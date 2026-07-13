@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UX-BE-09 · 封面取向偏好（横/竖 + 兜底）</title>
+  <style>
+    :root {
+      --bg: #e8e4db;
+      --sheet: #fbf8f2;
+      --ink: #1a1713;
+      --muted: #5f584e;
+      --line: rgba(26,23,19,.12);
+      --rec: #2f6b4f;
+      --warn: #8a5a2b;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+    .bar { background: #2a2621; color: #efeae2; padding: 12px 18px; }
+    .bar h1 { margin: 0; font-size: 15px; }
+    .bar p { margin: 4px 0 0; font-size: 12px; color: #b7aea2; max-width: 90ch; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 22px 18px 64px; display: grid; gap: 16px; grid-template-columns: 1fr 280px; }
+    @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
+    .card { background: var(--sheet); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .card h2 { margin: 0 0 8px; font-size: 14px; }
+    .card p, .card li { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e4f0e9; color: var(--rec); }
+    .spread { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .pane { background: rgba(26,23,19,.04); border-radius: 8px; padding: 8px; }
+    .pane strong { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .hero-web { aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(145deg,#8fa8b8,#445866); }
+    .hero-close { aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(145deg,#c4a484,#6b4c3b); opacity: .85; }
+    .mobile { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; font-size: 12px; color: var(--muted); }
+    .mobile-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; }
+    .mobile-thumb { width: 56px; height: 72px; border-radius: 6px; background: linear-gradient(180deg,#9a7b62,#4a3a2e); flex: 0 0 auto; }
+    .hint { margin: 0; color: var(--warn); }
+    .aside h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--warn); }
+    .aside ul { margin: 0; padding-left: 18px; }
+    .aside li { margin-bottom: 6px; }
+    code { font-size: 11px; background: rgba(0,0,0,.05); padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>UX-BE-09 · 按屏幕取向偏好选封面</h1>
+    <p>Web/桌面偏横、手机偏竖；不足则质量兜底且可解释；合页默认展示 Web 封面，手机折叠缩略 + 一句提示。</p>
+  </div>
+  <div class="wrap">
+    <section class="card">
+      <span class="tag">推荐落地</span>
+      <h2>合页：Web 主预览 · 手机折叠</h2>
+      <p>默认展示电脑端（横图）封面；手机封面折叠展示，不并排四张。</p>
+      <div class="spread">
+        <div class="pane">
+          <strong>封面 · 电脑 / 网页</strong>
+          <div class="hero-web" title="landscape preferred"></div>
+        </div>
+        <div class="pane">
+          <strong>封底 · 仅网页</strong>
+          <div class="hero-close"></div>
+        </div>
+      </div>
+      <details class="mobile" open>
+        <summary>手机封面</summary>
+        <div class="mobile-row">
+          <div class="mobile-thumb" title="portrait preferred"></div>
+          <p class="hint">未找到更合适的竖图，先用这张适配手机；你可手换。</p>
+        </div>
+      </details>
+    </section>
+    <aside class="card aside">
+      <h3>规则</h3>
+      <ul>
+        <li>Web → 横图一等；Mobile → 竖图一等</li>
+        <li>池空 → 任意最高分（屏幕适配裁切）</li>
+        <li>错取向质量 ≥ 2.75× 可软越级</li>
+        <li>telemetry：<code>orientationFallback</code></li>
+        <li>手选优先于策略</li>
+      </ul>
+      <h3 style="margin-top:14px">禁止</h3>
+      <ul>
+        <li>静默换图无提示</li>
+        <li>合页并排 web横/竖 + mobile横/竖</li>
+        <li>暗示手机也有独立封底</li>
+      </ul>
+    </aside>
+  </div>
+</body>
+</html>

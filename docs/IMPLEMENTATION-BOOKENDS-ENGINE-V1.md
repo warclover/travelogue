@@ -137,6 +137,7 @@
 - [x] §6.6 `excludedByMoment` + moment soft warning（`bookendsSoftWarnings`）
 - [x] 合页大图预览 + mobile 缩略 +「已固定」+ Top3 灰标 + pending 预览候选
 - [x] 换版式经 bookends `repick-opening` 级联（R-BE-14 / FE-BE-05）
+- [x] **UX-BE-09** 封面取向软偏好：web 偏横 / mobile 偏竖 + 质量兜底 + `orientationFallback` 可解释；合页默认 Web 封面 + 手机折叠提示（线框 `studio-bookends-orientation-ux-be-09-wireframe.html`）
 
 ### B3（可选）
 

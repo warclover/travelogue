@@ -95,10 +95,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
     "</div>" +
     "</div>" +
     '<details class="preview-sheet__bookends-mobile">' +
-    "<summary>手机封面说明</summary>" +
+    "<summary>手机封面</summary>" +
     '<div class="preview-sheet__bookends-mobile-body">' +
     '<div class="preview-sheet__bookends-mobile-thumb" data-bookends-mobile-thumb aria-hidden="true"></div>' +
-    '<p class="preview-sheet__hint">手机版封面可能不同；封底目前仅网页成书。</p>' +
+    '<p class="preview-sheet__hint" data-bookends-mobile-hint>为竖屏另选；封底目前仅网页成书。</p>' +
     "</div>" +
     "</details>" +
     '<div class="preview-sheet__bookends-actions">' +
@@ -122,11 +122,14 @@ export function mountBookendsPanel(slot, tripId, opts) {
   var openingEmpty = root.querySelector("[data-bookends-opening-empty]");
   var closingEmpty = root.querySelector("[data-bookends-closing-empty]");
   var mobileThumb = root.querySelector("[data-bookends-mobile-thumb]");
+  var mobileHint = root.querySelector("[data-bookends-mobile-hint]");
   var restoreBtn = root.querySelector("[data-bookends-restore]");
   var styleSlot = root.querySelector("[data-bookends-style-slot]");
 
   var state = {
     coverAssetId: "",
+    webCoverAssetId: "",
+    mobileCoverAssetId: "",
     closingAssetId: "",
     coverOpeningStyle: "",
     closingPending: false,
@@ -171,6 +174,15 @@ export function mountBookendsPanel(slot, tripId, opts) {
   function render(payload) {
     if (!payload) return;
     state.coverAssetId = payload.coverAssetId || "";
+    state.webCoverAssetId =
+      payload.webCoverAssetId ||
+      (payload.webCoverThumb && payload.webCoverThumb.assetId) ||
+      payload.coverAssetId ||
+      "";
+    state.mobileCoverAssetId =
+      payload.mobileCoverAssetId ||
+      (payload.mobileCoverThumb && payload.mobileCoverThumb.assetId) ||
+      "";
     state.closingAssetId = payload.closingAssetId || "";
     state.coverOpeningStyle = payload.coverOpeningStyle || "";
     state.closingPending = !!payload.closingPending;
@@ -205,15 +217,15 @@ export function mountBookendsPanel(slot, tripId, opts) {
       );
     }
 
-    var coverThumb = payload.coverThumb || {};
+    var coverThumb = payload.coverThumb || payload.webCoverThumb || {};
     setHero(
       openingHero,
       tripId,
-      state.coverAssetId || coverThumb.assetId,
+      state.webCoverAssetId || coverThumb.assetId,
       coverThumb.displayFile,
       "暂无封面"
     );
-    if (payload.degraded || (!state.closingAssetId && !state.closingPending)) {
+    if (payload.degraded || (!state.closingAssetId && !payload.closingPending)) {
       setHero(closingHero, tripId, "", null, "已省略封底图");
     } else {
       var closingThumb = payload.closingThumb || {};
@@ -230,16 +242,26 @@ export function mountBookendsPanel(slot, tripId, opts) {
     setHero(
       mobileThumb,
       tripId,
-      payload.mobileCoverAssetId || mobile.assetId || state.coverAssetId,
+      state.mobileCoverAssetId || mobile.assetId,
       mobile.displayFile,
       ""
     );
+    if (mobileHint) {
+      mobileHint.textContent =
+        payload.mobileCoverHint ||
+        "为竖屏另选；封底目前仅网页成书。";
+    }
 
     if (openingCands) {
       openingCands.innerHTML = "";
       var opens = payload.openingCandidates || [];
       opens.forEach(function (item) {
-        var btn = candidateButton(tripId, item, "opening", state.coverAssetId);
+        var btn = candidateButton(
+          tripId,
+          item,
+          "opening",
+          state.webCoverAssetId || state.coverAssetId
+        );
         btn.addEventListener("click", function () {
           applyOpening(item.assetId || item.id);
         });

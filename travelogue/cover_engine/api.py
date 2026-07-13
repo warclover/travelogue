@@ -13,6 +13,7 @@ from travelogue.cover_engine.opening.title_safe import (
 )
 from travelogue.cover_engine.telemetry import record_bookends_event, write_bookends_telemetry
 from travelogue.cover_engine.types import BookendsDecision
+from travelogue.curation.curate_scoring import orientation_meta_for_cover
 
 
 class ClosingPendingError(RuntimeError):
@@ -638,15 +639,69 @@ def build_bookends_studio_payload(trip: dict) -> dict[str, Any]:
         else {}
     )
     mobile_id = str(cover_by.get("mobile") or cover_id or "").strip()
+    web_id = str(cover_by.get("web") or cover_id or "").strip()
+    # Spread hero defaults to web/desktop cover (primary acceptance surface)
+    hero_cover_id = web_id or cover_id
     payload["mobileCoverAssetId"] = mobile_id or None
-    if cover_id:
-        payload["coverThumb"] = _cand(cover_id)
+    payload["webCoverAssetId"] = web_id or None
+    if hero_cover_id:
+        payload["coverThumb"] = _cand(hero_cover_id)
     if closing_id:
         payload["closingThumb"] = _cand(closing_id)
     elif degraded:
         payload["closingThumb"] = None
     if mobile_id:
         payload["mobileCoverThumb"] = _cand(mobile_id)
+    if web_id:
+        payload["webCoverThumb"] = _cand(web_id)
+
+    orient_by = (
+        curation.get("coverOrientationByLayout")
+        if isinstance(curation.get("coverOrientationByLayout"), dict)
+        else {}
+    )
+    mobile_orient = orient_by.get("mobile") if isinstance(orient_by.get("mobile"), dict) else {}
+    web_orient = orient_by.get("web") if isinstance(orient_by.get("web"), dict) else {}
+    # Lazily annotate when sync hasn't written orientation meta yet
+    if not mobile_orient and mobile_id:
+        mobile_orient = orientation_meta_for_cover(
+            list(assets_map.values()), mobile_id, export_layout="mobile"
+        )
+    if not web_orient and web_id:
+        web_orient = orientation_meta_for_cover(
+            list(assets_map.values()), web_id, export_layout="web"
+        )
+    payload["coverOrientationByLayout"] = {
+        "mobile": mobile_orient or None,
+        "web": web_orient or None,
+    }
+    mobile_fallback = bool(mobile_orient.get("orientationFallback"))
+    web_fallback = bool(web_orient.get("orientationFallback"))
+    payload["orientationFallback"] = {
+        "mobile": mobile_fallback,
+        "web": web_fallback,
+    }
+    payload["mobileCoverHint"] = (
+        str(mobile_orient.get("userOneLiner") or "")
+        if mobile_fallback
+        else (
+            "为竖屏另选"
+            if mobile_id and web_id and mobile_id != web_id
+            else "手机版封面可能与网页不同；封底目前仅网页成书。"
+        )
+    )
+    if mobile_fallback and mobile_orient.get("userOneLiner"):
+        soft = list(payload.get("softWarnings") or [])
+        code = "orientation_fallback_mobile"
+        if not any(isinstance(w, dict) and w.get("code") == code for w in soft):
+            soft.append(
+                {
+                    "code": code,
+                    "message": str(mobile_orient["userOneLiner"]),
+                    "layout": "mobile",
+                }
+            )
+            payload["softWarnings"] = soft
 
     # Opening Top-3 (FE-BE-03)
     try:
@@ -659,10 +714,10 @@ def build_bookends_studio_payload(trip: dict) -> dict[str, Any]:
                 )
     except Exception:
         pass
-    if cover_id and not any(
-        c.get("assetId") == cover_id for c in payload["openingCandidates"]
+    if hero_cover_id and not any(
+        c.get("assetId") == hero_cover_id for c in payload["openingCandidates"]
     ):
-        payload["openingCandidates"].insert(0, _cand(cover_id, rank=0, current=True))
+        payload["openingCandidates"].insert(0, _cand(hero_cover_id, rank=0, current=True))
         payload["openingCandidates"] = payload["openingCandidates"][:3]
 
     # Closing candidates (scored); allow preview-only while pending

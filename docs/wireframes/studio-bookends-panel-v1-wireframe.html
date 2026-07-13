@@ -70,7 +70,8 @@
       <ul>
         <li>面板标题：封面与封底</li>
         <li>副文案：游记的第一眼与最后一眼</li>
-        <li>恢复自动挑选 / 手机封面可能不同 / 封底仅网页</li>
+        <li>恢复自动挑选 / 手机封面折叠 / 封底仅网页</li>
+        <li>UX-BE-09：合页默认 Web 封面；取向兜底有人话提示</li>
         <li>禁止：Bookends、Opening、Closing、degraded、locked</li>
       </ul>
       <h2 style="margin-top:16px">必含</h2>
@@ -109,16 +110,16 @@
         </div>
       </div>
       <details class="mobile" open>
-        <summary>手机封面说明</summary>
+        <summary>手机封面</summary>
         <div style="display:flex;gap:10px;margin-top:8px;align-items:flex-start">
-          <div style="width:56px;height:72px;border-radius:6px;background:linear-gradient(145deg,#8fa8b8,#445866);flex:none"></div>
-          <p>手机版封面可能不同；封底目前仅网页成书。</p>
+          <div style="width:56px;height:72px;border-radius:6px;background:linear-gradient(180deg,#9a7b62,#4a3a2e);flex:none"></div>
+          <p>为竖屏另选；未找到更合适的竖图时会提示兜底。封底目前仅网页成书。</p>
         </div>
       </details>
       <div class="actions">
         <button type="button" class="ghost">恢复自动挑选</button>
       </div>
-      <p class="anno">嵌套原封面版式控件（FE-BE-05）。API：<code>/__travelogue/trips/{id}/bookends*</code></p>
+      <p class="anno">嵌套原封面版式控件（FE-BE-05）。UX-BE-09 详见 <code>studio-bookends-orientation-ux-be-09-wireframe.html</code>。API：<code>/__travelogue/trips/{id}/bookends*</code></p>
     </section>
   </div>
 </body>

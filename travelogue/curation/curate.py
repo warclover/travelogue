@@ -29,7 +29,9 @@ from travelogue.curation.curate_scoring import (
     build_cover_layout_review,
     cover_asset_pool,
     median_sharpness,
+    orientation_meta_for_cover,
     pick_chapter_hero,
+    pick_cover_asset_id_with_meta,
 )
 from travelogue.curation.curate_scoring import (
     cover_candidates as _cover_candidates,
@@ -363,34 +365,50 @@ def _sync_trip_covers_core(
     web_locked = is_opening_locked(trip) and not force
 
     if layout == "auto":
-        mobile_id = _pick_cover_asset_id(
+        mobile_id, mobile_orient = pick_cover_asset_id_with_meta(
             assets,
             export_layout="mobile",
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             **scoring_kwargs,
         )
+        web_orient: dict[str, object] | None = None
         if web_locked:
             cover_by = curation.get("coverByLayout") or {}
             web_id = str((cover_by.get("web") if isinstance(cover_by, dict) else "") or "")
             if not web_id:
-                web_id = _pick_cover_asset_id(
+                web_id, web_orient = pick_cover_asset_id_with_meta(
                     assets,
                     export_layout="web",
                     featured_weight=featured_weight,
                     enable_phase6_cover_factors=p6,
                     **scoring_kwargs,
                 )
+            else:
+                web_orient = orientation_meta_for_cover(
+                    assets, web_id, export_layout="web"
+                )
         else:
-            web_id = _apply_web_joint() or _pick_cover_asset_id(
-                assets,
-                export_layout="web",
-                featured_weight=featured_weight,
-                enable_phase6_cover_factors=p6,
-                **scoring_kwargs,
-            )
+            web_id = _apply_web_joint()
+            if web_id:
+                web_orient = orientation_meta_for_cover(
+                    assets, web_id, export_layout="web"
+                )
+            else:
+                web_id, web_orient = pick_cover_asset_id_with_meta(
+                    assets,
+                    export_layout="web",
+                    featured_weight=featured_weight,
+                    enable_phase6_cover_factors=p6,
+                    **scoring_kwargs,
+                )
 
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
+        curation["coverOrientationByLayout"] = {
+            "mobile": mobile_orient,
+            "web": web_orient
+            or orientation_meta_for_cover(assets, web_id, export_layout="web"),
+        }
         trip["coverAssetId"] = mobile_id
         trip["coverCandidates"] = _cover_candidates(
             assets,
@@ -446,6 +464,25 @@ def _sync_trip_covers_core(
             }
         else:
             curation.pop("coverExplainByLayout", None)
+        soft_warnings = list(curation.get("bookendsSoftWarnings") or [])
+        for side, orient in (("mobile", mobile_orient), ("web", web_orient)):
+            if not isinstance(orient, dict) or not orient.get("orientationFallback"):
+                continue
+            line = orient.get("userOneLiner")
+            if not line:
+                continue
+            code = f"orientation_fallback_{side}"
+            if any(isinstance(w, dict) and w.get("code") == code for w in soft_warnings):
+                continue
+            soft_warnings.append(
+                {
+                    "code": code,
+                    "message": str(line),
+                    "layout": side,
+                }
+            )
+        if soft_warnings:
+            curation["bookendsSoftWarnings"] = soft_warnings
         _write_blind_review(mobile_id, "mobile")
         _write_blind_review(web_id, "web")
         return mobile_id
@@ -474,6 +511,11 @@ def _sync_trip_covers_core(
                 curation.pop("coverByLayout", None)
                 curation.pop("coverCandidatesByLayout", None)
                 curation.pop("coverExplainByLayout", None)
+                curation["coverOrientationByLayout"] = {
+                    "web": orientation_meta_for_cover(
+                        assets, cover_id, export_layout="web"
+                    )
+                }
                 explain = _cover_explain_for(
                     assets,
                     cover_id,
@@ -488,7 +530,7 @@ def _sync_trip_covers_core(
                 _write_blind_review(cover_id, "web")
                 return cover_id
 
-    cover_id = _pick_cover_asset_id(
+    cover_id, cover_orient = pick_cover_asset_id_with_meta(
         assets,
         export_layout=layout,
         featured_weight=featured_weight,
@@ -508,6 +550,10 @@ def _sync_trip_covers_core(
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
     curation.pop("coverExplainByLayout", None)
+    if layout in ("mobile", "web"):
+        curation["coverOrientationByLayout"] = {layout: cover_orient}
+    else:
+        curation.pop("coverOrientationByLayout", None)
     explain = _cover_explain_for(
         assets,
         cover_id,

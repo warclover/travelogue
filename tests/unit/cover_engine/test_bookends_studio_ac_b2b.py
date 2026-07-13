@@ -213,16 +213,20 @@ def test_ac_be_25_mobile_fold_copy_in_payload_and_ui_source() -> None:
 
     ui = Path("templates/studio/preview-toolbar/bookends.js").read_text(encoding="utf-8")
     assert "封面与封底" in ui
-    assert "手机封面说明" in ui
+    assert "手机封面" in ui
     assert "封底目前仅网页成书" in ui
     assert "恢复自动挑选" in ui
     assert "data-bookends-status" in ui
     assert "data-bookends-opening-hero" in ui
     assert "data-bookends-mobile-thumb" in ui
+    assert "data-bookends-mobile-hint" in ui
     assert "已按你的选择固定" in ui
     assert "applyStyleViaBookends" in ui
     assert "closingStyleOptions" not in ui
     assert "封底样式" not in ui
+    assert payload.get("webCoverAssetId") == "cover"
+    assert payload.get("mobileCoverHint")
+    assert "orientationFallback" in payload
 
 
 def test_fe_be_03_opening_candidates_top3() -> None:

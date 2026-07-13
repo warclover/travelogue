@@ -122,18 +122,118 @@ def mobile_cover_pool(assets: list[dict]) -> list[dict]:
     return combined if combined else list(assets)
 
 
-def cover_asset_pool(assets: list[dict], *, export_layout: str) -> list[dict]:
+# Soft prefer: wrong-orientation must beat preferred by this quality ratio
+# (quality = sharpness × aesthetic overall) before it may win.
+# Keep high enough that intentional preferred-pool winners (e.g. mobile
+# portrait thumbs vs sharper landscapes) are not casually overridden.
+_ORIENTATION_SOFT_QUALITY_GAP = 2.75
+
+
+def preferred_orientation_kinds(export_layout: str) -> frozenset[str]:
+    if export_layout == "mobile":
+        return _MOBILE_VERTICAL_KINDS
+    return _WEB_HORIZONTAL_KINDS
+
+
+def preferred_orientation_label(export_layout: str) -> str:
+    """Studio / explain label: landscape (web/desktop) or portrait (mobile)."""
+    return "portrait" if export_layout == "mobile" else "landscape"
+
+
+def asset_matches_preferred_orientation(asset: dict, export_layout: str) -> bool:
+    return aspect_kind_for_asset(asset) in preferred_orientation_kinds(export_layout)
+
+
+def preferred_orientation_pool(
+    assets: list[dict], *, export_layout: str
+) -> list[dict]:
+    """Preferred-kind candidates only (may be empty — caller must fall back)."""
+    kinds = preferred_orientation_kinds(export_layout)
     if export_layout == "mobile":
         pool = mobile_cover_pool(assets)
-        vertical = [a for a in pool if aspect_kind_for_asset(a) in _MOBILE_VERTICAL_KINDS]
-        if vertical:
-            return vertical
-        return pool
+    else:
+        pool = cover_eligible_assets(assets)
+    return [a for a in pool if aspect_kind_for_asset(a) in kinds]
+
+
+def cover_asset_pool(
+    assets: list[dict],
+    *,
+    export_layout: str,
+    prefer_orientation: bool = True,
+) -> list[dict]:
+    """Orientation-aware cover candidates for mobile vs web export.
+
+    When ``prefer_orientation`` is True (default), return the preferred-kind
+    pool if non-empty; otherwise fall back to the full eligible pool.
+    """
+    if export_layout == "mobile":
+        pool = mobile_cover_pool(assets)
+        if not prefer_orientation:
+            return pool
+        vertical = [
+            a for a in pool if aspect_kind_for_asset(a) in _MOBILE_VERTICAL_KINDS
+        ]
+        return vertical if vertical else pool
     pool = cover_eligible_assets(assets)
-    horizontal = [a for a in pool if aspect_kind_for_asset(a) in _WEB_HORIZONTAL_KINDS]
-    if horizontal:
-        return horizontal
-    return pool
+    if not prefer_orientation:
+        return pool
+    horizontal = [
+        a for a in pool if aspect_kind_for_asset(a) in _WEB_HORIZONTAL_KINDS
+    ]
+    return horizontal if horizontal else pool
+
+
+def _cover_quality_proxy(asset: dict) -> float:
+    """Orientation-agnostic quality for soft-prefer override decisions."""
+    sharp = float(asset_sharpness(asset) or 0.0)
+    overall = float(((asset.get("aesthetic") or {}).get("overall")) or 0.0)
+    return max(0.0, sharp) * max(0.05, overall)
+
+
+def orientation_meta_for_cover(
+    assets: list[dict],
+    cover_id: str,
+    *,
+    export_layout: str,
+) -> dict[str, object]:
+    """Explainable orientation prefer / fallback snapshot for a chosen cover."""
+    layout = export_layout if export_layout in ("mobile", "web") else "mobile"
+    preferred = preferred_orientation_label(layout)
+    preferred_pool = preferred_orientation_pool(assets, export_layout=layout)
+    asset = next((a for a in assets if a.get("id") == cover_id), None)
+    matched = bool(
+        asset is not None and asset_matches_preferred_orientation(asset, layout)
+    )
+    fallback = not matched
+    reason: str | None = None
+    if fallback:
+        reason = (
+            "no_preferred_orientation_in_pool"
+            if not preferred_pool
+            else "orientation_mismatch"
+        )
+    return {
+        "preferredOrientation": preferred,
+        "orientationMatched": matched,
+        "orientationFallback": fallback,
+        "orientationFallbackReason": reason,
+        "exportLayout": layout,
+        "userOneLiner": orientation_fallback_one_liner(layout, reason)
+        if fallback
+        else None,
+    }
+
+
+def orientation_fallback_one_liner(
+    export_layout: str, reason: str | None
+) -> str:
+    """Short Studio / soft-warning copy when orientation fallback applied."""
+    if reason == "soft_quality_override":
+        return "这张画幅不太理想，但画质更好，已优先质量；你可手换。"
+    if export_layout == "mobile":
+        return "未找到更合适的竖图，先用这张适配手机；你可手换。"
+    return "未找到更合适的横图，先用这张适配电脑；你可手换。"
 
 
 def _cover_media_weight(asset: dict, export_layout: str) -> float:
@@ -666,41 +766,41 @@ def _curate_scoring_context(
     return ver, _cover_params(cover_scoring), params_v2
 
 
-def pick_cover_asset_id(
-    assets: list[dict],
+def _score_pick_cover_in_pool(
+    search_pool: list[dict],
     *,
-    export_layout: str = "mobile",
-    exclude: set[str] | None = None,
-    featured_weight: float = 1.35,
-    enable_phase6_cover_factors: bool = True,
-    cover_scoring: CoverScoringParams | None = None,
-    cover_scoring_v2: CoverScoringParamsV2 | None = None,
-    scoring_version: str | None = None,
-    aesthetic_enabled: bool | None = None,
+    export_layout: str,
+    exclude: set[str],
+    featured_weight: float,
+    enable_phase6_cover_factors: bool,
+    params: CoverScoringParams,
+    params_v2: CoverScoringParamsV2,
+    ver: str,
+    aesthetic_enabled: bool | None,
 ) -> str:
-    exclude = exclude or set()
-    ver, params, params_v2 = _curate_scoring_context(
-        cover_scoring, cover_scoring_v2, scoring_version
-    )
+    """Highest effective_cover_score within an already-built search pool."""
+    if not search_pool:
+        return ""
     p6 = enable_phase6_cover_factors and params.enable_phase6_factors
-    pool = cover_asset_pool(assets, export_layout=export_layout)
     featured_pool = [
         a
-        for a in pool
-        if a.get("userTier") == "featured" and a["id"] not in exclude and a.get("type") != "video"
+        for a in search_pool
+        if a.get("userTier") == "featured"
+        and a["id"] not in exclude
+        and a.get("type") != "video"
     ]
-    search_pool = featured_pool if featured_pool else pool
+    pool = featured_pool if featured_pool else search_pool
     person_demote = (
-        resolve_person_demote_v2(params_v2, search_pool)
+        resolve_person_demote_v2(params_v2, pool)
         if ver == "v2"
-        else resolve_person_demote(params, search_pool)
+        else resolve_person_demote(params, pool)
     )
     median_sharp, median_overall = _cover_batch_medians(
-        search_pool, aesthetic_enabled=aesthetic_enabled
+        pool, aesthetic_enabled=aesthetic_enabled
     )
     best_id = ""
     best_score = 0.0
-    for a in search_pool:
+    for a in pool:
         if a["id"] in exclude or a.get("type") == "video":
             continue
         score = effective_cover_score(
@@ -714,49 +814,173 @@ def pick_cover_asset_id(
             cover_scoring=params,
             cover_scoring_v2=params_v2,
             scoring_version=ver,
-            pool=search_pool,
+            pool=pool,
             person_demote_mult=person_demote,
         )
         if score > best_score:
             best_score = score
             best_id = a["id"]
     if not best_id and featured_pool and export_layout == "web":
-        material_pool = [a for a in pool if a.get("userTier") != "featured"]
+        material_pool = [a for a in search_pool if a.get("userTier") != "featured"]
         if material_pool:
-            person_demote = (
-                resolve_person_demote_v2(params_v2, material_pool)
-                if ver == "v2"
-                else resolve_person_demote(params, material_pool)
+            return _score_pick_cover_in_pool(
+                material_pool,
+                export_layout=export_layout,
+                exclude=exclude,
+                featured_weight=featured_weight,
+                enable_phase6_cover_factors=enable_phase6_cover_factors,
+                params=params,
+                params_v2=params_v2,
+                ver=ver,
+                aesthetic_enabled=aesthetic_enabled,
             )
-            median_sharp, median_overall = _cover_batch_medians(
-                material_pool, aesthetic_enabled=aesthetic_enabled
+    return best_id
+
+
+def pick_cover_asset_id_with_meta(
+    assets: list[dict],
+    *,
+    export_layout: str = "mobile",
+    exclude: set[str] | None = None,
+    featured_weight: float = 1.35,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    aesthetic_enabled: bool | None = None,
+    soft_orientation_gap: float = _ORIENTATION_SOFT_QUALITY_GAP,
+) -> tuple[str, dict[str, object]]:
+    """Pick cover with soft orientation prefer + explainable fallback meta.
+
+    Policy (UX-BE-09):
+    - Prefer landscape for web/desktop, portrait for mobile.
+    - If preferred pool empty → any eligible photo; mark orientationFallback.
+    - If preferred exists but wrong-orientation quality ≥ gap× preferred,
+      allow soft override and mark fallback.
+    """
+    exclude = exclude or set()
+    ver, params, params_v2 = _curate_scoring_context(
+        cover_scoring, cover_scoring_v2, scoring_version
+    )
+    preferred_label = preferred_orientation_label(export_layout)
+    preferred_only = preferred_orientation_pool(assets, export_layout=export_layout)
+    full_pool = cover_asset_pool(
+        assets, export_layout=export_layout, prefer_orientation=False
+    )
+    by_id = {a["id"]: a for a in assets if a.get("id")}
+
+    meta: dict[str, object] = {
+        "preferredOrientation": preferred_label,
+        "orientationMatched": False,
+        "orientationFallback": False,
+        "orientationFallbackReason": None,
+        "exportLayout": export_layout,
+        "userOneLiner": None,
+    }
+
+    def _finalize(chosen: str, *, reason: str | None = None) -> tuple[str, dict[str, object]]:
+        asset = by_id.get(chosen)
+        matched = bool(
+            asset is not None
+            and asset_matches_preferred_orientation(asset, export_layout)
+        )
+        fallback = not matched
+        meta["orientationMatched"] = matched
+        meta["orientationFallback"] = fallback
+        if fallback:
+            meta["orientationFallbackReason"] = reason or (
+                "no_preferred_orientation_in_pool"
+                if not preferred_only
+                else "orientation_mismatch"
             )
-            for a in material_pool:
-                if a["id"] in exclude or a.get("type") == "video":
-                    continue
-                score = effective_cover_score(
-                    a,
-                    export_layout,
-                    median_sharp=median_sharp,
-                    median_overall=median_overall,
-                    aesthetic_enabled=aesthetic_enabled,
-                    featured_weight=featured_weight,
-                    enable_phase6_cover_factors=p6,
-                    cover_scoring=params,
-                    cover_scoring_v2=params_v2,
-                    scoring_version=ver,
-                    pool=material_pool,
-                    person_demote_mult=person_demote,
+            meta["userOneLiner"] = orientation_fallback_one_liner(
+                export_layout, str(meta["orientationFallbackReason"])
+            )
+        else:
+            meta["orientationFallbackReason"] = None
+            meta["userOneLiner"] = None
+        return chosen, meta
+
+    # Soft quality override: wrong orientation clearly higher quality
+    if preferred_only and soft_orientation_gap > 1.0 and full_pool:
+        best_pref_id = _score_pick_cover_in_pool(
+            preferred_only,
+            export_layout=export_layout,
+            exclude=exclude,
+            featured_weight=featured_weight,
+            enable_phase6_cover_factors=enable_phase6_cover_factors,
+            params=params,
+            params_v2=params_v2,
+            ver=ver,
+            aesthetic_enabled=aesthetic_enabled,
+        )
+        kinds = preferred_orientation_kinds(export_layout)
+        wrong = [
+            a
+            for a in full_pool
+            if a.get("id") not in exclude
+            and a.get("type") != "video"
+            and aspect_kind_for_asset(a) not in kinds
+        ]
+        if best_pref_id and wrong:
+            pref_asset = by_id.get(best_pref_id)
+            best_wrong = max(wrong, key=_cover_quality_proxy)
+            q_pref = _cover_quality_proxy(pref_asset) if pref_asset else 0.0
+            q_wrong = _cover_quality_proxy(best_wrong)
+            if q_pref > 0 and q_wrong >= q_pref * soft_orientation_gap:
+                meta["preferredCandidateId"] = best_pref_id
+                return _finalize(
+                    str(best_wrong["id"]), reason="soft_quality_override"
                 )
-                if score > best_score:
-                    best_score = score
-                    best_id = a["id"]
+
+    pool = cover_asset_pool(assets, export_layout=export_layout)
+    best_id = _score_pick_cover_in_pool(
+        pool,
+        export_layout=export_layout,
+        exclude=exclude,
+        featured_weight=featured_weight,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        params=params,
+        params_v2=params_v2,
+        ver=ver,
+        aesthetic_enabled=aesthetic_enabled,
+    )
     if best_id:
-        return best_id
+        return _finalize(best_id)
+
     for a in assets:
         if a["id"] not in exclude and a.get("type") != "video":
-            return a["id"]
-    return assets[0]["id"]
+            return _finalize(a["id"])
+    if assets:
+        return _finalize(assets[0]["id"])
+    return "", meta
+
+
+def pick_cover_asset_id(
+    assets: list[dict],
+    *,
+    export_layout: str = "mobile",
+    exclude: set[str] | None = None,
+    featured_weight: float = 1.35,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring: CoverScoringParams | None = None,
+    cover_scoring_v2: CoverScoringParamsV2 | None = None,
+    scoring_version: str | None = None,
+    aesthetic_enabled: bool | None = None,
+) -> str:
+    """Highest effective_cover_score with soft orientation prefer (see meta helper)."""
+    cover_id, _meta = pick_cover_asset_id_with_meta(
+        assets,
+        export_layout=export_layout,
+        exclude=exclude,
+        featured_weight=featured_weight,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        cover_scoring=cover_scoring,
+        cover_scoring_v2=cover_scoring_v2,
+        scoring_version=scoring_version,
+        aesthetic_enabled=aesthetic_enabled,
+    )
+    return cover_id
 
 
 def score_ranked_cover_ids(

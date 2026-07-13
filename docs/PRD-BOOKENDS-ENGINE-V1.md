@@ -140,7 +140,7 @@
 | **代表性** | 与 `albumProfile` / 主导 stratum 同族优先 |
 | **可读性（硬）** | 活动开屏样式的 `text_safe_regions` 内：人脸中心不得落入字区；字区边缘能量过高则 **不得进质量 Top1**（§6.1） |
 | **质量** | 清晰、合格画幅；继承 v2 闸口 |
-| **布局** | mobile 竖池 / web 横池；`coverByLayout` 可分置 |
+| **布局** | mobile 竖池 / web 横池；`coverByLayout` 可分置；不足时任意图兜底（`orientationFallback`，UX-BE-09） |
 | **时间** | 不强制最早拍摄 |
 
 ### 3.2 封底（Closing · 对用户称「封底」）

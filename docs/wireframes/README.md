@@ -5,7 +5,9 @@
 | [preview-refine-v1-wireframe.html](./preview-refine-v1-wireframe.html) | **预览精修体验 V1** · 验货默认 + 这页/这本/导出与更多 + 更新版面/导出拦截 · [PRD-PREVIEW-REFINE-V1](../PRD-PREVIEW-REFINE-V1.md) · 待评审 |
 | [preview-cover-web-v1-wireframe.html](./preview-cover-web-v1-wireframe.html) | **Web 预览页封面 v1** · 首屏线框 · 现状 + A/B/C/D 四方案 · **已落地 D 全视窗** · 设计评审用 |
 | [preview-closing-web-v1-wireframe.html](./preview-closing-web-v1-wireframe.html) | **Web 预览页封底 v1** · 末屏线框 · 对称 `cover-opening` · **推荐 D 全视窗封底** · 待评审 |
-| [studio-bookends-panel-v1-wireframe.html](./studio-bookends-panel-v1-wireframe.html) | **Studio「封面与封底」合页** · DE-BE-02 / FE-BE-07 状态条 · [PRD-BOOKENDS-ENGINE-V1](../PRD-BOOKENDS-ENGINE-V1.md) |
+| [studio-bookends-panel-v1-wireframe.html](./studio-bookends-panel-v1-wireframe.html) | **Studio「封面与封底」合页控件** · DE-BE-02 / FE-BE-07 · [PRD-BOOKENDS-ENGINE-V1](../PRD-BOOKENDS-ENGINE-V1.md) |
+| [studio-bookends-orientation-ux-be-09-wireframe.html](./studio-bookends-orientation-ux-be-09-wireframe.html) | **UX-BE-09 封面取向** · Web 偏横 / Mobile 偏竖 + 兜底提示 · 已落地 |
+| [studio-book-tab-bookends-ux-v1-wireframe.html](./studio-book-tab-bookends-ux-v1-wireframe.html) | **精修「这本」首尾装帧体验** · 分区 IA / 预览焦点联动 / 试装帧 · **待评审** |
 | [studio-homepage-output-first-v1.6.html](./studio-homepage-output-first-v1.6.html) | **首页探索 v1.6** · PRD v2.0.3 reconcile · **Web/iPad Tab 为 M20 验收依据**；Mobile Tab = 小程序探索参考 |
 | [studio-homepage-output-first-v1.5.html](./studio-homepage-output-first-v1.5.html) | 首页探索 v1.5 · Bento 结构定稿 · iPad / Import Sheet · 设计评审用 |
 | [studio-homepage-output-first-v1.4.html](./studio-homepage-output-first-v1.4.html) | 首页探索 v1.4 · Bento 定稿候选 · 16:9 横滑 + 手机滚动 · 设计评审用（未落地） |
