@@ -78,7 +78,9 @@ function describeScreenContext(el) {
     screen: el,
     featured: el.getAttribute("data-featured") === "true",
     hasStar: !!el.querySelector(".preview-toolbar__featured-star"),
-    hasMediaCtl: !!el.querySelector(".preview-toolbar__collage-media, .preview-collage-media"),
+    hasMediaCtl: !!el.querySelector(
+      ".preview-toolbar__collage-ctrl, .preview-toolbar__collage-select"
+    ),
     copyHint: !!(kicker || body),
   };
 }
@@ -555,6 +557,28 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
+  function scrollPreviewToBodyScreen() {
+    var el = document.querySelector(
+      '.layout-screen[data-block="layout-screen"][data-asset-ids], section.chapter .layout-screen'
+    );
+    if (!el) return false;
+    resumePageFlowScroll();
+    if (
+      window.TravelogueLenis &&
+      typeof window.TravelogueLenis.scrollTo === "function"
+    ) {
+      try {
+        window.TravelogueLenis.scrollTo(el, { offset: 0 });
+      } catch (_err) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    pausePageFlowScroll();
+    return true;
+  }
+
   function renderPagePanel() {
     var ctx = describeScreenContext(findDominantScreen());
     if (ctx.empty) {
@@ -567,12 +591,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
             ? "你正在看封底"
             : "当前是封面或封底";
       bodyEl.innerHTML =
-        '<p class="preview-sheet__hint preview-sheet__hint--lead">滚动到正文屏可调整本页</p>' +
+        '<p class="preview-sheet__hint preview-sheet__hint--lead">精选 ★ 与拼图改判只出现在正文屏，封面/封底没有这些操作。</p>' +
         '<p class="preview-sheet__empty-label"><strong>' +
         watching +
         "</strong></p>" +
-        '<p class="preview-sheet__hint">本页精修用于正文屏。要换第一眼 / 最后一眼，请调首尾装帧。</p>' +
-        '<button type="button" class="preview-sheet__primary" data-action="goto-bookends">去调封面与封底</button>';
+        '<p class="preview-sheet__hint">请先滚到某一章的正文照片屏，再打开「这页」；或去调封面与封底。</p>' +
+        '<button type="button" class="preview-sheet__primary" data-action="goto-body">滚动到正文屏</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-bookends" style="margin-top:8px">去调封面与封底</button>';
+      var goBody = bodyEl.querySelector('[data-action="goto-body"]');
+      if (goBody) {
+        goBody.addEventListener("click", function () {
+          if (!scrollPreviewToBodyScreen()) return;
+          window.setTimeout(function () {
+            renderPagePanel();
+          }, 420);
+        });
+      }
       var goBookends = bodyEl.querySelector('[data-action="goto-bookends"]');
       if (goBookends) {
         goBookends.addEventListener("click", function () {
@@ -591,7 +625,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         ? '<p class="preview-sheet__hint">本屏有文案 · 也可直接点画面修改</p>'
         : '<p class="preview-sheet__hint">也可直接点画面上的字修改</p>') +
       '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
-      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>';
+      '<p class="preview-sheet__footnote">改精选或拼图后，请到「这本 → 进阶」点「更新版面」。</p>';
 
     var actions = bodyEl.querySelector(".preview-sheet__page-actions");
     if (ctx.hasStar && actions) {
@@ -614,18 +648,28 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       mediaBtn.className = "preview-sheet__chip";
       mediaBtn.textContent = "改判普通照片 / 拼图";
       mediaBtn.addEventListener("click", function () {
-        var ctl =
+        var sel =
           ctx.screen &&
-          ctx.screen.querySelector(
-            ".preview-toolbar__collage-media, .preview-collage-media, button[data-media-class]"
-          );
+          ctx.screen.querySelector(".preview-toolbar__collage-select");
+        if (sel) {
+          sel.focus();
+          // Toggle photo ↔ collage for one-click chip action
+          sel.value = sel.value === "collage" ? "photo" : "collage";
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+          window.setTimeout(function () {
+            renderPagePanel();
+          }, 200);
+          return;
+        }
+        var ctl =
+          ctx.screen && ctx.screen.querySelector(".preview-toolbar__collage-ctrl");
         if (ctl) ctl.click();
       });
       actions.appendChild(mediaBtn);
     }
     if (actions && !actions.childNodes.length) {
       actions.innerHTML =
-        '<p class="preview-sheet__hint">本屏可在画面上标精选或改判拼图；改后请更新版面。</p>';
+        '<p class="preview-sheet__hint">本屏可在左侧预览画面右下角标精选；单图/整图屏左上角可改判拼图。改后请更新版面。</p>';
     }
   }
 
@@ -647,6 +691,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
       '<summary>进阶 <span class="preview-sheet__zone-meta">模板 · 同框 · 分章</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">多数情况下不用改。这里放整本级少见设置：换模板、旅行主角同框、查看/确认分章。</p>' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +

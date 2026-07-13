@@ -300,6 +300,10 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     assert "进阶" in sheet
     assert "去调封面与封底" in sheet
     assert "goto-bookends" in sheet
+    assert "goto-body" in sheet
+    assert "滚动到正文屏" in sheet
+    assert "preview-toolbar__collage-select" in sheet
+    assert "preview-toolbar__collage-media" not in sheet
     assert "bookendsFocus" in sheet
     assert "applyBookendsFocusUi" in sheet
     assert "scrollPreviewToBookend" in sheet
@@ -319,6 +323,38 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     assert "preview-sheet__template-slot" in advanced_block
     assert "preview-sheet__embed--cohort" in advanced_block
     assert "preview-sheet__embed--structure" in advanced_block
+    assert "较少改动的整本级少见设置" in advanced_block or "多数情况下不用改" in advanced_block
+
+
+def test_studio_aesthetic_debug_gated_from_default_ui() -> None:
+    """Aesthetic score dump is dogfood-only (?debug=aesthetic), not default Studio UI."""
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert "export function isAestheticDebugEnabled" in drawers
+    assert 'get("debug") === "aesthetic"' in drawers
+    assert "travelogue.aestheticDebug" in drawers
+    # loadAestheticExplain itself is gated
+    load_fn = drawers.split("export function loadAestheticExplain", 1)[1].split(
+        "export function", 1
+    )[0]
+    assert "isAestheticDebugEnabled()" in load_fn
+    # Structure embed only loads aesthetic when debug is on
+    assert "loadAestheticExplain(tripId, aestheticEl)" in drawers
+    struct_open = drawers.split(
+        'targetBody.querySelector(".preview-drawer__explain")', 1
+    )[1].split("var applyBtn", 1)[0]
+    assert "isAestheticDebugEnabled()" in struct_open
+    assert "loadAestheticExplain(tripId, aestheticEl)" in struct_open
+    # Hover title scores also gated
+    titles_fn = features.split("function initDisplayedAestheticTitles", 1)[1].split(
+        "export function", 1
+    )[0]
+    assert "isAestheticDebugEnabled()" in titles_fn
+    assert "· overall " in drawers  # still exists for debug panel copy
+    # Default advanced lead must not promise score boards
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    assert "照片审美分项" not in sheet
+    assert "多数情况下不用改" in sheet
 
 
 def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:

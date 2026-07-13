@@ -761,10 +761,23 @@ body.preview-sheet-open {
   border-top: 1px solid rgba(20, 17, 13, 0.06);
 }
 
+.preview-sheet__zone--bookends > .preview-sheet__zone-body {
+  padding: 0 10px 12px;
+}
+
 .preview-sheet__zone--bookends .preview-sheet__bookends {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: 0;
+}
+
+/* Zone already titles this block — drop duplicate head */
+.preview-sheet__zone--bookends .preview-sheet__bookends-head {
+  display: none;
+}
+
+.preview-sheet__zone--bookends .preview-sheet__bookends-oneliner {
+  margin-top: 8px;
 }
 
 /* Bookends · 封面与封底合页 */
@@ -817,13 +830,13 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-spread {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
 }
 
 .preview-sheet__bookends-pane {
   min-width: 0;
-  padding: 8px;
+  padding: 10px;
   background: rgba(20, 17, 13, 0.03);
   border-radius: 8px;
   transition: opacity 0.15s ease, box-shadow 0.15s ease;
@@ -840,24 +853,35 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-pane-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 8px;
+  min-width: 0;
 }
 
 .preview-sheet__bookends-pane-label {
   display: block;
+  flex: 0 0 auto;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: rgba(20, 17, 13, 0.62);
+  white-space: nowrap;
+}
+
+.preview-sheet__bookends-pane.is-focus .preview-sheet__bookends-pane-label {
+  color: rgba(61, 90, 76, 0.95);
 }
 
 .preview-sheet__bookends-lock {
   font-size: 11px;
+  line-height: 1.3;
   color: rgba(20, 17, 13, 0.55);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview-sheet__bookends-hero {
@@ -889,7 +913,9 @@ body.preview-sheet-open {
 .preview-sheet__bookends-empty-hint {
   margin: 0 0 8px;
   font-size: 12px;
+  line-height: 1.35;
   color: rgba(20, 17, 13, 0.65);
+  overflow-wrap: anywhere;
 }
 
 .preview-sheet__bookends-preview-note {
@@ -903,8 +929,9 @@ body.preview-sheet-open {
 }
 
 .preview-sheet__bookends-thumb {
-  width: 48px;
-  height: 48px;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 2px solid transparent;
   border-radius: 6px;

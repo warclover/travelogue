@@ -10,7 +10,7 @@ import {
 import { trackStudioEvent } from "../js/analytics.js";
 import { presentAutoplayHref } from "./dock.js";
 import { saveMagazineTitle } from "./inline-edit.js";
-import { formatAestheticPurposeLine } from "./drawers.js";
+import { formatAestheticPurposeLine, isAestheticDebugEnabled } from "./drawers.js";
 import {
   revealTripPath,
   refreshStaleHint,
@@ -128,6 +128,7 @@ export function initTitleEdit(root, tripId) {
 
 
 export function initDisplayedAestheticTitles(tripId) {
+    if (!isAestheticDebugEnabled()) return;
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
       .then(function (resp) { return resp.ok ? resp.json() : null; })
       .then(function (data) {

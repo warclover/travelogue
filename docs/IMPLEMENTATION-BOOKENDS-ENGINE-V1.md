@@ -139,6 +139,7 @@
 - [x] 换版式经 bookends `repick-opening` 级联（R-BE-14 / FE-BE-05）
 - [x] **UX-BE-09** 封面取向软偏好：web 偏横 / mobile 偏竖 + 质量兜底 + `orientationFallback` 可解释；合页默认 Web 封面 + 手机折叠提示（线框 `studio-bookends-orientation-ux-be-09-wireframe.html`）
 - [x] **UX-BE-01..05 / 07 / 08** 「这本」三分区 + 预览焦点联动 + 看封面/封底 + 空态深链 + 锁文案「手选 · 可恢复自动」+ 进阶折叠（线框 `studio-book-tab-bookends-ux-v1-wireframe.html`；乐观试看 UX-BE-06 P1 未做）
+- [x] 审美分项默认不对用户展示；仅 `?debug=aesthetic`（或 `localStorage.travelogue.aestheticDebug=1`）开启 dogfood 面板 / 图片 title 分数字符串
 
 ### B3（可选）
 

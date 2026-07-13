@@ -4,7 +4,7 @@ html[data-preview-toolbar="on"] {
   --studio-font-ui:
     "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
     "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
-  --preview-sheet-side-w: 380px;
+  --preview-sheet-side-w: 520px;
   --preview-sheet-float-gap: 12px;
   --preview-sheet-duration-enter: 460ms;
   --preview-sheet-duration-exit: 380ms;

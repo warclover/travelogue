@@ -30,6 +30,26 @@ var AESTHETIC_STRATUM_LABELS = {
   group: "合影",
   general: "通用",
 };
+
+/** Studio dogfood gate · default off. Enable with ?debug=aesthetic or localStorage travelogue.aestheticDebug=1 */
+export function isAestheticDebugEnabled() {
+  try {
+    var q = new URLSearchParams(window.location.search || "");
+    if (q.get("debug") === "aesthetic" || q.get("aestheticDebug") === "1") {
+      return true;
+    }
+    if (
+      window.localStorage &&
+      window.localStorage.getItem("travelogue.aestheticDebug") === "1"
+    ) {
+      return true;
+    }
+  } catch (_err) {
+    /* ignore */
+  }
+  return false;
+}
+
 var AESTHETIC_PURPOSE_LABELS = {
   cover: "封面",
   hero: "主图",
@@ -198,6 +218,11 @@ export function renderAestheticAlbumProfile(container, profile, pref, tripId) {
 
 export function loadAestheticExplain(tripId, container) {
     if (!container) return;
+    if (!isAestheticDebugEnabled()) {
+      container.hidden = true;
+      container.innerHTML = "";
+      return;
+    }
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
       .then(function (resp) { return resp.ok ? resp.json() : null; })
       .then(function (data) {
@@ -871,7 +896,16 @@ export function initPreviewDrawers(root, tripId) {
         if (g1Actions) g1Actions.hidden = true;
       }
       loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
-      loadAestheticExplain(tripId, targetBody.querySelector(".preview-drawer__aesthetic"));
+      // Aesthetic score dump is dogfood-only (?debug=aesthetic).
+      var aestheticEl = targetBody.querySelector(".preview-drawer__aesthetic");
+      if (aestheticEl) {
+        if (isAestheticDebugEnabled()) {
+          loadAestheticExplain(tripId, aestheticEl);
+        } else {
+          aestheticEl.hidden = true;
+          aestheticEl.innerHTML = "";
+        }
+      }
       var applyBtn = targetBody.querySelector(".preview-drawer__apply-layout");
       if (applyBtn) {
         applyBtn.hidden = !_getLayoutPending();
