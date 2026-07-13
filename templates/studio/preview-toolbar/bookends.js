@@ -75,7 +75,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<div class="preview-sheet__bookends-pane" data-bookends-opening>' +
     '<div class="preview-sheet__bookends-pane-head">' +
     '<span class="preview-sheet__bookends-pane-label">封面</span>' +
-    '<span class="preview-sheet__bookends-lock" data-bookends-opening-lock hidden>已按你的选择固定</span>' +
+    '<span class="preview-sheet__bookends-lock" data-bookends-opening-lock hidden>手选 · 可恢复自动</span>' +
     "</div>" +
     '<div class="preview-sheet__bookends-hero" data-bookends-opening-hero aria-hidden="true"></div>' +
     '<p class="preview-sheet__bookends-style" data-bookends-style></p>' +
@@ -85,7 +85,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<div class="preview-sheet__bookends-pane" data-bookends-closing>' +
     '<div class="preview-sheet__bookends-pane-head">' +
     '<span class="preview-sheet__bookends-pane-label">封底</span>' +
-    '<span class="preview-sheet__bookends-lock" data-bookends-closing-lock hidden>已按你的选择固定</span>' +
+    '<span class="preview-sheet__bookends-lock" data-bookends-closing-lock hidden>手选 · 可恢复自动</span>' +
     "</div>" +
     '<div class="preview-sheet__bookends-hero" data-bookends-closing-hero aria-hidden="true"></div>' +
     '<p class="preview-sheet__bookends-pending" data-bookends-pending hidden>排版完成后自动选择</p>' +
@@ -102,6 +102,8 @@ export function mountBookendsPanel(slot, tripId, opts) {
     "</div>" +
     "</details>" +
     '<div class="preview-sheet__bookends-actions">' +
+    '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-opening>看封面</button>' +
+    '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>看封底</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-restore>恢复自动挑选</button>' +
     "</div>" +
     '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>';

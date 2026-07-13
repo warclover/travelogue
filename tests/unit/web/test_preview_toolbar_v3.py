@@ -285,6 +285,42 @@ def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
     assert "滚动到正文屏可调整本页" in sheet
 
 
+def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
+    """UX-BE-01..05/07/08 · 「这本」三分区 + 焦点联动 + 空态深链（源码门禁）。"""
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    bookends = (STUDIO / "preview-toolbar" / "bookends.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
+
+    assert "改整本的名字、意图，以及封面与封底。" in sheet
+    assert 'data-book-zone="story"' in sheet
+    assert 'data-book-zone="bookends"' in sheet
+    assert 'data-book-zone="advanced"' in sheet
+    assert "整本故事" in sheet
+    assert "首尾装帧" in sheet
+    assert "进阶" in sheet
+    assert "去调封面与封底" in sheet
+    assert "goto-bookends" in sheet
+    assert "bookendsFocus" in sheet
+    assert "applyBookendsFocusUi" in sheet
+    assert "scrollPreviewToBookend" in sheet
+    assert "正在看封面" in sheet
+    assert "你正在看封面" in sheet
+    assert "手选 · 可恢复自动" in bookends
+    assert "已按你的选择固定" not in bookends
+    assert "data-bookends-scroll-opening" in bookends
+    assert "data-bookends-scroll-closing" in bookends
+    assert "preview-sheet__zone" in css
+    assert "preview-sheet__bookends-pane.is-focus" in css
+    assert "preview-sheet__bookends-pane.is-dim" in css
+    # Advanced hosts template / cohort / structure inside zone
+    advanced_block = sheet.split('data-book-zone="advanced"', 1)[1].split(
+        "startPreviewFocusWatch", 1
+    )[0]
+    assert "preview-sheet__template-slot" in advanced_block
+    assert "preview-sheet__embed--cohort" in advanced_block
+    assert "preview-sheet__embed--structure" in advanced_block
+
+
 def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
     trip_dir = trips_dir / trip_id
     trip_dir.mkdir(parents=True, exist_ok=True)

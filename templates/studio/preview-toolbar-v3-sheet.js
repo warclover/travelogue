@@ -119,6 +119,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var sheetClosing = false;
   var sheetCloseTimer = null;
   var SHEET_ANIM_MS = 540;
+  /** @type {{ side: "opening"|"closing", scroll?: boolean } | null} */
+  var pendingBookendsDeepLink = null;
+  var previewFocusObs = null;
+  var previewFocusScrollTimer = null;
 
   function pausePageFlowScroll() {
     if (lenisPausedBySheet) return;
@@ -244,12 +248,154 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     hooks.confirmLeaveCurrentTab(activeTab, next);
   }
 
-  function requestTabSwitch(tabId) {
-    if (tabId === activeTab) return;
+  function requestTabSwitch(tabId, opts) {
+    opts = opts || {};
+    if (opts.bookendsFocus) {
+      pendingBookendsDeepLink = {
+        side: opts.bookendsFocus === "closing" ? "closing" : "opening",
+        scroll: opts.scrollToBookends !== false,
+      };
+    }
+    if (tabId === activeTab) {
+      if (activeTab === "book" && pendingBookendsDeepLink) {
+        applyBookendsFocusUi();
+      }
+      return;
+    }
     confirmLeave(function (ok) {
-      if (!ok) return;
+      if (!ok) {
+        pendingBookendsDeepLink = null;
+        return;
+      }
       switchTab(tabId);
     });
+  }
+
+  function stopPreviewFocusWatch() {
+    if (previewFocusObs) {
+      previewFocusObs.disconnect();
+      previewFocusObs = null;
+    }
+    if (previewFocusScrollTimer) {
+      window.clearTimeout(previewFocusScrollTimer);
+      previewFocusScrollTimer = null;
+    }
+    window.removeEventListener("scroll", onPreviewScrollForBookends, true);
+  }
+
+  function onPreviewScrollForBookends() {
+    if (shell.hidden || activeTab !== "book") return;
+    if (previewFocusScrollTimer) window.clearTimeout(previewFocusScrollTimer);
+    previewFocusScrollTimer = window.setTimeout(function () {
+      previewFocusScrollTimer = null;
+      applyBookendsFocusUi();
+    }, 120);
+  }
+
+  function startPreviewFocusWatch() {
+    stopPreviewFocusWatch();
+    applyBookendsFocusUi();
+    var targets = document.querySelectorAll(
+      ".cover-opening[data-block='cover-opening'], .cover-closing[data-block='cover-closing'], .cover-opening, .cover-closing"
+    );
+    if (targets.length && typeof IntersectionObserver !== "undefined") {
+      previewFocusObs = new IntersectionObserver(
+        function () {
+          if (shell.hidden || activeTab !== "book") return;
+          applyBookendsFocusUi();
+        },
+        { threshold: [0, 0.2, 0.45, 0.7] }
+      );
+      targets.forEach(function (el) {
+        previewFocusObs.observe(el);
+      });
+    }
+    window.addEventListener("scroll", onPreviewScrollForBookends, true);
+  }
+
+  function scrollPreviewToBookend(side) {
+    var sel =
+      side === "closing"
+        ? ".cover-closing[data-block='cover-closing'], .cover-closing"
+        : ".cover-opening[data-block='cover-opening'], .cover-opening";
+    var el = document.querySelector(sel);
+    if (!el) return;
+    resumePageFlowScroll();
+    if (
+      window.TravelogueLenis &&
+      typeof window.TravelogueLenis.scrollTo === "function"
+    ) {
+      try {
+        window.TravelogueLenis.scrollTo(el, { offset: 0 });
+      } catch (_err) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    pausePageFlowScroll();
+    window.setTimeout(function () {
+      if (!shell.hidden && activeTab === "book") applyBookendsFocusUi(side);
+    }, 380);
+  }
+
+  function resolveBookendsFocusSide(forcedSide) {
+    if (forcedSide === "opening" || forcedSide === "closing") return forcedSide;
+    if (pendingBookendsDeepLink && pendingBookendsDeepLink.side) {
+      return pendingBookendsDeepLink.side;
+    }
+    var ctx = describeScreenContext(findDominantScreen());
+    if (ctx.detail === "cover") return "opening";
+    if (ctx.detail === "closing") return "closing";
+    return null;
+  }
+
+  function applyBookendsFocusUi(forcedSide) {
+    var side = resolveBookendsFocusSide(forcedSide);
+    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
+    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
+    var badge = bodyEl.querySelector("[data-bookends-focus-badge]");
+    var openingPane = bodyEl.querySelector("[data-bookends-opening]");
+    var closingPane = bodyEl.querySelector("[data-bookends-closing]");
+
+    if (side && bookendsZone) {
+      bookendsZone.open = true;
+      if (storyZone && !storyZone.open) {
+        /* keep story as user left it */
+      }
+    }
+    if (badge) {
+      if (side === "opening") {
+        badge.hidden = false;
+        badge.textContent = "正在看封面";
+      } else if (side === "closing") {
+        badge.hidden = false;
+        badge.textContent = "正在看封底";
+      } else {
+        badge.hidden = true;
+        badge.textContent = "";
+      }
+    }
+    if (openingPane && closingPane) {
+      openingPane.classList.toggle("is-focus", side === "opening");
+      openingPane.classList.toggle("is-dim", side === "closing");
+      closingPane.classList.toggle("is-focus", side === "closing");
+      closingPane.classList.toggle("is-dim", side === "opening");
+      if (!side) {
+        openingPane.classList.remove("is-focus", "is-dim");
+        closingPane.classList.remove("is-focus", "is-dim");
+      }
+    }
+
+    if (pendingBookendsDeepLink) {
+      var dl = pendingBookendsDeepLink;
+      pendingBookendsDeepLink = null;
+      if (dl.scroll && bookendsZone) {
+        window.requestAnimationFrame(function () {
+          bookendsZone.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      }
+    }
   }
 
   function renderAdvancedPanel() {
@@ -412,17 +558,25 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   function renderPagePanel() {
     var ctx = describeScreenContext(findDominantScreen());
     if (ctx.empty) {
+      var isClosing = ctx.detail === "closing";
+      var focusSide = isClosing ? "closing" : "opening";
+      var watching =
+        ctx.detail === "cover"
+          ? "你正在看封面"
+          : isClosing
+            ? "你正在看封底"
+            : "当前是封面或封底";
       bodyEl.innerHTML =
         '<p class="preview-sheet__hint preview-sheet__hint--lead">滚动到正文屏可调整本页</p>' +
-        '<p class="preview-sheet__empty-label">当前是' +
-        (ctx.label || "封面/封底") +
-        "，本页精修暂不可用。</p>" +
-        '<button type="button" class="preview-sheet__primary" data-action="goto-book">去「这本」</button>' +
-        '<p class="preview-sheet__hint">杂志名、封面版式、章意图在「这本」里改。</p>';
-      var goBook = bodyEl.querySelector('[data-action="goto-book"]');
-      if (goBook) {
-        goBook.addEventListener("click", function () {
-          requestTabSwitch("book");
+        '<p class="preview-sheet__empty-label"><strong>' +
+        watching +
+        "</strong></p>" +
+        '<p class="preview-sheet__hint">本页精修用于正文屏。要换第一眼 / 最后一眼，请调首尾装帧。</p>' +
+        '<button type="button" class="preview-sheet__primary" data-action="goto-bookends">去调封面与封底</button>';
+      var goBookends = bodyEl.querySelector('[data-action="goto-bookends"]');
+      if (goBookends) {
+        goBookends.addEventListener("click", function () {
+          requestTabSwitch("book", { bookendsFocus: focusSide, scrollToBookends: true });
         });
       }
       return;
@@ -475,39 +629,63 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
-  function renderLayoutPanel() {
-    var wrap = document.createElement("div");
-    wrap.className = "preview-sheet__book-layout";
-    wrap.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面与封底可在此成对调整。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>' +
+  function renderBookPanel() {
+    stopPreviewFocusWatch();
+    bodyEl.innerHTML =
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">改整本的名字、意图，以及封面与封底。</p>' +
+      '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story">' +
+      '<summary>整本故事 <span class="preview-sheet__zone-meta">杂志名 · 意图</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--bookends" data-book-zone="bookends">' +
+      '<summary>首尾装帧 <span class="preview-sheet__zone-meta" data-bookends-focus-badge hidden></span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__bookends-slot"></div>' +
       '<div class="preview-sheet__cover-slot" hidden></div>' +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
+      '<summary>进阶 <span class="preview-sheet__zone-meta">模板 · 同框 · 分章</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
       '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>' +
       '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
-      '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>';
-    return wrap;
-  }
+      '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>' +
+      "</div></details>";
 
-  function renderBookPanel() {
-    bodyEl.innerHTML = "";
-    var editSlot = document.createElement("div");
-    editSlot.className = "preview-sheet__embed preview-sheet__embed--edit";
-    bodyEl.appendChild(editSlot);
-    if (hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+    var focusSide = resolveBookendsFocusSide(null);
+    var focusBookends = !!focusSide || !!pendingBookendsDeepLink;
+    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
+    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
+    var advancedZone = bodyEl.querySelector('[data-book-zone="advanced"]');
+    if (storyZone) storyZone.open = !focusBookends;
+    if (bookendsZone) bookendsZone.open = focusBookends;
+    if (advancedZone) advancedZone.open = false;
+
+    var editSlot = bodyEl.querySelector(".preview-sheet__embed--edit");
+    if (editSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
     }
 
-    var layoutWrap = renderLayoutPanel();
-    bodyEl.appendChild(layoutWrap);
-
-    var bookendsSlot = layoutWrap.querySelector(".preview-sheet__bookends-slot");
+    var bookendsSlot = bodyEl.querySelector(".preview-sheet__bookends-slot");
     if (bookendsSlot && typeof hooks.mountBookendsPanel === "function") {
       hooks.mountBookendsPanel(bookendsSlot);
+      var scrollOpening = bookendsSlot.querySelector("[data-bookends-scroll-opening]");
+      var scrollClosing = bookendsSlot.querySelector("[data-bookends-scroll-closing]");
+      if (scrollOpening) {
+        scrollOpening.addEventListener("click", function () {
+          scrollPreviewToBookend("opening");
+        });
+      }
+      if (scrollClosing) {
+        scrollClosing.addEventListener("click", function () {
+          scrollPreviewToBookend("closing");
+        });
+      }
     } else {
-      var coverSlot = layoutWrap.querySelector(".preview-sheet__cover-slot");
+      var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
       if (coverSlot) {
         coverSlot.hidden = false;
         if (typeof hooks.mountCoverStyleControls === "function") {
@@ -515,11 +693,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         }
       }
     }
-    var templateSlot = layoutWrap.querySelector(".preview-sheet__template-slot");
+
+    var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {
       hooks.mountTemplateControls(templateSlot);
     }
-    var applyBtn = layoutWrap.querySelector(".preview-sheet__apply-layout");
+    var applyBtn = bodyEl.querySelector(".preview-sheet__apply-layout");
     if (applyBtn) {
       applyBtn.hidden = !(
         typeof hooks.isLayoutPending === "function"
@@ -531,19 +710,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (typeof hooks.onApplyLayout === "function") hooks.onApplyLayout();
       });
     }
-    var cohortEmbed = layoutWrap.querySelector(".preview-sheet__embed--cohort");
+    var cohortEmbed = bodyEl.querySelector(".preview-sheet__embed--cohort");
     if (cohortEmbed && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       if (hooks.cohortEnabled) {
         var cohortHost = document.createElement("div");
         cohortEmbed.appendChild(cohortHost);
         hooks.drawers.openEmbed("cohort", cohortHost, { sheetMode: true });
       } else {
-        // D-REF-15 / M6 · cohort 未开则藏入口（不展示「未开启」提示）
         cohortEmbed.hidden = true;
         cohortEmbed.innerHTML = "";
       }
     }
-    var structEmbed = layoutWrap.querySelector(".preview-sheet__embed--structure");
+    var structEmbed = bodyEl.querySelector(".preview-sheet__embed--structure");
     if (structEmbed) {
       structEmbed.innerHTML =
         '<details class="preview-sheet__details">' +
@@ -560,11 +738,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         });
       }
     }
+
+    startPreviewFocusWatch();
   }
 
   function switchTab(tabId) {
     activeTab = resolveSheetTab(tabId);
     syncTabUi();
+    stopPreviewFocusWatch();
     bodyEl.innerHTML = "";
     bodyEl.scrollTop = 0;
     if (typeof hooks.onSheetTabShown === "function") {
@@ -602,6 +783,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     confirmLeave(function (ok) {
       if (!ok) return;
       if (sheetClosing) return;
+      stopPreviewFocusWatch();
+      pendingBookendsDeepLink = null;
       releaseFocusTrap();
       if (hooks.drawers && typeof hooks.drawers.close === "function") {
         hooks.drawers.close();

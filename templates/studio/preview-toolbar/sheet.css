@@ -704,6 +704,69 @@ body.preview-sheet-open {
   font-size: 13px;
 }
 
+/* 「这本」三分区 · UX-BE-01 */
+.preview-sheet__zone {
+  margin: 0 0 10px;
+  border: 1px solid rgba(20, 17, 13, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 252, 247, 0.72);
+  overflow: hidden;
+}
+
+.preview-sheet__zone > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(20, 17, 13, 0.92);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-sheet__zone > summary::-webkit-details-marker {
+  display: none;
+}
+
+.preview-sheet__zone > summary::before {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 1.5px solid rgba(20, 17, 13, 0.45);
+  border-bottom: 1.5px solid rgba(20, 17, 13, 0.45);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex: 0 0 auto;
+}
+
+.preview-sheet__zone[open] > summary::before {
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.preview-sheet__zone-meta {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(20, 17, 13, 0.5);
+}
+
+.preview-sheet__zone--bookends[open] .preview-sheet__zone-meta:not([hidden]) {
+  color: rgba(61, 90, 76, 0.95);
+}
+
+.preview-sheet__zone-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(20, 17, 13, 0.06);
+}
+
+.preview-sheet__zone--bookends .preview-sheet__bookends {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
 /* Bookends · 封面与封底合页 */
 .preview-sheet__bookends {
   margin: 0 0 16px;
@@ -763,6 +826,16 @@ body.preview-sheet-open {
   padding: 8px;
   background: rgba(20, 17, 13, 0.03);
   border-radius: 8px;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.preview-sheet__bookends-pane.is-focus {
+  box-shadow: inset 0 0 0 1.5px rgba(61, 90, 76, 0.55);
+  background: rgba(61, 90, 76, 0.06);
+}
+
+.preview-sheet__bookends-pane.is-dim {
+  opacity: 0.55;
 }
 
 .preview-sheet__bookends-pane-head {
