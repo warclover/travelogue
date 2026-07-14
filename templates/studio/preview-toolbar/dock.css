@@ -79,13 +79,14 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot-caret {
-  width: 26px;
-  min-width: 26px;
+  width: 38px;
+  min-width: 38px;
   border-radius: 0 10px 10px 0;
   border-left: 1px solid rgba(26, 20, 8, 0.18);
   background: linear-gradient(165deg, #d4ae48 0%, #b88432 100%);
   color: #1a1408;
-  font-size: 11px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .preview-toolbar--v4
@@ -126,11 +127,45 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   box-sizing: border-box;
 }
 
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled,
+.preview-toolbar--v4 .preview-toolbar__dock a.preview-toolbar__dock-btn--labeled {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 0 10px 0 8px;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--labeled {
+  padding: 0 14px 0 12px;
+  gap: 7px;
+  min-width: 76px;
+}
+
 .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl.preview-toolbar__dock-btn {
   padding: 0;
   height: 36px;
   min-height: 36px;
   border-radius: 8px;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__ctl.preview-toolbar__dock-btn--labeled {
+  padding: 0 10px 0 8px;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__ctl.preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--labeled {
+  padding: 0 14px 0 12px;
 }
 
 .preview-toolbar--v4
@@ -298,13 +333,19 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   gap: 7px;
 }
 
-.preview-toolbar__dock-export-label {
+.preview-toolbar__dock-export-label,
+.preview-toolbar__dock-label {
   font-family: var(--studio-font-ui);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1;
   color: inherit;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-btn--labeled .preview-toolbar__dock-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export .preview-toolbar__dock-icon-accent {

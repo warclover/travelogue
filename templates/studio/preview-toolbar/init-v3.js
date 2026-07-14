@@ -396,7 +396,6 @@ export function initToolbarV3(root, tripId) {
   caretBtn.className = "preview-toolbar__longshot-caret";
   caretBtn.setAttribute("aria-label", "导出设置");
   caretBtn.setAttribute("aria-haspopup", "dialog");
-  caretBtn.title = "导出设置（平台 / 清晰度）";
   caretBtn.textContent = "▾";
 
   split.appendChild(longshotBtn);

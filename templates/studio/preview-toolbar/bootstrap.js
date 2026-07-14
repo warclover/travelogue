@@ -29,13 +29,15 @@ export function initPreviewToolbar() {
   root.className = "preview-toolbar preview-toolbar--v4";
   root.innerHTML =
     '<nav class="preview-toolbar__dock" aria-label="预览快捷操作">' +
-    '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__ctl" href="/" aria-label="返回" title="返回 Studio 首页">' +
+    '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__dock-btn--labeled preview-toolbar__ctl" href="/" aria-label="返回">' +
     dockIconSvg("back") +
+    '<span class="preview-toolbar__dock-label">返回</span>' +
     "</a>" +
     '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
     '<div class="preview-toolbar__menu-wrap">' +
-    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio" aria-haspopup="dialog" aria-expanded="false" aria-label="精修" title="精修">' +
+    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio preview-toolbar__dock-btn--labeled" aria-haspopup="dialog" aria-expanded="false" aria-label="精修">' +
     dockIconSvg("refine") +
+    '<span class="preview-toolbar__dock-label">精修</span>' +
     "</button>" +
     "</div>" +
     "</nav>";
