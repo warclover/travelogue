@@ -74,6 +74,13 @@
 | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | Phase 5 实施任务清单（M20–M23） |
 | [ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) | Phase 5 验收（UX-P5-80-01 · UX-P5-SCROLL-01） |
 | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) | 预览精修体验 V1（验货默认 · 更新版面 · 导出拦截） |
+| [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) | **精修可用性优化 V1.1**（模式≠面板 · 情境对齐 · 导出门面收敛）· **Conditional Go** |
+| [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 实施清单（M1–M3 代码就绪） |
+| [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 验收清单（手测待补签） |
+| [acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) | 精修可用性 V1.1 跨职能评审纪要 |
+| [acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md) | 精修可用性 V1.1 · S1 新手脚本手测记录 |
+| [acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md) | 精修可用性 V1.1 · 多角色复测（Playwright） |
+| [wireframes/preview-refine-ux-v1.1-wireframe.html](./wireframes/preview-refine-ux-v1.1-wireframe.html) | 精修可用性 V1.1 评审线框 |
 | [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) | **预览导出门面 V1** v1.1 · Reliability 条件 Go |
 | [IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md](./IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 实施清单 |
 | [ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md](./ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 验收 |
@@ -83,13 +90,21 @@
 | [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
 | [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
 | [acceptance-records/ux-trust-v1-review-2026-07-11.md](./acceptance-records/ux-trust-v1-review-2026-07-11.md) | 信任闭环 V1 跨职能评审纪要 · Conditional Go |
-| [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1**（三层帮助 · 首访主链触达 · 帮助抽屉 · 不打断验货） |
+| [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1** **v1.1.1**（Conditional Go · MF 已回写 · FirstSuccess 方案 A · 可见 tip · 发群兜底 · 可开 W0） |
+| [IMPLEMENTATION-HELP-ONBOARDING-V1.md](./IMPLEMENTATION-HELP-ONBOARDING-V1.md) | 帮助系统 V1 · W0–W3 落地说明（V1 编码收口） |
+| [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
+| [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
+| [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
+| [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环 · M1+M2+P0+M3 落地说明 |
+| [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环验收 · AC-FEED + P0 + M3 |
+| [wireframes/refine-feedback-loop-v1-wireframe.html](./wireframes/refine-feedback-loop-v1-wireframe.html) | 精修反馈闭环评审线框 · F-BE-01 / F-FEAT-01～03 |
 
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
-预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）→ **PRD-UX-TRUST-V1**（试用反馈加严）。  
-首访帮助：**PRD-HELP-ONBOARDING-V1**（复用 FirstSuccess / 脉冲 / Task Dock / publishGuide；不做全站 tour）。
+预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-REFINE-UX-V1.1**（Conditional Go · 可开 M1）→ **PRD-PREVIEW-EXPORT-FACADE-V1** → **PRD-UX-TRUST-V1**。  
+首访帮助：**PRD-HELP-ONBOARDING-V1** **v1.1.1**（Conditional Go · FirstSuccess 方案 A · 脉冲+可见 tip · 发群三要素兜底 · 对齐精修 V1.1「完成≠更新版面」；不做全站 tour）。  
+精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
 
 ---
 
@@ -296,7 +311,7 @@
 
 ---
 
-## 封面专项 · V4 / V5
+## 封面专项 · V4 / V5 / V6 / Bookends
 
 | 文档 | 说明 |
 |------|------|
@@ -309,8 +324,16 @@
 | [acceptance-records/cover-styles-prd-review-2026-06-15.md](./acceptance-records/cover-styles-prd-review-2026-06-15.md) | V5 跨职能评审纪要 |
 | [wireframes/cover-styles-v5-split-mat.html](./wireframes/cover-styles-v5-split-mat.html) | `split-mat` 线框 |
 | [wireframes/cover-styles-v5-magazine-head.html](./wireframes/cover-styles-v5-magazine-head.html) | `magazine-head` 线框 |
+| [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) | **封面多样式 V6** · 五款 Opening + Cover Style Engine + 图×样式联合 |
+| [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) | V6 验收 |
+| [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
+| [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
+| [adr/017-bookends-engine.md](./adr/017-bookends-engine.md) | ADR-017 · Bookends 挂点 / 锁 / 压字分期 / B2a·b |
+| [IMPLEMENTATION-BOOKENDS-ENGINE-V1.md](./IMPLEMENTATION-BOOKENDS-ENGINE-V1.md) | Bookends 实施清单（B0→B1→B2a→B2b） |
+| [ACCEPTANCE-BOOKENDS-ENGINE-V1.md](./ACCEPTANCE-BOOKENDS-ENGINE-V1.md) | Bookends 验收追踪（B1 起勾选） |
+| [acceptance-records/bookends-prd-review-2026-07-13.md](./acceptance-records/bookends-prd-review-2026-07-13.md) | Bookends PRD 跨职能评审纪要（产品/架构/算法/UIUX/体验/视觉/流程） |
 
-阅读顺序：**PRD-COVER-OPTIMIZATION-V4**（前置）→ **PRD-COVER-STYLES-V5** v1.1 → **IMPLEMENTATION** → **ACCEPTANCE**。
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE。
 
 ---
 
@@ -471,6 +494,8 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-14 | 精修反馈闭环：PRD v0.1.2 + IMPLEMENTATION + ACCEPTANCE + 线框索引 |
+| 2026-07-13 | Bookends：PRD v0.2.1 + [ADR-017](./adr/017-bookends-engine.md) + IMPLEMENTATION + ACCEPTANCE 索引 |
 | 2026-07-11 | 索引补 [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md)（Windows 可安装版 · Gate A/B/C） |
 | 2026-06-13 | 索引补 Phase 18–22 · Integration Sprint · ACCEPTANCE v1.3 闸门对齐 |
 | 2026-06-06 | 索引补 Phase 11–15 · M21 · Algorithm V2 · ADR-012 |

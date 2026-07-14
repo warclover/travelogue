@@ -86,7 +86,8 @@ def test_web_landscape_fallback_to_portrait_when_none() -> None:
     assert resolve_closing_asset_id(trip, assets, prefer_landscape=True) == "portrait"
 
 
-def test_resolve_closing_falls_back_to_cover_when_only_cover_exists() -> None:
+def test_resolve_closing_omits_cover_when_only_cover_exists() -> None:
+    """AC-BE-11 · no legal candidate → None (never reuse cover)."""
     trip = {
         "coverAssetId": "cover",
         "assets": [
@@ -95,10 +96,11 @@ def test_resolve_closing_falls_back_to_cover_when_only_cover_exists() -> None:
         "chapters": [{"screens": [{"slots": [{"assetId": "cover"}]}]}],
     }
     assets = {a["id"]: a for a in trip["assets"]}
-    assert resolve_closing_asset_id(trip, assets) == "cover"
+    assert resolve_closing_asset_id(trip, assets) is None
 
 
-def test_render_keeps_cover_closing_when_only_cover_asset() -> None:
+def test_render_keeps_colophon_without_hero_when_only_cover_asset() -> None:
+    """AC-BE-31 · Colophon retained; closing-hero omitted when no closing asset."""
     trip = {
         "tripId": "closing-only-cover",
         "title": "仅封面",
@@ -133,6 +135,9 @@ def test_render_keeps_cover_closing_when_only_cover_asset() -> None:
         reading_profile_override="default_hybrid",
     )
     assert 'data-block="cover-closing"' in html
+    assert "THE END" in html
+    assert 'data-block="closing-hero"' not in html
+    assert trip["curation"].get("closingAssetId") is None
 
 
 def test_resolve_closing_excludes_cover_even_when_last_screen() -> None:

@@ -17,7 +17,13 @@ import {
   ensurePreviewRefineDefault,
   setPreviewRefineMode,
   syncInspectChromeVisibility,
+  isPreviewRefineOn,
+  syncRefineDockChrome,
+  maybeShowRefineStarTip,
+  maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
+import { trackStudioEvent } from "../js/analytics.js";
+import { HELP_COPY } from "../js/help-onboarding.js";
 import {
   registerInlineEditBridge,
   initCoverTitleEdit,
@@ -42,6 +48,9 @@ import {
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
   shouldShowExportPulse,
+  maybeShowLongshotHelp,
+  onLongshotHelpTargetClick,
+  queueLongshotHelpIdleEval,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -89,13 +98,51 @@ import {
   mountTemplateControls,
   snapshotReadingPayload,
   applyReaderSurfaceMode,
+  runFeaturedRerank,
 } from "./features.js";
+import { mountBookendsPanel } from "./bookends.js";
+import {
+  configureHelpDrawer,
+  createHelpOpenButton,
+  openHelpDrawer,
+  closeHelpDrawer,
+  isHelpDrawerOpen,
+  maybeInjectRefineSaveHint,
+  maybeOpenHelpFromDeepLink,
+} from "../js/help-drawer.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
+
+  var helpBtn = createHelpOpenButton({
+    id: "studio-help-open-preview",
+    className: "studio-help-open studio-help-open--ghost studio-help-open--preview",
+  });
+  document.body.appendChild(helpBtn);
+
+  configureHelpDrawer({
+    getOpenButton: function () {
+      return document.getElementById("studio-help-open-preview");
+    },
+    showToast: showToolbarToast,
+    isHelpOpen: isHelpDrawerOpen,
+    beforeOpen: function (done) {
+      // MF-HELP-06 / AC-16 · 精修面板开着 → 先关面板保模式，再开帮助
+      var sheet = root._sheet;
+      if (sheet && typeof sheet.isOpen === "function" && sheet.isOpen()) {
+        sheet.close("help", function () {
+          done(true);
+        });
+        return;
+      }
+      done(true);
+    },
+  });
+  maybeOpenHelpFromDeepLink();
+
   registerLongshotBridge({
     showToolbarToast: showToolbarToast,
     toolbarConfirm: toolbarConfirm,
@@ -169,10 +216,26 @@ export function initToolbarV3(root, tripId) {
 
   var cohortEnabled = false;
 
+  function exitRefineMode(opts) {
+    opts = opts || {};
+    if (getLayoutPending()) {
+      showToolbarToast("版面还没更新，可稍后在下方更新", { duration: 4000 });
+    }
+    setPreviewRefineMode(false);
+    syncRefineDockChrome(root, { panelOpen: false });
+    trackStudioEvent("refine_mode_exit", {
+      source: opts.source || "done",
+    });
+  }
+
   var sheetHooks = {
     drawers: drawers,
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
+    isRefineModeOn: isPreviewRefineOn,
+    isHelpOpen: isHelpDrawerOpen,
+    maybeInjectRefineSaveHint: maybeInjectRefineSaveHint,
+    onExitRefineMode: exitRefineMode,
     confirmLeaveCurrentTab: function (tabId, done) {
       // D-REF-05 · 文案立即自动保存；切 Tab 不再弹「未保存将丢弃」
       clearSheetEditDirty(root);
@@ -183,12 +246,32 @@ export function initToolbarV3(root, tripId) {
         clearSheetEditDirty(root);
       }
     },
-    onSheetOpened: function () {
-      // Trust V1 · 打开精修 → 验货壳放出 ★/拼图
-      setPreviewRefineMode(true);
+    onBookTabRendered: function () {
+      maybeShowBookTabMigrateTip(showToolbarToast, trackStudioEvent);
     },
-    onSheetClosed: function () {
-      setPreviewRefineMode(false);
+    onSheetOpened: function (meta) {
+      meta = meta || {};
+      var entering = !isPreviewRefineOn();
+      // Trust V1 + V1.1 · 打开精修 → refine=on；面板开
+      setPreviewRefineMode(true);
+      syncRefineDockChrome(root, { panelOpen: true });
+      if (entering) {
+        trackStudioEvent("refine_mode_enter", {
+          source: meta.source || "dock",
+        });
+      }
+    },
+    onSheetClosed: function (meta) {
+      meta = meta || {};
+      // V1.1 MF-01 · 关面板不退出模式
+      syncRefineDockChrome(root, { panelOpen: false });
+      if (isPreviewRefineOn()) {
+        trackStudioEvent("refine_panel_close", {
+          keep_mode: true,
+          via: meta.via || "close",
+        });
+        maybeShowRefineStarTip(showToolbarToast);
+      }
     },
     syncLongshotPrefsUi: syncLongshotPrefsUi,
     syncReaderModeUi: syncReaderModeUi,
@@ -221,11 +304,22 @@ export function initToolbarV3(root, tripId) {
     onApplyLayout: function () {
       applyLayoutRerender(tripId, root);
     },
+    onFeaturedRerank: function () {
+      runFeaturedRerank(tripId, root);
+    },
+    featuredPresentEmptyText: HELP_COPY.featuredPresentEmpty || "先在正文点 ★",
     mountTemplateControls: function (slot) {
       mountTemplateControls(slot, tripId, { inSheet: true });
     },
     mountCoverStyleControls: function (slot) {
       mountCoverStyleControls(slot, tripId);
+    },
+    mountBookendsPanel: function (slot) {
+      mountBookendsPanel(slot, tripId, {
+        mountCoverStyleControls: function (inner, styleOpts) {
+          mountCoverStyleControls(inner, tripId, styleOpts || {});
+        },
+      });
     },
     syncCopyDisplayUi: function (container) {
       if (!container) return;
@@ -271,24 +365,43 @@ export function initToolbarV3(root, tripId) {
       if (!panel) return;
       drawers.refreshEntry().then(function (/** @type {{ intentSummary?: { featuredCount?: number } }} */ data) {
         var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
-        panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
-          var action = li.querySelector("[data-action]");
-          if (!action) return;
-          if (action.getAttribute("data-action") === "present") {
-            li.hidden = count < 1;
-          }
-        });
+        var presentLi = panel.querySelector('[data-tool="present"]');
+        if (!presentLi) return;
+        presentLi.hidden = false;
+        var presentBtn = presentLi.querySelector('[data-action="present"]');
+        var emptyHint = presentLi.querySelector(".preview-sheet__present-empty");
+        var empty = count < 1;
+        if (presentBtn) {
+          presentBtn.disabled = empty;
+          presentBtn.hidden = empty;
+          presentBtn.setAttribute("aria-disabled", empty ? "true" : "false");
+        }
+        if (emptyHint) {
+          emptyHint.hidden = !empty;
+          emptyHint.textContent =
+            (typeof hooks.featuredPresentEmptyText === "string" &&
+              hooks.featuredPresentEmptyText) ||
+            "先在正文点 ★";
+        }
       });
+      var llmBtn = panel.querySelector('[data-action="llm"]');
+      var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
+      function setLlmAvailable(ok) {
+        if (llmBtn) {
+          llmBtn.disabled = !ok;
+          llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
+        }
+        if (llmHint) llmHint.hidden = !!ok;
+      }
+      setLlmAvailable(false);
       fetch("/__travelogue/config")
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (cfg) {
-          if (!cfg || !cfg.llmAvailable) return;
-          panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
-            var action = li.querySelector('[data-action="llm"]');
-            if (action) li.hidden = false;
-          });
+          setLlmAvailable(!!(cfg && cfg.llmAvailable));
         })
-        .catch(function () {});
+        .catch(function () {
+          setLlmAvailable(false);
+        });
     },
   };
 
@@ -326,6 +439,9 @@ export function initToolbarV3(root, tripId) {
     },
     onApplyLayout: function () {
       applyLayoutRerender(tripId, root);
+    },
+    onFeaturedRerank: function () {
+      runFeaturedRerank(tripId, root);
     },
     onDismissPending: function () {
       dismissPendingDock();
@@ -388,7 +504,6 @@ export function initToolbarV3(root, tripId) {
   caretBtn.className = "preview-toolbar__longshot-caret";
   caretBtn.setAttribute("aria-label", "导出设置");
   caretBtn.setAttribute("aria-haspopup", "dialog");
-  caretBtn.title = "导出设置（平台 / 清晰度）";
   caretBtn.textContent = "▾";
 
   split.appendChild(longshotBtn);
@@ -413,19 +528,24 @@ export function initToolbarV3(root, tripId) {
   refreshLongshotExportMeta(root);
 
   try {
+    // D-HELP-03′ / 08′ · 首访脉冲+可见 tip；忙碌则排队 idle 补评估
     if (longshotBtn && shouldShowExportPulse(tripId)) {
-      longshotBtn.classList.add("preview-toolbar__dock-btn--pulse");
+      maybeShowLongshotHelp(root, tripId, {
+        delayMs: 450,
+        isLayoutPending: getLayoutPending,
+      });
     }
   } catch (eExportHint) {}
 
   longshotBtn.addEventListener("click", function () {
     try {
-      // 仅主钮点击算「学会长图」；打开 ▾ 不停脉冲（MF-EXP-05）
       sessionStorage.setItem(EXPORT_HINT_KEY, "1");
-      localStorage.setItem("travelogue.studio.exportPulseSeen", "1");
+      onLongshotHelpTargetClick(root);
+      trackStudioEvent("help_funnel_longshot_click", { tripId: tripId || null });
     } catch (eSeen) {}
     longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse");
     longshotBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+    longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse-static");
     startLongshot(root, tripId);
   });
   caretBtn.addEventListener("click", function (e) {
@@ -449,6 +569,19 @@ export function initToolbarV3(root, tripId) {
     initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
     syncInspectChromeVisibility();
   });
+
+  // V1.1 MF-01d · 返回首页强制退出精修
+  var backBtn = root.querySelector(".preview-toolbar__dock-btn--back");
+  if (backBtn) {
+    backBtn.addEventListener("click", function () {
+      if (isPreviewRefineOn()) {
+        trackStudioEvent("refine_mode_exit", { source: "home_nav" });
+      }
+      setPreviewRefineMode(false);
+      syncRefineDockChrome(root, { panelOpen: false });
+    });
+  }
+  syncRefineDockChrome(root, { panelOpen: false });
 
   // Trust V1 · 文案保存不升 longshotStale（废止 copy-saved → showStaleHint）
   window.addEventListener("travelogue:copy-saved", function () {

@@ -25,6 +25,13 @@ export function postJson(url, payload) {
   }).then(parseJsonResponse);
 }
 
+export function getJson(url) {
+  return fetch(url, {
+    method: "GET",
+    headers: studioAuthHeaders({ Accept: "application/json" }),
+  }).then(parseJsonResponse);
+}
+
 export function patchJson(url, payload) {
   return fetch(url, {
     method: "PATCH",

@@ -345,16 +345,23 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             return
         ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
         defer_rerender = payload.get("rerender") is False
+        # D-FEED-05 · tier=material|demote → 取消精选；默认 featured 升格
+        raw_tier = str(payload.get("tier") or payload.get("action") or "featured").strip().lower()
+        demote = raw_tier in ("material", "demote")
         svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
 
                 def mutator(trip: dict) -> list[str]:
+                    if demote:
+                        from travelogue.web.tier_patch import apply_tier_demotions
+
+                        return apply_tier_demotions(trip, ids)
                     return apply_tier_promotions(trip, ids)
 
-                promoted = svc.update(self.trip_json_path, mutator)
-                if self.auto_rerender and promoted and not defer_rerender:
+                changed = svc.update(self.trip_json_path, mutator)
+                if self.auto_rerender and changed and not defer_rerender:
                     from travelogue.web.rerender import rerender_draft_trip
 
                     rendered = rerender_draft_trip(self.trip_json_path)
@@ -365,10 +372,13 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self._json_response(400, client_error_payload(exc))
             return
         except Exception:
-            _log.exception("tier promotion failed for %s", self.trip_json_path)
+            _log.exception("tier patch failed for %s", self.trip_json_path)
             self._json_response(500, internal_error_payload())
             return
-        self._json_response(200, {"ok": True, "promoted": promoted, "rendered": rendered})
+        if demote:
+            self._json_response(200, {"ok": True, "demoted": changed, "rendered": rendered})
+            return
+        self._json_response(200, {"ok": True, "promoted": changed, "rendered": rendered})
 
     def _json_response(self, status: int, payload: dict) -> None:
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")

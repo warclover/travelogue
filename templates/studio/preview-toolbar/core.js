@@ -124,7 +124,7 @@ export function refreshTaskDockState(root) {
     }
     if (_layoutPending && !_pendingDockDismissed) {
       root._taskDock.showPending({
-        title: _layoutPendingMessage || "版面有更新",
+        title: _layoutPendingMessage || "版面有改动",
       });
       return;
     }

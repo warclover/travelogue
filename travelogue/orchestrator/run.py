@@ -248,6 +248,9 @@ def _run_trip_stages(
             assert_stage_allowed(trip, "layout")
             layout_t0 = time.monotonic()
             apply_layout_to_trip(trip, export_layout=effective_export_layout, cfg=get_config())
+            from travelogue.cover_engine.api import maybe_resolve_closing_after_layout
+
+            maybe_resolve_closing_after_layout(trip, layout=effective_export_layout)
             pipeline_timings["layoutMs"] = round((time.monotonic() - layout_t0) * 1000.0, 2)
             flush_timings()
             result.stages.append("layout")

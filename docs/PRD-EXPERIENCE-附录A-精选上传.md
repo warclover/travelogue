@@ -125,6 +125,7 @@ curate:
 | featured 全竖、web 要横封面 | fallback material；WARN |
 | 无 featured | 与旧 trip bit-identical |
 | structure_locked 后改 tier | 需 relayout 或 G1 解锁 |
+| **Studio 预览升格** | 预览内 promote/demote 只写 `userTier`；**须显式「按精选重排」**（`/curate`）后才影响封面/章首/屏构图；「更新版面」=`/rerender` 不重跑策展。详见 [PRD-REFINE-FEEDBACK-LOOP-V1](./PRD-REFINE-FEEDBACK-LOOP-V1.md) |
 
 ---
 

@@ -394,6 +394,19 @@ def _write_moment_fields(
         curation["momentExplain"] = explain
     if collision:
         curation["momentCollision"] = collision
+        # PRD §6.6 · soft warning when moment overlaps locked closing; never steal closing
+        warnings = curation.get("bookendsSoftWarnings")
+        if not isinstance(warnings, list):
+            warnings = []
+        code = "moment_closing_overlap"
+        if not any(isinstance(w, dict) and w.get("code") == code for w in warnings):
+            warnings.append(
+                {
+                    "code": code,
+                    "message": "高光时刻与封底撞车；已保留封底，仅作提示。",
+                }
+            )
+        curation["bookendsSoftWarnings"] = warnings[-5:]
     else:
         curation.pop("momentCollision", None)
 
@@ -516,16 +529,23 @@ def sync_trip_moments_finalize(
 
     explain = _moment_explain(assets_by_id.get(signature_id, {}), signature_score, ctx)
     collision: str | None = None
-    from travelogue.domain.closing_view import resolve_closing_asset_id
+    curation_live = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+    if "closingAssetId" in curation_live:
+        closing_id = curation_live.get("closingAssetId")
+        if closing_id and str(closing_id) == signature_id:
+            collision = "closing"
+    else:
+        # Read-only probe — do not persist closing from moment path (ADR-017)
+        from travelogue.domain.closing_view import resolve_closing_asset_id
 
-    assets_map = assets_by_id
-    closing_id = resolve_closing_asset_id(
-        trip,
-        assets_map,
-        exclude_ids={signature_id},
-    )
-    if closing_id == signature_id:
-        collision = "closing"
+        assets_map = assets_by_id
+        closing_id = resolve_closing_asset_id(
+            trip,
+            assets_map,
+            exclude_ids={signature_id},
+        )
+        if closing_id == signature_id:
+            collision = "closing"
 
     _write_moment_fields(
         trip,

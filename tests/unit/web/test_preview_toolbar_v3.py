@@ -278,11 +278,84 @@ def test_v3_task_dock_exports_g1_and_pending() -> None:
 
 def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
     sheet = SHEET_JS.read_text(encoding="utf-8")
-    for label in ("这页", "这本", "导出与更多"):
+    for label in ("这页", "这本", "导出"):
         assert label in sheet
+    assert "导出与更多" not in sheet
     assert "confirmLeaveCurrentTab" in sheet or "confirmLeave" in sheet
     assert "setStructureDot" in sheet
     assert "滚动到正文屏可调整本页" in sheet
+
+
+def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
+    """UX-BE-01..05/07/08 · 「这本」三分区 + 焦点联动 + 空态深链（源码门禁）。"""
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    bookends = (STUDIO / "preview-toolbar" / "bookends.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
+
+    assert "改整本的名字与首尾装帧。" in sheet
+    assert 'data-book-zone="story"' in sheet
+    assert 'data-book-zone="bookends"' in sheet
+    assert 'data-book-zone="advanced"' in sheet
+    assert "整本故事" in sheet
+    assert "首尾装帧" in sheet
+    assert "进阶" in sheet
+    assert "去调封面与封底" in sheet
+    assert "goto-bookends" in sheet
+    assert "goto-body" in sheet
+    assert "滚动到正文屏" in sheet
+    assert "preview-toolbar__collage-select" in sheet
+    assert "preview-toolbar__collage-media" not in sheet
+    assert "bookendsFocus" in sheet
+    assert "applyBookendsFocusUi" in sheet
+    assert "scrollPreviewToBookend" in sheet
+    assert "正在看封面" in sheet
+    assert "你正在看封面" in sheet
+    assert "手选 · 可恢复自动" in bookends
+    assert "已按你的选择固定" not in bookends
+    assert "data-bookends-scroll-opening" in bookends
+    assert "data-bookends-scroll-closing" in bookends
+    assert "preview-sheet__zone" in css
+    assert "preview-sheet__bookends-pane.is-focus" in css
+    assert "preview-sheet__bookends-pane.is-dim" in css
+    # Advanced hosts template / cohort / structure inside zone
+    advanced_block = sheet.split('data-book-zone="advanced"', 1)[1].split(
+        "startPreviewFocusWatch", 1
+    )[0]
+    assert "preview-sheet__template-slot" in advanced_block
+    assert "preview-sheet__embed--cohort" in advanced_block
+    assert "preview-sheet__embed--structure" in advanced_block
+    assert "较少改动的整本级少见设置" in advanced_block or "多数情况下不用改" in advanced_block
+
+
+def test_studio_aesthetic_debug_gated_from_default_ui() -> None:
+    """Aesthetic score dump is dogfood-only (?debug=aesthetic), not default Studio UI."""
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert "export function isAestheticDebugEnabled" in drawers
+    assert 'get("debug") === "aesthetic"' in drawers
+    assert "travelogue.aestheticDebug" in drawers
+    # loadAestheticExplain itself is gated
+    load_fn = drawers.split("export function loadAestheticExplain", 1)[1].split(
+        "export function", 1
+    )[0]
+    assert "isAestheticDebugEnabled()" in load_fn
+    # Structure embed only loads aesthetic when debug is on
+    assert "loadAestheticExplain(tripId, aestheticEl)" in drawers
+    struct_open = drawers.split(
+        'targetBody.querySelector(".preview-drawer__explain")', 1
+    )[1].split("var applyBtn", 1)[0]
+    assert "isAestheticDebugEnabled()" in struct_open
+    assert "loadAestheticExplain(tripId, aestheticEl)" in struct_open
+    # Hover title scores also gated
+    titles_fn = features.split("function initDisplayedAestheticTitles", 1)[1].split(
+        "export function", 1
+    )[0]
+    assert "isAestheticDebugEnabled()" in titles_fn
+    assert "· overall " in drawers  # still exists for debug panel copy
+    # Default advanced lead must not promise score boards
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    assert "照片审美分项" not in sheet
+    assert "多数情况下不用改" in sheet
 
 
 def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
@@ -333,8 +406,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             box = dock.bounding_box()
             assert box is not None
             assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
-            # Split export (main + caret) is slightly wider than the old single icon.
-            assert box["width"] <= 280, f"dock width expected compact, got {box['width']}"
+            # Labeled dock (返回/播放/精修 + 长图 split) is wider than icon-only era.
+            assert box["width"] <= 520, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
@@ -400,11 +473,13 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             tabs = page.locator(".preview-sheet__tab")
             assert tabs.count() == 3
             tab_labels = [tabs.nth(i).inner_text().strip() for i in range(3)]
-            assert tab_labels == ["这页", "这本", "导出与更多"]
+            assert tab_labels == ["这页", "这本", "导出"]
 
             page.locator('.preview-sheet__tab[data-sheet-tab="more"]').click()
-            page.wait_for_selector('[data-reader-mode="reader"]', timeout=5_000)
             page.wait_for_selector('[data-copy-preset="full"]', timeout=5_000)
+            page.wait_for_selector(".preview-sheet__more-tools", timeout=5_000)
+            page.locator(".preview-sheet__more-tools > summary").click()
+            page.wait_for_selector('[data-reader-mode="reader"]', timeout=5_000)
             page.wait_for_selector('[data-action="reveal-folder"]', timeout=5_000)
 
             page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
@@ -422,7 +497,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert tab_metrics["tabsH"] >= 40, tab_metrics
             assert tab_metrics["tabBtnH"] >= 28, tab_metrics
 
-            # Trust V1 · 打开精修后 refine=on
+            # Trust V1 + V1.1 · 打开精修后 refine=on
             refine_on = page.evaluate(
                 """() => document.documentElement.getAttribute('data-preview-refine')"""
             )
@@ -431,10 +506,31 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             page.locator(".preview-sheet__close").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
 
-            refine_off = page.evaluate(
+            # V1.1 MF-01 · 关面板不退出模式
+            refine_keep = page.evaluate(
                 """() => document.documentElement.getAttribute('data-preview-refine')"""
             )
-            assert refine_off == "off"
+            assert refine_keep == "on"
+
+            dock_done = page.evaluate(
+                """() => {
+                const btn = document.querySelector('.preview-toolbar__menu-btn');
+                const label = btn && btn.querySelector('.preview-toolbar__dock-label');
+                return {
+                  label: label ? label.textContent.trim() : '',
+                  aria: btn ? btn.getAttribute('aria-label') : '',
+                  pressed: btn ? btn.getAttribute('aria-pressed') : '',
+                  expanded: btn ? btn.getAttribute('aria-expanded') : '',
+                  chip: !!(document.getElementById('preview-refine-mode-chip')
+                    && !document.getElementById('preview-refine-mode-chip').hidden),
+                };
+            }"""
+            )
+            assert dock_done["label"] == "完成", dock_done
+            assert dock_done["aria"] == "完成", dock_done
+            assert dock_done["pressed"] == "true", dock_done
+            assert dock_done["expanded"] == "false", dock_done
+            assert dock_done["chip"] is True, dock_done
 
             focused_menu = page.evaluate(
                 """() => {
@@ -443,6 +539,26 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             }"""
             )
             assert focused_menu is True
+
+            # 「完成」退出模式
+            page.locator(".preview-toolbar__menu-btn").click()
+            page.wait_for_timeout(200)
+            refine_off = page.evaluate(
+                """() => document.documentElement.getAttribute('data-preview-refine')"""
+            )
+            assert refine_off == "off"
+            dock_idle = page.evaluate(
+                """() => {
+                const btn = document.querySelector('.preview-toolbar__menu-btn');
+                const label = btn && btn.querySelector('.preview-toolbar__dock-label');
+                return {
+                  label: label ? label.textContent.trim() : '',
+                  pressed: btn ? btn.getAttribute('aria-pressed') : '',
+                };
+            }"""
+            )
+            assert dock_idle["label"] == "精修", dock_idle
+            assert dock_idle["pressed"] == "false", dock_idle
 
             browser.close()
     finally:
@@ -520,18 +636,22 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "layoutUpdating" in longshot
     assert "版面没有更新成功，长图尚未开始" in longshot
     assert "再点「长图」即可导出" in longshot
-    assert "已保存到本机 · 拖进微信群即可" in longshot
-    assert "已保存到本机 · 拖进微信群即可" in task_dock
+    assert "长图已保存到本机" in longshot or "resolvePublishGuide" in longshot
+    assert "长图已保存到本机" in task_dock or "resolvePublishGuide" in task_dock
+    assert "resolvePublishGuide" in task_dock
+    assert "publishGuideFallback" in task_dock or "打开微信，按文件名顺序发到群聊" in task_dock
+    assert "help-onboarding" in task_dock or "resolvePublishGuide" in task_dock
+    assert "已保存到本机 · 拖进微信群即可" not in task_dock
     assert "showNextStepHint" in task_dock
     assert "在文件夹中显示" in task_dock
-    assert "版面有更新" in core
+    assert "版面有改动" in core
     assert "正在更新版面" in core
     assert "有编辑尚未应用排版" not in core
     assert "应用排版" not in task_dock
     assert "更新版面" in task_dock
-    assert "版面有更新" in task_dock
+    assert "版面有改动" in task_dock
     assert ">精修<" in sheet or 'preview-sheet__title">精修' in sheet
-    assert "改精选或拼图后，请点「更新版面」。" in sheet
+    assert "改精选或拼图后，请点「更新版面」。" not in sheet
     assert "secondaryText" in modal
     assert "studio__modal-actions--stacked" in modal
     assert "导入偏好" in home
@@ -540,6 +660,27 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
+
+
+def test_preview_refine_ux_v11_m1_mode_panel_decouple_markers() -> None:
+    """PRD-PREVIEW-REFINE-UX-V1.1 · M1 模式≠面板静态门禁。"""
+    mode = (STUDIO / "preview-toolbar" / "preview-mode.js").read_text(encoding="utf-8")
+    init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
+
+    assert "syncRefineDockChrome" in mode
+    assert "maybeShowRefineStarTip" in mode
+    assert "精修中" in mode
+    assert "onExitRefineMode" in init
+    assert "isRefineModeOn" in init
+    assert "syncRefineDockChrome(root, { panelOpen: false })" in init
+    assert "版面还没更新，可稍后在下方更新" in init
+    assert "收起面板，去画面上修改" in sheet
+    assert "onExitRefineMode" in sheet
+    assert "isRefineModeOn" in sheet
+    assert "preview-toolbar__refine-chip" in dock_css
+    assert "preview-toolbar__dock-btn--done" in dock_css
 
 
 def test_preview_export_facade_v1_markers() -> None:
@@ -602,13 +743,66 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "return;" in g1_block
     assert 'label: "这页"' in sheet
     assert 'label: "这本"' in sheet
-    assert 'label: "导出与更多"' in sheet
+    assert 'label: "导出"' in sheet
+    assert 'label: "导出与更多"' not in sheet
     assert "滚动到正文屏可调整本页" in sheet
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
     assert "精修 · 这本" in shell
     assert "可在「排版」中更换" not in shell
+
+
+def test_preview_refine_ux_v11_m2_markers() -> None:
+    """PRD-PREVIEW-REFINE-UX-V1.1 · M2 这本净化 / 导出收敛 / 缩略图门禁。"""
+    sheet = SHEET_JS.read_text(encoding="utf-8")
+    drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
+    mode = (STUDIO / "preview-toolbar" / "preview-mode.js").read_text(encoding="utf-8")
+    init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    bookends = (STUDIO / "preview-toolbar" / "bookends.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
+
+    assert "bookEditTpl" in drawers
+    assert "pageEditTpl" in drawers
+    assert "edit-page" in drawers
+    assert "给这本游记的一句话" in drawers
+    assert "写给编辑的一句话" not in drawers
+    assert "preview-drawer__featured-help" not in drawers
+    assert 'openEmbed("edit-page"' in sheet
+    assert "更多工具" in sheet
+    assert "preview-sheet__more-tools" in sheet
+    assert "与 Dock ▾ 同一套偏好" in sheet
+    assert "生成不可用 · 未配置写作引擎" in sheet
+    assert "maybeShowBookTabMigrateTip" in mode
+    assert "book_tab_migrate_tip_show" in mode
+    assert "onBookTabRendered" in init
+    assert "aria-label" in bookends
+    assert "preview-sheet__bookends-thumb-badge" in bookends
+    assert "预览手机效果" in bookends
+    assert "bookendsMobileOnce" in bookends
+    assert 'data-bookends-scroll-opening">看封面' in bookends or "看封面" in bookends
+    assert 'class="preview-sheet__primary" data-bookends-scroll-opening' in bookends
+    assert "height: 64px" in css
+    assert "repeat(3, 48px)" in css
+    assert "repeat(5, 48px)" in css
+    assert sheet.count("更新版面") <= 2  # 进阶主按钮 + 可能的文案对照
+    css_vj = (ROOT / "templates" / "visual-journal" / "journal-screens.css").read_text(
+        encoding="utf-8"
+    )
+    assert 'content: "\\201C"' in css_vj or 'content: "\\201C";' in css_vj
+    assert "C" not in css_vj
+
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "给这本游记的一句话" in home
+    assert "写给编辑的一句话" not in home
+
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert 'trackStudioEvent("refine_mode_enter"' in init
+    assert 'trackStudioEvent("refine_panel_close"' in init
+    assert 'trackStudioEvent("refine_mode_exit"' in init
+    assert 'trackStudioEvent("featured_star_click"' in features
+    assert 'trackStudioEvent("cover_candidate_click"' in bookends
+    assert 'trackStudioEvent("export_tab_more_open"' in sheet
 
 
 def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:

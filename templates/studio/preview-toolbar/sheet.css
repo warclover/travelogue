@@ -508,6 +508,20 @@
   font-size: 13px;
 }
 
+.preview-sheet__link:disabled,
+.preview-sheet__link[aria-disabled="true"] {
+  color: #90a4ae;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.preview-sheet__present-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #78909c;
+  font-weight: 500;
+}
+
 .preview-sheet__hint {
   margin: 12px 0 0;
   font-size: 13px;
@@ -630,6 +644,7 @@ body.preview-sheet-open {
   box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.55);
 }
 
+.preview-toolbar__dock-btn--pulse-static,
 .preview-toolbar__dock-btn--next-hint {
   box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.65);
   outline: 1px solid rgba(212, 168, 67, 0.35);
@@ -643,6 +658,53 @@ body.preview-sheet-open {
   50% {
     box-shadow: 0 0 0 8px rgba(212, 168, 67, 0);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-toolbar__menu-btn--pulse,
+  .preview-toolbar__dock-btn--pulse {
+    animation: none;
+    box-shadow: 0 0 0 2px rgba(212, 168, 67, 0.65);
+    outline: 1px solid rgba(212, 168, 67, 0.35);
+  }
+}
+
+/* T-PREVIEW-LONGSHOT · 一次性可见 tip（D-HELP-03′） */
+.preview-help-longshot-tip {
+  position: fixed;
+  top: 56px;
+  right: 16px;
+  z-index: 210;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(26, 47, 40, 0.96);
+  color: #f5fbf8;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(212, 168, 67, 0.45);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.preview-help-longshot-tip__text {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-help-longshot-tip__dismiss {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #d4a843;
+  color: #1a1408;
 }
 
 .preview-sheet__footnote,
@@ -702,4 +764,346 @@ body.preview-sheet-open {
 .preview-sheet__body .preview-drawer__primary,
 .preview-sheet__body .preview-drawer__ghost {
   font-size: 13px;
+}
+
+/* 「这本」三分区 · UX-BE-01 */
+.preview-sheet__zone {
+  margin: 0 0 10px;
+  border: 1px solid rgba(20, 17, 13, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 252, 247, 0.72);
+  overflow: hidden;
+}
+
+.preview-sheet__zone > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(20, 17, 13, 0.92);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-sheet__zone > summary::-webkit-details-marker {
+  display: none;
+}
+
+.preview-sheet__zone > summary::before {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 1.5px solid rgba(20, 17, 13, 0.45);
+  border-bottom: 1.5px solid rgba(20, 17, 13, 0.45);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex: 0 0 auto;
+}
+
+.preview-sheet__zone[open] > summary::before {
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.preview-sheet__zone-meta {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(20, 17, 13, 0.5);
+}
+
+.preview-sheet__zone--bookends[open] .preview-sheet__zone-meta:not([hidden]) {
+  color: rgba(61, 90, 76, 0.95);
+}
+
+.preview-sheet__zone-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(20, 17, 13, 0.06);
+}
+
+.preview-sheet__zone--bookends > .preview-sheet__zone-body {
+  padding: 0 10px 12px;
+}
+
+.preview-sheet__zone--bookends .preview-sheet__bookends {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Zone already titles this block — drop duplicate head */
+.preview-sheet__zone--bookends .preview-sheet__bookends-head {
+  display: none;
+}
+
+.preview-sheet__zone--bookends .preview-sheet__bookends-oneliner {
+  margin-top: 8px;
+}
+
+/* Bookends · 封面与封底合页 */
+.preview-sheet__bookends {
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(20, 17, 13, 0.08);
+}
+
+.preview-sheet__bookends-sub {
+  margin: 2px 0 0;
+}
+
+.preview-sheet__bookends-how {
+  margin: 6px 0 0;
+  color: #3d6b5a;
+  font-weight: 600;
+}
+
+.preview-sheet__bookends-oneliner {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(20, 17, 13, 0.78);
+}
+
+.preview-sheet__bookends.is-degraded .preview-sheet__bookends-oneliner {
+  color: rgba(120, 72, 20, 0.92);
+}
+
+.preview-sheet__bookends-status {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 6px;
+  background: rgba(20, 17, 13, 0.05);
+  color: rgba(20, 17, 13, 0.78);
+}
+
+.preview-sheet__bookends.is-degraded .preview-sheet__bookends-status {
+  background: rgba(180, 110, 40, 0.12);
+  color: rgba(120, 72, 20, 0.95);
+}
+
+.preview-sheet__bookends.is-low-confidence .preview-sheet__bookends-status,
+.preview-sheet__bookends.is-soft-warn .preview-sheet__bookends-status {
+  background: rgba(90, 110, 140, 0.12);
+  color: rgba(40, 55, 80, 0.9);
+}
+
+.preview-sheet__bookends.is-pending-status .preview-sheet__bookends-status {
+  background: rgba(20, 17, 13, 0.04);
+  color: rgba(20, 17, 13, 0.62);
+}
+
+.preview-sheet__bookends-spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.preview-sheet__bookends-pane {
+  min-width: 0;
+  padding: 10px;
+  background: rgba(20, 17, 13, 0.03);
+  border-radius: 8px;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+}
+
+.preview-sheet__bookends-pane.is-focus {
+  box-shadow: inset 0 0 0 1.5px rgba(61, 90, 76, 0.55);
+  background: rgba(61, 90, 76, 0.06);
+}
+
+.preview-sheet__bookends-pane.is-dim {
+  opacity: 0.55;
+}
+
+.preview-sheet__bookends-pane-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.preview-sheet__bookends-pane-label {
+  display: block;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(20, 17, 13, 0.62);
+  white-space: nowrap;
+}
+
+.preview-sheet__bookends-pane.is-focus .preview-sheet__bookends-pane-label {
+  color: rgba(61, 90, 76, 0.95);
+}
+
+.preview-sheet__bookends-lock {
+  font-size: 11px;
+  line-height: 1.3;
+  color: rgba(20, 17, 13, 0.55);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-sheet__bookends-hero {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: rgba(20, 17, 13, 0.08) center / cover no-repeat;
+  margin-bottom: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.preview-sheet__bookends-hero.is-empty {
+  background-image: none !important;
+  background-color: rgba(20, 17, 13, 0.04);
+  border: 1px dashed rgba(20, 17, 13, 0.18);
+}
+
+.preview-sheet__bookends-hero-empty {
+  font-size: 12px;
+  color: rgba(20, 17, 13, 0.55);
+  text-align: center;
+  padding: 0 8px;
+}
+
+.preview-sheet__bookends-style,
+.preview-sheet__bookends-pending,
+.preview-sheet__bookends-preview-note,
+.preview-sheet__bookends-empty-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(20, 17, 13, 0.65);
+  overflow-wrap: anywhere;
+}
+
+.preview-sheet__bookends-preview-note {
+  color: rgba(90, 110, 140, 0.95);
+}
+
+.preview-sheet__bookends-cands {
+  display: grid;
+  gap: 6px;
+  justify-content: start;
+}
+
+/* MF-05 · 封面约 3 列 · 封底 4–5 列 */
+[data-bookends-opening] .preview-sheet__bookends-cands {
+  grid-template-columns: repeat(3, 48px);
+}
+
+[data-bookends-closing] .preview-sheet__bookends-cands {
+  grid-template-columns: repeat(5, 48px);
+}
+
+@media (max-width: 420px) {
+  [data-bookends-opening] .preview-sheet__bookends-cands {
+    grid-template-columns: repeat(3, 44px);
+  }
+  [data-bookends-closing] .preview-sheet__bookends-cands {
+    grid-template-columns: repeat(4, 44px);
+  }
+}
+
+.preview-sheet__bookends-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 64px; /* 3:4 */
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(20, 17, 13, 0.08);
+}
+
+.preview-sheet__bookends-thumb.is-on {
+  border-color: rgba(180, 83, 9, 0.95);
+  opacity: 1;
+}
+
+.preview-sheet__bookends-thumb.is-muted {
+  opacity: 0.55;
+}
+
+.preview-sheet__bookends-thumb.is-preview:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.preview-sheet__bookends-thumb-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.preview-sheet__bookends-thumb-badge {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(20, 17, 13, 0.72);
+  pointer-events: none;
+}
+
+.preview-sheet__bookends-mobile {
+  margin: 10px 0 8px;
+  font-size: 12px;
+  color: rgba(20, 17, 13, 0.7);
+}
+
+.preview-sheet__bookends-mobile-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.preview-sheet__bookends-mobile-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 72px;
+  border-radius: 6px;
+  background: rgba(20, 17, 13, 0.08) center / cover no-repeat;
+}
+
+.preview-sheet__bookends-mobile-thumb.is-empty {
+  border: 1px dashed rgba(20, 17, 13, 0.18);
+}
+
+.preview-sheet__bookends-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preview-sheet__bookends-actions .preview-sheet__primary,
+.preview-sheet__bookends-actions .preview-sheet__ghost {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  .preview-sheet__bookends-spread {
+    grid-template-columns: 1fr;
+  }
 }

@@ -37,6 +37,30 @@ import {
   updateDockTip,
 } from "./dock.js";
 import { saveMagazineTitleValue } from "./inline-edit.js";
+import {
+  HELP_COPY,
+  hasLongshotHelpSeen,
+  markLongshotHelpSeen,
+  maybeShowLongshotHelp,
+  onLongshotHelpTargetClick,
+  queueLongshotHelpIdleEval,
+  resolvePublishGuide,
+  shouldShowExportPulse,
+  markExportPulseSeen,
+  maybeShowPlatformPickTip,
+} from "../js/help-onboarding.js";
+
+export {
+  shouldShowExportPulse,
+  markExportPulseSeen,
+  maybeShowLongshotHelp,
+  queueLongshotHelpIdleEval,
+  onLongshotHelpTargetClick,
+  hasLongshotHelpSeen,
+  resolvePublishGuide,
+  HELP_COPY,
+  maybeShowPlatformPickTip,
+};
 
 var isJobBusy409 = isJobBusyResponse;
 var LONGSHOT_MODE_KEY = "travelogue:longshotMode";
@@ -82,7 +106,6 @@ var EXPORT_RESUME_PLATFORM_KEY = "travelogue.studio.exportResumePlatform";
 var LAYOUT_UPDATING_KEY = "travelogue.studio.layoutUpdating";
 var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
 var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
-var EXPORT_PULSE_SEEN_KEY = "travelogue.studio.exportPulseSeen";
 var EXPORT_SIDE_EFFECT_KEY = "travelogue.studio.exportSideEffect";
 var COPY_GATE_SEVERE_KEY = "travelogue.studio.copyGateSevere.";
 var EXPORT_AFTER_TTL_MS = 10 * 60 * 1000;
@@ -136,6 +159,15 @@ function clearExportAfterLayoutFlag(reason, extra) {
 
 function clearLayoutUpdatingFlag() {
   _removeStorage(sessionStorage, LAYOUT_UPDATING_KEY);
+}
+
+function notifyHelpL1Idle(root) {
+  if (!root) return;
+  try {
+    queueLongshotHelpIdleEval(root, _tripIdFromPath(), {
+      isLayoutPending: _getLayoutPending,
+    });
+  } catch (_eHelp) {}
 }
 
 function markExpectLayoutReload() {
@@ -316,25 +348,6 @@ function bindExportAfterLayoutPagehide() {
     clearExportAfterLayoutFlag("leave");
     clearLayoutUpdatingFlag();
   });
-}
-
-function markExportPulseSeen(tripId) {
-  try {
-    localStorage.setItem(EXPORT_PULSE_SEEN_KEY, "1");
-    if (tripId) {
-      localStorage.setItem(EXPORT_PULSE_SEEN_KEY + "." + tripId, "1");
-    }
-  } catch (ePulse) {}
-}
-
-export function shouldShowExportPulse(tripId) {
-  try {
-    if (localStorage.getItem(EXPORT_PULSE_SEEN_KEY) === "1") return false;
-    if (tripId && localStorage.getItem(EXPORT_PULSE_SEEN_KEY + "." + tripId) === "1") {
-      return false;
-    }
-  } catch (eSeen) {}
-  return true;
 }
 
 export function registerLongshotBridge(api) {
@@ -745,6 +758,8 @@ export function cancelPreviewLongshotExport(root) {
         var prev = readExportPrefs().platform || "wechat_chat";
         if (pid !== prev) {
           trackStudioEvent("longshot_platform_change", { from: prev, to: pid });
+          // T-PLATFORM-PICK · 首次从微信群切到其他平台
+          maybeShowPlatformPickTip(prev, pid, _showToolbarToast);
         }
         if (pid === "wechat_moments") {
           maybeToastSparseMoments();
@@ -754,6 +769,7 @@ export function cancelPreviewLongshotExport(root) {
 
     pop._applyDraft = function () {
       var draft = panel.getDraft();
+      var prevPlatform = readExportPrefs().platform || "wechat_chat";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
         platform: draft.platform,
@@ -762,8 +778,11 @@ export function cancelPreviewLongshotExport(root) {
         slideCount: draft.slideCount,
         padMode: draft.padMode,
       });
-      if (draft.platform === "wechat_moments") {
+      if (draft.platform && draft.platform !== "wechat_chat") {
+        maybeShowPlatformPickTip(prevPlatform, draft.platform, _showToolbarToast);
         markMomentsCoachSeen();
+      }
+      if (draft.platform === "wechat_moments") {
         maybeToastSparseMoments();
       }
       syncLongshotCtaLabel(root);
@@ -1144,6 +1163,7 @@ export function cancelPreviewLongshotExport(root) {
         syncLongshotCtaLabel(root);
         root._exportDockActive = false;
         if (badge) badge.hidden = true;
+        notifyHelpL1Idle(root);
         return;
       }
       btn.classList.add("preview-toolbar__longshot--done");
@@ -1153,6 +1173,7 @@ export function cancelPreviewLongshotExport(root) {
       setLongshotExportMeta(root, "点击查看详情", { actionable: true });
       setLongshotExportProgress(root, false);
       if (badge) badge.hidden = true;
+      notifyHelpL1Idle(root);
       return;
     }
     if (state === "error") {
@@ -1176,6 +1197,7 @@ export function cancelPreviewLongshotExport(root) {
       if (isV3) {
         root._exportDockActive = false;
         if (root._taskDock) root._taskDock.showError(errPayload);
+        notifyHelpL1Idle(root);
       } else {
         var metaHint =
           typeof errPayload === "string"
@@ -1184,6 +1206,7 @@ export function cancelPreviewLongshotExport(root) {
               (errPayload.subtitle ? " · " + errPayload.subtitle : "");
         setLongshotExportMeta(root, metaHint, { actionable: false });
         setLongshotExportProgress(root, false);
+        notifyHelpL1Idle(root);
       }
       if (badge) badge.hidden = true;
       return;
@@ -1342,7 +1365,7 @@ export function cancelPreviewLongshotExport(root) {
         (outputs.length || 0) +
         " 张小红书配图 · 3:4 · 可直接上传";
     } else {
-      homeHint.textContent = "已保存到本机 · 拖进微信群即可";
+      homeHint.textContent = resolvePublishGuide(result).text.replace(/\n/g, " · ");
     }
     drawer.appendChild(homeHint);
     if (_copyGateBypassTitle) {
@@ -1512,11 +1535,13 @@ export function cancelPreviewLongshotExport(root) {
       trackStudioEvent("longshot_export_blocked_pending", { trip_id: tripId });
       _toolbarConfirm({
         title: "导出前先更新一下",
-        body: "你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。",
+        body: "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
         confirmText: "更新并导出",
         secondaryText: "仅更新版面",
         cancelText: "取消",
         stacked: true,
+        helpItemId: "H3",
+        helpLinkText: "「长图待更新」是什么意思 →",
       }).then(function (choice) {
         if (!choice) {
           trackStudioEvent("longshot_export_block_dismissed", {

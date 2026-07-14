@@ -1284,6 +1284,27 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   pointer-events: none;
 }
 
+/* B3 · colophon-quiet + degraded hint + data-cover-closing hook */
+.cover-closing--quiet .cover-closing__panel {
+  opacity: 0.92;
+}
+
+.cover-closing--quiet .cover-closing__label,
+.cover-closing--quiet .cover-closing__brand {
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.cover-closing--no-hero .cover-closing__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(250, 248, 244, 0.55);
+}
+
+.cover-closing[data-cover-closing="on"] {
+  /* hook for future interactions / analytics */
+}
+
 html[data-export="share"] .cover-closing__end,
 html[data-preview-share="on"] .cover-closing__end {
   display: none;

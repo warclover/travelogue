@@ -30,6 +30,26 @@ var AESTHETIC_STRATUM_LABELS = {
   group: "合影",
   general: "通用",
 };
+
+/** Studio dogfood gate · default off. Enable with ?debug=aesthetic or localStorage travelogue.aestheticDebug=1 */
+export function isAestheticDebugEnabled() {
+  try {
+    var q = new URLSearchParams(window.location.search || "");
+    if (q.get("debug") === "aesthetic" || q.get("aestheticDebug") === "1") {
+      return true;
+    }
+    if (
+      window.localStorage &&
+      window.localStorage.getItem("travelogue.aestheticDebug") === "1"
+    ) {
+      return true;
+    }
+  } catch (_err) {
+    /* ignore */
+  }
+  return false;
+}
+
 var AESTHETIC_PURPOSE_LABELS = {
   cover: "封面",
   hero: "主图",
@@ -198,6 +218,11 @@ export function renderAestheticAlbumProfile(container, profile, pref, tripId) {
 
 export function loadAestheticExplain(tripId, container) {
     if (!container) return;
+    if (!isAestheticDebugEnabled()) {
+      container.hidden = true;
+      container.innerHTML = "";
+      return;
+    }
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/aesthetic")
       .then(function (resp) { return resp.ok ? resp.json() : null; })
       .then(function (data) {
@@ -352,13 +377,16 @@ export function initPreviewDrawers(root, tripId) {
     var drawerPreviousFocus = null;
     var drawerEmbedTarget = null;
 
-    var editTpl =
+    // V1.1 · 整本字段（杂志名 / 一句话）与章字段（锚点 / 意图）分模板
+    var bookEditTpl =
       '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
       '<input id="preview-drawer-title-input" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
-      '<label class="preview-drawer__label" for="preview-drawer-notes">写给编辑的一句话</label>' +
+      '<label class="preview-drawer__label" for="preview-drawer-notes">给这本游记的一句话</label>' +
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
       STUDIO_USER_NOTES_MAX_LEN +
-      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
+      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>';
+
+    var pageEditTpl =
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
       '<p class="preview-drawer__label">记忆锚点（0–3 个）</p>' +
       '<div class="preview-drawer__anchors">' +
@@ -385,10 +413,7 @@ export function initPreviewDrawers(root, tripId) {
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
       "</details>" +
-      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新意图重写文案</button>' +
-      '<p class="preview-drawer__featured-help">★ 在任意一屏右下角可将照片标为精选，之后点「更新版面」生效</p>' +
-      '<p class="preview-drawer__featured-help">拼图/整图屏左上角可改判媒资类型（普通照片 ↔ 拼图），改后请更新版面</p>' +
-      '<p class="preview-drawer__footnote">改精选或拼图后，请点「更新版面」。</p>';
+      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新意图重写文案</button>';
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -489,6 +514,9 @@ export function initPreviewDrawers(root, tripId) {
     }
 
     function readCopyIntentPayload() {
+      if (!drawerBodyEl.querySelector(".preview-drawer__copy-intent")) {
+        return null;
+      }
       if (chapterHasVoice(_currentChapterId())) {
         return null;
       }
@@ -629,9 +657,16 @@ export function initPreviewDrawers(root, tripId) {
         targetBody.innerHTML = "";
       }
 
-      if (mode === "edit") {
+      if (mode === "edit" || mode === "edit-page") {
         if (useOverlay) titleEl.textContent = "编辑";
-        targetBody.innerHTML = editTpl;
+        // overlay openEdit：整本+章字段；sheet embed 按 mode 分流
+        var editHtml =
+          mode === "edit-page"
+            ? pageEditTpl
+            : useOverlay
+              ? bookEditTpl + pageEditTpl
+              : bookEditTpl;
+        targetBody.innerHTML = editHtml;
         var titleInput = targetBody.querySelector(".preview-drawer__title-input");
         var notes = targetBody.querySelector(".preview-drawer__notes");
         if (titleInput && entryCache.intentSummary) {
@@ -640,7 +675,9 @@ export function initPreviewDrawers(root, tripId) {
         if (notes && entryCache.intentSummary) {
           notes.value = entryCache.intentSummary.userNotes || "";
         }
-        fillChapterFields(_currentChapterId());
+        if (targetBody.querySelector(".preview-drawer__anchor")) {
+          fillChapterFields(_currentChapterId());
+        }
         wireChipGroup(targetBody.querySelector(".preview-drawer__chips--mood"), "preview-drawer__chip-mood");
         wireChipGroup(targetBody.querySelector(".preview-drawer__chips--focus"), "preview-drawer__chip-focus");
         if (drawerEmbedTarget) {
@@ -651,8 +688,10 @@ export function initPreviewDrawers(root, tripId) {
         function persistEditDrawer(btn, opts) {
           opts = opts || {};
           var chId = _currentChapterId();
-          var titleVal = (titleInput && titleInput.value || "").trim();
-          var notesVal = (notes.value || "").trim();
+          var hasBookFields = !!titleInput || !!notes;
+          var hasPageFields = !!targetBody.querySelector(".preview-drawer__anchor");
+          var titleVal = titleInput ? (titleInput.value || "").trim() : "";
+          var notesVal = notes ? (notes.value || "").trim() : "";
           var anchorInputs = targetBody.querySelectorAll(".preview-drawer__anchor");
           var anchors = [];
           anchorInputs.forEach(function (inp) {
@@ -660,18 +699,21 @@ export function initPreviewDrawers(root, tripId) {
             if (v) anchors.push(v);
           });
           if (btn) btn.disabled = true;
-          if (titleVal.length > 20) {
+          if (hasBookFields && titleVal.length > 20) {
             if (btn) btn.disabled = false;
             showToolbarToast("杂志名最多 20 个字", { error: true });
             return Promise.resolve(false);
           }
-          var tasks = [
-            patchJsonConflictRetry("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
-              title: titleVal || null,
-              userNotes: notesVal || null,
-            }),
-          ];
-          if (chId) {
+          var tasks = [];
+          if (hasBookFields) {
+            tasks.push(
+              patchJsonConflictRetry("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
+                title: titleVal || null,
+                userNotes: notesVal || null,
+              })
+            );
+          }
+          if (hasPageFields && chId) {
             tasks.push(
               postJsonConflictRetry(tripApiBase(tripId) + "/save-copy", {
                 patches: [{
@@ -684,6 +726,10 @@ export function initPreviewDrawers(root, tripId) {
             if (copyIntentPayload) {
               tasks.push(patchJsonConflictRetry(copyIntentApiUrl(tripId, chId), copyIntentPayload));
             }
+          }
+          if (!tasks.length) {
+            if (btn) btn.disabled = false;
+            return Promise.resolve(true);
           }
           return Promise.all(tasks)
             .then(function (results) {
@@ -699,11 +745,11 @@ export function initPreviewDrawers(root, tripId) {
                 showToolbarToast(errMsg, { error: true });
                 return false;
               }
-              if (entryCache.intentSummary) {
+              if (hasBookFields && entryCache.intentSummary) {
                 entryCache.intentSummary.userNotes = notesVal;
                 if (titleVal) entryCache.intentSummary.title = titleVal;
               }
-              if (titleVal) {
+              if (hasBookFields && titleVal) {
                 var coverTitle = document.querySelector(".cover-opening__title");
                 if (coverTitle) {
                   coverTitle.textContent = titleVal;
@@ -713,7 +759,7 @@ export function initPreviewDrawers(root, tripId) {
                   document.title = titleVal;
                 } catch (eDoc) {}
               }
-              if (chId && entryCache.chapters) {
+              if (hasPageFields && chId && entryCache.chapters) {
                 var row = chapterRow(chId);
                 if (row) {
                   row.memoryAnchors = anchors;
@@ -740,7 +786,7 @@ export function initPreviewDrawers(root, tripId) {
                 var savedIntentPayload = readCopyIntentPayload();
                 var hasIntent = savedIntentPayload && savedIntentPayload.clear !== true;
                 showToolbarToast(
-                  anchors.length > 0 || hasIntent
+                  (hasPageFields && (anchors.length > 0 || hasIntent))
                     ? "编辑已保存。可在「精修」中重新生成文案以写入锚点与点缀。"
                     : "编辑已保存"
                 );
@@ -871,7 +917,16 @@ export function initPreviewDrawers(root, tripId) {
         if (g1Actions) g1Actions.hidden = true;
       }
       loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
-      loadAestheticExplain(tripId, targetBody.querySelector(".preview-drawer__aesthetic"));
+      // Aesthetic score dump is dogfood-only (?debug=aesthetic).
+      var aestheticEl = targetBody.querySelector(".preview-drawer__aesthetic");
+      if (aestheticEl) {
+        if (isAestheticDebugEnabled()) {
+          loadAestheticExplain(tripId, aestheticEl);
+        } else {
+          aestheticEl.hidden = true;
+          aestheticEl.innerHTML = "";
+        }
+      }
       var applyBtn = targetBody.querySelector(".preview-drawer__apply-layout");
       if (applyBtn) {
         applyBtn.hidden = !_getLayoutPending();

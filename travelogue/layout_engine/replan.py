@@ -88,6 +88,11 @@ def record_applied_layout_density(trip: dict, *, cfg: AppConfig | None = None) -
 
 def buckets_from_existing_chapters(trip: dict) -> dict[str, Any] | None:
     """Rebuild bucket plan fields from persisted chapters (layout-only)."""
+    from travelogue.layout_contract.chapter_items import (
+        collect_screen_asset_ids,
+        item_asset_ids,
+    )
+
     chapters = trip.get("chapters") or []
     if not chapters:
         return None
@@ -95,8 +100,23 @@ def buckets_from_existing_chapters(trip: dict) -> dict[str, Any] | None:
     bucket_segment_ids: list[str] = []
     bucket_segment_ids_all: list[list[str]] = []
     for ch in chapters:
-        items = ch.get("items") or []
-        bucket = [str(it.get("assetId")) for it in items if it.get("assetId")]
+        bucket = collect_screen_asset_ids(ch)
+        if not bucket:
+            flat: list[str] = []
+            seen: set[str] = set()
+            for it in ch.get("items") or []:
+                for aid in item_asset_ids(it):
+                    if aid and aid not in seen:
+                        seen.add(aid)
+                        flat.append(str(aid))
+            # Legacy single-card items may omit type
+            if not flat:
+                for it in ch.get("items") or []:
+                    aid = it.get("assetId")
+                    if aid and str(aid) not in seen:
+                        seen.add(str(aid))
+                        flat.append(str(aid))
+            bucket = flat
         buckets.append(bucket)
         cur = ch.get("curation") or {}
         seg = cur.get("segmentId")

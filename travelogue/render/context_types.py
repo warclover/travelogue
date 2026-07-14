@@ -337,6 +337,9 @@ class TripRenderContext(TypedDict, total=False):
     useEpilogueStats: bool
     useEpilogueScreen: bool
     useCoverClosing: bool
+    hasClosingHero: bool
+    closingDegraded: bool
+    closingQuiet: bool
     hasMomentScreen: bool
     momentScreen: dict[str, Any]
     showClosingTitle: bool

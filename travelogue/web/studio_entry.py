@@ -183,6 +183,7 @@ def build_entry(
         "intentSummary": build_intent_summary(trip),
         "pipelineStatus": pipeline.get("status"),
         "g1Pending": pipeline.get("status") == "structure_draft",
+        "coverAssetId": str(trip.get("coverAssetId") or "") or None,
         "chapters": build_chapter_summaries(trip),
         "telemetry": telemetry,
         "aesthetic": build_aesthetic_entry_summary(
@@ -204,4 +205,39 @@ def build_entry(
             if isinstance(curation, dict)
             else True
         ),
+        "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
     }
+
+
+def _bookends_entry_summary(trip: dict, curation: dict) -> dict:
+    """Compact bookends snapshot for Studio entry (B2b)."""
+    try:
+        from travelogue.cover_engine.api import build_bookends_studio_payload
+
+        payload = build_bookends_studio_payload(trip)
+        return {
+            "panelTitle": payload.get("panelTitle"),
+            "panelSubtitle": payload.get("panelSubtitle"),
+            "userOneLiner": payload.get("userOneLiner"),
+            "closingAssetId": payload.get("closingAssetId"),
+            "closingPending": payload.get("closingPending"),
+            "degraded": payload.get("degraded"),
+            "lock": payload.get("lock"),
+            "closingUserPicked": payload.get("closingUserPicked"),
+            "mobileClosingEnabled": payload.get("mobileClosingEnabled"),
+            "hasScreens": payload.get("hasScreens"),
+        }
+    except Exception:
+        lock = curation.get("bookendsLock") if isinstance(curation.get("bookendsLock"), dict) else {}
+        return {
+            "panelTitle": "封面与封底",
+            "panelSubtitle": "游记的第一眼与最后一眼",
+            "userOneLiner": "",
+            "closingAssetId": curation.get("closingAssetId") if "closingAssetId" in curation else None,
+            "closingPending": "closingAssetId" not in curation,
+            "degraded": bool(curation.get("bookendsDegraded")),
+            "lock": {"opening": bool(lock.get("opening")), "closing": bool(lock.get("closing"))},
+            "closingUserPicked": bool(curation.get("closingUserPicked")),
+            "mobileClosingEnabled": False,
+            "hasScreens": False,
+        }

@@ -161,6 +161,17 @@ def test_promote_tier_defer_rerender(tmp_path: Path) -> None:
         saved = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
         tiers = {a["id"]: a.get("userTier") for a in saved["assets"]}
         assert tiers["a1"] == "featured"
+
+        status2, body2 = _post_json(
+            f"http://127.0.0.1:{port}/{trip_id}/__travelogue/promote-tier",
+            {"assetIds": ["a1"], "tier": "material", "rerender": False},
+        )
+        assert status2 == 200
+        assert body2["ok"] is True
+        assert body2["demoted"] == ["a1"]
+        saved2 = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+        tiers2 = {a["id"]: a.get("userTier") for a in saved2["assets"]}
+        assert tiers2["a1"] == "material"
     finally:
         server.shutdown()
 

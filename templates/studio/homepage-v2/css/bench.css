@@ -261,6 +261,23 @@
 .v2-bench__sample-text { display: flex; flex-direction: column; gap: 2px; }
 .v2-bench__sample-text strong { font-size: 12px; font-weight: 600; color: var(--v2-ink); }
 .v2-bench__sample-text span { font-size: 10px; color: var(--v2-text-muted); letter-spacing: .04em; }
+.v2-bench__demo-convert {
+  display: block;
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--v2-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.v2-bench__demo-convert:hover {
+  color: var(--v2-primary-hover);
+}
 .v2-bench__quick {
   flex: 0 0 32%;
   min-width: 300px;

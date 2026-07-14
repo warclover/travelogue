@@ -1,0 +1,57 @@
+{
+  "version": "1",
+  "notes": "B0 baseline freeze for Bookends closing blind review. Fill tripDir when local trips exist. Synthetic fixtures listed in ACCEPTANCE.",
+  "protocol": {
+    "question": "哪边封底更有收束/回望（不是更好看）",
+    "mustShowCoverThumbnail": true,
+    "minJudges": 3,
+    "minAlbums": 10
+  },
+  "albums": [
+    {
+      "albumId": "opening-v6-fit",
+      "tripDir": "",
+      "fixtureRef": "tests/unit/curation/test_cover_styles_v6_golden.py",
+      "tags": [
+        "opening",
+        "v6"
+      ]
+    },
+    {
+      "albumId": "closing-unused",
+      "tripDir": "",
+      "fixtureRef": "tests/unit/cover_engine/test_bookends_dogfood_b2a.py::df-01",
+      "tags": [
+        "closing",
+        "unused"
+      ]
+    },
+    {
+      "albumId": "closing-tiny-degraded",
+      "tripDir": "",
+      "fixtureRef": "tests/unit/cover_engine/test_bookends_dogfood_b2a.py::df-03-tiny",
+      "tags": [
+        "closing",
+        "degraded",
+        "colophon"
+      ]
+    },
+    {
+      "albumId": "closing-portrait-h3",
+      "tripDir": "",
+      "fixtureRef": "tests/unit/cover_engine/test_bookends_closing_pairing.py::test_pair_h3",
+      "tags": [
+        "closing",
+        "portrait",
+        "PAIR-H3"
+      ]
+    },
+    {
+      "albumId": "placeholder-local-trip",
+      "tripDir": "trips/",
+      "tags": [
+        "local"
+      ]
+    }
+  ]
+}

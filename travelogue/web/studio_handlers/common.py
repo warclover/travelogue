@@ -190,6 +190,42 @@ def match_trip_moment_patch(path: str) -> str | None:
     return match_trip_suffix(path, MOMENT_SUFFIX)
 
 
+def match_trip_bookends(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_SUFFIX)
+
+
+def match_trip_bookends_resolve_opening(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_RESOLVE_OPENING_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_RESOLVE_OPENING_SUFFIX)
+
+
+def match_trip_bookends_resolve_closing(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_RESOLVE_CLOSING_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_RESOLVE_CLOSING_SUFFIX)
+
+
+def match_trip_bookends_repick_opening(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_REPICK_OPENING_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_REPICK_OPENING_SUFFIX)
+
+
+def match_trip_bookends_repick_closing(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_REPICK_CLOSING_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_REPICK_CLOSING_SUFFIX)
+
+
+def match_trip_bookends_restore_auto(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import BOOKENDS_RESTORE_AUTO_SUFFIX
+
+    return match_trip_suffix(path, BOOKENDS_RESTORE_AUTO_SUFFIX)
+
+
 def match_trip_asset_media(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import ASSET_MEDIA_SUFFIX
 

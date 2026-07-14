@@ -1,13 +1,15 @@
 /**
- * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出与更多）.
+ * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出）.
  * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
  */
 "use strict";
 
+import { trackStudioEvent } from "./js/analytics.js";
+
 var TAB_MODES = [
   { id: "page", label: "这页" },
   { id: "book", label: "这本" },
-  { id: "more", label: "导出与更多" },
+  { id: "more", label: "导出" },
 ];
 
 var TAB_ALIASES = {
@@ -78,7 +80,9 @@ function describeScreenContext(el) {
     screen: el,
     featured: el.getAttribute("data-featured") === "true",
     hasStar: !!el.querySelector(".preview-toolbar__featured-star"),
-    hasMediaCtl: !!el.querySelector(".preview-toolbar__collage-media, .preview-collage-media"),
+    hasMediaCtl: !!el.querySelector(
+      ".preview-toolbar__collage-ctrl, .preview-toolbar__collage-select"
+    ),
     copyHint: !!(kicker || body),
   };
 }
@@ -119,6 +123,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var sheetClosing = false;
   var sheetCloseTimer = null;
   var SHEET_ANIM_MS = 540;
+  /** @type {{ side: "opening"|"closing", scroll?: boolean } | null} */
+  var pendingBookendsDeepLink = null;
+  var previewFocusObs = null;
+  var previewFocusScrollTimer = null;
 
   function pausePageFlowScroll() {
     if (lenisPausedBySheet) return;
@@ -244,20 +252,161 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     hooks.confirmLeaveCurrentTab(activeTab, next);
   }
 
-  function requestTabSwitch(tabId) {
-    if (tabId === activeTab) return;
+  function requestTabSwitch(tabId, opts) {
+    opts = opts || {};
+    if (opts.bookendsFocus) {
+      pendingBookendsDeepLink = {
+        side: opts.bookendsFocus === "closing" ? "closing" : "opening",
+        scroll: opts.scrollToBookends !== false,
+      };
+    }
+    if (tabId === activeTab) {
+      if (activeTab === "book" && pendingBookendsDeepLink) {
+        applyBookendsFocusUi();
+      }
+      return;
+    }
     confirmLeave(function (ok) {
-      if (!ok) return;
+      if (!ok) {
+        pendingBookendsDeepLink = null;
+        return;
+      }
       switchTab(tabId);
     });
+  }
+
+  function stopPreviewFocusWatch() {
+    if (previewFocusObs) {
+      previewFocusObs.disconnect();
+      previewFocusObs = null;
+    }
+    if (previewFocusScrollTimer) {
+      window.clearTimeout(previewFocusScrollTimer);
+      previewFocusScrollTimer = null;
+    }
+    window.removeEventListener("scroll", onPreviewScrollForBookends, true);
+  }
+
+  function onPreviewScrollForBookends() {
+    if (shell.hidden || activeTab !== "book") return;
+    if (previewFocusScrollTimer) window.clearTimeout(previewFocusScrollTimer);
+    previewFocusScrollTimer = window.setTimeout(function () {
+      previewFocusScrollTimer = null;
+      applyBookendsFocusUi();
+    }, 120);
+  }
+
+  function startPreviewFocusWatch() {
+    stopPreviewFocusWatch();
+    applyBookendsFocusUi();
+    var targets = document.querySelectorAll(
+      ".cover-opening[data-block='cover-opening'], .cover-closing[data-block='cover-closing'], .cover-opening, .cover-closing"
+    );
+    if (targets.length && typeof IntersectionObserver !== "undefined") {
+      previewFocusObs = new IntersectionObserver(
+        function () {
+          if (shell.hidden || activeTab !== "book") return;
+          applyBookendsFocusUi();
+        },
+        { threshold: [0, 0.2, 0.45, 0.7] }
+      );
+      targets.forEach(function (el) {
+        previewFocusObs.observe(el);
+      });
+    }
+    window.addEventListener("scroll", onPreviewScrollForBookends, true);
+  }
+
+  function scrollPreviewToBookend(side) {
+    var sel =
+      side === "closing"
+        ? ".cover-closing[data-block='cover-closing'], .cover-closing"
+        : ".cover-opening[data-block='cover-opening'], .cover-opening";
+    var el = document.querySelector(sel);
+    if (!el) return;
+    resumePageFlowScroll();
+    if (
+      window.TravelogueLenis &&
+      typeof window.TravelogueLenis.scrollTo === "function"
+    ) {
+      try {
+        window.TravelogueLenis.scrollTo(el, { offset: 0 });
+      } catch (_err) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    pausePageFlowScroll();
+    window.setTimeout(function () {
+      if (!shell.hidden && activeTab === "book") applyBookendsFocusUi(side);
+    }, 380);
+  }
+
+  function resolveBookendsFocusSide(forcedSide) {
+    if (forcedSide === "opening" || forcedSide === "closing") return forcedSide;
+    if (pendingBookendsDeepLink && pendingBookendsDeepLink.side) {
+      return pendingBookendsDeepLink.side;
+    }
+    var ctx = describeScreenContext(findDominantScreen());
+    if (ctx.detail === "cover") return "opening";
+    if (ctx.detail === "closing") return "closing";
+    return null;
+  }
+
+  function applyBookendsFocusUi(forcedSide) {
+    var side = resolveBookendsFocusSide(forcedSide);
+    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
+    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
+    var badge = bodyEl.querySelector("[data-bookends-focus-badge]");
+    var openingPane = bodyEl.querySelector("[data-bookends-opening]");
+    var closingPane = bodyEl.querySelector("[data-bookends-closing]");
+
+    if (side && bookendsZone) {
+      bookendsZone.open = true;
+      if (storyZone && !storyZone.open) {
+        /* keep story as user left it */
+      }
+    }
+    if (badge) {
+      if (side === "opening") {
+        badge.hidden = false;
+        badge.textContent = "正在看封面";
+      } else if (side === "closing") {
+        badge.hidden = false;
+        badge.textContent = "正在看封底";
+      } else {
+        badge.hidden = true;
+        badge.textContent = "";
+      }
+    }
+    if (openingPane && closingPane) {
+      openingPane.classList.toggle("is-focus", side === "opening");
+      openingPane.classList.toggle("is-dim", side === "closing");
+      closingPane.classList.toggle("is-focus", side === "closing");
+      closingPane.classList.toggle("is-dim", side === "opening");
+      if (!side) {
+        openingPane.classList.remove("is-focus", "is-dim");
+        closingPane.classList.remove("is-focus", "is-dim");
+      }
+    }
+
+    if (pendingBookendsDeepLink) {
+      var dl = pendingBookendsDeepLink;
+      pendingBookendsDeepLink = null;
+      if (dl.scroll && bookendsZone) {
+        window.requestAnimationFrame(function () {
+          bookendsZone.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      }
+    }
   }
 
   function renderAdvancedPanel() {
     bodyEl.innerHTML =
       '<div class="preview-sheet__section">' +
-      '<p class="preview-sheet__label">快捷</p>' +
-      '<button type="button" class="preview-sheet__link preview-sheet__link--block" data-action="focus-export">打开导出设置</button>' +
-      '<p class="preview-sheet__hint">也可点 Dock 导出旁的 ▾</p>' +
+      '<button type="button" class="preview-sheet__primary" data-action="focus-export">打开导出设置</button>' +
+      '<p class="preview-sheet__hint">与 Dock ▾ 同一套偏好</p>' +
       "</div>" +
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">长图文案范围</p>' +
@@ -281,6 +430,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
       '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
       "</div></div>" +
+      '<details class="preview-sheet__details preview-sheet__more-tools">' +
+      "<summary>更多工具</summary>" +
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">预览显示</p>' +
       '<div class="preview-sheet__seg" data-field="reader-mode" role="group">' +
@@ -290,12 +441,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<ul class="preview-sheet__list">' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
-      '<li class="preview-sheet__list-item--optional" hidden><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button></li>' +
-      '<li class="preview-sheet__list-item--optional" hidden><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
+      '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
+      '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__footnote">点画面上的字可直接改；改精选或拼图后请点「更新版面」。</p>';
+      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>生成不可用 · 未配置写作引擎</p>' +
+      "</details>";
 
     wireAdvancedPanelActions();
+    var moreTools = bodyEl.querySelector(".preview-sheet__more-tools");
+    if (moreTools && moreTools.dataset.trackBound !== "1") {
+      moreTools.dataset.trackBound = "1";
+      moreTools.addEventListener("toggle", function () {
+        if (moreTools.open) {
+          trackStudioEvent("export_tab_more_open", {});
+        }
+      });
+    }
   }
 
   function wireAdvancedPanelActions() {
@@ -399,6 +560,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     var llmBtn = bodyEl.querySelector('[data-action="llm"]');
     if (llmBtn) {
       llmBtn.addEventListener("click", function () {
+        if (llmBtn.disabled) return;
         close();
         if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(llmBtn);
       });
@@ -409,20 +571,67 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
+  function scrollPreviewToBodyScreen() {
+    var el = document.querySelector(
+      '.layout-screen[data-block="layout-screen"][data-asset-ids], section.chapter .layout-screen'
+    );
+    if (!el) return false;
+    resumePageFlowScroll();
+    if (
+      window.TravelogueLenis &&
+      typeof window.TravelogueLenis.scrollTo === "function"
+    ) {
+      try {
+        window.TravelogueLenis.scrollTo(el, { offset: 0 });
+      } catch (_err) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    pausePageFlowScroll();
+    return true;
+  }
+
   function renderPagePanel() {
     var ctx = describeScreenContext(findDominantScreen());
     if (ctx.empty) {
+      var isClosing = ctx.detail === "closing";
+      var focusSide = isClosing ? "closing" : "opening";
+      var watching =
+        ctx.detail === "cover"
+          ? "你正在看封面"
+          : isClosing
+            ? "你正在看封底"
+            : "当前是封面或封底";
       bodyEl.innerHTML =
-        '<p class="preview-sheet__hint preview-sheet__hint--lead">滚动到正文屏可调整本页</p>' +
-        '<p class="preview-sheet__empty-label">当前是' +
-        (ctx.label || "封面/封底") +
-        "，本页精修暂不可用。</p>" +
-        '<button type="button" class="preview-sheet__primary" data-action="goto-book">去「这本」</button>' +
-        '<p class="preview-sheet__hint">杂志名、封面版式、章意图在「这本」里改。</p>';
-      var goBook = bodyEl.querySelector('[data-action="goto-book"]');
-      if (goBook) {
-        goBook.addEventListener("click", function () {
-          requestTabSwitch("book");
+        '<p class="preview-sheet__hint preview-sheet__hint--lead">精选 ★ 与拼图改判只出现在正文屏，封面/封底没有这些操作。</p>' +
+        '<p class="preview-sheet__empty-label"><strong>' +
+        watching +
+        "</strong></p>" +
+        '<p class="preview-sheet__hint">滚动到正文屏可调整本页；或去调封面与封底。</p>' +
+        '<button type="button" class="preview-sheet__primary" data-action="collapse-panel">收起面板，去画面上修改</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-body" style="margin-top:8px">滚动到正文屏</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-bookends" style="margin-top:8px">去调封面与封底</button>';
+      var collapsePanel = bodyEl.querySelector('[data-action="collapse-panel"]');
+      if (collapsePanel) {
+        collapsePanel.addEventListener("click", function () {
+          close();
+        });
+      }
+      var goBody = bodyEl.querySelector('[data-action="goto-body"]');
+      if (goBody) {
+        goBody.addEventListener("click", function () {
+          if (!scrollPreviewToBodyScreen()) return;
+          window.setTimeout(function () {
+            renderPagePanel();
+          }, 420);
+        });
+      }
+      var goBookends = bodyEl.querySelector('[data-action="goto-bookends"]');
+      if (goBookends) {
+        goBookends.addEventListener("click", function () {
+          requestTabSwitch("book", { bookendsFocus: focusSide, scrollToBookends: true });
         });
       }
       return;
@@ -433,11 +642,33 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<p class="preview-sheet__context">' +
       ctx.label +
       "</p>" +
-      (ctx.copyHint
-        ? '<p class="preview-sheet__hint">本屏有文案 · 也可直接点画面修改</p>'
-        : '<p class="preview-sheet__hint">也可直接点画面上的字修改</p>') +
+      '<div class="preview-sheet__embed preview-sheet__embed--edit-page"></div>' +
       '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
-      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>';
+      '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:10px">收起面板，去画面上修改</button>' +
+      '<p class="preview-sheet__hint">直接在照片上点 ★；需要改设置时再打开本面板。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact" data-featured-semantic>精选 = 记下这张更重要；不会立刻重排整本</p>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="featured-rerank" style="margin-top:8px">按精选重排</button>';
+
+    var pageEditSlot = bodyEl.querySelector(".preview-sheet__embed--edit-page");
+    if (pageEditSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+      hooks.drawers.openEmbed("edit-page", pageEditSlot);
+    }
+
+    var collapseOnBody = bodyEl.querySelector('[data-action="collapse-panel"]');
+    if (collapseOnBody) {
+      collapseOnBody.addEventListener("click", function () {
+        close();
+      });
+    }
+
+    var rerankBtn = bodyEl.querySelector('[data-action="featured-rerank"]');
+    if (rerankBtn) {
+      rerankBtn.addEventListener("click", function () {
+        if (typeof hooks.onFeaturedRerank === "function") {
+          hooks.onFeaturedRerank();
+        }
+      });
+    }
 
     var actions = bodyEl.querySelector(".preview-sheet__page-actions");
     if (ctx.hasStar && actions) {
@@ -460,57 +691,101 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       mediaBtn.className = "preview-sheet__chip";
       mediaBtn.textContent = "改判普通照片 / 拼图";
       mediaBtn.addEventListener("click", function () {
-        var ctl =
+        var sel =
           ctx.screen &&
-          ctx.screen.querySelector(
-            ".preview-toolbar__collage-media, .preview-collage-media, button[data-media-class]"
-          );
+          ctx.screen.querySelector(".preview-toolbar__collage-select");
+        if (sel) {
+          sel.focus();
+          // Toggle photo ↔ collage for one-click chip action
+          sel.value = sel.value === "collage" ? "photo" : "collage";
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+          window.setTimeout(function () {
+            renderPagePanel();
+          }, 200);
+          return;
+        }
+        var ctl =
+          ctx.screen && ctx.screen.querySelector(".preview-toolbar__collage-ctrl");
         if (ctl) ctl.click();
       });
       actions.appendChild(mediaBtn);
     }
-    if (actions && !actions.childNodes.length) {
-      actions.innerHTML =
-        '<p class="preview-sheet__hint">本屏可在画面上标精选或改判拼图；改后请更新版面。</p>';
-    }
-  }
-
-  function renderLayoutPanel() {
-    var wrap = document.createElement("div");
-    wrap.className = "preview-sheet__book-layout";
-    wrap.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">封面版式保存后立即生效。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>' +
-      '<div class="preview-sheet__cover-slot"></div>' +
-      '<div class="preview-sheet__template-slot"></div>' +
-      '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
-      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
-      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>' +
-      '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
-      '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>';
-    return wrap;
   }
 
   function renderBookPanel() {
-    bodyEl.innerHTML = "";
-    var editSlot = document.createElement("div");
-    editSlot.className = "preview-sheet__embed preview-sheet__embed--edit";
-    bodyEl.appendChild(editSlot);
-    if (hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+    stopPreviewFocusWatch();
+    bodyEl.innerHTML =
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">改整本的名字与首尾装帧。</p>' +
+      '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story">' +
+      '<summary>整本故事 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--bookends" data-book-zone="bookends">' +
+      '<summary>首尾装帧 <span class="preview-sheet__zone-meta" data-bookends-focus-badge hidden></span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<div class="preview-sheet__bookends-slot"></div>' +
+      '<div class="preview-sheet__cover-slot" hidden></div>' +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
+      '<summary>进阶 <span class="preview-sheet__zone-meta">模板 · 同框 · 分章</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">多数情况下不用改。这里放整本级少见设置：换模板、旅行主角同框、查看/确认分章。</p>' +
+      '<div class="preview-sheet__template-slot"></div>' +
+      '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
+      '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
+      '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
+      '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>' +
+      "</div></details>";
+
+    if (typeof hooks.onBookTabRendered === "function") {
+      hooks.onBookTabRendered();
+    }
+
+    var focusSide = resolveBookendsFocusSide(null);
+    var focusBookends = !!focusSide || !!pendingBookendsDeepLink;
+    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
+    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
+    var advancedZone = bodyEl.querySelector('[data-book-zone="advanced"]');
+    if (storyZone) storyZone.open = !focusBookends;
+    if (bookendsZone) bookendsZone.open = focusBookends;
+    if (advancedZone) advancedZone.open = false;
+
+    var editSlot = bodyEl.querySelector(".preview-sheet__embed--edit");
+    if (editSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
     }
 
-    var layoutWrap = renderLayoutPanel();
-    bodyEl.appendChild(layoutWrap);
-
-    var coverSlot = layoutWrap.querySelector(".preview-sheet__cover-slot");
-    if (coverSlot && typeof hooks.mountCoverStyleControls === "function") {
-      hooks.mountCoverStyleControls(coverSlot);
+    var bookendsSlot = bodyEl.querySelector(".preview-sheet__bookends-slot");
+    if (bookendsSlot && typeof hooks.mountBookendsPanel === "function") {
+      hooks.mountBookendsPanel(bookendsSlot);
+      var scrollOpening = bookendsSlot.querySelector("[data-bookends-scroll-opening]");
+      var scrollClosing = bookendsSlot.querySelector("[data-bookends-scroll-closing]");
+      if (scrollOpening) {
+        scrollOpening.addEventListener("click", function () {
+          scrollPreviewToBookend("opening");
+        });
+      }
+      if (scrollClosing) {
+        scrollClosing.addEventListener("click", function () {
+          scrollPreviewToBookend("closing");
+        });
+      }
+    } else {
+      var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
+      if (coverSlot) {
+        coverSlot.hidden = false;
+        if (typeof hooks.mountCoverStyleControls === "function") {
+          hooks.mountCoverStyleControls(coverSlot);
+        }
+      }
     }
-    var templateSlot = layoutWrap.querySelector(".preview-sheet__template-slot");
+
+    var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {
       hooks.mountTemplateControls(templateSlot);
     }
-    var applyBtn = layoutWrap.querySelector(".preview-sheet__apply-layout");
+    var applyBtn = bodyEl.querySelector(".preview-sheet__apply-layout");
     if (applyBtn) {
       applyBtn.hidden = !(
         typeof hooks.isLayoutPending === "function"
@@ -522,19 +797,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (typeof hooks.onApplyLayout === "function") hooks.onApplyLayout();
       });
     }
-    var cohortEmbed = layoutWrap.querySelector(".preview-sheet__embed--cohort");
+    var cohortEmbed = bodyEl.querySelector(".preview-sheet__embed--cohort");
     if (cohortEmbed && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       if (hooks.cohortEnabled) {
         var cohortHost = document.createElement("div");
         cohortEmbed.appendChild(cohortHost);
         hooks.drawers.openEmbed("cohort", cohortHost, { sheetMode: true });
       } else {
-        // D-REF-15 / M6 · cohort 未开则藏入口（不展示「未开启」提示）
         cohortEmbed.hidden = true;
         cohortEmbed.innerHTML = "";
       }
     }
-    var structEmbed = layoutWrap.querySelector(".preview-sheet__embed--structure");
+    var structEmbed = bodyEl.querySelector(".preview-sheet__embed--structure");
     if (structEmbed) {
       structEmbed.innerHTML =
         '<details class="preview-sheet__details">' +
@@ -551,11 +825,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         });
       }
     }
+
+    startPreviewFocusWatch();
   }
 
   function switchTab(tabId) {
     activeTab = resolveSheetTab(tabId);
     syncTabUi();
+    stopPreviewFocusWatch();
     bodyEl.innerHTML = "";
     bodyEl.scrollTop = 0;
     if (typeof hooks.onSheetTabShown === "function") {
@@ -564,16 +841,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     if (activeTab === "more") {
       renderAdvancedPanel();
-      return;
-    }
-    if (activeTab === "page") {
+    } else if (activeTab === "page") {
       renderPagePanel();
-      return;
+    } else {
+      renderBookPanel();
     }
-    renderBookPanel();
+    if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+      hooks.maybeInjectRefineSaveHint(bodyEl);
+    }
   }
 
-  function open(tabId) {
+  function open(tabId, openOpts) {
+    openOpts = openOpts || {};
+    // AC-HELP-15 · 帮助开着时禁止再开精修 Sheet
+    if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) {
+      return;
+    }
     previousFocus = document.activeElement;
     beginSheetEnter();
     pausePageFlowScroll();
@@ -582,17 +865,23 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       menuBtn.setAttribute("aria-expanded", "true");
     }
     if (typeof hooks.onSheetOpened === "function") {
-      hooks.onSheetOpened();
+      hooks.onSheetOpened({ source: openOpts.source || "dock" });
     }
     switchTab(resolveSheetTab(tabId || activeTab));
     activateFocusTrap();
     closeBtn.focus();
   }
 
-  function close() {
+  /** @param {string} [via] esc | close | dock_toggle | help
+   *  @param {() => void} [afterClose]
+   */
+  function close(via, afterClose) {
+    var closeVia = via || "close";
     confirmLeave(function (ok) {
       if (!ok) return;
       if (sheetClosing) return;
+      stopPreviewFocusWatch();
+      pendingBookendsDeepLink = null;
       releaseFocusTrap();
       if (hooks.drawers && typeof hooks.drawers.close === "function") {
         hooks.drawers.close();
@@ -602,7 +891,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       }
       beginSheetExit(function () {
         if (typeof hooks.onSheetClosed === "function") {
-          hooks.onSheetClosed();
+          hooks.onSheetClosed({ via: closeVia });
         }
         if (previousFocus && typeof previousFocus.focus === "function") {
           previousFocus.focus();
@@ -610,8 +899,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
           menuBtn.focus();
         }
         previousFocus = null;
+        if (typeof afterClose === "function") afterClose();
       });
     });
+  }
+
+  function isOpen() {
+    return !shell.hidden && !sheetClosing;
   }
 
   function setPendingDot(on) {
@@ -626,35 +920,66 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     syncTabUi();
   }
 
-  closeBtn.addEventListener("click", close);
-  scrim.addEventListener("click", close);
+  closeBtn.addEventListener("click", function () {
+    close("close");
+  });
+  scrim.addEventListener("click", function () {
+    close("close");
+  });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !shell.hidden && !sheetClosing) close();
+    if (e.key !== "Escape" || shell.hidden || sheetClosing) return;
+    // 帮助开着时由帮助抽屉优先处理 Esc（AC-HELP-15）
+    if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) return;
+    close("esc");
   });
 
   if (menuBtn) {
     menuBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (sheetClosing) return;
-      if (shell.hidden) open("page");
-      else close();
+      if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) {
+        return;
+      }
+      // 面板开 → 关面板保模式
+      if (!shell.hidden) {
+        close("dock_toggle");
+        return;
+      }
+      // 面板关 + 精修中 → 「完成」退出模式（MF-01c）
+      if (
+        typeof hooks.isRefineModeOn === "function" &&
+        hooks.isRefineModeOn()
+      ) {
+        if (typeof hooks.onExitRefineMode === "function") {
+          hooks.onExitRefineMode({ source: "done" });
+        }
+        return;
+      }
+      open("page", { source: "dock" });
     });
   }
 
   return {
     open: open,
     close: close,
+    isOpen: isOpen,
     switchTab: switchTab,
     setPendingDot: setPendingDot,
     setStructureDot: setStructureDot,
     refreshLayoutTab: function () {
       if (!shell.hidden && activeTab === "book") {
         renderBookPanel();
+        if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+          hooks.maybeInjectRefineSaveHint(bodyEl);
+        }
       }
     },
     refreshAdvancedTab: function () {
       if (!shell.hidden && activeTab === "more") {
         renderAdvancedPanel();
+        if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+          hooks.maybeInjectRefineSaveHint(bodyEl);
+        }
       }
     },
   };

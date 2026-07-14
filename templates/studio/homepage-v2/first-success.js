@@ -3,6 +3,10 @@
  *
  * 背景 = 恒常 Bento 首屏；有画册时同屏保留下方书架区。
  */
+import {
+  HELP_COPY,
+  trackHelpEvent,
+} from "../js/help-onboarding.js";
 import { LS, isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
@@ -195,15 +199,21 @@ function populateSuccessUi(result) {
   }
   var open = $("v2-success-open");
   var secondary = $("v2-success-secondary");
+  var nextHint = $("v2-success-next-hint");
   var url = resolvePreviewUrl(result);
   if (open && url) open.href = url;
   if (secondary && url) secondary.href = url;
+  // D-HELP-10 · 方案 A：主 CTA 恒为打开预览；保存长图为次按钮
   if (open) {
-    open.textContent = _successMode === "fine_craft" ? "打开卷轴预览 →" : "保存长图";
+    open.textContent = HELP_COPY.openPreviewCta;
   }
   if (secondary) {
-    secondary.textContent = "打开卷轴预览";
+    secondary.textContent = HELP_COPY.saveLongshotSecondary;
     show(secondary, _successRefinedEnabled && _successMode === "quick_share");
+  }
+  if (nextHint) {
+    nextHint.textContent = HELP_COPY.firstSuccessNext;
+    show(nextHint, true);
   }
   var setPreview = $("v2-success-set-preview");
   if (setPreview) {
@@ -250,6 +260,10 @@ function openPreview(action) {
   trackStudioEvent("preview_open_from_success", {
     mode: _successMode,
     tripId: _successResult && _successResult.tripId ? _successResult.tripId : null,
+  });
+  trackHelpEvent("help_funnel_preview_open", {
+    tripId: _successResult && _successResult.tripId ? _successResult.tripId : null,
+    source: action || "open_preview",
   });
   if (_successResult && _successResult.tripId) {
     markFirstPreviewDone(_successResult.tripId);
@@ -323,17 +337,6 @@ function wireFirstSuccess() {
   if (open) {
     open.addEventListener("click", function (e) {
       e.preventDefault();
-      if (_successRefinedEnabled && _successMode === "quick_share" && _successResult && _successResult.tripId) {
-        trackStudioEvent("success_primary_click", {
-          action: "save_longshot",
-          mode: _successMode,
-          layoutDensity: _successResult.layoutDensity || null,
-        });
-        runShelfLongshot({ tripId: _successResult.tripId, title: _successResult.title || "我的旅途" }, {
-          surface: "first_success",
-        });
-        return;
-      }
       openPreview("open_preview");
     });
   }
@@ -341,6 +344,22 @@ function wireFirstSuccess() {
   if (secondary) {
     secondary.addEventListener("click", function (e) {
       e.preventDefault();
+      // 次按钮「保存长图」：显式跳过验货（D-HELP-10）
+      if (_successRefinedEnabled && _successResult && _successResult.tripId) {
+        trackStudioEvent("success_primary_click", {
+          action: "save_longshot",
+          mode: _successMode,
+          layoutDensity: _successResult.layoutDensity || null,
+        });
+        trackHelpEvent("help_funnel_skip_preview", {
+          tripId: _successResult.tripId,
+          mode: _successMode,
+        });
+        runShelfLongshot({ tripId: _successResult.tripId, title: _successResult.title || "我的旅途" }, {
+          surface: "first_success",
+        });
+        return;
+      }
       openPreview("open_preview_secondary");
     });
   }

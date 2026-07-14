@@ -27,7 +27,26 @@ import { initThemeSettings } from "./theme.js";
 import { initAdvancedOptionsPanel, syncAdvancedOptionsLock } from "./advanced-options.js";
 import { initSettingsPanel } from "./settings-panel.js";
 import { applyPreviewDeepLink } from "./bento-preview-deeplink.js";
+import {
+  configureHelpDrawer,
+  createHelpOpenButton,
+  maybeOpenHelpFromDeepLink,
+} from "../js/help-drawer.js";
 
+function initHelpEntry() {
+  if (document.getElementById("studio-help-open-home")) return;
+  var btn = createHelpOpenButton({
+    id: "studio-help-open-home",
+    className: "studio-help-open studio-help-open--ghost studio-help-open--home",
+  });
+  document.body.appendChild(btn);
+  configureHelpDrawer({
+    getOpenButton: function () {
+      return document.getElementById("studio-help-open-home");
+    },
+  });
+  maybeOpenHelpFromDeepLink();
+}
 function applyTripsData(data) {
   V2.trips = (data && data.trips) || [];
   V2.tripsTotal =
@@ -183,6 +202,7 @@ function init() {
   initThemeSettings();
   initSettingsPanel();
   initAdvancedOptionsPanel();
+  initHelpEntry();
   applyPreviewDeepLink();
   if (harnessEnabled()) {
     harnessPreseedSession();

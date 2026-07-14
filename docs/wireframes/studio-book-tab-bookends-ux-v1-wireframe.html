@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精修「这本」· 首尾装帧体验线框 v1 · 设计评审</title>
+  <style>
+    :root {
+      --wf-bg: #e8e4db;
+      --wf-page: #f7f4ee;
+      --wf-border: #9aa3a8;
+      --wf-text: #1c1915;
+      --wf-muted: #5f584e;
+      --wf-anno: #c45c16;
+      --wf-rec: #2f6b4f;
+      --wf-rec-bg: #e4f0e9;
+      --sheet: #fbf8f2;
+      --ink: #1a1713;
+      --line: rgba(26, 23, 19, 0.12);
+      --accent: #3d5a4c;
+      --warn: #8a5a2b;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --display: "Iowan Old Style", "Palatino Linotype", "Songti SC", serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        radial-gradient(ellipse at 12% 0%, #efe8da 0%, transparent 45%),
+        linear-gradient(180deg, #e4dfd3, var(--wf-bg));
+      color: var(--wf-text);
+      line-height: 1.5;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 1000;
+      background: #2a2621; color: #efeae2;
+      padding: 12px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #b7aea2; max-width: 92ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #5a534a; background: transparent; color: #efeae2;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #3a342d; }
+    .tabs button.is-active { background: var(--wf-rec); border-color: var(--wf-rec); color: #fff; }
+    .tabs button.is-rec::after { content: " ★"; }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 18px 80px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .wrap { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .aside {
+      position: sticky; top: 96px;
+      background: #fffdf8; border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px 14px 16px; font-size: 13px;
+    }
+    .aside h2 {
+      margin: 0 0 8px; font-size: 12px; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--wf-anno);
+    }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .aside .rec {
+      display: inline-block; margin-bottom: 8px;
+      background: var(--wf-rec-bg); color: var(--wf-rec);
+      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+
+    .sec h2 { margin: 0 0 6px; font-family: var(--display); font-size: 22px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; max-width: 70ch; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--p0 { background: #e65100; color: #fff; }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--fail { background: #8a3b2c; color: #fff; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 18px 0 8px;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 16px 40px rgba(40, 30, 10, .06);
+    }
+    @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+
+    .preview {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #111;
+      min-height: 420px;
+      position: relative;
+    }
+    .preview__chrome {
+      display: flex; gap: 6px; padding: 8px 10px;
+      background: #1d1a17; color: #cfc6b8; font-size: 11px;
+    }
+    .preview__chrome i {
+      width: 8px; height: 8px; border-radius: 50%; background: #5a534a; display: inline-block;
+    }
+    .preview__page {
+      min-height: 360px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.45)),
+        linear-gradient(145deg, #6b8a9a, #314652);
+      color: #fff;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .preview__page.is-closing {
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55)),
+        linear-gradient(160deg, #3d4a55, #1b2228);
+    }
+    .preview__page.is-body {
+      background:
+        linear-gradient(180deg, #f4efe6, #ebe4d6);
+      color: var(--ink);
+      justify-content: flex-start;
+    }
+    .preview__kicker { font-size: 11px; letter-spacing: .12em; opacity: .8; margin: 0 0 8px; }
+    .preview__title { font-family: var(--display); font-size: 28px; margin: 0 0 8px; line-height: 1.2; }
+    .preview__meta { font-size: 12px; opacity: .75; margin: 0; }
+    .preview__focus {
+      position: absolute; left: 10px; top: 36px;
+      background: rgba(255,255,255,.92); color: var(--wf-anno);
+      font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px;
+    }
+
+    .sheet {
+      background: var(--sheet);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 420px;
+    }
+    .sheet__tabs {
+      display: flex; gap: 4px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--line); padding-bottom: 8px;
+    }
+    .sheet__tabs span {
+      font-size: 12px; padding: 6px 10px; border-radius: 8px; color: var(--wf-muted);
+    }
+    .sheet__tabs span.is-on {
+      background: rgba(61,90,76,.12); color: var(--accent); font-weight: 700;
+    }
+    .sheet__lead {
+      margin: 0 0 12px; font-size: 12px; color: var(--wf-muted);
+    }
+
+    details.block {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fffdf8;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    details.block > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    details.block > summary::-webkit-details-marker { display: none; }
+    details.block > summary::after {
+      content: "▾"; font-weight: 400; color: var(--wf-muted); font-size: 12px;
+    }
+    details.block[open] > summary::after { content: "▴"; }
+    details.block.is-focus {
+      border-color: rgba(61,90,76,.45);
+      box-shadow: 0 0 0 2px rgba(61,90,76,.12);
+    }
+    details.block .body { padding: 0 12px 12px; }
+    .hint { font-size: 12px; color: var(--wf-muted); margin: 0 0 8px; }
+
+    .spread {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
+    }
+    .pane {
+      background: rgba(26,23,19,.04); border-radius: 8px; padding: 8px;
+    }
+    .pane.is-dim { opacity: .45; }
+    .pane__h {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--wf-muted); margin-bottom: 6px;
+    }
+    .hero {
+      aspect-ratio: 4/3; border-radius: 8px;
+      background: linear-gradient(145deg, #8fa8b8, #445866) center/cover;
+      margin-bottom: 6px;
+      display: grid; place-items: center;
+      color: rgba(255,255,255,.85); font-size: 11px;
+    }
+    .hero.alt { background: linear-gradient(145deg, #c4a484, #6b4c3b); }
+    .hero.empty {
+      background: repeating-linear-gradient(-45deg, #eee8dc, #eee8dc 8px, #e2d9c8 8px, #e2d9c8 16px);
+      color: var(--wf-muted); border: 1px dashed var(--line);
+    }
+    .thumbs { display: flex; gap: 5px; flex-wrap: wrap; }
+    .thumb {
+      width: 40px; height: 40px; border-radius: 6px;
+      border: 2px solid transparent;
+      background: linear-gradient(145deg, #8fa8b8, #445866);
+    }
+    .thumb.is-on { border-color: var(--accent); }
+    .thumb.muted { opacity: .5; background: linear-gradient(145deg, #c4a484, #6b4c3b); }
+    .oneliner {
+      margin: 8px 0; font-size: 12px; color: var(--ink);
+      padding: 8px 10px; border-radius: 8px; background: rgba(61,90,76,.08);
+    }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .btn {
+      border: 1px solid var(--line); background: #fff; border-radius: 8px;
+      padding: 7px 10px; font-size: 12px; cursor: default;
+    }
+    .btn--pri { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn--ghost { background: transparent; }
+    .field {
+      border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+      font-size: 13px; background: #fff; margin-bottom: 8px;
+    }
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
+    }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .card {
+      background: #fffdf8; border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 14px; }
+    .card p { margin: 0; font-size: 12px; color: var(--wf-muted); }
+    .fail { outline: 2px solid rgba(138,59,44,.35); outline-offset: -2px; }
+    .ok { outline: 2px solid rgba(47,107,79,.35); outline-offset: -2px; }
+    .checklist label {
+      display: flex; gap: 8px; align-items: flex-start;
+      font-size: 13px; margin-bottom: 8px; color: var(--wf-muted);
+    }
+    .checklist input { margin-top: 3px; }
+    table.spec {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      background: #fffdf8; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    }
+    table.spec th, table.spec td {
+      border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top;
+    }
+    table.spec th { background: rgba(26,23,19,.04); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>精修「这本」· 首尾装帧体验线框 v1</h1>
+    <p>
+      评审目标：解决「这本与内容逻辑弱、交互生硬」。范围 = P0 信息架构 + 预览焦点联动 + 合页试装帧心智。
+      关联 Bookends Engine / Preview Refine「这本」。
+    </p>
+    <nav class="tabs" id="tabs" aria-label="评审场景"></nav>
+  </div>
+
+  <div class="wrap">
+    <main>
+      <!-- ① 现状问题 -->
+      <section class="panel is-visible" data-panel="0">
+        <div class="sec">
+          <h2>① 现状问题 <span class="tag tag--fail">AS-IS</span></h2>
+          <p class="lead">「这本」像杂物抽屉：故事、装帧、模板、结构平铺；合页与左侧预览几乎无关。</p>
+        </div>
+        <div class="anno">侧栏一长页 · 无焦点</div>
+        <div class="stage">
+          <div class="preview">
+            <div class="preview__chrome"><i></i><i></i><i></i> 预览 · 正文某屏</div>
+            <div class="preview__focus">用户视线在这里</div>
+            <div class="preview__page is-body">
+              <p class="preview__kicker">CHAPTER 02</p>
+              <h3 class="preview__title" style="font-size:20px">湖边午后</h3>
+              <p class="preview__meta">正文屏 · 与侧栏「封面封底」无空间对应</p>
+            </div>
+          </div>
+          <div class="sheet fail">
+            <div class="sheet__tabs">
+              <span>这页</span><span class="is-on">这本</span><span>导出</span>
+            </div>
+            <p class="sheet__lead">封面与封底可在此成对调整。模板策略会自动重渲染。拼图改判、精选与旅行主角需点「更新版面」。</p>
+            <div class="field">杂志名 · 雨后林芝</div>
+            <div class="field" style="min-height:48px;color:#999">写给编辑的一句话…</div>
+            <div class="field">封面与封底合页（缩略条）</div>
+            <div class="field">版式按钮群</div>
+            <div class="field">模板 · 同框 · 分章说明…</div>
+            <p class="hint">问题：打开侧栏不知道先改什么；改首尾也不回到正在看的页。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 提案 IA -->
+      <section class="panel" data-panel="1">
+        <div class="sec">
+          <h2>② 提案信息架构 <span class="tag tag--rec">TO-BE</span><span class="tag tag--p0">P0</span></h2>
+          <p class="lead">「这本」只回答整本三件事：故事写什么、首尾长什么样、进阶少碰什么。默认折叠，按预览焦点展开。</p>
+        </div>
+        <div class="anno">导语重写 + 三分区</div>
+        <div class="stage">
+          <div class="preview">
+            <div class="preview__chrome"><i></i><i></i><i></i> 预览 · 封面</div>
+            <div class="preview__page">
+              <p class="preview__kicker">COVER</p>
+              <h3 class="preview__title">雨后林芝</h3>
+              <p class="preview__meta">第一眼 · 驱动侧栏展开「首尾装帧」</p>
+            </div>
+          </div>
+          <div class="sheet ok">
+            <div class="sheet__tabs">
+              <span>这页</span><span class="is-on">这本</span><span>导出</span>
+            </div>
+            <p class="sheet__lead">改整本的名字、意图，以及封面与封底。</p>
+
+            <details class="block">
+              <summary>整本故事 <span style="font-weight:400;color:var(--wf-muted);font-size:11px">杂志名 · 意图</span></summary>
+              <div class="body">
+                <div class="field">雨后林芝</div>
+                <div class="field" style="min-height:40px;color:#999">这一路想留下什么…</div>
+              </div>
+            </details>
+
+            <details class="block is-focus" open>
+              <summary>首尾装帧 <span style="font-weight:400;color:var(--accent);font-size:11px">正在看封面</span></summary>
+              <div class="body">
+                <p class="hint">第一眼与最后一眼 · 成对挑选</p>
+                <div class="spread">
+                  <div class="pane">
+                    <div class="pane__h"><span>封面</span><span>手选</span></div>
+                    <div class="hero">当前封面</div>
+                  </div>
+                  <div class="pane">
+                    <div class="pane__h"><span>封底</span><span></span></div>
+                    <div class="hero alt">当前封底</div>
+                  </div>
+                </div>
+                <p class="oneliner">封底选用了正文未出现的照片，与封面形成收束。</p>
+                <div class="row-actions">
+                  <button class="btn btn--ghost" type="button">看封面</button>
+                  <button class="btn btn--ghost" type="button">看封底</button>
+                  <button class="btn" type="button">恢复自动挑选</button>
+                </div>
+              </div>
+            </details>
+
+            <details class="block">
+              <summary>进阶 <span style="font-weight:400;color:var(--wf-muted);font-size:11px">模板 · 同框 · 分章</span></summary>
+              <div class="body"><p class="hint">默认折叠，减少噪音。</p></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ 看封面联动 -->
+      <section class="panel" data-panel="2">
+        <div class="sec">
+          <h2>③ 预览焦点 · 封面 <span class="tag tag--p0">P0</span></h2>
+          <p class="lead">用户停在封面时打开精修：「这本」自动展开首尾，封面高亮、封底略淡；可一键「看封底」滚动画布。</p>
+        </div>
+        <div class="stage">
+          <div class="preview">
+            <div class="preview__chrome"><i></i><i></i><i></i> 预览焦点 = 封面</div>
+            <div class="preview__focus">FOCUS · COVER</div>
+            <div class="preview__page">
+              <p class="preview__kicker">COVER</p>
+              <h3 class="preview__title">雨后林芝</h3>
+              <p class="preview__meta">侧栏与画布同步</p>
+            </div>
+          </div>
+          <div class="sheet">
+            <div class="sheet__tabs">
+              <span>这页</span><span class="is-on">这本</span><span>导出</span>
+            </div>
+            <details class="block is-focus" open>
+              <summary>首尾装帧</summary>
+              <div class="body">
+                <div class="spread">
+                  <div class="pane">
+                    <div class="pane__h"><strong style="color:var(--accent)">封面 · 正在编辑</strong><span>手选</span></div>
+                    <div class="hero">大图主角</div>
+                    <div class="thumbs">
+                      <div class="thumb is-on"></div>
+                      <div class="thumb muted"></div>
+                      <div class="thumb muted"></div>
+                    </div>
+                  </div>
+                  <div class="pane is-dim">
+                    <div class="pane__h"><span>封底</span><span></span></div>
+                    <div class="hero alt">成对参照</div>
+                    <div class="thumbs">
+                      <div class="thumb muted is-on"></div>
+                      <div class="thumb muted"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row-actions">
+                  <button class="btn btn--pri" type="button">看封底</button>
+                  <button class="btn" type="button">换版式</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ 看封底 / degraded -->
+      <section class="panel" data-panel="3">
+        <div class="sec">
+          <h2>④ 预览焦点 · 封底 / 无图空态 <span class="tag tag--p0">P0</span></h2>
+          <p class="lead">停在封底时高亮右页；极小册无封底大图时用安静空态，不堆灰缩略。</p>
+        </div>
+        <div class="compare">
+          <div class="card ok">
+            <h3>有封底</h3>
+            <div class="spread" style="margin-top:10px">
+              <div class="pane is-dim"><div class="hero">封面</div></div>
+              <div class="pane">
+                <div class="pane__h"><strong style="color:var(--accent)">封底 · 正在编辑</strong></div>
+                <div class="hero alt">大图主角</div>
+              </div>
+            </div>
+            <p style="margin-top:8px">「看封面」滚回首屏。</p>
+          </div>
+          <div class="card ok">
+            <h3>已省略封底图</h3>
+            <div class="spread" style="margin-top:10px">
+              <div class="pane"><div class="hero">唯一合格图</div></div>
+              <div class="pane"><div class="hero empty">已省略封底图<br/>保留文末说明</div></div>
+            </div>
+            <p style="margin-top:8px">状态条：可选照片太少，避免与封面重复。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ 试装帧交互 -->
+      <section class="panel" data-panel="4">
+        <div class="sec">
+          <h2>⑤ 试装帧交互 <span class="tag tag--rec">P1 可先示意</span></h2>
+          <p class="lead">点候选先更新合页大图（试看），再跟画布；避免「一点就整页重渲、视线丢失」的生硬感。</p>
+        </div>
+        <div class="anno">步骤条</div>
+        <div class="compare">
+          <div class="card">
+            <h3>1 · 点候选</h3>
+            <p>合页封面大图立刻换成候选（乐观 UI）。画布可短延迟跟随，或等「应用到预览」。</p>
+            <div class="thumbs" style="margin-top:10px">
+              <div class="thumb muted"></div>
+              <div class="thumb is-on"></div>
+              <div class="thumb muted"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>2 · 成对反馈</h3>
+            <p class="oneliner" style="margin-top:10px">已避开与封面过于接近的照片，选出更顺的收束画面。</p>
+            <p>冲突时在合页内提示「封底需重选」，少跳全局模态。</p>
+          </div>
+          <div class="card">
+            <h3>3 · 固定语义</h3>
+            <p>不用「locked」。用：<strong>手选 · 可恢复自动</strong>。恢复二次确认文案保持现网。</p>
+          </div>
+          <div class="card">
+            <h3>4 · 版式同叙事</h3>
+            <p>换版式 = 同一「装帧」流，走 bookends 级联；与换图同一结果区反馈。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑥ 这页空态 -->
+      <section class="panel" data-panel="5">
+        <div class="sec">
+          <h2>⑥ 「这页」在封面/封底时 <span class="tag tag--p0">P0</span></h2>
+          <p class="lead">不要笼统「去这本」。明确：你正在看封面/封底 → 去调首尾装帧。</p>
+        </div>
+        <div class="compare">
+          <div class="card fail">
+            <h3>现状</h3>
+            <p>滚动到正文屏可调整本页</p>
+            <p style="margin:8px 0">当前是封面，本页精修暂不可用。</p>
+            <button class="btn btn--pri" type="button">去「这本」</button>
+            <p style="margin-top:8px">杂志名、封面版式、章意图在「这本」里改。— 承诺过宽，落地是杂物页。</p>
+          </div>
+          <div class="card ok">
+            <h3>提案</h3>
+            <p><strong>你正在看封面</strong></p>
+            <p style="margin:8px 0">本页精修用于正文屏。要换第一眼 / 最后一眼，请调首尾装帧。</p>
+            <button class="btn btn--pri" type="button">去调封面与封底</button>
+            <p style="margin-top:8px">点击后：打开「这本」并 <strong>展开首尾装帧 + 滚动到合页</strong>。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑦ 规范表 -->
+      <section class="panel" data-panel="6">
+        <div class="sec">
+          <h2>⑦ 评审验收表</h2>
+          <p class="lead">请勾选是否同意进入编码。不同意请在对应项旁批注。</p>
+        </div>
+        <table class="spec">
+          <thead>
+            <tr><th>ID</th><th>决议</th><th>建议</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>UX-BE-01</td>
+              <td>「这本」三分区：整本故事 / 首尾装帧 / 进阶</td>
+              <td>P0 必做</td>
+            </tr>
+            <tr>
+              <td>UX-BE-02</td>
+              <td>导语改为「改整本的名字、意图，以及封面与封底。」</td>
+              <td>P0</td>
+            </tr>
+            <tr>
+              <td>UX-BE-03</td>
+              <td>预览焦点在封面/封底 → 自动展开首尾并高亮对应侧</td>
+              <td>P0</td>
+            </tr>
+            <tr>
+              <td>UX-BE-04</td>
+              <td>「看封面 / 看封底」滚动预览画布</td>
+              <td>P0</td>
+            </tr>
+            <tr>
+              <td>UX-BE-05</td>
+              <td>「这页」空态 CTA 改为「去调封面与封底」并深链合页</td>
+              <td>P0</td>
+            </tr>
+            <tr>
+              <td>UX-BE-06</td>
+              <td>合页大图为主、候选为辅；乐观试看（可 P1）</td>
+              <td>P0 结构 / P1 乐观</td>
+            </tr>
+            <tr>
+              <td>UX-BE-07</td>
+              <td>锁文案用「手选 · 可恢复自动」，不用 locked</td>
+              <td>P0</td>
+            </tr>
+            <tr>
+              <td>UX-BE-08</td>
+              <td>模板/同框/分章默认进「进阶」折叠</td>
+              <td>P0</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="checklist" style="margin-top:16px;background:#fffdf8;border:1px solid var(--line);border-radius:12px;padding:14px">
+          <label><input type="checkbox" checked disabled /> 同意按本线框做 P0 编码（分区 + 焦点联动 + 空态深链）· 已落地</label>
+          <label><input type="checkbox" checked disabled /> 乐观试看 / 延迟跟画布放到 P1</label>
+          <label><input type="checkbox" disabled /> 需要改文案后再编码（请批注）</label>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <div class="rec">推荐评审序 ①→②→③→⑥→⑦</div>
+      <h2>本线框解决什么</h2>
+      <ul>
+        <li>「这本」与画面的弱关系</li>
+        <li>首尾淹没在杂项里</li>
+        <li>封面空态乱指路</li>
+        <li>换图像后台表单</li>
+      </ul>
+      <h2 style="margin-top:14px">刻意不做</h2>
+      <ul>
+        <li>封底样式切换器</li>
+        <li>重做整本精修 IA 以外模块</li>
+        <li>小程序书衣页</li>
+      </ul>
+      <h2 style="margin-top:14px">文件</h2>
+      <ul>
+        <li>本页：studio-book-tab-bookends-ux-v1-wireframe.html</li>
+        <li>旧合页控件稿：studio-bookends-panel-v1-wireframe.html</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var labels = [
+        "① 现状问题",
+        "② 提案 IA ★",
+        "③ 焦点·封面 ★",
+        "④ 焦点·封底",
+        "⑤ 试装帧",
+        "⑥ 这页空态 ★",
+        "⑦ 验收表"
+      ];
+      var rec = { 1: true, 2: true, 5: true };
+      var tabs = document.getElementById("tabs");
+      var panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
+      labels.forEach(function (label, i) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = label.replace(" ★", "");
+        if (rec[i]) btn.classList.add("is-rec");
+        if (i === 0) btn.classList.add("is-active");
+        btn.addEventListener("click", function () {
+          tabs.querySelectorAll("button").forEach(function (b) { b.classList.remove("is-active"); });
+          btn.classList.add("is-active");
+          panels.forEach(function (p) {
+            p.classList.toggle("is-visible", p.getAttribute("data-panel") === String(i));
+          });
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+        tabs.appendChild(btn);
+      });
+    })();
+  </script>
+</body>
+</html>

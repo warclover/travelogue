@@ -1,0 +1,295 @@
+/**
+ * 帮助抽屉 L2 + 「?」入口（W2）
+ */
+.studio-help-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.studio-help-open--ghost {
+  color: rgba(26, 47, 40, 0.55);
+  border-color: rgba(26, 47, 40, 0.12);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.studio-help-open--ghost:hover {
+  color: rgba(26, 47, 40, 0.9);
+  border-color: rgba(26, 47, 40, 0.28);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.studio-help-open--ghost:focus-visible {
+  outline: 2px solid #d4a843;
+  outline-offset: 2px;
+}
+
+/* 预览页：左上幽灵，远离 Dock 长图 */
+.studio-help-open--preview {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 205;
+  color: rgba(245, 251, 248, 0.72);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(26, 47, 40, 0.45);
+}
+
+.studio-help-open--preview:hover {
+  color: #fff;
+  background: rgba(26, 47, 40, 0.72);
+}
+
+/* 首页：右上角，不与主 CTA 抢位 */
+.studio-help-open--home {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 80;
+}
+
+.studio-help-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  pointer-events: none;
+}
+
+.studio-help-drawer-root.is-open {
+  pointer-events: auto;
+}
+
+.studio-help-drawer__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 18, 16, 0.28);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.studio-help-drawer-root.is-open .studio-help-drawer__scrim {
+  opacity: 1;
+}
+
+.studio-help-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 100%);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f7faf8;
+  color: #1a2f28;
+  box-shadow: -12px 0 36px rgba(0, 0, 0, 0.18);
+  transform: translateX(104%);
+  transition: transform 0.28s ease;
+}
+
+.studio-help-drawer-root.is-open .studio-help-drawer {
+  transform: translateX(0);
+}
+
+.studio-help-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(26, 47, 40, 0.1);
+  flex-shrink: 0;
+}
+
+.studio-help-drawer__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.studio-help-drawer__close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #1a2f28;
+}
+
+.studio-help-drawer__close:hover {
+  background: rgba(26, 47, 40, 0.06);
+}
+
+.studio-help-drawer__body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px 24px;
+}
+
+.studio-help-drawer__item {
+  margin: 0 0 8px;
+  border: 1px solid rgba(26, 47, 40, 0.1);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.studio-help-drawer__item.is-active {
+  border-color: rgba(212, 168, 67, 0.55);
+  box-shadow: 0 0 0 1px rgba(212, 168, 67, 0.25);
+}
+
+.studio-help-drawer__item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.studio-help-drawer__item summary::-webkit-details-marker {
+  display: none;
+}
+
+.studio-help-drawer__item summary::before {
+  content: "▸ ";
+  color: #3d6b5a;
+}
+
+.studio-help-drawer__item[open] summary::before {
+  content: "▾ ";
+}
+
+.studio-help-drawer__points {
+  margin: 0 14px 12px;
+  padding-left: 1.15em;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(26, 47, 40, 0.78);
+}
+
+.studio-help-drawer__points li + li {
+  margin-top: 4px;
+}
+
+.studio-help-drawer__replay {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(26, 47, 40, 0.16);
+}
+
+.studio-help-drawer__replay-btn {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(26, 47, 40, 0.18);
+  background: #fff;
+  color: #1a2f28;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.studio-help-drawer__replay-btn:hover {
+  border-color: rgba(61, 107, 90, 0.45);
+  background: #eef5f1;
+}
+
+.studio-help-drawer__replay-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(26, 47, 40, 0.72);
+}
+
+/* 窄窗：底部 Sheet，避免挡 Dock「长图」 */
+@media (max-width: 720px) {
+  .studio-help-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: min(72vh, 560px);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(104%);
+  }
+
+  .studio-help-drawer-root.is-open .studio-help-drawer {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-help-drawer,
+  .studio-help-drawer__scrim {
+    transition: none !important;
+  }
+}
+
+/* T-REFINE-SAVE sheet 顶 hint */
+.preview-sheet__help-hint {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(212, 168, 67, 0.12);
+  border: 1px solid rgba(212, 168, 67, 0.35);
+  font-size: 12px;
+  line-height: 1.45;
+  color: #1a2f28;
+}
+
+.preview-sheet__help-hint p {
+  margin: 0;
+}
+
+.preview-sheet__help-hint p + p {
+  margin-top: 4px;
+}
+
+.preview-sheet__help-hint-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.preview-sheet__help-hint-more {
+  border: none;
+  background: transparent;
+  color: #3d6b5a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 0;
+}
+
+.preview-sheet__help-hint-dismiss {
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(26, 47, 40, 0.08);
+  color: #1a2f28;
+}

@@ -12,6 +12,13 @@ from travelogue.config.aesthetic import (
     resolve_learned_blend,
 )
 from travelogue.config.app import AppConfig
+from travelogue.config.bookends import (
+    BookendsConfig,
+    BookendsPairingConfig,
+    BookendsPluginsConfig,
+    BookendsTitleSafeConfig,
+    bookends_config_from_dict,
+)
 from travelogue.config.clustering import (
     ClusteringConfig,
     GeoClusterConfig,
@@ -65,6 +72,10 @@ __all__ = [
     "AestheticPurposePresets",
     "AestheticWeights",
     "AppConfig",
+    "BookendsConfig",
+    "BookendsPairingConfig",
+    "BookendsPluginsConfig",
+    "BookendsTitleSafeConfig",
     "ClusteringConfig",
     "ConfigError",
     "CohortConfig",
@@ -94,6 +105,7 @@ __all__ = [
     "TemplateRouterConfig",
     "VisionConfig",
     "app_config_scope",
+    "bookends_config_from_dict",
     "config_override",
     "default_enable_food_grid",
     "default_mundane_grid_buckets",

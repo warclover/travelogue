@@ -96,14 +96,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  min-width: 28px;
+  width: 36px;
+  min-width: 36px;
   height: 100%;
   padding: 0;
   border: none;
   border-left: 1px solid rgba(26, 20, 8, 0.16);
   border-radius: 0;
-  font-size: 12px;
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   background: rgba(0, 0, 0, 0.07);

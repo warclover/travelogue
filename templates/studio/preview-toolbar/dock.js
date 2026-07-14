@@ -91,9 +91,11 @@ export function insertScreenplayControl(parent, beforeNode, opts) {
   if (!parent) return null;
   opts = opts || {};
   var label = opts.label != null ? opts.label : "▶ 全屏放映";
-  if (opts.dock) label = "▶";
+  if (opts.dock) label = "播放";
   var v3Class = opts.v3 ? " preview-toolbar__screenplay--v3" : "";
-  var dockClass = opts.dock ? " preview-toolbar__dock-btn preview-toolbar__dock-btn--screenplay preview-toolbar__dock-btn--folio" : "";
+  var dockClass = opts.dock
+    ? " preview-toolbar__dock-btn preview-toolbar__dock-btn--screenplay preview-toolbar__dock-btn--folio preview-toolbar__dock-btn--labeled"
+    : "";
   if (document.documentElement.getAttribute("data-screenplay") === "on") {
     var screenplayBtn = document.createElement("button");
     screenplayBtn.type = "button";
@@ -103,10 +105,11 @@ export function insertScreenplayControl(parent, beforeNode, opts) {
     screenplayBtn.setAttribute("data-screenplay-label", label);
     screenplayBtn.setAttribute("data-screenplay-busy", "退出放映");
     screenplayBtn.setAttribute("aria-pressed", "false");
-    screenplayBtn.setAttribute("aria-label", "全屏放映，逐屏展示");
-    screenplayBtn.title = "全屏逐屏放映";
+    screenplayBtn.setAttribute("aria-label", "播放");
     if (opts.dock) {
-      screenplayBtn.innerHTML = dockIconSvg("play");
+      screenplayBtn.innerHTML =
+        dockIconSvg("play") +
+        '<span class="preview-toolbar__dock-label">播放</span>';
     } else {
       screenplayBtn.textContent = label;
     }
@@ -120,12 +123,13 @@ export function insertScreenplayControl(parent, beforeNode, opts) {
     "preview-toolbar__ctl preview-toolbar__screenplay" + v3Class + dockClass;
   autoplayLink.href = href;
   if (opts.dock) {
-    autoplayLink.innerHTML = dockIconSvg("play");
+    autoplayLink.innerHTML =
+      dockIconSvg("play") +
+      '<span class="preview-toolbar__dock-label">播放</span>';
   } else {
     autoplayLink.textContent = label;
   }
-  autoplayLink.setAttribute("aria-label", "全屏放映，逐屏展示");
-  autoplayLink.title = "全屏逐屏放映";
+  autoplayLink.setAttribute("aria-label", "播放");
   parent.insertBefore(autoplayLink, beforeNode || null);
   return autoplayLink;
 }
@@ -187,34 +191,12 @@ export function syncDockScreenplayTip(btn) {
   }
 
 export function initDockTooltips(root) {
+    // 底栏按钮已有可见文字标签，不再挂悬浮 tip / 原生 title
     if (!isPreviewToolbarV4(root)) return;
     var dock = root.querySelector(".preview-toolbar__dock");
     if (!dock) return;
-
-    ensureDockTooltip(
-      dock.querySelector(".preview-toolbar__dock-btn--back"),
-      "返回"
-    );
-    ensureDockTooltip(dock.querySelector(".preview-toolbar__menu-btn"), "精修");
-
-    var exportBtn = dock.querySelector(".preview-toolbar__dock-btn--export");
-    ensureDockTooltip(exportBtn, "导出长图");
     var caretBtn = dock.querySelector(".preview-toolbar__longshot-caret");
-    ensureDockTooltip(caretBtn, "导出设置");
-
-    var screenplayBtn = dock.querySelector(".preview-toolbar__screenplay--v3");
-    ensureDockTooltip(screenplayBtn, "放映");
-    if (screenplayBtn && typeof MutationObserver !== "undefined") {
-      syncDockScreenplayTip(screenplayBtn);
-      var spObs = new MutationObserver(function () {
-        syncDockScreenplayTip(screenplayBtn);
-      });
-      spObs.observe(screenplayBtn, {
-        attributes: true,
-        attributeFilter: ["aria-pressed"],
-      });
-      root._dockScreenplayTipObs = spObs;
-    }
+    if (caretBtn) caretBtn.removeAttribute("title");
   }
 
 export function initDockScrollFade(root) {

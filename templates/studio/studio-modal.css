@@ -48,6 +48,20 @@
   color: rgba(20, 17, 13, .72);
 }
 
+.studio__modal-help-link {
+  display: inline-block;
+  margin: -8px 0 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #3d6b5a;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .studio__modal-actions {
   display: flex;
   gap: 10px;

@@ -66,6 +66,8 @@
    * @param {boolean} [opts.stacked=false] - column button layout (primary → secondary → ghost)
    * @param {boolean} [opts.danger=false] - red confirm button
    * @param {boolean} [opts.focusCancel=false] - default focus on cancel (destructive flows)
+   * @param {string} [opts.helpItemId] - optional deep link to help drawer (H1–H5)
+   * @param {string} [opts.helpLinkText='了解更多']
    * @returns {Promise<boolean|string>} true/false, or "confirm"|"secondary"|false when secondaryText set
    */
   window.studioModal = function (opts) {
@@ -75,6 +77,7 @@
       var hasSecondary = !!opts.secondaryText;
       var stacked = !!opts.stacked || hasSecondary;
       var confirmValue = hasSecondary ? "confirm" : true;
+      var helpItemId = opts.helpItemId ? String(opts.helpItemId).toUpperCase() : "";
 
       var backdrop = document.createElement("div");
       backdrop.className = "studio__modal-backdrop";
@@ -94,6 +97,14 @@
       p.id = "studio-modal-body-" + Date.now();
       p.textContent = opts.body || "";
       modal.setAttribute("aria-describedby", p.id);
+
+      var helpLink = null;
+      if (helpItemId) {
+        helpLink = document.createElement("button");
+        helpLink.type = "button";
+        helpLink.className = "studio__modal-help-link";
+        helpLink.textContent = opts.helpLinkText || "了解更多 →";
+      }
 
       var actions = document.createElement("div");
       actions.className =
@@ -128,6 +139,7 @@
       }
       modal.appendChild(h);
       modal.appendChild(p);
+      if (helpLink) modal.appendChild(helpLink);
       modal.appendChild(actions);
       backdrop.appendChild(modal);
       document.body.appendChild(backdrop);
@@ -157,6 +169,18 @@
       confirmBtn.addEventListener("click", function () { cleanup(confirmValue); });
       if (secondaryBtn) {
         secondaryBtn.addEventListener("click", function () { cleanup("secondary"); });
+      }
+      if (helpLink) {
+        helpLink.addEventListener("click", function () {
+          cleanup(false);
+          import("/__studio/js/help-drawer.js")
+            .then(function (m) {
+              if (m && typeof m.openHelpDrawer === "function") {
+                m.openHelpDrawer({ source: "deep_link", itemId: helpItemId });
+              }
+            })
+            .catch(function () { /* ignore */ });
+        });
       }
       backdrop.addEventListener("click", function (e) {
         if (e.target === backdrop) cleanup(false);

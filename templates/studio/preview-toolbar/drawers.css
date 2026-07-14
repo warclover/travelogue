@@ -414,6 +414,27 @@ html[data-preview-share="on"] .preview-toolbar__collage-ctrl {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   pointer-events: none;
 }
+.preview-toolbar__toast:has(.preview-toolbar__toast-link) {
+  pointer-events: auto;
+}
+.preview-toolbar__toast-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #b8e0d0;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.preview-toolbar__toast-link:hover,
+.preview-toolbar__toast-link:focus-visible {
+  color: #e8f7f0;
+}
 .preview-toolbar__toast[hidden] { display: none !important; }
 .preview-toolbar__toast--error {
   background: rgba(155, 44, 44, 0.94);

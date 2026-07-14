@@ -25,6 +25,25 @@ geocode:
   provider: null
   api_key_env: null
 
+# Bookends Engine（封面–封底）· B1 默认 opening_hard_gate=false
+bookends:
+  enabled: true
+  pairing_version: v1
+  opening_quality_version: v2
+  closing_scorer_version: v1
+  lock_after_resolve: true
+  mobile_closing: false
+  pairing:
+    require_hard: true
+    soft_weight: 0.35
+    near_dup_seconds: 3
+  title_safe:
+    opening_hard_gate: true   # B2a 默认；可回滚 false
+  plugins:
+    opening_vl_rerank: false
+    closing_vl_rerank: false
+  telemetry: true
+
 curate:
   segment_gap_days: 14
   city_gap_days: 3

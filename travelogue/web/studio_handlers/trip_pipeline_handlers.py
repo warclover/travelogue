@@ -18,6 +18,12 @@ from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
 _log = logging.getLogger(__name__)
 
 
+def normalize_curate_scope(payload: dict | None) -> str:
+    """Return ``full`` or ``tier`` from POST body (M3 · scope=tier)."""
+    raw = (payload or {}).get("scope")
+    return "tier" if str(raw or "").strip().lower() == "tier" else "full"
+
+
 def handle_patch_pipeline(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_g1 import continue_after_g1_confirm, lock_trip_structure
@@ -85,20 +91,40 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.curation.curate import CurateError, run_curate
     from travelogue.render.engine import render_trip_surfaces
 
-    handler._read_json_body()
+    payload = handler._read_json_body() or {}
+    scope = normalize_curate_scope(payload)
+    force = bool(payload.get("force", scope == "full"))
+    reason = str(payload.get("reason") or "").strip() or None
+
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
         return
-    trip_dir, _trip = loaded
+    trip_dir, trip0 = loaded
     trip_json = trip_dir / "trip.json"
     ctx = studio_ctx(handler)
     svc = ctx.trip_service()
+
+    if scope == "tier" and not (trip0.get("chapters") or []):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_CURATE_NO_STRUCTURE",
+                "message": "按精选重排需要先有成书章节结构",
+            },
+        )
+        return
 
     def runner() -> dict:
         from travelogue.domain.pipeline_view import unlock_structure_for_replan
 
         trip = svc.load(trip_json)
-        unlock_structure_for_replan(trip)
+        prev_pipeline = dict(trip.get("pipeline") or {})
+        prev_status = prev_pipeline.get("status")
+        prev_locks = prev_pipeline.get("locks")
+
+        if scope == "full":
+            unlock_structure_for_replan(trip)
         try:
             run_curate(
                 trip,
@@ -106,10 +132,20 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 apply_layout=True,
                 trip_dir=trip_dir,
                 cfg=ctx.cfg,
-                refresh_algorithms=True,
+                refresh_algorithms=scope == "full",
+                scope=scope,
+                cover_force=force if scope == "tier" else False,
             )
         except CurateError as exc:
             raise DemoError(exc.code, str(exc)) from exc
+
+        if scope == "tier":
+            pipe = trip.setdefault("pipeline", {})
+            if prev_status:
+                pipe["status"] = prev_status
+            if isinstance(prev_locks, dict):
+                pipe["locks"] = dict(prev_locks)
+
         from travelogue.layout_engine.planner.screen_planner import (
             LAYOUT_ENGINE_SCREENS,
             resolve_layout_engine,
@@ -151,7 +187,15 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
         from travelogue.render.preview import render_preview_jpg
 
         render_preview_jpg(trip_json, trip_root=trip_dir)
-        return {"tripId": trip_id, "pipelineStatus": "structure_draft"}
+        out_status = (trip.get("pipeline") or {}).get("status") or (
+            "structure_draft" if scope == "full" else prev_status
+        )
+        return {
+            "tripId": trip_id,
+            "scope": scope,
+            "reason": reason,
+            "pipelineStatus": out_status,
+        }
 
     store = get_job_store()
     job = store.create_g1_continue_job()
@@ -165,8 +209,10 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
         target=lambda: run_g1_continue_job(job, runner=runner),
         daemon=True,
     ).start()
-    handler._json_response(202, {"ok": True, "jobId": job.job_id})
-
+    handler._json_response(
+        202,
+        {"ok": True, "jobId": job.job_id, "scope": scope},
+    )
 
 def handle_rerender(handler: StudioHandlerProtocol) -> None:
     from travelogue.web.rerender import rerender_draft_trip

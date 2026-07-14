@@ -24,6 +24,7 @@ from travelogue.config.mosaic import MosaicConfig
 from travelogue.config.phase6 import Phase6ObservabilityConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.bookends import BookendsConfig
 from travelogue.config.vision import VisionConfig
 
 _log = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ class AppConfig:
     vision: VisionConfig = field(default_factory=VisionConfig)
     geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
     curate: CurateConfig = field(default_factory=CurateConfig)
+    bookends: BookendsConfig = field(default_factory=BookendsConfig)
     studio: StudioConfig = field(default_factory=StudioConfig)
     config_path: Path | None = None
     export: ExportConfig = field(default_factory=ExportConfig)

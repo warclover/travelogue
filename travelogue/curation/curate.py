@@ -29,7 +29,9 @@ from travelogue.curation.curate_scoring import (
     build_cover_layout_review,
     cover_asset_pool,
     median_sharpness,
+    orientation_meta_for_cover,
     pick_chapter_hero,
+    pick_cover_asset_id_with_meta,
 )
 from travelogue.curation.curate_scoring import (
     cover_candidates as _cover_candidates,
@@ -276,7 +278,7 @@ def _attach_cover_explain(
         curation.pop("coverExplain", None)
 
 
-def sync_trip_covers(
+def _sync_trip_covers_core(
     trip: dict,
     *,
     export_layout: str | None = None,
@@ -290,14 +292,13 @@ def sync_trip_covers(
     force: bool = False,
     joint_enabled: bool | None = None,
 ) -> str:
-    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id.
+    """Core Opening write path (called via cover_engine.api.resolve_opening)."""
+    from travelogue.cover_engine.lock import is_opening_locked, sync_lock_mirrors
 
-    V6 · web path uses Cover Style Engine joint pick when unlocked (D-CSV6-53).
-    Mobile still uses pick_cover_asset_id. When coverJointLocked and not force, web is skipped.
-    """
     assets = assets if assets is not None else layout_eligible_assets(trip)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
+    sync_lock_mirrors(trip)
     cs, cs_v2, ver = _cover_scoring_runtime(cover_scoring, cover_scoring_v2, scoring_version)
     p6 = bool(enable_phase6_cover_factors and cs.enable_phase6_factors)
     scoring_kwargs = {
@@ -361,37 +362,53 @@ def sync_trip_covers(
         apply_joint_pick(trip, explain, lock=True, layout="web")
         return str(explain.asset_id or "")
 
-    web_locked = bool(curation.get("coverJointLocked")) and not force
+    web_locked = is_opening_locked(trip) and not force
 
     if layout == "auto":
-        mobile_id = _pick_cover_asset_id(
+        mobile_id, mobile_orient = pick_cover_asset_id_with_meta(
             assets,
             export_layout="mobile",
             featured_weight=featured_weight,
             enable_phase6_cover_factors=p6,
             **scoring_kwargs,
         )
+        web_orient: dict[str, object] | None = None
         if web_locked:
             cover_by = curation.get("coverByLayout") or {}
             web_id = str((cover_by.get("web") if isinstance(cover_by, dict) else "") or "")
             if not web_id:
-                web_id = _pick_cover_asset_id(
+                web_id, web_orient = pick_cover_asset_id_with_meta(
                     assets,
                     export_layout="web",
                     featured_weight=featured_weight,
                     enable_phase6_cover_factors=p6,
                     **scoring_kwargs,
                 )
+            else:
+                web_orient = orientation_meta_for_cover(
+                    assets, web_id, export_layout="web"
+                )
         else:
-            web_id = _apply_web_joint() or _pick_cover_asset_id(
-                assets,
-                export_layout="web",
-                featured_weight=featured_weight,
-                enable_phase6_cover_factors=p6,
-                **scoring_kwargs,
-            )
+            web_id = _apply_web_joint()
+            if web_id:
+                web_orient = orientation_meta_for_cover(
+                    assets, web_id, export_layout="web"
+                )
+            else:
+                web_id, web_orient = pick_cover_asset_id_with_meta(
+                    assets,
+                    export_layout="web",
+                    featured_weight=featured_weight,
+                    enable_phase6_cover_factors=p6,
+                    **scoring_kwargs,
+                )
 
         curation["coverByLayout"] = {"mobile": mobile_id, "web": web_id}
+        curation["coverOrientationByLayout"] = {
+            "mobile": mobile_orient,
+            "web": web_orient
+            or orientation_meta_for_cover(assets, web_id, export_layout="web"),
+        }
         trip["coverAssetId"] = mobile_id
         trip["coverCandidates"] = _cover_candidates(
             assets,
@@ -447,6 +464,25 @@ def sync_trip_covers(
             }
         else:
             curation.pop("coverExplainByLayout", None)
+        soft_warnings = list(curation.get("bookendsSoftWarnings") or [])
+        for side, orient in (("mobile", mobile_orient), ("web", web_orient)):
+            if not isinstance(orient, dict) or not orient.get("orientationFallback"):
+                continue
+            line = orient.get("userOneLiner")
+            if not line:
+                continue
+            code = f"orientation_fallback_{side}"
+            if any(isinstance(w, dict) and w.get("code") == code for w in soft_warnings):
+                continue
+            soft_warnings.append(
+                {
+                    "code": code,
+                    "message": str(line),
+                    "layout": side,
+                }
+            )
+        if soft_warnings:
+            curation["bookendsSoftWarnings"] = soft_warnings
         _write_blind_review(mobile_id, "mobile")
         _write_blind_review(web_id, "web")
         return mobile_id
@@ -475,6 +511,11 @@ def sync_trip_covers(
                 curation.pop("coverByLayout", None)
                 curation.pop("coverCandidatesByLayout", None)
                 curation.pop("coverExplainByLayout", None)
+                curation["coverOrientationByLayout"] = {
+                    "web": orientation_meta_for_cover(
+                        assets, cover_id, export_layout="web"
+                    )
+                }
                 explain = _cover_explain_for(
                     assets,
                     cover_id,
@@ -489,7 +530,7 @@ def sync_trip_covers(
                 _write_blind_review(cover_id, "web")
                 return cover_id
 
-    cover_id = _pick_cover_asset_id(
+    cover_id, cover_orient = pick_cover_asset_id_with_meta(
         assets,
         export_layout=layout,
         featured_weight=featured_weight,
@@ -509,6 +550,10 @@ def sync_trip_covers(
     curation.pop("coverByLayout", None)
     curation.pop("coverCandidatesByLayout", None)
     curation.pop("coverExplainByLayout", None)
+    if layout in ("mobile", "web"):
+        curation["coverOrientationByLayout"] = {layout: cover_orient}
+    else:
+        curation.pop("coverOrientationByLayout", None)
     explain = _cover_explain_for(
         assets,
         cover_id,
@@ -522,6 +567,42 @@ def sync_trip_covers(
         curation.pop("coverExplain", None)
     _write_blind_review(cover_id, layout)
     return cover_id
+
+
+def sync_trip_covers(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    assets: list[dict] | None = None,
+    featured_weight: float = 1.35,
+    featured_min_for_cover_pool: int = 2,
+    enable_phase6_cover_factors: bool = True,
+    cover_scoring=None,
+    cover_scoring_v2=None,
+    scoring_version: str | None = None,
+    force: bool = False,
+    joint_enabled: bool | None = None,
+) -> str:
+    """Write coverAssetId (+ coverByLayout when exportLayout=auto). Returns primary cover id.
+
+    B1 · delegates to cover_engine.api.resolve_opening (D-CSV6-53 / Bookends).
+    """
+    from travelogue.cover_engine.api import resolve_opening
+
+    decision = resolve_opening(
+        trip,
+        layout=export_layout,
+        assets=assets,
+        featured_weight=featured_weight,
+        featured_min_for_cover_pool=featured_min_for_cover_pool,
+        enable_phase6_cover_factors=enable_phase6_cover_factors,
+        cover_scoring=cover_scoring,
+        cover_scoring_v2=cover_scoring_v2,
+        scoring_version=scoring_version,
+        force=force,
+        joint_enabled=joint_enabled,
+    )
+    return decision.cover_asset_id
 
 
 from travelogue.curation.chapter_items import (
@@ -610,6 +691,7 @@ def _curate_preflight(
     trip_dir: Path | None,
     cfg: AppConfig | None,
     saved_memory_anchors: list[list[str] | None],
+    cover_force: bool = False,
 ) -> _CuratePreflight:
     from travelogue.config import default_web_layout_engine, get_config
     from travelogue.layout_engine.planner.screen_planner import (
@@ -658,6 +740,7 @@ def _curate_preflight(
         cover_scoring=cur_cfg.cover_scoring,
         cover_scoring_v2=cur_cfg.cover_scoring_v2,
         scoring_version=cur_cfg.cover_scoring_version,
+        force=cover_force,
     )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}
@@ -800,7 +883,10 @@ def run_curate(
     trip_dir: Path | None = None,
     cfg: AppConfig | None = None,
     refresh_algorithms: bool | None = None,
+    scope: str = "full",
+    cover_force: bool = False,
 ) -> CurateResult:
+    curate_scope = "tier" if str(scope or "").strip().lower() == "tier" else "full"
     if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
         raise CurateError(
             "E_CURATE_TOO_FEW",
@@ -826,7 +912,9 @@ def run_curate(
         trip,
         trip_dir=trip_dir,
         app_cfg=cfg,
-        refresh_algorithms=refresh_algorithms,
+        refresh_algorithms=(
+            False if curate_scope == "tier" and refresh_algorithms is None else refresh_algorithms
+        ),
     )
 
     cohort_summary = None
@@ -842,6 +930,7 @@ def run_curate(
         trip_dir=trip_dir,
         cfg=cfg,
         saved_memory_anchors=saved_memory_anchors,
+        cover_force=bool(cover_force) if curate_scope == "tier" else False,
     )
     app_cfg = preflight.app_cfg
     cur_cfg = preflight.cur_cfg
@@ -874,7 +963,15 @@ def run_curate(
     )
 
     replan_decision = should_layout_only_replan(trip, trip_dir=trip_dir, cfg=app_cfg)
-    if replan_decision.layout_only:
+    if curate_scope == "tier":
+        bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
+        if bucket_plan is None:
+            raise CurateError(
+                "E_CURATE_NO_STRUCTURE",
+                "tier scope requires existing chapter structure",
+            )
+        mark_layout_replan(trip, reason="tier_rerank")
+    elif replan_decision.layout_only:
         bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
         if bucket_plan is None:
             bucket_plan = _build_curate_buckets(trip, preflight)
@@ -900,7 +997,22 @@ def run_curate(
     write_album_profile(trip)
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
-    non_empty_buckets = [b for b in buckets if b]
+    # Keep segment metadata aligned when empty buckets are dropped.
+    if len(bucket_segment_ids) == len(buckets) and len(bucket_segment_ids_all) == len(
+        buckets
+    ):
+        aligned = [
+            (b, sid, sids)
+            for b, sid, sids in zip(
+                buckets, bucket_segment_ids, bucket_segment_ids_all, strict=True
+            )
+            if b
+        ]
+        non_empty_buckets = [row[0] for row in aligned]
+        bucket_segment_ids = [row[1] for row in aligned]
+        bucket_segment_ids_all = [row[2] for row in aligned]
+    else:
+        non_empty_buckets = [b for b in buckets if b]
     arc_profile = "dynamic"
     use_arc = cur_cfg.arc_mode in ("v2_adaptive", "v2_five_beat")
     if use_arc:
@@ -1116,7 +1228,7 @@ def run_curate(
         min_layout_eligible=layout_cfg.scoring.min_layout_eligible,
         min_aspect_kinds=layout_cfg.scoring.min_aspect_kinds,
         structure_locked=structure_locked,
-        force_relayout=False,
+        force_relayout=curate_scope == "tier",
     )
     has_color_metrics = any(a.get("dominantTone") for a in layout_assets)
     scoring_weights = resolve_scoring_weights(
@@ -1369,7 +1481,16 @@ def run_curate(
     if cross_seg:
         warnings.append(f"{cross_seg} 章跨时间段合并，章标题已标注多段信息")
 
-    undated_seg = any(s.label.startswith("未标注") for s in segments)
+    undated_seg = False
+    for s in segments or []:
+        label = (
+            s.label
+            if hasattr(s, "label")
+            else str((s.get("label") if isinstance(s, dict) else "") or "")
+        )
+        if label.startswith("未标注"):
+            undated_seg = True
+            break
     if undated_seg:
         warnings.append("含未标注日期照片，已单独成段或置于末段")
 
@@ -1395,9 +1516,11 @@ def run_curate(
         set_layout_status(trip, "pending")
 
     # Main pipeline status (structure_draft); layoutStatus above is the Agent 1.5 sub-state.
-    set_pipeline_status(trip, "structure_draft")
-    # Re-curate from structure_draft clears the post-lock pending ingest queue.
-    clear_pending_assets(trip)
+    # scope=tier keeps chapter structure locks / pipeline.status (M3 · OQ-FEED-01).
+    if curate_scope != "tier":
+        set_pipeline_status(trip, "structure_draft")
+        # Re-curate from structure_draft clears the post-lock pending ingest queue.
+        clear_pending_assets(trip)
     trip["updatedAt"] = now
     append_pipeline_run(
         trip,
@@ -1407,6 +1530,11 @@ def run_curate(
             "startedAt": now,
             "finishedAt": now,
             "model": None,
+            **(
+                {"note": "scope=tier"}
+                if curate_scope == "tier"
+                else {}
+            ),
         },
     )
 
@@ -1490,6 +1618,9 @@ def run_curate(
     )
     if apply_layout:
         record_applied_layout_density(trip, cfg=app_cfg)
+        from travelogue.cover_engine.api import maybe_resolve_closing_after_layout
+
+        maybe_resolve_closing_after_layout(trip, layout=layout)
 
     return CurateResult(
         chapter_count=len(trip.get("chapters", [])),
