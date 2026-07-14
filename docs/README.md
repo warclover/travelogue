@@ -90,13 +90,15 @@
 | [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
 | [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
 | [acceptance-records/ux-trust-v1-review-2026-07-11.md](./acceptance-records/ux-trust-v1-review-2026-07-11.md) | 信任闭环 V1 跨职能评审纪要 · Conditional Go |
-| [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1**（三层帮助 · 首访主链触达 · 帮助抽屉 · 不打断验货） |
+| [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1** **v1.1.1**（Conditional Go · MF 已回写 · FirstSuccess 方案 A · 可见 tip · 发群兜底 · 可开 W0） |
+| [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
+| [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
 
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
 预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-REFINE-UX-V1.1**（Conditional Go · 可开 M1）→ **PRD-PREVIEW-EXPORT-FACADE-V1** → **PRD-UX-TRUST-V1**。  
-首访帮助：**PRD-HELP-ONBOARDING-V1**（复用 FirstSuccess / 脉冲 / Task Dock / publishGuide；不做全站 tour）。
+首访帮助：**PRD-HELP-ONBOARDING-V1** **v1.1.1**（Conditional Go · FirstSuccess 方案 A · 脉冲+可见 tip · 发群三要素兜底 · 对齐精修 V1.1「完成≠更新版面」；不做全站 tour）。
 
 ---
 

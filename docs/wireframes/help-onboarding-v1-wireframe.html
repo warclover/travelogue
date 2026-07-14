@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>帮助与情境引导系统 V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --accent: #3d6b5a;
+      --danger: #c62828;
+      --warn-bg: #fff8e1;
+      --warn-border: #ffb74d;
+      --rec-bg: #e8f5e9;
+      --fail-bg: #ffebee;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--fail { background: var(--danger); color: #fff; }
+    .tag--w1 { background: #e65100; color: #fff; }
+    .tag--w2 { background: #1565c0; color: #fff; }
+    .tag--new { background: #6a1b9a; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+    }
+    .callout--fail { background: var(--fail-bg); border: 1px solid #ef9a9a; }
+    .callout--rec { background: var(--rec-bg); border: 1px solid #a5d6a7; }
+    .callout--warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+
+    .frame {
+      background: #e8efe9;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 540px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .frame--photo {
+      background:
+        linear-gradient(160deg, rgba(26,47,40,.4), rgba(26,47,40,.62)),
+        repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #b0bec5 8px, #b0bec5 16px);
+    }
+    .frame--home {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+    }
+    .frame--narrow { max-width: 390px; margin: 0 auto; border-radius: 0 0 14px 14px; }
+
+    .home-chrome {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: rgba(255,255,255,.72);
+      border-bottom: 1px solid #cfd8dc;
+    }
+    .home-chrome .brand { font-weight: 700; font-size: 14px; color: var(--bar); }
+    .help-q {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #90a4ae; background: transparent;
+      color: #546e7a; font-weight: 700; font-size: 14px; cursor: pointer;
+    }
+    .help-q--ghost { opacity: .85; }
+    .bento {
+      margin: 24px 28px; background: #fff; border-radius: 14px;
+      padding: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.06);
+    }
+    .bento h3 { margin: 0 0 8px; font-size: 20px; }
+    .bento p { margin: 0 0 14px; color: var(--wf-muted); font-size: 13px; }
+
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px;
+      background: rgba(26, 47, 40, 0.9);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .dock .ctl {
+      height: 36px; border: none; border-radius: 8px;
+      background: transparent; color: #e8f5ef; font-size: 12px; font-weight: 600;
+      cursor: pointer; padding: 0 10px;
+    }
+    .dock .ctl--done {
+      background: rgba(127, 203, 179, 0.22);
+      border: 1px solid rgba(127, 203, 179, 0.5);
+      color: #dff5ec;
+    }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px;
+      background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 12px; padding: 0 12px; cursor: pointer;
+      position: relative;
+    }
+    .dock .export--pulse {
+      animation: pulse 1.4s ease-in-out infinite;
+      box-shadow: 0 0 0 0 rgba(212, 168, 67, .55);
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(212, 168, 67, .55); }
+      70% { box-shadow: 0 0 0 12px rgba(212, 168, 67, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 168, 67, 0); }
+    }
+    .mode-chip {
+      position: absolute; top: 18px; left: 14px; z-index: 35;
+      background: rgba(26,47,40,.92); color: #e8f5ef;
+      font-size: 11px; font-weight: 600;
+      padding: 6px 10px; border-radius: 999px;
+    }
+
+    .magazine {
+      margin: 72px auto 24px; width: min(420px, 86%);
+      background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28);
+      overflow: hidden;
+    }
+    .magazine__cover {
+      height: 200px;
+      background: linear-gradient(180deg, #5d4037, #3e2723);
+      color: #fff; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 18px;
+    }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 22px; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .magazine__body { padding: 16px; }
+    .photo-card {
+      height: 140px; border-radius: 8px;
+      background: linear-gradient(135deg, #78909c, #546e7a);
+    }
+
+    .sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; width: min(360px, 92%);
+      background: #fff; border-left: 1px solid #cfd8dc;
+      box-shadow: -12px 0 32px rgba(0,0,0,.18);
+      z-index: 50; display: flex; flex-direction: column;
+    }
+    .sheet--help { z-index: 55; }
+    .sheet--bottom {
+      top: auto; left: 0; right: 0; width: 100%; height: 58%;
+      border-left: none; border-top: 1px solid #cfd8dc;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -12px 32px rgba(0,0,0,.18);
+    }
+    .sheet__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 8px; border-bottom: 1px solid #eceff1;
+    }
+    .sheet__head h4 { margin: 0; font-size: 15px; }
+    .sheet__close {
+      width: 32px; height: 32px; border: none; border-radius: 8px;
+      background: #f5f5f5; cursor: pointer; font-size: 16px;
+    }
+    .sheet__body { padding: 12px 14px 20px; overflow: auto; flex: 1; font-size: 12px; }
+    .sheet__tabs {
+      display: flex; gap: 4px; padding: 8px 12px;
+      border-bottom: 1px solid #eceff1;
+    }
+    .sheet__tabs span {
+      flex: 1; text-align: center; font-size: 12px; font-weight: 600;
+      padding: 8px 4px; border-radius: 8px; color: var(--wf-muted);
+    }
+    .sheet__tabs .on { background: #e8f5ef; color: var(--accent); }
+    .help-item {
+      border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px;
+      margin-bottom: 8px; background: #fafafa; cursor: pointer;
+    }
+    .help-item.is-on { border-color: var(--accent); background: #e8f5ef; }
+    .help-item strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .help-item span { color: var(--wf-muted); font-size: 11px; }
+    .help-replay {
+      margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cfd8dc;
+      font-size: 12px;
+    }
+    .help-replay button {
+      width: 100%; border: 1px solid #90a4ae; background: #fff;
+      border-radius: 8px; padding: 10px; font-weight: 700; cursor: pointer;
+    }
+    .help-replay p { margin: 8px 0 0; color: var(--wf-muted); font-size: 11px; }
+
+    .hint-box {
+      background: #fff8e1; border: 1px solid #ffb74d; border-radius: 10px;
+      padding: 10px 12px; font-size: 12px; margin-bottom: 12px;
+    }
+    .hint-box a { color: var(--accent); font-weight: 700; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .btn--primary { background: var(--accent); color: #fff; }
+    .btn--gold { background: var(--gold); color: var(--gold-text); }
+    .btn--ghost { background: #f5f5f5; color: #37474f; }
+    .btn--warn { background: #ffe0b2; color: #e65100; }
+    .btn--block { width: 100%; }
+    .btn--sm { padding: 8px 10px; font-size: 12px; }
+
+    .scrim {
+      position: absolute; inset: 0; z-index: 70;
+      background: rgba(38, 50, 56, .48);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .success-card {
+      width: min(420px, 100%);
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 20px 48px rgba(0,0,0,.28);
+      padding: 22px 22px 18px;
+    }
+    .success-card h3 { margin: 0 0 6px; font-size: 18px; }
+    .success-card .sub {
+      margin: 0 0 16px; font-size: 14px; color: var(--wf-text);
+      line-height: 1.5; font-weight: 500;
+    }
+    .success-card .sub.muted-fail {
+      color: #90a4ae; font-size: 12px; font-weight: 400;
+    }
+    .success-actions { display: flex; flex-direction: column; gap: 8px; }
+    .success-foot {
+      margin-top: 12px; display: flex; gap: 8px; justify-content: center;
+    }
+    .success-foot button {
+      border: none; background: transparent; color: var(--wf-muted);
+      font-size: 12px; cursor: pointer; text-decoration: underline;
+    }
+
+    .dock-tip {
+      position: absolute; top: 58px; right: 18px; z-index: 42;
+      max-width: 260px;
+      background: #fff; color: var(--wf-text);
+      border-radius: 12px; padding: 12px 14px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+      font-size: 13px; line-height: 1.45;
+    }
+    .dock-tip::before {
+      content: "";
+      position: absolute; top: -6px; right: 36px;
+      width: 12px; height: 12px; background: #fff;
+      transform: rotate(45deg);
+      box-shadow: -2px -2px 4px rgba(0,0,0,.06);
+    }
+    .dock-tip strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .dock-tip .tip-actions {
+      margin-top: 10px; display: flex; gap: 8px; align-items: center;
+    }
+    .dock-tip .tip-actions button {
+      border: none; border-radius: 8px; padding: 6px 10px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: var(--accent); color: #fff;
+    }
+    .dock-tip .tip-actions .ghost {
+      background: transparent; color: var(--wf-muted); font-weight: 600;
+    }
+    .x-mark {
+      position: absolute; z-index: 80; color: #ff1744; font-size: 36px; font-weight: 900;
+      text-shadow: 0 2px 0 #fff;
+    }
+
+    .task-dock {
+      position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+      z-index: 45; width: min(440px, calc(100% - 32px));
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      padding: 12px 14px; font-size: 12px;
+    }
+    .task-dock--success { border: 1px solid #a5d6a7; }
+    .task-dock--busy { border: 1px solid #ffb74d; background: #fffde7; }
+    .task-dock__row {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .task-dock__main { font-weight: 700; font-size: 13px; margin: 0 0 4px; }
+    .task-dock__hint {
+      margin: 0; color: var(--wf-muted); font-size: 12px; line-height: 1.45;
+    }
+    .task-dock__hint ol {
+      margin: 6px 0 0; padding-left: 18px; color: var(--wf-text);
+    }
+    .task-dock__hint li { margin: 2px 0; }
+    .task-dock__actions {
+      margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .task-dock__actions button {
+      border: none; border-radius: 8px; padding: 8px 12px;
+      font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .task-dock__actions .pri { background: var(--gold); color: var(--gold-text); }
+    .task-dock__actions .ghost { background: #f5f5f5; color: #37474f; }
+
+    .toast {
+      position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+      z-index: 46; background: rgba(38,50,56,.92); color: #fff;
+      border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .overlay-busy {
+      position: absolute; inset: 0; z-index: 48;
+      background: rgba(38,50,56,.22);
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .busy-card {
+      background: rgba(255,255,255,.95); border-radius: 12px;
+      padding: 16px 20px; text-align: center; min-width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .busy-card .bar {
+      height: 6px; border-radius: 999px; background: #eceff1; overflow: hidden; margin-top: 10px;
+    }
+    .busy-card .bar i {
+      display: block; height: 100%; width: 62%;
+      background: var(--accent); border-radius: 999px;
+    }
+
+    .aside {
+      position: sticky; top: 96px;
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ol { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin: 6px 0; }
+    .aside a { color: var(--accent); }
+
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
+    }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .compare .col {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 10px; padding: 10px;
+    }
+    .compare .col h4 { margin: 0 0 8px; font-size: 12px; }
+
+    .pin {
+      position: absolute; z-index: 90;
+      background: var(--wf-anno); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>帮助与情境引导系统 V1 · 设计评审线框</h1>
+    <p>
+      对应 PRD：<code>docs/PRD-HELP-ONBOARDING-V1.md</code> <strong>v1.1.1</strong> ·
+      Conditional Go · 对齐方案 A / 可见 tip / 发群三要素兜底。
+      橙标 = W1 挡门；蓝标 = W2。绿 = 推荐；红 = 现行失败对照。
+    </p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 FirstSuccess<span class="w">W1</span></button>
+      <button type="button" data-panel="f2">F2 长图 tip<span class="w">W1</span></button>
+      <button type="button" data-panel="f3">F3 发群兜底<span class="w">W1</span></button>
+      <button type="button" data-panel="f7">F7 忙碌态<span class="w">W1</span></button>
+      <button type="button" data-panel="f4">F4 「?」入口<span class="w">W2</span></button>
+      <button type="button" data-panel="f5">F5 帮助抽屉<span class="w">W2</span></button>
+      <button type="button" data-panel="f6">F6 精修冲突<span class="w">W2</span></button>
+      <button type="button" data-panel="f8">F8 精修 hint<span class="w">W2</span></button>
+      <button type="button" data-panel="f9">F9 窄窗 Sheet<span class="w">W2</span></button>
+      <button type="button" data-panel="f10">F10 tip 避让<span class="w">W1建议</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · FirstSuccess <span class="tag tag--w1">W1</span> <span class="tag tag--rec">方案 A</span></h2>
+          <p class="lead">主 CTA = 打开卷轴预览；副文案与主 CTA 同卡可视区；「保存长图」降为次按钮（D-HELP-10）。</p>
+        </div>
+
+        <div class="callout callout--fail">
+          <strong>现行失败（对照）</strong>
+          <code>quick_share</code> 主 CTA 现为「保存长图」，可跳过验货；无合同副文案节点 → 与主链冲突。
+        </div>
+
+        <div class="anno">推荐 · 方案 A</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 首页</div>
+        </div>
+        <div class="frame frame--home">
+          <div class="home-chrome">
+            <span class="brand">Travelogue Studio</span>
+          </div>
+          <div class="bento">
+            <h3>京都五日 · 已生成</h3>
+            <p>可在书架打开卷轴，或导出长图发群。</p>
+            <button class="btn btn--ghost btn--sm" type="button">打开书架</button>
+          </div>
+          <div class="scrim">
+            <div class="success-card">
+              <span class="pin" style="position:relative;display:inline-block;margin-bottom:8px;">① 副文案同卡</span>
+              <h3>游记已生成</h3>
+              <p class="sub">先翻一翻验货；满意就点预览页下方的『长图』</p>
+              <div class="success-actions">
+                <button class="btn btn--primary btn--block" type="button">打开卷轴预览</button>
+                <button class="btn btn--ghost btn--block" type="button">保存长图</button>
+              </div>
+              <div class="success-foot">
+                <button type="button">留在首页</button>
+              </div>
+              <span class="pin" style="left:auto;right:24px;bottom:88px;">② 主 CTA</span>
+              <span class="pin" style="left:auto;right:24px;bottom:48px;">③ 次按钮</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="anno">失败对照 · 现网主次颠倒</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">现行 · 勿再落地</div>
+        </div>
+        <div class="frame frame--home" style="min-height:420px;">
+          <div class="scrim">
+            <div class="success-card">
+              <h3>游记已生成</h3>
+              <p class="sub muted-fail">（无合同副文案 / 或脚注灰字）</p>
+              <div class="success-actions">
+                <button class="btn btn--gold btn--block" type="button">保存长图</button>
+                <button class="btn btn--ghost btn--block" type="button">打开卷轴预览</button>
+              </div>
+              <span class="x-mark" style="top:72px;right:28px;">✕</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--rec">
+          <strong>验收锚点</strong>
+          AC-HELP-04 / 04a · 副文案非脚注 · 主 CTA 不得再写「保存长图」。
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 长图脉冲 + 可见 tip <span class="tag tag--w1">W1</span> <span class="tag tag--rec">D-HELP-03′</span></h2>
+          <p class="lead">首访 = 脉冲 + 一次性可见 tip + aria；禁止第二层 coach；禁止仅 aria 过验收。</p>
+        </div>
+
+        <div class="anno">推荐</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 预览</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock">
+            <button class="ctl" type="button">精修</button>
+            <button class="export export--pulse" type="button">长图 ▾</button>
+          </div>
+          <div class="dock-tip">
+            <strong>保存长图</strong>
+            验货没问题就点『长图』，生成可发微信的长图
+            <div class="tip-actions">
+              <button type="button">知道了</button>
+              <button class="ghost" type="button">Esc 关闭</button>
+            </div>
+          </div>
+          <span class="pin" style="top:16px;right:120px;">① 脉冲</span>
+          <span class="pin" style="top:120px;right:40px;">② 可见 tip</span>
+          <div class="magazine">
+            <div class="magazine__cover">
+              <h3>京都五日</h3>
+              <p>卷轴预览 · 验货默认</p>
+            </div>
+            <div class="magazine__body"><div class="photo-card"></div></div>
+          </div>
+        </div>
+
+        <div class="compare">
+          <div class="col">
+            <h4><span class="tag tag--fail">拒收</span> 仅 aria / 仅脉冲</h4>
+            <p style="font-size:12px;color:var(--wf-muted);margin:0;">
+              明眼用户看不见合同句；AC-HELP-05a 不通过。
+            </p>
+          </div>
+          <div class="col">
+            <h4><span class="tag tag--fail">拒收</span> 脉冲 + 独立 coach</h4>
+            <p style="font-size:12px;color:var(--wf-muted);margin:0;">
+              双打扰违反 D-HELP-03；W1 No-Go。
+            </p>
+          </div>
+        </div>
+
+        <div class="callout callout--rec">
+          <strong>载体建议</strong>
+          tip 锚在 Dock「长图」附近（本帧）；也可复用精修 toast 底中形态，但须一眼指向长图，不得指向精修。
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 成功态发群指引 <span class="tag tag--w1">W1</span> <span class="tag tag--rec">D-HELP-09</span></h2>
+          <p class="lead"><code>publishGuide</code> 优先；空则客户端三要素兜底必显；不得空白成功态。</p>
+        </div>
+
+        <div class="anno">推荐 · 默认微信群兜底</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 预览 · 导出成功</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock">
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">长图 ▾</button>
+          </div>
+          <div class="magazine" style="opacity:.85;">
+            <div class="magazine__cover">
+              <h3>京都五日</h3>
+              <p>已导出</p>
+            </div>
+            <div class="magazine__body"><div class="photo-card"></div></div>
+          </div>
+          <div class="task-dock task-dock--success">
+            <div>
+              <p class="task-dock__main">长图已保存到本机</p>
+              <div class="task-dock__hint">
+                <ol>
+                  <li>打开微信，按文件名顺序发到群聊</li>
+                  <li>可点「在文件夹中显示」找到文件</li>
+                </ol>
+              </div>
+              <div class="task-dock__actions">
+                <button class="pri" type="button">在文件夹中显示</button>
+                <button class="ghost" type="button">关闭</button>
+              </div>
+            </div>
+          </div>
+          <span class="pin" style="bottom:150px;left:50%;transform:translateX(-50%);">三要素 · Task Dock</span>
+        </div>
+
+        <div class="callout callout--warn">
+          <strong>现网差距</strong>
+          Task Dock 现有硬编码短句（如「拖进微信群即可」）；合同要求三要素齐全，backend 有 <code>publishGuide</code> 时优先覆盖。
+        </div>
+      </section>
+
+      <!-- F7 -->
+      <section class="panel" id="f7">
+        <div class="sec">
+          <h2>F7 · 忙碌态零 L1 <span class="tag tag--w1">W1</span> <span class="tag tag--rec">D-HELP-08′</span></h2>
+          <p class="lead"><code>isHelpL1Blocked()</code> 为 true 时：无脉冲、无 tip、无 coach；进度只走既有 UI。idle 后可补评估一轮。</p>
+        </div>
+
+        <div class="anno">导出进行中 · 正确</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 预览 · 导出中</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="dock">
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button" style="opacity:.75;">长图 ▾</button>
+          </div>
+          <span class="x-mark" style="top:52px;right:28px;font-size:22px;">无 tip</span>
+          <span class="x-mark" style="top:18px;right:100px;font-size:18px;">无脉冲</span>
+          <div class="magazine" style="opacity:.7;">
+            <div class="magazine__cover">
+              <h3>京都五日</h3>
+              <p>生成中…</p>
+            </div>
+            <div class="magazine__body"><div class="photo-card"></div></div>
+          </div>
+          <div class="task-dock task-dock--busy">
+            <div class="task-dock__row">
+              <div style="flex:1;">
+                <p class="task-dock__main">正在生成长图…</p>
+                <p class="task-dock__hint">约还要 20 秒 · 请稍候</p>
+                <div class="busy-card" style="box-shadow:none;padding:8px 0 0;background:transparent;">
+                  <div class="bar"><i></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--rec">
+          <strong>AC-HELP-13 / 13a</strong>
+          忙碌中零打扰；转 idle 且全局未见过长图引导时，允许补发脉冲+可见 tip（仍只一轮）。
+        </div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 「?」入口位置 <span class="tag tag--w2">W2</span></h2>
+          <p class="lead">首页 + 预览同源幽灵图标；不进 Task Dock；不与金色「长图」并排抢主。</p>
+        </div>
+
+        <div class="compare">
+          <div class="col">
+            <h4>首页 Chrome</h4>
+            <div class="browser">
+              <div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">首页</div>
+            </div>
+            <div class="frame frame--home" style="min-height:280px;">
+              <div class="home-chrome">
+                <span class="brand">Travelogue Studio</span>
+                <button class="help-q help-q--ghost" type="button" title="使用帮助">?</button>
+              </div>
+              <div class="bento" style="margin-top:20px;">
+                <h3>把旅行照片做成杂志风长图</h3>
+                <p>照片留在本机 · 无需注册</p>
+                <button class="btn btn--primary btn--sm" type="button">开始制作</button>
+              </div>
+              <span class="pin" style="top:18px;right:56px;">?</span>
+            </div>
+          </div>
+          <div class="col">
+            <h4>预览 Chrome</h4>
+            <div class="browser">
+              <div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">预览</div>
+            </div>
+            <div class="frame frame--photo" style="min-height:280px;">
+              <button class="help-q help-q--ghost" type="button" style="position:absolute;top:16px;left:14px;z-index:36;">?</button>
+              <div class="dock">
+                <button class="ctl" type="button">精修</button>
+                <button class="export" type="button">长图 ▾</button>
+              </div>
+              <span class="pin" style="top:18px;left:52px;">左上幽灵 · 远离长图</span>
+              <div class="magazine" style="margin-top:56px;width:70%;">
+                <div class="magazine__cover" style="height:120px;">
+                  <h3 style="font-size:16px;">卷轴</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--warn">
+          <strong>禁止</strong>
+          「?」放进 Task Dock，或与金色「长图」并排成第二主 CTA。
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 帮助抽屉 H1–H5 + 重播 <span class="tag tag--w2">W2</span></h2>
+          <p class="lead">固定 5 条任务型条目；重播文案须明示重置长图引导与精修保存 hint。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 预览 · 帮助开</div>
+        </div>
+        <div class="frame frame--photo">
+          <button class="help-q" type="button" style="position:absolute;top:16px;left:14px;z-index:36;background:#fff;">?</button>
+          <div class="dock" style="opacity:.55;">
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">长图 ▾</button>
+          </div>
+          <div class="magazine" style="margin-right:380px;opacity:.75;">
+            <div class="magazine__cover">
+              <h3>京都五日</h3>
+              <p>帮助打开时 Dock 仍可见，但不挡长图命中区</p>
+            </div>
+          </div>
+          <div class="sheet sheet--help">
+            <div class="sheet__head">
+              <h4>使用帮助</h4>
+              <button class="sheet__close" type="button">×</button>
+            </div>
+            <div class="sheet__body">
+              <div class="help-item is-on">
+                <strong>H1 · 怎么选照片文件夹</strong>
+                <span>同一次旅行 · 子夹 · 格式 · 先传到电脑</span>
+              </div>
+              <div class="help-item">
+                <strong>H2 · 「完成」和「更新版面」有什么区别</strong>
+                <span>短标题 · §3.4 对照表</span>
+              </div>
+              <div class="help-item">
+                <strong>H3 · 「长图待更新」是什么意思</strong>
+                <span>pending → 更新版面 → 再点长图</span>
+              </div>
+              <div class="help-item">
+                <strong>H4 · 怎么把长图发到微信群</strong>
+                <span>打开文件夹 · 按序发送</span>
+              </div>
+              <div class="help-item">
+                <strong>H5 · 出错了怎么办</strong>
+                <span>导入 / 导出 / 要更新版面 · 三行决策树</span>
+              </div>
+              <div class="help-replay">
+                <button type="button">重新显示操作提示</button>
+                <p>已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- F6 -->
+      <section class="panel" id="f6">
+        <div class="sec">
+          <h2>F6 · 精修开 → 点? → 面板关 + 帮助开 <span class="tag tag--w2">W2</span></h2>
+          <p class="lead">关面板保 <code>refine</code> 模式；chip「精修中」与 Dock「完成」保留；不清 pending（MF-HELP-06 / AC-16）。</p>
+        </div>
+
+        <div class="compare">
+          <div class="col">
+            <h4>① 精修面板开着</h4>
+            <div class="frame frame--photo" style="min-height:360px;border:2px solid var(--wf-border);border-radius:14px;">
+              <div class="mode-chip">精修中</div>
+              <div class="dock">
+                <button class="ctl ctl--done" type="button">完成</button>
+                <button class="export" type="button">长图 ▾</button>
+              </div>
+              <button class="help-q help-q--ghost" type="button" style="position:absolute;top:56px;left:14px;">?</button>
+              <div class="sheet" style="width:48%;">
+                <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+                <div class="sheet__tabs">
+                  <span class="on">这页</span><span>这本</span><span>导出</span>
+                </div>
+                <div class="sheet__body">
+                  <div class="hint-box">改字马上生效…</div>
+                  <p class="hint">面板开 · 点左上「?」</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <h4>② 帮助开 · 面板已关 · 模式仍 on</h4>
+            <div class="frame frame--photo" style="min-height:360px;border:2px solid var(--wf-border);border-radius:14px;">
+              <div class="mode-chip">精修中</div>
+              <div class="dock">
+                <button class="ctl ctl--done" type="button">完成</button>
+                <button class="export" type="button">长图 ▾</button>
+              </div>
+              <span class="pin" style="top:18px;left:100px;">chip 仍在</span>
+              <span class="pin" style="top:18px;right:120px;">完成 仍在</span>
+              <div class="sheet sheet--help" style="width:48%;">
+                <div class="sheet__head"><h4>使用帮助</h4><button class="sheet__close" type="button">×</button></div>
+                <div class="sheet__body">
+                  <div class="help-item is-on"><strong>H2</strong><span>完成 ≠ 更新版面</span></div>
+                  <p class="hint">★ 仍可点 · pending 不清</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- F8 -->
+      <section class="panel" id="f8">
+        <div class="sec">
+          <h2>F8 · T-REFINE-SAVE 两行 hint <span class="tag tag--w2">W2</span></h2>
+          <p class="lead">首次打开精修 Sheet；必须含「完成 ≠ 更新版面」；可链到 H2。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio · 精修 Sheet</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="mode-chip">精修中</div>
+          <div class="dock">
+            <button class="ctl ctl--done" type="button">完成</button>
+            <button class="export" type="button">长图 ▾</button>
+          </div>
+          <div class="sheet">
+            <div class="sheet__head">
+              <h4>精修</h4>
+              <button class="sheet__close" type="button">×</button>
+            </div>
+            <div class="sheet__tabs">
+              <span class="on">这页</span><span>这本</span><span>导出</span><span>更多</span>
+            </div>
+            <div class="sheet__body">
+              <div class="hint-box">
+                ① 改字马上生效；改精选请先点下方『更新版面』<br />
+                ② 『完成』只是退出精修，不是更新版面
+                <div style="margin-top:8px;"><a href="#">了解更多 →</a></div>
+              </div>
+              <label>正文</label>
+              <textarea rows="3">清水寺的红叶…</textarea>
+              <button class="btn btn--primary" type="button">更新版面</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- F9 -->
+      <section class="panel" id="f9">
+        <div class="sec">
+          <h2>F9 · 窄窗底部 Sheet <span class="tag tag--w2">W2</span> <span class="tag tag--new">SF</span></h2>
+          <p class="lead">窄窗帮助改底部 Sheet，避免挡住 Dock「长图」命中区。</p>
+        </div>
+
+        <div class="browser" style="max-width:390px;margin:0 auto;border-radius:14px 14px 0 0;">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">窄窗 · 390</div>
+        </div>
+        <div class="frame frame--photo frame--narrow">
+          <div class="dock">
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">长图</button>
+          </div>
+          <div class="magazine" style="margin-top:64px;width:78%;">
+            <div class="magazine__cover" style="height:140px;">
+              <h3 style="font-size:16px;">卷轴</h3>
+            </div>
+          </div>
+          <div class="sheet sheet--help sheet--bottom">
+            <div class="sheet__head">
+              <h4>使用帮助</h4>
+              <button class="sheet__close" type="button">×</button>
+            </div>
+            <div class="sheet__body">
+              <div class="help-item is-on"><strong>H4 · 发到微信群</strong><span>底部 Sheet · 长图仍可点</span></div>
+              <div class="help-item"><strong>H1</strong><span>…</span></div>
+            </div>
+          </div>
+          <span class="pin" style="top:18px;right:70px;">长图不被挡</span>
+        </div>
+      </section>
+
+      <!-- F10 -->
+      <section class="panel" id="f10">
+        <div class="sec">
+          <h2>F10 · pending 与长图 tip 避让 <span class="tag tag--w1">W1 建议</span></h2>
+          <p class="lead">有「更新版面」待办时，长图 tip 勿遮挡主行动；可上移 tip 或延后到 pending 清除后。</p>
+        </div>
+
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · pending + 首访 tip</div>
+        </div>
+        <div class="frame frame--photo">
+          <div class="mode-chip">精修中</div>
+          <div class="dock">
+            <button class="ctl ctl--done" type="button">完成</button>
+            <button class="export export--pulse" type="button">长图 ▾</button>
+          </div>
+          <div class="dock-tip" style="top:58px;">
+            <strong>保存长图</strong>
+            验货没问题就点『长图』…
+            <div class="tip-actions"><button type="button">知道了</button></div>
+          </div>
+          <div class="task-dock" style="bottom:18px;">
+            <div class="task-dock__row">
+              <div style="flex:1;">
+                <p class="task-dock__main" style="color:#e65100;">版面有改动</p>
+                <p class="task-dock__hint">先更新版面，再导出长图</p>
+              </div>
+              <button class="btn btn--warn btn--sm" type="button" style="background:#ffe0b2;color:#e65100;margin-left:auto;">更新版面</button>
+            </div>
+          </div>
+          <span class="pin" style="bottom:100px;left:24px;">tip 在上 · 更新版面在下 · 互不叠</span>
+        </div>
+
+        <div class="callout callout--warn">
+          <strong>SF-HELP-02</strong>
+          若同屏冲突难解：忙碌/pending 期间可延后 tip（仍受全局 seen 与 idle 补评估约束）。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside" id="aside">
+      <h3>本帧审核要点</h3>
+      <ol id="aside-list">
+        <li>主 CTA = 打开卷轴预览</li>
+        <li>副文案与主 CTA 同卡可视区</li>
+        <li>「保存长图」仅为次按钮</li>
+        <li>AC-HELP-04 / 04a</li>
+      </ol>
+      <p style="margin:14px 0 0;color:var(--wf-muted);">
+        PRD：<a href="../PRD-HELP-ONBOARDING-V1.md">v1.1.1</a><br />
+        评审：<a href="../acceptance-records/help-onboarding-v1-review-2026-07-14.md">2026-07-14</a>
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    const tips = {
+      f1: ["主 CTA = 打开卷轴预览", "副文案与主 CTA 同卡可视区", "「保存长图」仅为次按钮", "AC-HELP-04 / 04a"],
+      f2: ["脉冲 + 可见 tip + aria", "禁止仅 aria / 禁止双打扰", "只指向「长图」", "AC-HELP-05 / 05a"],
+      f3: ["publishGuide 优先", "空则三要素兜底必显", "「在文件夹中显示」可用", "AC-HELP-06 / 06a"],
+      f7: ["忙碌态零脉冲 / 零 tip", "进度只走 Task Dock", "idle 后可补评估一轮", "AC-HELP-13 / 13a"],
+      f4: ["首页 + 预览同源「?」", "不进 Task Dock", "远离金色长图", "W2 · P5-H1"],
+      f5: ["仅 5 条任务条目", "重播文案覆盖长图+精修 hint", "不挡 Dock 长图命中区", "AC-HELP-09 / 10"],
+      f6: ["关面板保 refine 模式", "chip / 完成保留", "不清 pending", "AC-HELP-15 / 16"],
+      f8: ["两行语义 hint", "完成 ≠ 更新版面", "了解更多 → H2", "AC-HELP-07 / 14"],
+      f9: ["窄窗改底部 Sheet", "长图命中区不被挡", "SF-HELP-01", "W2"],
+      f10: ["tip 与「更新版面」互不叠", "可延后 tip", "SF-HELP-02", "W1 建议"]
+    };
+
+    const tabs = document.getElementById("tabs");
+    const asideList = document.getElementById("aside-list");
+
+    function show(id) {
+      document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-visible", p.id === id));
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("is-active", b.dataset.panel === id));
+      asideList.innerHTML = (tips[id] || []).map((t) => `<li>${t}</li>`).join("");
+      history.replaceState(null, "", "#" + id);
+    }
+
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-panel]");
+      if (!btn) return;
+      show(btn.dataset.panel);
+    });
+
+    const hash = (location.hash || "#f1").slice(1);
+    if (document.getElementById(hash)) show(hash);
+  </script>
+</body>
+</html>

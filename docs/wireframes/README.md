@@ -3,7 +3,8 @@
 | 文件 | 说明 |
 |------|------|
 | [preview-refine-v1-wireframe.html](./preview-refine-v1-wireframe.html) | **预览精修体验 V1** · 验货默认 + 这页/这本/导出与更多 + 更新版面/导出拦截 · [PRD-PREVIEW-REFINE-V1](../PRD-PREVIEW-REFINE-V1.md) · 已落地 |
-| [preview-refine-ux-v1.1-wireframe.html](./preview-refine-ux-v1.1-wireframe.html) | **精修可用性优化 V1.1** · 模式≠面板 · 这页/这本情境对齐 · 封面缩略图 · 导出收敛 · [PRD-PREVIEW-REFINE-UX-V1.1](../PRD-PREVIEW-REFINE-UX-V1.1.md) · **待评审** |
+| [preview-refine-ux-v1.1-wireframe.html](./preview-refine-ux-v1.1-wireframe.html) | **精修可用性优化 V1.1** · 模式≠面板 · 这页/这本情境对齐 · 封面缩略图 · 导出收敛 · [PRD-PREVIEW-REFINE-UX-V1.1](../PRD-PREVIEW-REFINE-UX-V1.1.md) |
+| [help-onboarding-v1-wireframe.html](./help-onboarding-v1-wireframe.html) | **帮助与情境引导 V1** · F1–F10（W1：F1–F3/F7）· 方案 A / 可见 tip / 发群兜底 · [PRD-HELP-ONBOARDING-V1](../PRD-HELP-ONBOARDING-V1.md) **v1.1.1** · Conditional Go |
 | [preview-cover-web-v1-wireframe.html](./preview-cover-web-v1-wireframe.html) | **Web 预览页封面 v1** · 首屏线框 · 现状 + A/B/C/D 四方案 · **已落地 D 全视窗** · 设计评审用 |
 | [preview-closing-web-v1-wireframe.html](./preview-closing-web-v1-wireframe.html) | **Web 预览页封底 v1** · 末屏线框 · 对称 `cover-opening` · **推荐 D 全视窗封底** · 待评审 |
 | [studio-bookends-panel-v1-wireframe.html](./studio-bookends-panel-v1-wireframe.html) | **Studio「封面与封底」合页控件** · DE-BE-02 / FE-BE-07 · [PRD-BOOKENDS-ENGINE-V1](../PRD-BOOKENDS-ENGINE-V1.md) |
@@ -31,7 +32,9 @@
 
 **精修体验 V1 评审 Tab**：**① 诊断** · **② 验货默认** · **③ 精修·这页** · **④ 精修·这本** · **⑤ 更新版面/拦截** · **⑥ G1 横幅** · **⑦ 导入偏好** · **⑧ 对照表** · **⑨ 规范** · **⑩ 图标** · **⑪ 这页空态** · **⑫ P0 过渡** · PRD：[PRD-PREVIEW-REFINE-V1.md](../PRD-PREVIEW-REFINE-V1.md) **v1.2** · 验收：[ACCEPTANCE-PREVIEW-REFINE-V1.md](../ACCEPTANCE-PREVIEW-REFINE-V1.md) · 评审记录：[preview-refine-v1-review-2026-07-11.md](../acceptance-records/preview-refine-v1-review-2026-07-11.md)
 
-**精修可用性 V1.1 评审 Tab**：**① 问题对照** · **② 模式解耦** · **③ 收起后面面可改** · **④ 这页·正文** · **⑤ 这本·净化** · **⑥ 封面缩略图** · **⑦ 导出收敛** · **⑧ 状态机&审核** · PRD：[PRD-PREVIEW-REFINE-UX-V1.1.md](../PRD-PREVIEW-REFINE-UX-V1.1.md) **v0.1** · 线框：[preview-refine-ux-v1.1-wireframe.html](./preview-refine-ux-v1.1-wireframe.html)
+**精修可用性 V1.1 评审 Tab**：**① 问题对照** · **② 模式解耦** · **③ 收起后面面可改** · **④ 这页·正文** · **⑤ 这本·净化** · **⑥ 封面缩略图** · **⑦ 导出收敛** · **⑧ 状态机&审核** · PRD：[PRD-PREVIEW-REFINE-UX-V1.1.md](../PRD-PREVIEW-REFINE-UX-V1.1.md) · 线框：[preview-refine-ux-v1.1-wireframe.html](./preview-refine-ux-v1.1-wireframe.html)
+
+**帮助系统 V1 评审 Tab**：**F1 FirstSuccess** · **F2 长图 tip** · **F3 发群兜底** · **F7 忙碌态**（W1 挡门）· F4–F6/F8–F10（W2）· PRD：[PRD-HELP-ONBOARDING-V1.md](../PRD-HELP-ONBOARDING-V1.md) **v1.1.1** · 线框：[help-onboarding-v1-wireframe.html](./help-onboarding-v1-wireframe.html) · 评审：[help-onboarding-v1-review-2026-07-14.md](../acceptance-records/help-onboarding-v1-review-2026-07-14.md)
 
 **output-first v1.6 评审 Tab（M20）**：**Web·空态** · **iPad·横屏** · **Import Sheet** · **Web·导入中** · **Web·书架** · PRD：[PRD-STUDIO-HOMEPAGE-v2.md](../PRD-STUDIO-HOMEPAGE-v2.md) **v2.0.3** · 契约：[studio-homepage-v2/](../studio-homepage-v2/README.md) · Mobile Tab 非 Studio Web 范围
 
