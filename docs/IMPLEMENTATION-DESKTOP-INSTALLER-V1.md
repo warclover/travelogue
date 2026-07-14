@@ -4,7 +4,7 @@
 |------|------|
 | **文档版本** | v1.0.0 |
 | **日期** | 2026-07-14 |
-| **状态** | **M-INS-0a Done** · 进入 M-INS-0b（路径 / portable / worker） |
+| **状态** | **M-INS-0c Done** · 可进入冒烟 / Gate A 准备 |
 | **关联 PRD** | [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) v1.1.0 |
 | **关联 ADR** | [ADR-018](./adr/018-desktop-installer-layout.md) |
 | **关联验收** | [ACCEPTANCE-DESKTOP-INSTALLER-V1.md](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |
@@ -118,15 +118,26 @@ Gate C    公开下载
 
 ### 3.3 完成定义（DoD）
 
-- [ ] 无源码干净目录：启动 + 首页 200  
-- [ ] 中文路径选文件夹成功  
-- [ ] 便携模式 trips/logs 在 exe 旁  
-- [ ] （开发态）不设 portable.flag 时行为与开发约定兼容，不破坏日常 CLI  
+- [x] 无源码干净目录：启动 + 首页 200（`scripts/smoke_studio_portable.py`）  
+- [x] 选文件夹 worker：frozen 走 `--pick-folder-worker` + `--out` 文件 IPC（单元覆盖）  
+- [x] 便携模式 trips/logs/ownership 在 exe 旁（冒烟已验证）  
+- [x] （开发态）不设 portable.flag：`user_data_dir()==ROOT`，日常 CLI 不变  
 
 ### 3.4 回滚
 
 用 feature flag / 环境变量临时回退到「开发态 ROOT」；不得带着半收口路径进 Gate A。
 
+### 3.5 本阶段落地文件（2026-07-14）
+
+| 文件 | 变更 |
+|------|------|
+| `travelogue/paths.py` | `resource_root` / `user_data_dir` / `is_portable_mode` / `ensure_user_data_layout` / `logs_dir` |
+| `travelogue/desktop/launcher.py` | `freeze_support` · `--pick-folder-worker` 分发 · 日志进 `logs_dir()` |
+| `travelogue/desktop/folder_picker_service.py` · `pick_folder_worker.py` | frozen argv + `--out` JSON |
+| `travelogue/web/studio_config.py` · `config/loader.py` | frozen 读用户 config；相对 trips 锚到 `user_data_dir` |
+| `travelogue/export/platform_profiles.py` · `render/reading_profile.py` | 捆绑资源经 `resource_root()` |
+| `scripts/smoke_studio_portable.py` | 干净临时目录 HTTP 冒烟 |
+| `tests/unit/desktop/test_runtime_paths_0b.py` | portable / install / env / worker 单测 |
 ---
 
 ## 4. M-INS-0c · 长图双轨 · 单实例 · 退出
@@ -161,10 +172,23 @@ Gate C    公开下载
 
 ### 4.4 完成定义（DoD）
 
-- [ ] 干净机无 PW：A05 工程自测 PASS  
-- [ ] 单实例 + 退出自测 PASS  
-- [ ] 全文案扫描：安装相关路径无 `pip install`  
+- [x] 无 PW：`POST /longshot` → `fallback:client` → iframe html2canvas → upload 写盘  
+- [x] 单实例 mutex + instance state；端口占用有限重试  
+- [x] `POST /__travelogue/shutdown` + 首页设置 / 预览 Dock「退出 Studio」  
+- [x] 安装版相关文案去 pip（`E_LNG_PLAYWRIGHT` / `E_PICK_FOLDER_FAILED`）  
+- [x] `index-longshot.html` 不再注入 preview-toolbar（capture 面干净）  
 
+### 4.5 本阶段落地文件（2026-07-14）
+
+| 文件 | 变更 |
+|------|------|
+| `travelogue/web/studio_chrome.py` | longshot 面不注入 chrome |
+| `travelogue/export/longshot.py` | `playwright_longshot_available` · `write_longshot_upload` |
+| `travelogue/web/studio_handlers/export_handlers.py` | client fallback 响应 · upload · shutdown |
+| `travelogue/web/studio_lifecycle.py` · `desktop/single_instance.py` | 端口重试 · mutex · instance.json |
+| `templates/studio/preview-toolbar/longshot*.js` | 自动轨 2 |
+| `templates/studio/js/studio-exit.js` · homepage settings · preview dock | 退出入口 |
+| `tests/unit/desktop/test_*_0c.py` | 单测 |
 ---
 
 ## 5. Smoke → Gate A
@@ -225,7 +249,7 @@ Gate C    公开下载
 3. 再 **T-0c-01～09**（长图与生命周期）  
 4. 跑 **T-A-01** 冒烟；通过后再约人  
 
-当前状态：**M-INS-0a 完成**；下一会话从 **T-0b-01**（`resource_root` / `user_data_dir` / `portable.flag`）开始。
+当前状态：**M-INS-0c 完成**；下一步跑完整冒烟（含无 PW 长图）并准备 Gate A。
 
 ---
 

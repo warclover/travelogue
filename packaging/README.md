@@ -56,6 +56,14 @@ V1 安装版 **不** 打入：
 - `config/platform_profiles.yaml`
 - `config.yaml.example`
 
+## 冒烟（干净临时目录）
+
+```bat
+python scripts/smoke_studio_portable.py --dist dist\TravelogueStudio
+```
+
+期望：HTTP 200；exe 旁出现 `trips/`、`logs/`、`.travelogue-ownership`。
+
 ## 相关文档
 
 - [ADR-018](../docs/adr/018-desktop-installer-layout.md)

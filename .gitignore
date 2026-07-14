@@ -16,6 +16,7 @@ dist/
 build/
 *.egg-info/
 logs/
+studio-instance.json
 
 # Runtime trip data (local albums); track linzhi experience overrides only
 trips/*

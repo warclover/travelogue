@@ -232,7 +232,13 @@ def _report_unknown_config_keys(keys: list[str], *, strict: bool) -> None:
 
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
-    candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
+    from travelogue.paths import is_frozen, user_config_path, user_data_dir
+
+    candidates: list[Path | None] = [path, Path.cwd() / "config.yaml"]
+    if is_frozen():
+        candidates.append(user_config_path())
+    else:
+        candidates.append(ROOT / "config.yaml")
     cfg_path = next((p for p in candidates if p and p.is_file()), None)
     data: TrackedDict | dict[str, Any] = {}
     if cfg_path and yaml is not None:
@@ -247,12 +253,11 @@ def load_config(path: Path | None = None) -> AppConfig:
     if not trips_dir.is_absolute():
         base = Path.cwd()
         try:
-            from travelogue.paths import exe_dir, is_frozen
-
             if is_frozen():
-                base = exe_dir()
+                # Relative trips_dir is anchored at user_data_dir (portable or LocalAppData).
+                base = user_data_dir()
         except Exception:
-            _log.debug("frozen exe_dir lookup failed; using cwd for trips_dir", exc_info=True)
+            _log.debug("frozen user_data_dir lookup failed; using cwd for trips_dir", exc_info=True)
         trips_dir = (base / trips_dir).resolve()
     ingest_raw = data.get("ingest") if isinstance(data.get("ingest"), dict) else {}
     if isinstance(ingest_raw, TrackedDict):

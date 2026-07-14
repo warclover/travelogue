@@ -6,7 +6,7 @@ import json
 import threading
 from typing import Any
 
-from travelogue.paths import ROOT
+from travelogue.paths import resource_root
 
 try:
     import yaml
@@ -28,7 +28,7 @@ VALID_PROFILES = frozenset({
     "reader_immersive",
 })
 
-_MATRIX_PATH = ROOT / "docs" / "experience-matrix.yaml"
+_MATRIX_PATH = resource_root() / "docs" / "experience-matrix.yaml"
 
 # Minimal fallback when YAML unavailable (matches experience-matrix.yaml v0.1).
 _FALLBACK_MATRIX: dict[str, Any] = {

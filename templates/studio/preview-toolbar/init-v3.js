@@ -24,6 +24,7 @@ import {
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
+import { requestExitStudio } from "../js/studio-exit.js";
 import {
   registerInlineEditBridge,
   initCoverTitleEdit,
@@ -581,6 +582,39 @@ export function initToolbarV3(root, tripId) {
       syncRefineDockChrome(root, { panelOpen: false });
     });
   }
+
+  // M-INS-0c · desktop exit (only when capabilities.desktopExit)
+  fetch("/__travelogue/config")
+    .then(function (r) {
+      return r.ok ? r.json() : null;
+    })
+    .then(function (cfg) {
+      var caps = (cfg && cfg.capabilities) || {};
+      if (!caps.desktopExit) return;
+      var dock = root.querySelector(".preview-toolbar__dock-rail") || root;
+      if (root.querySelector("[data-studio-exit]")) return;
+      var exitBtn = document.createElement("button");
+      exitBtn.type = "button";
+      exitBtn.className = "preview-toolbar__dock-btn preview-toolbar__dock-btn--exit";
+      exitBtn.setAttribute("data-studio-exit", "1");
+      exitBtn.setAttribute("aria-label", "退出 Studio");
+      exitBtn.title = "退出 Studio";
+      exitBtn.textContent = "退出";
+      exitBtn.addEventListener("click", function () {
+        requestExitStudio({ surface: "preview_dock" }).then(function (res) {
+          if (res && res.ok === false && !res.cancelled && res.message) {
+            showToolbarToast(res.message);
+          }
+        });
+      });
+      if (backBtn && backBtn.parentNode) {
+        backBtn.parentNode.insertBefore(exitBtn, backBtn.nextSibling);
+      } else {
+        dock.appendChild(exitBtn);
+      }
+    })
+    .catch(function () {});
+
   syncRefineDockChrome(root, { panelOpen: false });
 
   // Trust V1 · 文案保存不升 longshotStale（废止 copy-saved → showStaleHint）

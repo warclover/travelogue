@@ -3,26 +3,34 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
 import sys
 from pathlib import Path
 
 
+def _dispatch_pick_folder_worker() -> bool:
+    """Handle ``--pick-folder-worker`` before Typer / file-log stdout redirect."""
+    if len(sys.argv) < 2 or sys.argv[1] != "--pick-folder-worker":
+        return False
+    from travelogue.desktop.pick_folder_worker import main as worker_main
+
+    worker_main(sys.argv[2:])
+    return True
+
+
 def _setup_early_file_logging() -> Path | None:
-    """Attach a file logger as early as possible (windowed builds have no console).
+    """Attach a file logger as early as possible (windowed builds have no console)."""
+    from travelogue.paths import is_frozen, logs_dir
 
-    M-INS-0a: always log next to the exe under ``logs/``. M-INS-0b will route
-    install-mode logs to LocalAppData while keeping portable ``./logs/``.
-    """
-    frozen = bool(getattr(sys, "frozen", False))
-    if frozen:
-        base = Path(sys.executable).resolve().parent
-    else:
-        # Dev runs via ``python -m travelogue.desktop.launcher`` — keep optional file log
-        # under cwd so windowed-path debugging still has a place to look.
-        base = Path.cwd()
-
-    log_dir = base / "logs"
+    frozen = is_frozen()
     try:
+        if frozen:
+            from travelogue.paths import ensure_user_data_layout
+
+            ensure_user_data_layout()
+            log_dir = logs_dir()
+        else:
+            log_dir = Path.cwd() / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         log_path = log_dir / "studio.log"
         handler = logging.FileHandler(log_path, encoding="utf-8")
@@ -72,12 +80,17 @@ def _setup_early_file_logging() -> Path | None:
             sys.stdout = _StreamToLogger(logging.getLogger("stdout"), logging.INFO)  # type: ignore[assignment]
             sys.stderr = _StreamToLogger(logging.getLogger("stderr"), logging.ERROR)  # type: ignore[assignment]
 
+        from travelogue.paths import is_portable_mode, user_data_dir
+
         logging.getLogger(__name__).info(
-            "Travelogue Studio starting (frozen=%s) log=%s", frozen, log_path
+            "Travelogue Studio starting (frozen=%s portable=%s user_data=%s log=%s)",
+            frozen,
+            is_portable_mode() if frozen else False,
+            user_data_dir() if frozen else Path.cwd(),
+            log_path,
         )
         return log_path
     except OSError as exc:
-        # Last resort: cannot create log dir (read-only media). Continue without file log.
         try:
             sys.stderr.write(f"studio log setup failed: {exc}\n")
         except Exception:
@@ -86,6 +99,9 @@ def _setup_early_file_logging() -> Path | None:
 
 
 def main() -> None:
+    multiprocessing.freeze_support()
+    if _dispatch_pick_folder_worker():
+        return
     _setup_early_file_logging()
     # Desktop / packaged Studio: allow local folder-picker albums by default.
     # Operators can still set TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=0 to lock down.

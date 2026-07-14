@@ -49,6 +49,7 @@ import {
   markExportPulseSeen,
   maybeShowPlatformPickTip,
 } from "../js/help-onboarding.js";
+import { runClientLongshotFallback } from "./longshot-client-fallback.js";
 
 export {
   shouldShowExportPulse,
@@ -1777,6 +1778,43 @@ export function cancelPreviewLongshotExport(root) {
       req.platform = platform;
     }
 
+    function finishClientFallback() {
+      setLongshotExportState(root, "running", { hint: "正在使用兼容模式保存…" });
+      return runClientLongshotFallback(root, tripId, {
+        platform: platform,
+        prefs: prefs,
+      }).then(function (job) {
+        _setSlowHint(root, "", false);
+        if (job.status === "succeeded") {
+          markExportPulseSeen(tripId);
+          writeExportSideEffect(tripId);
+          trackStudioEvent("longshot_export_success", {
+            platform: (job.result && job.result.platform) || platform,
+            output_count: (job.result && job.result.outputs && job.result.outputs.length) || 0,
+            target_page_count: job.result && job.result.pageCount != null ? job.result.pageCount : null,
+            duration_ms: Date.now() - t0,
+            trip_id: tripId,
+            surface: "preview",
+            from: from,
+            capture_method: "p2",
+          });
+          setLongshotExportState(root, "done");
+          showLongshotDrawer(root, job);
+        } else {
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: (job.error && job.error.code) || "E_LNG_CAPTURE_FAILED",
+            trip_id: tripId,
+            surface: "preview",
+            from: from,
+            capture_method: "p2",
+          });
+          setLongshotExportState(root, "error");
+          showLongshotDrawer(root, job);
+        }
+      });
+    }
+
     postJsonBusyRetry("/__travelogue/longshot", req, {
       onBusy: function () {
         var busyHint =
@@ -1824,6 +1862,11 @@ export function cancelPreviewLongshotExport(root) {
           });
           return;
         }
+        // M-INS-0c · server asks client to run html2canvas track
+        if (res.status === 200 && res.body && res.body.fallback === "client") {
+          clearResumePlatform();
+          return finishClientFallback();
+        }
         if (res.status !== 202 || !res.body.jobId) {
           trackStudioEvent("longshot_export_fail", {
             platform: platform,
@@ -1862,6 +1905,11 @@ export function cancelPreviewLongshotExport(root) {
               showLongshotDrawer(root, job);
             } else if (job.status === "failed") {
               var err = job.error || {};
+              // Playwright missing mid-job → auto client track (non-terminal).
+              if (err.code === "E_LNG_PLAYWRIGHT") {
+                finishClientFallback();
+                return;
+              }
               trackStudioEvent("longshot_export_fail", {
                 platform: platform,
                 error_code: err.code || "E_EXPORT_LONGSHOT",

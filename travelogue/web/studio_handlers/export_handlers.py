@@ -78,7 +78,11 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
 
 
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
-    from travelogue.export.longshot import DEFAULT_EXPORT_SCALE, export_trip_longshot
+    from travelogue.export.longshot import (
+        DEFAULT_EXPORT_SCALE,
+        export_trip_longshot,
+        playwright_longshot_available,
+    )
     from travelogue.export.platform_profiles import (
         DEFAULT_PLATFORM,
         PlatformProfileError,
@@ -94,6 +98,21 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     trip_id = str(payload.get("tripId") or "").strip()
     if not trip_id:
         handler._json_response(400, {"ok": False, "error": "tripId required"})
+        return
+
+    # M-INS-0c · ADR-018 D6: if server track unavailable, ask client to run html2canvas.
+    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
+    if force_client or not playwright_longshot_available():
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "fallback": "client",
+                "captureMethod": "p2",
+                "tripId": trip_id,
+                "message": user_message("E_LNG_CLIENT_FALLBACK"),
+            },
+        )
         return
 
     try:
@@ -269,6 +288,134 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         daemon=True,
     ).start()
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
+
+
+def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
+    """Accept client-captured longshot PNG/JPEG and write into the trip dir (D-INS-09)."""
+    import base64
+    import binascii
+
+    from travelogue.export.longshot import (
+        LongshotExportError,
+        write_longshot_upload,
+    )
+    from travelogue.render.copy_display import COPY_DISPLAY_FULL
+
+    payload = handler._read_json_body()
+    if not payload:
+        return
+
+    trip_id = str(payload.get("tripId") or "").strip()
+    if not trip_id:
+        handler._json_response(400, {"ok": False, "error": "tripId required"})
+        return
+
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "trip not found"})
+        return
+
+    fmt = str(payload.get("format") or "png").strip().lower()
+    if fmt == "jpg":
+        fmt = "jpeg"
+    if fmt not in ("png", "jpeg"):
+        handler._json_response(
+            400,
+            {"ok": False, "error": "invalid format", "message": "format 须为 png 或 jpeg"},
+        )
+        return
+
+    raw_b64 = payload.get("data") or payload.get("base64") or ""
+    if not isinstance(raw_b64, str) or not raw_b64.strip():
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_LNG_CAPTURE_FAILED", "message": "缺少长图数据"},
+        )
+        return
+    text = raw_b64.strip()
+    if "," in text and text.lower().startswith("data:"):
+        text = text.split(",", 1)[1]
+    try:
+        data = base64.b64decode(text, validate=False)
+    except (binascii.Error, ValueError):
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_LNG_CAPTURE_FAILED", "message": "长图数据无法解码"},
+        )
+        return
+
+    segment_index = payload.get("segmentIndex")
+    segment_total = payload.get("segmentTotal")
+    try:
+        seg_i = int(segment_index) if segment_index not in (None, "") else None
+        seg_n = int(segment_total) if segment_total not in (None, "") else None
+    except (TypeError, ValueError):
+        handler._json_response(
+            400,
+            {"ok": False, "error": "invalid segment", "message": "分段序号无效"},
+        )
+        return
+
+    filename = payload.get("filename") or payload.get("relPath")
+    filename_s = str(filename).strip() if filename else None
+
+    try:
+        out = write_longshot_upload(
+            trip_dir,
+            data,
+            fmt=fmt,
+            filename=filename_s,
+            segment_index=seg_i,
+            segment_total=seg_n,
+        )
+    except LongshotExportError as exc:
+        handler._json_response(400, client_error_payload(exc))
+        return
+
+    rel = rel_to_trip(trip_dir, out)
+    platform = str(payload.get("platform") or "wechat_chat").strip() or "wechat_chat"
+    copy_display = str(payload.get("copyDisplay") or COPY_DISPLAY_FULL).strip().lower()
+    publish_guide = [
+        "长图已保存到本机",
+        "打开微信，按文件名顺序发到群聊",
+        "可点『在文件夹中显示』找到文件",
+    ]
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "tripId": trip_id,
+            "outputs": [rel],
+            "captureMethod": "p2",
+            "segmented": bool(seg_n and seg_n > 1),
+            "pageCount": seg_n or 1,
+            "platform": platform,
+            "copyDisplay": copy_display,
+            "publishGuide": "\n".join(publish_guide),
+            "userHint": "已使用兼容模式保存",
+        },
+    )
+
+
+def handle_shutdown(handler: StudioHandlerProtocol) -> None:
+    """Stop Studio HTTP server (loopback / authenticated desktop exit)."""
+    from travelogue.web.studio_lifecycle import request_studio_shutdown
+
+    if not request_studio_shutdown():
+        handler._json_response(
+            503,
+            {
+                "ok": False,
+                "error": "E_STUDIO_SHUTDOWN",
+                "message": "当前进程未注册可退出的 Studio 服务",
+            },
+        )
+        return
+    handler._json_response(
+        200,
+        {"ok": True, "message": user_message("E_STUDIO_SHUTDOWN")},
+    )
 
 
 def handle_reveal(handler: StudioHandlerProtocol) -> None:
