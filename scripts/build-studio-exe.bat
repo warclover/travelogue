@@ -4,11 +4,15 @@ REM Requires: pip install -e ".[desktop]"
 setlocal
 cd /d "%~dp0.."
 
-echo [1/2] PyInstaller onedir ...
+echo [1/3] Windows FileVersion resource (D-INS-10) ...
+python scripts/gen_studio_version_info.py
+if errorlevel 1 exit /b 1
+
+echo [2/3] PyInstaller onedir ...
 python -m PyInstaller packaging/travelogue-studio.spec --noconfirm
 if errorlevel 1 exit /b 1
 
-echo [2/2] Portable sidecar + VERSION + SHA256 + zip ...
+echo [3/3] Portable sidecar + VERSION + SHA256 + zip ...
 python scripts/package_studio_portable.py
 if errorlevel 1 exit /b 1
 

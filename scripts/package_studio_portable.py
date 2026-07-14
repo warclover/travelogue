@@ -57,6 +57,16 @@ def finalize(dist_dir: Path, *, make_zip: bool = True) -> Path:
     shutil.copy2(PACKAGING / "使用说明.txt", onedir / "使用说明.txt")
     (onedir / "VERSION.txt").write_text(version + "\n", encoding="utf-8")
 
+    # Gate A invite sidecars (T-A-02) — optional folder next to exe
+    gate_a_src = PACKAGING / "gate-a"
+    gate_a_dst = onedir / "gate-a"
+    if gate_a_src.is_dir():
+        if gate_a_dst.exists():
+            shutil.rmtree(gate_a_dst)
+        shutil.copytree(gate_a_src, gate_a_dst)
+    else:
+        gate_a_dst = Path()  # nonexistent sentinel
+
     # Hash key user-facing files at zip root (exe + sidecar docs).
     hash_targets = [
         exe,
@@ -74,6 +84,8 @@ def finalize(dist_dir: Path, *, make_zip: bool = True) -> Path:
     print(f"OK: {onedir}")
     print(f"    VERSION={version}")
     print(f"    sidecar: portable.flag, 使用说明.txt, VERSION.txt, SHA256SUMS")
+    if gate_a_dst.is_dir():
+        print(f"    gate-a invite materials: {gate_a_dst}")
 
     if not make_zip:
         return onedir

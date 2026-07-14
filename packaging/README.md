@@ -18,10 +18,10 @@ scripts\build-studio-exe.bat
 
 脚本会：
 
-1. 运行 PyInstaller（`packaging/travelogue-studio.spec`）
-2. 注入 `portable.flag`、`使用说明.txt`、`VERSION.txt`
-3. 生成 `SHA256SUMS`
-4. 打 zip
+1. 生成 Windows FileVersion 资源（`scripts/gen_studio_version_info.py`）
+2. 运行 PyInstaller（`packaging/travelogue-studio.spec`）
+3. 注入 `portable.flag`、`使用说明.txt`、`VERSION.txt`、`gate-a/` 邀请材料
+4. 生成 `SHA256SUMS` 并打 zip
 
 也可只做收尾（已有 onedir 时）：
 
@@ -55,14 +55,16 @@ V1 安装版 **不** 打入：
 - `docs/experience-matrix.yaml`
 - `config/platform_profiles.yaml`
 - `config.yaml.example`
+- `travelogue` 包内数据（`collect_data_files`：含 `lse_policy.yaml` / layout templates 等）
 
 ## 冒烟（干净临时目录）
 
 ```bat
 python scripts/smoke_studio_portable.py --dist dist\TravelogueStudio
+python scripts/smoke_studio_portable.py --dist dist\TravelogueStudio --mode install --skip-import
 ```
 
-期望：HTTP 200；exe 旁出现 `trips/`、`logs/`、`.travelogue-ownership`。
+期望：SM-01～SM-09 PASS；安装模式 trips/logs 落在 LocalAppData。记录见 `docs/acceptance-records/desktop-installer-v1-smoke-*.md`。
 
 ## 相关文档
 

@@ -4,8 +4,8 @@
 |------|------|
 | **文档版本** | v1.0.0 |
 | **日期** | 2026-07-14 |
-| **状态** | **M-INS-0c Done** · 可进入冒烟 / Gate A 准备 |
-| **关联 PRD** | [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) v1.1.0 |
+| **状态** | **Smoke / Gate A 准备进行中** · M-INS-0c Done；冒烟矩阵与邀请材料已补齐 |
+| **关联 PRD** | [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) v1.1.1 |
 | **关联 ADR** | [ADR-018](./adr/018-desktop-installer-layout.md) |
 | **关联验收** | [ACCEPTANCE-DESKTOP-INSTALLER-V1.md](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |
 | **工时锚点** | 约 **28–42 人日**（含 Gate A 准备；含 Gate B 安装器；不含证书采购等待） |
@@ -158,8 +158,8 @@ Gate C    公开下载
 | **T-0c-06** | 命名 mutex + 端口状态文件；二次启动打开已有 URL | launcher | A09 · ADR D4 |
 | **T-0c-07** | 端口占用策略：复用或有限重试下一端口 | launcher · serve | UX-03 |
 | **T-0c-08** | 产品内「退出 Studio」：停 HTTP/Job、刷日志、释端口/mutex | Studio UI + shutdown API/信号 | A08 |
-| **T-0c-09** | windowed 启动失败：写日志 + 可选本地 HTML/MessageBox 指向日志 | launcher | SM-04 |
-| **T-0c-10** | （P1）帮助中「安装高清长图组件」说明草稿 | 帮助文案 | D-INS-04 |
+| **T-0c-09** | windowed 启动失败：写日志 + MessageBox 指向日志 | launcher · `startup_feedback.py` | SM-04 · FIRST-04 |
+| **T-0c-10** | （P1）帮助中「安装高清长图组件」说明草稿 | `packaging/gate-a/高清长图组件说明-草稿.md` | D-INS-04 |
 
 ### 4.3 轨 2 技术冻结（实施时写入代码注释/配置）
 
@@ -177,6 +177,9 @@ Gate C    公开下载
 - [x] `POST /__travelogue/shutdown` + 首页设置 / 预览 Dock「退出 Studio」  
 - [x] 安装版相关文案去 pip（`E_LNG_PLAYWRIGHT` / `E_PICK_FOLDER_FAILED`）  
 - [x] `index-longshot.html` 不再注入 preview-toolbar（capture 面干净）  
+- [x] T-0c-09：frozen 启动失败 MessageBox 指向 `logs/studio.log`  
+- [x] T-0c-10：高清长图组件说明草稿（P1）  
+- [x] D-INS-10：`scripts/gen_studio_version_info.py` → PE FileVersion  
 
 ### 4.5 本阶段落地文件（2026-07-14）
 
@@ -193,14 +196,16 @@ Gate C    公开下载
 
 ## 5. Smoke → Gate A
 
-| 任务 ID | 内容 |
-|---------|------|
-| **T-A-01** | 执行 ACCEPTANCE §1；填写 `docs/acceptance-records/desktop-installer-v1-smoke-*.md` |
-| **T-A-02** | 准备 5 人邀请包：zip + 半页说明 + 反馈表（含版本/OS/是否完成找文件） |
-| **T-A-03** | 指定环境覆盖：Win10、Win11、中文路径、至少一台真干净机 |
-| **T-A-04** | Gate A 结束后写验收记录；≥4 完成才开 M-INS-1 |
+| 任务 ID | 内容 | 状态 |
+|---------|------|------|
+| **T-A-01** | 执行 ACCEPTANCE §1；填写 `docs/acceptance-records/desktop-installer-v1-smoke-*.md` | 脚本已扩展；见验收记录 |
+| **T-A-02** | 准备 5 人邀请包：zip + 半页说明 + 反馈表 | `packaging/gate-a/` |
+| **T-A-03** | 指定环境覆盖：Win10、Win11、中文路径、至少一台真干净机 | 约人时执行 |
+| **T-A-04** | Gate A 结束后写验收记录；≥4 完成才开 M-INS-1 | 待约人 |
 
 **禁止**：冒烟未过约用户；Gate A 未过上官网下载按钮。
+
+**反馈入口冻结**：`packaging/gate-a/SUPPORT-SOP.md`（F-INS-REL-05；约人前须填实 TODO 占位）。
 
 ---
 
@@ -249,7 +254,7 @@ Gate C    公开下载
 3. 再 **T-0c-01～09**（长图与生命周期）  
 4. 跑 **T-A-01** 冒烟；通过后再约人  
 
-当前状态：**M-INS-0c 完成**；下一步跑完整冒烟（含无 PW 长图）并准备 Gate A。
+当前状态：**M-INS-0c + Gate A 准备材料完成**；跑完整冒烟并填实反馈入口后再约 5 人。
 
 ---
 
@@ -257,4 +262,5 @@ Gate C    公开下载
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.1.0 | 2026-07-14 | Gate A 准备：启动失败 MessageBox · FileVersion · 扩展 smoke · 邀请包/SOP · 验收记录 |
 | v1.0.0 | 2026-07-14 | 首版：0a/0b/0c → Gate A/B/C 任务拆解与 DoD |

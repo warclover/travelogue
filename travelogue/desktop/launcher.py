@@ -102,7 +102,7 @@ def main() -> None:
     multiprocessing.freeze_support()
     if _dispatch_pick_folder_worker():
         return
-    _setup_early_file_logging()
+    log_path = _setup_early_file_logging()
     # Desktop / packaged Studio: allow local folder-picker albums by default.
     # Operators can still set TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=0 to lock down.
     from travelogue.web.studio_handlers.import_handlers import ensure_studio_trust_local_album
@@ -111,8 +111,24 @@ def main() -> None:
     if len(sys.argv) == 1:
         sys.argv.append("studio")
     from travelogue.cli import app
+    from travelogue.desktop.startup_feedback import show_startup_failure
+    from travelogue.paths import is_frozen
 
-    app()
+    try:
+        app()
+    except SystemExit as exc:
+        code = exc.code
+        if code in (None, 0):
+            raise
+        detail = code if isinstance(code, str) else f"进程退出码 {code}"
+        if is_frozen():
+            show_startup_failure(detail=str(detail), log_path=log_path)
+        raise
+    except Exception as exc:
+        logging.getLogger(__name__).exception("Studio startup failed")
+        if is_frozen():
+            show_startup_failure(detail=str(exc), log_path=log_path)
+        raise
 
 
 if __name__ == "__main__":
