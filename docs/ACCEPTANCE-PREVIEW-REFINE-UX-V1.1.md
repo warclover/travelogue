@@ -6,9 +6,10 @@
 | **实施清单** | [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) |
 | **评审纪要** | [preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) |
 | **线框** | [wireframes/preview-refine-ux-v1.1-wireframe.html](./wireframes/preview-refine-ux-v1.1-wireframe.html) |
-| **状态** | **代码就绪 · 工程狗粮已过 · S1 N≥5 待补** |
+| **状态** | **Conditional Go 维持** · 多角色复测通过 · S1 真人 N≥5 待补 |
 | **日期** | 2026-07-14 |
 | **静态门禁** | `tests/unit/web/test_preview_toolbar_v3.py` · M1/M2 + 埋点/文案 markers ✅ |
+| **复测记录** | [acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md) |
 
 ---
 
@@ -32,20 +33,20 @@
 | **AC-REFUX-01** | 开精修 → Esc | 面板关，`refine=on`，★ 可见可点 | ✅ | ⏳ |
 | **AC-REFUX-02** | 面板关时点 ★ | 成功切换精选；Task Dock「更新版面」 | ✅ | ⏳ |
 | **AC-REFUX-03** | 点 Dock「完成」 | `refine=off`，★ 隐藏 | ✅ | ⏳ |
-| **AC-REFUX-04** | 「这本 · 整本故事」 | 无锚点 / 章意图 /「当前章」 | ✅ 静态 | ⏳ |
-| **AC-REFUX-05** | 正文「这页」 | 可见本章名与锚点 | ✅ 静态 | ⏳ |
-| **AC-REFUX-06** | 封面候选 | UI 无 `asset-` 明文 | ✅ 静态 | ⏳ |
-| **AC-REFUX-07** | 「导出」首屏 | 无 zip / LLM / 放映；在「更多工具」内 | ✅ 静态 | ⏳ |
-| **AC-REFUX-08** | LLM off | 「生成」禁用 + 原因文案 | ✅ 静态 | ⏳ |
+| **AC-REFUX-04** | 「这本 · 整本故事」 | 无锚点 / 章意图 /「当前章」 | ✅ | ⏳ |
+| **AC-REFUX-05** | 正文「这页」 | 可见本章名与锚点 | ✅ | ⏳ |
+| **AC-REFUX-06** | 封面候选 | UI 无 `asset-` 明文 | ✅ | ⏳ |
+| **AC-REFUX-07** | 「导出」首屏 | 无 zip / LLM / 放映；在「更多工具」内 | ✅ | ⏳ |
+| **AC-REFUX-08** | LLM off | 「生成」禁用 + 原因文案 | ✅ | ⏳ |
 | **AC-REFUX-09** | 零精修导出 | 仍 ≤1 次点击（无 pending） | ✅ 不回归（V1） | ⏳ |
 | **AC-REFUX-10** | Share | 无精修壳 | ✅ 不回归（V1） | ⏳ |
 | **AC-REFUX-11** | V1 导出拦截 | pending 时不可静默旧导出 | ✅ 不回归（V1） | ⏳ |
-| **AC-REFUX-12** | Sheet 说教 | 「更新版面」重复 hint ≤1 | ✅ 静态 | ⏳ |
+| **AC-REFUX-12** | Sheet 说教 | 「更新版面」重复 hint ≤1 | ✅ | ⏳ |
 | **AC-REFUX-13** | 面板开再点 Dock「精修」 | 关面板，`refine` 仍 on | ✅ | ⏳ |
 | **AC-REFUX-14** | 面板已关时 Esc | 不退出模式 | ✅ | ⏳ |
 | **AC-REFUX-15** | pending 时点「完成」 | 退出模式 + toast + Task Dock 仍在 | ✅ | ⏳ |
-| **AC-REFUX-16** | 首次打开「这本」 | 一次迁移 tip | ✅ 静态 | ⏳ |
-| **AC-REFUX-S1** | 新手脚本（MF-06） | 无旁白完成标精选（N≥5） | — | ⏳ |
+| **AC-REFUX-16** | 首次打开「这本」 | 一次迁移 tip | ✅ | ⏳ |
+| **AC-REFUX-S1** | 新手脚本（MF-06） | 无旁白完成标精选（N≥5） | ✅ 工程单人 | ⏳ |
 
 「工程狗粮」列：2026-07-14 工程对照基线 + 静态门禁；真人签收见「产品手测」。
 
