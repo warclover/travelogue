@@ -187,6 +187,29 @@
 .v2-wizard__details summary::-webkit-details-marker { display: none; }
 .v2-wizard__details summary::before { content: "▸ "; color: var(--v2-sheet-accent); }
 .v2-wizard__details[open] summary::before { content: "▾ "; }
+.v2-wizard__folder-points {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--v2-sheet-muted-soft);
+}
+.v2-wizard__folder-points li + li {
+  margin-top: 4px;
+}
+.v2-wizard__help-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--v2-sheet-accent, #3d6b5a);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .v2-wizard__upload { margin-top: 10px; }
 .v2-wizard__upload-btn {
   display: inline-flex;

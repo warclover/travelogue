@@ -584,7 +584,7 @@ def test_ac_iw_09_remembers_fine_craft(wizard_server) -> None:
 
 
 def test_ac_iw_ds_01_first_success_longshot_cta(wizard_server) -> None:
-    """AC-IW-DS-01 后半 · 快速路径成功 → FirstSuccess 主 CTA=保存长图。"""
+    """AC-IW-DS-01 / D-HELP-10 · 快速路径成功 → FirstSuccess 主 CTA=打开卷轴预览。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -601,7 +601,12 @@ def test_ac_iw_ds_01_first_success_longshot_cta(wizard_server) -> None:
         page.locator("#v2-wizard-start").click()
         page.wait_for_selector("#v2-success-open", timeout=30_000)
         cta = page.locator("#v2-success-open").inner_text().strip()
-        assert cta == "保存长图"
+        assert "打开卷轴预览" in cta
+        secondary = page.locator("#v2-success-secondary")
+        assert secondary.is_visible()
+        assert secondary.inner_text().strip() == "保存长图"
+        hint = page.locator("#v2-success-next-hint").inner_text().strip()
+        assert "验货" in hint and "长图" in hint
         browser.close()
 
 

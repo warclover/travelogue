@@ -91,6 +91,7 @@
 | [IMPLEMENTATION-UX-TRUST-V1.md](./IMPLEMENTATION-UX-TRUST-V1.md) | 信任闭环 V1 实施清单 |
 | [acceptance-records/ux-trust-v1-review-2026-07-11.md](./acceptance-records/ux-trust-v1-review-2026-07-11.md) | 信任闭环 V1 跨职能评审纪要 · Conditional Go |
 | [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) | **帮助与情境引导系统 V1** **v1.1.1**（Conditional Go · MF 已回写 · FirstSuccess 方案 A · 可见 tip · 发群兜底 · 可开 W0） |
+| [IMPLEMENTATION-HELP-ONBOARDING-V1.md](./IMPLEMENTATION-HELP-ONBOARDING-V1.md) | 帮助系统 V1 · W0–W3 落地说明（V1 编码收口） |
 | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
 | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
 

@@ -150,6 +150,14 @@
 .v2-first-success__msg:has(+ .v2-first-success__details:not([hidden])) {
   margin-bottom: 4px;
 }
+/* D-HELP-10 · T-SUCCESS-NEXT 副文案：同卡可视区，非脚注灰字 */
+.v2-first-success__next-hint {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--v2-fs-ink);
+}
 .v2-first-success__countdown {
   margin: 0 0 14px;
   font-size: 12px;

@@ -27,6 +27,8 @@
 
 .preview-task-dock--success {
   border-color: rgba(61, 107, 90, 0.6);
+  border-radius: 16px;
+  align-items: flex-start;
 }
 
 .preview-task-dock--next-hint {
@@ -36,6 +38,33 @@
 .preview-task-dock__share-hint {
   color: #d4e8df !important;
   font-weight: 500;
+}
+
+.preview-task-dock__guide-list {
+  margin: 4px 0 0;
+  padding-left: 1.15em;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #d4e8df;
+  font-weight: 500;
+}
+
+.preview-task-dock__guide-list li + li {
+  margin-top: 2px;
+}
+
+.preview-task-dock__help-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #d4a843;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .preview-task-dock__icon {

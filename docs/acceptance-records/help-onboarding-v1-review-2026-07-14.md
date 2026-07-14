@@ -215,6 +215,7 @@
 | **建议结论** | ☑ **Conditional Go** |
 | **下一步** | 工程按 v1.1.1 开 W0（seen 迁移 · FirstSuccess 方案 A · 发群兜底 COPY）；线框 F1–F10 [已出](../wireframes/help-onboarding-v1-wireframe.html) |
 | **确认人 / 日期** | 产品 / 2026-07-14 · **MF 已回写 v1.1.1** |
+| **工程落地** | 2026-07-14 · W0+W1 已合入代码（未要求 commit）· 见 [IMPLEMENTATION-HELP-ONBOARDING-V1.md](../IMPLEMENTATION-HELP-ONBOARDING-V1.md) |
 
 ---
 

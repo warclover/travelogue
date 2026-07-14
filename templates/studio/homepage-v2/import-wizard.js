@@ -11,6 +11,7 @@ import {
 } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
+import { openHelpDrawer } from "../js/help-drawer.js";
 
 var _open = false;
 var _previousFocus = null;
@@ -1022,7 +1023,7 @@ function startUploadFromWizard() {
   _pendingUploadFiles = null;
   closeImportWizard("start_upload");
   if (typeof studioToast === "function") {
-    studioToast("已选择 " + files.length + " 张照片，开始上传…", { duration: 2200 });
+    studioToast("将新建一篇游记 · 已选择 " + files.length + " 张", { duration: 2200 });
   }
   return startV2UploadImport(files, {
     source: "浏览器上传",
@@ -1050,10 +1051,17 @@ function startImportFromWizard() {
     _importStarted = true;
     closeImportWizard("start");
     if (typeof studioToast === "function") {
-      studioToast(
-        _activeMode === "fine_craft" ? "已按精细制作启动" : "将新建一篇画册 · 开始制作",
-        { duration: 2000 }
-      );
+      var nPhotos =
+        (body && typeof body.eligibleCount === "number" && body.eligibleCount) ||
+        (body && typeof body.photoCount === "number" && body.photoCount) ||
+        0;
+      var toastMsg =
+        _activeMode === "fine_craft"
+          ? "已按精细制作启动"
+          : nPhotos > 0
+            ? "将新建一篇游记 · 已选择 " + nPhotos + " 张"
+            : "将新建一篇游记 · 开始制作";
+      studioToast(toastMsg, { duration: 2000 });
     }
     return startV2Import(body, { source: "本机文件夹" }).catch(function () { /* handled */ });
   }).catch(function (err) {
@@ -1223,6 +1231,13 @@ export function initImportWizard() {
   _wired = true;
   loadTemplateSelectOptions();
   wireTemplateSelect();
+
+  var folderHelpMore = $("v2-wizard-folder-help-more");
+  if (folderHelpMore) {
+    folderHelpMore.addEventListener("click", function () {
+      openHelpDrawer({ source: "deep_link", itemId: "H1" });
+    });
+  }
 
   var pick = $("v2-wizard-pick");
   if (pick) pick.addEventListener("click", pickFolder);

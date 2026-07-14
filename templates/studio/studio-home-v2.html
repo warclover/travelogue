@@ -121,6 +121,9 @@
                 <strong id="v2-bench-title">京都 · 雨后</strong>
                 <span id="v2-bench-meta">自动生成 · 86 张 · 3 章</span>
               </div>
+              <button type="button" class="v2-bench__demo-convert" id="v2-bench-demo-convert">
+                试试用自己的照片做一篇 →
+              </button>
             </div>
           </div>
           <div class="v2-bench__quick" aria-label="预览切换与快捷操作">
@@ -295,6 +298,9 @@
       <p class="v2-first-success__eyebrow">✓ 生成完成</p>
       <p class="v2-first-success__msg" id="v2-success-msg">你的第一篇游记已生成</p>
       <p class="v2-first-success__details" id="v2-success-details" hidden></p>
+      <p class="v2-first-success__next-hint" id="v2-success-next-hint" role="status">
+        先翻一翻验货；满意就点预览页下方的『长图』
+      </p>
       <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
       <div class="v2-first-success__actions">
         <a id="v2-success-open" href="#" class="v2-first-success__cta">打开卷轴预览 →</a>
@@ -342,11 +348,16 @@
           <button type="button" class="v2-wizard__first-tip-dismiss" id="v2-wizard-first-tip-dismiss"
                   aria-label="关闭提示">×</button>
         </p>
-        <details class="v2-wizard__details">
-          <summary>文件夹怎么选？</summary>
-          <p class="v2-wizard__hint">
-            一次旅行一个文件夹 · 子目录可放精选 / 素材 · 支持 JPG / PNG / WebP / HEIC · 照片留在本机。
-          </p>
+        <details class="v2-wizard__details" id="v2-wizard-folder-help">
+          <summary>不知道选哪个文件夹？</summary>
+          <ul class="v2-wizard__folder-points">
+            <li>同一次旅行放同一文件夹（50–100 张最佳）</li>
+            <li>Day1/Day2 子夹：合并导入或分两次导入（每次一篇<strong>新</strong>游记）</li>
+            <li>支持 JPG / PNG / WebP / HEIC；不移动、不修改原片</li>
+            <li>手机照片需先传到电脑</li>
+          </ul>
+          <button type="button" class="v2-wizard__help-link" id="v2-wizard-folder-help-more"
+                  data-help-item="H1">了解更多 →</button>
         </details>
         <details class="v2-wizard__details" id="v2-wizard-more-import">
           <summary>其他导入方式</summary>
@@ -411,7 +422,7 @@
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start">开始制作 →</button>
         <p class="v2-wizard__trust" id="v2-wizard-trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
         <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
-          每个文件夹会生成一本新的游记画册，<strong>不会覆盖</strong>已有作品。
+          每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。
         </p>
         <p class="v2-wizard__hint v2-wizard__hint--center v2-wizard__dup-note" id="v2-wizard-dup-note" hidden></p>
         <p class="v2-wizard__error" id="v2-wizard-error-confirm" role="alert" hidden></p>

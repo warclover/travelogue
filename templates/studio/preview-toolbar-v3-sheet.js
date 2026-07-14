@@ -830,17 +830,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     if (activeTab === "more") {
       renderAdvancedPanel();
-      return;
-    }
-    if (activeTab === "page") {
+    } else if (activeTab === "page") {
       renderPagePanel();
-      return;
+    } else {
+      renderBookPanel();
     }
-    renderBookPanel();
+    if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+      hooks.maybeInjectRefineSaveHint(bodyEl);
+    }
   }
 
   function open(tabId, openOpts) {
     openOpts = openOpts || {};
+    // AC-HELP-15 · 帮助开着时禁止再开精修 Sheet
+    if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) {
+      return;
+    }
     previousFocus = document.activeElement;
     beginSheetEnter();
     pausePageFlowScroll();
@@ -856,8 +861,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     closeBtn.focus();
   }
 
-  /** @param {string} [via] esc | close | dock_toggle */
-  function close(via) {
+  /** @param {string} [via] esc | close | dock_toggle | help
+   *  @param {() => void} [afterClose]
+   */
+  function close(via, afterClose) {
     var closeVia = via || "close";
     confirmLeave(function (ok) {
       if (!ok) return;
@@ -881,8 +888,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
           menuBtn.focus();
         }
         previousFocus = null;
+        if (typeof afterClose === "function") afterClose();
       });
     });
+  }
+
+  function isOpen() {
+    return !shell.hidden && !sheetClosing;
   }
 
   function setPendingDot(on) {
@@ -904,13 +916,19 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     close("close");
   });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !shell.hidden && !sheetClosing) close("esc");
+    if (e.key !== "Escape" || shell.hidden || sheetClosing) return;
+    // 帮助开着时由帮助抽屉优先处理 Esc（AC-HELP-15）
+    if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) return;
+    close("esc");
   });
 
   if (menuBtn) {
     menuBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (sheetClosing) return;
+      if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) {
+        return;
+      }
       // 面板开 → 关面板保模式
       if (!shell.hidden) {
         close("dock_toggle");
@@ -933,17 +951,24 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   return {
     open: open,
     close: close,
+    isOpen: isOpen,
     switchTab: switchTab,
     setPendingDot: setPendingDot,
     setStructureDot: setStructureDot,
     refreshLayoutTab: function () {
       if (!shell.hidden && activeTab === "book") {
         renderBookPanel();
+        if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+          hooks.maybeInjectRefineSaveHint(bodyEl);
+        }
       }
     },
     refreshAdvancedTab: function () {
       if (!shell.hidden && activeTab === "more") {
         renderAdvancedPanel();
+        if (typeof hooks.maybeInjectRefineSaveHint === "function") {
+          hooks.maybeInjectRefineSaveHint(bodyEl);
+        }
       }
     },
   };

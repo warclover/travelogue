@@ -4,6 +4,8 @@
  */
 "use strict";
 
+import { HELP_COPY } from "./help-onboarding.js";
+
 export var LONGSHOT_EXPORT_PREFS_KEY = "travelogue.studio.longshotExportPrefs";
 export var MOMENTS_COACH_KEY = "travelogue.studio.longshotMomentsCoachSeen";
 
@@ -122,6 +124,10 @@ export function ctaLabelForPlatform(platformId) {
 
 export function shouldShowMomentsCoach() {
   try {
+    // 与帮助系统 T-PLATFORM-PICK 同周期（D-HELP / AC-HELP-08）
+    if (localStorage.getItem("travelogue.studio.help.platformPickSeen") === "1") {
+      return false;
+    }
     return localStorage.getItem(MOMENTS_COACH_KEY) !== "1";
   } catch (e) {
     return true;
@@ -131,6 +137,7 @@ export function shouldShowMomentsCoach() {
 export function markMomentsCoachSeen() {
   try {
     localStorage.setItem(MOMENTS_COACH_KEY, "1");
+    localStorage.setItem("travelogue.studio.help.platformPickSeen", "1");
   } catch (e) {}
 }
 
@@ -337,9 +344,11 @@ export function syncPanelUI(pop, draft, opts) {
 
   var coach = pop.querySelector('[data-field="coach"]');
   if (coach) {
-    if (platform === "wechat_moments" && shouldShowMomentsCoach()) {
+    var showPlatformCoach =
+      platform !== "wechat_chat" && shouldShowMomentsCoach();
+    if (showPlatformCoach) {
       coach.hidden = false;
-      coach.textContent = "将按编号 01→09 选图发布到朋友圈。";
+      coach.textContent = HELP_COPY.platformPickTip;
     } else {
       coach.hidden = true;
       coach.textContent = "";

@@ -47,6 +47,9 @@ import {
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
   shouldShowExportPulse,
+  maybeShowLongshotHelp,
+  onLongshotHelpTargetClick,
+  queueLongshotHelpIdleEval,
 } from "./longshot.js";
 import {
   tripIdFromPath,
@@ -96,12 +99,48 @@ import {
   applyReaderSurfaceMode,
 } from "./features.js";
 import { mountBookendsPanel } from "./bookends.js";
+import {
+  configureHelpDrawer,
+  createHelpOpenButton,
+  openHelpDrawer,
+  closeHelpDrawer,
+  isHelpDrawerOpen,
+  maybeInjectRefineSaveHint,
+  maybeOpenHelpFromDeepLink,
+} from "../js/help-drawer.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
+
+  var helpBtn = createHelpOpenButton({
+    id: "studio-help-open-preview",
+    className: "studio-help-open studio-help-open--ghost studio-help-open--preview",
+  });
+  document.body.appendChild(helpBtn);
+
+  configureHelpDrawer({
+    getOpenButton: function () {
+      return document.getElementById("studio-help-open-preview");
+    },
+    showToast: showToolbarToast,
+    isHelpOpen: isHelpDrawerOpen,
+    beforeOpen: function (done) {
+      // MF-HELP-06 / AC-16 · 精修面板开着 → 先关面板保模式，再开帮助
+      var sheet = root._sheet;
+      if (sheet && typeof sheet.isOpen === "function" && sheet.isOpen()) {
+        sheet.close("help", function () {
+          done(true);
+        });
+        return;
+      }
+      done(true);
+    },
+  });
+  maybeOpenHelpFromDeepLink();
+
   registerLongshotBridge({
     showToolbarToast: showToolbarToast,
     toolbarConfirm: toolbarConfirm,
@@ -192,6 +231,8 @@ export function initToolbarV3(root, tripId) {
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
     isRefineModeOn: isPreviewRefineOn,
+    isHelpOpen: isHelpDrawerOpen,
+    maybeInjectRefineSaveHint: maybeInjectRefineSaveHint,
     onExitRefineMode: exitRefineMode,
     confirmLeaveCurrentTab: function (tabId, done) {
       // D-REF-05 · 文案立即自动保存；切 Tab 不再弹「未保存将丢弃」
@@ -462,19 +503,24 @@ export function initToolbarV3(root, tripId) {
   refreshLongshotExportMeta(root);
 
   try {
+    // D-HELP-03′ / 08′ · 首访脉冲+可见 tip；忙碌则排队 idle 补评估
     if (longshotBtn && shouldShowExportPulse(tripId)) {
-      longshotBtn.classList.add("preview-toolbar__dock-btn--pulse");
+      maybeShowLongshotHelp(root, tripId, {
+        delayMs: 450,
+        isLayoutPending: getLayoutPending,
+      });
     }
   } catch (eExportHint) {}
 
   longshotBtn.addEventListener("click", function () {
     try {
-      // 仅主钮点击算「学会长图」；打开 ▾ 不停脉冲（MF-EXP-05）
       sessionStorage.setItem(EXPORT_HINT_KEY, "1");
-      localStorage.setItem("travelogue.studio.exportPulseSeen", "1");
+      onLongshotHelpTargetClick(root);
+      trackStudioEvent("help_funnel_longshot_click", { tripId: tripId || null });
     } catch (eSeen) {}
     longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse");
     longshotBtn.classList.remove("preview-toolbar__menu-btn--pulse");
+    longshotBtn.classList.remove("preview-toolbar__dock-btn--pulse-static");
     startLongshot(root, tripId);
   });
   caretBtn.addEventListener("click", function (e) {

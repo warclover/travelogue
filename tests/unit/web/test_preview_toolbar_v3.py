@@ -636,8 +636,12 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "layoutUpdating" in longshot
     assert "版面没有更新成功，长图尚未开始" in longshot
     assert "再点「长图」即可导出" in longshot
-    assert "已保存到本机 · 拖进微信群即可" in longshot
-    assert "已保存到本机 · 拖进微信群即可" in task_dock
+    assert "长图已保存到本机" in longshot or "resolvePublishGuide" in longshot
+    assert "长图已保存到本机" in task_dock or "resolvePublishGuide" in task_dock
+    assert "resolvePublishGuide" in task_dock
+    assert "publishGuideFallback" in task_dock or "打开微信，按文件名顺序发到群聊" in task_dock
+    assert "help-onboarding" in task_dock or "resolvePublishGuide" in task_dock
+    assert "已保存到本机 · 拖进微信群即可" not in task_dock
     assert "showNextStepHint" in task_dock
     assert "在文件夹中显示" in task_dock
     assert "版面有改动" in core

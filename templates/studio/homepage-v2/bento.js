@@ -13,9 +13,37 @@ import { initBentoPreviewPicker } from "./bento-preview-picker.js";
 import { syncPreviewUi, setBentoPreviewTripId } from "./bento-tabs.js";
 import { syncBentoStaleBar } from "./bento-stale.js";
 import { pickRecentUserTrips } from "./trip-preview.js";
+import { openImportSheet } from "./import-entry.js";
+import { HELP_COPY, trackHelpEvent } from "../js/help-onboarding.js";
 
 var STALE_BADGE = "可更新";
 var STALE_LONGSHOT = "长图可更新";
+var _demoConvertWired = false;
+
+function syncDemoConvertCta() {
+  var btn = $("v2-bench-demo-convert");
+  if (!btn) return;
+  var onlyDemo = pickRecentUserTrips(V2.trips).length === 0;
+  show(btn, onlyDemo);
+  if (!_demoConvertWired) {
+    _demoConvertWired = true;
+    btn.addEventListener("click", function () {
+      trackHelpEvent("help_demo_convert_click", {});
+      openImportSheet({ forceStep: "pick" });
+      var primary = $("v2-cta");
+      if (primary) {
+        try {
+          primary.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+    });
+  }
+  if (btn.textContent !== HELP_COPY.demoConvertCta) {
+    btn.textContent = HELP_COPY.demoConvertCta;
+  }
+}
 
 /** D-19 · 空态 CTA 在文案区，回访 CTA 在工作台。 */
 export function syncCtaPlacement() {
@@ -230,6 +258,7 @@ export function renderBenchRecent() {
     if (left) left.classList.remove("v2-bench__left--recent");
     if (bench) bench.classList.remove("v2-bench--recent");
     syncCtaPlacement();
+    syncDemoConvertCta();
     return;
   }
 
@@ -301,6 +330,7 @@ export function renderBenchRecent() {
   if (left) left.classList.add("v2-bench__left--recent");
   if (bench) bench.classList.add("v2-bench--recent");
   syncCtaPlacement();
+  syncDemoConvertCta();
 }
 
 /** 工作台 bench。 */
