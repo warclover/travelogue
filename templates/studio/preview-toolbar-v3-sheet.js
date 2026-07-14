@@ -4,6 +4,8 @@
  */
 "use strict";
 
+import { trackStudioEvent } from "./js/analytics.js";
+
 var TAB_MODES = [
   { id: "page", label: "这页" },
   { id: "book", label: "这本" },
@@ -446,6 +448,15 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       "</details>";
 
     wireAdvancedPanelActions();
+    var moreTools = bodyEl.querySelector(".preview-sheet__more-tools");
+    if (moreTools && moreTools.dataset.trackBound !== "1") {
+      moreTools.dataset.trackBound = "1";
+      moreTools.addEventListener("toggle", function () {
+        if (moreTools.open) {
+          trackStudioEvent("export_tab_more_open", {});
+        }
+      });
+    }
   }
 
   function wireAdvancedPanelActions() {
@@ -828,7 +839,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     renderBookPanel();
   }
 
-  function open(tabId) {
+  function open(tabId, openOpts) {
+    openOpts = openOpts || {};
     previousFocus = document.activeElement;
     beginSheetEnter();
     pausePageFlowScroll();
@@ -837,14 +849,16 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       menuBtn.setAttribute("aria-expanded", "true");
     }
     if (typeof hooks.onSheetOpened === "function") {
-      hooks.onSheetOpened();
+      hooks.onSheetOpened({ source: openOpts.source || "dock" });
     }
     switchTab(resolveSheetTab(tabId || activeTab));
     activateFocusTrap();
     closeBtn.focus();
   }
 
-  function close() {
+  /** @param {string} [via] esc | close | dock_toggle */
+  function close(via) {
+    var closeVia = via || "close";
     confirmLeave(function (ok) {
       if (!ok) return;
       if (sheetClosing) return;
@@ -859,7 +873,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       }
       beginSheetExit(function () {
         if (typeof hooks.onSheetClosed === "function") {
-          hooks.onSheetClosed();
+          hooks.onSheetClosed({ via: closeVia });
         }
         if (previousFocus && typeof previousFocus.focus === "function") {
           previousFocus.focus();
@@ -883,10 +897,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     syncTabUi();
   }
 
-  closeBtn.addEventListener("click", close);
-  scrim.addEventListener("click", close);
+  closeBtn.addEventListener("click", function () {
+    close("close");
+  });
+  scrim.addEventListener("click", function () {
+    close("close");
+  });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !shell.hidden && !sheetClosing) close();
+    if (e.key === "Escape" && !shell.hidden && !sheetClosing) close("esc");
   });
 
   if (menuBtn) {
@@ -895,7 +913,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       if (sheetClosing) return;
       // 面板开 → 关面板保模式
       if (!shell.hidden) {
-        close();
+        close("dock_toggle");
         return;
       }
       // 面板关 + 精修中 → 「完成」退出模式（MF-01c）
@@ -904,11 +922,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         hooks.isRefineModeOn()
       ) {
         if (typeof hooks.onExitRefineMode === "function") {
-          hooks.onExitRefineMode();
+          hooks.onExitRefineMode({ source: "done" });
         }
         return;
       }
-      open("page");
+      open("page", { source: "dock" });
     });
   }
 

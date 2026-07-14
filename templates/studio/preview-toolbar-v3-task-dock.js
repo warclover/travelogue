@@ -304,7 +304,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "版面有更新";
+    main.textContent = opts.title || "版面有改动";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =

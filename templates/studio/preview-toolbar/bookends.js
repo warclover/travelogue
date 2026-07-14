@@ -4,6 +4,7 @@
 "use strict";
 
 import { getJson, postJson } from "../js/http.js";
+import { trackStudioEvent } from "../js/analytics.js";
 import { showToolbarToast, toolbarConfirm } from "./shell.js";
 import { applyLayoutRerender, syncCoverOpeningStyleInDom } from "./core.js";
 
@@ -111,7 +112,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
     "</div>" +
     "</details>" +
     '<div class="preview-sheet__bookends-actions">' +
-    '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-opening>看封面</button>' +
+    '<button type="button" class="preview-sheet__primary" data-bookends-scroll-opening>看封面</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>看封底</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-restore>恢复自动挑选</button>' +
     "</div>" +
@@ -274,7 +275,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
     if (mobileHint) {
       mobileHint.textContent =
         payload.mobileCoverHint ||
-        "为竖屏另选；封底目前仅网页成书。";
+        "电脑与手机版式可能不同；此处为竖屏封面对照。封底目前仅网页成书。";
     }
 
     if (openingCands) {
@@ -289,6 +290,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
           idx
         );
         btn.addEventListener("click", function () {
+          trackStudioEvent("cover_candidate_click", {
+            has_thumb: true,
+            kind: "opening",
+          });
           applyOpening(item.assetId || item.id);
         });
         openingCands.appendChild(btn);
@@ -306,6 +311,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
           btn.title = "排版完成后可选";
         } else {
           btn.addEventListener("click", function () {
+            trackStudioEvent("cover_candidate_click", {
+              has_thumb: true,
+              kind: "closing",
+            });
             applyClosing(item.assetId || item.id);
           });
         }

@@ -923,9 +923,27 @@ body.preview-sheet-open {
 }
 
 .preview-sheet__bookends-cands {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 6px;
+  justify-content: start;
+}
+
+/* MF-05 · 封面约 3 列 · 封底 4–5 列 */
+[data-bookends-opening] .preview-sheet__bookends-cands {
+  grid-template-columns: repeat(3, 48px);
+}
+
+[data-bookends-closing] .preview-sheet__bookends-cands {
+  grid-template-columns: repeat(5, 48px);
+}
+
+@media (max-width: 420px) {
+  [data-bookends-opening] .preview-sheet__bookends-cands {
+    grid-template-columns: repeat(3, 44px);
+  }
+  [data-bookends-closing] .preview-sheet__bookends-cands {
+    grid-template-columns: repeat(4, 44px);
+  }
 }
 
 .preview-sheet__bookends-thumb {
@@ -1007,6 +1025,13 @@ body.preview-sheet-open {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+}
+
+.preview-sheet__bookends-actions .preview-sheet__primary,
+.preview-sheet__bookends-actions .preview-sheet__ghost {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 @media (max-width: 520px) {

@@ -175,12 +175,16 @@ export function initToolbarV3(root, tripId) {
 
   var cohortEnabled = false;
 
-  function exitRefineMode() {
+  function exitRefineMode(opts) {
+    opts = opts || {};
     if (getLayoutPending()) {
       showToolbarToast("版面还没更新，可稍后在下方更新", { duration: 4000 });
     }
     setPreviewRefineMode(false);
     syncRefineDockChrome(root, { panelOpen: false });
+    trackStudioEvent("refine_mode_exit", {
+      source: opts.source || "done",
+    });
   }
 
   var sheetHooks = {
@@ -202,15 +206,27 @@ export function initToolbarV3(root, tripId) {
     onBookTabRendered: function () {
       maybeShowBookTabMigrateTip(showToolbarToast, trackStudioEvent);
     },
-    onSheetOpened: function () {
+    onSheetOpened: function (meta) {
+      meta = meta || {};
+      var entering = !isPreviewRefineOn();
       // Trust V1 + V1.1 · 打开精修 → refine=on；面板开
       setPreviewRefineMode(true);
       syncRefineDockChrome(root, { panelOpen: true });
+      if (entering) {
+        trackStudioEvent("refine_mode_enter", {
+          source: meta.source || "dock",
+        });
+      }
     },
-    onSheetClosed: function () {
+    onSheetClosed: function (meta) {
+      meta = meta || {};
       // V1.1 MF-01 · 关面板不退出模式
       syncRefineDockChrome(root, { panelOpen: false });
       if (isPreviewRefineOn()) {
+        trackStudioEvent("refine_panel_close", {
+          keep_mode: true,
+          via: meta.via || "close",
+        });
         maybeShowRefineStarTip(showToolbarToast);
       }
     },
@@ -487,6 +503,9 @@ export function initToolbarV3(root, tripId) {
   var backBtn = root.querySelector(".preview-toolbar__dock-btn--back");
   if (backBtn) {
     backBtn.addEventListener("click", function () {
+      if (isPreviewRefineOn()) {
+        trackStudioEvent("refine_mode_exit", { source: "home_nav" });
+      }
       setPreviewRefineMode(false);
       syncRefineDockChrome(root, { panelOpen: false });
     });

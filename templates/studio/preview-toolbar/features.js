@@ -387,6 +387,9 @@ export function initFeaturedStars(tripId) {
         e.preventDefault();
         e.stopPropagation();
         if (star.disabled) return;
+        trackStudioEvent("featured_star_click", {
+          panel_open: document.body.classList.contains("preview-sheet-open"),
+        });
         star.disabled = true;
         postJsonConflictRetry(tripApiBase(tripId) + "/promote-tier", {
           assetIds: [assetId],

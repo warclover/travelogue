@@ -640,12 +640,12 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "已保存到本机 · 拖进微信群即可" in task_dock
     assert "showNextStepHint" in task_dock
     assert "在文件夹中显示" in task_dock
-    assert "版面有更新" in core
+    assert "版面有改动" in core
     assert "正在更新版面" in core
     assert "有编辑尚未应用排版" not in core
     assert "应用排版" not in task_dock
     assert "更新版面" in task_dock
-    assert "版面有更新" in task_dock
+    assert "版面有改动" in task_dock
     assert ">精修<" in sheet or 'preview-sheet__title">精修' in sheet
     assert "改精选或拼图后，请点「更新版面」。" not in sheet
     assert "secondaryText" in modal
@@ -776,13 +776,29 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "preview-sheet__bookends-thumb-badge" in bookends
     assert "预览手机效果" in bookends
     assert "bookendsMobileOnce" in bookends
+    assert 'data-bookends-scroll-opening">看封面' in bookends or "看封面" in bookends
+    assert 'class="preview-sheet__primary" data-bookends-scroll-opening' in bookends
     assert "height: 64px" in css
+    assert "repeat(3, 48px)" in css
+    assert "repeat(5, 48px)" in css
     assert sheet.count("更新版面") <= 2  # 进阶主按钮 + 可能的文案对照
     css_vj = (ROOT / "templates" / "visual-journal" / "journal-screens.css").read_text(
         encoding="utf-8"
     )
     assert 'content: "\\201C"' in css_vj or 'content: "\\201C";' in css_vj
     assert "C" not in css_vj
+
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "给这本游记的一句话" in home
+    assert "写给编辑的一句话" not in home
+
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert 'trackStudioEvent("refine_mode_enter"' in init
+    assert 'trackStudioEvent("refine_panel_close"' in init
+    assert 'trackStudioEvent("refine_mode_exit"' in init
+    assert 'trackStudioEvent("featured_star_click"' in features
+    assert 'trackStudioEvent("cover_candidate_click"' in bookends
+    assert 'trackStudioEvent("export_tab_more_open"' in sheet
 
 
 def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:
