@@ -508,6 +508,20 @@
   font-size: 13px;
 }
 
+.preview-sheet__link:disabled,
+.preview-sheet__link[aria-disabled="true"] {
+  color: #90a4ae;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.preview-sheet__present-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #78909c;
+  font-weight: 500;
+}
+
 .preview-sheet__hint {
   margin: 12px 0 0;
   font-size: 13px;
@@ -837,6 +851,12 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-sub {
   margin: 2px 0 0;
+}
+
+.preview-sheet__bookends-how {
+  margin: 6px 0 0;
+  color: #3d6b5a;
+  font-weight: 600;
 }
 
 .preview-sheet__bookends-oneliner {

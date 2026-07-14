@@ -7,6 +7,10 @@ import { getJson, postJson } from "../js/http.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { showToolbarToast, toolbarConfirm } from "./shell.js";
 import { applyLayoutRerender, syncCoverOpeningStyleInDom } from "./core.js";
+import {
+  HELP_COPY,
+  maybeShowBookendsPickTip,
+} from "../js/help-onboarding.js";
 
 function bookendsApi(tripId, suffix) {
   return "/__travelogue/trips/" + encodeURIComponent(tripId) + "/bookends" + (suffix || "");
@@ -78,13 +82,18 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<div class="preview-sheet__bookends-head">' +
     '<span class="preview-sheet__label">封面与封底</span>' +
     '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-sub">游记的第一眼与最后一眼</p>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-how">' +
+    (HELP_COPY.bookendsPickTip || "点下方缩略图，即可更换封面或封底") +
+    "</p>" +
     "</div>" +
     '<p class="preview-sheet__bookends-oneliner" data-bookends-oneliner></p>' +
     '<p class="preview-sheet__bookends-status" data-bookends-status hidden role="status"></p>' +
     '<div class="preview-sheet__bookends-spread" aria-label="合页预览">' +
     '<div class="preview-sheet__bookends-pane" data-bookends-opening>' +
     '<div class="preview-sheet__bookends-pane-head">' +
-    '<span class="preview-sheet__bookends-pane-label">封面</span>' +
+    '<span class="preview-sheet__bookends-pane-label">' +
+    (HELP_COPY.bookendsOpeningLabel || "换封面 · 点选一张") +
+    "</span>" +
     '<span class="preview-sheet__bookends-lock" data-bookends-opening-lock hidden>手选 · 可恢复自动</span>' +
     "</div>" +
     '<div class="preview-sheet__bookends-hero" data-bookends-opening-hero aria-hidden="true"></div>' +
@@ -94,7 +103,9 @@ export function mountBookendsPanel(slot, tripId, opts) {
     "</div>" +
     '<div class="preview-sheet__bookends-pane" data-bookends-closing>' +
     '<div class="preview-sheet__bookends-pane-head">' +
-    '<span class="preview-sheet__bookends-pane-label">封底</span>' +
+    '<span class="preview-sheet__bookends-pane-label">' +
+    (HELP_COPY.bookendsClosingLabel || "换封底 · 点选一张") +
+    "</span>" +
     '<span class="preview-sheet__bookends-lock" data-bookends-closing-lock hidden>手选 · 可恢复自动</span>' +
     "</div>" +
     '<div class="preview-sheet__bookends-hero" data-bookends-closing-hero aria-hidden="true"></div>' +
@@ -362,7 +373,13 @@ export function mountBookendsPanel(slot, tripId, opts) {
       });
       return false;
     }
-    if (res.body.toast) showToolbarToast(res.body.toast);
+    if (res.body.toast) {
+      showToolbarToast(res.body.toast);
+    } else if (mutOpts.kind === "opening") {
+      showToolbarToast(HELP_COPY.bookendsAppliedOpening || "已换封面", { duration: 2000 });
+    } else if (mutOpts.kind === "closing") {
+      showToolbarToast(HELP_COPY.bookendsAppliedClosing || "已换封底", { duration: 2000 });
+    }
     if (res.body.coverOpeningStyle) {
       syncCoverOpeningStyleInDom(res.body.coverOpeningStyle);
     }
@@ -390,6 +407,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
         assetId: assetId,
         styleId: styleId,
         keepCover: keepCover,
+        kind: "opening",
       });
     });
   }
@@ -399,7 +417,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
     return postJson(bookendsApi(tripId, "/repick-closing"), {
       assetId: assetId,
     }).then(function (res) {
-      afterMutation(res);
+      afterMutation(res, { kind: "closing" });
     });
   }
 
@@ -438,6 +456,25 @@ export function mountBookendsPanel(slot, tripId, opts) {
       viaBookends: true,
       applyStyleViaBookends: applyStyleViaBookends,
     });
+  }
+
+  function tryBookendsPickTip() {
+    window.setTimeout(function () {
+      try {
+        maybeShowBookendsPickTip(showToolbarToast);
+      } catch (_eTip) {}
+    }, 350);
+  }
+
+  // 面板挂载时若父级 details 已展开，立即评估 tip
+  var zoneHost = slot.closest("[data-book-zone='bookends']");
+  if (zoneHost) {
+    if (zoneHost.open) tryBookendsPickTip();
+    zoneHost.addEventListener("toggle", function () {
+      if (zoneHost.open) tryBookendsPickTip();
+    });
+  } else {
+    tryBookendsPickTip();
   }
 
   refresh();

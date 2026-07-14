@@ -16,6 +16,7 @@
 | **W2** | 「?」· HelpDrawer H1–H5 · 重播 · T-REFINE-SAVE · 面板冲突 |
 | **W3** | **T-PLATFORM-PICK** · 情境反链 H1/H3/H4 |
 | **补丁** | pending/stale/next-step Dock → H3；长图 tip 活跃时跳过平台 tip；pending 时延后长图 L1（F10）；重播文案含平台 tip |
+| **闭环联动** | 重播同步清 `bookendsPickSeen`（首尾 tip 可再出现 · 见 [精修意图闭环](./PRD-REFINE-FEEDBACK-LOOP-V1.md)） |
 
 ## W3 本轮
 
@@ -25,7 +26,7 @@
 | **情境反链** | Wizard 文件夹 → H1；导出拦截 Modal → H3；**pending/stale/仅更新 next-step Dock → H3**；成功态「怎么发到微信群？」→ H4 |
 | **L1 互斥** | `isLongshotHelpActive()` 时 `maybeShowPlatformPickTip` 跳过（不叠 tip） |
 | **F10** | `isHelpLongshotDeferred`：layout pending / warn Dock 可见时延后长图 tip，idle 后补评估 |
-| **重播** | 同步清 `platformPickSeen` + legacy moments coach；toast 提及平台 tip |
+| **重播** | 同步清 `platformPickSeen` + legacy moments coach + **`bookendsPickSeen`**；toast 提及平台 tip / 首尾 tip |
 
 ### 关键文件（增量）
 

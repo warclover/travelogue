@@ -1535,7 +1535,7 @@ export function cancelPreviewLongshotExport(root) {
       trackStudioEvent("longshot_export_blocked_pending", { trip_id: tripId });
       _toolbarConfirm({
         title: "导出前先更新一下",
-        body: "你改过精选或拼图，导出前需先更新版面，否则长图仍是旧版。",
+        body: "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
         confirmText: "更新并导出",
         secondaryText: "仅更新版面",
         cancelText: "取消",

@@ -23,6 +23,7 @@ import {
   maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { HELP_COPY } from "../js/help-onboarding.js";
 import {
   registerInlineEditBridge,
   initCoverTitleEdit,
@@ -97,6 +98,7 @@ import {
   mountTemplateControls,
   snapshotReadingPayload,
   applyReaderSurfaceMode,
+  runFeaturedRerank,
 } from "./features.js";
 import { mountBookendsPanel } from "./bookends.js";
 import {
@@ -302,6 +304,10 @@ export function initToolbarV3(root, tripId) {
     onApplyLayout: function () {
       applyLayoutRerender(tripId, root);
     },
+    onFeaturedRerank: function () {
+      runFeaturedRerank(tripId, root);
+    },
+    featuredPresentEmptyText: HELP_COPY.featuredPresentEmpty || "先在正文点 ★",
     mountTemplateControls: function (slot) {
       mountTemplateControls(slot, tripId, { inSheet: true });
     },
@@ -360,7 +366,23 @@ export function initToolbarV3(root, tripId) {
       drawers.refreshEntry().then(function (/** @type {{ intentSummary?: { featuredCount?: number } }} */ data) {
         var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
         var presentLi = panel.querySelector('[data-tool="present"]');
-        if (presentLi) presentLi.hidden = count < 1;
+        if (!presentLi) return;
+        presentLi.hidden = false;
+        var presentBtn = presentLi.querySelector('[data-action="present"]');
+        var emptyHint = presentLi.querySelector(".preview-sheet__present-empty");
+        var empty = count < 1;
+        if (presentBtn) {
+          presentBtn.disabled = empty;
+          presentBtn.hidden = empty;
+          presentBtn.setAttribute("aria-disabled", empty ? "true" : "false");
+        }
+        if (emptyHint) {
+          emptyHint.hidden = !empty;
+          emptyHint.textContent =
+            (typeof hooks.featuredPresentEmptyText === "string" &&
+              hooks.featuredPresentEmptyText) ||
+            "先在正文点 ★";
+        }
       });
       var llmBtn = panel.querySelector('[data-action="llm"]');
       var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
@@ -417,6 +439,9 @@ export function initToolbarV3(root, tripId) {
     },
     onApplyLayout: function () {
       applyLayoutRerender(tripId, root);
+    },
+    onFeaturedRerank: function () {
+      runFeaturedRerank(tripId, root);
     },
     onDismissPending: function () {
       dismissPendingDock();

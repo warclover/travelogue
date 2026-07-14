@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精修意图可感知闭环 V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --bar: #1a2f28;
+      --gold: #d4a843;
+      --accent: #3d6b5a;
+      --danger: #c62828;
+      --warn-bg: #fff8e1;
+      --warn-border: #ffb74d;
+      --rec-bg: #e8f5e9;
+      --fail-bg: #ffebee;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .m { opacity: .7; font-size: 10px; margin-left: 4px; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--fail { background: var(--danger); color: #fff; }
+    .tag--m1 { background: #e65100; color: #fff; }
+    .tag--m2 { background: #1565c0; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+    }
+    .callout--fail { background: var(--fail-bg); border: 1px solid #ef9a9a; }
+    .callout--rec { background: var(--rec-bg); border: 1px solid #a5d6a7; }
+    .callout--warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+
+    .frame {
+      background: #e8efe9;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 520px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .frame--photo {
+      background:
+        linear-gradient(160deg, rgba(26,47,40,.35), rgba(26,47,40,.55)),
+        repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #b0bec5 8px, #b0bec5 16px);
+    }
+    .preview-scroll {
+      flex: 1; overflow: auto; padding: 24px 28px 100px;
+    }
+    .cover-mock {
+      height: 280px; border-radius: 12px;
+      background: linear-gradient(145deg, #5d7a6c, #2a4036);
+      display: flex; align-items: flex-end; padding: 20px;
+      color: #f5fbf8; font-size: 22px; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .screen-mock {
+      margin-top: 18px; padding: 14px; border-radius: 10px;
+      background: rgba(255,255,255,.92); border: 1px solid #b0bec5;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative;
+    }
+    .photo-cell {
+      aspect-ratio: 4/3; border-radius: 8px;
+      background: linear-gradient(120deg, #90a4ae, #607d8b);
+      position: relative;
+    }
+    .star {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,.92); border: 1px solid #90a4ae;
+      display: grid; place-items: center; font-size: 14px; color: #90a4ae;
+    }
+    .star.is-on { color: var(--gold); border-color: var(--gold); background: #1a1408; }
+
+    .dock {
+      position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+      display: flex; gap: 8px; padding: 8px 12px; border-radius: 999px;
+      background: var(--bar); color: #f5fbf8; font-size: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    }
+    .dock button {
+      border: 0; background: transparent; color: inherit;
+      padding: 6px 10px; border-radius: 999px; cursor: default;
+    }
+    .dock button.is-gold { background: var(--gold); color: #1a1408; font-weight: 700; }
+
+    .sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; width: 340px;
+      background: var(--wf-page); border-left: 2px solid var(--wf-border);
+      display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(0,0,0,.12);
+    }
+    .sheet__tabs { display: flex; border-bottom: 1px solid #cfd8dc; }
+    .sheet__tabs span {
+      flex: 1; text-align: center; padding: 10px 6px; font-size: 12px; font-weight: 600;
+      color: var(--wf-muted);
+    }
+    .sheet__tabs span.is-on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+    .sheet__body { padding: 12px 14px 18px; overflow: auto; flex: 1; font-size: 12px; }
+    .sheet__lead { margin: 0 0 10px; color: var(--wf-muted); }
+    .zone {
+      border: 1px solid #cfd8dc; border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+    }
+    .zone summary {
+      list-style: none; padding: 10px 12px; font-weight: 700; cursor: default;
+      background: #f1f5f4;
+    }
+    .zone summary::-webkit-details-marker { display: none; }
+    .zone__body { padding: 10px 12px 12px; }
+    .pane-label { font-size: 11px; font-weight: 700; color: var(--accent); margin: 0 0 6px; }
+    .thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .thumb {
+      aspect-ratio: 3/4; border-radius: 8px; border: 2px solid transparent;
+      background: linear-gradient(160deg, #78909c, #455a64); position: relative;
+    }
+    .thumb.is-on { border-color: var(--accent); }
+    .thumb .badge {
+      position: absolute; left: 4px; bottom: 4px; font-size: 9px; font-weight: 700;
+      background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 4px;
+    }
+    .toast {
+      position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%);
+      background: rgba(38,50,56,.94); color: #fff; font-size: 12px;
+      padding: 10px 14px; border-radius: 10px; max-width: 72%; text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,.28);
+    }
+    .toast strong { display: block; margin-bottom: 2px; }
+    .task-dock {
+      position: absolute; left: 16px; right: 360px; bottom: 70px;
+      background: #fff8e1; border: 1px solid #ffb74d; border-radius: 12px;
+      padding: 10px 12px; font-size: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .task-dock button {
+      border: 0; border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 700;
+      background: var(--accent); color: #fff;
+    }
+    .task-dock button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .modal {
+      position: absolute; inset: 0; background: rgba(38,50,56,.45);
+      display: grid; place-items: center; padding: 20px;
+    }
+    .modal__card {
+      width: min(360px, 100%); background: #fff; border-radius: 14px;
+      padding: 18px 16px; border: 2px solid var(--wf-border);
+    }
+    .modal__card h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal__card p { margin: 0 0 14px; font-size: 13px; color: var(--wf-muted); }
+    .modal__actions { display: flex; flex-direction: column; gap: 8px; }
+    .modal__actions button {
+      border: 0; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 700;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: #eceff1; color: var(--wf-text); }
+    .btn-ghost { background: transparent; color: var(--wf-muted); }
+
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
+    }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+    .compare__col {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px;
+      font-size: 12px;
+    }
+    .compare__col h3 { margin: 0 0 8px; font-size: 13px; }
+    .strike { text-decoration: line-through; color: #c62828; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+
+    .aside {
+      position: sticky; top: 88px;
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ol { margin: 0; padding-left: 18px; }
+    .aside li { margin: 0 0 6px; }
+    .aside .meta { color: var(--wf-muted); margin-top: 12px; font-size: 11px; }
+
+    table.matrix {
+      width: 100%; border-collapse: collapse; font-size: 12px; background: #fff;
+      border: 1px solid #cfd8dc; border-radius: 10px; overflow: hidden;
+    }
+    table.matrix th, table.matrix td {
+      border-bottom: 1px solid #eceff1; padding: 8px 10px; text-align: left; vertical-align: top;
+    }
+    table.matrix th { background: #f1f5f4; font-size: 11px; }
+    .checklist label {
+      display: flex; gap: 8px; align-items: flex-start;
+      padding: 8px 0; border-bottom: 1px solid #eceff1; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>精修意图可感知闭环 V1 · 设计评审线框</h1>
+    <p>
+      PRD：<code>PRD-REFINE-FEEDBACK-LOOP-V1.md</code> v0.1.1 · 冻结 B′ + pending 3a ·
+      M1：首尾 tip + 诚实文案 · M2：demote / 按精选重排
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-active" data-tab="diag">① 诊断</button>
+      <button type="button" data-tab="be01">F-BE-01<span class="m">M1</span></button>
+      <button type="button" data-tab="feat01">F-FEAT-01<span class="m">M1</span></button>
+      <button type="button" data-tab="feat02">F-FEAT-02<span class="m">M1</span></button>
+      <button type="button" data-tab="feat03">F-FEAT-03<span class="m">M2</span></button>
+      <button type="button" data-tab="split">F-SPLIT<span class="m">分词</span></button>
+      <button type="button" data-tab="audit">审核清单</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- ① 诊断 -->
+      <section class="panel is-visible" id="panel-diag">
+        <div class="sec">
+          <h2>① 问题对照 <span class="tag tag--fail">As-Is</span> → <span class="tag tag--rec">To-Be</span></h2>
+          <p class="lead">两条狗粮断裂必须一次对齐，禁止只加 tip 或只改 toast。</p>
+        </div>
+        <div class="compare">
+          <div class="compare__col">
+            <h3><span class="tag tag--fail">P-FEED-01</span> 换封面不知点哪</h3>
+            <p>能力在「这本 → 首尾装帧 → 缩略图」，无首次可见提示。</p>
+            <p class="ok">To-Be：展开即 tip + 区头「换封面 · 点选一张」</p>
+          </div>
+          <div class="compare__col">
+            <h3><span class="tag tag--fail">P-FEED-02</span> 精选+更新版面无变化</h3>
+            <p class="strike">「已标为精选 · 点更新版面后生效」</p>
+            <p>实际 `/rerender` 不换图位；已上屏 ★ 几乎零感知。</p>
+            <p class="ok">To-Be：★=记下意图；更新版面=渲染类；重排=显式次路径</p>
+          </div>
+        </div>
+        <div class="callout callout--rec">
+          <strong>冻结决策（执行默认）</strong>
+          D-FEED-01 B′ · D-FEED-02 tip+区头 · D-FEED-03 纯★不拦导出(3a) ·
+          D-FEED-04/05「按精选重排」+ demote 放 M2
+        </div>
+      </section>
+
+      <!-- F-BE-01 -->
+      <section class="panel" id="panel-be01">
+        <div class="sec">
+          <h2>F-BE-01 首尾装帧发现性 <span class="tag tag--m1">M1</span> <span class="tag tag--rec">推荐</span></h2>
+          <p class="lead">首次展开「首尾装帧」：可见 tip + 区头点选语义；点候选有轻确认。</p>
+        </div>
+        <div class="callout callout--warn">
+          <strong>合同句（T-BE-OPEN）</strong>
+          「点下方缩略图，即可更换封面或封底」· seen 可重播清除 · 忙碌态零 L1
+        </div>
+        <div class="anno">Wire · 精修 · 这本 · 首尾展开</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 精修中</div></div>
+        <div class="frame frame--photo">
+          <div class="preview-scroll">
+            <div class="cover-mock">封面预览</div>
+          </div>
+          <div class="sheet">
+            <div class="sheet__tabs">
+              <span>这页</span><span class="is-on">这本</span><span>导出</span>
+            </div>
+            <div class="sheet__body">
+              <p class="sheet__lead">改整本的名字与首尾装帧。</p>
+              <details class="zone" open>
+                <summary>首尾装帧 <span style="color:#00897b;font-weight:600">正在看封面</span></summary>
+                <div class="zone__body">
+                  <p style="margin:0 0 8px;color:var(--accent);font-weight:700">
+                    点下方缩略图即可更换封面或封底
+                  </p>
+                  <p class="pane-label">换封面 · 点选一张</p>
+                  <div class="thumbs">
+                    <div class="thumb is-on"><span class="badge">当前</span></div>
+                    <div class="thumb"></div>
+                    <div class="thumb"></div>
+                  </div>
+                  <p class="pane-label" style="margin-top:12px">换封底 · 点选一张</p>
+                  <div class="thumbs" style="grid-template-columns:repeat(4,1fr)">
+                    <div class="thumb"></div><div class="thumb"></div>
+                    <div class="thumb"></div><div class="thumb"></div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="toast"><strong>点下方缩略图，即可更换封面或封底</strong>首次展开 · 只出现一次</div>
+          <div class="dock">
+            <button type="button">←</button>
+            <button type="button">完成</button>
+            <button type="button" class="is-gold">长图</button>
+          </div>
+        </div>
+        <div class="callout callout--rec">
+          <strong>点候选成功（T-BE-APPLY）</strong>
+          短 toast「已换封面」/「已换封底」≤2s · 不再弹教学 tip · 预览立即变图
+        </div>
+      </section>
+
+      <!-- F-FEAT-01 -->
+      <section class="panel" id="panel-feat01">
+        <div class="sec">
+          <h2>F-FEAT-01 精选即时诚实反馈 <span class="tag tag--m1">M1</span></h2>
+          <p class="lead">★ 立刻亮；toast 不再承诺「更新版面后构图变」；这页常驻一行语义。</p>
+        </div>
+        <div class="compare">
+          <div class="compare__col">
+            <h3 class="strike">禁止</h3>
+            <p>已标为精选 · 点更新版面后生效</p>
+          </div>
+          <div class="compare__col">
+            <h3 class="ok">合同</h3>
+            <p><strong>已标为精选</strong><br/>会优先出现在「放映精选」；若要按精选改构图，请用「按精选重排」（M2）</p>
+          </div>
+        </div>
+        <div class="anno">Wire · 正文屏点 ★</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 精修中 · 面板可收起</div></div>
+        <div class="frame frame--photo">
+          <div class="preview-scroll">
+            <div class="screen-mock">
+              <div class="photo-cell"><span class="star is-on">★</span></div>
+              <div class="photo-cell"><span class="star">★</span></div>
+            </div>
+          </div>
+          <div class="sheet">
+            <div class="sheet__tabs">
+              <span class="is-on">这页</span><span>这本</span><span>导出</span>
+            </div>
+            <div class="sheet__body">
+              <p class="sheet__lead">当前屏 · 正文</p>
+              <button type="button" class="btn-primary" style="width:100%;margin-bottom:8px">★ 已标精选</button>
+              <p style="margin:0;color:var(--wf-muted)">
+                精选 = 记下这张更重要；不会立刻重排整本
+              </p>
+            </div>
+          </div>
+          <div class="toast">
+            <strong>已标为精选</strong>
+            会优先出现在「放映精选」
+          </div>
+          <div class="dock">
+            <button type="button">←</button>
+            <button type="button">完成</button>
+            <button type="button" class="is-gold">长图</button>
+          </div>
+        </div>
+        <div class="callout callout--warn">
+          <strong>D-FEED-03 · 3a</strong>
+          纯 ★ <strong>不</strong>置导出拦截 pending · 不强迫空跑「更新版面」
+        </div>
+      </section>
+
+      <!-- F-FEAT-02 -->
+      <section class="panel" id="panel-feat02">
+        <div class="sec">
+          <h2>F-FEAT-02 更新版面只服务渲染类 <span class="tag tag--m1">M1</span></h2>
+          <p class="lead">拼图改判仍 pending → Dock「更新版面」→ 可感知样式变化；拦截 Modal 不再绑「精选」。</p>
+        </div>
+        <div class="anno">Wire · 改拼图后导出拦截</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · pending=media</div></div>
+        <div class="frame frame--photo">
+          <div class="preview-scroll">
+            <div class="screen-mock" style="grid-template-columns:1fr">
+              <div class="photo-cell" style="aspect-ratio:16/9"></div>
+            </div>
+          </div>
+          <div class="task-dock">
+            <div>
+              <strong>版面有改动</strong><br/>
+              <span style="color:var(--wf-muted)">改过拼图后，请先更新版面再导出</span>
+            </div>
+            <button type="button">更新版面</button>
+          </div>
+          <div class="modal">
+            <div class="modal__card">
+              <h3>导出前先更新一下</h3>
+              <p>你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。</p>
+              <div class="modal__actions">
+                <button type="button" class="btn-primary">更新并导出</button>
+                <button type="button" class="btn-secondary">仅更新版面</button>
+                <button type="button" class="btn-ghost">取消</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--fail">
+          <strong>禁止再写</strong>
+          「你改过精选或拼图…」——精选已从渲染类 pending 解绑
+        </div>
+      </section>
+
+      <!-- F-FEAT-03 -->
+      <section class="panel" id="panel-feat03">
+        <div class="sec">
+          <h2>F-FEAT-03 按精选重排（次路径） <span class="tag tag--m2">M2</span></h2>
+          <p class="lead">与「更新版面」分权；确认后 `/curate`；structure_locked 须风险说明。</p>
+        </div>
+        <div class="anno">Wire · 确认 Modal（M2 示意，本波可不编码）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 按精选重排</div></div>
+        <div class="frame">
+          <div class="modal">
+            <div class="modal__card">
+              <h3>按精选重新排版？</h3>
+              <p>
+                将按你标过的精选重新选片排版，封面、章首或部分屏构图可能变化。
+                已锁定结构时会改动章序相关结果——请确认后再继续。
+              </p>
+              <div class="modal__actions">
+                <button type="button" class="btn-primary">重新排版</button>
+                <button type="button" class="btn-ghost">取消</button>
+              </div>
+            </div>
+          </div>
+          <div class="dock">
+            <button type="button">←</button>
+            <button type="button">完成</button>
+            <button type="button" class="is-gold">长图</button>
+          </div>
+        </div>
+        <div class="callout callout--warn">
+          <strong>入口（M2）</strong>
+          「这页」次按钮 / Dock 次 CTA · <strong>禁止</strong>把 curate 静默塞进「更新版面」
+        </div>
+      </section>
+
+      <!-- F-SPLIT -->
+      <section class="panel" id="panel-split">
+        <div class="sec">
+          <h2>F-SPLIT 全局分词表 <span class="tag tag--rec">合同</span></h2>
+          <p class="lead">帮助 H2/H3/H6 · Dock · Modal · toast 必须同表。</p>
+        </div>
+        <table class="matrix">
+          <thead>
+            <tr><th>用户可见词</th><th>含义</th><th>禁止</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>更新版面</strong></td>
+              <td>消化渲染类 pending（拼图等）→ `/rerender`</td>
+              <td>「重新选片」「精选后必变构图」</td>
+            </tr>
+            <tr>
+              <td><strong>按精选重排</strong></td>
+              <td>确认后重新策展（M2）</td>
+              <td>与更新版面同一按钮</td>
+            </tr>
+            <tr>
+              <td><strong>完成</strong></td>
+              <td>退出精修模式</td>
+              <td>当作更新版面</td>
+            </tr>
+            <tr>
+              <td><strong>换封面/封底</strong></td>
+              <td>点首尾候选缩略图</td>
+              <td>仅靠 aria、无区头</td>
+            </tr>
+            <tr>
+              <td><strong>精选 ★</strong></td>
+              <td>记下更重要；影响放映精选 / 下次重排加权</td>
+              <td>「点更新版面后生效」</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout callout--rec" style="margin-top:14px">
+          <strong>H6（建议 M1）</strong>
+          「怎么换封面封底」：精修 → 这本 → 首尾装帧 → 点缩略图
+        </div>
+      </section>
+
+      <!-- 审核 -->
+      <section class="panel" id="panel-audit">
+        <div class="sec">
+          <h2>审核清单</h2>
+          <p class="lead">与 PRD §13 对齐；勾选后可继续 M1 编码合入。</p>
+        </div>
+        <div class="checklist">
+          <label><input type="checkbox" checked disabled /> 采纳 B′ 分层反馈（精选 / 更新版面 / 按精选重排分权）</label>
+          <label><input type="checkbox" checked disabled /> 采纳 pending 3a（纯 ★ 不拦导出）</label>
+          <label><input type="checkbox" checked disabled /> F-BE-01 tip + 区头文案</label>
+          <label><input type="checkbox" checked disabled /> F-FEAT-01/02 诚实文案进 M1</label>
+          <label><input type="checkbox" checked disabled /> F-FEAT-03 demote + 重排进 M2</label>
+          <label><input type="checkbox" checked disabled /> 不把 `/curate` 塞进「更新版面」</label>
+          <label><input type="checkbox" checked disabled /> 不做全站 tour / 不重做 Bookends 算法</label>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>本页看点</h3>
+      <ol id="aside-notes">
+        <li>两条狗粮问题对照</li>
+        <li>冻结决策一览</li>
+      </ol>
+      <p class="meta">打开本地 HTML 即可评审。<br/>关联 PRD-REFINE-FEEDBACK-LOOP-V1。</p>
+    </aside>
+  </div>
+
+  <script>
+    var notes = {
+      diag: ["两条狗粮问题对照", "冻结决策一览"],
+      be01: ["T-BE-OPEN 合同句", "区头「换封面 · 点选一张」", "点候选轻确认"],
+      feat01: ["禁止旧 toast", "这页常驻语义", "纯 ★ 不 pending"],
+      feat02: ["Dock 仅渲染类", "拦截 Modal 去掉精选"],
+      feat03: ["M2 确认 Modal", "与更新版面分权"],
+      split: ["全局分词表", "H6 换封面步骤"],
+      audit: ["Conditional Go 勾选", "M1 可编码"]
+    };
+    var tabs = document.querySelectorAll(".tabs button");
+    var panels = document.querySelectorAll(".panel");
+    var aside = document.getElementById("aside-notes");
+    tabs.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-tab");
+        tabs.forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+        panels.forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === "panel-" + id);
+        });
+        aside.innerHTML = (notes[id] || []).map(function (t) {
+          return "<li>" + t + "</li>";
+        }).join("");
+      });
+    });
+  </script>
+</body>
+</html>

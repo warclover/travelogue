@@ -357,7 +357,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "改过精选或拼图后，请先更新版面再导出";
+      opts.subtitle || "改过拼图或版式后，请先更新版面再导出";
     textWrap.appendChild(sub);
     // F-EXP-08 / SF-EXP-02 · 稍后 dismiss 后再见，仍提示导出会拦
     if (opts.remindExport !== false) {
@@ -495,6 +495,55 @@ export function mountPreviewTaskDock(root, hooks) {
     // 残留：不自动隐藏，直到用户关闭或再点长图
   }
 
+  /** D-FEED-04 · 标精选后 Dock 次路径：按精选重排 */
+  function showFeaturedRerankCue(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--next-hint";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "★";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "已记下精选";
+    textWrap.appendChild(main);
+    var sub = document.createElement("small");
+    sub.textContent =
+      opts.subtitle ||
+      HELP_COPY.featuredPageHint ||
+      "不会立刻重排整本；若要改构图可按精选重排";
+    textWrap.appendChild(sub);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+    var rerankBtn = document.createElement("button");
+    rerankBtn.type = "button";
+    rerankBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+    rerankBtn.textContent =
+      opts.cta || HELP_COPY.featuredRerankCta || "按精选重排";
+    rerankBtn.addEventListener("click", function () {
+      hide();
+      if (typeof hooks.onResultDismissed === "function") hooks.onResultDismissed();
+      if (typeof hooks.onFeaturedRerank === "function") hooks.onFeaturedRerank();
+    });
+    actions.appendChild(rerankBtn);
+    actions.appendChild(
+      buildCloseBtn(function () {
+        if (typeof hooks.onResultDismissed === "function") hooks.onResultDismissed();
+      })
+    );
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+  }
+
   function showError(messageOrOpts) {
     var opts =
       messageOrOpts && typeof messageOrOpts === "object"
@@ -547,6 +596,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showPending: showPending,
     showStale: showStale,
     showNextStepHint: showNextStepHint,
+    showFeaturedRerankCue: showFeaturedRerankCue,
     showError: showError,
   };
 }

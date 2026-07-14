@@ -15,6 +15,7 @@ export var HELP_LS = {
   exportPulseSeen: "travelogue.studio.help.exportPulseSeen",
   refineSaveSeen: "travelogue.studio.help.refineSaveSeen",
   platformPickSeen: "travelogue.studio.help.platformPickSeen",
+  bookendsPickSeen: "travelogue.studio.help.bookendsPickSeen",
   importFolderExpanded: "travelogue.studio.help.importFolderExpanded",
 };
 
@@ -44,19 +45,41 @@ export var HELP_COPY = {
   demoConvertCta: "试试用自己的照片做一篇 →",
   platformPickTip:
     "会按平台切成多张；页脚有顺序。失败可改回微信群长图",
+  bookendsPickTip: "点下方缩略图，即可更换封面或封底",
+  bookendsOpeningLabel: "换封面 · 点选一张",
+  bookendsClosingLabel: "换封底 · 点选一张",
+  bookendsAppliedOpening: "已换封面",
+  bookendsAppliedClosing: "已换封底",
+  featuredPromotedToast: "已标为精选 · 会优先出现在『放映精选』",
+  featuredDemotedToast: "已取消精选",
+  featuredMoreLink: "了解更多 →",
+  featuredPageHint: "精选 = 记下这张更重要；不会立刻重排整本",
+  featuredPresentEmpty: "先在正文点 ★",
+  featuredRerankCta: "按精选重排",
+  featuredRerankDockTitle: "已记下精选",
+  featuredRerankDockSub: "不会立刻重排整本；若要改构图可按精选重排",
+  featuredRerankTitle: "按精选重新排版？",
+  featuredRerankBody:
+    "将按你标过的精选重新选片排版，封面、章首或部分屏构图可能变化。",
+  featuredRerankLockedNote:
+    "当前结构已锁定，继续将解锁并可能改动章序相关结果。",
+  featuredRerankConfirm: "重新排版",
+  featuredRerankBusy: "正在按精选重新排版…",
+  featuredRerankDone: "排版已更新",
+  featuredRerankDoneCover: "排版已更新 · 封面已更换",
   helpAria: "使用帮助",
   helpTitle: "使用帮助",
   refineSaveLines: [
-    "改字马上生效；改精选请先点下方『更新版面』",
-    "『完成』只是退出精修，不是更新版面",
+    "改字马上生效；改拼图请先点下方『更新版面』",
+    "『完成』只是退出精修，不是更新版面；精选不会立刻重排整本",
   ],
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",
   replayDoneToast:
-    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台时也会再提示。",
+    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示。",
   helpDeepLinkPending: "「长图待更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
-  /** H1–H5 帮助抽屉条目（D-HELP-02） */
+  /** H1–H6 帮助抽屉条目 */
   helpItems: [
     {
       id: "H1",
@@ -73,7 +96,9 @@ export var HELP_COPY = {
       title: "「完成」和「更新版面」有什么区别",
       body: [
         "点字改文案：马上在预览看到，导出用当前预览",
-        "改精选 / 拼图 / 版式相关：需点「更新版面」后才进导出",
+        "改拼图 / 版式相关：需点「更新版面」后才进导出",
+        "标精选 ★：立刻记下「这张更重要」；点已亮的 ★ 可取消；不会立刻重排整本",
+        "若要按精选改构图：用「按精选重排」（会确认；与「更新版面」不同）",
         "点「长图」：导出当前已更新结果",
         "点「精修」：进入精修模式（可收起面板继续改）",
         "Esc / × / 再点「精修」（面板开时）：只关面板，模式可仍为 on",
@@ -84,9 +109,10 @@ export var HELP_COPY = {
       id: "H3",
       title: "「长图待更新」是什么意思",
       body: [
-        "改了精选或拼图后，版面还没更新",
+        "改了拼图或版式相关设置后，版面还没更新",
         "请先点「更新版面」，再点「长图」导出最新结果",
         "若导出时弹出拦截，选「更新并导出」即可",
+        "仅标精选不会触发「待更新」；精选是意图，不是立刻重排",
       ],
     },
     {
@@ -106,6 +132,16 @@ export var HELP_COPY = {
         "导入失败 → 换文件夹重试 / 新建一篇",
         "导出失败 → 再点「长图」；仍失败见日志或重开 Studio",
         "提示要更新版面 → 先「更新版面」再导出 · 原片不被改",
+      ],
+    },
+    {
+      id: "H6",
+      title: "怎么换封面封底",
+      body: [
+        "打开精修 → 点「这本」→ 展开「首尾装帧」",
+        "点下方缩略图，即可更换封面或封底",
+        "选中的一张会标「当前」；也可点「看封面 / 看封底」滚动画布",
+        "封面/封底这页没有 ★ 精选与拼图改判",
       ],
     },
   ],
@@ -290,6 +326,46 @@ export function clearPlatformPickSeen() {
   }
 }
 
+export function hasBookendsPickSeen() {
+  return _lsGet(HELP_LS.bookendsPickSeen) === "1";
+}
+
+export function markBookendsPickSeen(meta) {
+  meta = meta || {};
+  _lsSet(HELP_LS.bookendsPickSeen, "1");
+  if (!meta.silent) {
+    trackHelpEvent("help_coach_dismiss", {
+      touchpoint: "T-BE-OPEN",
+      reason: meta.reason || "shown",
+    });
+  }
+}
+
+export function clearBookendsPickSeen() {
+  try {
+    localStorage.removeItem(HELP_LS.bookendsPickSeen);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+/**
+ * 首次展开首尾装帧：可见 tip（D-FEED-02 · T-BE-OPEN）。
+ * @returns {boolean} 是否本次展示
+ */
+export function maybeShowBookendsPickTip(showToast) {
+  if (hasBookendsPickSeen()) return false;
+  if (isHelpL1Blocked()) return false;
+  if (isLongshotHelpActive()) return false;
+
+  markBookendsPickSeen({ silent: true });
+  trackHelpEvent("help_coach_show", { touchpoint: "T-BE-OPEN" });
+  if (typeof showToast === "function") {
+    showToast(HELP_COPY.bookendsPickTip, { duration: 4500 });
+  }
+  return true;
+}
+
 /**
  * 首次从默认微信群切到朋友圈/小红书等（AC-HELP-08）。
  * @param {string} fromPlatform
@@ -332,6 +408,7 @@ export function replayHelpHints() {
   clearLongshotHelpSeen();
   clearRefineSaveSeen();
   clearPlatformPickSeen();
+  clearBookendsPickSeen();
   // 顺带清部分 legacy per-trip 脉冲键（非必须）
   try {
     var keys = [];

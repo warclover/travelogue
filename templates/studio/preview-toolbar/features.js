@@ -4,10 +4,12 @@
 "use strict";
 
 import {
+  postJson,
   postJsonConflictRetry,
   patchJsonConflictRetry,
 } from "../js/http.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { pollJobUntilDone } from "../js/job-poll.js";
 import { presentAutoplayHref } from "./dock.js";
 import { saveMagazineTitle } from "./inline-edit.js";
 import { formatAestheticPurposeLine, isAestheticDebugEnabled } from "./drawers.js";
@@ -18,6 +20,7 @@ import {
 } from "./longshot.js";
 import {
   showToolbarToast,
+  toolbarConfirm,
   tripApiBase,
   toolbarBody,
 } from "./shell.js";
@@ -29,8 +32,44 @@ import {
   refreshPreviewAfterCopySave,
   refreshTaskDockState,
   setLayoutPending,
+  setLayoutPendingMessage,
   syncCoverOpeningStyleInDom,
 } from "./core.js";
+import { HELP_COPY } from "../js/help-onboarding.js";
+import { openHelpDrawer } from "../js/help-drawer.js";
+
+function attachFeaturedHelpLinkOnToast() {
+  var el = document.getElementById("preview-toolbar-toast");
+  if (!el) return;
+  var msg = el.textContent || "";
+  el.textContent = "";
+  var span = document.createElement("span");
+  span.textContent = msg + " · ";
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "preview-toolbar__toast-link";
+  btn.textContent = HELP_COPY.featuredMoreLink || "了解更多 →";
+  btn.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    openHelpDrawer({ source: "deep_link", itemId: "H2" });
+  });
+  el.appendChild(span);
+  el.appendChild(btn);
+}
+
+function showFeaturedRerankDockCue(root) {
+  if (!root || !root._taskDock || typeof root._taskDock.showFeaturedRerankCue !== "function") {
+    return;
+  }
+  if (root._exportDockActive) return;
+  root._exportResultShowing = true;
+  root._taskDock.showFeaturedRerankCue({
+    title: HELP_COPY.featuredRerankDockTitle || "已记下精选",
+    subtitle: HELP_COPY.featuredRerankDockSub,
+    cta: HELP_COPY.featuredRerankCta || "按精选重排",
+  });
+}
 
 var COVER_OPENING_STYLE_OPTIONS = [];
 var READER_VIEW_KEY = "travelogue.studio.readerView";
@@ -318,6 +357,7 @@ export function initCollageMediaControls(tripId, assetMediaById) {
           assetMediaById[assetId] = mediaClass;
           selectEl.value = mediaClass;
           setLayoutPending(true);
+          setLayoutPendingMessage("版面有改动");
           showToolbarToast(
             mediaClass === "collage"
               ? "已标记为拼图 · 点更新版面后生效"
@@ -377,35 +417,63 @@ export function initFeaturedStars(tripId) {
       var star = document.createElement("button");
       star.type = "button";
       star.className = "preview-toolbar__featured-star";
-      star.setAttribute("aria-label", "标为精选");
       star.textContent = "★";
-      if (screen.getAttribute("data-featured") === "true") {
+      var initiallyOn = screen.getAttribute("data-featured") === "true";
+      if (initiallyOn) {
         star.classList.add("preview-toolbar__featured-star--on");
         star.setAttribute("aria-pressed", "true");
+        star.setAttribute("aria-label", "取消精选");
+      } else {
+        star.setAttribute("aria-pressed", "false");
+        star.setAttribute("aria-label", "标为精选");
       }
       star.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
         if (star.disabled) return;
+        var isOn = star.classList.contains("preview-toolbar__featured-star--on");
         trackStudioEvent("featured_star_click", {
           panel_open: document.body.classList.contains("preview-sheet-open"),
+          action: isOn ? "demote" : "promote",
         });
         star.disabled = true;
-        postJsonConflictRetry(tripApiBase(tripId) + "/promote-tier", {
+        var body = {
           assetIds: [assetId],
           rerender: false,
-        })
+        };
+        if (isOn) body.tier = "material";
+        postJsonConflictRetry(tripApiBase(tripId) + "/promote-tier", body)
           .then(function (res) {
             star.disabled = false;
             if (res.status !== 200 || !res.body.ok) {
               showToolbarToast((res.body && res.body.error) || "标记失败", { error: true });
               return;
             }
+            if (isOn) {
+              star.classList.remove("preview-toolbar__featured-star--on");
+              star.setAttribute("aria-pressed", "false");
+              star.setAttribute("aria-label", "标为精选");
+              screen.removeAttribute("data-featured");
+              showToolbarToast(
+                HELP_COPY.featuredDemotedToast || "已取消精选"
+              );
+              return;
+            }
             star.classList.add("preview-toolbar__featured-star--on");
             star.setAttribute("aria-pressed", "true");
+            star.setAttribute("aria-label", "取消精选");
             screen.setAttribute("data-featured", "true");
-            setLayoutPending(true);
-            showToolbarToast("已标为精选 · 点更新版面后生效");
+            // D-FEED-03 · 3a：纯 ★ 不置导出拦截 pending（意图类，非渲染类）
+            showToolbarToast(
+              HELP_COPY.featuredPromotedToast ||
+                "已标为精选 · 会优先出现在『放映精选』",
+              { duration: 5200 }
+            );
+            attachFeaturedHelpLinkOnToast();
+            var toolbar =
+              (screen.closest && screen.closest(".preview-toolbar")) ||
+              document.querySelector(".preview-toolbar");
+            showFeaturedRerankDockCue(toolbar);
           })
           .catch(function () {
             star.disabled = false;
@@ -417,6 +485,141 @@ export function initFeaturedStars(tripId) {
     });
     syncInspectChromeVisibility();
   }
+
+/**
+ * D-FEED-04 · 按精选重排：确认后 POST /curate（与「更新版面」分权）。
+ * @returns {Promise<boolean>}
+ */
+export function runFeaturedRerank(tripId, root) {
+  var coverBefore = "";
+  return fetchEntry(tripId)
+    .then(function (entry) {
+      entry = entry || {};
+      coverBefore = String(entry.coverAssetId || "");
+      var locked = entry.pipelineStatus === "structure_locked";
+      trackStudioEvent("help_funnel_tier_rerank_open", {
+        structure_locked: locked,
+      });
+      var body =
+        (HELP_COPY.featuredRerankBody ||
+          "将按你标过的精选重新选片排版，封面、章首或部分屏构图可能变化。") +
+        (locked
+          ? "\n\n" +
+            (HELP_COPY.featuredRerankLockedNote ||
+              "当前结构已锁定，继续将解锁并可能改动章序相关结果。")
+          : "");
+      return toolbarConfirm({
+        title: HELP_COPY.featuredRerankTitle || "按精选重新排版？",
+        body: body,
+        confirmText: HELP_COPY.featuredRerankConfirm || "重新排版",
+        cancelText: "取消",
+        danger: true,
+      }).then(function (ok) {
+        return { ok: !!ok, locked: locked };
+      });
+    })
+    .then(function (gate) {
+      if (!gate || !gate.ok) {
+        trackStudioEvent("help_funnel_tier_rerank_cancel", {
+          structure_locked: !!(gate && gate.locked),
+        });
+        return false;
+      }
+      trackStudioEvent("help_funnel_tier_rerank_confirm", {
+        structure_locked: gate.locked,
+      });
+      if (root) root._exportResultShowing = false;
+      showToolbarToast(HELP_COPY.featuredRerankBusy || "正在按精选重新排版…", {
+        duration: 4000,
+      });
+      if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+        root._taskDock.updateExporting({
+          title: "正在按精选重新排版…",
+          subtitle: "完成后将刷新预览",
+          pct: 8,
+        });
+        root._exportDockActive = true;
+      }
+      return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", {
+        force: true,
+        reason: "tier_rerank",
+      }).then(function (res) {
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          if (root && root._taskDock) root._taskDock.hide();
+          root && (root._exportDockActive = false);
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法开始重新排版",
+            { error: true }
+          );
+          trackStudioEvent("help_funnel_tier_rerank_fail", { stage: "start" });
+          return false;
+        }
+        return pollJobUntilDone(res.body.jobId, {
+          intervalMs: 800,
+          onTick: function (job) {
+            if (
+              root &&
+              root._taskDock &&
+              typeof root._taskDock.updateExporting === "function" &&
+              job &&
+              job.stageHint
+            ) {
+              root._taskDock.updateExporting({
+                title: "正在按精选重新排版…",
+                subtitle: String(job.stageHint),
+                pct: Math.min(90, 10 + (job.progress || 0) * 0.8),
+              });
+            }
+          },
+        }).then(function (job) {
+          if (root && root._taskDock) root._taskDock.hide();
+          root && (root._exportDockActive = false);
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast("重新排版失败", { error: true });
+            trackStudioEvent("help_funnel_tier_rerank_fail", { stage: "job" });
+            return false;
+          }
+          return fetchEntry(tripId)
+            .then(function (after) {
+              var coverAfter = String((after && after.coverAssetId) || "");
+              var coverChanged = !!(
+                coverBefore &&
+                coverAfter &&
+                coverBefore !== coverAfter
+              );
+              trackStudioEvent("help_funnel_tier_rerank_success", {
+                cover_changed: coverChanged,
+              });
+              showToolbarToast(
+                coverChanged
+                  ? HELP_COPY.featuredRerankDoneCover || "排版已更新 · 封面已更换"
+                  : HELP_COPY.featuredRerankDone || "排版已更新",
+                { duration: 2200 }
+              );
+              window.setTimeout(function () {
+                window.location.reload();
+              }, 600);
+              return true;
+            })
+            .catch(function () {
+              trackStudioEvent("help_funnel_tier_rerank_success", {
+                cover_changed: false,
+              });
+              showToolbarToast(HELP_COPY.featuredRerankDone || "排版已更新");
+              window.location.reload();
+              return true;
+            });
+        });
+      });
+    })
+    .catch(function () {
+      if (root && root._taskDock) root._taskDock.hide();
+      root && (root._exportDockActive = false);
+      showToolbarToast("无法开始重新排版", { error: true });
+      trackStudioEvent("help_funnel_tier_rerank_fail", { stage: "network" });
+      return false;
+    });
+}
 
 
 export function revealTripFolder(tripId) {

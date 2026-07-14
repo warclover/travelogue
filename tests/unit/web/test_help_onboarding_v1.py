@@ -128,5 +128,5 @@ def test_help_w3_platform_pick_markers() -> None:
     assert "helpDeepLinkPending" in help_js
     assert "isLongshotHelpActive" in help_js
     assert "isHelpLongshotDeferred" in help_js
-    assert "切换分享平台时也会再提示" in help_js
+    assert "切换分享平台、展开首尾装帧时也会再提示" in help_js
     assert "isLayoutPending: getLayoutPending" in INIT_V3.read_text(encoding="utf-8")

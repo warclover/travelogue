@@ -581,11 +581,44 @@ def test_g2_serve_promote_asset_to_featured() -> None:
     assert summary["material"] == 1
 
 
+def test_g2_serve_demote_asset_from_featured() -> None:
+    """Feedback Loop M2 · featured → material with userTierSource=user."""
+    from travelogue.media.user_tier import (
+        TIER_FEATURED,
+        TIER_MATERIAL,
+        TIER_SOURCE_USER,
+        demote_assets_from_featured,
+        promote_assets_to_featured,
+    )
+
+    trip = {
+        "assets": [
+            {"id": "a1", "userTier": TIER_MATERIAL},
+            {"id": "a2", "userTier": TIER_FEATURED, "userTierSource": "ingest"},
+        ],
+        "curation": {},
+    }
+    promote_assets_to_featured(trip, ["a1"])
+    demoted = demote_assets_from_featured(trip, ["a1", "a2", "missing"])
+    assert demoted == ["a1", "a2"]
+    assert trip["assets"][0]["userTier"] == TIER_MATERIAL
+    assert trip["assets"][0]["userTierSource"] == TIER_SOURCE_USER
+    assert trip["assets"][1]["userTier"] == TIER_MATERIAL
+    assert trip["assets"][1]["userTierSource"] == TIER_SOURCE_USER
+    # 无 featured 时 summary 被清掉（sync_user_tier_summary 约定）
+    assert "userTierSummary" not in (trip.get("curation") or {})
+
+
 def test_tier_patch_via_serve_api_shape() -> None:
-    from travelogue.web.tier_patch import TierPatchError, apply_tier_promotions
+    from travelogue.web.tier_patch import TierPatchError, apply_tier_demotions, apply_tier_promotions
 
     trip = {"assets": [{"id": "x1", "userTier": "material"}]}
     promoted = apply_tier_promotions(trip, ["x1"])
     assert promoted == ["x1"]
+    demoted = apply_tier_demotions(trip, ["x1"])
+    assert demoted == ["x1"]
+    assert trip["assets"][0]["userTier"] == "material"
     with pytest.raises(TierPatchError):
         apply_tier_promotions(trip, ["nope"])
+    with pytest.raises(TierPatchError):
+        apply_tier_demotions(trip, ["nope"])

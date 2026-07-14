@@ -441,7 +441,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<ul class="preview-sheet__list">' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
-      '<li class="preview-sheet__list-item--optional" hidden data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button></li>' +
+      '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
       '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       "</ul>" +
       '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>生成不可用 · 未配置写作引擎</p>' +
@@ -645,7 +645,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<div class="preview-sheet__embed preview-sheet__embed--edit-page"></div>' +
       '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
       '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:10px">收起面板，去画面上修改</button>' +
-      '<p class="preview-sheet__hint">直接在照片上点 ★；需要改设置时再打开本面板。</p>';
+      '<p class="preview-sheet__hint">直接在照片上点 ★；需要改设置时再打开本面板。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact" data-featured-semantic>精选 = 记下这张更重要；不会立刻重排整本</p>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="featured-rerank" style="margin-top:8px">按精选重排</button>';
 
     var pageEditSlot = bodyEl.querySelector(".preview-sheet__embed--edit-page");
     if (pageEditSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
@@ -656,6 +658,15 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (collapseOnBody) {
       collapseOnBody.addEventListener("click", function () {
         close();
+      });
+    }
+
+    var rerankBtn = bodyEl.querySelector('[data-action="featured-rerank"]');
+    if (rerankBtn) {
+      rerankBtn.addEventListener("click", function () {
+        if (typeof hooks.onFeaturedRerank === "function") {
+          hooks.onFeaturedRerank();
+        }
       });
     }
 
