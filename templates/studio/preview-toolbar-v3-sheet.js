@@ -1,5 +1,5 @@
 /**
- * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出与更多）.
+ * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出）.
  * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
  */
 "use strict";
@@ -7,7 +7,7 @@
 var TAB_MODES = [
   { id: "page", label: "这页" },
   { id: "book", label: "这本" },
-  { id: "more", label: "导出与更多" },
+  { id: "more", label: "导出" },
 ];
 
 var TAB_ALIASES = {
@@ -403,9 +403,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   function renderAdvancedPanel() {
     bodyEl.innerHTML =
       '<div class="preview-sheet__section">' +
-      '<p class="preview-sheet__label">快捷</p>' +
-      '<button type="button" class="preview-sheet__link preview-sheet__link--block" data-action="focus-export">打开导出设置</button>' +
-      '<p class="preview-sheet__hint">也可点 Dock 导出旁的 ▾</p>' +
+      '<button type="button" class="preview-sheet__primary" data-action="focus-export">打开导出设置</button>' +
+      '<p class="preview-sheet__hint">与 Dock ▾ 同一套偏好</p>' +
       "</div>" +
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">长图文案范围</p>' +
@@ -429,6 +428,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
       '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
       "</div></div>" +
+      '<details class="preview-sheet__details preview-sheet__more-tools">' +
+      "<summary>更多工具</summary>" +
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">预览显示</p>' +
       '<div class="preview-sheet__seg" data-field="reader-mode" role="group">' +
@@ -438,10 +439,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<ul class="preview-sheet__list">' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
-      '<li class="preview-sheet__list-item--optional" hidden><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button></li>' +
-      '<li class="preview-sheet__list-item--optional" hidden><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
+      '<li class="preview-sheet__list-item--optional" hidden data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button></li>' +
+      '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__footnote">点画面上的字可直接改；改精选或拼图后请点「更新版面」。</p>';
+      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>生成不可用 · 未配置写作引擎</p>' +
+      "</details>";
 
     wireAdvancedPanelActions();
   }
@@ -547,6 +549,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     var llmBtn = bodyEl.querySelector('[data-action="llm"]');
     if (llmBtn) {
       llmBtn.addEventListener("click", function () {
+        if (llmBtn.disabled) return;
         close();
         if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(llmBtn);
       });
@@ -595,9 +598,16 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         '<p class="preview-sheet__empty-label"><strong>' +
         watching +
         "</strong></p>" +
-        '<p class="preview-sheet__hint">请先滚到某一章的正文照片屏，再打开「这页」；或去调封面与封底。</p>' +
-        '<button type="button" class="preview-sheet__primary" data-action="goto-body">滚动到正文屏</button>' +
+        '<p class="preview-sheet__hint">滚动到正文屏可调整本页；或去调封面与封底。</p>' +
+        '<button type="button" class="preview-sheet__primary" data-action="collapse-panel">收起面板，去画面上修改</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-body" style="margin-top:8px">滚动到正文屏</button>' +
         '<button type="button" class="preview-sheet__ghost" data-action="goto-bookends" style="margin-top:8px">去调封面与封底</button>';
+      var collapsePanel = bodyEl.querySelector('[data-action="collapse-panel"]');
+      if (collapsePanel) {
+        collapsePanel.addEventListener("click", function () {
+          close();
+        });
+      }
       var goBody = bodyEl.querySelector('[data-action="goto-body"]');
       if (goBody) {
         goBody.addEventListener("click", function () {
@@ -621,11 +631,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<p class="preview-sheet__context">' +
       ctx.label +
       "</p>" +
-      (ctx.copyHint
-        ? '<p class="preview-sheet__hint">本屏有文案 · 也可直接点画面修改</p>'
-        : '<p class="preview-sheet__hint">也可直接点画面上的字修改</p>') +
+      '<div class="preview-sheet__embed preview-sheet__embed--edit-page"></div>' +
       '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
-      '<p class="preview-sheet__footnote">改精选或拼图后，请到「这本 → 进阶」点「更新版面」。</p>';
+      '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:10px">收起面板，去画面上修改</button>' +
+      '<p class="preview-sheet__hint">直接在照片上点 ★；需要改设置时再打开本面板。</p>';
+
+    var pageEditSlot = bodyEl.querySelector(".preview-sheet__embed--edit-page");
+    if (pageEditSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
+      hooks.drawers.openEmbed("edit-page", pageEditSlot);
+    }
+
+    var collapseOnBody = bodyEl.querySelector('[data-action="collapse-panel"]');
+    if (collapseOnBody) {
+      collapseOnBody.addEventListener("click", function () {
+        close();
+      });
+    }
 
     var actions = bodyEl.querySelector(".preview-sheet__page-actions");
     if (ctx.hasStar && actions) {
@@ -667,18 +688,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       });
       actions.appendChild(mediaBtn);
     }
-    if (actions && !actions.childNodes.length) {
-      actions.innerHTML =
-        '<p class="preview-sheet__hint">本屏可在左侧预览画面右下角标精选；单图/整图屏左上角可改判拼图。改后请更新版面。</p>';
-    }
   }
 
   function renderBookPanel() {
     stopPreviewFocusWatch();
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">改整本的名字、意图，以及封面与封底。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">改整本的名字与首尾装帧。</p>' +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story">' +
-      '<summary>整本故事 <span class="preview-sheet__zone-meta">杂志名 · 意图</span></summary>' +
+      '<summary>整本故事 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       "</div></details>" +
@@ -695,10 +712,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
-      '<p class="preview-sheet__footnote">改精选或拼图后，请点「更新版面」。</p>' +
       '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
       '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>' +
       "</div></details>";
+
+    if (typeof hooks.onBookTabRendered === "function") {
+      hooks.onBookTabRendered();
+    }
 
     var focusSide = resolveBookendsFocusSide(null);
     var focusBookends = !!focusSide || !!pendingBookendsDeepLink;
@@ -873,8 +893,22 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     menuBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (sheetClosing) return;
-      if (shell.hidden) open("page");
-      else close();
+      // 面板开 → 关面板保模式
+      if (!shell.hidden) {
+        close();
+        return;
+      }
+      // 面板关 + 精修中 → 「完成」退出模式（MF-01c）
+      if (
+        typeof hooks.isRefineModeOn === "function" &&
+        hooks.isRefineModeOn()
+      ) {
+        if (typeof hooks.onExitRefineMode === "function") {
+          hooks.onExitRefineMode();
+        }
+        return;
+      }
+      open("page");
     });
   }
 

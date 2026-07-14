@@ -41,20 +41,29 @@ function setHero(el, tripId, assetId, displayFile, emptyText) {
   el.style.backgroundImage = "url('" + thumbUrl(tripId, assetId, displayFile) + "')";
 }
 
-function candidateButton(tripId, item, kind, selectedId) {
+function candidateButton(tripId, item, kind, selectedId, index) {
   var aid = item.assetId || item.id || "";
   var btn = document.createElement("button");
   btn.type = "button";
   btn.className = "preview-sheet__bookends-thumb";
-  if (aid && aid === selectedId) btn.classList.add("is-on");
+  var isOn = !!(aid && aid === selectedId);
+  if (isOn) btn.classList.add("is-on");
   else btn.classList.add("is-muted");
   if (item.preview) btn.classList.add("is-preview");
   btn.setAttribute("data-bookends-" + kind, aid);
+  // asset-id 仅保留 title（调试）；可见 UI 用缩略图 + aria-label
   btn.title = aid;
+  var kindLabel = kind === "closing" ? "封底" : "封面";
+  var n = (index == null ? 0 : index) + 1;
+  btn.setAttribute(
+    "aria-label",
+    isOn ? "当前" + kindLabel : kindLabel + "候选 " + n
+  );
   btn.innerHTML =
     '<span class="preview-sheet__bookends-thumb-media" style="background-image:url(\'' +
     thumbUrl(tripId, aid, item.displayFile) +
-    "')\"></span>";
+    "')\"></span>" +
+    (isOn ? '<span class="preview-sheet__bookends-thumb-badge">当前</span>' : "");
   return btn;
 }
 
@@ -94,11 +103,11 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<p class="preview-sheet__bookends-empty-hint" data-bookends-closing-empty hidden>暂无封底候选</p>' +
     "</div>" +
     "</div>" +
-    '<details class="preview-sheet__bookends-mobile">' +
-    "<summary>手机封面</summary>" +
+    '<details class="preview-sheet__bookends-mobile" data-bookends-mobile>' +
+    "<summary>手机封面 · 预览手机效果</summary>" +
     '<div class="preview-sheet__bookends-mobile-body">' +
     '<div class="preview-sheet__bookends-mobile-thumb" data-bookends-mobile-thumb aria-hidden="true"></div>' +
-    '<p class="preview-sheet__hint" data-bookends-mobile-hint>为竖屏另选；封底目前仅网页成书。</p>' +
+    '<p class="preview-sheet__hint" data-bookends-mobile-hint>电脑与手机版式可能不同；此处为竖屏封面对照。封底目前仅网页成书。</p>' +
     "</div>" +
     "</details>" +
     '<div class="preview-sheet__bookends-actions">' +
@@ -109,6 +118,20 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>';
 
   slot.appendChild(root);
+
+  // D-REFUX-06 · 首次展开「手机封面」以强化对照发现性
+  var mobileDetails = root.querySelector("[data-bookends-mobile]");
+  var MOBILE_OPEN_KEY = "travelogue.preview.bookendsMobileOnce";
+  if (mobileDetails) {
+    try {
+      if (localStorage.getItem(MOBILE_OPEN_KEY) !== "1") {
+        mobileDetails.open = true;
+        localStorage.setItem(MOBILE_OPEN_KEY, "1");
+      }
+    } catch (_eMob) {
+      mobileDetails.open = true;
+    }
+  }
 
   var onelinerEl = root.querySelector("[data-bookends-oneliner]");
   var statusEl = root.querySelector("[data-bookends-status]");
@@ -257,12 +280,13 @@ export function mountBookendsPanel(slot, tripId, opts) {
     if (openingCands) {
       openingCands.innerHTML = "";
       var opens = payload.openingCandidates || [];
-      opens.forEach(function (item) {
+      opens.forEach(function (item, idx) {
         var btn = candidateButton(
           tripId,
           item,
           "opening",
-          state.webCoverAssetId || state.coverAssetId
+          state.webCoverAssetId || state.coverAssetId,
+          idx
         );
         btn.addEventListener("click", function () {
           applyOpening(item.assetId || item.id);
@@ -275,8 +299,8 @@ export function mountBookendsPanel(slot, tripId, opts) {
       closingCands.innerHTML = "";
       var closes = payload.closingCandidates || [];
       // Pending: still show preview candidates (PRD §4.5)
-      closes.forEach(function (item) {
-        var btn = candidateButton(tripId, item, "closing", state.closingAssetId);
+      closes.forEach(function (item, idx) {
+        var btn = candidateButton(tripId, item, "closing", state.closingAssetId, idx);
         if (payload.closingPreviewOnly && !payload.hasScreens) {
           btn.disabled = true;
           btn.title = "排版完成后可选";

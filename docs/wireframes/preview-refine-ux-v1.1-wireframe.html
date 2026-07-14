@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精修可用性优化 V1.1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --accent: #3d6b5a;
+      --danger: #c62828;
+      --warn-bg: #fff8e1;
+      --warn-border: #ffb74d;
+      --rec-bg: #e8f5e9;
+      --fail-bg: #ffebee;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--fail { background: var(--danger); color: #fff; }
+    .tag--p0 { background: #e65100; color: #fff; }
+    .tag--p1 { background: #1565c0; color: #fff; }
+    .tag--new { background: #6a1b9a; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+    }
+    .callout--fail { background: var(--fail-bg); border: 1px solid #ef9a9a; }
+    .callout--rec { background: var(--rec-bg); border: 1px solid #a5d6a7; }
+    .callout--warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+
+    .frame {
+      background: #e8efe9;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 540px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .frame--photo {
+      background:
+        linear-gradient(160deg, rgba(26,47,40,.4), rgba(26,47,40,.62)),
+        repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #b0bec5 8px, #b0bec5 16px);
+    }
+
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px;
+      background: rgba(26, 47, 40, 0.9);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .dock .ctl {
+      height: 36px; border: none; border-radius: 8px;
+      background: transparent; color: #e8f5ef; font-size: 12px; font-weight: 600;
+      cursor: pointer; padding: 0 10px;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .dock .ctl:hover { background: rgba(255,255,255,.1); }
+    .dock .ctl--done {
+      background: rgba(127, 203, 179, 0.22);
+      border: 1px solid rgba(127, 203, 179, 0.5);
+      color: #dff5ec;
+    }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px;
+      background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 12px; padding: 0 12px; cursor: pointer;
+    }
+    .mode-chip {
+      position: absolute; top: 18px; left: 14px; z-index: 35;
+      background: rgba(26,47,40,.92); color: #e8f5ef;
+      font-size: 11px; font-weight: 600;
+      padding: 6px 10px; border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.2);
+    }
+
+    .magazine {
+      margin: 72px auto 24px; width: min(420px, 86%);
+      background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28);
+      overflow: hidden;
+    }
+    .magazine__cover {
+      height: 220px;
+      background: linear-gradient(180deg, #5d4037, #3e2723);
+      color: #fff; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 18px;
+    }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 22px; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .magazine__body { padding: 16px; }
+    .photo-card {
+      position: relative;
+      height: 160px; border-radius: 8px;
+      background: linear-gradient(135deg, #78909c, #546e7a);
+      margin-bottom: 12px;
+    }
+    .star {
+      position: absolute; right: 10px; bottom: 10px;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; background: rgba(0,0,0,.45); color: #ffd54f;
+      font-size: 16px; cursor: pointer;
+    }
+    .star.is-on { background: rgba(255,213,79,.95); color: #5d4037; }
+    .star.is-blocked { outline: 2px dashed #ff5252; }
+    .collage {
+      position: absolute; left: 10px; top: 10px;
+      background: rgba(255,255,255,.92); border-radius: 6px;
+      font-size: 11px; padding: 4px 6px; color: #37474f;
+    }
+
+    .sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; width: min(360px, 92%);
+      background: #fff; border-left: 1px solid #cfd8dc;
+      box-shadow: -12px 0 32px rgba(0,0,0,.18);
+      z-index: 50; display: flex; flex-direction: column;
+    }
+    .sheet__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 14px 8px; border-bottom: 1px solid #eceff1;
+    }
+    .sheet__head h4 { margin: 0; font-size: 15px; }
+    .sheet__close {
+      width: 32px; height: 32px; border: none; border-radius: 8px;
+      background: #f5f5f5; cursor: pointer; font-size: 16px;
+    }
+    .sheet__tabs {
+      display: flex; gap: 4px; padding: 8px 12px;
+      border-bottom: 1px solid #eceff1;
+    }
+    .sheet__tabs span {
+      flex: 1; text-align: center; font-size: 12px; font-weight: 600;
+      padding: 8px 4px; border-radius: 8px; color: var(--wf-muted); cursor: default;
+    }
+    .sheet__tabs .on { background: #e8f5ef; color: var(--accent); }
+    .sheet__body { padding: 12px 14px 20px; overflow: auto; flex: 1; font-size: 12px; }
+    .sheet__body h5 { margin: 14px 0 6px; font-size: 12px; color: var(--wf-muted); text-transform: none; }
+    .sheet__body label { display: block; margin: 8px 0 4px; font-weight: 600; font-size: 12px; }
+    .sheet__body input, .sheet__body textarea {
+      width: 100%; border: 1px solid #cfd8dc; border-radius: 8px;
+      padding: 8px 10px; font: inherit;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 8px; padding: 9px 12px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .btn--primary { background: var(--accent); color: #fff; width: 100%; margin-top: 10px; }
+    .btn--ghost { background: #f5f5f5; color: #37474f; width: 100%; margin-top: 8px; }
+    .btn--warn { background: #ffe0b2; color: #e65100; width: 100%; margin-top: 8px; }
+    .hint { color: var(--wf-muted); font-size: 11px; margin: 6px 0; }
+    .hint--spam { color: #c62828; text-decoration: line-through; }
+    .block {
+      border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px; margin-top: 10px;
+      background: #fafafa;
+    }
+    .block summary { font-weight: 700; cursor: pointer; }
+    .thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .thumb {
+      aspect-ratio: 3/4; border-radius: 8px; border: 2px solid transparent;
+      background: linear-gradient(145deg, #90a4ae, #607d8b); cursor: pointer; position: relative;
+    }
+    .thumb.is-on { border-color: var(--accent); }
+    .thumb.is-on::after {
+      content: "当前"; position: absolute; left: 4px; top: 4px;
+      background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
+      padding: 2px 5px; border-radius: 999px;
+    }
+    .asset-bad {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px;
+    }
+    .asset-bad button {
+      border: 1px solid #cfd8dc; background: #fff; border-radius: 6px;
+      padding: 10px 4px; font-size: 10px; font-family: ui-monospace, monospace; color: #c62828;
+    }
+
+    .task-dock {
+      position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+      z-index: 45; min-width: 280px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.22);
+      padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+      font-size: 12px;
+    }
+    .task-dock button {
+      margin-left: auto; border: none; border-radius: 8px;
+      background: var(--gold); color: var(--gold-text);
+      font-weight: 700; padding: 8px 12px; cursor: pointer;
+    }
+
+    .overlay-block {
+      position: absolute; inset: 0; z-index: 48;
+      background: rgba(38,50,56,.28);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 14px;
+      pointer-events: none;
+    }
+    .x-mark {
+      position: absolute; z-index: 60; color: #ff1744; font-size: 42px; font-weight: 900;
+      text-shadow: 0 2px 0 #fff;
+    }
+
+    .aside {
+      position: sticky; top: 96px;
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ol { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin: 6px 0; }
+    .aside a { color: var(--accent); }
+
+    .flow {
+      display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 8px;
+      align-items: center; margin: 12px 0 18px; font-size: 11px;
+    }
+    .flow .box {
+      background: #fff; border: 1px dashed var(--wf-border); border-radius: 8px;
+      padding: 10px; text-align: center;
+    }
+    .flow .box.on { border-style: solid; border-color: var(--accent); background: #e8f5ef; }
+    .flow .arrow { color: var(--wf-muted); font-weight: 700; }
+
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
+    }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .compare .col {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 10px; padding: 10px;
+    }
+    .compare .col h4 { margin: 0 0 8px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>精修可用性优化 V1.1 · 设计评审线框</h1>
+    <p>
+      对应 PRD：<code>docs/PRD-PREVIEW-REFINE-UX-V1.1.md</code> ·
+      聚焦：模式≠面板 · 这页/这本情境对齐 · 封面缩略图 · 导出门面收敛。
+      绿标 = 推荐实现；红标 = 现行失败态（对照）。
+    </p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="p0" class="is-active">① 问题对照</button>
+      <button type="button" data-panel="p1">② 模式解耦 P0</button>
+      <button type="button" data-panel="p2">③ 收起后面面可改</button>
+      <button type="button" data-panel="p3">④ 这页 · 正文</button>
+      <button type="button" data-panel="p4">⑤ 这本 · 净化</button>
+      <button type="button" data-panel="p5">⑥ 封面缩略图</button>
+      <button type="button" data-panel="p6">⑦ 导出收敛</button>
+      <button type="button" data-panel="p7">⑧ 状态机 & 审核</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- ① -->
+      <section class="panel is-visible" id="p0">
+        <div class="sec">
+          <h2>① 现行失败 vs 目标 <span class="tag tag--fail">现状</span> <span class="tag tag--rec">目标</span></h2>
+          <p class="lead">狗粮核心：开精修才能看见 ★，但面板挡住 ★；关面板 ★ 又消失。</p>
+          <div class="compare">
+            <div class="col">
+              <h4><span class="tag tag--fail">FAIL</span> 现行</h4>
+              <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 现行</div></div>
+              <div class="frame frame--photo" style="min-height:420px">
+                <div class="dock">
+                  <span class="ctl">返回</span>
+                  <span class="ctl">播放</span>
+                  <span class="ctl" style="background:rgba(255,255,255,.12)">精修</span>
+                  <span class="export">长图</span>
+                </div>
+                <div class="magazine" style="margin-top:64px;width:58%">
+                  <div class="photo-card">
+                    <span class="collage">媒资</span>
+                    <button class="star is-blocked" type="button">★</button>
+                  </div>
+                </div>
+                <div class="sheet">
+                  <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+                  <div class="sheet__tabs"><span class="on">这页</span><span>这本</span><span>导出与更多</span></div>
+                  <div class="sheet__body">
+                    <p>请先滚到正文，再在画面上点 ★……</p>
+                    <p class="hint">面板盖住画面 → 点不到</p>
+                  </div>
+                </div>
+                <div class="x-mark" style="left:42%;top:48%">✕</div>
+              </div>
+              <p class="hint">关 × 后 refine=off，★ 直接隐藏 → 死胡同。</p>
+            </div>
+            <div class="col">
+              <h4><span class="tag tag--rec">REC</span> V1.1</h4>
+              <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 目标</div></div>
+              <div class="frame frame--photo" style="min-height:420px">
+                <div class="mode-chip">精修中 · 可点 ★</div>
+                <div class="dock">
+                  <span class="ctl">返回</span>
+                  <span class="ctl">播放</span>
+                  <span class="ctl ctl--done">完成</span>
+                  <span class="export">长图</span>
+                </div>
+                <div class="magazine" style="margin-top:64px;width:70%">
+                  <div class="photo-card">
+                    <span class="collage">普通照片 ▾</span>
+                    <button class="star is-on" type="button">★</button>
+                  </div>
+                </div>
+                <div class="task-dock">
+                  <span>版面有改动</span>
+                  <button type="button">更新版面</button>
+                </div>
+              </div>
+              <p class="hint">面板已收起；模式仍在；★ 可点；待办进 Task Dock。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② -->
+      <section class="panel" id="p1">
+        <div class="sec">
+          <h2>② 模式与面板解耦 <span class="tag tag--p0">P0</span> <span class="tag tag--rec">推荐</span></h2>
+          <p class="lead">关面板 ≠ 退出精修。Dock 文案在精修中变为「完成」。</p>
+          <div class="callout callout--rec">
+            <strong>D1 推荐</strong>
+            Esc / × / 点遮罩 → 只关面板；点「完成」→ refine=off。
+          </div>
+          <div class="flow">
+            <div class="box">验货<br><small>refine=off</small></div>
+            <div class="arrow">→</div>
+            <div class="box on">精修中·面板开<br><small>点「精修」</small></div>
+            <div class="arrow">Esc</div>
+            <div class="box on">精修中·面板关<br><small>★ 可用</small></div>
+          </div>
+          <div class="anno">线框 · 面板打开（进入后）</div>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">精修模式 · 面板开</div></div>
+          <div class="frame frame--photo">
+            <div class="mode-chip">精修中 · 可点 ★</div>
+            <div class="dock">
+              <span class="ctl">返回</span>
+              <span class="ctl">播放</span>
+              <span class="ctl" style="background:rgba(255,255,255,.12)">精修</span>
+              <span class="export">长图</span>
+            </div>
+            <div class="magazine">
+              <div class="magazine__cover">
+                <h3>凯哥斯里兰卡游记</h3>
+                <p>封面 · 请滚到正文再标精选</p>
+              </div>
+            </div>
+            <div class="sheet">
+              <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+              <div class="sheet__tabs"><span class="on">这页</span><span>这本</span><span>导出</span></div>
+              <div class="sheet__body">
+                <p><strong>你正在看封面</strong></p>
+                <p class="hint">★ 与拼图只出现在正文照片屏。</p>
+                <button class="btn btn--primary" type="button">收起面板，去画面上修改</button>
+                <button class="btn btn--ghost" type="button">滚动到正文屏</button>
+                <button class="btn btn--ghost" type="button">去调封面与封底</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ -->
+      <section class="panel" id="p2">
+        <div class="sec">
+          <h2>③ 收起面板后的精修态 <span class="tag tag--p0">P0</span></h2>
+          <p class="lead">用户主作业区是杂志画面，不是侧栏。</p>
+          <div class="anno">线框 · 面板关 · 标精选</div>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">精修模式 · 面板关</div></div>
+          <div class="frame frame--photo">
+            <div class="mode-chip">精修中 · 点照片上的 ★</div>
+            <div class="dock">
+              <span class="ctl">返回</span>
+              <span class="ctl">播放</span>
+              <span class="ctl ctl--done">完成</span>
+              <span class="export">长图 ▾</span>
+            </div>
+            <div class="magazine">
+              <div class="magazine__body">
+                <p style="margin:0 0 8px;font-size:11px;color:#8d6e63">02 / 05 · 5月12–5月21日</p>
+                <div class="photo-card">
+                  <span class="collage">普通照片 ▾</span>
+                  <button class="star is-on" type="button">★</button>
+                </div>
+                <div class="photo-card" style="height:120px;opacity:.85">
+                  <button class="star" type="button">★</button>
+                </div>
+              </div>
+            </div>
+            <div class="task-dock">
+              <div>
+                <strong>版面有改动</strong>
+                <div class="hint" style="margin:0">已标精选 · 导出前请更新</div>
+              </div>
+              <button type="button">更新版面</button>
+            </div>
+          </div>
+          <div class="callout callout--warn">
+            <strong>审核点</strong>
+            「完成」是否需要在有 pending 时二次确认？PRD 建议：允许退出，pending 留在 Task Dock。
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ -->
+      <section class="panel" id="p3">
+        <div class="sec">
+          <h2>④ 「这页」· 正文情境 <span class="tag tag--p1">P1</span> <span class="tag tag--new">字段迁移</span></h2>
+          <p class="lead">章锚点 / 章意图从「整本故事」迁到「这页」。</p>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">这页 · 正文</div></div>
+          <div class="frame" style="background:#dfe8e2">
+            <div class="dock" style="background:rgba(26,47,40,.92)">
+              <span class="ctl">返回</span>
+              <span class="ctl ctl--done">完成</span>
+              <span class="export">长图</span>
+            </div>
+            <div class="magazine" style="margin-left:24px;width:46%;align-self:flex-start;margin-top:70px">
+              <div class="magazine__body">
+                <div class="photo-card"><button class="star" type="button">★</button></div>
+              </div>
+            </div>
+            <div class="sheet">
+              <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+              <div class="sheet__tabs"><span class="on">这页</span><span>这本</span><span>导出</span></div>
+              <div class="sheet__body">
+                <p>当前章：<strong>5月12–5月21日</strong></p>
+                <label>记忆锚点（0–3）</label>
+                <input placeholder="锚点 1" value="夜市灯" />
+                <input placeholder="锚点 2" style="margin-top:6px" />
+                <input placeholder="锚点 3" style="margin-top:6px" />
+                <div class="block">
+                  <summary>章级意图（可选）</summary>
+                  <p class="hint">这一章更像什么感觉？ · 芯片组（略）</p>
+                </div>
+                <button class="btn btn--primary" type="button">按新意图重写文案</button>
+                <p class="hint">直接在左侧照片上点 ★；改完后用下方待办更新版面。</p>
+                <p class="hint hint--spam">（删除）三连「请更新版面」说教</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ -->
+      <section class="panel" id="p4">
+        <div class="sec">
+          <h2>⑤ 「这本」净化 <span class="tag tag--p1">P1</span></h2>
+          <p class="lead">整本只谈整本；不再出现「当前章：—」。</p>
+          <div class="compare">
+            <div class="col">
+              <h4><span class="tag tag--fail">现行混装</span></h4>
+              <ul class="hint">
+                <li>杂志名</li>
+                <li>写给编辑的一句话 ← 黑话</li>
+                <li>当前章：—</li>
+                <li>记忆锚点 ×3</li>
+                <li>章意图</li>
+                <li>★ 说明 ×3</li>
+              </ul>
+            </div>
+            <div class="col">
+              <h4><span class="tag tag--rec">V1.1</span></h4>
+              <ul class="hint">
+                <li>杂志名</li>
+                <li><strong>给这本游记的一句话</strong></li>
+                <li>首尾装帧（缩略图）</li>
+                <li>进阶：模板 · 同框 · 分章</li>
+              </ul>
+            </div>
+          </div>
+          <div class="anno">线框 · 这本 · 整本故事</div>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">这本</div></div>
+          <div class="frame" style="min-height:480px;background:#eef2f0">
+            <div class="sheet" style="width:min(400px,100%);position:relative;height:100%;box-shadow:none;border:none">
+              <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+              <div class="sheet__tabs"><span>这页</span><span class="on">这本</span><span>导出</span></div>
+              <div class="sheet__body">
+                <p class="hint">改整本的名字与首尾装帧。</p>
+                <div class="block" open>
+                  <strong>整本故事</strong>
+                  <label>杂志名</label>
+                  <input value="凯哥斯里兰卡游记" />
+                  <label>给这本游记的一句话</label>
+                  <textarea rows="2" placeholder="例如：想突出海边傍晚的慢节奏"></textarea>
+                </div>
+                <div class="block">
+                  <strong>首尾装帧</strong>
+                  <span class="hint">见下一页线框</span>
+                </div>
+                <div class="block">
+                  <strong>进阶</strong>
+                  <span class="hint">模板 · 同框 · 分章（默认折叠）</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑥ -->
+      <section class="panel" id="p5">
+        <div class="sec">
+          <h2>⑥ 封面 / 封底候选 <span class="tag tag--p1">P1</span></h2>
+          <p class="lead">用眼睛选图，不用读 asset-id。</p>
+          <div class="compare">
+            <div class="col">
+              <h4><span class="tag tag--fail">现行</span></h4>
+              <div class="asset-bad">
+                <button type="button">asset-007</button>
+                <button type="button">asset-034</button>
+                <button type="button">asset-018</button>
+              </div>
+            </div>
+            <div class="col">
+              <h4><span class="tag tag--rec">推荐</span></h4>
+              <div class="thumbs">
+                <div class="thumb is-on" title="asset-007"></div>
+                <div class="thumb" title="asset-034"></div>
+                <div class="thumb" title="asset-018"></div>
+              </div>
+              <p class="hint">asset-id 仅在 title / 开发者模式。</p>
+            </div>
+          </div>
+          <div class="anno">嵌在「首尾装帧」中的合页区</div>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">首尾装帧</div></div>
+          <div class="frame" style="background:#fff;min-height:460px;padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">封底与封面成对挑选</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <div style="font-size:12px;font-weight:700;margin-bottom:6px">封面 · 手选</div>
+                <div class="thumbs">
+                  <div class="thumb is-on"></div>
+                  <div class="thumb"></div>
+                  <div class="thumb"></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:700;margin-bottom:6px">封底 · 手选</div>
+                <div class="thumbs" style="grid-template-columns:repeat(4,1fr)">
+                  <div class="thumb is-on"></div>
+                  <div class="thumb"></div>
+                  <div class="thumb"></div>
+                  <div class="thumb"></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px">
+              <button class="btn btn--primary" style="width:auto" type="button">看封面</button>
+              <button class="btn btn--ghost" style="width:auto;margin:0" type="button">看封底</button>
+              <button class="btn btn--ghost" style="width:auto;margin:0" type="button">恢复自动挑选</button>
+            </div>
+            <div class="block">
+              <strong>封面版式</strong>
+              <p class="hint">沉浸题签 · 对页叠印 · 切带题名 · …（可后续加迷你预览）</p>
+              <label style="font-weight:500"><input type="checkbox" /> 更换时保留当前封面图</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑦ -->
+      <section class="panel" id="p6">
+        <div class="sec">
+          <h2>⑦ 「导出」收敛 <span class="tag tag--p1">P1</span></h2>
+          <p class="lead">首屏只放导出决策；其余进「更多工具」。</p>
+          <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">导出</div></div>
+          <div class="frame" style="background:#eef2f0;min-height:520px">
+            <div class="sheet" style="width:min(380px,100%);position:relative;height:100%;box-shadow:none;border:none">
+              <div class="sheet__head"><h4>精修</h4><button class="sheet__close" type="button">×</button></div>
+              <div class="sheet__tabs"><span>这页</span><span>这本</span><span class="on">导出</span></div>
+              <div class="sheet__body">
+                <button class="btn btn--primary" type="button">打开导出设置</button>
+                <p class="hint">与 Dock ▾ 同一套偏好</p>
+                <h5>长图文案范围</h5>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn--ghost" style="width:auto;margin:0" type="button">纯照片</button>
+                  <button class="btn btn--primary" style="width:auto;margin:0" type="button">完整文案</button>
+                  <button class="btn btn--ghost" style="width:auto;margin:0" type="button">图注：开</button>
+                  <button class="btn btn--ghost" style="width:auto;margin:0" type="button">导语：显</button>
+                </div>
+                <h5>导出范围</h5>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn--ghost" style="width:auto;margin:0" type="button">按章导出</button>
+                  <button class="btn btn--primary" style="width:auto;margin:0" type="button">完整长图</button>
+                </div>
+                <h5>清晰度</h5>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn--primary" style="width:auto;margin:0" type="button">标准 2×</button>
+                  <button class="btn btn--ghost" style="width:auto;margin:0" type="button">高清 3×</button>
+                </div>
+                <div class="block" style="margin-top:16px">
+                  <summary><strong>更多工具</strong>（默认折叠）</summary>
+                  <p class="hint">阅读视图 · 文件夹 · zip · 放映精选</p>
+                  <button class="btn btn--ghost" type="button" disabled>生成杂志感文案</button>
+                  <p class="hint">生成不可用 · 未配置写作引擎</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑧ -->
+      <section class="panel" id="p7">
+        <div class="sec">
+          <h2>⑧ 状态机与审核勾选</h2>
+          <p class="lead">请对照 PRD §0 / §14 拍板。</p>
+          <div class="flow">
+            <div class="box">验货</div>
+            <div class="arrow">精修</div>
+            <div class="box on">面板开</div>
+            <div class="arrow">Esc/×</div>
+            <div class="box on">面板关</div>
+          </div>
+          <p class="hint" style="text-align:center">面板关 → 点「完成」→ 验货</p>
+
+          <div class="callout callout--rec">
+            <strong>建议结论</strong>
+            Conditional Go：Must-fix = M1 模式解耦必须先合；封面缩略图与导出收敛可同 PR。
+          </div>
+
+          <div class="block">
+            <label><input type="checkbox" /> D1 关面板保模式；「完成」退出</label>
+            <label><input type="checkbox" /> D2 章级字段迁入「这页」</label>
+            <label><input type="checkbox" /> D3 封面缩略图，隐藏 asset-id</label>
+            <label><input type="checkbox" /> D4 「导出与更多」→「导出」+ 更多工具</label>
+            <label><input type="checkbox" /> D5 文案质量不进本主题（乱码可顺带）</label>
+            <label><input type="checkbox" /> 同意线框 ②③⑥⑦ 为实现方向</label>
+          </div>
+          <p class="hint">完整 PRD：<code>docs/PRD-PREVIEW-REFINE-UX-V1.1.md</code></p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>审核导航</h3>
+      <ol>
+        <li>先看 ① 问题是否认同</li>
+        <li>拍板 ② D1 模式解耦</li>
+        <li>确认 ④⑤ IA 迁移</li>
+        <li>确认 ⑥⑦ 视觉与导出</li>
+        <li>在 ⑧ 勾选结论</li>
+      </ol>
+      <p style="margin:14px 0 0">
+        <a href="../PRD-PREVIEW-REFINE-UX-V1.1.md">打开 PRD</a><br />
+        <a href="../PRD-PREVIEW-REFINE-V1.md">V1 原文</a>
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var panels = document.querySelectorAll(".panel");
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        tabs.querySelectorAll("button").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        panels.forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === btn.getAttribute("data-panel"));
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    })();
+  </script>
+</body>
+</html>

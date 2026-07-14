@@ -74,6 +74,12 @@
 | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | Phase 5 实施任务清单（M20–M23） |
 | [ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) | Phase 5 验收（UX-P5-80-01 · UX-P5-SCROLL-01） |
 | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) | 预览精修体验 V1（验货默认 · 更新版面 · 导出拦截） |
+| [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) | **精修可用性优化 V1.1**（模式≠面板 · 情境对齐 · 导出门面收敛）· **Conditional Go** |
+| [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 实施清单（M1–M3 代码就绪） |
+| [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 验收清单（手测待补签） |
+| [acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) | 精修可用性 V1.1 跨职能评审纪要 |
+| [acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md) | 精修可用性 V1.1 · S1 新手脚本手测记录 |
+| [wireframes/preview-refine-ux-v1.1-wireframe.html](./wireframes/preview-refine-ux-v1.1-wireframe.html) | 精修可用性 V1.1 评审线框 |
 | [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) | **预览导出门面 V1** v1.1 · Reliability 条件 Go |
 | [IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md](./IMPLEMENTATION-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 实施清单 |
 | [ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md](./ACCEPTANCE-PREVIEW-EXPORT-FACADE-V1.md) | 导出门面 V1 验收 |
@@ -88,7 +94,7 @@
 **前置**：Phase 4 M15–M19 代码主线已收口。**代号**：P5-Polish。**决策**：D1–D6 见 PRD §2.2（D4/D5 暂缓）。
 
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
-预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-EXPORT-FACADE-V1**（待评审）→ **PRD-UX-TRUST-V1**（试用反馈加严）。  
+预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-REFINE-UX-V1.1**（Conditional Go · 可开 M1）→ **PRD-PREVIEW-EXPORT-FACADE-V1** → **PRD-UX-TRUST-V1**。  
 首访帮助：**PRD-HELP-ONBOARDING-V1**（复用 FirstSuccess / 脉冲 / Task Dock / publishGuide；不做全站 tour）。
 
 ---

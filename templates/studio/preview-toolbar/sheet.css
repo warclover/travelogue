@@ -929,19 +929,20 @@ body.preview-sheet-open {
 }
 
 .preview-sheet__bookends-thumb {
+  position: relative;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 64px; /* 3:4 */
   padding: 0;
   border: 2px solid transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   background: rgba(20, 17, 13, 0.08);
 }
 
 .preview-sheet__bookends-thumb.is-on {
-  border-color: rgba(20, 17, 13, 0.72);
+  border-color: rgba(180, 83, 9, 0.95);
   opacity: 1;
 }
 
@@ -960,6 +961,20 @@ body.preview-sheet-open {
   height: 100%;
   background-size: cover;
   background-position: center;
+}
+
+.preview-sheet__bookends-thumb-badge {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(20, 17, 13, 0.72);
+  pointer-events: none;
 }
 
 .preview-sheet__bookends-mobile {

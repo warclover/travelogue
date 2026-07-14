@@ -17,7 +17,12 @@ import {
   ensurePreviewRefineDefault,
   setPreviewRefineMode,
   syncInspectChromeVisibility,
+  isPreviewRefineOn,
+  syncRefineDockChrome,
+  maybeShowRefineStarTip,
+  maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
+import { trackStudioEvent } from "../js/analytics.js";
 import {
   registerInlineEditBridge,
   initCoverTitleEdit,
@@ -170,10 +175,20 @@ export function initToolbarV3(root, tripId) {
 
   var cohortEnabled = false;
 
+  function exitRefineMode() {
+    if (getLayoutPending()) {
+      showToolbarToast("版面还没更新，可稍后在下方更新", { duration: 4000 });
+    }
+    setPreviewRefineMode(false);
+    syncRefineDockChrome(root, { panelOpen: false });
+  }
+
   var sheetHooks = {
     drawers: drawers,
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
+    isRefineModeOn: isPreviewRefineOn,
+    onExitRefineMode: exitRefineMode,
     confirmLeaveCurrentTab: function (tabId, done) {
       // D-REF-05 · 文案立即自动保存；切 Tab 不再弹「未保存将丢弃」
       clearSheetEditDirty(root);
@@ -184,12 +199,20 @@ export function initToolbarV3(root, tripId) {
         clearSheetEditDirty(root);
       }
     },
+    onBookTabRendered: function () {
+      maybeShowBookTabMigrateTip(showToolbarToast, trackStudioEvent);
+    },
     onSheetOpened: function () {
-      // Trust V1 · 打开精修 → 验货壳放出 ★/拼图
+      // Trust V1 + V1.1 · 打开精修 → refine=on；面板开
       setPreviewRefineMode(true);
+      syncRefineDockChrome(root, { panelOpen: true });
     },
     onSheetClosed: function () {
-      setPreviewRefineMode(false);
+      // V1.1 MF-01 · 关面板不退出模式
+      syncRefineDockChrome(root, { panelOpen: false });
+      if (isPreviewRefineOn()) {
+        maybeShowRefineStarTip(showToolbarToast);
+      }
     },
     syncLongshotPrefsUi: syncLongshotPrefsUi,
     syncReaderModeUi: syncReaderModeUi,
@@ -279,24 +302,27 @@ export function initToolbarV3(root, tripId) {
       if (!panel) return;
       drawers.refreshEntry().then(function (/** @type {{ intentSummary?: { featuredCount?: number } }} */ data) {
         var count = (data && data.intentSummary && data.intentSummary.featuredCount) || 0;
-        panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
-          var action = li.querySelector("[data-action]");
-          if (!action) return;
-          if (action.getAttribute("data-action") === "present") {
-            li.hidden = count < 1;
-          }
-        });
+        var presentLi = panel.querySelector('[data-tool="present"]');
+        if (presentLi) presentLi.hidden = count < 1;
       });
+      var llmBtn = panel.querySelector('[data-action="llm"]');
+      var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
+      function setLlmAvailable(ok) {
+        if (llmBtn) {
+          llmBtn.disabled = !ok;
+          llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
+        }
+        if (llmHint) llmHint.hidden = !!ok;
+      }
+      setLlmAvailable(false);
       fetch("/__travelogue/config")
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (cfg) {
-          if (!cfg || !cfg.llmAvailable) return;
-          panel.querySelectorAll(".preview-sheet__list-item--optional").forEach(function (li) {
-            var action = li.querySelector('[data-action="llm"]');
-            if (action) li.hidden = false;
-          });
+          setLlmAvailable(!!(cfg && cfg.llmAvailable));
         })
-        .catch(function () {});
+        .catch(function () {
+          setLlmAvailable(false);
+        });
     },
   };
 
@@ -456,6 +482,16 @@ export function initToolbarV3(root, tripId) {
     initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
     syncInspectChromeVisibility();
   });
+
+  // V1.1 MF-01d · 返回首页强制退出精修
+  var backBtn = root.querySelector(".preview-toolbar__dock-btn--back");
+  if (backBtn) {
+    backBtn.addEventListener("click", function () {
+      setPreviewRefineMode(false);
+      syncRefineDockChrome(root, { panelOpen: false });
+    });
+  }
+  syncRefineDockChrome(root, { panelOpen: false });
 
   // Trust V1 · 文案保存不升 longshotStale（废止 copy-saved → showStaleHint）
   window.addEventListener("travelogue:copy-saved", function () {
