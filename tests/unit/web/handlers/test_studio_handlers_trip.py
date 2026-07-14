@@ -317,6 +317,74 @@ def test_handle_trip_curate_starts_job(tmp_path: Path) -> None:
     assert status == 202
     assert body["ok"] is True
     assert body.get("jobId")
+    assert body.get("scope") == "full"
+
+
+def test_handle_trip_curate_tier_requires_chapters(tmp_path: Path) -> None:
+    from travelogue.web.studio_handlers.trip_handlers import handle_trip_curate
+
+    trips_dir = tmp_path / "trips"
+    create_trip("demo-tier-empty", trips_dir)
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"scope": "tier", "force": True, "reason": "tier_rerank"},
+    )
+    handle_trip_curate(handler, "demo-tier-empty")
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 409
+    assert body.get("error") == "E_CURATE_NO_STRUCTURE"
+
+
+def test_handle_trip_curate_tier_skips_unlock(tmp_path: Path) -> None:
+    from travelogue.domain.pipeline_view import lock_structure
+    from travelogue.web.studio_handlers.trip_handlers import handle_trip_curate
+
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-tier-lock", trips_dir)
+    svc = TripService(root=trips_dir.parent)
+    trip = svc.load(trip_json)
+    trip["chapters"] = [
+        {"id": "ch-01", "index": 1, "patternId": "open", "title": "一", "items": []}
+    ]
+    lock_structure(trip)
+    svc.save(trip, trip_json)
+
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={"scope": "tier", "force": True, "reason": "tier_rerank"},
+    )
+    captured: list = []
+
+    def _sync_job(_job, *, runner=None):
+        if runner is not None:
+            captured.append(runner)
+        return {}
+
+    with patch(
+        "travelogue.web.studio_handlers.trip_pipeline_handlers.run_g1_continue_job",
+        side_effect=_sync_job,
+    ):
+        with patch(
+            "travelogue.domain.pipeline_view.unlock_structure_for_replan"
+        ) as unlock_fn:
+            with patch("travelogue.curation.curate.run_curate") as run_fn:
+                with patch("travelogue.render.engine.render_trip_surfaces"):
+                    with patch("travelogue.render.preview.render_preview_jpg"):
+                        handle_trip_curate(handler, "demo-tier-lock")
+                        assert captured
+                        result = captured[0]()
+                        unlock_fn.assert_not_called()
+                        run_fn.assert_called_once()
+                        kwargs = run_fn.call_args.kwargs
+                        assert kwargs.get("scope") == "tier"
+                        assert kwargs.get("cover_force") is True
+                        assert kwargs.get("refresh_algorithms") is False
+                        assert result.get("scope") == "tier"
+                        assert result.get("pipelineStatus") == "structure_locked"
+    assert handler.response is not None
+    assert handler.response[0] == 202
+    assert handler.response[1].get("scope") == "tier"
 
 
 def test_handle_trip_curate_runner_regenerates_preview_jpg(tmp_path: Path) -> None:

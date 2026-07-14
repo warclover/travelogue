@@ -5,7 +5,7 @@
 | **对应 PRD** | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) v0.1.2 |
 | **实施清单** | [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) |
 | **线框** | [wireframes/refine-feedback-loop-v1-wireframe.html](./wireframes/refine-feedback-loop-v1-wireframe.html) |
-| **状态** | **工程可合入 master（Conditional Go）** · M1+M2+P0 编码+静态门禁 ✅ · **AC-FEED-02 N≥5 真人待补** · M3 未开 · 正式评审纪要待补 |
+| **状态** | **M1+M2+P0+M3 工程可合入 master（Conditional Go）** · **AC-FEED-02 N≥5 真人待补** · 正式评审纪要待补 |
 | **日期** | 2026-07-14 |
 | **静态门禁** | `tests/unit/web/test_refine_feedback_loop_v1.py` |
 
@@ -18,7 +18,7 @@
 | **M1** | ✅ | 首尾 tip/区头；★ 诚实文案；纯 ★ 不拦导出；分词对齐 |
 | **M2** | ✅ | demote；「按精选重排」→确认→`/curate`；structure_locked 风险文案 |
 | **P0 收口** | ✅ | Dock 次 CTA；★ toast→H2；放映空池说明；重排成功封面 toast；文档回写 |
-| **M3** | ⏳ | `curate?scope=tier`；正式 N≥5 手测 AC-FEED-02 |
+| **M3** | ✅ | `curate scope=tier`：保留章序；不解锁 structure_locked |
 
 ---
 
@@ -39,7 +39,7 @@
 | **AC-FEED-11** | 抽检 toast / Modal / H2 / hint | 分词表零冲突 | ✅ | ⏳ |
 | **AC-FEED-12** | 导出中 / 更新版面中 | 不弹 T-BE-OPEN | ✅ | ⏳ |
 | **AC-FEED-13** | 取消精选 | ★ 灭；可再标 | ✅ | ⏳ |
-| **AC-FEED-14** | structure_locked 下重排 | Modal 有风险说明；取消不调 curate | ✅ | ⏳ |
+| **AC-FEED-14** | structure_locked 下重排 | Modal 说明**不解锁章序**；取消不调 curate；成功后仍 locked | ✅ | ⏳ |
 | **AC-FEED-15** | 重播操作提示 | 可再出现 T-BE-OPEN | ✅ | ⏳ |
 | **AC-FEED-P0a** | 标 ★ 后 | Dock 出现「按精选重排」次路径 | ✅ | ⏳ |
 | **AC-FEED-P0b** | 导出 Tab「放映精选」空池 | 可见说明「先在正文点 ★」；按钮禁用 | ✅ | ⏳ |

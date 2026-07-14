@@ -691,6 +691,7 @@ def _curate_preflight(
     trip_dir: Path | None,
     cfg: AppConfig | None,
     saved_memory_anchors: list[list[str] | None],
+    cover_force: bool = False,
 ) -> _CuratePreflight:
     from travelogue.config import default_web_layout_engine, get_config
     from travelogue.layout_engine.planner.screen_planner import (
@@ -739,6 +740,7 @@ def _curate_preflight(
         cover_scoring=cur_cfg.cover_scoring,
         cover_scoring_v2=cur_cfg.cover_scoring_v2,
         scoring_version=cur_cfg.cover_scoring_version,
+        force=cover_force,
     )
     curation = trip.get("curation") or {}
     by_layout = curation.get("coverByLayout") or {}
@@ -881,7 +883,10 @@ def run_curate(
     trip_dir: Path | None = None,
     cfg: AppConfig | None = None,
     refresh_algorithms: bool | None = None,
+    scope: str = "full",
+    cover_force: bool = False,
 ) -> CurateResult:
+    curate_scope = "tier" if str(scope or "").strip().lower() == "tier" else "full"
     if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
         raise CurateError(
             "E_CURATE_TOO_FEW",
@@ -907,7 +912,9 @@ def run_curate(
         trip,
         trip_dir=trip_dir,
         app_cfg=cfg,
-        refresh_algorithms=refresh_algorithms,
+        refresh_algorithms=(
+            False if curate_scope == "tier" and refresh_algorithms is None else refresh_algorithms
+        ),
     )
 
     cohort_summary = None
@@ -923,6 +930,7 @@ def run_curate(
         trip_dir=trip_dir,
         cfg=cfg,
         saved_memory_anchors=saved_memory_anchors,
+        cover_force=bool(cover_force) if curate_scope == "tier" else False,
     )
     app_cfg = preflight.app_cfg
     cur_cfg = preflight.cur_cfg
@@ -955,7 +963,15 @@ def run_curate(
     )
 
     replan_decision = should_layout_only_replan(trip, trip_dir=trip_dir, cfg=app_cfg)
-    if replan_decision.layout_only:
+    if curate_scope == "tier":
+        bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
+        if bucket_plan is None:
+            raise CurateError(
+                "E_CURATE_NO_STRUCTURE",
+                "tier scope requires existing chapter structure",
+            )
+        mark_layout_replan(trip, reason="tier_rerank")
+    elif replan_decision.layout_only:
         bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
         if bucket_plan is None:
             bucket_plan = _build_curate_buckets(trip, preflight)
@@ -981,7 +997,22 @@ def run_curate(
     write_album_profile(trip)
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
-    non_empty_buckets = [b for b in buckets if b]
+    # Keep segment metadata aligned when empty buckets are dropped.
+    if len(bucket_segment_ids) == len(buckets) and len(bucket_segment_ids_all) == len(
+        buckets
+    ):
+        aligned = [
+            (b, sid, sids)
+            for b, sid, sids in zip(
+                buckets, bucket_segment_ids, bucket_segment_ids_all, strict=True
+            )
+            if b
+        ]
+        non_empty_buckets = [row[0] for row in aligned]
+        bucket_segment_ids = [row[1] for row in aligned]
+        bucket_segment_ids_all = [row[2] for row in aligned]
+    else:
+        non_empty_buckets = [b for b in buckets if b]
     arc_profile = "dynamic"
     use_arc = cur_cfg.arc_mode in ("v2_adaptive", "v2_five_beat")
     if use_arc:
@@ -1197,7 +1228,7 @@ def run_curate(
         min_layout_eligible=layout_cfg.scoring.min_layout_eligible,
         min_aspect_kinds=layout_cfg.scoring.min_aspect_kinds,
         structure_locked=structure_locked,
-        force_relayout=False,
+        force_relayout=curate_scope == "tier",
     )
     has_color_metrics = any(a.get("dominantTone") for a in layout_assets)
     scoring_weights = resolve_scoring_weights(
@@ -1450,7 +1481,16 @@ def run_curate(
     if cross_seg:
         warnings.append(f"{cross_seg} 章跨时间段合并，章标题已标注多段信息")
 
-    undated_seg = any(s.label.startswith("未标注") for s in segments)
+    undated_seg = False
+    for s in segments or []:
+        label = (
+            s.label
+            if hasattr(s, "label")
+            else str((s.get("label") if isinstance(s, dict) else "") or "")
+        )
+        if label.startswith("未标注"):
+            undated_seg = True
+            break
     if undated_seg:
         warnings.append("含未标注日期照片，已单独成段或置于末段")
 
@@ -1476,9 +1516,11 @@ def run_curate(
         set_layout_status(trip, "pending")
 
     # Main pipeline status (structure_draft); layoutStatus above is the Agent 1.5 sub-state.
-    set_pipeline_status(trip, "structure_draft")
-    # Re-curate from structure_draft clears the post-lock pending ingest queue.
-    clear_pending_assets(trip)
+    # scope=tier keeps chapter structure locks / pipeline.status (M3 · OQ-FEED-01).
+    if curate_scope != "tier":
+        set_pipeline_status(trip, "structure_draft")
+        # Re-curate from structure_draft clears the post-lock pending ingest queue.
+        clear_pending_assets(trip)
     trip["updatedAt"] = now
     append_pipeline_run(
         trip,
@@ -1488,6 +1530,11 @@ def run_curate(
             "startedAt": now,
             "finishedAt": now,
             "model": None,
+            **(
+                {"note": "scope=tier"}
+                if curate_scope == "tier"
+                else {}
+            ),
         },
     )
 

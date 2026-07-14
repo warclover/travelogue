@@ -69,6 +69,8 @@ def test_m2_demote_and_featured_rerank_markers() -> None:
     assert "structure_locked" in features
     assert "help_funnel_tier_rerank_confirm" in features
     assert "按精选改构图" in help_js
+    assert 'scope: "tier"' in features or "scope: 'tier'" in features
+    assert "不会解锁章序" in help_js
 
 
 def test_p0_dock_present_empty_toast_cover() -> None:

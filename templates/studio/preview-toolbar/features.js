@@ -527,6 +527,7 @@ export function runFeaturedRerank(tripId, root) {
       }
       trackStudioEvent("help_funnel_tier_rerank_confirm", {
         structure_locked: gate.locked,
+        scope: "tier",
       });
       if (root) root._exportResultShowing = false;
       showToolbarToast(HELP_COPY.featuredRerankBusy || "正在按精选重新排版…", {
@@ -541,6 +542,7 @@ export function runFeaturedRerank(tripId, root) {
         root._exportDockActive = true;
       }
       return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", {
+        scope: "tier",
         force: true,
         reason: "tier_rerank",
       }).then(function (res) {

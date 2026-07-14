@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.1.2** |
-| **状态** | **Conditional Go · 推荐案已冻结** · **M1+M2+P0 收口可手测** · M3 可选 |
+| **文档版本** | **v0.1.3** |
+| **状态** | **Conditional Go · 推荐案已冻结** · **M1+M2+P0+M3 可手测** |
 | **主题代号** | 「精修意图可感知闭环 V1」— 首尾可发现 · 精选有反馈 · 更新版面语义对齐 |
 | **前置条件** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) 已落地；[PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) 模式≠面板已落地；[PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) B2b 合页面板可用；[PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) W0–W3 编码可用 |
 | **关联文档** | [PRD-EXPERIENCE-附录A-精选上传.md](./PRD-EXPERIENCE-附录A-精选上传.md) · [PRD-PHASE4.md](./PRD-PHASE4.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [IMPLEMENTATION-HELP-ONBOARDING-V1.md](./IMPLEMENTATION-HELP-ONBOARDING-V1.md) |
@@ -332,7 +332,7 @@
 | **M1** | 首尾 tip+区头；★/帮助/Modal/Dock **诚实文案**；pending 分因（3a）；present 空池说明 | ✅ |
 | **M2** | demote；「按精选重排」确认→curate；完成反馈；埋点 | ✅ |
 | **P0 收口** | Dock 次 CTA · toast→H2 · 放映空池 · 封面更换 toast · ACCEPTANCE | ✅ |
-| **M3（可选）** | `curate?scope=tier` 轻量重排（少打乱章序）；封面变化 UI 高亮（成功 toast 已有） | 算法评估 |
+| **M3** | `scope=tier` 轻量重排（保留章序 · 不解锁）· 封面更换 toast 已有 | ✅ |
 
 ---
 
@@ -352,7 +352,7 @@
 
 | ID | 问题 | 默认建议 |
 |----|------|----------|
-| **OQ-FEED-01** | 「按精选重排」= full `/curate` 还是轻量 repick（封面池+章 hero）？ | M2 先 full curate + 诚实文案；M3 再评估轻量 |
+| **OQ-FEED-01** | 「按精选重排」= full `/curate` 还是轻量 repick（封面池+章 hero）？ | ✅ **M3：`scope=tier`** layout-only；G1 仍 full |
 | **OQ-FEED-02** | demote 写回 `material` 还是删除 `userTier` 覆盖？ | 写回 `material` + `userTierSource=user` |
 | **OQ-FEED-03** | 未上屏素材如何标精选？ | V1 仍仅正文屏上 ★；未上屏走双文件夹 / 结构工具（非本主题） |
 | **OQ-FEED-04** | H6 独立条目 vs 并入 H2？ | **独立 H6**（换封面步骤短、常查） |
@@ -430,4 +430,5 @@
 |------|------|------|
 | **v0.1.0** | 2026-07-14 | 初稿：首尾发现性 + 精选/更新版面语义闭环；推荐 B′+3a；上下游对齐清单与 AC |
 | **v0.1.1** | 2026-07-14 | **冻结推荐案为执行默认** · Conditional Go · 线框 + IMPLEMENTATION 开工；M1 可编码 |
+| **v0.1.3** | 2026-07-14 | **M3**：`POST /curate` · `scope=tier` 轻量重排（保留章序 · structure_locked 不解锁） |
 | **v0.1.2** | 2026-07-14 | **M2+P0 落地**：demote + 按精选重排 + Dock cue / toast→H2 / 放映空池 / 封面更换 toast · ACCEPTANCE |

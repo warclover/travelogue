@@ -6,7 +6,7 @@
 | **验收** | [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) |
 | **线框** | [wireframes/refine-feedback-loop-v1-wireframe.html](./wireframes/refine-feedback-loop-v1-wireframe.html) |
 | **日期** | 2026-07-14 |
-| **状态** | **M1+M2+P0 收口可手测** · M3（轻量 curate scope）未开 |
+| **状态** | **M1+M2+P0+M3 可手测** · AC-FEED-02 真人待补 |
 
 ## 冻结决策（执行默认）
 
@@ -54,10 +54,15 @@
 | 附录 A §6 预览升格注记 | `PRD-EXPERIENCE-附录A-精选上传.md` | ✅ |
 | ACCEPTANCE 清单 | `ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md` | ✅ |
 
-## M3（未做）
+## M3 勾选
 
-- `curate?scope=tier` 轻量重排（少打乱章序）
-- 正式评审纪要 + AC-FEED-02 N≥5
+| 项 | 落点 | 状态 |
+|----|------|------|
+| `run_curate(scope="tier")` layout-only buckets | `curate.py` · 不重建分章 | ✅ |
+| `structure_locked` 不解锁 | `trip_pipeline_handlers.handle_trip_curate` | ✅ |
+| `force_relayout` 允许章内 beam | `assess_degradation(force_relayout=True)` | ✅ |
+| 前端 `scope:"tier"` + Modal 文案 | `features.js` · `HELP_COPY` | ✅ |
+| 单测 | `test_curate_tier_scope` · handler tier 门禁 | ✅ |
 
 ## 手测要点
 

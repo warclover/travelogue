@@ -60,9 +60,9 @@ export var HELP_COPY = {
   featuredRerankDockSub: "不会立刻重排整本；若要改构图可按精选重排",
   featuredRerankTitle: "按精选重新排版？",
   featuredRerankBody:
-    "将按你标过的精选重新选片排版，封面、章首或部分屏构图可能变化。",
+    "将按你标过的精选重新选片排版。章序与分章不变；封面、章首或部分屏构图可能变化。",
   featuredRerankLockedNote:
-    "当前结构已锁定，继续将解锁并可能改动章序相关结果。",
+    "当前结构已锁定：不会解锁章序。仅在现有分章内按精选调整封面、章首与部分屏。",
   featuredRerankConfirm: "重新排版",
   featuredRerankBusy: "正在按精选重新排版…",
   featuredRerankDone: "排版已更新",
