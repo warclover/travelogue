@@ -33,6 +33,7 @@ import {
   maybeOpenHelpFromDeepLink,
 } from "../js/help-drawer.js";
 import { initLlmSettingsEntry } from "../js/llm-settings.js";
+import { maybeShowCapabilityCard } from "../js/capability-card.js";
 
 function initHelpEntry() {
   if (document.getElementById("studio-help-open-home")) return;
@@ -183,7 +184,14 @@ function startApp() {
       V2.manifestError = !results[0];
       if (harnessApplyStartup()) return;
       var routed = routeFinalState();
-      if (routed && typeof routed.catch === "function") routed.catch(function () { /* ignore */ });
+      var after = function () {
+        maybeShowCapabilityCard();
+      };
+      if (routed && typeof routed.then === "function") {
+        routed.then(after).catch(after);
+      } else {
+        after();
+      }
     });
   });
 }

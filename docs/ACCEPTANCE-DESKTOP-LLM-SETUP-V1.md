@@ -34,12 +34,14 @@
 
 | ID | 步骤 | 期望 | 结果 |
 |----|------|------|------|
-| AC-DLLM-03 | 能力卡 | 可关；主 CTA 仅开始导入；不强制 Key | ☐ |
+| AC-DLLM-03 | 能力卡 | 可关；主 CTA 仅开始导入；文内链升级；不强制 Key | ☐ |
 | AC-DLLM-06 | 导入 busy | 不弹能力卡 | ☐ |
+| AC-DLLM-07 | 帮助 H7 | 抽屉可见「要不要配置 AI 文案」；设置「了解更多」可深链 | ☐ |
+| AC-DLLM-08 | 重播引导 | 清能力卡 seen；下次 idle 可再出卡 | ☐ |
 | AC-DLLM-30 | N≥3 非技术用户无 Key | 导入→预览→长图；记录是否误以为必须配 Key | ☐ |
 
 ## 自动化
 
 ```powershell
-python -m pytest tests/unit/web/test_user_llm_settings.py tests/unit/web/test_studio_route_snapshot.py -q
+python -m pytest tests/unit/web/test_user_llm_settings.py tests/unit/web/test_desktop_llm_setup_w2.py tests/unit/web/test_studio_route_snapshot.py tests/unit/web/test_help_onboarding_v1.py -q
 ```

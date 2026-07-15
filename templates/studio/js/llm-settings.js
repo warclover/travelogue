@@ -49,7 +49,8 @@ function ensureRoot() {
     '<a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a>' +
     ' · ' +
     '<a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a>' +
-    '（复制 Key 即可，不用写代码）' +
+    '（复制 Key 即可，不用写代码） · ' +
+    '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>' +
     "</p>" +
     '<details class="studio-llm-settings__advanced"><summary>高级</summary>' +
     '<label class="studio-llm-settings__label" for="studio-llm-base">自定义 API 地址（可选）</label>' +
@@ -151,12 +152,27 @@ function updateHowto() {
   var howto = $("#studio-llm-howto");
   var sel = $("#studio-llm-provider");
   if (!howto || !sel) return;
+  var more =
+    ' · <button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>';
   if (sel.value === "dashscope") {
     howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a> 创建 API-KEY 并复制（不用写代码）。';
+      '如何获取 Key：打开 <a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a> 创建 API-KEY 并复制（不用写代码）。' +
+      more;
   } else {
     howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a> 创建 API Key 并复制（不用写代码）。';
+      '如何获取 Key：打开 <a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a> 创建 API Key 并复制（不用写代码）。' +
+      more;
+  }
+  var helpH7 = $("#studio-llm-help-h7");
+  if (helpH7 && helpH7.dataset.bound !== "1") {
+    helpH7.dataset.bound = "1";
+    helpH7.addEventListener("click", function () {
+      import("/__studio/js/help-drawer.js").then(function (mod) {
+        if (mod && typeof mod.openHelpDrawer === "function") {
+          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
+        }
+      });
+    });
   }
 }
 
@@ -205,6 +221,17 @@ function wire(root) {
   }
   var prov = $("#studio-llm-provider", root);
   if (prov) prov.addEventListener("change", updateHowto);
+
+  var helpH7 = $("#studio-llm-help-h7", root);
+  if (helpH7) {
+    helpH7.addEventListener("click", function () {
+      import("/__studio/js/help-drawer.js").then(function (mod) {
+        if (mod && typeof mod.openHelpDrawer === "function") {
+          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
+        }
+      });
+    });
+  }
 
   $("#studio-llm-ping", root).addEventListener("click", function () {
     var body = payloadFromForm(true);

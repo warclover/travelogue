@@ -208,6 +208,10 @@ export function syncSettingsLock() {
 function maybeShowSettingsMovedHint() {
   try {
     if (localStorage.getItem(SETTINGS_HINT_KEY) === "1") return;
+    // D-DLLM-13：首启能力卡优先，避免同帧双打扰
+    if (localStorage.getItem("travelogue.desktop.capabilityCard.v1") !== "1") {
+      return;
+    }
     localStorage.setItem(SETTINGS_HINT_KEY, "1");
   } catch (e) {
     return;

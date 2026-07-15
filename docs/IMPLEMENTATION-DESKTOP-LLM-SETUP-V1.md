@@ -13,7 +13,7 @@
 |------|------|------|
 | **W0** | PRD v1.1 回写 · 线框 F1–F3/F5 · MF 消化 | ✅ |
 | **W1a** | user_data · `/llm/*` API · 注入 · 设置 Modal · 预览文案/出口 · 单测 | ✅ 核心已合入 |
-| **W1b / W2** | 能力卡 T-CAP-01 · H6 · seen/重播 · D-DLLM-13 | ⏳ 待开 |
+| **W1b / W2** | 能力卡 T-CAP-01 · H7 · seen/重播 · D-DLLM-13 | ✅ |
 | **W3** | ACL 打磨 · 打包冒烟记录 · 短 ADR | ⏳ |
 
 ## W1a 落点清单
@@ -36,14 +36,16 @@
 | I-14 | 单测 | `tests/unit/web/test_user_llm_settings.py` | ✅ |
 | I-15 | 路由快照 | `studio_route_snapshot.json` | ✅ |
 
-## W2 待办
+## W2 落点清单
 
-| ID | 任务 |
-|----|------|
-| I-20 | 首页能力卡（MF-01 CTA）· seen 键 · busy 门禁 |
-| I-21 | 帮助 H6 + 重播清能力卡 |
-| I-22 | D-DLLM-13 与 Help L1 仲裁 |
-| I-23 | 狗粮 AC-DLLM-30（N≥3）记录模板 |
+| ID | 任务 | 路径 | 状态 |
+|----|------|------|------|
+| I-20 | 首页能力卡（MF-01 CTA）· seen · busy 门禁 | `templates/studio/js/capability-card.js` · `bootstrap.js` | ✅ |
+| I-21 | 帮助 **H7**（AI 文案；H6 已为封面封底）+ 重播清能力卡 | `help-onboarding.js` · `llm-settings.js` | ✅ |
+| I-22 | D-DLLM-13 本会话压制首页非关键 Help L1 | `markCapabilityCardSuppressHelpL1` | ✅ |
+| I-23 | 狗粮 AC-DLLM-30（N≥3） | ACCEPTANCE 勾选 | ⏳ 人工 |
+
+> **命名说明**：PRD 初稿写 H6「写作引擎」，现网 H6 已用于封面封底 → 落地为 **H7**。
 
 ## 鉴权优先级（冻结）
 

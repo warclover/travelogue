@@ -17,7 +17,12 @@ export var HELP_LS = {
   platformPickSeen: "travelogue.studio.help.platformPickSeen",
   bookendsPickSeen: "travelogue.studio.help.bookendsPickSeen",
   importFolderExpanded: "travelogue.studio.help.importFolderExpanded",
+  /** Desktop LLM Setup V1 · 能力卡（全局一次） */
+  capabilityCardSeen: "travelogue.desktop.capabilityCard.v1",
 };
+
+/** session：能力卡本会话压制非关键自动 Help L1（D-DLLM-13） */
+var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHelpL1";
 
 export var HELP_COPY = {
   firstSuccessNext:
@@ -76,10 +81,10 @@ export var HELP_COPY = {
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",
   replayDoneToast:
-    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示。",
+    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡也会再出现一次。",
   helpDeepLinkPending: "「长图待更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
-  /** H1–H6 帮助抽屉条目 */
+  /** H1–H7 帮助抽屉条目（H6=封面封底；H7=AI 文案） */
   helpItems: [
     {
       id: "H1",
@@ -142,6 +147,17 @@ export var HELP_COPY = {
         "点下方缩略图，即可更换封面或封底",
         "选中的一张会标「当前」；也可点「看封面 / 看封底」滚动画布",
         "封面/封底这页没有 ★ 精选与拼图改判",
+      ],
+    },
+    {
+      id: "H7",
+      title: "要不要配置 AI 文案",
+      body: [
+        "不配置也可以导入、排版、预览和导出长图（本机文案）",
+        "想要杂志感文案时：打开设置 → AI 文案，选择 DeepSeek 或通义，粘贴 API Key，点测试连接",
+        "Key 只存在本机；调用时只发送文案所需摘要，默认不上传原片",
+        "配好后不会自动重写全文：在预览「更多工具」里点「生成杂志感文案」",
+        "连接失败常见原因：Key 错、网络不通、服务商余额不足",
       ],
     },
   ],
@@ -409,6 +425,7 @@ export function replayHelpHints() {
   clearRefineSaveSeen();
   clearPlatformPickSeen();
   clearBookendsPickSeen();
+  clearCapabilityCardSeen();
   // 顺带清部分 legacy per-trip 脉冲键（非必须）
   try {
     var keys = [];
@@ -459,6 +476,47 @@ export function isHelpL1Blocked(root) {
     if (zone) return true;
   }
   return false;
+}
+
+export function isCapabilityCardSeen() {
+  return _lsGet(HELP_KEYS.capabilityCardSeen) === "1";
+}
+
+export function markCapabilityCardSeen() {
+  _lsSet(HELP_KEYS.capabilityCardSeen, "1");
+}
+
+export function clearCapabilityCardSeen() {
+  try {
+    localStorage.removeItem(HELP_KEYS.capabilityCardSeen);
+  } catch (_e) {
+    /* ignore */
+  }
+  try {
+    sessionStorage.removeItem(CAPABILITY_SUPPRESS_HELP_SS);
+  } catch (_e2) {
+    /* ignore */
+  }
+}
+
+export function markCapabilityCardSuppressHelpL1() {
+  try {
+    sessionStorage.setItem(CAPABILITY_SUPPRESS_HELP_SS, "1");
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+export function isCapabilityCardSuppressingHelpL1() {
+  return _ssGet(CAPABILITY_SUPPRESS_HELP_SS) === "1";
+}
+
+/**
+ * 首页非关键自动 Help L1：能力卡优先或本会话已压制（D-DLLM-13）。
+ * 预览长图 tip 等关键路径勿调用此门禁。
+ */
+export function shouldDeferHomeHelpL1ForCapabilityCard() {
+  return isCapabilityCardSuppressingHelpL1();
 }
 
 export function prefersReducedMotion() {
