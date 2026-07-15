@@ -114,7 +114,8 @@
 |------|------|
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** |
 | [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | **无 Key 主路径加固与首启预期管理**（死循环修复 · 友好引导）**Draft · W1/W2 ✅** |
-| [IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | W1 实施对照 |
+| [IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | W1–W3 实施对照（含 Resume 断点） |
+| [acceptance-records/l0-resume-flow-fix-2026-07-15.md](./acceptance-records/l0-resume-flow-fix-2026-07-15.md) | Resume 断点修复 · T1–T7 手工矩阵 |
 | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) | 实施清单（W1a–W3 ✅ · 狗粮/实机冒烟待人工） |
 | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) | 验收 |
 | [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) | LLM secrets 落盘（复用 ADR-018 `user_data_dir`） |

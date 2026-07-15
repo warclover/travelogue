@@ -284,9 +284,13 @@ function pollImport(jobId, gen, source) {
     _activeJobId = null;
     try {
       sessionStorage.removeItem(SS.activeJobId);
-      sessionStorage.removeItem(SS.activePending);
     } catch (e) { /* ignore */ }
+    // L0 resume: only clear pending on success/cancel — keep on failure for
+    // 「继续生成本机游记」/ retry (AC-L0G-05).
     if (job.status === "succeeded") {
+      try {
+        sessionStorage.removeItem(SS.activePending);
+      } catch (e) { /* ignore */ }
       setStage("完成", 100);
       var result = job.result || {};
       trackStudioEvent("import_success", {
@@ -316,6 +320,9 @@ function pollImport(jobId, gen, source) {
       });
     }
     if (job.status === "cancelled") {
+      try {
+        sessionStorage.removeItem(SS.activePending);
+      } catch (e) { /* ignore */ }
       if (typeof V2.reroute === "function") V2.reroute();
       return null;
     }

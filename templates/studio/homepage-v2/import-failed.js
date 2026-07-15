@@ -1,6 +1,7 @@
 /**
  * 首页 v2 · Import Failed 专屏（继承 v1.4 · 背景 = 恒常 Bento 壳层 · 方案 A）。
- * L0 Hardening：E_LLM_AUTH → T-FAIL-01（用本机文案继续 / 去配置 / 留在首页）。
+ * L0 Hardening：E_LLM_AUTH → T-FAIL-01（继续生成本机游记 / 去配置 / 留在首页）。
+ * L0 Resume：失败保留 pending；配置后可从设置 Modal resume；无 pending 时书架兜底。
  */
 import { SS, isDemoTrip } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint, isLlmAuthRecoverable } from "../js/errors.js";
@@ -18,6 +19,12 @@ var _lastErr = null;
 
 function hasUserTrips() {
   return V2.trips.some(function (t) { return !isDemoTrip(t); });
+}
+
+function clearActivePending() {
+  try {
+    sessionStorage.removeItem(SS.activePending);
+  } catch (e) { /* ignore */ }
 }
 
 function restoreImportShell() {
@@ -50,6 +57,12 @@ function setHidden(el, hidden) {
   else el.removeAttribute("hidden");
 }
 
+function latestUserTrip() {
+  var list = (V2.trips || []).filter(function (t) { return t && !isDemoTrip(t) && t.tripId; });
+  if (!list.length) return null;
+  return list[0];
+}
+
 function populateFailedUi(err, pending) {
   var code = err && err.code;
   var authRecoverable = isLlmAuthRecoverable(err);
@@ -67,13 +80,13 @@ function populateFailedUi(err, pending) {
   var msgEl = $("v2-failure-msg");
   if (msgEl) {
     msgEl.textContent = authRecoverable
-      ? "可以改用本机文案继续生成游记；配置写作引擎后可再升级文案。"
+      ? "可以继续生成本机游记；写作引擎可选，配置后在预览中升级杂志感文案。"
       : humanizeStudioError(code, (err && err.message) || "导入失败，请重试");
   }
   var hintEl = $("v2-failure-hint");
   if (hintEl) {
     hintEl.textContent = authRecoverable
-      ? "打开设置 → AI 文案，粘贴 API Key 并测试连接。不配置也可导入、预览和导出长图。"
+      ? "配置可选。配完后请点「继续生成本机游记」；杂志感文案在预览「更多工具」里升级，不会在本步自动改写。"
       : failureNextHint(code);
   }
   var echoEl = $("v2-failure-echo");
@@ -91,10 +104,18 @@ function populateFailedUi(err, pending) {
   var continueBtn = $("v2-failure-continue-stub");
   var settingsBtn = $("v2-failure-open-settings");
   var retry = $("v2-failure-retry");
-  setHidden(continueBtn, !authRecoverable);
+  var openRecent = $("v2-failure-open-recent");
+  var canContinue = !!(pending && (pending.albumPath || pending.uploadForm));
+  var recent = !canContinue ? latestUserTrip() : null;
+
+  setHidden(continueBtn, !authRecoverable || !canContinue);
   setHidden(settingsBtn, !authRecoverable);
+  setHidden(openRecent, !(authRecoverable && recent));
+  if (continueBtn && authRecoverable) {
+    continueBtn.textContent = "继续生成本机游记";
+  }
   // 缺引擎：重试降为次要（配置变更后仍可用）；有 pending 才显示
-  var canRetry = !!(pending && (pending.albumPath || pending.uploadForm));
+  var canRetry = !!canContinue;
   setHidden(retry, authRecoverable ? !canRetry : false);
   if (retry && authRecoverable) {
     retry.textContent = "仍要重试";
@@ -118,6 +139,7 @@ export function hideImportFailed() {
 }
 
 export function dismissImportFailed() {
+  clearActivePending();
   hideImportFailed();
   syncVariantGuard();
   if (typeof V2.reroute === "function") V2.reroute();
@@ -143,9 +165,13 @@ export function showImportFailed(err) {
   syncHomeStubBanner();
   if (authRecoverable) {
     trackStudioEvent("import_fail_auth_shown", { code: _lastErr.code || "E_LLM_AUTH" });
-    setV2SkipLinkTarget("v2-failure-continue-stub");
-    var cont = $("v2-failure-continue-stub");
-    if (cont && typeof cont.focus === "function") cont.focus();
+    var canContinue = !!(pending && (pending.albumPath || pending.uploadForm));
+    var focusId = canContinue ? "v2-failure-continue-stub" : (
+      latestUserTrip() ? "v2-failure-open-recent" : "v2-failure-open-settings"
+    );
+    setV2SkipLinkTarget(focusId);
+    var focusEl = $(focusId);
+    if (focusEl && typeof focusEl.focus === "function") focusEl.focus();
   } else {
     setV2SkipLinkTarget("v2-failure-retry");
     var retry = $("v2-failure-retry");
@@ -157,7 +183,7 @@ export function showImportFailed(err) {
 function retryImportFailed() {
   var pending = readPendingImport();
   if (pending && pending.uploadForm) {
-    try { sessionStorage.removeItem(SS.activePending); } catch (e) { /* ignore */ }
+    clearActivePending();
     hideImportFailed();
     syncVariantGuard();
     openImportSheet({ forceStep: "pick" });
@@ -174,30 +200,55 @@ function retryImportFailed() {
   startV2Import(pending, { source: "本机文件夹" }).catch(function () { /* handled */ });
 }
 
-function continueWithStub() {
+/**
+ * 用本机文案（forceStub）续跑同一 pending；供失败屏与设置 Modal resume 共用。
+ */
+export function continueWithStub() {
   var pending = readPendingImport();
   if (pending && pending.uploadForm) {
     try {
       sessionStorage.setItem(SS.forceStubNextUpload, "1");
-      sessionStorage.removeItem(SS.activePending);
     } catch (e) { /* ignore */ }
+    clearActivePending();
     trackStudioEvent("import_continue_stub", { source: "import_fail_upload" });
     hideImportFailed();
     syncVariantGuard();
     openImportSheet({ forceStep: "pick" });
     if (typeof studioToast === "function") {
-      studioToast("请重新选择照片后，将使用本机文案继续", { duration: 2400 });
+      studioToast("请重新选择同一批照片后继续（浏览器无法记住上次选中的文件）", { duration: 3200 });
     }
     return;
   }
   if (!pending || !pending.albumPath) {
+    var recent = latestUserTrip();
+    if (recent) {
+      openRecentTripPreview();
+      return;
+    }
     dismissImportFailed();
     return;
   }
   trackStudioEvent("import_continue_stub", { source: "import_fail" });
   var body = Object.assign({}, pending, { forceStub: true, force: true });
+  clearActivePending();
   hideImportFailed();
   startV2Import(body, { source: "本机文件夹" }).catch(function () { /* handled */ });
+}
+
+function openRecentTripPreview() {
+  var trip = latestUserTrip();
+  if (!trip || !trip.tripId) {
+    if (typeof studioToast === "function") {
+      studioToast("暂无可打开的游记，请重新导入", { duration: 2200 });
+    }
+    return;
+  }
+  trackStudioEvent("import_fail_open_recent", { tripId: trip.tripId });
+  clearActivePending();
+  hideImportFailed();
+  syncVariantGuard();
+  var url = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+  window.location.href = url;
 }
 
 function openSettingsFromFail() {
@@ -220,4 +271,6 @@ function wireImportFailed() {
   if (cont) cont.addEventListener("click", continueWithStub);
   var settings = $("v2-failure-open-settings");
   if (settings) settings.addEventListener("click", openSettingsFromFail);
+  var openRecent = $("v2-failure-open-recent");
+  if (openRecent) openRecent.addEventListener("click", openRecentTripPreview);
 }

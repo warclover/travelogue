@@ -59,7 +59,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_LNG_NO_LONGSHOT: "未找到长图页面，请先完成渲染",
   E_LNG_PLAYWRIGHT: "高清长图组件不可用，将尝试兼容模式",
   E_LNG_CLIENT_FALLBACK: "正在使用兼容模式保存长图…",
-  E_LLM_AUTH: "可以改用本机文案继续生成游记；配置写作引擎后可再升级文案。",
+  E_LLM_AUTH: "可以继续生成本机游记；配置写作引擎后可在预览中升级杂志感文案。",
   E_LLM_PROVIDER: "请选择支持的写作引擎服务商",
   E_LLM_PING: "连接测试失败，请检查 Key 或稍后重试",
   E_LLM_NETWORK: "文案生成时网络中断，请重试",

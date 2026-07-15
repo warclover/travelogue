@@ -4,7 +4,7 @@
 |------|------|
 | **对应 PRD** | [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) **v1.0.0** |
 | **更新日期** | 2026-07-15 |
-| **范围** | **W1 P0 ✅** + **W2 P1 ✅** + **W2.1 缺口收口 ✅** |
+| **范围** | **W1 P0 ✅** + **W2 P1 ✅** + **W2.1 缺口收口 ✅** + **W3 Resume 断点修复 ✅** |
 
 ## W1 落地对照
 
@@ -44,6 +44,17 @@
 | 上传路径 forceStub 续跑 | ✅ | `SS.forceStubNextUpload` + upload form |
 | BE-03 warn 日志 | ✅ | `studio_pipeline` / `studio_g1` |
 | 埋点 `action` 字段 | ✅ | `capability_card_cta` |
+
+## W3 · Resume 断点修复（2026-07-15）
+
+| 项 | 状态 | 锚点 |
+|----|------|------|
+| 失败保留 `SS.activePending` | ✅ | `import-run.js` pollImport；仅 success/cancel/dismiss 清除 |
+| 设置保存后 resume CTA | ✅ | `llm-settings.js`：`import_fail`→继续本机；`card`/`home_banner`→开始导入 |
+| 失败屏文案 + 最近游记兜底 | ✅ | `import-failed.js` + `v2-failure-open-recent` |
+| 上传重选 toast 写清 | ✅ | `continueWithStub` upload 分支 |
+| FirstSuccess 本机文案轻提示 | ✅ | `HELP_COPY.firstSuccessNext` |
+| FE 单测扩展 | ✅ | `test_l0_guidance_hardening_fe.py` |
 
 ## 自动化
 

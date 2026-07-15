@@ -30,7 +30,7 @@ var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHel
 
 export var HELP_COPY = {
   firstSuccessNext:
-    "先翻一翻验货；满意就点预览页下方的『长图』",
+    "当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』；需要杂志感可在「更多工具」升级。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
@@ -492,16 +492,16 @@ export function isHelpL1Blocked(root) {
 }
 
 export function isCapabilityCardSeen() {
-  return _lsGet(HELP_KEYS.capabilityCardSeen) === "1";
+  return _lsGet(HELP_LS.capabilityCardSeen) === "1";
 }
 
 export function markCapabilityCardSeen() {
-  _lsSet(HELP_KEYS.capabilityCardSeen, "1");
+  _lsSet(HELP_LS.capabilityCardSeen, "1");
 }
 
 export function clearCapabilityCardSeen() {
   try {
-    localStorage.removeItem(HELP_KEYS.capabilityCardSeen);
+    localStorage.removeItem(HELP_LS.capabilityCardSeen);
   } catch (_e) {
     /* ignore */
   }
@@ -525,32 +525,32 @@ export function isCapabilityCardSuppressingHelpL1() {
 }
 
 export function isHomeStubBannerDismissed() {
-  return _lsGet(HELP_KEYS.homeStubBannerDismissed) === "1";
+  return _lsGet(HELP_LS.homeStubBannerDismissed) === "1";
 }
 
 export function markHomeStubBannerDismissed() {
-  _lsSet(HELP_KEYS.homeStubBannerDismissed, "1");
+  _lsSet(HELP_LS.homeStubBannerDismissed, "1");
 }
 
 export function clearHomeStubBannerDismissed() {
   try {
-    localStorage.removeItem(HELP_KEYS.homeStubBannerDismissed);
+    localStorage.removeItem(HELP_LS.homeStubBannerDismissed);
   } catch (_e) {
     /* ignore */
   }
 }
 
 export function isStubHintSeen() {
-  return _lsGet(HELP_KEYS.stubHintSeen) === "1";
+  return _lsGet(HELP_LS.stubHintSeen) === "1";
 }
 
 export function markStubHintSeen() {
-  _lsSet(HELP_KEYS.stubHintSeen, "1");
+  _lsSet(HELP_LS.stubHintSeen, "1");
 }
 
 export function clearStubHintSeen() {
   try {
-    localStorage.removeItem(HELP_KEYS.stubHintSeen);
+    localStorage.removeItem(HELP_LS.stubHintSeen);
   } catch (_e) {
     /* ignore */
   }
@@ -566,7 +566,7 @@ export function maybeShowStubNarrateTip(showToast) {
   if (isHelpL1Blocked()) return false;
   if (isLongshotHelpActive()) return false;
   // 长图关键 tip 未出示过：让位，稍后再试由调用方重试
-  if (_lsGet(HELP_KEYS.previewLongshotSeen) !== "1") return false;
+  if (_lsGet(HELP_LS.previewLongshotSeen) !== "1") return false;
   markStubHintSeen();
   trackHelpEvent("help_coach_show", { touchpoint: "T-CAP-05" });
   if (typeof showToast === "function") {

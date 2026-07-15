@@ -29,7 +29,7 @@ USER_MESSAGES: dict[str, str] = {
     "E_LNG_CLIENT_FALLBACK": "正在使用兼容模式保存长图…",
     "E_STUDIO_SHUTDOWN": "Studio 正在退出",
     # BE-09 / COPY-L0G-09
-    "E_LLM_AUTH": "可以改用本机文案继续生成游记；配置写作引擎后可再升级文案。",
+    "E_LLM_AUTH": "可以继续生成本机游记；配置写作引擎后可在预览中升级杂志感文案。",
     "E_LLM_NETWORK": "文案生成时网络中断，请重试",
     "E_LLM_PROVIDER": "请选择支持的写作引擎服务商",
     "E_LLM_PING": "连接测试失败，请检查 Key 或稍后重试",

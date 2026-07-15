@@ -1,4 +1,4 @@
-"""L0 Hardening · FE 静态合同（T-FAIL-01 · 能力卡 · W2 轻状态 / stub tip）。"""
+"""L0 Hardening · FE 静态合同（T-FAIL-01 · 能力卡 · W2 轻状态 / stub tip · Resume）。"""
 
 from __future__ import annotations
 
@@ -16,16 +16,35 @@ def test_import_failed_auth_recoverable_contract() -> None:
 
     assert "isLlmAuthRecoverable" in failed
     assert "isLlmAuthRecoverable" in errors
-    assert "用本机文案继续" in failed
-    assert "用本机文案继续" in home
+    assert "继续生成本机游记" in failed
+    assert "继续生成本机游记" in home
     assert "v2-failure-continue-stub" in home
     assert "v2-failure-open-settings" in home
+    assert "v2-failure-open-recent" in home
     assert "去配置写作引擎" in home
     assert "杂志感文案暂不可用" in failed
     assert "import_continue_stub" in failed
     assert "forceStub: true" in failed
+    assert "export function continueWithStub" in failed
     assert "v2-failure__panel--auth" in css
-    assert "可以改用本机文案继续生成游记" in constants
+    assert "可以继续生成本机游记" in constants
+
+
+def test_import_run_retains_pending_on_failure() -> None:
+    """AC-L0G-05：失败时不得先删 activePending，否则续跑空转。"""
+    run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    # Success/cancel clear pending; failure path must not remove before throw
+    assert 'sessionStorage.removeItem(SS.activePending)' in run
+    assert "L0 resume: only clear pending on success/cancel" in run
+    # The shared clear-before-branch pattern must be gone
+    succeeded_idx = run.find('if (job.status === "succeeded")')
+    assert succeeded_idx > 0
+    pre = run[succeeded_idx - 400 : succeeded_idx]
+    assert "removeItem(SS.activePending)" not in pre or "activeJobId" in pre
+    # Immediately before succeeded branch we only clear job id
+    block_start = run.find("L0 resume: only clear pending on success/cancel")
+    assert block_start > 0
+    assert 'job.status === "succeeded"' in run[block_start : block_start + 800]
 
 
 def test_capability_card_l0g_copy() -> None:
@@ -50,6 +69,8 @@ def test_home_stub_banner_t_cap_06() -> None:
     assert "升级 AI 文案 →" in banner
     assert "maybeShowHomeStubBanner" in boot
     assert "homeStubBanner.v1" in help_js
+    assert "HELP_LS" in help_js
+    assert "HELP_KEYS" not in help_js
     assert "isCapabilityCardVisible" in banner
     assert "home_stub_banner_click" in banner
     assert "clearHomeStubBannerDismissed" in help_js
@@ -69,6 +90,22 @@ def test_stub_narrate_tip_t_cap_05() -> None:
     assert "clearStubHintSeen" in help_js
 
 
+def test_llm_settings_resume_cta_contract() -> None:
+    llm = (STUDIO / "js" / "llm-settings.js").read_text(encoding="utf-8")
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
+    assert "studio-llm-resume" in llm
+    assert "继续生成本机游记" in llm
+    assert "开始导入" in llm
+    assert "showResumeAfterSave" in llm
+    assert "runResumeAfterLlmSettings" in llm
+    assert 'source === "import_fail"' in llm
+    assert 'source === "card"' in llm
+    assert 'source === "home_banner"' in llm
+    assert "API 用于预览里升级杂志感文案" in llm
+    assert "llm_settings_resume" in analytics
+    assert "import_fail_open_recent" in analytics
+
+
 def test_w21_gap_copy_and_busy_banner() -> None:
     llm = (STUDIO / "js" / "llm-settings.js").read_text(encoding="utf-8")
     sheet = (STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
@@ -78,6 +115,7 @@ def test_w21_gap_copy_and_busy_banner() -> None:
     first = (STUDIO / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
     boot = (STUDIO / "homepage-v2" / "bootstrap.js").read_text(encoding="utf-8")
     constants = (STUDIO / "js" / "constants.js").read_text(encoding="utf-8")
+    help_js = (STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
     pipeline = (
         Path(__file__).resolve().parents[3]
         / "travelogue"
@@ -95,3 +133,5 @@ def test_w21_gap_copy_and_busy_banner() -> None:
     assert "forceStubNextUpload" in failed
     assert "forceStub: forceStub" in import_run
     assert "degrading to stub" in pipeline
+    assert "当前为本机文案；先翻一翻验货" in help_js
+    assert "重新选择同一批照片" in failed

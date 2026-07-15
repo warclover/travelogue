@@ -69,7 +69,11 @@ function ensureRoot() {
     '<button type="button" class="studio-llm-settings__btn" id="studio-llm-save">保存</button>' +
     '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--danger" id="studio-llm-clear">清除配置</button>' +
     "</div>" +
-    '<p class="studio-llm-settings__foot">配置后导入仍默认使用本机文案；在预览「更多工具」中点击「生成杂志感文案」才会升级。</p>' +
+    '<div class="studio-llm-settings__resume" id="studio-llm-resume" hidden>' +
+    '<p class="studio-llm-settings__resume-note" id="studio-llm-resume-note"></p>' +
+    '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-resume-cta"></button>' +
+    "</div>" +
+    '<p class="studio-llm-settings__foot" id="studio-llm-foot">配置后导入仍默认使用本机文案；在预览「更多工具」中点击「生成杂志感文案」才会升级。</p>' +
     "</div>";
   document.body.appendChild(el);
   if (!document.getElementById("studio-llm-settings-style")) {
@@ -107,6 +111,10 @@ function ensureRoot() {
       "font-size:13px;cursor:pointer;}" +
       ".studio-llm-settings__btn--primary{background:#2f6b55;border-color:#2f6b55;color:#fff;}" +
       ".studio-llm-settings__btn--danger{border-color:#c98a82;color:#8a2b22;}" +
+      ".studio-llm-settings__resume{margin-top:14px;padding-top:12px;border-top:1px solid #d5ddd8;}" +
+      ".studio-llm-settings__resume[hidden]{display:none!important;}" +
+      ".studio-llm-settings__resume-note{margin:0 0 10px;font-size:12px;color:#4a5c55;line-height:1.45;}" +
+      ".studio-llm-settings__resume .studio-llm-settings__btn{width:100%;}" +
       ".studio-llm-settings__foot{margin:12px 0 0;font-size:12px;color:#60756c;line-height:1.45;}" +
       ".studio-llm-settings__hint{margin:0 0 8px;font-size:11px;color:#60756c;word-break:break-all;}";
     document.head.appendChild(style);
@@ -215,6 +223,63 @@ function notifyChange(st) {
   }
 }
 
+function hideResumePanel() {
+  var box = document.getElementById("studio-llm-resume");
+  if (box) box.hidden = true;
+}
+
+function resumeKindForSource(source) {
+  if (source === "import_fail") return "continue_stub";
+  if (source === "card" || source === "home_banner") return "start_import";
+  return null;
+}
+
+function showResumeAfterSave(source) {
+  var kind = resumeKindForSource(source);
+  var box = document.getElementById("studio-llm-resume");
+  var note = document.getElementById("studio-llm-resume-note");
+  var cta = document.getElementById("studio-llm-resume-cta");
+  if (!box || !note || !cta || !kind) {
+    hideResumePanel();
+    return;
+  }
+  if (kind === "continue_stub") {
+    note.textContent =
+      "API 用于预览里升级杂志感文案，不会在本步自动改写导入文案。请继续生成本机游记，稍后在预览中升级。";
+    cta.textContent = "继续生成本机游记";
+  } else {
+    note.textContent =
+      "已保存。导入仍使用本机文案；杂志感可在预览中升级。下一步：开始导入照片。";
+    cta.textContent = "开始导入";
+  }
+  box.hidden = false;
+  cta.dataset.resumeKind = kind;
+  try { cta.focus(); } catch (_) {}
+}
+
+function runResumeAfterLlmSettings() {
+  var cta = document.getElementById("studio-llm-resume-cta");
+  var kind = (cta && cta.dataset.resumeKind) || resumeKindForSource(_source);
+  trackStudioEvent("llm_settings_resume", { source: _source, kind: kind || "none" });
+  closeLlmSettings();
+  if (kind === "continue_stub") {
+    import("/__studio/homepage-v2/import-failed.js").then(function (mod) {
+      if (mod && typeof mod.continueWithStub === "function") mod.continueWithStub();
+    });
+    return;
+  }
+  if (kind === "start_import") {
+    import("/__studio/homepage-v2/import-entry.js").then(function (mod) {
+      if (mod && typeof mod.openImportSheet === "function") {
+        mod.openImportSheet();
+      } else {
+        var homeCta = document.getElementById("v2-cta");
+        if (homeCta) homeCta.click();
+      }
+    });
+  }
+}
+
 function wire(root) {
   root.addEventListener("click", function (ev) {
     var t = ev.target;
@@ -303,6 +368,7 @@ function wire(root) {
           notifyChange(res.j);
           var key = $("#studio-llm-key");
           if (key) key.value = "";
+          showResumeAfterSave(_source);
         } else {
           setMsg((res.j && res.j.message) || "保存失败", false);
         }
@@ -354,6 +420,13 @@ function wire(root) {
     }
     if (window.confirm("清除写作引擎配置并回到本机文案？")) doClear();
   });
+
+  var resumeCta = $("#studio-llm-resume-cta", root);
+  if (resumeCta) {
+    resumeCta.addEventListener("click", function () {
+      runResumeAfterLlmSettings();
+    });
+  }
 }
 
 export function openLlmSettings(opts) {
@@ -364,6 +437,7 @@ export function openLlmSettings(opts) {
   _open = true;
   root.hidden = false;
   setMsg("", true);
+  hideResumePanel();
   trackStudioEvent("llm_settings_open", { source: _source });
   fetch("/__travelogue/llm/status", { headers: studioAuthHeaders({}) })
     .then(function (r) { return r.ok ? r.json() : null; })

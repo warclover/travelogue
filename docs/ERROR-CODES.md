@@ -99,14 +99,14 @@
 | `E_STUDIO_CANCELLED` | 用户取消 Job | 已取消 |
 | `E_STUDIO_UPLOAD_EMPTY` | multipart 无文件 | 未收到任何照片文件 |
 | `E_STUDIO_PIPELINE` | 导入子进程或 pipeline 异常 | 导入失败，请重试 |
-| `E_LLM_AUTH` | 未配置 / Key 无效（**可选**杂志感文案路径） | 可以改用本机文案继续生成游记；配置写作引擎后可再升级文案。 |
+| `E_LLM_AUTH` | 未配置 / Key 无效（**可选**杂志感文案路径） | 可以继续生成本机游记；配置写作引擎后可在预览中升级杂志感文案。 |
 | `E_LLM_NETWORK` | 网络中断 | 文案生成时网络中断，请重试 |
 | `E_LLM_PROVIDER` | 未知/未选服务商 | 请选择支持的写作引擎服务商 |
 | `E_LLM_PING` | ping 响应异常 | 连接测试失败，请检查 Key 或稍后重试 |
 | `E_LLM_STUB` | 内部：`provider=stub` 仍调 LLM | 不直接给终端用户；UI 应走「未配置 / 本机文案」（见 Desktop LLM Setup） |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
-> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；UI 主 CTA 为「用本机文案继续」。
+> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；UI 主 CTA 为「继续生成本机游记」。失败时须保留 pending；设置保存后提供 resume CTA。
 
 ### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）
 
