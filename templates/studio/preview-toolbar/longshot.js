@@ -376,15 +376,51 @@ export function registerLongshotBridge(api) {
 }
 
 export function cancelPreviewLongshotExport(root) {
-  if (longshotPollCancel) {
-    longshotPollCancel();
-    longshotPollCancel = null;
+  var jobId = longshotJobId;
+  if (!jobId && !longshotPollCancel) {
+    setLongshotExportState(root, "idle");
+    return Promise.resolve(false);
   }
-  if (longshotJobId) {
-    postJson("/__travelogue/cancel", { jobId: longshotJobId }).catch(function () {});
+  return _toolbarConfirm({
+    title: "停止导出？",
+    body: "已生成的本轮图片将丢弃。",
+    confirmText: "停止",
+    cancelText: "继续导出",
+  }).then(function (ok) {
+    if (!ok) return false;
+    // OQ-LCC-04 · 清续跑 flag，避免取消后幽灵「更新并导出」
+    clearLayoutUpdatingFlag();
+    try {
+      sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
+      sessionStorage.removeItem(EXPECT_LAYOUT_RELOAD_KEY);
+    } catch (e) {}
+    clearResumePlatform();
+    trackStudioEvent("longshot_export_cancel", {
+      trip_id: (_tripIdFromPath && _tripIdFromPath()) || undefined,
+      surface: "preview",
+    });
+    if (longshotPollCancel) {
+      longshotPollCancel();
+      longshotPollCancel = null;
+    }
+    var pending = jobId
+      ? postJson("/__travelogue/cancel", { jobId: jobId })
+      : Promise.resolve({ status: 200, body: { ok: true } });
     longshotJobId = null;
-  }
-  setLongshotExportState(root, "idle");
+    return pending
+      .catch(function () {
+        return { status: 0, body: {} };
+      })
+      .then(function () {
+        setLongshotExportState(root, "idle");
+        if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+          root._taskDock.hide();
+        }
+        root._exportDockActive = false;
+        _showToolbarToast("已取消导出");
+        return true;
+      });
+  });
 }
 
 
@@ -1925,6 +1961,15 @@ export function cancelPreviewLongshotExport(root) {
                 setLongshotExportState(root, "error");
                 showLongshotDrawer(root, job);
               }
+            } else if (job.status === "cancelled") {
+              trackStudioEvent("longshot_export_cancel", {
+                trip_id: tripId,
+                surface: "preview",
+                from: from,
+                source: "poll",
+              });
+              setLongshotExportState(root, "idle");
+              _showToolbarToast("已取消导出");
             } else {
               setLongshotExportState(root, "idle");
             }

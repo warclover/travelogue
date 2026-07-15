@@ -471,8 +471,6 @@ export function initToolbarV3(root, tripId) {
   root._taskDock = mountPreviewTaskDock(root, {
     onCancelExport: function () {
       cancelPreviewLongshotExport(root);
-      root._exportDockActive = false;
-      root._taskDock.hide();
     },
     onRevealFolder: function (relPath, tid) {
       revealTripPath(tid || tripId, relPath);

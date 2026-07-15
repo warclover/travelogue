@@ -53,6 +53,8 @@ class StudioJobStore:
         self._narrate_running = False
         self._g1_running = False
         self._import_handles: dict[str, Any] = {}
+        self._longshot_active_id: str | None = None
+        self._longshot_aborts: dict[str, Callable[[], None]] = {}
 
     def create_import_job(self) -> StudioJob | None:
         with self._lock:
@@ -97,6 +99,9 @@ class StudioJobStore:
         result: dict[str, Any] | None = None,
     ) -> None:
         with self._lock:
+            if job.status == "cancelled" and status is not None and status != "cancelled":
+                # Cooperative cancel wins: never revive a cancelled job.
+                status = None
             if status is not None:
                 job.status = status
             if stage is not None:
@@ -155,11 +160,34 @@ class StudioJobStore:
             )
             self._jobs[job_id] = job
             self._longshot_running = True
+            self._longshot_active_id = job_id
             return job
 
     def finish_longshot(self) -> None:
         with self._lock:
+            active = self._longshot_active_id
             self._longshot_running = False
+            self._longshot_active_id = None
+            if active:
+                self._longshot_aborts.pop(active, None)
+
+    def set_longshot_abort(self, job_id: str, abort: Callable[[], None] | None) -> None:
+        with self._lock:
+            if abort is None:
+                self._longshot_aborts.pop(job_id, None)
+            else:
+                self._longshot_aborts[job_id] = abort
+
+    def await_longshot_done(self, job_id: str, timeout: float = 30.0) -> bool:
+        """Wait until longshot worker finishes (slot released for this job)."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            with self._lock:
+                if self._longshot_active_id != job_id:
+                    return True
+            time.sleep(0.1)
+        with self._lock:
+            return self._longshot_active_id != job_id
 
     def create_narrate_job(self) -> StudioJob | None:
         with self._lock:
@@ -212,12 +240,14 @@ class StudioJobStore:
             return self._import_handles.pop(job_id, None)
 
     def cancel_job(self, job_id: str) -> StudioJob | None:
+        abort: Callable[[], None] | None = None
         with self._lock:
             job = self._jobs.get(job_id)
             if job is None:
                 return None
             if job.status not in ("queued", "running"):
                 return job
+            prev_status = job.status
             handle = self._import_handles.get(job_id)
             if handle is not None:
                 handle.cancel()
@@ -232,12 +262,24 @@ class StudioJobStore:
                 if handle is None:
                     self._import_running = False
             elif job.type == "longshot":
-                self._longshot_running = False
+                # Running worker: keep slot until finish_longshot (await).
+                # Queued-only cancel: no worker yet → release immediately.
+                abort = self._longshot_aborts.get(job_id)
+                if prev_status == "queued":
+                    self._longshot_running = False
+                    self._longshot_active_id = None
+                    self._longshot_aborts.pop(job_id, None)
+                    abort = None
             elif job.type == "narrate":
                 self._narrate_running = False
             elif job.type == "g1_continue":
                 self._g1_running = False
-            return job
+        if abort is not None:
+            try:
+                abort()
+            except Exception:
+                pass
+        return job
 
     def await_import_handle_done(self, job_id: str, timeout: float = 30.0) -> bool:
         """Wait until the import worker pops its handle (finally completed)."""
@@ -417,8 +459,12 @@ def run_longshot_job(
     except Exception as exc:
         if store.is_cancelled(job):
             return
-        from travelogue.export.longshot import LongshotExportError
+        from travelogue.export.longshot import LongshotCancelled, LongshotExportError
 
+        if isinstance(exc, LongshotCancelled) or (
+            isinstance(exc, LongshotExportError) and getattr(exc, "code", None) == "E_LNG_CANCELLED"
+        ):
+            return
         if isinstance(exc, LongshotExportError):
             payload = job_error_payload(exc.code, detail=str(exc))
         elif isinstance(exc, DemoError):

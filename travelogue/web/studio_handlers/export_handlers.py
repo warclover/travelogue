@@ -256,6 +256,13 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
                 stage_count=max(total, 1),
             )
 
+        def cancel_check() -> bool:
+            return store.is_cancelled(job)
+
+        def cancel_register(abort: object) -> None:
+            if callable(abort):
+                store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
+
         result = export_trip_longshot(
             trip_dir,
             scale=scale,
@@ -266,6 +273,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             platform=profile.id,
             slide_count=slide_count,
             pad_mode=pad_mode,
+            cancel_check=cancel_check,
+            cancel_register=cancel_register,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         page_count = result.page_count if result.page_count is not None else len(result.outputs)
