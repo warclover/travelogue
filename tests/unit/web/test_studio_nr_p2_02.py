@@ -58,8 +58,14 @@ def test_non_studio_serve_no_preview_toolbar(tmp_path: Path) -> None:
         server.server_close()
 
 
-def test_studio_config_stub_llm_unavailable(tmp_path: Path) -> None:
+def test_studio_config_stub_llm_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from travelogue.config import AppConfig
+    from travelogue.llm.user_settings import UserLlmSecrets
+
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(),
+    )
 
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()

@@ -199,3 +199,33 @@ def make_intent_flush_mutator(memory_trip: dict):
                     disk_meta[key] = mem_meta[key]
 
     return mutator
+
+
+def make_intent_folders_merge_mutator(memory_trip: dict):
+    """Deep-merge ``intent.folders`` from memory onto disk (Stable-QH D-QH-02).
+
+    Pipeline persist must not clobber HTTP-owned intent (ADR-008). After ingest,
+    ``featuredDetected`` is applied only in memory; this mutator pushes *folders*
+    keys onto disk without replacing the rest of intent.
+    """
+
+    def mutator(disk_trip: dict) -> None:
+        mem_intent = memory_trip.get("intent")
+        if not isinstance(mem_intent, dict):
+            return
+        mem_folders = mem_intent.get("folders")
+        if not isinstance(mem_folders, dict) or not mem_folders:
+            return
+        disk_intent = disk_trip.get("intent")
+        if not isinstance(disk_intent, dict):
+            disk_trip["intent"] = {"version": mem_intent.get("version", "1"), "folders": dict(mem_folders)}
+            # Keep required shape if memory has more; prefer minimal seed when disk empty.
+            for key in ("title", "places", "placesUserSet", "userNotes", "photoCullEnabled", "keepNearDuplicates"):
+                if key in mem_intent:
+                    disk_trip["intent"][key] = mem_intent[key]
+            return
+        disk_folders = dict(disk_intent.get("folders") or {})
+        disk_folders.update(mem_folders)
+        disk_intent["folders"] = disk_folders
+
+    return mutator

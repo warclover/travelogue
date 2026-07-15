@@ -370,7 +370,7 @@ export function mountPreviewTaskDock(root, hooks) {
       appendHelpDeepLink(
         textWrap,
         "H3",
-        HELP_COPY.helpDeepLinkPending || "「长图待更新」是什么意思 →"
+        HELP_COPY.helpDeepLinkPending || "「长图可更新」是什么意思 →"
       );
     }
 
@@ -418,7 +418,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "长图已过期";
+    main.textContent = opts.title || "长图可更新";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
