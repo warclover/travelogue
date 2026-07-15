@@ -109,12 +109,18 @@ def test_ux_p3_03_v2_settings_markers() -> None:
         'id="studio-cfg-clustering"',
         'id="studio-cfg-vision"',
         'id="studio-cfg-layout-scoring"',
+        'id="v2-settings-experimental"',
         "设置",
         "导入偏好",
+        "实验选项",
+        "导入后先确认章节",
         "智能排版",
         "开始制作我的游记",
     ):
         assert expected in html, f"missing v2 UX marker: {expected}"
+    assert "结构确认（G1）" not in html
+    assert "beam 评分" not in html
+    assert "beam 搜索" not in html
 
 
 def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
@@ -125,6 +131,13 @@ def test_ux_p3_05_06_slow_hint_thresholds_and_copy() -> None:
     assert "比预期久一些，请耐心等待" in js
     assert "照片较多，正在仔细分析行程与场景" in js
     assert "高级 · 分析选项" in js
+    # T-M4-04 · v2 Importing 已接线
+    run = (ROOT / "templates" / "studio" / "homepage-v2" / "import-run.js").read_text(
+        encoding="utf-8"
+    )
+    assert "tickSlowHint" in run
+    assert "v2-import-slow-hint" in run
+    assert "SLOW_HINT_COPY" in run
 
 
 def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:

@@ -12,6 +12,7 @@
  */
 import {
   SS, STAGE_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
+  SLOW_JOB_MS, SLOW_JOB_VISION_MS, SLOW_JOB_VISION_LONG_MS,
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
@@ -34,6 +35,15 @@ import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 let _gen = 0;
 let _activeJobId = null;
+let _importStartedAt = 0;
+let _slowHintLevel = 0;
+
+/** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
+var SLOW_HINT_COPY = {
+  1: "比预期久一些，请耐心等待…",
+  2: "照片较多，正在仔细分析行程与场景，首次可能较慢",
+  3: "仍可继续等待，或在「高级 · 分析选项」中关闭场景分析以加快速度",
+};
 
 function humanizeError(code, fallback) {
   return STUDIO_ERROR_MESSAGES[code] || fallback || "导入失败，请重试";
@@ -164,6 +174,24 @@ function setStage(text, fillPct) {
   }
 }
 
+function setSlowHintLevel(level) {
+  if (level <= _slowHintLevel) return;
+  _slowHintLevel = level;
+  var hint = $("v2-import-slow-hint");
+  if (!hint) return;
+  var copy = SLOW_HINT_COPY[level] || "";
+  hint.textContent = copy;
+  hint.hidden = !copy;
+}
+
+function tickSlowHint() {
+  if (!_importStartedAt) return;
+  var elapsed = Date.now() - _importStartedAt;
+  if (elapsed >= SLOW_JOB_VISION_LONG_MS) setSlowHintLevel(3);
+  else if (elapsed >= SLOW_JOB_VISION_MS) setSlowHintLevel(2);
+  else if (elapsed >= SLOW_JOB_MS) setSlowHintLevel(1);
+}
+
 export function renderImportingPanel(source) {
   captureImportShell();
   var host = $("v2-importing");
@@ -215,6 +243,13 @@ export function renderImportingPanel(source) {
   stage.textContent = "准备导入…";
   panel.appendChild(stage);
 
+  var slowHint = document.createElement("p");
+  slowHint.className = "v2-import-panel__slow-hint";
+  slowHint.id = "v2-import-slow-hint";
+  slowHint.setAttribute("role", "status");
+  slowHint.hidden = true;
+  panel.appendChild(slowHint);
+
   var cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
   cancelBtn.className = "v2-import-panel__cancel";
@@ -225,6 +260,8 @@ export function renderImportingPanel(source) {
   host.appendChild(panel);
   show(host, true);
   V2.state = "Importing";
+  _importStartedAt = Date.now();
+  _slowHintLevel = 0;
   setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
@@ -277,6 +314,7 @@ function refreshTripsForImportSuccess(result) {
 
 function pollImport(jobId, gen, source) {
   _activeJobId = jobId;
+  if (!_importStartedAt) _importStartedAt = Date.now();
   try {
     sessionStorage.setItem(SS.activeJobId, jobId);
   } catch (e) { /* ignore */ }
@@ -286,6 +324,7 @@ function pollImport(jobId, gen, source) {
     shouldAbort: function () { return gen !== _gen; },
     onTick: function (job) {
       if (gen !== _gen) return;
+      tickSlowHint();
       if (job.status === "running" || job.status === "queued") {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
@@ -295,6 +334,8 @@ function pollImport(jobId, gen, source) {
     },
   }).then(function (job) {
     if (gen !== _gen) return null;
+    _importStartedAt = 0;
+    _slowHintLevel = 0;
     var pending = null;
     try {
       var pendingRaw = sessionStorage.getItem(SS.activePending);

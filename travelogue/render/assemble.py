@@ -117,12 +117,9 @@ def build_render_context(
     if surface.strip_narrative_copy:
         hook = ""
         epilogue = ""
-    show_cover_hook = show_hook_on_cover(hook) or (
-        surface.is_draft
-        and bool(hook)
-        and not surface.strip_narrative_copy
-        and (cfg or get_config()).narrative.show_hook_in_draft
-    )
+    # T-M4-01：封面 hook 一律经 show_hook_on_cover（系统 stub 句默认不上封面；
+    # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
+    show_cover_hook = show_hook_on_cover(hook)
     show_cover_place = cover_place_is_distinct(cover_place, meta_title)
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)

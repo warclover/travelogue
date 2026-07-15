@@ -12,7 +12,7 @@ import { openImportSheet } from "./import-entry.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
-import { shelfResumeActions } from "./shelf-actions-logic.js";
+import { shelfResumeActions, shelfShowCoverLongshotBadge } from "./shelf-actions-logic.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 
 var STALE_BADGE = "可更新";
@@ -158,10 +158,13 @@ function buildCoverWrap(trip, surface) {
   if (isDemoTrip(trip)) {
     wrap.appendChild(el("span", "v2-demo-flag v2-shelf__badge", "示例"));
   }
-  if (trip.longshotStale || trip.algorithmStale) {
-    var badgeText = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
-    var staleBadge = el("span", "v2-shelf__stale-badge", badgeText);
-    wrap.appendChild(staleBadge);
+  var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];
+  var resumeTripId = resumeTrip ? resumeTrip.tripId : null;
+  var showLongshotBadge = shelfShowCoverLongshotBadge(trip, { resumeTripId: resumeTripId });
+  if (showLongshotBadge) {
+    wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_LONGSHOT));
+  } else if (trip.algorithmStale) {
+    wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_BADGE));
   }
   attachShelfTripMenu(wrap, trip, { surface: surface, onDeleted: onTripDeleted });
   return wrap;

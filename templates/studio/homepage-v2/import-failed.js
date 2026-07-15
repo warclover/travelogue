@@ -3,7 +3,7 @@
  * L0 Hardening：E_LLM_AUTH → T-FAIL-01（继续生成本机游记 / 去配置 / 留在首页）。
  * L0 Resume：失败保留 pending；配置后可从设置 Modal resume；无 pending 时书架兜底。
  */
-import { SS, isDemoTrip } from "../js/constants.js";
+import { SS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint, isLlmAuthRecoverable } from "../js/errors.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
@@ -16,6 +16,9 @@ import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 var _wired = false;
 var _lastErr = null;
+var _trapHandler = null;
+var _escHandler = null;
+var _previousFocus = null;
 
 function hasUserTrips() {
   return V2.trips.some(function (t) { return !isDemoTrip(t); });
@@ -133,9 +136,64 @@ export function isImportFailedVisible() {
   return !!(el && !el.hidden);
 }
 
+function focusableEls(container) {
+  return Array.prototype.slice
+    .call(container.querySelectorAll(SHEET_FOCUSABLE))
+    .filter(function (el) {
+      return !el.hidden && (el.offsetParent !== null || el === document.activeElement);
+    });
+}
+
+function trapFocus(dialog) {
+  releaseTrap(dialog);
+  _trapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(dialog);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  dialog.addEventListener("keydown", _trapHandler);
+}
+
+function releaseTrap(dialog) {
+  if (_trapHandler && dialog) dialog.removeEventListener("keydown", _trapHandler);
+  _trapHandler = null;
+}
+
+function bindEscDismiss() {
+  releaseEsc();
+  _escHandler = function (e) {
+    if (e.key !== "Escape") return;
+    if (!isImportFailedVisible()) return;
+    e.preventDefault();
+    dismissImportFailed();
+  };
+  document.addEventListener("keydown", _escHandler);
+}
+
+function releaseEsc() {
+  if (_escHandler) document.removeEventListener("keydown", _escHandler);
+  _escHandler = null;
+}
+
 export function hideImportFailed() {
-  show($("v2-failure"), false);
+  var overlay = $("v2-failure");
+  releaseTrap(overlay);
+  releaseEsc();
+  show(overlay, false);
   _lastErr = null;
+  if (_previousFocus && typeof _previousFocus.focus === "function") {
+    try { _previousFocus.focus(); } catch (_e) { /* ignore */ }
+  }
+  _previousFocus = null;
 }
 
 export function dismissImportFailed() {
@@ -159,6 +217,7 @@ export function showImportFailed(err) {
   try {
     window.scrollTo(0, 0);
   } catch (e) { /* ignore */ }
+  _previousFocus = document.activeElement;
   show($("v2-failure"), true);
 
   var authRecoverable = isLlmAuthRecoverable(_lastErr);
@@ -176,6 +235,11 @@ export function showImportFailed(err) {
     setV2SkipLinkTarget("v2-failure-retry");
     var retry = $("v2-failure-retry");
     if (retry && typeof retry.focus === "function") retry.focus();
+  }
+  var overlay = $("v2-failure");
+  if (overlay) {
+    trapFocus(overlay);
+    bindEscDismiss();
   }
   if (!_wired) wireImportFailed();
 }

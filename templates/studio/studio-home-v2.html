@@ -254,24 +254,27 @@
           </select>
           <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
         </div>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
-          <select id="studio-cfg-g1" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-g1-hint">
-            <option value="false">自动继续（推荐）</option>
-            <option value="true">导入后先确认章节</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
-        </div>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
-          <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-layout-scoring-hint">
-            <option value="false">经典（默认）</option>
-            <option value="true">实验 · beam 评分</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
-        </div>
+        <details class="v2-advanced-popover__experimental" id="v2-settings-experimental">
+          <summary class="v2-advanced-popover__experimental-summary">实验选项</summary>
+          <div class="v2-advanced-popover__row">
+            <label class="v2-advanced-popover__label" for="studio-cfg-g1">导入后先确认章节</label>
+            <select id="studio-cfg-g1" class="v2-advanced-popover__select"
+                    aria-describedby="studio-cfg-g1-hint">
+              <option value="false">自动继续（推荐）</option>
+              <option value="true">导入后先确认章节</option>
+            </select>
+            <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
+          </div>
+          <div class="v2-advanced-popover__row">
+            <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版（实验）</label>
+            <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
+                    aria-describedby="studio-cfg-layout-scoring-hint">
+              <option value="false">经典（默认）</option>
+              <option value="true">智能排版（实验）</option>
+            </select>
+            <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式用多信号搜索排版；一般保持默认即可</p>
+          </div>
+        </details>
       </section>
       <section class="v2-settings-popover__section v2-settings-popover__section--dev" id="v2-settings-dev-section" hidden>
         <p class="v2-settings-popover__section-label">开发者</p>

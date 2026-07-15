@@ -105,16 +105,12 @@ export function mountPreviewTaskDock(root, hooks) {
 
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
-    if (typeof hooks.onCancelExport === "function") {
-      var cancelBtn = document.createElement("button");
-      cancelBtn.type = "button";
-      cancelBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
-      cancelBtn.textContent = "取消";
-      cancelBtn.addEventListener("click", function () {
-        hooks.onCancelExport();
-      });
-      actions.appendChild(cancelBtn);
-    }
+    // T-M4-06 / R-QH-10：捕获开始后无法协作取消 — 诚实文案，不提供假取消按钮
+    var note = document.createElement("span");
+    note.className = "preview-task-dock__cancel-note";
+    note.setAttribute("role", "status");
+    note.textContent = "导出开始后无法取消";
+    actions.appendChild(note);
     actions.appendChild(buildCloseBtn());
 
     dock.appendChild(icon);

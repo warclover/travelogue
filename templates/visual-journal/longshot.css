@@ -298,7 +298,8 @@ body.longshot-capturing .cover-hero__media img {
   height: auto;
   max-height: none !important;
   min-height: 0;
-  object-fit: fill;
+  /* T-M4-07：封面用 cover，避免 fill 拉伸变形 */
+  object-fit: cover;
   object-position: center;
 }
 
@@ -446,7 +447,8 @@ body.longshot-capturing img.media-card__visual {
   max-height: none !important;
   min-height: 0;
   aspect-ratio: unset;
-  object-fit: fill;
+  /* T-M4-07：媒体用 contain，保持原比例 */
+  object-fit: contain;
   object-position: center;
 }
 
