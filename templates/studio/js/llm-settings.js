@@ -10,6 +10,20 @@ var _open = false;
 var _source = "settings";
 var _onChange = null;
 
+/** 官方申请入口（简化指引：链到对方新手流程，不在应用内复述逐步教程） */
+var LLM_KEY_LINKS = {
+  deepseek: {
+    href: "https://platform.deepseek.com/api_keys",
+    label: "DeepSeek 创建 API Key",
+  },
+  dashscope: {
+    href: "https://bailian.console.aliyun.com/",
+    label: "通义百炼控制台",
+    guideHref: "https://help.aliyun.com/zh/model-studio/get-api-key",
+    guideLabel: "官方说明",
+  },
+};
+
 function $(sel, root) {
   return (root || document).querySelector(sel);
 }
@@ -44,14 +58,7 @@ function ensureRoot() {
     '<input id="studio-llm-key" class="studio-llm-settings__input" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />' +
     '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-toggle-key">显示</button>' +
     "</div>" +
-    '<p class="studio-llm-settings__howto" id="studio-llm-howto">' +
-    '如何获取 Key：' +
-    '<a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a>' +
-    ' · ' +
-    '<a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a>' +
-    '（复制 Key 即可，不用写代码） · ' +
-    '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>' +
-    "</p>" +
+    '<p class="studio-llm-settings__howto" id="studio-llm-howto"></p>' +
     '<details class="studio-llm-settings__advanced"><summary>高级</summary>' +
     '<label class="studio-llm-settings__label" for="studio-llm-base">自定义 API 地址（可选）</label>' +
     '<input id="studio-llm-base" class="studio-llm-settings__input" type="url" placeholder="留空则用默认地址" />' +
@@ -156,28 +163,33 @@ function updateHowto() {
   var howto = $("#studio-llm-howto");
   var sel = $("#studio-llm-provider");
   if (!howto || !sel) return;
-  var more =
-    ' · <button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>';
-  if (sel.value === "dashscope") {
-    howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a> 创建 API-KEY 并复制（不用写代码）。' +
-      more;
-  } else {
-    howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a> 创建 API Key 并复制（不用写代码）。' +
-      more;
+  var link =
+    sel.value === "dashscope" ? LLM_KEY_LINKS.dashscope : LLM_KEY_LINKS.deepseek;
+  var html =
+    '获取 Key：打开 <a href="' +
+    link.href +
+    '" target="_blank" rel="noopener">' +
+    link.label +
+    "</a>，按其页面指引创建并复制，粘贴到上方后点「测试连接」。";
+  if (link.guideHref) {
+    html +=
+      ' <a href="' +
+      link.guideHref +
+      '" target="_blank" rel="noopener">' +
+      (link.guideLabel || "官方说明") +
+      "</a>";
   }
-  var helpH7 = $("#studio-llm-help-h7");
-  if (helpH7 && helpH7.dataset.bound !== "1") {
-    helpH7.dataset.bound = "1";
-    helpH7.addEventListener("click", function () {
-      import("/__studio/js/help-drawer.js").then(function (mod) {
-        if (mod && typeof mod.openHelpDrawer === "function") {
-          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
-        }
-      });
-    });
-  }
+  html +=
+    ' · <button type="button" class="studio-llm-settings__linkbtn" data-llm-help-h7="1">了解更多</button>';
+  howto.innerHTML = html;
+}
+
+function openHelpH7() {
+  import("/__studio/js/help-drawer.js").then(function (mod) {
+    if (mod && typeof mod.openHelpDrawer === "function") {
+      mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
+    }
+  });
 }
 
 function payloadFromForm(requireKey) {
@@ -226,16 +238,18 @@ function wire(root) {
   var prov = $("#studio-llm-provider", root);
   if (prov) prov.addEventListener("change", updateHowto);
 
-  var helpH7 = $("#studio-llm-help-h7", root);
-  if (helpH7) {
-    helpH7.addEventListener("click", function () {
-      import("/__studio/js/help-drawer.js").then(function (mod) {
-        if (mod && typeof mod.openHelpDrawer === "function") {
-          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
-        }
-      });
+  var howto = $("#studio-llm-howto", root);
+  if (howto && howto.dataset.helpBound !== "1") {
+    howto.dataset.helpBound = "1";
+    howto.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (t && t.getAttribute && t.getAttribute("data-llm-help-h7")) {
+        ev.preventDefault();
+        openHelpH7();
+      }
     });
   }
+  updateHowto();
 
   $("#studio-llm-ping", root).addEventListener("click", function () {
     var body = payloadFromForm(true);
