@@ -470,7 +470,8 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 |------|------|
 | [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) | 架构优化还债 PRD v1.1 |
 | [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) | WS1 合并闸门修复 PRD（feedback / LSE baseline / CI） |
-| [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) | **稳定期质量硬化与体验优化 v1.1**（Ready for Kickoff · BLK 已合入） |
+| [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) | **稳定期质量硬化与体验优化 v1.1**（**Done** · PR #12 · [结案](./acceptance-records/stable-qh-closeout-2026-07-15.md)） |
+| [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) | **长图 Job 真协作取消 V1**（大纲 · 承接 Stable-QH OUT-06） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
 | [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |
@@ -507,6 +508,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-15 | Stable-QH **结案**：[closeout](./acceptance-records/stable-qh-closeout-2026-07-15.md)；补充试用 [supplemental](./acceptance-records/stable-qh-supplemental-trial-2026-07-15.md)；下一波 [长图协作取消](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) |
 | 2026-07-15 | Stable-QH M1–M5 落地验收：[acceptance-records/stable-qh-2026-07-15.md](./acceptance-records/stable-qh-2026-07-15.md)；QUALITY-GATE 增稳定期 AC 命令 |
 | 2026-07-15 | [PRD-STABLE-QUALITY-HARDENING-V1](./PRD-STABLE-QUALITY-HARDENING-V1.md) 升 **v1.1.0**（合入六席 BLK-01..08 · Ready for Kickoff） |
 | 2026-07-15 | 新增 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md)（稳定期 16 失败归因 + 体验硬化可落地方案） |

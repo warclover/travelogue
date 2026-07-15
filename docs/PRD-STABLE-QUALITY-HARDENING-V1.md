@@ -4,13 +4,14 @@
 |------|------|
 | **产品代号** | Travelogue（Studio + 管线 + 长图） |
 | **文档版本** | **v1.1.0-STABLE-QH** |
-| **状态** | **Ready for Kickoff**（六席评审阻塞项已合入；[评审纪要](./acceptance-records/stable-qh-prd-review-2026-07-15.md)） |
-| **性质** | **稳定期还债 PRD**：契约对齐 + 正确性修复 + 体验硬化；**零 intentional 新功能** |
+| **状态** | **Done**（PR #12 已合入 `master` · [结案记录](./acceptance-records/stable-qh-closeout-2026-07-15.md)） |
+| **性质** | **稳定期还债 PRD**：契约对齐 + 正确性修复 + 体验硬化；**零 intentional 新功能** · **已结案，勿再扩范围** |
 | **触发来源** | 2026-07-15 首席质量/UX 审查；`tests/unit/web` **16 失败归因**；六席评审 BLK-01..08 |
-| **目标分支** | `fix/stable-quality-hardening-v1` → `master` |
+| **目标分支** | `fix/stable-quality-hardening-v1` → `master`（已合并） |
 | **关联文档** | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) · [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md](./PRD-STUDIO-HOMEPAGE-v2.1-OPTIMIZATION.md) · [QUALITY-GATE.md](./QUALITY-GATE.md) · [TESTING.md](./TESTING.md) |
 | **评审纪要** | [acceptance-records/stable-qh-prd-review-2026-07-15.md](./acceptance-records/stable-qh-prd-review-2026-07-15.md) |
-| **验收配套** | 本文 §10；落地后补 `ACCEPTANCE-STABLE-QUALITY-HARDENING-V1.md` |
+| **验收配套** | 本文 §10；[结案](./acceptance-records/stable-qh-closeout-2026-07-15.md) · [补充试用](./acceptance-records/stable-qh-supplemental-trial-2026-07-15.md) |
+| **下一波** | [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md)（承接 OUT-06） |
 | **更新日期** | 2026-07-15 |
 
 ---
@@ -45,7 +46,7 @@
 | OUT-03 | Phase 22 全量 CacheRegistry / incremental | 仅做 schema 最小补齐 |
 | OUT-04 | 手机端 Studio 工作台 | 产品策略仍为 ≥1024 |
 | OUT-05 | 桌面 Gate B/C 签名与商店 | 本 PRD 只要求 Gate A 反馈入口立项勾选 |
-| OUT-06 | 长图 Job **真协作取消** | 本期仅诚实文案（§7.4） |
+| OUT-06 | 长图 Job **真协作取消** | 本期仅诚实文案（§7.4）→ **已升格** [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) |
 | OUT-07 | 取消方案 B（未完成书架 / 断点续跑） | 属新 IA；另立 PRD |
 | OUT-08 | 章节命名完整模板体系 | 归 CHAPTER-NAMING；本期仅禁「日期·二」类最伤标题 |
 | OUT-09 | 客户端 `expectedRevision` | ADR-008 / Phase22 归档债，不进本波 P1 |
@@ -487,11 +488,14 @@ LSE：继续冻结。
 
 ### 12.2 开工门槛
 
-- [ ] Owner / Reviewer / 目标合并日已指定  
-- [ ] M0：schema 扫描初表归档到 acceptance-records 或 PR 描述  
-- [ ] M0：扩展文案表（清点四态 + 慢提示三档 + 取消确认句 + Dock 主副文）已贴  
-- [ ] M0：R-QH-06 选定案甲或案乙  
-- [ ] 分支 `fix/stable-quality-hardening-v1` 已开  
+> **结案注记（2026-07-15）**：下列门槛在实施期已满足并随 PR #12 合入；清单保留为历史证据。
+
+- [x] Owner / Reviewer / 目标合并日已指定
+- [x] M0：schema 扫描初表归档到 acceptance-records 或 PR 描述
+- [x] M0：扩展文案表（清点四态 + 慢提示三档 + 取消确认句 + Dock 主副文）已贴
+- [x] M0：R-QH-06 选定案甲或案乙
+- [x] 分支 `fix/stable-quality-hardening-v1` 已开
+- [x] PR #12 已合并；见 [结案记录](./acceptance-records/stable-qh-closeout-2026-07-15.md)
 - [ ] 确认不混入 OUT-01..09  
 
 ---

@@ -25,8 +25,16 @@ python scripts/e2e_trip_acceptance.py linzhi mao
 
 ## 稳定期质量硬化（Stable-QH）AC 命令
 
-> 对应 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) · M1–M5。  
-> 验收记录：[acceptance-records/stable-qh-2026-07-15.md](./acceptance-records/stable-qh-2026-07-15.md)
+> **状态：Done**（PR #12）。对应 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) · M1–M5。  
+> 结案：[acceptance-records/stable-qh-closeout-2026-07-15.md](./acceptance-records/stable-qh-closeout-2026-07-15.md) · 主验收：[stable-qh-2026-07-15.md](./acceptance-records/stable-qh-2026-07-15.md) · 补充试用：[stable-qh-supplemental-trial-2026-07-15.md](./acceptance-records/stable-qh-supplemental-trial-2026-07-15.md)  
+> 下一波信任债：[PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md)
+
+**补充试用（精修 stale / 慢安抚 / 老 trip）**：
+
+```bash
+# Studio 须在跑；本机相册信任开关按需
+TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM=1 python scripts/stable_qh_supplemental_trial.py --base http://127.0.0.1:8768
+```
 
 **PR 快测（勿含 Playwright flake / vision）**：
 
