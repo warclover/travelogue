@@ -29,7 +29,7 @@ function ensureRoot() {
     '<div class="studio-llm-settings__panel">' +
     '<div class="studio-llm-settings__head">' +
     '<div><p id="studio-llm-settings-title" class="studio-llm-settings__title">AI 文案（可选）</p>' +
-    '<p class="studio-llm-settings__desc">不配置也可以导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p></div>' +
+    '<p class="studio-llm-settings__desc">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p></div>' +
     '<button type="button" class="studio-llm-settings__close" data-llm-close="1" aria-label="关闭">×</button>' +
     "</div>" +
     '<p class="studio-llm-settings__badge" id="studio-llm-readiness">未配置</p>' +
@@ -382,7 +382,7 @@ export function initLlmSettingsEntry() {
     sec.setAttribute("aria-label", "AI 文案");
     sec.innerHTML =
       '<p class="v2-settings-popover__section-label">AI 文案（可选）</p>' +
-      '<p class="v2-advanced-popover__note">不配置也能出长图；配置后可生成杂志感文案</p>' +
+      '<p class="v2-advanced-popover__note">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p>' +
       '<button type="button" class="v2-settings-popover__dev-btn" id="studio-llm-settings-entry">配置写作引擎…</button>';
     var importSec = pop.querySelector('[aria-label="导入选项"]');
     if (importSec && importSec.parentNode) {

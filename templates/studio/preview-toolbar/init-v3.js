@@ -23,7 +23,7 @@ import {
   maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { HELP_COPY } from "../js/help-onboarding.js";
+import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
 import { requestExitStudio } from "../js/studio-exit.js";
 import {
   registerInlineEditBridge,
@@ -389,6 +389,20 @@ export function initToolbarV3(root, tripId) {
       var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
       var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
       var llmExpect = panel.querySelector(".preview-sheet__llm-expect");
+      var _wantStubTip = false;
+      var _stubTipTries = 0;
+      var _stubTipTimer = null;
+      function scheduleStubNarrateTip() {
+        if (!_wantStubTip || _stubTipTries > 10) return;
+        if (_stubTipTimer) return;
+        _stubTipTries += 1;
+        _stubTipTimer = window.setTimeout(function () {
+          _stubTipTimer = null;
+          if (!_wantStubTip) return;
+          if (maybeShowStubNarrateTip(showToolbarToast)) return;
+          scheduleStubNarrateTip();
+        }, _stubTipTries === 1 ? 1800 : 1600);
+      }
       function setLlmAvailable(ok) {
         if (llmBtn) {
           llmBtn.disabled = !ok;
@@ -398,6 +412,8 @@ export function initToolbarV3(root, tripId) {
         if (llmHint) llmHint.hidden = !!ok;
         if (llmSetup) llmSetup.hidden = !!ok;
         if (llmExpect) llmExpect.hidden = false;
+        _wantStubTip = !ok;
+        if (!ok) scheduleStubNarrateTip();
       }
       setLlmAvailable(false);
       function refreshLlmStatus() {

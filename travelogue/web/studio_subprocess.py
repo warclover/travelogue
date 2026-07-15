@@ -111,6 +111,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             layout_density=payload.get("layoutDensity"),
             photo_cull_enabled=bool(payload.get("photoCullEnabled", False)),
             keep_near_duplicates=bool(payload.get("keepNearDuplicates", False)),
+            force_stub=bool(payload.get("forceStub")),
         )
         progress_queue.put(
             {

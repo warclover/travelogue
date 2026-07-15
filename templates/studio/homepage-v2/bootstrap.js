@@ -34,6 +34,7 @@ import {
 } from "../js/help-drawer.js";
 import { initLlmSettingsEntry } from "../js/llm-settings.js";
 import { maybeShowCapabilityCard } from "../js/capability-card.js";
+import { maybeShowHomeStubBanner, syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 function initHelpEntry() {
   if (document.getElementById("studio-help-open-home")) return;
@@ -133,11 +134,13 @@ function routeFinalState() {
   if (resumeV2ImportIfAny()) {
     V2.state = "Importing";
     syncVariantGuard();
+    syncHomeStubBanner();
     trackHomepageView();
     return Promise.resolve();
   }
   V2.state = hasUserTrips() ? "IdleReturning" : "IdleEmpty";
   syncAdvancedOptionsLock();
+  syncHomeStubBanner();
   renderBentoEmpty(V2.demoManifest);
   return import("./bento-preview-picker.js").then(function (picker) {
     picker.syncPreviewSelectOptions(V2.trips);
@@ -186,6 +189,7 @@ function startApp() {
       var routed = routeFinalState();
       var after = function () {
         maybeShowCapabilityCard();
+        maybeShowHomeStubBanner({ delayMs: 900 });
       };
       if (routed && typeof routed.then === "function") {
         routed.then(after).catch(after);

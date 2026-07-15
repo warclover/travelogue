@@ -321,11 +321,13 @@
        aria-labelledby="v2-failure-msg">
     <div class="v2-failure__scrim" aria-hidden="true"></div>
     <div class="v2-failure__panel">
-      <p class="v2-failure__eyebrow">导入失败</p>
+      <p class="v2-failure__eyebrow" id="v2-failure-eyebrow">导入失败</p>
       <p class="v2-failure__echo" id="v2-failure-echo" hidden></p>
       <p class="v2-failure__msg" id="v2-failure-msg"></p>
       <p class="v2-failure__hint" id="v2-failure-hint"></p>
       <div class="v2-failure__actions">
+        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>用本机文案继续</button>
+        <button type="button" class="v2-failure__secondary" id="v2-failure-open-settings" hidden>去配置写作引擎</button>
         <button type="button" class="v2-failure__cta" id="v2-failure-retry">重试</button>
         <button type="button" class="v2-failure__stay" id="v2-failure-stay">留在首页</button>
       </div>

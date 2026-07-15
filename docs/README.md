@@ -113,6 +113,8 @@
 | 文档 | 说明 |
 |------|------|
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** |
+| [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | **无 Key 主路径加固与首启预期管理**（死循环修复 · 友好引导）**Draft · W1/W2 ✅** |
+| [IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | W1 实施对照 |
 | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) | 实施清单（W1a–W3 ✅ · 狗粮/实机冒烟待人工） |
 | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) | 验收 |
 | [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) | LLM secrets 落盘（复用 ADR-018 `user_data_dir`） |
@@ -126,7 +128,7 @@
 
 **前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。  
 **代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
-**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
+**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → 若处理无 Key 死循环/首启预期则读 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
 
 ---
 
@@ -503,6 +505,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-15 | 索引补 [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 主路径加固 · 首启预期 · 失败可继续） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（桌面首启 L0/L1 · 写作引擎配置 · 无 Key 长图兜底） |
 | 2026-07-14 | 桌面安装版：PRD v1.1.1 + [ADR-018](./adr/018-desktop-installer-layout.md) + [IMPLEMENTATION](./IMPLEMENTATION-DESKTOP-INSTALLER-V1.md) + [ACCEPTANCE](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |
 | 2026-07-14 | 精修反馈闭环：PRD v0.1.2 + IMPLEMENTATION + ACCEPTANCE + 线框索引 |

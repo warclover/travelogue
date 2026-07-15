@@ -40,7 +40,8 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "要不要配置 AI 文案" in help_js
     assert "不配置也可以导入" in help_js
     assert "clearCapabilityCardSeen" in help_js
-    assert "首页能力卡也会再出现一次" in help_js
+    assert "首页能力卡与轻状态也会再出现" in help_js
+    assert "clearStubHintSeen" in help_js
     assert 'itemId: "H7"' in llm
 
 
@@ -48,7 +49,7 @@ def test_mf06_llm_expect_visible_when_available() -> None:
     sheet = (STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
     init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     assert "preview-sheet__llm-expect" in sheet
-    assert "不会自动重写全文" in sheet
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
     assert "llmExpect.hidden = false" in init
     assert "if (llmSetup) llmSetup.hidden = !!ok;" in init
 

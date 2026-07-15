@@ -19,6 +19,10 @@ export var HELP_LS = {
   importFolderExpanded: "travelogue.studio.help.importFolderExpanded",
   /** Desktop LLM Setup V1 · 能力卡（全局一次） */
   capabilityCardSeen: "travelogue.desktop.capabilityCard.v1",
+  /** L0 Hardening · 首页轻状态 dismiss（可选永久关闭） */
+  homeStubBannerDismissed: "travelogue.desktop.homeStubBanner.v1",
+  /** L0 Hardening · 首次预览本机文案 tip */
+  stubHintSeen: "travelogue.desktop.stubHint.v1",
 };
 
 /** session：能力卡本会话压制非关键自动 Help L1（D-DLLM-13） */
@@ -81,7 +85,8 @@ export var HELP_COPY = {
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",
   replayDoneToast:
-    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡也会再出现一次。",
+    "已重置。下次进入预览会再提示如何保存长图与本机文案说明；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡与轻状态也会再出现。",
+  stubNarrateTip: "当前为本机文案（可随时在设置中升级）",
   helpDeepLinkPending: "「长图待更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
   /** H1–H7 帮助抽屉条目（H6=封面封底；H7=AI 文案） */
@@ -426,6 +431,8 @@ export function replayHelpHints() {
   clearPlatformPickSeen();
   clearBookendsPickSeen();
   clearCapabilityCardSeen();
+  clearHomeStubBannerDismissed();
+  clearStubHintSeen();
   // 顺带清部分 legacy per-trip 脉冲键（非必须）
   try {
     var keys = [];
@@ -515,6 +522,59 @@ export function markCapabilityCardSuppressHelpL1() {
 
 export function isCapabilityCardSuppressingHelpL1() {
   return _ssGet(CAPABILITY_SUPPRESS_HELP_SS) === "1";
+}
+
+export function isHomeStubBannerDismissed() {
+  return _lsGet(HELP_KEYS.homeStubBannerDismissed) === "1";
+}
+
+export function markHomeStubBannerDismissed() {
+  _lsSet(HELP_KEYS.homeStubBannerDismissed, "1");
+}
+
+export function clearHomeStubBannerDismissed() {
+  try {
+    localStorage.removeItem(HELP_KEYS.homeStubBannerDismissed);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+export function isStubHintSeen() {
+  return _lsGet(HELP_KEYS.stubHintSeen) === "1";
+}
+
+export function markStubHintSeen() {
+  _lsSet(HELP_KEYS.stubHintSeen, "1");
+}
+
+export function clearStubHintSeen() {
+  try {
+    localStorage.removeItem(HELP_KEYS.stubHintSeen);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+/**
+ * T-CAP-05 · 首次预览本机文案 tip（在长图 tip 之后或已见过后出现）。
+ * @param {(msg: string, opts?: object) => void} [showToast]
+ * @returns {boolean}
+ */
+export function maybeShowStubNarrateTip(showToast) {
+  if (isStubHintSeen()) return false;
+  if (isHelpL1Blocked()) return false;
+  if (isLongshotHelpActive()) return false;
+  // 长图关键 tip 未出示过：让位，稍后再试由调用方重试
+  if (_lsGet(HELP_KEYS.previewLongshotSeen) !== "1") return false;
+  markStubHintSeen();
+  trackHelpEvent("help_coach_show", { touchpoint: "T-CAP-05" });
+  if (typeof showToast === "function") {
+    showToast(HELP_COPY.stubNarrateTip || "当前为本机文案（可随时在设置中升级）", {
+      duration: 4200,
+    });
+  }
+  return true;
 }
 
 /**

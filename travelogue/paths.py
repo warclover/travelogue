@@ -133,10 +133,60 @@ def ensure_user_data_layout(*, bootstrap_config: bool = True) -> Path:
                 shutil.copy2(example, cfg)
             else:
                 cfg.write_text(
-                    "# Travelogue Studio (auto-generated)\ntrips_dir: ./trips\n",
+                    "# Travelogue Studio (auto-generated)\n"
+                    "trips_dir: ./trips\n"
+                    "llm:\n"
+                    "  provider: stub\n",
                     encoding="utf-8",
                 )
+            _force_bootstrap_llm_provider_stub(cfg)
     return root
+
+
+def _force_bootstrap_llm_provider_stub(cfg_path: Path) -> None:
+    """First-run desktop config must default to stub (D-L0G-02 / BE-04).
+
+    Preserves comments where possible by rewriting only the ``provider:`` line
+    inside the top-level ``llm:`` block.
+    """
+    try:
+        text = cfg_path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    lines = text.splitlines(keepends=True)
+    if not lines:
+        return
+    out: list[str] = []
+    in_llm = False
+    replaced = False
+    for line in lines:
+        stripped = line.lstrip()
+        indent = line[: len(line) - len(stripped)]
+        if stripped.startswith("llm:") and not indent.strip("\t"):
+            in_llm = True
+            out.append(line)
+            continue
+        if in_llm:
+            # Left the llm block (next top-level key).
+            if stripped and not stripped.startswith("#") and indent == "":
+                in_llm = False
+            elif not replaced and stripped.startswith("provider:"):
+                nl = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+                out.append(
+                    f"{indent}provider: stub  # desktop L0 default; upgrade via Settings{nl}"
+                )
+                replaced = True
+                continue
+        out.append(line)
+    if not replaced:
+        # No llm.provider line ? append a stub block.
+        if out and not out[-1].endswith("\n"):
+            out[-1] = out[-1] + "\n"
+        out.append("\nllm:\n  provider: stub  # desktop L0 default; upgrade via Settings\n")
+    try:
+        cfg_path.write_text("".join(out), encoding="utf-8")
+    except OSError:
+        return
 
 
 # --- Bundled resource paths (always via resource_root / ROOT coincidence) ---

@@ -28,7 +28,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_LNG_PLAYWRIGHT": "高清长图组件不可用，将尝试兼容模式",
     "E_LNG_CLIENT_FALLBACK": "正在使用兼容模式保存长图…",
     "E_STUDIO_SHUTDOWN": "Studio 正在退出",
-    "E_LLM_AUTH": "要生成杂志感文案，请先在设置中配置写作引擎",
+    # BE-09 / COPY-L0G-09
+    "E_LLM_AUTH": "可以改用本机文案继续生成游记；配置写作引擎后可再升级文案。",
     "E_LLM_NETWORK": "文案生成时网络中断，请重试",
     "E_LLM_PROVIDER": "请选择支持的写作引擎服务商",
     "E_LLM_PING": "连接测试失败，请检查 Key 或稍后重试",
@@ -125,4 +126,22 @@ def demo_error_payload(exc: DemoError) -> dict:
                 from pathlib import Path
 
                 payload["existingTripId"] = Path(trip_dir).name
+    if is_llm_auth_recoverable(exc.code):
+        payload["recoverableWithStub"] = True
+    return payload
+
+
+def is_llm_auth_recoverable(code: str | None) -> bool:
+    """Import may still surface E_LLM_AUTH on legacy/edge paths — FE can continue with stub."""
+    return code == "E_LLM_AUTH"
+
+
+def job_error_payload(code: str, *, detail: str = "") -> dict[str, object]:
+    """Build a Studio job ``error`` object; mark LLM auth as stub-recoverable (BE-06)."""
+    payload: dict[str, object] = {
+        "code": code,
+        "message": user_message(code, detail),
+    }
+    if is_llm_auth_recoverable(code):
+        payload["recoverableWithStub"] = True
     return payload

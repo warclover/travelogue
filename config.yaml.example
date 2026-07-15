@@ -7,11 +7,17 @@
 trips_dir: ./trips
 
 llm:
-  provider: deepseek          # stub | deepseek | dashscope
+  # 桌面 / Studio L0 默认：本机文案（无需 API Key 即可导入→预览→长图）
+  # 升级杂志感文案：在 Studio「设置 → AI 文案」配置 Key，或取消注释下方 deepseek/dashscope 示例
+  provider: stub                  # stub | deepseek | dashscope
   model: deepseek-chat
-  api_key_env: DEEPSEEK_API_KEY  # 密钥写在项目根 .env（见 .env.example），或系统环境变量
+  api_key_env: DEEPSEEK_API_KEY   # 密钥写在项目根 .env（见 .env.example），或系统环境变量
   timeout_sec: 120
-  # 百炼对照：
+  # --- 可选：DeepSeek ---
+  # provider: deepseek
+  # model: deepseek-chat
+  # api_key_env: DEEPSEEK_API_KEY
+  # --- 可选：通义千问（百炼）---
   # provider: dashscope
   # model: qwen-plus
   # api_key_env: DASHSCOPE_API_KEY

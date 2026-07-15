@@ -8,7 +8,7 @@
 | **主题代号** | 「桌面首启 · 能力分层」— L0 开箱成稿 · L1 可选升级写作引擎 |
 | **触发来源** | 2026-07-15 打包 `.exe` 实测：缺 LLM API 配置页/接口，用户感知为「生成失败」；产品讨论采用降级原则 |
 | **前置条件** | Phase 2 Studio Hub 可用（`python -m travelogue studio` / M11 `TravelogueStudio.exe`）；主链路 stub narrate 已落地（G-P2-05）；长图导出可用（[PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) / 导出门面）；[PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) 帮助合同有效（可并行，不阻塞本主题 W0） |
-| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) G-P2-05 · US-P2-08 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) §8 · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [ERROR-CODES.md](./ERROR-CODES.md) · [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) · README 索引中的 Desktop Installer（实体 PRD **待建**；本文不替代安装包规格） |
+| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) G-P2-05 · US-P2-08 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) §8 · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [ERROR-CODES.md](./ERROR-CODES.md) · [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) · **加固增量** [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 死循环 · 首启预期）· README 索引中的 Desktop Installer |
 | **评审记录** | [acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md) |
 | **验收** | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) · 本文 §10 |
 | **实施清单** | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) |

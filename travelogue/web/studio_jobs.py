@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from travelogue.demo.build import DemoError
-from travelogue.web.studio_errors import user_message
+from travelogue.web.studio_errors import job_error_payload, user_message
 from travelogue.web.studio_stages import stage_hint
 
 STAGE_COUNT = 4
@@ -298,28 +298,23 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                             store.finalize(
                                 job,
                                 status="cancelled",
-                                error={
-                                    "code": code,
-                                    "message": user_message(code),
-                                },
+                                error=job_error_payload(code),
                             )
                         elif event.get("demo"):
                             store.finalize(
                                 job,
                                 status="failed",
-                                error={
-                                    "code": code,
-                                    "message": user_message(code, event.get("message", "")),
-                                },
+                                error=job_error_payload(
+                                    code, detail=str(event.get("message") or "")
+                                ),
                             )
                         else:
                             store.finalize(
                                 job,
                                 status="failed",
-                                error={
-                                    "code": code,
-                                    "message": user_message(code, event.get("message", code)),
-                                },
+                                error=job_error_payload(
+                                    code, detail=str(event.get("message") or code)
+                                ),
                             )
                         finished = True
                         break
@@ -332,10 +327,7 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                 store.finalize(
                     job,
                     status="failed",
-                    error={
-                        "code": "E_STUDIO_PIPELINE",
-                        "message": user_message("E_STUDIO_PIPELINE"),
-                    },
+                    error=job_error_payload("E_STUDIO_PIPELINE"),
                 )
         finally:
             handle.join(timeout=5.0)
@@ -370,14 +362,11 @@ def run_longshot_job(
         from travelogue.export.longshot import LongshotExportError
 
         if isinstance(exc, LongshotExportError):
-            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+            payload = job_error_payload(exc.code, detail=str(exc))
         elif isinstance(exc, DemoError):
-            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+            payload = job_error_payload(exc.code, detail=str(exc))
         else:
-            payload = {
-                "code": "E_LNG_CAPTURE_FAILED",
-                "message": user_message("E_LNG_CAPTURE_FAILED", str(exc)),
-            }
+            payload = job_error_payload("E_LNG_CAPTURE_FAILED", detail=str(exc))
         store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_longshot()
@@ -414,16 +403,13 @@ def run_narrate_job(
         from travelogue.llm.errors import LlmError
 
         if isinstance(exc, LlmError):
-            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+            payload = job_error_payload(exc.code, detail=str(exc))
         elif isinstance(exc, DemoError):
-            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+            payload = job_error_payload(exc.code, detail=str(exc))
         elif isinstance(exc, FileNotFoundError):
-            payload = {
-                "code": "E_TRIP_NOT_FOUND",
-                "message": user_message("E_TRIP_NOT_FOUND", str(exc)),
-            }
+            payload = job_error_payload("E_TRIP_NOT_FOUND", detail=str(exc))
         else:
-            payload = {"code": "E_NARRATE_API", "message": user_message("E_NARRATE_API", str(exc))}
+            payload = job_error_payload("E_NARRATE_API", detail=str(exc))
         store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_narrate()
@@ -458,12 +444,9 @@ def run_g1_continue_job(
         if store.is_cancelled(job):
             return
         if isinstance(exc, DemoError):
-            payload = {"code": exc.code, "message": user_message(exc.code, str(exc))}
+            payload = job_error_payload(exc.code, detail=str(exc))
         else:
-            payload = {
-                "code": "E_STUDIO_PIPELINE",
-                "message": user_message("E_STUDIO_PIPELINE"),
-            }
+            payload = job_error_payload("E_STUDIO_PIPELINE")
         store.finalize(job, status="failed", error=payload)
     finally:
         store.finish_g1()
