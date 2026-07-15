@@ -530,12 +530,47 @@ def test_handle_cancel_keeps_previewable_trip(tmp_path: Path) -> None:
     assert trip_dir.is_dir()
 
 
-def test_handle_longshot_requires_trip_id(tmp_path: Path) -> None:
-    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+def test_handle_import_busy_before_album_acl(tmp_path: Path) -> None:
+    """Busy 须先于相册 ACL，避免 probe 误判为空闲（403）。"""
+    job = get_job_store().create_import_job()
+    assert job is not None
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={"albumPath": str(tmp_path / "nope"), "title": "x"},
+    )
+    handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 409
+    assert body["error"] == "E_STUDIO_JOB_BUSY"
 
-    handler = MockStudioHandler(tmp_path / "trips", json_body={"scale": 1})
-    handle_longshot(handler)
-    assert handler.response == (400, {"ok": False, "error": "tripId required"})
+
+def test_handle_import_force_binds_predicted_trip_id(tmp_path: Path) -> None:
+    """force=True 也须 early-bind tripId，否则 cancel purge 无目标。"""
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "qhdf-forcebind-aaaa"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={
+            "albumPath": str(album),
+            "title": "强制绑定",
+            "place": "测试",
+            "force": True,
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess"):
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+            return_value="qhdf-forcebind-aaaa",
+        ):
+            handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202
+    job = get_job_store().get(body["jobId"])
+    assert job is not None
+    assert job.trip_id == "qhdf-forcebind-aaaa"
 
 
 def test_handle_longshot_rejects_invalid_copy_display(tmp_path: Path) -> None:

@@ -431,27 +431,29 @@ LSE：继续冻结。
 
 ### 10.1 自动化
 
-- [ ] **AC-QH-01** F08/F09/F10 绿；schema 扫描 ⊇ 产线键  
-- [ ] **AC-QH-02** F05/F06/F01/F02/F07/F12/F13/F14/F11 绿  
-- [ ] **AC-QH-03a** 上传 FormData 字段对齐  
-- [ ] **AC-QH-03b** 成册结果标题/模板与 Wizard 一致（集成或 e2e）  
-- [ ] **AC-QH-04a** 清点 **failed** 文案翻转  
-- [ ] **AC-QH-04b** 清点 **timeout/degraded** 诚实态  
-- [ ] **AC-QH-05** 取消后：未 previewable trip 已 purge；书架无空壳  
-- [ ] **AC-QH-06** route snapshot 一致  
-- [ ] **AC-QH-07** 用户面扫描无「长图待更新」（排除 wireframe）  
+- [x] **AC-QH-01** F08/F09/F10 绿；schema 扫描 ⊇ 产线键  
+- [x] **AC-QH-02** F05/F06/F01/F02/F07/F12/F13/F14/F11 绿  
+- [x] **AC-QH-03a** 上传 FormData 字段对齐  
+- [x] **AC-QH-03b** 成册结果标题/模板与 Wizard 一致（集成或 e2e）  
+- [x] **AC-QH-04a** 清点 **failed** 文案翻转  
+- [x] **AC-QH-04b** 清点 **timeout/degraded** 诚实态  
+- [x] **AC-QH-05** 取消后：未 previewable trip 已 purge；书架无空壳  
+- [x] **AC-QH-06** route snapshot 一致  
+- [x] **AC-QH-07** 用户面扫描无「长图待更新」（排除 wireframe）  
 
 ### 10.2 手测（dogfood）
 
-- [ ] **UX-QH-01** 无 Key：导入 → 预览 → 长图  
-- [ ] **UX-QH-02** 选夹失败 → 上传精细 + 手动模板 + 自定义标题 → **成册可见生效**  
-- [ ] **UX-QH-03** 导入中取消：确认「未完成草稿将删除」→ 书架干净  
-- [ ] **UX-QH-04** 窄屏 Unsupported（回归）  
-- [ ] **UX-QH-05** 清点硬失败 +（若可造）超时降级  
-- [ ] **UX-QH-06** 取消后再导入无幽灵冲突  
-- [ ] **UX-QH-07** 无 Key 预览封面无「碎片拼成」类系统句（或仅精修可见）  
-- [ ] **UX-QH-08** Importing ≥30s 慢安抚；FirstSuccess/Failure：trap + Esc  
-- [ ] **UX-QH-09**（M4）角标主 CTA 矩阵抽查  
+- [x] **UX-QH-01** 无 Key：导入 → 预览 → 长图  
+- [x] **UX-QH-02** 选夹失败 → 上传精细 + 手动模板 + 自定义标题 → **成册可见生效**  
+- [x] **UX-QH-03** 导入中取消：确认「未完成草稿将删除」→ 书架干净  
+- [x] **UX-QH-04** 窄屏 Unsupported（回归）  
+- [x] **UX-QH-05** 清点硬失败 +（若可造）超时降级  
+- [x] **UX-QH-06** 取消后再导入无幽灵冲突  
+- [x] **UX-QH-07** 无 Key 预览封面无「碎片拼成」类系统句（或仅精修可见）  
+- [x] **UX-QH-08** Importing ≥30s 慢安抚；FirstSuccess/Failure：trap + Esc  
+- [x] **UX-QH-09**（M4）角标主 CTA 矩阵抽查  
+
+> Dogfood 记录：[acceptance-records/stable-qh-dogfood-2026-07-15.md](./acceptance-records/stable-qh-dogfood-2026-07-15.md)。UX-QH-01 验长图入口（不强制 PNG 落盘）；UX-QH-08 ≥30s 墙钟目视可选补跑。
 
 ---
 

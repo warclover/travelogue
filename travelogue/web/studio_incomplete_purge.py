@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.services.trip import meta_revision
-from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 _log = logging.getLogger(__name__)
@@ -89,9 +88,12 @@ def maybe_purge_incomplete_import_trip(
 
     trip_json = trip_dir / "trip.json"
     trip = _load_trip_dict(trip_json) if trip_json.is_file() else {}
-    if trip and is_protected_demo_trip(tid, trip):
-        _log.info("skip purge protected demo %s", tid)
-        return False
+    if trip:
+        from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
+
+        if is_protected_demo_trip(tid, trip):
+            _log.info("skip purge protected demo %s", tid)
+            return False
     if trip and trip_has_user_patches(trip):
         _log.info("skip purge user-patched trip %s (%s)", tid, reason)
         return False

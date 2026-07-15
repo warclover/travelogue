@@ -33,20 +33,28 @@ def handle_cancel(handler: StudioHandlerProtocol) -> None:
         handler._json_response(400, {"ok": False, "error": "jobId required"})
         return
 
-    job = get_job_store().cancel_job(job_id)
+    store = get_job_store()
+    job = store.cancel_job(job_id)
     if job is None:
         handler._json_response(404, {"ok": False, "error": "job not found"})
         return
 
     purged = False
     if job.type == "import" and job.status == "cancelled":
+        # Wait for worker finally (join subprocess → purge) before answering,
+        # so clients do not re-import into a half-dead trip directory.
+        store.await_import_handle_done(job.job_id, timeout=30.0)
         ctx = studio_ctx(handler)
-        purged = cleanup_import_terminal_artifacts(
+        cleanup_import_terminal_artifacts(
             ctx.trips_root,
             job_id=job.job_id,
             trip_id=job.trip_id,
             status="cancelled",
         )
+        if job.trip_id:
+            purged = not (ctx.trips_root / job.trip_id).is_dir()
+        else:
+            purged = True
     handler._json_response(
         200,
         {"ok": True, "status": job.status, "purged": purged},

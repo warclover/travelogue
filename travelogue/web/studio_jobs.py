@@ -64,6 +64,10 @@ class StudioJobStore:
             self._import_running = True
             return job
 
+    def is_import_running(self) -> bool:
+        with self._lock:
+            return self._import_running
+
     def get(self, job_id: str) -> StudioJob | None:
         with self._lock:
             return self._jobs.get(job_id)
@@ -222,9 +226,11 @@ class StudioJobStore:
                 "code": "E_STUDIO_CANCELLED",
                 "message": user_message("E_STUDIO_CANCELLED"),
             }
+            # Import with a live subprocess: keep busy lock until worker finally.
+            # No handle (queued / tests): release immediately.
             if job.type == "import":
-                self._import_running = False
-                self._import_handles.pop(job_id, None)
+                if handle is None:
+                    self._import_running = False
             elif job.type == "longshot":
                 self._longshot_running = False
             elif job.type == "narrate":
@@ -232,6 +238,21 @@ class StudioJobStore:
             elif job.type == "g1_continue":
                 self._g1_running = False
             return job
+
+    def await_import_handle_done(self, job_id: str, timeout: float = 30.0) -> bool:
+        """Wait until the import worker pops its handle (finally completed)."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            with self._lock:
+                handle = self._import_handles.get(job_id)
+            if handle is None:
+                return True
+            try:
+                handle.join(timeout=0.2)
+            except Exception:
+                time.sleep(0.2)
+        with self._lock:
+            return job_id not in self._import_handles
 
 
 _JOB_STORE = StudioJobStore()
@@ -261,10 +282,23 @@ def _cleanup_import_if_incomplete(job: StudioJob, payload: dict[str, Any]) -> No
 
     from travelogue.web.studio_incomplete_purge import cleanup_import_terminal_artifacts
 
+    trip_id = job.trip_id or (str(payload.get("tripId") or "").strip() or None)
+    if not trip_id:
+        album = str(payload.get("albumPath") or "").strip()
+        if album:
+            from travelogue.util.trip_slug import demo_trip_id_from_album
+
+            trip_id = demo_trip_id_from_album(
+                Path(album),
+                title=str(payload.get("title") or "") or None,
+                place=str(payload.get("place") or "") or None,
+                explicit=None,
+            )
+
     cleanup_import_terminal_artifacts(
         Path(trips_raw),
         job_id=job.job_id,
-        trip_id=job.trip_id,
+        trip_id=trip_id,
         status=job.status,
     )
 
@@ -353,7 +387,8 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
             try:
                 _cleanup_import_if_incomplete(job, payload)
             except Exception:
-                pass
+                _log = __import__("logging").getLogger(__name__)
+                _log.exception("cleanup incomplete import failed for %s", job.job_id)
             store.finish_import()
             store.pop_import_handle(job.job_id)
 
