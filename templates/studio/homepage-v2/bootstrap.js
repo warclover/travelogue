@@ -32,6 +32,7 @@ import {
   createHelpOpenButton,
   maybeOpenHelpFromDeepLink,
 } from "../js/help-drawer.js";
+import { initLlmSettingsEntry } from "../js/llm-settings.js";
 
 function initHelpEntry() {
   if (document.getElementById("studio-help-open-home")) return;
@@ -201,6 +202,7 @@ function init() {
   initErrorPipeline();
   initThemeSettings();
   initSettingsPanel();
+  initLlmSettingsEntry();
   initAdvancedOptionsPanel();
   initHelpEntry();
   applyPreviewDeepLink();

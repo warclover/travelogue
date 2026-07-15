@@ -99,7 +99,10 @@
 | `E_STUDIO_CANCELLED` | 用户取消 Job | 已取消 |
 | `E_STUDIO_UPLOAD_EMPTY` | multipart 无文件 | 未收到任何照片文件 |
 | `E_STUDIO_PIPELINE` | 导入子进程或 pipeline 异常 | 导入失败，请重试 |
-| `E_LLM_AUTH` | 未配置 LLM API Key | 未配置 LLM API Key，无法生成杂志感文案 |
+| `E_LLM_AUTH` | 未配置 / Key 无效 | 要生成杂志感文案，请先在设置中配置写作引擎 |
+| `E_LLM_NETWORK` | 网络中断 | 文案生成时网络中断，请重试 |
+| `E_LLM_PROVIDER` | 未知/未选服务商 | 请选择支持的写作引擎服务商 |
+| `E_LLM_PING` | ping 响应异常 | 连接测试失败，请检查 Key 或稍后重试 |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
 ### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）

@@ -772,7 +772,8 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "更多工具" in sheet
     assert "preview-sheet__more-tools" in sheet
     assert "与 Dock ▾ 同一套偏好" in sheet
-    assert "生成不可用 · 未配置写作引擎" in sheet
+    assert "当前为本机文案 · 配置写作引擎后可升级" in sheet
+    assert 'data-action="llm-setup"' in sheet
     assert "maybeShowBookTabMigrateTip" in mode
     assert "book_tab_migrate_tip_show" in mode
     assert "onBookTabRendered" in init

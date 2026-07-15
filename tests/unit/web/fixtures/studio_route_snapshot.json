@@ -1,6 +1,11 @@
 [
   {
     "method": "DELETE",
+    "path": "/__travelogue/llm/settings",
+    "handler": "llm_settings_handlers.handle_llm_settings"
+  },
+  {
+    "method": "DELETE",
     "path": "/__travelogue/trips/{tripId}",
     "handler": "trip_handlers.handle_delete_trip"
   },
@@ -48,6 +53,11 @@
     "method": "GET",
     "path": "/__travelogue/layout-strategies/{strategyId}/decisions",
     "handler": "layout_strategy_handlers.handle_layout_strategy_decisions"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/llm/status",
+    "handler": "llm_settings_handlers.handle_llm_status"
   },
   {
     "method": "GET",
@@ -103,6 +113,11 @@
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/bento-preview",
     "handler": "trip_handlers.handle_bento_preview"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/bookends",
+    "handler": "trip_handlers.handle_get_bookends"
   },
   {
     "method": "GET",
@@ -251,6 +266,16 @@
   },
   {
     "method": "POST",
+    "path": "/__travelogue/llm/ping",
+    "handler": "llm_settings_handlers.handle_llm_ping"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/llm/settings",
+    "handler": "llm_settings_handlers.handle_llm_settings"
+  },
+  {
+    "method": "POST",
     "path": "/__travelogue/longshot",
     "handler": "export_handlers.handle_longshot"
   },
@@ -323,6 +348,31 @@
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/asset-media-class",
     "handler": "trip_handlers.handle_asset_media_class"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/bookends/repick-closing",
+    "handler": "trip_handlers.handle_post_repick_closing"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/bookends/repick-opening",
+    "handler": "trip_handlers.handle_post_repick_opening"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/bookends/resolve-closing",
+    "handler": "trip_handlers.handle_post_resolve_closing"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/bookends/resolve-opening",
+    "handler": "trip_handlers.handle_post_resolve_opening"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/bookends/restore-auto",
+    "handler": "trip_handlers.handle_post_restore_auto"
   },
   {
     "method": "POST",

@@ -444,7 +444,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
       '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>生成不可用 · 未配置写作引擎</p>' +
+      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
+      '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
+      '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
+      ' · 配置后不会自动重写，需再点「生成」' +
+      "</p>" +
       "</details>";
 
     wireAdvancedPanelActions();
