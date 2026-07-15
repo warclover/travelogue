@@ -470,6 +470,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 |------|------|
 | [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) | 架构优化还债 PRD v1.1 |
 | [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) | WS1 合并闸门修复 PRD（feedback / LSE baseline / CI） |
+| [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) | **稳定期质量硬化与体验优化 v1.1**（Ready for Kickoff · BLK 已合入） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
 | [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |
@@ -506,6 +507,9 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-15 | [PRD-STABLE-QUALITY-HARDENING-V1](./PRD-STABLE-QUALITY-HARDENING-V1.md) 升 **v1.1.0**（合入六席 BLK-01..08 · Ready for Kickoff） |
+| 2026-07-15 | 新增 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md)（稳定期 16 失败归因 + 体验硬化可落地方案） |
+| 2026-07-15 | 稳定期修复 PRD 六席评审纪要：[acceptance-records/stable-qh-prd-review-2026-07-15.md](./acceptance-records/stable-qh-prd-review-2026-07-15.md)（有条件通过） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 主路径加固 · 首启预期 · 失败可继续） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（桌面首启 L0/L1 · 写作引擎配置 · 无 Key 长图兜底） |
 | 2026-07-14 | 桌面安装版：PRD v1.1.1 + [ADR-018](./adr/018-desktop-installer-layout.md) + [IMPLEMENTATION](./IMPLEMENTATION-DESKTOP-INSTALLER-V1.md) + [ACCEPTANCE](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |
