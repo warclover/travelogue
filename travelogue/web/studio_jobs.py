@@ -250,6 +250,25 @@ def reset_job_store() -> None:
 ProgressCallback = Callable[[str, int, str], None]
 
 
+def _cleanup_import_if_incomplete(job: StudioJob, payload: dict[str, Any]) -> None:
+    """M3 · D-QH-05：cancelled/failed 且未 previewable 时清理半成品 + upload staging。"""
+    if job.type != "import" or job.status not in ("cancelled", "failed"):
+        return
+    trips_raw = payload.get("tripsDir")
+    if not trips_raw:
+        return
+    from pathlib import Path
+
+    from travelogue.web.studio_incomplete_purge import cleanup_import_terminal_artifacts
+
+    cleanup_import_terminal_artifacts(
+        Path(trips_raw),
+        job_id=job.job_id,
+        trip_id=job.trip_id,
+        status=job.status,
+    )
+
+
 def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
     from travelogue.web.studio_subprocess import ImportSubprocess
 
@@ -331,6 +350,10 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                 )
         finally:
             handle.join(timeout=5.0)
+            try:
+                _cleanup_import_if_incomplete(job, payload)
+            except Exception:
+                pass
             store.finish_import()
             store.pop_import_handle(job.job_id)
 

@@ -86,16 +86,34 @@ function buildUploadForm(files, opts) {
   var form = new FormData();
   var title = (opts.title || guessUploadTitle(files) || "我的旅途").slice(0, 20);
   form.append("title", title);
-  form.append("place", "旅途");
-  form.append("placeUserSet", "false");
+  var place = String(opts.place || "旅途").trim() || "旅途";
+  form.append("place", place);
+  var placeUserSet = opts.placeUserSet === true ||
+    (opts.placeUserSet !== false && place && place !== "旅途");
+  form.append("placeUserSet", placeUserSet ? "true" : "false");
   var mode = String(opts.mode || "quick_share");
   form.append("mode", mode);
   if (mode === "fine_craft" && opts.layoutDensity) {
     form.append("layoutDensity", String(opts.layoutDensity));
   }
-  var tpl = readTemplateParams();
-  form.append("template_mode", tpl.template_mode || "smart");
-  if (tpl.template_id) form.append("template_id", tpl.template_id);
+  var tplMode = opts.template_mode || opts.templateMode;
+  var tplId = opts.template_id || opts.templateId;
+  if (!tplMode) {
+    var tpl = readTemplateParams();
+    tplMode = tpl.template_mode;
+    tplId = tpl.template_id;
+  }
+  form.append("template_mode", tplMode || "smart");
+  if (tplId) form.append("template_id", tplId);
+  if (opts.userNotes) form.append("userNotes", String(opts.userNotes).slice(0, 200));
+  if (opts.travelNotes) form.append("travelNotes", String(opts.travelNotes).slice(0, 500));
+  var dateRange = opts.dateRange;
+  if (dateRange && typeof dateRange === "object") {
+    if (dateRange.start) form.append("dateRangeStart", String(dateRange.start));
+    if (dateRange.end) form.append("dateRangeEnd", String(dateRange.end));
+  }
+  if (opts.featuredDir) form.append("featuredDir", String(opts.featuredDir));
+  if (opts.materialDir) form.append("materialDir", String(opts.materialDir));
   if (opts.force) form.append("force", "true");
   if (opts.forceStub) form.append("forceStub", "true");
   form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
@@ -106,8 +124,9 @@ function buildUploadForm(files, opts) {
   return form;
 }
 
+/** 与 import-wizard.js 同源：读 Wizard 模板控件（勿回退到已退役 #v2-template-mode）。 */
 function readTemplateParams() {
-  var sel = $("v2-template-mode");
+  var sel = $("v2-wizard-template-mode");
   if (!sel) return { template_mode: "smart" };
   var v = String(sel.value || "smart");
   if (v.indexOf("manual:") === 0) {
@@ -225,7 +244,7 @@ function performCancelImport() {
     postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
   }
   if (typeof studioToast === "function") {
-    studioToast("已取消导入", { duration: 2000 });
+    studioToast("已清理未完成草稿", { duration: 2000 });
   }
   syncVariantGuard();
   if (typeof V2.reroute === "function") V2.reroute();
@@ -236,12 +255,12 @@ export function cancelImport() {
   if (typeof studioModal === "function") {
     studioModal({
       title: "确定取消？",
-      body: "取消后将丢失当前进度。",
+      body: "取消后将删除未完成的草稿。",
       confirmText: "确定取消",
       cancelText: "继续等待",
       danger: true,
     }).then(function (confirmed) { if (confirmed) doCancel(); });
-  } else if (window.confirm("确定取消导入？")) {
+  } else if (window.confirm("取消后将删除未完成的草稿。确定取消？")) {
     doCancel();
   }
 }
@@ -455,12 +474,21 @@ export function startV2UploadImport(files, opts) {
   var submit = function (force) {
     var form = buildUploadForm(list, {
       title: opts.title,
+      place: opts.place,
+      placeUserSet: opts.placeUserSet,
       force: !!force,
       forceStub: forceStub,
       photoCullEnabled: opts.photoCullEnabled,
       keepNearDuplicates: opts.keepNearDuplicates,
       mode: uploadMode,
       layoutDensity: opts.layoutDensity,
+      template_mode: opts.template_mode || opts.templateMode,
+      template_id: opts.template_id || opts.templateId,
+      userNotes: opts.userNotes,
+      travelNotes: opts.travelNotes,
+      dateRange: opts.dateRange,
+      featuredDir: opts.featuredDir,
+      materialDir: opts.materialDir,
     });
     return withJobBusyRetry(function () {
       return postMultipartImportV2(form, {

@@ -461,7 +461,8 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
                     "cancelled",
                 ):
                     finished.set()
-                    if upload_dir and current.status == "succeeded":
+                    # M3 · D-QH-05：任意终态都清 upload staging（成功/失败/取消）
+                    if upload_dir:
                         delete_upload_dir(upload_dir, trips_dir=trips_root)
                     break
                 time.sleep(0.5)

@@ -466,6 +466,68 @@ def test_handle_cancel_existing_job(tmp_path: Path) -> None:
     assert status == 200
     assert body["ok"] is True
     assert body["status"] == "cancelled"
+    assert "purged" in body
+
+
+def test_handle_cancel_purges_incomplete_trip(tmp_path: Path) -> None:
+    """AC-QH-05 · cancel 清理未 previewable 半成品。"""
+    import json
+
+    trips = tmp_path / "trips"
+    trip_id = "cancel-shell"
+    trip_dir = trips / trip_id
+    trip_dir.mkdir(parents=True)
+    (trip_dir / "trip.json").write_text(
+        json.dumps(
+            {
+                "meta": {"title": "半成品", "revision": 0},
+                "pipeline": {"status": "", "locks": {"structure": False, "copy": False}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    job = get_job_store().create_import_job()
+    assert job is not None
+    get_job_store().update(job, trip_id=trip_id)
+    handler = MockStudioHandler(trips, json_body={"jobId": job.job_id})
+    handle_cancel(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["status"] == "cancelled"
+    assert body.get("purged") is True
+    assert not trip_dir.exists()
+
+
+def test_handle_cancel_keeps_previewable_trip(tmp_path: Path) -> None:
+    import json
+
+    trips = tmp_path / "trips"
+    trip_id = "cancel-ready"
+    trip_dir = trips / trip_id
+    trip_dir.mkdir(parents=True)
+    (trip_dir / "trip.json").write_text(
+        json.dumps(
+            {
+                "meta": {"title": "已成册", "revision": 0},
+                "pipeline": {
+                    "status": "rendered",
+                    "locks": {"structure": False, "copy": False},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (trip_dir / "index.html").write_text("<html>ok</html>", encoding="utf-8")
+    job = get_job_store().create_import_job()
+    assert job is not None
+    get_job_store().update(job, trip_id=trip_id)
+    handler = MockStudioHandler(trips, json_body={"jobId": job.job_id})
+    handle_cancel(handler)
+    assert handler.response is not None
+    _, body = handler.response
+    assert body.get("purged") is False
+    assert trip_dir.is_dir()
 
 
 def test_handle_longshot_requires_trip_id(tmp_path: Path) -> None:
