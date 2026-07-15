@@ -8,7 +8,7 @@
 | **主题代号** | 「桌面首启 · 能力分层」— L0 开箱成稿 · L1 可选升级写作引擎 |
 | **触发来源** | 2026-07-15 打包 `.exe` 实测：缺 LLM API 配置页/接口，用户感知为「生成失败」；产品讨论采用降级原则 |
 | **前置条件** | Phase 2 Studio Hub 可用（`python -m travelogue studio` / M11 `TravelogueStudio.exe`）；主链路 stub narrate 已落地（G-P2-05）；长图导出可用（[PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) / 导出门面）；[PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) 帮助合同有效（可并行，不阻塞本主题 W0） |
-| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) G-P2-05 · US-P2-08 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) §8 · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [ERROR-CODES.md](./ERROR-CODES.md) · [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) · README 索引中的 Desktop Installer（实体 PRD **待建**；本文不替代安装包规格） |
+| **关联文档** | [PRD-PHASE2.md](./PRD-PHASE2.md) G-P2-05 · US-P2-08 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) §8 · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [ERROR-CODES.md](./ERROR-CODES.md) · [adr/004-studio-hub-server.md](./adr/004-studio-hub-server.md) · **加固增量** [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 死循环 · 首启预期）· README 索引中的 Desktop Installer |
 | **评审记录** | [acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md) |
 | **验收** | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) · 本文 §10 |
 | **实施清单** | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) |
@@ -297,7 +297,7 @@
 
 | 运行态 | `user_data_dir` 默认 |
 |--------|----------------------|
-| **frozen exe** | `%LOCALAPPDATA%/TravelogueStudio/`（Windows） |
+| **frozen exe** | `%LOCALAPPDATA%/Travelogue/`（安装模式；便携模式见 [ADR-018](./adr/018-desktop-installer-layout.md)） |
 | **源码 / 非 frozen** | 仍可用项目 `ROOT`；但 UI 写入建议同样落到 `user_data_dir`，避免污染仓库（可用 env `TRAVELOGUE_USER_DATA` 覆盖） |
 
 目录内容（V1）：
@@ -512,7 +512,7 @@ user_data_dir/
 | **AC-DLLM-12** | L1 已就绪 | 预览点「生成杂志感文案」 | 可启动；不再显示未配置禁用主态 |
 | **AC-DLLM-13** | 错误 Key | ping | 失败中文原因；不标「已就绪」 |
 | **AC-DLLM-14** | 已配置 | 清除配置 | 回 L0；杂志感入口回到可配置态；长图仍可用 |
-| **AC-DLLM-15** | frozen | 查看落盘位置 | secrets 在 `%LOCALAPPDATA%/TravelogueStudio/`（或文档声明的 user_data）；**不在** `_MEIPASS` |
+| **AC-DLLM-15** | frozen | 查看落盘位置 | secrets 在 `%LOCALAPPDATA%/Travelogue/`（或便携 `user_data` / 文档声明的覆盖）；**不在** `_MEIPASS` |
 
 ### 10.3 安全与埋点
 

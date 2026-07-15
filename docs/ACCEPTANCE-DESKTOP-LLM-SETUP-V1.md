@@ -6,6 +6,30 @@
 | **实施** | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) |
 | **更新日期** | 2026-07-15 |
 
+## L0 Hardening（W1 · 2026-07-15）
+
+对应 [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)。
+
+| ID | 步骤 | 期望 | 结果 |
+|----|------|------|------|
+| AC-L0G-01 | 干净机无 Key；导入至预览 | stub 成稿；无导入失败弹窗 | ☐ |
+| AC-L0G-02 | 同上；导出长图 | 成功 | ☐ |
+| AC-L0G-03 | 首次引导用户 config | `llm.provider` 为 stub | ☐ |
+| AC-L0G-04 | 人为 `E_LLM_AUTH` 失败 | 主 CTA「继续生成本机游记」；非唯一「重试」；**pending 仍保留** | ☐ |
+| AC-L0G-05 | 点「继续生成本机游记」 | 进 FirstSuccess/预览；可长图 | ☐ |
+| AC-L0G-05b | 失败 → 去配置 → 保存 → Modal「继续生成本机游记」 | 关设置并 forceStub 续跑成功 | ☐ |
+| AC-L0G-05c | pending 丢失但书架有 user trip | 显示「打开最近游记预览」可进预览 | ☐ |
+| AC-L0G-06 | 无 Key 点「生成杂志感」 | 局部错误；预览/长图仍在 | ☐ |
+| AC-L0G-10 | 清 seen；冷启首页 | 能力卡出现；主 CTA「开始导入」 | ☐ |
+| AC-L0G-11 | 关卡后仍未配置 | 首页轻状态可见；点升级进设置 | ☐ |
+| AC-L0G-11b | 能力卡/banner 进设置并保存 | 出现「开始导入」resume CTA | ☐ |
+| AC-L0G-12 | 首次进预览（长图 tip 已见或已过） | stub tip 或工具条「本机文案」归因可见 | ☐ |
+| AC-L0G-13 | 导入 Job 进行中 | 不弹能力卡 / 轻状态 | ☐ |
+
+```powershell
+python -m pytest tests/unit/web/test_l0_guidance_hardening.py tests/unit/web/test_l0_guidance_hardening_fe.py -q
+```
+
 ## Reliability Go（W1a）
 
 | ID | 步骤 | 期望 | 结果 |
@@ -15,7 +39,7 @@
 | AC-DLLM-04 | 打开更多工具 | 文案「当前为本机文案…」；有「配置写作引擎」 | ☐ |
 | AC-DLLM-05 | 未配置调 narrate API | `E_LLM_AUTH`；预览/长图仍可用 | ☐ |
 | AC-DLLM-11 | POST settings 后 GET status | `configured`；无完整 Key；`maskedKey` 可有 | ☐ |
-| AC-DLLM-15 | frozen/user_data | secrets 在 `%LOCALAPPDATA%/TravelogueStudio` 或 `TRAVELOGUE_USER_DATA` | ☐ |
+| AC-DLLM-15 | frozen/user_data | secrets 在 `%LOCALAPPDATA%/Travelogue`（或便携/覆盖路径） | ☐ |
 | AC-DLLM-20 | 日志/遥测抽样 | 无 API Key 明文 | ☐ |
 | AC-DLLM-21 | GET status/config | 无完整 Key | ☐ |
 

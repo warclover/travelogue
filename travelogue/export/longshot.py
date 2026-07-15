@@ -105,8 +105,7 @@ class _PlaywrightBrowserPool:
                 except ImportError as exc:
                     raise LongshotExportError(
                         "E_LNG_PLAYWRIGHT",
-                        "无法生成长图。请运行：pip install 'travelogue[playwright]' "
-                        "&& playwright install chromium",
+                        "server longshot unavailable (playwright missing)",
                     ) from exc
                 self._playwright = sync_playwright().start()
                 self._browser = self._playwright.chromium.launch(headless=True)
@@ -132,16 +131,88 @@ class _PlaywrightBrowserPool:
 
 
 _BROWSER_POOL = _PlaywrightBrowserPool()
+_PLAYWRIGHT_AVAILABLE: bool | None = None
 
 
 def warm_playwright_browser() -> bool:
     """P5-L4 · lazy-warm Chromium pool on Studio startup (best-effort)."""
+    global _PLAYWRIGHT_AVAILABLE
     try:
         _BROWSER_POOL.acquire()
         _BROWSER_POOL.release()
+        _PLAYWRIGHT_AVAILABLE = True
         return True
     except LongshotExportError:
+        _PLAYWRIGHT_AVAILABLE = False
         return False
+    except Exception:
+        _log.debug("playwright warm unexpected failure", exc_info=True)
+        _PLAYWRIGHT_AVAILABLE = False
+        return False
+
+
+def playwright_longshot_available() -> bool:
+    """True when Playwright + Chromium can be launched for server longshot."""
+    global _PLAYWRIGHT_AVAILABLE
+    if _PLAYWRIGHT_AVAILABLE is not None:
+        return _PLAYWRIGHT_AVAILABLE
+    try:
+        from playwright.sync_api import sync_playwright  # noqa: F401
+    except ImportError:
+        _PLAYWRIGHT_AVAILABLE = False
+        return False
+    return warm_playwright_browser()
+
+
+def default_longshot_output_name(
+    trip_dir: Path,
+    *,
+    fmt: str = "png",
+    segment_index: int | None = None,
+    segment_total: int | None = None,
+) -> str:
+    """Filename matching server-side longshot naming (D-INS-09)."""
+    title = _slug_title(_trip_title(trip_dir))
+    ext = "jpg" if fmt in ("jpeg", "jpg") else "png"
+    if (
+        segment_index is not None
+        and segment_total is not None
+        and segment_total > 1
+        and segment_index >= 1
+    ):
+        return f"{title}-ch{segment_index:02d}.{ext}"
+    return f"{title}.{ext}"
+
+
+def write_longshot_upload(
+    trip_dir: Path,
+    data: bytes,
+    *,
+    fmt: str = "png",
+    filename: str | None = None,
+    segment_index: int | None = None,
+    segment_total: int | None = None,
+) -> Path:
+    """Write client-captured longshot bytes into the trip directory."""
+    if not data:
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "空的长图数据")
+    name = filename or default_longshot_output_name(
+        trip_dir,
+        fmt=fmt,
+        segment_index=segment_index,
+        segment_total=segment_total,
+    )
+    # Keep basename only — never allow path traversal from client.
+    safe_name = Path(name).name
+    if not safe_name or safe_name in (".", ".."):
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法文件名")
+    out = (trip_dir / safe_name).resolve()
+    try:
+        out.relative_to(trip_dir.resolve())
+    except ValueError as exc:
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法输出路径") from exc
+    _write_output(out, data)
+    return out
 
 
 def _estimate_output_bytes(metrics: dict[str, Any], *, scale: int, fmt: str) -> int:

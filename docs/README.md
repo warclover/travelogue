@@ -112,20 +112,24 @@
 
 | 文档 | 说明 |
 |------|------|
-| [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key · W1a 已落地）**v1.1 Conditional Go** |
+| [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** |
+| [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | **无 Key 主路径加固与首启预期管理**（死循环修复 · 友好引导）**Draft · W1/W2 ✅** |
+| [IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | W1–W3 实施对照（含 Resume 断点） |
+| [acceptance-records/l0-resume-flow-fix-2026-07-15.md](./acceptance-records/l0-resume-flow-fix-2026-07-15.md) | Resume 断点修复 · T1–T7 手工矩阵 |
 | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) | 实施清单（W1a–W3 ✅ · 狗粮/实机冒烟待人工） |
 | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) | 验收 |
-| [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) | user_data 与 LLM secrets 合同 |
+| [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) | LLM secrets 落盘（复用 ADR-018 `user_data_dir`） |
 | [wireframes/desktop-llm-setup-v1-wireframe.html](./wireframes/desktop-llm-setup-v1-wireframe.html) | 线框 F1–F3/F5 |
 | [acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md) | 跨职能评审 · Conditional Go |
 | [acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md) | 打包冒烟模板（发布门） |
-| [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) | **桌面可安装版 V1**（绿色便携包 · Windows 安装包 · frozen 路径 · 长图双轨 · 三道发布门）（**实体待建**） |
-| IMPLEMENTATION-DESKTOP-INSTALLER-V1.md | 实施清单（**待建**） |
-| ACCEPTANCE-DESKTOP-INSTALLER-V1.md | 验收（**待建**） |
+| [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) | **桌面可安装版 V1**（绿色便携包 · Windows 安装包 · frozen 路径 · 长图双轨 · 三道发布门） |
+| [IMPLEMENTATION-DESKTOP-INSTALLER-V1.md](./IMPLEMENTATION-DESKTOP-INSTALLER-V1.md) | 实施清单（M-INS-0a/0b/0c → Gate A/B/C） |
+| [ACCEPTANCE-DESKTOP-INSTALLER-V1.md](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) | 验收（冒烟 · Gate A/B/C 矩阵） |
+| [adr/018-desktop-installer-layout.md](./adr/018-desktop-installer-layout.md) | ADR：onedir · 数据目录 · worker · 长图双轨 · 单实例退出 |
 
 **前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。  
-**代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层，可先于安装器落地）。  
-**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)**（无 Key 也能出长图 + 应用内配写作引擎）→ **PRD-DESKTOP-INSTALLER-V1**（安装包/路径/发布门，待建）→ IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
+**代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
+**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → 若处理无 Key 死循环/首启预期则读 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
 
 ---
 
@@ -502,7 +506,9 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-15 | 索引补 [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 主路径加固 · 首启预期 · 失败可继续） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（桌面首启 L0/L1 · 写作引擎配置 · 无 Key 长图兜底） |
+| 2026-07-14 | 桌面安装版：PRD v1.1.1 + [ADR-018](./adr/018-desktop-installer-layout.md) + [IMPLEMENTATION](./IMPLEMENTATION-DESKTOP-INSTALLER-V1.md) + [ACCEPTANCE](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |
 | 2026-07-14 | 精修反馈闭环：PRD v0.1.2 + IMPLEMENTATION + ACCEPTANCE + 线框索引 |
 | 2026-07-13 | Bookends：PRD v0.2.1 + [ADR-017](./adr/017-bookends-engine.md) + IMPLEMENTATION + ACCEPTANCE 索引 |
 | 2026-07-11 | 索引补 [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md)（Windows 可安装版 · Gate A/B/C） |

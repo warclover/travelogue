@@ -9,9 +9,9 @@ from typing import Any
 
 import yaml
 
-from travelogue.paths import ROOT
+from travelogue.paths import resource_root
 
-PLATFORM_PROFILES_PATH = ROOT / "config" / "platform_profiles.yaml"
+PLATFORM_PROFILES_PATH = resource_root() / "config" / "platform_profiles.yaml"
 
 DEFAULT_PLATFORM = "wechat_chat"
 # Branch B · content-balanced platforms (ADR-016). Studio UI only opens a subset via config.

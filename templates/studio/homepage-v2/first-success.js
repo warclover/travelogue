@@ -12,6 +12,7 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
+import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 var _countdownTimer = null;
 var _countdownLeft = 5;
@@ -315,6 +316,7 @@ export function showFirstSuccess(jobOrResult) {
 
   populateSuccessUi(result);
   show($("v2-first-success"), true);
+  syncHomeStubBanner();
 
   if (!_wired) wireFirstSuccess();
   startCountdown();

@@ -449,7 +449,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
       "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      "不会自动重写全文 · 需点上方「生成」才会升级杂志感文案" +
+      "本机文案 · 点此生成杂志感（不会自动重写）" +
       "</p>" +
       "</details>";
 

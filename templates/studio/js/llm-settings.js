@@ -10,6 +10,20 @@ var _open = false;
 var _source = "settings";
 var _onChange = null;
 
+/** 官方申请入口（简化指引：链到对方新手流程，不在应用内复述逐步教程） */
+var LLM_KEY_LINKS = {
+  deepseek: {
+    href: "https://platform.deepseek.com/api_keys",
+    label: "DeepSeek 创建 API Key",
+  },
+  dashscope: {
+    href: "https://bailian.console.aliyun.com/",
+    label: "通义百炼控制台",
+    guideHref: "https://help.aliyun.com/zh/model-studio/get-api-key",
+    guideLabel: "官方说明",
+  },
+};
+
 function $(sel, root) {
   return (root || document).querySelector(sel);
 }
@@ -29,7 +43,7 @@ function ensureRoot() {
     '<div class="studio-llm-settings__panel">' +
     '<div class="studio-llm-settings__head">' +
     '<div><p id="studio-llm-settings-title" class="studio-llm-settings__title">AI 文案（可选）</p>' +
-    '<p class="studio-llm-settings__desc">不配置也可以导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p></div>' +
+    '<p class="studio-llm-settings__desc">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p></div>' +
     '<button type="button" class="studio-llm-settings__close" data-llm-close="1" aria-label="关闭">×</button>' +
     "</div>" +
     '<p class="studio-llm-settings__badge" id="studio-llm-readiness">未配置</p>' +
@@ -44,14 +58,7 @@ function ensureRoot() {
     '<input id="studio-llm-key" class="studio-llm-settings__input" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />' +
     '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-toggle-key">显示</button>' +
     "</div>" +
-    '<p class="studio-llm-settings__howto" id="studio-llm-howto">' +
-    '如何获取 Key：' +
-    '<a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a>' +
-    ' · ' +
-    '<a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a>' +
-    '（复制 Key 即可，不用写代码） · ' +
-    '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>' +
-    "</p>" +
+    '<p class="studio-llm-settings__howto" id="studio-llm-howto"></p>' +
     '<details class="studio-llm-settings__advanced"><summary>高级</summary>' +
     '<label class="studio-llm-settings__label" for="studio-llm-base">自定义 API 地址（可选）</label>' +
     '<input id="studio-llm-base" class="studio-llm-settings__input" type="url" placeholder="留空则用默认地址" />' +
@@ -62,7 +69,11 @@ function ensureRoot() {
     '<button type="button" class="studio-llm-settings__btn" id="studio-llm-save">保存</button>' +
     '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--danger" id="studio-llm-clear">清除配置</button>' +
     "</div>" +
-    '<p class="studio-llm-settings__foot">配置后导入仍默认使用本机文案；在预览「更多工具」中点击「生成杂志感文案」才会升级。</p>' +
+    '<div class="studio-llm-settings__resume" id="studio-llm-resume" hidden>' +
+    '<p class="studio-llm-settings__resume-note" id="studio-llm-resume-note"></p>' +
+    '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-resume-cta"></button>' +
+    "</div>" +
+    '<p class="studio-llm-settings__foot" id="studio-llm-foot">配置后导入仍默认使用本机文案；在预览「更多工具」中点击「生成杂志感文案」才会升级。</p>' +
     "</div>";
   document.body.appendChild(el);
   if (!document.getElementById("studio-llm-settings-style")) {
@@ -100,6 +111,10 @@ function ensureRoot() {
       "font-size:13px;cursor:pointer;}" +
       ".studio-llm-settings__btn--primary{background:#2f6b55;border-color:#2f6b55;color:#fff;}" +
       ".studio-llm-settings__btn--danger{border-color:#c98a82;color:#8a2b22;}" +
+      ".studio-llm-settings__resume{margin-top:14px;padding-top:12px;border-top:1px solid #d5ddd8;}" +
+      ".studio-llm-settings__resume[hidden]{display:none!important;}" +
+      ".studio-llm-settings__resume-note{margin:0 0 10px;font-size:12px;color:#4a5c55;line-height:1.45;}" +
+      ".studio-llm-settings__resume .studio-llm-settings__btn{width:100%;}" +
       ".studio-llm-settings__foot{margin:12px 0 0;font-size:12px;color:#60756c;line-height:1.45;}" +
       ".studio-llm-settings__hint{margin:0 0 8px;font-size:11px;color:#60756c;word-break:break-all;}";
     document.head.appendChild(style);
@@ -156,28 +171,33 @@ function updateHowto() {
   var howto = $("#studio-llm-howto");
   var sel = $("#studio-llm-provider");
   if (!howto || !sel) return;
-  var more =
-    ' · <button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-help-h7">了解更多</button>';
-  if (sel.value === "dashscope") {
-    howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://dashscope.console.aliyun.com/" target="_blank" rel="noopener">通义百炼控制台</a> 创建 API-KEY 并复制（不用写代码）。' +
-      more;
-  } else {
-    howto.innerHTML =
-      '如何获取 Key：打开 <a href="https://platform.deepseek.com/" target="_blank" rel="noopener">DeepSeek 控制台</a> 创建 API Key 并复制（不用写代码）。' +
-      more;
+  var link =
+    sel.value === "dashscope" ? LLM_KEY_LINKS.dashscope : LLM_KEY_LINKS.deepseek;
+  var html =
+    '获取 Key：打开 <a href="' +
+    link.href +
+    '" target="_blank" rel="noopener">' +
+    link.label +
+    "</a>，按其页面指引创建并复制，粘贴到上方后点「测试连接」。";
+  if (link.guideHref) {
+    html +=
+      ' <a href="' +
+      link.guideHref +
+      '" target="_blank" rel="noopener">' +
+      (link.guideLabel || "官方说明") +
+      "</a>";
   }
-  var helpH7 = $("#studio-llm-help-h7");
-  if (helpH7 && helpH7.dataset.bound !== "1") {
-    helpH7.dataset.bound = "1";
-    helpH7.addEventListener("click", function () {
-      import("/__studio/js/help-drawer.js").then(function (mod) {
-        if (mod && typeof mod.openHelpDrawer === "function") {
-          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
-        }
-      });
-    });
-  }
+  html +=
+    ' · <button type="button" class="studio-llm-settings__linkbtn" data-llm-help-h7="1">了解更多</button>';
+  howto.innerHTML = html;
+}
+
+function openHelpH7() {
+  import("/__studio/js/help-drawer.js").then(function (mod) {
+    if (mod && typeof mod.openHelpDrawer === "function") {
+      mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
+    }
+  });
 }
 
 function payloadFromForm(requireKey) {
@@ -200,6 +220,63 @@ function notifyChange(st) {
   } catch (_) {}
   if (typeof _onChange === "function") {
     try { _onChange(st); } catch (_) {}
+  }
+}
+
+function hideResumePanel() {
+  var box = document.getElementById("studio-llm-resume");
+  if (box) box.hidden = true;
+}
+
+function resumeKindForSource(source) {
+  if (source === "import_fail") return "continue_stub";
+  if (source === "card" || source === "home_banner") return "start_import";
+  return null;
+}
+
+function showResumeAfterSave(source) {
+  var kind = resumeKindForSource(source);
+  var box = document.getElementById("studio-llm-resume");
+  var note = document.getElementById("studio-llm-resume-note");
+  var cta = document.getElementById("studio-llm-resume-cta");
+  if (!box || !note || !cta || !kind) {
+    hideResumePanel();
+    return;
+  }
+  if (kind === "continue_stub") {
+    note.textContent =
+      "API 用于预览里升级杂志感文案，不会在本步自动改写导入文案。请继续生成本机游记，稍后在预览中升级。";
+    cta.textContent = "继续生成本机游记";
+  } else {
+    note.textContent =
+      "已保存。导入仍使用本机文案；杂志感可在预览中升级。下一步：开始导入照片。";
+    cta.textContent = "开始导入";
+  }
+  box.hidden = false;
+  cta.dataset.resumeKind = kind;
+  try { cta.focus(); } catch (_) {}
+}
+
+function runResumeAfterLlmSettings() {
+  var cta = document.getElementById("studio-llm-resume-cta");
+  var kind = (cta && cta.dataset.resumeKind) || resumeKindForSource(_source);
+  trackStudioEvent("llm_settings_resume", { source: _source, kind: kind || "none" });
+  closeLlmSettings();
+  if (kind === "continue_stub") {
+    import("/__studio/homepage-v2/import-failed.js").then(function (mod) {
+      if (mod && typeof mod.continueWithStub === "function") mod.continueWithStub();
+    });
+    return;
+  }
+  if (kind === "start_import") {
+    import("/__studio/homepage-v2/import-entry.js").then(function (mod) {
+      if (mod && typeof mod.openImportSheet === "function") {
+        mod.openImportSheet();
+      } else {
+        var homeCta = document.getElementById("v2-cta");
+        if (homeCta) homeCta.click();
+      }
+    });
   }
 }
 
@@ -226,16 +303,18 @@ function wire(root) {
   var prov = $("#studio-llm-provider", root);
   if (prov) prov.addEventListener("change", updateHowto);
 
-  var helpH7 = $("#studio-llm-help-h7", root);
-  if (helpH7) {
-    helpH7.addEventListener("click", function () {
-      import("/__studio/js/help-drawer.js").then(function (mod) {
-        if (mod && typeof mod.openHelpDrawer === "function") {
-          mod.openHelpDrawer({ source: "llm_settings", itemId: "H7" });
-        }
-      });
+  var howto = $("#studio-llm-howto", root);
+  if (howto && howto.dataset.helpBound !== "1") {
+    howto.dataset.helpBound = "1";
+    howto.addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (t && t.getAttribute && t.getAttribute("data-llm-help-h7")) {
+        ev.preventDefault();
+        openHelpH7();
+      }
     });
   }
+  updateHowto();
 
   $("#studio-llm-ping", root).addEventListener("click", function () {
     var body = payloadFromForm(true);
@@ -289,6 +368,7 @@ function wire(root) {
           notifyChange(res.j);
           var key = $("#studio-llm-key");
           if (key) key.value = "";
+          showResumeAfterSave(_source);
         } else {
           setMsg((res.j && res.j.message) || "保存失败", false);
         }
@@ -340,6 +420,13 @@ function wire(root) {
     }
     if (window.confirm("清除写作引擎配置并回到本机文案？")) doClear();
   });
+
+  var resumeCta = $("#studio-llm-resume-cta", root);
+  if (resumeCta) {
+    resumeCta.addEventListener("click", function () {
+      runResumeAfterLlmSettings();
+    });
+  }
 }
 
 export function openLlmSettings(opts) {
@@ -350,6 +437,7 @@ export function openLlmSettings(opts) {
   _open = true;
   root.hidden = false;
   setMsg("", true);
+  hideResumePanel();
   trackStudioEvent("llm_settings_open", { source: _source });
   fetch("/__travelogue/llm/status", { headers: studioAuthHeaders({}) })
     .then(function (r) { return r.ok ? r.json() : null; })
@@ -382,7 +470,7 @@ export function initLlmSettingsEntry() {
     sec.setAttribute("aria-label", "AI 文案");
     sec.innerHTML =
       '<p class="v2-settings-popover__section-label">AI 文案（可选）</p>' +
-      '<p class="v2-advanced-popover__note">不配置也能出长图；配置后可生成杂志感文案</p>' +
+      '<p class="v2-advanced-popover__note">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p>' +
       '<button type="button" class="v2-settings-popover__dev-btn" id="studio-llm-settings-entry">配置写作引擎…</button>';
     var importSec = pop.querySelector('[aria-label="导入选项"]');
     if (importSec && importSec.parentNode) {

@@ -662,7 +662,7 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
-    assert "不会自动重写全文" in sheet
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
     assert "preview-sheet__llm-expect" in sheet
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     assert "llmExpect" in init_v3
@@ -782,7 +782,7 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "当前为本机文案 · 配置写作引擎后可升级" in sheet
     assert 'data-action="llm-setup"' in sheet
     assert "preview-sheet__llm-expect" in sheet
-    assert "不会自动重写全文" in sheet
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
     assert "maybeShowBookTabMigrateTip" in mode
     assert "book_tab_migrate_tip_show" in mode
     assert "onBookTabRendered" in init

@@ -6,6 +6,7 @@ import { bindAdvancedConfigControls } from "../js/advanced.js";
 import { isCapabilityCardSeen } from "../js/help-onboarding.js";
 import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
+import { requestExitStudio } from "../js/studio-exit.js";
 import { $, V2 } from "./store.js";
 
 var SETTINGS_HINT_KEY = "travelogue.studio.v2.settingsMovedHint";
@@ -270,6 +271,30 @@ export function initSettingsPanel() {
     devBtn.addEventListener("click", function () {
       closeSettings();
       openDevPanelFromSettings();
+    });
+  }
+
+  var exitSection = $("v2-settings-exit-section");
+  var exitBtn = $("v2-settings-exit-studio");
+  if (exitSection && exitBtn) {
+    fetch("/__travelogue/config")
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (cfg) {
+        var caps = (cfg && cfg.capabilities) || {};
+        if (caps.desktopExit) {
+          exitSection.hidden = false;
+        }
+      })
+      .catch(function () {});
+    exitBtn.addEventListener("click", function () {
+      closeSettings();
+      requestExitStudio({ surface: "homepage_settings" }).then(function (res) {
+        if (res && res.ok === false && !res.cancelled && res.message) {
+          window.alert(res.message);
+        }
+      });
     });
   }
 

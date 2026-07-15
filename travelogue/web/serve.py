@@ -477,6 +477,12 @@ def serve_studio_directory(
         studio_config_path=config_path,
     )
     from travelogue.desktop.folder_picker_service import start_folder_picker_service
+    from travelogue.desktop.single_instance import record_running_instance
+    from travelogue.web.studio_lifecycle import (
+        bind_studio_server,
+        clear_studio_server,
+        register_studio_server,
+    )
 
     start_folder_picker_service()
 
@@ -486,13 +492,31 @@ def serve_studio_directory(
 
             if warm_playwright_browser():
                 print("  playwright: warmed (longshot ready)")
+            else:
+                print("  playwright: unavailable (client longshot fallback)")
         except Exception:
             _log.debug("playwright warm skipped (optional)", exc_info=True)
 
     threading.Thread(target=_warm_playwright, daemon=True, name="playwright-warm").start()
 
-    server = ThreadingHTTPServer((host, port), handler)
-    url = f"http://{host}:{port}/"
+    try:
+        server, bound_port = bind_studio_server(host, port, handler)
+    except OSError as exc:
+        raise SystemExit(f"无法绑定 Studio 端口 {port}+：{exc}") from exc
+
+    # Handler was created with the preferred port; update if we moved.
+    if bound_port != port and getattr(handler, "keywords", None) is not None:
+        handler.keywords["studio_port"] = bound_port
+        print(f"  port {port} busy → using {bound_port}")
+
+    try:
+        record_running_instance(host=host, port=bound_port)
+    except OSError:
+        _log.debug("failed to write studio instance state", exc_info=True)
+
+    shutdown_event = threading.Event()
+    register_studio_server(server, shutdown_event)
+    url = f"http://{host}:{bound_port}/"
     print(f"Studio mode · trips: {trips_dir}")
     print(f"  workbench: {url}")
     print(f"  import API: POST {url.rstrip('/')}/__travelogue/import")
@@ -500,12 +524,13 @@ def serve_studio_directory(
         masked = f"****{studio_token[-4:]}" if len(studio_token) > 4 else "****"
         print(f"  studio token (X-Studio-Token header / cookie): {masked}")
         print("  LAN mode: sensitive GET + all mutations require the token")
-    print("  Ctrl+C to stop")
+    print("  Ctrl+C or POST /__travelogue/shutdown to stop")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
+        clear_studio_server(server)
         server.server_close()
 
 

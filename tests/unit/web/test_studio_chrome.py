@@ -20,7 +20,7 @@ from travelogue.web.studio_pipeline import run_studio_pipeline
 def test_should_inject_allowlist() -> None:
     assert should_inject_studio_chrome("index.html")
     assert should_inject_studio_chrome("index-mobile.html")
-    assert should_inject_studio_chrome("index-longshot.html")
+    assert not should_inject_studio_chrome("index-longshot.html")
     assert not should_inject_studio_chrome("longshot.css")
 
 
@@ -107,8 +107,9 @@ def test_studio_chrome_on_index_and_longshot(tmp_path: Path) -> None:
         assert 'type="module" src="/__studio/preview-toolbar.js"' in index_html
         assert "studio-api.js" not in index_html
         assert 'data-preview-toolbar="on"' in index_html
-        assert "preview-toolbar.js" in longshot_html
-        assert 'data-preview-toolbar="on"' in longshot_html
+        # Capture surface must remain chrome-free for client/html2canvas track (M-INS-0c).
+        assert "preview-toolbar.js" not in longshot_html
+        assert 'data-preview-toolbar="on"' not in longshot_html
         assert 'data-block="surface-nav"' in longshot_html
         assert "← 返回卷轴" in longshot_html
 

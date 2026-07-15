@@ -42,7 +42,7 @@
 
 | # | 检查 | 结果 |
 |---|------|------|
-| K1 | `%LOCALAPPDATA%/TravelogueStudio/secrets.json`（或覆盖路径）存在且非空 Key 时，日志/遥测抽样无明文 Key | ☐ |
+| K1 | `%LOCALAPPDATA%/Travelogue/secrets.json`（或便携 `user_data` / `TRAVELOGUE_USER_DATA` 覆盖路径）存在且非空 Key 时，日志/遥测抽样无明文 Key | ☐ |
 | K2 | `GET /__travelogue/llm/status` 无完整 Key，仅 `maskedKey` | ☐ |
 
 ---

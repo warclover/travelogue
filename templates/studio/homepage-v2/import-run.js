@@ -30,6 +30,7 @@ import {
 import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncAdvancedOptionsLock } from "./advanced-options.js";
+import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 let _gen = 0;
 let _activeJobId = null;
@@ -96,6 +97,7 @@ function buildUploadForm(files, opts) {
   form.append("template_mode", tpl.template_mode || "smart");
   if (tpl.template_id) form.append("template_id", tpl.template_id);
   if (opts.force) form.append("force", "true");
+  if (opts.forceStub) form.append("forceStub", "true");
   form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
   form.append("keepNearDuplicates", opts.keepNearDuplicates === true ? "true" : "false");
   for (var i = 0; i < files.length; i++) {
@@ -207,6 +209,7 @@ export function renderImportingPanel(source) {
   setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
+  syncHomeStubBanner();
   cancelBtn.addEventListener("click", cancelImport);
 }
 
@@ -281,9 +284,13 @@ function pollImport(jobId, gen, source) {
     _activeJobId = null;
     try {
       sessionStorage.removeItem(SS.activeJobId);
-      sessionStorage.removeItem(SS.activePending);
     } catch (e) { /* ignore */ }
+    // L0 resume: only clear pending on success/cancel — keep on failure for
+    // 「继续生成本机游记」/ retry (AC-L0G-05).
     if (job.status === "succeeded") {
+      try {
+        sessionStorage.removeItem(SS.activePending);
+      } catch (e) { /* ignore */ }
       setStage("完成", 100);
       var result = job.result || {};
       trackStudioEvent("import_success", {
@@ -313,11 +320,18 @@ function pollImport(jobId, gen, source) {
       });
     }
     if (job.status === "cancelled") {
+      try {
+        sessionStorage.removeItem(SS.activePending);
+      } catch (e) { /* ignore */ }
       if (typeof V2.reroute === "function") V2.reroute();
       return null;
     }
     var err = job.error || {};
-    throw { code: err.code, message: humanizeError(err.code, err.message) };
+    throw {
+      code: err.code,
+      message: humanizeError(err.code, err.message),
+      recoverableWithStub: err.recoverableWithStub === true,
+    };
   });
 }
 
@@ -410,11 +424,19 @@ export function startV2UploadImport(files, opts) {
   var gen = ++_gen;
   var source = opts.source || "浏览器上传";
   var uploadMode = String(opts.mode || "quick_share");
+  var forceStub = !!opts.forceStub;
+  try {
+    if (sessionStorage.getItem(SS.forceStubNextUpload) === "1") {
+      forceStub = true;
+      sessionStorage.removeItem(SS.forceStubNextUpload);
+    }
+  } catch (e) { /* ignore */ }
   trackStudioEvent("import_start", {
     via: "upload",
     surface: "v2_sheet",
     mode: uploadMode,
     photoCullEnabled: opts.photoCullEnabled !== false,
+    forceStub: forceStub || undefined,
   });
   try {
     sessionStorage.setItem(SS.activePending, JSON.stringify({
@@ -423,6 +445,7 @@ export function startV2UploadImport(files, opts) {
       title: (opts.title || guessUploadTitle(list) || "我的旅途").slice(0, 20),
       mode: uploadMode,
       photoCullEnabled: opts.photoCullEnabled !== false,
+      forceStub: forceStub,
     }));
   } catch (e) { /* ignore */ }
 
@@ -433,6 +456,7 @@ export function startV2UploadImport(files, opts) {
     var form = buildUploadForm(list, {
       title: opts.title,
       force: !!force,
+      forceStub: forceStub,
       photoCullEnabled: opts.photoCullEnabled,
       keepNearDuplicates: opts.keepNearDuplicates,
       mode: uploadMode,

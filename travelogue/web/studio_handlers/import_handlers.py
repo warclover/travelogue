@@ -166,6 +166,7 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
             "place": upload_place_raw or "旅途",
             "placeUserSet": upload_place_user_set,
             "force": fields.get("force", "").lower() in ("1", "true", "yes"),
+            "forceStub": fields.get("forceStub", "").lower() in ("1", "true", "yes"),
             "_job": job,
         }
         import_mode = str(fields.get("mode") or fields.get("importMode") or "quick_share").strip().lower()
@@ -340,6 +341,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     trip_id = payload.get("tripId")
     trip_id_str = str(trip_id).strip() if trip_id else None
     force = bool(payload.get("force"))
+    force_stub = bool(payload.get("forceStub") or payload.get("force_stub"))
     template_mode = str(payload.get("template_mode") or payload.get("templateMode") or "smart").strip().lower()
     if template_mode not in ("smart", "manual"):
         template_mode = "smart"
@@ -406,6 +408,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "place": place,
         "placeUserSet": place_user_set,
         "force": force,
+        "forceStub": force_stub,
         "dedupe": not (use_demo_album or is_demo_album_path(str(album_path))),
         "host": host,
         "port": port,

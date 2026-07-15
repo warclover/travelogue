@@ -208,7 +208,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
 
 ## 相关决策（非本 ADR 修订）
 
-Desktop 写作引擎密钥与用户级配置落在 **`user_data_dir`**（与 `trips_dir` 分裂），见 **[ADR-019](./019-desktop-user-data-llm-secrets.md)**。Studio 仍保持本 ADR 的单进程 `--studio`；不新增配置服务端口。
+Desktop 写作引擎密钥与用户级配置落在 **ADR-018 `user_data_dir`** 下的 `secrets.json` / `config.user.yaml`，见 **[ADR-019](./019-desktop-user-data-llm-secrets.md)**。Studio 仍保持本 ADR 的单进程 `--studio`；不新增配置服务端口。
 
 ---
 
@@ -221,4 +221,4 @@ Desktop 写作引擎密钥与用户级配置落在 **`user_data_dir`**（与 `tr
 | v0.2.1 | 2026-05-27 | cancelled、upload 清理、GIL D7、cancel 路由 |
 | v0.3 | 2026-05-27 | D8 Studio Chrome；stageHint；M9 长图 UI 注入 |
 | v0.3.1 | 2026-05-27 | Chrome allowlist；D9 StudioMixin；reveal API |
-| 注记 | 2026-07-15 | 交叉引用 ADR-019（user_data / LLM secrets） |
+| 注记 | 2026-07-15 | 交叉引用 ADR-019（LLM secrets；路径根见 ADR-018） |

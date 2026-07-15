@@ -229,9 +229,34 @@ export function startLlmNarrate(root, tripId, btn, opts) {
         .then(function (res) {
           if (!res) return;
           if (res.status === 409 || res.status === 400) {
-            setSlowHint(root, (res.body && res.body.message) || "无法开始", true);
+            var failCode = res.body && res.body.error;
+            var failMsg = (res.body && res.body.message) || "无法开始";
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
+            setSlowHint(root, "", false);
+            if (
+              failCode === "E_LLM_AUTH" ||
+              failCode === "E_LLM_NETWORK" ||
+              failCode === "E_LLM_PING"
+            ) {
+              toolbarConfirm({
+                title: "连接写作引擎失败",
+                body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
+                confirmText: "去检查配置",
+                cancelText: "知道了",
+              }).then(function (ok) {
+                if (!ok) return;
+                import("/__studio/js/llm-settings.js")
+                  .then(function (mod) {
+                    if (mod && typeof mod.openLlmSettings === "function") {
+                      mod.openLlmSettings({ source: "preview_narrate_fail" });
+                    }
+                  })
+                  .catch(function () {});
+              });
+              return;
+            }
+            setSlowHint(root, failMsg, true);
             return;
           }
           if (res.status !== 202 || !res.body.jobId) {
@@ -253,7 +278,31 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                 window.location.reload();
                 return;
               }
-              var err = (job.error && (job.error.message || job.error.code)) || "文案生成失败";
+              var errCode = job.error && job.error.code;
+              var err =
+                (job.error && (job.error.message || job.error.code)) || "文案生成失败";
+              if (
+                errCode === "E_LLM_AUTH" ||
+                errCode === "E_LLM_NETWORK" ||
+                errCode === "E_LLM_PING"
+              ) {
+                toolbarConfirm({
+                  title: "连接写作引擎失败",
+                  body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
+                  confirmText: "去检查配置",
+                  cancelText: "知道了",
+                }).then(function (ok) {
+                  if (!ok) return;
+                  import("/__studio/js/llm-settings.js")
+                    .then(function (mod) {
+                      if (mod && typeof mod.openLlmSettings === "function") {
+                        mod.openLlmSettings({ source: "preview_narrate_fail" });
+                      }
+                    })
+                    .catch(function () {});
+                });
+                return;
+              }
               toolbarAlert(err, { error: true });
             },
             function () {

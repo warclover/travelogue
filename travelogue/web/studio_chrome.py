@@ -5,9 +5,9 @@ from __future__ import annotations
 import html
 from pathlib import Path
 
-CHROME_ALLOWLIST = frozenset(
-    {"index.html", "index-mobile.html", "index-longshot.html"}
-)
+CHROME_ALLOWLIST = frozenset({"index.html", "index-mobile.html"})
+# index-longshot.html intentionally excluded: capture surface must stay chrome-free (ADR-018 D6).
+
 
 SHARE_QUERY_MARKERS = ("share=1", "mode=share")
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -26,6 +27,8 @@ from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 from travelogue.web.studio_config import resolve_studio_config
 from travelogue.web.studio_jobs import ProgressCallback
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -171,6 +174,7 @@ def _studio_post_curate(
     persist_trip_state: Callable[[], None],
     flush_pipeline_timings: Callable[[dict[str, float] | None], None],
     hooks: StudioHooks,
+    force_stub: bool = False,
 ) -> StudioPipelineResult:
     g1_pending = bool(cfg.studio.g1_confirm_structure)
     if g1_pending:
@@ -212,7 +216,9 @@ def _studio_post_curate(
 
     from travelogue.web.studio_narrate import resolve_studio_narrate_provider
 
-    narrate_provider = resolve_studio_narrate_provider(cfg=cfg)
+    narrate_provider = resolve_studio_narrate_provider(
+        cfg=cfg, force_stub=bool(force_stub)
+    )
     try:
         # Single run_trip slice (align with continue_after_g1_confirm): lock → narrate → render.
         run_trip(
@@ -236,7 +242,35 @@ def _studio_post_curate(
         persist_trip_state()
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")
-        raise DemoError(code, str(exc)) from exc
+        # BE-03: never leave users in an auth dead-end; degrade once to stub.
+        if code == "E_LLM_AUTH" and narrate_provider != "stub":
+            _log.warning(
+                "studio import narrate hit E_LLM_AUTH with provider=%s; degrading to stub",
+                narrate_provider,
+            )
+            try:
+                run_trip(
+                    trip_json,
+                    from_stage="narrate",
+                    until="rendered",
+                    skip_locked=True,
+                    narrate_provider="stub",
+                    validate=False,
+                    cfg=cfg,
+                    studio_hooks=hooks,
+                )
+                from travelogue.render.preview import render_preview_jpg
+
+                render_preview_jpg(trip_json, trip_root=trip_root)
+                _sync_trip_from_disk(trip, svc, trip_json)
+                flush_pipeline_timings()
+                mark_render_bundle_current(trip)
+                persist_trip_state()
+            except Exception as stub_exc:
+                stub_code = getattr(stub_exc, "code", "E_STUDIO_PIPELINE")
+                raise DemoError(stub_code, str(stub_exc)) from stub_exc
+        else:
+            raise DemoError(code, str(exc)) from exc
 
     return _finalize_pipeline_result(
         svc=app_ctx.trip_service(),
@@ -683,6 +717,7 @@ def run_studio_pipeline(
     photo_cull_enabled: bool = True,
     keep_near_duplicates: bool = False,
     stop_after: str = "full",
+    force_stub: bool = False,
 ) -> StudioPipelineResult:
     album_dir = album_dir.resolve()
     cfg_path = resolve_studio_config(config)
@@ -894,6 +929,7 @@ def run_studio_pipeline(
             "report": report,
             "persist_trip_state": _persist_trip_state,
             "flush_pipeline_timings": _flush_pipeline_timings,
+            "force_stub": bool(force_stub),
         }
 
         ingest_stats_holder: dict = {}

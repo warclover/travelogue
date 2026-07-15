@@ -172,11 +172,28 @@ def cmd_studio(
     import webbrowser
 
     from travelogue.demo.build import DemoError
+    from travelogue.desktop.single_instance import (
+        open_existing_instance_or_stale,
+        record_running_instance,
+        release_single_instance,
+        try_acquire_single_instance,
+    )
     from travelogue.web.serve import serve_studio_directory
     from travelogue.web.studio_config import resolve_studio_config
     from travelogue.web.studio_pipeline import run_studio_pipeline
 
-    _load_cfg(config)
+    instance = try_acquire_single_instance()
+    if not instance.owned:
+        existing = open_existing_instance_or_stale()
+        target = (existing.url if existing else f"http://{host}:{port}/")
+        if not no_open:
+            webbrowser.open(target)
+        typer.echo(f"Studio 已在运行 · 打开 {target}")
+        raise typer.Exit(0)
+
+    resolved_config = config or resolve_studio_config()
+    if resolved_config is not None:
+        get_config(reload=True, path=resolved_config)
     cfg = get_config()
     root = (trips_dir or cfg.trips_dir).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -191,6 +208,7 @@ def cmd_studio(
 
         album_path = open_folder_dialog(title="选择照片文件夹")
         if album_path is None:
+            release_single_instance(instance)
             typer.echo("未选择文件夹", err=True)
             raise typer.Exit(1)
 
@@ -207,6 +225,7 @@ def cmd_studio(
                 app_config=cfg,
             )
         except DemoError as exc:
+            release_single_instance(instance)
             typer.echo(f"{exc.code}: {exc}", err=True)
             raise typer.Exit(1) from exc
         preview_url = result.preview_url
@@ -218,16 +237,22 @@ def cmd_studio(
         webbrowser.open(preview_url or f"http://{host}:{port}/")
 
     try:
+        # Record preferred port; serve may bump if busy — rewrite after bind via state file
+        # updated inside serve is harder; record before and refresh after return is OK for
+        # second-launch open (uses last written). We write again once serve starts via hook.
+        record_running_instance(host=host, port=port)
         serve_studio_directory(
             root,
             port=port,
             host=host,
             app_config=cfg,
             allow_lan=allow_lan,
-            config_path=config or resolve_studio_config(),
+            config_path=resolved_config,
         )
     except KeyboardInterrupt:
         raise typer.Exit(0) from None
+    finally:
+        release_single_instance(instance)
 
 
 @app.command("serve")

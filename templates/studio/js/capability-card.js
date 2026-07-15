@@ -33,7 +33,7 @@ function ensureRoot() {
     '<div class="studio-capability-card__panel">' +
     '<button type="button" class="studio-capability-card__close" data-cap-dismiss="1" aria-label="关闭">×</button>' +
     '<p id="studio-capability-card-title" class="studio-capability-card__title">本机即可生成杂志卷轴与长图</p>' +
-    '<p class="studio-capability-card__body">照片留在你的电脑。不必先配置任何接口。需要更强杂志感文案时，可稍后升级 AI 文案。</p>' +
+    '<p class="studio-capability-card__body">照片留在你的电脑。不必先配置任何接口，也能导入、预览和导出长图。若需要更强的杂志感文案，可稍后配置自己的 API Key（可选）。</p>' +
     '<div class="studio-capability-card__actions">' +
     '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始导入</button>' +
     "</div>" +
@@ -102,7 +102,10 @@ function ensureRoot() {
 function dismissCapabilityCard(cta) {
   markCapabilityCardSeen();
   markCapabilityCardSuppressHelpL1();
-  trackStudioEvent("capability_card_cta", { cta: cta || "dismiss" });
+  trackStudioEvent("capability_card_cta", {
+    action: cta || "dismiss",
+    cta: cta || "dismiss",
+  });
   closeCapabilityCard();
   try {
     window.dispatchEvent(new CustomEvent("travelogue:capability-card-done", { detail: { cta: cta } }));

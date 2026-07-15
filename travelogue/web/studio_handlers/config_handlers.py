@@ -14,9 +14,17 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 def studio_capabilities(*, client_host: str = "") -> dict[str, bool]:
     """Expose client-side feature gates (not UA sniffing on the browser)."""
+    from travelogue.export.longshot import playwright_longshot_available
+    from travelogue.paths import is_frozen
+
     host = (client_host or "").strip()
     pick_folder = sys.platform == "win32" and (not host or is_loopback_host(host))
-    return {"pickFolder": pick_folder}
+    return {
+        "pickFolder": pick_folder,
+        "longshotServer": playwright_longshot_available(),
+        "longshotClientFallback": True,
+        "desktopExit": bool(is_frozen()),
+    }
 
 def handle_config(handler: StudioHandlerProtocol) -> None:
     from travelogue.web.studio_narrate import studio_llm_status

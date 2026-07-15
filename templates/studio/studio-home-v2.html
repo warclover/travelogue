@@ -277,6 +277,11 @@
         <p class="v2-settings-popover__section-label">开发者</p>
         <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-dev-toggle">打开 Dev 面板</button>
       </section>
+      <section class="v2-settings-popover__section" id="v2-settings-exit-section" hidden>
+        <p class="v2-settings-popover__section-label">桌面版</p>
+        <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-exit-studio">退出 Studio</button>
+        <p class="v2-advanced-popover__hint">停止本机服务并释放端口；浏览器标签可稍后关闭</p>
+      </section>
     </div>
   </div>
   </div><!-- /v2-bento-hero -->
@@ -299,7 +304,7 @@
       <p class="v2-first-success__msg" id="v2-success-msg">你的第一篇游记已生成</p>
       <p class="v2-first-success__details" id="v2-success-details" hidden></p>
       <p class="v2-first-success__next-hint" id="v2-success-next-hint" role="status">
-        先翻一翻验货；满意就点预览页下方的『长图』
+        当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』；需要杂志感可在「更多工具」升级。
       </p>
       <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
       <div class="v2-first-success__actions">
@@ -316,11 +321,14 @@
        aria-labelledby="v2-failure-msg">
     <div class="v2-failure__scrim" aria-hidden="true"></div>
     <div class="v2-failure__panel">
-      <p class="v2-failure__eyebrow">导入失败</p>
+      <p class="v2-failure__eyebrow" id="v2-failure-eyebrow">导入失败</p>
       <p class="v2-failure__echo" id="v2-failure-echo" hidden></p>
       <p class="v2-failure__msg" id="v2-failure-msg"></p>
       <p class="v2-failure__hint" id="v2-failure-hint"></p>
       <div class="v2-failure__actions">
+        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>继续生成本机游记</button>
+        <button type="button" class="v2-failure__secondary" id="v2-failure-open-settings" hidden>去配置写作引擎</button>
+        <button type="button" class="v2-failure__secondary" id="v2-failure-open-recent" hidden>打开最近游记预览</button>
         <button type="button" class="v2-failure__cta" id="v2-failure-retry">重试</button>
         <button type="button" class="v2-failure__stay" id="v2-failure-stay">留在首页</button>
       </div>
