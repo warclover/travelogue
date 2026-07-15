@@ -63,6 +63,10 @@
 | I-32 | 打包冒烟记录模板 | `docs/acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md` | ✅ 模板；实机 ☐ |
 | I-33 | SF-DLLM-02：status/UI 双显 `userDataDir` + `tripsDir` | `llm_settings_handlers.py` · `llm-settings.js` | ✅ |
 | I-34 | secrets ACL best-effort（已有） | `user_settings._try_restrict_acl` | ✅ 维持 |
+| I-35 | Help PRD §12.4 交叉引用 H7 / T-CAP / D-13 | `PRD-HELP-ONBOARDING-V1.md` v1.1.2 | ✅ |
+| I-36 | ERROR-CODES 补 `E_LLM_STUB` | `docs/ERROR-CODES.md` | ✅ |
+| I-37 | D-DLLM-13：能力卡可见并入 `isHelpL1Blocked` | `help-onboarding.js` | ✅ |
+| I-38 | `llm_narrate_click` 埋点 + 清除确认 studioModal | `core.js` · `llm-settings.js` · analytics | ✅ |
 
 > **命名说明**：PRD 初稿写 H6「写作引擎」，现网 H6 已用于封面封底 → 落地为 **H7**。
 > **人工残留**：I-23 狗粮 AC-DLLM-30（N≥3）；冒烟模板实机勾选。

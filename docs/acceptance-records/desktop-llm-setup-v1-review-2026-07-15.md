@@ -272,3 +272,4 @@
 | 2026-07-15 | MF 回写 PRD v1.1 · W1a 落地 · 线框/IMPLEMENTATION/ACCEPTANCE 就位 |
 | 2026-07-15 | W2 + W2.1：能力卡/H7；MF-06 预期常显；外层「设置」；能力卡→设置 tip 接线 |
 | 2026-07-15 | W3：ADR-018 · 冒烟模板 · SF 路径双显 |
+| 2026-07-15 | 软缺口收口：Help §12.4 · E_LLM_STUB · D-13 可见并入 · narrate 埋点 · 清除 Modal |

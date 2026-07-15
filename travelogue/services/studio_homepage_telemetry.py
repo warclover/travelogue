@@ -68,6 +68,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "llm_settings_save",
         "llm_settings_clear",
         "llm_ping",
+        "llm_narrate_click",
         "capability_card_show",
         "capability_card_cta",
         "bench_resume_click",

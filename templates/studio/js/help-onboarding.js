@@ -454,6 +454,9 @@ export function getHelpItem(itemId) {
 
 /**
  * 忙碌态零 L1（D-HELP-08′）：导入 Job / layoutUpdating / 长图导出中 / 导出拦截 Modal。
+ * D-DLLM-13：能力卡**同帧可见**时亦阻塞（仅 DOM 可见态；不含 session suppress，
+ * 以免挡预览关键 tip）。首页非关键自动 coach 关闭后压制请用
+ * shouldDeferHomeHelpL1ForCapabilityCard。
  */
 export function isHelpL1Blocked(root) {
   if (_ssGet(SS.activeJobId)) return true;
@@ -463,6 +466,9 @@ export function isHelpL1Blocked(root) {
       return true;
     }
     if (document.querySelector(".studio__modal-backdrop")) return true;
+    // D-DLLM-13：能力卡同帧优先
+    var cap = document.getElementById("studio-capability-card-root");
+    if (cap && !cap.hidden) return true;
   }
   if (root) {
     if (root._exportDockActive) return true;
@@ -513,10 +519,19 @@ export function isCapabilityCardSuppressingHelpL1() {
 
 /**
  * 首页非关键自动 Help L1：能力卡优先或本会话已压制（D-DLLM-13）。
- * 预览长图 tip 等关键路径勿调用此门禁。
+ * 预览长图 tip 等关键路径勿调用此门禁（继续只用 isHelpL1Blocked 的忙碌态部分）。
  */
 export function shouldDeferHomeHelpL1ForCapabilityCard() {
-  return isCapabilityCardSuppressingHelpL1();
+  if (isCapabilityCardSuppressingHelpL1()) return true;
+  try {
+    if (typeof document !== "undefined") {
+      var cap = document.getElementById("studio-capability-card-root");
+      if (cap && !cap.hidden) return true;
+    }
+  } catch (_e) {
+    /* ignore */
+  }
+  return false;
 }
 
 export function prefersReducedMotion() {

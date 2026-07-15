@@ -24,6 +24,7 @@ def test_capability_card_contract() -> None:
     assert "maybeShowCapabilityCard" in boot
     assert "markCapabilityCardSuppressHelpL1" in cap
     assert "shouldDeferHomeHelpL1ForCapabilityCard" in help_js
+    assert "studio-capability-card-root" in help_js
     assert "travelogue:capability-card-done" in cap
     assert "travelogue:capability-card-done" in settings
     assert "isCapabilityCardSeen" in settings
@@ -56,3 +57,11 @@ def test_llm_settings_shows_trips_dir() -> None:
     llm = LLM_JS.read_text(encoding="utf-8")
     assert "tripsDir" in llm
     assert "相册位置" in llm
+    assert "studioModal" in llm
+
+
+def test_llm_narrate_click_analytics() -> None:
+    core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
+    assert 'trackStudioEvent("llm_narrate_click"' in core
+    assert "llm_narrate_click" in analytics

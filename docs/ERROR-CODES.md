@@ -103,6 +103,7 @@
 | `E_LLM_NETWORK` | 网络中断 | 文案生成时网络中断，请重试 |
 | `E_LLM_PROVIDER` | 未知/未选服务商 | 请选择支持的写作引擎服务商 |
 | `E_LLM_PING` | ping 响应异常 | 连接测试失败，请检查 Key 或稍后重试 |
+| `E_LLM_STUB` | 内部：`provider=stub` 仍调 LLM | 不直接给终端用户；UI 应走「未配置 / 本机文案」（见 Desktop LLM Setup） |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
 ### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）
@@ -155,3 +156,4 @@
 | v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |
 | v0.4.0 | 2026-05-28 | Phase 3 Curate 聚类：`E_CLUSTER_*`；废止 v0.2 洞察/引擎错误码 |
 | v0.5.0 | 2026-07-09 | Longshot 2.0：`E_LNG2_*` 平台导出错误码 |
+| v0.5.1 | 2026-07-15 | Desktop LLM Setup：补 `E_LLM_STUB`；对齐 `E_LLM_*` 用户文案 |

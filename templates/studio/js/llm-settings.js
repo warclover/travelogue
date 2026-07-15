@@ -299,30 +299,46 @@ function wire(root) {
   });
 
   $("#studio-llm-clear", root).addEventListener("click", function () {
-    if (!window.confirm("清除写作引擎配置并回到本机文案？")) return;
-    fetch("/__travelogue/llm/settings", {
-      method: "DELETE",
-      headers: studioAuthHeaders({}),
-    })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-      .then(function (res) {
-        trackStudioEvent("llm_settings_clear", { source: _source });
-        if (res.ok) {
-          setMsg("已清除，当前为本机文案", true);
-          var key = $("#studio-llm-key");
-          if (key) {
-            key.value = "";
-            key.placeholder = "粘贴你的 API Key";
-          }
-          applyStatus(res.j);
-          notifyChange(res.j);
-        } else {
-          setMsg((res.j && res.j.message) || "清除失败", false);
-        }
+    function doClear() {
+      fetch("/__travelogue/llm/settings", {
+        method: "DELETE",
+        headers: studioAuthHeaders({}),
       })
-      .catch(function () {
-        setMsg("清除失败，请重试", false);
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          trackStudioEvent("llm_settings_clear", { source: _source });
+          if (res.ok) {
+            setMsg("已清除，当前为本机文案", true);
+            var key = $("#studio-llm-key");
+            if (key) {
+              key.value = "";
+              key.placeholder = "粘贴你的 API Key";
+            }
+            applyStatus(res.j);
+            notifyChange(res.j);
+          } else {
+            setMsg((res.j && res.j.message) || "清除失败", false);
+          }
+        })
+        .catch(function () {
+          setMsg("清除失败，请重试", false);
+        });
+    }
+    var confirmOpts = {
+      title: "清除写作引擎配置？",
+      body: "清除后回到本机文案。已有游记不会删除。",
+      confirmText: "清除",
+      cancelText: "取消",
+      danger: true,
+      focusCancel: true,
+    };
+    if (typeof studioModal === "function") {
+      studioModal(confirmOpts).then(function (ok) {
+        if (ok) doClear();
       });
+      return;
+    }
+    if (window.confirm("清除写作引擎配置并回到本机文案？")) doClear();
   });
 }
 
