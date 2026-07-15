@@ -58,7 +58,7 @@
 
 | ID | 任务 | 路径 | 状态 |
 |----|------|------|------|
-| I-30 | ADR-018 `user_data_dir` + LLM secrets | `docs/adr/018-desktop-user-data-llm-secrets.md` | ✅ |
+| I-30 | ADR-019 `user_data_dir` + LLM secrets | `docs/adr/019-desktop-user-data-llm-secrets.md` | ✅ |
 | I-31 | ADR-004 交叉引用 | `docs/adr/004-studio-hub-server.md` | ✅ |
 | I-32 | 打包冒烟记录模板 | `docs/acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md` | ✅ 模板；实机 ☐ |
 | I-33 | SF-DLLM-02：status/UI 双显 `userDataDir` + `tripsDir` | `llm_settings_handlers.py` · `llm-settings.js` | ✅ |

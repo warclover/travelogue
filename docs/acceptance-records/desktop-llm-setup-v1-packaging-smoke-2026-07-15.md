@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **对应** | [PRD-DESKTOP-LLM-SETUP-V1.md](../PRD-DESKTOP-LLM-SETUP-V1.md) §10.4 · [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](../ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) |
-| **ADR** | [018-desktop-user-data-llm-secrets.md](../adr/018-desktop-user-data-llm-secrets.md) |
+| **ADR** | [019-desktop-user-data-llm-secrets.md](../adr/019-desktop-user-data-llm-secrets.md) |
 | **模板日期** | 2026-07-15 |
 | **状态** | ⏳ 待填（人工 / 发布门） |
 

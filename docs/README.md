@@ -115,7 +115,7 @@
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key · W1a 已落地）**v1.1 Conditional Go** |
 | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) | 实施清单（W1a–W3 ✅ · 狗粮/实机冒烟待人工） |
 | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) | 验收 |
-| [adr/018-desktop-user-data-llm-secrets.md](./adr/018-desktop-user-data-llm-secrets.md) | user_data 与 LLM secrets 合同 |
+| [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) | user_data 与 LLM secrets 合同 |
 | [wireframes/desktop-llm-setup-v1-wireframe.html](./wireframes/desktop-llm-setup-v1-wireframe.html) | 线框 F1–F3/F5 |
 | [acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-review-2026-07-15.md) | 跨职能评审 · Conditional Go |
 | [acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md) | 打包冒烟模板（发布门） |

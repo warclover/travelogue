@@ -1,4 +1,4 @@
-# ADR-018 · Desktop user_data_dir 与 LLM secrets
+# ADR-019 · Desktop user_data_dir 与 LLM secrets
 
 | 属性 | 内容 |
 |------|------|
@@ -8,6 +8,7 @@
 | **影响范围** | `travelogue/paths.py` · `travelogue/llm/user_settings.py` · `/__travelogue/llm/*` · 桌面 launcher |
 | **关联** | [PRD-DESKTOP-LLM-SETUP-V1.md](../PRD-DESKTOP-LLM-SETUP-V1.md) · [ADR-004](./004-studio-hub-server.md) · [ADR-008](./008-trip-storage-boundaries.md) |
 | **前置** | Phase 2 Studio 单进程（ADR-004）；G-P2-05 stub 主链 |
+| **编号说明** | 原占 018；Installer 布局 ADR 占用 018 后改为 **019** |
 
 ---
 
