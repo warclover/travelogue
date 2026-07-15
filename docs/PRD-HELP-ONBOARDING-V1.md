@@ -7,12 +7,12 @@
 | **状态** | **有条件通过（Conditional Go）** · 评审 Must-Fix 已回写 · 可开 W0 |
 | **主题代号** | 「帮助系统 V1」— 情境引导主链 · 按需救援 · 不打断验货 |
 | **前置条件** | Studio 首页 v2（M21）可用；Preview Toolbar v3 可用；[PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) P0～P2 已落地；[PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) **Conditional Go / 模式≠面板已落地**；[PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) 导出门面合同有效 |
-| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） |
+| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 · H7 · 能力卡 · 见 §12.4） |
 | **评审记录** | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) · **Conditional Go · MF 已回写本版** |
 | **线框** | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) · F1–F10（W1 挡门：F1–F3/F7） |
 | **验收** | 本文 §10；正式文件可后续拆出 `ACCEPTANCE-HELP-ONBOARDING-V1.md` |
 | **实施清单** | 可后续拆出 `IMPLEMENTATION-HELP-ONBOARDING-V1.md` |
-| **更新日期** | 2026-07-14 |
+| **更新日期** | 2026-07-15 |
 
 > **定位**
 >
@@ -650,6 +650,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | Longshot 2.0 publishGuide / 平台 | T-EXPORT-SHARE · T-PLATFORM-PICK |
 | M21「Coach 非 M21」 | 本文正式立项，**不阻塞** M21 路由 |
 | 评审纪要 2026-07-14 | MF-HELP-01～08 → v1.1.1 冻结决策 |
+| **Desktop LLM Setup V1** | §12.4 · H7 · T-CAP-01 · D-DLLM-13 |
 
 ### 12.2 首访触达一览（实施用）
 
@@ -676,6 +677,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 [全局 L2 · W2]
   ? → H1 … H5 · 重播（长图 + 精修保存）
   └─ 开帮助：关面板保模式 · chip/完成保留
+  └─（相邻主题扩展）H6 封面封底 · H7 AI 文案 · 见 §12.4
 ```
 
 ### 12.3 修订记录
@@ -685,6 +687,20 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | v1.0.0 | 2026-07-11 | 首版 Draft：三层架构 · 触达矩阵 · 帮助抽屉 · 与精修/导出门面合同对齐 |
 | **v1.1.0** | **2026-07-14** | 专家审视回写：精修 V1.1 语义；D-HELP-03/07/08 冻结；忙碌态；帮助↔精修冲突；叙事接力；W1 不强制 Coach；漏斗埋点；AC-13～15；H5 决策树 |
 | **v1.1.1** | **2026-07-14** | 评审 Must-Fix 回写：D-HELP-03′/07′/08′/09/10；FirstSuccess 方案 A；可见 tip；seen 迁移；发群兜底；AC-04a/05a/06a/13a/16/17；关闭 OQ-HELP-01；Conditional Go 可开 W0 |
+| **v1.1.2** | **2026-07-15** | 交叉引用 Desktop LLM Setup：§12.4 H7 / T-CAP-01 / D-DLLM-13（不改主链 H1–H5） |
+
+### 12.4 相邻主题 · Desktop LLM Setup（H7 / 能力卡）
+
+> 权威合同：[PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)。本节仅做帮助系统交叉索引，**不**把写作引擎做成首访主链。
+
+| 触点 / 条目 | 说明 | 与本文关系 |
+|-------------|------|------------|
+| **T-CAP-01** 首页能力卡 | 非阻断；主 CTA「开始导入」；文内链「升级 AI 文案」 | **L0 认知补丁**；busy 同 D-HELP-08；**不**改 FirstSuccess 主 CTA |
+| **H7**「要不要配置 AI 文案」 | 抽屉条目；设置 Modal「了解更多」深链 | 支线救援；与 H1–H5 并列扩展（H6 已为封面封底） |
+| **D-DLLM-13** | 能力卡 vs 首页非关键 Help L1 仲裁 | 同帧只显示能力卡；关闭后本会话压制首页非关键自动 coach；**预览关键 tip（长图等）勿用此门禁** |
+| seen | `travelogue.desktop.capabilityCard.v1` | 帮助「重播」可清能力卡 seen（见 Desktop LLM ACCEPTANCE） |
+
+**铁律对齐**：配置非门槛；缺 Key 不得表现为整次生成失败；忙碌态零配置打扰。
 
 ---
 

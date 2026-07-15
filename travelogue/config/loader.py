@@ -230,6 +230,27 @@ def _report_unknown_config_keys(keys: list[str], *, strict: bool) -> None:
     _log.warning(message)
 
 
+def _merge_user_llm_overlay(data: TrackedDict | dict[str, Any]) -> TrackedDict | dict[str, Any]:
+    """Merge user_data config.user.yaml llm section (Desktop LLM Setup V1)."""
+    try:
+        from travelogue.llm.user_settings import load_user_llm_config_overlay
+
+        overlay = load_user_llm_config_overlay()
+    except Exception:
+        return data
+    llm_overlay = overlay.get("llm") if isinstance(overlay, dict) else None
+    if not isinstance(llm_overlay, dict) or not llm_overlay:
+        return data
+    base_llm = data.get("llm") if isinstance(data.get("llm"), dict) else {}
+    merged_llm = {**dict(base_llm), **dict(llm_overlay)}
+    if isinstance(data, TrackedDict):
+        data["llm"] = wrap_tracked(merged_llm, path="llm", allow_extra=True)
+        return data
+    out = dict(data)
+    out["llm"] = merged_llm
+    return out
+
+
 def load_config(path: Path | None = None) -> AppConfig:
     """Load config.yaml from path, or ./config.yaml, or defaults."""
     candidates = [path, Path.cwd() / "config.yaml", ROOT / "config.yaml"]
@@ -239,6 +260,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         text = cfg_path.read_text(encoding="utf-8")
         loaded = load_yaml_mapping(text, source=str(cfg_path))
         data = wrap_tracked(loaded)
+    data = _merge_user_llm_overlay(data)
     if isinstance(data, TrackedDict):
         data.mark_keys("ffmpeg", "preview")
     strict = _read_strict_flag(data) if isinstance(data, TrackedDict) else False

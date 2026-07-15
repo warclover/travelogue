@@ -18,5 +18,6 @@
 | [015](./015-lse-planner-migration.md) | LSE 与 Screen Planner 两步渐进迁移（supersede R-P17-04 / ADR-010 D5 部分） | **Accepted** | 2026-07-08 |
 | [016](./016-longshot-platform-export.md) | 平台化长图导出：三分支 Pipeline · full capture 切分 · 禁 P1 · 原子 Job | **Accepted** | 2026-07-08 |
 | [017](./017-bookends-engine.md) | Bookends Engine：两阶段挂点 · 锁粒度 · 压字分期 · B2a/B2b · 禁封面回退 | **Accepted** | 2026-07-13 |
+| [018](./018-desktop-user-data-llm-secrets.md) | Desktop `user_data_dir` 与 LLM secrets（与 trips 分裂 · L0/L1） | **Accepted** | 2026-07-15 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

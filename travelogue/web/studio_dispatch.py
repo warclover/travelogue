@@ -16,6 +16,7 @@ from travelogue.web.studio_handlers import (
     import_handlers,
     job_handlers,
     layout_strategy_handlers,
+    llm_settings_handlers,
     static_handlers,
     telemetry_handlers,
     template_admin_handlers,
@@ -64,6 +65,9 @@ from travelogue.web.studio_handlers.paths import (
     LAYOUT_STRATEGIES_RUNTIME_APPROVE_PATH,
     LAYOUT_STRATEGIES_SANDBOX_PATH,
     LAYOUT_STRATEGIES_SHADOW_PATH,
+    LLM_PING_PATH,
+    LLM_SETTINGS_PATH,
+    LLM_STATUS_PATH,
     LONGSHOT_PATH,
     LSE_CAPS_API_PATH,
     LSE_FLAGS_UI_PATH,
@@ -124,6 +128,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     # GET — authenticated APIs / admin UIs
     RouteSpec("GET", STATUS_PATH, "job_handlers.handle_status", auth=True),
     RouteSpec("GET", CONFIG_PATH, "config_handlers.handle_config", auth=True),
+    RouteSpec("GET", LLM_STATUS_PATH, "llm_settings_handlers.handle_llm_status", auth=True),
     RouteSpec("GET", TEMPLATES_ADMIN_UI_PATH, "static_handlers.handle_templates_admin_page", auth=True),
     RouteSpec("GET", LSE_FLAGS_UI_PATH, "static_handlers.handle_lse_flags_admin_page", auth=True),
     RouteSpec("GET", LSE_CAPS_API_PATH, "layout_strategy_handlers.handle_lse_capabilities_get", auth=True),
@@ -218,6 +223,9 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     ),
     # PATCH
     RouteSpec("PATCH", CONFIG_PATH, "config_handlers.handle_config", auth=True),
+    RouteSpec("POST", LLM_SETTINGS_PATH, "llm_settings_handlers.handle_llm_settings", auth=True),
+    RouteSpec("DELETE", LLM_SETTINGS_PATH, "llm_settings_handlers.handle_llm_settings", auth=True),
+    RouteSpec("POST", LLM_PING_PATH, "llm_settings_handlers.handle_llm_ping", auth=True),
     RouteSpec("PATCH", LSE_CAPS_API_PATH, "layout_strategy_handlers.handle_lse_capabilities_patch", auth=True),
     RouteSpec(
         "PATCH",
@@ -468,6 +476,7 @@ def _resolve_handler(handler_id: str) -> Callable[..., None]:
     module = {
         "static_handlers": static_handlers,
         "config_handlers": config_handlers,
+        "llm_settings_handlers": llm_settings_handlers,
         "job_handlers": job_handlers,
         "layout_strategy_handlers": layout_strategy_handlers,
         "template_handlers": template_handlers,

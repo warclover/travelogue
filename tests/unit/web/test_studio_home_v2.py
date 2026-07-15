@@ -72,10 +72,11 @@ V2_HOME_MARKERS = (
     "v2-success-details",
     "v2-wizard-photo-cull",
     "打开卷轴预览",
-    # M20 · 设置 Popover（v2.1 · 导入选项迁入）
+    # M20 · 设置 Popover（外层「设置」· 内含导入偏好 · D-DLLM-03）
     "v2-settings-toggle",
     "v2-settings-popover",
     "v2-settings-close",
+    "设置",
     "导入偏好",
     'id="studio-cfg-clustering"',
     'id="studio-cfg-vision"',

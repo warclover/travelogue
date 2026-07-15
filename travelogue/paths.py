@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -33,6 +34,30 @@ def default_trips_dir() -> Path:
     if is_frozen():
         return exe_dir() / "trips"
     return ROOT / "trips"
+
+
+def user_data_dir(*, ensure: bool = False) -> Path:
+    """Writable user data root for Desktop LLM secrets / overlays.
+
+    Frozen: ``%LOCALAPPDATA%/TravelogueStudio`` (Windows) or ``~/.local/share/TravelogueStudio``.
+    Override: ``TRAVELOGUE_USER_DATA``.
+    Non-frozen default: ``ROOT/.travelogue-user`` (keeps repo root clean of secrets).
+    """
+    override = (os.environ.get("TRAVELOGUE_USER_DATA") or "").strip()
+    if override:
+        path = Path(override).expanduser().resolve()
+    elif is_frozen():
+        if os.name == "nt":
+            base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
+            root = Path(base) if base else Path.home() / "AppData" / "Local"
+            path = (root / "TravelogueStudio").resolve()
+        else:
+            path = (Path.home() / ".local" / "share" / "TravelogueStudio").resolve()
+    else:
+        path = (ROOT / ".travelogue-user").resolve()
+    if ensure:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def template_dir_for(template_id: str) -> Path:

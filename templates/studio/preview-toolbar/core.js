@@ -4,6 +4,7 @@
 "use strict";
 
 import { postJson } from "../js/http.js";
+import { trackStudioEvent } from "../js/analytics.js";
 import { isPreviewToolbarV3 } from "./dock.js";
 import { syncCoverTitleLayoutClass } from "./inline-edit.js";
 import { pollJob, syncLongshotPreviewRowVisibility } from "./longshot.js";
@@ -214,6 +215,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
     if (!btn || btn.disabled) return Promise.resolve();
 
     function run() {
+      trackStudioEvent("llm_narrate_click", { available: true });
       btn.disabled = true;
       if (btn.dataset && !btn.dataset.labelBusy) {
         btn.dataset.labelIdle = btn.textContent || "";
