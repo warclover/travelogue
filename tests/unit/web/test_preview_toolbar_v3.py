@@ -654,12 +654,19 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "改精选或拼图后，请点「更新版面」。" not in sheet
     assert "secondaryText" in modal
     assert "studio__modal-actions--stacked" in modal
+    assert "设置" in home
+    assert ">设置<" in home
+    assert 'aria-label="设置"' in home
     assert "导入偏好" in home
-    assert ">导入偏好<" in home
-    assert ">设置<" not in home
+    assert 'v2-settings-popover__section-label">导入偏好</p>' in home
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
+    assert "不会自动重写全文" in sheet
+    assert "preview-sheet__llm-expect" in sheet
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert "llmExpect" in init_v3
+    assert "MF-06" in init_v3 or "不会自动重写" in init_v3 or "llmExpect.hidden = false" in init_v3
 
 
 def test_preview_refine_ux_v11_m1_mode_panel_decouple_markers() -> None:
@@ -774,6 +781,8 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "与 Dock ▾ 同一套偏好" in sheet
     assert "当前为本机文案 · 配置写作引擎后可升级" in sheet
     assert 'data-action="llm-setup"' in sheet
+    assert "preview-sheet__llm-expect" in sheet
+    assert "不会自动重写全文" in sheet
     assert "maybeShowBookTabMigrateTip" in mode
     assert "book_tab_migrate_tip_show" in mode
     assert "onBookTabRendered" in init

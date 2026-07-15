@@ -1,8 +1,9 @@
 /**
- * 首页 v2 · 导入偏好 Popover（v2.1 · D-15 · 精修体验 V1 改名）。
+ * 首页 v2 · 设置 Popover（外层「设置」· 内含导入偏好 · D-DLLM-03）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { bindAdvancedConfigControls } from "../js/advanced.js";
+import { isCapabilityCardSeen } from "../js/help-onboarding.js";
 import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
 import { $, V2 } from "./store.js";
@@ -205,13 +206,12 @@ export function syncSettingsLock() {
   if (locked) closeSettings();
 }
 
-function maybeShowSettingsMovedHint() {
+export function maybeShowSettingsMovedHint() {
   try {
     if (localStorage.getItem(SETTINGS_HINT_KEY) === "1") return;
-    // D-DLLM-13：首启能力卡优先，避免同帧双打扰
-    if (localStorage.getItem("travelogue.desktop.capabilityCard.v1") !== "1") {
-      return;
-    }
+    // 能力卡未见过：等首启卡结束（travelogue:capability-card-done）后再提示设置入口
+    // 不读 shouldDeferHomeHelpL1：该门禁只压制 Help L1，能力卡关闭后仍应允许设置 tip
+    if (!isCapabilityCardSeen()) return;
     localStorage.setItem(SETTINGS_HINT_KEY, "1");
   } catch (e) {
     return;
@@ -231,6 +231,13 @@ export function initSettingsPanel() {
   syncDevSection();
   ensurePopoverPortaled(popover);
   maybeShowSettingsMovedHint();
+  try {
+    window.addEventListener("travelogue:capability-card-done", function () {
+      maybeShowSettingsMovedHint();
+    });
+  } catch (_e) {
+    /* ignore */
+  }
 
   toggle.addEventListener("click", function (e) {
     e.stopPropagation();

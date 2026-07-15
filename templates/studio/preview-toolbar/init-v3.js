@@ -387,13 +387,16 @@ export function initToolbarV3(root, tripId) {
       var llmBtn = panel.querySelector('[data-action="llm"]');
       var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
       var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
+      var llmExpect = panel.querySelector(".preview-sheet__llm-expect");
       function setLlmAvailable(ok) {
         if (llmBtn) {
           llmBtn.disabled = !ok;
           llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
         }
+        // L0：未配置提示 + 配置出口；L1：保留「不会自动重写」预期（MF-06）
         if (llmHint) llmHint.hidden = !!ok;
         if (llmSetup) llmSetup.hidden = !!ok;
+        if (llmExpect) llmExpect.hidden = false;
       }
       setLlmAvailable(false);
       function refreshLlmStatus() {

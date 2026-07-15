@@ -15,16 +15,21 @@ def test_capability_card_contract() -> None:
     cap = CAP_JS.read_text(encoding="utf-8")
     help_js = HELP_JS.read_text(encoding="utf-8")
     boot = BOOT.read_text(encoding="utf-8")
+    settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "travelogue.desktop.capabilityCard.v1" in help_js
     assert "本机即可生成杂志卷轴与长图" in cap
     assert "升级 AI 文案（可选）" in cap
     assert "开始导入" in cap
-    # MF-01：无第三主按钮「配置写作引擎」并排
-    assert "配置写作引擎" not in cap or "升级 AI 文案" in cap
-    assert 'cta: "configure"' in cap or 'dismissCapabilityCard("configure")' in cap
     assert "maybeShowCapabilityCard" in boot
     assert "markCapabilityCardSuppressHelpL1" in cap
     assert "shouldDeferHomeHelpL1ForCapabilityCard" in help_js
+    assert "travelogue:capability-card-done" in cap
+    assert "travelogue:capability-card-done" in settings
+    assert "isCapabilityCardSeen" in settings
+    assert ">设置<" in home
+    assert 'aria-label="设置"' in home
+    assert 'v2-settings-popover__section-label">导入偏好</p>' in home
 
 
 def test_help_h7_writing_engine_and_replay() -> None:
@@ -36,3 +41,12 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "clearCapabilityCardSeen" in help_js
     assert "首页能力卡也会再出现一次" in help_js
     assert 'itemId: "H7"' in llm
+
+
+def test_mf06_llm_expect_visible_when_available() -> None:
+    sheet = (STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
+    init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert "preview-sheet__llm-expect" in sheet
+    assert "不会自动重写全文" in sheet
+    assert "llmExpect.hidden = false" in init
+    assert "if (llmSetup) llmSetup.hidden = !!ok;" in init

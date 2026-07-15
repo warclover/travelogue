@@ -447,7 +447,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
       '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
       '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
-      ' · 配置后不会自动重写，需再点「生成」' +
+      "</p>" +
+      '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
+      "不会自动重写全文 · 需点上方「生成」才会升级杂志感文案" +
       "</p>" +
       "</details>";
 

@@ -104,6 +104,11 @@ function dismissCapabilityCard(cta) {
   markCapabilityCardSuppressHelpL1();
   trackStudioEvent("capability_card_cta", { cta: cta || "dismiss" });
   closeCapabilityCard();
+  try {
+    window.dispatchEvent(new CustomEvent("travelogue:capability-card-done", { detail: { cta: cta } }));
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 export function closeCapabilityCard() {

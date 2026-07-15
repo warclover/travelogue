@@ -14,6 +14,7 @@
 | **W0** | PRD v1.1 回写 · 线框 F1–F3/F5 · MF 消化 | ✅ |
 | **W1a** | user_data · `/llm/*` API · 注入 · 设置 Modal · 预览文案/出口 · 单测 | ✅ 核心已合入 |
 | **W1b / W2** | 能力卡 T-CAP-01 · H7 · seen/重播 · D-DLLM-13 | ✅ |
+| **W2.1** | MF-06 预期文案常显 · D-DLLM-03「设置」外壳 · D-DLLM-13 设置 tip 接线 | ✅ |
 | **W3** | ACL 打磨 · 打包冒烟记录 · 短 ADR | ⏳ |
 
 ## W1a 落点清单
@@ -44,6 +45,14 @@
 | I-21 | 帮助 **H7**（AI 文案；H6 已为封面封底）+ 重播清能力卡 | `help-onboarding.js` · `llm-settings.js` | ✅ |
 | I-22 | D-DLLM-13 本会话压制首页非关键 Help L1 | `markCapabilityCardSuppressHelpL1` | ✅ |
 | I-23 | 狗粮 AC-DLLM-30（N≥3） | ACCEPTANCE 勾选 | ⏳ 人工 |
+
+## W2.1 收口（评审 PARTIAL）
+
+| ID | 任务 | 路径 | 状态 |
+|----|------|------|------|
+| I-24 | MF-06：L1 仍常显「不会自动重写」；仅隐藏配置 CTA | `init-v3.js` · `preview-toolbar-v3-sheet.js` | ✅ |
+| I-25 | D-DLLM-03：外层「设置」· 内「导入偏好」分组 | `studio-home-v2.html` | ✅ |
+| I-26 | D-DLLM-13：能力卡结束后再弹设置 tip（`capability-card-done`） | `capability-card.js` · `settings-panel.js` | ✅ |
 
 > **命名说明**：PRD 初稿写 H6「写作引擎」，现网 H6 已用于封面封底 → 落地为 **H7**。
 
