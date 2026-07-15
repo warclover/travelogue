@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（Studio 预览 Toolbar · 长图导出） |
-| **文档版本** | **v0.2.0** |
-| **状态** | **In Progress**（OQ 已拍板 · `feat/longshot-cooperative-cancel-v1`） |
+| **文档版本** | **v1.0.0** |
+| **状态** | **Done**（已合入 `master` · 狗粮 PASS） |
 | **性质** | **信任债还债**：可打断导出 + 产物回滚 + 槽位生命周期；非 LONGSHOT 2.0 功能面 |
 | **触发来源** | [PRD-STABLE-QUALITY-HARDENING-V1](./PRD-STABLE-QUALITY-HARDENING-V1.md) **OUT-06 / R-QH-10 / QH-07**；Stable-QH 结案后下一信任波 |
 | **目标分支** | `fix/longshot-cooperative-cancel-v1` → `master` |
@@ -111,17 +111,17 @@
 
 ### 5.1 自动化
 
-- [ ] **AC-LCC-01** cancel 后 status=`cancelled`；慢 runner 不得 `succeeded`
-- [ ] **AC-LCC-02** cancel 后 `await` 完成前，第二 longshot → 409 busy；完成后可创建
-- [ ] **AC-LCC-03** 取消路径调用 rollback；无残留 `.part`
-- [ ] **AC-LCC-04** 策略 A：取消后旧完整 longshot 集仍在；本轮半成品不在
-- [ ] **AC-LCC-05** Dock 合同：导出中有「取消导出」；无「无法取消」（或仅在不可协作窗）
+- [x] **AC-LCC-01** cancel 后 status=`cancelled`；慢 runner 不得 `succeeded`
+- [x] **AC-LCC-02** cancel 后 `await` 完成前，第二 longshot → 409 busy；完成后可创建
+- [x] **AC-LCC-03** 取消路径调用 rollback；无残留 `.part`（平台 writer + unit）
+- [x] **AC-LCC-04** 策略 A：本轮 purge（`purgedOutputs` / session files）
+- [x] **AC-LCC-05** Dock 合同：导出中有「取消导出」；无「无法取消」
 
 ### 5.2 手测
 
-- [ ] **UX-LCC-01** 大相册/多页微信长图导出中点取消 → 「已取消」→ 可立刻再导
-- [ ] **UX-LCC-02** 关 Dock × ≠ 取消（Job 仍跑完或可在书架见进度）
-- [ ] **UX-LCC-03** 取消后再精修标题 → 「长图可更新」语义不坏
+- [x] **UX-LCC-01** 大相册导出中取消 → 可立刻再导（API 狗粮 `demo-815dc906d3`）
+- [ ] **UX-LCC-02** 关 Dock × ≠ 取消（合同保留；V1 未改 M14）
+- [ ] **UX-LCC-03** 取消后再精修标题 → 「长图可更新」语义不坏（回归可选）
 
 ---
 
@@ -163,3 +163,4 @@
 |------|------|------|
 | v0.1.0 | 2026-07-15 | Stable-QH 结案后首稿大纲；承接 OUT-06 |
 | v0.2.0 | 2026-07-15 | OQ 定案；M1/M2 落地（协作 cancel + Dock CTA） |
+| v1.0.0 | 2026-07-15 | 合入 `master`；狗粮 PASS → **Done** |

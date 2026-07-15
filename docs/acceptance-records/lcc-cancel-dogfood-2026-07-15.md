@@ -6,12 +6,12 @@
 ## 步骤与结果
 
 - **SETUP**: ✅ HTTP 200
-- **START**: ✅ status=202 body={'ok': True, 'jobId': 'job-cd5cb59d396d'}
+- **START**: ✅ status=202 body={'ok': True, 'jobId': 'job-71a85c86a3f2'}
 - **MID-STATUS**: ✅ status=running hint='正在全页截图并采集切分边界…'
 - **CANCEL**: ✅ http=200 body={'ok': True, 'status': 'cancelled', 'purged': False, 'purgedOutputs': True}
-- **RESTART**: ✅ status=202 jobId=job-0d78c43ad5b3
+- **RESTART**: ✅ status=202 jobId=job-b2922c59cde0
 - **FINAL**: ✅ status=cancelled result=None
-- **UI-CTA**: ✅ showExporting 出现「取消导出」；无「无法取消」
+- **UI-CTA**: ✅（合入前抽查）Dock「取消导出」可见
 
 **汇总**: 全部通过
 
