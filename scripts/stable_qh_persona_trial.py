@@ -180,6 +180,7 @@ def write_report(base: str, out: Path) -> None:
             "- 系统「选文件夹」对话框与微信发出长图 PNG：需真人。",
             "- 大相册 ≥30s Importing 慢安抚墙钟目视：可选。",
             "- 真 LLM Key 文案气质：本轮 forceStub，不评文案质量。",
+            "- 长图工程补签：见本文件「残留」表（`/__travelogue/longshot` → moments PNG）。",
             "",
         ]
     )

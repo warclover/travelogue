@@ -27,7 +27,15 @@
 
 ## 残留（真人补签）
 
-- 系统「选文件夹」对话框与微信发出长图 PNG：需真人。
-- 大相册 ≥30s Importing 慢安抚墙钟目视：可选。
-- 真 LLM Key 文案气质：本轮 forceStub，不评文案质量。
+| 项 | 状态 | 说明 |
+|----|------|------|
+| 系统「选文件夹」原生对话框 | ☐ 待真人 | 本轮用 `TRUST_LOCAL_ALBUM` **粘贴路径**等价走通导入 |
+| 长图 PNG 真导出 | ✅ 工程补签 | `POST /__travelogue/longshot` → trip=`qhtrial-p1-eb2232` · 朋友圈 7 张 PNG（`captureMethod=p0`） |
+| ≥30s Importing 慢安抚墙钟 | ☐ 可选 | 源码接线已在 dogfood UX-QH-08 覆盖 |
+| 真 LLM Key 文案气质 | ☐ 可选 | 本轮 forceStub |
+
+### 长图补签细节（2026-07-15）
+
+- Job `job-29f2adf8e87f` · `status=succeeded` · platform=`wechat_moments`
+- 产出：`试用·周末短途-moments-01.png` … `07.png`（均落盘于 `trips/qhtrial-p1-eb2232/`）
 

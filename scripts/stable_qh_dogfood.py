@@ -116,7 +116,7 @@ def write_report(base: str, out: Path) -> None:
         "| 属性 | 内容 |",
         "|------|------|",
         f"| **Studio** | `{base}` |",
-        f"| **分支** | `fix/stable-quality-hardening-v1` |",
+        "| **分支** | `fix/stable-quality-hardening-v1` |",
         "| **方式** | Playwright + Import API（模拟用户路径） |",
         f"| **Demo 相册** | `{DEMO}` |",
         "",
@@ -400,12 +400,6 @@ def _run(base: str) -> int:
                 except Exception:
                     pass
         page.wait_for_timeout(500)
-        wizard = page.locator("#v2-import-wizard, #v2-wizard-root")
-        wiz_open = wizard.count() > 0 and (
-            page.locator("#v2-wizard-root").is_visible()
-            if page.locator("#v2-wizard-root").count()
-            else True
-        )
         if not opened:
             # try bento new card
             nc = page.locator(".v2-shelf__book--new").first
@@ -610,7 +604,7 @@ def _run(base: str) -> int:
         parts.append(
             (
                 f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
-            ).encode("utf-8")
+            ).encode()
         )
     for img in sorted(album_upload.glob("*.jpg"))[:4]:
         data = img.read_bytes()
@@ -618,11 +612,11 @@ def _run(base: str) -> int:
             (
                 f"--{boundary}\r\nContent-Disposition: form-data; name=\"files[]\"; filename=\"{img.name}\"\r\n"
                 f"Content-Type: image/jpeg\r\n\r\n"
-            ).encode("utf-8")
+            ).encode()
             + data
             + b"\r\n"
         )
-    parts.append(f"--{boundary}--\r\n".encode("utf-8"))
+    parts.append(f"--{boundary}--\r\n".encode())
     body_bytes = b"".join(parts)
     req = urllib.request.Request(
         f"{base}/__travelogue/import",
@@ -665,8 +659,8 @@ def _run(base: str) -> int:
                 place_ok = False
             record(
                 "UX-QH-02",
-                title_ok and place_ok,
-                f"trip={tid}; title_ok={title_ok}; place_ok={place_ok}; tpl={resolved}",
+                title_ok and place_ok and tpl_ok,
+                f"trip={tid}; title_ok={title_ok}; place_ok={place_ok}; tpl_ok={tpl_ok}; tpl={resolved}",
             )
         else:
             record("UX-QH-02", False, f"upload job {job.get('status')} err={job.get('error')}")
