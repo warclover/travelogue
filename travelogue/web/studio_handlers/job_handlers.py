@@ -40,6 +40,7 @@ def handle_cancel(handler: StudioHandlerProtocol) -> None:
         return
 
     purged = False
+    purged_outputs = False
     if job.type == "import" and job.status == "cancelled":
         # Wait for worker finally (join subprocess → purge) before answering,
         # so clients do not re-import into a half-dead trip directory.
@@ -55,7 +56,16 @@ def handle_cancel(handler: StudioHandlerProtocol) -> None:
             purged = not (ctx.trips_root / job.trip_id).is_dir()
         else:
             purged = True
+    elif job.type == "longshot" and job.status == "cancelled":
+        # Await runner exit so a second longshot cannot race the same trip.
+        store.await_longshot_done(job.job_id, timeout=30.0)
+        purged_outputs = True
     handler._json_response(
         200,
-        {"ok": True, "status": job.status, "purged": purged},
+        {
+            "ok": True,
+            "status": job.status,
+            "purged": purged,
+            "purgedOutputs": purged_outputs,
+        },
     )

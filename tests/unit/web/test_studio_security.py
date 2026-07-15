@@ -212,9 +212,61 @@ def test_longshot_cancel_releases_job_slot() -> None:
     store = get_job_store()
     job = store.create_longshot_job()
     assert job is not None
+    # Queued-only cancel releases immediately.
     store.cancel_job(job.job_id)
     retry = store.create_longshot_job()
     assert retry is not None
+
+
+def test_longshot_cancel_keeps_slot_until_runner_finishes() -> None:
+    from travelogue.web import studio_jobs
+
+    store = get_job_store()
+    job = store.create_longshot_job()
+    assert job is not None
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_runner() -> dict:
+        started.set()
+        release.wait(timeout=2.0)
+        return {"tripId": "demo", "outputs": ["demo-longshot.png"]}
+
+    threading.Thread(
+        target=lambda: studio_jobs.run_longshot_job(job, runner=slow_runner),
+        daemon=True,
+    ).start()
+    assert started.wait(timeout=1.0)
+    store.cancel_job(job.job_id)
+    assert store.create_longshot_job() is None
+    release.set()
+    assert store.await_longshot_done(job.job_id, timeout=2.0)
+    assert job.status == "cancelled"
+    retry = store.create_longshot_job()
+    assert retry is not None
+
+
+def test_longshot_cancel_check_raises_and_purges_session_files(tmp_path: Path) -> None:
+    from travelogue.export.longshot import (
+        LongshotCancelled,
+        purge_longshot_session_files,
+        raise_if_longshot_cancelled,
+    )
+
+    path = tmp_path / "round-ch01.png"
+    path.write_bytes(b"new")
+    assert purge_longshot_session_files([path]) == 1
+    assert not path.exists()
+
+    flag = {"on": False}
+
+    def check() -> bool:
+        return flag["on"]
+
+    raise_if_longshot_cancelled(check)
+    flag["on"] = True
+    with pytest.raises(LongshotCancelled):
+        raise_if_longshot_cancelled(check)
 
 
 def test_studio_get_trips_requires_token_on_allow_lan(tmp_path: Path) -> None:

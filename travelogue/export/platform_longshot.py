@@ -31,6 +31,9 @@ from travelogue.export.longshot import (
     _BROWSER_POOL,
     CAPTURE_WIDTH,
     DEFAULT_EXPORT_SCALE,
+    CancelCheckFn,
+    CancelRegisterFn,
+    LongshotCancelled,
     LongshotExportError,
     LongshotExportResult,
     LongshotOutput,
@@ -41,6 +44,7 @@ from travelogue.export.longshot import (
     _resolve_longshot_url,
     _slug_title,
     _trip_title,
+    raise_if_longshot_cancelled,
 )
 from travelogue.export.platform_profiles import (
     ASPECT_FIT_PLATFORM_IDS,
@@ -254,6 +258,8 @@ def export_platform_longshot(
     pad_mode: str | None = None,
     profile: PlatformProfile | None = None,
     smart_crop_enabled: bool | None = None,
+    cancel_check: CancelCheckFn | None = None,
+    cancel_register: CancelRegisterFn | None = None,
 ) -> LongshotExportResult:
     """Branch B entry · moments / xhs / Phase C aspect-fit platforms."""
     trip_dir = trip_dir.resolve()
@@ -323,9 +329,20 @@ def export_platform_longshot(
     }.get(profile.id, "平台配图")
 
     try:
+        raise_if_longshot_cancelled(cancel_check)
         _report(W_OPEN, W_TOTAL, "正在打开页面…")
         page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 844})
+        if cancel_register is not None:
+
+            def _abort_page() -> None:
+                try:
+                    page.close()
+                except Exception:
+                    _log.debug("platform longshot cancel page.close skipped", exc_info=True)
+
+            cancel_register(_abort_page)
         page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+        raise_if_longshot_cancelled(cancel_check)
         page.wait_for_function(
             "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
             timeout=30_000,
@@ -493,6 +510,7 @@ def export_platform_longshot(
         try:
             with writer:
                 for i, (y0, y1) in enumerate(ranges):
+                    raise_if_longshot_cancelled(cancel_check)
                     slice_bytes = slice_canvas_png(canvas_bytes, y0, y1)
                     if is_aspect and canvas_size:
                         w, h = canvas_size
@@ -519,9 +537,13 @@ def export_platform_longshot(
                         W_TOTAL,
                         f"正在切分{label_noun}（{i + 1}/{page_count}）…",
                     )
+                raise_if_longshot_cancelled(cancel_check)
                 finals = writer.commit()
             for path in finals:
                 outputs.append(LongshotOutput(path=path, capture_method="p0"))
+        except LongshotCancelled:
+            writer.rollback()
+            raise
         except Exception:
             writer.rollback()
             raise

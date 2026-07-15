@@ -26,10 +26,37 @@ MAX_CHAPTER_CARDS = 60
 MAX_WECHAT_BYTES = 20 * 1024 * 1024
 
 ProgressFn = Any  # Callable[[int, int, str], None] — avoid circular import noise
+CancelCheckFn = Any  # Callable[[], bool]
+CancelRegisterFn = Any  # Callable[[Callable[[], None]], None]
 
 
 class LongshotExportError(CodeError):
     pass
+
+
+class LongshotCancelled(LongshotExportError):
+    """Raised when cooperative cancel is observed mid-export."""
+
+    def __init__(self, message: str = "导出已取消") -> None:
+        super().__init__("E_LNG_CANCELLED", message)
+
+
+def raise_if_longshot_cancelled(cancel_check: CancelCheckFn | None) -> None:
+    if cancel_check and cancel_check():
+        raise LongshotCancelled()
+
+
+def purge_longshot_session_files(paths: list[Path]) -> int:
+    """Strategy A · delete this-round outputs (best-effort)."""
+    removed = 0
+    for path in paths:
+        try:
+            if path.is_file():
+                path.unlink()
+                removed += 1
+        except OSError:
+            _log.debug("purge session longshot failed: %s", path, exc_info=True)
+    return removed
 
 
 @dataclass
@@ -574,6 +601,15 @@ def _write_output(path: Path, data: bytes) -> None:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", f"写入失败: {path}")
 
 
+def _write_output_tracked(
+    path: Path,
+    data: bytes,
+    session_writes: list[Path],
+) -> None:
+    _write_output(path, data)
+    session_writes.append(path)
+
+
 def _watermark_font(size: int):
     from PIL import ImageFont
 
@@ -657,6 +693,8 @@ def export_trip_longshot(
     slide_count: int | None = None,
     pad_mode: str | None = None,
     profile: Any = None,
+    cancel_check: CancelCheckFn | None = None,
+    cancel_register: CancelRegisterFn | None = None,
 ) -> LongshotExportResult:
     """Export longshot. Branch A (wechat_chat) by default; platform → branch B."""
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
@@ -680,6 +718,8 @@ def export_trip_longshot(
             slide_count=slide_count,
             pad_mode=pad_mode,
             profile=profile,
+            cancel_check=cancel_check,
+            cancel_register=cancel_register,
         )
 
     trip_dir = trip_dir.resolve()
@@ -689,6 +729,8 @@ def export_trip_longshot(
             "E_LNG_NO_LONGSHOT",
             "未找到 index-longshot.html，请先完成渲染",
         )
+
+    raise_if_longshot_cancelled(cancel_check)
 
     scale = max(1, min(int(scale), 3))
     fmt = "jpeg" if str(fmt).lower() == "jpeg" else "png"
@@ -703,6 +745,7 @@ def export_trip_longshot(
     outputs: list[LongshotOutput] = []
     segment_reason = ""
     user_hint = ""
+    session_writes: list[Path] = []
 
     def _report(cur: int, total: int, hint: str) -> None:
         if progress:
@@ -711,14 +754,26 @@ def export_trip_longshot(
     page = None
     try:
         _report(0, 1, "正在打开浏览器…")
+        raise_if_longshot_cancelled(cancel_check)
         page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 844})
+        if cancel_register is not None:
+
+            def _abort_page() -> None:
+                try:
+                    page.close()
+                except Exception:
+                    _log.debug("longshot cancel page.close skipped", exc_info=True)
+
+            cancel_register(_abort_page)
         page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+        raise_if_longshot_cancelled(cancel_check)
         _report(0, 1, "正在加载长图页面…")
         page.wait_for_function(
             "() => window.TravelogueLongshot && document.documentElement.dataset.longshot === 'on'",
             timeout=30_000,
         )
         _apply_copy_display(page, copy_display)
+        raise_if_longshot_cancelled(cancel_check)
 
         metrics = _page_metrics(page)
         chapter_count = max(int(metrics.get("chapterCount") or 0), 1)
@@ -733,20 +788,24 @@ def export_trip_longshot(
         if chapter is not None:
             if chapter < 1 or chapter > chapter_count:
                 raise LongshotExportError("E_LNG_CAPTURE_FAILED", f"章节 {chapter} 不存在")
+            raise_if_longshot_cancelled(cancel_check)
             _report(1, 1, f"第 {chapter}/{chapter_count} 段")
             data, method = _capture_bytes(
                 page, scale=scale, fmt=fmt, chapter_index=chapter - 1
             )
+            raise_if_longshot_cancelled(cancel_check)
             capture_method = method
             out_path = output or trip_dir / f"{title}-ch{chapter:02d}.{ext}"
-            _write_output(out_path, data)
+            _write_output_tracked(out_path, data, session_writes)
             outputs.append(LongshotOutput(path=out_path, capture_method=method))
         elif do_segment:
             _report(0, chapter_count, "准备导出…")
             for idx in range(chapter_count):
+                raise_if_longshot_cancelled(cancel_check)
                 data, method = _capture_bytes(
                     page, scale=scale, fmt=fmt, chapter_index=idx
                 )
+                raise_if_longshot_cancelled(cancel_check)
                 capture_method = method if idx == 0 else capture_method
                 if len(data) > MAX_WECHAT_BYTES and fmt == "png":
                     data, method = _capture_bytes(
@@ -761,21 +820,25 @@ def export_trip_longshot(
                     watermark=watermark,
                 )
                 out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
-                _write_output(out_path, data)
+                _write_output_tracked(out_path, data, session_writes)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
                 _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
             user_hint = _segment_user_hint(chapter_count, segment_reason)
         else:
             _report(1, 1, "正在合成长图…")
+            raise_if_longshot_cancelled(cancel_check)
             data, method = _capture_bytes(page, scale=scale, fmt=fmt)
+            raise_if_longshot_cancelled(cancel_check)
             capture_method = method
             if len(data) > MAX_WECHAT_BYTES:
                 segment_reason = "size"
                 _report(0, chapter_count, "准备导出…")
                 for idx in range(chapter_count):
+                    raise_if_longshot_cancelled(cancel_check)
                     data, method = _capture_bytes(
                         page, scale=scale, fmt=fmt, chapter_index=idx
                     )
+                    raise_if_longshot_cancelled(cancel_check)
                     capture_method = method if idx == 0 else capture_method
                     if len(data) > MAX_WECHAT_BYTES and fmt == "png":
                         data, method = _capture_bytes(
@@ -790,14 +853,17 @@ def export_trip_longshot(
                         watermark=watermark,
                     )
                     out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
-                    _write_output(out_path, data)
+                    _write_output_tracked(out_path, data, session_writes)
                     outputs.append(LongshotOutput(path=out_path, capture_method=method))
                     _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
                 user_hint = _segment_user_hint(chapter_count, segment_reason)
             else:
                 out_path = output or trip_dir / f"{title}-longshot.{ext}"
-                _write_output(out_path, data)
+                _write_output_tracked(out_path, data, session_writes)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
+    except LongshotCancelled:
+        purge_longshot_session_files(session_writes)
+        raise
     finally:
         if page is not None:
             try:
@@ -826,6 +892,7 @@ def export_trip_longshot(
         publish_guide="",
         page_count=len(outputs),
     )
+
 
 
 def reveal_path_in_folder(path: Path, *, allowed_root: Path) -> None:

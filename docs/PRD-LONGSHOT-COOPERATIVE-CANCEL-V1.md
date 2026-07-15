@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（Studio 预览 Toolbar · 长图导出） |
-| **文档版本** | **v0.1.0-DRAFT** |
-| **状态** | **Ready for Kickoff 大纲**（Stable-QH OUT-06 升格；待六席短评） |
+| **文档版本** | **v0.2.0** |
+| **状态** | **In Progress**（OQ 已拍板 · `feat/longshot-cooperative-cancel-v1`） |
 | **性质** | **信任债还债**：可打断导出 + 产物回滚 + 槽位生命周期；非 LONGSHOT 2.0 功能面 |
 | **触发来源** | [PRD-STABLE-QUALITY-HARDENING-V1](./PRD-STABLE-QUALITY-HARDENING-V1.md) **OUT-06 / R-QH-10 / QH-07**；Stable-QH 结案后下一信任波 |
 | **目标分支** | `fix/longshot-cooperative-cancel-v1` → `master` |
@@ -136,24 +136,24 @@
 
 ---
 
-## 7. 开放问题（Kickoff 拍板）
+## 7. 开放问题（Kickoff 已拍板）
 
-| ID | 问题 | 默认建议 |
-|----|------|----------|
-| **OQ-LCC-01** | 本轮已 commit 的 PNG 删还是留？ | **策略 A：删本轮、留旧完整集** |
-| **OQ-LCC-02** | 书架 Modal 是否暴露「取消导出」？ | V1 仅预览 Dock；书架保持关闭≠取消 |
-| **OQ-LCC-03** | 取消是否要确认框？ | 要；一句确认，Esc=继续导出 |
-| **OQ-LCC-04** | 与导出门面 V1 续跑 flag 交互？ | 取消须清 `exportAfterLayout` 类 flag，防幽灵续跑 |
+| ID | 问题 | **定案（2026-07-15）** |
+|----|------|------------------------|
+| **OQ-LCC-01** | 本轮已 commit 的 PNG 删还是留？ | **策略 A：删本轮、留旧完整集**（未 commit 的 `.part` rollback） |
+| **OQ-LCC-02** | 书架 Modal 是否暴露「取消导出」？ | **V1 仅预览 Dock**；书架保持关闭≠取消 |
+| **OQ-LCC-03** | 取消是否要确认框？ | **要**；「停止导出？」· 主「停止」· 次「继续导出」 |
+| **OQ-LCC-04** | 与导出门面 V1 续跑 flag 交互？ | **取消须清** `exportAfterLayout` / layoutUpdating 类 flag |
 
 ---
 
 ## 8. Kickoff 检查清单
 
-- [ ] Owner / Reviewer / 目标合并日
-- [ ] OQ-LCC-01..04 圈定
-- [ ] 分支 `fix/longshot-cooperative-cancel-v1` 已开
-- [ ] 对照单测基线：`test_longshot_cancel_does_not_overwrite_cancelled` / `test_longshot_cancel_releases_job_slot` 保留并扩展
-- [ ] Stable-QH OUT-06 在结案记录中回链本文
+- [x] Owner / Reviewer / 目标合并日（本波实施中）
+- [x] OQ-LCC-01..04 圈定
+- [x] 分支 `feat/longshot-cooperative-cancel-v1` 已开
+- [x] 对照单测基线扩展（slot await + cancel_check purge）
+- [x] Stable-QH OUT-06 在结案记录中回链本文
 
 ---
 
@@ -162,3 +162,4 @@
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1.0 | 2026-07-15 | Stable-QH 结案后首稿大纲；承接 OUT-06 |
+| v0.2.0 | 2026-07-15 | OQ 定案；M1/M2 落地（协作 cancel + Dock CTA） |

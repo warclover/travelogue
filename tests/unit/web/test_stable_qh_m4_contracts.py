@@ -30,11 +30,16 @@ def test_m4_03_shelf_badge_demotes_when_resume_owns_cta() -> None:
     assert "更新长图" in logic
 
 
-def test_m4_06_longshot_export_honest_no_fake_cancel() -> None:
+def test_m4_06_longshot_export_cooperative_cancel_cta() -> None:
+    """LCC V1 supersedes Stable-QH honest-only cancel (OUT-06)."""
     dock = (_STUDIO / "preview-toolbar-v3-task-dock.js").read_text(encoding="utf-8")
-    assert "导出开始后无法取消" in dock
-    # showExporting 不再挂假取消按钮
-    assert 'cancelBtn.textContent = "取消"' not in dock
+    assert "取消导出" in dock
+    assert "导出开始后无法取消" not in dock
+    assert "hooks.onCancelExport" in dock
+    longshot = (_STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    assert "longshot_export_cancel" in longshot
+    assert "已取消导出" in longshot
+    assert "停止导出？" in longshot
 
 
 def test_m4_07_capture_object_fit_split() -> None:
