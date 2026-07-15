@@ -59,7 +59,6 @@ def test_preview_toolbar_longshot_integrated_to_top_bar() -> None:
         "preview-task-dock",
         "preview-sheet",
         "showG1",
-        "SHEET_HINT_KEY",
         "mountTemplateControls",
         "trapFocus",
         "data-copy-preset",

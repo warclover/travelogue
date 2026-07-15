@@ -23,6 +23,46 @@ python scripts/quality_gate.py
 python scripts/e2e_trip_acceptance.py linzhi mao
 ```
 
+## 稳定期质量硬化（Stable-QH）AC 命令
+
+> 对应 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) · M1–M5。  
+> 验收记录：[acceptance-records/stable-qh-2026-07-15.md](./acceptance-records/stable-qh-2026-07-15.md)
+
+**PR 快测（勿含 Playwright flake / vision）**：
+
+```bash
+pytest tests/ -q --fast
+# 等价：
+# pytest -m "not integration and not e2e and not vision and not playwright_serial and not legacy_homepage" -q
+```
+
+**合同 / schema / intent（AC-QH-01 / 02 子集）**：
+
+```bash
+pytest tests/unit/web/test_studio_intent.py::test_pipeline_default_place_passes_schema \
+  tests/unit/web/test_studio_intent.py::test_pipeline_persists_intent_and_passes_schema \
+  tests/unit/web/test_studio_m10.py::test_studio_export_zip \
+  tests/unit/web/test_stable_qh_m4_contracts.py \
+  tests/unit/web/test_import_wizard_payload_contract.py \
+  tests/unit/web/test_studio_incomplete_purge.py -q --timeout=120
+```
+
+**M3 取消半成品（AC-QH-05）**：
+
+```bash
+pytest tests/unit/web/test_studio_incomplete_purge.py \
+  tests/unit/web/handlers/test_studio_handlers_import_export.py::test_handle_cancel_purges_incomplete_trip \
+  tests/unit/web/handlers/test_studio_handlers_import_export.py::test_handle_cancel_keeps_previewable_trip -q
+```
+
+**Playwright 串行（F03/F04/F15/F16 · 勿堵 PR 快测）**：
+
+```bash
+pytest tests/ -q -m "e2e and playwright_serial"
+```
+
+**unit 禁隐式 NIMA**：默认 `tests/conftest.py` 对 unit 路径 stub `pyiqa_available→False`；真实 ML 测须 `@pytest.mark.vision`。
+
 ## Lint / pre-commit
 
 ```bash
@@ -37,7 +77,7 @@ pre-commit install   # 可选：提交前自动 ruff --fix
 | `ruff check travelogue tests scripts` | `lint` | 全仓 Python 规范（含 tests/scripts） |
 | `scripts/quality_gate.py` | `validate` | layout/scoring/studio 回归 + fixture schema |
 | `scripts/validate_trip.py … --level all` | `validate` | 标准 fixture 校验 |
-| 全量 pytest | 本地 / nightly | PR fast 子集不含 vision/e2e |
+| 全量 pytest | 本地 / nightly | PR fast 子集不含 vision/e2e/playwright_serial |
 
 ## P7 telemetry（已 schema 化）
 

@@ -519,6 +519,47 @@
           "additionalProperties": true,
           "description": "Bookends Engine telemetry snapshot (PRD §9)"
         },
+        "bookendsExplain": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Bookends Engine explain snapshot (opening/closing/pairing; Stable-QH D-QH-01)"
+        },
+        "bookendsVersions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Bookends scoring/version stamps (cover_engine decision.scoring_versions)"
+        },
+        "bookendsSoftWarnings": {
+          "type": "array",
+          "description": "Bookends soft warnings (structured; code+message required)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "layout": { "type": "string" }
+            }
+          }
+        },
+        "bookendsDegraded": {
+          "type": "boolean",
+          "description": "Bookends · closing degraded (e.g. no candidate)"
+        },
+        "closingUserPicked": {
+          "type": "boolean",
+          "description": "Bookends · user manually picked closing asset"
+        },
+        "coverOrientationByLayout": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Cover orientation prefer/fallback meta per export layout",
+          "properties": {
+            "mobile": { "$ref": "#/$defs/coverOrientationMeta" },
+            "web": { "$ref": "#/$defs/coverOrientationMeta" }
+          }
+        },
         "coverStyleExplain": {
           "type": "object",
           "additionalProperties": false,
@@ -531,7 +572,20 @@
             "quality": { "type": "number" },
             "fit": { "type": "number" },
             "avoidPenalty": { "type": "number" },
-            "lowConfidence": { "type": "boolean" }
+            "lowConfidence": { "type": "boolean" },
+            "titleSafe": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Opening title-safe mark (cover_engine.opening.title_safe)",
+              "properties": {
+                "titleUnsafe": { "type": "boolean" },
+                "reasons": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "hardGateApplied": { "type": "boolean" }
+              }
+            }
           }
         },
         "coverBlindReview": {
@@ -1091,6 +1145,10 @@
           ],
           "description": "Web cover opening skin. V6 assignable: first five. Last three deprecated (legacy trips only; resolve maps to V6)."
         },
+        "coverClosingStyle": {
+          "type": "string",
+          "description": "Closing / colophon skin id when a closing hero exists; omit key when no closing asset (cover_engine pops)."
+        },
         "revision": {
           "type": "integer",
           "minimum": 0,
@@ -1119,6 +1177,19 @@
       "properties": {
         "x": { "type": "number", "minimum": 0, "maximum": 1 },
         "y": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "coverOrientationMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "orientation_meta_for_cover() snapshot per layout",
+      "properties": {
+        "preferredOrientation": { "type": "string" },
+        "orientationMatched": { "type": "boolean" },
+        "orientationFallback": { "type": "boolean" },
+        "orientationFallbackReason": { "type": ["string", "null"] },
+        "exportLayout": { "type": "string", "enum": ["mobile", "web"] },
+        "userOneLiner": { "type": ["string", "null"] }
       }
     },
     "srcsetEntry": {

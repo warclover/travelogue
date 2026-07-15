@@ -27,6 +27,10 @@ var _previewThumbs = [];
 var _previewThumbNames = [];
 var _previewDateStart = null;
 var _previewDateEnd = null;
+/** 清点四态：idle | loading | ready | failed | degraded */
+var _previewState = "idle";
+var _previewGen = 0;
+var PREVIEW_TIMEOUT_MS = 8000;
 var _importStarted = false;
 var _photoCullTouched = false;
 var _keepDupesTouched = false;
@@ -305,6 +309,7 @@ function renderThumbs(thumbs) {
 function renderVerifyLine() {
   var line = $("v2-wizard-verify-line");
   var fineCtx = $("v2-wizard-fine-context");
+  if (line) line.setAttribute("role", "status");
   var name = _pendingFolderName || basenameTitle(_pendingAlbumPath) || "已选文件夹";
   if (_pendingUploadFiles && _pendingUploadFiles.length) {
     var uploadText = "浏览器上传 · " + _pendingUploadFiles.length + " 张";
@@ -313,14 +318,20 @@ function renderVerifyLine() {
     show($("v2-wizard-thumbs"), false);
     return;
   }
-  if (_pendingPhotoCount == null && _pendingAlbumPath) {
-    if (line) line.textContent = "📁 " + name + " · 正在清点照片…";
+  var verifyText = "📁 " + name;
+  if (_previewState === "loading" && _pendingAlbumPath) {
+    verifyText = "📁 " + name + " · 正在清点照片…";
+  } else if (_previewState === "degraded" && _pendingAlbumPath) {
+    verifyText = "📁 " + name + " · 照片较多，制作时将自动清点";
+  } else if (_previewState === "failed" && _pendingAlbumPath) {
+    verifyText = "📁 " + name + " · 未能清点照片，可更换文件夹或直接开始";
+  } else if (_previewState === "ready" && _pendingPhotoCount != null) {
+    verifyText = "📁 " + name + " · 已清点 " + _pendingPhotoCount + " 张";
   } else if (_pendingPhotoCount != null) {
-    if (line) line.textContent = "📁 " + name + " · 已清点 " + _pendingPhotoCount + " 张";
-  } else if (line) {
-    line.textContent = "📁 " + name;
+    verifyText = "📁 " + name + " · 已清点 " + _pendingPhotoCount + " 张";
   }
-  if (fineCtx && _pendingPhotoCount != null) {
+  if (line) line.textContent = verifyText;
+  if (fineCtx && _pendingPhotoCount != null && _previewState === "ready") {
     fineCtx.textContent = "📁 " + name + " · " + _pendingPhotoCount + " 张";
   } else if (fineCtx) {
     fineCtx.textContent = "📁 " + name;
@@ -328,7 +339,27 @@ function renderVerifyLine() {
 }
 
 function fetchAlbumPreview(albumPath) {
+  var gen = ++_previewGen;
   var started = Date.now();
+  _previewState = "loading";
+  _pendingPhotoCount = null;
+  renderVerifyLine();
+  updateCountHint();
+
+  var settled = false;
+  var timeoutId = setTimeout(function () {
+    if (gen !== _previewGen || settled) return;
+    _previewState = "degraded";
+    _pendingPhotoCount = null;
+    _previewThumbs = [];
+    _previewThumbNames = [];
+    renderVerifyLine();
+    updateCountHint();
+    trackStudioEvent("preview_timeout", {
+      elapsedMs: Date.now() - started,
+    });
+  }, PREVIEW_TIMEOUT_MS);
+
   return postJson("/__travelogue/album-preview", { albumPath: albumPath, thumbCount: thumbLimit() })
     .then(function (res) {
       var data = res.body || {};
@@ -337,7 +368,13 @@ function fetchAlbumPreview(albumPath) {
     })
     .catch(function () { return null; })
     .then(function (data) {
+      if (gen !== _previewGen) return;
+      settled = true;
+      clearTimeout(timeoutId);
       if (!data) {
+        if (_previewState !== "degraded") {
+          _previewState = "failed";
+        }
         _pendingPhotoCount = null;
         _previewThumbs = [];
         _previewThumbNames = [];
@@ -345,6 +382,10 @@ function fetchAlbumPreview(albumPath) {
         _previewDateEnd = null;
         renderVerifyLine();
         updateCountHint();
+        trackStudioEvent("preview_failed", {
+          elapsedMs: Date.now() - started,
+          degraded: _previewState === "degraded",
+        });
         return;
       }
       var n = Number(data.photoCount);
@@ -354,6 +395,7 @@ function fetchAlbumPreview(albumPath) {
       if (data.folderName) _pendingFolderName = String(data.folderName);
       _previewDateStart = data.dateStart ? String(data.dateStart) : null;
       _previewDateEnd = data.dateEnd ? String(data.dateEnd) : null;
+      _previewState = _pendingPhotoCount != null ? "ready" : "degraded";
       renderVerifyLine();
       renderThumbs(_previewThumbs);
       updateCountHint();
@@ -368,7 +410,7 @@ function fetchAlbumPreview(albumPath) {
         photoCount: _pendingPhotoCount,
         thumbCount: Math.min(_previewThumbs.length, thumbLimit()),
         elapsedMs: Date.now() - started,
-        degraded: _pendingPhotoCount == null,
+        degraded: _previewState === "degraded",
       });
     });
 }
@@ -752,6 +794,7 @@ function afterFolderPicked(albumPath, via) {
   _pendingUploadFiles = null;
   _pendingFolderName = basenameTitle(albumPath);
   _pendingPhotoCount = null;
+  _previewState = "loading";
   _previewThumbs = [];
   _previewThumbNames = [];
   _previewDateStart = null;
@@ -824,6 +867,7 @@ function restoreDraftFields(draft) {
   _photoCullTouched = !!draft.photoCullTouched;
   _keepDupesTouched = !!draft.keepDupesTouched;
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
+  _previewState = _pendingPhotoCount != null ? "ready" : "idle";
   var density = draft.layoutDensity || "balanced";
   document.querySelectorAll('input[name="v2-wizard-layout-density"]').forEach(function (input) {
     input.checked = input.value === density;
@@ -1016,6 +1060,44 @@ function startUploadFromWizard() {
     setStepError("confirm", "请先选择要上传的照片");
     return;
   }
+  if (_activeMode === "fine_craft") {
+    var fineErr = validateFineFields();
+    if (fineErr) {
+      setStepError("fine", fineErr);
+      return;
+    }
+  }
+  var title = safeGet("v2-wizard-trip-title");
+  var place = safeGet("v2-wizard-trip-place");
+  var userNotes = safeGet("v2-wizard-user-notes");
+  var travelNotes = safeGet("v2-wizard-travel-notes");
+  var dateStart = safeGet("v2-wizard-date-start");
+  var dateEnd = safeGet("v2-wizard-date-end");
+  var featuredDir = safeGet("v2-wizard-featured-dir");
+  var materialDir = safeGet("v2-wizard-material-dir");
+  var tpl = readTemplateParams();
+  var uploadOpts = {
+    source: "浏览器上传",
+    mode: _activeMode,
+    title: (title || "").trim() || undefined,
+    place: place || "旅途",
+    placeUserSet: !!place,
+    photoCullEnabled: readPhotoCullEnabled(),
+    keepNearDuplicates: readKeepDupesEnabled(),
+    template_mode: tpl.template_mode,
+    template_id: tpl.template_id,
+  };
+  if (userNotes) uploadOpts.userNotes = userNotes.slice(0, 200);
+  if (travelNotes) uploadOpts.travelNotes = travelNotes.slice(0, 500);
+  if (dateStart || dateEnd) {
+    uploadOpts.dateRange = { source: "user" };
+    if (dateStart) uploadOpts.dateRange.start = dateStart;
+    if (dateEnd) uploadOpts.dateRange.end = dateEnd;
+  }
+  if (featuredDir) uploadOpts.featuredDir = featuredDir;
+  if (materialDir) uploadOpts.materialDir = materialDir;
+  if (_activeMode === "fine_craft") uploadOpts.layoutDensity = readLayoutDensity();
+
   saveDraft();
   markVisited();
   try { localStorage.setItem(IMPORT_MODE_KEY, _activeMode); } catch (_e) { /* ignore */ }
@@ -1025,12 +1107,7 @@ function startUploadFromWizard() {
   if (typeof studioToast === "function") {
     studioToast("将新建一篇游记 · 已选择 " + files.length + " 张", { duration: 2200 });
   }
-  return startV2UploadImport(files, {
-    source: "浏览器上传",
-    photoCullEnabled: readPhotoCullEnabled(),
-    keepNearDuplicates: readKeepDupesEnabled(),
-    mode: _activeMode,
-  }).catch(function () { /* import-run handles */ });
+  return startV2UploadImport(files, uploadOpts).catch(function () { /* import-run handles */ });
 }
 
 function startImportFromWizard() {

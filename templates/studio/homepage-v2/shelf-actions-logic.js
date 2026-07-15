@@ -41,6 +41,23 @@ export function shelfResumeActions(trip) {
 }
 
 /**
+ * T-M4-03 · 角标矩阵：resume 条已有「更新长图」主 CTA 时，卡片长图角标降级（隐藏）。
+ * @param {{ longshotStale?: boolean, tripId?: string }} trip
+ * @param {{ resumeTripId?: string|null }} [opts]
+ * @returns {boolean}
+ */
+export function shelfShowCoverLongshotBadge(trip, opts) {
+  trip = trip || {};
+  opts = opts || {};
+  if (!trip.longshotStale) return false;
+  var resumeId = opts.resumeTripId;
+  if (resumeId && trip.tripId && String(resumeId) === String(trip.tripId)) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Bento「我的画册」Tab 是否应展示算法过期提示条。
  * @param {{ algorithmStale?: boolean, longshotStale?: boolean }} trip
  * @returns {boolean}

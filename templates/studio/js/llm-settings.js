@@ -464,7 +464,7 @@ export function initLlmSettingsEntry() {
     var title = document.getElementById("v2-settings-title");
     if (title) title.textContent = "设置";
     var desc = document.getElementById("v2-settings-desc");
-    if (desc) desc.textContent = "导入偏好与可选的 AI 文案升级";
+    if (desc) desc.textContent = "导入与分析偏好；AI 文案可在能力卡中升级";
     var sec = document.createElement("section");
     sec.className = "v2-settings-popover__section";
     sec.setAttribute("aria-label", "AI 文案");

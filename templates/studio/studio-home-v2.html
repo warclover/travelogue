@@ -160,7 +160,7 @@
               <div class="v2-bench__quick-actions">
                 <button type="button" class="v2-bench__ghost-btn v2-bench__ghost-btn--secondary" id="v2-bench-resume">继续上次</button>
                 <button type="button" class="v2-bench__ghost-btn v2-settings-toggle" id="v2-settings-toggle"
-                        aria-label="设置" title="导入偏好与可选的 AI 文案"
+                        aria-label="设置" title="导入与分析偏好"
                         aria-describedby="v2-settings-desc"
                         aria-expanded="false" aria-controls="v2-settings-popover"
                         aria-haspopup="dialog">设置</button>
@@ -211,7 +211,7 @@
       <div class="v2-settings-popover__head">
         <div class="v2-settings-popover__titles">
           <p id="v2-settings-title" class="v2-settings-popover__title">设置</p>
-          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入偏好与可选的 AI 文案升级</p>
+          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入与分析偏好；AI 文案可在能力卡中升级</p>
         </div>
         <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
                 aria-label="关闭">×</button>
@@ -254,24 +254,27 @@
           </select>
           <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
         </div>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-g1">结构确认（G1）</label>
-          <select id="studio-cfg-g1" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-g1-hint">
-            <option value="false">自动继续（推荐）</option>
-            <option value="true">导入后先确认章节</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需预览内确认章节顺序再生成文案</p>
-        </div>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版</label>
-          <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-layout-scoring-hint">
-            <option value="false">经典（默认）</option>
-            <option value="true">实验 · beam 评分</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式启用多信号 beam 搜索；内测 A/B 用，一般保持默认</p>
-        </div>
+        <details class="v2-advanced-popover__experimental" id="v2-settings-experimental">
+          <summary class="v2-advanced-popover__experimental-summary">实验选项</summary>
+          <div class="v2-advanced-popover__row">
+            <label class="v2-advanced-popover__label" for="studio-cfg-g1">导入后先确认章节</label>
+            <select id="studio-cfg-g1" class="v2-advanced-popover__select"
+                    aria-describedby="studio-cfg-g1-hint">
+              <option value="false">自动继续（推荐）</option>
+              <option value="true">导入后先确认章节</option>
+            </select>
+            <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
+          </div>
+          <div class="v2-advanced-popover__row">
+            <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版（实验）</label>
+            <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
+                    aria-describedby="studio-cfg-layout-scoring-hint">
+              <option value="false">经典（默认）</option>
+              <option value="true">智能排版（实验）</option>
+            </select>
+            <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式用多信号搜索排版；一般保持默认即可</p>
+          </div>
+        </details>
       </section>
       <section class="v2-settings-popover__section v2-settings-popover__section--dev" id="v2-settings-dev-section" hidden>
         <p class="v2-settings-popover__section-label">开发者</p>
@@ -398,7 +401,7 @@
       <div class="v2-wizard__body">
         <div class="v2-wizard__verify" id="v2-wizard-verify">
           <div class="v2-wizard__verify-row">
-            <p class="v2-wizard__verify-line" id="v2-wizard-verify-line">正在清点照片…</p>
+            <p class="v2-wizard__verify-line" id="v2-wizard-verify-line" role="status">正在清点照片…</p>
             <button type="button" class="v2-wizard__link" id="v2-wizard-change-folder"
                     aria-label="更换文件夹，返回选择步骤">更换</button>
           </div>

@@ -281,6 +281,11 @@
   },
   {
     "method": "POST",
+    "path": "/__travelogue/longshot/upload",
+    "handler": "export_handlers.handle_longshot_upload"
+  },
+  {
+    "method": "POST",
     "path": "/__travelogue/narrate",
     "handler": "export_handlers.handle_narrate"
   },
@@ -293,6 +298,11 @@
     "method": "POST",
     "path": "/__travelogue/reveal",
     "handler": "export_handlers.handle_reveal"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/shutdown",
+    "handler": "export_handlers.handle_shutdown"
   },
   {
     "method": "POST",

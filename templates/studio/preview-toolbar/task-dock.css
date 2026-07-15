@@ -114,6 +114,12 @@
   align-items: center;
 }
 
+.preview-task-dock__cancel-note {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
 .preview-task-dock__btn {
   border: none;
   border-radius: 999px;

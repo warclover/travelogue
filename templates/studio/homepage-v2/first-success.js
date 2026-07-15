@@ -7,7 +7,7 @@ import {
   HELP_COPY,
   trackHelpEvent,
 } from "../js/help-onboarding.js";
-import { LS, isDemoTrip } from "../js/constants.js";
+import { LS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
@@ -21,6 +21,9 @@ var _autoOpenEnabled = true;
 var _wired = false;
 var _successMode = "quick_share";
 var _successRefinedEnabled = true;
+var _trapHandler = null;
+var _escHandler = null;
+var _previousFocus = null;
 
 var DENSITY_COPY = {
   zh: {
@@ -298,10 +301,65 @@ export function isFirstSuccessVisible() {
   return !!(overlay && !overlay.hidden);
 }
 
+function focusableEls(container) {
+  return Array.prototype.slice
+    .call(container.querySelectorAll(SHEET_FOCUSABLE))
+    .filter(function (el) {
+      return el.offsetParent !== null || el === document.activeElement;
+    });
+}
+
+function trapFocus(dialog) {
+  releaseTrap(dialog);
+  _trapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(dialog);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  dialog.addEventListener("keydown", _trapHandler);
+}
+
+function releaseTrap(dialog) {
+  if (_trapHandler && dialog) dialog.removeEventListener("keydown", _trapHandler);
+  _trapHandler = null;
+}
+
+function bindEscDismiss() {
+  releaseEsc();
+  _escHandler = function (e) {
+    if (e.key !== "Escape") return;
+    if (!isFirstSuccessVisible()) return;
+    e.preventDefault();
+    dismissFirstSuccess();
+  };
+  document.addEventListener("keydown", _escHandler);
+}
+
+function releaseEsc() {
+  if (_escHandler) document.removeEventListener("keydown", _escHandler);
+  _escHandler = null;
+}
+
 export function dismissFirstSuccess() {
   clearCountdown();
-  show($("v2-first-success"), false);
+  var overlay = $("v2-first-success");
+  releaseTrap(overlay);
+  releaseEsc();
+  show(overlay, false);
   syncVariantGuard();
+  if (_previousFocus && typeof _previousFocus.focus === "function") {
+    try { _previousFocus.focus(); } catch (_e) { /* ignore */ }
+  }
+  _previousFocus = null;
   if (typeof V2.reroute === "function") V2.reroute();
 }
 
@@ -315,10 +373,18 @@ export function showFirstSuccess(jobOrResult) {
   restoreImportShell();
 
   populateSuccessUi(result);
+  _previousFocus = document.activeElement;
   show($("v2-first-success"), true);
   syncHomeStubBanner();
 
   if (!_wired) wireFirstSuccess();
+  var overlay = $("v2-first-success");
+  if (overlay) {
+    trapFocus(overlay);
+    bindEscDismiss();
+    var focusTarget = $("v2-success-open") || $("v2-success-stay");
+    if (focusTarget && typeof focusTarget.focus === "function") focusTarget.focus();
+  }
   startCountdown();
 }
 

@@ -186,7 +186,7 @@ def test_homepage_p2_denoise_no_user_facing_bento():
     assert "Bento" not in joined
     assert "Bento" not in aria_labels
     assert 'id="v2-settings-desc"' in html
-    assert "下次导入时的默认选项" in html
+    assert "导入与分析偏好；AI 文案可在能力卡中升级" in html
     assert 'id="v2-cta"' in html
     assert "开始制作我的游记" in html
     assert "你的游记画册" in _read("templates/studio/homepage-v2/shelf.js")

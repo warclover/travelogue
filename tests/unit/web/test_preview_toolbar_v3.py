@@ -379,6 +379,7 @@ def _seed_preview_trip(trips_dir: Path, trip_id: str = "v3-smoke") -> str:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
@@ -567,6 +568,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+@pytest.mark.playwright_serial
 def test_v3_mobile_keeps_bottom_sheet(tmp_path: Path) -> None:
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright

@@ -135,3 +135,35 @@ def test_pipeline_persist_mutator_keeps_render_bundle_fresh(tmp_path) -> None:
     assert after["pipeline"]["timings"]["totalMs"] == 99.0
     assert meta_rendered_revision(after) == meta_revision(after)
     assert trip_render_bundle_stale(Path(trips_dir), after) is False
+
+
+def test_intent_folders_merge_mutator_pushes_featured_detected() -> None:
+    """Stable-QH D-QH-02: folders merge survives disk-intent-wins pipeline persist."""
+    from travelogue.media.ingest_persist import (
+        make_intent_folders_merge_mutator,
+        merge_pipeline_persist,
+    )
+
+    disk = {
+        "intent": {"version": "1", "title": "HTTP wins", "places": ["京都"], "folders": {}},
+        "meta": {"title": "HTTP wins"},
+        "pipeline": {"status": "ingest_ready"},
+    }
+    memory = {
+        "intent": {
+            "version": "1",
+            "title": "stale",
+            "places": [],
+            "folders": {"featuredDetected": True},
+        },
+        "pipeline": {"status": "structure_locked"},
+        "chapters": [{"id": "ch-01"}],
+    }
+    mutator = make_intent_folders_merge_mutator(memory)
+    mutator(disk)
+    assert disk["intent"]["title"] == "HTTP wins"
+    assert disk["intent"]["folders"]["featuredDetected"] is True
+    merge_pipeline_persist(disk, memory_trip=memory)
+    assert disk["intent"]["title"] == "HTTP wins"
+    assert disk["intent"]["folders"]["featuredDetected"] is True
+    assert disk["chapters"][0]["id"] == "ch-01"

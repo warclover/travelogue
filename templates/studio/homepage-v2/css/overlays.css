@@ -44,6 +44,12 @@
   font-size: 11px;
   color: rgba(255, 255, 255, .68);
 }
+.v2-import-panel__slow-hint {
+  margin: -8px 0 16px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 230, 180, .92);
+}
 .v2-import-panel__bar {
   height: 3px;
   border-radius: 2px;

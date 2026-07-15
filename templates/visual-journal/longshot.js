@@ -1345,7 +1345,9 @@
     cloneImg.removeAttribute("srcset");
     cloneImg.style.display = "block";
     cloneImg.style.position = "static";
-    cloneImg.style.objectFit = "fill";
+    // T-M4-07：封面 cover / 其余 contain（与 longshot.css 捕获态分策一致）
+    var isCover = !!(cloneImg.closest && cloneImg.closest(".cover-hero__media"));
+    cloneImg.style.objectFit = isCover ? "cover" : "contain";
     cloneImg.style.objectPosition = "center";
     cloneImg.style.verticalAlign = "top";
     cloneImg.style.flex = "none";

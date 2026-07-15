@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.vision
+
 torch = pytest.importorskip("torch")
 pytest.importorskip("PIL.Image")
 pytest.importorskip("open_clip")

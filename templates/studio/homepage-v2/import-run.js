@@ -12,6 +12,7 @@
  */
 import {
   SS, STAGE_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
+  SLOW_JOB_MS, SLOW_JOB_VISION_MS, SLOW_JOB_VISION_LONG_MS,
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
@@ -34,6 +35,15 @@ import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 let _gen = 0;
 let _activeJobId = null;
+let _importStartedAt = 0;
+let _slowHintLevel = 0;
+
+/** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
+var SLOW_HINT_COPY = {
+  1: "比预期久一些，请耐心等待…",
+  2: "照片较多，正在仔细分析行程与场景，首次可能较慢",
+  3: "仍可继续等待，或在「高级 · 分析选项」中关闭场景分析以加快速度",
+};
 
 function humanizeError(code, fallback) {
   return STUDIO_ERROR_MESSAGES[code] || fallback || "导入失败，请重试";
@@ -86,16 +96,34 @@ function buildUploadForm(files, opts) {
   var form = new FormData();
   var title = (opts.title || guessUploadTitle(files) || "我的旅途").slice(0, 20);
   form.append("title", title);
-  form.append("place", "旅途");
-  form.append("placeUserSet", "false");
+  var place = String(opts.place || "旅途").trim() || "旅途";
+  form.append("place", place);
+  var placeUserSet = opts.placeUserSet === true ||
+    (opts.placeUserSet !== false && place && place !== "旅途");
+  form.append("placeUserSet", placeUserSet ? "true" : "false");
   var mode = String(opts.mode || "quick_share");
   form.append("mode", mode);
   if (mode === "fine_craft" && opts.layoutDensity) {
     form.append("layoutDensity", String(opts.layoutDensity));
   }
-  var tpl = readTemplateParams();
-  form.append("template_mode", tpl.template_mode || "smart");
-  if (tpl.template_id) form.append("template_id", tpl.template_id);
+  var tplMode = opts.template_mode || opts.templateMode;
+  var tplId = opts.template_id || opts.templateId;
+  if (!tplMode) {
+    var tpl = readTemplateParams();
+    tplMode = tpl.template_mode;
+    tplId = tpl.template_id;
+  }
+  form.append("template_mode", tplMode || "smart");
+  if (tplId) form.append("template_id", tplId);
+  if (opts.userNotes) form.append("userNotes", String(opts.userNotes).slice(0, 200));
+  if (opts.travelNotes) form.append("travelNotes", String(opts.travelNotes).slice(0, 500));
+  var dateRange = opts.dateRange;
+  if (dateRange && typeof dateRange === "object") {
+    if (dateRange.start) form.append("dateRangeStart", String(dateRange.start));
+    if (dateRange.end) form.append("dateRangeEnd", String(dateRange.end));
+  }
+  if (opts.featuredDir) form.append("featuredDir", String(opts.featuredDir));
+  if (opts.materialDir) form.append("materialDir", String(opts.materialDir));
   if (opts.force) form.append("force", "true");
   if (opts.forceStub) form.append("forceStub", "true");
   form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
@@ -106,8 +134,9 @@ function buildUploadForm(files, opts) {
   return form;
 }
 
+/** 与 import-wizard.js 同源：读 Wizard 模板控件（勿回退到已退役 #v2-template-mode）。 */
 function readTemplateParams() {
-  var sel = $("v2-template-mode");
+  var sel = $("v2-wizard-template-mode");
   if (!sel) return { template_mode: "smart" };
   var v = String(sel.value || "smart");
   if (v.indexOf("manual:") === 0) {
@@ -143,6 +172,24 @@ function setStage(text, fillPct) {
   if (progress && text) {
     progress.setAttribute("aria-valuetext", text);
   }
+}
+
+function setSlowHintLevel(level) {
+  if (level <= _slowHintLevel) return;
+  _slowHintLevel = level;
+  var hint = $("v2-import-slow-hint");
+  if (!hint) return;
+  var copy = SLOW_HINT_COPY[level] || "";
+  hint.textContent = copy;
+  hint.hidden = !copy;
+}
+
+function tickSlowHint() {
+  if (!_importStartedAt) return;
+  var elapsed = Date.now() - _importStartedAt;
+  if (elapsed >= SLOW_JOB_VISION_LONG_MS) setSlowHintLevel(3);
+  else if (elapsed >= SLOW_JOB_VISION_MS) setSlowHintLevel(2);
+  else if (elapsed >= SLOW_JOB_MS) setSlowHintLevel(1);
 }
 
 export function renderImportingPanel(source) {
@@ -196,6 +243,13 @@ export function renderImportingPanel(source) {
   stage.textContent = "准备导入…";
   panel.appendChild(stage);
 
+  var slowHint = document.createElement("p");
+  slowHint.className = "v2-import-panel__slow-hint";
+  slowHint.id = "v2-import-slow-hint";
+  slowHint.setAttribute("role", "status");
+  slowHint.hidden = true;
+  panel.appendChild(slowHint);
+
   var cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
   cancelBtn.className = "v2-import-panel__cancel";
@@ -206,6 +260,8 @@ export function renderImportingPanel(source) {
   host.appendChild(panel);
   show(host, true);
   V2.state = "Importing";
+  _importStartedAt = Date.now();
+  _slowHintLevel = 0;
   setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
@@ -225,7 +281,7 @@ function performCancelImport() {
     postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
   }
   if (typeof studioToast === "function") {
-    studioToast("已取消导入", { duration: 2000 });
+    studioToast("已清理未完成草稿", { duration: 2000 });
   }
   syncVariantGuard();
   if (typeof V2.reroute === "function") V2.reroute();
@@ -236,12 +292,12 @@ export function cancelImport() {
   if (typeof studioModal === "function") {
     studioModal({
       title: "确定取消？",
-      body: "取消后将丢失当前进度。",
+      body: "取消后将删除未完成的草稿。",
       confirmText: "确定取消",
       cancelText: "继续等待",
       danger: true,
     }).then(function (confirmed) { if (confirmed) doCancel(); });
-  } else if (window.confirm("确定取消导入？")) {
+  } else if (window.confirm("取消后将删除未完成的草稿。确定取消？")) {
     doCancel();
   }
 }
@@ -258,6 +314,7 @@ function refreshTripsForImportSuccess(result) {
 
 function pollImport(jobId, gen, source) {
   _activeJobId = jobId;
+  if (!_importStartedAt) _importStartedAt = Date.now();
   try {
     sessionStorage.setItem(SS.activeJobId, jobId);
   } catch (e) { /* ignore */ }
@@ -267,6 +324,7 @@ function pollImport(jobId, gen, source) {
     shouldAbort: function () { return gen !== _gen; },
     onTick: function (job) {
       if (gen !== _gen) return;
+      tickSlowHint();
       if (job.status === "running" || job.status === "queued") {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
@@ -276,6 +334,8 @@ function pollImport(jobId, gen, source) {
     },
   }).then(function (job) {
     if (gen !== _gen) return null;
+    _importStartedAt = 0;
+    _slowHintLevel = 0;
     var pending = null;
     try {
       var pendingRaw = sessionStorage.getItem(SS.activePending);
@@ -455,12 +515,21 @@ export function startV2UploadImport(files, opts) {
   var submit = function (force) {
     var form = buildUploadForm(list, {
       title: opts.title,
+      place: opts.place,
+      placeUserSet: opts.placeUserSet,
       force: !!force,
       forceStub: forceStub,
       photoCullEnabled: opts.photoCullEnabled,
       keepNearDuplicates: opts.keepNearDuplicates,
       mode: uploadMode,
       layoutDensity: opts.layoutDensity,
+      template_mode: opts.template_mode || opts.templateMode,
+      template_id: opts.template_id || opts.templateId,
+      userNotes: opts.userNotes,
+      travelNotes: opts.travelNotes,
+      dateRange: opts.dateRange,
+      featuredDir: opts.featuredDir,
+      materialDir: opts.materialDir,
     });
     return withJobBusyRetry(function () {
       return postMultipartImportV2(form, {

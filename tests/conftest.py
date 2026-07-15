@@ -138,6 +138,39 @@ def _trust_local_album_in_tests(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
+def _forbid_implicit_nima_torch_in_unit(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+):
+    """T-M5-02 / QH-17 · unit 默认禁止隐式拉起 NIMA/pyiqa 评分。
+
+    Opt-in：``@pytest.mark.vision``，或测试内自行 monkeypatch ``pyiqa_available``。
+    e2e / integration / playwright_serial 不受影响。
+    """
+    node = request.node
+    if node.get_closest_marker("vision") is not None:
+        yield
+        return
+    if any(
+        node.get_closest_marker(name) is not None
+        for name in ("e2e", "integration", "playwright_serial")
+    ):
+        yield
+        return
+    subpath = _tests_subpath(node)
+    is_unit = node.get_closest_marker("unit") is not None or (
+        bool(subpath) and subpath[0] == "unit"
+    )
+    if not is_unit:
+        yield
+        return
+    monkeypatch.setattr(
+        "travelogue.curation.photo_cull_ml.pyiqa_available",
+        lambda: False,
+    )
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _release_resources_before_playwright(request: pytest.FixtureRequest):
     """Reduce open_clip/torch ↔ Playwright contention for longshot capture."""
     if request.node.get_closest_marker("playwright_serial") is None:

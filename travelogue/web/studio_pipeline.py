@@ -978,6 +978,10 @@ def run_studio_pipeline(
 
         _sync_trip_from_disk(trip, svc, trip_json)
         tier_mode = _apply_featured_detected_intent(trip, ingest_stats_holder)
+        # D-QH-02: folders.featuredDetected must survive disk-intent-wins persist.
+        from travelogue.media.ingest_persist import make_intent_folders_merge_mutator
+
+        svc.update(trip_json, make_intent_folders_merge_mutator(trip))
         _persist_trip_state()
 
         try:

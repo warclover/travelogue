@@ -123,12 +123,15 @@ def test_intent_summary_reads_intent_then_meta():
 def test_build_entry_includes_cover_opening_style() -> None:
     trip = {"meta": {"coverOpeningStyle": "magazine-head"}}
     entry = build_entry(trip, "demo-trip")
-    assert entry["coverOpeningStyle"] == "magazine-head"
+    # V6 legacy_map: magazine-head → folio-overlap (resolved for Studio consumers)
+    assert entry["coverOpeningStyle"] == "folio-overlap"
+    assert entry["coverOpeningStyleRaw"] == "magazine-head"
+    assert entry["coverLegacyMapped"] is True
 
 
-def test_build_entry_cover_opening_style_defaults_card_br() -> None:
+def test_build_entry_cover_opening_style_defaults_veil_footer() -> None:
     entry = build_entry({"meta": {}}, "demo-trip")
-    assert entry["coverOpeningStyle"] == "card-br"
+    assert entry["coverOpeningStyle"] == "veil-footer"
 
 
 def test_build_entry_includes_pipeline_and_chapters():

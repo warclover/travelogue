@@ -368,6 +368,11 @@ bypass 门禁后追加回声：「标题仍是『{title}』· 可回预览改」
 |----|------|--------|
 | **F-TRU-HOME-01** | 用户可见表面避免「Bento」等内部词 | P2 |
 | **F-TRU-HOME-02** | 「导入偏好」副文案说明「下次导入默认选项」 | P2 |
+
+> **Superseded（Stable-QH v1.1 · R-QH-04 / R-QH-06）**：设置描述改为  
+> 「导入与分析偏好；AI 文案可在能力卡中升级」（案甲：不在 Popover 内重复承诺 AI 入口）。  
+> 详见 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md)。
+
 | **F-TRU-HOME-03** | 英雄区「你的游记画册」权重 ≥ 工具快捷区 | P2 |
 | **F-TRU-HOME-04** | 不削弱「开始制作我的游记」主 CTA | P2 |
 

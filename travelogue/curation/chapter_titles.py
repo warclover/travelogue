@@ -94,9 +94,10 @@ def chapter_titles(
             if n == 0:
                 titles.append(base[:12])
             elif n == 1:
-                titles.append(f"{base}·二"[:12])
+                # T-M4-02：禁止默认「日期·二」类最伤标题；同日第二段用软消歧
+                titles.append(f"{base}续"[:12])
             else:
-                titles.append(f"{base}·{n + 1}"[:12])
+                titles.append(f"{place}·{n + 1}"[:12])
         elif i == 0:
             titles.append("抵达"[:12])
         elif i == len(buckets) - 1:

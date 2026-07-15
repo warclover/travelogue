@@ -258,6 +258,18 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if not payload:
         return
 
+    # Busy check before album validation so clients/probes see 409, not 403/400.
+    if payload.get("_job") is None and get_job_store().is_import_running():
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": user_message("E_STUDIO_JOB_BUSY"),
+            },
+        )
+        return
+
     precreated_job = payload.pop("_job", None)
     album_raw = str(payload.get("albumPath") or "").strip()
     use_demo_album = bool(payload.get("useDemoAlbum"))
@@ -385,10 +397,11 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    # Bind tripId early so PATCH/DELETE busy checks cover in-flight imports.
+    # Bind tripId early so cancel/fail purge + PATCH/DELETE busy checks work
+    # even when force=True (otherwise job.trip_id stays None until success).
     if trip_id_str:
         store.update(job, trip_id=trip_id_str)
-    elif not force:
+    else:
         from travelogue.util.trip_slug import demo_trip_id_from_album
 
         predicted = demo_trip_id_from_album(
@@ -461,7 +474,8 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
                     "cancelled",
                 ):
                     finished.set()
-                    if upload_dir and current.status == "succeeded":
+                    # M3 · D-QH-05：任意终态都清 upload staging（成功/失败/取消）
+                    if upload_dir:
                         delete_upload_dir(upload_dir, trips_dir=trips_root)
                     break
                 time.sleep(0.5)

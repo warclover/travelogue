@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   shelfResumeActions,
+  shelfShowCoverLongshotBadge,
   shouldShowBentoStaleBar,
   bentoStaleMessage,
 } from "../../templates/studio/homepage-v2/shelf-actions-logic.js";
@@ -39,9 +40,39 @@ describe("shelfResumeActions", function () {
     var actions = shelfResumeActions({ longshotStale: true, algorithmStale: true });
     assert.equal(actions.length, 3);
     assert.equal(actions[0].kind, "longshot");
+    assert.equal(actions[0].primary, true);
     assert.equal(actions[1].kind, "algorithm");
     assert.equal(actions[1].primary, false);
     assert.equal(actions[2].kind, "open");
+  });
+});
+
+describe("shelfShowCoverLongshotBadge", function () {
+  it("hides card badge when resume owns the longshot CTA", function () {
+    assert.equal(
+      shelfShowCoverLongshotBadge(
+        { tripId: "a", longshotStale: true },
+        { resumeTripId: "a" }
+      ),
+      false
+    );
+  });
+
+  it("shows badge for other stale trips", function () {
+    assert.equal(
+      shelfShowCoverLongshotBadge(
+        { tripId: "b", longshotStale: true },
+        { resumeTripId: "a" }
+      ),
+      true
+    );
+  });
+
+  it("hides when not longshot stale", function () {
+    assert.equal(
+      shelfShowCoverLongshotBadge({ tripId: "a", longshotStale: false }, { resumeTripId: "a" }),
+      false
+    );
   });
 });
 
