@@ -40,6 +40,10 @@
 | AC-DLLM-08 | 重播引导 | 清能力卡 seen；下次 idle 可再出卡 | ☐ |
 | AC-DLLM-30 | N≥3 非技术用户无 Key | 导入→预览→长图；记录是否误以为必须配 Key | ☐ |
 
+## 打包冒烟（W3）
+
+见 [acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md)（发布门实机勾选）。
+
 ## 自动化
 
 ```powershell

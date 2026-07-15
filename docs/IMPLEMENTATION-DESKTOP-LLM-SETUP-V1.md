@@ -15,7 +15,7 @@
 | **W1a** | user_data · `/llm/*` API · 注入 · 设置 Modal · 预览文案/出口 · 单测 | ✅ 核心已合入 |
 | **W1b / W2** | 能力卡 T-CAP-01 · H7 · seen/重播 · D-DLLM-13 | ✅ |
 | **W2.1** | MF-06 预期文案常显 · D-DLLM-03「设置」外壳 · D-DLLM-13 设置 tip 接线 | ✅ |
-| **W3** | ACL 打磨 · 打包冒烟记录 · 短 ADR | ⏳ |
+| **W3** | ACL 打磨 · 打包冒烟记录 · 短 ADR · SF 路径双显 | ✅ |
 
 ## W1a 落点清单
 
@@ -54,7 +54,18 @@
 | I-25 | D-DLLM-03：外层「设置」· 内「导入偏好」分组 | `studio-home-v2.html` | ✅ |
 | I-26 | D-DLLM-13：能力卡结束后再弹设置 tip（`capability-card-done`） | `capability-card.js` · `settings-panel.js` | ✅ |
 
+## W3 收口
+
+| ID | 任务 | 路径 | 状态 |
+|----|------|------|------|
+| I-30 | ADR-018 `user_data_dir` + LLM secrets | `docs/adr/018-desktop-user-data-llm-secrets.md` | ✅ |
+| I-31 | ADR-004 交叉引用 | `docs/adr/004-studio-hub-server.md` | ✅ |
+| I-32 | 打包冒烟记录模板 | `docs/acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md` | ✅ 模板；实机 ☐ |
+| I-33 | SF-DLLM-02：status/UI 双显 `userDataDir` + `tripsDir` | `llm_settings_handlers.py` · `llm-settings.js` | ✅ |
+| I-34 | secrets ACL best-effort（已有） | `user_settings._try_restrict_acl` | ✅ 维持 |
+
 > **命名说明**：PRD 初稿写 H6「写作引擎」，现网 H6 已用于封面封底 → 落地为 **H7**。
+> **人工残留**：I-23 狗粮 AC-DLLM-30（N≥3）；冒烟模板实机勾选。
 
 ## 鉴权优先级（冻结）
 

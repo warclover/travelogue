@@ -50,3 +50,9 @@ def test_mf06_llm_expect_visible_when_available() -> None:
     assert "不会自动重写全文" in sheet
     assert "llmExpect.hidden = false" in init
     assert "if (llmSetup) llmSetup.hidden = !!ok;" in init
+
+
+def test_llm_settings_shows_trips_dir() -> None:
+    llm = LLM_JS.read_text(encoding="utf-8")
+    assert "tripsDir" in llm
+    assert "相册位置" in llm

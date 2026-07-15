@@ -48,6 +48,7 @@ def _status_body(*, cfg: Any = None) -> dict[str, Any]:
         "maskedKey": mask_api_key(secrets.api_key),
         "lastPingOk": secrets.last_ping_ok,
         "userDataDir": str(user_data_dir(ensure=False)),
+        "tripsDir": str(getattr(app_cfg, "trips_dir", "") or ""),
         "capabilities": {
             "import": True,
             "layout": True,

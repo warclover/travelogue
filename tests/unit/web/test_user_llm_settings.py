@@ -73,3 +73,14 @@ def test_config_overlay_and_status(user_data: Path, monkeypatch: pytest.MonkeyPa
     assert "api_key" not in overlay or "api_key_env" in overlay
     raw = json.loads((user_data / "secrets.json").read_text(encoding="utf-8"))
     assert "api_key" in raw
+
+
+def test_status_body_exposes_user_and_trips_dirs(user_data: Path) -> None:
+    from travelogue.web.studio_handlers.llm_settings_handlers import _status_body
+
+    body = _status_body()
+    assert body["ok"] is True
+    assert body["userDataDir"]
+    assert Path(body["userDataDir"]) == user_data.resolve()
+    assert "tripsDir" in body
+    assert body["tripsDir"]

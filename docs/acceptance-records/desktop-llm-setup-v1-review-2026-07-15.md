@@ -259,7 +259,8 @@
 4. ~~W1a 开编码~~ ✅（user_data · `/llm/*` · 设置 Modal · 预览文案）  
 5. ~~W2 能力卡 + H7~~ ✅  
 6. ~~W2.1 PARTIAL 收口（MF-06 / D-DLLM-03 / D-DLLM-13 tip）~~ ✅  
-7. **下一步**：W3 短 ADR + 打包冒烟记录；ACCEPTANCE 勾选狗粮 AC-DLLM-30（N≥3）  
+7. ~~W3 短 ADR + 打包冒烟模板 + 路径双显~~ ✅  
+8. **下一步（人工）**：按冒烟模板勾选发布门；ACCEPTANCE 勾选狗粮 AC-DLLM-30（N≥3）  
 
 ---
 
@@ -270,3 +271,4 @@
 | 2026-07-15 | 首轮跨职能评审 · Conditional Go · MF-DLLM-01～10 |
 | 2026-07-15 | MF 回写 PRD v1.1 · W1a 落地 · 线框/IMPLEMENTATION/ACCEPTANCE 就位 |
 | 2026-07-15 | W2 + W2.1：能力卡/H7；MF-06 预期常显；外层「设置」；能力卡→设置 tip 接线 |
+| 2026-07-15 | W3：ADR-018 · 冒烟模板 · SF 路径双显 |

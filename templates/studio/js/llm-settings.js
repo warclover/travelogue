@@ -141,9 +141,13 @@ function applyStatus(st) {
     key.placeholder = "已保存 " + st.maskedKey + " · 留空则保持原 Key";
   }
   var ud = $("#studio-llm-userdata");
-  if (ud && st.userDataDir) {
+  if (ud && (st.userDataDir || st.tripsDir)) {
     ud.hidden = false;
-    ud.textContent = "配置位置：" + st.userDataDir;
+    var lines = [];
+    if (st.userDataDir) lines.push("配置位置：" + st.userDataDir);
+    if (st.tripsDir) lines.push("相册位置：" + st.tripsDir);
+    ud.textContent = lines.join("\n");
+    ud.style.whiteSpace = "pre-line";
   }
   updateHowto();
 }
