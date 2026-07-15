@@ -163,3 +163,14 @@
 | [linzhi.md](./linzhi.md) | linzhi |
 | [mao.md](./mao.md) | mao |
 | [maomi.md](./maomi.md) | maomi |
+
+---
+
+## 稳定期质量硬化（Stable-QH）
+
+| 文件 | 用途 |
+|------|------|
+| [stable-qh-prd-review-2026-07-15.md](./stable-qh-prd-review-2026-07-15.md) | PRD v1.1 六席评审纪要 |
+| [stable-qh-2026-07-15.md](./stable-qh-2026-07-15.md) | M1–M5 落地验收记录 |
+
+门禁命令见 [QUALITY-GATE.md · 稳定期质量硬化](../QUALITY-GATE.md)。

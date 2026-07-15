@@ -46,6 +46,7 @@ def test_run_cull_ml_mode_without_pyiqa_uses_rules() -> None:
     assert summary["mode"] == "rules"
 
 
+@pytest.mark.vision
 def test_ac_p9_ml_02_keep_ratio_within_rules_delta() -> None:
     """AC-P9-ML-02 · ML 保留率 ≥ rules − 2%（需 pyiqa + ml 模式）。"""
     if not pyiqa_available() or resolve_effective_mode(CullConfig(mode="ml")) != "ml":

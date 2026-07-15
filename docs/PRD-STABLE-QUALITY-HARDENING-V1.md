@@ -393,10 +393,10 @@ M4 **不需要**新全页线框；需要 **扩展文案表**（清点四态、�
 
 | ID | 任务 |
 |----|------|
-| T-M5-01 | F03/F04 与 F15/F16 统一 `playwright_serial` / e2e；PR 快测排除 |
-| T-M5-02 | unit 禁隐式 NIMA/torch |
-| T-M5-03 | `QUALITY-GATE.md` 增加稳定期 AC 命令 |
-| T-M5-04 | `acceptance-records/stable-qh-YYYY-MM-DD.md` |
+| T-M5-01 | F03/F04 与 F15/F16 统一 `playwright_serial` / e2e；PR 快测排除 | ✅ |
+| T-M5-02 | unit 禁隐式 NIMA/torch | ✅ |
+| T-M5-03 | `QUALITY-GATE.md` 增加稳定期 AC 命令 | ✅ |
+| T-M5-04 | `acceptance-records/stable-qh-YYYY-MM-DD.md` | ✅ `stable-qh-2026-07-15.md` |
 
 ---
 
