@@ -52,10 +52,33 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
     )
     api_key = os.environ.get(api_key_env, "").strip()
     if not api_key:
+        # Desktop LLM Setup V1: fall back to user_data secrets (MF-DLLM-03).
+        try:
+            from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
+
+            secrets = read_user_llm_secrets()
+            inject_secrets_into_environ(secrets)
+            api_key = os.environ.get(api_key_env, "").strip()
+            if not api_key and secrets.api_key and secrets.provider == prov:
+                api_key = secrets.api_key.strip()
+        except Exception:
+            pass
+    if not api_key:
         raise LlmError("E_LLM_AUTH", f"missing API key env {api_key_env}")
 
     model = (llm.model or preset["default_model"]).strip()
     base = (llm.base_url or preset["base_url"]).rstrip("/")
+    try:
+        from travelogue.llm.user_settings import read_user_llm_secrets
+
+        secrets = read_user_llm_secrets()
+        if secrets.provider == prov:
+            if secrets.model:
+                model = secrets.model.strip()
+            if secrets.base_url:
+                base = secrets.base_url.rstrip("/")
+    except Exception:
+        pass
     return LlmRuntime(
         provider=prov,
         model=model,

@@ -1,8 +1,11 @@
 # Local config & secrets
 config.yaml
+config.user.yaml
+secrets.json
 .env
 .env.*
 !.env.example
+.travelogue-user/
 
 # Python
 .venv/

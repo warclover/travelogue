@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>桌面 LLM Setup V1 · 线框 F1–F3/F5</title>
+  <style>
+    :root {
+      --bg: #eceff1; --page: #fafafa; --text: #263238; --muted: #607d8b;
+      --bar: #1a2f28; --accent: #2f6b55; --border: #90a4ae; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+    .bar { background: var(--bar); color: #f5fbf8; padding: 14px 20px; }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .bar p { margin: 0; font-size: 12px; color: #9cb0a8; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button { border: 1px solid #546e7a; background: transparent; color: #eceff1; padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; }
+    .wrap { max-width: 720px; margin: 24px auto; padding: 0 16px 48px; }
+    .panel { display: none; background: var(--page); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .panel.is-visible { display: block; }
+    .phone { max-width: 360px; margin: 16px auto; border: 2px solid #455a64; border-radius: 16px; padding: 16px; background: #f7f5f0; }
+    .anno { font-size: 12px; color: #e65100; margin-top: 12px; }
+    .btn { display: inline-block; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 13px; }
+    .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .link { color: var(--accent); font-size: 13px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e8eee9; font-size: 12px; }
+    .badge.ready { background: #d9efe0; }
+    label { display: block; font-size: 12px; margin: 10px 0 4px; font-weight: 600; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #b7c4bd; border-radius: 8px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Desktop LLM Setup V1 · 线框</h1>
+    <p>PRD v1.1 · MF-01/02/05/06 · W1 挡门帧 F1–F3/F5（F4 H6 → W2）</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="f1" class="is-active">F1 能力卡</button>
+      <button type="button" data-tab="f2">F2 设置 Modal</button>
+      <button type="button" data-tab="f3">F3 预览 LLM 行</button>
+      <button type="button" data-tab="f5">F5 清除确认</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <section class="panel is-visible" id="f1">
+      <h2>F1 · 能力卡（W2 · CTA 收紧）</h2>
+      <div class="phone">
+        <strong>本机即可生成杂志卷轴与长图</strong>
+        <p style="font-size:13px;color:#4a5c55;">照片留在你的电脑。不必先配置任何接口。需要更强杂志感时，可稍后升级 AI 文案。</p>
+        <div class="row"><span class="btn">开始导入</span></div>
+        <p><a class="link" href="#">升级 AI 文案（可选）→</a></p>
+      </div>
+      <p class="anno">MF-01：禁止第三按钮「配置」；关闭用 × / Esc。</p>
+    </section>
+    <section class="panel" id="f2">
+      <h2>F2 · AI 文案设置 Modal（W1a）</h2>
+      <div class="phone">
+        <strong>AI 文案（可选）</strong>
+        <p style="font-size:12px;color:#4a5c55;">不配置也可以导入、排版和导出长图。</p>
+        <span class="badge">未配置</span>
+        <label>服务商</label>
+        <select><option>DeepSeek</option><option>通义千问</option></select>
+        <label>API Key</label>
+        <input type="password" placeholder="粘贴你的 API Key" />
+        <p style="font-size:12px;">如何获取 Key：DeepSeek / 通义控制台外链</p>
+        <div class="row">
+          <span class="btn">测试连接</span>
+          <span class="btn ghost">保存</span>
+          <span class="btn ghost">清除配置</span>
+        </div>
+        <p style="font-size:11px;color:#60756c;margin-top:10px;">配置后导入仍默认本机文案；需在预览点击「生成杂志感文案」。</p>
+      </div>
+      <p class="anno">MF-02/05/06：预览与首页共用此 Modal。</p>
+    </section>
+    <section class="panel" id="f3">
+      <h2>F3 · 预览更多工具 · L0</h2>
+      <div class="phone">
+        <details open>
+          <summary>更多工具</summary>
+          <p>生成杂志感文案 <button disabled>生成</button></p>
+          <p style="font-size:12px;color:#4a5c55;">当前为本机文案 · 配置写作引擎后可升级</p>
+          <p><a class="link" href="#">配置写作引擎</a> · 配置后不会自动重写，需再点「生成」</p>
+        </details>
+      </div>
+      <p class="anno">废止「生成不可用 · 未配置写作引擎」作主归因。</p>
+    </section>
+    <section class="panel" id="f5">
+      <h2>F5 · 清除配置确认</h2>
+      <div class="phone">
+        <p>清除写作引擎配置并回到本机文案？</p>
+        <div class="row"><span class="btn ghost">取消</span><span class="btn">清除</span></div>
+      </div>
+    </section>
+  </div>
+  <script>
+    document.getElementById("tabs").addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-tab]");
+      if (!btn) return;
+      document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.toggle("is-visible", p.id === btn.dataset.tab); });
+    });
+  </script>
+</body>
+</html>

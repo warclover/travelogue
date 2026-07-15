@@ -387,22 +387,56 @@ export function initToolbarV3(root, tripId) {
       });
       var llmBtn = panel.querySelector('[data-action="llm"]');
       var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
+      var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
+      var llmExpect = panel.querySelector(".preview-sheet__llm-expect");
       function setLlmAvailable(ok) {
         if (llmBtn) {
           llmBtn.disabled = !ok;
           llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
         }
+        // L0：未配置提示 + 配置出口；L1：保留「不会自动重写」预期（MF-06）
         if (llmHint) llmHint.hidden = !!ok;
+        if (llmSetup) llmSetup.hidden = !!ok;
+        if (llmExpect) llmExpect.hidden = false;
       }
       setLlmAvailable(false);
-      fetch("/__travelogue/config")
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (cfg) {
-          setLlmAvailable(!!(cfg && cfg.llmAvailable));
-        })
-        .catch(function () {
-          setLlmAvailable(false);
-        });
+      function refreshLlmStatus() {
+        fetch("/__travelogue/llm/status")
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (cfg) {
+            setLlmAvailable(!!(cfg && cfg.llmAvailable));
+          })
+          .catch(function () {
+            setLlmAvailable(false);
+          });
+      }
+      refreshLlmStatus();
+      window.addEventListener("travelogue:llm-status", function (ev) {
+        var d = ev && ev.detail;
+        if (d && typeof d.llmAvailable === "boolean") {
+          setLlmAvailable(d.llmAvailable);
+        } else {
+          refreshLlmStatus();
+        }
+      });
+      if (llmSetup && llmSetup.dataset.bound !== "1") {
+        llmSetup.dataset.bound = "1";
+        var setupBtn = llmSetup.querySelector('[data-action="llm-setup"]');
+        if (setupBtn) {
+          setupBtn.addEventListener("click", function () {
+            import("/__studio/js/llm-settings.js").then(function (mod) {
+              if (mod && typeof mod.openLlmSettings === "function") {
+                mod.openLlmSettings({
+                  source: "preview",
+                  onChange: function (st) {
+                    setLlmAvailable(!!(st && st.llmAvailable));
+                  },
+                });
+              }
+            });
+          });
+        }
+      }
     },
   };
 

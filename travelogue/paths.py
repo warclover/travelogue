@@ -60,27 +60,32 @@ def is_portable_mode() -> bool:
     return False
 
 
-def user_data_dir() -> Path:
-    """Writable user data root (trips / config / logs / cache).
+def user_data_dir(*, ensure: bool = False) -> Path:
+    """Writable user data root (trips / config / logs / cache / LLM secrets).
 
     Priority:
     1. ``TRAVELOGUE_USER_DATA`` (path override only)
-    2. Frozen portable → exe directory
-    3. Frozen install → ``%LOCALAPPDATA%\\Travelogue``
-    4. Dev → repository ``ROOT``
+    2. Frozen portable -> exe directory
+    3. Frozen install -> ``%LOCALAPPDATA%\\Travelogue``
+    4. Dev -> repository ``ROOT``
+
+    ``ensure=True`` creates the directory (Desktop LLM Setup / launcher).
     """
     override = (os.environ.get("TRAVELOGUE_USER_DATA") or "").strip()
     if override:
-        return Path(override).expanduser().resolve()
-    if not is_frozen():
-        return ROOT
-    if is_portable_mode():
-        return exe_dir()
-    local = (os.environ.get("LOCALAPPDATA") or "").strip()
-    if not local:
-        local = str(Path.home() / "AppData" / "Local")
-    return (Path(local) / APP_DIRNAME).resolve()
-
+        path = Path(override).expanduser().resolve()
+    elif not is_frozen():
+        path = ROOT
+    elif is_portable_mode():
+        path = exe_dir()
+    else:
+        local = (os.environ.get("LOCALAPPDATA") or "").strip()
+        if not local:
+            local = str(Path.home() / "AppData" / "Local")
+        path = (Path(local) / APP_DIRNAME).resolve()
+    if ensure:
+        path.mkdir(parents=True, exist_ok=True)
+    return path
 
 def default_trips_dir() -> Path:
     override = (os.environ.get("TRAVELOGUE_TRIPS_DIR") or "").strip()

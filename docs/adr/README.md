@@ -19,5 +19,6 @@
 | [016](./016-longshot-platform-export.md) | 平台化长图导出：三分支 Pipeline · full capture 切分 · 禁 P1 · 原子 Job | **Accepted** | 2026-07-08 |
 | [017](./017-bookends-engine.md) | Bookends Engine：两阶段挂点 · 锁粒度 · 压字分期 · B2a/B2b · 禁封面回退 | **Accepted** | 2026-07-13 |
 | [018](./018-desktop-installer-layout.md) | 桌面可安装版：onedir · 资源/数据根 · portable.flag · 单实例退出 · frozen worker · 长图自动轨 2 | **Accepted** | 2026-07-14 |
+| [019](./019-desktop-user-data-llm-secrets.md) | Desktop LLM secrets（复用 ADR-018 `user_data_dir` · L0/L1） | **Accepted** | 2026-07-15 |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

@@ -14,6 +14,15 @@ from travelogue.services.trip import TripService
 def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
     app_cfg = cfg or get_config()
     provider = (app_cfg.llm.provider or "stub").strip().lower()
+    try:
+        from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
+
+        secrets = read_user_llm_secrets()
+        inject_secrets_into_environ(secrets)
+        if secrets.configured and secrets.provider:
+            provider = secrets.provider
+    except Exception:
+        pass
     if provider == "stub":
         return {"llmAvailable": False, "llmProvider": "stub"}
     try:
@@ -42,7 +51,7 @@ def run_studio_llm_narrate(
     app_cfg = cfg or get_config()
     status = studio_llm_status(cfg=app_cfg)
     if not status.get("llmAvailable"):
-        raise LlmError("E_LLM_AUTH", "未配置 LLM API Key，无法生成杂志感文案")
+        raise LlmError("E_LLM_AUTH", "要生成杂志感文案，请先在设置中配置写作引擎")
 
     trip_dir = trip_dir.resolve()
     trip_json = trip_dir / "trip.json"
