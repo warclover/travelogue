@@ -3,14 +3,14 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（核心管线 + Studio + e2e） |
-| **文档版本** | **v1.0.3-ASH** |
-| **状态** | **In Progress · M0–M3 Done（待结案记录）** |
+| **文档版本** | **v1.0.4-ASH** |
+| **状态** | **Done**（[结案](./acceptance-records/ash-closeout-2026-07-16.md)） |
 | **特性代号** | **ASH**（Assertion Hardening） |
 | **性质** | **工程还债 PRD**：生产不变量安全 + 断言可诊断性 + e2e 稳定性；**零 intentional 用户功能** |
 | **触发来源** | 2026-07-16 全库断言专项审计（扫描证据见 §1 · 附录 B 可复现） |
-| **目标分支** | `chore/assertion-hardening-v1` → `master`（建议） |
+| **目标分支** | 已直合 `master`（`84a9ada`…`549e645`） |
 | **关联文档** | [TESTING.md](./TESTING.md) · [QUALITY-GATE.md](./QUALITY-GATE.md) · [DEFINITION-OF-DONE.md](./DEFINITION-OF-DONE.md) · [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) · [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) |
-| **验收配套** | 本文 §9；结案后补 `docs/acceptance-records/ash-closeout-YYYY-MM-DD.md` |
+| **验收配套** | 本文 §9 · [ash-closeout-2026-07-16.md](./acceptance-records/ash-closeout-2026-07-16.md) |
 | **更新日期** | 2026-07-16 |
 
 ---
@@ -346,9 +346,9 @@ python -m pytest tests/e2e/test_breath_lenis_scroll_playwright.py tests/e2e/test
 
 ### 9.3 结案产物
 
-- [ ] 本 PRD 状态 → **Done**
-- [ ] `docs/acceptance-records/ash-closeout-YYYY-MM-DD.md`（扫描前后对比表）
-- [ ] 若有 DIFF-ASH-*：release note 开发者段一行说明
+- [x] 本 PRD 状态 → **Done**
+- [x] `docs/acceptance-records/ash-closeout-2026-07-16.md`（扫描前后对比表）
+- [x] DIFF-ASH-01/02：结案记录 §4 开发者说明（无独立 release note 文件）
 
 ---
 
@@ -392,6 +392,7 @@ python -m pytest tests/e2e/test_breath_lenis_scroll_playwright.py tests/e2e/test
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.0.4-ASH | 2026-07-16 | 结案：[ash-closeout-2026-07-16.md](./acceptance-records/ash-closeout-2026-07-16.md)；状态 → Done |
 | v1.0.3-ASH | 2026-07-16 | M3：`_ash_source_contracts` helper；home_v2 主题字段级契约；toolbar import-path 11→7（~36%） |
 | v1.0.2-ASH | 2026-07-16 | M2：e2e 去固定 sleep；引入 expect / wait_for_function |
 | v1.0.1-ASH | 2026-07-16 | M0+M1 落地：TESTING §9、lint_no_runtime_assert、11 处生产 assert→领域 raise、raises(Exception) 收窄 |
