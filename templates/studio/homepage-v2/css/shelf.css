@@ -32,6 +32,24 @@
   font-size: 13px;
   color: var(--v2-text-muted);
 }
+.v2-shelf__storage-badge {
+  align-self: center;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--v2-border-strong, #c9c2b8);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--v2-text-muted, #6b655c);
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.v2-shelf__storage-badge:hover,
+.v2-shelf__storage-badge:focus-visible {
+  color: var(--v2-ink, #1c1916);
+  border-color: var(--v2-ink, #1c1916);
+  outline: none;
+}
 .v2-shelf__resume {
   display: flex;
   align-items: center;

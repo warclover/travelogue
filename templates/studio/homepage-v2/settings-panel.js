@@ -7,12 +7,14 @@ import { isCapabilityCardSeen } from "../js/help-onboarding.js";
 import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
 import { requestExitStudio } from "../js/studio-exit.js";
+import { bindStorageSettings } from "./storage-settings.js";
 import { $, V2 } from "./store.js";
 
 var SETTINGS_HINT_KEY = "travelogue.studio.v2.settingsMovedHint";
 
 var _open = false;
 var _bound = null;
+var _storageBound = null;
 var _scrim = null;
 var _focusTrapHandler = null;
 var _focusRestoreEl = null;
@@ -174,13 +176,19 @@ export function closeSettings() {
   if (restore && typeof restore.focus === "function") restore.focus();
 }
 
-function openSettings() {
+/**
+ * @param {{ focus?: "storage", source?: string }} [opts]
+ */
+export function openSettings(opts) {
+  opts = opts || {};
   var popover = $("v2-settings-popover");
   var toggle = $("v2-settings-toggle");
   if (!popover || !toggle || toggle.disabled || V2.state === "Importing") return;
   ensurePopoverPortaled(popover);
   syncDevSection();
   if (_bound && _bound.fetchConfig) _bound.fetchConfig();
+  if (_storageBound && _storageBound.fetchConfig) _storageBound.fetchConfig();
+  trackStudioEvent("storage_settings_open", { source: opts.source || "toolbar" });
   _focusRestoreEl = document.activeElement;
   _open = true;
   positionPopover(popover, toggle);
@@ -190,7 +198,22 @@ function openSettings() {
   scrim.hidden = false;
   toggle.setAttribute("aria-expanded", "true");
   trapFocus(popover);
-  trackStudioEvent("settings_open", { source: "toolbar" });
+  trackStudioEvent("settings_open", { source: opts.source || "toolbar" });
+  if (opts.focus === "storage") {
+    var storageSec = $("v2-settings-storage-section");
+    var copySel = $("studio-cfg-copy-source");
+    if (storageSec && typeof storageSec.scrollIntoView === "function") {
+      storageSec.scrollIntoView({ block: "nearest" });
+    }
+    if (copySel && typeof copySel.focus === "function") {
+      try {
+        copySel.focus();
+      } catch (_e) {
+        /* ignore */
+      }
+      return;
+    }
+  }
   var first = focusableEls(popover)[0];
   if (first && typeof first.focus === "function") first.focus();
   else {
@@ -228,6 +251,7 @@ export function initSettingsPanel() {
   if (!toggle || !popover) return;
 
   _bound = bindAdvancedConfigControls();
+  _storageBound = bindStorageSettings();
   syncSettingsLock();
   syncDevSection();
   ensurePopoverPortaled(popover);
@@ -247,7 +271,7 @@ export function initSettingsPanel() {
       closeSettings();
       return;
     }
-    openSettings();
+    openSettings({ source: "toolbar" });
   });
 
   popover.addEventListener("mousedown", function (e) {

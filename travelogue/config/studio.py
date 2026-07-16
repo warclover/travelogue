@@ -79,4 +79,8 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
         "cohort": {
             "enabled": cfg.cohort.enabled,
         },
+        "ingest": {
+            "copySourceFiles": bool(getattr(cfg.ingest, "copy_source_files", True)),
+        },
+        "tripsDir": str(cfg.trips_dir) if getattr(cfg, "trips_dir", None) else None,
     }

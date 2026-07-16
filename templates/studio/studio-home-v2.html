@@ -276,6 +276,28 @@
           </div>
         </details>
       </section>
+      <section class="v2-settings-popover__section" aria-label="存储与磁盘" id="v2-settings-storage-section">
+        <p class="v2-settings-popover__section-label">存储与磁盘</p>
+        <p class="v2-advanced-popover__note" id="studio-storage-usage-line">正在估算占用…</p>
+        <p class="v2-advanced-popover__hint" id="studio-storage-mode-line" hidden></p>
+        <div class="v2-advanced-popover__row">
+          <label class="v2-advanced-popover__label" for="studio-cfg-copy-source">导入时复制源文件</label>
+          <select id="studio-cfg-copy-source" class="v2-advanced-popover__select"
+                  aria-describedby="studio-cfg-copy-source-hint">
+            <option value="true">开（默认）</option>
+            <option value="false">关（引用原相册，更省空间）</option>
+          </select>
+          <p class="v2-advanced-popover__hint" id="studio-cfg-copy-source-hint">
+            开启时作品内保存一份处理后的照片；关闭后只引用你选择的相册目录并生成预览图。仅影响之后的导入。
+          </p>
+        </div>
+        <button type="button" class="v2-settings-popover__dev-btn" id="studio-storage-cleanup-btn">
+          清理磁盘…
+        </button>
+        <p class="v2-advanced-popover__hint" id="studio-storage-cleanup-hint">
+          默认清理可再生缓存；删除源文件拷贝需二次确认。
+        </p>
+      </section>
       <section class="v2-settings-popover__section v2-settings-popover__section--dev" id="v2-settings-dev-section" hidden>
         <p class="v2-settings-popover__section-label">开发者</p>
         <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-dev-toggle">打开 Dev 面板</button>
@@ -432,6 +454,13 @@
         </div>
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start">开始制作 →</button>
         <p class="v2-wizard__trust" id="v2-wizard-trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-ref-note" hidden>
+          不会把原片再复制进 Travelogue；请保持相册目录可访问。
+        </p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-upload-note" hidden>
+          示例/上传包仍保存在作品内。
+        </p>
+        <button type="button" class="v2-wizard__link" id="v2-wizard-change-storage">更改存储设置</button>
         <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
           每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。
         </p>

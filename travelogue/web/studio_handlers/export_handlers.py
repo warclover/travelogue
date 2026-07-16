@@ -11,6 +11,38 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_longshot_job, run_narrate_job
 
 
+def _respond_if_source_missing(handler: StudioHandlerProtocol, trip_id: str) -> bool:
+    """Return True if response already written (sourceMissing block)."""
+    import json
+
+    from travelogue.media.source_resolve import assess_source_availability
+
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        return False
+    trip_json = trip_dir / "trip.json"
+    if not trip_json.is_file():
+        return False
+    try:
+        trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    health = assess_source_availability(trip, trip_dir)
+    if not health.get("sourceMissing"):
+        return False
+    handler._json_response(
+        409,
+        {
+            "ok": False,
+            "error": "E_MEDIA_SOURCE_MISSING",
+            "message": user_message("E_MEDIA_SOURCE_MISSING"),
+            **health,
+        },
+    )
+    return True
+
+
 def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
@@ -99,6 +131,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     if not trip_id:
         handler._json_response(400, {"ok": False, "error": "tripId required"})
         return
+
+    if not payload.get("allowMissingSource"):
+        blocked = _respond_if_source_missing(handler, trip_id)
+        if blocked:
+            return
 
     # M-INS-0c · ADR-018 D6: if server track unavailable, ask client to run html2canvas.
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
@@ -500,6 +537,11 @@ def handle_export(handler: StudioHandlerProtocol) -> None:
             },
         )
         return
+
+    if not payload.get("allowMissingSource"):
+        blocked = _respond_if_source_missing(handler, trip_id)
+        if blocked:
+            return
 
     try:
         zip_path = export_trip(trip_dir / "trip.json", confirm_privacy=True)

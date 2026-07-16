@@ -25,12 +25,31 @@ var _pendingDockDismissed = false;
 var _layoutPendingMessage = "";
 var _g1Pending = false;
 var _g1DockDismissed = false;
+var _sourceMissing = false;
+var _sourceMissingDockDismissed = false;
 var _sheetEditDirty = false;
 var _sheetEditBaseline = "";
 var narrateJobId = null;
 
 export function getLayoutPending() {
   return _layoutPending;
+}
+
+export function getSourceMissing() {
+  return _sourceMissing;
+}
+
+export function setSourceMissing(on) {
+  _sourceMissing = !!on;
+  if (on) _sourceMissingDockDismissed = false;
+  var toolbar = document.querySelector(".preview-toolbar");
+  if (toolbar && isPreviewToolbarV3(toolbar)) {
+    refreshTaskDockState(toolbar);
+  }
+}
+
+export function dismissSourceMissingDock() {
+  _sourceMissingDockDismissed = true;
 }
 
 export function setLayoutPendingMessage(msg) {
@@ -113,7 +132,7 @@ export function wireSheetEditDirty(root, panel) {
 export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
-    // D-REF-18 · G1 > layoutPending > longshotStale；同时最多一层主待办
+    // D-REF-18 / D-MRS · G1 > layoutPending > sourceMissing > longshotStale
     if (_g1Pending) {
       // 横幅在视口内时由横幅承担；滚出且未「稍后」时由 Task Dock 镜像
       if (!root._g1BannerVisible && !_g1DockDismissed) {
@@ -126,6 +145,12 @@ export function refreshTaskDockState(root) {
     if (_layoutPending && !_pendingDockDismissed) {
       root._taskDock.showPending({
         title: _layoutPendingMessage || "版面有改动",
+      });
+      return;
+    }
+    if (_sourceMissing && !_sourceMissingDockDismissed) {
+      root._taskDock.showPending({
+        title: "原相册无法访问",
       });
       return;
     }

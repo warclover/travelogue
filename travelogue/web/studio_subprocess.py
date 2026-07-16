@@ -141,6 +141,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "layoutEligibleCount": result.layout_eligible_count,
                     "keepNearDuplicates": result.keep_near_duplicates,
                     "assetsWritten": result.assets_written,
+                    "mediaWarn": result.media_warn or "",
                 },
             }
         )

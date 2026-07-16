@@ -74,6 +74,12 @@ export const STUDIO_ERROR_MESSAGES = {
   E_TEMPLATE_CONFIRM_REQUIRED: "需要二次确认后才能执行",
   E_TEMPLATE_GUARDRAIL: "该字段受模板护栏保护，不可编辑",
   E_TEMPLATE_LIFECYCLE: "模板状态不允许此操作",
+  E_MEDIA_SOURCE_MISSING: "原相册无法访问，请重新指定目录",
+  E_MEDIA_REMOUNT_MISMATCH: "所选目录与作品照片对不上",
+  E_MEDIA_CONTENT_CHANGED: "照片内容已变化，无法自动关联",
+  E_MEDIA_CLEANUP_REFUSED: "无法安全删除源文件拷贝",
+  E_MEDIA_CLEANUP_PARTIAL: "清理未完成，查看详情",
+  E_MEDIA_INCREMENTAL_SOURCE: "追加导入缺少可访问的原片",
 };
 
 export const DEFAULT_PIPELINE_ESTIMATES = [

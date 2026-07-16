@@ -58,6 +58,7 @@ class StudioPipelineResult:
     layout_eligible_count: int = 0
     keep_near_duplicates: bool = False
     assets_written: int = 0
+    media_warn: str = ""
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -175,6 +176,7 @@ def _studio_post_curate(
     flush_pipeline_timings: Callable[[dict[str, float] | None], None],
     hooks: StudioHooks,
     force_stub: bool = False,
+    media_warn: str = "",
 ) -> StudioPipelineResult:
     g1_pending = bool(cfg.studio.g1_confirm_structure)
     if g1_pending:
@@ -212,6 +214,7 @@ def _studio_post_curate(
             user_date_range=date_payload,
             import_mode=import_mode,
             g1_pending=g1_pending,
+            media_warn=media_warn,
         )
 
     from travelogue.web.studio_narrate import resolve_studio_narrate_provider
@@ -286,6 +289,7 @@ def _studio_post_curate(
         user_date_range=date_payload,
         import_mode=import_mode,
         g1_pending=False,
+        media_warn=media_warn,
     )
 
 
@@ -305,6 +309,7 @@ def _finalize_pipeline_result(
     import_mode: str = "quick_share",
     layout_density: str = "balanced",
     g1_pending: bool = False,
+    media_warn: str = "",
 ) -> StudioPipelineResult:
     from travelogue.web.studio_intent_telemetry import write_studio_intent_telemetry
 
@@ -380,6 +385,7 @@ def _finalize_pipeline_result(
         layout_eligible_count=layout_eligible_count,
         keep_near_duplicates=keep_near_duplicates,
         assets_written=assets_written,
+        media_warn=media_warn or "",
     )
 
 
@@ -934,9 +940,20 @@ def run_studio_pipeline(
 
         ingest_stats_holder: dict = {}
         cluster_notice = ""
+        media_warn = ""
 
         def capture_ingest_stats(stats: dict) -> None:
+            nonlocal media_warn
             ingest_stats_holder.update(stats)
+            code = str(stats.get("errorCode") or stats.get("error") or "")
+            if code == "E_MEDIA_INCREMENTAL_SOURCE":
+                from travelogue.web.studio_errors import user_message
+
+                missing_n = len(stats.get("incremental_source_missing") or [])
+                base = user_message("E_MEDIA_INCREMENTAL_SOURCE")
+                media_warn = (
+                    f"{base}（{missing_n} 张）" if missing_n else base
+                )
 
         def capture_cluster_notice(notice: str) -> None:
             nonlocal cluster_notice
@@ -1018,10 +1035,12 @@ def run_studio_pipeline(
                 user_date_range=date_payload,
                 import_mode=import_mode,
                 g1_pending=False,
+                media_warn=media_warn,
             )
 
         return _studio_post_curate(
             **post_curate_kwargs,
             cluster_notice=cluster_notice,
             tier_mode=tier_mode,
+            media_warn=media_warn,
         )
