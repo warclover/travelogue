@@ -8,6 +8,7 @@
   AC-IW-DS-03 关智能挑选 FirstSuccess 文案 · AC-IW-DS-06 上传路径
   DS-03 payload 字段 snapshot · DS-04 Success→预览链接 200
   P0 E_INGEST_TOO_FEW 失败弹层 hint（非示例相册文案）
+  P1 示例冲突三分支 · 取消确认 · 失败保留 pending · telemetry 400 不阻断
 
 Wizard 为唯一导入入口（RET-3 · Sheet 已删除）。
 """
@@ -365,8 +366,17 @@ def _route_harness_import_mocks(
     preview_url: str = "/harness-trip/index.html",
     import_mode: str = "quick_share",
     status_error: dict[str, Any] | None = None,
+    import_responses: list[dict[str, Any]] | None = None,
+    status_running: bool = False,
+    cancel_bodies: list[dict[str, Any]] | None = None,
 ) -> None:
-    """Playwright 路由：album-preview + import + status（不依赖真实 pipeline）。"""
+    """Playwright 路由：album-preview + import + status（不依赖真实 pipeline）。
+
+    ``import_responses``: 按序消费 ``{"status": int, "body": dict}``；耗尽后默认 202。
+    ``status_running``: status 轮询始终返回 running（用于取消确认）。
+    """
+
+    response_queue = list(import_responses or [])
 
     def _album_preview(route) -> None:
         if not preview_ok:
@@ -397,6 +407,14 @@ def _route_harness_import_mocks(
             body = {}
         if import_bodies is not None:
             import_bodies.append(body)
+        if response_queue:
+            item = response_queue.pop(0)
+            route.fulfill(
+                status=int(item.get("status", 202)),
+                content_type="application/json",
+                body=json.dumps(item.get("body") or {}),
+            )
+            return
         route.fulfill(
             status=202,
             content_type="application/json",
@@ -404,6 +422,20 @@ def _route_harness_import_mocks(
         )
 
     def _status_poll(route) -> None:
+        if status_running:
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(
+                    {
+                        "jobId": "harness-job-1",
+                        "status": "running",
+                        "stage": "ingest",
+                        "progress": 0.2,
+                    }
+                ),
+            )
+            return
         if status_error is not None:
             route.fulfill(
                 status=200,
@@ -439,6 +471,20 @@ def _route_harness_import_mocks(
             ),
         )
 
+    def _cancel_post(route) -> None:
+        try:
+            raw = route.request.post_data or "{}"
+            body = json.loads(raw)
+        except Exception:
+            body = {}
+        if cancel_bodies is not None:
+            cancel_bodies.append(body)
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body=json.dumps({"ok": True}),
+        )
+
     def _preview_html(route) -> None:
         route.fulfill(
             status=200,
@@ -449,6 +495,7 @@ def _route_harness_import_mocks(
     page.route("**/__travelogue/album-preview", _album_preview)
     page.route("**/__travelogue/import", _import_post)
     page.route("**/__travelogue/status**", _status_poll)
+    page.route("**/__travelogue/cancel", _cancel_post)
     page.route(f"**{preview_url}", _preview_html)
 
 
@@ -774,4 +821,210 @@ def test_ds_04_wizard_success_preview_link_200(wizard_server) -> None:
             href,
         )
         assert status == 200
+        browser.close()
+
+
+def _start_demo_album_from_wizard(page) -> None:
+    _open_wizard(page)
+    page.locator("#v2-wizard-demo-album").click()
+
+
+def _demo_exists_response() -> dict[str, Any]:
+    return {
+        "status": 409,
+        "body": {
+            "ok": False,
+            "error": "E_DEMO_EXISTS",
+            "message": "该游记已存在。是否覆盖？",
+            "previewUrl": "/demo-album/index.html",
+            "existingTripId": "demo-album",
+        },
+    }
+
+
+def test_p1_demo_conflict_open_existing(wizard_server) -> None:
+    """P1 · 示例相册 409 → 打开已有示例 → 跳转 previewUrl。"""
+    bodies: list[dict[str, Any]] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            import_bodies=bodies,
+            import_responses=[_demo_exists_response()],
+            preview_url="/demo-album/index.html",
+        )
+        page.route(
+            "**/demo-album/index.html",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="text/html; charset=utf-8",
+                body="<!doctype html><title>示例游记</title><h1>demo</h1>",
+            ),
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _start_demo_album_from_wizard(page)
+        modal = page.locator(".studio__modal")
+        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
+        with page.expect_navigation(wait_until="networkidle"):
+            modal.get_by_role("button", name="打开已有示例 →").click()
+        assert "/demo-album/index.html" in page.url
+        assert len(bodies) == 1
+        assert bodies[0].get("useDemoAlbum") is True
+        assert bodies[0].get("force") is not True
+        browser.close()
+
+
+def test_p1_demo_conflict_regenerate(wizard_server) -> None:
+    """P1 · 示例相册 409 → 重新生成 → 第二次 import 带 force=true。"""
+    bodies: list[dict[str, Any]] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            import_bodies=bodies,
+            import_responses=[
+                _demo_exists_response(),
+                {"status": 202, "body": {"jobId": "harness-job-1"}},
+            ],
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _start_demo_album_from_wizard(page)
+        modal = page.locator(".studio__modal")
+        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
+        modal.get_by_role("button", name="重新生成（将覆盖）").click()
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+        page.wait_for_selector("#v2-success-open", timeout=30_000)
+        assert len(bodies) >= 2
+        assert bodies[0].get("useDemoAlbum") is True
+        assert bodies[1].get("force") is True
+        assert bodies[1].get("useDemoAlbum") is True
+        browser.close()
+
+
+def test_p1_demo_conflict_cancel(wizard_server) -> None:
+    """P1 · 示例相册 409 → 取消 → 不发起第二次 import，回到首页壳。"""
+    bodies: list[dict[str, Any]] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            import_bodies=bodies,
+            import_responses=[_demo_exists_response()],
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _start_demo_album_from_wizard(page)
+        modal = page.locator(".studio__modal")
+        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
+        modal.get_by_role("button", name="取消").click()
+        page.wait_for_function(
+            """() => !document.querySelector('.studio__modal-backdrop')""",
+            timeout=10_000,
+        )
+        assert len(bodies) == 1
+        assert page.locator("#v2-cta").count() >= 1
+        browser.close()
+
+
+def test_p1_import_cancel_confirm_clears_job(wizard_server) -> None:
+    """P1 · Importing → 取消 → 确定取消 → 清 job/pending 并 POST /cancel。"""
+    cancels: list[dict[str, Any]] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            photo_count=6,
+            layout_eligible=6,
+            status_running=True,
+            cancel_bodies=cancels,
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _wizard_quick_folder_to_confirm(page)
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-import-cancel", timeout=20_000)
+        page.locator("#v2-import-cancel").click()
+        page.get_by_role("heading", name="确定取消？").wait_for(timeout=10_000)
+        page.get_by_role("button", name="确定取消").click()
+        page.wait_for_function(
+            """() => {
+              const job = sessionStorage.getItem('travelogue.studio.activeJobId');
+              const pending = sessionStorage.getItem('travelogue.studio.activePending');
+              return !job && !pending;
+            }""",
+            timeout=10_000,
+        )
+        assert cancels, "expected POST /__travelogue/cancel"
+        assert cancels[0].get("jobId") == "harness-job-1"
+        browser.close()
+
+
+def test_p1_import_failure_keeps_active_pending(wizard_server) -> None:
+    """P1 · job failed → 清 activeJobId，保留 activePending（便于重试）。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            photo_count=6,
+            layout_eligible=6,
+            status_error={
+                "code": "E_INGEST_TOO_FEW",
+                "message": "至少需要 4 张照片，请换一个文件夹",
+            },
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _wizard_quick_folder_to_confirm(page)
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-failure:not([hidden])", timeout=20_000)
+        state = page.evaluate(
+            """() => ({
+              job: sessionStorage.getItem('travelogue.studio.activeJobId'),
+              pending: sessionStorage.getItem('travelogue.studio.activePending'),
+            })"""
+        )
+        assert state["job"] is None
+        assert state["pending"]
+        pending = json.loads(state["pending"])
+        assert pending.get("albumPath") == "/harness/album"
+        browser.close()
+
+
+def test_p1_telemetry_and_recipe_errors_do_not_block_import(wizard_server) -> None:
+    """P1 · studio-event 400 / output-recipe 404 不阻断导入成功路径。"""
+    page_errors: list[str] = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.on("pageerror", lambda exc: page_errors.append(str(exc)))
+        page.route(
+            "**/__travelogue/studio-event",
+            lambda route: route.fulfill(
+                status=400,
+                content_type="application/json",
+                body=json.dumps({"ok": False, "error": "bad_event"}),
+            ),
+        )
+        page.route(
+            "**/__travelogue/output-recipe**",
+            lambda route: route.fulfill(
+                status=404,
+                content_type="application/json",
+                body=json.dumps({"ok": False, "error": "not_found"}),
+            ),
+        )
+        _route_harness_import_mocks(page, photo_count=6, layout_eligible=6)
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _wizard_quick_folder_to_confirm(page)
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-success-open", timeout=30_000)
+        assert not page_errors, page_errors
         browser.close()
