@@ -3,25 +3,21 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 18,
+  "totalCrossEdges": 5,
   "layoutEngineToCuration": 0,
-  "curationToLayoutEngine": 18,
+  "curationToLayoutEngine": 5,
   "targetAfterMigration": {
-    "maxCrossEdges": 4,
+    "maxCrossEdges": 1,
     "reductionPercent": 80,
     "note": "M-B4b proceeds only if post-kernel (M-B4a) cross edges ≤ maxCrossEdges"
   },
   "topImporters": [
     [
       "travelogue.curation.curate",
-      13
-    ],
-    [
-      "travelogue.curation.layout_metrics",
       2
     ],
     [
-      "travelogue.curation.chapter_items",
+      "travelogue.curation.layout_metrics",
       1
     ],
     [
@@ -35,203 +31,61 @@
   ],
   "topImported": [
     [
-      "travelogue.layout_engine.planner.screen_planner",
+      "travelogue.layout_engine.adapter",
       4
     ],
     [
-      "travelogue.layout_engine.adapter",
-      1
-    ],
-    [
-      "travelogue.layout_engine.capabilities",
-      1
-    ],
-    [
-      "travelogue.layout_engine.editorial_hints",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.constants",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.coverage",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.hook",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.metrics",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.runtime",
-      1
-    ],
-    [
-      "travelogue.layout_engine.mosaic.telemetry",
-      1
-    ],
-    [
       "travelogue.layout_engine.mosaic.trip",
-      1
-    ],
-    [
-      "travelogue.layout_engine.pattern_policy",
-      1
-    ],
-    [
-      "travelogue.layout_engine.replan",
-      1
-    ],
-    [
-      "travelogue.layout_engine.rollout",
-      1
-    ],
-    [
-      "travelogue.layout_engine.segment_order",
       1
     ]
   ],
   "edges": [
     {
-      "importer": "travelogue.curation.chapter_items",
-      "imported": "travelogue.layout_engine.planner.screen_planner",
-      "lines": [
-        34
-      ]
-    },
-    {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        634,
-        908,
-        1133,
-        1143
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.capabilities",
-      "lines": [
-        635,
-        1144
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.editorial_hints",
-      "lines": [
-        1145
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.mosaic.coverage",
-      "lines": [
-        1108
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.mosaic.hook",
-      "lines": [
-        934,
-        962
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.mosaic.runtime",
-      "lines": [
-        898,
-        920
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.mosaic.telemetry",
-      "lines": [
-        1162
+        716,
+        824,
+        861,
+        958,
+        1113,
+        1134,
+        1147,
+        1175,
+        1321,
+        1346,
+        1356,
+        1375
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.mosaic.trip",
       "lines": [
-        1031
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.pattern_policy",
-      "lines": [
-        927
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.planner.screen_planner",
-      "lines": [
-        511,
-        762
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.replan",
-      "lines": [
-        668,
-        766
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.rollout",
-      "lines": [
-        527
-      ]
-    },
-    {
-      "importer": "travelogue.curation.curate",
-      "imported": "travelogue.layout_engine.segment_order",
-      "lines": [
-        636
+        1244
       ]
     },
     {
       "importer": "travelogue.curation.layout_metrics",
-      "imported": "travelogue.layout_engine.mosaic.constants",
+      "imported": "travelogue.layout_engine.adapter",
       "lines": [
         271
       ]
     },
     {
-      "importer": "travelogue.curation.layout_metrics",
-      "imported": "travelogue.layout_engine.mosaic.metrics",
-      "lines": [
-        272
-      ]
-    },
-    {
       "importer": "travelogue.curation.layout_planner",
-      "imported": "travelogue.layout_engine.planner.screen_planner",
+      "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        482,
-        542
+        483,
+        541
       ]
     },
     {
       "importer": "travelogue.curation.moment_scoring",
-      "imported": "travelogue.layout_engine.planner.screen_planner",
+      "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        633,
-        658
+        679
       ]
     }
-  ],
-  "note": "2026-07-10: curation mosaic/screen_planner/media_classify/layout_search shims retired; edges rose 7→18 as previously importlib-masked curation→layout_engine imports became static AST edges. Not new coupling — transparency of existing dependencies."
+  ]
 }

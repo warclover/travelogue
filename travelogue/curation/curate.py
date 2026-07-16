@@ -697,7 +697,7 @@ def _curate_preflight(
     cover_force: bool = False,
 ) -> _CuratePreflight:
     from travelogue.config import default_web_layout_engine, get_config
-    from travelogue.layout_engine.planner.screen_planner import (
+    from travelogue.layout_contract.engines import (
         LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,
     )
@@ -713,7 +713,7 @@ def _curate_preflight(
 
         cover_p6 = phase6_in_rollout_cohort(trip_id, app_cfg)
         app_cfg = resolve_app_config_for_trip(app_cfg, trip_id)
-        from travelogue.layout_engine.rollout import resolve_lse_config_for_trip
+        from travelogue.layout_engine.adapter import resolve_lse_config_for_trip
 
         app_cfg = resolve_lse_config_for_trip(app_cfg, trip_id)
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
@@ -821,9 +821,12 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
         bucket_segment_ids = norm.primary_segment_ids
         bucket_segment_ids_all = norm.segment_ids_per_bucket
 
-    from travelogue.layout_engine.adapter import lse_enabled, resolve_pack
-    from travelogue.layout_engine.capabilities import effective_capabilities
-    from travelogue.layout_engine.segment_order import apply_segment_order_to_buckets
+    from travelogue.layout_engine.adapter import (
+        apply_segment_order_to_buckets,
+        effective_capabilities,
+        lse_enabled,
+        resolve_pack,
+    )
 
     if lse_enabled(preflight.app_cfg):
         pack = resolve_pack(preflight.app_cfg)
@@ -855,7 +858,7 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
 
 def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _CurateBucketPlan | None:
     from travelogue.domain.copy_subject import effective_meta_places
-    from travelogue.layout_engine.replan import buckets_from_existing_chapters
+    from travelogue.layout_engine.adapter import buckets_from_existing_chapters
 
     raw = buckets_from_existing_chapters(trip)
     if raw is None:
@@ -948,11 +951,11 @@ def run_curate(
             trip=trip,
         )
 
-    from travelogue.layout_engine.planner.screen_planner import (
+    from travelogue.layout_contract.engines import (
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
     )
-    from travelogue.layout_engine.replan import (
+    from travelogue.layout_engine.adapter import (
         mark_layout_replan,
         record_applied_layout_density,
         should_layout_only_replan,
@@ -1107,8 +1110,9 @@ def run_curate(
     )
     summary = summarize_orientations(layout_assets, export_layout=layout)  # type: ignore[arg-type]
     summary_dict = summary.to_dict()
-    from travelogue.layout_engine.mosaic.runtime import (
+    from travelogue.layout_engine.adapter import (
         cohort_mosaic_override,
+        mosaic_config_from_pack,
         reset_mosaic_config_override,
         set_mosaic_config_override,
     )
@@ -1116,8 +1120,6 @@ def run_curate(
     mosaic_override_active = None
     if app_cfg.layout.strategy_engine.enabled:
         from dataclasses import replace as _dc_replace
-
-        from travelogue.layout_engine.adapter import mosaic_config_from_pack
 
         mosaic_override_active = mosaic_config_from_pack(app_cfg)
         cohort_ov = cohort_mosaic_override(app_cfg) if cohort_summary else None
@@ -1129,21 +1131,20 @@ def run_curate(
             mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
     elif cohort_summary:
         mosaic_override_active = cohort_mosaic_override(app_cfg)
-    from travelogue.layout_engine.mosaic.runtime import (
+    from travelogue.layout_engine.adapter import (
+        effective_pattern_blacklist,
         reset_mosaic_disabled_patterns,
         set_mosaic_disabled_patterns,
     )
 
     pattern_blacklist_active = False
     if app_cfg.layout.strategy_engine.enabled:
-        from travelogue.layout_engine.pattern_policy import effective_pattern_blacklist
-
         set_mosaic_disabled_patterns(effective_pattern_blacklist(app_cfg))
         pattern_blacklist_active = True
     if mosaic_override_active is not None:
         set_mosaic_config_override(mosaic_override_active)
     if app_cfg.mosaic.enabled:
-        from travelogue.layout_engine.mosaic.hook import begin_mosaic_capture
+        from travelogue.layout_engine.adapter import begin_mosaic_capture
 
         begin_mosaic_capture()
     try:
@@ -1171,7 +1172,7 @@ def run_curate(
         if pattern_blacklist_active:
             reset_mosaic_disabled_patterns()
     if app_cfg.mosaic.enabled:
-        from travelogue.layout_engine.mosaic.hook import drain_mosaic_dropped, drain_mosaic_logs
+        from travelogue.layout_engine.adapter import drain_mosaic_dropped, drain_mosaic_logs
 
         mosaic_logs = drain_mosaic_logs()
         dropped = drain_mosaic_dropped()
@@ -1317,7 +1318,7 @@ def run_curate(
         curation["displayedAssetIds"] = collect_displayed_asset_ids(
             chapters, extra_asset_ids=hero_extra
         )
-        from travelogue.layout_engine.mosaic.coverage import compute_coverage_metrics
+        from travelogue.layout_engine.adapter import compute_coverage_metrics
 
         planned_ids = {aid for bucket in non_empty_buckets for aid in bucket}
         displayed_for_cov = list(curation.get("displayedAssetIds") or [])
@@ -1352,11 +1353,11 @@ def run_curate(
         beam_logs=decision_logs,
     )
     if app_cfg.layout.strategy_engine.enabled:
-        from travelogue.layout_engine.adapter import resolve_pack
-        from travelogue.layout_engine.capabilities import effective_capabilities
-        from travelogue.layout_engine.editorial_hints import (
+        from travelogue.layout_engine.adapter import (
             build_editorial_hints,
             editorial_hints_from_pack,
+            effective_capabilities,
+            resolve_pack,
         )
 
         pack = resolve_pack(app_cfg)
@@ -1371,7 +1372,7 @@ def run_curate(
                 folio_tone_delta_max=float(ed_cfg.get("folio_tone_delta_max") or 12.0),
             )
     if engine == LAYOUT_ENGINE_SCREENS:
-        from travelogue.layout_engine.mosaic.telemetry import (
+        from travelogue.layout_engine.adapter import (
             record_mosaic_layout_metrics,
             record_per_template_layout_metrics,
         )

@@ -650,7 +650,7 @@ def _homogeneous_stack_pattern(
     """Map a same-family run to screen-{family}-{n} when n ∈ {1,2,3,4}."""
     if not asset_ids or len(asset_ids) > 4:
         return None
-    from travelogue.layout_engine.planner.screen_planner import _layout_family_for_asset
+    from travelogue.layout_contract.families import layout_family_for_asset as _layout_family_for_asset
 
     aspects = {
         aid: aspect_kind_for_asset(assets_by_id.get(aid, {})) for aid in asset_ids
@@ -675,10 +675,8 @@ def _decompose_to_primitive_screens(
     assets_by_id: dict[str, dict],
 ) -> list[dict]:
     """Rebuild remaining assets as valid primitive screens (pair-first portraits)."""
-    from travelogue.layout_engine.planner.screen_planner import (
-        _layout_family_for_asset,
-        _make_screen,
-    )
+    from travelogue.layout_contract.families import layout_family_for_asset as _layout_family_for_asset
+    from travelogue.layout_engine.adapter import make_screen as _make_screen
 
     if not asset_ids:
         return []
