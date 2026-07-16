@@ -31,7 +31,7 @@ def resolve_chapter_items_for_render(
         MobilePuzzlePlannerState,
         mobile_puzzle_enabled,
     )
-    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_LEGACY
+    from travelogue.layout_contract.engines import LAYOUT_ENGINE_LEGACY
 
     is_mobile = export_layout == "mobile"
     is_stub = bool((chapter.get("curation") or {}).get("layoutStub"))

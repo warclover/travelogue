@@ -268,13 +268,14 @@ def compute_layout_metrics(
                 subject_run_tolerance=subject_run_tolerance,
             )
         )
-    from travelogue.layout_engine.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
-    from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics
+    from travelogue.layout_engine.adapter import enrich_layout_metrics_with_mosaic
 
-    if mosaic_logs is not None or any("mosaic-5" in pid for pid in pids):
-        out.update(compute_mosaic_metrics(chapters, mosaic_logs=mosaic_logs))
-    elif any(p in MOSAIC_UNIFIED_PATTERN_IDS for p in pids):
-        out.update(compute_mosaic_metrics(chapters, mosaic_logs=None))
+    enrich_layout_metrics_with_mosaic(
+        out,
+        chapters,
+        mosaic_logs=mosaic_logs,
+        pattern_ids=pids,
+    )
     if assets:
         from travelogue.config import get_config
         from travelogue.curation.usage_rules.metrics import compute_usage_rules_metrics

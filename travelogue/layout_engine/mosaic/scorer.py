@@ -353,13 +353,19 @@ def score_candidate(
 
     total = base
     reasons: list[str] = []
-    for key, pen in penalties.items():
-        weight = cfg.penalties.get(key, 0.15 if key != "trip_small" else 0.0)
-        if key == "trip_small":
-            weight = 0.2
-        if pen <= 0 or weight <= 0:
-            continue
-        total *= 1.0 - _clamp01(weight) * _clamp01(pen)
+    from travelogue.layout_contract.scoring import combine_utility
+
+    weight_map = {
+        key: (
+            0.2
+            if key == "trip_small"
+            else float(cfg.penalties.get(key, 0.15 if key != "trip_small" else 0.0))
+        )
+        for key in penalties
+    }
+    breakdown = combine_utility(base, penalties, weight_map)
+    total = breakdown.utility
+    for key, pen in breakdown.penalties_applied.items():
         if pen >= 0.5:
             code = "R_MAIN_AR_BLOCK" if key == "main_ar_ineligible" else f"R_{key.upper()}"
             reasons.append(code)

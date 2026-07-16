@@ -38,7 +38,7 @@ def cmd_ingest(
     no_dedupe: bool = typer.Option(False, "--no-dedupe"),
     no_crop: bool = typer.Option(False, "--no-crop", help="skip -m/-w profile crops"),
     incremental: bool = typer.Option(False, "--incremental"),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
     config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
     featured_dir: Path | None = typer.Option(None, "--featured-dir", help="精选文件夹（双源 ingest）"),
     material_dir: Path | None = typer.Option(None, "--material-dir", help="素材文件夹（双源 ingest）"),
@@ -79,7 +79,7 @@ def cmd_ingest(
 def cmd_media_reexport(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     asset_id: list[str] | None = typer.Option(None, "--asset", "-a", help="only these asset ids"),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
     config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """Re-export WebP from source/ (after layout or focalPoint change)."""
@@ -110,7 +110,7 @@ def cmd_curate(
         "--no-refresh-algorithms",
         help="skip auto re-cull even when cull config is stale",
     ),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
 ) -> None:
     """Agent 1+1.5: day chapters, cover, row layout (structure_draft)."""
     _require_export_layout(layout)
@@ -142,7 +142,7 @@ def cmd_lock(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
     target: str = typer.Argument(..., help="structure | copy"),
     cover: str | None = typer.Option(None, "--cover", help="cover asset id (structure lock)"),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
 ) -> None:
     """Lock structure or copy gate."""
     trip_path = _resolve(path, trips_dir=trips_dir)
@@ -185,7 +185,7 @@ def cmd_narrate(
         "--chapter-id",
         help="Only narrate this chapter (skips meta/epilogue); use with --regenerate",
     ),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
     config: Path | None = typer.Option(None, "--config"),
 ) -> None:
     """Agent 2: hook, leads, captions via LLM or rule stub."""
@@ -250,7 +250,7 @@ def cmd_llm_ping(
 @app.command("status")
 def cmd_status(
     path: str = typer.Argument(..., help="trip.json path or tripId"),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
     g1: bool = typer.Option(False, "--g1", help="include structure/layout summary"),
 ) -> None:
     """Print pipeline status, locks, asset/chapter counts."""
@@ -279,7 +279,7 @@ def cmd_run(
     until: str = typer.Option("rendered", "--until", help="ingest|structure|layout|copy|rendered|exported"),
     from_dir: Path | None = typer.Option(None, "--from-dir", help="album for ingest stage"),
     layout: str = typer.Option("mobile", "--layout", "-l"),
-    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    trips_dir: Path | None = typer.Option(None, "--trips-dir"),
     confirm_privacy: bool = typer.Option(False, "--confirm-privacy"),
     no_preview: bool = typer.Option(False, "--no-preview"),
     skip_locked: bool = typer.Option(True, "--skip-locked/--no-skip-locked"),

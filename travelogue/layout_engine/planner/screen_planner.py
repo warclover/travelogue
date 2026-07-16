@@ -38,15 +38,23 @@ from travelogue.layout_contract.subject import (
     asset_has_person,
     portrait_fit_for_asset,
 )
+from travelogue.layout_contract.engines import (
+    LAYOUT_ENGINE_LEGACY,
+    LAYOUT_ENGINE_SCREENS,
+    LAYOUT_ENGINE_VERSION_SCREENS,
+    LayoutEngine,
+)
+from travelogue.layout_contract.families import (
+    ULTRA_WIDE_SOLO_AR,
+    asset_native_aspect_ratio as _asset_native_aspect_ratio,
+    family_kind as _family_kind,
+    layout_family_for_asset as _layout_family_for_asset,
+)
 from travelogue.media.image_ops import AspectKind
 
-LayoutEngine = Literal["legacy", "screens"]
 LayoutFit = Literal["cover", "contain"]
 SlotRole = Literal["portrait", "landscape", "main"]
 
-LAYOUT_ENGINE_LEGACY: LayoutEngine = "legacy"
-LAYOUT_ENGINE_SCREENS: LayoutEngine = "screens"
-LAYOUT_ENGINE_VERSION_SCREENS = "screens-2"
 MAX_SLOTS_PER_SCREEN = 9
 MIN_TRIP_PHOTOS_FOR_MOSAIC = 35
 DEFAULT_FEATURED_WEIGHT = 1.35
@@ -532,47 +540,6 @@ def _make_mixed_portrait_landscape_screen(
             {"assetId": landscape_ids[1], "slot": 2, "fit": "cover", "role": "landscape"},
         ],
     )
-
-
-def _family_kind(k: AspectKind) -> str:
-    if k == "panorama":
-        return "panorama"
-    if k == "tall":
-        return "tall"
-    if k == "square":
-        return "square"
-    if _is_std_portrait(k):
-        return "portrait"
-    if _is_std_landscape(k):
-        return "landscape"
-    return "landscape"
-
-
-# Solo ultra-wide stage only when native w/h ≥ this (aligns with render ultra tier).
-ULTRA_WIDE_SOLO_AR = 2.8
-
-
-def _asset_native_aspect_ratio(asset: dict) -> float | None:
-    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
-    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
-    if w > 0 and h > 0:
-        return w / h
-    return None
-
-
-def _layout_family_for_asset(
-    aid: str,
-    aspects: dict[str, AspectKind],
-    assets_map: dict[str, dict] | None = None,
-) -> str:
-    """Map ingest panorama (≥2:1) to landscape unless truly ultra-wide."""
-    fam = _family_kind(aspects.get(aid, "square"))
-    if fam != "panorama" or not assets_map:
-        return fam
-    ar = _asset_native_aspect_ratio(assets_map.get(aid, {}))
-    if ar is not None and ar < ULTRA_WIDE_SOLO_AR:
-        return "landscape"
-    return "panorama"
 
 
 def _is_std_portrait_id(aid: str, aspects: dict[str, AspectKind]) -> bool:

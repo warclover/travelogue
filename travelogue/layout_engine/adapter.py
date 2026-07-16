@@ -14,10 +14,12 @@ from travelogue.layout_engine.decision_log import (
     strategy_trace_from_pack,
     write_sidecar,
 )
-from travelogue.layout_engine.planner.screen_planner import DEFAULT_FEATURED_WEIGHT
 from travelogue.layout_engine.registry import StrategyPack, get_strategy_pack
 from travelogue.layout_engine.rhythm import layout_state_from_pack
 from travelogue.media.image_ops import AspectKind
+
+# Keep out of screen_planner import graph (adapter ↔ attach circular).
+DEFAULT_FEATURED_WEIGHT = 1.35
 
 
 @dataclass
@@ -304,3 +306,178 @@ def persist_layout_observability(
     layout_strategy = dict(curation.get("layoutStrategy") or {})
     layout_strategy.update(summary)
     curation["layoutStrategy"] = layout_strategy
+
+
+# --- Curation-facing facade (AAD-11 · whitelist thin imports) -----------------
+# Prefer: curation → layout_engine.adapter (+ compose_trip when needed).
+# Keep peripheral modules off planner/mosaic internals.
+
+
+def resolve_lse_config_for_trip(cfg: AppConfig, trip_id: str) -> AppConfig:
+    from travelogue.layout_engine.rollout import resolve_lse_config_for_trip as _resolve
+
+    return _resolve(cfg, trip_id)
+
+
+def effective_capabilities(cfg: AppConfig, pack: StrategyPack | None = None) -> Any:
+    from travelogue.layout_engine.capabilities import effective_capabilities as _caps
+
+    return _caps(cfg, pack)
+
+
+def apply_segment_order_to_buckets(
+    buckets: list[list[str]],
+    assets: list[dict],
+    *,
+    enabled: bool,
+    max_segment_len: int = 30,
+) -> None:
+    from travelogue.layout_engine.segment_order import apply_segment_order_to_buckets as _apply
+
+    _apply(buckets, assets, enabled=enabled, max_segment_len=max_segment_len)
+
+
+def buckets_from_existing_chapters(trip: dict) -> dict[str, Any] | None:
+    from travelogue.layout_engine.replan import buckets_from_existing_chapters as _buckets
+
+    return _buckets(trip)
+
+
+def should_layout_only_replan(
+    trip: dict,
+    *,
+    trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
+) -> Any:
+    from travelogue.layout_engine.replan import should_layout_only_replan as _should
+
+    return _should(trip, trip_dir=trip_dir, cfg=cfg)
+
+
+def mark_layout_replan(trip: dict, *, reason: str) -> None:
+    from travelogue.layout_engine.replan import mark_layout_replan as _mark
+
+    _mark(trip, reason=reason)
+
+
+def record_applied_layout_density(trip: dict, *, cfg: AppConfig | None = None) -> None:
+    from travelogue.layout_engine.replan import record_applied_layout_density as _record
+
+    _record(trip, cfg=cfg)
+
+
+def begin_mosaic_capture() -> None:
+    from travelogue.layout_engine.mosaic.hook import begin_mosaic_capture as _begin
+
+    _begin()
+
+
+def drain_mosaic_logs() -> list[dict[str, Any]]:
+    from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs as _drain
+
+    return _drain()
+
+
+def drain_mosaic_dropped() -> list[str]:
+    from travelogue.layout_engine.mosaic.hook import drain_mosaic_dropped as _drain
+
+    return _drain()
+
+
+def set_mosaic_config_override(cfg: MosaicConfig | None) -> None:
+    from travelogue.layout_engine.mosaic.runtime import set_mosaic_config_override as _set
+
+    _set(cfg)
+
+
+def reset_mosaic_config_override() -> None:
+    from travelogue.layout_engine.mosaic.runtime import reset_mosaic_config_override as _reset
+
+    _reset()
+
+
+def cohort_mosaic_override(cfg: AppConfig) -> MosaicConfig | None:
+    from travelogue.layout_engine.mosaic.runtime import cohort_mosaic_override as _cohort
+
+    return _cohort(cfg)
+
+
+def set_mosaic_disabled_patterns(pattern_ids: tuple[str, ...] | list[str]) -> None:
+    from travelogue.layout_engine.mosaic.runtime import set_mosaic_disabled_patterns as _set
+
+    _set(pattern_ids)
+
+
+def reset_mosaic_disabled_patterns() -> None:
+    from travelogue.layout_engine.mosaic.runtime import reset_mosaic_disabled_patterns as _reset
+
+    _reset()
+
+
+def effective_pattern_blacklist(cfg: AppConfig, *, pack: Any | None = None) -> tuple[str, ...]:
+    from travelogue.layout_engine.pattern_policy import effective_pattern_blacklist as _bl
+
+    return _bl(cfg, pack=pack)
+
+
+def compute_coverage_metrics(**kwargs: Any) -> dict[str, Any]:
+    from travelogue.layout_engine.mosaic.coverage import compute_coverage_metrics as _cov
+
+    return _cov(**kwargs)
+
+
+def record_mosaic_layout_metrics(**kwargs: Any) -> None:
+    from travelogue.layout_engine.mosaic.telemetry import record_mosaic_layout_metrics as _rec
+
+    _rec(**kwargs)
+
+
+def record_per_template_layout_metrics(**kwargs: Any) -> None:
+    from travelogue.layout_engine.mosaic.telemetry import (
+        record_per_template_layout_metrics as _rec,
+    )
+
+    _rec(**kwargs)
+
+
+def build_editorial_hints(*args: Any, **kwargs: Any) -> Any:
+    from travelogue.layout_engine.editorial_hints import build_editorial_hints as _build
+
+    return _build(*args, **kwargs)
+
+
+def editorial_hints_from_pack(raw: dict | None) -> dict[str, Any]:
+    from travelogue.layout_engine.editorial_hints import editorial_hints_from_pack as _from
+
+    return _from(raw)
+
+
+def attach_screens_to_chapters(*args: Any, **kwargs: Any) -> list[dict]:
+    from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters as _attach
+
+    return _attach(*args, **kwargs)
+
+
+def make_screen(*args: Any, **kwargs: Any) -> dict:
+    """Public wrapper for screen_planner._make_screen (moment / peripheral use)."""
+    from travelogue.layout_engine.planner.screen_planner import _make_screen
+
+    return _make_screen(*args, **kwargs)
+
+
+def enrich_layout_metrics_with_mosaic(
+    out: dict[str, Any],
+    chapters: list[dict],
+    *,
+    mosaic_logs: list[dict] | None,
+    pattern_ids: list[str],
+) -> None:
+    """Single mosaic metrics entry for curation.layout_metrics (AAD-11)."""
+    from travelogue.layout_engine.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+    from travelogue.layout_engine.mosaic.metrics import compute_mosaic_metrics
+
+    pids = pattern_ids
+    if mosaic_logs is not None or any("mosaic-5" in pid for pid in pids):
+        out.update(compute_mosaic_metrics(chapters, mosaic_logs=mosaic_logs))
+    elif any(p in MOSAIC_UNIFIED_PATTERN_IDS for p in pids):
+        out.update(compute_mosaic_metrics(chapters, mosaic_logs=None))

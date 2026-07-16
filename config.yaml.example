@@ -220,6 +220,8 @@ layout:
   scoring:
     enabled: false
     beam_width: 3
+    # AAD-20 PrefixBeam（真前缀搜索）；默认关 = 现行 VariantRerank
+    prefix_beam_enabled: false
     max_screens_per_chapter: 12
     min_layout_eligible: 3
     min_aspect_kinds: 1

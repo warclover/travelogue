@@ -561,6 +561,10 @@ def _finalize_plan_score(
                 if aid and (assets_by_id.get(aid) or {}).get("userTier") == "featured":
                     featured_n += 1
         avg.total += featured_n * FEATURED_BEAM_BONUS_PER_ASSET
+    # AAD-21 · chapter soft via LayoutUtility; hard pens stay at window (empty Π).
+    from travelogue.layout_contract.scoring import combine_utility
+
+    avg.utility = combine_utility(avg.total, {}).utility
     return avg
 
 
@@ -598,6 +602,14 @@ def _build_plan_screen_parts(
         parts.append(bd)
         prior.append(screen.get("patternId") or "")
     return parts, prior
+
+
+def _sync_chapter_utility(bd: ScoreBreakdown) -> ScoreBreakdown:
+    """AAD-21: refresh utility after post-finalize total adjustments."""
+    from travelogue.layout_contract.scoring import combine_utility
+
+    bd.utility = combine_utility(bd.total, {}).utility
+    return bd
 
 
 def score_screen_plan(
@@ -652,7 +664,7 @@ def score_screen_plan(
                 secondary_ids=moment_secondary_ids or set(),
                 boost=moment_secondary_boost,
             )
-            return result
+            return _sync_chapter_utility(result)
         start_index = 0
         parts: list[ScoreBreakdown] = []
         prior: list[str] = []
@@ -693,7 +705,7 @@ def score_screen_plan(
             secondary_ids=moment_secondary_ids or set(),
             boost=moment_secondary_boost,
         )
-        return result
+        return _sync_chapter_utility(result)
 
     parts, prior = _build_plan_screen_parts(
         screens,
@@ -721,7 +733,7 @@ def score_screen_plan(
         secondary_ids=moment_secondary_ids or set(),
         boost=moment_secondary_boost,
     )
-    return result
+    return _sync_chapter_utility(result)
 
 
 def rank_screens(

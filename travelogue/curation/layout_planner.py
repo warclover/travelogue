@@ -479,10 +479,8 @@ def build_chapters_from_plan(
             }
         )
 
-    from travelogue.layout_engine.planner.screen_planner import (
-        LAYOUT_ENGINE_SCREENS,
-        attach_screens_to_chapters,
-    )
+    from travelogue.layout_contract.engines import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.adapter import attach_screens_to_chapters
 
     summary = OrientationSummary(
         total=len(asset_ids),
@@ -539,10 +537,8 @@ def build_chapters_from_buckets(
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.curate_patterns import resolve_chapter_pattern
-    from travelogue.layout_engine.planner.screen_planner import (
-        LAYOUT_ENGINE_SCREENS,
-        attach_screens_to_chapters,
-    )
+    from travelogue.layout_contract.engines import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.adapter import attach_screens_to_chapters
 
     default_titles = ["抵达", "途中", "片段", "尾声"]
     titles = titles or default_titles

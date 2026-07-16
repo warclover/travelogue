@@ -14,6 +14,7 @@ class LayoutScoringConfig:
 
     enabled: bool = False
     beam_width: int = 3
+    prefix_beam_enabled: bool = False  # AAD-20 PrefixBeam · default off (VariantRerank)
     max_screens_per_chapter: int = 12
     min_layout_eligible: int = 3
     min_aspect_kinds: int = 1
@@ -203,6 +204,9 @@ def layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
     return LayoutScoringConfig(
         enabled=bool(raw.get("enabled", False)),
         beam_width=int(raw.get("beam_width", 3)),
+        prefix_beam_enabled=cfg_bool(
+            raw, "prefix_beam_enabled", "prefixBeamEnabled", False
+        ),
         max_screens_per_chapter=int(raw.get("max_screens_per_chapter", 12)),
         min_layout_eligible=int(raw.get("min_layout_eligible", 3)),
         min_aspect_kinds=int(raw.get("min_aspect_kinds", 1)),

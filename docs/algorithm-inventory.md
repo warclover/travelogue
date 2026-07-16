@@ -262,7 +262,7 @@
 | | `_ml_runtime_available` | pyiqa/torch 可用性（含 PA 校准强制路径） |
 | | `pyiqa_available` / `resolve_effective_mode` | ML 路径探测 |
 
-### 2.5 `travelogue/curation/mosaic/`
+### 2.5 `travelogue/layout_engine/mosaic/`
 
 | 文件 | 函数 | 算法摘要 |
 |------|------|----------|
@@ -273,13 +273,15 @@
 | `scorer.py` | `score_candidate` | Mosaic 多维惩罚/加分 |
 | | `_main_quality_penalty` | 主槽 overall 阈值惩罚（U-HERO 回退 sharpness） |
 | `hero.py` | `pick_main_for_pattern` | 版式主槽 → `_pick_main_landscape_id` |
-| `search.py` | `replan_day_buckets_beam` | **Beam Search 主入口** |
+| `search.py` | `replan_day_buckets_beam` | **VariantRerank / Beam 主入口**（真 PrefixBeam 见 [PRD-ARCH-ALGO-DEEPENING-V1](./PRD-ARCH-ALGO-DEEPENING-V1.md)） |
 | `builders.py` | `build_screen` | 候选→screen 结构 |
 | | `try_order_for_pattern` | 槽位排列 |
 | `hook.py` | `try_mosaic_window` | 规划期 Mosaic 挂钩 |
 | `trip.py` | `compose_trip` | 全 trip Mosaic 合成 |
 | `replan.py` | `replan_screen` | 单屏局部重排 |
 | `selfheal.py` | `try_self_heal_pick` | 失败收紧重试 |
+
+> **路径注**：原 `curation/mosaic/` 已迁至 `layout_engine/mosaic/`（ADR-015 / shim 退役）。
 
 ### 2.7 `travelogue/web/` · Studio
 

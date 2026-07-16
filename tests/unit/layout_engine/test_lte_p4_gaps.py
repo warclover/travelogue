@@ -41,7 +41,7 @@ def engine() -> LayoutTemplateEngine:
 def test_legacy_generated_matches_codegen(engine: LayoutTemplateEngine) -> None:
     data = export_legacy_data(engine)
     rendered = render_legacy_python_module(data)
-    snapshot_path = Path("travelogue/curation/mosaic/_legacy_generated.py")
+    snapshot_path = Path("travelogue/layout_engine/mosaic/_legacy_generated.py")
     assert snapshot_path.is_file()
     assert "EXPLICIT_GRID_SPECS" in rendered
     assert len(EXPLICIT_GRID_SPECS) >= 8
