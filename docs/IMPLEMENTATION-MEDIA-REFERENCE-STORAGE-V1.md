@@ -92,4 +92,4 @@
 1. 设置清理改用产品 Dialog（替代 `window.confirm`）  
 2. 批量 remount 多 trip 共享 albumRoot  
 3. 「引用 → 重新物化 source」反向向导  
-4. 狗粮 5 步出口勾选（评审纪要 §8）  
+4. 狗粮 5 步出口勾选 → [media-reference-storage-v1-dogfood-checklist.md](./acceptance-records/media-reference-storage-v1-dogfood-checklist.md)  

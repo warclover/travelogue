@@ -303,6 +303,7 @@
 | [PRD-MEDIA-REFERENCE-STORAGE-V1.md](./PRD-MEDIA-REFERENCE-STORAGE-V1.md) | **媒体存储省盘与引用模式 V1** **v0.2.0**（W0–W2 已落地 · 待狗粮出口） |
 | [IMPLEMENTATION-MEDIA-REFERENCE-STORAGE-V1.md](./IMPLEMENTATION-MEDIA-REFERENCE-STORAGE-V1.md) | MRS V1 实施清单 · 分支 `feature/media-reference-storage-v1` |
 | [acceptance-records/media-reference-storage-v1-review-2026-07-15.md](./acceptance-records/media-reference-storage-v1-review-2026-07-15.md) | MRS V1 跨职能评审纪要 · 架构/开发/产品/算法/测试 · Conditional Go |
+| [acceptance-records/media-reference-storage-v1-dogfood-checklist.md](./acceptance-records/media-reference-storage-v1-dogfood-checklist.md) | MRS V1 狗粮 5 步出口清单（合入前手测） |
 | [reports/integration-sprint-checklist-2026-06-13.md](./reports/integration-sprint-checklist-2026-06-13.md) | **Integration Sprint** · 收口/验证/还债 |
 
 ---
