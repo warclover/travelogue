@@ -15,6 +15,7 @@ CTA 打开 `#v2-wizard-root`（Wizard 为唯一生产入口）。
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import pytest
@@ -24,7 +25,7 @@ from travelogue.web.studio_homepage_gate import stable_bucket
 from travelogue.web.studio_jobs import reset_job_store
 
 pytest.importorskip("playwright")
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
@@ -48,6 +49,49 @@ def studio_server(tmp_path: Path):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def _wait_studio_events(
+    events: list[dict],
+    event_name: str,
+    *,
+    timeout_ms: int = 10_000,
+) -> list[dict]:
+    """Poll Python-side capture list until named studio-event appears."""
+    deadline = time.monotonic() + timeout_ms / 1000
+    while time.monotonic() < deadline:
+        matched = [e for e in events if e.get("event") == event_name]
+        if matched:
+            return matched
+        time.sleep(0.05)
+    raise AssertionError(
+        f"未捕获 {event_name}，captured={[e.get('event') for e in events]}"
+    )
+
+
+def _assert_lightbox_stays_closed(page, *, settle_ms: int = 400) -> None:
+    """Negative settle: lightbox must remain closed for the settle window."""
+    deadline = time.monotonic() + settle_ms / 1000
+    while time.monotonic() < deadline:
+        open_now = page.evaluate(
+            "() => document.getElementById('v2-lightbox').classList.contains('is-open')"
+        )
+        assert not open_now, "lightbox opened unexpectedly during settle"
+        time.sleep(0.05)
+
+
+def _assert_no_studio_event(
+    events: list[dict],
+    event_name: str,
+    *,
+    settle_ms: int = 400,
+) -> None:
+    """Negative settle: named event must not appear during settle window."""
+    deadline = time.monotonic() + settle_ms / 1000
+    while time.monotonic() < deadline:
+        matched = [e for e in events if e.get("event") == event_name]
+        assert not matched, f"unexpected {event_name}: {matched}"
+        time.sleep(0.05)
 
 
 def _wait_visible(page, el_id: str, timeout: int = 20_000) -> None:
@@ -490,20 +534,33 @@ def test_ac_hp2_04_09_19_carousel(studio_server) -> None:
         web = page.locator("#v2-web-cell")
         web.focus()
         page.keyboard.press("ArrowRight")
-        page.wait_for_timeout(120)
+        page.wait_for_function(
+            """() => {
+              const d = document.querySelector('#v2-carousel-dots [aria-current="true"]');
+              return d && Number(d.dataset.index) >= 1;
+            }""",
+            timeout=5_000,
+        )
         cur = page.evaluate(
             "() => { const d = document.querySelector('#v2-carousel-dots [aria-current=\\\"true\\\"]'); return d ? Number(d.dataset.index) : -1; }"
         )
         assert cur >= 1
 
         # 连点 next 到末尾 → next disabled（clamp 不 wrap）
-        for _ in range(MANIFEST_PAGES + 2):
+        for target in range(cur + 1, MANIFEST_PAGES):
             if nxt.is_disabled():
                 break
             nxt.click()
-            page.wait_for_timeout(60)
-        assert nxt.is_disabled()
-        assert not prev.is_disabled()
+            page.wait_for_function(
+                """(idx) => {
+                  const d = document.querySelector('#v2-carousel-dots [aria-current="true"]');
+                  return d && Number(d.dataset.index) === idx;
+                }""",
+                arg=target,
+                timeout=5_000,
+            )
+        expect(nxt).to_be_disabled(timeout=5_000)
+        expect(prev).to_be_enabled(timeout=5_000)
         browser.close()
 
 
@@ -1030,8 +1087,14 @@ def test_ac_hp2_15_cancel_no_half_trip(studio_server) -> None:
         confirm = page.locator(".studio__modal .studio__btn--primary")
         if confirm.count() > 0:
             confirm.click()
-        page.wait_for_timeout(400)
 
+        page.wait_for_function(
+            """(before) => fetch('/__travelogue/trips?limit=20')
+              .then((r) => r.json())
+              .then((d) => (d.trips || []).length === before)""",
+            arg=trips_before,
+            timeout=10_000,
+        )
         trips_after = page.evaluate(
             "() => fetch('/__travelogue/trips?limit=20').then(r => r.json()).then(d => (d.trips || []).length)"
         )
@@ -1276,12 +1339,7 @@ def test_ac_hp2_07_drag_does_not_open_lightbox(studio_server) -> None:
         page.mouse.down()
         page.mouse.move(cx + 15, cy, steps=5)
         page.mouse.up()
-        page.wait_for_timeout(200)
-
-        lb_open = page.evaluate(
-            "() => document.getElementById('v2-lightbox').classList.contains('is-open')"
-        )
-        assert not lb_open
+        _assert_lightbox_stays_closed(page, settle_ms=200)
         browser.close()
 
 
@@ -1320,7 +1378,18 @@ def test_ac_hp2_08_odd_tail_left_align(studio_server) -> None:
             arg=last_idx,
             timeout=10_000,
         )
-        page.wait_for_timeout(400)
+        # Wait for carousel scrollLeft to settle near max (tail left-align).
+        page.wait_for_function(
+            """() => {
+              const track = document.getElementById('v2-carousel-track');
+              const viewport = track && track.parentElement;
+              if (!track || !viewport) return false;
+              const maxScroll = track.scrollWidth - viewport.clientWidth;
+              if (maxScroll <= 0) return true;
+              return Math.abs(track.scrollLeft - maxScroll) <= 2;
+            }""",
+            timeout=10_000,
+        )
 
         tail = page.evaluate(
             """
@@ -1626,9 +1695,8 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             }
             """
         )
-        page.wait_for_timeout(300)
         shelf_badge = page.locator(".v2-shelf__stale-badge").first
-        assert shelf_badge.is_visible()
+        expect(shelf_badge).to_be_visible(timeout=10_000)
         assert "可更新" in shelf_badge.inner_text()
         browser.close()
 
@@ -1702,7 +1770,18 @@ def test_ac_hp2_demo_assets_serve_200(studio_server) -> None:
         page.on("response", _on_response)
         _goto_v2(page, studio_server["base"])
         _wait_visible(page, "v2-frame")
-        page.wait_for_timeout(600)
+        page.wait_for_function(
+            """() => {
+              const imgs = document.querySelectorAll(
+                '#v2-carousel-track img, #v2-bento-bg'
+              );
+              return imgs.length > 0;
+            }""",
+            timeout=15_000,
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and not statuses:
+            time.sleep(0.05)
         assert statuses, "未捕获 demo-showcase webp 请求"
         assert all(s == 200 for s in statuses), statuses
         browser.close()
@@ -1720,11 +1799,7 @@ def test_ac_hp2_06_tap_opens_lightbox(studio_server) -> None:
         box = track.bounding_box()
         assert box
         page.mouse.click(box["x"] + box["width"] * 0.5, box["y"] + box["height"] * 0.5)
-        page.wait_for_timeout(400)
-        lb_open = page.evaluate(
-            "() => document.getElementById('v2-lightbox').classList.contains('is-open')"
-        )
-        assert not lb_open
+        _assert_lightbox_stays_closed(page, settle_ms=400)
         browser.close()
 
 
@@ -1788,10 +1863,7 @@ def test_ac_hp2_25_homepage_view_after_state(studio_server) -> None:
         page.on("request", _on_request)
         _goto_v2(page, studio_server["base"], "studioFixture=multi")
         _wait_visible(page, "v2-shelf")
-        page.wait_for_timeout(300)
-
-        views = [e for e in events if e.get("event") == "homepage_view"]
-        assert views, f"未捕获 homepage_view，captured={[e.get('event') for e in events]}"
+        views = _wait_studio_events(events, "homepage_view")
         assert views[0].get("meta", {}).get("state") == "returning"
         assert views[0].get("meta", {}).get("variant") == "v2"
         browser.close()
@@ -1829,20 +1901,28 @@ def test_m20j_holdback_redirect_experiment_exposure(tmp_path: Path, monkeypatch)
             page.goto(base + "/", wait_until="networkidle")
             assert page.url.startswith(base + "/"), page.url
             assert not page.url.rstrip("/").endswith("/v2"), page.url
-            page.wait_for_timeout(400)
 
-            cookies = context.cookies()
-            bucket_cookie = next(
-                (c for c in cookies if c.get("name") == "travelogue.studio.hp_bucket"),
-                None,
-            )
+            deadline = time.monotonic() + 10
+            bucket_cookie = None
+            while time.monotonic() < deadline:
+                cookies = context.cookies()
+                bucket_cookie = next(
+                    (
+                        c
+                        for c in cookies
+                        if c.get("name") == "travelogue.studio.hp_bucket"
+                    ),
+                    None,
+                )
+                if bucket_cookie is not None:
+                    break
+                time.sleep(0.05)
             assert bucket_cookie is not None
             raw_cookie = str(bucket_cookie["value"])
             cookie_bucket = int(raw_cookie.split(".")[0])
             assert cookie_bucket == expected_bucket
 
-            exposures = [e for e in events if e.get("event") == "experiment_exposure"]
-            assert exposures, f"未捕获 experiment_exposure，captured={[e.get('event') for e in events]}"
+            exposures = _wait_studio_events(events, "experiment_exposure")
             meta = exposures[0].get("meta", {})
             assert meta.get("variant") == "v2"
             assert meta.get("bucket_id") == expected_bucket
@@ -1883,10 +1963,7 @@ def test_m20j_holdback_control_experiment_exposure(tmp_path: Path, monkeypatch) 
             page.goto(base + "/", wait_until="networkidle")
             assert page.url.rstrip("/").endswith(f":{port}")
             assert "studio-home-v2.css" not in page.content()
-            page.wait_for_timeout(400)
-
-            exposures = [e for e in events if e.get("event") == "experiment_exposure"]
-            assert not exposures, f"legacy classic 不应上报 v3 exposure，captured={exposures}"
+            _assert_no_studio_event(events, "experiment_exposure", settle_ms=400)
             browser.close()
     finally:
         server.shutdown()
@@ -1945,10 +2022,7 @@ def test_js_error_pipeline_posts_event(studio_server) -> None:
             "() => window.dispatchEvent(new ErrorEvent('error', "
             "{ message: 'harness-js-error-probe', filename: 'harness.js' }))"
         )
-        page.wait_for_timeout(500)
-
-        js_errors = [e for e in events if e.get("event") == "js_error"]
-        assert js_errors, f"未捕获 js_error，captured={[e.get('event') for e in events]}"
+        js_errors = _wait_studio_events(events, "js_error")
         meta = js_errors[0].get("meta", {})
         assert meta.get("variant") == "v2"
         assert "harness-js-error-probe" in (meta.get("message") or "")

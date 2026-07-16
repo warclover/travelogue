@@ -309,7 +309,15 @@ def test_ac_bsp_03_reduced_motion_no_scrub_transform(bsp_server) -> None:
         page.emulate_media(reduced_motion="reduce")
         _open_demo(page, bsp_server["base"])
         page.evaluate("window.scrollTo(0, document.body.scrollHeight / 3)")
-        page.wait_for_timeout(800)
+        # Wait until layout images exist and reduced-motion left transforms empty.
+        page.wait_for_function(
+            """() => {
+              const imgs = Array.from(document.querySelectorAll('.layout-slot__img'));
+              if (!imgs.length) return false;
+              return imgs.every((img) => !(img.style.transform || '').trim());
+            }""",
+            timeout=10_000,
+        )
         transforms = page.evaluate(
             """() => Array.from(document.querySelectorAll('.layout-slot__img'))
               .map((img) => img.style.transform || '')"""

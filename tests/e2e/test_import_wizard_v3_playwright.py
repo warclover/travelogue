@@ -35,7 +35,7 @@ _THUMB_GIF = (
 )
 
 pytest.importorskip("playwright")
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
@@ -635,8 +635,7 @@ def test_ac_iw_03_preview_degrade_still_startable(wizard_server) -> None:
         _goto_v2(page, wizard_server["base"])
         _wait_visible(page, "v2-frame")
         _wizard_quick_folder_to_confirm(page)
-        page.wait_for_timeout(400)
-        assert page.locator("#v2-wizard-start").is_enabled()
+        expect(page.locator("#v2-wizard-start")).to_be_enabled(timeout=10_000)
         page.locator("#v2-wizard-start").click()
         _wait_visible(page, "v2-import-cancel")
         browser.close()
