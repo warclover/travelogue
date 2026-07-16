@@ -117,10 +117,11 @@ python -m http.server 8765
 # 访问 http://127.0.0.1:8765/golden.html
 ```
 
-重新生成 golden HTML（修改生成脚本后）：
+`golden.html` 为手写维护（v0.2.1）。**不要**运行已废弃的 `scripts/gen_golden_html.py`（会立刻退出）。需要 demo 图或变体时用：
 
 ```powershell
-python scripts\gen_golden_html.py
+python scripts/gen_demo_assets.py
+python scripts/gen_golden_variants.py
 ```
 
 ---

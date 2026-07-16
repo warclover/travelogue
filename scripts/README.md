@@ -13,8 +13,8 @@ python scripts/gen_scripts_registry.py
 | Status | Count | Meaning |
 |--------|------:|---------|
 | CI | 28 | Referenced in `.github/workflows` |
-| docs | 120 | Referenced in `docs/` only |
-| active | 33 | No CI/docs scan hit; keep unless archived |
+| docs | 123 | Referenced in `docs/` only |
+| active | 30 | No CI/docs scan hit; keep unless archived |
 | internal | 3 | Leading `_` helper / one-off audit |
 | archivable-candidate | 0 | `phaseN_*` with zero CI/docs refs · see archive list |
 
@@ -71,9 +71,9 @@ python scripts/gen_scripts_registry.py
 | `diff_curate.py` | docs | — | `docs/ACCEPTANCE-PHASE3.md`, `docs/IMPLEMENTATION-PHASE4.md`, `docs/PRD-PHASE4.md`, `+2 more` | `scripts/diff_curate.py` |
 | `e2e_trip_acceptance.py` | docs | — | `docs/PRD-ARCH-OPTIMIZATION.md`, `docs/PROMPTS-ARCH-OPTIMIZATION.md`, `docs/QUALITY-GATE.md`, `+1 more` | `scripts/e2e_trip_acceptance.py` |
 | `export_clustering_fixture.py` | active | — | — | `scripts/export_clustering_fixture.py` |
-| `gen_demo_assets.py` | active | — | — | `scripts/gen_golden_html.py` |
-| `gen_golden_html.py` | active | — | — | — |
-| `gen_golden_variants.py` | active | — | — | `scripts/gen_golden_html.py` |
+| `gen_demo_assets.py` | docs | — | `docs/DEVELOPMENT.md` | `scripts/gen_golden_html.py` |
+| `gen_golden_html.py` | docs | — | `docs/DEVELOPMENT.md` | — |
+| `gen_golden_variants.py` | docs | — | `docs/DEVELOPMENT.md` | `scripts/gen_golden_html.py` |
 | `gen_studio_version_info.py` | docs | — | `docs/IMPLEMENTATION-DESKTOP-INSTALLER-V1.md`, `docs/acceptance-records/desktop-installer-v1-smoke-2026-07-14.md` | `scripts/gen_studio_version_info.py` |
 | `gen_usage_skeleton.py` | docs | — | `docs/PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md` | `scripts/gen_usage_skeleton.py` |
 | `generate_demo_placeholders.py` | docs | — | `docs/studio-homepage-v2/VISUAL-SIGNOFF.md` | — |
