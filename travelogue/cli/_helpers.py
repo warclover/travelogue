@@ -145,11 +145,16 @@ def _run_demo_cmd(
         raise typer.Exit(1) from exc
     _print_demo_result(result, layout=layout, no_render=no_render, published=publish)
 def _resolve(path: str, *, trips_dir: Path | None = None) -> Path:
+    """Resolve trip id / dir / trip.json.
+
+    When ``trips_dir`` is omitted (``None``), absolute or relative ``trip.json``
+    paths resolve by filesystem presence (CLI loose mode). Explicit
+    ``--trips-dir`` enables the trips-root sandbox. Studio/HTTP must never use
+    this loose path for user input.
+    """
     ctx = app_context_for_trips_dir(trips_dir)
     try:
-        return ctx.trip_service().resolve_trip_json(
-            path, trips_dir=trips_dir or ctx.trips_root
-        )
+        return ctx.trip_service().resolve_trip_json(path, trips_dir=trips_dir)
     except TripNotFoundError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc

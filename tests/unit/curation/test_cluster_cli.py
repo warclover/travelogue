@@ -158,3 +158,29 @@ def test_cluster_process_pending_keep_preserves_list(tmp_path: Path) -> None:
     body = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
     assert body["pipeline"]["pendingAssets"] == pending, "--keep must preserve the list"
     assert "cleared=0" in result.stdout
+
+
+def test_cluster_trips_dir_sandbox_rejects_absolute_escape(tmp_path: Path) -> None:
+    """AC-AAD-03: explicit --trips-dir keeps sandbox; absolute trip.json is rejected."""
+    trips_root = tmp_path / "trips"
+    trips_root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "trip.json").write_text(
+        json.dumps({"tripId": "out", "assets": [], "chapters": []}),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "cluster",
+            "cache-clear",
+            str(outside / "trip.json"),
+            "--trips-dir",
+            str(trips_root),
+        ],
+    )
+    assert result.exit_code != 0
+    err = str(result.exception or "") + result.stdout + result.stderr
+    assert "E_TRIP_NOT_FOUND" in err
