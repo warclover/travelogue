@@ -249,6 +249,51 @@ def test_worker_config_respects_copy_source_files_false():
     assert forced.copy_source_files is True
 
 
+def test_parallel_reference_ingest_skips_source_jpeg(tmp_path: Path):
+    """AC-MRS-02b · parallel_ingest=true + copy off → no source JPEG, refs intact."""
+    import json
+
+    from travelogue.config import AppConfig, PipelineConfig
+
+    album = _album(tmp_path, 4)
+    trips = tmp_path / "trips"
+    trips.mkdir()
+    trip_json = create_trip(trip_id="par-ref", trips_dir=trips, title="par-ref")
+    trip_dir = trip_json.parent
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    app = AppConfig(
+        ingest=IngestConfig(
+            copy_source_files=False,
+            webp_widths=(640,),
+            generate_crops=False,
+            detect_faces=False,
+            max_photos=10,
+        ),
+        pipeline=PipelineConfig(
+            parallel_ingest=True,
+            parallel_ingest_min_photos=2,
+            parallel_ingest_workers=2,
+        ),
+    )
+    result = ingest_into_trip(
+        trip, trip_dir, from_dir=album, dedupe=False, app_cfg=app, min_assets=1
+    )
+    assert result.stats.get("ingestParallelFallback") is not True
+    assert result.stats.get("ingestWorkers", 1) >= 2
+    source_files = (
+        list((trip_dir / "source").glob("*.jpg")) if (trip_dir / "source").is_dir() else []
+    )
+    assert source_files == []
+    assets = trip.get("assets") or []
+    assert len(assets) >= 4
+    for a in assets:
+        assert isinstance(a.get("sourceRef"), dict)
+        assert Path(a["sourceRef"]["path"]).is_file()
+        # Decode from album path must succeed — not silent photo fallback
+        assert not a.get("referenceDecodeSkipped")
+        assert a.get("mediaClass")
+
+
 def test_incremental_missing_sets_error_code(tmp_path: Path):
     """AC-MRS-12 · pending replay miss is observable, not silent."""
     import json

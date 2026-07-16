@@ -201,6 +201,9 @@ function populateSuccessUi(result) {
   if (result.clusterNotice && typeof studioToast === "function") {
     studioToast(result.clusterNotice, { duration: 4200 });
   }
+  if (result.mediaWarn && typeof studioToast === "function") {
+    studioToast(result.mediaWarn, { duration: 5200 });
+  }
   var open = $("v2-success-open");
   var secondary = $("v2-success-secondary");
   var nextHint = $("v2-success-next-hint");

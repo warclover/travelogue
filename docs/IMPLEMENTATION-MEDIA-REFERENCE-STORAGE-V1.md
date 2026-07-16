@@ -79,6 +79,14 @@
 | remount `content_changed` UI | `longshot.js` 阻断 + toast |
 | incremental 失败码 | ingest `errorCode=E_MEDIA_INCREMENTAL_SOURCE` |
 
+## P2 收口
+
+| 项 | 落地 |
+|----|------|
+| AC-MRS-02b 并行引用自动化 | `test_parallel_reference_ingest_skips_source_jpeg` |
+| 书架占用超阈值角标 | `shelf.js` 「磁盘占用较高」→ 打开存储设置 |
+| incremental 警告透出 UI | `StudioPipelineResult.media_warn` → first-success toast |
+
 ## 可选后续
 
 1. 设置清理改用产品 Dialog（替代 `window.confirm`）  

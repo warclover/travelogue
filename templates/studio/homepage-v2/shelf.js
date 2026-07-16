@@ -5,7 +5,7 @@
  * 不整页替换 Bento；无用户画册时 hideShelf()。
  */
 import { isDemoTrip } from "../js/constants.js";
-import { cssBackgroundImage } from "../js/dom.js";
+import { cssBackgroundImage, studioAuthHeaders } from "../js/dom.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { $, show, V2 } from "./store.js";
 import { openImportSheet } from "./import-entry.js";
@@ -14,6 +14,7 @@ import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
 import { shelfResumeActions, shelfShowCoverLongshotBadge } from "./shelf-actions-logic.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
+import { openSettings } from "./settings-panel.js";
 
 var STALE_BADGE = "可更新";
 var STALE_LONGSHOT = "长图可更新";
@@ -329,7 +330,16 @@ export function renderShelf(trips, total) {
   }
   headLeft.appendChild(el("p", "v2-shelf__count", countBits.join(" · ")));
   head.appendChild(headLeft);
+  var storageBadge = el("button", "v2-shelf__storage-badge");
+  storageBadge.type = "button";
+  storageBadge.hidden = true;
+  storageBadge.setAttribute("aria-label", "磁盘占用较高，打开存储设置");
+  storageBadge.addEventListener("click", function () {
+    openSettings({ focus: "storage", source: "shelf_storage_badge" });
+  });
+  head.appendChild(storageBadge);
   host.appendChild(head);
+  refreshShelfStorageBadge(storageBadge);
 
   var resumeTrip = latestNonDemo;
   if (resumeTrip) {
@@ -363,6 +373,28 @@ function wireShelfScrollObserver(host) {
     });
   }, { threshold: 0.15 });
   observer.observe(host);
+}
+
+/** D-MRS-13 · 占用超阈值时书架非阻断角标（无弹窗） */
+function refreshShelfStorageBadge(badgeEl) {
+  if (!badgeEl) return;
+  fetch("/__travelogue/storage/usage", { headers: studioAuthHeaders() })
+    .then(function (r) {
+      return r.json();
+    })
+    .then(function (data) {
+      if (!data || data.ok === false || !data.overThreshold) {
+        badgeEl.hidden = true;
+        badgeEl.textContent = "";
+        return;
+      }
+      badgeEl.hidden = false;
+      badgeEl.textContent = "磁盘占用较高";
+      badgeEl.title = "作品库占用较高，可打开设置清理";
+    })
+    .catch(function () {
+      badgeEl.hidden = true;
+    });
 }
 
 export { loadMoreShelf, SHELF_PAGE_SIZE };
