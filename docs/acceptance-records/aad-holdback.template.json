@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1",
+  "reviewId": "aad-holdback-TEMPLATE",
+  "feature": "PrefixBeam",
+  "gate": "AC-AAD-24 / Gate-Q",
+  "prd": "PRD-ARCH-ALGO-DEEPENING-V1",
+  "control": "layout.scoring.prefix_beam_enabled=false (VariantRerank)",
+  "treatment": "layout.scoring.prefix_beam_enabled=true (PrefixBeam)",
+  "blindThreshold": 0.55,
+  "protocol": {
+    "nMin": 8,
+    "diversityRequired": ["shortTrip", "longTrip", "portraitHeavy", "landscapeHeavy", "crossCity"],
+    "dimensions": ["rhythm", "mosaicReasonableness", "chapterHero"],
+    "judges": "dev>=1 + product>=1; tie → third or record not_default_on",
+    "tieMeans": "NOT Gate-Q default-on; default-on requires separate PR + plain release note"
+  },
+  "diversityCoverage": {
+    "shortTrip": null,
+    "longTrip": null,
+    "portraitHeavy": null,
+    "landscapeHeavy": null,
+    "crossCity": null
+  },
+  "vetoExamples": [
+    {
+      "id": "rhythm-streak",
+      "dimension": "rhythm",
+      "description": "连续 ≥3 屏同 pattern 失控",
+      "hit": null
+    },
+    {
+      "id": "mosaic-crop",
+      "dimension": "mosaicReasonableness",
+      "description": "拼图主图拧巴裁切 / 脸贴边",
+      "hit": null
+    },
+    {
+      "id": "chapter-hero-buried",
+      "dimension": "chapterHero",
+      "description": "章英雄埋在九宫或错位",
+      "hit": null
+    }
+  ],
+  "reviewerDev": null,
+  "reviewerProduct": null,
+  "reviewedAt": null,
+  "decision": {
+    "qualityNotWorse": null,
+    "defaultOn": false,
+    "tieBreak": "not_default_on",
+    "notes": "平局≠默认开"
+  },
+  "tripPairs": []
+}

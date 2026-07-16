@@ -128,6 +128,7 @@ class ScoringWeights:
 @dataclass
 class ScoreBreakdown:
     total: float = 0.0
+    utility: float = 0.0
     aspect_match: float = 0.0
     sharpness: float = 0.0
     hero_separation: float = 0.0
@@ -146,6 +147,7 @@ class ScoreBreakdown:
     def to_dict(self) -> dict[str, float]:
         return {
             "total": round(self.total, 6),
+            "utility": round(self.utility, 6),
             "aspect_match": round(self.aspect_match, 6),
             "sharpness": round(self.sharpness, 6),
             "hero_separation": round(self.hero_separation, 6),

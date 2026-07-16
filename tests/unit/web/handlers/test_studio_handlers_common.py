@@ -71,3 +71,16 @@ def test_resolve_trip_dir_finds_existing_trip(tmp_path: Path) -> None:
     trip_dir = resolve_trip_dir(ctx, "demo-01")
     assert trip_dir is not None
     assert (trip_dir / "trip.json").is_file()
+
+
+def test_ac_aad_03_studio_rejects_absolute_escape(tmp_path: Path) -> None:
+    """AC-AAD-03: Studio never resolves absolute paths outside trips_root."""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "trip.json").write_text("{}", encoding="utf-8")
+    ctx = AppContext(cfg=get_config(), trips_root=trips_dir)
+    assert resolve_trip_dir(ctx, str(outside)) is None
+    assert resolve_trip_dir(ctx, str(outside.resolve())) is None
+    assert resolve_trip_dir(ctx, "../outside") is None

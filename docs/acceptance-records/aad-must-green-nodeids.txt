@@ -1,0 +1,17 @@
+# AC-AAD-04 · must-green nodeids (arch/algo-deepening-v1)
+# Run: python -m pytest $(Get-Content docs/acceptance-records/aad-must-green-nodeids.txt | Where-Object { $_ -and $_ -notmatch '^\s*#' }) -q
+# Or:  python scripts/run_aad_must_green.py
+
+tests/unit/layout_engine/test_lte_p4_gaps.py::test_legacy_generated_matches_codegen
+tests/unit/curation/test_cluster_cli.py
+tests/unit/layout_engine/test_lse_adapter.py
+tests/unit/layout_engine/test_layout_utility_combine.py
+tests/unit/layout_engine/test_prefix_beam_flag.py
+tests/unit/layout_engine/test_prefix_beam_ac.py
+tests/unit/layout_engine/test_layout_metrics.py
+tests/unit/curation/test_aesthetic_purpose_lint.py
+tests/unit/curation/test_aad_curate_stages.py
+tests/unit/curation/test_aad_curate_signature_ab.py
+tests/unit/web/handlers/test_studio_handlers_common.py::test_resolve_trip_dir_finds_existing_trip
+tests/unit/web/handlers/test_studio_handlers_common.py::test_ac_aad_03_studio_rejects_absolute_escape
+tests/unit/lint/test_lint_layout_contract_surface.py

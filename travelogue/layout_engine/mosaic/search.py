@@ -342,7 +342,13 @@ def replan_day_buckets_beam(
                 )
                 if adjusted_total > best_score.total + 1e-6:
                     best_plan = plan
-                    best_score = replace(bd, total=adjusted_total)
+                    from travelogue.layout_contract.scoring import combine_utility
+
+                    best_score = replace(
+                        bd,
+                        total=adjusted_total,
+                        utility=combine_utility(adjusted_total, {}).utility,
+                    )
                     best_variant = variant_name
 
         prefix_enabled = bool(
@@ -373,6 +379,7 @@ def replan_day_buckets_beam(
                 late_kwargs=late_kwargs,
                 moment_secondary_ids=moment_secondary_ids,
                 moment_secondary_boost=moment_secondary_boost,
+                incremental_state=incr_state,
             )
             if pb_fallback:
                 fallback_reason = fallback_reason or pb_fallback
@@ -397,7 +404,13 @@ def replan_day_buckets_beam(
                 )
                 if pb_adj > best_score.total + 1e-6:
                     best_plan = pb_plan
-                    best_score = replace(pb_bd, total=pb_adj)
+                    from travelogue.layout_contract.scoring import combine_utility
+
+                    best_score = replace(
+                        pb_bd,
+                        total=pb_adj,
+                        utility=combine_utility(pb_adj, {}).utility,
+                    )
                     best_variant = "prefix_beam"
 
         if late_kwargs and best_plan:
@@ -410,6 +423,10 @@ def replan_day_buckets_beam(
                 "variant": best_variant,
                 "candidateCount": len(candidates),
                 "score": best_score.to_dict(),
+                "utility": round(
+                    float(getattr(best_score, "utility", 0.0) or best_score.total),
+                    6,
+                ),
                 "legacyScore": legacy_score.to_dict(),
                 "changed": _screens_signature([{"screens": best_plan}]) != legacy_sig,
                 "arcProfile": arc_profile,

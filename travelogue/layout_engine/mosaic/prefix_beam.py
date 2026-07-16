@@ -15,7 +15,7 @@ from dataclasses import dataclass, replace
 
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
-from travelogue.layout_contract.scoring import ScoringWeights
+from travelogue.layout_contract.scoring import IncrementalScoreState, ScoringWeights
 from travelogue.layout_contract.search_budget import SearchBudget
 from travelogue.layout_engine.planner.beam_scoring import score_screen_plan
 from travelogue.layout_engine.planner.layout_candidates import generate_day_bucket_candidates
@@ -65,6 +65,7 @@ def prefix_beam_plan_bucket(
     late_kwargs: dict,
     moment_secondary_ids: set[str] | frozenset[str] | None = None,
     moment_secondary_boost: float = 0.0,
+    incremental_state: IncrementalScoreState | None = None,
 ) -> tuple[list[dict], str | None]:
     """Return (screens, fallback_reason). fallback_reason set when VariantRerank should win."""
     if not bucket:
@@ -72,6 +73,7 @@ def prefix_beam_plan_bucket(
     if not budget.can_evaluate() and not budget.can_generate():
         return [], "BUDGET_EXHAUSTED"
 
+    incr = incremental_state if incremental_state is not None else IncrementalScoreState()
     initial = _BeamState(
         screens=[],
         remaining=list(bucket),
@@ -153,6 +155,8 @@ def prefix_beam_plan_bucket(
                     subject_run_tolerance=subject_run_tolerance,
                     featured_beam=True,
                     enable_gravity_balance=enable_gravity_balance,
+                    incremental=True,
+                    incremental_state=incr,
                     moment_secondary_ids=moment_secondary_ids,
                     moment_secondary_boost=moment_secondary_boost,
                 )
@@ -161,7 +165,7 @@ def prefix_beam_plan_bucket(
                         screens=new_screens,
                         remaining=new_remaining,
                         layout_state=new_state,
-                        score=bd.total,
+                        score=float(getattr(bd, "utility", 0.0) or bd.total),
                     )
                 )
             if fallback:
