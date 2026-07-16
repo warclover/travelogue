@@ -75,6 +75,7 @@ from travelogue.web.studio_handlers.paths import (
     LLM_STATUS_PATH,
     LONGSHOT_PATH,
     LONGSHOT_UPLOAD_PATH,
+    OUTPUT_RECIPE_PATH,
     LSE_CAPS_API_PATH,
     LSE_FLAGS_UI_PATH,
     NARRATE_PATH,
@@ -135,6 +136,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     # GET — authenticated APIs / admin UIs
     RouteSpec("GET", STATUS_PATH, "job_handlers.handle_status", auth=True),
     RouteSpec("GET", CONFIG_PATH, "config_handlers.handle_config", auth=True),
+    RouteSpec("GET", OUTPUT_RECIPE_PATH, "export_handlers.handle_output_recipe", auth=True),
     RouteSpec("GET", STORAGE_USAGE_PATH, "storage_handlers.handle_storage_usage", auth=True),
     RouteSpec("GET", LLM_STATUS_PATH, "llm_settings_handlers.handle_llm_status", auth=True),
     RouteSpec("GET", TEMPLATES_ADMIN_UI_PATH, "static_handlers.handle_templates_admin_page", auth=True),

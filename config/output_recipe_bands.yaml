@@ -1,0 +1,5 @@
+# Output Recipe V1 · Band 阈值（D-OR / AC-OR-01）
+bands:
+  sparse_max: 9
+  ambiguous_max: 30
+  narrative_chapter_hint_at: 50

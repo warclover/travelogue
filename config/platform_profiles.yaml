@@ -34,6 +34,26 @@ platforms:
       2. 朋友圈 → 从相册选择 3. 按顺序发布 · 滑动可连读整卷长图。
       各段高度可变；切点落在照片之间，不会切开单张照片。
 
+  # Output Recipe · 分支 D · 真九宫格（非长卷切片；不走 Playwright capture）
+  moments_grid:
+    label: 朋友圈 · 九宫格
+    label_en: Moments Grid
+    segment: photo_led
+    capture: photo_grid
+    allow_p1: false
+    phase: B
+    target_pages: 9
+    min_pages: 1
+    max_pages: 9
+    output:
+      width: 1080
+      height: 1080
+      aspect: "1:1"
+      naming: "{title}-moments-grid-{nn}"
+    publish_guide: >-
+      有几张发几张：按编号 01→N 选入朋友圈九宫格（1:1）。
+      这是真九宫格配图，不是长图连读切片。
+
   xiaohongshu:
     label: 小红书
     label_en: Xiaohongshu

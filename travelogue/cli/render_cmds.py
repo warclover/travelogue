@@ -430,9 +430,14 @@ def cmd_export_longshot(
         None,
         "--platform",
         help=(
-            "wechat_chat (default) | wechat_moments | xiaohongshu | "
+            "wechat_chat (default) | wechat_moments | moments_grid | xiaohongshu | "
             "instagram | weibo | douyin_cover | custom"
         ),
+    ),
+    intent: str | None = typer.Option(
+        None,
+        "--intent",
+        help="chat_longshot | moments_scroll | moments_grid | xiaohongshu (Output Recipe)",
     ),
     slide_count: int | None = typer.Option(
         None,
@@ -456,9 +461,13 @@ def cmd_export_longshot(
     ),
 ) -> None:
     """Export trip longshot PNG via Playwright (requires playwright + chromium)."""
+    import json
     import time
 
+    from travelogue.config import get_config
     from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+    from travelogue.export.output_recipe import resolve_output_recipe
+    from travelogue.export.output_recipe.types import OutputRecipeError
     from travelogue.export.platform_profiles import (
         PlatformProfileError,
         resolve_profile,
@@ -484,10 +493,44 @@ def cmd_export_longshot(
         pass
 
     try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+        cfg = get_config()
+        or_cfg = getattr(cfg.studio, "output_recipe", None)
+        recipe_enabled = bool(getattr(or_cfg, "enabled", False))
+        segment_mode = "auto"
         profile = None
-        if platform:
+
+        if recipe_enabled or intent:
+            trip_data: dict = {}
+            trip_json = serve_dir / "trip.json"
+            if trip_json.is_file():
+                try:
+                    trip_data = json.loads(trip_json.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    trip_data = {}
+            recipe = resolve_output_recipe(
+                trip=trip_data,
+                entrypoint="cli",
+                enabled=True if intent else recipe_enabled,
+                intent=intent,
+                platform=platform,
+            )
+            if recipe.needs_intent:
+                raise OutputRecipeError(
+                    "E_OR_INTENT_REQUIRED", "CLI 需指定 --intent 或 --platform"
+                )
+            platform_id = recipe.platform or platform_id
+            if platform_id == "wechat_chat" and recipe.layout in ("chapter", "by_chapter"):
+                segment_mode = "chapter"
+            elif platform_id == "wechat_chat" and recipe.layout == "single":
+                segment_mode = "full"
+        else:
+            platform_id = platform or "wechat_chat"
+
+        if platform_id and platform_id != "wechat_chat":
             profile = resolve_profile(
-                platform, slide_count=slide_count, pad_mode=pad_mode
+                platform_id, slide_count=slide_count, pad_mode=pad_mode
             )
             if profile.id == "custom":
                 profile = with_custom_output(
@@ -498,21 +541,32 @@ def cmd_export_longshot(
                     "E_LNG2_INVALID_CUSTOM_SIZE",
                     "--width/--height 仅用于 --platform custom",
                 )
-        trip_path = _resolve(path)
-        serve_dir = resolve_trip_serve_dir(trip_path)
+        elif width is not None or height is not None:
+            raise PlatformProfileError(
+                "E_LNG2_INVALID_CUSTOM_SIZE",
+                "--width/--height 仅用于 --platform custom",
+            )
+
         result = export_trip_longshot(
             serve_dir,
             scale=scale,
             fmt=format,
-            chapter=chapter if not platform or platform == "wechat_chat" else None,
+            chapter=chapter if platform_id == "wechat_chat" else None,
             output=out,
             port=port,
-            platform=platform,
+            platform=platform_id,
             slide_count=slide_count,
             pad_mode=pad_mode,
             profile=profile,
+            segment_mode=segment_mode,
         )
-    except (TripNotFoundError, FileNotFoundError, LongshotExportError, PlatformProfileError) as exc:
+    except (
+        TripNotFoundError,
+        FileNotFoundError,
+        LongshotExportError,
+        PlatformProfileError,
+        OutputRecipeError,
+    ) as exc:
         try:
             code = getattr(exc, "code", None) or type(exc).__name__
             append_studio_homepage_event(
@@ -525,7 +579,11 @@ def cmd_export_longshot(
             )
         except Exception:
             pass
-        typer.echo(f"E_EXPORT_LONGSHOT: {exc}", err=True)
+        code = getattr(exc, "code", None)
+        if code:
+            typer.echo(f"E_EXPORT_LONGSHOT: {code}: {exc}", err=True)
+        else:
+            typer.echo(f"E_EXPORT_LONGSHOT: {exc}", err=True)
         raise typer.Exit(1) from exc
     try:
         append_studio_homepage_event(
@@ -544,6 +602,45 @@ def cmd_export_longshot(
         typer.echo(f"OK export-longshot · {item.path} ({item.capture_method})")
     if getattr(result, "user_hint", ""):
         typer.echo(result.user_hint)
+    if getattr(result, "publish_guide", ""):
+        typer.echo(result.publish_guide)
+
+
+@app.command("resolve-output-recipe")
+def cmd_resolve_output_recipe(
+    path: str = typer.Argument(..., help="trip directory, trip.json, or tripId"),
+    entrypoint: str = typer.Option("cli", "--entrypoint", help="preview | shelf | cli"),
+    intent: str | None = typer.Option(None, "--intent"),
+    platform: str | None = typer.Option(None, "--platform"),
+) -> None:
+    """Print resolved Output Recipe JSON (debug / AC-OR)."""
+    import json
+
+    from travelogue.config import get_config
+    from travelogue.export.output_recipe import resolve_output_recipe
+    from travelogue.export.output_recipe.types import OutputRecipeError
+    from travelogue.web.serve import resolve_trip_serve_dir
+
+    try:
+        trip_path = _resolve(path)
+        serve_dir = resolve_trip_serve_dir(trip_path)
+        trip_json = serve_dir / "trip.json"
+        trip_data: dict = {}
+        if trip_json.is_file():
+            trip_data = json.loads(trip_json.read_text(encoding="utf-8"))
+        cfg = get_config()
+        or_cfg = getattr(cfg.studio, "output_recipe", None)
+        recipe = resolve_output_recipe(
+            trip=trip_data,
+            entrypoint=entrypoint,
+            enabled=bool(getattr(or_cfg, "enabled", False)),
+            intent=intent,
+            platform=platform,
+        )
+    except (TripNotFoundError, FileNotFoundError, OutputRecipeError, json.JSONDecodeError) as exc:
+        typer.echo(f"E_OR_RESOLVE: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(json.dumps(recipe.to_dict(), ensure_ascii=False))
 
 
 @app.command("preview")

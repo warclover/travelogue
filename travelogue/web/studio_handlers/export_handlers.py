@@ -109,12 +109,78 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
     handler._json_response(202, {"ok": True, "jobId": job.job_id})
 
 
+def handle_output_recipe(handler: StudioHandlerProtocol) -> None:
+    """GET /__travelogue/output-recipe · Band/Intent 解析（不启动导出）."""
+    import json
+    from urllib.parse import parse_qs, urlparse
+
+    from travelogue.export.output_recipe import (
+        ambiguous_intent_options,
+        count_kept_n,
+        resolve_output_recipe,
+    )
+    from travelogue.export.output_recipe.types import OutputRecipeError
+
+    query = parse_qs(urlparse(handler.path).query)
+    trip_id = (query.get("tripId") or query.get("tripid") or [""])[0].strip()
+    entrypoint = (query.get("entrypoint") or ["preview"])[0].strip() or "preview"
+    if not trip_id:
+        handler._json_response(400, {"ok": False, "error": "tripId required"})
+        return
+
+    ctx = studio_ctx(handler)
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "trip not found"})
+        return
+
+    trip_json = trip_dir / "trip.json"
+    try:
+        trip = json.loads(trip_json.read_text(encoding="utf-8")) if trip_json.is_file() else {}
+    except (OSError, json.JSONDecodeError):
+        trip = {}
+
+    or_cfg = getattr(ctx.cfg.studio, "output_recipe", None)
+    enabled = bool(getattr(or_cfg, "enabled", False))
+    try:
+        recipe = resolve_output_recipe(
+            trip=trip if isinstance(trip, dict) else None,
+            entrypoint=entrypoint,
+            enabled=enabled,
+        )
+    except OutputRecipeError as exc:
+        handler._json_response(
+            400,
+            {"ok": False, "error": exc.code, "message": exc.message},
+        )
+        return
+
+    options = (
+        ambiguous_intent_options(phase="B", kept_n=recipe.kept_n)
+        if recipe.needs_intent
+        else []
+    )
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "recipe": recipe.to_dict(),
+            "intentOptions": options,
+            "keptN": count_kept_n(trip if isinstance(trip, dict) else None),
+        },
+    )
+
+
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
+    import json
+
     from travelogue.export.longshot import (
         DEFAULT_EXPORT_SCALE,
         export_trip_longshot,
         playwright_longshot_available,
     )
+    from travelogue.export.output_recipe import count_kept_n, resolve_output_recipe
+    from travelogue.export.output_recipe.types import OutputRecipeError
     from travelogue.export.platform_profiles import (
         DEFAULT_PLATFORM,
         PlatformProfileError,
@@ -136,21 +202,6 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         blocked = _respond_if_source_missing(handler, trip_id)
         if blocked:
             return
-
-    # M-INS-0c · ADR-018 D6: if server track unavailable, ask client to run html2canvas.
-    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    if force_client or not playwright_longshot_available():
-        handler._json_response(
-            200,
-            {
-                "ok": True,
-                "fallback": "client",
-                "captureMethod": "p2",
-                "tripId": trip_id,
-                "message": user_message("E_LNG_CLIENT_FALLBACK"),
-            },
-        )
-        return
 
     try:
         scale = int(payload.get("scale") or DEFAULT_EXPORT_SCALE)
@@ -202,25 +253,93 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     ctx = studio_ctx(handler)
     cfg = ctx.cfg
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(404, {"ok": False, "error": "trip not found"})
+        return
+
+    trip_json = trip_dir / "trip.json"
+    try:
+        trip = json.loads(trip_json.read_text(encoding="utf-8")) if trip_json.is_file() else {}
+    except (OSError, json.JSONDecodeError):
+        trip = {}
+
+    or_cfg = getattr(cfg.studio, "output_recipe", None)
+    recipe_enabled = bool(getattr(or_cfg, "enabled", False))
+    entrypoint = str(payload.get("entrypoint") or "preview").strip() or "preview"
+    intent_raw = payload.get("intent")
+    intent = str(intent_raw).strip() if intent_raw not in (None, "") else None
+    platform_raw = payload.get("platform")
+
     longshot2_enabled = bool(getattr(cfg.studio, "longshot2_enabled", True))
     from travelogue.config.studio import DEFAULT_LONGSHOT2_PLATFORMS
 
     allowed_platforms = list(
         getattr(cfg.studio, "longshot2_platforms", list(DEFAULT_LONGSHOT2_PLATFORMS))
     )
+    if (recipe_enabled or intent) and "moments_grid" not in allowed_platforms:
+        allowed_platforms.append("moments_grid")
 
-    platform_raw = payload.get("platform")
-    # When longshot2 disabled, ignore platform (PRD §13)
-    if not longshot2_enabled:
+    recipe = None
+    use_recipe = bool(recipe_enabled or intent)
+    if use_recipe:
+        try:
+            recipe = resolve_output_recipe(
+                trip=trip if isinstance(trip, dict) else None,
+                entrypoint=entrypoint,
+                enabled=True if intent else recipe_enabled,
+                intent=intent,
+                platform=None if platform_raw in (None, "") else str(platform_raw),
+            )
+        except OutputRecipeError as exc:
+            handler._json_response(
+                400,
+                {"ok": False, "error": exc.code, "message": exc.message},
+            )
+            return
+
+        if recipe.needs_intent:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_OR_INTENT_REQUIRED",
+                    "message": "请先选择分享方式",
+                    "recipe": recipe.to_dict(),
+                },
+            )
+            return
+
+        platform_id = normalize_platform_id(recipe.platform or platform_raw)
+        if platform_id == DEFAULT_PLATFORM and recipe.layout in ("chapter", "by_chapter"):
+            segment_mode = "chapter"
+        elif platform_id == DEFAULT_PLATFORM and recipe.layout == "single":
+            segment_mode = "full"
+    elif not longshot2_enabled:
         platform_id = DEFAULT_PLATFORM
     else:
         platform_id = normalize_platform_id(platform_raw)
 
-    # Moments photo_led: always export pure photos (ignore preview copy mode).
-    if platform_id == "wechat_moments":
+    # Moments / grid: always export pure photos (ignore preview copy mode).
+    if platform_id in ("wechat_moments", "moments_grid"):
         from travelogue.render.copy_display import COPY_DISPLAY_PHOTOS
 
         copy_display = COPY_DISPLAY_PHOTOS
+
+    # M-INS-0c · 真九宫格不需 Playwright；其余保留 client fallback。
+    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
+    if platform_id != "moments_grid" and (force_client or not playwright_longshot_available()):
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "fallback": "client",
+                "captureMethod": "p2",
+                "tripId": trip_id,
+                "message": user_message("E_LNG_CLIENT_FALLBACK"),
+            },
+        )
+        return
 
     slide_count_raw = payload.get("slideCount")
     slide_count: int | None
@@ -252,7 +371,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             platform_id,
             slide_count=slide_count,
             pad_mode=pad_mode,
-            longshot2_enabled=longshot2_enabled,
+            longshot2_enabled=longshot2_enabled or use_recipe,
             allowed_platforms=allowed_platforms if platform_id != DEFAULT_PLATFORM else None,
         )
     except PlatformProfileError as exc:
@@ -265,11 +384,6 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     # Non-chat platforms ignore segmentMode (PRD §8.1)
     if profile.id != DEFAULT_PLATFORM:
         segment_mode = "auto"
-
-    trip_dir = resolve_trip_dir(ctx, trip_id)
-    if trip_dir is None:
-        handler._json_response(404, {"ok": False, "error": "trip not found"})
-        return
 
     store = get_job_store()
     job = store.create_longshot_job()
@@ -327,6 +441,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             "profileLabel": result.profile_label,
             "targetPageCount": result.target_page_count,
             "publishGuide": result.publish_guide,
+            "keptN": count_kept_n(trip if isinstance(trip, dict) else None),
+            "intent": getattr(recipe, "intent", None) if recipe else None,
         }
 
     threading.Thread(

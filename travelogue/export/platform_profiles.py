@@ -18,6 +18,7 @@ DEFAULT_PLATFORM = "wechat_chat"
 PLATFORM_SEGMENT_IDS = frozenset(
     {
         "wechat_moments",
+        "moments_grid",
         "xiaohongshu",
         "instagram",
         "weibo",
@@ -430,6 +431,8 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
     slug = _slug_title(title)
     if platform_id == "wechat_moments":
         return f"{slug}-moments"
+    if platform_id == "moments_grid":
+        return f"{slug}-moments-grid"
     if platform_id == "xiaohongshu":
         return f"{slug}-xhs"
     if platform_id == "instagram":

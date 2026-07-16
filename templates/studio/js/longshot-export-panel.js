@@ -18,11 +18,19 @@ export var PLATFORMS = {
   },
   wechat_moments: {
     id: "wechat_moments",
-    label: "朋友圈",
-    cta: "导出朋友圈配图",
+    label: "朋友圈 · 长图连读",
+    cta: "导出朋友圈 · 长图连读",
     showSegmentMode: false,
     expectHtml:
-      "将按完整照片生成 <strong>1–9 张</strong>配图（默认纯图、高度随图）· 预计 30–60 秒",
+      "将按完整游记切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
+  },
+  moments_grid: {
+    id: "moments_grid",
+    label: "朋友圈 · 九宫格",
+    cta: "导出朋友圈 · 九宫格",
+    showSegmentMode: false,
+    expectHtml:
+      "将导出最多 <strong>9 张</strong> 1:1 真九宫格（有几张发几张）· 无需截长卷",
   },
   xiaohongshu: {
     id: "xiaohongshu",
@@ -31,7 +39,7 @@ export var PLATFORMS = {
     showSegmentMode: false,
     showXhsOptions: true,
     expectHtml:
-      "将生成 <strong>3:4</strong> 配图（auto 约 5–9 张）· 默认留白边填充",
+      "将生成 <strong>3:4</strong> 配图（杂志页适配 · auto 约 5–9 张）· 默认留白边填充",
   },
 };
 

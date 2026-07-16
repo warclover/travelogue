@@ -171,9 +171,12 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status === "failed") {
       main.textContent =
         (job.error && (job.error.message || job.error.code)) || "导出失败";
+    } else if (result.platform === "moments_grid") {
+      var nGrid = result.pageCount || outputs.length;
+      main.textContent = "✓ " + nGrid + " 张九宫格已就绪";
     } else if (result.platform === "wechat_moments") {
       var nMoments = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nMoments + " 张朋友圈配图已就绪";
+      main.textContent = "✓ " + nMoments + " 张长图连读已就绪";
     } else if (result.platform === "xiaohongshu") {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
@@ -184,11 +187,16 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status !== "failed") {
       var shareHint = document.createElement("small");
       shareHint.className = "preview-task-dock__share-hint";
-      if (result.platform === "wechat_moments") {
+      if (result.platform === "moments_grid") {
+        shareHint.textContent =
+          result.publishGuide ||
+          ("已打开文件夹 · 共 " + outputs.length + " 张 1:1，有几张发几张");
+        textWrap.appendChild(shareHint);
+      } else if (result.platform === "wechat_moments") {
         shareHint.textContent =
           outputs.length > 1
-            ? "已打开文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈即可"
-            : "已打开文件夹 · 按序发到朋友圈即可";
+            ? "这不是九宫格 · 已打开文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
+            : "这不是九宫格 · 已打开文件夹 · 按序发到朋友圈连读";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "xiaohongshu") {
         shareHint.textContent =
@@ -220,7 +228,9 @@ export function mountPreviewTaskDock(root, hooks) {
         textWrap.appendChild(moreHelp);
       }
       if (
-        (result.platform === "wechat_moments" || result.platform === "xiaohongshu") &&
+        (result.platform === "wechat_moments" ||
+          result.platform === "xiaohongshu" ||
+          result.platform === "moments_grid") &&
         result.publishGuide
       ) {
         // 非默认平台：backend publishGuide 优先覆盖短句
@@ -230,6 +240,18 @@ export function mountPreviewTaskDock(root, hooks) {
 
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
+
+    if (job && job.status === "failed" && typeof hooks.onSwitchShareMethod === "function") {
+      var switchBtn = document.createElement("button");
+      switchBtn.type = "button";
+      switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--accent";
+      var actionText = "换种分享方式";
+      switchBtn.textContent = actionText;
+      switchBtn.addEventListener("click", function () {
+        hooks.onSwitchShareMethod({ actionText: actionText, tripId: tripId });
+      });
+      actions.appendChild(switchBtn);
+    }
 
     if (job && job.status !== "failed" && outputs.length && typeof hooks.onRevealFolder === "function") {
       var revealBtn = document.createElement("button");

@@ -69,8 +69,24 @@ def _wait_visible(page, el_id: str, timeout: int = 20_000) -> None:
 
 def _goto_v2(page, base: str, query: str = "") -> None:
     # M21-c 后 v2 主入口收敛到根路径；保留 helper 名称避免批量改用例名。
+    # D-PFT-01 · 抑制首启能力卡，避免挡住 #v2-cta（新用户走卡上「开始制作」）。
+    page.add_init_script(
+        """
+        try {
+          localStorage.setItem('travelogue.desktop.capabilityCard.v1', '1');
+        } catch (e) {}
+        """
+    )
     url = base + "/" + (("?" + query) if query else "")
     page.goto(url, wait_until="networkidle")
+    page.evaluate(
+        """
+        () => {
+          const el = document.getElementById('studio-capability-card-root');
+          if (el) el.hidden = true;
+        }
+        """
+    )
 
 
 # Playwright evaluate 内 triggerHomepageRecurate / stale 按钮 click / runTripCurateJob+onProgress

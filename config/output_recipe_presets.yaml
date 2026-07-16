@@ -1,0 +1,111 @@
+# Output Recipe V1 · Preset 注册表（Phase A · D-OR-22）
+# intent → preset_id → engine → platform（Job 兼容别名）
+# Phase B：moments_grid / xiaohongshu 主卡；本文件仅声明 hook / 未开放项。
+
+presets:
+  preset.chat_longshot_single:
+    intent: chat_longshot
+    engine: chapter_capture
+    platform: wechat_chat
+    layout: single
+    geometry: { mode: native_long, width: 428 }
+    count_policy: { mode: auto }
+    packing: none
+    phases: [studio, cli]
+    publish_guide_key: guide.chat_longshot
+    cta_key: cta.sparse_chat
+    product_label_key: label.chat_longshot
+
+  preset.chat_longshot_chapter:
+    intent: chat_longshot
+    engine: chapter_capture
+    platform: wechat_chat
+    layout: by_chapter
+    geometry: { mode: native_long, width: 428 }
+    count_policy: { mode: auto }
+    packing: none
+    phases: [studio, cli]
+    publish_guide_key: guide.chat_longshot
+    cta_key: cta.narrative_chat
+    product_label_key: label.chat_longshot
+
+  preset.moments_scroll:
+    intent: moments_scroll
+    engine: platform_segment
+    platform: wechat_moments
+    layout: content_balanced
+    geometry: { mode: native_long, width: 428 }
+    count_policy: { mode: auto, max: 9 }
+    packing: none
+    phases: [studio, cli]
+    publish_guide_key: guide.moments_scroll
+    cta_key: cta.moments_scroll
+    product_label_key: label.moments_scroll
+
+  # Phase B · 真九宫格 Writer（ADR-016 分支 D）
+  preset.moments_grid:
+    intent: moments_grid
+    engine: photo_grid
+    platform: moments_grid
+    layout: grid
+    geometry: { mode: fixed_aspect, width: 1080, height: 1080, aspect: "1:1" }
+    count_policy: { mode: auto, max: 9 }
+    packing: none
+    phases: [studio, cli]
+    phase: B
+    publish_guide_key: guide.moments_grid
+    cta_key: cta.moments_grid
+    product_label_key: label.moments_grid
+
+  # Phase B1 主卡；B0 仍可 CLI
+  preset.xiaohongshu:
+    intent: xiaohongshu
+    engine: platform_segment
+    platform: xiaohongshu
+    layout: content_balanced
+    geometry: { mode: fixed_aspect, width: 1080, height: 1440, aspect: "3:4" }
+    count_policy: { mode: auto }
+    packing: none
+    pad_mode: letterbox
+    phases: [cli]
+    phase: B
+    publish_guide_key: guide.xiaohongshu
+    product_label_key: label.xiaohongshu
+
+  # Overseas · 仅 hook_only（G-OR-10）；永不改写 locale=zh 默认
+  preset.instagram_carousel:
+    intent: instagram_carousel
+    engine: platform_segment
+    platform: instagram
+    layout: content_balanced
+    geometry: { mode: fixed_aspect, width: 1080, height: 1350, aspect: "4:5" }
+    count_policy: { mode: auto, max: 10 }
+    packing: none
+    pad_mode: letterbox
+    phases: [hidden]
+    phase: D
+    instagram_preset_state: hook_only
+    publish_guide_key: guide.instagram_carousel
+    product_label_key: label.instagram_carousel
+
+copy:
+  cta.sparse_chat: "导出长图 · 发微信群"
+  cta.narrative_chat: "按章导出长图 · 发微信群"
+  cta.moments_scroll: "导出朋友圈 · 长图连读"
+  cta.moments_grid: "导出朋友圈 · 九宫格"
+  label.chat_longshot: "微信群 · 长图"
+  label.moments_scroll: "朋友圈 · 长图连读"
+  label.moments_grid: "朋友圈 · 九宫格"
+  label.xiaohongshu: "小红书 · 笔记配图（杂志页适配）"
+  label.instagram_carousel: "Instagram · 轮播"
+  hint.ambiguous_shelf: "可到预览选择其他分享方式"
+  hint.narrative_deep: "照片较多，已按章节拆成多张，方便发送"
+  hint.grid_count: "有几张发几张，不必凑满 9 张"
+  intent.title: "这趟精选了 {n} 张，你想怎么发？"
+  intent.chat: "微信群 · 长图 — 整篇游记发到群里"
+  intent.scroll: "朋友圈 · 长图连读 — 最多 9 段，滑动连读"
+  intent.grid: "朋友圈 · 九宫格 — 约 {n} 张 1:1 配图（有几张发几张）"
+  intent.select_and_export: "选择并导出"
+  intent.save_only: "先选不导出"
+  fail.switch_share: "换种分享方式"
+  guide.moments_grid: "按 01→N 全选九宫格配图发到朋友圈；有几张发几张，不必凑满 9 张。"

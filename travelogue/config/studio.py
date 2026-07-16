@@ -23,6 +23,23 @@ class Longshot2Config:
 
 
 @dataclass
+class OutputRecipeBandsConfig:
+    """Output Recipe band thresholds (AC-OR-01)."""
+
+    sparse_max: int = 9
+    ambiguous_max: int = 30
+    narrative_chapter_hint_at: int = 50
+
+
+@dataclass
+class OutputRecipeConfig:
+    """Output Recipe V1 feature flag + bands (D-OR-24)."""
+
+    enabled: bool = False
+    bands: OutputRecipeBandsConfig = field(default_factory=OutputRecipeBandsConfig)
+
+
+@dataclass
 class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
@@ -32,6 +49,7 @@ class StudioConfig:
     import_sheet_large_enabled: bool = True
     layout_templates_internal: bool = False
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
+    output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
 
     @property
     def longshot2_enabled(self) -> bool:
@@ -44,6 +62,8 @@ class StudioConfig:
 
 def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
     """Subset of config safe for Studio GET /__travelogue/config."""
+    or_cfg = getattr(cfg.studio, "output_recipe", None) or OutputRecipeConfig()
+    bands = getattr(or_cfg, "bands", None) or OutputRecipeBandsConfig()
     return {
         "clustering": {
             "enabled": cfg.clustering.enabled,
@@ -73,6 +93,14 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                 "platforms": list(cfg.studio.longshot2.platforms),
                 "smartCrop": {
                     "enabled": cfg.studio.longshot2.smart_crop_enabled,
+                },
+            },
+            "outputRecipe": {
+                "enabled": bool(or_cfg.enabled),
+                "bands": {
+                    "sparseMax": int(bands.sparse_max),
+                    "ambiguousMax": int(bands.ambiguous_max),
+                    "narrativeChapterHintAt": int(bands.narrative_chapter_hint_at),
                 },
             },
         },

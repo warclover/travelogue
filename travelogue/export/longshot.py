@@ -711,10 +711,20 @@ def export_trip_longshot(
     cancel_check: CancelCheckFn | None = None,
     cancel_register: CancelRegisterFn | None = None,
 ) -> LongshotExportResult:
-    """Export longshot. Branch A (wechat_chat) by default; platform → branch B."""
+    """Export longshot. Branch A (wechat_chat) by default; platform → branch B/D."""
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
 
     pid = normalize_platform_id(platform)
+    # Output Recipe · 分支 D · 真九宫格（不经 Playwright / platform_longshot）
+    if pid == "moments_grid":
+        from travelogue.export.photo_grid_pack import export_photo_grid_pack
+
+        return export_photo_grid_pack(
+            trip_dir,
+            scale=scale,
+            fmt=fmt,
+            progress=progress,
+        )
     if pid != DEFAULT_PLATFORM:
         from travelogue.export.platform_longshot import export_platform_longshot
 

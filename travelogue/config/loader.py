@@ -42,6 +42,8 @@ from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.studio import (
     DEFAULT_LONGSHOT2_PLATFORMS,
     Longshot2Config,
+    OutputRecipeBandsConfig,
+    OutputRecipeConfig,
     StudioConfig,
 )
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
@@ -71,6 +73,25 @@ def _parse_longshot2_config(studio_raw: dict[str, Any]) -> Longshot2Config:
         enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
         platforms=platforms or DEFAULT_LONGSHOT2_PLATFORMS,
         smart_crop_enabled=cfg_bool(smart, "enabled", "enabled", False) if smart else False,
+    )
+
+
+def _parse_output_recipe_config(studio_raw: dict[str, Any]) -> OutputRecipeConfig:
+    raw = studio_raw.get("output_recipe")
+    if not isinstance(raw, dict):
+        raw = studio_raw.get("outputRecipe")
+    if not isinstance(raw, dict):
+        raw = {}
+    bands_raw = raw.get("bands") if isinstance(raw.get("bands"), dict) else {}
+    return OutputRecipeConfig(
+        enabled=cfg_bool(raw, "enabled", "enabled", False) if raw else False,
+        bands=OutputRecipeBandsConfig(
+            sparse_max=cfg_int(bands_raw, "sparse_max", "sparseMax", 9),
+            ambiguous_max=cfg_int(bands_raw, "ambiguous_max", "ambiguousMax", 30),
+            narrative_chapter_hint_at=cfg_int(
+                bands_raw, "narrative_chapter_hint_at", "narrativeChapterHintAt", 50
+            ),
+        ),
     )
 
 LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})
@@ -594,6 +615,7 @@ def load_config(path: Path | None = None) -> AppConfig:
                 studio_raw, "layout_templates_internal", "layoutTemplatesInternal", False
             ),
             longshot2=_parse_longshot2_config(studio_raw),
+            output_recipe=_parse_output_recipe_config(studio_raw),
         ),
         phase6=phase6_from_dict(phase6_raw),
         template_router=TemplateRouterConfig(

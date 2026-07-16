@@ -59,7 +59,12 @@ from travelogue.config.runtime import (
     reading_profile_defaults,
     reset_config_cache,
 )
-from travelogue.config.studio import StudioConfig, studio_config_expose
+from travelogue.config.studio import (
+    OutputRecipeBandsConfig,
+    OutputRecipeConfig,
+    StudioConfig,
+    studio_config_expose,
+)
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.vision import VisionConfig
 
@@ -100,6 +105,8 @@ __all__ = [
     "RenderConfig",
     "RenderReadingConfig",
     "SceneClusterConfig",
+    "OutputRecipeBandsConfig",
+    "OutputRecipeConfig",
     "StudioConfig",
     "TemplateAdminConfig",
     "TemplateRouterConfig",

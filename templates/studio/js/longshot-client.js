@@ -49,6 +49,12 @@ export function buildLongshotRequest(tripId, preset) {
       body.segmentMode = "auto";
     }
   }
+  if (p.intent) {
+    body.intent = p.intent;
+  }
+  if (p.entrypoint) {
+    body.entrypoint = p.entrypoint;
+  }
   if (p.slideCount != null && p.slideCount !== "") {
     body.slideCount = p.slideCount;
   }
@@ -134,9 +140,15 @@ export function formatLongshotResult(job) {
   var title = "长图已保存";
   var guide = null;
 
-  if (platform === "wechat_moments") {
+  if (platform === "moments_grid") {
+    var nGrid = result.pageCount || outputs.length;
+    title = "✓ " + nGrid + " 张九宫格已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (platform === "wechat_moments") {
     var n = result.pageCount || outputs.length;
-    title = "✓ " + n + " 张朋友圈配图已就绪";
+    title = "✓ " + n + " 张长图连读已就绪";
+    lines.push("这不是九宫格 · 滑动连读的长图切片");
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
   } else if (platform === "xiaohongshu") {

@@ -33,6 +33,7 @@ import {
   registerLongshotBridge,
   cancelPreviewLongshotExport,
   startLongshot,
+  offerSwitchShareMethod,
   setLongshotExportState,
   readLongshotExportPrefs,
   writeStoredLongshotPrefs,
@@ -504,6 +505,9 @@ export function initToolbarV3(root, tripId) {
     },
     onReExport: function () {
       startLongshot(root, tripId);
+    },
+    onSwitchShareMethod: function () {
+      offerSwitchShareMethod(root, tripId);
     },
     onDismissStale: function () {
       root._staleDockDismissed = true;
