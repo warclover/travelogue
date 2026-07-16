@@ -69,8 +69,19 @@
 | ADR / AC / DATA-MODEL | 已回写 |
 | zip 泄漏 | `tests/unit/export/test_export_no_absolute_paths.py` |
 
+## P1 收口（合入前补齐）
+
+| 项 | 落地 |
+|----|------|
+| 导入向导引用/上传文案 +「更改存储设置」 | `import-wizard.js` · `studio-home-v2.html` |
+| 设置页 trip `storageMode` 纯文字 | `storage-settings.js` · source-status |
+| DLLM 三组交叉引用 | `PRD-DESKTOP-LLM-SETUP-V1.md` §4.3 |
+| remount `content_changed` UI | `longshot.js` 阻断 + toast |
+| incremental 失败码 | ingest `errorCode=E_MEDIA_INCREMENTAL_SOURCE` |
+
 ## 可选后续
 
 1. 设置清理改用产品 Dialog（替代 `window.confirm`）  
 2. 批量 remount 多 trip 共享 albumRoot  
 3. 「引用 → 重新物化 source」反向向导  
+4. 狗粮 5 步出口勾选（评审纪要 §8）  

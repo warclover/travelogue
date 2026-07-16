@@ -236,3 +236,63 @@ def test_remount_content_changed_rejects_same_name(tmp_path: Path):
     assert result.content_changed == 1
     assert result.error_code == "E_MEDIA_CONTENT_CHANGED"
     assert trip["assets"][0]["sourceRef"]["path"] == before
+
+
+def test_worker_config_respects_copy_source_files_false():
+    """AC-MRS-02b · parallel worker must inherit reference-mode flag."""
+    from travelogue.media.ingest_worker import WorkerIngestConfig
+
+    cfg = IngestConfig(copy_source_files=False)
+    worker = WorkerIngestConfig.from_ingest_config(cfg)
+    assert worker.copy_source_files is False
+    forced = WorkerIngestConfig.from_ingest_config(cfg, force_materialize=True)
+    assert forced.copy_source_files is True
+
+
+def test_incremental_missing_sets_error_code(tmp_path: Path):
+    """AC-MRS-12 · pending replay miss is observable, not silent."""
+    import json
+
+    from travelogue.config.app import AppConfig
+
+    trips = tmp_path / "trips"
+    trips.mkdir()
+    trip_json = create_trip(trip_id="inc-miss", trips_dir=trips, title="inc")
+    trip_dir = trip_json.parent
+    trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    trip["assets"] = [
+        {
+            "id": "asset-001",
+            "type": "image",
+            "sourceRef": {
+                "kind": "filesystem",
+                "path": str(tmp_path / "missing" / "gone.jpg"),
+            },
+            "contentSig": "1:abc",
+        }
+    ]
+    trip["pipeline"] = {
+        "status": "structure_locked",
+        "pendingAssets": ["asset-001"],
+        "locks": {"structure": True, "copy": False},
+    }
+    app = AppConfig(
+        ingest=IngestConfig(
+            copy_source_files=False,
+            webp_widths=(640,),
+            generate_crops=False,
+            detect_faces=False,
+            max_photos=10,
+        )
+    )
+    result = ingest_into_trip(
+        trip,
+        trip_dir,
+        from_dir=None,
+        incremental=True,
+        dedupe=False,
+        app_cfg=app,
+        min_assets=1,
+    )
+    assert result.stats.get("errorCode") == "E_MEDIA_INCREMENTAL_SOURCE"
+    assert "asset-001" in (result.stats.get("incremental_source_missing") or [])

@@ -1532,15 +1532,26 @@ export function cancelPreviewLongshotExport(root) {
           albumPath: data.albumPath,
         }).then(function (rem) {
           var body = (rem && rem.body) || {};
+          var contentChanged = Number(body.contentChanged) || 0;
           trackStudioEvent("storage_remount_album", {
             trip_id: tripId,
             matched: body.matched || 0,
             unmatched: body.missing || 0,
+            content_changed: contentChanged,
             ok: !!(body && body.ok),
           });
           if (!rem || rem.status >= 400 || body.ok === false) {
             _toolbarAlert(
               (body && body.message) || "重新指定相册失败",
+              { error: true }
+            );
+            return false;
+          }
+          // AC-MRS-13 · partial match + content_changed: warn, do not silent continue
+          if (contentChanged > 0) {
+            _toolbarAlert(
+              (body && body.message) ||
+                "照片内容已变化，无法自动关联；请重新导入或跳过",
               { error: true }
             );
             return false;

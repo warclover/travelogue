@@ -3,6 +3,7 @@
  * 下游出口：startV2Import / startV2UploadImport（import-run.js）。
  */
 import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT, isDemoTrip } from "../js/constants.js";
+import { studioAuthHeaders } from "../js/dom.js";
 import { postJson } from "../js/http.js";
 import {
   trackStudioEvent,
@@ -12,6 +13,7 @@ import {
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+import { openSettings } from "./settings-panel.js";
 
 var _open = false;
 var _previousFocus = null;
@@ -737,6 +739,37 @@ function goToStep1(clearPending) {
   if (pick) pick.focus();
 }
 
+function syncStorageTrustNotes() {
+  var refNote = $("v2-wizard-storage-ref-note");
+  var uploadNote = $("v2-wizard-storage-upload-note");
+  var isUpload = !!(
+    _pendingUploadFiles && _pendingUploadFiles.length
+  );
+  if (uploadNote) {
+    uploadNote.hidden = !isUpload;
+  }
+  if (!refNote) return Promise.resolve();
+  if (isUpload) {
+    refNote.hidden = true;
+    return Promise.resolve();
+  }
+  return fetch("/__travelogue/config", { headers: studioAuthHeaders() })
+    .then(function (r) {
+      return r.json();
+    })
+    .then(function (data) {
+      var copyOn =
+        !data ||
+        data.ok === false ||
+        !data.ingest ||
+        data.ingest.copySourceFiles !== false;
+      refNote.hidden = !!copyOn;
+    })
+    .catch(function () {
+      refNote.hidden = true;
+    });
+}
+
 function goToStep2(opts) {
   opts = opts || {};
   clearErrors();
@@ -753,6 +786,7 @@ function goToStep2(opts) {
   showPanel("confirm");
   refreshFirstTip();
   updateDuplicateTitleNote();
+  syncStorageTrustNotes();
   if (_pendingAlbumPath && _pendingPhotoCount == null && !_pendingUploadFiles) {
     fetchAlbumPreview(_pendingAlbumPath);
   }
@@ -1331,6 +1365,14 @@ export function initImportWizard() {
 
   var changeFolder = $("v2-wizard-change-folder");
   if (changeFolder) changeFolder.addEventListener("click", function () { goToStep1(true); });
+
+  var changeStorage = $("v2-wizard-change-storage");
+  if (changeStorage) {
+    changeStorage.addEventListener("click", function () {
+      closeImportWizard("open_storage_settings");
+      openSettings({ focus: "storage", source: "import_wizard" });
+    });
+  }
 
   ["v2-wizard-back-fine", "v2-wizard-back-fine-action"].forEach(function (id) {
     var btn = $(id);

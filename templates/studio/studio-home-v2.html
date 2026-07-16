@@ -279,6 +279,7 @@
       <section class="v2-settings-popover__section" aria-label="存储与磁盘" id="v2-settings-storage-section">
         <p class="v2-settings-popover__section-label">存储与磁盘</p>
         <p class="v2-advanced-popover__note" id="studio-storage-usage-line">正在估算占用…</p>
+        <p class="v2-advanced-popover__hint" id="studio-storage-mode-line" hidden></p>
         <div class="v2-advanced-popover__row">
           <label class="v2-advanced-popover__label" for="studio-cfg-copy-source">导入时复制源文件</label>
           <select id="studio-cfg-copy-source" class="v2-advanced-popover__select"
@@ -453,6 +454,13 @@
         </div>
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start">开始制作 →</button>
         <p class="v2-wizard__trust" id="v2-wizard-trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-ref-note" hidden>
+          不会把原片再复制进 Travelogue；请保持相册目录可访问。
+        </p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-upload-note" hidden>
+          示例/上传包仍保存在作品内。
+        </p>
+        <button type="button" class="v2-wizard__link" id="v2-wizard-change-storage">更改存储设置</button>
         <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
           每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。
         </p>

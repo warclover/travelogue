@@ -648,6 +648,41 @@ def _scan_photos_for_ingest(
 ) -> _IngestScanResult:
     from travelogue.media.user_tier import resolve_dual_folders, scan_tiered_image_paths
 
+    album_root = from_dir.resolve() if from_dir else scan_root.resolve()
+    checkpoint_keys: set[str] = set()
+    if from_dir and resume_ingest:
+        checkpoint = icp.load_ingest_checkpoint(trip_dir)
+        if checkpoint and str(checkpoint.get("sourceRoot") or "") == str(album_root):
+            checkpoint_keys = set(checkpoint.get("processedRelPaths") or [])
+
+    # AC-MRS-12 · pending replay resolves assets directly (may have no source/ dir)
+    if incremental:
+        pipe = trip.get("pipeline") or {}
+        pending = set(pipe.get("pendingAssets") or [])
+        if pending:
+            from travelogue.media.source_resolve import resolve_source_path
+
+            scan_stats: dict[str, Any] = {"mode": "incremental_pending"}
+            assets_by_id = {a["id"]: a for a in trip.get("assets") or []}
+            photo_tiers: list[tuple[Path, str]] = []
+            for aid in sorted(pending):
+                a = assets_by_id.get(aid)
+                if not a:
+                    continue
+                p = resolve_source_path(a, trip_dir)
+                if p is not None and p.is_file():
+                    tier = a.get("userTier") or "material"
+                    photo_tiers.append((p, tier))
+                else:
+                    scan_stats.setdefault("incremental_source_missing", []).append(aid)
+            return _IngestScanResult(
+                photo_tiers=photo_tiers,
+                scan_stats=scan_stats,
+                dual_ingest=False,
+                album_root=album_root,
+                checkpoint_keys=checkpoint_keys,
+            )
+
     feat_dir, mat_dir, tier_mode = resolve_dual_folders(
         scan_root,
         cfg,
@@ -690,31 +725,6 @@ def _scan_photos_for_ingest(
         scan_stats.setdefault("mode", "single")
 
     dual_ingest = scan_stats.get("mode") == "dual"
-    album_root = from_dir.resolve() if from_dir else scan_root.resolve()
-    checkpoint_keys: set[str] = set()
-    if from_dir and resume_ingest:
-        checkpoint = icp.load_ingest_checkpoint(trip_dir)
-        if checkpoint and str(checkpoint.get("sourceRoot") or "") == str(album_root):
-            checkpoint_keys = set(checkpoint.get("processedRelPaths") or [])
-
-    if incremental:
-        from travelogue.media.source_resolve import resolve_source_path
-
-        pipe = trip.get("pipeline") or {}
-        pending = set(pipe.get("pendingAssets") or [])
-        if pending:
-            assets_by_id = {a["id"]: a for a in trip.get("assets") or []}
-            photo_tiers = []
-            for aid in sorted(pending):
-                a = assets_by_id.get(aid)
-                if not a:
-                    continue
-                p = resolve_source_path(a, trip_dir)
-                if p is not None and p.is_file():
-                    tier = a.get("userTier") or "material"
-                    photo_tiers.append((p, tier))
-                else:
-                    scan_stats.setdefault("incremental_source_missing", []).append(aid)
 
     return _IngestScanResult(
         photo_tiers=photo_tiers,
@@ -1203,6 +1213,12 @@ def ingest_into_trip(
         "deduped_burst_replaced": 0,
         **raw_stats,
     }
+    # AC-MRS-12 · pending replay must not silently drop unresolvable sources
+    inc_missing = list(scan_stats.get("incremental_source_missing") or [])
+    if inc_missing:
+        ingest_stats["incremental_source_missing"] = inc_missing
+        ingest_stats["errorCode"] = "E_MEDIA_INCREMENTAL_SOURCE"
+        ingest_stats["error"] = "E_MEDIA_INCREMENTAL_SOURCE"
     ingest_t0 = time.monotonic()
     elapsed_ms: dict[str, float] = {}
     if checkpoint_keys and from_dir:

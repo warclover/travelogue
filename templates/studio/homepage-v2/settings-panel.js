@@ -176,7 +176,11 @@ export function closeSettings() {
   if (restore && typeof restore.focus === "function") restore.focus();
 }
 
-function openSettings() {
+/**
+ * @param {{ focus?: "storage", source?: string }} [opts]
+ */
+export function openSettings(opts) {
+  opts = opts || {};
   var popover = $("v2-settings-popover");
   var toggle = $("v2-settings-toggle");
   if (!popover || !toggle || toggle.disabled || V2.state === "Importing") return;
@@ -184,7 +188,7 @@ function openSettings() {
   syncDevSection();
   if (_bound && _bound.fetchConfig) _bound.fetchConfig();
   if (_storageBound && _storageBound.fetchConfig) _storageBound.fetchConfig();
-  trackStudioEvent("storage_settings_open", {});
+  trackStudioEvent("storage_settings_open", { source: opts.source || "toolbar" });
   _focusRestoreEl = document.activeElement;
   _open = true;
   positionPopover(popover, toggle);
@@ -194,7 +198,22 @@ function openSettings() {
   scrim.hidden = false;
   toggle.setAttribute("aria-expanded", "true");
   trapFocus(popover);
-  trackStudioEvent("settings_open", { source: "toolbar" });
+  trackStudioEvent("settings_open", { source: opts.source || "toolbar" });
+  if (opts.focus === "storage") {
+    var storageSec = $("v2-settings-storage-section");
+    var copySel = $("studio-cfg-copy-source");
+    if (storageSec && typeof storageSec.scrollIntoView === "function") {
+      storageSec.scrollIntoView({ block: "nearest" });
+    }
+    if (copySel && typeof copySel.focus === "function") {
+      try {
+        copySel.focus();
+      } catch (_e) {
+        /* ignore */
+      }
+      return;
+    }
+  }
   var first = focusableEls(popover)[0];
   if (first && typeof first.focus === "function") first.focus();
   else {
@@ -252,7 +271,7 @@ export function initSettingsPanel() {
       closeSettings();
       return;
     }
-    openSettings();
+    openSettings({ source: "toolbar" });
   });
 
   popover.addEventListener("mousedown", function (e) {

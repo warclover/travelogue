@@ -3,6 +3,7 @@
  */
 import { $, studioAuthHeaders } from "../js/dom.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { V2 } from "./store.js";
 
 function formatBytes(n) {
   var v = Number(n) || 0;
@@ -16,9 +17,17 @@ function toast(msg, opts) {
   if (typeof studioToast === "function") studioToast(msg, opts || { duration: 2500 });
 }
 
+function storageModeLabel(mode) {
+  if (mode === "referenced") return "引用原相册";
+  if (mode === "mixed") return "混合";
+  if (mode === "copied") return "已复制源文件";
+  return "";
+}
+
 export function bindStorageSettings() {
   var copySelect = $("studio-cfg-copy-source");
   var usageLine = $("studio-storage-usage-line");
+  var modeLine = $("studio-storage-mode-line");
   var cleanupBtn = $("studio-storage-cleanup-btn");
   if (!copySelect) return null;
 
@@ -29,6 +38,41 @@ export function bindStorageSettings() {
     if (data.ingest && typeof data.ingest.copySourceFiles === "boolean") {
       copySelect.value = data.ingest.copySourceFiles ? "true" : "false";
     }
+  }
+
+  function refreshTripStorageMode() {
+    if (!modeLine) return Promise.resolve();
+    var tripId =
+      (typeof V2 !== "undefined" && V2 && V2.bentoPreviewTripId) ||
+      "";
+    if (!tripId) {
+      modeLine.hidden = true;
+      modeLine.textContent = "";
+      return Promise.resolve();
+    }
+    return fetch(
+      "/__travelogue/trips/" + encodeURIComponent(tripId) + "/source-status",
+      { headers: studioAuthHeaders() }
+    )
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        if (!data || data.ok === false) {
+          modeLine.hidden = true;
+          return;
+        }
+        var label = storageModeLabel(data.storageMode);
+        if (!label) {
+          modeLine.hidden = true;
+          return;
+        }
+        modeLine.hidden = false;
+        modeLine.textContent = "当前预览作品存储模式：" + label;
+      })
+      .catch(function () {
+        modeLine.hidden = true;
+      });
   }
 
   function refreshUsage() {
@@ -61,6 +105,9 @@ export function bindStorageSettings() {
       })
       .catch(function () {
         if (usageLine) usageLine.textContent = "无法估算占用";
+      })
+      .then(function () {
+        return refreshTripStorageMode();
       });
   }
 
@@ -115,7 +162,6 @@ export function bindStorageSettings() {
         "部分旧作品可能没有原相册引用。\n\n若仍要删除它们的源文件拷贝，请确认：\n我接受仅保留衍生图，放弃这些照片的原图像素能力。\n\n确定？"
       );
       if (!acceptOnly) {
-        // User declined derivatives-only — still allow deep for trips with sourceRef
         acceptOnly = false;
       }
     }
@@ -161,5 +207,9 @@ export function bindStorageSettings() {
   copySelect.addEventListener("change", patchCopySource);
   if (cleanupBtn) cleanupBtn.addEventListener("click", runCleanup);
 
-  return { fetchConfig: fetchConfig, refreshUsage: refreshUsage };
+  return {
+    fetchConfig: fetchConfig,
+    refreshUsage: refreshUsage,
+    refreshTripStorageMode: refreshTripStorageMode,
+  };
 }
