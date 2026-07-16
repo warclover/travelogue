@@ -53,6 +53,9 @@ jobs:
       - name: Trip JSON lint (ADR-008)
         run: python scripts/lint_trip_json.py schemas/fixtures tests/fixtures
 
+      - name: Trip HTML title consistency (shelf/preview drift)
+        run: python scripts/lint_trip_html_title.py schemas/fixtures tests/fixtures
+
       - name: Import layer contract (M-B0)
         run: lint-imports
 

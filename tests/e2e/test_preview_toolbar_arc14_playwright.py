@@ -113,3 +113,24 @@ def test_arc14d_share_preview_minimal_toolbar(arc14_trip) -> None:
         assert page.locator(".preview-toolbar__dock").count() == 0
         assert page.locator(".preview-toolbar__menu-btn").count() == 0
         assert page.locator(".preview-toolbar__back").count() >= 1
+
+
+def test_p0_preview_back_returns_homepage_v2(arc14_trip) -> None:
+    """P0 · 预览顶栏「返回」必须回到 `/` v2（非 /classic）。"""
+    from urllib.parse import urlparse
+
+    with arc14_studio_browser(arc14_trip) as (_pw, page, _base, _trip_id):
+        wait_preview_dock(page)
+        back = page.locator(".preview-toolbar__dock-btn--back")
+        back.wait_for(state="visible", timeout=10_000)
+        assert (back.get_attribute("href") or "") == "/"
+        with page.expect_navigation(wait_until="networkidle"):
+            back.click()
+        path = urlparse(page.url).path or "/"
+        assert path == "/"
+        assert "/classic" not in page.url
+        variant = page.evaluate(
+            """() => document.body.getAttribute('data-homepage-variant')"""
+        )
+        assert variant == "v2"
+        assert page.locator("#v2-cta").count() >= 1

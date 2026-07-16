@@ -115,6 +115,28 @@ def test_import_worker_surfaces_demo_error(tmp_path: Path) -> None:
     assert events[0]["demo"] is True
 
 
+def test_import_worker_surfaces_ingest_too_few_not_demo_code(tmp_path: Path) -> None:
+    """Regular album too-few must keep E_INGEST_TOO_FEW through the subprocess event."""
+    ctx = mp.get_context("spawn")
+    queue: mp.Queue = ctx.Queue()
+    cancel = ctx.Event()
+
+    with patch(
+        "travelogue.web.studio_pipeline.run_studio_pipeline",
+        side_effect=DemoError(
+            "E_INGEST_TOO_FEW",
+            "need at least 4 assets in trip after ingest (have 1)",
+        ),
+    ):
+        _import_worker(_base_payload(tmp_path), queue, cancel)
+
+    events = _drain_queue(queue)
+    assert len(events) == 1
+    assert events[0]["type"] == "error"
+    assert events[0]["code"] == "E_INGEST_TOO_FEW"
+    assert "示例相册" not in str(events[0].get("message") or "")
+
+
 def test_import_worker_surfaces_generic_error(tmp_path: Path) -> None:
     ctx = mp.get_context("spawn")
     queue: mp.Queue = ctx.Queue()

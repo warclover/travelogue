@@ -7,6 +7,7 @@
   AC-IW-DS-05 上传失败重试回 Step 1 · AC-IW-DS-02 精细 mode payload · AC-IW-DS-07 刷新续 poll
   AC-IW-DS-03 关智能挑选 FirstSuccess 文案 · AC-IW-DS-06 上传路径
   DS-03 payload 字段 snapshot · DS-04 Success→预览链接 200
+  P0 E_INGEST_TOO_FEW 失败弹层 hint（非示例相册文案）
 
 Wizard 为唯一导入入口（RET-3 · Sheet 已删除）。
 """
@@ -363,6 +364,7 @@ def _route_harness_import_mocks(
     import_bodies: list[dict[str, Any]] | None = None,
     preview_url: str = "/harness-trip/index.html",
     import_mode: str = "quick_share",
+    status_error: dict[str, Any] | None = None,
 ) -> None:
     """Playwright 路由：album-preview + import + status（不依赖真实 pipeline）。"""
 
@@ -402,6 +404,19 @@ def _route_harness_import_mocks(
         )
 
     def _status_poll(route) -> None:
+        if status_error is not None:
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(
+                    {
+                        "jobId": "harness-job-1",
+                        "status": "failed",
+                        "error": status_error,
+                    }
+                ),
+            )
+            return
         route.fulfill(
             status=200,
             content_type="application/json",
@@ -443,6 +458,34 @@ def _wizard_quick_folder_to_confirm(page) -> None:
     page.locator("#v2-wizard-album-path").fill("/harness/album")
     page.locator("#v2-wizard-path-submit").click()
     _wait_visible(page, "v2-wizard-step-confirm")
+
+
+def test_p0_ingest_too_few_failure_hint_not_demo(wizard_server) -> None:
+    """P0 · 确认页已清点≥4 后 job 失败码 E_INGEST_TOO_FEW → 非示例相册 hint。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _route_harness_import_mocks(
+            page,
+            photo_count=6,
+            layout_eligible=6,
+            status_error={
+                "code": "E_INGEST_TOO_FEW",
+                "message": "至少需要 4 张照片，请换一个文件夹（need at least 4 assets）",
+            },
+        )
+        _goto_v2(page, wizard_server["base"])
+        _wait_visible(page, "v2-frame")
+        _wizard_quick_folder_to_confirm(page)
+        page.locator("#v2-wizard-start").click()
+        page.wait_for_selector("#v2-failure:not([hidden])", timeout=20_000)
+        msg = page.locator("#v2-failure-msg").inner_text()
+        hint = page.locator("#v2-failure-hint").inner_text()
+        assert "至少需要 4 张照片" in msg
+        assert "智能挑选" in hint
+        assert "示例相册" not in hint
+        assert "制作我的杂志" not in hint
+        browser.close()
 
 
 def test_ac_iw_ds_03_cull_disabled_first_success_copy(wizard_server) -> None:
