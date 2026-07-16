@@ -120,8 +120,24 @@ function openShelfLongshotModal(opts) {
     },
     showResult: function (formatted, tripId) {
       controller.setTitle(formatted.ok ? formatted.title : formatted.title);
-      var lines = [LONGSHOT_PRESETS.shelf.label].concat(formatted.lines);
-      if (formatted.ok) lines.unshift("「" + (opts.tripTitle || "") + "」");
+      // FE-FTUE-04 · 发群句在第一可读行；preset / 路径次之
+      var lines = [];
+      if (formatted.ok) {
+        lines.push("「" + (opts.tripTitle || "") + "」");
+        (formatted.lines || []).forEach(function (line) {
+          lines.push(line);
+        });
+        lines.push(LONGSHOT_PRESETS.shelf.label);
+        try {
+          trackStudioEvent("longshot_success_share_hint_shown", {
+            trip_id: tripId,
+            source: "shelf",
+            platform: formatted.platform || "wechat_chat",
+          });
+        } catch (_e) {}
+      } else {
+        lines = [LONGSHOT_PRESETS.shelf.label].concat(formatted.lines || []);
+      }
       setBodyLines(lines);
       primaryBtn.hidden = false;
       primaryBtn.textContent = formatted.ok ? "在文件夹中显示" : "关闭";

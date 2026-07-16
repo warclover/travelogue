@@ -113,6 +113,11 @@ class _PlaywrightBrowserPool:
             self._playwright = None
         self._owner_thread_id = None
 
+    def needs_cold_start(self) -> bool:
+        """True when next acquire() will launch Chromium (FTUE preparing_browser)."""
+        with self._lock:
+            return self._browser is None
+
     def acquire(self) -> Any:
         with self._lock:
             if self._idle_timer:
@@ -750,16 +755,21 @@ def export_trip_longshot(
     url, server = _resolve_longshot_url(
         trip_dir, base_url=base_url, host=host, port=port, trip_id=trip_id
     )
+    def _report(cur: int, total: int, hint: str) -> None:
+        if progress:
+            progress(cur, total, hint)
+
+    if _BROWSER_POOL.needs_cold_start():
+        from travelogue.web.stage_hints import PREPARING_BROWSER, stage_hint_text
+
+        _report(0, 1, stage_hint_text(PREPARING_BROWSER))
+
     browser = _BROWSER_POOL.acquire()
     capture_method = "p0"
     outputs: list[LongshotOutput] = []
     segment_reason = ""
     user_hint = ""
     session_writes: list[Path] = []
-
-    def _report(cur: int, total: int, hint: str) -> None:
-        if progress:
-            progress(cur, total, hint)
 
     page = None
     try:

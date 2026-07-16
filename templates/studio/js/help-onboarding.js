@@ -52,6 +52,8 @@ export var HELP_COPY = {
     "可点『在文件夹中显示』找到文件",
   ],
   demoConvertCta: "试试用自己的照片做一篇 →",
+  /** FE-FTUE-08 · FirstSuccess 转化句（PRD §3.2） */
+  ftueConvertHint: "下一步可用自己的旅行照片再做一本",
   platformPickTip:
     "会按平台切成多张；页脚有顺序。失败可改回微信群长图",
   bookendsPickTip: "点下方缩略图，即可更换封面或封底",

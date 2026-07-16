@@ -159,7 +159,8 @@ export function syncCoverExplainLine(data) {
 
 function explainToHuman(explain) {
     if (!explain || typeof explain !== "object") return "";
-    if (explain.lowConfidence) return "备选有限，已选相对最合适的一款";
+    // FE-FTUE-07 / §4.3 · 系统句不进封面 DOM
+    if (explain.lowConfidence) return "";
     if (explain.source === "manual") return "由你手动选定";
     var styleId = explain.styleId || "";
     if (styleId === "cameo-aperture") return "主体较居中，适合圆窗";

@@ -264,7 +264,9 @@ class ClusteringLayer:
         if clip_torch_available() and not clip_weights_likely_cached(
             model_name=cfg.vision.model.replace("/", "-")
         ):
-            hints.append("正在准备场景分析组件（仅首次）…")
+            from travelogue.web.stage_hints import PREPARING_VISION, stage_hint_text
+
+            hints.append(stage_hint_text(PREPARING_VISION))
         if embedding_cache_is_corrupt(trip_dir):
             log.add("fallback", "E_CLUSTER_CACHE_CORRUPT: rebuilding cluster cache")
             hints.append("正在重新分析场景…")

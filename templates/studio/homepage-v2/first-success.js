@@ -219,7 +219,12 @@ function populateSuccessUi(result) {
     show(secondary, _successRefinedEnabled && _successMode === "quick_share");
   }
   if (nextHint) {
-    nextHint.textContent = HELP_COPY.firstSuccessNext;
+    var nextLines = [HELP_COPY.firstSuccessNext];
+    // FE-FTUE-08 · 示例成稿后转化；非示例也轻提示一次（防试完就走）
+    if (HELP_COPY.ftueConvertHint) {
+      nextLines.push(HELP_COPY.ftueConvertHint);
+    }
+    nextHint.textContent = nextLines.join("\n");
     show(nextHint, true);
   }
   var setPreview = $("v2-success-set-preview");

@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.paths import OWNERSHIP_MARKER_NAME, _force_bootstrap_llm_provider_stub, ensure_user_data_layout
+from travelogue.paths import (
+    OWNERSHIP_MARKER_NAME,
+    _force_bootstrap_llm_provider_stub,
+    _force_bootstrap_vision_disabled,
+    ensure_user_data_layout,
+)
 from travelogue.web.studio_errors import is_llm_auth_recoverable, job_error_payload
 from travelogue.web.studio_narrate import (
     resolve_studio_narrate_provider,
@@ -63,6 +68,19 @@ def test_force_bootstrap_llm_provider_stub_rewrites_deepseek(tmp_path: Path) -> 
     assert "model: deepseek-chat" in text
 
 
+def test_force_bootstrap_vision_disabled(tmp_path: Path) -> None:
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        "trips_dir: ./trips\n\nvision:\n  enabled: true\n  model: foo\n",
+        encoding="utf-8",
+    )
+    _force_bootstrap_vision_disabled(cfg)
+    text = cfg.read_text(encoding="utf-8")
+    assert "enabled: false" in text
+    assert "enabled: true" not in text
+    assert "model: foo" in text
+
+
 def test_ensure_user_data_layout_bootstraps_stub(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -76,7 +94,7 @@ def test_ensure_user_data_layout_bootstraps_stub(
     monkeypatch.setattr(paths, "user_data_dir", lambda: tmp_path)
     example = tmp_path / "config.yaml.example"
     example.write_text(
-        "trips_dir: ./trips\nllm:\n  provider: deepseek\n",
+        "trips_dir: ./trips\nllm:\n  provider: deepseek\nvision:\n  enabled: true\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(paths, "bundled_config_example", lambda: example)
@@ -88,6 +106,8 @@ def test_ensure_user_data_layout_bootstraps_stub(
     cfg_text = (tmp_path / "config.yaml").read_text(encoding="utf-8")
     assert "provider: stub" in cfg_text
     assert "provider: deepseek" not in cfg_text
+    assert "enabled: false" in cfg_text
+    assert "enabled: true" not in cfg_text
 
 
 def test_run_studio_llm_narrate_auth_does_not_require_trip_mutation(

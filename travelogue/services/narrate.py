@@ -310,14 +310,15 @@ def _build_hook(
         return f"{title} · {place}。"
 
     day_count = _trip_day_count(meta)
+    # FE-FTUE-07 / §4.3 · 去掉「碎片」刺耳词（深度润色仍属 W2）
     templates = [
-        f"在{place}的{day_count}天，{photo_count} 张碎片拼成这一页。",
+        f"在{place}的{day_count}天，{photo_count} 张照片汇成这一页。",
         f"{place}·{span or f'{day_count}天'}，慢慢翻。",
         f"走进{place}，{photo_count} 帧留在这里。",
         f"{title} · 关于{place}的{day_count}天。",
     ]
     if span and photo_count:
-        templates.append(f"在{place}的{span}，{photo_count} 张碎片拼成这一页。")
+        templates.append(f"在{place}的{span}，{photo_count} 张照片汇成这一页。")
     seed = str(title or place)
     return _pick_template(templates, seed)
 

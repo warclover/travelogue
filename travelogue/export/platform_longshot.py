@@ -301,11 +301,17 @@ def export_platform_longshot(
     url, server = _resolve_longshot_url(
         trip_dir, base_url=base_url, host=host, port=port, trip_id=trip_id
     )
-    browser = _BROWSER_POOL.acquire()
 
     def _report(cur: int, total: int, hint: str) -> None:
         if progress:
             progress(cur, total, hint)
+
+    if _BROWSER_POOL.needs_cold_start():
+        from travelogue.web.stage_hints import PREPARING_BROWSER, stage_hint_text
+
+        _report(0, 1, stage_hint_text(PREPARING_BROWSER))
+
+    browser = _BROWSER_POOL.acquire()
 
     W_OPEN, W_CAPTURE, W_SPLIT, W_WRITE = 10, 30, 50, 10
     W_TOTAL = W_OPEN + W_CAPTURE + W_SPLIT + W_WRITE

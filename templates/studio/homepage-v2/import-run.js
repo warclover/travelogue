@@ -11,7 +11,7 @@
  * 冷启动静帧 + 四阶段精修在 M20-g。
  */
 import {
-  SS, STAGE_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
+  SS, STAGE_LABELS, STAGE_HINT_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
   SLOW_JOB_MS, SLOW_JOB_VISION_MS, SLOW_JOB_VISION_LONG_MS,
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
@@ -355,7 +355,12 @@ function pollImport(jobId, gen, source) {
       if (job.status === "running" || job.status === "queued") {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
-        var hint = job.stageHint || STAGE_LABELS[job.stage] || "处理中…";
+        var rawHint = job.stageHint || "";
+        var hint =
+          STAGE_HINT_LABELS[rawHint] ||
+          rawHint ||
+          STAGE_LABELS[job.stage] ||
+          "处理中…";
         setStage(hint, count ? (idx / count) * 100 : 0);
       }
     },

@@ -65,8 +65,10 @@ def test_preview_longshot_tip_and_busy_gate() -> None:
 def test_task_dock_publish_guide_fallback() -> None:
     dock = TASK_DOCK.read_text(encoding="utf-8")
     assert "resolvePublishGuide" in dock
-    assert "preview-task-dock__guide-list" in dock
+    # AC-FTUE-09 · 第一可读行用 guide 全文（· 拼接），不再拆 ol 次行
+    assert 'guide.text.replace(/\\n/g, " · ")' in dock or "guide.text.replace" in dock
     assert "help_publish_guide_show" in dock
+    assert "longshot_success_share_hint_shown" in dock
     assert "已保存到本机 · 拖进微信群即可" not in dock
 
 

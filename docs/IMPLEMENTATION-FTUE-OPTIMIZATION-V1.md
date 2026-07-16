@@ -6,7 +6,7 @@
 | **评审** | [acceptance-records/ftue-optimization-v1-review-2026-07-15.md](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md) · Conditional Go · MF 已回写 |
 | **线框** | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) · F1–F8 |
 | **更新日期** | 2026-07-15 |
-| **状态** | **W0 编码进行中**（2026-07-16 · 分支 `feat/ftue-optimization-v1-w0`） |
+| **状态** | **W1 编码进行中**（2026-07-16 · 分支 `feat/ftue-optimization-v1-w0`） |
 | **估时** | W0 ≈ **3 人日** · W1 ≈ **3–4 人日**（含 Help/Facade 回归） |
 
 ---
@@ -134,12 +134,18 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 
 | ID | 状态 |
 |----|------|
-| FE-FTUE-01～03 | ✅ 代码已改（待狗粮手测） |
+| FE-FTUE-01～03 | ✅ |
 | BE-FTUE-01 | ✅ `default_longshot_output_name` → tripId |
-| DOC-FTUE-01～03 | ✅ README / WORKSHOP |
-| DOC-FTUE-04～05 | ✅ Installer / L0G / Help（评审回写时已改） |
-| FE-FTUE-04～08 | ⬜ W1 |
-| BE-FTUE-02/03/05/06 | ⬜ W1 |
+| DOC-FTUE-01～05 | ✅ |
+| FE-FTUE-04 | ✅ Dock / 书架 / formatter → `resolvePublishGuide` |
+| FE-FTUE-05 | ✅ 文内 longshot tertiary |
+| FE-FTUE-06 | ✅ `STAGE_HINT_LABELS` |
+| FE-FTUE-07 | ✅ 封面禁系统句；stub 去「碎片」 |
+| FE-FTUE-08 | ✅ `ftueConvertHint` |
+| BE-FTUE-02 | ✅ `stage_hints.py` + pipeline / browser |
+| BE-FTUE-03 | ✅ bootstrap `vision.enabled: false` |
+| BE-FTUE-05 | ✅ templateFeedback 仅 Job 字段（既有） |
+| BE-FTUE-06 | ✅ `formatLongshotResult` 对齐 |
 
 ---
 
