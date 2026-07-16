@@ -68,5 +68,6 @@ def bind_studio_server(
         except OSError as exc:
             last_err = exc
             continue
-    assert last_err is not None
+    if last_err is None:
+        raise OSError(f"failed to bind Studio on {host}:{port}+")
     raise last_err

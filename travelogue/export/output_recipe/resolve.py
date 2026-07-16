@@ -415,7 +415,14 @@ def ambiguous_intent_options(*, phase: str = "B", kept_n: int = 0) -> list[dict[
         )
         allowed = PHASE_A_INTENTS
     for o in opts:
-        assert o["intent"] in allowed
-        if o["intent"] == "moments_scroll":
-            assert "九宫格" not in o["label"]
+        if o["intent"] not in allowed:
+            raise OutputRecipeError(
+                "E_OR_INVALID_INTENT",
+                f"ambiguous option intent not allowed: {o['intent']!r}",
+            )
+        if o["intent"] == "moments_scroll" and "九宫格" in o["label"]:
+            raise OutputRecipeError(
+                "E_OR_INVALID_INTENT",
+                "scroll label must not contain 九宫格",
+            )
     return opts

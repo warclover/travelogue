@@ -51,7 +51,8 @@ def hungarian_slot_assignment(
         if total < best_cost:
             best_cost = total
             best_perm = perm
-    assert best_perm is not None
+    if best_perm is None:
+        raise RuntimeError("hungarian brute-force found no permutation")
     assignment = [0] * n
     for slot_idx, asset_idx in enumerate(best_perm):
         assignment[slot_idx] = asset_idx

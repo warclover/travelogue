@@ -271,7 +271,8 @@ def export_mosaic_pattern(template: Any) -> MosaicPattern:
     """TemplateDef → MosaicPattern for parity with default_registry()."""
     from travelogue.layout_templates.models import TemplateDef
 
-    assert isinstance(template, TemplateDef)
+    if not isinstance(template, TemplateDef):
+        raise TypeError(f"template must be TemplateDef, got {type(template)!r}")
     roles = tuple(s.role for s in template.slots)
     legacy = template.raw.get("_legacy", {})
     accepts_raw = legacy.get("accepts")

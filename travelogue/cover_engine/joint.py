@@ -210,7 +210,8 @@ def pick_cover_style_and_asset(
         # fail-open: only unsafe pairs existed
         best = best_unsafe
 
-    assert best is not None
+    if best is None:
+        raise ValueError("cover joint pick produced no candidate")
     return best
 
 
@@ -393,7 +394,8 @@ def repick_cover_for_style(
             best = explain
             best_key = key
 
-    assert best is not None
+    if best is None:
+        raise ValueError("cover joint repick produced no candidate")
     apply_joint_pick(trip, best, lock=True, layout=layout)
     return best
 

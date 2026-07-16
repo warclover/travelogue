@@ -153,7 +153,10 @@ def _build_entry_from_worker_result(
     )
     from travelogue.media.user_tier import apply_user_tier_fields
 
-    assert isinstance(build_ctx, IngestAssetBuildContext)
+    if not isinstance(build_ctx, IngestAssetBuildContext):
+        raise TypeError(
+            f"build_ctx must be IngestAssetBuildContext, got {type(build_ctx)!r}"
+        )
     cfg = build_ctx.cfg
     geo_obj, place = _resolve_place_city_main(
         geo_lat=result.geo_lat,

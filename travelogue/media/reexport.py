@@ -41,7 +41,8 @@ def reexport_asset(
         source_path = resolve_source_path(asset, trip_dir, raise_on_missing=True)
     except MediaSourceMissingError as exc:
         raise IngestError("E_MEDIA_SOURCE_MISSING", str(exc)) from exc
-    assert source_path is not None
+    if source_path is None:
+        raise IngestError("E_MEDIA_SOURCE_MISSING", "missing source after resolve")
 
     loaded = _load_photo(source_path)
     img = loaded.image

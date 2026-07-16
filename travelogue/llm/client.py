@@ -213,7 +213,8 @@ def chat_completion(
         except TimeoutError as exc:
             raise LlmError("E_LLM_TIMEOUT", "request timed out") from exc
 
-    assert last_http is not None
+    if last_http is None:
+        raise LlmError("E_LLM_HTTP", "no HTTP response after retries")
     detail = last_http.read().decode("utf-8", errors="replace")[:400]
     raise LlmError("E_LLM_HTTP", f"HTTP {last_http.code}: {detail}") from last_http
 

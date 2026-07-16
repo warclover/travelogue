@@ -492,7 +492,11 @@ def export_platform_longshot(
                 "单张超过 20MB，请降低清晰度",
             )
 
-        assert canvas_bytes is not None and plan is not None
+        if canvas_bytes is None or plan is None:
+            raise LongshotExportError(
+                "E_LNG2_CAPTURE_P0_FAILED",
+                "截图或切分计划缺失",
+            )
         if plan.method == "photo_led":
             ranges = photo_led_slice_ranges(plan.breakpoints)
         else:

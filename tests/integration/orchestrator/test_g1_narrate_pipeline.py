@@ -111,8 +111,9 @@ def test_narrate_before_structure_locked_rejected(g1_workspace: Path) -> None:
     trip = json.loads((g1_workspace / "trip.json").read_text(encoding="utf-8"))
     trip["pipeline"]["status"] = "structure_draft"
     trip["pipeline"]["locks"]["structure"] = False
+    from travelogue.domain.pipeline_view import PipelineError
     from travelogue.services.pipeline_state import assert_stage_allowed
 
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(PipelineError, match="structure_locked") as exc:
         assert_stage_allowed(trip, "narrate")
-    assert "structure_locked" in str(exc.value)
+    assert exc.value.code == "E_PIPELINE_ORDER"
