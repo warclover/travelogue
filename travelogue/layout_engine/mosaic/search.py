@@ -345,6 +345,61 @@ def replan_day_buckets_beam(
                     best_score = replace(bd, total=adjusted_total)
                     best_variant = variant_name
 
+        prefix_enabled = bool(
+            cfg is not None
+            and getattr(getattr(cfg, "layout", None), "scoring", None) is not None
+            and bool(cfg.layout.scoring.prefix_beam_enabled)
+        )
+        if prefix_enabled and not legacy_only and plan_ids:
+            from travelogue.layout_engine.mosaic.prefix_beam import prefix_beam_plan_bucket
+
+            pb_plan, pb_fallback = prefix_beam_plan_bucket(
+                plan_ids,
+                aspects,
+                assets_by_id=assets_by_id,
+                orientation_summary=orientation_summary,
+                skip_screen_asset_ids=skip,
+                mixed_proximity_seconds=mixed_proximity_seconds,
+                trip_photo_total=trip_photo_total,
+                preferred_hero_id=preferred_hero,
+                layout_state=replace(layout_state),
+                enable_food_grid=enable_food_grid,
+                mundane_grid_buckets=mundane_grid_buckets,
+                beam_width=beam_width,
+                budget=budget,
+                weights=weights,
+                subject_run_tolerance=subject_run_tolerance,
+                enable_gravity_balance=enable_gravity_balance,
+                late_kwargs=late_kwargs,
+                moment_secondary_ids=moment_secondary_ids,
+                moment_secondary_boost=moment_secondary_boost,
+            )
+            if pb_fallback:
+                fallback_reason = fallback_reason or pb_fallback
+            elif pb_plan and budget.can_evaluate():
+                budget.note_evaluation()
+                pb_bd = score_screen_plan(
+                    pb_plan,
+                    aspects=aspects,
+                    assets_by_id=assets_by_id,
+                    weights=weights,
+                    arc_profile=arc_profile,
+                    subject_run_tolerance=subject_run_tolerance,
+                    featured_beam=True,
+                    enable_gravity_balance=enable_gravity_balance,
+                    incremental=incremental_scoring,
+                    incremental_state=incr_state,
+                    moment_secondary_ids=moment_secondary_ids,
+                    moment_secondary_boost=moment_secondary_boost,
+                )
+                pb_adj = pb_bd.total + _late_chapter_beam_adjustment(
+                    pb_plan, layout_state.rhythm, bucket_idx + 1
+                )
+                if pb_adj > best_score.total + 1e-6:
+                    best_plan = pb_plan
+                    best_score = replace(pb_bd, total=pb_adj)
+                    best_variant = "prefix_beam"
+
         if late_kwargs and best_plan:
             best_plan = _consolidate_adjacent_portrait_singles(best_plan, aspects)
 
@@ -360,7 +415,11 @@ def replan_day_buckets_beam(
                 "arcProfile": arc_profile,
                 "fallbackUsed": bool(fallback_reason),
                 "fallbackReason": fallback_reason,
-                "plannerPath": "legacy" if legacy_only or fallback_reason else "beam",
+                "plannerPath": (
+                    "legacy"
+                    if legacy_only or (fallback_reason and best_variant != "prefix_beam")
+                    else ("prefix_beam" if best_variant == "prefix_beam" else "beam")
+                ),
                 "consecutivePatternFilterBypassed": consecutive_filter_bypassed,
                 "filteredCandidateCount": filtered_candidate_count,
                 "maxConsecutiveStreak": (
