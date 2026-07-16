@@ -5,7 +5,7 @@
 | **日期** | 2026-07-16 |
 | **发现于** | `arch/algo-deepening-v1` 全量回归（相对 master **同源**，非 AAD 引入） |
 | **分支建议** | 另开 `fix/cover-intent-regression`（勿混入 AAD PR） |
-| **AAD 代码** | 已推送 `origin/arch/algo-deepening-v1` @ `a3f3d18`（工作区仅剩无关未跟踪 FTUE/output-recipe） |
+| **实施状态** | **F5 + F1 已修**（分支 `fix/cover-intent-regression`）；F2–F4 仍待办 |
 
 ---
 

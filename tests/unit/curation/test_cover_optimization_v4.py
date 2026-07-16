@@ -99,24 +99,23 @@ def _seed_cover_v4_trip(
 
 
 def test_cover_opening_title_card_styles() -> None:
+    """V6 baseline cover contract (veil-footer); supersedes retired V4 solid card markers."""
     css = JOURNAL_CSS.read_text(encoding="utf-8")
-    block = css.split("/* V4 · 右下实心书名卡 */", 1)[1].split("}", 1)[0]
+    assert "/* V6 baseline · veil-footer" in css
+    assert 'data-cover-opening="veil-footer"' in css
     for token in (
-        "position: absolute",
-        "width: max-content",
-        "max-width: min(640px, 70.4vw)",
-        "min(352px, 57.6vh)",
-        "rgba(18, 17, 16, 0.9)",
-        "border-left: 5px solid",
-        "-webkit-line-clamp: 2",
-        "display: block",
-        "font-family: var(--font-ui)",
         ".cover-opening .trip-meta",
         "display: none",
+        "position: absolute",
+        "-webkit-line-clamp",
+        "var(--font-ui)",
+        'html[data-layout="web"] .cover-opening__panel',
     ):
-        assert token in css, f"missing cover v4 token: {token}"
+        assert token in css, f"missing cover baseline token: {token}"
     assert "cover-opening__enter" not in css
-    assert "linear-gradient" not in block
+    # Retired V4 solid title-card paint must not reappear as default.
+    assert "rgba(18, 17, 16, 0.9)" not in css
+    assert "border-left: 5px solid" not in css
 
 
 @pytest.mark.e2e

@@ -181,7 +181,11 @@ def make_pipeline_persist_mutator(memory_trip: dict):
 
 
 def make_intent_flush_mutator(memory_trip: dict):
-    """Flush intent + mirrored notes/meta from memory onto disk (pre-ingest)."""
+    """Flush intent (+ travelPlan) and curation.intentHints from memory onto disk.
+
+    Used pre-ingest and again after ``ingest_travel_plan`` so plan cities survive
+    ``_sync_trip_from_disk`` (cover/intent regression F5).
+    """
 
     def mutator(disk_trip: dict) -> None:
         if "intent" in memory_trip:
@@ -197,6 +201,17 @@ def make_intent_flush_mutator(memory_trip: dict):
             for key in ("title", "places", "tone", "dateStart", "dateEnd", "dates"):
                 if key in mem_meta:
                     disk_meta[key] = mem_meta[key]
+        mem_curation = memory_trip.get("curation")
+        if isinstance(mem_curation, dict) and "intentHints" in mem_curation:
+            disk_curation = disk_trip.setdefault("curation", {})
+            if not isinstance(disk_curation, dict):
+                disk_trip["curation"] = {}
+                disk_curation = disk_trip["curation"]
+            hints = mem_curation.get("intentHints")
+            if hints:
+                disk_curation["intentHints"] = hints
+            else:
+                disk_curation.pop("intentHints", None)
 
     return mutator
 
