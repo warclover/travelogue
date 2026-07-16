@@ -241,6 +241,10 @@ export function mountPreviewTaskDock(root, hooks) {
           trackHelpEvent("help_funnel_reveal_folder", {
             tripId: tripId || null,
           });
+          trackStudioEvent("ftue_reveal_folder", {
+            tripId: tripId || null,
+            source: "task_dock",
+          });
         } catch (_e) {}
         hooks.onRevealFolder(outputs[0], tripId);
       });

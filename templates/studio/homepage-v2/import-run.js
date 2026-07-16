@@ -60,7 +60,7 @@ function resolveDemoAlbumExists(data) {
       title: "示例相册已在书架",
       body: "可以打开已有成品，或重新生成（将覆盖）。",
       confirmText: "打开已有示例 →",
-      secondaryText: "重新生成（覆盖）",
+      secondaryText: "重新生成（将覆盖）",
       cancelText: "取消",
       stacked: true,
     }).then(function (choice) {
@@ -391,6 +391,15 @@ function pollImport(jobId, gen, source) {
         layoutDensity: result.layoutDensity || null,
         layoutDensityEffect: result.layoutDensityEffect || null,
       });
+      var viaDemo =
+        !!(pending && pending.useDemoAlbum) ||
+        String(result.tripId || "") === "demo-album";
+      if (viaDemo) {
+        trackStudioEvent("ftue_demo_album_success", {
+          tripId: result.tripId || null,
+          source: "wizard",
+        });
+      }
       trackImportPhotoCullPref({
         enabled: result.photoCullEnabled !== false,
         mode: (pending && pending.mode) || result.importMode || "quick_share",

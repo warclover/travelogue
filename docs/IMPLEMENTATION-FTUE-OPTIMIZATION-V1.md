@@ -52,11 +52,11 @@
 
 ### 1.4 W0 完成定义
 
-- [ ] 线框 F1–F3/F7 已对照合入  
-- [ ] 空态 dogfood：无继续上次 DOM；向导可一键示例至 FirstSuccess  
-- [ ] 中文 title 导出文件名无乱码  
-- [ ] README 三步可见  
-- [ ] **不**宣称「首访成稿主题完成」（发群在 W1）
+- [x] 线框 F1–F3/F7 已对照合入  
+- [x] 空态 dogfood：无继续上次 DOM；向导可一键示例至 FirstSuccess（合同测 + 建议人手复核）  
+- [x] 中文 title 导出文件名无乱码  
+- [x] README 三步可见  
+- [x] **不**宣称「首访成稿主题完成」（发群在 W1）
 
 ### 1.5 W0 建议测试
 
@@ -91,9 +91,10 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 
 ### 2.1 W1 完成定义
 
-- [ ] 线框 F4–F6 对照  
-- [ ] 人手 5 步狗粮（评审纪要 §9）第 4 步「敢发」  
-- [ ] Help FirstSuccess 方案 A / L0 无 Key 回归绿  
+- [x] 线框 F4–F6 对照（发群 COPY 以 Help 为准）  
+- [ ] 人手 5 步狗粮（评审纪要 §9）第 4 步「敢发」（合并前建议手测）  
+- [x] Help FirstSuccess 方案 A / L0 无 Key 回归绿（静态合同）  
+
 
 ---
 
@@ -112,9 +113,9 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 | FTUE 事件 | 优先复用 |
 |-----------|----------|
 | 能力卡 CTA | 现网 `capability_card_cta`（action 扩展） |
-| 成功面发群提示 | `longshot_success_share_hint_shown` |
-| `ftue_demo_album_*` | 新增（向导示例漏斗） |
-| `ftue_reveal_folder` | 新增或复用 reveal 既有事件 |
+| 成功面发群提示 | `longshot_success_share_hint_shown` ✅ FE/BE allowlist |
+| `ftue_demo_album_click` / `_success` | ✅ 向导漏斗 + allowlist |
+| `ftue_reveal_folder` | ✅ 书架 / Dock / drawer；并行 `shelf_longshot_reveal` / `help_funnel_reveal_folder` |
 
 ---
 
@@ -149,6 +150,7 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 | BE-FTUE-04 | ✅ `resolve_studio_trips_dir` · CLI > env > config + INFO |
 | W2 stub Copy | ✅ lead/caption/epilogue/hook；封面过滤扩「照片汇成」 |
 | W3 便携包 | ⬜ |
+| FTUE 埋点白名单/漏斗 | ✅ 2026-07-16 补全（见 acceptance-records） |
 
 ---
 
@@ -157,3 +159,4 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 | 日期 | 说明 |
 |------|------|
 | 2026-07-15 | 首版：对照 PRD v1.1.0 · Ready for Kickoff W0 |
+| 2026-07-16 | W0–W2 合入；埋点 allowlist + demo success / reveal 补全 |

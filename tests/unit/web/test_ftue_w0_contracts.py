@@ -29,6 +29,8 @@ def test_wizard_demo_album_cta() -> None:
     run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "resolveDemoAlbumExists" in run
     assert "打开已有示例" in run
+    assert "重新生成（将覆盖）" in run
+    assert "ftue_demo_album_success" in run
 
 
 def test_capability_card_ftue_copy() -> None:

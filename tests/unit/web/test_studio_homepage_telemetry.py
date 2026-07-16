@@ -56,6 +56,26 @@ def test_longshot2_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
     assert len(lines) == 4
 
 
+def test_ftue_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
+    """PRD-FTUE §7 · funnel events registered on both sides."""
+    path = tmp_path / "studio-homepage-events.jsonl"
+    monkeypatch.setattr(
+        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        lambda: path,
+    )
+    for ev in (
+        "ftue_demo_album_click",
+        "ftue_demo_album_success",
+        "ftue_reveal_folder",
+        "longshot_success_share_hint_shown",
+        "help_funnel_reveal_folder",
+    ):
+        assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS
+        append_studio_homepage_event(ev, {"source": "unit"})
+    lines = path.read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 5
+
+
 def test_handle_studio_event_accepts_allowed_event(tmp_path, monkeypatch) -> None:
     events_path = tmp_path / "events.jsonl"
     monkeypatch.setattr(

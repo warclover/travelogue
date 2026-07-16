@@ -933,6 +933,11 @@ export function cancelPreviewLongshotExport(root) {
           output_count: list.length,
           platform: opts.platform || "",
         });
+        trackStudioEvent("ftue_reveal_folder", {
+          trip_id: tripId,
+          source: "auto_reveal",
+          platform: opts.platform || "",
+        });
         return true;
       })
       .catch(function () {
@@ -1461,6 +1466,10 @@ export function cancelPreviewLongshotExport(root) {
       revealBtn.className = "preview-toolbar__reveal";
       revealBtn.textContent = "在文件夹中显示";
       revealBtn.addEventListener("click", function () {
+        trackStudioEvent("ftue_reveal_folder", {
+          tripId: tripId,
+          source: "preview_drawer",
+        });
         revealTripPath(tripId, outputs[0]);
       });
       actions.appendChild(revealBtn);

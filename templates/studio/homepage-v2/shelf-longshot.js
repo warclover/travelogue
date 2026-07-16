@@ -146,6 +146,10 @@ function openShelfLongshotModal(opts) {
       controller._onPrimary = formatted.ok
         ? function () {
             trackStudioEvent("shelf_longshot_reveal", { trip_id: tripId });
+            trackStudioEvent("ftue_reveal_folder", {
+              trip_id: tripId,
+              source: "shelf",
+            });
             revealLongshotOutput(tripId, formatted.revealPath).catch(function () {
               toast("无法打开文件夹", { duration: 3200 });
             });
