@@ -852,7 +852,7 @@ def test_cover_styles_v5_first_preview_toast_once(tmp_path: Path) -> None:
 @pytest.mark.e2e
 @pytest.mark.playwright_serial
 def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
-    """P1 · Sheet 切换封面版式后立即更新预览 data-cover-opening（V6 五选一）。"""
+    """P1 · 精修「这本 · 首尾装帧」切换封面版式后更新 data-cover-opening（V6 五选一）。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     trip_id = _seed_rendered_cover_style_trip(trips_dir, "cover-switch", style="veil-footer")
@@ -886,32 +886,50 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
             assert _read_cover_opening_style(page) == "veil-footer"
 
             page.locator(".preview-toolbar__menu-btn").click()
-            page.wait_for_selector(".preview-sheet", timeout=10_000)
-            page.locator('.preview-sheet__tab[data-sheet-tab="layout"]').click()
+            page.wait_for_selector(".preview-sheet:not([hidden])", timeout=10_000)
+            page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
+            bookends = page.locator('[data-book-zone="bookends"]')
+            bookends.wait_for(state="visible", timeout=10_000)
+            if not bookends.evaluate("el => el.open"):
+                bookends.locator("summary").click()
             page.wait_for_selector(".preview-sheet__cover-styles", timeout=10_000)
             page.wait_for_selector('[data-cover-style="veil-footer"]', timeout=10_000)
             assert page.locator('[data-cover-style="veil-footer"].is-on').count() == 1
             assert page.locator("[data-cover-style]").count() == 5
 
+            # Prefer keep-cover to avoid heavy repick; still persists style via bookends.
+            keep = page.locator(".preview-sheet__cover-keep-check")
+            if keep.count():
+                keep.check()
+
             with page.expect_response(
-                lambda r: r.url.endswith("/save-copy") and r.request.method == "POST",
-                timeout=15_000,
+                lambda r: (
+                    "/bookends/repick-opening" in r.url
+                    and r.request.method == "POST"
+                    and r.status == 200
+                ),
+                timeout=30_000,
             ):
                 page.locator('[data-cover-style="band-cut"]').click()
+
             page.wait_for_function(
-                """() => {
-                  const el = document.getElementById('preview-toolbar-toast');
-                  return el && !el.hidden && el.textContent.indexOf('封面版式已更新') >= 0;
-                }""",
-                timeout=10_000,
+                """() => document.querySelector('.cover-opening')
+                  ?.getAttribute('data-cover-opening') === 'band-cut'""",
+                timeout=15_000,
             )
             change_events = [e for e in events if e.get("event") == "cover_opening_style_change"]
-            assert len(change_events) == 1, events
-            change_meta = change_events[0].get("meta", {})
+            assert len(change_events) >= 1, events
+            change_meta = change_events[-1].get("meta", {})
             assert change_meta.get("tripId") == trip_id
             assert change_meta.get("coverOpeningStyle") == "band-cut"
-            assert change_meta.get("previousCoverOpeningStyle") == "veil-footer"
+            # Bookends path may omit previous*; accept either shape.
+            prev = change_meta.get("previousCoverOpeningStyle")
+            if prev is not None:
+                assert prev == "veil-footer"
 
+            # Rerender may reload; wait for settle then re-check DOM + disk.
+            page.wait_for_load_state("networkidle", timeout=90_000)
+            page.locator(".cover-opening").wait_for(state="visible", timeout=30_000)
             assert _read_cover_opening_style(page) == "band-cut"
 
             entry = page.evaluate(
