@@ -49,6 +49,33 @@ function humanizeError(code, fallback) {
   return STUDIO_ERROR_MESSAGES[code] || fallback || "导入失败，请重试";
 }
 
+/** FE-FTUE-02：示例已存在 → open | regenerate | cancel */
+function resolveDemoAlbumExists(data) {
+  var previewUrl =
+    (data && data.result && data.result.previewUrl) ||
+    (data && data.previewUrl) ||
+    "/demo-album/index.html";
+  if (typeof studioModal === "function") {
+    return studioModal({
+      title: "示例相册已在书架",
+      body: "可以打开已有成品，或重新生成（将覆盖）。",
+      confirmText: "打开已有示例 →",
+      secondaryText: "重新生成（覆盖）",
+      cancelText: "取消",
+      stacked: true,
+    }).then(function (choice) {
+      if (choice === "confirm") return "open";
+      if (choice === "secondary") return "regenerate";
+      return "cancel";
+    });
+  }
+  var openFirst = window.confirm(
+    (data && data.message) || "示例相册已存在。确定=打开已有示例；取消=放弃。"
+  );
+  if (openFirst) return Promise.resolve("open");
+  return Promise.resolve("cancel");
+}
+
 function postMultipartImportV2(formData, options) {
   options = options || {};
   return new Promise(function (resolve, reject) {
@@ -429,6 +456,25 @@ export function startV2Import(body, opts) {
   }).then(function (res) {
     var data = res.body || {};
     if (res.status === 409 && data.error === "E_DEMO_EXISTS") {
+      // FE-FTUE-02 / BLK-07：示例已存在 → 默认打开；次要才覆盖重生成
+      if (body && body.useDemoAlbum) {
+        return resolveDemoAlbumExists(data).then(function (choice) {
+          if (choice === "open") {
+            var previewUrl =
+              (data.result && data.result.previewUrl) ||
+              data.previewUrl ||
+              "/demo-album/index.html";
+            window.location.href = previewUrl;
+            return null;
+          }
+          if (choice === "regenerate") {
+            var forcedDemo = Object.assign({}, body, { force: true });
+            return startV2Import(forcedDemo, opts);
+          }
+          if (typeof V2.reroute === "function") V2.reroute();
+          return null;
+        });
+      }
       var confirmOverwrite = typeof studioModal === "function"
         ? studioModal({
             title: "该游记已存在",

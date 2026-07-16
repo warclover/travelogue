@@ -1337,6 +1337,28 @@ function wireTemplateSelect() {
   });
 }
 
+/** FE-FTUE-02：向导 pick · 一键试用示例相册（useDemoAlbum）。 */
+function startDemoAlbumImport() {
+  if (V2.state === "Importing") {
+    if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
+    return;
+  }
+  trackStudioEvent("ftue_demo_album_click", { source: "wizard" });
+  markVisited();
+  _importStarted = true;
+  closeImportWizard("start_demo_album");
+  if (typeof studioToast === "function") {
+    studioToast("正在用示例照片试做一本…", { duration: 2200 });
+  }
+  var body = {
+    useDemoAlbum: true,
+    title: "示例游记",
+    place: "旅途",
+    mode: "quick_share",
+  };
+  return startV2Import(body, { source: "示例相册" }).catch(function () { /* import-run handles */ });
+}
+
 export function initImportWizard() {
   if (_wired) return;
   _wired = true;
@@ -1352,6 +1374,13 @@ export function initImportWizard() {
 
   var pick = $("v2-wizard-pick");
   if (pick) pick.addEventListener("click", pickFolder);
+
+  var demoBtn = $("v2-wizard-demo-album");
+  if (demoBtn) {
+    demoBtn.addEventListener("click", function () {
+      startDemoAlbumImport();
+    });
+  }
 
   ["v2-wizard-close-pick", "v2-wizard-close-confirm", "v2-wizard-close-fine"].forEach(function (id) {
     var btn = $(id);

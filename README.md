@@ -31,25 +31,27 @@
 
 ---
 
-## 快速开始（Phase 2 · 推荐）
+## 快速开始（三步 · 开发者路径）
 
-**非开发者**：双击 [`scripts/start-studio.bat`](scripts/start-studio.bat)（需已 `pip install -e .`）。
+> 非开发者安装包见 [Desktop Installer](docs/PRD-DESKTOP-INSTALLER-V1.md)。以下为本机开发启动。
+
+1. **安装**：`pip install -e ".[dev]"`（建议 Python 3.11+ · 虚拟环境）  
+2. **启动**：`python -m travelogue studio`（或双击 [`scripts/start-studio.bat`](scripts/start-studio.bat)）  
+3. **打开**：浏览器访问 `http://127.0.0.1:8766/` →「开始制作」→ 可选「用示例照片试一次」
 
 ```powershell
 cd C:\Users\xiafe\Projects\travelogue
 pip install -e ".[dev]"
-
-# 或命令行
 python -m travelogue studio
-python -m travelogue studio --pick-folder "D:\Photos\某次旅行"
-
-# 长图（默认 scale=1；--scale 2 高清）
-python -m travelogue export-longshot trips\<tripId>
+# 可选：指定相册 / 空态狗粮
+# python -m travelogue studio --pick-folder "D:\Photos\某次旅行"
+# python -m travelogue studio --trips-dir $env:TEMP\travelogue-ftue-trips --port 8771
 ```
 
-相册默认 **≤250 张**；浏览器 **Chrome/Edge 90+（Windows）**。
+相册默认 **≤250 张**；浏览器 **Chrome/Edge 90+（Windows）**。可选依赖（Playwright / HEIC / vision）见 [docs/WORKSHOP.md](docs/WORKSHOP.md)。
 
-### Studio 首页（M21）
+<details>
+<summary>开发者深链 · Studio 路由 / 管理页 / 长图 CLI</summary>
 
 | URL | 说明 |
 |-----|------|
@@ -59,9 +61,14 @@ python -m travelogue export-longshot trips\<tripId>
 | **`/templates-admin`** | 模板 / LTE / LSE 治理控制台（internal） |
 | **`/lse-flags-admin`** | 智能排版能力开关（LSE capabilities · 写 `config.yaml`） |
 
-门控：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 `on`）。详见 [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md)。
+```powershell
+python -m travelogue export-longshot trips\<tripId>
+python -m travelogue export-longshot trips\<tripId> --scale 2
+```
 
-LSE 能力开关页 PRD：[docs/PRD-智能排版开关页.md](docs/PRD-智能排版开关页.md)。
+门控：`TRAVELOGUE_STUDIO_HOMEPAGE_V2=on|auto|off`（默认 `on`）。详见 [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md) · [docs/PRD-智能排版开关页.md](docs/PRD-智能排版开关页.md)。
+
+</details>
 
 ---
 

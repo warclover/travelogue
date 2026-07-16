@@ -695,7 +695,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 
 | 触点 / 条目 | 说明 | 与本文关系 |
 |-------------|------|------------|
-| **T-CAP-01** 首页能力卡 | 非阻断；主 CTA「开始导入」；文内链「升级 AI 文案」 | **L0 认知补丁**；busy 同 D-HELP-08；**不**改 FirstSuccess 主 CTA |
+| **T-CAP-01** 首页能力卡 | 非阻断；主 CTA **「开始制作」**（用户面字面以 [PRD-FTUE §4.2](./PRD-FTUE-OPTIMIZATION-V1.md) v1.1 为准；原「开始导入」废止）；文内链「以后再升级 AI 文案」 | **L0 认知补丁**；busy 同 D-HELP-08；**不**改 FirstSuccess 主 CTA |
 | **H7**「要不要配置 AI 文案」 | 抽屉条目；设置 Modal「了解更多」深链 | 支线救援；与 H1–H5 并列扩展（H6 已为封面封底） |
 | **D-DLLM-13** | 能力卡 vs 首页非关键 Help L1 仲裁 | 同帧只显示能力卡；关闭后本会话压制首页非关键自动 coach；**预览关键 tip（长图等）勿用此门禁** |
 | seen | `travelogue.desktop.capabilityCard.v1` | 帮助「重播」可清能力卡 seen（见 Desktop LLM ACCEPTANCE） |

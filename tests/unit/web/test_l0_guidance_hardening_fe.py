@@ -48,11 +48,14 @@ def test_import_run_retains_pending_on_failure() -> None:
 
 
 def test_capability_card_l0g_copy() -> None:
+    """COPY-L0G capability strings superseded by FTUE §4.2 (PRD v1.1)."""
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
-    assert "本机即可生成杂志卷轴与长图" in cap
-    assert "不必先配置任何接口，也能导入、预览和导出长图" in cap
-    assert "升级 AI 文案（可选）" in cap
-    assert "开始导入" in cap
+    assert "照片留在本机，也能做成杂志游记" in cap
+    assert "开始制作" in cap
+    assert "以后再升级 AI 文案" in cap
+    assert "向导里可一键试用示例" in cap
+    assert "开始导入" not in cap
+    assert "不必先配置任何接口" not in cap
 
 
 def test_import_run_passes_recoverable_flag() -> None:

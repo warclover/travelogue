@@ -276,7 +276,7 @@
 
 | ID | 需求 | 优先级 |
 |----|------|--------|
-| **F-INS-FIRST-01** | 首启首页可见「试用示例相册」入口（已有 demo 能力须在安装版可用） | P0 |
+| **F-INS-FIRST-01′** | 首启首页主 CTA 进入导入向导；向导 pick **必须**同屏提供一等「试用示例相册」（与选文件夹并列次主）。首页**不要求**并排第二主按钮。**（[PRD-FTUE-OPTIMIZATION-V1](./PRD-FTUE-OPTIMIZATION-V1.md) v1.1 附录 C；原 F-INS-FIRST-01 废止）** | P0 |
 | **F-INS-FIRST-02** | 复用 [PRD-HELP-ONBOARDING-V1](./PRD-HELP-ONBOARDING-V1.md) 主链触达；**不**另造安装专用全屏向导（除非 Gate A 实测卡住） | P0 |
 | **F-INS-FIRST-03** | 包内 `使用说明.txt`：系统要求、如何打开、数据位置、长图说明、如何退出、如何反馈 | P0 |
 | **F-INS-FIRST-04** | 失败页：无法绑端口 / 浏览器未开 → 日志路径 + 反馈指引 | P0 |
@@ -398,7 +398,7 @@
 |----|------|------|
 | **AC-INS-A01** | 无 Python 的 Windows 10/11 干净机，解压 portable zip | 无报错依赖缺失弹窗（或有中文修复指引） |
 | **AC-INS-A02** | 双击 exe | 无 cmd 黑窗；浏览器打开 Studio |
-| **AC-INS-A03** | 点击试用示例 | ≥4 张 demo 跑通至预览页 |
+| **AC-INS-A03** | 首页 → 向导 → 点击试用示例 | ≥4 张 demo 跑通至预览页（路径对齐 F-INS-FIRST-01′） |
 | **AC-INS-A04** | 选择自己的 JPG/PNG 文件夹（20～100 张） | 无指导导入成功并预览 |
 | **AC-INS-A05** | 无 Playwright | 自动降级并经同一「长图」入口保存 PNG；成功态、打开文件夹和发群三要素可用；文案不提 pip |
 | **AC-INS-A06** | 将整个目录拷到另一路径再开 | 仍能启动（相对路径/ bundle 正确） |

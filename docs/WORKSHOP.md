@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **关联** | [PRD-PHASE2.md](./PRD-PHASE2.md)、[IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md)、`DEVELOPMENT.md`、`ACCEPTANCE.md`、[PRD-EXPERIENCE.md](./PRD-EXPERIENCE.md) |
-| **更新日期** | 2026-05-27 |
+| **更新日期** | 2026-07-16 |
 
 ---
 
@@ -31,6 +31,29 @@ python -m travelogue export-longshot trips\<tripId> --scale 2
 - 相册默认上限 **250 张**（`config.yaml` · Studio 不收紧至 MVP PRD 的 30）
 - 浏览器：**Chrome 90+ / Edge 90+（Windows）**
 - 验收：[ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md)
+
+### 1.0 可选依赖一览
+
+| 能力 | 安装 | 说明 |
+|------|------|------|
+| **长图（Playwright）** | `pip install -e ".[playwright]"` + `playwright install chromium` | 缺省常见 `E_LNG_PLAYWRIGHT` |
+| **HEIC** | `pip install pillow-heif` | iPhone 照片 |
+| **Vision / CLIP** | `pip install -e ".[vision]"`；`config.yaml` 中 `vision.enabled` | 默认 **关**；开启后首次可能下载模型 |
+
+### 1.0b 空态 FTUE 狗粮（`--trips-dir`）
+
+空书架测试须用 **CLI `--trips-dir`**（勿只设 `TRAVELOGUE_TRIPS_DIR`——Studio 加载 `config.yaml` 后 env 基本无效）。
+
+```powershell
+$empty = Join-Path $env:TEMP "travelogue-ftue-trips"
+New-Item -ItemType Directory -Force -Path $empty | Out-Null
+$env:TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM = "1"
+python -m travelogue studio --no-open --host 127.0.0.1 --port 8771 --trips-dir $empty
+# 浏览器打开 http://127.0.0.1:8771/ 后清 localStorage 再刷新
+# 优先级：--trips-dir > config.yaml trips_dir > 默认
+```
+
+见 [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) · [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md)。
 
 ---
 

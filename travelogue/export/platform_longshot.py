@@ -41,9 +41,8 @@ from travelogue.export.longshot import (
     _apply_copy_display,
     _capture_p0_with_metrics,
     _page_metrics,
+    _longshot_file_stem,
     _resolve_longshot_url,
-    _slug_title,
-    _trip_title,
     raise_if_longshot_cancelled,
 )
 from travelogue.export.platform_profiles import (
@@ -296,8 +295,8 @@ def export_platform_longshot(
     fmt = "jpeg" if str(fmt).lower() == "jpeg" else "png"
     out_fmt = "png" if is_aspect else fmt
     out_ext = "png" if is_aspect else ("jpg" if fmt == "jpeg" else "png")
-    title = _slug_title(_trip_title(trip_dir))
-    prefix = file_prefix_for_platform(title, profile.id)
+    stem = _longshot_file_stem(trip_dir)
+    prefix = file_prefix_for_platform(stem, profile.id)
 
     url, server = _resolve_longshot_url(
         trip_dir, base_url=base_url, host=host, port=port, trip_id=trip_id
