@@ -14,7 +14,7 @@ python scripts/gen_scripts_registry.py
 |--------|------:|---------|
 | CI | 28 | Referenced in `.github/workflows` |
 | docs | 120 | Referenced in `docs/` only |
-| active | 45 | No CI/docs scan hit; keep unless archived |
+| active | 33 | No CI/docs scan hit; keep unless archived |
 | internal | 3 | Leading `_` helper / one-off audit |
 | archivable-candidate | 0 | `phaseN_*` with zero CI/docs refs · see archive list |
 
@@ -109,8 +109,6 @@ python scripts/gen_scripts_registry.py
 | `m_c2_fix_repo_root.py` | active | — | — | — |
 | `mcr_eval_recurate.py` | docs | — | `docs/MCR-RELEASE-NOTE.md`, `docs/PHASE15-ROLLOUT.md`, `docs/PRD-LAYOUT-READER-REGRESSION-GUARD.md`, `+1 more` | `scripts/mcr_eval_recurate.py` |
 | `migrate_lse_batch4plus.py` | docs | — | `docs/PRD-ARCH-OPT-WS1-MERGE-FIX.md` | — |
-| `migrate_lse_batch5.py` | active | — | — | — |
-| `migrate_lse_batch6.py` | active | — | — | — |
 | `migrate_sharpness_v2.py` | docs | — | `docs/IMPLEMENTATION-ALGORITHM-V2.md`, `docs/acceptance-records/algorithm-v2-prd-review-2026-06-05.md` | — |
 | `mosaic_config_diag.py` | docs | — | `docs/GUIDE-PHASE16-layout-template-engine.md`, `docs/MCR-RELEASE-NOTE.md`, `docs/PHASE15-ROLLOUT.md`, `+3 more` | `scripts/mosaic_config_diag.py` |
 | `mosaic_probe_window.py` | active | — | — | `scripts/mosaic_probe_window.py` |
@@ -191,16 +189,6 @@ python scripts/gen_scripts_registry.py
 | `run_aad_must_green.py` | docs | — | `docs/PRD-ARCH-ALGO-DEEPENING-V1.md`, `docs/acceptance-records/aad-ac-gapfill-2026-07-16.md` | — |
 | `show_plate_screen.py` | active | — | — | — |
 | `smoke_studio_portable.py` | docs | — | `docs/IMPLEMENTATION-DESKTOP-INSTALLER-V1.md`, `docs/PRD-DESKTOP-INSTALLER-V1.md`, `docs/acceptance-records/desktop-installer-v1-smoke-2026-07-14.md` | `scripts/smoke_studio_portable.py` |
-| `split_preview_toolbar_bootstrap.py` | active | — | — | — |
-| `split_preview_toolbar_core.py` | active | — | — | — |
-| `split_preview_toolbar_css.py` | active | — | — | — |
-| `split_preview_toolbar_drawers.py` | active | — | — | — |
-| `split_preview_toolbar_features.py` | active | — | — | — |
-| `split_preview_toolbar_init_v3.py` | active | — | — | — |
-| `split_preview_toolbar_longshot.py` | active | — | — | — |
-| `split_preview_toolbar_m5.py` | active | — | — | — |
-| `split_preview_toolbar_shell.py` | active | — | — | — |
-| `split_studio_home_v2_css.py` | active | — | — | — |
 | `stable_qh_dogfood.py` | docs | — | `docs/acceptance-records/stable-qh-2026-07-15.md` | `scripts/stable_qh_dogfood.py`, `scripts/stable_qh_persona_trial.py` |
 | `stable_qh_persona_trial.py` | docs | — | `docs/acceptance-records/stable-qh-2026-07-15.md` | `scripts/stable_qh_persona_trial.py` |
 | `stable_qh_supplemental_trial.py` | docs | — | `docs/QUALITY-GATE.md` | `scripts/stable_qh_supplemental_trial.py` |
