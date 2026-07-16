@@ -762,7 +762,9 @@ def run_studio_pipeline(
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:
-            progress("ingest", 0, "正在预加载视觉模型…")
+            from travelogue.web.stage_hints import PREPARING_VISION, stage_hint_text
+
+            progress("ingest", 0, stage_hint_text(PREPARING_VISION))
         from travelogue.vision.clip_encoder import preload_clip_encoder
 
         preload_clip_encoder(cfg)
@@ -806,7 +808,9 @@ def run_studio_pipeline(
         report("ingest", 1, hint)
 
     with app_config_scope(cfg):
-        report("ingest", 1)
+        from travelogue.web.stage_hints import PROCESSING_PHOTOS, stage_hint_text
+
+        report("ingest", 1, stage_hint_text(PROCESSING_PHOTOS))
         cluster_notice = ""
         import_mode = str(mode or "quick_share").strip().lower()
         if import_mode not in ("quick_share", "fine_craft"):

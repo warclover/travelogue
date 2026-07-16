@@ -113,6 +113,11 @@ class _PlaywrightBrowserPool:
             self._playwright = None
         self._owner_thread_id = None
 
+    def needs_cold_start(self) -> bool:
+        """True when next acquire() will launch Chromium (FTUE preparing_browser)."""
+        with self._lock:
+            return self._browser is None
+
     def acquire(self) -> Any:
         with self._lock:
             if self._idle_timer:
@@ -191,6 +196,16 @@ def playwright_longshot_available() -> bool:
     return warm_playwright_browser()
 
 
+def _longshot_file_stem(trip_dir: Path) -> str:
+    """Filesystem-safe stem for longshot files (FTUE D-FTUE-05): prefer tripId dir name.
+
+    Chinese ``meta.title`` stays display-only; never used as the on-disk basename.
+    """
+    raw = (trip_dir.name or "").strip() or "travelogue"
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", raw).strip()
+    return cleaned or "travelogue"
+
+
 def default_longshot_output_name(
     trip_dir: Path,
     *,
@@ -198,8 +213,8 @@ def default_longshot_output_name(
     segment_index: int | None = None,
     segment_total: int | None = None,
 ) -> str:
-    """Filename matching server-side longshot naming (D-INS-09)."""
-    title = _slug_title(_trip_title(trip_dir))
+    """Filename matching server-side longshot naming (D-INS-09 / D-FTUE-05)."""
+    stem = _longshot_file_stem(trip_dir)
     ext = "jpg" if fmt in ("jpeg", "jpg") else "png"
     if (
         segment_index is not None
@@ -207,8 +222,8 @@ def default_longshot_output_name(
         and segment_total > 1
         and segment_index >= 1
     ):
-        return f"{title}-ch{segment_index:02d}.{ext}"
-    return f"{title}.{ext}"
+        return f"{stem}-ch{segment_index:02d}.{ext}"
+    return f"{stem}.{ext}"
 
 
 def write_longshot_upload(
@@ -735,21 +750,26 @@ def export_trip_longshot(
     scale = max(1, min(int(scale), 3))
     fmt = "jpeg" if str(fmt).lower() == "jpeg" else "png"
     ext = "jpg" if fmt == "jpeg" else "png"
-    title = _slug_title(_trip_title(trip_dir))
+    title = _longshot_file_stem(trip_dir)
 
     url, server = _resolve_longshot_url(
         trip_dir, base_url=base_url, host=host, port=port, trip_id=trip_id
     )
+    def _report(cur: int, total: int, hint: str) -> None:
+        if progress:
+            progress(cur, total, hint)
+
+    if _BROWSER_POOL.needs_cold_start():
+        from travelogue.web.stage_hints import PREPARING_BROWSER, stage_hint_text
+
+        _report(0, 1, stage_hint_text(PREPARING_BROWSER))
+
     browser = _BROWSER_POOL.acquire()
     capture_method = "p0"
     outputs: list[LongshotOutput] = []
     segment_reason = ""
     user_hint = ""
     session_writes: list[Path] = []
-
-    def _report(cur: int, total: int, hint: str) -> None:
-        if progress:
-            progress(cur, total, hint)
 
     page = None
     try:

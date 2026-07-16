@@ -98,7 +98,7 @@ def test_narrate_lead_day_format_f_nar_p2_01() -> None:
     trip["assets"][1]["takenAt"] = "2025-04-03T10:00:00Z"
     run_narrate(trip, provider="stub", scope="full", cfg=_lead_test_cfg())
     lead = trip["chapters"][1]["lead"]
-    assert lead.startswith("Day 2 ·")
+    assert lead.startswith("第2天 ·")
     assert "4月3日" in lead
     assert "祇园" in lead
 

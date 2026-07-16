@@ -3,6 +3,7 @@
  */
 import { postJson, postJsonBusyRetry, isJobBusyResponse } from "./http.js";
 import { pollJobUntilDone } from "./job-poll.js";
+import { resolvePublishGuide } from "./help-onboarding.js";
 
 export const LONGSHOT_SLOW_MS = 45000;
 export const LONGSHOT_POLL_MS = 800;
@@ -131,6 +132,7 @@ export function formatLongshotResult(job) {
   var platform = result.platform || "wechat_chat";
   var lines = [];
   var title = "长图已保存";
+  var guide = null;
 
   if (platform === "wechat_moments") {
     var n = result.pageCount || outputs.length;
@@ -141,11 +143,19 @@ export function formatLongshotResult(job) {
     title = "✓ " + (result.pageCount || outputs.length) + " 张 3:4 配图已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (segmented && outputs.length > 1) {
-    lines.push(
-      result.userHint ||
-        "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。"
-    );
+  } else {
+    // FE-FTUE-04 / BE-FTUE-06 · 默认微信群：与 Dock 同源 resolvePublishGuide
+    guide = resolvePublishGuide(result);
+    title = guide.lines[0] || title;
+    for (var gi = 0; gi < guide.lines.length; gi++) {
+      lines.push(guide.lines[gi]);
+    }
+    if (segmented && outputs.length > 1) {
+      lines.push(
+        result.userHint ||
+          "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。"
+      );
+    }
   }
   if (method === "p1") {
     lines.push("已使用兼容模式导出，与预览可能有细微差异。");
@@ -163,7 +173,7 @@ export function formatLongshotResult(job) {
     captureMethod: method,
     segmented: segmented,
     platform: platform,
-    publishGuide: result.publishGuide || "",
+    publishGuide: (guide && guide.text) || result.publishGuide || "",
   };
 }
 

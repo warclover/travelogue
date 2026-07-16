@@ -9,6 +9,7 @@ import {
   trackHelpEvent,
 } from "./js/help-onboarding.js";
 import { openHelpDrawer } from "./js/help-drawer.js";
+import { trackStudioEvent } from "./js/analytics.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -196,26 +197,18 @@ export function mountPreviewTaskDock(root, hooks) {
             : "已打开文件夹 · 导入小红书发布即可";
         textWrap.appendChild(shareHint);
       } else {
-        // D-HELP-09 · 默认微信群：publishGuide 优先，空则三要素兜底必显
+        // D-HELP-09 / AC-FTUE-09 · 第一可读行 = 发群引导全文（Help 同源）
         var guide = resolvePublishGuide(result);
-        main.textContent = HELP_COPY.publishGuideFallback[0];
-        if (guide.kind === "publishGuide") {
-          shareHint.textContent = guide.text;
-          textWrap.appendChild(shareHint);
-        } else {
-          var list = document.createElement("ol");
-          list.className = "preview-task-dock__guide-list";
-          for (var gi = 1; gi < guide.lines.length; gi++) {
-            var li = document.createElement("li");
-            li.textContent = guide.lines[gi];
-            list.appendChild(li);
-          }
-          textWrap.appendChild(list);
-        }
+        main.textContent = guide.text.replace(/\n/g, " · ");
         trackHelpEvent("help_publish_guide_show", {
           platform: result.platform || "wechat_chat",
           segmented: outputs.length > 1,
           source: guide.kind,
+        });
+        trackStudioEvent("longshot_success_share_hint_shown", {
+          platform: result.platform || "wechat_chat",
+          source: "task_dock",
+          guideKind: guide.kind,
         });
         var moreHelp = document.createElement("button");
         moreHelp.type = "button";
@@ -247,6 +240,10 @@ export function mountPreviewTaskDock(root, hooks) {
         try {
           trackHelpEvent("help_funnel_reveal_folder", {
             tripId: tripId || null,
+          });
+          trackStudioEvent("ftue_reveal_folder", {
+            tripId: tripId || null,
+            source: "task_dock",
           });
         } catch (_e) {}
         hooks.onRevealFolder(outputs[0], tripId);

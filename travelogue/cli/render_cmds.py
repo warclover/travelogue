@@ -179,7 +179,11 @@ def cmd_studio(
         try_acquire_single_instance,
     )
     from travelogue.web.serve import serve_studio_directory
-    from travelogue.web.studio_config import resolve_studio_config
+    from travelogue.web.studio_config import (
+        log_studio_trips_dir,
+        resolve_studio_config,
+        resolve_studio_trips_dir,
+    )
     from travelogue.web.studio_pipeline import run_studio_pipeline
 
     instance = try_acquire_single_instance()
@@ -195,7 +199,11 @@ def cmd_studio(
     if resolved_config is not None:
         get_config(reload=True, path=resolved_config)
     cfg = get_config()
-    root = (trips_dir or cfg.trips_dir).resolve()
+    root, trips_source = resolve_studio_trips_dir(
+        cli_trips_dir=trips_dir,
+        cfg_trips_dir=cfg.trips_dir,
+    )
+    log_studio_trips_dir(root, trips_source)
     root.mkdir(parents=True, exist_ok=True)
 
     album_path: Path | None = pick_folder

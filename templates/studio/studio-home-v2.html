@@ -157,8 +157,8 @@
             </div>
             <div class="v2-bench__side">
               <p class="v2-bench__side-label">快捷操作</p>
-              <div class="v2-bench__quick-actions">
-                <button type="button" class="v2-bench__ghost-btn v2-bench__ghost-btn--secondary" id="v2-bench-resume">继续上次</button>
+              <div class="v2-bench__quick-actions" id="v2-bench-quick-actions">
+                <!-- FE-FTUE-01：有用户作品时由 bento.js 动态插入「继续上次」（空态不渲染 DOM） -->
                 <button type="button" class="v2-bench__ghost-btn v2-settings-toggle" id="v2-settings-toggle"
                         aria-label="设置" title="导入与分析偏好"
                         aria-describedby="v2-settings-desc"
@@ -375,6 +375,10 @@
         <button type="button" class="v2-wizard__primary v2-wizard__primary--pick" id="v2-wizard-pick">
           选择本次旅行的照片文件夹
         </button>
+        <button type="button" class="v2-wizard__demo" id="v2-wizard-demo-album">
+          用示例照片试一次
+          <small>本机 · 无需选文件夹</small>
+        </button>
         <p class="v2-wizard__hint v2-wizard__hint--center">一次旅行一个文件夹，照片留在本机</p>
         <p class="v2-wizard__first-tip" id="v2-wizard-first-tip" hidden role="status">
           <span id="v2-wizard-first-tip-text">选一次旅行的文件夹即可，不用先整理</span>
@@ -397,10 +401,10 @@
           <div class="v2-wizard__upload">
             <label class="v2-wizard__upload-btn" for="v2-wizard-album-upload"
                    title="建议总量 ≤200MB，过大可能失败或较慢">
-              小文件夹试用（建议 ≤200MB）
+              上传小文件夹（建议 ≤200MB）
             </label>
             <input id="v2-wizard-album-upload" type="file" webkitdirectory directory multiple hidden
-                   aria-label="小文件夹试用上传" />
+                   aria-label="上传小文件夹" />
           </div>
           <div class="v2-wizard__path">
             <input type="text" id="v2-wizard-album-path" placeholder="粘贴文件夹路径…" aria-label="文件夹路径" />

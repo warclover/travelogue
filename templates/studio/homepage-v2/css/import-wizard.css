@@ -154,6 +154,32 @@
 .v2-wizard__primary--pick { min-height: 56px; margin-top: 8px; }
 .v2-wizard__primary:hover { background: #f0e6d4; }
 .v2-wizard__primary:disabled { opacity: .5; cursor: not-allowed; }
+/* FE-FTUE-02：试用示例 · 同屏次主 CTA（不进「其他导入」折叠） */
+.v2-wizard__demo {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(47, 107, 85, 0.55);
+  border-radius: 8px;
+  background: rgba(47, 107, 85, 0.08);
+  color: var(--v2-ink, #1a2420);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.35;
+}
+.v2-wizard__demo small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--v2-sheet-muted-soft, #6b7c74);
+}
+.v2-wizard__demo:hover { background: rgba(47, 107, 85, 0.14); }
+.v2-wizard__demo:disabled { opacity: .5; cursor: not-allowed; }
 .v2-wizard__secondary {
   min-height: 48px;
   padding: 10px 14px;

@@ -99,6 +99,12 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "photo_count_hint_show",
         "advanced_fields_toggle",
         "close_confirm",
+        # FTUE Optimization V1 · PRD §7
+        "ftue_demo_album_click",
+        "ftue_demo_album_success",
+        "ftue_reveal_folder",
+        "longshot_success_share_hint_shown",
+        "help_funnel_reveal_folder",
     }
 )
 

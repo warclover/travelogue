@@ -331,17 +331,63 @@ export function renderBenchRecent() {
   if (bench) bench.classList.add("v2-bench--recent");
   syncCtaPlacement();
   syncDemoConvertCta();
+  syncBenchResumeButton();
+}
+
+/** FE-FTUE-01：仅有非 demo 用户作品时挂载「继续上次」；空态不渲染 DOM。 */
+function syncBenchResumeButton() {
+  var host = $("v2-bench-quick-actions");
+  var resumeTrip = (V2.trips || []).find(function (t) {
+    return t && !isDemoTrip(t);
+  });
+  var resumeBtn = $("v2-bench-resume");
+  if (!resumeTrip) {
+    if (resumeBtn && resumeBtn.parentNode) resumeBtn.parentNode.removeChild(resumeBtn);
+    return;
+  }
+  if (!resumeBtn) {
+    if (!host) return;
+    resumeBtn = document.createElement("button");
+    resumeBtn.type = "button";
+    resumeBtn.className = "v2-bench__ghost-btn v2-bench__ghost-btn--secondary";
+    resumeBtn.id = "v2-bench-resume";
+    resumeBtn.textContent = "继续上次";
+    var settings = $("v2-settings-toggle");
+    if (settings && settings.parentNode === host) {
+      host.insertBefore(resumeBtn, settings);
+    } else {
+      host.insertBefore(resumeBtn, host.firstChild);
+    }
+  }
+  resumeBtn.disabled = false;
+  resumeBtn.dataset.tripId = resumeTrip.tripId || "";
+  if (!resumeBtn.dataset.wired) {
+    resumeBtn.dataset.wired = "1";
+    resumeBtn.addEventListener("click", function () {
+      var tripId = resumeBtn.dataset.tripId;
+      if (!tripId) return;
+      var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
+      if (!trip) return;
+      trackStudioEvent("bench_resume_click", {
+        trip_id: tripId,
+        stale: !!(trip.algorithmStale || trip.longshotStale),
+      });
+      window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
+    });
+  }
 }
 
 /** 工作台 bench。 */
 export function renderBench(manifest) {
   renderBenchRecent();
-  if (!manifest) return;
+  if (!manifest) {
+    syncBenchResumeButton();
+    return;
+  }
   var titleEl = $("v2-bench-title");
   var metaEl = $("v2-bench-meta");
   var thumb = $("v2-bench-thumb");
   var sampleFlag = $("v2-bench-sample-flag");
-  var resumeBtn = $("v2-bench-resume");
   if (titleEl && manifest.title) titleEl.textContent = manifest.title;
   if (sampleFlag) {
     show(sampleFlag, manifest.source !== "user");
@@ -353,27 +399,7 @@ export function renderBench(manifest) {
     if (meta.chapterCount) parts.push(meta.chapterCount + " 章");
     metaEl.textContent = parts.join(" · ");
   }
-  var resumeTrip = V2.trips.find(function (t) {
-    return !isDemoTrip(t);
-  });
-  if (resumeBtn) {
-    resumeBtn.disabled = !resumeTrip;
-    resumeBtn.dataset.tripId = resumeTrip ? resumeTrip.tripId : "";
-    if (!resumeBtn.dataset.wired) {
-      resumeBtn.dataset.wired = "1";
-      resumeBtn.addEventListener("click", function () {
-        var tripId = resumeBtn.dataset.tripId;
-        if (!tripId) return;
-        var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
-        if (!trip) return;
-        trackStudioEvent("bench_resume_click", {
-          trip_id: tripId,
-          stale: !!(trip.algorithmStale || trip.longshotStale),
-        });
-        window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-      });
-    }
-  }
+  syncBenchResumeButton();
   if (thumb && manifest.assets && manifest.assets.background) {
     var url = manifestAssetUrl(manifest, "background");
     var probe = new Image();

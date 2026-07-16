@@ -140,7 +140,48 @@ def ensure_user_data_layout(*, bootstrap_config: bool = True) -> Path:
                     encoding="utf-8",
                 )
             _force_bootstrap_llm_provider_stub(cfg)
+            _force_bootstrap_vision_disabled(cfg)
     return root
+
+
+def _force_bootstrap_vision_disabled(cfg_path: Path) -> None:
+    """First-run desktop: vision.enabled=false (D-FTUE-04 / AC-FTUE-06)."""
+    try:
+        text = cfg_path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    lines = text.splitlines(keepends=True)
+    if not lines:
+        return
+    out: list[str] = []
+    in_vision = False
+    replaced = False
+    for line in lines:
+        stripped = line.lstrip()
+        indent = line[: len(line) - len(stripped)]
+        if stripped.startswith("vision:") and not indent.strip("\t"):
+            in_vision = True
+            out.append(line)
+            continue
+        if in_vision:
+            if stripped and not stripped.startswith("#") and indent == "":
+                in_vision = False
+            elif not replaced and stripped.startswith("enabled:"):
+                nl = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+                out.append(
+                    f"{indent}enabled: false  # desktop L0 / FTUE default{nl}"
+                )
+                replaced = True
+                continue
+        out.append(line)
+    if not replaced:
+        if out and not out[-1].endswith("\n"):
+            out[-1] = out[-1] + "\n"
+        out.append("\nvision:\n  enabled: false  # desktop L0 / FTUE default\n")
+    try:
+        cfg_path.write_text("".join(out), encoding="utf-8")
+    except OSError:
+        return
 
 
 def _force_bootstrap_llm_provider_stub(cfg_path: Path) -> None:

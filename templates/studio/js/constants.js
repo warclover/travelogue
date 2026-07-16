@@ -36,6 +36,13 @@ export const STAGE_LABELS = {
   render: "正在生成杂志预览",
 };
 
+/** FE-FTUE-06 · 冻结 stageHint 键 → 用户文案（对齐 PRD §3.5 / stage_hints.py） */
+export const STAGE_HINT_LABELS = {
+  preparing_vision: "正在准备本机视觉组件（仅第一次）…",
+  preparing_browser: "正在准备长图组件（仅第一次）…",
+  processing_photos: "正在整理照片…",
+};
+
 // P5-10.1 · mirror travelogue/web/studio_errors.py USER_MESSAGES
 export const STUDIO_ERROR_MESSAGES = {
   E_DEMO_EXISTS: "该游记已存在。是否覆盖？",

@@ -59,7 +59,10 @@ V2_HOME_MARKERS = (
     "选择本次旅行的照片文件夹",
     "v2-wizard-album-path",
     "v2-wizard-album-upload",
-    "小文件夹试用（建议 ≤200MB）",
+    "上传小文件夹（建议 ≤200MB）",
+    "用示例照片试一次",
+    "v2-wizard-demo-album",
+    'id="v2-bench-quick-actions"',
     "v2-wizard-close-pick",
     # M20-c · Lightbox
     "v2-lightbox",

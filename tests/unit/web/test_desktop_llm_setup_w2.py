@@ -18,9 +18,11 @@ def test_capability_card_contract() -> None:
     settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "travelogue.desktop.capabilityCard.v1" in help_js
-    assert "本机即可生成杂志卷轴与长图" in cap
-    assert "升级 AI 文案（可选）" in cap
-    assert "开始导入" in cap
+    # FTUE v1.1 §4.2 supersedes L0G capability-card copy
+    assert "照片留在本机，也能做成杂志游记" in cap
+    assert "开始制作" in cap
+    assert "以后再升级 AI 文案" in cap
+    assert "开始导入" not in cap
     assert "maybeShowCapabilityCard" in boot
     assert "markCapabilityCardSuppressHelpL1" in cap
     assert "shouldDeferHomeHelpL1ForCapabilityCard" in help_js

@@ -5,13 +5,19 @@ from __future__ import annotations
 import re
 
 # Stub hooks from travelogue.services.narrate._build_hook (frame / pre-LLM).
+# Keep legacy「碎片」patterns for old trips; also catch W1/W2「照片汇成」类模板句.
 _SYSTEM_HOOK_PATTERNS = (
     re.compile(r"^\d+\s*张碎片拼成这一页[。．]?$"),
+    re.compile(r"^\d+\s*张照片汇成这一页[。．]?$"),
     re.compile(r"^.+，\d+\s*帧记录[。．]?$"),
+    re.compile(r"^.+，\d+\s*张照片[。．]?$"),
     re.compile(r"^.+，\d+\s*帧留在这里[。．]?$"),
+    re.compile(r"^.+，\d+\s*张照片留在这里[。．]?$"),
     re.compile(r"^.+[·•].+，慢慢翻[。．]?$"),
     re.compile(r"^在.+的(\d+天|[\d\.]+\s*[–-]\s*[\d\.]+)，\d+\s*张碎片拼成这一页[。．]?$"),
+    re.compile(r"^在.+的(\d+天|[\d\.]+\s*[–-]\s*[\d\.]+)，\d+\s*张照片汇成这一页[。．]?$"),
     re.compile(r"^.+·.+，\d+\s*张碎片拼成这一页[。．]?$"),
+    re.compile(r"^.+·.+，\d+\s*张照片汇成这一页[。．]?$"),
 )
 
 _PORTRAIT_CONTAIN_AR = 1.2
