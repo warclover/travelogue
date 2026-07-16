@@ -146,10 +146,15 @@ def _sync_trip_from_disk(trip: dict, svc: TripService, trip_json: Path) -> None:
 
 
 def _raise_demo_from_ingest(exc: IngestError) -> None:
+    """Map ingest failures onto Studio/DemoError while preserving user-facing codes.
+
+    ``E_INGEST_TOO_FEW`` / ``E_INGEST_EMPTY`` must stay as-is for regular album
+    imports so the homepage failure hint does not claim this was a demo album.
+    Demo-only entry points (``demo/from_album``, ``demo/build``) still remap to
+    ``E_DEMO_TOO_FEW`` themselves.
+    """
     if exc.code == "E_INGEST_RAW_UNSUPPORTED":
         raise DemoError(exc.code, RAW_UNSUPPORTED_MESSAGE) from exc
-    if exc.code in ("E_INGEST_TOO_FEW", "E_INGEST_EMPTY"):
-        raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
     raise DemoError(exc.code, str(exc)) from exc
 
 
@@ -754,11 +759,8 @@ def run_studio_pipeline(
         # surface E_INGEST_RAW_UNSUPPORTED before the ingest stage's handler below.
         # Translate here too, otherwise it leaks as a generic E_STUDIO_PIPELINE
         # ("导入失败，请重试") instead of the actionable RAW / too-few guidance.
-        if exc.code == "E_INGEST_RAW_UNSUPPORTED":
-            raise DemoError(exc.code, RAW_UNSUPPORTED_MESSAGE) from exc
-        if exc.code in ("E_INGEST_TOO_FEW", "E_INGEST_EMPTY"):
-            raise DemoError("E_DEMO_TOO_FEW", str(exc)) from exc
-        raise DemoError(exc.code, str(exc)) from exc
+        # Keep E_INGEST_TOO_FEW / E_INGEST_EMPTY codes (do not remap to E_DEMO_*).
+        _raise_demo_from_ingest(exc)
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:
