@@ -264,6 +264,47 @@ def median_sharpness(assets: list[dict]) -> float:
     return (values[mid - 1] + values[mid]) / 2.0
 
 
+def _clamp01(value: float) -> float:
+    return min(1.0, max(0.0, float(value)))
+
+
+@dataclass(frozen=True)
+class UtilityBreakdown:
+    """LayoutUtility = soft × Π(1 − w·p) (AAD-21 · kernel combine only)."""
+
+    soft: float
+    utility: float
+    penalties_applied: dict[str, float] = field(default_factory=dict)
+
+
+def combine_utility(
+    soft: float,
+    penalties: Mapping[str, float],
+    weights: Mapping[str, float] | None = None,
+    *,
+    default_weight: float = 0.15,
+) -> UtilityBreakdown:
+    """Pure multiplicative combine; no I/O / no layout_engine imports.
+
+    ``utility = soft × Π_i (1 − clamp(w_i)·clamp(p_i))``.
+    Window-level callers supply mosaic penalty weights; chapter-level soft
+    should exclude hard penalties already applied at window pick (AAD BLK-01).
+    """
+    total = _clamp01(soft)
+    applied: dict[str, float] = {}
+    for key, pen in penalties.items():
+        weight = default_weight if weights is None else float(weights.get(key, default_weight))
+        if float(pen) <= 0 or weight <= 0:
+            continue
+        total *= 1.0 - _clamp01(weight) * _clamp01(float(pen))
+        applied[str(key)] = float(pen)
+    return UtilityBreakdown(
+        soft=_clamp01(soft),
+        utility=_clamp01(total),
+        penalties_applied=applied,
+    )
+
+
 def sort_bucket_asset_ids(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
     from travelogue.layout_contract.quality import asset_sharpness
 
