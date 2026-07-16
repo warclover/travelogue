@@ -163,17 +163,9 @@ def write_user_llm_config_overlay(*, provider: str, model: str | None, base_url:
 
 def load_user_llm_config_overlay() -> dict[str, Any]:
     """Return mapping suitable for merging into load_config data."""
-    path = user_data_dir(ensure=False) / _USER_CONFIG_NAME
-    if not path.is_file():
-        return {}
-    try:
-        from travelogue.config.yaml_loader import load_yaml_mapping
+    from travelogue.config.user_overlay import load_user_llm_config_overlay as _load
 
-        loaded = load_yaml_mapping(path.read_text(encoding="utf-8"), source=str(path))
-    except Exception:
-        _log.warning("user config overlay unreadable", exc_info=True)
-        return {}
-    return loaded if isinstance(loaded, dict) else {}
+    return _load()
 
 
 def inject_secrets_into_environ(secrets: UserLlmSecrets | None = None) -> None:

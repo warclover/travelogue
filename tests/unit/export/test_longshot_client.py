@@ -28,8 +28,9 @@ def test_panel_module_exists_and_exports() -> None:
         "xiaohongshu",
         "clampXhsSlideCount",
         'data-studio-xhs-count="custom"',
-        "完整照片",
-        "导出朋友圈配图",
+        "长图连读",
+        "导出朋友圈 · 九宫格",
+        "moments_grid",
     ):
         assert token in src, f"missing: {token}"
 
@@ -53,7 +54,9 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
 def test_studio_panel_excludes_phase_c_platforms() -> None:
     """H-C-04 · Studio UI must not list Ins/微博/抖音/custom (Phase C backend only)."""
     src = PANEL.read_text(encoding="utf-8")
-    assert 'id === "wechat_moments" || id === "xiaohongshu"' in src
+    # Phase A/B allowlist includes moments_grid when Output Recipe is on
+    assert 'id === "moments_grid"' in src
+    assert "wechat_moments" in src and "xiaohongshu" in src
     for banned in ("instagram", "weibo", "douyin_cover"):
         assert f'id: "{banned}"' not in src
     assert 'id: "custom"' not in src
@@ -72,9 +75,12 @@ def test_build_longshot_request_platform_contract() -> None:
 def test_format_longshot_result_moments_title() -> None:
     src = CLIENT.read_text(encoding="utf-8")
     assert "wechat_moments" in src
-    assert "张朋友圈配图已就绪" in src
+    assert "张长图连读已就绪" in src
+    assert "九宫格已就绪" in src
+    assert "这不是九宫格" in src
     assert "publishGuide" in src
     assert "xiaohongshu" in src
+    assert 'entrypoint: "shelf"' in src
 
 
 def test_longshot2_analytics_events_registered() -> None:

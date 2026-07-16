@@ -266,7 +266,7 @@ def _report_unknown_config_keys(keys: list[str], *, strict: bool) -> None:
 def _merge_user_llm_overlay(data: TrackedDict | dict[str, Any]) -> TrackedDict | dict[str, Any]:
     """Merge user_data config.user.yaml llm section (Desktop LLM Setup V1)."""
     try:
-        from travelogue.llm.user_settings import load_user_llm_config_overlay
+        from travelogue.config.user_overlay import load_user_llm_config_overlay
 
         overlay = load_user_llm_config_overlay()
     except Exception:

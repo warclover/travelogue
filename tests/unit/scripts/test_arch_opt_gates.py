@@ -54,9 +54,9 @@ def test_lint_imports_no_exemptions() -> None:
 def test_lint_lse_cross_import_at_baseline() -> None:
     code, out = _run_script("scripts/lint_lse_cross_import.py")
     assert code == 0, out
-    # Shim retirement made previously importlib-masked curation→LSE imports visible (7→18).
-    assert "edges: 18" in out
-    assert "ceiling 18" in out
+    # Domain/stage_hints + telemetry sink reduced visible cross-edges (18→5).
+    assert "edges: 5" in out
+    assert "ceiling 5" in out
 
 def test_load_config_warns_on_removed_planner_impl(tmp_path) -> None:
     cfg_path = tmp_path / "config.yaml"

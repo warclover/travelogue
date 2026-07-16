@@ -307,7 +307,7 @@ def export_platform_longshot(
             progress(cur, total, hint)
 
     if _BROWSER_POOL.needs_cold_start():
-        from travelogue.web.stage_hints import PREPARING_BROWSER, stage_hint_text
+        from travelogue.domain.stage_hints import PREPARING_BROWSER, stage_hint_text
 
         _report(0, 1, stage_hint_text(PREPARING_BROWSER))
 
@@ -568,7 +568,7 @@ def export_platform_longshot(
     return LongshotExportResult(
         outputs=outputs,
         capture_method="p0",
-        title=title,
+        title=stem,
         segmented=len(outputs) > 1,
         segment_reason=f"platform_{profile.id}",
         user_hint=user_hint,

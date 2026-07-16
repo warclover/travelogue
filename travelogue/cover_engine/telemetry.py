@@ -17,7 +17,7 @@ def record_cover_joint_event(
     if not trip_id:
         return
     try:
-        from travelogue.services.studio_homepage_telemetry import append_studio_homepage_event
+        from travelogue.domain.studio_events import append_studio_homepage_event
 
         append_studio_homepage_event(
             "cover_joint_pick",
@@ -43,7 +43,7 @@ def record_bookends_event(trip_id: str, event: str, payload: dict[str, Any]) -> 
     if not trip_id:
         return
     try:
-        from travelogue.services.studio_homepage_telemetry import append_studio_homepage_event
+        from travelogue.domain.studio_events import append_studio_homepage_event
 
         body = dict(payload)
         body["tripId"] = trip_id

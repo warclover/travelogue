@@ -140,11 +140,15 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             raise DemoError(exc.code, str(exc)) from exc
 
         if scope == "tier":
-            pipe = trip.setdefault("pipeline", {})
+            from travelogue.domain.pipeline_view import (
+                replace_pipeline_locks,
+                set_pipeline_status,
+            )
+
             if prev_status:
-                pipe["status"] = prev_status
+                set_pipeline_status(trip, str(prev_status))
             if isinstance(prev_locks, dict):
-                pipe["locks"] = dict(prev_locks)
+                replace_pipeline_locks(trip, prev_locks)
 
         from travelogue.layout_engine.planner.screen_planner import (
             LAYOUT_ENGINE_SCREENS,

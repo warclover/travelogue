@@ -44,25 +44,26 @@
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.adapter",
       "lines": [
-        716,
-        824,
-        861,
-        958,
-        1113,
-        1134,
-        1147,
-        1175,
-        1321,
-        1346,
-        1356,
-        1375
+        734,
+        842,
+        879,
+        928,
+        1112,
+        1133,
+        1146,
+        1174,
+        1327,
+        1352,
+        1362,
+        1381,
+        1685
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.mosaic.trip",
       "lines": [
-        1244
+        1245
       ]
     },
     {

@@ -770,7 +770,7 @@ def export_trip_longshot(
             progress(cur, total, hint)
 
     if _BROWSER_POOL.needs_cold_start():
-        from travelogue.web.stage_hints import PREPARING_BROWSER, stage_hint_text
+        from travelogue.domain.stage_hints import PREPARING_BROWSER, stage_hint_text
 
         _report(0, 1, stage_hint_text(PREPARING_BROWSER))
 

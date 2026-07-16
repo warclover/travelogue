@@ -6,9 +6,16 @@ from pathlib import Path
 
 from travelogue.demo.build import DemoError
 from travelogue.desktop.bundle import bundle_root
+from travelogue.paths import DEMO_ALBUM_SENTINEL, is_demo_album_path
 
 DEMO_ALBUM_REL = Path("templates") / "studio" / "assets" / "demo-album"
-DEMO_ALBUM_SENTINEL = "@bundled/demo-album"
+
+__all__ = [
+    "DEMO_ALBUM_REL",
+    "DEMO_ALBUM_SENTINEL",
+    "is_demo_album_path",
+    "resolve_demo_album_dir",
+]
 
 
 def resolve_demo_album_dir() -> Path:
@@ -20,7 +27,3 @@ def resolve_demo_album_dir() -> Path:
         raise DemoError("E_DEMO_TOO_FEW", f"demo album too few photos: {album}")
     return album
 
-
-def is_demo_album_path(raw: str) -> bool:
-    val = str(raw or "").strip().lower()
-    return val in (DEMO_ALBUM_SENTINEL.lower(), "demo-album", "@demo-album")

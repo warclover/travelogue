@@ -15,12 +15,14 @@ export const LONGSHOT_PRESETS = {
     copyDisplay: "photos",
     format: "png",
     label: "纯照片 · 3×",
+    entrypoint: "shelf",
   },
   preview: {
     scale: 2,
     copyDisplay: "full",
     format: "png",
     label: "完整文案 · 2×",
+    entrypoint: "preview",
   },
 };
 

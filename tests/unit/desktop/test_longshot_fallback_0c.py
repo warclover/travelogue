@@ -24,7 +24,8 @@ def test_write_longshot_upload_names_file(tmp_path: Path) -> None:
     out = longshot_mod.write_longshot_upload(trip, b"\x89PNG\r\n", fmt="png")
     assert out.is_file()
     assert out.name.endswith(".png")
-    assert "测试旅途" in out.name or out.name == "travelogue.png"
+    # D-FTUE-05 · on-disk stem uses tripId dir name, not Chinese meta.title
+    assert out.name == "t1.png"
 
 
 def test_playwright_unavailable_without_package(monkeypatch: pytest.MonkeyPatch) -> None:

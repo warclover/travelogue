@@ -762,7 +762,7 @@ def run_studio_pipeline(
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:
-            from travelogue.web.stage_hints import PREPARING_VISION, stage_hint_text
+            from travelogue.domain.stage_hints import PREPARING_VISION, stage_hint_text
 
             progress("ingest", 0, stage_hint_text(PREPARING_VISION))
         from travelogue.vision.clip_encoder import preload_clip_encoder
@@ -808,7 +808,7 @@ def run_studio_pipeline(
         report("ingest", 1, hint)
 
     with app_config_scope(cfg):
-        from travelogue.web.stage_hints import PROCESSING_PHOTOS, stage_hint_text
+        from travelogue.domain.stage_hints import PROCESSING_PHOTOS, stage_hint_text
 
         report("ingest", 1, stage_hint_text(PROCESSING_PHOTOS))
         cluster_notice = ""

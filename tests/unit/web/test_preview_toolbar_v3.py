@@ -721,7 +721,7 @@ def test_preview_export_facade_v1_markers() -> None:
     assert "longshot_auto_reveal" in longshot
     assert "导出时仍会提醒" in task_dock
     assert "preview-task-dock__remind" in css
-    assert "按序发到朋友圈即可" in task_dock
+    assert "按序发到朋友圈连读" in task_dock
     assert "导入小红书" in task_dock
     assert "onFail" in core
     assert "error_code" in longshot

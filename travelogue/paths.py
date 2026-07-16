@@ -19,6 +19,14 @@ OWNERSHIP_MARKER_NAME = ".travelogue-ownership"
 APP_DIRNAME = "Travelogue"
 OWNERSHIP_MARKER_CONTENTS = "travelogue-ownership-v1\n"
 
+# Bundled demo album sentinels (media may check without importing desktop).
+DEMO_ALBUM_SENTINEL = "@bundled/demo-album"
+
+
+def is_demo_album_path(raw: str) -> bool:
+    val = str(raw or "").strip().lower()
+    return val in (DEMO_ALBUM_SENTINEL.lower(), "demo-album", "@demo-album")
+
 
 def is_frozen() -> bool:
     return bool(getattr(sys, "frozen", False))

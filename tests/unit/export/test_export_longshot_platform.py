@@ -557,20 +557,17 @@ def test_export_custom_canvas_size(
         assert Image.open(item.path).size == (720, 960)
 
 
-def test_xhs_safe_area_warn_during_letterbox(caplog) -> None:
-    """AC-LNG2-03s · letterbox tall slice triggers warn log (non-hard-fail)."""
-    import logging
+def test_xhs_safe_area_warn_during_letterbox() -> None:
+    """AC-LNG2-03s · letterbox tall slice triggers safe-area warn (non-hard-fail)."""
+    from travelogue.export.slide_postprocess import fit_aspect_letterbox, warn_safe_area
 
-    from travelogue.export.slide_postprocess import fit_aspect_letterbox
-
-    # Very tall → letterbox with side margins < SAFE_LEFT → warn
+    # Very tall → letterbox with top/bottom outside safe area → warn
     img = Image.new("RGB", (200, 2000), (40, 80, 120))
     buf = BytesIO()
     img.save(buf, format="PNG")
-    with caplog.at_level(logging.WARNING, logger="travelogue.export.slide_postprocess"):
-        out, box = fit_aspect_letterbox(buf.getvalue())
+    out, box = fit_aspect_letterbox(buf.getvalue())
     assert Image.open(BytesIO(out)).size == (1080, 1440)
-    assert any("safe-area warn" in r.message for r in caplog.records)
+    assert warn_safe_area(box) is True
 
 
 def test_draw_page_footer_label_i_of_n_pixels() -> None:

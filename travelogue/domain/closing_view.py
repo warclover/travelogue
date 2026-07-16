@@ -246,31 +246,16 @@ def resolve_closing_asset_id(
 
     B2a · never falls back to cover (PAIR-H1 / R-BE-09). Returns None when
     no legal candidate remains.
-    """
-    try:
-        from travelogue.cover_engine.closing.pick import pick_closing_with_meta
-        from travelogue.config import get_config
 
-        cfg = get_config().bookends
-        pairing = cfg.pairing
-        result = pick_closing_with_meta(
-            trip,
-            prefer_landscape=prefer_landscape,
-            exclude_ids=exclude_ids,
-            assets=assets,
-            soft_weight=float(pairing.soft_weight),
-            near_dup_seconds=float(pairing.near_dup_seconds),
-            require_hard=bool(pairing.require_hard) and str(cfg.pairing_version) != "off",
-        )
-        return result["closing_asset_id"]
-    except Exception:
-        # NFR fail-open: legacy heuristic without cover reuse
-        return _resolve_closing_no_cover_fallback(
-            trip,
-            assets,
-            prefer_landscape=prefer_landscape,
-            exclude_ids=exclude_ids,
-        )
+    Pairing-aware pick lives in ``cover_engine.closing.pick`` (higher layers);
+    domain keeps a config-free heuristic so it does not import cover_engine→config.
+    """
+    return _resolve_closing_no_cover_fallback(
+        trip,
+        assets,
+        prefer_landscape=prefer_landscape,
+        exclude_ids=exclude_ids,
+    )
 
 
 def _resolve_closing_no_cover_fallback(

@@ -20,7 +20,7 @@ pytestmark = pytest.mark.unit
 def test_append_studio_homepage_event_writes_jsonl(tmp_path, monkeypatch) -> None:
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.domain.studio_events.studio_homepage_events_path",
         lambda: path,
     )
     append_studio_homepage_event("open_sheet", {"state": "IdleEmpty"})
@@ -41,7 +41,7 @@ def test_longshot2_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
     """DOC-LNG2-01 · PRD-LONGSHOT-2.0 §12 events are registered."""
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.domain.studio_events.studio_homepage_events_path",
         lambda: path,
     )
     for ev in (
@@ -60,7 +60,7 @@ def test_ftue_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
     """PRD-FTUE §7 · funnel events registered on both sides."""
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.domain.studio_events.studio_homepage_events_path",
         lambda: path,
     )
     for ev in (
@@ -79,7 +79,7 @@ def test_ftue_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
 def test_handle_studio_event_accepts_allowed_event(tmp_path, monkeypatch) -> None:
     events_path = tmp_path / "events.jsonl"
     monkeypatch.setattr(
-        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.domain.studio_events.studio_homepage_events_path",
         lambda: events_path,
     )
     handler = MockStudioHandler(tmp_path / "trips")
@@ -108,7 +108,7 @@ def test_studio_homepage_events_default_path_under_travelogue() -> None:
 def test_append_trims_oversized_meta(tmp_path, monkeypatch) -> None:
     path = tmp_path / "studio-homepage-events.jsonl"
     monkeypatch.setattr(
-        "travelogue.services.studio_homepage_telemetry.studio_homepage_events_path",
+        "travelogue.domain.studio_events.studio_homepage_events_path",
         lambda: path,
     )
     huge = {"payload": "x" * 5000}

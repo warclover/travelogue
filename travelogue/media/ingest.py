@@ -1255,7 +1255,7 @@ def ingest_into_trip(
     force_materialize = False
     if from_dir is not None:
         try:
-            from travelogue.desktop.demo_album import is_demo_album_path
+            from travelogue.paths import is_demo_album_path
 
             if is_demo_album_path(str(from_dir)):
                 force_materialize = True

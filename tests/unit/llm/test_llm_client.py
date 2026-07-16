@@ -14,7 +14,17 @@ def test_resolve_llm_runtime_stub_raises():
 
 
 def test_resolve_llm_runtime_missing_key(monkeypatch):
+    from travelogue.llm.user_settings import UserLlmSecrets
+
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(),
+    )
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.inject_secrets_into_environ",
+        lambda *_a, **_k: None,
+    )
     with pytest.raises(LlmError, match="E_LLM_AUTH"):
         resolve_llm_runtime("deepseek")
 

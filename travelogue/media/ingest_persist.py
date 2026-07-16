@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.services.trip import STAMP_RENDERED_REVISION
+from travelogue.domain.trip_meta import STAMP_RENDERED_REVISION
 
 # Top-level keys ingest may write during / at end of import.
 _INGEST_OWNED_TOP = (

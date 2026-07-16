@@ -264,7 +264,7 @@ class ClusteringLayer:
         if clip_torch_available() and not clip_weights_likely_cached(
             model_name=cfg.vision.model.replace("/", "-")
         ):
-            from travelogue.web.stage_hints import PREPARING_VISION, stage_hint_text
+            from travelogue.domain.stage_hints import PREPARING_VISION, stage_hint_text
 
             hints.append(stage_hint_text(PREPARING_VISION))
         if embedding_cache_is_corrupt(trip_dir):

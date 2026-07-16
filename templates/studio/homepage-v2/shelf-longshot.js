@@ -226,7 +226,17 @@ export function runShelfLongshot(trip, opts) {
     }
     if (res.status !== 202 || !res.body.jobId) {
       modal.close();
-      toast("无法开始导出", { duration: 3200 });
+      var body = res.body || {};
+      var hints = (body.recipe && body.recipe.userHints) || body.userHints || [];
+      var soft =
+        (Array.isArray(hints) && hints[0]) ||
+        body.message ||
+        "无法开始导出";
+      // AC-OR-03b · 书架不弹意图卡；弱提示引导去预览换分享方式
+      if (soft.indexOf("预览") < 0 && soft.indexOf("分享") < 0) {
+        soft = soft + " · 可到预览选择其他分享方式";
+      }
+      toast(soft, { duration: 3600 });
       return null;
     }
 

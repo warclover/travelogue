@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
+from travelogue.domain.trip_meta import STAMP_RENDERED_REVISION
 from travelogue.errors import CodeError
 from travelogue.services.validate import load_json
 from travelogue.util.datetime_ import utc_now_iso
@@ -130,7 +131,6 @@ def meta_rendered_revision(trip: dict) -> int:
 
 # Private mutator signal — also recognized by merge_pipeline_persist so incremental
 # persists can re-watermark without a full meta overwrite.
-STAMP_RENDERED_REVISION = "_stampRenderedRevision"
 _STAMP_RENDERED_REVISION = STAMP_RENDERED_REVISION
 
 

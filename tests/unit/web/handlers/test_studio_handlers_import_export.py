@@ -605,15 +605,22 @@ def test_handle_longshot_rejects_invalid_platform(tmp_path: Path) -> None:
     """AC-LNG2-05c · illegal platform → 400, no silent fallback."""
     from travelogue.web.studio_handlers.export_handlers import handle_longshot
 
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
     handler = MockStudioHandler(
-        tmp_path / "trips",
-        json_body={"tripId": "demo", "platform": "not_a_real_platform"},
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platform": "not_a_real_platform",
+            "allowMissingSource": True,
+        },
     )
     handle_longshot(handler)
     assert handler.response is not None
     status, body = handler.response
     assert status == 400
-    assert body["error"] == "E_LNG2_INVALID_PLATFORM"
+    # Recipe-on → E_OR_UNKNOWN_PLATFORM; Recipe-off → E_LNG2_INVALID_PLATFORM
+    assert body["error"] in ("E_LNG2_INVALID_PLATFORM", "E_OR_UNKNOWN_PLATFORM")
 
 
 def test_read_import_request_json_body(tmp_path: Path) -> None:

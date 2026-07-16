@@ -41,6 +41,7 @@ class _FakePipelineResult:
     layout_eligible_count: int = 0
     keep_near_duplicates: bool = False
     assets_written: int = 0
+    media_warn: str = ""
 
 
 def _drain_queue(queue: mp.Queue, *, timeout: float = 2.0) -> list[dict]:

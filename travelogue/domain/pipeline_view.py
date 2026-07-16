@@ -81,6 +81,11 @@ def set_pipeline_lock(trip: dict, name: str, value: bool) -> None:
     pipeline_dict(trip).setdefault("locks", {})[name] = value
 
 
+def replace_pipeline_locks(trip: dict, locks: dict) -> None:
+    """Replace the whole locks map (e.g. restore after tier-only curate)."""
+    pipeline_dict(trip)["locks"] = dict(locks)
+
+
 def append_pipeline_run(trip: dict, run: dict) -> None:
     pipeline_dict(trip).setdefault("runs", []).append(run)
 

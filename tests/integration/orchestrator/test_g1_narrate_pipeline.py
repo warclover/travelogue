@@ -80,7 +80,12 @@ def test_g1_narrate_then_dual_render(g1_workspace: Path) -> None:
     web, mobile, _present = render_trip_surfaces(trip_path, validate=False)
     web_html = web.read_text(encoding="utf-8")
     mobile_html = mobile.read_text(encoding="utf-8")
-    assert trip["meta"]["hook"] in web_html
+    from travelogue.render.cover_opening import show_hook_on_cover
+
+    hook = trip["meta"]["hook"]
+    # System stub hooks are intentionally omitted from cover HTML.
+    if show_hook_on_cover(hook):
+        assert hook in web_html
     assert 'data-layout="web"' in web_html
     assert 'data-layout="mobile"' in mobile_html
 

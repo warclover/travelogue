@@ -93,7 +93,7 @@ def test_longshot_trust_contracts():
     assert "copy_gate_shown" in text
     assert "maybeCopyGateThenExport" in text
     assert "暂时不改，继续导出" in text
-    assert "正在导出朋友圈配图" in text
+    assert "正在导出朋友圈长图连读" in text or "正在导出朋友圈九宫格" in text
     assert "服务已停止，长图还没有导出" in text
     assert "disconnectExportFeedback" in text
     assert "回到预览" in text

@@ -52,10 +52,24 @@ export function enabledPlatformsFromConfig(cfgStudio) {
   var list = Array.isArray(l2.platforms)
     ? l2.platforms.slice()
     : ["wechat_moments", "xiaohongshu"];
+  var orCfg =
+    (cfgStudio && (cfgStudio.outputRecipe || cfgStudio.output_recipe)) || {};
+  var recipeOn = orCfg.enabled === true;
+  // Output Recipe · moments_grid is Studio-facing when recipe flag is on
+  // (H-B / AC-OR-11b); Phase C platforms stay excluded.
+  if (recipeOn && list.indexOf("moments_grid") < 0) {
+    list = list.concat(["moments_grid"]);
+  }
   var out = ["wechat_chat"];
   list.forEach(function (id) {
     if (id && id !== "wechat_chat" && out.indexOf(id) < 0) {
-      if (id === "wechat_moments" || id === "xiaohongshu") out.push(id);
+      if (
+        id === "wechat_moments" ||
+        id === "xiaohongshu" ||
+        id === "moments_grid"
+      ) {
+        out.push(id);
+      }
     }
   });
   return out;
@@ -494,8 +508,10 @@ export function formatPlatformSuccess(result) {
   var platform = result.platform || "wechat_chat";
   var n = result.pageCount || (result.outputs && result.outputs.length) || 0;
   var title = "✓ 长图已保存";
-  if (platform === "wechat_moments") {
-    title = "✓ " + n + " 张朋友圈配图已就绪";
+  if (platform === "moments_grid") {
+    title = "✓ " + n + " 张九宫格已就绪";
+  } else if (platform === "wechat_moments") {
+    title = "✓ " + n + " 张长图连读已就绪";
   } else if (platform === "xiaohongshu") {
     title = "✓ " + n + " 张 3:4 配图已就绪";
   }

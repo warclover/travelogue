@@ -73,4 +73,5 @@ def test_stub_hook_uses_day_template() -> None:
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     hook = trip["meta"]["hook"]
     assert "京都" in hook
-    assert "天" in hook or "帧" in hook or "翻" in hook
+    # W2 stub templates: 天 / 翻 / 张照片留在这里（不再强制「帧」工程口吻）
+    assert "天" in hook or "翻" in hook or "张照片" in hook

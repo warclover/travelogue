@@ -326,21 +326,6 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
         copy_display = COPY_DISPLAY_PHOTOS
 
-    # M-INS-0c · 真九宫格不需 Playwright；其余保留 client fallback。
-    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    if platform_id != "moments_grid" and (force_client or not playwright_longshot_available()):
-        handler._json_response(
-            200,
-            {
-                "ok": True,
-                "fallback": "client",
-                "captureMethod": "p2",
-                "tripId": trip_id,
-                "message": user_message("E_LNG_CLIENT_FALLBACK"),
-            },
-        )
-        return
-
     slide_count_raw = payload.get("slideCount")
     slide_count: int | None
     if slide_count_raw is None or slide_count_raw == "":
@@ -366,6 +351,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         else str(pad_mode_raw).strip().lower()
     )
 
+    # Validate platform before client fallback (AC-LNG2-05c / AC-OR-R03).
     try:
         profile = resolve_profile(
             platform_id,
@@ -378,6 +364,21 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         handler._json_response(
             400,
             {"ok": False, "error": exc.code, "message": exc.message},
+        )
+        return
+
+    # M-INS-0c · 真九宫格不需 Playwright；其余保留 client fallback。
+    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
+    if profile.id != "moments_grid" and (force_client or not playwright_longshot_available()):
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "fallback": "client",
+                "captureMethod": "p2",
+                "tripId": trip_id,
+                "message": user_message("E_LNG_CLIENT_FALLBACK"),
+            },
         )
         return
 

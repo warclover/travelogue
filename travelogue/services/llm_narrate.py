@@ -417,7 +417,9 @@ def _chat_for_brief(
 
 
 def _merge_narrate_timings(trip: dict, stats: dict[str, int]) -> None:
-    pipe = trip.setdefault("pipeline", {})
+    from travelogue.domain.pipeline_view import pipeline_dict, set_pipeline_timings
+
+    pipe = pipeline_dict(trip)
     timings = dict(pipe.get("timings") or {})
     for key in (
         "narrateConcurrency",
@@ -427,7 +429,7 @@ def _merge_narrate_timings(trip: dict, stats: dict[str, int]) -> None:
     ):
         if key in stats:
             timings[key] = stats[key]
-    pipe["timings"] = timings
+    set_pipeline_timings(trip, timings)
 
 
 def _fetch_chapter_payload(

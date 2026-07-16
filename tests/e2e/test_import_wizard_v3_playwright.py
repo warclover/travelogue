@@ -58,8 +58,24 @@ def wizard_server(tmp_path: Path):
 
 
 def _goto_v2(page, base: str, query: str = "") -> None:
+    # D-PFT-01 · 抑制首启能力卡，避免挡住 #v2-cta（与 home_v2 AC 对齐）。
+    page.add_init_script(
+        """
+        try {
+          localStorage.setItem('travelogue.desktop.capabilityCard.v1', '1');
+        } catch (e) {}
+        """
+    )
     url = base + "/" + (("?" + query) if query else "")
     page.goto(url, wait_until="networkidle")
+    page.evaluate(
+        """
+        () => {
+          const el = document.getElementById('studio-capability-card-root');
+          if (el) el.hidden = true;
+        }
+        """
+    )
 
 
 def _wait_visible(page, el_id: str, timeout: int = 20_000) -> None:
