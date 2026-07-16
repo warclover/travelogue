@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（核心管线 + Studio + e2e） |
-| **文档版本** | **v1.0.0-ASH** |
+| **文档版本** | **v1.0.3-ASH** |
 | **状态** | **In Progress · M0–M3 Done（待结案记录）** |
 | **特性代号** | **ASH**（Assertion Hardening） |
 | **性质** | **工程还债 PRD**：生产不变量安全 + 断言可诊断性 + e2e 稳定性；**零 intentional 用户功能** |
@@ -392,7 +392,8 @@ python -m pytest tests/e2e/test_breath_lenis_scroll_playwright.py tests/e2e/test
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| v1.0.2-ASH | 2026-07-16 | M2：e2e 去固定 sleep（白名单仅 1 处 ASH-SLEEP 竞态）；引入 expect / wait_for_function |
+| v1.0.3-ASH | 2026-07-16 | M3：`_ash_source_contracts` helper；home_v2 主题字段级契约；toolbar import-path 11→7（~36%） |
+| v1.0.2-ASH | 2026-07-16 | M2：e2e 去固定 sleep；引入 expect / wait_for_function |
 | v1.0.1-ASH | 2026-07-16 | M0+M1 落地：TESTING §9、lint_no_runtime_assert、11 处生产 assert→领域 raise、raises(Exception) 收窄 |
 | v1.0.0-ASH | 2026-07-16 | 初稿：全库扫描证据 + M0–M3 计划 + TESTING 约定草案 + 生产 10 项施工单 |
 
