@@ -22,6 +22,11 @@ import yaml
 
 from tests._repo_root import repo_root
 from tests.integration.studio.test_studio_server import _free_port, _post_json, _start_studio_server
+from tests.unit.web._ash_source_contracts import (
+    assert_exported_array_members,
+    assert_exported_const,
+    assert_exported_string_const,
+)
 from tests.unit.web._studio_home_v2_css import read_studio_home_v2_css_bundle
 from travelogue.web.studio_handlers.paths import STUDIO_EVENT_PATH
 from travelogue.web.studio_jobs import reset_job_store
@@ -219,21 +224,37 @@ def test_studio_home_v2_theme_palette_options() -> None:
         ("folio", "纸墨装帧"),
         ("atelier", "木紫文艺"),
     ):
-        assert f'<option value="{theme_id}">{label}</option>' in html
-        assert f':root[data-v2-theme="{theme_id}"]' in css
-        assert '--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0]
-        assert f'{theme_id}:' in store
-        assert f"{theme_id}: 1" in boot
+        assert f'<option value="{theme_id}">{label}</option>' in html, theme_id
+        assert f':root[data-v2-theme="{theme_id}"]' in css, theme_id
+        assert '--v2-primary: #' in css.split(f':root[data-v2-theme="{theme_id}"]', 1)[1].split("}", 1)[0], theme_id
+        assert f"{theme_id}:" in store, theme_id
+        assert f"{theme_id}: 1" in boot, theme_id
 
-    assert 'export const V2_THEME_IDS = ["classic", "dawn", "mist", "folio", "atelier"]' in store
-    assert 'export const V2_THEME_DEFAULT = "mist"' in store
-    assert 'export const V2_THEME_FEATURED = ["mist", "folio", "dawn", "classic"]' in store
-    assert 'export const V2_THEME_MORE = ["atelier", "sky"]' in store
+    # ASH-CONTRACT: theme registry — field-level (not exact array formatting)
+    assert_exported_array_members(
+        store,
+        "V2_THEME_IDS",
+        ("classic", "dawn", "mist", "folio", "atelier"),
+        where="store.js",
+    )
+    assert_exported_string_const(store, "V2_THEME_DEFAULT", "mist", where="store.js")
+    assert_exported_array_members(
+        store,
+        "V2_THEME_FEATURED",
+        ("mist", "folio", "dawn", "classic"),
+        where="store.js",
+    )
+    assert_exported_array_members(
+        store,
+        "V2_THEME_MORE",
+        ("atelier", "sky"),
+        where="store.js",
+    )
+    assert_exported_const(store, "V2_THEME_LABELS", where="store.js")
+    assert "V2_THEME_LABELS" in theme_js, "theme.js should reference V2_THEME_LABELS"
     assert '<optgroup label="精选">' in html
     assert '<optgroup label="更多">' in html
     assert 'DEFAULT_THEME = "mist"' in boot
-    assert "V2_THEME_LABELS" in store
-    assert "V2_THEME_LABELS" in theme_js
     assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="mist"] .v2-shelf' in css

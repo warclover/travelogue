@@ -10,6 +10,10 @@ from pathlib import Path
 import pytest
 
 from tests._repo_root import repo_root
+from tests.unit.web._ash_source_contracts import (
+    assert_contains_all,
+    assert_js_exports,
+)
 from tests.unit.web._preview_toolbar_css import read_preview_toolbar_css_bundle
 from travelogue.web.studio_chrome import inject_studio_chrome
 
@@ -22,123 +26,162 @@ TASK_DOCK_JS = STUDIO / "preview-toolbar-v3-task-dock.js"
 SHEET_JS = STUDIO / "preview-toolbar-v3-sheet.js"
 
 
+def test_preview_toolbar_entry_import_contract() -> None:
+    """ASH-CONTRACT: entry/init-v3 import graph (path literals consolidated)."""
+    js = PREVIEW_JS.read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert TASK_DOCK_JS.is_file()
+    assert SHEET_JS.is_file()
+    # Critical entry + dock/sheet wiring (AC-ASH-M3-02 ≥30% cut vs scattered paths).
+    assert_contains_all(
+        js,
+        (
+            'from "./preview-toolbar/init-v3.js"',
+            'from "./preview-toolbar/bootstrap.js"',
+        ),
+        where="preview-toolbar.js",
+    )
+    assert_contains_all(
+        init_v3,
+        (
+            'from "../preview-toolbar-v3-task-dock.js"',
+            'from "../preview-toolbar-v3-sheet.js"',
+            'from "./shell.js"',
+            'from "./core.js"',
+            'from "./features.js"',
+        ),
+        where="init-v3.js",
+    )
+
+
 def test_v3_modules_exist_and_are_imported() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     assert TASK_DOCK_JS.is_file()
     assert SHEET_JS.is_file()
-    assert 'from "./preview-toolbar/init-v3.js"' in js
-    for token in (
-        'from "../preview-toolbar-v3-task-dock.js"',
-        'from "../preview-toolbar-v3-sheet.js"',
-        'from "./dock.js"',
-        'from "./longshot.js"',
-        "export function initToolbarV3",
-        "mountPreviewTaskDock",
-        "mountPreviewUnifiedSheet",
-        "registerLongshotBridge",
-        "startLongshot",
-    ):
-        assert token in init_v3
+    assert_contains_all(
+        init_v3,
+        (
+            "export function initToolbarV3",
+            "mountPreviewTaskDock",
+            "mountPreviewUnifiedSheet",
+            "registerLongshotBridge",
+            "startLongshot",
+        ),
+        where="init-v3.js",
+    )
     assert "initToolbarV3" in js
     assert "registerBootstrapBridge" in js
 
 
 def test_m5_longshot_module_exports() -> None:
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
-    for token in (
-        "export function startLongshot",
-        "export function pollJob",
-        "export function registerLongshotBridge",
-        "export function cancelPreviewLongshotExport",
-    ):
-        assert token in longshot, f"missing longshot export: {token}"
+    assert_js_exports(
+        longshot,
+        (
+            "startLongshot",
+            "pollJob",
+            "registerLongshotBridge",
+            "cancelPreviewLongshotExport",
+        ),
+        module="longshot.js",
+    )
     assert "export function (job)" not in longshot
 
 
 def test_m5_shell_module_exports() -> None:
-    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
-    assert 'from "./shell.js"' in init_v3
-    for token in (
-        "export function showToolbarToast",
-        "export function syncToolbarHeight",
-        "export function tripIdFromPath",
-        "export function reloadPreviewAfterLayout",
-    ):
-        assert token in shell, f"missing shell export: {token}"
+    assert_js_exports(
+        shell,
+        (
+            "showToolbarToast",
+            "syncToolbarHeight",
+            "tripIdFromPath",
+            "reloadPreviewAfterLayout",
+        ),
+        module="shell.js",
+    )
 
 
 def test_m5_drawers_module_exports() -> None:
-    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
-    assert 'from "./drawers.js"' in init_v3
-    for token in (
-        "export function initPreviewDrawers",
-        "export function trapDrawerFocus",
-        "export function registerDrawersBridge",
-        "preview-drawer__copy-intent",
-    ):
-        assert token in drawers, f"missing drawers export: {token}"
+    assert_js_exports(
+        drawers,
+        (
+            "initPreviewDrawers",
+            "trapDrawerFocus",
+            "registerDrawersBridge",
+        ),
+        module="drawers.js",
+    )
+    assert "preview-drawer__copy-intent" in drawers
 
 
 def test_m5_core_module_exports() -> None:
-    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
     jsconfig = STUDIO / "preview-toolbar" / "jsconfig.json"
     assert jsconfig.is_file()
-    assert 'from "./core.js"' in init_v3
-    for token in (
-        "export function setLayoutPending",
-        "export function applyLayoutRerender",
-        "export function getLayoutPending",
-        "export function refreshTaskDockState",
-    ):
-        assert token in core, f"missing core export: {token}"
+    assert_js_exports(
+        core,
+        (
+            "setLayoutPending",
+            "applyLayoutRerender",
+            "getLayoutPending",
+            "refreshTaskDockState",
+        ),
+        module="core.js",
+    )
 
 
 def test_m5_bootstrap_module_exports() -> None:
     js = PREVIEW_JS.read_text(encoding="utf-8")
     bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
-    assert 'from "./preview-toolbar/bootstrap.js"' in js
     assert "registerBootstrapBridge" in js
     assert "bootstrapPreviewToolbarWhenReady" in js
-    for token in (
-        "export function initPreviewToolbar",
-        "export function bootstrapPreviewToolbarWhenReady",
-        "preview-toolbar--v4",
-        "preview-toolbar__dock",
-    ):
-        assert token in bootstrap, f"missing bootstrap export: {token}"
+    assert_js_exports(
+        bootstrap,
+        (
+            "initPreviewToolbar",
+            "bootstrapPreviewToolbarWhenReady",
+        ),
+        module="bootstrap.js",
+    )
+    assert_contains_all(
+        bootstrap,
+        ("preview-toolbar--v4", "preview-toolbar__dock"),
+        where="bootstrap.js",
+    )
 
 
 def test_m5_features_module_exports() -> None:
-    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
-    assert 'from "./features.js"' in init_v3
-    for token in (
-        "export function mountTemplateControls",
-        "export function initFeaturedStars",
-        "export function applyReaderSurfaceMode",
-        "export function mountCoverStyleControls",
-    ):
-        assert token in features, f"missing features export: {token}"
+    assert_js_exports(
+        features,
+        (
+            "mountTemplateControls",
+            "initFeaturedStars",
+            "applyReaderSurfaceMode",
+            "mountCoverStyleControls",
+        ),
+        module="features.js",
+    )
 
 
 def test_m5_init_v3_module_exports() -> None:
-    js = PREVIEW_JS.read_text(encoding="utf-8")
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
-    assert 'from "./preview-toolbar/init-v3.js"' in js
-    for token in (
-        "export function initToolbarV3",
-        "mountPreviewTaskDock",
-        "mountPreviewUnifiedSheet",
-        "insertScreenplayControl(actions, menuWrap",
-        "registerLongshotBridge",
-        "registerDrawersBridge",
-        "registerInlineEditBridge",
-    ):
-        assert token in init_v3, f"missing init-v3 export/wiring: {token}"
+    assert_js_exports(init_v3, ("initToolbarV3",), module="init-v3.js")
+    assert_contains_all(
+        init_v3,
+        (
+            "mountPreviewTaskDock",
+            "mountPreviewUnifiedSheet",
+            "insertScreenplayControl(actions, menuWrap",
+            "registerLongshotBridge",
+            "registerDrawersBridge",
+            "registerInlineEditBridge",
+        ),
+        where="init-v3.js",
+    )
 
 
 def test_m5_css_split_modules() -> None:
