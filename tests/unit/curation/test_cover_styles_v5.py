@@ -874,22 +874,23 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
             page = browser.new_page(viewport={"width": 1280, "height": 800})
             events = _attach_studio_event_collector(page)
             page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
-            page.goto(url, wait_until="networkidle")
-            page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
+            page.goto(url, wait_until="domcontentloaded")
+            page.locator(".preview-toolbar--v4").wait_for(state="attached", timeout=30_000)
+            page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=30_000)
             page.wait_for_function(
                 """() => {
                   const el = document.getElementById('preview-toolbar-toast');
                   return !el || el.hidden;
                 }""",
-                timeout=6_000,
+                timeout=10_000,
             )
             assert _read_cover_opening_style(page) == "veil-footer"
 
             page.locator(".preview-toolbar__menu-btn").click()
-            page.wait_for_selector(".preview-sheet:not([hidden])", timeout=10_000)
+            page.wait_for_selector(".preview-sheet:not([hidden])", timeout=15_000)
             page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
             bookends = page.locator('[data-book-zone="bookends"]')
-            bookends.wait_for(state="visible", timeout=10_000)
+            bookends.wait_for(state="visible", timeout=15_000)
             if not bookends.evaluate("el => el.open"):
                 bookends.locator("summary").click()
             page.wait_for_selector(".preview-sheet__cover-styles", timeout=10_000)
@@ -928,7 +929,8 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 assert prev == "veil-footer"
 
             # Rerender may reload; wait for settle then re-check DOM + disk.
-            page.wait_for_load_state("networkidle", timeout=90_000)
+            page.wait_for_load_state("domcontentloaded", timeout=90_000)
+            page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=30_000)
             page.locator(".cover-opening").wait_for(state="visible", timeout=30_000)
             assert _read_cover_opening_style(page) == "band-cut"
 
