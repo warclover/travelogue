@@ -14,6 +14,7 @@
 - [ ] 代码合并至主分支（或约定开发分支）  
 - [ ] `python scripts/validate_trip.py` 对相关 **fixtures** 通过（`--level all`）  
 - [ ] 新增逻辑有 **pytest** 或脚本测试（见 `TESTING.md`）  
+- [ ] 新增/改动代码遵守 [TESTING.md §9 断言约定](./TESTING.md)（生产禁止裸 `assert`；e2e 优先 `expect`）  
 - [ ] 若改 `trip.schema.json` / `manifest.json`：同步 **fixtures + 文档**  
 - [ ] `CLI-SPEC.md` 中对应命令已实现或标注 `NOT IMPLEMENTED`  
 - [ ] 无 API Key、精确 GPS 写入日志或提交文件  

@@ -75,8 +75,11 @@ pytest tests/ -q -m "e2e and playwright_serial"
 
 ```bash
 python -m ruff check travelogue tests scripts
+python scripts/lint_no_runtime_assert.py   # ASH：travelogue/ 禁止 runtime assert
 pre-commit install   # 可选：提交前自动 ruff --fix
 ```
+
+断言约定见 [TESTING.md §9](./TESTING.md) · [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md)。
 
 ## CI 对应
 

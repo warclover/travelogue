@@ -44,6 +44,9 @@ jobs:
       - name: Trip save lint
         run: python scripts/lint_trip_save_calls.py
 
+      - name: No runtime assert in travelogue (ASH)
+        run: python scripts/lint_no_runtime_assert.py
+
       - name: Trip pipeline mutation lint (M-C4)
         run: python scripts/lint_trip_pipeline_mutations.py
 

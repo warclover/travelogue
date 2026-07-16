@@ -12,7 +12,7 @@ python scripts/gen_scripts_registry.py
 
 | Status | Count | Meaning |
 |--------|------:|---------|
-| CI | 28 | Referenced in `.github/workflows` |
+| CI | 29 | Referenced in `.github/workflows` |
 | docs | 123 | Referenced in `docs/` only |
 | active | 30 | No CI/docs scan hit; keep unless archived |
 | internal | 3 | Leading `_` helper / one-off audit |
@@ -83,6 +83,7 @@ python scripts/gen_scripts_registry.py
 | `lcc_cancel_ui_smoke.py` | active | — | — | — |
 | `lint_layout_contract_surface.py` | CI | `.github/workflows/ci.yml` | `docs/ARCH-OPT-P2-BACKLOG.md`, `docs/TECH-ARCHITECTURE.md` | — |
 | `lint_lse_cross_import.py` | CI | `.github/workflows/arch-opt-weekly.yml`, `.github/workflows/ci.yml` | `docs/ARCH-OPT-REVIEW-2026-07-09.md`, `docs/ARCH-OPT-STATUS.md`, `docs/PRD-ARCH-OPT-WS1-MERGE-FIX.md`, `+1 more` | `scripts/lse_cross_import_stats.py` |
+| `lint_no_runtime_assert.py` | CI | `.github/workflows/ci.yml` | `docs/PRD-ASSERTION-HARDENING-V1.md`, `docs/QUALITY-GATE.md`, `docs/TESTING.md` | — |
 | `lint_pt_default_flags.py` | CI | `.github/workflows/ci.yml`, `.github/workflows/nightly-windows-pt.yml` | `docs/PRD-PIPELINE-THROUGHPUT.md`, `docs/TECH-ARCHITECTURE.md` | `scripts/lint_pt_default_flags.py` |
 | `lint_test_layout.py` | CI | `.github/workflows/ci.yml` | `docs/PRD-ARCH-OPT-WS1-MERGE-FIX.md` | — |
 | `lint_trip_html_title.py` | CI | `.github/workflows/ci.yml` | — | — |

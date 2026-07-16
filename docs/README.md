@@ -479,6 +479,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) | 架构优化还债 PRD v1.1 |
 | [PRD-ARCH-OPT-WS1-MERGE-FIX.md](./PRD-ARCH-OPT-WS1-MERGE-FIX.md) | WS1 合并闸门修复 PRD（feedback / LSE baseline / CI） |
 | [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md) | **稳定期质量硬化与体验优化 v1.1**（**Done** · PR #12 · [结案](./acceptance-records/stable-qh-closeout-2026-07-15.md)） |
+| [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md) | **断言硬化 ASH V1**（Draft · 生产零 assert · e2e expect · TESTING 约定 · M0–M3） |
 | [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) | **长图 Job 真协作取消 V1**（**Done** · [狗粮](./acceptance-records/lcc-cancel-dogfood-2026-07-15.md)） |
 | [PRD-ARCH-ALGO-DEEPENING-V1.md](./PRD-ARCH-ALGO-DEEPENING-V1.md) | **架构收敛与算法加深 V1.1**（执行分支 `arch/algo-deepening-v1` · [评审纪要](./acceptance-records/aad-prd-review-2026-07-15.md)） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
@@ -517,6 +518,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-16 | 新增 [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md)（断言硬化 · 生产零 runtime assert · e2e Playwright expect · M0–M3） |
 | 2026-07-16 | 开工 [PRD-ARCH-ALGO-DEEPENING-V1](./PRD-ARCH-ALGO-DEEPENING-V1.md) 分支 `arch/algo-deepening-v1`（M1 基线）；评审纪要 [aad-prd-review-2026-07-15.md](./acceptance-records/aad-prd-review-2026-07-15.md) |
 | 2026-07-16 | [PRD-MEDIA-REFERENCE-STORAGE-V1](./PRD-MEDIA-REFERENCE-STORAGE-V1.md) W0–W2 落地（引用 ingest · 清理 · remount · 导出阻断）；待狗粮出口 |
 | 2026-07-15 | LCC V1 **Done**：长图协作取消合入 `master`；狗粮 [lcc-cancel-dogfood-2026-07-15.md](./acceptance-records/lcc-cancel-dogfood-2026-07-15.md) |

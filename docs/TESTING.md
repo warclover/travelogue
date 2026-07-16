@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v0.2 |
 | **原则** | 关键路径必测；不追求高覆盖率 |
 | **关联** | `VALIDATION-RULES.md`、`DEFINITION-OF-DONE.md` |
 | **更新日期** | 2026-05-22 |
@@ -158,8 +158,38 @@ MVP **不强制** Percy；采用：
 
 ---
 
-## 9. 版本历史
+## 9. 断言约定（Assertion Style · ASH）
+
+> 完整计划见 [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md)。  
+> 原则：**渐进还债**——新代码遵守约定；旧债触达时顺手修，不要求全库回填。
+
+### 9.1 生产代码（`travelogue/`）
+
+- **禁止**用 Python `assert` 语句做运行时校验（`-O` / `PYTHONOPTIMIZE` 会剥离）。
+- 不变量用显式 `raise XxxError(...)`，或既有命名 `assert_*` **领域守卫**（守卫内部亦不得写裸 `assert`）。
+- CI：`python scripts/lint_no_runtime_assert.py`（AST 扫描 `ast.Assert`）。
+
+### 9.2 单元 / 集成测试
+
+- 优先断言**可观察行为**、返回值、错误码；避免大段 HTML/JS/CSS 源码字面量。
+- 确需锁字面量时标注 `# ASH-CONTRACT`，并保持短小。
+- `pytest.raises` 使用**具体异常类型**；业务错误建议 `match=` 错误码或关键子串。
+- 浮点 / ML 分数使用 `pytest.approx`。
+- 循环内 assert 须带循环变量上下文（id / index）。
+- 新写断言**鼓励**带失败消息；不要求回填全库。
+
+### 9.3 Playwright e2e
+
+- 优先 `from playwright.sync_api import expect`（自动重试）。
+- **禁止**无注释的 `page.wait_for_timeout`；例外须写 `# ASH-SLEEP: <理由>`。
+- 定位优先级：role/label → `data-testid` → `#id` → 少量可见文案。
+- 避免单测 assertion roulette：一个场景一个主断言簇。
+
+---
+
+## 10. 版本历史
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2 | 2026-07-16 | 增 §9 断言约定（ASH M0 · [PRD-ASSERTION-HARDENING-V1](./PRD-ASSERTION-HARDENING-V1.md)） |
 | v0.1 | 2026-05-19 | 初稿 |
