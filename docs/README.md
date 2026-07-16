@@ -511,6 +511,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-16 | [PRD-MEDIA-REFERENCE-STORAGE-V1](./PRD-MEDIA-REFERENCE-STORAGE-V1.md) W0–W2 落地（引用 ingest · 清理 · remount · 导出阻断）；待狗粮出口 |
 | 2026-07-15 | LCC V1 **Done**：长图协作取消合入 `master`；狗粮 [lcc-cancel-dogfood-2026-07-15.md](./acceptance-records/lcc-cancel-dogfood-2026-07-15.md) |
 | 2026-07-15 | Stable-QH **结案**：[closeout](./acceptance-records/stable-qh-closeout-2026-07-15.md)；补充试用 [supplemental](./acceptance-records/stable-qh-supplemental-trial-2026-07-15.md)；下一波 [长图协作取消](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) |
 | 2026-07-15 | Stable-QH M1–M5 落地验收：[acceptance-records/stable-qh-2026-07-15.md](./acceptance-records/stable-qh-2026-07-15.md)；QUALITY-GATE 增稳定期 AC 命令 |
