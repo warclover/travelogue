@@ -37,9 +37,13 @@ Phase 22 需要 **成文的存储边界**，避免「file-as-DB」退化为「JS
 - `version`, `tripId`, `templateId`, `exportLayout`, `export`, `meta`（含 **`revision`**）
 - `intent`, `userNotes`, `privacy`, `pipeline`（含 **`stageFingerprints` 摘要**）
 - `assets[]`（元数据：id、路径引用、quality、dimensions；**非** embedding）
+- `assets[].sourceRef`（本机原图引用：`kind` / `path` / `albumRoot` / `relativePath`；**禁止**写入分享 zip / 渲染产物）
+- `media`（`storageMode`: `copied` \| `referenced` \| `mixed`；`albumRoots[]` 本机相册根）
 - `chapters[]`, `coverAssetId`, `coverCandidates`
 - `curation` **摘要**：`orientationSummary`, `clustering`（segments/clusters 摘要）, `layoutDensityMeta`, **`layoutDecisionLogDigest` + `layoutDecisionLogCount`**
 - **禁止** `curation.layoutDecisionLog[]` 全量数组（见 §7 清退）
+
+> **增量（2026-07-16）**：见 [PRD-MEDIA-REFERENCE-STORAGE-V1](../PRD-MEDIA-REFERENCE-STORAGE-V1.md) · 引用模式 Document 字段。
 
 #### 2.2 禁止（Blob / Derived / Telemetry）
 

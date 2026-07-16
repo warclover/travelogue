@@ -984,26 +984,15 @@ def _resolve_asset_path(
             if candidate.is_file() and _path_within_trip(candidate, trip_resolved):
                 return candidate, True
 
-    # NR profile / prefer_web=false: prefer decoded source JPEG over WebP derivatives
-    # so CLIP/cull subjectClass is not polluted by parallel-ingest WebP byte drift (D-PT-07).
+    # NR profile / prefer_web=false: prefer original pixels (D-MRS-09 / D-PT-07).
     if not prefer_web_derivative:
-        for key in ("sourceFile", "path", "file", "src", "displayFile"):
-            rel_src = asset.get(key)
-            if not isinstance(rel_src, str) or not rel_src.strip():
-                continue
-            # Skip derivative-looking display paths when a dedicated source exists.
-            if key == "displayFile" and asset.get("sourceFile"):
-                continue
-            p = Path(rel_src)
-            if p.is_file():
-                return p, False
-            candidate = (trip_dir / rel_src.lstrip("/\\")).resolve()
-            if candidate.is_file() and _path_within_trip(candidate, trip_resolved):
-                return candidate, False
-        if aid:
-            source_jpg = trip_dir / "source" / f"{aid}.jpg"
-            if source_jpg.is_file():
-                return source_jpg, False
+        from travelogue.media.source_resolve import resolve_source_path
+
+        resolved_src = resolve_source_path(asset, trip_dir)
+        if resolved_src is not None and resolved_src.is_file():
+            return resolved_src, False
+        # Do not fall through to WebP when prefer_web=false (avoids silent quality drop).
+        return None, False
 
     rel = asset.get("path") or asset.get("file") or asset.get("src") or asset.get("displayFile")
     if isinstance(rel, str) and rel.strip():

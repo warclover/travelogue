@@ -6,7 +6,7 @@
 | **模板** | `visual-journal` |
 | **机器校验** | [schemas/trip.schema.json](../schemas/trip.schema.json) |
 | **关联** | `TEMPLATE-visual-journal.md`、`AGENT-ARCHITECTURE.md` §10 |
-| **更新日期** | 2026-05-28 |
+| **更新日期** | 2026-07-16 |
 
 ---
 
@@ -53,6 +53,7 @@ trips/{tripId}/
 | `epilogue` | string | ❌ | ≤80 字 |
 | `privacy` | object | ✅ | 隐私与导出确认 |
 | `pipeline` | object | ✅ | 状态机与锁 |
+| `media` | object | ❌ | `storageMode` / `albumRoots[]`（PRD-MRS-V1 · 本机存储） |
 | `userNotes` | string | ❌ | 全局备注，供 Agent 2 |
 | `slug` | string \| null | ❌ | P2 托管用 |
 | `publishedAt` | string \| null | ❌ | ISO8601 |
@@ -203,7 +204,8 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 |------|------|------|
 | `id` | string | 如 `asset-001` |
 | `type` | `image` \| `video` \| `audio` | 语音可独立或挂 image/video |
-| `sourceFile` | string | 相对 `trips/{id}/` |
+| `sourceFile` | string \| null | 物化源相对 `trips/{id}/`（引用模式可省略） |
+| `sourceRef` | object? | `{ kind:"filesystem", path, albumRoot?, relativePath? }` · 本机原图引用（PRD-MRS-V1；禁止进分享包） |
 | `ingestBatchId` | string? | 分批上传 |
 | `dedupeGroupId` | string? | 连拍分组 |
 | `locked` | boolean? | `true` 时 Agent 不可删 |

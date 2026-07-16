@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-07-12 |
+| **更新日期** | 2026-07-16 |
 
 ---
 
@@ -300,6 +300,9 @@
 | [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | P22 实施清单 |
 | [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | P22 验收 |
 | [adr/008-trip-storage-boundaries.md](./adr/008-trip-storage-boundaries.md) | trip.json 写入边界 · **Accepted** |
+| [PRD-MEDIA-REFERENCE-STORAGE-V1.md](./PRD-MEDIA-REFERENCE-STORAGE-V1.md) | **媒体存储省盘与引用模式 V1** **v0.2.0**（W0–W2 已落地 · 待狗粮出口） |
+| [IMPLEMENTATION-MEDIA-REFERENCE-STORAGE-V1.md](./IMPLEMENTATION-MEDIA-REFERENCE-STORAGE-V1.md) | MRS V1 实施清单 · 分支 `feature/media-reference-storage-v1` |
+| [acceptance-records/media-reference-storage-v1-review-2026-07-15.md](./acceptance-records/media-reference-storage-v1-review-2026-07-15.md) | MRS V1 跨职能评审纪要 · 架构/开发/产品/算法/测试 · Conditional Go |
 | [reports/integration-sprint-checklist-2026-06-13.md](./reports/integration-sprint-checklist-2026-06-13.md) | **Integration Sprint** · 收口/验证/还债 |
 
 ---

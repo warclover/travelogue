@@ -59,6 +59,8 @@ class IngestConfig:
     sharpness_version: str = "v2"  # v1 | v2
     exif_camera: bool = True
     portrait_analyze: bool = True
+    # PRD-MEDIA-REFERENCE-STORAGE-V1 · D-MRS-01 (default copy = As-Is)
+    copy_source_files: bool = True
 
 
 def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
@@ -104,4 +106,7 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         ).lower(),
         exif_camera=bool(raw.get("exif_camera", raw.get("exifCamera", True))),
         portrait_analyze=bool(raw.get("portrait_analyze", raw.get("portraitAnalyze", True))),
+        copy_source_files=bool(
+            raw.get("copy_source_files", raw.get("copySourceFiles", True))
+        ),
     )

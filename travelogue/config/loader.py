@@ -102,6 +102,7 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
     allowed_clustering = {"enabled", "segmentCurateMode", "sceneClusterMode"}
     allowed_vision = {"enabled"}
     allowed_layout_scoring = {"enabled"}
+    allowed_ingest = {"copySourceFiles", "copy_source_files"}
     allowed_studio = {
         "g1ConfirmStructure",
         "g1_confirm_structure",
@@ -118,6 +119,7 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
     vis_patch = patch.get("vision") if isinstance(patch.get("vision"), dict) else {}
     layout_patch = patch.get("layout") if isinstance(patch.get("layout"), dict) else {}
     studio_patch = patch.get("studio") if isinstance(patch.get("studio"), dict) else {}
+    ingest_patch = patch.get("ingest") if isinstance(patch.get("ingest"), dict) else {}
     if clu_patch:
         target = data.setdefault("clustering", {})
         if not isinstance(target, dict):
@@ -202,6 +204,16 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
                 }
                 norm_key = mapping.get(key, key)
                 target[norm_key] = val
+    if ingest_patch:
+        target = data.setdefault("ingest", {})
+        if not isinstance(target, dict):
+            target = {}
+            data["ingest"] = target
+        for key, val in ingest_patch.items():
+            if key not in allowed_ingest:
+                continue
+            norm_key = "copy_source_files" if key in ("copySourceFiles", "copy_source_files") else key
+            target[norm_key] = bool(val)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)

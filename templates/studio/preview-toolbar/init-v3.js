@@ -73,6 +73,9 @@ import {
 } from "./drawers.js";
 import {
   getLayoutPending,
+  getSourceMissing,
+  setSourceMissing,
+  dismissSourceMissingDock,
   setLayoutPendingMessage,
   clearSheetEditDirty,
   dismissPendingDock,
@@ -153,6 +156,9 @@ export function initToolbarV3(root, tripId) {
     syncToolbarHeight: syncToolbarHeight,
     refreshTaskDockState: refreshTaskDockState,
     getLayoutPending: getLayoutPending,
+    getSourceMissing: getSourceMissing,
+    setSourceMissing: setSourceMissing,
+    dismissSourceMissingDock: dismissSourceMissingDock,
     tripIdFromPath: tripIdFromPath,
     toolbarBody: toolbarBody,
     setLayoutPending: setLayoutPending,

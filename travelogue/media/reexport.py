@@ -34,11 +34,14 @@ def reexport_asset(
     """Regenerate displayFile, srcset, cropMobile/cropWeb from source JPEG."""
     resolved = app_cfg or get_config()
     cfg = cfg or resolved.ingest
+    from travelogue.media.source_resolve import MediaSourceMissingError, resolve_source_path
+
     assets_dir = trip_dir / "assets"
-    source_rel = asset.get("sourceFile", "")
-    source_path = trip_dir / source_rel
-    if not source_path.is_file():
-        raise IngestError("E_REEXPORT_SOURCE", f"missing source {source_rel}")
+    try:
+        source_path = resolve_source_path(asset, trip_dir, raise_on_missing=True)
+    except MediaSourceMissingError as exc:
+        raise IngestError("E_MEDIA_SOURCE_MISSING", str(exc)) from exc
+    assert source_path is not None
 
     loaded = _load_photo(source_path)
     img = loaded.image

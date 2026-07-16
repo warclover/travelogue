@@ -138,6 +138,9 @@ class IngestAssetBuildContext:
     aesthetic: AestheticConfig | None = None
     aesthetic_cache: dict[str, dict] | None = None
     portrait_cfg: Any | None = None
+    album_root: Path | None = None
+    copy_source_files: bool = True
+    force_materialize: bool = False
 
 
 @dataclass
@@ -377,9 +380,13 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         focal = subj.focal
         ctx.ingest_stats["faces_detected"] = ctx.ingest_stats.get("faces_detected", 0) + 1
 
+    from travelogue.media.source_resolve import build_source_ref
+
+    copy_source = bool(ctx.copy_source_files) or bool(ctx.force_materialize)
     dest_source = ctx.source_dir / f"{photo.asset_id}.jpg"
-    if photo.photo.resolve() != dest_source.resolve() or not dest_source.is_file():
-        save_jpeg_without_exif(photo.img, dest_source)
+    if copy_source:
+        if photo.photo.resolve() != dest_source.resolve() or not dest_source.is_file():
+            save_jpeg_without_exif(photo.img, dest_source)
 
     t_webp = time.monotonic()
     display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
@@ -414,7 +421,6 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
     entry: dict = {
         "id": photo.asset_id,
         "type": "image",
-        "sourceFile": f"source/{dest_source.name}",
         "displayFile": display_rel,
         "srcset": srcset_rel,
         "nativeWidth": photo.img.width,
@@ -435,6 +441,13 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         "dominantTone": tone_hex,
         "layoutEligible": True,
     }
+    if copy_source:
+        entry["sourceFile"] = f"source/{dest_source.name}"
+    # D-MRS-14: always persist sourceRef when we know the user path
+    entry["sourceRef"] = build_source_ref(
+        album_root=ctx.album_root,
+        source_path=photo.photo,
+    )
     if photo.content_sig:
         entry["contentSig"] = photo.content_sig
     if subj.face_count > 0:
@@ -685,21 +698,23 @@ def _scan_photos_for_ingest(
             checkpoint_keys = set(checkpoint.get("processedRelPaths") or [])
 
     if incremental:
+        from travelogue.media.source_resolve import resolve_source_path
+
         pipe = trip.get("pipeline") or {}
         pending = set(pipe.get("pendingAssets") or [])
         if pending:
-            source_dir = trip_dir / "source"
             assets_by_id = {a["id"]: a for a in trip.get("assets") or []}
             photo_tiers = []
             for aid in sorted(pending):
                 a = assets_by_id.get(aid)
                 if not a:
                     continue
-                src_name = Path(a.get("sourceFile", "")).name
-                p = source_dir / src_name
-                if p.is_file():
+                p = resolve_source_path(a, trip_dir)
+                if p is not None and p.is_file():
                     tier = a.get("userTier") or "material"
                     photo_tiers.append((p, tier))
+                else:
+                    scan_stats.setdefault("incremental_source_missing", []).append(aid)
 
     return _IngestScanResult(
         photo_tiers=photo_tiers,
@@ -1221,6 +1236,20 @@ def ingest_into_trip(
 
         aesthetic_cache = load_signal_cache(trip_dir)
 
+    force_materialize = False
+    if from_dir is not None:
+        try:
+            from travelogue.desktop.demo_album import is_demo_album_path
+
+            if is_demo_album_path(str(from_dir)):
+                force_materialize = True
+        except Exception:
+            pass
+        # Browser uploads land under trips/_uploads — no stable user album path
+        parts = {p.lower() for p in from_dir.resolve().parts}
+        if "_uploads" in parts:
+            force_materialize = True
+
     build_ctx = IngestAssetBuildContext(
         cfg=cfg,
         assets_dir=assets_dir,
@@ -1236,6 +1265,9 @@ def ingest_into_trip(
         aesthetic=aesthetic_cfg if aesthetic_cfg.enabled else None,
         aesthetic_cache=aesthetic_cache if aesthetic_cfg.enabled else None,
         portrait_cfg=resolved_app.cull.portrait,
+        album_root=album_root,
+        copy_source_files=bool(getattr(cfg, "copy_source_files", True)),
+        force_materialize=force_materialize,
     )
 
     total_photos = len(photo_tiers)
@@ -1357,6 +1389,10 @@ def ingest_into_trip(
 
     if from_dir and resume_ingest:
         icp.clear_ingest_checkpoint(trip_dir)
+
+    from travelogue.media.source_resolve import ensure_media_block
+
+    ensure_media_block(trip, trip_dir, album_root=album_root if from_dir else None)
 
     return IngestResult(
         added=loop_state.added,

@@ -18,6 +18,7 @@ from travelogue.web.studio_handlers import (
     layout_strategy_handlers,
     llm_settings_handlers,
     static_handlers,
+    storage_handlers,
     telemetry_handlers,
     template_admin_handlers,
     template_handlers,
@@ -29,6 +30,7 @@ from travelogue.web.studio_handlers.common import (
     match_aesthetic_preference,
     match_bento_preview,
     match_entry,
+    match_source_status,
     match_trip_asset_media,
     match_trip_bookends,
     match_trip_bookends_repick_closing,
@@ -57,6 +59,9 @@ from travelogue.web.studio_handlers.paths import (
     CANCEL_PATH,
     CHAPTER_LAYOUT_PATH,
     CONFIG_PATH,
+    STORAGE_CLEANUP_PATH,
+    STORAGE_REMOUNT_PATH,
+    STORAGE_USAGE_PATH,
     EXPORT_PATH,
     HOME_CLASSIC_PATH,
     HOME_V2_PATH,
@@ -130,6 +135,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     # GET — authenticated APIs / admin UIs
     RouteSpec("GET", STATUS_PATH, "job_handlers.handle_status", auth=True),
     RouteSpec("GET", CONFIG_PATH, "config_handlers.handle_config", auth=True),
+    RouteSpec("GET", STORAGE_USAGE_PATH, "storage_handlers.handle_storage_usage", auth=True),
     RouteSpec("GET", LLM_STATUS_PATH, "llm_settings_handlers.handle_llm_status", auth=True),
     RouteSpec("GET", TEMPLATES_ADMIN_UI_PATH, "static_handlers.handle_templates_admin_page", auth=True),
     RouteSpec("GET", LSE_FLAGS_UI_PATH, "static_handlers.handle_lse_flags_admin_page", auth=True),
@@ -190,6 +196,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     RouteSpec("GET", "/__travelogue/trips/{tripId}/entry", "trip_handlers.handle_entry", "capture", auth=True),
     RouteSpec(
         "GET",
+        "/__travelogue/trips/{tripId}/source-status",
+        "storage_handlers.handle_source_status",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "GET",
         "/__travelogue/trips/{tripId}/cohort",
         "trip_handlers.handle_get_cohort",
         "capture",
@@ -225,6 +238,8 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     ),
     # PATCH
     RouteSpec("PATCH", CONFIG_PATH, "config_handlers.handle_config", auth=True),
+    RouteSpec("POST", STORAGE_CLEANUP_PATH, "storage_handlers.handle_storage_cleanup", auth=True),
+    RouteSpec("POST", STORAGE_REMOUNT_PATH, "storage_handlers.handle_storage_remount", auth=True),
     RouteSpec("POST", LLM_SETTINGS_PATH, "llm_settings_handlers.handle_llm_settings", auth=True),
     RouteSpec("DELETE", LLM_SETTINGS_PATH, "llm_settings_handlers.handle_llm_settings", auth=True),
     RouteSpec("POST", LLM_PING_PATH, "llm_settings_handlers.handle_llm_ping", auth=True),
@@ -433,6 +448,7 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/layout-strategies/{strategyId}": match_layout_strategy_detail,
     "/__travelogue/templates/admin/{templateId}/version": match_template_admin_version,
     "/__travelogue/trips/{tripId}/entry": match_entry,
+    "/__travelogue/trips/{tripId}/source-status": match_source_status,
     "/__travelogue/trips/{tripId}/cohort": match_trip_cohort,
     "/__travelogue/trips/{tripId}/aesthetic": match_aesthetic,
     "/__travelogue/trips/{tripId}/bento-preview": match_bento_preview,
@@ -488,6 +504,7 @@ def _resolve_handler(handler_id: str) -> Callable[..., None]:
         "trip_handlers": trip_handlers,
         "import_handlers": import_handlers,
         "export_handlers": export_handlers,
+        "storage_handlers": storage_handlers,
         "telemetry_handlers": telemetry_handlers,
     }[module_name]
     return getattr(module, fn_name)

@@ -78,9 +78,38 @@
     "updatedAt": { "type": "string", "format": "date-time" },
     "curation": { "$ref": "#/$defs/tripCuration" },
     "export": { "$ref": "#/$defs/exportOptions" },
-    "intent": { "$ref": "#/$defs/intent" }
+    "intent": { "$ref": "#/$defs/intent" },
+    "media": { "$ref": "#/$defs/tripMedia" }
   },
   "$defs": {
+    "tripMedia": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "PRD-MEDIA-REFERENCE-STORAGE-V1 · local media storage mode",
+      "properties": {
+        "storageMode": {
+          "type": "string",
+          "enum": ["copied", "referenced", "mixed"]
+        },
+        "albumRoots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Local album roots used for import/remount (never in share zip)"
+        }
+      }
+    },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path"],
+      "description": "Filesystem reference to user original (Document; local only)",
+      "properties": {
+        "kind": { "const": "filesystem" },
+        "path": { "type": "string", "minLength": 1 },
+        "albumRoot": { "type": "string" },
+        "relativePath": { "type": "string" }
+      }
+    },
     "templateSelection": {
       "type": "object",
       "additionalProperties": false,
@@ -1217,11 +1246,13 @@
     "asset": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "type", "sourceFile"],
+      "required": ["id", "type"],
+      "description": "sourceFile optional when sourceRef present (reference storage mode)",
       "properties": {
         "id": { "type": "string" },
         "type": { "type": "string", "enum": ["image", "video", "audio"] },
-        "sourceFile": { "type": "string" },
+        "sourceFile": { "type": ["string", "null"] },
+        "sourceRef": { "$ref": "#/$defs/sourceRef" },
         "displayFile": { "type": "string" },
         "posterFile": { "type": "string" },
         "srcset": {

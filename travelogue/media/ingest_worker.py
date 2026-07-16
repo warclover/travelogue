@@ -30,9 +30,17 @@ class WorkerIngestConfig:
     exif_camera: bool = True
     portrait_analyze: bool = True
     face_min_size_for_portrait: int = 48
+    copy_source_files: bool = True
 
     @classmethod
-    def from_ingest_config(cls, cfg: Any, *, portrait_enabled: bool = True) -> WorkerIngestConfig:
+    def from_ingest_config(
+        cls,
+        cfg: Any,
+        *,
+        portrait_enabled: bool = True,
+        force_materialize: bool = False,
+    ) -> WorkerIngestConfig:
+        copy = bool(getattr(cfg, "copy_source_files", True)) or bool(force_materialize)
         return cls(
             webp_widths=tuple(int(w) for w in (cfg.webp_widths or (800, 1600))),
             webp_quality=int(cfg.webp_quality),
@@ -46,6 +54,7 @@ class WorkerIngestConfig:
             exif_camera=bool(getattr(cfg, "exif_camera", True)),
             portrait_analyze=bool(getattr(cfg, "portrait_analyze", True)) and portrait_enabled,
             face_min_size_for_portrait=int(cfg.face_min_size_px),
+            copy_source_files=copy,
         )
 
 
@@ -212,9 +221,13 @@ def process_ingest_photo_worker(
                 )
                 result.portrait_quality = portrait.to_quality_dict(cfg=portrait_cfg)
 
+        copy_source = bool(worker_cfg.copy_source_files)
         dest_source = source_out_dir / f"{provisional_id}.jpg"
-        save_jpeg_without_exif(img, dest_source)
-        result.provisional_source = str(dest_source)
+        if copy_source:
+            save_jpeg_without_exif(img, dest_source)
+            result.provisional_source = str(dest_source)
+        else:
+            result.provisional_source = None
 
         display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
             img,
@@ -234,7 +247,9 @@ def process_ingest_photo_worker(
         result.crop_web_rel = crop_w
         result.provisional_dir = str(prov_dir)
 
-        files: list[str] = [str(dest_source)]
+        files: list[str] = []
+        if copy_source:
+            files.append(str(dest_source))
         for entry in srcset_rel:
             rel = entry.get("file") if isinstance(entry, dict) else None
             if isinstance(rel, str) and rel.startswith("assets/"):

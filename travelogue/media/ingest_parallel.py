@@ -63,18 +63,20 @@ def _commit_provisional_blobs(
     asset_id: str,
     source_dir: Path,
     assets_dir: Path,
+    copy_source_files: bool = True,
 ) -> tuple[str, list[dict], str | None, str | None]:
     """Rename provisional files to final assetId paths; return updated rel paths."""
     prov_id = result.provisional_id
-    if not result.provisional_source:
-        raise RuntimeError("missing provisional source")
-    dest_source = source_dir / f"{asset_id}.jpg"
-    dest_source.parent.mkdir(parents=True, exist_ok=True)
-    src_source = Path(result.provisional_source)
-    if src_source.is_file():
-        if dest_source.exists():
-            dest_source.unlink()
-        shutil.move(str(src_source), str(dest_source))
+    if copy_source_files:
+        if not result.provisional_source:
+            raise RuntimeError("missing provisional source")
+        dest_source = source_dir / f"{asset_id}.jpg"
+        dest_source.parent.mkdir(parents=True, exist_ok=True)
+        src_source = Path(result.provisional_source)
+        if src_source.is_file():
+            if dest_source.exists():
+                dest_source.unlink()
+            shutil.move(str(src_source), str(dest_source))
 
     assets_dir.mkdir(parents=True, exist_ok=True)
     prov_assets = Path(result.provisional_dir) / "assets" if result.provisional_dir else None
@@ -206,10 +208,14 @@ def _build_entry_from_worker_result(
             build_ctx.ingest_stats.get("portrait_analyzed", 0) + 1
         )
 
+    from travelogue.media.source_resolve import build_source_ref
+
+    copy_source = bool(getattr(build_ctx, "copy_source_files", True)) or bool(
+        getattr(build_ctx, "force_materialize", False)
+    )
     entry: dict = {
         "id": asset_id,
         "type": "image",
-        "sourceFile": f"source/{asset_id}.jpg",
         "displayFile": display_rel,
         "srcset": srcset,
         "nativeWidth": result.width,
@@ -227,6 +233,12 @@ def _build_entry_from_worker_result(
         "dominantTone": result.dominant_tone,
         "layoutEligible": True,
     }
+    if copy_source:
+        entry["sourceFile"] = f"source/{asset_id}.jpg"
+    entry["sourceRef"] = build_source_ref(
+        album_root=getattr(build_ctx, "album_root", None),
+        source_path=Path(result.source_path),
+    )
     if result.content_sig:
         entry["contentSig"] = result.content_sig
     if result.salient_box:
@@ -250,13 +262,19 @@ def _build_entry_from_worker_result(
     if burst_group_id:
         entry["burstGroupId"] = burst_group_id
 
-    # mediaClass + aesthetic need pixels — reload committed jpeg (main only)
-    source_path = build_ctx.source_dir / f"{asset_id}.jpg"
+    # mediaClass + aesthetic need pixels — prefer committed jpeg, else original album path
     img = None
-    if source_path.is_file():
+    open_candidates = [
+        build_ctx.source_dir / f"{asset_id}.jpg",
+        Path(result.source_path),
+    ]
+    for candidate in open_candidates:
+        if not candidate.is_file():
+            continue
         try:
-            img = Image.open(source_path)
+            img = Image.open(candidate)
             img.load()
+            break
         except OSError:
             img = None
     if img is not None:
@@ -282,6 +300,7 @@ def _build_entry_from_worker_result(
         img.close()
     else:
         entry["mediaClass"] = "photo"
+        entry["referenceDecodeSkipped"] = True
 
     apply_user_tier_fields(
         entry,
@@ -440,11 +459,15 @@ def merge_one_worker_result(
         tier_for_entry = preserve_user_tier_on_replace(old_asset, user_tier)
         replace_tier_source = preserve_user_tier_source_on_replace(old_asset, tier_for_entry)
 
+    copy_source = bool(getattr(build_ctx, "copy_source_files", True)) or bool(
+        getattr(build_ctx, "force_materialize", False)
+    )
     display_rel, srcset, crop_m, crop_w = _commit_provisional_blobs(
         result,
         asset_id=asset_id,
         source_dir=build_ctx.source_dir,
         assets_dir=build_ctx.assets_dir,
+        copy_source_files=copy_source,
     )
     entry = _build_entry_from_worker_result(
         result=result,
@@ -532,7 +555,11 @@ def run_parallel_ingest_loop(
         portrait_enabled = bool(getattr(app_cfg.cull.portrait, "enabled", True))
     except Exception:
         portrait_enabled = True
-    worker_cfg = WorkerIngestConfig.from_ingest_config(cfg, portrait_enabled=portrait_enabled)
+    worker_cfg = WorkerIngestConfig.from_ingest_config(
+        cfg,
+        portrait_enabled=portrait_enabled,
+        force_materialize=bool(getattr(build_ctx, "force_materialize", False)),
+    )
 
     jobs: list[tuple[Any, ...]] = []
     for index, (photo, user_tier) in enumerate(photo_tiers):

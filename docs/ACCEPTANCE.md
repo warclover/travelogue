@@ -137,7 +137,8 @@ python -m travelogue longshot-smoke trips/maomi
 | F-TRIP-02 | `pipeline.status` 随流程变化且可 `status` 查看 | ☐ |
 | F-TRIP-03 | 能列出并重新打开历史 trip | ☐ |
 | F-ING-01 | jpg/png/heic/webp 可导入 | ☐ |
-| F-ING-02 | 原图在 `source/`，不破坏相册原目录 | ☐ |
+| F-ING-02a | **复制模式**：原图在 `source/`，不破坏相册原目录 | ☐ |
+| F-ING-02b | **引用模式**：不破坏相册原目录；不强制写 `source/`；`sourceRef` 可解析或可重新挂载 | ☐ |
 | F-ING-03 | 有/无 EXIF 均不崩溃 | ☐ |
 | F-ING-04 | >250 张提示拒绝或分批 | ☐ |
 | F-ING-05 | mp4/mov ≤15s 可导入 | ☐ |

@@ -3,9 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **Agent** | Media Lab（Agent 0） |
-| **文档版本** | v0.1 |
-| **关联** | `ADAPTIVE-LAYOUT.md`、`config.yaml.example`、`adr/001-delivery-and-media.md` |
-| **更新日期** | 2026-05-19 |
+| **文档版本** | v0.1.1 |
+| **关联** | `ADAPTIVE-LAYOUT.md`、`config.yaml.example`、`adr/001-delivery-and-media.md`、[PRD-MEDIA-REFERENCE-STORAGE-V1.md](./PRD-MEDIA-REFERENCE-STORAGE-V1.md) |
+| **更新日期** | 2026-07-16 |
 
 ---
 
@@ -13,9 +13,9 @@
 
 | 输入 | 输出 |
 |------|------|
-| 用户目录中的 jpg/png/heic/webp/mp4/mov | `source/` 原文件拷贝 |
+| 用户目录中的 jpg/png/heic/webp/mp4/mov | **复制模式**（默认）：`source/` 归一化 JPEG + `sourceRef`；**引用模式**（`ingest.copy_source_files=false`）：仅 `sourceRef`/`contentSig`，不写 `source/*.jpg`（Demo/上传仍物化） |
 | | `assets/*` WebP、视频循环、poster、语音副本 |
-| | `trip.json` → `assets[]` 元数据更新 |
+| | `trip.json` → `assets[]` / `media.storageMode` 元数据更新 |
 
 ---
 
@@ -33,11 +33,13 @@
 
 ## 3. 图片管线
 
-### 3.1 拷贝
+### 3.1 源文件（复制 / 引用）
 
-- 目标：`trips/{tripId}/source/{originalName}`  
-- 若重名：追加 `_2`、`_3`…  
-- 不修改用户相册原路径文件。
+- **复制模式**（`ingest.copy_source_files=true`，默认）：目标 `trips/{tripId}/source/{assetId}.jpg`（解码去 EXIF）；**必须**同时写 `sourceRef` + `contentSig`（便于日后深度清理后 remount）。  
+- **引用模式**（`copy_source_files=false`）：不写 `source/*.jpg`；`sourceFile` 省略/`null`；权威路径为 `sourceRef`。  
+- 需要原图像素时统一走 `resolve_source_path`：物化 `sourceFile` → `sourceRef` → `E_MEDIA_SOURCE_MISSING`。  
+- 不修改用户相册原路径文件（`F-ING-02a` / `F-ING-02b`）。  
+- 详见 [PRD-MEDIA-REFERENCE-STORAGE-V1.md](./PRD-MEDIA-REFERENCE-STORAGE-V1.md)。
 
 ### 3.2 EXIF
 

@@ -40,6 +40,13 @@ USER_MESSAGES: dict[str, str] = {
     "E_EXPORT_PRIVACY": "导出 zip 需要确认隐私设置",
     "E_SERVER": "服务内部错误，请稍后重试",
     "E_STUDIO_RERENDER": "预览重新渲染失败，请稍后重试",
+    # PRD-MEDIA-REFERENCE-STORAGE-V1
+    "E_MEDIA_SOURCE_MISSING": "原相册无法访问，请重新指定目录",
+    "E_MEDIA_REMOUNT_MISMATCH": "所选目录与作品照片对不上",
+    "E_MEDIA_CONTENT_CHANGED": "照片内容已变化，无法自动关联",
+    "E_MEDIA_CLEANUP_REFUSED": "无法安全删除源文件拷贝",
+    "E_MEDIA_CLEANUP_PARTIAL": "清理未完成，查看详情",
+    "E_MEDIA_INCREMENTAL_SOURCE": "追加导入缺少可访问的原片",
 }
 
 # Codes with a fixed user-facing line — do not append raw exception text.

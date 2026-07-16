@@ -113,6 +113,10 @@ def match_entry(path: str) -> str | None:
     return match_trip_suffix(path, "/entry")
 
 
+def match_source_status(path: str) -> str | None:
+    return match_trip_suffix(path, "/source-status")
+
+
 def match_aesthetic(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import AESTHETIC_SUFFIX
 

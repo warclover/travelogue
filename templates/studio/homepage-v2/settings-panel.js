@@ -7,12 +7,14 @@ import { isCapabilityCardSeen } from "../js/help-onboarding.js";
 import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
 import { requestExitStudio } from "../js/studio-exit.js";
+import { bindStorageSettings } from "./storage-settings.js";
 import { $, V2 } from "./store.js";
 
 var SETTINGS_HINT_KEY = "travelogue.studio.v2.settingsMovedHint";
 
 var _open = false;
 var _bound = null;
+var _storageBound = null;
 var _scrim = null;
 var _focusTrapHandler = null;
 var _focusRestoreEl = null;
@@ -181,6 +183,8 @@ function openSettings() {
   ensurePopoverPortaled(popover);
   syncDevSection();
   if (_bound && _bound.fetchConfig) _bound.fetchConfig();
+  if (_storageBound && _storageBound.fetchConfig) _storageBound.fetchConfig();
+  trackStudioEvent("storage_settings_open", {});
   _focusRestoreEl = document.activeElement;
   _open = true;
   positionPopover(popover, toggle);
@@ -228,6 +232,7 @@ export function initSettingsPanel() {
   if (!toggle || !popover) return;
 
   _bound = bindAdvancedConfigControls();
+  _storageBound = bindStorageSettings();
   syncSettingsLock();
   syncDevSection();
   ensurePopoverPortaled(popover);

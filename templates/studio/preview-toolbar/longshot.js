@@ -90,6 +90,11 @@ var _refreshTaskDockState = function (_root) {};
 var _getLayoutPending = function () {
   return false;
 };
+var _getSourceMissing = function () {
+  return false;
+};
+var _setSourceMissing = function (_on) {};
+var _dismissSourceMissingDock = function () {};
 var _tripIdFromPath = function () {
   return "";
 };
@@ -364,6 +369,11 @@ export function registerLongshotBridge(api) {
     _refreshTaskDockState = api.refreshTaskDockState;
   }
   if (typeof api.getLayoutPending === "function") _getLayoutPending = api.getLayoutPending;
+  if (typeof api.getSourceMissing === "function") _getSourceMissing = api.getSourceMissing;
+  if (typeof api.setSourceMissing === "function") _setSourceMissing = api.setSourceMissing;
+  if (typeof api.dismissSourceMissingDock === "function") {
+    _dismissSourceMissingDock = api.dismissSourceMissingDock;
+  }
   if (typeof api.tripIdFromPath === "function") _tripIdFromPath = api.tripIdFromPath;
   if (typeof api.toolbarBody === "function") _toolbarBody = api.toolbarBody;
   if (typeof api.setLayoutPending === "function") _setLayoutPending = api.setLayoutPending;
@@ -1479,12 +1489,95 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function showStaleHint(root) {
-    // D-REF-18 · layoutPending 优先于 longshotStale，避免双层主待办抢注意力
+    // D-REF-18 · layoutPending / sourceMissing 优先于 longshotStale
     if (_getLayoutPending()) return;
+    if (_getSourceMissing()) return;
     // Trust V1 · 导出成功静音窗内不升 stale 主警告
     if (isExportSideEffectActive(_tripIdFromPath())) return;
     if (root && root._exportResultShowing) return;
     setLongshotExportState(root, "stale");
+  }
+
+  function fetchSourceStatus(tripId) {
+    return fetch(
+      "/__travelogue/trips/" + encodeURIComponent(tripId) + "/source-status"
+    )
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (data) {
+        var missing = !!(data && data.ok !== false && data.sourceMissing);
+        _setSourceMissing(missing);
+        return data;
+      })
+      .catch(function () {
+        return { ok: true, sourceMissing: false };
+      });
+  }
+
+  function remountAlbumThenContinue(root, tripId, continueFn) {
+    return postJson("/__travelogue/pick-folder", {})
+      .then(function (res) {
+        var data = (res && res.body) || {};
+        if (data.cancelled) return false;
+        if (!res || res.status >= 400 || data.ok === false || !data.albumPath) {
+          _toolbarAlert(
+            (data && data.message) || "无法打开文件夹选择器",
+            { error: true }
+          );
+          return false;
+        }
+        return postJson("/__travelogue/storage/remount", {
+          tripId: tripId,
+          albumPath: data.albumPath,
+        }).then(function (rem) {
+          var body = (rem && rem.body) || {};
+          trackStudioEvent("storage_remount_album", {
+            trip_id: tripId,
+            matched: body.matched || 0,
+            unmatched: body.missing || 0,
+            ok: !!(body && body.ok),
+          });
+          if (!rem || rem.status >= 400 || body.ok === false) {
+            _toolbarAlert(
+              (body && body.message) || "重新指定相册失败",
+              { error: true }
+            );
+            return false;
+          }
+          _setSourceMissing(false);
+          if (typeof continueFn === "function") continueFn();
+          return true;
+        });
+      })
+      .catch(function () {
+        _toolbarAlert("重新指定相册失败", { error: true });
+        return false;
+      });
+  }
+
+  function maybeSourceMissingGate(root, tripId, continueFn) {
+    return fetchSourceStatus(tripId).then(function (data) {
+      if (!data || !data.sourceMissing) {
+        continueFn();
+        return;
+      }
+      trackStudioEvent("export_blocked_source_missing", { trip_id: tripId });
+      return _toolbarConfirm({
+        title: "原相册无法访问",
+        body: "原相册已不存在或无法访问。请重新指定相册目录后，再继续导出。",
+        confirmText: "重新指定相册目录",
+        cancelText: "稍后",
+        stacked: true,
+      }).then(function (ok) {
+        if (!ok) {
+          _dismissSourceMissingDock();
+          if (_refreshTaskDockState) _refreshTaskDockState(root);
+          return;
+        }
+        return remountAlbumThenContinue(root, tripId, continueFn);
+      });
+    });
   }
 
   export function hideStaleHint(root) {
@@ -1526,39 +1619,44 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         _setLayoutPendingMessage("");
-        if (trip.longshotStale) {
-          showStaleHint(root);
-        }
+        return fetchSourceStatus(tripId).then(function () {
+          if (trip.longshotStale) {
+            showStaleHint(root);
+          }
+        });
       })
       .catch(function () {});
   }
 
   export function exportZip(tripId) {
-    _toolbarConfirm({
-      title: "导出 zip",
-      body: "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
-      confirmText: "继续",
-    }).then(function (ok) {
-      if (!ok) return;
-      return postJson("/__travelogue/export", { tripId: tripId, confirmPrivacy: true });
-    }).then(function (res) {
-      if (!res) return;
-      if (res.status !== 200 || !res.body.ok) {
-        _toolbarAlert((res.body && res.body.message) || "导出失败", { error: true });
-        return;
-      }
-      var zipRel = res.body.zipRelPath;
-      if (!zipRel) return;
-      return _toolbarConfirm({
-        title: "zip 已生成",
-        body: "是否在文件夹中显示？",
-        confirmText: "显示",
-        cancelText: "关闭",
-      }).then(function (reveal) {
-        if (reveal) revealTripPath(tripId, zipRel);
+    var root = document.querySelector(".preview-toolbar");
+    maybeSourceMissingGate(root, tripId, function () {
+      _toolbarConfirm({
+        title: "导出 zip",
+        body: "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
+        confirmText: "继续",
+      }).then(function (ok) {
+        if (!ok) return;
+        return postJson("/__travelogue/export", { tripId: tripId, confirmPrivacy: true });
+      }).then(function (res) {
+        if (!res) return;
+        if (res.status !== 200 || !res.body.ok) {
+          _toolbarAlert((res.body && res.body.message) || "导出失败", { error: true });
+          return;
+        }
+        var zipRel = res.body.zipRelPath;
+        if (!zipRel) return;
+        return _toolbarConfirm({
+          title: "zip 已生成",
+          body: "是否在文件夹中显示？",
+          confirmText: "显示",
+          cancelText: "关闭",
+        }).then(function (reveal) {
+          if (reveal) revealTripPath(tripId, zipRel);
+        });
+      }).catch(function () {
+        _toolbarAlert("导出失败", { error: true });
       });
-    }).catch(function () {
-      _toolbarAlert("导出失败", { error: true });
     });
   }
 
@@ -1663,7 +1761,9 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
 
-    maybeCopyGateThenExport(root, tripId);
+    maybeSourceMissingGate(root, tripId, function () {
+      maybeCopyGateThenExport(root, tripId);
+    });
   }
 
   function copyGateSevereKey(tripId) {

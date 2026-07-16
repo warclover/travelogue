@@ -56,6 +56,17 @@
 | `E_INGEST_FILE_CORRUPT` | 单文件失败（警告继续，不阻断） |
 | `E_INGEST_HEIC` | HEIC 解码失败 |
 
+### 媒体存储 `E_MEDIA_*`（PRD-MEDIA-REFERENCE-STORAGE-V1）
+
+| 代码 | 说明 |
+|------|------|
+| `E_MEDIA_SOURCE_MISSING` | 原片不可解析（含原 `E_REEXPORT_SOURCE` 映射） |
+| `E_MEDIA_REMOUNT_MISMATCH` | 重新指定相册后大量未匹配 |
+| `E_MEDIA_CONTENT_CHANGED` | 路径候选存在但 contentSig 已变 |
+| `E_MEDIA_CLEANUP_REFUSED` | 深度清理不满足安全前置 |
+| `E_MEDIA_CLEANUP_PARTIAL` | 清理部分失败 |
+| `E_MEDIA_INCREMENTAL_SOURCE` | pending 重放无法解析源 |
+
 ### 策展 `E_CURATE_*`
 
 | 代码 | 说明 |
