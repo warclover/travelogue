@@ -904,6 +904,8 @@ def run_studio_pipeline(
                 raw_text=plan_text,
                 filename=plan_filename,
             )
+            # Persist travelPlan / planCities before ingest sync-from-disk.
+            svc.update(trip_json, make_intent_flush_mutator(trip))
 
         featured_path, material_path = _resolve_ingest_folder_paths(album_dir, folder_overrides)
 

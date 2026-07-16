@@ -167,3 +167,21 @@ def test_intent_folders_merge_mutator_pushes_featured_detected() -> None:
     assert disk["intent"]["title"] == "HTTP wins"
     assert disk["intent"]["folders"]["featuredDetected"] is True
     assert disk["chapters"][0]["id"] == "ch-01"
+
+
+def test_intent_flush_mutator_persists_travel_plan_and_hints() -> None:
+    """F5: plan cities must survive disk flush after ingest_travel_plan."""
+    from travelogue.media.ingest_persist import make_intent_flush_mutator
+
+    disk: dict = {"intent": {"version": "1", "title": "关西之旅"}}
+    memory = {
+        "intent": {
+            "version": "1",
+            "title": "关西之旅",
+            "travelPlan": {"cities": ["大阪", "京都"], "format": "text"},
+        },
+        "curation": {"intentHints": {"planCities": ["大阪", "京都"]}},
+    }
+    make_intent_flush_mutator(memory)(disk)
+    assert disk["intent"]["travelPlan"]["cities"] == ["大阪", "京都"]
+    assert disk["curation"]["intentHints"]["planCities"] == ["大阪", "京都"]

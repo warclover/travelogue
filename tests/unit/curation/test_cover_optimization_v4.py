@@ -48,7 +48,7 @@ def _cover_opening_html(
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
         '<link rel="stylesheet" href="journal.css">'
         "<title>Cover V4</title></head><body><main>"
-        '<section class="cover-opening" data-block="cover-opening" data-cover-opening="card-br">'
+        '<section class="cover-opening" data-block="cover-opening" data-cover-opening="veil-footer">'
         '<header class="cover-hero cover-hero--photo-only">'
         '<div class="cover-hero__media" style="--focal-x: 0.5; --focal-y: 0.45;">'
         f'<img class="cover-hero__img" src="{_PLACEHOLDER_IMG}" alt="cover" />'
@@ -99,29 +99,28 @@ def _seed_cover_v4_trip(
 
 
 def test_cover_opening_title_card_styles() -> None:
+    """V6 baseline cover contract (veil-footer); supersedes retired V4 solid card markers."""
     css = JOURNAL_CSS.read_text(encoding="utf-8")
-    block = css.split("/* V4 · 右下实心书名卡 */", 1)[1].split("}", 1)[0]
+    assert "/* V6 baseline · veil-footer" in css
+    assert 'data-cover-opening="veil-footer"' in css
     for token in (
-        "position: absolute",
-        "width: max-content",
-        "max-width: min(640px, 70.4vw)",
-        "min(352px, 57.6vh)",
-        "rgba(18, 17, 16, 0.9)",
-        "border-left: 5px solid",
-        "-webkit-line-clamp: 2",
-        "display: block",
-        "font-family: var(--font-ui)",
         ".cover-opening .trip-meta",
         "display: none",
+        "position: absolute",
+        "-webkit-line-clamp",
+        "var(--font-ui)",
+        'html[data-layout="web"] .cover-opening__panel',
     ):
-        assert token in css, f"missing cover v4 token: {token}"
+        assert token in css, f"missing cover baseline token: {token}"
     assert "cover-opening__enter" not in css
-    assert "linear-gradient" not in block
+    # Retired V4 solid title-card paint must not reappear as default.
+    assert "rgba(18, 17, 16, 0.9)" not in css
+    assert "border-left: 5px solid" not in css
 
 
 @pytest.mark.e2e
 def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
-    """AC-COV-30～36 · 封面一屏 + 书名卡尺寸。"""
+    """AC-COV-30～36 · V6 veil-footer：封面一屏 + 底栏文案层几何。"""
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
@@ -156,13 +155,20 @@ def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
                 const toolbarH = parseFloat(
                   getComputedStyle(document.documentElement).getPropertyValue('--preview-toolbar-h')
                 ) || 0;
+                const panelMaxRaw = getComputedStyle(document.documentElement)
+                  .getPropertyValue('--cover-veil-panel-max')
+                  .trim();
                 return {
+                  style: cover.getAttribute('data-cover-opening'),
                   coverHeight: coverRect.height,
                   viewportH: vh,
                   toolbarH,
                   panelWidth: panelRect.width,
                   panelHeight: panelRect.height,
+                  panelBottomGap: Math.abs(coverRect.bottom - panelRect.bottom),
+                  panelLeft: panelRect.left,
                   panelPosition: getComputedStyle(panel).position,
+                  panelMaxToken: panelMaxRaw,
                   coverOverflow: cover.scrollHeight > cover.clientHeight + 2,
                   titleOverflow: title ? title.scrollHeight > title.clientHeight + 2 : false,
                   hookOverflow: hook ? hook.scrollHeight > hook.clientHeight + 4 : false,
@@ -171,11 +177,15 @@ def test_v4_cover_opening_layout_playwright(tmp_path: Path) -> None:
             }"""
             )
 
+            assert metrics["style"] == "veil-footer", metrics
             assert metrics["toolbarH"] == 0, metrics
             assert abs(metrics["coverHeight"] - metrics["viewportH"]) <= 2, metrics
             assert metrics["panelPosition"] == "absolute", metrics
-            assert metrics["panelWidth"] <= 640 + 1, metrics
-            assert metrics["panelHeight"] <= min(352, metrics["viewportH"] * 0.576) + 2, metrics
+            # V6 token: --cover-veil-panel-max: min(680px, 74%)
+            assert metrics["panelWidth"] <= 680 + 1, metrics
+            assert metrics["panelBottomGap"] <= 2, metrics
+            assert metrics["panelLeft"] <= 2, metrics
+            assert metrics["panelHeight"] < metrics["viewportH"], metrics
             assert metrics["coverOverflow"] is False, metrics
             assert metrics["panelBeforeDisplay"] in ("none", ""), metrics
 
@@ -259,7 +269,7 @@ def test_v4_share_preview_keeps_minimal_toolbar(tmp_path: Path) -> None:
 
 @pytest.mark.e2e
 def test_v4_dock_states_playwright(tmp_path: Path) -> None:
-    """AC-COV-05/08/20/P2 · running、放映隐藏、tooltip、滚过变淡。"""
+    """AC-COV-05/08/20/P2 · 可见标签、running、放映隐藏、滚过变淡。"""
     pytest.importorskip("playwright")
     from playwright.sync_api import sync_playwright
 
@@ -281,22 +291,21 @@ def test_v4_dock_states_playwright(tmp_path: Path) -> None:
             page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
             page.locator(".preview-toolbar__dock").wait_for(state="visible", timeout=15_000)
 
-            page.locator(".preview-toolbar__dock-btn--back").hover()
-            # dock-tip uses 0.3s transition-delay + 0.15s fade; wait past both.
-            page.wait_for_function(
+            # Labeled dock supersedes hover tips (initDockTooltips no longer mounts tips).
+            labeled = page.evaluate(
                 """() => {
-                const tip = document.querySelector('.preview-toolbar__dock-btn--back .preview-toolbar__dock-tip');
-                return tip && parseFloat(getComputedStyle(tip).opacity) >= 0.9;
-            }""",
-                timeout=3_000,
-            )
-            tip_opacity = page.evaluate(
-                """() => {
-                const tip = document.querySelector('.preview-toolbar__dock-btn--back .preview-toolbar__dock-tip');
-                return tip ? parseFloat(getComputedStyle(tip).opacity) : 0;
+                const back = document.querySelector('.preview-toolbar__dock-btn--back');
+                const label = back && back.querySelector('.preview-toolbar__dock-label');
+                return {
+                  hasLabeledClass: !!(back && back.classList.contains('preview-toolbar__dock-btn--labeled')),
+                  labelText: label ? label.textContent.trim() : '',
+                  tipCount: document.querySelectorAll('.preview-toolbar__dock-tip').length,
+                };
             }"""
             )
-            assert tip_opacity >= 0.9, tip_opacity
+            assert labeled["hasLabeledClass"] is True, labeled
+            assert labeled["labelText"] == "返回", labeled
+            assert labeled["tipCount"] == 0, labeled
 
             running = page.evaluate(
                 """() => {
@@ -304,6 +313,7 @@ def test_v4_dock_states_playwright(tmp_path: Path) -> None:
                 const exportBtn = document.querySelector('.preview-toolbar__dock-btn--export');
                 const screenplay = document.querySelector('.preview-toolbar__screenplay--v3');
                 const menu = document.querySelector('.preview-toolbar__menu-btn');
+                if (!exportBtn) return { exportMissing: true };
                 exportBtn.classList.add('preview-toolbar__longshot--running');
                 exportBtn.innerHTML = '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span>';
                 if (screenplay) screenplay.disabled = true;
@@ -316,6 +326,7 @@ def test_v4_dock_states_playwright(tmp_path: Path) -> None:
                 };
             }"""
             )
+            assert running.get("exportMissing") is not True, running
             assert running["hasSpinner"] is True, running
             assert running["screenplayDisabled"] is True, running
             assert running["menuDisabled"] is True, running
@@ -329,13 +340,17 @@ def test_v4_dock_states_playwright(tmp_path: Path) -> None:
             )
             assert dock_hidden == "hidden", dock_hidden
 
-            page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
-            page.wait_for_timeout(300)
-            dimmed = page.evaluate(
-                """() => document.querySelector('.preview-toolbar__dock')
-                  .classList.contains('preview-toolbar__dock--dim')"""
+            page.evaluate(
+                """() => {
+                document.body.classList.remove('screenplay-active');
+                window.scrollTo(0, document.body.scrollHeight);
+            }"""
             )
-            assert dimmed is True, "dock should dim after scrolling past cover"
+            page.wait_for_function(
+                """() => document.querySelector('.preview-toolbar__dock')
+                  ?.classList.contains('preview-toolbar__dock--dim')""",
+                timeout=3_000,
+            )
 
             browser.close()
     finally:
