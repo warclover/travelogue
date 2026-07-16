@@ -686,6 +686,24 @@ class _CurateBucketPlan:
     meta_places: list[str]
 
 
+
+@dataclass
+class _ChaptersComposeResult:
+    chapters: list[dict]
+    replan_meta: dict
+    non_empty_buckets: list[list[str]]
+    bucket_segment_ids: list[str]
+    pattern_hints: list
+    arc_profile: str
+    use_arc: bool
+    chapter_heroes: dict[str, str]
+    secondary_hints: list
+    trip_memory_anchors: list[str]
+    summary_dict: dict
+    layout_metrics: dict
+    degradation_reason: str | None
+    decision_logs: list | None
+
 def _curate_preflight(
     trip: dict,
     *,
@@ -882,65 +900,13 @@ def _build_layout_only_bucket_plan(trip: dict, preflight: _CuratePreflight) -> _
 
 
 
-def run_curate(
+
+def _stage_aesthetic_align(
     trip: dict,
     *,
-    export_layout: str | None = None,
-    layout_engine: str | None = None,
-    apply_layout: bool = True,
-    trip_dir: Path | None = None,
-    cfg: AppConfig | None = None,
-    refresh_algorithms: bool | None = None,
-    scope: str = "full",
-    cover_force: bool = False,
-) -> CurateResult:
-    curate_scope = "tier" if str(scope or "").strip().lower() == "tier" else "full"
-    if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
-        raise CurateError(
-            "E_CURATE_TOO_FEW",
-            f"need at least {MIN_CURATE_ASSETS} assets to curate",
-        )
-
-    from travelogue.curation.curation_adapter import apply_curation_adapter_hints
-
-    apply_curation_adapter_hints(trip, cfg=cfg)
-
-    from travelogue.curation.intent_hints import (
-        apply_editorial_intent_hints,
-        peak_chapter_hints_for_trip,
-        prior_chapter_memory_anchors,
-    )
-
-    apply_editorial_intent_hints(trip)
-    saved_memory_anchors = prior_chapter_memory_anchors(trip)
-
-    cohort_summary = stage_refresh_cull_cohort(
-        trip,
-        trip_dir=trip_dir,
-        cfg=cfg,
-        curate_scope=curate_scope,
-        refresh_algorithms=refresh_algorithms,
-    )
-
-    preflight = _curate_preflight(
-        trip,
-        export_layout=export_layout,
-        layout_engine=layout_engine,
-        trip_dir=trip_dir,
-        cfg=cfg,
-        saved_memory_anchors=saved_memory_anchors,
-        cover_force=bool(cover_force) if curate_scope == "tier" else False,
-    )
-    app_cfg = preflight.app_cfg
-    cur_cfg = preflight.cur_cfg
-    layout = preflight.layout
-    engine = preflight.engine
-    layout_assets = preflight.layout_assets
-    cover_id = preflight.cover_id
-    skip_screen_ids = preflight.skip_screen_ids
-    res_warn = preflight.res_warn
-    saved_memory_anchors = preflight.saved_memory_anchors
-
+    trip_dir: Path | None,
+    app_cfg: AppConfig,
+) -> None:
     if trip_dir is not None and app_cfg.aesthetic.enabled:
         from travelogue.curation.aesthetic_score import apply_aesthetic_alignment
 
@@ -951,17 +917,20 @@ def run_curate(
             trip=trip,
         )
 
-    from travelogue.layout_contract.engines import (
-        LAYOUT_ENGINE_SCREENS,
-        LAYOUT_ENGINE_VERSION_SCREENS,
-    )
+def _stage_resolve_buckets(
+    trip: dict,
+    preflight: _CuratePreflight,
+    *,
+    curate_scope: str,
+    trip_dir: Path | None,
+    cohort_summary: dict | None,
+) -> _CurateBucketPlan:
     from travelogue.layout_engine.adapter import (
         mark_layout_replan,
-        record_applied_layout_density,
         should_layout_only_replan,
     )
 
-    replan_decision = should_layout_only_replan(trip, trip_dir=trip_dir, cfg=app_cfg)
+    replan_decision = should_layout_only_replan(trip, trip_dir=trip_dir, cfg=preflight.app_cfg)
     if curate_scope == "tier":
         bucket_plan = _build_layout_only_bucket_plan(trip, preflight)
         if bucket_plan is None:
@@ -994,6 +963,36 @@ def run_curate(
     from travelogue.curation.album_profile import write_album_profile
 
     write_album_profile(trip)
+    return bucket_plan
+
+def _stage_build_chapters_compose(
+    trip: dict,
+    preflight: _CuratePreflight,
+    bucket_plan: _CurateBucketPlan,
+    *,
+    curate_scope: str,
+    cohort_summary: dict | None,
+    trip_dir: Path | None,
+) -> _ChaptersComposeResult:
+    app_cfg = preflight.app_cfg
+    cur_cfg = preflight.cur_cfg
+    layout = preflight.layout
+    engine = preflight.engine
+    layout_assets = preflight.layout_assets
+    cover_id = preflight.cover_id
+    skip_screen_ids = preflight.skip_screen_ids
+    saved_memory_anchors = preflight.saved_memory_anchors
+
+    buckets = bucket_plan.buckets
+    bucket_segment_ids = bucket_plan.bucket_segment_ids
+    bucket_segment_ids_all = bucket_plan.bucket_segment_ids_all
+    segments = bucket_plan.segments
+    segment_labels = bucket_plan.segment_labels
+    curation_segments = bucket_plan.curation_segments
+    meta_places = bucket_plan.meta_places
+
+    meta = trip.get("meta", {})
+    curation = trip.get("curation") or {}
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
     # Keep segment metadata aligned when empty buckets are dropped.
@@ -1238,6 +1237,8 @@ def run_curate(
         from travelogue.curation.cohort_faces import merge_cohort_weight
 
         scoring_weights = merge_cohort_weight(scoring_weights, app_cfg.cohort)
+    from travelogue.curation.intent_hints import peak_chapter_hints_for_trip
+
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
@@ -1276,6 +1277,11 @@ def run_curate(
         moment_secondary_ids=set(secondary_hints),
         moment_secondary_boost=effective_secondary_boost(cur_cfg.moment),
     )
+    from travelogue.layout_contract.engines import (
+        LAYOUT_ENGINE_SCREENS,
+        LAYOUT_ENGINE_VERSION_SCREENS,
+    )
+
     if engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.chapter_items import (
             collect_displayed_asset_ids,
@@ -1425,6 +1431,65 @@ def run_curate(
     mc = summarize_media_classes(trip.get("assets") or [])
     if mc:
         curation["mediaClassSummary"] = mc
+
+    return _ChaptersComposeResult(
+        chapters=chapters,
+        replan_meta=replan_meta,
+        non_empty_buckets=non_empty_buckets,
+        bucket_segment_ids=bucket_segment_ids,
+        pattern_hints=pattern_hints,
+        arc_profile=arc_profile,
+        use_arc=use_arc,
+        chapter_heroes=chapter_heroes,
+        secondary_hints=secondary_hints,
+        trip_memory_anchors=trip_memory_anchors,
+        summary_dict=summary_dict,
+        layout_metrics=layout_metrics,
+        degradation_reason=degradation_reason,
+        decision_logs=decision_logs,
+    )
+
+def _stage_finalize(
+    trip: dict,
+    preflight: _CuratePreflight,
+    bucket_plan: _CurateBucketPlan,
+    compose: _ChaptersComposeResult,
+    *,
+    curate_scope: str,
+    trip_dir: Path | None,
+    apply_layout: bool,
+    cohort_summary: dict | None,
+) -> CurateResult:
+    app_cfg = preflight.app_cfg
+    cur_cfg = preflight.cur_cfg
+    layout = preflight.layout
+    engine = preflight.engine
+    layout_assets = preflight.layout_assets
+    cover_id = preflight.cover_id
+    res_warn = preflight.res_warn
+
+    buckets = bucket_plan.buckets
+    segments = bucket_plan.segments
+    curation_segments = bucket_plan.curation_segments
+    meta_places = bucket_plan.meta_places
+
+    chapters = compose.chapters
+    replan_meta = compose.replan_meta
+    non_empty_buckets = compose.non_empty_buckets
+    bucket_segment_ids = compose.bucket_segment_ids
+    pattern_hints = compose.pattern_hints
+    arc_profile = compose.arc_profile
+    use_arc = compose.use_arc
+    chapter_heroes = compose.chapter_heroes
+    secondary_hints = compose.secondary_hints
+    trip_memory_anchors = compose.trip_memory_anchors
+    summary_dict = compose.summary_dict
+    layout_metrics = compose.layout_metrics
+    degradation_reason = compose.degradation_reason
+    decision_logs = compose.decision_logs
+
+    curation = trip.setdefault("curation", {})
+
     warnings: list[str] = []
     replan_skip = replan_meta.get("skipReason")
     if replan_skip == "search_timeout":
@@ -1538,6 +1603,7 @@ def run_curate(
     from travelogue.curation.arc_screen_tags import stamp_screen_arc_segments
     from travelogue.curation.breath_pauses import insert_breath_screens_in_chapters
     from travelogue.curation.chapter_explain import attach_chapter_explain
+    from travelogue.curation.moment_scoring import sync_trip_moments_finalize
 
     stamp_screen_arc_segments(trip, arc_profile=arc_profile)
     sync_trip_moments_finalize(
@@ -1586,6 +1652,8 @@ def run_curate(
         warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（叙事弧驱动）")
 
     # AC-RHY-07 · 节奏 post-check（灰度先 log，OQ-09=B）：R-06 / R-08 / V-09 观测。
+    from travelogue.layout_contract.engines import LAYOUT_ENGINE_SCREENS
+
     if apply_layout and engine == LAYOUT_ENGINE_SCREENS:
         from travelogue.curation.layout_constraints import run_rhythm_postcheck
 
@@ -1614,6 +1682,8 @@ def run_curate(
         layout_engine=engine,
     )
     if apply_layout:
+        from travelogue.layout_engine.adapter import record_applied_layout_density
+
         record_applied_layout_density(trip, cfg=app_cfg)
         from travelogue.cover_engine.api import maybe_resolve_closing_after_layout
 
@@ -1626,3 +1696,84 @@ def run_curate(
         day_groups=len(buckets),
         warnings=warnings,
     )
+
+
+def run_curate(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    layout_engine: str | None = None,
+    apply_layout: bool = True,
+    trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
+    refresh_algorithms: bool | None = None,
+    scope: str = "full",
+    cover_force: bool = False,
+) -> CurateResult:
+    curate_scope = "tier" if str(scope or "").strip().lower() == "tier" else "full"
+    if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
+        raise CurateError(
+            "E_CURATE_TOO_FEW",
+            f"need at least {MIN_CURATE_ASSETS} assets to curate",
+        )
+
+    from travelogue.curation.curation_adapter import apply_curation_adapter_hints
+
+    apply_curation_adapter_hints(trip, cfg=cfg)
+
+    from travelogue.curation.intent_hints import (
+        apply_editorial_intent_hints,
+        prior_chapter_memory_anchors,
+    )
+
+    apply_editorial_intent_hints(trip)
+    saved_memory_anchors = prior_chapter_memory_anchors(trip)
+
+    cohort_summary = stage_refresh_cull_cohort(
+        trip,
+        trip_dir=trip_dir,
+        cfg=cfg,
+        curate_scope=curate_scope,
+        refresh_algorithms=refresh_algorithms,
+    )
+
+    preflight = _curate_preflight(
+        trip,
+        export_layout=export_layout,
+        layout_engine=layout_engine,
+        trip_dir=trip_dir,
+        cfg=cfg,
+        saved_memory_anchors=saved_memory_anchors,
+        cover_force=bool(cover_force) if curate_scope == "tier" else False,
+    )
+
+    _stage_aesthetic_align(trip, trip_dir=trip_dir, app_cfg=preflight.app_cfg)
+
+    bucket_plan = _stage_resolve_buckets(
+        trip,
+        preflight,
+        curate_scope=curate_scope,
+        trip_dir=trip_dir,
+        cohort_summary=cohort_summary,
+    )
+
+    compose = _stage_build_chapters_compose(
+        trip,
+        preflight,
+        bucket_plan,
+        curate_scope=curate_scope,
+        cohort_summary=cohort_summary,
+        trip_dir=trip_dir,
+    )
+
+    return _stage_finalize(
+        trip,
+        preflight,
+        bucket_plan,
+        compose,
+        curate_scope=curate_scope,
+        trip_dir=trip_dir,
+        apply_layout=apply_layout,
+        cohort_summary=cohort_summary,
+    )
+
