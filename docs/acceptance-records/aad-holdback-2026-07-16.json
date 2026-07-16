@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1",
+  "reviewId": "aad-holdback-2026-07-16",
+  "feature": "PrefixBeam",
+  "gate": "AC-AAD-24 / Gate-Q",
+  "prd": "PRD-ARCH-ALGO-DEEPENING-V1",
+  "control": "layout.scoring.prefix_beam_enabled=false (VariantRerank)",
+  "treatment": "layout.scoring.prefix_beam_enabled=true (PrefixBeam)",
+  "status": "skeleton",
+  "blindThreshold": 0.55,
+  "protocolNote": "Blind review not yet executed. Gate-Q default-on = No-Go until N>=8 diversity review completes. Code may merge with flag OFF.",
+  "diversityCoverage": {
+    "shortTrip": null,
+    "longTrip": null,
+    "portraitHeavy": null,
+    "landscapeHeavy": null,
+    "crossCity": null
+  },
+  "vetoExamples": [
+    {
+      "id": "rhythm-streak",
+      "dimension": "rhythm",
+      "description": "连续 ≥3 屏同 pattern 失控",
+      "hit": null
+    },
+    {
+      "id": "mosaic-crop",
+      "dimension": "mosaicReasonableness",
+      "description": "拼图主图拧巴裁切 / 脸贴边",
+      "hit": null
+    },
+    {
+      "id": "chapter-hero-buried",
+      "dimension": "chapterHero",
+      "description": "章英雄埋在九宫或错位",
+      "hit": null
+    }
+  ],
+  "reviewerDev": null,
+  "reviewerProduct": null,
+  "reviewedAt": null,
+  "decision": {
+    "qualityNotWorse": null,
+    "defaultOn": false,
+    "tieBreak": "not_default_on",
+    "gateQ": "No-Go-default-on",
+    "notes": "本波合入保持 PrefixBeam 默认关；盲评完成后另 PR 再议默认开。平局≠默认开。"
+  },
+  "tripPairs": [],
+  "albumListRef": "aad-holdback-album-list.md"
+}

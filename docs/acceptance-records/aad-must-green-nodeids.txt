@@ -8,6 +8,8 @@ tests/unit/layout_engine/test_lse_adapter.py
 tests/unit/layout_engine/test_layout_utility_combine.py
 tests/unit/layout_engine/test_prefix_beam_flag.py
 tests/unit/layout_engine/test_prefix_beam_ac.py
+tests/unit/layout_engine/test_aad_ac_boost.py
+tests/unit/layout_engine/test_aad12_pattern_specials.py
 tests/unit/layout_engine/test_layout_metrics.py
 tests/unit/curation/test_aesthetic_purpose_lint.py
 tests/unit/curation/test_aad_curate_stages.py

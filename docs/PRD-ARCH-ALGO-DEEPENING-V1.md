@@ -344,29 +344,29 @@ soft    = clamp01(score_screen_plan.total)   # 或 M0 书面替代
 
 ### 7.1 WS-A
 
-- [ ] **AC-AAD-01** `test_lte_p4_gaps::test_legacy_generated_matches_codegen` passed
-- [ ] **AC-AAD-02** `tests/unit/curation/test_cluster_cli.py` 全绿（含绝对路径 tmp trip.json）
-- [ ] **AC-AAD-03** 显式 `--trips-dir` 时，逃逸绝对路径仍 `E_TRIP_NOT_FOUND`（**自动化负例**）；Studio/HTTP 沙箱不变量 1 正 1 反
-- [ ] **AC-AAD-04** `pytest tests/unit/layout_engine tests/unit/curation tests/unit/media -q` **exit 0**（或 `docs/acceptance-records/aad-must-green-nodeids.txt` 钉死列表 exit 0）；禁止「失败类」空话
+- [x] **AC-AAD-01** `test_lte_p4_gaps::test_legacy_generated_matches_codegen` passed
+- [x] **AC-AAD-02** `tests/unit/curation/test_cluster_cli.py` 全绿（含绝对路径 tmp trip.json）
+- [x] **AC-AAD-03** 显式 `--trips-dir` 时，逃逸绝对路径仍 `E_TRIP_NOT_FOUND`（**自动化负例**）；Studio/HTTP 沙箱不变量 1 正 1 反
+- [x] **AC-AAD-04** `docs/acceptance-records/aad-must-green-nodeids.txt` 钉死列表 exit 0（`scripts/run_aad_must_green.py`）；全量三目录见 gapfill 记录
 
 ### 7.2 WS-B
 
-- [ ] **AC-AAD-10** `run_curate` 编排壳 ≤80 行（度量口径写入 PR 描述）
-- [ ] **AC-AAD-11** 各 stage 至少 1 个单位测试或既有测试改挂新符号
-- [ ] **AC-AAD-12** **curate baseline replay / golden 签名 A/B** 通过（自反 `arch_equivalence_check` 仅烟测，不作唯一等价证明）
-- [ ] **AC-AAD-13** `lse_cross_import_stats`：LE→cur=0；cur→LE **≤10**；baseline 已更新且棘轮生效（禁止假压 baseline）
+- [x] **AC-AAD-10** `run_curate` 编排壳 ≤80 行（度量口径写入 PR 描述）
+- [x] **AC-AAD-11** 各 stage 至少 1 个单位测试或既有测试改挂新符号
+- [x] **AC-AAD-12** **curate baseline replay / golden 签名 A/B** 通过（`test_aad_curate_signature_ab`；自反 `arch_equivalence_check` 仅烟测）
+- [x] **AC-AAD-13** `lse_cross_import_stats`：LE→cur=0；cur→LE **≤10**（当前 **5**）；baseline 已更新且棘轮生效
 
 ### 7.3 WS-C
 
-- [ ] **AC-AAD-20** PrefixBeam 默认 **关闭** 时，与 VariantRerank 产物签名等价；**剔除字段集** M0 冻结（至少含可变 `utility` / 时间戳；`plannerPath` 策略写明）
-- [ ] **AC-AAD-21** 开启后：预算耗尽必降级且 `decisionLog` 含 `fallbackReason`
-- [ ] **AC-AAD-22** `deterministic_strict=true` 时同输入两次屏签名一致
-- [ ] **AC-AAD-23** 前缀扩展路径调用 `IncrementalScoreState` 且缓存键与 state 前缀一致（探针）
-- [ ] **AC-AAD-24** Holdback：N≥8 且含多样性（短途/长途、人像/风景、跨城各至少覆盖）；维度=节奏、拼图合理性、章英雄；有否决样例；记录入 `docs/acceptance-records/`；**平局≠默认开**
-- [ ] **AC-AAD-25** LayoutUtility：`(1−w·p)` + 章窗分层；`weights_hash` 变更可测；`lint_layout_contract_surface` 绿
-- [ ] **AC-AAD-26** 禁止新增平行打分入口（lint 或评审清单）
-- [ ] **AC-AAD-30** 热点路径 lint：封面/英雄/solo/moment 经 `purpose_overall`
-- [ ] ~~AC-AAD-31/32 Geo~~ → **取消（Parking）**
+- [x] **AC-AAD-20** PrefixBeam 默认 **关闭** 时，与 VariantRerank 产物签名等价；剔除字段用 `layout_snapshot`（pattern/slots）；`plannerPath`：flag 关不为 `prefix_beam`
+- [x] **AC-AAD-21** 开启后：预算耗尽必降级且 `decisionLog` 含 `fallbackReason`；另含 `utility`
+- [x] **AC-AAD-22** `deterministic_strict=true` 时同输入两次屏签名一致（`test_aad_ac_boost`）
+- [x] **AC-AAD-23** 前缀扩展路径调用 `IncrementalScoreState` 且缓存键与 state 前缀一致（探针）
+- [ ] **AC-AAD-24** Holdback：N≥8 盲评（**模板+骨架已落**；默认开=**否**/No-Go；见 `aad-holdback-2026-07-16.json`）
+- [x] **AC-AAD-25** LayoutUtility：`(1−w·p)` + 章窗分层；`weights_hash` 变更可测；`lint_layout_contract_surface` 绿
+- [x] **AC-AAD-26** 禁止新增平行打分入口（mosaic/beam 必须经 `combine_utility` AST 探针）
+- [x] **AC-AAD-30** 热点路径 lint：封面/英雄/solo/moment 经 `purpose_overall`
+- [x] ~~AC-AAD-31/32 Geo~~ → **取消（Parking）**
 
 ### 7.4 手测 / 狗粮
 
