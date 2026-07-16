@@ -42,7 +42,7 @@ python -m travelogue export-longshot trips\<tripId> --scale 2
 
 ### 1.0b 空态 FTUE 狗粮（`--trips-dir`）
 
-空书架测试须用 **CLI `--trips-dir`**（勿只设 `TRAVELOGUE_TRIPS_DIR`——Studio 加载 `config.yaml` 后 env 基本无效）。
+空书架测试优先用 **CLI `--trips-dir`**。W2 起也可设 `TRAVELOGUE_TRIPS_DIR`（优先级低于 CLI，高于 `config.yaml`）。
 
 ```powershell
 $empty = Join-Path $env:TEMP "travelogue-ftue-trips"
@@ -50,7 +50,8 @@ New-Item -ItemType Directory -Force -Path $empty | Out-Null
 $env:TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM = "1"
 python -m travelogue studio --no-open --host 127.0.0.1 --port 8771 --trips-dir $empty
 # 浏览器打开 http://127.0.0.1:8771/ 后清 localStorage 再刷新
-# 优先级：--trips-dir > config.yaml trips_dir > 默认
+# 优先级：--trips-dir > TRAVELOGUE_TRIPS_DIR > config.yaml trips_dir > 默认
+# 启动日志：studio trips_dir source=… path=…
 ```
 
 见 [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) · [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md)。

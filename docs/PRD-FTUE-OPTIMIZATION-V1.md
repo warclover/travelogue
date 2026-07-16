@@ -86,7 +86,7 @@
 | **空态** | `python -m travelogue studio --trips-dir <空目录> --no-open --port <闲置端口>` |
 | **首访** | 清该 origin 的 `localStorage` / `sessionStorage` 后打开首页 |
 | **样片** | `templates/studio/assets/demo-album` 或 `useDemoAlbum: true` |
-| **trips 优先级** | **`--trips-dir` > `config.yaml` `trips_dir` > 默认**；`TRAVELOGUE_TRIPS_DIR` 在 Studio 加载 config 后 **基本无效**（勿依赖） |
+| **trips 优先级** | **`--trips-dir` > `TRAVELOGUE_TRIPS_DIR` > `config.yaml` `trips_dir` > 默认**（W2 已接入 env；空态仍建议显式 `--trips-dir`） |
 
 ### 1.2 目标态剧本（To-Be）
 
@@ -313,7 +313,7 @@ L0G **铁律不变**（无 Key 可成稿、配置是升级）；仅 **用户可�
 | **BE-FTUE-01** | 长图文件名 tripId；中文 title 单测 | W0 |
 | **BE-FTUE-02** | stageHint 枚举 §3.5 | W1 |
 | **BE-FTUE-03** | example/bootstrap vision 默认不重型 | W1 |
-| **BE-FTUE-04** | （可选）trips 优先级日志 | W2 |
+| **BE-FTUE-04** | trips：CLI > `TRAVELOGUE_TRIPS_DIR` > config；INFO `source=` | W2 |
 | **BE-FTUE-05** | templateFeedback 不进 hook | W1 |
 | **BE-FTUE-06** | `formatLongshotResult` / 书架路径发群句对齐 | W1 |
 

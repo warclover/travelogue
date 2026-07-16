@@ -6,7 +6,7 @@
 | **评审** | [acceptance-records/ftue-optimization-v1-review-2026-07-15.md](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md) · Conditional Go · MF 已回写 |
 | **线框** | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) · F1–F8 |
 | **更新日期** | 2026-07-15 |
-| **状态** | **W1 编码进行中**（2026-07-16 · 分支 `feat/ftue-optimization-v1-w0`） |
+| **状态** | **W2 已合入**（2026-07-16 · 分支 `feat/ftue-optimization-v1-w0`） |
 | **估时** | W0 ≈ **3 人日** · W1 ≈ **3–4 人日**（含 Help/Facade 回归） |
 
 ---
@@ -101,8 +101,8 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 
 | ID | 内容 | 波次 |
 |----|------|------|
-| **BE-FTUE-04** | trips：CLI > config；可选打日志；env 现状文档化 | W2 |
-| stub「碎片」等用词 | Copy 会签 | W2 |
+| **BE-FTUE-04** | trips：CLI > env > config；INFO 打 `source=`；文档同步 | ✅ W2 |
+| stub「碎片 / Day / 帧 / 构图」等用词 | Copy 会签润色 | ✅ W2 |
 | 便携包手测 | 对齐 Installer Gate | W3 |
 
 ---
@@ -123,7 +123,7 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 | 风险 | 缓解 |
 |------|------|
 | 开发机 `vision: true` 误判 W0 变慢 | W0 狗粮用默认 / 显式关 vision |
-| 只设 `TRAVELOGUE_TRIPS_DIR` 空态测不准 | **必须** `--trips-dir` |
+| 只设 `TRAVELOGUE_TRIPS_DIR` 空态测不准 | W2 已接入 env；仍推荐 `--trips-dir` 以免与本机 config 混淆 |
 | 文件名改 tripId 后用户找文件 | 成功面展示中文标题 + reveal |
 | 与 L0G 字面双合同 | DOC-FTUE-05 同步脚注；以 FTUE §4.2 为用户面权威 |
 | 示例去重与 FirstSuccess 漏接 | FE-02 含打开已有路径手测 |
@@ -146,6 +146,9 @@ python -m pytest tests/unit -q -k "longshot_output_name or ftue or demo_album" -
 | BE-FTUE-03 | ✅ bootstrap `vision.enabled: false` |
 | BE-FTUE-05 | ✅ templateFeedback 仅 Job 字段（既有） |
 | BE-FTUE-06 | ✅ `formatLongshotResult` 对齐 |
+| BE-FTUE-04 | ✅ `resolve_studio_trips_dir` · CLI > env > config + INFO |
+| W2 stub Copy | ✅ lead/caption/epilogue/hook；封面过滤扩「照片汇成」 |
+| W3 便携包 | ⬜ |
 
 ---
 

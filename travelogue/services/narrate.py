@@ -176,12 +176,12 @@ def _pick_template(templates: list[str], seed: str) -> str:
 
 
 STUB_CAPTION_TEMPLATES: dict[str, tuple[str, ...]] = {
-    "portrait": ("{place}的竖构图。", "抬头看见{place}。", "{date}的{place}。"),
+    "portrait": ("{place}的竖幅。", "抬头看见{place}。", "{date}的{place}。"),
     "landscape": ("{place}的远景。", "横展开的{place}。", "{date}留在{place}。"),
     "panorama": ("{place}徐徐展开。", "宽幅里的{place}。", "全景里的{place}。"),
-    "square": ("{place}的一格。", "方构图里的{place}。", "{date}·{place}。"),
-    "tall": ("{place}的竖长一帧。", "向上延伸的{place}。", "{date}的{place}。"),
-    "default": ("{place}的一帧。", "旅途里的一帧。", "{date}的{place}。"),
+    "square": ("{place}的一格。", "方框里的{place}。", "{date}·{place}。"),
+    "tall": ("{place}的竖长一张。", "向上延伸的{place}。", "{date}的{place}。"),
+    "default": ("{place}的一张。", "旅途里的一张。", "{date}的{place}。"),
 }
 
 
@@ -304,17 +304,17 @@ def _build_hook(
 
     if tone == "documentary":
         if span and photo_count:
-            return f"{place}，{span}，{photo_count} 帧记录。"
+            return f"{place}，{span}，{photo_count} 张照片。"
         if span:
             return f"{place}，{span}。"
         return f"{title} · {place}。"
 
     day_count = _trip_day_count(meta)
-    # FE-FTUE-07 / §4.3 · 去掉「碎片」刺耳词（深度润色仍属 W2）
+    # W2 Copy · 读者向 stub（去「碎片 / 帧」工程口吻）
     templates = [
         f"在{place}的{day_count}天，{photo_count} 张照片汇成这一页。",
         f"{place}·{span or f'{day_count}天'}，慢慢翻。",
-        f"走进{place}，{photo_count} 帧留在这里。",
+        f"走进{place}，{photo_count} 张照片留在这里。",
         f"{title} · 关于{place}的{day_count}天。",
     ]
     if span and photo_count:
@@ -340,7 +340,7 @@ def _chapter_day_label(chapter: dict, assets: dict[str, dict]) -> str:
 
 
 def _build_lead_frame(chapter_index: int, day_label: str, place: str) -> str:
-    parts = [f"Day {chapter_index}"]
+    parts = [f"第{chapter_index}天"]
     if day_label:
         parts.append(day_label)
     if place:
@@ -386,19 +386,19 @@ def _build_lead(
 
     if chapter_index == 1:
         if tone == "documentary":
-            return f"第 1 章 · {title or place}，{n} 张。"
+            return f"开篇 · {title or place}，{n} 张。"
         return f"从{title or '这里'}开始，{place}比想象中安静。"
 
     if chapter_index >= chapter_total and chapter_total > 1:
         if tone == "documentary":
-            return f"末章 · {title or place}。"
+            return f"收尾 · {title or place}。"
         return f"快到尾声，{title or place}还留着余温。"
 
     if tone == "documentary":
         return f"{title or place}，{n} 张。"
     subject = place or title or "这一段"
     if n >= 2:
-        return f"{subject}这一段，{n} 帧慢慢铺开。"
+        return f"{subject}这一段，{n} 张慢慢铺开。"
     return f"{subject}，再走一步。"
 
 
@@ -411,7 +411,7 @@ def _build_epilogue(
 ) -> str:
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
     if tone == "documentary":
-        return f"{place}，行程归档。"
+        return f"把{place}收进这一本。"
     return f"下次再见，{place}。"
 
 
