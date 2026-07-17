@@ -66,6 +66,13 @@ import {
   maybeShowPlatformPickTip,
 } from "../js/help-onboarding.js";
 import { runClientLongshotFallback } from "./longshot-client-fallback.js";
+import {
+  assessMagazineTitleRisk as assessMagazineTitleRiskLogic,
+  disconnectExportFeedback as disconnectExportFeedbackLogic,
+  isFlagExpired as isFlagExpiredLogic,
+  isExportSideEffectActiveFor,
+  shouldShowLongshotStale,
+} from "./longshot-logic.js";
 
 export {
   shouldShowExportPulse,
@@ -267,8 +274,7 @@ function isExportSideEffectActive(tripId) {
   var data = _readJsonStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY);
   if (!data) return false;
   if (String(data.tripId || "") !== String(tripId || "")) return false;
-  var until = Number(data.until || 0);
-  if (!until || Date.now() > until) {
+  if (!isExportSideEffectActiveFor(data, tripId, Date.now())) {
     _removeStorage(sessionStorage, EXPORT_SIDE_EFFECT_KEY);
     return false;
   }
@@ -292,41 +298,14 @@ function readMagazineTitleFromDom() {
  * @returns {null|{level:"soft"|"severe", reason:string}}
  */
 export function assessMagazineTitleRisk(title) {
-  var t = String(title || "").trim();
-  if (!t) return { level: "severe", reason: "empty" };
-  if (/[\uFFFD\u0000-\u0008]/.test(t) || /�/.test(t)) {
-    return { level: "severe", reason: "garbled" };
-  }
-  if (t.length < 2) return { level: "severe", reason: "too_short" };
-  if (t.length > 40) {
-    var half = Math.floor(t.length / 2);
-    if (t.slice(0, half) === t.slice(half, half * 2)) {
-      return { level: "soft", reason: "repeat_long" };
-    }
-  }
-  // 孤立 +（可选 soft）；艺术书名含 + 可 bypass
-  if (/\S\+\S/.test(t) && !/^[A-Za-z0-9]+\+[A-Za-z0-9]+/.test(t)) {
-    return { level: "soft", reason: "plus_join" };
-  }
-  if (/\+\s|\s\+/.test(t) || /^\+|\+$/.test(t)) {
-    return { level: "soft", reason: "plus_join" };
-  }
-  return null;
+  return assessMagazineTitleRiskLogic(title);
 }
 
 /** Trust V1 · F-TRU-EXP-04 / 附录 C.2 · 断服反馈 */
 export function disconnectExportFeedback(tripId) {
-  var href =
-    tripId
-      ? "/" + encodeURIComponent(String(tripId)) + "/"
-      : (typeof window !== "undefined" && window.location && window.location.pathname) ||
-        "/";
-  return {
-    title: "服务已停止，长图还没有导出",
-    subtitle: "请重新启动 Studio 后打开本游记，再点「长图」",
-    linkText: "回到预览",
-    linkHref: href,
-  };
+  var pathname =
+    (typeof window !== "undefined" && window.location && window.location.pathname) || "/";
+  return disconnectExportFeedbackLogic(tripId, pathname);
 }
 
 function applyDisconnectExportError(root, tripId) {
@@ -357,8 +336,7 @@ function readLayoutUpdating() {
 }
 
 function isFlagExpired(data) {
-  if (!data || !data.ts) return true;
-  return Date.now() - Number(data.ts) > EXPORT_AFTER_TTL_MS;
+  return isFlagExpiredLogic(data, Date.now(), EXPORT_AFTER_TTL_MS);
 }
 
 function bindExportAfterLayoutPagehide() {
@@ -896,6 +874,58 @@ export function cancelPreviewLongshotExport(root) {
       e.stopPropagation();
     });
 
+    function syncExportPopoverCopyUi() {
+      var html = document.documentElement;
+      var photosOnly = html.getAttribute("data-photos-only") === "on";
+      var narrativeHidden = html.getAttribute("data-copy-display") === "photos";
+      var captionsOn = html.getAttribute("data-caption-display") !== "off";
+      pop.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+        var on = photosOnly
+          ? btn.getAttribute("data-copy-preset") === "photos"
+          : btn.getAttribute("data-copy-preset") === "full";
+        btn.classList.toggle("is-selected", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      var captionChip = pop.querySelector('[data-preview-chip="caption"]');
+      if (captionChip) {
+        captionChip.classList.toggle("is-selected", captionsOn && !photosOnly);
+        captionChip.setAttribute("aria-pressed", captionsOn ? "true" : "false");
+        captionChip.textContent = captionsOn ? "图注：开" : "图注：关";
+        captionChip.disabled = photosOnly;
+      }
+      var narrativeChip = pop.querySelector('[data-preview-chip="narrative"]');
+      if (narrativeChip) {
+        var showNarrative = !narrativeHidden && !photosOnly;
+        narrativeChip.classList.toggle("is-selected", showNarrative);
+        narrativeChip.setAttribute("aria-pressed", showNarrative ? "true" : "false");
+        narrativeChip.textContent = !narrativeHidden ? "导语：显" : "导语：隐";
+        narrativeChip.disabled = photosOnly;
+      }
+      syncLongshotPreviewChips(root);
+    }
+    pop._syncCopyUi = syncExportPopoverCopyUi;
+
+    pop.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        applyToolbarCopyPreset(root, btn.getAttribute("data-copy-preset"));
+        syncExportPopoverCopyUi();
+      });
+    });
+    var popCaption = pop.querySelector('[data-preview-chip="caption"]');
+    if (popCaption) {
+      popCaption.addEventListener("click", function () {
+        toggleToolbarCaptions(root);
+        syncExportPopoverCopyUi();
+      });
+    }
+    var popNarrative = pop.querySelector('[data-preview-chip="narrative"]');
+    if (popNarrative) {
+      popNarrative.addEventListener("click", function () {
+        toggleToolbarNarrative(root);
+        syncExportPopoverCopyUi();
+      });
+    }
+
     pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
@@ -959,6 +989,7 @@ export function cancelPreviewLongshotExport(root) {
         });
       }
       syncStudioExportPopoverUI(pop);
+      syncExportPopoverCopyUi();
     };
 
     wrap.appendChild(pop);
@@ -1643,12 +1674,17 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function showStaleHint(root) {
-    // D-REF-18 · layoutPending / sourceMissing 优先于 longshotStale
-    if (_getLayoutPending()) return;
-    if (_getSourceMissing()) return;
-    // Trust V1 · 导出成功静音窗内不升 stale 主警告
-    if (isExportSideEffectActive(_tripIdFromPath())) return;
-    if (root && root._exportResultShowing) return;
+    if (
+      !shouldShowLongshotStale({
+        layoutPending: !!_getLayoutPending(),
+        sourceMissing: !!_getSourceMissing(),
+        sideEffectActive: isExportSideEffectActive(_tripIdFromPath()),
+        exportResultShowing: !!(root && root._exportResultShowing),
+        longshotStale: true,
+      })
+    ) {
+      return;
+    }
     setLongshotExportState(root, "stale");
   }
 

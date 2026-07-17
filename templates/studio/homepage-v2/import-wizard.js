@@ -12,6 +12,12 @@ import {
 } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
+import {
+  isFineSnapshotDirty,
+  isPhotoPrefsNonDefault,
+  shouldConfirmCloseWizard,
+  canLeavePickStep,
+} from "./import-wizard-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 import { openSettings } from "./settings-panel.js";
 
@@ -616,25 +622,22 @@ function snapshotFineFields() {
 }
 
 function fineFieldsDirty() {
-  if (!_fineEntrySnapshot) return false;
-  var cur = snapshotFineFields();
-  var keys = Object.keys(_fineEntrySnapshot);
-  for (var i = 0; i < keys.length; i++) {
-    var k = keys[i];
-    if (String(cur[k] || "") !== String(_fineEntrySnapshot[k] || "")) return true;
-  }
-  return false;
+  return isFineSnapshotDirty(_fineEntrySnapshot, snapshotFineFields());
 }
 
 function photoPrefsNonDefault() {
-  return !readPhotoCullEnabled() || readKeepDupesEnabled();
+  return isPhotoPrefsNonDefault({
+    photoCullEnabled: readPhotoCullEnabled(),
+    keepNearDuplicates: readKeepDupesEnabled(),
+  });
 }
 
 function shouldConfirmClose() {
-  if (_step === "pick") return false;
-  if (_step === "fine" && fineFieldsDirty()) return true;
-  if ((_step === "confirm" || _step === "fine") && photoPrefsNonDefault()) return true;
-  return false;
+  return shouldConfirmCloseWizard({
+    step: _step,
+    fineDirty: fineFieldsDirty(),
+    photoPrefsNonDefault: photoPrefsNonDefault(),
+  });
 }
 
 function clearFineDraftFields() {
@@ -1152,7 +1155,7 @@ function startImportFromWizard() {
   if (_pendingUploadFiles && _pendingUploadFiles.length) {
     return startUploadFromWizard();
   }
-  if (!_pendingAlbumPath) {
+  if (!canLeavePickStep(_pendingAlbumPath)) {
     setStepError(_step === "fine" ? "fine" : "confirm", "请先选择照片文件夹");
     return;
   }

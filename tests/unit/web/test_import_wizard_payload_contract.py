@@ -43,7 +43,11 @@ def test_ds_03_source_still_assigns_contract_keys() -> None:
     """防回归：JS 仍写入契约字段名（非运行时；e2e 负责真实 POST body）。"""
     wizard = _WIZARD_JS.read_text(encoding="utf-8")
     run = _RUN_JS.read_text(encoding="utf-8")
+    logic = (_RUN_JS.parent / "import-run-logic.js").read_text(encoding="utf-8")
     assert "function buildWizardPayload" in wizard
+    # SFH W1 · payload 组装下沉 logic；壳层仍 export buildImportPayload
+    assert "function buildImportPayloadFields" in logic  # ASH-CONTRACT
+    assert "buildImportPayloadFields" in run
     assert "function buildImportPayload" in run
     for key in (
         "photoCullEnabled",
