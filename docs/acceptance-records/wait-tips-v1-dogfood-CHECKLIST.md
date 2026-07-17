@@ -4,11 +4,12 @@
 |------|------|
 | **对应** | [ACCEPTANCE-WAIT-TIPS-V1.md](../ACCEPTANCE-WAIT-TIPS-V1.md) · [PRD-WAIT-TIPS-V1.md](../PRD-WAIT-TIPS-V1.md) **v0.2.0** |
 | **线框** | [wait-tips-v1-wireframe.html](../wireframes/wait-tips-v1-wireframe.html) |
-| **状态** | 编码前备查 · Kickoff 后执行 |
+| **状态** | 工程烟测已绿（QA-WT-04 e2e）· **产品手测待非实现者签** |
 | **日期** | 2026-07-17 |
 
 > 手测人须为**非实现者**。环境：Studio · 示例相册导入。  
-> 开始前可清：`localStorage` 键 `travelogue.waitTips.dismissed` / `travelogue.waitTips.version`。
+> 开始前可清：`localStorage` 键 `travelogue.waitTips.dismissed` / `travelogue.waitTips.version`。  
+> 工程对照：`tests/e2e/test_wait_tips_w0_playwright.py`（AC-WT-01 / 05 烟测已绿；**不替代**本表产品勾选）。
 
 ---
 

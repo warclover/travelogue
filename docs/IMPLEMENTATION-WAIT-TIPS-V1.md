@@ -98,8 +98,8 @@
 |----|------|------|-----|------|
 | **QA-WT-01** | 契约：六张字面 · 禁区词 · WT-02 标题 | 0.3d | 07 · 09 | ✅ `test_wait_tips_v1_contracts.py` |
 | **QA-WT-02** | dismiss key 语义 | 0.2d | 04 | ✅ |
-| **QA-WT-03** | 手测 dogfood F1–F5 | 0.3d | 01～06 | ⏳ |
-| **QA-WT-04** |（建议）Playwright：Tips 出现与成功后消失 | 0.3d | 01 · 05 | ⏳ |
+| **QA-WT-03** | 手测 dogfood F1–F5 | 0.3d | 01～06 | ⏳ 待非实现者 |
+| **QA-WT-04** | Playwright：Tips 出现与成功后消失 | 0.3d | 01 · 05 | ✅ `test_wait_tips_w0_playwright.py` |
 
 ### 3.3 W0 完成定义
 
