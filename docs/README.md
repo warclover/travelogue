@@ -114,6 +114,7 @@
 | [acceptance-records/wait-tips-v1-review-2026-07-17.md](./acceptance-records/wait-tips-v1-review-2026-07-17.md) | Wait Tips · 跨职能评审纪要 · Conditional Go · BLK-01～07 |
 | [acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) | Wait Tips · 市场/运营/产品文案润色纪要 |
 | [acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md) | Wait Tips · 手测狗粮 F1–F5 |
+| [acceptance-records/wait-tips-v1-gap-checklist-2026-07-17.md](./acceptance-records/wait-tips-v1-gap-checklist-2026-07-17.md) | Wait Tips · PRD 对照缺口清单（执行收口） |
 | [acceptance-records/wait-tips-v1-review-TEMPLATE.md](./acceptance-records/wait-tips-v1-review-TEMPLATE.md) | Wait Tips · 跨职能评审模板（备查） |
 | [acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) | 首访可信 · 真人狗粮 F1–F5 · AC-FST-15 |
 | [acceptance-records/first-session-trust-v1-review-2026-07-17.md](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) | 首访可信 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
