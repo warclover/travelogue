@@ -14,7 +14,7 @@ HOME_HTML = STUDIO / "studio-home-v2.html"
 
 def test_help_copy_contract_locked() -> None:
     help_js = HELP_JS.read_text(encoding="utf-8")
-    assert "当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』" in help_js
+    assert "当前为本机文案。请点击打开卷轴预览查看游记，也可以直接保存长图。" in help_js
     assert "验货没问题就点『长图』，生成可发微信的长图" in help_js
     assert "长图已保存到本机" in help_js
     assert "打开微信，按文件名顺序发到群聊" in help_js
@@ -43,7 +43,7 @@ def test_first_success_scheme_a() -> None:
     assert "HELP_COPY.saveLongshotSecondary" in fs
     assert "HELP_COPY.firstSuccessNext" in fs
     assert 'v2-success-next-hint' in html
-    assert "当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』" in html
+    assert "当前为本机文案。请点击打开卷轴预览查看游记，也可以直接保存长图。" in html
     # 主 CTA 不再按 quick_share 切成「保存长图」
     assert '_successMode === "fine_craft" ? "打开卷轴预览' not in fs
     assert 'open.textContent = _successMode === "fine_craft"' not in fs
