@@ -783,7 +783,9 @@ def export_trip_longshot(
 
     page = None
     try:
-        _report(0, 1, "正在打开浏览器…")
+        from travelogue.domain.stage_hints import PREPARING_BROWSER, stage_hint_text
+
+        _report(0, 1, stage_hint_text(PREPARING_BROWSER))
         raise_if_longshot_cancelled(cancel_check)
         page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 844})
         if cancel_register is not None:
