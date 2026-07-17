@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-07-16 |
+| **更新日期** | 2026-07-17 |
 
 ---
 
@@ -97,6 +97,12 @@
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) | FTUE · W0–W3 任务卡 |
 | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) | FTUE 线框 F1–F8 |
+| [PRD-SHARE-READY-OPTIMIZATION-V1.md](./PRD-SHARE-READY-OPTIMIZATION-V1.md) | **敢发闭环优化 V1** **v1.0.2**（Conditional Go · 用户联席 USR 已回写 · 线框增补 · 编码另排期；**不含**海外 IG） |
+| [IMPLEMENTATION-SHARE-READY-OPTIMIZATION-V1.md](./IMPLEMENTATION-SHARE-READY-OPTIMIZATION-V1.md) | 敢发闭环 · W0–W2 任务卡（编码未 Kickoff） |
+| [ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) | 敢发闭环验收 · AC-SR + 手测脚本 |
+| [wireframes/share-ready-optimization-v1-wireframe.html](./wireframes/share-ready-optimization-v1-wireframe.html) | 敢发闭环线框 F1–F6 |
+| [acceptance-records/share-ready-optimization-v1-review-2026-07-17.md](./acceptance-records/share-ready-optimization-v1-review-2026-07-17.md) | 敢发闭环跨职能评审纪要 · Conditional Go |
+| [acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md](./acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md) | 敢发闭环 **多类型用户联席评审** · Conditional Go · USR-01～06 |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
 | [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环 · M1+M2+P0+M3 落地说明 |
 | [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环验收 · AC-FEED + P0 + M3 |
@@ -108,6 +114,7 @@
 预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-REFINE-UX-V1.1**（Conditional Go · 可开 M1）→ **PRD-PREVIEW-EXPORT-FACADE-V1** → **PRD-UX-TRUST-V1**。  
 首访帮助：**PRD-HELP-ONBOARDING-V1** **v1.1.1**（Conditional Go · FirstSuccess 方案 A · 脉冲+可见 tip · 发群三要素兜底 · 对齐精修 V1.1「完成≠更新版面」；不做全站 tour）。  
 首访成稿：**PRD-FTUE-OPTIMIZATION-V1** **v1.1.0**（W0 编码 · 分支 `feat/ftue-optimization-v1-w0`）。  
+敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · USR-01～06 已回写 · 线框 F1/F2/F5 增补 · **编码另排期**；不含海外 IG）。  
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
 
 ---

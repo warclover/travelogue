@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **关联** | [PRD-PHASE2.md](./PRD-PHASE2.md)、[IMPLEMENTATION-PHASE2.md](./IMPLEMENTATION-PHASE2.md)、`DEVELOPMENT.md`、`ACCEPTANCE.md`、[PRD-EXPERIENCE.md](./PRD-EXPERIENCE.md) |
-| **更新日期** | 2026-07-16 |
+| **更新日期** | 2026-07-17 |
 
 ---
 
@@ -55,6 +55,14 @@ python -m travelogue studio --no-open --host 127.0.0.1 --port 8771 --trips-dir $
 ```
 
 见 [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) · [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md)。
+
+---
+
+### 1.0c 首页 showcase 真图（Share-Ready · DOC-SR-03）
+
+首页 Bento 样品图目录：`templates/studio/assets/demo-showcase/`。  
+**合同与烘焙步骤**见该目录 [README.md](../templates/studio/assets/demo-showcase/README.md)（[PRD-SHARE-READY-OPTIMIZATION-V1](./PRD-SHARE-READY-OPTIMIZATION-V1.md) §3.1）。  
+W0 已自 `trips/demo-album` 烘焙真图（见该目录 README）；缺图时勿回退默认可上线的 `*-PLACEHOLDER.webp`。
 
 ---
 
