@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v1.1.3** |
+| **文档版本** | **v1.1.4** |
 | **状态** | **有条件通过（Conditional Go）** · 评审 Must-Fix 已回写 · 可开 W0 |
 | **主题代号** | 「帮助系统 V1」— 情境引导主链 · 按需救援 · 不打断验货 |
 | **前置条件** | Studio 首页 v2（M21）可用；Preview Toolbar v3 可用；[PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) P0～P2 已落地；[PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) **Conditional Go / 模式≠面板已落地**；[PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) 导出门面合同有效 |
@@ -25,6 +25,11 @@
 > **D-HELP-08′ 澄清**：「忙碌态零 L1」禁止的是 coach / 脉冲 / Help tip。  
 > 导入 Importing 进度壳内的 [Wait Tips](./PRD-WAIT-TIPS-V1.md) 属**进度 UI 次内容**（可关闭轮播），**不是** L1；不写 Help `seen`，不经过 `isHelpL1Blocked` 放行通道。  
 > 长图导出 / layoutUpdating 忙碌态仍 **零 L1**，且 Wait Tips V1 **不挂**长图 Dock。
+
+> **v1.1.4 交叉脚注（2026-07-17 · DOC-WT-12）**
+>
+> 帮助抽屉可提供 **「重播等待提示」**（清 `travelogue.waitTips.dismissed`），属 **按需救援 / 非 L1**。  
+> 明示：重播后仅在下次 Importing 再显示小提示，**不是**操作引导，也不挡进度。见 [PRD-WAIT-TIPS-V1](./PRD-WAIT-TIPS-V1.md) D-WT-04 W2。
 
 > **定位**
 >
@@ -703,6 +708,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | **v1.1.2** | **2026-07-17** | DOC-FST-03：发群三要素改按需查阅；默认成功面对齐 First-Session Trust；AC-HELP-06/06a 修订 |
 | **v1.1.2** | **2026-07-15** | 交叉引用 Desktop LLM Setup：§12.4 H7 / T-CAP-01 / D-DLLM-13（不改主链 H1–H5） |
 | **v1.1.3** | **2026-07-17** | DOC-WT BLK-01：D-HELP-08′ 脚注 — Importing Wait Tips 为进度次内容、非 L1 |
+| **v1.1.4** | **2026-07-17** | DOC-WT-12：帮助抽屉「重播等待提示」= 按需非 L1 |
 
 ### 12.4 相邻主题 · Desktop LLM Setup（H7 / 能力卡）
 

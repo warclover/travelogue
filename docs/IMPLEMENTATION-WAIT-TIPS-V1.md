@@ -98,8 +98,8 @@
 |----|------|------|-----|------|
 | **QA-WT-01** | 契约：六张字面 · 禁区词 · WT-02 标题 | 0.3d | 07 · 09 | ✅ `test_wait_tips_v1_contracts.py` |
 | **QA-WT-02** | dismiss key 语义 | 0.2d | 04 | ✅ |
-| **QA-WT-03** | 手测 dogfood F1–F5 | 0.3d | 01～06 | ⏳ |
-| **QA-WT-04** |（建议）Playwright：Tips 出现与成功后消失 | 0.3d | 01 · 05 | ⏳ |
+| **QA-WT-03** | 手测 dogfood F1–F5 | 0.3d | 01～06 | ⏳ 待非实现者 |
+| **QA-WT-04** | Playwright：mount / 手动翻 / dismiss / teardown / reduced-motion | 0.3d | 01·02·04·05·08 | ✅ `test_wait_tips_w0_playwright.py` |
 
 ### 3.3 W0 完成定义
 
@@ -117,7 +117,7 @@
 | **FE-WT-11** | D-WT-07 短尾不 advance | 0.3d | 10 | ✅ `notifyWaitTipsJob` |
 | **FE-WT-12** | prefers-reduced-motion 关自动播 | 0.2d | 08 | ✅ |
 | **FE-WT-13** | 埋点 auto_advance / pause / suppress | 0.1d | §6 | ✅ |
-| **QA-WT-05** | W1 手测 | 0.2d | 08 · 10 | ⏳ |
+| **QA-WT-05** | W1 手测（短尾抑制等） | 0.2d | 08 · 10 | ⏳ 待非实现者；08 已有 e2e |
 
 ---
 
@@ -126,7 +126,7 @@
 | ID | 任务 | 估时 | 状态 |
 |----|------|------|------|
 | **FE-WT-14** | Help 抽屉「重播等待提示」清 dismiss | 0.4d | ✅ `replayWaitTips` |
-| **DOC-WT-12** | Help 重播入口非 L1 脚注 | 0.1d | ✅ toast 明示「不是操作引导」 |
+| **DOC-WT-12** | Help 重播入口非 L1 脚注 | 0.1d | ✅ toast + Help PRD v1.1.4 |
 
 ---
 
@@ -154,8 +154,9 @@
 - [x] §4 文案无未决争议  
 - [x] ACCEPTANCE / dogfood 已拆  
 - [x] Help / FST / FTUE 脚注已回写  
-- [ ] 分支 `feat/wait-tips-v1-w0`（编码时建）  
-- [ ] 指定非实现者手测人  
+- [x] 分支 `feat/wait-tips-v1-w0`  
+- [ ] 指定非实现者手测人（G-09）  
+- [x] 缺口清单：[wait-tips-v1-gap-checklist-2026-07-17.md](./acceptance-records/wait-tips-v1-gap-checklist-2026-07-17.md)  
 
 ---
 
@@ -167,3 +168,4 @@
 | v0.2.0 | 2026-07-17 | Doc 波次收口 · Conditional Go · 对齐 PRD v0.2.0 · 可 Kickoff W0 |
 | v0.3.0 | 2026-07-17 | W0+W1 编码：copy/ctrl/host/css/analytics/契约单测 |
 | v0.3.1 | 2026-07-17 | W2：帮助抽屉「重播等待提示」+ 全量重播顺带清 dismiss |
+| v0.3.2 | 2026-07-17 | 缺口收口：e2e 扩 AC-02/04/08 · PRD AC-WT-10 · Help v1.1.4 · gap checklist |
