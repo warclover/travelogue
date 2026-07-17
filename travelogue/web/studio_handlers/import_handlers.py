@@ -20,6 +20,7 @@ from pathlib import Path
 
 from travelogue.demo.build import DemoError
 from travelogue.desktop.demo_album import is_demo_album_path
+from travelogue.domain.title_humanize import humanize_folder_title
 from travelogue.services.copy_subject import is_generic_place
 from travelogue.web.studio_auth import is_loopback_host
 from travelogue.web.studio_constants import (
@@ -162,7 +163,7 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         ) or bool(upload_place_raw and not is_generic_place(upload_place_raw))
         payload = {
             "albumPath": str(upload_dir),
-            "title": fields.get("title", "我的旅途"),
+            "title": humanize_folder_title(str(fields.get("title") or "我的旅途")),
             "place": upload_place_raw or "旅途",
             "placeUserSet": upload_place_user_set,
             "force": fields.get("force", "").lower() in ("1", "true", "yes"),
@@ -300,7 +301,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    title = str(payload.get("title") or "我的旅途").strip() or "我的旅途"
+    title = humanize_folder_title(str(payload.get("title") or "我的旅途"))
     place_raw = str(payload.get("place") or "").strip()
     place = place_raw or "旅途"
     place_user_set = (

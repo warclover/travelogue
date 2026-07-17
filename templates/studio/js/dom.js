@@ -125,6 +125,14 @@ export function basenameTitleFromPath(path) {
   var base = String(path).replace(/[/\\]+$/, "").split(/[/\\]/).pop() || "";
   base = base.replace(/\.[^.]+$/, "").trim();
   if (!base) return "我的旅途";
+  // BE-SR-05 · 与 homepage-v2/import-run humanizeFolderTitle 对齐
+  base = base.replace(
+    /[-_]?(?:[0-9a-f]{8,}|(?:ux-)?handtest[-_\w]*|demo[-_]?\d+|copy(?:\s*\(\d+\))?)$/i,
+    ""
+  );
+  base = base.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+  base = base.replace(/^(新建文件夹|untitled|copy)\s*/i, "").trim();
+  if (!base || /^[0-9a-f-]{8,}$/i.test(base)) return "我的旅途";
   return base.length > 20 ? base.slice(0, 20) : base;
 }
 

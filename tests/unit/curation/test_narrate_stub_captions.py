@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from travelogue.services.narrate import run_narrate
 from travelogue.services.narrative_scope import SCOPE_FRAME
 
@@ -73,5 +75,17 @@ def test_stub_hook_uses_day_template() -> None:
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     hook = trip["meta"]["hook"]
     assert "京都" in hook
-    # W2 stub templates: 天 / 翻 / 张照片留在这里（不再强制「帧」工程口吻）
-    assert "天" in hook or "翻" in hook or "张照片" in hook
+    # Share-Ready W2 · 可读短句；禁止说明书腔
+    assert "天" in hook or "翻" in hook or "·" in hook
+    assert "汇成" not in hook
+    assert not re.search(r"关于.+的\d+天", hook)
+
+
+def test_stub_hook_forbids_instructional_patterns() -> None:
+    """QA-SR-05 / AC-SR-12 · stub hook 禁止说明书模式；可空。"""
+    trip = _sample_trip()
+    run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
+    hook = str(trip["meta"].get("hook") or "")
+    assert "汇成" not in hook
+    assert "张照片" not in hook
+    assert not re.search(r"关于.+的\d+天", hook)
