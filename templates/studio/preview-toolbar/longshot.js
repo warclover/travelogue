@@ -29,10 +29,13 @@ import {
 import {
   applyOutputRecipeConfig,
   clearSessionIntent,
+  fetchServerRecipe,
+  getCachedKeptN,
   INTENT_TO_PLATFORM,
   isOutputRecipeEnabled,
   needsFullExportConfirm,
   PLATFORM_TO_INTENT,
+  RECIPE_API_FAIL_TOAST,
   readSessionIntent,
   resolveClientRecipe,
   showAmbiguousIntentCard,
@@ -500,6 +503,54 @@ export function cancelPreviewLongshotExport(root) {
     applyOutputRecipeConfig(studioCfg || {});
   }
 
+  /** D-OR-27 · CTA / Band 用缓存服务端 kept_n；无缓存再 DOM 估（仅非裁决提示）。 */
+  function keptNForRecipe(tripId) {
+    var cached = getCachedKeptN(tripId);
+    if (cached != null) return cached;
+    return estimatePhotoCountFromDom(document);
+  }
+
+  /**
+   * FE-SR-07 / D-SR-07 · 进度第一行人话；参数进次行。
+   * @returns {{ title: string, subtitle: string }}
+   */
+  function humanExportProgress(opts) {
+    opts = opts || {};
+    var hint = String(opts.hint || "");
+    var pct = typeof opts.pct === "number" ? opts.pct : null;
+    var prefs = readLongshotExportPrefs();
+    var modeLabel = prefs.mode === "full" ? "完整导出" : "按章导出";
+    var scale = Number(prefs.scale) || 2;
+    var quality = scale >= 3 ? "超清" : scale >= 2 ? "高清" : "标准";
+    var subtitle = modeLabel + " · " + quality;
+
+    var title = "正在生成可发微信的长图…";
+    if (/排队/.test(hint)) {
+      title = "正在排队生成长图…";
+    } else if (/更新版面/.test(hint)) {
+      title = "正在更新版面…";
+      subtitle = /自动导出/.test(hint) ? "完成后将自动导出长图" : "完成后可再点导出";
+    } else if (/九宫格/.test(hint)) {
+      title = "正在生成朋友圈九宫格…";
+    } else if (/朋友圈|连读/.test(hint)) {
+      title = "正在生成朋友圈长图…";
+    } else if (/小红书/.test(hint)) {
+      title = "正在生成小红书配图…";
+    } else if (/兼容模式/.test(hint)) {
+      title = "正在保存到本机…";
+    } else if (
+      /打开浏览器|准备长图组件|preparing_browser/i.test(hint) ||
+      (pct != null && pct < 25)
+    ) {
+      title = "正在生成可发微信的长图…";
+    } else if (pct != null && pct >= 70) {
+      title = "正在保存到本机…";
+    } else if (/保存|合成/.test(hint) || (pct != null && pct >= 25)) {
+      title = "正在合成长图…";
+    }
+    return { title: title, subtitle: subtitle };
+  }
+
   export function syncLongshotCtaLabel(root) {
     if (!root) return;
     var btn = longshotBtnEl(root);
@@ -508,9 +559,10 @@ export function cancelPreviewLongshotExport(root) {
     var prefs = readExportPrefs();
     var platform = prefs.platform || "wechat_chat";
     var tipRecipe = null;
+    var tripId = root._tripId || "";
     if (isOutputRecipeEnabled()) {
-      var keptN = estimatePhotoCountFromDom(document);
-      tipRecipe = resolveClientRecipe(keptN, root._tripId || "", "preview");
+      var keptN = keptNForRecipe(tripId);
+      tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
       if (tipRecipe && tipRecipe.ctaLabel && !tipRecipe.needsIntent) {
         platform = tipRecipe.platform || platform;
       }
@@ -518,7 +570,9 @@ export function cancelPreviewLongshotExport(root) {
     var label =
       tipRecipe && tipRecipe.ctaLabel && !tipRecipe.needsIntent
         ? tipRecipe.ctaLabel
-        : ctaLabelForPlatform(platform);
+        : tipRecipe && tipRecipe.needsIntent
+          ? tipRecipe.ctaLabel || "选择并导出"
+          : ctaLabelForPlatform(platform);
     // deepHint.subtitle · Narrative≥50 副文（H-A-07）
     if (tipRecipe && tipRecipe.subtitle) {
       btn.setAttribute("data-recipe-subtitle", tipRecipe.subtitle);
@@ -528,14 +582,17 @@ export function cancelPreviewLongshotExport(root) {
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
       // Compact dock: short chip text; full CTA on aria/tooltip.
+      // Share-Ready · Sparse 缩短形「发微信群」（D-SR-05）；Ambiguous 未选 →「选择分享」
       var short =
-        platform === "moments_grid"
-          ? "九宫格"
-          : platform === "wechat_moments"
-            ? "连读"
-            : platform === "xiaohongshu"
-              ? "小红书"
-              : "长图";
+        tipRecipe && tipRecipe.needsIntent
+          ? "选择分享"
+          : platform === "moments_grid"
+            ? "九宫格"
+            : platform === "wechat_moments"
+              ? "连读"
+              : platform === "xiaohongshu"
+                ? "小红书"
+                : "发微信群";
       var labelEl = btn.querySelector(".preview-toolbar__dock-export-label");
       if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
         labelEl.textContent = short;
@@ -544,13 +601,17 @@ export function cancelPreviewLongshotExport(root) {
       updateDockTip(btn, label);
       return;
     }
-    // F-EXP-09 · 非 Dock：可见短标签，aria 用完整 CTA
+    // F-EXP-09 / FE-SR-05 · 非 Dock：可见短标签含微信语义；aria 用完整 CTA
     var shortBar =
-      platform === "wechat_moments"
-        ? "朋友圈"
-        : platform === "xiaohongshu"
-          ? "小红书"
-          : "长图";
+      tipRecipe && tipRecipe.needsIntent
+        ? "选择分享"
+        : platform === "wechat_moments"
+          ? "朋友圈"
+          : platform === "moments_grid"
+            ? "九宫格"
+            : platform === "xiaohongshu"
+              ? "小红书"
+              : "发微信群";
     if (!btn.classList.contains("preview-toolbar__longshot--running")) {
       btn.textContent = shortBar;
     }
@@ -1022,7 +1083,8 @@ export function cancelPreviewLongshotExport(root) {
         ) {
           var pct = longshotProgressPct(job);
           setLongshotExportState(root, "running", {
-            hint: job.stageHint ? "正在保存… " + job.stageHint : "正在保存…",
+            // FE-SR-07 · stageHint 只作分类信号，不进第一行
+            hint: job.stageHint || "正在合成长图…",
             pct: pct,
           });
         }
@@ -1218,13 +1280,10 @@ export function cancelPreviewLongshotExport(root) {
         }
         root._exportDockActive = true;
         if (root._taskDock) {
-          var prefs = readLongshotExportPrefs();
-          var modeLabel = prefs.mode === "full" ? "完整" : "按章";
-          var sub =
-            modeLabel + " · " + prefs.scale + "×" + (opts.hint ? " · " + opts.hint : "");
+          var human = humanExportProgress(opts);
           root._taskDock.updateExporting({
-            title: "正在导出长图",
-            subtitle: sub,
+            title: human.title,
+            subtitle: human.subtitle,
             pct: typeof opts.pct === "number" ? opts.pct : 8,
           });
         }
@@ -1513,6 +1572,18 @@ export function cancelPreviewLongshotExport(root) {
         platform: result.platform || "wechat_chat",
       });
     }
+
+    // FE-SR-08 / USR-03 · 非 Dock 成功面也提供换种分享
+    var switchShareBtn = document.createElement("button");
+    switchShareBtn.type = "button";
+    switchShareBtn.className = "preview-toolbar__drawer-secondary";
+    switchShareBtn.setAttribute("data-share-ready-switch", "1");
+    switchShareBtn.textContent = "换种分享方式";
+    switchShareBtn.addEventListener("click", function () {
+      hideLongshotDrawer(root);
+      offerSwitchShareMethod(root, tripId);
+    });
+    actions.appendChild(switchShareBtn);
 
     var dismissBtn = document.createElement("button");
     dismissBtn.type = "button";
@@ -1827,40 +1898,63 @@ export function cancelPreviewLongshotExport(root) {
       maybeCopyGateThenExport(root, tripId);
       return;
     }
-    var keptN = estimatePhotoCountFromDom(document);
-    var tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
-    trackRecipeResolve({
-      band: tipRecipe.band,
-      needs_intent: tipRecipe.needsIntent,
-      intent: tipRecipe.intent,
-      platform: tipRecipe.platform,
-      kept_n: keptN,
-      source: tipRecipe.source,
-    });
-    if (tipRecipe.needsIntent) {
-      showAmbiguousIntentCard(keptN).then(function (choice) {
-        if (!choice || !choice.intent) return;
-        writeSessionIntent(tripId, choice.intent);
-        var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
-        _pendingExportPlatform = platform;
-        syncPrefsPlatform(platform);
-        syncLongshotCtaLabel(root);
-        if (!choice.exportNow) {
-          _showToolbarToast("已记住分享方式 · 再点导出即可", { duration: 3200 });
-          return;
+    fetchServerRecipe(tripId, "preview").then(function (res) {
+      var tipRecipe;
+      var keptN;
+      if (res && res.ok && res.tipRecipe) {
+        tipRecipe = res.tipRecipe;
+        keptN = res.keptN;
+        var domN = estimatePhotoCountFromDom(document);
+        if (domN != null && keptN != null && Number(domN) !== Number(keptN)) {
+          trackStudioEvent("recipe_keptn_dom_mismatch", {
+            trip_id: tripId,
+            server_kept_n: keptN,
+            dom_estimate: domN,
+          });
         }
-        maybeConfirmFullExportThen(root, tripId, function () {
-          maybeCopyGateThenExport(root, tripId);
-        });
+      } else {
+        // D-SR-13 · API 失败：降级 chat + 冻结 toast
+        keptN = keptNForRecipe(tripId);
+        tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
+        if (tipRecipe.needsIntent) {
+          tipRecipe = resolveClientRecipe(keptN, tripId, "shelf");
+        }
+        _showToolbarToast(RECIPE_API_FAIL_TOAST, { duration: 4200 });
+      }
+      trackRecipeResolve({
+        band: tipRecipe.band,
+        needs_intent: tipRecipe.needsIntent,
+        intent: tipRecipe.intent,
+        platform: tipRecipe.platform,
+        kept_n: keptN,
+        source: tipRecipe.source,
       });
-      return;
-    }
-    if (tipRecipe.platform) {
-      _pendingExportPlatform = tipRecipe.platform;
-      syncPrefsPlatform(tipRecipe.platform);
-    }
-    maybeConfirmFullExportThen(root, tripId, function () {
-      maybeCopyGateThenExport(root, tripId);
+      syncLongshotCtaLabel(root);
+      if (tipRecipe.needsIntent) {
+        showAmbiguousIntentCard(keptN).then(function (choice) {
+          if (!choice || !choice.intent) return;
+          writeSessionIntent(tripId, choice.intent);
+          var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
+          _pendingExportPlatform = platform;
+          syncPrefsPlatform(platform);
+          syncLongshotCtaLabel(root);
+          if (!choice.exportNow) {
+            _showToolbarToast("已记住分享方式 · 再点导出即可", { duration: 3200 });
+            return;
+          }
+          maybeConfirmFullExportThen(root, tripId, function () {
+            maybeCopyGateThenExport(root, tripId);
+          });
+        });
+        return;
+      }
+      if (tipRecipe.platform) {
+        _pendingExportPlatform = tipRecipe.platform;
+        syncPrefsPlatform(tipRecipe.platform);
+      }
+      maybeConfirmFullExportThen(root, tripId, function () {
+        maybeCopyGateThenExport(root, tripId);
+      });
     });
   }
 
@@ -1869,7 +1963,7 @@ export function cancelPreviewLongshotExport(root) {
     var mode = prefs.segmentMode || "auto";
     var platform =
       _pendingExportPlatform || prefs.platform || "wechat_chat";
-    var keptN = estimatePhotoCountFromDom(document);
+    var keptN = keptNForRecipe(tripId);
     if (!needsFullExportConfirm(keptN, mode === "full" ? "full" : mode, platform)) {
       next();
       return;
@@ -1901,21 +1995,24 @@ export function cancelPreviewLongshotExport(root) {
       _showToolbarToast("可在导出面板改选平台", { duration: 2800 });
       return;
     }
-    var keptN = estimatePhotoCountFromDom(document);
-    showAmbiguousIntentCard(keptN).then(function (choice) {
-      if (!choice || !choice.intent) return;
-      writeSessionIntent(tripId, choice.intent);
-      var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
-      _pendingExportPlatform = platform;
-      syncPrefsPlatform(platform);
-      syncLongshotCtaLabel(root);
-      if (choice.exportNow) {
-        maybeConfirmFullExportThen(root, tripId, function () {
-          maybeCopyGateThenExport(root, tripId);
-        });
-      } else {
-        _showToolbarToast("已换种分享方式", { duration: 2800 });
-      }
+    fetchServerRecipe(tripId, "preview").then(function (res) {
+      var keptN =
+        res && res.ok && res.keptN != null ? res.keptN : keptNForRecipe(tripId);
+      showAmbiguousIntentCard(keptN).then(function (choice) {
+        if (!choice || !choice.intent) return;
+        writeSessionIntent(tripId, choice.intent);
+        var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
+        _pendingExportPlatform = platform;
+        syncPrefsPlatform(platform);
+        syncLongshotCtaLabel(root);
+        if (choice.exportNow) {
+          maybeConfirmFullExportThen(root, tripId, function () {
+            maybeCopyGateThenExport(root, tripId);
+          });
+        } else {
+          _showToolbarToast("已换种分享方式", { duration: 2800 });
+        }
+      });
     });
   }
 

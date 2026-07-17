@@ -39,7 +39,7 @@ function demoThumbUrl() {
     var url = manifestAssetUrl(m, "background");
     if (url) return url;
   }
-  return STUDIO_DEMO_SHOWCASE_BASE + "background-PLACEHOLDER.webp";
+  return STUDIO_DEMO_SHOWCASE_BASE + "background.webp";
 }
 
 function tripThumbUrl(trip) {

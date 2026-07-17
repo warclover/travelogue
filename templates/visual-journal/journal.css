@@ -1310,6 +1310,16 @@ html[data-preview-share="on"] .cover-closing__end {
   display: none;
 }
 
+/* FE-SR-04 / D-SR-04 · 分享面与预览版心零泄漏：工程 tip / 省略说明不进成片 */
+html[data-export="share"] .cover-opening__explain-line,
+html[data-preview-share="on"] .cover-opening__explain-line,
+html[data-preview-toolbar="on"] .cover-opening__explain-line,
+html[data-export="share"] .cover-closing__hint[data-block="closing-degraded-hint"],
+html[data-preview-share="on"] .cover-closing__hint[data-block="closing-degraded-hint"],
+html[data-preview-toolbar="on"] .cover-closing__hint[data-block="closing-degraded-hint"] {
+  display: none !important;
+}
+
 @media (min-width: 48rem) {
   html[data-layout="web"] .cover-closing,
   html[data-layout="auto"] .cover-closing {
