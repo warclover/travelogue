@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精修 · 频次与文案优化线框 v1</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 760px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 960px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .layout {
+      max-width: calc(var(--max) + 280px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 260px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1040px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--bad { background: var(--danger); color: #fff; }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--p0 { background: #e65100; color: #fff; }
+    .tag--p1 { background: #1565c0; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #eef3f0 0%, #e4ebe6 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 440px; position: relative; overflow: hidden; padding: 20px;
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+    .frame--dark {
+      background: linear-gradient(160deg, #3a4f48, #1e2a28 60%);
+    }
+
+    /* Sheet mock */
+    .sheet {
+      width: min(520px, 100%); background: #fff; border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.18); overflow: hidden; display: flex; flex-direction: column;
+      min-height: 400px;
+    }
+    .sheet__head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #e0e0e0;
+    }
+    .sheet__head h3 { margin: 0; font-size: 16px; color: var(--bar); }
+    .sheet__x {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: #eceff1;
+      color: #546e7a; font-size: 16px; cursor: default;
+    }
+    .sheet__body { display: flex; flex: 1; min-height: 340px; }
+    .nav {
+      width: 88px; padding: 12px 8px; border-right: 1px solid #e8e8e8;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .nav button {
+      border: none; background: transparent; border-radius: 999px; padding: 8px 10px;
+      font-size: 13px; font-weight: 600; color: #78909c; text-align: left; cursor: default;
+    }
+    .nav button.is-on { background: #e8f5e9; color: #2e5c4a; }
+    .nav button .badge {
+      display: block; font-size: 9px; font-weight: 700; color: #e65100; margin-top: 2px;
+    }
+    .main { flex: 1; padding: 16px 18px 20px; font-size: 13px; }
+    .main .ctx {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #eceff1; color: #455a64; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 999px; margin-bottom: 10px;
+    }
+    .main h4 { margin: 0 0 6px; font-size: 16px; color: var(--bar); }
+    .main .hint { margin: 0 0 10px; color: var(--wf-muted); font-size: 12px; line-height: 1.5; }
+    .main .lead-bad { margin: 0 0 10px; color: #78909c; font-size: 12px; }
+    .btn-row { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .btn-row.row2 { flex-direction: row; flex-wrap: wrap; }
+    .btn {
+      border: none; border-radius: 10px; padding: 11px 14px; font-size: 13px; font-weight: 700;
+      cursor: default; text-align: center;
+    }
+    .btn--primary { background: var(--bar); color: #f5fbf8; }
+    .btn--secondary {
+      background: #fff; color: var(--bar); border: 1.5px solid rgba(26,47,40,.35);
+    }
+    .btn--ghost {
+      background: transparent; color: var(--accent); border: none; font-weight: 600; padding: 8px;
+    }
+    .btn--dim { background: #f5f5f5; color: #78909c; font-weight: 600; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .chip {
+      border: 1px solid rgba(61,107,90,.35); border-radius: 999px; padding: 6px 12px;
+      font-size: 12px; font-weight: 600; color: #3d6b5a; background: #fff;
+    }
+    .chip.is-on { background: #3d6b5a; color: #fff; border-color: #3d6b5a; }
+    .field { margin: 12px 0; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: #455a64; margin-bottom: 6px; }
+    .field input, .field textarea {
+      width: 100%; border: 1px solid #cfd8dc; border-radius: 8px; padding: 8px 10px; font-size: 12px;
+      font-family: inherit;
+    }
+    .details {
+      margin-top: 12px; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 12px;
+      font-size: 12px; color: var(--wf-muted);
+    }
+    .details summary { font-weight: 700; color: #455a64; cursor: default; }
+    .freq {
+      display: grid; grid-template-columns: 72px 1fr; gap: 6px 10px; font-size: 12px; margin: 12px 0;
+    }
+    .freq b { color: var(--bar); }
+    .matrix { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; background: #fff; }
+    .matrix th, .matrix td { border: 1px solid #cfd8dc; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .matrix th { background: #eceff1; font-size: 11px; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+    .compare figure { margin: 0; background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; }
+    .compare figcaption { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+    .strike { text-decoration: line-through; color: #90a4ae; }
+  </style>
+</head>
+<body>
+  <header class="review-bar">
+    <h1>精修 · 频次 / 文案 / 导出合并 · 线框 v1.2（评审稿）</h1>
+    <p>
+      v1.2 定案：精修三区 = <strong>这页 | 封面 | 这本</strong>；「封面」Tab 内用分段切换封面/封底（不作两个顶栏 Tab）。
+      导出决策完整迁入保存长图 ▾（F6）。情境默认见 F2。
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-active" data-tab="f0">F0 · 诊断</button>
+      <button type="button" data-tab="f1">F1 · 原则</button>
+      <button type="button" data-tab="f2">F2 · 封面 Tab<span class="w">已定</span></button>
+      <button type="button" data-tab="f3">F3 · 正文这页</button>
+      <button type="button" data-tab="f4">F4 · 三区 IA<span class="w">已定</span></button>
+      <button type="button" data-tab="f5">F5 · 文案对照</button>
+      <button type="button" data-tab="f6">F6 · 导出合并</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main>
+      <!-- F0 -->
+      <section class="panel is-visible" id="f0">
+        <div class="sec">
+          <h2>F0 · As-Is 诊断 <span class="tag tag--bad">卡死感</span></h2>
+          <p class="lead">用户在封底打开精修 → 默认落在「这页」→ 满屏告诉你「这里不能干那些事」→ 主按钮却是「收起面板」。</p>
+        </div>
+        <div class="callout callout--bad">
+          <strong>三层错位</strong>
+          ① 情境错：封底任务是换图，却停在「这页」；
+          ② 频次错：主按钮是关面板，真正想做的「换封面/封底」变成次要；
+          ③ 文案错：「正文屏 / 拼图改判」像内部术语。
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">As-Is · 封底 + 这页</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button" class="is-on">这页</button>
+                <button type="button">这本</button>
+                <button type="button">导出</button>
+              </div>
+              <div class="main">
+                <p class="lead-bad">精选 ★ 与拼图改判只出现在正文屏，封面/封底没有这些操作。</p>
+                <h4>你正在看封底</h4>
+                <p class="hint">滚动到正文屏可调整本页；或去调封面与封底。</p>
+                <div class="btn-row">
+                  <button type="button" class="btn btn--primary">收起面板，去画面上修改</button>
+                  <div class="btn-row row2">
+                    <button type="button" class="btn btn--secondary" style="flex:1">滚动到正文屏</button>
+                    <button type="button" class="btn btn--secondary" style="flex:1">去调封面与封底</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn">
+          <strong>V1.1 为何这样</strong>
+          当时为解「关面板才见 ★」把「收起面板」抬成主按钮（D-REFUX-02）——对<strong>正文屏</strong>成立；对<strong>封面/封底</strong>不成立（这里本就不能点 ★）。
+        </div>
+      </section>
+
+      <!-- F1 -->
+      <section class="panel" id="f1">
+        <div class="sec">
+          <h2>F1 · 设计原则 <span class="tag tag--rec">定案候选</span></h2>
+          <p class="lead">按「打开精修时用户最可能要做什么」排路径；文案只用分享者听得懂的词。</p>
+        </div>
+        <div class="freq">
+          <b>极高</b><span>不进精修：Dock「发微信群 / 长图」（本轮不改）</span>
+          <b>高</b><span>换封面/封底 · 改杂志名 · 正文点 ★（画面上，可收起面板）</span>
+          <b>中</b><span>本页锚点/短词 · 导出偏好（范围/清晰度）</span>
+          <b>低</b><span>拼图切换 · 按精选重排 · 章意图重写</span>
+          <b>极低</b><span>模板 / 同框 / 分章 / zip·LLM（保持折叠）</span>
+        </div>
+        <table class="matrix">
+          <thead><tr><th>#</th><th>原则</th><th>落地</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>P1</strong></td>
+              <td>三区 IA</td>
+              <td>精修 = <strong>这页 | 封面 | 这本</strong>。禁止顶栏再拆「封底」第四 Tab；封底在「封面」区内切换</td>
+            </tr>
+            <tr>
+              <td><strong>P2</strong></td>
+              <td>情境默认 Tab</td>
+              <td>看封面/封底 → 默认进<strong>「封面」</strong>并选对分段；看正文 → 默认「这页」</td>
+            </tr>
+            <tr>
+              <td><strong>P3</strong></td>
+              <td>空态主按钮 = 真实任务</td>
+              <td>若仍停在「这页」且在封面/封底：主按钮「去换封面」→ 跳「封面」Tab；「收起面板」降为次要</td>
+            </tr>
+            <tr>
+              <td><strong>P4</strong></td>
+              <td>人话优先</td>
+              <td>禁「正文屏 / 拼图改判 / 记忆锚点」裸露；见 F5</td>
+            </tr>
+            <tr>
+              <td><strong>P5</strong></td>
+              <td>导出决策单源</td>
+              <td>去掉精修「导出」Tab；文案范围/图注/导语<strong>完整</strong>迁入保存长图 ▾（F6）</td>
+            </tr>
+            <tr>
+              <td><strong>P6</strong></td>
+              <td>「这本」变轻</td>
+              <td>首尾装帧迁出后，「这本」只留杂志名 / 一句话 / 进阶</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>已拍板（2026-07-17）</strong>
+          采纳「封面」独立 Tab + 区内「封面 | 封底」分段；不采纳顶栏双 Tab「封面 + 封底」。
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 「封面」Tab（区内切换封底） <span class="tag tag--rec">已定</span></h2>
+          <p class="lead">
+            首尾从「这本」手风琴抬出，独占一区，布局从容。
+            顶栏<strong>不</strong>再拆「封底」Tab；用分段 <strong>封面 | 封底</strong> 切换。
+          </p>
+        </div>
+
+        <div class="anno">主路径 · 正在看封底 → 打开精修默认进「封面」· 分段选「封底」</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">To-Be · 封面 Tab · 封底分段</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button">这页</button>
+                <button type="button" class="is-on">封面</button>
+                <button type="button">这本</button>
+              </div>
+              <div class="main">
+                <div class="chips" style="margin-top:0">
+                  <span class="chip">封面</span>
+                  <span class="chip is-on">封底</span>
+                </div>
+                <h4 style="margin-top:4px">换一张封底图</h4>
+                <p class="hint">点缩略图即可更换。电脑与手机封面版式可能不同。</p>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0">
+                  <div style="aspect-ratio:3/4;background:#90a4ae;border-radius:8px;outline:2px solid #3d6b5a"></div>
+                  <div style="aspect-ratio:3/4;background:#b0bec5;border-radius:8px"></div>
+                  <div style="aspect-ratio:3/4;background:#78909c;border-radius:8px"></div>
+                  <div style="aspect-ratio:3/4;background:#a1887f;border-radius:8px"></div>
+                </div>
+                <div class="btn-row row2">
+                  <button type="button" class="btn btn--secondary" style="flex:1">在画面上看封底</button>
+                  <button type="button" class="btn btn--secondary" style="flex:1">恢复自动挑选</button>
+                </div>
+                <div class="details" style="margin-top:12px">
+                  <summary>封面版式（电脑预览）</summary>
+                  <p style="margin:8px 0 0;font-size:12px">更换版式时可保留当前图 · 窄屏/手机另算</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anno">同 Tab · 切换到「封面」分段</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">封面 Tab · 封面分段</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button">这页</button>
+                <button type="button" class="is-on">封面</button>
+                <button type="button">这本</button>
+              </div>
+              <div class="main">
+                <div class="chips" style="margin-top:0">
+                  <span class="chip is-on">封面</span>
+                  <span class="chip">封底</span>
+                </div>
+                <h4 style="margin-top:4px">换一张封面图</h4>
+                <p class="hint">点缩略图即可更换。当前角标表示正在使用的图。</p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0">
+                  <div style="aspect-ratio:3/4;background:#5d7a6a;border-radius:8px;outline:2px solid #3d6b5a;position:relative">
+                    <span style="position:absolute;bottom:6px;left:6px;background:#1a2f28;color:#fff;font-size:9px;padding:2px 6px;border-radius:4px">当前</span>
+                  </div>
+                  <div style="aspect-ratio:3/4;background:#8d6e3f;border-radius:8px"></div>
+                  <div style="aspect-ratio:3/4;background:#6d4c41;border-radius:8px"></div>
+                </div>
+                <div class="btn-row row2">
+                  <button type="button" class="btn btn--secondary" style="flex:1">在画面上看封面</button>
+                  <button type="button" class="btn btn--secondary" style="flex:1">恢复自动挑选</button>
+                </div>
+                <div class="details" open>
+                  <summary>手机封面 · 预览竖屏效果</summary>
+                  <div style="width:72px;height:128px;margin:10px auto 0;border-radius:10px;border:2px solid #37474f;background:linear-gradient(180deg,#c8a96a,#8d6e3f)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anno">兜底 · 用户误停在「这页」且画面是封底</div>
+        <div class="compare">
+          <figure>
+            <figcaption class="x">As-Is</figcaption>
+            <p class="strike" style="font-size:12px">精选 ★ 与拼图改判只出现在正文屏…</p>
+            <button type="button" class="btn btn--primary" style="width:100%;margin-top:8px">收起面板，去画面上修改</button>
+          </figure>
+          <figure>
+            <figcaption class="ok">To-Be</figcaption>
+            <div class="main" style="padding:0">
+              <span class="ctx">封底</span>
+              <h4>封底在「封面」里换</h4>
+              <p class="hint">点精选、改拼图要在有照片的游记页。</p>
+              <div class="btn-row">
+                <button type="button" class="btn btn--primary">去换封底</button>
+                <button type="button" class="btn btn--secondary">去游记正文</button>
+                <button type="button" class="btn btn--ghost">先收起面板</button>
+              </div>
+            </div>
+          </figure>
+        </div>
+        <div class="callout">
+          <strong>交互规格</strong>
+          · 「去换封底 / 去换封面」→ 切 Tab「封面」+ 分段选对侧（复用 bookends focus）。<br>
+          · 打开精修时：<code>cover-opening</code> → Tab 封面 + 分段封面；<code>cover-closing</code> → Tab 封面 + 分段封底。<br>
+          · 分段切换时：可选同步滚动画面到对应首尾（与现「看封面/看封底」一致）。<br>
+          · <span class="x">禁止</span>顶栏增加第四项「封底」。
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 正文「这页」· 按频次排 <span class="tag tag--p1">P1</span></h2>
+          <p class="lead">高频镜像控件置顶；重写/进阶默认收起；「收起面板」留在底部作辅助。</p>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">To-Be · 正文这页</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button" class="is-on">这页</button>
+                <button type="button">封面</button>
+                <button type="button">这本</button>
+              </div>
+              <div class="main">
+                <span class="ctx">第 3 页 · 雨后的车站</span>
+                <p class="hint" style="margin-bottom:8px">也可直接在照片上点 ★。这里改文字与标记。</p>
+
+                <div class="anno" style="margin-top:0">高频 · 本页标记</div>
+                <div class="chips">
+                  <span class="chip is-on">★ 已标精选</span>
+                  <span class="chip">改成拼图</span>
+                </div>
+                <p class="hint">精选只是记下「这张更重要」，不会马上打乱整本顺序。</p>
+
+                <div class="anno">中频 · 想写进图说的词</div>
+                <div class="field">
+                  <label>想写进图说的词（最多 3 个）</label>
+                  <input placeholder="例如：雨停了" />
+                </div>
+
+                <div class="details">
+                  <summary>本章想强调的感觉（可选）</summary>
+                  <p style="margin:8px 0 0">情绪 / 关注点 / 短念头 · 改完可「按新感觉重写这段」</p>
+                </div>
+
+                <div class="btn-row" style="margin-top:16px">
+                  <button type="button" class="btn btn--secondary">按精选重排整本</button>
+                  <button type="button" class="btn btn--ghost">收起面板，回到画面</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn">
+          <strong>评审点</strong>
+          「改成拼图 / 改回单张」是否比「改判普通照片 / 拼图」更易懂？
+          「想写进图说的词」是否可接受替代「记忆锚点」？（后端字段名不变）
+        </div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 三区 IA 总览 <span class="tag tag--rec">已定</span></h2>
+          <p class="lead">精修 = <strong>这页 | 封面 | 这本</strong>。导出 Tab 移除（F6）。首尾不再窝在「这本」折叠里。</p>
+        </div>
+        <table class="matrix">
+          <thead><tr><th>Tab</th><th>职责</th><th>默认何时进入</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>这页</strong></td>
+              <td>正文页：★ / 拼图 / 图说词 / 本章感觉</td>
+              <td>正在看游记正文</td>
+            </tr>
+            <tr>
+              <td><strong>封面</strong></td>
+              <td>首尾专用：区内分段「封面 | 封底」+ 缩略换图 + 版式/手机对照</td>
+              <td>正在看封面或封底（自动选对分段）</td>
+            </tr>
+            <tr>
+              <td><strong>这本</strong></td>
+              <td>杂志名、一句话；进阶（模板/同框/分章/阅读视图/放映/LLM）</td>
+              <td>用户主动点入（不再承载首尾）</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="anno">「这本」变轻之后</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">这本 · 无首尾折叠</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button">这页</button>
+                <button type="button">封面</button>
+                <button type="button" class="is-on">这本</button>
+              </div>
+              <div class="main">
+                <h4>整本信息</h4>
+                <p class="hint">改名字与一句话。换封面/封底请到「封面」。</p>
+                <div class="field">
+                  <label>杂志名</label>
+                  <input value="近郊一日" readonly />
+                </div>
+                <div class="field">
+                  <label>给这本游记的一句话</label>
+                  <textarea rows="2" readonly>带娃慢走，雨后的京都</textarea>
+                </div>
+                <div class="details">
+                  <summary>进阶 · 很少需要</summary>
+                  <p style="margin:8px 0 0;font-size:12px">
+                    阅读视图 · 放映精选 · 生成杂志感文案 · 换模板 · 同框 · 分章说明
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--warn">
+          <strong>否决</strong>
+          顶栏「这页 | 封面 | 封底 | 这本」四 Tab — 封底频次低、与封面 UI 同构，用区内分段即可。
+        </div>
+        <div class="callout">
+          <strong>命名（已定主推）</strong>
+          「这页 / 封面 / 这本」。若评审要更直白，可改为「本页 / 封面 / 整本」——仅文案，结构不变。
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 文案对照表（建议采纳）</h2>
+          <p class="lead">只改用户可见文案；埋点 / data-* / 后端字段保持不动。</p>
+        </div>
+        <table class="matrix">
+          <thead><tr><th>场景</th><th>As-Is</th><th>To-Be（建议）</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>空态 lead</td>
+              <td>精选 ★ 与拼图改判只出现在正文屏…</td>
+              <td>（删除说教）直接进入情境句</td>
+            </tr>
+            <tr>
+              <td>空态标题</td>
+              <td>你正在看封底</td>
+              <td>封底在「封面」里换</td>
+            </tr>
+            <tr>
+              <td>空态主按钮</td>
+              <td>收起面板，去画面上修改</td>
+              <td>去换封底（或「去换封面」）</td>
+            </tr>
+            <tr>
+              <td>侧栏 Tab</td>
+              <td>这页 / 这本 / 导出</td>
+              <td>这页 / 封面 / 这本</td>
+            </tr>
+            <tr>
+              <td>首尾入口</td>
+              <td>这本 → 首尾装帧（折叠）</td>
+              <td>顶栏「封面」Tab · 区内封面|封底</td>
+            </tr>
+            <tr>
+              <td>滚到正文</td>
+              <td>滚动到正文屏</td>
+              <td>去游记正文</td>
+            </tr>
+            <tr>
+              <td>收起</td>
+              <td>收起面板，去画面上修改</td>
+              <td>先收起面板 / 收起面板，回到画面</td>
+            </tr>
+            <tr>
+              <td>当前屏</td>
+              <td>第 N 屏 · 章名</td>
+              <td>第 N 页 · 章名</td>
+            </tr>
+            <tr>
+              <td>拼图 chip</td>
+              <td>改判普通照片 / 拼图</td>
+              <td>改成拼图 / 改回单张</td>
+            </tr>
+            <tr>
+              <td>锚点区</td>
+              <td>记忆锚点（0–3 个）</td>
+              <td>想写进图说的词（最多 3 个）</td>
+            </tr>
+            <tr>
+              <td>章意图折叠</td>
+              <td>章级意图（可选）</td>
+              <td>本章想强调的感觉（可选）</td>
+            </tr>
+            <tr>
+              <td>重写 CTA</td>
+              <td>按新意图重写文案</td>
+              <td>按新感觉重写这段</td>
+            </tr>
+            <tr>
+              <td>导出范围</td>
+              <td>按章导出 / 完整长图</td>
+              <td>按章分开 / 一整张</td>
+            </tr>
+            <tr>
+              <td>清晰度</td>
+              <td>标准 2× / 高清 3×</td>
+              <td>标准 / 更清晰（tooltip 可留 2×/3×）</td>
+            </tr>
+            <tr>
+              <td>文案范围</td>
+              <td>纯照片 / 完整文案</td>
+              <td>纯照片 / 带文字</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout callout--warn">
+          <strong>验收（人工）</strong>
+          ① 封底打开精修 → 落在「封面」Tab 且分段为「封底」，可直接点缩略图；
+          ② 「这页」空态无「正文屏/拼图改判」；主按钮为「去换封底」；
+          ③ 顶栏无「导出」、无第四项「封底」；
+          ④ 正文这页仍可收起面板点画面 ★。
+        </div>
+      </section>
+
+      <!-- F6 -->
+      <section class="panel" id="f6">
+        <div class="sec">
+          <h2>F6 · 导出合并定案 <span class="tag tag--p0">必审</span><span class="tag tag--rec">不弱化</span></h2>
+          <p class="lead">
+            精修「导出」Tab 全部能力已盘点（源码 <code>renderAdvancedPanel</code>）。
+            <strong>长图文案范围 / 图注 / 导语</strong>会同步预览 DOM 并写入 longshot 请求（<code>copyDisplay</code>），必须完整迁入保存长图 ▾ 首屏，禁止降级为「更多」。
+          </p>
+        </div>
+
+        <div class="callout callout--bad">
+          <strong>禁止</strong>
+          只留「打开导出设置」桥接、却不把文案范围迁进 ▾ · 或把图注/导语塞进折叠「更多」· 或两处仍可改 prefs（双源漂移）。
+        </div>
+
+        <div class="anno">As-Is · 精修「导出」完整能力清单</div>
+        <table class="matrix">
+          <thead>
+            <tr><th>#</th><th>能力（现网文案）</th><th>作用</th><th>迁入后归处</th><th>权重</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>打开导出设置</td>
+              <td>关 Sheet → 点 Dock ▾</td>
+              <td><span class="strike">删除</span>（用户直接点 ▾）</td>
+              <td>桥接</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>长图文案范围</strong><br>纯照片 / 完整文案</td>
+              <td>预设：藏/显 AI 文案层；写 <code>data-photos-only</code>；导出 <code>copyDisplay</code></td>
+              <td><strong>保存长图 ▾ 首屏 · 必显</strong></td>
+              <td class="ok">P0 决策</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>图注</strong> chip（开/关）</td>
+              <td>细调 caption 显隐；纯照片时禁用</td>
+              <td><strong>▾ 首屏 · 紧挨文案范围</strong></td>
+              <td class="ok">P0 决策</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>导语</strong> chip（显/隐）</td>
+              <td>细调 lead/narrative；纯照片时禁用</td>
+              <td><strong>▾ 首屏 · 紧挨文案范围</strong></td>
+              <td class="ok">P0 决策</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>导出范围 · 按章 / 完整</td>
+              <td>segmentMode（微信群）</td>
+              <td>▾ 首屏（已有，去重）</td>
+              <td>决策</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>清晰度 · 2× / 3×</td>
+              <td>scale</td>
+              <td>▾ 首屏（已有，去重）</td>
+              <td>决策</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>预览显示 · 编辑预览 / 阅读视图</td>
+              <td><code>data-surface-mode</code> · 非导出参数</td>
+              <td>精修「这本」· 进阶</td>
+              <td>预览工具</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>在文件夹中显示</td>
+              <td>reveal 目录</td>
+              <td>成功 Dock（已有）· ▾「更多」可再留链</td>
+              <td>结果动作</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>导出 zip（自行托管）</td>
+              <td>打包站点</td>
+              <td>▾ 折叠「更多输出」</td>
+              <td>低频</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>放映精选</td>
+              <td>放映 ★；无 ★ 时禁用+提示</td>
+              <td>精修「这本」· 进阶（或保留 Dock 播放）</td>
+              <td>内容工具</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>生成杂志感文案 + 配置写作引擎</td>
+              <td>LLM narrate；不可用时禁用+原因</td>
+              <td>精修「这页」文案区底部 或「这本」进阶</td>
+              <td>内容工具</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <strong>行为契约（迁入后不得丢）</strong>
+          ① 改「纯照片 / 完整文案 / 图注 / 导语」→ <em>立即同步预览画面</em>（所见即所长图）；
+          ② 点金色按钮导出时，请求体带当前 <code>copyDisplay</code>（与现 <code>buildLongshotRequestFromPage</code> 一致）；
+          ③ 选「纯照片」时图注/导语 chip <strong>禁用</strong>（现网逻辑）；
+          ④ prefs <strong>单源</strong>：仅 ▾ 与导出请求读写，精修内不再有第二套控件。
+        </div>
+
+        <div class="anno">To-Be · 精修三区（无导出 Tab）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">精修 · 这页 | 封面 | 这本</div></div>
+        <div class="frame">
+          <div class="sheet">
+            <div class="sheet__head"><h3>精修</h3><button type="button" class="sheet__x">×</button></div>
+            <div class="sheet__body">
+              <div class="nav">
+                <button type="button" class="is-on">这页</button>
+                <button type="button">封面</button>
+                <button type="button">这本</button>
+              </div>
+              <div class="main">
+                <span class="ctx">第 3 页 · 雨后的车站</span>
+                <p class="hint">导出（含要不要 AI 文案）→ 顶栏金色按钮旁 ▾。换封面 →「封面」。</p>
+                <div class="chips">
+                  <span class="chip is-on">★ 已标精选</span>
+                  <span class="chip">改成拼图</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="anno">To-Be · 保存长图 ▾（承接后的完整首屏）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">导出设置 · 合并后</div></div>
+        <div class="frame frame--dark">
+          <div style="width:min(360px,94%);margin:0 auto;background:rgba(245,251,248,.98);border-radius:14px;padding:14px 16px;color:#1a2f28;box-shadow:0 12px 32px rgba(0,0,0,.3);font-size:13px">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px">导出设置</div>
+            <p style="margin:0 0 12px;font-size:11px;color:#607d8b;line-height:1.45">选好后点「确定」，再点上方金色按钮开始导出。改文案范围会同步预览。</p>
+
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;font-weight:700;color:#455a64;margin-bottom:8px">发到哪里</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="border:1.5px solid #3d6b5a;background:#3d6b5a;border-radius:12px;padding:10px 12px;color:#fff">
+                  <strong style="display:block;font-size:13px">微信群</strong>
+                  <span style="font-size:11px;opacity:.88">长图 · 按序发群</span>
+                </div>
+                <div style="border:1.5px solid rgba(61,107,90,.22);background:#fff;border-radius:12px;padding:10px 12px">
+                  <strong style="display:block;font-size:13px">朋友圈</strong>
+                  <span style="font-size:11px;color:#607d8b">长图连读</span>
+                </div>
+                <div style="border:1.5px solid rgba(61,107,90,.22);background:#fff;border-radius:12px;padding:10px 12px">
+                  <strong style="display:block;font-size:13px">小红书</strong>
+                  <span style="font-size:11px;color:#607d8b">3:4 配图</span>
+                </div>
+                <div style="border:1.5px solid rgba(61,107,90,.22);background:#fff;border-radius:12px;padding:10px 12px">
+                  <strong style="display:block;font-size:13px">朋友圈</strong>
+                  <span style="font-size:11px;color:#607d8b">九宫格 1:1</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(61,107,90,.08);border:1px solid rgba(61,107,90,.18)">
+              <div style="font-size:11px;font-weight:700;color:#2e5c4a;margin-bottom:6px">长图要不要字 <span style="color:#e65100">· 自精修迁入 · 必显</span></div>
+              <div style="display:inline-flex;padding:3px;border-radius:999px;background:rgba(61,107,90,.12);gap:2px;margin-bottom:8px">
+                <span style="padding:6px 14px;border-radius:999px;background:#3d6b5a;color:#fff;font-size:12px;font-weight:600">纯照片</span>
+                <span style="padding:6px 14px;border-radius:999px;color:#3d6b5a;font-size:12px">带文字</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span style="padding:5px 10px;border-radius:999px;border:1px dashed #90a4ae;color:#90a4ae;font-size:11px">图注：关 · 禁用</span>
+                <span style="padding:5px 10px;border-radius:999px;border:1px dashed #90a4ae;color:#90a4ae;font-size:11px">导语：隐 · 禁用</span>
+              </div>
+              <p style="margin:8px 0 0;font-size:11px;color:#546e7a;line-height:1.4">「带文字」时可分别开关图注与导语。改动立即反映在预览上，导出长图按此出图。</p>
+            </div>
+
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;font-weight:700;color:#455a64;margin-bottom:6px">导出范围</div>
+              <div style="display:inline-flex;padding:3px;border-radius:999px;background:rgba(61,107,90,.1);gap:2px">
+                <span style="padding:6px 14px;border-radius:999px;background:#3d6b5a;color:#fff;font-size:12px;font-weight:600">按章分开</span>
+                <span style="padding:6px 14px;border-radius:999px;color:#3d6b5a;font-size:12px">一整张</span>
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;font-weight:700;color:#455a64;margin-bottom:6px">清晰度</div>
+              <div style="display:inline-flex;padding:3px;border-radius:999px;background:rgba(61,107,90,.1);gap:2px">
+                <span style="padding:6px 14px;border-radius:999px;background:#3d6b5a;color:#fff;font-size:12px;font-weight:600">标准 2×</span>
+                <span style="padding:6px 14px;border-radius:999px;color:#3d6b5a;font-size:12px">高清 3×</span>
+              </div>
+            </div>
+
+            <details style="margin:0 0 12px;border:1px solid #e0e0e0;border-radius:10px;padding:8px 10px;font-size:12px;color:#607d8b">
+              <summary style="font-weight:700;color:#455a64">更多输出</summary>
+              <p style="margin:8px 0 0">导出 zip（自行托管）· 在文件夹中显示</p>
+            </details>
+
+            <div style="display:flex;justify-content:flex-end;gap:8px">
+              <button type="button" class="btn btn--primary" style="padding:7px 14px">确定</button>
+              <button type="button" class="btn btn--secondary" style="padding:7px 14px">取消</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="anno">「带文字」展开态（图注/导语可点）</div>
+        <div class="callout">
+          <strong>交互细规</strong>
+          · 主段：「纯照片」= 现 <code>photos</code> 预设；「带文字」= 现 <code>full</code> 预设（文案更人话，id 不变）。<br>
+          · 选「带文字」后：图注 chip、导语 chip 可点；文案显示「图注：开/关」「导语：显/隐」（与现 sync 一致）。<br>
+          · 选「纯照片」：两 chip 禁用并视觉降权（如上图）。<br>
+          · 朋友圈连读若后端强制纯照片：chip 区旁注「此平台默认纯照片」且保持与现网一致（若有）。
+        </div>
+
+        <div class="anno">迁移节奏</div>
+        <table class="matrix">
+          <thead><tr><th>阶段</th><th>精修「导出」</th><th>保存长图 ▾</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>M1</strong></td>
+              <td>仍有 Tab，但首屏改为说明 +「去导出设置」；<em>控件只读提示已迁移</em></td>
+              <td>已含文案范围+图注+导语（可改）</td>
+            </tr>
+            <tr>
+              <td><strong>M2</strong></td>
+              <td><strong>移除 Tab</strong>；进阶承接阅读/放映/LLM</td>
+              <td>唯一决策面；契约测试锁 copyDisplay</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout--warn">
+          <strong>验收（导出合并）</strong>
+          ① ▾ 内可见并可改：纯照片/带文字、图注、导语（行为同现精修导出）；
+          ② 精修无第二套可写控件；
+          ③ 导出请求 <code>copyDisplay</code> 与预览 DOM 一致；
+          ④ zip / 文件夹在「更多输出」或成功面仍可达；
+          ⑤ 阅读视图 / 放映 / LLM 在精修进阶仍可达，文案与禁用态不丢。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>评审结论</h3>
+      <ul>
+        <li>☑ 三区：这页 | 封面 | 这本</li>
+        <li>☑ 封面区内分段：封面 | 封底</li>
+        <li>☑ 否决顶栏独立「封底」Tab</li>
+        <li>□ 采纳 F5 文案表</li>
+        <li>□ 采纳 F6 导出合并（文案范围必显）</li>
+        <li>□ LLM/放映归「这本·进阶」</li>
+        <li>□ 命名用「这页」或「本页」</li>
+      </ul>
+      <h3 style="margin-top:14px">实现落点</h3>
+      <ul>
+        <li><code>preview-toolbar-v3-sheet.js</code> · 三 Tab + 封面区</li>
+        <li><code>bookends.js</code> · 迁入封面 Tab</li>
+        <li><code>longshot-export-panel.js</code> · copy UI</li>
+        <li>打开 Sheet 情境默认 Tab</li>
+      </ul>
+      <h3 style="margin-top:14px">非目标</h3>
+      <ul>
+        <li>顶栏第四 Tab「封底」</li>
+        <li>弱化图注·导语</li>
+        <li>改 Dock 金色主 CTA</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll(".tabs [data-tab]");
+      var panels = document.querySelectorAll(".panel");
+      tabs.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("data-tab");
+          tabs.forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+          panels.forEach(function (p) { p.classList.toggle("is-visible", p.id === id); });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

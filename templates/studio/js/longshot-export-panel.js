@@ -13,12 +13,16 @@ export var PLATFORMS = {
   wechat_chat: {
     id: "wechat_chat",
     label: "微信群",
+    title: "微信群",
+    subtitle: "长图 · 按序发群",
     cta: "导出长图",
     showSegmentMode: true,
   },
   wechat_moments: {
     id: "wechat_moments",
     label: "朋友圈 · 长图连读",
+    title: "朋友圈",
+    subtitle: "长图连读",
     cta: "导出朋友圈 · 长图连读",
     showSegmentMode: false,
     expectHtml:
@@ -27,6 +31,8 @@ export var PLATFORMS = {
   moments_grid: {
     id: "moments_grid",
     label: "朋友圈 · 九宫格",
+    title: "朋友圈",
+    subtitle: "九宫格 1:1",
     cta: "导出朋友圈 · 九宫格",
     showSegmentMode: false,
     expectHtml:
@@ -35,6 +41,8 @@ export var PLATFORMS = {
   xiaohongshu: {
     id: "xiaohongshu",
     label: "小红书",
+    title: "小红书",
+    subtitle: "3:4 配图",
     cta: "导出小红书配图",
     showSegmentMode: false,
     showXhsOptions: true,
@@ -196,11 +204,24 @@ export function buildPanelHtml(platformIds) {
   var platformBtns = ids
     .map(function (id) {
       var p = PLATFORMS[id] || { id: id, label: id };
+      var title = p.title || p.label || id;
+      var sub = p.subtitle || "";
+      var aria = p.label || title;
       return (
-        '<button type="button" data-studio-longshot-platform="' +
+        '<button type="button" class="preview-toolbar__export-platform-card" ' +
+        'data-studio-longshot-platform="' +
         p.id +
+        '" aria-label="' +
+        aria +
         '">' +
-        (p.label || id) +
+        '<span class="preview-toolbar__export-platform-card__title">' +
+        title +
+        "</span>" +
+        (sub
+          ? '<span class="preview-toolbar__export-platform-card__sub">' +
+            sub +
+            "</span>"
+          : "") +
         "</button>"
       );
     })
@@ -208,20 +229,32 @@ export function buildPanelHtml(platformIds) {
 
   return (
     '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
-    '<p class="preview-toolbar__export-popover-note">调整平台与清晰度；点左侧按钮开始导出。</p>' +
+    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">分享平台</span>' +
-    '<div class="preview-toolbar__export-popover-seg" role="group">' +
+    '<span class="preview-toolbar__export-popover-label">发到哪里</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="radiogroup" aria-label="发到哪里">' +
     platformBtns +
     "</div></div>" +
+    '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
+    '<span class="preview-toolbar__export-popover-label">长图要不要字</span>' +
+    '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +
+    '<button type="button" data-copy-preset="photos">纯照片</button>' +
+    '<button type="button" data-copy-preset="full">带文字</button>' +
+    "</div>" +
+    '<div class="preview-toolbar__export-copy-chips">' +
+    '<button type="button" class="preview-toolbar__export-copy-chip" data-preview-chip="caption">图注</button>' +
+    '<button type="button" class="preview-toolbar__export-copy-chip" data-preview-chip="narrative">导语</button>' +
+    "</div>" +
+    '<p class="preview-toolbar__export-copy-hint">改动会同步预览；导出长图按此出图。</p>' +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="expect" hidden>' +
     '<span class="preview-toolbar__export-popover-label">预期</span>' +
     '<div class="preview-toolbar__export-expect" data-expect-body></div></div>' +
     '<div class="preview-toolbar__export-popover-field" data-field="mode">' +
     '<span class="preview-toolbar__export-popover-label">导出范围</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
-    '<button type="button" data-studio-longshot-mode="chapter">按章导出</button>' +
-    '<button type="button" data-studio-longshot-mode="full">完整长图</button>' +
+    '<button type="button" data-studio-longshot-mode="chapter">按章分开</button>' +
+    '<button type="button" data-studio-longshot-mode="full">一整张</button>' +
     "</div></div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="xhs-count" hidden>' +
     '<span class="preview-toolbar__export-popover-label">张数</span>' +
@@ -278,6 +311,8 @@ export function syncPanelUI(pop, draft, opts) {
     var on = btn.getAttribute("data-studio-longshot-platform") === platform;
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+    if (!btn.getAttribute("role")) btn.setAttribute("role", "radio");
   });
   pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
     var on = btn.getAttribute("data-studio-longshot-mode") === draft.mode;

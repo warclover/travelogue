@@ -159,10 +159,15 @@ def test_ac_or_11b_ui_grid_bound_only_to_moments_grid() -> None:
     assert "九宫格" not in scroll.cta_label
 
     recipe_js = (STUDIO / "js" / "output-recipe.js").read_text(encoding="utf-8")
+    recipe_logic = (STUDIO / "js" / "output-recipe-logic.js").read_text(encoding="utf-8")
     assert 'intent: "moments_grid"' in recipe_js
     assert "朋友圈 · 九宫格" in recipe_js
     assert "即将推出" not in recipe_js
-    assert "moments_grid: \"moments_grid\"" in recipe_js or "moments_grid: 'moments_grid'" in recipe_js
+    assert (
+        'moments_grid: "moments_grid"' in recipe_js
+        or "moments_grid: 'moments_grid'" in recipe_js
+        or 'moments_grid: "moments_grid"' in recipe_logic
+    )
 
     client = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
     assert 'platform === "moments_grid"' in client
@@ -173,6 +178,12 @@ def test_ac_or_11b_ui_grid_bound_only_to_moments_grid() -> None:
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
     assert 'id: "moments_grid"' in panel
     assert 'data-studio-longshot-platform="' in panel
+    # 导出设置 · 方案 A：2×2 平台卡（禁止 4 项单行 pill）
+    assert "preview-toolbar__export-platform-grid" in panel
+    assert "preview-toolbar__export-platform-card" in panel
+    assert 'title: "朋友圈"' in panel
+    assert 'subtitle: "长图连读"' in panel
+    assert 'subtitle: "九宫格 1:1"' in panel
     # wechat_moments CTA 不得冒充九宫格
     assert 'cta: "导出朋友圈 · 长图连读"' in panel
     assert 'cta: "导出朋友圈 · 九宫格"' in panel

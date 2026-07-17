@@ -888,11 +888,8 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
 
             page.locator(".preview-toolbar__menu-btn").click()
             page.wait_for_selector(".preview-sheet:not([hidden])", timeout=15_000)
-            page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
-            bookends = page.locator('[data-book-zone="bookends"]')
-            bookends.wait_for(state="visible", timeout=15_000)
-            if not bookends.evaluate("el => el.open"):
-                bookends.locator("summary").click()
+            page.locator('.preview-sheet__tab[data-sheet-tab="cover"]').click()
+            page.wait_for_selector(".preview-sheet__bookends-slot", timeout=15_000)
             page.wait_for_selector(".preview-sheet__cover-styles", timeout=10_000)
             page.wait_for_selector('[data-cover-style="veil-footer"]', timeout=10_000)
             assert page.locator('[data-cover-style="veil-footer"].is-on').count() == 1

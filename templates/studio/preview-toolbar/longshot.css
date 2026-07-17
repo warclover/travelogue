@@ -137,9 +137,10 @@
   top: calc(100% + 6px);
   right: 0;
   z-index: 400;
+  width: min(360px, 92vw);
   min-width: min(280px, 92vw);
-  padding: 12px 14px 14px;
-  border-radius: 12px;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
   background: rgba(245, 251, 248, 0.98);
   color: #1a2f28;
   border: 1px solid rgba(61, 107, 90, 0.28);
@@ -151,27 +152,82 @@
 }
 .preview-toolbar__export-popover-title {
   margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
 }
 .preview-toolbar__export-popover-note {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 11px;
   line-height: 1.45;
   color: #607d8b;
 }
 .preview-toolbar__export-popover-field {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .preview-toolbar__export-popover-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: #455a64;
+}
+/* 方案 A · 2×2 平台卡（禁止 4 项塞进单行 pill） */
+.preview-toolbar__export-platform-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.preview-toolbar__export-platform-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  min-height: 64px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid rgba(61, 107, 90, 0.22);
+  border-radius: 12px;
+  background: #fff;
+  color: #1a2f28;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.preview-toolbar__export-platform-card__title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #1a2f28;
+  white-space: nowrap;
+}
+.preview-toolbar__export-platform-card__sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #607d8b;
+  white-space: nowrap;
+}
+.preview-toolbar__export-platform-card.is-selected {
+  border-color: #3d6b5a;
+  background: #3d6b5a;
+  box-shadow: 0 0 0 1px #3d6b5a;
+}
+.preview-toolbar__export-platform-card.is-selected
+  .preview-toolbar__export-platform-card__title,
+.preview-toolbar__export-platform-card.is-selected
+  .preview-toolbar__export-platform-card__sub {
+  color: #fff;
+}
+.preview-toolbar__export-platform-card.is-selected
+  .preview-toolbar__export-platform-card__sub {
+  opacity: 0.88;
 }
 .preview-toolbar__export-popover-seg {
   display: inline-flex;
+  flex-wrap: wrap;
   padding: 3px;
   border-radius: 999px;
   background: rgba(61, 107, 90, 0.1);
@@ -180,17 +236,66 @@
 .preview-toolbar__export-popover-seg button {
   border: none;
   border-radius: 999px;
-  padding: 5px 12px;
+  padding: 6px 14px;
   font-size: 12px;
   font-family: inherit;
   background: transparent;
   color: #3d6b5a;
   cursor: pointer;
+  white-space: nowrap;
 }
 .preview-toolbar__export-popover-seg button.is-selected {
   background: #3d6b5a;
   color: #fff;
   font-weight: 600;
+}
+.preview-toolbar__export-expect {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(61, 107, 90, 0.08);
+  color: #2e5c4a;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.preview-toolbar__export-copy-field {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(61, 107, 90, 0.08);
+  border: 1px solid rgba(61, 107, 90, 0.18);
+}
+.preview-toolbar__export-copy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.preview-toolbar__export-copy-chip {
+  border: 1px solid rgba(61, 107, 90, 0.35);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  background: #fff;
+  color: #3d6b5a;
+  cursor: pointer;
+}
+.preview-toolbar__export-copy-chip.is-selected {
+  background: #3d6b5a;
+  border-color: #3d6b5a;
+  color: #fff;
+}
+.preview-toolbar__export-copy-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.preview-toolbar__export-copy-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #546e7a;
 }
 .preview-toolbar__export-popover-actions {
   display: flex;

@@ -919,6 +919,31 @@ body.preview-sheet-open {
   opacity: 0.55;
 }
 
+/* 封面 Tab · 区内只显示当前分段（封面 | 封底） */
+.preview-sheet__body[data-cover-side="opening"] [data-bookends-closing],
+.preview-sheet__body[data-cover-side="closing"] [data-bookends-opening] {
+  display: none !important;
+}
+
+.preview-sheet__body[data-cover-side] .preview-sheet__bookends-spread {
+  grid-template-columns: 1fr;
+}
+
+.preview-sheet__cover-side-seg {
+  margin-bottom: 12px;
+}
+
+.preview-sheet__ctx-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eceff1;
+  color: #455a64;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .preview-sheet__bookends-pane-head {
   display: flex;
   flex-direction: column;

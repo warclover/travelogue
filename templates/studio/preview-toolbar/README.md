@@ -35,3 +35,14 @@ Physical ESM split from `preview-toolbar.js` (entry URL unchanged).
 Entry `../preview-toolbar.js` only registers bootstrap bridge. Bootstrap (`bootstrap.js`) mounts v4 shell and wires DOM ready.
 
 Type-check (M-C5 gate): `npm run tsc:preview-toolbar` — uses `jsconfig.json` + `global.d.ts` for ambient DOM/window shims.
+
+## Pure logic / Node tests (SFH)
+
+Decision helpers without DOM belong in `*-logic.js` and are covered by `npm run test:js` (`tests/js/*.test.mjs`).
+
+| Module | Pure logic | Notes |
+|--------|------------|--------|
+| `longshot.js` | `longshot-logic.js` | stale / title risk / side-effect window |
+| (Studio FE) | see [PRD-STUDIO-FE-TEST-HARDENING-V1](../../../docs/PRD-STUDIO-FE-TEST-HARDENING-V1.md) | recipe / import / wizard logic likewise |
+
+When adding toolbar decision branches, prefer extracting to `*-logic.js` first (DoD · SFH).
