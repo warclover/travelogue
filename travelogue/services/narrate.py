@@ -303,7 +303,7 @@ def _build_hook(
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
     title = str(meta.get("title") or "").strip()
     span = _format_date_span(meta.get("dateStart", ""), meta.get("dateEnd", ""))
-    subject = title or (place if place and place != "旅途" else "")
+    subject = title or (place if place and place not in {"旅途", "未知"} else "")
 
     if tone == "documentary":
         if subject and span:

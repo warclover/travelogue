@@ -1969,7 +1969,7 @@ export function cancelPreviewLongshotExport(root) {
       });
       syncLongshotCtaLabel(root);
       if (tipRecipe.needsIntent) {
-        showAmbiguousIntentCard(keptN).then(function (choice) {
+        showAmbiguousIntentCard(keptN, tipRecipe.userHints).then(function (choice) {
           if (!choice || !choice.intent) return;
           writeSessionIntent(tripId, choice.intent);
           var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
@@ -2036,7 +2036,9 @@ export function cancelPreviewLongshotExport(root) {
     fetchServerRecipe(tripId, "preview").then(function (res) {
       var keptN =
         res && res.ok && res.keptN != null ? res.keptN : keptNForRecipe(tripId);
-      showAmbiguousIntentCard(keptN).then(function (choice) {
+      var hints =
+        res && res.ok && res.tipRecipe ? res.tipRecipe.userHints : null;
+      showAmbiguousIntentCard(keptN, hints).then(function (choice) {
         if (!choice || !choice.intent) return;
         writeSessionIntent(tripId, choice.intent);
         var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";

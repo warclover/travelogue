@@ -71,11 +71,33 @@ def test_stage_hints_module_frozen_copy() -> None:
 
 
 def test_narrate_hook_no_fragment_word() -> None:
-    narrate = (ROOT / "travelogue" / "services" / "narrate.py").read_text(encoding="utf-8")
-    assert "张碎片拼成" not in narrate
-    # Share-Ready W2 · 说明书句不得出现在 stub 生成源
-    assert "张照片汇成" not in narrate
-    assert "关于{place}的" not in narrate
+    """行为断言：stub hook 不含说明书腔 / 碎片拼成语（非源码扫串）。"""
+    import re
+
+    from travelogue.services.narrate import run_narrate
+    from travelogue.services.narrative_scope import SCOPE_FRAME
+
+    trip = {
+        "meta": {
+            "title": "京都雨后",
+            "places": ["京都"],
+            "dateStart": "2026-07-01",
+            "dateEnd": "2026-07-03",
+            "hook": "",
+        },
+        "intent": {"placesUserSet": True},
+        "assets": [
+            {"id": "a1", "layoutEligible": True, "type": "image"},
+            {"id": "a2", "layoutEligible": True, "type": "image"},
+        ],
+        "chapters": [{"id": "c1", "assetIds": ["a1", "a2"], "title": "一日"}],
+    }
+    run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
+    hook = str((trip.get("meta") or {}).get("hook") or "")
+    assert "张碎片拼成" not in hook
+    assert "汇成" not in hook
+    assert "张照片" not in hook
+    assert not re.search(r"关于.+的\d+天", hook)
 
 
 def test_bootstrap_forces_vision_disabled() -> None:

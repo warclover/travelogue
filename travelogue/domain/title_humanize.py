@@ -5,6 +5,11 @@ from __future__ import annotations
 import re
 
 _DEFAULT_TITLE = "我的旅途"
+# 仅剥已知媒体/压缩后缀；文件夹名可合法含点（如「2024.10 京都」）。
+_KNOWN_SUFFIX = re.compile(
+    r"\.(?:zip|jpe?g|png|gif|webp|heic|heif|bmp|tiff?|mov|mp4|avi|mkv|pdf|rar|7z)$",
+    re.IGNORECASE,
+)
 _HASH_OR_TEST_SUFFIX = re.compile(
     r"[-_]?(?:[0-9a-f]{8,}|(?:ux-)?handtest[-_\w]*|demo[-_]?\d+|copy(?:\s*\(\d+\))?)$",
     re.IGNORECASE,
@@ -21,7 +26,7 @@ def humanize_folder_title(raw: str | None, *, limit: int = 20) -> str:
     name = (raw or "").strip()
     if not name:
         return _DEFAULT_TITLE
-    name = re.sub(r"\.[^.]+$", "", name)
+    name = _KNOWN_SUFFIX.sub("", name)
     name = _HASH_OR_TEST_SUFFIX.sub("", name)
     name = re.sub(r"[_\-.]+", " ", name)
     name = re.sub(r"\s+", " ", name).strip()

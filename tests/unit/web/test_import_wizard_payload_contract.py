@@ -69,10 +69,12 @@ def test_m3_upload_aligns_with_wizard_fields() -> None:
     assert "uploadOpts.layoutDensity" in wizard or "layoutDensity: readLayoutDensity()" in wizard
     assert "template_mode:" in wizard or "template_mode =" in wizard
     assert 'placeUserSet:' in wizard or "placeUserSet:" in wizard
+    assert "titleUserSet" in wizard
     assert 'v2-wizard-template-mode' in run
     assert 'v2-template-mode' not in run or 'v2-wizard-template-mode' in run
     assert 'form.append("place", "旅途")' not in run
     assert "placeUserSet" in run
+    assert "titleUserSet" in run
     assert "dateRangeStart" in run or "dateRange" in run
 
 
@@ -144,3 +146,71 @@ def test_ac_qh_03b_fine_craft_result_fields_reach_worker(
     stored = get_job_store().get(body["jobId"])
     assert stored is not None
     assert stored.trip_id
+
+
+def test_title_user_set_preserves_dotted_title(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BE-SR-05 · 用户手改标题含点号时不得再 humanize。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
+    reset_job_store()
+    album = tmp_path / "album-title-user"
+    album.mkdir()
+    (album / "a.jpg").write_bytes(b"x")
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={
+            "albumPath": str(album),
+            "title": "Day1.出发",
+            "titleUserSet": True,
+            "place": "旅途",
+            "placeUserSet": False,
+            "mode": "quick_share",
+            "force": True,
+            "forceStub": True,
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+            return_value="album-title-user",
+        ):
+            handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202, body
+    payload = run_job.call_args.args[1]
+    assert payload["title"] == "Day1.出发"
+
+
+def test_default_title_still_humanized_when_not_user_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
+    reset_job_store()
+    album = tmp_path / "album-title-default"
+    album.mkdir()
+    (album / "a.jpg").write_bytes(b"x")
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={
+            "albumPath": str(album),
+            "title": "linzhi_a1b2c3d4e5f6",
+            "titleUserSet": False,
+            "place": "旅途",
+            "mode": "quick_share",
+            "force": True,
+            "forceStub": True,
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+            return_value="album-title-default",
+        ):
+            handle_import(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202, body
+    payload = run_job.call_args.args[1]
+    assert payload["title"] == "linzhi"

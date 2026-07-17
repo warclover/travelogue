@@ -27,9 +27,11 @@ def _trip(*, title: str = "周末近郊", place: str = "旅途") -> dict:
 
 
 def test_ac_sr_12_stub_hook_no_instructional_patterns() -> None:
-    trip = _trip()
+    trip = _trip(title="京都雨后", place="京都")
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     hook = str((trip.get("meta") or {}).get("hook") or "")
+    assert hook, "有主体时应产出可读 hook"
+    assert "京都" in hook or "雨后" in hook
     assert "汇成" not in hook
     assert "张照片" not in hook
     assert not re.search(r"关于.+的\d+天", hook)
@@ -41,5 +43,6 @@ def test_ac_sr_12_stub_hook_may_be_empty_without_subject() -> None:
     trip["meta"]["dateEnd"] = ""
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     hook = str((trip.get("meta") or {}).get("hook") or "")
+    assert hook == ""
     assert "汇成" not in hook
     assert not re.search(r"关于.+的\d+天", hook)

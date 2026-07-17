@@ -117,6 +117,44 @@ def test_ac_or_05_handle_output_recipe_and_illegal_intent(tmp_path: Path) -> Non
     assert body2.get("jobId")
 
 
+def test_ac_sr_04_output_recipe_http_keys_match_fe_contract(tmp_path: Path) -> None:
+    """AC-SR-04 · GET /output-recipe 键名与 tipRecipeFromServerPayload 读取面一致。"""
+    from travelogue.web.studio_handlers.export_handlers import handle_output_recipe
+
+    trips = tmp_path / "trips"
+    create_trip("sr-http", trips)
+    _write_kept_n(trips / "sr-http", 18)
+
+    handler = MockStudioHandler(
+        trips,
+        path="/__travelogue/output-recipe?tripId=sr-http&entrypoint=preview",
+    )
+    _enable_recipe(handler)
+    handle_output_recipe(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 200
+    assert body["ok"] is True
+    assert body["keptN"] == 18
+    recipe = body["recipe"]
+    # FE tipRecipeFromServerPayload 读取面（snake_case）
+    for key in (
+        "band",
+        "needs_intent",
+        "kept_n",
+        "cta_label",
+        "user_hints",
+        "intent",
+    ):
+        assert key in recipe, f"missing recipe.{key}"
+    assert recipe["band"] == "ambiguous"
+    assert recipe["needs_intent"] is True
+    assert recipe["kept_n"] == 18
+    assert isinstance(recipe["cta_label"], str) and recipe["cta_label"]
+    assert isinstance(recipe["user_hints"], list) and recipe["user_hints"]
+    assert "18" in recipe["user_hints"][0] or "精选" in recipe["user_hints"][0]
+
+
 def test_ac_or_07a_handle_longshot_chat_and_scroll(tmp_path: Path) -> None:
     """chat_longshot / moments_scroll 各至少启动一条 Job（202）。"""
     from travelogue.export.output_recipe import resolve_output_recipe

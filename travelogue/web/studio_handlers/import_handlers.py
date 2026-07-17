@@ -110,6 +110,20 @@ def _is_valid_iso_date(value: str) -> bool:
         return False
 
 
+def _truthy_flag(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").lower() in ("1", "true", "yes")
+
+
+def _resolve_import_title(raw: object, *, user_set: bool) -> str:
+    """Apply humanize only for default/folder titles; preserve user-edited titles."""
+    title = str(raw or "").strip() or "我的旅途"
+    if user_set:
+        return title[:20]
+    return humanize_folder_title(title)
+
+
 def _normalize_user_date_range(start: str, end: str) -> tuple[dict | None, str | None]:
     start = str(start or "").strip()
     end = str(end or "").strip()
@@ -156,14 +170,16 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         upload_dir = upload_dir_for_job(ctx.trips_root, job.job_id)
         save_upload_files(upload_dir, photo_files)
         upload_place_raw = str(fields.get("place") or "").strip()
-        upload_place_user_set = str(fields.get("placeUserSet") or "").lower() in (
-            "1",
-            "true",
-            "yes",
-        ) or bool(upload_place_raw and not is_generic_place(upload_place_raw))
+        upload_place_user_set = _truthy_flag(fields.get("placeUserSet")) or bool(
+            upload_place_raw and not is_generic_place(upload_place_raw)
+        )
+        upload_title_user_set = _truthy_flag(fields.get("titleUserSet"))
         payload = {
             "albumPath": str(upload_dir),
-            "title": humanize_folder_title(str(fields.get("title") or "我的旅途")),
+            "title": _resolve_import_title(
+                fields.get("title"), user_set=upload_title_user_set
+            ),
+            "titleUserSet": upload_title_user_set,
             "place": upload_place_raw or "旅途",
             "placeUserSet": upload_place_user_set,
             "force": fields.get("force", "").lower() in ("1", "true", "yes"),
@@ -301,11 +317,16 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    title = humanize_folder_title(str(payload.get("title") or "我的旅途"))
+    title_user_set = (
+        _truthy_flag(payload.get("titleUserSet"))
+        if "titleUserSet" in payload
+        else False
+    )
+    title = _resolve_import_title(payload.get("title"), user_set=title_user_set)
     place_raw = str(payload.get("place") or "").strip()
     place = place_raw or "旅途"
     place_user_set = (
-        bool(payload.get("placeUserSet"))
+        _truthy_flag(payload.get("placeUserSet"))
         if "placeUserSet" in payload
         else bool(place_raw and not is_generic_place(place_raw))
     )

@@ -32,6 +32,7 @@ import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncAdvancedOptionsLock } from "./advanced-options.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
+import { humanizeFolderTitle } from "../js/title-humanize.js";
 
 let _gen = 0;
 let _activeJobId = null;
@@ -98,21 +99,6 @@ function postMultipartImportV2(formData, options) {
   });
 }
 
-/** BE-SR-05 / D-SR-14 · 文件夹名可读化（仅默认 title；不覆盖用户已编辑）。 */
-function humanizeFolderTitle(raw) {
-  var name = String(raw || "").trim();
-  if (!name) return "我的旅途";
-  name = name.replace(/\.[^.]+$/, "");
-  name = name.replace(
-    /[-_]?(?:[0-9a-f]{8,}|(?:ux-)?handtest[-_\w]*|demo[-_]?\d+|copy(?:\s*\(\d+\))?)$/i,
-    ""
-  );
-  name = name.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
-  name = name.replace(/^(新建文件夹|untitled|copy)\s*/i, "").trim();
-  if (!name || /^[0-9a-f-]{8,}$/i.test(name)) return "我的旅途";
-  return name.length > 20 ? name.slice(0, 20) : name;
-}
-
 function basenameTitle(path) {
   if (!path) return "我的旅途";
   var parts = String(path).replace(/[\\/]+$/, "").split(/[\\/]/);
@@ -136,6 +122,8 @@ function buildUploadForm(files, opts) {
   var form = new FormData();
   var title = (opts.title || guessUploadTitle(files) || "我的旅途").slice(0, 20);
   form.append("title", title);
+  var titleUserSet = opts.titleUserSet === true;
+  form.append("titleUserSet", titleUserSet ? "true" : "false");
   var place = String(opts.place || "旅途").trim() || "旅途";
   form.append("place", place);
   var placeUserSet = opts.placeUserSet === true ||
@@ -185,11 +173,13 @@ function readTemplateParams() {
   return { template_mode: "smart" };
 }
 
-export function buildImportPayload(albumPath, title) {
+export function buildImportPayload(albumPath, title, opts) {
+  opts = opts || {};
   return Object.assign(
     {
       albumPath: albumPath,
       title: (title || basenameTitle(albumPath)).slice(0, 20) || "我的旅途",
+      titleUserSet: opts.titleUserSet === true,
       place: "旅途",
       placeUserSet: false,
       mode: "quick_share",
@@ -588,6 +578,7 @@ export function startV2UploadImport(files, opts) {
   var submit = function (force) {
     var form = buildUploadForm(list, {
       title: opts.title,
+      titleUserSet: opts.titleUserSet,
       place: opts.place,
       placeUserSet: opts.placeUserSet,
       force: !!force,
