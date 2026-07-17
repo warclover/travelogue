@@ -38,13 +38,14 @@
 | 合入范围 | master 已有 W0+W1+W2 主实现；本 PR 仅 fix + e2e + 文档缺口收口 |
 | 工程合入门 | ✅ 可合（G-09/G-10 不挡工程 merge） |
 
-### 相对 master 的 5 commits
+### 相对 master 的 commits
 
 1. `12bd827` fix(wait-tips): keep dismiss viewed_count free of dwell flags  
 2. `67d9f5a` test(wait-tips): add W0 Playwright smoke for tips mount and teardown  
 3. `0ffe020` docs(wait-tips): note e2e smoke green pending product dogfood  
 4. `8fc3aa8` chore(wait-tips): close PRD gaps with e2e coverage and doc sync  
 5. `4dca010` docs(wait-tips): link gap checklist and PR create URL  
+6. `a547add` docs(wait-tips): record pre-merge checklist and PR body  
 
 ### PR 标题（建议）
 
@@ -99,4 +100,4 @@ fix(wait-tips): viewed_count 隔离 + W0 e2e/文档缺口收口
 
 https://github.com/warclover/travelogue/compare/master...feat/wait-tips-v1-w0?expand=1
 
-相对 `master`：**5 commits**（viewed_count fix · e2e · 文档缺口收口）。开 PR 后把 G-08 标 ✅。
+相对 `master`：**6 commits**（viewed_count fix · e2e · 文档缺口收口 · 合并前复核）。开 PR 后把 G-08 标 ✅。
