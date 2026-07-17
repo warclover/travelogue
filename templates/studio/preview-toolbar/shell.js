@@ -140,23 +140,18 @@ export function syncCoverPlaceholderBadge(isPlaceholder) {
   }
 
 export function syncCoverExplainLine(data) {
+    // FE-SR-04 / D-SR-04 · 工程 tip 不进版心（含「雾底题签」等）；精修面板另有说明
     var cover = document.querySelector(".cover-opening");
-    if (!cover || !data) return;
+    if (!cover) return;
     var line = cover.querySelector(".cover-opening__explain-line");
-    var text = explainToHuman(data.coverStyleExplain);
-    if (!text) {
-      if (line) line.hidden = true;
-      return;
+    if (line) {
+      line.hidden = true;
+      line.textContent = "";
     }
-    if (!line) {
-      line = document.createElement("p");
-      line.className = "cover-opening__explain-line";
-      cover.appendChild(line);
-    }
-    line.hidden = false;
-    line.textContent = text;
+    void data;
   }
 
+/** @deprecated 保留供精修面板/测试映射；禁止写入分享面 DOM */
 function explainToHuman(explain) {
     if (!explain || typeof explain !== "object") return "";
     // FE-FTUE-07 / §4.3 · 系统句不进封面 DOM
@@ -171,6 +166,8 @@ function explainToHuman(explain) {
     if (explain.source === "joint-v6") return "已按版式与封面图联合精选";
     return "";
   }
+
+export { explainToHuman };
 
   var _layoutPending = false;
   var _pendingDockDismissed = false;

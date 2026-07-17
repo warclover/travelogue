@@ -179,9 +179,16 @@ def test_persona_ambiguous_intent_card_three_options_and_export(studio_server) -
         assert "朋友圈 · 九宫格" in labels
         assert "朋友圈 · 长图连读" in labels
 
-        # 选长图连读 → 选择并导出（force click：避免偶发叠层拦截）
+        # USR-02 · 微信群长图为唯一选项 primary
+        chat_weight = page.locator('[data-output-intent="chat_longshot"]').get_attribute(
+            "data-intent-weight"
+        )
+        assert chat_weight == "primary"
+        assert "推荐" in page.locator('[data-output-intent="chat_longshot"]').inner_text()
+
+        # 选长图连读 → 选择并导出（confirm 按钮带 data-output-recipe-confirm）
         _force_click(page, '[data-output-intent="moments_scroll"]')
-        _force_click(page, '[data-output-recipe-intent="1"] button.studio__btn--primary')
+        _force_click(page, '[data-output-recipe-confirm="export"]')
         page.wait_for_function("() => window.__intentResult !== null", timeout=5_000)
         result = page.evaluate("() => window.__intentResult")
         assert result == {"intent": "moments_scroll", "exportNow": True}

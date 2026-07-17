@@ -1,10 +1,12 @@
 /**
  * Output Recipe V1 · 客户端 Band / CTA / 意图卡（Phase A）
  * 与 travelogue.export.output_recipe.resolve 对齐；flag 关则不介入。
+ * D-OR-27 / Share-Ready：Band / needs_intent 以服务端 kept_n 为准。
  */
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
+import { getJson } from "./http.js";
 
 export var INTENT_TO_PLATFORM = {
   chat_longshot: "wechat_chat",
@@ -18,6 +20,10 @@ export var PLATFORM_TO_INTENT = {
   moments_grid: "moments_grid",
 };
 
+/** PRD-SHARE-READY §4.5 · recipe API 失败冻结 toast */
+export var RECIPE_API_FAIL_TOAST =
+  "暂时按微信群长图导出，可稍后重试选分享方式。";
+
 var _cfg = {
   enabled: false,
   sparseMax: 9,
@@ -26,6 +32,9 @@ var _cfg = {
 };
 
 var SESSION_INTENT_PREFIX = "travelogue.studio.outputIntent.";
+
+/** @type {Record<string, { keptN: number, ts: number }>} */
+var _keptNCache = {};
 
 export function applyOutputRecipeConfig(studioCfg) {
   var or = (studioCfg && (studioCfg.outputRecipe || studioCfg.output_recipe)) || {};
@@ -90,6 +99,109 @@ export function clearSessionIntent(tripId) {
   try {
     sessionStorage.removeItem(SESSION_INTENT_PREFIX + String(tripId || ""));
   } catch (e) {}
+}
+
+export function getCachedKeptN(tripId) {
+  var c = _keptNCache[String(tripId || "")];
+  return c && c.keptN != null ? Number(c.keptN) : null;
+}
+
+export function setCachedKeptN(tripId, keptN) {
+  var n = Number(keptN);
+  if (!tripId || !isFinite(n) || n < 0) return;
+  _keptNCache[String(tripId)] = { keptN: n, ts: Date.now() };
+}
+
+/**
+ * 将服务端 GET /output-recipe 载荷映射为客户端 tipRecipe。
+ * session intent 仍优先（与 resolveClientRecipe 一致）。
+ */
+export function tipRecipeFromServerPayload(body, tripId, entrypoint) {
+  var keptN = Number(
+    body && body.keptN != null
+      ? body.keptN
+      : body && body.recipe && body.recipe.kept_n
+  );
+  if (!isFinite(keptN) || keptN < 0) keptN = 0;
+  setCachedKeptN(tripId, keptN);
+  var ep = entrypoint || "preview";
+  var sessionIntent = readSessionIntent(tripId);
+  if (sessionIntent && INTENT_TO_PLATFORM[sessionIntent]) {
+    var fromSession = _recipeFromIntent(
+      sessionIntent,
+      classifyBand(keptN),
+      keptN,
+      "session_override"
+    );
+    fromSession.keptN = keptN;
+    return fromSession;
+  }
+  var r = (body && body.recipe) || {};
+  if (r.needs_intent) {
+    return {
+      band: r.band || classifyBand(keptN),
+      needsIntent: true,
+      intent: null,
+      platform: null,
+      ctaLabel: r.cta_label || "选择并导出",
+      subtitle: "",
+      userHints:
+        r.user_hints && r.user_hints.length
+          ? r.user_hints
+          : ["这趟精选了 " + keptN + " 张，你想怎么发？"],
+      source: "server",
+      keptN: keptN,
+    };
+  }
+  if (r.intent && INTENT_TO_PLATFORM[r.intent]) {
+    var fromIntent = _recipeFromIntent(
+      r.intent,
+      r.band || classifyBand(keptN),
+      keptN,
+      "server"
+    );
+    if (r.cta_label) fromIntent.ctaLabel = r.cta_label;
+    if (r.user_hints && r.user_hints.length) fromIntent.userHints = r.user_hints;
+    fromIntent.keptN = keptN;
+    return fromIntent;
+  }
+  var local = resolveClientRecipe(keptN, tripId, ep);
+  local.source = "server_kept_n";
+  local.keptN = keptN;
+  return local;
+}
+
+/**
+ * D-OR-27 · 拉取服务端 recipe（权威 kept_n）。
+ * @returns {Promise<{ ok: boolean, tipRecipe?: object, keptN?: number, failed?: boolean }>}
+ */
+export function fetchServerRecipe(tripId, entrypoint) {
+  var tid = String(tripId || "");
+  var ep = entrypoint || "preview";
+  if (!tid) {
+    return Promise.resolve({ ok: false, failed: true });
+  }
+  var url =
+    "/__travelogue/output-recipe?tripId=" +
+    encodeURIComponent(tid) +
+    "&entrypoint=" +
+    encodeURIComponent(ep);
+  return getJson(url)
+    .then(function (result) {
+      if (result.status !== 200 || !result.body || !result.body.ok) {
+        return { ok: false, failed: true };
+      }
+      var tipRecipe = tipRecipeFromServerPayload(result.body, tid, ep);
+      return {
+        ok: true,
+        tipRecipe: tipRecipe,
+        keptN: tipRecipe.keptN,
+        failed: false,
+      };
+    })
+    .catch(function () {
+      return { ok: false, failed: true };
+    });
 }
 
 /**
@@ -247,42 +359,59 @@ export function showAmbiguousIntentCard(keptN) {
       {
         intent: "chat_longshot",
         label: "微信群 · 长图",
-        desc: "整篇游记发到群里",
+        desc: "整篇游记发到群里 · 推荐",
+        primary: true,
       },
       {
         intent: "moments_grid",
         label: "朋友圈 · 九宫格",
         desc: "约 " + nGrid + " 张 1:1 · 有几张发几张",
+        primary: false,
       },
       {
         intent: "moments_scroll",
         label: "朋友圈 · 长图连读",
         desc: "最多 9 段，滑动连读",
+        primary: false,
       },
     ];
 
     options.forEach(function (opt, idx) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "studio__btn studio__btn--ghost";
+      // USR-02 · 唯一 primary；其余 secondary 描边
+      btn.className = opt.primary
+        ? "studio__btn studio__btn--primary studio__btn--block output-recipe-intent--primary"
+        : "studio__btn studio__btn--ghost studio__btn--block";
       btn.style.display = "block";
       btn.style.width = "100%";
       btn.style.textAlign = "left";
       btn.style.marginBottom = "8px";
       btn.setAttribute("data-output-intent", opt.intent);
+      btn.setAttribute("data-intent-weight", opt.primary ? "primary" : "secondary");
       btn.setAttribute("aria-pressed", idx === 0 ? "true" : "false");
-      if (idx === 0) btn.style.outline = "2px solid currentColor";
       btn.innerHTML =
         "<strong>" +
         opt.label +
-        "</strong><br><span style='opacity:.75;font-size:12px'>" +
+        "</strong><br><span style='opacity:.85;font-size:12px'>" +
         opt.desc +
         "</span>";
       btn.addEventListener("click", function () {
         selected = opt.intent;
         body.querySelectorAll("[data-output-intent]").forEach(function (el) {
-          el.setAttribute("aria-pressed", el === btn ? "true" : "false");
-          el.style.outline = el === btn ? "2px solid currentColor" : "";
+          var on = el === btn;
+          el.setAttribute("aria-pressed", on ? "true" : "false");
+          var isPrimaryOpt = el.getAttribute("data-intent-weight") === "primary";
+          // 选中态：主选项保持 primary 样式；次选项选中时加 outline
+          if (isPrimaryOpt) {
+            el.className = on
+              ? "studio__btn studio__btn--primary studio__btn--block output-recipe-intent--primary"
+              : "studio__btn studio__btn--ghost studio__btn--block";
+            el.style.outline = "";
+          } else {
+            el.className = "studio__btn studio__btn--ghost studio__btn--block";
+            el.style.outline = on ? "2px solid currentColor" : "";
+          }
         });
       });
       body.appendChild(btn);
@@ -299,6 +428,7 @@ export function showAmbiguousIntentCard(keptN) {
     var primary = document.createElement("button");
     primary.type = "button";
     primary.className = "studio__btn studio__btn--sm studio__btn--primary";
+    primary.setAttribute("data-output-recipe-confirm", "export");
     primary.textContent = "选择并导出";
 
     actions.appendChild(saveOnly);
