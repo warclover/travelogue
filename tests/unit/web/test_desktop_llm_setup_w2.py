@@ -32,7 +32,10 @@ def test_capability_card_contract() -> None:
     assert "isCapabilityCardSeen" in settings
     assert ">设置<" in home
     assert 'aria-label="设置"' in home
-    assert 'v2-settings-popover__section-label">导入偏好</p>' in home
+    assert "导入与分析" in home
+    assert 'id="v2-settings-zone-ai"' in home
+    assert 'id="studio-llm-settings-entry"' in home
+    assert "配置写作引擎" in home
 
 
 def test_help_h7_writing_engine_and_replay() -> None:
@@ -56,6 +59,9 @@ def test_llm_key_official_links_simplified() -> None:
     assert "help.aliyun.com/zh/model-studio/get-api-key" in llm
     assert "按其页面指引创建并复制" in llm
     assert "LLM_KEY_LINKS" in llm
+    assert "LLM_DEFAULT_BASE" in llm
+    assert "clearForeignBaseUrl" in llm
+    assert "dashscope.aliyuncs.com/compatible-mode/v1" in llm
     # 旧 DashScope 控制台域名不再作为主入口
     assert "dashscope.console.aliyun.com" not in llm
 

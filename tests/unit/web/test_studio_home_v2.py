@@ -80,14 +80,17 @@ V2_HOME_MARKERS = (
     "v2-success-details",
     "v2-wizard-photo-cull",
     "打开卷轴预览",
-    # M20 · 设置 Popover（外层「设置」· 内含导入偏好 · D-DLLM-03）
+    # M20 · 设置 Popover（手风琴五区 · 导入与分析 · D-DLLM-03 AI zone）
     "v2-settings-toggle",
     "v2-settings-popover",
     "v2-settings-close",
     "设置",
+    "导入与分析",
     "导入偏好",
     'id="studio-cfg-clustering"',
     'id="studio-cfg-vision"',
+    'id="v2-settings-zone-ai"',
+    'id="studio-llm-settings-entry"',
     "开始制作我的游记",
     "照片留在本机 · 无需注册",
     # Import Failed overlay

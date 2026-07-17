@@ -19,7 +19,11 @@ from travelogue.llm.user_settings import (
     write_user_llm_config_overlay,
     write_user_llm_secrets,
 )
-from travelogue.util.llm_presets import PROVIDER_PRESETS
+from travelogue.util.llm_presets import (
+    PROVIDER_PRESETS,
+    coerce_base_url_for_provider,
+    coerce_model_for_provider,
+)
 from travelogue.web.studio_errors import client_error_payload, user_message
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_narrate import studio_llm_status
@@ -106,6 +110,10 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
         )
         return
 
+    # 按服务商归一：勿把 DeepSeek 的 model/base_url 写进通义配置（或反之）
+    model_s = coerce_model_for_provider(provider, model_s)
+    base_s = coerce_base_url_for_provider(provider, base_s)
+
     secrets = UserLlmSecrets(
         provider=provider,
         api_key=api_key,
@@ -169,19 +177,26 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
 
     os.environ[env_name] = key_to_use
     base_cfg = get_config(reload=True)
-    model_override = payload.get("model") or secrets.model or base_cfg.llm.model
-    base_override = (
+    # 仅复用「同一服务商」的 secrets；禁止回落到 base_cfg 里另一家的 model/URL
+    same_secrets = secrets.provider == prov
+    raw_model = payload.get("model") or (secrets.model if same_secrets else None)
+    raw_base = (
         payload.get("baseUrl")
         or payload.get("base_url")
-        or secrets.base_url
-        or base_cfg.llm.base_url
+        or (secrets.base_url if same_secrets else None)
+    )
+    model_override = coerce_model_for_provider(
+        prov, str(raw_model).strip() if raw_model else None
+    )
+    base_override = coerce_base_url_for_provider(
+        prov, str(raw_base).strip() if raw_base else None
     )
     llm = replace(
         base_cfg.llm,
         provider=prov,
-        model=str(model_override or ""),
+        model=model_override,
         api_key_env=env_name,
-        base_url=str(base_override).strip() if base_override else None,
+        base_url=base_override,
     )
     cfg = replace(base_cfg, llm=llm)
 

@@ -24,6 +24,35 @@ var LLM_KEY_LINKS = {
   },
 };
 
+/** 与后端 PROVIDER_PRESETS 对齐 · 切换服务商时勿沿用另一家默认地址 */
+var LLM_DEFAULT_BASE = {
+  deepseek: "https://api.deepseek.com/v1",
+  dashscope: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+};
+
+function normalizeBaseUrl(url) {
+  return String(url || "")
+    .trim()
+    .replace(/\/+$/, "");
+}
+
+function clearForeignBaseUrl(provider) {
+  var baseEl = $("#studio-llm-base");
+  if (!baseEl) return;
+  var cur = normalizeBaseUrl(baseEl.value);
+  if (!cur) return;
+  var foreign = Object.keys(LLM_DEFAULT_BASE)
+    .filter(function (k) {
+      return k !== provider;
+    })
+    .map(function (k) {
+      return normalizeBaseUrl(LLM_DEFAULT_BASE[k]);
+    });
+  if (foreign.indexOf(cur) !== -1) {
+    baseEl.value = "";
+  }
+}
+
 function $(sel, root) {
   return (root || document).querySelector(sel);
 }
@@ -202,15 +231,29 @@ function openHelpH7() {
 
 function payloadFromForm(requireKey) {
   var provider = ($("#studio-llm-provider") || {}).value || "deepseek";
+  clearForeignBaseUrl(provider);
   var keyEl = $("#studio-llm-key");
   var apiKey = (keyEl && keyEl.value || "").trim();
-  var base = (($("#studio-llm-base") || {}).value || "").trim();
+  var base = normalizeBaseUrl(($("#studio-llm-base") || {}).value || "");
   if (requireKey && !apiKey) {
     return null;
   }
   var body = { provider: provider };
   if (apiKey) body.apiKey = apiKey;
-  if (base) body.baseUrl = base;
+  // 仅发送自定义地址；另一家默认 endpoint 一律丢掉，走当前服务商 preset
+  var ownDefault = normalizeBaseUrl(LLM_DEFAULT_BASE[provider] || "");
+  if (base && base !== ownDefault) {
+    var otherDefaults = Object.keys(LLM_DEFAULT_BASE)
+      .filter(function (k) {
+        return k !== provider;
+      })
+      .map(function (k) {
+        return normalizeBaseUrl(LLM_DEFAULT_BASE[k]);
+      });
+    if (otherDefaults.indexOf(base) === -1) {
+      body.baseUrl = base;
+    }
+  }
   return body;
 }
 
@@ -301,7 +344,13 @@ function wire(root) {
     });
   }
   var prov = $("#studio-llm-provider", root);
-  if (prov) prov.addEventListener("change", updateHowto);
+  if (prov) {
+    prov.addEventListener("change", function () {
+      clearForeignBaseUrl(prov.value);
+      updateHowto();
+      setMsg("", true);
+    });
+  }
 
   var howto = $("#studio-llm-howto", root);
   if (howto && howto.dataset.helpBound !== "1") {
@@ -458,28 +507,20 @@ export function closeLlmSettings() {
 }
 
 export function initLlmSettingsEntry() {
-  // Home settings: add CTA row if popover exists
-  var pop = document.getElementById("v2-settings-popover");
-  if (pop && !document.getElementById("studio-llm-settings-entry")) {
-    var title = document.getElementById("v2-settings-title");
-    if (title) title.textContent = "设置";
-    var desc = document.getElementById("v2-settings-desc");
-    if (desc) desc.textContent = "导入与分析偏好；AI 文案可在能力卡中升级";
-    var sec = document.createElement("section");
-    sec.className = "v2-settings-popover__section";
-    sec.setAttribute("aria-label", "AI 文案");
-    sec.innerHTML =
-      '<p class="v2-settings-popover__section-label">AI 文案（可选）</p>' +
-      '<p class="v2-advanced-popover__note">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p>' +
-      '<button type="button" class="v2-settings-popover__dev-btn" id="studio-llm-settings-entry">配置写作引擎…</button>';
-    var importSec = pop.querySelector('[aria-label="导入选项"]');
-    if (importSec && importSec.parentNode) {
-      importSec.parentNode.insertBefore(sec, importSec.nextSibling);
-    } else {
-      pop.appendChild(sec);
-    }
-    $("#studio-llm-settings-entry").addEventListener("click", function () {
+  // Home settings: 静态 AI zone CTA（手风琴）；不再动态注入 section
+  var entry = document.getElementById("studio-llm-settings-entry");
+  if (entry && entry.dataset.llmBound !== "1") {
+    entry.dataset.llmBound = "1";
+    entry.addEventListener("click", function () {
       openLlmSettings({ source: "settings" });
+    });
+  }
+  var helpBtn = document.getElementById("studio-llm-settings-help");
+  if (helpBtn && helpBtn.dataset.llmHelpBound !== "1") {
+    helpBtn.dataset.llmHelpBound = "1";
+    helpBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      openHelpH7();
     });
   }
   // Deep link ?llmSetup=1

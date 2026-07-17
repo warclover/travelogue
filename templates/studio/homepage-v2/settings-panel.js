@@ -1,5 +1,5 @@
 /**
- * 首页 v2 · 设置 Popover（外层「设置」· 内含导入偏好 · D-DLLM-03）。
+ * 首页 v2 · 设置 Popover（手风琴五区 · D-DLLM-03 AI zone→Modal）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { bindAdvancedConfigControls } from "../js/advanced.js";
@@ -8,7 +8,8 @@ import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
 import { requestExitStudio } from "../js/studio-exit.js";
 import { bindStorageSettings } from "./storage-settings.js";
-import { $, V2 } from "./store.js";
+import { $, V2, V2_THEME_LABELS } from "./store.js";
+import { studioAuthHeaders } from "../js/http.js";
 
 var SETTINGS_HINT_KEY = "travelogue.studio.v2.settingsMovedHint";
 
@@ -34,6 +35,7 @@ function focusableEls(container) {
   return Array.prototype.filter.call(container.querySelectorAll(POPOVER_FOCUSABLE), function (el) {
     if (el.getAttribute("aria-hidden") === "true") return false;
     if (el.closest("[hidden]")) return false;
+    if (el.classList && el.classList.contains("v2-settings-native-select")) return false;
     return true;
   });
 }
@@ -155,10 +157,199 @@ function releaseRepositionWhileOpen() {
   releasePopoverResizeObserver();
 }
 
+function syncSegFromSelect(select) {
+  if (!select || !select.id) return;
+  var group = document.querySelector('[data-seg-for="' + select.id + '"]');
+  if (!group) return;
+  var val = select.value;
+  Array.prototype.forEach.call(group.querySelectorAll(".v2-settings-seg__btn"), function (btn) {
+    btn.classList.toggle("is-on", btn.getAttribute("data-value") === val);
+  });
+}
+
+function syncAllSegs(root) {
+  var scope = root || document;
+  Array.prototype.forEach.call(scope.querySelectorAll("[data-seg-for]"), function (group) {
+    var select = document.getElementById(group.getAttribute("data-seg-for"));
+    syncSegFromSelect(select);
+  });
+}
+
+function shortClustering(v) {
+  if (v === "true") return "开";
+  if (v === "false") return "关";
+  return "自动";
+}
+
+function shortVision(v) {
+  if (v === "true") return "开";
+  if (v === "auto") return "自动";
+  return "关";
+}
+
+export function syncImportMeta() {
+  var meta = $("v2-settings-meta-import");
+  var clu = $("studio-cfg-clustering");
+  var vis = $("studio-cfg-vision");
+  if (!meta || !clu || !vis) return;
+  meta.textContent =
+    "行程·" + shortClustering(clu.value) + " · 场景·" + shortVision(vis.value);
+}
+
+export function syncAppearanceMeta() {
+  var meta = $("v2-settings-meta-appearance");
+  var select = $("v2-theme-select");
+  if (!meta || !select) return;
+  var key = select.value;
+  meta.textContent = (V2_THEME_LABELS && V2_THEME_LABELS[key]) || select.options[select.selectedIndex].text || key;
+}
+
+function bindSegControls(root) {
+  if (!root) return;
+  Array.prototype.forEach.call(root.querySelectorAll("[data-seg-for]"), function (group) {
+    if (group.dataset.segBound === "1") return;
+    var id = group.getAttribute("data-seg-for");
+    var select = document.getElementById(id);
+    if (!select) return;
+    group.dataset.segBound = "1";
+    group.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".v2-settings-seg__btn") : null;
+      if (!btn || !group.contains(btn)) return;
+      var val = btn.getAttribute("data-value");
+      if (val == null) return;
+      if (select.value !== val) {
+        select.value = val;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      syncSegFromSelect(select);
+      syncImportMeta();
+    });
+    select.addEventListener("change", function () {
+      syncSegFromSelect(select);
+      syncImportMeta();
+    });
+    syncSegFromSelect(select);
+  });
+}
+
+function syncMoreZone() {
+  var more = $("v2-settings-zone-more");
+  var dev = $("v2-settings-dev-section");
+  var exit = $("v2-settings-exit-section");
+  var meta = $("v2-settings-meta-more");
+  if (!more) return;
+  var showDev = !!(dev && !dev.hidden);
+  var showExit = !!(exit && !exit.hidden);
+  more.hidden = !(showDev || showExit);
+  if (meta) {
+    var bits = [];
+    if (showDev) bits.push("开发者");
+    if (showExit) bits.push("退出");
+    meta.textContent = bits.join(" · ");
+  }
+}
+
 function syncDevSection() {
   var section = $("v2-settings-dev-section");
   if (!section) return;
   section.hidden = !harnessEnabled();
+  syncMoreZone();
+}
+
+function applyAiStatus(st) {
+  var meta = $("v2-settings-meta-ai");
+  var badge = $("studio-llm-settings-badge");
+  var entry = $("studio-llm-settings-entry");
+  var readiness = (st && st.readiness) || (st && st.llmAvailable ? "已就绪" : "未配置");
+  var provider = st && st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "";
+  var providerLabel =
+    provider === "dashscope" ? "通义千问" : provider === "deepseek" ? "DeepSeek" : "";
+  var metaText = readiness;
+  if (readiness === "已就绪" && providerLabel) metaText = "已就绪 · " + providerLabel;
+  if (meta) {
+    meta.textContent = metaText;
+    meta.classList.toggle("is-ok", readiness === "已就绪");
+    meta.classList.toggle("is-warn", readiness === "连接失败" || readiness === "未配置");
+  }
+  if (badge) {
+    badge.textContent = readiness;
+    badge.classList.toggle("is-ready", readiness === "已就绪");
+    badge.classList.toggle("is-fail", readiness === "连接失败");
+  }
+  if (entry) {
+    entry.textContent = readiness === "已就绪" ? "管理写作引擎…" : "配置写作引擎…";
+  }
+}
+
+function refreshAiStatus() {
+  return fetch("/__travelogue/llm/status", { headers: studioAuthHeaders({}) })
+    .then(function (r) {
+      return r.ok ? r.json() : null;
+    })
+    .then(function (st) {
+      applyAiStatus(st || {});
+    })
+    .catch(function () {
+      applyAiStatus({});
+    });
+}
+
+function expandZone(zone) {
+  if (!zone) return;
+  try {
+    zone.open = true;
+  } catch (_e) {
+    /* ignore */
+  }
+  if (typeof zone.scrollIntoView === "function") {
+    zone.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function focusZoneControl(focusKey) {
+  if (focusKey === "storage") {
+    var storageSec = $("v2-settings-storage-section");
+    expandZone(storageSec);
+    var copyOn =
+      storageSec &&
+      storageSec.querySelector('[data-seg-for="studio-cfg-copy-source"] .v2-settings-seg__btn.is-on');
+    if (copyOn && typeof copyOn.focus === "function") {
+      try {
+        copyOn.focus();
+      } catch (_e) {
+        /* ignore */
+      }
+      return true;
+    }
+    return !!storageSec;
+  }
+  if (focusKey === "ai") {
+    var aiZone = $("v2-settings-zone-ai");
+    expandZone(aiZone);
+    var entry = $("studio-llm-settings-entry");
+    if (entry && typeof entry.focus === "function") {
+      try {
+        entry.focus();
+      } catch (_e2) {
+        /* ignore */
+      }
+      return true;
+    }
+    return !!aiZone;
+  }
+  if (focusKey === "import") {
+    expandZone($("v2-settings-zone-import"));
+    return true;
+  }
+  if (focusKey === "appearance") {
+    expandZone($("v2-settings-zone-appearance"));
+    return true;
+  }
+  if (focusKey === "more") {
+    expandZone($("v2-settings-zone-more"));
+    return true;
+  }
+  return false;
 }
 
 export function closeSettings() {
@@ -177,7 +368,7 @@ export function closeSettings() {
 }
 
 /**
- * @param {{ focus?: "storage", source?: string }} [opts]
+ * @param {{ focus?: "storage"|"ai"|"import"|"appearance"|"more", source?: string }} [opts]
  */
 export function openSettings(opts) {
   opts = opts || {};
@@ -186,8 +377,15 @@ export function openSettings(opts) {
   if (!popover || !toggle || toggle.disabled || V2.state === "Importing") return;
   ensurePopoverPortaled(popover);
   syncDevSection();
-  if (_bound && _bound.fetchConfig) _bound.fetchConfig();
+  syncAppearanceMeta();
+  if (_bound && _bound.fetchConfig) {
+    Promise.resolve(_bound.fetchConfig()).then(function () {
+      syncAllSegs(popover);
+      syncImportMeta();
+    });
+  }
   if (_storageBound && _storageBound.fetchConfig) _storageBound.fetchConfig();
+  refreshAiStatus();
   trackStudioEvent("storage_settings_open", { source: opts.source || "toolbar" });
   _focusRestoreEl = document.activeElement;
   _open = true;
@@ -199,21 +397,11 @@ export function openSettings(opts) {
   toggle.setAttribute("aria-expanded", "true");
   trapFocus(popover);
   trackStudioEvent("settings_open", { source: opts.source || "toolbar" });
-  if (opts.focus === "storage") {
-    var storageSec = $("v2-settings-storage-section");
-    var copySel = $("studio-cfg-copy-source");
-    if (storageSec && typeof storageSec.scrollIntoView === "function") {
-      storageSec.scrollIntoView({ block: "nearest" });
-    }
-    if (copySel && typeof copySel.focus === "function") {
-      try {
-        copySel.focus();
-      } catch (_e) {
-        /* ignore */
-      }
-      return;
-    }
+  // ?dev=1 / harness：展开「更多」，避免 Dev 入口藏在折叠区内不可见
+  if (harnessEnabled()) {
+    expandZone($("v2-settings-zone-more"));
   }
+  if (opts.focus && focusZoneControl(opts.focus)) return;
   var first = focusableEls(popover)[0];
   if (first && typeof first.focus === "function") first.focus();
   else {
@@ -233,8 +421,6 @@ export function syncSettingsLock() {
 export function maybeShowSettingsMovedHint() {
   try {
     if (localStorage.getItem(SETTINGS_HINT_KEY) === "1") return;
-    // 能力卡未见过：等首启卡结束（travelogue:capability-card-done）后再提示设置入口
-    // 不读 shouldDeferHomeHelpL1：该门禁只压制 Help L1，能力卡关闭后仍应允许设置 tip
     if (!isCapabilityCardSeen()) return;
     localStorage.setItem(SETTINGS_HINT_KEY, "1");
   } catch (e) {
@@ -252,16 +438,29 @@ export function initSettingsPanel() {
 
   _bound = bindAdvancedConfigControls();
   _storageBound = bindStorageSettings();
+  bindSegControls(popover);
+  syncAllSegs(popover);
+  syncImportMeta();
+  syncAppearanceMeta();
   syncSettingsLock();
   syncDevSection();
   ensurePopoverPortaled(popover);
   maybeShowSettingsMovedHint();
+
   try {
     window.addEventListener("travelogue:capability-card-done", function () {
       maybeShowSettingsMovedHint();
     });
+    window.addEventListener("travelogue:llm-status", function (ev) {
+      applyAiStatus((ev && ev.detail) || {});
+    });
   } catch (_e) {
     /* ignore */
+  }
+
+  var themeSelect = $("v2-theme-select");
+  if (themeSelect) {
+    themeSelect.addEventListener("change", syncAppearanceMeta);
   }
 
   toggle.addEventListener("click", function (e) {
@@ -309,6 +508,7 @@ export function initSettingsPanel() {
         var caps = (cfg && cfg.capabilities) || {};
         if (caps.desktopExit) {
           exitSection.hidden = false;
+          syncMoreZone();
         }
       })
       .catch(function () {});
@@ -324,12 +524,18 @@ export function initSettingsPanel() {
 
   document.addEventListener("mousedown", function (e) {
     if (!_open) return;
+    // AI Modal 叠在设置上时，点击 Modal 不应关掉设置（关闭 Modal 后继续改偏好）
+    var llmRoot = document.getElementById("studio-llm-settings-root");
+    if (llmRoot && !llmRoot.hidden) return;
     var t = e.target;
     if (popover.contains(t) || toggle.contains(t)) return;
     closeSettings();
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && _open) closeSettings();
+    if (e.key !== "Escape" || !_open) return;
+    var llmRoot = document.getElementById("studio-llm-settings-root");
+    if (llmRoot && !llmRoot.hidden) return; // Modal 自管 Esc
+    closeSettings();
   });
 }

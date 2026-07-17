@@ -211,102 +211,189 @@
       <div class="v2-settings-popover__head">
         <div class="v2-settings-popover__titles">
           <p id="v2-settings-title" class="v2-settings-popover__title">设置</p>
-          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入与分析偏好；AI 文案可在能力卡中升级</p>
+          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入 · 外观 · AI 文案（可选）</p>
         </div>
         <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
                 aria-label="关闭">×</button>
       </div>
-      <section class="v2-settings-popover__section" aria-label="外观">
-        <p class="v2-settings-popover__section-label">外观</p>
-        <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">
-          <optgroup label="精选">
-            <option value="mist">雾蓝纸本</option>
-            <option value="folio">纸墨装帧</option>
-            <option value="dawn">暖阳珊瑚</option>
-            <option value="classic">经典深色</option>
-          </optgroup>
-          <optgroup label="更多">
-            <option value="atelier">木紫文艺</option>
-            <option value="sky">清新浅蓝</option>
-          </optgroup>
-        </select>
-      </section>
-      <section class="v2-settings-popover__section" aria-label="导入偏好">
-        <p class="v2-settings-popover__section-label">导入偏好</p>
-        <p class="v2-advanced-popover__note">一般无需修改</p>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-clustering">行程识别</label>
-          <select id="studio-cfg-clustering" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-clustering-hint">
-            <option value="auto">自动（推荐）</option>
-            <option value="true">开</option>
-            <option value="false">关</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">默认自动：有 GPS 的照片会按行程分段（推荐）</p>
-        </div>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-vision">场景分析</label>
-          <select id="studio-cfg-vision" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-vision-hint">
-            <option value="false">关（默认）</option>
-            <option value="auto">自动</option>
-            <option value="true">开</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">默认关闭；大相册可开启以合并同场景照片（较慢，首次需下载组件）</p>
-        </div>
-        <details class="v2-advanced-popover__experimental" id="v2-settings-experimental">
-          <summary class="v2-advanced-popover__experimental-summary">实验选项</summary>
-          <div class="v2-advanced-popover__row">
-            <label class="v2-advanced-popover__label" for="studio-cfg-g1">导入后先确认章节</label>
-            <select id="studio-cfg-g1" class="v2-advanced-popover__select"
-                    aria-describedby="studio-cfg-g1-hint">
-              <option value="false">自动继续（推荐）</option>
-              <option value="true">导入后先确认章节</option>
+
+      <div class="v2-settings-zones">
+        <!-- 外观 -->
+        <details class="v2-settings-zone" id="v2-settings-zone-appearance">
+          <summary class="v2-settings-zone__summary">
+            外观
+            <span class="v2-settings-zone__meta" id="v2-settings-meta-appearance">雾蓝纸本</span>
+          </summary>
+          <div class="v2-settings-zone__body">
+            <label class="v2-settings-field__label" for="v2-theme-select">首页配色</label>
+            <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">
+              <optgroup label="精选">
+                <option value="mist">雾蓝纸本</option>
+                <option value="folio">纸墨装帧</option>
+                <option value="dawn">暖阳珊瑚</option>
+                <option value="classic">经典深色</option>
+              </optgroup>
+              <optgroup label="更多">
+                <option value="atelier">木紫文艺</option>
+                <option value="sky">清新浅蓝</option>
+              </optgroup>
             </select>
-            <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
-          </div>
-          <div class="v2-advanced-popover__row">
-            <label class="v2-advanced-popover__label" for="studio-cfg-layout-scoring">智能排版（实验）</label>
-            <select id="studio-cfg-layout-scoring" class="v2-advanced-popover__select"
-                    aria-describedby="studio-cfg-layout-scoring-hint">
-              <option value="false">经典（默认）</option>
-              <option value="true">智能排版（实验）</option>
-            </select>
-            <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式用多信号搜索排版；一般保持默认即可</p>
           </div>
         </details>
-      </section>
-      <section class="v2-settings-popover__section" aria-label="存储与磁盘" id="v2-settings-storage-section">
-        <p class="v2-settings-popover__section-label">存储与磁盘</p>
-        <p class="v2-advanced-popover__note" id="studio-storage-usage-line">正在估算占用…</p>
-        <p class="v2-advanced-popover__hint" id="studio-storage-mode-line" hidden></p>
-        <div class="v2-advanced-popover__row">
-          <label class="v2-advanced-popover__label" for="studio-cfg-copy-source">导入时复制源文件</label>
-          <select id="studio-cfg-copy-source" class="v2-advanced-popover__select"
-                  aria-describedby="studio-cfg-copy-source-hint">
-            <option value="true">开（默认）</option>
-            <option value="false">关（引用原相册，更省空间）</option>
-          </select>
-          <p class="v2-advanced-popover__hint" id="studio-cfg-copy-source-hint">
-            开启时作品内保存一份处理后的照片；关闭后只引用你选择的相册目录并生成预览图。仅影响之后的导入。
-          </p>
-        </div>
-        <button type="button" class="v2-settings-popover__dev-btn" id="studio-storage-cleanup-btn">
-          清理磁盘…
-        </button>
-        <p class="v2-advanced-popover__hint" id="studio-storage-cleanup-hint">
-          默认清理可再生缓存；删除源文件拷贝需二次确认。
-        </p>
-      </section>
-      <section class="v2-settings-popover__section v2-settings-popover__section--dev" id="v2-settings-dev-section" hidden>
-        <p class="v2-settings-popover__section-label">开发者</p>
-        <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-dev-toggle">打开 Dev 面板</button>
-      </section>
-      <section class="v2-settings-popover__section" id="v2-settings-exit-section" hidden>
-        <p class="v2-settings-popover__section-label">桌面版</p>
-        <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-exit-studio">退出 Studio</button>
-        <p class="v2-advanced-popover__hint">停止本机服务并释放端口；浏览器标签可稍后关闭</p>
-      </section>
+
+        <!-- 导入与分析（默认展开 · 原「导入偏好」） -->
+        <details class="v2-settings-zone" id="v2-settings-zone-import" open>
+          <summary class="v2-settings-zone__summary">
+            导入与分析
+            <span class="v2-settings-zone__meta" id="v2-settings-meta-import">行程·自动 · 场景·关</span>
+          </summary>
+          <div class="v2-settings-zone__body">
+            <p class="v2-settings-zone__note">导入偏好 · 一般无需修改</p>
+
+            <div class="v2-settings-field">
+              <span class="v2-settings-field__label" id="studio-cfg-clustering-label">行程识别</span>
+              <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-clustering-label"
+                   data-seg-for="studio-cfg-clustering">
+                <button type="button" class="v2-settings-seg__btn is-on" data-value="auto">自动<span class="v2-settings-seg__rec">荐</span></button>
+                <button type="button" class="v2-settings-seg__btn" data-value="true">开</button>
+                <button type="button" class="v2-settings-seg__btn" data-value="false">关</button>
+              </div>
+              <select id="studio-cfg-clustering" class="v2-settings-native-select"
+                      aria-describedby="studio-cfg-clustering-hint">
+                <option value="auto">自动（推荐）</option>
+                <option value="true">开</option>
+                <option value="false">关</option>
+              </select>
+            </div>
+
+            <div class="v2-settings-field">
+              <span class="v2-settings-field__label" id="studio-cfg-vision-label">场景分析</span>
+              <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-vision-label"
+                   data-seg-for="studio-cfg-vision">
+                <button type="button" class="v2-settings-seg__btn is-on" data-value="false">关<span class="v2-settings-seg__rec">荐</span></button>
+                <button type="button" class="v2-settings-seg__btn" data-value="auto">自动</button>
+                <button type="button" class="v2-settings-seg__btn" data-value="true">开</button>
+              </div>
+              <select id="studio-cfg-vision" class="v2-settings-native-select"
+                      aria-describedby="studio-cfg-vision-hint">
+                <option value="false">关（默认）</option>
+                <option value="auto">自动</option>
+                <option value="true">开</option>
+              </select>
+            </div>
+
+            <details class="v2-settings-sub" id="v2-settings-experimental">
+              <summary class="v2-settings-sub__summary">说明与实验选项</summary>
+              <div class="v2-settings-sub__body">
+                <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">行程识别：有 GPS 的照片会按行程分段（推荐自动）。</p>
+                <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">场景分析：合并同场景照片（较慢，首次需下载组件；默认关）。</p>
+
+                <div class="v2-settings-field">
+                  <span class="v2-settings-field__label" id="studio-cfg-g1-label">导入后先确认章节</span>
+                  <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-g1-label"
+                       data-seg-for="studio-cfg-g1">
+                    <button type="button" class="v2-settings-seg__btn is-on" data-value="false">自动继续</button>
+                    <button type="button" class="v2-settings-seg__btn" data-value="true">先确认</button>
+                  </div>
+                  <select id="studio-cfg-g1" class="v2-settings-native-select"
+                          aria-describedby="studio-cfg-g1-hint">
+                    <option value="false">自动继续（推荐）</option>
+                    <option value="true">导入后先确认章节</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
+                </div>
+
+                <div class="v2-settings-field">
+                  <span class="v2-settings-field__label" id="studio-cfg-layout-scoring-label">智能排版（实验）</span>
+                  <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-layout-scoring-label"
+                       data-seg-for="studio-cfg-layout-scoring">
+                    <button type="button" class="v2-settings-seg__btn is-on" data-value="false">经典</button>
+                    <button type="button" class="v2-settings-seg__btn" data-value="true">智能</button>
+                  </div>
+                  <select id="studio-cfg-layout-scoring" class="v2-settings-native-select"
+                          aria-describedby="studio-cfg-layout-scoring-hint">
+                    <option value="false">经典（默认）</option>
+                    <option value="true">智能排版（实验）</option>
+                  </select>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-layout-scoring-hint">实验模式用多信号搜索排版；一般保持默认即可</p>
+                </div>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <!-- AI 文案 · zone 摘要 + CTA → Modal（D-DLLM-03） -->
+        <details class="v2-settings-zone" id="v2-settings-zone-ai">
+          <summary class="v2-settings-zone__summary">
+            AI 文案
+            <span class="v2-settings-zone__meta" id="v2-settings-meta-ai">未配置</span>
+          </summary>
+          <div class="v2-settings-zone__body">
+            <p class="v2-settings-ai-badge" id="studio-llm-settings-badge">未配置</p>
+            <p class="v2-advanced-popover__hint" id="studio-llm-settings-note">
+              不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。
+            </p>
+            <button type="button" class="v2-settings-popover__cta" id="studio-llm-settings-entry">
+              配置写作引擎…
+            </button>
+            <button type="button" class="v2-settings-popover__dev-btn" id="studio-llm-settings-help"
+                    data-llm-help-h7="1">了解更多（帮助）</button>
+          </div>
+        </details>
+
+        <!-- 存储与磁盘 -->
+        <details class="v2-settings-zone" id="v2-settings-storage-section">
+          <summary class="v2-settings-zone__summary">
+            存储与磁盘
+            <span class="v2-settings-zone__meta" id="v2-settings-meta-storage">估算中…</span>
+          </summary>
+          <div class="v2-settings-zone__body">
+            <p class="v2-settings-usage" id="studio-storage-usage-line">正在估算占用…</p>
+            <p class="v2-advanced-popover__hint" id="studio-storage-mode-line" hidden></p>
+            <div class="v2-settings-field">
+              <span class="v2-settings-field__label" id="studio-cfg-copy-source-label">导入时复制源文件</span>
+              <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-copy-source-label"
+                   data-seg-for="studio-cfg-copy-source">
+                <button type="button" class="v2-settings-seg__btn is-on" data-value="true">复制</button>
+                <button type="button" class="v2-settings-seg__btn" data-value="false">引用相册</button>
+              </div>
+              <select id="studio-cfg-copy-source" class="v2-settings-native-select"
+                      aria-describedby="studio-cfg-copy-source-hint">
+                <option value="true">开（默认）</option>
+                <option value="false">关（引用原相册，更省空间）</option>
+              </select>
+              <p class="v2-advanced-popover__hint" id="studio-cfg-copy-source-hint">
+                开启时作品内保存一份处理后的照片；关闭后只引用相册目录并生成预览图。仅影响之后的导入。
+              </p>
+            </div>
+            <button type="button" class="v2-settings-popover__dev-btn" id="studio-storage-cleanup-btn">
+              清理磁盘…
+            </button>
+            <p class="v2-advanced-popover__hint" id="studio-storage-cleanup-hint">
+              默认清理可再生缓存；删除源文件拷贝需二次确认。
+            </p>
+          </div>
+        </details>
+
+        <!-- 更多（Dev / 退出 · 条件显示） -->
+        <details class="v2-settings-zone" id="v2-settings-zone-more" hidden>
+          <summary class="v2-settings-zone__summary">
+            更多
+            <span class="v2-settings-zone__meta" id="v2-settings-meta-more"></span>
+          </summary>
+          <div class="v2-settings-zone__body">
+            <div id="v2-settings-dev-section" hidden>
+              <p class="v2-settings-field__label">开发者</p>
+              <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-dev-toggle">打开 Dev 面板</button>
+            </div>
+            <div id="v2-settings-exit-section" hidden>
+              <p class="v2-settings-field__label">桌面版</p>
+              <button type="button" class="v2-settings-popover__dev-btn" id="v2-settings-exit-studio">退出 Studio</button>
+              <p class="v2-advanced-popover__hint">停止本机服务并释放端口；浏览器标签可稍后关闭</p>
+            </div>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
   </div><!-- /v2-bento-hero -->

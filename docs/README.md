@@ -108,6 +108,14 @@
 | [ACCEPTANCE-FIRST-SESSION-TRUST-V1.md](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) | 首访可信验收 · AC-FST + 手测脚本 |
 | [IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) | 首访可信实施清单 · W0–W2 工程已合入 |
 | [wireframes/first-session-trust-v1-wireframe.html](./wireframes/first-session-trust-v1-wireframe.html) | 首访可信线框 F1–F5（W0：F1–F4 · W1：F5） |
+| [PRD-WAIT-TIPS-V1.md](./PRD-WAIT-TIPS-V1.md) | **导入等待教育 Wait Tips V1** **v0.2.0**（Conditional Go · Outcome-first 六张 · **可 Kickoff W0 · 编码另排期**） |
+| [IMPLEMENTATION-WAIT-TIPS-V1.md](./IMPLEMENTATION-WAIT-TIPS-V1.md) | Wait Tips · Doc 已收口 · W0–W2 任务卡（未编码） |
+| [ACCEPTANCE-WAIT-TIPS-V1.md](./ACCEPTANCE-WAIT-TIPS-V1.md) | Wait Tips 验收 · AC-WT + 非回归 |
+| [wireframes/wait-tips-v1-wireframe.html](./wireframes/wait-tips-v1-wireframe.html) | Wait Tips 线框 F1–F5（W0：F1/F3 UI · F2 COPY） |
+| [acceptance-records/wait-tips-v1-review-2026-07-17.md](./acceptance-records/wait-tips-v1-review-2026-07-17.md) | Wait Tips · 跨职能评审纪要 · Conditional Go · BLK-01～07 |
+| [acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) | Wait Tips · 市场/运营/产品文案润色纪要 |
+| [acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md) | Wait Tips · 手测狗粮 F1–F5 |
+| [acceptance-records/wait-tips-v1-review-TEMPLATE.md](./acceptance-records/wait-tips-v1-review-TEMPLATE.md) | Wait Tips · 跨职能评审模板（备查） |
 | [acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) | 首访可信 · 真人狗粮 F1–F5 · AC-FST-15 |
 | [acceptance-records/first-session-trust-v1-review-2026-07-17.md](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) | 首访可信 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md) | 首访可信 · **八席用户联席** · Conditional Go · USR-01～07 |
@@ -125,7 +133,8 @@
 首访成稿：**PRD-FTUE-OPTIMIZATION-V1** **v1.1.0**（W0 编码 · 分支 `feat/ftue-optimization-v1-w0`）。  
 敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · USR-01～06 已回写 · 线框 F1/F2/F5 增补 · **编码另排期**；不含海外 IG）。  
 首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
-交叉脚注：FTUE **v1.1.1** · Help **v1.1.2** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
+导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · Doc 齐 · **可 Kickoff W0 · 编码另排期**）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
+交叉脚注：FTUE **v1.1.2** · Help **v1.1.3** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
 
 ---
@@ -135,6 +144,11 @@
 | 文档 | 说明 |
 |------|------|
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** |
+| [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **写作引擎 API 配置加固 V1**（服务商隔离 · 保存并测试 · 通义地域 · 可行动错误）**v1.1 Conditional Go · 可开 W1** |
+| [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 实施清单（W0 ✅ · W1 热修预工作 ✅ · 编码待开） |
+| [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 验收 AC-WEA-* |
+| [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) | WEA 线框 F1–F5 |
+| [acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md](./acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md) | WEA 跨职能评审 · Conditional Go |
 | [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | **无 Key 主路径加固与首启预期管理**（死循环修复 · 友好引导）**Draft · W1/W2 ✅** |
 | [IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./IMPLEMENTATION-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | W1–W3 实施对照（含 Resume 断点） |
 | [acceptance-records/l0-resume-flow-fix-2026-07-15.md](./acceptance-records/l0-resume-flow-fix-2026-07-15.md) | Resume 断点修复 · T1–T7 手工矩阵 |
@@ -151,7 +165,7 @@
 
 **前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。  
 **代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
-**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → 若处理无 Key 死循环/首启预期则读 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
+**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → 若处理无 Key 死循环/首启预期则读 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)** → 若加固写作引擎配置面则读 **[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
 
 ---
 
@@ -546,6 +560,8 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 2026-07-15 | [PRD-STABLE-QUALITY-HARDENING-V1](./PRD-STABLE-QUALITY-HARDENING-V1.md) 升 **v1.1.0**（合入六席 BLK-01..08 · Ready for Kickoff） |
 | 2026-07-15 | 新增 [PRD-STABLE-QUALITY-HARDENING-V1.md](./PRD-STABLE-QUALITY-HARDENING-V1.md)（稳定期 16 失败归因 + 体验硬化可落地方案） |
 | 2026-07-15 | 稳定期修复 PRD 六席评审纪要：[acceptance-records/stable-qh-prd-review-2026-07-15.md](./acceptance-records/stable-qh-prd-review-2026-07-15.md)（有条件通过） |
+| 2026-07-17 | WEA **Conditional Go**：PRD v1.1 + IMPLEMENTATION/ACCEPTANCE/线框/评审纪要；ERROR-CODES 预留扩展码 |
+| 2026-07-17 | 索引补 [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)（写作引擎 API 配置加固 · 服务商隔离 · 保存并测试） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)（无 Key 主路径加固 · 首启预期 · 失败可继续） |
 | 2026-07-15 | 索引补 [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（桌面首启 L0/L1 · 写作引擎配置 · 无 Key 长图兜底） |
 | 2026-07-14 | 桌面安装版：PRD v1.1.1 + [ADR-018](./adr/018-desktop-installer-layout.md) + [IMPLEMENTATION](./IMPLEMENTATION-DESKTOP-INSTALLER-V1.md) + [ACCEPTANCE](./ACCEPTANCE-DESKTOP-INSTALLER-V1.md) |

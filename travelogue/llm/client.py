@@ -13,6 +13,7 @@ from typing import Any
 
 from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
+from travelogue.util.llm_presets import coerce_base_url_for_provider, coerce_model_for_provider
 
 _RETRYABLE_HTTP = frozenset({429, 502, 503})
 _RETRYABLE_URL_CODES = frozenset({"E_LLM_TIMEOUT", "E_LLM_NETWORK"})
@@ -66,17 +67,27 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
     if not api_key:
         raise LlmError("E_LLM_AUTH", f"missing API key env {api_key_env}")
 
-    model = (llm.model or preset["default_model"]).strip()
-    base = (llm.base_url or preset["base_url"]).rstrip("/")
+    # Provider-scoped defaults: do not keep DeepSeek model/URL when using dashscope
+    # (common after switching 服务商 while config.user.yaml still has leftovers).
+    cfg_provider = (llm.provider or "").strip().lower()
+    provider_switched = bool(provider and prov != cfg_provider)
+    if provider_switched:
+        model = coerce_model_for_provider(prov, None)
+        base_custom = None
+    else:
+        model = coerce_model_for_provider(prov, getattr(llm, "model", None))
+        base_custom = coerce_base_url_for_provider(prov, getattr(llm, "base_url", None))
+    base = (base_custom or preset["base_url"]).rstrip("/")
     try:
         from travelogue.llm.user_settings import read_user_llm_secrets
 
         secrets = read_user_llm_secrets()
         if secrets.provider == prov:
             if secrets.model:
-                model = secrets.model.strip()
+                model = coerce_model_for_provider(prov, secrets.model)
             if secrets.base_url:
-                base = secrets.base_url.rstrip("/")
+                base_custom = coerce_base_url_for_provider(prov, secrets.base_url)
+                base = (base_custom or preset["base_url"]).rstrip("/")
     except Exception:
         pass
     return LlmRuntime(

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>写作引擎 API 配置加固 V1 · 线框</title>
+  <style>
+    :root {
+      --bg: #eceff1; --page: #fafafa; --text: #263238; --muted: #607d8b;
+      --bar: #1a2f28; --accent: #2f6b55; --border: #90a4ae; --warn: #e65100; --danger: #c62828;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+    .bar { background: var(--bar); color: #f5fbf8; padding: 14px 20px; }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .bar p { margin: 0; font-size: 12px; color: #9cb0a8; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; }
+    .wrap { max-width: 760px; margin: 24px auto; padding: 0 16px 48px; }
+    .panel { display: none; background: var(--page); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .panel.is-visible { display: block; }
+    .panel h2 { margin: 0 0 8px; font-size: 17px; }
+    .lead { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+    .phone {
+      max-width: 400px; margin: 12px auto; border: 2px solid #455a64; border-radius: 14px;
+      padding: 16px 18px; background: #f7f5f0;
+    }
+    .anno { font-size: 12px; color: var(--warn); margin-top: 12px; }
+    .ok { color: #2e7d32; font-size: 12px; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      background: #e8eee9; font-size: 12px; font-weight: 600; margin: 8px 0;
+    }
+    .badge.ready { background: #d9efe0; color: #1b5e3a; }
+    .badge.fail { background: #fde8e6; color: #8a2b22; }
+    .badge.warn { background: #fff3e0; color: #e65100; }
+    label { display: block; font-size: 12px; margin: 10px 0 4px; font-weight: 600; color: #3d4f48; }
+    input, select {
+      width: 100%; padding: 8px 10px; border: 1px solid #b7c4bd; border-radius: 8px;
+      font-size: 14px; background: #fff;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+    .btn {
+      display: inline-block; padding: 8px 14px; border-radius: 8px;
+      background: var(--accent); color: #fff; font-size: 13px; border: 0;
+    }
+    .btn.ghost { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+    .btn.danger { background: #fff; color: var(--danger); border: 1px solid #c98a82; }
+    .btn.linkish { background: transparent; color: var(--accent); border: 0; padding: 0; font-size: 12px; text-decoration: underline; }
+    .radio { display: flex; gap: 14px; font-size: 13px; margin-top: 4px; }
+    .foot { font-size: 11px; color: #60756c; margin-top: 12px; line-height: 1.45; }
+    .msg { font-size: 13px; margin-top: 10px; color: #1b5e3a; }
+    .msg.err { color: #8a2b22; }
+    table.matrix { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    table.matrix th, table.matrix td { border: 1px solid #cfd8dc; padding: 8px; text-align: left; vertical-align: top; }
+    table.matrix th { background: #eceff1; }
+    .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #e0f2f1; color: #00695c; }
+    details.adv { margin-top: 10px; font-size: 13px; color: #4a5c55; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>写作引擎 API 配置加固 V1 · 线框</h1>
+    <p>PRD v1.1 Conditional Go · D-WEA-* · W1 挡门帧 · 2026-07-17</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="f1" class="is-active">F1 · 诊断</button>
+      <button type="button" data-tab="f2">F2 · Modal To-Be</button>
+      <button type="button" data-tab="f3">F3 · 状态机</button>
+      <button type="button" data-tab="f4">F4 · 切换确认</button>
+      <button type="button" data-tab="f5">F5 · 拍板</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="panel is-visible" id="f1">
+      <h2>F1 · As-Is 诊断 <span class="tag">P0</span></h2>
+      <p class="lead">通义配失败、DeepSeek 正常 → 跨商沿用 deepseek-chat / api.deepseek.com。</p>
+      <table class="matrix">
+        <thead><tr><th>问题</th><th>表现</th><th>To-Be</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>P-WEA-01 串配置</td>
+            <td>百炼 Key 打到错误 host/模型</td>
+            <td>coerce + ping 同商 secrets</td>
+          </tr>
+          <tr>
+            <td>P-WEA-02 假就绪</td>
+            <td>只保存不测也像「配好了」</td>
+            <td>保存并测试；就绪⇔ping ok</td>
+          </tr>
+          <tr>
+            <td>P-WEA-03 地域</td>
+            <td>国际站 Key 难发现</td>
+            <td>中国站 / 国际站 radio</td>
+          </tr>
+          <tr>
+            <td>P-WEA-04 错误</td>
+            <td>笼统「连接失败」</td>
+            <td>可行动文案矩阵</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="anno">热修（coerce）已合入代码；本线框锁产品合同供 W1 编码。</p>
+    </section>
+
+    <section class="panel" id="f2">
+      <h2>F2 · Modal To-Be（W1）</h2>
+      <p class="lead">服务商 = 通义时显示地域；主 CTA 收敛为「保存并测试」。</p>
+      <div class="phone">
+        <strong>AI 文案（可选）</strong>
+        <p style="font-size:12px;color:#4a5c55;margin:6px 0 0;">不配置也可以正常导入、排版和导出长图。</p>
+        <div class="badge warn">已保存未验证</div>
+        <label>服务商</label>
+        <select>
+          <option>DeepSeek</option>
+          <option selected>通义千问（DashScope）</option>
+        </select>
+        <label>地域</label>
+        <div class="radio">
+          <label style="font-weight:400;margin:0;"><input type="radio" name="r" checked /> 中国站</label>
+          <label style="font-weight:400;margin:0;"><input type="radio" name="r" /> 国际站</label>
+        </div>
+        <label>模型 <span style="font-weight:400;color:#60756c;">（W2 下拉）</span></label>
+        <select disabled><option>默认（qwen-plus）</option></select>
+        <label>API Key</label>
+        <div class="row" style="margin-top:0;">
+          <input type="password" placeholder="粘贴你的 API Key" style="flex:1;" />
+          <button type="button" class="btn linkish">显示</button>
+        </div>
+        <p style="font-size:12px;color:#4a5c55;margin:8px 0 0;">
+          获取 Key：打开 <a href="#">通义百炼控制台</a> · <a href="#">官方说明</a>
+        </p>
+        <details class="adv"><summary>高级</summary>
+          <label>自定义 API 地址（可选 · 仅 https）</label>
+          <input type="url" placeholder="留空则用当前地域默认地址" />
+        </details>
+        <p class="msg">示例成功：已连通 · 通义千问 · qwen-plus</p>
+        <div class="row">
+          <span class="btn">保存并测试</span>
+          <span class="btn danger">清除配置…</span>
+        </div>
+        <p style="margin-top:8px;"><button type="button" class="btn linkish">仅测试连接</button></p>
+        <p class="foot">
+          API Key 只保存在你的电脑。调用写作引擎时，请求发往你选择的服务商，费用由该账户结算。
+          导入仍默认本机文案；在预览中升级杂志感。
+        </p>
+      </div>
+      <p class="ok">中国站 → dashscope.aliyuncs.com/compatible-mode/v1<br />
+        国际站 → dashscope-intl.aliyuncs.com/compatible-mode/v1</p>
+      <p class="anno">D-WEA-02/04/08 · 模型下拉 W2 灰显示意。</p>
+    </section>
+
+    <section class="panel" id="f3">
+      <h2>F3 · 状态机与徽章</h2>
+      <p class="lead">Modal 徽章与设置 AI zone meta <strong>同词</strong>。</p>
+      <table class="matrix">
+        <thead><tr><th>态</th><th>条件</th><th>示意</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>未配置</td>
+            <td>无 provider+Key</td>
+            <td><span class="badge">未配置</span></td>
+          </tr>
+          <tr>
+            <td>已保存未验证</td>
+            <td>有 Key 且 last_ping 未知</td>
+            <td><span class="badge warn">已保存未验证</span></td>
+          </tr>
+          <tr>
+            <td>已就绪</td>
+            <td>last_ping_ok=true <strong>仅此</strong></td>
+            <td><span class="badge ready">已就绪</span></td>
+          </tr>
+          <tr>
+            <td>连接失败</td>
+            <td>last_ping_ok=false</td>
+            <td><span class="badge fail">连接失败</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="phone" style="margin-top:16px;">
+        <p style="font-size:12px;margin:0 0 6px;color:#60756c;">失败示例（可行动）</p>
+        <p class="msg err" style="margin:0;">
+          Key 无效或已失效。请回控制台重新创建并粘贴。<br />
+          <span style="font-size:12px;">若使用通义：请确认中国站/国际站与 Key 归属一致。</span>
+        </p>
+      </div>
+      <p class="anno">MF-WEA-01：禁止「只保存」冒充已就绪。</p>
+    </section>
+
+    <section class="panel" id="f4">
+      <h2>F4 · 切换覆盖确认（W2）</h2>
+      <p class="lead">V1 单槽；已有他商配置时保存前确认。分槽不进本波。</p>
+      <div class="phone">
+        <strong>更换服务商？</strong>
+        <p style="font-size:13px;color:#4a5c55;">
+          将改用「通义千问」，并覆盖本机已保存的 DeepSeek 配置。
+          Key 不会上传；仅存在本机。
+        </p>
+        <div class="row">
+          <span class="btn ghost">取消</span>
+          <span class="btn">覆盖并继续</span>
+        </div>
+      </div>
+      <p class="anno">D-WEA-05 · 排 W2；不阻塞 W1 双 Key 冒烟。</p>
+    </section>
+
+    <section class="panel" id="f5">
+      <h2>F5 · 评审拍板（已冻结）</h2>
+      <table class="matrix">
+        <thead><tr><th>项</th><th>决议</th></tr></thead>
+        <tbody>
+          <tr><td>D-WEA-01～04、07～10</td><td class="ok">采纳 · W1</td></tr>
+          <tr><td>D-WEA-05 确认覆盖</td><td class="ok">采纳 · W2（非分槽）</td></tr>
+          <tr><td>D-WEA-06 模型下拉</td><td class="ok">采纳 · W2</td></tr>
+          <tr><td>O-WEA-01 失败落盘 Key</td><td class="ok">采纳</td></tr>
+          <tr><td>独立线框</td><td class="ok">要 · 即本页</td></tr>
+          <tr><td>总评</td><td><strong>Conditional Go · 可开 W1</strong></td></tr>
+        </tbody>
+      </table>
+      <p class="lead" style="margin-top:14px;">
+        PRD ·
+        <a href="../PRD-WRITING-ENGINE-API-HARDENING-V1.md">PRD-WRITING-ENGINE-API-HARDENING-V1</a> ·
+        <a href="../acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md">评审纪要</a>
+      </p>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var panels = document.querySelectorAll(".panel");
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-tab]");
+        if (!btn) return;
+        tabs.querySelectorAll("button").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        var id = btn.getAttribute("data-tab");
+        panels.forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === id);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

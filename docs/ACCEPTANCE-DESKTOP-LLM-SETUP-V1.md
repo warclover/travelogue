@@ -68,6 +68,19 @@ python -m pytest tests/unit/web/test_l0_guidance_hardening.py tests/unit/web/tes
 
 见 [acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md](./acceptance-records/desktop-llm-setup-v1-packaging-smoke-2026-07-15.md)（发布门实机勾选）。
 
+## 写作引擎 API 配置加固（WEA · 指针）
+
+配置面「配得对」增量（服务商隔离 · 保存并测试 · 通义地域）见独立验收，不重复抄表：
+
+| 文档 | 说明 |
+|------|------|
+| [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | PRD **v1.1.0 Conditional Go** |
+| [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) | AC-WEA-* |
+| [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) | W0–W2 |
+| [acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md](./acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md) | 跨职能评审 |
+
+本文件 Setup Go（AC-DLLM-10/13）在 WEA W1 落地后，解释以 **「保存并测试」+ 就绪⇔ping ok** 为准（MF-WEA-01）。
+
 ## 自动化
 
 ```powershell

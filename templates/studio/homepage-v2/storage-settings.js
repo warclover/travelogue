@@ -33,10 +33,20 @@ export function bindStorageSettings() {
 
   var _patchPending = false;
 
+  function syncCopySeg() {
+    var group = document.querySelector('[data-seg-for="studio-cfg-copy-source"]');
+    if (!group || !copySelect) return;
+    var val = copySelect.value;
+    Array.prototype.forEach.call(group.querySelectorAll(".v2-settings-seg__btn"), function (btn) {
+      btn.classList.toggle("is-on", btn.getAttribute("data-value") === val);
+    });
+  }
+
   function applyConfig(data) {
     if (!data || data.ok === false) return;
     if (data.ingest && typeof data.ingest.copySourceFiles === "boolean") {
       copySelect.value = data.ingest.copySourceFiles ? "true" : "false";
+      syncCopySeg();
     }
   }
 
@@ -102,9 +112,20 @@ export function bindStorageSettings() {
         if (data.tripsDir) {
           usageLine.title = data.tripsDir;
         }
+        var meta = $("v2-settings-meta-storage");
+        if (meta) {
+          var copyBit =
+            copySelect && copySelect.value === "false" ? "引用相册" : "复制开";
+          meta.textContent = data.overThreshold
+            ? total + " · 建议清理"
+            : total + " · " + copyBit;
+          meta.classList.toggle("is-warn", !!data.overThreshold);
+        }
       })
       .catch(function () {
         if (usageLine) usageLine.textContent = "无法估算占用";
+        var metaFail = $("v2-settings-meta-storage");
+        if (metaFail) metaFail.textContent = "无法估算";
       })
       .then(function () {
         return refreshTripStorageMode();

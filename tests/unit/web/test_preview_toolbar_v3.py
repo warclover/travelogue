@@ -736,7 +736,9 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert ">设置<" in home
     assert 'aria-label="设置"' in home
     assert "导入偏好" in home
-    assert 'v2-settings-popover__section-label">导入偏好</p>' in home
+    assert "导入与分析" in home
+    assert 'id="v2-settings-zone-ai"' in home
+    assert 'id="studio-llm-settings-entry"' in home
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet

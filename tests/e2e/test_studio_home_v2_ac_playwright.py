@@ -1236,10 +1236,18 @@ def test_ac_hp2_l2_carousel_lazy(studio_server) -> None:
 
 
 def _open_dev_panel(page) -> None:
-    """v2.1：dev panel 默认隐藏，经设置 Popover 唤起。"""
+    """v2.1：dev panel 默认隐藏，经设置 → 更多 zone 唤起。"""
     page.locator("#v2-settings-toggle").click()
     page.wait_for_function(
         "() => { const p = document.getElementById('v2-settings-popover'); return p && !p.hidden; }"
+    )
+    page.evaluate(
+        """() => {
+          const more = document.getElementById('v2-settings-zone-more');
+          if (more) { more.hidden = false; more.open = true; }
+          const dev = document.getElementById('v2-settings-dev-section');
+          if (dev) dev.hidden = false;
+        }"""
     )
     page.locator("#v2-settings-dev-toggle").click()
     page.wait_for_function(
@@ -1546,7 +1554,7 @@ def test_ac_hp21_08_user_preview_source_flag(studio_server) -> None:
 
 
 def test_ac_hp21_10_settings_dev_section(studio_server) -> None:
-    """AC-HP21-10 · ?dev=1 时设置 Popover 内可见 Dev 入口。"""
+    """AC-HP21-10 · ?dev=1 时设置 → 更多 zone 内可见 Dev 入口。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -1554,10 +1562,15 @@ def test_ac_hp21_10_settings_dev_section(studio_server) -> None:
         _wait_visible(page, "v2-frame")
         page.locator("#v2-settings-toggle").click()
         page.wait_for_function(
-            "() => { const p = document.getElementById('v2-settings-popover'); return p && !p.hidden; }"
+            """() => {
+              const p = document.getElementById('v2-settings-popover');
+              const more = document.getElementById('v2-settings-zone-more');
+              const dev = document.getElementById('v2-settings-dev-section');
+              return p && !p.hidden && more && !more.hidden && more.open && dev && !dev.hidden;
+            }""",
+            timeout=10_000,
         )
-        dev_section = page.locator("#v2-settings-dev-section")
-        assert dev_section.is_visible()
+        assert page.locator("#v2-settings-dev-toggle").is_visible()
         browser.close()
 
 
@@ -1642,6 +1655,12 @@ def test_ac_hp21_05_settings_theme_persist(studio_server) -> None:
         page.locator("#v2-settings-toggle").click()
         page.wait_for_function(
             "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }"
+        )
+        # 外观 zone 默认折叠：先展开再改主题
+        page.locator("#v2-settings-zone-appearance > summary").click()
+        page.wait_for_function(
+            "() => { const z = document.getElementById('v2-settings-zone-appearance'); return z && z.open; }",
+            timeout=5_000,
         )
         page.select_option("#v2-theme-select", "classic")
         stored = page.evaluate(

@@ -15,20 +15,43 @@ export function bindAdvancedConfigControls() {
   if (!cluSelect || !visSelect) return null;
 
   var _patchPending = false;
+  var _patchQueued = false;
+
+  function syncSeg(select) {
+    if (!select || !select.id) return;
+    var group = document.querySelector('[data-seg-for="' + select.id + '"]');
+    if (!group) return;
+    var val = select.value;
+    Array.prototype.forEach.call(group.querySelectorAll(".v2-settings-seg__btn"), function (btn) {
+      btn.classList.toggle("is-on", btn.getAttribute("data-value") === val);
+    });
+  }
 
   function applyConfig(data) {
     if (!data || data.ok === false) return;
     if (data.clustering && data.clustering.enabled) {
       cluSelect.value = data.clustering.enabled;
+      syncSeg(cluSelect);
     }
     if (data.vision && data.vision.enabled) {
       visSelect.value = data.vision.enabled;
+      syncSeg(visSelect);
     }
     if (g1Select && data.studio && typeof data.studio.g1ConfirmStructure === "boolean") {
       g1Select.value = data.studio.g1ConfirmStructure ? "true" : "false";
+      syncSeg(g1Select);
     }
     if (layoutScoringSelect && data.layout && data.layout.scoring) {
       layoutScoringSelect.value = data.layout.scoring.enabled ? "true" : "false";
+      syncSeg(layoutScoringSelect);
+    }
+    var meta = document.getElementById("v2-settings-meta-import");
+    if (meta) {
+      var cluLabel =
+        cluSelect.value === "true" ? "开" : cluSelect.value === "false" ? "关" : "自动";
+      var visLabel =
+        visSelect.value === "true" ? "开" : visSelect.value === "auto" ? "自动" : "关";
+      meta.textContent = "行程·" + cluLabel + " · 场景·" + visLabel;
     }
   }
 
@@ -47,7 +70,10 @@ export function bindAdvancedConfigControls() {
   }
 
   function patchConfig() {
-    if (_patchPending) return;
+    if (_patchPending) {
+      _patchQueued = true;
+      return;
+    }
     _patchPending = true;
     fetch("/__travelogue/config", {
       method: "PATCH",
@@ -78,7 +104,13 @@ export function bindAdvancedConfigControls() {
           studioToast("保存失败，请重试", { duration: 2500 });
         }
       })
-      .finally(function () { _patchPending = false; });
+      .finally(function () {
+        _patchPending = false;
+        if (_patchQueued) {
+          _patchQueued = false;
+          patchConfig();
+        }
+      });
   }
 
   cluSelect.addEventListener("change", patchConfig);
