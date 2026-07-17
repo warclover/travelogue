@@ -32,7 +32,15 @@ import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncAdvancedOptionsLock } from "./advanced-options.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
-import { humanizeFolderTitle } from "../js/title-humanize.js";
+import {
+  guessUploadTitle,
+  buildImportPayloadFields,
+  shouldResumeImport,
+  shouldDiscardUploadPendingWithoutJob,
+  resolveImportResumeSource,
+  isImportPhotoCapExceeded,
+  shouldClearPendingOnJobTerminal,
+} from "./import-run-logic.js";
 
 let _gen = 0;
 let _activeJobId = null;
@@ -99,24 +107,6 @@ function postMultipartImportV2(formData, options) {
   });
 }
 
-function basenameTitle(path) {
-  if (!path) return "我的旅途";
-  var parts = String(path).replace(/[\\/]+$/, "").split(/[\\/]/);
-  return humanizeFolderTitle(parts[parts.length - 1] || "");
-}
-
-function basenameFromRelativePath(rel) {
-  if (!rel) return "";
-  var parts = String(rel).split(/[\\/]/);
-  return (parts[0] || "").trim();
-}
-
-function guessUploadTitle(files) {
-  if (!files || !files.length) return "我的旅途";
-  var title = basenameFromRelativePath(files[0].webkitRelativePath);
-  return humanizeFolderTitle(title);
-}
-
 function buildUploadForm(files, opts) {
   opts = opts || {};
   var form = new FormData();
@@ -174,19 +164,7 @@ function readTemplateParams() {
 }
 
 export function buildImportPayload(albumPath, title, opts) {
-  opts = opts || {};
-  return Object.assign(
-    {
-      albumPath: albumPath,
-      title: (title || basenameTitle(albumPath)).slice(0, 20) || "我的旅途",
-      titleUserSet: opts.titleUserSet === true,
-      place: "旅途",
-      placeUserSet: false,
-      mode: "quick_share",
-      force: false,
-    },
-    readTemplateParams()
-  );
+  return buildImportPayloadFields(albumPath, title, opts, readTemplateParams());
 }
 
 function setStage(text, fillPct) {
@@ -382,7 +360,7 @@ function pollImport(jobId, gen, source) {
     } catch (e) { /* ignore */ }
     // L0 resume: only clear pending on success/cancel — keep on failure for
     // 「继续生成本机游记」/ retry (AC-L0G-05).
-    if (job.status === "succeeded") {
+    if (shouldClearPendingOnJobTerminal(job.status) && job.status === "succeeded") {
       try {
         sessionStorage.removeItem(SS.activePending);
       } catch (e) { /* ignore */ }
@@ -424,9 +402,11 @@ function pollImport(jobId, gen, source) {
       });
     }
     if (job.status === "cancelled") {
-      try {
-        sessionStorage.removeItem(SS.activePending);
-      } catch (e) { /* ignore */ }
+      if (shouldClearPendingOnJobTerminal(job.status)) {
+        try {
+          sessionStorage.removeItem(SS.activePending);
+        } catch (e) { /* ignore */ }
+      }
       if (typeof V2.reroute === "function") V2.reroute();
       return null;
     }
@@ -535,7 +515,7 @@ export function startV2UploadImport(files, opts) {
   opts = opts || {};
   var list = files ? Array.prototype.slice.call(files) : [];
   if (!list.length) return Promise.resolve();
-  if (list.length > IMPORT_PHOTO_CAP) {
+  if (isImportPhotoCapExceeded(list.length, IMPORT_PHOTO_CAP)) {
     var capErr = {
       code: "E_IMPORT_PHOTO_CAP",
       message: "照片过多（最多 " + IMPORT_PHOTO_CAP + " 张），建议先精选后再试。",
@@ -664,15 +644,13 @@ export function resumeV2ImportIfAny() {
   } catch (e) {
     pending = null;
   }
-  if (!jobId) {
-    if (pending && pending.uploadForm) {
+  if (!shouldResumeImport(jobId)) {
+    if (shouldDiscardUploadPendingWithoutJob(jobId, pending)) {
       try { sessionStorage.removeItem(SS.activePending); } catch (e) { /* ignore */ }
     }
     return false;
   }
-  var source = "本机文件夹";
-  if (pending && pending.uploadForm) source = "浏览器上传";
-  else if (pending && pending.albumPath) source = "本机文件夹";
+  var source = resolveImportResumeSource(pending);
   var gen = ++_gen;
   renderImportingPanel(source);
   setStage("恢复上次导入…", 0);

@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "test:js": "node scripts/run-js-tests.mjs",
     "tsc:preview-toolbar": "tsc -p templates/studio/preview-toolbar/jsconfig.json"
   },
   "devDependencies": {

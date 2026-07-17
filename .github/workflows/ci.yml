@@ -96,6 +96,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      # SFH W0a · Studio FE Node 单测（与 lint 同 Node 主版本；fail-closed，禁止无 node skip）
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Studio FE JS unit tests (SFH)
+        run: npm run test:js
+
       - name: Install package
         run: |
           pip install -e ".[dev]"

@@ -1,0 +1,204 @@
+{
+  "description": "SFH W0b · Band / client-resolve 共享规则向量（JS Node + Python classify_band / resolve）",
+  "thresholdSets": {
+    "default": {
+      "sparseMax": 9,
+      "ambiguousMax": 30,
+      "narrativeChapterHintAt": 50
+    },
+    "alt": {
+      "sparseMax": 5,
+      "ambiguousMax": 20,
+      "narrativeChapterHintAt": 35
+    }
+  },
+  "bandCases": [
+    { "thresholds": "default", "keptN": 0, "band": "sparse", "note": "空内容现语义归 sparse" },
+    { "thresholds": "default", "keptN": 9, "band": "sparse" },
+    { "thresholds": "default", "keptN": 10, "band": "ambiguous" },
+    { "thresholds": "default", "keptN": 30, "band": "ambiguous" },
+    { "thresholds": "default", "keptN": 31, "band": "narrative" },
+    { "thresholds": "default", "keptN": 49, "band": "narrative" },
+    { "thresholds": "default", "keptN": 50, "band": "narrative" },
+    { "thresholds": "alt", "keptN": 0, "band": "sparse" },
+    { "thresholds": "alt", "keptN": 5, "band": "sparse" },
+    { "thresholds": "alt", "keptN": 6, "band": "ambiguous" },
+    { "thresholds": "alt", "keptN": 20, "band": "ambiguous" },
+    { "thresholds": "alt", "keptN": 21, "band": "narrative" },
+    { "thresholds": "alt", "keptN": 34, "band": "narrative" },
+    { "thresholds": "alt", "keptN": 35, "band": "narrative" }
+  ],
+  "confirmCases": [
+    {
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 55,
+      "mode": "full",
+      "platform": "wechat_chat",
+      "expect": true
+    },
+    {
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 55,
+      "mode": "chapter",
+      "platform": "wechat_chat",
+      "expect": false
+    },
+    {
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 40,
+      "mode": "full",
+      "platform": "wechat_chat",
+      "expect": false
+    },
+    {
+      "thresholds": "default",
+      "enabled": false,
+      "keptN": 55,
+      "mode": "full",
+      "platform": "wechat_chat",
+      "expect": false
+    },
+    {
+      "thresholds": "alt",
+      "enabled": true,
+      "keptN": 35,
+      "mode": "full",
+      "platform": "wechat_chat",
+      "expect": true
+    }
+  ],
+  "clientResolveCases": [
+    {
+      "id": "ambiguous-preview-needs-intent",
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 18,
+      "entrypoint": "preview",
+      "sessionIntent": null,
+      "band": "ambiguous",
+      "needsIntent": true,
+      "intent": null
+    },
+    {
+      "id": "ambiguous-shelf-fallback",
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 18,
+      "entrypoint": "shelf",
+      "sessionIntent": null,
+      "band": "ambiguous",
+      "needsIntent": false,
+      "intent": "chat_longshot"
+    },
+    {
+      "id": "sparse-default-chat",
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 5,
+      "entrypoint": "preview",
+      "sessionIntent": null,
+      "band": "sparse",
+      "needsIntent": false,
+      "intent": "chat_longshot"
+    },
+    {
+      "id": "narrative-default-chat",
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 40,
+      "entrypoint": "preview",
+      "sessionIntent": null,
+      "band": "narrative",
+      "needsIntent": false,
+      "intent": "chat_longshot"
+    },
+    {
+      "id": "flag-disabled",
+      "thresholds": "default",
+      "enabled": false,
+      "keptN": 18,
+      "entrypoint": "preview",
+      "sessionIntent": null,
+      "band": "ambiguous",
+      "needsIntent": false,
+      "intent": "chat_longshot"
+    },
+    {
+      "id": "session-override-grid",
+      "thresholds": "default",
+      "enabled": true,
+      "keptN": 18,
+      "entrypoint": "preview",
+      "sessionIntent": "moments_grid",
+      "band": "ambiguous",
+      "needsIntent": false,
+      "intent": "moments_grid"
+    },
+    {
+      "id": "alt-ambiguous-preview",
+      "thresholds": "alt",
+      "enabled": true,
+      "keptN": 12,
+      "entrypoint": "preview",
+      "sessionIntent": null,
+      "band": "ambiguous",
+      "needsIntent": true,
+      "intent": null
+    }
+  ],
+  "serverMapCases": [
+    {
+      "id": "server-needs-intent-trusts-band",
+      "thresholds": "default",
+      "enabled": true,
+      "sessionIntent": null,
+      "entrypoint": "preview",
+      "body": {
+        "ok": true,
+        "keptN": 18,
+        "recipe": {
+          "band": "ambiguous",
+          "needs_intent": true,
+          "kept_n": 18,
+          "cta_label": "选择并导出",
+          "user_hints": ["这趟精选了 18 张，你想怎么发？"]
+        }
+      },
+      "expect": {
+        "band": "ambiguous",
+        "needsIntent": true,
+        "intent": null,
+        "source": "server",
+        "keptN": 18
+      }
+    },
+    {
+      "id": "server-intent-trusts-band",
+      "thresholds": "default",
+      "enabled": true,
+      "sessionIntent": null,
+      "entrypoint": "preview",
+      "body": {
+        "ok": true,
+        "keptN": 5,
+        "recipe": {
+          "band": "sparse",
+          "needs_intent": false,
+          "intent": "chat_longshot",
+          "kept_n": 5,
+          "cta_label": "导出长图 · 发微信群"
+        }
+      },
+      "expect": {
+        "band": "sparse",
+        "needsIntent": false,
+        "intent": "chat_longshot",
+        "source": "server",
+        "keptN": 5
+      }
+    }
+  ]
+}

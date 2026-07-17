@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.2 |
+| **文档版本** | v0.3 |
 | **原则** | 关键路径必测；不追求高覆盖率 |
-| **关联** | `VALIDATION-RULES.md`、`DEFINITION-OF-DONE.md` |
-| **更新日期** | 2026-05-22 |
+| **关联** | `VALIDATION-RULES.md`、`DEFINITION-OF-DONE.md` · [PRD-STUDIO-FE-TEST-HARDENING-V1](./PRD-STUDIO-FE-TEST-HARDENING-V1.md) |
+| **更新日期** | 2026-07-17 |
 
 ---
 
@@ -22,6 +22,40 @@
         │  单元测试    │  validate / curate 规则
         └─────────────┘
 ```
+
+### 1.1 Studio 前端测试金字塔（SFH）
+
+完整约定见 [PRD-STUDIO-FE-TEST-HARDENING-V1](./PRD-STUDIO-FE-TEST-HARDENING-V1.md) · [IMPLEMENTATION](./IMPLEMENTATION-STUDIO-FE-TEST-HARDENING-V1.md)。
+
+```text
+        ┌──────────────────────┐
+        │ 人工 / 真机 AC       │
+        ├──────────────────────┤
+        │ Playwright 跨层 e2e  │  kept_n→意图卡、导入恢复、导出成功面
+        ├──────────────────────┤
+        │ Python 合同 / 集成   │  API · schema · 服务端 resolve
+        ├──────────────────────┤
+        │ Node 纯逻辑单测      │  tests/js · *-logic.js（主反馈）
+        └──────────────────────┘
+```
+
+| 层 | 允许 | 禁止 |
+|----|------|------|
+| Node | 返回值、状态转移、载荷映射 | `document`、真 HTTP |
+| Python | handler/schema、服务端 recipe、短 `# ASH-CONTRACT` | 大段文案扫源码 |
+| Playwright | 可见性、role、服务端注入后 UI | 无注释固定 sleep |
+
+**约定**：Studio FE 新决策优先落 `*-logic.js` + `tests/js`；跨层行为本机补/跑 Playwright。
+
+本机（**Go 证据 SSOT**；Actions 额度用尽期间不刷 CI）：
+
+```powershell
+npm run test:js
+python -m pytest tests/unit/web/test_studio_home_v2.py -k v2_js_logic_node_units -q
+```
+
+- 唯一入口：`scripts/run-js-tests.mjs`（`package.json` → `test:js`）
+- CI 合同：`.github/workflows/ci.yml` 的 `test-pr` 须跑 `npm run test:js`（额度恢复后生效）
 
 ---
 
@@ -191,5 +225,6 @@ MVP **不强制** Percy；采用：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.3 | 2026-07-17 | 增 §1.1 Studio FE Node 最短入口（SFH W0a） |
 | v0.2 | 2026-07-16 | 增 §9 断言约定（ASH M0 · [PRD-ASSERTION-HARDENING-V1](./PRD-ASSERTION-HARDENING-V1.md)） |
 | v0.1 | 2026-05-19 | 初稿 |

@@ -113,7 +113,10 @@ def test_phase_a_must_fix_ui_guards() -> None:
     assert "换种分享方式" in shelf_ls
     assert 'data-share-ready-switch' in shelf_ls
     assert "offerShelfSwitchShare" in shelf_ls
-    assert "照片较多，已按章节拆成多张" in recipe
+    # SFH W0b · 叙事深提示文案已下沉 output-recipe-logic.js（行为等价）
+    recipe_logic = (STUDIO / "js" / "output-recipe-logic.js").read_text(encoding="utf-8")
+    assert "照片较多，已按章节拆成多张" in recipe_logic  # ASH-CONTRACT
+    assert "output-recipe-logic.js" in recipe
     # subtitle 须被 CTA sync 消费
     assert "tipRecipe.subtitle" in longshot or "deepHint.subtitle" in longshot
     from travelogue.config.app import AppConfig

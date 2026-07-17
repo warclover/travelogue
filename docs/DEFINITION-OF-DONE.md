@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.1 |
+| **文档版本** | v0.2 |
 | **MVP 完成** | 全部 M1–M7 Done + [ACCEPTANCE.md](./ACCEPTANCE.md) AC-01～07 |
 | **Phase 2 完成** | M8–M10 Done + [ACCEPTANCE-PHASE2.md](./ACCEPTANCE-PHASE2.md) AC-P2-01～06 |
-| **更新日期** | 2026-05-30 |
+| **更新日期** | 2026-07-17 |
 
 ---
 
@@ -14,6 +14,7 @@
 - [ ] 代码合并至主分支（或约定开发分支）  
 - [ ] `python scripts/validate_trip.py` 对相关 **fixtures** 通过（`--level all`）  
 - [ ] 新增逻辑有 **pytest** 或脚本测试（见 `TESTING.md`）  
+- [ ] 涉及 Studio FE 决策时：优先 `*-logic.js` + `tests/js`（`npm run test:js`）；跨层行为本机补/跑对应 Playwright（见 [TESTING.md §1.1](./TESTING.md) · SFH）  
 - [ ] 新增/改动代码遵守 [TESTING.md §9 断言约定](./TESTING.md)（生产禁止裸 `assert`；e2e 优先 `expect`）  
 - [ ] 若改 `trip.schema.json` / `manifest.json`：同步 **fixtures + 文档**  
 - [ ] `CLI-SPEC.md` 中对应命令已实现或标注 `NOT IMPLEMENTED`  

@@ -568,24 +568,22 @@ def test_studio_home_v2_carousel_modules() -> None:
 
 
 def test_v2_js_logic_node_units() -> None:
-    """运行 v2 纯逻辑 node 单测（carousel + lightbox 阈值）；无 node 则跳过。"""
+    """运行 tests/js 全量 Node 单测（SFH W0a · 目录扫描）。
+
+    本地无 node 可 skip。CI 合同见 ci.yml test-pr（须装 Node 并跑 npm run test:js）；
+    Actions 额度用尽期间以本机 npm run test:js 为 Go 证据（PRD R-SFH-01）。
+    """
     node = shutil.which("node")
     if not node:
-        pytest.skip("node 不可用，跳过 JS 单测")
-    js_dir = Path(__file__).resolve().parents[2] / "js"
-    test_files = [
-        str(js_dir / "carousel-logic.test.mjs"),
-        str(js_dir / "lightbox-logic.test.mjs"),
-        str(js_dir / "viewport-logic.test.mjs"),
-        str(js_dir / "layout-tier.test.mjs"),
-        str(js_dir / "shelf-actions-logic.test.mjs"),
-        str(js_dir / "bento-preview-picker-logic.test.mjs"),
-        str(js_dir / "manifest.test.mjs"),
-        str(js_dir / "title-humanize.test.mjs"),
-    ]
+        pytest.skip("node 不可用，跳过 JS 单测（开发 FE 决策时请自备 node）")
+    runner = REPO_ROOT / "scripts" / "run-js-tests.mjs"
+    assert runner.is_file(), f"缺少 JS 单测入口：{runner}"
+    js_dir = REPO_ROOT / "tests" / "js"
+    test_files = sorted(js_dir.glob("*.test.mjs"))
+    assert test_files, f"{js_dir} 下应有 *.test.mjs"
     try:
         result = subprocess.run(
-            [node, "--test", *test_files],
+            [node, str(runner)],
             cwd=str(REPO_ROOT),
             stdin=subprocess.DEVNULL,
             capture_output=True,
