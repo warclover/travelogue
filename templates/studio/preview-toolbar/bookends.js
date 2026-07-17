@@ -123,8 +123,8 @@ export function mountBookendsPanel(slot, tripId, opts) {
     "</div>" +
     "</details>" +
     '<div class="preview-sheet__bookends-actions">' +
-    '<button type="button" class="preview-sheet__primary" data-bookends-scroll-opening>看封面</button>' +
-    '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>看封底</button>' +
+    '<button type="button" class="preview-sheet__primary" data-bookends-scroll-opening>在画面上看封面</button>' +
+    '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>在画面上看封底</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-restore>恢复自动挑选</button>' +
     "</div>" +
     '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>';

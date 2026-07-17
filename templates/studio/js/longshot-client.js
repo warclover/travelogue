@@ -21,7 +21,7 @@ export const LONGSHOT_PRESETS = {
     scale: 2,
     copyDisplay: "full",
     format: "png",
-    label: "完整文案 · 2×",
+    label: "带文字 · 2×",
     entrypoint: "preview",
   },
 };

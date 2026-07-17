@@ -385,7 +385,7 @@ export function initCollageMediaControls(tripId, assetMediaById) {
         label.textContent = "媒资";
         var sel = document.createElement("select");
         sel.className = "preview-toolbar__collage-select";
-        sel.setAttribute("aria-label", "拼图改判");
+        sel.setAttribute("aria-label", "改成拼图或改回单张");
         [["photo", "普通照片"], ["collage", "拼图"]].forEach(function (pair) {
           var opt = document.createElement("option");
           opt.value = pair[0];

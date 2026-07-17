@@ -642,7 +642,7 @@ export function cancelPreviewLongshotExport(root) {
       return "小红书 · " + n + " 张 · " + prefs.scale + "×";
     }
     var modeLabel = prefs.mode === "full" ? "完整" : "按章";
-    var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "完整文案";
+    var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "带文字";
     var capLabel = prefs.captions ? "" : " · 无图注";
     return modeLabel + " · " + prefs.scale + "× · " + copyLabel + capLabel;
   }
@@ -941,6 +941,21 @@ export function cancelPreviewLongshotExport(root) {
       });
     });
 
+    var zipMoreBtn = pop.querySelector('[data-action="export-zip"]');
+    if (zipMoreBtn) {
+      zipMoreBtn.addEventListener("click", function () {
+        closeStudioExportPopover();
+        exportZip(_tripIdFromPath());
+      });
+    }
+    var revealMoreBtn = pop.querySelector('[data-action="reveal-folder"]');
+    if (revealMoreBtn) {
+      revealMoreBtn.addEventListener("click", function () {
+        closeStudioExportPopover();
+        revealTripFolderQuick(_tripIdFromPath());
+      });
+    }
+
     pop._applyDraft = function () {
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
@@ -1047,6 +1062,29 @@ export function cancelPreviewLongshotExport(root) {
 
   export function revealTripPath(tripId, relPath) {
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
+  }
+
+  /** ▾「更多输出」· 打开当前预览所在文件夹（避免 circular import features.js） */
+  function revealTripFolderQuick(tripId) {
+    if (!tripId) {
+      _showToolbarToast("无法打开文件夹", { error: true });
+      return;
+    }
+    fetch("/__travelogue/trips")
+      .then(function (resp) {
+        return resp.json();
+      })
+      .then(function (data) {
+        var trips = data.trips || [];
+        var trip = trips.filter(function (t) {
+          return t.tripId === tripId;
+        })[0];
+        var rel = (trip && trip.previewRelPath) || "index.html";
+        return revealTripPath(tripId, rel);
+      })
+      .catch(function () {
+        _showToolbarToast("无法打开文件夹", { error: true });
+      });
   }
 
   /** After successful export: open Explorer and select the first output (best-effort). */
