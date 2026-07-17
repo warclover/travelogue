@@ -7,7 +7,7 @@
   {{#if hasClosingHero}}
   {{> closing-hero}}
   {{else}}
-  <p class="cover-closing__hint" data-block="closing-degraded-hint"{{#unless closingDegraded}} hidden{{/unless}}>已省略封底图</p>
+  {{!-- BE-SR-06 / D-SR-04 · 封底省略不写读者可见文案；降级态仅无无 hero 版式 --}}
   {{/if}}
   <div class="cover-closing__panel">
     <span class="cover-closing__label">Colophon</span>

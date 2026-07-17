@@ -49,12 +49,12 @@
 
 ### 1.2 后端
 
-| ID | 任务 | 建议锚点 | 估时 | AC |
-|----|------|----------|------|-----|
-| **BE-SR-01** | preview HTML/bootstrap 注入 `keptN` 或 recipe 摘要，减少竞态 | studio preview inject / trip bootstrap | 0.4d | 02～04 |
-| **BE-SR-02** | 确认 `handle_output_recipe` 与 longshot resolve 同源 | `studio_handlers` · export resolve | 0.2d | 04 |
-| **BE-SR-03** | templateFeedback / veil 提示不进 hook 与读者字段 | narrate / render | 0.3d | 06 |
-| **BE-SR-06** | 封底省略不写进读者可见 HTML | template / render | 0.2d | 06 |
+| ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
+|----|------|----------|------|-----|------|
+| **BE-SR-01** | preview HTML/bootstrap 注入 `keptN` 或 recipe 摘要，减少竞态 | studio preview inject / trip bootstrap | 0.4d | 02～04 | ⏳ 可选（点击 fetch + 缓存） |
+| **BE-SR-02** | 确认 `handle_output_recipe` 与 longshot resolve 同源 | `studio_handlers` · export resolve | 0.2d | 04 | ✅ |
+| **BE-SR-03** | templateFeedback / veil 提示不进 hook 与读者字段 | narrate / render | 0.3d | 06 | ✅ |
+| **BE-SR-06** | 封底省略不写进读者可见 HTML | template / render | 0.2d | 06 | ✅ 不渲染该句 |
 
 ### 1.3 测试（BLK-07）
 
@@ -90,7 +90,7 @@
 | **FE-SR-05** | Dock 可见 CTA：完整 `cta_label` 或缩短「发微信群」；aria/tooltip 完整句 | `longshot.js` `syncLongshotCtaLabel` | 0.4d | 08 | ✅ |
 | **FE-SR-06** | 文内「保存长图」降强调（对齐 FTUE） | visual-journal / screenplay toolbar | 0.2d | R01 | ✅ |
 | **FE-SR-07** | 进度第一行人话；参数次行；冻结失败 toast（BLK-05） | `longshot.js` / task-dock busy | 0.4d | 11 · 11b | ✅ |
-| **FE-SR-08** | 成功面入口矩阵回归；**必含「换种分享方式」**（USR-03）；禁止新栈；与 FTUE W1 联调 | task-dock · shelf-longshot · `resolvePublishGuide` | 0.8d | 09 · 09b · 10 | ✅（复用 task-dock；产品狗粮待联签） |
+| **FE-SR-08** | 成功面入口矩阵回归；**必含「换种分享方式」**（USR-03）；禁止新栈；与 FTUE W1 联调 | task-dock · shelf-longshot · `resolvePublishGuide` | 0.8d | 09 · 09b · 10 | ✅ Dock + 书架；产品狗粮待联签 |
 
 ### 2.1 W1 完成定义
 
