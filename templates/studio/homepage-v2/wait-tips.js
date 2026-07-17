@@ -26,6 +26,7 @@ var _jobStage = null;
 var _importStartedAt = 0;
 var _suppressAdvance = false;
 var _alive = false;
+var _firstDwellDone = false;
 
 function _lsGet(key) {
   try {
@@ -86,7 +87,9 @@ function markViewed(id) {
 }
 
 function viewedCount() {
-  return Object.keys(_viewed).length;
+  return Object.keys(_viewed).filter(function (k) {
+    return k.indexOf("WT-") === 0;
+  }).length;
 }
 
 function currentCard() {
@@ -118,8 +121,8 @@ function scheduleAdvance() {
   if (!_alive || !_root || _paused || _suppressAdvance || prefersReducedMotion()) {
     return;
   }
-  var dwell = _index === 0 && !_viewed._firstDwellDone ? FIRST_DWELL_MS : DWELL_MS;
-  _viewed._firstDwellDone = true;
+  var dwell = !_firstDwellDone ? FIRST_DWELL_MS : DWELL_MS;
+  _firstDwellDone = true;
   _timer = setTimeout(function () {
     if (!_alive || _paused || _suppressAdvance) return;
     var from = currentCard().id;
@@ -279,6 +282,7 @@ export function scheduleWaitTips(panel, opts) {
     _viewed = Object.create(null);
     _suppressAdvance = false;
     _jobStage = null;
+    _firstDwellDone = false;
 
     var root = buildDom();
     _root = root;
