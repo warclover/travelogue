@@ -10,6 +10,14 @@ import {
   formatLongshotResult,
   isJobBusyResponse,
 } from "../js/longshot-client.js";
+import {
+  clearSessionIntent,
+  fetchServerRecipe,
+  getCachedKeptN,
+  INTENT_TO_PLATFORM,
+  showAmbiguousIntentCard,
+  writeSessionIntent,
+} from "../js/output-recipe.js";
 import { V2 } from "./store.js";
 
 var _activeModal = null;
@@ -67,6 +75,15 @@ function openShelfLongshotModal(opts) {
   secondaryBtn.textContent = opts.secondaryText || "关闭";
   secondaryBtn.hidden = !!opts.secondaryHidden;
 
+  // FE-SR-08 / USR-03 · 成功面「换种分享方式」（与预览 Dock 同合同）
+  var switchBtn = document.createElement("button");
+  switchBtn.type = "button";
+  switchBtn.className = "studio__btn studio__btn--ghost studio__btn--sm";
+  switchBtn.setAttribute("data-share-ready-switch", "1");
+  switchBtn.textContent = "换种分享方式";
+  switchBtn.hidden = true;
+
+  if (!switchBtn.hidden) actions.appendChild(switchBtn);
   if (!secondaryBtn.hidden) actions.appendChild(secondaryBtn);
   if (!primaryBtn.hidden) actions.appendChild(primaryBtn);
   modal.appendChild(titleEl);
@@ -143,6 +160,14 @@ function openShelfLongshotModal(opts) {
       primaryBtn.textContent = formatted.ok ? "在文件夹中显示" : "关闭";
       secondaryBtn.hidden = !formatted.ok;
       secondaryBtn.textContent = "关闭";
+      // 成功/失败均可换种分享（对齐预览 task-dock）
+      switchBtn.hidden = false;
+      if (!actions.contains(switchBtn)) {
+        actions.insertBefore(switchBtn, secondaryBtn.hidden ? primaryBtn : secondaryBtn);
+      }
+      switchBtn.onclick = function () {
+        offerShelfSwitchShare(tripId, opts.tripTitle || tripId, controller);
+      };
       controller._onPrimary = formatted.ok
         ? function () {
             trackStudioEvent("shelf_longshot_reveal", { trip_id: tripId });
@@ -170,21 +195,56 @@ function openShelfLongshotModal(opts) {
   return controller;
 }
 
+/** FE-SR-08 · 书架成功面换种分享 → 意图卡；可选立即再导出。 */
+function offerShelfSwitchShare(tripId, tripTitle, resultModal) {
+  clearSessionIntent(tripId);
+  var keptNPromise = fetchServerRecipe(tripId, "shelf").then(function (res) {
+    if (res && res.ok && res.keptN != null) return res.keptN;
+    var cached = getCachedKeptN(tripId);
+    return cached != null ? cached : 12;
+  });
+  return keptNPromise.then(function (keptN) {
+    return showAmbiguousIntentCard(keptN).then(function (choice) {
+      if (!choice || !choice.intent) return;
+      writeSessionIntent(tripId, choice.intent);
+      var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";
+      trackStudioEvent("shelf_switch_share_method", {
+        trip_id: tripId,
+        intent: choice.intent,
+        export_now: !!choice.exportNow,
+      });
+      if (resultModal) resultModal.close(true);
+      if (choice.exportNow) {
+        runShelfLongshot(
+          { tripId: tripId, title: tripTitle },
+          { surface: "switch_share", platform: platform, intent: choice.intent }
+        );
+      } else {
+        toast("已换种分享方式 · 下次导出生效", { duration: 2800 });
+      }
+    });
+  });
+}
+
 /**
  * @param {object} trip
- * @param {{ surface: string }} opts
+ * @param {{ surface?: string, platform?: string, intent?: string }} opts
  */
 export function runShelfLongshot(trip, opts) {
   opts = opts || {};
   var surface = opts.surface || "grid";
   var tripId = trip.tripId;
   var title = trip.title || tripId;
+  var preset = Object.assign({}, LONGSHOT_PRESETS.shelf);
+  if (opts.platform) preset.platform = opts.platform;
+  if (opts.intent) preset.intent = opts.intent;
 
   trackStudioEvent("shelf_longshot_start", {
     trip_id: tripId,
     surface: surface,
-    scale: LONGSHOT_PRESETS.shelf.scale,
-    copy_display: LONGSHOT_PRESETS.shelf.copyDisplay,
+    scale: preset.scale,
+    copy_display: preset.copyDisplay,
+    platform: preset.platform || null,
   });
 
   var modal = openShelfLongshotModal({
@@ -192,7 +252,7 @@ export function runShelfLongshot(trip, opts) {
     tripTitle: title,
     initialLines: [
       "「" + title + "」",
-      LONGSHOT_PRESETS.shelf.label,
+      preset.label,
       "正在提交任务…",
     ],
     primaryHidden: true,
@@ -207,7 +267,7 @@ export function runShelfLongshot(trip, opts) {
     originalClose();
   };
 
-  return startLongshotJob(tripId, "shelf", {
+  return startLongshotJob(tripId, preset, {
     onBusy: function () {
       modal.setProgress("排队中，请稍候…");
     },

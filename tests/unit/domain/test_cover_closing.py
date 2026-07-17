@@ -281,6 +281,15 @@ def test_copy_display_css_hides_closing_narrative_not_screen() -> None:
     assert 'html[data-copy-display="photos"] [data-block="cover-closing"]' not in css
 
 
+def test_be_sr_06_closing_degraded_hint_not_in_reader_partial() -> None:
+    """BE-SR-06 · 封底省略说明不得写入读者 HTML 模板。"""
+    hbs = (TEMPLATE_VISUAL_JOURNAL / "partials" / "cover-closing.hbs").read_text(
+        encoding="utf-8"
+    )
+    assert "已省略封底" not in hbs
+    assert "closing-degraded-hint" not in hbs
+
+
 def test_photos_draft_still_emits_cover_closing_for_toggle() -> None:
     trip = prepare_trip_web_screens(json.loads(FIXTURES_DIR.joinpath("trip.linzhi_screens.json").read_text(encoding="utf-8")))
     html = render_html(

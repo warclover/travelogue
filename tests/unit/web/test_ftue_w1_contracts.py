@@ -23,6 +23,9 @@ def test_shelf_longshot_emits_share_hint_event() -> None:
     src = (STUDIO / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
     assert "longshot_success_share_hint_shown" in src
     assert "formatLongshotResult" in src
+    # FE-SR-08 / USR-03 · 书架成功面也提供换种分享
+    assert "换种分享方式" in src
+    assert "offerShelfSwitchShare" in src
 
 
 def test_import_run_maps_stage_hint_labels() -> None:
