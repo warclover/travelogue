@@ -35,11 +35,11 @@
 
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
-| **AC-WT-01** | Importing 且未 dismiss 时，进度主句下方出现 Tips；主句随 stage 变且不受 Tips 影响 | 手测 F1 + 代码审查 | ✅ 挂载锚点 | ⏳ |
-| **AC-WT-02** | 默认约 10s 自动切；可 ‹ › / 圆点手动切 | 手测 F3 | ✅ | ⏳ |
-| **AC-WT-03** | 悬停卡片区暂停自动播；移出后继续 | 手测 | ✅ | ⏳ |
-| **AC-WT-04** | × 关闭后同会话及刷新后再导均不再出现（localStorage） | 手测 + 契约 | ✅ | ⏳ |
-| **AC-WT-05** | Job succeeded → Tips 已卸载；FirstSuccess 无 Tips 残留 | 手测 / 建议 e2e | ✅ unmount | ⏳ |
+| **AC-WT-01** | Importing 且未 dismiss 时，进度主句下方出现 Tips；主句随 stage 变且不受 Tips 影响 | 手测 F1 + e2e | ✅ e2e | ⏳ |
+| **AC-WT-02** | 默认约 10s 自动切；可 ‹ › / 圆点手动切 | 手测 F3 + e2e 手动下一张 | ✅ e2e 手动 | ⏳ |
+| **AC-WT-03** | 悬停卡片区暂停自动播；移出后继续 | 手测 | ✅ 代码 | ⏳ |
+| **AC-WT-04** | × 关闭后同会话及刷新后再导均不再出现（localStorage） | 手测 + e2e | ✅ e2e | ⏳ |
+| **AC-WT-05** | Job succeeded → Tips 已卸载；FirstSuccess 无 Tips 残留 | 手测 + e2e | ✅ e2e | ⏳ |
 | **AC-WT-06** | Importing 期间无 Help L1 / 导出脉冲 / 能力卡 | 手测 + 代码审查 | ✅ 不写 Help | ⏳ |
 | **AC-WT-09** | 六张字面 = PRD §4；WT-02 标题非「照片留在本机」；无「主链」、无「为的是…不是…」 | **契约单测必锁** | ✅ | — |
 
@@ -58,7 +58,7 @@
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
 | **AC-WT-07** | 文案不含微信操作步骤、精修、工程词、杂志级承诺；不含与 stage/estimate 同义过程复述 | 契约 + 手测 | ✅ | ⏳ |
-| **AC-WT-08** | `prefers-reduced-motion: reduce` 时不自动轮播 | 手测 / 单测 | ✅ | ⏳ |
+| **AC-WT-08** | `prefers-reduced-motion: reduce` 时不自动轮播 | 手测 + e2e | ✅ e2e | ⏳ |
 | **AC-WT-10** | render 末段或短尾启发式下不再 auto-advance（D-WT-07） | 手测 / 埋点 | ✅ | ⏳ |
 
 ---

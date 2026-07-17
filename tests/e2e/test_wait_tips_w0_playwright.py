@@ -1,6 +1,6 @@
-"""Wait Tips V1 · W0 e2e 烟测（AC-WT-01 / 05 · QA-WT-04）。
+"""Wait Tips V1 · W0/W1 e2e 烟测（AC-WT-01/02/04/05/08 · QA-WT-04）。
 
-对照 docs/ACCEPTANCE-WAIT-TIPS-V1.md · dogfood F1/F4。
+对照 docs/ACCEPTANCE-WAIT-TIPS-V1.md · dogfood · gap checklist。
 """
 
 from __future__ import annotations
@@ -23,6 +23,8 @@ from playwright.sync_api import sync_playwright
 
 pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
+_IMPORTING_QS = "dev=1&studioState=importing&studioJob=running"
+
 
 @pytest.fixture(autouse=True)
 def _reset_jobs() -> None:
@@ -43,32 +45,32 @@ def wizard_server(tmp_path: Path):
         server.server_close()
 
 
+def _clear_wait_tips_storage(page) -> None:
+    page.evaluate(
+        """() => {
+          try {
+            localStorage.removeItem('travelogue.waitTips.dismissed');
+            localStorage.removeItem('travelogue.waitTips.version');
+          } catch (e) {}
+        }"""
+    )
+
+
+def _open_importing_with_tips(page, base: str) -> None:
+    """清 dismiss 后进入 harness Importing，等到 Tips 可见。"""
+    _goto_v2(page, base, _IMPORTING_QS)
+    _clear_wait_tips_storage(page)
+    _goto_v2(page, base, _IMPORTING_QS)
+    _wait_visible(page, "v2-import-cancel")
+    page.wait_for_selector("#v2-wait-tips:not([hidden])", timeout=5_000)
+
+
 def test_ac_wt_01_tips_appear_under_stage_after_2s(wizard_server) -> None:
     """Harness Importing：≥2s 后 Tips 可见，且在取消按钮之前。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
-        _goto_v2(
-            page,
-            wizard_server["base"],
-            "dev=1&studioState=importing&studioJob=running",
-        )
-        page.evaluate(
-            """() => {
-              try {
-                localStorage.removeItem('travelogue.waitTips.dismissed');
-                localStorage.removeItem('travelogue.waitTips.version');
-              } catch (e) {}
-            }"""
-        )
-        # harness 在首屏后注入；清 dismiss 后重进 Importing
-        _goto_v2(
-            page,
-            wizard_server["base"],
-            "dev=1&studioState=importing&studioJob=running",
-        )
-        _wait_visible(page, "v2-import-cancel")
-        page.wait_for_selector("#v2-wait-tips:not([hidden])", timeout=5_000)
+        _open_importing_with_tips(page, wizard_server["base"])
         tips = page.locator("#v2-wait-tips")
         assert tips.is_visible()
         assert "可翻的卷轴" in tips.locator(".v2-wait-tips__title").inner_text()
@@ -89,6 +91,62 @@ def test_ac_wt_01_tips_appear_under_stage_after_2s(wizard_server) -> None:
         browser.close()
 
 
+def test_ac_wt_02_manual_next_changes_card(wizard_server) -> None:
+    """AC-WT-02 · 点击下一张切换文案。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _open_importing_with_tips(page, wizard_server["base"])
+        title = page.locator(".v2-wait-tips__title")
+        assert "可翻的卷轴" in title.inner_text()
+        page.locator('#v2-wait-tips button[aria-label="下一张"]').click()
+        page.wait_for_function(
+            """() => {
+              const t = document.querySelector('.v2-wait-tips__title');
+              return t && t.textContent && t.textContent.indexOf('回忆') !== -1;
+            }""",
+            timeout=3_000,
+        )
+        browser.close()
+
+
+def test_ac_wt_04_dismiss_persists_across_reload(wizard_server) -> None:
+    """AC-WT-04 · × 关闭后刷新再进 Importing 不再出现。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _open_importing_with_tips(page, wizard_server["base"])
+        page.locator('#v2-wait-tips button[aria-label="关闭提示"]').click()
+        page.wait_for_function(
+            """() => !document.getElementById('v2-wait-tips')""",
+            timeout=3_000,
+        )
+        dismissed = page.evaluate(
+            "() => localStorage.getItem('travelogue.waitTips.dismissed')"
+        )
+        assert dismissed == "1"
+        _goto_v2(page, wizard_server["base"], _IMPORTING_QS)
+        _wait_visible(page, "v2-import-cancel")
+        page.wait_for_timeout(2500)
+        tips = page.locator("#v2-wait-tips")
+        assert tips.count() == 0 or not tips.is_visible()
+        browser.close()
+
+
+def test_ac_wt_08_reduced_motion_no_auto_advance(wizard_server) -> None:
+    """AC-WT-08 · prefers-reduced-motion 时不自动切卡。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.emulate_media(reduced_motion="reduce")
+        _open_importing_with_tips(page, wizard_server["base"])
+        title = page.locator(".v2-wait-tips__title").inner_text()
+        assert "可翻的卷轴" in title
+        page.wait_for_timeout(3500)
+        assert "可翻的卷轴" in page.locator(".v2-wait-tips__title").inner_text()
+        browser.close()
+
+
 def test_ac_wt_05_tips_gone_after_first_success(wizard_server) -> None:
     """真实导入 succeeded → FirstSuccess；Tips 节点卸载。"""
     with sync_playwright() as p:
@@ -101,14 +159,7 @@ def test_ac_wt_05_tips_gone_after_first_success(wizard_server) -> None:
             import_mode="quick_share",
         )
         _goto_v2(page, wizard_server["base"])
-        page.evaluate(
-            """() => {
-              try {
-                localStorage.removeItem('travelogue.waitTips.dismissed');
-                localStorage.removeItem('travelogue.waitTips.version');
-              } catch (e) {}
-            }"""
-        )
+        _clear_wait_tips_storage(page)
         _wait_visible(page, "v2-frame")
         _wizard_quick_folder_to_confirm(page)
         page.locator("#v2-wizard-start").click()

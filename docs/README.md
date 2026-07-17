@@ -133,7 +133,7 @@
 敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **产品手测待签**；不含海外 IG）· [IMPLEMENTATION](./IMPLEMENTATION-SHARE-READY-OPTIMIZATION-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) · [狗粮队列](./acceptance-records/dogfood-queue-2026-07-17.md)。  
 首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
 导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · **W0–W2 编码已合入** · 手测待填）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
-交叉脚注：FTUE **v1.1.2** · Help **v1.1.3** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
+交叉脚注：FTUE **v1.1.2** · Help **v1.1.4** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
 
 ---
