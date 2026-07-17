@@ -70,7 +70,9 @@ def test_stage_hints_module_frozen_copy() -> None:
 def test_narrate_hook_no_fragment_word() -> None:
     narrate = (ROOT / "travelogue" / "services" / "narrate.py").read_text(encoding="utf-8")
     assert "张碎片拼成" not in narrate
-    assert "张照片汇成" in narrate
+    # Share-Ready W2 · 说明书句不得出现在 stub 生成源
+    assert "张照片汇成" not in narrate
+    assert "关于{place}的" not in narrate
 
 
 def test_bootstrap_forces_vision_disabled() -> None:

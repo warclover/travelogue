@@ -98,11 +98,25 @@ function postMultipartImportV2(formData, options) {
   });
 }
 
+/** BE-SR-05 / D-SR-14 · 文件夹名可读化（仅默认 title；不覆盖用户已编辑）。 */
+function humanizeFolderTitle(raw) {
+  var name = String(raw || "").trim();
+  if (!name) return "我的旅途";
+  name = name.replace(/\.[^.]+$/, "");
+  name = name.replace(
+    /[-_]?(?:[0-9a-f]{8,}|(?:ux-)?handtest[-_\w]*|demo[-_]?\d+|copy(?:\s*\(\d+\))?)$/i,
+    ""
+  );
+  name = name.replace(/[_\-.]+/g, " ").replace(/\s+/g, " ").trim();
+  name = name.replace(/^(新建文件夹|untitled|copy)\s*/i, "").trim();
+  if (!name || /^[0-9a-f-]{8,}$/i.test(name)) return "我的旅途";
+  return name.length > 20 ? name.slice(0, 20) : name;
+}
+
 function basenameTitle(path) {
   if (!path) return "我的旅途";
   var parts = String(path).replace(/[\\/]+$/, "").split(/[\\/]/);
-  var name = parts[parts.length - 1] || "我的旅途";
-  return name.slice(0, 20);
+  return humanizeFolderTitle(parts[parts.length - 1] || "");
 }
 
 function basenameFromRelativePath(rel) {
@@ -114,8 +128,7 @@ function basenameFromRelativePath(rel) {
 function guessUploadTitle(files) {
   if (!files || !files.length) return "我的旅途";
   var title = basenameFromRelativePath(files[0].webkitRelativePath);
-  if (!title) return "我的旅途";
-  return title.slice(0, 20);
+  return humanizeFolderTitle(title);
 }
 
 function buildUploadForm(files, opts) {

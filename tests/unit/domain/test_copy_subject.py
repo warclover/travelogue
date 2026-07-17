@@ -276,10 +276,12 @@ def test_build_epilogue_stats_counts_theme_not_exif_cities() -> None:
         ],
     }
     stats = build_epilogue_stats(trip)
-    assert stats["placeCount"] == 1
+    # AC-SR-13 · 无真实地理信号不撑「1 个地方」
+    assert stats["placeCount"] == 0
     assert "大理" not in stats["summaryLine"]
     assert "小学毕业" not in stats["summaryLine"]
-    assert "1 个地方" in stats["summaryLine"]
+    assert "个地方" not in stats["summaryLine"]
+    assert "张照片" in stats["summaryLine"]
 
 
 def test_build_chapter_brief_strips_exif_places_when_suppressed() -> None:

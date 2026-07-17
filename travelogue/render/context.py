@@ -571,7 +571,6 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
     """P5-S4 · trip summary for epilogue stats screen."""
     from travelogue.services.copy_subject import (
         filter_chapter_places_for_copy,
-        narrative_copy_subject,
         suppress_chapter_geo_places,
     )
 
@@ -610,16 +609,17 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
                 assets=asset_list,
             ):
                 places.add(p)
-    if suppress_geo:
-        subject = narrative_copy_subject(meta, intent=intent, assets=asset_list)
-        if subject and subject not in {"", "旅途"}:
-            places.add(subject)
-    elif isinstance(meta.get("place"), str) and meta["place"].strip():
+    if not suppress_geo and isinstance(meta.get("place"), str) and meta["place"].strip():
         places.add(meta["place"].strip())
+    # AC-SR-13 · 无地理信号不把「旅途」/主题标题撑成「1 个地方」
+    places = {p for p in places if p and p not in {"旅途", "未知"}}
     photo_count = len(assets)
     day_count = max(len(days), 1) if photo_count else 0
-    place_count = max(len(places), 1) if photo_count else 0
-    summary = f"{day_count} 天 · {place_count} 个地方 · {photo_count} 张照片"
+    place_count = len(places) if photo_count else 0
+    if place_count:
+        summary = f"{day_count} 天 · {place_count} 个地方 · {photo_count} 张照片"
+    else:
+        summary = f"{day_count} 天 · {photo_count} 张照片"
     return {
         "dayCount": day_count,
         "placeCount": place_count,

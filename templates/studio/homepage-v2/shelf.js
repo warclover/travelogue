@@ -77,14 +77,11 @@ function buildCover(trip, host) {
 }
 
 function tripSubLine(trip) {
+  // FE-SR-09 / AC-SR-14 · 主 meta 只保留用户可读信息；模板锁定/stale 靠角标
   var sub = [];
-  if (trip.templateSourceLabel) sub.push(trip.templateSourceLabel);
-  if (trip.templateLocked) sub.push("模板已锁定");
   if (trip.photoCount) sub.push(trip.photoCount + " 张");
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);
-  if (trip.longshotStale) sub.push("长图可更新");
-  if (trip.algorithmStale) sub.push("可更新 · 重新排版可获得新版式");
   return sub.join(" · ");
 }
 

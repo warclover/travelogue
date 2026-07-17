@@ -298,28 +298,33 @@ def _build_hook(
     intent: dict | None = None,
     assets: list[dict] | None = None,
 ) -> str:
+    """Share-Ready W2 · L0 stub hook：禁止说明书句；宁可空（D-SR-09 / AC-SR-12）。"""
+    del photo_count  # 张数不进 hook（禁止说明书式计数句）
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
-    title = meta.get("title") or "旅途"
+    title = str(meta.get("title") or "").strip()
     span = _format_date_span(meta.get("dateStart", ""), meta.get("dateEnd", ""))
+    subject = title or (place if place and place != "旅途" else "")
 
     if tone == "documentary":
-        if span and photo_count:
-            return f"{place}，{span}，{photo_count} 张照片。"
-        if span:
-            return f"{place}，{span}。"
-        return f"{title} · {place}。"
+        if subject and span:
+            return f"{subject} · {span}"
+        if subject:
+            return subject
+        return span or ""
 
     day_count = _trip_day_count(meta)
-    # W2 Copy · 读者向 stub（去「碎片 / 帧」工程口吻）
-    templates = [
-        f"在{place}的{day_count}天，{photo_count} 张照片汇成这一页。",
-        f"{place}·{span or f'{day_count}天'}，慢慢翻。",
-        f"走进{place}，{photo_count} 张照片留在这里。",
-        f"{title} · 关于{place}的{day_count}天。",
-    ]
-    if span and photo_count:
-        templates.append(f"在{place}的{span}，{photo_count} 张照片汇成这一页。")
-    seed = str(title or place)
+    templates: list[str] = []
+    if subject and span:
+        templates.append(f"{subject} · {span}")
+    if subject and day_count:
+        templates.append(f"{subject} · {day_count}天")
+    if subject:
+        templates.append(f"{subject}，慢慢翻。")
+    if span and not subject:
+        templates.append(span)
+    if not templates:
+        return ""
+    seed = subject or span or "trip"
     return _pick_template(templates, seed)
 
 
