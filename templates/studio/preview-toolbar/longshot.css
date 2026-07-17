@@ -297,6 +297,43 @@
   line-height: 1.4;
   color: #546e7a;
 }
+.preview-toolbar__export-more {
+  margin: 0 0 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #607d8b;
+}
+.preview-toolbar__export-more summary {
+  font-weight: 700;
+  color: #455a64;
+  cursor: pointer;
+}
+.preview-toolbar__export-more-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.preview-toolbar__export-more-link {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #2e5c4a;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.preview-toolbar__export-more-link:hover {
+  background: rgba(61, 107, 90, 0.08);
+}
 .preview-toolbar__export-popover-actions {
   display: flex;
   justify-content: flex-end;

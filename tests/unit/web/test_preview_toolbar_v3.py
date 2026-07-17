@@ -365,6 +365,12 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     assert 'data-field="copy"' in panel
     assert 'data-copy-preset="photos"' in panel
     assert "长图要不要字" in panel
+    assert "更多输出" in panel
+    assert 'data-action="export-zip"' in panel
+    assert 'data-action="reveal-folder"' in panel
+    assert 'title="2×"' in panel and ">标准<" in panel
+    assert 'title="3×"' in panel and ">更清晰<" in panel
+    assert "标准 2×" not in panel
     assert "preview-sheet__template-slot" in sheet
     assert "preview-sheet__embed--cohort" in sheet
     assert "preview-sheet__embed--structure" in sheet
@@ -529,8 +535,12 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             page.locator('.preview-sheet__tab[data-sheet-tab="book"]').click()
             page.wait_for_timeout(300)
             page.locator('[data-book-zone="advanced"] > summary').click()
-            page.wait_for_selector('[data-reader-mode="reader"]', timeout=5_000)
-            page.wait_for_selector('[data-action="reveal-folder"]', timeout=5_000)
+            page.wait_for_selector(
+                '.preview-sheet [data-reader-mode="reader"]', timeout=5_000
+            )
+            page.wait_for_selector(
+                '.preview-sheet [data-action="reveal-folder"]', timeout=5_000
+            )
 
             tab_metrics = page.evaluate(
                 """() => {
@@ -596,6 +606,13 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 '.preview-toolbar__export-popover:not([hidden]) [data-copy-preset="full"]',
                 timeout=5_000,
             )
+            page.wait_for_selector(
+                '.preview-toolbar__export-popover:not([hidden]) .preview-toolbar__export-more',
+                timeout=5_000,
+            )
+            assert "更多输出" in page.locator(
+                ".preview-toolbar__export-popover:not([hidden])"
+            ).inner_text()
             page.keyboard.press("Escape")
             page.wait_for_timeout(200)
 
@@ -857,7 +874,8 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "preview-sheet__bookends-thumb-badge" in bookends
     assert "预览手机效果" in bookends
     assert "bookendsMobileOnce" in bookends
-    assert 'data-bookends-scroll-opening">看封面' in bookends or "看封面" in bookends
+    assert "在画面上看封面" in bookends
+    assert "在画面上看封底" in bookends
     assert 'class="preview-sheet__primary" data-bookends-scroll-opening' in bookends
     assert "height: 64px" in css
     assert "repeat(3, 48px)" in css
@@ -881,6 +899,8 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert 'trackStudioEvent("cover_candidate_click"' in bookends
     assert "长图要不要字" in panel
     assert 'data-field="copy"' in panel
+    assert "更多输出" in panel
+    assert ">更清晰<" in panel
 
 
 def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:

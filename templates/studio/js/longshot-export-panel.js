@@ -247,9 +247,6 @@ export function buildPanelHtml(platformIds) {
     "</div>" +
     '<p class="preview-toolbar__export-copy-hint">改动会同步预览；导出长图按此出图。</p>' +
     "</div>" +
-    '<div class="preview-toolbar__export-popover-field" data-field="expect" hidden>' +
-    '<span class="preview-toolbar__export-popover-label">预期</span>' +
-    '<div class="preview-toolbar__export-expect" data-expect-body></div></div>' +
     '<div class="preview-toolbar__export-popover-field" data-field="mode">' +
     '<span class="preview-toolbar__export-popover-label">导出范围</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
@@ -282,10 +279,19 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
-    '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
-    '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
+    '<button type="button" data-studio-longshot-scale="2" title="2×">标准</button>' +
+    '<button type="button" data-studio-longshot-scale="3" title="3×">更清晰</button>' +
     "</div></div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="expect" hidden>' +
+    '<span class="preview-toolbar__export-popover-label">预期</span>' +
+    '<div class="preview-toolbar__export-expect" data-expect-body></div></div>' +
     '<p class="preview-toolbar__export-coach" data-field="coach" hidden></p>' +
+    '<details class="preview-toolbar__export-more" data-field="more">' +
+    "<summary>更多输出</summary>" +
+    '<div class="preview-toolbar__export-more-links">' +
+    '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
+    '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
+    "</div></details>" +
     '<div class="preview-toolbar__export-popover-actions">' +
     '<button type="button" class="preview-toolbar__export-popover-ok" data-action="ok">确定</button>' +
     '<button type="button" class="preview-toolbar__export-popover-cancel" data-action="cancel">取消</button>' +

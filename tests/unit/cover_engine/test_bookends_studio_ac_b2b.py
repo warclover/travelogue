@@ -222,8 +222,8 @@ def test_ac_be_25_mobile_fold_copy_in_payload_and_ui_source() -> None:
     assert "data-bookends-mobile-hint" in ui
     assert "已按你的选择固定" not in ui
     assert "手选 · 可恢复自动" in ui
-    assert "看封面" in ui
-    assert "看封底" in ui
+    assert "在画面上看封面" in ui
+    assert "在画面上看封底" in ui
     assert "data-bookends-scroll-opening" in ui
     assert "applyStyleViaBookends" in ui
     assert "closingStyleOptions" not in ui
