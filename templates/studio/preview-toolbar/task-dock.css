@@ -29,6 +29,22 @@
   border-color: rgba(61, 107, 90, 0.6);
   border-radius: 16px;
   align-items: flex-start;
+  flex-wrap: wrap;
+  width: min(520px, calc(100% - 32px));
+  row-gap: 10px;
+}
+
+/* 成功面按钮多且 nowrap：文案整行可读，动作另起一行换行（避免一字宽竖排） */
+.preview-task-dock--success .preview-task-dock__text {
+  flex: 1 1 calc(100% - 36px);
+  min-width: 12em;
+}
+
+.preview-task-dock--success .preview-task-dock__actions {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-left: 26px;
 }
 
 .preview-task-dock--next-hint {
