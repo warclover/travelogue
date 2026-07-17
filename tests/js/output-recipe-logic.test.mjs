@@ -12,6 +12,8 @@ import {
   PLATFORM_TO_INTENT,
   DEFAULT_BANDS,
   parseStudioOutputRecipeConfig,
+  normalizeBands,
+  isBandThresholdOrderValid,
   classifyBand,
   needsFullExportConfirm,
   resolveClientRecipe,
@@ -111,4 +113,26 @@ test("session storage helpers round-trip", () => {
   assert.equal(readSessionIntentFromStorage(storage, "t1"), "moments_grid");
   clearSessionIntentFromStorage(storage, "t1");
   assert.equal(readSessionIntentFromStorage(storage, "t1"), null);
+});
+
+test("OR-X-05 · 非法/NaN/空阈值 fail-open 回退默认（不抛错）", () => {
+  assert.deepEqual(
+    normalizeBands({ sparseMax: NaN, ambiguousMax: "x", narrativeChapterHintAt: null }),
+    DEFAULT_BANDS
+  );
+  assert.deepEqual(normalizeBands({ sparseMax: 0, ambiguousMax: 0 }), {
+    ...DEFAULT_BANDS,
+    // Number(0)||default → 默认（历史 FE 行为；合法 0 不保留）
+  });
+  assert.equal(classifyBand(10, { sparseMax: "bad", ambiguousMax: "worse" }), "ambiguous");
+});
+
+test("OR-X-06 · 阈值顺序护栏布尔；乱序不自动改写", () => {
+  assert.equal(isBandThresholdOrderValid(DEFAULT_BANDS), true);
+  assert.equal(isBandThresholdOrderValid({ sparseMax: 30, ambiguousMax: 9 }), false);
+  const inverted = normalizeBands({ sparseMax: 30, ambiguousMax: 9 });
+  assert.equal(inverted.sparseMax, 30);
+  assert.equal(inverted.ambiguousMax, 9);
+  // 乱序下 classify 仍按数值比较（不拒绝）
+  assert.equal(classifyBand(10, inverted), "sparse"); // 10 <= 30
 });

@@ -86,3 +86,12 @@ export function canRetryFailedImport(err) {
   var code = err.code || "";
   return code !== "E_IMPORT_PHOTO_CAP";
 }
+
+/**
+ * IR-U-03 · 是否应对服务端发起 cancel。
+ * 现网无独立 cancelling 枚举：有 activeJobId 才 POST /cancel；无 job 时仅本地清态（API no-op）。
+ * terminal 态下壳层通常已清空 _activeJobId，故再次 cancel → false。
+ */
+export function shouldPerformCancelImport(activeJobId) {
+  return !!activeJobId;
+}

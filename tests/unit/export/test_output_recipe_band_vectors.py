@@ -69,3 +69,15 @@ def test_server_map_vectors_band_matches_classify(vectors: dict) -> None:
         assert classify_band(kept, t) == case["expect"]["band"], case["id"]
         if body["recipe"].get("band"):
             assert body["recipe"]["band"] == case["expect"]["band"], case["id"]
+
+
+def test_or_x06_threshold_sets_have_sparse_lt_ambiguous(vectors: dict) -> None:
+    """OR-X-06 · 共享向量内阈值集须 sparseMax < ambiguousMax。"""
+    for set_id, raw in vectors["thresholdSets"].items():
+        assert int(raw["sparseMax"]) < int(raw["ambiguousMax"]), set_id
+
+
+def test_or_x05_python_classify_accepts_zero_kept_n() -> None:
+    """OR-X-05 对照：Python classify 对 kept_n=0 归 sparse（与 JS Number||0 一致）。"""
+    t = BandThresholds(sparse_max=9, ambiguous_max=30)
+    assert classify_band(0, t) == "sparse"

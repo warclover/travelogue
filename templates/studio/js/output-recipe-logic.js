@@ -46,7 +46,12 @@ export function parseStudioOutputRecipeConfig(studioCfg) {
   };
 }
 
-/** @param {Partial<typeof DEFAULT_BANDS>|null|undefined} bands */
+/**
+ * 规范化阈值。
+ * OR-X-05 冻结：非法 / NaN / 空 → Number(x)||default（与历史 FE 一致，不抛错）。
+ * OR-X-06：关系合法性见 isBandThresholdOrderValid；normalize **不**自动改写乱序阈值。
+ * @param {Partial<typeof DEFAULT_BANDS>|null|undefined} bands
+ */
 export function normalizeBands(bands) {
   var b = bands || {};
   return {
@@ -55,6 +60,12 @@ export function normalizeBands(bands) {
     narrativeChapterHintAt:
       Number(b.narrativeChapterHintAt) || DEFAULT_BANDS.narrativeChapterHintAt,
   };
+}
+
+/** OR-X-06 · sparseMax < ambiguousMax（规范化后）；乱序时仍可 classify，仅作护栏布尔 */
+export function isBandThresholdOrderValid(bands) {
+  var t = normalizeBands(bands);
+  return t.sparseMax < t.ambiguousMax;
 }
 
 /**

@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-STUDIO-FE-TEST-HARDENING-V1.md](./PRD-STUDIO-FE-TEST-HARDENING-V1.md) |
 | **评审** | [studio-fe-test-hardening-v1-review-2026-07-17.md](./acceptance-records/studio-fe-test-hardening-v1-review-2026-07-17.md) |
-| **状态** | **W0a–W2 Go（本机）** · SFH V1 施工完成 |
+| **状态** | **Done（本机）** · [结案](./acceptance-records/studio-fe-test-hardening-v1-closeout-2026-07-17.md) |
 | **更新日期** | 2026-07-17 |
 
 ## W0a · 已落盘 ✅
@@ -86,12 +86,21 @@ SFH evidence (local · Actions quota exhausted)
 | TESTING | §1.1 全金字塔 |
 | DoD | Studio FE logic + `tests/js` 勾选 |
 
+### 结案补丁（缺口收口）
+
+- OR-X-05/06：`normalizeBands` / `isBandThresholdOrderValid` + Node/Python 测  
+- IR-U-03：`shouldPerformCancelImport`（无 cancelling 枚举；无 job → API no-op）  
+- T-W2-03：`preview-toolbar/README.md` SFH 节  
+- §9.3：import wizard 全量 29 绿；Recipe/stale/arc14c 见 closeout  
+
 ### 汇总本机证据
 
 ```text
 SFH evidence (local · Actions quota exhausted)
-- npm run test:js: ≥57 pass（含 wizard-logic）
-- pytest v2_js_logic_node_units: green
-- e2e: share-ready/persona 11；toolbar arc14；import upload 单测复跑绿（全量 import 套件偶发 ConnectionAborted，属环境）
+- node -v: v22.19.0
+- npm run test:js: # tests 65 · # pass 65 · # fail 0
+- pytest v2_js_logic_node_units + band_vectors: green
+- e2e import_wizard_v3 + SR-02 + persona intent: 29 passed
+- e2e arc14c + lte stale + hp21 stale + guards: 4 passed
 - ci.yml test-pr: patched（未刷 Actions）
 ```

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio（`templates/studio/` 原生 ESM） |
 | **文档版本** | **v1.1.0-SFH** |
-| **状态** | **W0a–W2 Done（本机）** · 跨职能 Must-Fix 已回写 · [评审纪要](./acceptance-records/studio-fe-test-hardening-v1-review-2026-07-17.md) · [IMPLEMENTATION](./IMPLEMENTATION-STUDIO-FE-TEST-HARDENING-V1.md) |
+| **状态** | **Done（本机）** · [结案](./acceptance-records/studio-fe-test-hardening-v1-closeout-2026-07-17.md) · [评审纪要](./acceptance-records/studio-fe-test-hardening-v1-review-2026-07-17.md) · [IMPLEMENTATION](./IMPLEMENTATION-STUDIO-FE-TEST-HARDENING-V1.md) |
 | **特性代号** | **SFH**（Studio Frontend Hardening） |
 | **性质** | **工程还债 PRD**：前端可测边界 + Node 单测金字塔 + 测试入口；**零 intentional 用户功能** |
 | **触发来源** | 2026-07-17 前端测试弱项专项分析；五席 Conditional Go → 本版消化 BLK-01..08 |
@@ -357,8 +357,8 @@ python -m pytest tests/unit/web/test_studio_home_v2.py -k v2_js_logic_node_units
 | OR-X-02 | 边界：`0, sparseMax, +1, ambiguousMax, +1, hint-1, hint` |
 | OR-X-03 | 同一向量：JS `classifyBand` 与 Python `classify_band`（或 resolve 结果中的 band）一致 |
 | OR-X-04 | preview/shelf：`needs_intent` / 默认 intent（服务端 resolve）有 Python 测；客户端成功路径只断言**映射**不重算 |
-| OR-X-05 | 非法阈值 / NaN / 类型错误：两端同一拒绝或回退策略（写进对照表） |
-| OR-X-06 | 阈值关系护栏：至少 `sparseMax < ambiguousMax`（若产品另有定义则显式写） |
+| OR-X-05 | 非法阈值 / NaN / 类型错误：**冻结** FE `Number(x)\|\|default` 回退（不抛错）；Node 测锁定；Python `kept_n=0→sparse` 对照 |
+| OR-X-06 | 阈值关系：`isBandThresholdOrderValid`；共享向量强制 sparse&lt;ambiguous；乱序 **不**自动改写（行为等价） |
 
 > 跨层「DOM 少图仍出卡」**仍**由 Share-Ready Playwright 锁；本机复跑，不触发 Actions。
 
@@ -530,9 +530,9 @@ SFH evidence (local · Actions quota exhausted)
 
 ### 9.6 结案产物
 
-- [ ] 本文 → Done + 合入链接  
-- [ ] closeout 记录（含 §9.5 证据）  
-- [ ] `TESTING.md` / DoD 已按波次更新  
+- [x] 本文 → **Done（本机）** · 主施工 `a2d615f` · 结案补丁见 closeout  
+- [x] closeout 记录（含 §9.5 证据）→ [studio-fe-test-hardening-v1-closeout-2026-07-17.md](./acceptance-records/studio-fe-test-hardening-v1-closeout-2026-07-17.md)  
+- [x] `TESTING.md` / DoD 已按波次更新  
 - [ ] Actions 额度恢复后：抽查一次 `test-pr` 确跑 `test:js`（记入 closeout 补记，非本波阻塞）
 
 ---
@@ -611,5 +611,5 @@ SFH evidence (local · Actions quota exhausted)
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| v1.1.0-SFH | 2026-07-17 | 评审 Must-Fix 回写；W0a/W0b；本机优先 / Actions 休眠 |
+| v1.1.0-SFH | 2026-07-17 | 评审 Must-Fix 回写；W0a–W2 施工 + 结案（closeout） |
 | v1.0.0-SFH | 2026-07-17 | 初稿 |

@@ -15,6 +15,7 @@ import {
   shouldAbortImportPoll,
   shouldClearPendingOnJobTerminal,
   canRetryFailedImport,
+  shouldPerformCancelImport,
 } from "../../templates/studio/homepage-v2/import-run-logic.js";
 
 test("basenameTitle / guessUploadTitle", () => {
@@ -70,4 +71,13 @@ test("cap / poll abort / pending clear / retry", () => {
   assert.equal(shouldClearPendingOnJobTerminal("failed"), false);
   assert.equal(canRetryFailedImport({ recoverableWithStub: true }), true);
   assert.equal(canRetryFailedImport({ code: "E_IMPORT_PHOTO_CAP" }), false);
+});
+
+test("IR-U-03 · cancel API：有 job 才发起；terminal/无 job 为 no-op", () => {
+  // 现网无 cancelling 枚举；running 由 activeJobId 表达
+  assert.equal(shouldPerformCancelImport("job-running"), true);
+  assert.equal(shouldPerformCancelImport(""), false);
+  assert.equal(shouldPerformCancelImport(null), false);
+  // terminal 后壳层清空 activeJobId → 再次 cancel 不打 API
+  assert.equal(shouldPerformCancelImport(undefined), false);
 });
