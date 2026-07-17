@@ -198,13 +198,19 @@ function openShelfLongshotModal(opts) {
 /** FE-SR-08 · 书架成功面换种分享 → 意图卡；可选立即再导出。 */
 function offerShelfSwitchShare(tripId, tripTitle, resultModal) {
   clearSessionIntent(tripId);
-  var keptNPromise = fetchServerRecipe(tripId, "shelf").then(function (res) {
-    if (res && res.ok && res.keptN != null) return res.keptN;
+  var recipePromise = fetchServerRecipe(tripId, "shelf").then(function (res) {
     var cached = getCachedKeptN(tripId);
-    return cached != null ? cached : 12;
+    var keptN =
+      res && res.ok && res.keptN != null
+        ? res.keptN
+        : cached != null
+          ? cached
+          : 12;
+    var hints = res && res.ok && res.tipRecipe ? res.tipRecipe.userHints : null;
+    return { keptN: keptN, userHints: hints };
   });
-  return keptNPromise.then(function (keptN) {
-    return showAmbiguousIntentCard(keptN).then(function (choice) {
+  return recipePromise.then(function (meta) {
+    return showAmbiguousIntentCard(meta.keptN, meta.userHints).then(function (choice) {
       if (!choice || !choice.intent) return;
       writeSessionIntent(tripId, choice.intent);
       var platform = INTENT_TO_PLATFORM[choice.intent] || "wechat_chat";

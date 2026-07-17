@@ -11,6 +11,7 @@ QUICK_SHARE_REQUIRED_KEYS = frozenset(
     {
         "albumPath",
         "title",
+        "titleUserSet",
         "place",
         "placeUserSet",
         "mode",

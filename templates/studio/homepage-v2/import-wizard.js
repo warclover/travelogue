@@ -943,7 +943,9 @@ function readPlanFileText() {
 
 function buildWizardPayload() {
   var title = safeGet("v2-wizard-trip-title");
-  var body = buildImportPayload(_pendingAlbumPath, title);
+  var body = buildImportPayload(_pendingAlbumPath, title, {
+    titleUserSet: !!_titleUserEdited && !!title,
+  });
   body.mode = _activeMode;
   Object.assign(body, readTemplateParams());
   var place = safeGet("v2-wizard-trip-place");
@@ -1110,10 +1112,12 @@ function startUploadFromWizard() {
   var featuredDir = safeGet("v2-wizard-featured-dir");
   var materialDir = safeGet("v2-wizard-material-dir");
   var tpl = readTemplateParams();
+  var trimmedTitle = (title || "").trim();
   var uploadOpts = {
     source: "浏览器上传",
     mode: _activeMode,
-    title: (title || "").trim() || undefined,
+    title: trimmedTitle || undefined,
+    titleUserSet: !!_titleUserEdited && !!trimmedTitle,
     place: place || "旅途",
     placeUserSet: !!place,
     photoCullEnabled: readPhotoCullEnabled(),

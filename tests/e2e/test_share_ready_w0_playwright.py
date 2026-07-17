@@ -5,12 +5,16 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
 from tests.e2e.test_studio_home_v2_ac_playwright import _goto_v2
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
+from travelogue.config.app import AppConfig
+from travelogue.config.studio import OutputRecipeBandsConfig, OutputRecipeConfig, StudioConfig
+from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_jobs import reset_job_store
 
 pytest.importorskip("playwright")
@@ -24,15 +28,40 @@ def _reset_jobs() -> None:
     reset_job_store()
 
 
+def _recipe_enabled_config() -> AppConfig:
+    cfg = AppConfig()
+    cfg.studio = StudioConfig(
+        output_recipe=OutputRecipeConfig(
+            enabled=True,
+            bands=OutputRecipeBandsConfig(
+                sparse_max=9,
+                ambiguous_max=30,
+                narrative_chapter_hint_at=50,
+            ),
+        )
+    )
+    return cfg
+
+
+def _write_kept_n(trip_dir: Path, kept_n: int) -> None:
+    trip_json = trip_dir / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    curation = data.setdefault("curation", {})
+    cull = curation.setdefault("cullSummary", {})
+    cull["layoutEligibleCount"] = kept_n
+    cull["finalLayoutEligibleCount"] = kept_n
+    trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 @pytest.fixture
 def studio_server(tmp_path: Path):
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     port = _free_port()
-    server = _start_studio_server(trips_dir, port)
+    server = _start_studio_server(trips_dir, port, app_config=_recipe_enabled_config())
     base = f"http://127.0.0.1:{port}"
     try:
-        yield {"base": base}
+        yield {"base": base, "trips_dir": trips_dir}
     finally:
         server.shutdown()
         server.server_close()
@@ -131,6 +160,55 @@ def test_ac_sr_02_server_kept_n_wins_over_sparse_dom(studio_server) -> None:
         assert page.locator('[data-output-intent="chat_longshot"]').get_attribute(
             "data-intent-weight"
         ) == "primary"
+
+        browser.close()
+
+
+def test_ac_sr_04_fetch_server_recipe_http_contract(studio_server) -> None:
+    """AC-SR-04 · 真实 GET /output-recipe → tipRecipeFromServerPayload 键面一致。"""
+    trips_dir = studio_server["trips_dir"]
+    create_trip("sr-http-e2e", trips_dir)
+    _write_kept_n(trips_dir / "sr-http-e2e", 18)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _prepare_page(page, studio_server["base"])
+        _load_recipe(page)
+
+        tip = page.evaluate(
+            """
+            async () => {
+              const res = await window.__outputRecipe.fetchServerRecipe(
+                'sr-http-e2e',
+                'preview'
+              );
+              return res;
+            }
+            """
+        )
+        assert tip["ok"] is True
+        assert tip["failed"] is False
+        assert tip["keptN"] == 18
+        recipe = tip["tipRecipe"]
+        assert recipe["band"] == "ambiguous"
+        assert recipe["needsIntent"] is True
+        assert recipe["keptN"] == 18
+        assert recipe["ctaLabel"]
+        assert recipe["userHints"] and len(recipe["userHints"]) >= 1
+
+        page.evaluate(
+            """
+            async (hints) => {
+              window.__outputRecipe.showAmbiguousIntentCard(18, hints);
+            }
+            """,
+            recipe["userHints"],
+        )
+        page.wait_for_selector('[data-output-recipe-intent="1"]', timeout=10_000)
+        title = page.locator('[data-output-recipe-intent="1"] h3').inner_text()
+        assert title == recipe["userHints"][0]
+        assert "kept_n" not in title.lower()
 
         browser.close()
 

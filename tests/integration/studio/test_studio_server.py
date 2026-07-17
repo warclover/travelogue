@@ -50,6 +50,7 @@ def _start_studio_server(
     port: int,
     *,
     config_path: Path | None = None,
+    app_config=None,
     studio_host: str = "127.0.0.1",
     studio_allow_lan: bool = False,
 ) -> ThreadingHTTPServer:
@@ -64,6 +65,8 @@ def _start_studio_server(
     }
     if config_path is not None:
         handler_kwargs["studio_config_path"] = config_path
+    if app_config is not None:
+        handler_kwargs["app_config"] = app_config
     handler = partial(TripPreviewHandler, **handler_kwargs)
     server = ThreadingHTTPServer(("127.0.0.1", port), handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)

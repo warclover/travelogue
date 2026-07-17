@@ -327,7 +327,7 @@ export function trackIntentSelected(meta) {
  * Ambiguous 意图卡（Phase B0：发群 / 九宫格 / 长图连读）
  * @returns {Promise<{intent: string, exportNow: boolean}|null>}
  */
-export function showAmbiguousIntentCard(keptN) {
+export function showAmbiguousIntentCard(keptN, userHints) {
   return new Promise(function (resolve) {
     var n = Number(keptN) || 0;
     var nGrid = Math.min(9, Math.max(0, n));
@@ -335,7 +335,7 @@ export function showAmbiguousIntentCard(keptN) {
       band: "ambiguous",
       options: ["chat_longshot", "moments_grid", "moments_scroll"],
       phase: "B",
-      kept_n: keptN,
+      kept_n: n,
     });
 
     var backdrop = document.createElement("div");
@@ -349,7 +349,9 @@ export function showAmbiguousIntentCard(keptN) {
     modal.setAttribute("aria-label", "选择分享方式");
 
     var title = document.createElement("h3");
-    title.textContent = "这趟精选了 " + keptN + " 张，你想怎么发？";
+    var hint0 =
+      Array.isArray(userHints) && userHints.length ? String(userHints[0] || "").trim() : "";
+    title.textContent = hint0 || ("这趟精选了 " + n + " 张，你想怎么发？");
 
     var body = document.createElement("div");
     body.className = "studio__modal-body";
