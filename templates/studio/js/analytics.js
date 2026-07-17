@@ -50,6 +50,13 @@ const ALLOWED = new Set([
   "llm_provider_change",
   "llm_switch_confirm",
   "llm_narrate_click",
+  // Wait Tips V1
+  "wait_tips_show",
+  "wait_tips_auto_advance",
+  "wait_tips_manual_nav",
+  "wait_tips_pause",
+  "wait_tips_dismiss",
+  "wait_tips_suppress_short_wait",
   "capability_card_show",
   "capability_card_cta",
   "import_continue_stub",

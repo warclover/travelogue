@@ -9,7 +9,7 @@
 | **线框** | [wireframes/wait-tips-v1-wireframe.html](./wireframes/wait-tips-v1-wireframe.html) · F1–F5 |
 | **文案润色** | [acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) |
 | **更新日期** | 2026-07-17 |
-| **状态** | **Doc 波次完成 · Conditional Go** · **可 Kickoff W0（编码另排期）** · **未编码** |
+| **状态** | **W0+W1 编码 ✅** · 手测狗粮待填 · W2（帮助重播）可选 |
 | **估时** | W0 ≈ **1.5–2.5 人日** · W1 ≈ **0.5–1 人日** · W2（可选）≈ **0.5 人日** |
 
 ---
@@ -19,9 +19,9 @@
 | 波次 | 目标 | Go |
 |------|------|-----|
 | **Doc/Design** | PRD · 线框 · 三席文案 · 跨职能评审 · AC · 相邻脚注 | ✅ 2026-07-17 Conditional Go |
-| **W0** | Importing 壳嵌入 6 卡 · 10s 轮播 · 关闭持久化 · 核心埋点 · 与 FST/Help 仲裁 | ⏳ **可 Kickoff** |
-| **W1** | 短等待抑制（D-WT-07）· `prefers-reduced-motion` · 埋点补齐 | ⏳ |
-| **W2（可选）** | 帮助抽屉「重播等待提示」清 dismiss | 非挡门 |
+| **W0** | Importing 壳嵌入 6 卡 · 10s 轮播 · 关闭持久化 · 核心埋点 · 与 FST/Help 仲裁 | ✅ 2026-07-17 |
+| **W1** | 短等待抑制（D-WT-07）· `prefers-reduced-motion` · 埋点补齐 | ✅ 同批合入 |
+| **W2（可选）** | 帮助抽屉「重播等待提示」清 dismiss | ⏳ 非挡门 |
 
 **所有权**
 
@@ -75,48 +75,48 @@
 
 ---
 
-## 3. W0 任务卡（挡门 · 编码未开）
+## 3. W0 任务卡（✅ 编码）
 
 ### 3.1 前端
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **FE-WT-01** | 冻结 COPY 表（字面=PRD §4） | `wait-tips-copy.js` | 0.2d | 09 | ⏳ |
-| **FE-WT-02** | `renderImportingPanel` 挂载 Tips（主句下 / 取消上） | `import-run.js` · overlays.css | 0.3d | 01 | ⏳ |
-| **FE-WT-03** | 轮播 10s（首张可 12s）· ‹ › · 圆点 | `wait-tips.js` | 0.4d | 02 | ⏳ |
-| **FE-WT-04** | 悬停/focus 暂停；取消 Modal 时暂停 | `wait-tips.js` | 0.2d | 03 | ⏳ |
-| **FE-WT-05** | × → localStorage dismiss；已 dismiss 不 mount | `wait-tips.js` | 0.2d | 04 | ⏳ |
-| **FE-WT-06** | ≥2s 显现；终态立刻 unmount | `import-run.js` | 0.3d | 05 | ⏳ |
-| **FE-WT-07** | 不写 Help seen；不触发 L1/能力卡 | 审查 | 0.1d | 06 | ⏳ |
-| **FE-WT-08** | A11Y：roledescription · live · 关闭可聚焦 | `wait-tips.js` | 0.2d | §7 | ⏳ |
-| **FE-WT-09** | 埋点 allowlist：show / manual_nav / dismiss | `analytics.js` | 0.2d | §6 | ⏳ |
-| **FE-WT-10** | 视觉对齐线框 F1 | overlays.css | 0.2d | F1 | ⏳ |
+| **FE-WT-01** | 冻结 COPY 表（字面=PRD §4） | `wait-tips-copy.js` | 0.2d | 09 | ✅ |
+| **FE-WT-02** | `renderImportingPanel` 挂载 Tips（主句下 / 取消上） | `import-run.js` · overlays.css | 0.3d | 01 | ✅ |
+| **FE-WT-03** | 轮播 10s（首张可 12s）· ‹ › · 圆点 | `wait-tips.js` | 0.4d | 02 | ✅ |
+| **FE-WT-04** | 悬停/focus 暂停；取消 Modal 时暂停 | `wait-tips.js` | 0.2d | 03 | ✅ |
+| **FE-WT-05** | × → localStorage dismiss；已 dismiss 不 mount | `wait-tips.js` | 0.2d | 04 | ✅ |
+| **FE-WT-06** | ≥2s 显现；终态立刻 unmount | `import-run.js` | 0.3d | 05 | ✅ |
+| **FE-WT-07** | 不写 Help seen；不触发 L1/能力卡 | 审查 | 0.1d | 06 | ✅ |
+| **FE-WT-08** | A11Y：roledescription · live · 关闭可聚焦 | `wait-tips.js` | 0.2d | §7 | ✅ |
+| **FE-WT-09** | 埋点 allowlist：show / manual_nav / dismiss | `analytics.js` | 0.2d | §6 | ✅ |
+| **FE-WT-10** | 视觉对齐线框 F1 | overlays.css | 0.2d | F1 | ✅ |
 
 ### 3.2 测试
 
 | ID | 任务 | 估时 | AC | 状态 |
 |----|------|------|-----|------|
-| **QA-WT-01** | 契约：六张字面 · 禁区词 · WT-02 标题 | 0.3d | 07 · 09 | ⏳ |
-| **QA-WT-02** | dismiss key 语义 | 0.2d | 04 | ⏳ |
+| **QA-WT-01** | 契约：六张字面 · 禁区词 · WT-02 标题 | 0.3d | 07 · 09 | ✅ `test_wait_tips_v1_contracts.py` |
+| **QA-WT-02** | dismiss key 语义 | 0.2d | 04 | ✅ |
 | **QA-WT-03** | 手测 dogfood F1–F5 | 0.3d | 01～06 | ⏳ |
 | **QA-WT-04** |（建议）Playwright：Tips 出现与成功后消失 | 0.3d | 01 · 05 | ⏳ |
 
 ### 3.3 W0 完成定义
 
-- [ ] 线框 F1/F3 对照合入  
-- [ ] AC-WT-01～06 · 09 绿  
-- [ ] Tips 失败时进度壳完整  
-- [ ] **不**改 FST 进度 / FirstSuccess 合同  
+- [x] 线框 F1/F3 对照合入  
+- [x] AC-WT-09 契约绿；01～06 待手测  
+- [x] Tips 失败时进度壳完整（try/catch）  
+- [x] **不**改 FST 进度 / FirstSuccess 合同  
 
 ---
 
-## 4. W1 任务卡
+## 4. W1 任务卡（✅ 编码）
 
 | ID | 任务 | 估时 | AC | 状态 |
 |----|------|------|-----|------|
-| **FE-WT-11** | D-WT-07 短尾不 advance | 0.3d | 10 | ⏳ |
-| **FE-WT-12** | prefers-reduced-motion 关自动播 | 0.2d | 08 | ⏳ |
-| **FE-WT-13** | 埋点 auto_advance / pause / suppress | 0.1d | §6 | ⏳ |
+| **FE-WT-11** | D-WT-07 短尾不 advance | 0.3d | 10 | ✅ `notifyWaitTipsJob` |
+| **FE-WT-12** | prefers-reduced-motion 关自动播 | 0.2d | 08 | ✅ |
+| **FE-WT-13** | 埋点 auto_advance / pause / suppress | 0.1d | §6 | ✅ |
 | **QA-WT-05** | W1 手测 | 0.2d | 08 · 10 | ⏳ |
 
 ---
@@ -137,9 +137,9 @@
 | `wait_tips_show` | ✅ | `card_id`, `job_stage`, `elapsed_ms` |
 | `wait_tips_manual_nav` | ✅ | `from_id`, `to_id`, `dir` |
 | `wait_tips_dismiss` | ✅ | `card_id`, `viewed_count`, `elapsed_ms` |
-| `wait_tips_auto_advance` | W0/W1 | `from_id`, `to_id` |
-| `wait_tips_pause` | W1 | `card_id`, `reason` |
-| `wait_tips_suppress_short_wait` | W1 | `job_stage` |
+| `wait_tips_auto_advance` | ✅ | `from_id`, `to_id` |
+| `wait_tips_pause` | ✅ | `card_id`, `reason` |
+| `wait_tips_suppress_short_wait` | ✅ | `job_stage` |
 
 | Key | 值 |
 |-----|-----|
@@ -165,3 +165,4 @@
 |------|------|------|
 | v0.1.0 | 2026-07-17 | 初版实施清单 |
 | v0.2.0 | 2026-07-17 | Doc 波次收口 · Conditional Go · 对齐 PRD v0.2.0 · 可 Kickoff W0 |
+| v0.3.0 | 2026-07-17 | W0+W1 编码：copy/ctrl/host/css/analytics/契约单测 |

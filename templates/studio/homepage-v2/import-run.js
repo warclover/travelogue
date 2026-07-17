@@ -43,6 +43,13 @@ import {
   shouldPerformCancelImport,
   resolveImportStageCopy,
 } from "./import-run-logic.js";
+import {
+  scheduleWaitTips,
+  unmountWaitTips,
+  pauseWaitTips,
+  resumeWaitTips,
+  notifyWaitTipsJob,
+} from "./wait-tips.js";
 
 let _gen = 0;
 let _activeJobId = null;
@@ -296,9 +303,23 @@ export function renderImportingPanel(source) {
   syncAdvancedOptionsLock();
   syncHomeStubBanner();
   cancelBtn.addEventListener("click", cancelImport);
+  // Wait Tips：主句/慢安抚之下、取消之上；≥2s 显现；失败静默
+  try {
+    scheduleWaitTips(panel, {
+      importStartedAt: _importStartedAt,
+      beforeEl: cancelBtn,
+    });
+  } catch (_e) {
+    /* tips 不得拖垮进度壳 */
+  }
 }
 
 function performCancelImport() {
+  try {
+    unmountWaitTips();
+  } catch (_e) {
+    /* ignore */
+  }
   _gen += 1; // 使进行中的 poll 作废
   var jobId = _activeJobId;
   var shouldCancelApi = shouldPerformCancelImport(jobId);
@@ -319,6 +340,11 @@ function performCancelImport() {
 
 export function cancelImport() {
   var doCancel = function () { performCancelImport(); };
+  try {
+    pauseWaitTips("cancel_modal");
+  } catch (_e) {
+    /* ignore */
+  }
   if (typeof studioModal === "function") {
     studioModal({
       title: "确定取消？",
@@ -326,9 +352,25 @@ export function cancelImport() {
       confirmText: "确定取消",
       cancelText: "继续等待",
       danger: true,
-    }).then(function (confirmed) { if (confirmed) doCancel(); });
+    }).then(function (confirmed) {
+      if (confirmed) {
+        doCancel();
+      } else {
+        try {
+          resumeWaitTips("cancel_modal");
+        } catch (_e2) {
+          /* ignore */
+        }
+      }
+    });
   } else if (window.confirm("取消后将删除未完成的草稿。确定取消？")) {
     doCancel();
+  } else {
+    try {
+      resumeWaitTips("cancel_modal");
+    } catch (_e3) {
+      /* ignore */
+    }
   }
 }
 
@@ -355,6 +397,11 @@ function pollImport(jobId, gen, source) {
     onTick: function (job) {
       if (gen !== _gen) return;
       tickSlowHint();
+      try {
+        notifyWaitTipsJob(job);
+      } catch (_e) {
+        /* ignore */
+      }
       if (job.status === "running" || job.status === "queued") {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
@@ -383,6 +430,11 @@ function pollImport(jobId, gen, source) {
     },
   }).then(function (job) {
     if (gen !== _gen) return null;
+    try {
+      unmountWaitTips();
+    } catch (_e) {
+      /* ignore */
+    }
     _importStartedAt = 0;
     _slowHintLevel = 0;
     var importingHost = $("v2-importing");
