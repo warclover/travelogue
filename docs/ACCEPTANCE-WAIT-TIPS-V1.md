@@ -7,7 +7,7 @@
 | **实施清单** | [IMPLEMENTATION-WAIT-TIPS-V1.md](./IMPLEMENTATION-WAIT-TIPS-V1.md) |
 | **手测狗粮** | [wait-tips-v1-dogfood-CHECKLIST.md](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md) |
 | **线框** | [wireframes/wait-tips-v1-wireframe.html](./wireframes/wait-tips-v1-wireframe.html) · F1–F5 |
-| **状态** | **W0+W1 编码已合入 · 工程契约绿 · 产品手测待填** |
+| **状态** | **W0+W1 编码已合入 · 契约+e2e 烟测绿 · 产品手测待非实现者签** |
 | **日期** | 2026-07-17 |
 
 > **验收原则**
