@@ -123,6 +123,21 @@
   transition: width 0.25s ease;
 }
 
+/* FE-FST-03 · 未知进度 indeterminate（禁假 0%） */
+.preview-task-dock__progress--indeterminate i {
+  width: 36% !important;
+  animation: preview-task-dock-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes preview-task-dock-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
 .preview-task-dock__actions {
   display: flex;
   gap: 6px;

@@ -65,40 +65,8 @@ def format_moment_exif_line(asset: dict) -> str | None:
     if daypart:
         segments.append(daypart)
 
-    exif = asset.get("exif") if isinstance(asset.get("exif"), dict) else {}
-    model = str(exif.get("model") or "").strip()
-    if model:
-        segments.append(model)
-
-    focal = exif.get("focalLengthMm")
-    aperture = exif.get("aperture")
-    shutter = str(exif.get("shutter") or "").strip()
-    iso = exif.get("iso")
-    exposure_parts: list[str] = []
-    if focal is not None:
-        try:
-            exposure_parts.append(f"{float(focal):g}mm")
-        except (TypeError, ValueError):
-            pass
-    if aperture is not None:
-        try:
-            exposure_parts.append(f"f/{float(aperture):g}")
-        except (TypeError, ValueError):
-            pass
-    if shutter:
-        exposure_parts.append(shutter)
-    if iso is not None:
-        try:
-            exposure_parts.append(f"ISO{int(iso)}")
-        except (TypeError, ValueError):
-            pass
-    if exposure_parts:
-        if model and segments and segments[-1] == model:
-            segments.append(" ".join(exposure_parts))
-        elif not model:
-            segments.append(" ".join(exposure_parts))
-        else:
-            segments.append(" ".join(exposure_parts))
+    # BE-FST-04 / D-FST-07 · 读者面禁止相机 Make/Model 与曝光串
+    _ = asset.get("exif")
 
     if len(segments) < 2:
         if place and len(segments) == 1:

@@ -28,12 +28,12 @@ export function markSampleEngaged() {
   try { localStorage.setItem(LS.sampleViewed, "1"); } catch (e) { /* ignore */ }
 }
 
-// ── Stage labels (§8.2) ──
+// ── Stage labels（PRD-FIRST-SESSION-TRUST-V1 §3.1）──
 export const STAGE_LABELS = {
-  ingest: "正在分析你指定的照片",
-  curate: "正在挑选与排版",
-  narrate: "正在撰写游记文字",
-  render: "正在生成杂志预览",
+  ingest: "正在整理照片…",
+  curate: "正在分章与挑选…",
+  narrate: "正在生成游记文案…",
+  render: "正在排版杂志页…",
 };
 
 /** FE-FTUE-06 · 冻结 stageHint 键 → 用户文案（对齐 PRD §3.5 / stage_hints.py） */

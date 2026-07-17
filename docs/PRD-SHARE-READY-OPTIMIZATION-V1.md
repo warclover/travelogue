@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
-| **文档版本** | **v1.0.2** |
-| **状态** | **Conditional Go · 跨职能 MF + 用户联席 USR 已回写** · 线框已增补 · **编码另排期**（见 [跨职能评审](./acceptance-records/share-ready-optimization-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md)） |
+| **文档版本** | **v1.0.3** |
+| **状态** | **Conditional Go · 跨职能 MF + 用户联席 USR 已回写** · 线框已增补 · **编码另排期**（见 [跨职能评审](./acceptance-records/share-ready-optimization-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md)） · **v1.0.3 成功面脚注对齐 First-Session Trust** |
 | **主题代号** | 「敢发闭环」— 看见价值 · 选对分享 · 文案敢发 · 长图知发群 |
 | **触发来源** | 2026-07-17 多 Persona 本机走查（分享者 / 近郊周末党 / 编辑者 / 空态首访 / 回访）；交叉对照 FTUE · Output Recipe · L0 · Trust · Copy |
 | **前置条件** | Studio 首页 v2（M21）；导出门面 V1；Output Recipe flag 可开；Preview Toolbar V3/V4；Help 发群三要素合同有效 |
@@ -38,8 +38,13 @@
 > 2. **配方分流以策展后 `kept_n` 为唯一权威** — 禁止仅靠 DOM 估图数决定 Band / 意图卡。  
 > 3. **Ambiguous 必须显式问「怎么发」** — 含首次导出与「长图可更新」重导出；禁止静默猜默认。  
 > 4. **分享面零工程泄漏** — 封面/hook/章名/长图/Share 不得出现排版提示、省略说明、测试文件夹名腔。  
-> 5. **落盘 ≠ 完成** — 继承 FTUE/Help：成功面第一可读行=发群三要素；复用 Task Dock，禁止平行栈。  
+> 5. **落盘 ≠ 完成** — 复用 Task Dock，禁止平行栈；**完成 = 稳定可见成功确认**（主句已保存 + 主操作打开文件夹）。发群操作教学**不含**在完成定义内——见 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md)（2026-07-17 · DOC-FST-02）。  
 > 6. **本主题默认中文微信主路径** — **不做**海外 IG / Carousel / `locale=en` 扩展（见 §2.2）。
+
+> **v1.0.3 交叉修订（2026-07-17 · DOC-FST-02）**
+>
+> 默认成功面 COPY / 「第一可读行=发群三要素」由 First-Session Trust **supersede**。  
+> 本主题仍拥有：真图样品、意图卡、`kept_n`、CTA、进度人话、「换种分享方式」、零泄漏等；成功面**组件栈**仍复用 Task Dock，**禁止**第二套成功面。
 
 > **v1.0.1 评审回写摘要（2026-07-17 Conditional Go）**
 >
@@ -88,9 +93,10 @@
 
 | 主题 | 关系 | 本主题做什么 |
 |------|------|--------------|
-| [FTUE](./PRD-FTUE-OPTIMIZATION-V1.md) | **依赖关闭 · W1 联合挡门** | 不重写空态/示例合同；**发群成功面合同所有者 = FTUE + Help**；本主题 W1 Go 依赖 FTUE W1 同绿；**禁止**本主题实现第二套成功面 |
+| [FTUE](./PRD-FTUE-OPTIMIZATION-V1.md) | **依赖关闭** | 不重写空态/示例合同；**禁止**本主题实现第二套成功面 |
+| [First-Session Trust](./PRD-FIRST-SESSION-TRUST-V1.md) | **默认成功面 COPY 所有者（2026-07-17）** | 已保存 · 打开文件夹 · 不教微信 · 禁自动 reveal；本主题可挂「换种分享方式」次要动作 |
 | [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) | **本主题 P0 拥有缺陷修复** | 兑现 **D-OR-27**：客户端 `kept_n` 同源；重导出不绕过意图；CTA 可见文案兑现 |
-| [Export Facade](./PRD-PREVIEW-EXPORT-FACADE-V1.md) / [Help](./PRD-HELP-ONBOARDING-V1.md) | **复用** | 成功面 / 发群句唯一来源；禁止新成功面栈 |
+| [Export Facade](./PRD-PREVIEW-EXPORT-FACADE-V1.md) / [Help](./PRD-HELP-ONBOARDING-V1.md) | **复用组件 · Help 按需** | Task Dock 成功面栈；发群说明在 Help H4 按需；禁止新成功面栈 |
 | [L0 Guidance](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) | **依赖关闭** | 无 Key 永不整单失败；本主题只断言「主链可走完」 |
 | [UX Trust](./PRD-UX-TRUST-V1.md) | **交叉** | Share 只读壳 + 门禁不回归；工程提示泄漏归本主题挡 |
 | [Copy](./PRD-COPY-OPTIMIZATION.md) / [Chapter Naming](./PRD-CHAPTER-NAMING.md) | **W2 协同** | 本主题定义「敢发」最低文案门槛；深度润色仍归 Copy/章名轨 |
@@ -314,14 +320,14 @@
 | 保存 | 正在保存到本机… | 无 |
 | 附注 | 次行小字可写「按章导出 · 高清」 | 工程参数抢第一行 |
 
-**成功面（BLK-03 · USR-03）**：合同所有者 = **FTUE + Help**；完整继承 FTUE §3.3 / Help `publishGuideFallback`：
+**成功面（BLK-03 · USR-03 · v1.0.3 修订）**：
 
 1. 复用 Task Dock `showSuccess`；**禁止**本主题新建平行 Modal/toast 栈。  
-2. 第一可读行=发群三要素。  
-3. 可见 ≥3s 或关闭前保持；自动收起后可经再点长图 / H4 找回。  
-4. 次要：「在文件夹中显示」。  
-5. **须提供**可点「换种分享方式」（Ambiguous / 已导出后换 intent；Sparse 可进入高级或意图卡等价入口）——用户联席 U2/U4 刚需。  
-6. 本主题 **W1 Go** 与 FTUE W1 **联合挡门**（同绿才过）。
+2. **默认主句 / 主操作**以 [First-Session Trust §3.4](./PRD-FIRST-SESSION-TRUST-V1.md) 为准（已保存 · 在文件夹中显示 · 不教微信 · 禁自动 reveal）。  
+3. 可见 ≥3s 或关闭前保持。  
+4. **须提供**可点「换种分享方式」（Ambiguous / 已导出后换 intent；Sparse 可进入高级或意图卡等价入口）——用户联席 U2/U4 刚需；作成功面**次要/并列动作**，不取代「已保存」主句。  
+5. 发群操作说明：Help H4 **按需**，非默认成功面强制槽位。  
+6. 本主题 W1 进度/CTA/换种分享与 First-Session Trust W0 成功面 **联合狗粮**（成功面 COPY 冲突时以 First-Session Trust 为准）。
 
 ### 3.6 回访书架合同（P-SR-11）
 
@@ -721,3 +727,4 @@ W2 ──┬─ stub / title / shelf
 | **v1.0.0** | 2026-07-17 | 首稿 Draft；基于多 Persona 走查；排除海外 IG；定义 W0–W2 与 D-SR-* |
 | **v1.0.1** | 2026-07-17 | Conditional Go 评审回写 BLK-01～08；线框/AC/IMPL 齐备；OQ 关闭；交叉 D-OR-27；明确本轮不动代码 |
 | **v1.0.2** | 2026-07-17 | 用户联席 USR-01～06 回写；D-SR-15～17；§4.6 禁工程词；线框 F1/F2/F5 增补；AC-SR-01b/09b/15 |
+| **v1.0.3** | 2026-07-17 | DOC-FST-02：成功面主句/完成定义对齐 First-Session Trust；「换种分享」保留为本主题次要动作 |

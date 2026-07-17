@@ -1087,34 +1087,7 @@ export function cancelPreviewLongshotExport(root) {
       });
   }
 
-  /** After successful export: open Explorer and select the first output (best-effort). */
-  export function autoRevealLongshotOutputs(tripId, outputs, opts) {
-    opts = opts || {};
-    var list = outputs || [];
-    if (!tripId || !list.length) return Promise.resolve(false);
-    return revealTripPath(tripId, list[0])
-      .then(function () {
-        trackStudioEvent("longshot_auto_reveal", {
-          trip_id: tripId,
-          output_count: list.length,
-          platform: opts.platform || "",
-        });
-        trackStudioEvent("ftue_reveal_folder", {
-          trip_id: tripId,
-          source: "auto_reveal",
-          platform: opts.platform || "",
-        });
-        return true;
-      })
-      .catch(function () {
-        if (opts.toastOnError !== false) {
-          _showToolbarToast("无法自动打开文件夹，请点「在文件夹中显示」", {
-            error: true,
-          });
-        }
-        return false;
-      });
-  }
+  // FE-FST-05 / D-FST-13 · 禁止自动 reveal（成功后仅点击「在文件夹中显示」）
 
   export function longshotProgressPct(job) {
     if (!job || job.status !== "running") return null;
@@ -1291,8 +1264,15 @@ export function cancelPreviewLongshotExport(root) {
   export function setLongshotExportProgress(root, visible, pct) {
     var prog = root.querySelector(".preview-toolbar__export-progress");
     var fill = root.querySelector(".preview-toolbar__export-progress-fill");
-    if (prog) prog.hidden = !visible;
+    if (prog) {
+      prog.hidden = !visible;
+      prog.classList.toggle(
+        "preview-toolbar__export-progress--indeterminate",
+        visible && typeof pct !== "number"
+      );
+    }
     if (fill && typeof pct === "number") fill.style.width = pct + "%";
+    else if (fill && typeof pct !== "number") fill.style.width = "";
   }
 
   export function longshotSplitEl(root) {
@@ -1353,14 +1333,17 @@ export function cancelPreviewLongshotExport(root) {
           root._taskDock.updateExporting({
             title: human.title,
             subtitle: human.subtitle,
-            pct: typeof opts.pct === "number" ? opts.pct : 8,
+            // FE-FST-03 · null → indeterminate，勿假进度
+            pct: typeof opts.pct === "number" ? opts.pct : null,
           });
         }
       } else {
         btn.innerHTML =
           '<span class="preview-toolbar__longshot__spinner" aria-hidden="true"></span> 正在保存…';
-        setLongshotExportMeta(root, opts.hint || "生成长图中", { actionable: false });
-        var pctRun = typeof opts.pct === "number" ? opts.pct : 8;
+        setLongshotExportMeta(root, opts.hint || "正在生成可发微信的长图…", {
+          actionable: false,
+        });
+        var pctRun = typeof opts.pct === "number" ? opts.pct : null;
         setLongshotExportProgress(root, true, pctRun);
       }
       if (badge) badge.hidden = true;
@@ -1518,9 +1501,7 @@ export function cancelPreviewLongshotExport(root) {
           trip_id: _tripIdFromPath(),
           segment_count: outsV3.length || 0,
         });
-        autoRevealLongshotOutputs(_tripIdFromPath(), outsV3, {
-          platform: resultV3.platform || "wechat_chat",
-        });
+        // FE-FST-05 / D-FST-13 · 禁止自动 reveal；仅点击「在文件夹中显示」
       }
       hideStaleHint(root);
       return;
@@ -1581,7 +1562,11 @@ export function cancelPreviewLongshotExport(root) {
         (outputs.length || 0) +
         " 张小红书配图 · 3:4 · 可直接上传";
     } else {
-      homeHint.textContent = resolvePublishGuide(result).text.replace(/\n/g, " · ");
+      // FE-FST-04 · 默认成功面：已保存确认，不塞发群教学
+      var drawerTitle = String(result.displayTitle || result.title || "").trim();
+      homeHint.textContent = drawerTitle
+        ? "《" + drawerTitle + "》长图已保存"
+        : "长图已保存";
     }
     drawer.appendChild(homeHint);
     if (_copyGateBypassTitle) {
@@ -1637,9 +1622,7 @@ export function cancelPreviewLongshotExport(root) {
         revealTripPath(tripId, outputs[0]);
       });
       actions.appendChild(revealBtn);
-      autoRevealLongshotOutputs(tripId, outputs, {
-        platform: result.platform || "wechat_chat",
-      });
+      // FE-FST-05 / D-FST-13 · 禁止自动 reveal
     }
 
     // FE-SR-08 / USR-03 · 非 Dock 成功面也提供换种分享

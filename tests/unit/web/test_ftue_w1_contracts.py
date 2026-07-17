@@ -13,27 +13,34 @@ STUDIO = ROOT / "templates" / "studio"
 VJ = ROOT / "templates" / "visual-journal"
 
 
-def test_format_longshot_result_uses_resolve_publish_guide() -> None:
+def test_format_longshot_result_saved_confirm_not_publish_guide() -> None:
+    """First-Session Trust · 默认成功文案 = 已保存，不塞 resolvePublishGuide。"""
     src = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
-    assert "resolvePublishGuide" in src
-    assert "from \"./help-onboarding.js\"" in src
+    assert "长图已保存" in src
+    assert "resolvePublishGuide" not in src
 
 
 def test_shelf_longshot_emits_share_hint_event() -> None:
     src = (STUDIO / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
-    assert "longshot_success_share_hint_shown" in src
     assert "formatLongshotResult" in src
     # FE-SR-08 / USR-03 · 书架成功面也提供换种分享
     assert "换种分享方式" in src
     assert "offerShelfSwitchShare" in src
+    # D-FST-13 · 禁自动 reveal
+    assert "shelf_longshot_auto_reveal" not in src
+    assert "禁止自动 reveal" in src
 
 
 def test_import_run_maps_stage_hint_labels() -> None:
     constants = (STUDIO / "js" / "constants.js").read_text(encoding="utf-8")
     run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    logic = (STUDIO / "homepage-v2" / "import-run-logic.js").read_text(encoding="utf-8")
     assert "preparing_vision" in constants
     assert "正在准备本机视觉组件（仅第一次）" in constants
-    assert "STAGE_HINT_LABELS" in run
+    assert "resolveImportStageCopy" in logic
+    assert "resolveImportStageCopy" in run
+    # FE-FST-02 · FirstSuccess 不阻塞于 refreshTrips
+    assert "showFirstSuccess({ result: result })" in run
 
 
 def test_first_success_ftue_convert_hint() -> None:

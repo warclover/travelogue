@@ -175,13 +175,14 @@ def _pick_template(templates: list[str], seed: str) -> str:
     return templates[idx]
 
 
+# First-Session Trust · 禁说明书腔（抬头看见 / 慢慢翻 等）；宁可地点·日期短标签
 STUB_CAPTION_TEMPLATES: dict[str, tuple[str, ...]] = {
-    "portrait": ("{place}的竖幅。", "抬头看见{place}。", "{date}的{place}。"),
-    "landscape": ("{place}的远景。", "横展开的{place}。", "{date}留在{place}。"),
-    "panorama": ("{place}徐徐展开。", "宽幅里的{place}。", "全景里的{place}。"),
-    "square": ("{place}的一格。", "方框里的{place}。", "{date}·{place}。"),
-    "tall": ("{place}的竖长一张。", "向上延伸的{place}。", "{date}的{place}。"),
-    "default": ("{place}的一张。", "旅途里的一张。", "{date}的{place}。"),
+    "portrait": ("{place}", "{date} · {place}", "{date}"),
+    "landscape": ("{place}", "{date} · {place}", "{date}"),
+    "panorama": ("{place}", "{date} · {place}", "{date}"),
+    "square": ("{place}", "{date} · {place}", "{date}"),
+    "tall": ("{place}", "{date} · {place}", "{date}"),
+    "default": ("{place}", "{date} · {place}", "{date}"),
 }
 
 
@@ -319,7 +320,7 @@ def _build_hook(
     if subject and day_count:
         templates.append(f"{subject} · {day_count}天")
     if subject:
-        templates.append(f"{subject}，慢慢翻。")
+        templates.append(subject)
     if span and not subject:
         templates.append(span)
     if not templates:
@@ -403,8 +404,8 @@ def _build_lead(
         return f"{title or place}，{n} 张。"
     subject = place or title or "这一段"
     if n >= 2:
-        return f"{subject}这一段，{n} 张慢慢铺开。"
-    return f"{subject}，再走一步。"
+        return f"{subject} · {n} 张。"
+    return subject
 
 
 def _build_epilogue(
@@ -414,10 +415,9 @@ def _build_epilogue(
     intent: dict | None = None,
     assets: list[dict] | None = None,
 ) -> str:
-    place = narrative_copy_subject(meta, intent=intent, assets=assets)
-    if tone == "documentary":
-        return f"把{place}收进这一本。"
-    return f"下次再见，{place}。"
+    # BE-FST-03 / D-FST-06 · 禁「下次再见」说明书腔；宁可空
+    _ = (meta, tone, intent, assets)
+    return ""
 
 
 def run_narrate(

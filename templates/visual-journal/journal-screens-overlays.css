@@ -996,12 +996,12 @@ html[data-folio="full"] .epilogue {
 
 html[data-folio="lite"] .epilogue[data-block="epilogue"]::before,
 html[data-folio="full"] .epilogue[data-block="epilogue"]::before {
-  content: "Colophon";
+  content: "辑封";
   display: block;
   font-family: var(--folio-meta-font);
   font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-transform: none;
   color: color-mix(in srgb, var(--folio-ink) 45%, transparent);
   margin-bottom: 0.75rem;
 }
@@ -1023,8 +1023,8 @@ html[data-folio="full"] .epilogue-screen__label {
   display: block;
   font-family: var(--folio-meta-font);
   font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-transform: none;
   color: color-mix(in srgb, var(--folio-ink) 45%, transparent);
   margin-bottom: 0.75rem;
 }

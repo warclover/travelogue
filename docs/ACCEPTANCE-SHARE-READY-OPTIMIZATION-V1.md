@@ -13,7 +13,7 @@
 >
 > 1. 环境：Windows · Studio · `studio.output_recipe.enabled: true`（测 Ambiguous 时）。  
 > 2. W0 / W1 / W2 分门挡；**W0 ≠ 主题完成**。  
-> 3. 成功面 AC 与 FTUE W1 **联合签字**（合同所有者 = FTUE + Help）。  
+> 3. 默认成功面 COPY 以 [First-Session Trust](./PRD-FIRST-SESSION-TRUST-V1.md) / [ACCEPTANCE-FIRST-SESSION-TRUST-V1](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) 为准；本主题 AC-SR-09 测「稳定成功确认 + 换种分享」，**不**再要求发群教学句。  
 > 4. 手测「产品」列须 **非实现者** 勾选（对齐 Output Recipe 先例）。
 
 ---
@@ -58,7 +58,7 @@
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
 | **AC-SR-08** | Sparse Dock 可见文案含「微信」或完整 `cta_label`（缩短形允许「发微信群」） | 手测 F4 | ✅ | ⏳ |
-| **AC-SR-09** | 导出成功 → 发群主句第一可读行；≥3s 或可找回 | 手测 F5 · **联合 FTUE** | ✅ 复用 Help | ⏳ |
+| **AC-SR-09** | 导出成功 → **已保存**主句可见 ≥3s；主操作可打开文件夹（对齐 First-Session Trust；**不**要求发群教学句） | 手测 F5 · **联合 FST** | ✅ 复用 Task Dock | ⏳ |
 | **AC-SR-09b** | 成功面动作区可点「换种分享方式」（USR-03） | 手测 F5 | ✅ | ⏳ |
 | **AC-SR-10** | 「在文件夹中显示」可定位 PNG | 手测 | ✅ 既有 | ⏳ |
 | **AC-SR-11** | 进度第一行匹配人话；无孤立「正在打开浏览器…」作唯一主句 | 手测 F5 | ✅ | ⏳ |

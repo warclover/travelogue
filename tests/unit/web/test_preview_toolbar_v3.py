@@ -713,14 +713,15 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "layoutUpdating" in longshot
     assert "版面没有更新成功，长图尚未开始" in longshot
     assert "再点「长图」即可导出" in longshot
-    assert "长图已保存到本机" in longshot or "resolvePublishGuide" in longshot
-    assert "长图已保存到本机" in task_dock or "resolvePublishGuide" in task_dock
-    assert "resolvePublishGuide" in task_dock
-    assert "publishGuideFallback" in task_dock or "打开微信，按文件名顺序发到群聊" in task_dock
-    assert "help-onboarding" in task_dock or "resolvePublishGuide" in task_dock
+    # First-Session Trust · 默认成功面 = 已保存确认（不塞发群教学）
+    assert "长图已保存" in task_dock
+    assert 'guide.text.replace' not in task_dock
+    assert "怎么发到微信群？" in task_dock
+    assert "help-onboarding" in task_dock
     assert "已保存到本机 · 拖进微信群即可" not in task_dock
     assert "showNextStepHint" in task_dock
     assert "在文件夹中显示" in task_dock
+    assert 'preview-task-dock__btn--primary' in task_dock
     assert "版面有改动" in core
     assert "正在更新版面" in core
     assert "有编辑尚未应用排版" not in core
@@ -791,9 +792,11 @@ def test_preview_export_facade_v1_markers() -> None:
     assert "preview-task-dock--next-hint" in css
     assert 'textContent = "在文件夹中显示"' in task_dock
     assert 'textContent = "打开文件夹"' not in task_dock
-    assert "已打开文件夹" in task_dock
-    assert "autoRevealLongshotOutputs" in longshot
-    assert "longshot_auto_reveal" in longshot
+    # D-FST-13 · 禁止自动 reveal
+    assert "autoRevealLongshotOutputs" not in longshot
+    assert "longshot_auto_reveal" not in longshot
+    assert "禁止自动 reveal" in longshot
+    assert "已保存到本机" in task_dock
     assert "导出时仍会提醒" in task_dock
     assert "preview-task-dock__remind" in css
     assert "按序发到朋友圈连读" in task_dock

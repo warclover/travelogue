@@ -27,3 +27,17 @@ export function humanizeFolderTitle(raw, opts) {
   if (!name || HEXISH.test(name)) return DEFAULT_TITLE;
   return name.length > limit ? name.slice(0, limit) : name;
 }
+
+var CJK_TRAILING_DIGIT = /[\u4e00-\u9fff]\d{1,3}$/;
+var GLUED_ALNUM = /^[\u4e00-\u9fffA-Za-z]{2,}\d{1,3}$/;
+var EXPORT_DIRISH = /(导出|download|dcim|camera roll|img_|vid_|screenshot)/i;
+
+/** BE-FST-06 · 中文启发式：像目录名噪音 */
+export function isFolderTitleNoise(title) {
+  var t = String(title || "").trim();
+  if (!t || t === DEFAULT_TITLE) return false;
+  if (EXPORT_DIRISH.test(t)) return true;
+  if (CJK_TRAILING_DIGIT.test(t)) return true;
+  if (t.indexOf(" ") < 0 && t.indexOf("·") < 0 && GLUED_ALNUM.test(t)) return true;
+  return false;
+}

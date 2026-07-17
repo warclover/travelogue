@@ -37,7 +37,7 @@ def test_import_run_retains_pending_on_failure() -> None:
     assert 'sessionStorage.removeItem(SS.activePending)' in run
     assert "L0 resume: only clear pending on success/cancel" in run
     # The shared clear-before-branch pattern must be gone
-    succeeded_idx = run.find('if (job.status === "succeeded")')
+    succeeded_idx = run.find('job.status === "succeeded"')
     assert succeeded_idx > 0
     pre = run[succeeded_idx - 400 : succeeded_idx]
     assert "removeItem(SS.activePending)" not in pre or "activeJobId" in pre
@@ -50,7 +50,7 @@ def test_import_run_retains_pending_on_failure() -> None:
 def test_capability_card_l0g_copy() -> None:
     """COPY-L0G capability strings superseded by FTUE §4.2 (PRD v1.1)."""
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
-    assert "照片留在本机，也能做成杂志游记" in cap
+    assert "照片留在本机，也能做成可发的游记" in cap
     assert "开始制作" in cap
     assert "以后再升级 AI 文案" in cap
     assert "向导里可一键试用示例" in cap

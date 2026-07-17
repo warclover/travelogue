@@ -10,7 +10,6 @@ import { tripIdFromPath } from "./shell.js";
 import {
   startLongshotJob,
   waitForLongshotJob,
-  revealLongshotOutput,
   isJobBusyResponse,
 } from "../js/longshot-client.js";
 import { trackStudioEvent } from "../js/analytics.js";
@@ -134,10 +133,8 @@ function runShareSaveImages(root, btn) {
           segment_count: outputs.length,
           surface: "share",
         });
-        setShareSaveStatus(root, "已保存到本机 · 拖进微信群即可", false);
-        if (outputs.length) {
-          revealLongshotOutput(tripId, outputs[0]).catch(function () {});
-        }
+        // FE-FST-04/05 · 已保存确认；禁止自动 reveal
+        setShareSaveStatus(root, "长图已保存", false);
       } else {
         trackStudioEvent("longshot_export_fail", {
           platform: "wechat_chat",

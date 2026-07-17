@@ -3,11 +3,7 @@
  */
 "use strict";
 
-import {
-  HELP_COPY,
-  resolvePublishGuide,
-  trackHelpEvent,
-} from "./js/help-onboarding.js";
+import { HELP_COPY, trackHelpEvent } from "./js/help-onboarding.js";
 import { openHelpDrawer } from "./js/help-drawer.js";
 import { trackStudioEvent } from "./js/analytics.js";
 
@@ -24,6 +20,8 @@ export function mountPreviewTaskDock(root, hooks) {
 
   var autoHideTimer = null;
   var dismissTimer = null;
+  var _successShownAt = 0;
+  var _progressModeTracked = "";
 
   function appendHelpDeepLink(textWrap, itemId, label) {
     var moreHelp = document.createElement("button");
@@ -47,11 +45,23 @@ export function mountPreviewTaskDock(root, hooks) {
     }
   }
 
+  function emitSuccessVisibleMs() {
+    if (!_successShownAt) return;
+    var ms = Date.now() - _successShownAt;
+    _successShownAt = 0;
+    try {
+      trackStudioEvent("longshot_success_visible_ms", { ms: ms });
+    } catch (_e) {}
+  }
+
   function hide() {
+    emitSuccessVisibleMs();
     clearTimers();
     dock.hidden = true;
     dock.className = "preview-task-dock";
+    dock.removeAttribute("aria-busy");
     dock.innerHTML = "";
+    _progressModeTracked = "";
   }
 
   function scheduleAutoHide(ms, after) {
@@ -60,6 +70,24 @@ export function mountPreviewTaskDock(root, hooks) {
       hide();
       if (typeof after === "function") after();
     }, ms || SUCCESS_AUTO_HIDE_MS);
+  }
+
+  function focusDockPrimary() {
+    requestAnimationFrame(function () {
+      var primary =
+        dock.querySelector(".preview-task-dock__btn--primary") ||
+        dock.querySelector(".preview-task-dock__btn--close") ||
+        dock;
+      if (primary && typeof primary.focus === "function") {
+        try {
+          primary.focus({ preventScroll: true });
+        } catch (_e) {
+          try {
+            primary.focus();
+          } catch (_e2) {}
+        }
+      }
+    });
   }
 
   function buildCloseBtn(afterHide) {
@@ -76,11 +104,25 @@ export function mountPreviewTaskDock(root, hooks) {
     return btn;
   }
 
+  function trackProgressMode(pct) {
+    var mode = typeof pct === "number" ? "percent" : "indeterminate";
+    if (mode === _progressModeTracked) return;
+    _progressModeTracked = mode;
+    try {
+      trackStudioEvent("longshot_progress_mode", {
+        mode: mode,
+        pct: typeof pct === "number" ? pct : null,
+      });
+    } catch (_e) {}
+  }
+
   function showExporting(opts) {
     opts = opts || {};
     clearTimers();
+    _successShownAt = 0;
     dock.hidden = false;
     dock.className = "preview-task-dock preview-task-dock--exporting";
+    dock.setAttribute("aria-busy", "true");
     dock.innerHTML = "";
 
     var icon = document.createElement("span");
@@ -102,7 +144,14 @@ export function mountPreviewTaskDock(root, hooks) {
 
     var progress = document.createElement("div");
     progress.className = "preview-task-dock__progress";
-    progress.innerHTML = '<i style="width:' + (opts.pct || 8) + '%"></i>';
+    progress.innerHTML = "<i></i>";
+    // FE-FST-03 · 未知进度用 indeterminate，禁假 0%
+    if (typeof opts.pct === "number") {
+      progress.querySelector("i").style.width = Math.max(0, Math.min(100, opts.pct)) + "%";
+    } else {
+      progress.classList.add("preview-task-dock__progress--indeterminate");
+    }
+    trackProgressMode(opts.pct);
 
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
@@ -123,6 +172,7 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(textWrap);
     dock.appendChild(progress);
     dock.appendChild(actions);
+    dock._progressEl = progress;
     dock._progressFill = progress.querySelector("i");
     dock._mainEl = main;
     dock._subEl = textWrap.querySelector("small");
@@ -142,23 +192,28 @@ export function mountPreviewTaskDock(root, hooks) {
       }
       dock._subEl.textContent = opts.subtitle;
     }
-    if (typeof opts.pct === "number" && dock._progressFill) {
-      dock._progressFill.style.width = opts.pct + "%";
+    if (!dock._progressFill || !dock._progressEl) return;
+    if (typeof opts.pct === "number") {
+      dock._progressEl.classList.remove("preview-task-dock__progress--indeterminate");
+      dock._progressFill.style.width = Math.max(0, Math.min(100, opts.pct)) + "%";
+    } else {
+      dock._progressEl.classList.add("preview-task-dock__progress--indeterminate");
+      dock._progressFill.style.width = "";
     }
+    trackProgressMode(opts.pct);
   }
 
   function showSuccess(job, tripId) {
     clearTimers();
     var result = (job && job.result) || {};
     var outputs = result.outputs || [];
-    var pathsLabel =
-      outputs.length > 1
-        ? outputs[0] + " 等 " + outputs.length + " 个文件"
-        : outputs[0] || "画册目录";
 
     dock.hidden = false;
     dock.className = "preview-task-dock preview-task-dock--success";
+    dock.setAttribute("aria-busy", "false");
     dock.innerHTML = "";
+    _progressModeTracked = "";
+    _successShownAt = Date.now();
 
     var icon = document.createElement("span");
     icon.className = "preview-task-dock__icon";
@@ -181,7 +236,17 @@ export function mountPreviewTaskDock(root, hooks) {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
     } else {
-      main.textContent = HELP_COPY.publishGuideFallback[0];
+      // FE-FST-04 / D-FST-13 · 默认微信群：已保存确认，不塞发群教学
+      var displayTitle = String(
+        result.displayTitle || result.title || ""
+      ).trim();
+      if (outputs.length > 1) {
+        main.textContent = "长图已保存（共 " + outputs.length + " 段）";
+      } else if (displayTitle) {
+        main.textContent = "《" + displayTitle + "》长图已保存";
+      } else {
+        main.textContent = "长图已保存";
+      }
     }
     textWrap.appendChild(main);
     if (job && job.status !== "failed") {
@@ -190,33 +255,26 @@ export function mountPreviewTaskDock(root, hooks) {
       if (result.platform === "moments_grid") {
         shareHint.textContent =
           result.publishGuide ||
-          ("已打开文件夹 · 共 " + outputs.length + " 张 1:1，有几张发几张");
+          ("已保存到本机 · 共 " + outputs.length + " 张 1:1，有几张发几张");
         textWrap.appendChild(shareHint);
       } else if (result.platform === "wechat_moments") {
         shareHint.textContent =
           outputs.length > 1
-            ? "这不是九宫格 · 已打开文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
-            : "这不是九宫格 · 已打开文件夹 · 按序发到朋友圈连读";
+            ? "这不是九宫格 · 已保存到本机 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
+            : "这不是九宫格 · 已保存到本机 · 按序发到朋友圈连读";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "xiaohongshu") {
         shareHint.textContent =
           outputs.length > 1
-            ? "已打开文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
-            : "已打开文件夹 · 导入小红书发布即可";
+            ? "已保存到本机 · 共 " + outputs.length + " 张，导入小红书按序发布"
+            : "已保存到本机 · 导入小红书发布即可";
         textWrap.appendChild(shareHint);
       } else {
-        // D-HELP-09 / AC-FTUE-09 · 第一可读行 = 发群引导全文（Help 同源）
-        var guide = resolvePublishGuide(result);
-        main.textContent = guide.text.replace(/\n/g, " · ");
-        trackHelpEvent("help_publish_guide_show", {
-          platform: result.platform || "wechat_chat",
-          segmented: outputs.length > 1,
-          source: guide.kind,
-        });
+        // Help H4 按需；默认面不展示发群三要素（First-Session Trust）
         trackStudioEvent("longshot_success_share_hint_shown", {
           platform: result.platform || "wechat_chat",
           source: "task_dock",
-          guideKind: guide.kind,
+          guideKind: "saved_confirm",
         });
         var moreHelp = document.createElement("button");
         moreHelp.type = "button";
@@ -261,7 +319,8 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status !== "failed" && outputs.length && typeof hooks.onRevealFolder === "function") {
       var revealBtn = document.createElement("button");
       revealBtn.type = "button";
-      revealBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+      // FE-FST-04 / D-FST-14 · 唯一实心主钮
+      revealBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
       revealBtn.textContent = "在文件夹中显示";
       revealBtn.addEventListener("click", function () {
         try {
@@ -298,7 +357,17 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
 
     if (job && job.status !== "failed") {
+      // D-FST-13 · 成功面展示时未自动 reveal（观测）
+      try {
+        trackStudioEvent("longshot_reveal_auto_blocked", {
+          tripId: tripId || null,
+          platform: result.platform || "wechat_chat",
+        });
+      } catch (_e) {}
+      focusDockPrimary();
       scheduleAutoHide(SUCCESS_AUTO_HIDE_MS, hooks.onResultDismissed);
+    } else {
+      focusDockPrimary();
     }
   }
 

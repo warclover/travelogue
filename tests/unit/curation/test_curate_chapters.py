@@ -116,10 +116,12 @@ def test_chapter_titles_same_day_suffix() -> None:
     buckets = [["x0"], ["x1"], ["x2"]]
     titles = _chapter_titles(buckets, assets, {"places": ["京都"]})
     assert titles[0].startswith("4月2日")
-    # T-M4-02：禁止「日期·二」；同日第二段用软消歧
+    # BE-FST-05 / OQ-FST-01：禁「日期续」；同日第二段用时段或（2）
+    assert "续" not in titles[1]
     assert "·二" not in titles[1]
     assert titles[1].startswith("4月2日")
-    assert "续" in titles[1] or titles[1] != titles[0]
+    assert "·" in titles[1] or "（2）" in titles[1]
+    assert titles[1] != titles[0]
 
 
 def test_run_curate_auto_attaches_screens() -> None:

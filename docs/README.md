@@ -103,6 +103,15 @@
 | [wireframes/share-ready-optimization-v1-wireframe.html](./wireframes/share-ready-optimization-v1-wireframe.html) | 敢发闭环线框 F1–F6 |
 | [acceptance-records/share-ready-optimization-v1-review-2026-07-17.md](./acceptance-records/share-ready-optimization-v1-review-2026-07-17.md) | 敢发闭环跨职能评审纪要 · Conditional Go |
 | [acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md](./acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md) | 敢发闭环 **多类型用户联席评审** · Conditional Go · USR-01～06 |
+| [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) | **首访可信体验优化 V1** **v1.0.2**（Conditional Go · 进度不假死 · 成功面必出 · 分享面敢秀 · **不教微信** · 编码另排期） |
+| [IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) | 首访可信 · W0–W2 任务卡（编码未 Kickoff） |
+| [ACCEPTANCE-FIRST-SESSION-TRUST-V1.md](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) | 首访可信验收 · AC-FST + 手测脚本 |
+| [IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) | 首访可信实施清单 · W0–W2 工程已合入 |
+| [wireframes/first-session-trust-v1-wireframe.html](./wireframes/first-session-trust-v1-wireframe.html) | 首访可信线框 F1–F5（W0：F1–F4 · W1：F5） |
+| [acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) | 首访可信 · 真人狗粮 F1–F5 · AC-FST-15 |
+| [acceptance-records/first-session-trust-v1-review-2026-07-17.md](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) | 首访可信 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
+| [acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md) | 首访可信 · **八席用户联席** · Conditional Go · USR-01～07 |
+| [acceptance-records/first-session-trust-v1-review-TEMPLATE.md](./acceptance-records/first-session-trust-v1-review-TEMPLATE.md) | 首访可信 · 跨职能评审纪要模板（备查） |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
 | [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环 · M1+M2+P0+M3 落地说明 |
 | [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环验收 · AC-FEED + P0 + M3 |
@@ -115,6 +124,8 @@
 首访帮助：**PRD-HELP-ONBOARDING-V1** **v1.1.1**（Conditional Go · FirstSuccess 方案 A · 脉冲+可见 tip · 发群三要素兜底 · 对齐精修 V1.1「完成≠更新版面」；不做全站 tour）。  
 首访成稿：**PRD-FTUE-OPTIMIZATION-V1** **v1.1.0**（W0 编码 · 分支 `feat/ftue-optimization-v1-w0`）。  
 敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · USR-01～06 已回写 · 线框 F1/F2/F5 增补 · **编码另排期**；不含海外 IG）。  
+首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
+交叉脚注：FTUE **v1.1.1** · Help **v1.1.2** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
 
 ---

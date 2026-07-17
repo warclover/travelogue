@@ -1227,8 +1227,8 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   display: block;
   margin: 0 0 8px;
   font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-transform: none;
   color: var(--accent-mobile, #7cb89a);
 }
 

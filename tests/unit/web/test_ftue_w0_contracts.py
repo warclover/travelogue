@@ -35,6 +35,6 @@ def test_wizard_demo_album_cta() -> None:
 
 def test_capability_card_ftue_copy() -> None:
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
-    assert "照片留在本机，也能做成杂志游记" in cap
+    assert "照片留在本机，也能做成可发的游记" in cap
     assert "开始制作" in cap
     assert "开始导入" not in cap

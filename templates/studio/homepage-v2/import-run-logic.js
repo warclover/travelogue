@@ -5,6 +5,61 @@
 "use strict";
 
 import { humanizeFolderTitle } from "../js/title-humanize.js";
+import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
+
+/** Orchestrator 阶段名 → 产品四段 stage（FE-FST-01） */
+export function normalizeImportProductStage(stage) {
+  var s = String(stage || "");
+  if (s === "ingest") return "ingest";
+  if (
+    s === "clustering" ||
+    s === "curate" ||
+    s === "layout" ||
+    s === "lock_structure"
+  ) {
+    return "curate";
+  }
+  if (s === "narrate" || s === "lock_copy") return "narrate";
+  if (s === "render" || s === "export") return "render";
+  return s;
+}
+
+/**
+ * FE-FST-01 · 导入进度主句/次行。
+ * 照片计数不得在 curate/narrate/render 霸屏；慢安抚由壳层次行承担。
+ * @param {{ stage?: string, stageHint?: string }|null} job
+ * @returns {{ main: string, secondary: string }}
+ */
+export function resolveImportStageCopy(job) {
+  var stage = normalizeImportProductStage(job && job.stage);
+  var rawHint = String((job && job.stageHint) || "").trim();
+  var mappedHint = STAGE_HINT_LABELS[rawHint] || "";
+  var stageMain = STAGE_LABELS[stage] || "";
+  var isPhotoCount =
+    /^已处理\s*\d+\s*\/\s*\d+/.test(rawHint) ||
+    /正在导入并挑选照片/.test(rawHint);
+
+  if (stage && stage !== "ingest" && stageMain) {
+    return { main: stageMain, secondary: "" };
+  }
+
+  if (mappedHint) {
+    return { main: mappedHint, secondary: isPhotoCount ? rawHint : "" };
+  }
+
+  if (stage === "ingest" || !stage) {
+    if (isPhotoCount) {
+      return {
+        main: STAGE_LABELS.ingest || "正在整理照片…",
+        secondary: rawHint,
+      };
+    }
+    if (rawHint) return { main: rawHint, secondary: "" };
+    return { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
+  }
+
+  return { main: stageMain || rawHint || "处理中…", secondary: "" };
+}
 
 export function basenameTitle(path) {
   if (!path) return "我的旅途";

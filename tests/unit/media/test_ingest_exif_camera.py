@@ -34,10 +34,24 @@ def test_format_moment_exif_line_requires_two_segments() -> None:
     line = format_moment_exif_line(asset)
     assert line
     assert "林芝" in line
-    assert "iPhone 15 Pro" in line
-    assert "24mm" in line
+    # BE-FST-04 · 读者面不含相机 Model / 曝光串
+    assert "iPhone 15 Pro" not in line
+    assert "24mm" not in line
+    assert "NIKON" not in line.upper()
 
 
 def test_format_moment_exif_line_single_segment_returns_none() -> None:
     asset = {"exif": {"model": "Sony A7"}}
     assert format_moment_exif_line(asset) is None
+
+
+def test_format_moment_exif_line_no_camera_model() -> None:
+    asset = {
+        "takenAt": "2024-06-14T10:00:00+08:00",
+        "place": {"city": "京都"},
+        "exif": {"make": "NIKON CORPORATION", "model": "NIKON Z 6"},
+    }
+    line = format_moment_exif_line(asset)
+    assert line
+    assert "京都" in line
+    assert "NIKON" not in line.upper()

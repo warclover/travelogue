@@ -72,7 +72,10 @@ def build_render_context(
     )
 
     meta = trip.get("meta", {})
-    meta_title = meta.get("title", "")
+    from travelogue.domain.title_humanize import resolve_display_title
+
+    # BE-FST-06 · 封面主标题用展示名（噪音目录名回退）
+    meta_title = resolve_display_title(meta)
     assets = surface.assets
     image_layout = surface.image_layout
 

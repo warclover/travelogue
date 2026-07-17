@@ -3,16 +3,22 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v1.1.1** |
+| **文档版本** | **v1.1.2** |
 | **状态** | **有条件通过（Conditional Go）** · 评审 Must-Fix 已回写 · 可开 W0 |
 | **主题代号** | 「帮助系统 V1」— 情境引导主链 · 按需救援 · 不打断验货 |
 | **前置条件** | Studio 首页 v2（M21）可用；Preview Toolbar v3 可用；[PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) P0～P2 已落地；[PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) **Conditional Go / 模式≠面板已落地**；[PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) 导出门面合同有效 |
-| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 · H7 · 能力卡 · 见 §12.4） |
+| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 · H7 · 能力卡 · 见 §12.4） |
 | **评审记录** | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) · **Conditional Go · MF 已回写本版** |
 | **线框** | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) · F1–F10（W1 挡门：F1–F3/F7） |
 | **验收** | 本文 §10；正式文件可后续拆出 `ACCEPTANCE-HELP-ONBOARDING-V1.md` |
 | **实施清单** | 可后续拆出 `IMPLEMENTATION-HELP-ONBOARDING-V1.md` |
-| **更新日期** | 2026-07-15 |
+| **更新日期** | 2026-07-17 |
+
+> **v1.1.2 交叉修订（2026-07-17 · DOC-FST-03）**
+>
+> 发群三要素 / `publishGuide` / D-HELP-09：**改为按需查阅**（帮助抽屉 H4、用户点「?」），**不再**作为默认长图成功面强制槽位。  
+> 默认成功面合同见 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md)（已保存 + 在文件夹中显示；不教微信）。  
+> 铁律 5「落盘≠完成」修订为：必须以**稳定可见的成功确认**为终点；「知道怎么发微信」降为 Help 可选救援，非默认成功面拒收条件。
 
 > **定位**
 >
@@ -99,7 +105,7 @@
 | Import 进度 | Importing | 4 段 Job + 慢提示 | 与帮助系统无统一文案合同 |
 | FirstSuccess | `first-success.js` | 成功 overlay · 倒计时开预览（现网倒计时常禁用） | **v1.1.1**：主 CTA 须为「打开卷轴预览」；`quick_share`「保存长图」降次按钮（D-HELP-10） |
 | 首访导出脉冲 | `init-v3.js` / `longshot.js` | `exportPulseSeen`（含历史 per-trip） | **v1.1.1**：全局门禁 + 可见 tip；busy 门禁（D-HELP-03′/07′/08′） |
-| Task Dock | `preview-toolbar-v3-task-dock.js` | 进度/成功 · 部分 `publishGuide` | **v1.1.1**：空时客户端三要素兜底必显（D-HELP-09） |
+| Task Dock | `preview-toolbar-v3-task-dock.js` | 进度/成功 · 部分 `publishGuide` | **v1.1.2**：默认成功面=已保存确认（First-Session Trust）；三要素改 H4 按需（原 v1.1.1 D-HELP-09 范围收窄） |
 | G1 横幅 | `features.js` | 结构待确认 | 首访未必理解；属支线 |
 | 精修模式 / Sheet | `preview-mode.js` + sheet | V1.1：模式≠面板；「完成」退出；chip「精修中」 | 保存语义 +「完成≠更新版面」未产品化为帮助对照 |
 | Phase 5 常驻「?」 | P5-H1 | **规划采纳 · 未系统交付** | 无帮助抽屉、无可重播 |
@@ -279,7 +285,7 @@ L2  按需帮助抽屉（?）         → 回访、出错、进精修后自己�
 |------|--------|------|
 | 主链 L1（长图引导、精修保存 hint、平台切换等） | **全局技能** | 学一次即可；**门禁键不含 tripId** |
 | `exportPulseSeen` 历史 per-trip | **只读兼容** | 读时可识别旧 per-trip 键，但 **不再作门禁**；写入只双写全局键（见 §6.2） |
-| `publishGuide` / 发群指引 | **每次 success 必现** | 不纳入「只出现一次」（D-HELP-04 / D-HELP-09） |
+| `publishGuide` / 发群指引 | **按需查阅**（H4 /「?」）；**默认成功面不强制**（2026-07-17 · First-Session Trust） | 不纳入「只出现一次」；亦不作默认成功面拒收条件 |
 | 分析用展开等 | 可选 | 如 `help.importFolderExpanded`，不影响打扰 |
 
 ---
@@ -294,7 +300,7 @@ L2  按需帮助抽屉（?）         → 回访、出错、进精修后自己�
 | **P0** | T-IMPORT-NEW | L0 | 每个文件夹 = 一篇新游记 | 回访态一句 |
 | **P0** | T-SUCCESS-NEXT | L1 | 先打开预览验货；满意再点长图 | FirstSuccess 副文案 + 预览接力 |
 | **P0** | T-PREVIEW-LONGSHOT | L1 | 点下方「长图」即可保存 | **脉冲 + 可见 tip + aria**（D-HELP-03′）；不叠独立气泡 |
-| **P0** | T-EXPORT-SHARE | L1 | 已保存 → 怎么发微信群 | Task Dock `publishGuide` **或客户端三要素兜底** **必现** |
+| **P0** | T-EXPORT-SHARE | L1 | 已保存确认；发群操作说明按需 | 默认成功面：已保存 + 打开文件夹（[First-Session Trust](./PRD-FIRST-SESSION-TRUST-V1.md)）；`publishGuide` / 三要素 → **Help H4 按需** |
 | **P1** | T-REFINE-SAVE | L1 | 改字即时；改精选要更新版面；完成≠更新版面 | 首次打开精修 Sheet 顶 hint |
 | **P1** | T-DEMO-CONVERT | L0 | 试用后用自己的照片 | 示例区 CTA |
 | **P2** | T-PLATFORM-PICK | L1 | 朋友圈/小红书会切多张；失败可改回微信群 | Longshot 2.0 平台选择器首次 |
@@ -501,7 +507,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | **D-HELP-07′** | 门禁仅全局；per-trip 只读兼容；双写/重播双清 | **v1.1.1 拍板** |
 | **D-HELP-08** | 忙碌态零 L1 | 见铁律 6 · §3.5 |
 | **D-HELP-08′** | `isHelpL1Blocked()`；idle 后可补评估脉冲 | **v1.1.1 拍板** |
-| **D-HELP-09** | 默认微信群：`publishGuide` 空时客户端三要素兜底必显 | **v1.1.1 拍板** |
+| **D-HELP-09** | 默认微信群：`publishGuide` 空时客户端三要素兜底 | **v1.1.1 拍板** · **v1.1.2 收窄**：兜底必显范围 = **Help H4 /「?」按需**，非默认 Task Dock 成功面 |
 | **D-HELP-10** | FirstSuccess **方案 A**：主 CTA=打开卷轴预览；保存长图为次按钮 | **v1.1.1 拍板**；关闭 OQ-HELP-01 |
 
 ---
@@ -566,7 +572,8 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | W1 首访引导指向精修 | **拒收** |
 | W1 脉冲 + 独立 coach **双打扰** | **拒收**（违反 D-HELP-03） |
 | W1 首访长图 **仅 aria、无可见 tip** | **拒收**（违反 D-HELP-03′） |
-| 成功态无发群指引（含兜底） | **拒收**（P0 · D-HELP-09） |
+| 成功态无**已保存确认**且无打开文件夹入口 | **拒收**（对齐 First-Session Trust；2026-07-17 起不再以「无发群教学句」拒收） |
+| Help H4 被删除且无任何发群说明入口 | **拒收**（按需救援须可达） |
 | FirstSuccess 主 CTA 仍为「保存长图」且未改主链 | **拒收**（违反 D-HELP-10） |
 | 帮助抽屉一级条目 >5 或改成工程目录 | **拒收** |
 | 帮助文案与精修 V1.1「完成 / 更新版面」冲突 | **拒收** |
@@ -584,8 +591,8 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | **AC-HELP-04a** | FirstSuccess CTA | **主 CTA=「打开卷轴预览」**；「保存长图」仅为次按钮（D-HELP-10） |
 | **AC-HELP-05** | 首次进预览 | 长图引导只出现一轮；不指向精修；Dismiss 或导出后不再出现；无第二层独立 coach 气泡 |
 | **AC-HELP-05a** | 首访长图 tip | **可见 tip 必现**（非仅 aria）；合同句同时进 `aria-label`（D-HELP-03′） |
-| **AC-HELP-06** | 长图 success | Task Dock（或成功主表面）展示发群指引；「在文件夹中显示」可用 |
-| **AC-HELP-06a** | `publishGuide` 为空 | 仍展示客户端三要素兜底（D-HELP-09）；不得空白成功态 |
+| **AC-HELP-06** | 长图 success | Task Dock 展示**已保存**确认；「在文件夹中显示」为主操作可用（First-Session Trust）；发群教学句**非**必现 |
+| **AC-HELP-06a** | 用户打开帮助 H4 /「?」 | 仍可达发群说明（`publishGuide` 或三要素兜底）；**不**要求默认成功面强制展示 |
 | **AC-HELP-07** | 首次打开精修 | 见两行语义 hint（含完成≠更新版面）；「了解更多」打开 H2 |
 | **AC-HELP-08** | 首次切换非默认平台 | 见平台切张说明（W3） |
 | **AC-HELP-09** | 点击「?」 | 打开 5 条目抽屉；Esc 关闭；焦点可回 |
@@ -687,6 +694,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | v1.0.0 | 2026-07-11 | 首版 Draft：三层架构 · 触达矩阵 · 帮助抽屉 · 与精修/导出门面合同对齐 |
 | **v1.1.0** | **2026-07-14** | 专家审视回写：精修 V1.1 语义；D-HELP-03/07/08 冻结；忙碌态；帮助↔精修冲突；叙事接力；W1 不强制 Coach；漏斗埋点；AC-13～15；H5 决策树 |
 | **v1.1.1** | **2026-07-14** | 评审 Must-Fix 回写：D-HELP-03′/07′/08′/09/10；FirstSuccess 方案 A；可见 tip；seen 迁移；发群兜底；AC-04a/05a/06a/13a/16/17；关闭 OQ-HELP-01；Conditional Go 可开 W0 |
+| **v1.1.2** | **2026-07-17** | DOC-FST-03：发群三要素改按需查阅；默认成功面对齐 First-Session Trust；AC-HELP-06/06a 修订 |
 | **v1.1.2** | **2026-07-15** | 交叉引用 Desktop LLM Setup：§12.4 H7 / T-CAP-01 / D-DLLM-13（不改主链 H1–H5） |
 
 ### 12.4 相邻主题 · Desktop LLM Setup（H7 / 能力卡）

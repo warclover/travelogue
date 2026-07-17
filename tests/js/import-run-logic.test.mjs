@@ -16,6 +16,8 @@ import {
   shouldClearPendingOnJobTerminal,
   canRetryFailedImport,
   shouldPerformCancelImport,
+  normalizeImportProductStage,
+  resolveImportStageCopy,
 } from "../../templates/studio/homepage-v2/import-run-logic.js";
 
 test("basenameTitle / guessUploadTitle", () => {
@@ -80,4 +82,28 @@ test("IR-U-03 · cancel API：有 job 才发起；terminal/无 job 为 no-op", (
   assert.equal(shouldPerformCancelImport(null), false);
   // terminal 后壳层清空 activeJobId → 再次 cancel 不打 API
   assert.equal(shouldPerformCancelImport(undefined), false);
+});
+
+test("FE-FST-01 · resolveImportStageCopy：N/N 后切 curate，计数不霸屏", () => {
+  assert.equal(normalizeImportProductStage("clustering"), "curate");
+  assert.equal(normalizeImportProductStage("lock_structure"), "curate");
+  assert.equal(normalizeImportProductStage("narrate"), "narrate");
+  assert.equal(normalizeImportProductStage("render"), "render");
+
+  const ingestCount = resolveImportStageCopy({
+    stage: "ingest",
+    stageHint: "已处理 6/6 张",
+  });
+  assert.match(ingestCount.main, /整理照片/);
+  assert.equal(ingestCount.secondary, "已处理 6/6 张");
+
+  const afterIngest = resolveImportStageCopy({
+    stage: "clustering",
+    stageHint: "已处理 6/6 张",
+  });
+  assert.match(afterIngest.main, /分章/);
+  assert.equal(afterIngest.secondary, "");
+
+  const narrate = resolveImportStageCopy({ stage: "narrate", stageHint: "" });
+  assert.match(narrate.main, /游记文案/);
 });

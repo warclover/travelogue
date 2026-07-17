@@ -342,12 +342,7 @@ export function runShelfLongshot(trip, opts) {
           output_count: formatted.outputs.length,
         });
         if (typeof V2.reroute === "function") V2.reroute();
-        if (formatted.revealPath) {
-          revealLongshotOutput(tripId, formatted.revealPath).catch(function () {
-            /* keep modal CTA as fallback */
-          });
-          trackStudioEvent("shelf_longshot_auto_reveal", { trip_id: tripId });
-        }
+        // FE-FST-05 / D-FST-13 · 禁止自动 reveal；主钮「在文件夹中显示」才打开
       } else {
         trackStudioEvent("shelf_longshot_fail", {
           trip_id: tripId,

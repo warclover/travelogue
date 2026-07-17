@@ -568,7 +568,14 @@ def _screen_weight_for_tier(tier: str) -> float:
 
 
 def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
-    """P5-S4 · trip summary for epilogue stats screen."""
+    """P5-S4 · trip summary for epilogue / 辑封 stats screen.
+
+    Photo count priority (AC-FST-14 · 与精选/版面同源):
+    1. ``curation.displayedAssetIds``（已上版面）
+    2. ``count_kept_n``（cullSummary.finalLayoutEligible / layoutEligible）
+    3. layoutEligible 资产计数
+    """
+    from travelogue.export.output_recipe.kept_n import count_kept_n
     from travelogue.services.copy_subject import (
         filter_chapter_places_for_copy,
         suppress_chapter_geo_places,
@@ -583,12 +590,18 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
             for a in trip.get("assets") or []
             if a.get("id") in id_set and a.get("type") != "video"
         ]
+        photo_count = len(assets)
     else:
-        assets = [
-            a
-            for a in trip.get("assets") or []
-            if a.get("layoutEligible", True) and a.get("type") != "video"
-        ]
+        kept = count_kept_n(trip)
+        if kept > 0:
+            photo_count = kept
+        else:
+            assets = [
+                a
+                for a in trip.get("assets") or []
+                if a.get("layoutEligible", True) and a.get("type") != "video"
+            ]
+            photo_count = len(assets)
     meta = trip.get("meta") or {}
     intent = trip.get("intent")
     asset_list = trip.get("assets") or []
@@ -613,7 +626,6 @@ def build_epilogue_stats(trip: dict) -> EpilogueStatsContext:
         places.add(meta["place"].strip())
     # AC-SR-13 · 无地理信号不把「旅途」/主题标题撑成「1 个地方」
     places = {p for p in places if p and p not in {"旅途", "未知"}}
-    photo_count = len(assets)
     day_count = max(len(days), 1) if photo_count else 0
     place_count = len(places) if photo_count else 0
     if place_count:

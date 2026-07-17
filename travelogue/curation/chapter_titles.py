@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from travelogue.curation.bucket_planning import bucket_day_span
 from travelogue.curation.time_segments import parse_asset_date
@@ -19,6 +19,33 @@ def title_for_bucket_span(span: list[str]) -> str | None:
     if d0.month == d1.month and d0.day == d1.day:
         return f"{d0.month}月{d0.day}日"[:12]
     return f"{d0.month}月{d0.day}–{d1.month}月{d1.day}日"[:12]
+
+
+def _prd_daypart_label(taken_at: str | None) -> str | None:
+    """Map hour → PRD 四档：上午 / 下午 / 傍晚 / 晚上（OQ-FST-01）。"""
+    if not taken_at:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(taken_at).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    hour = dt.hour
+    if 5 <= hour < 12:
+        return "上午"
+    if 12 <= hour < 17:
+        return "下午"
+    if 17 <= hour < 20:
+        return "傍晚"
+    return "晚上"
+
+
+def _bucket_daypart(bucket: list[str], assets_by_id: dict[str, dict]) -> str | None:
+    for aid in bucket:
+        raw = (assets_by_id.get(aid) or {}).get("takenAt") or ""
+        label = _prd_daypart_label(str(raw) if raw else None)
+        if label:
+            return label
+    return None
 
 
 def chapter_titles(
@@ -93,11 +120,15 @@ def chapter_titles(
             base = f"{d.month}月{d.day}日"
             if n == 0:
                 titles.append(base[:12])
-            elif n == 1:
-                # T-M4-02：禁止默认「日期·二」类最伤标题；同日第二段用软消歧
-                titles.append(f"{base}续"[:12])
             else:
-                titles.append(f"{place}·{n + 1}"[:12])
+                # BE-FST-05 / OQ-FST-01 · 禁「日期续」；优先时段，否则（n）
+                daypart = _bucket_daypart(bucket, assets_by_id)
+                if daypart:
+                    candidate = f"{base} · {daypart}"
+                    if candidate not in titles:
+                        titles.append(candidate[:12])
+                        continue
+                titles.append(f"{base}（{n + 1}）"[:12])
         elif i == 0:
             titles.append("抵达"[:12])
         elif i == len(buckets) - 1:

@@ -379,6 +379,8 @@ export function showFirstSuccess(jobOrResult) {
   _successResult = result;
   V2.state = "FirstSuccess";
   restoreImportShell();
+  var importingHost = $("v2-importing");
+  if (importingHost) importingHost.setAttribute("aria-busy", "false");
 
   populateSuccessUi(result);
   _previousFocus = document.activeElement;

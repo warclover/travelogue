@@ -26,7 +26,9 @@
 | 能力 | 所有者 |
 |------|--------|
 | `kept_n` / 意图卡裁决 | **本主题**（回写 Output Recipe D-OR-27） |
-| 发群成功面 / publishGuide | **FTUE + Help**（本主题 W1 挡门依赖） |
+| 默认长图成功面 COPY（已保存 · 打开文件夹 · 不教微信） | **[First-Session Trust](./PRD-FIRST-SESSION-TRUST-V1.md)**（2026-07-17 supersede） |
+| 「换种分享方式」动作 | **本主题**（挂成功面次要动作；不改主句） |
+| 发群操作说明 publishGuide / H4 | **Help**（按需查阅，非默认成功面） |
 | showcase 资产 | **本主题** W0 |
 | stub 深度润色 | Copy；本主题只清禁止句式 |
 | 海外 IG | **不做** |

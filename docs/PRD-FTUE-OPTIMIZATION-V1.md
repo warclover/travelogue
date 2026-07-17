@@ -3,17 +3,23 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
-| **文档版本** | **v1.1.0** |
+| **文档版本** | **v1.1.1** |
 | **状态** | **Conditional Go · Must-Fix 已回写** · 可 Kickoff **W0**（见 [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | **主题代号** | 「首访成稿」— 空态不迷路 · 示例可一键 · 长图知发群 · 冷启动可解释 |
 | **触发来源** | 2026-07-15 空态 FTUE dogfood；跨职能评审 Conditional Go |
 | **前置条件** | Studio 首页 v2（M21）；能力卡 / L0 分层；帮助系统 V1 · 导出门面 V1 合同有效 |
-| **关联文档** | [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) · [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) · [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [SHARING.md](./SHARING.md) · [WORKSHOP.md](./WORKSHOP.md) · [README.md](../README.md) |
+| **关联文档** | [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) · [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) · [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [SHARING.md](./SHARING.md) · [WORKSHOP.md](./WORKSHOP.md) · [README.md](../README.md) |
 | **评审记录** | [acceptance-records/ftue-optimization-v1-review-2026-07-15.md](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md) |
 | **线框** | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) · F1–F8（W0 挡门：F1–F3/F7；W1 挡门：F4–F6） |
 | **验收** | 本文 §10；可后续拆 `ACCEPTANCE-FTUE-OPTIMIZATION-V1.md` |
 | **实施清单** | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) |
-| **更新日期** | 2026-07-15 |
+| **更新日期** | 2026-07-17 |
+
+> **v1.1.1 交叉修订（2026-07-17 · DOC-FST-01）**
+>
+> 默认长图成功面 COPY /「落盘≠完成」终点，以 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md) **D-FST-04 / §3.4** 为准：主句=已保存；主操作=在文件夹中显示；**不教微信操作**；**禁止自动 reveal**。  
+> 本文 §3.3 / G-FTUE-04 / 铁律 3 中「发群主句第一可读行」对**默认成功面**不再作为强制合同；空态/示例/文件名/冷启动等其余 FTUE 合同不变。  
+> 发群操作说明保留在 Help 抽屉（按需）。详见 First-Session Trust 跨职能 BLK-01。
 
 > **定位**
 >
@@ -136,7 +142,7 @@
 | **G-FTUE-01** | 空书架首访能理解「做什么 + 点哪」 | AC-FTUE-01～03 |
 | **G-FTUE-02** | 不选自有相册也能一键示例成稿 | AC-FTUE-04～05 |
 | **G-FTUE-03** | L0 导入可完成且冷启动可解释 | AC-FTUE-06～07 |
-| **G-FTUE-04** | 长图成功后知道发群 + 文件位置 | AC-FTUE-08～10 |
+| **G-FTUE-04** | 长图成功后确认已保存 + 文件位置（发群操作说明改 Help 按需 · 见 First-Session Trust） | AC-FTUE-08～10 · 对齐 AC-FST-08* |
 | **G-FTUE-05** | 导出文件名无乱码 | AC-FTUE-11 |
 | **G-FTUE-06** | **开发者路径** README 三步可启动 | AC-FTUE-12（**非**干净机非开发者成功） |
 
@@ -187,19 +193,26 @@
 
 ### 3.3 长图成功合同（BLK-04 / 05 / 06 · 加严 G-EXP-05）
 
+> **⚠ 默认成功面 COPY 已由 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md) §3.4 / §4.4 supersede（2026-07-17）**。  
+> 下列历史条文中「发群主句第一可读行 / 每次必现 publishGuide」**仅适用于** Help 抽屉按需查阅，**不**再强制进入默认 Task Dock 成功面。
+
 长图 Job `succeeded` 后：
 
 1. **可见成功面**：复用 Preview V3 **Task Dock** `showSuccess`（或等价既有门面）；**禁止**新建第四套 Modal/toast 体系。  
-2. **第一可读行**：发群引导——COPY **唯一**对齐 Help：
+2. **第一可读行（现行权威）**：已保存确认——见 First-Session Trust 冻结句（如 `《{displayTitle}》长图已保存。`）。  
+3. **主操作（现行权威）**：「在文件夹中显示」（实心主钮；**点击才 reveal**，禁止自动弹文件夹）。  
+4. **禁止**默认成功面展示发群步骤教学句；Help H4 / `publishGuide` 为按需。  
+5. **可验收**：成功面可见 ≥ **3s** 或用户主动关闭前保持；自动收起后可通过再点导出入口看到已有长图状态。  
+6. 关闭后不要求每次再弹；文件名磁盘为 `tripId`，UI 展示中文/回退 `displayTitle`。
 
-   > 已保存。按文件名顺序发到微信群即可。可点「在文件夹中显示」。  
+<details>
+<summary>历史条文（v1.1.0 · 已归档，仅备查）</summary>
 
-   （与 `HELP_COPY.publishGuideFallback` / D-HELP-09 同源；backend `publishGuide` 非空则优先。）
+- 第一可读行曾为发群引导（对齐 `publishGuideFallback` / D-HELP-09）。  
+- 「在文件夹中显示」曾为次要动作且不得压过发群主句。  
+- 入口矩阵曾要求均须发群句。
 
-3. **次要动作**：「在文件夹中显示」/ 打开文件夹——**不得**压过发群主句第一可读行。  
-4. **入口矩阵（均须发群句）**：Preview V3 Dock（主）· 书架长图成功路径 · client fallback——统一 `resolvePublishGuide`（或等价）。  
-5. **可验收**：成功面可见 ≥ **3s** 或用户主动关闭前保持；若自动收起，须仍能通过「再点长图」或帮助 H4 **找回**发群说明（写入 AC-FTUE-08′）。  
-6. 关闭后不要求每次再弹；文件名磁盘为 `tripId`，UI 展示中文 `meta.title`。
+</details>
 
 ### 3.4 双长图入口（D-FTUE-07 · OQ-02 已关闭）
 
@@ -264,7 +277,7 @@
 
 | 槽位 | **冻结 To-Be（唯一）** |
 |------|------------------------|
-| 标题 | 照片留在本机，也能做成杂志游记 |
+| 标题 | 照片留在本机，也能做成可发的游记（2026-07-17 · First-Session Trust USR-03：勿承诺杂志级） |
 | 正文 | 选一次旅行的照片，自动分章、排版；微信长图可直接发群。更好的文案可稍后自行升级（可选）。向导里可一键试用示例。 |
 | **主 CTA** | **开始制作** |
 | 次链 | 以后再升级 AI 文案 → |
@@ -475,6 +488,7 @@ python -m travelogue studio --no-open --host 127.0.0.1 --port 8771 --trips-dir $
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | **v1.1.0** | 2026-07-15 | 消化评审 BLK-01～12；OQ 关闭；线框 + IMPLEMENTATION；可 Kickoff W0 |
+| **v1.1.1** | 2026-07-17 | DOC-FST-01：默认成功面 COPY supersede → [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md)；§3.3 历史条文归档 |
 | **v1.0.0** | 2026-07-15 | 首稿 Draft；Conditional Go 评审 |
 
 ---

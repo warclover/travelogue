@@ -153,7 +153,11 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
         photo_count = 0
         try:
             data = json.loads(trip_json.read_text(encoding="utf-8"))
-            title = (data.get("meta") or {}).get("title") or title
+            from travelogue.domain.title_humanize import resolve_display_title
+
+            meta = data.get("meta") or {}
+            # BE-FST-06 / USR-04 · 书架主标题与封面 / FirstSuccess 同源展示名
+            title = resolve_display_title(meta) or title
             updated_at = _trip_updated_at(trip_json, data)
             photo_count = sum(
                 1 for a in data.get("assets") or [] if a.get("type", "image") == "image"

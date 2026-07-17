@@ -62,13 +62,14 @@ def test_preview_longshot_tip_and_busy_gate() -> None:
     assert "studio-modal-open" in help_js
 
 
-def test_task_dock_publish_guide_fallback() -> None:
+def test_task_dock_success_saved_confirm() -> None:
+    """First-Session Trust supersede AC-FTUE-09 · 默认面已保存确认；H4 按需。"""
     dock = TASK_DOCK.read_text(encoding="utf-8")
-    assert "resolvePublishGuide" in dock
-    # AC-FTUE-09 · 第一可读行用 guide 全文（· 拼接），不再拆 ol 次行
-    assert 'guide.text.replace(/\\n/g, " · ")' in dock or "guide.text.replace" in dock
-    assert "help_publish_guide_show" in dock
+    assert "长图已保存" in dock
+    assert "怎么发到微信群？" in dock
+    assert 'itemId: "H4"' in dock or "itemId: 'H4'" in dock
     assert "longshot_success_share_hint_shown" in dock
+    assert "guide.text.replace" not in dock
     assert "已保存到本机 · 拖进微信群即可" not in dock
 
 

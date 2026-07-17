@@ -59,6 +59,7 @@ class StudioPipelineResult:
     keep_near_duplicates: bool = False
     assets_written: int = 0
     media_warn: str = ""
+    title_noise_fallback: bool = False
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -227,6 +228,8 @@ def _studio_post_curate(
     narrate_provider = resolve_studio_narrate_provider(
         cfg=cfg, force_stub=bool(force_stub)
     )
+    # BE-FST-01 · 进入文案/排版前显式推进 stage（产品四段）
+    report("narrate", 3)
     try:
         # Single run_trip slice (align with continue_after_g1_confirm): lock → narrate → render.
         run_trip(
@@ -239,6 +242,7 @@ def _studio_post_curate(
             cfg=cfg,
             studio_hooks=hooks,
         )
+        report("render", 4)
         from travelogue.render.preview import render_preview_jpg
 
         render_preview_jpg(trip_json, trip_root=trip_root)
@@ -325,7 +329,29 @@ def _finalize_pipeline_result(
         inferred_start=meta_final.get("dateStart"),
         inferred_end=meta_final.get("dateEnd"),
     )
-    display_title = str(meta_final.get("title") or title).strip()[:20] or "我的旅途"
+    from travelogue.domain.title_humanize import (
+        is_folder_title_noise,
+        resolve_display_title,
+    )
+
+    # BE-FST-06 · 目录名噪音 → 展示名（FirstSuccess / 书架 / 封面同源）
+    raw_meta_title = str(meta_final.get("title") or title).strip()
+    display_title = resolve_display_title(meta_final, raw_title=raw_meta_title)
+    title_noise_fallback = is_folder_title_noise(raw_meta_title)
+    if str(meta_final.get("displayTitle") or "").strip() != display_title:
+
+        def _stamp_display_title(trip: dict) -> dict:
+            meta = dict(trip.get("meta") or {})
+            meta["displayTitle"] = display_title
+            trip["meta"] = meta
+            # Persist after render already stamped renderedRevision; a bare
+            # revision bump here false-flags「预览产物已过期」on FirstSuccess.
+            mark_render_bundle_current(trip)
+            return trip
+
+        svc.update(trip_json, _stamp_display_title)
+        trip_final = svc.load(trip_json)
+        meta_final = trip_final.get("meta") or {}
     featured_n, segment_n = _trip_import_stats(trip_final)
     intent_line = _format_intent_line(display_title, featured_n, segment_n)
     curation = trip_final.get("curation") or {}
@@ -391,6 +417,7 @@ def _finalize_pipeline_result(
         keep_near_duplicates=keep_near_duplicates,
         assets_written=assets_written,
         media_warn=media_warn or "",
+        title_noise_fallback=title_noise_fallback,
     )
 
 
@@ -1008,6 +1035,9 @@ def run_studio_pipeline(
 
         svc.update(trip_json, make_intent_folders_merge_mutator(trip))
         _persist_trip_state()
+
+        # BE-FST-01 · ingest 结束后立刻切 curate，避免前端长期停在「已处理 N/N」
+        report("curate", 2)
 
         try:
             run_trip(

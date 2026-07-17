@@ -108,6 +108,13 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "ftue_reveal_folder",
         "longshot_success_share_hint_shown",
         "help_funnel_reveal_folder",
+        # First-Session Trust V1 · PRD §7
+        "import_ui_terminal_ms",
+        "import_stage_stall",
+        "longshot_progress_mode",
+        "longshot_success_visible_ms",
+        "longshot_reveal_auto_blocked",
+        "share_surface_blocked",
     }
 )
 

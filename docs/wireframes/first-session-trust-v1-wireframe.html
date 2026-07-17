@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>首访可信 First-Session Trust V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w1 { background: #1565c0; color: #fff; }
+    .tag--gate { background: #6a1b9a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 480px; position: relative; overflow: hidden;
+    }
+    .frame--dark { background: #1e2a28; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .btn--primary { background: var(--bar); color: #f5fbf8; }
+    .btn--secondary { background: #fff; color: var(--bar); border: 1.5px solid var(--bar); }
+    .btn--gold { background: var(--gold); color: var(--gold-text); }
+    .btn--ghost { background: transparent; color: var(--accent); font-weight: 600; border: none; padding: 8px 0; }
+    .btn--block { width: 100%; }
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px; padding: 4px;
+      background: rgba(26,47,40,.92); border-radius: 999px;
+    }
+    .dock .ctl {
+      height: 36px; border: none; border-radius: 8px; background: transparent;
+      color: #e8f5ef; font-size: 12px; font-weight: 600; padding: 0 10px;
+    }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px; background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 11px; padding: 0 12px;
+    }
+    .busy {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(400px, 90%); background: #fff; border-radius: 16px; padding: 28px 24px 22px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.18); text-align: center; z-index: 50;
+    }
+    .busy .eyebrow { font-size: 11px; color: var(--wf-muted); margin: 0 0 8px; letter-spacing: .04em; }
+    .busy h3 { margin: 0 0 8px; font-size: 18px; color: var(--bar); }
+    .busy .stage { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--bar); }
+    .busy .sub { margin: 0 0 14px; font-size: 12px; color: var(--wf-muted); }
+    .bar { height: 8px; background: #eceff1; border-radius: 999px; overflow: hidden; margin: 0 0 10px; }
+    .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+    .bar--indet i {
+      width: 36%;
+      animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-20%); }
+      50% { transform: translateX(160%); }
+      100% { transform: translateX(-20%); }
+    }
+    .timeline {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 0; text-align: left;
+    }
+    .timeline div {
+      background: #f5f7f6; border-radius: 8px; padding: 8px; font-size: 11px; color: var(--wf-muted);
+      border: 1px solid #e0e0e0;
+    }
+    .timeline div.on { border-color: var(--accent); color: var(--bar); background: #e8f5e9; font-weight: 600; }
+    .timeline div.done { opacity: .55; }
+    .success-card {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(420px, 92%); background: #fff; border-radius: 16px; padding: 22px;
+      box-shadow: 0 20px 48px rgba(0,0,0,.28); z-index: 55;
+    }
+    .success-card .ok-eyebrow { color: var(--wf-rec); font-weight: 700; font-size: 12px; margin: 0 0 8px; }
+    .success-card h3 { margin: 0 0 8px; font-size: 18px; }
+    .success-card .hint { margin: 0 0 16px; font-size: 13px; color: var(--wf-muted); }
+    .success-card .actions { display: flex; flex-direction: column; gap: 8px; }
+    .success-dock {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      width: min(420px, 92%); background: #fff; border-radius: 14px; padding: 14px 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.28); z-index: 50; font-size: 13px;
+    }
+    .success-dock .main { font-weight: 700; color: var(--bar); margin-bottom: 8px; }
+    .success-dock .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .magazine {
+      margin: 72px auto 24px; width: min(400px, 86%); background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28); overflow: hidden;
+    }
+    .magazine__cover {
+      height: 220px; background: linear-gradient(180deg, #5d4037, #3e2723); color: #fff;
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; position: relative;
+    }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 20px; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .magazine__body { padding: 14px 16px; font-size: 12px; color: #5d4037; }
+    .leak {
+      background: rgba(255,255,255,.94); color: #c62828; font-size: 11px;
+      padding: 6px 8px; border-radius: 6px; border: 1px dashed #ef9a9a; margin-top: 8px;
+    }
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;
+    }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .compare .mini {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; font-size: 12px;
+    }
+    .compare .mini h4 { margin: 0 0 8px; font-size: 13px; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .seq {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin: 12px 0; font-size: 12px;
+    }
+    .seq span {
+      background: #fff; border: 1px solid #b0bec5; border-radius: 999px; padding: 4px 10px;
+    }
+    .seq span.hi { background: #e8f5e9; border-color: var(--accent); font-weight: 700; }
+    .seq em { font-style: normal; color: var(--wf-muted); }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>首访可信 First-Session Trust V1 · 线框 <span style="opacity:.7">PRD v1.0.2 · Conditional Go</span></h1>
+    <p>W0 挡门：F1–F4 · W1 挡门：F5。成功面「已保存」+ 主钮打开文件夹 · <strong>不教微信 · 不自动弹文件夹</strong>。跨职能 + 八席用户联席 2026-07-17。</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 导入进度<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 FirstSuccess<span class="w">W0</span></button>
+      <button type="button" data-panel="f3">F3 长图进度<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 成功面<span class="w">W0</span></button>
+      <button type="button" data-panel="f5">F5 敢秀对照<span class="w">W1</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · 导入进度诚实 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">照片计数到 N/N 后必须切换阶段主句（分章 / 文案 / 排版）。慢安抚只能作次行，不能取代「正在做什么」。</p>
+          <div class="callout"><strong>定案</strong>D-FST-01 · P-FST-01 · AC-FST-01～03 · §3.1 / §4.2</div>
+        </div>
+
+        <div class="anno">To-Be · render 阶段（照片已处理完）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio · 导入中</div></div>
+        <div class="frame">
+          <div class="busy">
+            <p class="eyebrow">来源 · 示例相册</p>
+            <h3>正在生成你的游记画册…</h3>
+            <p class="stage">正在排版杂志页…</p>
+            <p class="sub">照片已整理完成 · 比预期久一些，请耐心等待…</p>
+            <div class="bar"><i style="width:88%"></i></div>
+            <div class="timeline">
+              <div class="done">① 整理照片</div>
+              <div class="done">② 分章挑选</div>
+              <div class="done">③ 短文案</div>
+              <div class="on">④ 排版</div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>主句 = 阶段；次行才可放慢安抚。禁止主区域只剩「已处理 6/6 张」+「比预期久一些」。</div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">As-Is · 假死</div></div>
+        <div class="frame">
+          <div class="busy">
+            <p class="eyebrow">来源 · 示例相册</p>
+            <h3>正在生成你的游记画册…</h3>
+            <p class="stage" style="color:var(--danger)">已处理 6/6 张</p>
+            <p class="sub">比预期久一些，请耐心等待…</p>
+            <div class="bar"><i style="width:100%"></i></div>
+            <p class="sub" style="margin-top:12px;color:var(--danger)">后端可能已 succeeded / 已在 render，UI 仍像卡死</p>
+          </div>
+        </div>
+        <div class="callout callout--bad"><strong>禁止上线</strong>ingest 计数语义在后段阶段继续霸屏；慢安抚替代阶段说明。</div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · Job 成功 → FirstSuccess ≤1s <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead"><code>status=succeeded</code> 的同一轮询回调内关闭忙碌壳并展示 FirstSuccess。书架刷新不得阻塞成功面。</p>
+          <div class="callout"><strong>定案</strong>D-FST-02 · P-FST-02 · AC-FST-04～05 · §3.2</div>
+        </div>
+
+        <div class="seq">
+          <span>轮询 status</span><em>→</em>
+          <span class="hi">succeeded</span><em>→</em>
+          <span class="hi">关忙碌 ≤1s</span><em>→</em>
+          <span class="hi">FirstSuccess</span><em>∥</em>
+          <span>refreshTrips（可并行）</span>
+        </div>
+
+        <div class="anno">To-Be</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio</div></div>
+        <div class="frame">
+          <div class="success-card">
+            <p class="ok-eyebrow">✓ 生成完成</p>
+            <h3>《示例游记》已生成 · 照片 6 张</h3>
+            <p class="hint">先翻一翻验货。满意就点预览页下方的「发微信群」。</p>
+            <div class="actions">
+              <button class="btn btn--primary btn--block" type="button">打开卷轴预览 →</button>
+              <button class="btn btn--secondary btn--block" type="button">保存长图</button>
+              <button class="btn btn--ghost" type="button">留在首页</button>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>禁止</strong>Job 已成功但忙碌壳仍显示「比预期久一些」超过 1s；禁止 await 书架刷新后才 showFirstSuccess。</div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 长图导出进度诚实 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">无真实百分比时用不确定进度条；禁止长期「正在准备导出… 0%」。主句人话，工程词不上第一行。</p>
+          <div class="callout"><strong>定案</strong>D-FST-03 · P-FST-03 · AC-FST-06～07 · §3.3 / §4.3</div>
+        </div>
+
+        <div class="anno">To-Be · indeterminate</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 示例游记</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">返回</button>
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">发微信群</button>
+          </div>
+          <div class="busy" style="box-shadow:0 18px 40px rgba(0,0,0,.35)">
+            <h3 style="font-size:16px">正在生成可发微信的长图…</h3>
+            <p class="sub">按章 · 高清（若配方提供）</p>
+            <div class="bar bar--indet"><i></i></div>
+            <p class="sub">合成中，请稍候</p>
+          </div>
+        </div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">As-Is</div></div>
+        <div class="frame frame--dark">
+          <div class="busy" style="box-shadow:0 18px 40px rgba(0,0,0,.35)">
+            <h3 style="font-size:16px;color:var(--danger)">正在准备导出…</h3>
+            <div class="bar"><i style="width:0%"></i></div>
+            <p class="sub" style="color:var(--danger)">0% · 后台可能已在合成甚至已落盘</p>
+          </div>
+        </div>
+        <div class="callout callout--bad"><strong>禁止</strong>用 0% 表示「未知」；禁止主句出现 Playwright / 浏览器 / Chromium。</div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 长图成功面：已保存 · 不教微信 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">成功面稳定停住 ≥3s（或至用户关闭）。主句确认落盘；次要动作打开文件夹。用户非常清楚怎么用微信——默认面禁止发群步骤教学。</p>
+          <div class="callout"><strong>定案</strong>D-FST-04 / 05 / 10 / 12 / 13 / 14 · P-FST-04 · AC-FST-08/08b/08c/13 · USR-01/02 · §0.2 / §3.4 / §4.4<br/>修订 FTUE §3.3「发群主句第一可读行」</div>
+        </div>
+
+        <div class="anno">To-Be · Task Dock 成功面</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 导出完成</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">返回</button>
+            <button class="export" type="button">发微信群</button>
+          </div>
+          <div class="magazine">
+            <div class="magazine__cover">
+              <h3>示例游记</h3>
+              <p>卷轴预览继续可翻</p>
+            </div>
+          </div>
+          <div class="success-dock">
+            <div class="main">《示例游记》长图已保存。</div>
+            <div class="actions">
+              <button class="btn btn--gold" type="button" style="padding:8px 12px;font-size:12px">在文件夹中显示</button>
+              <button class="btn btn--secondary" type="button" style="padding:8px 12px;font-size:12px">关闭</button>
+            </div>
+            <p style="margin:10px 0 0;font-size:11px;color:#607d8b">主钮实心 · 点击后才打开文件夹 · <strong>禁止自动弹窗</strong></p>
+          </div>
+        </div>
+        <div class="callout"><strong>Help「?」</strong>仍可保留发群说明，供主动查阅；不进默认成功面。Dock「发微信群」= 终点语义，≠ 教操作（USR-05）。</div>
+
+        <div class="anno">As-Is / 禁止默认展示</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">禁止 · 教学句霸屏</h4>
+            <p>已保存。按文件名顺序发到微信群即可。可点「在文件夹中显示」。</p>
+            <p style="color:var(--wf-muted);margin:8px 0 0;font-size:11px">用户不需要被教怎么用微信；且易掩盖「文件在哪」。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止 · 成功面闪消失</h4>
+            <p>Job succeeded + reveal 已调，但面板秒关 / 不出现 → 用户不确定是否完成。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 分享面敢秀对照 <span class="tag tag--w1">W1</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">L0/stub 宁可空，不要说明书腔；章名禁「日期续」；相机 EXIF 与文件夹名噪音不得进读者/分享面。</p>
+          <div class="callout"><strong>定案</strong>D-FST-06～09 · P-FST-05～08 · AC-FST-09～12 · §3.5 / §4.5<br/>深度润色仍归 Copy / Chapter Naming；本帧只定最低敢秀门槛</div>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">As-Is · 不敢发</h4>
+            <div class="magazine" style="margin:0;width:100%;box-shadow:none">
+              <div class="magazine__cover" style="height:160px">
+                <h3>王丹昙华林2</h3>
+                <p>王丹昙华林2，慢慢翻。</p>
+                <div class="leak">抬头看见王丹昙华林2。</div>
+                <div class="leak">NIKON CORPORATION NIKON D800E</div>
+                <div class="leak">章名：10月5日续</div>
+              </div>
+            </div>
+          </div>
+          <div class="mini">
+            <h4 class="ok">To-Be · 敢秀底线</h4>
+            <div class="magazine" style="margin:0;width:100%;box-shadow:none">
+              <div class="magazine__cover" style="height:160px;background:linear-gradient(180deg,#455a64,#263238)">
+                <h3>昙华林 · 游记</h3>
+                <p>2013.10 · 武汉</p>
+                <div class="magazine__body" style="padding:10px 0 0;color:rgba(255,255,255,.85)">
+                  章名：10月5日 · 上午<br/>
+                  图注：可空，或不复读标题<br/>
+                  <span style="opacity:.7">无相机型号 · 无「续」 · 无说明书腔</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>OQ-FST-01（评审拍板）</strong>同日多章：倾向「{日期} · 时段」；无时段则「{日期}（2）」。勿用「续」。</div>
+        <div class="callout"><strong>文件夹名回退</strong>命中噪音启发 → 展示「{地名或旅行} · {日期或游记}」；原名仍可在精修编辑。</div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>本帧审核清单</h3>
+      <ul id="aside-list">
+        <li>阶段主句是否随 stage 变？</li>
+        <li>慢安抚是否仅次行？</li>
+        <li>N/N 后是否仍假死？</li>
+      </ul>
+      <h3 style="margin-top:16px">相邻合同</h3>
+      <ul>
+        <li>空态/示例 → FTUE</li>
+        <li>真图/意图卡 → Share-Ready</li>
+        <li>成功面栈 → Task Dock / Facade</li>
+        <li><span class="ok">不教微信</span> → 本文铁律 3</li>
+      </ul>
+      <h3 style="margin-top:16px">PRD</h3>
+      <ul>
+        <li><a href="../PRD-FIRST-SESSION-TRUST-V1.md">PRD-FIRST-SESSION-TRUST-V1</a></li>
+        <li><a href="../acceptance-records/first-session-trust-v1-review-2026-07-17.md">跨职能评审</a></li>
+        <li><a href="../acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md">用户联席八席</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var aside = {
+        f1: ["阶段主句是否随 stage 变？", "慢安抚是否仅次行？", "N/N 后是否仍假死？"],
+        f2: ["succeeded 后 ≤1s 出 FirstSuccess？", "忙碌壳是否关闭？", "refreshTrips 是否阻塞成功面？"],
+        f3: ["是否假 0%？", "无进度是否 indeterminate？", "主句有无工程词？"],
+        f4: ["主句是否「已保存」？", "是否出现发群教学句？", "成功面是否稳定 ≥3s？"],
+        f5: ["有无说明书腔？", "有无 EXIF /「日期续」？", "封面是否文件夹名噪音？"]
+      };
+      function show(id) {
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === id);
+        });
+        document.querySelectorAll(".tabs button").forEach(function (b) {
+          b.classList.toggle("is-active", b.getAttribute("data-panel") === id);
+        });
+        var list = document.getElementById("aside-list");
+        list.innerHTML = (aside[id] || []).map(function (t) { return "<li>" + t + "</li>"; }).join("");
+      }
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        show(btn.getAttribute("data-panel"));
+      });
+    })();
+  </script>
+</body>
+</html>

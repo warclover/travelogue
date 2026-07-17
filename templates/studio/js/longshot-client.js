@@ -3,7 +3,6 @@
  */
 import { postJson, postJsonBusyRetry, isJobBusyResponse } from "./http.js";
 import { pollJobUntilDone } from "./job-poll.js";
-import { resolvePublishGuide } from "./help-onboarding.js";
 
 export const LONGSHOT_SLOW_MS = 45000;
 export const LONGSHOT_POLL_MS = 800;
@@ -140,7 +139,6 @@ export function formatLongshotResult(job) {
   var platform = result.platform || "wechat_chat";
   var lines = [];
   var title = "长图已保存";
-  var guide = null;
 
   if (platform === "moments_grid") {
     var nGrid = result.pageCount || outputs.length;
@@ -158,17 +156,18 @@ export function formatLongshotResult(job) {
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
   } else {
-    // FE-FTUE-04 / BE-FTUE-06 · 默认微信群：与 Dock 同源 resolvePublishGuide
-    guide = resolvePublishGuide(result);
-    title = guide.lines[0] || title;
-    for (var gi = 0; gi < guide.lines.length; gi++) {
-      lines.push(guide.lines[gi]);
-    }
+    // FE-FST-04 · 默认微信群：已保存确认（发群教学改走 Help H4）
+    var displayTitle = String(result.displayTitle || result.title || "").trim();
     if (segmented && outputs.length > 1) {
+      title = "长图已保存（共 " + outputs.length + " 段）";
       lines.push(
         result.userHint ||
-          "已按章导出 " + outputs.length + " 张，底部含页码（如 2/5）便于微信按序发送。"
+          "已按章导出 " + outputs.length + " 张，底部含页码便于按序发送。"
       );
+    } else if (displayTitle) {
+      title = "《" + displayTitle + "》长图已保存";
+    } else {
+      title = "长图已保存";
     }
   }
   if (method === "p1") {
@@ -187,7 +186,7 @@ export function formatLongshotResult(job) {
     captureMethod: method,
     segmented: segmented,
     platform: platform,
-    publishGuide: (guide && guide.text) || result.publishGuide || "",
+    publishGuide: result.publishGuide || "",
   };
 }
 

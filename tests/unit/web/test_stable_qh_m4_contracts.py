@@ -16,10 +16,13 @@ def test_m4_01_assemble_no_draft_system_hook_bypass() -> None:
 
 
 def test_m4_02_chapter_titles_forbid_date_er() -> None:
+    """First-Session Trust supersede · 禁「日期续」；用时段 / （n）。"""
     src = (_ROOT / "travelogue" / "curation" / "chapter_titles.py").read_text(encoding="utf-8")
     assert 'f"{base}·二"' not in src
     assert 'f"{base}·{n + 1}"' not in src
-    assert 'f"{base}续"' in src
+    assert 'f"{base}续"' not in src
+    assert "（{n + 1}）" in src or "（" in src
+    assert "慢慢翻" not in src
 
 
 def test_m4_03_shelf_badge_demotes_when_resume_owns_cta() -> None:

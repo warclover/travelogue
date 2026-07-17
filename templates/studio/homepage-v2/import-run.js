@@ -4,14 +4,14 @@
  * 复用 v3 共享原语，不复制 v3 视图控制器：
  *  - http.js     postJson / withJobBusyRetry / isJobBusyResponse
  *  - job-poll.js pollJobUntilDone
- *  - constants.js SS / STAGE_LABELS / STUDIO_ERROR_MESSAGES / IMPORT_PHOTO_CAP
+ *  - constants.js SS / STUDIO_ERROR_MESSAGES / IMPORT_PHOTO_CAP
  *
  * sessionStorage 写入形状与 v3 完全一致（activeJobId / activePending），
  * 保证跨页 import 续跑（v3 ↔ v2）。Importing UI 为 M20-d 基础版，
  * 冷启动静帧 + 四阶段精修在 M20-g。
  */
 import {
-  SS, STAGE_LABELS, STAGE_HINT_LABELS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
+  SS, STUDIO_ERROR_MESSAGES, IMPORT_PHOTO_CAP,
   SLOW_JOB_MS, SLOW_JOB_VISION_MS, SLOW_JOB_VISION_LONG_MS,
 } from "../js/constants.js";
 import { postJson, withJobBusyRetry, isJobBusyResponse } from "../js/http.js";
@@ -41,12 +41,16 @@ import {
   isImportPhotoCapExceeded,
   shouldClearPendingOnJobTerminal,
   shouldPerformCancelImport,
+  resolveImportStageCopy,
 } from "./import-run-logic.js";
 
 let _gen = 0;
 let _activeJobId = null;
 let _importStartedAt = 0;
 let _slowHintLevel = 0;
+let _stageMainText = "";
+let _stageMainChangedAt = 0;
+let _stageStallEmitted = false;
 
 /** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
 var SLOW_HINT_COPY = {
@@ -168,9 +172,15 @@ export function buildImportPayload(albumPath, title, opts) {
   return buildImportPayloadFields(albumPath, title, opts, readTemplateParams());
 }
 
-function setStage(text, fillPct) {
+function setStage(text, fillPct, secondary) {
   var stage = $("v2-import-stage");
   if (stage && text) stage.textContent = text;
+  var sub = $("v2-import-stage-sub");
+  if (sub) {
+    var sec = String(secondary || "").trim();
+    sub.textContent = sec;
+    sub.hidden = !sec;
+  }
   var progress = $("v2-import-progress");
   var fill = $("v2-import-fill");
   if (fill && typeof fillPct === "number") {
@@ -252,6 +262,12 @@ export function renderImportingPanel(source) {
   stage.textContent = "准备导入…";
   panel.appendChild(stage);
 
+  var stageSub = document.createElement("p");
+  stageSub.className = "v2-import-panel__stage-sub";
+  stageSub.id = "v2-import-stage-sub";
+  stageSub.hidden = true;
+  panel.appendChild(stageSub);
+
   var slowHint = document.createElement("p");
   slowHint.className = "v2-import-panel__slow-hint";
   slowHint.id = "v2-import-slow-hint";
@@ -268,9 +284,13 @@ export function renderImportingPanel(source) {
 
   host.appendChild(panel);
   show(host, true);
+  host.setAttribute("aria-busy", "true");
   V2.state = "Importing";
   _importStartedAt = Date.now();
   _slowHintLevel = 0;
+  _stageMainText = "";
+  _stageMainChangedAt = Date.now();
+  _stageStallEmitted = false;
   setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
@@ -338,19 +358,35 @@ function pollImport(jobId, gen, source) {
       if (job.status === "running" || job.status === "queued") {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
-        var rawHint = job.stageHint || "";
-        var hint =
-          STAGE_HINT_LABELS[rawHint] ||
-          rawHint ||
-          STAGE_LABELS[job.stage] ||
-          "处理中…";
-        setStage(hint, count ? (idx / count) * 100 : 0);
+        // FE-FST-01 · 阶段主句优先；照片计数仅 ingest 次行
+        var copy = resolveImportStageCopy(job);
+        setStage(copy.main, count ? (idx / count) * 100 : 0, copy.secondary);
+        var now = Date.now();
+        if (copy.main && copy.main !== _stageMainText) {
+          _stageMainText = copy.main;
+          _stageMainChangedAt = now;
+          _stageStallEmitted = false;
+        } else if (
+          !_stageStallEmitted &&
+          _stageMainChangedAt &&
+          now - _stageMainChangedAt > 8000
+        ) {
+          _stageStallEmitted = true;
+          trackStudioEvent("import_stage_stall", {
+            jobId: jobId,
+            stage: job.stage || null,
+            stall_ms: now - _stageMainChangedAt,
+            main: _stageMainText || null,
+          });
+        }
       }
     },
   }).then(function (job) {
     if (gen !== _gen) return null;
     _importStartedAt = 0;
     _slowHintLevel = 0;
+    var importingHost = $("v2-importing");
+    if (importingHost) importingHost.setAttribute("aria-busy", "false");
     var pending = null;
     try {
       var pendingRaw = sessionStorage.getItem(SS.activePending);
@@ -398,8 +434,23 @@ function pollImport(jobId, gen, source) {
         assets_written: result.assetsWritten,
         pref_source: readPhotoCullPrefSource(),
       });
+      // FE-FST-02 · 成功面优先；书架刷新并行不阻塞 FirstSuccess
+      var terminalT0 = Date.now();
+      showFirstSuccess({ result: result });
+      trackStudioEvent("import_ui_terminal_ms", {
+        jobId: jobId,
+        ms_from_succeeded: Date.now() - terminalT0,
+        tripId: result.tripId || null,
+      });
+      if (result.titleNoiseFallback) {
+        trackStudioEvent("share_surface_blocked", {
+          reason: "folder_title",
+          tripId: result.tripId || null,
+        });
+      }
       return refreshTripsForImportSuccess(result).then(function () {
-        showFirstSuccess({ result: result });
+        return job;
+      }).catch(function () {
         return job;
       });
     }

@@ -198,7 +198,9 @@ def test_web_render_pool_exif_bars_and_role_split() -> None:
     assert html.count('data-role="peak"') == 1
     assert "林芝" in html
     assert "波密" in html
-    assert "Sony A7C" in html
+    # BE-FST-04 · 读者面不含相机 Model
+    assert "Sony A7C" not in html
+    assert "iPhone" not in html
     assert html.count("layout-screen__moment-label") == 1
     assert "决定性瞬间" in html
 

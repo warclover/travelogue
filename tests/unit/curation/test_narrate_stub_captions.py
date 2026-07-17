@@ -75,8 +75,10 @@ def test_stub_hook_uses_day_template() -> None:
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     hook = trip["meta"]["hook"]
     assert "京都" in hook
-    # Share-Ready W2 · 可读短句；禁止说明书腔
-    assert "天" in hook or "翻" in hook or "·" in hook
+    # First-Session Trust · 可读短句；禁慢慢翻 / 抬头看见
+    assert "天" in hook or "·" in hook or hook == "雨后京都"
+    assert "慢慢翻" not in hook
+    assert "抬头看见" not in hook
     assert "汇成" not in hook
     assert not re.search(r"关于.+的\d+天", hook)
 

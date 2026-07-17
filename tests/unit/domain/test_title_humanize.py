@@ -1,6 +1,10 @@
-"""Share-Ready W2 · BE-SR-05 title humanize."""
+"""Share-Ready W2 · BE-SR-05 title humanize + First-Session Trust BE-FST-06."""
 
-from travelogue.domain.title_humanize import humanize_folder_title
+from travelogue.domain.title_humanize import (
+    humanize_folder_title,
+    is_folder_title_noise,
+    resolve_display_title,
+)
 
 
 def test_humanize_strips_hash_and_handtest_suffix() -> None:
@@ -33,3 +37,26 @@ def test_humanize_respects_limit() -> None:
     long_name = "一二三四五六七八九十一二三四五六七八九十"
     assert humanize_folder_title(long_name, limit=20) == long_name[:20]
     assert humanize_folder_title("短标题", limit=20) == "短标题"
+
+
+def test_folder_title_noise_chinese_heuristics() -> None:
+    assert is_folder_title_noise("王丹昙华林2") is True
+    assert is_folder_title_noise("京都雨后") is False
+    assert is_folder_title_noise("导出相册01") is True
+
+
+def test_resolve_display_title_fallback_for_noise() -> None:
+    meta = {
+        "title": "王丹昙华林2",
+        "places": ["武汉"],
+        "dateStart": "2026-07-01",
+        "dateEnd": "2026-07-02",
+    }
+    shown = resolve_display_title(meta)
+    assert "王丹昙华林2" not in shown
+    assert "武汉" in shown
+    assert "·" in shown
+
+
+def test_resolve_display_title_keeps_readable() -> None:
+    assert resolve_display_title({"title": "雨后京都", "places": ["京都"]}) == "雨后京都"

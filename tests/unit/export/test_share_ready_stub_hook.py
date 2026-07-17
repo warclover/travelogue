@@ -34,7 +34,12 @@ def test_ac_sr_12_stub_hook_no_instructional_patterns() -> None:
     assert "京都" in hook or "雨后" in hook
     assert "汇成" not in hook
     assert "张照片" not in hook
+    assert "慢慢翻" not in hook
+    assert "抬头看见" not in hook
+    assert "下次再见" not in hook
     assert not re.search(r"关于.+的\d+天", hook)
+    epilogue = str((trip.get("meta") or {}).get("epilogue") or "")
+    assert "下次再见" not in epilogue
 
 
 def test_ac_sr_12_stub_hook_may_be_empty_without_subject() -> None:

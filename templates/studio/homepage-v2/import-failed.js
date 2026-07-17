@@ -32,7 +32,9 @@ function clearActivePending() {
 
 function restoreImportShell() {
   show($("v2-loading"), false);
-  show($("v2-importing"), false);
+  var importing = $("v2-importing");
+  if (importing) importing.setAttribute("aria-busy", "false");
+  show(importing, false);
   show($("v2-headline"), true);
   show($("v2-frame"), true);
   import("./shelf.js").then(function (m) {

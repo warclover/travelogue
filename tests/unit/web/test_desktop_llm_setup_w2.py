@@ -19,7 +19,7 @@ def test_capability_card_contract() -> None:
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "travelogue.desktop.capabilityCard.v1" in help_js
     # FTUE v1.1 §4.2 supersedes L0G capability-card copy
-    assert "照片留在本机，也能做成杂志游记" in cap
+    assert "照片留在本机，也能做成可发的游记" in cap
     assert "开始制作" in cap
     assert "以后再升级 AI 文案" in cap
     assert "开始导入" not in cap

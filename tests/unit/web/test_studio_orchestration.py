@@ -68,10 +68,12 @@ def test_post_curate_uses_single_run_trip_until_rendered(tmp_path: Path) -> None
     trip = json.loads(result.trip_json.read_text(encoding="utf-8"))
     timings = (trip.get("pipeline") or {}).get("timings") or {}
     assert "totalMs" in timings or "renderMs" in timings
-    # Post-render timings flush must not false-flag renderBundleStale.
+    # Post-render timings flush + BE-FST-06 displayTitle persist must not
+    # false-flag renderBundleStale（否则 FirstSuccess 立刻弹「预览产物已过期」）.
     from travelogue.layout_templates.css_stale import trip_render_bundle_stale
     from travelogue.services.trip import meta_rendered_revision, meta_revision
 
+    assert str((trip.get("meta") or {}).get("displayTitle") or "").strip()
     assert meta_rendered_revision(trip) == meta_revision(trip)
     assert trip_render_bundle_stale(result.trip_json.parent, trip) is False
 

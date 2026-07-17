@@ -30,7 +30,8 @@ var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHel
 
 export var HELP_COPY = {
   firstSuccessNext:
-    "当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』；需要杂志感可在「更多工具」升级。",
+    // FE-FST-06 / USR-03 · 勿承诺杂志级；升级路径改走 Help
+    "当前为本机文案；先翻一翻验货。满意就点预览页下方的『长图』。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
