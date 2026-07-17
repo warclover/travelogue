@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>敢发闭环 Share-Ready V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w1 { background: #1565c0; color: #fff; }
+    .tag--gate { background: #6a1b9a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 520px; position: relative; overflow: hidden;
+    }
+    .frame--dark { background: #1e2a28; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .home-chrome {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: rgba(255,255,255,.72); border-bottom: 1px solid #cfd8dc;
+    }
+    .home-chrome .brand { font-weight: 700; font-size: 14px; color: var(--bar); }
+    .bento {
+      display: grid; grid-template-columns: 1.4fr 0.7fr; gap: 14px; padding: 18px 20px 12px;
+    }
+    .carousel {
+      height: 220px; border-radius: 12px; overflow: hidden; position: relative;
+      background: linear-gradient(135deg, #5d7a6a, #2c4a3e 55%, #1a2f28);
+      color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px;
+    }
+    .carousel--bad { background: #111; color: #666; }
+    .carousel .label { font-size: 11px; opacity: .85; }
+    .carousel h3 { margin: 4px 0 0; font-size: 18px; }
+    .phone {
+      width: 120px; height: 220px; margin: 0 auto; border-radius: 18px; border: 3px solid #37474f;
+      background: linear-gradient(180deg, #c8a96a, #8d6e3f); box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      display: flex; align-items: flex-end; justify-content: center; color: #fff; font-size: 10px; padding: 10px; text-align: center;
+    }
+    .phone--bad { background: #111; color: #555; border-color: #333; }
+    .cta-row { padding: 8px 20px 20px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .btn--primary { background: var(--bar); color: #f5fbf8; }
+    .btn--secondary { background: #fff; color: var(--bar); border: 1.5px solid var(--bar); }
+    .btn--gold { background: var(--gold); color: var(--gold-text); }
+    .btn--ghost { background: transparent; color: var(--accent); font-weight: 600; border: none; padding: 8px 0; }
+    .btn--block { width: 100%; }
+    .btn--intent-primary { background: var(--bar); color: #fff; text-align: left; padding: 12px 14px; border-radius: 12px; font-size: 13px; }
+    .btn--intent { background: #fff; color: var(--bar); border: 1.5px solid #b0bec5; text-align: left; padding: 12px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+    .btn--intent small, .btn--intent-primary small { display: block; font-weight: 500; opacity: .75; margin-top: 3px; font-size: 11px; }
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px; padding: 4px;
+      background: rgba(26,47,40,.92); border-radius: 999px;
+    }
+    .dock .ctl { height: 36px; border: none; border-radius: 8px; background: transparent; color: #e8f5ef; font-size: 12px; font-weight: 600; padding: 0 10px; }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px; background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 11px; padding: 0 12px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .magazine {
+      margin: 72px auto 24px; width: min(400px, 86%); background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28); overflow: hidden;
+    }
+    .magazine__cover {
+      height: 200px; background: linear-gradient(180deg, #5d4037, #3e2723); color: #fff;
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 16px;
+    }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 20px; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .leak {
+      position: absolute; left: 24px; top: 120px; background: rgba(255,255,255,.92); color: #c62828;
+      font-size: 11px; padding: 6px 8px; border-radius: 6px; border: 1px dashed #ef9a9a; max-width: 180px;
+    }
+    .overlay {
+      position: absolute; inset: 0; background: rgba(26,47,40,.5);
+      display: flex; align-items: center; justify-content: center; z-index: 50;
+    }
+    .card {
+      width: min(400px, 92%); background: #fff; border-radius: 16px; padding: 20px;
+      box-shadow: 0 20px 48px rgba(0,0,0,.28);
+    }
+    .card h3 { margin: 0 0 6px; font-size: 17px; }
+    .card .sub { margin: 0 0 14px; font-size: 12px; color: var(--wf-muted); }
+    .stack { display: flex; flex-direction: column; gap: 8px; }
+    .stale-banner {
+      position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%);
+      width: min(380px, 90%); background: #fff8e1; border: 1px solid #ffb74d; border-radius: 12px;
+      padding: 12px 14px; font-size: 12px; z-index: 45; box-shadow: 0 8px 20px rgba(0,0,0,.15);
+    }
+    .stale-banner strong { display: block; margin-bottom: 4px; color: #e65100; }
+    .progress {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(360px, 88%); background: #fff; border-radius: 14px; padding: 20px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.2); text-align: center; z-index: 50;
+    }
+    .bar { height: 8px; background: #eceff1; border-radius: 999px; overflow: hidden; margin: 12px 0; }
+    .bar i { display: block; height: 100%; width: 48%; background: var(--accent); border-radius: 999px; }
+    .success-dock {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      width: min(420px, 92%); background: #fff; border-radius: 14px; padding: 14px 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.28); z-index: 50; font-size: 13px;
+    }
+    .success-dock .main { font-weight: 700; color: var(--bar); margin-bottom: 6px; }
+    .success-dock .guide { margin-bottom: 10px; line-height: 1.45; }
+    .success-dock .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .inline-save {
+      position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: rgba(255,255,255,.45); border: 1px dashed rgba(255,255,255,.3);
+      padding: 6px 10px; border-radius: 8px;
+    }
+    .refine-sheet {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 280px; background: #fff;
+      border-left: 1px solid #cfd8dc; padding: 16px; font-size: 12px; z-index: 40;
+    }
+    .refine-sheet h4 { margin: 0 0 8px; font-size: 14px; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .badge-demo {
+      position: absolute; top: 10px; left: 10px; z-index: 2;
+      background: rgba(26,47,40,.88); color: #f5fbf8; font-size: 10px; font-weight: 700;
+      letter-spacing: .06em; padding: 4px 8px; border-radius: 999px;
+    }
+    .carousel { position: relative; }
+    .phone { position: relative; }
+    .phone .badge-demo { top: 8px; left: 50%; transform: translateX(-50%); }
+    .weight-note {
+      font-size: 11px; color: var(--wf-muted); margin: 8px 0 0; padding: 8px;
+      background: #f5f5f5; border-radius: 8px;
+    }
+    .review-only {
+      margin-top: 10px; font-size: 11px; color: #6a1b9a; background: #f3e5f5;
+      border: 1px dashed #ce93d8; border-radius: 8px; padding: 8px 10px;
+    }
+    .btn--intent-primary {
+      box-shadow: 0 4px 12px rgba(26,47,40,.25);
+      outline: 2px solid rgba(212,168,67,.55); outline-offset: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>敢发闭环 Share-Ready V1 · 线框 <span style="opacity:.7">PRD v1.0.2 · USR 增补</span></h1>
+    <p>W0 挡门：F1–F3 / F6 · W1 挡门：F4–F5。v1.0.2：F1 示例徽标 · F2 去工程词+primary 权重 · F5 换种分享。用户联席 2026-07-17。本轮仅设计，不动代码。</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 首页真图<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 意图卡<span class="w">W0</span></button>
+      <button type="button" data-panel="f3">F3 stale 重导<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 Dock CTA<span class="w">W1</span></button>
+      <button type="button" data-panel="f5">F5 进度+成功面<span class="w">W1</span></button>
+      <button type="button" data-panel="f6">F6 零泄漏<span class="w">W0</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · 首页真图样品 +「示例」徽标 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">大屏卷轴 + 手机长图须为真实成片预览。禁止 PLACEHOLDER 黑块。样品区须有持久可见「示例」徽标（USR-04），避免与书架「我的作品」混淆。</p>
+          <div class="callout"><strong>定案</strong>D-SR-03 · D-SR-16 · P-SR-03 · USR-04 · BLK-06</div>
+        </div>
+        <div class="anno">To-Be</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio</div></div>
+        <div class="frame">
+          <div class="home-chrome"><span class="brand">TRAVELOGUE · 智能游记画册</span><button class="btn btn--ghost" type="button">?</button></div>
+          <div class="bento">
+            <div class="carousel">
+              <span class="badge-demo">示例</span>
+              <div class="label">京都·雨后 · 第 1 / 5 页</div>
+              <h3>真实成片封面（非黑屏）</h3>
+            </div>
+            <div class="phone"><span class="badge-demo">示例</span>微信长图<br/>竖屏真预览</div>
+          </div>
+          <div class="cta-row"><button class="btn btn--primary" type="button">开始制作我的游记 →</button></div>
+        </div>
+        <div class="callout"><strong>USR-04</strong>徽标须在样品画面上常驻可见；仅靠文案「示例 ·」不够（易被忽略）。</div>
+        <div class="anno">As-Is 禁止</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">As-Is</div></div>
+        <div class="frame">
+          <div class="bento">
+            <div class="carousel carousel--bad">
+              <div class="label">示例 · 第 1 / 5 页</div>
+              <h3>黑屏 PLACEHOLDER</h3>
+            </div>
+            <div class="phone phone--bad">空</div>
+          </div>
+          <div class="callout callout--bad" style="margin:12px 20px"><strong>禁止上线</strong><code>*PLACEHOLDER.webp</code> 约 1×1 充当样品。</div>
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · Ambiguous 意图卡（人话 · primary） <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">精选张数 10–30 且未选过分享方式时必须出卡。用户面只说人话；数字须与服务端一致。微信群长图为唯一主按钮（USR-01 / USR-02）。</p>
+          <div class="callout"><strong>定案</strong>D-SR-01 / 02 / 15 / 17 · USR-01 · USR-02 · AC-SR-02 · AC-SR-15</div>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 近郊一日</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">返回</button>
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">选择并导出</button>
+          </div>
+          <div class="magazine">
+            <div class="magazine__cover">
+              <h3>近郊一日</h3>
+              <p>精选 18 张 · 预览中</p>
+            </div>
+          </div>
+          <div class="overlay">
+            <div class="card">
+              <h3>这趟精选了 18 张，你想怎么发？</h3>
+              <p class="sub">选一种方式后开始导出 · 可随时取消</p>
+              <div class="stack">
+                <button class="btn btn--intent-primary" type="button">微信群 · 长图<small>整篇游记发到群里 · 推荐</small></button>
+                <button class="btn btn--intent" type="button">朋友圈 · 九宫格<small>约 9 张 1:1（有几张发几张）</small></button>
+                <button class="btn btn--intent" type="button">朋友圈 · 长图连读<small>最多 9 段，滑动连读</small></button>
+                <button class="btn btn--ghost" type="button">取消</button>
+              </div>
+              <p class="weight-note"><span class="ok">视觉</span>：上钮实心主色 + 轻描边强调 = <strong>唯一 primary</strong>；下两钮描边 secondary。禁止三钮同色同字重。</p>
+            </div>
+          </div>
+        </div>
+        <div class="review-only"><strong>评审旁注（不上产品面 · USR-01）</strong>数值 18 必须来自服务端策展保留数；禁止用版面图槽估数跳过本卡。用户可见文案不得出现 kept_n / DOM / recipe。</div>
+        <div class="callout callout--warn"><strong>禁止</strong>未选分享方式就直接「正在导出」；禁止三钮等权；禁止 hint 数字与真实精选数不一致。</div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 长图可更新 · 仍问怎么发 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">stale 重导出若无有效 intent，同等出意图卡或提供「换种分享」。</p>
+          <div class="callout"><strong>定案</strong>D-SR-02 · P-SR-02 · AC-SR-05</div>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · stale</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">返回</button>
+            <button class="export" type="button">选择并导出</button>
+          </div>
+          <div class="magazine"><div class="magazine__cover"><h3>近郊一日</h3><p>内容有更新</p></div></div>
+          <div class="stale-banner">
+            <strong>长图可更新</strong>
+            内容有更新，请重新导出后再分享。
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn--gold" type="button" style="padding:8px 12px;font-size:12px">重新导出</button>
+              <button class="btn btn--secondary" type="button" style="padding:8px 12px;font-size:12px">换种分享方式</button>
+              <button class="btn btn--ghost" type="button">稍后</button>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>禁止</strong>点「重新导出」因 stale 直出默认 chat、跳过意图。</div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · Dock CTA 人话 <span class="tag tag--w1">W1</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">Sparse：可见「导出长图 · 发微信群」或缩短「发微信群」。禁止唯一可见语义只剩「长图」。</p>
+          <div class="callout"><strong>定案</strong>D-SR-05 · OQ-SR-01 · AC-SR-08 · 文内「保存长图」降为 tertiary</div>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · Sparse</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">返回</button>
+            <button class="ctl" type="button">播放</button>
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button" title="导出长图 · 发微信群">发微信群</button>
+            <button class="ctl" type="button">▾</button>
+          </div>
+          <div class="magazine">
+            <div class="magazine__cover">
+              <h3>示例游记</h3>
+              <p>可发的短句 · 非说明书腔</p>
+            </div>
+          </div>
+          <div class="inline-save">保存长图（降强调 · 不脉冲）</div>
+        </div>
+        <div class="callout callout--warn"><strong>As-Is</strong>可见「长图」+ aria 才有完整句 → 分享者读不懂主路径。</div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 进度人话 + 成功面发群 + 换种分享 <span class="tag tag--w1">W1</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">进度第一行人话；成功面复用 Task Dock + Help 发群三要素；动作区须有「换种分享方式」（USR-03）。与 FTUE W1 联合挡门。</p>
+          <div class="callout"><strong>定案</strong>D-SR-06 / 07 · BLK-03 · USR-03 · FTUE §3.3 · AC-SR-09b</div>
+        </div>
+        <div class="anno">导出中</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">导出中</div></div>
+        <div class="frame frame--dark">
+          <div class="progress">
+            <div style="font-weight:700;color:var(--bar)">正在生成可发微信的长图…</div>
+            <div class="bar"><i></i></div>
+            <div style="font-size:11px;color:var(--wf-muted)">按章 · 高清</div>
+            <button class="btn btn--ghost" type="button">取消导出</button>
+          </div>
+        </div>
+        <div class="anno">成功面（≥3s 或可找回）· USR-03</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">导出成功</div></div>
+        <div class="frame frame--dark">
+          <div class="magazine"><div class="magazine__cover"><h3>示例游记</h3></div></div>
+          <div class="success-dock">
+            <div class="main">已保存</div>
+            <div class="guide">按文件名顺序发到微信群即可。可点「在文件夹中显示」。</div>
+            <div class="actions">
+              <button class="btn btn--primary" type="button">在文件夹中显示</button>
+              <button class="btn btn--secondary" type="button">换种分享方式</button>
+            </div>
+            <p class="weight-note" style="margin-top:10px"><span class="ok">USR-03</span>：「换种分享方式」为成功面<strong>必见可点</strong>次要动作（近郊/回访刚需）；点后回到意图卡或等价选择，不新开平行成功栈。</p>
+          </div>
+        </div>
+        <div class="callout callout--bad"><strong>禁止</strong>唯一主句「正在打开浏览器…」· 成功闪过无发群句 · 无「换种分享」· 新平行 Modal 栈。</div>
+      </section>
+
+      <!-- F6 -->
+      <section class="panel" id="f6">
+        <div class="sec">
+          <h2>F6 · 分享面零泄漏 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">版心 / Share 不见工程 tip；精修面板内可保留解释。</p>
+          <div class="callout"><strong>定案</strong>D-SR-04 · BLK-08 · §4.4 为 FTUE/Trust 增量</div>
+        </div>
+        <div class="anno">To-Be · 验货面</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 refine=off</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button class="ctl" type="button">精修</button>
+            <button class="export" type="button">发微信群</button>
+          </div>
+          <div class="magazine">
+            <div class="magazine__cover">
+              <h3>华农油菜花</h3>
+              <p>三月 · 油菜花田</p>
+            </div>
+          </div>
+          <div class="callout" style="position:absolute;left:16px;right:16px;bottom:16px;margin:0">
+            <strong class="ok">✓ 版心干净</strong>无「雾底题签」「已省略封底」「关于…的1天」
+          </div>
+        </div>
+        <div class="anno">精修内允许</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">精修 · 这本</div></div>
+        <div class="frame" style="background:#e8efe9">
+          <div class="magazine" style="margin-right:300px"><div class="magazine__cover"><h3>华农油菜花</h3></div></div>
+          <div class="refine-sheet">
+            <h4>精修 · 首尾装帧</h4>
+            <p style="color:var(--wf-muted);margin:0 0 10px">解释性文案可留在此：</p>
+            <p style="background:#fff8e1;padding:8px;border-radius:8px;margin:0;border:1px solid #ffe082">
+              适合风景与有天空分界的照片；题带偏下…
+            </p>
+            <p style="margin:12px 0 0;font-size:11px" class="ok">✓ 不进版心 / Share / 长图</p>
+          </div>
+        </div>
+        <div class="anno">As-Is 禁止</div>
+        <div class="frame frame--dark" style="min-height:280px">
+          <div class="magazine"><div class="magazine__cover"><h3>示例游记</h3><p class="x">关于示例游记的1天。</p></div></div>
+          <div class="leak">主体偏上，适合雾底题签</div>
+          <div class="callout callout--bad" style="position:absolute;bottom:12px;left:12px;right:12px;margin:0">
+            <strong>信任事故</strong>工程提示与 stub 说明书句进入分享面。
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>评审要点</h3>
+      <ul>
+        <li><span class="ok">W0</span> F1 真图+示例徽标 · F2 意图 · F3 stale · F6 零泄漏</li>
+        <li><span class="ok">W1</span> F4 CTA · F5 进度+成功+换种分享</li>
+        <li>用户面禁 kept_n/DOM 等词</li>
+        <li>意图卡唯一 primary = 发群长图</li>
+        <li>成功面合同所有者 = FTUE + Help</li>
+        <li>本主题不做海外 IG</li>
+        <li>本轮不动代码</li>
+      </ul>
+      <h3 style="margin-top:14px">关联</h3>
+      <ul>
+        <li>PRD v1.0.2</li>
+        <li>跨职能评审 + 用户联席</li>
+        <li>D-OR-27 · USR-01～06</li>
+        <li>FTUE 成功面</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      if (!tabs) return;
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        var id = btn.getAttribute("data-panel");
+        tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === id);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

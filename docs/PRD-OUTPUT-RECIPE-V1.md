@@ -10,7 +10,7 @@
 | **关联文档** | [SHARING.md](./SHARING.md) · [CHARTER.md](./CHARTER.md) · [config/platform_profiles.yaml](../config/platform_profiles.yaml) · [PRD-OVERSEAS-SHARE-PACK-V2.md](./PRD-OVERSEAS-SHARE-PACK-V2.md) · [TRAVELOGUE-PROJECT-BUSINESS-ASSESSMENT.md](./TRAVELOGUE-PROJECT-BUSINESS-ASSESSMENT.md) · [ROADMAP-EVIDENCE-DRIVEN-GROWTH-12M.md](./ROADMAP-EVIDENCE-DRIVEN-GROWTH-12M.md) · [评审纪要](./acceptance-records/output-recipe-v1-review-2026-07-14.md) |
 | **验收** | [ACCEPTANCE-OUTPUT-RECIPE-V1.md](./ACCEPTANCE-OUTPUT-RECIPE-V1.md) |
 | **实施清单** | [IMPLEMENTATION-OUTPUT-RECIPE-V1.md](./IMPLEMENTATION-OUTPUT-RECIPE-V1.md) |
-| **更新日期** | 2026-07-14 |
+| **更新日期** | 2026-07-17（增补 D-OR-27 · Share-Ready 交叉） |
 
 > **定位**
 >
@@ -187,6 +187,7 @@
 | **D-OR-24** | Feature flag | `studio.output_recipe.enabled`；关则回退 D-LNG2-01 固定 `wechat_chat` 默认 |
 | **D-OR-25** | 小红书预期 | V1 Intent = **现网长卷适配配图**，非笔记构图引擎；用户可见必须诚实标注 |
 | **D-OR-26** | LNG2 默认修订 | D-LNG2-01「默认 platform=`wechat_chat`」修订为：**默认由 `resolve_output_recipe` 决定**（Sparse/Narrative 仍常为 chat） |
+| **D-OR-27** | 客户端 `kept_n` 同源 | Studio 预览裁决 `needs_intent` / Band CTA **必须以服务端 `kept_n`（`GET /output-recipe` 或 preview 注入同源值）为准**；**禁止**单独用 DOM 估图数（如 `estimatePhotoCountFromDom`）决定是否弹意图卡。DOM 估数仅可用于非 Band 提示。交叉：[PRD-SHARE-READY-OPTIMIZATION-V1](./PRD-SHARE-READY-OPTIMIZATION-V1.md) · 评审 2026-07-17 |
 
 ---
 
@@ -483,6 +484,8 @@ python -m travelogue resolve-output-recipe trips\demo
 6. else → band_default for locale
 ```
 
+**客户端（D-OR-27 · 2026-07-17）**：预览 Dock / stale 重导出在展示意图卡前，须使用本 resolve 的 `kept_n`（API 或 bootstrap 注入），**不得**用版面 DOM 槽位数替代 `kept_n` 做步骤 1/4。
+
 ### 10.2 持久化
 
 | 存储 | 内容 |
@@ -510,7 +513,8 @@ python -m travelogue resolve-output-recipe trips\demo
 | `moments_grid` writer | 分支 D · Phase B |
 | `platform_longshot.py` | 分支 B · scroll/xhs/ig |
 | `longshot.py` | 路由 A/B/D |
-| `longshot-export-panel.js` | L1/L2；禁止堆 toolbar |
+| `longshot-export-panel.js` | L1/L2；禁止堆 toolbar；`estimatePhotoCountFromDom` **不得**裁决 Band（D-OR-27） |
+| `preview-toolbar/longshot.js` | `startLongshotWithRecipe` 须先消费服务端 recipe / 注入 `keptN` |
 
 ---
 

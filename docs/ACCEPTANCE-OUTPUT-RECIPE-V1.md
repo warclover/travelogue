@@ -55,6 +55,7 @@
 | **AC-OR-01** | `kept_n` 边界 9→sparse、10→ambiguous、30→ambiguous、31→narrative；阈值可配 | 单测 resolve | A | ☑ |
 | **AC-OR-02** | Sparse 默认 → `chat_longshot` + 非 grid | 单测 | A | ☑ |
 | **AC-OR-03** | Ambiguous + preview + 无 intent → `needs_intent=true` | 单测 | A | ☑ |
+| **AC-OR-03d** | 预览客户端：`kept_n∈[10,30]` 且 DOM 槽位偏少 → **仍**出意图卡（**D-OR-27**） | e2e（见 [Share-Ready AC-SR-02](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md)） | A′ | ☐ 编码后 |
 | **AC-OR-03b** | Ambiguous + shelf + 无 intent → `chat_longshot` + hint | 单测 | A | ☑ |
 | **AC-OR-03c** | Ambiguous + CLI 无 intent/platform → 非 0 | CLI 测 | A | ☑ |
 | **AC-OR-04** | Narrative 默认 `by_chapter`；≥50 含按章 hint/文案键 | 单测 | A | ☑ |
