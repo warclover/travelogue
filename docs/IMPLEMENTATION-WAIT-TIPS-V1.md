@@ -9,7 +9,7 @@
 | **线框** | [wireframes/wait-tips-v1-wireframe.html](./wireframes/wait-tips-v1-wireframe.html) · F1–F5 |
 | **文案润色** | [acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) |
 | **更新日期** | 2026-07-17 |
-| **状态** | **W0+W1 编码 ✅** · 手测狗粮待填 · W2（帮助重播）可选 |
+| **状态** | **W0–W2 编码 ✅** · 手测狗粮待填 |
 | **估时** | W0 ≈ **1.5–2.5 人日** · W1 ≈ **0.5–1 人日** · W2（可选）≈ **0.5 人日** |
 
 ---
@@ -21,7 +21,7 @@
 | **Doc/Design** | PRD · 线框 · 三席文案 · 跨职能评审 · AC · 相邻脚注 | ✅ 2026-07-17 Conditional Go |
 | **W0** | Importing 壳嵌入 6 卡 · 10s 轮播 · 关闭持久化 · 核心埋点 · 与 FST/Help 仲裁 | ✅ 2026-07-17 |
 | **W1** | 短等待抑制（D-WT-07）· `prefers-reduced-motion` · 埋点补齐 | ✅ 同批合入 |
-| **W2（可选）** | 帮助抽屉「重播等待提示」清 dismiss | ⏳ 非挡门 |
+| **W2（可选）** | 帮助抽屉「重播等待提示」清 dismiss | ✅ 2026-07-17 |
 
 **所有权**
 
@@ -125,8 +125,8 @@
 
 | ID | 任务 | 估时 | 状态 |
 |----|------|------|------|
-| **FE-WT-14** | Help 抽屉「重播等待提示」清 dismiss | 0.4d | ⏳ |
-| **DOC-WT-12** | Help 重播入口非 L1 脚注 | 0.1d | ⏳ |
+| **FE-WT-14** | Help 抽屉「重播等待提示」清 dismiss | 0.4d | ✅ `replayWaitTips` |
+| **DOC-WT-12** | Help 重播入口非 L1 脚注 | 0.1d | ✅ toast 明示「不是操作引导」 |
 
 ---
 
@@ -166,3 +166,4 @@
 | v0.1.0 | 2026-07-17 | 初版实施清单 |
 | v0.2.0 | 2026-07-17 | Doc 波次收口 · Conditional Go · 对齐 PRD v0.2.0 · 可 Kickoff W0 |
 | v0.3.0 | 2026-07-17 | W0+W1 编码：copy/ctrl/host/css/analytics/契约单测 |
+| v0.3.1 | 2026-07-17 | W2：帮助抽屉「重播等待提示」+ 全量重播顺带清 dismiss |

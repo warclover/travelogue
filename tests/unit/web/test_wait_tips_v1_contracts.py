@@ -92,3 +92,16 @@ def test_wait_tips_does_not_alter_help_busy_contract() -> None:
     assert "isHelpL1Blocked" in help_js or "busy" in help_js.lower()
     ctrl = _read(CTRL_JS)
     assert "openHelpDrawer" not in ctrl
+
+
+def test_wait_tips_w2_help_replay() -> None:
+    help_js = _read(HELP_JS)
+    drawer = _read(STUDIO / "js" / "help-drawer.js")
+    assert "replayWaitTips" in help_js
+    assert "重播等待提示" in help_js
+    assert "不是操作引导" in help_js
+    assert "clearWaitTipsDismissed" in help_js
+    assert "WAIT_TIPS_DISMISS_KEY" in help_js
+    assert "waitTips.dismissed" in _read(COPY_JS)
+    assert "replayWaitTips" in drawer
+    assert "重播等待提示" in drawer

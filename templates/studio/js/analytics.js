@@ -57,6 +57,7 @@ const ALLOWED = new Set([
   "wait_tips_pause",
   "wait_tips_dismiss",
   "wait_tips_suppress_short_wait",
+  "wait_tips_replay",
   "capability_card_show",
   "capability_card_cta",
   "import_continue_stub",

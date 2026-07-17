@@ -8,6 +8,7 @@ import {
   HELP_COPY,
   getHelpItem,
   replayHelpHints,
+  replayWaitTips,
   trackHelpEvent,
   hasRefineSaveSeen,
   markRefineSaveSeen,
@@ -114,10 +115,15 @@ function _ensureDom() {
   replayBtn.type = "button";
   replayBtn.className = "studio-help-drawer__replay-btn";
   replayBtn.textContent = HELP_COPY.replayButton;
+  var waitTipsBtn = document.createElement("button");
+  waitTipsBtn.type = "button";
+  waitTipsBtn.className = "studio-help-drawer__replay-btn studio-help-drawer__replay-btn--secondary";
+  waitTipsBtn.textContent = HELP_COPY.replayWaitTipsButton || "重播等待提示";
   _replayNoteEl = document.createElement("p");
   _replayNoteEl.className = "studio-help-drawer__replay-note";
   _replayNoteEl.hidden = true;
   replay.appendChild(replayBtn);
+  replay.appendChild(waitTipsBtn);
   replay.appendChild(_replayNoteEl);
   body.appendChild(replay);
 
@@ -127,14 +133,7 @@ function _ensureDom() {
   _root.appendChild(_panel);
   document.body.appendChild(_root);
 
-  closeBtn.addEventListener("click", function () {
-    closeHelpDrawer();
-  });
-  _scrim.addEventListener("click", function () {
-    closeHelpDrawer();
-  });
-  replayBtn.addEventListener("click", function () {
-    var msg = replayHelpHints();
+  function _afterReplay(msg) {
     _replayNoteEl.textContent = msg;
     _replayNoteEl.hidden = false;
     if (typeof _opts.onReplay === "function") {
@@ -148,6 +147,19 @@ function _ensureDom() {
         studioToast(msg, { duration: 5200 });
       }
     }, 600);
+  }
+
+  closeBtn.addEventListener("click", function () {
+    closeHelpDrawer();
+  });
+  _scrim.addEventListener("click", function () {
+    closeHelpDrawer();
+  });
+  replayBtn.addEventListener("click", function () {
+    _afterReplay(replayHelpHints());
+  });
+  waitTipsBtn.addEventListener("click", function () {
+    _afterReplay(replayWaitTips());
   });
 }
 

@@ -6,6 +6,10 @@
 
 import { trackStudioEvent } from "./analytics.js";
 import { SS } from "./constants.js";
+import {
+  DISMISS_KEY as WAIT_TIPS_DISMISS_KEY,
+  VERSION_KEY as WAIT_TIPS_VERSION_KEY,
+} from "../homepage-v2/wait-tips-copy.js";
 
 /** @deprecated 现网兼容键；门禁以 HELP_LS 为准并双写 */
 export var LEGACY_EXPORT_PULSE_SEEN = "travelogue.studio.exportPulseSeen";
@@ -88,7 +92,10 @@ export var HELP_COPY = {
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",
   replayDoneToast:
-    "已重置。下次进入预览会再提示如何保存长图与本机文案说明；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡与轻状态也会再出现。",
+    "已重置。下次进入预览会再提示如何保存长图与本机文案说明；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡与轻状态也会再出现；下次导入等待时也会再显示小提示。",
+  replayWaitTipsButton: "重播等待提示",
+  replayWaitTipsDoneToast:
+    "已重置等待提示。下次导入生成时会再显示小提示（不是操作引导，也不会挡进度）。",
   stubNarrateTip: "当前为本机文案（可随时在设置中升级）",
   helpDeepLinkPending: "「长图可更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
@@ -425,8 +432,32 @@ export function isLongshotHelpActive() {
   return !!_longshotHelpActive || !!_tipEl;
 }
 
+/** Wait Tips W2：清 dismiss，不写任何 Help seen（Tips ≠ L1）。 */
+export function clearWaitTipsDismissed() {
+  try {
+    localStorage.removeItem(WAIT_TIPS_DISMISS_KEY);
+    localStorage.removeItem(WAIT_TIPS_VERSION_KEY);
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
 /**
- * 重播：清长图引导 + 精修保存 hint（及平台选择 seen）。
+ * 仅重播等待提示（D-WT-04 W2）；不触发 L1 coach。
+ */
+export function replayWaitTips() {
+  clearWaitTipsDismissed();
+  trackHelpEvent("help_drawer_open", { source: "replay_wait_tips" });
+  try {
+    trackStudioEvent("wait_tips_replay", { source: "help_drawer" });
+  } catch (_e) {
+    /* ignore */
+  }
+  return HELP_COPY.replayWaitTipsDoneToast;
+}
+
+/**
+ * 重播：清长图引导 + 精修保存 hint（及平台选择 seen）+ Wait Tips dismiss。
  * 不自动连环弹出；关闭后展示 replayDoneToast。
  */
 export function replayHelpHints() {
@@ -437,6 +468,7 @@ export function replayHelpHints() {
   clearCapabilityCardSeen();
   clearHomeStubBannerDismissed();
   clearStubHintSeen();
+  clearWaitTipsDismissed();
   // 顺带清部分 legacy per-trip 脉冲键（非必须）
   try {
     var keys = [];

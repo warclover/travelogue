@@ -207,6 +207,16 @@
   cursor: pointer;
 }
 
+.studio-help-drawer__replay-btn + .studio-help-drawer__replay-btn {
+  margin-top: 8px;
+}
+
+.studio-help-drawer__replay-btn--secondary {
+  font-weight: 500;
+  background: transparent;
+  color: rgba(26, 47, 40, 0.78);
+}
+
 .studio-help-drawer__replay-btn:hover {
   border-color: rgba(61, 107, 90, 0.45);
   background: #eef5f1;

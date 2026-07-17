@@ -7,7 +7,7 @@
 | **验收** | [ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) |
 | **线框** | [wireframes/share-ready-optimization-v1-wireframe.html](./wireframes/share-ready-optimization-v1-wireframe.html) · F1–F6 |
 | **更新日期** | 2026-07-17 |
-| **状态** | **文档齐备 · 编码未 Kickoff**（2026-07-17 约定本轮不动代码） |
+| **状态** | **W0–W2 工程已合入** · 产品手测待签 · 可选补 QA-SR-02 |
 | **估时** | W0 ≈ **2.5–3.5 人日** · W1 ≈ **2–3 人日**（含 FTUE 成功面联调）· W2 ≈ **2 人日** |
 
 ---

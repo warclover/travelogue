@@ -50,6 +50,7 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "连接失败可自助" in help_js
     assert "clearCapabilityCardSeen" in help_js
     assert "首页能力卡与轻状态也会再出现" in help_js
+    assert "导入等待时也会再显示小提示" in help_js
     assert "clearStubHintSeen" in help_js
     assert 'itemId: "H7"' in llm
 
