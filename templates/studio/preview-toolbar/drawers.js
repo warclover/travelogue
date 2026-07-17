@@ -388,15 +388,15 @@ export function initPreviewDrawers(root, tripId) {
 
     var pageEditTpl =
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
-      '<p class="preview-drawer__label">记忆锚点（0–3 个）</p>' +
+      '<p class="preview-drawer__label">想写进图说的词（最多 3 个）</p>' +
       '<div class="preview-drawer__anchors">' +
-      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 1">' +
-      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 2">' +
-      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="锚点 3">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="例如：雨停了">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="词 2">' +
+      '<input type="text" class="preview-drawer__anchor" maxlength="24" placeholder="词 3">' +
       "</div>" +
       '<p class="preview-drawer__hint">短词即可，会写进图说，不会瞎编</p>' +
       '<details class="preview-drawer__copy-intent">' +
-      '<summary class="preview-drawer__label">章级意图（可选）</summary>' +
+      '<summary class="preview-drawer__label">本章想强调的感觉（可选）</summary>' +
       '<p class="preview-drawer__sublabel">这一章更像什么感觉？</p>' +
       '<div class="preview-drawer__chips preview-drawer__chips--mood" role="group" aria-label="章级情绪">' +
       buildCopyIntentChipHtml(COPY_INTENT_MOODS, "preview-drawer__chip-mood") +
@@ -413,7 +413,7 @@ export function initPreviewDrawers(root, tripId) {
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
       "</details>" +
-      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新意图重写文案</button>';
+      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新感觉重写这段</button>';
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -842,13 +842,13 @@ export function initPreviewDrawers(root, tripId) {
             if (btn.disabled) return;
             // D-REF-13 · 二次确认；确认后 busy，完成前不可连点
             toolbarConfirm({
-              title: "按新意图重写文案",
-              body: "将按当前锚点与章意图重新生成文案，可能覆盖未锁定的内容。继续？",
+              title: "按新感觉重写这段",
+              body: "将按当前词与本章感觉重新生成文案，可能覆盖未锁定的内容。继续？",
               confirmText: "重写",
             }).then(function (ok) {
               if (!ok) return;
               btn.disabled = true;
-              btn.dataset.labelIdle = "按新意图重写文案";
+              btn.dataset.labelIdle = "按新感觉重写这段";
               btn.textContent = "正在重写…";
               return persistEditDrawer(btn, { skipToast: true }).then(function (saved) {
                 if (!saved) {
@@ -858,7 +858,7 @@ export function initPreviewDrawers(root, tripId) {
                 }
                 return _startLlmNarrate(root, tripId, btn, {
                   skipConfirm: true,
-                  busyHint: "正在按新意图重写文案…",
+                  busyHint: "正在按新感觉重写这段…",
                 });
               });
             });

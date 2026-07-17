@@ -37,7 +37,7 @@ def test_featured_honest_copy_no_false_rerender_promise() -> None:
     # D-FEED-03 · 3a：promote 后不再 setLayoutPending(true)
     promote_block = features.split("promote-tier")[1].split("catch")[0]
     assert "setLayoutPending(true)" not in promote_block
-    assert "不会立刻重排整本" in sheet
+    assert "不会马上打乱整本顺序" in sheet or "不会立刻重排整本" in sheet
     assert "改精选请先点下方『更新版面』" not in help_js
     assert "精选不会立刻重排整本" in help_js
     # 拼图仍可说「点更新版面后生效」（渲染类）

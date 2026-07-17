@@ -1,5 +1,6 @@
 /**
- * Preview toolbar v3 · unified refine sheet（这页 | 这本 | 导出）.
+ * Preview toolbar v3 · unified refine sheet（这页 | 封面 | 这本）.
+ * Export decisions live in Dock ▾（copyDisplay / platform / scale）.
  * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
  */
 "use strict";
@@ -8,15 +9,17 @@ import { trackStudioEvent } from "./js/analytics.js";
 
 var TAB_MODES = [
   { id: "page", label: "这页" },
+  { id: "cover", label: "封面" },
   { id: "book", label: "这本" },
-  { id: "more", label: "导出" },
 ];
 
 var TAB_ALIASES = {
   edit: "book",
   structure: "book",
   layout: "book",
-  advanced: "more",
+  advanced: "book",
+  more: "book",
+  bookends: "cover",
 };
 
 function resolveSheetTab(tabId) {
@@ -43,7 +46,7 @@ function findDominantScreen() {
 
 function describeScreenContext(el) {
   if (!el) {
-    return { empty: true, label: "当前屏", detail: "" };
+    return { empty: true, label: "当前页", detail: "" };
   }
   var block = el.getAttribute("data-block") || "";
   if (block === "cover-opening" || el.classList.contains("cover-opening")) {
@@ -70,7 +73,7 @@ function describeScreenContext(el) {
     }
   }
   var label =
-    (idx ? "第 " + idx + " 屏" : "正文屏") + (chapterName ? " · " + chapterName : "");
+    (idx ? "第 " + idx + " 页" : "游记正文") + (chapterName ? " · " + chapterName : "");
   var kicker = el.querySelector(".kicker, .hook-line, [data-copy-role='kicker']");
   var body = el.querySelector(".caption, .lead, .body-copy, [data-copy-role='caption'], [data-copy-role='lead']");
   return {
@@ -261,7 +264,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       };
     }
     if (tabId === activeTab) {
-      if (activeTab === "book" && pendingBookendsDeepLink) {
+      if (activeTab === "cover" && pendingBookendsDeepLink) {
         applyBookendsFocusUi();
       }
       return;
@@ -288,7 +291,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   }
 
   function onPreviewScrollForBookends() {
-    if (shell.hidden || activeTab !== "book") return;
+    if (shell.hidden || activeTab !== "cover") return;
     if (previewFocusScrollTimer) window.clearTimeout(previewFocusScrollTimer);
     previewFocusScrollTimer = window.setTimeout(function () {
       previewFocusScrollTimer = null;
@@ -305,7 +308,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (targets.length && typeof IntersectionObserver !== "undefined") {
       previewFocusObs = new IntersectionObserver(
         function () {
-          if (shell.hidden || activeTab !== "book") return;
+          if (shell.hidden || activeTab !== "cover") return;
           applyBookendsFocusUi();
         },
         { threshold: [0, 0.2, 0.45, 0.7] }
@@ -339,7 +342,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
     pausePageFlowScroll();
     window.setTimeout(function () {
-      if (!shell.hidden && activeTab === "book") applyBookendsFocusUi(side);
+      if (!shell.hidden && activeTab === "cover") applyBookendsFocusUi(side);
     }, 380);
   }
 
@@ -355,83 +358,45 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   }
 
   function applyBookendsFocusUi(forcedSide) {
-    var side = resolveBookendsFocusSide(forcedSide);
-    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
-    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
-    var badge = bodyEl.querySelector("[data-bookends-focus-badge]");
+    var side = resolveBookendsFocusSide(forcedSide) || "opening";
     var openingPane = bodyEl.querySelector("[data-bookends-opening]");
     var closingPane = bodyEl.querySelector("[data-bookends-closing]");
+    var titleEl = bodyEl.querySelector("[data-cover-panel-title]");
+    var bookendsRoot = bodyEl.querySelector(".preview-sheet__bookends");
 
-    if (side && bookendsZone) {
-      bookendsZone.open = true;
-      if (storyZone && !storyZone.open) {
-        /* keep story as user left it */
-      }
-    }
-    if (badge) {
-      if (side === "opening") {
-        badge.hidden = false;
-        badge.textContent = "正在看封面";
-      } else if (side === "closing") {
-        badge.hidden = false;
-        badge.textContent = "正在看封底";
-      } else {
-        badge.hidden = true;
-        badge.textContent = "";
-      }
+    bodyEl.setAttribute("data-cover-side", side);
+    bodyEl.querySelectorAll("button[data-cover-side]").forEach(function (btn) {
+      var on = btn.getAttribute("data-cover-side") === side;
+      btn.classList.toggle("is-on", on);
+      btn.classList.toggle("is-selected", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    if (titleEl) {
+      titleEl.textContent = side === "closing" ? "换一张封底图" : "换一张封面图";
     }
     if (openingPane && closingPane) {
+      openingPane.hidden = side !== "opening";
+      closingPane.hidden = side !== "closing";
       openingPane.classList.toggle("is-focus", side === "opening");
-      openingPane.classList.toggle("is-dim", side === "closing");
       closingPane.classList.toggle("is-focus", side === "closing");
-      closingPane.classList.toggle("is-dim", side === "opening");
-      if (!side) {
-        openingPane.classList.remove("is-focus", "is-dim");
-        closingPane.classList.remove("is-focus", "is-dim");
-      }
+      openingPane.classList.remove("is-dim");
+      closingPane.classList.remove("is-dim");
+    }
+    if (bookendsRoot) {
+      bookendsRoot.setAttribute("data-cover-side", side);
     }
 
     if (pendingBookendsDeepLink) {
       var dl = pendingBookendsDeepLink;
       pendingBookendsDeepLink = null;
-      if (dl.scroll && bookendsZone) {
-        window.requestAnimationFrame(function () {
-          bookendsZone.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
+      if (dl.scroll) {
+        scrollPreviewToBookend(side);
       }
     }
   }
 
-  function renderAdvancedPanel() {
-    bodyEl.innerHTML =
-      '<div class="preview-sheet__section">' +
-      '<button type="button" class="preview-sheet__primary" data-action="focus-export">打开导出设置</button>' +
-      '<p class="preview-sheet__hint">与 Dock ▾ 同一套偏好</p>' +
-      "</div>" +
-      '<div class="preview-sheet__section">' +
-      '<p class="preview-sheet__label">长图文案范围</p>' +
-      '<div class="preview-sheet__seg" data-field="copy-preset" role="group">' +
-      '<button type="button" data-copy-preset="photos">纯照片</button>' +
-      '<button type="button" data-copy-preset="full">完整文案</button>' +
-      "</div>" +
-      '<div class="preview-sheet__chip-row">' +
-      '<button type="button" class="preview-sheet__chip" data-preview-chip="caption">图注</button>' +
-      '<button type="button" class="preview-sheet__chip" data-preview-chip="narrative">导语</button>' +
-      "</div></div>" +
-      '<div class="preview-sheet__section">' +
-      '<p class="preview-sheet__label">导出范围</p>' +
-      '<div class="preview-sheet__seg" data-field="longshot-mode" role="group">' +
-      '<button type="button" data-studio-longshot-mode="chapter">按章导出</button>' +
-      '<button type="button" data-studio-longshot-mode="full">完整长图</button>' +
-      "</div></div>" +
-      '<div class="preview-sheet__section">' +
-      '<p class="preview-sheet__label">清晰度</p>' +
-      '<div class="preview-sheet__seg" data-field="longshot-scale" role="group">' +
-      '<button type="button" data-studio-longshot-scale="2">标准 2×</button>' +
-      '<button type="button" data-studio-longshot-scale="3">高清 3×</button>' +
-      "</div></div>" +
-      '<details class="preview-sheet__details preview-sheet__more-tools">' +
-      "<summary>更多工具</summary>" +
+  function bookAdvancedToolsHtml() {
+    return (
       '<div class="preview-sheet__section">' +
       '<p class="preview-sheet__label">预览显示</p>' +
       '<div class="preview-sheet__seg" data-field="reader-mode" role="group">' +
@@ -439,10 +404,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" data-reader-mode="reader">阅读视图</button>' +
       "</div></div>" +
       '<ul class="preview-sheet__list">' +
-      '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
-      '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
       '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
+      '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
+      '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       "</ul>" +
       '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
       '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
@@ -451,76 +416,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
       "本机文案 · 点此生成杂志感（不会自动重写）" +
       "</p>" +
-      "</details>";
-
-    wireAdvancedPanelActions();
-    var moreTools = bodyEl.querySelector(".preview-sheet__more-tools");
-    if (moreTools && moreTools.dataset.trackBound !== "1") {
-      moreTools.dataset.trackBound = "1";
-      moreTools.addEventListener("toggle", function () {
-        if (moreTools.open) {
-          trackStudioEvent("export_tab_more_open", {});
-        }
-      });
-    }
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+    );
   }
 
-  function wireAdvancedPanelActions() {
-    if (typeof hooks.syncCopyDisplayUi === "function") {
-      hooks.syncCopyDisplayUi(bodyEl);
-    }
-    bodyEl.querySelectorAll("[data-copy-preset]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (typeof hooks.applyCopyPreset === "function") {
-          hooks.applyCopyPreset(btn.getAttribute("data-copy-preset"));
-        }
-        if (typeof hooks.syncCopyDisplayUi === "function") {
-          hooks.syncCopyDisplayUi(bodyEl);
-        }
-      });
-    });
-    var captionChip = bodyEl.querySelector('[data-preview-chip="caption"]');
-    if (captionChip) {
-      captionChip.addEventListener("click", function () {
-        if (typeof hooks.toggleCaptions === "function") hooks.toggleCaptions();
-        if (typeof hooks.syncCopyDisplayUi === "function") hooks.syncCopyDisplayUi(bodyEl);
-      });
-    }
-    var narrativeChip = bodyEl.querySelector('[data-preview-chip="narrative"]');
-    if (narrativeChip) {
-      narrativeChip.addEventListener("click", function () {
-        if (typeof hooks.toggleNarrative === "function") hooks.toggleNarrative();
-        if (typeof hooks.syncCopyDisplayUi === "function") hooks.syncCopyDisplayUi(bodyEl);
-      });
-    }
-
-    if (typeof hooks.syncLongshotPrefsUi === "function") {
-      hooks.syncLongshotPrefsUi(bodyEl);
-    }
+  function wireBookAdvancedTools() {
     if (typeof hooks.syncReaderModeUi === "function") {
       hooks.syncReaderModeUi(bodyEl);
     }
-
-    bodyEl.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (typeof hooks.setLongshotMode === "function") {
-          hooks.setLongshotMode(btn.getAttribute("data-studio-longshot-mode"));
-        }
-        if (typeof hooks.syncLongshotPrefsUi === "function") {
-          hooks.syncLongshotPrefsUi(bodyEl);
-        }
-      });
-    });
-    bodyEl.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (typeof hooks.setLongshotScale === "function") {
-          hooks.setLongshotScale(parseInt(btn.getAttribute("data-studio-longshot-scale"), 10));
-        }
-        if (typeof hooks.syncLongshotPrefsUi === "function") {
-          hooks.syncLongshotPrefsUi(bodyEl);
-        }
-      });
-    });
     bodyEl.querySelectorAll("[data-reader-mode]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         if (typeof hooks.setReaderMode === "function") {
@@ -531,19 +434,6 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         }
       });
     });
-
-    var focusExport = bodyEl.querySelector('[data-action="focus-export"]');
-    if (focusExport) {
-      focusExport.addEventListener("click", function () {
-        close();
-        if (typeof hooks.onFocusExportSettings === "function") {
-          hooks.onFocusExportSettings();
-        } else {
-          var caret = root.querySelector(".preview-toolbar__longshot-caret");
-          if (caret) caret.click();
-        }
-      });
-    }
     var revealBtn = bodyEl.querySelector('[data-action="reveal-folder"]');
     if (revealBtn) {
       revealBtn.addEventListener("click", function () {
@@ -571,7 +461,6 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(llmBtn);
       });
     }
-
     if (typeof hooks.refreshAdvancedOptions === "function") {
       hooks.refreshAdvancedOptions(bodyEl);
     }
@@ -604,21 +493,25 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (ctx.empty) {
       var isClosing = ctx.detail === "closing";
       var focusSide = isClosing ? "closing" : "opening";
-      var watching =
-        ctx.detail === "cover"
-          ? "你正在看封面"
-          : isClosing
-            ? "你正在看封底"
-            : "当前是封面或封底";
+      var emptyTitle = isClosing
+        ? "封底在「封面」里换"
+        : ctx.detail === "cover"
+          ? "封面在「封面」里换"
+          : "封面与封底在「封面」里换";
+      var primaryLabel = isClosing ? "去换封底" : "去换封面";
       bodyEl.innerHTML =
-        '<p class="preview-sheet__hint preview-sheet__hint--lead">精选 ★ 与拼图改判只出现在正文屏，封面/封底没有这些操作。</p>' +
+        '<p class="preview-sheet__context"><span class="preview-sheet__ctx-pill">' +
+        (isClosing ? "封底" : ctx.detail === "cover" ? "封面" : "封面/封底") +
+        "</span></p>" +
         '<p class="preview-sheet__empty-label"><strong>' +
-        watching +
+        emptyTitle +
         "</strong></p>" +
-        '<p class="preview-sheet__hint">滚动到正文屏可调整本页；或去调封面与封底。</p>' +
-        '<button type="button" class="preview-sheet__primary" data-action="collapse-panel">收起面板，去画面上修改</button>' +
-        '<button type="button" class="preview-sheet__ghost" data-action="goto-body" style="margin-top:8px">滚动到正文屏</button>' +
-        '<button type="button" class="preview-sheet__ghost" data-action="goto-bookends" style="margin-top:8px">去调封面与封底</button>';
+        '<p class="preview-sheet__hint">点精选、改拼图要在有照片的游记页。</p>' +
+        '<button type="button" class="preview-sheet__primary" data-action="goto-bookends">' +
+        primaryLabel +
+        "</button>" +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-body" style="margin-top:8px">去游记正文</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:4px">先收起面板</button>';
       var collapsePanel = bodyEl.querySelector('[data-action="collapse-panel"]');
       if (collapsePanel) {
         collapsePanel.addEventListener("click", function () {
@@ -637,23 +530,26 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       var goBookends = bodyEl.querySelector('[data-action="goto-bookends"]');
       if (goBookends) {
         goBookends.addEventListener("click", function () {
-          requestTabSwitch("book", { bookendsFocus: focusSide, scrollToBookends: true });
+          requestTabSwitch("cover", {
+            bookendsFocus: focusSide,
+            scrollToBookends: true,
+          });
         });
       }
       return;
     }
 
     bodyEl.innerHTML =
-      '<p class="preview-sheet__label">当前屏</p>' +
+      '<p class="preview-sheet__label">当前页</p>' +
       '<p class="preview-sheet__context">' +
       ctx.label +
       "</p>" +
-      '<div class="preview-sheet__embed preview-sheet__embed--edit-page"></div>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">也可直接在照片上点 ★。这里改文字与标记。</p>' +
       '<div class="preview-sheet__section preview-sheet__page-actions"></div>' +
-      '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:10px">收起面板，去画面上修改</button>' +
-      '<p class="preview-sheet__hint">直接在照片上点 ★；需要改设置时再打开本面板。</p>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact" data-featured-semantic>精选 = 记下这张更重要；不会立刻重排整本</p>' +
-      '<button type="button" class="preview-sheet__ghost" data-action="featured-rerank" style="margin-top:8px">按精选重排</button>';
+      '<div class="preview-sheet__embed preview-sheet__embed--edit-page"></div>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact" data-featured-semantic>精选只是记下「这张更重要」，不会马上打乱整本顺序。</p>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="featured-rerank" style="margin-top:8px">按精选重排整本</button>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:4px">收起面板，回到画面</button>';
 
     var pageEditSlot = bodyEl.querySelector(".preview-sheet__embed--edit-page");
     if (pageEditSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
@@ -695,14 +591,16 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       var mediaBtn = document.createElement("button");
       mediaBtn.type = "button";
       mediaBtn.className = "preview-sheet__chip";
-      mediaBtn.textContent = "改判普通照片 / 拼图";
+      var sel0 =
+        ctx.screen && ctx.screen.querySelector(".preview-toolbar__collage-select");
+      var isCollage = sel0 && sel0.value === "collage";
+      mediaBtn.textContent = isCollage ? "改回单张" : "改成拼图";
       mediaBtn.addEventListener("click", function () {
         var sel =
           ctx.screen &&
           ctx.screen.querySelector(".preview-toolbar__collage-select");
         if (sel) {
           sel.focus();
-          // Toggle photo ↔ collage for one-click chip action
           sel.value = sel.value === "collage" ? "photo" : "collage";
           sel.dispatchEvent(new Event("change", { bubbles: true }));
           window.setTimeout(function () {
@@ -718,25 +616,73 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
+  function mountBookendsInto(slot) {
+    if (!slot) return;
+    if (typeof hooks.mountBookendsPanel === "function") {
+      hooks.mountBookendsPanel(slot);
+    } else if (typeof hooks.mountCoverStyleControls === "function") {
+      var coverSlot = document.createElement("div");
+      coverSlot.className = "preview-sheet__cover-slot";
+      slot.appendChild(coverSlot);
+      hooks.mountCoverStyleControls(coverSlot);
+    }
+    var scrollOpening = slot.querySelector("[data-bookends-scroll-opening]");
+    var scrollClosing = slot.querySelector("[data-bookends-scroll-closing]");
+    if (scrollOpening) {
+      scrollOpening.addEventListener("click", function () {
+        scrollPreviewToBookend("opening");
+      });
+    }
+    if (scrollClosing) {
+      scrollClosing.addEventListener("click", function () {
+        scrollPreviewToBookend("closing");
+      });
+    }
+  }
+
+  function renderCoverPanel() {
+    stopPreviewFocusWatch();
+    var side = resolveBookendsFocusSide(null) || "opening";
+    if (!pendingBookendsDeepLink) {
+      pendingBookendsDeepLink = { side: side, scroll: false };
+    }
+    bodyEl.innerHTML =
+      '<div class="preview-sheet__seg preview-sheet__cover-side-seg" data-field="cover-side" role="tablist" aria-label="封面或封底">' +
+      '<button type="button" data-cover-side="opening">封面</button>' +
+      '<button type="button" data-cover-side="closing">封底</button>' +
+      "</div>" +
+      '<p class="preview-sheet__empty-label"><strong data-cover-panel-title>换一张封面图</strong></p>' +
+      '<p class="preview-sheet__hint">点缩略图即可更换。</p>' +
+      '<div class="preview-sheet__bookends-slot" data-book-zone="bookends"></div>';
+
+    bodyEl.querySelectorAll("button[data-cover-side]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var next = btn.getAttribute("data-cover-side") === "closing" ? "closing" : "opening";
+        pendingBookendsDeepLink = { side: next, scroll: true };
+        applyBookendsFocusUi(next);
+      });
+    });
+
+    var bookendsSlot = bodyEl.querySelector(".preview-sheet__bookends-slot");
+    mountBookendsInto(bookendsSlot);
+    applyBookendsFocusUi(side);
+    startPreviewFocusWatch();
+  }
+
   function renderBookPanel() {
     stopPreviewFocusWatch();
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">改整本的名字与首尾装帧。</p>' +
-      '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story">' +
-      '<summary>整本故事 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">改名字与一句话。换封面/封底请到「封面」。</p>' +
+      '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
+      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       "</div></details>" +
-      '<details class="preview-sheet__zone preview-sheet__zone--bookends" data-book-zone="bookends">' +
-      '<summary>首尾装帧 <span class="preview-sheet__zone-meta" data-bookends-focus-badge hidden></span></summary>' +
-      '<div class="preview-sheet__zone-body">' +
-      '<div class="preview-sheet__bookends-slot"></div>' +
-      '<div class="preview-sheet__cover-slot" hidden></div>' +
-      "</div></details>" +
       '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
-      '<summary>进阶 <span class="preview-sheet__zone-meta">模板 · 同框 · 分章</span></summary>' +
+      '<summary>进阶 <span class="preview-sheet__zone-meta">很少需要</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">多数情况下不用改。这里放整本级少见设置：换模板、旅行主角同框、查看/确认分章。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">阅读视图、放映、杂志感文案、换模板、旅行主角同框、分章说明。</p>' +
+      bookAdvancedToolsHtml() +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
@@ -748,44 +694,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       hooks.onBookTabRendered();
     }
 
-    var focusSide = resolveBookendsFocusSide(null);
-    var focusBookends = !!focusSide || !!pendingBookendsDeepLink;
-    var storyZone = bodyEl.querySelector('[data-book-zone="story"]');
-    var bookendsZone = bodyEl.querySelector('[data-book-zone="bookends"]');
-    var advancedZone = bodyEl.querySelector('[data-book-zone="advanced"]');
-    if (storyZone) storyZone.open = !focusBookends;
-    if (bookendsZone) bookendsZone.open = focusBookends;
-    if (advancedZone) advancedZone.open = false;
-
     var editSlot = bodyEl.querySelector(".preview-sheet__embed--edit");
     if (editSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
       hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
     }
 
-    var bookendsSlot = bodyEl.querySelector(".preview-sheet__bookends-slot");
-    if (bookendsSlot && typeof hooks.mountBookendsPanel === "function") {
-      hooks.mountBookendsPanel(bookendsSlot);
-      var scrollOpening = bookendsSlot.querySelector("[data-bookends-scroll-opening]");
-      var scrollClosing = bookendsSlot.querySelector("[data-bookends-scroll-closing]");
-      if (scrollOpening) {
-        scrollOpening.addEventListener("click", function () {
-          scrollPreviewToBookend("opening");
-        });
-      }
-      if (scrollClosing) {
-        scrollClosing.addEventListener("click", function () {
-          scrollPreviewToBookend("closing");
-        });
-      }
-    } else {
-      var coverSlot = bodyEl.querySelector(".preview-sheet__cover-slot");
-      if (coverSlot) {
-        coverSlot.hidden = false;
-        if (typeof hooks.mountCoverStyleControls === "function") {
-          hooks.mountCoverStyleControls(coverSlot);
-        }
-      }
-    }
+    wireBookAdvancedTools();
 
     var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {
@@ -831,8 +745,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         });
       }
     }
+  }
 
-    startPreviewFocusWatch();
+  function resolveDefaultOpenTab() {
+    var ctx = describeScreenContext(findDominantScreen());
+    if (ctx.detail === "cover" || ctx.detail === "closing") {
+      pendingBookendsDeepLink = {
+        side: ctx.detail === "closing" ? "closing" : "opening",
+        scroll: false,
+      };
+      return "cover";
+    }
+    return "page";
   }
 
   function switchTab(tabId) {
@@ -840,13 +764,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     syncTabUi();
     stopPreviewFocusWatch();
     bodyEl.innerHTML = "";
+    bodyEl.removeAttribute("data-cover-side");
     bodyEl.scrollTop = 0;
     if (typeof hooks.onSheetTabShown === "function") {
       hooks.onSheetTabShown(activeTab);
     }
 
-    if (activeTab === "more") {
-      renderAdvancedPanel();
+    if (activeTab === "cover") {
+      renderCoverPanel();
     } else if (activeTab === "page") {
       renderPagePanel();
     } else {
@@ -873,7 +798,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (typeof hooks.onSheetOpened === "function") {
       hooks.onSheetOpened({ source: openOpts.source || "dock" });
     }
-    switchTab(resolveSheetTab(tabId || activeTab));
+    var nextTab =
+      tabId != null && tabId !== ""
+        ? resolveSheetTab(tabId)
+        : resolveDefaultOpenTab();
+    if (openOpts.bookendsFocus) {
+      pendingBookendsDeepLink = {
+        side: openOpts.bookendsFocus === "closing" ? "closing" : "opening",
+        scroll: openOpts.scrollToBookends !== false,
+      };
+      nextTab = "cover";
+    }
+    switchTab(nextTab);
     activateFocusTrap();
     closeBtn.focus();
   }
@@ -961,7 +897,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         }
         return;
       }
-      open("page", { source: "dock" });
+      open(null, { source: "dock" });
     });
   }
 
@@ -981,8 +917,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       }
     },
     refreshAdvancedTab: function () {
-      if (!shell.hidden && activeTab === "more") {
-        renderAdvancedPanel();
+      if (!shell.hidden && activeTab === "book") {
+        renderBookPanel();
         if (typeof hooks.maybeInjectRefineSaveHint === "function") {
           hooks.maybeInjectRefineSaveHint(bodyEl);
         }
