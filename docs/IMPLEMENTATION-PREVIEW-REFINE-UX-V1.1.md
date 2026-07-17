@@ -4,10 +4,11 @@
 |------|------|
 | **对应 PRD** | [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) **v0.2.1** |
 | **评审纪要** | [preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) |
-| **线框** | [preview-refine-ux-v1.1-wireframe.html](./wireframes/preview-refine-ux-v1.1-wireframe.html) |
+| **线框** | [preview-refine-ux-v1.1-wireframe.html](./wireframes/preview-refine-ux-v1.1-wireframe.html) · [IA/导出合并 v1.2](./wireframes/preview-refine-ia-copy-v1-wireframe.html) |
 | **分支建议** | 当前工作分支继续，或 `feat/preview-refine-ux-v1.1` |
 | **范围** | M1（模式解耦）→ M2（净化/缩略图/导出）→ M3（文案/乱码）→ M4（验收） |
-| **更新日期** | 2026-07-14 |
+| **更新日期** | 2026-07-17 |
+| **IA 收口** | [preview-refine-ia-copy-v1-closeout-2026-07-17.md](./acceptance-records/preview-refine-ia-copy-v1-closeout-2026-07-17.md) |
 
 ---
 
@@ -72,7 +73,7 @@
 |----|-----|------|------|
 | D2 / SF-01 | 章锚点/意图迁「这页」；这本迁移 tip | `drawers.js` 拆 `bookEditTpl`/`pageEditTpl`；`maybeShowBookTabMigrateTip` | ✅ |
 | D3 / MF-05 | 封面/封底缩略图；无 `asset-` 明文 | `bookends.js` + `sheet.css`（3:4、「当前」角标） | ✅ |
-| D4 / SF-03 | Tab「导出」+ 更多工具；prefs 单源 | `renderAdvancedPanel`；Dock ▾ 同 `readLongshotExportPrefs` | ✅ |
+| D4 / SF-03 | **演进**：移除导出 Tab；文案范围/图注/导语进 Dock ▾ 首屏；阅读/放映/LLM→这本·进阶；prefs 单源 | `longshot-export-panel.js` + `longshot.js`；`bookAdvancedToolsHtml` | ✅ 2026-07-17 |
 | D-REFUX-05 | Sheet hint ≤1；Task Dock 主 CTA | 删 Sheet 三连脚注；保留进阶「更新版面」按钮 | ✅ |
 | SF-02 | 「完成」≠「更新版面」 | M1 Dock 文案已钉死 | ✅ |
 
@@ -104,8 +105,9 @@
 4. （可选）有 layoutPending 时点「完成」→ toast + Task Dock 仍在  
 5. 「这页」正文屏可见锚点；「这本 · 整本故事」无「当前章」  
 6. 首次开「这本」见迁移 tip  
-7. 「导出」首屏仅导出决策；「更多工具」内才有 zip / LLM  
+7. Dock ▾ 首屏含平台 / 要不要字 / 范围 / 清晰度；zip·文件夹在「更多输出」；LLM/放映在「这本·进阶」  
 8. 封面候选为缩略图，无 `asset-` 明文  
+9. 精修三区为「这页 \| 封面 \| 这本」；封底打开默认进封面 Tab + 封底分段  
 
 ---
 
@@ -113,4 +115,5 @@
 
 - [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md)  
 - S1：[preview-refine-ux-v1.1-s1-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md)  
+- IA/导出合并收口：[preview-refine-ia-copy-v1-closeout-2026-07-17.md](./acceptance-records/preview-refine-ia-copy-v1-closeout-2026-07-17.md)  
 
