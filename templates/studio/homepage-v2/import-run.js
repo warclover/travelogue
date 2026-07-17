@@ -40,6 +40,7 @@ import {
   resolveImportResumeSource,
   isImportPhotoCapExceeded,
   shouldClearPendingOnJobTerminal,
+  shouldPerformCancelImport,
 } from "./import-run-logic.js";
 
 let _gen = 0;
@@ -280,12 +281,13 @@ export function renderImportingPanel(source) {
 function performCancelImport() {
   _gen += 1; // 使进行中的 poll 作废
   var jobId = _activeJobId;
+  var shouldCancelApi = shouldPerformCancelImport(jobId);
   try {
     sessionStorage.removeItem(SS.activeJobId);
     sessionStorage.removeItem(SS.activePending);
   } catch (e) { /* ignore */ }
   _activeJobId = null;
-  if (jobId) {
+  if (shouldCancelApi) {
     postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
   }
   if (typeof studioToast === "function") {
