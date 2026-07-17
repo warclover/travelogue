@@ -7,7 +7,7 @@
 | **验收** | [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) |
 | **线框** | [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) |
 | **更新日期** | 2026-07-17 |
-| **范围** | **W0 文档 ✅** · **W1 编码待开**（隔离热修预工作 ✅） · W2 待排 |
+| **范围** | **W0 文档 ✅** · **W1 编码 ✅**（隔离热修 + 保存并测试 · 地域 · https · 文案） · W2 待排 |
 
 ---
 
@@ -24,45 +24,45 @@
 
 ---
 
-## W1 · P0 编码（待开 · 热修可计入）
+## W1 · P0 编码（✅ 2026-07-17）
 
 ### 后端
 
 | ID | 任务 | 状态 | 锚点 / 说明 |
 |----|------|------|-------------|
-| BE-01 | coerce model/base_url | ✅ 预工作 | `travelogue/util/llm_presets.py` |
-| BE-02 | `resolve_llm_runtime` 跨商不串 | ✅ 预工作 | `travelogue/llm/client.py` |
-| BE-03 | ping 仅复用同商 secrets | ✅ 预工作 | `llm_settings_handlers.handle_llm_ping` |
-| BE-04 | save 时 coerce | ✅ 预工作 | `handle_llm_settings` |
-| BE-05 | 单测隔离门禁 | ✅ 预工作 | `test_provider_endpoint_coerce.py` · `test_llm_ping_provider_isolation.py` |
-| BE-06 | secrets/overlay 支持 `region`（cn\|intl） | ☐ | `user_settings.py` · handlers；缺省 cn |
-| BE-07 | 地域 → base_url 映射 | ☐ | 与 PRD §4.4 冻结表一致 |
-| BE-08 | 保存并测试：API 串行或 `save-and-ping` | ☐ | 前端串行亦可；需原子语义验收 |
-| BE-09 | 用户文案映射核心错误码 | ☐ | AUTH / ENDPOINT / NETWORK / TIMEOUT / BASE_URL |
-| BE-10 | 清除后 env 注入不假绿（MF-WEA-05） | ☐ | `clear_user_llm_secrets` + inject 单测 |
-| BE-11 | 自定义 base_url 仅 https | ☐ | handlers 400 + `E_LLM_BASE_URL` |
+| BE-01 | coerce model/base_url | ✅ | `travelogue/util/llm_presets.py` |
+| BE-02 | `resolve_llm_runtime` 跨商不串 | ✅ | `travelogue/llm/client.py` |
+| BE-03 | ping 仅复用同商 secrets | ✅ | `llm_settings_handlers.handle_llm_ping` |
+| BE-04 | save 时 coerce | ✅ | `handle_llm_settings` |
+| BE-05 | 单测隔离门禁 | ✅ | `test_provider_endpoint_coerce.py` · `test_llm_ping_provider_isolation.py` |
+| BE-06 | secrets/overlay 支持 `region`（cn\|intl） | ✅ | `user_settings.py` · handlers；缺省 cn |
+| BE-07 | 地域 → base_url 映射 | ✅ | `DASHSCOPE_REGION_BASE_URLS` / `preset_base_url` |
+| BE-08 | 保存并测试：API 串行或 `save-and-ping` | ✅ | FE 串行 save→ping |
+| BE-09 | 用户文案映射核心错误码 | ✅ | handlers `_SETTINGS_MESSAGES` + `studio_errors` |
+| BE-10 | 清除后 env 注入不假绿（MF-WEA-05） | ✅ | `clear_injected_llm_environ` |
+| BE-11 | 自定义 base_url 仅 https | ✅ | `validate_custom_base_url` → 400 |
 
 ### 前端
 
 | ID | 任务 | 状态 | 锚点 / 说明 |
 |----|------|------|-------------|
-| FE-01 | 切换服务商清 foreign base | ✅ 预工作 | `llm-settings.js` `clearForeignBaseUrl` |
-| FE-02 | 主按钮「保存并测试」 | ☐ | 保存成功后自动 ping；成功才提示就绪 |
-| FE-03 | 通义地域 radio（中国站/国际站） | ☐ | 仅 dashscope 显示 |
-| FE-04 | 徽章四态同词 | ☐ | 未配置 / 已保存未验证 / 已就绪 / 连接失败 |
-| FE-05 | AI zone meta 同步四态 | ☐ | `settings-panel.js` `applyAiStatus` |
-| FE-06 | 脚注隐私+费用句 | ☐ | D-WEA-08 |
-| FE-07 | 可行动失败文案（核心） | ☐ | 对接 BE-09 |
-| FE-08 | 「仅测试连接」降为次要链（可选） | ☐ | 不挡 W1 冒烟 |
+| FE-01 | 切换服务商清 foreign base | ✅ | `llm-settings.js` `clearForeignBaseUrl` |
+| FE-02 | 主按钮「保存并测试」 | ✅ | `#studio-llm-save-ping` |
+| FE-03 | 通义地域 radio（中国站/国际站） | ✅ | `#studio-llm-region-wrap` |
+| FE-04 | 徽章四态同词 | ✅ | 含 `is-warn` |
+| FE-05 | AI zone meta 同步四态 | ✅ | `settings-panel.js` `applyAiStatus` |
+| FE-06 | 脚注隐私+费用句 | ✅ | D-WEA-08 标准句 |
+| FE-07 | 可行动失败文案（核心） | ✅ | `SETTINGS_ERR` |
+| FE-08 | 「仅测试连接」降为次要链（可选） | ✅ | 文案链 |
 
 ### 契约测试
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| TE-01 | 现有 coerce/ping 隔离单测进 CI 门 | ✅ 已有文件 |
-| TE-02 | region 往返单测 | ☐ |
-| TE-03 | https-only base_url 单测 | ☐ |
-| TE-04 | FE 契约：保存并测试文案 / 地域控件 marker | ☐ `test_desktop_llm_setup_w2.py` 扩展 |
+| TE-01 | 现有 coerce/ping 隔离单测进 CI 门 | ✅ |
+| TE-02 | region 往返单测 | ✅ |
+| TE-03 | https-only base_url 单测 | ✅ |
+| TE-04 | FE 契约：保存并测试文案 / 地域控件 marker | ✅ `test_wea_w1_save_and_ping_region_footnote_markers` |
 
 ---
 
@@ -109,3 +109,4 @@ python -m pytest `
 | 日期 | 说明 |
 |------|------|
 | 2026-07-17 | 初稿 · W0 关闭 · 热修计入 W1 预工作 |
+| 2026-07-17 | W1 编码合入：region · 保存并测试 · https · 文案 · 单测门 27 passed |

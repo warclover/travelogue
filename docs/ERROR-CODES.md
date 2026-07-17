@@ -115,12 +115,12 @@
 | `E_LLM_PROVIDER` | 未知/未选服务商 | 请选择支持的写作引擎服务商 |
 | `E_LLM_PING` | ping 响应异常 | 连接测试失败，请检查 Key 或稍后重试 |
 | `E_LLM_STUB` | 内部：`provider=stub` 仍调 LLM | 不直接给终端用户；UI 应走「未配置 / 本机文案」（见 Desktop LLM Setup） |
-| `E_LLM_ENDPOINT` | 地域/endpoint 与 Key 不匹配，或 host 不可达（**预留 · WEA W1**） | 当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。 |
-| `E_LLM_MODEL` | 模型名不被服务商接受（**预留 · WEA W2**） | 模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。 |
-| `E_LLM_QUOTA` | 余额/配额不足（**预留 · WEA W2**） | 服务商返回余额或配额不足。请到控制台充值或检查限流。 |
-| `E_LLM_RATE` | 429 / 限流（**预留 · WEA W2**） | 服务商繁忙，请稍后重试。 |
-| `E_LLM_BASE_URL` | 自定义 base_url 非法（非 https 等）（**预留 · WEA W1**） | 自定义 API 地址仅支持 https。 |
-| `E_LLM_TIMEOUT` | 连接或读写超时（与客户端 `E_LLM_TIMEOUT` 对齐；文档补登记） | 无法连接服务商。请检查网络后重试。 |
+| `E_LLM_ENDPOINT` | 地域/endpoint 与 Key 不匹配，或 host 不可达（**WEA W1**） | 当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。 |
+| `E_LLM_MODEL` | 模型名不被服务商接受（启发式 · **WEA W1**；下拉进 W2） | 模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。 |
+| `E_LLM_QUOTA` | 余额/配额不足（启发式 · **WEA W1**） | 服务商返回余额或配额不足。请到控制台充值或检查限流。 |
+| `E_LLM_RATE` | 429 / 限流（**WEA W1**） | 服务商繁忙，请稍后重试。 |
+| `E_LLM_BASE_URL` | 自定义 base_url 非法（非 https 等）（**WEA W1**） | 自定义 API 地址仅支持 https。 |
+| `E_LLM_TIMEOUT` | 连接或读写超时（与客户端 `E_LLM_TIMEOUT` 对齐） | 无法连接服务商。请检查网络后重试。 |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
 > **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；UI 主 CTA 为「继续生成本机游记」。失败时须保留 pending；设置保存后提供 resume CTA。

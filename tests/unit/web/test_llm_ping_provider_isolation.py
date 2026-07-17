@@ -106,3 +106,62 @@ def test_save_dashscope_writes_qwen_not_deepseek(
     assert "qwen-plus" in overlay
     assert "deepseek-chat" not in overlay
     assert "api.deepseek.com" not in overlay
+
+
+def test_save_rejects_http_base_url(user_data: Path) -> None:
+    handler = _handler(
+        {
+            "provider": "deepseek",
+            "apiKey": "sk-https-only-xxxxxxxxxxxx",
+            "baseUrl": "http://example.com/v1",
+        }
+    )
+    h.handle_llm_settings(handler)
+    assert handler._captured["status"] == 400
+    assert handler._captured["body"]["error"] == "E_LLM_BASE_URL"
+
+
+def test_save_dashscope_region_intl(user_data: Path) -> None:
+    handler = _handler(
+        {
+            "provider": "dashscope",
+            "apiKey": "sk-dash-intl-xxxxxxxxxxxx",
+            "region": "intl",
+        }
+    )
+    h.handle_llm_settings(handler)
+    assert handler._captured["status"] == 200
+    body = handler._captured["body"]
+    assert body.get("region") == "intl"
+    assert body.get("readiness") == "已保存未验证"
+    overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
+    assert "dashscope-intl.aliyuncs.com" in overlay
+
+
+def test_ping_respects_region_intl(
+    user_data: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from travelogue.util.llm_presets import DASHSCOPE_REGION_BASE_URLS
+
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="dashscope",
+            api_key="sk-dash-intl-ping-xxxxxxxx",
+            region="cn",
+            last_ping_ok=None,
+        )
+    )
+    seen: dict = {}
+
+    def _fake_ping(*, provider: str | None = None) -> str:
+        from travelogue.llm.client import resolve_llm_runtime
+
+        rt = resolve_llm_runtime(provider)
+        seen["base_url"] = rt.base_url
+        return f"{rt.provider}/{rt.model} @ {rt.base_url}"
+
+    monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
+    handler = _handler({"provider": "dashscope", "region": "intl"})
+    h.handle_llm_ping(handler)
+    assert handler._captured["status"] == 200
+    assert seen["base_url"] == DASHSCOPE_REGION_BASE_URLS["intl"].rstrip("/")

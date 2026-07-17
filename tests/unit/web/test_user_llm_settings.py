@@ -84,3 +84,40 @@ def test_status_body_exposes_user_and_trips_dirs(user_data: Path) -> None:
     assert Path(body["userDataDir"]) == user_data.resolve()
     assert "tripsDir" in body
     assert body["tripsDir"]
+
+
+def test_region_roundtrip_in_secrets(user_data: Path) -> None:
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="dashscope",
+            api_key="sk-dash-region-xxxxxxxxxxxx",
+            region="intl",
+            last_ping_ok=None,
+        )
+    )
+    sec = read_user_llm_secrets()
+    assert sec.region == "intl"
+    raw = json.loads((user_data / "secrets.json").read_text(encoding="utf-8"))
+    assert raw["region"] == "intl"
+    write_user_llm_config_overlay(
+        provider="dashscope", model="qwen-plus", base_url=None, region="intl"
+    )
+    overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
+    assert "dashscope-intl.aliyuncs.com" in overlay
+
+
+def test_clear_secrets_drops_injected_env(user_data: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+
+    from travelogue.llm.user_settings import clear_injected_llm_environ
+
+    write_user_llm_secrets(
+        UserLlmSecrets(provider="deepseek", api_key="sk-clear-env-12345678", last_ping_ok=True)
+    )
+    inject_secrets_into_environ()
+    assert os.environ.get("DEEPSEEK_API_KEY") == "sk-clear-env-12345678"
+    clear_user_llm_secrets()
+    assert os.environ.get("DEEPSEEK_API_KEY") is None
+    # idempotent
+    clear_injected_llm_environ()
+    assert os.environ.get("DEEPSEEK_API_KEY") is None

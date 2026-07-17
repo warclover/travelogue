@@ -13,7 +13,10 @@ from typing import Any
 
 from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
-from travelogue.util.llm_presets import coerce_base_url_for_provider, coerce_model_for_provider
+from travelogue.util.llm_presets import (
+    coerce_model_for_provider,
+    resolve_base_url_for_provider,
+)
 
 _RETRYABLE_HTTP = frozenset({429, 502, 503})
 _RETRYABLE_URL_CODES = frozenset({"E_LLM_TIMEOUT", "E_LLM_NETWORK"})
@@ -71,13 +74,14 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
     # (common after switching 服务商 while config.user.yaml still has leftovers).
     cfg_provider = (llm.provider or "").strip().lower()
     provider_switched = bool(provider and prov != cfg_provider)
+    llm_base = getattr(llm, "base_url", None)
     if provider_switched:
         model = coerce_model_for_provider(prov, None)
-        base_custom = None
+        # Keep explicit endpoint from ping/settings cfg (may be region preset URL)
+        base = resolve_base_url_for_provider(prov, llm_base, None)
     else:
         model = coerce_model_for_provider(prov, getattr(llm, "model", None))
-        base_custom = coerce_base_url_for_provider(prov, getattr(llm, "base_url", None))
-    base = (base_custom or preset["base_url"]).rstrip("/")
+        base = resolve_base_url_for_provider(prov, llm_base, None)
     try:
         from travelogue.llm.user_settings import read_user_llm_secrets
 
@@ -85,9 +89,12 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
         if secrets.provider == prov:
             if secrets.model:
                 model = coerce_model_for_provider(prov, secrets.model)
-            if secrets.base_url:
-                base_custom = coerce_base_url_for_provider(prov, secrets.base_url)
-                base = (base_custom or preset["base_url"]).rstrip("/")
+            # secrets.base_url 自定义优先；否则按 region / cfg 解析
+            base = resolve_base_url_for_provider(
+                prov,
+                secrets.base_url if secrets.base_url else llm_base,
+                secrets.region,
+            )
     except Exception:
         pass
     return LlmRuntime(

@@ -10,13 +10,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from travelogue.util.llm_presets import PROVIDER_PRESETS
+from travelogue.util.llm_presets import (
+    PROVIDER_PRESETS,
+    normalize_llm_region,
+    preset_base_url,
+)
 
 _log = logging.getLogger(__name__)
 
 _SECRETS_NAME = "secrets.json"
 _USER_CONFIG_NAME = "config.user.yaml"
 _ALLOWED_PROVIDERS = frozenset({"deepseek", "dashscope"})
+_INJECTED_ENV_NAMES = frozenset(
+    str(p.get("api_key_env") or "") for p in PROVIDER_PRESETS.values() if p.get("api_key_env")
+)
 
 
 @dataclass(frozen=True)
@@ -25,6 +32,7 @@ class UserLlmSecrets:
     api_key: str | None = None
     model: str | None = None
     base_url: str | None = None
+    region: str | None = None  # dashscope: cn | intl
     last_ping_ok: bool | None = None
 
     @property
@@ -108,6 +116,7 @@ def read_user_llm_secrets() -> UserLlmSecrets:
     api_key = str(raw.get("api_key") or "").strip() or None
     model = str(raw.get("model") or "").strip() or None
     base_url = str(raw.get("base_url") or "").strip() or None
+    region = normalize_llm_region(provider, raw.get("region"))
     last_ping = raw.get("last_ping_ok")
     last_ping_ok = bool(last_ping) if isinstance(last_ping, bool) else None
     return UserLlmSecrets(
@@ -115,11 +124,13 @@ def read_user_llm_secrets() -> UserLlmSecrets:
         api_key=api_key,
         model=model,
         base_url=base_url,
+        region=region,
         last_ping_ok=last_ping_ok,
     )
 
 
 def write_user_llm_secrets(secrets: UserLlmSecrets) -> None:
+    region = normalize_llm_region(secrets.provider, secrets.region)
     payload: dict[str, Any] = {
         "provider": secrets.provider,
         "api_key": secrets.api_key,
@@ -127,7 +138,16 @@ def write_user_llm_secrets(secrets: UserLlmSecrets) -> None:
         "base_url": secrets.base_url,
         "last_ping_ok": secrets.last_ping_ok,
     }
+    if region:
+        payload["region"] = region
     _atomic_write_text(secrets_path(), json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+
+
+def clear_injected_llm_environ() -> None:
+    """MF-WEA-05: drop process-env keys we may have injected so clear is not fake-green."""
+    for name in _INJECTED_ENV_NAMES:
+        if name:
+            os.environ.pop(name, None)
 
 
 def clear_user_llm_secrets() -> None:
@@ -143,11 +163,22 @@ def clear_user_llm_secrets() -> None:
             cfg_path.unlink()
         except OSError:
             _log.warning("failed to delete user llm config", exc_info=True)
+    clear_injected_llm_environ()
 
 
-def write_user_llm_config_overlay(*, provider: str, model: str | None, base_url: str | None) -> None:
-    """Write config.user.yaml llm section (no api key)."""
+def write_user_llm_config_overlay(
+    *,
+    provider: str,
+    model: str | None,
+    base_url: str | None,
+    region: str | None = None,
+) -> None:
+    """Write config.user.yaml llm section (no api key).
+
+    R5: base_url only when custom or dashscope intl; region drives cn default.
+    """
     preset = PROVIDER_PRESETS.get(provider, {})
+    reg = normalize_llm_region(provider, region)
     lines = [
         "# Travelogue user overlay · do not commit",
         "llm:",
@@ -157,6 +188,10 @@ def write_user_llm_config_overlay(*, provider: str, model: str | None, base_url:
     ]
     if base_url:
         lines.append(f"  base_url: {base_url}")
+    elif provider == "dashscope" and reg == "intl":
+        lines.append(f"  base_url: {preset_base_url(provider, reg)}")
+    if reg:
+        lines.append(f"  # region: {reg}")
     lines.append("")
     _atomic_write_text(user_config_path(), "\n".join(lines))
 

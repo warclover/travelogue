@@ -269,12 +269,19 @@ function applyAiStatus(st) {
   if (meta) {
     meta.textContent = metaText;
     meta.classList.toggle("is-ok", readiness === "已就绪");
-    meta.classList.toggle("is-warn", readiness === "连接失败" || readiness === "未配置");
+    meta.classList.toggle(
+      "is-warn",
+      readiness === "连接失败" || readiness === "未配置" || readiness === "已保存未验证"
+    );
   }
   if (badge) {
     badge.textContent = readiness;
     badge.classList.toggle("is-ready", readiness === "已就绪");
     badge.classList.toggle("is-fail", readiness === "连接失败");
+    badge.classList.toggle(
+      "is-warn",
+      readiness === "已保存未验证" || readiness === "未配置"
+    );
   }
   if (entry) {
     entry.textContent = readiness === "已就绪" ? "管理写作引擎…" : "配置写作引擎…";

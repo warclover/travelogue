@@ -26,11 +26,11 @@
 
 | ID | 命令 / 断言 | 结果 |
 |----|-------------|------|
-| AC-WEA-T01 | `pytest` coerce + ping isolation + user settings + desktop llm w2 + llm client | ☐ |
-| AC-WEA-T02 | 粘滞 DeepSeek overlay 下 resolve/ping dashscope → qwen-plus + 百炼 host | ☐（单测覆盖后勾） |
-| AC-WEA-T03 | save dashscope 误带 deepseek model/URL → overlay 无残留 | ☐ |
-| AC-WEA-T04 | region=intl → intl base_url | ☐ W1 编码后 |
-| AC-WEA-T05 | http:// 自定义 base → 400 `E_LLM_BASE_URL` | ☐ W1 编码后 |
+| AC-WEA-T01 | `pytest` coerce + ping isolation + user settings + desktop llm w2 + llm client | ✅ 27 passed |
+| AC-WEA-T02 | 粘滞 DeepSeek overlay 下 resolve/ping dashscope → qwen-plus + 百炼 host | ✅ |
+| AC-WEA-T03 | save dashscope 误带 deepseek model/URL → overlay 无残留 | ✅ |
+| AC-WEA-T04 | region=intl → intl base_url | ✅ |
+| AC-WEA-T05 | http:// 自定义 base → 400 `E_LLM_BASE_URL` | ✅ |
 
 ```powershell
 python -m pytest `
@@ -82,3 +82,4 @@ python -m pytest `
 | 日期 | 说明 |
 |------|------|
 | 2026-07-17 | 初稿 · W0 关闭 · W1/W2 AC 表 |
+| 2026-07-17 | W1 自动化 AC-WEA-T01～T05 勾选（手工 AC-WEA-01～07/09/11 仍待实机） |

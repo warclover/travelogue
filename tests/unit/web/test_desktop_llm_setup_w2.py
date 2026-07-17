@@ -66,6 +66,23 @@ def test_llm_key_official_links_simplified() -> None:
     assert "dashscope.console.aliyun.com" not in llm
 
 
+def test_wea_w1_save_and_ping_region_footnote_markers() -> None:
+    """WEA W1 FE 契约：保存并测试 · 地域 · 脚注 · 四态。"""
+    llm = LLM_JS.read_text(encoding="utf-8")
+    settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
+    assert "保存并测试" in llm
+    assert 'id="studio-llm-save-ping"' in llm
+    assert "仅测试连接" in llm
+    assert 'name="studio-llm-region"' in llm
+    assert "中国站" in llm and "国际站" in llm
+    assert "dashscope-intl.aliyuncs.com" in llm
+    assert "API Key 只保存在你的电脑" in llm
+    assert "费用由该账户结算" in llm
+    assert "已保存未验证" in llm
+    assert "is-warn" in llm
+    assert "已保存未验证" in settings
+
+
 def test_mf06_llm_expect_visible_when_available() -> None:
     sheet = (STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
     init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
