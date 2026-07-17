@@ -45,6 +45,9 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "要不要配置 AI 文案" in help_js
     assert "不配置也可以导入" in help_js
     assert "点官方链接按其指引创建 Key" in help_js
+    assert "保存并测试" in help_js
+    assert "中国站或国际站" in help_js
+    assert "连接失败可自助" in help_js
     assert "clearCapabilityCardSeen" in help_js
     assert "首页能力卡与轻状态也会再出现" in help_js
     assert "clearStubHintSeen" in help_js
@@ -70,6 +73,7 @@ def test_wea_w1_save_and_ping_region_footnote_markers() -> None:
     """WEA W1 FE 契约：保存并测试 · 地域 · 脚注 · 四态。"""
     llm = LLM_JS.read_text(encoding="utf-8")
     settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
     assert "保存并测试" in llm
     assert 'id="studio-llm-save-ping"' in llm
     assert "仅测试连接" in llm
@@ -78,9 +82,29 @@ def test_wea_w1_save_and_ping_region_footnote_markers() -> None:
     assert "dashscope-intl.aliyuncs.com" in llm
     assert "API Key 只保存在你的电脑" in llm
     assert "费用由该账户结算" in llm
+    assert "导入仍用本机文案" in llm
     assert "已保存未验证" in llm
     assert "is-warn" in llm
     assert "已保存未验证" in settings
+    assert "llm_save_and_ping" in analytics
+    assert "llm_provider_change" in analytics
+    assert "llm_switch_confirm" in analytics
+    assert 'trackStudioEvent("llm_save_and_ping"' in llm
+    assert "body.persist = false" in llm
+
+
+def test_wea_w2_model_switch_confirm_markers() -> None:
+    """WEA W2：模型下拉 · 切换覆盖确认。"""
+    llm = LLM_JS.read_text(encoding="utf-8")
+    assert 'id="studio-llm-model"' in llm
+    assert "LLM_MODELS" in llm
+    assert "qwen-turbo" in llm
+    assert "deepseek-reasoner" in llm
+    assert 'id="studio-llm-model-custom"' in llm
+    assert "confirmProviderSwitchIfNeeded" in llm
+    assert "覆盖并继续" in llm
+    assert 'trackStudioEvent("llm_switch_confirm"' in llm
+    assert "persist: true" in llm
 
 
 def test_mf06_llm_expect_visible_when_available() -> None:

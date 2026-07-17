@@ -7,7 +7,7 @@
 | **验收** | [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) |
 | **线框** | [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) |
 | **更新日期** | 2026-07-17 |
-| **范围** | **W0 文档 ✅** · **W1 编码 ✅**（隔离热修 + 保存并测试 · 地域 · https · 文案） · W2 待排 |
+| **范围** | **W0 ✅** · **W1 编码 ✅** · **W2 编码 ✅**（模型 · 切换确认 · H7 · 埋点收口）· 实机狗粮待填 |
 
 ---
 
@@ -66,17 +66,19 @@
 
 ---
 
-## W2 · P1
+## W2 · P1（✅ 编码 2026-07-17 · 狗粮待填）
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| BE-12 | 模型列表校验（可选白名单） | ☐ |
-| FE-09 | 模型下拉（D-WEA-06） | ☐ |
-| FE-10 | 切换服务商覆盖确认（D-WEA-05） | ☐ |
-| FE-11 | H7 增补国内/国际、保存并测试、错误自助 | ☐ |
-| FE-12 | 成功句简化（隐藏完整 URL） | ☐ |
-| BE-13 / FE-13 | QUOTA / RATE / MODEL 文案与码 | ☐ |
-| TE-05 | 狗粮记录模板 3 人 | ☐ |
+| BE-12 | 模型列表校验（可选白名单） | ✅ 轻量：FE 列表 + 自定义字符串；服务端 coerce 默认 |
+| FE-09 | 模型下拉（D-WEA-06） | ✅ `#studio-llm-model` + 高级自定义 |
+| FE-10 | 切换服务商覆盖确认（D-WEA-05） | ✅ `confirmProviderSwitchIfNeeded` |
+| FE-11 | H7 增补国内/国际、保存并测试、错误自助 | ✅ `help-onboarding.js` H7 |
+| FE-12 | 成功句简化（隐藏完整 URL） | ✅ handlers 已连通简句 |
+| BE-13 / FE-13 | QUOTA / RATE / MODEL 文案与码 | ✅ W1 已落地启发式 |
+| TE-05 | 狗粮记录模板 | ✅ `acceptance-records/…-dogfood-TEMPLATE.md` |
+| FE-14 | 埋点 `llm_save_and_ping` / provider_change / switch_confirm | ✅ |
+| BE-14 | 仅测试 `persist=false` 不写盘 | ✅ |
 
 ---
 
@@ -110,3 +112,4 @@ python -m pytest `
 |------|------|
 | 2026-07-17 | 初稿 · W0 关闭 · 热修计入 W1 预工作 |
 | 2026-07-17 | W1 编码合入：region · 保存并测试 · https · 文案 · 单测门 27 passed |
+| 2026-07-17 | W1 收口 + W2：埋点 · 仅测试不写盘 · 模型下拉 · 切换确认 · H7 · 狗粮模板 |

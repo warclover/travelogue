@@ -335,46 +335,50 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
         finally:
             us.read_user_llm_secrets = prev_read  # type: ignore[assignment]
 
-        # 成功简句（隐藏完整 URL · FE 亦可再格式化）
+        # 成功简句（隐藏完整 URL）
         label = "通义千问" if prov == "dashscope" else "DeepSeek"
         user_ok = f"已连通 · {label} · {model_override}"
 
-        if secrets.configured and secrets.provider == prov and (
-            not api_key or api_key == secrets.api_key
+        # PRD §4.3：仅测试不强制写盘；保存并测试路径传 persist=true 才落 last_ping_ok
+        persist = bool(payload.get("persist"))
+        if (
+            persist
+            and secrets.configured
+            and secrets.provider == prov
+            and (not api_key or api_key == secrets.api_key)
         ):
-            # 合并本次 region/base（仅测试也可能刚改地域）
-            stored = UserLlmSecrets(
-                provider=secrets.provider,
-                api_key=secrets.api_key,
-                model=model_override or secrets.model,
-                base_url=base_override if base_override is not None else secrets.base_url,
-                region=region if prov == "dashscope" else None,
-                last_ping_ok=True,
-            )
-            # 若仅测试且未保存过 region，写回便于下次 status
-            if payload.get("region") is not None or base_override is not None:
-                write_user_llm_secrets(stored)
-                write_user_llm_config_overlay(
-                    provider=prov,
-                    model=stored.model,
-                    base_url=stored.base_url,
-                    region=stored.region,
-                )
-            else:
-                write_user_llm_secrets(_with_ping(secrets, True))
+            write_user_llm_secrets(_with_ping(secrets, True))
+        status = _status_body(cfg=cfg)
         handler._json_response(
-            200, {"ok": True, "message": user_ok or msg, **_status_body(cfg=cfg)}
+            200,
+            {
+                "ok": True,
+                "message": user_ok or msg,
+                "pingOk": True,
+                "persisted": persist
+                and secrets.configured
+                and secrets.provider == prov,
+                **status,
+            },
         )
     except LlmError as exc:
         err_code = _classify_ping_error(exc)
-        if secrets.configured and secrets.provider == prov and (
-            not api_key or api_key == secrets.api_key
+        persist = bool(payload.get("persist"))
+        if (
+            persist
+            and secrets.configured
+            and secrets.provider == prov
+            and (not api_key or api_key == secrets.api_key)
         ):
             write_user_llm_secrets(_with_ping(secrets, False))
         body: dict[str, Any] = {
             "ok": False,
             "error": err_code,
             "message": _settings_message(err_code, str(exc)),
+            "pingOk": False,
+            "persisted": persist
+            and secrets.configured
+            and secrets.provider == prov,
         }
         try:
             for k, v in _status_body().items():

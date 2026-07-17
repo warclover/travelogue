@@ -1,6 +1,6 @@
 /**
- * Desktop LLM Setup V1 · 写作引擎 / AI 文案设置（首页+预览共用）
- * WEA W1: 保存并测试 · 通义地域 · 四态 · 脚注
+ * Desktop LLM Setup · 写作引擎 / AI 文案设置（首页+预览共用）
+ * WEA W1/W2: 保存并测试 · 地域 · 模型 · 切换确认 · 埋点 · 脚注
  * MF-02: 单一组件；预览内 Modal，不跳首页。
  */
 import { studioAuthHeaders } from "./http.js";
@@ -26,11 +26,26 @@ var LLM_KEY_LINKS = {
   },
 };
 
-/** 与后端 PROVIDER_PRESETS / DASHSCOPE_REGION 对齐 · 切换服务商时勿沿用另一家默认地址 */
+/** 与后端 PROVIDER_PRESETS / DASHSCOPE_REGION 对齐 */
 var LLM_DEFAULT_BASE = {
   deepseek: "https://api.deepseek.com/v1",
   dashscope: "https://dashscope.aliyuncs.com/compatible-mode/v1",
   dashscope_intl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+};
+
+/** D-WEA-06 常用模型 */
+var LLM_MODELS = {
+  deepseek: [
+    { value: "", label: "默认（deepseek-chat）" },
+    { value: "deepseek-chat", label: "deepseek-chat" },
+    { value: "deepseek-reasoner", label: "deepseek-reasoner" },
+  ],
+  dashscope: [
+    { value: "", label: "默认（qwen-plus）" },
+    { value: "qwen-plus", label: "qwen-plus" },
+    { value: "qwen-turbo", label: "qwen-turbo" },
+    { value: "qwen-max", label: "qwen-max" },
+  ],
 };
 
 var SETTINGS_ERR = {
@@ -83,6 +98,10 @@ function $(sel, root) {
   return (root || document).querySelector(sel);
 }
 
+function providerLabel(provider) {
+  return provider === "dashscope" ? "通义千问" : "DeepSeek";
+}
+
 function ensureRoot() {
   var el = document.getElementById(ROOT_ID);
   if (el) return el;
@@ -116,6 +135,8 @@ function ensureRoot() {
     "</div>" +
     '<p class="studio-llm-settings__region-hint" id="studio-llm-region-hint" hidden>已使用自定义 API 地址，地域预设不生效。</p>' +
     "</div>" +
+    '<label class="studio-llm-settings__label" for="studio-llm-model">模型</label>' +
+    '<select id="studio-llm-model" class="studio-llm-settings__input"></select>' +
     '<label class="studio-llm-settings__label" for="studio-llm-key">API Key</label>' +
     '<div class="studio-llm-settings__keyrow">' +
     '<input id="studio-llm-key" class="studio-llm-settings__input" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />' +
@@ -123,6 +144,8 @@ function ensureRoot() {
     "</div>" +
     '<p class="studio-llm-settings__howto" id="studio-llm-howto"></p>' +
     '<details class="studio-llm-settings__advanced"><summary>高级</summary>' +
+    '<label class="studio-llm-settings__label" for="studio-llm-model-custom">自定义模型名（可选）</label>' +
+    '<input id="studio-llm-model-custom" class="studio-llm-settings__input" type="text" placeholder="留空则用上方所选模型" autocomplete="off" />' +
     '<label class="studio-llm-settings__label" for="studio-llm-base">自定义 API 地址（可选）</label>' +
     '<input id="studio-llm-base" class="studio-llm-settings__input" type="url" placeholder="留空则用默认地址（仅 https）" />' +
     "</details>" +
@@ -139,7 +162,8 @@ function ensureRoot() {
     '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-resume-cta"></button>' +
     "</div>" +
     '<p class="studio-llm-settings__foot" id="studio-llm-foot">' +
-    "API Key 只保存在你的电脑。调用写作引擎时，请求发往你选择的服务商，费用由该账户结算。导入与长图默认不依赖此项配置。" +
+    "API Key 只保存在你的电脑。调用写作引擎时，请求发往你选择的服务商，费用由该账户结算。" +
+    "导入与长图默认不依赖此项配置；导入仍用本机文案，预览中可升级杂志感。" +
     "</p>" +
     "</div>";
   document.body.appendChild(el);
@@ -235,6 +259,32 @@ function setRegion(region) {
   }
 }
 
+function fillModelSelect(provider, selectedModel) {
+  var sel = $("#studio-llm-model");
+  if (!sel) return;
+  var list = LLM_MODELS[provider] || LLM_MODELS.deepseek;
+  sel.innerHTML = "";
+  var known = {};
+  list.forEach(function (opt) {
+    known[opt.value] = true;
+    var o = document.createElement("option");
+    o.value = opt.value;
+    o.textContent = opt.label;
+    sel.appendChild(o);
+  });
+  var custom = $("#studio-llm-model-custom");
+  var model = (selectedModel || "").trim();
+  if (model && !known[model]) {
+    if (custom) custom.value = model;
+    sel.value = "";
+  } else {
+    if (custom && !custom.value) {
+      /* keep custom empty */
+    }
+    sel.value = known[model] ? model : "";
+  }
+}
+
 function syncRegionVisibility() {
   var wrap = $("#studio-llm-region-wrap");
   var hint = $("#studio-llm-region-hint");
@@ -243,9 +293,7 @@ function syncRegionVisibility() {
   if (!wrap || !sel) return;
   var isDash = sel.value === "dashscope";
   wrap.hidden = !isDash;
-  var custom =
-    !!base &&
-    allDefaultBases().indexOf(base) === -1;
+  var custom = !!base && allDefaultBases().indexOf(base) === -1;
   if (hint) hint.hidden = !(isDash && custom);
 }
 
@@ -268,6 +316,7 @@ function applyStatus(st) {
   if (sel) sel.value = provider === "dashscope" ? "dashscope" : "deepseek";
   if (st.region) setRegion(st.region);
   else if (provider === "dashscope") setRegion("cn");
+  fillModelSelect(provider, st.model || "");
   var key = $("#studio-llm-key");
   if (key && st.maskedKey && !key.value) {
     key.placeholder = "已保存 " + st.maskedKey + " · 留空则保持原 Key";
@@ -318,6 +367,14 @@ function openHelpH7() {
   });
 }
 
+function selectedModelFromForm() {
+  var custom = (($("#studio-llm-model-custom") || {}).value || "").trim();
+  if (custom) return custom;
+  var sel = $("#studio-llm-model");
+  var v = sel ? String(sel.value || "").trim() : "";
+  return v || null;
+}
+
 function payloadFromForm(requireKey) {
   var provider = ($("#studio-llm-provider") || {}).value || "deepseek";
   clearForeignBaseUrl(provider);
@@ -340,6 +397,8 @@ function payloadFromForm(requireKey) {
   if (provider === "dashscope") {
     body.region = selectedRegion();
   }
+  var model = selectedModelFromForm();
+  if (model) body.model = model;
   var ownDefaults = [normalizeBaseUrl(LLM_DEFAULT_BASE[provider] || "")];
   if (provider === "dashscope") {
     ownDefaults.push(normalizeBaseUrl(LLM_DEFAULT_BASE.dashscope_intl));
@@ -426,8 +485,7 @@ function runResumeAfterLlmSettings() {
 }
 
 function setBusy(busy) {
-  var ids = ["studio-llm-save-ping", "studio-llm-ping", "studio-llm-clear"];
-  ids.forEach(function (id) {
+  ["studio-llm-save-ping", "studio-llm-ping", "studio-llm-clear"].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.disabled = !!busy;
   });
@@ -457,6 +515,42 @@ function runSave(body) {
   });
 }
 
+function confirmProviderSwitchIfNeeded(nextProvider) {
+  var prev =
+    _statusCache && _statusCache.configured && _statusCache.llmProvider
+      ? _statusCache.llmProvider
+      : null;
+  if (!prev || prev === "stub" || prev === nextProvider) {
+    return Promise.resolve(true);
+  }
+  var body =
+    "将改用「" +
+    providerLabel(nextProvider) +
+    "」，并覆盖本机已保存的 " +
+    providerLabel(prev) +
+    " 配置。\n此 Key 不会上传；仅存在本机。";
+  var opts = {
+    title: "覆盖已保存的写作引擎配置？",
+    body: body,
+    confirmText: "覆盖并继续",
+    cancelText: "取消",
+    danger: true,
+    focusCancel: true,
+  };
+  function done(ok) {
+    trackStudioEvent("llm_switch_confirm", {
+      action: ok ? "continue" : "cancel",
+      from: prev,
+      to: nextProvider,
+    });
+    return ok;
+  }
+  if (typeof studioModal === "function") {
+    return studioModal(opts).then(done);
+  }
+  return Promise.resolve(done(window.confirm(body)));
+}
+
 function wire(root) {
   root.addEventListener("click", function (ev) {
     var t = ev.target;
@@ -480,7 +574,15 @@ function wire(root) {
   var prov = $("#studio-llm-provider", root);
   if (prov) {
     prov.addEventListener("change", function () {
+      var from =
+        _statusCache && _statusCache.llmProvider
+          ? _statusCache.llmProvider
+          : "unknown";
+      trackStudioEvent("llm_provider_change", { from: from, to: prov.value });
       clearForeignBaseUrl(prov.value);
+      fillModelSelect(prov.value, "");
+      var custom = $("#studio-llm-model-custom");
+      if (custom) custom.value = "";
       syncRegionVisibility();
       updateHowto();
       setMsg("", true);
@@ -508,6 +610,7 @@ function wire(root) {
       }
     });
   }
+  fillModelSelect("deepseek", "");
   updateHowto();
 
   $("#studio-llm-ping", root).addEventListener("click", function () {
@@ -517,23 +620,31 @@ function wire(root) {
     if (body.provider === "dashscope" && !body.region) {
       body.region = selectedRegion();
     }
+    // 仅测试：不写盘
+    body.persist = false;
     setBusy(true);
     setMsg("正在测试连接…", true);
     runPing(body)
       .then(function (res) {
-        trackStudioEvent("llm_ping", { ok: !!res.ok, provider: body.provider, source: _source });
+        trackStudioEvent("llm_ping", {
+          ok: !!res.ok,
+          provider: body.provider,
+          region: body.region || null,
+          error_code: res.ok ? null : (res.j && (res.j.error || res.j.code)) || null,
+          source: _source,
+          persist: false,
+        });
+        // Modal 徽章跟本次 ping；zone 仍用已落盘状态（不 notify 假就绪）
+        setBadge(res.ok ? "已就绪" : "连接失败");
         if (res.ok) {
           setMsg(res.j.message || "已连通", true);
-          applyStatus(res.j);
-          notifyChange(res.j);
         } else {
           setMsg(errMessage(res.j), false);
-          applyStatus(res.j);
-          notifyChange(res.j);
         }
       })
       .catch(function () {
         setMsg("网络异常，请重试", false);
+        setBadge("连接失败");
       })
       .then(function () {
         setBusy(false);
@@ -551,44 +662,68 @@ function wire(root) {
       return;
     }
     setBusy(true);
-    setMsg("正在保存并测试…", true);
-    runSave(body)
-      .then(function (saveRes) {
-        trackStudioEvent("llm_settings_save", {
-          ok: !!saveRes.ok,
-          provider: body.provider,
-          source: _source,
-        });
-        if (!saveRes.ok) {
-          setMsg(errMessage(saveRes.j) || "保存失败", false);
+    confirmProviderSwitchIfNeeded(body.provider)
+      .then(function (ok) {
+        if (!ok) {
+          setBusy(false);
           return null;
         }
-        applyStatus(saveRes.j);
-        var key = $("#studio-llm-key");
-        if (key) key.value = "";
-        // 保存后用已落盘 Key 再 ping（不带明文 Key）
-        var pingBody = {
-          provider: body.provider,
-        };
-        if (body.region) pingBody.region = body.region;
-        if (body.baseUrl) pingBody.baseUrl = body.baseUrl;
-        return runPing(pingBody).then(function (pingRes) {
-          trackStudioEvent("llm_ping", {
-            ok: !!pingRes.ok,
+        setMsg("正在保存并测试…", true);
+        return runSave(body).then(function (saveRes) {
+          trackStudioEvent("llm_settings_save", {
+            ok: !!saveRes.ok,
             provider: body.provider,
+            region: body.region || null,
+            error_code: saveRes.ok
+              ? null
+              : (saveRes.j && (saveRes.j.error || saveRes.j.code)) || null,
             source: _source,
-            via: "save_and_ping",
           });
-          if (pingRes.ok) {
-            setMsg(pingRes.j.message || "已就绪", true);
-            applyStatus(pingRes.j);
-            notifyChange(pingRes.j);
-            showResumeAfterSave(_source);
-          } else {
-            setMsg(errMessage(pingRes.j), false);
-            applyStatus(pingRes.j);
-            notifyChange(pingRes.j);
+          if (!saveRes.ok) {
+            setMsg(errMessage(saveRes.j) || "保存失败", false);
+            return null;
           }
+          applyStatus(saveRes.j);
+          var key = $("#studio-llm-key");
+          if (key) key.value = "";
+          var pingBody = {
+            provider: body.provider,
+            persist: true,
+          };
+          if (body.region) pingBody.region = body.region;
+          if (body.baseUrl) pingBody.baseUrl = body.baseUrl;
+          if (body.model) pingBody.model = body.model;
+          return runPing(pingBody).then(function (pingRes) {
+            var errCode = pingRes.ok
+              ? null
+              : (pingRes.j && (pingRes.j.error || pingRes.j.code)) || null;
+            trackStudioEvent("llm_ping", {
+              ok: !!pingRes.ok,
+              provider: body.provider,
+              region: body.region || null,
+              error_code: errCode,
+              source: _source,
+              via: "save_and_ping",
+              persist: true,
+            });
+            trackStudioEvent("llm_save_and_ping", {
+              ok: !!pingRes.ok,
+              provider: body.provider,
+              region: body.region || null,
+              error_code: errCode,
+              source: _source,
+            });
+            if (pingRes.ok) {
+              setMsg(pingRes.j.message || "已就绪", true);
+              applyStatus(pingRes.j);
+              notifyChange(pingRes.j);
+              showResumeAfterSave(_source);
+            } else {
+              setMsg(errMessage(pingRes.j), false);
+              applyStatus(pingRes.j);
+              notifyChange(pingRes.j);
+            }
+          });
         });
       })
       .catch(function () {
@@ -611,7 +746,10 @@ function wire(root) {
           });
         })
         .then(function (res) {
-          trackStudioEvent("llm_settings_clear", { source: _source });
+          trackStudioEvent("llm_settings_clear", {
+            ok: !!res.ok,
+            source: _source,
+          });
           if (res.ok) {
             setMsg("已清除，当前为本机文案", true);
             var key = $("#studio-llm-key");
@@ -619,6 +757,8 @@ function wire(root) {
               key.value = "";
               key.placeholder = "粘贴你的 API Key";
             }
+            var custom = $("#studio-llm-model-custom");
+            if (custom) custom.value = "";
             applyStatus(res.j);
             notifyChange(res.j);
           } else {
@@ -687,7 +827,6 @@ export function closeLlmSettings() {
 }
 
 export function initLlmSettingsEntry() {
-  // Home settings: 静态 AI zone CTA（手风琴）；不再动态注入 section
   var entry = document.getElementById("studio-llm-settings-entry");
   if (entry && entry.dataset.llmBound !== "1") {
     entry.dataset.llmBound = "1";
@@ -703,7 +842,6 @@ export function initLlmSettingsEntry() {
       openHelpH7();
     });
   }
-  // Deep link ?llmSetup=1
   try {
     var q = new URLSearchParams(window.location.search || "");
     if (q.get("llmSetup") === "1") {

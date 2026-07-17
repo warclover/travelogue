@@ -141,6 +141,7 @@ def test_save_dashscope_region_intl(user_data: Path) -> None:
 def test_ping_respects_region_intl(
     user_data: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    from travelogue.llm.user_settings import read_user_llm_secrets
     from travelogue.util.llm_presets import DASHSCOPE_REGION_BASE_URLS
 
     write_user_llm_secrets(
@@ -161,7 +162,49 @@ def test_ping_respects_region_intl(
         return f"{rt.provider}/{rt.model} @ {rt.base_url}"
 
     monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
-    handler = _handler({"provider": "dashscope", "region": "intl"})
+    # 仅测试：不 persist，不得改写 region / last_ping_ok
+    handler = _handler({"provider": "dashscope", "region": "intl", "persist": False})
     h.handle_llm_ping(handler)
     assert handler._captured["status"] == 200
     assert seen["base_url"] == DASHSCOPE_REGION_BASE_URLS["intl"].rstrip("/")
+    sec = read_user_llm_secrets()
+    assert sec.region == "cn"
+    assert sec.last_ping_ok is None
+
+
+def test_ping_persist_updates_last_ping_ok(
+    user_data: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from travelogue.llm.user_settings import read_user_llm_secrets
+
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="deepseek",
+            api_key="sk-deepseek-persist-xxxxxx",
+            last_ping_ok=None,
+        )
+    )
+    monkeypatch.setattr(
+        "travelogue.llm.client.llm_ping",
+        lambda **_k: "deepseek/deepseek-chat @ https://api.deepseek.com/v1",
+    )
+    handler = _handler({"provider": "deepseek", "persist": True})
+    h.handle_llm_ping(handler)
+    assert handler._captured["status"] == 200
+    assert read_user_llm_secrets().last_ping_ok is True
+
+
+def test_save_model_qwen_turbo(user_data: Path) -> None:
+    handler = _handler(
+        {
+            "provider": "dashscope",
+            "apiKey": "sk-dash-model-xxxxxxxxxxxx",
+            "model": "qwen-turbo",
+            "region": "cn",
+        }
+    )
+    h.handle_llm_settings(handler)
+    assert handler._captured["status"] == 200
+    assert handler._captured["body"].get("model") == "qwen-turbo"
+    overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
+    assert "qwen-turbo" in overlay
