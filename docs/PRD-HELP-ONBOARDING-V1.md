@@ -3,11 +3,11 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v1.1.2** |
+| **文档版本** | **v1.1.3** |
 | **状态** | **有条件通过（Conditional Go）** · 评审 Must-Fix 已回写 · 可开 W0 |
 | **主题代号** | 「帮助系统 V1」— 情境引导主链 · 按需救援 · 不打断验货 |
 | **前置条件** | Studio 首页 v2（M21）可用；Preview Toolbar v3 可用；[PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) P0～P2 已落地；[PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) **Conditional Go / 模式≠面板已落地**；[PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) 导出门面合同有效 |
-| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 · H7 · 能力卡 · 见 §12.4） |
+| **关联文档** | [PRD-STUDIO-HOMEPAGE.md](./PRD-STUDIO-HOMEPAGE.md) §6.13 · [PRD-PHASE5.md](./PRD-PHASE5.md) P5-H1 · [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [PRD-WAIT-TIPS-V1.md](./PRD-WAIT-TIPS-V1.md)（Importing 非 L1 次内容） · [SHARING.md](./SHARING.md) · [PRD-MINIAPP-P1.md](./PRD-MINIAPP-P1.md)（独立轨道 · 见 §2.2） · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 · H7 · 能力卡 · 见 §12.4） |
 | **评审记录** | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) · **Conditional Go · MF 已回写本版** |
 | **线框** | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) · F1–F10（W1 挡门：F1–F3/F7） |
 | **验收** | 本文 §10；正式文件可后续拆出 `ACCEPTANCE-HELP-ONBOARDING-V1.md` |
@@ -19,6 +19,12 @@
 > 发群三要素 / `publishGuide` / D-HELP-09：**改为按需查阅**（帮助抽屉 H4、用户点「?」），**不再**作为默认长图成功面强制槽位。  
 > 默认成功面合同见 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md)（已保存 + 在文件夹中显示；不教微信）。  
 > 铁律 5「落盘≠完成」修订为：必须以**稳定可见的成功确认**为终点；「知道怎么发微信」降为 Help 可选救援，非默认成功面拒收条件。
+
+> **v1.1.3 交叉脚注（2026-07-17 · DOC-WT / BLK-01）**
+>
+> **D-HELP-08′ 澄清**：「忙碌态零 L1」禁止的是 coach / 脉冲 / Help tip。  
+> 导入 Importing 进度壳内的 [Wait Tips](./PRD-WAIT-TIPS-V1.md) 属**进度 UI 次内容**（可关闭轮播），**不是** L1；不写 Help `seen`，不经过 `isHelpL1Blocked` 放行通道。  
+> 长图导出 / layoutUpdating 忙碌态仍 **零 L1**，且 Wait Tips V1 **不挂**长图 Dock。
 
 > **定位**
 >
@@ -272,7 +278,7 @@ L2  按需帮助抽屉（?）         → 回访、出错、进精修后自己�
 | 规则 | 要求 |
 |------|------|
 | **同时只亮一个 L1** | 同一时刻最多一个 L1 表面；优先级见 §4.4 |
-| **忙碌态零 L1（D-HELP-08′）** | 统一门禁 `isHelpL1Blocked()`：导入 Job / `layoutUpdating` / 长图导出进行中为 true 时 **不**展示长图脉冲 / tip / coach；进度只走既有进度 UI。**idle 后**可再评估：若全局未见过长图引导，允许补发脉冲+可见 tip（一次逻辑周期内仍只打扰一轮） |
+| **忙碌态零 L1（D-HELP-08′）** | 统一门禁 `isHelpL1Blocked()`：导入 Job / `layoutUpdating` / 长图导出进行中为 true 时 **不**展示长图脉冲 / tip / coach；进度只走既有进度 UI。**idle 后**可再评估：若全局未见过长图引导，允许补发脉冲+可见 tip（一次逻辑周期内仍只打扰一轮）。**例外澄清（非例外放行 L1）**：Importing 壳内 [Wait Tips](./PRD-WAIT-TIPS-V1.md) 为进度次内容、非 L1，见 v1.1.3 脚注 |
 | **不与 Modal 叠乘** | 导出拦截 Modal 打开时，不弹 L1 |
 | **不新增第四类反馈面** | 优先写入 Task Dock / 既有 hint / 脉冲槽；禁止为帮助再发明平行 toast 体系 |
 | **Coachmark 结构**（若使用） | 标题 ≤8 字 · 正文 ≤1 句 · 主按钮「知道了」· 可选「了解更多」→ L2 |
@@ -696,6 +702,7 @@ FirstSuccess 与预览 L1 **不会同屏**（页面切换）；若自动跳转�
 | **v1.1.1** | **2026-07-14** | 评审 Must-Fix 回写：D-HELP-03′/07′/08′/09/10；FirstSuccess 方案 A；可见 tip；seen 迁移；发群兜底；AC-04a/05a/06a/13a/16/17；关闭 OQ-HELP-01；Conditional Go 可开 W0 |
 | **v1.1.2** | **2026-07-17** | DOC-FST-03：发群三要素改按需查阅；默认成功面对齐 First-Session Trust；AC-HELP-06/06a 修订 |
 | **v1.1.2** | **2026-07-15** | 交叉引用 Desktop LLM Setup：§12.4 H7 / T-CAP-01 / D-DLLM-13（不改主链 H1–H5） |
+| **v1.1.3** | **2026-07-17** | DOC-WT BLK-01：D-HELP-08′ 脚注 — Importing Wait Tips 为进度次内容、非 L1 |
 
 ### 12.4 相邻主题 · Desktop LLM Setup（H7 / 能力卡）
 

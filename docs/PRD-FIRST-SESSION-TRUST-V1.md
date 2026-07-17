@@ -3,12 +3,12 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
-| **文档版本** | **v1.0.2** |
-| **状态** | **Conditional Go · 跨职能 MF + 用户联席 USR 已回写** · **可 Kickoff W0（编码另排期）** |
+| **文档版本** | **v1.0.3** |
+| **状态** | **Conditional Go · 跨职能 MF + 用户联席 USR 已回写** · **W0–W2 工程已合入** · 完成宣布待狗粮 |
 | **主题代号** | 「首访可信」— 进度不假死 · 成功面必出 · 分享面敢秀 |
 | **触发来源** | 2026-07-17 CXO 空态首访模拟测试（示例相册 → 成稿 → 验货 → 长图） |
 | **前置条件** | Studio 首页 v2（M21）；FTUE V1 W0–W2 合同有效；导出门面 V1；L0 无 Key 可成稿 |
-| **关联文档** | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) · [PRD-SHARE-READY-OPTIMIZATION-V1.md](./PRD-SHARE-READY-OPTIMIZATION-V1.md) · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-CHAPTER-NAMING.md](./PRD-CHAPTER-NAMING.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) |
+| **关联文档** | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) · [PRD-SHARE-READY-OPTIMIZATION-V1.md](./PRD-SHARE-READY-OPTIMIZATION-V1.md) · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WAIT-TIPS-V1.md](./PRD-WAIT-TIPS-V1.md)（Importing 次区教育 · 不改本主题进度合同） · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-CHAPTER-NAMING.md](./PRD-CHAPTER-NAMING.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) |
 | **评审记录** | [跨职能评审](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md) |
 | **验收** | [ACCEPTANCE-FIRST-SESSION-TRUST-V1.md](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md)（本文 §10 为索引） |
 | **实施清单** | [IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) |
@@ -34,6 +34,11 @@
 > - **USR-05** → §0.2：Dock「发微信群」终点语义保留 ≠ 教操作  
 > - **USR-06** → §2.3 / §9：真人 N≥5 才对外宣布完成  
 > - **USR-07** → §4.3：进度/成功面零工程词 |
+
+> **v1.0.3 交叉脚注（2026-07-17 · DOC-WT / BLK-02）**
+>
+> [Wait Tips](./PRD-WAIT-TIPS-V1.md) 可嵌于 Importing 进度壳**次区**（阶段主句 / 慢安抚下方），属等待教育，**不修订**本主题：进度诚实、慢安抚次行、FirstSuccess ≤1s、成功面不教微信。  
+> Tips 失败或关闭时，本主题进度面须仍完整合格。
 
 > **定位**
 >
@@ -77,6 +82,7 @@
 |------|------|--------------|
 | [FTUE](./PRD-FTUE-OPTIMIZATION-V1.md) | **部分 supersede · 联合挡门** | **接管**导入/长图「终端态 UI 切换」与进度诚实；**修订** FTUE §3.3「发群主句第一可读行」——见 §0.2 |
 | [Help](./PRD-HELP-ONBOARDING-V1.md) | **修订成功面 COPY 优先级** | Help 抽屉 H4 仍可保留「怎么发」供主动查阅；**默认成功面不再强制展示发群三要素** |
+| [Wait Tips](./PRD-WAIT-TIPS-V1.md) | **并行 · 次区挂载** | Importing 壳可挂可关闭教育卡；**不改** stage 主句 / 慢安抚 / FirstSuccess（见 v1.0.3） |
 | [Share-Ready](./PRD-SHARE-READY-OPTIMIZATION-V1.md) | **并行不抢** | 真图样品 / 意图卡 / `kept_n` 仍归 Share-Ready；本主题只挡「等待假死 + stub 敢发底线」 |
 | [Export Facade](./PRD-PREVIEW-EXPORT-FACADE-V1.md) | **复用** | Task Dock 成功面组件；改 COPY 槽位优先级，不新建栈 |
 | [Copy](./PRD-COPY-OPTIMIZATION.md) / [Chapter Naming](./PRD-CHAPTER-NAMING.md) | **本主题定义最低门槛；深度润色归原轨** | W0 挡说明书腔 / 「日期续」刺耳形态 / EXIF；杂志级文案仍归 Copy/章名 |

@@ -3,12 +3,12 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
-| **文档版本** | **v1.1.1** |
+| **文档版本** | **v1.1.2** |
 | **状态** | **Conditional Go · Must-Fix 已回写** · 可 Kickoff **W0**（见 [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | **主题代号** | 「首访成稿」— 空态不迷路 · 示例可一键 · 长图知发群 · 冷启动可解释 |
 | **触发来源** | 2026-07-15 空态 FTUE dogfood；跨职能评审 Conditional Go |
 | **前置条件** | Studio 首页 v2（M21）；能力卡 / L0 分层；帮助系统 V1 · 导出门面 V1 合同有效 |
-| **关联文档** | [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) · [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) · [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [SHARING.md](./SHARING.md) · [WORKSHOP.md](./WORKSHOP.md) · [README.md](../README.md) |
+| **关联文档** | [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-PREVIEW-EXPORT-FACADE-V1.md](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) · [PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md) · [PRD-DESKTOP-INSTALLER-V1.md](./PRD-DESKTOP-INSTALLER-V1.md) · [PRD-STUDIO-HOMEPAGE-v2.md](./PRD-STUDIO-HOMEPAGE-v2.md) · [PRD-UX-TRUST-V1.md](./PRD-UX-TRUST-V1.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-FIRST-SESSION-TRUST-V1.md](./PRD-FIRST-SESSION-TRUST-V1.md) · [PRD-WAIT-TIPS-V1.md](./PRD-WAIT-TIPS-V1.md)（Importing 等待教育） · [SHARING.md](./SHARING.md) · [WORKSHOP.md](./WORKSHOP.md) · [README.md](../README.md) |
 | **评审记录** | [acceptance-records/ftue-optimization-v1-review-2026-07-15.md](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md) |
 | **线框** | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) · F1–F8（W0 挡门：F1–F3/F7；W1 挡门：F4–F6） |
 | **验收** | 本文 §10；可后续拆 `ACCEPTANCE-FTUE-OPTIMIZATION-V1.md` |
@@ -20,6 +20,10 @@
 > 默认长图成功面 COPY /「落盘≠完成」终点，以 [PRD-FIRST-SESSION-TRUST-V1](./PRD-FIRST-SESSION-TRUST-V1.md) **D-FST-04 / §3.4** 为准：主句=已保存；主操作=在文件夹中显示；**不教微信操作**；**禁止自动 reveal**。  
 > 本文 §3.3 / G-FTUE-04 / 铁律 3 中「发群主句第一可读行」对**默认成功面**不再作为强制合同；空态/示例/文件名/冷启动等其余 FTUE 合同不变。  
 > 发群操作说明保留在 Help 抽屉（按需）。详见 First-Session Trust 跨职能 BLK-01。
+
+> **v1.1.2 交叉脚注（2026-07-17 · DOC-WT / BLK-03）**
+>
+> 能力卡仅 **idle** 展示（§8 忙碌态）。导入 Importing 期间的等待教育归 [Wait Tips](./PRD-WAIT-TIPS-V1.md)，**不**在忙碌态重弹能力卡，二者时段错开。
 
 > **定位**
 >
@@ -372,7 +376,7 @@ L0G **铁律不变**（无 Key 可成稿、配置是升级）；仅 **用户可�
 | 项 | 要求 |
 |----|------|
 | **A11Y** | 空态移除控件无焦点陷阱；成功面可键盘关；`prefers-reduced-motion` 脉冲改静态 |
-| **忙碌态** | 导入中不弹能力卡；tip 在 busy 时不写 seen（对齐 Help） |
+| **忙碌态** | 导入中不弹能力卡；tip 在 busy 时不写 seen（对齐 Help）。Importing 等待教育见 [Wait Tips](./PRD-WAIT-TIPS-V1.md)（非能力卡） |
 | **兼容** | Windows Chrome/Edge 90+ |
 | **安全** | 示例走既有 demo ACL |
 

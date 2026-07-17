@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>导入等待教育 Wait Tips V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--gate { background: #6a1b9a; color: #fff; }
+    .tag--draft { background: #546e7a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(160deg, #3e5248 0%, #1e2a28 45%, #15201c 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 560px; position: relative; overflow: hidden;
+    }
+    .frame--light {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+    }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .busy {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(400px, 92%); background: rgba(20, 18, 16, .92); color: #f5fbf8;
+      border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 26px 22px 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35); text-align: center; z-index: 50;
+    }
+    .busy .eyebrow { font-size: 10px; letter-spacing: .08em; color: #90e0ef; margin: 0 0 8px; }
+    .busy h3 { margin: 0 0 6px; font-size: 18px; font-weight: 500; color: #fff; }
+    .busy .estimate { margin: 0 0 14px; font-size: 11px; color: rgba(255,255,255,.65); }
+    .busy .stage { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+    .busy .sub { margin: 0 0 12px; font-size: 11px; color: rgba(255,230,180,.9); }
+    .bar { height: 3px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; margin: 0 0 10px; }
+    .bar i { display: block; height: 100%; background: var(--gold); border-radius: 2px; }
+    .tips {
+      margin: 4px 0 14px; padding: 14px 14px 12px; text-align: left;
+      border: 1px solid rgba(255,255,255,.12); border-radius: 12px;
+      background: linear-gradient(165deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,.04) 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .tips__head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;
+    }
+    .tips__label {
+      display: inline-flex; align-items: center; font-size: 10px; font-weight: 700;
+      letter-spacing: .04em; padding: 3px 8px; border-radius: 999px;
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.78);
+    }
+    .tips__label[data-tone="outcome"] { background: rgba(212,168,67,.22); color: #f0d78c; }
+    .tips__label[data-tone="trust"] { background: rgba(144,224,239,.18); color: #9ee7f2; }
+    .tips__label[data-tone="capability"] { background: rgba(129,199,132,.18); color: #a5d6a7; }
+    .tips__label[data-tone="next"] { background: rgba(100,181,246,.18); color: #90caf9; }
+    .tips__label[data-tone="trial"] { background: rgba(255,183,77,.16); color: #ffcc80; }
+    .tips__close {
+      border: none; background: transparent; color: rgba(255,255,255,.7);
+      width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px; line-height: 1;
+    }
+    .tips__close:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .tips__title { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #fff; letter-spacing: .01em; }
+    .tips__body { margin: 0 0 12px; font-size: 12px; color: rgba(255,255,255,.72); line-height: 1.5; }
+    .tips__nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .tips__nav button {
+      border: 1px solid rgba(255,255,255,.18); background: transparent; color: rgba(255,255,255,.85);
+      width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+    .tips__dots { display: flex; gap: 5px; align-items: center; }
+    .tips__dots button {
+      width: 6px; height: 6px; border-radius: 50%; border: none; padding: 0;
+      background: rgba(255,255,255,.28); cursor: pointer;
+    }
+    .tips__dots button.is-active { background: var(--gold); width: 14px; border-radius: 999px; }
+    .tips__timer {
+      height: 2px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-top: 8px;
+    }
+    .tips__timer i {
+      display: block; height: 100%; width: 0; background: rgba(212,168,67,.75);
+    }
+    .tips.is-paused .tips__timer i { animation-play-state: paused !important; }
+    .tips[hidden] { display: none !important; }
+    .cancel {
+      border: none; background: transparent; color: rgba(255,255,255,.7);
+      font-size: 12px; cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .btn--secondary { background: #fff; color: var(--bar); border: 1.5px solid var(--bar); }
+    .card-wall {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;
+    }
+    @media (max-width: 720px) { .card-wall { grid-template-columns: 1fr; } }
+    .mini {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; font-size: 12px;
+    }
+    .mini .k {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+      background: #fff8e1; color: #ef6c00; margin-bottom: 6px;
+    }
+    .mini .k--outcome { background: #fff8e1; color: #f9a825; }
+    .mini .k--trust { background: #e0f7fa; color: #00838f; }
+    .mini .k--capability { background: #e8f5e9; color: var(--accent); }
+    .mini .k--next { background: #e3f2fd; color: #1565c0; }
+    .mini .k--trial { background: #fff3e0; color: #ef6c00; }
+    .mini .label-line { font-size: 11px; color: #90a4ae; margin: 0 0 4px; }
+    .mini h4 { margin: 0 0 4px; font-size: 13px; }
+    .mini p { margin: 0; color: var(--wf-muted); }
+    .mini .id { font-size: 10px; color: #90a4ae; margin-bottom: 4px; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .seq {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin: 12px 0; font-size: 12px;
+    }
+    .seq span {
+      background: #fff; border: 1px solid #b0bec5; border-radius: 999px; padding: 4px 10px;
+    }
+    .seq span.hi { background: #e8f5e9; border-color: var(--accent); font-weight: 700; }
+    .seq em { font-style: normal; color: var(--wf-muted); }
+    .demo-note {
+      margin-top: 10px; font-size: 11px; color: var(--wf-muted);
+    }
+    .demo-note code { font-size: 10px; background: #eceff1; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>导入等待教育 Wait Tips V1 · 线框 <span style="opacity:.7">PRD v0.2.0 · Conditional Go</span></h1>
+    <p>W0 挡门：F1/F3 UI · F2 COPY。Outcome-first 六张 · 非 L1 · 跨职能 2026-07-17 · 编码另排期。</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 嵌进度壳<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 文案墙<span class="w">W0</span></button>
+      <button type="button" data-panel="f3">F3 交互<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 仲裁<span class="w">W0</span></button>
+      <button type="button" data-panel="f5">F5 禁止形态<span class="w">W0</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · Tips 嵌导入进度壳 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">Tips 在阶段主句与慢安抚下方、取消上方。第一眼仍是「正在做什么」；卡片讲结果与技巧，不复述进度。</p>
+          <div class="callout"><strong>定案</strong>D-WT-01 / 02 / 10 / 11 · AC-WT-01 · PRD §3.1 / §4</div>
+        </div>
+
+        <div class="anno">To-Be · curate 阶段（线框可点 × / ‹ › 试交互）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio · 导入中</div></div>
+        <div class="frame">
+          <div class="busy" id="demo-busy">
+            <p class="eyebrow">来源 · 示例相册</p>
+            <h3>正在生成你的游记画册…</h3>
+            <p class="estimate">自动分章 · 配文 · 排版 · 可离开稍后回来</p>
+            <div class="bar"><i style="width:42%"></i></div>
+            <p class="stage">正在分章挑选…</p>
+            <p class="sub">比预期久一些，请耐心等待…</p>
+
+            <div class="tips" id="demo-tips" aria-roledescription="轮播">
+              <div class="tips__head">
+                <span class="tips__label" id="demo-label" data-tone="outcome">马上就好</span>
+                <button type="button" class="tips__close" id="demo-close" aria-label="关闭提示">×</button>
+              </div>
+              <h4 class="tips__title" id="demo-title">可翻的卷轴，可发的长图</h4>
+              <p class="tips__body" id="demo-body">先在大屏慢慢看；喜欢了，再存一张发群用的长图。</p>
+              <div class="tips__nav">
+                <button type="button" id="demo-prev" aria-label="上一张">‹</button>
+                <div class="tips__dots" id="demo-dots"></div>
+                <button type="button" id="demo-next" aria-label="下一张">›</button>
+              </div>
+              <div class="tips__timer"><i id="demo-timer"></i></div>
+            </div>
+
+            <button type="button" class="cancel">取消</button>
+          </div>
+        </div>
+        <p class="demo-note">演示：约 <code>10s</code> 自动切换 · 悬停卡片暂停 · 点 × 关闭（本页会话内）。正式产品用 localStorage 持久化（D-WT-04）。</p>
+        <div class="callout"><strong>读法</strong>主句 = 阶段；次行 = 慢安抚；卡片 = 结果/信任/技巧。禁止卡片再说「正在分章」。</div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 六张 Outcome-first 文案墙 <span class="tag tag--w0">W0</span></h2>
+          <p class="lead">市场 × 运营 × 产品三席润色定稿。标签口语化；隐私卡讲感觉，不讲辩解。</p>
+          <div class="callout"><strong>定案</strong>PRD §4 v0.1.3 · D-WT-08 / 11～14 · <a href="../acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md">润色纪要</a></div>
+        </div>
+
+        <div class="card-wall">
+          <div class="mini">
+            <div class="id">WT-01</div>
+            <span class="k k--outcome">结果</span>
+            <p class="label-line">马上就好</p>
+            <h4>可翻的卷轴，可发的长图</h4>
+            <p>先在大屏慢慢看；喜欢了，再存一张发群用的长图。</p>
+          </div>
+          <div class="mini">
+            <div class="id">WT-02</div>
+            <span class="k k--trust">信任</span>
+            <p class="label-line">安心</p>
+            <h4>回忆，只放在你身边</h4>
+            <p>不上传云端，在本机悄悄成册。私密，是旅行该有的样子。</p>
+          </div>
+          <div class="mini">
+            <div class="id">WT-03</div>
+            <span class="k k--capability">能力</span>
+            <p class="label-line">省心</p>
+            <h4>分章配文排版，交给它</h4>
+            <p>选好这一趟的照片就行，不用先一张张归类。</p>
+          </div>
+          <div class="mini">
+            <div class="id">WT-04</div>
+            <span class="k k--next">下一步</span>
+            <p class="label-line">小提示</p>
+            <h4>先翻卷轴，再存长图</h4>
+            <p>打开预览慢慢看；满意了，再点「长图」收下。</p>
+          </div>
+          <div class="mini">
+            <div class="id">WT-05</div>
+            <span class="k k--trial">试用</span>
+            <p class="label-line">想先试试</p>
+            <h4>没有照片？先用示例</h4>
+            <p>向导里一键试用，流程和自己的相册一模一样。</p>
+          </div>
+          <div class="mini">
+            <div class="id">WT-06</div>
+            <span class="k k--trial">试用</span>
+            <p class="label-line">选片诀窍</p>
+            <h4>一趟旅行，一个文件夹</h4>
+            <p>同一次出行放一起就好，不必事先精挑细选。</p>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>禁区</strong>说明书腔 · 辩解句「为的是…不是…」·「主链」· 教微信/精修 · 复述 stage · 杂志级承诺。</div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 交互合同 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">自动播是默认；控制权在用户。关闭后不再纠缠。</p>
+          <div class="callout"><strong>定案</strong>D-WT-02～05 · AC-WT-02～05</div>
+        </div>
+
+        <div class="seq">
+          <span>进 Importing</span><em>→</em>
+          <span>≥2s</span><em>→</em>
+          <span class="hi">Tips 显现</span><em>→</em>
+          <span class="hi">10s 自动切</span><em>∥</em>
+          <span>悬停暂停</span><em>∥</em>
+          <span>× 持久关闭</span>
+        </div>
+        <div class="seq">
+          <span>succeeded / failed / cancelled</span><em>→</em>
+          <span class="hi">立刻卸载 Tips</span><em>→</em>
+          <span>FirstSuccess（无 Tips）</span>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="ok">必须提供</h4>
+            <p>× 关闭整套 · ‹ › 翻页 · 圆点跳转 · 悬停/聚焦暂停 · reduced-motion 关自动播</p>
+          </div>
+          <div class="mini">
+            <h4 class="ok">成功切换</h4>
+            <p>Job 成功后 ≤1s 关忙碌壳（FST）；Tips 不得残留到 FirstSuccess 或预览。</p>
+          </div>
+        </div>
+        <div class="callout"><strong>短等待</strong>D-WT-07：尾段过短时不再新开下一张，避免成功瞬间还在切卡。</div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 与 Help / FST / 能力卡仲裁 <span class="tag tag--w0">W0</span></h2>
+          <p class="lead">Wait Tips 是忙碌壳次内容，不是 Coach。仲裁失败时牺牲 Tips，保全进度。</p>
+          <div class="callout"><strong>定案</strong>D-WT-06 · Help D-HELP-08′ · FST 进度诚实</div>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="ok">Importing 允许</h4>
+            <p>阶段主句 · 进度条 · 慢安抚 · <strong>Wait Tips</strong> · 取消</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">Importing 禁止</h4>
+            <p>Help L1 tip / 脉冲 · 能力卡 · FirstSuccess · 发群教学 · 精修 coach</p>
+          </div>
+        </div>
+
+        <div class="anno">主链时段</div>
+        <div class="seq">
+          <span>idle 能力卡</span><em>→</em>
+          <span class="hi">Importing + Wait Tips</span><em>→</em>
+          <span>FirstSuccess</span><em>→</em>
+          <span>预览 Help L1</span><em>→</em>
+          <span>长图</span>
+        </div>
+        <div class="callout callout--warn"><strong>seen 隔离</strong>关闭 Tips 只写 <code>waitTips.dismissed</code>；不写、不读 Help seen。</div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 禁止形态 <span class="tag tag--w0">W0</span></h2>
+          <p class="lead">这些形态评审即拒，避免做成第二套 onboarding。</p>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">禁止 · 全屏 Tour</h4>
+            <p>遮住进度条的连环步骤、不可跳过的「下一步」。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止 · 卡片抢主句</h4>
+            <p>大标题放 Tips、阶段说明缩成脚注；或用 tips 复述「比预期久一些」。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止 · 教微信 / 精修</h4>
+            <p>「按文件名发群」「点笔形改字」——留给成功后 / Help / 非首访。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止 · 挂长图 Dock</h4>
+            <p>V1 只挂导入等待；Dock 空间紧，再叠轮播会挤爆进度。</p>
+          </div>
+        </div>
+
+        <div class="anno">As-Is 对照（无 Tips，仅进度——仍合法）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">无 Tips 时仍须完整</div></div>
+        <div class="frame frame--light">
+          <div class="busy" style="background:#fff;color:var(--bar);border-color:#cfd8dc;box-shadow:0 18px 40px rgba(0,0,0,.12)">
+            <p class="eyebrow" style="color:#00838f">来源 · 示例相册</p>
+            <h3 style="color:var(--bar)">正在生成你的游记画册…</h3>
+            <p class="estimate" style="color:var(--wf-muted)">自动分章 · 配文 · 排版 · 可离开稍后回来</p>
+            <div class="bar" style="background:#eceff1"><i style="width:42%;background:var(--accent)"></i></div>
+            <p class="stage" style="color:var(--bar)">正在分章挑选…</p>
+            <p class="sub" style="color:var(--wf-muted)">比预期久一些，请耐心等待…</p>
+            <button type="button" class="btn btn--secondary" style="margin-top:8px">取消</button>
+          </div>
+        </div>
+        <div class="callout"><strong>降级</strong>Tips 关闭或脚本失败时，上图仍是完整合格进度面（FST）。</div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>本帧审核清单</h3>
+      <ul id="aside-list">
+        <li>Tips 是否在主句下方？</li>
+        <li>是否抢进度第一眼？</li>
+        <li>× 是否明显可点？</li>
+      </ul>
+      <h3 style="margin-top:16px">相邻合同</h3>
+      <ul>
+        <li>进度诚实 → FST</li>
+        <li><span class="ok">忙碌零 L1</span> → Help</li>
+        <li>能力卡 → idle only</li>
+        <li>不教微信 → FST 铁律 3</li>
+      </ul>
+      <h3 style="margin-top:16px">PRD</h3>
+      <ul>
+        <li><a href="../PRD-WAIT-TIPS-V1.md">PRD-WAIT-TIPS-V1</a></li>
+        <li><a href="../acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md">三席润色纪要</a></li>
+        <li><a href="../PRD-FIRST-SESSION-TRUST-V1.md">First-Session Trust</a></li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var CARDS = [
+        { id: "WT-01", tone: "outcome", label: "马上就好", title: "可翻的卷轴，可发的长图", body: "先在大屏慢慢看；喜欢了，再存一张发群用的长图。" },
+        { id: "WT-02", tone: "trust", label: "安心", title: "回忆，只放在你身边", body: "不上传云端，在本机悄悄成册。私密，是旅行该有的样子。" },
+        { id: "WT-03", tone: "capability", label: "省心", title: "分章配文排版，交给它", body: "选好这一趟的照片就行，不用先一张张归类。" },
+        { id: "WT-04", tone: "next", label: "小提示", title: "先翻卷轴，再存长图", body: "打开预览慢慢看；满意了，再点「长图」收下。" },
+        { id: "WT-05", tone: "trial", label: "想先试试", title: "没有照片？先用示例", body: "向导里一键试用，流程和自己的相册一模一样。" },
+        { id: "WT-06", tone: "trial", label: "选片诀窍", title: "一趟旅行，一个文件夹", body: "同一次出行放一起就好，不必事先精挑细选。" }
+      ];
+      var INTERVAL = 10000;
+      var idx = 0;
+      var timer = null;
+      var startedAt = 0;
+      var remaining = INTERVAL;
+      var dismissed = false;
+      var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      var labelEl = document.getElementById("demo-label");
+      var titleEl = document.getElementById("demo-title");
+      var bodyEl = document.getElementById("demo-body");
+      var tipsEl = document.getElementById("demo-tips");
+      var dotsEl = document.getElementById("demo-dots");
+      var timerEl = document.getElementById("demo-timer");
+
+      function renderDots() {
+        dotsEl.innerHTML = CARDS.map(function (_, i) {
+          return '<button type="button" data-i="' + i + '" class="' + (i === idx ? "is-active" : "") + '" aria-label="第 ' + (i + 1) + ' 张"></button>';
+        }).join("");
+      }
+
+      function paint() {
+        var c = CARDS[idx];
+        labelEl.textContent = c.label;
+        labelEl.setAttribute("data-tone", c.tone || "");
+        titleEl.textContent = c.title;
+        bodyEl.textContent = c.body;
+        renderDots();
+      }
+
+      function stopTimer() {
+        if (timer) cancelAnimationFrame(timer);
+        timer = null;
+      }
+
+      function tick(now) {
+        if (!startedAt) startedAt = now;
+        var elapsed = now - startedAt;
+        var p = Math.min(1, elapsed / remaining);
+        timerEl.style.width = (p * 100) + "%";
+        if (p >= 1) {
+          idx = (idx + 1) % CARDS.length;
+          paint();
+          remaining = INTERVAL;
+          startedAt = now;
+        }
+        timer = requestAnimationFrame(tick);
+      }
+
+      function startTimer() {
+        if (dismissed || reduceMotion || tipsEl.hidden) return;
+        stopTimer();
+        startedAt = 0;
+        timerEl.style.width = "0%";
+        timer = requestAnimationFrame(tick);
+      }
+
+      function pauseTimer() {
+        if (!timer) return;
+        var elapsed = performance.now() - startedAt;
+        remaining = Math.max(400, remaining - elapsed);
+        stopTimer();
+        tipsEl.classList.add("is-paused");
+      }
+
+      function resumeTimer() {
+        tipsEl.classList.remove("is-paused");
+        startTimer();
+      }
+
+      function go(i) {
+        idx = (i + CARDS.length) % CARDS.length;
+        paint();
+        remaining = INTERVAL;
+        startTimer();
+      }
+
+      document.getElementById("demo-prev").addEventListener("click", function () { go(idx - 1); });
+      document.getElementById("demo-next").addEventListener("click", function () { go(idx + 1); });
+      document.getElementById("demo-close").addEventListener("click", function () {
+        dismissed = true;
+        stopTimer();
+        tipsEl.hidden = true;
+      });
+      dotsEl.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-i]");
+        if (!btn) return;
+        go(parseInt(btn.getAttribute("data-i"), 10));
+      });
+      tipsEl.addEventListener("mouseenter", pauseTimer);
+      tipsEl.addEventListener("mouseleave", resumeTimer);
+      tipsEl.addEventListener("focusin", pauseTimer);
+      tipsEl.addEventListener("focusout", function (e) {
+        if (!tipsEl.contains(e.relatedTarget)) resumeTimer();
+      });
+
+      paint();
+      if (!reduceMotion) startTimer();
+
+      var aside = {
+        f1: ["Tips 是否在主句下方？", "是否抢进度第一眼？", "× 是否明显可点？"],
+        f2: ["读起来是否像广告而非说明书？", "隐私卡有无辩解腔？", "有无「主链」等内部词？"],
+        f3: ["10s / 暂停 / 关闭是否清楚？", "成功后是否立刻卸载？", "短等待是否抑制？"],
+        f4: ["是否写成 L1？", "是否写 Help seen？", "时段是否与能力卡错开？"],
+        f5: ["有无全屏 tour？", "有无教微信/精修？", "无 Tips 时进度是否仍完整？"]
+      };
+      function show(id) {
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === id);
+        });
+        document.querySelectorAll(".tabs button").forEach(function (b) {
+          b.classList.toggle("is-active", b.getAttribute("data-panel") === id);
+        });
+        var list = document.getElementById("aside-list");
+        list.innerHTML = (aside[id] || []).map(function (t) { return "<li>" + t + "</li>"; }).join("");
+        if (id === "f1" && !dismissed && !reduceMotion && !timer) startTimer();
+        if (id !== "f1") pauseTimer();
+      }
+      document.getElementById("tabs").addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        show(btn.getAttribute("data-panel"));
+      });
+    })();
+  </script>
+</body>
+</html>
