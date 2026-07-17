@@ -105,6 +105,10 @@ def test_phase_a_must_fix_ui_guards() -> None:
     assert "换种分享方式" in longshot
     assert "offerSwitchShareMethod" in longshot
     assert "actionText" in dock
+    # FE-SR-08 / USR-03 · 成功面也挂换种分享（非仅 failed）
+    assert 'data-share-ready-switch' in dock
+    assert "正在生成可发微信的长图" in longshot
+    assert "humanExportProgress" in longshot
     assert "照片较多，已按章节拆成多张" in recipe
     # subtitle 须被 CTA sync 消费
     assert "tipRecipe.subtitle" in longshot or "deepHint.subtitle" in longshot

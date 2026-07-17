@@ -92,7 +92,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "正在导出长图";
+    main.textContent = opts.title || "正在生成可发微信的长图…";
     textWrap.appendChild(main);
     if (opts.subtitle) {
       var sub = document.createElement("small");
@@ -241,11 +241,16 @@ export function mountPreviewTaskDock(root, hooks) {
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
 
-    if (job && job.status === "failed" && typeof hooks.onSwitchShareMethod === "function") {
+    // FE-SR-08 / USR-03 · 成功与失败均提供「换种分享方式」（禁止第二套成功面）
+    if (typeof hooks.onSwitchShareMethod === "function") {
       var switchBtn = document.createElement("button");
       switchBtn.type = "button";
-      switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--accent";
+      switchBtn.className =
+        job && job.status === "failed"
+          ? "preview-task-dock__btn preview-task-dock__btn--accent"
+          : "preview-task-dock__btn preview-task-dock__btn--ghost";
       var actionText = "换种分享方式";
+      switchBtn.setAttribute("data-share-ready-switch", "1");
       switchBtn.textContent = actionText;
       switchBtn.addEventListener("click", function () {
         hooks.onSwitchShareMethod({ actionText: actionText, tripId: tripId });
