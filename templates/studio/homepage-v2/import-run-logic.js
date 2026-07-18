@@ -4,7 +4,7 @@
  */
 "use strict";
 
-import { humanizeFolderTitle } from "../js/title-humanize.js";
+import { resolveDisplayTitle } from "../js/title-humanize.js";
 import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
 
 /** Orchestrator 阶段名 → 产品阶段（FE-FST-01 · SFC vision_warmup） */
@@ -73,7 +73,8 @@ export function resolveImportStageCopy(job) {
 export function basenameTitle(path) {
   if (!path) return "我的旅途";
   var parts = String(path).replace(/[\\/]+$/, "").split(/[\\/]/);
-  return humanizeFolderTitle(parts[parts.length - 1] || "");
+  var folder = parts[parts.length - 1] || "";
+  return resolveDisplayTitle({ title: folder }, { rawTitle: folder });
 }
 
 export function basenameFromRelativePath(rel) {
@@ -86,7 +87,7 @@ export function basenameFromRelativePath(rel) {
 export function guessUploadTitle(files) {
   if (!files || !files.length) return "我的旅途";
   var title = basenameFromRelativePath(files[0].webkitRelativePath);
-  return humanizeFolderTitle(title);
+  return resolveDisplayTitle({ title: title }, { rawTitle: title });
 }
 
 /**

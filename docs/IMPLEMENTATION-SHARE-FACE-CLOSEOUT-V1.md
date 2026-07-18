@@ -123,11 +123,11 @@
 
 | 事件 | 接入点 | 状态 |
 |------|--------|------|
-| `sfc_vision_warmup_shown` | import-run stage 切换 | ✅ |
-| `sfc_stub_blanked` | narrate/render 空槽 | ⏳ 允许列表已预留 |
-| `sfc_title_fallback` | displayTitle 回退 | ⏳ 允许列表已预留 |
-| `sfc_g1_suppressed_sparse` | FirstSuccess（sparse 跳过） | ✅ |
-| `sfc_stale_label_impression` | 书架/Dock 角标 | ⏳ 允许列表已预留 |
+| `sfc_vision_warmup_shown` | import-run stage 切换 | ✅ FE+BE 白名单 |
+| `sfc_stub_blanked` | narrate/render 空槽 | ⏳ 白名单已预留（未发射） |
+| `sfc_title_fallback` | import success `titleNoiseFallback` | ✅ FE+BE |
+| `sfc_g1_suppressed_sparse` | FirstSuccess（sparse 跳过） | ✅ FE+BE |
+| `sfc_stale_label_impression` | 书架/Dock 角标 | ⏳ 白名单已预留（未发射） |
 
 ---
 

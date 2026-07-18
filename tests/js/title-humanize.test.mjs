@@ -8,6 +8,7 @@ import {
   extractPlaceLabel,
   humanizeFolderTitle,
   isFolderTitleNoise,
+  resolveDisplayTitle,
 } from "../../templates/studio/js/title-humanize.js";
 
 test("strips hash / handtest noise", () => {
@@ -37,4 +38,17 @@ test("SFC · double dash and place extract", () => {
   assert.equal(humanizeFolderTitle("武大--米娜"), "武大 米娜");
   assert.equal(isFolderTitleNoise("武大--米娜"), true);
   assert.equal(extractPlaceLabel("2025东澳岛9"), "东澳岛");
+});
+
+test("SFC · resolveDisplayTitle matches BE fallbacks", () => {
+  assert.equal(resolveDisplayTitle({ title: "武大--米娜" }), "武大 米娜");
+  assert.equal(
+    resolveDisplayTitle({ title: "2025东澳岛9" }),
+    "东澳岛 · 旅行"
+  );
+  // 清洗后可读则保留，不得残留 --
+  assert.equal(
+    resolveDisplayTitle({ displayTitle: "武大--米娜", title: "武大--米娜" }),
+    "武大 米娜"
+  );
 });

@@ -22,6 +22,7 @@ import {
 
 test("basenameTitle / guessUploadTitle", () => {
   assert.equal(basenameTitle("C:\\\\trips\\\\京都雨后"), "京都雨后");
+  assert.equal(basenameTitle("C:\\\\trips\\\\2025东澳岛9"), "东澳岛 · 旅行");
   assert.equal(guessUploadTitle([]), "我的旅途");
   assert.equal(
     guessUploadTitle([{ webkitRelativePath: "京都雨后/a.jpg" }]),

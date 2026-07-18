@@ -58,3 +58,60 @@ export function extractPlaceLabel(raw) {
   if (CJK_PLACE.test(t)) return t;
   return null;
 }
+
+function _acceptDisplay(candidate, limit) {
+  var t = String(candidate || "").trim();
+  if (!t) return null;
+  var cleaned = humanizeFolderTitle(t, { limit: limit });
+  if (cleaned && cleaned !== DEFAULT_TITLE && !isFolderTitleNoise(cleaned)) {
+    return cleaned;
+  }
+  return null;
+}
+
+function _placeFallbackLabel(meta) {
+  var places = (meta && meta.places) || [];
+  if (Array.isArray(places)) {
+    for (var i = 0; i < places.length; i++) {
+      var s = String(places[i] || "").trim();
+      if (s && s !== "旅途" && s !== "未知" && s !== "这里") return s;
+    }
+  }
+  return "旅行";
+}
+
+/**
+ * 与 BE ``resolve_display_title`` 同源（D-SFC-03）。
+ * @param {{ displayTitle?: string, title?: string, places?: string[] }|null} meta
+ * @param {{ limit?: number, rawTitle?: string }} [opts]
+ */
+export function resolveDisplayTitle(meta, opts) {
+  opts = opts || {};
+  var limit = typeof opts.limit === "number" ? opts.limit : 20;
+  meta = meta || {};
+  var stored = String(meta.displayTitle || "").trim();
+  var accepted = _acceptDisplay(stored, limit);
+  if (accepted) return accepted;
+
+  var raw =
+    opts.rawTitle != null
+      ? String(opts.rawTitle || "").trim()
+      : String(meta.title || "").trim();
+  accepted = _acceptDisplay(raw, limit);
+  if (accepted) return accepted;
+
+  var metaPlace = _placeFallbackLabel(meta);
+  if (metaPlace !== "旅行") {
+    var withDate = metaPlace + " · 旅行";
+    return withDate.length > limit ? withDate.slice(0, limit) : withDate;
+  }
+
+  var extracted = extractPlaceLabel(raw || stored);
+  if (extracted) {
+    var out = extracted + " · 旅行";
+    return out.length > limit ? out.slice(0, limit) : out;
+  }
+
+  var fallback = "旅行 · 游记";
+  return fallback.length > limit ? fallback.slice(0, limit) : fallback;
+}

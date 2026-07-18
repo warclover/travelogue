@@ -507,9 +507,9 @@ function pollImport(jobId, gen, source) {
         tripId: result.tripId || null,
       });
       if (result.titleNoiseFallback) {
-        trackStudioEvent("share_surface_blocked", {
-          reason: "folder_title",
+        trackStudioEvent("sfc_title_fallback", {
           tripId: result.tripId || null,
+          reason: "folder_title",
         });
       }
       return refreshTripsForImportSuccess(result).then(function () {

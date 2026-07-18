@@ -1788,11 +1788,12 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         if (trip.layoutCssStale || trip.renderBundleStale) {
+          // SFC · 禁「产物/过期」工程腔；与 stale 主词「分享图需更新」同族
           var pendingMsg = trip.renderBundleStale
-            ? "预览产物已过期，请重新渲染"
-            : "布局 CSS 已过期，请更新版面重新渲染";
+            ? "预览需更新，请重新渲染后再分享"
+            : "版面需更新，请先更新版面再导出";
           if (trip.layoutCssStale && trip.renderBundleStale) {
-            pendingMsg = "预览产物与布局 CSS 已过期，请重新渲染";
+            pendingMsg = "预览与版面需更新，请重新渲染后再分享";
           }
           _setLayoutPendingMessage(pendingMsg);
           var pendingText = root.querySelector(".preview-toolbar__pending-text");

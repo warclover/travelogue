@@ -34,3 +34,8 @@ def test_chapter_titles_still_forbid_xu_suffix() -> None:
     src = (ROOT / "travelogue" / "curation" / "chapter_titles.py").read_text(encoding="utf-8")
     assert 'f"{base}续"' not in src
     assert "（" in src or "(2)" in src or "daypart" in src.lower()
+
+
+def test_no_preview_artifact_expired_jargon() -> None:
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    assert "预览产物已过期" not in longshot
