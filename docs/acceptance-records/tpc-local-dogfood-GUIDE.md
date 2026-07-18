@@ -6,7 +6,7 @@
 | 关联 | [PRD-TEMPLATE-CONTRACT-V1](../PRD-TEMPLATE-CONTRACT-V1.md) · [缺口清单](./tpc-gap-checklist-2026-07-18.md) · [配置样例](../config-tpc-dogfood.example.yaml) |
 | 适用 | **无外部用户** 的开发机手测；**不是**对外默认开 / Go exit |
 | 仓库默认 | `mosaic.template_contract.enabled=false` · `features.gcs_poster_bric.enabled=false`（保持 AC-TPC-01） |
-| 手测记录 | [tpc-mosaic-dogfood-2026-07-18.md](./tpc-mosaic-dogfood-2026-07-18.md)（版式通过；compare/F5–F6 可补） |
+| 手测记录 | [tpc-mosaic-dogfood-2026-07-18.md](./tpc-mosaic-dogfood-2026-07-18.md)（F1–F6 开发期通过） · [compare 手记](./tpc-layout-compare-notes-2026-07-18.jsonl) |
 
 ---
 
@@ -134,10 +134,10 @@ features:
 |---|----|--------|------|
 | F1 | config 验证 `contract=True` | ☐ | |
 | F2 | 混向相册 re-curate 后出现 W3 或合理 fallback | ☐ | |
-| F3 | `layout_compare` HTML 可读，手记 ≥3 行 | ☐ | |
-| F4 | hero-70 / 1L3P 至少各看一本 | ☐ | |
-| F5 | poster_bric 导出成功且 screens fingerprint 不变 | ☐ | |
-| F6 | 关回 `enabled=false` 后版面回到熟悉 baseline | ☐ | |
+| F3 | `layout_compare` HTML 可读，手记 ≥3 行 | ✅ | 三本 0% diff；见手记 jsonl |
+| F4 | hero-70 / 1L3P 至少各看一本 | ✅ | demo-2025 / demo-815dc906d3 |
+| F5 | poster_bric 导出成功且 screens fingerprint 不变 | ✅ | demo-65db8fd377 |
+| F6 | 关回 `enabled=false` 后版面回到熟悉 baseline | ✅ | compare off≈on（prefer:tie） |
 
 ---
 
