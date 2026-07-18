@@ -1,5 +1,6 @@
 /**
  * Share-Ready W2 · BE-SR-05 · 文件夹名 → 默认杂志标题（与 travelogue.domain.title_humanize 对齐）。
+ * Share-Face Closeout W0 · D-SFC-03 / OQ-SFC-01。
  * 纯函数、无 DOM 依赖，可供 node --test 直接 import。
  */
 
@@ -10,6 +11,13 @@ var HASH_OR_TEST_SUFFIX =
   /[-_]?(?:[0-9a-f]{8,}|(?:ux-)?handtest[-_\w]*|demo[-_]?\d+|copy(?:\s*\(\d+\))?)$/i;
 var NOISE_PREFIX = /^(新建文件夹|untitled|copy)\s*/i;
 var HEXISH = /^[0-9a-f-]{8,}$/i;
+var CJK_TRAILING_DIGIT = /[\u4e00-\u9fff]\d{1,3}$/;
+var GLUED_ALNUM = /^[\u4e00-\u9fffA-Za-z]{2,}\d{1,3}$/;
+var EXPORT_DIRISH = /(导出|download|dcim|camera roll|img_|vid_|screenshot)/i;
+var DIRTY_SEP = /--|__|\.\./;
+var LEADING_YEAR = /^(?:19|20)\d{2}/;
+var TRAILING_SERIAL = /\d{1,3}$/;
+var CJK_PLACE = /^[\u4e00-\u9fff]{2,6}$/;
 
 /**
  * @param {string|null|undefined} raw
@@ -28,16 +36,82 @@ export function humanizeFolderTitle(raw, opts) {
   return name.length > limit ? name.slice(0, limit) : name;
 }
 
-var CJK_TRAILING_DIGIT = /[\u4e00-\u9fff]\d{1,3}$/;
-var GLUED_ALNUM = /^[\u4e00-\u9fffA-Za-z]{2,}\d{1,3}$/;
-var EXPORT_DIRISH = /(导出|download|dcim|camera roll|img_|vid_|screenshot)/i;
-
 /** BE-FST-06 · 中文启发式：像目录名噪音 */
 export function isFolderTitleNoise(title) {
   var t = String(title || "").trim();
   if (!t || t === DEFAULT_TITLE) return false;
+  if (DIRTY_SEP.test(t)) return true;
   if (EXPORT_DIRISH.test(t)) return true;
   if (CJK_TRAILING_DIGIT.test(t)) return true;
   if (t.indexOf(" ") < 0 && t.indexOf("·") < 0 && GLUED_ALNUM.test(t)) return true;
   return false;
+}
+
+/** OQ-SFC-01 · 抽取 2–6 字中文地名 */
+export function extractPlaceLabel(raw) {
+  var cleaned = humanizeFolderTitle(raw, { limit: 40 });
+  if (!cleaned || cleaned === DEFAULT_TITLE) return null;
+  var t = cleaned.replace(/\s+/g, "");
+  t = t.replace(TRAILING_SERIAL, "");
+  t = t.replace(LEADING_YEAR, "");
+  t = t.replace(/^[\s·\-_.]+|[\s·\-_.]+$/g, "");
+  if (CJK_PLACE.test(t)) return t;
+  return null;
+}
+
+function _acceptDisplay(candidate, limit) {
+  var t = String(candidate || "").trim();
+  if (!t) return null;
+  var cleaned = humanizeFolderTitle(t, { limit: limit });
+  if (cleaned && cleaned !== DEFAULT_TITLE && !isFolderTitleNoise(cleaned)) {
+    return cleaned;
+  }
+  return null;
+}
+
+function _placeFallbackLabel(meta) {
+  var places = (meta && meta.places) || [];
+  if (Array.isArray(places)) {
+    for (var i = 0; i < places.length; i++) {
+      var s = String(places[i] || "").trim();
+      if (s && s !== "旅途" && s !== "未知" && s !== "这里") return s;
+    }
+  }
+  return "旅行";
+}
+
+/**
+ * 与 BE ``resolve_display_title`` 同源（D-SFC-03）。
+ * @param {{ displayTitle?: string, title?: string, places?: string[] }|null} meta
+ * @param {{ limit?: number, rawTitle?: string }} [opts]
+ */
+export function resolveDisplayTitle(meta, opts) {
+  opts = opts || {};
+  var limit = typeof opts.limit === "number" ? opts.limit : 20;
+  meta = meta || {};
+  var stored = String(meta.displayTitle || "").trim();
+  var accepted = _acceptDisplay(stored, limit);
+  if (accepted) return accepted;
+
+  var raw =
+    opts.rawTitle != null
+      ? String(opts.rawTitle || "").trim()
+      : String(meta.title || "").trim();
+  accepted = _acceptDisplay(raw, limit);
+  if (accepted) return accepted;
+
+  var metaPlace = _placeFallbackLabel(meta);
+  if (metaPlace !== "旅行") {
+    var withDate = metaPlace + " · 旅行";
+    return withDate.length > limit ? withDate.slice(0, limit) : withDate;
+  }
+
+  var extracted = extractPlaceLabel(raw || stored);
+  if (extracted) {
+    var out = extracted + " · 旅行";
+    return out.length > limit ? out.slice(0, limit) : out;
+  }
+
+  var fallback = "旅行 · 游记";
+  return fallback.length > limit ? fallback.slice(0, limit) : fallback;
 }

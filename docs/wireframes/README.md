@@ -9,6 +9,7 @@
 | [help-onboarding-v1-wireframe.html](./help-onboarding-v1-wireframe.html) | **帮助与情境引导 V1** · F1–F10（W1：F1–F3/F7）· 方案 A / 可见 tip / 发群兜底 · [PRD-HELP-ONBOARDING-V1](../PRD-HELP-ONBOARDING-V1.md) **v1.1.1** · Conditional Go |
 | [share-ready-optimization-v1-wireframe.html](./share-ready-optimization-v1-wireframe.html) | **敢发闭环 Share-Ready V1** · F1–F6（v1.0.2：示例徽标 · 意图 primary · 换种分享）· [PRD](../PRD-SHARE-READY-OPTIMIZATION-V1.md) **v1.0.2** · Conditional Go · 编码另排期 |
 | [first-session-trust-v1-wireframe.html](./first-session-trust-v1-wireframe.html) | **首访可信 V1** · F1–F5（进度诚实 · FirstSuccess · 长图进度 · 已保存不教微信 · 敢秀对照）· [PRD](../PRD-FIRST-SESSION-TRUST-V1.md) **v1.0.2** · Conditional Go · [跨职能](../acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](../acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md) |
+| [share-face-closeout-v1-wireframe.html](./share-face-closeout-v1-wireframe.html) | **敢发收口 V1** · F1–F5（识图准备 · 分享面对照 · 体面名 · stale 人话 · Sparse G1）· [PRD](../PRD-SHARE-FACE-CLOSEOUT-V1.md) **v1.0.1** · Conditional Go · [跨职能](../acceptance-records/share-face-closeout-v1-review-2026-07-18.md) |
 | [wait-tips-v1-wireframe.html](./wait-tips-v1-wireframe.html) | **导入等待教育 Wait Tips V1** · F1–F5（Outcome-first 六张）· [PRD](../PRD-WAIT-TIPS-V1.md) **v0.2.0** · Conditional Go · [跨职能](../acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](../acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) |
 | [refine-feedback-loop-v1-wireframe.html](./refine-feedback-loop-v1-wireframe.html) | **精修意图可感知闭环 V1** · F-BE-01 / F-FEAT-01～03 / F-SPLIT · [PRD-REFINE-FEEDBACK-LOOP-V1](../PRD-REFINE-FEEDBACK-LOOP-V1.md) **v0.1.2** · M1+M2+P0 |
 | [preview-cover-web-v1-wireframe.html](./preview-cover-web-v1-wireframe.html) | **Web 预览页封面 v1** · 首屏线框 · 现状 + A/B/C/D 四方案 · **已落地 D 全视窗** · 设计评审用 |
@@ -45,6 +46,8 @@
 **敢发闭环 V1 评审 Tab**：**F1 真图+示例徽标** · **F2 意图卡（人话·primary）** · **F3 stale** · **F6 零泄漏**（W0）· **F4 CTA** · **F5 成功面+换种分享**（W1）· PRD **v1.0.2** · 线框：[share-ready-optimization-v1-wireframe.html](./share-ready-optimization-v1-wireframe.html) · [跨职能评审](../acceptance-records/share-ready-optimization-v1-review-2026-07-17.md) · [用户联席](../acceptance-records/share-ready-optimization-v1-user-panel-2026-07-17.md)
 
 **首访可信 V1 评审 Tab**：**F1 导入进度诚实** · **F2 FirstSuccess ≤1s** · **F3 长图进度** · **F4 已保存·不教微信·不自动弹文件夹**（W0）· **F5 敢秀对照**（W1）· PRD **v1.0.2** · 线框：[first-session-trust-v1-wireframe.html](./first-session-trust-v1-wireframe.html) · [跨职能](../acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席八席](../acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)
+
+**敢发收口 V1 评审 Tab**：**F1 识图准备主句** · **F2 分享面空优于假句** · **F3 体面名同源**（W0）· **F4 stale「分享图需更新」** · **F5 Sparse 跳过 G1**（W1）· PRD **v1.0.1 Conditional Go** · 线框：[share-face-closeout-v1-wireframe.html](./share-face-closeout-v1-wireframe.html) · [跨职能](../acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [试用底稿](../acceptance-records/persona-ux-trial-2026-07-18.md)
 
 **导入等待教育 V1 评审 Tab**：**F1 嵌进度壳** · **F2 文案墙** · **F3 交互** · **F4 仲裁** · **F5 禁止形态** · PRD **v0.2.0 Conditional Go** · [线框](./wait-tips-v1-wireframe.html) · [跨职能](../acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](../acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md)
 

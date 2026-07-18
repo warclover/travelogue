@@ -34,8 +34,8 @@ var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHel
 
 export var HELP_COPY = {
   firstSuccessNext:
-    // FE-FST-06 / USR-03 · 勿承诺杂志级；升级路径改走 Help
-    "当前为本机文案。请点击打开卷轴预览查看游记，也可以直接保存长图。",
+    // FE-FST-06 / AC-SFC-11 · 勿承诺杂志级完成态
+    "游记已做好，可预览与导出。当前为本机文案；配置写作引擎后可在预览升级。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
@@ -97,7 +97,7 @@ export var HELP_COPY = {
   replayWaitTipsDoneToast:
     "已重置等待提示。下次导入生成时会再显示小提示（不是操作引导，也不会挡进度）。",
   stubNarrateTip: "当前为本机文案（可随时在设置中升级）",
-  helpDeepLinkPending: "「长图可更新」是什么意思 →",
+  helpDeepLinkPending: "「分享图需更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
   /** H1–H7 帮助抽屉条目（H6=封面封底；H7=AI 文案） */
   helpItems: [
@@ -127,12 +127,12 @@ export var HELP_COPY = {
     },
     {
       id: "H3",
-      title: "「长图可更新」是什么意思",
+      title: "「分享图需更新」是什么意思",
       body: [
-        "改了拼图或版式相关设置后，版面还没更新",
+        "改了拼图或版式相关设置后，旧分享图不要发",
         "请先点「更新版面」，再点「长图」导出最新结果",
         "若导出时弹出拦截，选「更新并导出」即可",
-        "仅标精选不会触发「长图可更新」；精选是意图，不是立刻重排",
+        "仅标精选不会触发「分享图需更新」；精选是意图，不是立刻重排",
       ],
     },
     {

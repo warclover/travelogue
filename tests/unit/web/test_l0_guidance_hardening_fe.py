@@ -136,5 +136,5 @@ def test_w21_gap_copy_and_busy_banner() -> None:
     assert "forceStubNextUpload" in failed
     assert "forceStub: forceStub" in import_run
     assert "degrading to stub" in pipeline
-    assert "当前为本机文案。请点击打开卷轴预览查看游记，也可以直接保存长图。" in help_js
+    assert "游记已做好，可预览与导出" in help_js
     assert "重新选择同一批照片" in failed

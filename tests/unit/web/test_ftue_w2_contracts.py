@@ -47,5 +47,8 @@ def test_stub_copy_no_engineering_words() -> None:
     for banned in ("竖构图", "方构图", "竖长一帧", "一帧。", "行程归档", "Day {", 'f"Day '):
         assert banned not in src, banned
     assert "第{chapter_index}天" in src or "第" in src
-    assert "把{place}收进这一本" in src or "收进这一本" in src
-    assert "竖幅" in src
+    # SFC · stub 以地点/日期短标签为主；竖幅等假句由护栏拦截
+    from travelogue.domain.share_face_copy import is_unsafe_share_copy
+
+    assert is_unsafe_share_copy("示例游记的竖幅。")
+    assert "{place}" in src and "{date}" in src

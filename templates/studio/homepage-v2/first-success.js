@@ -204,6 +204,13 @@ function populateSuccessUi(result) {
   if (result.mediaWarn && typeof studioToast === "function") {
     studioToast(result.mediaWarn, { duration: 5200 });
   }
+  if (result.sparseG1Suppressed) {
+    trackStudioEvent("sfc_g1_suppressed_sparse", {
+      tripId: result.tripId || null,
+      mode: result.mode || "quick_share",
+      photoCount: result.photoCount || null,
+    });
+  }
   var open = $("v2-success-open");
   var secondary = $("v2-success-secondary");
   var nextHint = $("v2-success-next-hint");

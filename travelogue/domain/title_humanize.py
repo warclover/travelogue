@@ -1,6 +1,7 @@
 """Share-Ready W2 · default trip title from folder names (D-SR-14 / BE-SR-05).
 
 First-Session Trust W1 · BE-FST-06 · folder-noise → displayTitle fallback.
+Share-Face Closeout W0 · D-SFC-03 · 再校验 stored displayTitle；地名抽取（OQ-SFC-01）。
 """
 
 from __future__ import annotations
@@ -27,6 +28,10 @@ _EXPORT_DIRISH = re.compile(
     r"(导出|download|dcim|camera roll|img_|vid_|screenshot)",
     re.IGNORECASE,
 )
+_LEADING_YEAR = re.compile(r"^(?:19|20)\d{2}")
+_TRAILING_SERIAL = re.compile(r"\d{1,3}$")
+_CJK_PLACE = re.compile(r"^[\u4e00-\u9fff]{2,6}$")
+_DIRTY_SEP = re.compile(r"--|_{2,}|\.\.")
 
 
 def humanize_folder_title(raw: str | None, *, limit: int = 20) -> str:
@@ -54,6 +59,8 @@ def is_folder_title_noise(title: str | None) -> bool:
     t = (title or "").strip()
     if not t or t == _DEFAULT_TITLE:
         return False
+    if _DIRTY_SEP.search(t):
+        return True
     if _EXPORT_DIRISH.search(t):
         return True
     if _CJK_TRAILING_DIGIT.search(t):
@@ -61,6 +68,20 @@ def is_folder_title_noise(title: str | None) -> bool:
     if " " not in t and "·" not in t and "—" not in t and _GLUED_ALNUM.match(t):
         return True
     return False
+
+
+def extract_place_label(raw: str | None) -> str | None:
+    """OQ-SFC-01 · 从脏文件夹名抽取 2–6 字中文地名（去尾数字与前导年份）。"""
+    cleaned = humanize_folder_title(raw, limit=40)
+    if not cleaned or cleaned == _DEFAULT_TITLE:
+        return None
+    t = cleaned.replace(" ", "")
+    t = _TRAILING_SERIAL.sub("", t)
+    t = _LEADING_YEAR.sub("", t)
+    t = t.strip(" ·-_.")
+    if _CJK_PLACE.match(t):
+        return t
+    return None
 
 
 def _date_fallback_label(meta: dict[str, Any] | None) -> str:
@@ -94,28 +115,54 @@ def _place_fallback_label(meta: dict[str, Any] | None) -> str:
     return "旅行"
 
 
+def _fallback_display(meta: dict[str, Any] | None, *, limit: int) -> str:
+    place = _place_fallback_label(meta)
+    date_part = _date_fallback_label(meta)
+    fallback = f"{place} · {date_part}"
+    return fallback[:limit] if len(fallback) > limit else fallback
+
+
+def _accept_display(candidate: str, *, limit: int) -> str | None:
+    """Return humanized title when清洗后已可读；否则 None（交 resolve 做地点回退）。"""
+    t = (candidate or "").strip()
+    if not t:
+        return None
+    cleaned = humanize_folder_title(t, limit=limit)
+    if cleaned and cleaned != _DEFAULT_TITLE and not is_folder_title_noise(cleaned):
+        return cleaned
+    return None
+
+
 def resolve_display_title(
     meta: dict[str, Any] | None,
     *,
     limit: int = 20,
     raw_title: str | None = None,
 ) -> str:
-    """Cover / FirstSuccess / shelf display name (BE-FST-06).
+    """Cover / FirstSuccess / shelf display name (BE-FST-06 · D-SFC-03).
 
-    Prefer stored ``meta.displayTitle``; else humanize; if still folder-noise,
-    fall back to ``{place|旅行} · {date|游记}``.
+    Re-validates stored ``meta.displayTitle`` (do not trust dirty history).
+    Noise path: 有真实地点 → ``{地} · {日}``；否则地名抽取 → ``{地} · 旅行``（OQ-SFC-01）。
     """
     meta = meta or {}
     stored = str(meta.get("displayTitle") or "").strip()
-    if stored:
-        return stored[:limit] if len(stored) > limit else stored
+    accepted = _accept_display(stored, limit=limit)
+    if accepted:
+        return accepted
 
     raw = (raw_title if raw_title is not None else str(meta.get("title") or "")).strip()
-    cleaned = humanize_folder_title(raw, limit=limit) if raw else _DEFAULT_TITLE
-    if not is_folder_title_noise(raw) and not is_folder_title_noise(cleaned):
-        return cleaned
+    accepted = _accept_display(raw, limit=limit)
+    if accepted:
+        return accepted
 
-    place = _place_fallback_label(meta)
-    date_part = _date_fallback_label(meta)
-    fallback = f"{place} · {date_part}"
-    return fallback[:limit] if len(fallback) > limit else fallback
+    # 清洗后仍噪音：优先 meta 地点；否则文件夹地名抽取
+    meta_place = _place_fallback_label(meta)
+    if meta_place != "旅行":
+        return _fallback_display(meta, limit=limit)
+
+    extracted = extract_place_label(raw or stored)
+    if extracted:
+        out = f"{extracted} · 旅行"
+        return out[:limit] if len(out) > limit else out
+
+    return _fallback_display(meta, limit=limit)

@@ -7,6 +7,7 @@ from travelogue.domain.stage_hints import (  # noqa: F401
     PREPARING_VISION,
     PROCESSING_PHOTOS,
     STAGE_HINT_COPY,
+    VISION_WARMUP,
     stage_hint_text,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "PREPARING_VISION",
     "PROCESSING_PHOTOS",
     "STAGE_HINT_COPY",
+    "VISION_WARMUP",
     "stage_hint_text",
 ]

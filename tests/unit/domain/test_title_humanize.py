@@ -1,6 +1,7 @@
 """Share-Ready W2 · BE-SR-05 title humanize + First-Session Trust BE-FST-06."""
 
 from travelogue.domain.title_humanize import (
+    extract_place_label,
     humanize_folder_title,
     is_folder_title_noise,
     resolve_display_title,
@@ -60,3 +61,36 @@ def test_resolve_display_title_fallback_for_noise() -> None:
 
 def test_resolve_display_title_keeps_readable() -> None:
     assert resolve_display_title({"title": "雨后京都", "places": ["京都"]}) == "雨后京都"
+
+
+def test_humanize_collapses_double_dash() -> None:
+    assert humanize_folder_title("武大--米娜") == "武大 米娜"
+    assert is_folder_title_noise("武大--米娜") is True
+
+
+def test_extract_place_from_year_serial_folder() -> None:
+    assert extract_place_label("2025东澳岛9") == "东澳岛"
+    shown = resolve_display_title(
+        {
+            "title": "2025东澳岛9",
+            "places": ["旅途"],
+            "dateStart": "2025-04-20",
+            "dateEnd": "2025-04-23",
+        }
+    )
+    assert shown == "东澳岛 · 旅行"
+    assert "9" not in shown
+
+
+def test_resolve_display_title_revalidates_stored_dirty() -> None:
+    """D-SFC-03 · 历史脏 displayTitle 不得穿透。"""
+    shown = resolve_display_title(
+        {
+            "title": "武大--米娜",
+            "displayTitle": "武大--米娜",
+            "places": ["武汉"],
+            "dateStart": "2015-07-08",
+        }
+    )
+    assert shown == "武大 米娜"
+    assert "--" not in shown

@@ -366,6 +366,8 @@
 
 **声明（BLK-07）**：本表为 [FTUE §4.3](./PRD-FTUE-OPTIMIZATION-V1.md) / [UX Trust](./PRD-UX-TRUST-V1.md) / [Share-Ready §4.4](./PRD-SHARE-READY-OPTIMIZATION-V1.md) 禁词表的 **增量扩展**；**禁止**再平行维护第三套完整禁词表。工程词仍禁。
 
+**2026-07-18 增量（Share-Face Closeout · DOC-SFC / BLK-03）**：[PRD-SHARE-FACE-CLOSEOUT-V1 §4.2](./PRD-SHARE-FACE-CLOSEOUT-V1.md) 并入本表扫描范围——**竖幅/横幅（作图注中心词）**、**弱枚举时段句**（如「夜景，白天」）、**杂志全名整册复读填 alt/图注**。仍禁止另起平行禁词表。
+
 ---
 
 ## 5. 工程任务

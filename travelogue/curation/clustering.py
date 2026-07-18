@@ -32,17 +32,19 @@ _MIN_SCENE_TIMEOUT_SEC = 30
 
 
 def _vision_downgrade_notice(log: ClusterDecisionLog, want_vision: bool, scene_count: int) -> str:
-    """Non-blocking toast copy when P3-Full vision was requested but skipped (UX-P3-08)."""
+    """Non-blocking toast when vision was requested but skipped (UX-P3-08 · SFC D-SFC-05)."""
     if not want_vision or scene_count > 0:
         return ""
+    from travelogue.domain.stage_hints import VISION_DOWNGRADE_NOTICE
+
     for entry in log.entries:
         detail = str(entry.get("detail") or "")
         if "E_CLUSTER_VISION_TIMEOUT" in detail:
-            return "场景分析耗时较长，已按行程与日期排版完成"
+            return VISION_DOWNGRADE_NOTICE
         if "E_CLUSTER_VISION_MISSING" in detail:
-            return ""
+            return VISION_DOWNGRADE_NOTICE
         if entry.get("kind") == "fallback" and "scene" in detail.lower():
-            return "场景分析未完成，已按行程与日期排版完成"
+            return VISION_DOWNGRADE_NOTICE
     return ""
 
 
@@ -264,9 +266,9 @@ class ClusteringLayer:
         if clip_torch_available() and not clip_weights_likely_cached(
             model_name=cfg.vision.model.replace("/", "-")
         ):
-            from travelogue.domain.stage_hints import PREPARING_VISION, stage_hint_text
+            from travelogue.domain.stage_hints import VISION_WARMUP, stage_hint_text
 
-            hints.append(stage_hint_text(PREPARING_VISION))
+            hints.append(stage_hint_text(VISION_WARMUP))
         if embedding_cache_is_corrupt(trip_dir):
             log.add("fallback", "E_CLUSTER_CACHE_CORRUPT: rebuilding cluster cache")
             hints.append("正在重新分析场景…")

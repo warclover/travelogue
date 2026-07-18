@@ -32,11 +32,22 @@ def asset_skips_caption(asset: dict | None) -> bool:
     return bool(asset and asset.get("skipCaption"))
 
 
-def resolve_caption(item: dict | None, asset: dict | None) -> str:
-    """Display precedence: item caption, then asset caption; skipCaption wins."""
+def resolve_caption(
+    item: dict | None,
+    asset: dict | None,
+    *,
+    title: str | None = None,
+) -> str:
+    """Display precedence: item caption, then asset caption; skipCaption wins.
+
+    Share-Face Closeout · 读取时再过护栏，清存量假句。
+    """
+    from travelogue.domain.share_face_copy import sanitize_share_copy
+
     if asset_skips_caption(asset):
         return ""
-    return item_caption(item) or asset_caption(asset)
+    raw = item_caption(item) or asset_caption(asset)
+    return sanitize_share_copy(raw, title=title, kind="caption")
 
 
 def find_item_for_asset(chapter: dict, asset_id: str) -> dict | None:

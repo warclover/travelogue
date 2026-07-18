@@ -17,7 +17,7 @@ import { openImportSheet } from "./import-entry.js";
 import { HELP_COPY, trackHelpEvent } from "../js/help-onboarding.js";
 
 var STALE_BADGE = "可更新";
-var STALE_LONGSHOT = "长图可更新";
+var STALE_LONGSHOT = "分享图需更新";
 var _demoConvertWired = false;
 
 function syncDemoConvertCta() {

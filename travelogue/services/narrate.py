@@ -75,9 +75,19 @@ def _strip_banned(text: str) -> str:
     return re.sub(r"\s{2,}", " ", out).strip()
 
 
-def _finalize_copy(text: str, max_chars: int, *, seen: set[str] | None = None) -> str:
-    """Clamp length, drop banned phrases, optional de-dupe within a narrate run."""
+def _finalize_copy(
+    text: str,
+    max_chars: int,
+    *,
+    seen: set[str] | None = None,
+    title: str | None = None,
+    kind: str = "caption",
+) -> str:
+    """Clamp length, drop banned phrases, Share-Face 空优于假句, optional de-dupe."""
+    from travelogue.domain.share_face_copy import sanitize_share_copy
+
     t = _strip_banned((text or "").strip())
+    t = sanitize_share_copy(t, title=title, kind=kind)
     if not t:
         return ""
     if seen is not None:
@@ -175,7 +185,8 @@ def _pick_template(templates: list[str], seed: str) -> str:
     return templates[idx]
 
 
-# First-Session Trust · 禁说明书腔（抬头看见 / 慢慢翻 等）；宁可地点·日期短标签
+# First-Session Trust / SFC · 禁说明书腔（竖幅 / 抬头看见 / 慢慢翻 等）；宁可地点·日期短标签
+# 输出侧由 travelogue.domain.share_face_copy 再拦一层（空优于假句）。
 STUB_CAPTION_TEMPLATES: dict[str, tuple[str, ...]] = {
     "portrait": ("{place}", "{date} · {place}", "{date}"),
     "landscape": ("{place}", "{date} · {place}", "{date}"),
@@ -282,6 +293,8 @@ def _apply_stub_captions(
                 assets=asset_list,
             ),
             max_chars,
+            title=str(meta.get("displayTitle") or meta.get("title") or ""),
+            kind="caption",
         )
         if not caption:
             continue
@@ -545,6 +558,8 @@ def _run_narrate_stub(
                     assets=asset_list,
                 ),
                 lim["hookMaxChars"],
+                title=str(meta.get("displayTitle") or meta.get("title") or ""),
+                kind="hook",
             )
         updated.append("meta.hook")
 
@@ -581,6 +596,8 @@ def _run_narrate_stub(
                 ),
                 lim["chapterLeadMaxChars"],
                 seen=lead_seen,
+                title=str(meta.get("displayTitle") or meta.get("title") or ""),
+                kind="lead",
             )
         updated.append(f"chapters[{ch.get('index')}].lead")
 

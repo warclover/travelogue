@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>敢发收口 Share-Face Closeout V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w1 { background: #1565c0; color: #fff; }
+    .tag--gate { background: #6a1b9a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 420px; position: relative; overflow: hidden;
+    }
+    .frame--dark { background: #1e2a28; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .busy {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: min(400px, 90%); background: #fff; border-radius: 16px; padding: 28px 24px 22px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.18); text-align: center; z-index: 50;
+    }
+    .busy .eyebrow { font-size: 11px; color: var(--wf-muted); margin: 0 0 8px; letter-spacing: .04em; }
+    .busy h3 { margin: 0 0 8px; font-size: 18px; color: var(--bar); }
+    .busy .stage { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--bar); }
+    .busy .sub { margin: 0 0 14px; font-size: 12px; color: var(--wf-muted); }
+    .bar { height: 8px; background: #eceff1; border-radius: 999px; overflow: hidden; margin: 0 0 10px; }
+    .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+    .bar--indet i { width: 36%; animation: slide 1.2s ease-in-out infinite; }
+    @keyframes slide {
+      0% { transform: translateX(-20%); }
+      50% { transform: translateX(160%); }
+      100% { transform: translateX(-20%); }
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+    }
+    .btn--primary { background: var(--bar); color: #f5fbf8; }
+    .btn--secondary { background: #fff; color: var(--bar); border: 1.5px solid var(--bar); }
+    .btn--ghost { background: transparent; color: var(--accent); font-weight: 600; border: none; padding: 8px 0; }
+    .magazine {
+      margin: 56px auto 24px; width: min(400px, 86%); background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28); overflow: hidden;
+    }
+    .magazine__cover {
+      height: 200px; background: linear-gradient(180deg, #5d4037, #3e2723); color: #fff;
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 16px;
+    }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 20px; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .magazine__body { padding: 14px 16px; font-size: 12px; color: #5d4037; }
+    .leak {
+      background: rgba(255,255,255,.94); color: #c62828; font-size: 11px;
+      padding: 6px 8px; border-radius: 6px; border: 1px dashed #ef9a9a; margin-top: 8px;
+    }
+    .okline {
+      background: rgba(232,245,233,.95); color: #1b5e20; font-size: 11px;
+      padding: 6px 8px; border-radius: 6px; border: 1px solid #a5d6a7; margin-top: 8px;
+    }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .compare .mini {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; font-size: 12px;
+    }
+    .compare .mini h4 { margin: 0 0 8px; font-size: 13px; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px; padding: 4px;
+      background: rgba(26,47,40,.92); border-radius: 999px;
+    }
+    .dock .ctl {
+      height: 36px; border: none; border-radius: 8px; background: transparent;
+      color: #e8f5ef; font-size: 12px; font-weight: 600; padding: 0 10px;
+    }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px; background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 11px; padding: 0 12px;
+    }
+    .banner {
+      position: absolute; left: 16px; right: 16px; top: 64px; z-index: 45;
+      background: #fff8e1; border: 1px solid #ffb74d; border-radius: 12px;
+      padding: 12px 14px; font-size: 13px; display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    }
+    .shelf {
+      margin: 40px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    .card {
+      background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .card .thumb { height: 88px; background: linear-gradient(135deg, #78909c, #546e7a); }
+    .card .meta { padding: 10px; }
+    .badge {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+      background: #fff3e0; color: #e65100; border: 1px solid #ffcc80;
+    }
+    .refine-row {
+      display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px;
+    }
+    .refine-row select { padding: 4px 8px; border-radius: 6px; border: 1px solid #b0bec5; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>敢发收口 Share-Face Closeout V1 · 线框 <span style="opacity:.7">PRD v1.0.1 · Conditional Go</span></h1>
+    <p>W0 挡门：F1–F3 · W1 挡门：F4–F5。空优于假句 · 体面名 · 识图准备有主句 · stale 人话 · Sparse 少打断。跨职能评审 2026-07-18 · 可 Kickoff W0。</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 识图准备<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 分享面对照<span class="w">W0</span></button>
+      <button type="button" data-panel="f3">F3 体面名<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 stale 人话<span class="w">W1</span></button>
+      <button type="button" data-panel="f5">F5 Sparse G1<span class="w">W1</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · 识图准备有主句 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">任意 running ≥1s 不得 phase/message 双空。首次视觉模型准备映射为 vision_warmup，主句用人话「识图」，不提 HF/CLIP。</p>
+          <div class="callout"><strong>定案</strong>D-SFC-04 · D-SFC-05 · P-SFC-03 · AC-SFC-04/05 · 线框挡门 W0</div>
+        </div>
+
+        <div class="anno">To-Be · vision_warmup</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio · 导入中</div></div>
+        <div class="frame">
+          <div class="busy">
+            <p class="eyebrow">来源 · 本地相册</p>
+            <h3>正在生成你的游记画册…</h3>
+            <p class="stage">正在准备识图（首次可能较慢）</p>
+            <p class="sub">可取消；取消后仍可做游记</p>
+            <div class="bar bar--indet"><i></i></div>
+            <button type="button" class="btn btn--secondary" style="margin-top:8px">取消</button>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>主句必须告诉用户「系统在做什么」。失败则降级继续，不卡死整单。</div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">As-Is · 假死</div></div>
+        <div class="frame">
+          <div class="busy">
+            <p class="eyebrow">来源 · 本地相册</p>
+            <h3>正在生成你的游记画册…</h3>
+            <p class="stage" style="color:var(--danger)">（无阶段主句）</p>
+            <p class="sub">进度与百分比均为空 · 后台在拉模型</p>
+            <div class="bar"><i style="width:0%"></i></div>
+          </div>
+        </div>
+        <div class="callout callout--bad"><strong>禁止</strong>running 时 UI 像卡住；禁止主句出现 huggingface / open_clip / .bin 文件名。</div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 分享面对照（空优于假句） <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">stub/L0：说明书腔与弱枚举不得进读者面；标题不得整册复读填图注。</p>
+          <div class="callout"><strong>定案</strong>D-SFC-01 · D-SFC-02 · AC-SFC-01/02 · FX-SFC-01～03</div>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">As-Is · 不敢发</h4>
+            <div class="magazine">
+              <div class="magazine__cover">
+                <p>示例</p>
+                <h3>示例游记</h3>
+                <p>关于示例游记的 1 天</p>
+              </div>
+              <div class="magazine__body">
+                <div class="leak">图注：示例游记的竖幅。</div>
+                <div class="leak">图注：抬头看见示例游记。</div>
+                <div class="leak">章引：夜景，白天</div>
+                <div class="leak">章名：5月27日续</div>
+              </div>
+            </div>
+          </div>
+          <div class="mini">
+            <h4 class="ok">To-Be · 敢看</h4>
+            <div class="magazine">
+              <div class="magazine__cover">
+                <p>京都</p>
+                <h3>试用·周末短途</h3>
+                <p>1 天 · 可预览与导出</p>
+              </div>
+              <div class="magazine__body">
+                <div class="okline">图注：空（或「5月27日」短标签）</div>
+                <div class="okline">章引：空（精修可补一句）</div>
+                <div class="okline">章名：5月27日 · 晚上 / 5月27日（2）</div>
+                <div class="okline">无整册复读杂志全名</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>注意</strong>空槽可能显得「没写完」——用精修「添加一句」承接；禁止用假句填坑（P-SFC-08）。</div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 体面名同源 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">封面 · 书架 · FirstSuccess 使用同一 displayTitle。清洗 `--` 与尾数字目录腔。</p>
+          <div class="callout"><strong>定案</strong>D-SFC-03 · AC-SFC-03 · FX-SFC-04/05 · OQ-SFC-01</div>
+        </div>
+
+        <div class="anno">To-Be · 书架 + 封面</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Travelogue Studio · 书架</div></div>
+        <div class="frame">
+          <div class="shelf">
+            <div class="card">
+              <div class="thumb"></div>
+              <div class="meta">
+                <strong>武大 米娜</strong>
+                <div style="color:var(--wf-muted);margin-top:4px">25 张 · 刚刚</div>
+                <div class="okline">来自文件夹 武大--米娜</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="thumb" style="background:linear-gradient(135deg,#6d4c41,#3e2723)"></div>
+              <div class="meta">
+                <strong>东澳岛 · 旅行</strong>
+                <div style="color:var(--wf-muted);margin-top:4px">或「旅行 · 4月20–23日」</div>
+                <div class="okline">禁止：2025东澳岛9</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="thumb" style="background:linear-gradient(135deg,#455a64,#263238)"></div>
+              <div class="meta">
+                <strong>试用·周末短途</strong>
+                <div style="color:var(--wf-muted);margin-top:4px">用户意图标题优先</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>精修仍可编辑原 title；展示链只看 displayTitle。</div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · stale 主词人话 <span class="tag tag--w1">W1</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">唯一主词由「长图可更新」改为「分享图需更新」。副文说明要重新导出再发。</p>
+          <div class="callout"><strong>定案</strong>D-SFC-06 · supersede QH R-QH-05 · AC-SFC-06 · OQ-SFC-03</div>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">As-Is</h4>
+            <p><span class="badge">长图可更新</span></p>
+            <p style="color:var(--wf-muted);margin-top:8px">用户：更新什么？产物？工程词。</p>
+          </div>
+          <div class="mini">
+            <h4 class="ok">To-Be</h4>
+            <p><span class="badge">分享图需更新</span></p>
+            <p style="margin-top:8px">副文：改过版面或照片后，导出最新图再发</p>
+            <p style="color:var(--wf-muted);margin-top:8px">Help：「分享图需更新」是什么意思 →</p>
+          </div>
+        </div>
+
+        <div class="anno">预览 Dock</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · Task Dock</div></div>
+        <div class="frame frame--dark">
+          <div class="dock">
+            <button type="button" class="ctl">返回</button>
+            <button type="button" class="ctl">精修</button>
+            <button type="button" class="export">发微信群</button>
+          </div>
+          <div class="busy" style="top:58%">
+            <p class="eyebrow">提醒</p>
+            <h3>分享图需更新</h3>
+            <p class="sub">改过版面或照片后，导出最新图再发</p>
+            <button type="button" class="btn btn--primary btn--block">导出最新分享图</button>
+            <button type="button" class="btn btn--ghost">「分享图需更新」是什么意思 →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · Sparse 默认跳过 G1 <span class="tag tag--w1">W1</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">kept_n 1–9 且快速分享：不展示「章节结构待确认」阻断横幅。实验选项开启后仍可 G1。</p>
+          <div class="callout"><strong>定案</strong>D-SFC-07 · AC-SFC-08/09 · OQ-SFC-02（精细制作可保留 G1）</div>
+        </div>
+
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">As-Is · 6 张也被拦</h4>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览</div></div>
+            <div class="frame" style="min-height:280px">
+              <div class="dock">
+                <button type="button" class="ctl">返回</button>
+                <button type="button" class="export">发微信群</button>
+              </div>
+              <div class="banner">
+                <div>章节结构待确认 · 请浏览各章顺序后确认</div>
+                <div>
+                  <button type="button" class="btn btn--primary" style="padding:6px 10px;font-size:11px">章节顺序 OK</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mini">
+            <h4 class="ok">To-Be · Sparse 默认</h4>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览</div></div>
+            <div class="frame" style="min-height:280px">
+              <div class="dock">
+                <button type="button" class="ctl">返回</button>
+                <button type="button" class="export">发微信群</button>
+              </div>
+              <div class="magazine" style="margin-top:72px">
+                <div class="magazine__cover">
+                  <p>京都</p>
+                  <h3>试用·周末短途</h3>
+                  <p>直接验货 → 导出</p>
+                </div>
+              </div>
+            </div>
+            <p class="okline" style="margin-top:8px">无 G1 横幅 · 高级设置可恢复确认</p>
+          </div>
+        </div>
+
+        <div class="anno">W2 附注 · 精修词表（非本帧挡门，见 AC-SFC-10）</div>
+        <div class="callout callout--warn">
+          <strong>照片类型</strong>
+          <div class="refine-row">
+            <label>照片类型</label>
+            <select><option>普通照片</option><option>拼图</option></select>
+            <span class="x">禁止标签「媒资」</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>评审速查</h3>
+      <ul>
+        <li><span class="ok">保留</span> Recipe CTA / 意图卡 / 示例试水 / 精修封面</li>
+        <li><span class="x">收口</span> 假句 · 脏名 · 空进度 · stale 词 · Sparse G1</li>
+        <li>PRD：<code>PRD-SHARE-FACE-CLOSEOUT-V1</code></li>
+        <li>AC：AC-SFC-01～11 · 15</li>
+        <li>宣布完成：真人 N≥5</li>
+      </ul>
+      <h3 style="margin-top:14px">OQ（M0 关）</h3>
+      <ul>
+        <li>OQ-01 东澳岛回退策略</li>
+        <li>OQ-02 精细小册是否 G1</li>
+        <li>OQ-03 stale 一字面确认</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var buttons = tabs.querySelectorAll("button[data-panel]");
+      var panels = document.querySelectorAll(".panel");
+      function show(id) {
+        panels.forEach(function (p) { p.classList.toggle("is-visible", p.id === id); });
+        buttons.forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-panel") === id); });
+      }
+      buttons.forEach(function (b) {
+        b.addEventListener("click", function () { show(b.getAttribute("data-panel")); });
+      });
+    })();
+  </script>
+</body>
+</html>

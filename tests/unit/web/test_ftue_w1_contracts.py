@@ -36,9 +36,18 @@ def test_import_run_maps_stage_hint_labels() -> None:
     run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     logic = (STUDIO / "homepage-v2" / "import-run-logic.js").read_text(encoding="utf-8")
     assert "preparing_vision" in constants
-    assert "正在准备本机视觉组件（仅第一次）" in constants
+    assert "vision_warmup" in constants
+    assert "正在准备识图" in constants
     assert "resolveImportStageCopy" in logic
     assert "resolveImportStageCopy" in run
+    pipeline = (
+        ROOT / "travelogue" / "web" / "studio_pipeline.py"
+    ).read_text(encoding="utf-8")
+    assert "maybe_sleep_vision_warmup_inject" in pipeline
+    assert "sfc_vision_warmup_shown" in (
+        ROOT / "templates" / "studio" / "js" / "analytics.js"
+    ).read_text(encoding="utf-8")
+    assert "sfc_vision_warmup_shown" in run
     # FE-FST-02 · FirstSuccess 不阻塞于 refreshTrips
     assert "showFirstSuccess({ result: result })" in run
 
@@ -71,8 +80,7 @@ def test_stage_hints_module_frozen_copy() -> None:
         stage_hint_text,
     )
 
-    assert "本机视觉组件" in stage_hint_text(PREPARING_VISION)
-    assert "仅第一次" in stage_hint_text(PREPARING_VISION)
+    assert "准备识图" in stage_hint_text(PREPARING_VISION)
     assert "长图组件" in stage_hint_text(PREPARING_BROWSER)
     assert "整理照片" in stage_hint_text(PROCESSING_PHOTOS)
 

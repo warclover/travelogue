@@ -30,6 +30,14 @@ FST_EVENTS = (
     "share_surface_blocked",
 )
 
+SFC_EVENTS = (
+    "sfc_vision_warmup_shown",
+    "sfc_stub_blanked",
+    "sfc_title_fallback",
+    "sfc_g1_suppressed_sparse",
+    "sfc_stale_label_impression",
+)
+
 
 def test_ftue_events_in_fe_and_be_allowlists() -> None:
     analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
@@ -51,6 +59,18 @@ def test_fst_events_in_fe_and_be_allowlists() -> None:
     assert "longshot_reveal_auto_blocked" in dock
     assert "aria-busy" in dock
     assert "focusDockPrimary" in dock or "preventScroll" in dock
+
+
+def test_sfc_events_in_fe_and_be_allowlists() -> None:
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
+    for ev in SFC_EVENTS:
+        assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS, ev
+        assert f'"{ev}"' in analytics, ev
+    run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
+    assert "sfc_vision_warmup_shown" in run
+    assert "sfc_title_fallback" in run
+    fs = (STUDIO / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+    assert "sfc_g1_suppressed_sparse" in fs
 
 
 def test_ftue_demo_album_success_emitted() -> None:

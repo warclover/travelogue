@@ -106,6 +106,12 @@ const ALLOWED = new Set([
   "longshot_success_visible_ms",
   "longshot_reveal_auto_blocked",
   "share_surface_blocked",
+  // Share-Face Closeout V1 · PRD §7
+  "sfc_vision_warmup_shown",
+  "sfc_stub_blanked",
+  "sfc_title_fallback",
+  "sfc_g1_suppressed_sparse",
+  "sfc_stale_label_impression",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

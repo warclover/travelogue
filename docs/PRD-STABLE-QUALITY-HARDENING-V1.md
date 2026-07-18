@@ -136,7 +136,7 @@ Cluster F · Playwright 偶绿（F03/F04/F15/F16） → P2 FLAKE
 | **R-QH-02** | `featuredDetected` 用 **intent flush / folders 深合并** 落盘 | 见 §6.1 D-QH-02；承认与 ADR-008 disk-intent 优先的张力 |
 | **R-QH-03** | 取消半成品 = **方案 A（约束版自动清理）** | 见 §6.3 D-QH-05；方案 B 为 OUT-07 |
 | **R-QH-04** | FirstSuccess / 设置描述合同：**采纳 L0 现行语义**，本 PRD **正式 supersede** Help V1 副文案锁与 UX-Trust F-TRU-HOME-02 | 禁止只改测；新句仍满足验货 + 『长图』、不推精修 |
-| **R-QH-05** | 用户面唯一 stale 主词：**「长图可更新」**；废除「长图待更新」；Dock「已过期」改同族主词 | 见 §6.2 词表 |
+| **R-QH-05** | 用户面唯一 stale 主词：**「长图可更新」**；废除「长图待更新」；Dock「已过期」改同族主词 | 见 §6.2 词表 · **2026-07-18 脚注**：一字面已被 [Share-Face Closeout V1](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **D-SFC-06** supersede 为 **「分享图需更新」**（仍保持「唯一主词」铁律；QH 本条记录历史统一阶段） |
 | **R-QH-06** | 设置描述与 AI 入口必须一致：Popover **加入口** 或 **改句不承诺 AI** | 见 §6.2；默认推荐改句（更小 diff） |
 | **R-QH-07** | 旁路上传 AC 验 **成册结果**，不止 FormData | 见 §6.3 / §10 |
 | **R-QH-08** | 清点态机含 **超时/降级** 诚实态 | 见 §6.3 D-QH-04 |

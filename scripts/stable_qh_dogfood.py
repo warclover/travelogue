@@ -567,7 +567,7 @@ def _run(base: str) -> int:
         settings_ok = exp.count() > 0
         # resume CTA copy in shelf logic is source-gated; check shelf for 更新长图 if stale present
         resume_cta = page.locator("text=更新长图").count()
-        stale_badge = page.locator(".v2-shelf__stale-badge", has_text="长图可更新").count()
+        stale_badge = page.locator(".v2-shelf__stale-badge", has_text="分享图需更新").count()
         logic = (ROOT / "templates" / "studio" / "homepage-v2" / "shelf-actions-logic.js").read_text(
             encoding="utf-8"
         )

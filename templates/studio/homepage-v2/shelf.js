@@ -17,7 +17,7 @@ import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
 var STALE_BADGE = "可更新";
-var STALE_LONGSHOT = "长图可更新";
+var STALE_LONGSHOT = "分享图需更新";
 var _shelfScrollTracked = false;
 var _hostEl = null;
 var _gridEl = null;
@@ -146,7 +146,7 @@ function buildCoverWrap(trip, surface) {
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
   var staleBits = [];
-  if (trip.longshotStale) staleBits.push("长图可更新");
+  if (trip.longshotStale) staleBits.push("分享图需更新");
   if (trip.algorithmStale) staleBits.push("可更新");
   openCover.title = (trip.title || trip.tripId)
     + (staleBits.length ? " · " + staleBits.join(" · ") : "");

@@ -89,7 +89,7 @@ def write_report(base: str, out: Path) -> None:
     ]
     labels = {
         "SETUP": "环境",
-        "STALE-VOCAB": "精修→长图可更新词表",
+        "STALE-VOCAB": "精修→分享图需更新词表",
         "SLOW-HINT": "大相册 Importing ≥30s 慢安抚",
         "OLD-TRIP-A": "老 trip 回归 A",
         "OLD-TRIP-B": "老 trip 回归 B",
@@ -100,7 +100,7 @@ def write_report(base: str, out: Path) -> None:
         "| 属性 | 内容 |",
         "|------|------|",
         f"| **Studio** | `{base}` |",
-        "| **范围** | 精修→长图可更新；大相册慢安抚；本机 2 本老 trip |",
+        "| **范围** | 精修→分享图需更新；大相册慢安抚；本机 2 本老 trip |",
         "",
         "## 结果",
         "",
@@ -119,7 +119,7 @@ def write_report(base: str, out: Path) -> None:
             "",
             "## 说明",
             "",
-            "- **STALE**：先导长图，等待 >0.5s 宽限后再 PATCH 标题 bump `updatedAt`；书架/API 应出现「长图可更新」，且无「长图待更新」。",
+            "- **STALE**：先导长图，等待 >0.5s 宽限后再 PATCH 标题 bump `updatedAt`；书架/API 应出现「分享图需更新」，且无「长图待更新」。",
             "- **SLOW**：合成 48 张去重后仍唯一的图；Importing 面板在约 ≥30s 出现「比预期久一些，请耐心等待…」（见到后可 cancel）。",
             "- **OLD**：抽 2 本本机已有 index 的 trip，验预览 HTML + 长图入口 + 无禁用词表。",
             "",
@@ -274,17 +274,17 @@ def trial_stale_vocab(base: str) -> None:
         page.goto(f"{base}/", wait_until="networkidle")
         page.wait_for_timeout(1500)
         bad = page.get_by_text("长图待更新").count()
-        badge = page.locator(".v2-shelf__stale-badge", has_text="长图可更新").count()
+        badge = page.locator(".v2-shelf__stale-badge", has_text="分享图需更新").count()
         resume = page.get_by_text("更新长图").count()
         # also check preview dock
         page.goto(f"{base}/{trip_id}/index.html", wait_until="domcontentloaded")
         page.wait_for_timeout(2000)
         content = page.content() or ""
-        dock_ok = "长图可更新" in content or "更新长图" in content or page.locator(".preview-toolbar__longshot--stale").count() > 0
+        dock_ok = "分享图需更新" in content or "更新长图" in content or page.locator(".preview-toolbar__longshot--stale").count() > 0
         ui_ok = bad == 0 and (badge > 0 or resume > 0 or dock_ok or api_stale)
         browser.close()
 
-    # Product AC: no「长图待更新」; shelf/API/dock use「长图可更新」
+    # Product AC: no「长图待更新」; shelf/API/dock use「分享图需更新」
     ok = bad == 0 and (api_stale or badge > 0 or resume > 0 or dock_ok)
     record(
         "STALE-VOCAB",

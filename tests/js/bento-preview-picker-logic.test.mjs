@@ -26,7 +26,7 @@ test("matchesPreviewSearch filters title and tripId", () => {
 });
 
 test("stalePreviewLabel prioritizes longshot", () => {
-  assert.equal(stalePreviewLabel({ longshotStale: true, algorithmStale: true }), "长图可更新");
+  assert.equal(stalePreviewLabel({ longshotStale: true, algorithmStale: true }), "分享图需更新");
   assert.equal(stalePreviewLabel({ algorithmStale: true }), "可更新");
   assert.equal(stalePreviewLabel({}), "");
 });

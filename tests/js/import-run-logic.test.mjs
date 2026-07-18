@@ -22,6 +22,7 @@ import {
 
 test("basenameTitle / guessUploadTitle", () => {
   assert.equal(basenameTitle("C:\\\\trips\\\\京都雨后"), "京都雨后");
+  assert.equal(basenameTitle("C:\\\\trips\\\\2025东澳岛9"), "东澳岛 · 旅行");
   assert.equal(guessUploadTitle([]), "我的旅途");
   assert.equal(
     guessUploadTitle([{ webkitRelativePath: "京都雨后/a.jpg" }]),
@@ -106,4 +107,25 @@ test("FE-FST-01 · resolveImportStageCopy：N/N 后切 curate，计数不霸屏"
 
   const narrate = resolveImportStageCopy({ stage: "narrate", stageHint: "" });
   assert.match(narrate.main, /游记文案/);
+});
+
+test("SFC W0 · vision_warmup 主句非空", () => {
+  assert.equal(normalizeImportProductStage("vision_warmup"), "vision_warmup");
+  assert.equal(normalizeImportProductStage("preparing_vision"), "vision_warmup");
+  const warm = resolveImportStageCopy({
+    stage: "vision_warmup",
+    stageHint: "vision_warmup",
+  });
+  assert.match(warm.main, /准备识图/);
+  const emptyish = resolveImportStageCopy({ stage: "vision_warmup", stageHint: "" });
+  assert.match(emptyish.main, /准备识图/);
+  assert.ok(emptyish.main.length > 0);
+});
+
+test("SFC W0 · stage/hint 双空仍有主句兜底", () => {
+  const empty = resolveImportStageCopy({ stage: "", stageHint: "" });
+  assert.ok(empty.main.length > 0);
+  assert.match(empty.main, /整理照片|正在处理/);
+  const bare = resolveImportStageCopy(null);
+  assert.ok(bare.main.length > 0);
 });
