@@ -2483,7 +2483,7 @@ html[data-folio="full"] .featured-grid__img {
 }
 
 .chapter-separator__pull::before {
-  content: "C";
+  content: "\201C";
   position: absolute;
   left: 0.42rem;
   top: 0.08rem;

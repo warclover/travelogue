@@ -214,6 +214,13 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
             ctx.i += advance
             continue
 
+        # Food/mundane grids before mosaic: otherwise a square food run is
+        # absorbed into screen-portrait-N and never gets layoutHint=food-grid.
+        advance = try_mundane_grid(ctx)
+        if advance is not None:
+            ctx.i += advance
+            continue
+
         mosaic_advance = try_mosaic_window(ctx, ctx.i)
         if mosaic_advance is not None:
             ctx.i += mosaic_advance
@@ -225,11 +232,6 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
             continue
 
         advance = try_landscape_run(ctx)
-        if advance is not None:
-            ctx.i += advance
-            continue
-
-        advance = try_mundane_grid(ctx)
         if advance is not None:
             ctx.i += advance
             continue

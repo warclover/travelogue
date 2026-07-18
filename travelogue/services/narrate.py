@@ -230,8 +230,21 @@ def _build_stub_caption(
     )
     date = _format_asset_date(str(asset.get("takenAt") or ""))
     kind = str(asset.get("aspectKind") or "default")
-    templates = STUB_CAPTION_TEMPLATES.get(kind) or STUB_CAPTION_TEMPLATES["default"]
-    template = _pick_template(list(templates), str(asset.get("id") or place))
+    templates = list(STUB_CAPTION_TEMPLATES.get(kind) or STUB_CAPTION_TEMPLATES["default"])
+    # Prefer place-bearing templates when editorial place is meaningful so we
+    # do not land on date-only captions that hide the magazine subject.
+    # When place equals the magazine title, also require {date} so Share-Face
+    # sanitize does not wipe a pure title echo.
+    title = str((meta or {}).get("displayTitle") or (meta or {}).get("title") or "").strip()
+    if place and place not in {"这里", "旅途", "未知"}:
+        with_place = [t for t in templates if "{place}" in t]
+        if title and place == title:
+            mixed = [t for t in with_place if "{date}" in t]
+            if mixed:
+                with_place = mixed
+        if with_place:
+            templates = with_place
+    template = _pick_template(templates, str(asset.get("id") or place))
     return template.format(place=place, date=date or "这一天").strip()
 
 

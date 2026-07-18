@@ -62,7 +62,9 @@ def test_narrate_fills_hook_leads_epilogue() -> None:
     assert trip["meta"]["hook"]
     assert "京都" in trip["meta"]["hook"]
     assert all(ch["lead"] for ch in trip["chapters"])
-    assert trip.get("epilogue")
+    # BE-FST-03 / D-FST-06 · stub epilogue prefers empty over brochure copy
+    assert "epilogue" in result.fields_updated
+    assert not (trip.get("epilogue") or "").strip()
     assert trip["pipeline"]["status"] == "copy_draft"
 
 

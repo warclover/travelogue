@@ -197,6 +197,7 @@ def _studio_post_curate(
     )
     if g1_pending:
         from travelogue.render.engine import render_trip_surfaces
+        from travelogue.render.preview import render_preview_jpg
         from travelogue.services.pipeline_state import trip_status
 
         render_t0 = time.monotonic()
@@ -208,6 +209,8 @@ def _studio_post_curate(
             update_pipeline=False,
             cfg=cfg,
         )
+        # Shelf / reveal still need preview.jpg while structure confirmation waits.
+        render_preview_jpg(trip_json, trip_root=trip_root)
         pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         flush_pipeline_timings()
         mark_render_bundle_current(trip)
