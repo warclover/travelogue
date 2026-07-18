@@ -12,7 +12,13 @@ import { openImportSheet } from "./import-entry.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
-import { shelfResumeActions, shelfShowCoverLongshotBadge } from "./shelf-actions-logic.js";
+import {
+  shelfResumeActions,
+  shelfShowCoverLongshotBadge,
+  shelfShowCoverReadyBadge,
+} from "./shelf-actions-logic.js";
+
+var READY_LONGSHOT = "分享图已就绪";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
@@ -148,6 +154,8 @@ function buildCoverWrap(trip, surface) {
   var staleBits = [];
   if (trip.longshotStale) staleBits.push("分享图需更新");
   if (trip.algorithmStale) staleBits.push("可更新");
+  var readyBadge = shelfShowCoverReadyBadge(trip);
+  if (readyBadge) staleBits.push(READY_LONGSHOT);
   openCover.title = (trip.title || trip.tripId)
     + (staleBits.length ? " · " + staleBits.join(" · ") : "");
   buildCover(trip, openCover);
@@ -161,6 +169,8 @@ function buildCoverWrap(trip, surface) {
   var showLongshotBadge = shelfShowCoverLongshotBadge(trip, { resumeTripId: resumeTripId });
   if (showLongshotBadge) {
     wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_LONGSHOT));
+  } else if (readyBadge) {
+    wrap.appendChild(el("span", "v2-shelf__ready-badge", READY_LONGSHOT));
   } else if (trip.algorithmStale) {
     wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_BADGE));
   }

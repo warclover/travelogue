@@ -126,6 +126,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "export_ok_toast_shown",
         "export_open_folder_clicked",
         "export_platform_mismatch",
+        "mobile_gate_qr_error",
         # FE allowlist sync（消 studio-event 400 · FE-DFX-44）
         "home_stub_banner_click",
         "home_stub_banner_dismiss",

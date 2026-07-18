@@ -6,9 +6,12 @@ import assert from "node:assert/strict";
 import {
   shelfResumeActions,
   shelfShowCoverLongshotBadge,
+  shelfShowCoverReadyBadge,
+  markLongshotReady,
   shouldShowBentoStaleBar,
   bentoStaleMessage,
 } from "../../templates/studio/homepage-v2/shelf-actions-logic.js";
+import { LONGSHOT_READY_KEY } from "../../templates/studio/js/longshot-ready.js";
 
 describe("shelfResumeActions", function () {
   it("fresh trip only opens preview", function () {
@@ -73,6 +76,26 @@ describe("shelfShowCoverLongshotBadge", function () {
       shelfShowCoverLongshotBadge({ tripId: "a", longshotStale: false }, { resumeTripId: "a" }),
       false
     );
+  });
+});
+
+describe("shelfShowCoverReadyBadge", function () {
+  it("shows ready when marked and not stale", function () {
+    var store = {
+      _d: {},
+      getItem: function (k) { return this._d[k] || null; },
+      setItem: function (k, v) { this._d[k] = String(v); },
+    };
+    markLongshotReady("trip-a", { store: store });
+    assert.equal(
+      shelfShowCoverReadyBadge({ tripId: "trip-a", longshotStale: false }, { store: store }),
+      true
+    );
+    assert.equal(
+      shelfShowCoverReadyBadge({ tripId: "trip-a", longshotStale: true }, { store: store }),
+      false
+    );
+    assert.ok(store.getItem(LONGSHOT_READY_KEY));
   });
 });
 

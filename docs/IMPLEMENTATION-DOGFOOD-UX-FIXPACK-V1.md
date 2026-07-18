@@ -49,7 +49,7 @@
 | ID | 任务 | 状态 |
 |----|------|------|
 | DOC-DFX-01 | PRD v0.2 + 本清单 + 评审纪要回写 | ☑ |
-| DOC-DFX-02 | M1 合入后补 ACCEPTANCE 中 AC-01～04 签字栏 | ☐ |
+| DOC-DFX-02 | M1 合入后补 ACCEPTANCE 中 AC-01～04 签字栏 | ☑ `ACCEPTANCE-DOGFOOD-UX-FIXPACK-V1.md` |
 
 ### 前端 · 平台贯通
 
@@ -82,7 +82,7 @@
 |----|------|------|
 | QA-DFX-01 | Node：平台↔intent↔CTA 映射（含 poster） | ☑ `tests/js/longshot-export-panel.test.mjs` |
 | QA-DFX-02 | pytest：poster on/off、PNG+sidecar、screens 指纹（扩展现有 `test_poster_bric_pack.py`） | ☑ + `E_GCS_POSTER_DISABLED` handler 测 |
-| QA-DFX-03 | Playwright：选海报→确定→导出→四层断言；1272×675 + 1280×800 + `<560` | ☐ 手测/后续补 e2e |
+| QA-DFX-03 | Playwright：选海报→确定→导出→四层断言；1272×675 + 1280×800 + `<560` | ☑ 部分：`test_dogfood_ux_fixpack_playwright` AC-01/02；视口 Sheet 仍可补 |
 | QA-DFX-04 | 至少 1 个非海报平台反向回归（确认 wechat_chat 不误走海报） | ☑ 映射互逆 + CTA 默认仍「发微信群」 |
 
 **M1 出口**：AC-DFX-01～04 全绿；QA-DFX-01～04 过；手测分享达人脚本「选海报得海报」。
@@ -104,7 +104,7 @@
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
-| FE-DFX-30 | succeeded：Dock/主按钮 done/书架徽标刷新 + toast + reveal；文案含「此游记文件夹」 | `longshot.js` · task-dock | ☑（书架徽标：发 `travelogue:longshot-export-ready`） |
+| FE-DFX-30 | succeeded：Dock/主按钮 done/书架徽标刷新 + toast + reveal；文案含「此游记文件夹」 | `longshot.js` · task-dock · `longshot-ready.js` | ☑ |
 | FE-DFX-31 | failed：原因 + 重试；不改 confirmed platform | 同上 | ☑ |
 | BE-DFX-20 | job 级 `outputFormat`；容量回退整批重捕；取消清理半成品 | `export/longshot.py` | ☑ |
 | BE-DFX-21 | 海报固定 PNG 不受 D6 JPG 默认影响 | `poster_bric_pack.py` | ☑ |
@@ -138,8 +138,8 @@
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| QA-DFX-20 | Playwright：QR 正常 + 404 降级双路径 | ☐ 手测/后续补 e2e |
-| QA-DFX-21 | Playwright：AC-11～14；FTUE 网络无失败 import | ☐ 手测/后续补 e2e |
+| QA-DFX-20 | Playwright：QR 正常 + 404 降级双路径 | ☑ 无能力删位：`test_ac_hp22_01`；有资产路径待补 webp |
+| QA-DFX-21 | Playwright：AC-11～14；FTUE 网络无失败 import | ☑ 部分：AC-13/14 骨架；AC-11/12 仍可补 |
 | QA-DFX-22 | 人工：390 真机截图；Windows reveal 烟测 | ☐ |
 
 **M3 出口**：AC-DFX-10～14 全绿。R5.1 不验收。

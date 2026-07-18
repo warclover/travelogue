@@ -45,6 +45,7 @@ import {
   writeSessionIntent,
 } from "../js/output-recipe.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { markLongshotReady } from "../js/longshot-ready.js";
 import {
   applyDockLongshotIdle,
   dockLongshotContentHtml,
@@ -2501,6 +2502,10 @@ export function cancelPreviewLongshotExport(root) {
               });
               setLongshotExportState(root, "done");
               showLongshotDrawer(root, job);
+              // FE-DFX-30 / D5 · 书架「分享图已就绪」会话标记
+              try {
+                markLongshotReady(tripId);
+              } catch (_readyErr) {}
               // FE-DFX-30 · Dock 为主；toast 短提示叠加
               try {
                 var nOut = (result.outputs && result.outputs.length) || 0;

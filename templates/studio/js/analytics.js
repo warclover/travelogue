@@ -117,6 +117,7 @@ const ALLOWED = new Set([
   "export_ok_toast_shown",
   "export_open_folder_clicked",
   "export_platform_mismatch",
+  "mobile_gate_qr_error",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

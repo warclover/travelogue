@@ -49,6 +49,12 @@ function copyPageUrl() {
 }
 
 function onQrError() {
+  try {
+    trackStudioEvent("mobile_gate_qr_error", {
+      src: ($("v2-unsupported-qr") && $("v2-unsupported-qr").getAttribute("src")) || null,
+      layout: V2.layout || "unsupported_phone",
+    });
+  } catch (_e) {}
   var qrFallback = $("v2-unsupported-qr-fallback");
   showMiniappQrFallback($("v2-unsupported-qr"), qrFallback, qrFallback && qrFallback.textContent);
 }

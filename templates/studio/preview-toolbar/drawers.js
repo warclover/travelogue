@@ -385,7 +385,7 @@ export function initPreviewDrawers(root, tripId) {
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
       STUDIO_USER_NOTES_MAX_LEN +
       '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
-      '<p class="preview-drawer__notes-saved" hidden aria-live="polite">✓ 将显示在封面副标题与辑封</p>';
+      '<p class="preview-drawer__notes-saved" hidden aria-live="polite">✓ 已保存 · 将显示在封面副标题与辑封</p>';
 
     var pageEditTpl =
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
@@ -785,6 +785,25 @@ export function initPreviewDrawers(root, tripId) {
                   notes._savedHintTimer = window.setTimeout(function () {
                     notesSaved.hidden = true;
                   }, 1500);
+                }
+                // R2.2 · 热刷新封面副标题（一句话）
+                if (notesVal) {
+                  var subEl =
+                    document.querySelector(".cover-opening__subtitle") ||
+                    document.querySelector(".cover-hero__text .subtitle");
+                  if (!subEl) {
+                    var titleHost = document.querySelector(".cover-opening__title");
+                    if (titleHost && titleHost.parentElement) {
+                      subEl = document.createElement("p");
+                      subEl.className = "cover-opening__subtitle subtitle";
+                      subEl.setAttribute("data-block", "cover-subtitle");
+                      titleHost.parentElement.insertBefore(subEl, titleHost.nextSibling);
+                    }
+                  }
+                  if (subEl) {
+                    subEl.textContent = notesVal;
+                    subEl.hidden = false;
+                  }
                 }
               }
               if (hasPageFields && chId && entryCache.chapters) {

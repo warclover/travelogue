@@ -51,6 +51,7 @@ def build_render_context(
         cover_focal_point,
         cover_place_is_distinct,
         cover_use_contain_fit,
+        resolve_cover_subtitle,
         resolve_split_mat_title_layout,
         show_hook_on_cover,
     )
@@ -114,6 +115,7 @@ def build_render_context(
         intent=trip.get("intent"),
         assets=trip.get("assets") or [],
     )
+    cover_subtitle = resolve_cover_subtitle(trip, meta)
     cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
     hook = (meta.get("hook") or "").strip()
     epilogue = (trip.get("epilogue") or "").strip()
@@ -322,8 +324,8 @@ def build_render_context(
         "placeholderScript": placeholder_script,
         "isShare": surface.is_share,
         "title": meta_title,
-        "subtitle": (meta.get("subtitle") or "").strip(),
-        "hasSubtitle": bool((meta.get("subtitle") or "").strip()),
+        "subtitle": cover_subtitle,
+        "hasSubtitle": bool(cover_subtitle),
         "coverShowTitle": cover_show_title,
         "cover": CoverRenderContext(
             src=cover_src,

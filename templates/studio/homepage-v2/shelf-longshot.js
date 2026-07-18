@@ -2,6 +2,7 @@
  * 首页 v2 · 书架「保存长图」Modal 流程（M14）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
+import { markLongshotReady } from "../js/longshot-ready.js";
 import {
   LONGSHOT_PRESETS,
   startLongshotJob,
@@ -326,6 +327,7 @@ export function runShelfLongshot(trip, opts) {
       _backgroundJob = null;
       if (dismissed) {
         if (job.status === "succeeded") {
+          markLongshotReady(tripId);
           toast("长图已保存", { duration: 3000 });
           if (typeof V2.reroute === "function") V2.reroute();
         }
@@ -334,6 +336,7 @@ export function runShelfLongshot(trip, opts) {
 
       var formatted = formatLongshotResult(job);
       if (job.status === "succeeded") {
+        markLongshotReady(tripId);
         trackStudioEvent("shelf_longshot_success", {
           trip_id: tripId,
           surface: surface,
