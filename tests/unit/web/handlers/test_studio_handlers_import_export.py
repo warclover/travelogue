@@ -623,6 +623,31 @@ def test_handle_longshot_rejects_invalid_platform(tmp_path: Path) -> None:
     assert body["error"] in ("E_LNG2_INVALID_PLATFORM", "E_OR_UNKNOWN_PLATFORM")
 
 
+def test_handle_longshot_rejects_poster_bric_when_flag_off(tmp_path: Path) -> None:
+    """AC-DFX-04 · gcs_poster_bric=false → API 拒绝 poster（禁止半开）。"""
+    from travelogue.config.studio import GcsPosterBricConfig
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    trips = tmp_path / "trips"
+    create_trip("poster-off", trips, title="poster-off")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "poster-off",
+            "platform": "poster_bric",
+            "intent": "poster_bric",
+            "entrypoint": "preview",
+            "allowMissingSource": True,
+        },
+    )
+    handler.app_config.studio.gcs_poster_bric = GcsPosterBricConfig(enabled=False)
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_GCS_POSTER_DISABLED"
+
+
 def test_read_import_request_json_body(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.import_handlers import read_import_request
 

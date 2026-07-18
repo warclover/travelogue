@@ -39,6 +39,7 @@ def test_apply_intent_mirrors_meta_and_usernotes() -> None:
     )
     assert intent["version"] == "1"
     assert intent["title"] == "雨后京都" == trip["meta"]["title"]
+    assert trip["meta"]["displayTitle"] == "雨后京都"
     assert intent["places"] == ["京都", "大阪"] == trip["meta"]["places"]
     assert intent["userNotes"] == "带娃慢走" == trip["userNotes"]
     # userNotes must live at top level, NOT under meta (meta has no such field)

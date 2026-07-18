@@ -215,13 +215,50 @@ export function initShareMinimal() {
   window.setTimeout(stripEditableChrome, 400);
 }
 
+var LAYOUT_DIFF_TIP_VERSION = "v1";
+
+function layoutDiffTipKey(tripId) {
+  return (
+    "travelogue.preview.layoutDiffTip." +
+    LAYOUT_DIFF_TIP_VERSION +
+    "." +
+    String(tripId || "unknown")
+  );
+}
+
+/** FE-DFX-42 · 版式差异 tip：5s 淡出、每 trip 一次、版本化 localStorage */
 export function ensureCoverMobileFootnote() {
   if (isSharePreview()) return;
   if (document.getElementById("preview-toolbar-cover-footnote")) return;
+  var tripId = "";
+  try {
+    tripId = String(
+      (document.documentElement.getAttribute("data-trip-id") ||
+        location.pathname.split("/").filter(Boolean)[0] ||
+        "")
+    ).trim();
+  } catch (_e) {}
+  var key = layoutDiffTipKey(tripId);
+  try {
+    if (localStorage.getItem(key) === "1") return;
+  } catch (_ls) {}
+
   var note = document.createElement("p");
   note.id = "preview-toolbar-cover-footnote";
   note.className = "preview-toolbar__cover-footnote";
-  note.setAttribute("role", "note");
-  note.textContent = "手机预览封面版式与电脑不同，以手机效果为准";
+  note.setAttribute("role", "status");
+  note.textContent =
+    "手机封面版式与电脑不同，以手机效果为准 · 详见帮助";
   document.body.appendChild(note);
+
+  window.setTimeout(function () {
+    note.classList.add("preview-toolbar__cover-footnote--fade");
+    window.setTimeout(function () {
+      if (note.parentNode) note.parentNode.removeChild(note);
+    }, 400);
+  }, 5000);
+
+  try {
+    localStorage.setItem(key, "1");
+  } catch (_w) {}
 }

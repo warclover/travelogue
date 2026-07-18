@@ -972,12 +972,21 @@ def test_cover_styles_v5_mobile_footnote_visible(tmp_path: Path) -> None:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1280, "height": 800})
             _attach_studio_event_collector(page)
-            page.add_init_script(f"() => localStorage.setItem({json.dumps(storage_key)}, '1')")
+            # FE-DFX-42 · 清版本化 tip 键以便本测可见；勿预写 seen
+            page.add_init_script(
+                f"""() => {{
+                  localStorage.setItem({json.dumps(storage_key)}, '1');
+                  Object.keys(localStorage).forEach((k) => {{
+                    if (k.startsWith('travelogue.preview.layoutDiffTip.')) localStorage.removeItem(k);
+                  }});
+                }}"""
+            )
             page.goto(url, wait_until="networkidle")
             footnote = page.locator("#preview-toolbar-cover-footnote")
             footnote.wait_for(state="visible", timeout=10_000)
-            assert "手机预览封面版式与电脑不同" in footnote.inner_text()
-            assert "以手机效果为准" in footnote.inner_text()
+            text = footnote.inner_text()
+            assert "手机封面版式与电脑不同" in text or "手机预览封面版式与电脑不同" in text
+            assert "以手机效果为准" in text
             browser.close()
     finally:
         server.shutdown()

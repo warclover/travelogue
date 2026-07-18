@@ -822,7 +822,7 @@ def test_ac_hp2_13_unsupported_phone(studio_server) -> None:
 
 
 def test_ac_hp22_01_unsupported_phone_actions(studio_server) -> None:
-    """AC-HP22-01 · 手机触屏 → 复制按钮可见；QR 缺失时降级占位且不请求 404。"""
+    """AC-HP22-01 / AC-DFX-10 · 手机触屏 → 复制可见；无 QR 能力时删位且不请求 404。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         context = browser.new_context(**p.devices["iPhone 13"])
@@ -840,6 +840,16 @@ def test_ac_hp22_01_unsupported_phone_actions(studio_server) -> None:
         copy_btn = page.locator("#v2-unsupported-copy")
         assert copy_btn.is_visible()
         assert qr_requests == []
+        # FE-DFX-40 · 无资产时整位移除（非占位破图）
+        qr_slot_hidden = page.evaluate(
+            """
+            () => {
+              const wrap = document.getElementById('v2-unsupported-qr-wrap');
+              return !wrap || wrap.hidden;
+            }
+            """
+        )
+        assert qr_slot_hidden
         page.evaluate(
             """
             () => {
@@ -856,15 +866,6 @@ def test_ac_hp22_01_unsupported_phone_actions(studio_server) -> None:
         copied = page.evaluate("() => window.__hp22Clipboard")
         assert copied.startswith("http")
         page.wait_for_selector(".studio__toast", timeout=3000)
-        qr_fallback_visible = page.evaluate(
-            """
-            () => {
-              const fb = document.getElementById('v2-unsupported-qr-fallback');
-              return fb && !fb.hidden;
-            }
-            """
-        )
-        assert qr_fallback_visible
         context.close()
         browser.close()
 

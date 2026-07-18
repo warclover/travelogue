@@ -49,6 +49,12 @@ function copyPageUrl() {
 }
 
 function onQrError() {
+  try {
+    trackStudioEvent("mobile_gate_qr_error", {
+      src: ($("v2-unsupported-qr") && $("v2-unsupported-qr").getAttribute("src")) || null,
+      layout: V2.layout || "unsupported_phone",
+    });
+  } catch (_e) {}
   var qrFallback = $("v2-unsupported-qr-fallback");
   showMiniappQrFallback($("v2-unsupported-qr"), qrFallback, qrFallback && qrFallback.textContent);
 }
@@ -106,11 +112,13 @@ function renderActions(actions) {
   show(host, list.length > 0);
 
   if (qrWrap) {
-    show(qrWrap, !!qrAction);
-    if (qrAction) {
+    // FE-DFX-40 · 无 QR action 或无能力 → 整位移除；仅有能力时才加载图 / onerror 降级
+    var canShowQr = !!qrAction && miniappQrAssetAvailable();
+    show(qrWrap, canShowQr);
+    if (canShowQr) {
       var fallbackText = qrAction.fallback || "小程序即将上线";
       if (qrFallback) qrFallback.textContent = fallbackText;
-      if (miniappQrAssetAvailable() && qrImg && qrAction.src) {
+      if (qrImg && qrAction.src) {
         show(qrImg, true);
         show(qrFallback, false);
         qrImg.alt = "微信小程序";
@@ -118,6 +126,10 @@ function renderActions(actions) {
       } else {
         showMiniappQrFallback(qrImg, qrFallback, fallbackText);
       }
+    } else if (qrImg) {
+      qrImg.removeAttribute("src");
+      show(qrImg, false);
+      if (qrFallback) show(qrFallback, false);
     }
   }
 
@@ -137,7 +149,11 @@ function trackUnsupportedView(layout) {
 }
 
 function renderUnsupported(layout) {
-  var copy = unsupportedCopy(layout, { width: viewportWidth() });
+  // FE-DFX-40 · 无 QR 资产时不渲染二维码位（删位，非占位降级）
+  var copy = unsupportedCopy(layout, {
+    width: viewportWidth(),
+    miniappQrAvailable: miniappQrAssetAvailable(),
+  });
   var titleEl = $("v2-unsupported-title");
   var leadEl = $("v2-unsupported-lead");
   if (titleEl) titleEl.textContent = copy.title;

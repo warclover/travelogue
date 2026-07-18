@@ -434,6 +434,15 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   display: none;
 }
 
+.cover-opening__subtitle {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+  line-height: 1.45;
+  font-weight: 400;
+  opacity: 0.88;
+  max-width: 36em;
+}
+
 .cover-opening__title {
   display: none;
   margin: 0;

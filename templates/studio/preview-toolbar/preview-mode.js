@@ -6,7 +6,7 @@
  */
 "use strict";
 
-var REFINE_STAR_TIP_KEY = "travelogue.preview.refineStarTipSeen";
+var REFINE_STAR_TIP_KEY = "travelogue.preview.refineStarTipSeen.v2";
 var BOOK_TAB_MIGRATE_TIP_KEY = "travelogue.preview.bookTabMigrateTipSeen";
 
 export function getPreviewRefineMode() {
@@ -126,7 +126,8 @@ export function maybeShowRefineStarTip(showToast) {
     /* ignore */
   }
   if (typeof showToast === "function") {
-    showToast("可在照片上点 ★ 标精选", { duration: 3500 });
+    // FE-DFX-46 / MF-04 · 含「点完成退出」
+    showToast("可在照片上点 ★ 标精选；点「完成」退出精修", { duration: 4200 });
   }
 }
 

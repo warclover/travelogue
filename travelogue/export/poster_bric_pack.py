@@ -197,18 +197,14 @@ def export_poster_bric_pack(
     title = _trip_title(trip_dir)
     prefix = file_prefix_for_platform(title, "poster_bric")
     profile = get_profile("poster_bric")
-    out_ext = "jpg" if str(fmt).lower() in ("jpeg", "jpg") else "png"
+    # BE-DFX-21 · poster always PNG (ignore job jpeg default / capacity fallback)
+    _ = fmt
+    out_ext = "png"
     writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=True)
 
     try:
         with writer:
-            if out_ext == "jpg":
-                img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
-                buf = io.BytesIO()
-                img.save(buf, format="JPEG", quality=92)
-                data = buf.getvalue()
-            else:
-                data = png_bytes
+            data = png_bytes
             writer.write(1, data)
             finals = writer.commit()
         if progress:
@@ -258,4 +254,5 @@ def export_poster_bric_pack(
         target_page_count=1,
         publish_guide=guide,
         page_count=len(outputs),
+        output_format="png",
     )

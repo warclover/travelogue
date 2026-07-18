@@ -268,4 +268,23 @@ def apply_copy_patches(trip: dict, patches: list[dict]) -> list[str]:
             from travelogue.services.copy_metrics import record_copy_metrics
 
             record_copy_metrics(trip)
+        # D2 · non-title save path: migrate stale displayTitle (title patches dual-write in apply_intent)
+        if "meta.title" not in updated:
+            from travelogue.domain.title_humanize import migrate_stale_display_title
+
+            meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else None
+            if migrate_stale_display_title(meta):
+                try:
+                    from travelogue.domain.studio_events import append_studio_homepage_event
+
+                    append_studio_homepage_event(
+                        "rename_propagation_migrated",
+                        {
+                            "title": str((meta or {}).get("title") or "")[:32],
+                            "displayTitle": str((meta or {}).get("displayTitle") or "")[:32],
+                            "via": "save_copy",
+                        },
+                    )
+                except Exception:
+                    pass
     return updated

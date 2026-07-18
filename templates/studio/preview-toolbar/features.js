@@ -121,7 +121,12 @@ export function initTitleEdit(root, tripId) {
       input.focus();
       input.select();
 
+      var imeComposing = false;
+      var finished = false;
       function finish(save) {
+        if (finished) return;
+        if (save && (imeComposing || input.isComposing)) return;
+        finished = true;
         var next = (input.value || "").trim();
         input.remove();
         display.hidden = false;
@@ -149,8 +154,18 @@ export function initTitleEdit(root, tripId) {
         });
       }
 
+      input.addEventListener("compositionstart", function () {
+        imeComposing = true;
+      });
+      input.addEventListener("compositionend", function () {
+        imeComposing = false;
+      });
       input.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
+          if (e.isComposing || imeComposing) {
+            e.preventDefault();
+            return;
+          }
           e.preventDefault();
           finish(true);
         }
@@ -160,6 +175,7 @@ export function initTitleEdit(root, tripId) {
         }
       });
       input.addEventListener("blur", function () {
+        if (imeComposing || input.isComposing) return;
         finish(true);
       });
     });

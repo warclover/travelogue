@@ -79,6 +79,8 @@ class LongshotExportResult:
     target_page_count: int | None = None
     publish_guide: str = ""
     page_count: int | None = None
+    # BE-DFX-20 · job-locked format (png|jpeg); never mixed within one job
+    output_format: str = "png"
 
     @property
     def paths(self) -> list[Path]:
@@ -688,6 +690,69 @@ def _maybe_watermark(
     return apply_chapter_watermark(data, page=page, total=total, fmt=fmt)
 
 
+def _capture_chapters_job_locked(
+    page: Any,
+    *,
+    trip_dir: Path,
+    title: str,
+    chapter_count: int,
+    scale: int,
+    fmt: str,
+    ext: str,
+    watermark: bool,
+    cancel_check: CancelCheckFn | None,
+    progress: ProgressFn | None,
+    session_writes: list[Path],
+) -> tuple[str, str, list[LongshotOutput], str]:
+    """Capture all chapters with one job-level format (BE-DFX-20).
+
+    If any PNG chapter exceeds WeChat size, purge session outputs and re-capture
+    the whole batch as JPEG so extensions stay uniform for the job.
+    """
+    job_fmt = "jpeg" if str(fmt).lower() == "jpeg" else "png"
+    job_ext = "jpg" if job_fmt == "jpeg" else "png"
+
+    def _run(active_fmt: str, active_ext: str) -> tuple[list[LongshotOutput], str, bool]:
+        outs: list[LongshotOutput] = []
+        first_method = "p0"
+        for idx in range(chapter_count):
+            raise_if_longshot_cancelled(cancel_check)
+            data, method = _capture_bytes(
+                page, scale=scale, fmt=active_fmt, chapter_index=idx
+            )
+            raise_if_longshot_cancelled(cancel_check)
+            if idx == 0:
+                first_method = method
+            if active_fmt == "png" and len(data) > MAX_WECHAT_BYTES:
+                # Abort this pass — caller purges and re-runs whole job as JPEG.
+                return outs, first_method, True
+            data = _maybe_watermark(
+                data,
+                page=idx + 1,
+                total=chapter_count,
+                fmt=active_fmt,
+                watermark=watermark,
+            )
+            out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{active_ext}"
+            _write_output_tracked(out_path, data, session_writes)
+            outs.append(LongshotOutput(path=out_path, capture_method=method))
+            if progress:
+                progress(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
+        return outs, first_method, False
+
+    outputs, capture_method, needs_jpeg = _run(job_fmt, job_ext)
+    if needs_jpeg and job_fmt == "png":
+        purge_longshot_session_files(session_writes)
+        session_writes.clear()
+        del outputs[:]
+        job_fmt = "jpeg"
+        job_ext = "jpg"
+        if progress:
+            progress(0, chapter_count, "文件偏大，整批改用 JPEG…")
+        outputs, capture_method, _ = _run(job_fmt, job_ext)
+    return job_fmt, job_ext, outputs, capture_method
+
+
 def export_trip_longshot(
     trip_dir: Path,
     *,
@@ -842,29 +907,19 @@ def export_trip_longshot(
             outputs.append(LongshotOutput(path=out_path, capture_method=method))
         elif do_segment:
             _report(0, chapter_count, "准备导出…")
-            for idx in range(chapter_count):
-                raise_if_longshot_cancelled(cancel_check)
-                data, method = _capture_bytes(
-                    page, scale=scale, fmt=fmt, chapter_index=idx
-                )
-                raise_if_longshot_cancelled(cancel_check)
-                capture_method = method if idx == 0 else capture_method
-                if len(data) > MAX_WECHAT_BYTES and fmt == "png":
-                    data, method = _capture_bytes(
-                        page, scale=scale, fmt="jpeg", chapter_index=idx
-                    )
-                    ext = "jpg"
-                data = _maybe_watermark(
-                    data,
-                    page=idx + 1,
-                    total=chapter_count,
-                    fmt=fmt if ext != "jpg" else "jpeg",
-                    watermark=watermark,
-                )
-                out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
-                _write_output_tracked(out_path, data, session_writes)
-                outputs.append(LongshotOutput(path=out_path, capture_method=method))
-                _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
+            fmt, ext, outputs, capture_method = _capture_chapters_job_locked(
+                page,
+                trip_dir=trip_dir,
+                title=title,
+                chapter_count=chapter_count,
+                scale=scale,
+                fmt=fmt,
+                ext=ext,
+                watermark=watermark,
+                cancel_check=cancel_check,
+                progress=_report,
+                session_writes=session_writes,
+            )
             user_hint = _segment_user_hint(chapter_count, segment_reason)
         else:
             _report(1, 1, "正在合成长图…")
@@ -875,29 +930,20 @@ def export_trip_longshot(
             if len(data) > MAX_WECHAT_BYTES:
                 segment_reason = "size"
                 _report(0, chapter_count, "准备导出…")
-                for idx in range(chapter_count):
-                    raise_if_longshot_cancelled(cancel_check)
-                    data, method = _capture_bytes(
-                        page, scale=scale, fmt=fmt, chapter_index=idx
-                    )
-                    raise_if_longshot_cancelled(cancel_check)
-                    capture_method = method if idx == 0 else capture_method
-                    if len(data) > MAX_WECHAT_BYTES and fmt == "png":
-                        data, method = _capture_bytes(
-                            page, scale=scale, fmt="jpeg", chapter_index=idx
-                        )
-                        ext = "jpg"
-                    data = _maybe_watermark(
-                        data,
-                        page=idx + 1,
-                        total=chapter_count,
-                        fmt=fmt if ext != "jpg" else "jpeg",
-                        watermark=watermark,
-                    )
-                    out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{ext}"
-                    _write_output_tracked(out_path, data, session_writes)
-                    outputs.append(LongshotOutput(path=out_path, capture_method=method))
-                    _report(idx + 1, chapter_count, f"第 {idx + 1}/{chapter_count} 段")
+                # Capacity overflow → segment; keep job-level format (may upgrade to jpeg)
+                fmt, ext, outputs, capture_method = _capture_chapters_job_locked(
+                    page,
+                    trip_dir=trip_dir,
+                    title=title,
+                    chapter_count=chapter_count,
+                    scale=scale,
+                    fmt=fmt,
+                    ext=ext,
+                    watermark=watermark,
+                    cancel_check=cancel_check,
+                    progress=_report,
+                    session_writes=session_writes,
+                )
                 user_hint = _segment_user_hint(chapter_count, segment_reason)
             else:
                 out_path = output or trip_dir / f"{title}-longshot.{ext}"
@@ -933,6 +979,7 @@ def export_trip_longshot(
         target_page_count=None,
         publish_guide="",
         page_count=len(outputs),
+        output_format="jpeg" if ext == "jpg" else "png",
     )
 
 

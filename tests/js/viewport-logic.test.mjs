@@ -47,3 +47,10 @@ test("unsupportedCopy phone 含动作区", () => {
   assert.equal(copy.actions[1].type, "copy_link");
   assert.match(copy.actions[1].label, /复制/);
 });
+
+test("unsupportedCopy phone 无 QR 能力时删位", () => {
+  var copy = unsupportedCopy("unsupported_phone", { miniappQrAvailable: false });
+  assert.equal(copy.actions.length, 1);
+  assert.equal(copy.actions[0].type, "copy_link");
+  assert.ok(!copy.actions.some(function (a) { return a.type === "miniapp_qr"; }));
+});

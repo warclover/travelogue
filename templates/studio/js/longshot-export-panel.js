@@ -169,6 +169,21 @@ export function ctaLabelForPlatform(platformId) {
   return p.cta;
 }
 
+/** Dock / 窄栏短标签（AC-DFX-02 · 含 poster_bric，禁止回落到「发微信群」） */
+export function shortCtaLabelForPlatform(platformId) {
+  if (platformId === "moments_grid") return "九宫格";
+  if (platformId === "wechat_moments") return "连读";
+  if (platformId === "xiaohongshu") return "小红书";
+  if (platformId === "poster_bric") return "单屏海报";
+  return "发微信群";
+}
+
+/** 设置入口摘要 · 「当前将导出：…」 */
+export function confirmedExportSummary(platformId) {
+  var p = PLATFORMS[platformId] || PLATFORMS.wechat_chat;
+  return "当前将导出：" + (p.label || p.title || platformId);
+}
+
 export function shouldShowMomentsCoach() {
   try {
     // 与帮助系统 T-PLATFORM-PICK 同周期（D-HELP / AC-HELP-08）
@@ -247,6 +262,8 @@ export function buildPanelHtml(platformIds) {
   return (
     '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。</p>' +
+    '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
+    '<div class="preview-toolbar__export-popover-body">' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
     '<span class="preview-toolbar__export-popover-label">发到哪里</span>' +
     '<div class="preview-toolbar__export-platform-grid" role="radiogroup" aria-label="发到哪里">' +
@@ -309,6 +326,7 @@ export function buildPanelHtml(platformIds) {
     '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
     "</div></details>" +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-actions">' +
     '<button type="button" class="preview-toolbar__export-popover-ok" data-action="ok">确定</button>' +
     '<button type="button" class="preview-toolbar__export-popover-cancel" data-action="cancel">取消</button>' +

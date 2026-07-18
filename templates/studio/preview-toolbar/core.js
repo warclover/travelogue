@@ -143,8 +143,12 @@ export function refreshTaskDockState(root) {
       return;
     }
     if (_layoutPending && !_pendingDockDismissed) {
+      var pendingTitle = _layoutPendingMessage || "版面有改动";
       root._taskDock.showPending({
-        title: _layoutPendingMessage || "版面有改动",
+        title: pendingTitle,
+        compact:
+          typeof pendingTitle === "string" &&
+          pendingTitle.indexOf("预览需更新") !== -1,
       });
       return;
     }

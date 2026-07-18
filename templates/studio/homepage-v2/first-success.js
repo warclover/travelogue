@@ -11,8 +11,29 @@ import { LS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
-import { runShelfLongshot } from "./shelf-longshot.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
+
+var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
+
+function writeFtueAutoExport(tripId, platform) {
+  try {
+    sessionStorage.setItem(
+      AUTO_EXPORT_KEY,
+      JSON.stringify({
+        tripId: String(tripId || ""),
+        platform: String(platform || "wechat_chat"),
+        ts: Date.now(),
+      })
+    );
+  } catch (_e) {}
+}
+
+function previewUrlWithAutoExport(baseUrl, platform) {
+  var url = String(baseUrl || "");
+  if (!url) return url;
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  return url + sep + "autoExport=" + encodeURIComponent(platform || "wechat_chat");
+}
 
 var _countdownTimer = null;
 var _countdownLeft = 5;
@@ -216,7 +237,10 @@ function populateSuccessUi(result) {
   var nextHint = $("v2-success-next-hint");
   var url = resolvePreviewUrl(result);
   if (open && url) open.href = url;
-  if (secondary && url) secondary.href = url;
+  // FE-DFX-43 · 次按钮链到预览并续跑 wechat_chat（禁止与主按钮同裸 URL）
+  if (secondary && url) {
+    secondary.href = previewUrlWithAutoExport(url, "wechat_chat");
+  }
   // D-HELP-10 · 方案 A：主 CTA 恒为打开预览；保存长图为次按钮
   if (open) {
     open.textContent = HELP_COPY.openPreviewCta;
@@ -429,7 +453,7 @@ function wireFirstSuccess() {
   if (secondary) {
     secondary.addEventListener("click", function (e) {
       e.preventDefault();
-      // 次按钮「保存长图」：显式跳过验货（D-HELP-10）
+      // FE-DFX-43 · 进预览并触发默认微信群长图导出（query + session 双写）
       if (_successRefinedEnabled && _successResult && _successResult.tripId) {
         trackStudioEvent("success_primary_click", {
           action: "save_longshot",
@@ -440,10 +464,19 @@ function wireFirstSuccess() {
           tripId: _successResult.tripId,
           mode: _successMode,
         });
-        runShelfLongshot({ tripId: _successResult.tripId, title: _successResult.title || "我的旅途" }, {
-          surface: "first_success",
-        });
-        return;
+        clearCountdown();
+        markFirstPreviewDone(_successResult.tripId);
+        writeFtueAutoExport(_successResult.tripId, "wechat_chat");
+        var dest =
+          secondary.href ||
+          previewUrlWithAutoExport(
+            resolvePreviewUrl(_successResult),
+            "wechat_chat"
+          );
+        if (dest) {
+          window.location.href = dest;
+          return;
+        }
       }
       openPreview("open_preview_secondary");
     });

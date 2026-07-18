@@ -91,7 +91,8 @@ function _ensureDom() {
     details.id = "studio-help-item-" + item.id;
     details.setAttribute("data-help-item", item.id);
     var summary = document.createElement("summary");
-    summary.textContent = item.id + " · " + item.title;
+    // FE-DFX-45 / AC-DFX-14 · 可见标题不含「H1 ·」前缀；id 留在 data-help-item
+    summary.textContent = item.title;
     var list = document.createElement("ul");
     list.className = "studio-help-drawer__points";
     (item.body || []).forEach(function (line) {

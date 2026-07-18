@@ -112,6 +112,12 @@ const ALLOWED = new Set([
   "sfc_title_fallback",
   "sfc_g1_suppressed_sparse",
   "sfc_stale_label_impression",
+  // Dogfood UX Fixpack V1 · PRD §8
+  "rename_propagation_migrated",
+  "export_ok_toast_shown",
+  "export_open_folder_clicked",
+  "export_platform_mismatch",
+  "mobile_gate_qr_error",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

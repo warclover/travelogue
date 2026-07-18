@@ -23,14 +23,19 @@ def test_panel_module_exists_and_exports() -> None:
         "export function bindPanelDraft",
         "export function enabledPlatformsFromConfig",
         "export function ctaLabelForPlatform",
+        "export function shortCtaLabelForPlatform",
+        "export function confirmedExportSummary",
         "export function shouldHintSparseMoments",
         "wechat_moments",
         "xiaohongshu",
+        "poster_bric",
         "clampXhsSlideCount",
         'data-studio-xhs-count="custom"',
         "长图连读",
         "导出朋友圈 · 九宫格",
+        "导出单屏海报",
         "moments_grid",
+        "data-export-confirmed-summary",
     ):
         assert token in src, f"missing: {token}"
 
@@ -47,6 +52,10 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     assert "export function openStudioLongshotExportPanel" in longshot
     assert "ensureStudioExportPopover" in longshot
     assert "syncLongshotCtaLabel" in longshot
+    assert "assertConfirmedPlatformPayload" in longshot
+    assert "export_platform_mismatch" in longshot
+    assert "shortCtaLabelForPlatform" in longshot
+    assert "preview-toolbar__export-popover--sheet" in longshot
     # Dev default: moments + xhs without requiring config.yaml
     assert '["wechat_moments", "xiaohongshu"]' in panel
 

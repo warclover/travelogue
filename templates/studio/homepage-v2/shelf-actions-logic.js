@@ -9,6 +9,15 @@
  * @property {boolean} [triggerCurate]
  */
 
+export {
+  LONGSHOT_READY_KEY,
+  LONGSHOT_READY_TTL_MS,
+  markLongshotReady,
+  isLongshotReady,
+} from "../js/longshot-ready.js";
+
+import { isLongshotReady } from "../js/longshot-ready.js";
+
 /**
  * @param {{ longshotStale?: boolean, algorithmStale?: boolean }} trip
  * @returns {ShelfResumeAction[]}
@@ -55,6 +64,17 @@ export function shelfShowCoverLongshotBadge(trip, opts) {
     return false;
   }
   return true;
+}
+
+/**
+ * D5 · 非 stale 且会话内刚导出成功 → 显示「分享图已就绪」
+ * @param {{ longshotStale?: boolean, tripId?: string }} trip
+ * @param {{ store?: Storage, now?: number }} [opts]
+ */
+export function shelfShowCoverReadyBadge(trip, opts) {
+  trip = trip || {};
+  if (trip.longshotStale) return false;
+  return isLongshotReady(trip.tripId, opts);
 }
 
 /**

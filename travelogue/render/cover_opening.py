@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from datetime import date
+from typing import Any
 
 # Stub hooks from travelogue.services.narrate._build_hook (frame / pre-LLM).
 # Keep legacy「碎片」patterns for old trips; also catch W1/W2「照片汇成」类模板句.
@@ -85,3 +87,30 @@ def cover_focal_point(asset: dict) -> tuple[float, float]:
     except (TypeError, ValueError):
         fx, fy = 0.5, 0.45
     return max(0.0, min(1.0, fx)), max(0.0, min(1.0, fy))
+
+
+def resolve_cover_subtitle(trip: dict[str, Any] | None, meta: dict[str, Any] | None = None) -> str:
+    """R2.1 · ``{subtitle 或 一句话} · {日期范围}``；绝不拼入杂志 title。"""
+    trip = trip or {}
+    meta = meta if isinstance(meta, dict) else (trip.get("meta") or {})
+    from travelogue.services.narrative_brief import resolve_user_notes
+
+    raw_subtitle = str(meta.get("subtitle") or "").strip()
+    one_liner = (resolve_user_notes(trip) or "").strip()
+    base = raw_subtitle or one_liner
+    if not base:
+        return ""
+    date_bit = ""
+    start = str(meta.get("dateStart") or "").strip()[:10]
+    end = str(meta.get("dateEnd") or "").strip()[:10]
+    if start:
+        try:
+            d0 = date.fromisoformat(start)
+            date_bit = d0.strftime("%Y.%m.%d")
+            if end and end != start:
+                d1 = date.fromisoformat(end)
+                date_bit = f"{date_bit} – {d1.strftime('%m.%d')}"
+        except ValueError:
+            date_bit = ""
+    out = f"{base} · {date_bit}" if date_bit and date_bit not in base else base
+    return out[:80] if len(out) > 80 else out

@@ -78,6 +78,12 @@
   margin-bottom: 8px;
 }
 .preview-drawer__notes { resize: vertical; min-height: 72px; }
+.preview-drawer__notes-saved {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: #3d6b5a;
+  line-height: 1.4;
+}
 .preview-drawer__chapter-label {
   margin: 8px 0 4px;
   font-size: 12px;
