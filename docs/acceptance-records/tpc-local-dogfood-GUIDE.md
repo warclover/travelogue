@@ -6,6 +6,7 @@
 | 关联 | [PRD-TEMPLATE-CONTRACT-V1](../PRD-TEMPLATE-CONTRACT-V1.md) · [缺口清单](./tpc-gap-checklist-2026-07-18.md) · [配置样例](../config-tpc-dogfood.example.yaml) |
 | 适用 | **无外部用户** 的开发机手测；**不是**对外默认开 / Go exit |
 | 仓库默认 | `mosaic.template_contract.enabled=false` · `features.gcs_poster_bric.enabled=false`（保持 AC-TPC-01） |
+| 手测记录 | [tpc-mosaic-dogfood-2026-07-18.md](./tpc-mosaic-dogfood-2026-07-18.md)（版式通过；compare/F5–F6 可补） |
 
 ---
 

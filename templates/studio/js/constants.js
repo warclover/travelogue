@@ -56,6 +56,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_STUDIO_UPLOAD_EMPTY: "未收到任何照片文件",
   E_STUDIO_CANCELLED: "已取消",
   E_STUDIO_PIPELINE: "导入失败，请重试",
+  E_TRIP_SAVE_BUSY: "游记文件正被占用，请关闭预览/资源管理器后重试",
   E_STUDIO_AUTH: "Studio 请求未授权",
   E_STUDIO_BODY_TOO_LARGE: "请求体过大",
   E_STUDIO_ALBUM_DENIED: "不允许从该路径导入",

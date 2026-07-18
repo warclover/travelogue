@@ -6,6 +6,7 @@ import json
 import os
 import tempfile
 import threading
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -38,6 +39,49 @@ class TripConflictError(CodeError):
 
 _trip_write_locks: dict[str, threading.Lock] = {}
 _trip_write_locks_guard = threading.Lock()
+
+# Windows Defender / Search Indexer often hold trip.json briefly after create/read,
+# blocking os.replace (WinError 5/32). Retry then fall back to in-place overwrite.
+_REPLACE_BUSY_BACKOFF_S: tuple[float, ...] = (0.05, 0.1, 0.2, 0.4, 0.8, 1.2)
+
+
+def _is_replace_busy_error(exc: BaseException) -> bool:
+    if isinstance(exc, PermissionError):
+        return True
+    if os.name == "nt" and isinstance(exc, OSError):
+        return getattr(exc, "winerror", None) in (5, 32)
+    return False
+
+
+def _replace_trip_json(tmp_path: str, dest: Path, *, payload: str) -> None:
+    """Atomically replace dest with tmp; on Windows busy locks, retry then overwrite."""
+    last_exc: OSError | None = None
+    for attempt, delay in enumerate(_REPLACE_BUSY_BACKOFF_S):
+        try:
+            os.replace(tmp_path, dest)
+            return
+        except OSError as exc:
+            last_exc = exc
+            if not _is_replace_busy_error(exc):
+                raise
+            if attempt + 1 < len(_REPLACE_BUSY_BACKOFF_S):
+                time.sleep(delay)
+    # Last resort: truncate+write the existing file (non-atomic, but import-critical).
+    # Rename/replace is what AV typically blocks; same-path write often still works.
+    try:
+        with open(dest, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        return
+    except OSError as exc:
+        raise TripSaveError(
+            f"E_TRIP_SAVE_BUSY cannot replace {dest.name}: file may be open elsewhere"
+        ) from (last_exc or exc)
 
 
 def _trip_lock_key(path: Path) -> str:
@@ -371,15 +415,7 @@ class TripService:
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
-            try:
-                os.replace(tmp_path, p)
-            except OSError as exc:
-                win_busy = os.name == "nt" and getattr(exc, "winerror", None) in (5, 32)
-                if win_busy or isinstance(exc, PermissionError):
-                    raise TripSaveError(
-                        f"E_TRIP_SAVE_BUSY cannot replace {p.name}: file may be open elsewhere"
-                    ) from exc
-                raise
+            _replace_trip_json(tmp_path, p, payload=payload)
         except Exception:
             if not opened:
                 try:

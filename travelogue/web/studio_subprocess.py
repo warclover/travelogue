@@ -163,6 +163,20 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             }
         )
     except Exception as exc:
+        from travelogue.services.trip import TripSaveError
+
+        if isinstance(exc, TripSaveError):
+            code = getattr(exc, "code", None) or "E_TRIP_SAVE_BUSY"
+            _write_import_diag(payload, code, f"{type(exc).__name__}: {exc}")
+            progress_queue.put(
+                {
+                    "type": "error",
+                    "code": code,
+                    "message": user_message(code),
+                    "demo": False,
+                }
+            )
+            return
         _log.exception("studio import subprocess failed")
         _write_import_diag(payload, "E_STUDIO_PIPELINE", f"{type(exc).__name__}: {exc}")
         progress_queue.put(

@@ -25,7 +25,7 @@
 |----|------|
 | **AC-TPC-12** | 需 BQP/`URO_GOLDEN` 本地齐备 → `readyToEnable=true` |
 | **AC-TPC-04② 删模块** | YAML 键已清；`main_eligibility.py` 仍承载 AR 算术（off 路径）；全删需狗粮后另 PR |
-| **狗粮周签核** | `layout_compare.py` + 手记 jsonl（模板见下） |
+| **狗粮周签核** | 版式手测见 [tpc-mosaic-dogfood-2026-07-18.md](./tpc-mosaic-dogfood-2026-07-18.md)（开发期通过；F3 compare 手记 / F5–F6 仍建议补） |
 | **正式盲评** | D-TPC-10 对外默认开前置 |
 | **MIT BRIC vendor** | ✅ `travelogue/export/_vendor/collage` @ `76f8888`（float path；shelf 回退） |
 | **AC-TPC-11 实测** | ✅ `docs/acceptance-records/tpc-curate-perf.json`（warm-up + P95 Δ -9.79% ≤ +10%） |

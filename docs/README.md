@@ -347,6 +347,7 @@
 | [IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md](./IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md) | LQS V1 · 实施清单（瘦身版）· **部分废止**：S1=TPC W1 可执行；S2+ 由 TPC 承接 |
 | [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.2**（W1+W2 落地中 · captionAreas **已 defer** · BLK-TPC-01～07 已回写 · §11 工程保障）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
 | [acceptance-records/tpc-local-dogfood-GUIDE.md](./acceptance-records/tpc-local-dogfood-GUIDE.md) | TPC · **本机狗粮 / 手测指南**（开发期开 `config.yaml`；仓库默认仍 off） |
+| [acceptance-records/tpc-mosaic-dogfood-2026-07-18.md](./acceptance-records/tpc-mosaic-dogfood-2026-07-18.md) | TPC · 2026-07-18 版式狗粮手测记录（近景/竖进横槽/四等分） |
 | [config-tpc-dogfood.example.yaml](./config-tpc-dogfood.example.yaml) | TPC / poster_bric · 本机狗粮配置片段 |
 | [acceptance-records/tpc-gap-checklist-2026-07-18.md](./acceptance-records/tpc-gap-checklist-2026-07-18.md) | TPC · PRD 缺口收口清单 |
 | [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**） |
