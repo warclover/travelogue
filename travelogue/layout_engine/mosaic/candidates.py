@@ -130,12 +130,43 @@ def generate_window_candidates_with_rejections(
     median_sharp: float | None = None,
     registry: dict[str, MosaicPattern] | None = None,
     window_ctx: WindowContext | None = None,
+    trip_photo_total: int = 0,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
         return WindowCandidateResult(candidates=[], rejected=[])
     reg = registry or mosaic_registry()
-    patterns = patterns_for_window_size(len(asset_ids), reg)
+    tc = getattr(cfg, "template_contract", None)
+    tc_enabled = bool(tc is not None and getattr(tc, "enabled", False))
+    contract_source = "legacy_size"
+    window_mix_label = ""
+    if tc_enabled:
+        from travelogue.layout_engine.contract.evaluator import (
+            patterns_for_contract_window,
+        )
+
+        patterns, contract_source, window_mix_label = patterns_for_contract_window(
+            asset_ids, aspects, registry=reg
+        )
+        if not patterns:
+            return WindowCandidateResult(
+                candidates=[],
+                rejected=[
+                    {
+                        "templateId": "*",
+                        "reason": "contract:mix_miss",
+                        "detail": window_mix_label or None,
+                    }
+                ],
+                contract_shadow={
+                    "windowMix": window_mix_label,
+                    "candidateSource": contract_source,
+                    "livePatternIds": [],
+                    "hasDiff": False,
+                },
+            )
+    else:
+        patterns = patterns_for_window_size(len(asset_ids), reg)
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     rejected: list[dict[str, Any]] = []
@@ -180,15 +211,31 @@ def generate_window_candidates_with_rejections(
                 ordered = refined
                 screen = build_screen(pat, ordered, assets_map=assets_map)
         geom_ok = screen_slots_geometry_ok(screen, aspects)
-        main_ok, main_reason = screen_main_slot_eligible(
-            screen,
-            assets_map,
-            pattern_id=pat.pattern_id,
-            cfg=cfg,
-        )
+        if tc_enabled:
+            from travelogue.layout_engine.contract.evaluator import (
+                evaluate_contract_eligibility,
+            )
+
+            elig_ok, elig_reason, elig_detail = evaluate_contract_eligibility(
+                screen,
+                assets_map,
+                pattern_id=pat.pattern_id,
+                cfg=cfg,
+                trip_photo_total=trip_photo_total,
+            )
+            main_ok, main_reason = elig_ok, elig_detail or elig_reason or "ok"
+            reject_reason = elig_reason or "contract:eligibility_main_ar"
+        else:
+            main_ok, main_reason = screen_main_slot_eligible(
+                screen,
+                assets_map,
+                pattern_id=pat.pattern_id,
+                cfg=cfg,
+            )
+            reject_reason = "main_ar_ineligible"
         geom_ok = geom_ok and main_ok
         if not geom_ok and not main_ok:
-            _reject(rejected, pat.pattern_id, "main_ar_ineligible", detail=main_reason)
+            _reject(rejected, pat.pattern_id, reject_reason, detail=main_reason)
         elif not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
         elif geom_ok and main_ok and window_ctx is not None:
@@ -201,6 +248,8 @@ def generate_window_candidates_with_rejections(
                 feat = {**summary, "patternId": pat.pattern_id}
                 if slot_fallback:
                     feat["slotAssignmentFallback"] = slot_fallback
+                if tc_enabled and contract_source == "fallback":
+                    feat["candidateSource"] = "fallback"
                 usage_deferred.append(
                     (
                         ScreenCandidate(
@@ -217,6 +266,12 @@ def generate_window_candidates_with_rejections(
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback
+        if tc_enabled:
+            feat["candidateSource"] = contract_source
+            if contract_source == "fallback":
+                # Explicit marker for AC-TPC-03
+                feat["contractReasons"] = ["contract:mix_fallback"]
+                feat["contractMixFallback"] = True
         out.append(
             ScreenCandidate(
                 pattern_id=pat.pattern_id,
@@ -230,8 +285,7 @@ def generate_window_candidates_with_rejections(
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
     shadow_payload: dict[str, Any] | None = None
-    tc = getattr(cfg, "template_contract", None)
-    if tc is not None and getattr(tc, "shadow_log", False) and not getattr(tc, "enabled", False):
+    if tc is not None and getattr(tc, "shadow_log", False) and not tc_enabled:
         # Shadow only while contract path is off (W1). Enabling selection is W2+.
         # Reuse orderable ids from this pass — never re-run try_order.
         from travelogue.layout_engine.contract.mix_index import (
@@ -251,6 +305,13 @@ def generate_window_candidates_with_rejections(
             "onlyInLive": sorted(live_set - index_set),
             "onlyInIndex": sorted(index_set - live_set),
             "hasDiff": bool(live_set ^ index_set),
+        }
+    elif tc_enabled:
+        shadow_payload = {
+            "windowMix": window_mix_label,
+            "candidateSource": contract_source,
+            "livePatternIds": sorted(orderable_pattern_ids),
+            "hasDiff": False,
         }
     return WindowCandidateResult(
         candidates=out,
