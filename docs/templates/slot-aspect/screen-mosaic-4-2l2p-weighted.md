@@ -1,0 +1,12 @@
+# screen-mosaic-4-2l2p-weighted
+
+- displayName: 四图 · 加权棋盘 2L2P
+- status: experimental
+- stage: 16:9
+
+| slot | role | displayAspect |
+|------|------|---------------|
+| 0 | landscape | 1.1852 |
+| 1 | portrait | 1.7778 |
+| 2 | portrait | 1.7778 |
+| 3 | landscape | 2.6667 |

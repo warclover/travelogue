@@ -1,0 +1,80 @@
+id: screen-mosaic-4-hero-70-sidebar
+version: 1
+status: experimental
+kind: composite
+displayName: 四图 · 七成英雄 + 侧栏三格
+description: >
+  TPC W3 非对称 hero：左列约 70% 满高主图 + 右侧三格竖条配图。
+  突破「算法味等分栅格」观感（观感路线图 P2）。
+aesthetic: hero_first
+balancePolicy: weighted_tracks
+
+stage:
+  aspect: "16:9"
+  cols: [7, 3]
+  rows: [1, 1, 1]
+  gap: "3px"
+  variants:
+    - { layout: web, aspect: "16:9" }
+    - { layout: mobile, aspect: "9:16" }
+
+photoCount: { min: 4, max: 4 }
+mix: { portrait: 0, landscape: 4 }
+
+slots:
+  - { index: 0, rect: [1, 1, 1, 3], role: main, fit: cover, visualWeight: 1.0 }
+  - { index: 1, rect: [2, 2, 1, 1], role: landscape, fit: cover, visualWeight: 0.55 }
+  - { index: 2, rect: [2, 2, 2, 2], role: landscape, fit: cover, visualWeight: 0.55 }
+  - { index: 3, rect: [2, 2, 3, 3], role: landscape, fit: cover, visualWeight: 0.55 }
+
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+  eligibility:
+    heroDominance: extreme
+    heroAreaBand: [0.60, 0.78]
+    eligibleAspectKinds: [landscape]
+    forbidKinds: [panorama, tall, portrait, square]
+  mainSlotPolicy:
+    slotIndex: 0
+    targetDisplayAspect: 1.7778
+    eligibleAspectKinds: [landscape]
+    forbidKinds: [panorama, tall, portrait, square]
+    arLadderTol: 0.08
+    preferLadder: [1.7778, 1.5, 1.3333]
+
+compatibilityHints:
+  prefers_burst: true
+  min_trip_photos: 12
+
+scoring:
+  base_weight: 1.08
+  tags: [hero, asymmetric, tpc-w3]
+  rhythm:
+    max_per_chapter: 1
+    diversity_bonus: 0.10
+
+render:
+  gridClass: layout-screen__grid--mosaic-4-hero-70-sidebar
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+
+rollout:
+  percent: 100
+  hash_key: tripId
+
+usage:
+  summary: 七成英雄页：左满高主横图 + 右三格侧栏，打破等分栅格算法味。
+  whenToUse: |
+    - 4 张横图窗口中有一张构图完整、适合大面积展示的主图时
+    - 章节需要一次明确的视觉高潮（非密铺信息屏）时
+  whenNotToUse: |
+    - 主图为超宽全景或主体贴边（cover 进大槽易伤）
+    - 四图都想均势展示时（应选等分/棋盘类）
+  designIntent: TPC W3 非对称 hero；几何参考 hero-3-2 加宽至约 7:3。
+  siblings:
+    - id: screen-mosaic-5-hero-3-2-plus-4
+      difference: 该模板约 50% 左列 + 5 图；本模板约 70% + 4 图侧栏。
+    - id: screen-mosaic-5-main-hero-plus-4
+      difference: 3×3 整数网格 2×2 hero；本模板加权轨道非对称。
