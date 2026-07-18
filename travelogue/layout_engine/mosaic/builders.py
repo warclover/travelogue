@@ -202,8 +202,17 @@ def _order_by_roles(
     assets_map: dict[str, dict],
 ) -> list[str] | None:
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
+    from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
+    from travelogue.layout_templates.registry import get_engine
 
     pat = mosaic_registry().get(pattern_id)
+    if pat is None:
+        # Contract dogfood / AC-TPC-02: pattern may be experimental percent=0
+        # and absent from the dark-launch registry.
+        try:
+            pat = export_mosaic_pattern(get_engine().get(pattern_id))
+        except KeyError:
+            return None
     if pat is None or len(pat.roles) != len(asset_ids):
         return None
     portraits = _sort_asset_ids_by_taken(
@@ -276,7 +285,7 @@ def try_order_for_pattern(
             return _order_mixed_p1_l2(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             )
-        return None
+        # else: fall through to role-based order (TPC AC-TPC-02)
 
     if n == 4:
         if pattern_id == PATTERN_PORTRAIT_2_LANDSCAPE_2:
@@ -287,7 +296,7 @@ def try_order_for_pattern(
             return _sort_asset_ids_by_taken(portraits[:4], assets_map)
         if pattern_id == PATTERN_LANDSCAPE_4 and len(landscapes) >= 4:
             return _sort_asset_ids_by_taken(landscapes[:4], assets_map)
-        return None
+        # else: fall through to role-based order (TPC W3 new SKUs)
 
     if n == 5:
         if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
@@ -306,7 +315,7 @@ def try_order_for_pattern(
             return _sort_asset_ids_by_taken(portraits[:6], assets_map)
         if pattern_id == PATTERN_LANDSCAPE_6 and len(landscapes) >= 6:
             return _sort_asset_ids_by_taken(landscapes[:6], assets_map)
-        return None
+        # else: fall through to role-based order
 
     if n == 8:
         if pattern_id == PATTERN_PORTRAIT_GRID_8:
@@ -314,14 +323,15 @@ def try_order_for_pattern(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             ):
                 return _sort_asset_ids_by_taken(portraits[:8], assets_map)
-        return None
+            return None
+        # else: fall through
 
     if n == 9:
         if pattern_id == PATTERN_PORTRAIT_9 and len(portraits) >= 9:
             return _sort_asset_ids_by_taken(portraits[:9], assets_map)
         if pattern_id == PATTERN_LANDSCAPE_9 and len(landscapes) >= 9:
             return _sort_asset_ids_by_taken(landscapes[:9], assets_map)
-        return None
+        # else: fall through
 
     role_order = _order_by_roles(pattern_id, asset_ids, aspects, assets_map)
     if role_order:

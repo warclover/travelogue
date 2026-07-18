@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.config import MosaicConfig
+from travelogue.layout_contract.asset_geometry import asset_native_ar
 from travelogue.layout_contract.orientations import (
     AspectKind,
     aspect_kind_for_asset,
@@ -37,11 +38,34 @@ DEFAULT_MAIN_ELIGIBLE_KINDS: frozenset[str] = frozenset({"landscape"})
 
 
 def template_main_slot_policy(pattern_id: str) -> dict[str, Any] | None:
+    """Prefer ``constraints.eligibility`` AR fields; bridge ``mainSlotPolicy`` (AC-TPC-04)."""
     try:
         from travelogue.layout_templates.registry import get_engine
 
         template = get_engine().get(pattern_id)
-        raw = (template.constraints or {}).get("mainSlotPolicy")
+        constraints = template.constraints or {}
+        elig = constraints.get("eligibility")
+        if isinstance(elig, dict) and (
+            elig.get("eligibleAspectKinds")
+            or elig.get("forbidKinds")
+            or elig.get("targetDisplayAspect")
+        ):
+            # Synthesize policy shape expected by resolve_* helpers
+            return {
+                "slotIndex": elig.get("slotIndex", 0),
+                "targetDisplayAspect": elig.get(
+                    "targetDisplayAspect", elig.get("target_display_aspect", MAIN_HERO_TARGET_AR)
+                ),
+                "eligibleAspectKinds": elig.get("eligibleAspectKinds")
+                or elig.get("eligible_aspect_kinds")
+                or list(DEFAULT_MAIN_ELIGIBLE_KINDS),
+                "forbidKinds": elig.get("forbidKinds")
+                or elig.get("forbid_kinds")
+                or list(DEFAULT_MAIN_FORBID_KINDS),
+                "arLadderTol": elig.get("arLadderTol", elig.get("ar_ladder_tol", AR_LADDER_TOL)),
+                "preferLadder": elig.get("preferLadder", elig.get("prefer_ladder", list(AR_LADDER))),
+            }
+        raw = constraints.get("mainSlotPolicy")
         if isinstance(raw, dict) and raw:
             return raw
     except (KeyError, AttributeError, TypeError):
@@ -143,12 +167,8 @@ def main_ar_guard_enabled(cfg: MosaicConfig | None = None) -> bool:
     return bool(getattr(cfg, "main_ar_guard", True))
 
 
-def asset_native_ar(asset: dict) -> float | None:
-    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
-    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
-    if w > 0 and h > 0:
-        return w / h
-    return None
+# asset_native_ar lives in layout_contract (TPC W2 shared-tool decoupling);
+# re-exported here for existing call sites until W3 deletes this module.
 
 
 def nearest_ladder_delta(ar: float) -> float:

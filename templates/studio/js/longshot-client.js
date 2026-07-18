@@ -145,6 +145,10 @@ export function formatLongshotResult(job) {
     title = "✓ " + nGrid + " 张九宫格已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (platform === "poster_bric") {
+    title = "✓ 单屏海报已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
   } else if (platform === "wechat_moments") {
     var n = result.pageCount || outputs.length;
     title = "✓ " + n + " 张长图连读已就绪";

@@ -107,7 +107,8 @@ def test_narrate_frame_stub_only_hook_epilogue() -> None:
     assert "epilogue" in result.fields_updated
     assert not any("lead" in f for f in result.fields_updated)
     assert trip["meta"]["hook"]
-    assert trip.get("epilogue")
+    # BE-FST-03 · stub still touches epilogue field but leaves it empty
+    assert not (trip.get("epilogue") or "").strip()
     assert not trip["chapters"][0].get("lead")
     assert not trip["chapters"][1].get("lead")
     assert not trip["chapters"][2].get("lead")

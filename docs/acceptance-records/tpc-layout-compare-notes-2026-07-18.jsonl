@@ -1,0 +1,3 @@
+﻿{"tripId":"demo-2025","tag":"ok","note":"layout_compare contract on/off identical (0/72). Has landscape-4 + hero-70 + 5-2p3l-rail. Prefer tie; no regression vs off.","prefer":"tie"}
+{"tripId":"demo-815dc906d3","tag":"ok","note":"layout_compare 0/140 changed. contract_on keeps 1l3p-rail + hero-70 + landscape-4; geometry gates removed fake 2l2p. Prefer tie.","prefer":"tie"}
+{"tripId":"demo-65db8fd377","tag":"ok","note":"layout_compare 0/41. landscape-4 present. poster_bric export OK; screens fingerprint unchanged; sidecar runs/gcs-poster-bric.json. Prefer tie.","prefer":"tie"}

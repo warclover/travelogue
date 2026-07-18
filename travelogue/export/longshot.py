@@ -725,6 +725,16 @@ def export_trip_longshot(
             fmt=fmt,
             progress=progress,
         )
+    if pid == "poster_bric":
+        from travelogue.export.poster_bric_pack import export_poster_bric_pack
+
+        return export_poster_bric_pack(
+            trip_dir,
+            scale=scale,
+            fmt=fmt,
+            progress=progress,
+            platform=pid,
+        )
     if pid != DEFAULT_PLATFORM:
         from travelogue.export.platform_longshot import export_platform_longshot
 

@@ -3,8 +3,8 @@
 /* screen-editorial-4mix */
 html[data-layout="web"] .layout-screen__grid--editorial-4mix,
 html[data-layout="auto"] .layout-screen__grid--editorial-4mix {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
   align-items: stretch;
 }
 
@@ -179,6 +179,93 @@ html[data-layout="web"] .layout-screen__grid--3x3 .layout-slot[data-slot="8"], h
   grid-row: 3;
 }
 
+/* screen-mosaic-4-1l3p-rail */
+html[data-layout="web"] .layout-screen__grid--mosaic-4-1l3p-rail,
+html[data-layout="auto"] .layout-screen__grid--mosaic-4-1l3p-rail {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="2"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-1l3p-rail .layout-slot[data-slot="3"] {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+/* screen-mosaic-4-2l2p-weighted */
+html[data-layout="web"] .layout-screen__grid--mosaic-4-2l2p-weighted,
+html[data-layout="auto"] .layout-screen__grid--mosaic-4-2l2p-weighted {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="2"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-2l2p-weighted .layout-slot[data-slot="3"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* screen-mosaic-4-hero-70-sidebar */
+html[data-layout="web"] .layout-screen__grid--mosaic-4-hero-70-sidebar,
+html[data-layout="auto"] .layout-screen__grid--mosaic-4-hero-70-sidebar {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3px;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="2"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--mosaic-4-hero-70-sidebar .layout-slot[data-slot="3"] {
+  grid-column: 2;
+  grid-row: 3;
+}
+
 /* screen-mosaic-5-2p3l-equal */
 html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-equal,
 html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-equal {
@@ -209,6 +296,40 @@ html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-equal .layout-slot[d
 }
 
 html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-equal .layout-slot[data-slot="4"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-equal .layout-slot[data-slot="4"] {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+/* screen-mosaic-5-2p3l-rail */
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail,
+html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  align-items: stretch;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="0"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="0"] {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="1"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="1"] {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="2"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="2"] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="3"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="3"] {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+html[data-layout="web"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="4"], html[data-layout="auto"] .layout-screen__grid--mosaic-5-2p3l-rail .layout-slot[data-slot="4"] {
   grid-column: 3;
   grid-row: 3;
 }

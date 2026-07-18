@@ -154,6 +154,12 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9
+        },
+        "square": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9,
+          "description": "TPC bag-of-mix square count (optional)"
         }
       }
     },
@@ -219,7 +225,7 @@
         },
         "mainSlotPolicy": {
           "type": "object",
-          "description": "Main hero slot asset AR eligibility (V-P16-MAIN-01 · PRD-6张拼图优化)",
+          "description": "Main hero slot asset AR eligibility (V-P16-MAIN-01 · PRD-6张拼图优化). W3+: prefer constraints.eligibility; bridge until deleted.",
           "additionalProperties": false,
           "properties": {
             "slotIndex": {
@@ -245,6 +251,89 @@
             "arLadderTol": {
               "type": "number",
               "exclusiveMinimum": 0
+            },
+            "preferLadder": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
+        "eligibility": {
+          "type": "object",
+          "description": "TPC TemplateContract hard eligibility (PRD-TEMPLATE-CONTRACT-V1 §3.1). Undeclared ≡ no hard reject.",
+          "additionalProperties": false,
+          "properties": {
+            "heroDominance": {
+              "type": "string",
+              "enum": ["extreme", "moderate"]
+            },
+            "heroAreaBand": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "description": "Hero area as col_frac×row_frac on stage grid"
+            },
+            "photoCountScale": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "referenceCount": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "maxHeroAreaAtRef": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "floorFactorAt50": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "canvasAr": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "eligibleAspectKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "forbidKinds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "slotIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Main slot index (migrated from mainSlotPolicy · AC-TPC-04)"
+            },
+            "targetDisplayAspect": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "arLadderTol": {
+              "type": "number",
+              "minimum": 0
             },
             "preferLadder": {
               "type": "array",

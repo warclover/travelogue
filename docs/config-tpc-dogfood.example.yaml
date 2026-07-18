@@ -1,0 +1,22 @@
+# TPC / poster_bric · 本机狗粮示例（勿把 enabled=true 合进仓库默认）
+#
+# 用法：
+#   1. 复制下列片段到项目根 config.yaml（已 gitignore）
+#   2. 或：Copy-Item docs/config-tpc-dogfood.example.yaml 片段手工合并
+#   3. 重启 Studio / CLI 后再导入或 re-curate
+#
+# 完整手测说明见：
+#   docs/acceptance-records/tpc-local-dogfood-GUIDE.md
+
+mosaic:
+  template_contract:
+    # 打开后：混向倒排 / eligibility 求值器生效；W3 experimental（percent=0）可被命中
+    enabled: true
+    # 决策 log 写 shadow 字段；手测期建议保持 true
+    shadow_log: true
+
+features:
+  gcs_poster_bric:
+    # Studio 导出 ▾「单屏海报」；默认关时入口隐藏
+    # 优先写 features 段（避免 studio 未知键告警）
+    enabled: true

@@ -261,6 +261,8 @@ def _layout_for_intent(intent: str, band: str) -> str:
         return "content_balanced"
     if intent == "moments_grid":
         return "grid"
+    if intent == "poster_bric":
+        return "collage"
     if intent in ("xiaohongshu", "instagram_carousel"):
         return "content_balanced"
     return _default_layout(band)

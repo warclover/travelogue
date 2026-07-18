@@ -41,6 +41,7 @@ from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.studio import (
     DEFAULT_LONGSHOT2_PLATFORMS,
+    GcsPosterBricConfig,
     Longshot2Config,
     OutputRecipeBandsConfig,
     OutputRecipeConfig,
@@ -92,6 +93,25 @@ def _parse_output_recipe_config(studio_raw: dict[str, Any]) -> OutputRecipeConfi
                 bands_raw, "narrative_chapter_hint_at", "narrativeChapterHintAt", 50
             ),
         ),
+    )
+
+
+def _parse_gcs_poster_bric_config(
+    data: dict[str, Any], studio_raw: dict[str, Any]
+) -> GcsPosterBricConfig:
+    """PRD key features.gcs_poster_bric; also accept studio.gcs_poster_bric."""
+    features = data.get("features") if isinstance(data.get("features"), dict) else {}
+    raw = features.get("gcs_poster_bric") if isinstance(features.get("gcs_poster_bric"), dict) else None
+    if raw is None and isinstance(features.get("gcsPosterBric"), dict):
+        raw = features["gcsPosterBric"]
+    if raw is None:
+        raw = studio_raw.get("gcs_poster_bric")
+    if not isinstance(raw, dict):
+        raw = studio_raw.get("gcsPosterBric")
+    if not isinstance(raw, dict):
+        raw = {}
+    return GcsPosterBricConfig(
+        enabled=cfg_bool(raw, "enabled", "enabled", False) if raw else False,
     )
 
 LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})
@@ -616,6 +636,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             ),
             longshot2=_parse_longshot2_config(studio_raw),
             output_recipe=_parse_output_recipe_config(studio_raw),
+            gcs_poster_bric=_parse_gcs_poster_bric_config(data, studio_raw),
         ),
         phase6=phase6_from_dict(phase6_raw),
         template_router=TemplateRouterConfig(

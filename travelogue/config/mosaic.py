@@ -21,6 +21,27 @@ class MosaicDensityBudgetConfig:
 
 
 @dataclass
+class TemplateContractConfig:
+    """TPC · unified template contract (PRD-TEMPLATE-CONTRACT-V1).
+
+    Defaults keep runtime on the legacy candidate path (AC-TPC-01).
+    Unknown keys under this root fail-loud (AC-TPC-13).
+    """
+
+    enabled: bool = False
+    shadow_log: bool = True
+
+
+_TEMPLATE_CONTRACT_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "shadow_log",
+        "shadowLog",
+    }
+)
+
+
+@dataclass
 class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
 
@@ -37,6 +58,7 @@ class MosaicConfig:
     candidate_top_k: int = 4
     log_level: str = "window"
     density_budget: MosaicDensityBudgetConfig = field(default_factory=MosaicDensityBudgetConfig)
+    template_contract: TemplateContractConfig = field(default_factory=TemplateContractConfig)
     # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
     hero_weighted_geometry_guard: bool = True
     # PRD-6张拼图优化 · R-MAIN-AR-01: conventional AR only for hero+tile main slot.
@@ -112,6 +134,24 @@ def _density_budget_from_dict(raw: dict[str, Any]) -> MosaicDensityBudgetConfig:
                 db.get("maxLargeMosaicPerChapter", defaults.max_large_mosaic_per_chapter),
             )
         ),
+    )
+
+
+def _template_contract_from_dict(raw: dict[str, Any]) -> TemplateContractConfig:
+    defaults = TemplateContractConfig()
+    tc = raw.get("template_contract")
+    if not isinstance(tc, dict):
+        tc = raw.get("templateContract")
+    if not isinstance(tc, dict):
+        return defaults
+    unknown = sorted(str(k) for k in tc if str(k) not in _TEMPLATE_CONTRACT_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.template_contract unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    return TemplateContractConfig(
+        enabled=cfg_bool(tc, "enabled", "enabled", defaults.enabled),
+        shadow_log=cfg_bool(tc, "shadow_log", "shadowLog", defaults.shadow_log),
     )
 
 
@@ -192,4 +232,5 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
             k: float(penalties_raw.get(k, defaults.penalties.get(k, 0.0))) for k in defaults.penalties
         },
         density_budget=_density_budget_from_dict(raw),
+        template_contract=_template_contract_from_dict(raw),
     )

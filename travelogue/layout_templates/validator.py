@@ -322,7 +322,7 @@ def _check_main_slot_policy(
     *,
     mode: ValidateMode,
 ) -> None:
-    """V-P16-MAIN-01 · 16:9 main hero+tile templates declare mainSlotPolicy."""
+    """V-P16-MAIN-01 · 16:9 main hero+tile templates declare eligibility (or legacy mainSlotPolicy)."""
     if template.kind != "composite":
         return
     main_rows = [row for row in slot_aspect_table(template) if row.role == "main"]
@@ -331,12 +331,22 @@ def _check_main_slot_policy(
     for row in main_rows:
         if abs(row.display_aspect - (16 / 9)) > AR_LADDER_TOL:
             continue
-        policy = (template.constraints or {}).get("mainSlotPolicy")
+        constraints = template.constraints or {}
+        elig = constraints.get("eligibility")
+        legacy = constraints.get("mainSlotPolicy")
+        policy = None
+        if isinstance(elig, dict) and (
+            elig.get("eligibleAspectKinds") or elig.get("targetDisplayAspect")
+        ):
+            policy = elig
+        elif isinstance(legacy, dict) and legacy:
+            policy = legacy
         if not isinstance(policy, dict) or not policy:
             level = "warn" if mode == "ci" else "block"
             report.add(
                 "V-P16-MAIN-01",
-                f"slot {row.index} main targets 16:9; constraints.mainSlotPolicy required",
+                f"slot {row.index} main targets 16:9; "
+                "constraints.eligibility (or legacy mainSlotPolicy) required",
                 level=level,
             )
             continue
@@ -344,7 +354,7 @@ def _check_main_slot_policy(
         if slot_idx is not None and int(slot_idx) != row.index:
             report.add(
                 "V-P16-MAIN-01",
-                f"mainSlotPolicy.slotIndex {slot_idx} != main slot {row.index}",
+                f"eligibility/mainSlotPolicy.slotIndex {slot_idx} != main slot {row.index}",
                 level="warn",
             )
         target = policy.get("targetDisplayAspect", policy.get("target_display_aspect"))
@@ -354,14 +364,14 @@ def _check_main_slot_policy(
             except (TypeError, ValueError):
                 report.add(
                     "V-P16-MAIN-01",
-                    "mainSlotPolicy.targetDisplayAspect must be numeric",
+                    "eligibility.targetDisplayAspect must be numeric",
                     level="warn",
                 )
             else:
                 if abs(target_f - row.display_aspect) > AR_LADDER_TOL:
                     report.add(
                         "V-P16-MAIN-01",
-                        f"mainSlotPolicy.targetDisplayAspect {target_f:.4f} "
+                        f"eligibility.targetDisplayAspect {target_f:.4f} "
                         f"≠ slot displayAspect {row.display_aspect:.4f}",
                         level="warn",
                     )

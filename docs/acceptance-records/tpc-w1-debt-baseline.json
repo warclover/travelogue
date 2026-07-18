@@ -1,0 +1,279 @@
+{
+  "schemaVersion": "tpc-debt-v1",
+  "feature": "TPC",
+  "generatedAt": "2026-07-18T04:01:43Z",
+  "corpus": {
+    "tripCount": 5,
+    "windowCount": 7,
+    "legacyCount": 0,
+    "legacyRate": 0.0,
+    "plannerPathCounts": {
+      "mosaic": 7
+    },
+    "fallbackReasonCounts": {},
+    "meanAspectPatternMatchRate": 1.0,
+    "windowMixHistogram": {
+      "L1P0S0": 54,
+      "L0P2S0": 35,
+      "L0P1S0": 16,
+      "L0P3S0": 9,
+      "L3P0S0": 7,
+      "L4P0S0": 4,
+      "L4P1S0": 3,
+      "L0P8S0": 1
+    },
+    "mixHoleTop": [],
+    "trips": [
+      {
+        "tripId": "demo-2025-9",
+        "legacyRate": 0.0,
+        "windowCount": 4,
+        "aspectPatternMatchRate": 1.0
+      },
+      {
+        "tripId": "demo-album",
+        "legacyRate": 0.0,
+        "windowCount": 0,
+        "aspectPatternMatchRate": 1.0
+      },
+      {
+        "tripId": "demo-49551086fe",
+        "legacyRate": 0.0,
+        "windowCount": 1,
+        "aspectPatternMatchRate": 1.0
+      },
+      {
+        "tripId": "demo-6180531087",
+        "legacyRate": 0.0,
+        "windowCount": 2,
+        "aspectPatternMatchRate": 1.0
+      },
+      {
+        "tripId": "demo-e863ec0da9",
+        "legacyRate": 0.0,
+        "windowCount": 0,
+        "aspectPatternMatchRate": 1.0
+      }
+    ]
+  },
+  "libraryMixIndex": {
+    "L0P1S0": [
+      "screen-portrait-1"
+    ],
+    "L0P2S0": [
+      "screen-portrait-2"
+    ],
+    "L0P3S0": [
+      "screen-portrait-3",
+      "screen-portrait-3-editorial"
+    ],
+    "L0P4S0": [
+      "screen-portrait-4"
+    ],
+    "L0P6S0": [
+      "screen-portrait-6"
+    ],
+    "L0P8S0": [
+      "screen-portrait-grid-8"
+    ],
+    "L0P9S0": [
+      "screen-portrait-9"
+    ],
+    "L1P0S0": [
+      "screen-full-frame",
+      "screen-landscape-1"
+    ],
+    "L2P0S0": [
+      "screen-landscape-2"
+    ],
+    "L2P1S0": [
+      "screen-portrait-1-landscape-2"
+    ],
+    "L2P2S0": [
+      "screen-editorial-4mix",
+      "screen-portrait-2-landscape-2"
+    ],
+    "L3P0S0": [
+      "screen-landscape-3"
+    ],
+    "L4P0S0": [
+      "screen-landscape-4"
+    ],
+    "L4P1S0": [
+      "screen-mosaic-5-main-portrait-3land"
+    ],
+    "L5P0S0": [
+      "screen-mosaic-5-hero-3-2-plus-4"
+    ],
+    "L6P0S0": [
+      "screen-landscape-6",
+      "screen-mosaic-5-main-hero-plus-4",
+      "screen-mosaic-6-main-hero-plus-5"
+    ],
+    "L9P0S0": [
+      "screen-landscape-9"
+    ]
+  },
+  "tripReports": [
+    {
+      "tripId": "demo-2025-9",
+      "legacy": {
+        "windowCount": 4,
+        "legacyCount": 0,
+        "legacyRate": 0.0,
+        "plannerPathCounts": {
+          "mosaic": 4
+        },
+        "fallbackReasonCounts": {},
+        "selfHealStepCounts": {},
+        "byWindowSize": {
+          "5": {
+            "total": 1,
+            "legacy": 0
+          },
+          "4": {
+            "total": 3,
+            "legacy": 0
+          }
+        }
+      },
+      "aspectPatternMatchRate": 1.0,
+      "layoutMetrics": {
+        "aspectPatternMatchRate": 1.0,
+        "patternDiversity": 0.1233
+      },
+      "windowMixHistogram": {
+        "L1P0S0": 26,
+        "L0P2S0": 14,
+        "L0P1S0": 6,
+        "L3P0S0": 5,
+        "L0P3S0": 4,
+        "L4P0S0": 3,
+        "L4P1S0": 1
+      },
+      "mixHoles": [],
+      "libraryMixCount": 17
+    },
+    {
+      "tripId": "demo-album",
+      "legacy": {
+        "windowCount": 0,
+        "legacyCount": 0,
+        "legacyRate": 0.0,
+        "plannerPathCounts": {},
+        "fallbackReasonCounts": {},
+        "selfHealStepCounts": {},
+        "byWindowSize": {}
+      },
+      "aspectPatternMatchRate": 1.0,
+      "layoutMetrics": {
+        "aspectPatternMatchRate": 1.0,
+        "patternDiversity": 1.0
+      },
+      "windowMixHistogram": {
+        "L0P3S0": 1,
+        "L0P2S0": 1
+      },
+      "mixHoles": [],
+      "libraryMixCount": 17
+    },
+    {
+      "tripId": "demo-49551086fe",
+      "legacy": {
+        "windowCount": 1,
+        "legacyCount": 0,
+        "legacyRate": 0.0,
+        "plannerPathCounts": {
+          "mosaic": 1
+        },
+        "fallbackReasonCounts": {},
+        "selfHealStepCounts": {},
+        "byWindowSize": {
+          "5": {
+            "total": 1,
+            "legacy": 0
+          }
+        }
+      },
+      "aspectPatternMatchRate": 1.0,
+      "layoutMetrics": {
+        "aspectPatternMatchRate": 1.0,
+        "patternDiversity": 0.3333
+      },
+      "windowMixHistogram": {
+        "L1P0S0": 7,
+        "L0P2S0": 5,
+        "L4P1S0": 1,
+        "L0P1S0": 1,
+        "L0P3S0": 1
+      },
+      "mixHoles": [],
+      "libraryMixCount": 17
+    },
+    {
+      "tripId": "demo-6180531087",
+      "legacy": {
+        "windowCount": 2,
+        "legacyCount": 0,
+        "legacyRate": 0.0,
+        "plannerPathCounts": {
+          "mosaic": 2
+        },
+        "fallbackReasonCounts": {},
+        "selfHealStepCounts": {},
+        "byWindowSize": {
+          "4": {
+            "total": 1,
+            "legacy": 0
+          },
+          "5": {
+            "total": 1,
+            "legacy": 0
+          }
+        }
+      },
+      "aspectPatternMatchRate": 1.0,
+      "layoutMetrics": {
+        "aspectPatternMatchRate": 1.0,
+        "patternDiversity": 0.1875
+      },
+      "windowMixHistogram": {
+        "L1P0S0": 16,
+        "L0P2S0": 10,
+        "L0P1S0": 6,
+        "L0P3S0": 2,
+        "L3P0S0": 2,
+        "L4P0S0": 1,
+        "L4P1S0": 1,
+        "L0P8S0": 1
+      },
+      "mixHoles": [],
+      "libraryMixCount": 17
+    },
+    {
+      "tripId": "demo-e863ec0da9",
+      "legacy": {
+        "windowCount": 0,
+        "legacyCount": 0,
+        "legacyRate": 0.0,
+        "plannerPathCounts": {},
+        "fallbackReasonCounts": {},
+        "selfHealStepCounts": {},
+        "byWindowSize": {}
+      },
+      "aspectPatternMatchRate": 1.0,
+      "layoutMetrics": {
+        "aspectPatternMatchRate": 1.0,
+        "patternDiversity": 0.2941
+      },
+      "windowMixHistogram": {
+        "L1P0S0": 5,
+        "L0P2S0": 5,
+        "L0P1S0": 3,
+        "L0P3S0": 1
+      },
+      "mixHoles": [],
+      "libraryMixCount": 17
+    }
+  ]
+}

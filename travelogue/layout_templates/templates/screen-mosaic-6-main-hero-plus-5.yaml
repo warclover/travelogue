@@ -68,7 +68,9 @@ constraints:
   portrait_forbidden_in_wide_slots: []
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
-  mainSlotPolicy:
+  eligibility:
+    heroDominance: moderate
+    heroAreaBand: [0.35, 0.55]
     slotIndex: 0
     targetDisplayAspect: 1.7778
     eligibleAspectKinds: [landscape]

@@ -113,8 +113,9 @@ def test_lte_template_loads() -> None:
     assert tpl.render_grid_class == "layout-screen__grid--editorial-4mix"
     assert tpl.photo_count_min == 4
     assert tpl.photo_count_max == 4
-    assert tuple(int(x) for x in (tpl.stage.cols or ())) == (2, 3)
-    assert tuple(int(x) for x in (tpl.stage.rows or ())) == (3, 2)
+    # Equal 2×2 (dogfood: weighted 2:3/3:2 tracks read as a broken puzzle).
+    assert tuple(int(x) for x in (tpl.stage.cols or ())) == (1, 1)
+    assert tuple(int(x) for x in (tpl.stage.rows or ())) == (1, 1)
 
 
 @pytest.mark.unit
@@ -125,7 +126,8 @@ def test_grid_class_for_pattern() -> None:
 
 
 @pytest.mark.unit
-def test_fits_for_4mix_person_land_cover_port_contain() -> None:
+def test_fits_for_4mix_person_land_all_cover() -> None:
+    """Chessboard cells are landscape-aspect; cover fills the grid (dogfood)."""
     assets = {
         "l1": {"id": "l1", "tags": ["scenery"]},
         "p1": {"id": "p1", "tags": ["person"]},
@@ -137,7 +139,53 @@ def test_fits_for_4mix_person_land_cover_port_contain() -> None:
         ["l1", "p1", "p2", "l2"],
         assets_map=assets,
     )
-    assert fits == ["cover", "contain", "contain", "cover"]
+    assert fits == ["cover", "cover", "cover", "cover"]
+
+
+@pytest.mark.unit
+def test_maybe_editorial_4mix_rejects_near_scene_person_walk() -> None:
+    assets = {
+        "l1": {
+            "id": "l1",
+            "aspectKind": "landscape",
+            "takenAt": "2025-04-20T22:01:56Z",
+            "tags": ["person", "face"],
+        },
+        "p1": {
+            "id": "p1",
+            "aspectKind": "portrait",
+            "takenAt": "2025-04-20T21:58:39Z",
+            "tags": ["person", "face"],
+        },
+        "p2": {
+            "id": "p2",
+            "aspectKind": "portrait",
+            "takenAt": "2025-04-20T22:02:12Z",
+            "tags": ["person", "face"],
+        },
+        "l2": {
+            "id": "l2",
+            "aspectKind": "landscape",
+            "takenAt": "2025-04-20T22:02:38Z",
+            "tags": ["person", "face"],
+        },
+    }
+    aspects = {
+        "l1": "landscape",
+        "p1": "portrait",
+        "p2": "portrait",
+        "l2": "landscape",
+    }
+    cfg = _cfg_with_4mix(enabled=True)
+    pid, hint = maybe_editorial_4mix(
+        "screen-portrait-2-landscape-2",
+        ["l1", "p1", "p2", "l2"],
+        assets,
+        cfg=cfg,
+        aspects=aspects,
+    )
+    assert pid == "screen-portrait-2-landscape-2"
+    assert hint is None
 
 
 @pytest.mark.unit
@@ -286,7 +334,8 @@ def test_editorial_4mix_chess_reorder() -> None:
 
 
 @pytest.mark.unit
-def test_maybe_editorial_4mix_replaces_p2l2_when_enabled() -> None:
+def test_maybe_editorial_4mix_skips_when_portraits_would_fill_wide_cells() -> None:
+    """Equal 2×2 editorial cells are landscape-AR; do not promote 2L2P into them."""
     aspects, assets_map = _mixed_4_assets()
     ids = ["l1", "p1", "p2", "l2"]
     cfg = _cfg_with_4mix(enabled=True)
@@ -297,8 +346,8 @@ def test_maybe_editorial_4mix_replaces_p2l2_when_enabled() -> None:
         cfg=cfg,
         aspects=aspects,
     )
-    assert pid == PATTERN_EDITORIAL_4MIX
-    assert hint == LAYOUT_HINT_EDITORIAL_4MIX
+    assert pid == PATTERN_PORTRAIT_2_LANDSCAPE_2
+    assert hint is None
 
 
 @pytest.mark.unit
@@ -318,7 +367,7 @@ def test_maybe_editorial_4mix_disabled_is_noop() -> None:
 
 
 @pytest.mark.unit
-def test_build_screen_p2l2_becomes_4mix_when_enabled() -> None:
+def test_build_screen_p2l2_stays_p2l2_when_4mix_would_crop_portraits() -> None:
     aspects, assets_map = _mixed_4_assets()
     reg = default_registry()
     pattern = reg[PATTERN_PORTRAIT_2_LANDSCAPE_2]
@@ -330,18 +379,11 @@ def test_build_screen_p2l2_becomes_4mix_when_enabled() -> None:
         assets_map=assets_map,
         cfg=cfg,
     )
-    assert screen["patternId"] == PATTERN_EDITORIAL_4MIX
-    assert screen["layoutHint"] == LAYOUT_HINT_EDITORIAL_4MIX
-    assert [s["slot"] for s in screen["slots"]] == [0, 1, 2, 3]
-    assert screen["slots"][0]["role"] == "landscape"
-    assert screen["slots"][1]["role"] == "portrait"
-    assert screen.get("layoutGeometry", {}).get("gridClass") == (
-        "layout-screen__grid--editorial-4mix"
-    )
+    assert screen["patternId"] == PATTERN_PORTRAIT_2_LANDSCAPE_2
 
 
 @pytest.mark.unit
-def test_editorial_4mix_prefers_over_mosaic_4_when_enabled() -> None:
+def test_editorial_4mix_not_forced_over_p2l2_when_wide_cells() -> None:
     aspects, assets_map = _mixed_4_assets()
     reg = default_registry()
     p2l2 = build_screen(
@@ -356,7 +398,7 @@ def test_editorial_4mix_prefers_over_mosaic_4_when_enabled() -> None:
         assets_map=assets_map,
         cfg=_cfg_with_4mix(enabled=True),
     )
-    assert p2l2["patternId"] == PATTERN_EDITORIAL_4MIX
+    assert p2l2["patternId"] == PATTERN_PORTRAIT_2_LANDSCAPE_2
     assert p4["patternId"] == PATTERN_PORTRAIT_4
 
 
@@ -377,7 +419,7 @@ def test_4mix_not_counted_as_dense_collage() -> None:
 
 
 @pytest.mark.unit
-def test_apply_editorial_4mix_reorders_slots() -> None:
+def test_apply_editorial_4mix_noop_when_portraits_cannot_fit_wide_cells() -> None:
     aspects, assets_map = _mixed_4_assets()
     screen = {
         "patternId": PATTERN_PORTRAIT_2_LANDSCAPE_2,
@@ -394,10 +436,8 @@ def test_apply_editorial_4mix_reorders_slots() -> None:
         cfg=_cfg_with_4mix(enabled=True),
         aspects=aspects,
     )
-    assert out["patternId"] == PATTERN_EDITORIAL_4MIX
-    aids = [s["assetId"] for s in out["slots"]]
-    assert aids[0] in ("l1", "l2") and aids[3] in ("l1", "l2")
-    assert aids[1] in ("p1", "p2") and aids[2] in ("p1", "p2")
+    # Promotion is skipped: equal 2×2 cells would cover-crop portraits.
+    assert out["patternId"] == PATTERN_PORTRAIT_2_LANDSCAPE_2
 
 
 def _4mix_screen(*, copy: dict | None = None) -> dict:
@@ -744,7 +784,7 @@ def test_scenery_portrait_fit_mode_is_deterministic() -> None:
 
 
 @pytest.mark.unit
-def test_apply_editorial_4mix_slot_fits_person_contain_scenery_may_cover() -> None:
+def test_apply_editorial_4mix_slot_fits_person_cover() -> None:
     from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_slot_fits
 
     screen = {
@@ -767,13 +807,13 @@ def test_apply_editorial_4mix_slot_fits_person_contain_scenery_may_cover() -> No
     out = apply_editorial_4mix_slot_fits(screen, assets_map, trip=trip, cfg=_cfg_with_4mix())
     fits = [s["fit"] for s in out["slots"]]
     assert fits[0] == "cover"
-    assert fits[1] == "contain"
+    assert fits[1] == "cover"
     assert fits[3] == "cover"
     assert fits[2] in ("cover", "contain")
 
 
 @pytest.mark.unit
-def test_scenery_portrait_cover_random_disabled_keeps_contain() -> None:
+def test_scenery_portrait_cover_random_disabled_still_cover() -> None:
     from dataclasses import replace
 
     from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_slot_fits
@@ -803,4 +843,4 @@ def test_scenery_portrait_cover_random_disabled_keeps_contain() -> None:
         trip={"tripId": "t"},
         cfg=cfg,
     )
-    assert [s["fit"] for s in out["slots"]] == ["cover", "contain", "contain", "cover"]
+    assert [s["fit"] for s in out["slots"]] == ["cover", "cover", "cover", "cover"]

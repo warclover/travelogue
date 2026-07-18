@@ -155,7 +155,7 @@ def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     assert "preview-toolbar__g1-banner" in bundle
     assert "preview-drawer__narrate-anchors" in bundle
     assert "copy-intent" in bundle
-    assert "章级意图" in bundle
+    assert "本章想强调的感觉" in bundle or "章级情绪" in bundle
     assert "preview-drawer__chip-mood" in bundle
     assert "trapDrawerFocus" in bundle
     assert "toolbarConfirm" in bundle

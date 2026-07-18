@@ -193,3 +193,75 @@ def test_allow_drop_false_never_sets_dropped_ids(monkeypatch):
     )
     assert pick.used_legacy
     assert pick.log.dropped_asset_ids == []
+
+
+def test_self_heal_drop_respects_usage_reject(monkeypatch):
+    """BLK-10 / AC-TPC-05: drop_worst_asset must not bypass usage hard reject."""
+    from travelogue.layout_engine.mosaic.candidates import (
+        ScreenCandidate,
+        WindowCandidateResult,
+    )
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
+
+    cfg = replace(
+        get_config().mosaic,
+        self_heal_enabled=True,
+        allow_drop=True,
+        max_drop_ratio=0.5,
+        min_candidate_score=0.9,
+    )
+    # 5 → drop 1 → remaining 4 (in default enabled_window_sizes)
+    asset_ids = ["a", "b", "c", "d", "e"]
+    cand = ScreenCandidate(
+        pattern_id="screen-experimental",
+        ordered_asset_ids=asset_ids,
+        screen={"patternId": "screen-experimental", "slots": []},
+    )
+    scored = [(cand, 0.1, [], {})]
+    captured: dict = {}
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.selfheal._asset_drop_penalty",
+        lambda aid, **_kw: 0.9 if aid == "a" else 0.1,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.selfheal.score_candidate",
+        lambda *_a, **_k: MosaicScoreResult(
+            total=0.1, base=0.1, penalties={}, reason_codes=[]
+        ),
+    )
+
+    def _fake_gen(*_args, **kwargs):
+        captured["window_ctx"] = kwargs.get("window_ctx")
+        return WindowCandidateResult(
+            candidates=[],
+            rejected=[
+                {
+                    "templateId": "screen-portrait-4",
+                    "reason": "usage_rule:UR-04",
+                }
+            ],
+        )
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.candidates."
+        "generate_window_candidates_with_rejections",
+        _fake_gen,
+    )
+
+    healed = try_self_heal_pick(
+        scored,
+        asset_ids=asset_ids,
+        aspects={},
+        assets_map={aid: {"id": aid} for aid in asset_ids},
+        cfg=cfg,
+        layout_state=None,
+        trip_photo_total=10,
+        burst_seconds=12.0,
+        min_score=0.9,
+        median_sharp=0.5,
+    )
+    assert healed is None
+    assert captured.get("window_ctx") is not None
+    assert list(captured["window_ctx"].window_asset_ids) == ["b", "c", "d", "e"]
+    assert "a" not in captured["window_ctx"].window_asset_ids

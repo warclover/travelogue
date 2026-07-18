@@ -87,6 +87,9 @@ def test_share_guards_and_inline_edit():
 
 def test_longshot_trust_contracts():
     text = _read("templates/studio/preview-toolbar/longshot.js")
+    logic = _read("templates/studio/preview-toolbar/longshot-logic.js")
+    share = _read("templates/studio/preview-toolbar/share.js")
+    bundle = text + logic + share
     assert "EXPORT_SIDE_EFFECT_KEY" in text
     assert "writeExportSideEffect" in text
     assert "assessMagazineTitleRisk" in text
@@ -94,9 +97,9 @@ def test_longshot_trust_contracts():
     assert "maybeCopyGateThenExport" in text
     assert "暂时不改，继续导出" in text
     assert "正在导出朋友圈长图连读" in text or "正在导出朋友圈九宫格" in text
-    assert "服务已停止，长图还没有导出" in text
+    assert "服务已停止，长图还没有导出" in bundle
     assert "disconnectExportFeedback" in text
-    assert "回到预览" in text
+    assert "回到预览" in bundle
     assert "onError:" in text
     assert "EXPORT_RESUME_PLATFORM_KEY" in text
     assert "readResumePlatform" in text
@@ -134,7 +137,7 @@ def test_copy_gate_06b_marks_seen_on_first_show():
 
 
 def test_assess_magazine_title_risk_markers():
-    text = _read("templates/studio/preview-toolbar/longshot.js")
+    text = _read("templates/studio/preview-toolbar/longshot-logic.js")
     assert 'reason: "empty"' in text
     assert 'reason: "garbled"' in text
     assert 'reason: "plus_join"' in text
@@ -186,7 +189,7 @@ def test_homepage_p2_denoise_no_user_facing_bento():
     assert "Bento" not in joined
     assert "Bento" not in aria_labels
     assert 'id="v2-settings-desc"' in html
-    assert "导入与分析偏好；AI 文案可在能力卡中升级" in html
+    assert "导入 · 外观 · AI 文案（可选）" in html
     assert 'id="v2-cta"' in html
     assert "开始制作我的游记" in html
     assert "你的游记画册" in _read("templates/studio/homepage-v2/shelf.js")

@@ -142,6 +142,39 @@ def test_replan_screen_legacy_builds_screen() -> None:
     assert chapters[0]["screens"][0].get("slots")
 
 
+def test_replan_legacy_blocked_when_usage_reject(monkeypatch) -> None:
+    """BLK-10 / AC-TPC-05: replan(legacy) must not emit usage-rejected patterns."""
+    chapters, aspects, assets_map, mosaic_cfg = _chapters_with_aspects()
+    screen = chapters[0]["screens"][0]
+    sid = screen["screenId"]
+    previous = dict(screen)
+    legacy_screen = {
+        "patternId": "screen-mosaic-5-main-portrait-3land",
+        "slots": list(screen.get("slots") or []),
+    }
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.replan.build_legacy_screen",
+        lambda *_a, **_k: legacy_screen,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.usage_rules.evaluator.evaluate_reject",
+        lambda *_a, **_k: (True, "UR-04", "portrait_hero_is_max"),
+    )
+
+    result = replan_screen(
+        chapters,
+        sid,
+        strategy="legacy",
+        aspects=aspects,
+        assets_map=assets_map,
+        cfg=mosaic_cfg,
+    )
+    assert result["applied"] is False
+    assert result["reason"] == "legacy_usage_rejected"
+    assert chapters[0]["screens"][0] == previous
+
+
 def test_replan_screen_missing_context_raises() -> None:
     chapters, _, _, _ = _chapters_with_aspects()
     sid = chapters[0]["screens"][0]["screenId"]

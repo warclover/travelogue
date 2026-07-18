@@ -1,0 +1,6 @@
+upstream: https://github.com/stefanwayon/collage
+commit: 76f888886848aadf42f67f989d3fd317267f213b
+license: MIT
+notes: round_result=False path only (numpy); integer MIP path not used (avoids python-mip).
+vendored: collage/bric.py collage/layout.py LICENSE
+date: 2026-07-18

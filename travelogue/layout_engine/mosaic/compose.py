@@ -48,7 +48,7 @@ def score_window_candidates_with_rejections(
     chapter_screen_count: int = 12,
 ) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict], list[dict]]:
     """Score MCS window candidates and return validator-level rejections (golden probe / tests)."""
-    return _score_window_candidates_with_rejections(
+    scored, rejected, hits, _shadow = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -61,6 +61,7 @@ def score_window_candidates_with_rejections(
         chapter_screen_index=chapter_screen_index,
         chapter_screen_count=chapter_screen_count,
     )
+    return scored, rejected, hits
 
 
 def score_window_candidates(
@@ -75,7 +76,7 @@ def score_window_candidates(
     median_sharp: float | None = None,
 ) -> list[tuple[ScreenCandidate, float, list[str], dict[str, float]]]:
     """Score all MCS window candidates (shared by compose + replan)."""
-    scored, _rejected, _hits = _score_window_candidates_with_rejections(
+    scored, _rejected, _hits, _shadow = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -101,7 +102,12 @@ def _score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
-) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict], list[dict]]:
+) -> tuple[
+    list[tuple[ScreenCandidate, float, list[str], dict[str, float]]],
+    list[dict],
+    list[dict],
+    dict | None,
+]:
     """Score MCS window candidates and collect validator-level rejections."""
     window_ctx = build_window_context(
         asset_ids,
@@ -118,10 +124,12 @@ def _score_window_candidates_with_rejections(
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
         window_ctx=window_ctx,
+        trip_photo_total=trip_photo_total,
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
     usage_hits = list(bundle.usage_rule_hits)
+    contract_shadow = bundle.contract_shadow
     scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
@@ -157,7 +165,7 @@ def _score_window_candidates_with_rejections(
         mode=str(div_cfg.get("mode", "off")),
         mmr_lambda=float(div_cfg.get("lambda", 0.65)),
     )
-    return scored, rejected, usage_hits
+    return scored, rejected, usage_hits, contract_shadow
 
 
 def _usage_rule_log_entries(rejected: list[dict]) -> list[dict[str, str]]:
@@ -209,7 +217,7 @@ def pick_best_window(
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
-    scored, rejected, usage_hits = _score_window_candidates_with_rejections(
+    scored, rejected, usage_hits, contract_shadow = _score_window_candidates_with_rejections(
         asset_ids,
         aspects,
         assets_map,
@@ -226,6 +234,10 @@ def pick_best_window(
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)
     log.usage_rule_hits = usage_hits
     log.candidates_count = len(scored)
+    if isinstance(contract_shadow, dict):
+        log.window_mix = contract_shadow.get("windowMix") or None
+        log.candidate_source = contract_shadow.get("candidateSource") or None
+        log.square_relaxed = bool(contract_shadow.get("squareRelaxed"))
     if not scored:
         log.fallback_used = True
         log.fallback_reason = "no_candidates"
@@ -272,6 +284,7 @@ def pick_best_window(
             trip_photo_total=trip_photo_total,
             burst_seconds=burst_seconds,
             min_score=cfg.min_candidate_score,
+            median_sharp=median_sharp,
         )
         if healed is not None:
             winner_cand, winner_score, reasons, step, dropped, healed_penalties = healed
@@ -294,6 +307,7 @@ def pick_best_window(
             log.dropped_asset_ids = list(dropped)
             log.planner_path = "mosaic"
             enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
+            _attach_raw_geometry_features(log, winner_cand.pattern_id)
             return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
         if cfg.fallback_to_legacy:
             log.fallback_used = True
@@ -303,7 +317,20 @@ def pick_best_window(
 
     log.planner_path = "mosaic"
     enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
+    _attach_raw_geometry_features(log, winner_cand.pattern_id)
     return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
+
+
+def _attach_raw_geometry_features(log: MosaicWindowLog, pattern_id: str) -> None:
+    """AC-TPC-10 · record-only raw geometry on winner (decoupled from penalties)."""
+    from travelogue.layout_engine.contract.geometry_features import (
+        compute_raw_geometry_features,
+    )
+
+    feats = compute_raw_geometry_features(pattern_id)
+    log.hero_prominence_ratio = feats.get("heroProminenceRatio")  # type: ignore[assignment]
+    log.hero_coverage_ratio = feats.get("heroCoverageRatio")  # type: ignore[assignment]
+    log.cell_area_cv = feats.get("cellAreaCv")  # type: ignore[assignment]
 
 
 def _attach_face_crop_proxy(

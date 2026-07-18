@@ -319,6 +319,13 @@ mosaic:
   self_heal:
     enabled: true
     allow_drop: false
+  # TPC · unified template contract (PRD-TEMPLATE-CONTRACT-V1)
+  # 仓库默认保持 false（AC-TPC-01）。本机手测请见：
+  #   docs/config-tpc-dogfood.example.yaml
+  #   docs/acceptance-records/tpc-local-dogfood-GUIDE.md
+  template_contract:
+    enabled: false
+    shadow_log: true
   weights:
     aspect_match: 0.20
     sharpness: 0.15

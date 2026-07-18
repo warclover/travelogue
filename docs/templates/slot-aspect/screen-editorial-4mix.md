@@ -6,7 +6,7 @@
 
 | slot | role | displayAspect |
 |------|------|---------------|
-| 0 | landscape | 1.1852 |
+| 0 | landscape | 1.7778 |
 | 1 | portrait | 1.7778 |
 | 2 | portrait | 1.7778 |
-| 3 | landscape | 2.6667 |
+| 3 | landscape | 1.7778 |

@@ -54,6 +54,23 @@ platforms:
       有几张发几张：按编号 01→N 选入朋友圈九宫格（1:1）。
       这是真九宫格配图，不是长图连读切片。
 
+  # GCS Track B · 单屏海报拼贴（不进 screens[]；不走 Playwright）
+  poster_bric:
+    label: 单屏海报
+    label_en: Poster Collage
+    segment: photo_led
+    capture: poster_bric
+    allow_p1: false
+    phase: GCS
+    target_pages: 1
+    min_pages: 1
+    max_pages: 1
+    output:
+      width: 1080
+      naming: "{title}-poster"
+    publish_guide: >-
+      导出一张拼贴海报（3–9 张精选 · contain 保比例）。
+
   xiaohongshu:
     label: 小红书
     label_en: Xiaohongshu

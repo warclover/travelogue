@@ -1149,6 +1149,11 @@
       "required": ["title", "dateStart", "dateEnd", "places", "tone"],
       "properties": {
         "title": { "type": "string", "maxLength": 20 },
+        "displayTitle": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "First-Session Trust / Share-Face · humanized title for reader/share surfaces (folder-noise stripped)."
+        },
         "subtitle": { "type": "string", "maxLength": 32 },
         "hook": { "type": "string", "maxLength": 56 },
         "dateStart": { "type": "string", "format": "date" },

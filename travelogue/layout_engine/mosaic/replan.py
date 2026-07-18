@@ -142,6 +142,26 @@ def replan_screen(
         )
         reason = "legacy" if new_screen else "legacy_failed"
         rank = 0
+        # BLK-10 / D-TPC-12: legacy replan must not emit patterns rejected by
+        # usage_rules (parity with append_legacy_window).
+        if new_screen:
+            from travelogue.layout_contract.usage_context import build_window_context
+            from travelogue.layout_engine.usage_rules.evaluator import evaluate_reject
+
+            window_ctx = build_window_context(
+                asset_ids,
+                aspects,
+                assets_map,
+                layout_state=layout_state,
+                median_sharp=median_sharp,
+            )
+            pid = str(new_screen.get("patternId") or "")
+            reject, _rule_id, _detail = evaluate_reject(
+                pid, window_ctx, screen=new_screen
+            )
+            if reject:
+                new_screen = None
+                reason = "legacy_usage_rejected"
     else:
         new_screen, rank, reason = _pick_alt_topk(
             asset_ids,

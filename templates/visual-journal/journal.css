@@ -520,7 +520,8 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
     --cover-folio-paper: #f7f5f2;
     --cover-folio-panel-width: min(54%, 540px);
     --cover-folio-title-size: clamp(2.35rem, 4.6vw, 3.35rem);
-    --cover-band-center: 72%;
+    /* Slightly lower than mid-third so person covers keep heads above the 题带 */
+    --cover-band-center: 78%;
     --cover-band-pad: 20px clamp(32px, 4.5vw, 52px);
     --cover-band-paper: rgba(247, 245, 242, 0.94);
     --cover-band-title-size: clamp(1.45rem, 2.8vw, 2.05rem);

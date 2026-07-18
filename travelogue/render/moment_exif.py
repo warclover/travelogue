@@ -15,6 +15,17 @@ def _month_label(taken_at: str | None) -> str | None:
         return None
 
 
+def _day_label(taken_at: str | None) -> str | None:
+    """Month.day when place is missing — avoids identical「2025.04 · 正午」spam."""
+    if not taken_at:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(taken_at).replace("Z", "+00:00"))
+        return f"{dt.year}.{dt.month:02d}.{dt.day:02d}"
+    except ValueError:
+        return None
+
+
 def _daypart_label(taken_at: str | None) -> str | None:
     if not taken_at:
         return None
@@ -52,16 +63,20 @@ def _place_label(asset: dict) -> str | None:
 def format_moment_exif_line(asset: dict) -> str | None:
     """Build footnote segments; returns None when fewer than 2 valid parts."""
     segments: list[str] = []
+    taken = str(asset.get("takenAt") or "") or None
 
     place = _place_label(asset)
     if place:
         segments.append(place)
+        month = _month_label(taken)
+        if month:
+            segments.append(month)
+    else:
+        day = _day_label(taken)
+        if day:
+            segments.append(day)
 
-    month = _month_label(str(asset.get("takenAt") or "") or None)
-    if month:
-        segments.append(month)
-
-    daypart = _daypart_label(str(asset.get("takenAt") or "") or None)
+    daypart = _daypart_label(taken)
     if daypart:
         segments.append(daypart)
 

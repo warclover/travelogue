@@ -324,6 +324,9 @@
 | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md) | **智能排版引擎 LSE** v0.17.6 · P17-Core/Plus/B · 跨职能 + CTO/算法 + 前端 + 开发负责人评审已纳入 |
 | [IMPLEMENTATION-PHASE17.md](./IMPLEMENTATION-PHASE17.md) | 实施清单：融合设计 · W0 三项审计 · adapter 参数收束 · 阶段交付（分支 `feature/phase17-lse`） |
 | [PRD-PHASE17-research-stub.md](./PRD-PHASE17-research-stub.md) | P17-B：生成式 composite · 7 张 4P+3L（LTE 扩展） |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.0**（Conditional Go · 可 Kickoff W0）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime |
+| [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
+| [acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md](./acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md) | GCS V1 · 跨职能评审纪要模板（备查） |
 
 **前置**：Phase 16 LTE 默认路径稳定。**代号**：LSE。**原则**：最小用户干扰 · 后台自动出结果。**与 LTE 分工**：LSE 管组屏决策与调参；LTE 管 pattern 几何。
 
@@ -338,8 +341,28 @@
 | [观感提升路线图.md](./观感提升路线图.md) | LSE 冻结 · 选片/模板/盲评优先级 |
 | [ROADMAP-PHASE18-BOOK-QUALITY.md](./ROADMAP-PHASE18-BOOK-QUALITY.md) | Phase 18 BQP 项目级路线图 |
 | [PRD-PHASE18-layout-effect-improvement.md](./PRD-PHASE18-layout-effect-improvement.md) | 版式观感专项 |
-| [PRD-MCS-GEOMETRIC-QUALITY-V1.md](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) | **MCS 屏内几何质量与标定闭环 V1** **v0.2.0**（Conditional Go · 可 Kickoff W0）· 准入 DSL + soft 几何罚 + pairwise 评分台 |
-| [acceptance-records/mcs-geometric-quality-v1-review-2026-07-18.md](./acceptance-records/mcs-geometric-quality-v1-review-2026-07-18.md) | MGQ V1 评审纪要（已结案 · BLK-01～08 已回写） |
+| [PRD-LAYOUT-QUALITY-STACK-V1.md](./PRD-LAYOUT-QUALITY-STACK-V1.md) | **版式质量栈纲领 LQS V1** **v0.1.0**（Draft · 统摄 MSR/MGQ/GCS · 跨主题合同与 LQS-P0～P7） |
+| [acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md) | LQS V1 · **实现前后效果与收益评估**（十席联席 · 事前推演） |
+| [acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md) | LQS V1 · **落地可行性与成本评估**（人日合流 · 砍 scope · 排期） |
+| [IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md](./IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md) | LQS V1 · 实施清单（瘦身版）· **部分废止**：S1=TPC W1 可执行；S2+ 由 TPC 承接 |
+| [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.2**（W1+W2 落地中 · captionAreas **已 defer** · BLK-TPC-01～07 已回写 · §11 工程保障）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [acceptance-records/tpc-local-dogfood-GUIDE.md](./acceptance-records/tpc-local-dogfood-GUIDE.md) | TPC · **本机狗粮 / 手测指南**（开发期开 `config.yaml`；仓库默认仍 off） |
+| [acceptance-records/tpc-mosaic-dogfood-2026-07-18.md](./acceptance-records/tpc-mosaic-dogfood-2026-07-18.md) | TPC · 2026-07-18 版式狗粮手测记录（F1–F6 通过） |
+| [acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl](./acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl) | TPC · layout_compare 手记（三本 prefer:tie） |
+| [config-tpc-dogfood.example.yaml](./config-tpc-dogfood.example.yaml) | TPC / poster_bric · 本机狗粮配置片段 |
+| [acceptance-records/tpc-gap-checklist-2026-07-18.md](./acceptance-records/tpc-gap-checklist-2026-07-18.md) | TPC · PRD 缺口收口清单 |
+| [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**） |
+| [acceptance-records/tpc-w3-template-pack-2026-07-18.md](./acceptance-records/tpc-w3-template-pack-2026-07-18.md) | TPC W3 · 手写模板包（4 experimental · L1P3/L3P2/L2P2/hero-70） |
+| [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md) | TPC V1 · 跨职能评审纪要（七席 · Conditional Go · 含代码事实核查） |
+| [PRD-MCS-GEOMETRIC-QUALITY-V1.md](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) | **MCS 屏内几何质量与标定闭环 V1** **v0.2.1**（Conditional Go · 可 Kickoff W0 · W1 前 BLK-09～14） |
+| [acceptance-records/mcs-geometric-quality-v1-expert-review-2026-07-18.md](./acceptance-records/mcs-geometric-quality-v1-expert-review-2026-07-18.md) | MGQ V1 **专家五席评审**（权威 · 算法/架构/开发/测试/UX） |
+| [acceptance-records/mcs-geometric-quality-v1-review-2026-07-18.md](./acceptance-records/mcs-geometric-quality-v1-review-2026-07-18.md) | MGQ V1 第一轮评审（推荐案结案 · BLK-01～08） |
+| [PRD-MCS-SIGNATURE-ROUTING-V1.md](./PRD-MCS-SIGNATURE-ROUTING-V1.md) | **MCS 格式签名路由与图文一体选版 V1（MSR）** **v0.2.0**（Conditional Go · 可 Kickoff W0 shadow）· US8131114 签名硬筛 + caption 优先；L1≠填槽序 |
+| [acceptance-records/mcs-signature-routing-v1-review-2026-07-18.md](./acceptance-records/mcs-signature-routing-v1-review-2026-07-18.md) | MSR V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
+| [acceptance-records/mcs-signature-routing-v1-review-TEMPLATE.md](./acceptance-records/mcs-signature-routing-v1-review-TEMPLATE.md) | MSR V1 · 跨职能评审纪要模板（备查） |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **生成式拼贴面 GCS V1** **v0.2.0**（Conditional Go · 可 Kickoff W0）· 轨道原生 SKU 工厂 + `poster_bric`；先 B 后 A；BLK-01～08 已回写 |
+| [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 评审纪要（已结案 · Conditional Go · BLK-01～08） |
+| [acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md](./acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md) | GCS V1 · 跨职能评审纪要模板（备查） |
 | [PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md](./PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md) | 模板 usage 规则驱动排版优化（URO） |
 | [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md) | 拼图密度预算 · ☑ 已合入 |
 | [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) | P21 实施清单 |

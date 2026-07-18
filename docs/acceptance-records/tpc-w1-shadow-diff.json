@@ -1,0 +1,247 @@
+{
+  "schemaVersion": "tpc-shadow-diff-v1",
+  "feature": "TPC",
+  "gate": "AC-TPC-12",
+  "generatedAt": "2026-07-18T04:30:44Z",
+  "windowCount": 13,
+  "diffCount": 2,
+  "allClear": false,
+  "rows": [
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#6:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#8:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#13:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#16:screen-mosaic-5-main-portrait-3land",
+      "n": 5,
+      "windowMix": "L4P1S0",
+      "livePatternIds": [],
+      "indexPatternIds": [
+        "screen-mosaic-5-main-portrait-3land"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-mosaic-5-main-portrait-3land"
+      ],
+      "hasDiff": true,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#18:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-02#3:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-02#4:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-landscape-3"
+      ],
+      "hasDiff": true,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#2:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#12:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#14:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4",
+        "screen-mosaic-4-hero-70-sidebar"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#15:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#17:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#24:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    }
+  ],
+  "notes": "Set signOff=true per row (or bulk) after human review before enabling mosaic.template_contract.enabled. hasDiff=false rows need no sign-off."
+}

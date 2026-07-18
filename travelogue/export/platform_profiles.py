@@ -19,6 +19,7 @@ PLATFORM_SEGMENT_IDS = frozenset(
     {
         "wechat_moments",
         "moments_grid",
+        "poster_bric",
         "xiaohongshu",
         "instagram",
         "weibo",
@@ -433,6 +434,8 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-moments"
     if platform_id == "moments_grid":
         return f"{slug}-moments-grid"
+    if platform_id == "poster_bric":
+        return f"{slug}-poster"
     if platform_id == "xiaohongshu":
         return f"{slug}-xhs"
     if platform_id == "instagram":

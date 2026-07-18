@@ -8,12 +8,13 @@ description: >
   Kicker/Body 文案区（2land 同族）；视觉 intrinsic render。
 stage:
   aspect: '16:9'
+  # Equal 2×2 so each tile ≈1/4 stage (dogfood: weighted tracks read as broken puzzle).
   cols:
-  - 2
-  - 3
+  - 1
+  - 1
   rows:
-  - 3
-  - 2
+  - 1
+  - 1
 photoCount:
   min: 4
   max: 4
@@ -54,9 +55,14 @@ slots:
   role: landscape
   fit: auto
 constraints:
-  portrait_forbidden_in_wide_slots: []
+  # Equal 2×2 cells are landscape-AR; do not cover-fill portraits into them.
+  portrait_forbidden_in_wide_slots: [0, 1, 2, 3]
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
+compatibilityHints:
+  prefers_burst: false
+  avoid_near_scene_clones: true
+
 scoring:
   base_weight: 0.88
   tags:
@@ -71,6 +77,10 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
   presentation: editorial-4mix
+rollout:
+  # Dark-launch until dogfood / contract on (AC-TPC-01 golden stability)
+  percent: 0
+  hash_key: tripId
 usage:
   summary: 四图横竖棋盘 + 留白呼吸：TL/BR 横图、TR/BL 竖图呈 Z 字混排，适合密度屏之后的“换口气”。
   whenToUse: |

@@ -229,21 +229,23 @@ def test_chapter_ticket_stub_rules_in_overlays(journal_css: str) -> None:
 
 
 @pytest.mark.unit
-def test_mosaic_5_main_portrait_3land_contain_collapses_stage(journal_css: str) -> None:
-    """screen-mosaic-5-main-portrait-3land with contain portrait must drop 16:9 clip.
+def test_mosaic_fixed_stage_keeps_aspect_with_contain(journal_css: str) -> None:
+    """Fixed-stage mosaics must keep 16:9 when a contain class is present.
 
-    Regression: portrait contain tile expands grid past fixed stage; bottom landscape
-    row was clipped (~74% hidden) when aspect-ratio stayed locked.
+    Regression: height:auto + align-items:start punched holes / jagged bottoms in
+    W3 rail / weighted / 5-main-portrait composites (demo-2025 dogfood).
     """
     ostart = journal_css.index(OVERLAYS_MARKER_START)
     oend = journal_css.index(OVERLAYS_MARKER_END)
     overlays = journal_css[ostart:oend]
+    assert '[data-pattern^="screen-mosaic-"]:has(.layout-slot__img--contain)' in overlays
+    assert "aspect-ratio: var(--screen-aspect, 16 / 9)" in overlays
+    assert "grid-template-rows: repeat(3, auto)" not in overlays
+    # Contain class still fills the cell (cover + focal) so bottoms align
     assert (
-        '[data-pattern="screen-mosaic-5-main-portrait-3land"]'
-        ":has(.layout-slot__img--contain)" in overlays
+        '[class*="layout-screen__grid--mosaic-"] .layout-slot .layout-slot__img--contain'
+        in overlays
     )
-    assert ".layout-screen__grid--mosaic-5-main-portrait-3land" in overlays
-    assert "grid-template-rows: repeat(3, auto)" in overlays
 
 
 @pytest.mark.unit

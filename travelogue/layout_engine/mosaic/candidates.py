@@ -47,6 +47,8 @@ class WindowCandidateResult:
     candidates: list[ScreenCandidate]
     rejected: list[dict[str, Any]] = field(default_factory=list)
     usage_rule_hits: list[dict[str, Any]] = field(default_factory=list)
+    # TPC W1 shadow (AC-TPC-12); never consumed by pick/score paths.
+    contract_shadow: dict[str, Any] | None = None
 
 
 def _reject(
@@ -128,17 +130,67 @@ def generate_window_candidates_with_rejections(
     median_sharp: float | None = None,
     registry: dict[str, MosaicPattern] | None = None,
     window_ctx: WindowContext | None = None,
+    trip_photo_total: int = 0,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
         return WindowCandidateResult(candidates=[], rejected=[])
-    reg = registry or mosaic_registry()
-    patterns = patterns_for_window_size(len(asset_ids), reg)
+    tc = getattr(cfg, "template_contract", None)
+    tc_enabled = bool(tc is not None and getattr(tc, "enabled", False))
+    if registry is not None:
+        reg = registry
+    elif tc_enabled:
+        # Dogfood / AC-TPC-02: experimental percent=0 enter when contract is on.
+        from dataclasses import replace
+
+        from travelogue.config import get_config
+
+        reg = mosaic_registry(cfg=replace(get_config(), mosaic=cfg))
+    else:
+        reg = mosaic_registry()
+    contract_source = "legacy_size"
+    window_mix_label = ""
+    square_relaxed = False
+    rejected: list[dict[str, Any]] = []
+    if tc_enabled:
+        from travelogue.layout_engine.contract.evaluator import (
+            patterns_for_contract_window,
+        )
+
+        (
+            patterns,
+            contract_source,
+            window_mix_label,
+            square_relaxed,
+            infeasible_rejects,
+        ) = patterns_for_contract_window(asset_ids, aspects, registry=reg)
+        for row in infeasible_rejects:
+            _reject(
+                rejected,
+                str(row.get("templateId") or "*"),
+                str(row.get("reason") or "contract:infeasible_mix"),
+                detail=row.get("detail"),
+            )
+        if not patterns:
+            _reject(rejected, "*", "contract:mix_miss", detail=window_mix_label or None)
+            return WindowCandidateResult(
+                candidates=[],
+                rejected=rejected,
+                contract_shadow={
+                    "windowMix": window_mix_label,
+                    "candidateSource": contract_source,
+                    "squareRelaxed": square_relaxed,
+                    "livePatternIds": [],
+                    "hasDiff": False,
+                },
+            )
+    else:
+        patterns = patterns_for_window_size(len(asset_ids), reg)
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
-    rejected: list[dict[str, Any]] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
     usage_hits: list[dict[str, Any]] = []
+    orderable_pattern_ids: list[str] = []
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -154,6 +206,27 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
+        from travelogue.layout_engine.mosaic.scorer import (
+            _near_scene_clone_penalty,
+            _template_prefers_burst,
+        )
+
+        # Hard gate: mosaics that do not prefer bursts must not absorb same-scene
+        # walking clones (demo-2025 weighted/rail/5-main looked like sliced panoramas).
+        # prefers_burst True → skip; False/None → reject when penalty is high.
+        if _template_prefers_burst(pat.pattern_id) is not True:
+            clone_pen = _near_scene_clone_penalty(
+                pat.pattern_id, list(ordered), assets_map
+            )
+            if clone_pen >= 0.75:
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "near_scene_clone",
+                    detail=f"penalty={clone_pen:.2f}",
+                )
+                continue
+        orderable_pattern_ids.append(pat.pattern_id)
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)
         if cfg.lse_hungarian_assignment:
@@ -176,15 +249,31 @@ def generate_window_candidates_with_rejections(
                 ordered = refined
                 screen = build_screen(pat, ordered, assets_map=assets_map)
         geom_ok = screen_slots_geometry_ok(screen, aspects)
-        main_ok, main_reason = screen_main_slot_eligible(
-            screen,
-            assets_map,
-            pattern_id=pat.pattern_id,
-            cfg=cfg,
-        )
+        if tc_enabled:
+            from travelogue.layout_engine.contract.evaluator import (
+                evaluate_contract_eligibility,
+            )
+
+            elig_ok, elig_reason, elig_detail = evaluate_contract_eligibility(
+                screen,
+                assets_map,
+                pattern_id=pat.pattern_id,
+                cfg=cfg,
+                trip_photo_total=trip_photo_total,
+            )
+            main_ok, main_reason = elig_ok, elig_detail or elig_reason or "ok"
+            reject_reason = elig_reason or "contract:eligibility_main_ar"
+        else:
+            main_ok, main_reason = screen_main_slot_eligible(
+                screen,
+                assets_map,
+                pattern_id=pat.pattern_id,
+                cfg=cfg,
+            )
+            reject_reason = "main_ar_ineligible"
         geom_ok = geom_ok and main_ok
         if not geom_ok and not main_ok:
-            _reject(rejected, pat.pattern_id, "main_ar_ineligible", detail=main_reason)
+            _reject(rejected, pat.pattern_id, reject_reason, detail=main_reason)
         elif not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
         elif geom_ok and main_ok and window_ctx is not None:
@@ -197,6 +286,8 @@ def generate_window_candidates_with_rejections(
                 feat = {**summary, "patternId": pat.pattern_id}
                 if slot_fallback:
                     feat["slotAssignmentFallback"] = slot_fallback
+                if tc_enabled and contract_source == "fallback":
+                    feat["candidateSource"] = "fallback"
                 usage_deferred.append(
                     (
                         ScreenCandidate(
@@ -213,6 +304,14 @@ def generate_window_candidates_with_rejections(
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback
+        if tc_enabled:
+            feat["candidateSource"] = contract_source
+            if square_relaxed:
+                feat["squareRelaxed"] = True
+            if contract_source == "fallback":
+                # Explicit marker for AC-TPC-03
+                feat["contractReasons"] = ["contract:mix_fallback"]
+                feat["contractMixFallback"] = True
         out.append(
             ScreenCandidate(
                 pattern_id=pat.pattern_id,
@@ -225,10 +324,41 @@ def generate_window_candidates_with_rejections(
     _restore_if_usage_emptied_candidates(out, rejected, usage_deferred, usage_hits)
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
+    shadow_payload: dict[str, Any] | None = None
+    if tc is not None and getattr(tc, "shadow_log", False) and not tc_enabled:
+        # Shadow only while contract path is off (W1). Enabling selection is W2+.
+        # Reuse orderable ids from this pass — never re-run try_order.
+        from travelogue.layout_engine.contract.mix_index import (
+            format_mix_key,
+            mix_key_from_aspects,
+        )
+        from travelogue.layout_engine.contract.shadow import index_pattern_ids_for_mix
+
+        key = mix_key_from_aspects(asset_ids, aspects)
+        index_ids = index_pattern_ids_for_mix(key)
+        live_ids = sorted(orderable_pattern_ids)
+        live_set, index_set = set(live_ids), set(index_ids)
+        shadow_payload = {
+            "windowMix": format_mix_key(key),
+            "livePatternIds": live_ids,
+            "indexPatternIds": index_ids,
+            "onlyInLive": sorted(live_set - index_set),
+            "onlyInIndex": sorted(index_set - live_set),
+            "hasDiff": bool(live_set ^ index_set),
+        }
+    elif tc_enabled:
+        shadow_payload = {
+            "windowMix": window_mix_label,
+            "candidateSource": contract_source,
+            "squareRelaxed": square_relaxed,
+            "livePatternIds": sorted(orderable_pattern_ids),
+            "hasDiff": False,
+        }
     return WindowCandidateResult(
         candidates=out,
         rejected=rejected,
         usage_rule_hits=usage_hits,
+        contract_shadow=shadow_payload,
     )
 
 
