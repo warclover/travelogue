@@ -206,6 +206,26 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
+        from travelogue.layout_engine.mosaic.scorer import (
+            _near_scene_clone_penalty,
+            _template_prefers_burst,
+        )
+
+        # Hard gate: mosaics that do not prefer bursts must not absorb same-scene
+        # walking clones (demo-2025 weighted/rail/5-main looked like sliced panoramas).
+        # prefers_burst True → skip; False/None → reject when penalty is high.
+        if _template_prefers_burst(pat.pattern_id) is not True:
+            clone_pen = _near_scene_clone_penalty(
+                pat.pattern_id, list(ordered), assets_map
+            )
+            if clone_pen >= 0.75:
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "near_scene_clone",
+                    detail=f"penalty={clone_pen:.2f}",
+                )
+                continue
         orderable_pattern_ids.append(pat.pattern_id)
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)

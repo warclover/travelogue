@@ -98,6 +98,15 @@ def _cell_aspect_for_slot(
     return _STAGE_ASPECT
 
 
+def _orientation_fits_cell_ar(
+    aid: str,
+    aspects: dict[str, AspectKind],
+    cell_ar: float,
+) -> bool:
+    """Reject portrait-in-wide / landscape-in-tall (dogfood: 竖图塞横槽极端裁切)."""
+    return asset_fits_cell(aid, aspects, cell_ar)
+
+
 def _explicit_geometry_ok(
     pattern_id: str,
     specs: list[tuple[int, int, int, int]],
@@ -117,12 +126,46 @@ def _explicit_geometry_ok(
         if not aid or idx < 0 or idx >= len(specs):
             continue
         cell_ar = _cell_aspect_for_slot(pattern_id, slot, idx, specs)
+        # Always reject portrait-in-wide (equal 2×2 chessboards are all ~1.78).
+        # Landscape-in-tall stays opt-in via forbid_tall / hero guard (Plate 63).
+        if cell_ar >= _WIDE_CELL_AR and _is_std_portrait_id(aid, aspects):
+            return False
         if idx in forbid_wide and cell_ar >= _WIDE_CELL_AR:
             if _is_std_portrait_id(aid, aspects):
                 return False
         if idx in forbid_tall and cell_ar <= _TALL_CELL_AR:
             if _is_landscape_id(aid, aspects):
                 return False
+    return True
+
+
+def _lte_template_geometry_ok(
+    pattern_id: str,
+    screen: dict,
+    aspects: dict[str, AspectKind],
+) -> bool:
+    """LTE-only mosaics (e.g. W3 weighted) not yet in legacy explicit/auto maps."""
+    try:
+        from travelogue.layout_templates.geometry import slot_display_aspect
+        from travelogue.layout_templates.registry import get_engine
+
+        template = get_engine().get(pattern_id)
+    except (KeyError, AttributeError, TypeError):
+        return True
+    tpl_slots = list(template.slots or ())
+    for slot in screen.get("slots") or []:
+        aid = slot.get("assetId")
+        if not aid:
+            continue
+        idx = int(slot.get("slot", slot.get("index", -1)))
+        cell_ar = _cell_aspect_for_slot(pattern_id, slot, idx, [])
+        if cell_ar == _STAGE_ASPECT and 0 <= idx < len(tpl_slots):
+            try:
+                cell_ar = slot_display_aspect(tpl_slots[idx].rect, template.stage)
+            except (TypeError, ValueError, AttributeError):
+                pass
+        if not _orientation_fits_cell_ar(aid, aspects, cell_ar):
+            return False
     return True
 
 
@@ -172,4 +215,4 @@ def screen_slots_geometry_ok(
             aspects,
             stage_aspect=_stage_aspect_for_auto_flow(pattern_id),
         )
-    return True
+    return _lte_template_geometry_ok(pattern_id, screen, aspects)

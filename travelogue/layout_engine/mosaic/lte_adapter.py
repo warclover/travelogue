@@ -240,6 +240,10 @@ def resolve_slot_fit(
     if declared == "auto" and hint_fit:
         declared = str(hint_fit)
     if declared == "auto":
+        # Fixed-stage mosaic composites must fill cells; person-contain escapes
+        # the 16:9 stage via overlays and creates holes / jagged bottoms.
+        if str(pattern_id).startswith("screen-mosaic-"):
+            return "cover"
         return default
     return str(declared)
 

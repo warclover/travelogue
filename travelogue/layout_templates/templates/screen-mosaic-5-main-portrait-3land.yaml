@@ -71,6 +71,11 @@ constraints:
     forbidKinds: [panorama, tall, portrait, square]
     arLadderTol: 0.08
     preferLadder: [1.7778, 1.5, 1.3333]
+compatibilityHints:
+  # Same-scene person walks read as sliced panoramas across the 2×2 main + rail.
+  prefers_burst: false
+  avoid_near_scene_clones: true
+
 scoring:
   base_weight: 1.0
   tags: []

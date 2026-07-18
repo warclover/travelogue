@@ -176,18 +176,9 @@ def _fits_for_screen(
         # Scenery fit finalized after screenId (§4.3); placeholder until attach/render.
         return ["contain"] * n
     if pattern_id == "screen-editorial-4mix":
-        # Scenery portrait cover random finalized at render (apply_editorial_4mix_slot_fits).
-        fits: list[LayoutFit] = []
-        for idx, aid in enumerate(asset_ids):
-            asset = assets_map.get(aid, {})
-            is_land = idx in (0, 3)
-            if asset_has_person(asset):
-                fits.append("contain")
-            elif is_land:
-                fits.append("cover")
-            else:
-                fits.append("contain")
-        return fits
+        # Chessboard cells are landscape-aspect; cover fills the grid (dogfood
+        # contain → jagged gaps). Per-slot finalize still via apply_editorial_4mix_slot_fits.
+        return ["cover"] * n
     if pattern_id in (
         "screen-portrait-2",
         "screen-portrait-3",

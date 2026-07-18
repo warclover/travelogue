@@ -615,7 +615,19 @@ export function initPreviewDrawers(root, tripId) {
               pollStudioJob(res.body.jobId, function (job) {
                 if (triggerBtn) triggerBtn.disabled = false;
                 if (job.status === "succeeded") {
-                  showToolbarToast("结构已重新生成");
+                  var changed = true;
+                  try {
+                    if (job.result && typeof job.result.structureChanged === "boolean") {
+                      changed = job.result.structureChanged;
+                    }
+                  } catch (_err) {
+                    changed = true;
+                  }
+                  showToolbarToast(
+                    changed
+                      ? "结构已重新生成"
+                      : "已重跑，章节结构与上次相同（照片集合未变时属正常）"
+                  );
                   window.location.reload();
                   return;
                 }

@@ -53,8 +53,9 @@ constraints:
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
 scoring:
-  base_weight: 1.0
-  tags: []
+  # Default four-up: four landscapes, each ~1/4 of the 16:9 stage.
+  base_weight: 1.12
+  tags: [equal-4, landscape-grid]
 render:
   gridClass: layout-screen__grid--2x2
   cssBundle: journal-screens.css
@@ -67,12 +68,12 @@ _legacy:
     max_landscape: 9
   css_verified: true
 usage:
-  summary: 四横 2×2 等分网格（16:9）：一屏四张横图等权，无 hero。
+  summary: 四横 2×2 等分网格（16:9）：一屏四张横图等权，各约占四分之一版面，无 hero。
   whenToUse: |
-    - 连续 4 张横图 burst，质量均匀、无需主次时
+    - 连续 4 张横图 burst，质量均匀、无需主次时（默认四图拼图）
     - 比 stack 更紧凑、比 6 宫格更疏的一档密度
   whenNotToUse: |
-    - 窗口有明确 hero 横图（应选 mosaic 或 landscape-1）
+    - 窗口有明确 hero 横图（应选 mosaic-4-hero-70-sidebar 或 landscape-1）
     - 需要 6 张及以上横图密度（应选 landscape-6）
   siblings:
     - id: screen-landscape-6

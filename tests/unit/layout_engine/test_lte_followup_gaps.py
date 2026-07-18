@@ -39,6 +39,16 @@ def test_resolve_slot_fit_reads_yaml_portrait_auto() -> None:
 
 
 @pytest.mark.unit
+def test_resolve_slot_fit_mosaic_auto_forces_cover() -> None:
+    """Person portraits in mosaics must cover cells (contain punches holes)."""
+    person = {"id": "p1", "tags": ["person", "face"]}
+    fit = resolve_slot_fit(
+        "screen-mosaic-4-1l3p-rail", 1, "portrait", person
+    )
+    assert fit == "cover"
+
+
+@pytest.mark.unit
 def test_solidify_writes_fit_from_lte() -> None:
     screen = {
         "patternId": "screen-mosaic-5-hero-3-2-plus-4",

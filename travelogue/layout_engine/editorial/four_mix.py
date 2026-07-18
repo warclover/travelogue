@@ -150,16 +150,16 @@ def resolve_4mix_slot_fit(
     cfg: AppConfig | None = None,
 ) -> LayoutFit:
     asset = assets_map.get(aid) or {}
-    if asset_has_person(asset):
-        return "contain"
-    if role == "landscape":
+    # Chessboard cells are landscape-aspect; cover+focal fills the grid (contain
+    # punched holes / jagged bottoms in dogfood).
+    if role == "landscape" or asset_has_person(asset):
         return "cover"
     e4 = editorial_4mix_config(cfg)
     if not e4.scenery_portrait_cover_random:
-        return "contain"
+        return "cover"
     screen_id = str((screen or {}).get("screenId") or "").strip()
     if not screen_id:
-        return "contain"
+        return "cover"
     slot_index = 0
     for idx, slot in enumerate((screen or {}).get("slots") or []):
         if str(slot.get("assetId") or "") == aid:
@@ -176,11 +176,9 @@ def resolve_4mix_slot_fit(
 
 def slot_fit_for_4mix(aid: str, *, role: str, assets_map: dict[str, dict]) -> LayoutFit:
     asset = assets_map.get(aid) or {}
-    if asset_has_person(asset):
-        return "contain"
-    if role == "landscape":
+    if role == "landscape" or asset_has_person(asset):
         return "cover"
-    return "contain"
+    return "cover"
 
 
 def apply_editorial_4mix_slot_fits(
@@ -250,6 +248,31 @@ def maybe_editorial_4mix(
     if pattern_id not in e4.replace_patterns:
         return pattern_id, None
     if not chess_window_matches(asset_ids, assets_map, aspects=aspects):
+        return pattern_id, None
+    # Same-scene person walks look like a broken panorama in the Z-chessboard
+    from travelogue.layout_engine.mosaic.scorer import _near_scene_clone_penalty
+
+    if _near_scene_clone_penalty(PATTERN_EDITORIAL_4MIX, list(asset_ids), assets_map) >= 0.75:
+        return pattern_id, None
+    # Equal 2×2 cells are landscape-AR; cover-filling portraits is a dogfood defect.
+    from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
+
+    asp = aspects or {}
+    if not asp and assets_map:
+        from travelogue.layout_contract.orientations import aspect_kind_for_asset
+
+        asp = {
+            aid: aspect_kind_for_asset(assets_map.get(aid) or {})
+            for aid in asset_ids
+        }
+    probe = {
+        "patternId": PATTERN_EDITORIAL_4MIX,
+        "slots": [
+            {"slot": i, "assetId": aid, "rect": [((i % 2) + 1)] * 2 + [((i // 2) + 1)] * 2}
+            for i, aid in enumerate(asset_ids[:4])
+        ],
+    }
+    if asp and not screen_slots_geometry_ok(probe, asp):
         return pattern_id, None
     return PATTERN_EDITORIAL_4MIX, LAYOUT_HINT_EDITORIAL_4MIX
 

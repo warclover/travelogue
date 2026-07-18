@@ -24,6 +24,20 @@ def normalize_curate_scope(payload: dict | None) -> str:
     return "tier" if str(raw or "").strip().lower() == "tier" else "full"
 
 
+def structure_fingerprint(trip: dict) -> str:
+    """Stable fingerprint of chapter titles + screen pattern sequence for G1 regen UX."""
+    parts: list[str] = []
+    for ch in trip.get("chapters") or []:
+        title = str(ch.get("title") or "")
+        patterns = [
+            str(s.get("patternId") or "")
+            for s in (ch.get("screens") or [])
+            if isinstance(s, dict)
+        ]
+        parts.append(f"{title}|{len(patterns)}|{','.join(patterns)}")
+    return "\n".join(parts)
+
+
 def handle_patch_pipeline(handler: StudioHandlerProtocol, trip_id: str) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_g1 import continue_after_g1_confirm, lock_trip_structure
@@ -122,6 +136,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
         prev_pipeline = dict(trip.get("pipeline") or {})
         prev_status = prev_pipeline.get("status")
         prev_locks = prev_pipeline.get("locks")
+        before_fp = structure_fingerprint(trip)
 
         if scope == "full":
             unlock_structure_for_replan(trip)
@@ -194,11 +209,13 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
         out_status = (trip.get("pipeline") or {}).get("status") or (
             "structure_draft" if scope == "full" else prev_status
         )
+        after_fp = structure_fingerprint(trip)
         return {
             "tripId": trip_id,
             "scope": scope,
             "reason": reason,
             "pipelineStatus": out_status,
+            "structureChanged": before_fp != after_fp,
         }
 
     store = get_job_store()

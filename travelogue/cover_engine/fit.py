@@ -113,6 +113,11 @@ def style_avoid_penalty(asset: dict[str, Any], profile: CoverStyleProfile) -> fl
         lo, hi = float(band[0]), float(band[1])
         if lo <= fy <= hi:
             penalty += 0.8
+        # Person covers: band-cut 题带横切腰线；加罚以倾向其它 opening style
+        from travelogue.layout_contract.subject import asset_has_person
+
+        if asset_has_person(asset) and fy >= 0.45:
+            penalty += 0.95
 
     if profile.avoid.get("edge_subject") and (fx < 0.18 or fx > 0.82 or fy < 0.12 or fy > 0.88):
         penalty += 0.6

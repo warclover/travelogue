@@ -46,7 +46,8 @@ compatibilityHints:
   min_trip_photos: 12
 
 scoring:
-  base_weight: 1.08
+  # Below landscape-4: equal four-up stays the default for flat 4L bursts.
+  base_weight: 0.98
   tags: [hero, asymmetric, tpc-w3]
   rhythm:
     max_per_chapter: 1
