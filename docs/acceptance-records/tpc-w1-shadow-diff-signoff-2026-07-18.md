@@ -6,6 +6,7 @@
 | 报告 | [tpc-w1-shadow-diff.json](./tpc-w1-shadow-diff.json) |
 | Corpus | **局部**：`demo-2025-9` · `demo-49551086fe` · `demo-6180531087`（BQP/URO golden 多数本机无 `trip.json`） |
 | 结论 | **Partial Sign-Off** — 差异已逐条定性；**不得**据此开启 `template_contract.enabled` |
+| 2026-07-18 复跑 | `demo-2025-9 --from-existing` → `diffCount=2/13`（与局部签核一致）；BQP/`URO_GOLDEN` 仍未齐，`readyToEnable` 仍为 false |
 
 ## 差异汇总
 

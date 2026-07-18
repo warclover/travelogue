@@ -321,6 +321,26 @@
               "items": {
                 "type": "string"
               }
+            },
+            "slotIndex": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Main slot index (migrated from mainSlotPolicy · AC-TPC-04)"
+            },
+            "targetDisplayAspect": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "arLadderTol": {
+              "type": "number",
+              "minimum": 0
+            },
+            "preferLadder": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
             }
           }
         }

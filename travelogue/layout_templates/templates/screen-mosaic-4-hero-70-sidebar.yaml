@@ -34,9 +34,6 @@ constraints:
   eligibility:
     heroDominance: extreme
     heroAreaBand: [0.60, 0.78]
-    eligibleAspectKinds: [landscape]
-    forbidKinds: [panorama, tall, portrait, square]
-  mainSlotPolicy:
     slotIndex: 0
     targetDisplayAspect: 1.7778
     eligibleAspectKinds: [landscape]

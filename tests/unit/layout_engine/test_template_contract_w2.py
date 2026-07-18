@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -40,9 +41,10 @@ def _reset_tpc_state() -> None:
     reset_mix_index_cache_for_tests()
 
 
-def test_resolve_eligibility_bridges_main_slot_policy() -> None:
+def test_resolve_eligibility_prefers_eligibility_yaml() -> None:
+    """AC-TPC-04 · hero YAML migrated to eligibility (no mainSlotPolicy key)."""
     source_spec, source = resolve_eligibility_spec("screen-mosaic-5-main-hero-plus-4")
-    assert source == "mainSlotPolicy"
+    assert source == "eligibility"
     assert isinstance(source_spec, dict)
     assert source_spec.get("eligibleAspectKinds") == ["landscape"]
 
@@ -104,21 +106,38 @@ def test_hero_equivalence_fixture_bridge_vs_legacy(
 
 
 def test_bridge_deprecation_log_once(caplog) -> None:
+    """Bridge path still logs once when only legacy mainSlotPolicy remains."""
     import logging
+
+    from travelogue.layout_engine.contract import evaluator as ev
 
     cfg = get_config().mosaic
     screen = {
-        "patternId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        "patternId": "synthetic-legacy-policy",
         "slots": [{"role": "main", "assetId": "l1"}],
     }
     assets = {"l1": _asset("l1", w=3000, h=1687)}
-    with caplog.at_level(logging.INFO, logger="travelogue.layout_engine.contract.evaluator"):
-        evaluate_contract_eligibility(
-            screen, assets, pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, cfg=cfg
-        )
-        evaluate_contract_eligibility(
-            screen, assets, pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, cfg=cfg
-        )
+    legacy_only = {
+        "mainSlotPolicy": {
+            "eligibleAspectKinds": ["landscape"],
+            "forbidKinds": ["portrait", "square", "panorama", "tall"],
+        }
+    }
+    with patch.object(ev, "_template_constraints", return_value=legacy_only):
+        with patch.object(
+            ev,
+            "screen_main_slot_eligible",
+            return_value=(True, None),
+        ):
+            with caplog.at_level(
+                logging.INFO, logger="travelogue.layout_engine.contract.evaluator"
+            ):
+                evaluate_contract_eligibility(
+                    screen, assets, pattern_id="synthetic-legacy-policy", cfg=cfg
+                )
+                evaluate_contract_eligibility(
+                    screen, assets, pattern_id="synthetic-legacy-policy", cfg=cfg
+                )
     msgs = [r.message for r in caplog.records if "tpc.deprecation" in r.message]
     assert len(msgs) == 1
 
@@ -147,7 +166,7 @@ def test_enabled_true_uses_mix_index(lte_pattern_enabled) -> None:
     result = generate_window_candidates_with_rejections(
         ids, aspects, assets_map, cfg=cfg
     )
-    patterns, source, mix = patterns_for_contract_window(ids, aspects)
+    patterns, source, mix, _sq, _inf = patterns_for_contract_window(ids, aspects)
     assert mix.startswith("L")
     assert source in ("exact", "fallback", "miss")
     assert (result.contract_shadow or {}).get("candidateSource") == source
@@ -181,10 +200,18 @@ def test_undeclared_eligibility_is_pass() -> None:
 
 def test_fallback_feasibility_rejects_direction_conflict() -> None:
     """AC-TPC-03 · infeasible mix must not enter fallback (BLK-TPC-01)."""
-    # Template needs 2P but window is all-L
-    assert _fallback_feasible((4, 0, 0), (4, 0, 0)) is True
-    assert _fallback_feasible((2, 2, 0), (4, 0, 0)) is False
-    assert _fallback_feasible((3, 2, 0), (3, 2, 0)) is True
+    assert _fallback_feasible((4, 0, 0), (4, 0, 0)) == (True, False)
+    assert _fallback_feasible((2, 2, 0), (4, 0, 0)) == (False, False)
+    assert _fallback_feasible((3, 2, 0), (3, 2, 0)) == (True, False)
+
+
+def test_fallback_square_relaxed_s_to_p() -> None:
+    """BLK-TPC-01 · fallback S→P then S→L."""
+    ok, relaxed = _fallback_feasible((2, 2, 0), (2, 1, 1))
+    assert ok is True
+    assert relaxed is True
+    # Template S cannot be filled by P/L
+    assert _fallback_feasible((0, 0, 2), (1, 1, 0)) == (False, False)
 
 
 def test_ac_tpc_01_off_pick_best_stable(lte_pattern_enabled) -> None:

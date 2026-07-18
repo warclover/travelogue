@@ -92,7 +92,7 @@ def test_ac_tpc_02_yaml_only_mix_hit(
     key = mix_key_from_aspects(ids, aspects)
     assert format_mix_key(key) == f"L{landscape}P{portrait}S0"
 
-    hit_ids, source = contract_pattern_ids_for_window(ids, aspects)
+    hit_ids, source, _sq, _inf = contract_pattern_ids_for_window(ids, aspects)
     assert template_id in hit_ids
     assert source in ("exact", "fallback")
 

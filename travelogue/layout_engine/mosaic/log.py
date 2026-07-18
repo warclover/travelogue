@@ -39,6 +39,13 @@ class MosaicWindowLog:
     scoring_weights: dict[str, float] = field(default_factory=dict)
     scoring_penalty_weights: dict[str, float] = field(default_factory=dict)
     slot_assignment_fallback: str | None = None
+    # TPC §3.3 / AC-TPC-10 — raw geometry (record-only, never penalties)
+    window_mix: str | None = None
+    candidate_source: str | None = None
+    square_relaxed: bool = False
+    hero_prominence_ratio: float | None = None
+    hero_coverage_ratio: float | None = None
+    cell_area_cv: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -86,6 +93,19 @@ class MosaicWindowLog:
             out["scoringPenaltyWeights"] = dict(self.scoring_penalty_weights)
         if self.slot_assignment_fallback:
             out["slotAssignmentFallback"] = self.slot_assignment_fallback
+        if self.window_mix:
+            out["windowMix"] = self.window_mix
+        if self.candidate_source:
+            out["candidateSource"] = self.candidate_source
+        if self.square_relaxed:
+            out["squareRelaxed"] = True
+        # AC-TPC-10 · always emit keys when computed (incl. null skip)
+        if self.hero_prominence_ratio is not None:
+            out["heroProminenceRatio"] = self.hero_prominence_ratio
+        if self.hero_coverage_ratio is not None:
+            out["heroCoverageRatio"] = self.hero_coverage_ratio
+        if self.cell_area_cv is not None:
+            out["cellAreaCv"] = self.cell_area_cv
         return out
 
 

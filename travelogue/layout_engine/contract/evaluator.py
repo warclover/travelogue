@@ -60,18 +60,15 @@ def resolve_eligibility_spec(pattern_id: str) -> tuple[dict[str, Any] | None, El
 
 
 def _hero_area_from_template(pattern_id: str) -> float | None:
-    """Hero area as col_frac × row_frac on the template stage grid (MGQ BLK-09)."""
+    """Hero area as col_frac × row_frac (weighted tracks · MGQ BLK-09)."""
     try:
+        from travelogue.layout_templates.geometry import _track_weights
         from travelogue.layout_templates.registry import get_engine
 
         template = get_engine().get(pattern_id)
     except (KeyError, AttributeError, TypeError):
         return None
-    grid = template.stage.grid if template.stage else None
-    if not grid or len(grid) != 2:
-        return None
-    cols_n, rows_n = int(grid[0]), int(grid[1])
-    if cols_n <= 0 or rows_n <= 0:
+    if not template.stage:
         return None
     main_slot = None
     for slot in template.slots:
@@ -79,17 +76,20 @@ def _hero_area_from_template(pattern_id: str) -> float | None:
             main_slot = slot
             break
     if main_slot is None and template.slots:
-        # Heaviest visualWeight, else first slot
         main_slot = max(
             template.slots,
             key=lambda s: (s.visual_weight is not None, s.visual_weight or 0.0, -s.index),
         )
-    if main_slot is None:
+    if main_slot is None or not main_slot.rect:
         return None
     c0, c1, r0, r1 = main_slot.rect
-    col_frac = (c1 - c0 + 1) / float(cols_n)
-    row_frac = (r1 - r0 + 1) / float(rows_n)
-    return col_frac * row_frac
+    cols, rows = _track_weights(template.stage)
+    col_sum, row_sum = sum(cols), sum(rows)
+    if col_sum <= 0 or row_sum <= 0:
+        return None
+    col_frac = sum(cols[c0 - 1 : c1]) / col_sum
+    row_frac = sum(rows[r0 - 1 : r1]) / row_sum
+    return float(col_frac * row_frac)
 
 
 def _evaluate_eligibility_dict(
@@ -98,30 +98,63 @@ def _evaluate_eligibility_dict(
     *,
     trip_photo_total: int = 0,
 ) -> tuple[bool, str | None, str | None]:
-    band = spec.get("heroAreaBand") or spec.get("hero_area_band")
-    if isinstance(band, (list, tuple)) and len(band) == 2:
-        area = _hero_area_from_template(pattern_id)
-        if area is not None:
-            lo, hi = float(band[0]), float(band[1])
-            # photoCountScale softens floor at large trip sizes (optional)
-            scale = spec.get("photoCountScale") or spec.get("photo_count_scale")
-            if isinstance(scale, dict) and trip_photo_total > 0:
-                ref = int(scale.get("referenceCount") or scale.get("reference_count") or 20)
-                floor_factor = float(
-                    scale.get("floorFactorAt50") or scale.get("floor_factor_at_50") or 1.0
-                )
-                if trip_photo_total >= 50 and floor_factor < 1.0:
-                    lo = lo * floor_factor
-                elif trip_photo_total > ref:
-                    # linear ease toward floor_factor between ref and 50
-                    t = min(1.0, (trip_photo_total - ref) / max(1, 50 - ref))
-                    lo = lo * (1.0 - t * (1.0 - floor_factor))
-            if area < lo or area > hi:
+    canvas = spec.get("canvasAr") or spec.get("canvas_ar")
+    if isinstance(canvas, (list, tuple)) and len(canvas) == 2:
+        try:
+            from travelogue.layout_templates.geometry import parse_aspect_ratio
+            from travelogue.layout_templates.registry import get_engine
+
+            stage_ar = parse_aspect_ratio(get_engine().get(pattern_id).stage.aspect)
+            lo_c, hi_c = float(canvas[0]), float(canvas[1])
+            if stage_ar < lo_c or stage_ar > hi_c:
                 return (
                     False,
-                    "contract:eligibility_hero_band",
-                    f"heroArea={area:.4f} band=[{lo:.4f},{hi:.4f}]",
+                    "contract:eligibility_canvas_ar",
+                    f"canvasAr={stage_ar:.4f} band=[{lo_c:.4f},{hi_c:.4f}]",
                 )
+        except (KeyError, AttributeError, TypeError, ValueError):
+            return False, "contract:invalid_template", "canvasAr check failed"
+
+    band = spec.get("heroAreaBand") or spec.get("hero_area_band")
+    scale = spec.get("photoCountScale") or spec.get("photo_count_scale")
+    need_area = isinstance(band, (list, tuple)) and len(band) == 2
+    need_area = need_area or isinstance(scale, dict)
+    area = _hero_area_from_template(pattern_id) if need_area else None
+    if isinstance(band, (list, tuple)) and len(band) == 2 and area is not None:
+        lo, hi = float(band[0]), float(band[1])
+        if isinstance(scale, dict) and trip_photo_total > 0:
+            ref = int(scale.get("referenceCount") or scale.get("reference_count") or 20)
+            floor_factor = float(
+                scale.get("floorFactorAt50") or scale.get("floor_factor_at_50") or 1.0
+            )
+            if trip_photo_total >= 50 and floor_factor < 1.0:
+                lo = lo * floor_factor
+            elif trip_photo_total > ref:
+                t = min(1.0, (trip_photo_total - ref) / max(1, 50 - ref))
+                lo = lo * (1.0 - t * (1.0 - floor_factor))
+            # Tighten ceiling via maxHeroAreaAtRef (MGQ photoCountScale)
+            max_at_ref = scale.get("maxHeroAreaAtRef") or scale.get("max_hero_area_at_ref")
+            if max_at_ref is not None and trip_photo_total >= ref and area > float(max_at_ref):
+                return (
+                    False,
+                    "contract:eligibility_count_scale",
+                    f"heroArea={area:.4f} > maxHeroAreaAtRef={float(max_at_ref):.4f}",
+                )
+        if area < lo or area > hi:
+            return (
+                False,
+                "contract:eligibility_hero_band",
+                f"heroArea={area:.4f} band=[{lo:.4f},{hi:.4f}]",
+            )
+    elif isinstance(scale, dict) and trip_photo_total > 0 and area is not None:
+        ref = int(scale.get("referenceCount") or scale.get("reference_count") or 20)
+        max_at_ref = scale.get("maxHeroAreaAtRef") or scale.get("max_hero_area_at_ref")
+        if max_at_ref is not None and trip_photo_total >= ref and area > float(max_at_ref):
+            return (
+                False,
+                "contract:eligibility_count_scale",
+                f"heroArea={area:.4f} > maxHeroAreaAtRef={float(max_at_ref):.4f}",
+            )
     return True, None, None
 
 
@@ -177,12 +210,39 @@ def evaluate_contract_eligibility(
     return True, None, None
 
 
-def _fallback_feasible(template_key: MixKey, window_key: MixKey) -> bool:
-    """BLK-TPC-01 letter-wise: required(x) ≤ available(x) (no flexible pool in V1 exact roles)."""
-    for ti, wi in zip(template_key, window_key, strict=True):
-        if ti > wi:
-            return False
-    return sum(template_key) == sum(window_key)
+def _fallback_feasible(template_key: MixKey, window_key: MixKey) -> tuple[bool, bool]:
+    """BLK-TPC-01 letter-wise feasibility + square relaxation (S→P then S→L).
+
+    Returns ``(ok, square_relaxed)``. Template S slots may only be filled by window S
+    (no P/L → S). Extra window S may fill remaining P then L demand.
+    """
+    if sum(template_key) != sum(window_key):
+        return False, False
+    tl, tp, ts = template_key
+    wl, wp, ws = window_key
+    if ts > ws:
+        return False, False
+    rem_s = ws - ts
+    need_l, need_p = tl, tp
+    avail_l, avail_p = wl, wp
+    take_l = min(need_l, avail_l)
+    need_l -= take_l
+    take_p = min(need_p, avail_p)
+    need_p -= take_p
+    square_relaxed = False
+    if need_p > 0 and rem_s > 0:
+        take = min(need_p, rem_s)
+        need_p -= take
+        rem_s -= take
+        square_relaxed = True
+    if need_l > 0 and rem_s > 0:
+        take = min(need_l, rem_s)
+        need_l -= take
+        rem_s -= take
+        square_relaxed = True
+    if need_l > 0 or need_p > 0:
+        return False, False
+    return True, square_relaxed
 
 
 def contract_pattern_ids_for_window(
@@ -190,26 +250,26 @@ def contract_pattern_ids_for_window(
     aspects: Mapping[str, AspectKind],
     *,
     registry: dict[str, MosaicPattern] | None = None,
-) -> tuple[list[str], str]:
+) -> tuple[list[str], str, bool, list[dict[str, Any]]]:
     """
-    Return (pattern_ids, source) where source is ``exact`` | ``fallback`` | ``miss``.
+    Return (pattern_ids, source, square_relaxed, infeasible_rejects).
 
-    Exact: bag-of-mix hit in inverted index ∩ mosaic registry.
-    Fallback: same N, letter-feasible templates from mosaic registry (stable id order).
+    source is ``exact`` | ``fallback`` | ``miss``.
     """
     reg = registry or mosaic_registry()
     key = mix_key_from_aspects(list(asset_ids), aspects)
     exact = [pid for pid in index_pattern_ids_for_mix(key) if pid in reg]
     if exact:
-        return exact, "exact"
+        return exact, "exact", False, []
 
-    # Fallback: same window size, letter-feasible *active* LTE templates in mosaic registry.
     n = len(asset_ids)
     from travelogue.layout_templates.registry import get_engine
 
     engine = get_engine()
     active = {t.id for t in engine.list_active(enforce_quotas=False)}
     fallback: list[str] = []
+    infeasible: list[dict[str, Any]] = []
+    square_any = False
     for pid, pat in sorted(reg.items()):
         if pat.slot_count != n or pid not in active:
             continue
@@ -220,11 +280,21 @@ def contract_pattern_ids_for_window(
         tkey = mix_key_from_template(tmpl)
         if tkey is None:
             continue
-        if _fallback_feasible(tkey, key):
+        ok, relaxed = _fallback_feasible(tkey, key)
+        if ok:
             fallback.append(pid)
+            square_any = square_any or relaxed
+        else:
+            infeasible.append(
+                {
+                    "templateId": pid,
+                    "reason": "contract:infeasible_mix",
+                    "detail": f"template={format_mix_key(tkey)} window={format_mix_key(key)}",
+                }
+            )
     if fallback:
-        return sorted(set(fallback)), "fallback"
-    return [], "miss"
+        return sorted(set(fallback)), "fallback", square_any, infeasible
+    return [], "miss", False, infeasible
 
 
 def patterns_for_contract_window(
@@ -232,12 +302,12 @@ def patterns_for_contract_window(
     aspects: Mapping[str, AspectKind],
     *,
     registry: dict[str, MosaicPattern] | None = None,
-) -> tuple[list[MosaicPattern], str, str]:
-    """Resolve MosaicPattern list + source + window mix label."""
+) -> tuple[list[MosaicPattern], str, str, bool, list[dict[str, Any]]]:
+    """Resolve patterns + source + mix label + squareRelaxed + infeasible rejects."""
     reg = registry or mosaic_registry()
     key = mix_key_from_aspects(list(asset_ids), aspects)
-    ids, source = contract_pattern_ids_for_window(
+    ids, source, square_relaxed, infeasible = contract_pattern_ids_for_window(
         list(asset_ids), aspects, registry=reg
     )
     patterns = [reg[pid] for pid in ids if pid in reg]
-    return patterns, source, format_mix_key(key)
+    return patterns, source, format_mix_key(key), square_relaxed, infeasible

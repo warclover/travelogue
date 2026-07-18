@@ -38,11 +38,34 @@ DEFAULT_MAIN_ELIGIBLE_KINDS: frozenset[str] = frozenset({"landscape"})
 
 
 def template_main_slot_policy(pattern_id: str) -> dict[str, Any] | None:
+    """Prefer ``constraints.eligibility`` AR fields; bridge ``mainSlotPolicy`` (AC-TPC-04)."""
     try:
         from travelogue.layout_templates.registry import get_engine
 
         template = get_engine().get(pattern_id)
-        raw = (template.constraints or {}).get("mainSlotPolicy")
+        constraints = template.constraints or {}
+        elig = constraints.get("eligibility")
+        if isinstance(elig, dict) and (
+            elig.get("eligibleAspectKinds")
+            or elig.get("forbidKinds")
+            or elig.get("targetDisplayAspect")
+        ):
+            # Synthesize policy shape expected by resolve_* helpers
+            return {
+                "slotIndex": elig.get("slotIndex", 0),
+                "targetDisplayAspect": elig.get(
+                    "targetDisplayAspect", elig.get("target_display_aspect", MAIN_HERO_TARGET_AR)
+                ),
+                "eligibleAspectKinds": elig.get("eligibleAspectKinds")
+                or elig.get("eligible_aspect_kinds")
+                or list(DEFAULT_MAIN_ELIGIBLE_KINDS),
+                "forbidKinds": elig.get("forbidKinds")
+                or elig.get("forbid_kinds")
+                or list(DEFAULT_MAIN_FORBID_KINDS),
+                "arLadderTol": elig.get("arLadderTol", elig.get("ar_ladder_tol", AR_LADDER_TOL)),
+                "preferLadder": elig.get("preferLadder", elig.get("prefer_ladder", list(AR_LADDER))),
+            }
+        raw = constraints.get("mainSlotPolicy")
         if isinstance(raw, dict) and raw:
             return raw
     except (KeyError, AttributeError, TypeError):

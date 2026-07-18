@@ -140,27 +140,36 @@ def generate_window_candidates_with_rejections(
     tc_enabled = bool(tc is not None and getattr(tc, "enabled", False))
     contract_source = "legacy_size"
     window_mix_label = ""
+    square_relaxed = False
+    rejected: list[dict[str, Any]] = []
     if tc_enabled:
         from travelogue.layout_engine.contract.evaluator import (
             patterns_for_contract_window,
         )
 
-        patterns, contract_source, window_mix_label = patterns_for_contract_window(
-            asset_ids, aspects, registry=reg
-        )
+        (
+            patterns,
+            contract_source,
+            window_mix_label,
+            square_relaxed,
+            infeasible_rejects,
+        ) = patterns_for_contract_window(asset_ids, aspects, registry=reg)
+        for row in infeasible_rejects:
+            _reject(
+                rejected,
+                str(row.get("templateId") or "*"),
+                str(row.get("reason") or "contract:infeasible_mix"),
+                detail=row.get("detail"),
+            )
         if not patterns:
+            _reject(rejected, "*", "contract:mix_miss", detail=window_mix_label or None)
             return WindowCandidateResult(
                 candidates=[],
-                rejected=[
-                    {
-                        "templateId": "*",
-                        "reason": "contract:mix_miss",
-                        "detail": window_mix_label or None,
-                    }
-                ],
+                rejected=rejected,
                 contract_shadow={
                     "windowMix": window_mix_label,
                     "candidateSource": contract_source,
+                    "squareRelaxed": square_relaxed,
                     "livePatternIds": [],
                     "hasDiff": False,
                 },
@@ -169,7 +178,6 @@ def generate_window_candidates_with_rejections(
         patterns = patterns_for_window_size(len(asset_ids), reg)
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
-    rejected: list[dict[str, Any]] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
     usage_hits: list[dict[str, Any]] = []
     orderable_pattern_ids: list[str] = []
@@ -268,6 +276,8 @@ def generate_window_candidates_with_rejections(
             feat["slotAssignmentFallback"] = slot_fallback
         if tc_enabled:
             feat["candidateSource"] = contract_source
+            if square_relaxed:
+                feat["squareRelaxed"] = True
             if contract_source == "fallback":
                 # Explicit marker for AC-TPC-03
                 feat["contractReasons"] = ["contract:mix_fallback"]
@@ -310,6 +320,7 @@ def generate_window_candidates_with_rejections(
         shadow_payload = {
             "windowMix": window_mix_label,
             "candidateSource": contract_source,
+            "squareRelaxed": square_relaxed,
             "livePatternIds": sorted(orderable_pattern_ids),
             "hasDiff": False,
         }
