@@ -120,19 +120,26 @@ def compose_poster_png(
     cw, ch = int(canvas_size[0]), int(max(1, canvas_size[1]))
     canvas = Image.new("RGB", (cw, ch), bg)
 
-    for img, (fw, fh), (x, y) in zip(images, fitted, positions, strict=True):
-        tw, th = max(1, int(fw)), max(1, int(fh))
-        # Contain into cell (letterbox inside allocated box)
-        ar_src = img.width / max(1, img.height)
-        ar_box = tw / th
-        if ar_src > ar_box:
-            nw, nh = tw, max(1, int(round(tw / ar_src)))
-        else:
-            nh, nw = th, max(1, int(round(th * ar_src)))
-        fg = img.resize((nw, nh), Image.Resampling.LANCZOS)
-        cell = Image.new("RGB", (tw, th), bg)
-        cell.paste(fg, ((tw - nw) // 2, (th - nh) // 2))
-        canvas.paste(cell, (int(x), int(y)))
+    try:
+        for img, (fw, fh), (x, y) in zip(images, fitted, positions, strict=True):
+            tw, th = max(1, int(fw)), max(1, int(fh))
+            # Contain into cell (letterbox inside allocated box)
+            ar_src = img.width / max(1, img.height)
+            ar_box = tw / th
+            if ar_src > ar_box:
+                nw, nh = tw, max(1, int(round(tw / ar_src)))
+            else:
+                nh, nw = th, max(1, int(round(th * ar_src)))
+            fg = img.resize((nw, nh), Image.Resampling.LANCZOS)
+            cell = Image.new("RGB", (tw, th), bg)
+            cell.paste(fg, ((tw - nw) // 2, (th - nh) // 2))
+            canvas.paste(cell, (int(x), int(y)))
+            fg.close()
+            cell.close()
+    finally:
+        # Release decoded source images promptly (large PNG/JPEG buffers).
+        for img in images:
+            img.close()
 
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)

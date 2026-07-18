@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
-| **文档版本** | **v1.0.1** |
-| **状态** | **Conditional Go · 跨职能 MF 已回写** · **可 Kickoff W0** · 本轮评审后仍不编码（编码另开） |
+| **文档版本** | **v1.0.2** |
+| **状态** | **Conditional Go · W0–W2 工程已合入** · **§12 质量收口全部必修** |
 | **主题代号** | 「敢发收口」— 无 Key 不丢人 · 进度可解释 · 小册少打断 · 词表人话 |
 | **触发来源** | [2026-07-18 八席 Persona 完整试用](./acceptance-records/persona-ux-trial-2026-07-18.md)（Agent 模拟联评 + 契约补签）；交叉对照 FST / Share-Ready / QH / Refine / Chapter Naming |
 | **前置条件** | Studio 首页 v2（M21）；L0 无 Key 可成稿；FST W0–W2 工程已合入；Share-Ready W0–W2 工程已合入；Output Recipe 可开 |
@@ -202,7 +202,7 @@
 | 连续分隔符 | `[_\-.·]+` → 单空格；禁止残留 `--` |
 | 中文/词尾序号 | `[\u4e00-\u9fff]\d{1,3}$` 或无分隔粘连+尾数字 → 视为噪音，走回退 |
 | 年份前缀+尾数字 | 如 `2025东澳岛9`：去掉尾数字后若仍像目录名，优先地名抽取或回退「旅行 · 日期」 |
-| 同源 | FE `title-humanize.js` 与 BE `travelogue.domain.title_humanize` **同测同例** |
+| 同源 | FE `title-humanize.js` 与 BE `travelogue.domain.title_humanize` **同测同例**（含最终日期兜底；见 §12.1 · AC-SFC-12） |
 
 ### 3.3 导入进度与视觉模型准备（P-SFC-03）
 
@@ -435,6 +435,8 @@
 | **AC-SFC-09** | 实验选项开启后 Sparse 仍可出现 G1 | W1 |
 | **AC-SFC-10** | 精修态可见标签无「媒资」 | W2 |
 | **AC-SFC-11** | FirstSuccess 无 Key 无「杂志文案已完成」承诺 | W1 |
+| **AC-SFC-12** | **displayTitle 最终兜底 FE/BE 一致（§12.1）**：无地点/噪音标题但有 `dateStart` 时，两端均走 `旅行 · {月日}`（或等价 `_fallback_display`），禁止 FE 独用恒定「旅行 · 游记」 | W0+ |
+| **AC-SFC-13** | **trip.json 忙锁回退不丢数据（§12.2）**：Windows `os.replace` 失败走同路径覆写前须保留可恢复副本（`.bak` 或保留完整 tmp）；写失败不得截断 dest 后删除唯一完好副本 | 横切 |
 | **AC-SFC-NR-01** | Ambiguous 意图卡三选一仍可用（回归） | 每波 |
 | **AC-SFC-NR-02** | Narrative「按章导出」CTA 仍可用（回归） | 每波 |
 | **AC-SFC-15** | 真人 N≥5 狗粮通过方可对外宣布 | 宣布 |
@@ -464,6 +466,35 @@
 
 ---
 
+## 12. 质量收口（2026-07-18 代码审查 · **全部必修**）
+
+> 触发与总表：[quality-review-remediation-2026-07-18.md](./acceptance-records/quality-review-remediation-2026-07-18.md)。
+
+### 12.1 displayTitle 同源加严（P2 · AC-SFC-12 · D-SFC-03）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | JS `resolveDisplayTitle` 最终硬编码「旅行 · 游记」，Python 走日期兜底 → 书架/封面与导入过程文案不一致 |
+| 合同 | FE 必须复刻 BE `_date_fallback_label` / `_fallback_display`；同 fixture 同测同例 |
+| 优先 | 有后端已写 `meta.displayTitle` 时 FE 优先采用；仅缺失时本地兜底，且兜底规则同源 |
+
+### 12.2 trip.json 保全（P1 · AC-SFC-13）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | Windows AV 忙锁回退 `open(dest,"w")` 截断后若写失败，上层再删 tmp → 不可恢复丢数据 |
+| 合同 | 回退写前备份或失败保留 tmp；错误信息须含恢复路径提示 |
+| 附带 | 原子写与回退写 `newline` 一致；CAS 的 expected revision 与磁盘读口径统一（migrate 或不 migrate 两端一致） |
+
+### 12.3 工程卫生（P3 · 本收口一并修）
+
+| 项 | 要求 |
+|----|------|
+| 写锁字典 | 长生命周期下避免无界增长（WeakValue / 上限）或文档化可接受 |
+| 展示插入 | `displayTitle` 使用 `textContent` / 框架转义，禁止 `innerHTML` 注入文件夹名 |
+
+---
+
 ## 附录 A · 试用吐槽 → 合同映射
 
 | 试用 | 合同 |
@@ -485,3 +516,4 @@
 | **v1.0.0** | 2026-07-18 | 首稿：基于八席试用收口；Draft 待评审 |
 | **v1.0.0+doc** | 2026-07-18 | Doc 包齐：ACCEPTANCE · IMPLEMENTATION · 线框 F1–F5 · 狗粮清单 · README 索引 |
 | **v1.0.1** | 2026-07-18 | 跨职能 Conditional Go · BLK-01～08 · OQ-01～04 关闭 · 可 Kickoff W0 |
+| **v1.0.2** | 2026-07-18 | §12 质量收口全部必修：AC-SFC-12 displayTitle FE/BE 日期兜底同源；AC-SFC-13 trip.json 忙锁回退数据保全 |

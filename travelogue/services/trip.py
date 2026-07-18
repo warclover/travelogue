@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import tempfile
 import threading
 import time
@@ -54,7 +55,15 @@ def _is_replace_busy_error(exc: BaseException) -> bool:
 
 
 def _replace_trip_json(tmp_path: str, dest: Path, *, payload: str) -> None:
-    """Atomically replace dest with tmp; on Windows busy locks, retry then overwrite."""
+    """Atomically replace dest with tmp; on Windows busy locks, retry then overwrite.
+
+    The last-resort truncate-and-rewrite path can corrupt an otherwise intact
+    ``dest`` if the write dies mid-stream (disk full, second AV grab). Before
+    truncating we snapshot the existing file to ``dest.trip.json.bak`` so a
+    partial write is always recoverable. The backup and tmp are only removed
+    once the rewrite fully succeeds; on failure both are kept and their paths
+    are surfaced in the error so an operator can restore by hand.
+    """
     last_exc: OSError | None = None
     for attempt, delay in enumerate(_REPLACE_BUSY_BACKOFF_S):
         try:
@@ -68,19 +77,38 @@ def _replace_trip_json(tmp_path: str, dest: Path, *, payload: str) -> None:
                 time.sleep(delay)
     # Last resort: truncate+write the existing file (non-atomic, but import-critical).
     # Rename/replace is what AV typically blocks; same-path write often still works.
+    bak_path = dest.with_suffix(dest.suffix + ".bak")
+    bak_written = False
+    if dest.is_file():
+        try:
+            shutil.copy2(dest, bak_path)
+            bak_written = True
+        except OSError:
+            # Could not snapshot — proceed without a backup rather than block.
+            bak_written = False
     try:
         with open(dest, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
+        # Rewrite fully succeeded: drop the recovery artifacts.
+        if bak_written:
+            try:
+                os.unlink(bak_path)
+            except OSError:
+                pass
         try:
             os.unlink(tmp_path)
         except OSError:
             pass
         return
     except OSError as exc:
+        recovery = f" recover from {tmp_path}"
+        if bak_written:
+            recovery += f" or backup {bak_path}"
         raise TripSaveError(
-            f"E_TRIP_SAVE_BUSY cannot replace {dest.name}: file may be open elsewhere"
+            f"E_TRIP_SAVE_BUSY cannot replace {dest.name}: file may be open elsewhere;"
+            f"{recovery}"
         ) from (last_exc or exc)
 
 
@@ -204,10 +232,18 @@ def mark_render_bundle_current_if_fresh(trip: dict, trip_dir: Path) -> None:
 
 
 def _read_disk_revision(path: Path) -> int:
+    """Disk revision using the SAME migrate as ``TripService.load``.
+
+    ``update`` computes ``expected`` from the migrated trip; if migration bumps
+    ``meta.revision`` (schema upgrade) but this read stayed on the raw value the
+    CAS check would never match and every write would deadlock into a
+    TripConflictError. Migrate here so both sides use one revision.
+    """
     if not path.is_file():
         return 0
-    raw = load_json(path)
-    return meta_revision(raw)
+    from travelogue.curation.trip_migration import migrate_trip
+
+    return meta_revision(migrate_trip(load_json(path)))
 
 
 _UNSET = object()
@@ -410,22 +446,27 @@ class TripService:
         )
         opened = False
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
                 opened = True
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
             _replace_trip_json(tmp_path, p, payload=payload)
-        except Exception:
+        except Exception as exc:
             if not opened:
                 try:
                     os.close(fd)
                 except OSError:
                     pass
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
+            # TripSaveError means the non-atomic in-place fallback failed: dest may
+            # be half-written, so _replace_trip_json intentionally preserved tmp and
+            # a .bak for recovery — do NOT unlink the intact tmp here. Any other
+            # failure leaves dest untouched, so the tmp is just a useless leftover.
+            if not isinstance(exc, TripSaveError):
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
             raise
 
     def update(

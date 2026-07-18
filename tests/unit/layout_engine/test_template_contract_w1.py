@@ -107,7 +107,10 @@ def test_window_mix_histogram_and_merge() -> None:
 def test_template_contract_defaults_off() -> None:
     cfg = mosaic_from_dict({})
     assert cfg.template_contract.enabled is False
-    assert cfg.template_contract.shadow_log is True
+    # shadow_log defaults OFF now (AC-TPC quality-review closeout).
+    assert cfg.template_contract.shadow_log is False
+    # near_scene_clone gate is opt-in (AC-TPC-15).
+    assert cfg.near_scene_clone_gate.enabled is False
 
 
 def test_candidates_attach_contract_shadow_when_log_on(lte_pattern_enabled) -> None:

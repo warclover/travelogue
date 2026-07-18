@@ -54,9 +54,11 @@ def fit_pictures_grid(
 
 def fit_pictures(image_sizes: List[Size], layout: Layout, round_result=False) -> Tuple[List[Size], List[Position], Size]:
     if round_result:
-        new_sizes = _compute_integer_image_sizes(image_sizes, layout)
-    else:
-        new_sizes = _compute_rescaled_image_sizes(image_sizes, layout)
+        # AC-GCS-11 · the integer path pulls python-mip (GPL); callers use the
+        # float solve and round locally. Refuse instead of importing mip.
+        raise RuntimeError("MIP/integer path disabled (AC-GCS-11)")
+
+    new_sizes = _compute_rescaled_image_sizes(image_sizes, layout)
 
     positions, canvas_size = layout.compute_positions(new_sizes)
 
@@ -92,55 +94,7 @@ def _compute_rescaled_image_sizes(image_sizes: List[Size], layout: Layout) -> Li
 
 
 def _compute_integer_image_sizes(image_sizes: List[Size], layout: Layout) -> List[Size]:
-    import mip
-    constraints = layout.get_constraints(image_sizes)
-    aspect_ratios = [h/w for w, h in image_sizes]
-
-    # set up a mixed-integer program, and solve it
-    n_images = len(image_sizes)
-
-    m = mip.Model()
-    var_widths = [m.add_var(var_type=mip.INTEGER) for _ in range(n_images)]
-    var_heights = [m.add_var(var_type=mip.INTEGER) for _ in range(n_images)]
-
-    for c in constraints:
-        if c.is_height:
-            vars = ([var_heights[i] for i in c.positive_ids] +
-                    [-var_heights[i] for i in c.negative_ids])
-        else:
-            vars = ([var_widths[i] for i in c.positive_ids] +
-                    [-var_widths[i] for i in c.negative_ids])
-
-        m.add_constr(mip.xsum(vars) == c.result)
-
-    # the errors come from a deviation in aspect ratio
-    var_errs = [m.add_var(var_type=mip.CONTINUOUS) for _ in range(n_images)]
-    for err, w, h, ar in zip(var_errs, var_widths, var_heights, aspect_ratios):
-        m.add_constr(err == h - w * ar)
-
-    # To minimise error, we need to create a convex cost function. Common
-    # options are either abs(err) or err ** 2. However, both these functions are
-    # non-linear, so cannot be directly computed in MIP. We can represent abs
-    # exactly with a type-1 SOS, and approximate ** 2 with a type-2 SOS. Here we
-    # use abs.
-
-    var_errs_pos = [m.add_var(var_type=mip.CONTINUOUS) for _ in range(n_images)]
-    var_errs_neg = [m.add_var(var_type=mip.CONTINUOUS) for _ in range(n_images)]
-    var_abs_errs = [m.add_var(var_type=mip.CONTINUOUS) for _ in range(n_images)]
-
-    for abs_err, err, err_pos, err_neg in zip(var_abs_errs,
-                                              var_errs,
-                                              var_errs_pos,
-                                              var_errs_neg):
-        # err_pos and err_neg are both positive representing each side of the
-        # abs function. Only one will be non-zero (SOS Type-1).
-        m.add_constr(err == err_pos - err_neg)
-        m.add_constr(abs_err == err_pos + err_neg)
-        m.add_sos([(err_pos, 1), (err_neg, -1)], sos_type=1)
-
-    m.objective = mip.minimize(mip.xsum(var_abs_errs))
-    m.optimize(max_seconds=30)
-
-    new_sizes = [Size(int(w.x), int(h.x))
-                 for w, h in zip(var_widths, var_heights)]
-    return new_sizes
+    # AC-GCS-11 · disabled: the upstream integer solve depended on the GPL
+    # python-mip package. It is intentionally not imported; callers must use the
+    # float path (_compute_rescaled_image_sizes) and round locally.
+    raise RuntimeError("MIP/integer path disabled (AC-GCS-11)")

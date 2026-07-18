@@ -44,6 +44,44 @@ def test_build_trip_debt_includes_new_fields() -> None:
     assert "rawGeometryPercentiles" in merged
 
 
+def test_merge_debt_geometry_does_not_fabricate_corpus_p95() -> None:
+    """AC-TPC-17 · corpus p95 must be an honest roll-up, never a p50 copy."""
+    trip_reports = [
+        {
+            "tripId": "t1",
+            "legacy": {"windowCount": 3, "legacyCount": 0},
+            "rawGeometryPercentiles": {
+                "heroProminenceRatio": {"n": 3, "p50": 0.20, "p95": 0.40},
+                "heroCoverageRatio": {"n": 3, "p50": 0.30, "p95": 0.50},
+                "cellAreaCv": {"n": 3, "p50": 0.10, "p95": 0.15},
+            },
+        },
+        {
+            "tripId": "t2",
+            "legacy": {"windowCount": 5, "legacyCount": 0},
+            "rawGeometryPercentiles": {
+                "heroProminenceRatio": {"n": 5, "p50": 0.60, "p95": 0.90},
+                "heroCoverageRatio": {"n": 5, "p50": 0.40, "p95": 0.70},
+                "cellAreaCv": {"n": 5, "p50": 0.20, "p95": 0.35},
+            },
+        },
+    ]
+    merged = merge_debt_reports(trip_reports)
+    geo = merged["rawGeometryPercentiles"]
+    assert "note" in geo and "p50" in geo["note"]
+
+    hero = geo["heroProminenceRatio"]
+    assert hero["n"] == 8
+    assert hero["tripCount"] == 2
+    # p50 is the median of per-trip p50s (0.20, 0.60) — NOT reconstructed by count.
+    assert hero["p50"] in (0.2, 0.6)
+    # corpus keeps the worst per-trip p95, never the p50 value.
+    assert hero["tripP95Max"] == 0.90
+    assert hero["tripP95Max"] != hero["p50"]
+    # No misleading top-level corpus p95 field.
+    assert "p95" not in hero
+
+
 def test_caption_coverage_counts_flags() -> None:
     logs = [{"captionActive": True}, {"plannerPath": "mcs"}]
     cov = caption_coverage(logs, templates=None)

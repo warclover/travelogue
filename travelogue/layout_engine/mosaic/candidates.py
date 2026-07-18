@@ -10,6 +10,11 @@ from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.usage_context import WindowContext
 from travelogue.layout_contract.usage_rules_registry import USAGE_RULE_UNDO_ORDER
 from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
+from travelogue.layout_engine.mosaic.clone_detection import (
+    NEAR_SCENE_CLONE_REJECT_THRESHOLD,
+    near_scene_clone_penalty,
+    template_prefers_burst,
+)
 from travelogue.layout_engine.mosaic.features import feature_summary_for_window
 from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled, mosaic_registry
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
@@ -206,19 +211,21 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
-        from travelogue.layout_engine.mosaic.scorer import (
-            _near_scene_clone_penalty,
-            _template_prefers_burst,
-        )
-
-        # Hard gate: mosaics that do not prefer bursts must not absorb same-scene
-        # walking clones (demo-2025 weighted/rail/5-main looked like sliced panoramas).
+        # Hard gate (AC-TPC-15): mosaics that do not prefer bursts must not absorb
+        # same-scene walking clones (demo-2025 weighted/rail/5-main looked like
+        # sliced panoramas). Only rejects when the gate is explicitly enabled; the
+        # scorer keeps applying the soft penalty regardless.
         # prefers_burst True → skip; False/None → reject when penalty is high.
-        if _template_prefers_burst(pat.pattern_id) is not True:
-            clone_pen = _near_scene_clone_penalty(
+        gate = getattr(cfg, "near_scene_clone_gate", None)
+        if (
+            gate is not None
+            and getattr(gate, "enabled", False)
+            and template_prefers_burst(pat.pattern_id) is not True
+        ):
+            clone_pen = near_scene_clone_penalty(
                 pat.pattern_id, list(ordered), assets_map
             )
-            if clone_pen >= 0.75:
+            if clone_pen >= NEAR_SCENE_CLONE_REJECT_THRESHOLD:
                 _reject(
                     rejected,
                     pat.pattern_id,

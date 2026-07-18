@@ -43,6 +43,7 @@ from travelogue.config.misc import (
 from travelogue.config.mosaic import (
     MosaicConfig,
     MosaicDensityBudgetConfig,
+    NearSceneCloneGateConfig,
     TemplateContractConfig,
 )
 from travelogue.config.phase6 import (
@@ -100,6 +101,7 @@ __all__ = [
     "LayoutScoringConfig",
     "LlmConfig",
     "MosaicConfig",
+    "NearSceneCloneGateConfig",
     "MosaicDensityBudgetConfig",
     "TemplateContractConfig",
     "NarrativeConfig",

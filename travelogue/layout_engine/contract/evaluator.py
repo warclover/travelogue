@@ -13,6 +13,9 @@ from typing import Any, Literal, Mapping
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
+from travelogue.layout_engine.contract.eligibility_normalize import (
+    normalize_eligibility_spec,
+)
 from travelogue.layout_engine.contract.mix_index import (
     MixKey,
     format_mix_key,
@@ -48,14 +51,17 @@ def _template_constraints(pattern_id: str) -> dict[str, Any]:
 
 
 def resolve_eligibility_spec(pattern_id: str) -> tuple[dict[str, Any] | None, EligibilitySource]:
-    """Prefer ``constraints.eligibility``; else bridge ``mainSlotPolicy``."""
+    """Prefer ``constraints.eligibility``; else bridge ``mainSlotPolicy``.
+
+    Both specs are normalized to camelCase (AC-TPC-18) so callers read one spelling.
+    """
     constraints = _template_constraints(pattern_id)
     elig = constraints.get("eligibility")
     if isinstance(elig, dict) and elig:
-        return dict(elig), "eligibility"
+        return normalize_eligibility_spec(elig), "eligibility"
     policy = constraints.get("mainSlotPolicy")
     if isinstance(policy, dict) and policy:
-        return dict(policy), "mainSlotPolicy"
+        return normalize_eligibility_spec(policy), "mainSlotPolicy"
     return None, "none"
 
 
@@ -98,7 +104,9 @@ def _evaluate_eligibility_dict(
     *,
     trip_photo_total: int = 0,
 ) -> tuple[bool, str | None, str | None]:
-    canvas = spec.get("canvasAr") or spec.get("canvas_ar")
+    # Single spelling for the whole function (AC-TPC-18); idempotent if already normalized.
+    spec = normalize_eligibility_spec(spec)
+    canvas = spec.get("canvasAr")
     if isinstance(canvas, (list, tuple)) and len(canvas) == 2:
         try:
             from travelogue.layout_templates.geometry import parse_aspect_ratio
@@ -113,47 +121,46 @@ def _evaluate_eligibility_dict(
                     f"canvasAr={stage_ar:.4f} band=[{lo_c:.4f},{hi_c:.4f}]",
                 )
         except (KeyError, AttributeError, TypeError, ValueError):
+            _log.warning(
+                "tpc.eligibility: canvasAr check failed for %s (invalid template)",
+                pattern_id,
+                exc_info=True,
+            )
             return False, "contract:invalid_template", "canvasAr check failed"
 
-    band = spec.get("heroAreaBand") or spec.get("hero_area_band")
-    scale = spec.get("photoCountScale") or spec.get("photo_count_scale")
+    band = spec.get("heroAreaBand")
+    scale = spec.get("photoCountScale")
     need_area = isinstance(band, (list, tuple)) and len(band) == 2
     need_area = need_area or isinstance(scale, dict)
     area = _hero_area_from_template(pattern_id) if need_area else None
-    if isinstance(band, (list, tuple)) and len(band) == 2 and area is not None:
-        lo, hi = float(band[0]), float(band[1])
-        if isinstance(scale, dict) and trip_photo_total > 0:
-            ref = int(scale.get("referenceCount") or scale.get("reference_count") or 20)
-            floor_factor = float(
-                scale.get("floorFactorAt50") or scale.get("floor_factor_at_50") or 1.0
-            )
-            if trip_photo_total >= 50 and floor_factor < 1.0:
-                lo = lo * floor_factor
-            elif trip_photo_total > ref:
-                t = min(1.0, (trip_photo_total - ref) / max(1, 50 - ref))
-                lo = lo * (1.0 - t * (1.0 - floor_factor))
-            # Tighten ceiling via maxHeroAreaAtRef (MGQ photoCountScale)
-            max_at_ref = scale.get("maxHeroAreaAtRef") or scale.get("max_hero_area_at_ref")
-            if max_at_ref is not None and trip_photo_total >= ref and area > float(max_at_ref):
-                return (
-                    False,
-                    "contract:eligibility_count_scale",
-                    f"heroArea={area:.4f} > maxHeroAreaAtRef={float(max_at_ref):.4f}",
-                )
-        if area < lo or area > hi:
-            return (
-                False,
-                "contract:eligibility_hero_band",
-                f"heroArea={area:.4f} band=[{lo:.4f},{hi:.4f}]",
-            )
-    elif isinstance(scale, dict) and trip_photo_total > 0 and area is not None:
-        ref = int(scale.get("referenceCount") or scale.get("reference_count") or 20)
-        max_at_ref = scale.get("maxHeroAreaAtRef") or scale.get("max_hero_area_at_ref")
+
+    # Unified maxHeroAreaAtRef ceiling (was duplicated in the band + scale-only
+    # branches). Applies whenever photoCountScale is declared and we have an area.
+    if isinstance(scale, dict) and trip_photo_total > 0 and area is not None:
+        ref = int(scale.get("referenceCount") or 20)
+        max_at_ref = scale.get("maxHeroAreaAtRef")
         if max_at_ref is not None and trip_photo_total >= ref and area > float(max_at_ref):
             return (
                 False,
                 "contract:eligibility_count_scale",
                 f"heroArea={area:.4f} > maxHeroAreaAtRef={float(max_at_ref):.4f}",
+            )
+
+    if isinstance(band, (list, tuple)) and len(band) == 2 and area is not None:
+        lo, hi = float(band[0]), float(band[1])
+        if isinstance(scale, dict) and trip_photo_total > 0:
+            ref = int(scale.get("referenceCount") or 20)
+            floor_factor = float(scale.get("floorFactorAt50") or 1.0)
+            if trip_photo_total >= 50 and floor_factor < 1.0:
+                lo = lo * floor_factor
+            elif trip_photo_total > ref:
+                t = min(1.0, (trip_photo_total - ref) / max(1, 50 - ref))
+                lo = lo * (1.0 - t * (1.0 - floor_factor))
+        if area < lo or area > hi:
+            return (
+                False,
+                "contract:eligibility_hero_band",
+                f"heroArea={area:.4f} band=[{lo:.4f},{hi:.4f}]",
             )
     return True, None, None
 

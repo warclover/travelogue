@@ -87,6 +87,78 @@ def test_replace_raises_when_inplace_also_fails(tmp_path: Path, monkeypatch) -> 
         _replace_trip_json(str(tmp), path, payload='{"tripId":"x"}\n')
 
 
+def test_replace_fallback_failure_preserves_dest_via_bak_and_tmp(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """AC-SFC-13 · in-place fallback dying mid-write must stay recoverable.
+
+    Simulate: os.replace永远 busy → 走截断回退；截断后写入中途失败。既有 dest 被
+    截断，但 .bak 保留原文、tmp 保留新内容，两者皆可恢复；错误信息含恢复路径。
+    """
+    import builtins
+
+    from travelogue.services.trip import TripSaveError
+
+    path = tmp_path / "trip.json"
+    original = '{"tripId":"original","meta":{"revision":1}}\n'
+    path.write_text(original, encoding="utf-8")
+
+    def always_busy(src: str, dst: str) -> None:
+        err = PermissionError("denied")
+        err.winerror = 5  # type: ignore[attr-defined]
+        raise err
+
+    monkeypatch.setattr("travelogue.services.trip.os.replace", always_busy)
+    monkeypatch.setattr("travelogue.services.trip.time.sleep", lambda _s: None)
+
+    real_open = builtins.open
+
+    class _FailingHandle:
+        def __init__(self, fh: object) -> None:
+            self._fh = fh
+
+        def __enter__(self) -> "_FailingHandle":
+            return self
+
+        def __exit__(self, *_a: object) -> bool:
+            self._fh.close()  # type: ignore[attr-defined]
+            return False
+
+        def write(self, *_a: object, **_k: object) -> int:
+            raise OSError("disk full mid-write")
+
+        def flush(self) -> None:
+            pass
+
+        def fileno(self) -> int:
+            return self._fh.fileno()  # type: ignore[attr-defined]
+
+    def failing_open(file, mode="r", *args, **kwargs):  # type: ignore[no-untyped-def]
+        # Truncate dest (as real "w" open would) then fail on the actual write.
+        if Path(file) == path and "w" in mode and "b" not in mode:
+            fh = real_open(file, mode, *args, **kwargs)
+            return _FailingHandle(fh)
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", failing_open)
+
+    with pytest.raises(TripSaveError) as excinfo:
+        TripService().save({"tripId": "new", "meta": {"revision": 2}}, path)
+
+    monkeypatch.undo()
+
+    bak = path.with_suffix(path.suffix + ".bak")
+    assert bak.is_file(), "backup must survive so dest is recoverable"
+    assert bak.read_text(encoding="utf-8") == original
+
+    tmps = list(tmp_path.glob(".trip-*.json"))
+    assert tmps, "tmp must be preserved for recovery on fallback failure"
+    assert json.loads(tmps[0].read_text(encoding="utf-8"))["tripId"] == "new"
+
+    msg = str(excinfo.value)
+    assert ".bak" in msg or "recover" in msg
+
+
 def test_save_writes_valid_json(tmp_path: Path) -> None:
     path = tmp_path / "trip.json"
     trip = {"tripId": "t1", "version": "0.2", "meta": {"title": "测"}}

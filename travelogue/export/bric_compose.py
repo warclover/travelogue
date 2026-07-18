@@ -7,8 +7,11 @@ Call signature stays stable (D-GCS-05).
 
 from __future__ import annotations
 
+import logging
 import math
 from typing import Sequence
+
+_log = logging.getLogger(__name__)
 
 
 def _shelf_compose(
@@ -155,6 +158,7 @@ def bric_compose(
             round_result=round_result,
         )
     except Exception:
+        _log.debug("bric vendor compose failed; using shelf packer", exc_info=True)
         return _shelf_compose(
             sizes,
             width=width,

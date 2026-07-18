@@ -350,14 +350,20 @@ def _check_main_slot_policy(
                 level=level,
             )
             continue
-        slot_idx = policy.get("slotIndex", policy.get("slot_index"))
+        # Single spelling via shared normalizer (AC-TPC-18).
+        from travelogue.layout_engine.contract.eligibility_normalize import (
+            normalize_eligibility_spec,
+        )
+
+        policy = normalize_eligibility_spec(policy)
+        slot_idx = policy.get("slotIndex")
         if slot_idx is not None and int(slot_idx) != row.index:
             report.add(
                 "V-P16-MAIN-01",
                 f"eligibility/mainSlotPolicy.slotIndex {slot_idx} != main slot {row.index}",
                 level="warn",
             )
-        target = policy.get("targetDisplayAspect", policy.get("target_display_aspect"))
+        target = policy.get("targetDisplayAspect")
         if target is not None:
             try:
                 target_f = float(target)

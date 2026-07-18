@@ -80,6 +80,42 @@ function _placeFallbackLabel(meta) {
   return "旅行";
 }
 
+/** 与 BE ``_date_fallback_label`` 同源：{月}月{日}日 / 跨日区间，无日期回 "游记"。 */
+function _dateFallbackLabel(meta) {
+  var start = String((meta && meta.dateStart) || "")
+    .trim()
+    .slice(0, 10);
+  var end = String((meta && meta.dateEnd) || "")
+    .trim()
+    .slice(0, 10);
+  if (!start) return "游记";
+  var sp = start.split("-");
+  if (sp.length !== 3) return "游记";
+  var m = parseInt(sp[1], 10);
+  var d = parseInt(sp[2], 10);
+  if (isNaN(m) || isNaN(d)) return "游记";
+  var label = m + "月" + d + "日";
+  if (end && end !== start) {
+    var ep = end.split("-");
+    if (ep.length === 3) {
+      var m2 = parseInt(ep[1], 10);
+      var d2 = parseInt(ep[2], 10);
+      if (!isNaN(m2) && !isNaN(d2)) {
+        label = m + "月" + d + "–" + m2 + "月" + d2 + "日";
+      }
+    }
+  }
+  return label;
+}
+
+/** 与 BE ``_fallback_display`` 同源：``{地} · {日期}``（无地点→旅行，无日期→游记）。 */
+function _fallbackDisplay(meta, limit) {
+  var place = _placeFallbackLabel(meta);
+  var datePart = _dateFallbackLabel(meta);
+  var fallback = place + " · " + datePart;
+  return fallback.length > limit ? fallback.slice(0, limit) : fallback;
+}
+
 /**
  * 与 BE ``resolve_display_title`` 同源（D-SFC-03）。
  * @param {{ displayTitle?: string, title?: string, places?: string[] }|null} meta
@@ -100,10 +136,10 @@ export function resolveDisplayTitle(meta, opts) {
   accepted = _acceptDisplay(raw, limit);
   if (accepted) return accepted;
 
+  // 清洗后仍噪音：优先 meta 地点 → {地} · {日期}；否则文件夹地名抽取 → {地} · 旅行。
   var metaPlace = _placeFallbackLabel(meta);
   if (metaPlace !== "旅行") {
-    var withDate = metaPlace + " · 旅行";
-    return withDate.length > limit ? withDate.slice(0, limit) : withDate;
+    return _fallbackDisplay(meta, limit);
   }
 
   var extracted = extractPlaceLabel(raw || stored);
@@ -112,6 +148,5 @@ export function resolveDisplayTitle(meta, opts) {
     return out.length > limit ? out.slice(0, limit) : out;
   }
 
-  var fallback = "旅行 · 游记";
-  return fallback.length > limit ? fallback.slice(0, limit) : fallback;
+  return _fallbackDisplay(meta, limit);
 }

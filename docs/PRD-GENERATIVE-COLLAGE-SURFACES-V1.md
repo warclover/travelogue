@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.0** |
-| **状态** | **Conditional Go · Ready for Kickoff W0**（本轮不编码；编码另开） |
+| **文档版本** | **v0.2.1** |
+| **状态** | **Conditional Go · 轨 B 已落地**（**§12 质量收口全部必修**；轨 A 仍挂起） |
 | **特性代号** | **GCS**（Generative Collage Surfaces） |
 | **文档类型** | 版式旁路专项优化 PRD（导出海报面 + 离线 LTE SKU 工厂 · **非** MCS 主链） |
 | **触发来源** | 开源对标 [stefanwayon/collage](https://github.com/stefanwayon/collage)（BRIC · Atkins ACM）；与 MGQ「禁 runtime 改 rect」及 P17-B「生成式 composite」对齐 |
@@ -398,8 +398,9 @@ enumerate_track_topologies(n, mix, stage_aspect, gap, enum_params)
 | 策略 | 要求 |
 |------|------|
 | Vendoring | V1 **强制**拷贝/钉 commit MIT 核心；CI 可离线单测 |
-| 许可证扫描 | 禁止 GPL 传递依赖（AC-GCS-09） |
+| 许可证扫描 | 禁止 GPL **运行时依赖闭包**（含传递依赖；AC-GCS-09 · §12.1） |
 | pip | 热路径与默认安装 **零新依赖**；可选 extras 仅工具链且钉版本 |
+| MIP 路径 | vendored BRIC **禁止** `round_result=True` 拉起 `python-mip`；封装层强制 float + 本地取整（§12.2） |
 
 ### 7.3 字段隔离
 
@@ -452,9 +453,11 @@ Feature flag：
 | **AC-GCS-06** | 轨 B 后 `screens[]` 无伪 pattern | W1 | export 前后 screens diff |
 | **AC-GCS-07** | 默认排除用户 collage 素材 | W1 | collage fixture 不进拼贴 |
 | **AC-GCS-08** | 杂志 golden / LRG 无回归 | W1–W3 | **W1 硬门** |
-| **AC-GCS-09** | GPL 依赖扫描通过 | W1 | CI 命令写入 ACCEPTANCE |
+| **AC-GCS-09** | GPL **运行时依赖闭包**扫描通过（含传递依赖；不得只扫 requirements 直接声明） | W1 | CI 扫已安装闭包或递归 requires；命令写入 ACCEPTANCE / §12.1 |
 | **AC-GCS-BLIND** | 海报「可发」≥55% 方可默认露出 | W3 | Gate 码独立；可共用 trip 集 |
 | **AC-GCS-10** | 用户文案不含「九宫格」顶替海报 | W2 | 文案/fixture 扫描 |
+| **AC-GCS-11** | vendored `fit_pictures*` 在 `round_result=True` 时 **硬失败**（不 import mip）；封装层 `bric_compose` 强制 float 路径 | W1 | 单测负例 |
+| **AC-GCS-12** | vendor 失败回退 shelf 时须打 debug 日志（含 exc_info）；`compose_poster_png` 显式关闭 PIL 句柄 | W1 | 代码审查 + 单测/手工 |
 
 W1 merge 前须拆独立 ACCEPTANCE 细化命令与 fixture 路径。
 
@@ -479,6 +482,29 @@ W1 merge 前须拆独立 ACCEPTANCE 细化命令与 fixture 路径。
 
 ---
 
+## 12. 质量收口（2026-07-18 代码审查 · **全部必修**）
+
+> 触发与总表：[quality-review-remediation-2026-07-18.md](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
+> 执行业主：轨 B / TPC W4；**不得**以「海报 flag 默认关」跳过合规门禁。
+
+### 12.1 GPL 闭包扫描（P1 · AC-GCS-09 加严）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | `license_gpl_scan.py` 默认只比对 requirements **直接声明**包，传递 GPL 可漏扫；PyInstaller 会打入运行时 |
+| 合同 | CI 必须扫描**运行时依赖闭包**（`--all-installed` 或递归 `requires`）；ALLOWLIST 精确维护 |
+| 文档 | 脚本 docstring / ACCEPTANCE 命令与真实口径一致；禁止写「closure」却只扫直接依赖 |
+
+### 12.2 Vendor 安全与可观测（P3 · AC-GCS-11/12）
+
+| 项 | 冻结 |
+|----|------|
+| MIP | vendored 层对整数/MIP 路径显式禁用或抛错 |
+| 回退 | `bric_compose` 宽 except 回退 shelf 时必须留 debug 痕迹 |
+| 资源 | 海报导出循环打开的 PIL Image 须 `close` / `with` |
+
+---
+
 ## 附录 A · 开源对标摘要（stefanwayon/collage）
 
 | 项 | 内容 |
@@ -495,3 +521,4 @@ W1 merge 前须拆独立 ACCEPTANCE 细化命令与 fixture 路径。
 |------|------|------|
 | **v0.1.0** | 2026-07-18 | 初稿：双轨；禁 MCS runtime fallback |
 | **v0.2.0** | 2026-07-18 | 跨职能 Conditional Go：BLK-01～08；OQ 全关；轨 A 轨道原生；轨 B job sidecar；先 B 后 A |
+| **v0.2.1** | 2026-07-18 | §12 质量收口全部必修：AC-GCS-09 加严为运行时闭包；新增 AC-GCS-11/12（禁 MIP · 回退日志 · PIL close） |

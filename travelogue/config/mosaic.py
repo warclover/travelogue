@@ -29,7 +29,7 @@ class TemplateContractConfig:
     """
 
     enabled: bool = False
-    shadow_log: bool = True
+    shadow_log: bool = False
 
 
 _TEMPLATE_CONTRACT_KNOWN_KEYS = frozenset(
@@ -37,6 +37,24 @@ _TEMPLATE_CONTRACT_KNOWN_KEYS = frozenset(
         "enabled",
         "shadow_log",
         "shadowLog",
+    }
+)
+
+
+@dataclass
+class NearSceneCloneGateConfig:
+    """AC-TPC-15 · hard-reject non-burst mosaics that absorb same-scene clones.
+
+    Off by default: the scorer keeps applying the soft penalty regardless; only
+    the candidate-path hard gate is toggled here. Unknown keys fail-loud.
+    """
+
+    enabled: bool = False
+
+
+_NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
     }
 )
 
@@ -59,6 +77,9 @@ class MosaicConfig:
     log_level: str = "window"
     density_budget: MosaicDensityBudgetConfig = field(default_factory=MosaicDensityBudgetConfig)
     template_contract: TemplateContractConfig = field(default_factory=TemplateContractConfig)
+    near_scene_clone_gate: NearSceneCloneGateConfig = field(
+        default_factory=NearSceneCloneGateConfig
+    )
     # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
     hero_weighted_geometry_guard: bool = True
     # PRD-6张拼图优化 · R-MAIN-AR-01: conventional AR only for hero+tile main slot.
@@ -155,6 +176,23 @@ def _template_contract_from_dict(raw: dict[str, Any]) -> TemplateContractConfig:
     )
 
 
+def _near_scene_clone_gate_from_dict(raw: dict[str, Any]) -> NearSceneCloneGateConfig:
+    defaults = NearSceneCloneGateConfig()
+    gate = raw.get("near_scene_clone_gate")
+    if not isinstance(gate, dict):
+        gate = raw.get("nearSceneCloneGate")
+    if not isinstance(gate, dict):
+        return defaults
+    unknown = sorted(str(k) for k in gate if str(k) not in _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.near_scene_clone_gate unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    return NearSceneCloneGateConfig(
+        enabled=cfg_bool(gate, "enabled", "enabled", defaults.enabled),
+    )
+
+
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
     defaults = MosaicConfig()
     sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", defaults.enabled_window_sizes))
@@ -233,4 +271,5 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         },
         density_budget=_density_budget_from_dict(raw),
         template_contract=_template_contract_from_dict(raw),
+        near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
     )

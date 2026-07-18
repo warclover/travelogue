@@ -222,11 +222,13 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
     match_rates: list[float] = []
     caption_active_total = 0
     caption_templates_max = 0
-    geo_samples: dict[str, list[float]] = {
-        "heroProminenceRatio": [],
-        "heroCoverageRatio": [],
-        "cellAreaCv": [],
-    }
+    _GEO_KEYS = ("heroProminenceRatio", "heroCoverageRatio", "cellAreaCv")
+    # Percentiles do not average: we CANNOT rebuild a corpus p95 from per-trip p50
+    # (the old p50×n expansion was mathematically misleading). Keep the per-trip
+    # p50/p95 lists and only report honest roll-ups (median of p50s, max of p95s).
+    geo_trip_p50s: dict[str, list[float]] = {k: [] for k in _GEO_KEYS}
+    geo_trip_p95s: dict[str, list[float]] = {k: [] for k in _GEO_KEYS}
+    geo_total_n: dict[str, int] = {k: 0 for k in _GEO_KEYS}
 
     for rep in trip_reports:
         legacy = rep.get("legacy") or {}
@@ -246,12 +248,18 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
             caption_templates_max, int(cap.get("templatesWithCaptionAreas") or 0)
         )
         geo = rep.get("rawGeometryPercentiles") or {}
-        for key in geo_samples:
+        for key in _GEO_KEYS:
             bucket = geo.get(key) or {}
-            # Reconstruct approx from p50 when full series unavailable
+            n = int(bucket.get("n") or 0)
+            if n <= 0:
+                continue
+            geo_total_n[key] += n
             p50 = bucket.get("p50")
-            if isinstance(p50, (int, float)) and int(bucket.get("n") or 0) > 0:
-                geo_samples[key].extend([float(p50)] * int(bucket.get("n") or 0))
+            if isinstance(p50, (int, float)):
+                geo_trip_p50s[key].append(float(p50))
+            p95 = bucket.get("p95")
+            if isinstance(p95, (int, float)):
+                geo_trip_p95s[key].append(float(p95))
 
     return {
         "tripCount": len(trip_reports),
@@ -277,12 +285,21 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
             ),
         },
         "rawGeometryPercentiles": {
-            k: {
-                "n": len(vals),
-                "p50": _percentile(vals, 0.50),
-                "p95": _percentile(vals, 0.95),
-            }
-            for k, vals in geo_samples.items()
+            "note": (
+                "per-trip percentiles only; corpus p95 not reconstructed from p50"
+            ),
+            **{
+                k: {
+                    "n": geo_total_n[k],
+                    "tripCount": len(geo_trip_p50s[k]),
+                    # Honest roll-up: median of per-trip p50s (no p50 copying).
+                    "p50": _percentile(geo_trip_p50s[k], 0.50),
+                    # p95 cannot be re-derived; expose the worst per-trip p95.
+                    "tripP95Max": (max(geo_trip_p95s[k]) if geo_trip_p95s[k] else None),
+                    "tripP95Median": _percentile(geo_trip_p95s[k], 0.50),
+                }
+                for k in _GEO_KEYS
+            },
         },
         "trips": [
             {

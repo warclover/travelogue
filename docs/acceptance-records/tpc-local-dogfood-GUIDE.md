@@ -31,7 +31,11 @@
 mosaic:
   template_contract:
     enabled: true
+    # 仓库默认 false；狗粮观测请显式打开（AC-TPC-16）
     shadow_log: true
+  # 可选：开启近景连拍硬门（仓库默认 false · AC-TPC-15）
+  # near_scene_clone_gate:
+  #   enabled: true
 
 features:
   gcs_poster_bric:

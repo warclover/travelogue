@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
-from travelogue.layout_engine.mosaic.scorer import (
-    _near_scene_clone_penalty,
-    _template_prefers_burst,
+from travelogue.layout_engine.mosaic.clone_detection import (
+    near_scene_clone_penalty as _near_scene_clone_penalty,
+)
+from travelogue.layout_engine.mosaic.clone_detection import (
+    template_prefers_burst as _template_prefers_burst,
 )
 
 
@@ -15,6 +19,82 @@ def test_rail_and_weighted_prefer_burst_false() -> None:
     assert _template_prefers_burst("screen-mosaic-4-1l3p-rail") is False
     assert _template_prefers_burst("screen-mosaic-4-2l2p-weighted") is False
     assert _template_prefers_burst("screen-mosaic-5-main-portrait-3land") is False
+
+
+def _near_scene_weighted_assets() -> tuple[dict, dict]:
+    assets = {
+        "a0": {
+            "id": "a0",
+            "takenAt": "2025-04-20T22:00:00Z",
+            "tags": ["person", "face"],
+            "width": 1600,
+            "height": 900,
+        },
+        "a1": {
+            "id": "a1",
+            "takenAt": "2025-04-20T22:01:00Z",
+            "tags": ["person", "face"],
+            "width": 900,
+            "height": 1600,
+        },
+        "a2": {
+            "id": "a2",
+            "takenAt": "2025-04-20T22:02:00Z",
+            "tags": ["person", "face"],
+            "width": 900,
+            "height": 1600,
+        },
+        "a3": {
+            "id": "a3",
+            "takenAt": "2025-04-20T22:03:00Z",
+            "tags": ["person", "face"],
+            "width": 1600,
+            "height": 900,
+        },
+    }
+    aspects = {
+        "a0": "landscape",
+        "a1": "portrait",
+        "a2": "portrait",
+        "a3": "landscape",
+    }
+    return assets, aspects
+
+
+@pytest.mark.unit
+def test_candidates_hard_reject_requires_gate_enabled() -> None:
+    """AC-TPC-15 · hard reject only fires when the gate is explicitly enabled."""
+    from travelogue.config import get_config
+    from travelogue.layout_engine.mosaic.candidates import (
+        generate_window_candidates_with_rejections,
+    )
+
+    assets, aspects = _near_scene_weighted_assets()
+    cfg = get_config().mosaic
+    # Default gate is off → weighted must NOT be hard-rejected as near_scene_clone.
+    assert cfg.near_scene_clone_gate.enabled is False
+    res_off = generate_window_candidates_with_rejections(
+        list(assets), aspects, assets, cfg=cfg
+    )
+    assert not any(
+        r.get("reason") == "near_scene_clone" for r in res_off.rejected
+    )
+
+    # Gate on → weighted is hard-rejected with reason near_scene_clone.
+    cfg_on = dataclasses.replace(
+        cfg, near_scene_clone_gate=dataclasses.replace(cfg.near_scene_clone_gate, enabled=True)
+    )
+    res_on = generate_window_candidates_with_rejections(
+        list(assets), aspects, assets, cfg=cfg_on
+    )
+    assert not any(
+        c.pattern_id == "screen-mosaic-4-2l2p-weighted" for c in res_on.candidates
+    )
+    assert any(
+        r.get("templateId") == "screen-mosaic-4-2l2p-weighted"
+        and r.get("reason") == "near_scene_clone"
+        for r in res_on.rejected
+    )
 
 
 @pytest.mark.unit
@@ -60,7 +140,13 @@ def test_candidates_hard_reject_near_scene_on_weighted() -> None:
         "a2": "portrait",
         "a3": "landscape",
     }
-    cfg = get_config().mosaic
+    base_cfg = get_config().mosaic
+    cfg = dataclasses.replace(
+        base_cfg,
+        near_scene_clone_gate=dataclasses.replace(
+            base_cfg.near_scene_clone_gate, enabled=True
+        ),
+    )
     res = generate_window_candidates_with_rejections(
         list(assets), aspects, assets, cfg=cfg
     )

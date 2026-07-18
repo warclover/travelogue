@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.2** |
-| **状态** | **Conditional Go · Ready for Kickoff W1**（七席评审结案；**BLK-TPC-01～07 已回写本版**；LQS 瘦身版 S2+ 由本案承接） |
+| **文档版本** | **v0.2.3** |
+| **状态** | **Conditional Go · Ready for Kickoff W1**（七席评审结案；**BLK-TPC-01～07 已回写本版**；**§12 质量收口全部必修**；LQS 瘦身版 S2+ 由本案承接） |
 | **评审纪要** | [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md)（已结案 · Conditional Go · BLK-TPC-01～07 · 估时修正 17–22 人日） |
 | **特性代号** | **TPC**（Template Contract · 统一模板合同） |
 | **文档类型** | 版式质量重设计 PRD（问题驱动 · 收敛现网机制 · 非对标搬运） |
@@ -235,7 +235,8 @@ generate_window_candidates(window)
 
 ### 3.5 配置合同（BLK-TPC-07）
 
-- 唯一配置根：`mosaic.template_contract`（`enabled` 默认 `false`；`shadow_log` 默认 `true`）。  
+- 唯一配置根：`mosaic.template_contract`（`enabled` 默认 `false`；`shadow_log` 默认 **`false`**——观测/狗粮时显式打开，见 §12）。  
+- 近景连拍硬门配置根：`mosaic.near_scene_clone_gate`（默认 **`false`**；开启后才允许 candidates 硬拒绝，见 §12.1）。  
 - 未知子键 **fail-loud**（禁止静默丢键）。  
 - CI 断言：配置根唯一；默认 `layout.scoring.enabled is false`（AC-TPC-13）。
 
@@ -350,6 +351,10 @@ generate_window_candidates(window)
 | **AC-TPC-12** | **shadow diff 硬门（BLK-TPC-04）**：W1 末在代表 corpus（BQP 8 本）上输出「倒排候选集 vs 现网 `try_order` 候选集」逐窗 diff 报告；差异 = 0 或逐条人工签核；报告文件进仓库；未过此门不得切换候选入口 |
 | **AC-TPC-13** | **配置合同（BLK-TPC-07）**：`mosaic.template_contract` 未知子键 fail-loud（负例单测）；CI 断言配置根唯一且默认 `layout.scoring.enabled is false` |
 | **AC-TPC-14** | **caption tie-break（条件项 · BLK-TPC-06）**：若图文进 V1——fixture 断言同分带内带文案区候选胜出且 `captionTiebreakApplied=true`；无文案窗行为与 off 完全一致 |
+| **AC-TPC-15** | **近景硬门不得默认改写 off 路径（§12.1）**：`near_scene_clone` 硬拒绝仅在 `mosaic.near_scene_clone_gate.enabled=true`（或等价显式开关）时生效；默认关闭时仅允许 scorer 软惩罚；fixture 断言 contract off + 开关 off 下 90s 连拍窗仍可产出 mosaic 候选 |
+| **AC-TPC-16** | **shadow 非常驻（§12.2）**：仓库默认 `shadow_log=false`；开启时只写观测字段、不改选择；perf 脚本可单独量测 shadow 开销 |
+| **AC-TPC-17** | **debt 分位数口径诚实（§12.3）**：跨 trip `merge_debt_reports` 不得用 p50 复制伪造 corpus p95；须传原始样本或显式标注「无可信 p95」并省略误导字段 |
+| **AC-TPC-18** | **eligibility 归一化单点（§12.4）**：camelCase/snake_case 与 `mainSlotPolicy`→eligibility 桥接由 contract 模块唯一 `normalize_eligibility_spec`（或等价）提供；evaluator / validator / main_eligibility 禁止各写一套 |
 
 ---
 
@@ -447,6 +452,58 @@ generate_window_candidates(window)
 | MGQ BLK-11/12（eligibility 语义/接线） | §3.1–3.2（继承，接线简化） |
 | GCS BLK-01～08 | 轨 B 全继承；轨 A 挂起（重启条件 §D-TPC-08） |
 
+---
+
+## 12. 质量收口（2026-07-18 代码审查 · **全部必修**）
+
+> 触发：[当日工程合入后的质量审查](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
+> **纪律**：下列条款为合入后必修，不得以「狗粮已通过」跳过；与 AC-TPC-15～18 一一对应。
+
+### 12.1 近景连拍硬门（P1 · AC-TPC-15）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | `near_scene_clone` 硬拒绝落在默认候选路径，且不受 `template_contract.enabled` 控制；`prefers_burst` 缺失时按 `None` 一律门控，90s 连拍窗易被静默清空 |
+| 合同 | 硬拒绝 **必须** 受显式开关 `mosaic.near_scene_clone_gate.enabled`（默认 `false`）约束 |
+| 默认 | 开关关闭：仅保留 scorer 软惩罚（`duplicate_density` 等），**禁止** candidates 硬 `continue` |
+| 阈值 | `span` / `penalty` 门槛进 config（或命名常量 + 单点注释出处），禁止魔法数散落 |
+| 可观测 | 硬拒绝时 reject reason 仍为 `near_scene_clone`；建议计数进决策 log / 埋点以便监控 legacyRate |
+| 封装 | clone 判定抽公共模块；candidates **禁止** import scorer 的 `_` 私有函数 |
+
+### 12.2 shadow 默认 off（P2 · AC-TPC-16）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | `shadow_log` 默认 `true` 时，合约关闭路径仍每窗计算 shadow，结果不参与选择却膨胀日志 |
+| 合同 | 仓库默认 `shadow_log=false`；狗粮 / CI 观测显式打开（见 dogfood GUIDE / example yaml） |
+| 不变式 | shadow **永不**改变 selection（AC-TPC-12 语义不变） |
+
+### 12.3 debt corpus 分位数诚实（P2 · AC-TPC-17）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | `merge_debt_reports` 用 p50×n 重建样本 → corpus `p95` 恒等于 `p50`，误导 AC-TPC-10 基线 |
+| 合同 | 汇总须使用原始样本，或省略 corpus `p95` 并在报告标明「per-trip only」 |
+| 禁止 | 用单一分位数值伪造多样本序列 |
+
+### 12.4 eligibility 归一化单点（P2 · AC-TPC-18）
+
+| 项 | 冻结 |
+|----|------|
+| 问题 | camelCase/snake_case 与 mainSlotPolicy 桥接在 evaluator / validator / main_eligibility 三处重复 |
+| 合同 | contract 模块提供唯一 normalize；三处共用；count-scale 天花板判断不得双分支复制 |
+| 与 AC-TPC-04 | 桥接删除前仍须单点实现，禁止再引入第四份拷贝 |
+
+### 12.5 工程卫生（P3 · 本收口一并修）
+
+| 项 | 要求 |
+|----|------|
+| 宽 except | 模板解析失败不得静默成「无约束」；至少 warning 日志 |
+| mix 索引缓存 | 文档化「模板不可变」假设，或 cache key 含 engine 身份 |
+| `lte_adapter` cover | `screen-mosaic-*` 一律 cover 的取舍须可配置或收敛到具体 SKU（本收口至少加注释 + 跟踪项） |
+
+---
+
 ## 附录 B · 版本记录
 
 | 版本 | 日期 | 说明 |
@@ -455,3 +512,4 @@ generate_window_candidates(window)
 | **v0.2.0** | 2026-07-18 | 七席评审回写：BLK-TPC-01～07 合入（fallback 可行性/square 归置冻结 · 迁移两步走 8 调用点 · captionAreas spike 前置 · shadow diff 升 AC-TPC-12 · 双轨收口 · tie-break 定义 · 配置 fail-loud）；估时修正 17–22 人日；D-TPC 全部冻结 |
 | **v0.2.1** | 2026-07-18 | 新增 §11 工程保障与测试迁移策略：五层防护 + 一键回滚；加法集成原则（挂钩不改签名 · 双轨有死期）；测试四类处置（A 必绿 / B 搬家 / C 同 commit 签核 / D 只增）；W1 绿色基线存档与 PR 测试改动量仪表盘入流程 |
 | **v0.2.2** | 2026-07-18 | W2 spike 结案：captionAreas **defer**（验收记录 `tpc-w2-caption-areas-spike-2026-07-18.md`）；图文 SKU + tie-break 挪出 V1；hero 等价 fixture / 共享工具解耦落地 |
+| **v0.2.3** | 2026-07-18 | §12 质量收口全部必修：近景硬门默认关（AC-TPC-15）· shadow 默认 off（AC-TPC-16）· debt p95 诚实（AC-TPC-17）· eligibility 单点归一（AC-TPC-18）；`shadow_log` 默认改 `false` |

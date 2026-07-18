@@ -120,7 +120,7 @@
 | [acceptance-records/first-session-trust-v1-review-2026-07-17.md](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) | 首访可信 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md) | 首访可信 · **八席用户联席** · Conditional Go · USR-01～07 |
 | [acceptance-records/first-session-trust-v1-review-TEMPLATE.md](./acceptance-records/first-session-trust-v1-review-TEMPLATE.md) | 首访可信 · 跨职能评审纪要模板（备查） |
-| [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) | **敢发收口优化 V1** **v1.0.1**（Conditional Go · [跨职能评审](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · **可 Kickoff W0** · 基于 [八席试用](./acceptance-records/persona-ux-trial-2026-07-18.md)） |
+| [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) | **敢发收口优化 V1** **v1.0.2**（Conditional Go · W0–W2 工程已合入 · **§12 质量收口全部必修** · [跨职能评审](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · 基于 [八席试用](./acceptance-records/persona-ux-trial-2026-07-18.md)） |
 | [acceptance-records/share-face-closeout-v1-review-2026-07-18.md](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) | 敢发收口 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) | 敢发收口 · W0–W2 任务卡 · **Ready for Kickoff W0** |
 | [ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) | 敢发收口验收 · AC-SFC + fixture |
@@ -140,7 +140,7 @@
 首访成稿：**PRD-FTUE-OPTIMIZATION-V1** **v1.1.0**（W0 编码 · 分支 `feat/ftue-optimization-v1-w0`）。  
 敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **产品手测待签**；不含海外 IG）· [IMPLEMENTATION](./IMPLEMENTATION-SHARE-READY-OPTIMIZATION-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) · [狗粮队列](./acceptance-records/dogfood-queue-2026-07-17.md)。  
 首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
-敢发收口：**PRD-SHARE-FACE-CLOSEOUT-V1** **v1.0.1**（Conditional Go · **可 Kickoff W0** · 编码未开工）· [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) · [线框](./wireframes/share-face-closeout-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · [试用底稿](./acceptance-records/persona-ux-trial-2026-07-18.md)。  
+敢发收口：**PRD-SHARE-FACE-CLOSEOUT-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **§12 质量收口全部必修**）· [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) · [线框](./wireframes/share-face-closeout-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · [试用底稿](./acceptance-records/persona-ux-trial-2026-07-18.md) · [质量收口](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
 导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · **W0–W2 编码已合入** · 手测待填）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
 交叉脚注：FTUE **v1.1.2** · Help **v1.1.4** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
@@ -324,7 +324,7 @@
 | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md) | **智能排版引擎 LSE** v0.17.6 · P17-Core/Plus/B · 跨职能 + CTO/算法 + 前端 + 开发负责人评审已纳入 |
 | [IMPLEMENTATION-PHASE17.md](./IMPLEMENTATION-PHASE17.md) | 实施清单：融合设计 · W0 三项审计 · adapter 参数收束 · 阶段交付（分支 `feature/phase17-lse`） |
 | [PRD-PHASE17-research-stub.md](./PRD-PHASE17-research-stub.md) | P17-B：生成式 composite · 7 张 4P+3L（LTE 扩展） |
-| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.0**（Conditional Go · 可 Kickoff W0）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.1**（轨 B 已落地 · **§12 质量收口全部必修**）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime |
 | [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md](./acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md) | GCS V1 · 跨职能评审纪要模板（备查） |
 
@@ -345,7 +345,8 @@
 | [acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md) | LQS V1 · **实现前后效果与收益评估**（十席联席 · 事前推演） |
 | [acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md) | LQS V1 · **落地可行性与成本评估**（人日合流 · 砍 scope · 排期） |
 | [IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md](./IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md) | LQS V1 · 实施清单（瘦身版）· **部分废止**：S1=TPC W1 可执行；S2+ 由 TPC 承接 |
-| [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.2**（W1+W2 落地中 · captionAreas **已 defer** · BLK-TPC-01～07 已回写 · §11 工程保障）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.3**（W1–W4 落地 · captionAreas **已 defer** · **§12 质量收口全部必修** · AC-TPC-15～18）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [acceptance-records/quality-review-remediation-2026-07-18.md](./acceptance-records/quality-review-remediation-2026-07-18.md) | 2026-07-18 质量审查收口清单（TPC/GCS/SFC · **全部必修**） |
 | [acceptance-records/tpc-local-dogfood-GUIDE.md](./acceptance-records/tpc-local-dogfood-GUIDE.md) | TPC · **本机狗粮 / 手测指南**（开发期开 `config.yaml`；仓库默认仍 off） |
 | [acceptance-records/tpc-mosaic-dogfood-2026-07-18.md](./acceptance-records/tpc-mosaic-dogfood-2026-07-18.md) | TPC · 2026-07-18 版式狗粮手测记录（F1–F6 通过） |
 | [acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl](./acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl) | TPC · layout_compare 手记（三本 prefer:tie） |
@@ -360,7 +361,7 @@
 | [PRD-MCS-SIGNATURE-ROUTING-V1.md](./PRD-MCS-SIGNATURE-ROUTING-V1.md) | **MCS 格式签名路由与图文一体选版 V1（MSR）** **v0.2.0**（Conditional Go · 可 Kickoff W0 shadow）· US8131114 签名硬筛 + caption 优先；L1≠填槽序 |
 | [acceptance-records/mcs-signature-routing-v1-review-2026-07-18.md](./acceptance-records/mcs-signature-routing-v1-review-2026-07-18.md) | MSR V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [acceptance-records/mcs-signature-routing-v1-review-TEMPLATE.md](./acceptance-records/mcs-signature-routing-v1-review-TEMPLATE.md) | MSR V1 · 跨职能评审纪要模板（备查） |
-| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **生成式拼贴面 GCS V1** **v0.2.0**（Conditional Go · 可 Kickoff W0）· 轨道原生 SKU 工厂 + `poster_bric`；先 B 后 A；BLK-01～08 已回写 |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **生成式拼贴面 GCS V1** **v0.2.1**（轨 B 已落地 · **§12 质量收口全部必修** · AC-GCS-09 闭包扫描）· 轨道原生 SKU 工厂 + `poster_bric`；先 B 后 A；BLK-01～08 已回写 |
 | [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 评审纪要（已结案 · Conditional Go · BLK-01～08） |
 | [acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md](./acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md) | GCS V1 · 跨职能评审纪要模板（备查） |
 | [PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md](./PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md) | 模板 usage 规则驱动排版优化（URO） |

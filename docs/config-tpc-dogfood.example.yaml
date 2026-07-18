@@ -12,8 +12,11 @@ mosaic:
   template_contract:
     # 打开后：混向倒排 / eligibility 求值器生效；W3 experimental（percent=0）可被命中
     enabled: true
-    # 决策 log 写 shadow 字段；手测期建议保持 true
+    # 仓库默认 false（AC-TPC-16）；手测观测请显式 true
     shadow_log: true
+  # 可选：近景连拍硬拒绝（仓库默认 false · AC-TPC-15）
+  # near_scene_clone_gate:
+  #   enabled: true
 
 features:
   gcs_poster_bric:

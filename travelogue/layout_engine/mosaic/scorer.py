@@ -12,6 +12,10 @@ from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.scoring import ScoringWeights
+from travelogue.layout_engine.mosaic.clone_detection import (
+    near_scene_clone_penalty,
+    template_prefers_burst,
+)
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
@@ -135,61 +139,9 @@ def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dic
     return 0.0
 
 
-def _template_prefers_burst(pattern_id: str) -> bool | None:
-    """None when LTE unavailable; True/False from compatibilityHints.prefers_burst."""
-    if not pattern_id:
-        return None
-    # Chessboard editorial shares the same anti-clone policy as W3 weighted
-    if pattern_id == "screen-editorial-4mix":
-        return False
-    try:
-        from travelogue.layout_templates.registry import get_engine
-
-        hints = get_engine().get(pattern_id).compatibility_hints or {}
-    except (KeyError, AttributeError, TypeError):
-        return None
-    if "prefers_burst" not in hints:
-        return None
-    return bool(hints.get("prefers_burst"))
-
-
-def _near_scene_clone_penalty(
-    pattern_id: str,
-    asset_ids: list[str],
-    assets_by_id: dict[str, dict],
-) -> float:
-    """Penalize same-scene clones on non-burst mosaics (fake「切条拼图」).
-
-    Ingest often assigns unique burstGroupId per frame; time span still reveals
-    a walking burst. Patterns with prefers_burst:false must not absorb them.
-    """
-    if len(asset_ids) < 3:
-        return 0.0
-    prefers = _template_prefers_burst(pattern_id)
-    if prefers is True:
-        return 0.0
-
-    from travelogue.layout_contract.burst import parse_taken_ts
-    from travelogue.layout_contract.subject import asset_has_person
-
-    stamps = [parse_taken_ts(assets_by_id.get(aid) or {}) for aid in asset_ids]
-    valid = [t for t in stamps if t is not None]
-    if len(valid) < 2:
-        return 0.0
-    span = max(valid) - min(valid)
-    person_n = sum(
-        1 for aid in asset_ids if asset_has_person(assets_by_id.get(aid) or {})
-    )
-    # Tight temporal window → looks like sliced one take / same walk
-    if span <= 90:
-        return 0.95 if person_n >= 2 else 0.75
-    if span <= 300:
-        return 0.85 if person_n >= 3 else 0.55
-    if span <= 900 and person_n >= 3:
-        return 0.8
-    if prefers is False and span <= 1800 and person_n >= len(asset_ids) - 1:
-        return 0.75
-    return 0.0
+# Backward-compatible private aliases (moved to clone_detection · AC-TPC-15).
+_template_prefers_burst = template_prefers_burst
+_near_scene_clone_penalty = near_scene_clone_penalty
 
 
 def _main_ar_penalty(

@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **对应 PRD** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **v1.0.1** |
+| **对应 PRD** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **v1.0.2** |
 | **评审纪要** | [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · Conditional Go |
 | **实施清单** | [IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) |
 | **手测狗粮** | [share-face-closeout-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · F1–F5 |
@@ -41,6 +41,8 @@
 | **AC-SFC-01** | forceStub / 示例成片：PRD §4.2 禁词命中数 = 0（含竖幅 / 抬头看见 / 弱枚举） | 单测 fixture + 手测 F2 | ✅ | ⏳ |
 | **AC-SFC-02** | 可见图注不得整册复读杂志全名填坑（同屏 ≥3 张完全相同且=杂志名 → 失败） | 单测 / DOM 扫描 + 手测 F2 | ✅ | ⏳ |
 | **AC-SFC-03** | 脏名 fixture（`2025东澳岛9`、`武大--米娜`）→ 封面与书架无裸 `--`、无尾数字目录腔 | FE/BE humanize 同测 + 手测 F3 | ✅ | ⏳ |
+| **AC-SFC-12** | 无地点有 `dateStart` 的噪音标题 → FE/BE 均 `旅行 · {月日}`（禁止 FE 恒定「旅行 · 游记」） | FE/BE 同例单测 · PRD §12.1 | ✅ | — |
+| **AC-SFC-13** | trip.json Windows 忙锁回退：写失败不得截断 dest 后删唯一完好 tmp | `test_trip_service` · PRD §12.2 | ✅ | — |
 | **AC-SFC-04** | 人为延长 vision 准备：UI ≥1s 内出现「正在准备识图」类主句；stage/hint 不得双空 >1s | `TRAVELOGUE_SFC_VISION_WARMUP_DELAY_MS` 注入 + 手测 F1 | ✅ | ⏳ |
 | **AC-SFC-05** | vision 失败 / 离线仍可 `succeeded` 成稿；有一次人话降级说明 | `_vision_downgrade_notice` → clusterNotice toast + 手测 | ✅ | ⏳ |
 
