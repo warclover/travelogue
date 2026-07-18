@@ -6,13 +6,14 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 BandId = Literal["sparse", "ambiguous", "narrative"]
-EngineId = Literal["chapter_capture", "platform_segment", "photo_grid"]
+EngineId = Literal["chapter_capture", "platform_segment", "photo_grid", "poster_bric"]
 IntentId = Literal[
     "chat_longshot",
     "moments_scroll",
     "moments_grid",
     "xiaohongshu",
     "instagram_carousel",
+    "poster_bric",
 ]
 EntrypointId = Literal["preview", "shelf", "cli"]
 SourceId = Literal[
@@ -36,6 +37,7 @@ ALL_INTENTS = frozenset(
         "moments_grid",
         "xiaohongshu",
         "instagram_carousel",
+        "poster_bric",
     }
 )
 # Phase B0 Writer 已交付 · 不再 unavailable
@@ -48,6 +50,7 @@ INTENT_TO_PLATFORM: dict[str, str] = {
     "moments_grid": "moments_grid",
     "xiaohongshu": "xiaohongshu",
     "instagram_carousel": "instagram",
+    "poster_bric": "poster_bric",
 }
 
 PLATFORM_TO_INTENT: dict[str, str] = {
@@ -56,6 +59,7 @@ PLATFORM_TO_INTENT: dict[str, str] = {
     "moments_grid": "moments_grid",
     "xiaohongshu": "xiaohongshu",
     "instagram": "instagram_carousel",
+    "poster_bric": "poster_bric",
 }
 
 

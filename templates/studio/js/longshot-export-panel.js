@@ -38,6 +38,16 @@ export var PLATFORMS = {
     expectHtml:
       "将导出最多 <strong>9 张</strong> 1:1 真九宫格（有几张发几张）· 无需截长卷",
   },
+  poster_bric: {
+    id: "poster_bric",
+    label: "单屏海报",
+    title: "单屏海报",
+    subtitle: "拼贴海报",
+    cta: "导出单屏海报",
+    showSegmentMode: false,
+    expectHtml:
+      "将导出 <strong>1 张</strong>拼贴海报（3–9 张精选 · contain 保比例）",
+  },
   xiaohongshu: {
     id: "xiaohongshu",
     label: "小红书",
@@ -68,13 +78,20 @@ export function enabledPlatformsFromConfig(cfgStudio) {
   if (recipeOn && list.indexOf("moments_grid") < 0) {
     list = list.concat(["moments_grid"]);
   }
+  // GCS · poster_bric secondary entry when features.gcs_poster_bric is on
+  var gcs =
+    (cfgStudio && (cfgStudio.gcsPosterBric || cfgStudio.gcs_poster_bric)) || {};
+  if (gcs.enabled === true && list.indexOf("poster_bric") < 0) {
+    list = list.concat(["poster_bric"]);
+  }
   var out = ["wechat_chat"];
   list.forEach(function (id) {
     if (id && id !== "wechat_chat" && out.indexOf(id) < 0) {
       if (
         id === "wechat_moments" ||
         id === "xiaohongshu" ||
-        id === "moments_grid"
+        id === "moments_grid" ||
+        id === "poster_bric"
       ) {
         out.push(id);
       }
@@ -551,6 +568,8 @@ export function formatPlatformSuccess(result) {
   var title = "✓ 长图已保存";
   if (platform === "moments_grid") {
     title = "✓ " + n + " 张九宫格已就绪";
+  } else if (platform === "poster_bric") {
+    title = "✓ 单屏海报已就绪";
   } else if (platform === "wechat_moments") {
     title = "✓ " + n + " 张长图连读已就绪";
   } else if (platform === "xiaohongshu") {

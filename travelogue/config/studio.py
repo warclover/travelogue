@@ -40,6 +40,13 @@ class OutputRecipeConfig:
 
 
 @dataclass
+class GcsPosterBricConfig:
+    """GCS Track B · poster_bric Writer (PRD features.gcs_poster_bric)."""
+
+    enabled: bool = False
+
+
+@dataclass
 class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
@@ -50,6 +57,7 @@ class StudioConfig:
     layout_templates_internal: bool = False
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
     output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
+    gcs_poster_bric: GcsPosterBricConfig = field(default_factory=GcsPosterBricConfig)
 
     @property
     def longshot2_enabled(self) -> bool:
@@ -102,6 +110,15 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                     "ambiguousMax": int(bands.ambiguous_max),
                     "narrativeChapterHintAt": int(bands.narrative_chapter_hint_at),
                 },
+            },
+            "gcsPosterBric": {
+                "enabled": bool(
+                    getattr(
+                        getattr(cfg.studio, "gcs_poster_bric", None),
+                        "enabled",
+                        False,
+                    )
+                ),
             },
         },
         "cohort": {

@@ -57,6 +57,21 @@ presets:
     cta_key: cta.moments_grid
     product_label_key: label.moments_grid
 
+  # GCS Track B · 单屏海报（TPC W4 · features.gcs_poster_bric；非九宫格）
+  preset.poster_bric:
+    intent: poster_bric
+    engine: poster_bric
+    platform: poster_bric
+    layout: collage
+    geometry: { mode: collage, width: 1080, border: 16, spacing: 8 }
+    count_policy: { mode: auto, min: 3, max: 9 }
+    packing: bric_compose
+    phases: [hidden, cli]
+    phase: GCS
+    publish_guide_key: guide.poster_bric
+    cta_key: cta.poster_bric
+    product_label_key: label.poster_bric
+
   # Phase B1 主卡；B0 仍可 CLI
   preset.xiaohongshu:
     intent: xiaohongshu
@@ -93,9 +108,11 @@ copy:
   cta.narrative_chat: "按章导出长图 · 发微信群"
   cta.moments_scroll: "导出朋友圈 · 长图连读"
   cta.moments_grid: "导出朋友圈 · 九宫格"
+  cta.poster_bric: "导出单屏海报"
   label.chat_longshot: "微信群 · 长图"
   label.moments_scroll: "朋友圈 · 长图连读"
   label.moments_grid: "朋友圈 · 九宫格"
+  label.poster_bric: "单屏海报"
   label.xiaohongshu: "小红书 · 笔记配图（杂志页适配）"
   label.instagram_carousel: "Instagram · 轮播"
   hint.ambiguous_shelf: "可到预览选择其他分享方式"
@@ -109,3 +126,4 @@ copy:
   intent.save_only: "先选不导出"
   fail.switch_share: "换种分享方式"
   guide.moments_grid: "按 01→N 全选九宫格配图发到朋友圈；有几张发几张，不必凑满 9 张。"
+  guide.poster_bric: "导出一张拼贴海报（3–9 张精选 · contain 保比例）。"

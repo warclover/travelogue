@@ -279,6 +279,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     )
     if (recipe_enabled or intent) and "moments_grid" not in allowed_platforms:
         allowed_platforms.append("moments_grid")
+    gcs_flag = getattr(cfg.studio, "gcs_poster_bric", None)
+    if bool(getattr(gcs_flag, "enabled", False)) and "poster_bric" not in allowed_platforms:
+        allowed_platforms.append("poster_bric")
+    if intent == "poster_bric" and "poster_bric" not in allowed_platforms:
+        # Explicit intent still requires flag (Writer rejects when disabled).
+        allowed_platforms.append("poster_bric")
 
     recipe = None
     use_recipe = bool(recipe_enabled or intent)
@@ -321,7 +327,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         platform_id = normalize_platform_id(platform_raw)
 
     # Moments / grid: always export pure photos (ignore preview copy mode).
-    if platform_id in ("wechat_moments", "moments_grid"):
+    if platform_id in ("wechat_moments", "moments_grid", "poster_bric"):
         from travelogue.render.copy_display import COPY_DISPLAY_PHOTOS
 
         copy_display = COPY_DISPLAY_PHOTOS
@@ -367,9 +373,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    # M-INS-0c · 真九宫格不需 Playwright；其余保留 client fallback。
+    # M-INS-0c · 真九宫格 / 单屏海报不需 Playwright；其余保留 client fallback。
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    if profile.id != "moments_grid" and (force_client or not playwright_longshot_available()):
+    server_pack_platforms = frozenset({"moments_grid", "poster_bric"})
+    if profile.id not in server_pack_platforms and (
+        force_client or not playwright_longshot_available()
+    ):
         handler._json_response(
             200,
             {

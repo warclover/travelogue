@@ -64,6 +64,7 @@ from travelogue.config.runtime import (
     reset_config_cache,
 )
 from travelogue.config.studio import (
+    GcsPosterBricConfig,
     OutputRecipeBandsConfig,
     OutputRecipeConfig,
     StudioConfig,
@@ -111,6 +112,7 @@ __all__ = [
     "RenderReadingConfig",
     "SceneClusterConfig",
     "OutputRecipeBandsConfig",
+    "GcsPosterBricConfig",
     "OutputRecipeConfig",
     "StudioConfig",
     "TemplateAdminConfig",
