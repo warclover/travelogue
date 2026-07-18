@@ -320,7 +320,9 @@ mosaic:
     enabled: true
     allow_drop: false
   # TPC · unified template contract (PRD-TEMPLATE-CONTRACT-V1)
-  # Keep enabled=false until AC-TPC-12 shadow diff is signed off.
+  # 仓库默认保持 false（AC-TPC-01）。本机手测请见：
+  #   docs/config-tpc-dogfood.example.yaml
+  #   docs/acceptance-records/tpc-local-dogfood-GUIDE.md
   template_contract:
     enabled: false
     shadow_log: true

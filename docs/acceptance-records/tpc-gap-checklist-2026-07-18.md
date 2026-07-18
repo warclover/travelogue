@@ -4,6 +4,7 @@
 |------|------|
 | 关联 | [PRD-TEMPLATE-CONTRACT-V1](../PRD-TEMPLATE-CONTRACT-V1.md) |
 | 状态 | **进行中** · 代码缺口本批收口；corpus/盲评/默认开仍阻塞 |
+| 本机手测 | [tpc-local-dogfood-GUIDE.md](./tpc-local-dogfood-GUIDE.md) · [config-tpc-dogfood.example.yaml](../config-tpc-dogfood.example.yaml) |
 
 ## 本批已做
 

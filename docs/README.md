@@ -346,6 +346,9 @@
 | [acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md) | LQS V1 · **落地可行性与成本评估**（人日合流 · 砍 scope · 排期） |
 | [IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md](./IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md) | LQS V1 · 实施清单（瘦身版）· **部分废止**：S1=TPC W1 可执行；S2+ 由 TPC 承接 |
 | [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.2**（W1+W2 落地中 · captionAreas **已 defer** · BLK-TPC-01～07 已回写 · §11 工程保障）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [acceptance-records/tpc-local-dogfood-GUIDE.md](./acceptance-records/tpc-local-dogfood-GUIDE.md) | TPC · **本机狗粮 / 手测指南**（开发期开 `config.yaml`；仓库默认仍 off） |
+| [config-tpc-dogfood.example.yaml](./config-tpc-dogfood.example.yaml) | TPC / poster_bric · 本机狗粮配置片段 |
+| [acceptance-records/tpc-gap-checklist-2026-07-18.md](./acceptance-records/tpc-gap-checklist-2026-07-18.md) | TPC · PRD 缺口收口清单 |
 | [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**） |
 | [acceptance-records/tpc-w3-template-pack-2026-07-18.md](./acceptance-records/tpc-w3-template-pack-2026-07-18.md) | TPC W3 · 手写模板包（4 experimental · L1P3/L3P2/L2P2/hero-70） |
 | [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md) | TPC V1 · 跨职能评审纪要（七席 · Conditional Go · 含代码事实核查） |
