@@ -47,6 +47,8 @@ class WindowCandidateResult:
     candidates: list[ScreenCandidate]
     rejected: list[dict[str, Any]] = field(default_factory=list)
     usage_rule_hits: list[dict[str, Any]] = field(default_factory=list)
+    # TPC W1 shadow (AC-TPC-12); never consumed by pick/score paths.
+    contract_shadow: dict[str, Any] | None = None
 
 
 def _reject(
@@ -139,6 +141,7 @@ def generate_window_candidates_with_rejections(
     rejected: list[dict[str, Any]] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
     usage_hits: list[dict[str, Any]] = []
+    orderable_pattern_ids: list[str] = []
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -154,6 +157,7 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
+        orderable_pattern_ids.append(pat.pattern_id)
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)
         if cfg.lse_hungarian_assignment:
@@ -225,10 +229,34 @@ def generate_window_candidates_with_rejections(
     _restore_if_usage_emptied_candidates(out, rejected, usage_deferred, usage_hits)
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
+    shadow_payload: dict[str, Any] | None = None
+    tc = getattr(cfg, "template_contract", None)
+    if tc is not None and getattr(tc, "shadow_log", False) and not getattr(tc, "enabled", False):
+        # Shadow only while contract path is off (W1). Enabling selection is W2+.
+        # Reuse orderable ids from this pass — never re-run try_order.
+        from travelogue.layout_engine.contract.mix_index import (
+            format_mix_key,
+            mix_key_from_aspects,
+        )
+        from travelogue.layout_engine.contract.shadow import index_pattern_ids_for_mix
+
+        key = mix_key_from_aspects(asset_ids, aspects)
+        index_ids = index_pattern_ids_for_mix(key)
+        live_ids = sorted(orderable_pattern_ids)
+        live_set, index_set = set(live_ids), set(index_ids)
+        shadow_payload = {
+            "windowMix": format_mix_key(key),
+            "livePatternIds": live_ids,
+            "indexPatternIds": index_ids,
+            "onlyInLive": sorted(live_set - index_set),
+            "onlyInIndex": sorted(index_set - live_set),
+            "hasDiff": bool(live_set ^ index_set),
+        }
     return WindowCandidateResult(
         candidates=out,
         rejected=rejected,
         usage_rule_hits=usage_hits,
+        contract_shadow=shadow_payload,
     )
 
 

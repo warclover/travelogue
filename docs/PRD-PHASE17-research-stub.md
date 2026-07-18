@@ -10,7 +10,7 @@
 
 ## 候选方向（LTE 侧）
 
-1. **生成式 composite**：guillotine/treemap 枚举 + LTE validator 过滤
+1. **生成式 composite**：guillotine/treemap 枚举 + LTE validator 过滤 → **已升格专项** [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md)（GCS · 轨 A 离线 SKU 工厂；另含轨 B 海报导出；**禁** MCS runtime BRIC）
 2. **7 张 4P+3L**：`4×3` 舞台新模板
 
 ## 接口预留

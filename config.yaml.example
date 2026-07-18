@@ -319,6 +319,11 @@ mosaic:
   self_heal:
     enabled: true
     allow_drop: false
+  # TPC · unified template contract (PRD-TEMPLATE-CONTRACT-V1)
+  # Keep enabled=false until AC-TPC-12 shadow diff is signed off.
+  template_contract:
+    enabled: false
+    shadow_log: true
   weights:
     aspect_match: 0.20
     sharpness: 0.15

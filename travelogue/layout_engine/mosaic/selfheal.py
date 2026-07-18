@@ -73,9 +73,14 @@ def try_self_heal_pick(
     trip_photo_total: int,
     burst_seconds: float,
     min_score: float,
+    median_sharp: float | None = None,
 ) -> tuple[ScreenCandidate, float, list[str], str, list[str], dict[str, float]] | None:
     """
     Return (winner, score, reasons, step, dropped_ids) when self-heal succeeds.
+
+    ``drop_worst_asset`` rebuilds candidates via
+    ``generate_window_candidates_with_rejections`` + ``window_ctx`` so usage /
+    contract hard rejects cannot be bypassed (TPC D-TPC-12 / MGQ BLK-10).
     """
     if not cfg.self_heal_enabled or not scored:
         return None
@@ -119,20 +124,37 @@ def try_self_heal_pick(
             if worst_pen >= 0.45:
                 max_drop = max(1, int(len(asset_ids) * cfg.max_drop_ratio))
                 if max_drop >= 1:
+                    from travelogue.layout_contract.usage_context import (
+                        build_window_context,
+                    )
                     from travelogue.layout_engine.mosaic.candidates import (
-                        generate_window_candidates,
+                        generate_window_candidates_with_rejections,
                     )
 
                     remaining = [a for a in asset_ids if a != drop_id]
                     size = len(remaining)
                     if size in cfg.enabled_window_sizes:
-                        sub = generate_window_candidates(
+                        window_ctx = build_window_context(
+                            remaining,
+                            aspects,
+                            assets_map,
+                            layout_state=layout_state,
+                            median_sharp=median_sharp,
+                        )
+                        sub_bundle = generate_window_candidates_with_rejections(
                             remaining,
                             aspects,
                             assets_map,
                             cfg=cfg,
                             burst_seconds=burst_seconds,
+                            median_sharp=median_sharp,
+                            window_ctx=window_ctx,
                         )
+                        sub = [
+                            c
+                            for c in sub_bundle.candidates
+                            if c.hard_valid
+                        ]
                         if sub:
                             sub_scored: list[
                                 tuple[ScreenCandidate, float, list[str], dict[str, float]]

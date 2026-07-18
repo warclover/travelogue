@@ -40,7 +40,11 @@ from travelogue.config.misc import (
     RenderConfig,
     RenderReadingConfig,
 )
-from travelogue.config.mosaic import MosaicConfig, MosaicDensityBudgetConfig
+from travelogue.config.mosaic import (
+    MosaicConfig,
+    MosaicDensityBudgetConfig,
+    TemplateContractConfig,
+)
 from travelogue.config.phase6 import (
     Phase6AcThresholds,
     Phase6AlertThresholds,
@@ -96,6 +100,7 @@ __all__ = [
     "LlmConfig",
     "MosaicConfig",
     "MosaicDensityBudgetConfig",
+    "TemplateContractConfig",
     "NarrativeConfig",
     "Phase6AcThresholds",
     "Phase6AlertThresholds",

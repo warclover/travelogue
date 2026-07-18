@@ -20,6 +20,21 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.enabled_window_sizes == defaults.enabled_window_sizes
     assert cfg.enabled is defaults.enabled
     assert cfg.density_budget.enabled is defaults.density_budget.enabled
+    assert cfg.template_contract.enabled is False
+    assert cfg.template_contract.shadow_log is True
+
+
+def test_template_contract_parses_known_keys() -> None:
+    cfg = mosaic_from_dict(
+        {"template_contract": {"enabled": True, "shadow_log": False}}
+    )
+    assert cfg.template_contract.enabled is True
+    assert cfg.template_contract.shadow_log is False
+
+
+def test_template_contract_unknown_key_fail_loud() -> None:
+    with pytest.raises(ValueError, match="unknown keys"):
+        mosaic_from_dict({"template_contract": {"enabled": False, "softPenalty": 0.1}})
 
 
 def test_partial_dict_merges_defaults() -> None:

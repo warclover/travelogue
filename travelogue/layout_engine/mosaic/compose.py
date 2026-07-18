@@ -272,6 +272,7 @@ def pick_best_window(
             trip_photo_total=trip_photo_total,
             burst_seconds=burst_seconds,
             min_score=cfg.min_candidate_score,
+            median_sharp=median_sharp,
         )
         if healed is not None:
             winner_cand, winner_score, reasons, step, dropped, healed_penalties = healed

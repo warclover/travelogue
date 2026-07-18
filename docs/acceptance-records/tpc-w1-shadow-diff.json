@@ -1,0 +1,252 @@
+{
+  "schemaVersion": "tpc-shadow-diff-v1",
+  "feature": "TPC",
+  "gate": "AC-TPC-12",
+  "generatedAt": "2026-07-18T03:48:57Z",
+  "windowCount": 13,
+  "diffCount": 6,
+  "allClear": false,
+  "rows": [
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#6:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-portrait-3-editorial"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "index supersets live with editorial; acceptable candidate expansion; soft score decides"
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#8:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-portrait-3-editorial"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "index supersets live with editorial; acceptable candidate expansion; soft score decides"
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#13:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-portrait-3-editorial"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "index supersets live with editorial; acceptable candidate expansion; soft score decides"
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#16:screen-mosaic-5-main-portrait-3land",
+      "n": 5,
+      "windowMix": "L4P1S0",
+      "livePatternIds": [],
+      "indexPatternIds": [
+        "screen-mosaic-5-main-portrait-3land"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-mosaic-5-main-portrait-3land"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "from-existing replay harness false positive (ordering_failed on emitted window); not a live selection regression"
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-01#18:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-02#3:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-02#4:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-landscape-3"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "from-existing replay harness false positive (ordering_failed on emitted window); not a live selection regression"
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#2:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#12:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#14:screen-landscape-4",
+      "n": 4,
+      "windowMix": "L4P0S0",
+      "livePatternIds": [
+        "screen-landscape-4"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-4"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#15:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#17:screen-landscape-3",
+      "n": 3,
+      "windowMix": "L3P0S0",
+      "livePatternIds": [
+        "screen-landscape-3"
+      ],
+      "indexPatternIds": [
+        "screen-landscape-3"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [],
+      "hasDiff": false,
+      "signOff": null,
+      "signOffNote": null
+    },
+    {
+      "tripId": "demo-2025-9",
+      "window": "ch-03#24:screen-portrait-3",
+      "n": 3,
+      "windowMix": "L0P3S0",
+      "livePatternIds": [
+        "screen-portrait-3"
+      ],
+      "indexPatternIds": [
+        "screen-portrait-3",
+        "screen-portrait-3-editorial"
+      ],
+      "onlyInLive": [],
+      "onlyInIndex": [
+        "screen-portrait-3-editorial"
+      ],
+      "hasDiff": true,
+      "signOff": true,
+      "signOffNote": "index supersets live with editorial; acceptable candidate expansion; soft score decides"
+    }
+  ],
+  "notes": "Partial corpus (demo-2025-9 only). Diff rows signed with notes; readyToEnable=false until URO_GOLDEN_TRIP_IDS full rerun. See tpc-w1-shadow-diff-signoff-2026-07-18.md",
+  "partialCorpus": true,
+  "readyToEnable": false,
+  "signOffSummary": {
+    "signedDiffRows": 6,
+    "unsignedDiffRows": 0,
+    "record": "docs/acceptance-records/tpc-w1-shadow-diff-signoff-2026-07-18.md"
+  }
+}
