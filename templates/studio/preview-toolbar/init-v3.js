@@ -388,8 +388,9 @@ export function initToolbarV3(root, tripId) {
         if (emptyHint) {
           emptyHint.hidden = !empty;
           emptyHint.textContent =
-            (typeof hooks.featuredPresentEmptyText === "string" &&
-              hooks.featuredPresentEmptyText) ||
+            (typeof sheetHooks.featuredPresentEmptyText === "string" &&
+              sheetHooks.featuredPresentEmptyText) ||
+            HELP_COPY.featuredPresentEmpty ||
             "先在正文点 ★";
         }
       });

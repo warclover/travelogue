@@ -94,6 +94,9 @@ def test_p0_dock_present_empty_toast_cover() -> None:
     assert "featuredPresentEmpty" in help_js
     assert "preview-sheet__present-empty" in sheet
     assert "featuredPresentEmptyText" in init
+    # 空态文案须引用 sheetHooks（勿写未定义的 hooks，否则开「这本」面板会 ReferenceError）
+    assert "sheetHooks.featuredPresentEmptyText" in init
+    assert "hooks.featuredPresentEmptyText" not in init
     assert "coverAssetId" in entry
     assert "featuredRerankDoneCover" in help_js
     assert "cover_changed" in features
