@@ -49,7 +49,8 @@ render:
   fitPolicy: auto_delegate
 
 rollout:
-  percent: 100
+  # 0 until dogfood sign-off; becomes eligible when template_contract.enabled (AC-TPC-01)
+  percent: 0
   hash_key: tripId
 
 usage:

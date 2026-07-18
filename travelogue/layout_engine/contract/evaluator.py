@@ -256,9 +256,23 @@ def contract_pattern_ids_for_window(
 
     source is ``exact`` | ``fallback`` | ``miss``.
     """
-    reg = registry or mosaic_registry()
+    if registry is None:
+        # Contract resolution sees all active LTE templates (incl. experimental).
+        # Emit-time dark-launch stays in mosaic_registry / mosaic_pattern_disabled.
+        from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
+        from travelogue.layout_templates.registry import get_engine
+
+        registry = {
+            t.id: export_mosaic_pattern(t)
+            for t in get_engine().list_active(enforce_quotas=False)
+        }
+    reg = registry
     key = mix_key_from_aspects(list(asset_ids), aspects)
-    exact = [pid for pid in index_pattern_ids_for_mix(key) if pid in reg]
+    # mosaic_only=False: include experimental percent=0 SKUs for contract matching
+    # (emit-time dark-launch remains mosaic_registry / mosaic_pattern_disabled).
+    exact = [
+        pid for pid in index_pattern_ids_for_mix(key, mosaic_only=False) if pid in reg
+    ]
     if exact:
         return exact, "exact", False, []
 
@@ -304,7 +318,18 @@ def patterns_for_contract_window(
     registry: dict[str, MosaicPattern] | None = None,
 ) -> tuple[list[MosaicPattern], str, str, bool, list[dict[str, Any]]]:
     """Resolve patterns + source + mix label + squareRelaxed + infeasible rejects."""
-    reg = registry or mosaic_registry()
+    if registry is None:
+        # Align with contract_pattern_ids_for_window: include experimental SKUs.
+        # Default mosaic_registry() excludes percent=0 until contract emit unlock.
+        from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
+        from travelogue.layout_templates.registry import get_engine
+
+        reg = {
+            t.id: export_mosaic_pattern(t)
+            for t in get_engine().list_active(enforce_quotas=False)
+        }
+    else:
+        reg = registry
     key = mix_key_from_aspects(list(asset_ids), aspects)
     ids, source, square_relaxed, infeasible = contract_pattern_ids_for_window(
         list(asset_ids), aspects, registry=reg

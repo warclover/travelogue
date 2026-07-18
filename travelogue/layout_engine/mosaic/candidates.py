@@ -135,9 +135,19 @@ def generate_window_candidates_with_rejections(
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
         return WindowCandidateResult(candidates=[], rejected=[])
-    reg = registry or mosaic_registry()
     tc = getattr(cfg, "template_contract", None)
     tc_enabled = bool(tc is not None and getattr(tc, "enabled", False))
+    if registry is not None:
+        reg = registry
+    elif tc_enabled:
+        # Dogfood / AC-TPC-02: experimental percent=0 enter when contract is on.
+        from dataclasses import replace
+
+        from travelogue.config import get_config
+
+        reg = mosaic_registry(cfg=replace(get_config(), mosaic=cfg))
+    else:
+        reg = mosaic_registry()
     contract_source = "legacy_size"
     window_mix_label = ""
     square_relaxed = False

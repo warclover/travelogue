@@ -45,7 +45,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-10: Cover Styles V6 · five opening skins + Studio options.
 # Re-bumped 2026-07-10 (b): V6 dock-safe / placeholder badge / §4.7 token wiring.
 # Re-bumped 2026-07-10 (c): enlarge cameo aperture circle (58vh / 520px).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}408cb27bd024"
+# Re-bumped 2026-07-18: TPC W3/gap template YAML + contract gating (rollout percent=0).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}d8e9f2e416dd"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

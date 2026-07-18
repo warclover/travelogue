@@ -202,8 +202,17 @@ def _order_by_roles(
     assets_map: dict[str, dict],
 ) -> list[str] | None:
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
+    from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
+    from travelogue.layout_templates.registry import get_engine
 
     pat = mosaic_registry().get(pattern_id)
+    if pat is None:
+        # Contract dogfood / AC-TPC-02: pattern may be experimental percent=0
+        # and absent from the dark-launch registry.
+        try:
+            pat = export_mosaic_pattern(get_engine().get(pattern_id))
+        except KeyError:
+            return None
     if pat is None or len(pat.roles) != len(asset_ids):
         return None
     portraits = _sort_asset_ids_by_taken(

@@ -93,7 +93,11 @@ def test_main_slot_policy_missing_blocks_publish(engine: LayoutTemplateEngine) -
     t = engine.get(PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
     stripped = replace(
         t,
-        constraints={k: v for k, v in t.constraints.items() if k != "mainSlotPolicy"},
+        constraints={
+            k: v
+            for k, v in t.constraints.items()
+            if k not in ("mainSlotPolicy", "eligibility")
+        },
     )
     report = validate_template_def(stripped, mode="publish")
     assert not report.ok

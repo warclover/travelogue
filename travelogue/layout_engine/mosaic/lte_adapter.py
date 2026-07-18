@@ -32,6 +32,14 @@ def lte_rollout_eligible(pattern_id: str) -> bool:
     return pct > 0
 
 
+def _contract_unlocks_experimental(app: AppConfig, template: object) -> bool:
+    """AC-TPC-01/02 · experimental + percent=0 visible only when contract is on."""
+    if str(getattr(template, "status", "") or "") != "experimental":
+        return False
+    tc = getattr(getattr(app, "mosaic", None), "template_contract", None)
+    return bool(tc is not None and getattr(tc, "enabled", False))
+
+
 def mosaic_registry(cfg: AppConfig | None = None) -> dict[str, MosaicPattern]:
     """Return MosaicPattern registry for MCS candidate generation."""
     if not read_templates_from_lte(cfg):
@@ -39,10 +47,11 @@ def mosaic_registry(cfg: AppConfig | None = None) -> dict[str, MosaicPattern]:
     from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
     from travelogue.layout_templates.registry import get_engine
 
-    patterns: dict[str, MosaicPattern] = {
-        t.id: export_mosaic_pattern(t) for t in get_engine().list_active()
-    }
     app = cfg or get_config()
+    patterns: dict[str, MosaicPattern] = {}
+    for t in get_engine().list_active():
+        if lte_rollout_eligible(t.id) or _contract_unlocks_experimental(app, t):
+            patterns[t.id] = export_mosaic_pattern(t)
     te = getattr(app.layout, "template_engine", None)
     if te is not None:
         for pid in getattr(te, "overrides_disable", ()) or ():
@@ -259,6 +268,8 @@ def mosaic_pattern_disabled(
     cfg: MosaicConfig | None = None,
 ) -> bool:
     """True when patternId must not be emitted (LTE status/overrides + window-size gates)."""
+    from dataclasses import replace
+
     from travelogue.layout_engine.mosaic.runtime import (
         get_effective_mosaic_config,
         mosaic_window_size_enabled,
@@ -266,16 +277,20 @@ def mosaic_pattern_disabled(
 
     app = get_config()
     mosaic_cfg = cfg or get_effective_mosaic_config()
+    # Honor caller MosaicConfig.template_contract (tests / dogfood enable path).
+    unlock_app = replace(app, mosaic=mosaic_cfg) if cfg is not None else app
 
     if read_templates_from_lte(app):
         try:
             tpl = _lte_template(pattern_id)
             if tpl.status in ("deprecated", "disabled"):
                 return True
+            if not lte_rollout_eligible(pattern_id) and not _contract_unlocks_experimental(
+                unlock_app, tpl
+            ):
+                return True
         except KeyError:
             pass
-        if not lte_rollout_eligible(pattern_id):
-            return True
         te = getattr(app.layout, "template_engine", None)
         if te is not None:
             disabled = getattr(te, "overrides_disable", ()) or ()

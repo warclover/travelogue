@@ -71,6 +71,10 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
   presentation: editorial-4mix
+rollout:
+  # Dark-launch until dogfood / contract on (AC-TPC-01 golden stability)
+  percent: 0
+  hash_key: tripId
 usage:
   summary: 四图横竖棋盘 + 留白呼吸：TL/BR 横图、TR/BL 竖图呈 Z 字混排，适合密度屏之后的“换口气”。
   whenToUse: |

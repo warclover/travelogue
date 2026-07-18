@@ -292,9 +292,18 @@ def export_mosaic_pattern(template: Any) -> MosaicPattern:
 
 
 def export_explicit_grid_specs(templates: dict[str, Any]) -> dict[str, list[tuple[int, int, int, int]]]:
+    from travelogue.layout_engine.mosaic.grid_specs import EXPLICIT_GRID_SPECS
+
     out: dict[str, list[tuple[int, int, int, int]]] = {}
     for tid, t in templates.items():
         if t.kind != "composite":
+            continue
+        # New experimental SKUs stay out of frozen legacy parity until beta/ga.
+        # Keep pre-existing experimental ids that already live in EXPLICIT_GRID_SPECS.
+        if (
+            str(getattr(t, "status", "") or "") == "experimental"
+            and tid not in EXPLICIT_GRID_SPECS
+        ):
             continue
         out[tid] = [tuple(s.rect) for s in t.slots]
     return out
