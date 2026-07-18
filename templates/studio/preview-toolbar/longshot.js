@@ -1860,7 +1860,7 @@ export function cancelPreviewLongshotExport(root) {
         cancelText: "取消",
         stacked: true,
         helpItemId: "H3",
-        helpLinkText: "「长图可更新」是什么意思 →",
+        helpLinkText: "「分享图需更新」是什么意思 →",
       }).then(function (choice) {
         if (!choice) {
           trackStudioEvent("longshot_export_block_dismissed", {

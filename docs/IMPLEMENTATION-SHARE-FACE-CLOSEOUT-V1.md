@@ -9,7 +9,7 @@
 | **线框** | [wireframes/share-face-closeout-v1-wireframe.html](./wireframes/share-face-closeout-v1-wireframe.html) · F1–F5 |
 | **试用底稿** | [persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) |
 | **更新日期** | 2026-07-18 |
-| **状态** | **W0 工程合入中** · 分支 `feat/share-face-closeout-v1-w0` · W1/W2 未开工 |
+| **状态** | **W0+W1+W2 工程合入** · 分支 `feat/share-face-closeout-v1-w0` · 狗粮待签 |
 | **估时** | W0 ≈ **2.5–4 人日** · W1 ≈ **1.5–2.5 人日** · W2 ≈ **0.3–0.5 人日** |
 
 ---
@@ -21,8 +21,8 @@
 | **Doc/Design** | PRD · 线框 · AC · IMPL · README 索引 | ✅ 2026-07-18 |
 | **评审** | 跨职能 Conditional Go；OQ-01～04 关闭；相邻脚注 | ✅ 2026-07-18 |
 | **W0** | 假句空槽 · 体面名 · vision_warmup 主句 | ✅ 工程 |
-| **W1** | stale「分享图需更新」· Sparse 跳过 G1 · 禁「续」· 无 Key 预期 | ⏳ |
-| **W2** | 「媒资」→「照片类型」 | ⏳ |
+| **W1** | stale「分享图需更新」· Sparse 跳过 G1 · 禁「续」· 无 Key 预期 | ✅ 工程 |
+| **W2** | 「媒资」→「照片类型」 | ✅ 工程 |
 | **完成宣布** | 真人 N≥5 | ⏳ AC-SFC-15 |
 
 **所有权**
@@ -95,17 +95,17 @@
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **FE-SFC-03** | stale 主词全链路 →「分享图需更新」；Help 深链同步 | `bento.js` · `shelf.js` · task-dock · `help-onboarding.js` | 0.5d | 06 | ⏳ |
-| **BE-SFC-05** | Sparse 快速分享默认 `structurePending=false`；实验选项可开 G1 | curate/G1 · settings flag | 0.4d | 08·09 | ⏳ |
-| **BE-SFC-06** | 章名禁「续」存量清洗；demo-album 重烘焙 | `chapter_titles` · demo trip | 0.3d | 07 | ⏳ |
-| **FE-SFC-04** | FirstSuccess 无 Key 预期文案（禁杂志文案已完成） | `first-success.js` · help copy | 0.2d | 11 | ⏳ |
-| **QA-SFC-03** | e2e：Sparse 无 G1；开启实验后有 G1；stale 词扫描 | 0.4d | 06·08·09 | ⏳ |
+| **FE-SFC-03** | stale 主词全链路 →「分享图需更新」；Help 深链同步 | `bento.js` · `shelf.js` · task-dock · `help-onboarding.js` | 0.5d | 06 | ✅ |
+| **BE-SFC-05** | Sparse 快速分享默认跳过 G1；实验选项可开 | `sparse_g1.py` · `studio_pipeline` | 0.4d | 08·09 | ✅ |
+| **BE-SFC-06** | 章名禁「续」（生成器已禁；契约锁） | `chapter_titles` · `test_sfc_w1_contracts` | 0.3d | 07 | ✅ |
+| **FE-SFC-04** | FirstSuccess 无 Key 预期文案（禁杂志文案已完成） | `HELP_COPY.firstSuccessNext` | 0.2d | 11 | ✅ |
+| **QA-SFC-03** | 单测：Sparse 门控 · stale 词扫描 · FirstSuccess 禁词 | 0.4d | 06·08·09·11 | ✅ |
 
 ### 3.1 W1 完成定义
 
-- [ ] 线框 F4–F5 对照  
-- [ ] AC-SFC-06～09 · 11 工程列绿  
-- [ ] 用户面无「长图可更新」主词  
+- [x] 线框 F4–F5 对照（工程对齐）  
+- [x] AC-SFC-06～09 · 11 工程列绿  
+- [x] 用户面无「长图可更新」主词  
 
 ---
 
@@ -113,9 +113,9 @@
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **FE-SFC-05** | 「媒资」→「照片类型」 | `preview-toolbar/features.js` | 0.2d | 10 | ⏳ |
-| **QA-SFC-04** | DOM 禁词扫描含精修态 | 0.1d | 10 | ⏳ |
-| **DOC-SFC-07** | 相邻 PRD 脚注回写（若评审要求） | QH / Refine / FST | 0.2d | — | ⏳ |
+| **FE-SFC-05** | 「媒资」→「照片类型」 | `preview-toolbar/features.js` | 0.2d | 10 | ✅ |
+| **QA-SFC-04** | DOM 禁词扫描含精修态 | `test_sfc_w1_contracts` | 0.1d | 10 | ✅ |
+| **DOC-SFC-07** | 相邻 PRD 脚注回写（若评审要求） | QH / Refine / FST | 0.2d | — | ✅ W0 |
 
 ---
 
@@ -123,11 +123,11 @@
 
 | 事件 | 接入点 | 状态 |
 |------|--------|------|
-| `sfc_vision_warmup_shown` | import-run stage 切换 | ✅ 允许列表 + 上报 |
+| `sfc_vision_warmup_shown` | import-run stage 切换 | ✅ |
 | `sfc_stub_blanked` | narrate/render 空槽 | ⏳ 允许列表已预留 |
 | `sfc_title_fallback` | displayTitle 回退 | ⏳ 允许列表已预留 |
-| `sfc_g1_suppressed_sparse` | G1 跳过 | ⏳ W1 |
-| `sfc_stale_label_impression` | 书架/Dock 角标 | ⏳ W1 |
+| `sfc_g1_suppressed_sparse` | FirstSuccess（sparse 跳过） | ✅ |
+| `sfc_stale_label_impression` | 书架/Dock 角标 | ⏳ 允许列表已预留 |
 
 ---
 
@@ -161,4 +161,4 @@
 - [x] 分支：`feat/share-face-closeout-v1-w0`  
 - [x] W0 任务卡认领并完成工程  
 - [ ] 狗粮场次预约（AC-SFC-15）  
-- [ ] W1 Kickoff（stale / Sparse G1 / 章名「续」）  
+- [x] W1/W2 工程合入  

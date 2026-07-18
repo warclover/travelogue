@@ -127,6 +127,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "segmentCount": result.segment_count,
                     "tierMode": result.tier_mode,
                     "g1Pending": result.g1_pending,
+                    "sparseG1Suppressed": bool(
+                        getattr(result, "sparse_g1_suppressed", False)
+                    ),
                     "photoCount": result.photo_count,
                     "cullUserLine": result.cull_user_line or "",
                     "cullWarn": result.cull_warn or "",
@@ -142,7 +145,9 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "keepNearDuplicates": result.keep_near_duplicates,
                     "assetsWritten": result.assets_written,
                     "mediaWarn": result.media_warn or "",
-                    "titleNoiseFallback": bool(result.title_noise_fallback),
+                    "titleNoiseFallback": bool(
+                        getattr(result, "title_noise_fallback", False)
+                    ),
                     "displayTitle": result.title,
                 },
             }

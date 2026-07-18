@@ -464,7 +464,7 @@ export function mountPreviewTaskDock(root, hooks) {
       appendHelpDeepLink(
         textWrap,
         "H3",
-        HELP_COPY.helpDeepLinkPending || "「长图可更新」是什么意思 →"
+        HELP_COPY.helpDeepLinkPending || "「分享图需更新」是什么意思 →"
       );
     }
 
@@ -512,11 +512,11 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "长图可更新";
+    main.textContent = opts.title || "分享图需更新";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "内容有更新，请重新导出后再分享";
+      opts.subtitle || "改过版面或照片后，导出最新图再发";
     textWrap.appendChild(sub);
     if (opts.helpLink !== false) {
       appendHelpDeepLink(textWrap, "H3", HELP_COPY.helpDeepLinkH3);

@@ -382,7 +382,7 @@ export function initCollageMediaControls(tripId, assetMediaById) {
         wrap.className = "preview-toolbar__collage-ctrl";
         var label = document.createElement("span");
         label.className = "preview-toolbar__collage-label";
-        label.textContent = "媒资";
+        label.textContent = "照片类型";
         var sel = document.createElement("select");
         sel.className = "preview-toolbar__collage-select";
         sel.setAttribute("aria-label", "改成拼图或改回单张");

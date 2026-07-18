@@ -8,7 +8,7 @@
 | **手测狗粮** | [share-face-closeout-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · F1–F5 |
 | **线框** | [wireframes/share-face-closeout-v1-wireframe.html](./wireframes/share-face-closeout-v1-wireframe.html) · F1–F5 |
 | **试用底稿** | [persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) |
-| **状态** | **W0 工程列绿** · 手测/狗粮待签 · W1/W2 未开工 |
+| **状态** | **W0+W1+W2 工程列绿** · 手测/狗粮待签 |
 | **日期** | 2026-07-18 |
 
 > **验收原则**
@@ -28,8 +28,8 @@
 | **PRD + AC + IMPL + 线框** | ✅ 2026-07-18 | — | Doc 包 |
 | **跨职能评审 + 相邻脚注** | ✅ 2026-07-18 | — | Conditional Go · BLK 已回写 |
 | **W0** | ✅ 合同 | ✅ 工程 | 假句空槽 · 体面名 · vision_warmup |
-| **W1** | ✅ 合同 | ⏳ | stale 人话 · Sparse G1 · 章名续 · 无 Key 预期 |
-| **W2** | ✅ 合同 | ⏳ | 「照片类型」词表 |
+| **W1** | ✅ 合同 | ✅ 工程 | stale 人话 · Sparse G1 · 无 Key 预期 |
+| **W2** | ✅ 合同 | ✅ 工程 | 「照片类型」 |
 | **完成宣布** | ✅ 合同 | ⏳ | 真人 N≥5 |
 
 ---
@@ -58,11 +58,11 @@
 
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
-| **AC-SFC-06** | 用户面主词仅「分享图需更新」；无「长图可更新 / 待更新 / 已过期」作主词 | 全文/DOM 扫描 + 手测 F4 | ⏳ | ⏳ |
-| **AC-SFC-07** | demo-album（及新 stub 成片）无「×日续」章名 | 单测 + 手测 F2 | ⏳ | ⏳ |
-| **AC-SFC-08** | `kept_n≤9` 快速分享默认设置：无 G1 阻断横幅 | e2e + 手测 F5 | ⏳ | ⏳ |
-| **AC-SFC-09** | 设置开启「导入后先确认章节」后，Sparse 仍可出现 G1 | 手测 F5 | ⏳ | ⏳ |
-| **AC-SFC-11** | FirstSuccess 无 Key 无「杂志文案已完成」类承诺 | 文案断言 + 手测 | ⏳ | ⏳ |
+| **AC-SFC-06** | 用户面主词仅「分享图需更新」；无「长图可更新 / 待更新 / 已过期」作主词 | `test_sfc_w1_contracts` + 手测 F4 | ✅ | ⏳ |
+| **AC-SFC-07** | demo-album（及新 stub 成片）无「×日续」章名 | `chapter_titles` 契约 + 手测 F2 | ✅ | ⏳ |
+| **AC-SFC-08** | `kept_n≤9` 快速分享默认设置：无 G1 阻断横幅 | `test_sparse_g1` + 手测 F5 | ✅ | ⏳ |
+| **AC-SFC-09** | 设置开启「导入后先确认章节」后，Sparse 仍可出现 G1 | `test_sparse_g1` + 手测 F5 | ✅ | ⏳ |
+| **AC-SFC-11** | FirstSuccess 无 Key 无「杂志文案已完成」类承诺 | help 文案断言 + 手测 | ✅ | ⏳ |
 
 ---
 
@@ -70,7 +70,7 @@
 
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
-| **AC-SFC-10** | 精修态可见标签无「媒资」；为「照片类型」或等价人话 | DOM 契约 + 手测 | ⏳ | ⏳ |
+| **AC-SFC-10** | 精修态可见标签无「媒资」；为「照片类型」或等价人话 | `test_sfc_w1_contracts` + 手测 | ✅ | ⏳ |
 
 ---
 

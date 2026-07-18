@@ -27,6 +27,7 @@ class _FakePipelineResult:
     segment_count: int = 0
     tier_mode: str = "none"
     g1_pending: bool = False
+    sparse_g1_suppressed: bool = False
     photo_count: int = 6
     cull_user_line: str = ""
     cull_warn: str = ""
@@ -42,6 +43,7 @@ class _FakePipelineResult:
     keep_near_duplicates: bool = False
     assets_written: int = 0
     media_warn: str = ""
+    title_noise_fallback: bool = False
 
 
 def _drain_queue(queue: mp.Queue, *, timeout: float = 2.0) -> list[dict]:

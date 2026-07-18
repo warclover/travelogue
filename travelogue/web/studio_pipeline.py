@@ -44,6 +44,7 @@ class StudioPipelineResult:
     featured_count: int = 0
     segment_count: int = 0
     g1_pending: bool = False
+    sparse_g1_suppressed: bool = False
     tier_mode: str = "single"
     cull_user_line: str = ""
     cull_warn: str = ""
@@ -184,7 +185,16 @@ def _studio_post_curate(
     force_stub: bool = False,
     media_warn: str = "",
 ) -> StudioPipelineResult:
-    g1_pending = bool(cfg.studio.g1_confirm_structure)
+    from travelogue.domain.sparse_g1 import resolve_g1_pending
+    from travelogue.export.output_recipe.kept_n import count_kept_n
+
+    # SFC W1 · D-SFC-07 · Sparse 快速分享默认不打断 G1
+    kept_n = count_kept_n(trip)
+    g1_pending, sparse_g1_suppressed = resolve_g1_pending(
+        import_mode=import_mode,
+        kept_n=kept_n,
+        g1_confirm_structure=bool(cfg.studio.g1_confirm_structure),
+    )
     if g1_pending:
         from travelogue.render.engine import render_trip_surfaces
         from travelogue.services.pipeline_state import trip_status
@@ -220,6 +230,7 @@ def _studio_post_curate(
             user_date_range=date_payload,
             import_mode=import_mode,
             g1_pending=g1_pending,
+            sparse_g1_suppressed=False,
             media_warn=media_warn,
         )
 
@@ -298,6 +309,7 @@ def _studio_post_curate(
         user_date_range=date_payload,
         import_mode=import_mode,
         g1_pending=False,
+        sparse_g1_suppressed=sparse_g1_suppressed,
         media_warn=media_warn,
     )
 
@@ -318,6 +330,7 @@ def _finalize_pipeline_result(
     import_mode: str = "quick_share",
     layout_density: str = "balanced",
     g1_pending: bool = False,
+    sparse_g1_suppressed: bool = False,
     media_warn: str = "",
 ) -> StudioPipelineResult:
     from travelogue.web.studio_intent_telemetry import write_studio_intent_telemetry
@@ -402,6 +415,7 @@ def _finalize_pipeline_result(
         featured_count=featured_n,
         segment_count=segment_n,
         g1_pending=g1_pending,
+        sparse_g1_suppressed=sparse_g1_suppressed,
         tier_mode=tier_mode,
         cull_user_line=cull_user_line,
         cull_warn=cull_warn,

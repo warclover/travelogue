@@ -1694,8 +1694,8 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             timeout=10_000,
         )
         bench_badge = page.locator(".v2-bench__recent-card__stale").first.inner_text()
-        # multi fixture · hokkaido 为 longshotStale → 「长图可更新」；算法 stale 为「可更新」。
-        assert bench_badge in ("可更新", "长图可更新")
+        # multi fixture · hokkaido 为 longshotStale → 「分享图需更新」；算法 stale 为「可更新」。
+        assert bench_badge in ("可更新", "分享图需更新")
         assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 
         page.locator("#v2-bento-preview-trigger").click()
@@ -1703,7 +1703,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             "() => !document.getElementById('v2-bento-preview-listbox').hidden"
         )
         picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
-        assert "长图可更新" in picker_text or "可更新" in picker_text
+        assert "分享图需更新" in picker_text or "可更新" in picker_text
         assert "算法待更新" not in picker_text
 
         page.evaluate(
