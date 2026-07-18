@@ -214,16 +214,25 @@ def asset_aspect_kind(asset: dict) -> str:
 
 
 def alt_text(item: dict | None, asset: dict, meta_title: str) -> str:
+    """Accessible alt · SFC W0：禁假句与杂志名整册复读（D-SFC-01/02）。"""
+    from travelogue.domain.share_face_copy import sanitize_share_copy
+
+    title = (meta_title or "").strip()
     if item:
         for key in ("title", "caption"):
-            v = (item.get(key) or "").strip()
+            v = sanitize_share_copy((item.get(key) or "").strip(), title=title, kind="alt")
             if v:
                 return v
     for key in ("title", "caption"):
-        v = (asset.get(key) or "").strip() if isinstance(asset.get(key), str) else ""
+        raw = asset.get(key)
+        v = sanitize_share_copy(
+            (raw or "").strip() if isinstance(raw, str) else "",
+            title=title,
+            kind="alt",
+        )
         if v:
             return v
-    return meta_title or "旅行照片"
+    return "旅行照片"
 
 
 def media_card_classes(layout: dict | None, asset: dict) -> str:
@@ -340,7 +349,7 @@ def build_media_card(
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
     alt = alt_text(item, asset, meta_title)
     title = (item.get("title") or "").strip()
-    caption = resolve_caption(item, asset)
+    caption = resolve_caption(item, asset, title=meta_title)
     if photos_only:
         title = ""
         caption = ""

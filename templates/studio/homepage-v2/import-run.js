@@ -58,6 +58,7 @@ let _slowHintLevel = 0;
 let _stageMainText = "";
 let _stageMainChangedAt = 0;
 let _stageStallEmitted = false;
+let _sfcVisionWarmupTracked = false;
 
 /** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
 var SLOW_HINT_COPY = {
@@ -298,6 +299,7 @@ export function renderImportingPanel(source) {
   _stageMainText = "";
   _stageMainChangedAt = Date.now();
   _stageStallEmitted = false;
+  _sfcVisionWarmupTracked = false;
   setV2SkipLinkTarget("v2-import-cancel");
   syncVariantGuard();
   syncAdvancedOptionsLock();
@@ -409,6 +411,16 @@ function pollImport(jobId, gen, source) {
         var copy = resolveImportStageCopy(job);
         setStage(copy.main, count ? (idx / count) * 100 : 0, copy.secondary);
         var now = Date.now();
+        if (
+          !_sfcVisionWarmupTracked &&
+          (job.stage === "vision_warmup" || job.stage === "preparing_vision")
+        ) {
+          _sfcVisionWarmupTracked = true;
+          trackStudioEvent("sfc_vision_warmup_shown", {
+            jobId: jobId,
+            main: copy.main || null,
+          });
+        }
         if (copy.main && copy.main !== _stageMainText) {
           _stageMainText = copy.main;
           _stageMainChangedAt = now;

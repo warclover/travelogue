@@ -30,15 +30,17 @@ export function markSampleEngaged() {
 
 // ── Stage labels（PRD-FIRST-SESSION-TRUST-V1 §3.1）──
 export const STAGE_LABELS = {
+  vision_warmup: "正在准备识图（首次可能较慢）",
   ingest: "正在整理照片…",
   curate: "正在分章与挑选…",
   narrate: "正在生成游记文案…",
   render: "正在排版杂志页…",
 };
 
-/** FE-FTUE-06 · 冻结 stageHint 键 → 用户文案（对齐 PRD §3.5 / stage_hints.py） */
+/** FE-FTUE-06 · 冻结 stageHint 键 → 用户文案（对齐 stage_hints.py · SFC W0） */
 export const STAGE_HINT_LABELS = {
-  preparing_vision: "正在准备本机视觉组件（仅第一次）…",
+  preparing_vision: "正在准备识图（首次可能较慢）",
+  vision_warmup: "正在准备识图（首次可能较慢）",
   preparing_browser: "正在准备长图组件（仅第一次）…",
   processing_photos: "正在整理照片…",
 };

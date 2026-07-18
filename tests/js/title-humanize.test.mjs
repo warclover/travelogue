@@ -4,7 +4,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { humanizeFolderTitle } from "../../templates/studio/js/title-humanize.js";
+import {
+  extractPlaceLabel,
+  humanizeFolderTitle,
+  isFolderTitleNoise,
+} from "../../templates/studio/js/title-humanize.js";
 
 test("strips hash / handtest noise", () => {
   assert.equal(humanizeFolderTitle("linzhi_a1b2c3d4e5f6"), "linzhi");
@@ -27,4 +31,10 @@ test("empty / noise / limit", () => {
   assert.equal(humanizeFolderTitle("新建文件夹"), "我的旅途");
   const longName = "一二三四五六七八九十一二三四五六七八九十";
   assert.equal(humanizeFolderTitle(longName), longName.slice(0, 20));
+});
+
+test("SFC · double dash and place extract", () => {
+  assert.equal(humanizeFolderTitle("武大--米娜"), "武大 米娜");
+  assert.equal(isFolderTitleNoise("武大--米娜"), true);
+  assert.equal(extractPlaceLabel("2025东澳岛9"), "东澳岛");
 });

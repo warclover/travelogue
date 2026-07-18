@@ -7,9 +7,10 @@
 import { humanizeFolderTitle } from "../js/title-humanize.js";
 import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
 
-/** Orchestrator 阶段名 → 产品四段 stage（FE-FST-01） */
+/** Orchestrator 阶段名 → 产品阶段（FE-FST-01 · SFC vision_warmup） */
 export function normalizeImportProductStage(stage) {
   var s = String(stage || "");
+  if (s === "vision_warmup" || s === "preparing_vision") return "vision_warmup";
   if (s === "ingest") return "ingest";
   if (
     s === "clustering" ||
@@ -26,18 +27,26 @@ export function normalizeImportProductStage(stage) {
 
 /**
  * FE-FST-01 · 导入进度主句/次行。
- * 照片计数不得在 curate/narrate/render 霸屏；慢安抚由壳层次行承担。
+ * SFC W0 · D-SFC-04 · running 主句永不为空；vision_warmup 优先。
  * @param {{ stage?: string, stageHint?: string }|null} job
  * @returns {{ main: string, secondary: string }}
  */
 export function resolveImportStageCopy(job) {
   var stage = normalizeImportProductStage(job && job.stage);
   var rawHint = String((job && job.stageHint) || "").trim();
-  var mappedHint = STAGE_HINT_LABELS[rawHint] || "";
+  var mappedHint = STAGE_HINT_LABELS[rawHint] || STAGE_HINT_LABELS[stage] || "";
   var stageMain = STAGE_LABELS[stage] || "";
   var isPhotoCount =
     /^已处理\s*\d+\s*\/\s*\d+/.test(rawHint) ||
     /正在导入并挑选照片/.test(rawHint);
+  var fallback = "正在处理…";
+
+  if (stage === "vision_warmup") {
+    return {
+      main: stageMain || mappedHint || "正在准备识图（首次可能较慢）",
+      secondary: "",
+    };
+  }
 
   if (stage && stage !== "ingest" && stageMain) {
     return { main: stageMain, secondary: "" };
@@ -58,7 +67,7 @@ export function resolveImportStageCopy(job) {
     return { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
   }
 
-  return { main: stageMain || rawHint || "处理中…", secondary: "" };
+  return { main: stageMain || rawHint || fallback, secondary: "" };
 }
 
 export function basenameTitle(path) {

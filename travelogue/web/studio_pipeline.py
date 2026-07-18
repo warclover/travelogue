@@ -791,9 +791,16 @@ def run_studio_pipeline(
 
     if cfg.vision.preload_on_folder_pick and cfg.vision.enabled != "false":
         if progress:
-            from travelogue.domain.stage_hints import PREPARING_VISION, stage_hint_text
+            from travelogue.domain.stage_hints import (
+                VISION_WARMUP,
+                maybe_sleep_vision_warmup_inject,
+                stage_hint_text,
+            )
 
-            progress("ingest", 0, stage_hint_text(PREPARING_VISION))
+            # SFC W0 · D-SFC-04 · 识图准备为一等阶段（禁双空）
+            progress("vision_warmup", 0, stage_hint_text(VISION_WARMUP))
+            # AC-SFC-04 / BLK-06 · 测试可注入延长，保证 UI 能看见主句
+            maybe_sleep_vision_warmup_inject()
         from travelogue.vision.clip_encoder import preload_clip_encoder
 
         preload_clip_encoder(cfg)

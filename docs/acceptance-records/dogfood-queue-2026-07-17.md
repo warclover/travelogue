@@ -14,6 +14,12 @@
 | 3 | **首访可信 FST** | [first-session-trust-v1-dogfood-CHECKLIST.md](./first-session-trust-v1-dogfood-CHECKLIST.md) | AC-FST-15 完成宣布前至少 F1–F2 |
 | 4 | **敢发闭环 Share-Ready** | [ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md](../ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) §5 | 意图卡 / 成功面「换种分享」/ 书架可读标题抽检 |
 
+### 下一主题（Doc 齐 · 待评审后编码）
+
+| 主题 | 清单 | 说明 |
+|------|------|------|
+| **敢发收口 SFC** | [share-face-closeout-v1-dogfood-CHECKLIST.md](./share-face-closeout-v1-dogfood-CHECKLIST.md) | PRD Draft · W0 假句/体面名/识图进度 · 编码 Kickoff 后入 P0 |
+
 ---
 
 ## 建议跑法（约 60–90 分钟）

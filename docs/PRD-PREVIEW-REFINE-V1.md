@@ -150,7 +150,7 @@
 | **D-REF-06** | 版面类 = **写入意图 + 待更新** | ★ / 拼图 / 同框；Task Dock 固定一条 |
 | **D-REF-07** | 主动作文案 = **「更新版面」** | **P0 起**用户可见文案全局替换「应用排版」；禁止一词两名 |
 | **D-REF-08** | 导出前 = **拦截 pending** | **P0** Modal 规格见 §4.3.1 |
-| **D-REF-09** | G1 = **顶栏横幅** | **P1**；仅 `structurePending` 时出现 |
+| **D-REF-09** | G1 = **顶栏横幅** | **P1**；仅 `structurePending` 时出现 · **2026-07-18 脚注**：[Share-Face Closeout](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **D-SFC-07**：`kept_n` 1–9 且**快速分享**默认不设 pending（实验选项可开）；**精细制作**除外 |
 | **D-REF-10** | 导出相关设置跟导出走 | 文案范围 / 清晰度 / 按章·完整 → Dock 导出 `▾` |
 | **D-REF-11** | 首页设置改名 = **「导入偏好」** | **P0** |
 | **D-REF-12** | 封面版式 = **选后自动更新版面** | 维持立即生效体验 |
@@ -159,7 +159,7 @@
 | **D-REF-15** | Cohort 未开 = **藏入口** | P1 |
 | **D-REF-16** | Dock 图标 = **形象简洁线描套件** | 见 §6.1.1；P0 与改名同发 |
 | **D-REF-17** | **两拍发布** | P0：M1+M2+图标；P1：M3+M4 |
-| **D-REF-18** | **状态优先级栈** | **G1 > layoutPending > longshotStale**（同时最多突出一层主待办） |
+| **D-REF-18** | **状态优先级栈** | **G1 > layoutPending > longshotStale**（同时最多突出一层主待办）· Sparse 快速分享无 G1 时：`layoutPending > longshotStale`（见 SFC D-SFC-07） |
 | **D-REF-19** | **P0 过渡态** | Sheet 标题先改「精修」；四 Tab 可暂留；脚注见 §8.1 |
 
 ---
