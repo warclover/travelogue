@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Any
 
 import pytest
 
 from travelogue.config import get_config
 from travelogue.config.mosaic import TemplateContractConfig
 from travelogue.layout_engine.contract.evaluator import (
+    _fallback_feasible,
     evaluate_contract_eligibility,
     patterns_for_contract_window,
     reset_evaluator_state_for_tests,
@@ -18,7 +20,15 @@ from travelogue.layout_engine.contract.shadow import reset_mix_index_cache_for_t
 from travelogue.layout_engine.mosaic.candidates import (
     generate_window_candidates_with_rejections,
 )
+from travelogue.layout_engine.mosaic.constants import (
+    PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+    PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+)
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
+
+
+def _asset(aid: str, *, w: int, h: int) -> dict[str, Any]:
+    return {"id": aid, "width": w, "height": h}
 
 
 @pytest.fixture(autouse=True)
@@ -37,36 +47,80 @@ def test_resolve_eligibility_bridges_main_slot_policy() -> None:
     assert source_spec.get("eligibleAspectKinds") == ["landscape"]
 
 
-def test_bridge_matches_screen_main_slot_eligible(lte_pattern_enabled) -> None:
-    """AC-TPC-04①: bridge outcome ≡ screen_main_slot_eligible."""
-    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4
-
+@pytest.mark.parametrize(
+    "pattern_id,main_asset,expect_ok",
+    [
+        (
+            PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+            _asset("p1", w=900, h=1600),  # portrait → blocked
+            False,
+        ),
+        (
+            PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+            _asset("l1", w=3000, h=1687),  # ~16:9 → ok
+            True,
+        ),
+        (
+            PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+            _asset("pano", w=5000, h=2000),  # panorama → blocked
+            False,
+        ),
+        (
+            PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+            _asset("std", w=3000, h=1687),
+            True,
+        ),
+        (
+            PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+            _asset("odd", w=1900, h=1000),  # off-ladder
+            False,
+        ),
+    ],
+)
+def test_hero_equivalence_fixture_bridge_vs_legacy(
+    pattern_id: str,
+    main_asset: dict[str, Any],
+    expect_ok: bool,
+) -> None:
+    """AC-TPC-04① · hero 等价 fixture：桥接结果逐例对照 screen_main_slot_eligible."""
     cfg = get_config().mosaic
-    # Portrait in main → ineligible
+    aid = str(main_asset["id"])
     screen = {
-        "patternId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-        "slots": [
-            {"role": "main", "assetId": "p1"},
-            {"role": "tile", "assetId": "l1"},
-        ],
+        "patternId": pattern_id,
+        "slots": [{"role": "main", "assetId": aid}],
     }
-    assets = {
-        "p1": {"id": "p1", "width": 900, "height": 1600},
-        "l1": {"id": "l1", "width": 1600, "height": 900},
-    }
+    assets = {aid: main_asset}
     legacy_ok, legacy_reason = screen_main_slot_eligible(
-        screen, assets, pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, cfg=cfg
+        screen, assets, pattern_id=pattern_id, cfg=cfg
     )
     ok, reason, detail = evaluate_contract_eligibility(
-        screen,
-        assets,
-        pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
-        cfg=cfg,
+        screen, assets, pattern_id=pattern_id, cfg=cfg
     )
+    assert legacy_ok is expect_ok
     assert ok is legacy_ok
-    if not legacy_ok:
+    if not expect_ok:
         assert reason == "contract:eligibility_main_ar"
         assert detail == legacy_reason
+
+
+def test_bridge_deprecation_log_once(caplog) -> None:
+    import logging
+
+    cfg = get_config().mosaic
+    screen = {
+        "patternId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        "slots": [{"role": "main", "assetId": "l1"}],
+    }
+    assets = {"l1": _asset("l1", w=3000, h=1687)}
+    with caplog.at_level(logging.INFO, logger="travelogue.layout_engine.contract.evaluator"):
+        evaluate_contract_eligibility(
+            screen, assets, pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, cfg=cfg
+        )
+        evaluate_contract_eligibility(
+            screen, assets, pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4, cfg=cfg
+        )
+    msgs = [r.message for r in caplog.records if "tpc.deprecation" in r.message]
+    assert len(msgs) == 1
 
 
 def test_enabled_false_unchanged_vs_size_path(lte_pattern_enabled) -> None:
@@ -123,3 +177,45 @@ def test_undeclared_eligibility_is_pass() -> None:
     # portrait-3 has no mainSlotPolicy / eligibility → BLK-11 pass
     assert ok is True
     assert reason is None
+
+
+def test_fallback_feasibility_rejects_direction_conflict() -> None:
+    """AC-TPC-03 · infeasible mix must not enter fallback (BLK-TPC-01)."""
+    # Template needs 2P but window is all-L
+    assert _fallback_feasible((4, 0, 0), (4, 0, 0)) is True
+    assert _fallback_feasible((2, 2, 0), (4, 0, 0)) is False
+    assert _fallback_feasible((3, 2, 0), (3, 2, 0)) is True
+
+
+def test_ac_tpc_01_off_pick_best_stable(lte_pattern_enabled) -> None:
+    """AC-TPC-01: enabled=false → deterministic pick matches across runs."""
+    from tests._golden.helpers import build_mosaic_five_2p3l_window
+    from travelogue.layout_engine.mosaic.compose import pick_best_window
+
+    ids, aspects, assets_map = build_mosaic_five_2p3l_window()
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=False, shadow_log=True),
+    )
+    a = pick_best_window(
+        ids, aspects, assets_map, cfg=cfg, window_size=5, trip_photo_total=40
+    )
+    b = pick_best_window(
+        ids, aspects, assets_map, cfg=cfg, window_size=5, trip_photo_total=40
+    )
+    assert a.log.winner_pattern_id == b.log.winner_pattern_id
+    assert a.log.planner_path == b.log.planner_path
+    if a.screen and b.screen:
+        assert [s.get("assetId") for s in a.screen.get("slots") or []] == [
+            s.get("assetId") for s in b.screen.get("slots") or []
+        ]
+
+
+def test_asset_native_ar_shared_tool() -> None:
+    """W2 step-0: shared geometry helper lives in layout_contract."""
+    from travelogue.layout_contract.asset_geometry import asset_native_ar
+    from travelogue.layout_engine.mosaic import main_eligibility as me
+
+    asset = {"width": 1600, "height": 900}
+    assert asset_native_ar(asset) == pytest.approx(1600 / 900)
+    assert me.asset_native_ar(asset) == asset_native_ar(asset)

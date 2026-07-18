@@ -72,7 +72,7 @@ def evaluate_ur03(
             main_aid = str(slots[0].get("assetId") or "") or None
     if not main_aid:
         return False, ""
-    from travelogue.layout_engine.mosaic.main_eligibility import asset_native_ar
+    from travelogue.layout_contract.asset_geometry import asset_native_ar
 
     ar = asset_native_ar(ctx.assets_map.get(main_aid) or {})
     if ar is not None and ar > HERO_32_WIDE_AR_THRESHOLD:

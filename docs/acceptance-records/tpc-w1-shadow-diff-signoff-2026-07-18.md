@@ -4,7 +4,7 @@
 |------|------|
 | 日期 | 2026-07-18 |
 | 报告 | [tpc-w1-shadow-diff.json](./tpc-w1-shadow-diff.json) |
-| Corpus | **局部**：本机仅 `demo-2025-9`（BQP/URO golden 多数 trip 目录无 `trip.json`） |
+| Corpus | **局部**：`demo-2025-9` · `demo-49551086fe` · `demo-6180531087`（BQP/URO golden 多数本机无 `trip.json`） |
 | 结论 | **Partial Sign-Off** — 差异已逐条定性；**不得**据此开启 `template_contract.enabled` |
 
 ## 差异汇总

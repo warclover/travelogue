@@ -345,7 +345,8 @@
 | [acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-impact-review-2026-07-18.md) | LQS V1 · **实现前后效果与收益评估**（十席联席 · 事前推演） |
 | [acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md](./acceptance-records/layout-quality-stack-v1-feasibility-cost-2026-07-18.md) | LQS V1 · **落地可行性与成本评估**（人日合流 · 砍 scope · 排期） |
 | [IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md](./IMPLEMENTATION-LAYOUT-QUALITY-STACK-V1.md) | LQS V1 · 实施清单（瘦身版）· **部分废止**：S1=TPC W1 可执行；S2+ 由 TPC 承接 |
-| [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.1**（**Conditional Go · Ready for Kickoff W1** · BLK-TPC-01～07 已回写 · D-TPC 全冻结 · §11 工程保障与测试迁移策略）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [PRD-TEMPLATE-CONTRACT-V1.md](./PRD-TEMPLATE-CONTRACT-V1.md) | **统一模板合同重设计 TPC V1** **v0.2.2**（W1+W2 落地中 · captionAreas **已 defer** · BLK-TPC-01～07 已回写 · §11 工程保障）· bag-only 匹配 + 硬面积带 + 手写模板主战场 · 17–22 人日 · **对外默认开启前须补正式盲评** |
+| [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**） |
 | [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md) | TPC V1 · 跨职能评审纪要（七席 · Conditional Go · 含代码事实核查） |
 | [PRD-MCS-GEOMETRIC-QUALITY-V1.md](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) | **MCS 屏内几何质量与标定闭环 V1** **v0.2.1**（Conditional Go · 可 Kickoff W0 · W1 前 BLK-09～14） |
 | [acceptance-records/mcs-geometric-quality-v1-expert-review-2026-07-18.md](./acceptance-records/mcs-geometric-quality-v1-expert-review-2026-07-18.md) | MGQ V1 **专家五席评审**（权威 · 算法/架构/开发/测试/UX） |

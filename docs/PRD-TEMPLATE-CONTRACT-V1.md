@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.1** |
+| **文档版本** | **v0.2.2** |
 | **状态** | **Conditional Go · Ready for Kickoff W1**（七席评审结案；**BLK-TPC-01～07 已回写本版**；LQS 瘦身版 S2+ 由本案承接） |
 | **评审纪要** | [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md)（已结案 · Conditional Go · BLK-TPC-01～07 · 估时修正 17–22 人日） |
 | **特性代号** | **TPC**（Template Contract · 统一模板合同） |
@@ -288,7 +288,7 @@ generate_window_candidates(window)
 |------|------|------|------|
 | 混向 SKU ×2–3 | debt 报表 mix 空洞 Top（预期 2L2P / 1L3P 族） | 报表驱动 | 无条件（W3 主体） |
 | 非对称 hero ×1 | 「算法味 grid」突破（大图 ~70% + 竖条侧栏）；**绑 CSS token（gutter/bleed/max-fill-ratio）渲染检查** | 观感路线图 P2 §6.3.1 | 无条件（W3 主体） |
-| captionAreas SKU ×2 | 图文窗「有字仍密铺」 | MSR P-03 | **条件项（BLK-TPC-03）**：须先过 W2 渲染 spike——`render/chapters.py` 可消费文案区、长图导出正确呈现；**不支持则连同 §3.4 tie-break 整体挪出 V1**，另立小型 PRD |
+| captionAreas SKU ×2 | 图文窗「有字仍密铺」 | MSR P-03 | **已 defer（W2 spike 结案）**：见 [tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md)；连同 §3.4 tie-break / AC-TPC-14 **整体挪出 V1** |
 
 要求：带齐 `mix` / `eligibility` / `usage`；经 validator + admission（experimental）；狗粮并排签核后升 beta。**禁止**无 eligibility/usage 的裸模板入库。
 
@@ -454,3 +454,4 @@ generate_window_candidates(window)
 | **v0.1.0** | 2026-07-18 | 初稿：统一模板合同重设计；bag-only 匹配；硬面积带替代 soft；手写模板主战场；海报继承；待评审拍板 D-TPC-01～12 |
 | **v0.2.0** | 2026-07-18 | 七席评审回写：BLK-TPC-01～07 合入（fallback 可行性/square 归置冻结 · 迁移两步走 8 调用点 · captionAreas spike 前置 · shadow diff 升 AC-TPC-12 · 双轨收口 · tie-break 定义 · 配置 fail-loud）；估时修正 17–22 人日；D-TPC 全部冻结 |
 | **v0.2.1** | 2026-07-18 | 新增 §11 工程保障与测试迁移策略：五层防护 + 一键回滚；加法集成原则（挂钩不改签名 · 双轨有死期）；测试四类处置（A 必绿 / B 搬家 / C 同 commit 签核 / D 只增）；W1 绿色基线存档与 PR 测试改动量仪表盘入流程 |
+| **v0.2.2** | 2026-07-18 | W2 spike 结案：captionAreas **defer**（验收记录 `tpc-w2-caption-areas-spike-2026-07-18.md`）；图文 SKU + tie-break 挪出 V1；hero 等价 fixture / 共享工具解耦落地 |

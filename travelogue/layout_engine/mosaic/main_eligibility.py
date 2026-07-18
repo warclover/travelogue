@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.config import MosaicConfig
+from travelogue.layout_contract.asset_geometry import asset_native_ar
 from travelogue.layout_contract.orientations import (
     AspectKind,
     aspect_kind_for_asset,
@@ -143,12 +144,8 @@ def main_ar_guard_enabled(cfg: MosaicConfig | None = None) -> bool:
     return bool(getattr(cfg, "main_ar_guard", True))
 
 
-def asset_native_ar(asset: dict) -> float | None:
-    w = int(asset.get("nativeWidth") or asset.get("width") or 0)
-    h = int(asset.get("nativeHeight") or asset.get("height") or 0)
-    if w > 0 and h > 0:
-        return w / h
-    return None
+# asset_native_ar lives in layout_contract (TPC W2 shared-tool decoupling);
+# re-exported here for existing call sites until W3 deletes this module.
 
 
 def nearest_ladder_delta(ar: float) -> float:
