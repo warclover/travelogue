@@ -121,6 +121,33 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "sfc_title_fallback",
         "sfc_g1_suppressed_sparse",
         "sfc_stale_label_impression",
+        # Dogfood UX Fixpack V1 · PRD §8
+        "rename_propagation_migrated",
+        "export_ok_toast_shown",
+        "export_open_folder_clicked",
+        "export_platform_mismatch",
+        # FE allowlist sync（消 studio-event 400 · FE-DFX-44）
+        "home_stub_banner_click",
+        "home_stub_banner_dismiss",
+        "home_stub_banner_show",
+        "import_continue_stub",
+        "import_fail_auth_shown",
+        "import_fail_open_recent",
+        "import_fail_open_settings",
+        "import_keep_dupes_pref",
+        "import_photo_cull_pref",
+        "llm_provider_change",
+        "llm_save_and_ping",
+        "llm_settings_resume",
+        "llm_switch_confirm",
+        "preview_narrate_fail",
+        "wait_tips_auto_advance",
+        "wait_tips_dismiss",
+        "wait_tips_manual_nav",
+        "wait_tips_pause",
+        "wait_tips_replay",
+        "wait_tips_show",
+        "wait_tips_suppress_short_wait",
     }
 )
 

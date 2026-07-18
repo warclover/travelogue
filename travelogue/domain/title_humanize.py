@@ -133,6 +133,27 @@ def _accept_display(candidate: str, *, limit: int) -> str | None:
     return None
 
 
+def migrate_stale_display_title(meta: dict[str, Any] | None) -> bool:
+    """D2 · sync stale ``displayTitle`` to a non-noise user ``title`` (save path only).
+
+    Returns True when ``meta`` was mutated. Idempotent when already aligned.
+    Never promotes folder-noise titles into the display face.
+    """
+    meta = meta if isinstance(meta, dict) else None
+    if not meta:
+        return False
+    title = str(meta.get("title") or "").strip()
+    if not title or is_folder_title_noise(title):
+        return False
+    if _accept_display(title, limit=32) is None:
+        return False
+    stored = str(meta.get("displayTitle") or "").strip()
+    if stored == title:
+        return False
+    meta["displayTitle"] = title[:32]
+    return True
+
+
 def resolve_display_title(
     meta: dict[str, Any] | None,
     *,

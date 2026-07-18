@@ -8,12 +8,16 @@ export var INTENT_TO_PLATFORM = {
   chat_longshot: "wechat_chat",
   moments_scroll: "wechat_moments",
   moments_grid: "moments_grid",
+  xiaohongshu: "xiaohongshu",
+  poster_bric: "poster_bric",
 };
 
 export var PLATFORM_TO_INTENT = {
   wechat_chat: "chat_longshot",
   wechat_moments: "moments_scroll",
   moments_grid: "moments_grid",
+  xiaohongshu: "xiaohongshu",
+  poster_bric: "poster_bric",
 };
 
 export var SESSION_INTENT_PREFIX = "travelogue.studio.outputIntent.";

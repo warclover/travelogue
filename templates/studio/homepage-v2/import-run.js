@@ -72,7 +72,7 @@ function humanizeError(code, fallback) {
 }
 
 /** FE-FTUE-02：示例已存在 → open | regenerate | cancel */
-function resolveDemoAlbumExists(data) {
+export function resolveDemoAlbumExists(data) {
   var previewUrl =
     (data && data.result && data.result.previewUrl) ||
     (data && data.previewUrl) ||
@@ -706,26 +706,30 @@ export function startV2UploadImport(files, opts) {
   return submit(false).then(function (res) {
     var data = res.body || {};
     if (res.status === 409 && data.error === "E_DEMO_EXISTS") {
-      var confirmOverwrite = typeof studioModal === "function"
-        ? studioModal({
-            title: "该游记已存在",
-            body: "是否覆盖已有内容？覆盖后无法撤销。",
-            confirmText: "覆盖并重新导入",
-            cancelText: "取消",
-          })
-        : Promise.resolve(window.confirm(data.message || "该游记已存在。是否覆盖？"));
-      return confirmOverwrite.then(function (ok) {
-        if (!ok) {
-          if (typeof V2.reroute === "function") V2.reroute();
+      // FE-DFX-44 · upload 路径复用示例专用 modal（open / regenerate / cancel）
+      return resolveDemoAlbumExists(data).then(function (choice) {
+        if (choice === "open") {
+          var previewUrl =
+            (data.result && data.result.previewUrl) ||
+            data.previewUrl ||
+            "/demo-album/index.html";
+          window.location.href = previewUrl;
           return null;
         }
-        return submit(true).then(function (retryRes) {
-          var retryData = retryRes.body || {};
-          if (retryRes.status !== 202 || !retryData.jobId) {
-            throw { code: retryData.error, message: humanizeError(retryData.error, retryData.message) };
-          }
-          return pollImport(retryData.jobId, gen, source);
-        });
+        if (choice === "regenerate") {
+          return submit(true).then(function (retryRes) {
+            var retryData = retryRes.body || {};
+            if (retryRes.status !== 202 || !retryData.jobId) {
+              throw {
+                code: retryData.error,
+                message: humanizeError(retryData.error, retryData.message),
+              };
+            }
+            return pollImport(retryData.jobId, gen, source);
+          });
+        }
+        if (typeof V2.reroute === "function") V2.reroute();
+        return null;
       });
     }
     if (isJobBusyResponse(res)) {

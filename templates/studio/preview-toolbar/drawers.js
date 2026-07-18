@@ -384,7 +384,8 @@ export function initPreviewDrawers(root, tripId) {
       '<label class="preview-drawer__label" for="preview-drawer-notes">给这本游记的一句话</label>' +
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
       STUDIO_USER_NOTES_MAX_LEN +
-      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>';
+      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
+      '<p class="preview-drawer__notes-saved" hidden aria-live="polite">✓ 将显示在封面副标题与辑封</p>';
 
     var pageEditTpl =
       '<p class="preview-drawer__chapter-label">当前章：<strong class="preview-drawer__chapter-name"></strong></p>' +
@@ -766,10 +767,25 @@ export function initPreviewDrawers(root, tripId) {
                 if (coverTitle) {
                   coverTitle.textContent = titleVal;
                   coverTitle.dataset.title = titleVal;
+                  coverTitle.classList.add("cover-opening__title--saved");
+                  window.clearTimeout(coverTitle._savedMarkTimer);
+                  coverTitle._savedMarkTimer = window.setTimeout(function () {
+                    coverTitle.classList.remove("cover-opening__title--saved");
+                  }, 1500);
                 }
                 try {
                   document.title = titleVal;
                 } catch (eDoc) {}
+              }
+              if (hasBookFields && notes) {
+                var notesSaved = targetBody.querySelector(".preview-drawer__notes-saved");
+                if (notesSaved) {
+                  notesSaved.hidden = false;
+                  window.clearTimeout(notes._savedHintTimer);
+                  notes._savedHintTimer = window.setTimeout(function () {
+                    notesSaved.hidden = true;
+                  }, 1500);
+                }
               }
               if (hasPageFields && chId && entryCache.chapters) {
                 var row = chapterRow(chId);
@@ -816,12 +832,15 @@ export function initPreviewDrawers(root, tripId) {
         }
 
         // D-REF-05 · 文案类立即保存（失焦 / chip 变更），不再依赖「保存编辑」主按钮
+        // FE-DFX-20 · IME 组合态下不提交（composition / isComposing）
         var autoPersistTimer = null;
         var autoPersisting = false;
+        var imeComposing = false;
         function scheduleAutoPersist() {
+          if (imeComposing) return;
           if (autoPersistTimer) window.clearTimeout(autoPersistTimer);
           autoPersistTimer = window.setTimeout(function () {
-            if (autoPersisting) return;
+            if (autoPersisting || imeComposing) return;
             autoPersisting = true;
             persistEditDrawer(null, { skipToast: true }).then(function () {
               autoPersisting = false;
@@ -833,7 +852,26 @@ export function initPreviewDrawers(root, tripId) {
             ".preview-drawer__title-input, .preview-drawer__notes, .preview-drawer__anchor, .preview-drawer__copy-intent-note"
           )
           .forEach(function (el) {
-            el.addEventListener("blur", scheduleAutoPersist);
+            el.addEventListener("compositionstart", function () {
+              imeComposing = true;
+            });
+            el.addEventListener("compositionend", function () {
+              imeComposing = false;
+            });
+            el.addEventListener("keydown", function (e) {
+              if (e.key !== "Enter" || e.shiftKey) return;
+              if (el.tagName === "TEXTAREA") return;
+              if (e.isComposing || imeComposing) {
+                e.preventDefault();
+                return;
+              }
+              e.preventDefault();
+              el.blur();
+            });
+            el.addEventListener("blur", function () {
+              if (imeComposing || (el.isComposing === true)) return;
+              scheduleAutoPersist();
+            });
           });
         var subsequent = targetBody.querySelector(".preview-drawer__copy-intent-subsequent");
         if (subsequent) {

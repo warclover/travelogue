@@ -72,7 +72,7 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
         window.clearTimeout(el._savedMarkTimer);
         el._savedMarkTimer = window.setTimeout(function () {
           el.classList.remove("cover-opening__title--saved");
-        }, 800);
+        }, 1500);
         try {
           document.title = next;
         } catch (eTitle) {}
@@ -165,7 +165,12 @@ export function initCoverTitleEdit(tripId) {
       input.focus();
       input.select();
 
+      var imeComposing = false;
+      var finished = false;
       function finish(save) {
+        if (finished) return;
+        if (save && (imeComposing || input.isComposing)) return;
+        finished = true;
         var next = (input.value || "").trim();
         input.remove();
         titleEl.hidden = false;
@@ -184,8 +189,18 @@ export function initCoverTitleEdit(tripId) {
         saveMagazineTitle(tripId, next, titleEl);
       }
 
+      input.addEventListener("compositionstart", function () {
+        imeComposing = true;
+      });
+      input.addEventListener("compositionend", function () {
+        imeComposing = false;
+      });
       input.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
+          if (e.isComposing || imeComposing) {
+            e.preventDefault();
+            return;
+          }
           e.preventDefault();
           finish(true);
         }
@@ -195,6 +210,7 @@ export function initCoverTitleEdit(tripId) {
         }
       });
       input.addEventListener("blur", function () {
+        if (imeComposing || input.isComposing) return;
         finish(true);
       });
     }

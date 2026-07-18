@@ -485,7 +485,8 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
     assert "display: none !important;" in css
 
     for marker in (
-        "runShelfLongshot",
+        "autoExport",
+        "writeFtueAutoExport",
         "v2-success-secondary",
         "success_preview_unavailable_fallback_longshot",
     ):

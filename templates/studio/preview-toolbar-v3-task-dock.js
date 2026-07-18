@@ -235,6 +235,8 @@ export function mountPreviewTaskDock(root, hooks) {
     } else if (result.platform === "xiaohongshu") {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
+    } else if (result.platform === "poster_bric") {
+      main.textContent = "✓ 单屏海报已就绪";
     } else {
       // FE-FST-04 / D-FST-13 · 默认微信群：已保存确认，不塞发群教学
       var displayTitle = String(
@@ -255,21 +257,27 @@ export function mountPreviewTaskDock(root, hooks) {
       if (result.platform === "moments_grid") {
         shareHint.textContent =
           result.publishGuide ||
-          ("已保存到本机 · 共 " + outputs.length + " 张 1:1，有几张发几张");
+          ("已保存到此游记文件夹 · 共 " + outputs.length + " 张 1:1，有几张发几张");
         textWrap.appendChild(shareHint);
       } else if (result.platform === "wechat_moments") {
         shareHint.textContent =
           outputs.length > 1
-            ? "这不是九宫格 · 已保存到本机 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
-            : "这不是九宫格 · 已保存到本机 · 按序发到朋友圈连读";
+            ? "这不是九宫格 · 已保存到此游记文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
+            : "这不是九宫格 · 已保存到此游记文件夹 · 按序发到朋友圈连读";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "xiaohongshu") {
         shareHint.textContent =
           outputs.length > 1
-            ? "已保存到本机 · 共 " + outputs.length + " 张，导入小红书按序发布"
-            : "已保存到本机 · 导入小红书发布即可";
+            ? "已保存到此游记文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
+            : "已保存到此游记文件夹 · 导入小红书发布即可";
+        textWrap.appendChild(shareHint);
+      } else if (result.platform === "poster_bric") {
+        shareHint.textContent = "已保存到此游记文件夹 · 单屏拼贴海报";
         textWrap.appendChild(shareHint);
       } else {
+        // FE-DFX-30 · 稳定成功面副文案（此游记文件夹）
+        shareHint.textContent = "已保存到此游记文件夹";
+        textWrap.appendChild(shareHint);
         // Help H4 按需；默认面不展示发群三要素（First-Session Trust）
         trackStudioEvent("longshot_success_share_hint_shown", {
           platform: result.platform || "wechat_chat",
@@ -299,13 +307,25 @@ export function mountPreviewTaskDock(root, hooks) {
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
 
+    // FE-DFX-31 · 失败：重试（不改 confirmed platform）+ 换种分享方式
+    if (job && job.status === "failed" && typeof hooks.onReExport === "function") {
+      var retryBtn = document.createElement("button");
+      retryBtn.type = "button";
+      retryBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      retryBtn.textContent = "重试";
+      retryBtn.addEventListener("click", function () {
+        hooks.onReExport({ tripId: tripId, source: "task_dock_retry" });
+      });
+      actions.appendChild(retryBtn);
+    }
+
     // FE-SR-08 / USR-03 · 成功与失败均提供「换种分享方式」（禁止第二套成功面）
     if (typeof hooks.onSwitchShareMethod === "function") {
       var switchBtn = document.createElement("button");
       switchBtn.type = "button";
       switchBtn.className =
         job && job.status === "failed"
-          ? "preview-task-dock__btn preview-task-dock__btn--accent"
+          ? "preview-task-dock__btn preview-task-dock__btn--ghost"
           : "preview-task-dock__btn preview-task-dock__btn--ghost";
       var actionText = "换种分享方式";
       switchBtn.setAttribute("data-share-ready-switch", "1");
@@ -328,6 +348,10 @@ export function mountPreviewTaskDock(root, hooks) {
             tripId: tripId || null,
           });
           trackStudioEvent("ftue_reveal_folder", {
+            tripId: tripId || null,
+            source: "task_dock",
+          });
+          trackStudioEvent("export_open_folder_clicked", {
             tripId: tripId || null,
             source: "task_dock",
           });
@@ -436,7 +460,14 @@ export function mountPreviewTaskDock(root, hooks) {
     opts = opts || {};
     clearTimers();
     dock.hidden = false;
-    dock.className = "preview-task-dock preview-task-dock--warn";
+    var titleText = opts.title || "版面有改动";
+    // FE-DFX-41 · 「预览需更新」在窄屏走 compact（≤48px）
+    var compact =
+      opts.compact === true ||
+      (typeof titleText === "string" && titleText.indexOf("预览需更新") !== -1);
+    dock.className =
+      "preview-task-dock preview-task-dock--warn" +
+      (compact ? " preview-task-dock--compact" : "");
     dock.innerHTML = "";
 
     var icon = document.createElement("span");
@@ -447,25 +478,27 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "版面有改动";
+    main.textContent = compact ? "预览需更新" : titleText;
     textWrap.appendChild(main);
-    var sub = document.createElement("small");
-    sub.textContent =
-      opts.subtitle || "改过拼图或版式后，请先更新版面再导出";
-    textWrap.appendChild(sub);
-    // F-EXP-08 / SF-EXP-02 · 稍后 dismiss 后再见，仍提示导出会拦
-    if (opts.remindExport !== false) {
-      var remind = document.createElement("small");
-      remind.className = "preview-task-dock__remind";
-      remind.textContent = opts.remindText || "导出时仍会提醒";
-      textWrap.appendChild(remind);
-    }
-    if (opts.helpLink !== false) {
-      appendHelpDeepLink(
-        textWrap,
-        "H3",
-        HELP_COPY.helpDeepLinkPending || "「分享图需更新」是什么意思 →"
-      );
+    if (!compact) {
+      var sub = document.createElement("small");
+      sub.textContent =
+        opts.subtitle || "改过拼图或版式后，请先更新版面再导出";
+      textWrap.appendChild(sub);
+      // F-EXP-08 / SF-EXP-02 · 稍后 dismiss 后再见，仍提示导出会拦
+      if (opts.remindExport !== false) {
+        var remind = document.createElement("small");
+        remind.className = "preview-task-dock__remind";
+        remind.textContent = opts.remindText || "导出时仍会提醒";
+        textWrap.appendChild(remind);
+      }
+      if (opts.helpLink !== false) {
+        appendHelpDeepLink(
+          textWrap,
+          "H3",
+          HELP_COPY.helpDeepLinkPending || "「分享图需更新」是什么意思 →"
+        );
+      }
     }
 
     var actions = document.createElement("div");
@@ -667,6 +700,16 @@ export function mountPreviewTaskDock(root, hooks) {
 
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
+    if (typeof hooks.onReExport === "function" && opts.retry !== false) {
+      var errRetry = document.createElement("button");
+      errRetry.type = "button";
+      errRetry.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      errRetry.textContent = "重试";
+      errRetry.addEventListener("click", function () {
+        hooks.onReExport({ source: "task_dock_error_retry" });
+      });
+      actions.appendChild(errRetry);
+    }
     if (opts.linkHref && opts.linkText) {
       var link = document.createElement("a");
       link.className = "preview-task-dock__btn preview-task-dock__btn--ghost";

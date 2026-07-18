@@ -25,6 +25,54 @@
   border-color: rgba(255, 183, 77, 0.5);
 }
 
+/* FE-DFX-41 · <768 预览需更新条 ≤48px + safe-area */
+@media (max-width: 767px) {
+  .preview-task-dock--warn.preview-task-dock--compact {
+    max-height: 48px;
+    min-height: 0;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    width: min(100% - 16px, 420px);
+    gap: 6px;
+    overflow: hidden;
+    border-radius: 12px;
+    align-items: center;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__icon {
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__main {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact small,
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__help-link,
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__remind {
+    display: none !important;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__actions {
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+  .preview-task-dock--warn.preview-task-dock--compact .preview-task-dock__btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
 .preview-task-dock--success {
   border-color: rgba(61, 107, 90, 0.6);
   border-radius: 16px;

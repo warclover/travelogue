@@ -80,6 +80,13 @@ export function dockLongshotContentHtml(state) {
       '<span class="preview-toolbar__dock-export-label">导出中</span></span>'
     );
   }
+  if (state === "done") {
+    return (
+      '<span class="preview-toolbar__dock-export-inner preview-toolbar__dock-export-inner--done">' +
+      '<span class="preview-toolbar__dock-export-label" aria-hidden="true">✓</span>' +
+      '<span class="preview-toolbar__dock-export-label">已保存</span></span>'
+    );
+  }
   return (
     '<span class="preview-toolbar__dock-export-inner">' +
     dockIconSvg("scroll") +
@@ -155,6 +162,9 @@ export function setDockLongshotAria(btn, state) {
     if (state === "running") {
       btn.setAttribute("aria-label", "导出中");
       updateDockTip(btn, "导出中…");
+    } else if (state === "done") {
+      btn.setAttribute("aria-label", "已保存到此游记文件夹");
+      updateDockTip(btn, "已保存");
     } else {
       btn.setAttribute("aria-label", "导出长图");
       updateDockTip(btn, "导出长图");

@@ -11,7 +11,12 @@ import {
   trackImportKeepDupesPref,
 } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
-import { startV2Import, startV2UploadImport, buildImportPayload } from "./import-run.js";
+import {
+  startV2Import,
+  startV2UploadImport,
+  buildImportPayload,
+  resolveDemoAlbumExists,
+} from "./import-run.js";
 import {
   isFineSnapshotDirty,
   isPhotoPrefsNonDefault,
@@ -1344,7 +1349,7 @@ function wireTemplateSelect() {
   });
 }
 
-/** FE-FTUE-02：向导 pick · 一键试用示例相册（useDemoAlbum）。 */
+/** FE-FTUE-02 / FE-DFX-44：向导 pick · 一键试用示例相册（先判重再 import）。 */
 function startDemoAlbumImport() {
   if (V2.state === "Importing") {
     if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
@@ -1352,18 +1357,47 @@ function startDemoAlbumImport() {
   }
   trackStudioEvent("ftue_demo_album_click", { source: "wizard" });
   markVisited();
-  _importStarted = true;
-  closeImportWizard("start_demo_album");
-  if (typeof studioToast === "function") {
-    studioToast("正在用示例照片试做一本…", { duration: 2200 });
-  }
+
+  var existing = (V2.trips || []).find(function (t) {
+    return t && t.tripId === "demo-album";
+  });
   var body = {
     useDemoAlbum: true,
     title: "示例游记",
     place: "旅途",
     mode: "quick_share",
   };
-  return startV2Import(body, { source: "示例相册" }).catch(function () { /* import-run handles */ });
+
+  function kickoff(force) {
+    _importStarted = true;
+    closeImportWizard("start_demo_album");
+    if (typeof studioToast === "function") {
+      studioToast(
+        force ? "正在重新生成示例…" : "正在用示例照片试做一本…",
+        { duration: 2200 }
+      );
+    }
+    var payload = force ? Object.assign({}, body, { force: true }) : body;
+    return startV2Import(payload, { source: "示例相册" }).catch(function () {
+      /* import-run handles */
+    });
+  }
+
+  if (existing) {
+    return resolveDemoAlbumExists({
+      previewUrl: "/" + (existing.tripId || "demo-album") + "/index.html",
+      result: { previewUrl: "/" + (existing.tripId || "demo-album") + "/index.html" },
+    }).then(function (choice) {
+      if (choice === "open") {
+        window.location.href =
+          "/" + (existing.tripId || "demo-album") + "/index.html";
+        return null;
+      }
+      if (choice === "regenerate") return kickoff(true);
+      return null;
+    });
+  }
+  return kickoff(false);
 }
 
 export function initImportWizard() {

@@ -798,7 +798,7 @@ def test_preview_export_facade_v1_markers() -> None:
     assert "autoRevealLongshotOutputs" not in longshot
     assert "longshot_auto_reveal" not in longshot
     assert "禁止自动 reveal" in longshot
-    assert "已保存到本机" in task_dock
+    assert "已保存到此游记文件夹" in task_dock
     assert "导出时仍会提醒" in task_dock
     assert "preview-task-dock__remind" in css
     assert "按序发到朋友圈连读" in task_dock

@@ -280,11 +280,29 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     if (recipe_enabled or intent) and "moments_grid" not in allowed_platforms:
         allowed_platforms.append("moments_grid")
     gcs_flag = getattr(cfg.studio, "gcs_poster_bric", None)
-    if bool(getattr(gcs_flag, "enabled", False)) and "poster_bric" not in allowed_platforms:
+    gcs_poster_on = bool(getattr(gcs_flag, "enabled", False))
+    if gcs_poster_on and "poster_bric" not in allowed_platforms:
         allowed_platforms.append("poster_bric")
-    if intent == "poster_bric" and "poster_bric" not in allowed_platforms:
-        # Explicit intent still requires flag (Writer rejects when disabled).
-        allowed_platforms.append("poster_bric")
+
+    # AC-DFX-04 · flag off 时前后端双拒（禁止半开：UI 可见但任务成功走长图）
+    platform_hint = (
+        str(platform_raw).strip()
+        if platform_raw not in (None, "")
+        else ""
+    )
+    if (
+        not gcs_poster_on
+        and (intent == "poster_bric" or platform_hint == "poster_bric")
+    ):
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_GCS_POSTER_DISABLED",
+                "message": "单屏海报未开启（features.gcs_poster_bric.enabled=false）",
+            },
+        )
+        return
 
     recipe = None
     use_recipe = bool(recipe_enabled or intent)
@@ -451,6 +469,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             "profileLabel": result.profile_label,
             "targetPageCount": result.target_page_count,
             "publishGuide": result.publish_guide,
+            "outputFormat": getattr(result, "output_format", None) or fmt,
             "keptN": count_kept_n(trip if isinstance(trip, dict) else None),
             "intent": getattr(recipe, "intent", None) if recipe else None,
         }

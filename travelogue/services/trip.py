@@ -288,14 +288,21 @@ def apply_intent(
     intent["version"] = "1"
     meta = trip.setdefault("meta", {})
 
-    if title is not _UNSET:
+    title_touched = title is not _UNSET
+    rename_migrated = False
+    if title_touched:
         cleaned = _clean_str(title, limit=20)
         if cleaned:
+            prev_display = str(meta.get("displayTitle") or "").strip()
             intent["title"] = cleaned
             meta["title"] = cleaned
+            # D2 · user rename SSOT: dual-write displayTitle (same value)
+            meta["displayTitle"] = cleaned
+            rename_migrated = bool(prev_display) and prev_display != cleaned
         else:
             intent.pop("title", None)
             meta.pop("title", None)
+            meta.pop("displayTitle", None)
 
     if places is not _UNSET:
         place_list = [
@@ -414,6 +421,28 @@ def apply_intent(
         timespec="seconds"
     )
     trip["intent"] = intent
+
+    # D2 · stale displayTitle migration on any user save (notes-only included).
+    # Preview/load must not call this path — only apply_intent / save-copy.
+    if not title_touched:
+        from travelogue.domain.title_humanize import migrate_stale_display_title
+
+        rename_migrated = migrate_stale_display_title(meta)
+
+    if rename_migrated:
+        try:
+            from travelogue.domain.studio_events import append_studio_homepage_event
+
+            append_studio_homepage_event(
+                "rename_propagation_migrated",
+                {
+                    "title": str(meta.get("title") or "")[:32],
+                    "displayTitle": str(meta.get("displayTitle") or "")[:32],
+                },
+            )
+        except Exception:
+            pass
+
     return intent
 
 

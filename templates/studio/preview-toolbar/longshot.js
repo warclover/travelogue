@@ -16,12 +16,14 @@ import {
 import {
   bindPanelDraft,
   buildPanelHtml,
+  confirmedExportSummary,
   ctaLabelForPlatform,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
   isSmartCropUiEnabled,
   markMomentsCoachSeen,
   readExportPrefs,
+  shortCtaLabelForPlatform,
   shouldHintSparseMoments,
   sparseMomentsHintMessage,
   writeExportPrefs,
@@ -136,9 +138,11 @@ var LAYOUT_UPDATING_KEY = "travelogue.studio.layoutUpdating";
 var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
 var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
 var EXPORT_SIDE_EFFECT_KEY = "travelogue.studio.exportSideEffect";
+var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
 var COPY_GATE_SEVERE_KEY = "travelogue.studio.copyGateSevere.";
 var EXPORT_AFTER_TTL_MS = 10 * 60 * 1000;
 var EXPORT_SIDE_EFFECT_MS = 60 * 1000;
+var AUTO_EXPORT_TTL_MS = 5 * 60 * 1000;
 var _exportStartFrom = "direct";
 var _pagehideBound = false;
 var _copyGateBypassTitle = null;
@@ -535,42 +539,39 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn) return;
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
+    // AC-DFX-02 · confirmed prefs 为 CTA SSOT；tipRecipe 不得覆盖用户已确认平台
     var platform = prefs.platform || "wechat_chat";
     var tipRecipe = null;
     var tripId = root._tripId || "";
     if (isOutputRecipeEnabled()) {
       var keptN = keptNForRecipe(tripId);
       tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
-      if (tipRecipe && tipRecipe.ctaLabel && !tipRecipe.needsIntent) {
-        platform = tipRecipe.platform || platform;
-      }
     }
-    var label =
-      tipRecipe && tipRecipe.ctaLabel && !tipRecipe.needsIntent
-        ? tipRecipe.ctaLabel
-        : tipRecipe && tipRecipe.needsIntent
-          ? tipRecipe.ctaLabel || "选择并导出"
-          : ctaLabelForPlatform(platform);
-    // deepHint.subtitle · Narrative≥50 副文（H-A-07）
-    if (tipRecipe && tipRecipe.subtitle) {
+    var label;
+    if (tipRecipe && tipRecipe.needsIntent) {
+      label = tipRecipe.ctaLabel || "选择并导出";
+    } else if (
+      tipRecipe &&
+      tipRecipe.ctaLabel &&
+      tipRecipe.platform &&
+      tipRecipe.platform === platform
+    ) {
+      label = tipRecipe.ctaLabel;
+    } else {
+      label = ctaLabelForPlatform(platform);
+    }
+    // deepHint.subtitle · Narrative≥50 副文（H-A-07）；仅当配方平台与 confirmed 一致
+    if (tipRecipe && tipRecipe.subtitle && tipRecipe.platform === platform) {
       btn.setAttribute("data-recipe-subtitle", tipRecipe.subtitle);
     } else {
       btn.removeAttribute("data-recipe-subtitle");
     }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
-      // Compact dock: short chip text; full CTA on aria/tooltip.
-      // Share-Ready · Sparse 缩短形「发微信群」（D-SR-05）；Ambiguous 未选 →「选择分享」
       var short =
         tipRecipe && tipRecipe.needsIntent
           ? "选择分享"
-          : platform === "moments_grid"
-            ? "九宫格"
-            : platform === "wechat_moments"
-              ? "连读"
-              : platform === "xiaohongshu"
-                ? "小红书"
-                : "发微信群";
+          : shortCtaLabelForPlatform(platform);
       var labelEl = btn.querySelector(".preview-toolbar__dock-export-label");
       if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
         labelEl.textContent = short;
@@ -579,17 +580,10 @@ export function cancelPreviewLongshotExport(root) {
       updateDockTip(btn, label);
       return;
     }
-    // F-EXP-09 / FE-SR-05 · 非 Dock：可见短标签含微信语义；aria 用完整 CTA
     var shortBar =
       tipRecipe && tipRecipe.needsIntent
         ? "选择分享"
-        : platform === "wechat_moments"
-          ? "朋友圈"
-          : platform === "moments_grid"
-            ? "九宫格"
-            : platform === "xiaohongshu"
-              ? "小红书"
-              : "发微信群";
+        : shortCtaLabelForPlatform(platform);
     if (!btn.classList.contains("preview-toolbar__longshot--running")) {
       btn.textContent = shortBar;
     }
@@ -641,6 +635,12 @@ export function cancelPreviewLongshotExport(root) {
       var n = prefs.slideCount == null ? "auto" : String(prefs.slideCount);
       return "小红书 · " + n + " 张 · " + prefs.scale + "×";
     }
+    if (platform === "poster_bric") {
+      return "单屏海报 · " + prefs.scale + "×";
+    }
+    if (platform === "moments_grid") {
+      return "九宫格 · " + prefs.scale + "×";
+    }
     var modeLabel = prefs.mode === "full" ? "完整" : "按章";
     var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "带文字";
     var capLabel = prefs.captions ? "" : " · 无图注";
@@ -659,7 +659,15 @@ export function cancelPreviewLongshotExport(root) {
   export function buildLongshotRequestFromPage(tripId) {
     var prefs = readLongshotExportPrefs();
     var platform = prefs.platform || "wechat_chat";
-    var intent = readSessionIntent(tripId) || PLATFORM_TO_INTENT[platform] || null;
+    // AC-DFX-01 · confirmed platform → intent；禁止陈旧 session intent 覆盖（如 chat 盖住 poster）
+    var mappedIntent = PLATFORM_TO_INTENT[platform] || null;
+    var sessionIntent = readSessionIntent(tripId);
+    if (mappedIntent && sessionIntent && sessionIntent !== mappedIntent) {
+      writeSessionIntent(tripId, mappedIntent);
+    } else if (mappedIntent && !sessionIntent) {
+      writeSessionIntent(tripId, mappedIntent);
+    }
+    var intent = mappedIntent || sessionIntent || null;
     return buildLongshotRequest(tripId, {
       scale: prefs.scale,
       format: "png",
@@ -671,6 +679,39 @@ export function cancelPreviewLongshotExport(root) {
       slideCount: prefs.slideCount,
       padMode: prefs.padMode,
     });
+  }
+
+  /** Fail-closed：confirmed prefs 与即将提交的 platform 必须一致 */
+  function assertConfirmedPlatformPayload(prefsPlatform, payloadPlatform) {
+    var a = String(prefsPlatform || "wechat_chat");
+    var b = String(payloadPlatform || "wechat_chat");
+    if (a !== b) {
+      trackStudioEvent("export_platform_mismatch", {
+        confirmed: a,
+        payload: b,
+      });
+      return false;
+    }
+    return true;
+  }
+
+  function isExportAfterLayoutActive(tripId) {
+    var data = _readJsonStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY);
+    if (!data) return false;
+    if (String(data.tripId || "") !== String(tripId || "")) return false;
+    if (data.ts && Date.now() - Number(data.ts) > EXPORT_AFTER_TTL_MS) {
+      _removeStorage(sessionStorage, EXPORT_AFTER_LAYOUT_KEY);
+      return false;
+    }
+    return true;
+  }
+
+  function syncConfirmedExportSummary(pop) {
+    if (!pop) return;
+    var el = pop.querySelector("[data-export-confirmed-summary]");
+    if (!el) return;
+    var prefs = readExportPrefs();
+    el.textContent = confirmedExportSummary(prefs.platform || "wechat_chat");
   }
 
   export function isReaderSurfaceMode() {
@@ -824,12 +865,17 @@ export function cancelPreviewLongshotExport(root) {
 
   export function closeStudioExportPopover() {
     document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
+      releaseExportPopoverFocus(pop);
       pop.hidden = true;
+      pop.classList.remove("preview-toolbar__export-popover--sheet");
     });
     if (_studioExportPopoverClose) {
       document.removeEventListener("click", _studioExportPopoverClose, true);
       _studioExportPopoverClose = null;
     }
+    try {
+      document.documentElement.classList.remove("preview-export-popover-open");
+    } catch (eLock) {}
   }
 
   export function syncStudioExportPopoverUI(pop) {
@@ -959,24 +1005,44 @@ export function cancelPreviewLongshotExport(root) {
     pop._applyDraft = function () {
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
+      var confirmedPlatform = draft.platform || "wechat_chat";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
-        platform: draft.platform,
+        platform: confirmedPlatform,
         mode: draft.mode,
         scale: draft.scale,
         slideCount: draft.slideCount,
         padMode: draft.padMode,
       });
-      if (draft.platform && draft.platform !== "wechat_chat") {
-        maybeShowPlatformPickTip(prevPlatform, draft.platform, _showToolbarToast);
+      // Confirmed platform SSOT · 同步 session intent，清陈旧续跑 pending
+      var mappedIntent = PLATFORM_TO_INTENT[confirmedPlatform] || null;
+      var tripIdApply = _tripIdFromPath() || root._tripId || "";
+      if (mappedIntent) {
+        writeSessionIntent(tripIdApply, mappedIntent);
+      } else {
+        clearSessionIntent(tripIdApply);
+      }
+      _pendingExportPlatform = null;
+      clearResumePlatform();
+      if (confirmedPlatform && confirmedPlatform !== "wechat_chat") {
+        maybeShowPlatformPickTip(prevPlatform, confirmedPlatform, _showToolbarToast);
         markMomentsCoachSeen();
       }
-      if (draft.platform === "wechat_moments") {
+      if (confirmedPlatform === "wechat_moments") {
         maybeToastSparseMoments();
       }
+      syncConfirmedExportSummary(pop);
       syncLongshotCtaLabel(root);
       refreshLongshotExportMeta(root);
     };
+
+    // 永久确定处理器（不依赖 Promise once），保证 JS/辅助点击也能落盘 confirmed
+    var okBtnAlways = pop.querySelector('[data-action="ok"]');
+    if (okBtnAlways) {
+      okBtnAlways.addEventListener("click", function () {
+        if (typeof pop._applyDraft === "function") pop._applyDraft();
+      });
+    }
     pop._readDraftFromPrefs = function () {
       var prefs = readLongshotExportPrefs();
       if (panel.setDraft) {
@@ -990,10 +1056,60 @@ export function cancelPreviewLongshotExport(root) {
       }
       syncStudioExportPopoverUI(pop);
       syncExportPopoverCopyUi();
+      syncConfirmedExportSummary(pop);
     };
 
     wrap.appendChild(pop);
     return pop;
+  }
+
+  function applyExportPopoverLayoutMode(pop) {
+    if (!pop) return;
+    var sheet = typeof window !== "undefined" && window.innerHeight < 560;
+    pop.classList.toggle("preview-toolbar__export-popover--sheet", sheet);
+    if (sheet) {
+      pop.setAttribute("data-export-sheet", "1");
+    } else {
+      pop.removeAttribute("data-export-sheet");
+    }
+  }
+
+  function trapExportPopoverFocus(pop) {
+    if (!pop) return;
+    var focusables = pop.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusables.length) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    function onKey(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeStudioExportPopover();
+        return;
+      }
+      if (e.key !== "Tab" || focusables.length < 2) return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    pop._focusTrapHandler = onKey;
+    pop.addEventListener("keydown", onKey);
+    window.setTimeout(function () {
+      var ok = pop.querySelector('[data-action="ok"]');
+      if (ok && typeof ok.focus === "function") ok.focus();
+      else if (typeof first.focus === "function") first.focus();
+    }, 0);
+  }
+
+  function releaseExportPopoverFocus(pop) {
+    if (!pop || !pop._focusTrapHandler) return;
+    pop.removeEventListener("keydown", pop._focusTrapHandler);
+    pop._focusTrapHandler = null;
   }
 
   export function openStudioLongshotExportPanel(root) {
@@ -1005,7 +1121,12 @@ export function cancelPreviewLongshotExport(root) {
       }
       closeStudioExportPopover();
       pop._readDraftFromPrefs();
+      applyExportPopoverLayoutMode(pop);
       pop.hidden = false;
+      try {
+        document.documentElement.classList.add("preview-export-popover-open");
+      } catch (eOpen) {}
+      trapExportPopoverFocus(pop);
 
       function finish(ok) {
         closeStudioExportPopover();
@@ -1017,7 +1138,8 @@ export function cancelPreviewLongshotExport(root) {
       var cancelBtn = pop.querySelector('[data-action="cancel"]');
 
       function onOk() {
-        pop._applyDraft();
+        // applyDraft 由永久 OK 处理器先行执行；此处只收尾关闭
+        if (typeof pop._applyDraft === "function") pop._applyDraft();
         finish(true);
       }
       function onCancel() {
@@ -1315,6 +1437,7 @@ export function cancelPreviewLongshotExport(root) {
 
     if (state === "running") {
       root._longshotStale = false;
+      window.clearTimeout(root._longshotDoneIdleTimer);
       btn.classList.add("preview-toolbar__longshot--running");
       setLongshotSplitState(root, "running");
       if (zone) zone.classList.add("preview-toolbar__export-zone--running");
@@ -1352,17 +1475,32 @@ export function cancelPreviewLongshotExport(root) {
     if (state === "done") {
       root._longshotStale = false;
       if (isV3) {
-        btn.classList.add("preview-toolbar__longshot--idle");
-        setLongshotSplitState(root, "idle");
+        // FE-DFX-30 · 稳定成功态：主钮短暂 done，Dock 为权威成功面
+        btn.classList.add("preview-toolbar__longshot--done");
+        setLongshotSplitState(root, "done");
         setLongshotControlsDisabled(root, false);
         if (isDock) {
-          btn.innerHTML = dockLongshotIconHtml("idle");
-          setDockLongshotAria(btn, "idle");
+          btn.innerHTML = dockLongshotIconHtml("done");
+          setDockLongshotAria(btn, "done");
+        } else {
+          btn.textContent = "✓ 已保存";
         }
-        syncLongshotCtaLabel(root);
-        root._exportDockActive = false;
+        root._exportDockActive = true;
         if (badge) badge.hidden = true;
         notifyHelpL1Idle(root);
+        window.clearTimeout(root._longshotDoneIdleTimer);
+        root._longshotDoneIdleTimer = window.setTimeout(function () {
+          if (!btn.isConnected) return;
+          btn.classList.remove("preview-toolbar__longshot--done");
+          btn.classList.add("preview-toolbar__longshot--idle");
+          setLongshotSplitState(root, "idle");
+          if (isDock) {
+            btn.innerHTML = dockLongshotIconHtml("idle");
+            setDockLongshotAria(btn, "idle");
+          }
+          syncLongshotCtaLabel(root);
+          root._exportDockActive = false;
+        }, 8000);
         return;
       }
       btn.classList.add("preview-toolbar__longshot--done");
@@ -2189,14 +2327,17 @@ export function cancelPreviewLongshotExport(root) {
     hideLongshotDrawer(root);
 
     var prefs = readLongshotExportPrefs();
-    // AC-TRU-07 · 续跑 platform 权威：pending → resume session → prefs
+    // AC-DFX-01 · confirmed prefs 为默认权威；resume 仅在「更新版面后续跑」激活时优先
+    var prefsPlatform = prefs.platform || "wechat_chat";
+    var afterLayout = isExportAfterLayoutActive(tripId);
     var platform =
       _pendingExportPlatform ||
-      readResumePlatform(tripId) ||
-      prefs.platform ||
-      "wechat_chat";
+      (afterLayout ? readResumePlatform(tripId) : null) ||
+      prefsPlatform;
     _pendingExportPlatform = null;
-    syncPrefsPlatform(platform);
+    if (platform !== prefsPlatform) {
+      syncPrefsPlatform(platform);
+    }
     var runningHint =
       platform === "moments_grid"
         ? "正在导出朋友圈九宫格…"
@@ -2204,7 +2345,9 @@ export function cancelPreviewLongshotExport(root) {
           ? "正在导出朋友圈长图连读…"
           : platform === "xiaohongshu"
             ? "正在导出小红书配图…"
-            : "正在保存…";
+            : platform === "poster_bric"
+              ? "正在导出单屏海报…"
+              : "正在保存…";
     setLongshotExportState(root, "running", { hint: runningHint });
     _setSlowHint(root, "", false);
 
@@ -2224,6 +2367,13 @@ export function cancelPreviewLongshotExport(root) {
     var req = buildLongshotRequestFromPage(tripId);
     if (req && platform) {
       req.platform = platform;
+      var mapped = PLATFORM_TO_INTENT[platform];
+      if (mapped) req.intent = mapped;
+    }
+    if (!assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)) {
+      setLongshotExportState(root, "idle");
+      _showToolbarToast("导出目标不一致，请重新在导出设置里确认", { error: true });
+      return;
     }
 
     function finishClientFallback() {
@@ -2351,6 +2501,34 @@ export function cancelPreviewLongshotExport(root) {
               });
               setLongshotExportState(root, "done");
               showLongshotDrawer(root, job);
+              // FE-DFX-30 · Dock 为主；toast 短提示叠加
+              try {
+                var nOut = (result.outputs && result.outputs.length) || 0;
+                var toastLabel = shortCtaLabelForPlatform(
+                  result.platform || platform || "wechat_chat"
+                );
+                var toastMsg =
+                  nOut > 1
+                    ? "已导出 " + nOut + " 张 · " + toastLabel
+                    : "已导出 · " + toastLabel;
+                if (typeof studioToast === "function") {
+                  studioToast(toastMsg, { duration: 4000 });
+                } else {
+                  _showToolbarToast(toastMsg);
+                }
+                trackStudioEvent("export_ok_toast_shown", {
+                  platform: result.platform || platform,
+                  output_count: nOut,
+                  trip_id: tripId,
+                });
+              } catch (_toastErr) {}
+              try {
+                window.dispatchEvent(
+                  new CustomEvent("travelogue:longshot-export-ready", {
+                    detail: { tripId: tripId, platform: result.platform || platform },
+                  })
+                );
+              } catch (_evErr) {}
             } else if (job.status === "failed") {
               var err = job.error || {};
               // Playwright missing mid-job → auto client track (non-terminal).
@@ -2403,6 +2581,45 @@ export function cancelPreviewLongshotExport(root) {
         // F-TRU-EXP-04 · 启动请求断服
         applyDisconnectExportError(root, tripId);
       });
+  }
+
+  /** FE-DFX-43 · FTUE「保存长图」续跑：query/session → 默认 wechat_chat 导出 */
+  export function consumeAutoExport(root, tripId) {
+    var platform = null;
+    try {
+      var q = new URLSearchParams(location.search || "").get("autoExport");
+      if (q) platform = String(q).trim() || "wechat_chat";
+    } catch (_q) {}
+    var flagged = _readJsonStorage(sessionStorage, AUTO_EXPORT_KEY);
+    if (flagged) {
+      _removeStorage(sessionStorage, AUTO_EXPORT_KEY);
+      if (
+        flagged.ts &&
+        Date.now() - Number(flagged.ts) <= AUTO_EXPORT_TTL_MS &&
+        String(flagged.tripId || "") === String(tripId || "")
+      ) {
+        platform = String(flagged.platform || platform || "wechat_chat");
+      }
+    }
+    if (!platform) return false;
+    if (platform !== "wechat_chat" && platform !== "chat_longshot") {
+      platform = "wechat_chat";
+    } else {
+      platform = "wechat_chat";
+    }
+    try {
+      if (location.search && /(?:^|[?&])autoExport=/.test(location.search)) {
+        var url = new URL(location.href);
+        url.searchParams.delete("autoExport");
+        history.replaceState(null, "", url.pathname + url.search + url.hash);
+      }
+    } catch (_hist) {}
+    _exportStartFrom = "ftue_save_longshot";
+    _pendingExportPlatform = platform;
+    writeResumePlatform(tripId, platform);
+    syncPrefsPlatform(platform);
+    maybeCopyGateThenExport(root, tripId);
+    return true;
   }
 
   export function consumeExportAfterLayout(root, tripId) {

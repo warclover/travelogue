@@ -33,11 +33,13 @@ export function isSupported(layout) {
 /**
  * Unsupported 文案与动作区（§10.3 · D-20）。
  * @param {string} layout
- * @param {{ width?: number }} [ctx] 当前视口宽度（narrow 态 lead 提示）
+ * @param {{ width?: number, miniappQrAvailable?: boolean }} [ctx]
+ *   width：narrow 态 lead 提示；miniappQrAvailable：FE-DFX-40 无能力时不塞 QR 位
  */
 export function unsupportedCopy(layout, ctx) {
   ctx = ctx || {};
   var width = Number(ctx.width) || 0;
+  var qrAvailable = ctx.miniappQrAvailable !== false;
   if (layout === "unsupported_rotate") {
     return {
       title: "请旋转至横屏使用 Studio",
@@ -46,13 +48,21 @@ export function unsupportedCopy(layout, ctx) {
     };
   }
   if (layout === "unsupported_phone") {
+    var phoneActions = [];
+    if (qrAvailable) {
+      phoneActions.push({
+        type: "miniapp_qr",
+        src: MINIAPP_QR_SRC,
+        fallback: "小程序即将上线",
+      });
+    }
+    phoneActions.push({ type: "copy_link", label: "复制电脑打开地址" });
     return {
       title: "请在电脑浏览器打开 Studio",
-      lead: "手机端的阅读与分享请使用微信小程序；工作台导入请在电脑浏览器打开。",
-      actions: [
-        { type: "miniapp_qr", src: MINIAPP_QR_SRC, fallback: "小程序即将上线" },
-        { type: "copy_link", label: "复制电脑打开地址" },
-      ],
+      lead: qrAvailable
+        ? "手机端的阅读与分享请使用微信小程序；工作台导入请在电脑浏览器打开。"
+        : "请在电脑浏览器打开本页以使用工作台；手机端小程序即将上线。",
+      actions: phoneActions,
     };
   }
   var widthHint = width > 0 ? "当前 " + Math.round(width) + "px · " : "";

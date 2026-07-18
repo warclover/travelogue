@@ -140,6 +140,20 @@ def test_ac_tpc_07_export_n4_no_screens_mutation(tmp_path: Path) -> None:
     assert (trip_dir / "runs" / "gcs-poster-bric.json").is_file()
 
 
+def test_poster_bric_ignores_jpeg_fmt(tmp_path: Path) -> None:
+    """BE-DFX-21 · poster always PNG even when job asks for jpeg."""
+    trips = tmp_path / "trips"
+    create_trip("poster-jpeg", trips, title="海报强制PNG")
+    trip_dir = trips / "poster-jpeg"
+    _seed_kept_photos(trip_dir, 4)
+    result = export_poster_bric_pack(trip_dir, cfg=_cfg_on(), fmt="jpeg")
+    assert result.output_format == "png"
+    assert list(trip_dir.glob("*-poster.jpg")) == []
+    finals = list(trip_dir.glob("*-poster.png"))
+    assert len(finals) == 1
+    assert finals[0].read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
 def test_ac_tpc_07_reject_n2(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     create_trip("poster-2", trips, title="两张拒")
@@ -166,8 +180,13 @@ def test_ac_tpc_07_flag_default_off(tmp_path: Path) -> None:
     create_trip("poster-off", trips, title="默认关")
     trip_dir = trips / "poster-off"
     _seed_kept_photos(trip_dir, 4)
-    with pytest.raises(LongshotExportError) as ei:
-        export_poster_bric_pack(trip_dir)
+    # 隔离本机 dogfood config.yaml（可能已打开 gcs_poster_bric）
+    with patch(
+        "travelogue.export.poster_bric_pack.gcs_poster_bric_enabled",
+        return_value=False,
+    ):
+        with pytest.raises(LongshotExportError) as ei:
+            export_poster_bric_pack(trip_dir)
     assert getattr(ei.value, "code", None) == "E_GCS_POSTER_DISABLED"
 
 
