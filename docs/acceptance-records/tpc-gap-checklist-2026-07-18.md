@@ -26,8 +26,8 @@
 | **AC-TPC-04② 删模块** | YAML 键已清；`main_eligibility.py` 仍承载 AR 算术（off 路径）；全删需狗粮后另 PR |
 | **狗粮周签核** | `layout_compare.py` + 手记 jsonl（模板见下） |
 | **正式盲评** | D-TPC-10 对外默认开前置 |
-| **MIT BRIC vendor** | 仍用 shelf stub；钉 commit 可另 PR |
-| **AC-TPC-11 实测** | 跑 `layout_contract_perf.py --write` 写入 `tpc-curate-perf.json` |
+| **MIT BRIC vendor** | ✅ `travelogue/export/_vendor/collage` @ `76f8888`（float path；shelf 回退） |
+| **AC-TPC-11 实测** | ✅ `docs/acceptance-records/tpc-curate-perf.json`（warm-up + P95 Δ -9.79% ≤ +10%） |
 
 ## 狗粮手记模板
 

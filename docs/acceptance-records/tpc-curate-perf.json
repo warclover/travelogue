@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-07-18T05:47:11+00:00",
+  "trip": "tests/fixtures/clustering/golden-mixed-scenes/assets-manifest.json",
+  "repeats": 5,
+  "budgetPct": 10.0,
+  "offMs": [
+    51.76709999796003,
+    45.64530000789091,
+    52.16419999487698,
+    54.5791000186,
+    50.10679998667911
+  ],
+  "onMs": [
+    46.21519998181611,
+    44.41719999886118,
+    49.23549998784438,
+    48.44860002049245,
+    42.29050001595169
+  ],
+  "offP95Ms": 54.58,
+  "onP95Ms": 49.24,
+  "deltaPct": -9.79,
+  "withinBudget": true,
+  "medianOffMs": 51.77,
+  "medianOnMs": 46.22
+}

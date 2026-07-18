@@ -140,7 +140,16 @@ def main() -> int:
         }
         windows = _collect_windows_from_chapters(body.get("chapters") or [], assets_map)
         for label, aids in windows:
-            diff = compute_mix_shadow_diff(aids, aspects, assets_map)
+            committed = None
+            if args.from_existing and ":" in label:
+                # label form: "{chapterId}#{i}:{patternId}"
+                committed = label.rsplit(":", 1)[-1].strip() or None
+            diff = compute_mix_shadow_diff(
+                aids,
+                aspects,
+                assets_map,
+                committed_pattern_id=committed,
+            )
             row = {
                 "tripId": trip_dir.name,
                 "window": label,

@@ -10,7 +10,7 @@
 
 | 项 | 路径 / 说明 |
 |----|-------------|
-| Composer stub | `travelogue/export/bric_compose.py`（shelf packer；签名对齐 MIT BRIC；可替换实现） |
+| Composer | `travelogue/export/bric_compose.py` → vendored MIT BRIC（`export/_vendor/collage` @ `76f8888`）；失败时回退 shelf packer |
 | Writer | `travelogue/export/poster_bric_pack.py` |
 | Flag | `features.gcs_poster_bric.enabled`（或 `studio.gcs_poster_bric`）默认 **false** |
 | Recipe | `intent/engine/platform=poster_bric`；▾「单屏海报」；禁串「九宫格」 |

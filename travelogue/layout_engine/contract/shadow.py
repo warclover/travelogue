@@ -28,6 +28,7 @@ class MixShadowDiff:
     index_pattern_ids: list[str]
     only_in_live: list[str] = field(default_factory=list)
     only_in_index: list[str] = field(default_factory=list)
+    harness_fp: bool = False
 
     @property
     def has_diff(self) -> bool:
@@ -41,6 +42,7 @@ class MixShadowDiff:
             "onlyInLive": list(self.only_in_live),
             "onlyInIndex": list(self.only_in_index),
             "hasDiff": self.has_diff,
+            "harnessFp": self.harness_fp,
         }
 
 
@@ -84,7 +86,7 @@ def live_orderable_pattern_ids(
     registry: dict | None = None,
 ) -> list[str]:
     """Patterns for which ``try_order_for_pattern`` returns a non-empty order."""
-    reg = registry or mosaic_registry()
+    reg = mosaic_registry() if registry is None else registry
     ids: list[str] = []
     for pat in patterns_for_window_size(len(asset_ids), reg):
         ordered = try_order_for_pattern(
@@ -109,7 +111,15 @@ def compute_mix_shadow_diff(
     median_sharp: float | None = None,
     registry: dict | None = None,
     mix_index: Mapping[MixKey, list[str] | tuple[str, ...]] | None = None,
+    committed_pattern_id: str | None = None,
 ) -> MixShadowDiff:
+    """Compare mix-index vs live try_order sets.
+
+    ``committed_pattern_id`` (from-existing harness): when the emitted screen's
+    pattern is already in the index but ``try_order`` fails to re-order (common
+    for frozen chapter windows), treat it as live so the row is not a false
+    ``onlyInIndex`` diff (AC-TPC-12 signoff harnessFp).
+    """
     key = mix_key_from_aspects(list(asset_ids), aspects)
     mix_label = format_mix_key(key)
     if mix_index is not None:
@@ -124,6 +134,11 @@ def compute_mix_shadow_diff(
         median_sharp=median_sharp,
         registry=registry,
     )
+    harness_fp = False
+    committed = str(committed_pattern_id or "").strip()
+    if committed and committed in set(index_ids) and committed not in set(live_ids):
+        live_ids = sorted(set(live_ids) | {committed})
+        harness_fp = True
     live_set = set(live_ids)
     index_set = set(index_ids)
     return MixShadowDiff(
@@ -132,4 +147,5 @@ def compute_mix_shadow_diff(
         index_pattern_ids=index_ids,
         only_in_live=sorted(live_set - index_set),
         only_in_index=sorted(index_set - live_set),
+        harness_fp=harness_fp,
     )

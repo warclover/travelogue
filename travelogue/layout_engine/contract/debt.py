@@ -106,6 +106,74 @@ def mix_holes(
     return holes
 
 
+def _percentile(values: list[float], p: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return round(ordered[0], 6)
+    k = max(0, min(len(ordered) - 1, int(round(p * (len(ordered) - 1)))))
+    return round(ordered[k], 6)
+
+
+def raw_geometry_percentiles(mosaic_logs: list[dict[str, Any]]) -> dict[str, Any]:
+    """P50/P95 for AC-TPC-10 raw geometry fields present on mosaicDecisionLog."""
+    keys = ("heroProminenceRatio", "heroCoverageRatio", "cellAreaCv")
+    out: dict[str, Any] = {"sampleCount": 0}
+    samples: dict[str, list[float]] = {k: [] for k in keys}
+    for e in mosaic_logs:
+        hit = False
+        for k in keys:
+            raw = e.get(k)
+            if isinstance(raw, (int, float)):
+                samples[k].append(float(raw))
+                hit = True
+        if hit:
+            out["sampleCount"] = int(out["sampleCount"]) + 1
+    for k in keys:
+        vals = samples[k]
+        out[k] = {
+            "n": len(vals),
+            "p50": _percentile(vals, 0.50),
+            "p95": _percentile(vals, 0.95),
+        }
+    return out
+
+
+def caption_coverage(
+    mosaic_logs: list[dict[str, Any]],
+    templates: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Caption-active windows vs templates declaring captionAreas (TPC §6.1).
+
+    V1 captionAreas SKUs are deferred — rates may stay 0 until MSR ships.
+    """
+    caption_active = 0
+    for e in mosaic_logs:
+        if e.get("captionActive") or e.get("hasCaption") or e.get("captionTiebreakApplied"):
+            caption_active += 1
+            continue
+        if e.get("captionSlots") or e.get("captionAreas"):
+            caption_active += 1
+
+    with_areas = 0
+    if templates:
+        for t in templates.values():
+            constraints = getattr(t, "constraints", None)
+            if isinstance(constraints, dict) and constraints.get("captionAreas"):
+                with_areas += 1
+            elif isinstance(t, Mapping) and (t.get("constraints") or {}).get("captionAreas"):
+                with_areas += 1
+
+    return {
+        "captionActiveWindows": caption_active,
+        "templatesWithCaptionAreas": with_areas,
+        "coverageRate": (
+            round(min(1.0, with_areas / caption_active), 4) if caption_active else None
+        ),
+    }
+
+
 def build_trip_debt_report(
     *,
     trip_id: str,
@@ -138,6 +206,8 @@ def build_trip_debt_report(
         "windowMixHistogram": window_hist,
         "mixHoles": holes,
         "libraryMixCount": len(library),
+        "captionCoverage": caption_coverage(mosaic_logs, templates),
+        "rawGeometryPercentiles": raw_geometry_percentiles(mosaic_logs),
     }
 
 
@@ -150,6 +220,13 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
     mix_hist: Counter[str] = Counter()
     hole_freq: Counter[str] = Counter()
     match_rates: list[float] = []
+    caption_active_total = 0
+    caption_templates_max = 0
+    geo_samples: dict[str, list[float]] = {
+        "heroProminenceRatio": [],
+        "heroCoverageRatio": [],
+        "cellAreaCv": [],
+    }
 
     for rep in trip_reports:
         legacy = rep.get("legacy") or {}
@@ -163,6 +240,18 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
         rate = rep.get("aspectPatternMatchRate")
         if isinstance(rate, (int, float)):
             match_rates.append(float(rate))
+        cap = rep.get("captionCoverage") or {}
+        caption_active_total += int(cap.get("captionActiveWindows") or 0)
+        caption_templates_max = max(
+            caption_templates_max, int(cap.get("templatesWithCaptionAreas") or 0)
+        )
+        geo = rep.get("rawGeometryPercentiles") or {}
+        for key in geo_samples:
+            bucket = geo.get(key) or {}
+            # Reconstruct approx from p50 when full series unavailable
+            p50 = bucket.get("p50")
+            if isinstance(p50, (int, float)) and int(bucket.get("n") or 0) > 0:
+                geo_samples[key].extend([float(p50)] * int(bucket.get("n") or 0))
 
     return {
         "tripCount": len(trip_reports),
@@ -178,6 +267,23 @@ def merge_debt_reports(trip_reports: list[dict[str, Any]]) -> dict[str, Any]:
         "mixHoleTop": [
             {"mix": m, "windowFreq": f} for m, f in hole_freq.most_common(20)
         ],
+        "captionCoverage": {
+            "captionActiveWindows": caption_active_total,
+            "templatesWithCaptionAreas": caption_templates_max,
+            "coverageRate": (
+                round(min(1.0, caption_templates_max / caption_active_total), 4)
+                if caption_active_total
+                else None
+            ),
+        },
+        "rawGeometryPercentiles": {
+            k: {
+                "n": len(vals),
+                "p50": _percentile(vals, 0.50),
+                "p95": _percentile(vals, 0.95),
+            }
+            for k, vals in geo_samples.items()
+        },
         "trips": [
             {
                 "tripId": r.get("tripId"),

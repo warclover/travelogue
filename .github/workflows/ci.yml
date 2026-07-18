@@ -68,6 +68,9 @@ jobs:
       - name: layout_contract surface (P2-C)
         run: python scripts/lint_layout_contract_surface.py
 
+      - name: GPL license scan (AC-TPC-07 / AC-GCS-09)
+        run: python scripts/license_gpl_scan.py
+
       - name: Pipeline Throughput default flags lint (M5)
         run: python scripts/lint_pt_default_flags.py
 

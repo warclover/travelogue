@@ -76,47 +76,75 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=RECORD_PATH)
     args = parser.parse_args()
 
+    # Default: clustering golden-mixed-scenes (synthesized via load_fixture_trip).
+    # phase16-dogfood/*/trip.json are pattern specs without assets — not curatable.
+    fixture_id = args.fixture or "golden-mixed-scenes"
+    trip_path: Path | None = None
+    trip: dict[str, Any] | None = None
+
     if args.trip_dir:
         trip_path = Path(args.trip_dir) / "trip.json"
-    elif args.fixture:
-        trip_path = (
-            ROOT / "tests" / "fixtures" / "phase16-dogfood" / args.fixture / "trip.json"
-        )
         if not trip_path.is_file():
-            trip_path = (
-                ROOT / "tests" / "fixtures" / "clustering" / args.fixture / "trip.json"
-            )
+            print(f"trip.json not found: {trip_path}", file=sys.stderr)
+            return 1
+        trip = json.loads(trip_path.read_text(encoding="utf-8"))
     else:
-        trip_path = ROOT / "tests" / "fixtures" / "phase16-dogfood" / "golden-mixed-scenes" / "trip.json"
+        for base in (
+            ROOT / "tests" / "fixtures" / "clustering" / fixture_id,
+            ROOT / "tests" / "fixtures" / "phase16-dogfood" / fixture_id,
+        ):
+            candidate = base / "trip.json"
+            if candidate.is_file():
+                loaded = json.loads(candidate.read_text(encoding="utf-8"))
+                if len(loaded.get("assets") or []) >= 4:
+                    trip_path = candidate
+                    trip = loaded
+                    break
+        if trip is None:
+            try:
+                from scripts.phase3_ig2_report import load_fixture_trip
 
-    if not trip_path.is_file():
-        print(f"trip.json not found: {trip_path}", file=sys.stderr)
-        return 1
+                trip = load_fixture_trip(fixture_id)
+                trip_path = (
+                    ROOT / "tests" / "fixtures" / "clustering" / fixture_id / "assets-manifest.json"
+                )
+                print(f"synthesized trip from clustering fixture: {fixture_id}")
+            except Exception as exc:
+                print(
+                    f"trip not found for fixture={fixture_id!r}: {exc}",
+                    file=sys.stderr,
+                )
+                return 1
 
-    trip = json.loads(trip_path.read_text(encoding="utf-8"))
+    assert trip is not None and trip_path is not None
     from travelogue.config import get_config
 
     base = get_config(reload=True)
     work_root = ROOT / ".cache" / "tpc-curate-perf"
     work_root.mkdir(parents=True, exist_ok=True)
 
+    cfg_off = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
+        ),
+    )
+    cfg_on = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        ),
+    )
+    # Discard cold-start (NIMA/CLIP load) so P95 compares like-for-like.
+    print("warm-up …")
+    _run_once(trip, work=work_root / "warmup-off", cfg=cfg_off)
+    _run_once(trip, work=work_root / "warmup-on", cfg=cfg_on)
+
     off_ms: list[float] = []
     on_ms: list[float] = []
     for i in range(max(1, args.repeats)):
-        cfg_off = replace(
-            base,
-            mosaic=replace(
-                base.mosaic,
-                template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
-            ),
-        )
-        cfg_on = replace(
-            base,
-            mosaic=replace(
-                base.mosaic,
-                template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
-            ),
-        )
         off_ms.append(_run_once(trip, work=work_root / f"off-{i}", cfg=cfg_off))
         on_ms.append(_run_once(trip, work=work_root / f"on-{i}", cfg=cfg_on))
         print(f"  repeat {i+1}: off={off_ms[-1]:.1f}ms on={on_ms[-1]:.1f}ms")
@@ -124,9 +152,13 @@ def main() -> int:
     off_p95, on_p95 = _p95(off_ms), _p95(on_ms)
     delta = None if off_p95 <= 0 else round((on_p95 - off_p95) / off_p95 * 100.0, 2)
     ok = delta is not None and delta <= BUDGET_PCT
+    try:
+        trip_label = str(trip_path.relative_to(ROOT)).replace("\\", "/")
+    except ValueError:
+        trip_label = str(trip_path).replace("\\", "/")
     report = {
         "recordedAt": _now(),
-        "trip": str(trip_path),
+        "trip": trip_label,
         "repeats": args.repeats,
         "budgetPct": BUDGET_PCT,
         "offMs": off_ms,
