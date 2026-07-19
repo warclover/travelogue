@@ -16,7 +16,7 @@ def test_p6_rollback_values() -> None:
     """P7 fast-path defaults can revert to P6-equivalent flags."""
     p7 = AppConfig()
     assert p7.vision.batch_size == 16
-    assert p7.ingest.webp_method == 4
+    assert p7.ingest.webp_method == 2
 
     p6 = AppConfig(
         vision=VisionConfig(batch_size=0, prefer_web_derivative=False, session_singleton=False),

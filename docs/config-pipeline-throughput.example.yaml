@@ -14,18 +14,29 @@ vision:
   preload_on_folder_pick: true
 
 ingest:
-  webp_method: 4
+  # PRD-PIPELINE-PERF-V1 · R1.3 / R1.4（E-B，可单独回退）
+  webp_method: 2
+  # R2.3 · 金字塔缩放默认关（SSIM 报告后再开）
+  webp_pyramid: false
   shared_color_thumb_px: 32
-  face_detect_max_edge: 0
+  face_detect_max_edge: 1024
+  webp_widths: [800, 1600, 2400, 3200]
+  webp_ingest_widths: [800, 1600]
+
+aesthetic:
+  # R4.1 · ingest 期间重叠预热 NIMA（只重叠不换源；需 pyiqa）
+  warm_learned_on_ingest: true
 
 pipeline:
   parallel_embed: true
   parallel_embed_chunk: 32
-  # --- Pipeline Throughput (PRD v0.2) ---
-  parallel_ingest: false
+  # --- Pipeline Throughput + PIPELINE-PERF-V1 ---
+  parallel_ingest: true
+  # 0 = auto max(2, min(cpu//2, 10)) + long-edge memory cap
   parallel_ingest_workers: 0
   parallel_ingest_min_photos: 12
   persist_every_n: 8
+  deferred_derivatives: true
 
 layout_scoring:
   skip_duplicate_signatures: true

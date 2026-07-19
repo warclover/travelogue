@@ -43,6 +43,35 @@ def _respond_if_source_missing(handler: StudioHandlerProtocol, trip_id: str) -> 
     return True
 
 
+def _ensure_derivatives_for_export(trip_dir: Path) -> None:
+    """D6 · sync-materialize missing HD tiers before zip/longshot export."""
+    import json
+
+    from travelogue.config import get_config
+    from travelogue.media.derivatives import ensure_derivatives_before_export
+    from travelogue.media.ingest import IngestError
+
+    trip_json = trip_dir / "trip.json"
+    if not trip_json.is_file():
+        return
+    try:
+        trip = json.loads(trip_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(trip, dict):
+        return
+    result = ensure_derivatives_before_export(trip, trip_dir, app_cfg=get_config())
+    if result.errors:
+        raise IngestError(
+            "E_DERIVATIVE_MATERIALIZE",
+            f"derivative materialize failed: {result.errors[0]}",
+        )
+    trip_json.write_text(
+        json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
@@ -442,6 +471,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             if callable(abort):
                 store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
 
+        _ensure_derivatives_for_export(trip_dir)
         result = export_trip_longshot(
             trip_dir,
             scale=scale,
@@ -689,10 +719,18 @@ def handle_export(handler: StudioHandlerProtocol) -> None:
             return
 
     try:
+        _ensure_derivatives_for_export(trip_dir)
         zip_path = export_trip(trip_dir / "trip.json", confirm_privacy=True)
     except ExportError as exc:
         handler._json_response(400, client_error_payload(exc))
         return
+    except Exception as exc:
+        from travelogue.media.ingest import IngestError
+
+        if isinstance(exc, IngestError):
+            handler._json_response(400, client_error_payload(exc))
+            return
+        raise
 
     rel_zip = rel_to_trip(trip_dir, zip_path)
     handler._json_response(200, {"ok": True, "zipRelPath": rel_zip, "tripId": trip_id})

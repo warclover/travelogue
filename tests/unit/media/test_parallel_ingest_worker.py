@@ -38,5 +38,8 @@ def test_worker_produces_provisional_blobs(tmp_path: Path) -> None:
     assert result.provisional_source
     assert Path(result.provisional_source).is_file()
     assert result.provisional_files
+    assert result.media_class  # R3.2
+    assert isinstance(result.aesthetic_signals, dict)
+    assert result.aesthetic_signals
     cleanup_provisional_files(result)
     assert not Path(result.provisional_source).exists()

@@ -94,6 +94,26 @@ def set_pipeline_timings(trip: dict, timings: dict[str, float]) -> None:
     pipeline_dict(trip)["timings"] = dict(timings)
 
 
+def absorb_pipeline_timing_keys(trip: dict, timings: dict[str, float]) -> None:
+    """Copy keys from ``trip.pipeline.timings`` into *timings* when absent.
+
+    Stages such as ingest may write PT telemetry (``ingestWorkers`` …) onto the
+    trip before the orchestrator flushes its local timings dict. Without this
+    merge, ``set_pipeline_timings`` would wipe those keys (PRD-PIPELINE-PERF-V1
+    · P-PPF-01 / MF-07).
+    """
+    existing = pipeline_dict(trip).get("timings") or {}
+    if not isinstance(existing, dict):
+        return
+    for key, value in existing.items():
+        if key in timings:
+            continue
+        try:
+            timings[key] = float(value)
+        except (TypeError, ValueError):
+            continue
+
+
 def clear_pending_assets(trip: dict) -> None:
     pipeline_dict(trip)["pendingAssets"] = []
 

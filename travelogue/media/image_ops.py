@@ -166,6 +166,55 @@ def resolve_photo_datetime(path: Path, img: Image.Image) -> tuple[datetime, str]
     return datetime.fromtimestamp(path.stat().st_mtime), "mtime"
 
 
+# EXIF Orientation values that swap stored width/height for upright display.
+_ORIENTATION_SWAP_WH = frozenset({5, 6, 7, 8})
+
+
+@dataclass
+class ImagePeekMeta:
+    """Header-only image meta for scan (no pixel decode / transpose)."""
+
+    width: int
+    height: int
+    taken_at: datetime
+    date_source: str
+    orientation_tag: int | None
+
+
+def peek_image_meta(path: Path) -> ImagePeekMeta:
+    """Open image headers only: size + EXIF datetime; do not load pixels.
+
+    EXIF orientation tags that rotate 90° swap width/height so min-edge checks
+    match upright dimensions (PRD-PIPELINE-PERF-V1 · R3.1).
+    """
+    try:
+        import pillow_heif  # type: ignore
+
+        pillow_heif.register_heif_opener()
+    except ImportError:
+        pass
+    img = Image.open(path)
+    try:
+        ori_tag = read_exif_orientation(img)
+        width, height = img.size
+        if ori_tag in _ORIENTATION_SWAP_WH:
+            width, height = height, width
+        taken_at, date_source = resolve_photo_datetime(path, img)
+        return ImagePeekMeta(
+            width=int(width),
+            height=int(height),
+            taken_at=taken_at,
+            date_source=date_source,
+            orientation_tag=ori_tag,
+        )
+    finally:
+        img.close()
+
+
+def min_edge_ok(width: int, height: int, min_px: int = 320) -> bool:
+    return min(int(width), int(height)) >= int(min_px)
+
+
 def load_image_normalized(path: Path) -> ImageLoadResult:
     """
     Open image, apply EXIF transpose (rotation), return RGB image + metadata.
@@ -325,26 +374,46 @@ def export_webp_variants(
     webp_method: int = 4,
     generate_crops: bool = False,
     focal: tuple[float, float] = (0.5, 0.45),
+    pyramid: bool = False,
 ) -> tuple[str, list[dict], int, int, str | None, str | None]:
+    """Export WebP width ladder.
+
+    ``pyramid=False`` (default, R2.3): each width resizes from the original.
+    ``pyramid=True`` (E-B, flag-gated): largest→smallest chain resize.
+    """
     assets_dir.mkdir(parents=True, exist_ok=True)
     method = max(0, min(6, int(webp_method)))
     srcset: list[dict] = []
+    unique_widths = tuple(sorted({int(w) for w in widths if int(w) > 0}))
+    if not unique_widths:
+        raise ValueError("export_webp_variants requires at least one width")
     largest = img
+    by_width: dict[int, Image.Image] = {}
 
-    for w in sorted(widths):
-        variant = resize_to_width(img, w)
+    if pyramid:
+        source = img
+        for w in sorted(unique_widths, reverse=True):
+            variant = resize_to_width(source, w)
+            by_width[w] = variant
+            source = variant
+    else:
+        for w in unique_widths:
+            by_width[w] = resize_to_width(img, w)
+
+    for w in unique_widths:
+        variant = by_width[w]
         rel = f"assets/{asset_id}-w{w}.webp"
         out = assets_dir / f"{asset_id}-w{w}.webp"
         variant.save(out, "WEBP", quality=quality, method=method)
         srcset.append({"file": rel, "width": w})
-        if w == max(widths):
+        if w == max(unique_widths):
             largest = variant
 
-    display = f"assets/{asset_id}-w{max(widths)}.webp"
+    display = f"assets/{asset_id}-w{max(unique_widths)}.webp"
     crop_m: str | None = None
     crop_w: str | None = None
     if generate_crops:
-        max_w = max(widths)
+        max_w = max(unique_widths)
         crop_m, crop_w = export_layout_crops(
             img, assets_dir, asset_id, quality=quality, focal=focal, max_width=max_w, webp_method=method
         )
@@ -374,4 +443,4 @@ def filter_trip_dates(
 
 
 def min_dimension_ok(img: Image.Image, min_px: int = 320) -> bool:
-    return min(img.size) >= min_px
+    return min_edge_ok(img.size[0], img.size[1], min_px)

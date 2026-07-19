@@ -1,0 +1,68 @@
+{
+  "album": "D:\\Photos\\仙本那精选全集2",
+  "maxPhotos": 48,
+  "baselineCommit": "8f37a1f (pre Pipeline Perf V1)",
+  "candidateBranch": "feat/pipeline-perf-v1",
+  "baseline": {
+    "mode": "baseline",
+    "repo": "C:\\Users\\xiafe\\Projects\\travelogue-ppf-baseline",
+    "slug": "perf-cmp-baseline-52efafa6",
+    "stages": [
+      "ingest",
+      "curate",
+      "layout",
+      "lock_structure",
+      "narrate",
+      "lock_copy",
+      "render"
+    ],
+    "elapsedSec": 111.8,
+    "assetCount": 31,
+    "timings": {
+      "ingestMs": 79748.57,
+      "ingestWorkers": null,
+      "ingestWorkersDownscaled": null,
+      "curateMs": 29652.53,
+      "materializeMs": null,
+      "narrateMs": 232.11,
+      "renderMs": 1890.34,
+      "nimaWarmHits": null,
+      "nimaWarmMisses": null,
+      "derivativesOnDemandCount": null
+    },
+    "wallClockSec": 114.8
+  },
+  "candidate": {
+    "mode": "candidate",
+    "repo": "C:\\Users\\xiafe\\Projects\\travelogue",
+    "slug": "perf-cmp-candidate-233991a2",
+    "stages": [
+      "ingest",
+      "curate",
+      "layout",
+      "lock_structure",
+      "narrate",
+      "lock_copy",
+      "render"
+    ],
+    "elapsedSec": 68.8,
+    "assetCount": 29,
+    "timings": {
+      "ingestMs": 11213.84,
+      "ingestWorkers": 9.0,
+      "ingestWorkersDownscaled": null,
+      "curateMs": 20393.23,
+      "materializeMs": 35653.44,
+      "narrateMs": 26.68,
+      "renderMs": 1330.5,
+      "nimaWarmHits": null,
+      "nimaWarmMisses": null,
+      "derivativesOnDemandCount": null
+    },
+    "wallClockSec": 71.8
+  },
+  "deltaSec": 43.0,
+  "speedupX": 1.62,
+  "fasterPct": 38.5,
+  "tripsRoot": "C:\\Users\\xiafe\\AppData\\Local\\Temp\\ppf-compare-u5n2ltd1"
+}

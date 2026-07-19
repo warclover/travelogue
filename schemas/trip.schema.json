@@ -1235,6 +1235,27 @@
         "width": { "type": "integer", "minimum": 1 }
       }
     },
+    "derivedPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "PRD-PIPELINE-PERF-V1 · planned WebP widths; srcset lists only on-disk files",
+      "required": ["version", "plannedWidths", "readyWidths", "status"],
+      "properties": {
+        "version": { "type": "string" },
+        "plannedWidths": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "readyWidths": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "partial", "ready", "skipped"]
+        }
+      }
+    },
     "voice": {
       "type": "object",
       "additionalProperties": false,
@@ -1264,6 +1285,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/srcsetEntry" }
         },
+        "derivedPlan": { "$ref": "#/$defs/derivedPlan" },
         "cropMobile": { "type": "string" },
         "cropWeb": { "type": "string" },
         "focalPoint": { "$ref": "#/$defs/focalPoint" },

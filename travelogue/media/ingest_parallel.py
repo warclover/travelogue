@@ -10,8 +10,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
-
 from travelogue.config import AppConfig, IngestConfig
 from travelogue.media.heuristic_tags import build_heuristic_tags
 from travelogue.media.ingest_worker import (
@@ -20,35 +18,72 @@ from travelogue.media.ingest_worker import (
     cleanup_provisional_files,
     process_ingest_photo_worker_star,
 )
-from travelogue.media.media_classify import classify_media_class, date_confidence_for_source
+from travelogue.media.media_classify import date_confidence_for_source
+
+
+def workers_memory_cap(*, median_long_edge_px: int | None = None) -> int:
+    """Cap parallel ingest workers by typical album resolution (PRD · D5 / MF-05).
+
+    Peak RAM scales with decoded pixels; 36MP × many workers can OOM. Thresholds
+    use long-edge (max(w, h)) medians in pixels.
+    """
+    if median_long_edge_px is None or median_long_edge_px <= 0:
+        return 10
+    edge = int(median_long_edge_px)
+    if edge >= 7000:
+        return 4
+    if edge >= 5000:
+        return 6
+    if edge >= 3500:
+        return 8
+    return 10
+
+
+def resolve_auto_ingest_workers(*, median_long_edge_px: int | None = None) -> tuple[int, bool]:
+    """Return ``(workers, downscaled)`` for ``parallel_ingest_workers=0``.
+
+    Auto formula (PRD-PIPELINE-PERF-V1 · R1.2): ``max(2, min(cpu//2, 10))``,
+    then apply :func:`workers_memory_cap`.
+    """
+    cpu = os.cpu_count() or 2
+    uncapped = max(2, min(cpu // 2, 10))
+    capped = min(uncapped, workers_memory_cap(median_long_edge_px=median_long_edge_px))
+    return max(1, capped), capped < uncapped
 
 
 def resolve_parallel_ingest_plan(
     app_cfg: AppConfig,
     *,
     photo_count: int,
-) -> tuple[bool, int, bool]:
-    """Return (use_parallel, workers, fallback_serial).
+    median_long_edge_px: int | None = None,
+) -> tuple[bool, int, bool, bool]:
+    """Return ``(use_parallel, workers, fallback_serial, workers_downscaled)``.
 
     ``workers=1`` or ``photo_count < min_photos`` → serial short-circuit.
     """
     pipe = app_cfg.pipeline
     if not pipe.parallel_ingest:
-        return False, 1, False
+        return False, 1, False, False
     min_photos = max(1, int(pipe.parallel_ingest_min_photos))
     if photo_count < min_photos:
-        return False, 1, True
+        return False, 1, True, False
     configured = int(pipe.parallel_ingest_workers)
     if configured == 1:
-        return False, 1, True
+        return False, 1, False, False
+    downscaled = False
     if configured <= 0:
-        cpu = os.cpu_count() or 2
-        workers = max(1, min(4, cpu - 1))
+        workers, downscaled = resolve_auto_ingest_workers(
+            median_long_edge_px=median_long_edge_px
+        )
     else:
         workers = max(1, configured)
+        mem_cap = workers_memory_cap(median_long_edge_px=median_long_edge_px)
+        if workers > mem_cap:
+            workers = mem_cap
+            downscaled = True
     if workers <= 1:
-        return False, 1, True
-    return True, workers, False
+        return False, 1, False, False
+    return True, workers, False, downscaled
 
 
 def _rewrite_asset_rel(rel: str | None, *, provisional_id: str, asset_id: str) -> str | None:
@@ -265,45 +300,28 @@ def _build_entry_from_worker_result(
     if burst_group_id:
         entry["burstGroupId"] = burst_group_id
 
-    # mediaClass + aesthetic need pixels — prefer committed jpeg, else original album path
-    img = None
-    open_candidates = [
-        build_ctx.source_dir / f"{asset_id}.jpg",
-        Path(result.source_path),
-    ]
-    for candidate in open_candidates:
-        if not candidate.is_file():
-            continue
-        try:
-            img = Image.open(candidate)
-            img.load()
-            break
-        except OSError:
-            img = None
-    if img is not None:
-        entry["mediaClass"] = classify_media_class(
-            path=Path(result.source_path),
-            img=img,
-            date_source=result.date_source or "mtime",
-            asset=entry,
-        )
-        photo_payload = IngestPhotoPayload(
-            asset_id=asset_id,
-            photo=Path(result.source_path),
-            loaded=None,
-            img=img,
-            dhash=result.dhash or "",
-            sharpness=result.sharpness,
-            burst_group_id=burst_group_id,
-            content_sig=result.content_sig,
-            user_tier=user_tier,
-            import_source=import_source,
-        )
-        _attach_aesthetic(build_ctx, entry, photo_payload)
-        img.close()
-    else:
-        entry["mediaClass"] = "photo"
-        entry["referenceDecodeSkipped"] = True
+    # R3.2 · mediaClass + aesthetic signals come from worker; no re-decode here.
+    entry["mediaClass"] = result.media_class or "photo"
+    if result.aesthetic_signals and build_ctx.aesthetic_cache is not None and result.content_sig:
+        from travelogue.curation.aesthetic_score import AESTHETIC_VERSION
+
+        build_ctx.aesthetic_cache[result.content_sig] = {
+            "version": AESTHETIC_VERSION,
+            "signals": dict(result.aesthetic_signals),
+        }
+    photo_payload = IngestPhotoPayload(
+        asset_id=asset_id,
+        photo=Path(result.source_path),
+        loaded=None,
+        img=None,
+        dhash=result.dhash or "",
+        sharpness=result.sharpness,
+        burst_group_id=burst_group_id,
+        content_sig=result.content_sig,
+        user_tier=user_tier,
+        import_source=import_source,
+    )
+    _attach_aesthetic(build_ctx, entry, photo_payload)
 
     apply_user_tier_fields(
         entry,
@@ -311,6 +329,9 @@ def _build_entry_from_worker_result(
         dual_ingest=build_ctx.dual_ingest,
         import_source=import_source,
     )
+    from travelogue.media.derivatives import sync_derived_plan_from_srcset
+
+    sync_derived_plan_from_srcset(entry, planned_widths=cfg.webp_widths)
     return entry
 
 
@@ -562,6 +583,8 @@ def run_parallel_ingest_loop(
         cfg,
         portrait_enabled=portrait_enabled,
         force_materialize=bool(getattr(build_ctx, "force_materialize", False)),
+        deferred_derivatives=bool(app_cfg.pipeline.deferred_derivatives),
+        aesthetic_cfg=getattr(app_cfg, "aesthetic", None),
     )
 
     jobs: list[tuple[Any, ...]] = []

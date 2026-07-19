@@ -70,6 +70,7 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
     fetchEntrySafe(tripId).then(function (data) {
       if (!data) return;
       syncCoverPlaceholderBadge(!!data.coverIsPlaceholder);
+      syncDerivativesStatusBadge(data);
       syncCoverExplainLine(data);
 
       // §7.4 · legacy V5 notice once
@@ -136,6 +137,33 @@ export function syncCoverPlaceholderBadge(isPlaceholder) {
       badge.textContent = "临时预览 · 精选后更新";
     } else if (badge) {
       badge.hidden = true;
+    }
+  }
+
+/** R5.1 / MF-09 · preview badge matches shelf two-state (preparing / preview). */
+export function syncDerivativesStatusBadge(data) {
+    data = data || {};
+    var badge = document.getElementById("preview-derivatives-badge");
+    if (!badge) {
+      badge = document.createElement("p");
+      badge.id = "preview-derivatives-badge";
+      badge.className = "preview-toolbar__derivatives-badge";
+      badge.setAttribute("role", "status");
+      badge.hidden = true;
+      document.body.appendChild(badge);
+    }
+    var preparing = Number(data.derivativesPreparing || 0);
+    var previewOnly =
+      !!data.g1Pending || String(data.derivativesStatus || "") === "preview";
+    if (preparing > 0) {
+      badge.hidden = false;
+      badge.textContent = "正在准备 " + preparing + " 张高清图";
+    } else if (previewOnly) {
+      badge.hidden = false;
+      badge.textContent = "版面已就绪，可先预览";
+    } else {
+      badge.hidden = true;
+      badge.textContent = "";
     }
   }
 

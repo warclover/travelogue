@@ -23,6 +23,8 @@ from travelogue.media.image_ops import (
     export_webp_variants,
     load_image_normalized,
     min_dimension_ok,
+    min_edge_ok,
+    peek_image_meta,
     save_jpeg_without_exif,
 )
 from travelogue.media.ingest_preview import preview_multi_journey
@@ -141,6 +143,7 @@ class IngestAssetBuildContext:
     album_root: Path | None = None
     copy_source_files: bool = True
     force_materialize: bool = False
+    deferred_derivatives: bool = True
 
 
 @dataclass
@@ -180,6 +183,20 @@ def _load_photo(path: Path):
     _register_heif()
     try:
         return load_image_normalized(path)
+    except Exception as exc:
+        if path.suffix.lower() in HEIC_SUFFIXES:
+            raise IngestError(
+                "E_INGEST_HEIC",
+                f"HEIC requires pillow-heif: pip install pillow-heif ({path.name})",
+            ) from exc
+        raise IngestError("E_INGEST_IMAGE", f"cannot open {path.name}: {exc}") from exc
+
+
+def _peek_photo(path: Path):
+    """Scan-path meta only (no pixel decode). Same error codes as ``_load_photo``."""
+    _register_heif()
+    try:
+        return peek_image_meta(path)
     except Exception as exc:
         if path.suffix.lower() in HEIC_SUFFIXES:
             raise IngestError(
@@ -238,14 +255,14 @@ def scan_image_paths(
 
     for path in candidates:
         try:
-            loaded = _load_photo(path)
+            meta = _peek_photo(path)
         except IngestError:
             stats["skipped_open"] += 1
             continue
-        if not min_dimension_ok(loaded.image, min_edge_px):
+        if not min_edge_ok(meta.width, meta.height, min_edge_px):
             stats["skipped_small"] += 1
             continue
-        accepted.append((loaded.taken_at, str(path).lower(), path))
+        accepted.append((meta.taken_at, str(path).lower(), path))
 
     accepted.sort(key=lambda x: (x[0], x[1]))
     files = [p for _, _, p in accepted[:max_photos]]
@@ -389,15 +406,20 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
             save_jpeg_without_exif(photo.img, dest_source)
 
     t_webp = time.monotonic()
+    from travelogue.media.derivatives import effective_ingest_widths, sync_derived_plan_from_srcset
+
+    deferred = bool(getattr(ctx, "deferred_derivatives", True))
+    ingest_widths = effective_ingest_widths(cfg, deferred=deferred)
     display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
         photo.img,
         ctx.assets_dir,
         photo.asset_id,
-        widths=cfg.webp_widths,
+        widths=ingest_widths,
         quality=cfg.webp_quality,
         webp_method=cfg.webp_method,
         generate_crops=ctx.generate_crops,
         focal=focal,
+        pyramid=bool(getattr(cfg, "webp_pyramid", False)),
     )
     if acc is not None:
         acc["webp"] = acc.get("webp", 0.0) + (time.monotonic() - t_webp) * 1000.0
@@ -511,6 +533,7 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         dual_ingest=ctx.dual_ingest,
         import_source=photo.import_source,
     )
+    sync_derived_plan_from_srcset(entry, planned_widths=cfg.webp_widths)
     return entry
 
 
@@ -581,6 +604,8 @@ def _attach_aesthetic(
                 if isinstance(cached_signals, dict):
                     signals = dict(cached_signals)
         if signals is None:
+            if photo.img is None:
+                return
             signals = compute_aesthetic_signals(photo.img, entry, cfg=ae_cfg)
             if cache is not None and sig_key:
                 cache[sig_key] = {"version": AESTHETIC_VERSION, "signals": signals}
@@ -1010,6 +1035,7 @@ def _finalize_ingest_assets(
     min_assets: int,
     app_cfg: AppConfig | None = None,
     on_cull_hint: Callable[[str], None] | None = None,
+    aesthetic_warm: Any | None = None,
 ) -> None:
     resolved_app = app_cfg or get_config()
     if min_assets and len(assets) < min_assets:
@@ -1103,6 +1129,14 @@ def _finalize_ingest_assets(
     if ae_cfg.enabled and ae_cfg.ml_calibrate and ae_cfg.warm_learned_on_ingest:
         from travelogue.curation.aesthetic_score import apply_aesthetic_ml_calibration
 
+        if aesthetic_warm is not None:
+            try:
+                warm_stats = aesthetic_warm.finish()
+                ingest_stats["nimaWarmHits"] = int(warm_stats.hits)
+                ingest_stats["nimaWarmMisses"] = int(warm_stats.misses)
+            except Exception:
+                ingest_stats["nimaWarmHits"] = 0
+                ingest_stats["nimaWarmMisses"] = 0
         try:
             ingest_stats["aestheticLearnedWarm"] = bool(
                 apply_aesthetic_ml_calibration(
@@ -1284,6 +1318,7 @@ def ingest_into_trip(
         album_root=album_root,
         copy_source_files=bool(getattr(cfg, "copy_source_files", True)),
         force_materialize=force_materialize,
+        deferred_derivatives=bool(resolved_app.pipeline.deferred_derivatives),
     )
 
     total_photos = len(photo_tiers)
@@ -1296,12 +1331,30 @@ def ingest_into_trip(
         if on_progress and total_photos > 0:
             on_progress(processed, total_photos)
 
+    aesthetic_warm = None
+    asset_added_cb = on_asset_added
+    if (
+        aesthetic_cfg.enabled
+        and aesthetic_cfg.ml_calibrate
+        and aesthetic_cfg.warm_learned_on_ingest
+    ):
+        from travelogue.curation.aesthetic_warm import AestheticWarmCoordinator
+
+        aesthetic_warm = AestheticWarmCoordinator(trip_dir, app_cfg=resolved_app)
+        prior_added = on_asset_added
+
+        def asset_added_cb(entry: dict) -> None:
+            aesthetic_warm.offer(entry)
+            if prior_added is not None:
+                prior_added(entry)
+
     use_parallel, workers, parallel_fallback = False, 1, False
+    workers_downscaled = False
     if resolved_app.pipeline.parallel_ingest:
         from travelogue.media.ingest_parallel import resolve_parallel_ingest_plan
 
-        use_parallel, workers, parallel_fallback = resolve_parallel_ingest_plan(
-            resolved_app, photo_count=total_photos
+        use_parallel, workers, parallel_fallback, workers_downscaled = (
+            resolve_parallel_ingest_plan(resolved_app, photo_count=total_photos)
         )
 
     if use_parallel:
@@ -1321,13 +1374,16 @@ def ingest_into_trip(
             album_root=album_root,
             resume_ingest=resume_ingest,
             on_persist=on_persist,
-            on_asset_added=on_asset_added,
+            on_asset_added=asset_added_cb,
             emit_progress=_emit_progress,
         )
         if ok:
             ingest_stats = loop_state.ingest_stats
             ingest_stats["ingestWorkers"] = workers
             ingest_stats["ingestParallelFallback"] = False
+            if workers_downscaled:
+                ingest_stats["ingestWorkersDownscaled"] = True
+                ingest_stats["ingestWorkersDownscaleReason"] = "memory_cap_long_edge"
         else:
             use_parallel = False
             parallel_fallback = True
@@ -1354,7 +1410,7 @@ def ingest_into_trip(
                 processed=processed,
                 total_photos=total_photos,
                 on_persist=on_persist,
-                on_asset_added=on_asset_added,
+                on_asset_added=asset_added_cb,
                 emit_progress=_emit_progress,
             )
 
@@ -1375,6 +1431,7 @@ def ingest_into_trip(
         min_assets=min_assets,
         app_cfg=resolved_app,
         on_cull_hint=on_cull_hint,
+        aesthetic_warm=aesthetic_warm,
     )
     elapsed_ms["total"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
     for key, val in loop_state.elapsed_acc.items():
@@ -1400,6 +1457,12 @@ def ingest_into_trip(
         timings["ingestParallelFallback"] = (
             1.0 if ingest_stats["ingestParallelFallback"] else 0.0
         )
+    if ingest_stats.get("ingestWorkersDownscaled"):
+        timings["ingestWorkersDownscaled"] = 1.0
+    if "nimaWarmHits" in ingest_stats:
+        timings["nimaWarmHits"] = float(ingest_stats["nimaWarmHits"])
+    if "nimaWarmMisses" in ingest_stats:
+        timings["nimaWarmMisses"] = float(ingest_stats["nimaWarmMisses"])
     if timings:
         pipe["timings"] = timings
 

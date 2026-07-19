@@ -71,6 +71,8 @@ class PipelineConfig:
     parallel_ingest_workers: int = 0  # 0 = auto
     parallel_ingest_min_photos: int = 12
     persist_every_n: int = 8
+    # PRD-PIPELINE-PERF-V1 · R2.1/R2.2：ingest 预览档 + 选片后物化大图
+    deferred_derivatives: bool = True
 
 
 def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
@@ -94,6 +96,9 @@ def pipeline_from_dict(raw: dict[str, Any]) -> PipelineConfig:
             raw, "parallel_ingest_min_photos", "parallelIngestMinPhotos", 12
         ),
         persist_every_n=cfg_int(raw, "persist_every_n", "persistEveryN", 8),
+        deferred_derivatives=cfg_bool(
+            raw, "deferred_derivatives", "deferredDerivatives", True
+        ),
     )
 
 

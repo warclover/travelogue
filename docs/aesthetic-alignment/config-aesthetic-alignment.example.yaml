@@ -21,7 +21,7 @@
 #     metric: nima
 #     allow_cpu: true
 #     device: cuda:0   # GAP-14 · 可选，覆盖 cull.ml.device
-#   warm_learned_on_ingest: false   # GAP-10 · true 时 ingest 后预热 learned 缓存
+#   warm_learned_on_ingest: false   # GAP-10 / PIPELINE-PERF R4.1 · true 时 ingest 期间重叠预热 NIMA 缓存
 #   mllm:
 #     enabled: false
 

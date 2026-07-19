@@ -199,6 +199,25 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "hasLongshotExport": has_longshot_exports(child),
                     "previewRelPath": preview_rel,
                     "shelfCoverRelPath": shelf_cover_rel,
+                    "derivativesStatus": str(
+                        ((data.get("pipeline") or {}).get("derivativesStatus") or "")
+                    )
+                    or None,
+                    "derivativesReady": (
+                        ((data.get("pipeline") or {}).get("derivativesStatus") == "ready")
+                        if data
+                        else False
+                    ),
+                    "derivativesPreparing": int(
+                        ((data.get("pipeline") or {}).get("derivativesPreparing") or 0)
+                        if data
+                        else 0
+                    ),
+                    "g1Pending": (
+                        ((data.get("pipeline") or {}).get("status") == "structure_draft")
+                        if data
+                        else False
+                    ),
                     "resolvedTemplateId": template_meta.get("resolvedTemplateId", "visual-journal"),
                     "templateSource": template_meta.get("source", "legacy"),
                     "templateSourceLabel": template_meta.get("sourceLabel", "默认模板"),

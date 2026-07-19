@@ -195,6 +195,25 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
                     t[key] = trip[key]
 
         svc.update(trip_json, mutator)
+        # MF-09 · after replan, fill missing HD for newly selected assets
+        preparing = 0
+        try:
+            from travelogue.media.derivatives import materialize_on_demand
+
+            od = materialize_on_demand(
+                trip, trip_dir, app_cfg=ctx.cfg, persist=True
+            )
+            preparing = int(od.preparing_count)
+            if od.mode == "sync" and od.sync_result is not None:
+
+                def _pipe_mutator(t: dict) -> None:
+                    if "pipeline" in trip:
+                        t["pipeline"] = trip["pipeline"]
+                    t["assets"] = trip.get("assets") or t.get("assets")
+
+                svc.update(trip_json, _pipe_mutator)
+        except Exception:
+            preparing = 0
         render_trip_surfaces(
             trip_json,
             trip_dir,
@@ -216,6 +235,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             "reason": reason,
             "pipelineStatus": out_status,
             "structureChanged": before_fp != after_fp,
+            "derivativesPreparing": preparing,
         }
 
     store = get_job_store()

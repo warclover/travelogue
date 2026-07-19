@@ -5,7 +5,11 @@
 
 import { getJson, postJson } from "../js/http.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { showToolbarToast, toolbarConfirm } from "./shell.js";
+import {
+  showToolbarToast,
+  syncDerivativesStatusBadge,
+  toolbarConfirm,
+} from "./shell.js";
 import { applyLayoutRerender, syncCoverOpeningStyleInDom } from "./core.js";
 import {
   HELP_COPY,
@@ -380,6 +384,11 @@ export function mountBookendsPanel(slot, tripId, opts) {
     } else if (mutOpts.kind === "closing") {
       showToolbarToast(HELP_COPY.bookendsAppliedClosing || "已换封底", { duration: 2000 });
     }
+    var preparingN = Number(res.body.derivativesPreparing || 0);
+    if (preparingN > 0) {
+      showToolbarToast("正在准备 " + preparingN + " 张高清图", { duration: 3600 });
+    }
+    syncDerivativesStatusBadge(res.body);
     if (res.body.coverOpeningStyle) {
       syncCoverOpeningStyleInDom(res.body.coverOpeningStyle);
     }

@@ -138,10 +138,15 @@ def _run_trip_stages(
     }
     pipeline_timings: dict[str, float] = dict((trip.get("pipeline") or {}).get("timings") or {})
     pipeline_t0 = time.monotonic()
+    derivative_materializer = None
 
     def flush_timings(*, extra: dict[str, float] | None = None) -> None:
         if extra:
             pipeline_timings.update(extra)
+        # PRD-PIPELINE-PERF-V1 · MF-07: keep PT keys written by ingest/stages.
+        from travelogue.domain.pipeline_view import absorb_pipeline_timing_keys
+
+        absorb_pipeline_timing_keys(trip, pipeline_timings)
         pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
         set_pipeline_timings(trip, pipeline_timings)
         if studio_hooks is not None:
@@ -261,6 +266,13 @@ def _run_trip_stages(
                 continue
             assert_stage_allowed(trip, "lock_structure")
             lock_structure(trip)
+            # PRD-PIPELINE-PERF-V1 · D3: background materialize (not a public stage).
+            if get_config().pipeline.deferred_derivatives:
+                from travelogue.media.derivatives import DerivativeMaterializer
+
+                derivative_materializer = DerivativeMaterializer()
+                derivative_materializer.start(trip, trip_root, app_cfg=get_config())
+                trip.setdefault("pipeline", {})["derivativesStatus"] = "preview"
             result.stages.append("lock_structure")
             save()
             status = trip_status(trip)
@@ -293,7 +305,38 @@ def _run_trip_stages(
         elif stage == "render":
             if status == "rendered" and skip_locked:
                 continue
-            trip = svc.load(trip_path)
+            # Join bg materialize on the in-memory trip, persist, then reload.
+            if get_config().pipeline.deferred_derivatives:
+                from travelogue.media.derivatives import ensure_derivatives_for_trip
+
+                if derivative_materializer is not None:
+                    bg_result = derivative_materializer.join()
+                    if bg_result is not None:
+                        pipeline_timings["materializeMs"] = float(bg_result.elapsed_ms)
+                    save()
+                trip = svc.load(trip_path)
+                sync_result = ensure_derivatives_for_trip(
+                    trip, trip_root, app_cfg=get_config()
+                )
+                if sync_result.errors:
+                    raise IngestError(
+                        "E_DERIVATIVE_MATERIALIZE",
+                        f"derivative materialize failed: {sync_result.errors[0]}",
+                    )
+                trip.setdefault("pipeline", {})["derivativesStatus"] = "ready"
+                # Sync path only contributes when bg did not run (e.g. G1 from narrate).
+                if "materializeMs" not in pipeline_timings:
+                    pipeline_timings["materializeMs"] = float(sync_result.elapsed_ms)
+                elif sync_result.widths_written:
+                    pipeline_timings["materializeMs"] = round(
+                        float(pipeline_timings["materializeMs"])
+                        + float(sync_result.elapsed_ms),
+                        2,
+                    )
+                flush_timings()
+                save()
+            else:
+                trip = svc.load(trip_path)
             render_t0 = time.monotonic()
             if trip.get("exportLayout") == "auto":
                 render_trip_surfaces(

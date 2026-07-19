@@ -20,7 +20,8 @@ def test_shared_color_thumb_close_to_legacy() -> None:
 
 def test_webp_method_config_default() -> None:
     cfg = IngestConfig()
-    assert cfg.webp_method == 4
+    # PRD-PIPELINE-PERF-V1 · R1.4 — default 2; rollback via webp_method: 4
+    assert cfg.webp_method == 2
     assert cfg.shared_color_thumb_px == 32
     assert cfg.webp_widths == (800, 1600, 2400, 3200)
 
@@ -37,7 +38,8 @@ def test_screen_full_sizes_requests_hd_tier() -> None:
 
 def test_face_detect_max_edge_config_default() -> None:
     cfg = IngestConfig()
-    assert cfg.face_detect_max_edge == 0
+    # PRD-PIPELINE-PERF-V1 · R1.3 — default 1024; rollback via face_detect_max_edge: 0
+    assert cfg.face_detect_max_edge == 1024
 
 
 def test_downscale_for_detect_preserves_aspect() -> None:
