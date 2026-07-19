@@ -213,9 +213,12 @@ def _studio_post_curate(
         render_preview_jpg(trip_json, trip_root=trip_root)
         pipeline_timings["renderMs"] = round((time.monotonic() - render_t0) * 1000.0, 2)
         flush_pipeline_timings()
+        from travelogue.domain.stage_hints import LAYOUT_PREVIEW_READY, stage_hint_text
+
+        trip.setdefault("pipeline", {})["derivativesStatus"] = "preview"
         mark_render_bundle_current(trip)
         persist_trip_state()
-        report("render", 4)
+        report("render", 4, stage_hint_text(LAYOUT_PREVIEW_READY))
         trip_final = svc.load(trip_json)
         if trip_status(trip_final) != "structure_draft":
             g1_pending = False
@@ -256,16 +259,18 @@ def _studio_post_curate(
             cfg=cfg,
             studio_hooks=hooks,
         )
-        report("render", 4)
+        from travelogue.domain.stage_hints import EXPORT_READY, stage_hint_text
         from travelogue.render.preview import render_preview_jpg
 
         render_preview_jpg(trip_json, trip_root=trip_root)
         _sync_trip_from_disk(trip, svc, trip_json)
+        trip.setdefault("pipeline", {})["derivativesStatus"] = "ready"
         flush_pipeline_timings()
         # Metadata-only persist after a fresh render must re-stamp the watermark;
         # otherwise revision > renderedRevision and preview false-flags「产物已过期」.
         mark_render_bundle_current(trip)
         persist_trip_state()
+        report("render", 4, stage_hint_text(EXPORT_READY))
     except Exception as exc:
         code = getattr(exc, "code", "E_STUDIO_PIPELINE")
         # BE-03: never leave users in an auth dead-end; degrade once to stub.

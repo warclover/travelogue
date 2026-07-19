@@ -36,6 +36,8 @@ class IngestConfig:
     webp_quality: int = 82
     # PRD-PIPELINE-PERF-V1 · R1.4（E-B）：默认 2；回退设 webp_method: 4
     webp_method: int = 2
+    # PRD-PIPELINE-PERF-V1 · R2.3（E-B）：金字塔缩放默认关；SSIM 报告后再开
+    webp_pyramid: bool = False
     shared_color_thumb_px: int = 32
     generate_crops: bool = False
     min_edge_px: int = 320
@@ -84,6 +86,7 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         webp_ingest_widths=tuple(int(w) for w in ingest_widths),
         webp_quality=int(raw.get("webp_quality", 82)),
         webp_method=int(raw.get("webp_method", 2)),
+        webp_pyramid=bool(raw.get("webp_pyramid", raw.get("webpPyramid", False))),
         shared_color_thumb_px=int(raw.get("shared_color_thumb_px", raw.get("sharedColorThumbPx", 32))),
         generate_crops=bool(raw.get("generate_crops", False)),
         min_edge_px=int(raw.get("min_edge_px", 320)),

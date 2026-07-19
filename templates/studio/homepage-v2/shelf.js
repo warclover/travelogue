@@ -20,6 +20,7 @@ import {
 } from "./shelf-actions-logic.js";
 
 var READY_LONGSHOT = "分享图已就绪";
+var PREVIEW_READY = "可先预览";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
@@ -164,6 +165,10 @@ function buildCoverWrap(trip, surface) {
   wrap.appendChild(openCover);
   if (isDemoTrip(trip)) {
     wrap.appendChild(el("span", "v2-demo-flag v2-shelf__badge", "示例"));
+  }
+  // PRD-PIPELINE-PERF-V1 · R5.1 · intermediate preview state only (ready = default, no badge)
+  if (trip.g1Pending || trip.derivativesStatus === "preview") {
+    wrap.appendChild(el("span", "v2-shelf__preview-badge", PREVIEW_READY));
   }
   var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];
   var resumeTripId = resumeTrip ? resumeTrip.tripId : null;

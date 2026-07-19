@@ -10,9 +10,9 @@ from travelogue.media.ingest import (
     HEIC_SUFFIXES,
     IMAGE_SUFFIXES,
     IngestError,
-    _load_photo,
-    min_dimension_ok,
+    _peek_photo,
 )
+from travelogue.media.image_ops import min_edge_ok
 
 TIER_FEATURED = "featured"
 TIER_MATERIAL = "material"
@@ -96,14 +96,14 @@ def _scan_one_dir(
         if len(accepted) >= max_count:
             break
         try:
-            loaded = _load_photo(path)
+            meta = _peek_photo(path)
         except IngestError:
             stats["skipped_open"] = stats.get("skipped_open", 0) + 1
             continue
-        if not min_dimension_ok(loaded.image, min_edge_px):
+        if not min_edge_ok(meta.width, meta.height, min_edge_px):
             stats["skipped_small"] = stats.get("skipped_small", 0) + 1
             continue
-        accepted.append((loaded.taken_at, str(path).lower(), path, tier))
+        accepted.append((meta.taken_at, str(path).lower(), path, tier))
 
     accepted.sort(key=lambda x: (x[0], x[1]))
     stats[f"used_{tier}"] = len(accepted)

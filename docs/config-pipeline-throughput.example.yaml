@@ -16,10 +16,16 @@ vision:
 ingest:
   # PRD-PIPELINE-PERF-V1 · R1.3 / R1.4（E-B，可单独回退）
   webp_method: 2
+  # R2.3 · 金字塔缩放默认关（SSIM 报告后再开）
+  webp_pyramid: false
   shared_color_thumb_px: 32
   face_detect_max_edge: 1024
   webp_widths: [800, 1600, 2400, 3200]
   webp_ingest_widths: [800, 1600]
+
+aesthetic:
+  # R4.1 · ingest 期间重叠预热 NIMA（只重叠不换源；需 pyiqa）
+  warm_learned_on_ingest: true
 
 pipeline:
   parallel_embed: true

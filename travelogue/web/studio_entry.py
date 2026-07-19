@@ -183,6 +183,8 @@ def build_entry(
         "intentSummary": build_intent_summary(trip),
         "pipelineStatus": pipeline.get("status"),
         "g1Pending": pipeline.get("status") == "structure_draft",
+        "derivativesStatus": str(pipeline.get("derivativesStatus") or "") or None,
+        "derivativesReady": pipeline.get("derivativesStatus") == "ready",
         "coverAssetId": str(trip.get("coverAssetId") or "") or None,
         "chapters": build_chapter_summaries(trip),
         "telemetry": telemetry,

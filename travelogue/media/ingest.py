@@ -23,6 +23,8 @@ from travelogue.media.image_ops import (
     export_webp_variants,
     load_image_normalized,
     min_dimension_ok,
+    min_edge_ok,
+    peek_image_meta,
     save_jpeg_without_exif,
 )
 from travelogue.media.ingest_preview import preview_multi_journey
@@ -190,6 +192,20 @@ def _load_photo(path: Path):
         raise IngestError("E_INGEST_IMAGE", f"cannot open {path.name}: {exc}") from exc
 
 
+def _peek_photo(path: Path):
+    """Scan-path meta only (no pixel decode). Same error codes as ``_load_photo``."""
+    _register_heif()
+    try:
+        return peek_image_meta(path)
+    except Exception as exc:
+        if path.suffix.lower() in HEIC_SUFFIXES:
+            raise IngestError(
+                "E_INGEST_HEIC",
+                f"HEIC requires pillow-heif: pip install pillow-heif ({path.name})",
+            ) from exc
+        raise IngestError("E_INGEST_IMAGE", f"cannot open {path.name}: {exc}") from exc
+
+
 def _file_signature(path: Path) -> str:
     """Content fingerprint for dedupe (size + MD5). Not for security/crypto use."""
     st = path.stat()
@@ -239,14 +255,14 @@ def scan_image_paths(
 
     for path in candidates:
         try:
-            loaded = _load_photo(path)
+            meta = _peek_photo(path)
         except IngestError:
             stats["skipped_open"] += 1
             continue
-        if not min_dimension_ok(loaded.image, min_edge_px):
+        if not min_edge_ok(meta.width, meta.height, min_edge_px):
             stats["skipped_small"] += 1
             continue
-        accepted.append((loaded.taken_at, str(path).lower(), path))
+        accepted.append((meta.taken_at, str(path).lower(), path))
 
     accepted.sort(key=lambda x: (x[0], x[1]))
     files = [p for _, _, p in accepted[:max_photos]]
@@ -403,6 +419,7 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         webp_method=cfg.webp_method,
         generate_crops=ctx.generate_crops,
         focal=focal,
+        pyramid=bool(getattr(cfg, "webp_pyramid", False)),
     )
     if acc is not None:
         acc["webp"] = acc.get("webp", 0.0) + (time.monotonic() - t_webp) * 1000.0
@@ -587,6 +604,8 @@ def _attach_aesthetic(
                 if isinstance(cached_signals, dict):
                     signals = dict(cached_signals)
         if signals is None:
+            if photo.img is None:
+                return
             signals = compute_aesthetic_signals(photo.img, entry, cfg=ae_cfg)
             if cache is not None and sig_key:
                 cache[sig_key] = {"version": AESTHETIC_VERSION, "signals": signals}
@@ -1016,6 +1035,7 @@ def _finalize_ingest_assets(
     min_assets: int,
     app_cfg: AppConfig | None = None,
     on_cull_hint: Callable[[str], None] | None = None,
+    aesthetic_warm: Any | None = None,
 ) -> None:
     resolved_app = app_cfg or get_config()
     if min_assets and len(assets) < min_assets:
@@ -1109,6 +1129,14 @@ def _finalize_ingest_assets(
     if ae_cfg.enabled and ae_cfg.ml_calibrate and ae_cfg.warm_learned_on_ingest:
         from travelogue.curation.aesthetic_score import apply_aesthetic_ml_calibration
 
+        if aesthetic_warm is not None:
+            try:
+                warm_stats = aesthetic_warm.finish()
+                ingest_stats["nimaWarmHits"] = int(warm_stats.hits)
+                ingest_stats["nimaWarmMisses"] = int(warm_stats.misses)
+            except Exception:
+                ingest_stats["nimaWarmHits"] = 0
+                ingest_stats["nimaWarmMisses"] = 0
         try:
             ingest_stats["aestheticLearnedWarm"] = bool(
                 apply_aesthetic_ml_calibration(
@@ -1303,6 +1331,23 @@ def ingest_into_trip(
         if on_progress and total_photos > 0:
             on_progress(processed, total_photos)
 
+    aesthetic_warm = None
+    asset_added_cb = on_asset_added
+    if (
+        aesthetic_cfg.enabled
+        and aesthetic_cfg.ml_calibrate
+        and aesthetic_cfg.warm_learned_on_ingest
+    ):
+        from travelogue.curation.aesthetic_warm import AestheticWarmCoordinator
+
+        aesthetic_warm = AestheticWarmCoordinator(trip_dir, app_cfg=resolved_app)
+        prior_added = on_asset_added
+
+        def asset_added_cb(entry: dict) -> None:
+            aesthetic_warm.offer(entry)
+            if prior_added is not None:
+                prior_added(entry)
+
     use_parallel, workers, parallel_fallback = False, 1, False
     workers_downscaled = False
     if resolved_app.pipeline.parallel_ingest:
@@ -1329,7 +1374,7 @@ def ingest_into_trip(
             album_root=album_root,
             resume_ingest=resume_ingest,
             on_persist=on_persist,
-            on_asset_added=on_asset_added,
+            on_asset_added=asset_added_cb,
             emit_progress=_emit_progress,
         )
         if ok:
@@ -1365,7 +1410,7 @@ def ingest_into_trip(
                 processed=processed,
                 total_photos=total_photos,
                 on_persist=on_persist,
-                on_asset_added=on_asset_added,
+                on_asset_added=asset_added_cb,
                 emit_progress=_emit_progress,
             )
 
@@ -1386,6 +1431,7 @@ def ingest_into_trip(
         min_assets=min_assets,
         app_cfg=resolved_app,
         on_cull_hint=on_cull_hint,
+        aesthetic_warm=aesthetic_warm,
     )
     elapsed_ms["total"] = round((time.monotonic() - ingest_t0) * 1000.0, 2)
     for key, val in loop_state.elapsed_acc.items():
@@ -1413,6 +1459,10 @@ def ingest_into_trip(
         )
     if ingest_stats.get("ingestWorkersDownscaled"):
         timings["ingestWorkersDownscaled"] = 1.0
+    if "nimaWarmHits" in ingest_stats:
+        timings["nimaWarmHits"] = float(ingest_stats["nimaWarmHits"])
+    if "nimaWarmMisses" in ingest_stats:
+        timings["nimaWarmMisses"] = float(ingest_stats["nimaWarmMisses"])
     if timings:
         pipe["timings"] = timings
 

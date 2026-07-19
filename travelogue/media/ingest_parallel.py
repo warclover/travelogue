@@ -10,8 +10,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
-
 from travelogue.config import AppConfig, IngestConfig
 from travelogue.media.heuristic_tags import build_heuristic_tags
 from travelogue.media.ingest_worker import (
@@ -20,7 +18,7 @@ from travelogue.media.ingest_worker import (
     cleanup_provisional_files,
     process_ingest_photo_worker_star,
 )
-from travelogue.media.media_classify import classify_media_class, date_confidence_for_source
+from travelogue.media.media_classify import date_confidence_for_source
 
 
 def workers_memory_cap(*, median_long_edge_px: int | None = None) -> int:
@@ -302,45 +300,28 @@ def _build_entry_from_worker_result(
     if burst_group_id:
         entry["burstGroupId"] = burst_group_id
 
-    # mediaClass + aesthetic need pixels — prefer committed jpeg, else original album path
-    img = None
-    open_candidates = [
-        build_ctx.source_dir / f"{asset_id}.jpg",
-        Path(result.source_path),
-    ]
-    for candidate in open_candidates:
-        if not candidate.is_file():
-            continue
-        try:
-            img = Image.open(candidate)
-            img.load()
-            break
-        except OSError:
-            img = None
-    if img is not None:
-        entry["mediaClass"] = classify_media_class(
-            path=Path(result.source_path),
-            img=img,
-            date_source=result.date_source or "mtime",
-            asset=entry,
-        )
-        photo_payload = IngestPhotoPayload(
-            asset_id=asset_id,
-            photo=Path(result.source_path),
-            loaded=None,
-            img=img,
-            dhash=result.dhash or "",
-            sharpness=result.sharpness,
-            burst_group_id=burst_group_id,
-            content_sig=result.content_sig,
-            user_tier=user_tier,
-            import_source=import_source,
-        )
-        _attach_aesthetic(build_ctx, entry, photo_payload)
-        img.close()
-    else:
-        entry["mediaClass"] = "photo"
-        entry["referenceDecodeSkipped"] = True
+    # R3.2 · mediaClass + aesthetic signals come from worker; no re-decode here.
+    entry["mediaClass"] = result.media_class or "photo"
+    if result.aesthetic_signals and build_ctx.aesthetic_cache is not None and result.content_sig:
+        from travelogue.curation.aesthetic_score import AESTHETIC_VERSION
+
+        build_ctx.aesthetic_cache[result.content_sig] = {
+            "version": AESTHETIC_VERSION,
+            "signals": dict(result.aesthetic_signals),
+        }
+    photo_payload = IngestPhotoPayload(
+        asset_id=asset_id,
+        photo=Path(result.source_path),
+        loaded=None,
+        img=None,
+        dhash=result.dhash or "",
+        sharpness=result.sharpness,
+        burst_group_id=burst_group_id,
+        content_sig=result.content_sig,
+        user_tier=user_tier,
+        import_source=import_source,
+    )
+    _attach_aesthetic(build_ctx, entry, photo_payload)
 
     apply_user_tier_fields(
         entry,
@@ -603,6 +584,7 @@ def run_parallel_ingest_loop(
         portrait_enabled=portrait_enabled,
         force_materialize=bool(getattr(build_ctx, "force_materialize", False)),
         deferred_derivatives=bool(app_cfg.pipeline.deferred_derivatives),
+        aesthetic_cfg=getattr(app_cfg, "aesthetic", None),
     )
 
     jobs: list[tuple[Any, ...]] = []

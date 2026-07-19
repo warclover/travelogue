@@ -5,7 +5,7 @@
 | **PRD** | [PRD-PIPELINE-PERF-V1.md](./PRD-PIPELINE-PERF-V1.md) **v0.2** |
 | **评审** | [acceptance-records/pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **验收** | 落地后补 `ACCEPTANCE-PIPELINE-PERF-V1.md`（对照 PRD §9） |
-| **状态** | **M1 ☑ · M2 进行中**（BE-PPF-10/11 已落地） |
+| **状态** | **M1 ☑ · M2 ☑ · M3 ☑**（核心路径已落地；07b 狗粮签字后置） |
 | **更新** | 2026-07-19 |
 | **分支** | `feat/pipeline-perf-v1` |
 
@@ -83,21 +83,21 @@
 |----|------|------|
 | BE-PPF-10 | `derivedPlan` schema + ingest 只产 800/1600 | ☑ `schemas/trip.schema.json` · `webp_ingest_widths` · `deferred_derivatives` |
 | BE-PPF-11 | `media/derivatives.py` 物化；lock_structure 后后台线程与 narrate 重叠；render 前 join + sync ensure | ☑ |
-| BE-PPF-12 | 金字塔缩放 flag 默认关 | ☐ |
-| BE-PPF-13 | 扫描免像素解码（orientation 交换） | ☐ |
-| BE-PPF-14 | 美学信号 / mediaClass 入 worker | ☐ |
-| BE-PPF-15 | NIMA 重叠预热 + torch 线程配额（只重叠不换源） | ☐ |
-| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ☐ 部分：`test_derivatives_deferred.py` 覆盖 AC-05 主路径 |
+| BE-PPF-12 | 金字塔缩放 flag 默认关 | ☑ `webp_pyramid=False` · `export_webp_variants(pyramid=…)` |
+| BE-PPF-13 | 扫描免像素解码（orientation 交换） | ☑ `peek_image_meta` · `scan_image_paths` / tiered |
+| BE-PPF-14 | 美学信号 / mediaClass 入 worker | ☑ `WorkerResult.media_class` / `aesthetic_signals`；merge 不再重开图 |
+| BE-PPF-15 | NIMA 重叠预热 + torch 线程配额（只重叠不换源） | ☑ `aesthetic_warm.AestheticWarmCoordinator`；`warm_learned_on_ingest` |
+| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ◐ `test_derivatives_deferred` · `test_scan_peek_meta` · `test_webp_pyramid_flag` · `test_aesthetic_warm`；07a/07b/MF-10 后置 |
 
 ---
 
-## M3 · 渐进产出（待 M2 后）
+## M3 · 渐进产出
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| FE-PPF-01 | 两态进度 + 书架/预览一致 | ☐ |
-| BE-PPF-20 | 导出同步物化（D6，不置灰） | ☐ |
-| QA-PPF-20 | AC-PPF-11 / 基准机 AC-PPF-12 | ☐ |
+| FE-PPF-01 | 两态进度 + 书架/预览一致 | ☑ `layout_preview_ready` / `export_ready` hints · shelf 角标 · `derivativesStatus` |
+| BE-PPF-20 | 导出同步物化（D6，不置灰） | ☑ `ensure_derivatives_before_export` · zip/longshot 前同步 |
+| QA-PPF-20 | AC-PPF-11 / 基准机 AC-PPF-12 | ☐ 基准机 Playwright 后置 |
 
 ---
 
@@ -106,3 +106,4 @@
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v0.1 | 2026-07-19 | 初稿 · 摸底：timings 覆盖抹掉 ingestWorkers · M1 任务拆解 |
+| v0.2 | 2026-07-19 | M2 收尾：R3 扫描/worker 信号 · R4 NIMA 重叠 · R2.3 金字塔 flag · M3 两态进度与导出同步物化 |

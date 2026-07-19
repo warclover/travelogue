@@ -141,6 +141,7 @@ def materialize_asset_widths(
         webp_method=cfg.webp_method,
         generate_crops=False,
         focal=focal,
+        pyramid=bool(getattr(cfg, "webp_pyramid", False)),
     )
     existing = [
         dict(e)
@@ -222,6 +223,22 @@ def ensure_derivatives_for_trip(
         except Exception as exc:  # noqa: BLE001 — collect; caller may fail-closed
             result.errors.append(f"{aid}:{type(exc).__name__}:{exc}")
     result.elapsed_ms = round((time.monotonic() - t0) * 1000.0, 2)
+    return result
+
+
+def ensure_derivatives_before_export(
+    trip: dict,
+    trip_dir: Path,
+    *,
+    app_cfg: AppConfig | None = None,
+) -> MaterializeResult:
+    """D6 · sync materialize on export click; never leave export greyed out."""
+    result = ensure_derivatives_for_trip(trip, trip_dir, app_cfg=app_cfg)
+    pipe = trip.setdefault("pipeline", {})
+    if not result.errors:
+        pipe["derivativesStatus"] = "ready"
+    elif not pipe.get("derivativesStatus"):
+        pipe["derivativesStatus"] = "preview"
     return result
 
 

@@ -1,7 +1,8 @@
 """ProcessPool worker for parallel ingest (Pipeline Throughput · Phase A).
 
 Top-level pickle-safe entrypoint. Must not import services / web / orchestrator /
-curation / vision. Worker writes provisional Blobs only — never trip.json or
+vision. May lazy-import ``curation.aesthetic_score.compute_aesthetic_signals``
+(pure PIL, R3.2). Worker writes provisional Blobs only — never trip.json or
 final assetId assignment.
 """
 
@@ -31,6 +32,9 @@ class WorkerIngestConfig:
     portrait_analyze: bool = True
     face_min_size_for_portrait: int = 48
     copy_source_files: bool = True
+    webp_pyramid: bool = False
+    aesthetic_enabled: bool = True
+    aesthetic_thumb_px: int = 32
 
     @classmethod
     def from_ingest_config(
@@ -40,11 +44,13 @@ class WorkerIngestConfig:
         portrait_enabled: bool = True,
         force_materialize: bool = False,
         deferred_derivatives: bool = True,
+        aesthetic_cfg: Any | None = None,
     ) -> WorkerIngestConfig:
         copy = bool(getattr(cfg, "copy_source_files", True)) or bool(force_materialize)
         from travelogue.media.derivatives import effective_ingest_widths
 
         widths = effective_ingest_widths(cfg, deferred=bool(deferred_derivatives))
+        ae = aesthetic_cfg
         return cls(
             webp_widths=widths,
             webp_quality=int(cfg.webp_quality),
@@ -59,6 +65,9 @@ class WorkerIngestConfig:
             portrait_analyze=bool(getattr(cfg, "portrait_analyze", True)) and portrait_enabled,
             face_min_size_for_portrait=int(cfg.face_min_size_px),
             copy_source_files=copy,
+            webp_pyramid=bool(getattr(cfg, "webp_pyramid", False)),
+            aesthetic_enabled=bool(getattr(ae, "enabled", True)) if ae is not None else True,
+            aesthetic_thumb_px=int(getattr(ae, "thumb_px", 32) or 32) if ae is not None else 32,
         )
 
 
@@ -104,6 +113,8 @@ class WorkerResult:
     crop_mobile_rel: str | None = None
     crop_web_rel: str | None = None
     provisional_files: list[str] = field(default_factory=list)
+    media_class: str | None = None
+    aesthetic_signals: dict[str, float] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -242,6 +253,7 @@ def process_ingest_photo_worker(
             webp_method=worker_cfg.webp_method,
             generate_crops=worker_cfg.generate_crops,
             focal=(result.focal_x, result.focal_y),
+            pyramid=bool(worker_cfg.webp_pyramid),
         )
         result.display_rel = display_rel
         result.srcset = list(srcset_rel)
@@ -250,6 +262,34 @@ def process_ingest_photo_worker(
         result.crop_mobile_rel = crop_m
         result.crop_web_rel = crop_w
         result.provisional_dir = str(prov_dir)
+
+        # R3.2 · mediaClass + aesthetic signals on the already-decoded image
+        provisional_asset: dict[str, Any] = {
+            "id": provisional_id,
+            "width": result.width,
+            "height": result.height,
+            "quality": {
+                "meanLuma": result.mean_luma,
+                "hasFace": result.has_face,
+                "faceCount": result.face_count,
+            },
+            "salientBox": result.salient_box,
+        }
+        from travelogue.media.media_classify import classify_media_class
+
+        result.media_class = classify_media_class(
+            path=photo,
+            img=img,
+            date_source=result.date_source or "mtime",
+            asset=provisional_asset,
+        )
+        if worker_cfg.aesthetic_enabled:
+            from travelogue.config import AestheticConfig
+            from travelogue.curation.aesthetic_score import compute_aesthetic_signals
+
+            ae_cfg = AestheticConfig(thumb_px=int(worker_cfg.aesthetic_thumb_px))
+            signals = compute_aesthetic_signals(img, provisional_asset, cfg=ae_cfg)
+            result.aesthetic_signals = {str(k): float(v) for k, v in signals.items()}
 
         files: list[str] = []
         if copy_source:

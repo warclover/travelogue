@@ -15,6 +15,9 @@ PREPARING_VISION = "preparing_vision"
 VISION_WARMUP = "vision_warmup"
 PREPARING_BROWSER = "preparing_browser"
 PROCESSING_PHOTOS = "processing_photos"
+# PRD-PIPELINE-PERF-V1 · R5.1 · two-state progressive readiness
+LAYOUT_PREVIEW_READY = "layout_preview_ready"
+EXPORT_READY = "export_ready"
 
 # SFC · 识图准备主句（禁止 HF/CLIP/权重文件名）
 _VISION_WARMUP_COPY = "正在准备识图（首次可能较慢）"
@@ -31,6 +34,8 @@ STAGE_HINT_COPY: dict[str, str] = {
     VISION_WARMUP: _VISION_WARMUP_COPY,
     PREPARING_BROWSER: "正在准备长图组件（仅第一次）…",
     PROCESSING_PHOTOS: "正在整理照片…",
+    LAYOUT_PREVIEW_READY: "版面已就绪，可先预览",
+    EXPORT_READY: "高清图与导出准备完成",
 }
 
 
