@@ -29,7 +29,10 @@ DEFAULT_RAW_BLOCKLIST_SUFFIXES: tuple[str, ...] = (
 @dataclass
 class IngestConfig:
     max_photos: int = 250
+    # Full product srcset contract (materialize fills deferred tiers).
     webp_widths: tuple[int, ...] = (800, 1600, 2400, 3200)
+    # PRD-PIPELINE-PERF-V1 · R2.1：ingest 只产预览档；回退设与 webp_widths 相同
+    webp_ingest_widths: tuple[int, ...] = (800, 1600)
     webp_quality: int = 82
     # PRD-PIPELINE-PERF-V1 · R1.4（E-B）：默认 2；回退设 webp_method: 4
     webp_method: int = 2
@@ -67,6 +70,9 @@ class IngestConfig:
 
 def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
     widths = raw.get("webp_widths") or [800, 1600, 2400, 3200]
+    ingest_widths = raw.get("webp_ingest_widths") or raw.get("webpIngestWidths")
+    if not isinstance(ingest_widths, list) or not ingest_widths:
+        ingest_widths = [800, 1600]
     raw_suffixes = raw.get("raw_blocklist_suffixes") or raw.get("rawBlocklistSuffixes")
     if isinstance(raw_suffixes, list) and raw_suffixes:
         suffixes = tuple(str(s).lower() if str(s).startswith(".") else f".{str(s).lower()}" for s in raw_suffixes)
@@ -75,6 +81,7 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
     return IngestConfig(
         max_photos=int(raw.get("max_photos", 250)),
         webp_widths=tuple(int(w) for w in widths),
+        webp_ingest_widths=tuple(int(w) for w in ingest_widths),
         webp_quality=int(raw.get("webp_quality", 82)),
         webp_method=int(raw.get("webp_method", 2)),
         shared_color_thumb_px=int(raw.get("shared_color_thumb_px", raw.get("sharedColorThumbPx", 32))),

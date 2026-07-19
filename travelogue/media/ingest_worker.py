@@ -39,17 +39,21 @@ class WorkerIngestConfig:
         *,
         portrait_enabled: bool = True,
         force_materialize: bool = False,
+        deferred_derivatives: bool = True,
     ) -> WorkerIngestConfig:
         copy = bool(getattr(cfg, "copy_source_files", True)) or bool(force_materialize)
+        from travelogue.media.derivatives import effective_ingest_widths
+
+        widths = effective_ingest_widths(cfg, deferred=bool(deferred_derivatives))
         return cls(
-            webp_widths=tuple(int(w) for w in (cfg.webp_widths or (800, 1600))),
+            webp_widths=widths,
             webp_quality=int(cfg.webp_quality),
             webp_method=int(cfg.webp_method),
             shared_color_thumb_px=int(cfg.shared_color_thumb_px),
             generate_crops=bool(cfg.generate_crops),
             detect_faces=bool(cfg.detect_faces),
             face_min_size_px=int(cfg.face_min_size_px),
-            face_detect_max_edge=int(getattr(cfg, "face_detect_max_edge", 0) or 0),
+            face_detect_max_edge=int(getattr(cfg, "face_detect_max_edge", 1024) or 0),
             sharpness_version=str(getattr(cfg, "sharpness_version", "v2") or "v2"),
             exif_camera=bool(getattr(cfg, "exif_camera", True)),
             portrait_analyze=bool(getattr(cfg, "portrait_analyze", True)) and portrait_enabled,

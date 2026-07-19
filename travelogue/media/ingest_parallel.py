@@ -348,6 +348,9 @@ def _build_entry_from_worker_result(
         dual_ingest=build_ctx.dual_ingest,
         import_source=import_source,
     )
+    from travelogue.media.derivatives import sync_derived_plan_from_srcset
+
+    sync_derived_plan_from_srcset(entry, planned_widths=cfg.webp_widths)
     return entry
 
 
@@ -599,6 +602,7 @@ def run_parallel_ingest_loop(
         cfg,
         portrait_enabled=portrait_enabled,
         force_materialize=bool(getattr(build_ctx, "force_materialize", False)),
+        deferred_derivatives=bool(app_cfg.pipeline.deferred_derivatives),
     )
 
     jobs: list[tuple[Any, ...]] = []

@@ -405,6 +405,9 @@ ingest:
   warn_featured_count_above: 30
   # PRD-PIPELINE-PERF-V1 · R1.4（E-B）：默认 2；回退设 4（Phase7 旧默认）
   webp_method: 2
+  # Full product contract; ingest 只写 webp_ingest_widths，其余由 materialize 补齐
+  webp_widths: [800, 1600, 2400, 3200]
+  webp_ingest_widths: [800, 1600]
   shared_color_thumb_px: 32
   reject_raw: true
 
@@ -467,9 +470,11 @@ cull:
     device: auto
 
 # Phase 7 · 流水线并行（见 docs/PRD-PHASE7.md）
+# PRD-PIPELINE-PERF-V1 · deferred_derivatives：ingest 预览档 + 选片后物化
 pipeline:
   parallel_embed: true
   parallel_embed_chunk: 32
+  deferred_derivatives: true
 
 vision:
   enabled: false                   # true | false | auto — P3-Full CLIP (M13)

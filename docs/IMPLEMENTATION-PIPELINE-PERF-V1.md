@@ -5,7 +5,7 @@
 | **PRD** | [PRD-PIPELINE-PERF-V1.md](./PRD-PIPELINE-PERF-V1.md) **v0.2** |
 | **评审** | [acceptance-records/pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **验收** | 落地后补 `ACCEPTANCE-PIPELINE-PERF-V1.md`（对照 PRD §9） |
-| **状态** | **M1 进行中** · BE-PPF-01/02/03 已落地 |
+| **状态** | **M1 ☑ · M2 进行中**（BE-PPF-10/11 已落地） |
 | **更新** | 2026-07-19 |
 | **分支** | `feat/pipeline-perf-v1` |
 
@@ -81,13 +81,13 @@
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| BE-PPF-10 | `derivedPlan` schema + ingest 只产 800/1600 | ☐ |
-| BE-PPF-11 | `media/derivatives.py` 物化队列；lock_structure 后与 narrate 并行；render 前 join | ☐ |
+| BE-PPF-10 | `derivedPlan` schema + ingest 只产 800/1600 | ☑ `schemas/trip.schema.json` · `webp_ingest_widths` · `deferred_derivatives` |
+| BE-PPF-11 | `media/derivatives.py` 物化；lock_structure 后后台线程与 narrate 重叠；render 前 join + sync ensure | ☑ |
 | BE-PPF-12 | 金字塔缩放 flag 默认关 | ☐ |
 | BE-PPF-13 | 扫描免像素解码（orientation 交换） | ☐ |
 | BE-PPF-14 | 美学信号 / mediaClass 入 worker | ☐ |
 | BE-PPF-15 | NIMA 重叠预热 + torch 线程配额（只重叠不换源） | ☐ |
-| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ☐ |
+| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ☐ 部分：`test_derivatives_deferred.py` 覆盖 AC-05 主路径 |
 
 ---
 

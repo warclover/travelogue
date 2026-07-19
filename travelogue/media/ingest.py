@@ -141,6 +141,7 @@ class IngestAssetBuildContext:
     album_root: Path | None = None
     copy_source_files: bool = True
     force_materialize: bool = False
+    deferred_derivatives: bool = True
 
 
 @dataclass
@@ -389,11 +390,15 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
             save_jpeg_without_exif(photo.img, dest_source)
 
     t_webp = time.monotonic()
+    from travelogue.media.derivatives import effective_ingest_widths, sync_derived_plan_from_srcset
+
+    deferred = bool(getattr(ctx, "deferred_derivatives", True))
+    ingest_widths = effective_ingest_widths(cfg, deferred=deferred)
     display_rel, srcset_rel, out_w, out_h, crop_m, crop_w = export_webp_variants(
         photo.img,
         ctx.assets_dir,
         photo.asset_id,
-        widths=cfg.webp_widths,
+        widths=ingest_widths,
         quality=cfg.webp_quality,
         webp_method=cfg.webp_method,
         generate_crops=ctx.generate_crops,
@@ -511,6 +516,7 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         dual_ingest=ctx.dual_ingest,
         import_source=photo.import_source,
     )
+    sync_derived_plan_from_srcset(entry, planned_widths=cfg.webp_widths)
     return entry
 
 
@@ -1284,6 +1290,7 @@ def ingest_into_trip(
         album_root=album_root,
         copy_source_files=bool(getattr(cfg, "copy_source_files", True)),
         force_materialize=force_materialize,
+        deferred_derivatives=bool(resolved_app.pipeline.deferred_derivatives),
     )
 
     total_photos = len(photo_tiers)
