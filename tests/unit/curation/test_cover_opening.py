@@ -11,7 +11,8 @@ from travelogue.render.cover_opening import (
 
 def test_cover_place_hidden_when_same_as_title() -> None:
     assert cover_place_is_distinct("斯里兰卡人文精选", "斯里兰卡人文精选") is False
-    assert cover_place_is_distinct("京都", "雨后京都") is True
+    assert cover_place_is_distinct("黔西南三日漫游", "黔西南三日漫游·精选") is False
+    assert cover_place_is_distinct("京都", "雨后京都") is True  # 短地名眉题保留
 
 
 def test_system_hook_detection() -> None:

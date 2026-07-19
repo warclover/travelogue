@@ -7,6 +7,7 @@ import {
   shelfResumeActions,
   shelfShowCoverLongshotBadge,
   shelfShowCoverReadyBadge,
+  shelfPriorityLongshotTripId,
   markLongshotReady,
   shouldShowBentoStaleBar,
   bentoStaleMessage,
@@ -71,10 +72,42 @@ describe("shelfShowCoverLongshotBadge", function () {
     );
   });
 
+  it("hides non-priority stale trips when priority set", function () {
+    assert.equal(
+      shelfShowCoverLongshotBadge(
+        { tripId: "b", longshotStale: true },
+        { resumeTripId: "a", priorityLongshotTripId: "c" }
+      ),
+      false
+    );
+    assert.equal(
+      shelfShowCoverLongshotBadge(
+        { tripId: "c", longshotStale: true },
+        { resumeTripId: "a", priorityLongshotTripId: "c" }
+      ),
+      true
+    );
+  });
+
   it("hides when not longshot stale", function () {
     assert.equal(
       shelfShowCoverLongshotBadge({ tripId: "a", longshotStale: false }, { resumeTripId: "a" }),
       false
+    );
+  });
+});
+
+describe("shelfPriorityLongshotTripId", function () {
+  it("skips resume trip and returns first other stale", function () {
+    assert.equal(
+      shelfPriorityLongshotTripId(
+        [
+          { tripId: "a", longshotStale: true },
+          { tripId: "b", longshotStale: true },
+        ],
+        { resumeTripId: "a" }
+      ),
+      "b"
     );
   });
 });

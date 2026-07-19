@@ -186,6 +186,25 @@ export function confirmedExportSummary(platformId) {
   return "当前将导出：" + (p.label || p.title || platformId);
 }
 
+/**
+ * 摘要行：draft 与 confirmed 不一致时提示「未确定」，避免误以为已切换平台。
+ * @param {string} confirmedPlatform
+ * @param {string} [draftPlatform]
+ */
+export function exportSummaryLine(confirmedPlatform, draftPlatform) {
+  var confirmed = confirmedPlatform || "wechat_chat";
+  var draft = draftPlatform || confirmed;
+  var confirmedLabel =
+    (PLATFORMS[confirmed] && (PLATFORMS[confirmed].label || PLATFORMS[confirmed].title)) ||
+    confirmed;
+  if (draft === confirmed) {
+    return "当前将导出：" + confirmedLabel;
+  }
+  var draftLabel =
+    (PLATFORMS[draft] && (PLATFORMS[draft].label || PLATFORMS[draft].title)) || draft;
+  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+}
+
 export function shouldShowMomentsCoach() {
   try {
     // 与帮助系统 T-PLATFORM-PICK 同周期（D-HELP / AC-HELP-08）
@@ -486,9 +505,21 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     slideCount: initialDraft ? initialDraft.slideCount : null,
     padMode: (initialDraft && initialDraft.padMode) || "letterbox",
   };
+  var onDraftChange = typeof opts.onDraftChange === "function" ? opts.onDraftChange : null;
 
   function refresh() {
     syncPanelUI(pop, draft, uiOpts);
+    if (onDraftChange) {
+      try {
+        onDraftChange({
+          platform: draft.platform,
+          mode: draft.mode,
+          scale: draft.scale,
+          slideCount: draft.slideCount,
+          padMode: draft.padMode,
+        });
+      } catch (_e) {}
+    }
   }
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {

@@ -558,6 +558,37 @@
   cursor: pointer;
 }
 
+.preview-sheet__empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preview-sheet__empty-actions .preview-sheet__primary {
+  margin-top: 0;
+}
+
+.preview-sheet__ghost {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(61, 107, 90, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  color: #3d6b5a;
+  text-align: center;
+}
+
+.preview-sheet__ghost:hover {
+  background: rgba(61, 107, 90, 0.08);
+}
+
 .preview-toolbar__template--sheet {
   display: block;
   margin-bottom: 8px;

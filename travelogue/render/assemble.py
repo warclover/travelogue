@@ -125,7 +125,10 @@ def build_render_context(
     # T-M4-01：封面 hook 一律经 show_hook_on_cover（系统 stub 句默认不上封面；
     # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
     show_cover_hook = show_hook_on_cover(hook)
-    show_cover_place = cover_place_is_distinct(cover_place, meta_title)
+    raw_meta_title = str((meta.get("title") or "")).strip()
+    show_cover_place = cover_place_is_distinct(cover_place, meta_title) and (
+        not raw_meta_title or cover_place_is_distinct(cover_place, raw_meta_title)
+    )
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)
 

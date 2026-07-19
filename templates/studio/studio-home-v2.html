@@ -241,8 +241,8 @@
           </div>
         </details>
 
-        <!-- 导入与分析（默认展开 · 原「导入偏好」） -->
-        <details class="v2-settings-zone" id="v2-settings-zone-import" open>
+        <!-- 导入与分析（默认折叠 · 原「导入偏好」） -->
+        <details class="v2-settings-zone" id="v2-settings-zone-import">
           <summary class="v2-settings-zone__summary">
             导入与分析
             <span class="v2-settings-zone__meta" id="v2-settings-meta-import">行程·自动 · 场景·关</span>
@@ -254,39 +254,41 @@
               <span class="v2-settings-field__label" id="studio-cfg-clustering-label">行程识别</span>
               <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-clustering-label"
                    data-seg-for="studio-cfg-clustering">
-                <button type="button" class="v2-settings-seg__btn is-on" data-value="auto">自动<span class="v2-settings-seg__rec">荐</span></button>
+                <button type="button" class="v2-settings-seg__btn is-on" data-value="auto" title="推荐">自动</button>
                 <button type="button" class="v2-settings-seg__btn" data-value="true">开</button>
                 <button type="button" class="v2-settings-seg__btn" data-value="false">关</button>
               </div>
               <select id="studio-cfg-clustering" class="v2-settings-native-select"
+                      aria-hidden="true" tabindex="-1"
                       aria-describedby="studio-cfg-clustering-hint">
                 <option value="auto">自动（推荐）</option>
                 <option value="true">开</option>
                 <option value="false">关</option>
               </select>
+              <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">有 GPS 时按行程分段；一般保持「自动」。</p>
             </div>
 
             <div class="v2-settings-field">
               <span class="v2-settings-field__label" id="studio-cfg-vision-label">场景分析</span>
               <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-vision-label"
                    data-seg-for="studio-cfg-vision">
-                <button type="button" class="v2-settings-seg__btn is-on" data-value="false">关<span class="v2-settings-seg__rec">荐</span></button>
+                <button type="button" class="v2-settings-seg__btn is-on" data-value="false" title="推荐">关</button>
                 <button type="button" class="v2-settings-seg__btn" data-value="auto">自动</button>
                 <button type="button" class="v2-settings-seg__btn" data-value="true">开</button>
               </div>
               <select id="studio-cfg-vision" class="v2-settings-native-select"
+                      aria-hidden="true" tabindex="-1"
                       aria-describedby="studio-cfg-vision-hint">
                 <option value="false">关（默认）</option>
                 <option value="auto">自动</option>
                 <option value="true">开</option>
               </select>
+              <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">合并同场景照片（较慢）；一般保持「关」。</p>
             </div>
 
             <details class="v2-settings-sub" id="v2-settings-experimental">
               <summary class="v2-settings-sub__summary">说明与实验选项</summary>
               <div class="v2-settings-sub__body">
-                <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">行程识别：有 GPS 的照片会按行程分段（推荐自动）。</p>
-                <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">场景分析：合并同场景照片（较慢，首次需下载组件；默认关）。</p>
 
                 <div class="v2-settings-field">
                   <span class="v2-settings-field__label" id="studio-cfg-g1-label">导入后先确认章节</span>

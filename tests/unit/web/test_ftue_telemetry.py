@@ -77,7 +77,7 @@ def test_ftue_demo_album_success_emitted() -> None:
     run = (STUDIO / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "ftue_demo_album_success" in run
     assert "useDemoAlbum" in run
-    assert "重新生成（将覆盖）" in run
+    assert "再做一遍" in run
 
 
 def test_ftue_reveal_folder_wired() -> None:

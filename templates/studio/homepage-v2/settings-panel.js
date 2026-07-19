@@ -404,6 +404,12 @@ export function openSettings(opts) {
   toggle.setAttribute("aria-expanded", "true");
   trapFocus(popover);
   trackStudioEvent("settings_open", { source: opts.source || "toolbar" });
+  // 默认全部折叠，避免一打开就见导入实验区 / 开发者
+  try {
+    popover.querySelectorAll("details.v2-settings-zone, details.v2-settings-sub").forEach(function (d) {
+      d.open = false;
+    });
+  } catch (_e) {}
   // ?dev=1 / harness：展开「更多」，避免 Dev 入口藏在折叠区内不可见
   if (harnessEnabled()) {
     expandZone($("v2-settings-zone-more"));

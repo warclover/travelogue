@@ -13,6 +13,7 @@ import {
   confirmedExportSummary,
   ctaLabelForPlatform,
   enabledPlatformsFromConfig,
+  exportSummaryLine,
   shortCtaLabelForPlatform,
   syncPanelUI,
 } from "../../templates/studio/js/longshot-export-panel.js";
@@ -58,6 +59,21 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.equal(shortCtaLabelForPlatform("poster_bric"), "单屏海报");
   assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单屏海报");
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
+});
+
+test("exportSummaryLine · draft 未确认时提示待生效", () => {
+  assert.equal(
+    exportSummaryLine("wechat_chat", "wechat_chat"),
+    "当前将导出：微信群"
+  );
+  assert.match(
+    exportSummaryLine("wechat_chat", "wechat_moments"),
+    /已改选：.*点「确定」后生效/
+  );
+  assert.match(
+    exportSummaryLine("wechat_chat", "wechat_moments"),
+    /金色按钮仍按：微信群/
+  );
 });
 
 test("enabledPlatformsFromConfig · gcsPosterBric on/off", () => {

@@ -31,9 +31,20 @@ def _normalize_label(value: str) -> str:
 
 def cover_place_is_distinct(place: str, title: str) -> bool:
     """False when place duplicates the magazine title (common with narrative_copy_subject)."""
-    if not (place or "").strip() or not (title or "").strip():
-        return bool((place or "").strip())
-    return _normalize_label(place) != _normalize_label(title)
+    p = _normalize_label(place)
+    t = _normalize_label(title)
+    if not p:
+        return False
+    if not t:
+        return True
+    if p == t:
+        return False
+    # 近重复：较短一方几乎占满较长一方（避免「黔西南三日漫游」vs「…·精选」）
+    # 但不误伤「京都」vs「雨后京都」这类地名眉题
+    shorter, longer = (p, t) if len(p) <= len(t) else (t, p)
+    if shorter in longer and len(shorter) >= max(4, int(len(longer) * 0.7)):
+        return False
+    return True
 
 
 def is_system_cover_hook(hook: str) -> bool:

@@ -865,7 +865,7 @@ def test_p1_demo_conflict_open_existing(wizard_server) -> None:
         _wait_visible(page, "v2-frame")
         _start_demo_album_from_wizard(page)
         modal = page.locator(".studio__modal")
-        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
+        modal.get_by_role("heading", name="示例已经做过了").wait_for(timeout=10_000)
         with page.expect_navigation(wait_until="networkidle"):
             modal.get_by_role("button", name="打开已有示例 →").click()
         assert "/demo-album/index.html" in page.url
@@ -893,8 +893,8 @@ def test_p1_demo_conflict_regenerate(wizard_server) -> None:
         _wait_visible(page, "v2-frame")
         _start_demo_album_from_wizard(page)
         modal = page.locator(".studio__modal")
-        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
-        modal.get_by_role("button", name="重新生成（将覆盖）").click()
+        modal.get_by_role("heading", name="示例已经做过了").wait_for(timeout=10_000)
+        modal.get_by_role("button", name="再做一遍").click()
         page.wait_for_selector("#v2-import-cancel", timeout=20_000)
         page.wait_for_selector("#v2-success-open", timeout=30_000)
         assert len(bodies) >= 2
@@ -919,7 +919,7 @@ def test_p1_demo_conflict_cancel(wizard_server) -> None:
         _wait_visible(page, "v2-frame")
         _start_demo_album_from_wizard(page)
         modal = page.locator(".studio__modal")
-        modal.get_by_role("heading", name="示例相册已在书架").wait_for(timeout=10_000)
+        modal.get_by_role("heading", name="示例已经做过了").wait_for(timeout=10_000)
         modal.get_by_role("button", name="取消").click()
         page.wait_for_function(
             """() => !document.querySelector('.studio__modal-backdrop')""",

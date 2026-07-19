@@ -79,10 +79,10 @@ export function resolveDemoAlbumExists(data) {
     "/demo-album/index.html";
   if (typeof studioModal === "function") {
     return studioModal({
-      title: "示例相册已在书架",
-      body: "可以打开已有成品，或重新生成（将覆盖）。",
-      confirmText: "打开已有示例 →",
-      secondaryText: "重新生成（将覆盖）",
+      title: "示例已经做过了",
+      body: "可以直接打开看看效果，也可以再做一遍（会替换当前示例）。",
+      confirmText: "打开示例 →",
+      secondaryText: "再做一遍",
       cancelText: "取消",
       stacked: true,
     }).then(function (choice) {

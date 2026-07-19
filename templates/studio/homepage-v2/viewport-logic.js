@@ -14,6 +14,9 @@ export const WIDE_MIN_WIDTH = 1024;
 export const TABLET_MIN_WIDTH = 768;
 export const MINIAPP_QR_SRC = "/__studio/assets/miniapp-qr.webp";
 
+/** 典型手机宽度上限（无 coarse 指针时仍按手机引导，避免误写「拉宽至 1024」） */
+export const PHONE_MAX_WIDTH = 480;
+
 /** @returns {'wide'|'tablet_landscape'|'unsupported_rotate'|'unsupported_phone'|'unsupported_narrow'} */
 export function classifyViewport(width, height, coarsePointer) {
   var w = Number(width) || 0;
@@ -22,8 +25,9 @@ export function classifyViewport(width, height, coarsePointer) {
   if (w >= TABLET_MIN_WIDTH) {
     return w >= h ? "tablet_landscape" : "unsupported_rotate";
   }
-  // 窄视口
-  return coarsePointer ? "unsupported_phone" : "unsupported_narrow";
+  // 窄视口：触屏或典型手机宽度 → 引导去电脑；否则桌面窄窗拉宽
+  if (coarsePointer || w <= PHONE_MAX_WIDTH) return "unsupported_phone";
+  return "unsupported_narrow";
 }
 
 export function isSupported(layout) {
@@ -42,9 +46,9 @@ export function unsupportedCopy(layout, ctx) {
   var qrAvailable = ctx.miniappQrAvailable !== false;
   if (layout === "unsupported_rotate") {
     return {
-      title: "请旋转至横屏使用 Studio",
-      lead: "Studio 工作台为横屏双列设计，请将设备旋转至横屏。",
-      actions: [],
+      title: "请旋转至横屏，或改用电脑",
+      lead: "Studio 工作台为横屏双列设计。可旋转平板，也可在电脑浏览器打开同一地址。",
+      actions: [{ type: "copy_link", label: "复制电脑打开地址" }],
     };
   }
   if (layout === "unsupported_phone") {

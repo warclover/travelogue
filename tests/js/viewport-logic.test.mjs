@@ -17,6 +17,7 @@ test("classifyViewport 支持矩阵", () => {
   assert.equal(classifyViewport(900, 700, false), "tablet_landscape"); // iPad 横屏
   assert.equal(classifyViewport(800, 1100, false), "unsupported_rotate"); // 平板竖屏
   assert.equal(classifyViewport(500, 900, true), "unsupported_phone"); // 手机触屏
+  assert.equal(classifyViewport(390, 800, false), "unsupported_phone"); // 典型手机宽度
   assert.equal(classifyViewport(700, 500, false), "unsupported_narrow"); // 桌面窄窗
 });
 
@@ -29,9 +30,14 @@ test("isSupported 仅 wide / tablet_landscape", () => {
 });
 
 test("unsupportedCopy 文案分支", () => {
-  assert.match(unsupportedCopy("unsupported_rotate").title, /横屏/);
+  assert.match(unsupportedCopy("unsupported_rotate").title, /横屏|电脑/);
   assert.match(unsupportedCopy("unsupported_phone").title, /电脑浏览器/);
   assert.match(unsupportedCopy("unsupported_narrow").title, /拉宽/);
+  assert.ok(
+    unsupportedCopy("unsupported_rotate").actions.some(function (a) {
+      return a.type === "copy_link";
+    })
+  );
 });
 
 test("unsupportedCopy narrow 含当前宽度", () => {

@@ -124,6 +124,43 @@ def test_chapter_titles_same_day_suffix() -> None:
     assert titles[1] != titles[0]
 
 
+def test_chapter_titles_prefer_span_over_multi_seg_labels() -> None:
+    """多日桶优先日期跨度，避免 label 硬截断出双间隔号。"""
+    from travelogue.curation.chapter_titles import chapter_titles
+
+    assets = [
+        {"id": "a", "takenAt": "2024-02-09T12:00:00Z"},
+        {"id": "b", "takenAt": "2024-02-12T12:00:00Z"},
+        {"id": "c", "takenAt": "2024-04-04T12:00:00Z"},
+    ]
+    titles = chapter_titles(
+        [["a", "b", "c"]],
+        assets,
+        {"places": ["旅途"]},
+        bucket_segment_ids_all=[["s1", "s2"]],
+        segment_labels={
+            "s1": "2月9–12日·春游",
+            "s2": "4月4日·清明",
+        },
+    )
+    assert titles[0] == "2月9–4月4日"
+    assert "··" not in titles[0]
+
+
+def test_chapter_titles_clean_long_segment_label() -> None:
+    from travelogue.curation.chapter_titles import chapter_titles
+
+    assets = [{"id": "a", "takenAt": "2025-01-16T12:00:00Z"}]
+    titles = chapter_titles(
+        [["a"]],
+        assets,
+        {"places": ["旅途"]},
+        bucket_segment_ids=["seg"],
+        segment_labels={"seg": "1月16日·夏睿彤年度精选"},
+    )
+    assert titles[0] == "1月16日"
+
+
 def test_run_curate_auto_attaches_screens() -> None:
     assets = _assets_for_days(
         ["2025-04-01", "2025-04-02", "2025-04-03", "2025-04-04", "2025-04-05", "2025-04-06"]

@@ -13,6 +13,7 @@ import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
 import { renderBenchRecent } from "./bento.js";
 import {
+  shelfPriorityLongshotTripId,
   shelfResumeActions,
   shelfShowCoverLongshotBadge,
   shelfShowCoverReadyBadge,
@@ -166,12 +167,19 @@ function buildCoverWrap(trip, surface) {
   }
   var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];
   var resumeTripId = resumeTrip ? resumeTrip.tripId : null;
-  var showLongshotBadge = shelfShowCoverLongshotBadge(trip, { resumeTripId: resumeTripId });
+  var priorityLongshotTripId = shelfPriorityLongshotTripId(_loadedTrips, {
+    resumeTripId: resumeTripId,
+  });
+  var showLongshotBadge = shelfShowCoverLongshotBadge(trip, {
+    resumeTripId: resumeTripId,
+    priorityLongshotTripId: priorityLongshotTripId,
+  });
   if (showLongshotBadge) {
     wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_LONGSHOT));
   } else if (readyBadge) {
     wrap.appendChild(el("span", "v2-shelf__ready-badge", READY_LONGSHOT));
-  } else if (trip.algorithmStale) {
+  } else if (trip.algorithmStale && !trip.longshotStale) {
+    // 长图过期优先于「可更新」；同本不叠两枚角标
     wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_BADGE));
   }
   attachShelfTripMenu(wrap, trip, { surface: surface, onDeleted: onTripDeleted });

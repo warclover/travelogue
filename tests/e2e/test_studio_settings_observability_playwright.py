@@ -163,7 +163,7 @@ def test_settings_accordion_zones_ai_modal_and_seg(studio_server) -> None:
             }"""
         )
         assert state["hasZones"] is True
-        assert state["importOpen"] is True
+        assert state["importOpen"] is False  # 默认折叠，避免一打开就见导入实验区
         assert state["aiOpen"] is False
         assert state["appearanceOpen"] is False
         assert state["storageOpen"] is False

@@ -35,7 +35,7 @@ function ensureRoot() {
     '<p id="studio-capability-card-title" class="studio-capability-card__title">照片留在本机，也能做成可发的游记</p>' +
     '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。更好的文案可稍后自行升级（可选）。向导里可一键试用示例。</p>' +
     '<div class="studio-capability-card__actions">' +
-    '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始制作</button>' +
+    '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始制作我的游记</button>' +
     "</div>" +
     '<p class="studio-capability-card__linkrow">' +
     '<button type="button" class="studio-capability-card__link" id="studio-capability-upgrade">以后再升级 AI 文案 →</button>' +
@@ -128,6 +128,11 @@ function canShow() {
   if (isCapabilityCardSeen()) return false;
   if (V2 && (V2.state === "Importing" || V2.state === "FirstSuccess" || V2.state === "Loading")) {
     return false;
+  }
+  // 书架已有作品：不是真·首次，避免遮罩挡主 CTA、背后满书架仍弹卡
+  if (V2) {
+    if (typeof V2.tripsTotal === "number" && V2.tripsTotal > 0) return false;
+    if (Array.isArray(V2.trips) && V2.trips.length > 0) return false;
   }
   if (isHelpL1Blocked()) return false;
   if (typeof document !== "undefined" && document.getElementById("v2-first-success")) {

@@ -507,11 +507,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         emptyTitle +
         "</strong></p>" +
         '<p class="preview-sheet__hint">点精选、改拼图要在有照片的游记页。</p>' +
+        '<div class="preview-sheet__empty-actions">' +
         '<button type="button" class="preview-sheet__primary" data-action="goto-bookends">' +
         primaryLabel +
         "</button>" +
-        '<button type="button" class="preview-sheet__ghost" data-action="goto-body" style="margin-top:8px">去游记正文</button>' +
-        '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel" style="margin-top:4px">先收起面板</button>';
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-body">去游记正文</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel">先收起面板</button>' +
+        "</div>";
       var collapsePanel = bodyEl.querySelector('[data-action="collapse-panel"]');
       if (collapsePanel) {
         collapsePanel.addEventListener("click", function () {

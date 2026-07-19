@@ -51,9 +51,11 @@ def test_settings_accordion_html_inventory() -> None:
         'data-seg-for="studio-cfg-g1"',
         'data-seg-for="studio-cfg-layout-scoring"',
         'data-seg-for="studio-cfg-copy-source"',
-        'id="v2-settings-zone-import" open',
+        'id="v2-settings-zone-import"',
     ):
         assert marker in home, f"missing settings inventory marker: {marker}"
+    # 默认折叠：勿再默认 open「导入与分析」
+    assert 'id="v2-settings-zone-import" open' not in home
     # 不再动态注入 AI section
     assert 'aria-label="导入选项"' not in home
     assert "v2-settings-popover__section-label" not in home

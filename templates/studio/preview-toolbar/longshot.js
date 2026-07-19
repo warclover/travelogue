@@ -16,7 +16,7 @@ import {
 import {
   bindPanelDraft,
   buildPanelHtml,
-  confirmedExportSummary,
+  exportSummaryLine,
   ctaLabelForPlatform,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
@@ -707,12 +707,22 @@ export function cancelPreviewLongshotExport(root) {
     return true;
   }
 
-  function syncConfirmedExportSummary(pop) {
+  function syncConfirmedExportSummary(pop, draftPlatform) {
     if (!pop) return;
     var el = pop.querySelector("[data-export-confirmed-summary]");
     if (!el) return;
     var prefs = readExportPrefs();
-    el.textContent = confirmedExportSummary(prefs.platform || "wechat_chat");
+    var confirmed = prefs.platform || "wechat_chat";
+    var draft = draftPlatform;
+    if (draft == null && pop._panelDraft && typeof pop._panelDraft.getDraft === "function") {
+      var d = pop._panelDraft.getDraft();
+      draft = d && d.platform;
+    }
+    el.textContent = exportSummaryLine(confirmed, draft || confirmed);
+    el.setAttribute(
+      "data-export-summary-pending",
+      draft && draft !== confirmed ? "1" : "0"
+    );
   }
 
   export function isReaderSurfaceMode() {
@@ -913,6 +923,9 @@ export function cancelPreviewLongshotExport(root) {
       {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
+        onDraftChange: function (draft) {
+          syncConfirmedExportSummary(pop, draft && draft.platform);
+        },
       }
     );
     pop._panelDraft = panel;
