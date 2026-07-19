@@ -111,6 +111,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .preview-sheet__grab {
@@ -179,11 +180,14 @@
 
 .preview-sheet__body {
   padding: 16px;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   font-size: 13px;
   flex: 1;
   min-height: 0;
+  max-height: 100%;
 }
 
 @media (min-width: 1024px) {
@@ -255,6 +259,14 @@
 
   .preview-sheet__content {
     flex-direction: row;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .preview-sheet__body {
+    align-self: stretch;
+    height: 100%;
+    max-height: 100%;
   }
 
   .preview-sheet__tabs {
@@ -1118,6 +1130,16 @@ body.preview-sheet-open {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 10px 0 4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    #fff 28%,
+    #fff 100%
+  );
 }
 
 .preview-sheet__bookends-actions .preview-sheet__primary,

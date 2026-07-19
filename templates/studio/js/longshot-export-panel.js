@@ -35,6 +35,7 @@ export var PLATFORMS = {
     subtitle: "九宫格 1:1",
     cta: "导出朋友圈 · 九宫格",
     showSegmentMode: false,
+    showCopyControls: false,
     expectHtml:
       "将导出最多 <strong>9 张</strong> 1:1 真九宫格（有几张发几张）· 无需截长卷",
   },
@@ -45,6 +46,7 @@ export var PLATFORMS = {
     subtitle: "拼贴海报",
     cta: "导出单屏海报",
     showSegmentMode: false,
+    showCopyControls: false,
     expectHtml:
       "将导出 <strong>1 张</strong>拼贴海报（3–9 张精选 · contain 保比例）",
   },
@@ -397,6 +399,19 @@ export function syncPanelUI(pop, draft, opts) {
 
   var modeField = pop.querySelector('[data-field="mode"]');
   if (modeField) modeField.hidden = !meta.showSegmentMode;
+
+  var copyField = pop.querySelector('[data-field="copy"]');
+  if (copyField) {
+    // 海报 / 九宫格非长图文案语义，避免「长图要不要字」误导
+    copyField.hidden = meta.showCopyControls === false;
+  }
+  var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
+  if (noteEl) {
+    noteEl.textContent =
+      meta.showCopyControls === false
+        ? "选好后点「确定」，再点上方金色按钮开始导出。"
+        : "选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。";
+  }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
   var xhsPad = pop.querySelector('[data-field="xhs-pad"]');

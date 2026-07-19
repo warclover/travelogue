@@ -1,7 +1,8 @@
 /* Preview toolbar · Preview toolbar v4 icon dock */
 /* ── Preview toolbar v4 · Icon Dock ── */
 html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
-  --preview-toolbar-h: 0px;
+  /* Dock 约占顶栏高度：侧栏/遮罩避开顶右操作区 */
+  --preview-toolbar-h: 56px;
 }
 
 .preview-toolbar--v4 {
@@ -9,7 +10,8 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 220;
+  /* Above preview-sheet-root (240) so dock「返回」在精修打开时仍可点 */
+  z-index: 250;
   min-height: 0;
   overflow: visible;
   pointer-events: none;
@@ -20,7 +22,8 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   position: fixed;
   top: max(12px, env(safe-area-inset-top, 0px));
   right: max(12px, env(safe-area-inset-right, 0px));
-  z-index: 221;
+  /* Above preview-sheet-root (240): 精修侧栏打开时「返回」等 dock 仍可点 */
+  z-index: 250;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;

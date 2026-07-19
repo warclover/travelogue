@@ -9,11 +9,43 @@ import {
   PLATFORM_TO_INTENT,
 } from "../../templates/studio/js/output-recipe-logic.js";
 import {
+  PLATFORMS,
   confirmedExportSummary,
   ctaLabelForPlatform,
   enabledPlatformsFromConfig,
   shortCtaLabelForPlatform,
+  syncPanelUI,
 } from "../../templates/studio/js/longshot-export-panel.js";
+
+/** Minimal popover stub for syncPanelUI field visibility (no jsdom). */
+function stubPopover() {
+  const copy = { hidden: false };
+  const note = { textContent: "" };
+  const expectField = { hidden: true };
+  const expectBody = { innerHTML: "", textContent: "" };
+  return {
+    querySelector(sel) {
+      if (sel === '[data-field="copy"]') return copy;
+      if (sel === ".preview-toolbar__export-popover-note") return note;
+      if (sel === '[data-field="mode"]') return { hidden: false };
+      if (sel === '[data-field="xhs-count"]') return { hidden: true };
+      if (sel === '[data-field="xhs-pad"]') return { hidden: true };
+      if (sel === '[data-field="expect"]') return expectField;
+      if (sel === "[data-expect-body]") return expectBody;
+      if (sel === '[data-field="coach"]') return { hidden: true, textContent: "" };
+      if (sel === "[data-xhs-custom-row]") return { hidden: true };
+      if (sel === "[data-studio-xhs-custom-input]") return null;
+      if (sel === "[data-smart-crop-btn]") return null;
+      if (sel === "[data-xhs-estimate]") return null;
+      return null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+    _copy: copy,
+    _note: note,
+  };
+}
 
 test("poster_bric 在 INTENT/PLATFORM 映射中互逆", () => {
   assert.equal(INTENT_TO_PLATFORM.poster_bric, "poster_bric");
@@ -41,4 +73,21 @@ test("enabledPlatformsFromConfig · gcsPosterBric on/off", () => {
   });
   assert.ok(on.includes("poster_bric"));
   assert.ok(on.includes("wechat_chat"));
+});
+
+test("poster_bric / moments_grid 隐藏「长图要不要字」", () => {
+  assert.equal(PLATFORMS.poster_bric.showCopyControls, false);
+  assert.equal(PLATFORMS.moments_grid.showCopyControls, false);
+  assert.notEqual(PLATFORMS.wechat_chat.showCopyControls, false);
+
+  const popPoster = stubPopover();
+  syncPanelUI(popPoster, { platform: "poster_bric", mode: "full", scale: 2 });
+  assert.equal(popPoster._copy.hidden, true);
+  assert.match(popPoster._note.textContent, /金色按钮/);
+  assert.doesNotMatch(popPoster._note.textContent, /要不要字/);
+
+  const popChat = stubPopover();
+  syncPanelUI(popChat, { platform: "wechat_chat", mode: "chapter", scale: 2 });
+  assert.equal(popChat._copy.hidden, false);
+  assert.match(popChat._note.textContent, /要不要字/);
 });

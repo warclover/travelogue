@@ -80,29 +80,54 @@ function _placeFallbackLabel(meta) {
   return "旅行";
 }
 
-/** 与 BE ``_date_fallback_label`` 同源：{月}月{日}日 / 跨日区间，无日期回 "游记"。 */
+function _parseIsoYmd(value) {
+  var parts = String(value || "")
+    .trim()
+    .slice(0, 10)
+    .split("-");
+  if (parts.length !== 3) return null;
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10);
+  var d = parseInt(parts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+  return { y: y, m: m, d: d };
+}
+
+function _isCrossYearSpan(meta) {
+  var start = _parseIsoYmd(meta && meta.dateStart);
+  var end = _parseIsoYmd(meta && meta.dateEnd);
+  return !!(start && end && start.y !== end.y);
+}
+
+/** Detect yearless spans like ``1月20–1月16日`` (cross-year smell). */
+function _looksLikeYearlessDateSpan(label) {
+  var t = String(label || "").trim();
+  if (!t || t.indexOf("年") >= 0 || /(?:19|20)\d{2}/.test(t)) return false;
+  return /\d{1,2}月\d{1,2}.+\d{1,2}月\d{1,2}/.test(t);
+}
+
+/** 与 BE ``_date_fallback_label`` 同源：同月日区间 / 跨年紧凑形，无日期回 "游记"。 */
 function _dateFallbackLabel(meta) {
-  var start = String((meta && meta.dateStart) || "")
-    .trim()
-    .slice(0, 10);
-  var end = String((meta && meta.dateEnd) || "")
-    .trim()
-    .slice(0, 10);
+  var start = _parseIsoYmd(meta && meta.dateStart);
   if (!start) return "游记";
-  var sp = start.split("-");
-  if (sp.length !== 3) return "游记";
-  var m = parseInt(sp[1], 10);
-  var d = parseInt(sp[2], 10);
-  if (isNaN(m) || isNaN(d)) return "游记";
-  var label = m + "月" + d + "日";
-  if (end && end !== start) {
-    var ep = end.split("-");
-    if (ep.length === 3) {
-      var m2 = parseInt(ep[1], 10);
-      var d2 = parseInt(ep[2], 10);
-      if (!isNaN(m2) && !isNaN(d2)) {
-        label = m + "月" + d + "–" + m2 + "月" + d2 + "日";
-      }
+  var label = start.m + "月" + start.d + "日";
+  var end = _parseIsoYmd(meta && meta.dateEnd);
+  if (end && !(end.y === start.y && end.m === start.m && end.d === start.d)) {
+    if (start.y !== end.y) {
+      label =
+        (start.y % 100) +
+        "." +
+        start.m +
+        "." +
+        start.d +
+        "–" +
+        (end.y % 100) +
+        "." +
+        end.m +
+        "." +
+        end.d;
+    } else {
+      label = start.m + "月" + start.d + "–" + end.m + "月" + end.d + "日";
     }
   }
   return label;
@@ -127,6 +152,10 @@ export function resolveDisplayTitle(meta, opts) {
   meta = meta || {};
   var stored = String(meta.displayTitle || "").trim();
   var accepted = _acceptDisplay(stored, limit);
+  // Cross-year trips must not keep yearless spans like「1月20–1月16日」
+  if (accepted && _isCrossYearSpan(meta) && _looksLikeYearlessDateSpan(accepted)) {
+    accepted = null;
+  }
   if (accepted) return accepted;
 
   var raw =

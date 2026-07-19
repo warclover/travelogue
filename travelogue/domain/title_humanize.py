@@ -84,23 +84,46 @@ def extract_place_label(raw: str | None) -> str | None:
     return None
 
 
+def _parse_iso_ymd(value: str) -> tuple[int, int, int] | None:
+    parts = str(value or "").strip()[:10].split("-")
+    if len(parts) != 3:
+        return None
+    try:
+        return int(parts[0]), int(parts[1]), int(parts[2])
+    except ValueError:
+        return None
+
+
+def _is_cross_year_span(meta: dict[str, Any] | None) -> bool:
+    meta = meta or {}
+    start = _parse_iso_ymd(str(meta.get("dateStart") or ""))
+    end = _parse_iso_ymd(str(meta.get("dateEnd") or ""))
+    return bool(start and end and start[0] != end[0])
+
+
+def _looks_like_yearless_date_span(label: str) -> bool:
+    """Detect shelf labels like ``1月20–1月16日`` that omit year (cross-year smell)."""
+    t = str(label or "").strip()
+    if not t or "年" in t or re.search(r"(?:19|20)\d{2}", t):
+        return False
+    return bool(re.search(r"\d{1,2}月\d{1,2}.+\d{1,2}月\d{1,2}", t))
+
+
 def _date_fallback_label(meta: dict[str, Any] | None) -> str:
     meta = meta or {}
-    start = str(meta.get("dateStart") or "").strip()[:10]
-    end = str(meta.get("dateEnd") or "").strip()[:10]
+    start = _parse_iso_ymd(str(meta.get("dateStart") or ""))
     if not start:
         return "游记"
-    try:
-        y, m, d = start.split("-")
-        label = f"{int(m)}月{int(d)}日"
-    except ValueError:
-        return "游记"
+    y, m, d = start
+    label = f"{m}月{d}日"
+    end = _parse_iso_ymd(str(meta.get("dateEnd") or ""))
     if end and end != start:
-        try:
-            _, m2, d2 = end.split("-")
-            label = f"{int(m)}月{int(d)}–{int(m2)}月{int(d2)}日"
-        except ValueError:
-            pass
+        y2, m2, d2 = end
+        if y != y2:
+            # Compact cross-year form fits shelf limit (~20 with place prefix)
+            label = f"{y % 100}.{m}.{d}–{y2 % 100}.{m2}.{d2}"
+        else:
+            label = f"{m}月{d}–{m2}月{d2}日"
     return label
 
 
@@ -168,6 +191,9 @@ def resolve_display_title(
     meta = meta or {}
     stored = str(meta.get("displayTitle") or "").strip()
     accepted = _accept_display(stored, limit=limit)
+    # Cross-year trips must not keep yearless spans like「1月20–1月16日」
+    if accepted and _is_cross_year_span(meta) and _looks_like_yearless_date_span(accepted):
+        accepted = None
     if accepted:
         return accepted
 

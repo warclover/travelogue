@@ -90,3 +90,16 @@ test("displayTitle · final fallback uses date label then 旅行 · 游记", () 
   assert.equal(resolveDisplayTitle({ title: "download" }), "旅行 · 游记");
   assert.equal(resolveDisplayTitle(null), "旅行 · 游记");
 });
+
+test("displayTitle · cross-year span keeps year (no inverted month feel)", () => {
+  assert.equal(
+    resolveDisplayTitle({
+      title: "夏睿彤年度精选2",
+      displayTitle: "旅行 · 1月20–1月16日",
+      places: ["旅途"],
+      dateStart: "2024-01-20",
+      dateEnd: "2025-01-16",
+    }),
+    "旅行 · 24.1.20–25.1.16"
+  );
+});
