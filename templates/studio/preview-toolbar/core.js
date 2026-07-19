@@ -132,16 +132,8 @@ export function wireSheetEditDirty(root, panel) {
 export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
-    // D-REF-18 / D-MRS · G1 > layoutPending > sourceMissing > longshotStale
-    if (_g1Pending) {
-      // 横幅在视口内时由横幅承担；滚出且未「稍后」时由 Task Dock 镜像
-      if (!root._g1BannerVisible && !_g1DockDismissed) {
-        root._taskDock.showG1({});
-      } else {
-        root._taskDock.hide();
-      }
-      return;
-    }
+    // D-PCU · 默认/实验均不走黄底 G1 Strip；分章走 Dock 面板
+    // 栈：export(外层) > layoutPending > sourceMissing > longshotStale > featured
     if (_layoutPending && !_pendingDockDismissed) {
       var pendingTitle = _layoutPendingMessage || "版面有改动";
       root._taskDock.showPending({

@@ -21,6 +21,8 @@ def test_help_copy_contract_locked() -> None:
     assert "长图已保存到本机" in help_js
     assert "打开微信，按文件名顺序发到群聊" in help_js
     assert "可点『在文件夹中显示』找到文件" in help_js
+    # SF-04 / D-PCU · Help 须提及 Dock「分章」
+    assert "工具栏「分章」" in help_js
     assert "应用排版" not in help_js
     assert "导出与更多" not in help_js
     assert "写给编辑的一句话" not in help_js

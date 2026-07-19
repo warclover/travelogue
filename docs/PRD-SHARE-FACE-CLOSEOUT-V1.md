@@ -281,7 +281,7 @@
 | **D-SFC-04** | running >1s 禁止 phase/message 双空；`vision_warmup` 为一等阶段 |
 | **D-SFC-05** | 视觉准备失败 → 降级继续，不阻断 L0 成稿 |
 | **D-SFC-06** | stale 唯一主词 =「分享图需更新」（supersede R-QH-05） |
-| **D-SFC-07** | Sparse 快速分享默认跳过 G1 阻断 |
+| **D-SFC-07** | Sparse 快速分享默认跳过 G1 阻断 · **2026-07-19**：[PCU D-PCU-09](./acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) 默认路径对任意 kept_n / 精细制作一律 auto-lock；本条 Sparse 跳过并入更广默认；实验 `g1ConfirmStructure` 仍可强制 pending |
 | **D-SFC-08** | 「媒资」→「照片类型」 |
 | **D-SFC-09** | 不新建成功面/进度壳；复用 FST / Dock / Importing 壳 |
 | **D-SFC-10** | 喜欢项（Recipe CTA / 意图卡 / 示例试水 / 精修封面）本主题不改行为，仅回归 |

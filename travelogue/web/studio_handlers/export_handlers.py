@@ -98,7 +98,7 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
             {
                 "ok": False,
                 "error": "E_PIPELINE_ORDER",
-                "message": "请先确认章节顺序",
+                "message": "请先在「分章」中确认章节顺序",
             },
         )
         return

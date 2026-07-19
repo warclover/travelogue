@@ -9,6 +9,7 @@ import {
   insertScreenplayControl,
   isPreviewToolbarV4,
   dockLongshotIconHtml,
+  dockIconSvg,
   initDockTooltips,
   initDockScrollFade,
 } from "./dock.js";
@@ -116,6 +117,10 @@ import {
   maybeInjectRefineSaveHint,
   maybeOpenHelpFromDeepLink,
 } from "../js/help-drawer.js";
+import {
+  mountChapterPanel,
+  maybeShowChapterHintTip,
+} from "./chapter-panel.js";
 
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
@@ -123,11 +128,20 @@ var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现�
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
 
+  var dock = root.querySelector(".preview-toolbar__dock");
   var helpBtn = createHelpOpenButton({
     id: "studio-help-open-preview",
-    className: "studio-help-open studio-help-open--ghost studio-help-open--preview",
+    className:
+      "studio-help-open studio-help-open--ghost studio-help-open--dock preview-toolbar__dock-btn",
   });
-  document.body.appendChild(helpBtn);
+  helpBtn.setAttribute("aria-label", "使用帮助");
+  if (dock && dock.firstChild) {
+    dock.insertBefore(helpBtn, dock.firstChild);
+  } else if (dock) {
+    dock.appendChild(helpBtn);
+  } else {
+    document.body.appendChild(helpBtn);
+  }
 
   configureHelpDrawer({
     getOpenButton: function () {
@@ -138,6 +152,9 @@ export function initToolbarV3(root, tripId) {
     beforeOpen: function (done) {
       // MF-HELP-06 / AC-16 · 精修面板开着 → 先关面板保模式，再开帮助
       var sheet = root._sheet;
+      if (root._chapterPanel && root._chapterPanel.isOpen()) {
+        root._chapterPanel.close();
+      }
       if (sheet && typeof sheet.isOpen === "function" && sheet.isOpen()) {
         sheet.close("help", function () {
           done(true);
@@ -532,6 +549,13 @@ export function initToolbarV3(root, tripId) {
   });
 
   root._sheet = mountPreviewUnifiedSheet(root, sheetHooks);
+  root._chapterPanel = mountChapterPanel(root, tripId, drawers, root._sheet);
+  root._openChapterPanel = function (opts) {
+    root._chapterPanel.open(opts || {});
+  };
+  root._maybeShowChapterHint = function () {
+    maybeShowChapterHintTip(root, tripId);
+  };
   initG1V3(root, tripId, drawers, root._sheet);
   initDisplayedAestheticTitles(tripId);
 
@@ -574,6 +598,31 @@ export function initToolbarV3(root, tripId) {
   var menuWrap = actions.querySelector(".preview-toolbar__menu-wrap");
   if (isPreviewToolbarV4(root)) {
     insertScreenplayControl(actions, menuWrap, { label: "▶", v3: true, dock: true });
+
+    // D-CHAP · 分章（播放与精修之间）
+    var chapBtn = document.createElement("button");
+    chapBtn.type = "button";
+    chapBtn.className =
+      "preview-toolbar__dock-btn preview-toolbar__dock-btn--chapters preview-toolbar__dock-btn--labeled preview-toolbar__ctl";
+    chapBtn.setAttribute("aria-label", "分章");
+    chapBtn.setAttribute("aria-pressed", "false");
+    chapBtn.innerHTML =
+      dockIconSvg("chapters") +
+      '<span class="preview-toolbar__dock-label">分章</span>';
+    chapBtn.addEventListener("click", function () {
+      if (root._chapterPanel) root._chapterPanel.toggle();
+    });
+    actions.insertBefore(chapBtn, menuWrap);
+
+    // D-STAT · 管道状态槽
+    var dockStat = document.createElement("span");
+    dockStat.id = "preview-dock-stat";
+    dockStat.className = "preview-toolbar__dock-stat";
+    dockStat.setAttribute("role", "status");
+    dockStat.setAttribute("aria-live", "polite");
+    dockStat.hidden = true;
+    actions.insertBefore(dockStat, menuWrap.nextSibling);
+
     var exportDivider = document.createElement("span");
     exportDivider.className = "preview-toolbar__dock-divider";
     exportDivider.setAttribute("aria-hidden", "true");

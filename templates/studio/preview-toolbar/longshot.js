@@ -2461,14 +2461,27 @@ export function cancelPreviewLongshotExport(root) {
             ? "版面已更新，长图没有保存成功，可再点「长图」"
             : null;
         if (res.status === 409) {
+          var errCode = (res.body && res.body.error) || "E_STUDIO_JOB_BUSY";
           trackStudioEvent("longshot_export_fail", {
             platform: platform,
-            error_code: (res.body && res.body.error) || "E_STUDIO_JOB_BUSY",
+            error_code: errCode,
             trip_id: tripId,
             surface: "preview",
             from: from,
           });
           clearResumePlatform();
+          // D-PCU-10 · 结构未确认：引导打开分章面板
+          if (errCode === "E_PIPELINE_ORDER") {
+            if (typeof root._openChapterPanel === "function") {
+              root._openChapterPanel({ pending: true });
+            }
+            _showToolbarToast(
+              (res.body && res.body.message) || "请先在「分章」中确认章节顺序",
+              { error: true }
+            );
+            setLongshotExportState(root, "idle");
+            return;
+          }
           setLongshotExportState(root, "error", {
             hint: failHint || (res.body && res.body.message) || "请稍候再试",
           });

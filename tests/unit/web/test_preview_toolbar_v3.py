@@ -812,24 +812,39 @@ def test_preview_export_facade_v1_markers() -> None:
 
 
 def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
-    """PRD-PREVIEW-REFINE-V1 · P1 M4 G1 横幅 + M3 三区 IA。"""
+    """PRD-PREVIEW-REFINE-V1 · 三区 IA；G1 默认黄条已被 PCU 取代（D-PCU-01/10）。"""
     features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
     core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     sheet = SHEET_JS.read_text(encoding="utf-8")
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
-    css = (STUDIO / "preview-toolbar" / "drawers.css").read_text(encoding="utf-8")
     shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
+    chap = (STUDIO / "preview-toolbar" / "chapter-panel.js").read_text(encoding="utf-8")
 
+    # 废弃函数仍可存在，但 init 不得挂默认黄条
     assert "mountG1Banner" in features
-    assert "章节结构待确认 · 请浏览各章顺序后确认" in features
-    assert "章节顺序 OK" in features
-    assert "重新生成结构" in features
-    assert "preview-toolbar__g1-banner--v4" in features or "g1-banner--v4" in css
-    assert "_g1BannerVisible" in core
-    # D-REF-18 · G1 pending 时不落 layoutPending Task Dock
-    assert "if (_g1Pending)" in core
-    g1_block = core.split("if (_g1Pending)", 1)[1].split("if (_layoutPending", 1)[0]
-    assert "return;" in g1_block
+    assert "mountG1Banner(root, drawers)" not in features.split("export function initG1V3")[1].split(
+        "export function mountG1Banner"
+    )[0]
+    assert "pcu_legacy_g1_autoconfirm" in features
+    assert "_openChapterPanel" in features or "mountChapterPanel" in init_v3
+    assert "dock-btn--chapters" in init_v3
+    assert "preview-dock-stat" in init_v3
+    assert "studio-help-open--dock" in init_v3
+    assert "showG1" not in core.split("export function refreshTaskDockState")[1].split(
+        "if (_layoutPending"
+    )[0]
+    assert "preview-chapter-panel" in chap
+    assert "确认并继续" in chap
+    dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
+    # MF-05 · Dock 触控目标 ≥40px（含窄屏折叠态）
+    assert "min-width: 40px" in dock_css
+    assert "min-height: 40px" in dock_css
+    assert (
+        ".preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled {\n"
+        "    padding: 0;\n"
+        "    width: 40px;"
+    ) in dock_css or "width: 40px;\n    min-width: 40px;\n    max-width: 40px;" in dock_css
     assert 'label: "这页"' in sheet
     assert 'label: "封面"' in sheet
     assert 'label: "这本"' in sheet
@@ -841,6 +856,7 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert 'label: "高级"' not in sheet
     assert "精修 · 这本" in shell
     assert "可在「排版」中更换" not in shell
+    assert "preview-dock-stat" in shell or "准备高清 ·" in shell
 
 
 def test_preview_refine_ux_v11_m2_markers() -> None:

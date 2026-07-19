@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>预览 Chrome 收敛 V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--new { background: #1565c0; color: #fff; }
+    .tag--kill { background: #c62828; color: #fff; }
+    .tag--keep { background: #546e7a; color: #fff; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(160deg, #c8d4cc 0%, #8fa396 35%, #5a6e62 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 520px; position: relative; overflow: hidden;
+    }
+    .frame__hint {
+      position: absolute; left: 24px; bottom: 28%; color: rgba(255,255,255,.55);
+      font-size: 13px; letter-spacing: .04em;
+    }
+    /* Dock mock */
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 30;
+      display: flex; align-items: center; gap: 5px; flex-wrap: nowrap;
+      padding: 5px 7px; border-radius: 999px;
+      background: linear-gradient(145deg, rgba(32,56,48,.94), rgba(20,36,30,.9));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 4px 22px rgba(0,0,0,.22);
+      color: #f5fbf8; font-size: 12px;
+    }
+    .dock button, .dock .chip {
+      appearance: none; border: 1px solid rgba(255,255,255,.18);
+      background: transparent; color: #f5fbf8; border-radius: 8px;
+      padding: 6px 9px; font-size: 12px; white-space: nowrap; cursor: default;
+    }
+    .dock .ghost { border-color: transparent; }
+    .dock .sep { width: 1px; height: 22px; background: rgba(255,255,255,.15); margin: 0 2px; }
+    .dock .stat {
+      font-size: 11px; font-weight: 600; color: #e8f5ef;
+      padding: 0 8px; border-left: 1px solid rgba(255,255,255,.12);
+      max-width: 120px; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dock .cta {
+      display: inline-flex; border-radius: 10px; overflow: hidden; border: none; padding: 0;
+    }
+    .dock .cta .main {
+      background: linear-gradient(165deg, #d4ae48, #b88432); color: #1a1408;
+      border: none; padding: 7px 12px; font-weight: 700; font-size: 12px;
+    }
+    .dock .cta .caret {
+      background: linear-gradient(165deg, #d4ae48, #b88432); color: #1a1408;
+      border: none; border-left: 1px solid rgba(26,20,8,.18);
+      padding: 7px 10px; font-weight: 700;
+    }
+    .dock .help {
+      width: 28px; height: 28px; border-radius: 50%; display: inline-flex;
+      align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.2);
+      font-weight: 700; font-size: 13px;
+    }
+    /* Bad old chrome */
+    .badge-old {
+      position: absolute; top: 16px; right: 12px; z-index: 40;
+      padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: linear-gradient(165deg, #d4ae48, #b88432); color: #1a1408;
+      box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    }
+    .help-old {
+      position: absolute; top: 14px; left: 14px; z-index: 30;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(32,40,36,.75); color: #fff; display: flex;
+      align-items: center; justify-content: center; font-weight: 700;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+    .g1-old {
+      position: absolute; left: 12px; right: 12px; top: 62px; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      background: #fff8e1; border: 1px solid #ffe082; color: #3e2723; font-size: 13px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    }
+    .g1-old .ok {
+      background: #2e5a45; color: #fff; border: none; border-radius: 8px;
+      padding: 8px 12px; font-weight: 600; white-space: nowrap;
+    }
+    .g1-old .regen {
+      background: #fff; border: 1px solid #5d4037; border-radius: 8px;
+      padding: 8px 12px; white-space: nowrap;
+    }
+    /* Task strip new */
+    .strip {
+      position: absolute; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 12px 14px; border-radius: 14px;
+      background: linear-gradient(145deg, rgba(32,56,48,.94), rgba(20,36,30,.9));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 8px 28px rgba(0,0,0,.28); color: #f5fbf8;
+    }
+    .strip--top { left: 14px; right: 14px; top: 64px; max-width: 720px; }
+    .strip--bottom { left: 50%; transform: translateX(-50%); bottom: 18px; width: min(720px, calc(100% - 28px)); }
+    .strip__text strong { display: block; font-size: 13px; font-weight: 600; }
+    .strip__text span { font-size: 11px; color: #a8dcc8; }
+    .strip__actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .strip__actions .ghost {
+      background: transparent; border: 1px solid rgba(255,255,255,.28);
+      color: #f5fbf8; border-radius: 8px; padding: 7px 10px; font-size: 12px;
+    }
+    .strip__actions .primary {
+      background: linear-gradient(165deg, #d4ae48, #b88432); color: #1a1408;
+      border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700;
+    }
+    .sheet-mock {
+      position: absolute; top: 0; right: 0; bottom: 0; width: 38%;
+      background: rgba(250,250,248,.97); border-left: 1px solid #cfd8dc;
+      box-shadow: -12px 0 40px rgba(0,0,0,.18); z-index: 25; padding: 16px 14px;
+      font-size: 12px; color: #37474f;
+    }
+    .sheet-mock h4 { margin: 0 0 10px; font-size: 14px; color: #1a2f28; }
+    .sheet-mock .tabs-mini { display: flex; gap: 6px; margin-bottom: 12px; }
+    .sheet-mock .tabs-mini span {
+      padding: 4px 10px; border-radius: 999px; background: #eceff1; font-size: 11px;
+    }
+    .sheet-mock .tabs-mini .on { background: #1a2f28; color: #fff; }
+    .layer-badge {
+      position: absolute; left: 10px; top: 10px; z-index: 5;
+      background: rgba(0,0,0,.55); color: #fff; font-size: 10px; font-weight: 700;
+      padding: 4px 8px; border-radius: 6px; letter-spacing: .04em;
+    }
+    table.compare { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; background: #fff; }
+    table.compare th, table.compare td {
+      border: 1px solid #cfd8dc; padding: 8px 10px; text-align: left; vertical-align: top;
+    }
+    table.compare th { background: #eceff1; font-size: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border: 1px solid #cfd8dc;
+      border-radius: 12px; padding: 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ol { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin: 4px 0; }
+    .slot-map {
+      font-family: ui-monospace, Consolas, monospace; font-size: 11px;
+      background: #263238; color: #b2dfdb; padding: 14px; border-radius: 10px;
+      white-space: pre; overflow-x: auto; line-height: 1.45;
+    }
+    .checklist label { display: block; margin: 6px 0; font-size: 13px; }
+    .checklist input { margin-right: 8px; }
+    .swatch-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 16px; }
+    .swatch {
+      width: 72px; border-radius: 10px; overflow: hidden; border: 1px solid #cfd8dc;
+      background: #fff; font-size: 10px; color: #546e7a; text-align: center;
+    }
+    .swatch i { display: block; height: 44px; }
+    .swatch span { display: block; padding: 5px 4px; line-height: 1.25; }
+    .dock--as-is {
+      background: linear-gradient(145deg, rgba(32,56,48,.94), rgba(20,36,30,.9));
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .dock--as-is .cta .main, .dock--as-is .cta .caret {
+      background: linear-gradient(165deg, #d4ae48, #b88432); color: #1a1408;
+    }
+    .dock--ink {
+      background: linear-gradient(160deg, rgba(28,32,34,.92), rgba(18,20,22,.88));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 6px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .dock--ink button { border-color: rgba(255,255,255,.10); color: rgba(245,247,246,.88); }
+    .dock--ink .stat { color: rgba(232,236,234,.72); border-left-color: rgba(255,255,255,.10); font-weight: 500; }
+    .dock--ink .cta .main, .dock--ink .cta .caret {
+      background: #c4a574; color: #1c1812; font-weight: 650;
+    }
+    .dock--ink .cta .caret { border-left-color: rgba(28,24,18,.16); }
+    .dock--ink .help { border-color: rgba(255,255,255,.14); color: rgba(245,247,246,.8); }
+    .dock--olive {
+      background: linear-gradient(155deg, rgba(36,44,40,.90), rgba(22,28,26,.86));
+      border: 1px solid rgba(255,255,255,.09);
+    }
+    .dock--olive button { border-color: rgba(255,255,255,.09); color: #eef2ef; }
+    .dock--olive .stat { color: #c5d0c8; border-left-color: rgba(255,255,255,.09); font-weight: 500; }
+    .dock--olive .cta .main, .dock--olive .cta .caret {
+      background: #b8956a; color: #1a1610;
+    }
+    .dock--olive .cta .caret { border-left-color: rgba(26,22,16,.15); }
+    .rec-banner {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+      background: #00897b; color: #fff; padding: 2px 8px; border-radius: 999px; margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>预览 Chrome 收敛 V1.1 · 设计评审线框 <span class="tag tag--rec">原则已拍板</span></h1>
+    <p>
+      <b>产品原则（2026-07-19 拍板）</b>：主路径一次做成——创建→预览→导出；首次生成<b>不</b>主动弹分章确认；
+      Dock 增加「分章」按需入口；分章/精修服务极少数用户。
+      范围：Dock / 管道状态 / 分章入口 / Task Strip / Help。不改 Sheet 内页、导出 ▾ 内容、Share 栏、长图 job。
+      纪要：<code>docs/acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md</code>
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-active" data-panel="diag">① 诊断·对照</button>
+      <button type="button" data-panel="ia">② IA·槽位</button>
+      <button type="button" data-panel="f1">③ F1 主路径</button>
+      <button type="button" data-panel="f3">④ F3 可先预览</button>
+      <button type="button" data-panel="f4">⑤ F4 按需分章</button>
+      <button type="button" data-panel="f5">⑥ F5 分章工作台</button>
+      <button type="button" data-panel="f7">⑦ F7 精修面板</button>
+      <button type="button" data-panel="tasks">⑧ 任务条矩阵</button>
+      <button type="button" data-panel="color">⑨ 配色提案</button>
+      <button type="button" data-panel="inv">⑩ 功能清单</button>
+      <button type="button" data-panel="rules">⑪ 规范·拍板</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- ① -->
+      <section class="panel is-visible" id="panel-diag">
+        <div class="sec">
+          <h2>诊断 · 当前实现（As-Is）</h2>
+          <p class="lead">创建完成后进入预览：四套浮动系统并存，读起来像功能贴纸，不像打开的游记。</p>
+        </div>
+        <div class="callout callout--bad">
+          <strong>问题摘要</strong>
+          Dock（z250）+ 独立管道徽标（z1090 压住 Dock）+ 告警黄 G1 横幅 + 左上 Help FAB = <b>四层 chrome</b>。
+          按钮方言混用（描边框 / 金渐变 / 实心绿 / 黄条）。任务在左下重、导航在右上轻，轴线断裂。
+        </div>
+
+        <div class="anno">As-Is · 首屏（G1 + 可先预览）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 现状</div></div>
+        <div class="frame">
+          <div class="layer-badge">LAYER ×4</div>
+          <div class="help-old">?</div>
+          <div class="dock" style="right: 150px;">
+            <button type="button" class="ghost">← 返回</button>
+            <div class="sep"></div>
+            <button type="button">▶ 播放</button>
+            <button type="button">精修</button>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="badge-old">版面已就绪，可先预览</div>
+          <div class="g1-old">
+            <div>章节结构待确认 · 请浏览各章顺序后确认</div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="ok">章节顺序 OK</button>
+              <button type="button" class="regen">重新生成结构</button>
+            </div>
+          </div>
+          <div class="frame__hint">卷轴内容（示意）</div>
+        </div>
+
+        <div class="anno">对照 · To-Be 主路径（首次生成 · 零打扰 · Scheme A）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 目标主路径</div></div>
+        <div class="frame">
+          <div class="layer-badge">L1 only · 无 G1</div>
+          <div class="dock dock--ink">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <div class="sep"></div>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="stat">可先预览</span>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="frame__hint">卷轴内容 · 可直接导出 · 无弹层任务</div>
+        </div>
+
+        <div class="callout">
+          <strong>产品 + Chrome 硬约束（v1.2 · Scheme A）</strong>
+          ① <b>主路径零结构打扰</b>：首次生成不弹分章确认；结构默认已锁定可导出。<br />
+          ② Dock 增加「分章」（选修）；点开后再进入调整/重生（见 F4/F5）。<br />
+          ③ chrome ≤ 2 层：Dock + 可选 Task Strip（Strip <b>默认不因分章出现</b>）。<br />
+          ④ 管道状态进 D-STAT；杀独立徽标 / 黄 G1 横幅 / Help FAB。<br />
+          ⑤ 主 CTA 仅香槟铜平涂 <code>#c4a574</code>（长图）；分章/精修为次级控件。
+        </div>
+      </section>
+
+      <!-- ② -->
+      <section class="panel" id="panel-ia">
+        <div class="sec">
+          <h2>信息架构 · Chrome 槽位（v1.1）</h2>
+          <p class="lead">主路径只见 Dock；分章/精修为选修入口。Sheet / 导出弹层只谈附着。</p>
+        </div>
+        <div class="slot-map">L1 · Navigation Dock (always · top-right · folio glass)
+├─ D-SYS   ? 帮助 ·（desktop）退出
+├─ D-NAV   ← 返回
+├─ D-ACT   ▶ 播放|退出放映
+├─ D-CHAP  分章          ← 新增 · 选修 · 权重 ≤ 精修
+├─ D-REF   精修|完成 ·（精修中 chip）
+├─ D-STAT  准备高清·N | 可先预览 | （空则折叠）
+└─ D-CTA   [长图 | ▾]  ← 唯一 gold 实心
+
+L2 · Task Strip (0|1 · 默认主路径不出现分章条)
+└─ 优先级：export进度 > layoutPending > sourceMissing
+            > longshotStale > export失败 > 精选重排 cue
+   · 分章相关 UI：仅用户点击「分章」后，在分章工作台/面板内出现
+   · derivatives 永不入 Strip · 禁止默认弹出 G1 条
+
+ATTACH · 分章工作台（点 D-CHAP）· Refine Sheet（点精修）
+CONTENT · 封面占位徽标 · Share 最小栏</div>
+
+        <table class="compare">
+          <thead>
+            <tr><th>槽位</th><th>承载</th><th>规则</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>D-CHAP</b> <span class="tag tag--new">新</span></td>
+              <td>分章入口</td>
+              <td>常驻但克制；点击后开工作台（确认/重生/说明）；不主动闪烁</td>
+            </tr>
+            <tr>
+              <td><b>D-STAT</b></td>
+              <td>管道就绪 / 准备高清</td>
+              <td>纯告知 · 不点击 · 不抢路径</td>
+            </tr>
+            <tr>
+              <td><b>T-STRIP</b></td>
+              <td>导出/版面/stale/精选等</td>
+              <td><b>不含</b>默认 G1；同时最多 1 条</td>
+            </tr>
+            <tr>
+              <td><b>Kill</b> <span class="tag tag--kill">删</span></td>
+              <td>独立 badge · 黄 G1 横幅 · 默认底舱 G1 · Help FAB</td>
+              <td>首次生成禁止出现</td>
+            </tr>
+            <tr>
+              <td><b>管线</b></td>
+              <td>结构锁定</td>
+              <td>默认创建完成 = 已锁定可导出（D-PCU-02）</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ③ F1 -->
+      <section class="panel" id="panel-f1">
+        <div class="sec">
+          <h2>F1 · 主路径首屏 <span class="tag tag--rec">默认 · 零打扰</span></h2>
+          <p class="lead">创建完成进入预览：可浏览、可导出。无分章弹层；「分章」「精修」静默在 Dock。</p>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">F1 主路径</div></div>
+        <div class="frame">
+          <div class="layer-badge">L1 only · 无 Strip</div>
+          <div class="dock dock--ink">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <div class="sep"></div>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="frame__hint">内容全幅 · 直接验货 / 导出</div>
+        </div>
+        <div class="callout">
+          <strong>验收点</strong>
+          无 G1 横幅/底舱；无独立管道徽标（或仅 D-STAT）；「分章」可见但不抢戏；长图为唯一强调色。
+        </div>
+      </section>
+
+      <!-- ④ F3 -->
+      <section class="panel" id="panel-f3">
+        <div class="sec">
+          <h2>F3 · 可先预览（Status Slot）</h2>
+          <p class="lead">Pipeline Perf 两态：状态进 Dock，不再叠第三个胶囊。</p>
+        </div>
+        <div class="grid-2">
+          <div>
+            <div class="anno">准备高清</div>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">F2</div></div>
+            <div class="frame" style="min-height:280px">
+              <div class="dock dock--ink">
+                <span class="help">?</span>
+                <button type="button" class="ghost">←</button>
+                <button type="button">▶</button>
+                <button type="button">分章</button>
+                <button type="button">精修</button>
+                <span class="stat">准备高清 · 12</span>
+                <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="anno">可先预览</div>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">F3</div></div>
+            <div class="frame" style="min-height:280px">
+              <div class="dock dock--ink">
+                <span class="help">?</span>
+                <button type="button" class="ghost">←</button>
+                <button type="button">▶</button>
+                <button type="button">分章</button>
+                <button type="button">精修</button>
+                <span class="stat">可先预览</span>
+                <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <table class="compare">
+          <thead><tr><th>场景</th><th>D-STAT 文案</th><th>窄屏短式</th></tr></thead>
+          <tbody>
+            <tr><td>preparing &gt; 0</td><td>准备高清 · {N}</td><td>高清 · {N}</td></tr>
+            <tr><td>preview 可先看</td><td>可先预览</td><td>可先预览</td></tr>
+            <tr><td>完成且非 preview-only</td><td>（隐藏）</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout--warn">
+          <strong>废弃露出</strong>
+          独立文案「版面已就绪，可先预览」fixed pill；书架两态可继续用「可先预览」与 D-STAT 对齐。
+        </div>
+      </section>
+
+      <!-- ⑤ F4 -->
+      <section class="panel" id="panel-f4">
+        <div class="sec">
+          <h2>F4 · 按需分章 <span class="tag tag--new">选修入口</span></h2>
+          <p class="lead">用户主动点 Dock「分章」后，才进入结构工具——不是首次生成的默认帧。</p>
+        </div>
+        <div class="callout callout--warn">
+          <strong>与 v1.0 线框差异</strong>
+          已废弃「默认顶 pin / 底浮 G1 Strip」。分章 UI 仅在用户点击「分章」后出现（面板或工作台，见 F5）。
+        </div>
+
+        <div class="anno">触发前（主路径）→ 触发后（高亮「分章」）</div>
+        <div class="grid-2">
+          <div>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">未点分章</div></div>
+            <div class="frame" style="min-height:260px">
+              <div class="dock dock--ink">
+                <span class="help">?</span>
+                <button type="button" class="ghost">←</button>
+                <button type="button">▶</button>
+                <button type="button">分章</button>
+                <button type="button">精修</button>
+                <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+              </div>
+              <div class="frame__hint">无任何分章条</div>
+            </div>
+          </div>
+          <div>
+            <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+              <div class="browser__tab">已点分章</div></div>
+            <div class="frame" style="min-height:260px">
+              <div class="dock dock--ink">
+                <span class="help">?</span>
+                <button type="button" class="ghost">←</button>
+                <button type="button">▶</button>
+                <button type="button" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)">分章</button>
+                <button type="button">精修</button>
+                <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+              </div>
+              <div class="sheet-mock" style="width:42%">
+                <h4>分章</h4>
+                <p>浏览各章顺序后，可调整或重新生成。</p>
+                <p style="margin-top:12px">
+                  <button type="button" style="background:#c4a574;color:#1c1812;border:none;border-radius:8px;padding:8px 12px;font-weight:700">完成</button>
+                </p>
+                <p style="margin-top:8px;color:#607d8b">次要：重新生成 · 为什么这样分章 · pending 时主 CTA「确认并继续」</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <table class="compare">
+          <thead><tr><th>项</th><th>规则</th></tr></thead>
+          <tbody>
+            <tr><td>出现条件</td><td>仅用户点击 D-CHAP「分章」</td></tr>
+            <tr><td>关闭</td><td>× / Esc / 再次点分章；回到主路径无残留条</td></tr>
+            <tr><td>与精修</td><td>互斥或先后：开分章时不强制开精修；深编辑仍走精修「这本」</td></tr>
+            <tr><td>文案</td><td>入口「分章」；已锁定「完成」/ 待确认「确认并继续」/ 重生后「保存调整」；次「重新生成」</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ⑥ F5 -->
+      <section class="panel" id="panel-f5">
+        <div class="sec">
+          <h2>F5 · 分章工作台（点开后）</h2>
+          <p class="lead">分章能力完整保留：浏览说明、应用锁定、重新生成。承载改为按需面板，不是顶栏任务条。</p>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">F5 分章工作台</div></div>
+        <div class="frame">
+          <div class="layer-badge">Dock + 分章面板</div>
+          <div class="dock dock--ink">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <button type="button">▶ 播放</button>
+            <button type="button" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)">分章</button>
+            <button type="button">精修</button>
+            <span class="stat">准备高清 · 12</span>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="sheet-mock" style="width:40%">
+            <h4>分章</h4>
+            <p><b>当前结构</b>（示意章列表）</p>
+            <p style="color:#607d8b;font-size:11px;margin:8px 0">Day 1 · Day 2 · 返程 …</p>
+            <details open style="margin:10px 0;font-size:11px;color:#546e7a">
+              <summary>为什么这样分章</summary>
+              <p>既有 explain 文案，不重写。</p>
+            </details>
+            <p style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+              <button type="button" style="background:#c4a574;color:#1c1812;border:none;border-radius:8px;padding:8px;font-weight:700">完成</button>
+              <button type="button" style="background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px;color:#eceff1">重新生成</button>
+            </p>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>规则</strong>
+          准备高清仍只占 D-STAT；分章面板与管道状态可并存，但<b>不</b>再叠默认 G1 Strip。
+          实现时可复用「这本」结构区控件，入口改为 Dock「分章」。
+        </div>
+      </section>
+
+      <!-- ⑦ F7 -->
+      <section class="panel" id="panel-f7">
+        <div class="sec">
+          <h2>F7 · 精修面板附着 <span class="tag tag--keep">内页不改</span></h2>
+          <p class="lead">模式 ≠ 面板（既有 UX 1.1）。本帧只画壳与 Dock 关系。</p>
+        </div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">F7 Sheet</div></div>
+        <div class="frame">
+          <div class="dock dock--ink">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">完成</button>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="sheet-mock">
+            <h4>精修</h4>
+            <div class="tabs-mini">
+              <span class="on">这页</span><span>封面</span><span>这本</span>
+            </div>
+            <p>Tab 内字段 / Bookends / 模板 / 更新版面 —— <b>本主题不重画</b>。</p>
+            <p style="color:#607d8b">桌面：右缘面板 · 窄屏：底部 sheet</p>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>附着规则</strong>
+          Dock z 高于 Sheet；返回/完成始终可点。分章与精修同时只开一个面板。
+          帮助打开时：先关面板（既有规则保留）。
+        </div>
+      </section>
+
+      <!-- ⑧ tasks -->
+      <section class="panel" id="panel-tasks">
+        <div class="sec">
+          <h2>任务条矩阵 · 主路径不含分章门闸</h2>
+          <p class="lead">Strip 只服务「做事中的反馈」；分章改走 Dock 选修入口。</p>
+        </div>
+        <table class="compare">
+          <thead>
+            <tr><th>模式</th><th>主文</th><th>主 CTA</th><th>优先级</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Export progress</td><td>正在导出长图</td><td>取消</td><td>最高</td></tr>
+            <tr><td>G1 / 分章确认</td><td>—</td><td>—</td><td><b>默认不进 Strip</b>（走「分章」面板）</td></tr>
+            <tr><td>layoutPending</td><td>版面有更新</td><td>更新版面</td><td>中</td></tr>
+            <tr><td>sourceMissing</td><td>原相册无法访问</td><td>（既有）</td><td>中</td></tr>
+            <tr><td>longshotStale</td><td>长图已过期</td><td>重新导出</td><td>中</td></tr>
+            <tr><td>Export fail</td><td>导出失败</td><td>重试</td><td>中</td></tr>
+            <tr><td>Export success</td><td>长图已保存</td><td>在文件夹中显示</td><td>8s 后隐</td></tr>
+            <tr><td>Featured cue</td><td>可按精选重排</td><td>按精选重排</td><td>低</td></tr>
+            <tr><td>Derivatives</td><td>—</td><td>—</td><td><b>不进 Strip</b></td></tr>
+          </tbody>
+        </table>
+
+        <div class="anno">layoutPending 示意（仍可用 Strip）</div>
+        <div class="frame" style="min-height:200px">
+          <div class="dock dock--ink">
+            <span class="help">?</span>
+            <button type="button" class="ghost">←</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+          <div class="strip strip--bottom">
+            <div class="strip__text">
+              <strong>版面有更新</strong>
+              <span>更新后再导出长图</span>
+            </div>
+            <div class="strip__actions">
+              <button type="button" class="ghost">稍后</button>
+              <button type="button" class="primary">更新版面</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑨ color -->
+      <section class="panel" id="panel-color">
+        <div class="sec">
+          <h2>Dock 配色提案 <span class="tag tag--rec">已选 A</span></h2>
+          <p class="lead">问题不在「有没有品牌色」，而在墨绿底 + 亮金渐变过硬、铜/金双轨打架、描边按钮显 admin。</p>
+        </div>
+
+        <div class="callout callout--bad">
+          <strong>现状（As-Is）病因</strong>
+          壳色 <code>rgba(32,56,48)</code> 饱和偏高 → 像工具栏而非杂志控件；
+          CTA <code>#d4a843→#b88432</code> 渐变过「按钮促销」；
+          另有 accent <code>#c8956c</code> 与 gold 抢暖色；
+          白描边小框在深底上显得碎。
+        </div>
+
+        <div class="anno">As-Is</div>
+        <div class="swatch-row">
+          <div class="swatch"><i style="background:#203830"></i><span>壳 203830</span></div>
+          <div class="swatch"><i style="background:#d4a843"></i><span>金 d4a843</span></div>
+          <div class="swatch"><i style="background:#c8956c"></i><span>铜 c8956c</span></div>
+          <div class="swatch"><i style="background:#f5fbf8"></i><span>字 f5fbf8</span></div>
+        </div>
+        <div class="frame" style="min-height:120px;background:linear-gradient(120deg,#b7c4bc,#6d7f74)">
+          <div class="dock dock--as-is" style="position:relative;top:36px;right:auto;margin:0 auto;width:max-content">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="stat">可先预览</span>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+        </div>
+
+        <div class="anno">方案 A · 墨炭 + 香槟铜 <span class="rec-banner">推荐</span></div>
+        <p class="lead" style="margin-top:0">降温壳色，让照片做主角；CTA 改<strong>单色香槟铜</strong>（无渐变），更像装帧金属而非促销金。</p>
+        <div class="swatch-row">
+          <div class="swatch"><i style="background:#1c2022"></i><span>壳 1c2022</span></div>
+          <div class="swatch"><i style="background:#c4a574"></i><span>CTA c4a574</span></div>
+          <div class="swatch"><i style="background:#e8ecea"></i><span>字 e8ecea 88%</span></div>
+          <div class="swatch"><i style="background:#9aa3a0"></i><span>次级/状态</span></div>
+        </div>
+        <div class="frame" style="min-height:120px;background:linear-gradient(120deg,#b7c4bc,#6d7f74)">
+          <div class="dock dock--ink" style="position:relative;top:36px;right:auto;margin:0 auto;width:max-content">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="stat">可先预览</span>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>A 令牌（实现用）</strong>
+          壳 <code>linear(160deg, rgba(28,32,34,.92), rgba(18,20,22,.88))</code> · 边 <code>white/10</code> ·
+          主字 <code>rgba(245,247,246,.88)</code> · 状态 <code>rgba(232,236,234,.72)</code> ·
+          CTA 平涂 <code>#c4a574</code> / 字 <code>#1c1812</code> · hover <code>#ceb08a</code> ·
+          <b>废除</b>第二金属 accent；分章/精修无描边框，改 ghost（透明底 + 字色）。
+        </div>
+
+        <div class="anno">方案 B · 雾橄 + 哑光铜（更贴近现绿，但降饱和）</div>
+        <div class="swatch-row">
+          <div class="swatch"><i style="background:#242c28"></i><span>壳 242c28</span></div>
+          <div class="swatch"><i style="background:#b8956a"></i><span>CTA b8956a</span></div>
+          <div class="swatch"><i style="background:#eef2ef"></i><span>字 eef2ef</span></div>
+          <div class="swatch"><i style="background:#c5d0c8"></i><span>状态</span></div>
+        </div>
+        <div class="frame" style="min-height:120px;background:linear-gradient(120deg,#b7c4bc,#6d7f74)">
+          <div class="dock dock--olive" style="position:relative;top:36px;right:auto;margin:0 auto;width:max-content">
+            <span class="help">?</span>
+            <button type="button" class="ghost">← 返回</button>
+            <button type="button">▶ 播放</button>
+            <button type="button">分章</button>
+            <button type="button">精修</button>
+            <span class="stat">可先预览</span>
+            <span class="cta"><span class="main">长图</span><span class="caret">▾</span></span>
+          </div>
+        </div>
+
+        <table class="compare">
+          <thead><tr><th>维度</th><th>As-Is</th><th>A 墨炭（荐）</th><th>B 雾橄</th></tr></thead>
+          <tbody>
+            <tr><td>气质</td><td>工具绿 + 促销金</td><td>杂志墨 + 装帧铜</td><td>保留一点「旅程绿」</td></tr>
+            <tr><td>对亮景照片</td><td>偏抢</td><td>更退</td><td>中</td></tr>
+            <tr><td>与首页 folio</td><td>绿同源但过艳</td><td>墨系更通用</td><td>绿系连续</td></tr>
+            <tr><td>实现成本</td><td>—</td><td>改 Dock/Strip/长图 CTA token</td><td>同左，色值不同</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout--warn">
+          <strong>共同规范（无论 A/B）</strong>
+          ① CTA <b>禁止双色大渐变</b>，平涂即可；② 次级按钮去描边框；③ 状态字降对比、勿用亮金；
+          ④ Strip 与 Dock <b>同壳色</b>；⑤ 不引入紫/霓虹/第二强调色。
+        </div>
+      </section>
+
+      <!-- ⑩ inventory -->
+      <section class="panel" id="panel-inv">
+        <div class="sec">
+          <h2>功能清单 · 零删减对照</h2>
+          <p class="lead">审核用：确认每项仍有入口，只是换壳。</p>
+        </div>
+        <table class="compare">
+          <thead><tr><th>功能</th><th>现状承载</th><th>To-Be 承载</th><th>本主题</th></tr></thead>
+          <tbody>
+            <tr><td>返回 / 播放 / 精修·完成</td><td>Dock</td><td>Dock D-NAV/ACT/REF</td><td>保留</td></tr>
+            <tr><td>分章入口</td><td>（无 / 藏在这本）</td><td>Dock <b>分章</b> D-CHAP</td><td><b>新增</b></td></tr>
+            <tr><td>长图 + ▾ 导出设置</td><td>Dock gold</td><td>D-CTA</td><td>保留</td></tr>
+            <tr><td>桌面退出</td><td>Dock 条件</td><td>D-SYS</td><td>保留</td></tr>
+            <tr><td>可先预览 / 准备高清</td><td>独立 badge</td><td>D-STAT</td><td><b>迁入</b></td></tr>
+            <tr><td>G1 确认 / 重生</td><td>黄横幅 + Task Dock（默认弹）</td><td>分章工作台（按需）</td><td><b>改入口·默认关</b></td></tr>
+            <tr><td>layoutPending / stale / 缺源</td><td>Task Dock</td><td>Strip 栈</td><td>保留</td></tr>
+            <tr><td>导出进度 / 成败面</td><td>Task Dock</td><td>Strip</td><td>保留</td></tr>
+            <tr><td>精选重排 cue</td><td>Task Dock</td><td>Strip</td><td>保留</td></tr>
+            <tr><td>精修 Sheet 三 Tab</td><td>右/底面板</td><td>同附着规则</td><td>内页不改</td></tr>
+            <tr><td>画面 ★ / 拼图（精修中）</td><td>叠层</td><td>同左</td><td>不改</td></tr>
+            <tr><td>封面标题 inline</td><td>内容区</td><td>同左</td><td>不改</td></tr>
+            <tr><td>帮助 H1–H7</td><td>左上 FAB</td><td>Dock <code>?</code></td><td><b>入口迁</b></td></tr>
+            <tr><td>Share 最小栏</td><td>独立壳</td><td>同左</td><td>不改</td></tr>
+            <tr><td>封面占位徽标</td><td>内容区</td><td>同左</td><td>不改</td></tr>
+            <tr><td>Toast / FTUE tip</td><td>短暂层</td><td>同左</td><td>不改</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ⑪ rules -->
+      <section class="panel" id="panel-rules">
+        <div class="sec">
+          <h2>规范与拍板清单</h2>
+          <p class="lead">产品原则与配色 A 已拍板；下列为实现范围确认（MF-07 线框已贯彻 Scheme A）。</p>
+        </div>
+
+        <div class="callout">
+          <strong>已拍板 · 产品原则（D-PCU-01～12）</strong>
+          首次生成不弹分章 · 默认结构锁定可导出 · Dock「分章」按需 · 精修更深一层 · 覆盖默认路径上的 G1 醒目横幅合同 · F5 轻面板无拖拽。
+        </div>
+
+        <div class="callout">
+          <strong>视觉合同（D-PCU-06 · 方案 A）</strong>
+          壳墨炭玻璃 · CTA 平涂 <code>#c4a574</code> · Strip 同壳；禁止默认黄 G1；禁止第三 fixed chrome；禁止促销金大渐变。方案 B 不采用。
+        </div>
+
+        <div class="checklist">
+          <label><input type="checkbox" checked disabled /> <b>D-PCU</b> 主路径零分章打扰 + Dock「分章」（已拍板）</label>
+          <label><input type="checkbox" checked disabled /> <b>D-COLOR</b> 配色 <b>A 墨炭+香槟铜</b>（已拍板 · D-PCU-06）</label>
+          <label><input type="checkbox" checked disabled /> <b>MF-07</b> 线框 To-Be 帧 <code>dock--ink</code> + CTA「完成 / 确认并继续」</label>
+          <label><input type="checkbox" /> <b>P0-A</b> 删除独立 derivatives fixed badge → D-STAT</label>
+          <label><input type="checkbox" /> <b>P0-B</b> 删除默认黄 G1 横幅 / 底舱 G1 镜像</label>
+          <label><input type="checkbox" /> <b>P0-C</b> Dock 增加「分章」→ 打开分章工作台</label>
+          <label><input type="checkbox" /> <b>P0-D</b> 默认创建完成 = 结构已锁定可导出</label>
+          <label><input type="checkbox" /> <b>P0-E</b> Help 并入 Dock <code>?</code></label>
+          <label><input type="checkbox" /> <b>Out</b> Sheet 内页 / 导出 ▾ / Share 栏 本迭代不动</label>
+        </div>
+
+        <div class="callout">
+          <strong>实现状态</strong>
+          生产 CSS/JS 已在 <code>feat/preview-chrome-unify-v1</code> 落地；本线框作对照真源。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>审核导读</h3>
+      <ol>
+        <li>① 主路径对照是否认同</li>
+        <li>③ F1 是否足够干净</li>
+        <li>⑤「分章」入口是否克制</li>
+        <li>⑥ 工作台能力是否够用</li>
+        <li>说「开工」再编码</li>
+      </ol>
+      <h3 style="margin-top:16px">硬约束</h3>
+      <ol>
+        <li>首次生成无 G1 弹层</li>
+        <li>Dock 含「分章」</li>
+        <li>D-STAT ⊂ Dock</li>
+        <li>唯一 gold = 长图</li>
+      </ol>
+      <h3 style="margin-top:16px">纪要</h3>
+      <p style="margin:0;color:var(--wf-muted)">preview-chrome-unify-v1-product-note-2026-07-19.md</p>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll(".tabs button");
+      var panels = document.querySelectorAll(".panel");
+      tabs.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = btn.getAttribute("data-panel");
+          tabs.forEach(function (b) { b.classList.toggle("is-active", b === btn); });
+          panels.forEach(function (p) {
+            p.classList.toggle("is-visible", p.id === "panel-" + id);
+          });
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

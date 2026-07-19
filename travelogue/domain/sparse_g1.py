@@ -18,9 +18,10 @@ def resolve_g1_pending(
 ) -> tuple[bool, bool]:
     """Return ``(g1_pending, sparse_suppressed)``.
 
-    - 快速分享 + kept_n∈1–9 + 未开实验选项 → 不打断（sparse_suppressed=True）
-    - 开启「导入后先确认章节」→ 允许 G1（含 Sparse）
-    - 精细制作 → 与实验选项一致（不享受 Sparse 默认跳过以外的特殊强制）
+    Preview Chrome Unify（D-PCU-09～11）:
+    - 默认（``g1_confirm_structure=False``）：一律不 pending（kept_n / 精细制作无关）→ 管线 auto-lock
+    - 实验 ON：一律 pending（含 Sparse），前端开分章面板而非黄条
+    - ``sparse_suppressed`` 仅作遥测：默认路径下 Sparse 快速分享记 True
     """
     if not g1_confirm_structure:
         return False, is_sparse_quick_share(import_mode, kept_n)

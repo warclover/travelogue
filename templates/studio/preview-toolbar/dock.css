@@ -29,22 +29,24 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 5px;
+  gap: 8px;
   padding: 5px 7px;
   border-radius: 999px;
+  /* D-PCU-06 · Scheme A 墨炭 + 香槟铜 */
   background:
-    linear-gradient(145deg, rgba(32, 56, 48, 0.94) 0%, rgba(20, 36, 30, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+    linear-gradient(160deg, rgba(28, 32, 34, 0.94) 0%, rgba(18, 20, 22, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 4px 22px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 6px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   pointer-events: auto;
-  opacity: 0.92;
+  opacity: 0.96;
   transition: opacity 0.25s ease;
-  --dock-folio-accent: #c8956c;
-  --dock-folio-gold: #d4a843;
+  --dock-folio-accent: #c4a574;
+  --dock-folio-gold: #c4a574;
+  color: rgba(245, 247, 246, 0.88);
 }
 
 .preview-toolbar--v4 .preview-toolbar__menu-wrap {
@@ -82,12 +84,12 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot-caret {
-  width: 38px;
-  min-width: 38px;
+  width: 40px;
+  min-width: 40px;
   border-radius: 0 10px 10px 0;
-  border-left: 1px solid rgba(26, 20, 8, 0.18);
-  background: linear-gradient(165deg, #d4ae48 0%, #b88432 100%);
-  color: #1a1408;
+  border-left: 1px solid rgba(28, 24, 18, 0.16);
+  background: #c4a574;
+  color: #1c1812;
   font-size: 24px;
   font-weight: 700;
 }
@@ -95,7 +97,7 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 .preview-toolbar--v4
   .preview-toolbar__longshot-split--idle
   .preview-toolbar__longshot-caret:hover:not(:disabled) {
-  background: linear-gradient(165deg, #e0ba52 0%, #c8943f 100%);
+  background: #ceb08a;
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot-split--running .preview-toolbar__longshot-caret {
@@ -116,13 +118,13 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   align-items: center;
   justify-content: center;
   align-self: center;
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  max-width: 36px;
-  max-height: 36px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
   padding: 0;
   margin: 0;
   line-height: 1;
@@ -136,9 +138,9 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   width: auto;
   min-width: 0;
   max-width: none;
-  height: 36px;
-  min-height: 36px;
-  max-height: 36px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
   padding: 0 10px 0 8px;
   gap: 5px;
   white-space: nowrap;
@@ -154,8 +156,8 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 
 .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl.preview-toolbar__dock-btn {
   padding: 0;
-  height: 36px;
-  min-height: 36px;
+  height: 40px;
+  min-height: 40px;
   border-radius: 8px;
 }
 
@@ -175,8 +177,8 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   .preview-toolbar__dock
   .preview-toolbar__longshot--v3.preview-toolbar__dock-btn:not(.preview-toolbar__dock-btn--export) {
   padding: 0;
-  width: 36px;
-  min-width: 36px;
+  width: 40px;
+  min-width: 40px;
   border-radius: 9px;
   white-space: nowrap;
 }
@@ -188,9 +190,9 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   width: auto;
   min-width: 0;
   max-width: none;
-  height: 36px;
-  min-height: 36px;
-  max-height: 36px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
   padding: 0 12px 0 10px;
   border-radius: 10px;
   white-space: nowrap;
@@ -274,10 +276,10 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   padding: 0;
   border: none;
   border-radius: 8px;
@@ -462,27 +464,253 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   display: none !important;
 }
 
+/* Legacy fixed badge removed (D-PCU); keep hidden if any stale DOM */
 .preview-toolbar__derivatives-badge {
-  position: fixed;
-  top: 18px;
-  right: 16px;
-  z-index: 1090;
-  margin: 0;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(26, 47, 40, 0.92);
-  color: #e8f5ef;
-  font-family: var(--studio-font-ui, inherit);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-  pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  display: none !important;
 }
 
-.preview-toolbar__derivatives-badge[hidden] {
+.preview-toolbar__dock-stat {
+  flex: 0 1 auto;
+  max-width: 7.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(232, 236, 234, 0.72);
+  pointer-events: none;
+}
+
+.preview-toolbar__dock-stat[hidden] {
   display: none !important;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters {
+  border: none;
+  background: transparent;
+  color: rgba(245, 247, 246, 0.88);
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f7f6;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--dock {
+  position: static;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: rgba(245, 247, 246, 0.8);
+  box-shadow: none;
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export {
+  background: #c4a574;
+  color: #1c1812;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export:hover:not(:disabled) {
+  background: #ceb08a;
+}
+
+/* F5 分章轻面板 */
+.preview-chapter-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, 92vw);
+  z-index: 245;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px 20px;
+  background: linear-gradient(160deg, rgba(28, 32, 34, 0.97), rgba(18, 20, 22, 0.96));
+  color: rgba(245, 247, 246, 0.92);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.28);
+  font-family: var(--studio-font-ui, inherit);
+}
+
+.preview-chapter-panel[hidden] {
+  display: none !important;
+}
+
+.preview-chapter-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.preview-chapter-panel__head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preview-chapter-panel__close {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.preview-chapter-panel__lead {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(232, 236, 234, 0.72);
+  line-height: 1.45;
+}
+
+.preview-chapter-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preview-chapter-panel__chap {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preview-chapter-panel__chap:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.preview-chapter-panel__empty {
+  font-size: 12px;
+  color: rgba(232, 236, 234, 0.55);
+  padding: 8px 0;
+}
+
+.preview-chapter-panel__explain {
+  font-size: 12px;
+  color: rgba(232, 236, 234, 0.72);
+}
+
+.preview-chapter-panel__explain summary {
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.preview-chapter-panel__foot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.preview-chapter-panel__regen {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: inherit;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preview-chapter-panel__primary {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #c4a574;
+  color: #1c1812;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 720px) {
+  .preview-toolbar--v4 .preview-toolbar__dock-label {
+    display: none;
+  }
+  .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled,
+  .preview-toolbar--v4
+    .preview-toolbar__dock
+    .preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--labeled,
+  .preview-toolbar--v4
+    .preview-toolbar__dock
+    .preview-toolbar__ctl.preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--labeled {
+    padding: 0;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    gap: 0;
+  }
+  .preview-toolbar__dock {
+    gap: 4px;
+    max-width: calc(100vw - 16px);
+    left: max(8px, env(safe-area-inset-left, 0px));
+    right: max(8px, env(safe-area-inset-right, 0px));
+    justify-content: flex-end;
+  }
+  .preview-toolbar__dock-stat {
+    max-width: 4.5em;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .preview-toolbar__dock-stat {
+    display: none !important;
+  }
+  /* MF-05 · 极窄：长图主钮可收为图标宽，整条 Dock 不溢出视口 */
+  .preview-toolbar--v4
+    .preview-toolbar__dock
+    .preview-toolbar__longshot--v3.preview-toolbar__dock-btn--export {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    padding: 0;
+  }
+  .preview-toolbar--v4 .preview-toolbar__dock-export-label {
+    display: none;
+  }
+  .preview-toolbar--v4 .preview-toolbar__longshot-caret {
+    width: 40px;
+    min-width: 40px;
+  }
+  .preview-chapter-panel {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

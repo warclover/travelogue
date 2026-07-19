@@ -966,11 +966,12 @@ export function initPreviewDrawers(root, tripId) {
       if (pending) {
         g1.className = "preview-drawer__g1 preview-drawer__g1--warn";
         g1.textContent =
-          "章节结构待确认：请先看顶栏横幅确认顺序；也可在此确认或重新生成。";
+          "章节结构待确认：请确认顺序后继续成册；也可重新生成。";
         if (g1Actions) g1Actions.hidden = false;
         var confirmBtn = targetBody.querySelector(".preview-drawer__g1-confirm");
         var regenBtn = targetBody.querySelector(".preview-drawer__g1-regenerate");
         if (confirmBtn) {
+          confirmBtn.textContent = "确认并继续";
           confirmBtn.addEventListener("click", function () {
             runG1Confirm(confirmBtn);
           });
@@ -982,8 +983,19 @@ export function initPreviewDrawers(root, tripId) {
         }
       } else {
         g1.className = "preview-drawer__g1 preview-drawer__g1--info";
-        g1.textContent = "章节已按行程排好，可在预览中改字、锚点与精选。结构确认见顶栏横幅（若开启）。";
-        if (g1Actions) g1Actions.hidden = true;
+        g1.textContent =
+          "章节已按行程排好。调整请用工具栏「分章」，或在「精修 · 这本」深入编辑。";
+        if (g1Actions) {
+          g1Actions.hidden = false;
+          var regenOnly = targetBody.querySelector(".preview-drawer__g1-regenerate");
+          var confirmOnly = targetBody.querySelector(".preview-drawer__g1-confirm");
+          if (confirmOnly) confirmOnly.hidden = true;
+          if (regenOnly) {
+            regenOnly.addEventListener("click", function () {
+              runG1Regenerate(regenOnly);
+            });
+          }
+        }
       }
       loadChapterExplain(tripId, targetBody.querySelector(".preview-drawer__explain"));
       // Aesthetic score dump is dogfood-only (?debug=aesthetic).

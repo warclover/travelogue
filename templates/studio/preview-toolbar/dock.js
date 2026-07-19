@@ -67,6 +67,16 @@ export function dockIconSvg(name) {
         '<path d="M9 17.5l3 3 3-3"/>' +
         "</svg>"
       );
+    case "chapters":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<path d="M5 5h10v14H5z"/>' +
+        '<path d="M9 5v14"/>' +
+        '<path d="M15 8h4v11h-4"/>' +
+        "</svg>"
+      );
     default:
       return "";
   }

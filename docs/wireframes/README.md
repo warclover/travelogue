@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) | **预览 Chrome 收敛 V1.1** · 主路径零分章打扰 · Dock「分章」按需 · D-STAT · 杀默认 G1/徽标/Help FAB · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) |
 | [writing-engine-api-hardening-v1-wireframe.html](./writing-engine-api-hardening-v1-wireframe.html) | **写作引擎 API 配置加固 V1** · F1 诊断 · F2 Modal To-Be · F3 状态机 · F4 切换确认 · F5 拍板 · [PRD](../PRD-WRITING-ENGINE-API-HARDENING-V1.md) **v1.1 Conditional Go** · [评审](../acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md) |
 | [homepage-settings-accordion-v1-wireframe.html](./homepage-settings-accordion-v1-wireframe.html) | **首页设置 · 手风琴改版 V1.1** · 五区 + AI zone→Modal · F5 全量功能清单 · ④⑤已推荐拍板 |
 | [preview-refine-v1-wireframe.html](./preview-refine-v1-wireframe.html) | **预览精修体验 V1** · 验货默认 + 这页/这本/导出与更多 + 更新版面/导出拦截 · [PRD-PREVIEW-REFINE-V1](../PRD-PREVIEW-REFINE-V1.md) · 已落地 |
@@ -36,6 +37,8 @@
 ## 如何查看
 
 双击 HTML 文件，或用浏览器打开。
+
+**预览 Chrome 收敛 V1.1 评审 Tab**：**① 诊断·对照** · **② IA** · **③ F1 主路径** · **④ F3** · **⑤ F4 按需分章** · **⑥ F5 分章工作台** · **⑦ F7** · **⑧ 任务条** · **⑨ 配色** · **⑩ 清单** · **⑪ 拍板** · 线框：[preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) · [D-PCU-07～12](../acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) · [跨职能评审](../acceptance-records/preview-chrome-unify-v1-review-2026-07-19.md) · **合同已定 · 可开工**
 
 **精修体验 V1 评审 Tab**：**① 诊断** · **② 验货默认** · **③ 精修·这页** · **④ 精修·这本** · **⑤ 更新版面/拦截** · **⑥ G1 横幅** · **⑦ 导入偏好** · **⑧ 对照表** · **⑨ 规范** · **⑩ 图标** · **⑪ 这页空态** · **⑫ P0 过渡** · PRD：[PRD-PREVIEW-REFINE-V1.md](../PRD-PREVIEW-REFINE-V1.md) **v1.2** · 验收：[ACCEPTANCE-PREVIEW-REFINE-V1.md](../ACCEPTANCE-PREVIEW-REFINE-V1.md) · 评审记录：[preview-refine-v1-review-2026-07-11.md](../acceptance-records/preview-refine-v1-review-2026-07-11.md)
 
