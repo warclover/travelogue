@@ -1,8 +1,8 @@
 /* Preview toolbar · Preview toolbar v4 icon dock */
 /* ── Preview toolbar v4 · Icon Dock ── */
 html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
-  /* Dock 约占顶栏高度：侧栏/遮罩避开顶右操作区 */
-  --preview-toolbar-h: 56px;
+  /* Dock：top inset + 40px 触控 + padding/border；侧栏须整体让出顶右 Dock 占位 */
+  --preview-toolbar-h: 80px;
 }
 
 .preview-toolbar--v4 {
@@ -531,7 +531,7 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
 /* F5 分章轻面板 */
 .preview-chapter-panel {
   position: fixed;
-  top: 0;
+  top: var(--preview-toolbar-h, 80px);
   right: 0;
   bottom: 0;
   width: min(380px, 92vw);

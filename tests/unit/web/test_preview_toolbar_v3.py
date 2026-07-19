@@ -277,7 +277,7 @@ def test_v4_css_icon_dock_and_task_dock() -> None:
     for token in (
         "preview-toolbar__dock",
         "preview-toolbar--v4",
-        "--preview-toolbar-h: 0px",
+        "--preview-toolbar-h: 80px",
         "preview-task-dock",
         "preview-sheet",
         "preview-sheet__content",
@@ -458,12 +458,14 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             box = dock.bounding_box()
             assert box is not None
-            assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
-            # Labeled dock (返回/播放/精修 + 长图 split) is wider than icon-only era.
-            assert box["width"] <= 520, f"dock width expected compact-labeled, got {box['width']}"
+            # PCU：40px 触控 + Help/?/分章；高度/宽度较 icon-only 与旧 labeled 略增
+            assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
+            assert box["width"] <= 640, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
+            assert page.locator(".preview-toolbar__dock-btn--chapters").count() == 1
+            assert page.locator("#studio-help-open-preview").count() == 1
             assert page.locator(".preview-toolbar__longshot-caret").count() == 1
             assert page.locator(".preview-toolbar__longshot-split").count() == 1
             assert page.locator(".preview-toolbar__screenplay--v3").count() == 1
@@ -561,7 +563,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             )
             assert refine_on == "on"
 
-            page.locator(".preview-sheet__close").click()
+            # Dock z 高于 Sheet；× 可能被顶右长图区挡住 → 再点 Dock「完成/精修」关面板（保模式）
+            page.locator(".preview-toolbar__menu-btn").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
 
             # V1.1 MF-01 · 关面板不退出模式
@@ -902,11 +905,12 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "repeat(3, 48px)" in css
     assert "repeat(5, 48px)" in css
     assert sheet.count("更新版面") <= 2  # 进阶主按钮 + 可能的文案对照
-    css_vj = (ROOT / "templates" / "visual-journal" / "journal-screens.css").read_text(
-        encoding="utf-8"
-    )
-    assert 'content: "\\201C"' in css_vj or 'content: "\\201C";' in css_vj
-    assert "C" not in css_vj
+    # 弯引号 escape 在 overlays 分片（journal-screens.css 本体不再内联）
+    css_vj_overlays = (
+        ROOT / "templates" / "visual-journal" / "journal-screens-overlays.css"
+    ).read_text(encoding="utf-8")
+    assert 'content: "\\201C"' in css_vj_overlays or 'content: "\\201C";' in css_vj_overlays
+    assert "C" not in css_vj_overlays
 
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "给这本游记的一句话" in home
