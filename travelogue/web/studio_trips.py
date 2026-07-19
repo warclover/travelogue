@@ -208,6 +208,11 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                         if data
                         else False
                     ),
+                    "derivativesPreparing": int(
+                        ((data.get("pipeline") or {}).get("derivativesPreparing") or 0)
+                        if data
+                        else 0
+                    ),
                     "g1Pending": (
                         ((data.get("pipeline") or {}).get("status") == "structure_draft")
                         if data

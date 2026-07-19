@@ -18,6 +18,7 @@ PROCESSING_PHOTOS = "processing_photos"
 # PRD-PIPELINE-PERF-V1 · R5.1 · two-state progressive readiness
 LAYOUT_PREVIEW_READY = "layout_preview_ready"
 EXPORT_READY = "export_ready"
+PREPARING_HD = "preparing_hd"
 
 # SFC · 识图准备主句（禁止 HF/CLIP/权重文件名）
 _VISION_WARMUP_COPY = "正在准备识图（首次可能较慢）"
@@ -36,7 +37,16 @@ STAGE_HINT_COPY: dict[str, str] = {
     PROCESSING_PHOTOS: "正在整理照片…",
     LAYOUT_PREVIEW_READY: "版面已就绪，可先预览",
     EXPORT_READY: "高清图与导出准备完成",
+    PREPARING_HD: "正在准备高清图",
 }
+
+
+def preparing_hd_text(count: int | None = None) -> str:
+    """MF-09 · 「正在准备 N 张高清图」；count 缺省时用通用句。"""
+    n = int(count or 0)
+    if n > 0:
+        return f"正在准备 {n} 张高清图"
+    return STAGE_HINT_COPY[PREPARING_HD]
 
 
 def stage_hint_text(key_or_text: str) -> str:

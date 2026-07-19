@@ -68,12 +68,17 @@ def effective_ingest_widths(cfg: IngestConfig, *, deferred: bool) -> tuple[int, 
 
 
 def selected_asset_ids(trip: dict) -> set[str]:
-    """Assets that appear in cover / moment / chapters / screens."""
+    """Assets that appear in cover / moment / closing / chapters / screens."""
     ids: set[str] = set()
     for key in ("coverAssetId", "momentAssetId"):
         raw = trip.get(key)
         if isinstance(raw, str) and raw.strip():
             ids.add(raw.strip())
+    curation = trip.get("curation")
+    if isinstance(curation, dict):
+        closing = curation.get("closingAssetId")
+        if isinstance(closing, str) and closing.strip():
+            ids.add(closing.strip())
     for ch in trip.get("chapters") or []:
         if not isinstance(ch, dict):
             continue
@@ -96,6 +101,181 @@ def selected_asset_ids(trip: dict) -> set[str]:
                 if isinstance(aid, str) and aid.strip():
                     ids.add(aid.strip())
     return ids
+
+
+def asset_ids_needing_materialize(
+    trip: dict,
+    *,
+    asset_ids: set[str] | None = None,
+    planned_widths: tuple[int, ...] | list[int] | None = None,
+) -> list[str]:
+    """Selected (or explicit) asset ids that still miss planned WebP widths."""
+    planned = tuple(
+        int(w)
+        for w in (
+            planned_widths
+            if planned_widths is not None
+            else (get_config().ingest.webp_widths or (800, 1600, 2400, 3200))
+        )
+    )
+    wanted = asset_ids if asset_ids is not None else selected_asset_ids(trip)
+    by_id = {
+        str(a.get("id") or ""): a
+        for a in (trip.get("assets") or [])
+        if isinstance(a, dict) and a.get("type", "image") == "image"
+    }
+    missing: list[str] = []
+    for aid in sorted(wanted):
+        asset = by_id.get(aid)
+        if asset is None:
+            continue
+        if missing_planned_widths(asset, planned_widths=planned):
+            missing.append(aid)
+    return missing
+
+
+# MF-09 · sync budget for refine swap (≤3 assets); larger sets go background.
+ON_DEMAND_SYNC_MAX_ASSETS = 3
+
+
+@dataclass
+class OnDemandMaterializeResult:
+    mode: str  # sync | async | noop
+    asset_ids: list[str] = field(default_factory=list)
+    preparing_count: int = 0
+    sync_result: MaterializeResult | None = None
+    elapsed_ms: float = 0.0
+
+
+_on_demand_lock = threading.Lock()
+_on_demand_threads: dict[str, threading.Thread] = {}
+
+
+def _bump_on_demand_telemetry(trip: dict, *, count: int) -> None:
+    pipe = trip.setdefault("pipeline", {})
+    timings = dict(pipe.get("timings") or {})
+    timings["derivativesOnDemandCount"] = float(
+        timings.get("derivativesOnDemandCount") or 0.0
+    ) + float(count)
+    pipe["timings"] = timings
+
+
+def materialize_on_demand(
+    trip: dict,
+    trip_dir: Path,
+    *,
+    asset_ids: set[str] | None = None,
+    app_cfg: AppConfig | None = None,
+    sync_max_assets: int = ON_DEMAND_SYNC_MAX_ASSETS,
+    persist: bool = True,
+) -> OnDemandMaterializeResult:
+    """MF-09 · refine/curate on-demand materialize.
+
+    ≤ ``sync_max_assets`` missing assets: synchronous ensure (≤3s budget intent).
+    More: background thread + ``pipeline.derivativesPreparing`` for FE badge.
+    """
+    resolved = app_cfg or get_config()
+    if not resolved.pipeline.deferred_derivatives:
+        return OnDemandMaterializeResult(mode="noop")
+    planned = tuple(int(w) for w in resolved.ingest.webp_widths)
+    need = asset_ids_needing_materialize(
+        trip,
+        asset_ids=asset_ids,
+        planned_widths=planned,
+    )
+    if not need:
+        pipe = trip.setdefault("pipeline", {})
+        if pipe.get("derivativesPreparing"):
+            pipe["derivativesPreparing"] = 0
+        return OnDemandMaterializeResult(mode="noop")
+
+    _bump_on_demand_telemetry(trip, count=len(need))
+    t0 = time.monotonic()
+    if len(need) <= int(sync_max_assets):
+        sync = ensure_derivatives_for_trip(
+            trip,
+            trip_dir,
+            app_cfg=resolved,
+            asset_ids=set(need),
+            mark_unselected_skipped=False,
+        )
+        pipe = trip.setdefault("pipeline", {})
+        pipe["derivativesPreparing"] = 0
+        if not sync.errors:
+            still = asset_ids_needing_materialize(
+                trip, asset_ids=asset_ids, planned_widths=planned
+            )
+            pipe["derivativesStatus"] = "ready" if not still else "preview"
+        elapsed = round((time.monotonic() - t0) * 1000.0, 2)
+        if persist:
+            _persist_trip_json(trip_dir, trip)
+        return OnDemandMaterializeResult(
+            mode="sync",
+            asset_ids=need,
+            preparing_count=0,
+            sync_result=sync,
+            elapsed_ms=elapsed,
+        )
+
+    pipe = trip.setdefault("pipeline", {})
+    pipe["derivativesPreparing"] = len(need)
+    pipe["derivativesStatus"] = "preview"
+    if persist:
+        _persist_trip_json(trip_dir, trip)
+
+    trip_key = str(trip_dir.resolve())
+    need_set = set(need)
+
+    def _bg() -> None:
+        try:
+            ensure_derivatives_for_trip(
+                trip,
+                trip_dir,
+                app_cfg=resolved,
+                asset_ids=need_set,
+                mark_unselected_skipped=False,
+            )
+            pipe2 = trip.setdefault("pipeline", {})
+            pipe2["derivativesPreparing"] = 0
+            still = asset_ids_needing_materialize(
+                trip, asset_ids=need_set, planned_widths=planned
+            )
+            if not still:
+                pipe2["derivativesStatus"] = "ready"
+            if persist:
+                _persist_trip_json(trip_dir, trip)
+        finally:
+            with _on_demand_lock:
+                _on_demand_threads.pop(trip_key, None)
+
+    with _on_demand_lock:
+        prior = _on_demand_threads.get(trip_key)
+        if prior is not None and prior.is_alive():
+            prior.join(timeout=0.05)
+        thread = threading.Thread(
+            target=_bg, name="derivative-ondemand", daemon=True
+        )
+        _on_demand_threads[trip_key] = thread
+        thread.start()
+
+    return OnDemandMaterializeResult(
+        mode="async",
+        asset_ids=need,
+        preparing_count=len(need),
+        elapsed_ms=round((time.monotonic() - t0) * 1000.0, 2),
+    )
+
+
+def _persist_trip_json(trip_dir: Path, trip: dict) -> None:
+    path = trip_dir / "trip.json"
+    if not path.is_file():
+        return
+    import json
+
+    path.write_text(
+        json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def missing_planned_widths(asset: dict, *, planned_widths: tuple[int, ...] | list[int]) -> list[int]:

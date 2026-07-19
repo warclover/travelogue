@@ -462,6 +462,29 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   display: none !important;
 }
 
+.preview-toolbar__derivatives-badge {
+  position: fixed;
+  top: 18px;
+  right: 16px;
+  z-index: 1090;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(26, 47, 40, 0.92);
+  color: #e8f5ef;
+  font-family: var(--studio-font-ui, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.preview-toolbar__derivatives-badge[hidden] {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .preview-toolbar__refine-chip {
     transition: none;

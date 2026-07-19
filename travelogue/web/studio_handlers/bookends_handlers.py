@@ -49,6 +49,40 @@ def _rerender(trip_json) -> bool:
         return False
 
 
+def _materialize_bookends_on_demand(trip_json) -> dict:
+    """MF-09 · sync/async HD materialize after cover/closing repick."""
+    import json
+    from pathlib import Path
+
+    from travelogue.config import get_config
+    from travelogue.media.derivatives import materialize_on_demand, selected_asset_ids
+
+    path = Path(trip_json)
+    try:
+        trip = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return {}
+    if not isinstance(trip, dict):
+        return {}
+    try:
+        result = materialize_on_demand(
+            trip,
+            path.parent,
+            asset_ids=selected_asset_ids(trip),
+            app_cfg=get_config(),
+        )
+    except Exception:
+        _log.exception("bookends on-demand materialize failed for %s", path)
+        return {}
+    out: dict = {
+        "derivativesMode": result.mode,
+        "derivativesPreparing": int(result.preparing_count),
+    }
+    if result.asset_ids:
+        out["derivativesAssetIds"] = list(result.asset_ids)
+    return out
+
+
 def handle_get_bookends(handler: StudioHandlerProtocol, trip_id: str) -> None:
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
@@ -177,6 +211,7 @@ def handle_post_repick_opening(handler: StudioHandlerProtocol, trip_id: str) -> 
         return
     if not ok:
         return
+    on_demand = _materialize_bookends_on_demand(trip_json)
     if not _rerender(trip_json):
         handler._json_response(500, internal_error_payload())
         return
@@ -184,6 +219,7 @@ def handle_post_repick_opening(handler: StudioHandlerProtocol, trip_id: str) -> 
     toast = (decision.explain or {}).get("cascadeToast")
     if toast:
         out["toast"] = toast
+    out.update(on_demand)
     handler._json_response(200, {"ok": True, **out})
 
 
@@ -215,10 +251,13 @@ def handle_post_repick_closing(handler: StudioHandlerProtocol, trip_id: str) -> 
         return
     if not ok:
         return
+    on_demand = _materialize_bookends_on_demand(trip_json)
     if not _rerender(trip_json):
         handler._json_response(500, internal_error_payload())
         return
-    handler._json_response(200, {"ok": True, **decision_to_dict(decision)})
+    out = decision_to_dict(decision)
+    out.update(on_demand)
+    handler._json_response(200, {"ok": True, **out})
 
 
 def handle_post_restore_auto(handler: StudioHandlerProtocol, trip_id: str) -> None:

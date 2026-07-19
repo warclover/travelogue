@@ -185,6 +185,7 @@ def build_entry(
         "g1Pending": pipeline.get("status") == "structure_draft",
         "derivativesStatus": str(pipeline.get("derivativesStatus") or "") or None,
         "derivativesReady": pipeline.get("derivativesStatus") == "ready",
+        "derivativesPreparing": int(pipeline.get("derivativesPreparing") or 0),
         "coverAssetId": str(trip.get("coverAssetId") or "") or None,
         "chapters": build_chapter_summaries(trip),
         "telemetry": telemetry,

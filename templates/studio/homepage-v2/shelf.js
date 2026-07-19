@@ -21,6 +21,7 @@ import {
 
 var READY_LONGSHOT = "分享图已就绪";
 var PREVIEW_READY = "可先预览";
+var PREPARING_HD = "正在准备高清图";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
@@ -166,8 +167,17 @@ function buildCoverWrap(trip, surface) {
   if (isDemoTrip(trip)) {
     wrap.appendChild(el("span", "v2-demo-flag v2-shelf__badge", "示例"));
   }
-  // PRD-PIPELINE-PERF-V1 · R5.1 · intermediate preview state only (ready = default, no badge)
-  if (trip.g1Pending || trip.derivativesStatus === "preview") {
+  // PRD-PIPELINE-PERF-V1 · R5.1 / MF-09 · shelf two-state (+ preparing HD)
+  var preparingN = Number(trip.derivativesPreparing || 0);
+  if (preparingN > 0) {
+    wrap.appendChild(
+      el(
+        "span",
+        "v2-shelf__preview-badge",
+        preparingN > 0 ? "正在准备 " + preparingN + " 张高清图" : PREPARING_HD
+      )
+    );
+  } else if (trip.g1Pending || trip.derivativesStatus === "preview") {
     wrap.appendChild(el("span", "v2-shelf__preview-badge", PREVIEW_READY));
   }
   var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];

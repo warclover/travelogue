@@ -40,6 +40,7 @@ def test_build_derived_plan_partial() -> None:
 def test_selected_asset_ids_from_chapters() -> None:
     trip = {
         "coverAssetId": "asset-001",
+        "curation": {"closingAssetId": "asset-006"},
         "chapters": [
             {
                 "items": [{"assetId": "asset-002"}, {"assetIds": ["asset-003", "asset-004"]}],
@@ -53,6 +54,7 @@ def test_selected_asset_ids_from_chapters() -> None:
         "asset-003",
         "asset-004",
         "asset-005",
+        "asset-006",
     }
 
 

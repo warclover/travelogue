@@ -45,6 +45,7 @@ export const STAGE_HINT_LABELS = {
   processing_photos: "正在整理照片…",
   layout_preview_ready: "版面已就绪，可先预览",
   export_ready: "高清图与导出准备完成",
+  preparing_hd: "正在准备高清图",
 };
 
 // P5-10.1 · mirror travelogue/web/studio_errors.py USER_MESSAGES

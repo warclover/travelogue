@@ -5,7 +5,7 @@
 | **PRD** | [PRD-PIPELINE-PERF-V1.md](./PRD-PIPELINE-PERF-V1.md) **v0.2** |
 | **评审** | [acceptance-records/pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **验收** | 落地后补 `ACCEPTANCE-PIPELINE-PERF-V1.md`（对照 PRD §9） |
-| **状态** | **M1 ☑ · M2 ☑ · M3 ☑**（核心路径已落地；07b 狗粮签字后置） |
+| **状态** | **M1 ☑ · M2 ◐ · M3 ◐**（MF-09/10 + AC-07a 已补；07b 狗粮 / AC-11 基准机后置） |
 | **更新** | 2026-07-19 |
 | **分支** | `feat/pipeline-perf-v1` |
 
@@ -87,7 +87,8 @@
 | BE-PPF-13 | 扫描免像素解码（orientation 交换） | ☑ `peek_image_meta` · `scan_image_paths` / tiered |
 | BE-PPF-14 | 美学信号 / mediaClass 入 worker | ☑ `WorkerResult.media_class` / `aesthetic_signals`；merge 不再重开图 |
 | BE-PPF-15 | NIMA 重叠预热 + torch 线程配额（只重叠不换源） | ☑ `aesthetic_warm.AestheticWarmCoordinator`；`warm_learned_on_ingest` |
-| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ◐ `test_derivatives_deferred` · `test_scan_peek_meta` · `test_webp_pyramid_flag` · `test_aesthetic_warm`；07a/07b/MF-10 后置 |
+| BE-PPF-16 | MF-09 refine 换片补图（≤3 同步 / >3 后台+徽标）；`closingAssetId` 计入 selected | ☑ `materialize_on_demand` · bookends / curate hook |
+| QA-PPF-10 | AC-PPF-05～10 · 07a CI · 07b 报告 · MF-10 三负例 | ◐ MF-10 单测 + AC-07a 脚本/CI；07b / AC-08 spy / AC-09 串并双跑 / AC-10 命中率后置 |
 
 ---
 
@@ -95,7 +96,7 @@
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| FE-PPF-01 | 两态进度 + 书架/预览一致 | ☑ `layout_preview_ready` / `export_ready` hints · shelf 角标 · `derivativesStatus` |
+| FE-PPF-01 | 两态进度 + 书架/预览一致 | ☑ shelf + preview badge（可先预览 / 正在准备 N 张高清图） |
 | BE-PPF-20 | 导出同步物化（D6，不置灰） | ☑ `ensure_derivatives_before_export` · zip/longshot 前同步 |
 | QA-PPF-20 | AC-PPF-11 / 基准机 AC-PPF-12 | ☐ 基准机 Playwright 后置 |
 
@@ -107,3 +108,4 @@
 |------|------|------|
 | v0.1 | 2026-07-19 | 初稿 · 摸底：timings 覆盖抹掉 ingestWorkers · M1 任务拆解 |
 | v0.2 | 2026-07-19 | M2 收尾：R3 扫描/worker 信号 · R4 NIMA 重叠 · R2.3 金字塔 flag · M3 两态进度与导出同步物化 |
+| v0.3 | 2026-07-19 | MF-09 换片补图 · MF-10 负例 · AC-07a 等价脚本+CI · 预览/书架徽标对齐 |

@@ -211,6 +211,15 @@ jobs:
         if: github.event_name != 'pull_request'
         run: python scripts/arch_equivalence_check.py
 
+      - name: Pipeline Perf E-A equivalence (AC-PPF-07a · PR warn)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: python scripts/pipeline_perf_equivalence_check.py
+
+      - name: Pipeline Perf E-A equivalence (AC-PPF-07a · release block)
+        if: github.event_name != 'pull_request'
+        run: python scripts/pipeline_perf_equivalence_check.py
+
       - name: Pipeline Throughput gate from-record schema (M5 · block)
         run: python scripts/pipeline_throughput_gate.py --from-record --require-schema-only
 
