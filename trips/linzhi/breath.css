@@ -124,13 +124,19 @@ html[data-breath="cinematic"] .breath-reveal {
   transition-duration: 1s;
 }
 
-html[data-breath="cinematic"] .layout-screen.breath-reveal {
+/* Cinematic keeps photo screens opaque; chapter titles must match — otherwise
+   breath-reveal leaves them at opacity:0 while snap jumps cover → first screen. */
+html[data-breath="cinematic"] .layout-screen.breath-reveal,
+html[data-breath="cinematic"] .chapter-header.breath-reveal,
+html[data-breath="cinematic"] .chapter-separator.breath-reveal {
   opacity: 1;
   transform: none;
   transition: none;
 }
 
-html[data-breath="cinematic"] .layout-screen.breath-reveal.is-visible {
+html[data-breath="cinematic"] .layout-screen.breath-reveal.is-visible,
+html[data-breath="cinematic"] .chapter-header.breath-reveal.is-visible,
+html[data-breath="cinematic"] .chapter-separator.breath-reveal.is-visible {
   opacity: 1;
   transform: none;
 }
@@ -256,11 +262,6 @@ html[data-breath="flow"] .cover-closing__panel.closing-breath-reveal.is-visible,
 html[data-breath="cinematic"] .cover-closing__panel.closing-breath-reveal.is-visible {
   opacity: 1;
   transform: none;
-}
-
-html[data-breath="cinematic"] .chapter-header.breath-reveal {
-  transform: translateY(2rem);
-  transition-duration: 0.95s;
 }
 
 html[data-breath="cinematic"] .hook-line.breath-reveal {

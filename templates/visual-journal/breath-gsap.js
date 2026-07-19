@@ -283,7 +283,7 @@
             scrub: 0.85,
             onUpdate: function (self) {
               var p = self.progress;
-              el.style.opacity = String(0.35 + p * 0.65);
+              // Opacity stays CSS-visible in cinematic; scrub only motion.
               el.style.transform = "translate3d(0," + (1 - p) * 26 + "px,0)";
             },
           })
@@ -334,7 +334,6 @@
         addTrigger(
           el,
           function (p) {
-            el.style.opacity = String(0.7 + p * 0.3);
             el.style.transform = "translate3d(0," + (1 - p) * 10 + "px,0)";
           },
           { start: 0.08, end: 0.25 }

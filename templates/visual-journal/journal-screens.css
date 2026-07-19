@@ -1879,10 +1879,12 @@ html[data-snap="proximity"] .cover-opening[data-block="cover-opening"],
 html[data-snap="proximity"] .cover-hero[data-block="cover-hero"],
 html[data-snap="proximity"] .cover-closing[data-block="cover-closing"],
 html[data-snap="proximity"] .layout-screen[data-block="layout-screen"],
+html[data-snap="proximity"] .chapter-header[data-block="chapter-header"],
 html[data-snap="mandatory"] .cover-opening[data-block="cover-opening"],
 html[data-snap="mandatory"] .cover-hero[data-block="cover-hero"],
 html[data-snap="mandatory"] .cover-closing[data-block="cover-closing"],
-html[data-snap="mandatory"] .layout-screen[data-block="layout-screen"] {
+html[data-snap="mandatory"] .layout-screen[data-block="layout-screen"],
+html[data-snap="mandatory"] .chapter-header[data-block="chapter-header"] {
   scroll-snap-align: start;
   scroll-margin-top: 0.5rem;
 }
