@@ -398,12 +398,13 @@ ingest:
   detect_faces: true
   portrait_analyze: true
   face_min_size_px: 48
-  face_detect_max_edge: 0   # 0=原图检测；640=检测前缩放到长边 640（P7-B4）
+  # PRD-PIPELINE-PERF-V1 · R1.3（E-B）：默认 1024；回退设 0=原图检测
+  face_detect_max_edge: 1024
   featured_dir_names: ["主图上传", "精选", "featured", "hero"]
   material_dir_names: ["素材上传", "素材", "material", "extras"]
   warn_featured_count_above: 30
-  # Phase 7 · ingest 微优化 + RAW 拦截
-  webp_method: 4
+  # PRD-PIPELINE-PERF-V1 · R1.4（E-B）：默认 2；回退设 4（Phase7 旧默认）
+  webp_method: 2
   shared_color_thumb_px: 32
   reject_raw: true
 

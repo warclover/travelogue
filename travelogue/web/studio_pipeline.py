@@ -834,9 +834,14 @@ def run_studio_pipeline(
     def _flush_pipeline_timings(extra: dict[str, float] | None = None) -> None:
         if extra:
             pipeline_timings.update(extra)
-        pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
-        from travelogue.domain.pipeline_view import set_pipeline_timings
+        from travelogue.domain.pipeline_view import (
+            absorb_pipeline_timing_keys,
+            set_pipeline_timings,
+        )
 
+        # PRD-PIPELINE-PERF-V1 · MF-07: same merge as orchestrator.run.flush_timings.
+        absorb_pipeline_timing_keys(trip, pipeline_timings)
+        pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
         set_pipeline_timings(trip, pipeline_timings)
 
     def report(stage: str, index: int, hint: str | None = None) -> None:

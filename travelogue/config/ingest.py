@@ -31,7 +31,8 @@ class IngestConfig:
     max_photos: int = 250
     webp_widths: tuple[int, ...] = (800, 1600, 2400, 3200)
     webp_quality: int = 82
-    webp_method: int = 4
+    # PRD-PIPELINE-PERF-V1 · R1.4（E-B）：默认 2；回退设 webp_method: 4
+    webp_method: int = 2
     shared_color_thumb_px: int = 32
     generate_crops: bool = False
     min_edge_px: int = 320
@@ -48,7 +49,8 @@ class IngestConfig:
     low_res_circuit_breaker_median_short_px: int = 1200
     detect_faces: bool = True
     face_min_size_px: int = 48
-    face_detect_max_edge: int = 0
+    # PRD-PIPELINE-PERF-V1 · R1.3（E-B）：默认 1024；回退设 face_detect_max_edge: 0
+    face_detect_max_edge: int = 1024
     featured_dir_names: tuple[str, ...] = ("主图上传", "精选", "featured", "hero")
     material_dir_names: tuple[str, ...] = ("素材上传", "素材", "material", "extras")
     featured_priority_on_truncation: bool = True
@@ -74,7 +76,7 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         max_photos=int(raw.get("max_photos", 250)),
         webp_widths=tuple(int(w) for w in widths),
         webp_quality=int(raw.get("webp_quality", 82)),
-        webp_method=int(raw.get("webp_method", 4)),
+        webp_method=int(raw.get("webp_method", 2)),
         shared_color_thumb_px=int(raw.get("shared_color_thumb_px", raw.get("sharedColorThumbPx", 32))),
         generate_crops=bool(raw.get("generate_crops", False)),
         min_edge_px=int(raw.get("min_edge_px", 320)),
@@ -93,7 +95,9 @@ def ingest_from_dict(raw: dict[str, Any]) -> IngestConfig:
         ),
         detect_faces=bool(raw.get("detect_faces", True)),
         face_min_size_px=int(raw.get("face_min_size_px", 48)),
-        face_detect_max_edge=int(raw.get("face_detect_max_edge", raw.get("faceDetectMaxEdge", 0))),
+        face_detect_max_edge=int(
+            raw.get("face_detect_max_edge", raw.get("faceDetectMaxEdge", 1024))
+        ),
         featured_dir_names=tuple(str(x) for x in (raw.get("featured_dir_names") or ["主图上传", "精选", "featured", "hero"])),
         material_dir_names=tuple(str(x) for x in (raw.get("material_dir_names") or ["素材上传", "素材", "material", "extras"])),
         featured_priority_on_truncation=bool(raw.get("featured_priority_on_truncation", True)),

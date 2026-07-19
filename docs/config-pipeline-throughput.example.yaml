@@ -14,15 +14,17 @@ vision:
   preload_on_folder_pick: true
 
 ingest:
-  webp_method: 4
+  # PRD-PIPELINE-PERF-V1 · R1.3 / R1.4（E-B，可单独回退）
+  webp_method: 2
   shared_color_thumb_px: 32
-  face_detect_max_edge: 0
+  face_detect_max_edge: 1024
 
 pipeline:
   parallel_embed: true
   parallel_embed_chunk: 32
-  # --- Pipeline Throughput (PRD v0.2) ---
-  parallel_ingest: false
+  # --- Pipeline Throughput + PIPELINE-PERF-V1 ---
+  parallel_ingest: true
+  # 0 = auto max(2, min(cpu//2, 10)) + long-edge memory cap
   parallel_ingest_workers: 0
   parallel_ingest_min_photos: 12
   persist_every_n: 8

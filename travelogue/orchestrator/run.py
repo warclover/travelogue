@@ -142,6 +142,10 @@ def _run_trip_stages(
     def flush_timings(*, extra: dict[str, float] | None = None) -> None:
         if extra:
             pipeline_timings.update(extra)
+        # PRD-PIPELINE-PERF-V1 · MF-07: keep PT keys written by ingest/stages.
+        from travelogue.domain.pipeline_view import absorb_pipeline_timing_keys
+
+        absorb_pipeline_timing_keys(trip, pipeline_timings)
         pipeline_timings["totalMs"] = round((time.monotonic() - pipeline_t0) * 1000.0, 2)
         set_pipeline_timings(trip, pipeline_timings)
         if studio_hooks is not None:

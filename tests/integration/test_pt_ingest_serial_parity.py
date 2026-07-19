@@ -45,20 +45,23 @@ def test_resolve_parallel_short_circuit_min_photos() -> None:
     app = AppConfig(
         pipeline=PipelineConfig(parallel_ingest=True, parallel_ingest_min_photos=12, parallel_ingest_workers=4)
     )
-    use, workers, fallback = resolve_parallel_ingest_plan(app, photo_count=5)
+    use, workers, fallback, downscaled = resolve_parallel_ingest_plan(app, photo_count=5)
     assert use is False
     assert workers == 1
     assert fallback is True
+    assert downscaled is False
 
 
 def test_resolve_parallel_short_circuit_workers_one() -> None:
     app = AppConfig(
         pipeline=PipelineConfig(parallel_ingest=True, parallel_ingest_min_photos=2, parallel_ingest_workers=1)
     )
-    use, workers, fallback = resolve_parallel_ingest_plan(app, photo_count=20)
+    use, workers, fallback, downscaled = resolve_parallel_ingest_plan(app, photo_count=20)
     assert use is False
     assert workers == 1
-    assert fallback is True
+    # workers=1 is an explicit serial choice, not a parallel→serial fallback.
+    assert fallback is False
+    assert downscaled is False
 
 
 def test_parallel_ingest_false_uses_serial_path(tmp_path: Path) -> None:

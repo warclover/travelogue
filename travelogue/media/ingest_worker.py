@@ -20,12 +20,12 @@ class WorkerIngestConfig:
 
     webp_widths: tuple[int, ...] = (800, 1600, 2400, 3200)
     webp_quality: int = 82
-    webp_method: int = 4
+    webp_method: int = 2
     shared_color_thumb_px: int = 32
     generate_crops: bool = False
     detect_faces: bool = True
     face_min_size_px: int = 48
-    face_detect_max_edge: int = 0
+    face_detect_max_edge: int = 1024
     sharpness_version: str = "v2"
     exif_camera: bool = True
     portrait_analyze: bool = True

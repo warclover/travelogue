@@ -1297,11 +1297,12 @@ def ingest_into_trip(
             on_progress(processed, total_photos)
 
     use_parallel, workers, parallel_fallback = False, 1, False
+    workers_downscaled = False
     if resolved_app.pipeline.parallel_ingest:
         from travelogue.media.ingest_parallel import resolve_parallel_ingest_plan
 
-        use_parallel, workers, parallel_fallback = resolve_parallel_ingest_plan(
-            resolved_app, photo_count=total_photos
+        use_parallel, workers, parallel_fallback, workers_downscaled = (
+            resolve_parallel_ingest_plan(resolved_app, photo_count=total_photos)
         )
 
     if use_parallel:
@@ -1328,6 +1329,9 @@ def ingest_into_trip(
             ingest_stats = loop_state.ingest_stats
             ingest_stats["ingestWorkers"] = workers
             ingest_stats["ingestParallelFallback"] = False
+            if workers_downscaled:
+                ingest_stats["ingestWorkersDownscaled"] = True
+                ingest_stats["ingestWorkersDownscaleReason"] = "memory_cap_long_edge"
         else:
             use_parallel = False
             parallel_fallback = True
@@ -1400,6 +1404,8 @@ def ingest_into_trip(
         timings["ingestParallelFallback"] = (
             1.0 if ingest_stats["ingestParallelFallback"] else 0.0
         )
+    if ingest_stats.get("ingestWorkersDownscaled"):
+        timings["ingestWorkersDownscaled"] = 1.0
     if timings:
         pipe["timings"] = timings
 
