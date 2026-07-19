@@ -10,6 +10,7 @@ import {
   DISMISS_KEY as WAIT_TIPS_DISMISS_KEY,
   VERSION_KEY as WAIT_TIPS_VERSION_KEY,
 } from "../homepage-v2/wait-tips-copy.js";
+import { remountWaitTipsIfImporting } from "../homepage-v2/wait-tips.js";
 
 /** @deprecated 现网兼容键；门禁以 HELP_LS 为准并双写 */
 export var LEGACY_EXPORT_PULSE_SEEN = "travelogue.studio.exportPulseSeen";
@@ -95,7 +96,8 @@ export var HELP_COPY = {
     "已重置。下次进入预览会再提示如何保存长图与本机文案说明；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡与轻状态也会再出现；下次导入等待时也会再显示小提示。",
   replayWaitTipsButton: "重播等待提示",
   replayWaitTipsDoneToast:
-    "已重置等待提示。下次导入生成时会再显示小提示（不是操作引导，也不会挡进度）。",
+    "已重置等待提示。若正在生成，提示会马上出现；否则下次导入时再显示。",
+  replayWaitTipsRemountToast: "已重新打开功能介绍与使用技巧。",
   stubNarrateTip: "当前为本机文案（可随时在设置中升级）",
   helpDeepLinkPending: "「分享图需更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
@@ -453,7 +455,15 @@ export function replayWaitTips() {
   } catch (_e) {
     /* ignore */
   }
-  return HELP_COPY.replayWaitTipsDoneToast;
+  var remounted = false;
+  try {
+    remounted = remountWaitTipsIfImporting();
+  } catch (_e2) {
+    remounted = false;
+  }
+  return remounted
+    ? HELP_COPY.replayWaitTipsRemountToast || "已重新打开功能介绍与使用技巧。"
+    : HELP_COPY.replayWaitTipsDoneToast;
 }
 
 /**

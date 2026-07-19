@@ -268,13 +268,18 @@ function buildDom() {
 
 /**
  * @param {HTMLElement} panel · .v2-import-panel
- * @param {{ importStartedAt?: number, beforeEl?: HTMLElement|null }} opts
+ * @param {{ importStartedAt?: number, beforeEl?: HTMLElement|null, force?: boolean }} opts
+ *   force：忽略/清除 dismiss，立即显现（帮助「重播」或面板内恢复入口）
  */
 export function scheduleWaitTips(panel, opts) {
   try {
     unmountWaitTips();
-    if (!panel || isWaitTipsDismissed()) return;
-    _importStartedAt = (opts && opts.importStartedAt) || Date.now();
+    opts = opts || {};
+    var force = opts.force === true;
+    if (force) clearWaitTipsDismissed();
+    if (!panel || (!force && isWaitTipsDismissed())) return;
+    removeWaitTipsRestoreChip(panel);
+    _importStartedAt = opts.importStartedAt || Date.now();
     _alive = true;
     _index = 0;
     _paused = false;
@@ -286,7 +291,7 @@ export function scheduleWaitTips(panel, opts) {
 
     var root = buildDom();
     _root = root;
-    var before = opts && opts.beforeEl;
+    var before = opts.beforeEl;
     if (before && before.parentNode === panel) {
       panel.insertBefore(root, before);
     } else {
@@ -294,11 +299,12 @@ export function scheduleWaitTips(panel, opts) {
     }
 
     var elapsed = Date.now() - _importStartedAt;
-    var delay = Math.max(0, SHOW_DELAY_MS - elapsed);
+    var delay = force ? 0 : Math.max(0, SHOW_DELAY_MS - elapsed);
     clearShowTimer();
     _showTimer = setTimeout(function () {
       _showTimer = null;
-      if (!_alive || !_root || isWaitTipsDismissed()) return;
+      if (!_alive || !_root) return;
+      if (!force && isWaitTipsDismissed()) return;
       _root.hidden = false;
       _mountedAt = Date.now();
       renderCard();
@@ -307,6 +313,7 @@ export function scheduleWaitTips(panel, opts) {
         job_stage: _jobStage,
         elapsed_ms: Date.now() - _importStartedAt,
         copy_version: COPY_VERSION,
+        force: force || undefined,
       });
       scheduleAdvance();
     }, delay);
@@ -316,6 +323,57 @@ export function scheduleWaitTips(panel, opts) {
     } catch (_e2) {
       /* ignore */
     }
+  }
+}
+
+/** 已 dismiss 时在进度壳提供恢复入口（长等待仍可看功能介绍/技巧） */
+export function mountWaitTipsRestoreChip(panel, beforeEl) {
+  try {
+    if (!panel || !isWaitTipsDismissed()) return;
+    if (panel.querySelector("[data-wait-tips-restore]")) return;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "v2-wait-tips-restore";
+    btn.setAttribute("data-wait-tips-restore", "1");
+    btn.textContent = "查看功能介绍与使用技巧";
+    btn.addEventListener("click", function () {
+      scheduleWaitTips(panel, {
+        importStartedAt: _importStartedAt || Date.now() - SHOW_DELAY_MS,
+        beforeEl: beforeEl,
+        force: true,
+      });
+    });
+    if (beforeEl && beforeEl.parentNode === panel) {
+      panel.insertBefore(btn, beforeEl);
+    } else {
+      panel.appendChild(btn);
+    }
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+export function removeWaitTipsRestoreChip(panel) {
+  if (!panel) return;
+  var chip = panel.querySelector("[data-wait-tips-restore]");
+  if (chip && chip.parentNode) chip.parentNode.removeChild(chip);
+}
+
+/** 帮助抽屉「重播等待提示」：若正在 Importing，当场重新挂上 Tips */
+export function remountWaitTipsIfImporting() {
+  try {
+    var host = document.getElementById("v2-importing");
+    var panel = host && !host.hidden ? host.querySelector(".v2-import-panel") : null;
+    var cancel = document.getElementById("v2-import-cancel");
+    if (!panel) return false;
+    scheduleWaitTips(panel, {
+      importStartedAt: _importStartedAt || Date.now() - SHOW_DELAY_MS,
+      beforeEl: cancel,
+      force: true,
+    });
+    return !!document.getElementById("v2-wait-tips");
+  } catch (_e) {
+    return false;
   }
 }
 

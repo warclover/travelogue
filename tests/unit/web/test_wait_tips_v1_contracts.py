@@ -61,6 +61,12 @@ def test_wait_tips_host_hooks_in_import_run() -> None:
     assert "resumeWaitTips" in imp
     assert "notifyWaitTipsJob" in imp
     assert "beforeEl: cancelBtn" in imp
+    assert "mountWaitTipsRestoreChip" in imp
+    ctrl = _read(CTRL_JS)
+    assert "remountWaitTipsIfImporting" in ctrl
+    assert "force: true" in ctrl or "opts.force" in ctrl
+    help_js = (STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
+    assert "remountWaitTipsIfImporting" in help_js
 
 
 def test_wait_tips_analytics_allowlist() -> None:
@@ -99,7 +105,8 @@ def test_wait_tips_w2_help_replay() -> None:
     drawer = _read(STUDIO / "js" / "help-drawer.js")
     assert "replayWaitTips" in help_js
     assert "重播等待提示" in help_js
-    assert "不是操作引导" in help_js
+    assert "remountWaitTipsIfImporting" in help_js
+    assert "已重新打开功能介绍与使用技巧" in help_js
     assert "clearWaitTipsDismissed" in help_js
     assert "WAIT_TIPS_DISMISS_KEY" in help_js
     assert "waitTips.dismissed" in _read(COPY_JS)

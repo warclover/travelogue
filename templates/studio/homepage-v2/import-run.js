@@ -49,6 +49,8 @@ import {
   pauseWaitTips,
   resumeWaitTips,
   notifyWaitTipsJob,
+  isWaitTipsDismissed,
+  mountWaitTipsRestoreChip,
 } from "./wait-tips.js";
 
 let _gen = 0;
@@ -311,6 +313,10 @@ export function renderImportingPanel(source) {
       importStartedAt: _importStartedAt,
       beforeEl: cancelBtn,
     });
+    // 曾点 × 持久隐藏时，长等待仍可一键恢复（避免「技巧卡片不见了」）
+    if (isWaitTipsDismissed()) {
+      mountWaitTipsRestoreChip(panel, cancelBtn);
+    }
   } catch (_e) {
     /* tips 不得拖垮进度壳 */
   }

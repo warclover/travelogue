@@ -91,6 +91,27 @@
 }
 
 /* ── Wait Tips V1（进度主句之下 · 取消之上） ── */
+.v2-wait-tips-restore {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(255, 255, 255, .22);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, .78);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.v2-wait-tips-restore:hover,
+.v2-wait-tips-restore:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .4);
+  background: rgba(255, 255, 255, .06);
+}
 .v2-wait-tips {
   margin: 0 0 14px;
   padding: 14px 14px 12px;
