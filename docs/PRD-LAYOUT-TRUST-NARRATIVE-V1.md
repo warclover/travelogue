@@ -334,7 +334,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | **R-E1** | LTE 单权威收束 | 活跃 pattern 唯一清单；收敛**六写**（YAML status / rollout / lte_policy / LEGACY registry / schema 枚举 / config override）；顺序：先修门（H8）→ 再删写点 → 最后建新抽象。生命周期规则：**rollout=0 超 4 周强制 review**（转正或归档） |
 | **R-E2** | 周看板 | 窗宽分布、mosaic 曝光、§12 指标包；脚本 `scripts/ltn_weekly_dashboard.py`（只读 trip.json，默认不 re-curate）。实现：`travelogue/layout_engine/mosaic/ltn_weekly.py` |
 | **R-E3** | 分轨表产品化 | curated / archive / quick-share 写入 `config.yaml.example` + §11.1（权威：`mosaic_track.py`） |
-| **R-E4** | Asymmetric quota（可选） | max 不变；opportunity 维度可观测；**无合法窗不强制 emit** |
+| **R-E4** | Asymmetric quota（可选） | max 不变；opportunity 维度可观测；**无合法窗不强制 emit**。**已落地**：`asymmetric_quota.py` + planner soft min/`denseOpportunitySeen`；周看板字段；`should_force_dense_emit()≡False` |
 
 ---
 
@@ -402,6 +402,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | `portrait3_after_failed_mcs5_rate` | MCS 5 失败后立刻三叠占比（看板为 MVP 代理；门禁用 AC-C-01 隔离重放口径） | ↓≥50% |
 | `cross_scene_window_rate` | 跨 scene MCS 窗占比（日志无 flag 时记 0；C4 构造本即段内） | &lt;5% |
 | `dense_quota_utilization` | used/max（P21 + 分轨 cap） | 健康带约 0.4–0.8（非 0 非 1 硬凑） |
+| `dense_opportunity_min` / `seen` / `fill_rate` | E4 soft 机会维（相对 max）；`denseForcedEmit` 恒 false | fill 观察用；无合法窗不得硬凑 |
 | `preserve_group_honor_rate` | longshot 尊重 mosaic 组 | → 高 |
 | `studio_reject_explain_rate` | 有 Top3 解释的决策占比 | → 100%（有决策时） |
 | `windowSizeDistribution` | 胜出 plan 窗宽直方图 | 观察 4/5/6 结构 |
@@ -462,6 +463,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.15-LTN | 2026-07-20 | 实施落地：E4 asymmetric quota（hard max + soft opportunity；无合法窗不强制 emit；看板字段） |
 | v1.2.14-LTN | 2026-07-20 | 实施落地：D3 版式角色表（产品别名↔narrativeRole、渲染 data-*）+ `rhythmSignOff` CSS 漂移闸门 |
 | v1.2.13-LTN | 2026-07-20 | 实施落地：E2 周看板（`ltn_weekly.py` + `ltn_weekly_dashboard.py`）；E3 分轨说明补齐 `config.yaml.example` |
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |

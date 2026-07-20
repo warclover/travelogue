@@ -1,6 +1,9 @@
 """LTN C7 · curated / archive / quick_share mosaic track params.
 
 Tracks are parameter overlays on the shared MCS path (not separate planners).
+
+LTN E4 · ``dense_collage_max_cap`` is a hard ceiling only. Soft opportunity
+floors live in ``asymmetric_quota.dense_opportunity_min_for`` and never force emit.
 """
 
 from __future__ import annotations

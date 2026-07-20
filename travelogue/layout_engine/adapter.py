@@ -181,12 +181,22 @@ def layout_state_for_trip(
 
 
 def _apply_track_dense_cap(state: ScreenLayoutPlannerState) -> ScreenLayoutPlannerState:
-    """LTN C7 · optional track dense cap after P21 / density limits."""
+    """LTN C7 · optional track dense cap after P21 / density limits.
+
+    LTN E4 · refresh soft opportunity min after max settles (never raises max).
+    """
+    from travelogue.layout_contract.asymmetric_quota import dense_opportunity_min_for
     from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
 
-    cap = getattr(get_effective_mosaic_config(), "track_dense_collage_cap", None)
+    cfg = get_effective_mosaic_config()
+    cap = getattr(cfg, "track_dense_collage_cap", None)
     if cap is not None:
         state.dense_collage_max = min(int(state.dense_collage_max), max(0, int(cap)))
+    track_id = getattr(cfg, "track_id", None)
+    state.dense_collage_opportunity_min = dense_opportunity_min_for(
+        dense_max=state.dense_collage_max,
+        track=track_id,
+    )
     return state
 
 

@@ -5,6 +5,10 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
+from travelogue.layout_contract.asymmetric_quota import (
+    asymmetric_dense_snapshot,
+    dense_opportunity_min_for,
+)
 from travelogue.layout_contract.chapter_items import resolve_longshot_mode
 from travelogue.layout_contract.mosaic_track import resolve_mosaic_track, track_params_for
 from travelogue.layout_contract.planner_state import (
@@ -101,6 +105,24 @@ def studio_reject_explain_rate(mosaic_logs: list[dict[str, Any]]) -> float | Non
     return round(explained / interesting, 6)
 
 
+def _dense_used_count(chapters: list[dict[str, Any]]) -> int:
+    used = 0
+    for _ch, sc in _iter_screens(chapters):
+        pid = str(sc.get("patternId") or "")
+        if is_dense_collage_pattern(pid) or "mosaic" in pid:
+            used += 1
+    return used
+
+
+def _dense_max_for_trip(
+    trip_photo_total: int, *, dense_max_cap: int | None = None
+) -> int:
+    _lo, hi = dense_collage_limits_for_trip(max(0, int(trip_photo_total)))
+    if dense_max_cap is not None:
+        hi = min(hi, max(0, int(dense_max_cap)))
+    return max(0, int(hi))
+
+
 def dense_quota_utilization(
     chapters: list[dict[str, Any]],
     *,
@@ -108,17 +130,31 @@ def dense_quota_utilization(
     dense_max_cap: int | None = None,
 ) -> float | None:
     """used dense screens / P21(+track) max."""
-    _lo, hi = dense_collage_limits_for_trip(max(0, int(trip_photo_total)))
-    if dense_max_cap is not None:
-        hi = min(hi, max(0, int(dense_max_cap)))
+    hi = _dense_max_for_trip(trip_photo_total, dense_max_cap=dense_max_cap)
     if hi <= 0:
         return None
-    used = 0
-    for _ch, sc in _iter_screens(chapters):
-        pid = str(sc.get("patternId") or "")
-        if is_dense_collage_pattern(pid) or "mosaic" in pid:
-            used += 1
+    used = _dense_used_count(chapters)
     return round(min(1.0, used / hi), 6)
+
+
+def dense_opportunity_seen_from_logs(mosaic_logs: list[dict[str, Any]]) -> int:
+    """Legal scored windows (E4 opportunity dimension) from decision logs."""
+    n = 0
+    for lg in _winner_plan_logs(mosaic_logs):
+        if int(lg.get("windowSize") or 0) < 4:
+            continue
+        if lg.get("fallbackReason") == "no_candidates":
+            continue
+        cc = lg.get("candidatesCount")
+        if cc is not None:
+            if int(cc) > 0:
+                n += 1
+            continue
+        if lg.get("top3Patterns") or (
+            lg.get("winnerPatternId") and not lg.get("fallbackUsed")
+        ):
+            n += 1
+    return n
 
 
 def preserve_group_honor_rate(chapters: list[dict[str, Any]]) -> float | None:
@@ -220,6 +256,16 @@ def compute_ltn_weekly_metrics(
     intent_mode = str((trip.get("intent") or {}).get("mode") or "")
     track = resolve_mosaic_track(kept_count=kept, intent_mode=intent_mode)
     params = track_params_for(track)
+    dense_max = _dense_max_for_trip(kept, dense_max_cap=params.dense_collage_max_cap)
+    dense_used = _dense_used_count(chapters)
+    opp_min = dense_opportunity_min_for(dense_max=dense_max, track=track)
+    opp_seen = dense_opportunity_seen_from_logs(logs)
+    asym = asymmetric_dense_snapshot(
+        dense_max=dense_max,
+        dense_used=dense_used,
+        opportunity_min=opp_min,
+        opportunity_seen=opp_seen,
+    )
 
     out: dict[str, Any] = {
         "mosaicTrack": track,
@@ -229,11 +275,12 @@ def compute_ltn_weekly_metrics(
         "mcsUnifiedExposureRate": mcs_unified_exposure_rate(chapters),
         "heroMosaicCount": hero_mosaic_count(chapters),
         "studioRejectExplainRate": studio_reject_explain_rate(logs),
-        "denseQuotaUtilization": dense_quota_utilization(
-            chapters,
-            trip_photo_total=kept,
-            dense_max_cap=params.dense_collage_max_cap,
-        ),
+        "denseQuotaUtilization": asym["denseQuotaUtilization"],
+        "denseOpportunityMin": asym["denseOpportunityMin"],
+        "denseOpportunitySeen": asym["denseOpportunitySeen"],
+        "denseOpportunityFillRate": asym["denseOpportunityFillRate"],
+        "denseForcedEmit": False,
+        "asymmetricQuota": True,
         "preserveGroupHonorRate": preserve_group_honor_rate(chapters),
         "portrait3AfterFailedMcs5Rate": portrait3_after_failed_mcs5_rate(chapters, logs),
         "crossSceneWindowRate": cross_scene_window_rate(logs),

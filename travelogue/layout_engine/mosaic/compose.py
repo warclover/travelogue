@@ -242,7 +242,12 @@ def pick_best_window(
         log.fallback_used = True
         log.fallback_reason = "no_candidates"
         log.planner_path = "legacy"
+        # LTN E4 · no legal window ⇒ do not force emit (opportunity min is soft only).
         return WindowPickResult(screen=None, log=log, used_legacy=True)
+
+    # LTN E4 · legal scored set counts as dense opportunity (observability).
+    if layout_state is not None:
+        layout_state.note_dense_opportunity()
 
     # LTN C5 · arm on hero opportunity; while armed, drop equal-weight dense winners.
     if layout_state is not None:

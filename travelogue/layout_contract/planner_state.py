@@ -128,6 +128,9 @@ class ScreenLayoutPlannerState:
     nine_min: int
     nine_max: int
     dense_collage_max: int = 0
+    # LTN E4 · soft aspirational floor (never forces emit; see asymmetric_quota.py)
+    dense_collage_opportunity_min: int = 0
+    dense_opportunity_seen: int = 0
     portrait_grid8_max: int = 0
     nine_used: int = 0
     dense_collage_used: int = 0
@@ -166,10 +169,15 @@ class ScreenLayoutPlannerState:
             _dense_lo, dense_hi, total_photos=total_photos
         )
         lm_min, lm_trip, lm_ch = large_mosaic_limits_from_config()
+        from travelogue.layout_contract.asymmetric_quota import dense_opportunity_min_for
+
         return cls(
             nine_min=lo,
             nine_max=hi,
             dense_collage_max=dense_hi,
+            dense_collage_opportunity_min=dense_opportunity_min_for(
+                dense_max=dense_hi, track=None
+            ),
             portrait_grid8_max=portrait_grid8_max_for_trip(total_photos),
             layout_density=params.density,
             rhythm=rhythm if rhythm is not None else RhythmRules.from_config(),
@@ -237,6 +245,28 @@ class ScreenLayoutPlannerState:
         if self.dense_collage_used >= self.dense_collage_max:
             return False
         return not self.last_was_dense_collage
+
+    def should_force_dense_emit(self) -> bool:
+        """LTN E4 · asymmetric quota invariant: opportunity min never forces emit."""
+        return False
+
+    def needs_dense_opportunity(self) -> bool:
+        """Soft gap vs opportunity min (observability only — does not gate emit)."""
+        return self.dense_collage_used < self.dense_collage_opportunity_min
+
+    def note_dense_opportunity(self) -> None:
+        """Count a legal dense/mosaic candidate window (scored > 0)."""
+        self.dense_opportunity_seen += 1
+
+    def asymmetric_dense_snapshot(self) -> dict:
+        from travelogue.layout_contract.asymmetric_quota import asymmetric_dense_snapshot
+
+        return asymmetric_dense_snapshot(
+            dense_max=self.dense_collage_max,
+            dense_used=self.dense_collage_used,
+            opportunity_min=self.dense_collage_opportunity_min,
+            opportunity_seen=self.dense_opportunity_seen,
+        )
 
     def can_use_dense_collage_window(self, window_size: int) -> bool:
         if window_size < self.dense_collage_min_slots:
