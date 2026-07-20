@@ -18,6 +18,9 @@ if TYPE_CHECKING:
 
 _mosaic_logs_var: ContextVar[list[dict] | None] = ContextVar("mosaic_logs", default=None)
 _mosaic_dropped_var: ContextVar[list[str] | None] = ContextVar("mosaic_dropped", default=None)
+_mosaic_capture_enabled_var: ContextVar[bool] = ContextVar(
+    "mosaic_capture_enabled", default=True
+)
 _fallback_logs: list[dict] = []
 _fallback_dropped: list[str] = []
 
@@ -32,6 +35,16 @@ def begin_mosaic_capture() -> None:
     """Start a fresh log buffer for the current curate/plan run (thread-safe)."""
     _mosaic_logs_var.set([])
     _mosaic_dropped_var.set([])
+    _mosaic_capture_enabled_var.set(True)
+
+
+def set_mosaic_log_capture(enabled: bool) -> None:
+    """LTN H2 · pause append during beam candidate generation (avoid orphan logs)."""
+    _mosaic_capture_enabled_var.set(bool(enabled))
+
+
+def mosaic_log_capture_enabled() -> bool:
+    return bool(_mosaic_capture_enabled_var.get())
 
 
 def _logs_buf() -> list[dict]:
@@ -42,6 +55,12 @@ def _logs_buf() -> list[dict]:
 def _dropped_buf() -> list[str]:
     buf = _mosaic_dropped_var.get()
     return buf if buf is not None else _fallback_dropped
+
+
+def _append_mosaic_log(entry: dict) -> None:
+    if not mosaic_log_capture_enabled():
+        return
+    _logs_buf().append(entry)
 
 
 def window_has_candidates(
@@ -156,18 +175,29 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
     )
 
 
-def drain_mosaic_logs() -> list[dict]:
+def drain_mosaic_capture() -> tuple[list[dict], list[dict]]:
+    """Return (formatted_for_persist, raw_for_metrics) and clear the buffer.
+
+    LTN H2 · AC/metrics must use the raw list; trip.curation uses formatted.
+    """
     from travelogue.config import get_config
     from travelogue.layout_engine.mosaic.log import format_log_entry
 
     level = get_config().mosaic.log_level
     buf = _logs_buf()
-    out = [format_log_entry(entry, level) for entry in buf]
+    raw = [dict(entry) for entry in buf]
+    formatted = [format_log_entry(entry, level) for entry in raw]
     if _mosaic_logs_var.get() is not None:
         _mosaic_logs_var.set([])
     else:
         buf.clear()
-    return out
+    return formatted, raw
+
+
+def drain_mosaic_logs() -> list[dict]:
+    """Persist-shaped logs (formatted by mosaic.log_level). Prefer drain_mosaic_capture."""
+    formatted, _raw = drain_mosaic_capture()
+    return formatted
 
 
 def drain_mosaic_dropped() -> list[str]:
@@ -204,16 +234,16 @@ def try_mosaic_window_mcs(
         chapter_screen_index=len(ctx.screens),
         chapter_screen_count=max(12, len(ctx.screens) + 1),
     )
-    if pick.log.dropped_asset_ids:
+    if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)
 
     if pick.used_legacy:
         # LTN C1 · do not silent-fallback to size=3/equal legacy; try next window size.
         pick.log.fallback_reason = pick.log.fallback_reason or "mcs_no_winner"
-        _logs_buf().append(pick.log.to_dict())
+        _append_mosaic_log(pick.log.to_dict())
         return False
     if pick.screen:
-        _logs_buf().append(pick.log.to_dict())
+        _append_mosaic_log(pick.log.to_dict())
         append_screen(ctx, pick.screen)
         return True
     return False

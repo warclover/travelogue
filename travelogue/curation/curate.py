@@ -1170,16 +1170,6 @@ def _stage_build_chapters_compose(
             reset_mosaic_config_override()
         if pattern_blacklist_active:
             reset_mosaic_disabled_patterns()
-    if app_cfg.mosaic.enabled:
-        from travelogue.layout_engine.adapter import drain_mosaic_dropped, drain_mosaic_logs
-
-        mosaic_logs = drain_mosaic_logs()
-        dropped = drain_mosaic_dropped()
-        curation = trip.setdefault("curation", {})
-        if mosaic_logs:
-            curation["mosaicDecisionLog"] = mosaic_logs
-        if dropped:
-            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
     for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
         zip(
             chapters,
@@ -1289,7 +1279,25 @@ def _stage_build_chapters_compose(
         )
 
         compact_chapter_items_for_screens(chapters)
-    mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
+    mosaic_logs_for_metrics = None
+    if app_cfg.mosaic.enabled:
+        from travelogue.layout_engine.adapter import drain_mosaic_dropped
+        from travelogue.layout_engine.mosaic.hook import drain_mosaic_capture
+        from travelogue.layout_engine.mosaic.log import annotate_winner_plan_logs
+
+        mosaic_logs, mosaic_logs_for_metrics = drain_mosaic_capture()
+        mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)
+        mosaic_logs_for_metrics = annotate_winner_plan_logs(
+            mosaic_logs_for_metrics, chapters
+        )
+        dropped = drain_mosaic_dropped()
+        curation = trip.setdefault("curation", {})
+        if mosaic_logs:
+            curation["mosaicDecisionLog"] = mosaic_logs
+        if dropped:
+            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
+    if mosaic_logs_for_metrics is None:
+        mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
     layout_metrics = compute_layout_metrics(
         chapters,
         layout_assets,

@@ -378,6 +378,18 @@ def drain_mosaic_logs() -> list[dict[str, Any]]:
     return _drain()
 
 
+def drain_mosaic_capture() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    from travelogue.layout_engine.mosaic.hook import drain_mosaic_capture as _drain
+
+    return _drain()
+
+
+def set_mosaic_log_capture(enabled: bool) -> None:
+    from travelogue.layout_engine.mosaic.hook import set_mosaic_log_capture as _set
+
+    _set(enabled)
+
+
 def drain_mosaic_dropped() -> list[str]:
     from travelogue.layout_engine.mosaic.hook import drain_mosaic_dropped as _drain
 

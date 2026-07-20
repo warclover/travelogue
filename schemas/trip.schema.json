@@ -20,25 +20,39 @@
     "updatedAt"
   ],
   "properties": {
-    "version": { "const": "0.2" },
+    "version": {
+      "const": "0.2"
+    },
     "tripId": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$"
     },
     "templateId": {
       "type": "string",
-      "enum": ["visual-journal", "event-recap"],
+      "enum": [
+        "visual-journal",
+        "event-recap"
+      ],
       "default": "visual-journal"
     },
-    "templateSelection": { "$ref": "#/$defs/templateSelection" },
+    "templateSelection": {
+      "$ref": "#/$defs/templateSelection"
+    },
     "exportLayout": {
       "type": "string",
-      "enum": ["auto", "mobile", "web"],
+      "enum": [
+        "auto",
+        "mobile",
+        "web"
+      ],
       "default": "auto"
     },
     "layoutEngine": {
       "type": "string",
-      "enum": ["legacy", "screens"],
+      "enum": [
+        "legacy",
+        "screens"
+      ],
       "default": "legacy",
       "description": "Web layout: legacy (media-card/row) or screens (16:9 stage)"
     },
@@ -46,40 +60,85 @@
       "type": "string",
       "description": "screens engine rules version, e.g. screens-1"
     },
-    "meta": { "$ref": "#/$defs/meta" },
-    "coverAssetId": { "type": "string" },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "coverAssetId": {
+      "type": "string"
+    },
     "momentAssetId": {
       "type": "string",
       "description": "Phase 23 · signature moment (∈ curation.momentPoolIds)"
     },
     "coverCandidates": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "maxItems": 5
     },
     "assets": {
       "type": "array",
       "maxItems": 250,
-      "items": { "$ref": "#/$defs/asset" }
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
     },
     "chapters": {
       "type": "array",
       "minItems": 0,
       "maxItems": 5,
-      "items": { "$ref": "#/$defs/chapter" }
+      "items": {
+        "$ref": "#/$defs/chapter"
+      }
     },
-    "epilogue": { "type": "string", "maxLength": 80 },
-    "privacy": { "$ref": "#/$defs/privacy" },
-    "pipeline": { "$ref": "#/$defs/pipeline" },
-    "userNotes": { "type": "string", "maxLength": 2000 },
-    "slug": { "type": ["string", "null"] },
-    "publishedAt": { "type": ["string", "null"], "format": "date-time" },
-    "createdAt": { "type": "string", "format": "date-time" },
-    "updatedAt": { "type": "string", "format": "date-time" },
-    "curation": { "$ref": "#/$defs/tripCuration" },
-    "export": { "$ref": "#/$defs/exportOptions" },
-    "intent": { "$ref": "#/$defs/intent" },
-    "media": { "$ref": "#/$defs/tripMedia" }
+    "epilogue": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "privacy": {
+      "$ref": "#/$defs/privacy"
+    },
+    "pipeline": {
+      "$ref": "#/$defs/pipeline"
+    },
+    "userNotes": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "slug": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "publishedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "curation": {
+      "$ref": "#/$defs/tripCuration"
+    },
+    "export": {
+      "$ref": "#/$defs/exportOptions"
+    },
+    "intent": {
+      "$ref": "#/$defs/intent"
+    },
+    "media": {
+      "$ref": "#/$defs/tripMedia"
+    }
   },
   "$defs": {
     "tripMedia": {
@@ -89,11 +148,17 @@
       "properties": {
         "storageMode": {
           "type": "string",
-          "enum": ["copied", "referenced", "mixed"]
+          "enum": [
+            "copied",
+            "referenced",
+            "mixed"
+          ]
         },
         "albumRoots": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Local album roots used for import/remount (never in share zip)"
         }
       }
@@ -101,13 +166,25 @@
     "sourceRef": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "path"],
+      "required": [
+        "kind",
+        "path"
+      ],
       "description": "Filesystem reference to user original (Document; local only)",
       "properties": {
-        "kind": { "const": "filesystem" },
-        "path": { "type": "string", "minLength": 1 },
-        "albumRoot": { "type": "string" },
-        "relativePath": { "type": "string" }
+        "kind": {
+          "const": "filesystem"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "albumRoot": {
+          "type": "string"
+        },
+        "relativePath": {
+          "type": "string"
+        }
       }
     },
     "templateSelection": {
@@ -115,62 +192,142 @@
       "additionalProperties": false,
       "description": "Phase 13 template routing decision (optional on legacy trips).",
       "properties": {
-        "mode": { "type": "string", "enum": ["smart", "manual"] },
-        "requestedTemplateId": { "type": ["string", "null"] },
-        "resolvedTemplateId": { "type": "string" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "smart",
+            "manual"
+          ]
+        },
+        "requestedTemplateId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolvedTemplateId": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "reasonCodes": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "fallbackUsed": { "type": "boolean" },
-        "routerVersion": { "type": "string" },
-        "routerConfigVersion": { "type": "string" },
-        "featureSnapshotVersion": { "type": "string" },
-        "registryVersion": { "type": "string" },
-        "locked": { "type": "boolean" },
-        "lockedAt": { "type": ["string", "null"], "format": "date-time" },
-        "decisionHash": { "type": "string" }
+        "fallbackUsed": {
+          "type": "boolean"
+        },
+        "routerVersion": {
+          "type": "string"
+        },
+        "routerConfigVersion": {
+          "type": "string"
+        },
+        "featureSnapshotVersion": {
+          "type": "string"
+        },
+        "registryVersion": {
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "lockedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "decisionHash": {
+          "type": "string"
+        }
       }
     },
     "intent": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version"],
+      "required": [
+        "version"
+      ],
       "description": "Phase 4 editorial intent (PRD-PHASE4 §4.1). Optional; mirrored to meta/userNotes via TripService.apply_intent.",
       "properties": {
-        "version": { "const": "1" },
-        "title": { "type": "string", "maxLength": 20 },
+        "version": {
+          "const": "1"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 20
+        },
         "places": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 10
         },
         "placesUserSet": {
           "type": "boolean",
           "description": "True when Studio user explicitly filled 主地点; false when default/blank so copy prefers magazine title over EXIF city"
         },
-        "userNotes": { "type": "string", "maxLength": 200 },
-        "travelNotes": { "type": "string", "maxLength": 500 },
+        "userNotes": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "travelNotes": {
+          "type": "string",
+          "maxLength": 500
+        },
         "dateRange": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "start": { "type": "string", "format": "date" },
-            "end": { "type": "string", "format": "date" },
-            "source": { "type": "string", "enum": ["user", "exif", "mixed"] }
+            "start": {
+              "type": "string",
+              "format": "date"
+            },
+            "end": {
+              "type": "string",
+              "format": "date"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "user",
+                "exif",
+                "mixed"
+              ]
+            }
           }
         },
         "travelPlan": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "format": { "type": "string", "enum": ["text", "markdown"] },
-            "filename": { "type": "string" },
-            "summary": { "type": "string", "maxLength": 200 },
+            "format": {
+              "type": "string",
+              "enum": [
+                "text",
+                "markdown"
+              ]
+            },
+            "filename": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string",
+              "maxLength": 200
+            },
             "cities": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "maxItems": 10
             }
           }
@@ -179,15 +336,28 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "featuredDetected": { "type": "boolean" },
-            "featuredDir": { "type": "string" },
-            "materialDir": { "type": "string" }
+            "featuredDetected": {
+              "type": "boolean"
+            },
+            "featuredDir": {
+              "type": "string"
+            },
+            "materialDir": {
+              "type": "string"
+            }
           }
         },
-        "submittedAt": { "type": "string", "format": "date-time" },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "layoutDensity": {
           "type": "string",
-          "enum": ["balanced", "hero_first", "collage_first"],
+          "enum": [
+            "balanced",
+            "hero_first",
+            "collage_first"
+          ],
           "description": "Fine-craft layout preference: single-hero vs collage-heavy (PRD-FINE-CRAFT-LAYOUT-DENSITY)"
         },
         "photoCullEnabled": {
@@ -205,17 +375,25 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "seedAssetIds"],
+            "required": [
+              "id",
+              "seedAssetIds"
+            ],
             "properties": {
               "id": {
                 "type": "string",
                 "pattern": "^[a-z][a-z0-9-]{0,31}$",
                 "description": "Stable subject id (e.g. alice, bob)"
               },
-              "label": { "type": "string", "maxLength": 16 },
+              "label": {
+                "type": "string",
+                "maxLength": 16
+              },
               "seedAssetIds": {
                 "type": "array",
-                "items": { "type": "string" },
+                "items": {
+                  "type": "string"
+                },
                 "minItems": 1,
                 "maxItems": 12
               }
@@ -234,25 +412,43 @@
         },
         "fontTheme": {
           "type": "string",
-          "enum": ["ui", "magazine"],
+          "enum": [
+            "ui",
+            "magazine"
+          ],
           "description": "Optional HTML font theme (default ui / Microsoft YaHei stack)"
         },
         "copyDisplay": {
           "type": "string",
-          "enum": ["full", "photos"],
+          "enum": [
+            "full",
+            "photos"
+          ],
           "description": "Render: full shows hook/lead/captions; photos hides narrative copy (trip.json unchanged)"
         },
         "breathMode": {
           "type": "string",
-          "enum": ["off", "soft", "flow", "cinematic", "gallery"],
+          "enum": [
+            "off",
+            "soft",
+            "flow",
+            "cinematic",
+            "gallery"
+          ],
           "description": "Deprecated alias for export.reading.scroll.breath (1-version compat)"
         },
         "folioMode": {
           "type": "string",
-          "enum": ["off", "lite", "full"],
+          "enum": [
+            "off",
+            "lite",
+            "full"
+          ],
           "description": "Deprecated alias for export.reading.scroll.folio (1-version compat)"
         },
-        "reading": { "$ref": "#/$defs/readingOptions" },
+        "reading": {
+          "$ref": "#/$defs/readingOptions"
+        },
         "editorialPortraitRow": {
           "type": "boolean",
           "description": "Trip-level override for layout.editorial_portrait_row (portrait-row-editorial pilot)"
@@ -269,15 +465,31 @@
       "properties": {
         "profile": {
           "type": "string",
-          "enum": ["legacy", "performance", "default_hybrid", "magazine"],
+          "enum": [
+            "legacy",
+            "performance",
+            "default_hybrid",
+            "magazine"
+          ],
           "description": "Reading experience preset (PRD-EXPERIENCE); expands scroll/present/longshot defaults"
         },
-        "present": { "$ref": "#/$defs/readingPresent" },
-        "scroll": { "$ref": "#/$defs/readingScroll" },
-        "longshot": { "$ref": "#/$defs/readingLongshot" },
+        "present": {
+          "$ref": "#/$defs/readingPresent"
+        },
+        "scroll": {
+          "$ref": "#/$defs/readingScroll"
+        },
+        "longshot": {
+          "$ref": "#/$defs/readingLongshot"
+        },
         "mobileProfile": {
           "type": "string",
-          "enum": ["legacy", "performance", "default_hybrid", "magazine"],
+          "enum": [
+            "legacy",
+            "performance",
+            "default_hybrid",
+            "magazine"
+          ],
           "description": "Optional profile override for index-mobile.html (P5 · ADR-003 opt-in)"
         }
       }
@@ -286,10 +498,20 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "dwellMs": { "type": "integer", "minimum": 500, "maximum": 30000 },
-        "featuredOnly": { "type": "boolean" },
-        "syncScrollOnExit": { "type": "boolean" },
-        "skipAuxBlocks": { "type": "boolean" },
+        "dwellMs": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 30000
+        },
+        "featuredOnly": {
+          "type": "boolean"
+        },
+        "syncScrollOnExit": {
+          "type": "boolean"
+        },
+        "skipAuxBlocks": {
+          "type": "boolean"
+        },
         "deepLink": {
           "type": "boolean",
           "description": "Enable URL hash #present/N deep links (P5)"
@@ -300,15 +522,38 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "snap": { "type": "string", "enum": ["off", "proximity", "mandatory"] },
+        "snap": {
+          "type": "string",
+          "enum": [
+            "off",
+            "proximity",
+            "mandatory"
+          ]
+        },
         "breath": {
           "type": "string",
-          "enum": ["off", "soft", "flow", "cinematic", "gallery"]
+          "enum": [
+            "off",
+            "soft",
+            "flow",
+            "cinematic",
+            "gallery"
+          ]
         },
-        "folio": { "type": "string", "enum": ["off", "lite", "full"] },
+        "folio": {
+          "type": "string",
+          "enum": [
+            "off",
+            "lite",
+            "full"
+          ]
+        },
         "breathEngine": {
           "type": "string",
-          "enum": ["native", "gsap"],
+          "enum": [
+            "native",
+            "gsap"
+          ],
           "description": "Scrub engine for cinematic/gallery (P5 · gsap loads CDN when set)"
         }
       }
@@ -317,19 +562,43 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "breath": { "type": "string", "enum": ["off"] },
-        "folio": { "type": "string", "enum": ["off"] }
+        "breath": {
+          "type": "string",
+          "enum": [
+            "off"
+          ]
+        },
+        "folio": {
+          "type": "string",
+          "enum": [
+            "off"
+          ]
+        }
       }
     },
     "coverBlindReviewRankedItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rank", "assetId", "score"],
+      "required": [
+        "rank",
+        "assetId",
+        "score"
+      ],
       "properties": {
-        "rank": { "type": "integer", "minimum": 1 },
-        "assetId": { "type": "string" },
-        "score": { "type": "number", "minimum": 0 },
-        "scoringVersion": { "type": "string" }
+        "rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "assetId": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scoringVersion": {
+          "type": "string"
+        }
       }
     },
     "assetExif": {
@@ -337,17 +606,40 @@
       "additionalProperties": false,
       "description": "Phase 23 · camera EXIF written at ingest",
       "properties": {
-        "make": { "type": "string" },
-        "model": { "type": "string" },
-        "lens": { "type": "string" },
-        "focalLengthMm": { "type": "number", "minimum": 0 },
-        "aperture": { "type": "number", "minimum": 0 },
-        "shutter": { "type": "string" },
-        "iso": { "type": "integer", "minimum": 0 },
-        "altitudeM": { "type": "number" },
+        "make": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "lens": {
+          "type": "string"
+        },
+        "focalLengthMm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "aperture": {
+          "type": "number",
+          "minimum": 0
+        },
+        "shutter": {
+          "type": "string"
+        },
+        "iso": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "altitudeM": {
+          "type": "number"
+        },
         "completeness": {
           "type": "string",
-          "enum": ["full", "partial", "none"]
+          "enum": [
+            "full",
+            "partial",
+            "none"
+          ]
         }
       }
     },
@@ -356,35 +648,75 @@
       "additionalProperties": false,
       "description": "Cover blind-review snapshot for one export layout",
       "properties": {
-        "exportLayout": { "type": "string", "enum": ["mobile", "web"] },
-        "coverAssetId": { "type": "string" },
+        "exportLayout": {
+          "type": "string",
+          "enum": [
+            "mobile",
+            "web"
+          ]
+        },
+        "coverAssetId": {
+          "type": "string"
+        },
         "scoreRankedTop3": {
           "type": "array",
-          "items": { "$ref": "#/$defs/coverBlindReviewRankedItem" }
+          "items": {
+            "$ref": "#/$defs/coverBlindReviewRankedItem"
+          }
         },
         "scoreRankedTop10": {
           "type": "array",
-          "items": { "$ref": "#/$defs/coverBlindReviewRankedItem" }
+          "items": {
+            "$ref": "#/$defs/coverBlindReviewRankedItem"
+          }
         },
-        "personTagRatio": { "type": "number", "minimum": 0, "maximum": 1 },
-        "personDemoteApplied": { "type": "number" },
-        "featuredPoolOnly": { "type": "boolean" },
-        "scoringVersion": { "type": "string" },
+        "personTagRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "personDemoteApplied": {
+          "type": "number"
+        },
+        "featuredPoolOnly": {
+          "type": "boolean"
+        },
+        "scoringVersion": {
+          "type": "string"
+        },
         "coverExplain": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "code": { "type": "string" },
-              "label": { "type": "string" },
-              "multiplier": { "type": "number" },
-              "feature": { "type": "number" },
-              "weight": { "type": "number" },
-              "contribution": { "type": "number" },
-              "reason": { "type": "string" }
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "multiplier": {
+                "type": "number"
+              },
+              "feature": {
+                "type": "number"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "contribution": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "string"
+              }
             },
-            "required": ["code", "label", "reason"]
+            "required": [
+              "code",
+              "label",
+              "reason"
+            ]
           }
         }
       }
@@ -394,67 +726,139 @@
       "additionalProperties": false,
       "description": "One mosaic window pick (travelogue.layout_engine.mosaic.log.MosaicWindowLog)",
       "properties": {
-        "routerVersion": { "type": "string" },
-        "segmentId": { "type": "string" },
-        "windowSize": { "type": "integer", "minimum": 1 },
-        "windowStart": { "type": "integer", "minimum": 0 },
-        "candidatesCount": { "type": "integer", "minimum": 0 },
-        "winnerPatternId": { "type": "string" },
-        "winnerScore": { "type": "number" },
+        "routerVersion": {
+          "type": "string"
+        },
+        "segmentId": {
+          "type": "string"
+        },
+        "windowSize": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "windowStart": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "candidatesCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "winnerPatternId": {
+          "type": "string"
+        },
+        "winnerScore": {
+          "type": "number"
+        },
         "winnerReasonCodes": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "fallbackUsed": { "type": "boolean" },
-        "fallbackReason": { "type": ["string", "null"] },
-        "selfHealApplied": { "type": "boolean" },
-        "selfHealStep": { "type": ["string", "null"] },
+        "fallbackUsed": {
+          "type": "boolean"
+        },
+        "fallbackReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selfHealApplied": {
+          "type": "boolean"
+        },
+        "selfHealStep": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "droppedAssetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "plannerPath": { "type": "string" },
-        "scorerVersion": { "type": "string" },
-        "weightsHash": { "type": "string" },
+        "plannerPath": {
+          "type": "string"
+        },
+        "scorerVersion": {
+          "type": "string"
+        },
+        "weightsHash": {
+          "type": "string"
+        },
         "top3Patterns": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "top3Scores": {
           "type": "array",
-          "items": { "type": "number" }
+          "items": {
+            "type": "number"
+          }
         },
-        "templateVersion": { "type": "integer" },
-        "templateRegistryVersion": { "type": "string" },
-        "slotArMatchScore": { "type": "number" },
-        "faceCropProxy": { "type": "boolean" },
+        "templateVersion": {
+          "type": "integer"
+        },
+        "templateRegistryVersion": {
+          "type": "string"
+        },
+        "slotArMatchScore": {
+          "type": "number"
+        },
+        "faceCropProxy": {
+          "type": "boolean"
+        },
         "winnerPenalties": {
           "type": "object",
-          "additionalProperties": { "type": "number" }
+          "additionalProperties": {
+            "type": "number"
+          }
         },
         "scoringWeights": {
           "type": "object",
-          "additionalProperties": { "type": "number" }
+          "additionalProperties": {
+            "type": "number"
+          }
         },
         "scoringPenaltyWeights": {
           "type": "object",
-          "additionalProperties": { "type": "number" }
+          "additionalProperties": {
+            "type": "number"
+          }
         },
         "rejectedTemplates": {
           "type": "array",
-          "items": { "type": "object" }
+          "items": {
+            "type": "object"
+          }
         },
-        "slotAssignmentFallback": { "type": "string" },
+        "slotAssignmentFallback": {
+          "type": "string"
+        },
         "usageRuleRejects": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["ruleId", "templateId"],
+            "required": [
+              "ruleId",
+              "templateId"
+            ],
             "properties": {
-              "ruleId": { "type": "string" },
-              "templateId": { "type": "string" },
-              "detail": { "type": "string" }
+              "ruleId": {
+                "type": "string"
+              },
+              "templateId": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              }
             }
           }
         },
@@ -463,14 +867,63 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["ruleId", "templateId"],
+            "required": [
+              "ruleId",
+              "templateId"
+            ],
             "properties": {
-              "ruleId": { "type": "string" },
-              "templateId": { "type": "string" },
-              "action": { "type": "string" },
-              "detail": { "type": "string" }
+              "ruleId": {
+                "type": "string"
+              },
+              "templateId": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              }
             }
           }
+        },
+        "isWinnerPlan": {
+          "type": "boolean",
+          "description": "LTN H2 · true when winnerPatternId appears on final plan screens"
+        },
+        "planPhase": {
+          "type": "string",
+          "description": "LTN H2 · e.g. pass1"
+        },
+        "geometryRejectedTemplates": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "mainArRejectedTemplates": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "windowMix": {
+          "type": "string"
+        },
+        "candidateSource": {
+          "type": "string"
+        },
+        "squareRelaxed": {
+          "type": "boolean"
+        },
+        "heroProminenceRatio": {
+          "type": "number"
+        },
+        "heroCoverageRatio": {
+          "type": "number"
+        },
+        "cellAreaCv": {
+          "type": "number"
         }
       }
     },
@@ -487,15 +940,37 @@
         "export_layout"
       ],
       "properties": {
-        "total": { "type": "integer", "minimum": 0 },
-        "landscape": { "type": "integer", "minimum": 0 },
-        "portrait": { "type": "integer", "minimum": 0 },
-        "square": { "type": "integer", "minimum": 0 },
-        "panorama": { "type": "integer", "minimum": 0 },
-        "tall": { "type": "integer", "minimum": 0 },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "landscape": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "portrait": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "square": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "panorama": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tall": {
+          "type": "integer",
+          "minimum": 0
+        },
         "export_layout": {
           "type": "string",
-          "enum": ["auto", "mobile", "web"]
+          "enum": [
+            "auto",
+            "mobile",
+            "web"
+          ]
         }
       }
     },
@@ -503,23 +978,45 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "orientationSummary": { "$ref": "#/$defs/orientationSummary" },
-        "layoutPlanVersion": { "type": "string" },
-        "layoutPlanRunId": { "type": "string" },
+        "orientationSummary": {
+          "$ref": "#/$defs/orientationSummary"
+        },
+        "layoutPlanVersion": {
+          "type": "string"
+        },
+        "layoutPlanRunId": {
+          "type": "string"
+        },
         "coverByLayout": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "mobile": { "type": "string" },
-            "web": { "type": "string" }
+            "mobile": {
+              "type": "string"
+            },
+            "web": {
+              "type": "string"
+            }
           }
         },
         "coverCandidatesByLayout": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "mobile": { "type": "array", "items": { "type": "string" }, "maxItems": 5 },
-            "web": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
+            "mobile": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 5
+            },
+            "web": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 5
+            }
           }
         },
         "coverJointLocked": {
@@ -531,8 +1028,12 @@
           "additionalProperties": false,
           "description": "Bookends Engine · granular opening/closing locks (R-BE-20)",
           "properties": {
-            "opening": { "type": "boolean" },
-            "closing": { "type": "boolean" }
+            "opening": {
+              "type": "boolean"
+            },
+            "closing": {
+              "type": "boolean"
+            }
           }
         },
         "bookendsLocked": {
@@ -541,7 +1042,10 @@
         },
         "closingAssetId": {
           "description": "Bookends · closing hero asset id; null = explicit no-hero (B2a). Missing key = not yet resolved.",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "bookendsTelemetry": {
           "type": "object",
@@ -555,7 +1059,9 @@
         },
         "bookendsVersions": {
           "type": "object",
-          "additionalProperties": { "type": "string" },
+          "additionalProperties": {
+            "type": "string"
+          },
           "description": "Bookends scoring/version stamps (cover_engine decision.scoring_versions)"
         },
         "bookendsSoftWarnings": {
@@ -564,11 +1070,20 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["code", "message"],
+            "required": [
+              "code",
+              "message"
+            ],
             "properties": {
-              "code": { "type": "string" },
-              "message": { "type": "string" },
-              "layout": { "type": "string" }
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "layout": {
+                "type": "string"
+              }
             }
           }
         },
@@ -585,8 +1100,12 @@
           "additionalProperties": false,
           "description": "Cover orientation prefer/fallback meta per export layout",
           "properties": {
-            "mobile": { "$ref": "#/$defs/coverOrientationMeta" },
-            "web": { "$ref": "#/$defs/coverOrientationMeta" }
+            "mobile": {
+              "$ref": "#/$defs/coverOrientationMeta"
+            },
+            "web": {
+              "$ref": "#/$defs/coverOrientationMeta"
+            }
           }
         },
         "coverStyleExplain": {
@@ -594,25 +1113,47 @@
           "additionalProperties": false,
           "description": "V6 · joint / manual / hash-fallback explain snapshot",
           "properties": {
-            "source": { "type": "string" },
-            "styleId": { "type": "string" },
-            "assetId": { "type": "string" },
-            "joint": { "type": "number" },
-            "quality": { "type": "number" },
-            "fit": { "type": "number" },
-            "avoidPenalty": { "type": "number" },
-            "lowConfidence": { "type": "boolean" },
+            "source": {
+              "type": "string"
+            },
+            "styleId": {
+              "type": "string"
+            },
+            "assetId": {
+              "type": "string"
+            },
+            "joint": {
+              "type": "number"
+            },
+            "quality": {
+              "type": "number"
+            },
+            "fit": {
+              "type": "number"
+            },
+            "avoidPenalty": {
+              "type": "number"
+            },
+            "lowConfidence": {
+              "type": "boolean"
+            },
             "titleSafe": {
               "type": "object",
               "additionalProperties": false,
               "description": "Opening title-safe mark (cover_engine.opening.title_safe)",
               "properties": {
-                "titleUnsafe": { "type": "boolean" },
+                "titleUnsafe": {
+                  "type": "boolean"
+                },
                 "reasons": {
                   "type": "array",
-                  "items": { "type": "string" }
+                  "items": {
+                    "type": "string"
+                  }
                 },
-                "hardGateApplied": { "type": "boolean" }
+                "hardGateApplied": {
+                  "type": "boolean"
+                }
               }
             }
           }
@@ -622,8 +1163,12 @@
           "additionalProperties": false,
           "description": "Per-layout blind-review snapshot written by curate (cover selection v0.2.1)",
           "properties": {
-            "mobile": { "$ref": "#/$defs/coverBlindReviewEntry" },
-            "web": { "$ref": "#/$defs/coverBlindReviewEntry" }
+            "mobile": {
+              "$ref": "#/$defs/coverBlindReviewEntry"
+            },
+            "web": {
+              "$ref": "#/$defs/coverBlindReviewEntry"
+            }
           }
         },
         "coverExplain": {
@@ -632,15 +1177,33 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "code": { "type": "string" },
-              "label": { "type": "string" },
-              "multiplier": { "type": "number" },
-              "feature": { "type": "number" },
-              "weight": { "type": "number" },
-              "contribution": { "type": "number" },
-              "reason": { "type": "string" }
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "multiplier": {
+                "type": "number"
+              },
+              "feature": {
+                "type": "number"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "contribution": {
+                "type": "number"
+              },
+              "reason": {
+                "type": "string"
+              }
             },
-            "required": ["code", "label", "reason"]
+            "required": [
+              "code",
+              "label",
+              "reason"
+            ]
           }
         },
         "coverExplainByLayout": {
@@ -653,15 +1216,33 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "code": { "type": "string" },
-                  "label": { "type": "string" },
-                  "multiplier": { "type": "number" },
-                  "feature": { "type": "number" },
-                  "weight": { "type": "number" },
-                  "contribution": { "type": "number" },
-                  "reason": { "type": "string" }
+                  "code": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "multiplier": {
+                    "type": "number"
+                  },
+                  "feature": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "type": "number"
+                  },
+                  "contribution": {
+                    "type": "number"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
                 },
-                "required": ["code", "label", "reason"]
+                "required": [
+                  "code",
+                  "label",
+                  "reason"
+                ]
               }
             },
             "web": {
@@ -670,15 +1251,33 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "code": { "type": "string" },
-                  "label": { "type": "string" },
-                  "multiplier": { "type": "number" },
-                  "feature": { "type": "number" },
-                  "weight": { "type": "number" },
-                  "contribution": { "type": "number" },
-                  "reason": { "type": "string" }
+                  "code": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "multiplier": {
+                    "type": "number"
+                  },
+                  "feature": {
+                    "type": "number"
+                  },
+                  "weight": {
+                    "type": "number"
+                  },
+                  "contribution": {
+                    "type": "number"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
                 },
-                "required": ["code", "label", "reason"]
+                "required": [
+                  "code",
+                  "label",
+                  "reason"
+                ]
               }
             }
           }
@@ -688,113 +1287,249 @@
           "additionalProperties": false,
           "description": "Featured-subject cohort tagging summary (curate)",
           "properties": {
-            "version": { "const": "1" },
+            "version": {
+              "const": "1"
+            },
             "subjectIds": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
-            "templatesBuilt": { "type": "integer", "minimum": 0 },
-            "tagged": { "type": "integer", "minimum": 0 },
-            "duoCount": { "type": "integer", "minimum": 0 },
-            "method": { "type": "string" }
+            "templatesBuilt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tagged": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "duoCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "method": {
+              "type": "string"
+            }
           }
         },
         "warnings": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "excludedLowResAssetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "excludedByCullAssetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "cullUserLine": { "type": "string" },
+        "cullUserLine": {
+          "type": "string"
+        },
         "algorithmProfile": {
           "type": "object",
           "additionalProperties": true,
           "description": "Algorithm freshness snapshot written after ingest/curate",
           "properties": {
-            "profileVersion": { "type": "string" },
-            "aestheticVersion": { "type": "string" },
-            "aestheticEnabled": { "type": "boolean" },
-            "cullEnabled": { "type": "boolean" },
-            "cullKeepRatioFloor": { "type": "number", "minimum": 0, "maximum": 1 },
-            "coverScoringHash": { "type": "string" },
-            "layoutEngine": { "type": "string" },
-            "exportLayout": { "type": "string" },
-            "ingestedAt": { "type": "string", "format": "date-time" },
-            "curatedAt": { "type": "string", "format": "date-time" }
+            "profileVersion": {
+              "type": "string"
+            },
+            "aestheticVersion": {
+              "type": "string"
+            },
+            "aestheticEnabled": {
+              "type": "boolean"
+            },
+            "cullEnabled": {
+              "type": "boolean"
+            },
+            "cullKeepRatioFloor": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "coverScoringHash": {
+              "type": "string"
+            },
+            "layoutEngine": {
+              "type": "string"
+            },
+            "exportLayout": {
+              "type": "string"
+            },
+            "ingestedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "curatedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         },
         "cullSummary": {
           "type": "object",
           "additionalProperties": true,
           "properties": {
-            "enabled": { "type": "boolean" },
-            "mode": { "type": "string" },
-            "scanned": { "type": "integer", "minimum": 0 },
-            "featuredCount": { "type": "integer", "minimum": 0 },
-            "layoutEligibleCount": { "type": "integer", "minimum": 0 },
-            "nonFeaturedEligibleCount": { "type": "integer", "minimum": 0 },
-            "finalLayoutEligibleCount": { "type": "integer", "minimum": 0 },
-            "finalNonFeaturedEligibleCount": { "type": "integer", "minimum": 0 },
-            "finalNonFeaturedKeepRatio": { "type": "number", "minimum": 0, "maximum": 1 },
-            "keepRatioFloor": { "type": "number", "minimum": 0, "maximum": 1 },
-            "excludedByCull": { "type": "integer", "minimum": 0 },
+            "enabled": {
+              "type": "boolean"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "scanned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "featuredCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "layoutEligibleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nonFeaturedEligibleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "finalLayoutEligibleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "finalNonFeaturedEligibleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "finalNonFeaturedKeepRatio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "keepRatioFloor": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "excludedByCull": {
+              "type": "integer",
+              "minimum": 0
+            },
             "excludedByReason": {
               "type": "object",
-              "additionalProperties": { "type": "integer", "minimum": 0 }
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
             },
-            "pass3Skipped": { "type": ["string", "null"] },
-            "floorNotMet": { "type": "boolean" },
-            "finalFloorNotMet": { "type": "boolean" },
-            "floorTargetNonFeatured": { "type": "integer", "minimum": 0 },
-            "maxPhotosExceeded": { "type": "boolean" },
-            "maxPhotosLimit": { "type": "integer", "minimum": 0 },
-            "warnMessage": { "type": "string" },
-            "error": { "type": "string" }
+            "pass3Skipped": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "floorNotMet": {
+              "type": "boolean"
+            },
+            "finalFloorNotMet": {
+              "type": "boolean"
+            },
+            "floorTargetNonFeatured": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxPhotosExceeded": {
+              "type": "boolean"
+            },
+            "maxPhotosLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "warnMessage": {
+              "type": "string"
+            },
+            "error": {
+              "type": "string"
+            }
           }
         },
         "segments": {
           "type": "array",
-          "items": { "$ref": "#/$defs/timeSegment" }
+          "items": {
+            "$ref": "#/$defs/timeSegment"
+          }
         },
-        "primarySegmentId": { "type": "string" },
+        "primarySegmentId": {
+          "type": "string"
+        },
         "mediaClassSummary": {
           "type": "object",
-          "additionalProperties": { "type": "integer", "minimum": 0 }
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
-        "curatePlanVersion": { "type": "string" },
+        "curatePlanVersion": {
+          "type": "string"
+        },
         "chapterPlan": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "chapterIndex": { "type": "integer" },
-              "chapterId": { "type": "string" },
-              "assetCount": { "type": "integer", "minimum": 0 },
+              "chapterIndex": {
+                "type": "integer"
+              },
+              "chapterId": {
+                "type": "string"
+              },
+              "assetCount": {
+                "type": "integer",
+                "minimum": 0
+              },
               "daySpan": {
                 "type": "array",
-                "items": { "type": "string", "format": "date" }
+                "items": {
+                  "type": "string",
+                  "format": "date"
+                }
               },
-              "segmentId": { "type": "string" },
-              "patternHint": { "type": "string" },
-              "patternId": { "type": "string" },
-              "heroAssetId": { "type": "string" }
+              "segmentId": {
+                "type": "string"
+              },
+              "patternHint": {
+                "type": "string"
+              },
+              "patternId": {
+                "type": "string"
+              },
+              "heroAssetId": {
+                "type": "string"
+              }
             }
           }
         },
         "chapterHeroAssetIds": {
           "type": "object",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "layoutPlanSummary": {
           "type": "object",
-          "additionalProperties": { "type": "integer", "minimum": 0 }
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
         "arcProfile": {
           "type": "object",
@@ -808,11 +1543,18 @@
         },
         "layoutDecisionLog": {
           "type": "array",
-          "items": { "type": "object", "additionalProperties": true }
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
         },
         "appliedLayoutDensity": {
           "type": "string",
-          "enum": ["compact", "balanced", "airy"],
+          "enum": [
+            "compact",
+            "balanced",
+            "airy"
+          ],
           "description": "P17 layout-only replan density target (CAP-10)"
         },
         "editorialHints": {
@@ -825,21 +1567,43 @@
           "additionalProperties": true,
           "description": "P17 LSE strategy trace summary (full log in runs/layout-decisions.jsonl)",
           "properties": {
-            "enabled": { "type": "boolean" },
-            "strategyId": { "type": "string" },
-            "strategyVersion": { "type": "string" },
-            "strategyRevision": { "type": "integer", "minimum": 0 },
-            "weightsHash": { "type": "string" },
-            "algorithmVersion": { "type": "string" },
-            "contentHash": { "type": "string" },
-            "decisionLogDigest": { "type": "string" },
-            "eventCount": { "type": "integer", "minimum": 0 }
+            "enabled": {
+              "type": "boolean"
+            },
+            "strategyId": {
+              "type": "string"
+            },
+            "strategyVersion": {
+              "type": "string"
+            },
+            "strategyRevision": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "weightsHash": {
+              "type": "string"
+            },
+            "algorithmVersion": {
+              "type": "string"
+            },
+            "contentHash": {
+              "type": "string"
+            },
+            "decisionLogDigest": {
+              "type": "string"
+            },
+            "eventCount": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "mosaicDecisionLog": {
           "type": "array",
           "description": "Phase 15 mosaic window decisions (AC-P15-07)",
-          "items": { "$ref": "#/$defs/mosaicDecisionLogEntry" }
+          "items": {
+            "$ref": "#/$defs/mosaicDecisionLogEntry"
+          }
         },
         "layoutSearchBudget": {
           "type": "object",
@@ -852,7 +1616,11 @@
         },
         "narrativeScope": {
           "type": "string",
-          "enum": ["frame", "frame_chapters", "full"],
+          "enum": [
+            "frame",
+            "frame_chapters",
+            "full"
+          ],
           "description": "Copy generation scope used at last narrate run"
         },
         "copyStyle": {
@@ -874,16 +1642,26 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "index": { "type": "boolean" },
-            "foreword": { "type": "boolean" },
-            "featuredGrid": { "type": "boolean" },
+            "index": {
+              "type": "boolean"
+            },
+            "foreword": {
+              "type": "boolean"
+            },
+            "featuredGrid": {
+              "type": "boolean"
+            },
             "featuredGridAssetIds": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "plateAssetIds": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -891,22 +1669,37 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "featured": { "type": "integer", "minimum": 0 },
-            "material": { "type": "integer", "minimum": 0 },
-            "featuredInLayout": { "type": "integer", "minimum": 0 }
+            "featured": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "material": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "featuredInLayout": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "featuredHeroByChapter": {
           "type": "object",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "featuredCoverPool": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "displayedAssetIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Asset ids shown on screens (mosaic coverage / replan)"
         },
         "templateHints": {
@@ -921,37 +1714,59 @@
           "properties": {
             "planCities": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "maxItems": 10
             },
             "userNotesKeywords": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "maxItems": 10
             },
-            "featuredBoost": { "type": "boolean" },
+            "featuredBoost": {
+              "type": "boolean"
+            },
             "layoutDensity": {
               "type": "string",
-              "enum": ["balanced", "hero_first", "collage_first"]
+              "enum": [
+                "balanced",
+                "hero_first",
+                "collage_first"
+              ]
             },
-            "preferMosaic": { "type": "boolean" },
-            "nineQuotaScale": { "type": "number", "minimum": 0, "maximum": 2 }
+            "preferMosaic": {
+              "type": "boolean"
+            },
+            "nineQuotaScale": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2
+            }
           }
         },
         "momentPoolIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 5,
           "description": "Phase 23 · ranked moment pool (5% clamp 1–5)"
         },
         "momentSecondaryIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Phase 23 · pool members except signature (no extra screen)"
         },
         "momentSecondaryHintIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Phase 23 · pre-layout secondary hints (preflight only)"
         },
         "momentPoolSize": {
@@ -962,7 +1777,9 @@
         },
         "momentCandidates": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 3,
           "description": "Phase 23 · Studio signature swap top-3 (diversity order)"
         },
@@ -972,17 +1789,30 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "factor": { "type": "string" },
-              "weight": { "type": "number" },
-              "detail": { "type": "string" }
+              "factor": {
+                "type": "string"
+              },
+              "weight": {
+                "type": "number"
+              },
+              "detail": {
+                "type": "string"
+              }
             },
-            "required": ["factor", "detail"]
+            "required": [
+              "factor",
+              "detail"
+            ]
           },
           "description": "Phase 23 · signature scoring factors"
         },
         "momentPosition": {
           "type": "string",
-          "enum": ["inline", "before_closing", "arc_peak"],
+          "enum": [
+            "inline",
+            "before_closing",
+            "arc_peak"
+          ],
           "description": "Phase 23 · moment screen insertion point"
         },
         "momentSkipped": {
@@ -991,10 +1821,14 @@
         },
         "momentCollision": {
           "type": "string",
-          "enum": ["closing"],
+          "enum": [
+            "closing"
+          ],
           "description": "Phase 23 · soft collision warning (e.g. same asset as closing)"
         },
-        "clustering": { "$ref": "#/$defs/tripClustering" },
+        "clustering": {
+          "$ref": "#/$defs/tripClustering"
+        },
         "aestheticAlignment": {
           "type": "object",
           "additionalProperties": true,
@@ -1010,31 +1844,66 @@
     "geoEventSegment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "startDate", "endDate", "assetIds"],
+      "required": [
+        "id",
+        "name",
+        "startDate",
+        "endDate",
+        "assetIds"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string", "maxLength": 48 },
-        "startDate": { "type": "string", "format": "date" },
-        "endDate": { "type": "string", "format": "date" },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 48
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date"
+        },
         "assetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "location": { "type": "string", "maxLength": 32 }
+        "location": {
+          "type": "string",
+          "maxLength": 32
+        }
       }
     },
     "sceneCluster": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "assetIds"],
+      "required": [
+        "id",
+        "label",
+        "assetIds"
+      ],
       "properties": {
-        "id": { "type": "integer" },
-        "label": { "type": "string", "maxLength": 32 },
+        "id": {
+          "type": "integer"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 32
+        },
         "assetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "medoidAssetId": { "type": "string" },
+        "medoidAssetId": {
+          "type": "string"
+        },
         "confidence": {
           "type": "number",
           "minimum": 0,
@@ -1047,34 +1916,54 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "version": { "type": "string", "const": "1" },
+        "version": {
+          "type": "string",
+          "const": "1"
+        },
         "segmentMode": {
           "type": "string",
-          "enum": ["geo_event", "date_fallback"]
+          "enum": [
+            "geo_event",
+            "date_fallback"
+          ]
         },
         "segments": {
           "type": "array",
-          "items": { "$ref": "#/$defs/geoEventSegment" }
+          "items": {
+            "$ref": "#/$defs/geoEventSegment"
+          }
         },
         "clusters": {
           "type": "array",
-          "items": { "$ref": "#/$defs/sceneCluster" }
+          "items": {
+            "$ref": "#/$defs/sceneCluster"
+          }
         },
-        "visionModel": { "type": "string" },
+        "visionModel": {
+          "type": "string"
+        },
         "vision": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "source": {
               "type": "string",
-              "enum": ["clip", "heuristic"]
+              "enum": [
+                "clip",
+                "heuristic"
+              ]
             },
-            "model": { "type": "string" }
+            "model": {
+              "type": "string"
+            }
           }
         },
         "sceneAlgorithm": {
           "type": "string",
-          "enum": ["hdbscan", "dbscan"],
+          "enum": [
+            "hdbscan",
+            "dbscan"
+          ],
           "description": "Scene clustering algorithm used (Phase 6)"
         },
         "eventSegmentation": {
@@ -1083,9 +1972,15 @@
           "properties": {
             "gapMode": {
               "type": "string",
-              "enum": ["auto", "fixed"]
+              "enum": [
+                "auto",
+                "fixed"
+              ]
             },
-            "thresholdHours": { "type": "number", "minimum": 0 }
+            "thresholdHours": {
+              "type": "number",
+              "minimum": 0
+            }
           }
         },
         "sceneSubSegmentation": {
@@ -1103,18 +1998,42 @@
           "additionalProperties": false,
           "description": "P7 telemetry: CLIP embedding run statistics",
           "properties": {
-            "elapsedMs": { "type": "number" },
-            "batchSize": { "type": "integer" },
-            "batches": { "type": "integer" },
-            "prefetchEnabled": { "type": "boolean" },
-            "webDerivativeHits": { "type": "integer" },
-            "webDerivativeFallbacks": { "type": "integer" },
-            "webDerivativeGated": { "type": "boolean" },
-            "cacheHitRatio": { "type": "number" },
-            "fallbackSingle": { "type": "integer" },
-            "oomHalves": { "type": "integer" },
-            "autoBatchTuned": { "type": "boolean" },
-            "recommendedBatchSize": { "type": "integer" }
+            "elapsedMs": {
+              "type": "number"
+            },
+            "batchSize": {
+              "type": "integer"
+            },
+            "batches": {
+              "type": "integer"
+            },
+            "prefetchEnabled": {
+              "type": "boolean"
+            },
+            "webDerivativeHits": {
+              "type": "integer"
+            },
+            "webDerivativeFallbacks": {
+              "type": "integer"
+            },
+            "webDerivativeGated": {
+              "type": "boolean"
+            },
+            "cacheHitRatio": {
+              "type": "number"
+            },
+            "fallbackSingle": {
+              "type": "integer"
+            },
+            "oomHalves": {
+              "type": "integer"
+            },
+            "autoBatchTuned": {
+              "type": "boolean"
+            },
+            "recommendedBatchSize": {
+              "type": "integer"
+            }
           }
         },
         "embedSkipped": {
@@ -1126,19 +2045,40 @@
     "timeSegment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "dateStart", "dateEnd", "assetIds"],
+      "required": [
+        "id",
+        "label",
+        "dateStart",
+        "dateEnd",
+        "assetIds"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string", "maxLength": 24 },
-        "dateStart": { "type": "string", "format": "date" },
-        "dateEnd": { "type": "string", "format": "date" },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "dateStart": {
+          "type": "string",
+          "format": "date"
+        },
+        "dateEnd": {
+          "type": "string",
+          "format": "date"
+        },
         "assetIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "places": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 3
         }
       }
@@ -1146,25 +2086,57 @@
     "meta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "dateStart", "dateEnd", "places", "tone"],
+      "required": [
+        "title",
+        "dateStart",
+        "dateEnd",
+        "places",
+        "tone"
+      ],
       "properties": {
-        "title": { "type": "string", "maxLength": 20 },
+        "title": {
+          "type": "string",
+          "maxLength": 20
+        },
         "displayTitle": {
           "type": "string",
           "maxLength": 32,
           "description": "First-Session Trust / Share-Face · humanized title for reader/share surfaces (folder-noise stripped)."
         },
-        "subtitle": { "type": "string", "maxLength": 32 },
-        "hook": { "type": "string", "maxLength": 56 },
-        "dateStart": { "type": "string", "format": "date" },
-        "dateEnd": { "type": "string", "format": "date" },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "hook": {
+          "type": "string",
+          "maxLength": 56
+        },
+        "dateStart": {
+          "type": "string",
+          "format": "date"
+        },
+        "dateEnd": {
+          "type": "string",
+          "format": "date"
+        },
         "places": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1
         },
-        "companions": { "type": "string", "maxLength": 32 },
-        "tone": { "type": "string", "enum": ["relaxed", "documentary"] },
+        "companions": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "relaxed",
+            "documentary"
+          ]
+        },
         "coverOpeningStyle": {
           "type": "string",
           "enum": [
@@ -1198,19 +2170,38 @@
     "place": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["city"],
+      "required": [
+        "city"
+      ],
       "properties": {
-        "city": { "type": "string" },
-        "country": { "type": "string", "minLength": 2, "maxLength": 2 }
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2
+        }
       }
     },
     "focalPoint": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number", "minimum": 0, "maximum": 1 },
-        "y": { "type": "number", "minimum": 0, "maximum": 1 }
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       }
     },
     "coverOrientationMeta": {
@@ -1218,79 +2209,187 @@
       "additionalProperties": false,
       "description": "orientation_meta_for_cover() snapshot per layout",
       "properties": {
-        "preferredOrientation": { "type": "string" },
-        "orientationMatched": { "type": "boolean" },
-        "orientationFallback": { "type": "boolean" },
-        "orientationFallbackReason": { "type": ["string", "null"] },
-        "exportLayout": { "type": "string", "enum": ["mobile", "web"] },
-        "userOneLiner": { "type": ["string", "null"] }
+        "preferredOrientation": {
+          "type": "string"
+        },
+        "orientationMatched": {
+          "type": "boolean"
+        },
+        "orientationFallback": {
+          "type": "boolean"
+        },
+        "orientationFallbackReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exportLayout": {
+          "type": "string",
+          "enum": [
+            "mobile",
+            "web"
+          ]
+        },
+        "userOneLiner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "srcsetEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["file", "width"],
+      "required": [
+        "file",
+        "width"
+      ],
       "properties": {
-        "file": { "type": "string" },
-        "width": { "type": "integer", "minimum": 1 }
+        "file": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "derivedPlan": {
       "type": "object",
       "additionalProperties": false,
       "description": "PRD-PIPELINE-PERF-V1 · planned WebP widths; srcset lists only on-disk files",
-      "required": ["version", "plannedWidths", "readyWidths", "status"],
+      "required": [
+        "version",
+        "plannedWidths",
+        "readyWidths",
+        "status"
+      ],
       "properties": {
-        "version": { "type": "string" },
+        "version": {
+          "type": "string"
+        },
         "plannedWidths": {
           "type": "array",
-          "items": { "type": "integer", "minimum": 1 }
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
         "readyWidths": {
           "type": "array",
-          "items": { "type": "integer", "minimum": 1 }
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
         "status": {
           "type": "string",
-          "enum": ["pending", "partial", "ready", "skipped"]
+          "enum": [
+            "pending",
+            "partial",
+            "ready",
+            "skipped"
+          ]
         }
       }
     },
     "voice": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["audioFile", "transcript", "source"],
+      "required": [
+        "audioFile",
+        "transcript",
+        "source"
+      ],
       "properties": {
-        "audioFile": { "type": "string" },
-        "durationSec": { "type": "number", "minimum": 5, "maximum": 180 },
-        "transcript": { "type": "string", "maxLength": 4000 },
-        "transcriptPreview": { "type": "string", "maxLength": 40 },
-        "source": { "const": "user" },
-        "showTranscript": { "type": "boolean", "default": true }
+        "audioFile": {
+          "type": "string"
+        },
+        "durationSec": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 180
+        },
+        "transcript": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "transcriptPreview": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "source": {
+          "const": "user"
+        },
+        "showTranscript": {
+          "type": "boolean",
+          "default": true
+        }
       }
     },
     "asset": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "type"],
+      "required": [
+        "id",
+        "type"
+      ],
       "description": "sourceFile optional when sourceRef present (reference storage mode)",
       "properties": {
-        "id": { "type": "string" },
-        "type": { "type": "string", "enum": ["image", "video", "audio"] },
-        "sourceFile": { "type": ["string", "null"] },
-        "sourceRef": { "$ref": "#/$defs/sourceRef" },
-        "displayFile": { "type": "string" },
-        "posterFile": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video",
+            "audio"
+          ]
+        },
+        "sourceFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceRef": {
+          "$ref": "#/$defs/sourceRef"
+        },
+        "displayFile": {
+          "type": "string"
+        },
+        "posterFile": {
+          "type": "string"
+        },
         "srcset": {
           "type": "array",
-          "items": { "$ref": "#/$defs/srcsetEntry" }
+          "items": {
+            "$ref": "#/$defs/srcsetEntry"
+          }
         },
-        "derivedPlan": { "$ref": "#/$defs/derivedPlan" },
-        "cropMobile": { "type": "string" },
-        "cropWeb": { "type": "string" },
-        "focalPoint": { "$ref": "#/$defs/focalPoint" },
-        "width": { "type": "integer", "minimum": 1 },
-        "height": { "type": "integer", "minimum": 1 },
+        "derivedPlan": {
+          "$ref": "#/$defs/derivedPlan"
+        },
+        "cropMobile": {
+          "type": "string"
+        },
+        "cropWeb": {
+          "type": "string"
+        },
+        "focalPoint": {
+          "$ref": "#/$defs/focalPoint"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        },
         "nativeWidth": {
           "type": "integer",
           "minimum": 1,
@@ -1301,44 +2400,81 @@
           "minimum": 1,
           "description": "Original source pixel height before WebP upscale"
         },
-        "takenAt": { "type": "string", "format": "date-time" },
-        "place": { "$ref": "#/$defs/place" },
-        "duration": { "type": "number", "minimum": 0 },
-        "hasAudio": { "type": "boolean" },
-        "ingestBatchId": { "type": "string" },
-        "dedupeGroupId": { "type": "string" },
+        "takenAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "place": {
+          "$ref": "#/$defs/place"
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "hasAudio": {
+          "type": "boolean"
+        },
+        "ingestBatchId": {
+          "type": "string"
+        },
+        "dedupeGroupId": {
+          "type": "string"
+        },
         "contentSig": {
           "type": "string",
           "description": "MD5 content signature (size:hex) for cross-ingest dedupe"
         },
-        "locked": { "type": "boolean" },
+        "locked": {
+          "type": "boolean"
+        },
         "tags": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 32 },
+          "items": {
+            "type": "string",
+            "maxLength": 32
+          },
           "maxItems": 8,
           "description": "Semantic tags from Agent 0 vision/heuristic; 3-5 recommended"
         },
         "tagsSource": {
           "type": "string",
-          "enum": ["heuristic", "exif", "clip", "vlm", "user"],
+          "enum": [
+            "heuristic",
+            "exif",
+            "clip",
+            "vlm",
+            "user"
+          ],
           "description": "How tags were produced"
         },
         "userTier": {
           "type": "string",
-          "enum": ["featured", "material"],
+          "enum": [
+            "featured",
+            "material"
+          ],
           "description": "User intent from featured vs material ingest folder (PRD-EXPERIENCE appendix A)"
         },
         "userTierSource": {
           "type": "string",
-          "enum": ["ingest", "user"],
+          "enum": [
+            "ingest",
+            "user"
+          ],
           "description": "How userTier was assigned"
         },
         "importSource": {
           "type": "string",
-          "enum": ["featured", "material", "legacy"],
+          "enum": [
+            "featured",
+            "material",
+            "legacy"
+          ],
           "description": "Original ingest folder (PRD-EXPERIENCE appendix A §3.1)"
         },
-        "voice": { "$ref": "#/$defs/voice" },
+        "voice": {
+          "$ref": "#/$defs/voice"
+        },
         "caption": {
           "type": "string",
           "maxLength": 60,
@@ -1350,20 +2486,41 @@
         },
         "aspectKind": {
           "type": "string",
-          "enum": ["portrait", "landscape", "square", "panorama", "tall"],
+          "enum": [
+            "portrait",
+            "landscape",
+            "square",
+            "panorama",
+            "tall"
+          ],
           "description": "Composition bucket from classify_aspect (Agent 0 / layout)"
         },
         "dateSource": {
           "type": "string",
-          "enum": ["exif", "filename", "mtime"]
+          "enum": [
+            "exif",
+            "filename",
+            "mtime"
+          ]
         },
         "dateConfidence": {
           "type": "string",
-          "enum": ["high", "low"]
+          "enum": [
+            "high",
+            "low"
+          ]
         },
         "mediaClass": {
           "type": "string",
-          "enum": ["photo", "screenshot", "thumbnail", "reupload", "archive", "collage", "unknown"]
+          "enum": [
+            "photo",
+            "screenshot",
+            "thumbnail",
+            "reupload",
+            "archive",
+            "collage",
+            "unknown"
+          ]
         },
         "layoutEligible": {
           "type": "boolean",
@@ -1384,68 +2541,190 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "sharpness": { "type": "number", "minimum": 0 },
-            "sharpnessVersion": { "type": "string", "enum": ["v1", "v2"] },
-            "sharpnessLegacy": { "type": "number", "minimum": 0 },
-            "meanLuma": { "type": "number", "minimum": 0, "maximum": 1 },
-            "cullScore": { "type": "number", "minimum": 0, "maximum": 1 },
-            "cullRank": { "type": "integer", "minimum": 1 },
-            "cullGroupId": { "type": "string" },
-            "cullExplain": { "type": "string" },
-            "aestheticScore": { "type": "number", "minimum": 0, "maximum": 1 },
-            "aestheticMetric": { "type": "string" },
+            "sharpness": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sharpnessVersion": {
+              "type": "string",
+              "enum": [
+                "v1",
+                "v2"
+              ]
+            },
+            "sharpnessLegacy": {
+              "type": "number",
+              "minimum": 0
+            },
+            "meanLuma": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cullScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "cullRank": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "cullGroupId": {
+              "type": "string"
+            },
+            "cullExplain": {
+              "type": "string"
+            },
+            "aestheticScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "aestheticMetric": {
+              "type": "string"
+            },
             "aesthetic": {
               "type": "object",
               "additionalProperties": false,
               "description": "PA Layer 1 · CV aesthetic evaluation (quality.aesthetic)",
               "properties": {
-                "version": { "type": "string" },
-                "source": { "type": "string", "enum": ["rules", "rules+ml", "mllm"] },
-                "overall": { "type": "number", "minimum": 0, "maximum": 1 },
-                "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+                "version": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "rules",
+                    "rules+ml",
+                    "mllm"
+                  ]
+                },
+                "overall": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
                 "dims": {
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
-                    "composition": { "type": "number", "minimum": 0, "maximum": 1 },
-                    "exposure": { "type": "number", "minimum": 0, "maximum": 1 },
-                    "color": { "type": "number", "minimum": 0, "maximum": 1 },
-                    "lighting": { "type": "number", "minimum": 0, "maximum": 1 },
-                    "subjectClarity": { "type": "number", "minimum": 0, "maximum": 1 }
+                    "composition": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "exposure": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "color": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "lighting": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "subjectClarity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
                   }
                 },
                 "signals": {
                   "type": "object",
                   "description": "Numeric CV/ML signals; AA may add string metadata (learnedMetric, mllmModel, mllmShortlist).",
                   "properties": {
-                    "learnedMetric": { "type": "string" },
-                    "mllmModel": { "type": "string" },
-                    "mllmShortlist": { "type": "string" }
+                    "learnedMetric": {
+                      "type": "string"
+                    },
+                    "mllmModel": {
+                      "type": "string"
+                    },
+                    "mllmShortlist": {
+                      "type": "string"
+                    }
                   },
-                  "additionalProperties": { "type": ["number", "string", "null"] }
+                  "additionalProperties": {
+                    "type": [
+                      "number",
+                      "string",
+                      "null"
+                    ]
+                  }
                 },
-                "critique": { "type": ["string", "null"] }
+                "critique": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
               }
             },
-            "lowResSuspected": { "type": "boolean" },
-            "faceCount": { "type": "integer", "minimum": 0 },
-            "faceRatio": { "type": "number", "minimum": 0, "maximum": 1 },
-            "portraitEyesOpenScore": { "type": "number", "minimum": 0, "maximum": 1 },
+            "lowResSuspected": {
+              "type": "boolean"
+            },
+            "faceCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "faceRatio": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "portraitEyesOpenScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
             "portrait": {
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "version": { "type": "string" },
-                "backend": { "type": "string" },
-                "eyesOpenScore": { "type": "number", "minimum": 0, "maximum": 1 },
-                "faceSharpness": { "type": "number", "minimum": 0 },
-                "eyeFocusRaw": { "type": "number", "minimum": 0 },
-                "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                "version": {
+                  "type": "string"
+                },
+                "backend": {
+                  "type": "string"
+                },
+                "eyesOpenScore": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "faceSharpness": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "eyeFocusRaw": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
               }
             },
             "cullBranch": {
               "type": "string",
-              "enum": ["portrait", "landscape", "gray"],
+              "enum": [
+                "portrait",
+                "landscape",
+                "gray"
+              ],
               "description": "Branch chosen by photo_cull quality scoring"
             },
             "cullBranchScore": {
@@ -1467,12 +2746,33 @@
         "salientBox": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["x", "y", "w", "h"],
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
           "properties": {
-            "x": { "type": "number", "minimum": 0, "maximum": 1 },
-            "y": { "type": "number", "minimum": 0, "maximum": 1 },
-            "w": { "type": "number", "minimum": 0, "maximum": 1 },
-            "h": { "type": "number", "minimum": 0, "maximum": 1 }
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "w": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "h": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
           },
           "description": "Primary subject region (face box when detected)"
         },
@@ -1496,7 +2796,10 @@
         },
         "clusterSource": {
           "type": "string",
-          "enum": ["clip", "heuristic"],
+          "enum": [
+            "clip",
+            "heuristic"
+          ],
           "description": "Embedding source used for sceneClusterId"
         },
         "subjectBucket": {
@@ -1518,32 +2821,80 @@
           "additionalProperties": false,
           "description": "Phase 8/12 L1 semantic category (ingest pipeline)",
           "properties": {
-            "category": { "type": "string" },
-            "subClusterId": { "type": ["string", "integer", "null"] },
-            "label": { "type": "string" },
-            "timeContext": { "type": "string" },
-            "locationContext": { "type": "string" }
+            "category": {
+              "type": "string"
+            },
+            "subClusterId": {
+              "type": [
+                "string",
+                "integer",
+                "null"
+              ]
+            },
+            "label": {
+              "type": "string"
+            },
+            "timeContext": {
+              "type": "string"
+            },
+            "locationContext": {
+              "type": "string"
+            }
           }
         },
         "geo": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
-            "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+            "lat": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "lon": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
           }
         },
-        "exif": { "$ref": "#/$defs/assetExif" },
-        "curation": { "$ref": "#/$defs/assetCuration" }
+        "exif": {
+          "$ref": "#/$defs/assetExif"
+        },
+        "curation": {
+          "$ref": "#/$defs/assetCuration"
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "type": { "const": "image" } } },
-          "then": { "required": ["displayFile"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "displayFile"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "video" } } },
-          "then": { "required": ["displayFile", "posterFile", "duration"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "video"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "displayFile",
+              "posterFile",
+              "duration"
+            ]
+          }
         }
       ]
     },
@@ -1551,12 +2902,22 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "fill": { "type": "boolean" },
-        "bleed": { "type": "boolean" },
-        "overlay": { "type": "boolean" },
+        "fill": {
+          "type": "boolean"
+        },
+        "bleed": {
+          "type": "boolean"
+        },
+        "overlay": {
+          "type": "boolean"
+        },
         "slot": {
           "type": "string",
-          "enum": ["panorama", "square", "tall"],
+          "enum": [
+            "panorama",
+            "square",
+            "tall"
+          ],
           "description": "Wide/tall/square card treatment for render CSS"
         }
       }
@@ -1564,25 +2925,50 @@
     "mediaCardItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "assetId"],
+      "required": [
+        "type",
+        "assetId"
+      ],
       "properties": {
-        "type": { "const": "media-card" },
-        "assetId": { "type": "string" },
-        "title": { "type": "string", "maxLength": 14 },
-        "caption": { "type": "string", "maxLength": 60 },
-        "edited": { "type": "boolean" },
-        "layout": { "$ref": "#/$defs/mediaCardLayout" }
+        "type": {
+          "const": "media-card"
+        },
+        "assetId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 14
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "edited": {
+          "type": "boolean"
+        },
+        "layout": {
+          "$ref": "#/$defs/mediaCardLayout"
+        }
       }
     },
     "mediaRowItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "assetIds", "rowLayout"],
+      "required": [
+        "type",
+        "assetIds",
+        "rowLayout"
+      ],
       "properties": {
-        "type": { "const": "media-row" },
+        "type": {
+          "const": "media-row"
+        },
         "assetIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 2,
           "maxItems": 8
         },
@@ -1601,53 +2987,92 @@
         },
         "layoutHint": {
           "type": "string",
-          "enum": ["person-grid-4"]
+          "enum": [
+            "person-grid-4"
+          ]
         }
       }
     },
     "mediaScrollItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "assetIds"],
+      "required": [
+        "type",
+        "assetIds"
+      ],
       "properties": {
-        "type": { "const": "media-scroll" },
+        "type": {
+          "const": "media-scroll"
+        },
         "assetIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 3,
           "maxItems": 5
         },
-        "caption": { "type": "string", "maxLength": 60 },
-        "voice": { "$ref": "#/$defs/voice" }
+        "caption": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "voice": {
+          "$ref": "#/$defs/voice"
+        }
       }
     },
     "chapterItem": {
       "oneOf": [
-        { "$ref": "#/$defs/mediaCardItem" },
-        { "$ref": "#/$defs/mediaRowItem" },
-        { "$ref": "#/$defs/mediaScrollItem" }
+        {
+          "$ref": "#/$defs/mediaCardItem"
+        },
+        {
+          "$ref": "#/$defs/mediaRowItem"
+        },
+        {
+          "$ref": "#/$defs/mediaScrollItem"
+        }
       ]
     },
     "assetCohort": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "version": { "const": "1" },
+        "version": {
+          "const": "1"
+        },
         "subjectIds": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "subjectsPresent": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "duo": { "type": "boolean" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "duo": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "method": {
           "type": "string",
-          "enum": ["face_embed_v1", "face_count_proxy", "none"]
+          "enum": [
+            "face_embed_v1",
+            "face_count_proxy",
+            "none"
+          ]
         },
-        "faceCount": { "type": "integer", "minimum": 0 }
+        "faceCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "assetCuration": {
@@ -1656,28 +3081,42 @@
       "properties": {
         "subjectTags": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 12
         },
-        "cohort": { "$ref": "#/$defs/assetCohort" }
+        "cohort": {
+          "$ref": "#/$defs/assetCohort"
+        }
       }
     },
     "chapterCuration": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "anchorAssetId": { "type": "string" },
+        "anchorAssetId": {
+          "type": "string"
+        },
         "daySpan": {
           "type": "array",
-          "items": { "type": "string", "format": "date" }
+          "items": {
+            "type": "string",
+            "format": "date"
+          }
         },
         "places": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "memoryAnchors": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 24 },
+          "items": {
+            "type": "string",
+            "maxLength": 24
+          },
           "maxItems": 3,
           "description": "User memory hooks at G1; fed to Agent 2"
         },
@@ -1688,13 +3127,29 @@
           "properties": {
             "mood": {
               "type": "string",
-              "enum": ["松弛", "热闹", "赶路", "意外", "仪式感", "平静"]
+              "enum": [
+                "松弛",
+                "热闹",
+                "赶路",
+                "意外",
+                "仪式感",
+                "平静"
+              ]
             },
             "focus": {
               "type": "string",
-              "enum": ["人", "地方", "食物", "关系", "自我感受"]
+              "enum": [
+                "人",
+                "地方",
+                "食物",
+                "关系",
+                "自我感受"
+              ]
             },
-            "note": { "type": "string", "maxLength": 30 }
+            "note": {
+              "type": "string",
+              "maxLength": 30
+            }
           }
         },
         "segmentId": {
@@ -1703,15 +3158,24 @@
         },
         "segmentIds": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "maxItems": 16,
           "description": "All segments represented when day buckets were merged across trips"
         },
         "patternHint": {
           "type": "string",
-          "enum": ["open", "gallery", "moment", "close"]
+          "enum": [
+            "open",
+            "gallery",
+            "moment",
+            "close"
+          ]
         },
-        "heroAssetId": { "type": "string" },
+        "heroAssetId": {
+          "type": "string"
+        },
         "layoutStub": {
           "type": "boolean",
           "description": "True when items[] is a compact stub derived from screens[]"
@@ -1721,16 +3185,39 @@
     "chapter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "index", "patternId", "title", "items"],
+      "required": [
+        "id",
+        "index",
+        "patternId",
+        "title",
+        "items"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "index": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
         "patternId": {
           "type": "string",
-          "enum": ["open", "gallery", "moment", "close"]
+          "enum": [
+            "open",
+            "gallery",
+            "moment",
+            "close"
+          ]
         },
-        "title": { "type": "string", "maxLength": 12 },
-        "lead": { "type": "string", "maxLength": 80 },
+        "title": {
+          "type": "string",
+          "maxLength": 12
+        },
+        "lead": {
+          "type": "string",
+          "maxLength": 80
+        },
         "decorLine": {
           "type": "string",
           "maxLength": 30,
@@ -1740,29 +3227,62 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 8,
-          "items": { "$ref": "#/$defs/chapterItem" }
+          "items": {
+            "$ref": "#/$defs/chapterItem"
+          }
         },
         "screens": {
           "type": "array",
           "description": "Web layoutEngine=screens; optional when legacy",
-          "items": { "$ref": "#/$defs/layoutScreen" }
+          "items": {
+            "$ref": "#/$defs/layoutScreen"
+          }
         },
-        "curation": { "$ref": "#/$defs/chapterCuration" }
+        "curation": {
+          "$ref": "#/$defs/chapterCuration"
+        }
       }
     },
     "layoutScreenSlot": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["assetId", "slot", "fit"],
+      "required": [
+        "assetId",
+        "slot",
+        "fit"
+      ],
       "properties": {
-        "assetId": { "type": "string" },
-        "slot": { "type": "integer", "minimum": 0, "maximum": 8 },
-        "fit": { "type": "string", "enum": ["cover", "contain"] },
-        "role": { "type": "string", "enum": ["portrait", "landscape", "main"] },
-        "displayAspect": { "type": "number" },
+        "assetId": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "fit": {
+          "type": "string",
+          "enum": [
+            "cover",
+            "contain"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape",
+            "main"
+          ]
+        },
+        "displayAspect": {
+          "type": "number"
+        },
         "rect": {
           "type": "array",
-          "items": { "type": "number" },
+          "items": {
+            "type": "number"
+          },
           "minItems": 4,
           "maxItems": 4
         }
@@ -1772,20 +3292,47 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "stageAspect": { "type": ["number", "string"] },
-        "cols": { "type": "array", "items": { "type": "number" } },
-        "rows": { "type": "array", "items": { "type": "number" } },
-        "gridClass": { "type": "string" },
-        "templateVersion": { "type": "integer" },
-        "gap": { "type": "string" }
+        "stageAspect": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "cols": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "gridClass": {
+          "type": "string"
+        },
+        "templateVersion": {
+          "type": "integer"
+        },
+        "gap": {
+          "type": "string"
+        }
       }
     },
     "layoutScreen": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["screenId", "patternId", "slots"],
+      "required": [
+        "screenId",
+        "patternId",
+        "slots"
+      ],
       "properties": {
-        "screenId": { "type": "string" },
+        "screenId": {
+          "type": "string"
+        },
         "patternId": {
           "type": "string",
           "enum": [
@@ -1830,40 +3377,79 @@
           ]
         },
         "tone": {
-          "type": ["object", "null"],
+          "type": [
+            "object",
+            "null"
+          ],
           "additionalProperties": false,
           "properties": {
-            "r": { "type": "integer", "minimum": 0, "maximum": 255 },
-            "g": { "type": "integer", "minimum": 0, "maximum": 255 },
-            "b": { "type": "integer", "minimum": 0, "maximum": 255 }
+            "r": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "g": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "b": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
           }
         },
         "layoutHint": {
           "type": "string",
-          "enum": ["person-pair", "person-triple", "person-grid-8", "portrait-row-editorial", "editorial-4mix"],
+          "enum": [
+            "person-pair",
+            "person-triple",
+            "person-grid-8",
+            "portrait-row-editorial",
+            "editorial-4mix"
+          ],
           "description": "Person portrait: 2-col pair, 3-col row, 4×2 grid (contain per slot); editorial row hint"
         },
         "arcSegment": {
           "type": "string",
-          "enum": ["open", "rise", "peak", "fall", "close", "moment"],
+          "enum": [
+            "open",
+            "rise",
+            "peak",
+            "fall",
+            "close",
+            "moment"
+          ],
           "description": "Narrative arc beat for smart layout V2 (Phase 4 entry deep link)"
         },
         "role": {
           "type": "string",
-          "enum": ["moment", "peak"],
+          "enum": [
+            "moment",
+            "peak"
+          ],
           "description": "P23.1 · inline peak pool screen role (moment = signature only)"
         },
         "breathLabel": {
           "type": "string",
           "description": "Display label for screen-breath-pause (default ···)"
         },
-        "layoutGeometry": { "$ref": "#/$defs/layoutGeometry" },
+        "layoutGeometry": {
+          "$ref": "#/$defs/layoutGeometry"
+        },
         "copy": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "kicker": { "type": "string", "maxLength": 30 },
-            "body": { "type": "string", "maxLength": 80 }
+            "kicker": {
+              "type": "string",
+              "maxLength": 30
+            },
+            "body": {
+              "type": "string",
+              "maxLength": 80
+            }
           },
           "description": "screen-editorial-4mix / 2land inline copy (kicker + body)"
         },
@@ -1873,34 +3459,64 @@
           "properties": {
             "kickerSource": {
               "type": "string",
-              "enum": ["user", "ai_sparse", "chapter_seed", "empty"]
+              "enum": [
+                "user",
+                "ai_sparse",
+                "chapter_seed",
+                "empty"
+              ]
             },
             "bodySource": {
               "type": "string",
-              "enum": ["user", "ai_sparse", "chapter_seed", "empty"]
+              "enum": [
+                "user",
+                "ai_sparse",
+                "chapter_seed",
+                "empty"
+              ]
             }
           }
         },
         "slots": {
           "type": "array",
           "maxItems": 9,
-          "items": { "$ref": "#/$defs/layoutScreenSlot" }
+          "items": {
+            "$ref": "#/$defs/layoutScreenSlot"
+          }
         }
       },
       "allOf": [
         {
-          "if": { "properties": { "patternId": { "const": "screen-breath-pause" } } },
+          "if": {
+            "properties": {
+              "patternId": {
+                "const": "screen-breath-pause"
+              }
+            }
+          },
           "then": {
             "properties": {
-              "slots": { "maxItems": 0 }
+              "slots": {
+                "maxItems": 0
+              }
             }
           }
         },
         {
-          "if": { "properties": { "patternId": { "not": { "const": "screen-breath-pause" } } } },
+          "if": {
+            "properties": {
+              "patternId": {
+                "not": {
+                  "const": "screen-breath-pause"
+                }
+              }
+            }
+          },
           "then": {
             "properties": {
-              "slots": { "minItems": 1 }
+              "slots": {
+                "minItems": 1
+              }
             }
           }
         }
@@ -1909,33 +3525,82 @@
     "privacy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "stripExifOnExport", "confirmedAt"],
+      "required": [
+        "level",
+        "stripExifOnExport",
+        "confirmedAt"
+      ],
       "properties": {
-        "level": { "type": "string", "enum": ["private", "unlisted", "public"] },
-        "stripExifOnExport": { "type": "boolean" },
-        "confirmedAt": { "type": ["string", "null"], "format": "date-time" }
+        "level": {
+          "type": "string",
+          "enum": [
+            "private",
+            "unlisted",
+            "public"
+          ]
+        },
+        "stripExifOnExport": {
+          "type": "boolean"
+        },
+        "confirmedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
       }
     },
     "pipelineRun": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runId", "agent", "startedAt", "finishedAt"],
+      "required": [
+        "runId",
+        "agent",
+        "startedAt",
+        "finishedAt"
+      ],
       "properties": {
-        "runId": { "type": "string" },
+        "runId": {
+          "type": "string"
+        },
         "agent": {
           "type": "string",
-          "enum": ["media_lab", "curator", "layout", "storyteller", "storyteller-lite", "publisher"]
+          "enum": [
+            "media_lab",
+            "curator",
+            "layout",
+            "storyteller",
+            "storyteller-lite",
+            "publisher"
+          ]
         },
-        "note": { "type": "string" },
-        "startedAt": { "type": "string", "format": "date-time" },
-        "finishedAt": { "type": "string", "format": "date-time" },
-        "model": { "type": ["string", "null"] }
+        "note": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "pipeline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "locks"],
+      "required": [
+        "status",
+        "locks"
+      ],
       "properties": {
         "status": {
           "type": "string",
@@ -1950,32 +3615,53 @@
             "exported"
           ]
         },
-        "lastBatchId": { "type": "string" },
+        "lastBatchId": {
+          "type": "string"
+        },
         "layoutStatus": {
           "type": "string",
-          "enum": ["pending", "layout_draft", "layout_locked"]
+          "enum": [
+            "pending",
+            "layout_draft",
+            "layout_locked"
+          ]
         },
         "pendingAssets": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "locks": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["structure", "copy"],
+          "required": [
+            "structure",
+            "copy"
+          ],
           "properties": {
-            "structure": { "type": "boolean" },
-            "layout": { "type": "boolean" },
-            "copy": { "type": "boolean" }
+            "structure": {
+              "type": "boolean"
+            },
+            "layout": {
+              "type": "boolean"
+            },
+            "copy": {
+              "type": "boolean"
+            }
           }
         },
         "runs": {
           "type": "array",
-          "items": { "$ref": "#/$defs/pipelineRun" }
+          "items": {
+            "$ref": "#/$defs/pipelineRun"
+          }
         },
         "timings": {
           "type": "object",
-          "additionalProperties": { "type": "number" },
+          "additionalProperties": {
+            "type": "number"
+          },
           "description": "P7 telemetry: per-stage elapsed milliseconds"
         }
       }

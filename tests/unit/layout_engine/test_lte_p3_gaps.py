@@ -20,14 +20,14 @@ def _fresh() -> None:
 
 @pytest.mark.unit
 def test_merge_mosaic_debug_layout_decision_log_pattern() -> None:
-    """PRD §9.3 · rejectedTemplates only in debug layoutDecisionLog merge."""
+    """PRD §9.3 / LTN H2 · debug keeps full rejects; window keeps Top3."""
     raw = MosaicWindowLog(
         rejected_templates=[{"templateId": "screen-portrait-3", "reason": "pattern_disabled"}]
     ).to_dict()
     debug_entry = format_log_entry(raw, "debug")
     window_entry = format_log_entry(raw, "window")
     assert "rejectedTemplates" in debug_entry
-    assert "rejectedTemplates" not in window_entry
+    assert "rejectedTemplates" in window_entry  # LTN H2 · Top3 retained
 
     curation = {
         "layoutDecisionLog": [{"kind": "layout_search", "step": "pick"}],
