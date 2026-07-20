@@ -65,7 +65,7 @@
         },
         {
           "screenId": "df-s04",
-          "patternId": "screen-mosaic-5-main-portrait-3land",
+          "patternId": "screen-mosaic-4-hero-70-sidebar",
           "narrativeRole": "mosaic_hero",
           "preserveGroup": true,
           "groupId": "df-s04",
@@ -74,8 +74,7 @@
             {"assetId": "df-a04", "slot": 0, "role": "main"},
             {"assetId": "df-a05", "slot": 1},
             {"assetId": "df-a06", "slot": 2},
-            {"assetId": "df-a08", "slot": 3},
-            {"assetId": "df-a09", "slot": 4}
+            {"assetId": "df-a08", "slot": 3}
           ]
         },
         {
@@ -91,7 +90,7 @@
   "curation": {
     "displayedAssetIds": [
       "df-a01", "df-a02", "df-a07", "df-a03", "df-a04",
-      "df-a05", "df-a06", "df-a08", "df-a09", "df-a10"
+      "df-a05", "df-a06", "df-a08", "df-a10"
     ]
   }
 }

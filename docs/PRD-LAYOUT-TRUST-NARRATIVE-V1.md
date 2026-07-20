@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v1.2.0-LTN |
+| **文档版本** | v1.2.18-LTN |
 | **状态** | **Approved · 2026-07-20 项目负责人拍板（v1.1 并入开发评审纠错 + 七方峰会决议；v1.2 并入实证基线校准 E1–E9）** |
 | **特性代号** | **LTN**（Layout Trust & Narrative） |
 | **一句话代号** | 「先不撒谎，再让拼图该出时出；冻结扩库，勿先松配额」 |
@@ -132,7 +132,7 @@
 | **G-LTN-04** | 切断假拼图 | `portrait3_after_failed_mcs5_rate` 相对基线 **↓≥50%** |
 | **G-LTN-05** | 节奏可扫视 | 小样本盲评节奏 **5.5→≥7**；语义 pause 与屏缝分离 |
 | **G-LTN-06** | Studio 可解释 | 用户可见 reject / fallback Top3 |
-| **G-LTN-07** | 可观测 | 周看板：窗宽、mosaic 曝光、burstPass、screenCount parity、scroll↔longshot 守恒 |
+| **G-LTN-07** | 可观测 | 周看板：窗宽、mosaic 曝光、burstPass、screenCount parity、scroll↔longshot 守恒。**已落地** `burstPassRate` / `screenCount*` / `scrollLongshotSlotConservationRate`（`ltn_weekly.py`） |
 
 ### 3.2 非目标
 
@@ -287,13 +287,13 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | ID | 验收项 |
 |----|--------|
-| **AC-C-01** | `portrait3_after_failed_mcs5_rate` ↓≥50%。**口径**：分母 = fixture 上离线隔离重放（配额/rhythm 无关）中「size≥4 有 hard_valid 候选但无 winner」的窗数；分子 = 成品三叠屏中与失败窗**共享 ≥1 assetId 且序位紧邻**者；parity/tiler 产物不计入；**只读原始日志** |
-| **AC-C-02** | **机会 oracle**（配额无关：main 角色 pattern 硬门全过 ∧ 隔离评分 ≥ min_candidate_score 的窗数）≥1 ⇒ 成品 hero ∈ [1,2]；oracle=0 ⇒ used=0 可接受且 Studio 可解释。计入的 hero 屏须 `main ∈ roles` 且 main 面积占比 ≥0.55（防换标签冒充）。**样本口径（E1）**：demo-65 为阴性对照（oracle=0 → used=0 + 可解释）；阳性断言跑在 demo-2025 / demo-815 同分布的 H9 fixture 上 |
+| **AC-C-01** | `portrait3_after_failed_mcs5_rate` ↓≥50%。**口径**：分母 = fixture 上离线隔离重放（配额/rhythm 无关）中「size≥4 有 hard_valid 候选但无 winner」的窗数；分子 = 成品三叠屏中与失败窗**共享 ≥1 assetId 且序位紧邻**者；parity/tiler 产物不计入；**只读原始日志**。**引擎已落地** `ltn_isolation.py`（严格率）；相对历史基线 ↓50% 仍须在固定基线文件上签核 |
+| **AC-C-02** | **机会 oracle**（配额无关：main 角色 pattern 硬门全过 ∧ 隔离评分 ≥ min_candidate_score 的窗数）≥1 ⇒ 成品 hero ∈ [1,2]；oracle=0 ⇒ used=0 可接受且 Studio 可解释。计入的 hero 屏须 `main ∈ roles` 且 main 面积占比 ≥0.55（防换标签冒充）。**样本口径（E1）**：demo-65 为阴性对照（oracle=0 → used=0 + 可解释）；阳性断言跑在 demo-2025 / demo-815 同分布的 H9 fixture 上。**E2E 已落地**：H9 阴性 used=0；阳性 `run_curate` 后 hero∈[1,2] **或** MCS fail-loud 可解释；面积门锁在 dogfood（`screen-mosaic-4-hero-70-sidebar`，coverage=0.70；MCS5 模板自身 &lt;0.55 不计 qualifying） |
 | **AC-C-03** | archive dogfood（≥100 kept）：hero/dense 落在 P21 max 内，目标 3–5 高质量（盲评「有主次」+ 计数硬门：裁脸数 / AR 失配数） |
 | **AC-C-04** | `cross_scene_window_rate` &lt;5%（简化分段下由构造保证） |
 | **AC-C-05** | Studio 可见「为何没拼」Top3 |
 | **AC-C-06** | P21：`dense_collage_used ≤ max`；相邻 dense = 0 |
-| **AC-C-07** | 防回潮单测齐备：no_aux3 / parity_tail / hero_first_attempts_mcs / dense_floor / burst_no_dup / no_grid9_boost / reserve_release / metric_reads_raw_log + golden 重录（与剪枝同 PR） |
+| **AC-C-07** | 防回潮单测齐备：no_aux3 / parity_tail / hero_first_attempts_mcs / dense_floor / burst_no_dup / no_grid9_boost / reserve_release / metric_reads_raw_log + golden 重录（与剪枝同 PR）。**parity_tail / burst_no_dup 已补**（`test_ltn_prd_gap_close.py`）；golden 重录仍随剪枝 PR |
 
 ---
 
@@ -407,6 +407,10 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | `studio_reject_explain_rate` | 有 Top3 解释的决策占比 | → 100%（有决策时） |
 | `windowSizeDistribution` | 胜出 plan 窗宽直方图 | 观察 4/5/6 结构 |
 | `mosaic5ExposureRate` / `mcsUnifiedExposureRate` | 内容屏曝光率 | 见既有 MCS 健康带 |
+| `burstPassRate` | 1P+(N-1)L 滑窗时间内聚通过率 | ↑（有几何窗时） |
+| `screenCount` / `screenCountParityOk` | 内容屏数；有 HTML 时与 layout-screen 对账 | parity → true |
+| `scrollLongshotSlotConservationRate` | scroll 槽位 ↔ longshot 组/卡守恒 | → 1.0 |
+| `portrait3AfterFailedMcs5RateStrict` | AC-C-01 隔离重放严格率 | ↓；门禁用基线对比 |
 
 ---
 
@@ -463,6 +467,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.18-LTN | 2026-07-20 | 补缺口：AC-C-01 隔离严格率、AC-C-02 H9 e2e + dogfood 面积门（4-hero-70）、G-LTN-07 三项指标、AC-C-07 parity_tail/burst_no_dup、schema 审计字段、阴性 fixture 扩容 |
 | v1.2.17-LTN | 2026-07-20 | Dogfood AC：B-02/D-02/D-03 机器可复跑（fixture+脚本）；D-01 人评清单；验收记录入库 |
 | v1.2.16-LTN | 2026-07-20 | 实施落地：E1 第一步 — active_set SSOT、LEGACY 派生自 codegen、rollout.zeroSince 生命周期进 H8 gate |
 | v1.2.15-LTN | 2026-07-20 | 实施落地：E4 asymmetric quota（hard max + soft opportunity；无合法窗不强制 emit；看板字段） |

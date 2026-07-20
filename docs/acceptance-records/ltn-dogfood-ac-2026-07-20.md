@@ -38,3 +38,4 @@
 
 - AC-D-01 **不以 proxy 替代盲评**；CI 只卡 B-02 / D-02 / D-03 机器项。
 - fixture 章序刻意把 hero mosaic 放在中章，用于锁 D-03 与 beat 峰窗语义对齐。
+- hero 模板为 `screen-mosaic-4-hero-70-sidebar`（main 面积 0.70），满足 AC-C-02 ≥0.55 面积门；MCS5 自身 coverage≈0.44 不计 qualifying。

@@ -284,6 +284,11 @@ def inventory_report(*, root: Path | None = None, today: date | None = None) -> 
     )
     contract_missing_in_schema = sorted(contract_all - schema_all)
     policy_missing_in_golden = sorted(policy - golden)
+    # Audit-only: mosaic ids in schema that are neither policy nor contract extras
+    # (legacy/deprecated render paths). Does not fail the gate.
+    schema_mosaic_not_in_active = sorted(
+        schema - policy - contract_active - contract_dogfood
+    )
 
     ok = (
         not policy_vs_codegen["only_in_policy"]
@@ -315,6 +320,7 @@ def inventory_report(*, root: Path | None = None, today: date | None = None) -> 
         "policyMissingInGolden": policy_missing_in_golden,
         "goldenUnknownInSchema": golden_unknown,
         "contractMissingInSchema": contract_missing_in_schema,
+        "schemaMosaicNotInActive": schema_mosaic_not_in_active,
         "policyIds": sorted(policy),
         "rolloutZeroLifecycle": lifecycle,
     }

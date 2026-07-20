@@ -64,6 +64,12 @@ def main() -> int:
                 "  policyMissingInGolden (info):",
                 ", ".join(report["policyMissingInGolden"]),
             )
+        extra = report.get("schemaMosaicNotInActive") or []
+        if extra:
+            print(
+                "  schemaMosaicNotInActive (info/audit):",
+                ", ".join(extra[:12]) + ("…" if len(extra) > 12 else ""),
+            )
         if report["activeUnionCount"] > 12:
             print("  activeUnion>12:", report["activeUnionCount"], report["activeUnion"])
         life = report.get("rolloutZeroLifecycle") or {}
