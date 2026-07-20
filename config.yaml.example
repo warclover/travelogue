@@ -309,9 +309,11 @@ mosaic:
   fallback_to_legacy: true
   candidate_top_k: 4
   log_level: window
-  # LTN C7 · size=3 MCS aux is OFF by default (parity/tiler keep explicit 3).
-  # Track overlay (curated/archive/quick_share) is applied at curate time — see
-  # travelogue/layout_contract/mosaic_track.py and PRD §11.
+  # LTN C7 / R-E3 · size=3 MCS aux is OFF by default (parity/tiler keep explicit 3).
+  # Product tracks (curated / archive / quick_share) are NOT separate YAML blocks:
+  # resolve_mosaic_track(kept, intent.mode) overlays MosaicConfig at curate time.
+  # Defaults & knobs: travelogue/layout_contract/mosaic_track.py + PRD §11 / §11.1.
+  # Weekly board (R-E2, read-only): python scripts/ltn_weekly_dashboard.py
   enable_size3_aux: false
   density_budget:
     enabled: true

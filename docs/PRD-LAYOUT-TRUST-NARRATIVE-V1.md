@@ -332,8 +332,8 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | ID | 需求 | 验收 |
 |----|------|------|
 | **R-E1** | LTE 单权威收束 | 活跃 pattern 唯一清单；收敛**六写**（YAML status / rollout / lte_policy / LEGACY registry / schema 枚举 / config override）；顺序：先修门（H8）→ 再删写点 → 最后建新抽象。生命周期规则：**rollout=0 超 4 周强制 review**（转正或归档） |
-| **R-E2** | 周看板 | 窗宽分布、mosaic 曝光、burstPassRate、overlay 覆盖、screenCount parity、scroll↔longshot 守恒 |
-| **R-E3** | 分轨表产品化 | curated / archive / quick-share 写入配置说明 |
+| **R-E2** | 周看板 | 窗宽分布、mosaic 曝光、§12 指标包；脚本 `scripts/ltn_weekly_dashboard.py`（只读 trip.json，默认不 re-curate）。实现：`travelogue/layout_engine/mosaic/ltn_weekly.py` |
+| **R-E3** | 分轨表产品化 | curated / archive / quick-share 写入 `config.yaml.example` + §11.1（权威：`mosaic_track.py`） |
 | **R-E4** | Asymmetric quota（可选） | max 不变；opportunity 维度可观测；**无合法窗不强制 emit** |
 
 ---
@@ -391,15 +391,19 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 ## 12. 指标与周看板
 
+只读聚合入口：`compute_ltn_weekly_metrics` → `scripts/ltn_weekly_dashboard.py`（输出 `.cache/ltn-weekly/report.json`）。
+
 | 指标 | 定义 | 健康方向 |
 |------|------|----------|
-| `silent_ship_count` | 静默丢失样式/错误 config 上线次数 | → 0 |
+| `silent_ship_count` | 静默丢失样式/错误 config 上线次数（CI/过程指标；周看板脚本不产出） | → 0 |
 | `hero_mosaic_count` | 含 main/hero 角色的 dense 屏 | curated 1–2；archive 3–5 / 百张 |
-| `portrait3_after_failed_mcs5_rate` | MCS 5 失败后立刻三叠占比 | ↓≥50% |
-| `cross_scene_window_rate` | 跨 scene MCS 窗占比 | &lt;5% |
-| `dense_quota_utilization` | used/max | 健康带约 0.4–0.8（非 0 非 1 硬凑） |
+| `portrait3_after_failed_mcs5_rate` | MCS 5 失败后立刻三叠占比（看板为 MVP 代理；门禁用 AC-C-01 隔离重放口径） | ↓≥50% |
+| `cross_scene_window_rate` | 跨 scene MCS 窗占比（日志无 flag 时记 0；C4 构造本即段内） | &lt;5% |
+| `dense_quota_utilization` | used/max（P21 + 分轨 cap） | 健康带约 0.4–0.8（非 0 非 1 硬凑） |
 | `preserve_group_honor_rate` | longshot 尊重 mosaic 组 | → 高 |
 | `studio_reject_explain_rate` | 有 Top3 解释的决策占比 | → 100%（有决策时） |
+| `windowSizeDistribution` | 胜出 plan 窗宽直方图 | 观察 4/5/6 结构 |
+| `mosaic5ExposureRate` / `mcsUnifiedExposureRate` | 内容屏曝光率 | 见既有 MCS 健康带 |
 
 ---
 
@@ -456,6 +460,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.13-LTN | 2026-07-20 | 实施落地：E2 周看板（`ltn_weekly.py` + `ltn_weekly_dashboard.py`）；E3 分轨说明补齐 `config.yaml.example` |
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
