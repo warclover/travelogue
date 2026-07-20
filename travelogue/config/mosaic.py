@@ -67,7 +67,7 @@ class MosaicConfig:
     scorer_version: str = "p15-s3"
     deterministic_strict: bool = True
     min_candidate_score: float = 0.35
-    enabled_window_sizes: tuple[int, ...] = (4, 5, 6, 9)
+    enabled_window_sizes: tuple[int, ...] = (4, 5, 6)
     unified_mode: bool = True
     fallback_to_legacy: bool = True
     self_heal_enabled: bool = True
@@ -113,6 +113,7 @@ class MosaicConfig:
             "flat_six_grid": 0.35,
             "flat_nine_grid": 0.45,
             "dense_without_hero": 0.25,
+            "wasted_hero": 0.35,
             "main_ar_ineligible": 0.95,
         }
     )

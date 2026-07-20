@@ -378,6 +378,9 @@ class ScreenLayoutPlannerState:
             self.pattern_counts[pattern_id] = self.pattern_counts.get(pattern_id, 0) + 1
             if self.pattern_has_main_role(pattern_id):
                 self.consume_hero_reserve()
+            elif self.hero_reserve == "armed":
+                # LTN C5 · non-hero emit while armed ⇒ opportunity assets consumed.
+                self.release_hero_reserve()
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1

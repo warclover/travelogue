@@ -29,6 +29,11 @@ DEFAULT_TARGETS = (
     "demo-2025",
     "demo-815dc906d3",
 )
+# LTN H9 · CI-safe fixtures when local demo trips are absent.
+H9_FIXTURE_TARGETS = (
+    "tests/fixtures/ltn/trip.ltn_oracle_positive.json",
+    "tests/fixtures/ltn/trip.ltn_oracle_negative.json",
+)
 
 
 def _aspect_family(kind: str) -> str:
@@ -167,13 +172,26 @@ def main() -> int:
     cfg_dbg = replace(cfg, mosaic=replace(cfg.mosaic, log_level="debug"))
     burst_seconds = float(cfg.layout.mixed_proximity_seconds)
 
+    targets = list(args.targets)
+    # Prefer demos when present; otherwise fall back to H9 fixtures (R-A4/H9).
+    if all(not (args.trips_dir / tid / "trip.json").is_file() for tid in targets):
+        targets = list(H9_FIXTURE_TARGETS)
+
     report: dict = {"burstSeconds": burst_seconds, "trips": {}}
-    for tid in args.targets:
-        tj = args.trips_dir / tid / "trip.json"
+    for tid in targets:
+        tj = Path(tid)
+        if not tj.is_absolute():
+            # Allow "demo-*" under trips/ or a direct fixture path.
+            cand = args.trips_dir / tid / "trip.json"
+            if cand.is_file():
+                tj = cand
+            else:
+                tj = ROOT / tid
         if not tj.is_file():
             print(f"SKIP {tid}: no trip.json", flush=True)
             continue
-        print(f"=== {tid} ===", flush=True)
+        label = tj.stem if "fixtures" in tj.as_posix() else str(tid)
+        print(f"=== {label} ===", flush=True)
         trip = json.loads(tj.read_text(encoding="utf-8"))
         row: dict = {
             "before_patterns": dict(pattern_counter(trip).most_common()),
@@ -186,12 +204,15 @@ def main() -> int:
         try:
             with config_override(cfg_dbg):
                 run_curate(
-                    body, apply_layout=True, trip_dir=args.out_dir / tid, cfg=cfg_dbg
+                    body,
+                    apply_layout=True,
+                    trip_dir=args.out_dir / label,
+                    cfg=cfg_dbg,
                 )
             logs = (body.get("curation") or {}).get("mosaicDecisionLog") or []
             row["after_patterns"] = dict(pattern_counter(body).most_common())
             row["mosaic_log"] = aggregate_mosaic_log(logs)
-            (args.out_dir / f"{tid}-mosaic-log.json").write_text(
+            (args.out_dir / f"{label}-mosaic-log.json").write_text(
                 json.dumps(logs, indent=1, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
@@ -203,7 +224,7 @@ def main() -> int:
         except Exception as exc:
             row["recurate_error"] = f"{type(exc).__name__}: {exc}"
             traceback.print_exc()
-        report["trips"][tid] = row
+        report["trips"][label] = row
 
     out = args.out_dir / "report.json"
     out.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

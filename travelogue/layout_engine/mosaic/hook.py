@@ -378,6 +378,97 @@ def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     return sizes
 
 
+
+def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | None:
+    """LTN C1 · single-asset hero rescue when all MCS window sizes fail.
+
+    Only when the cursor asset is main-eligible and hero-gap vs look-ahead peers
+    is significant. Advances by 1 so remaining assets re-enter the planner loop.
+    """
+    from travelogue.config import get_config
+    from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+    from travelogue.layout_engine.mosaic.main_eligibility import (
+        asset_eligible_for_main_slot,
+        pick_best_main_eligible,
+        resolve_main_ar_ladder_tol,
+    )
+    from travelogue.layout_engine.planner.screen_planner import _make_screen
+    from travelogue.layout_engine.planner.screen_planner_stages import append_screen
+    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+
+    if start >= len(ctx.ids):
+        return None
+    look = ctx.ids[start : start + min(6, len(ctx.ids) - start)]
+    pattern_id = PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    cursor = ctx.ids[start]
+    asset = ctx.assets_map.get(cursor) or {}
+    tol = resolve_main_ar_ladder_tol(pattern_id, _mosaic_cfg())
+    ok, _ = asset_eligible_for_main_slot(asset, pattern_id=pattern_id, tol=tol)
+    if not ok:
+        return None
+    best = pick_best_main_eligible(
+        look,
+        ctx.assets_map,
+        pattern_id=pattern_id,
+        median_sharp=ctx.med_sharp,
+        cfg=_mosaic_cfg(),
+    )
+    if best != cursor:
+        return None
+    wctx = build_window_context(
+        look,
+        ctx.aspects,
+        ctx.assets_map,
+        median_sharp=ctx.med_sharp,
+    )
+    gap, _scores = main_eligible_hero_score_gap(wctx, pattern_id)
+    thr = float(get_config().layout.usage_rules.hero_gap_threshold)
+    if gap < thr:
+        return None
+    screen = _make_screen(
+        "screen-landscape-1",
+        [cursor],
+        screen_id="",
+        aspects=ctx.aspects,
+        assets_map=ctx.assets_map,
+    )
+    append_screen(ctx, screen)
+    log = MosaicWindowLog(
+        segment_id=ctx.chapter_id or "",
+        window_size=1,
+        window_start=start,
+        winner_pattern_id=str(screen.get("patternId") or "screen-landscape-1"),
+        winner_score=1.0,
+        fallback_used=True,
+        fallback_reason="mcs_single_hero_rescue",
+        planner_path="mosaic",
+        winner_reason_codes=["R_MCS_SINGLE_HERO_RESCUE"],
+    )
+    _append_mosaic_log(log.to_dict())
+    return 1
+
+
+def _log_mcs_all_sizes_failed(
+    ctx: ChapterPlanContext, start: int, tried_sizes: list[int]
+) -> None:
+    """LTN C1 · fail-loud when every MCS size (and rescue) failed."""
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+
+    log = MosaicWindowLog(
+        segment_id=ctx.chapter_id or "",
+        window_size=0,
+        window_start=start,
+        fallback_used=True,
+        fallback_reason="mcs_all_sizes_failed",
+        planner_path="legacy",
+        winner_reason_codes=[f"tried_sizes={tried_sizes}"],
+    )
+    _append_mosaic_log(log.to_dict())
+    if ctx.layout_state is not None:
+        ctx.layout_state.release_hero_reserve()
+
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     """Try enabled window sizes (P21 balanced: 5→4→6). Returns advance count or None."""
     cfg = _mosaic_cfg()
@@ -448,6 +539,10 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if try_mosaic_window_mcs(ctx, start, size, cfg):
             return size
+    rescued = _try_mcs_single_hero_rescue(ctx, start)
+    if rescued is not None:
+        return rescued
+    _log_mcs_all_sizes_failed(ctx, start, list(sizes))
     return None
 
 

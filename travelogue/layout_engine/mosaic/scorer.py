@@ -303,6 +303,80 @@ def _dense_without_hero_penalty(screen: dict, pattern_id: str) -> float:
     return 0.0
 
 
+
+def _wasted_hero_penalty(
+    screen: dict,
+    pattern_id: str,
+    *,
+    aspects: dict[str, AspectKind],
+    assets_by_id: dict[str, dict],
+    median_sharp: float | None = None,
+) -> float:
+    """LTN C3 · equal-weight patterns pay when the window had a clear hero gap."""
+    from travelogue.config import get_config
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+    from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+
+    if ScreenLayoutPlannerState.pattern_has_main_role(pattern_id):
+        return 0.0
+    asset_ids = [sl.get("assetId") for sl in screen.get("slots") or [] if sl.get("assetId")]
+    if len(asset_ids) < 2:
+        return 0.0
+    # Probe against a main-role SKU for eligibility/gap.
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+
+    wctx = build_window_context(
+        list(asset_ids),
+        aspects,
+        assets_by_id,
+        median_sharp=median_sharp,
+    )
+    gap, scores = main_eligible_hero_score_gap(wctx, PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    if not scores:
+        return 0.0
+    thr = float(get_config().layout.usage_rules.hero_gap_threshold)
+    if gap < thr:
+        return 0.0
+    return 0.35
+
+
+def _apply_hero_gap_prior(
+    total: float,
+    reasons: list[str],
+    *,
+    pattern_id: str,
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_by_id: dict[str, dict],
+    median_sharp: float | None = None,
+) -> float:
+    """LTN C3 · main-role patterns with a clear hero gap get ×1.10."""
+    from travelogue.config import get_config
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+    from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+
+    if not ScreenLayoutPlannerState.pattern_has_main_role(pattern_id):
+        return total
+    if len(asset_ids) < 2:
+        return total
+    wctx = build_window_context(
+        list(asset_ids),
+        aspects,
+        assets_by_id,
+        median_sharp=median_sharp,
+    )
+    gap, scores = main_eligible_hero_score_gap(wctx, PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    if not scores:
+        return total
+    thr = float(get_config().layout.usage_rules.hero_gap_threshold)
+    if gap < thr:
+        return total
+    reasons.append("R_HERO_GAP_PRIOR")
+    return min(1.0, total * 1.10)
+
 def score_candidate(
     screen: dict,
     *,
@@ -366,6 +440,13 @@ def score_candidate(
         ),
         "dense_without_hero": _dense_without_hero_penalty(
             screen, str(screen.get("patternId") or "")
+        ),
+        "wasted_hero": _wasted_hero_penalty(
+            screen,
+            str(screen.get("patternId") or ""),
+            aspects=aspects,
+            assets_by_id=assets_by_id,
+            median_sharp=None,
         ),
     }
     # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)
@@ -432,6 +513,15 @@ def score_candidate(
             reasons.append("R_LTE_WEIGHT_UP")
         elif base_w < 1.0:
             reasons.append("R_LTE_WEIGHT_DOWN")
+
+    total = _apply_hero_gap_prior(
+        total,
+        reasons,
+        pattern_id=pattern_id,
+        asset_ids=[a for a in asset_ids if a],
+        aspects=aspects,
+        assets_by_id=assets_by_id,
+    )
 
     div_bonus = template_diversity_bonus(pattern_id)
     if div_bonus > 0:
