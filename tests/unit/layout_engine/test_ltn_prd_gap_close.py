@@ -281,7 +281,7 @@ def test_weekly_gltn07_metrics_on_dogfood_fixture():
 
 def test_burst_pass_rate_null_without_1p_geometry():
     trip = json.loads(DOGFOOD.read_text(encoding="utf-8"))
-    rate = burst_pass_rate(trip, burst_seconds=900.0)
+    rate = burst_pass_rate(trip, burst_seconds=1800.0)
     assert rate is None or 0.0 <= rate <= 1.0
 
 

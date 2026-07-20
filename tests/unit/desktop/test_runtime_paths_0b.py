@@ -116,3 +116,52 @@ def test_pick_folder_worker_out_file(tmp_path: Path, monkeypatch: pytest.MonkeyP
     worker.main([f"--out={out}", "标题"])
     data = out.read_text(encoding="utf-8")
     assert "相册" in data
+
+
+def test_parse_worker_payload_tolerates_stdout_warning() -> None:
+    from travelogue.desktop.folder_picker_service import _parse_worker_payload
+
+    polluted = (
+        '[WARNING] Ignore caches that are heterogeneous\n'
+        '{"path": "D:\\\\Photos\\\\2025东澳岛"}'
+    )
+    data = _parse_worker_payload(polluted)
+    assert data is not None
+    assert data["path"].endswith("东澳岛")
+
+
+def test_request_folder_reads_out_file_not_polluted_stdout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression: native WARNING on stdout must not break pick-folder API."""
+    import json
+    import subprocess
+
+    from travelogue.desktop import folder_picker_service as fps
+
+    album = tmp_path / "相册"
+    album.mkdir()
+
+    def fake_run(cmd, **kwargs):  # noqa: ANN001
+        out = None
+        for arg in cmd:
+            if isinstance(arg, str) and arg.startswith("--out="):
+                out = Path(arg.split("=", 1)[1])
+                break
+        assert out is not None, "dev pick-folder must pass --out"
+        out.write_text(
+            json.dumps({"path": str(album)}, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout='[WARNING] Ignore caches that are heterogeneous\n{"path": null}\n',
+            stderr="",
+        )
+
+    monkeypatch.setattr(fps.subprocess, "run", fake_run)
+    result = fps.request_folder(title="t")
+    assert result.error is None
+    assert result.cancelled is False
+    assert result.path == album

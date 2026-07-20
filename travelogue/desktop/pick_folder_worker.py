@@ -47,6 +47,8 @@ def _parse_args(argv: list[str]) -> tuple[str, Path | None]:
 def main(argv: list[str] | None = None) -> None:
     _configure_utf8_stdio()
     title, out_path = _parse_args(list(argv if argv is not None else sys.argv[1:]))
+    # Native libs (e.g. vision/caches) may print "[WARNING] …" to stdout during
+    # dialog setup; keep payload on a dedicated channel when --out is set.
     try:
         chosen = pick_folder(title=title)
         payload = {"path": str(chosen.resolve()) if chosen else None}
@@ -60,6 +62,7 @@ def main(argv: list[str] | None = None) -> None:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(text + "\n", encoding="utf-8")
     else:
+        # Last resort: emit JSON alone on stdout (may still be polluted by natives).
         sys.stdout.write(text)
         sys.stdout.flush()
     if exit_code:

@@ -30,7 +30,7 @@ from travelogue.layout_engine.mosaic.pattern_catalog import MosaicPattern
 # Summit D-04 · cohesive when takenAt span within the window is short.
 COHESIVE_SPAN_S = 300.0
 GAP_FLOOR_S = 120.0
-GAP_CEIL_S = 900.0
+GAP_CEIL_S = 1800.0
 GAP_MEDIAN_MULT = 3.0
 
 # Pattern ids kept as strings when not exported from constants.
@@ -84,7 +84,7 @@ def build_coarse_segments(
 
     Rules (R-C4):
     - Primary signal = ``takenAt`` (not degenerate burstGroupId).
-    - Split when gap > min(900, max(120, 3×median_gap)) or city changes.
+    - Split when gap > min(1800, max(120, 3×median_gap)) or city changes.
     - Missing timestamps stick to the previous segment.
     """
     if not ids:

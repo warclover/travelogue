@@ -158,8 +158,8 @@ layout:
   web_layout_engine: screens
   # 组屏范围：day=按策展日桶时间序全序列；chapter=仅章内 items 顺序
   screen_plan_scope: day
-  # 混排/拼图连拍 takenAt 最大跨度（秒）· 默认 900 = 15min
-  mixed_proximity_seconds: 900
+  # 混排/拼图连拍 takenAt 最大跨度（秒）· 默认 1800 = 30min
+  mixed_proximity_seconds: 1800
   # 三竖 editorial row（screen-portrait-3-editorial）· 默认关闭
   editorial_portrait_row:
     enabled: false

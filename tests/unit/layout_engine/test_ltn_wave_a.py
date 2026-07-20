@@ -96,11 +96,11 @@ def test_c2_hero_first_attempts_mcs(monkeypatch) -> None:
     ctx.aspects = {aid: "landscape" for aid in ctx.ids}
     ctx.assets_map = {aid: {"id": aid} for aid in ctx.ids}
     ctx.screens = []
-    ctx.mix_gap = 900.0
+    ctx.mix_gap = 1800.0
     ctx.med_sharp = 0.5
     ctx.trip_total = 40
     ctx.chapter_id = "ch-01"
-    ctx.burst_seconds = 900.0
+    ctx.burst_seconds = 1800.0
     ctx.use_portrait_grid8 = False
 
     assert try_mosaic_window(ctx, 0) is None

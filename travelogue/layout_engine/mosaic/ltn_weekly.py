@@ -243,7 +243,7 @@ def _aspect_family(kind: str) -> str:
 def burst_pass_rate(
     trip: dict[str, Any],
     *,
-    burst_seconds: float = 900.0,
+    burst_seconds: float = 1800.0,
 ) -> float | None:
     """G-LTN-07 / LRG · 1P+(N-1)L window time-near pass rate."""
     from travelogue.curation.burst_utils import parse_taken_ts, time_near_chain
@@ -354,7 +354,7 @@ def compute_ltn_weekly_metrics(
     chapters: list[dict[str, Any]] | None = None,
     mosaic_logs: list[dict[str, Any]] | None = None,
     html_layout_screen_count: int | None = None,
-    burst_seconds: float = 900.0,
+    burst_seconds: float = 1800.0,
     include_ac_c01_strict: bool = False,
     ac_c01_baseline_rate: float | None = None,
 ) -> dict[str, Any]:

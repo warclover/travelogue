@@ -52,6 +52,40 @@ def _picker_command(title: str, *, out_path: Path | None) -> list[str]:
     return cmd
 
 
+def _parse_worker_payload(raw: str) -> dict | None:
+    """Parse worker JSON; tolerate native libs that print warnings to stdout."""
+    text = (raw or "").strip()
+    if not text:
+        return None
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict):
+            return data
+    except json.JSONDecodeError:
+        pass
+    # Prefer the last JSON object line (worker payload is one object).
+    for line in reversed(text.splitlines()):
+        line = line.strip()
+        if not (line.startswith("{") and line.endswith("}")):
+            continue
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict):
+            return data
+    start = text.rfind("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            return None
+        if isinstance(data, dict):
+            return data
+    return None
+
+
 def request_folder(*, title: str = "选择照片文件夹", timeout: float = 600.0) -> FolderPickResult:
     """Spawn a short-lived process so the dialog runs on its main thread."""
     if sys.platform != "win32":
@@ -60,10 +94,12 @@ def request_folder(*, title: str = "选择照片文件夹", timeout: float = 600
         out_file: Path | None = None
         proc: subprocess.CompletedProcess[str] | None = None
         try:
-            if is_frozen():
-                fd, name = tempfile.mkstemp(prefix="travelogue-pick-", suffix=".json")
-                os.close(fd)
-                out_file = Path(name)
+            # Always use --out: worker imports can print native warnings to
+            # stdout (e.g. "[WARNING] Ignore caches…"), which breaks JSON parse
+            # when the parent only reads pipes.
+            fd, name = tempfile.mkstemp(prefix="travelogue-pick-", suffix=".json")
+            os.close(fd)
+            out_file = Path(name)
             # Force UTF-8 decode: worker writes UTF-8 JSON (ensure_ascii=False),
             # but Windows default codepage (e.g. cp936) would mangle non-ASCII paths.
             proc = subprocess.run(
@@ -109,9 +145,8 @@ def request_folder(*, title: str = "选择照片文件夹", timeout: float = 600
         if not raw:
             log.warning("pick_folder_worker returned empty stdout")
             return FolderPickResult(error="picker_empty_response")
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError:
+        data = _parse_worker_payload(raw)
+        if data is None:
             log.warning("pick_folder_worker invalid JSON: %r", raw[:200])
             return FolderPickResult(error="picker_invalid_response")
         path = data.get("path")

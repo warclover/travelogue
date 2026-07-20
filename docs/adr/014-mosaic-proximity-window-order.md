@@ -17,7 +17,7 @@
 
 | 配置项 | 默认 | 作用阶段 | 含义 |
 |--------|------|----------|------|
-| `layout.mixed_proximity_seconds` | **900** | **curate / 组屏** | 混排/拼图窗口内 `takenAt` 最大跨度 |
+| `layout.mixed_proximity_seconds` | **1800**（2026-07-20 自 900 上调） | **curate / 组屏** | 混排/拼图窗口内 `takenAt` 最大跨度 |
 | `ingest.burst_seconds` | **3** | **ingest** | 近重复/连拍 ingest 去重 |
 
 ## 待决问题
@@ -91,7 +91,7 @@
 
 **决议摘要（一句话）**：
 
-> 维持 `mixed_proximity_seconds=900` 与 `window_order=(5,4,6,9)` 现状不变；window_order 调整因缺乏 6 格候选竞争的 dogfood 证据而暂缓，待补充一本真实横图连拍相册后再评审。
+> 2026-07-20 将默认上调为 `mixed_proximity_seconds=1800`（30min；C4 `GAP_CEIL` 同步）；`window_order=(5,4,6,9)` 仍维持。window_order 调整因缺乏 6 格候选竞争的 dogfood 证据而暂缓。
 
 ## 后果
 

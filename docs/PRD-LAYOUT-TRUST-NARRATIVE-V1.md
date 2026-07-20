@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | v1.2.19-LTN |
+| **文档版本** | v1.2.20-LTN |
 | **状态** | **Approved · 2026-07-20 项目负责人拍板（v1.1 并入开发评审纠错 + 七方峰会决议；v1.2 并入实证基线校准 E1–E9）** |
 | **特性代号** | **LTN**（Layout Trust & Narrative） |
 | **一句话代号** | 「先不撒谎，再让拼图该出时出；冻结扩库，勿先松配额」 |
@@ -268,7 +268,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | **R-C1** | 解耦 MCS→size=3 legacy | 删 aux-3 拼接（`hook.py` size=3 直连 + `runtime.py` pack_aux）；降级序：**降窗宽（5→4→6 内建）→ 单图 hero 救场**（仅 main-eligible 且 hero gap 显著；advance=1 余照重进循环）**→ 显式 pending**（fail-loud 日志 `mcs_all_sizes_failed`）。parity / portrait tiler 显式 3 槽路径**原样保留** |
 | **R-C2** | `hero_first` 改降权 | 删 hook 早退 + 修 S3 取整归零（**两处都要动**）；对 flat dense 强降权；hero 族仍可在合法窗尝试 |
 | **R-C3** | 活跃集 15→11 + 4-hero 转 GA | 按 D8 清单剪 5 加 1；4-hero：`status: ga`、`rollout: 100`、进 `MOSAIC_4_PATTERN_IDS` + schema 枚举 + `--sync-python` codegen + `LEGACY_MOSAIC_REGISTRY_IDS` 补 hero-3-2；竞争用**条件化 hero-gap prior**（有主角 hero ×1.10、等权背 `wasted_hero` 0.35；均势反向），不硬抬 base_weight |
-| **R-C4** | 简化粗分段（可降级项） | **主信号 = `takenAt` 时间链**（E3：现网 burstGroupId 退化为每资产一组，不可依赖）；时间豁口 = min(900s, max(120s, 3×中位间隔))；换 city 切；时间戳缺失贴前段；segment 为 planner 内存对象。**签名路由**：`(nP,nL,burst内聚)` → pattern 白名单缩窄，未命中回落全量 registry，路由结果写日志 `candidate_source`。视 C1–C3 后指标决定是否完整化 |
+| **R-C4** | 简化粗分段（可降级项） | **主信号 = `takenAt` 时间链**（E3：现网 burstGroupId 退化为每资产一组，不可依赖）；时间豁口 = min(1800s, max(120s, 3×中位间隔))；混排连拍默认 `mixed_proximity_seconds=1800`（30min）；换 city 切；时间戳缺失贴前段；segment 为 planner 内存对象。**签名路由**：`(nP,nL,burst内聚)` → pattern 白名单缩窄，未命中回落全量 registry，路由结果写日志 `candidate_source`。视 C1–C3 后指标决定是否完整化 |
 | **R-C5** | 机会 reserve 状态机 | `planner_state` 加 `hero_reserve: idle/armed/consumed/released`；armed 期间等权 dense 让位 hero 窗；失败/章尽/资产被占 → released；**不加额度**，P21 max / 相邻禁 / 章级上限照常 |
 | **R-C6** | Studio 解释 | 前置 H2；消费原始 `mosaicDecisionLog` 展示 fallbackReason / rejected Top3（叙事语言）；签名路由的 `candidate_source` 一并展示 |
 | **R-C7** | 分轨参数表 | 文档化 curated / archive / quick-share：limits、是否启用 size=3 aux、beat、min_score（实现可配置，不必三套代码） |
@@ -467,6 +467,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.20-LTN | 2026-07-20 | 拼图时间内聚默认 900s→1800s（`mixed_proximity_seconds` + C4 `GAP_CEIL` + 周看板 burstPass） |
 | v1.2.19-LTN | 2026-07-20 | 审查修复：AC-C-01 邻接非恒真、排除 tiler hint、相对基线 gate、隔离单次复用、周看板 `--strict-c01` opt-in、qualifying hero 要求 coverage≥0.55 |
 | v1.2.18-LTN | 2026-07-20 | 补缺口：AC-C-01 隔离严格率、AC-C-02 H9 e2e + dogfood 面积门（4-hero-70）、G-LTN-07 三项指标、AC-C-07 parity_tail/burst_no_dup、schema 审计字段、阴性 fixture 扩容 |
 | v1.2.17-LTN | 2026-07-20 | Dogfood AC：B-02/D-02/D-03 机器可复跑（fixture+脚本）；D-01 人评清单；验收记录入库 |
