@@ -356,11 +356,8 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     if not cfg.enabled or not ctx.enable_mosaic:
         return None
     density = getattr(ctx.layout_state, "layout_density", "balanced")
-    if density == "hero_first":
-        # Hero-first prefers sparse single-hero screens over dense collages
-        # (intent preferMosaic=False). Defer to the legacy single/grid emitters,
-        # which already honor density, instead of greedily packing MCS windows.
-        return None
+    # LTN C2 · hero_first no longer hard-skips MCS; flat dense is down-weighted
+    # via density params / scoring instead of closing the mosaic pipe.
     if _defer_portrait_grid8(ctx, start):
         return None
     remaining = len(ctx.ids) - start

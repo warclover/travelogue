@@ -123,7 +123,15 @@ def _main_quality_penalty(
     return 0.0
 
 
-def _duplicate_density_penalty(asset_ids: list[str], assets_by_id: dict[str, dict]) -> float:
+def _duplicate_density_penalty(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+    *,
+    pattern_id: str = "",
+) -> float:
+    # LTN H6/S1 · burst-preferring templates must not be born with a 0.8 penalty.
+    if pattern_id and template_prefers_burst(pattern_id) is True:
+        return 0.0
     groups: dict[str, int] = {}
     for aid in asset_ids:
         bg = (assets_by_id.get(aid) or {}).get("burstGroupId")
@@ -341,7 +349,9 @@ def score_candidate(
             quality_pool=quality_pool,
         ),
         "duplicate_density": max(
-            _duplicate_density_penalty(asset_ids, assets_by_id),
+            _duplicate_density_penalty(
+                asset_ids, assets_by_id, pattern_id=pattern_id_early
+            ),
             _near_scene_clone_penalty(pattern_id_early, asset_ids, assets_by_id),
         ),
         "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects, cfg=cfg),
@@ -402,13 +412,7 @@ def score_candidate(
         if n_p == 1 and n_l >= 4:
             total = min(1.0, total * 1.05)
             reasons.append("R_SINGLE_PORTRAIT_3LAND")
-    if screen.get("patternId") == PATTERN_LANDSCAPE_9 and penalties.get(
-        "hero_slot_aspect", 0.0
-    ) <= 0.0:
-        all_land = asset_ids and all(_is_landscape_id(aid, aspects) for aid in asset_ids)
-        if all_land and len(asset_ids) == 9:
-            total = min(1.0, total * 1.06)
-            reasons.append("R_GRID9_LAND")
+    # LTN H6/S2 · R_GRID9_LAND ×1.06 removed (conflicts with pruning 9-grid SKUs).
     if layout_state and layout_state.can_emit_pattern(screen.get("patternId", "")):
         reasons.append("R_RHYTHM_OK")
     else:

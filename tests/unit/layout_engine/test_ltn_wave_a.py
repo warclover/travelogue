@@ -1,0 +1,140 @@
+"""LTN Wave A · H6 / H8 / R-A3 / C2 regression locks."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+from unittest.mock import MagicMock
+
+from travelogue.config import get_config
+from travelogue.layout_contract.density import LayoutDensityParams
+from travelogue.layout_engine.mosaic.hook import try_mosaic_window
+from travelogue.layout_engine.mosaic.scorer import _duplicate_density_penalty
+from travelogue.layout_templates.models import TemplateDef, TemplateSlot, TemplateStage
+from travelogue.layout_templates.validator import (
+    _GRANDFATHERED_DENSE_SLOT_IDS,
+    validate_template_def,
+)
+
+
+def test_h6_s1_prefers_burst_skips_duplicate_density_penalty(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.scorer.template_prefers_burst",
+        lambda pid: True if pid == "screen-mosaic-4-hero-70-sidebar" else False,
+    )
+    assets = {f"a{i}": {"id": f"a{i}", "burstGroupId": "bg-1"} for i in range(4)}
+    ids = list(assets)
+    assert (
+        _duplicate_density_penalty(
+            ids, assets, pattern_id="screen-mosaic-4-hero-70-sidebar"
+        )
+        == 0.0
+    )
+    assert _duplicate_density_penalty(ids, assets, pattern_id="screen-landscape-4") == 0.8
+
+
+def test_h6_s3_dense_floor() -> None:
+    params = LayoutDensityParams(density="hero_first")
+    assert params.adjust_dense_collage_limits(0, 1)[1] == 1
+    assert params.adjust_dense_collage_limits(0, 0)[1] == 0
+
+
+def test_c2_hero_first_attempts_mcs(monkeypatch) -> None:
+    """hero_first must no longer hard-return before MCS window tries."""
+    cfg = replace(
+        get_config().mosaic,
+        enabled=True,
+        enabled_window_sizes=(5, 4, 6),
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook._mosaic_cfg", lambda: cfg
+    )
+    called: list[int] = []
+
+    def fake_mcs(ctx, start, size, mosaic_cfg):
+        called.append(size)
+        return False
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook.try_mosaic_window_mcs", fake_mcs
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook._defer_portrait_grid8",
+        lambda *a, **k: False,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook.planner_mosaic_window_sizes",
+        lambda *a, **k: (5, 4, 6),
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook.window_has_candidates",
+        lambda *a, **k: True,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook._mixed_portrait_dense_skip",
+        lambda *a, **k: False,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook._single_portrait_dense_skip",
+        lambda *a, **k: False,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook._window_all_std_portrait",
+        lambda *a, **k: False,
+    )
+
+    layout_state = MagicMock()
+    layout_state.layout_density = "hero_first"
+    layout_state.can_use_dense_collage_window.return_value = True
+    layout_state.can_use_large_mosaic_window.return_value = True
+    layout_state.large_mosaic_min_slots = 8
+    layout_state.dense_collage_min_slots = 4
+
+    ctx = MagicMock()
+    ctx.enable_mosaic = True
+    ctx.layout_state = layout_state
+    ctx.ids = [f"a{i}" for i in range(10)]
+    ctx.aspects = {aid: "landscape" for aid in ctx.ids}
+    ctx.assets_map = {aid: {"id": aid} for aid in ctx.ids}
+    ctx.screens = []
+    ctx.mix_gap = 900.0
+    ctx.med_sharp = 0.5
+    ctx.trip_total = 40
+    ctx.chapter_id = "ch-01"
+    ctx.burst_seconds = 900.0
+    ctx.use_portrait_grid8 = False
+
+    assert try_mosaic_window(ctx, 0) is None
+    assert called, "hero_first must attempt MCS windows (LTN C2)"
+
+
+def test_a3_freeze_blocks_new_dense_sku() -> None:
+    slots = tuple(
+        TemplateSlot(index=i, rect=(i + 1, i + 1, 1, 1), role="support")
+        for i in range(7)
+    )
+    tpl = TemplateDef(
+        id="screen-mosaic-7-forbidden-new",
+        version=1,
+        status="experimental",
+        kind="composite",
+        display_name="forbidden",
+        stage=TemplateStage(aspect="16:9", cols=(1,) * 7, rows=(1,), gap="2px"),
+        photo_count_min=7,
+        photo_count_max=7,
+        slots=slots,
+        render_grid_class="layout-screen__grid--x",
+        render_css_bundle="journal-screens.css",
+    )
+    report = validate_template_def(tpl, mode="ci")
+    assert any(i.code == "V-LTN-FREEZE" for i in report.issues)
+
+
+def test_a3_grandfather_allows_grid8() -> None:
+    assert "screen-portrait-grid-8" in _GRANDFATHERED_DENSE_SLOT_IDS
+
+
+def test_h8_active_set_gate_script() -> None:
+    from scripts.ltn_active_set_gate import check
+
+    report = check()
+    assert report["ok"], report

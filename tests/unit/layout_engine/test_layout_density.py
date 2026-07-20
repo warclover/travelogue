@@ -28,22 +28,36 @@ PP_THRESHOLD = 0.10
 
 
 def test_normalize_layout_density_invalid() -> None:
-    assert normalize_layout_density("foo") == "balanced"
+    from travelogue.config.errors import ConfigError
+    import pytest
+
     assert normalize_layout_density("hero_first") == "hero_first"
+    assert normalize_layout_density(None) == "balanced"
+    assert normalize_layout_density("") == "balanced"
+    with pytest.raises(ConfigError, match="layoutDensity"):
+        normalize_layout_density("foo")
 
 
 def test_resolve_import_layout_density_modes() -> None:
+    from travelogue.config.errors import ConfigError
+    import pytest
+
     assert resolve_import_layout_density("hero_first", import_mode="fine_craft") == "hero_first"
-    assert resolve_import_layout_density("foo", import_mode="fine_craft") == "balanced"
     assert resolve_import_layout_density("hero_first", import_mode="quick_share") is None
+    with pytest.raises(ConfigError, match="layoutDensity"):
+        resolve_import_layout_density("foo", import_mode="fine_craft")
 
 
 def test_apply_intent_layout_density() -> None:
+    from travelogue.config.errors import ConfigError
+    import pytest
+
     trip: dict = {"meta": {"places": ["旅途"]}}
     apply_intent(trip, layout_density="collage_first")
     assert trip["intent"]["layoutDensity"] == "collage_first"
-    apply_intent(trip, layout_density="not-valid")
-    assert trip["intent"]["layoutDensity"] == "balanced"
+    with pytest.raises(ConfigError, match="layoutDensity"):
+        apply_intent(trip, layout_density="not-valid")
+    assert trip["intent"]["layoutDensity"] == "collage_first"
     apply_intent(trip, layout_density=None)
     assert "layoutDensity" not in trip["intent"]
 
@@ -169,9 +183,8 @@ def _plan_density(density: str, n_assets: int = 50) -> list[dict]:
     )
 
 
-# Density preferences are honored by both the legacy grid planner and the MCS
-# unified planner: hero_first defers MCS to the legacy single/grid emitters, and
-# collage_first reorders MCS windows to avoid stranding trailing single slots.
+# Density preferences: hero_first down-weights dense quota (LTN C2 still attempts
+# MCS); collage_first reorders MCS windows to avoid stranding trailing singles.
 def test_ac_ld_06_hero_first_single_slot_ratio_up_10pp() -> None:
     balanced = _plan_density("balanced", 80)
     hero = _plan_density("hero_first", 80)

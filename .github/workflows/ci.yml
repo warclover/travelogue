@@ -127,6 +127,19 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-fail-under=65
 
+      # LTN R-A1 · LRG sync-journal must block PRs (was push-only / dead PR-warn in validate).
+      - name: LTE journal CSS sync drift (PR block)
+        run: |
+          python -m travelogue.layout_templates.cli export --sync-journal
+          git diff --exit-code templates/visual-journal/journal-screens.css || {
+            echo "journal-screens.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-journal"
+            exit 1
+          }
+
+      # LTN R-A5 / H8 · active mosaic set must agree across policy / codegen / schema.
+      - name: LTN active_set_gate
+        run: python scripts/ltn_active_set_gate.py
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
@@ -307,22 +320,8 @@ jobs:
       - name: LTE journal CSS handwritten inventory
         run: python scripts/lte_journal_css_audit.py --fail-on-duplicates
 
-      # LRG-W0 · T-LRG-12: export --sync-journal defaults to strict fail-fast when
-      # hand-written CSS survives after @journal-overlays:end (would otherwise be
-      # silently truncated). PR-warn → release-block staged rollout (§3.2.1/§3.2.3
-      # of docs/PRD-LAYOUT-READER-REGRESSION-GUARD.md), same as Phase16/17 steps below.
-      - name: LTE journal CSS sync drift (PR warn)
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-        run: |
-          python -m travelogue.layout_templates.cli export --sync-journal
-          git diff --exit-code templates/visual-journal/journal-screens.css || {
-            echo "journal-screens.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-journal"
-            exit 1
-          }
-
+      # LRG / LTN R-A1 · sync-journal also runs as PR block in test-pr; keep on push.
       - name: LTE journal CSS sync drift (release block)
-        if: github.event_name != 'pull_request'
         run: |
           python -m travelogue.layout_templates.cli export --sync-journal
           git diff --exit-code templates/visual-journal/journal-screens.css || {

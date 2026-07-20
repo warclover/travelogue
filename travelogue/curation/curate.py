@@ -1710,6 +1710,37 @@ def run_curate(
     scope: str = "full",
     cover_force: bool = False,
 ) -> CurateResult:
+    """Run curation. Pins *cfg* via app_config_scope so internal get_config() matches (LTN E6b)."""
+    from travelogue.config import get_config
+    from travelogue.config.runtime import app_config_scope
+
+    active_cfg = cfg or get_config()
+    with app_config_scope(active_cfg):
+        return _run_curate_inner(
+            trip,
+            export_layout=export_layout,
+            layout_engine=layout_engine,
+            apply_layout=apply_layout,
+            trip_dir=trip_dir,
+            cfg=active_cfg,
+            refresh_algorithms=refresh_algorithms,
+            scope=scope,
+            cover_force=cover_force,
+        )
+
+
+def _run_curate_inner(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    layout_engine: str | None = None,
+    apply_layout: bool = True,
+    trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
+    refresh_algorithms: bool | None = None,
+    scope: str = "full",
+    cover_force: bool = False,
+) -> CurateResult:
     curate_scope = "tier" if str(scope or "").strip().lower() == "tier" else "full"
     if len(trip.get("assets") or []) < MIN_CURATE_ASSETS:
         raise CurateError(

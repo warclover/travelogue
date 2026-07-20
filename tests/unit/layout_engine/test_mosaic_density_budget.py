@@ -36,6 +36,13 @@ def test_hero_first_scales_dense_quota_down() -> None:
     assert hi == 1
 
 
+def test_hero_first_dense_floor_keeps_at_least_one() -> None:
+    """LTN H6/S3 · small-trip dense_max=1 must not floor to 0 under hero_first."""
+    params = LayoutDensityParams(density="hero_first")
+    _lo, hi = params.adjust_dense_collage_limits(0, 1, total_photos=40)
+    assert hi == 1
+
+
 def test_collage_first_scales_dense_quota_up() -> None:
     params = LayoutDensityParams(density="collage_first")
     _lo, hi = params.adjust_dense_collage_limits(0, 3, total_photos=100)

@@ -6,6 +6,8 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
+from travelogue.config.errors import ConfigError
+
 LayoutDensity = Literal["balanced", "hero_first", "collage_first"]
 
 _VALID: frozenset[str] = frozenset({"balanced", "hero_first", "collage_first"})
@@ -14,12 +16,18 @@ MIN_PHOTOS_COLLAGE_FULL_EFFECT = 35
 
 
 def normalize_layout_density(raw: object, *, enabled: bool = True) -> LayoutDensity:
+    """Normalize density; empty/None → balanced; illegal non-empty → ConfigError (LTN R-A2)."""
     if not enabled:
         return "balanced"
     value = str(raw or "").strip().lower()
+    if not value:
+        return "balanced"
     if value in _VALID:
         return value  # type: ignore[return-value]
-    return "balanced"
+    raise ConfigError(
+        f"invalid layoutDensity={raw!r}; expected one of "
+        f"{sorted(_VALID)} (LTN R-A2 fail-loud)"
+    )
 
 
 def layout_density_from_trip(trip: dict, *, app_cfg=None) -> LayoutDensity:
@@ -52,7 +60,10 @@ class LayoutDensityParams:
         if self.density == "balanced":
             return dense_min, dense_max
         if self.density == "hero_first":
-            return dense_min, max(0, int(math.floor(dense_max * 0.35)))
+            # LTN H6/S3 · floor at 1 when base max>0 so small trips keep a legal hero slot.
+            if dense_max <= 0:
+                return dense_min, 0
+            return dense_min, max(1, int(math.floor(dense_max * 0.35)))
         cap = max(dense_max, (total_photos // 4) if total_photos > 0 else dense_max)
         new_max = min(int(math.ceil(dense_max * 1.15)), cap) if dense_max > 0 else dense_max
         if MIN_PHOTOS_COLLAGE_FULL_EFFECT <= total_photos <= 50:
