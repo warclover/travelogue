@@ -44,6 +44,8 @@ class ChapterPlanContext:
     flush_lookahead_portraits: int = 0
     trip: dict | None = None
     app_config: AppConfig | None = None
+    # LTN C4 · planner-memory coarse segments (not persisted as sceneId).
+    coarse_segments: list = field(default_factory=list)
 
 
 def build_chapter_plan_context(
@@ -98,6 +100,9 @@ def build_chapter_plan_context(
     burst_groups: dict[str, int] = {}
     if assets_map:
         burst_groups = burst_group_map(ids, assets_map, aspects, burst_seconds=burst_seconds)
+    from travelogue.layout_engine.mosaic.coarse_segments import build_coarse_segments
+
+    coarse_segments = build_coarse_segments(ids, assets_map) if assets_map else []
     return ChapterPlanContext(
         chapter_id=chapter_id,
         aspects=aspects,
@@ -124,6 +129,7 @@ def build_chapter_plan_context(
         flush_lookahead_portraits=max(0, int(flush_lookahead_portraits)),
         trip=trip,
         app_config=app_config,
+        coarse_segments=coarse_segments,
     )
 
 

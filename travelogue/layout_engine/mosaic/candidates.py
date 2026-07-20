@@ -191,6 +191,16 @@ def generate_window_candidates_with_rejections(
             )
     else:
         patterns = patterns_for_window_size(len(asset_ids), reg)
+        contract_source = "legacy_size"
+    # LTN C4 · signature route on the legacy (non-TC) path only. When template
+    # contract is on, mix-index already owns candidate narrowing (exact/fallback).
+    route_source = contract_source
+    if not tc_enabled:
+        from travelogue.layout_engine.mosaic.coarse_segments import apply_signature_route
+
+        patterns, route_source = apply_signature_route(
+            patterns, asset_ids, aspects, assets_map
+        )
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
@@ -293,8 +303,8 @@ def generate_window_candidates_with_rejections(
                 feat = {**summary, "patternId": pat.pattern_id}
                 if slot_fallback:
                     feat["slotAssignmentFallback"] = slot_fallback
-                if tc_enabled and contract_source == "fallback":
-                    feat["candidateSource"] = "fallback"
+                if route_source:
+                    feat["candidateSource"] = route_source
                 usage_deferred.append(
                     (
                         ScreenCandidate(
@@ -311,8 +321,9 @@ def generate_window_candidates_with_rejections(
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback
+        if route_source:
+            feat["candidateSource"] = route_source
         if tc_enabled:
-            feat["candidateSource"] = contract_source
             if square_relaxed:
                 feat["squareRelaxed"] = True
             if contract_source == "fallback":
@@ -356,11 +367,19 @@ def generate_window_candidates_with_rejections(
     elif tc_enabled:
         shadow_payload = {
             "windowMix": window_mix_label,
-            "candidateSource": contract_source,
+            "candidateSource": route_source,
             "squareRelaxed": square_relaxed,
             "livePatternIds": sorted(orderable_pattern_ids),
             "hasDiff": False,
         }
+    else:
+        shadow_payload = {
+            "candidateSource": route_source,
+            "livePatternIds": sorted(orderable_pattern_ids),
+            "hasDiff": False,
+        }
+    if shadow_payload is not None and "candidateSource" not in shadow_payload:
+        shadow_payload["candidateSource"] = route_source
     return WindowCandidateResult(
         candidates=out,
         rejected=rejected,

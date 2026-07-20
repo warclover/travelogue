@@ -24,8 +24,11 @@ _REJECT_LABELS: dict[str, str] = {
 }
 
 _SOURCE_LABELS: dict[str, str] = {
-    "exact": "签名路由直接命中",
-    "fallback": "签名未命中，已回落全量模板库",
+    "exact": "模板合约精确命中",
+    "fallback": "模板合约回落",
+    "signature": "签名路由直接命中",
+    "signature_fallback": "签名未命中，已回落全量模板库",
+    "legacy_size": "按窗宽全量模板",
 }
 
 

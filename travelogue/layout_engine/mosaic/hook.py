@@ -496,8 +496,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
     if ctx.layout_state is not None:
         ctx.layout_state.dense_collage_min_slots = min_dense
+    # LTN C4 · never open a mosaic window across coarse segment boundaries.
+    from travelogue.layout_engine.mosaic.coarse_segments import max_window_size_in_segment
+
+    seg_cap = max_window_size_in_segment(getattr(ctx, "coarse_segments", None), start)
     for size in sizes:
         if start + size > len(ctx.ids):
+            continue
+        if size > seg_cap:
             continue
         if (
             cfg.density_budget.enabled
