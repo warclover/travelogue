@@ -28,6 +28,7 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
+import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
   clearSessionIntent,
@@ -909,6 +910,15 @@ export function cancelPreviewLongshotExport(root) {
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", "导出设置");
     pop.innerHTML = buildPanelHtml(_longshot2PlatformIds);
+    var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
+    if (dualBtn && !dualBtn._ltnBound) {
+      dualBtn._ltnBound = true;
+      dualBtn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openDualPreview(_tripIdFromPath());
+      });
+    }
 
     var prefs0 = readLongshotExportPrefs();
     var panel = bindPanelDraft(
