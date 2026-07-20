@@ -331,7 +331,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | ID | 需求 | 验收 |
 |----|------|------|
-| **R-E1** | LTE 单权威收束 | 活跃 pattern 唯一清单；收敛**六写**（YAML status / rollout / lte_policy / LEGACY registry / schema 枚举 / config override）；顺序：先修门（H8）→ 再删写点 → 最后建新抽象。生命周期规则：**rollout=0 超 4 周强制 review**（转正或归档） |
+| **R-E1** | LTE 单权威收束 | 活跃 pattern 唯一清单；收敛**六写**（YAML status / rollout / lte_policy / LEGACY registry / schema 枚举 / config override）；顺序：先修门（H8）→ 再删写点 → 最后建新抽象。生命周期规则：**rollout=0 超 4 周强制 review**（转正或归档）。**已落地（第一步）**：`active_set.py` 清单 + 六写表；`LEGACY_MOSAIC_REGISTRY_IDS` **改为派生** codegen unified（删手写第四表）；gate 对账含 LEGACY↔policy；`rollout.zeroSince` + 28 天逾期 FAIL |
 | **R-E2** | 周看板 | 窗宽分布、mosaic 曝光、§12 指标包；脚本 `scripts/ltn_weekly_dashboard.py`（只读 trip.json，默认不 re-curate）。实现：`travelogue/layout_engine/mosaic/ltn_weekly.py` |
 | **R-E3** | 分轨表产品化 | curated / archive / quick-share 写入 `config.yaml.example` + §11.1（权威：`mosaic_track.py`） |
 | **R-E4** | Asymmetric quota（可选） | max 不变；opportunity 维度可观测；**无合法窗不强制 emit**。**已落地**：`asymmetric_quota.py` + planner soft min/`denseOpportunitySeen`；周看板字段；`should_force_dense_emit()≡False` |
@@ -463,6 +463,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.16-LTN | 2026-07-20 | 实施落地：E1 第一步 — active_set SSOT、LEGACY 派生自 codegen、rollout.zeroSince 生命周期进 H8 gate |
 | v1.2.15-LTN | 2026-07-20 | 实施落地：E4 asymmetric quota（hard max + soft opportunity；无合法窗不强制 emit；看板字段） |
 | v1.2.14-LTN | 2026-07-20 | 实施落地：D3 版式角色表（产品别名↔narrativeRole、渲染 data-*）+ `rhythmSignOff` CSS 漂移闸门 |
 | v1.2.13-LTN | 2026-07-20 | 实施落地：E2 周看板（`ltn_weekly.py` + `ltn_weekly_dashboard.py`）；E3 分轨说明补齐 `config.yaml.example` |
