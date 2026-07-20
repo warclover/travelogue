@@ -13,7 +13,7 @@ def test_build_mosaic_explain_top3_rejects_and_fallback():
                 "segmentId": "ch-01",
                 "fallbackUsed": True,
                 "fallbackReason": "mcs_all_sizes_failed",
-                "candidateSource": "fallback",
+                "candidateSource": "signature_fallback",
                 "rejectedTemplates": [
                     {"templateId": "screen-landscape-4", "reason": "geometry_invalid"},
                     {
@@ -46,6 +46,24 @@ def test_build_mosaic_explain_top3_rejects_and_fallback():
     assert "hero-70-sidebar" in line
     # Top3 only — fourth reject omitted
     assert "landscape-3" not in line
+
+
+
+
+def test_build_mosaic_explain_contract_source_label():
+    curation = {
+        "mosaicDecisionLog": [
+            {
+                "isWinnerPlan": True,
+                "fallbackUsed": True,
+                "fallbackReason": "no_candidates",
+                "candidateSource": "fallback",
+            }
+        ]
+    }
+    out = build_mosaic_explain(curation)
+    assert out is not None
+    assert "模板合约回落" in out["details"][0]
 
 
 def test_build_mosaic_explain_ignores_non_winner_only_noise():
