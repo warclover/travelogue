@@ -1,0 +1,97 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-ltn-dogfood-hero-chapter",
+  "templateId": "visual-journal",
+  "exportLayout": "web",
+  "meta": {
+    "title": "LTN dogfood · hero mosaic + rhythm chapter",
+    "dateStart": "2025-07-01",
+    "dateEnd": "2025-07-01",
+    "places": ["Dogfood Bay"],
+    "tone": "warm"
+  },
+  "intent": {
+    "version": "1",
+    "mode": "curated",
+    "layoutDensity": "balanced",
+    "photoCullEnabled": false
+  },
+  "coverAssetId": "df-a01",
+  "privacy": { "visibility": "private" },
+  "pipeline": { "status": "structure_ready" },
+  "createdAt": "2025-07-01T00:00:00Z",
+  "updatedAt": "2025-07-01T00:00:00Z",
+  "assets": [
+    {"id": "df-a01", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a01.webp"},
+    {"id": "df-a02", "type": "image", "width": 1200, "height": 1600, "displayFile": "assets/df-a02.webp"},
+    {"id": "df-a03", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a03.webp"},
+    {"id": "df-a04", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a04.webp"},
+    {"id": "df-a05", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a05.webp"},
+    {"id": "df-a06", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a06.webp"},
+    {"id": "df-a07", "type": "image", "width": 1200, "height": 1600, "displayFile": "assets/df-a07.webp"},
+    {"id": "df-a08", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a08.webp"},
+    {"id": "df-a09", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a09.webp"},
+    {"id": "df-a10", "type": "image", "width": 1600, "height": 900, "displayFile": "assets/df-a10.webp"}
+  ],
+  "chapters": [
+    {
+      "chapterId": "ch-df-01",
+      "title": "中章高潮样章",
+      "screens": [
+        {
+          "screenId": "df-s01",
+          "patternId": "screen-landscape-1",
+          "narrativeRole": "hero_single",
+          "rhythmGap": "L1",
+          "slots": [{"assetId": "df-a01", "slot": 0}]
+        },
+        {
+          "screenId": "df-s02",
+          "patternId": "screen-portrait-2",
+          "narrativeRole": "pair",
+          "rhythmGap": "L1",
+          "slots": [
+            {"assetId": "df-a02", "slot": 0},
+            {"assetId": "df-a07", "slot": 1}
+          ]
+        },
+        {
+          "screenId": "df-s03",
+          "patternId": "screen-landscape-1",
+          "narrativeRole": "hero_single",
+          "rhythmGap": "L2",
+          "sceneId": "beach-am",
+          "slots": [{"assetId": "df-a03", "slot": 0}]
+        },
+        {
+          "screenId": "df-s04",
+          "patternId": "screen-mosaic-5-main-portrait-3land",
+          "narrativeRole": "mosaic_hero",
+          "preserveGroup": true,
+          "groupId": "df-s04",
+          "rhythmGap": "L0",
+          "slots": [
+            {"assetId": "df-a04", "slot": 0, "role": "main"},
+            {"assetId": "df-a05", "slot": 1},
+            {"assetId": "df-a06", "slot": 2},
+            {"assetId": "df-a08", "slot": 3},
+            {"assetId": "df-a09", "slot": 4}
+          ]
+        },
+        {
+          "screenId": "df-s05",
+          "patternId": "screen-landscape-1",
+          "narrativeRole": "hero_single",
+          "rhythmGap": "L1",
+          "slots": [{"assetId": "df-a10", "slot": 0}]
+        }
+      ]
+    }
+  ],
+  "curation": {
+    "displayedAssetIds": [
+      "df-a01", "df-a02", "df-a07", "df-a03", "df-a04",
+      "df-a05", "df-a06", "df-a08", "df-a09", "df-a10"
+    ]
+  }
+}

@@ -230,7 +230,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | ID | 验收项 |
 |----|--------|
 | **AC-B-01** | ADR 评审通过并入库 |
-| **AC-B-02** | 固定 dogfood：scroll 中含 hero mosaic 的 trip，longshot 仍可辨「一组」（目视 + 可选 slot 守恒断言） |
+| **AC-B-02** | 固定 dogfood：scroll 中含 hero mosaic 的 trip，longshot 仍可辨「一组」（目视 + 可选 slot 守恒断言）。**机器项已落地**：`ltn_dogfood.py` / `scripts/ltn_dogfood_ac.py` + fixture；目视见验收记录 |
 | **AC-B-03** | 双预览在导出/分享主路径可达，家庭用户能说清差异 |
 | **AC-B-04** | `preserveGroup=false` 仅显式场景使用，有日志 |
 
@@ -321,9 +321,9 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | ID | 验收项 |
 |----|--------|
-| **AC-D-01** | 小样本盲评节奏分 ≥7（基线 ~5.5） |
-| **AC-D-02** | 语义 pause 出现在章界/地点界，而非均匀加大所有屏缝 |
-| **AC-D-03** | 有样本时：hero mosaic 中章占比 ≥60%（与 beat 一致） |
+| **AC-D-01** | 小样本盲评节奏分 ≥7（基线 ~5.5）。工程 proxy 仅提示；人评清单见 [ltn-dogfood-ac](./acceptance-records/ltn-dogfood-ac-2026-07-20.md) |
+| **AC-D-02** | 语义 pause 出现在章界/地点界，而非均匀加大所有屏缝。**代理已进** `ltn_dogfood`（禁全 L1/全 L2） |
+| **AC-D-03** | 有样本时：hero mosaic 中章占比 ≥60%（与 beat 一致）。**已落地** fixture + 脚本（中章带 `[0.35, 0.80]`） |
 
 ---
 
@@ -463,6 +463,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.17-LTN | 2026-07-20 | Dogfood AC：B-02/D-02/D-03 机器可复跑（fixture+脚本）；D-01 人评清单；验收记录入库 |
 | v1.2.16-LTN | 2026-07-20 | 实施落地：E1 第一步 — active_set SSOT、LEGACY 派生自 codegen、rollout.zeroSince 生命周期进 H8 gate |
 | v1.2.15-LTN | 2026-07-20 | 实施落地：E4 asymmetric quota（hard max + soft opportunity；无合法窗不强制 emit；看板字段） |
 | v1.2.14-LTN | 2026-07-20 | 实施落地：D3 版式角色表（产品别名↔narrativeRole、渲染 data-*）+ `rhythmSignOff` CSS 漂移闸门 |
