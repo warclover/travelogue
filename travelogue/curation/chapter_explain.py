@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from travelogue.curation.mosaic_explain import build_mosaic_explain
+
 _SCORE_LABELS: dict[str, str] = {
     "aspect_match": "画幅匹配",
     "sharpness": "清晰度",
@@ -271,6 +273,7 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
         "segmentCount": segment_count,
         "segmentMode": segment_mode,
         "layoutExplain": build_layout_explain(trip.get("curation") or {}),
+        "mosaicExplain": build_mosaic_explain(trip.get("curation") or {}),
     }
 
 

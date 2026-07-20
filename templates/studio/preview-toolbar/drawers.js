@@ -344,6 +344,10 @@ export function loadChapterExplain(tripId, container) {
         if (data.layoutExplain) {
           renderExplainBlock(container, "排版引擎", data.layoutExplain);
         }
+        if (data.mosaicExplain) {
+          renderExplainBlock(container, "为何没拼", data.mosaicExplain);
+        }
+
       })
       .catch(function () {
         container.textContent = "无法加载分章说明";
