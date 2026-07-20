@@ -5,6 +5,7 @@
 
 import {
   postJson,
+  patchJson,
   postJsonConflictRetry,
   patchJsonConflictRetry,
 } from "../js/http.js";
@@ -224,6 +225,11 @@ export function initDisplayedAestheticTitles(tripId) {
   }
 
 
+/**
+ * Preview Chrome Unify · D-PCU-07～11
+ * - 默认：无黄条/底舱；旧 pending 静默 auto-confirm
+ * - 实验 ON：自动开分章面板，维持 pending，禁止黄条
+ */
 export function initG1V3(root, tripId, drawers, sheet) {
     Promise.all([
       fetch("/__travelogue/config").then(function (r) { return r.ok ? r.json() : null; }),
@@ -234,18 +240,47 @@ export function initG1V3(root, tripId, drawers, sheet) {
       .then(function (rows) {
         var cfg = rows[0];
         var entry = rows[1];
-        if (!cfg || !entry || !entry.g1Pending) return;
-        if (!(cfg.studio && cfg.studio.g1ConfirmStructure)) return;
-        activateG1Pending();
-        if (sheet) sheet.setStructureDot(true);
-        mountG1Banner(root, drawers);
-        refreshTaskDockState(root);
+        if (!cfg || !entry) return;
+        var experimentOn = !!(cfg.studio && cfg.studio.g1ConfirmStructure);
+
+        if (entry.g1Pending && !experimentOn) {
+          // D-PCU-11 · 旧 trip 静默锁定，禁止幽灵 pending
+          return patchJson(
+            "/__travelogue/trips/" + encodeURIComponent(tripId) + "/pipeline",
+            { status: "structure_locked", continuePipeline: true }
+          ).then(function (res) {
+            trackStudioEvent("pcu_legacy_g1_autoconfirm", {
+              tripId: tripId,
+              ok: !!(res && res.status >= 200 && res.status < 300),
+            });
+            if (typeof root._maybeShowChapterHint === "function") {
+              root._maybeShowChapterHint();
+            }
+          });
+        }
+
+        if (entry.g1Pending && experimentOn) {
+          activateG1Pending();
+          // 禁止 Task Dock 镜像黄条
+          root._g1BannerVisible = true;
+          if (sheet) sheet.setStructureDot(true);
+          if (typeof root._openChapterPanel === "function") {
+            root._openChapterPanel({ auto: true, pending: true });
+          } else if (drawers && typeof drawers.openStructure === "function") {
+            drawers.openStructure();
+          }
+          return;
+        }
+
+        if (typeof root._maybeShowChapterHint === "function") {
+          root._maybeShowChapterHint();
+        }
       })
       .catch(function () {});
   }
 
 
-/** PRD §6.2 · G1 顶栏横幅（M4）；可见时为栈顶主待办，滚出可视区后由 Task Dock 镜像。 */
+/** @deprecated D-PCU：默认路径不再挂黄条；保留函数供测试/实验逃生。 */
 export function mountG1Banner(root, drawers) {
     if (document.querySelector(".preview-toolbar__g1-banner")) return null;
 

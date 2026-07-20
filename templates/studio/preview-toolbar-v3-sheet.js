@@ -899,6 +899,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         }
         return;
       }
+      // D-PCU · 分章与精修互斥
+      if (root._chapterPanel && root._chapterPanel.isOpen()) {
+        root._chapterPanel.close();
+      }
       open(null, { source: "dock" });
     });
   }

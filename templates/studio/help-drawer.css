@@ -38,19 +38,24 @@
 }
 
 /* 预览页：左上幽灵，远离 Dock 长图 */
-.studio-help-open--preview {
+/* 预览：Help 已迁入 Dock（D-PCU）；保留旧 class 以免残留 DOM 错位抢戏 */
+.studio-help-open--preview:not(.studio-help-open--dock) {
   position: fixed;
   top: 14px;
   left: 14px;
   z-index: 205;
   color: rgba(245, 251, 248, 0.72);
   border-color: rgba(255, 255, 255, 0.18);
-  background: rgba(26, 47, 40, 0.45);
+  background: rgba(28, 32, 34, 0.45);
 }
 
-.studio-help-open--preview:hover {
+.studio-help-open--preview:not(.studio-help-open--dock):hover {
   color: #fff;
-  background: rgba(26, 47, 40, 0.72);
+  background: rgba(28, 32, 34, 0.72);
+}
+
+.studio-help-open--dock {
+  position: static;
 }
 
 /* 首页：右上角，不与主 CTA 抢位 */

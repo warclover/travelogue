@@ -150,7 +150,7 @@
 | **D-REF-06** | 版面类 = **写入意图 + 待更新** | ★ / 拼图 / 同框；Task Dock 固定一条 |
 | **D-REF-07** | 主动作文案 = **「更新版面」** | **P0 起**用户可见文案全局替换「应用排版」；禁止一词两名 |
 | **D-REF-08** | 导出前 = **拦截 pending** | **P0** Modal 规格见 §4.3.1 |
-| **D-REF-09** | G1 = **顶栏横幅** | **P1**；仅 `structurePending` 时出现 · **2026-07-18 脚注**：[Share-Face Closeout](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **D-SFC-07**：`kept_n` 1–9 且**快速分享**默认不设 pending（实验选项可开）；**精细制作**除外 |
+| **D-REF-09** | G1 = **顶栏横幅** | **P1**；仅 `structurePending` 时出现 · **2026-07-18 脚注**：[Share-Face Closeout](./PRD-SHARE-FACE-CLOSEOUT-V1.md) **D-SFC-07**：`kept_n` 1–9 且**快速分享**默认不设 pending（实验选项可开）；**精细制作**除外 · **2026-07-19 supersede**：[Preview Chrome Unify](./acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) **D-PCU-01/05/07～11**：默认主路径**不**挂黄横幅；分章改 Dock「分章」按需；默认一律 auto-lock；实验 ON 开分章面板而非黄条 |
 | **D-REF-10** | 导出相关设置跟导出走 | 文案范围 / 清晰度 / 按章·完整 → Dock 导出 `▾` |
 | **D-REF-11** | 首页设置改名 = **「导入偏好」** | **P0** |
 | **D-REF-12** | 封面版式 = **选后自动更新版面** | 维持立即生效体验 |

@@ -481,7 +481,7 @@ html[data-preview-toolbar="on"] .longshot-export-sheet__note--bridge {
 }
 
 .preview-toolbar__longshot-split--idle {
-  background: linear-gradient(135deg, #e8c872 0%, #d4a843 100%);
+  background: #c4a574;
 }
 .preview-toolbar__longshot-split--idle .preview-toolbar__longshot--main,
 .preview-toolbar__longshot-split--idle .preview-toolbar__longshot-caret {

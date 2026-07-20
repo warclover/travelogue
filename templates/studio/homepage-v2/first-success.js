@@ -169,7 +169,8 @@ function populateSuccessUi(result) {
     var segments = result.segmentCount;
     var photoCount = result.photoCount || 0;
     if (result.g1Pending) {
-      msg.textContent = "《" + title + "》章节结构已就绪，请先在预览中确认。";
+      // 仅实验「导入后先确认章节」仍会 pending；引导打开预览中的分章面板
+      msg.textContent = "《" + title + "》已可预览；请在预览中打开「分章」确认顺序。";
       if (details) {
         details.textContent = "";
         show(details, false);

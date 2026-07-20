@@ -152,7 +152,8 @@ def test_ux_p3_07_preview_toolbar_has_no_cluster_controls() -> None:
     assert "为什么这样分章" in bundle or "chapter-layout" in bundle
     assert "layoutExplain" in bundle
     assert "排版引擎" in bundle
-    assert "preview-toolbar__g1-banner" in bundle
+    # G1 黄条 CSS 可残留；默认路径不再挂载（见 PCU / test_preview_toolbar_v3）
+    assert "preview-toolbar__g1-banner" in bundle or "preview-chapter-panel" in bundle
     assert "preview-drawer__narrate-anchors" in bundle
     assert "copy-intent" in bundle
     assert "本章想强调的感觉" in bundle or "章级情绪" in bundle

@@ -140,30 +140,35 @@ export function syncCoverPlaceholderBadge(isPlaceholder) {
     }
   }
 
-/** R5.1 / MF-09 · preview badge matches shelf two-state (preparing / preview). */
+/**
+ * R5.1 / D-PCU · 管道状态进 Dock D-STAT（禁止独立 fixed badge）。
+ * 文案：准备高清 · N / 可先预览
+ */
 export function syncDerivativesStatusBadge(data) {
     data = data || {};
-    var badge = document.getElementById("preview-derivatives-badge");
-    if (!badge) {
-      badge = document.createElement("p");
-      badge.id = "preview-derivatives-badge";
-      badge.className = "preview-toolbar__derivatives-badge";
-      badge.setAttribute("role", "status");
-      badge.hidden = true;
-      document.body.appendChild(badge);
+    var legacy = document.getElementById("preview-derivatives-badge");
+    if (legacy && legacy.parentNode) {
+      legacy.parentNode.removeChild(legacy);
     }
+    var slot =
+      document.getElementById("preview-dock-stat") ||
+      document.querySelector(".preview-toolbar__dock-stat");
+    if (!slot) return;
     var preparing = Number(data.derivativesPreparing || 0);
     var previewOnly =
       !!data.g1Pending || String(data.derivativesStatus || "") === "preview";
     if (preparing > 0) {
-      badge.hidden = false;
-      badge.textContent = "正在准备 " + preparing + " 张高清图";
+      slot.hidden = false;
+      slot.textContent = "准备高清 · " + preparing;
+      slot.setAttribute("data-stat", "preparing");
     } else if (previewOnly) {
-      badge.hidden = false;
-      badge.textContent = "版面已就绪，可先预览";
+      slot.hidden = false;
+      slot.textContent = "可先预览";
+      slot.setAttribute("data-stat", "preview");
     } else {
-      badge.hidden = true;
-      badge.textContent = "";
+      slot.hidden = true;
+      slot.textContent = "";
+      slot.removeAttribute("data-stat");
     }
   }
 

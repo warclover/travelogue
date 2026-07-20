@@ -277,7 +277,7 @@ def test_v4_css_icon_dock_and_task_dock() -> None:
     for token in (
         "preview-toolbar__dock",
         "preview-toolbar--v4",
-        "--preview-toolbar-h: 0px",
+        "--preview-toolbar-h: 80px",
         "preview-task-dock",
         "preview-sheet",
         "preview-sheet__content",
@@ -458,12 +458,14 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             box = dock.bounding_box()
             assert box is not None
-            assert box["height"] <= 52, f"dock height expected compact, got {box['height']}"
-            # Labeled dock (返回/播放/精修 + 长图 split) is wider than icon-only era.
-            assert box["width"] <= 520, f"dock width expected compact-labeled, got {box['width']}"
+            # PCU：40px 触控 + Help/?/分章；高度/宽度较 icon-only 与旧 labeled 略增
+            assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
+            assert box["width"] <= 640, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
+            assert page.locator(".preview-toolbar__dock-btn--chapters").count() == 1
+            assert page.locator("#studio-help-open-preview").count() == 1
             assert page.locator(".preview-toolbar__longshot-caret").count() == 1
             assert page.locator(".preview-toolbar__longshot-split").count() == 1
             assert page.locator(".preview-toolbar__screenplay--v3").count() == 1
@@ -561,7 +563,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             )
             assert refine_on == "on"
 
-            page.locator(".preview-sheet__close").click()
+            # Dock z 高于 Sheet；× 可能被顶右长图区挡住 → 再点 Dock「完成/精修」关面板（保模式）
+            page.locator(".preview-toolbar__menu-btn").click()
             page.locator(".preview-sheet-root").wait_for(state="hidden", timeout=5_000)
 
             # V1.1 MF-01 · 关面板不退出模式
@@ -812,24 +815,39 @@ def test_preview_export_facade_v1_markers() -> None:
 
 
 def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
-    """PRD-PREVIEW-REFINE-V1 · P1 M4 G1 横幅 + M3 三区 IA。"""
+    """PRD-PREVIEW-REFINE-V1 · 三区 IA；G1 默认黄条已被 PCU 取代（D-PCU-01/10）。"""
     features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
     core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     sheet = SHEET_JS.read_text(encoding="utf-8")
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
-    css = (STUDIO / "preview-toolbar" / "drawers.css").read_text(encoding="utf-8")
     shell = (STUDIO / "preview-toolbar" / "shell.js").read_text(encoding="utf-8")
+    chap = (STUDIO / "preview-toolbar" / "chapter-panel.js").read_text(encoding="utf-8")
 
+    # 废弃函数仍可存在，但 init 不得挂默认黄条
     assert "mountG1Banner" in features
-    assert "章节结构待确认 · 请浏览各章顺序后确认" in features
-    assert "章节顺序 OK" in features
-    assert "重新生成结构" in features
-    assert "preview-toolbar__g1-banner--v4" in features or "g1-banner--v4" in css
-    assert "_g1BannerVisible" in core
-    # D-REF-18 · G1 pending 时不落 layoutPending Task Dock
-    assert "if (_g1Pending)" in core
-    g1_block = core.split("if (_g1Pending)", 1)[1].split("if (_layoutPending", 1)[0]
-    assert "return;" in g1_block
+    assert "mountG1Banner(root, drawers)" not in features.split("export function initG1V3")[1].split(
+        "export function mountG1Banner"
+    )[0]
+    assert "pcu_legacy_g1_autoconfirm" in features
+    assert "_openChapterPanel" in features or "mountChapterPanel" in init_v3
+    assert "dock-btn--chapters" in init_v3
+    assert "preview-dock-stat" in init_v3
+    assert "studio-help-open--dock" in init_v3
+    assert "showG1" not in core.split("export function refreshTaskDockState")[1].split(
+        "if (_layoutPending"
+    )[0]
+    assert "preview-chapter-panel" in chap
+    assert "确认并继续" in chap
+    dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
+    # MF-05 · Dock 触控目标 ≥40px（含窄屏折叠态）
+    assert "min-width: 40px" in dock_css
+    assert "min-height: 40px" in dock_css
+    assert (
+        ".preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled {\n"
+        "    padding: 0;\n"
+        "    width: 40px;"
+    ) in dock_css or "width: 40px;\n    min-width: 40px;\n    max-width: 40px;" in dock_css
     assert 'label: "这页"' in sheet
     assert 'label: "封面"' in sheet
     assert 'label: "这本"' in sheet
@@ -841,6 +859,7 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert 'label: "高级"' not in sheet
     assert "精修 · 这本" in shell
     assert "可在「排版」中更换" not in shell
+    assert "preview-dock-stat" in shell or "准备高清 ·" in shell
 
 
 def test_preview_refine_ux_v11_m2_markers() -> None:
@@ -886,11 +905,12 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "repeat(3, 48px)" in css
     assert "repeat(5, 48px)" in css
     assert sheet.count("更新版面") <= 2  # 进阶主按钮 + 可能的文案对照
-    css_vj = (ROOT / "templates" / "visual-journal" / "journal-screens.css").read_text(
-        encoding="utf-8"
-    )
-    assert 'content: "\\201C"' in css_vj or 'content: "\\201C";' in css_vj
-    assert "C" not in css_vj
+    # 弯引号 escape 在 overlays 分片（journal-screens.css 本体不再内联）
+    css_vj_overlays = (
+        ROOT / "templates" / "visual-journal" / "journal-screens-overlays.css"
+    ).read_text(encoding="utf-8")
+    assert 'content: "\\201C"' in css_vj_overlays or 'content: "\\201C";' in css_vj_overlays
+    assert "C" not in css_vj_overlays
 
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "给这本游记的一句话" in home
