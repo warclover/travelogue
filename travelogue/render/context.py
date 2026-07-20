@@ -416,6 +416,20 @@ def build_media_card(
             )
         )
 
+    # LTN B2 · representative_badge / group mark on single cards.
+    group_badge = (item.get("groupBadge") or "").strip() or None
+    group_mark = (item.get("groupMark") or "").strip() or None
+    group_id = (item.get("groupId") or "").strip() or None
+    if group_badge:
+        ctx["groupBadge"] = group_badge
+        ctx["hasGroupBadge"] = True
+    if group_mark:
+        ctx["groupMark"] = group_mark
+        ctx["hasGroupMark"] = True
+    if group_id:
+        ctx["groupId"] = group_id
+        ctx["hasGroupId"] = True
+
     return ctx
 
 
@@ -463,6 +477,10 @@ def build_media_row(
         cell["sizes"] = sizes
     layout_hint = (item.get("layoutHint") or "").strip() or None
     edit_caption = f"chapters.{chapter_id}.items.{item_index}.caption" if is_draft else None
+    group_id = (item.get("groupId") or "").strip() or None
+    group_mark = (item.get("groupMark") or "").strip() or None
+    group_count = item.get("groupCount")
+    preserve_group = item.get("preserveGroup")
     return {
         "isMediaCard": False,
         "isMediaRow": True,
@@ -476,6 +494,12 @@ def build_media_row(
         "hasLayoutHint": bool(layout_hint),
         "editable": is_draft,
         "editPathCaption": edit_caption,
+        "groupId": group_id,
+        "hasGroupId": bool(group_id),
+        "groupMark": group_mark,
+        "hasGroupMark": bool(group_mark),
+        "groupCount": int(group_count) if group_count is not None else None,
+        "preserveGroup": bool(preserve_group) if preserve_group is not None else None,
     }
 
 

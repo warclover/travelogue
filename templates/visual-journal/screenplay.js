@@ -9,8 +9,9 @@
   var DEFAULT_DWELL_MS = 2000;
   var FADE_MS = 700;
   var SELECTOR = '.layout-screen[data-block="layout-screen"]';
+  // LTN B4 · chapter-separator is a narrative beat; include unless skipAuxBlocks.
   var AUX_SELECTOR =
-    'header[data-block="cover-hero"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], section[data-block="cover-closing"], .epilogue-screen[data-block="epilogue-screen"], .epilogue[data-block="epilogue"]';
+    'header[data-block="cover-hero"], .foreword-spread[data-block="foreword-spread"], .trip-index[data-block="trip-index"], .featured-grid[data-block="featured-grid"], .screen-spread[data-block="screen-spread"], section[data-block="chapter-separator"], .chapter-separator[data-block="chapter-separator"], section[data-block="cover-closing"], .epilogue-screen[data-block="epilogue-screen"], .epilogue[data-block="epilogue"]';
   var featuredOnlyOverride = null;
   var presentHash = global.TraveloguePresentHash || {};
   var presentBookmarks = global.TraveloguePresentBookmarks || {};

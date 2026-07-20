@@ -91,7 +91,8 @@ def interleave_breath_items(
             out.append(it)
             continue
         out.append(it)
-        if it.get("type") != "media-card":
+        # LTN B2 · count group blocks (media-row) as media units, not only cards.
+        if it.get("type") not in ("media-card", "media-row", "media-scroll"):
             continue
         since_pause += 1
         if since_pause >= interval:

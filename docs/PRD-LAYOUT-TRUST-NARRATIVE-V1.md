@@ -221,9 +221,9 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | ID | 需求 | 说明 |
 |----|------|------|
 | **R-B1** | ADR：Narrative Contract | 字段、默认值、迁移策略、与现有 `screens[]` 对齐 · **已落地** [ADR-020](./adr/020-narrative-contract.md) |
-| **R-B2** | longshot 尊重 `preserveGroup` | **改合同非修 bug**：新 ADR 推翻 ADR-003「按 slot 展平」。窄幅（~428px）三级降级：① **保组换排**（竖向组排+组标记，默认）→ ② **代表图 + N**（`representativeAssetId` + 徽标）→ ③ 拆屏（仅显式 `preserveGroup=false`） |
+| **R-B2** | longshot 尊重 `preserveGroup` | **改合同非修 bug**：新 ADR 推翻 ADR-003「按 slot 展平」。窄幅（~428px）三级降级：① **保组换排**（竖向组排+组标记，默认）→ ② **代表图 + N**（`representativeAssetId` + 徽标）→ ③ 拆屏（仅显式 `preserveGroup=false`）。**已落地** `screens_to_longshot_items` |
 | **R-B3** | 导出前双预览（**提前交付**） | MVP：iframe 双面（`index.html` vs `index-longshot.html` 同宽模拟），并排或一键切换；不依赖 B2，先让差异诚实可见 |
-| **R-B4** | present 不偷叙事 | 现状：`chapter-separator` 不在幻灯 selector 内**已被静默跳过**（与 `skipAuxBlocks` 无关）；须补产品规则，不得 silent 丢章界 |
+| **R-B4** | present 不偷叙事 | 现状：`chapter-separator` 不在幻灯 selector 内**已被静默跳过**（与 `skipAuxBlocks` 无关）；须补产品规则，不得 silent 丢章界。**已落地**：`screenplay.js` AUX 含章界（仍受 `skipAuxBlocks` 约束） |
 
 ### 6.3 验收（AC-B）
 
@@ -459,6 +459,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
+| v1.2.11-LTN | 2026-07-20 | 实施落地：B2 longshot 尊重 preserveGroup（三级降级）+ B4 present 纳入 chapter-separator |
 | v1.2.10-LTN | 2026-07-20 | 实施落地：B1 Narrative Contract — [ADR-020](./adr/020-narrative-contract.md)、schema 五字段、`ensure_narrative_contract`、修订 ADR-003 长图默认展平 |
 | v1.2.9-LTN | 2026-07-20 | 实施落地：C7 分轨参数表（curated/archive/quick_share）；C8 槽位软惩罚 + AR/副槽短边闸门（面积比软罚以免误杀 3land） |
 | v1.2.8-LTN | 2026-07-20 | C4 补齐：签名路由叠在模板合约之上（TC∩signature；命中写 signature，未命中保留 exact/fallback） |

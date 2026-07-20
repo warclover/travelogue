@@ -527,7 +527,8 @@ body.longshot-capturing .media-scroll__footer {
   padding: 8px 16px 12px;
 }
 
-/* 组图 / 旧 row：长图单列自然比例 */
+/* 组图 / 旧 row / LTN B2 preserve-stack：长图单列自然比例 */
+html[data-layout="longshot"] .media-row,
 body.longshot-capturing .media-row {
   display: flex;
   flex-direction: column;
@@ -536,15 +537,52 @@ body.longshot-capturing .media-row {
   max-width: 100%;
 }
 
+html[data-layout="longshot"] .media-row--landscape-triple,
+html[data-layout="longshot"] .media-row--landscape-pair,
+html[data-layout="longshot"] .media-row--portrait-triple,
+html[data-layout="longshot"] .media-row--portrait-pair,
+html[data-layout="longshot"] .media-row--square-triple,
+html[data-layout="longshot"] .media-row--square-pair,
+html[data-layout="longshot"] .media-row--preserve-stack,
 body.longshot-capturing .media-row--landscape-triple,
 body.longshot-capturing .media-row--landscape-pair,
 body.longshot-capturing .media-row--portrait-triple,
 body.longshot-capturing .media-row--portrait-pair,
 body.longshot-capturing .media-row--square-triple,
-body.longshot-capturing .media-row--square-pair {
+body.longshot-capturing .media-row--square-pair,
+body.longshot-capturing .media-row--preserve-stack {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+html[data-layout="longshot"] .media-row__group-mark,
+body.longshot-capturing .media-row__group-mark {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+  padding: 2px 4px 0;
+}
+
+html[data-layout="longshot"] .media-card__frame--has-group-badge,
+body.longshot-capturing .media-card__frame--has-group-badge {
+  position: relative;
+}
+
+html[data-layout="longshot"] .media-card__group-badge,
+body.longshot-capturing .media-card__group-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  min-width: 1.75em;
+  padding: 0.2em 0.45em;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.72);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 body.longshot-capturing .media-row .media-card__frame {

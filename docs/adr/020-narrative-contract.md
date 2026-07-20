@@ -125,15 +125,16 @@ B2 可另开实施 PR / 补充 ADR 细节，但不得回退到「mosaic 无提�
 - [x] planner `append_screen` 写入时推导  
 - [x] 单测：默认 mosaic → `preserveGroup=true`；显式值不被覆盖  
 
-### B2（后续）
+### B2（已落地 · 2026-07-20）
 
-- [ ] `resolve_chapter_items_for_render` / `flatten_screens_to_items` 分支  
-- [ ] 窄幅三级降级 + `preserveGroup=false` 日志（AC-B-04）  
-- [ ] dogfood AC-B-02  
+- [x] `screens_to_longshot_items` + `resolve_chapter_items_for_render`  
+- [x] 窄幅三级降级（preserve-stack media-row / representative badge / 显式 flatten）  
+- [x] `preserveGroup=false` 日志（AC-B-04）  
+- [ ] dogfood AC-B-02（人工目视）  
 
-### B4（后续）
+### B4（已落地 · 2026-07-20）
 
-- [ ] present 章界产品规则（禁 silent 跳过）  
+- [x] present `AUX_SELECTOR` 含 `chapter-separator`（`skipAuxBlocks` 仍可关）  
 
 ---
 
