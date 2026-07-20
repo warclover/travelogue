@@ -26,7 +26,7 @@ import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
 import {
-  captureImportShell, showFirstSuccess,
+  captureImportShell, showFirstSuccess, refreshSuccessCover,
 } from "./first-success.js";
 import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
@@ -386,9 +386,22 @@ function refreshTripsForImportSuccess(result) {
   return fetchTripsFirstPage().then(function (data) {
     V2.trips = data.trips || [];
     V2.tripsTotal = typeof data.total === "number" ? data.total : V2.trips.length;
-    V2.isOffline = false;
+    V2.isEmpty = false;
+    // FirstSuccess: backfill real cover photo after trips refresh
+    if (result && result.tripId && !result.shelfCoverRelPath) {
+      for (var i = 0; i < V2.trips.length; i++) {
+        var t = V2.trips[i];
+        if (t && t.tripId === result.tripId && t.shelfCoverRelPath) {
+          result.shelfCoverRelPath = t.shelfCoverRelPath;
+          break;
+        }
+      }
+      if (result.shelfCoverRelPath) {
+        refreshSuccessCover(result);
+      }
+    }
   }).catch(function () {
-    /* 保留已有 trips；FirstSuccess 后 reroute 会再拉 */
+    /* keep existing trips; reroute will refetch */
   });
 }
 

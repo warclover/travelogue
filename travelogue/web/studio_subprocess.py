@@ -148,6 +148,10 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "titleNoiseFallback": bool(
                         getattr(result, "title_noise_fallback", False)
                     ),
+                    "shelfCoverRelPath": getattr(
+                        result, "shelf_cover_rel_path", ""
+                    )
+                    or "",
                     "displayTitle": result.title,
                 },
             }
