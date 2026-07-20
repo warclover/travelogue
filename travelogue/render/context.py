@@ -922,6 +922,14 @@ def build_layout_screen(
     if rhythm_gap in ("L0", "L1", "L2"):
         out["rhythmGap"] = rhythm_gap
         out["hasRhythmGap"] = True
+    # LTN D3 · product role aliases on DOM for review / CSS hooks
+    from travelogue.layout_contract.layout_roles import resolve_layout_roles
+
+    narrative_role, layout_role = resolve_layout_roles(screen)
+    out["narrativeRole"] = narrative_role
+    out["hasNarrativeRole"] = True
+    out["layoutRole"] = layout_role
+    out["hasLayoutRole"] = True
     if screen_role == "moment" and show_signature_label:
         out["isMomentScreen"] = True
         out["hasMomentScreen"] = True

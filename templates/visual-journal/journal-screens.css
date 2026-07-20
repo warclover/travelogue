@@ -3,7 +3,7 @@
  */
 html[data-layout-engine="screens"] {
   --content-rail: var(--bleed-width);
-  /* LTN D1 · L0/L1/L2 rhythm tokens (authoritative mirror in overlays; keep preamble sync-safe) */
+  /* LTN D1/D3 · rhythm tokens (mirror overlays; rhythmSignOff=ltn-d1-rhythm-v1) */
   --rhythm-l0-gap: 3px;
   --rhythm-l1-gap: clamp(10px, 1.6vh, 20px);
   --rhythm-l2-gap: clamp(36px, 6vh, 64px);

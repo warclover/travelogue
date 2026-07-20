@@ -315,7 +315,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 |----|------|------|
 | **R-D1** | Token 定标 | 起点带（JND 小样在带内定标，家庭侧宁小勿大）：**L0 ≈ 3px**（贴片感）；**L1 = clamp(10–12px, 1.6vh, 20px)**（现 8px 起步偏黏）；**L2 = clamp(36px, 6vh, 64px)**；比例 **L0:L1:L2 ≈ 1:4:16**。职责：票根管**章界**、L2 管**章内场景界**，不叠加。Token 只放 **preamble / overlays 源文件**（`@lte-generated` 段会被 sync 冲掉）。**已落地**：`--rhythm-l*` + `rhythmGap`/`data-rhythm-gap` |
 | **R-D2** | Beat 接线 | 默认 `flat` → `classic_magazine`，**峰位 0.60–0.65 章进度**；章进度用真实/可靠估计。连续同 pattern 容忍：单图 ≤3、组合屏 ≤2、mosaic ≤1；章内 pattern 熵参考带 0.55–0.75。**已落地**：资产序进度 + 峰窗 0.55–0.70；pack 默认 classic（quick_share 仍 flat） |
-| **R-D3** | 版式角色表 | 产品/渲染注释统一：plate / 1col / stack-3 / 2col / mosaic-hero / breath；命名规范与 `rhythmSignOff` 变更评审由排版侧出稿 |
+| **R-D3** | 版式角色表 | 产品/渲染注释统一：plate / 1col / stack-3 / 2col / mosaic-hero / breath（+ mosaic-flat）。**已落地**：`layout_roles.py` 映射表；DOM `data-layout-role` / `data-narrative-role`；`rhythm_signoff.py` 闸门（改 `--rhythm-l*` 须 bump `RHYTHM_SIGNOFF`） |
 
 ### 8.3 验收（AC-D）
 
@@ -339,6 +339,8 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 ---
 
 ## 10. 版式角色表与活跃集（产品合同）
+
+工程映射：`travelogue/layout_contract/layout_roles.py`（产品别名 ↔ `narrativeRole`；渲染 `data-layout-role`）。
 
 | 角色 | pattern 族（示意） | 叙事职责 | 密度 |
 |------|-------------------|----------|------|
@@ -460,6 +462,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2.14-LTN | 2026-07-20 | 实施落地：D3 版式角色表（产品别名↔narrativeRole、渲染 data-*）+ `rhythmSignOff` CSS 漂移闸门 |
 | v1.2.13-LTN | 2026-07-20 | 实施落地：E2 周看板（`ltn_weekly.py` + `ltn_weekly_dashboard.py`）；E3 分轨说明补齐 `config.yaml.example` |
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
