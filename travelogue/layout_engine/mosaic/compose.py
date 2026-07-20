@@ -244,6 +244,27 @@ def pick_best_window(
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
 
+    # LTN C5 · arm on hero opportunity; while armed, drop equal-weight dense winners.
+    if layout_state is not None:
+        from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
+
+        hero_hits = [
+            row
+            for row in scored
+            if row[1] >= cfg.min_candidate_score
+            and ScreenLayoutPlannerState.pattern_has_main_role(row[0].pattern_id)
+        ]
+        if hero_hits:
+            layout_state.arm_hero_reserve()
+        if layout_state.hero_reserve == "armed":
+            filtered = [
+                row
+                for row in scored
+                if not layout_state.blocks_dense_for_hero_reserve(row[0].pattern_id)
+            ]
+            if filtered:
+                scored = filtered
+
     top = scored[: min(3, cfg.candidate_top_k)]
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]
