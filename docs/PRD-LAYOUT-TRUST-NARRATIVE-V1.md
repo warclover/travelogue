@@ -375,6 +375,18 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 > 分轨是**参数与策略**差异，优先共用 MCS 代码路径。
 
+### 11.1 运行时参数表（R-C7 · v1.2.9）
+
+权威实现：`travelogue/layout_contract/mosaic_track.py`（curate 时叠在 `MosaicConfig` 上）。
+
+| track | 解析条件 | `dense_collage_max` 额外上限 | `min_candidate_score` | `beat_profile` | `enable_size3_aux` |
+|-------|----------|-------------------------------|------------------------|----------------|--------------------|
+| curated | `intent.mode≠quick_share` 且 kept&lt;100 | **2** | 0.35 | classic_magazine | false |
+| archive | kept≥100（且非 quick_share） | 无（沿用 P21） | 0.35 | classic_magazine | false |
+| quick_share | `intent.mode=quick_share` | **1** | 0.40 | flat | false |
+
+`enable_size3_aux=true` 时仅追加 size=3 为 MCS 末档（默认全轨关闭，守 C1）。
+
 ---
 
 ## 12. 指标与周看板
@@ -447,6 +459,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
+| v1.2.9-LTN | 2026-07-20 | 实施落地：C7 分轨参数表（curated/archive/quick_share）；C8 槽位软惩罚 + AR/副槽短边闸门（面积比软罚以免误杀 3land） |
 | v1.2.8-LTN | 2026-07-20 | C4 补齐：签名路由叠在模板合约之上（TC∩signature；命中写 signature，未命中保留 exact/fallback） |
 | v1.2.7-LTN | 2026-07-20 | 实施落地：C4 简化粗分段（takenAt/city 切分 + 跨段截窗）与签名路由（signature / signature_fallback） |
 | v1.2.6-LTN | 2026-07-20 | 实施落地：B3 导出前双预览 MVP（同宽 428 iframe 网页 vs 长图） |

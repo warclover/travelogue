@@ -1130,6 +1130,16 @@ def _stage_build_chapters_compose(
             mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
     elif cohort_summary:
         mosaic_override_active = cohort_mosaic_override(app_cfg)
+    # LTN C7 · curated/archive/quick_share track overlay (shared MCS path).
+    from travelogue.layout_contract.mosaic_track import resolve_and_apply_mosaic_track
+
+    track_base = mosaic_override_active if mosaic_override_active is not None else app_cfg.mosaic
+    intent_mode = str((trip.get("intent") or {}).get("mode") or "")
+    mosaic_override_active, _track_params = resolve_and_apply_mosaic_track(
+        track_base,
+        kept_count=len(layout_assets),
+        intent_mode=intent_mode,
+    )
     from travelogue.layout_engine.adapter import (
         effective_pattern_blacklist,
         reset_mosaic_disabled_patterns,

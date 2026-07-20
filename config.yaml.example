@@ -309,6 +309,10 @@ mosaic:
   fallback_to_legacy: true
   candidate_top_k: 4
   log_level: window
+  # LTN C7 · size=3 MCS aux is OFF by default (parity/tiler keep explicit 3).
+  # Track overlay (curated/archive/quick_share) is applied at curate time — see
+  # travelogue/layout_contract/mosaic_track.py and PRD §11.
+  enable_size3_aux: false
   density_budget:
     enabled: true
     min_slots: 4
@@ -341,6 +345,10 @@ mosaic:
     duplicate_density: 0.20
     flat_nine_grid: 0.45
     dense_without_hero: 0.25
+    # LTN C8 · D-03 slot-role
+    main_not_window_best: 0.4
+    main_clone_in_sidebar: 0.3
+    main_area_ratio: 0.35
 
 # --- Phase-3a 智能排版（beam 护栏 + 自适应叙事弧 + 亮度/主题 run）---
 # layout:

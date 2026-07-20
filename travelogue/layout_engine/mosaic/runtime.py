@@ -118,15 +118,23 @@ def planner_mosaic_window_sizes(
     *,
     density: str = "balanced",
 ) -> tuple[int, ...]:
-    """Layout-density-aware MCS sizes (no silent size=3 aux · LTN C1)."""
+    """Layout-density-aware MCS sizes (no silent size=3 aux · LTN C1).
+
+    LTN C7 · ``enable_size3_aux`` may append size=3 as an explicit last resort
+    (quick-share / dogfood only when the track opts in).
+    """
     sizes = effective_mosaic_window_sizes(cfg)
     if not sizes:
         return ()
     if density == "collage_first":
-        return tuple(sorted(sizes, reverse=True))
-    if density == "balanced":
-        return ordered_mosaic_window_sizes(cfg, density="balanced")
-    return tuple(sorted(sizes, reverse=True))
+        ordered = tuple(sorted(sizes, reverse=True))
+    elif density == "balanced":
+        ordered = ordered_mosaic_window_sizes(cfg, density="balanced")
+    else:
+        ordered = tuple(sorted(sizes, reverse=True))
+    if getattr(cfg, "enable_size3_aux", False) and 3 not in ordered:
+        return ordered + (3,)
+    return ordered
 
 
 def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
@@ -137,6 +145,11 @@ def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
     sizes = tuple(
         s for s in cfg.enabled_window_sizes if s in _ALLOWED_SIZES and s <= max_slots
     )
+    if getattr(cfg, "enable_size3_aux", False) and 3 not in sizes and 3 <= max_slots:
+        sizes = sizes + (3,)
     if cfg.unified_mode:
         return sizes
+    # Track opt-in size=3 still available when unified_mode is off.
+    if getattr(cfg, "enable_size3_aux", False) and 3 in sizes:
+        return tuple(s for s in sizes if s in (5, 3))
     return tuple(s for s in sizes if s == 5)

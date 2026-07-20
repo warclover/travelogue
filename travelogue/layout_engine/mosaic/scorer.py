@@ -449,6 +449,22 @@ def score_candidate(
             median_sharp=None,
         ),
     }
+    # LTN C8 · D-03 slot-role soft penalties
+    from travelogue.layout_engine.mosaic.slot_role_penalties import (
+        main_area_ratio_penalty,
+        main_clone_in_sidebar_penalty,
+        main_not_window_best_penalty,
+    )
+
+    penalties["main_not_window_best"] = main_not_window_best_penalty(
+        screen, assets_by_id=assets_by_id
+    )
+    penalties["main_clone_in_sidebar"] = main_clone_in_sidebar_penalty(
+        screen, assets_by_id=assets_by_id
+    )
+    penalties["main_area_ratio"] = main_area_ratio_penalty(
+        str(screen.get("patternId") or "")
+    )
     # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)
     if trip_photo_total > 0 and trip_photo_total < 20:
         penalties["trip_small"] = 0.7

@@ -168,12 +168,26 @@ def layout_state_for_trip(
     active = pack if pack is not None else resolve_pack(cfg)
     if active is not None:
         params = LayoutDensityParams(density=density or "balanced")  # type: ignore[arg-type]
-        return layout_state_from_pack(total_photos, active, density_params=params)
-    return ScreenLayoutPlannerState.from_trip_total(
-        total_photos,
-        density=density or "balanced",  # type: ignore[arg-type]
-        rhythm=RhythmRules.from_config(cfg),
+        return _apply_track_dense_cap(
+            layout_state_from_pack(total_photos, active, density_params=params)
+        )
+    return _apply_track_dense_cap(
+        ScreenLayoutPlannerState.from_trip_total(
+            total_photos,
+            density=density or "balanced",  # type: ignore[arg-type]
+            rhythm=RhythmRules.from_config(cfg),
+        )
     )
+
+
+def _apply_track_dense_cap(state: ScreenLayoutPlannerState) -> ScreenLayoutPlannerState:
+    """LTN C7 · optional track dense cap after P21 / density limits."""
+    from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
+
+    cap = getattr(get_effective_mosaic_config(), "track_dense_collage_cap", None)
+    if cap is not None:
+        state.dense_collage_max = min(int(state.dense_collage_max), max(0, int(cap)))
+    return state
 
 
 def resolve_attach_layout_state(
@@ -186,11 +200,12 @@ def resolve_attach_layout_state(
     from travelogue.layout_contract.rhythm import RhythmRules
 
     if cfg is None:
-        return ScreenLayoutPlannerState.from_trip_total(
+        state = ScreenLayoutPlannerState.from_trip_total(
             trip_photo_total,
             density=density or "balanced",  # type: ignore[arg-type]
             rhythm=RhythmRules.from_config(None),
         )
+        return _apply_track_dense_cap(state)
     return layout_state_for_trip(trip_photo_total, cfg=cfg, density=density or "balanced")
 
 

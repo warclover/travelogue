@@ -293,6 +293,30 @@ def generate_window_candidates_with_rejections(
                 cfg=cfg,
             )
             reject_reason = "main_ar_ineligible"
+        # LTN C8 · D-03 hard gates when measurable (area ratio is soft — see scorer).
+        from travelogue.layout_engine.mosaic.slot_role_penalties import (
+            main_ar_mismatch_gate_ok,
+            sidebar_min_short_side_ok,
+        )
+
+        ar_ok = main_ar_mismatch_gate_ok(screen, assets_map)
+        if ar_ok is False:
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "main_ar_mismatch",
+                detail="mismatch>1.4",
+            )
+            continue
+        side_ok = sidebar_min_short_side_ok(pat.pattern_id)
+        if side_ok is False:
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "sidebar_min_short_side",
+                detail="short_side<72px@428",
+            )
+            continue
         geom_ok = geom_ok and main_ok
         if not geom_ok and not main_ok:
             _reject(rejected, pat.pattern_id, reject_reason, detail=main_reason)

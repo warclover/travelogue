@@ -115,6 +115,10 @@ class MosaicConfig:
             "dense_without_hero": 0.25,
             "wasted_hero": 0.35,
             "main_ar_ineligible": 0.95,
+            # LTN C8 · D-03 slot-role soft penalties
+            "main_not_window_best": 0.4,
+            "main_clone_in_sidebar": 0.3,
+            "main_area_ratio": 0.35,
         }
     )
     # LSE W3b capability flags (set via layout_engine.adapter mosaic_config_from_pack)
@@ -125,6 +129,10 @@ class MosaicConfig:
     lse_quality_unified: bool = False
     lse_slot_max_matrix_n: int = 16
     lse_highlight_boost: float = 1.0
+    # LTN C7 · track overlay (see layout_contract.mosaic_track)
+    enable_size3_aux: bool = False
+    track_id: str | None = None
+    track_dense_collage_cap: int | None = None
 
 
 def _density_budget_from_dict(raw: dict[str, Any]) -> MosaicDensityBudgetConfig:
@@ -273,4 +281,25 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         density_budget=_density_budget_from_dict(raw),
         template_contract=_template_contract_from_dict(raw),
         near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
+        enable_size3_aux=cfg_bool(
+            raw, "enable_size3_aux", "enableSize3Aux", defaults.enable_size3_aux
+        ),
+        track_id=(
+            str(raw["track_id"]).strip()
+            if isinstance(raw.get("track_id"), str) and raw["track_id"].strip()
+            else (
+                str(raw["trackId"]).strip()
+                if isinstance(raw.get("trackId"), str) and raw["trackId"].strip()
+                else defaults.track_id
+            )
+        ),
+        track_dense_collage_cap=(
+            int(raw["track_dense_collage_cap"])
+            if raw.get("track_dense_collage_cap") is not None
+            else (
+                int(raw["trackDenseCollageCap"])
+                if raw.get("trackDenseCollageCap") is not None
+                else defaults.track_dense_collage_cap
+            )
+        ),
     )
