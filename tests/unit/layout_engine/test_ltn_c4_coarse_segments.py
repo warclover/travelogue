@@ -208,3 +208,58 @@ def test_signature_five_slot_main():
     narrowed, source = apply_signature_route(patterns, ids, aspects, assets)
     assert source == "signature"
     assert PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND in {p.pattern_id for p in narrowed}
+
+
+def test_tc_intersect_signature_logs_signature():
+    """TC on + known signature → candidateSource=signature (TC∩signature)."""
+    from travelogue.config import TemplateContractConfig
+
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    ids = ["a0", "a1", "a2", "a3"]
+    assets = {
+        aid: _asset(aid, taken_offset_s=i * 40, base=base) for i, aid in enumerate(ids)
+    }
+    aspects = {aid: "landscape" for aid in ids}
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+    )
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets, cfg=cfg, burst_seconds=12.0
+    )
+    assert result.contract_shadow is not None
+    assert result.contract_shadow.get("candidateSource") == "signature"
+    # Still a subset of contract-feasible patterns (no silent empty).
+    assert result.candidates or result.rejected
+
+
+def test_tc_signature_miss_keeps_contract_source():
+    """Unknown signature under TC → keep exact/fallback, do not invent empty."""
+    from travelogue.config import TemplateContractConfig
+
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    ids = ["a0", "a1", "a2", "a3"]
+    assets = {
+        "a0": _asset("a0", taken_offset_s=0, base=base, orientation="portrait"),
+        "a1": _asset("a1", taken_offset_s=10, base=base, orientation="portrait"),
+        "a2": _asset("a2", taken_offset_s=20, base=base, orientation="portrait"),
+        "a3": _asset("a3", taken_offset_s=30, base=base, orientation="landscape"),
+    }
+    aspects = {
+        "a0": "portrait",
+        "a1": "portrait",
+        "a2": "portrait",
+        "a3": "landscape",
+    }
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+    )
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets, cfg=cfg, burst_seconds=12.0
+    )
+    src = (result.contract_shadow or {}).get("candidateSource")
+    assert src in ("exact", "fallback", "miss", "legacy_size")
+    assert src != "signature"
+
+

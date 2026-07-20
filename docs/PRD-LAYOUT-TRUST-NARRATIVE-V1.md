@@ -447,6 +447,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
+| v1.2.8-LTN | 2026-07-20 | C4 补齐：签名路由叠在模板合约之上（TC∩signature；命中写 signature，未命中保留 exact/fallback） |
 | v1.2.7-LTN | 2026-07-20 | 实施落地：C4 简化粗分段（takenAt/city 切分 + 跨段截窗）与签名路由（signature / signature_fallback） |
 | v1.2.6-LTN | 2026-07-20 | 实施落地：B3 导出前双预览 MVP（同宽 428 iframe 网页 vs 长图） |
 | v1.2.5-LTN | 2026-07-20 | 实施落地：C6 Studio「为何没拼」— mosaicExplain API + chapter-layout + 预览抽屉 |

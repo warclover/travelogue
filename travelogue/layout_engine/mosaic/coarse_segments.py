@@ -33,17 +33,23 @@ GAP_FLOOR_S = 120.0
 GAP_CEIL_S = 900.0
 GAP_MEDIAN_MULT = 3.0
 
-# Pattern id for 4-hero (sidebar) — kept as string to match registry.
+# Pattern ids kept as strings when not exported from constants.
 PATTERN_MOSAIC_4_HERO = "screen-mosaic-4-hero-70-sidebar"
+PATTERN_MOSAIC_4_2L2P_WEIGHTED = "screen-mosaic-4-2l2p-weighted"
 
-# (nP, nL, cohesive) → whitelist. Unknown keys → full set (signature_fallback).
+# (nP, nL, cohesive) → whitelist. Unknown keys → keep input set (signature_fallback).
+# 2P2L includes contract-extra weighted so TC+signature still exercises clone gate.
 SIGNATURE_WHITELIST: dict[tuple[int, int, bool], frozenset[str]] = {
     (0, 4, True): frozenset({PATTERN_LANDSCAPE_4, PATTERN_MOSAIC_4_HERO}),
     (0, 4, False): frozenset({PATTERN_LANDSCAPE_4}),
     (4, 0, True): frozenset({PATTERN_PORTRAIT_4}),
     (4, 0, False): frozenset({PATTERN_PORTRAIT_4}),
-    (2, 2, True): frozenset({PATTERN_PORTRAIT_2_LANDSCAPE_2}),
-    (2, 2, False): frozenset({PATTERN_PORTRAIT_2_LANDSCAPE_2}),
+    (2, 2, True): frozenset(
+        {PATTERN_PORTRAIT_2_LANDSCAPE_2, PATTERN_MOSAIC_4_2L2P_WEIGHTED}
+    ),
+    (2, 2, False): frozenset(
+        {PATTERN_PORTRAIT_2_LANDSCAPE_2, PATTERN_MOSAIC_4_2L2P_WEIGHTED}
+    ),
     # Summit: (1,4) → 5-slot main family
     (1, 4, True): frozenset(
         {PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND, PATTERN_MOSAIC_5_HERO_3_2_PLUS_4}
@@ -189,7 +195,12 @@ def apply_signature_route(
     aspects: dict[str, AspectKind],
     assets_map: dict[str, dict],
 ) -> tuple[list[MosaicPattern], str]:
-    """Narrow patterns by signature whitelist; miss → full list + signature_fallback."""
+    """Narrow patterns by signature whitelist.
+
+    Miss (unknown key or empty intersection) → keep the input set and return
+    ``signature_fallback`` (never a silent empty). Callers on the TC path should
+    prefer the prior contract source when logging a miss.
+    """
     if not patterns:
         return patterns, "signature_fallback"
     key = signature_key(asset_ids, aspects, assets_map)

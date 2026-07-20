@@ -192,15 +192,20 @@ def generate_window_candidates_with_rejections(
     else:
         patterns = patterns_for_window_size(len(asset_ids), reg)
         contract_source = "legacy_size"
-    # LTN C4 · signature route on the legacy (non-TC) path only. When template
-    # contract is on, mix-index already owns candidate narrowing (exact/fallback).
-    route_source = contract_source
-    if not tc_enabled:
-        from travelogue.layout_engine.mosaic.coarse_segments import apply_signature_route
+    # LTN C4 · signature on top of TC or legacy sets (TC∩signature).
+    # Hit → candidateSource=signature; miss → keep prior set, log contract/legacy
+    # source under TC (or signature_fallback on the legacy path).
+    from travelogue.layout_engine.mosaic.coarse_segments import apply_signature_route
 
-        patterns, route_source = apply_signature_route(
-            patterns, asset_ids, aspects, assets_map
-        )
+    patterns, signature_source = apply_signature_route(
+        patterns, asset_ids, aspects, assets_map
+    )
+    if signature_source == "signature":
+        route_source = "signature"
+    elif tc_enabled:
+        route_source = contract_source
+    else:
+        route_source = signature_source
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
