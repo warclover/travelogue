@@ -13,9 +13,8 @@ from travelogue.layout_engine.mosaic.constants import (
     MOSAIC_9_PATTERN_IDS,
     PATTERN_LANDSCAPE_3,
     PATTERN_LANDSCAPE_4,
-    PATTERN_LANDSCAPE_6,
-    PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
+    PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
@@ -23,29 +22,24 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
-    PATTERN_PORTRAIT_6,
-    PATTERN_PORTRAIT_9,
-    PATTERN_PORTRAIT_GRID_8,
 )
 
 # Stable id set for parity export (R-P16-02); YAML is authority for field values.
+# LTN C3 · active MCS set (deprecated 6/8/9 flats omitted; kept in YAML for old trips).
 LEGACY_MOSAIC_REGISTRY_IDS: frozenset[str] = frozenset(
     {
         PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
         PATTERN_MOSAIC_5_3P_2L_BALANCED,
         PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
         PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+        "screen-mosaic-4-hero-70-sidebar",
+        PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
         PATTERN_PORTRAIT_3,
         PATTERN_LANDSCAPE_3,
         PATTERN_PORTRAIT_1_LANDSCAPE_2,
         PATTERN_PORTRAIT_2_LANDSCAPE_2,
         PATTERN_PORTRAIT_4,
         PATTERN_LANDSCAPE_4,
-        PATTERN_PORTRAIT_6,
-        PATTERN_LANDSCAPE_6,
-        PATTERN_PORTRAIT_GRID_8,
-        PATTERN_PORTRAIT_9,
-        PATTERN_LANDSCAPE_9,
     }
 )
 

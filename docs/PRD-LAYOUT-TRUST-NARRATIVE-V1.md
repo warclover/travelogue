@@ -447,3 +447,4 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
+| v1.2.1-LTN | 2026-07-20 | 实施落地：H7 几何审计 + 4-hero AR 校正；H9 合成 fixture；C1 解耦 MCS aux-3；C3 活跃集 11（剪 6/8/9 平铺 + 4-hero GA） |

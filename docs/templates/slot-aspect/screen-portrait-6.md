@@ -1,7 +1,7 @@
 # screen-portrait-6
 
 - displayName: portrait · 6
-- status: ga
+- status: deprecated
 - stage: 9:16
 
 | slot | role | displayAspect |

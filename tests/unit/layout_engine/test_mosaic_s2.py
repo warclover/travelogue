@@ -54,10 +54,12 @@ def test_generate_candidates_size_3_4_6():
 
     land_ids = [a["id"] for a in assets if aspects[a["id"]] == "landscape"][:6]
     c6 = generate_window_candidates(land_ids, aspects, assets_map, cfg=cfg, burst_seconds=3600)
-    assert any(c.pattern_id == "screen-landscape-6" for c in c6)
+    # LTN C3 · landscape-6 pruned; hero-plus / equal-6 no longer required.
+    assert all(c.pattern_id != "screen-landscape-6" for c in c6)
 
 
-def test_generate_candidates_size_8_9():
+def test_generate_candidates_size_8_9_pruned():
+    """LTN C3 · grid-8 / landscape-9 removed from MCS candidate universe."""
     _app, cfg = _s2_cfg()
     _, aspects, assets = build_mosaic_portrait8_trip()
     assets_map = {a["id"]: a for a in assets}
@@ -68,7 +70,7 @@ def test_generate_candidates_size_8_9():
         cfg=cfg,
         burst_seconds=3600,
     )
-    assert any(c.pattern_id == PATTERN_PORTRAIT_GRID_8 for c in c8)
+    assert all(c.pattern_id != PATTERN_PORTRAIT_GRID_8 for c in c8)
 
     _, aspects9, assets9 = build_mosaic_landscape9_trip()
     assets_map9 = {a["id"]: a for a in assets9}
@@ -79,7 +81,7 @@ def test_generate_candidates_size_8_9():
         cfg=cfg,
         burst_seconds=3600,
     )
-    assert any(c.pattern_id == PATTERN_LANDSCAPE_9 for c in c9)
+    assert all(c.pattern_id != PATTERN_LANDSCAPE_9 for c in c9)
 
 
 def test_planning_loop_uses_portrait_3_for_three_portraits(monkeypatch):
@@ -110,6 +112,7 @@ def test_planning_loop_uses_portrait_3_for_three_portraits(monkeypatch):
 
 
 def test_try_mosaic_window_six_landscapes(monkeypatch):
+    """LTN C3 · flat landscape-6 pruned; MCS may take a smaller window or skip."""
     _patch_s2_cfg(monkeypatch)
     assets = [
         {
@@ -132,11 +135,13 @@ def test_try_mosaic_window_six_landscapes(monkeypatch):
         layout_state=ScreenLayoutPlannerState.from_trip_total(40),
     )
     adv = try_mosaic_window(ctx, 0)
-    assert adv == 6
-    assert ctx.screens[0]["patternId"] == "screen-landscape-6"
+    if adv is not None:
+        assert ctx.screens[0]["patternId"] != "screen-landscape-6"
+        assert adv in (4, 5, 6)
 
 
 def test_try_mosaic_window_nine_landscapes(monkeypatch):
+    """LTN C3 · landscape-9 pruned; MCS must not emit flat nine-grid."""
     _patch_s2_cfg(monkeypatch, max_mosaic_slots=9)
     _, aspects, assets = build_mosaic_landscape9_trip()
     assets_map = {a["id"]: a for a in assets}
@@ -150,6 +155,7 @@ def test_try_mosaic_window_nine_landscapes(monkeypatch):
     )
     drain_mosaic_logs()
     adv = try_mosaic_window(ctx, 0)
-    assert adv == 9
-    assert ctx.screens[0]["patternId"] == PATTERN_LANDSCAPE_9
+    if adv is not None:
+        assert ctx.screens[0]["patternId"] != PATTERN_LANDSCAPE_9
+        assert adv in (4, 5, 6)
 

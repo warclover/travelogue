@@ -1,0 +1,89 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-ltn-oracle-negative",
+  "templateId": "visual-journal",
+  "exportLayout": "web",
+  "meta": {
+    "title": "LTN H9 · 阴性对照（散点时间）",
+    "dateStart": "2025-06-01",
+    "dateEnd": "2025-06-05",
+    "places": ["散点城"],
+    "tone": "calm"
+  },
+  "intent": {
+    "version": "1",
+    "layoutDensity": "balanced",
+    "photoCullEnabled": false
+  },
+  "coverAssetId": "ltn-n00",
+  "privacy": { "visibility": "private" },
+  "pipeline": { "status": "structure_draft" },
+  "createdAt": "2025-06-01T00:00:00Z",
+  "updatedAt": "2025-06-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "ltn-n00",
+      "type": "image",
+      "sourceFile": "source/n00.jpg",
+      "displayFile": "assets/ltn-n00.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:00:00+08:00",
+      "place": { "city": "散点城", "country": "CN" },
+      "burstGroupId": "solo-0",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n01",
+      "type": "image",
+      "sourceFile": "source/n01.jpg",
+      "displayFile": "assets/ltn-n01.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-02T10:00:00+08:00",
+      "place": { "city": "散点城", "country": "CN" },
+      "burstGroupId": "solo-1",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n02",
+      "type": "image",
+      "sourceFile": "source/n02.jpg",
+      "displayFile": "assets/ltn-n02.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-03T10:00:00+08:00",
+      "place": { "city": "散点城", "country": "CN" },
+      "burstGroupId": "solo-2",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n03",
+      "type": "image",
+      "sourceFile": "source/n03.jpg",
+      "displayFile": "assets/ltn-n03.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-04T10:00:00+08:00",
+      "place": { "city": "散点城", "country": "CN" },
+      "burstGroupId": "solo-3",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n04",
+      "type": "image",
+      "sourceFile": "source/n04.jpg",
+      "displayFile": "assets/ltn-n04.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-05T10:00:00+08:00",
+      "place": { "city": "散点城", "country": "CN" },
+      "burstGroupId": "solo-4",
+      "curation": { "layoutEligible": true }
+    }
+  ],
+  "chapters": [],
+  "curation": {
+    "displayedAssetIds": ["ltn-n00", "ltn-n01", "ltn-n02", "ltn-n03", "ltn-n04"]
+  }
+}

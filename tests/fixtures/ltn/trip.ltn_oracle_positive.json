@@ -1,0 +1,165 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-ltn-oracle-positive",
+  "templateId": "visual-journal",
+  "exportLayout": "web",
+  "meta": {
+    "title": "LTN H9 · 阳性机会对照",
+    "dateStart": "2025-06-01",
+    "dateEnd": "2025-06-01",
+    "places": ["合成岛"],
+    "tone": "warm"
+  },
+  "intent": {
+    "version": "1",
+    "layoutDensity": "balanced",
+    "photoCullEnabled": false
+  },
+  "coverAssetId": "ltn-l00",
+  "privacy": { "visibility": "private" },
+  "pipeline": { "status": "structure_draft" },
+  "createdAt": "2025-06-01T00:00:00Z",
+  "updatedAt": "2025-06-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "ltn-l00",
+      "type": "image",
+      "sourceFile": "source/l00.jpg",
+      "displayFile": "assets/ltn-l00.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:00:00+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-a",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l01",
+      "type": "image",
+      "sourceFile": "source/l01.jpg",
+      "displayFile": "assets/ltn-l01.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:00:20+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-a",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l02",
+      "type": "image",
+      "sourceFile": "source/l02.jpg",
+      "displayFile": "assets/ltn-l02.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:00:40+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-a",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l03",
+      "type": "image",
+      "sourceFile": "source/l03.jpg",
+      "displayFile": "assets/ltn-l03.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:01:00+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-a",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l04",
+      "type": "image",
+      "sourceFile": "source/l04.jpg",
+      "displayFile": "assets/ltn-l04.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T10:01:20+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-a",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-p10",
+      "type": "image",
+      "sourceFile": "source/p10.jpg",
+      "displayFile": "assets/ltn-p10.webp",
+      "width": 900,
+      "height": 1600,
+      "takenAt": "2025-06-01T11:00:00+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-b",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l11",
+      "type": "image",
+      "sourceFile": "source/l11.jpg",
+      "displayFile": "assets/ltn-l11.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T11:00:15+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-b",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l12",
+      "type": "image",
+      "sourceFile": "source/l12.jpg",
+      "displayFile": "assets/ltn-l12.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T11:00:30+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-b",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l13",
+      "type": "image",
+      "sourceFile": "source/l13.jpg",
+      "displayFile": "assets/ltn-l13.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T11:00:45+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-b",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-l14",
+      "type": "image",
+      "sourceFile": "source/l14.jpg",
+      "displayFile": "assets/ltn-l14.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T11:01:00+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-b",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-scatter",
+      "type": "image",
+      "sourceFile": "source/scatter.jpg",
+      "displayFile": "assets/ltn-scatter.webp",
+      "width": 1600,
+      "height": 900,
+      "takenAt": "2025-06-01T18:00:00+08:00",
+      "place": { "city": "合成岛", "country": "CN" },
+      "burstGroupId": "burst-scatter",
+      "curation": { "layoutEligible": true }
+    }
+  ],
+  "chapters": [],
+  "curation": {
+    "displayedAssetIds": [
+      "ltn-l00", "ltn-l01", "ltn-l02", "ltn-l03", "ltn-l04",
+      "ltn-p10", "ltn-l11", "ltn-l12", "ltn-l13", "ltn-l14",
+      "ltn-scatter"
+    ]
+  }
+}

@@ -8,7 +8,7 @@ description: >
   TL/BR 横、TR/BL 竖（Z 字），无文案 presentation（与 editorial-4mix 分流）。
   狗粮验收：不等分 2:3/3:2 轨道会造成「假拼图」锯齿感，故改为等分。
 aesthetic: airy
-balancePolicy: equal
+balancePolicy: equal_area
 
 stage:
   aspect: "16:9"

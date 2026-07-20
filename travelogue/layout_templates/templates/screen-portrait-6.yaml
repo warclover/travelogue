@@ -1,6 +1,6 @@
 id: screen-portrait-6
 version: 1
-status: ga
+status: deprecated
 kind: primitive
 displayName: portrait · 6
 description: Reverse-migrated from legacy mosaic sources (Phase 16 W1).

@@ -140,6 +140,10 @@ jobs:
       - name: LTN active_set_gate
         run: python scripts/ltn_active_set_gate.py
 
+      # LTN H7 · declared main AR must match rendered cell AR on active templates.
+      - name: LTN geometry audit
+        run: python scripts/ltn_geometry_audit.py
+
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:

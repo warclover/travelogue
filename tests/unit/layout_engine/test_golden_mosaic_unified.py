@@ -44,28 +44,28 @@ def test_golden_mosaic_portrait_4_matches_mcs():
 
 
 def test_golden_mosaic_landscape_6_matches_mcs():
+    """LTN C3 · landscape-6 pruned; 6L splits into smaller landscape screens."""
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
-    assert layout_snapshot(chapters) == load_golden("mosaic-landscape-6")
     patterns = [s["patternId"] for s in chapters[0]["screens"]]
-    # Flat 6-grid is still avoided; the hero-3-2 weighted track is now also
-    # off-limits for an all-landscape window — its tall main slot (displayAspect
-    # ~0.89) crops landscapes badly (Plate 63 guard, commit 1dedb8d).
     assert PATTERN_LANDSCAPE_6 not in patterns
     assert PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 not in patterns
+    assert "screen-landscape-4" in patterns or "screen-landscape-1" in patterns
 
 
 def test_mosaic_landscape_6_ab_unified_vs_legacy():
-    """6 横图：MCS 不再合并为 hero-3-2（Plate 63 高槽裁切 guard），拆为更小的横图屏。"""
+    """6 横图：MCS 不再合并为 hero-3-2（Plate 63）；flat-6 已剪除。"""
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
     assert len(off[0]["screens"]) == 3
     on_patterns = [s["patternId"] for s in on[0]["screens"]]
     assert PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 not in on_patterns
+    assert PATTERN_LANDSCAPE_6 not in on_patterns
 
 
-def test_golden_mosaic_portrait_8_grid():
+def test_golden_mosaic_portrait_8_pair_first_after_grid8_prune():
+    """LTN C3 · grid-8 pruned; eight portraits fall to pair-first tiler."""
     buckets, aspects, assets = build_mosaic_portrait8_trip()
     chapters = plan_mosaic_screens(
         buckets,
@@ -74,10 +74,13 @@ def test_golden_mosaic_portrait_8_grid():
         trip_photo_total=60,
         orientation_summary={"portrait": 8, "landscape": 0},
     )
-    assert layout_snapshot(chapters) == load_golden("mosaic-portrait-8")
+    patterns = [s["patternId"] for s in chapters[0]["screens"]]
+    assert "screen-portrait-grid-8" not in patterns
+    assert patterns.count("screen-portrait-2") >= 2
 
 
-def test_golden_mosaic_landscape_9():
+def test_golden_mosaic_landscape_9_after_prune():
+    """LTN C3 · landscape-9 pruned from MCS active set."""
     buckets, aspects, assets = build_mosaic_landscape9_trip()
     chapters = plan_mosaic_screens(
         buckets,
@@ -85,7 +88,9 @@ def test_golden_mosaic_landscape_9():
         assets,
         trip_photo_total=60,
     )
-    assert layout_snapshot(chapters) == load_golden("mosaic-landscape-9")
+    patterns = [s["patternId"] for s in chapters[0]["screens"]]
+    assert "screen-landscape-9" not in patterns
+    assert any(p.startswith("screen-landscape-") for p in patterns)
 
 
 def test_mosaic_portrait_3_ab_exposure():

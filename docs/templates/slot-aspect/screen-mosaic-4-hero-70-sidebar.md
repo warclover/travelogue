@@ -1,7 +1,7 @@
 # screen-mosaic-4-hero-70-sidebar
 
 - displayName: 四图 · 七成英雄 + 侧栏三格
-- status: experimental
+- status: ga
 - stage: 16:9
 
 | slot | role | displayAspect |

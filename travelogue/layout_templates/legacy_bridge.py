@@ -123,9 +123,9 @@ def _roles_for(pattern_id: str) -> tuple[str, ...]:
 
 
 def _accepts_for(pattern_id: str, roles: tuple[str, ...]) -> AspectProfile:
-    reg = default_registry()
-    if pattern_id in reg:
-        return reg[pattern_id].accepts
+    # Derive from roles only — never call default_registry() here (export↔registry
+    # recursion when a template lacks raw._legacy.accepts · LTN C3 4-hero).
+    del pattern_id  # reserved for future id-specific overrides
     p = sum(1 for r in roles if r == "portrait")
     n_land = sum(1 for r in roles if r in ("landscape", "main", "tile"))
     return AspectProfile(

@@ -84,7 +84,8 @@ def test_ac_tpc_02_yaml_only_mix_hit(
     """AC-TPC-02: new YAML templates are mix-index hittable with zero Python branches."""
     engine = get_engine()
     tmpl = engine.get(template_id)
-    assert tmpl.status == "experimental"
+    # LTN C3 · 4-hero promoted to ga; rails remain experimental.
+    assert tmpl.status in ("experimental", "ga")
     assert (tmpl.raw or {}).get("usage", {}).get("summary")
     assert (tmpl.constraints or {}).get("eligibility")
 

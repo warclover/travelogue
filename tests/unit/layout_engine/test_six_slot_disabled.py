@@ -20,14 +20,14 @@ from travelogue.layout_engine.mosaic.runtime import (
 )
 from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
+# Active 6-slot hero SKUs (LTN C3 pruned flat landscape/portrait-6).
 _FORBIDDEN_SIX = frozenset(
     {
-        "screen-landscape-6",
-        "screen-portrait-6",
         "screen-mosaic-6-main-hero-plus-5",
         "screen-mosaic-5-main-hero-plus-4",
     }
 )
+_PRUNED_FLAT_SIX = frozenset({"screen-landscape-6", "screen-portrait-6"})
 
 _DISABLED_5_6 = (3, 4, 8, 9)
 
@@ -74,11 +74,14 @@ def test_mosaic_pattern_policy_blocks_five_and_six_ids(lte_pattern_enabled):
         assert mosaic_pattern_disabled(pid, cfg=off)
     assert not mosaic_pattern_disabled("screen-landscape-4", cfg=off)
 
-    # Restored default (5/6 enabled) must allow them again.
+    # Restored default (5/6 enabled) must allow active hero SKUs again.
     on = replace(get_config().mosaic, enabled_window_sizes=(3, 4, 5, 6, 8, 9))
     for pid in _FORBIDDEN_SIX:
         assert not mosaic_pattern_disabled(pid, cfg=on)
     for pid in MOSAIC_5_PATTERN_IDS:
         assert not mosaic_pattern_disabled(pid, cfg=on)
+    # LTN C3 · pruned flats stay disabled even when window size 6 is enabled.
+    for pid in _PRUNED_FLAT_SIX:
+        assert mosaic_pattern_disabled(pid, cfg=on)
     for pid in (PATTERN_MOSAIC_5_2P_3L_BALANCED, PATTERN_MOSAIC_5_MAIN_LAND_2P_2L):
         assert mosaic_pattern_disabled(pid, cfg=on)

@@ -157,4 +157,5 @@ def test_window_has_candidates_aligns_with_usage_filter(monkeypatch):
         median_sharp=0.5,
         layout_state=st,
     ) == expected
-    assert any(c.pattern_id == PATTERN_LANDSCAPE_9 for c in bundle.candidates if c.hard_valid)
+    # LTN C3 · landscape-9 pruned; alignment check is candidates ↔ window_has_candidates.
+    assert all(c.pattern_id != PATTERN_LANDSCAPE_9 for c in bundle.candidates)

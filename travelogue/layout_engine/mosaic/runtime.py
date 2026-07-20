@@ -109,6 +109,7 @@ def ordered_mosaic_window_sizes(
     return tuple(head + tail)
 
 
+# LTN C1 · size=3 aux pack removed from MCS window order (parity/tiler keep explicit 3).
 _DENSITY_AUX_PACK_SIZE = 3
 
 
@@ -117,22 +118,12 @@ def planner_mosaic_window_sizes(
     *,
     density: str = "balanced",
 ) -> tuple[int, ...]:
-    """Layout-density-aware MCS sizes (balanced/collage may append aux slot-3)."""
+    """Layout-density-aware MCS sizes (no silent size=3 aux · LTN C1)."""
     sizes = effective_mosaic_window_sizes(cfg)
     if not sizes:
         return ()
-    pack_aux = (
-        cfg.density_budget.enabled
-        and density in ("balanced", "collage_first")
-        and _DENSITY_AUX_PACK_SIZE in _ALLOWED_SIZES
-        and _DENSITY_AUX_PACK_SIZE not in sizes
-    )
     if density == "collage_first":
-        head = tuple(sorted(sizes, reverse=True))
-        return head + (_DENSITY_AUX_PACK_SIZE,) if pack_aux else head
-    if density == "balanced" and cfg.density_budget.enabled:
-        ordered = ordered_mosaic_window_sizes(cfg, density="balanced")
-        return ordered + (_DENSITY_AUX_PACK_SIZE,) if pack_aux else ordered
+        return tuple(sorted(sizes, reverse=True))
     if density == "balanced":
         return ordered_mosaic_window_sizes(cfg, density="balanced")
     return tuple(sorted(sizes, reverse=True))

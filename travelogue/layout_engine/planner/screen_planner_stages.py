@@ -365,6 +365,11 @@ def try_drain_portrait_grid8(ctx: ChapterPlanContext) -> bool:
         return False
     if ctx.layout_state is not None and not ctx.layout_state.can_use_portrait_grid8():
         return False
+    # LTN C3 · pruned grid-8 must not append (pair-first tiler handles the run).
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+
+    if mosaic_pattern_disabled("screen-portrait-grid-8"):
+        return False
     buf = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
     if len(buf) < 8:
         return False

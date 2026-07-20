@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_engine.mosaic.compose import pick_best_window
-from travelogue.layout_engine.mosaic.legacy import append_legacy_window
 from travelogue.layout_engine.mosaic.runtime import (
-    _DENSITY_AUX_PACK_SIZE,
     effective_mosaic_window_sizes,
     planner_mosaic_window_sizes,
 )
@@ -210,9 +208,9 @@ def try_mosaic_window_mcs(
         _dropped_buf().extend(pick.log.dropped_asset_ids)
 
     if pick.used_legacy:
-        if append_legacy_window(ctx, window, size):
-            _logs_buf().append(pick.log.to_dict())
-            return True
+        # LTN C1 · do not silent-fallback to size=3/equal legacy; try next window size.
+        pick.log.fallback_reason = pick.log.fallback_reason or "mcs_no_winner"
+        _logs_buf().append(pick.log.to_dict())
         return False
     if pick.screen:
         _logs_buf().append(pick.log.to_dict())
@@ -406,15 +404,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
-        if (
-            size == _DENSITY_AUX_PACK_SIZE
-            and density in ("balanced", "collage_first")
-        ):
-            from travelogue.layout_engine.mosaic.legacy import append_legacy_window
-
-            if append_legacy_window(ctx, window, size):
-                return size
-            continue
+        # LTN C1 · size=3 aux short-circuit removed; portrait tiler owns explicit triples.
         if not window_has_candidates(
             window,
             ctx.aspects,

@@ -173,8 +173,11 @@ def render_legacy_python_module(data: dict[str, Any]) -> str:
     chunks.append("")
     for group_name in sorted(mosaic_groups):
         ids = mosaic_groups[group_name]
-        inner = ", ".join(json.dumps(x, ensure_ascii=False) for x in ids)
-        chunks.append(f"{group_name}: tuple[str, ...] = ({inner},)")
+        if not ids:
+            chunks.append(f"{group_name}: tuple[str, ...] = ()")
+        else:
+            inner = ", ".join(json.dumps(x, ensure_ascii=False) for x in ids)
+            chunks.append(f"{group_name}: tuple[str, ...] = ({inner},)")
         chunks.append("")
     chunks.append(
         "MOSAIC_UNIFIED_PATTERN_IDS: tuple[str, ...] = ("

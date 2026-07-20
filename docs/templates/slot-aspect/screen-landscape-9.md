@@ -1,7 +1,7 @@
 # screen-landscape-9
 
 - displayName: landscape · 9
-- status: ga
+- status: deprecated
 - stage: 16:9
 
 | slot | role | displayAspect |

@@ -100,6 +100,7 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-landscape-4": "layout-screen__grid--2x2",
     "screen-landscape-6": "layout-screen__grid--3x2",
     "screen-landscape-9": "layout-screen__grid--3x3",
+    "screen-mosaic-4-hero-70-sidebar": "layout-screen__grid--mosaic-4-hero-70-sidebar",
     "screen-square-1": "layout-screen__grid--1col",
     "screen-square-2": "layout-screen__grid--2col",
     "screen-square-3": "layout-screen__grid--3col",
@@ -652,15 +653,21 @@ def _pick_largest_allowed_grid(
             if s not in seen and s not in candidates:
                 candidates.append(s)
                 seen.add(s)
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+
     for size in candidates:
         if size == 6 and not allow_six:
             continue
         if size > cap:
             continue
+        pid = _pattern_id(family, size)
+        # LTN C3 · skip pruned/deprecated flats (6/8/9) even outside MCS.
+        if size >= 6 and mosaic_pattern_disabled(pid):
+            continue
         if layout_state is not None:
             if not layout_state.can_pick_grid_size(size):
                 continue
-            if not layout_state.can_emit_pattern(_pattern_id(family, size)):
+            if not layout_state.can_emit_pattern(pid):
                 continue
         return size
     return 1

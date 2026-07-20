@@ -5,6 +5,7 @@ registry_version: p16-2026-06
 
 # MCS unified window families (exported to _legacy_generated.py · R-P16-02)
 mosaic_unified_groups:
+  # LTN C3 / D8 · active set 11 (3+4+2+2); pruned 6/8/9 flat grids stay in YAML as deprecated.
   MOSAIC_3_PATTERN_IDS:
     - screen-portrait-3
     # screen-portrait-3-editorial · beta primitive · planner hook only (PRD portrait-row-editorial)
@@ -14,19 +15,15 @@ mosaic_unified_groups:
     - screen-portrait-2-landscape-2
     - screen-portrait-4
     - screen-landscape-4
+    - screen-mosaic-4-hero-70-sidebar
   MOSAIC_5_PATTERN_IDS:
     - screen-mosaic-5-main-portrait-3land
     - screen-mosaic-5-hero-3-2-plus-4   # MCR · D4 · 行为等价，消除 orphan
   MOSAIC_6_PATTERN_IDS:
     - screen-mosaic-5-main-hero-plus-4
     - screen-mosaic-6-main-hero-plus-5
-    - screen-portrait-6
-    - screen-landscape-6
-  MOSAIC_8_PATTERN_IDS:
-    - screen-portrait-grid-8
-  MOSAIC_9_PATTERN_IDS:
-    - screen-portrait-9
-    - screen-landscape-9
+  MOSAIC_8_PATTERN_IDS: []
+  MOSAIC_9_PATTERN_IDS: []
 
 quotas:
   5:

@@ -57,7 +57,7 @@ def test_usage_rules_off_matches_no_ctx(monkeypatch):
         layout_state=st,
         median_sharp=0.5,
     )
-    with_ctx_off = generate_window_candidates_with_rejections(
+    with_ctx_on = generate_window_candidates_with_rejections(
         ids,
         aspects,
         assets_map,
@@ -80,20 +80,25 @@ def test_usage_rules_off_matches_no_ctx(monkeypatch):
         window_ctx=ctx,
     )
 
-    def _snapshot(result):
+    def _hard(result):
         hard = [
             (c.pattern_id, tuple(c.ordered_asset_ids))
             for c in result.candidates
             if c.hard_valid
         ]
         hard.sort()
-        return hard, list(result.rejected)
+        return hard
 
-    assert _snapshot(without_ctx) == _snapshot(with_rules_disabled)
-    assert _snapshot(without_ctx) != _snapshot(with_ctx_off)
+    # enabled=false must match no-ctx hard set (AC-URO-01).
+    assert _hard(without_ctx) == _hard(with_rules_disabled)
+    # LTN C3 · size=6 仅剩 hero SKUs；UR 拒尽后 empty-fallback restore，
+    # hard 集可与无 ctx 相同，但必须留下 restore 痕迹。
+    assert with_ctx_on.usage_rule_hits
+    assert any(h.get("action") == "restore" for h in with_ctx_on.usage_rule_hits)
 
 
-def test_usage_rules_on_rejects_main_hero(monkeypatch):
+def test_usage_rules_on_restores_main_hero_when_only_heroes(monkeypatch):
+    """LTN C3 · 平铺 6 剪枝后，size=6 仅 hero 候选；UR-01 拒尽 → restore。"""
     ids, aspects, assets_map = _six_landscape_window()
     cfg = MosaicConfig()
     base = get_config()
@@ -109,10 +114,9 @@ def test_usage_rules_on_rejects_main_hero(monkeypatch):
     result = generate_window_candidates_with_rejections(
         ids, aspects, assets_map, cfg=cfg, window_ctx=ctx
     )
-    usage_rejects = [
-        r for r in result.rejected if str(r.get("reason", "")).startswith("usage_rule:")
-    ]
-    assert usage_rejects
+    hard_ids = {c.pattern_id for c in result.candidates if c.hard_valid}
+    assert PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 in hard_ids
+    restores = [h for h in result.usage_rule_hits if h.get("action") == "restore"]
     assert any(
-        r.get("templateId") == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 for r in usage_rejects
+        h.get("templateId") == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 for h in restores
     )

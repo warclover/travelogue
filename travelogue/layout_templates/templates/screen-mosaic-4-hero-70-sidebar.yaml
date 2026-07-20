@@ -1,6 +1,6 @@
 id: screen-mosaic-4-hero-70-sidebar
-version: 1
-status: experimental
+version: 2
+status: ga
 kind: composite
 displayName: 四图 · 七成英雄 + 侧栏三格
 description: >
@@ -35,11 +35,12 @@ constraints:
     heroDominance: extreme
     heroAreaBand: [0.60, 0.78]
     slotIndex: 0
-    targetDisplayAspect: 1.7778
+    # LTN H7 · match rendered cell AR (~1.244 for 7:3 × 16:9), not 16:9 crop prior.
+    targetDisplayAspect: 1.30
     eligibleAspectKinds: [landscape]
     forbidKinds: [panorama, tall, portrait, square]
     arLadderTol: 0.08
-    preferLadder: [1.7778, 1.5, 1.3333]
+    preferLadder: [1.3333, 1.5, 1.7778]
 
 compatibilityHints:
   prefers_burst: true
@@ -59,8 +60,8 @@ render:
   fitPolicy: auto_delegate
 
 rollout:
-  # 0 until dogfood sign-off; becomes eligible when template_contract.enabled (AC-TPC-01)
-  percent: 0
+  # LTN C3 · GA active set
+  percent: 100
   hash_key: tripId
 
 usage:

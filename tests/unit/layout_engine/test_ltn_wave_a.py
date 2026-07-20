@@ -138,3 +138,56 @@ def test_h8_active_set_gate_script() -> None:
 
     report = check()
     assert report["ok"], report
+    assert report["policyCount"] == 11
+
+
+def test_h7_geometry_audit_script() -> None:
+    from scripts.ltn_geometry_audit import audit
+
+    report = audit()
+    assert report["ok"], report["failures"]
+
+
+def test_c3_four_hero_in_active_set() -> None:
+    from travelogue.layout_engine.mosaic.constants import MOSAIC_4_PATTERN_IDS
+    from travelogue.layout_templates.registry import get_engine
+
+    assert "screen-mosaic-4-hero-70-sidebar" in MOSAIC_4_PATTERN_IDS
+    tpl = get_engine().get("screen-mosaic-4-hero-70-sidebar")
+    assert tpl.status == "ga"
+    assert int((tpl.rollout or {}).get("percent", 0)) == 100
+
+
+def test_c3_pruned_flats_deprecated() -> None:
+    from travelogue.layout_templates.registry import get_engine
+
+    engine = get_engine()
+    for tid in (
+        "screen-portrait-6",
+        "screen-landscape-6",
+        "screen-portrait-9",
+        "screen-landscape-9",
+        "screen-portrait-grid-8",
+    ):
+        assert engine.get(tid).status == "deprecated", tid
+
+
+def test_c1_no_aux3_in_planner_sizes() -> None:
+    from travelogue.config import MosaicConfig, MosaicDensityBudgetConfig
+    from travelogue.layout_engine.mosaic.runtime import planner_mosaic_window_sizes
+
+    cfg = MosaicConfig(
+        enabled=True,
+        enabled_window_sizes=(4, 5, 6),
+        density_budget=MosaicDensityBudgetConfig(enabled=True, window_order=(5, 4, 6)),
+    )
+    assert 3 not in planner_mosaic_window_sizes(cfg, density="balanced")
+    assert 3 not in planner_mosaic_window_sizes(cfg, density="collage_first")
+
+
+def test_h9_fixtures_exist() -> None:
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / "fixtures" / "ltn"
+    assert (root / "trip.ltn_oracle_positive.json").is_file()
+    assert (root / "trip.ltn_oracle_negative.json").is_file()
