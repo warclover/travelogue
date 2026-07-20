@@ -1,0 +1,10 @@
+{
+  "ac": "AC-C-01",
+  "version": "1",
+  "reduceFactor": 0.5,
+  "notes": "Placeholder historical rates for relative ↓≥50% gate. Replace with signed dogfood isolation rates when available.",
+  "baselines": {
+    "fixture-synthetic": 1.0,
+    "h9-oracle-positive": null
+  }
+}

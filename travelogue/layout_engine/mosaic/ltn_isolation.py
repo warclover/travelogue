@@ -15,12 +15,21 @@ from travelogue.layout_engine.mosaic.candidates import (
 )
 from travelogue.layout_engine.mosaic.compose import pick_best_window
 
-_STACK3_PATTERNS = frozenset(
+# Finished stack-3 patterns that may count toward the AC-C-01 numerator.
+STACK3_PATTERNS = frozenset(
     {
         "screen-portrait-3",
         "screen-portrait-3-editorial",
         "screen-landscape-3",
         "screen-portrait-1-landscape-2",
+    }
+)
+
+# Parity / portrait-tiler explicit triples — PRD excludes these from the numerator.
+_TILER_PARITY_LAYOUT_HINTS = frozenset(
+    {
+        "person-triple",
+        "portrait-row-editorial",
     }
 )
 
@@ -55,7 +64,7 @@ def isolation_failed_mcs_windows(
                 assets_map,
                 cfg=mosaic_cfg,
             )
-            hard = [c for c in bundle.candidates if getattr(c, "hard_valid", True)]
+            hard = [c for c in bundle.candidates if c.hard_valid]
             if not hard:
                 continue
             pick = pick_best_window(
@@ -100,6 +109,27 @@ def _screen_aids(screen: dict[str, Any]) -> set[str]:
     }
 
 
+def is_tiler_or_parity_stack(screen: dict[str, Any]) -> bool:
+    """True when stack-3 came from parity / portrait tiler (excluded from AC-C-01)."""
+    hint = str(screen.get("layoutHint") or "").strip()
+    return hint in _TILER_PARITY_LAYOUT_HINTS
+
+
+def _ordered_asset_ids(trip: dict[str, Any], assets_map: dict[str, dict]) -> list[str]:
+    from travelogue.curation.burst_utils import parse_taken_ts
+
+    cur = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+    ordered = [
+        str(x) for x in (cur.get("displayedAssetIds") or []) if str(x) in assets_map
+    ]
+    if ordered:
+        return ordered
+    return sorted(
+        assets_map,
+        key=lambda i: parse_taken_ts(assets_map[i]) or 0.0,
+    )
+
+
 def portrait3_after_failed_mcs5_rate_strict(
     chapters: list[dict[str, Any]],
     *,
@@ -107,49 +137,101 @@ def portrait3_after_failed_mcs5_rate_strict(
     aspects: dict[str, AspectKind],
     assets_map: dict[str, dict],
     cfg: MosaicConfig | None = None,
+    failed: list[IsolationFailedWindow] | None = None,
 ) -> float | None:
-    """AC-C-01 strict rate. None when denominator is 0."""
-    failed = isolation_failed_mcs_windows(
-        ordered_ids, aspects, assets_map, cfg=cfg
+    """AC-C-01 strict rate. None when denominator is 0.
+
+    Numerator: stack-3 screens that share ≥1 assetId with a failed window **and**
+    are reading-order adjacent to other placements of that window's assets.
+    Tiler / parity triples (layoutHint person-triple / portrait-row-editorial) excluded.
+    """
+    failed_windows = (
+        failed
+        if failed is not None
+        else isolation_failed_mcs_windows(
+            ordered_ids, aspects, assets_map, cfg=cfg
+        )
     )
-    if not failed:
+    if not failed_windows:
         return None
 
     screens = _content_screens(chapters)
-    # Map assetId → content screen indices (for adjacency).
     aid_to_idx: dict[str, list[int]] = {}
     for i, sc in enumerate(screens):
         for aid in _screen_aids(sc):
             aid_to_idx.setdefault(aid, []).append(i)
 
     hits = 0
-    for fw in failed:
+    for fw in failed_windows:
         win_aids = set(fw.asset_ids)
         hit = False
         for i, sc in enumerate(screens):
             pid = str(sc.get("patternId") or "")
-            if pid not in _STACK3_PATTERNS:
+            if pid not in STACK3_PATTERNS:
+                continue
+            if is_tiler_or_parity_stack(sc):
                 continue
             sc_aids = _screen_aids(sc)
             if not (win_aids & sc_aids):
                 continue
-            # Adjacent in reading order: any shared asset's screen neighbors the stack,
-            # or stack index is next to a screen that holds other window assets.
-            neighbor_idxs = set()
-            for aid in win_aids:
-                for j in aid_to_idx.get(aid, []):
-                    neighbor_idxs.add(j)
-                    neighbor_idxs.add(j - 1)
-                    neighbor_idxs.add(j + 1)
-            if i in neighbor_idxs or any(abs(i - j) <= 1 for j in neighbor_idxs):
+            # Adjacency vs *other* screens that hold window assets (exclude self).
+            # Sharing alone must not imply adjacency — far reuse must not count.
+            # Empty other_idxs ⇒ shared assets only finished on this stack (post-fail
+            # placement); count once tiler/parity already filtered out.
+            other_idxs = {
+                j
+                for aid in win_aids
+                for j in aid_to_idx.get(aid, [])
+                if j != i
+            }
+            if not other_idxs or any(abs(i - j) <= 1 for j in other_idxs):
                 hit = True
                 break
         if hit:
             hits += 1
-    return round(hits / len(failed), 6)
+    return round(hits / len(failed_windows), 6)
 
 
-def compute_ac_c01_on_trip(trip: dict[str, Any]) -> dict[str, Any]:
+def compare_ac_c01_to_baseline(
+    rate: float | None,
+    baseline_rate: float | None,
+    *,
+    reduce_factor: float = 0.5,
+) -> dict[str, Any]:
+    """Relative AC-C-01 gate: current ≤ baseline × reduce_factor (default ↓≥50%)."""
+    if rate is None or baseline_rate is None:
+        return {
+            "ok": None,
+            "deltaRatio": None,
+            "baselineRate": baseline_rate,
+            "currentRate": rate,
+            "targetMax": None,
+        }
+    if baseline_rate <= 0:
+        # No positive baseline → cannot claim relative reduction; treat null ok.
+        return {
+            "ok": None,
+            "deltaRatio": None,
+            "baselineRate": baseline_rate,
+            "currentRate": rate,
+            "targetMax": 0.0,
+        }
+    target = baseline_rate * reduce_factor
+    return {
+        "ok": rate <= target + 1e-9,
+        "deltaRatio": round(rate / baseline_rate, 6),
+        "baselineRate": baseline_rate,
+        "currentRate": rate,
+        "targetMax": round(target, 6),
+    }
+
+
+def compute_ac_c01_on_trip(
+    trip: dict[str, Any],
+    *,
+    baseline_rate: float | None = None,
+    cfg: MosaicConfig | None = None,
+) -> dict[str, Any]:
     """Convenience: strict AC-C-01 from a trip dict (chapters + assets)."""
     from travelogue.curation.layout_planner import aspect_kind_for_asset
 
@@ -158,20 +240,25 @@ def compute_ac_c01_on_trip(trip: dict[str, Any]) -> dict[str, Any]:
     aspects: dict[str, AspectKind] = {
         aid: aspect_kind_for_asset(a) for aid, a in assets_map.items()  # type: ignore[misc]
     }
-    cur = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
-    ordered = [str(x) for x in (cur.get("displayedAssetIds") or []) if str(x) in assets_map]
-    if not ordered:
-        ordered = list(assets_map.keys())
+    ordered = _ordered_asset_ids(trip, assets_map)
+    failed = isolation_failed_mcs_windows(
+        ordered, aspects, assets_map, cfg=cfg
+    )
     rate = portrait3_after_failed_mcs5_rate_strict(
         list(trip.get("chapters") or []),
         ordered_ids=ordered,
         aspects=aspects,
         assets_map=assets_map,
+        cfg=cfg,
+        failed=failed,
     )
-    failed = isolation_failed_mcs_windows(ordered, aspects, assets_map)
+    relative = compare_ac_c01_to_baseline(rate, baseline_rate)
     return {
         "ac": "AC-C-01",
         "rate": rate,
         "failedWindowCount": len(failed),
-        "ok": rate is None or rate <= 0.5,  # absolute health band when no baseline
+        # Absolute band is observational only — not the PRD AC gate.
+        "withinAbsoluteBand": rate is None or rate <= 0.5,
+        "baseline": relative,
+        "ok": relative["ok"],
     }

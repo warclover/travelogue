@@ -19,6 +19,7 @@ from travelogue.layout_contract.planner_state import (
     is_dense_collage_pattern,
 )
 from travelogue.layout_contract.rhythm import dense_collage_limits_for_trip
+from travelogue.layout_engine.mosaic.ltn_isolation import STACK3_PATTERNS
 from travelogue.layout_engine.mosaic.metrics import (
     mcs_unified_exposure_rate,
     mosaic5_exposure_rate,
@@ -26,15 +27,6 @@ from travelogue.layout_engine.mosaic.metrics import (
 
 _BURST_WINDOW_LENS = (5, 6)
 _NON_LAYOUT_PATTERNS = frozenset({"screen-breath-pause"})
-
-_STACK3_PATTERNS = frozenset(
-    {
-        "screen-portrait-3",
-        "screen-portrait-3-editorial",
-        "screen-landscape-3",
-        "screen-portrait-1-landscape-2",
-    }
-)
 
 
 def _winner_plan_logs(mosaic_logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -211,7 +203,7 @@ def portrait3_after_failed_mcs5_rate(
         seg = lg.get("segmentId")
         for sc in screens:
             pid = str(sc.get("patternId") or "")
-            if pid not in _STACK3_PATTERNS:
+            if pid not in STACK3_PATTERNS:
                 continue
             sc_aids = _screen_asset_ids(sc)
             if win_aids:
@@ -363,8 +355,14 @@ def compute_ltn_weekly_metrics(
     mosaic_logs: list[dict[str, Any]] | None = None,
     html_layout_screen_count: int | None = None,
     burst_seconds: float = 900.0,
+    include_ac_c01_strict: bool = False,
+    ac_c01_baseline_rate: float | None = None,
 ) -> dict[str, Any]:
-    """Aggregate LTN weekly dashboard metrics for one trip (or chapter slice)."""
+    """Aggregate LTN weekly dashboard metrics for one trip (or chapter slice).
+
+    ``include_ac_c01_strict`` is opt-in: isolation replay is O(n×sizes) and
+    expensive on archive trips.
+    """
     trip = trip or {}
     chapters = list(chapters if chapters is not None else (trip.get("chapters") or []))
     curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
@@ -421,25 +419,33 @@ def compute_ltn_weekly_metrics(
         ),
         "notes": [],
     }
-    # Optional strict AC-C-01 when assets present
-    if assets and chapters:
+    if include_ac_c01_strict and assets and chapters:
         try:
             from travelogue.layout_engine.mosaic.ltn_isolation import (
                 compute_ac_c01_on_trip,
             )
 
-            c01 = compute_ac_c01_on_trip(trip)
+            c01 = compute_ac_c01_on_trip(
+                trip, baseline_rate=ac_c01_baseline_rate
+            )
             out["portrait3AfterFailedMcs5RateStrict"] = c01.get("rate")
             out["acC01FailedWindowCount"] = c01.get("failedWindowCount")
+            out["acC01WithinAbsoluteBand"] = c01.get("withinAbsoluteBand")
+            out["acC01Baseline"] = c01.get("baseline")
+            out["acC01Ok"] = c01.get("ok")
         except Exception as exc:  # noqa: BLE001 — dashboard must not crash
-            out["notes"].append(f"acC01Strict skipped: {type(exc).__name__}")
+            out["notes"].append(
+                f"acC01Strict skipped: {type(exc).__name__}: {exc}"
+            )
+            out["portrait3AfterFailedMcs5RateStrict"] = None
     if out["crossSceneWindowRate"] is None and not logs:
         out["notes"].append("no mosaicDecisionLog; log-dependent rates skipped/null")
     elif out["crossSceneWindowRate"] is None:
         out["notes"].append("crossSceneWindowRate null — C4 constructs windows within segments")
     if out["portrait3AfterFailedMcs5Rate"] is not None:
         out["notes"].append(
-            "portrait3AfterFailedMcs5Rate is MVP proxy; prefer portrait3AfterFailedMcs5RateStrict"
+            "portrait3AfterFailedMcs5Rate is MVP proxy; "
+            "prefer --strict-c01 portrait3AfterFailedMcs5RateStrict"
         )
     if not out["notes"]:
         out.pop("notes")

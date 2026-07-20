@@ -54,6 +54,17 @@ def main() -> int:
         default=str(ROOT / ".cache" / "ltn-weekly" / "report.json"),
         help="output JSON path",
     )
+    ap.add_argument(
+        "--strict-c01",
+        action="store_true",
+        help="include AC-C-01 isolation-replay strict rate (expensive)",
+    )
+    ap.add_argument(
+        "--ac-c01-baseline",
+        type=float,
+        default=None,
+        help="optional baseline rate for relative ↓≥50%% gate (with --strict-c01)",
+    )
     args = ap.parse_args()
 
     trips_out: list[dict] = []
@@ -64,7 +75,11 @@ def main() -> int:
         except (OSError, json.JSONDecodeError, FileNotFoundError) as exc:
             skipped.append(f"{t}: {exc}")
             continue
-        metrics = compute_ltn_weekly_metrics(trip)
+        metrics = compute_ltn_weekly_metrics(
+            trip,
+            include_ac_c01_strict=bool(args.strict_c01),
+            ac_c01_baseline_rate=args.ac_c01_baseline,
+        )
         trips_out.append({"tripId": trip_id, "metrics": metrics})
 
     report = {
