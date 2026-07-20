@@ -1,4 +1,7 @@
-<figure class="media-row{{#if rowClass}} {{rowClass}}{{/if}}" data-block="media-row"{{#if rowLayout}} data-row-layout="{{rowLayout}}"{{/if}}{{#if layoutHint}} data-layout-hint="{{layoutHint}}"{{/if}}>
+<figure class="media-row{{#if rowClass}} {{rowClass}}{{/if}}" data-block="media-row"{{#if rowLayout}} data-row-layout="{{rowLayout}}"{{/if}}{{#if layoutHint}} data-layout-hint="{{layoutHint}}"{{/if}}{{#if hasGroupId}} data-group-id="{{groupId}}"{{/if}}{{#if preserveGroup}} data-preserve-group="true"{{/if}}>
+  {{#if hasGroupMark}}
+  <div class="media-row__group-mark" aria-label="{{groupMark}}">{{groupMark}}</div>
+  {{/if}}
   {{#each cells}}
   <div class="media-card__frame" data-aspect-kind="{{aspectKind}}">
     <img class="media-card__visual"

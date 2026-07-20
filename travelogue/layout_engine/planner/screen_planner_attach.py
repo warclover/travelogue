@@ -122,6 +122,7 @@ def _rebuild_layout_state(
         layout_density=base.layout_density,
         rhythm=base.rhythm,
         dense_collage_max=base.dense_collage_max,
+        dense_collage_opportunity_min=base.dense_collage_opportunity_min,
         large_mosaic_min_slots=base.large_mosaic_min_slots,
         large_mosaic_max_per_template_trip=base.large_mosaic_max_per_template_trip,
         large_mosaic_max_per_chapter=base.large_mosaic_max_per_chapter,

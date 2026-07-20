@@ -36,6 +36,13 @@ def test_hero_first_scales_dense_quota_down() -> None:
     assert hi == 1
 
 
+def test_hero_first_dense_floor_keeps_at_least_one() -> None:
+    """LTN H6/S3 · small-trip dense_max=1 must not floor to 0 under hero_first."""
+    params = LayoutDensityParams(density="hero_first")
+    _lo, hi = params.adjust_dense_collage_limits(0, 1, total_photos=40)
+    assert hi == 1
+
+
 def test_collage_first_scales_dense_quota_up() -> None:
     params = LayoutDensityParams(density="collage_first")
     _lo, hi = params.adjust_dense_collage_limits(0, 3, total_photos=100)
@@ -44,15 +51,17 @@ def test_collage_first_scales_dense_quota_up() -> None:
     assert hi44 >= 3
 
 
-def test_planner_mosaic_window_sizes_append_aux_three_for_density_modes() -> None:
+def test_planner_mosaic_window_sizes_no_aux_three_ltn_c1() -> None:
+    """LTN C1 · MCS window order must not silently append size=3 aux."""
     cfg = MosaicConfig(
         enabled=True,
         enabled_window_sizes=(4, 5, 6, 9),
         density_budget=MosaicDensityBudgetConfig(enabled=True, window_order=(5, 4, 6, 9)),
     )
-    assert planner_mosaic_window_sizes(cfg, density="balanced") == (5, 4, 6, 9, 3)
-    assert planner_mosaic_window_sizes(cfg, density="collage_first") == (9, 6, 5, 4, 3)
+    assert planner_mosaic_window_sizes(cfg, density="balanced") == (5, 4, 6, 9)
+    assert planner_mosaic_window_sizes(cfg, density="collage_first") == (9, 6, 5, 4)
     assert planner_mosaic_window_sizes(cfg, density="hero_first") == (9, 6, 5, 4)
+    assert 3 not in planner_mosaic_window_sizes(cfg, density="balanced")
 
 
 def test_dense_collage_quota_adjusted_helper() -> None:

@@ -100,6 +100,15 @@ def test_apply_layout_mobile_landscape_stacks_in_one_column():
 def test_apply_layout_web_portrait_mosaic():
     # MCS unified planner: web export uses screens engine; mixed portrait windows
     # land in unified MCS patterns (e.g. screen-portrait-3) instead of legacy rows.
+    from dataclasses import replace
+
+    from travelogue.config import get_config
+    from travelogue.config.mosaic import TemplateContractConfig
+    from travelogue.layout_engine.mosaic.runtime import (
+        reset_mosaic_config_override,
+        set_mosaic_config_override,
+    )
+
     specs = [
         (1200, 800),
         (900, 1600),
@@ -108,13 +117,23 @@ def test_apply_layout_web_portrait_mosaic():
         (1200, 800),
         (1200, 800),
     ]
-    trip = _trip_with_assets(specs, export_layout="web", cover_index=0)
-    result = apply_layout_to_trip(trip, export_layout="web")
-    assert result.orientation_summary["export_layout"] == "web"
-    screens = [sc for ch in trip["chapters"] for sc in ch.get("screens") or []]
-    assert any(sc.get("patternId") == "screen-portrait-3" for sc in screens)
-    placed = {sl.get("assetId") for sc in screens for sl in sc.get("slots") or []}
-    assert {"a1", "a2", "a3"} <= placed
+    # Isolate from local config.yaml template_contract dogfood.
+    set_mosaic_config_override(
+        replace(
+            get_config().mosaic,
+            template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
+        )
+    )
+    try:
+        trip = _trip_with_assets(specs, export_layout="web", cover_index=0)
+        result = apply_layout_to_trip(trip, export_layout="web")
+        assert result.orientation_summary["export_layout"] == "web"
+        screens = [sc for ch in trip["chapters"] for sc in ch.get("screens") or []]
+        assert any(sc.get("patternId") == "screen-portrait-3" for sc in screens)
+        placed = {sl.get("assetId") for sc in screens for sl in sc.get("slots") or []}
+        assert {"a1", "a2", "a3"} <= placed
+    finally:
+        reset_mosaic_config_override()
 
 
 def test_apply_layout_panorama_not_in_triple():

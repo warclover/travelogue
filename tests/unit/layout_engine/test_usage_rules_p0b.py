@@ -156,15 +156,21 @@ def test_can_mosaic_main_portrait_blocked_by_ur04(monkeypatch):
 
 
 def test_usage_empty_fallback_restores_weakest_rule(monkeypatch):
-    aspects = {f"a{i}": "landscape" for i in range(9)}
-    assets_map = {f"a{i}": _asset(f"a{i}", w=3000, h=1687) for i in range(9)}
-    ids = [f"a{i}" for i in range(9)]
+    # LTN C3 · landscape-9 pruned; size=6 only hero SKUs remain → UR reject-all → restore.
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+
+    aspects = {f"a{i}": "landscape" for i in range(6)}
+    assets_map = {f"a{i}": _asset(f"a{i}", w=3000, h=1687) for i in range(6)}
+    ids = [f"a{i}" for i in range(6)]
     cfg = MosaicConfig()
     st = ScreenLayoutPlannerState.from_trip_total(40)
     st.last_was_dense_collage = True
     ctx = build_window_context(ids, aspects, assets_map, layout_state=st, median_sharp=0.5)
     base = get_config()
-    layout = replace(base.layout, usage_rules=UsageRulesConfig(enabled=True))
+    layout = replace(
+        base.layout,
+        usage_rules=UsageRulesConfig(enabled=True, hero_gap_threshold=0.15),
+    )
     monkeypatch.setattr(
         "travelogue.layout_engine.usage_rules.evaluator.get_config",
         lambda: replace(base, layout=layout),
@@ -174,17 +180,12 @@ def test_usage_empty_fallback_restores_weakest_rule(monkeypatch):
     )
     hard = [c for c in result.candidates if c.hard_valid]
     assert hard
-    assert any(c.pattern_id == PATTERN_LANDSCAPE_9 for c in hard)
-    usage_rejects = [
-        r for r in result.rejected if str(r.get("reason", "")).startswith("usage_rule:")
-    ]
-    assert not any(
-        r.get("templateId") == PATTERN_LANDSCAPE_9 and r.get("reason") == f"usage_rule:{RULE_UR_05}"
-        for r in usage_rejects
-    )
+    assert any(c.pattern_id == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 for c in hard)
     restores = [h for h in result.usage_rule_hits if h.get("action") == "restore"]
-    if restores:
-        assert any(h.get("ruleId") == RULE_UR_05 for h in restores)
+    assert restores
+    assert any(
+        h.get("templateId") == PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 for h in restores
+    )
 
 
 def test_ur03_sole_candidate_restored_by_empty_fallback(monkeypatch):

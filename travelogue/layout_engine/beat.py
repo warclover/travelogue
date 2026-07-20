@@ -33,12 +33,17 @@ def beat_score_multiplier(
     progress = screen_index / max(1, n - 1) if n > 1 else 0.0
     pid = str(pattern_id or "")
     if profile == "classic_magazine":
-        if progress < 0.28 and (_is_hero_pattern(pid) or is_portrait_single_pattern(pid)):
+        # LTN D2 · peak band centered ~0.60–0.65 (PRD R-D2).
+        if progress < 0.25 and (_is_hero_pattern(pid) or is_portrait_single_pattern(pid)):
             return 1.12
-        if 0.22 <= progress <= 0.78 and _is_mosaic_dense(pid):
-            return 1.08
-        if progress > 0.72 and is_portrait_single_pattern(pid):
+        if 0.55 <= progress <= 0.70 and _is_mosaic_dense(pid):
+            return 1.12
+        if 0.48 <= progress < 0.55 and _is_mosaic_dense(pid):
             return 1.06
-    if profile == "dense_mid" and 0.3 <= progress <= 0.7 and _is_mosaic_dense(pid):
+        if 0.70 < progress <= 0.78 and _is_mosaic_dense(pid):
+            return 1.06
+        if progress > 0.78 and is_portrait_single_pattern(pid):
+            return 1.06
+    if profile == "dense_mid" and 0.55 <= progress <= 0.70 and _is_mosaic_dense(pid):
         return 1.10
     return 1.0

@@ -156,6 +156,25 @@ function resolvePreviewUrl(result) {
   return null;
 }
 
+/** FirstSuccess 顶栏：真实封面图；避免竖版 preview.jpg 封面卡（含标题字） */
+function resolveSuccessCoverUrl(result) {
+  if (!result || !result.tripId) return null;
+  var rel = result.shelfCoverRelPath || result.coverImageRelPath || "";
+  if (!rel && Array.isArray(V2.trips)) {
+    for (var i = 0; i < V2.trips.length; i++) {
+      var trip = V2.trips[i];
+      if (trip && trip.tripId === result.tripId) {
+        rel = trip.shelfCoverRelPath || trip.previewRelPath || "";
+        break;
+      }
+    }
+  }
+  rel = String(rel || "").replace(/^\/+/, "");
+  // 仍回退 preview.jpg 时，宁可无图也不展示带标题的竖版封面卡
+  if (!rel || rel === "preview.jpg") return null;
+  return "/" + result.tripId + "/" + rel + "?t=" + String(Date.now());
+}
+
 function populateSuccessUi(result) {
   result = result || {};
   _successMode = String(result.mode || "quick_share").toLowerCase();
@@ -195,8 +214,12 @@ function populateSuccessUi(result) {
       if (densityLine) detailLines.push(densityLine);
       msg.textContent = line1;
       if (details) {
-        var detailBody = detailLines.join("\n");
-        details.textContent = detailBody;
+        details.textContent = "";
+        detailLines.forEach(function (line) {
+          var li = document.createElement("li");
+          li.textContent = line;
+          details.appendChild(li);
+        });
         show(details, detailLines.length > 0);
       }
       var ariaBody = line1 + (detailLines.length ? "; " + detailLines.join("; ") : "");
@@ -251,12 +274,18 @@ function populateSuccessUi(result) {
     show(secondary, _successRefinedEnabled && _successMode === "quick_share");
   }
   if (nextHint) {
-    var nextLines = [HELP_COPY.firstSuccessNext];
+    nextHint.textContent = "";
+    var lead = document.createElement("p");
+    lead.className = "v2-first-success__guidance-lead";
+    lead.textContent = HELP_COPY.firstSuccessNext;
+    nextHint.appendChild(lead);
     // FE-FTUE-08 · 示例成稿后转化；非示例也轻提示一次（防试完就走）
     if (HELP_COPY.ftueConvertHint) {
-      nextLines.push(HELP_COPY.ftueConvertHint);
+      var nextLine = document.createElement("p");
+      nextLine.className = "v2-first-success__guidance-next";
+      nextLine.textContent = HELP_COPY.ftueConvertHint;
+      nextHint.appendChild(nextLine);
     }
-    nextHint.textContent = nextLines.join("\n");
     show(nextHint, true);
   }
   var setPreview = $("v2-success-set-preview");
@@ -264,13 +293,28 @@ function populateSuccessUi(result) {
     show(setPreview, !!result.tripId);
   }
 
+  applySuccessCover(result, title);
+}
+
+/** 书架刷新后补挂封面（仅图片，不动文案） */
+export function refreshSuccessCover(result) {
+  if (!result || !isFirstSuccessVisible()) return;
+  applySuccessCover(result, result.title || "我的旅途");
+}
+
+function applySuccessCover(result, title) {
   var cover = $("v2-success-cover");
   var coverImg = $("v2-success-cover-img");
-  if (cover && coverImg && result.tripId) {
-    coverImg.alt = title;
+  var coverUrl = resolveSuccessCoverUrl(result);
+  if (cover && coverImg && coverUrl) {
+    coverImg.alt = title || "";
     coverImg.onerror = function () { show(cover, false); };
     coverImg.onload = function () { show(cover, true); };
-    coverImg.src = "/" + result.tripId + "/preview.jpg?t=" + String(Date.now());
+    if (coverImg.getAttribute("src") !== coverUrl) {
+      coverImg.src = coverUrl;
+    } else {
+      show(cover, true);
+    }
   } else if (cover) {
     show(cover, false);
   }

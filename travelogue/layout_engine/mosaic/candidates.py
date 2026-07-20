@@ -191,6 +191,21 @@ def generate_window_candidates_with_rejections(
             )
     else:
         patterns = patterns_for_window_size(len(asset_ids), reg)
+        contract_source = "legacy_size"
+    # LTN C4 · signature on top of TC or legacy sets (TC∩signature).
+    # Hit → candidateSource=signature; miss → keep prior set, log contract/legacy
+    # source under TC (or signature_fallback on the legacy path).
+    from travelogue.layout_engine.mosaic.coarse_segments import apply_signature_route
+
+    patterns, signature_source = apply_signature_route(
+        patterns, asset_ids, aspects, assets_map
+    )
+    if signature_source == "signature":
+        route_source = "signature"
+    elif tc_enabled:
+        route_source = contract_source
+    else:
+        route_source = signature_source
     summary = feature_summary_for_window(asset_ids, assets_map)
     out: list[ScreenCandidate] = []
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
@@ -278,6 +293,30 @@ def generate_window_candidates_with_rejections(
                 cfg=cfg,
             )
             reject_reason = "main_ar_ineligible"
+        # LTN C8 · D-03 hard gates when measurable (area ratio is soft — see scorer).
+        from travelogue.layout_engine.mosaic.slot_role_penalties import (
+            main_ar_mismatch_gate_ok,
+            sidebar_min_short_side_ok,
+        )
+
+        ar_ok = main_ar_mismatch_gate_ok(screen, assets_map)
+        if ar_ok is False:
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "main_ar_mismatch",
+                detail="mismatch>1.4",
+            )
+            continue
+        side_ok = sidebar_min_short_side_ok(pat.pattern_id)
+        if side_ok is False:
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "sidebar_min_short_side",
+                detail="short_side<72px@428",
+            )
+            continue
         geom_ok = geom_ok and main_ok
         if not geom_ok and not main_ok:
             _reject(rejected, pat.pattern_id, reject_reason, detail=main_reason)
@@ -293,8 +332,8 @@ def generate_window_candidates_with_rejections(
                 feat = {**summary, "patternId": pat.pattern_id}
                 if slot_fallback:
                     feat["slotAssignmentFallback"] = slot_fallback
-                if tc_enabled and contract_source == "fallback":
-                    feat["candidateSource"] = "fallback"
+                if route_source:
+                    feat["candidateSource"] = route_source
                 usage_deferred.append(
                     (
                         ScreenCandidate(
@@ -311,8 +350,9 @@ def generate_window_candidates_with_rejections(
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback
+        if route_source:
+            feat["candidateSource"] = route_source
         if tc_enabled:
-            feat["candidateSource"] = contract_source
             if square_relaxed:
                 feat["squareRelaxed"] = True
             if contract_source == "fallback":
@@ -356,11 +396,19 @@ def generate_window_candidates_with_rejections(
     elif tc_enabled:
         shadow_payload = {
             "windowMix": window_mix_label,
-            "candidateSource": contract_source,
+            "candidateSource": route_source,
             "squareRelaxed": square_relaxed,
             "livePatternIds": sorted(orderable_pattern_ids),
             "hasDiff": False,
         }
+    else:
+        shadow_payload = {
+            "candidateSource": route_source,
+            "livePatternIds": sorted(orderable_pattern_ids),
+            "hasDiff": False,
+        }
+    if shadow_payload is not None and "candidateSource" not in shadow_payload:
+        shadow_payload["candidateSource"] = route_source
     return WindowCandidateResult(
         candidates=out,
         rejected=rejected,

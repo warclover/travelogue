@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from typing import Literal
 
 from travelogue.layout_contract.density import (
     LayoutDensity,
     LayoutDensityParams,
     layout_density_params,
 )
+
+HeroReserve = Literal["idle", "armed", "consumed", "released"]
 from travelogue.layout_contract.patterns import is_editorial_composite_pattern
 from travelogue.layout_contract.rhythm import (  # re-export for curation callers
     DEFAULT_CONSECUTIVE_BANS,
@@ -125,6 +128,9 @@ class ScreenLayoutPlannerState:
     nine_min: int
     nine_max: int
     dense_collage_max: int = 0
+    # LTN E4 · soft aspirational floor (never forces emit; see asymmetric_quota.py)
+    dense_collage_opportunity_min: int = 0
+    dense_opportunity_seen: int = 0
     portrait_grid8_max: int = 0
     nine_used: int = 0
     dense_collage_used: int = 0
@@ -143,6 +149,8 @@ class ScreenLayoutPlannerState:
     layout_density: LayoutDensity = "balanced"
     pattern_counts: dict[str, int] = field(default_factory=dict)
     rhythm: RhythmRules = field(default_factory=RhythmRules)
+    # LTN C5 · opportunity reserve (no extra quota; P21 / adjacent bans still apply)
+    hero_reserve: HeroReserve = "idle"
 
     @classmethod
     def from_trip_total(
@@ -161,10 +169,15 @@ class ScreenLayoutPlannerState:
             _dense_lo, dense_hi, total_photos=total_photos
         )
         lm_min, lm_trip, lm_ch = large_mosaic_limits_from_config()
+        from travelogue.layout_contract.asymmetric_quota import dense_opportunity_min_for
+
         return cls(
             nine_min=lo,
             nine_max=hi,
             dense_collage_max=dense_hi,
+            dense_collage_opportunity_min=dense_opportunity_min_for(
+                dense_max=dense_hi, track=None
+            ),
             portrait_grid8_max=portrait_grid8_max_for_trip(total_photos),
             layout_density=params.density,
             rhythm=rhythm if rhythm is not None else RhythmRules.from_config(),
@@ -233,6 +246,28 @@ class ScreenLayoutPlannerState:
             return False
         return not self.last_was_dense_collage
 
+    def should_force_dense_emit(self) -> bool:
+        """LTN E4 · asymmetric quota invariant: opportunity min never forces emit."""
+        return False
+
+    def needs_dense_opportunity(self) -> bool:
+        """Soft gap vs opportunity min (observability only — does not gate emit)."""
+        return self.dense_collage_used < self.dense_collage_opportunity_min
+
+    def note_dense_opportunity(self) -> None:
+        """Count a legal dense/mosaic candidate window (scored > 0)."""
+        self.dense_opportunity_seen += 1
+
+    def asymmetric_dense_snapshot(self) -> dict:
+        from travelogue.layout_contract.asymmetric_quota import asymmetric_dense_snapshot
+
+        return asymmetric_dense_snapshot(
+            dense_max=self.dense_collage_max,
+            dense_used=self.dense_collage_used,
+            opportunity_min=self.dense_collage_opportunity_min,
+            opportunity_seen=self.dense_opportunity_seen,
+        )
+
     def can_use_dense_collage_window(self, window_size: int) -> bool:
         if window_size < self.dense_collage_min_slots:
             return True
@@ -249,6 +284,11 @@ class ScreenLayoutPlannerState:
     ) -> None:
         self.large_mosaic_chapter_used = 0
         self.editorial_composite_chapter_used = 0
+        # LTN C5 · unused armed opportunity dies with the chapter.
+        if self.hero_reserve == "armed":
+            self.hero_reserve = "released"
+        else:
+            self.hero_reserve = "idle"
         late = self.rhythm.late_chapter_pairing
         if not late.is_late_chapter(chapter_index):
             return
@@ -257,6 +297,41 @@ class ScreenLayoutPlannerState:
         if late.reset_pair_streak and self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
             self.last_pattern_id = ""
             self.pattern_streak = 0
+
+    def arm_hero_reserve(self) -> None:
+        if self.hero_reserve in ("idle", "released"):
+            self.hero_reserve = "armed"
+
+    def consume_hero_reserve(self) -> None:
+        if self.hero_reserve == "armed":
+            self.hero_reserve = "consumed"
+
+    def release_hero_reserve(self) -> None:
+        if self.hero_reserve == "armed":
+            self.hero_reserve = "released"
+
+    @staticmethod
+    def pattern_has_main_role(pattern_id: str) -> bool:
+        if not pattern_id:
+            return False
+        try:
+            from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+
+            pat = default_registry().get(pattern_id)
+        except Exception:
+            return False
+        return bool(pat and "main" in pat.roles)
+
+    def is_equal_weight_dense(self, pattern_id: str) -> bool:
+        """Dense collage without a main/hero slot — yields while reserve is armed."""
+        if not is_dense_collage_pattern(
+            pattern_id, min_slots=self.dense_collage_min_slots
+        ):
+            return False
+        return not self.pattern_has_main_role(pattern_id)
+
+    def blocks_dense_for_hero_reserve(self, pattern_id: str) -> bool:
+        return self.hero_reserve == "armed" and self.is_equal_weight_dense(pattern_id)
 
     def can_use_large_mosaic_window(self, window_size: int) -> bool:
         if window_size < self.large_mosaic_min_slots:
@@ -302,6 +377,8 @@ class ScreenLayoutPlannerState:
             return False
         if max_ch is not None and self.pattern_counts.get(pattern_id, 0) >= max_ch:
             return False
+        if self.blocks_dense_for_hero_reserve(pattern_id):
+            return False
         if not self.can_use_dense_collage(pattern_id):
             return False
         if not self.can_use_large_mosaic(pattern_id):
@@ -329,6 +406,11 @@ class ScreenLayoutPlannerState:
     def note_screen(self, pattern_id: str) -> None:
         if pattern_id:
             self.pattern_counts[pattern_id] = self.pattern_counts.get(pattern_id, 0) + 1
+            if self.pattern_has_main_role(pattern_id):
+                self.consume_hero_reserve()
+            elif self.hero_reserve == "armed":
+                # LTN C5 · non-hero emit while armed ⇒ opportunity assets consumed.
+                self.release_hero_reserve()
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1

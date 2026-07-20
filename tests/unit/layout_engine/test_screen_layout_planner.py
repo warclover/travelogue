@@ -228,6 +228,7 @@ def test_portrait_grid8_limits_by_trip_size():
 
 
 def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
+    """LTN C3 · grid-8 pruned; eight portraits fall to pair-first."""
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
     base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
@@ -247,17 +248,13 @@ def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
         trip_photo_total=60,
         orientation_summary={"portrait": 40, "landscape": 20},
     )
-    assert len(screens) == 1
-    assert screens[0]["patternId"] == PATTERN_PORTRAIT_GRID_8
-    assert len(screens[0]["slots"]) == 8
-    assert layout_kind_from_pattern(PATTERN_PORTRAIT_GRID_8) == "other"
-    assert (
-        grid_class_for_pattern(PATTERN_PORTRAIT_GRID_8)
-        == "layout-screen__grid--portrait-2x4"
-    )
+    assert all(sc["patternId"] != PATTERN_PORTRAIT_GRID_8 for sc in screens)
+    assert sum(len(sc.get("slots") or []) for sc in screens) == 8
+    assert any(sc["patternId"] == "screen-portrait-2" for sc in screens)
 
 
 def test_plan_portrait_grid8_person_hint():
+    """LTN C3 · without grid-8, person portraits still get contain fit on pairs."""
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
     base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
@@ -278,8 +275,14 @@ def test_plan_portrait_grid8_person_hint():
         trip_photo_total=60,
         orientation_summary={"portrait": 35, "landscape": 25},
     )
-    assert screens[0]["layoutHint"] == PERSON_LAYOUT_GRID_8
-    assert all(s["fit"] == "contain" for s in screens[0]["slots"])
+    assert all(sc["patternId"] != PATTERN_PORTRAIT_GRID_8 for sc in screens)
+    person_slots = [
+        s
+        for sc in screens
+        for s in sc.get("slots") or []
+        if s.get("fit") == "contain"
+    ]
+    assert person_slots
 
 
 def test_plan_no_portrait_grid8_when_trip_at_most_50():
@@ -319,6 +322,7 @@ def test_plan_no_portrait_grid8_when_not_portrait_heavy():
 
 
 def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
+    """LTN C3 · grid-8 pruned; ten portraits still fully placed via tiler."""
     ids = [f"p{i}" for i in range(10)]
     aspects = {x: "portrait" for x in ids}
     base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
@@ -338,8 +342,7 @@ def test_plan_portrait_grid8_ten_yields_grid_plus_remainder():
         trip_photo_total=60,
         orientation_summary={"portrait": 40, "landscape": 20},
     )
-    assert screens[0]["patternId"] == PATTERN_PORTRAIT_GRID_8
-    assert sum(1 for sc in screens if sc["patternId"] == PATTERN_PORTRAIT_GRID_8) == 1
+    assert all(sc["patternId"] != PATTERN_PORTRAIT_GRID_8 for sc in screens)
     assert sum(len(sc.get("slots") or []) for sc in screens) == 10
 
 
@@ -408,13 +411,15 @@ def test_plan_landscape_four_is_2x2():
     assert grid_class_for_pattern("screen-landscape-4") == "layout-screen__grid--2x2"
 
 
-def test_plan_landscape_nine_is_3x3():
+def test_plan_landscape_nine_no_longer_flat_nine():
+    """LTN C3 · landscape-9 pruned; nine landscapes pack into smaller screens."""
     ids = [f"l{i}" for i in range(9)]
     aspects = _aspects(ids, {x: "landscape" for x in ids})
     screens = plan_screens_for_chapter(ids, aspects, chapter_id="ch-03")
-    assert len(screens) == 1
-    assert screens[0]["patternId"] == "screen-landscape-9"
-    assert len(screens[0]["slots"]) == 9
+    assert screens
+    assert all(sc.get("patternId") != "screen-landscape-9" for sc in screens)
+    placed = sum(len(sc.get("slots") or []) for sc in screens)
+    assert placed == 9
 
 
 def test_nine_grid_limits_by_trip_size():
@@ -505,11 +510,9 @@ def test_trip_200_plus_caps_nine_and_no_consecutive():
         layout_state=state,
     )
     nines = _nine_patterns(screens)
-    assert 1 <= len(nines) <= 10
-    assert state.used == len(nines)
-    for i in range(len(screens) - 1):
-        if is_nine_grid_pattern(screens[i]["patternId"]):
-            assert not is_nine_grid_pattern(screens[i + 1]["patternId"])
+    # LTN C3 · flat 9-grid pruned from active set; large trips must not emit them.
+    assert nines == []
+    assert sum(len(sc.get("slots") or []) for sc in screens) == 72
 
 
 def test_plan_landscape_triple_then_single_portrait():
@@ -784,6 +787,7 @@ def test_landscape_nine_across_mixed_aspect_buckets():
         assets_map=assets,
         layout_state=state,
     )
-    assert consumed == 9
+    # LTN C3 · flat landscape-9 pruned; planner may take a smaller dense window.
     assert screen is not None
-    assert screen["patternId"] == "screen-landscape-9"
+    assert screen["patternId"] != "screen-landscape-9"
+    assert consumed in (4, 5, 6, 9)

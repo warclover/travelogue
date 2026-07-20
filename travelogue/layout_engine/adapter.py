@@ -168,12 +168,36 @@ def layout_state_for_trip(
     active = pack if pack is not None else resolve_pack(cfg)
     if active is not None:
         params = LayoutDensityParams(density=density or "balanced")  # type: ignore[arg-type]
-        return layout_state_from_pack(total_photos, active, density_params=params)
-    return ScreenLayoutPlannerState.from_trip_total(
-        total_photos,
-        density=density or "balanced",  # type: ignore[arg-type]
-        rhythm=RhythmRules.from_config(cfg),
+        return _apply_track_dense_cap(
+            layout_state_from_pack(total_photos, active, density_params=params)
+        )
+    return _apply_track_dense_cap(
+        ScreenLayoutPlannerState.from_trip_total(
+            total_photos,
+            density=density or "balanced",  # type: ignore[arg-type]
+            rhythm=RhythmRules.from_config(cfg),
+        )
     )
+
+
+def _apply_track_dense_cap(state: ScreenLayoutPlannerState) -> ScreenLayoutPlannerState:
+    """LTN C7 · optional track dense cap after P21 / density limits.
+
+    LTN E4 · refresh soft opportunity min after max settles (never raises max).
+    """
+    from travelogue.layout_contract.asymmetric_quota import dense_opportunity_min_for
+    from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
+
+    cfg = get_effective_mosaic_config()
+    cap = getattr(cfg, "track_dense_collage_cap", None)
+    if cap is not None:
+        state.dense_collage_max = min(int(state.dense_collage_max), max(0, int(cap)))
+    track_id = getattr(cfg, "track_id", None)
+    state.dense_collage_opportunity_min = dense_opportunity_min_for(
+        dense_max=state.dense_collage_max,
+        track=track_id,
+    )
+    return state
 
 
 def resolve_attach_layout_state(
@@ -186,11 +210,12 @@ def resolve_attach_layout_state(
     from travelogue.layout_contract.rhythm import RhythmRules
 
     if cfg is None:
-        return ScreenLayoutPlannerState.from_trip_total(
+        state = ScreenLayoutPlannerState.from_trip_total(
             trip_photo_total,
             density=density or "balanced",  # type: ignore[arg-type]
             rhythm=RhythmRules.from_config(None),
         )
+        return _apply_track_dense_cap(state)
     return layout_state_for_trip(trip_photo_total, cfg=cfg, density=density or "balanced")
 
 
@@ -376,6 +401,18 @@ def drain_mosaic_logs() -> list[dict[str, Any]]:
     from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs as _drain
 
     return _drain()
+
+
+def drain_mosaic_capture() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    from travelogue.layout_engine.mosaic.hook import drain_mosaic_capture as _drain
+
+    return _drain()
+
+
+def set_mosaic_log_capture(enabled: bool) -> None:
+    from travelogue.layout_engine.mosaic.hook import set_mosaic_log_capture as _set
+
+    _set(enabled)
 
 
 def drain_mosaic_dropped() -> list[str]:

@@ -1,0 +1,90 @@
+{
+  "version": "0.2",
+  "tripId": "fixture-ltn-oracle-negative",
+  "templateId": "visual-journal",
+  "exportLayout": "web",
+  "meta": {
+    "title": "LTN H9 · 阴性对照（散点时间）",
+    "dateStart": "2025-06-01",
+    "dateEnd": "2025-06-05",
+    "places": ["散点城"],
+    "tone": "calm"
+  },
+  "intent": {
+    "version": "1",
+    "layoutDensity": "balanced",
+    "photoCullEnabled": false
+  },
+  "coverAssetId": "ltn-n00",
+  "privacy": { "visibility": "private" },
+  "pipeline": { "status": "structure_draft" },
+  "createdAt": "2025-06-01T00:00:00Z",
+  "updatedAt": "2025-06-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "ltn-n00",
+      "type": "image",
+      "width": 900,
+      "height": 1600,
+      "aspectKind": "portrait",
+      "takenAt": "2025-06-01T10:00:00+00:00",
+      "burstGroupId": "solo-0",
+      "displayFile": "assets/ltn-n00.webp",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n01",
+      "type": "image",
+      "width": 1600,
+      "height": 900,
+      "aspectKind": "landscape",
+      "takenAt": "2025-06-02T10:00:00+00:00",
+      "burstGroupId": "solo-1",
+      "displayFile": "assets/ltn-n01.webp",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n02",
+      "type": "image",
+      "width": 900,
+      "height": 1600,
+      "aspectKind": "portrait",
+      "takenAt": "2025-06-03T10:00:00+00:00",
+      "burstGroupId": "solo-2",
+      "displayFile": "assets/ltn-n02.webp",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n03",
+      "type": "image",
+      "width": 1600,
+      "height": 900,
+      "aspectKind": "landscape",
+      "takenAt": "2025-06-04T10:00:00+00:00",
+      "burstGroupId": "solo-3",
+      "displayFile": "assets/ltn-n03.webp",
+      "curation": { "layoutEligible": true }
+    },
+    {
+      "id": "ltn-n04",
+      "type": "image",
+      "width": 900,
+      "height": 1600,
+      "aspectKind": "portrait",
+      "takenAt": "2025-06-05T10:00:00+00:00",
+      "burstGroupId": "solo-4",
+      "displayFile": "assets/ltn-n04.webp",
+      "curation": { "layoutEligible": true }
+    }
+  ],
+  "chapters": [],
+  "curation": {
+    "displayedAssetIds": [
+      "ltn-n00",
+      "ltn-n01",
+      "ltn-n02",
+      "ltn-n03",
+      "ltn-n04"
+    ]
+  }
+}

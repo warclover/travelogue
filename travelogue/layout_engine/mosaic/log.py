@@ -109,8 +109,25 @@ class MosaicWindowLog:
         return out
 
 
+_WINDOW_REJECT_TOP_N = 3
+
+
+def _compact_reject(entry: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {
+        "templateId": entry.get("templateId"),
+        "reason": entry.get("reason"),
+    }
+    if entry.get("detail"):
+        out["detail"] = entry["detail"]
+    return out
+
+
 def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str, Any]:
-    """Filter persisted log fields by level (D-MCS-10 · summary/window/debug)."""
+    """Filter persisted log fields by level (D-MCS-10 · summary/window/debug).
+
+    LTN H2 · window keeps rejectedTemplates Top3 (compact) for Studio/C6 explain;
+    AC/metrics must consume raw buffers via drain_mosaic_capture, not this output.
+    """
     if log_level == "debug":
         return dict(raw)
     summary_keys = (
@@ -125,15 +142,18 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
         "plannerPath",
         "scorerVersion",
         "routerVersion",
+        "isWinnerPlan",
+        "planPhase",
     )
     if log_level == "summary":
         return {k: raw[k] for k in summary_keys if k in raw}
-    # window: drop top3 score arrays; keep compact geometry rejections for guard verification
+    # window: drop top3 score arrays; keep Top3 rejects + geom/mainAr summaries
     out = dict(raw)
     out.pop("top3Scores", None)
+    rejected = list(raw.get("rejectedTemplates") or [])
     geom_rejected = [
         {"templateId": r["templateId"], "reason": r["reason"]}
-        for r in raw.get("rejectedTemplates") or []
+        for r in rejected
         if r.get("reason") == "geometry_invalid"
     ]
     if geom_rejected:
@@ -144,10 +164,46 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
             "reason": r["reason"],
             **({"detail": r["detail"]} if r.get("detail") else {}),
         }
-        for r in raw.get("rejectedTemplates") or []
+        for r in rejected
         if r.get("reason") == "main_ar_ineligible"
     ]
     if main_ar_rejected:
         out["mainArRejectedTemplates"] = main_ar_rejected
-    out.pop("rejectedTemplates", None)
+    if rejected:
+        out["rejectedTemplates"] = [
+            _compact_reject(r) for r in rejected[:_WINDOW_REJECT_TOP_N]
+        ]
+    else:
+        out.pop("rejectedTemplates", None)
+    return out
+
+
+def annotate_winner_plan_logs(
+    logs: list[dict[str, Any]], chapters: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """LTN H2 / E5 · mark entries whose winnerPatternId appears on the final plan."""
+    on_screen: set[tuple[str, str]] = set()
+    on_screen_patterns: set[str] = set()
+    for ch in chapters:
+        seg = str((ch.get("curation") or {}).get("segmentId") or ch.get("id") or "")
+        for sc in ch.get("screens") or []:
+            pid = str(sc.get("patternId") or "")
+            if not pid:
+                continue
+            on_screen_patterns.add(pid)
+            on_screen.add((seg, pid))
+    out: list[dict[str, Any]] = []
+    for entry in logs:
+        row = dict(entry)
+        seg = str(row.get("segmentId") or "")
+        pid = str(row.get("winnerPatternId") or "")
+        if seg and (seg, pid) in on_screen:
+            winner = True
+        elif not seg and pid in on_screen_patterns:
+            winner = True
+        else:
+            winner = bool(pid) and pid in on_screen_patterns
+        row["isWinnerPlan"] = winner
+        row.setdefault("planPhase", "pass1")
+        out.append(row)
     return out

@@ -1,7 +1,7 @@
 # screen-portrait-grid-8
 
 - displayName: portrait · grid · 8
-- status: ga
+- status: deprecated
 - stage: 9:16
 
 | slot | role | displayAspect |

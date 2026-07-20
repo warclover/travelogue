@@ -135,31 +135,38 @@ def generate_day_bucket_candidates(
             )
         )
 
+    from travelogue.layout_engine.mosaic.hook import set_mosaic_log_capture
+
     seen: set[tuple[tuple[str, tuple[str, ...]], ...]] = set()
     candidates: list[tuple[str, list[dict]]] = []
-    for name, extra in variants:
-        if len(candidates) >= cap:
-            break
-        if budget is not None and not budget.can_generate():
-            break
-        state = _clone_layout_state(layout_state)
-        plan = plan_screens_for_chapter(bucket, layout_state=state, **common, **extra)
-        if budget is not None:
-            budget.note_generation()
-        sig = _plan_signature(plan)
-        if sig in seen or not plan:
-            continue
-        seen.add(sig)
-        candidates.append((name, plan))
-    if not candidates and (budget is None or budget.can_generate()):
-        if budget is not None:
-            budget.note_generation()
-        fallback = plan_screens_for_chapter(
-            bucket,
-            layout_state=_clone_layout_state(layout_state),
-            **common,
-            include_chapter_hero=True,
-            preferred_hero_id=preferred_hero_id,
-        )
-        candidates.append(("with_hero", fallback))
+    # LTN H2 · beam variants must not pollute mosaicDecisionLog.
+    set_mosaic_log_capture(False)
+    try:
+        for name, extra in variants:
+            if len(candidates) >= cap:
+                break
+            if budget is not None and not budget.can_generate():
+                break
+            state = _clone_layout_state(layout_state)
+            plan = plan_screens_for_chapter(bucket, layout_state=state, **common, **extra)
+            if budget is not None:
+                budget.note_generation()
+            sig = _plan_signature(plan)
+            if sig in seen or not plan:
+                continue
+            seen.add(sig)
+            candidates.append((name, plan))
+        if not candidates and (budget is None or budget.can_generate()):
+            if budget is not None:
+                budget.note_generation()
+            fallback = plan_screens_for_chapter(
+                bucket,
+                layout_state=_clone_layout_state(layout_state),
+                **common,
+                include_chapter_hero=True,
+                preferred_hero_id=preferred_hero_id,
+            )
+            candidates.append(("with_hero", fallback))
+    finally:
+        set_mosaic_log_capture(True)
     return candidates[:cap]

@@ -1,6 +1,6 @@
 id: screen-landscape-6
 version: 1
-status: ga
+status: deprecated
 kind: primitive
 displayName: landscape · 6
 description: Reverse-migrated from legacy mosaic sources (Phase 16 W1).

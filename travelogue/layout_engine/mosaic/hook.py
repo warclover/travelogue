@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_engine.mosaic.compose import pick_best_window
-from travelogue.layout_engine.mosaic.legacy import append_legacy_window
 from travelogue.layout_engine.mosaic.runtime import (
-    _DENSITY_AUX_PACK_SIZE,
     effective_mosaic_window_sizes,
     planner_mosaic_window_sizes,
 )
@@ -20,6 +18,9 @@ if TYPE_CHECKING:
 
 _mosaic_logs_var: ContextVar[list[dict] | None] = ContextVar("mosaic_logs", default=None)
 _mosaic_dropped_var: ContextVar[list[str] | None] = ContextVar("mosaic_dropped", default=None)
+_mosaic_capture_enabled_var: ContextVar[bool] = ContextVar(
+    "mosaic_capture_enabled", default=True
+)
 _fallback_logs: list[dict] = []
 _fallback_dropped: list[str] = []
 
@@ -34,6 +35,16 @@ def begin_mosaic_capture() -> None:
     """Start a fresh log buffer for the current curate/plan run (thread-safe)."""
     _mosaic_logs_var.set([])
     _mosaic_dropped_var.set([])
+    _mosaic_capture_enabled_var.set(True)
+
+
+def set_mosaic_log_capture(enabled: bool) -> None:
+    """LTN H2 · pause append during beam candidate generation (avoid orphan logs)."""
+    _mosaic_capture_enabled_var.set(bool(enabled))
+
+
+def mosaic_log_capture_enabled() -> bool:
+    return bool(_mosaic_capture_enabled_var.get())
 
 
 def _logs_buf() -> list[dict]:
@@ -44,6 +55,12 @@ def _logs_buf() -> list[dict]:
 def _dropped_buf() -> list[str]:
     buf = _mosaic_dropped_var.get()
     return buf if buf is not None else _fallback_dropped
+
+
+def _append_mosaic_log(entry: dict) -> None:
+    if not mosaic_log_capture_enabled():
+        return
+    _logs_buf().append(entry)
 
 
 def window_has_candidates(
@@ -158,18 +175,29 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
     )
 
 
-def drain_mosaic_logs() -> list[dict]:
+def drain_mosaic_capture() -> tuple[list[dict], list[dict]]:
+    """Return (formatted_for_persist, raw_for_metrics) and clear the buffer.
+
+    LTN H2 · AC/metrics must use the raw list; trip.curation uses formatted.
+    """
     from travelogue.config import get_config
     from travelogue.layout_engine.mosaic.log import format_log_entry
 
     level = get_config().mosaic.log_level
     buf = _logs_buf()
-    out = [format_log_entry(entry, level) for entry in buf]
+    raw = [dict(entry) for entry in buf]
+    formatted = [format_log_entry(entry, level) for entry in raw]
     if _mosaic_logs_var.get() is not None:
         _mosaic_logs_var.set([])
     else:
         buf.clear()
-    return out
+    return formatted, raw
+
+
+def drain_mosaic_logs() -> list[dict]:
+    """Persist-shaped logs (formatted by mosaic.log_level). Prefer drain_mosaic_capture."""
+    formatted, _raw = drain_mosaic_capture()
+    return formatted
 
 
 def drain_mosaic_dropped() -> list[str]:
@@ -203,19 +231,20 @@ def try_mosaic_window_mcs(
         window_start=start,
         segment_id=ctx.chapter_id or "",
         prev_screen=ctx.screens[-1] if ctx.screens else None,
-        chapter_screen_index=len(ctx.screens),
-        chapter_screen_count=max(12, len(ctx.screens) + 1),
+        # LTN D2 · real chapter asset progress (not fake max(12, …) denominator).
+        chapter_screen_index=max(0, int(start)),
+        chapter_screen_count=max(2, len(ctx.ids)),
     )
-    if pick.log.dropped_asset_ids:
+    if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)
 
     if pick.used_legacy:
-        if append_legacy_window(ctx, window, size):
-            _logs_buf().append(pick.log.to_dict())
-            return True
+        # LTN C1 · do not silent-fallback to size=3/equal legacy; try next window size.
+        pick.log.fallback_reason = pick.log.fallback_reason or "mcs_no_winner"
+        _append_mosaic_log(pick.log.to_dict())
         return False
     if pick.screen:
-        _logs_buf().append(pick.log.to_dict())
+        _append_mosaic_log(pick.log.to_dict())
         append_screen(ctx, pick.screen)
         return True
     return False
@@ -350,17 +379,105 @@ def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     return sizes
 
 
+
+def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | None:
+    """LTN C1 · single-asset hero rescue when all MCS window sizes fail.
+
+    Only when the cursor asset is main-eligible and hero-gap vs look-ahead peers
+    is significant. Advances by 1 so remaining assets re-enter the planner loop.
+    """
+    from travelogue.config import get_config
+    from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+    from travelogue.layout_engine.mosaic.main_eligibility import (
+        asset_eligible_for_main_slot,
+        pick_best_main_eligible,
+        resolve_main_ar_ladder_tol,
+    )
+    from travelogue.layout_engine.planner.screen_planner import _make_screen
+    from travelogue.layout_engine.planner.screen_planner_stages import append_screen
+    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+
+    if start >= len(ctx.ids):
+        return None
+    look = ctx.ids[start : start + min(6, len(ctx.ids) - start)]
+    pattern_id = PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    cursor = ctx.ids[start]
+    asset = ctx.assets_map.get(cursor) or {}
+    tol = resolve_main_ar_ladder_tol(pattern_id, _mosaic_cfg())
+    ok, _ = asset_eligible_for_main_slot(asset, pattern_id=pattern_id, tol=tol)
+    if not ok:
+        return None
+    best = pick_best_main_eligible(
+        look,
+        ctx.assets_map,
+        pattern_id=pattern_id,
+        median_sharp=ctx.med_sharp,
+        cfg=_mosaic_cfg(),
+    )
+    if best != cursor:
+        return None
+    wctx = build_window_context(
+        look,
+        ctx.aspects,
+        ctx.assets_map,
+        median_sharp=ctx.med_sharp,
+    )
+    gap, _scores = main_eligible_hero_score_gap(wctx, pattern_id)
+    thr = float(get_config().layout.usage_rules.hero_gap_threshold)
+    if gap < thr:
+        return None
+    screen = _make_screen(
+        "screen-landscape-1",
+        [cursor],
+        screen_id="",
+        aspects=ctx.aspects,
+        assets_map=ctx.assets_map,
+    )
+    append_screen(ctx, screen)
+    log = MosaicWindowLog(
+        segment_id=ctx.chapter_id or "",
+        window_size=1,
+        window_start=start,
+        winner_pattern_id=str(screen.get("patternId") or "screen-landscape-1"),
+        winner_score=1.0,
+        fallback_used=True,
+        fallback_reason="mcs_single_hero_rescue",
+        planner_path="mosaic",
+        winner_reason_codes=["R_MCS_SINGLE_HERO_RESCUE"],
+    )
+    _append_mosaic_log(log.to_dict())
+    return 1
+
+
+def _log_mcs_all_sizes_failed(
+    ctx: ChapterPlanContext, start: int, tried_sizes: list[int]
+) -> None:
+    """LTN C1 · fail-loud when every MCS size (and rescue) failed."""
+    from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+
+    log = MosaicWindowLog(
+        segment_id=ctx.chapter_id or "",
+        window_size=0,
+        window_start=start,
+        fallback_used=True,
+        fallback_reason="mcs_all_sizes_failed",
+        planner_path="legacy",
+        winner_reason_codes=[f"tried_sizes={tried_sizes}"],
+    )
+    _append_mosaic_log(log.to_dict())
+    if ctx.layout_state is not None:
+        ctx.layout_state.release_hero_reserve()
+
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     """Try enabled window sizes (P21 balanced: 5→4→6). Returns advance count or None."""
     cfg = _mosaic_cfg()
     if not cfg.enabled or not ctx.enable_mosaic:
         return None
     density = getattr(ctx.layout_state, "layout_density", "balanced")
-    if density == "hero_first":
-        # Hero-first prefers sparse single-hero screens over dense collages
-        # (intent preferMosaic=False). Defer to the legacy single/grid emitters,
-        # which already honor density, instead of greedily packing MCS windows.
-        return None
+    # LTN C2 · hero_first no longer hard-skips MCS; flat dense is down-weighted
+    # via density params / scoring instead of closing the mosaic pipe.
     if _defer_portrait_grid8(ctx, start):
         return None
     remaining = len(ctx.ids) - start
@@ -380,8 +497,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
     if ctx.layout_state is not None:
         ctx.layout_state.dense_collage_min_slots = min_dense
+    # LTN C4 · never open a mosaic window across coarse segment boundaries.
+    from travelogue.layout_engine.mosaic.coarse_segments import max_window_size_in_segment
+
+    seg_cap = max_window_size_in_segment(getattr(ctx, "coarse_segments", None), start)
     for size in sizes:
         if start + size > len(ctx.ids):
+            continue
+        if size > seg_cap:
             continue
         if (
             cfg.density_budget.enabled
@@ -409,15 +532,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
-        if (
-            size == _DENSITY_AUX_PACK_SIZE
-            and density in ("balanced", "collage_first")
-        ):
-            from travelogue.layout_engine.mosaic.legacy import append_legacy_window
-
-            if append_legacy_window(ctx, window, size):
-                return size
-            continue
+        # LTN C1 · size=3 aux short-circuit removed; portrait tiler owns explicit triples.
         if not window_has_candidates(
             window,
             ctx.aspects,
@@ -431,6 +546,10 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if try_mosaic_window_mcs(ctx, start, size, cfg):
             return size
+    rescued = _try_mcs_single_hero_rescue(ctx, start)
+    if rescued is not None:
+        return rescued
+    _log_mcs_all_sizes_failed(ctx, start, list(sizes))
     return None
 
 

@@ -232,7 +232,7 @@ def build_dogfood_report(
 
                 burst_seconds = float(get_config().layout.mixed_proximity_seconds)
             except Exception:  # pragma: no cover - config load is best-effort here
-                burst_seconds = 900.0
+                burst_seconds = 1800.0
         screen_count = _trip_json_screen_count(trip)
         pattern_histogram = _pattern_histogram(trip)
         mosaic_decision_summary, window_exposure = _mosaic_decision_summary(trip)

@@ -158,8 +158,8 @@ layout:
   web_layout_engine: screens
   # 组屏范围：day=按策展日桶时间序全序列；chapter=仅章内 items 顺序
   screen_plan_scope: day
-  # 混排/拼图连拍 takenAt 最大跨度（秒）· 默认 900 = 15min
-  mixed_proximity_seconds: 900
+  # 混排/拼图连拍 takenAt 最大跨度（秒）· 默认 1800 = 30min
+  mixed_proximity_seconds: 1800
   # 三竖 editorial row（screen-portrait-3-editorial）· 默认关闭
   editorial_portrait_row:
     enabled: false
@@ -309,6 +309,12 @@ mosaic:
   fallback_to_legacy: true
   candidate_top_k: 4
   log_level: window
+  # LTN C7 / R-E3 · size=3 MCS aux is OFF by default (parity/tiler keep explicit 3).
+  # Product tracks (curated / archive / quick_share) are NOT separate YAML blocks:
+  # resolve_mosaic_track(kept, intent.mode) overlays MosaicConfig at curate time.
+  # Defaults & knobs: travelogue/layout_contract/mosaic_track.py + PRD §11 / §11.1.
+  # Weekly board (R-E2, read-only): python scripts/ltn_weekly_dashboard.py
+  enable_size3_aux: false
   density_budget:
     enabled: true
     min_slots: 4
@@ -341,6 +347,10 @@ mosaic:
     duplicate_density: 0.20
     flat_nine_grid: 0.45
     dense_without_hero: 0.25
+    # LTN C8 · D-03 slot-role
+    main_not_window_best: 0.4
+    main_clone_in_sidebar: 0.3
+    main_area_ratio: 0.35
 
 # --- Phase-3a 智能排版（beam 护栏 + 自适应叙事弧 + 亮度/主题 run）---
 # layout:

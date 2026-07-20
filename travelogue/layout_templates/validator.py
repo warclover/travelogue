@@ -123,6 +123,16 @@ def _check_gaps(template: TemplateDef, report: ValidationReport) -> None:
         )
 
 
+# LTN R-A3 · slots >6 frozen except grandfathered 8/9 SKUs (Wave C may prune further).
+_GRANDFATHERED_DENSE_SLOT_IDS: frozenset[str] = frozenset(
+    {
+        "screen-portrait-grid-8",
+        "screen-portrait-9",
+        "screen-landscape-9",
+    }
+)
+
+
 def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
     n = len(template.slots)
     if n != template.photo_count_min or n != template.photo_count_max:
@@ -133,6 +143,15 @@ def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
         )
     if template.photo_count_max > 9 or n > 9:
         report.add("V-P16-12", "photoCount.max and slots must be ≤ 9", level="block")
+    # LTN R-A3 freeze: new templates with >6 slots blocked unless grandfathered.
+    if (n > 6 or template.photo_count_max > 6) and template.id not in _GRANDFATHERED_DENSE_SLOT_IDS:
+        if template.status != "deprecated":
+            report.add(
+                "V-LTN-FREEZE",
+                f"slots/photoCount={max(n, template.photo_count_max)} > 6 blocked "
+                f"(LTN R-A3 freeze; grandfather or written exemption required)",
+                level="block",
+            )
 
 
 def _check_mix(template: TemplateDef, report: ValidationReport) -> None:

@@ -61,6 +61,8 @@ class StudioPipelineResult:
     assets_written: int = 0
     media_warn: str = ""
     title_noise_fallback: bool = False
+    # FirstSuccess 顶栏用真实封面图（非竖版 preview.jpg 封面卡）
+    shelf_cover_rel_path: str = ""
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -411,6 +413,12 @@ def _finalize_pipeline_result(
         layout_density=layout_density,
     )
     preview_url = f"http://{host}:{port}/{slug}/index.html"
+    from travelogue.web.studio_trips import _pick_shelf_cover_rel
+
+    shelf_cover_rel = _pick_shelf_cover_rel(trip_root, trip_final) or ""
+    # FirstSuccess 只要照片本身；竖版 preview.jpg 封面卡（含标题）不进顶栏
+    if shelf_cover_rel.replace("\\", "/").rsplit("/", 1)[-1] == "preview.jpg":
+        shelf_cover_rel = ""
     return StudioPipelineResult(
         trip_id=slug,
         trip_dir=trip_root,
@@ -440,6 +448,7 @@ def _finalize_pipeline_result(
         assets_written=assets_written,
         media_warn=media_warn or "",
         title_noise_fallback=title_noise_fallback,
+        shelf_cover_rel_path=shelf_cover_rel,
     )
 
 

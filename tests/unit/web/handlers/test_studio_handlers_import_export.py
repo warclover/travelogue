@@ -337,7 +337,7 @@ def test_handle_import_passes_layout_density_fine_only(tmp_path: Path) -> None:
     assert worker_payload["layoutDensity"] == "hero_first"
 
 
-def test_handle_import_fine_craft_normalizes_invalid_layout_density(tmp_path: Path) -> None:
+def test_handle_import_fine_craft_rejects_invalid_layout_density(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     album = tmp_path / "album"
     album.mkdir()
@@ -354,8 +354,11 @@ def test_handle_import_fine_craft_normalizes_invalid_layout_density(tmp_path: Pa
             "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
         ):
             handle_import(handler)
-    worker_payload = run_job.call_args.args[1]
-    assert worker_payload["layoutDensity"] == "balanced"
+    assert run_job.call_count == 0
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_STUDIO_INVALID_LAYOUT_DENSITY"
 
 
 def test_handle_import_quick_share_omits_layout_density(tmp_path: Path) -> None:

@@ -280,6 +280,8 @@ def layout_snapshot(chapters: list[dict]) -> dict[str, Any]:
 
 
 def _mosaic_cfg_for_golden():
+    from travelogue.config.mosaic import TemplateContractConfig
+
     base = _lte_pattern_config()
     return replace(
         base,
@@ -290,6 +292,8 @@ def _mosaic_cfg_for_golden():
             unified_mode=True,
             scorer_version="p15-s2",
             min_candidate_score=0.0,
+            # Isolate from local config.yaml dogfood (rails not in MOSAIC_UNIFIED).
+            template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
         ),
     )
 

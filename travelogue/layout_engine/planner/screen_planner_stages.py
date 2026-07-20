@@ -44,6 +44,8 @@ class ChapterPlanContext:
     flush_lookahead_portraits: int = 0
     trip: dict | None = None
     app_config: AppConfig | None = None
+    # LTN C4 · planner-memory coarse segments (not persisted as sceneId).
+    coarse_segments: list = field(default_factory=list)
 
 
 def build_chapter_plan_context(
@@ -98,6 +100,9 @@ def build_chapter_plan_context(
     burst_groups: dict[str, int] = {}
     if assets_map:
         burst_groups = burst_group_map(ids, assets_map, aspects, burst_seconds=burst_seconds)
+    from travelogue.layout_engine.mosaic.coarse_segments import build_coarse_segments
+
+    coarse_segments = build_coarse_segments(ids, assets_map) if assets_map else []
     return ChapterPlanContext(
         chapter_id=chapter_id,
         aspects=aspects,
@@ -124,6 +129,7 @@ def build_chapter_plan_context(
         flush_lookahead_portraits=max(0, int(flush_lookahead_portraits)),
         trip=trip,
         app_config=app_config,
+        coarse_segments=coarse_segments,
     )
 
 
@@ -322,6 +328,8 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
+    from travelogue.layout_contract.narrative_contract import ensure_narrative_contract
+    from travelogue.layout_contract.rhythm_gap import assign_rhythm_gaps_on_append
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
@@ -330,6 +338,14 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     if ctx.layout_state:
         ctx.layout_state.note_screen(screen.get("patternId", ""))
     assign_screen_id(ctx, screen)
+    # LTN B1 / ADR-020 · fill Narrative Contract defaults after screenId exists.
+    ensure_narrative_contract(screen)
+    # LTN D1 · L0/L1/L2 screen-gap hints (may tighten/widen previous screen).
+    assign_rhythm_gaps_on_append(
+        screen,
+        prev_screen=ctx.screens[-1] if ctx.screens else None,
+        assets_map=ctx.assets_map,
+    )
     ctx.screens.append(screen)
 
 
@@ -364,6 +380,11 @@ def try_drain_portrait_grid8(ctx: ChapterPlanContext) -> bool:
     if not ctx.enable_portrait_grid8 or not ctx.use_portrait_grid8:
         return False
     if ctx.layout_state is not None and not ctx.layout_state.can_use_portrait_grid8():
+        return False
+    # LTN C3 · pruned grid-8 must not append (pair-first tiler handles the run).
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+
+    if mosaic_pattern_disabled("screen-portrait-grid-8"):
         return False
     buf = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
     if len(buf) < 8:

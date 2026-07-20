@@ -41,7 +41,7 @@
 |------|-----|------|--------|
 | 浏览 | `scroll` | `index.html` 默认 | 主模式 |
 | 放映 | `present` | toolbar「放映」· `screenplay.js` | 1 screen = 1 slide |
-| 长图 | `longshot` | `index-longshot.html` / 保存长图 | screens 按 slot 展平 |
+| 长图 | `longshot` | `index-longshot.html` / 保存长图 | screens 按 slot 展平（**已由 [ADR-020](./020-narrative-contract.md) D5 修订**：默认尊重 `preserveGroup`；仅显式 `false` 时拆屏） |
 
 **屏序**：`trip.chapters[].screens[]` 为唯一顺序源；present/longshot **禁止**独立排序。
 

@@ -284,6 +284,7 @@ export function buildPanelHtml(platformIds) {
     '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
+    '<p class="preview-toolbar__export-dual"><button type="button" class="preview-toolbar__export-dual-btn" data-ltn-dual-preview>对比网页与长图</button></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
     '<span class="preview-toolbar__export-popover-label">发到哪里</span>' +

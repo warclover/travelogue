@@ -109,6 +109,7 @@ def ordered_mosaic_window_sizes(
     return tuple(head + tail)
 
 
+# LTN C1 · size=3 aux pack removed from MCS window order (parity/tiler keep explicit 3).
 _DENSITY_AUX_PACK_SIZE = 3
 
 
@@ -117,25 +118,23 @@ def planner_mosaic_window_sizes(
     *,
     density: str = "balanced",
 ) -> tuple[int, ...]:
-    """Layout-density-aware MCS sizes (balanced/collage may append aux slot-3)."""
+    """Layout-density-aware MCS sizes (no silent size=3 aux · LTN C1).
+
+    LTN C7 · ``enable_size3_aux`` may append size=3 as an explicit last resort
+    (quick-share / dogfood only when the track opts in).
+    """
     sizes = effective_mosaic_window_sizes(cfg)
     if not sizes:
         return ()
-    pack_aux = (
-        cfg.density_budget.enabled
-        and density in ("balanced", "collage_first")
-        and _DENSITY_AUX_PACK_SIZE in _ALLOWED_SIZES
-        and _DENSITY_AUX_PACK_SIZE not in sizes
-    )
     if density == "collage_first":
-        head = tuple(sorted(sizes, reverse=True))
-        return head + (_DENSITY_AUX_PACK_SIZE,) if pack_aux else head
-    if density == "balanced" and cfg.density_budget.enabled:
+        ordered = tuple(sorted(sizes, reverse=True))
+    elif density == "balanced":
         ordered = ordered_mosaic_window_sizes(cfg, density="balanced")
-        return ordered + (_DENSITY_AUX_PACK_SIZE,) if pack_aux else ordered
-    if density == "balanced":
-        return ordered_mosaic_window_sizes(cfg, density="balanced")
-    return tuple(sorted(sizes, reverse=True))
+    else:
+        ordered = tuple(sorted(sizes, reverse=True))
+    if getattr(cfg, "enable_size3_aux", False) and 3 not in ordered:
+        return ordered + (3,)
+    return ordered
 
 
 def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
@@ -146,6 +145,11 @@ def effective_mosaic_window_sizes(cfg: MosaicConfig) -> tuple[int, ...]:
     sizes = tuple(
         s for s in cfg.enabled_window_sizes if s in _ALLOWED_SIZES and s <= max_slots
     )
+    if getattr(cfg, "enable_size3_aux", False) and 3 not in sizes and 3 <= max_slots:
+        sizes = sizes + (3,)
     if cfg.unified_mode:
         return sizes
+    # Track opt-in size=3 still available when unified_mode is off.
+    if getattr(cfg, "enable_size3_aux", False) and 3 in sizes:
+        return tuple(s for s in sizes if s in (5, 3))
     return tuple(s for s in sizes if s == 5)

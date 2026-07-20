@@ -156,6 +156,17 @@ class LayoutScreenContext(TypedDict, total=False):
     copyBodyEmpty: NotRequired[bool]
     editableCopyBody: NotRequired[bool]
     editCopyBodyPath: NotRequired[str | None]
+    rhythmGap: NotRequired[str]
+    hasRhythmGap: NotRequired[bool]
+    narrativeRole: NotRequired[str]
+    hasNarrativeRole: NotRequired[bool]
+    layoutRole: NotRequired[str]
+    hasLayoutRole: NotRequired[bool]
+    isMomentScreen: NotRequired[bool]
+    hasMomentScreen: NotRequired[bool]
+    momentScreenLabel: NotRequired[str]
+    hasMomentScreenLabel: NotRequired[bool]
+    hasPeakScreen: NotRequired[bool]
 
 
 class ScreenSpreadContext(TypedDict, total=False):

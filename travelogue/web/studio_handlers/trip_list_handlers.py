@@ -182,6 +182,7 @@ def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:
 
 def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
     from travelogue.curation.chapter_explain import build_chapter_explain, build_layout_explain
+    from travelogue.curation.mosaic_explain import build_mosaic_explain
 
     trip_id = trip_id_from_query(handler)
     if not trip_id or not is_valid_studio_trip_id(trip_id):
@@ -196,7 +197,14 @@ def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
         explain = dict(stored)
     else:
         explain = build_chapter_explain(trip, trip_dir=trip_dir)
-    layout_explain = build_layout_explain(trip.get("curation") or {})
+    curation = trip.get("curation") or {}
+    layout_explain = build_layout_explain(curation)
     if layout_explain:
         explain["layoutExplain"] = layout_explain
+    # LTN C6 · always refresh mosaic explain from live decision log (not stale userSummary).
+    mosaic_explain = build_mosaic_explain(curation)
+    if mosaic_explain:
+        explain["mosaicExplain"] = mosaic_explain
+    elif "mosaicExplain" in explain:
+        explain.pop("mosaicExplain", None)
     handler._json_response(200, {"ok": True, **explain})

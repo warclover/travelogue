@@ -169,7 +169,10 @@ def test_enabled_true_uses_mix_index(lte_pattern_enabled) -> None:
     patterns, source, mix, _sq, _inf = patterns_for_contract_window(ids, aspects)
     assert mix.startswith("L")
     assert source in ("exact", "fallback", "miss")
-    assert (result.contract_shadow or {}).get("candidateSource") == source
+    # LTN C4 · signature may further narrow; logged source is signature on hit,
+    # otherwise the contract source is preserved.
+    logged = (result.contract_shadow or {}).get("candidateSource")
+    assert logged in (source, "signature")
 
     if source == "miss":
         assert result.candidates == []
@@ -178,8 +181,8 @@ def test_enabled_true_uses_mix_index(lte_pattern_enabled) -> None:
         allowed = {p.pattern_id for p in patterns}
         for c in result.candidates:
             assert c.pattern_id in allowed
-            assert c.feature_summary.get("candidateSource") == source
-        if source == "fallback" and result.candidates:
+            assert c.feature_summary.get("candidateSource") in (source, "signature")
+        if source == "fallback" and result.candidates and logged != "signature":
             assert any(
                 c.feature_summary.get("contractMixFallback") for c in result.candidates
             )

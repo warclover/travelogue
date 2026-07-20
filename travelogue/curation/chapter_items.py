@@ -16,12 +16,12 @@ def resolve_chapter_items_for_render(
     """
     Pick items[] for HTML render.
 
-    - longshot: one card per screen slot (vertical stack)
+    - longshot: ADR-020 / LTN B2 · respect preserveGroup (stack / badge / flatten)
     - mobile + screens trip: re-run mobile layout planner (trip.json items may be schema stub)
     - otherwise: stored items[]
     """
     if is_longshot and chapter.get("screens"):
-        return flatten_screens_to_items(chapter)
+        return screens_to_longshot_items(chapter)
 
     from travelogue.curation.layout_planner import (
         _apply_gallery_layout,

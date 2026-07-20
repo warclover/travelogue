@@ -20,7 +20,8 @@ planning:
       enabled_window_sizes: [4, 5, 6, 9]
 
 rhythm:
-  beat_profile: flat
+  # LTN D2 · product default classic_magazine; C7 quick_share track still forces flat.
+  beat_profile: classic_magazine
   pace_profile: flat
   nine_grid_limits:
     - { max_photos: 50, min: 0, max: 1 }

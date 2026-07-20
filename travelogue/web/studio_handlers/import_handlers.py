@@ -216,6 +216,7 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         if import_mode == "fine_craft":
             from travelogue.curation.layout_density import normalize_layout_density
 
+            # LTN R-A2 · illegal density raises ConfigError (caught in handle_import).
             payload["layoutDensity"] = normalize_layout_density(
                 fields.get("layoutDensity")
             )
@@ -260,8 +261,20 @@ def album_path_allowed(handler: StudioHandlerProtocol, album_path: Path, *, trip
 
 
 def handle_import(handler: StudioHandlerProtocol) -> None:
+    from travelogue.config.errors import ConfigError
+
     try:
         payload, upload_dir = read_import_request(handler)
+    except ConfigError as exc:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_STUDIO_INVALID_LAYOUT_DENSITY",
+                "message": str(exc),
+            },
+        )
+        return
     except DemoError as exc:
         status = 409 if exc.code in ("E_DEMO_EXISTS", "E_STUDIO_JOB_BUSY") else 400
         body = demo_error_payload(exc) if exc.code == "E_DEMO_EXISTS" else {
@@ -467,9 +480,24 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if import_mode == "fine_craft":
         from travelogue.curation.layout_density import normalize_layout_density
 
-        worker_payload["layoutDensity"] = normalize_layout_density(
-            payload.get("layoutDensity")
-        )
+        try:
+            worker_payload["layoutDensity"] = normalize_layout_density(
+                payload.get("layoutDensity")
+            )
+        except ConfigError as exc:
+            if upload_dir:
+                delete_upload_dir(upload_dir, trips_dir=trips_root)
+            if precreated_job:
+                get_job_store().finish_import()
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_STUDIO_INVALID_LAYOUT_DENSITY",
+                    "message": str(exc),
+                },
+            )
+            return
     if plan_text:
         worker_payload["planText"] = plan_text
     if plan_bytes_b64:

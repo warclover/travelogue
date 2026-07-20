@@ -1130,6 +1130,16 @@ def _stage_build_chapters_compose(
             mosaic_override_active = _dc_replace(mosaic_override_active, weights=mw)
     elif cohort_summary:
         mosaic_override_active = cohort_mosaic_override(app_cfg)
+    # LTN C7 · curated/archive/quick_share track overlay (shared MCS path).
+    from travelogue.layout_contract.mosaic_track import resolve_and_apply_mosaic_track
+
+    track_base = mosaic_override_active if mosaic_override_active is not None else app_cfg.mosaic
+    intent_mode = str((trip.get("intent") or {}).get("mode") or "")
+    mosaic_override_active, _track_params = resolve_and_apply_mosaic_track(
+        track_base,
+        kept_count=len(layout_assets),
+        intent_mode=intent_mode,
+    )
     from travelogue.layout_engine.adapter import (
         effective_pattern_blacklist,
         reset_mosaic_disabled_patterns,
@@ -1170,16 +1180,6 @@ def _stage_build_chapters_compose(
             reset_mosaic_config_override()
         if pattern_blacklist_active:
             reset_mosaic_disabled_patterns()
-    if app_cfg.mosaic.enabled:
-        from travelogue.layout_engine.adapter import drain_mosaic_dropped, drain_mosaic_logs
-
-        mosaic_logs = drain_mosaic_logs()
-        dropped = drain_mosaic_dropped()
-        curation = trip.setdefault("curation", {})
-        if mosaic_logs:
-            curation["mosaicDecisionLog"] = mosaic_logs
-        if dropped:
-            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
     for ch_idx, (ch, bucket, seg_id, seg_ids, hint) in enumerate(
         zip(
             chapters,
@@ -1289,7 +1289,25 @@ def _stage_build_chapters_compose(
         )
 
         compact_chapter_items_for_screens(chapters)
-    mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
+    mosaic_logs_for_metrics = None
+    if app_cfg.mosaic.enabled:
+        from travelogue.layout_engine.adapter import drain_mosaic_dropped
+        from travelogue.layout_engine.mosaic.hook import drain_mosaic_capture
+        from travelogue.layout_engine.mosaic.log import annotate_winner_plan_logs
+
+        mosaic_logs, mosaic_logs_for_metrics = drain_mosaic_capture()
+        mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)
+        mosaic_logs_for_metrics = annotate_winner_plan_logs(
+            mosaic_logs_for_metrics, chapters
+        )
+        dropped = drain_mosaic_dropped()
+        curation = trip.setdefault("curation", {})
+        if mosaic_logs:
+            curation["mosaicDecisionLog"] = mosaic_logs
+        if dropped:
+            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
+    if mosaic_logs_for_metrics is None:
+        mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
     layout_metrics = compute_layout_metrics(
         chapters,
         layout_assets,
@@ -1699,6 +1717,37 @@ def _stage_finalize(
 
 
 def run_curate(
+    trip: dict,
+    *,
+    export_layout: str | None = None,
+    layout_engine: str | None = None,
+    apply_layout: bool = True,
+    trip_dir: Path | None = None,
+    cfg: AppConfig | None = None,
+    refresh_algorithms: bool | None = None,
+    scope: str = "full",
+    cover_force: bool = False,
+) -> CurateResult:
+    """Run curation. Pins *cfg* via app_config_scope so internal get_config() matches (LTN E6b)."""
+    from travelogue.config import get_config
+    from travelogue.config.runtime import app_config_scope
+
+    active_cfg = cfg or get_config()
+    with app_config_scope(active_cfg):
+        return _run_curate_inner(
+            trip,
+            export_layout=export_layout,
+            layout_engine=layout_engine,
+            apply_layout=apply_layout,
+            trip_dir=trip_dir,
+            cfg=active_cfg,
+            refresh_algorithms=refresh_algorithms,
+            scope=scope,
+            cover_force=cover_force,
+        )
+
+
+def _run_curate_inner(
     trip: dict,
     *,
     export_layout: str | None = None,

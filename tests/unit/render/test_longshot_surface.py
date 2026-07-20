@@ -15,6 +15,8 @@ from tests._repo_root import repo_root
 from travelogue.curation.chapter_items import (
     count_chapter_screen_slots,
     flatten_screens_to_items,
+    item_asset_ids,
+    screens_to_longshot_items,
 )
 from travelogue.paths import FIXTURES_DIR
 from travelogue.render.dual_layout_regression import prepare_trip_web_screens
@@ -55,7 +57,10 @@ def test_longshot_surface_contract(screens_trip: dict) -> None:
     assert 'data-longshot="on"' in html
     assert 'data-layout-engine="screens"' not in html
     assert 'data-block="layout-screen"' not in html
-    assert 'data-block="media-card"' in html
+    # LTN B2 · mosaic groups may render as media-row; cards still appear for singles.
+    assert (
+        'data-block="media-card"' in html or 'data-block="media-row"' in html
+    )
     assert "longshot-save" in html
     assert "screenplay-start" not in html
     assert 'data-block="surface-nav"' in html
@@ -63,34 +68,35 @@ def test_longshot_surface_contract(screens_trip: dict) -> None:
     assert "← 返回首页" in html
 
 
-def _expected_longshot_cards(trip: dict) -> int:
+def _expected_longshot_visuals(trip: dict) -> int:
+    """Count photos that should appear (group-aware · LTN B2)."""
     from travelogue.curation.breath_pauses import interleave_breath_items
     from travelogue.curation.longshot_filter import chapters_for_longshot_render
 
     total = 0
     for ch in chapters_for_longshot_render(trip.get("chapters") or []):
         if ch.get("screens"):
-            items = interleave_breath_items(flatten_screens_to_items(ch))
-            total += sum(1 for it in items if it.get("type") == "media-card")
+            items = interleave_breath_items(screens_to_longshot_items(ch))
+            for it in items:
+                if it.get("type") == "breath-pause":
+                    continue
+                total += len(item_asset_ids(it))
             continue
         for it in ch.get("items") or []:
-            if it.get("type") == "media-card":
-                total += 1
-            elif it.get("type") in ("media-row", "media-scroll"):
-                total += len(it.get("assetIds") or [])
+            total += len(item_asset_ids(it))
     return total
 
 
 def test_longshot_image_count_matches_screen_slots(screens_trip: dict) -> None:
-    expected = _expected_longshot_cards(screens_trip)
+    expected = _expected_longshot_visuals(screens_trip)
     html = render_html(
         screens_trip,
         export_mode="draft",
         layout_engine_override="screens",
         export_layout_override="longshot",
     )
-    cards = len(re.findall(r'data-block="media-card"', html))
-    assert cards == expected
+    visuals = len(re.findall(r'class="media-card__visual"', html))
+    assert visuals == expected
 
 
 def test_bridge_points_to_longshot_sidecar(screens_trip: dict) -> None:

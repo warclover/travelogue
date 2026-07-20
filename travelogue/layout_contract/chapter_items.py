@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Literal
+
 MAX_CHAPTER_ITEMS = 8
+
+_LOG = logging.getLogger("travelogue.layout.narrative")
+
+LongshotMode = Literal["preserve_stack", "representative_badge", "flatten"]
 
 
 def item_asset_ids(item: dict) -> list[str]:
@@ -109,20 +116,137 @@ def items_from_asset_ids(
 
 
 def flatten_screens_to_items(chapter: dict) -> list[dict]:
-    """Expand screens[].slots into one media-card each (longshot vertical stack)."""
+    """Expand screens[].slots into one media-card each (explicit flatten path)."""
     items: list[dict] = []
     for sc in chapter.get("screens") or []:
-        for slot in sc.get("slots") or []:
-            aid = slot.get("assetId")
-            if not aid:
-                continue
-            items.append(
-                {
-                    "type": "media-card",
-                    "assetId": aid,
-                    "layout": {"fill": True, "bleed": True, "overlay": False},
-                }
+        items.extend(_flatten_screen_to_cards(sc))
+    return items
+
+
+def _flatten_screen_to_cards(screen: dict) -> list[dict]:
+    items: list[dict] = []
+    for slot in screen.get("slots") or []:
+        aid = slot.get("assetId")
+        if not aid:
+            continue
+        items.append(
+            {
+                "type": "media-card",
+                "assetId": aid,
+                "layout": {"fill": True, "bleed": True, "overlay": False},
+                "groupId": screen.get("groupId") or screen.get("screenId"),
+                "preserveGroup": False,
+            }
+        )
+    return items
+
+
+def resolve_longshot_mode(screen: dict) -> LongshotMode:
+    """ADR-020 D5 · three-tier longshot mode for one screen."""
+    from travelogue.layout_contract.narrative_contract import ensure_narrative_contract
+
+    ensure_narrative_contract(screen)
+    if screen.get("preserveGroup") is False:
+        return "flatten"
+    hints = screen.get("exportHints") if isinstance(screen.get("exportHints"), dict) else {}
+    mode = str(hints.get("longshotMode") or "").strip()
+    if mode == "representative_badge":
+        return "representative_badge"
+    if mode == "flatten":
+        # Conflict with preserveGroup=true should already be stripped; belt-and-suspenders.
+        return "preserve_stack"
+    if mode == "preserve_stack":
+        return "preserve_stack"
+    # Default when preserveGroup is true (or derived true).
+    if screen.get("preserveGroup") is True:
+        return "preserve_stack"
+    return "flatten"
+
+
+def longshot_group_item_for_screen(screen: dict) -> dict | None:
+    """One preserve_stack group → media-row with full assetIds (no [:3] truncate)."""
+    from travelogue.layout_contract.narrative_contract import (
+        derive_representative_asset_id,
+        ensure_narrative_contract,
+    )
+
+    ensure_narrative_contract(screen)
+    slots = screen.get("slots") or []
+    aids = [sl["assetId"] for sl in slots if sl.get("assetId")]
+    if not aids:
+        return None
+    if len(aids) == 1:
+        return {
+            "type": "media-card",
+            "assetId": aids[0],
+            "layout": {"fill": True, "bleed": True, "overlay": False},
+            "groupId": screen.get("groupId") or screen.get("screenId"),
+            "preserveGroup": True,
+            "patternId": screen.get("patternId"),
+        }
+    return {
+        "type": "media-row",
+        "assetIds": aids,
+        "rowLayout": "preserve-stack",
+        "groupId": screen.get("groupId") or screen.get("screenId"),
+        "preserveGroup": True,
+        "patternId": screen.get("patternId"),
+        "groupCount": len(aids),
+        "groupMark": f"一组 · {len(aids)}",
+        "representativeAssetId": derive_representative_asset_id(screen),
+    }
+
+
+def longshot_representative_item_for_screen(screen: dict) -> dict | None:
+    """Tier-2 · representativeAssetId + N badge."""
+    from travelogue.layout_contract.narrative_contract import (
+        derive_representative_asset_id,
+        ensure_narrative_contract,
+    )
+
+    ensure_narrative_contract(screen)
+    slots = screen.get("slots") or []
+    aids = [sl["assetId"] for sl in slots if sl.get("assetId")]
+    if not aids:
+        return None
+    rep = derive_representative_asset_id(screen) or aids[0]
+    n = len(aids)
+    return {
+        "type": "media-card",
+        "assetId": rep,
+        "layout": {"fill": True, "bleed": True, "overlay": True},
+        "groupId": screen.get("groupId") or screen.get("screenId"),
+        "preserveGroup": True,
+        "patternId": screen.get("patternId"),
+        "groupCount": n,
+        "groupBadge": f"+{n - 1}" if n > 1 else None,
+        "groupMark": f"一组 · {n}",
+    }
+
+
+def screens_to_longshot_items(chapter: dict) -> list[dict]:
+    """LTN B2 / ADR-020 · longshot items with preserveGroup three-tier degradation."""
+    items: list[dict] = []
+    for sc in chapter.get("screens") or []:
+        if not isinstance(sc, dict):
+            continue
+        mode = resolve_longshot_mode(sc)
+        if mode == "flatten":
+            _LOG.info(
+                "ltn.preserve_group_false screenId=%s patternId=%s",
+                sc.get("screenId"),
+                sc.get("patternId"),
             )
+            items.extend(_flatten_screen_to_cards(sc))
+            continue
+        if mode == "representative_badge":
+            stub = longshot_representative_item_for_screen(sc)
+            if stub:
+                items.append(stub)
+            continue
+        stub = longshot_group_item_for_screen(sc)
+        if stub:
+            items.append(stub)
     return items
 
 
