@@ -231,8 +231,9 @@ def try_mosaic_window_mcs(
         window_start=start,
         segment_id=ctx.chapter_id or "",
         prev_screen=ctx.screens[-1] if ctx.screens else None,
-        chapter_screen_index=len(ctx.screens),
-        chapter_screen_count=max(12, len(ctx.screens) + 1),
+        # LTN D2 · real chapter asset progress (not fake max(12, …) denominator).
+        chapter_screen_index=max(0, int(start)),
+        chapter_screen_count=max(2, len(ctx.ids)),
     )
     if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)

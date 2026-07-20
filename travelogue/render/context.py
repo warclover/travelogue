@@ -918,6 +918,10 @@ def build_layout_screen(
         "slots": slots_out,
         "isFeatured": is_featured,
     }
+    rhythm_gap = str(screen.get("rhythmGap") or "").strip().upper()
+    if rhythm_gap in ("L0", "L1", "L2"):
+        out["rhythmGap"] = rhythm_gap
+        out["hasRhythmGap"] = True
     if screen_role == "moment" and show_signature_label:
         out["isMomentScreen"] = True
         out["hasMomentScreen"] = True

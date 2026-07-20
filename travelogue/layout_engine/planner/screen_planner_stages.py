@@ -329,6 +329,7 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     from travelogue.layout_contract.narrative_contract import ensure_narrative_contract
+    from travelogue.layout_contract.rhythm_gap import assign_rhythm_gaps_on_append
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
@@ -339,6 +340,12 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     assign_screen_id(ctx, screen)
     # LTN B1 / ADR-020 · fill Narrative Contract defaults after screenId exists.
     ensure_narrative_contract(screen)
+    # LTN D1 · L0/L1/L2 screen-gap hints (may tighten/widen previous screen).
+    assign_rhythm_gaps_on_append(
+        screen,
+        prev_screen=ctx.screens[-1] if ctx.screens else None,
+        assets_map=ctx.assets_map,
+    )
     ctx.screens.append(screen)
 
 

@@ -3,7 +3,11 @@
  */
 html[data-layout-engine="screens"] {
   --content-rail: var(--bleed-width);
-  --screen-rhythm-gap: clamp(8px, 1vh, 16px);
+  /* LTN D1 · L0/L1/L2 rhythm tokens (authoritative mirror in overlays; keep preamble sync-safe) */
+  --rhythm-l0-gap: 3px;
+  --rhythm-l1-gap: clamp(10px, 1.6vh, 20px);
+  --rhythm-l2-gap: clamp(36px, 6vh, 64px);
+  --screen-rhythm-gap: var(--rhythm-l1-gap);
 }
 
 html[data-layout-engine="screens"] .hook-line[data-block="hook-line"] {
@@ -48,7 +52,7 @@ html[data-layout="auto"] .layout-screen__grid {
   display: grid;
   width: 100%;
   height: 100%;
-  gap: 3px;
+  gap: var(--rhythm-l0-gap, 3px);
   margin: 0;
   padding: 0;
 }

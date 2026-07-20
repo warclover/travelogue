@@ -9,7 +9,7 @@
 | **一句话代号** | 「先不撒谎，再让拼图该出时出；冻结扩库，勿先松配额」 |
 | **前置条件** | Phase 15 MCS、Phase 16 LTE、Phase 21 密度预算已落地；LRG / MCR 有基础但未完全闭合 |
 | **依据** | [layout-mosaic-multi-persona-review-2026-07-20.md](./acceptance-records/layout-mosaic-multi-persona-review-2026-07-20.md)、[layout-next-sprint-backlog-2026-07-20.md](./acceptance-records/layout-next-sprint-backlog-2026-07-20.md)、[ltn-dev-feasibility-review-2026-07-20.md](./acceptance-records/ltn-dev-feasibility-review-2026-07-20.md)、[ltn-template-slot-summit-2026-07-20.md](./acceptance-records/ltn-template-slot-summit-2026-07-20.md)、[ltn-evidence-baseline-2026-07-20.md](./acceptance-records/ltn-evidence-baseline-2026-07-20.md) |
-| **关联文档** | [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md)、[PRD-LAYOUT-READER-REGRESSION-GUARD.md](./PRD-LAYOUT-READER-REGRESSION-GUARD.md)、[PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)、[PRD-HIGHLIGHT-GALLERY-MOUNT-V1.md](./PRD-HIGHLIGHT-GALLERY-MOUNT-V1.md)（**后置依赖本 PRD**） |
+| **关联文档** | [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md)、[PRD-LAYOUT-READER-REGRESSION-GUARD.md](./PRD-LAYOUT-READER-REGRESSION-GUARD.md)、[PRD-PHASE15-photo-mosaic-evolution.md](./PRD-PHASE15-photo-mosaic-evolution.md)、[PRD-HIGHLIGHT-GALLERY-MOUNT-V1.md](./PRD-HIGHLIGHT-GALLERY-MOUNT-V1.md)（**后置依赖本 PRD**）、[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md)（FTT 纲领 · 将本 PRD A/B 标为 P0、C/D 标为 P1） |
 | **参考 demo** | 阴性对照：`demo-65db8fd377`（凯哥精选，实证无内聚窗，hero=0 为正确行为）；阳性样本：`demo-2025` / `demo-815dc906d3`（内聚窗充足） |
 | **更新日期** | 2026-07-20 |
 
@@ -313,8 +313,8 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 
 | ID | 需求 | 说明（v1.1 并入峰会值带） |
 |----|------|------|
-| **R-D1** | Token 定标 | 起点带（JND 小样在带内定标，家庭侧宁小勿大）：**L0 ≈ 3px**（贴片感）；**L1 = clamp(10–12px, 1.6vh, 20px)**（现 8px 起步偏黏）；**L2 = clamp(36px, 6vh, 64px)**；比例 **L0:L1:L2 ≈ 1:4:16**。职责：票根管**章界**、L2 管**章内场景界**，不叠加。Token 只放 **preamble / overlays 源文件**（`@lte-generated` 段会被 sync 冲掉） |
-| **R-D2** | Beat 接线 | 默认 `flat` → `classic_magazine`，**峰位 0.60–0.65 章进度**；章进度用真实/可靠估计。连续同 pattern 容忍：单图 ≤3、组合屏 ≤2、mosaic ≤1；章内 pattern 熵参考带 0.55–0.75 |
+| **R-D1** | Token 定标 | 起点带（JND 小样在带内定标，家庭侧宁小勿大）：**L0 ≈ 3px**（贴片感）；**L1 = clamp(10–12px, 1.6vh, 20px)**（现 8px 起步偏黏）；**L2 = clamp(36px, 6vh, 64px)**；比例 **L0:L1:L2 ≈ 1:4:16**。职责：票根管**章界**、L2 管**章内场景界**，不叠加。Token 只放 **preamble / overlays 源文件**（`@lte-generated` 段会被 sync 冲掉）。**已落地**：`--rhythm-l*` + `rhythmGap`/`data-rhythm-gap` |
+| **R-D2** | Beat 接线 | 默认 `flat` → `classic_magazine`，**峰位 0.60–0.65 章进度**；章进度用真实/可靠估计。连续同 pattern 容忍：单图 ≤3、组合屏 ≤2、mosaic ≤1；章内 pattern 熵参考带 0.55–0.75。**已落地**：资产序进度 + 峰窗 0.55–0.70；pack 默认 classic（quick_share 仍 flat） |
 | **R-D3** | 版式角色表 | 产品/渲染注释统一：plate / 1col / stack-3 / 2col / mosaic-hero / breath；命名规范与 `rhythmSignOff` 变更评审由排版侧出稿 |
 
 ### 8.3 验收（AC-D）
@@ -459,6 +459,7 @@ Canonical SSOT = `chapters[].screens[]`。每屏（或组）须能表达：
 | v1.0.0-LTN | 2026-07-20 | 首版：依据八方评审与已拍板 backlog，专项解决可信 / 三模式 / 拼图出场 / 节奏 |
 | v1.1.0-LTN | 2026-07-20 | 并入开发可实现性评审（F1–F6 勘误、工期修正、H 系列前置）与七方峰会决议（D8–D12、S1–S6、活跃集 11、节奏值带、longshot 三级降级、AC 防钻空口径） |
 | v1.2.0-LTN | 2026-07-20 | 并入 4 trip debug 重放实证基线（§1.7 E 系列）：demo-65 改阴性对照、C4/C5 主信号改 takenAt、活跃集口径扩 contract extras、H2 增胜出 plan 标记、R-A2 增双通道排查 |
+| v1.2.12-LTN | 2026-07-20 | 实施落地：D1 三级节奏 token + `rhythmGap` hint；D2 资产真进度 + classic_magazine 峰位 0.55–0.70 |
 | v1.2.11-LTN | 2026-07-20 | 实施落地：B2 longshot 尊重 preserveGroup（三级降级）+ B4 present 纳入 chapter-separator |
 | v1.2.10-LTN | 2026-07-20 | 实施落地：B1 Narrative Contract — [ADR-020](./adr/020-narrative-contract.md)、schema 五字段、`ensure_narrative_contract`、修订 ADR-003 长图默认展平 |
 | v1.2.9-LTN | 2026-07-20 | 实施落地：C7 分轨参数表（curated/archive/quick_share）；C8 槽位软惩罚 + AR/副槽短边闸门（面积比软罚以免误杀 3land） |

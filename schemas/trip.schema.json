@@ -3527,6 +3527,15 @@
           "type": "string",
           "description": "ADR-020 · group representative for fold / badge / present thumb"
         },
+        "rhythmGap": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1",
+            "L2"
+          ],
+          "description": "LTN D1 · screen-gap tier after this screen (L2 = semantic pause, not breath stuffing)"
+        },
         "slots": {
           "type": "array",
           "maxItems": 9,
