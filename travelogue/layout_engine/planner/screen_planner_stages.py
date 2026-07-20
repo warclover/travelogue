@@ -328,6 +328,7 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 
 
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
+    from travelogue.layout_contract.narrative_contract import ensure_narrative_contract
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
@@ -336,6 +337,8 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     if ctx.layout_state:
         ctx.layout_state.note_screen(screen.get("patternId", ""))
     assign_screen_id(ctx, screen)
+    # LTN B1 / ADR-020 · fill Narrative Contract defaults after screenId exists.
+    ensure_narrative_contract(screen)
     ctx.screens.append(screen)
 
 

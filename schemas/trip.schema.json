@@ -3478,6 +3478,55 @@
             }
           }
         },
+        "narrativeRole": {
+          "type": "string",
+          "enum": [
+            "plate",
+            "hero_single",
+            "stack",
+            "pair",
+            "mosaic_hero",
+            "mosaic_flat",
+            "breath"
+          ],
+          "description": "ADR-020 / LTN B1 · layout narrative role (≠ screen.role peak pool)"
+        },
+        "groupId": {
+          "type": "string",
+          "description": "ADR-020 · collage / sequence group id (default = screenId)"
+        },
+        "preserveGroup": {
+          "type": "boolean",
+          "description": "ADR-020 · longshot/export keep group feel; mosaic defaults true"
+        },
+        "exportHints": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "longshotMode": {
+              "type": "string",
+              "enum": [
+                "preserve_stack",
+                "representative_badge",
+                "flatten"
+              ]
+            },
+            "preferRepresentative": {
+              "type": "boolean"
+            },
+            "allowSplit": {
+              "type": "boolean"
+            },
+            "conflictDropped": {
+              "type": "string"
+            }
+          },
+          "description": "ADR-020 · surface hints; must not silently contradict preserveGroup"
+        },
+        "representativeAssetId": {
+          "type": "string",
+          "description": "ADR-020 · group representative for fold / badge / present thumb"
+        },
         "slots": {
           "type": "array",
           "maxItems": 9,
