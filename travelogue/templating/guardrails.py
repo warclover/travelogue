@@ -38,7 +38,16 @@ def is_field_editable(template_id: str, field_path: str) -> bool:
 def copy_path_to_scope(path: str) -> str:
     """Map inline-edit path to guardrail scope pattern."""
     p = str(path or "").strip()
-    if p in ("meta.hook", "meta.title", "meta.subtitle", "meta.coverOpeningStyle", "epilogue"):
+    if p in (
+        "meta.hook",
+        "meta.title",
+        "meta.subtitle",
+        "meta.coverOpeningStyle",
+        "meta.worksBrandMode",
+        "meta.worksBrandText",
+        "export.longshotDensity",
+        "epilogue",
+    ):
         return p
     if p.startswith("chapters.") and ".items." in p:
         parts = p.split(".")

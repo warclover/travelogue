@@ -356,4 +356,9 @@ class TripRenderContext(TypedDict, total=False):
     hasMomentScreen: bool
     momentScreen: dict[str, Any]
     showClosingTitle: bool
+    showWorksBrand: NotRequired[bool]
+    worksBrandLine: NotRequired[str]
+    worksBrandCustom: NotRequired[bool]
+    longshotDensity: NotRequired[str]
+    compactLongshot: NotRequired[bool]
     closing: CoverRenderContext

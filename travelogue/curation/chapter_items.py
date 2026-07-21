@@ -12,6 +12,7 @@ def resolve_chapter_items_for_render(
     aspects: dict[str, str],
     assets_map: dict[str, dict],
     trip_photo_total: int,
+    compact_longshot: bool = False,
 ) -> list[dict]:
     """
     Pick items[] for HTML render.
@@ -21,7 +22,7 @@ def resolve_chapter_items_for_render(
     - otherwise: stored items[]
     """
     if is_longshot and chapter.get("screens"):
-        return screens_to_longshot_items(chapter)
+        return screens_to_longshot_items(chapter, compact=compact_longshot)
 
     from travelogue.curation.layout_planner import (
         _apply_gallery_layout,

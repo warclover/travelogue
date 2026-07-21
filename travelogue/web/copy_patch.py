@@ -84,6 +84,31 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         meta["edited"] = True
         return "meta.coverOpeningStyle"
 
+    if path == "meta.worksBrandMode":
+        from travelogue.domain.works_brand import normalize_works_brand_mode
+
+        meta["worksBrandMode"] = normalize_works_brand_mode(value)
+        meta["edited"] = True
+        return "meta.worksBrandMode"
+
+    if path == "meta.worksBrandText":
+        from travelogue.domain.works_brand import BRAND_TEXT_MAX
+
+        meta["worksBrandText"] = value[:BRAND_TEXT_MAX]
+        meta["edited"] = True
+        return "meta.worksBrandText"
+
+    if path == "export.longshotDensity":
+        cleaned = value.strip().lower()
+        if cleaned not in ("default", "compact"):
+            raise CopyPatchError(
+                "E_COPY_PATCH",
+                f"invalid longshotDensity {cleaned!r}; expected default|compact",
+            )
+        export = trip.setdefault("export", {})
+        export["longshotDensity"] = cleaned
+        return "export.longshotDensity"
+
     if path.startswith("chapters.") and path.endswith(".curation.memoryAnchors"):
         ch_id = path[len("chapters.") : -len(".curation.memoryAnchors")]
         anchors = [

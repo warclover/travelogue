@@ -143,6 +143,7 @@ export function readExportPrefs() {
     slideCount: null,
     padMode: "letterbox",
     includeAppendix: false,
+    density: "default",
   };
   try {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
@@ -156,6 +157,7 @@ export function readExportPrefs() {
         parsed.slideCount == null ? null : clampXhsSlideCount(parsed.slideCount),
       padMode: parsed.padMode || "letterbox",
       includeAppendix: parsed.includeAppendix === true,
+      density: parsed.density === "compact" ? "compact" : "default",
     };
   } catch (e) {
     return defaults;
@@ -337,9 +339,19 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
-    '<button type="button" data-studio-longshot-scale="2" title="2×">标准</button>' +
-    '<button type="button" data-studio-longshot-scale="3" title="3×">更清晰</button>' +
-    "</div></div>" +
+    '<button type="button" data-studio-longshot-scale="2" title="输出宽约 856px（428×2）">标准 · 856</button>' +
+    '<button type="button" data-studio-longshot-scale="3" title="输出宽约 1284px（428×3）">更清晰 · 1284</button>' +
+    "</div>" +
+    '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出宽 = 逻辑宽 428 × 倍率</p>' +
+    "</div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="density">' +
+    '<span class="preview-toolbar__export-popover-label">长图密度</span>' +
+    '<div class="preview-toolbar__export-popover-seg" role="group">' +
+    '<button type="button" data-studio-longshot-density="default">默认</button>' +
+    '<button type="button" data-studio-longshot-density="compact">紧凑</button>' +
+    "</div>" +
+    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面；导出前可「对比网页与长图」。</p>' +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="appendix" hidden>' +
     '<label class="preview-toolbar__export-appendix">' +
     '<input type="checkbox" data-studio-include-appendix />' +
@@ -393,6 +405,19 @@ export function syncPanelUI(pop, draft, opts) {
   });
   pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
     var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(draft.scale);
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  var scaleHint = pop.querySelector("[data-scale-hint]");
+  if (scaleHint) {
+    var px = draft.scale === 3 ? 1284 : 856;
+    scaleHint.textContent =
+      "输出宽约 " + px + "px（逻辑宽 428 × " + (draft.scale === 3 ? "3" : "2") + "）";
+  }
+  pop.querySelectorAll("[data-studio-longshot-density]").forEach(function (btn) {
+    var on =
+      (btn.getAttribute("data-studio-longshot-density") || "default") ===
+      (draft.density || "default");
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
@@ -530,6 +555,8 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     slideCount: initialDraft ? initialDraft.slideCount : null,
     padMode: (initialDraft && initialDraft.padMode) || "letterbox",
     includeAppendix: !!(initialDraft && initialDraft.includeAppendix),
+    density:
+      (initialDraft && initialDraft.density) === "compact" ? "compact" : "default",
   };
   var onDraftChange = typeof opts.onDraftChange === "function" ? opts.onDraftChange : null;
 
@@ -544,10 +571,21 @@ export function bindPanelDraft(pop, initialDraft, opts) {
           slideCount: draft.slideCount,
           padMode: draft.padMode,
           includeAppendix: !!draft.includeAppendix,
+          density: draft.density || "default",
         });
       } catch (_e) {}
     }
   }
+
+  pop.querySelectorAll("[data-studio-longshot-density]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      draft.density =
+        btn.getAttribute("data-studio-longshot-density") === "compact"
+          ? "compact"
+          : "default";
+      refresh();
+    });
+  });
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -641,6 +679,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
           draft.slideCount == null ? null : clampXhsSlideCount(draft.slideCount),
         padMode: draft.padMode,
         includeAppendix: !!draft.includeAppendix,
+        density: draft.density === "compact" ? "compact" : "default",
       };
     },
     setDraft: function (next) {
@@ -652,6 +691,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       draft.padMode = next.padMode || draft.padMode;
       if (next && typeof next.includeAppendix === "boolean") {
         draft.includeAppendix = next.includeAppendix;
+      }
+      if (next && next.density) {
+        draft.density = next.density === "compact" ? "compact" : "default";
       }
       refresh();
     },

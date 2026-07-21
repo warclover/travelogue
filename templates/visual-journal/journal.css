@@ -1277,6 +1277,11 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.cover-closing__brand--custom {
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
 .cover-closing__end {
   display: none;
   position: absolute;

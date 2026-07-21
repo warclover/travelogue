@@ -238,6 +238,9 @@ def build_chapters_render_context(
             has_screen_spread = screen_spread is not None
 
         items_out: list = []
+        from travelogue.domain.longshot_density import is_compact_longshot
+
+        compact_ls = is_longshot_surface and is_compact_longshot(trip)
         chapter_items = resolve_chapter_items_for_render(
             ch,
             export_layout=image_layout,
@@ -246,6 +249,7 @@ def build_chapters_render_context(
             aspects=aspects_map,
             assets_map=assets,
             trip_photo_total=layout_eligible_count,
+            compact_longshot=compact_ls,
         )
         if is_longshot_surface:
             from travelogue.curation.breath_pauses import interleave_breath_items
@@ -325,6 +329,7 @@ def build_chapters_render_context(
             intent=trip.get("intent"),
             assets=trip.get("assets") or [],
         )
+        curation = ch.get("curation") or {}
 
         # BE-SFI-01 · 读者面收口 share_face_copy（含 decorLine 旁路）
         from travelogue.domain.share_face_copy import (
@@ -376,7 +381,6 @@ def build_chapters_render_context(
                     surface=surface_name, field="title", pattern_id=pattern_id, trip_id=trip_id
                 )
                 # 示例泄漏等：回退日期章名（D-SFI-01）
-                curation = ch.get("curation") or {}
                 day_span = curation.get("daySpan") or []
                 if day_span:
                     try:
@@ -389,6 +393,20 @@ def build_chapters_render_context(
                     ch_title = cleaned_title
             else:
                 ch_title = cleaned_title
+
+        # D-SFI-11 · 紧凑档：日期与章名同义时二选一（藏 divider）
+        if compact_ls and divider_ctx.get("showDivider") and ch_title:
+            day_span = curation.get("daySpan") or []
+            if day_span:
+                try:
+                    from datetime import date as _date
+
+                    d0 = _date.fromisoformat(str(day_span[0])[:10])
+                    syn = f"{d0.month}月{d0.day}日"
+                    if syn in str(ch_title).replace(" ", ""):
+                        divider_ctx = {"showDivider": False}
+                except ValueError:
+                    pass
 
         is_appendix = bool(curation.get("isAppendix") or ch.get("isAppendix"))
         ch_ctx: ChapterRenderContext = {

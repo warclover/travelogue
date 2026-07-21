@@ -10,7 +10,7 @@
 | **试用底稿** | [persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) |
 | **相邻硬化** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md)（执行层接管 · 存量兑现） |
 | **更新日期** | 2026-07-21 |
-| **状态** | **W0/W1 工程收口**（手测/狗粮仍开）· W2 可砍 · `feat/share-face-integrity-w0` |
+| **状态** | **W2 编码中**（F4/F5 已再签）· W0/W1 工程收口 · `feat/share-face-integrity-w0` |
 | **估时** | Doc ✅ · W0 ≈ **3–5 人日** · W1 ≈ **4–6 人日**（含 E0）· W2 ≈ **2.5–4 人日**（可砍） |
 
 ---
@@ -148,16 +148,16 @@
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
 | **DES-SFI-01** | **前置**：真实照片册长图归因表签字（非 demo-album） | 验收记录附件 | 0.3d | 12 | ✅ 仙本那基线 10.4% · [签字记录](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md) |
-| **FE-SFI-09** | 紧凑档：章头瘦身 / 封面去重 / moment 折叠；进 B3 双预览；不跳 B2 | `longshot.css` · longshot 模板 | 1.0d | 12 | ⏳ |
-| **FE-SFI-10** | 清晰度档位参数与产物换算一致 | export settings UI | 0.3d | 13 | ⏳ |
-| **FE-SFI-11** | 署名三态册级字段；同步 `cover-closing` + `longshot-boundary-footer` | 精修·这本 · 模板 | 0.5d | 13 | ⏳ |
-| **FE-SFI-12** | 小红书成功面文案包（dock 展开）；无 Key = 标题+话题 | task-dock · OQ-2 | 0.5d | 13 | ⏳ |
-| **QA-SFI-06** | 像素占比脚本 + 盲评记录模板 | 0.4d | 12 | 🔧 `sfi_longshot_attribution.py` 已齐；盲评模板 / 紧凑后对比仍开 |
+| **FE-SFI-09** | 紧凑档：章头瘦身 / 封面去重 / moment 折叠；进 B3 双预览；不跳 B2 | `longshot.css` · density · chapter_items | 1.0d | 12 | ✅ `export.longshotDensity` + CSS/折叠；导出面板切换→save-copy 重渲 |
+| **FE-SFI-10** | 清晰度档位参数与产物换算一致 | export settings UI | 0.3d | 13 | ✅ 标准·856 / 更清晰·1284（428×scale） |
+| **FE-SFI-11** | 署名三态册级字段；同步 `cover-closing` + `longshot-boundary-footer` | 精修·这本 · 模板 | 0.5d | 13 | ✅ `worksBrandMode/Text` 同源 |
+| **FE-SFI-12** | 小红书成功面文案包（dock 展开）；无 Key = 标题+话题 | task-dock · OQ-2 | 0.5d | 13 | ✅ dock「复制文案包」；无正文时仅标题+话题 |
+| **QA-SFI-06** | 像素占比脚本 + 盲评记录模板 | 0.4d | 12 | ✅ `--baseline` 对比 + [盲评模板](./acceptance-records/share-face-integrity-v1-compact-blind-TEMPLATE.md) |
 
 ### W2 完成定义
 
-- [ ] 线框 F4–F5 对照合入  
-- [x] 归因表已签（DES-SFI-01 · 仙本那）；AC-SFI-12·13 按项验收（允许砍项）仍开  
+- [x] 线框 F4–F5 再签（2026-07-21 产品同意）  
+- [x] 归因表已签（DES-SFI-01 · 仙本那）；AC-SFI-12·13 **产品手测/盲评**仍开  
 
 ---
 
@@ -184,6 +184,7 @@
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v0.1.6 | 2026-07-21 | W2：FE-09～12 + QA-06；F4/F5 再签；紧凑档/署名/清晰度诚实标宽/小红书文案包 |
 | v0.1.5 | 2026-07-21 | 补漏：rerender 真写 longshot · 精修单张移回 · D-SFI-06 矛盾抑年 · §6/§7 · QA-SFI-03；[gapfill 记录](./acceptance-records/share-face-integrity-v1-gapfill-2026-07-21.md) |
 | v0.1.4 | 2026-07-21 | DES-SFI-01：仙本那真实册长图归因签字（基线非照片 10.4%）；`sfi_longshot_attribution.py` |
 | v0.1.3 | 2026-07-21 | QA-SFI-04/05：瘦 fixture 回归；实质多段豁免；章名禁拼回离群日；sparse scope 尊重 origin=user |

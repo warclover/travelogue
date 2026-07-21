@@ -739,6 +739,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       bookCopyRefreshHtml() +
+      '<div class="preview-sheet__brand" data-works-brand>' +
+      '<p class="preview-sheet__label">作品署名</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">个人署名 · 同时出现在辑封与长图尾</p>' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="default" /> 默认 · Travelogue</label>' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="custom" /> 自定义（≤14 字）</label>' +
+      '<input type="text" class="preview-sheet__brand-input" maxlength="14" placeholder="你的署名" hidden />' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="hidden" /> 不显示</label>' +
+      "</div>" +
       "</div></details>" +
       '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
       '<summary>进阶 <span class="preview-sheet__zone-meta">很少需要</span></summary>' +
@@ -761,6 +769,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
     }
 
+    wireWorksBrandControls();
     wireBookAdvancedTools();
     // FE-SFI-04 · 文案刷新入口在整本信息区，复用同一套 llm 接线
     var storyLlm = bodyEl.querySelector(
@@ -818,6 +827,83 @@ export function mountPreviewUnifiedSheet(root, hooks) {
           hooks.drawers.openEmbed("structure", structHost, { sheetMode: true });
         });
       }
+    }
+  }
+
+  function wireWorksBrandControls() {
+    var host = bodyEl.querySelector("[data-works-brand]");
+    if (!host) return;
+    var tid =
+      (hooks && hooks.tripId) ||
+      (typeof tripIdFromPath === "function" && tripIdFromPath()) ||
+      "";
+    if (!tid) return;
+    var input = host.querySelector(".preview-sheet__brand-input");
+    var radios = host.querySelectorAll('input[name="works-brand"]');
+
+    function syncCustomVisibility(mode) {
+      if (!input) return;
+      input.hidden = mode !== "custom";
+      if (mode === "custom") {
+        try {
+          input.focus();
+        } catch (_e) {}
+      }
+    }
+
+    function saveBrand(mode, text) {
+      var patches = [{ path: "meta.worksBrandMode", value: mode }];
+      if (mode === "custom") {
+        patches.push({
+          path: "meta.worksBrandText",
+          value: String(text || "").trim().slice(0, 14),
+        });
+      }
+      postJsonConflictRetry(tripApiBase(tid) + "/save-copy", { patches: patches })
+        .then(function (res) {
+          if (!res || res.status < 200 || res.status >= 300) {
+            showToolbarToast("署名未保存");
+            return;
+          }
+          showToolbarToast("署名已更新");
+        })
+        .catch(function () {
+          showToolbarToast("署名未保存");
+        });
+    }
+
+    fetch("/__travelogue/trips/" + encodeURIComponent(tid) + "/entry")
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (entry) {
+        var brand = (entry && entry.worksBrand) || {};
+        var mode = brand.mode || "default";
+        radios.forEach(function (radio) {
+          radio.checked = radio.value === mode;
+        });
+        if (input) input.value = brand.text || "";
+        syncCustomVisibility(mode);
+      })
+      .catch(function () {});
+
+    radios.forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        if (!radio.checked) return;
+        syncCustomVisibility(radio.value);
+        if (radio.value === "custom" && input && !String(input.value || "").trim()) {
+          return;
+        }
+        saveBrand(radio.value, input ? input.value : "");
+      });
+    });
+    if (input) {
+      input.addEventListener("change", function () {
+        var modeEl = host.querySelector('input[name="works-brand"]:checked');
+        var mode = (modeEl && modeEl.value) || "custom";
+        if (mode !== "custom") return;
+        saveBrand("custom", input.value);
+      });
     }
   }
 

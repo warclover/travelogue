@@ -220,6 +220,48 @@ def build_entry(
             if isinstance(curation, dict)
             else []
         ),
+        "worksBrand": _works_brand_entry(trip),
+        "longshotDensity": _longshot_density_entry(trip),
+        "shareCopyPack": _share_copy_pack_entry(trip),
+    }
+
+
+def _works_brand_entry(trip: dict) -> dict:
+    from travelogue.domain.works_brand import resolve_works_brand
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    resolved = resolve_works_brand(meta)
+    return {
+        "mode": resolved["worksBrandMode"],
+        "text": str(meta.get("worksBrandText") or "").strip()[:14],
+        "line": resolved["worksBrandLine"],
+        "show": resolved["showWorksBrand"],
+    }
+
+
+def _longshot_density_entry(trip: dict) -> str:
+    from travelogue.domain.longshot_density import resolve_longshot_density
+
+    return resolve_longshot_density(trip)
+
+
+def _share_copy_pack_entry(trip: dict) -> dict:
+    """Xiaohongshu copy pack fields (D-SFI-14)."""
+    from travelogue.domain.title_humanize import resolve_display_title
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    title = resolve_display_title(meta) or str(meta.get("title") or "").strip()
+    hook = str(meta.get("hook") or "").strip()
+    places = meta.get("places") if isinstance(meta.get("places"), list) else []
+    tags: list[str] = ["#旅行日记"]
+    for p in places[:2]:
+        label = str(p or "").strip()
+        if label:
+            tags.append("#" + label.replace(" ", ""))
+    return {
+        "title": title,
+        "body": hook,
+        "topics": " ".join(tags),
     }
 
 

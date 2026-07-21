@@ -440,6 +440,14 @@
           ],
           "description": "Render: full shows hook/lead/captions; photos hides narrative copy (trip.json unchanged)"
         },
+        "longshotDensity": {
+          "type": "string",
+          "enum": [
+            "default",
+            "compact"
+          ],
+          "description": "SFI D-SFI-11 · longshot density; compact = chapter-header slim + cover dedupe + moment badge fold"
+        },
         "breathMode": {
           "type": "string",
           "enum": [
@@ -2196,6 +2204,20 @@
           "type": "integer",
           "minimum": 0,
           "description": "meta.revision captured when index.html was last written; used to detect preview bundle stale without false positives from post-render metadata persists (G-LRG-08)"
+        },
+        "worksBrandMode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "custom",
+            "hidden"
+          ],
+          "description": "SFI D-SFI-13 · works brand three-state; drives cover-closing + longshot footer"
+        },
+        "worksBrandText": {
+          "type": "string",
+          "maxLength": 14,
+          "description": "Custom works brand when worksBrandMode=custom (≤14 full-width chars)"
         }
       }
     },

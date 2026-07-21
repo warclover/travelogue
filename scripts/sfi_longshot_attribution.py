@@ -238,6 +238,33 @@ def format_markdown(m: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_compare(baseline: dict[str, Any], current: dict[str, Any]) -> str:
+    """QA-SFI-06 · before/after compact comparison (AC-SFI-12)."""
+    b = float(baseline.get("nonPhotoVerticalRatio") or 0)
+    c = float(current.get("nonPhotoVerticalRatio") or 0)
+    drop = (b - c) / b if b > 0 else 0.0
+    target = b * 0.6  # ≥40% relative drop → ≤ 60% of baseline
+    ok = c <= target + 1e-9 if b > 0 else False
+    return "\n".join(
+        [
+            "# 紧凑档前后对比 · QA-SFI-06",
+            "",
+            f"- **基线册**：`{baseline.get('tripDir')}`",
+            f"- **当前册**：`{current.get('tripDir')}`",
+            "",
+            "| 指标 | 基线（默认） | 当前 |",
+            "|------|-------------|------|",
+            f"| 非照片纵向占比 | {b:.1%} | {c:.1%} |",
+            f"| 相对降幅 | — | {drop:.1%} |",
+            f"| AC-SFI-12 目标（基线×0.6） | — | ≤{target:.1%} |",
+            f"| **脚本门** | — | {'✅ 通过' if ok else '❌ 未达'} |",
+            "",
+            "> 盲评仍须另附 5 席表（敢发偏好 ≥3/5）。",
+            "",
+        ]
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("trip_dir", type=Path, help="Trip directory with index-longshot.html")
@@ -249,13 +276,42 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Write markdown (and .json sidecar) to this path",
     )
+    ap.add_argument(
+        "--baseline",
+        type=Path,
+        default=None,
+        help="Prior attribution JSON (or trip dir) for compact before/after compare",
+    )
     args = ap.parse_args(argv)
     trip_dir = args.trip_dir.resolve()
     metrics = measure_trip(trip_dir)
+    compare_md = ""
+    if args.baseline:
+        base_path = args.baseline.resolve()
+        if base_path.is_dir():
+            baseline = measure_trip(base_path)
+        else:
+            baseline = json.loads(base_path.read_text(encoding="utf-8"))
+        compare_md = format_compare(baseline, metrics)
+        metrics["compare"] = {
+            "baselineRatio": baseline.get("nonPhotoVerticalRatio"),
+            "currentRatio": metrics.get("nonPhotoVerticalRatio"),
+            "relativeDrop": (
+                (
+                    float(baseline.get("nonPhotoVerticalRatio") or 0)
+                    - float(metrics.get("nonPhotoVerticalRatio") or 0)
+                )
+                / float(baseline.get("nonPhotoVerticalRatio") or 1)
+                if float(baseline.get("nonPhotoVerticalRatio") or 0) > 0
+                else None
+            ),
+        }
     if args.json and not args.out:
         print(json.dumps(metrics, ensure_ascii=False, indent=2))
         return 0
     md = format_markdown(metrics)
+    if compare_md:
+        md = compare_md + "\n---\n\n" + md
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(md, encoding="utf-8")
