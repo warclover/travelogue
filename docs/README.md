@@ -136,6 +136,7 @@
 | [ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性验收 · AC-SFI + fixture |
 | [wireframes/share-face-integrity-v1-wireframe.html](./wireframes/share-face-integrity-v1-wireframe.html) | 敢发面一致性线框 F0–F5 |
 | [acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) | 敢发面一致性 · 手测狗粮 · AC-SFI-15 |
+| [acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md) | SFI · **DES-SFI-01** 仙本那真实册长图归因签字（W2 前置） |
 | [acceptance-records/persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) | 典型用户+博主试用底稿（2026-07-21 首轮） |
 | [acceptance-records/persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) | 十二席深度试用底稿（2026-07-21 下午） |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
