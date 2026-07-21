@@ -405,18 +405,25 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       "</div></div>" +
       '<ul class="preview-sheet__list">' +
       '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
-      '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
+      "</ul>" +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+    );
+  }
+
+  function bookCopyRefreshHtml() {
+    return (
+      '<ul class="preview-sheet__list preview-sheet__list--copy-refresh">' +
+      '<li data-tool="llm"><span>重新生成文案</span><button type="button" class="preview-sheet__link" data-action="llm">开始</button></li>' +
       "</ul>" +
       '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
       '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
       '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
       "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      "本机文案 · 点此生成杂志感（不会自动重写）" +
-      "</p>" +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+      "当前为本机文案 · 配置写作引擎后可升级" +
+      "</p>"
     );
   }
 
@@ -676,14 +683,15 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     bodyEl.innerHTML =
       '<p class="preview-sheet__hint preview-sheet__hint--lead">改名字与一句话。换封面/封底请到「封面」。</p>' +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
-      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
+      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话 · 文案</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
+      bookCopyRefreshHtml() +
       "</div></details>" +
       '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
       '<summary>进阶 <span class="preview-sheet__zone-meta">很少需要</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">阅读视图、放映、杂志感文案、换模板、旅行主角同框、分章说明。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">阅读视图、放映、换模板、旅行主角同框、分章说明。</p>' +
       bookAdvancedToolsHtml() +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
@@ -702,6 +710,18 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
 
     wireBookAdvancedTools();
+    // FE-SFI-04 · 文案刷新入口在整本信息区，复用同一套 llm 接线
+    var storyLlm = bodyEl.querySelector(
+      '.preview-sheet__zone--story [data-action="llm"]'
+    );
+    if (storyLlm && !storyLlm._sfiWired) {
+      storyLlm._sfiWired = true;
+      storyLlm.addEventListener("click", function () {
+        if (storyLlm.disabled) return;
+        close();
+        if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(storyLlm);
+      });
+    }
 
     var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {

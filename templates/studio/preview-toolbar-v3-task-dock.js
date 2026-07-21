@@ -584,6 +584,56 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  /** FE-SFI-05 · 文案刷新提示（高于 longshotStale；导出/成功面外层不进此栈） */
+  function showCopyRefresh(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--info";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "✎";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "AI 文案已就绪，可为这本重新生成文案";
+    textWrap.appendChild(main);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+
+    if (typeof hooks.onCopyRefresh === "function") {
+      var refreshBtn = document.createElement("button");
+      refreshBtn.type = "button";
+      refreshBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      refreshBtn.textContent = "重新生成文案";
+      refreshBtn.addEventListener("click", function () {
+        hooks.onCopyRefresh();
+      });
+      actions.appendChild(refreshBtn);
+    }
+
+    var dismissBtn = document.createElement("button");
+    dismissBtn.type = "button";
+    dismissBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+    dismissBtn.textContent = "不再提示";
+    dismissBtn.addEventListener("click", function () {
+      hide();
+      if (typeof hooks.onDismissCopyRefresh === "function") {
+        hooks.onDismissCopyRefresh({ persistent: true });
+      }
+    });
+    actions.appendChild(dismissBtn);
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+  }
+
   function showNextStepHint(opts) {
     opts = opts || {};
     clearTimers();
@@ -732,6 +782,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showG1: showG1,
     showPending: showPending,
     showStale: showStale,
+    showCopyRefresh: showCopyRefresh,
     showNextStepHint: showNextStepHint,
     showFeaturedRerankCue: showFeaturedRerankCue,
     showError: showError,

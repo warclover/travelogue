@@ -133,7 +133,7 @@ export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
     // D-PCU · 默认/实验均不走黄底 G1 Strip；分章走 Dock 面板
-    // 栈：export(外层) > layoutPending > sourceMissing > longshotStale > featured
+    // 栈：export(外层) > layoutPending > sourceMissing > copyRefresh > longshotStale
     if (_layoutPending && !_pendingDockDismissed) {
       var pendingTitle = _layoutPendingMessage || "版面有改动";
       root._taskDock.showPending({
@@ -148,6 +148,15 @@ export function refreshTaskDockState(root) {
       root._taskDock.showPending({
         title: "原相册无法访问",
       });
+      return;
+    }
+    // FE-SFI-05 · copyRefresh 高于 longshotStale（先刷新再导出）
+    var copyRefresh =
+      !!root._copyRefreshHint &&
+      !root._copyRefreshDismissed &&
+      typeof root._taskDock.showCopyRefresh === "function";
+    if (copyRefresh) {
+      root._taskDock.showCopyRefresh({});
       return;
     }
     var longshotStale =
@@ -245,7 +254,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       }
       setToolbarCollapsed(root, false, false);
       setSlowHint(root, "", false);
-      setSlowHint(root, opts.busyHint || "正在生成杂志感文案…", true);
+      setSlowHint(root, opts.busyHint || "正在重新生成文案…", true);
       return postJson("/__travelogue/narrate", { tripId: tripId })
         .then(function (res) {
           if (!res) return;
@@ -343,11 +352,11 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       return run();
     }
     return toolbarConfirm({
-      title: opts.confirmTitle || "生成杂志感文案",
+      title: opts.confirmTitle || "重新生成文案",
       body:
         opts.confirmBody ||
-        "将调用 LLM 重写 hook、导语与图注，可能覆盖未锁定的文案。继续？",
-      confirmText: opts.confirmText || "继续",
+        "将为这本重新写开头一句和图说；你自己改过的内容不会动。通常不到一分钟。",
+      confirmText: opts.confirmText || "重新生成文案",
     }).then(function (ok) {
       if (!ok) return;
       return run();

@@ -96,6 +96,10 @@
       "type": "string",
       "maxLength": 80
     },
+    "epilogueOrigin": {
+      "$ref": "#/$defs/fieldOrigin",
+      "description": "Provenance for epilogue; user never overwritten on copy refresh."
+    },
     "privacy": {
       "$ref": "#/$defs/privacy"
     },
@@ -141,6 +145,15 @@
     }
   },
   "$defs": {
+    "fieldOrigin": {
+      "type": "string",
+      "enum": [
+        "user",
+        "stub",
+        "llm"
+      ],
+      "description": "Share-Face Integrity · field-level copy provenance (D-SFI-03 / BE-SFI-00). user = never overwrite on refresh."
+    },
     "tripMedia": {
       "type": "object",
       "additionalProperties": false,
@@ -2111,6 +2124,9 @@
           "type": "string",
           "maxLength": 56
         },
+        "hookOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "dateStart": {
           "type": "string",
           "format": "date"
@@ -2154,6 +2170,10 @@
         "coverClosingStyle": {
           "type": "string",
           "description": "Closing / colophon skin id when a closing hero exists; omit key when no closing asset (cover_engine pops)."
+        },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy object-level user-edit flag (pre-SFI). Prefer fieldOrigin; kept for migration / coarse skip."
         },
         "revision": {
           "type": "integer",
@@ -2479,6 +2499,9 @@
           "type": "string",
           "maxLength": 60,
           "description": "Per-asset caption (screens/longshot); complements chapter items[]"
+        },
+        "captionOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
         },
         "skipCaption": {
           "type": "boolean",
@@ -2944,8 +2967,12 @@
           "type": "string",
           "maxLength": 60
         },
+        "captionOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "edited": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Legacy object-level edit flag; prefer captionOrigin=user"
         },
         "layout": {
           "$ref": "#/$defs/mediaCardLayout"
@@ -3223,6 +3250,19 @@
           "maxLength": 30,
           "description": "Phase 11 · optional chapter accent line (<=30 chars)"
         },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy object-level user-edit flag (pre-SFI). Prefer *Origin fields."
+        },
+        "titleOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
+        "leadOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
+        "decorLineOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "items": {
           "type": "array",
           "minItems": 1,
@@ -3477,6 +3517,10 @@
               ]
             }
           }
+        },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy screen-level edit flag from inline copy patch"
         },
         "narrativeRole": {
           "type": "string",

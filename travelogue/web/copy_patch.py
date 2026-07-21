@@ -56,8 +56,10 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
     meta = trip.setdefault("meta", {})
 
     if path == "meta.hook":
+        from travelogue.domain.copy_origin import mark_origin
+
         meta["hook"] = value[:HOOK_MAX]
-        meta["edited"] = True
+        mark_origin(meta, "hookOrigin")
         return "meta.hook"
 
     if path == "meta.title":
@@ -101,25 +103,43 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
 
     if path == "epilogue":
+        from travelogue.domain.copy_origin import ORIGIN_USER
+
         trip["epilogue"] = value[:EPILOGUE_MAX]
+        trip["epilogueOrigin"] = ORIGIN_USER
         meta["edited"] = True
         return "epilogue"
 
+    if path.startswith("chapters.") and path.endswith(".title"):
+        from travelogue.domain.copy_origin import mark_origin
+
+        ch_id = path[len("chapters.") : -len(".title")]
+        for ch in trip.get("chapters") or []:
+            if ch.get("id") == ch_id:
+                ch["title"] = value[:TITLE_MAX]
+                mark_origin(ch, "titleOrigin")
+                return path
+        raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
+
     if path.startswith("chapters.") and path.endswith(".lead"):
+        from travelogue.domain.copy_origin import mark_origin
+
         ch_id = path[len("chapters.") : -len(".lead")]
         for ch in trip.get("chapters") or []:
             if ch.get("id") == ch_id:
                 ch["lead"] = value[:LEAD_MAX]
-                ch["edited"] = True
+                mark_origin(ch, "leadOrigin")
                 return path
         raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
 
     if path.startswith("chapters.") and path.endswith(".decorLine"):
+        from travelogue.domain.copy_origin import mark_origin
+
         ch_id = path[len("chapters.") : -len(".decorLine")]
         for ch in trip.get("chapters") or []:
             if ch.get("id") == ch_id:
                 ch["decorLine"] = value[:DECOR_LINE_MAX]
-                ch["edited"] = True
+                mark_origin(ch, "decorLineOrigin")
                 return path
         raise CopyPatchError("E_COPY_PATCH", f"unknown chapter {ch_id!r}")
 
@@ -168,8 +188,10 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
                     raise CopyPatchError("E_COPY_PATCH", f"item index {idx} out of range for {ch_id!r}")
                 item = items[idx]
                 if field == "caption":
+                    from travelogue.domain.copy_origin import mark_origin
+
                     item["caption"] = value[:CAPTION_MAX]
-                    item["edited"] = True
+                    mark_origin(item, "captionOrigin")
                     return path
                 if field == "voice.transcript":
                     voice = item.setdefault("voice", {})
@@ -179,20 +201,25 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         raise CopyPatchError("E_COPY_PATCH", f"unsupported path {path!r}")
 
     if path.startswith("items.") and path.endswith(".caption"):
+        from travelogue.domain.copy_origin import mark_origin
+
         asset_id = path[len("items.") : -len(".caption")]
         item = _find_item_by_asset_id(trip, asset_id)
         if item:
             item["caption"] = value[:CAPTION_MAX]
-            item["edited"] = True
+            mark_origin(item, "captionOrigin")
             return path
         assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
         asset = assets.get(asset_id)
         if not asset:
             raise CopyPatchError("E_COPY_PATCH", f"unknown item asset {asset_id!r}")
         asset["caption"] = value[:CAPTION_MAX]
+        mark_origin(asset, "captionOrigin")
         return path
 
     if path.startswith("assets.") and path.endswith(".caption"):
+        from travelogue.domain.copy_origin import mark_origin
+
         asset_id = path[len("assets.") : -len(".caption")]
         assets = {a.get("id"): a for a in trip.get("assets") or [] if a.get("id")}
         asset = assets.get(asset_id)
@@ -201,6 +228,7 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         from travelogue.curation.asset_caption import apply_caption_to_trip
 
         apply_caption_to_trip(trip, asset_id, value[:CAPTION_MAX] if value else "")
+        mark_origin(asset, "captionOrigin")
         return path
 
     if path.startswith("assets.") and path.endswith(".skipCaption"):
