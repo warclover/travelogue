@@ -112,6 +112,8 @@ const ALLOWED = new Set([
   "sfc_title_fallback",
   "sfc_g1_suppressed_sparse",
   "sfc_stale_label_impression",
+  // Share-Face Integrity V1 · D-SFI-01
+  "stub_hits",
   // Dogfood UX Fixpack V1 · PRD §8
   "rename_propagation_migrated",
   "export_ok_toast_shown",

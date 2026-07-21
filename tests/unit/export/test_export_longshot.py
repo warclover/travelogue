@@ -177,7 +177,7 @@ def test_export_longshot_single_file(longshot_workspace: Path) -> None:
         assert item.path.is_file()
         assert item.path.stat().st_size > 1024
     names = [item.path.name for item in result.outputs]
-    assert any(n.endswith("-longshot.png") or "-ch" in n for n in names)
+    assert any("-长图" in n for n in names)
 
 
 def test_export_longshot_explicit_wechat_chat_same_as_default(

@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-# 说明书腔 / 构图假句（子串命中即空）
+# 说明书腔 / 构图假句 / 示例泄漏（子串命中即空 · SFI 并入同一表，非第三套）
 _BANNED_SUBSTRINGS: tuple[str, ...] = (
     "竖幅",
     "横幅",
@@ -16,6 +16,8 @@ _BANNED_SUBSTRINGS: tuple[str, ...] = (
     "慢慢翻",
     "碎片拼成",
     "下次再见",
+    "示例游记",
+    "--",  # 裸脏分隔（如「武大--米娜」）· D-SFI-01 工程串
 )
 
 # 纯时段弱枚举：仅由时段词 + 顿号/逗号组成
@@ -78,3 +80,47 @@ def sanitize_share_copy(
     if is_unsafe_share_copy(raw, title=title, kind=kind):
         return ""
     return raw
+
+
+def sanitize_share_copy_tracked(
+    text: str | None,
+    *,
+    title: str | None = None,
+    kind: str = "caption",
+    edited: bool = False,
+) -> tuple[str, bool]:
+    """Sanitize with optional edited exemption; return (text, blanked).
+
+    ``edited=True`` 粗豁免：对象级手改不过滤（编辑面可保留原文）。
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return "", False
+    if edited:
+        return raw, False
+    if is_unsafe_share_copy(raw, title=title, kind=kind):
+        return "", True
+    return raw, False
+
+
+def record_stub_hit(
+    *,
+    surface: str,
+    field: str,
+    pattern_id: str | None = None,
+    trip_id: str | None = None,
+) -> None:
+    """Emit render-side stub blank telemetry (D-SFI-01 · AC-SFI-01)."""
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        meta: dict[str, str] = {"surface": surface, "field": field}
+        if pattern_id:
+            meta["pattern_id"] = pattern_id
+        if trip_id:
+            meta["trip_id"] = trip_id
+        append_studio_homepage_event("stub_hits", meta)
+        append_studio_homepage_event("sfc_stub_blanked", meta)
+    except Exception:
+        # Telemetry must never break render
+        pass

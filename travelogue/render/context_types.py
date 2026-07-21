@@ -50,6 +50,7 @@ class MediaCardContext(TypedDict, total=False):
     hasTitle: bool
     caption: str
     hasCaption: bool
+    hasOverlayText: NotRequired[bool]
     editable: bool
     editPathTitle: str | None
     editPathCaption: str | None

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-07-18 |
+| **更新日期** | 2026-07-20 |
 
 ---
 
@@ -94,6 +94,9 @@
 | [IMPLEMENTATION-HELP-ONBOARDING-V1.md](./IMPLEMENTATION-HELP-ONBOARDING-V1.md) | 帮助系统 V1 · W0–W3 落地说明（V1 编码收口） |
 | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
 | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
+| [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) | **「这一趟做完」成册防搁置 FTT V1** **v0.2.1**（Conditional Go · 认可 SFI 敢发支线 · [线框 F1–F8](./wireframes/finish-this-trip-v1-wireframe.html) 待审 · [评审](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md)） |
+| [wireframes/finish-this-trip-v1-wireframe.html](./wireframes/finish-this-trip-v1-wireframe.html) | FTT · F1–F8 线框草稿 · **待产品审核** |
+| [acceptance-records/finish-this-trip-v1-review-2026-07-20.md](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md) | FTT · 七席评审纪要 · Conditional Go · BLK-FTT-01～08 |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) | FTUE · W0–W3 任务卡 |
 | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) | FTUE 线框 F1–F8 |
@@ -127,6 +130,14 @@
 | [wireframes/share-face-closeout-v1-wireframe.html](./wireframes/share-face-closeout-v1-wireframe.html) | 敢发收口线框 F1–F5 |
 | [acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) | 敢发收口 · 手测狗粮 F1–F5 · AC-SFC-15 |
 | [acceptance-records/persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) | 八席 Persona 完整试用 · 喜欢与吐槽底稿（Agent 模拟 · 待真人 N≥5） |
+| [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) | **敢发面一致性 V1** **v0.2.1**（Conditional Go · Doc 包齐 · **Ready for Kickoff W0** · 硬化 SFC 执行层 + 存量兑现 · [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md)） |
+| [acceptance-records/share-face-integrity-v1-review-2026-07-21.md](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) | 敢发面一致性 · 六席跨职能评审 · Conditional Go · BLK-SFI-01～10 |
+| [IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性 · W0–W2 任务卡 · **Ready for Kickoff W0** |
+| [ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性验收 · AC-SFI + fixture |
+| [wireframes/share-face-integrity-v1-wireframe.html](./wireframes/share-face-integrity-v1-wireframe.html) | 敢发面一致性线框 F0–F5 |
+| [acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) | 敢发面一致性 · 手测狗粮 · AC-SFI-15 |
+| [acceptance-records/persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) | 典型用户+博主试用底稿（2026-07-21 首轮） |
+| [acceptance-records/persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) | 十二席深度试用底稿（2026-07-21 下午） |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
 | [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环 · M1+M2+P0+M3 落地说明 |
 | [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环验收 · AC-FEED + P0 + M3 |
@@ -137,10 +148,12 @@
 阅读顺序：**PRD-PHASE5** →（启动实施时）**IMPLEMENTATION-PHASE5** → **ACCEPTANCE-PHASE5**。  
 预览导出加固：**PRD-PREVIEW-REFINE-V1**（已落地）→ **PRD-PREVIEW-REFINE-UX-V1.1**（Conditional Go · 可开 M1）→ **PRD-PREVIEW-EXPORT-FACADE-V1** → **PRD-UX-TRUST-V1**。  
 首访帮助：**PRD-HELP-ONBOARDING-V1** **v1.1.1**（Conditional Go · FirstSuccess 方案 A · 脉冲+可见 tip · 发群三要素兜底 · 对齐精修 V1.1「完成≠更新版面」；不做全站 tour）。  
+成册防搁置纲领：**PRD-FINISH-THIS-TRIP-V1** **v0.2.1-FTT**（Conditional Go · 完成分层/事件字典/W3a·b/轻控制已入正文 · 认可 [SFI](./PRD-SHARE-FACE-INTEGRITY-V1.md) 为敢发支线 · [七席评审](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md) · 开放挡门 G2/G3/G5/G7）。  
 首访成稿：**PRD-FTUE-OPTIMIZATION-V1** **v1.1.0**（W0 编码 · 分支 `feat/ftue-optimization-v1-w0`）。  
 敢发闭环：**PRD-SHARE-READY-OPTIMIZATION-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **产品手测待签**；不含海外 IG）· [IMPLEMENTATION](./IMPLEMENTATION-SHARE-READY-OPTIMIZATION-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-READY-OPTIMIZATION-V1.md) · [狗粮队列](./acceptance-records/dogfood-queue-2026-07-17.md)。  
 首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
 敢发收口：**PRD-SHARE-FACE-CLOSEOUT-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **§12 质量收口全部必修**）· [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) · [线框](./wireframes/share-face-closeout-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · [试用底稿](./acceptance-records/persona-ux-trial-2026-07-18.md) · [质量收口](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
+敢发面一致性：**PRD-SHARE-FACE-INTEGRITY-V1** **v0.2.1**（Conditional Go · **Doc 包齐 · Ready for Kickoff W0** · 硬化 SFC 执行层 + 存量兑现 · 编码另排期）· [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) · [线框](./wireframes/share-face-integrity-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md)。  
 导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · **W0–W2 编码已合入** · 手测待填）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
 交叉脚注：FTUE **v1.1.2** · Help **v1.1.4** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
@@ -448,7 +461,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [CHARTER.md](./CHARTER.md) | 项目章程 |
+| [CHARTER.md](./CHARTER.md) | 项目章程（含 §7 核心原则 · 成册/防搁置） |
+| [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) | **FTT**「这一趟做完」成册防搁置纲领 V1（v0.2.1 · Conditional Go · SFI 敢发支线已脚注） |
 | [PRD-MVP.md](./PRD-MVP.md) | MVP 产品需求（**已冻结**） |
 | [PRD-PHASE2.md](./PRD-PHASE2.md) | **Phase 2**：Studio 工作台 + 服务端长图 + 交付物层级 |
 | [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md) | 智能体流水线 |

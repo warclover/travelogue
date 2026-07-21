@@ -122,6 +122,32 @@ def build_render_context(
     if surface.strip_narrative_copy:
         hook = ""
         epilogue = ""
+    else:
+        # BE-SFI-01 · 封面 hook 再过分享面护栏（与章级同一漏斗）
+        from travelogue.domain.share_face_copy import (
+            record_stub_hit,
+            sanitize_share_copy_tracked,
+        )
+
+        meta_edited = bool(meta.get("edited"))
+        hook, hook_blanked = sanitize_share_copy_tracked(
+            hook, title=meta_title, kind="lead", edited=meta_edited
+        )
+        if hook_blanked:
+            record_stub_hit(
+                surface="draft" if surface.is_draft else "share",
+                field="hook",
+                trip_id=str(trip.get("tripId") or "") or None,
+            )
+        epilogue, epi_blanked = sanitize_share_copy_tracked(
+            epilogue, title=meta_title, kind="lead", edited=meta_edited
+        )
+        if epi_blanked:
+            record_stub_hit(
+                surface="draft" if surface.is_draft else "share",
+                field="epilogue",
+                trip_id=str(trip.get("tripId") or "") or None,
+            )
     # T-M4-01：封面 hook 一律经 show_hook_on_cover（系统 stub 句默认不上封面；
     # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
     show_cover_hook = show_hook_on_cover(hook)

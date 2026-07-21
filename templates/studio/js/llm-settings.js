@@ -236,14 +236,21 @@ function setMsg(text, ok) {
   msg.classList.toggle("is-err", !ok);
 }
 
+/** FE-SFI-03 · W0 间隙期：弱化「已就绪」，避免暗示可刷新旧册（E4 前） */
+var GAP_READY_LABEL = "已连接 · 新生成的册子将使用 AI 文案";
+
 function setBadge(readiness) {
   var badge = $("#studio-llm-readiness");
   if (!badge) return;
   var r = readiness || "未配置";
+  if (r === "已就绪") r = GAP_READY_LABEL;
   badge.textContent = r;
-  badge.classList.toggle("is-ready", r === "已就绪");
+  badge.classList.toggle("is-ready", r === GAP_READY_LABEL || r === "已就绪");
   badge.classList.toggle("is-fail", r === "连接失败");
-  badge.classList.toggle("is-warn", r === "已保存未验证" || r === "未配置");
+  badge.classList.toggle(
+    "is-warn",
+    r === "已保存未验证" || r === "未配置"
+  );
 }
 
 function selectedRegion() {
@@ -307,7 +314,7 @@ function errMessage(j) {
 function applyStatus(st) {
   if (!st) return;
   _statusCache = st;
-  setBadge(st.readiness || (st.llmAvailable ? "已就绪" : "未配置"));
+  setBadge(st.readiness || (st.llmAvailable ? "已就绪" : "未配置")); // setBadge 间隙期弱化
   var provider = st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "deepseek";
   if (st.configured && st.llmProvider) {
     provider = st.llmProvider === "dashscope" ? "dashscope" : "deepseek";

@@ -17,10 +17,12 @@ html[data-preview-share="on"] {
   scroll-padding-top: var(--preview-toolbar-h);
 }
 
-/* Trust V1 · 验货 / Share 隐藏工程 Plate 标注 */
-html[data-preview-refine="off"] .folio-plate-meta,
-html[data-preview-share="on"] .folio-plate-meta {
+/* SFI D-SFI-10 · Plate / screen-* 标注仅 ?debug=1 可见（精修默认也隐藏） */
+.folio-plate-meta {
   display: none !important;
+}
+html[data-debug="1"] .folio-plate-meta {
+  display: block !important;
 }
 
 .preview-toolbar--share-minimal .preview-toolbar__body {

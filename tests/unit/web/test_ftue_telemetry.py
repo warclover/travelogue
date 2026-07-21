@@ -36,6 +36,7 @@ SFC_EVENTS = (
     "sfc_title_fallback",
     "sfc_g1_suppressed_sparse",
     "sfc_stale_label_impression",
+    "stub_hits",
 )
 
 

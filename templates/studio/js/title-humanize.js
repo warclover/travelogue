@@ -179,3 +179,35 @@ export function resolveDisplayTitle(meta, opts) {
 
   return _fallbackDisplay(meta, limit);
 }
+
+/** D-SFI-07 · 与 BE ``_slug_title`` 对齐的文件系统安全 stem。 */
+export function slugExportTitle(title) {
+  var cleaned = String(title || "")
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, "")
+    .trim();
+  return cleaned || "travelogue";
+}
+
+/**
+ * 与 BE ``default_longshot_output_name`` 同源（D-SFI-07）。
+ * @param {string} displayTitle
+ * @param {{ format?: string, segmentIndex?: number, segmentTotal?: number }} [opts]
+ */
+export function defaultLongshotOutputName(displayTitle, opts) {
+  opts = opts || {};
+  var stem = slugExportTitle(displayTitle);
+  var fmt = String(opts.format || "png").toLowerCase();
+  var ext = fmt === "jpeg" || fmt === "jpg" ? "jpg" : "png";
+  var segI = opts.segmentIndex;
+  var segN = opts.segmentTotal;
+  if (
+    segI != null &&
+    segN != null &&
+    Number(segN) > 1 &&
+    Number(segI) >= 1
+  ) {
+    var nn = String(Number(segI)).padStart(2, "0");
+    return stem + "-长图-" + nn + "." + ext;
+  }
+  return stem + "-长图." + ext;
+}

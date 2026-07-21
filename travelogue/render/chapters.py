@@ -322,27 +322,88 @@ def build_chapters_render_context(
             assets=trip.get("assets") or [],
         )
 
+        # BE-SFI-01 · 读者面收口 share_face_copy（含 decorLine 旁路）
+        from travelogue.domain.share_face_copy import (
+            record_stub_hit,
+            sanitize_share_copy_tracked,
+        )
+
+        ch_edited = bool(ch.get("edited"))
+        surface_name = "longshot" if is_longshot_surface else ("draft" if is_draft else "share")
+        trip_id = str(trip.get("tripId") or "").strip() or None
+        pattern_id = str(ch.get("patternId") or "") or None
+
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
             lead = ""
         if i == 0 and has_foreword_spread:
             lead = ""
+        elif lead:
+            lead, blanked = sanitize_share_copy_tracked(
+                lead, title=meta_title, kind="lead", edited=ch_edited
+            )
+            if blanked:
+                record_stub_hit(
+                    surface=surface_name, field="lead", pattern_id=pattern_id, trip_id=trip_id
+                )
+
         decor_line = (ch.get("decorLine") or "").strip()
         if strip_narrative_copy:
             decor_line = ""
+        elif decor_line:
+            decor_line, blanked = sanitize_share_copy_tracked(
+                decor_line, title=meta_title, kind="decorLine", edited=ch_edited
+            )
+            if blanked:
+                record_stub_hit(
+                    surface=surface_name,
+                    field="decorLine",
+                    pattern_id=pattern_id,
+                    trip_id=trip_id,
+                )
+
+        ch_title = str(ch.get("title") or "").strip()
+        if ch_title:
+            cleaned_title, blanked = sanitize_share_copy_tracked(
+                ch_title, title=meta_title, kind="title", edited=ch_edited
+            )
+            if blanked:
+                record_stub_hit(
+                    surface=surface_name, field="title", pattern_id=pattern_id, trip_id=trip_id
+                )
+                # 示例泄漏等：回退日期章名（D-SFI-01）
+                curation = ch.get("curation") or {}
+                day_span = curation.get("daySpan") or []
+                if day_span:
+                    try:
+                        from datetime import date as _date
+
+                        ch_title = _date.fromisoformat(str(day_span[0])).strftime("%m月%d日")
+                    except ValueError:
+                        ch_title = str(day_span[0])
+                else:
+                    ch_title = cleaned_title
+            else:
+                ch_title = cleaned_title
+
         ch_ctx: ChapterRenderContext = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
             "index": f"{idx:02d}",
-            "title": ch.get("title", ""),
+            "title": ch_title,
             "lead": lead,
             "hasLead": bool(lead),
             "decorLine": decor_line,
             "hasDecorLine": bool(decor_line),
-            "editableLead": is_draft and bool(lead),
+            # 编辑面保留 trip.json 原文入口；读者面已过滤。edited 豁免时两边一致。
+            "editableLead": is_draft and bool((ch.get("lead") or "").strip()),
             "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,
-            "editableDecorLine": is_draft and bool(decor_line),
-            "editDecorLinePath": f"chapters.{ch['id']}.decorLine" if is_draft and decor_line else None,
+            "editableDecorLine": is_draft and bool((ch.get("decorLine") or "").strip()),
+            "editDecorLinePath": (
+                f"chapters.{ch['id']}.decorLine"
+                if is_draft and (ch.get("decorLine") or "").strip()
+                else None
+            ),
             "hasMemoryAnchors": bool(anchors),
             "memoryAnchors": ",".join(anchors) if anchors else None,
             "useScreensEngine": use_screens,

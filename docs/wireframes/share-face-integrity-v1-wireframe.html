@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>敢发面一致性 Share-Face Integrity V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --bar: #1a2f28; --gold: #d4a843; --accent: #3d6b5a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w1 { background: #1565c0; color: #fff; }
+    .tag--w2 { background: #6a1b9a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 400px; position: relative; overflow: hidden; padding: 16px;
+    }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,.92);
+      border: 1px solid #cfd8dc; border-radius: 10px; padding: 8px 10px; margin-bottom: 12px;
+      font-size: 12px; flex-wrap: wrap;
+    }
+    .toolbar .gold {
+      background: var(--gold); color: #1a1408; border: none; border-radius: 8px;
+      padding: 6px 12px; font-weight: 700; font-size: 12px;
+    }
+    .toolbar button, .chip {
+      border: 1px solid #b0bec5; background: #fff; border-radius: 8px;
+      padding: 5px 10px; font-size: 12px; cursor: default;
+    }
+    .sheet {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 14px 16px; max-width: 320px; margin-left: auto; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .sheet h3 { margin: 0 0 8px; font-size: 15px; }
+    .sheet .muted { color: var(--wf-muted); font-size: 12px; margin: 0 0 12px; }
+    .sheet .primary {
+      display: block; width: 100%; background: var(--bar); color: #fff; border: none;
+      border-radius: 8px; padding: 10px; font-weight: 600; margin-top: 8px;
+    }
+    .dock {
+      position: absolute; left: 16px; right: 16px; bottom: 16px;
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 12px 14px; display: flex; gap: 10px; align-items: center;
+      box-shadow: 0 10px 28px rgba(0,0,0,.12); font-size: 13px;
+    }
+    .dock .actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+    .dock .actions button {
+      border: 1px solid #b0bec5; background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 12px;
+    }
+    .dock .actions .pri { background: var(--bar); color: #fff; border-color: var(--bar); }
+    .chapter-list { background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; max-width: 360px; }
+    .chapter-list li {
+      list-style: none; display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid #eceff1; font-size: 13px;
+    }
+    .chapter-list li:last-child { border-bottom: none; }
+    .chapter-list input {
+      flex: 1; border: 1px solid var(--accent); border-radius: 6px; padding: 4px 8px; font-size: 13px;
+    }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .compare .box {
+      background: #fff; border: 1px dashed #90a4ae; border-radius: 10px; padding: 12px; font-size: 12px;
+    }
+    .compare .box h4 { margin: 0 0 8px; font-size: 12px; color: var(--wf-muted); }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border: 1px solid #cfd8dc;
+      border-radius: 12px; padding: 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin: 4px 0; }
+    .checklist { margin: 12px 0 0; padding: 0; list-style: none; }
+    .checklist li { padding: 6px 0; border-bottom: 1px solid #eceff1; font-size: 12px; }
+    code { font-size: 11px; background: #eceff1; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header class="review-bar">
+    <h1>敢发面一致性 V1 · 设计评审线框</h1>
+    <p>
+      PRD v0.2.0 · Conditional Go · 硬化 SFC/FST 执行层 + 存量兑现 ·
+      W0 无新交互面 · W1 三处 · W2 两处 · 编码 Kickoff 前对照本页
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-active" data-panel="f0">F0 精修调试串<span class="w">W0</span></button>
+      <button type="button" data-panel="f1">F1 重新生成文案<span class="w">W1</span></button>
+      <button type="button" data-panel="f2">F2 Dock 提示条<span class="w">W1</span></button>
+      <button type="button" data-panel="f3">F3 分章行内改名<span class="w">W1</span></button>
+      <button type="button" data-panel="f4">F4 署名三态<span class="w">W2</span></button>
+      <button type="button" data-panel="f5">F5 小红书文案包<span class="w">W2</span></button>
+      <button type="button" data-panel="gate">拍板清单</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main>
+      <!-- F0 -->
+      <section class="panel is-visible sec" id="f0">
+        <h2>F0 · 精修调试串出读者面 <span class="tag tag--w0">W0</span></h2>
+        <p class="lead">文案级 UI Delta（非零 UI）。普通精修不可见 <code>Plate · 01</code> / <code>screen-portrait-*</code>；仅 <code>?debug=1</code>。</p>
+        <div class="callout">
+          <strong>合同 D-SFI-10</strong>
+          修前：覆盖层露工程串 · 修后：人话或不显示 · 须留对照帧进验收
+        </div>
+        <div class="anno">修前 / 修后对照</div>
+        <div class="compare">
+          <div class="box">
+            <h4>修前 · 禁止合入</h4>
+            屏角角标：<code>Plate · 01</code><br />
+            底栏：<code>03 · screen-portrait-2</code>
+          </div>
+          <div class="box">
+            <h4>修后 · To-Be</h4>
+            无角标；或「第 1 版式」人话<br />
+            debug 模式才见模板 ID
+          </div>
+        </div>
+      </section>
+
+      <!-- F1 -->
+      <section class="panel sec" id="f1">
+        <h2>F1 · 重新生成文案（替换升级） <span class="tag tag--w1">W1</span></h2>
+        <p class="lead">替换既有「生成杂志感文案」——同一入口，禁止并列第二按钮。入口在精修·这本「整本信息」区（默认可见）。</p>
+        <div class="callout--warn callout">
+          <strong>禁令</strong>
+          禁止 LLM invent 章名 · 禁止确认句含「LLM / hook」· 禁止「可能覆盖未锁定的文案」旧句
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 精修·这本</div>
+        </div>
+        <div class="frame">
+          <div class="toolbar">
+            <span>返回</span><span>播放</span><span>分章</span><span>精修 ✓</span>
+            <button type="button" class="gold">发微信群</button>
+          </div>
+          <div class="sheet">
+            <h3>这本</h3>
+            <p class="muted">整本信息 · 默认展开</p>
+            <label style="font-size:12px;color:#607d8b">杂志名</label>
+            <div style="border:1px solid #cfd8dc;border-radius:8px;padding:8px;margin:4px 0 12px">武大 米娜</div>
+            <button type="button" class="primary">重新生成文案</button>
+            <p class="muted" style="margin-top:10px">将为这本重新写开头一句和图说；你自己改过的内容不会动。通常不到一分钟。</p>
+            <details style="font-size:12px;color:#90a4ae;margin-top:12px">
+              <summary>很少需要 · 进阶</summary>
+              <p>此处不再放文案生成入口</p>
+            </details>
+          </div>
+        </div>
+        <div class="anno">确认弹层冻结句（§4）</div>
+        <div class="callout">
+          「将为这本重新写开头一句和图说；你自己改过的内容不会动。通常不到一分钟。」· 主按钮「继续」· 次「取消」
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel sec" id="f2">
+        <h2>F2 · Dock 提示条仲裁 <span class="tag tag--w1">W1</span></h2>
+        <p class="lead">并入 task dock 单槽栈，非另起横幅。排序：copyRefresh &gt; longshotStale。导出流程与成功面内不出现。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 旧册首次进入</div>
+        </div>
+        <div class="frame" style="min-height:360px">
+          <div class="toolbar">
+            <span>精修</span>
+            <button type="button" class="gold">发微信群</button>
+            <span class="chip">▾ 导出设置</span>
+          </div>
+          <p style="margin:40px 16px;color:#78909c;font-size:13px">卷轴内容区（示意）· 主 CTA 不被遮挡</p>
+          <div class="dock">
+            <div>
+              <strong>AI 文案已就绪</strong><br />
+              <span style="color:#607d8b;font-size:12px">可为这本重新生成文案</span>
+            </div>
+            <div class="actions">
+              <button type="button" class="pri">重新生成文案</button>
+              <button type="button">不再提示</button>
+              <button type="button">×</button>
+            </div>
+          </div>
+        </div>
+        <div class="callout--warn callout">
+          <strong>与 stale 并存时</strong>
+          先出本条（刷新）· 刷新并更新版面后再出「分享图需更新」· 禁止两条「重新 X」同屏
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel sec" id="f3">
+        <h2>F3 · 分章行内改名 + 重新分章 <span class="tag tag--w1">W1</span></h2>
+        <p class="lead">放弃「直达精修锚点」（落点不存在且互斥闪跳）。行内改名 + 危险按钮改名「重新分章」。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">预览 · 分章面板</div>
+        </div>
+        <div class="frame">
+          <div class="chapter-list">
+            <h3 style="margin:0 0 8px;font-size:15px">分章</h3>
+            <p style="margin:0 0 10px;font-size:12px;color:#607d8b">浏览各章，或重新分章。点「改名」直接编辑。</p>
+            <ul style="margin:0;padding:0">
+              <li><span>1.</span><input value="7月8–9日" aria-label="章名" /><button type="button" class="chip">保存</button></li>
+              <li><span>2.</span><span style="flex:1">7月9日</span><button type="button" class="chip">改名</button></li>
+              <li><span>3.</span><span style="flex:1">往年 · 旧照 · 2 张</span><button type="button" class="chip">改名</button></li>
+            </ul>
+            <details style="margin:10px 0;font-size:12px">
+              <summary>为什么这样分章</summary>
+              <p style="color:#607d8b">章节按拍摄节奏切分，同一天可能出现在多章。部分旧照已归入「往年 · 旧照」。</p>
+            </details>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button type="button" class="chip" style="border-color:#c62828;color:#c62828">重新分章</button>
+              <button type="button" class="chip" style="background:#1a2f28;color:#fff;border-color:#1a2f28">完成</button>
+            </div>
+          </div>
+        </div>
+        <div class="callout--bad callout">
+          <strong>禁止</strong>
+          裸按钮文案「重新生成」· 「深改请用精修 · 这本」死句 · 关面板跳精修找章名
+        </div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel sec" id="f4">
+        <h2>F4 · 署名三态（两处同源） <span class="tag tag--w2">W2</span></h2>
+        <p class="lead">册级唯一字段，同时驱动辑封 <code>cover-closing__brand</code> 与长图尾 <code>longshot-boundary-footer__brand</code>。</p>
+        <div class="sheet" style="margin:0">
+          <h3>作品署名</h3>
+          <p class="muted">个人诉求 · 非机构白标</p>
+          <label style="display:block;font-size:13px;margin:6px 0"><input type="radio" name="brand" checked /> 默认 · Travelogue</label>
+          <label style="display:block;font-size:13px;margin:6px 0"><input type="radio" name="brand" /> 自定义（≤14 字）</label>
+          <input placeholder="你的署名" maxlength="14" style="width:100%;padding:8px;border:1px solid #cfd8dc;border-radius:8px" />
+          <label style="display:block;font-size:13px;margin:10px 0 0"><input type="radio" name="brand" /> 不显示</label>
+        </div>
+        <div class="callout callout--warn" style="margin-top:14px">
+          <strong>验收</strong>
+          「不显示」时辑封与长图尾均无品牌；关闭态辑封保留「N 天 · M 张」stats 行
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel sec" id="f5">
+        <h2>F5 · 小红书成功面文案包 <span class="tag tag--w2">W2</span></h2>
+        <p class="lead">成功面单行 bar 塞不下三段——用 dock 展开 / popover。无 Key：仅标题 + 话题模板。</p>
+        <div class="frame" style="min-height:280px">
+          <div class="dock" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;gap:10px">
+              <strong>✓ 3:4 配图已保存</strong>
+              <div class="actions" style="margin-left:auto">
+                <button type="button" class="pri">在文件夹中显示</button>
+                <button type="button">复制文案包 ▾</button>
+              </div>
+            </div>
+            <div style="margin-top:10px;padding:10px;background:#f5f7f6;border-radius:8px;font-size:12px">
+              <div><strong>标题</strong>　武大 米娜 · 两日漫步</div>
+              <div style="margin-top:6px"><strong>正文</strong>　（有 Key：复用开头一句；无 Key：空）</div>
+              <div style="margin-top:6px"><strong>话题</strong>　#旅行日记 #武大</div>
+              <button type="button" class="chip" style="margin-top:8px">一键复制</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- gate -->
+      <section class="panel sec" id="gate">
+        <h2>拍板清单（编码前）</h2>
+        <ul class="checklist">
+          <li>☐ F0 对照帧认可（调试串出读者面）</li>
+          <li>☐ F1 替换升级（非并列）+ 确认句白话</li>
+          <li>☐ F2 dock 仲裁：copyRefresh &gt; stale</li>
+          <li>☐ F3 行内改名 +「重新分章」</li>
+          <li>☐ F4 / F5 可随 W2 砍，但进编码前须再签</li>
+          <li>☐ W2 紧凑档另附真实照片册归因表（不在本线框）</li>
+          <li>☑ FTT 脚注认可本主题为敢发支线（v0.2.1-FTT · §4.2）</li>
+        </ul>
+        <div class="callout" style="margin-top:16px">
+          <strong>文档包</strong>
+          PRD v0.2.0 · IMPLEMENTATION · ACCEPTANCE · 本线框 · 狗粮清单 · 评审纪要
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>波次门</h3>
+      <ul>
+        <li><strong>W0</strong> F0 + 重渲/命名（无新面）</li>
+        <li><strong>W1</strong> F1–F3 挡门</li>
+        <li><strong>W2</strong> F4–F5 可砍</li>
+      </ul>
+      <h3 style="margin-top:14px">关联</h3>
+      <ul>
+        <li>PRD-SHARE-FACE-INTEGRITY-V1</li>
+        <li>SFC（硬化执行层）</li>
+        <li>Chapter Naming / Copy</li>
+      </ul>
+      <h3 style="margin-top:14px">冻结纪律</h3>
+      <ul>
+        <li>空优于假句</li>
+        <li>一名到底</li>
+        <li>对照片数量诚实</li>
+        <li>状态即承诺</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll(".tabs button");
+    const panels = document.querySelectorAll(".panel");
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.classList.remove("is-active"));
+        panels.forEach((p) => p.classList.remove("is-visible"));
+        btn.classList.add("is-active");
+        document.getElementById(btn.dataset.panel).classList.add("is-visible");
+      });
+    });
+  </script>
+</body>
+</html>

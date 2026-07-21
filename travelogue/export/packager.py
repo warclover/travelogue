@@ -137,8 +137,17 @@ def _export_trip_stages(
     if not no_preview:
         render_preview_jpg(trip_path, preview_path, trip_root=trip_root)
 
-    trip_id = trip.get("tripId", trip_root.name)
-    zip_path = (output_zip or trip_root / f"trip-{trip_id}.zip").resolve()
+    from travelogue.render.context import share_zip_filename
+
+    default_zip_name = share_zip_filename(trip) or f"{trip_root.name}-分享.zip"
+    zip_path = (output_zip or trip_root / default_zip_name).resolve()
+    # D-SFI-07 · 清掉旧 trip-{id}.zip，避免书架/用户看到工程名
+    legacy_zip = trip_root / f"trip-{trip.get('tripId', trip_root.name)}.zip"
+    if legacy_zip.is_file() and legacy_zip.resolve() != zip_path:
+        try:
+            legacy_zip.unlink()
+        except OSError:
+            pass
 
     asset_paths = collect_asset_paths(trip, trip_root)
     seen: set[str] = set()

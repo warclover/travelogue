@@ -198,14 +198,34 @@ def playwright_longshot_available() -> bool:
     return warm_playwright_browser()
 
 
-def _longshot_file_stem(trip_dir: Path) -> str:
-    """Filesystem-safe stem for longshot files (FTUE D-FTUE-05): prefer tripId dir name.
-
-    Chinese ``meta.title`` stays display-only; never used as the on-disk basename.
-    """
-    raw = (trip_dir.name or "").strip() or "travelogue"
-    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", raw).strip()
+def _slug_title(title: str) -> str:
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", title).strip()
     return cleaned or "travelogue"
+
+
+def _longshot_file_stem(trip_dir: Path) -> str:
+    """Filesystem-safe stem from ``resolve_display_title`` (D-SFI-07 supersede FTUE).
+
+    Prefer human display name; fall back to trip directory name only when trip.json
+    is missing or title resolves empty.
+    """
+    trip_json = trip_dir / "trip.json"
+    if trip_json.is_file():
+        try:
+            from travelogue.domain.title_humanize import resolve_display_title
+
+            data = json.loads(trip_json.read_text(encoding="utf-8"))
+            meta = data.get("meta") or {}
+            display = resolve_display_title(meta if isinstance(meta, dict) else {})
+            stem = _slug_title(display)
+            if stem and stem != "travelogue":
+                return stem
+            if display:
+                return _slug_title(display)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass
+    raw = (trip_dir.name or "").strip() or "travelogue"
+    return _slug_title(raw)
 
 
 def default_longshot_output_name(
@@ -215,7 +235,7 @@ def default_longshot_output_name(
     segment_index: int | None = None,
     segment_total: int | None = None,
 ) -> str:
-    """Filename matching server-side longshot naming (D-INS-09 / D-FTUE-05)."""
+    """Filename: ``{展示名}-长图[-nn].ext`` (D-SFI-07)."""
     stem = _longshot_file_stem(trip_dir)
     ext = "jpg" if fmt in ("jpeg", "jpg") else "png"
     if (
@@ -224,8 +244,37 @@ def default_longshot_output_name(
         and segment_total > 1
         and segment_index >= 1
     ):
-        return f"{stem}-ch{segment_index:02d}.{ext}"
-    return f"{stem}.{ext}"
+        return f"{stem}-长图-{segment_index:02d}.{ext}"
+    return f"{stem}-长图.{ext}"
+
+
+def cleanup_legacy_longshot_outputs(trip_dir: Path, *, keep: set[str] | None = None) -> list[str]:
+    """Remove pre-SFI tripId-stem longshot files so shelf/stale won't pick stale mtimes."""
+    keep = keep or set()
+    trip_id = trip_dir.name
+    removed: list[str] = []
+    patterns = (
+        f"{trip_id}.png",
+        f"{trip_id}.jpg",
+        f"{trip_id}.jpeg",
+        f"{trip_id}-ch*.png",
+        f"{trip_id}-ch*.jpg",
+        f"{trip_id}-ch*.jpeg",
+        f"{trip_id}-longshot.png",
+        f"{trip_id}-longshot.jpg",
+        f"{trip_id}-longshot.jpeg",
+        f"trip-{trip_id}.zip",
+    )
+    for pattern in patterns:
+        for path in trip_dir.glob(pattern):
+            if path.name in keep or path.name.endswith(".part"):
+                continue
+            try:
+                path.unlink()
+                removed.append(path.name)
+            except OSError:
+                continue
+    return removed
 
 
 def write_longshot_upload(
@@ -256,6 +305,7 @@ def write_longshot_upload(
     except ValueError as exc:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法输出路径") from exc
     _write_output(out, data)
+    cleanup_legacy_longshot_outputs(trip_dir, keep={safe_name})
     return out
 
 
@@ -325,11 +375,6 @@ def _resolve_segment_plan(
     return False, ""
 
 
-def _slug_title(title: str) -> str:
-    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", title).strip()
-    return cleaned or "travelogue"
-
-
 def _start_static_server(directory: Path, host: str, port: int) -> ThreadingHTTPServer:
     handler = lambda *args, **kwargs: SimpleHTTPRequestHandler(  # noqa: E731
         *args, directory=str(directory), **kwargs
@@ -341,11 +386,8 @@ def _start_static_server(directory: Path, host: str, port: int) -> ThreadingHTTP
 
 
 def _trip_title(trip_dir: Path) -> str:
-    trip_json = trip_dir / "trip.json"
-    if not trip_json.is_file():
-        return "travelogue"
-    meta = (json.loads(trip_json.read_text(encoding="utf-8")).get("meta") or {})
-    return str(meta.get("title") or "travelogue").strip() or "travelogue"
+    """Display title for pack filenames (D-SFI-07 · never raw dirty meta.title)."""
+    return _longshot_file_stem(trip_dir)
 
 
 _APPLY_PHOTOS_MODE_JS = """() => {
@@ -733,7 +775,12 @@ def _capture_chapters_job_locked(
                 fmt=active_fmt,
                 watermark=watermark,
             )
-            out_path = trip_dir / f"{title}-ch{idx + 1:02d}.{active_ext}"
+            out_path = trip_dir / default_longshot_output_name(
+                trip_dir,
+                fmt=active_fmt,
+                segment_index=idx + 1,
+                segment_total=chapter_count,
+            )
             _write_output_tracked(out_path, data, session_writes)
             outs.append(LongshotOutput(path=out_path, capture_method=method))
             if progress:
@@ -902,7 +949,12 @@ def export_trip_longshot(
             )
             raise_if_longshot_cancelled(cancel_check)
             capture_method = method
-            out_path = output or trip_dir / f"{title}-ch{chapter:02d}.{ext}"
+            out_path = output or trip_dir / default_longshot_output_name(
+                trip_dir,
+                fmt=fmt,
+                segment_index=chapter,
+                segment_total=chapter_count,
+            )
             _write_output_tracked(out_path, data, session_writes)
             outputs.append(LongshotOutput(path=out_path, capture_method=method))
         elif do_segment:
@@ -946,7 +998,9 @@ def export_trip_longshot(
                 )
                 user_hint = _segment_user_hint(chapter_count, segment_reason)
             else:
-                out_path = output or trip_dir / f"{title}-longshot.{ext}"
+                out_path = output or trip_dir / default_longshot_output_name(
+                    trip_dir, fmt=fmt
+                )
                 _write_output_tracked(out_path, data, session_writes)
                 outputs.append(LongshotOutput(path=out_path, capture_method=method))
     except LongshotCancelled:
@@ -966,6 +1020,9 @@ def export_trip_longshot(
     segmented = len(outputs) > 1
     if segmented and not user_hint:
         user_hint = _segment_user_hint(len(outputs), segment_reason or "height")
+
+    keep = {p.path.name for p in outputs}
+    cleanup_legacy_longshot_outputs(trip_dir, keep=keep)
 
     return LongshotExportResult(
         outputs=outputs,
