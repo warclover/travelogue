@@ -116,6 +116,34 @@ def chapter_titles(
                 titles.append(span_title)
                 continue
 
+        # D-SFI-05 · 离群排除后若只剩单日，禁止再用多段 label 把离群日期拼回章名
+        # （否则会出现「6月30日·11月30日」/「2018–2020」）
+        if len(span) == 1:
+            d = date.fromisoformat(span[0])
+            key = d.isoformat()
+            n = day_seen.get(key, 0)
+            day_seen[key] = n + 1
+            base = f"{d.month}月{d.day}日"
+            if n == 0:
+                titles.append(_clip_title(base))
+            else:
+                daypart = _bucket_daypart(
+                    [
+                        aid
+                        for aid in bucket
+                        if not (assets_by_id.get(aid) or {}).get("timeOutlier")
+                    ]
+                    or bucket,
+                    assets_by_id,
+                )
+                if daypart:
+                    candidate = f"{base} · {daypart}"
+                    if candidate not in titles:
+                        titles.append(_clip_title(candidate))
+                        continue
+                titles.append(_clip_title(f"{base}（{n + 1}）"))
+            continue
+
         all_seg = (
             bucket_segment_ids_all[i]
             if i < len(bucket_segment_ids_all)

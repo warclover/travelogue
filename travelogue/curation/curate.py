@@ -740,13 +740,16 @@ def _curate_preflight(
     from travelogue.curation.time_segments import cluster_time_segments
 
     _eligible = [a for a in (trip.get("assets") or []) if a.get("layoutEligible", True)]
-    _seg_n = len(
-        cluster_time_segments(
-            _eligible,
-            gap_days=int(app_cfg.curate.segment_gap_days or 14),
-        )
+    _segs = cluster_time_segments(
+        _eligible,
+        gap_days=int(app_cfg.curate.segment_gap_days or 14),
     )
-    apply_time_outlier_marks(trip, segments_count=_seg_n)
+    _seg_sizes = [len(getattr(s, "asset_ids", None) or []) for s in _segs]
+    apply_time_outlier_marks(
+        trip,
+        segments_count=len(_segs),
+        segment_sizes=_seg_sizes,
+    )
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
         raise CurateError(
@@ -1143,7 +1146,7 @@ def _stage_build_chapters_compose(
             chapter_heroes[f"ch-{i + 1:02d}"] = hero
 
     titles = chapter_titles(
-        buckets,
+        non_empty_buckets,
         layout_assets,
         meta,
         intent=trip.get("intent"),

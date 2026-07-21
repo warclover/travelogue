@@ -43,17 +43,50 @@ def adaptive_outlier_threshold_days(core_span_days: int) -> int:
     return max(_FLOOR_DAYS, min(_CEIL_DAYS, int(_K * max(core_span_days, 1))))
 
 
+def substantial_segment_count(
+    segment_sizes: list[int],
+    *,
+    dated_total: int,
+    min_size: int = 3,
+) -> int:
+    """Count segments large enough to mean intentional multi-trip (年度精选).
+
+    A lone stray photo that opens its own gap segment must NOT suppress
+    outlier isolation (仙本那 FX-SFI-03).
+    """
+    if dated_total <= 0:
+        return 0
+    floor = max(min_size, int(dated_total * 0.10))
+    return sum(1 for n in segment_sizes if n >= floor)
+
+
 def detect_time_outlier_ids(
     assets: list[dict],
     *,
     segments_count: int | None = None,
+    segment_sizes: list[int] | None = None,
 ) -> list[str]:
     """Return asset ids to mark as timeOutlier.
 
-    Multi-segment trips (segments≥2) skip auto-isolation (年度精选豁免).
-    If outliers would exceed 20% of dated assets, abandon isolation.
+    Multi-segment **substantial** trips skip auto-isolation (年度精选豁免).
+    Tiny gap segments (stray photos) do not count. If outliers would exceed
+    20% of dated assets, abandon isolation.
     """
-    if segments_count is not None and segments_count >= 2:
+    dated_preview = [
+        a
+        for a in assets
+        if a.get("layoutEligible", True)
+        and not a.get("timeOutlierExempt")
+        and parse_asset_date(a)
+    ]
+    if segment_sizes is not None:
+        if (
+            substantial_segment_count(segment_sizes, dated_total=len(dated_preview))
+            >= 2
+        ):
+            return []
+    elif segments_count is not None and segments_count >= 2:
+        # Legacy callers without sizes: keep old gate (tests / yearbook).
         return []
 
     dated: list[tuple[date, str]] = []
@@ -87,7 +120,12 @@ def detect_time_outlier_ids(
     return outliers
 
 
-def apply_time_outlier_marks(trip: dict, *, segments_count: int | None = None) -> list[str]:
+def apply_time_outlier_marks(
+    trip: dict,
+    *,
+    segments_count: int | None = None,
+    segment_sizes: list[int] | None = None,
+) -> list[str]:
     """Mark assets with timeOutlier; write curation.excludedTimeOutlierAssetIds."""
     assets = trip.get("assets") or []
     # Clear previous marks on layout-eligible assets
@@ -95,7 +133,11 @@ def apply_time_outlier_marks(trip: dict, *, segments_count: int | None = None) -
         if isinstance(a, dict):
             a.pop("timeOutlier", None)
 
-    outlier_ids = detect_time_outlier_ids(assets, segments_count=segments_count)
+    outlier_ids = detect_time_outlier_ids(
+        assets,
+        segments_count=segments_count,
+        segment_sizes=segment_sizes,
+    )
     for a in assets:
         if isinstance(a, dict) and a.get("id") in set(outlier_ids):
             a["timeOutlier"] = True
