@@ -105,6 +105,20 @@ export function runClientLongshotFallback(root, tripId, opts) {
       var win = iframe.contentWindow;
       waitForTravelogueLongshot(win, 20000)
         .then(function (api) {
+          try {
+            var idoc = win && win.document;
+            if (idoc && idoc.documentElement) {
+              if (copyDisplay === "photos") {
+                idoc.documentElement.setAttribute("data-photos-only", "on");
+                idoc.documentElement.setAttribute("data-copy-display", "photos");
+              }
+              if (prefs.includeAppendix === true) {
+                idoc.documentElement.setAttribute("data-include-appendix", "on");
+              }
+            }
+          } catch (_attrErr) {
+            /* ignore */
+          }
           return api.captureMainToBlob({
             scale: scale,
             format: format,

@@ -230,6 +230,7 @@ class ChapterRenderContext(TypedDict, total=False):
     patternId: str
     index: str
     title: str
+    isAppendix: bool
     hasChapterMeta: bool
     chapterMeta: str
     hasDecorPull: bool

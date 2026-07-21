@@ -108,23 +108,23 @@
 |----|------|----------|------|-----|------|
 | **FE-SFI-04** | 替换「生成杂志感文案」→「重新生成文案」；入口提到整本信息区；确认句按 §4；去掉 LLM/hook 工程词 | `preview-toolbar-v3-sheet.js` · `core.js` | 0.5d | 05 | ✅ |
 | **FE-SFI-05** | 提示条并入 task dock；排序 copyRefresh > longshotStale；册级 dismiss；导出/成功面不出 | `preview-toolbar-v3-task-dock.js` · `core.js` · `init-v3.js` | 0.5d | 05 | ✅ |
-| **BE-SFI-06** | 刷新：章名走 CN 规则链；图说/开头一句走 Copy sparse；`origin=user` 永不覆盖；全缓冲一次落盘 | `llm_narrate.py` · `chapter_titles.py` · `studio_narrate.py` | 1.0d | 05 | 🔧 origin 保护已接；CN/sparse 待完 |
+| **BE-SFI-06** | 刷新：章名走 CN 规则链；图说/开头一句走 Copy sparse；`origin=user` 永不覆盖；全缓冲一次落盘 | `llm_narrate.py` · `chapter_titles.py` · `studio_narrate.py` | 1.0d | 05 | ✅ CN + `scope=frame` 锁定；跳过附录章名 |
 | **FE-SFI-06** | E4 落地后恢复设置「已就绪」文案（结束间隙期） | settings | 0.1d | 05 | ✅ |
 
 ### 3.2 时间离群
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **BE-SFI-07** | 合并环节硬断言：离群不得并回；`bucket_day_span` 排除离群日期 | `bucket_planning.py` · `chapter_titles.py` | 0.8d | 06 | ⏳ |
-| **BE-SFI-08** | `_curate_preflight` 打 `timeOutlier`；自适应阈值；多段豁免；附录章不计 cap；coverage 排除 | `curate.py` · moment_scoring · 封面池 | 1.0d | 06·09 | ⏳ |
-| **BE-SFI-09** | 读者面 `dateConfidence=low` 抑制绝对年份 | `render/moment_exif.py` | 0.3d | 07 | ⏳ |
-| **FE-SFI-07** | 附录知情：章头 N 张 · 分章列出 · 移回原章 · 导出「未含」提示可勾 | chapter-panel · export settings · task-dock | 0.6d | 09 | ⏳ |
+| **BE-SFI-07** | 合并环节硬断言：离群不得并回；`bucket_day_span` 排除离群日期 | `bucket_planning.py` · `chapter_titles.py` | 0.8d | 06 | ✅ |
+| **BE-SFI-08** | `_curate_preflight` 打 `timeOutlier`；自适应阈值；多段豁免；附录章不计 cap；coverage 排除 | `curate.py` · `time_outlier.py` · moment/封面池 | 1.0d | 06·09 | ✅ peel + 册尾附录「往年 · 旧照 · N」；长图 CSS 默认不含 |
+| **BE-SFI-09** | 读者面 `dateConfidence=low` 抑制绝对年份 | `render/moment_exif.py` | 0.3d | 07 | ✅ |
+| **FE-SFI-07** | 附录知情：章头 N 张 · 分章列出 · 移回原章 · 导出「未含」提示可勾 | chapter-panel · export settings · longshot | 0.6d | 09 | ✅ 分章原因/移回；导出勾选 `includeAppendix` |
 
 ### 3.3 分章
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **FE-SFI-08** | 分章行内改名 +「重新分章」改名 + 解释句；删死句 | `chapter-panel.js` · `copy_patch` 章名路径 | 0.6d | 08 | ⏳ |
+| **FE-SFI-08** | 分章行内改名 +「重新分章」改名 + 解释句；删死句 | `chapter-panel.js` · `copy_patch` 章名路径 | 0.6d | 08 | ✅ |
 
 ### 3.4 W1 测试
 
@@ -135,9 +135,9 @@
 
 ### 3.5 W1 完成定义
 
-- [ ] 线框 F1–F3 对照合入  
-- [ ] AC-SFI-05～09 工程列绿  
-- [ ] 无并列第二刷新按钮；无裸「重新生成」歧义  
+- [ ] 线框 F1–F3 对照合入（手测）  
+- [x] AC-SFI-05～09 工程列：核心单测绿；附录 compose / 导出勾选已接（真人手测仍开）  
+- [x] 无并列第二刷新按钮；无裸「重新生成」歧义（「重新分章」/「重新生成文案」）  
 - [ ] **不**宣称主题完成（W2 / 真人门仍开）  
 
 ---
@@ -183,5 +183,6 @@
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v0.1.2 | 2026-07-21 | W1 收口：BE-06～09 · FE-07/08 · 附录章 + 长图默认不含 + 移回豁免 · 离群核心中位数邻域 |
 | v0.1.1 | 2026-07-21 | W0 编码开工：BE-01～05 · FE-01～03 · 抽检/重渲脚本 · 武大/京都抽检绿 |
 | v0.1.0 | 2026-07-21 | 首版 · 对齐 PRD v0.2.0 · Doc 包齐 · Ready for Kickoff W0 |

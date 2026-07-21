@@ -47,6 +47,8 @@ def _eligible_moment_candidates(assets: list[dict], *, exclude: set[str]) -> lis
             continue
         if not asset.get("layoutEligible", True):
             continue
+        if asset.get("timeOutlier"):
+            continue
         if asset.get("mediaClass") in _EXCLUDED_MEDIA:
             continue
         out.append(asset)

@@ -133,13 +133,19 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
         if not ch_id:
             continue
         curation = ch.get("curation") or {}
+        title_cap = 16 if curation.get("isAppendix") else 12
+        appendix_ids = [str(a) for a in (curation.get("appendixAssetIds") or []) if a]
         rows.append(
             {
                 "id": str(ch_id),
-                "title": str(ch.get("title") or ch_id)[:12],
+                "title": str(ch.get("title") or ch_id)[:title_cap],
                 "memoryAnchors": list(curation.get("memoryAnchors") or [])[:3],
                 "copyIntent": dict(curation.get("copyIntent") or {}),
                 "hasVoice": chapter_has_voice(ch, trip),
+                "isAppendix": bool(curation.get("isAppendix")),
+                "appendixReason": str(curation.get("appendixReason") or ""),
+                "appendixCount": len(appendix_ids),
+                "appendixAssetIds": appendix_ids,
             }
         )
     return rows
@@ -209,6 +215,11 @@ def build_entry(
             else True
         ),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
+        "appendixOutlierCount": len(
+            (curation.get("excludedTimeOutlierAssetIds") or [])
+            if isinstance(curation, dict)
+            else []
+        ),
     }
 
 

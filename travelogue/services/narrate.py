@@ -504,18 +504,18 @@ def run_narrate(
             scope=scope_val,
             cfg=app_cfg,
         )
-        return result
-    result = run_llm_narrate(
-        trip,
-        provider=prov,
-        tone=tone,
-        dry_run=dry_run,
-        regenerate=regenerate,
-        cache_dir=cache_dir,
-        chapter_id=chapter_id,
-        scope=scope_val,
-        cfg=app_cfg,
-    )
+    else:
+        result = run_llm_narrate(
+            trip,
+            provider=prov,
+            tone=tone,
+            dry_run=dry_run,
+            regenerate=regenerate,
+            cache_dir=cache_dir,
+            chapter_id=chapter_id,
+            scope=scope_val,
+            cfg=app_cfg,
+        )
     if not dry_run:
         from travelogue.services.decor_line import apply_decor_lines
 
@@ -527,6 +527,13 @@ def run_narrate(
         )
         if decor_updates:
             result.fields_updated.extend(decor_updates)
+        # BE-SFI-06 · 刷新时章名走 CN 规则链（禁止 LLM invent）
+        if regenerate and not chapter_id:
+            from travelogue.curation.chapter_titles import refresh_chapter_titles_on_trip
+
+            title_updates = refresh_chapter_titles_on_trip(trip)
+            if title_updates:
+                result.fields_updated.extend(title_updates)
     return result
 
 

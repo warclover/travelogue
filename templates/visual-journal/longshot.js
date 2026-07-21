@@ -592,7 +592,15 @@
   }
 
   function listChapterSections(main) {
-    return Array.prototype.slice.call(main.querySelectorAll("section.chapter"));
+    var includeAppendix =
+      typeof document !== "undefined" &&
+      document.documentElement &&
+      document.documentElement.getAttribute("data-include-appendix") === "on";
+    return Array.prototype.slice
+      .call(main.querySelectorAll("section.chapter"))
+      .filter(function (ch) {
+        return includeAppendix || !ch.classList.contains("chapter--appendix");
+      });
   }
 
   function applyChapterVisibility(main, chapters, chapterIndex) {

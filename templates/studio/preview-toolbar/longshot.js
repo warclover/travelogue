@@ -624,7 +624,18 @@ export function cancelPreviewLongshotExport(root) {
       platform: stored.platform || "wechat_chat",
       slideCount: stored.slideCount,
       padMode: stored.padMode || "letterbox",
+      includeAppendix: stored.includeAppendix === true,
     };
+  }
+
+  function estimateAppendixCountFromDom(doc) {
+    doc = doc || document;
+    var ch = doc.querySelector("section.chapter--appendix");
+    if (!ch) return 0;
+    var n = ch.querySelectorAll(
+      '.layout-slot__img, [data-block="media-card"], .media-card img'
+    ).length;
+    return n >= 2 ? n : 2;
   }
 
   export function formatLongshotExportMetaLabel() {
@@ -680,6 +691,7 @@ export function cancelPreviewLongshotExport(root) {
       entrypoint: "preview",
       slideCount: prefs.slideCount,
       padMode: prefs.padMode,
+      includeAppendix: prefs.includeAppendix === true,
     });
   }
 
@@ -895,6 +907,7 @@ export function cancelPreviewLongshotExport(root) {
     pop._panelDraft.setUiOpts({
       smartCropEnabled: _longshot2SmartCrop,
       photoCount: estimatePhotoCountFromDom(document),
+      appendixCount: estimateAppendixCountFromDom(document),
     });
   }
 
@@ -929,10 +942,12 @@ export function cancelPreviewLongshotExport(root) {
         scale: prefs0.scale,
         slideCount: prefs0.slideCount,
         padMode: prefs0.padMode,
+        includeAppendix: prefs0.includeAppendix === true,
       },
       {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
+        appendixCount: estimateAppendixCountFromDom(document),
         onDraftChange: function (draft) {
           syncConfirmedExportSummary(pop, draft && draft.platform);
         },
@@ -1037,6 +1052,7 @@ export function cancelPreviewLongshotExport(root) {
         scale: draft.scale,
         slideCount: draft.slideCount,
         padMode: draft.padMode,
+        includeAppendix: draft.includeAppendix === true,
       });
       // Confirmed platform SSOT · 同步 session intent，清陈旧续跑 pending
       var mappedIntent = PLATFORM_TO_INTENT[confirmedPlatform] || null;
@@ -1076,6 +1092,7 @@ export function cancelPreviewLongshotExport(root) {
           scale: prefs.scale,
           slideCount: prefs.slideCount,
           padMode: prefs.padMode,
+          includeAppendix: prefs.includeAppendix === true,
         });
       }
       syncStudioExportPopoverUI(pop);

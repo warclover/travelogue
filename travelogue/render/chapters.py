@@ -386,15 +386,17 @@ def build_chapters_render_context(
             else:
                 ch_title = cleaned_title
 
+        is_appendix = bool(curation.get("isAppendix") or ch.get("isAppendix"))
         ch_ctx: ChapterRenderContext = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
             "index": f"{idx:02d}",
             "title": ch_title,
+            "isAppendix": is_appendix,
             "lead": lead,
-            "hasLead": bool(lead),
+            "hasLead": bool(lead) and not is_appendix,
             "decorLine": decor_line,
-            "hasDecorLine": bool(decor_line),
+            "hasDecorLine": bool(decor_line) and not is_appendix,
             # 编辑面保留 trip.json 原文入口；读者面已过滤。edited 豁免时两边一致。
             "editableLead": is_draft and bool((ch.get("lead") or "").strip()),
             "editLeadPath": f"chapters.{ch['id']}.lead" if is_draft else None,

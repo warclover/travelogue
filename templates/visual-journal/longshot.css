@@ -3,6 +3,11 @@
  * 与 journal.css 并列交付；P0 默认随 zip 分发（见 trip.export.longShot、SHARING.md）。
  */
 
+/* SFI · 长图默认不含附录章；勾选「含往年旧照」时 data-include-appendix=on */
+html:not([data-include-appendix="on"]) .chapter--appendix {
+  display: none !important;
+}
+
 .longshot-toolbar {
   position: fixed;
   z-index: 150;

@@ -62,6 +62,9 @@ export function buildLongshotRequest(tripId, preset) {
   if (p.padMode) {
     body.padMode = p.padMode;
   }
+  if (p.includeAppendix === true) {
+    body.includeAppendix = true;
+  }
   return body;
 }
 

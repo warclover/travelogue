@@ -18,11 +18,13 @@ class NormalizedBuckets(NamedTuple):
 
 
 def bucket_day_span(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
+    """Day span for titles; excludes timeOutlier assets (D-SFI-05)."""
     dates = sorted(
         {
             d
             for aid in bucket
-            if (d := parse_asset_date(assets_by_id.get(aid, {})))
+            if not (assets_by_id.get(aid) or {}).get("timeOutlier")
+            and (d := parse_asset_date(assets_by_id.get(aid, {})))
         }
     )
     return [d.isoformat() for d in dates]
@@ -144,6 +146,8 @@ def normalize_bucket_counts(
     min_bucket_size: int = 3,
     chapter_balance_enabled: bool = True,
     chapter_balance_ratio: float = 0.55,
+    assets_by_id: dict[str, dict] | None = None,
+    gap_days: int = 14,
 ) -> NormalizedBuckets:
     """Merge day buckets to fit manifest chapter limits; preserve segment metadata."""
     from travelogue.manifest_limits import chapter_limits
@@ -175,7 +179,12 @@ def normalize_bucket_counts(
         else min_bucket_size
     )
     out, seg, seg_all = merge_small_buckets_with_segments(
-        out, seg, seg_all, min_size=merge_min
+        out,
+        seg,
+        seg_all,
+        min_size=merge_min,
+        assets_by_id=assets_by_id,
+        gap_days=gap_days,
     )
 
     if len(out) < min_c:
@@ -248,8 +257,15 @@ def merge_small_buckets_with_segments(
     segment_ids_all: list[list[str]] | None = None,
     *,
     min_size: int = 3,
+    assets_by_id: dict[str, dict] | None = None,
+    gap_days: int = 14,
 ) -> tuple[list[list[str]], list[str], list[list[str]]]:
-    """Like merge_small_buckets; keeps primary and full segment lists per bucket."""
+    """Like merge_small_buckets; keeps primary and full segment lists per bucket.
+
+    BE-SFI-07 · 禁止把跨大 gap 的离群小桶并回邻章（仙本那根因）。
+    """
+    from travelogue.curation.time_outlier import bucket_gap_days
+
     out = [list(b) for b in buckets if b]
     seg = _align_segment_ids(segment_ids, len(out))
     seg_all = list(segment_ids_all or [])
@@ -261,12 +277,22 @@ def merge_small_buckets_with_segments(
     ]
     if not out:
         return out, seg, seg_all
+
+    def _can_merge(a: int, b: int) -> bool:
+        if not assets_by_id:
+            return True
+        gap = bucket_gap_days(out[a], out[b], assets_by_id)
+        if gap is None:
+            return True
+        return gap <= gap_days
+
+    blocked: set[int] = set()
     while True:
-        small = [i for i, b in enumerate(out) if len(b) < min_size]
+        small = [i for i, b in enumerate(out) if len(b) < min_size and i not in blocked]
         if not small or len(out) <= 1:
             break
         idx = min(small, key=lambda i: len(out[i]))
-        if idx > 0:
+        if idx > 0 and _can_merge(idx - 1, idx):
             left_n, right_n = len(out[idx - 1]), len(out[idx])
             out[idx - 1].extend(out[idx])
             seg_all[idx - 1] = _merge_segment_lists(seg_all[idx - 1], seg_all[idx])
@@ -275,7 +301,8 @@ def merge_small_buckets_with_segments(
             del out[idx]
             del seg[idx]
             del seg_all[idx]
-        else:
+            blocked = {i if i < idx else i - 1 for i in blocked if i != idx}
+        elif idx == 0 and len(out) > 1 and _can_merge(0, 1):
             left_n, right_n = len(out[0]), len(out[1])
             out[0].extend(out[1])
             seg_all[0] = _merge_segment_lists(seg_all[0], seg_all[1])
@@ -284,6 +311,12 @@ def merge_small_buckets_with_segments(
             del out[1]
             del seg[1]
             del seg_all[1]
+            blocked = {i if i < 1 else i - 1 for i in blocked if i != 1}
+        else:
+            # Hard assert: leave outlier small bucket alone
+            blocked.add(idx)
+            if len(blocked) >= len(out):
+                break
     for i, sid in enumerate(seg):
         if sid and sid not in seg_all[i]:
             seg_all[i].insert(0, sid)
@@ -339,6 +372,8 @@ def group_assets_by_segments(
         min_bucket_size=min_bucket_size,
         chapter_balance_enabled=chapter_balance_enabled,
         chapter_balance_ratio=chapter_balance_ratio,
+        assets_by_id=by_id,
+        gap_days=segment_gap_days,
     )
     sort_buckets_in_place(norm.buckets, by_id)
     return norm.buckets, norm.primary_segment_ids, norm.segment_ids_per_bucket, segments

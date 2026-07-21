@@ -403,6 +403,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         if pad_mode_raw is None or pad_mode_raw == ""
         else str(pad_mode_raw).strip().lower()
     )
+    include_appendix = bool(payload.get("includeAppendix"))
 
     # Validate platform before client fallback (AC-LNG2-05c / AC-OR-R03).
     try:
@@ -482,6 +483,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             platform=profile.id,
             slide_count=slide_count,
             pad_mode=pad_mode,
+            include_appendix=include_appendix,
             cancel_check=cancel_check,
             cancel_register=cancel_register,
         )

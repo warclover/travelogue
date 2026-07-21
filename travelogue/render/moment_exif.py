@@ -61,17 +61,22 @@ def _place_label(asset: dict) -> str | None:
 
 
 def format_moment_exif_line(asset: dict) -> str | None:
-    """Build footnote segments; returns None when fewer than 2 valid parts."""
+    """Build footnote segments; returns None when fewer than 2 valid parts.
+
+    BE-SFI-09 · ``dateConfidence=low`` 抑制绝对年份，仅保留时段（+地点）。
+    """
     segments: list[str] = []
     taken = str(asset.get("takenAt") or "") or None
+    low_conf = str(asset.get("dateConfidence") or "").strip().lower() == "low"
 
     place = _place_label(asset)
     if place:
         segments.append(place)
-        month = _month_label(taken)
-        if month:
-            segments.append(month)
-    else:
+        if not low_conf:
+            month = _month_label(taken)
+            if month:
+                segments.append(month)
+    elif not low_conf:
         day = _day_label(taken)
         if day:
             segments.append(day)
@@ -86,5 +91,7 @@ def format_moment_exif_line(asset: dict) -> str | None:
     if len(segments) < 2:
         if place and len(segments) == 1:
             return place
+        if daypart and len(segments) == 1:
+            return daypart
         return None
     return " · ".join(segments)

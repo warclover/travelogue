@@ -735,6 +735,18 @@ def _curate_preflight(
 
         app_cfg = resolve_lse_config_for_trip(app_cfg, trip_id)
     res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
+    # BE-SFI-08 · 时间离群打标（多段豁免在 detect 内）
+    from travelogue.curation.time_outlier import apply_time_outlier_marks
+    from travelogue.curation.time_segments import cluster_time_segments
+
+    _eligible = [a for a in (trip.get("assets") or []) if a.get("layoutEligible", True)]
+    _seg_n = len(
+        cluster_time_segments(
+            _eligible,
+            gap_days=int(app_cfg.curate.segment_gap_days or 14),
+        )
+    )
+    apply_time_outlier_marks(trip, segments_count=_seg_n)
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
         raise CurateError(
@@ -1011,6 +1023,43 @@ def _stage_build_chapters_compose(
         bucket_segment_ids_all = [row[2] for row in aligned]
     else:
         non_empty_buckets = [b for b in buckets if b]
+
+    # BE-SFI-08 · ≥2 outliers → peel into appendix; 单张仅降权留在原桶（不消失）
+    assets_by_id_early = {a["id"]: a for a in layout_assets}
+    appendix_outlier_ids: list[str] = []
+    for bucket in non_empty_buckets:
+        for aid in bucket:
+            if (assets_by_id_early.get(aid) or {}).get("timeOutlier"):
+                appendix_outlier_ids.append(str(aid))
+    _seen_out: set[str] = set()
+    _unique_out: list[str] = []
+    for aid in appendix_outlier_ids:
+        if aid not in _seen_out:
+            _seen_out.add(aid)
+            _unique_out.append(aid)
+    appendix_outlier_ids = _unique_out
+
+    if len(appendix_outlier_ids) >= 2:
+        peeled_rows: list[tuple[list[str], str, list[str]]] = []
+        has_seg_meta = len(bucket_segment_ids) == len(non_empty_buckets) and len(
+            bucket_segment_ids_all
+        ) == len(non_empty_buckets)
+        outlier_set = set(appendix_outlier_ids)
+        for i, bucket in enumerate(non_empty_buckets):
+            kept = [aid for aid in bucket if str(aid) not in outlier_set]
+            if not kept:
+                continue
+            sid = bucket_segment_ids[i] if has_seg_meta else ""
+            sids = bucket_segment_ids_all[i] if has_seg_meta else []
+            peeled_rows.append((kept, sid, sids))
+        non_empty_buckets = [row[0] for row in peeled_rows]
+        if has_seg_meta:
+            bucket_segment_ids = [row[1] for row in peeled_rows]
+            bucket_segment_ids_all = [row[2] for row in peeled_rows]
+    else:
+        # 0 or 1 outlier · no appendix chapter; ids kept for coverage exclusion only
+        appendix_outlier_ids = []
+
     arc_profile = "dynamic"
     use_arc = cur_cfg.arc_mode in ("v2_adaptive", "v2_five_beat")
     if use_arc:
@@ -1308,6 +1357,25 @@ def _stage_build_chapters_compose(
             curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
     if mosaic_logs_for_metrics is None:
         mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
+
+    # BE-SFI-08 · ≥2 outliers → 册尾附录章（不计 ADR-007 cap / 不进 compose beam）
+    if len(appendix_outlier_ids) >= 2:
+        from travelogue.curation.time_outlier import build_appendix_chapter
+
+        appendix_ch = build_appendix_chapter(
+            appendix_outlier_ids,
+            index=len(chapters) + 1,
+            aspects=aspects,
+            export_layout=layout,
+            layout_engine=engine,
+            assets=layout_assets,
+            orientation_summary=summary_dict,
+            trip_photo_total=len(layout_assets),
+            cfg=app_cfg,
+        )
+        if appendix_ch:
+            chapters.append(appendix_ch)
+
     layout_metrics = compute_layout_metrics(
         chapters,
         layout_assets,
@@ -1416,14 +1484,22 @@ def _stage_build_chapters_compose(
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
     curation["chapterPlan"] = []
     for i, ch in enumerate(chapters):
+        ch_cur_plan = ch.get("curation") or {}
+        if ch_cur_plan.get("isAppendix"):
+            asset_count = len(ch_cur_plan.get("appendixAssetIds") or appendix_outlier_ids)
+        elif i < len(non_empty_buckets):
+            asset_count = len(non_empty_buckets[i])
+        else:
+            asset_count = 0
         plan_entry: dict = {
             "chapterIndex": ch.get("index"),
             "chapterId": ch.get("id"),
-            "assetCount": len(non_empty_buckets[i]) if i < len(non_empty_buckets) else 0,
-            "daySpan": (ch.get("curation") or {}).get("daySpan"),
-            "segmentId": (ch.get("curation") or {}).get("segmentId"),
+            "assetCount": asset_count,
+            "daySpan": ch_cur_plan.get("daySpan"),
+            "segmentId": ch_cur_plan.get("segmentId"),
             "patternHint": pattern_hints[i] if i < len(pattern_hints) else None,
             "patternId": ch.get("patternId"),
+            "isAppendix": bool(ch_cur_plan.get("isAppendix")),
         }
         hero_plan_id = chapter_heroes.get(ch.get("id", ""))
         if hero_plan_id:

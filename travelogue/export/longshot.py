@@ -395,11 +395,21 @@ _APPLY_PHOTOS_MODE_JS = """() => {
   document.documentElement.setAttribute('data-copy-display', 'photos');
 }"""
 
+_APPLY_INCLUDE_APPENDIX_JS = """() => {
+  document.documentElement.setAttribute('data-include-appendix', 'on');
+}"""
+
 
 def _apply_copy_display(page, copy_display: str) -> None:
     if str(copy_display).strip().lower() != "photos":
         return
     page.evaluate(_APPLY_PHOTOS_MODE_JS)
+
+
+def _apply_include_appendix(page, include_appendix: bool) -> None:
+    if not include_appendix:
+        return
+    page.evaluate(_APPLY_INCLUDE_APPENDIX_JS)
 
 
 def _resolve_longshot_url(
@@ -425,7 +435,11 @@ def _page_metrics(page) -> dict[str, Any]:
         """() => {
           const main = document.querySelector('main');
           if (!main) return { scrollHeight: 0, chapterCount: 0, perChapter: [] };
-          const chapters = Array.from(main.querySelectorAll('section.chapter'));
+          const includeAppendix =
+            document.documentElement.getAttribute('data-include-appendix') === 'on';
+          const chapters = Array.from(main.querySelectorAll('section.chapter')).filter(
+            (ch) => includeAppendix || !ch.classList.contains('chapter--appendix')
+          );
           const perChapter = chapters.map(
             (ch) => ch.querySelectorAll('[data-block="media-card"]').length
           );
@@ -463,10 +477,18 @@ async (opts) => {
 }
 """
 
+_VISIBLE_CHAPTERS_JS = """
+  const includeAppendix =
+    document.documentElement.getAttribute('data-include-appendix') === 'on';
+  const chapters = Array.from(main.querySelectorAll('section.chapter')).filter(
+    (ch) => includeAppendix || !ch.classList.contains('chapter--appendix')
+  );
+"""
+
 _CHAPTER_CAPTURE_P0_JS = """
 async (opts) => {
   const main = document.querySelector("main");
-  const chapters = Array.from(main.querySelectorAll("section.chapter"));
+""" + _VISIBLE_CHAPTERS_JS + """
   const coverOpening = main.querySelector(".cover-opening");
   const cover = coverOpening || main.querySelector(".cover-hero");
   const pageEl = main.querySelector(".page");
@@ -555,7 +577,7 @@ def _capture_p0_with_metrics(
 _CHAPTER_ISOLATE_JS = """
 (chapterIndex) => {
   const main = document.querySelector("main");
-  const chapters = Array.from(main.querySelectorAll("section.chapter"));
+""" + _VISIBLE_CHAPTERS_JS + """
   const coverOpening = main.querySelector(".cover-opening");
   const cover = coverOpening || main.querySelector(".cover-hero");
   const pageEl = main.querySelector(".page");
@@ -820,6 +842,7 @@ def export_trip_longshot(
     slide_count: int | None = None,
     pad_mode: str | None = None,
     profile: Any = None,
+    include_appendix: bool = False,
     cancel_check: CancelCheckFn | None = None,
     cancel_register: CancelRegisterFn | None = None,
 ) -> LongshotExportResult:
@@ -927,6 +950,7 @@ def export_trip_longshot(
             timeout=30_000,
         )
         _apply_copy_display(page, copy_display)
+        _apply_include_appendix(page, include_appendix)
         raise_if_longshot_cancelled(cancel_check)
 
         metrics = _page_metrics(page)

@@ -169,3 +169,63 @@ def chapter_titles(
         else:
             titles.append(_clip_title(f"{place}·{i}"))
     return titles
+
+
+def _chapter_asset_ids(chapter: dict) -> list[str]:
+    from travelogue.layout_contract.chapter_items import collect_screen_asset_ids
+
+    if chapter.get("screens"):
+        return list(collect_screen_asset_ids(chapter))
+    ids: list[str] = []
+    for item in chapter.get("items") or []:
+        if item.get("type") == "media-card" and item.get("assetId"):
+            ids.append(str(item["assetId"]))
+        elif item.get("type") in ("media-row", "media-scroll"):
+            ids.extend(str(a) for a in (item.get("assetIds") or []) if a)
+    return ids
+
+
+def refresh_chapter_titles_on_trip(trip: dict) -> list[str]:
+    """BE-SFI-06 · regenerate chapter titles via CN rules; never overwrite titleOrigin=user."""
+    from travelogue.domain.copy_origin import is_user_protected
+
+    chapters = trip.get("chapters") or []
+    if not chapters:
+        return []
+    assets = trip.get("assets") or []
+    meta = trip.get("meta") or {}
+    buckets = [_chapter_asset_ids(ch) for ch in chapters]
+    # Preserve segment labels from curation when present
+    bucket_segment_ids: list[str] = []
+    segment_labels: dict[str, str] = {}
+    for ch in chapters:
+        curation = ch.get("curation") or {}
+        sid = str(curation.get("segmentId") or "").strip()
+        bucket_segment_ids.append(sid)
+        for seg in (trip.get("curation") or {}).get("segments") or []:
+            if isinstance(seg, dict) and seg.get("id") and seg.get("label"):
+                segment_labels[str(seg["id"])] = str(seg["label"])
+
+    titles = chapter_titles(
+        buckets,
+        assets,
+        meta,
+        intent=trip.get("intent"),
+        bucket_segment_ids=bucket_segment_ids,
+        segment_labels=segment_labels or None,
+    )
+    updated: list[str] = []
+    for ch, title in zip(chapters, titles, strict=False):
+        if (ch.get("curation") or {}).get("isAppendix"):
+            continue
+        if is_user_protected(ch, "titleOrigin"):
+            continue
+        new_title = (title or "").strip()
+        if not new_title or new_title == str(ch.get("title") or "").strip():
+            continue
+        ch["title"] = new_title[:12]
+        # Rule-based CN · not LLM invent; clear non-user origin so later refresh can update
+        if str(ch.get("titleOrigin") or "") != "user":
+            ch.pop("titleOrigin", None)
+        updated.append(f"chapters[{ch.get('index')}].title")
+    return updated
