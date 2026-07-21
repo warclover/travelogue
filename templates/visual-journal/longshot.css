@@ -1154,27 +1154,28 @@ body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-
   padding-bottom: 48px;
 }
 
-/* SFI D-SFI-11 · 紧凑档：第 2 章起章头瘦身；封面题名/日期去重；尾 footer 收紧 */
-html[data-longshot-density="compact"] body.longshot-capturing .chapter ~ .chapter .chapter-header {
+/* SFI D-SFI-11 · 紧凑档：第 2 章起章头瘦身；封面题名/日期去重；尾 footer 收紧
+ * 绑定 data-longshot-density（勿绑 longshot-capturing）：B3 双预览与 QA 脚本须可见 */
+html[data-longshot-density="compact"] .chapter ~ .chapter .chapter-header {
   padding: 4px 16px 2px;
   max-height: 48px;
   overflow: hidden;
 }
 
-html[data-longshot-density="compact"] body.longshot-capturing .chapter ~ .chapter .chapter-header h2 {
+html[data-longshot-density="compact"] .chapter ~ .chapter .chapter-header h2 {
   font-size: 15px;
   line-height: 1.25;
 }
 
-html[data-longshot-density="compact"] body.longshot-capturing .chapter ~ .chapter .chapter-header__index,
-html[data-longshot-density="compact"] body.longshot-capturing .chapter ~ .chapter .chapter-header__rule {
+html[data-longshot-density="compact"] .chapter ~ .chapter .chapter-header__index,
+html[data-longshot-density="compact"] .chapter ~ .chapter .chapter-header__rule {
   display: none;
 }
 
-html[data-longshot-density="compact"] body.longshot-capturing .cover-opening:has(.cover-opening__subtitle) .trip-meta {
+html[data-longshot-density="compact"] .cover-opening:has(.cover-opening__subtitle) .trip-meta {
   display: none;
 }
 
-html[data-longshot-density="compact"] body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
+html[data-longshot-density="compact"] .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
   padding: 16px 16px 28px;
 }

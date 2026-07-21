@@ -96,7 +96,14 @@ export function openDualPreview(tripId) {
   if (ls) {
     ls.src = lsUrl;
     ls.onload = function () {
-      /* ok */
+      // SFI · 尽量套上 capturing 根，使长图侧更接近导出态（紧凑 CSS 已绑 density）
+      try {
+        var doc = ls.contentDocument;
+        if (doc && doc.documentElement && doc.body) {
+          doc.documentElement.classList.add("longshot-capturing-root");
+          doc.body.classList.add("longshot-capturing");
+        }
+      } catch (_e) {}
     };
     ls.onerror = function () {
       if (hint) {

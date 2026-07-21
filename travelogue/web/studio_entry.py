@@ -246,22 +246,19 @@ def _longshot_density_entry(trip: dict) -> str:
 
 
 def _share_copy_pack_entry(trip: dict) -> dict:
-    """Xiaohongshu copy pack fields (D-SFI-14)."""
-    from travelogue.domain.title_humanize import resolve_display_title
+    """Xiaohongshu copy pack fields (D-SFI-14 / OQ-2)."""
+    from travelogue.domain.share_copy_pack import build_share_copy_pack
+    from travelogue.web.studio_narrate import studio_llm_status
 
-    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
-    title = resolve_display_title(meta) or str(meta.get("title") or "").strip()
-    hook = str(meta.get("hook") or "").strip()
-    places = meta.get("places") if isinstance(meta.get("places"), list) else []
-    tags: list[str] = ["#旅行日记"]
-    for p in places[:2]:
-        label = str(p or "").strip()
-        if label:
-            tags.append("#" + label.replace(" ", ""))
+    status = studio_llm_status()
+    pack = build_share_copy_pack(
+        trip, llm_available=bool(status.get("llmAvailable"))
+    )
     return {
-        "title": title,
-        "body": hook,
-        "topics": " ".join(tags),
+        "title": pack["title"],
+        "body": pack["body"],
+        "topics": pack["topics"],
+        "llmAvailable": bool(status.get("llmAvailable")),
     }
 
 

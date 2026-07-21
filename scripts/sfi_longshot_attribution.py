@@ -68,6 +68,8 @@ def measure_trip(trip_dir: Path) -> dict[str, Any]:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(viewport={"width": CAPTURE_WIDTH, "height": 900})
             page.goto(url, wait_until="networkidle", timeout=120_000)
+            # Compact CSS binds html[data-longshot-density] (not capturing), so
+            # B3 / this script see FE-SFI-09 levers without invalidating DES baseline mode.
             page.wait_for_timeout(400)
             metrics = page.evaluate(
                 """({ photoSelectors, chromeSelectors, captureWidth }) => {

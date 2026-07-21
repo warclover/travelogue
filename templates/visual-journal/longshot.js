@@ -481,10 +481,10 @@
       '<div class="longshot-export-sheet__field">' +
       '<span class="longshot-export-sheet__label">清晰度</span>' +
       '<div class="longshot-segment" role="group" aria-label="清晰度">' +
-      '<button type="button" class="longshot-segment__btn longshot-segment__btn--active" data-longshot-scale-option="2" aria-pressed="true">标准 2×</button>' +
-      '<button type="button" class="longshot-segment__btn" data-longshot-scale-option="3" aria-pressed="false">高清 3×</button>' +
+      '<button type="button" class="longshot-segment__btn longshot-segment__btn--active" data-longshot-scale-option="2" aria-pressed="true" title="输出宽约 856px（428×2）">标准 · 856</button>' +
+      '<button type="button" class="longshot-segment__btn" data-longshot-scale-option="3" aria-pressed="false" title="输出宽约 1284px（428×3）">更清晰 · 1284</button>' +
       "</div>" +
-      '<p class="longshot-export-sheet__field-note">高清适合放大看细节，文件更大、耗时更长。</p>' +
+      '<p class="longshot-export-sheet__field-note">更清晰适合放大看细节，文件更大、耗时更长（输出宽 = 428 × 倍率）。</p>' +
       "</div>" +
       '<div class="longshot-export-sheet__field">' +
       '<label class="longshot-export-sheet__check">' +
@@ -2100,7 +2100,7 @@
       result.captureScale >= DESKTOP_CAPTURE_SCALE
     ) {
       setTimeout(function () {
-        toast("体积较大：可切换「标准 2×」、按章导出，或加 ?format=jpeg", true);
+        toast("体积较大：可切换「标准 · 856」、按章导出，或加 ?format=jpeg", true);
       }, 2600);
     }
     return result;

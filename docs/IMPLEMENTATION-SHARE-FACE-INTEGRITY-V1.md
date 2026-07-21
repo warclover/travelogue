@@ -10,7 +10,7 @@
 | **试用底稿** | [persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) |
 | **相邻硬化** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md)（执行层接管 · 存量兑现） |
 | **更新日期** | 2026-07-21 |
-| **状态** | **W2 编码中**（F4/F5 已再签）· W0/W1 工程收口 · `feat/share-face-integrity-w0` |
+| **状态** | **W2 工程已接**（F4/F5 已再签；AC-12/13 产品门仍开）· `feat/share-face-integrity-w0` |
 | **估时** | Doc ✅ · W0 ≈ **3–5 人日** · W1 ≈ **4–6 人日**（含 E0）· W2 ≈ **2.5–4 人日**（可砍） |
 
 ---
@@ -23,7 +23,7 @@
 | **评审** | 跨职能 Conditional Go；BLK-SFI-01～10 回写 | ✅ 2026-07-21 |
 | **W0** | context 过滤 · 存量重渲 · 命名 supersede · 调试串出读者面 | ✅ |
 | **W1** | origin 字段 · 刷新替换升级 · 离群双根因 · 分章行内改名 | ✅ 工程收口；手测/狗粮仍开 |
-| **W2** | 紧凑档（真实册归因）· 清晰度 · 署名两处同源 · 小红书文案包 | ⏳ 可砍 · DES-SFI-01 ✅ |
+| **W2** | 紧凑档（真实册归因）· 清晰度 · 署名两处同源 · 小红书文案包 | ✅ 工程已接 · AC-12/13 产品门仍开 |
 | **完成宣布** | 真人 N≥5（观察法协议） | ⏳ AC-SFI-15 |
 
 **所有权**
@@ -148,10 +148,10 @@
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
 | **DES-SFI-01** | **前置**：真实照片册长图归因表签字（非 demo-album） | 验收记录附件 | 0.3d | 12 | ✅ 仙本那基线 10.4% · [签字记录](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md) |
-| **FE-SFI-09** | 紧凑档：章头瘦身 / 封面去重 / moment 折叠；进 B3 双预览；不跳 B2 | `longshot.css` · density · chapter_items | 1.0d | 12 | ✅ `export.longshotDensity` + CSS/折叠；导出面板切换→save-copy 重渲 |
-| **FE-SFI-10** | 清晰度档位参数与产物换算一致 | export settings UI | 0.3d | 13 | ✅ 标准·856 / 更清晰·1284（428×scale） |
+| **FE-SFI-09** | 紧凑档：章头瘦身 / 封面去重 / moment 折叠；进 B3 双预览；不跳 B2 | `longshot.css` · density · chapter_items | 1.0d | 12 | ✅ density CSS 解绑 capturing；B3 长图侧套 capturing；切换→save-copy 重渲 |
+| **FE-SFI-10** | 清晰度档位参数与产物换算一致 | export settings UI | 0.3d | 13 | ✅ Studio + 长图页：标准·856 / 更清晰·1284 |
 | **FE-SFI-11** | 署名三态册级字段；同步 `cover-closing` + `longshot-boundary-footer` | 精修·这本 · 模板 | 0.5d | 13 | ✅ `worksBrandMode/Text` 同源 |
-| **FE-SFI-12** | 小红书成功面文案包（dock 展开）；无 Key = 标题+话题 | task-dock · OQ-2 | 0.5d | 13 | ✅ dock「复制文案包」；无正文时仅标题+话题 |
+| **FE-SFI-12** | 小红书成功面文案包（dock 展开）；无 Key = 标题+话题 | task-dock · OQ-2 | 0.5d | 13 | ✅ dock「复制文案包」；`llmAvailable=false` 强制空正文 |
 | **QA-SFI-06** | 像素占比脚本 + 盲评记录模板 | 0.4d | 12 | ✅ `--baseline` 对比 + [盲评模板](./acceptance-records/share-face-integrity-v1-compact-blind-TEMPLATE.md) |
 
 ### W2 完成定义
@@ -184,6 +184,7 @@
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v0.1.7 | 2026-07-21 | W2 补漏：紧凑 CSS 解绑 capturing（B3/脚本可见）· 文案包无 Key 正文门 · 长图清晰度标宽对齐 |
 | v0.1.6 | 2026-07-21 | W2：FE-09～12 + QA-06；F4/F5 再签；紧凑档/署名/清晰度诚实标宽/小红书文案包 |
 | v0.1.5 | 2026-07-21 | 补漏：rerender 真写 longshot · 精修单张移回 · D-SFI-06 矛盾抑年 · §6/§7 · QA-SFI-03；[gapfill 记录](./acceptance-records/share-face-integrity-v1-gapfill-2026-07-21.md) |
 | v0.1.4 | 2026-07-21 | DES-SFI-01：仙本那真实册长图归因签字（基线非照片 10.4%）；`sfi_longshot_attribution.py` |
