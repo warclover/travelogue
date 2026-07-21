@@ -1154,8 +1154,9 @@ body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-
   padding-bottom: 48px;
 }
 
-/* SFI D-SFI-11 · 紧凑档：第 2 章起章头瘦身；封面题名/日期去重；尾 footer 收紧
- * 绑定 data-longshot-density（勿绑 longshot-capturing）：B3 双预览与 QA 脚本须可见 */
+/* SFI D-SFI-11 · 紧凑档：第 2 章起章头瘦身；封面去重；去呼吸停顿；压 hook/辑封
+ * 绑定 data-longshot-density（勿绑 longshot-capturing）：B3 双预览与 QA 脚本须可见
+ * 屏缝 4px 保持不动（见 .media-card--landscape + … / .media-scroll gap） */
 html[data-longshot-density="compact"] .chapter ~ .chapter .chapter-header {
   padding: 4px 16px 2px;
   max-height: 48px;
@@ -1176,6 +1177,32 @@ html[data-longshot-density="compact"] .cover-opening:has(.cover-opening__subtitl
   display: none;
 }
 
-html[data-longshot-density="compact"] .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
-  padding: 16px 16px 28px;
+/* 主杠杆：呼吸停顿在紧凑档整段撤掉（真册约十余处 ×120px） */
+html[data-longshot-density="compact"] .breath-pause-card[data-block="breath-pause-card"],
+html[data-longshot-density="compact"] .breath-pause-screen[data-block="breath-pause-screen"] {
+  display: none !important;
+}
+
+html[data-longshot-density="compact"] .cover-opening__panel {
+  padding-top: 8px;
+  padding-bottom: 4px;
+}
+
+html[data-longshot-density="compact"] .hook-line,
+html[data-longshot-density="compact"] .cover-opening__hook {
+  font-size: 14px;
+  line-height: 1.35;
+  max-height: 3.2em;
+  overflow: hidden;
+  margin-bottom: 4px;
+  padding-bottom: 0;
+}
+
+html[data-longshot-density="compact"] .longshot-boundary-footer[data-block="longshot-boundary-footer"],
+html[data-longshot-density="compact"] .cover-closing__panel {
+  padding: 12px 16px 20px;
+}
+
+html[data-longshot-density="compact"] .cover-closing__end {
+  display: none;
 }

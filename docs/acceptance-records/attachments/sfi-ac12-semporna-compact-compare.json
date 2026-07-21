@@ -1,0 +1,75 @@
+{
+  "captureWidth": 428,
+  "scrollHeightCss": 26004,
+  "photoVerticalPx": 25214,
+  "nonPhotoVerticalPx": 790,
+  "nonPhotoVerticalRatio": 0.030390757191201354,
+  "photoElementCount": 211,
+  "chapterCount": 3,
+  "screenishCount": 0,
+  "chapterHeaderHeights": {
+    "count": 3,
+    "totalHeightCss": 159
+  },
+  "chapterHeaders": [
+    "6月30日",
+    "6月30日 · 傍晚",
+    "7月1日"
+  ],
+  "coverTitleOccurrences": [
+    "旅行 · 6月30–7月1日"
+  ],
+  "coverTitleDupMax": 1,
+  "reusedAssetCount": 0,
+  "reusedAssets": [],
+  "uniquePhotoAssetIds": 33,
+  "maxPhotoWidthCss": 428,
+  "chrome": {
+    "chapterHeader": {
+      "count": 3,
+      "totalHeightCss": 159
+    },
+    "chapterLead": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "decorLine": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "coverPanel": {
+      "count": 1,
+      "totalHeightCss": 60
+    },
+    "coverTitle": {
+      "count": 1,
+      "totalHeightCss": 0
+    },
+    "hook": {
+      "count": 1,
+      "totalHeightCss": 19
+    },
+    "epilogue": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "closing": {
+      "count": 1,
+      "totalHeightCss": 78
+    }
+  },
+  "trip": {
+    "tripId": "demo-1d4f92d534",
+    "title": "仙本那精选全集2",
+    "assetCount": 250
+  },
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-1d4f92d534",
+  "source": "index-longshot.html",
+  "method": "playwright-y-union-css-px",
+  "note": "非照片纵向占比 = 1 − (照片元素 Y 并集高度 / main.scrollHeight)；逻辑宽 428；与 PNG 逐行扫描同构（CSS px）",
+  "compare": {
+    "baselineRatio": 0.11331696616964411,
+    "currentRatio": 0.030390757191201354,
+    "relativeDrop": 0.7318075287534254
+  }
+}

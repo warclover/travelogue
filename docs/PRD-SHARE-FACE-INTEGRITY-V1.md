@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio（本机 Studio / 桌面打包同等体验） |
 | **文档版本** | **v0.2.1** |
-| **状态** | **Conditional Go** · **W0 编码中**（分支 `feat/share-face-integrity-w0`） |
+| **状态** | **Conditional Go** · **W2 工程已接**（AC-12 脚本门 ✅ · 盲评/手测/AC-15 仍开 · 分支 `feat/share-face-integrity-w0`） |
 | **主题代号** | 「敢发面一致性」— 存量兑现 · 文案刷新 · 时间轴可信 · 交付体面 |
 | **触发来源** | 2026-07-21 两轮多 Persona 实机试用：[首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [深走](./acceptance-records/persona-deep-trial-2026-07-21.md)；上承 [persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) |
 | **前置条件** | 导出门面五目标已上线；FST 成功面合同生效；[Share-Face Closeout](./PRD-SHARE-FACE-CLOSEOUT-V1.md) W0–W2 工程已合入（本主题硬化其未兑现部分） |
@@ -446,9 +446,11 @@ W2 各项进编码前须有对应线框（§9 W2 门）。
 | 复读图注 | 每屏杂志名+日期 | W0 D-SFI-01 已抑制；空渐变不渲染 |
 | moment 复用屏 | 真册 reused=0；占位册曾 5→7 屏 | 折叠为代表图 + N 徽标（LTN B2 ②） |
 | 尾 footer | 偏松 | padding 收紧；署名受三态控制 |
-| 验收锚 | 非照片纵向占比 **10.4%**（仙本那） | 下降 ≥40% → **≤6.2%** 脚本 + 5 席盲评 |
+| 验收锚 | 非照片纵向占比 **10.4%**（仙本那 DES 立项）· 复跑默认 **11.3%** | 下降 ≥40% → **≤6.8%**（复跑基线×0.6）；2026-07-21 紧凑实测 **3.0% / −73%** 脚本 ✅ |
+| 紧凑主杠杆（补） | 呼吸停顿 ~120px×N | **紧凑档撤掉**（默认档保留）；另压 hook / 封面 panel / 辑封 |
 
-> 立项签字见 [DES-SFI-01 记录](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md)。demo-album（~15.9%）仅历史对照，不作基线。
+> 立项签字见 [DES-SFI-01 记录](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md)。demo-album（~15.9%）仅历史对照，不作基线。  
+> AC-12 脚本半门记录：[ac12-compact-2026-07-21](./acceptance-records/share-face-integrity-v1-ac12-compact-2026-07-21.md)。
 
 ---
 
@@ -461,3 +463,4 @@ W2 各项进编码前须有对应线框（§9 W2 门）。
 | v0.2.0 | 2026-07-21 | 跨职能评审回写：BLK-SFI-01～10 全部合入；W0/W1/W2 重定义；状态 → Conditional Go（评审回写完成） |
 | v0.2.1 | 2026-07-21 | Doc 包齐：IMPLEMENTATION · ACCEPTANCE · 线框 F0–F5 · 狗粮清单 · README 索引；状态 → Ready for Kickoff W0；**DOC-SFI-08** FTT 脚注已回写（FTT v0.2.1） |
 | v0.2.2 | 2026-07-21 | **DES-SFI-01**：附录 A 基线改为仙本那真册（非照片纵向 10.4%）；demo-album 降为对照 |
+| v0.2.3 | 2026-07-21 | AC-12：紧凑档撤呼吸停顿；仙本那复跑 11.3%→3.0%（−73%）脚本过门；状态 → W2 工程已接 |

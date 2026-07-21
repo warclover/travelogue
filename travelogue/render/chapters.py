@@ -251,7 +251,8 @@ def build_chapters_render_context(
             trip_photo_total=layout_eligible_count,
             compact_longshot=compact_ls,
         )
-        if is_longshot_surface:
+        if is_longshot_surface and not compact_ls:
+            # SFI D-SFI-11 · 紧凑档去掉呼吸停顿（默认档保留组感节奏）
             from travelogue.curation.breath_pauses import interleave_breath_items
 
             chapter_items = interleave_breath_items(chapter_items)
@@ -259,6 +260,8 @@ def build_chapters_render_context(
         for j, it in enumerate(chapter_items):
             itype = it.get("type")
             eager = i == 0 and j == 0
+            if itype == "breath-pause" and compact_ls:
+                continue
             if itype == "media-card":
                 aid = it.get("assetId", "")
                 asset = assets.get(aid)
