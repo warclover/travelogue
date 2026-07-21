@@ -7,6 +7,8 @@
 | **样本** | 武大 `demo-e863ec0da9` · 京都 `demo-album` · 仙本那 `demo-1d4f92d534` · （W2）另备真实照片册 |
 | **签字纪律** | 产品手测列须 **非实现者**；完成门须真人 N≥5 |
 | **日期** | 2026-07-21 |
+| **工程自测证据** | [eng-smoke-2026-07-21](./share-face-integrity-v1-eng-smoke-2026-07-21.md)（产品列仍须你勾） |
+| **AC-12 盲评表** | [ac12-blind-2026-07-21](./share-face-integrity-v1-ac12-blind-2026-07-21.md) |
 
 ---
 
