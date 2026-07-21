@@ -1235,23 +1235,26 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function openLongshotExportOptions(root) {
-    var ls = longshotApi();
-    if (ls && typeof ls.openExportPanel === "function") {
-      ls
-        .openExportPanel()
-        .then(function () {
-          refreshLongshotExportMeta(root);
-          syncLongshotPreviewChips(root);
-        })
-        .catch(function () {});
-      return;
-    }
+    // SFI FE-09 · ▾ 优先 Studio 面板（密度 / 双预览 / 平台 / 诚实标宽）；
+    // 勿先走 TravelogueLongshot.openExportPanel，否则紧凑档入口不可达。
     openStudioLongshotExportPanel(root)
       .then(function () {
         refreshLongshotExportMeta(root);
         syncLongshotPreviewChips(root);
       })
-      .catch(function () {});
+      .catch(function () {
+        var ls = longshotApi();
+        if (ls && typeof ls.openExportPanel === "function") {
+          ls
+            .openExportPanel()
+            .then(function () {
+              refreshLongshotExportMeta(root);
+              syncLongshotPreviewChips(root);
+            })
+            .catch(function () {});
+          return;
+        }
+      });
   }
 
   export function revealTripPath(tripId, relPath) {
