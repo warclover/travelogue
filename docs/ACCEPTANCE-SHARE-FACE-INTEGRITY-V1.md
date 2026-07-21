@@ -2,13 +2,13 @@
 
 | 属性 | 内容 |
 |------|------|
-| **对应 PRD** | [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) **v0.2.0** |
+| **对应 PRD** | [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) **v0.2.2** |
 | **评审纪要** | [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · Conditional Go · BLK-SFI-01～10 |
 | **实施清单** | [IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) |
 | **手测狗粮** | [share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) |
 | **线框** | [wireframes/share-face-integrity-v1-wireframe.html](./wireframes/share-face-integrity-v1-wireframe.html) · F0–F5 |
 | **试用底稿** | [persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) |
-| **状态** | **合同已定 · 工程未开工**（文档波次） |
+| **状态** | **W0/W1 工程收口** · 产品手测/狗粮仍开 · W2 可砍 · 不得对外宣布主题完成 |
 | **日期** | 2026-07-21 |
 
 > **验收原则**
@@ -28,9 +28,9 @@
 |--------|------|------|------|
 | **PRD + AC + IMPL + 线框** | ✅ 2026-07-21 | — | Doc 包 |
 | **跨职能评审 + BLK 回写** | ✅ 2026-07-21 | — | Conditional Go · PRD v0.2.0 |
-| **W0** | ✅ 合同 | ⏳ | 过滤 · 重渲 · 命名 · 调试串 |
-| **W1** | ✅ 合同 | ⏳ | 刷新 · 离群 · 分章行内改名 |
-| **W2** | ✅ 合同 | ⏳ | 可砍 · 须真实册归因 |
+| **W0** | ✅ 合同 | ✅ 工程 | 过滤 · 重渲 · 命名 · 调试串（产品手测仍开） |
+| **W1** | ✅ 合同 | ✅ 工程 | 刷新 · 离群 · 分章行内改名（产品手测仍开） |
+| **W2** | ✅ 合同 | 🔧 前置 | DES-SFI-01 ✅；FE-09～12 / 盲评仍开 |
 | **完成宣布** | ✅ 合同 | ⏳ | AC-SFI-15 |
 
 ---
@@ -39,12 +39,12 @@
 
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
-| **AC-SFI-01** | 样本 13 册重渲后读者面禁入句命中 = 0（含 decorLine：「白天，傍晚」「示例游记」） | 自动抽检脚本 + 手测 F0/F-share | ⏳ | ⏳ |
-| **AC-SFI-02** | 武大用例：封面 / 书架 / FirstSuccess / 导出文件名四处一致且无裸 `--`；zip 文件名无 `trip-{id}` | 重渲后对照 + 导出落盘核验 | ⏳ | ⏳ |
-| **AC-SFI-03** | 精修态无 `Plate` / `screen-*`（非 `?debug=1`） | 手测 F0 | ⏳ | ⏳ |
-| **AC-SFI-04** | 题名复读图注抑制后空渐变条不渲染；导出/截图态零 inline-edit 占位 | DOM/长图抽检 + 手测 | ⏳ | ⏳ |
-| **AC-SFI-10** | 回归：SFC AC-SFC-01/03/07；stale 主词仅「分享图需更新」；C7 → AC-SFC-11（无 Key 无「杂志文案已完成」） | 既有 SFC 契约 + 手测 | ⏳ | ⏳ |
-| **AC-SFI-11** | 导入忙碌态：前置核验 FST W0；若未落地 → 跨主题阻塞（不可空转 ✅） | 打开 FST AC 状态表 + 手测导入 | ⏳ | ⏳ |
+| **AC-SFI-01** | 样本 13 册重渲后读者面禁入句命中 = 0（含 decorLine：「白天，傍晚」「示例游记」） | 自动抽检脚本 + 手测 F0/F-share | ✅ QA-SFI-01 | ⏳ |
+| **AC-SFI-02** | 武大用例：封面 / 书架 / FirstSuccess / 导出文件名四处一致且无裸 `--`；zip 文件名无 `trip-{id}` | 重渲后对照 + 导出落盘核验 | ✅ QA-SFI-02 | ⏳ |
+| **AC-SFI-03** | 精修态无 `Plate` / `screen-*`（非 `?debug=1`） | 手测 F0 | ✅ FE-SFI-02 | ⏳ |
+| **AC-SFI-04** | 题名复读图注抑制后空渐变条不渲染；导出/截图态零 inline-edit 占位 | DOM/长图抽检 + 手测 | ✅ BE-SFI-02 | ⏳ |
+| **AC-SFI-10** | 回归：SFC AC-SFC-01/03/07；stale 主词仅「分享图需更新」；C7 → AC-SFC-11（无 Key 无「杂志文案已完成」） | 既有 SFC 契约 + 手测 | ✅ QA-SFI-03 | ⏳ |
+| **AC-SFI-11** | 导入忙碌态：前置核验 FST W0；若未落地 → 跨主题阻塞（不可空转 ✅） | 打开 FST AC 状态表 + 手测导入 | ✅ QA-SFI-03（FST W0 工程已合入） | ⏳ |
 
 ### W0 非回归
 
@@ -61,11 +61,11 @@
 
 | ID | 标准 | 方法 | 工程 | 产品手测 |
 |----|------|------|------|----------|
-| **AC-SFI-05** | Key 就绪 + stub 命中：dock 提示条符合纪律（非模态、不遮 CTA、导出/成功面不出、册级 dismiss）；刷新后禁入句 = 0；`origin=user` 不变；章名非 LLM invent；无并列第二刷新按钮 | 手测 F1·F2 + 单测 | 🔧 | ⏳ |
-| **AC-SFI-06** | 仙本那：离群段不被小桶合并回灌；章名无「2018–2020」；附录/降权规则生效 | fixture 重 curate + 手测 F3 | ✅ QA-SFI-04 | ⏳ |
-| **AC-SFI-07** | 武大：`dateConfidence=low` 读者面无绝对年份「2015」；决定性瞬间不选离群 | 重渲/重 curate + 手测 | ✅ QA-SFI-04 | ⏳ |
-| **AC-SFI-08** | 分章行内改名可用；按钮为「重新分章」；解释句含日期重叠说明；无跳转闪跳 | 手测 F3 | 🔧 FE 已接 | ⏳ |
-| **AC-SFI-09** | 附录知情：章头「往年 · 旧照 · N 张」· 分章列出原因 · 可移回 · 导出未含时显性提示可勾 | 手测 F3 · 导出设置 | 🔧 FE/BE 已接 | ⏳ |
+| **AC-SFI-05** | Key 就绪 + stub 命中：dock 提示条符合纪律（非模态、不遮 CTA、导出/成功面不出、册级 dismiss）；刷新后禁入句 = 0；`origin=user` 不变；章名非 LLM invent；无并列第二刷新按钮 | 手测 F1·F2 + 单测 | ✅ FE/BE + dock 单测 | ⏳ |
+| **AC-SFI-06** | 仙本那：离群段不被小桶合并回灌；章名无「2018–2020」；附录/降权规则生效 | fixture 重 curate + 手测 F3 | ✅ QA-SFI-04 + 本机重 curate/重渲 | ⏳ |
+| **AC-SFI-07** | 武大：`dateConfidence=low` 读者面无绝对年份「2015」；决定性瞬间不选离群；图注与章区间矛盾抑年 | 重渲/重 curate + 手测 | ✅ QA-SFI-04 + D-SFI-06 单测 | ⏳ |
+| **AC-SFI-08** | 分章行内改名可用；按钮为「重新分章」；解释句含日期重叠说明；无跳转闪跳 | 手测 F3 | ✅ FE-SFI-08（含 IME 防抖） | ⏳ |
+| **AC-SFI-09** | 附录知情：章头「往年 · 旧照 · N 张」· 分章列出原因 · 可移回 · 导出未含时显性提示可勾 | 手测 F3 · 导出设置 | ✅ 分章整章 + 精修单张「移回原章」 | ⏳ |
 
 ---
 
@@ -115,4 +115,5 @@
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v0.1.1 | 2026-07-21 | 回写 W0/W1 工程列；对齐补漏（gapfill 记录）；PRD v0.2.2 |
 | v0.1.0 | 2026-07-21 | 首版 · 对齐 PRD v0.2.0 AC-SFI-01～13·15 |

@@ -6,6 +6,8 @@
 "use strict";
 
 import { trackStudioEvent } from "./js/analytics.js";
+import { postJsonConflictRetry } from "./js/http.js";
+import { showToolbarToast, tripApiBase, tripIdFromPath } from "./preview-toolbar/shell.js";
 
 var TAB_MODES = [
   { id: "page", label: "这页" },
@@ -76,6 +78,10 @@ function describeScreenContext(el) {
     (idx ? "第 " + idx + " 页" : "游记正文") + (chapterName ? " · " + chapterName : "");
   var kicker = el.querySelector(".kicker, .hook-line, [data-copy-role='kicker']");
   var body = el.querySelector(".caption, .lead, .body-copy, [data-copy-role='caption'], [data-copy-role='lead']");
+  var rawIds = el.getAttribute("data-asset-ids") || "";
+  var primaryAssetId = (rawIds.split(",")[0] || "").trim();
+  var isAppendix =
+    !!(chapter && chapter.getAttribute("data-appendix") === "1");
   return {
     empty: false,
     label: label,
@@ -87,6 +93,8 @@ function describeScreenContext(el) {
       ".preview-toolbar__collage-ctrl, .preview-toolbar__collage-select"
     ),
     copyHint: !!(kicker || body),
+    isAppendix: isAppendix,
+    primaryAssetId: primaryAssetId,
   };
 }
 
@@ -622,6 +630,50 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (ctl) ctl.click();
       });
       actions.appendChild(mediaBtn);
+    }
+    // FE-SFI-07 · 精修单张「移回原章」（附录章）
+    if (ctx.isAppendix && ctx.primaryAssetId && actions) {
+      var restoreBtn = document.createElement("button");
+      restoreBtn.type = "button";
+      restoreBtn.className = "preview-sheet__chip";
+      restoreBtn.textContent = "移回原章";
+      restoreBtn.addEventListener("click", function () {
+        var tid =
+          (hooks && hooks.tripId) ||
+          (typeof tripIdFromPath === "function" && tripIdFromPath()) ||
+          "";
+        if (!tid) {
+          showToolbarToast("移回未完成");
+          return;
+        }
+        restoreBtn.disabled = true;
+        postJsonConflictRetry(tripApiBase(tid) + "/promote-tier", {
+          action: "restoreTimeOutlier",
+          assetIds: [ctx.primaryAssetId],
+          rerender: false,
+        })
+          .then(function (res) {
+            restoreBtn.disabled = false;
+            if (!res || res.status < 200 || res.status >= 300) {
+              showToolbarToast(
+                (res && res.body && res.body.message) || "移回未完成，请稍后重试"
+              );
+              return;
+            }
+            showToolbarToast("已移回，正在重新分章…");
+            if (
+              hooks.drawers &&
+              typeof hooks.drawers.regenerateStructure === "function"
+            ) {
+              return hooks.drawers.regenerateStructure();
+            }
+          })
+          .catch(function () {
+            restoreBtn.disabled = false;
+            showToolbarToast("移回未完成");
+          });
+      });
+      actions.appendChild(restoreBtn);
     }
   }
 

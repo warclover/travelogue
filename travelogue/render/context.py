@@ -746,6 +746,7 @@ def build_layout_screen(
     show_moment_exif: bool = True,
     show_signature_label: bool = True,
     moment_screen_label: str = "",
+    chapter_day_span: list[str] | None = None,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if is_plate and not folio_plate_rewrite_eligible(screen):
@@ -906,7 +907,9 @@ def build_layout_screen(
         if show_moment_exif and str(aid or "").strip() in exif_pool and asset:
             from travelogue.render.moment_exif import format_moment_exif_line
 
-            exif_line = format_moment_exif_line(asset)
+            exif_line = format_moment_exif_line(
+                asset, day_span=chapter_day_span
+            )
             if exif_line:
                 entry["hasMomentExif"] = True
                 entry["momentExifLine"] = exif_line

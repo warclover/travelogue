@@ -2,7 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
-| **对应 PRD** | [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) **v0.2.0** |
+| **对应 PRD** | [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) **v0.2.2** |
 | **评审** | [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · Conditional Go · BLK-SFI-01～10 已回写 |
 | **验收** | [ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) |
 | **手测狗粮** | [share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) |
@@ -10,7 +10,7 @@
 | **试用底稿** | [persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) |
 | **相邻硬化** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md)（执行层接管 · 存量兑现） |
 | **更新日期** | 2026-07-21 |
-| **状态** | **W0 编码中**（`feat/share-face-integrity-w0`） |
+| **状态** | **W0/W1 工程收口**（手测/狗粮仍开）· W2 可砍 · `feat/share-face-integrity-w0` |
 | **估时** | Doc ✅ · W0 ≈ **3–5 人日** · W1 ≈ **4–6 人日**（含 E0）· W2 ≈ **2.5–4 人日**（可砍） |
 
 ---
@@ -82,12 +82,12 @@
 |----|------|------|-----|------|
 | **QA-SFI-01** | 抽检脚本：13 册读者面禁入句 = 0（含 decorLine） | `scripts/sfi_share_face_scan.py` · 0.5d | 01 | ✅ 13 册重渲后 scanned=39 hit=0 |
 | **QA-SFI-02** | fixture：武大脏名重渲后四处同源；FX-SFI-01～04 | 单测 + demo 抽检 · 0.4d | 02 | ✅ 武大/京都抽检绿；导出名单测绿 |
-| **QA-SFI-03** | 回归：SFC AC-SFC-01/03/07/11；stale 主词不回退；FST 忙碌态**前置核验** | 0.4d | 10·11 | ⏳ 手测/既有契约 |
+| **QA-SFI-03** | 回归：SFC AC-SFC-01/03/07/11；stale 主词不回退；FST 忙碌态**前置核验** | 0.4d | 10·11 | ✅ `test_sfi_qa03_contracts.py`（产品手测仍开） |
 
 ### 2.4 W0 完成定义
 
 - [x] 线框 F0 对照合入（Plate 门禁 · CSS `data-debug=1`）  
-- [ ] AC-SFI-01～04 · 10·11 工程列绿（01～04 工程侧基本齐；10·11 待手测核验）  
+- [x] AC-SFI-01～04 · 10·11 **工程列**绿（产品手测仍开）  
 - [x] 武大 / 京都示例分享面抽检无「白天，傍晚」/「示例游记」/ 封面 `--`  
 - [x] 导出文件名人话；zip 无 `trip-{id}`（单测）  
 - [x] **不**宣称主题完成；设置文案处于间隙期弱化态  
@@ -117,8 +117,8 @@
 |----|------|----------|------|-----|------|
 | **BE-SFI-07** | 合并环节硬断言：离群不得并回；`bucket_day_span` 排除离群日期 | `bucket_planning.py` · `chapter_titles.py` | 0.8d | 06 | ✅ |
 | **BE-SFI-08** | `_curate_preflight` 打 `timeOutlier`；自适应阈值；多段豁免；附录章不计 cap；coverage 排除 | `curate.py` · `time_outlier.py` · moment/封面池 | 1.0d | 06·09 | ✅ peel + 册尾附录「往年 · 旧照 · N」；长图 CSS 默认不含 |
-| **BE-SFI-09** | 读者面 `dateConfidence=low` 抑制绝对年份 | `render/moment_exif.py` | 0.3d | 07 | ✅ |
-| **FE-SFI-07** | 附录知情：章头 N 张 · 分章列出 · 移回原章 · 导出「未含」提示可勾 | chapter-panel · export settings · longshot | 0.6d | 09 | ✅ 分章原因/移回；导出勾选 `includeAppendix` |
+| **BE-SFI-09** | 读者面 `dateConfidence=low` / 与章 `daySpan` 矛盾时抑制绝对年份 | `render/moment_exif.py` | 0.3d | 07 | ✅ 含 D-SFI-06 矛盾抑年 |
+| **FE-SFI-07** | 附录知情：章头 N 张 · 分章列出 · 移回原章 · 导出「未含」提示可勾 | chapter-panel · refine sheet · export · longshot | 0.6d | 09 | ✅ 分章整章移回 + 精修单张「移回原章」；导出 `includeAppendix` |
 
 ### 3.3 分章
 
@@ -152,7 +152,7 @@
 | **FE-SFI-10** | 清晰度档位参数与产物换算一致 | export settings UI | 0.3d | 13 | ⏳ |
 | **FE-SFI-11** | 署名三态册级字段；同步 `cover-closing` + `longshot-boundary-footer` | 精修·这本 · 模板 | 0.5d | 13 | ⏳ |
 | **FE-SFI-12** | 小红书成功面文案包（dock 展开）；无 Key = 标题+话题 | task-dock · OQ-2 | 0.5d | 13 | ⏳ |
-| **QA-SFI-06** | 像素占比脚本 + 盲评记录模板 | 0.4d | 12 | ⏳ |
+| **QA-SFI-06** | 像素占比脚本 + 盲评记录模板 | 0.4d | 12 | 🔧 `sfi_longshot_attribution.py` 已齐；盲评模板 / 紧凑后对比仍开 |
 
 ### W2 完成定义
 
@@ -184,6 +184,7 @@
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v0.1.5 | 2026-07-21 | 补漏：rerender 真写 longshot · 精修单张移回 · D-SFI-06 矛盾抑年 · §6/§7 · QA-SFI-03；[gapfill 记录](./acceptance-records/share-face-integrity-v1-gapfill-2026-07-21.md) |
 | v0.1.4 | 2026-07-21 | DES-SFI-01：仙本那真实册长图归因签字（基线非照片 10.4%）；`sfi_longshot_attribution.py` |
 | v0.1.3 | 2026-07-21 | QA-SFI-04/05：瘦 fixture 回归；实质多段豁免；章名禁拼回离群日；sparse scope 尊重 origin=user |
 | v0.1.2 | 2026-07-21 | W1 收口：BE-06～09 · FE-07/08 · 附录章 + 长图默认不含 + 移回豁免 · 离群核心中位数邻域 |

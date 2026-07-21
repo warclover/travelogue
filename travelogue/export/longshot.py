@@ -305,7 +305,21 @@ def write_longshot_upload(
     except ValueError as exc:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法输出路径") from exc
     _write_output(out, data)
-    cleanup_legacy_longshot_outputs(trip_dir, keep={safe_name})
+    removed = cleanup_legacy_longshot_outputs(trip_dir, keep={safe_name})
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        append_studio_homepage_event(
+            "export_renamed",
+            {
+                "trip_id": trip_dir.name,
+                "naming_rule": "d-sfi-07",
+                "filename": safe_name,
+                "legacy_cleaned": len(removed),
+            },
+        )
+    except Exception:  # noqa: BLE001 — telemetry must not break export
+        pass
     return out
 
 
@@ -1046,7 +1060,21 @@ def export_trip_longshot(
         user_hint = _segment_user_hint(len(outputs), segment_reason or "height")
 
     keep = {p.path.name for p in outputs}
-    cleanup_legacy_longshot_outputs(trip_dir, keep=keep)
+    removed = cleanup_legacy_longshot_outputs(trip_dir, keep=keep)
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        append_studio_homepage_event(
+            "export_renamed",
+            {
+                "trip_id": trip_dir.name,
+                "naming_rule": "d-sfi-07",
+                "filenames": sorted(keep),
+                "legacy_cleaned": len(removed),
+            },
+        )
+    except Exception:  # noqa: BLE001 — telemetry must not break export
+        pass
 
     return LongshotExportResult(
         outputs=outputs,

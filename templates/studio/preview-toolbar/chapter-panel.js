@@ -273,9 +273,16 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
     input.select();
 
     var saving = false;
+    var composing = false;
+    var blurTimer = null;
     function finish(commit) {
       if (saving) return;
+      if (composing) return;
       saving = true;
+      if (blurTimer) {
+        window.clearTimeout(blurTimer);
+        blurTimer = null;
+      }
       var next = String(input.value || "").trim().slice(0, 12);
       input.remove();
       titleBtn.hidden = false;
@@ -305,11 +312,24 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
         });
     }
 
+    // D-SFI-09 · IME 防抖：composition 期间不 blur 提交
+    input.addEventListener("compositionstart", function () {
+      composing = true;
+    });
+    input.addEventListener("compositionend", function () {
+      composing = false;
+    });
     input.addEventListener("blur", function () {
+      if (composing) {
+        blurTimer = window.setTimeout(function () {
+          if (!composing) finish(true);
+        }, 120);
+        return;
+      }
       finish(true);
     });
     input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && !composing) {
         e.preventDefault();
         input.blur();
       } else if (e.key === "Escape") {

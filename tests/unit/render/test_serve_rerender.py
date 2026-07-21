@@ -39,7 +39,13 @@ def test_rerender_draft_after_copy_patch(tmp_path: Path) -> None:
 
     apply_copy_patches(trip, [{"path": "meta.hook", "value": "改后的 hook"}])
     TripService().save(trip, ws / "trip.json")
+    # Stale longshot must be overwritten (not merely listed as present).
+    longshot = ws / "index-longshot.html"
+    longshot.write_text("<html>STALE-LONGSHOT-MARKER</html>", encoding="utf-8")
     rendered = rerender_draft_trip(ws / "trip.json")
     after = index.read_text(encoding="utf-8")
     assert "改后的 hook" in after
     assert "index.html" in rendered
+    assert "index-longshot.html" in rendered
+    assert "STALE-LONGSHOT-MARKER" not in longshot.read_text(encoding="utf-8")
+    assert "改后的 hook" in longshot.read_text(encoding="utf-8")

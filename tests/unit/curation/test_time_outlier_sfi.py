@@ -91,6 +91,31 @@ def test_moment_exif_low_confidence_suppresses_year() -> None:
     assert "武汉" in line
 
 
+def test_moment_exif_day_span_contradiction_suppresses_year() -> None:
+    """D-SFI-06 · 图注日期与章 daySpan 矛盾时同样抑年。"""
+    line = format_moment_exif_line(
+        {
+            "takenAt": "2015-07-08T15:00:00Z",
+            "dateConfidence": "high",
+            "place": {"city": "武汉"},
+        },
+        day_span=["2024-05-01", "2024-05-02"],
+    )
+    assert line is not None
+    assert "2015" not in line
+    assert "武汉" in line
+    ok = format_moment_exif_line(
+        {
+            "takenAt": "2024-05-01T15:00:00Z",
+            "dateConfidence": "high",
+            "place": {"city": "武汉"},
+        },
+        day_span=["2024-05-01", "2024-05-02"],
+    )
+    assert ok is not None
+    assert "2024" in ok
+
+
 def test_apply_marks_writes_curation() -> None:
     trip = {
         "assets": [

@@ -80,6 +80,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL {name}: {exc}", file=sys.stderr)
 
     print(f"done: ok={ok} fail={len(failed)}")
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        append_studio_homepage_event(
+            "album_rerender_batch",
+            {"n_ok": ok, "n_fail": len(failed)},
+        )
+    except Exception:  # noqa: BLE001 — telemetry must not break CLI
+        pass
     return 1 if failed else 0
 
 

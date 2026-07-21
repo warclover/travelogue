@@ -255,6 +255,7 @@ export function initToolbarV3(root, tripId) {
   }
 
   var sheetHooks = {
+    tripId: tripId,
     drawers: drawers,
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,

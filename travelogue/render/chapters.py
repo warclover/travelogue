@@ -216,6 +216,10 @@ def build_chapters_render_context(
                         show_moment_exif=show_moment_exif,
                         show_signature_label=show_signature_label,
                         moment_screen_label=moment_screen_label,
+                        chapter_day_span=list(
+                            (ch.get("curation") or {}).get("daySpan") or []
+                        )
+                        or None,
                     )
                 )
 

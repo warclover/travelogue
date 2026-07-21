@@ -606,12 +606,17 @@ export function mountPreviewTaskDock(root, hooks) {
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
 
+    trackStudioEvent("copy_refresh_shown", {
+      stub_hits: opts.stubHits != null ? opts.stubHits : undefined,
+    });
+
     if (typeof hooks.onCopyRefresh === "function") {
       var refreshBtn = document.createElement("button");
       refreshBtn.type = "button";
       refreshBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
       refreshBtn.textContent = "重新生成文案";
       refreshBtn.addEventListener("click", function () {
+        trackStudioEvent("copy_refresh_clicked", {});
         hooks.onCopyRefresh();
       });
       actions.appendChild(refreshBtn);

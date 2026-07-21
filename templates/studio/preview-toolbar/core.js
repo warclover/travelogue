@@ -11,7 +11,6 @@ import { pollJob, syncLongshotPreviewRowVisibility } from "./longshot.js";
 import {
   showToolbarToast,
   toolbarConfirm,
-  toolbarAlert,
   setSlowHint,
   setToolbarCollapsed,
   syncToolbarHeight,
@@ -240,12 +239,23 @@ export function setLayoutPending(on) {
   }
 
 
+var COPY_REFRESH_FAIL_TOAST =
+  "这次没写完，稍后再试 · 原文案保持不变";
+
 export function startLlmNarrate(root, tripId, btn, opts) {
     opts = opts || {};
     if (!btn || btn.disabled) return Promise.resolve();
+    var narrateStartedAt = 0;
+
+    function failRefresh(meta) {
+      trackStudioEvent("copy_refresh_failed", meta || {});
+      showToolbarToast(COPY_REFRESH_FAIL_TOAST, { error: true, duration: 5200 });
+      setSlowHint(root, "", false);
+    }
 
     function run() {
       trackStudioEvent("llm_narrate_click", { available: true });
+      narrateStartedAt = Date.now();
       btn.disabled = true;
       if (btn.dataset && !btn.dataset.labelBusy) {
         btn.dataset.labelIdle = btn.textContent || "";
@@ -260,7 +270,6 @@ export function startLlmNarrate(root, tripId, btn, opts) {
           if (!res) return;
           if (res.status === 409 || res.status === 400) {
             var failCode = res.body && res.body.error;
-            var failMsg = (res.body && res.body.message) || "无法开始";
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
             setSlowHint(root, "", false);
@@ -269,6 +278,10 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               failCode === "E_LLM_NETWORK" ||
               failCode === "E_LLM_PING"
             ) {
+              trackStudioEvent("copy_refresh_failed", {
+                code: failCode,
+                trip_id: tripId,
+              });
               toolbarConfirm({
                 title: "连接写作引擎失败",
                 body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
@@ -286,13 +299,13 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               });
               return;
             }
-            setSlowHint(root, failMsg, true);
+            failRefresh({ code: failCode || "start_fail", trip_id: tripId });
             return;
           }
           if (res.status !== 202 || !res.body.jobId) {
-            setSlowHint(root, "无法开始文案生成", true);
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
+            failRefresh({ code: "no_job", trip_id: tripId });
             return;
           }
           narrateJobId = res.body.jobId;
@@ -305,17 +318,29 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               narrateJobId = null;
               setSlowHint(root, "", false);
               if (job.status === "succeeded") {
+                var durationMs = narrateStartedAt ? Date.now() - narrateStartedAt : 0;
+                var originSkip =
+                  (job.result && job.result.origin_skip_count) ||
+                  (job.result && job.result.originSkipCount) ||
+                  0;
+                trackStudioEvent("copy_refresh_done", {
+                  trip_id: tripId,
+                  duration: durationMs,
+                  origin_skip_count: originSkip,
+                });
                 window.location.reload();
                 return;
               }
               var errCode = job.error && job.error.code;
-              var err =
-                (job.error && (job.error.message || job.error.code)) || "文案生成失败";
               if (
                 errCode === "E_LLM_AUTH" ||
                 errCode === "E_LLM_NETWORK" ||
                 errCode === "E_LLM_PING"
               ) {
+                trackStudioEvent("copy_refresh_failed", {
+                  code: errCode,
+                  trip_id: tripId,
+                });
                 toolbarConfirm({
                   title: "连接写作引擎失败",
                   body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
@@ -333,7 +358,11 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                 });
                 return;
               }
-              toolbarAlert(err, { error: true });
+              failRefresh({
+                code: errCode || "job_fail",
+                trip_id: tripId,
+                duration: narrateStartedAt ? Date.now() - narrateStartedAt : 0,
+              });
             },
             function () {
               setSlowHint(root, "比预期久一些，请耐心等待…", true);
@@ -344,7 +373,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
         .catch(function () {
           btn.disabled = false;
           if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
-          setSlowHint(root, "网络错误", true);
+          failRefresh({ code: "network", trip_id: tripId });
         });
     }
 

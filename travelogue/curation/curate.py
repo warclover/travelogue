@@ -745,11 +745,42 @@ def _curate_preflight(
         gap_days=int(app_cfg.curate.segment_gap_days or 14),
     )
     _seg_sizes = [len(getattr(s, "asset_ids", None) or []) for s in _segs]
-    apply_time_outlier_marks(
+    _outlier_ids = apply_time_outlier_marks(
         trip,
         segments_count=len(_segs),
         segment_sizes=_seg_sizes,
     )
+    if _outlier_ids:
+        try:
+            from travelogue.domain.studio_events import append_studio_homepage_event
+            from travelogue.curation.time_segments import parse_asset_date
+
+            dated = [
+                parse_asset_date(a)
+                for a in _eligible
+                if parse_asset_date(a) is not None
+            ]
+            span_days = (
+                (max(dated) - min(dated)).days if len(dated) >= 2 else 0
+            )
+            conf_dist: dict[str, int] = {}
+            oid_set = set(_outlier_ids)
+            for a in trip.get("assets") or []:
+                if not isinstance(a, dict) or a.get("id") not in oid_set:
+                    continue
+                key = str(a.get("dateConfidence") or "unknown")
+                conf_dist[key] = conf_dist.get(key, 0) + 1
+            append_studio_homepage_event(
+                "outlier_isolated",
+                {
+                    "trip_id": str(trip.get("tripId") or ""),
+                    "n_outliers": len(_outlier_ids),
+                    "span_days": span_days,
+                    "dateConfidence": conf_dist,
+                },
+            )
+        except Exception:  # noqa: BLE001 — telemetry must not break curate
+            pass
     layout_assets = layout_eligible_assets(trip)
     if len(layout_assets) < MIN_CURATE_ASSETS:
         raise CurateError(
