@@ -460,3 +460,4 @@ W2 各项进编码前须有对应线框（§9 W2 门）。
 | v0.1.1 | 2026-07-21 | 影楼方向改为已决策暂不做 |
 | v0.2.0 | 2026-07-21 | 跨职能评审回写：BLK-SFI-01～10 全部合入；W0/W1/W2 重定义；状态 → Conditional Go（评审回写完成） |
 | v0.2.1 | 2026-07-21 | Doc 包齐：IMPLEMENTATION · ACCEPTANCE · 线框 F0–F5 · 狗粮清单 · README 索引；状态 → Ready for Kickoff W0；**DOC-SFI-08** FTT 脚注已回写（FTT v0.2.1） |
+| v0.2.2 | 2026-07-21 | **DES-SFI-01**：附录 A 基线改为仙本那真册（非照片纵向 10.4%）；demo-album 降为对照 |
