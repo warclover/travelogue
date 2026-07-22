@@ -5,6 +5,8 @@
 
 import { postJson } from "../js/http.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { isAiSurfaceEnabled } from "../js/ai-surface.js";
+import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { isPreviewToolbarV3 } from "./dock.js";
 import { syncCoverTitleLayoutClass } from "./inline-edit.js";
 import { pollJob, syncLongshotPreviewRowVisibility } from "./longshot.js";
@@ -244,6 +246,8 @@ var COPY_REFRESH_FAIL_TOAST =
 
 export function startLlmNarrate(root, tripId, btn, opts) {
     opts = opts || {};
+    // NAS · D-NAS-19 / FE-NAS-09：函数级门闩（藏 UI 不够）
+    if (!isAiSurfaceEnabled()) return Promise.resolve();
     if (!btn || btn.disabled) return Promise.resolve();
     var narrateStartedAt = 0;
 
@@ -264,7 +268,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       }
       setToolbarCollapsed(root, false, false);
       setSlowHint(root, "", false);
-      setSlowHint(root, opts.busyHint || "正在重新生成文案…", true);
+      setSlowHint(root, opts.busyHint || DARK_COPY.narrateBusy, true);
       return postJson("/__travelogue/narrate", { tripId: tripId })
         .then(function (res) {
           if (!res) return;
@@ -283,8 +287,8 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                 trip_id: tripId,
               });
               toolbarConfirm({
-                title: "连接写作引擎失败",
-                body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
+                title: DARK_COPY.narrateFailTitle,
+                body: DARK_COPY.narrateFailBody,
                 confirmText: "去检查配置",
                 cancelText: "知道了",
               }).then(function (ok) {
@@ -342,8 +346,8 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                   trip_id: tripId,
                 });
                 toolbarConfirm({
-                  title: "连接写作引擎失败",
-                  body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
+                  title: DARK_COPY.narrateFailTitle,
+                  body: DARK_COPY.narrateFailBody,
                   confirmText: "去检查配置",
                   cancelText: "知道了",
                 }).then(function (ok) {
@@ -381,11 +385,11 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       return run();
     }
     return toolbarConfirm({
-      title: opts.confirmTitle || "重新生成文案",
+      title: opts.confirmTitle || DARK_COPY.narrateConfirmTitle,
       body:
         opts.confirmBody ||
         "将为这本重新写开头一句和图说；你自己改过的内容不会动。通常不到一分钟。",
-      confirmText: opts.confirmText || "重新生成文案",
+      confirmText: opts.confirmText || DARK_COPY.narrateConfirmText,
     }).then(function (ok) {
       if (!ok) return;
       return run();

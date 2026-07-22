@@ -368,15 +368,21 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     assert "更多输出" in panel
     assert 'data-action="export-zip"' in panel
     assert 'data-action="reveal-folder"' in panel
-    assert 'title="2×"' in panel and ">标准<" in panel
-    assert 'title="3×"' in panel and ">更清晰<" in panel
+    assert 'data-studio-longshot-scale="2"' in panel and "标准" in panel
+    assert 'data-studio-longshot-scale="3"' in panel and "更清晰" in panel
     assert "标准 2×" not in panel
     assert "preview-sheet__template-slot" in sheet
     assert "preview-sheet__embed--cohort" in sheet
     assert "preview-sheet__embed--structure" in sheet
     assert "bookAdvancedToolsHtml" in sheet
     assert "放映精选" in sheet
-    assert "生成杂志感文案" in sheet
+    # NAS · AC-NAS-05：默认 sheet 不渲染「生成杂志感文案」；dark 用 DARK_COPY.sheetLlmStart
+    assert "生成杂志感文案" not in sheet
+    assert "isAiSurfaceEnabled" in sheet
+    assert 'if (!isAiSurfaceEnabled()) return ""' in sheet
+    dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
+    assert "重新生成文案" in dark
+    assert "sheetLlmStart" in dark
 
 
 def test_studio_aesthetic_debug_gated_from_default_ui() -> None:
@@ -745,11 +751,18 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
-    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
-    assert "preview-sheet__llm-expect" in sheet
+    # NAS · AC-NAS-05/14：默认面无杂志感 expect 串；dark-copy + 门控
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
+    assert "配置写作引擎" not in sheet
+    assert "preview-sheet__llm-expect" in sheet  # dark 模板标记仍在 bookCopyRefreshHtml
+    assert "isAiSurfaceEnabled" in sheet
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
+    assert "if (!isAiSurfaceEnabled())" in init_v3
+    assert 'copy_branch: "nas_hidden"' in init_v3
     assert "llmExpect" in init_v3
-    assert "MF-06" in init_v3 or "不会自动重写" in init_v3 or "llmExpect.hidden = false" in init_v3
+    assert "DARK_COPY" in init_v3
+    assert "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。" in dark
 
 
 def test_preview_refine_ux_v11_m1_mode_panel_decouple_markers() -> None:
@@ -886,10 +899,17 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "preview-sheet__more-tools" not in sheet
     assert "长图要不要字" in panel
     assert 'data-copy-preset="full"' in panel
-    assert "当前为本机文案 · 配置写作引擎后可升级" in sheet
-    assert 'data-action="llm-setup"' in sheet
+    # NAS · AC-NAS-05：默认 sheet 无 llm-setup / 杂志感串；dark-copy 冻结
+    dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
+    assert "当前为本机文案 · 配置写作引擎后可升级" not in sheet
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
+    assert "配置写作引擎" not in sheet
+    assert "当前为本机文案 · 配置写作引擎后可升级" in dark
+    assert "sheetLlmUnavailable" in dark
+    assert 'data-action="llm-setup"' in sheet  # dark bookCopyRefreshHtml 仍含标记
     assert "preview-sheet__llm-expect" in sheet
-    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
+    assert "isAiSurfaceEnabled" in sheet
+    assert 'if (!isAiSurfaceEnabled()) return ""' in sheet
     assert "maybeShowBookTabMigrateTip" in mode
     assert "book_tab_migrate_tip_show" in mode
     assert "onBookTabRendered" in init
@@ -925,18 +945,25 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "长图要不要字" in panel
     assert 'data-field="copy"' in panel
     assert "更多输出" in panel
-    assert ">更清晰<" in panel
+    assert "更清晰" in panel and 'data-studio-longshot-scale="3"' in panel
 
 
 def test_preview_refine_v1_d_ref_13_rewrite_copy() -> None:
-    """D-REF-13 · 按新感觉重写：文案 + 二次确认 + busy。"""
+    """D-REF-13 · NAS：默认面无「按新感觉重写」字面量；dark-copy + 门控。"""
     drawers = (STUDIO / "preview-toolbar" / "drawers.js").read_text(encoding="utf-8")
     core = (STUDIO / "preview-toolbar" / "core.js").read_text(encoding="utf-8")
-    assert "按新感觉重写这段" in drawers
+    dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
+    # 默认可达面不得出现禁词字面量（经 DARK_COPY 引用）
+    assert "按新感觉重写这段" not in drawers
+    assert "按新感觉重写这段" in dark
+    assert "drawerNarrate" in dark
+    assert "DARK_COPY.drawerNarrate" in drawers
+    assert "isAiSurfaceEnabled" in drawers
     assert "正在重写…" in drawers
     assert "skipConfirm: true" in drawers
     assert "保存并重新生成文案" not in drawers
     assert "opts.skipConfirm" in core or "skipConfirm" in core
+    assert "isAiSurfaceEnabled" in core
 
 
 def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:

@@ -1,7 +1,7 @@
 /**
  * 首页 v2 · Import Failed 专屏（继承 v1.4 · 背景 = 恒常 Bento 壳层 · 方案 A）。
- * L0 Hardening：E_LLM_AUTH → T-FAIL-01（继续生成本机游记 / 去配置 / 留在首页）。
- * L0 Resume：失败保留 pending；配置后可从设置 Modal resume；无 pending 时书架兜底。
+ * NAS：默认面失败归因去配置出口（FE-NAS-06）；dark 可恢复配置 CTA。
+ * L0 Resume：失败保留 pending；无 pending 时书架兜底。
  */
 import { SS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint, isLlmAuthRecoverable } from "../js/errors.js";
@@ -13,6 +13,7 @@ import { openImportSheet } from "./import-entry.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { openLlmSettings } from "../js/llm-settings.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
+import { isAiSurfaceEnabled } from "../js/ai-surface.js";
 
 var _wired = false;
 var _lastErr = null;
@@ -70,7 +71,8 @@ function latestUserTrip() {
 
 function populateFailedUi(err, pending) {
   var code = err && err.code;
-  var authRecoverable = isLlmAuthRecoverable(err);
+  // NAS · 默认面不走「配置引擎」失败分支
+  var authRecoverable = isAiSurfaceEnabled() && isLlmAuthRecoverable(err);
   var panel = document.querySelector("#v2-failure .v2-failure__panel");
   if (panel) {
     if (authRecoverable) panel.classList.add("v2-failure__panel--auth");
@@ -79,19 +81,19 @@ function populateFailedUi(err, pending) {
 
   var eyebrow = $("v2-failure-eyebrow");
   if (eyebrow) {
-    eyebrow.textContent = authRecoverable ? "杂志感文案暂不可用" : "导入失败";
+    eyebrow.textContent = "导入失败";
   }
 
   var msgEl = $("v2-failure-msg");
   if (msgEl) {
     msgEl.textContent = authRecoverable
-      ? "可以继续生成本机游记；写作引擎可选，配置后在预览中升级杂志感文案。"
+      ? "可以继续生成本次导入；配好后可在预览中刷新叙述。"
       : humanizeStudioError(code, (err && err.message) || "导入失败，请重试");
   }
   var hintEl = $("v2-failure-hint");
   if (hintEl) {
     hintEl.textContent = authRecoverable
-      ? "配置可选。配完后请点「继续生成本机游记」；杂志感文案在预览「更多工具」里升级，不会在本步自动改写。"
+      ? "可点「继续生成游记」；或检查文件夹后重试。"
       : failureNextHint(code);
   }
   var echoEl = $("v2-failure-echo");
@@ -117,7 +119,7 @@ function populateFailedUi(err, pending) {
   setHidden(settingsBtn, !authRecoverable);
   setHidden(openRecent, !(authRecoverable && recent));
   if (continueBtn && authRecoverable) {
-    continueBtn.textContent = "继续生成本机游记";
+    continueBtn.textContent = "继续生成游记";
   }
   // 缺引擎：重试降为次要（配置变更后仍可用）；有 pending 才显示
   var canRetry = !!canContinue;
@@ -222,14 +224,17 @@ export function showImportFailed(err) {
   _previousFocus = document.activeElement;
   show($("v2-failure"), true);
 
-  var authRecoverable = isLlmAuthRecoverable(_lastErr);
+  var authRecoverable = isAiSurfaceEnabled() && isLlmAuthRecoverable(_lastErr);
   syncHomeStubBanner();
   if (authRecoverable) {
     trackStudioEvent("import_fail_auth_shown", { code: _lastErr.code || "E_LLM_AUTH" });
     var canContinue = !!(pending && (pending.albumPath || pending.uploadForm));
-    var focusId = canContinue ? "v2-failure-continue-stub" : (
-      latestUserTrip() ? "v2-failure-open-recent" : "v2-failure-open-settings"
-    );
+    // NAS · M7：焦点永不落到 settings
+    var focusId = canContinue
+      ? "v2-failure-continue-stub"
+      : latestUserTrip()
+        ? "v2-failure-open-recent"
+        : "v2-failure-retry";
     setV2SkipLinkTarget(focusId);
     var focusEl = $(focusId);
     if (focusEl && typeof focusEl.focus === "function") focusEl.focus();

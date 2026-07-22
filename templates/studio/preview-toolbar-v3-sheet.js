@@ -7,6 +7,8 @@
 
 import { trackStudioEvent } from "./js/analytics.js";
 import { postJsonConflictRetry } from "./js/http.js";
+import { isAiSurfaceEnabled } from "./js/ai-surface.js";
+import { DARK_COPY } from "./js/ai-surface-dark-copy.js";
 import { showToolbarToast, tripApiBase, tripIdFromPath } from "./preview-toolbar/shell.js";
 
 var TAB_MODES = [
@@ -432,16 +434,24 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   }
 
   function bookCopyRefreshHtml() {
+    // NAS · FE-NAS-08：默认不渲染 llm 行（dark 再开）
+    if (!isAiSurfaceEnabled()) return "";
     return (
       '<ul class="preview-sheet__list preview-sheet__list--copy-refresh">' +
-      '<li data-tool="llm"><span>重新生成文案</span><button type="button" class="preview-sheet__link" data-action="llm">开始</button></li>' +
+      '<li data-tool="llm"><span>' +
+      DARK_COPY.sheetLlmStart +
+      '</span><button type="button" class="preview-sheet__link" data-action="llm">开始</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
+      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>' +
+      DARK_COPY.sheetLlmUnavailable +
+      "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
-      '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
+      '<button type="button" class="preview-sheet__link" data-action="llm-setup">' +
+      DARK_COPY.sheetLlmSetup +
+      "</button>" +
       "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。" +
+      DARK_COPY.sheetLlmExpect +
       "</p>"
     );
   }

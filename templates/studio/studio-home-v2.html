@@ -211,7 +211,7 @@
       <div class="v2-settings-popover__head">
         <div class="v2-settings-popover__titles">
           <p id="v2-settings-title" class="v2-settings-popover__title">设置</p>
-          <p id="v2-settings-desc" class="v2-settings-popover__desc">常用：导入 · 存储 · 外观；AI 可选。实验项默认折叠。</p>
+          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入偏好、存储位置与界面选项。改动会立即保存。</p>
         </div>
         <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
                 aria-label="关闭">×</button>
@@ -304,7 +304,7 @@
                     <option value="false">自动继续（推荐）</option>
                     <option value="true">导入后先确认章节</option>
                   </select>
-                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
+                  <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再继续排版</p>
                 </div>
 
                 <div class="v2-settings-field" data-csc-tier="advanced" data-csc-key="layout.scoring.enabled">
@@ -326,19 +326,20 @@
           </div>
         </details>
 
-        <!-- AI 文案 · zone 摘要 + CTA → Modal（D-DLLM-03） -->
-        <details class="v2-settings-zone" id="v2-settings-zone-ai" data-csc-tier="l0">
+        <!-- nas-allow: dark-only settings AI zone (NAS FE-NAS-03 / S1) -->
+        <details class="v2-settings-zone" id="v2-settings-zone-ai" data-csc-tier="l0" hidden aria-hidden="true"
+                 data-nas-allow="1">
           <summary class="v2-settings-zone__summary">
-            AI 文案
+            写作增强
             <span class="v2-settings-zone__meta" id="v2-settings-meta-ai">未配置</span>
           </summary>
           <div class="v2-settings-zone__body">
             <p class="v2-settings-ai-badge" id="studio-llm-settings-badge">未配置</p>
             <p class="v2-advanced-popover__hint" id="studio-llm-settings-note">
-              不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。
+              可选增强：配置后可在预览中刷新叙述语气。
             </p>
             <button type="button" class="v2-settings-popover__cta" id="studio-llm-settings-entry">
-              配置写作引擎…
+              打开配置…
             </button>
             <button type="button" class="v2-settings-popover__dev-btn" id="studio-llm-settings-help"
                     data-llm-help-h7="1">了解更多（帮助）</button>
@@ -449,8 +450,8 @@
       <p class="v2-failure__msg" id="v2-failure-msg"></p>
       <p class="v2-failure__hint" id="v2-failure-hint"></p>
       <div class="v2-failure__actions">
-        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>继续生成本机游记</button>
-        <button type="button" class="v2-failure__secondary" id="v2-failure-open-settings" hidden>去配置写作引擎</button>
+        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>继续生成游记</button>
+        <button type="button" class="v2-failure__secondary" id="v2-failure-open-settings" hidden>查看设置</button>
         <button type="button" class="v2-failure__secondary" id="v2-failure-open-recent" hidden>打开最近游记预览</button>
         <button type="button" class="v2-failure__cta" id="v2-failure-retry">重试</button>
         <button type="button" class="v2-failure__stay" id="v2-failure-stay">留在首页</button>

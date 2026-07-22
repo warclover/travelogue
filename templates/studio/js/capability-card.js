@@ -11,7 +11,6 @@ import {
   markCapabilityCardSuppressHelpL1,
   isCapabilityCardSuppressingHelpL1,
 } from "./help-onboarding.js";
-import { openLlmSettings } from "./llm-settings.js";
 import { V2 } from "../homepage-v2/store.js";
 
 var ROOT_ID = "studio-capability-card-root";
@@ -33,35 +32,13 @@ function ensureRoot() {
     '<div class="studio-capability-card__panel">' +
     '<button type="button" class="studio-capability-card__close" data-cap-dismiss="1" aria-label="关闭">×</button>' +
     '<p id="studio-capability-card-title" class="studio-capability-card__title">照片留在本机，也能做成可发的游记</p>' +
-    '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。更好的文案可稍后自行升级（可选）。向导里可一键试用示例。</p>' +
+    '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。向导里可一键试用示例。</p>' +
     '<div class="studio-capability-card__actions">' +
     '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始制作我的游记</button>' +
     "</div>" +
-    '<p class="studio-capability-card__linkrow">' +
-    '<button type="button" class="studio-capability-card__link" id="studio-capability-upgrade">以后再升级 AI 文案 →</button>' +
-    "</p>" +
     "</div>";
   document.body.appendChild(el);
-  if (!document.getElementById("studio-capability-card-style")) {
-    var style = document.createElement("style");
-    style.id = "studio-capability-card-style";
-    style.textContent =
-      ".studio-capability-card{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;}" +
-      ".studio-capability-card[hidden]{display:none!important;}" +
-      ".studio-capability-card__scrim{position:absolute;inset:0;background:rgba(20,28,26,.4);}" +
-      ".studio-capability-card__panel{position:relative;z-index:1;width:min(400px,92vw);background:#f7f5f0;color:#1a2420;" +
-      "border-radius:14px;padding:22px 22px 18px;border:1px solid #c5d0ca;box-sizing:border-box;}" +
-      ".studio-capability-card__close{position:absolute;top:10px;right:12px;border:0;background:transparent;" +
-      "font-size:22px;line-height:1;cursor:pointer;color:#4a5c55;}" +
-      ".studio-capability-card__title{margin:0 28px 8px 0;font-size:17px;font-weight:650;line-height:1.35;}" +
-      ".studio-capability-card__body{margin:0;font-size:13px;color:#4a5c55;line-height:1.5;}" +
-      ".studio-capability-card__actions{margin-top:16px;}" +
-      ".studio-capability-card__primary{border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;" +
-      "cursor:pointer;background:#2f6b55;color:#fff;}" +
-      ".studio-capability-card__linkrow{margin:12px 0 0;}" +
-      ".studio-capability-card__link{border:0;background:transparent;padding:0;color:#2f6b55;font-size:13px;cursor:pointer;}";
-    document.head.appendChild(style);
-  }
+  /* Styles: capability-card.css via studio-home-v2.css（UI Detail Wave5） */
   el.addEventListener("click", function (ev) {
     var t = ev.target;
     if (t && t.getAttribute && t.getAttribute("data-cap-dismiss")) {
@@ -87,13 +64,6 @@ function ensureRoot() {
           if (cta) cta.click();
         } catch (_e2) {}
       }
-    });
-  }
-  var upgrade = document.getElementById("studio-capability-upgrade");
-  if (upgrade) {
-    upgrade.addEventListener("click", function () {
-      dismissCapabilityCard("configure");
-      openLlmSettings({ source: "card" });
     });
   }
   return el;
@@ -143,44 +113,16 @@ function canShow() {
 }
 
 export function showCapabilityCard() {
-  if (!canShow()) return false;
-  var el = ensureRoot();
-  el.hidden = false;
-  _visible = true;
-  // D-DLLM-13：本会话压制非关键自动 Help L1
-  markCapabilityCardSuppressHelpL1();
-  trackStudioEvent("capability_card_show", {});
-  var primary = document.getElementById("studio-capability-start");
-  if (primary) {
-    try {
-      primary.focus();
-    } catch (_e) {}
-  }
-  return true;
+  // NAS · FE-NAS-01 / D-NAS-20：能力卡首启硬推永久关闭（dark 亦不恢复）
+  return false;
 }
 
 /**
  * 首页 idle 后评估一次（busy 则延后）。
+ * NAS：永不调度展示。
  */
-export function maybeShowCapabilityCard(opts) {
-  opts = opts || {};
-  if (_scheduled && !opts.force) return;
-  if (isCapabilityCardSeen()) return;
-  _scheduled = true;
-  var delay = typeof opts.delayMs === "number" ? opts.delayMs : 480;
-  window.setTimeout(function () {
-    if (!canShow()) {
-      // busy：idle 后再试一次
-      if (isHelpL1Blocked() || (V2 && V2.state === "Importing")) {
-        _scheduled = false;
-        window.setTimeout(function () {
-          maybeShowCapabilityCard({ force: true, delayMs: 600 });
-        }, 1200);
-      }
-      return;
-    }
-    showCapabilityCard();
-  }, delay);
+export function maybeShowCapabilityCard(_opts) {
+  return;
 }
 
 /** 供 Help L1 仲裁：能力卡优先或本会话已压制 */

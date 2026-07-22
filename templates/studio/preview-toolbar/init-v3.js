@@ -25,6 +25,12 @@ import {
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
+import {
+  ensureAiSurfaceHydrated,
+  hydrateAiSurfaceFromConfig,
+  isAiSurfaceEnabled,
+} from "../js/ai-surface.js";
+import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { requestExitStudio } from "../js/studio-exit.js";
 import {
   registerInlineEditBridge,
@@ -412,6 +418,17 @@ export function initToolbarV3(root, tripId) {
             "先在正文点 ★";
         }
       });
+      // NAS · FE-NAS-09：默认面不跑 llm 状态机 / stub tip / Dock 刷新提示
+      root._copyRefreshHint = false;
+      if (!isAiSurfaceEnabled()) {
+        try {
+          trackStudioEvent("refine_copy_branch", {
+            copy_branch: "nas_hidden",
+            trip_id: tripId || null,
+          });
+        } catch (_eNas) {}
+        return;
+      }
       var llmBtn = panel.querySelector('[data-action="llm"]');
       var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
       var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
@@ -435,22 +452,18 @@ export function initToolbarV3(root, tripId) {
           llmBtn.disabled = !ok;
           llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
         }
-        // PMX D2 · L0 显示配置引导；L1 显示就绪预期（禁止强制显示「配置写作引擎」）
         if (llmHint) llmHint.hidden = !!ok;
         if (llmSetup) llmSetup.hidden = !!ok;
         if (llmExpect) {
           llmExpect.hidden = !ok;
           if (ok) {
-            llmExpect.textContent =
-              "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。";
+            llmExpect.textContent = DARK_COPY.llmExpectReady;
           } else {
-            llmExpect.textContent =
-              "当前为本机文案 · 配置写作引擎后可升级";
+            llmExpect.textContent = DARK_COPY.llmExpectStub;
           }
         }
         _wantStubTip = !ok;
         if (!ok) scheduleStubNarrateTip();
-        // FE-SFI-05 · Key 就绪时提示可刷新（册级 dismiss）
         root._copyRefreshHint = !!ok;
         try {
           var dismissKey = "travelogue.copyRefreshDismiss." + tripId;
@@ -461,7 +474,6 @@ export function initToolbarV3(root, tripId) {
         if (typeof refreshTaskDockState === "function") {
           refreshTaskDockState(root);
         }
-        // PMX §8 · 精修文案分支（与 FirstSuccess / 设置同源；仅状态变化时打点）
         try {
           var branch = ok ? "l1_ready" : "l0_degraded";
           if (root._pmxCopyBranch !== branch) {
@@ -514,9 +526,11 @@ export function initToolbarV3(root, tripId) {
     },
   };
 
+  ensureAiSurfaceHydrated();
   fetch("/__travelogue/config")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {
+      hydrateAiSurfaceFromConfig(cfg || {});
       cohortEnabled = !!(cfg && cfg.cohort && cfg.cohort.enabled);
       if (cfg && cfg.studio) {
         applyLongshot2Config(cfg.studio);
@@ -565,6 +579,8 @@ export function initToolbarV3(root, tripId) {
       refreshTaskDockState(root);
     },
     onCopyRefresh: function () {
+      // NAS · M11：默认面切断 Dock → narrate
+      if (!isAiSurfaceEnabled()) return;
       var btn =
         (root._sheet &&
           root._sheet.el &&

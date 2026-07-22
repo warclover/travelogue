@@ -55,6 +55,8 @@ class StudioConfig:
     success_refined_default_enabled: bool = True
     import_sheet_large_enabled: bool = True
     layout_templates_internal: bool = False
+    # NAS · 默认 False；正式面勿 PATCH。亦可用 env TRAVELOGUE_AI_SURFACE=1。
+    ai_surface_enabled: bool = False
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
     output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
     gcs_poster_bric: GcsPosterBricConfig = field(default_factory=GcsPosterBricConfig)

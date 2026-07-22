@@ -11,6 +11,8 @@ import { requestExitStudio } from "../js/studio-exit.js";
 import { bindStorageSettings } from "./storage-settings.js";
 import { $, V2, V2_THEME_LABELS } from "./store.js";
 import { studioAuthHeaders } from "../js/http.js";
+import { isAiSurfaceEnabled } from "../js/ai-surface.js";
+import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 
 var SETTINGS_HINT_KEY = "travelogue.studio.v2.settingsMovedHint";
 
@@ -285,11 +287,16 @@ function applyAiStatus(st) {
     );
   }
   if (entry) {
-    entry.textContent = readiness === "已就绪" ? "管理写作引擎…" : "配置写作引擎…";
+    entry.textContent =
+      readiness === "已就绪" ? DARK_COPY.settingsManage : DARK_COPY.settingsConfigure;
   }
 }
 
 function refreshAiStatus() {
+  // NAS · S3：默认面不请求 /llm/status
+  if (!isAiSurfaceEnabled()) {
+    return Promise.resolve();
+  }
   return fetch("/__travelogue/llm/status", { headers: studioAuthHeaders({}) })
     .then(function (r) {
       return r.ok ? r.json() : null;
@@ -300,6 +307,22 @@ function refreshAiStatus() {
     .catch(function () {
       applyAiStatus({});
     });
+}
+
+/** NAS · FE-NAS-03：默认隐藏 AI zone；dark ON 再显示并恢复文案 */
+export function syncAiSettingsZone() {
+  var zone = $("v2-settings-zone-ai");
+  if (!zone) return;
+  var on = isAiSurfaceEnabled();
+  zone.hidden = !on;
+  zone.setAttribute("aria-hidden", on ? "false" : "true");
+  if (!on) {
+    try {
+      zone.open = false;
+    } catch (_e) {
+      /* ignore */
+    }
+  }
 }
 
 function expandZone(zone) {
@@ -332,6 +355,8 @@ function focusZoneControl(focusKey) {
     return !!storageSec;
   }
   if (focusKey === "ai") {
+    // NAS · 默认面忽略 focus=ai
+    if (!isAiSurfaceEnabled()) return false;
     var aiZone = $("v2-settings-zone-ai");
     expandZone(aiZone);
     var entry = $("studio-llm-settings-entry");

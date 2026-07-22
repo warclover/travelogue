@@ -110,10 +110,11 @@
 | `E_STUDIO_CANCELLED` | 用户取消 Job | 已取消 |
 | `E_STUDIO_UPLOAD_EMPTY` | multipart 无文件 | 未收到任何照片文件 |
 | `E_STUDIO_PIPELINE` | 导入子进程或 pipeline 异常 | 导入失败，请重试 |
-| `E_LLM_AUTH` | 未配置 / Key 无效（**可选**杂志感文案路径） | 可以继续生成本机游记；配置写作引擎后可在预览中升级杂志感文案。 |
+| `E_AI_SURFACE_DISABLED` | NAS：默认面 AI 产品面关闭；`POST /narrate` · settings 写 · ping | 当前版本不可用 |
+| `E_LLM_AUTH` | 未配置 / Key 无效（**dark / AI-Return** 配置路径；默认面勿引导配 Key） | 检查文件夹是否仍可访问、照片是否足够，然后点「重试」或换文件夹再试。 |
 | `E_LLM_NETWORK` | 网络中断 | 文案生成时网络中断，请重试 |
-| `E_LLM_PROVIDER` | 未知/未选服务商 | 请选择支持的写作引擎服务商 |
-| `E_LLM_PING` | ping 响应异常 | 连接测试失败，请检查 Key 或稍后重试 |
+| `E_LLM_PROVIDER` | 未知/未选服务商 | 当前不可用，请稍后重试 |
+| `E_LLM_PING` | ping 响应异常 | 连接测试失败，请稍后重试 |
 | `E_LLM_STUB` | 内部：`provider=stub` 仍调 LLM | 不直接给终端用户；UI 应走「未配置 / 本机文案」（见 Desktop LLM Setup） |
 | `E_LLM_ENDPOINT` | 地域/endpoint 与 Key 不匹配，或 host 不可达（**WEA W1**） | 当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。 |
 | `E_LLM_MODEL` | 模型名不被服务商接受（启发式 · **WEA W1**；下拉进 W2） | 模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。 |
@@ -123,9 +124,11 @@
 | `E_LLM_TIMEOUT` | 连接或读写超时（与客户端 `E_LLM_TIMEOUT` 对齐） | 无法连接服务商。请检查网络后重试。 |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 
-> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；UI 主 CTA 为「继续生成本机游记」。失败时须保留 pending；设置保存后提供 resume CTA。
+> **当前版无 AI 面（[PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md)）**：默认门控 off 时返回 `E_AI_SURFACE_DISABLED`（403）；**禁止**用 `E_LLM_AUTH` 冒充门控拒绝。用户面由 NAS supersede；dark（`TRAVELOGUE_AI_SURFACE=1`）下恢复配置/ping/narrate。
 >
-> **写作引擎配置加固（[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)）**：`E_LLM_ENDPOINT` / `E_LLM_BASE_URL` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` 为 W1–W2 落地预留码；handlers 映射完成前，UI 可先按 HTTP/消息启发式展示同方向中文，再换成稳定 code。
+> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；默认面失败 CTA 见 NAS COPY（「继续生成游记」）。
+>
+> **写作引擎配置加固（[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)）**：`E_LLM_ENDPOINT` / `E_LLM_BASE_URL` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` 为 W1–W2 落地预留码；handlers 映射完成前，UI 可先按 HTTP/消息启发式展示同方向中文，再换成稳定 code。默认 UI 入口由 NAS 关闭。
 
 ### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）
 
@@ -177,6 +180,7 @@
 | v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |
 | v0.4.0 | 2026-05-28 | Phase 3 Curate 聚类：`E_CLUSTER_*`；废止 v0.2 洞察/引擎错误码 |
 | v0.5.0 | 2026-07-09 | Longshot 2.0：`E_LNG2_*` 平台导出错误码 |
+| v0.5.4 | 2026-07-22 | NAS：登记 `E_AI_SURFACE_DISABLED`；默认面 `E_LLM_AUTH`/`PROVIDER`/`PING` 文案中性化 |
 | v0.5.3 | 2026-07-17 | WEA：预留 `E_LLM_ENDPOINT` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` / `E_LLM_BASE_URL`；补登记 `E_LLM_TIMEOUT` |
 | v0.5.2 | 2026-07-15 | L0 Hardening：`E_LLM_AUTH` 不得作为导入唯一出口；`recoverableWithStub` |
 | v0.5.1 | 2026-07-15 | Desktop LLM Setup：补 `E_LLM_STUB`；对齐 `E_LLM_*` 用户文案 |

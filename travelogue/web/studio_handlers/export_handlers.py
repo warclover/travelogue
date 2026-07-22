@@ -74,6 +74,10 @@ def _ensure_derivatives_for_export(trip_dir: Path) -> None:
 
 def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
+    from travelogue.web.ai_surface import (
+        ai_surface_disabled_body,
+        resolve_ai_surface_enabled,
+    )
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
 
     payload = handler._read_json_body()
@@ -101,6 +105,11 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
                 "message": "请先在「分章」中确认章节顺序",
             },
         )
+        return
+
+    # NAS · BE-NAS-02：先于 Key / status / Job（有 Key 亦 403）
+    if not resolve_ai_surface_enabled(ctx.cfg):
+        handler._json_response(403, ai_surface_disabled_body())
         return
 
     llm_status = studio_llm_status(cfg=ctx.cfg)
