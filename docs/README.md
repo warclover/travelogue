@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
-| **更新日期** | 2026-07-20 |
+| **更新日期** | 2026-07-22 |
 
 ---
 
@@ -95,6 +95,7 @@
 | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
 | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
 | [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) | **「这一趟做完」成册防搁置 FTT V1** **v0.2.1**（Conditional Go · 认可 SFI 敢发支线 · [线框 F1–F8](./wireframes/finish-this-trip-v1-wireframe.html) 待审 · [评审](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md)） |
+| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe 根治 · AppConfig 97/53 决议 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md)） |
 | [wireframes/finish-this-trip-v1-wireframe.html](./wireframes/finish-this-trip-v1-wireframe.html) | FTT · F1–F8 线框草稿 · **待产品审核** |
 | [acceptance-records/finish-this-trip-v1-review-2026-07-20.md](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md) | FTT · 七席评审纪要 · Conditional Go · BLK-FTT-01～08 |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
@@ -139,6 +140,8 @@
 | [acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md) | SFI · **DES-SFI-01** 仙本那真实册长图归因签字（W2 前置） |
 | [acceptance-records/persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) | 典型用户+博主试用底稿（2026-07-21 首轮） |
 | [acceptance-records/persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) | 十二席深度试用底稿（2026-07-21 下午） |
+| [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
+| [acceptance-records/post-trip-needs-product-decision-2026-07-21.md](./acceptance-records/post-trip-needs-product-decision-2026-07-21.md) | 调研 → 产品决策备忘录（**已认可** · D1 48h 话术 · D2 小红书包收窄 · D3 ShareHandoff 北极星 · X1–X3 不追） |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
 | [IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md](./IMPLEMENTATION-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环 · M1+M2+P0+M3 落地说明 |
 | [ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md](./ACCEPTANCE-REFINE-FEEDBACK-LOOP-V1.md) | 精修反馈闭环验收 · AC-FEED + P0 + M3 |
@@ -564,6 +567,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md) | **断言硬化 ASH V1**（**Done** · [结案](./acceptance-records/ash-closeout-2026-07-16.md)） |
 | [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) | **长图 Job 真协作取消 V1**（**Done** · [狗粮](./acceptance-records/lcc-cancel-dogfood-2026-07-15.md)） |
 | [PRD-ARCH-ALGO-DEEPENING-V1.md](./PRD-ARCH-ALGO-DEEPENING-V1.md) | **架构收敛与算法加深 V1.1**（执行分支 `arch/algo-deepening-v1` · [评审纪要](./acceptance-records/aad-prd-review-2026-07-15.md)） |
+| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe + 布尔面决议 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md)） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
 | [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |
