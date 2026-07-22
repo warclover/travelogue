@@ -4,6 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | **v0.2.2-CSC** |
+| **DOC-STATUS** | **active**（登记见 [DOC-STATUS.md](./DOC-STATUS.md)） |
 | **状态** | **Conditional Go · 九席 + 根因 + AppConfig 布尔面决议已写入** · 根治主轴 = Happy Path Recipe；W0 交付 Recipe 初稿后方可称基线完成 |
 | **特性代号** | **CSC**（Completion Surface Convergence · 完工表面积收敛） |
 | **一句话代号** | 「别再做更强的排版引擎；收成更窄、更稳、更可解释的完工器」 |

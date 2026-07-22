@@ -1,0 +1,39 @@
+# Travelogue · 用户档配置样例（CSC W3b · L0 + L1）
+# 复制为 config.yaml 并勿提交到 Git。
+#
+# 本文件只列「安装/成册结果」相关键：
+#   L0 运维根 — 目录、写作引擎、地理编码占位
+#   L1 结果旋钮 — ≤10（当前 3；见 docs/acceptance-records/csc-w0-l0-l1-keys.md）
+#
+# 深参、实验旗标、杂志算法细节 → 见 config.yaml.example（research 面），
+# 或依赖 AppConfig 代码默认；勿把 research 键抄进用户档「常用」。
+
+trips_dir: ./trips
+
+# --- L0 · 运维根（默认不进 Studio「常用」设置）---
+llm:
+  provider: stub                  # stub | deepseek | dashscope
+  model: deepseek-chat
+  api_key_env: DEEPSEEK_API_KEY   # 密钥写项目根 .env，勿提交
+  timeout_sec: 120
+
+ffmpeg:
+  path: ffmpeg
+
+geocode:
+  enabled: false
+  provider: null
+  api_key_env: null
+
+# --- L1 · 结果旋钮（预算 ≤10 · 当前 3）---
+clustering:
+  enabled: auto                   # auto | true | false · 行程识别
+
+vision:
+  enabled: false                  # 场景分析；开则更慢
+
+ingest:
+  copy_source_files: true         # 导入时复制源文件
+
+# 其余能力（bookends / curate / layout / aesthetic / …）使用代码默认，
+# 不在用户档展开。需要研究调试时再对照 config.yaml.example。

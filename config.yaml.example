@@ -1,5 +1,8 @@
-# Travelogue 本地配置样例
+# Travelogue 本地配置样例 · research / 全量面（CSC W3b）
 # 复制为 config.yaml 并勿提交到 Git
+#
+# 用户档（L0 + L1≤10）请优先复制：config.user.example.yaml
+# 本文件保留深参与实验旗标，供对照与研究；勿把整文件当作「常用设置」清单。
 #
 # 说明：config.py 读取 trips_dir / ingest / layout / export / vision / narrative / llm。
 # ffmpeg / geocode 段：geocode.enabled 已接入 ingest（Nominatim + 本地缓存）；ffmpeg 仍为规划预留。

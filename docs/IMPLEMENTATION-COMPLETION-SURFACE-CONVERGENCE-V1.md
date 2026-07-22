@@ -3,8 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2.2 |
+| **DOC-STATUS** | **active**（登记见 [DOC-STATUS.md](./DOC-STATUS.md)） |
 | **分支** | `feat/csc-w0-recipe` |
-| **状态** | **W0–W2b 棘轮就绪** · facade 深 import = 0；god-module 行数 ceiling 已钉；W3 清退未开 |
+| **状态** | **W0–W3 棘轮/分层就绪** · facade=0；god-module ceiling；债务表 **24**；用户档 example；DOC-STATUS 示范；W1-05 手测 Pending |
 | **根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md) |
 | **更新日期** | 2026-07-22 |
 
@@ -99,9 +100,35 @@ python scripts/lint_csc_god_module_ratchet.py
 
 > 有意加行须同 PR 带 `--allow-growth` 更新 baseline，并在 PR 说明理由。
 
-### W3 · 清退（未开工）
+### W3a · 结构化债务表
 
-债务表 ceiling · L1≤10 用户档 · 文档状态示范。
+| ID | 任务 | 状态 |
+|----|------|------|
+| CSC-W3a-01 | 债务扫描（legacy 文件名 + `shim →` docstring） | **Done** · 24 条 |
+| CSC-W3a-02 | `lint_csc_debt_table.py` ceiling（只降不升） | **Done** |
+| CSC-W3a-03 | 人读表 `csc-w3-debt-table.md` | **Done** |
+| CSC-W3a-04 | 按批删除无调用 shim | **Parking**（下批；本波只钉 ceiling） |
+
+**验证**
+
+```powershell
+python scripts/lint_csc_debt_table.py
+```
+
+### W3b · 配置分层
+
+| ID | 任务 | 状态 |
+|----|------|------|
+| CSC-W3b-01 | `config.user.example.yaml`（L0 + L1≤10） | **Done** |
+| CSC-W3b-02 | `config.yaml.example` 标为 research/全量面 | **Done** |
+| CSC-W3b-03 | 分层说明 md | **Done** · [csc-w3-config-surface-split.md](./acceptance-records/csc-w3-config-surface-split.md) |
+
+### W3c · 文档状态示范
+
+| ID | 任务 | 状态 |
+|----|------|------|
+| CSC-W3c-01 | [DOC-STATUS.md](./DOC-STATUS.md) 状态机 + 入口 | **Done** |
+| CSC-W3c-02 | ≥5 篇示范标注 | **Done**（6 篇登记） |
 
 ---
 
@@ -116,7 +143,15 @@ python scripts/lint_csc_god_module_ratchet.py
 | 单测 | `tests/unit/orchestrator/test_happy_path_recipe.py` |
 | Facade API | `travelogue/layout_engine/api.py` |
 | Facade lint | `scripts/lint_layout_engine_facade.py` |
-| Facade baseline | `docs/acceptance-records/csc-w2a-facade-deep-import-baseline.json` |
+| Facade baseline | `docs/acceptance-records/csc-w2a-facade-deep-import-baseline.json`（**0** 边） |
+| God-module ratchet | `scripts/lint_csc_god_module_ratchet.py` |
+| God-module baseline | `docs/acceptance-records/csc-w2b-god-module-ratchet-baseline.json` |
+| 债务表 lint | `scripts/lint_csc_debt_table.py` |
+| 债务表 baseline | `docs/acceptance-records/csc-w3-debt-table-baseline.json`（**24**） |
+| 债务表（人读） | `docs/acceptance-records/csc-w3-debt-table.md` |
+| 用户档 example | `config.user.example.yaml` |
+| 配置分层说明 | `docs/acceptance-records/csc-w3-config-surface-split.md` |
+| 文档状态入口 | `docs/DOC-STATUS.md` |
 
 **更新基线（仅在有意变更默认 / L1 名单时）**
 
