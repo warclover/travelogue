@@ -232,24 +232,21 @@
     },
     "S-FAIL": {
       "surface": "#v2-failure .v2-failure__panel",
-      "textSampleCount": 6,
+      "textSampleCount": 5,
       "uniqueFontSizes": [
         "11.0",
         "12.0",
-        "13.0",
         "14.0",
         "18.0"
       ],
       "uniqueColors": [
-        "rgb(232, 160, 152)",
-        "rgb(245, 240, 232)",
         "rgba(245, 240, 232, 0.62)",
-        "rgba(255, 255, 255, 0.85)",
+        "rgb(245, 240, 232)",
         "rgb(26, 21, 16)",
         "rgba(255, 255, 255, 0.55)"
       ],
-      "fontSizeCount": 5,
-      "colorCount": 6,
+      "fontSizeCount": 4,
+      "colorCount": 4,
       "leftDeltaFirstTwo": 0,
       "samples": [
         {
@@ -257,7 +254,7 @@
           "className": "v2-failure__eyebrow",
           "text": "导入失败",
           "fontSize": 11,
-          "color": "rgb(232, 160, 152)",
+          "color": "rgba(245, 240, 232, 0.62)",
           "fontWeight": "400",
           "lineHeight": "normal",
           "left": 447
@@ -281,16 +278,6 @@
           "fontWeight": "400",
           "lineHeight": "18px",
           "left": 447
-        },
-        {
-          "tag": "button",
-          "className": "v2-failure__secondary",
-          "text": "去配置写作引擎",
-          "fontSize": 13,
-          "color": "rgba(255, 255, 255, 0.85)",
-          "fontWeight": "400",
-          "lineHeight": "normal",
-          "left": 577.5
         },
         {
           "tag": "button",

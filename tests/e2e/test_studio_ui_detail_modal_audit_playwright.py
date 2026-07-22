@@ -450,9 +450,13 @@ def test_studio_ui_detail_modal_family_audit(studio_server, tmp_path: Path) -> N
               const el = document.getElementById('v2-failure');
               el.hidden = false;
               el.classList.add('is-open');
+              const eyebrow = document.getElementById('v2-failure-eyebrow');
+              if (eyebrow) eyebrow.textContent = '导入失败';
               document.getElementById('v2-failure-msg').textContent = '没能读完这个文件夹';
               document.getElementById('v2-failure-hint').textContent = '可换一个文件夹重试，或先用示例照片。';
-              document.getElementById('v2-failure-open-settings').hidden = false;
+              // 非鉴权导入失败不得露出 AI 配置 CTA
+              const settings = document.getElementById('v2-failure-open-settings');
+              if (settings) settings.hidden = true;
             }
             """
         )

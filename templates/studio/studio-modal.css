@@ -60,9 +60,11 @@
 }
 
 .studio__modal-help-link {
-  display: inline-block;
-  margin: -8px 0 16px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  margin: -4px 0 12px;
+  padding: 10px 2px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: #3d6b5a;

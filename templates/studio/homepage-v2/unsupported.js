@@ -177,6 +177,9 @@ function hideUnsupported() {
 export function applyViewport(onSupportedStart) {
   var layout = currentLayout();
   V2.layout = layout;
+  try {
+    document.documentElement.setAttribute("data-v2-layout", layout);
+  } catch (_e) { /* ignore */ }
   if (!isSupported(layout)) {
     renderUnsupported(layout);
     return;

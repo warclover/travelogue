@@ -578,7 +578,8 @@
   margin: 0 0 8px;
   font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: .12em;
-  color: var(--v2-fs-coral);
+  /* 眉题用 muted cream；珊瑚留给边框，避免与 CTA（--v2-gold/雾蓝）双强调 */
+  color: var(--v2-fs-muted);
 }
 .v2-failure__echo {
   margin: 0 0 8px;

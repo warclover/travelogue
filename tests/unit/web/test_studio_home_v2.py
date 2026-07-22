@@ -935,6 +935,11 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     # 隐藏的 fixed 覆盖层不得拦截点击
     assert "#v2-unsupported[hidden]" in css
     assert "display: none !important" in css
+    # FOUC guard：JS 写入 data-v2-layout 前窄屏先亮 Unsupported
+    assert "html:not([data-v2-layout]) #v2-unsupported[hidden]" in css
+    assert 'setAttribute("data-v2-layout"' in (
+        STUDIO_DIR / "homepage-v2" / "unsupported.js"
+    ).read_text(encoding="utf-8")
     # CTA 触控目标 ≥44px（AC-HP2-21）
     assert "min-height: 44px" in css
 

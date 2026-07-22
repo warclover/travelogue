@@ -303,8 +303,8 @@
 }
 .v2-settings-popover__desc {
   margin: 4px 0 0;
-  font-size: var(--studio-panel-label-size, 11px);
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.45;
   font-weight: 400;
   color: var(--v2-set-muted);
 }
@@ -349,13 +349,14 @@
 .v2-settings-zone__summary {
   cursor: pointer;
   list-style: none;
-  padding: 10px 12px;
+  padding: 11px 12px;
   font-size: 13px;
   font-weight: 650;
   color: var(--v2-set-ink);
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 40px;
 }
 .v2-settings-zone__summary::-webkit-details-marker {
   display: none;
@@ -376,7 +377,7 @@
 }
 .v2-settings-zone__meta {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--v2-set-muted);
   max-width: 54%;
@@ -399,7 +400,8 @@
 }
 .v2-settings-zone__note {
   margin: 10px 0 0;
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--v2-set-muted);
 }
 .v2-settings-field {
@@ -408,7 +410,7 @@
 .v2-settings-field__label {
   display: block;
   margin: 0 0 6px;
-  font-size: var(--studio-panel-label-size, 11px);
+  font-size: 12px;
   font-weight: 700;
   color: var(--v2-set-muted);
 }

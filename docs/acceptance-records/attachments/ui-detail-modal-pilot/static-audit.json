@@ -44,9 +44,9 @@
   ],
   "histograms": {
     "fontSizeHistogram": {
-      "12px": 28,
+      "12px": 29,
       "11px": 21,
-      "13px": 17,
+      "13px": 18,
       "14px": 6,
       "var(--studio-panel-label-size, 11px)": 4,
       "16px": 3,
@@ -57,8 +57,7 @@
       "21px": 1,
       "24px": 1,
       "var(--studio-panel-title-size, 15px)": 1,
-      "22px": 1,
-      "var(--studio-panel-chip-size, 11px)": 1
+      "22px": 1
     },
     "colorHistogram": {
       "#fff": 9,
@@ -174,10 +173,9 @@
           "13px",
           "16px",
           "22px",
-          "var(--studio-panel-chip-size, 11px)",
           "var(--studio-panel-title-size, 15px)"
         ],
-        "fontSizeCount": 6,
+        "fontSizeCount": 5,
         "colorUnique": [
           "#f5f0e8",
           "color-mix(in srgb, var(--studio-panel-ink, #14110d) 55%, transparent)",
