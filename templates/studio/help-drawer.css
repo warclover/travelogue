@@ -67,6 +67,16 @@
   z-index: 80;
 }
 
+/* Unsupported / FOUC 窄屏 gate 时隐藏，避免与「去电脑打开」抢注意力 */
+html[data-v2-layout^="unsupported"] .studio-help-open--home {
+  display: none !important;
+}
+@media (max-width: 767px), (max-width: 1023px) and (orientation: portrait) {
+  html:not([data-v2-layout]) .studio-help-open--home {
+    display: none !important;
+  }
+}
+
 .studio-help-drawer-root {
   position: fixed;
   inset: 0;

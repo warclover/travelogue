@@ -940,6 +940,11 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert 'setAttribute("data-v2-layout"' in (
         STUDIO_DIR / "homepage-v2" / "unsupported.js"
     ).read_text(encoding="utf-8")
+    # Unsupported 态隐藏首页帮助 FAB
+    help_css = (STUDIO_DIR / "help-drawer.css").read_text(encoding="utf-8")
+    assert 'html[data-v2-layout^="unsupported"] .studio-help-open--home' in help_css
+    # 卷轴页点扩大命中区
+    assert ".v2-carousel__dots button::after" in css
     # CTA 触控目标 ≥44px（AC-HP2-21）
     assert "min-height: 44px" in css
 

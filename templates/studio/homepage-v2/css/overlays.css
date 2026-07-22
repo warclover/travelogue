@@ -446,8 +446,11 @@
   width: 100%;
 }
 .v2-first-success__link {
-  min-height: 36px;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
   border: none;
   background: transparent;
   color: var(--v2-fs-muted);
@@ -464,8 +467,11 @@
   margin-left: 2px;
 }
 .v2-first-success__dismiss {
-  min-height: 36px;
-  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 8px;
   border: none;
   background: transparent;
   color: rgba(255, 255, 255, .48);
@@ -478,8 +484,11 @@
 .v2-first-success__dismiss:hover { color: var(--v2-fs-ink); }
 /* 兼容旧类名（harness / 测试若仍引用） */
 .v2-first-success__stay {
-  min-height: 36px;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
   border: none;
   background: transparent;
   color: var(--v2-fs-muted);
