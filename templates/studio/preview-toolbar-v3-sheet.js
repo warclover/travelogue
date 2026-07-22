@@ -6,6 +6,8 @@
 "use strict";
 
 import { trackStudioEvent } from "./js/analytics.js";
+import { postJsonConflictRetry } from "./js/http.js";
+import { showToolbarToast, tripApiBase, tripIdFromPath } from "./preview-toolbar/shell.js";
 
 var TAB_MODES = [
   { id: "page", label: "这页" },
@@ -76,6 +78,10 @@ function describeScreenContext(el) {
     (idx ? "第 " + idx + " 页" : "游记正文") + (chapterName ? " · " + chapterName : "");
   var kicker = el.querySelector(".kicker, .hook-line, [data-copy-role='kicker']");
   var body = el.querySelector(".caption, .lead, .body-copy, [data-copy-role='caption'], [data-copy-role='lead']");
+  var rawIds = el.getAttribute("data-asset-ids") || "";
+  var primaryAssetId = (rawIds.split(",")[0] || "").trim();
+  var isAppendix =
+    !!(chapter && chapter.getAttribute("data-appendix") === "1");
   return {
     empty: false,
     label: label,
@@ -87,6 +93,8 @@ function describeScreenContext(el) {
       ".preview-toolbar__collage-ctrl, .preview-toolbar__collage-select"
     ),
     copyHint: !!(kicker || body),
+    isAppendix: isAppendix,
+    primaryAssetId: primaryAssetId,
   };
 }
 
@@ -405,18 +413,25 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       "</div></div>" +
       '<ul class="preview-sheet__list">' +
       '<li data-tool="present"><span>放映精选</span><button type="button" class="preview-sheet__link" data-action="present">开始</button><small class="preview-sheet__present-empty" hidden>先在正文点 ★</small></li>' +
-      '<li data-tool="llm"><span>生成杂志感文案</span><button type="button" class="preview-sheet__link" data-action="llm">生成</button></li>' +
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
+      "</ul>" +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+    );
+  }
+
+  function bookCopyRefreshHtml() {
+    return (
+      '<ul class="preview-sheet__list preview-sheet__list--copy-refresh">' +
+      '<li data-tool="llm"><span>重新生成文案</span><button type="button" class="preview-sheet__link" data-action="llm">开始</button></li>' +
       "</ul>" +
       '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>当前为本机文案 · 配置写作引擎后可升级</p>' +
       '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
       '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
       "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      "本机文案 · 点此生成杂志感（不会自动重写）" +
-      "</p>" +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+      "当前为本机文案 · 配置写作引擎后可升级" +
+      "</p>"
     );
   }
 
@@ -616,6 +631,50 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       });
       actions.appendChild(mediaBtn);
     }
+    // FE-SFI-07 · 精修单张「移回原章」（附录章）
+    if (ctx.isAppendix && ctx.primaryAssetId && actions) {
+      var restoreBtn = document.createElement("button");
+      restoreBtn.type = "button";
+      restoreBtn.className = "preview-sheet__chip";
+      restoreBtn.textContent = "移回原章";
+      restoreBtn.addEventListener("click", function () {
+        var tid =
+          (hooks && hooks.tripId) ||
+          (typeof tripIdFromPath === "function" && tripIdFromPath()) ||
+          "";
+        if (!tid) {
+          showToolbarToast("移回未完成");
+          return;
+        }
+        restoreBtn.disabled = true;
+        postJsonConflictRetry(tripApiBase(tid) + "/promote-tier", {
+          action: "restoreTimeOutlier",
+          assetIds: [ctx.primaryAssetId],
+          rerender: false,
+        })
+          .then(function (res) {
+            restoreBtn.disabled = false;
+            if (!res || res.status < 200 || res.status >= 300) {
+              showToolbarToast(
+                (res && res.body && res.body.message) || "移回未完成，请稍后重试"
+              );
+              return;
+            }
+            showToolbarToast("已移回，正在重新分章…");
+            if (
+              hooks.drawers &&
+              typeof hooks.drawers.regenerateStructure === "function"
+            ) {
+              return hooks.drawers.regenerateStructure();
+            }
+          })
+          .catch(function () {
+            restoreBtn.disabled = false;
+            showToolbarToast("移回未完成");
+          });
+      });
+      actions.appendChild(restoreBtn);
+    }
   }
 
   function mountBookendsInto(slot) {
@@ -676,14 +735,23 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     bodyEl.innerHTML =
       '<p class="preview-sheet__hint preview-sheet__hint--lead">改名字与一句话。换封面/封底请到「封面」。</p>' +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
-      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话</span></summary>' +
+      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话 · 文案</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
+      bookCopyRefreshHtml() +
+      '<div class="preview-sheet__brand" data-works-brand>' +
+      '<p class="preview-sheet__label">作品署名</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">个人署名 · 同时出现在辑封与长图尾</p>' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="default" /> 默认 · Travelogue</label>' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="custom" /> 自定义（≤14 字）</label>' +
+      '<input type="text" class="preview-sheet__brand-input" maxlength="14" placeholder="你的署名" hidden />' +
+      '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="hidden" /> 不显示</label>' +
+      "</div>" +
       "</div></details>" +
       '<details class="preview-sheet__zone preview-sheet__zone--advanced" data-book-zone="advanced">' +
       '<summary>进阶 <span class="preview-sheet__zone-meta">很少需要</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">阅读视图、放映、杂志感文案、换模板、旅行主角同框、分章说明。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">阅读视图、放映、换模板、旅行主角同框、分章说明。</p>' +
       bookAdvancedToolsHtml() +
       '<div class="preview-sheet__template-slot"></div>' +
       '<div class="preview-sheet__embed preview-sheet__embed--cohort"></div>' +
@@ -701,7 +769,20 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
     }
 
+    wireWorksBrandControls();
     wireBookAdvancedTools();
+    // FE-SFI-04 · 文案刷新入口在整本信息区，复用同一套 llm 接线
+    var storyLlm = bodyEl.querySelector(
+      '.preview-sheet__zone--story [data-action="llm"]'
+    );
+    if (storyLlm && !storyLlm._sfiWired) {
+      storyLlm._sfiWired = true;
+      storyLlm.addEventListener("click", function () {
+        if (storyLlm.disabled) return;
+        close();
+        if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(storyLlm);
+      });
+    }
 
     var templateSlot = bodyEl.querySelector(".preview-sheet__template-slot");
     if (templateSlot && typeof hooks.mountTemplateControls === "function") {
@@ -746,6 +827,83 @@ export function mountPreviewUnifiedSheet(root, hooks) {
           hooks.drawers.openEmbed("structure", structHost, { sheetMode: true });
         });
       }
+    }
+  }
+
+  function wireWorksBrandControls() {
+    var host = bodyEl.querySelector("[data-works-brand]");
+    if (!host) return;
+    var tid =
+      (hooks && hooks.tripId) ||
+      (typeof tripIdFromPath === "function" && tripIdFromPath()) ||
+      "";
+    if (!tid) return;
+    var input = host.querySelector(".preview-sheet__brand-input");
+    var radios = host.querySelectorAll('input[name="works-brand"]');
+
+    function syncCustomVisibility(mode) {
+      if (!input) return;
+      input.hidden = mode !== "custom";
+      if (mode === "custom") {
+        try {
+          input.focus();
+        } catch (_e) {}
+      }
+    }
+
+    function saveBrand(mode, text) {
+      var patches = [{ path: "meta.worksBrandMode", value: mode }];
+      if (mode === "custom") {
+        patches.push({
+          path: "meta.worksBrandText",
+          value: String(text || "").trim().slice(0, 14),
+        });
+      }
+      postJsonConflictRetry(tripApiBase(tid) + "/save-copy", { patches: patches })
+        .then(function (res) {
+          if (!res || res.status < 200 || res.status >= 300) {
+            showToolbarToast("署名未保存");
+            return;
+          }
+          showToolbarToast("署名已更新");
+        })
+        .catch(function () {
+          showToolbarToast("署名未保存");
+        });
+    }
+
+    fetch("/__travelogue/trips/" + encodeURIComponent(tid) + "/entry")
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (entry) {
+        var brand = (entry && entry.worksBrand) || {};
+        var mode = brand.mode || "default";
+        radios.forEach(function (radio) {
+          radio.checked = radio.value === mode;
+        });
+        if (input) input.value = brand.text || "";
+        syncCustomVisibility(mode);
+      })
+      .catch(function () {});
+
+    radios.forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        if (!radio.checked) return;
+        syncCustomVisibility(radio.value);
+        if (radio.value === "custom" && input && !String(input.value || "").trim()) {
+          return;
+        }
+        saveBrand(radio.value, input ? input.value : "");
+      });
+    });
+    if (input) {
+      input.addEventListener("change", function () {
+        var modeEl = host.querySelector('input[name="works-brand"]:checked');
+        var mode = (modeEl && modeEl.value) || "custom";
+        if (mode !== "custom") return;
+        saveBrand("custom", input.value);
+      });
     }
   }
 

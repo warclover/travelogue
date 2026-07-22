@@ -1,0 +1,280 @@
+{
+  "tripId": "fixture-sfi-wuhan",
+  "schemaVersion": "0.2",
+  "meta": {
+    "title": "武大--米娜",
+    "displayTitle": "武大 米娜",
+    "dateStart": "2015-07-01",
+    "dateEnd": "2015-07-08",
+    "places": [
+      "武汉"
+    ],
+    "tone": "relaxed"
+  },
+  "assets": [
+    {
+      "id": "asset-001",
+      "takenAt": "2015-07-08T16:17:10Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2136,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "7月8日"
+    },
+    {
+      "id": "asset-002",
+      "takenAt": "2015-07-08T16:20:42Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "武大--米娜"
+    },
+    {
+      "id": "asset-003",
+      "takenAt": "2015-07-08T16:25:26Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-004",
+      "takenAt": "2015-07-08T16:36:12Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": false,
+      "mediaClass": "photo",
+      "type": "image",
+      "excludeReason": "blur"
+    },
+    {
+      "id": "asset-005",
+      "takenAt": "2015-07-08T16:48:42Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-006",
+      "takenAt": "2015-07-08T17:00:50Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-007",
+      "takenAt": "2015-07-09T15:00:24Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2286,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "7月9日"
+    },
+    {
+      "id": "asset-008",
+      "takenAt": "2015-07-09T15:00:38Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4781,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "武大--米娜"
+    },
+    {
+      "id": "asset-009",
+      "takenAt": "2015-07-09T15:19:34Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4781,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-010",
+      "takenAt": "2015-07-09T15:20:00Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4781,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-011",
+      "takenAt": "2015-07-09T15:20:20Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4781,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-012",
+      "takenAt": "2015-07-09T15:20:40Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2142,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-013",
+      "takenAt": "2015-07-09T15:21:02Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-014",
+      "takenAt": "2015-07-09T15:21:34Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2142,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "武大--米娜"
+    },
+    {
+      "id": "asset-015",
+      "takenAt": "2015-07-09T15:22:12Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4781,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-016",
+      "takenAt": "2015-07-09T15:22:34Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-017",
+      "takenAt": "2015-07-09T15:23:02Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2142,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-018",
+      "takenAt": "2015-07-09T15:57:06Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-019",
+      "takenAt": "2015-07-09T15:57:40Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": false,
+      "mediaClass": "photo",
+      "type": "image",
+      "excludeReason": "cull_quota"
+    },
+    {
+      "id": "asset-020",
+      "takenAt": "2015-07-09T15:58:06Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4483,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "武大--米娜"
+    },
+    {
+      "id": "asset-021",
+      "takenAt": "2015-07-09T15:58:36Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4794,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-022",
+      "takenAt": "2015-07-09T15:59:18Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-023",
+      "takenAt": "2015-07-09T15:59:40Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-024",
+      "takenAt": "2015-07-09T16:00:04Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 4479,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image"
+    },
+    {
+      "id": "asset-025",
+      "takenAt": "2015-07-09T16:00:26Z",
+      "dateConfidence": "low",
+      "width": 3200,
+      "height": 2136,
+      "layoutEligible": true,
+      "mediaClass": "photo",
+      "type": "image",
+      "caption": "7月9日"
+    }
+  ],
+  "chapters": [],
+  "curation": {},
+  "pipeline": {
+    "status": "draft"
+  }
+}

@@ -134,14 +134,19 @@ def test_capture_dimensions_falls_back_to_natural() -> None:
 
 
 def test_share_zip_filename() -> None:
-    trip = {"tripId": "demo-kyoto"}
-    assert share_zip_filename(trip) == "trip-demo-kyoto.zip"
+    trip = {
+        "tripId": "demo-kyoto",
+        "meta": {"displayTitle": "京都雨季漫游", "title": "demo-kyoto"},
+    }
+    assert share_zip_filename(trip) == "京都雨季漫游-分享.zip"
+    assert "trip-" not in share_zip_filename(trip)
 
 
 def test_has_share_zip_when_file_exists(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
     assert not has_share_zip(trip, trip_workspace)
-    (trip_workspace / "trip-render-golden-demo.zip").write_bytes(b"PK")
+    zip_name = share_zip_filename(trip)
+    (trip_workspace / zip_name).write_bytes(b"PK")
     assert has_share_zip(trip, trip_workspace)
 
 
@@ -158,10 +163,11 @@ def test_render_includes_share_toolbar(trip_workspace: Path) -> None:
 
 def test_render_shows_download_zip_when_published(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
-    (trip_workspace / "trip-render-golden-demo.zip").write_bytes(b"PK")
+    (trip_workspace / share_zip_filename(trip)).write_bytes(b"PK")
     ctx = build_render_context(trip, trip_root=trip_workspace)
     assert ctx["hasShareZip"] is True
-    assert ctx["shareZipFile"] == "trip-render-golden-demo.zip"
+    assert ctx["shareZipFile"] == share_zip_filename(trip)
+    assert "trip-" not in ctx["shareZipFile"]
     html = render_html(trip, trip_root=trip_workspace)
     assert "下载分享包" in html
     assert 'data-share-action="download-zip"' in html

@@ -11,7 +11,6 @@ import { pollJob, syncLongshotPreviewRowVisibility } from "./longshot.js";
 import {
   showToolbarToast,
   toolbarConfirm,
-  toolbarAlert,
   setSlowHint,
   setToolbarCollapsed,
   syncToolbarHeight,
@@ -133,7 +132,7 @@ export function refreshTaskDockState(root) {
     if (!root || !isPreviewToolbarV3(root) || !root._taskDock) return;
     if (root._exportDockActive || root._exportResultShowing) return;
     // D-PCU · 默认/实验均不走黄底 G1 Strip；分章走 Dock 面板
-    // 栈：export(外层) > layoutPending > sourceMissing > longshotStale > featured
+    // 栈：export(外层) > layoutPending > sourceMissing > copyRefresh > longshotStale
     if (_layoutPending && !_pendingDockDismissed) {
       var pendingTitle = _layoutPendingMessage || "版面有改动";
       root._taskDock.showPending({
@@ -148,6 +147,15 @@ export function refreshTaskDockState(root) {
       root._taskDock.showPending({
         title: "原相册无法访问",
       });
+      return;
+    }
+    // FE-SFI-05 · copyRefresh 高于 longshotStale（先刷新再导出）
+    var copyRefresh =
+      !!root._copyRefreshHint &&
+      !root._copyRefreshDismissed &&
+      typeof root._taskDock.showCopyRefresh === "function";
+    if (copyRefresh) {
+      root._taskDock.showCopyRefresh({});
       return;
     }
     var longshotStale =
@@ -231,12 +239,23 @@ export function setLayoutPending(on) {
   }
 
 
+var COPY_REFRESH_FAIL_TOAST =
+  "这次没写完，稍后再试 · 原文案保持不变";
+
 export function startLlmNarrate(root, tripId, btn, opts) {
     opts = opts || {};
     if (!btn || btn.disabled) return Promise.resolve();
+    var narrateStartedAt = 0;
+
+    function failRefresh(meta) {
+      trackStudioEvent("copy_refresh_failed", meta || {});
+      showToolbarToast(COPY_REFRESH_FAIL_TOAST, { error: true, duration: 5200 });
+      setSlowHint(root, "", false);
+    }
 
     function run() {
       trackStudioEvent("llm_narrate_click", { available: true });
+      narrateStartedAt = Date.now();
       btn.disabled = true;
       if (btn.dataset && !btn.dataset.labelBusy) {
         btn.dataset.labelIdle = btn.textContent || "";
@@ -245,13 +264,12 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       }
       setToolbarCollapsed(root, false, false);
       setSlowHint(root, "", false);
-      setSlowHint(root, opts.busyHint || "正在生成杂志感文案…", true);
+      setSlowHint(root, opts.busyHint || "正在重新生成文案…", true);
       return postJson("/__travelogue/narrate", { tripId: tripId })
         .then(function (res) {
           if (!res) return;
           if (res.status === 409 || res.status === 400) {
             var failCode = res.body && res.body.error;
-            var failMsg = (res.body && res.body.message) || "无法开始";
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
             setSlowHint(root, "", false);
@@ -260,6 +278,10 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               failCode === "E_LLM_NETWORK" ||
               failCode === "E_LLM_PING"
             ) {
+              trackStudioEvent("copy_refresh_failed", {
+                code: failCode,
+                trip_id: tripId,
+              });
               toolbarConfirm({
                 title: "连接写作引擎失败",
                 body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
@@ -277,13 +299,13 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               });
               return;
             }
-            setSlowHint(root, failMsg, true);
+            failRefresh({ code: failCode || "start_fail", trip_id: tripId });
             return;
           }
           if (res.status !== 202 || !res.body.jobId) {
-            setSlowHint(root, "无法开始文案生成", true);
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
+            failRefresh({ code: "no_job", trip_id: tripId });
             return;
           }
           narrateJobId = res.body.jobId;
@@ -296,17 +318,29 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               narrateJobId = null;
               setSlowHint(root, "", false);
               if (job.status === "succeeded") {
+                var durationMs = narrateStartedAt ? Date.now() - narrateStartedAt : 0;
+                var originSkip =
+                  (job.result && job.result.origin_skip_count) ||
+                  (job.result && job.result.originSkipCount) ||
+                  0;
+                trackStudioEvent("copy_refresh_done", {
+                  trip_id: tripId,
+                  duration: durationMs,
+                  origin_skip_count: originSkip,
+                });
                 window.location.reload();
                 return;
               }
               var errCode = job.error && job.error.code;
-              var err =
-                (job.error && (job.error.message || job.error.code)) || "文案生成失败";
               if (
                 errCode === "E_LLM_AUTH" ||
                 errCode === "E_LLM_NETWORK" ||
                 errCode === "E_LLM_PING"
               ) {
+                trackStudioEvent("copy_refresh_failed", {
+                  code: errCode,
+                  trip_id: tripId,
+                });
                 toolbarConfirm({
                   title: "连接写作引擎失败",
                   body: "仍保留本机文案。可检查 API Key、网络或服务商余额后重试。",
@@ -324,7 +358,11 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                 });
                 return;
               }
-              toolbarAlert(err, { error: true });
+              failRefresh({
+                code: errCode || "job_fail",
+                trip_id: tripId,
+                duration: narrateStartedAt ? Date.now() - narrateStartedAt : 0,
+              });
             },
             function () {
               setSlowHint(root, "比预期久一些，请耐心等待…", true);
@@ -335,7 +373,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
         .catch(function () {
           btn.disabled = false;
           if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
-          setSlowHint(root, "网络错误", true);
+          failRefresh({ code: "network", trip_id: tripId });
         });
     }
 
@@ -343,11 +381,11 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       return run();
     }
     return toolbarConfirm({
-      title: opts.confirmTitle || "生成杂志感文案",
+      title: opts.confirmTitle || "重新生成文案",
       body:
         opts.confirmBody ||
-        "将调用 LLM 重写 hook、导语与图注，可能覆盖未锁定的文案。继续？",
-      confirmText: opts.confirmText || "继续",
+        "将为这本重新写开头一句和图说；你自己改过的内容不会动。通常不到一分钟。",
+      confirmText: opts.confirmText || "重新生成文案",
     }).then(function (ok) {
       if (!ok) return;
       return run();

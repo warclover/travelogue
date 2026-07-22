@@ -624,7 +624,19 @@ export function cancelPreviewLongshotExport(root) {
       platform: stored.platform || "wechat_chat",
       slideCount: stored.slideCount,
       padMode: stored.padMode || "letterbox",
+      includeAppendix: stored.includeAppendix === true,
+      density: stored.density === "compact" ? "compact" : "default",
     };
+  }
+
+  function estimateAppendixCountFromDom(doc) {
+    doc = doc || document;
+    var ch = doc.querySelector("section.chapter--appendix");
+    if (!ch) return 0;
+    var n = ch.querySelectorAll(
+      '.layout-slot__img, [data-block="media-card"], .media-card img'
+    ).length;
+    return n >= 2 ? n : 2;
   }
 
   export function formatLongshotExportMetaLabel() {
@@ -680,6 +692,7 @@ export function cancelPreviewLongshotExport(root) {
       entrypoint: "preview",
       slideCount: prefs.slideCount,
       padMode: prefs.padMode,
+      includeAppendix: prefs.includeAppendix === true,
     });
   }
 
@@ -895,6 +908,7 @@ export function cancelPreviewLongshotExport(root) {
     pop._panelDraft.setUiOpts({
       smartCropEnabled: _longshot2SmartCrop,
       photoCount: estimatePhotoCountFromDom(document),
+      appendixCount: estimateAppendixCountFromDom(document),
     });
   }
 
@@ -929,10 +943,13 @@ export function cancelPreviewLongshotExport(root) {
         scale: prefs0.scale,
         slideCount: prefs0.slideCount,
         padMode: prefs0.padMode,
+        includeAppendix: prefs0.includeAppendix === true,
+        density: prefs0.density === "compact" ? "compact" : "default",
       },
       {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
+        appendixCount: estimateAppendixCountFromDom(document),
         onDraftChange: function (draft) {
           syncConfirmedExportSummary(pop, draft && draft.platform);
         },
@@ -1029,7 +1046,9 @@ export function cancelPreviewLongshotExport(root) {
     pop._applyDraft = function () {
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
+      var prevDensity = readExportPrefs().density || "default";
       var confirmedPlatform = draft.platform || "wechat_chat";
+      var nextDensity = draft.density === "compact" ? "compact" : "default";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
         platform: confirmedPlatform,
@@ -1037,7 +1056,35 @@ export function cancelPreviewLongshotExport(root) {
         scale: draft.scale,
         slideCount: draft.slideCount,
         padMode: draft.padMode,
+        includeAppendix: draft.includeAppendix === true,
+        density: nextDensity,
       });
+      // FE-SFI-09 · 密度档写入 trip 并走「更新版面」
+      if (nextDensity !== prevDensity) {
+        var tidDensity = _tripIdFromPath() || root._tripId || "";
+        if (tidDensity) {
+          postJson(
+            "/" + encodeURIComponent(tidDensity) + "/__travelogue/save-copy",
+            {
+              patches: [{ path: "export.longshotDensity", value: nextDensity }],
+            }
+          )
+            .then(function (res) {
+              if (!res || res.status < 200 || res.status >= 300) {
+                _showToolbarToast("密度未保存，请稍后重试");
+                return;
+              }
+              _showToolbarToast(
+                nextDensity === "compact"
+                  ? "已切换紧凑档 · 长图已更新"
+                  : "已切回默认密度 · 长图已更新"
+              );
+            })
+            .catch(function () {
+              _showToolbarToast("密度未保存，请稍后重试");
+            });
+        }
+      }
       // Confirmed platform SSOT · 同步 session intent，清陈旧续跑 pending
       var mappedIntent = PLATFORM_TO_INTENT[confirmedPlatform] || null;
       var tripIdApply = _tripIdFromPath() || root._tripId || "";
@@ -1076,6 +1123,7 @@ export function cancelPreviewLongshotExport(root) {
           scale: prefs.scale,
           slideCount: prefs.slideCount,
           padMode: prefs.padMode,
+          includeAppendix: prefs.includeAppendix === true,
         });
       }
       syncStudioExportPopoverUI(pop);
@@ -1187,23 +1235,26 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   export function openLongshotExportOptions(root) {
-    var ls = longshotApi();
-    if (ls && typeof ls.openExportPanel === "function") {
-      ls
-        .openExportPanel()
-        .then(function () {
-          refreshLongshotExportMeta(root);
-          syncLongshotPreviewChips(root);
-        })
-        .catch(function () {});
-      return;
-    }
+    // SFI FE-09 · ▾ 优先 Studio 面板（密度 / 双预览 / 平台 / 诚实标宽）；
+    // 勿先走 TravelogueLongshot.openExportPanel，否则紧凑档入口不可达。
     openStudioLongshotExportPanel(root)
       .then(function () {
         refreshLongshotExportMeta(root);
         syncLongshotPreviewChips(root);
       })
-      .catch(function () {});
+      .catch(function () {
+        var ls = longshotApi();
+        if (ls && typeof ls.openExportPanel === "function") {
+          ls
+            .openExportPanel()
+            .then(function () {
+              refreshLongshotExportMeta(root);
+              syncLongshotPreviewChips(root);
+            })
+            .catch(function () {});
+          return;
+        }
+      });
   }
 
   export function revealTripPath(tripId, relPath) {

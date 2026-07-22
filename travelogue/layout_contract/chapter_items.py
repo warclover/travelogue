@@ -224,8 +224,14 @@ def longshot_representative_item_for_screen(screen: dict) -> dict | None:
     }
 
 
-def screens_to_longshot_items(chapter: dict) -> list[dict]:
-    """LTN B2 / ADR-020 · longshot items with preserveGroup three-tier degradation."""
+def screens_to_longshot_items(
+    chapter: dict, *, compact: bool = False
+) -> list[dict]:
+    """LTN B2 / ADR-020 · longshot items with preserveGroup three-tier degradation.
+
+    SFI D-SFI-11 · ``compact=True`` folds multi-slot preserve groups to
+    representative_badge (tier ②) without skipping B2 / flattening.
+    """
     items: list[dict] = []
     for sc in chapter.get("screens") or []:
         if not isinstance(sc, dict):
@@ -239,6 +245,10 @@ def screens_to_longshot_items(chapter: dict) -> list[dict]:
             )
             items.extend(_flatten_screen_to_cards(sc))
             continue
+        if mode == "preserve_stack" and compact:
+            slots = [sl for sl in (sc.get("slots") or []) if sl.get("assetId")]
+            if len(slots) > 1:
+                mode = "representative_badge"
         if mode == "representative_badge":
             stub = longshot_representative_item_for_screen(sc)
             if stub:

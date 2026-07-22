@@ -87,7 +87,8 @@
     "chapters": {
       "type": "array",
       "minItems": 0,
-      "maxItems": 5,
+      "maxItems": 6,
+      "description": "ADR-007 cap is 5 content chapters; +1 optional SFI appendix (isAppendix)",
       "items": {
         "$ref": "#/$defs/chapter"
       }
@@ -95,6 +96,10 @@
     "epilogue": {
       "type": "string",
       "maxLength": 80
+    },
+    "epilogueOrigin": {
+      "$ref": "#/$defs/fieldOrigin",
+      "description": "Provenance for epilogue; user never overwritten on copy refresh."
     },
     "privacy": {
       "$ref": "#/$defs/privacy"
@@ -141,6 +146,15 @@
     }
   },
   "$defs": {
+    "fieldOrigin": {
+      "type": "string",
+      "enum": [
+        "user",
+        "stub",
+        "llm"
+      ],
+      "description": "Share-Face Integrity · field-level copy provenance (D-SFI-03 / BE-SFI-00). user = never overwrite on refresh."
+    },
     "tripMedia": {
       "type": "object",
       "additionalProperties": false,
@@ -425,6 +439,14 @@
             "photos"
           ],
           "description": "Render: full shows hook/lead/captions; photos hides narrative copy (trip.json unchanged)"
+        },
+        "longshotDensity": {
+          "type": "string",
+          "enum": [
+            "default",
+            "compact"
+          ],
+          "description": "SFI D-SFI-11 · longshot density; compact = chapter-header slim + cover dedupe + moment badge fold"
         },
         "breathMode": {
           "type": "string",
@@ -1325,6 +1347,13 @@
             "type": "string"
           }
         },
+        "excludedTimeOutlierAssetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Share-Face Integrity · assets marked timeOutlier (D-SFI-05)"
+        },
         "excludedByCullAssetIds": {
           "type": "array",
           "items": {
@@ -1514,6 +1543,10 @@
               },
               "heroAssetId": {
                 "type": "string"
+              },
+              "isAppendix": {
+                "type": "boolean",
+                "description": "SFI appendix chapter marker"
               }
             }
           }
@@ -2111,6 +2144,9 @@
           "type": "string",
           "maxLength": 56
         },
+        "hookOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "dateStart": {
           "type": "string",
           "format": "date"
@@ -2155,6 +2191,10 @@
           "type": "string",
           "description": "Closing / colophon skin id when a closing hero exists; omit key when no closing asset (cover_engine pops)."
         },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy object-level user-edit flag (pre-SFI). Prefer fieldOrigin; kept for migration / coarse skip."
+        },
         "revision": {
           "type": "integer",
           "minimum": 0,
@@ -2164,6 +2204,20 @@
           "type": "integer",
           "minimum": 0,
           "description": "meta.revision captured when index.html was last written; used to detect preview bundle stale without false positives from post-render metadata persists (G-LRG-08)"
+        },
+        "worksBrandMode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "custom",
+            "hidden"
+          ],
+          "description": "SFI D-SFI-13 · works brand three-state; drives cover-closing + longshot footer"
+        },
+        "worksBrandText": {
+          "type": "string",
+          "maxLength": 14,
+          "description": "Custom works brand when worksBrandMode=custom (≤14 full-width chars)"
         }
       }
     },
@@ -2480,6 +2534,9 @@
           "maxLength": 60,
           "description": "Per-asset caption (screens/longshot); complements chapter items[]"
         },
+        "captionOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "skipCaption": {
           "type": "boolean",
           "description": "When true, hide caption and skip narrate for this asset"
@@ -2525,6 +2582,14 @@
         "layoutEligible": {
           "type": "boolean",
           "description": "False when excluded from cover/chapters/screens (e.g. low resolution)"
+        },
+        "timeOutlier": {
+          "type": "boolean",
+          "description": "Share-Face Integrity · far from dense date core; excluded from span/pools/merge"
+        },
+        "timeOutlierExempt": {
+          "type": "boolean",
+          "description": "User restored to main timeline; skip auto timeOutlier isolation"
         },
         "excludeReason": {
           "type": "string",
@@ -2944,8 +3009,12 @@
           "type": "string",
           "maxLength": 60
         },
+        "captionOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
         "edited": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Legacy object-level edit flag; prefer captionOrigin=user"
         },
         "layout": {
           "$ref": "#/$defs/mediaCardLayout"
@@ -3179,6 +3248,22 @@
         "layoutStub": {
           "type": "boolean",
           "description": "True when items[] is a compact stub derived from screens[]"
+        },
+        "isAppendix": {
+          "type": "boolean",
+          "description": "SFI · 往年旧照附录章；不计 ADR-007 章 cap"
+        },
+        "appendixReason": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "SFI · informed-copy reason for appendix chapter"
+        },
+        "appendixAssetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "SFI · asset ids in the appendix chapter"
         }
       }
     },
@@ -3199,7 +3284,8 @@
         "index": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5
+          "maximum": 6,
+          "description": "1–5 content chapters; 6 allowed for SFI appendix only"
         },
         "patternId": {
           "type": "string",
@@ -3212,7 +3298,8 @@
         },
         "title": {
           "type": "string",
-          "maxLength": 12
+          "maxLength": 16,
+          "description": "Normal titles ≤12; appendix「往年 · 旧照 · N 张」may reach 16"
         },
         "lead": {
           "type": "string",
@@ -3222,6 +3309,19 @@
           "type": "string",
           "maxLength": 30,
           "description": "Phase 11 · optional chapter accent line (<=30 chars)"
+        },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy object-level user-edit flag (pre-SFI). Prefer *Origin fields."
+        },
+        "titleOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
+        "leadOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
+        },
+        "decorLineOrigin": {
+          "$ref": "#/$defs/fieldOrigin"
         },
         "items": {
           "type": "array",
@@ -3477,6 +3577,10 @@
               ]
             }
           }
+        },
+        "edited": {
+          "type": "boolean",
+          "description": "Legacy screen-level edit flag from inline copy patch"
         },
         "narrativeRole": {
           "type": "string",

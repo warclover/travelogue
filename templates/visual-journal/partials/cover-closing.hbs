@@ -20,7 +20,9 @@
     {{#if showClosingTitle}}
     <p class="cover-closing__title" aria-hidden="true">{{title}}</p>
     {{/if}}
-    <p class="cover-closing__brand">Travelogue · Visual Journal</p>
+    {{#if showWorksBrand}}
+    <p class="cover-closing__brand{{#if worksBrandCustom}} cover-closing__brand--custom{{/if}}">{{worksBrandLine}}</p>
+    {{/if}}
     <p class="footer-cta__studio-home cover-closing__studio-home" hidden>
       <a class="footer-cta__studio-home-link" href="/">← 返回 Studio 首页</a>
     </p>

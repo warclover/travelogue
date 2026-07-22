@@ -142,14 +142,20 @@ def apply_scope_cleanup(trip: dict, scope: str) -> list[str]:
     assets = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
     cleared: list[str] = []
 
+    from travelogue.domain.copy_origin import is_user_protected
+
     if not captions_allowed(scope):
         for ch in chapters:
             for aid in chapter_caption_asset_ids(ch):
                 item = find_item_for_asset(ch, aid)
-                if item and item.get("edited"):
+                if item and (
+                    item.get("edited") or is_user_protected(item, "captionOrigin")
+                ):
                     continue
                 asset = assets.get(aid)
-                if asset and asset.get("edited"):
+                if asset and (
+                    asset.get("edited") or is_user_protected(asset, "captionOrigin")
+                ):
                     continue
                 if not resolve_caption(item, asset).strip():
                     continue
@@ -159,7 +165,8 @@ def apply_scope_cleanup(trip: dict, scope: str) -> list[str]:
     for ch in chapters:
         if chapter_lead_allowed(ch, chapters, scope):
             continue
-        if ch.get("edited"):
+        # BE-SFI-00/06 · field-level origin=user never cleared by sparse scope
+        if ch.get("edited") or is_user_protected(ch, "leadOrigin"):
             continue
         if (ch.get("lead") or "").strip():
             ch.pop("lead", None)

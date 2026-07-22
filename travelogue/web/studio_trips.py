@@ -10,6 +10,14 @@ from pathlib import Path
 def _longshot_files(trip_dir: Path) -> list[Path]:
     files: list[Path] = []
     for pattern in (
+        # SFI D-SFI-07 · 人话展示名产物
+        "*-长图.png",
+        "*-长图.jpg",
+        "*-长图.jpeg",
+        "*-长图-*.png",
+        "*-长图-*.jpg",
+        "*-长图-*.jpeg",
+        # 兼容旧 tripId / -longshot / -chNN 命名（迁移期；新导出后会清理）
         "*-longshot.png",
         "*-longshot.jpg",
         "*-longshot.jpeg",
@@ -31,6 +39,8 @@ def _longshot_files(trip_dir: Path) -> list[Path]:
         "*-douyin-cover.jpg",
         "*-custom-*.png",
         "*-custom-*.jpg",
+        "*-poster*.png",
+        "*-poster*.jpg",
     ):
         files.extend(trip_dir.glob(pattern))
     # Drop atomic temp leftovers if any
@@ -99,13 +109,22 @@ def _pick_shelf_cover_rel(trip_dir: Path, data: dict) -> str | None:
 
 
 def _pick_preview(trip_dir: Path) -> str | None:
-    """Return cover: preview.jpg → ch01 (png/jpg) → longshot (png/jpg)."""
+    """Return cover: preview.jpg → 长图/ch01 → longshot (png/jpg)."""
     primary = trip_dir / "preview.jpg"
     if primary.is_file():
         return "preview.jpg"
-    ch01 = sorted(list(trip_dir.glob("*-ch01.png")) + list(trip_dir.glob("*-ch01.jpg")) + list(trip_dir.glob("*-ch01.jpeg")))
-    if ch01:
-        return ch01[0].name
+    # Prefer new SFI names, then legacy
+    preferred = sorted(
+        list(trip_dir.glob("*-长图-01.png"))
+        + list(trip_dir.glob("*-长图-01.jpg"))
+        + list(trip_dir.glob("*-长图.png"))
+        + list(trip_dir.glob("*-长图.jpg"))
+        + list(trip_dir.glob("*-ch01.png"))
+        + list(trip_dir.glob("*-ch01.jpg"))
+        + list(trip_dir.glob("*-ch01.jpeg"))
+    )
+    if preferred:
+        return preferred[0].name
     longshots = sorted(
         list(trip_dir.glob("*-longshot.png"))
         + list(trip_dir.glob("*-longshot.jpg"))
@@ -114,7 +133,9 @@ def _pick_preview(trip_dir: Path) -> str | None:
     if longshots:
         return longshots[0].name
     any_ch = sorted(
-        list(trip_dir.glob("*-ch*.png"))
+        list(trip_dir.glob("*-长图-*.png"))
+        + list(trip_dir.glob("*-长图-*.jpg"))
+        + list(trip_dir.glob("*-ch*.png"))
         + list(trip_dir.glob("*-ch*.jpg"))
         + list(trip_dir.glob("*-ch*.jpeg"))
     )

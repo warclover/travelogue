@@ -133,13 +133,19 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
         if not ch_id:
             continue
         curation = ch.get("curation") or {}
+        title_cap = 16 if curation.get("isAppendix") else 12
+        appendix_ids = [str(a) for a in (curation.get("appendixAssetIds") or []) if a]
         rows.append(
             {
                 "id": str(ch_id),
-                "title": str(ch.get("title") or ch_id)[:12],
+                "title": str(ch.get("title") or ch_id)[:title_cap],
                 "memoryAnchors": list(curation.get("memoryAnchors") or [])[:3],
                 "copyIntent": dict(curation.get("copyIntent") or {}),
                 "hasVoice": chapter_has_voice(ch, trip),
+                "isAppendix": bool(curation.get("isAppendix")),
+                "appendixReason": str(curation.get("appendixReason") or ""),
+                "appendixCount": len(appendix_ids),
+                "appendixAssetIds": appendix_ids,
             }
         )
     return rows
@@ -209,6 +215,50 @@ def build_entry(
             else True
         ),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
+        "appendixOutlierCount": len(
+            (curation.get("excludedTimeOutlierAssetIds") or [])
+            if isinstance(curation, dict)
+            else []
+        ),
+        "worksBrand": _works_brand_entry(trip),
+        "longshotDensity": _longshot_density_entry(trip),
+        "shareCopyPack": _share_copy_pack_entry(trip),
+    }
+
+
+def _works_brand_entry(trip: dict) -> dict:
+    from travelogue.domain.works_brand import resolve_works_brand
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    resolved = resolve_works_brand(meta)
+    return {
+        "mode": resolved["worksBrandMode"],
+        "text": str(meta.get("worksBrandText") or "").strip()[:14],
+        "line": resolved["worksBrandLine"],
+        "show": resolved["showWorksBrand"],
+    }
+
+
+def _longshot_density_entry(trip: dict) -> str:
+    from travelogue.domain.longshot_density import resolve_longshot_density
+
+    return resolve_longshot_density(trip)
+
+
+def _share_copy_pack_entry(trip: dict) -> dict:
+    """Xiaohongshu copy pack fields (D-SFI-14 / OQ-2)."""
+    from travelogue.domain.share_copy_pack import build_share_copy_pack
+    from travelogue.web.studio_narrate import studio_llm_status
+
+    status = studio_llm_status()
+    pack = build_share_copy_pack(
+        trip, llm_available=bool(status.get("llmAvailable"))
+    )
+    return {
+        "title": pack["title"],
+        "body": pack["body"],
+        "topics": pack["topics"],
+        "llmAvailable": bool(status.get("llmAvailable")),
     }
 
 

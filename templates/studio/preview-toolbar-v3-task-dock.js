@@ -304,6 +304,75 @@ export function mountPreviewTaskDock(root, hooks) {
       }
     }
 
+    // FE-SFI-12 · 小红书文案包（dock 展开，不塞单行 bar）
+    if (
+      job &&
+      job.status !== "failed" &&
+      result.platform === "xiaohongshu" &&
+      tripId
+    ) {
+      var packHost = document.createElement("div");
+      packHost.className = "preview-task-dock__copy-pack";
+      packHost.hidden = true;
+      var packToggle = document.createElement("button");
+      packToggle.type = "button";
+      packToggle.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+      packToggle.textContent = "复制文案包 ▾";
+      packToggle.addEventListener("click", function () {
+        if (!packHost.hidden) {
+          packHost.hidden = true;
+          packToggle.textContent = "复制文案包 ▾";
+          return;
+        }
+        packToggle.disabled = true;
+        fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (entry) {
+            packToggle.disabled = false;
+            var pack = (entry && entry.shareCopyPack) || {};
+            var title = String(pack.title || "").trim() || "旅行日记";
+            var body = String(pack.body || "").trim();
+            var topics = String(pack.topics || "#旅行日记").trim();
+            var lines = ["标题　" + title];
+            if (body) lines.push("正文　" + body);
+            lines.push("话题　" + topics);
+            packHost.innerHTML = "";
+            var pre = document.createElement("pre");
+            pre.className = "preview-task-dock__copy-pack-body";
+            pre.textContent = lines.join("\n");
+            packHost.appendChild(pre);
+            var copyAll = document.createElement("button");
+            copyAll.type = "button";
+            copyAll.className =
+              "preview-task-dock__btn preview-task-dock__btn--primary";
+            copyAll.textContent = "一键复制";
+            copyAll.addEventListener("click", function () {
+              var blob = title + "\n\n" + (body ? body + "\n\n" : "") + topics;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(blob).then(
+                  function () {
+                    copyAll.textContent = "已复制";
+                  },
+                  function () {
+                    copyAll.textContent = "复制失败";
+                  }
+                );
+              }
+            });
+            packHost.appendChild(copyAll);
+            packHost.hidden = false;
+            packToggle.textContent = "收起文案包 ▴";
+          })
+          .catch(function () {
+            packToggle.disabled = false;
+          });
+      });
+      textWrap.appendChild(packToggle);
+      textWrap.appendChild(packHost);
+    }
+
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
 
@@ -584,6 +653,61 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  /** FE-SFI-05 · 文案刷新提示（高于 longshotStale；导出/成功面外层不进此栈） */
+  function showCopyRefresh(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className = "preview-task-dock preview-task-dock--info";
+    dock.innerHTML = "";
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.textContent = "✎";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || "AI 文案已就绪，可为这本重新生成文案";
+    textWrap.appendChild(main);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+
+    trackStudioEvent("copy_refresh_shown", {
+      stub_hits: opts.stubHits != null ? opts.stubHits : undefined,
+    });
+
+    if (typeof hooks.onCopyRefresh === "function") {
+      var refreshBtn = document.createElement("button");
+      refreshBtn.type = "button";
+      refreshBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+      refreshBtn.textContent = "重新生成文案";
+      refreshBtn.addEventListener("click", function () {
+        trackStudioEvent("copy_refresh_clicked", {});
+        hooks.onCopyRefresh();
+      });
+      actions.appendChild(refreshBtn);
+    }
+
+    var dismissBtn = document.createElement("button");
+    dismissBtn.type = "button";
+    dismissBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+    dismissBtn.textContent = "不再提示";
+    dismissBtn.addEventListener("click", function () {
+      hide();
+      if (typeof hooks.onDismissCopyRefresh === "function") {
+        hooks.onDismissCopyRefresh({ persistent: true });
+      }
+    });
+    actions.appendChild(dismissBtn);
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+  }
+
   function showNextStepHint(opts) {
     opts = opts || {};
     clearTimers();
@@ -732,6 +856,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showG1: showG1,
     showPending: showPending,
     showStale: showStale,
+    showCopyRefresh: showCopyRefresh,
     showNextStepHint: showNextStepHint,
     showFeaturedRerankCue: showFeaturedRerankCue,
     showError: showError,

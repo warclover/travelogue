@@ -1,0 +1,79 @@
+{
+  "captureWidth": 428,
+  "scrollHeightCss": 5657,
+  "photoVerticalPx": 4757,
+  "nonPhotoVerticalPx": 900,
+  "nonPhotoVerticalRatio": 0.15913359554534207,
+  "photoElementCount": 8,
+  "chapterCount": 3,
+  "screenishCount": 5,
+  "chapterHeaderHeights": {
+    "count": 3,
+    "totalHeightCss": 327
+  },
+  "chapterHeaders": [
+    "05月27日",
+    "5月27日",
+    "5月27日 · 晚上"
+  ],
+  "coverTitleOccurrences": [
+    "京都雨季漫游"
+  ],
+  "coverTitleDupMax": 1,
+  "reusedAssetCount": 2,
+  "reusedAssets": [
+    {
+      "id": "asset-003",
+      "count": 2
+    },
+    {
+      "id": "asset-004",
+      "count": 2
+    }
+  ],
+  "uniquePhotoAssetIds": 5,
+  "maxPhotoWidthCss": 428,
+  "chrome": {
+    "chapterHeader": {
+      "count": 3,
+      "totalHeightCss": 327
+    },
+    "chapterLead": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "decorLine": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "coverPanel": {
+      "count": 1,
+      "totalHeightCss": 252
+    },
+    "coverTitle": {
+      "count": 1,
+      "totalHeightCss": 0
+    },
+    "hook": {
+      "count": 1,
+      "totalHeightCss": 186
+    },
+    "epilogue": {
+      "count": 0,
+      "totalHeightCss": 0
+    },
+    "closing": {
+      "count": 1,
+      "totalHeightCss": 118
+    }
+  },
+  "trip": {
+    "tripId": "demo-album",
+    "title": "京都雨季漫游",
+    "assetCount": 6
+  },
+  "tripDir": "C:\\Users\\xiafe\\Projects\\travelogue\\trips\\demo-album",
+  "source": "index-longshot.html",
+  "method": "playwright-y-union-css-px",
+  "note": "非照片纵向占比 = 1 − (照片元素 Y 并集高度 / main.scrollHeight)；逻辑宽 428；与 PNG 逐行扫描同构（CSS px）"
+}

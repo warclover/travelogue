@@ -93,8 +93,12 @@ def _resolve_aesthetic_enabled(enabled: bool | None) -> bool:
 
 def cover_eligible_assets(assets: list[dict]) -> list[dict]:
     """Exclude screenshot/thumbnail/reupload from cover pool when alternatives exist."""
-    good = [a for a in assets if a.get("mediaClass") not in _COVER_EXCLUDED_CLASSES]
-    return good if good else list(assets)
+    good = [
+        a
+        for a in assets
+        if a.get("mediaClass") not in _COVER_EXCLUDED_CLASSES and not a.get("timeOutlier")
+    ]
+    return good if good else [a for a in assets if not a.get("timeOutlier")] or list(assets)
 
 
 def mobile_cover_pool(assets: list[dict]) -> list[dict]:

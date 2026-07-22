@@ -6,6 +6,8 @@ from travelogue.domain.share_face_copy import is_unsafe_share_copy, sanitize_sha
 def test_bans_instructional_captions() -> None:
     assert sanitize_share_copy("示例游记的竖幅。") == ""
     assert sanitize_share_copy("抬头看见示例游记。") == ""
+    assert sanitize_share_copy("示例游记") == ""
+    assert sanitize_share_copy("5月27日·示例游记") == ""
     assert is_unsafe_share_copy("慢慢翻这一页")
 
 
@@ -18,6 +20,10 @@ def test_bans_weak_daypart_enum() -> None:
 def test_bans_title_echo() -> None:
     assert sanitize_share_copy("武大--米娜", title="武大 米娜", kind="caption") == ""
     assert sanitize_share_copy("武大 米娜", title="武大 米娜", kind="alt") == ""
+
+
+def test_bans_dirty_double_dash() -> None:
+    assert sanitize_share_copy("武大--米娜 · 2天", kind="lead") == ""
 
 
 def test_keeps_short_place_date() -> None:

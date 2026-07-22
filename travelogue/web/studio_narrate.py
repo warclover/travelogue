@@ -89,10 +89,11 @@ def run_studio_llm_narrate(
     trip = svc.load(trip_json)
     provider = str(status["llmProvider"])
 
+    # BE-SFI-06 · 刷新锁定 Copy sparse（frame）；禁止升 full
     run_narrate(
         trip,
         provider=provider,
-        scope=app_cfg.narrative.scope,
+        scope="frame",
         regenerate=True,
         cfg=app_cfg,
     )

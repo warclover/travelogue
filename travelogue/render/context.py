@@ -6,7 +6,7 @@ import hashlib
 from datetime import date
 from pathlib import Path
 
-from travelogue.curation.asset_caption import asset_caption, resolve_caption
+from travelogue.curation.asset_caption import asset_caption, asset_skips_caption, resolve_caption
 from travelogue.media.image_ops import classify_aspect, detect_orientation
 from travelogue.paths import (
     BREATH_CSS,
@@ -91,8 +91,15 @@ def _longshot_bundle_version(trip: dict) -> str:
 
 
 def share_zip_filename(trip: dict) -> str:
-    trip_id = (trip.get("tripId") or "").strip()
-    return f"trip-{trip_id}.zip" if trip_id else ""
+    """D-SFI-07 · zip 用人话展示名，不再用 trip-{id}.zip。"""
+    import re
+
+    from travelogue.domain.title_humanize import resolve_display_title
+
+    meta = trip.get("meta") or {}
+    display = resolve_display_title(meta if isinstance(meta, dict) else {})
+    stem = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", display).strip() or "travelogue"
+    return f"{stem}-分享.zip"
 
 
 def has_share_zip(trip: dict, trip_root: Path | None) -> bool:
@@ -235,14 +242,23 @@ def alt_text(item: dict | None, asset: dict, meta_title: str) -> str:
     return "旅行照片"
 
 
-def media_card_classes(layout: dict | None, asset: dict) -> str:
+def media_card_classes(
+    layout: dict | None,
+    asset: dict,
+    *,
+    has_overlay_text: bool | None = None,
+) -> str:
     layout = layout or {}
     classes = ["media-card"]
     if layout.get("bleed", True):
         classes.append("media-card--bleed")
     if layout.get("fill", True):
         classes.append("media-card--fill")
-    if layout.get("overlay", True):
+    # BE-SFI-02 · 空图注时不挂 overlay 渐变类
+    want_overlay = layout.get("overlay", True)
+    if has_overlay_text is not None:
+        want_overlay = want_overlay and has_overlay_text
+    if want_overlay:
         classes.append("media-card--overlay")
     if asset.get("type") == "video":
         classes.append("media-card--video")
@@ -278,11 +294,15 @@ def format_trip_meta(
     intent: dict | None = None,
     assets: list[dict] | None = None,
 ) -> tuple[str, str]:
+    from travelogue.domain.title_humanize import is_folder_title_noise, resolve_display_title
     from travelogue.services.copy_subject import narrative_copy_subject
 
     start = meta.get("dateStart", "")
     end = meta.get("dateEnd", "")
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
+    # SFI · 封面 meta 行不得回落脏文件夹名（裸 -- 等）
+    if is_folder_title_noise(place):
+        place = resolve_display_title(meta)
     days = 1
     try:
         d0 = date.fromisoformat(start)
@@ -344,18 +364,38 @@ def build_media_card(
     item_index: int | None = None,
     caption_on_asset: bool = False,
 ) -> MediaCardContext:
+    from travelogue.domain.share_face_copy import (
+        record_stub_hit,
+        sanitize_share_copy_tracked,
+    )
+
     layout = item.get("layout") or {}
     src = pick_image_src(asset, export_layout=export_layout)
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
     alt = alt_text(item, asset, meta_title)
     title = (item.get("title") or "").strip()
+    raw_caption = ""
+    if not asset_skips_caption(asset):
+        raw_caption = (item.get("caption") or asset.get("caption") or "").strip()
     caption = resolve_caption(item, asset, title=meta_title)
     if photos_only:
         title = ""
         caption = ""
+    elif raw_caption and not caption:
+        # caption 被护栏抑制 → 打点（resolve_caption 内部已 sanitize）
+        record_stub_hit(surface="share" if not is_draft else "draft", field="caption")
+    title, title_blanked = sanitize_share_copy_tracked(
+        title,
+        title=meta_title,
+        kind="caption",
+        edited=bool(item.get("edited") or (asset or {}).get("edited")),
+    )
+    if title_blanked:
+        record_stub_hit(surface="share" if not is_draft else "draft", field="title")
     tags = asset.get("tags") or []
     voice = asset.get("voice")
     is_video = asset.get("type") == "video"
+    has_overlay_text = bool(title or caption)
 
     if is_draft:
         if caption_on_asset:
@@ -371,7 +411,7 @@ def build_media_card(
         "isMediaCard": True,
         "isMediaRow": False,
         "isMediaScroll": False,
-        "classes": media_card_classes(layout, asset),
+        "classes": media_card_classes(layout, asset, has_overlay_text=has_overlay_text),
         "assetId": asset["id"],
         "aspectKind": asset_aspect_kind(asset),
         "tagsAttr": ",".join(tags) if tags else None,
@@ -390,6 +430,7 @@ def build_media_card(
         "hasTitle": bool(title),
         "caption": caption,
         "hasCaption": bool(caption),
+        "hasOverlayText": has_overlay_text,
         "editable": is_draft,
         "editPathTitle": f"items.{asset['id']}.title" if is_draft else None,
         "editPathCaption": edit_caption,
@@ -705,6 +746,7 @@ def build_layout_screen(
     show_moment_exif: bool = True,
     show_signature_label: bool = True,
     moment_screen_label: str = "",
+    chapter_day_span: list[str] | None = None,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if is_plate and not folio_plate_rewrite_eligible(screen):
@@ -865,7 +907,9 @@ def build_layout_screen(
         if show_moment_exif and str(aid or "").strip() in exif_pool and asset:
             from travelogue.render.moment_exif import format_moment_exif_line
 
-            exif_line = format_moment_exif_line(asset)
+            exif_line = format_moment_exif_line(
+                asset, day_span=chapter_day_span
+            )
             if exif_line:
                 entry["hasMomentExif"] = True
                 entry["momentExifLine"] = exif_line
@@ -1064,16 +1108,35 @@ def _trip_index_desc(lead: str, *, max_len: int = 48) -> str:
 
 
 def build_trip_index_entries(chapters: list[dict]) -> list[TripIndexEntryContext]:
+    from travelogue.domain.share_face_copy import sanitize_share_copy
+
     entries: list[TripIndexEntryContext] = []
     for ch in chapters:
         idx = ch.get("index", len(entries) + 1)
+        ch_edited = bool(ch.get("edited"))
         lead = str(ch.get("lead") or "")
+        title = str(ch.get("title") or "")
+        if not ch_edited:
+            lead = sanitize_share_copy(lead, kind="lead")
+            cleaned = sanitize_share_copy(title, kind="title")
+            if not cleaned and title:
+                curation = ch.get("curation") or {}
+                day_span = curation.get("daySpan") or []
+                if day_span:
+                    try:
+                        title = date.fromisoformat(str(day_span[0])).strftime("%m月%d日")
+                    except ValueError:
+                        title = str(day_span[0])
+                else:
+                    title = ""
+            else:
+                title = cleaned
         desc = _trip_index_desc(lead)
         entries.append(
             {
                 "id": ch.get("id", f"ch-{idx:02d}"),
                 "index": f"{int(idx):02d}",
-                "title": ch.get("title", ""),
+                "title": title,
                 "desc": desc,
                 "hasDesc": bool(desc),
             }

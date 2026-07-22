@@ -2,5 +2,7 @@
   {{#if epilogueStats}}
   <p class="longshot-boundary-footer__stats">{{epilogueStats.summaryLine}}</p>
   {{/if}}
-  <p class="longshot-boundary-footer__brand">{{title}} · Travelogue</p>
+  {{#if showWorksBrand}}
+  <p class="longshot-boundary-footer__brand{{#if worksBrandCustom}} longshot-boundary-footer__brand--custom{{/if}}">{{worksBrandLine}}</p>
+  {{/if}}
 </footer>

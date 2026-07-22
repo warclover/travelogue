@@ -255,6 +255,7 @@ export function initToolbarV3(root, tripId) {
   }
 
   var sheetHooks = {
+    tripId: tripId,
     drawers: drawers,
     get cohortEnabled() { return cohortEnabled; },
     isLayoutPending: getLayoutPending,
@@ -440,6 +441,17 @@ export function initToolbarV3(root, tripId) {
         if (llmExpect) llmExpect.hidden = false;
         _wantStubTip = !ok;
         if (!ok) scheduleStubNarrateTip();
+        // FE-SFI-05 · Key 就绪时提示可刷新（册级 dismiss）
+        root._copyRefreshHint = !!ok;
+        try {
+          var dismissKey = "travelogue.copyRefreshDismiss." + tripId;
+          root._copyRefreshDismissed = localStorage.getItem(dismissKey) === "1";
+        } catch (_e) {
+          root._copyRefreshDismissed = false;
+        }
+        if (typeof refreshTaskDockState === "function") {
+          refreshTaskDockState(root);
+        }
       }
       setLlmAvailable(false);
       function refreshLlmStatus() {
@@ -530,6 +542,23 @@ export function initToolbarV3(root, tripId) {
     },
     onDismissStale: function () {
       root._staleDockDismissed = true;
+      refreshTaskDockState(root);
+    },
+    onCopyRefresh: function () {
+      var btn =
+        (root._sheet &&
+          root._sheet.el &&
+          root._sheet.el.querySelector('[data-action="llm"]')) ||
+        root.querySelector('[data-action="llm"]');
+      startLlmNarrate(root, tripId, btn || document.createElement("button"));
+    },
+    onDismissCopyRefresh: function () {
+      root._copyRefreshDismissed = true;
+      try {
+        localStorage.setItem("travelogue.copyRefreshDismiss." + tripId, "1");
+      } catch (_e) {
+        /* ignore */
+      }
       refreshTaskDockState(root);
     },
     onOpenStructure: function () {

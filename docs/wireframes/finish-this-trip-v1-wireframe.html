@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>这一趟做完 FTT V1 · Delta 线框（叠现网 Homepage v2）</title>
+  <style>
+    :root {
+      --ink: #100f0d; --muted: #8a8278; --paper: #f4efe6; --cream: #e8dcc8;
+      --gold: #c4a574; --forest: #2d4a3e; --anno: #ff6f00; --rec: #2e7d32;
+      --danger: #c62828; --bar: #1a2f28; --wf-bg: #12110f;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --display: Georgia, "Songti SC", "SimSun", serif;
+      --max: 960px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #eceff1; color: #263238; line-height: 1.55; }
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 1100px; }
+    .review-bar a { color: #80cbc4; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 12px; color: #607d8b; font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w3a { background: #00695c; color: #fff; }
+    .tag--w3b { background: #1565c0; color: #fff; }
+    .tag--w1 { background: #5e35b1; color: #fff; }
+    .tag--reuse { background: #455a64; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 10px 0 14px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout--info { background: #e3f2fd; border-color: #90caf9; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .anno-line {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--anno); margin: 14px 0 8px;
+    }
+    .browser {
+      background: #2a2826; border: 2px solid #3a3733; border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #5a554e; display: block; }
+    .browser__tab {
+      display: inline-flex; background: #1a1816; border: 1px solid #3a3733; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #c8c0b4;
+    }
+    .frame {
+      position: relative; border: 2px solid #3a3733; border-top: none;
+      border-radius: 0 0 14px 14px; min-height: 560px; overflow: hidden;
+      background: #0a0908; color: #ece8e0;
+    }
+    .frame--light { background: #eef2f0; color: #263238; border-color: #90a4ae; }
+    .browser--light { background: #dee1e6; border-color: #90a4ae; }
+    .browser--light .browser__tab { background: #fafafa; border-color: #b0bec5; color: #263238; }
+    .browser--light .browser__dots i { background: #b0bec5; }
+
+    /* Bento shell (simplified from homepage v1.6) */
+    .bento {
+      position: relative; min-height: 560px;
+      background: #0a0908 url("https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1400") center/cover;
+    }
+    .bento::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(10,9,8,.55), rgba(10,9,8,.82) 55%, rgba(10,9,8,.95));
+    }
+    .bento > * { position: relative; z-index: 1; }
+    .bento__headline { padding: 22px 24px 10px; max-width: 640px; }
+    .bento__eyebrow { font-size: 10px; letter-spacing: .16em; color: rgba(255,255,255,.45); margin: 0 0 8px; }
+    .bento__h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.25; font-family: var(--display); font-weight: 500; }
+    .bento__h1 em { font-style: italic; color: var(--gold); }
+    .bento__lead { margin: 0 0 10px; font-size: 13px; color: rgba(255,255,255,.65); max-width: 40em; }
+    .bento__lead b { color: rgba(255,255,255,.88); font-weight: 600; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-pill {
+      font-size: 10px; padding: 4px 8px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.7);
+    }
+    .bento__grid {
+      display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 12px;
+      padding: 8px 20px 12px;
+    }
+    .cell-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; color: rgba(255,255,255,.45); margin: 0 0 6px; letter-spacing: .04em;
+    }
+    .demo-flag {
+      font-size: 9px; padding: 2px 6px; border-radius: 4px;
+      background: rgba(196,165,116,.25); color: var(--gold); font-weight: 700;
+    }
+    .scroll-cell {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: 10px; min-height: 200px;
+    }
+    .scroll-fake {
+      aspect-ratio: 16/9; border-radius: 4px; overflow: hidden;
+      background: linear-gradient(135deg, #1a221e, #2a3830);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--display); font-style: italic; color: #c9b896; font-size: 22px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.4);
+    }
+    .phone-cell { padding: 10px; }
+    .phone {
+      width: 96px; margin: 0 auto; padding: 6px 5px 8px; border-radius: 14px;
+      background: linear-gradient(145deg, #2a2826, #141210);
+      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+    }
+    .phone__notch { width: 28px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.15); margin: 0 auto 5px; }
+    .phone__screen {
+      height: 168px; border-radius: 8px; background: #faf7f2;
+      background-image: linear-gradient(#1e2824 0 18%, #faf7f2 18% 22%, #7a8a7a 22% 48%, #faf7f2 48% 52%, #6a7a6a 52% 78%, #1e2824 78% 100%);
+    }
+    .bench {
+      grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; justify-content: space-between;
+      padding: 12px 14px; margin: 0 20px 16px;
+      background: rgba(20,18,16,.78); border: 1px solid rgba(255,255,255,.1); border-radius: 10px;
+    }
+    .bench__sample { display: flex; gap: 10px; align-items: center; min-width: 0; }
+    .bench__thumb { width: 44px; height: 56px; border-radius: 4px; background: #3a4a40 center/cover; flex-shrink: 0; }
+    .bench__text strong { display: block; font-size: 13px; }
+    .bench__text span { font-size: 11px; color: rgba(255,255,255,.45); }
+    .bench__cta {
+      border: none; padding: 12px 20px; background: var(--cream); color: var(--ink);
+      font-weight: 700; font-size: 13px; cursor: pointer; letter-spacing: .02em;
+    }
+    .bench__meta { margin: 6px 0 0; font-size: 10px; color: rgba(255,255,255,.4); text-align: right; }
+
+    /* Delta markers */
+    .delta {
+      position: absolute; z-index: 20; font-size: 10px; font-weight: 700;
+      padding: 4px 8px; border-radius: 4px; background: var(--anno); color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.35); max-width: 200px; line-height: 1.35;
+    }
+    .delta--keep {
+      background: #455a64;
+    }
+    .delta::after {
+      content: ""; position: absolute; width: 0; height: 0;
+    }
+    .hl {
+      outline: 2px solid var(--anno); outline-offset: 3px; border-radius: 2px;
+    }
+    .hl--keep { outline-color: #78909c; }
+
+    /* Shelf below bento (D-08) */
+    .returning { background: #0a0908; }
+    .shelf-below {
+      background: #141210; border-top: 1px solid rgba(255,255,255,.08);
+      padding: 18px 20px 22px; color: #ece8e0;
+    }
+    .shelf-below__head {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+    }
+    .shelf-below__head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+    .shelf-below__head p { margin: 2px 0 0; font-size: 11px; color: rgba(255,255,255,.4); }
+    .btn-new {
+      border: none; padding: 10px 14px; background: var(--cream); color: var(--ink);
+      font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .btn-ghost {
+      border: 1px solid rgba(255,255,255,.25); background: transparent; color: rgba(255,255,255,.75);
+      padding: 9px 12px; font-size: 12px; cursor: pointer;
+    }
+    .resume {
+      display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 12px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
+    }
+    .resume__thumb { width: 56px; height: 40px; border-radius: 4px; background: #3a4a40 center/cover; }
+    .resume__text { flex: 1; min-width: 0; }
+    .resume__text strong { display: block; font-size: 12px; }
+    .resume__text span { font-size: 11px; color: rgba(255,255,255,.45); }
+    .shelf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .book {
+      text-align: left; border: none; background: transparent; color: inherit; cursor: pointer; padding: 0;
+    }
+    .book__cover {
+      aspect-ratio: 3/4; border-radius: 4px; background: #2a3830 center/cover;
+      box-shadow: 0 8px 20px rgba(0,0,0,.35); margin-bottom: 6px;
+    }
+    .book__title { font-size: 12px; font-weight: 600; margin: 0; }
+    .book__sub { font-size: 10px; color: rgba(255,255,255,.4); margin: 2px 0 0; }
+
+    /* Import sheet */
+    .sheet-mask {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 30;
+      display: flex; align-items: flex-end; justify-content: center; padding: 24px;
+    }
+    .sheet {
+      width: min(420px, 100%); background: #faf7f2; color: #100f0d; border-radius: 16px 16px 12px 12px;
+      padding: 16px 18px 18px; box-shadow: 0 -8px 40px rgba(0,0,0,.4);
+    }
+    .sheet__handle { width: 36px; height: 4px; border-radius: 2px; background: #cfc6b8; margin: 0 auto 12px; }
+    .sheet h3 { margin: 0 0 4px; font-size: 17px; }
+    .sheet .badge { font-size: 10px; color: #8a8278; margin-bottom: 12px; display: block; }
+    .sheet__primary {
+      width: 100%; border: none; padding: 14px; background: #100f0d; color: #f4efe6;
+      font-weight: 700; font-size: 13px; cursor: pointer; margin-bottom: 10px;
+    }
+    .sheet__hint { margin: 0 0 10px; font-size: 12px; color: #5a534a; }
+    .sheet__friendly {
+      margin: 0 0 12px; font-size: 12px; color: var(--forest); background: #e8f0eb;
+      border-radius: 8px; padding: 8px 10px; font-weight: 600;
+    }
+    .sheet details { margin-bottom: 8px; font-size: 12px; color: #5a534a; }
+    .sheet__demo {
+      width: 100%; margin-top: 8px; border: 1px solid #cfc6b8; background: #fff;
+      padding: 10px; font-size: 12px; cursor: pointer; font-weight: 600;
+    }
+
+    /* Success dock on preview */
+    .preview-dark { min-height: 520px; background: #1e2a28; position: relative; }
+    .dock-top {
+      position: absolute; top: 14px; right: 14px; display: flex; gap: 4px; padding: 4px;
+      background: rgba(26,47,40,.92); border-radius: 999px; z-index: 5;
+    }
+    .dock-top button {
+      height: 34px; border: none; border-radius: 8px; padding: 0 12px;
+      background: transparent; color: #e8f5ef; font-size: 12px; font-weight: 600;
+    }
+    .dock-top .gold { background: #d4a843; color: #1a1408; border-radius: 10px; font-weight: 700; }
+    .mag {
+      margin: 64px auto 0; width: min(300px, 70%); background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35); overflow: hidden;
+    }
+    .mag__cover {
+      height: 180px; background: linear-gradient(180deg, #5d4037, #3e2723); color: #fff;
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 14px;
+    }
+    .mag__cover h3 { margin: 0 0 4px; font-size: 18px; }
+    .success-dock {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: min(420px, 92%); background: #fff; color: #263238; border-radius: 14px;
+      padding: 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.35); z-index: 10; font-size: 13px;
+    }
+    .success-dock .ok { color: var(--rec); font-weight: 700; font-size: 12px; margin: 0 0 4px; }
+    .success-dock .main { font-weight: 700; margin: 0 0 4px; }
+    .success-dock .file { margin: 0 0 10px; font-size: 12px; color: #607d8b; }
+    .success-dock .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; border: none;
+      border-radius: 8px; padding: 9px 12px; font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .btn--primary { background: #1a2f28; color: #f5fbf8; }
+    .btn--secondary { background: #fff; color: #1a2f28; border: 1.5px solid #1a2f28; }
+    .handoff { border-top: 1px solid #eceff1; padding-top: 8px; }
+    .handoff .q { margin: 0 0 6px; font-size: 11px; color: #607d8b; }
+    .chip {
+      border: 1px solid #b0bec5; background: #fff; border-radius: 999px;
+      padding: 5px 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+
+    .matrix { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+    .matrix th, .matrix td { border: 1px solid #cfd8dc; padding: 8px 10px; text-align: left; vertical-align: top; }
+    .matrix th { background: #eceff1; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--rec); font-weight: 700; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } .bento__grid { grid-template-columns: 1fr; } }
+    .mini { background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; font-size: 12px; }
+    .mini h4 { margin: 0 0 8px; font-size: 13px; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: #607d8b; }
+    .aside li { margin-bottom: 6px; }
+    .aside .dyn { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eceff1; }
+    .audit { background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; overflow: auto; font-size: 12px; }
+    .audit table { width: 100%; border-collapse: collapse; }
+    .audit th, .audit td { padding: 8px 10px; border-bottom: 1px solid #eceff1; text-align: left; vertical-align: top; }
+    .audit th { background: #f5f7f6; font-size: 11px; }
+    .pill { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; }
+    .pill--p0 { background: #ffebee; color: #c62828; }
+    .pill--open { background: #fff8e1; color: #e65100; }
+    .dual {
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; padding: 18px; min-height: 360px;
+    }
+    .dual .scroll {
+      background: #f7f3ea; border-radius: 10px; padding: 12px; color: #5d4037;
+    }
+    .dual .long {
+      background: #fff; border-radius: 10px; border: 1px solid #cfd8dc; padding: 10px; color: #263238;
+    }
+    .strip {
+      min-height: 260px; border-radius: 6px;
+      background: linear-gradient(180deg, #efebe9, #d7ccc8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #5d4037;
+    }
+    .seq { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; margin: 10px 0; }
+    .seq span { background: #fff; border: 1px solid #b0bec5; border-radius: 999px; padding: 4px 10px; }
+    .seq span.hi { background: #e8f5e9; border-color: #3d6b5a; font-weight: 700; }
+    .seq em { font-style: normal; color: #90a4ae; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>这一趟做完 FTT V1 · Delta 线框 <span style="opacity:.7">叠现网 Homepage v2 / FST</span></h1>
+    <p>
+      <strong>不重做首页。</strong>壳层沿用 Bento（16:9 + 9:16 + 工作台）与回访「Bento + 下方书架」。
+      橙标 = FTT 要改的 Delta；灰标 = 沿用现网。权威首页线框：
+      <a href="./studio-homepage-output-first-v1.6.html">homepage v1.6</a> ·
+      <a href="../PRD-FINISH-THIS-TRIP-V1.md">FTT PRD v0.2</a> ·
+      <a href="../PRD-STUDIO-HOMEPAGE-v2.md">Homepage PRD</a>
+    </p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 空态 Bento<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 Import Delta<span class="w">W3b</span></button>
+      <button type="button" data-panel="f3">F3 成功面挡门<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 回访书架入口<span class="w">W3a</span></button>
+      <button type="button" data-panel="f5">F5 0→1 同壳<span class="w">W3b</span></button>
+      <button type="button" data-panel="f6">F6 话术对照<span class="w">W3b</span></button>
+      <button type="button" data-panel="f7">F7 双预览<span class="w">W1</span></button>
+      <button type="button" data-panel="f8">F8 搁置点<span class="w">W0</span></button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · 空态 = 现网 Bento + COPY Delta <span class="tag tag--w0">W0</span><span class="tag tag--reuse">复用壳</span></h2>
+          <p class="lead">结构 100% 沿用 Homepage v2：背景 + Slogan + 16:9/9:16 + Bench CTA。FTT 只审文案槽与禁区，不换布局。</p>
+          <div class="callout callout--info"><strong>本轮纠正</strong>上一版「文字英雄首页」作废。空态不得整页改成浅色营销页。</div>
+        </div>
+
+        <div class="anno-line">To-Be · IdleEmpty（沿用 Bento）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Studio · / · 空态</div></div>
+        <div class="frame">
+          <div class="bento">
+            <div class="delta" style="top:18px;right:14px">DELTA · Slogan 槽<br/>方向：完工感 · 禁 OS 腔</div>
+            <div class="bento__headline">
+              <p class="bento__eyebrow">TRAVELOGUE · 自动游记画册</p>
+              <h1 class="bento__h1 hl">旅行结束，照片还在——<em>游记一次做完</em></h1>
+              <p class="bento__lead hl">选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成能在大屏读、也能发微信的游记画册。</p>
+              <div class="tags hl">
+                <span class="tag-pill">成册</span>
+                <span class="tag-pill">微信长图</span>
+                <span class="tag-pill">本地 · 免注册</span>
+              </div>
+            </div>
+            <div class="bento__grid">
+              <div class="scroll-cell">
+                <p class="cell-label"><span>大屏卷轴 · 16:9</span><span class="demo-flag">示例作品</span></p>
+                <div class="scroll-fake">雨后</div>
+                <span class="delta delta--keep" style="position:relative;display:inline-block;margin-top:8px">KEEP · 双交付预览</span>
+              </div>
+              <div class="phone-cell">
+                <p class="cell-label"><span>微信长图 · 9:16</span><span class="demo-flag">示例</span></p>
+                <div class="phone"><div class="phone__notch"></div><div class="phone__screen"></div></div>
+              </div>
+              <div class="bench" style="grid-column:1/-1;margin:0">
+                <div class="bench__sample">
+                  <div class="bench__thumb" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=120')"></div>
+                  <div class="bench__text">
+                    <strong>京都 · 雨后</strong>
+                    <span>示例 · 86 张 · 3 章</span>
+                  </div>
+                </div>
+                <div style="text-align:right;position:relative">
+                  <span class="delta delta--keep" style="position:absolute;top:-28px;right:0">KEEP · CTA 字面可沿用现网</span>
+                  <button class="bench__cta hl--keep" type="button">开始制作我的游记 →</button>
+                  <p class="bench__meta">照片留在本机 · 无需注册 · 下一步选文件夹</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>Delta 清单</strong>① H1/lead 对齐「一次做完」② tags 禁「搭建系统/知识库」③ CTA <b>保留</b>「开始制作我的游记 →」（现网已合格，勿改短成另一套首页语义）④ 双交付与 Bench 结构零改。</div>
+        <div class="callout callout--bad"><strong>禁止</strong>去掉 Bento 双交付改成纯文案英雄；禁止并列「配置 API」主按钮。</div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · Import Sheet Delta <span class="tag tag--w3b">W3b</span><span class="tag tag--reuse">复用 Sheet</span></h2>
+          <p class="lead">沿用现网 Import Sheet（步骤 1/2 · 选文件夹）。只加小集正向句；不新做 Modal 体系。</p>
+        </div>
+
+        <div class="anno-line">To-Be · 叠在 Bento 上的现网 Sheet</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">开始制作 → Sheet</div></div>
+        <div class="frame">
+          <div class="bento" style="filter:saturate(.7)">
+            <div class="bento__headline"><h1 class="bento__h1" style="font-size:20px">照片导进来，<em>画册自动出来</em></h1></div>
+          </div>
+          <div class="sheet-mask">
+            <div class="sheet" style="position:relative">
+              <div class="sheet__handle"></div>
+              <h3>制作我的游记画册</h3>
+              <span class="badge">步骤 1 / 2 · 选择照片</span>
+              <span class="delta" style="position:absolute;top:48px;right:12px">DELTA · 小集正向</span>
+              <p class="sheet__friendly hl">精选相册也可以，不必倒全库。</p>
+              <button class="sheet__primary" type="button">选择本次旅行的照片文件夹</button>
+              <p class="sheet__hint">一次旅行一个文件夹。有「精选 / 素材」子文件夹时，封面会优先用精选。</p>
+              <details open>
+                <summary>其他导入方式</summary>
+                <p class="sheet__hint">粘贴路径 · 浏览… · 试用示例照片</p>
+              </details>
+              <button class="sheet__demo" type="button">用示例照片试一次</button>
+              <p class="sheet__hint">每个文件夹生成一本新画册，<strong>不会覆盖</strong>已有作品。</p>
+            </div>
+          </div>
+        </div>
+        <div class="compare" style="margin-top:12px">
+          <div class="mini"><h4 class="ok">允许 / 保留</h4><ul><li>精选也可以，不必倒全库</li><li>现网「精选优先」说明可留</li><li>示例入口仍在 Sheet 内</li></ul></div>
+          <div class="mini"><h4 class="x">禁止</h4><ul><li>相册太少无法做出大片</li><li>建议必须 ≥120 张</li><li>另起一套选片向导</li></ul></div>
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 成功面挡门（叠 FST / Dock） <span class="tag tag--w0">W0</span><span class="tag tag--reuse">复用成功面</span></h2>
+          <p class="lead">不新造成功面栈。字段合同仍归 FST：已保存 + 打开文件夹。FTT 只加可选 ShareHandoff 次区与完成分层读法。</p>
+        </div>
+
+        <div class="anno-line">To-Be · 预览页 Task Dock 成功面</div>
+        <div class="browser browser--light"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 导出完成</div></div>
+        <div class="frame frame--light">
+          <div class="preview-dark">
+            <div class="dock-top">
+              <button type="button">返回</button>
+              <button type="button">精修</button>
+              <button class="gold" type="button">发微信群</button>
+            </div>
+            <span class="delta delta--keep" style="top:56px;right:14px">KEEP · Dock「发微信群」= 终点标签 ≠教程</span>
+            <div class="mag"><div class="mag__cover"><h3>清迈十日</h3><p>长图已生成</p></div></div>
+            <div class="success-dock">
+              <p class="ok">✓ 已保存</p>
+              <p class="main hl">长图已保存到本机</p>
+              <p class="file">清迈十日-微信长图.png</p>
+              <div class="actions">
+                <button class="btn btn--primary" type="button">在文件夹中显示</button>
+                <button class="btn btn--secondary" type="button">回首页</button>
+              </div>
+              <div class="handoff hl">
+                <p class="q">这一份你打算？（可选 · FTT Delta · 不教怎么发）</p>
+                <button class="chip" type="button">已发出</button>
+                <button class="chip" type="button">稍后分享</button>
+                <button class="chip" type="button">仅保存</button>
+              </div>
+            </div>
+            <span class="delta" style="bottom:168px;left:16px">DELTA · ShareHandoff 次区<br/>不进第一可读行</span>
+          </div>
+        </div>
+        <div class="callout"><strong>完成分层</strong>导出成功 ∧ 点「在文件夹中显示」→ Completed。「回首页」次要；勿用「再做一趟」抢主钮。</div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 回访 = Bento + 下方书架 · 入口 Delta <span class="tag tag--w3a">W3a</span><span class="tag tag--reuse">复用 D-08</span></h2>
+          <p class="lead">按 Homepage D-08：回访<strong>不</strong>整页替换为书架。Bento 仍在上，书架在下。FTT 把「+ 选择文件夹新建」收成一等「再做一趟」（同动作：新建 trip → Sheet）。</p>
+          <div class="callout callout--info"><strong>映射</strong>现网 <code>+ 选择文件夹新建</code> ≈ FTT「再做一趟」。改的是<strong>字面 + 权重</strong>，不是新导航壳。</div>
+        </div>
+
+        <div class="anno-line">To-Be · IdleReturning</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Studio · / · 回访</div></div>
+        <div class="frame">
+          <div class="returning">
+            <div class="bento" style="min-height:280px">
+              <span class="delta delta--keep" style="top:12px;left:12px">KEEP · 上方仍是 Bento</span>
+              <div class="bento__headline" style="padding-bottom:0">
+                <p class="bento__eyebrow">TRAVELOGUE · 自动游记画册</p>
+                <h1 class="bento__h1" style="font-size:20px">照片导进来，<em>画册自动出来</em></h1>
+              </div>
+              <div class="bento__grid" style="padding-bottom:8px">
+                <div class="scroll-cell" style="min-height:120px">
+                  <p class="cell-label"><span>16:9</span><span class="demo-flag">可切换预览画册</span></p>
+                  <div class="scroll-fake" style="font-size:16px">清迈十日</div>
+                </div>
+                <div class="phone-cell">
+                  <div class="phone" style="transform:scale(.85);transform-origin:top center"><div class="phone__notch"></div><div class="phone__screen"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="shelf-below" style="position:relative">
+              <span class="delta" style="top:-12px;right:16px">DELTA · 一等「再做一趟」</span>
+              <div class="shelf-below__head">
+                <div>
+                  <h3>你的游记画册</h3>
+                  <p>2 本作品 · 上次编辑昨天</p>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn-ghost" type="button">设置</button>
+                  <button class="btn-new hl" type="button">再做一趟</button>
+                </div>
+              </div>
+              <div class="resume">
+                <div class="resume__thumb" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=200')"></div>
+                <div class="resume__text">
+                  <strong>继续编辑 · 清迈十日</strong>
+                  <span>与「再做一趟」分流 · KEEP resume 卡</span>
+                </div>
+                <button class="btn-ghost" type="button">打开预览</button>
+              </div>
+              <div class="shelf-grid">
+                <button class="book" type="button">
+                  <div class="book__cover" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=300')"></div>
+                  <p class="book__title">清迈十日</p>
+                  <p class="book__sub">已导出 · 昨天</p>
+                </button>
+                <button class="book" type="button">
+                  <div class="book__cover" style="background:#4e342e"></div>
+                  <p class="book__title">京都·雨后</p>
+                  <p class="book__sub">草稿</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>铁律</strong>「再做一趟」= 打开现网 Import Sheet 建新 trip；视觉权重 ≥ ghost。「继续编辑」留在 resume，禁止合并成「完善数据库」。</div>
+        <div class="callout callout--bad"><strong>禁止</strong>回访整页去掉 Bento 只留书架（违背 D-08）；禁止新做第三套首页。</div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 0→1 · 同壳出现书架区 <span class="tag tag--w3b">W3b</span></h2>
+          <p class="lead">首趟 Completed 后回 <code>/</code>：仍是 Bento，下方多出书架区（1 本）。「再做一趟」此时首次出现。成功面不抢这个一等入口。</p>
+        </div>
+
+        <div class="seq">
+          <span>空态 Bento</span><em>→</em>
+          <span>制作 / 导出</span><em>→</em>
+          <span class="hi">Completed</span><em>→</em>
+          <span class="hi">回 / ：Bento + 书架(1)</span><em>→</em>
+          <span class="hi">再做一趟可见</span>
+        </div>
+
+        <div class="anno-line">To-Be · 第一本刚出现</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">Studio · 首趟完成后</div></div>
+        <div class="frame">
+          <div class="returning">
+            <div class="bento" style="min-height:200px">
+              <span class="delta delta--keep" style="top:12px;left:12px">KEEP · Bento 不卸掉</span>
+              <div class="bento__headline">
+                <h1 class="bento__h1" style="font-size:18px">照片导进来，<em>画册自动出来</em></h1>
+              </div>
+              <div class="bench" style="margin-bottom:12px">
+                <div class="bench__sample">
+                  <div class="bench__thumb"></div>
+                  <div class="bench__text"><strong>预览画册 · 清迈十日</strong><span>刚完成的一本可设为首页预览</span></div>
+                </div>
+                <button class="bench__cta" type="button" style="opacity:.92">开始制作我的游记 →</button>
+              </div>
+            </div>
+            <div class="shelf-below">
+              <div class="shelf-below__head">
+                <div><h3>你的游记画册</h3><p>1 本作品 · 刚刚</p></div>
+                <button class="btn-new hl" type="button">再做一趟</button>
+              </div>
+              <div class="shelf-grid" style="grid-template-columns:1fr 1fr 1fr">
+                <button class="book" type="button">
+                  <div class="book__cover" style="background-image:url('https://images.unsplash.com/photo-1493976040374-85c8e912ba09?w=300')"></div>
+                  <p class="book__title">清迈十日</p>
+                  <p class="book__sub">刚刚完成</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>成功面</strong>最多「回首页」次链；一等「再做一趟」在回首页后的书架头，避免双主 CTA。</div>
+      </section>
+
+      <!-- F6 -->
+      <section class="panel" id="f6">
+        <div class="sec">
+          <h2>F6 · 话术对照（对现网字符串） <span class="tag tag--w3b">W3b</span></h2>
+          <p class="lead">在现网触点上改/留，而不是发明新触点。</p>
+        </div>
+        <table class="matrix">
+          <thead>
+            <tr><th>现网触点</th><th>现网 / 沿用</th><th>FTT Delta</th><th>禁区</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bento H1 / lead</td>
+              <td>照片导进来，画册自动出来</td>
+              <td>可改为完工向主句（F1）；或保留现网若已够「一次做完」感</td>
+              <td class="x">知识库 · Notion · 搭建系统</td>
+            </tr>
+            <tr>
+              <td>Bench CTA</td>
+              <td class="ok">开始制作我的游记 →</td>
+              <td><b>KEEP</b>（推荐不改字面）</td>
+              <td class="x">配置 API 并列</td>
+            </tr>
+            <tr>
+              <td>Import Sheet</td>
+              <td>选择本次旅行的照片文件夹</td>
+              <td>+ 精选也可以，不必倒全库</td>
+              <td class="x">张数羞辱</td>
+            </tr>
+            <tr>
+              <td>书架新建</td>
+              <td>+ 选择文件夹新建</td>
+              <td>收成一等 <b>再做一趟</b>（同动作）</td>
+              <td class="x">完善数据库</td>
+            </tr>
+            <tr>
+              <td>成功面</td>
+              <td>FST：已保存 / 打开文件夹</td>
+              <td>可选 ShareHandoff 次区</td>
+              <td class="x">发群教程（字段归 FST）</td>
+            </tr>
+            <tr>
+              <td>等待文案</td>
+              <td>Wait Tips / 阶段主句</td>
+              <td>禁「初始化数据库」</td>
+              <td class="x">系统初始化腔</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- F7 -->
+      <section class="panel" id="f7">
+        <div class="sec">
+          <h2>F7 · 双预览可发现（预览壳内） <span class="tag tag--w1">W1</span><span class="tag tag--reuse">挂 LTN</span></h2>
+          <p class="lead">不改首页。在预览 / 导出 Facade 上保证卷轴与长图可对照；UI 细节归 LTN B3。</p>
+        </div>
+        <div class="browser browser--light"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 对照</div></div>
+        <div class="frame frame--light">
+          <div class="preview-dark">
+            <div class="dock-top">
+              <button type="button">返回</button>
+              <button type="button" class="hl">对照长图</button>
+              <button class="gold" type="button">发微信群</button>
+            </div>
+            <span class="delta" style="top:56px;left:14px">DELTA · 入口可发现<br/>实现归 LTN/Facade</span>
+            <div class="dual">
+              <div class="scroll">
+                <div style="font-size:11px;font-weight:700;margin-bottom:8px">卷轴 scroll</div>
+                <div style="height:70px;background:#d7ccc8;border-radius:6px;margin-bottom:8px"></div>
+                <div style="height:40px;border:1px dashed #8d6e63;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px">拼图组 · 保组感</div>
+              </div>
+              <div class="long">
+                <div style="font-size:11px;font-weight:700;margin-bottom:8px">长图 longshot</div>
+                <div class="strip">9:16</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- F8 -->
+      <section class="panel" id="f8">
+        <div class="sec">
+          <h2>F8 · 搁置点审计（挂现网节点） <span class="tag tag--w0">W0</span></h2>
+          <p class="lead">节点名对齐现网：Bento CTA · Import Sheet · Importing · Preview Dock · 书架区。</p>
+        </div>
+        <div class="audit">
+          <table>
+            <thead>
+              <tr><th>现网节点</th><th>主 CTA / 出口</th><th>失败模式</th><th>归属</th><th>状态</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Bento Bench CTA</td>
+                <td>开始制作我的游记 →</td>
+                <td>被设置/能力说明稀释</td>
+                <td>FTUE / HP2</td>
+                <td><span class="pill pill--open">待审</span></td>
+              </tr>
+              <tr>
+                <td>Import Sheet</td>
+                <td>选文件夹 / 示例</td>
+                <td>权限拒；不知可选小集</td>
+                <td>FTUE</td>
+                <td><span class="pill pill--open">待审</span></td>
+              </tr>
+              <tr>
+                <td>Importing</td>
+                <td>阶段主句 → DraftReady</td>
+                <td>假死；刷新丢任务</td>
+                <td>FST / Wait Tips</td>
+                <td><span class="pill pill--open">待审</span></td>
+              </tr>
+              <tr>
+                <td>Preview · 发微信群</td>
+                <td>ExportSucceeded</td>
+                <td>toast 假成功</td>
+                <td>Share / FST</td>
+                <td><span class="pill pill--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td>成功面 · 打开文件夹</td>
+                <td>DeliveryLocated → Completed</td>
+                <td>找不到文件</td>
+                <td>FST</td>
+                <td><span class="pill pill--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td>书架区新建</td>
+                <td>再做一趟 → Sheet</td>
+                <td>入口弱 / 像建库</td>
+                <td>FTT W3a</td>
+                <td><span class="pill pill--open">待审</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside" id="aside">
+      <h3>审核要点 · F1</h3>
+      <ul id="aside-list">
+        <li>是否仍是 Bento 双交付壳</li>
+        <li>Delta 是否只在文案/tags</li>
+        <li>CTA 是否保留现网字面</li>
+      </ul>
+      <div class="dyn">
+        <h3>总原则</h3>
+        <ul>
+          <li><span class="ok">橙标</span> = 可改 Delta</li>
+          <li><span style="color:#455a64;font-weight:700">灰标 KEEP</span> = 禁重做</li>
+          <li>回访 = Bento + 下方书架</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const tips = {
+      f1: ["是否仍是 Bento 双交付壳", "Delta 是否只在文案/tags", "CTA 是否保留「开始制作我的游记 →」"],
+      f2: ["Sheet 是否仍是现网结构", "小集正向句是否为增量", "是否另起选片向导（应否）"],
+      f3: ["成功面是否仍归 FST", "ShareHandoff 是否次区", "主钮是否为打开文件夹"],
+      f4: ["上方 Bento 是否保留", "再做一趟是否映射原新建", "是否整页书架壳（应否）"],
+      f5: ["0→1 是否同 URL 出书架区", "成功面是否未抢一等入口", "Bench CTA 空态字面是否仍在"],
+      f6: ["是否对现网字符串而非新触点", "书架新建→再做一趟映射是否清楚"],
+      f7: ["是否在预览壳而非首页", "实现是否标明归 LTN"],
+      f8: ["节点名是否对齐现网", "导出/打开文件夹是否 P0"]
+    };
+    const titles = {
+      f1: "审核要点 · F1", f2: "审核要点 · F2", f3: "审核要点 · F3", f4: "审核要点 · F4",
+      f5: "审核要点 · F5", f6: "审核要点 · F6", f7: "审核要点 · F7", f8: "审核要点 · F8"
+    };
+    const tabs = document.getElementById("tabs");
+    const asideTitle = document.querySelector("#aside h3");
+    const asideList = document.getElementById("aside-list");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-panel]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-panel");
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("is-active", b === btn));
+      document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-visible", p.id === id));
+      asideTitle.textContent = titles[id] || "审核要点";
+      asideList.innerHTML = (tips[id] || []).map((t) => `<li>${t}</li>`).join("");
+    });
+  </script>
+</body>
+</html>

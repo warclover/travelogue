@@ -7,6 +7,7 @@
 
 import { postJson } from "../js/http.js";
 import { resolveCopyDisplayFromDom } from "../js/longshot-client.js";
+import { defaultLongshotOutputName, resolveDisplayTitle } from "../js/title-humanize.js";
 
 function blobToBase64(blob) {
   return new Promise(function (resolve, reject) {
@@ -104,6 +105,20 @@ export function runClientLongshotFallback(root, tripId, opts) {
       var win = iframe.contentWindow;
       waitForTravelogueLongshot(win, 20000)
         .then(function (api) {
+          try {
+            var idoc = win && win.document;
+            if (idoc && idoc.documentElement) {
+              if (copyDisplay === "photos") {
+                idoc.documentElement.setAttribute("data-photos-only", "on");
+                idoc.documentElement.setAttribute("data-copy-display", "photos");
+              }
+              if (prefs.includeAppendix === true) {
+                idoc.documentElement.setAttribute("data-include-appendix", "on");
+              }
+            }
+          } catch (_attrErr) {
+            /* ignore */
+          }
           return api.captureMainToBlob({
             scale: scale,
             format: format,
@@ -117,6 +132,20 @@ export function runClientLongshotFallback(root, tripId, opts) {
           });
         })
         .then(function (payload) {
+          // FE-SFI-01 · 轨 2 回传命名与 BE default_longshot_output_name 同源
+          var coverEl =
+            document.querySelector("[data-block='cover-opening'] .cover-opening__title") ||
+            document.querySelector("h1.cover-opening__title") ||
+            document.querySelector("title");
+          var rawTitle = coverEl ? String(coverEl.textContent || "").trim() : "";
+          if (!rawTitle && document.title) {
+            rawTitle = String(document.title).split("·")[0].trim();
+          }
+          var displayTitle = resolveDisplayTitle(
+            { displayTitle: rawTitle, title: rawTitle },
+            { limit: 32 }
+          );
+          var filename = defaultLongshotOutputName(displayTitle, { format: format });
           return postJson("/__travelogue/longshot/upload", {
             tripId: tripId,
             format: format,
@@ -124,9 +153,10 @@ export function runClientLongshotFallback(root, tripId, opts) {
             platform: platform,
             copyDisplay: copyDisplay,
             captureMethod: "p2",
+            filename: filename,
             data: payload.b64,
           }).then(function (res) {
-            return { res: res, blob: payload.blob };
+            return { res: res, blob: payload.blob, filename: filename };
           });
         })
         .then(function (pack) {

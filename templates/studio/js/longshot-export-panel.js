@@ -142,6 +142,8 @@ export function readExportPrefs() {
     scale: 2,
     slideCount: null,
     padMode: "letterbox",
+    includeAppendix: false,
+    density: "default",
   };
   try {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
@@ -154,6 +156,8 @@ export function readExportPrefs() {
       slideCount:
         parsed.slideCount == null ? null : clampXhsSlideCount(parsed.slideCount),
       padMode: parsed.padMode || "letterbox",
+      includeAppendix: parsed.includeAppendix === true,
+      density: parsed.density === "compact" ? "compact" : "default",
     };
   } catch (e) {
     return defaults;
@@ -335,9 +339,26 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
-    '<button type="button" data-studio-longshot-scale="2" title="2×">标准</button>' +
-    '<button type="button" data-studio-longshot-scale="3" title="3×">更清晰</button>' +
-    "</div></div>" +
+    '<button type="button" data-studio-longshot-scale="2" title="输出宽约 856px（428×2）">标准 · 856</button>' +
+    '<button type="button" data-studio-longshot-scale="3" title="输出宽约 1284px（428×3）">更清晰 · 1284</button>' +
+    "</div>" +
+    '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出宽 = 逻辑宽 428 × 倍率</p>' +
+    "</div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="density">' +
+    '<span class="preview-toolbar__export-popover-label">长图密度</span>' +
+    '<div class="preview-toolbar__export-popover-seg" role="group">' +
+    '<button type="button" data-studio-longshot-density="default">默认</button>' +
+    '<button type="button" data-studio-longshot-density="compact">紧凑</button>' +
+    "</div>" +
+    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面；导出前可「对比网页与长图」。</p>' +
+    "</div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="appendix" hidden>' +
+    '<label class="preview-toolbar__export-appendix">' +
+    '<input type="checkbox" data-studio-include-appendix />' +
+    '<span data-appendix-label>未含 · 往年旧照</span>' +
+    "</label>" +
+    '<p class="preview-toolbar__export-appendix-hint">默认不含附录旧照；勾选后一并导出。</p>' +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="expect" hidden>' +
     '<span class="preview-toolbar__export-popover-label">预期</span>' +
     '<div class="preview-toolbar__export-expect" data-expect-body></div></div>' +
@@ -384,6 +405,19 @@ export function syncPanelUI(pop, draft, opts) {
   });
   pop.querySelectorAll("[data-studio-longshot-scale]").forEach(function (btn) {
     var on = String(btn.getAttribute("data-studio-longshot-scale")) === String(draft.scale);
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  var scaleHint = pop.querySelector("[data-scale-hint]");
+  if (scaleHint) {
+    var px = draft.scale === 3 ? 1284 : 856;
+    scaleHint.textContent =
+      "输出宽约 " + px + "px（逻辑宽 428 × " + (draft.scale === 3 ? "3" : "2") + "）";
+  }
+  pop.querySelectorAll("[data-studio-longshot-density]").forEach(function (btn) {
+    var on =
+      (btn.getAttribute("data-studio-longshot-density") || "default") ===
+      (draft.density || "default");
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
@@ -450,6 +484,20 @@ export function syncPanelUI(pop, draft, opts) {
     }
   }
 
+  var appendixField = pop.querySelector('[data-field="appendix"]');
+  var appendixInput = pop.querySelector("[data-studio-include-appendix]");
+  var appendixLabel = pop.querySelector("[data-appendix-label]");
+  var appendixN = opts.appendixCount || 0;
+  if (appendixField) {
+    appendixField.hidden = !(appendixN >= 2);
+    if (appendixLabel && appendixN >= 2) {
+      appendixLabel.textContent = "未含 · 往年旧照（" + appendixN + " 张）";
+    }
+    if (appendixInput) {
+      appendixInput.checked = draft.includeAppendix === true;
+    }
+  }
+
   var expectField = pop.querySelector('[data-field="expect"]');
   var expectBody = pop.querySelector("[data-expect-body]");
   if (expectField && expectBody) {
@@ -498,6 +546,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   var uiOpts = {
     smartCropEnabled: opts.smartCropEnabled === true,
     photoCount: opts.photoCount || 0,
+    appendixCount: opts.appendixCount || 0,
   };
   var draft = {
     platform: (initialDraft && initialDraft.platform) || "wechat_chat",
@@ -505,6 +554,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     scale: (initialDraft && initialDraft.scale) || 2,
     slideCount: initialDraft ? initialDraft.slideCount : null,
     padMode: (initialDraft && initialDraft.padMode) || "letterbox",
+    includeAppendix: !!(initialDraft && initialDraft.includeAppendix),
+    density:
+      (initialDraft && initialDraft.density) === "compact" ? "compact" : "default",
   };
   var onDraftChange = typeof opts.onDraftChange === "function" ? opts.onDraftChange : null;
 
@@ -518,10 +570,22 @@ export function bindPanelDraft(pop, initialDraft, opts) {
           scale: draft.scale,
           slideCount: draft.slideCount,
           padMode: draft.padMode,
+          includeAppendix: !!draft.includeAppendix,
+          density: draft.density || "default",
         });
       } catch (_e) {}
     }
   }
+
+  pop.querySelectorAll("[data-studio-longshot-density]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      draft.density =
+        btn.getAttribute("data-studio-longshot-density") === "compact"
+          ? "compact"
+          : "default";
+      refresh();
+    });
+  });
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -588,6 +652,20 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       refresh();
     });
   });
+  var appendixCb = pop.querySelector("[data-studio-include-appendix]");
+  if (appendixCb) {
+    appendixCb.addEventListener("change", function () {
+      draft.includeAppendix = !!appendixCb.checked;
+      // Label flips meaning when checked: 「含 · 往年旧照」
+      var label = pop.querySelector("[data-appendix-label]");
+      if (label && uiOpts.appendixCount >= 2) {
+        label.textContent = draft.includeAppendix
+          ? "含 · 往年旧照（" + uiOpts.appendixCount + " 张）"
+          : "未含 · 往年旧照（" + uiOpts.appendixCount + " 张）";
+      }
+      refresh();
+    });
+  }
 
   refresh();
 
@@ -600,6 +678,8 @@ export function bindPanelDraft(pop, initialDraft, opts) {
         slideCount:
           draft.slideCount == null ? null : clampXhsSlideCount(draft.slideCount),
         padMode: draft.padMode,
+        includeAppendix: !!draft.includeAppendix,
+        density: draft.density === "compact" ? "compact" : "default",
       };
     },
     setDraft: function (next) {
@@ -609,6 +689,12 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       draft.slideCount =
         next.slideCount == null ? null : clampXhsSlideCount(next.slideCount);
       draft.padMode = next.padMode || draft.padMode;
+      if (next && typeof next.includeAppendix === "boolean") {
+        draft.includeAppendix = next.includeAppendix;
+      }
+      if (next && next.density) {
+        draft.density = next.density === "compact" ? "compact" : "default";
+      }
       refresh();
     },
     setUiOpts: function (nextOpts) {
@@ -617,6 +703,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       }
       if (nextOpts && nextOpts.photoCount != null) {
         uiOpts.photoCount = nextOpts.photoCount;
+      }
+      if (nextOpts && nextOpts.appendixCount != null) {
+        uiOpts.appendixCount = nextOpts.appendixCount;
       }
       refresh();
     },

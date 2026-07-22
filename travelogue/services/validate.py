@@ -203,11 +203,24 @@ def validate_manifest(
     for i, ch in enumerate(chapters):
         idx = ch.get("index", i + 1)
         pid = ch.get("patternId", "")
-        if char_len(ch.get("title", "")) > limits.get("chapterTitleMaxChars", 12):
+        title_max = limits.get("chapterTitleMaxChars", 12)
+        if (ch.get("curation") or {}).get("isAppendix"):
+            title_max = max(int(title_max), 16)
+        if char_len(ch.get("title", "")) > title_max:
             errors.append(f"E_VALIDATE_LIMIT chapters[{i}].title too long")
+        is_appendix = bool((ch.get("curation") or {}).get("isAppendix"))
         if idx == 1 and pid != "open":
             errors.append("E_VALIDATE_MANIFEST first chapter must be open (VR-P02)")
-        if idx == len(chapters) and pid != "close":
+        # VR-P03 · last content chapter (附录不计) must be close
+        content_chapters = [
+            c for c in chapters if not (c.get("curation") or {}).get("isAppendix")
+        ]
+        if (
+            content_chapters
+            and ch is content_chapters[-1]
+            and not is_appendix
+            and pid != "close"
+        ):
             errors.append("E_VALIDATE_MANIFEST last chapter must be close (VR-P03)")
 
         items = ch.get("items", [])

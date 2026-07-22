@@ -122,6 +122,32 @@ def build_render_context(
     if surface.strip_narrative_copy:
         hook = ""
         epilogue = ""
+    else:
+        # BE-SFI-01 · 封面 hook 再过分享面护栏（与章级同一漏斗）
+        from travelogue.domain.share_face_copy import (
+            record_stub_hit,
+            sanitize_share_copy_tracked,
+        )
+
+        meta_edited = bool(meta.get("edited"))
+        hook, hook_blanked = sanitize_share_copy_tracked(
+            hook, title=meta_title, kind="lead", edited=meta_edited
+        )
+        if hook_blanked:
+            record_stub_hit(
+                surface="draft" if surface.is_draft else "share",
+                field="hook",
+                trip_id=str(trip.get("tripId") or "") or None,
+            )
+        epilogue, epi_blanked = sanitize_share_copy_tracked(
+            epilogue, title=meta_title, kind="lead", edited=meta_edited
+        )
+        if epi_blanked:
+            record_stub_hit(
+                surface="draft" if surface.is_draft else "share",
+                field="epilogue",
+                trip_id=str(trip.get("tripId") or "") or None,
+            )
     # T-M4-01：封面 hook 一律经 show_hook_on_cover（系统 stub 句默认不上封面；
     # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
     show_cover_hook = show_hook_on_cover(hook)
@@ -284,6 +310,13 @@ def build_render_context(
     theme = surface.font_theme or (trip.get("export") or {}).get("fontTheme") or ""
     if theme == "magazine":
         html_attrs.append('data-font-theme="magazine"')
+    from travelogue.domain.longshot_density import resolve_longshot_density
+    from travelogue.domain.works_brand import resolve_works_brand
+
+    density = resolve_longshot_density(trip)
+    if surface.is_longshot_surface:
+        html_attrs.append(f'data-longshot-density="{density}"')
+    works_brand = resolve_works_brand(meta if isinstance(meta, dict) else {})
     html_attrs.extend(reading_html_attrs(surface.reading_payload))
 
     asset_version = _longshot_bundle_version(trip)
@@ -382,6 +415,11 @@ def build_render_context(
         "useEpilogueStats": use_epilogue_stats,
         "useEpilogueScreen": (surface.folio_lite and bool(epilogue)) or use_epilogue_stats,
         "useCoverClosing": use_cover_closing,
+        "showWorksBrand": works_brand["showWorksBrand"],
+        "worksBrandLine": works_brand["worksBrandLine"],
+        "worksBrandCustom": works_brand["worksBrandCustom"],
+        "longshotDensity": density,
+        "compactLongshot": density == "compact" and surface.is_longshot_surface,
         "hasMomentScreen": False,
         "momentScreen": {},
         "showClosingTitle": show_closing_title(meta_title) if use_cover_closing else False,

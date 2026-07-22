@@ -50,6 +50,7 @@ class MediaCardContext(TypedDict, total=False):
     hasTitle: bool
     caption: str
     hasCaption: bool
+    hasOverlayText: NotRequired[bool]
     editable: bool
     editPathTitle: str | None
     editPathCaption: str | None
@@ -229,6 +230,7 @@ class ChapterRenderContext(TypedDict, total=False):
     patternId: str
     index: str
     title: str
+    isAppendix: bool
     hasChapterMeta: bool
     chapterMeta: str
     hasDecorPull: bool
@@ -354,4 +356,9 @@ class TripRenderContext(TypedDict, total=False):
     hasMomentScreen: bool
     momentScreen: dict[str, Any]
     showClosingTitle: bool
+    showWorksBrand: NotRequired[bool]
+    worksBrandLine: NotRequired[str]
+    worksBrandCustom: NotRequired[bool]
+    longshotDensity: NotRequired[str]
+    compactLongshot: NotRequired[bool]
     closing: CoverRenderContext

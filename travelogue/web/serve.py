@@ -339,21 +339,63 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         payload = self._read_json_body()
         if not payload:
             return
-        asset_ids = payload.get("assetIds")
-        if not isinstance(asset_ids, list) or not asset_ids:
-            self._json_response(400, {"ok": False, "error": "assetIds required"})
-            return
-        ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
         defer_rerender = payload.get("rerender") is False
         # D-FEED-05 · tier=material|demote → 取消精选；默认 featured 升格
+        # FE-SFI-07 · action=restoreTimeOutlier → 移回主行程（豁免再隔离）
         raw_tier = str(payload.get("tier") or payload.get("action") or "featured").strip().lower()
         demote = raw_tier in ("material", "demote")
+        restore_outlier = raw_tier in ("restoretimeoutlier", "restore_outlier", "restore-outlier")
+        asset_ids = payload.get("assetIds")
+        if not isinstance(asset_ids, list):
+            asset_ids = []
+        ids = [str(aid).strip() for aid in asset_ids if str(aid).strip()]
+        if not ids and not restore_outlier:
+            self._json_response(400, {"ok": False, "error": "assetIds required"})
+            return
         svc = app_context_for_trip_json(self.trip_json_path, cfg=self.app_config).trip_service()
         rendered: list[str] = []
         try:
             with self._app_config_scope():
 
                 def mutator(trip: dict) -> list[str]:
+                    if restore_outlier:
+                        from travelogue.curation.time_outlier import exempt_time_outlier
+
+                        assets_by_id = {
+                            str(a.get("id")): a
+                            for a in (trip.get("assets") or [])
+                            if isinstance(a, dict) and a.get("id")
+                        }
+                        target_ids = list(ids)
+                        if not target_ids:
+                            target_ids = [
+                                str(x)
+                                for x in (
+                                    (trip.get("curation") or {}).get(
+                                        "excludedTimeOutlierAssetIds"
+                                    )
+                                    or []
+                                )
+                                if x
+                            ]
+                        changed_ids: list[str] = []
+                        for aid in target_ids:
+                            asset = assets_by_id.get(aid)
+                            if not asset:
+                                continue
+                            exempt_time_outlier(asset)
+                            changed_ids.append(aid)
+                        curation = trip.setdefault("curation", {})
+                        excluded = [
+                            x
+                            for x in (curation.get("excludedTimeOutlierAssetIds") or [])
+                            if str(x) not in set(changed_ids)
+                        ]
+                        if excluded:
+                            curation["excludedTimeOutlierAssetIds"] = excluded
+                        else:
+                            curation.pop("excludedTimeOutlierAssetIds", None)
+                        return changed_ids
                     if demote:
                         from travelogue.web.tier_patch import apply_tier_demotions
 
@@ -361,7 +403,7 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                     return apply_tier_promotions(trip, ids)
 
                 changed = svc.update(self.trip_json_path, mutator)
-                if self.auto_rerender and changed and not defer_rerender:
+                if self.auto_rerender and changed and not defer_rerender and not restore_outlier:
                     from travelogue.web.rerender import rerender_draft_trip
 
                     rendered = rerender_draft_trip(self.trip_json_path)
@@ -374,6 +416,17 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         except Exception:
             _log.exception("tier patch failed for %s", self.trip_json_path)
             self._json_response(500, internal_error_payload())
+            return
+        if restore_outlier:
+            self._json_response(
+                200,
+                {
+                    "ok": True,
+                    "restored": changed,
+                    "needsRecurate": True,
+                    "message": "已移回主行程，请重新分章以更新章节",
+                },
+            )
             return
         if demote:
             self._json_response(200, {"ok": True, "demoted": changed, "rendered": rendered})

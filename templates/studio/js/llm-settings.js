@@ -236,6 +236,7 @@ function setMsg(text, ok) {
   msg.classList.toggle("is-err", !ok);
 }
 
+/** FE-SFI-06 · E4 落地后恢复「已就绪」（结束 W0 间隙期弱化） */
 function setBadge(readiness) {
   var badge = $("#studio-llm-readiness");
   if (!badge) return;
@@ -307,7 +308,7 @@ function errMessage(j) {
 function applyStatus(st) {
   if (!st) return;
   _statusCache = st;
-  setBadge(st.readiness || (st.llmAvailable ? "已就绪" : "未配置"));
+  setBadge(st.readiness || (st.llmAvailable ? "已就绪" : "未配置")); // setBadge 间隙期弱化
   var provider = st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "deepseek";
   if (st.configured && st.llmProvider) {
     provider = st.llmProvider === "dashscope" ? "dashscope" : "deepseek";

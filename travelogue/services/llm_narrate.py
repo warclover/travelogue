@@ -174,13 +174,19 @@ def _stub_lead_for_chapter(
 
 
 def _needs_meta(trip: dict, *, regenerate: bool = False) -> bool:
+    from travelogue.domain.copy_origin import is_user_protected
+
     meta = trip.get("meta") or {}
-    if meta.get("edited"):
-        return bool(regenerate and not (trip.get("epilogue") or "").strip())
-    need_hook = regenerate or not (meta.get("hook") or "").strip()
+    hook_locked = is_user_protected(meta, "hookOrigin")
+    epi_locked = (
+        str(trip.get("epilogueOrigin") or "").strip().lower() == "user" or meta.get("edited")
+    )
+    need_hook = (not hook_locked) and (regenerate or not (meta.get("hook") or "").strip())
     need_epilogue = (
-        regenerate or not (trip.get("epilogue") or "").strip()
-    ) and len(trip.get("chapters") or []) >= 2
+        (not epi_locked)
+        and (regenerate or not (trip.get("epilogue") or "").strip())
+        and len(trip.get("chapters") or []) >= 2
+    )
     return need_hook or need_epilogue
 
 
@@ -208,18 +214,19 @@ def _chapter_needs_copy(
     regenerate: bool = False,
     scope: str = "frame",
 ) -> bool:
-    if chapter.get("edited"):
-        return False
+    from travelogue.domain.copy_origin import is_user_protected
+
     chapters = trip.get("chapters") or []
-    need_lead = chapter_lead_allowed(chapter, chapters, scope) and (
-        regenerate or not (chapter.get("lead") or "").strip()
+    lead_locked = is_user_protected(chapter, "leadOrigin")
+    need_lead = (
+        (not lead_locked)
+        and chapter_lead_allowed(chapter, chapters, scope)
+        and (regenerate or not (chapter.get("lead") or "").strip())
     )
     if need_lead:
         return True
     if not captions_allowed(scope):
         return False
-    if regenerate:
-        return True
     assets = {a["id"]: a for a in trip.get("assets") or []}
     item_by_asset = {
         it.get("assetId"): it
@@ -228,12 +235,12 @@ def _chapter_needs_copy(
     }
     for aid in chapter_caption_asset_ids(chapter):
         item = item_by_asset.get(aid)
-        if item and item.get("edited"):
-            continue
         asset = assets.get(aid)
+        if is_user_protected(item, "captionOrigin") or is_user_protected(asset, "captionOrigin"):
+            continue
         if asset_skips_caption(asset) and not regenerate:
             continue
-        if not resolve_caption(item, asset).strip():
+        if regenerate or not resolve_caption(item, asset).strip():
             return True
     return False
 
@@ -246,21 +253,27 @@ def _planned_fields(
     scope: str | None = None,
     cfg: AppConfig | None = None,
 ) -> list[str]:
+    from travelogue.domain.copy_origin import is_user_protected
+
     scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     fields: list[str] = []
     meta = trip.get("meta") or {}
     chapters = trip.get("chapters") or []
-    if not chapter_id and not meta.get("edited") and (regenerate or not (meta.get("hook") or "").strip()):
+    if (
+        not chapter_id
+        and not is_user_protected(meta, "hookOrigin")
+        and (regenerate or not (meta.get("hook") or "").strip())
+    ):
         fields.append("meta.hook")
     assets = {a["id"]: a for a in trip.get("assets") or []}
     for ch in chapters:
         if chapter_id and ch.get("id") != chapter_id:
             continue
-        if ch.get("edited"):
-            continue
         idx = ch.get("index")
-        if chapter_lead_allowed(ch, chapters, scope_val) and (
-            regenerate or not (ch.get("lead") or "").strip()
+        if (
+            not is_user_protected(ch, "leadOrigin")
+            and chapter_lead_allowed(ch, chapters, scope_val)
+            and (regenerate or not (ch.get("lead") or "").strip())
         ):
             fields.append(f"chapters[{idx}].lead")
         if not captions_allowed(scope_val):
@@ -272,37 +285,50 @@ def _planned_fields(
         }
         for aid in chapter_caption_asset_ids(ch):
             item = item_by_asset.get(aid)
-            if item and item.get("edited"):
-                continue
             asset = assets.get(aid)
+            if is_user_protected(item, "captionOrigin") or is_user_protected(asset, "captionOrigin"):
+                continue
             if asset_skips_caption(asset) and not regenerate:
                 continue
             if regenerate or not resolve_caption(item, asset).strip():
                 fields.append(f"assets[{aid}].caption")
+    epi_locked = (
+        str(trip.get("epilogueOrigin") or "").strip().lower() == "user"
+        or (meta.get("edited") and (trip.get("epilogue") or "").strip())
+    )
     if (
         not chapter_id
+        and not epi_locked
         and len(chapters) >= 2
         and (regenerate or not (trip.get("epilogue") or "").strip())
     ):
-        if not meta.get("edited"):
-            fields.append("epilogue")
+        fields.append("epilogue")
     return fields
 
 
 def _apply_meta_payload(
     trip: dict, payload: dict[str, Any], *, regenerate: bool = False
 ) -> list[str]:
+    from travelogue.domain.copy_origin import ORIGIN_LLM, is_user_protected
+
     updated: list[str] = []
     lim = _manifest_limits()
     meta = trip.setdefault("meta", {})
-    if not meta.get("edited"):
+    if not is_user_protected(meta, "hookOrigin"):
         hook = (payload.get("meta") or {}).get("hook")
         if hook and (regenerate or not (meta.get("hook") or "").strip()):
             meta["hook"] = _finalize_copy(str(hook), lim["hookMaxChars"])
+            meta["hookOrigin"] = ORIGIN_LLM
             updated.append("meta.hook")
+    epi_locked = str(trip.get("epilogueOrigin") or "").strip().lower() == "user"
     epilogue = payload.get("epilogue")
-    if epilogue and (regenerate or not (trip.get("epilogue") or "").strip()):
+    if (
+        not epi_locked
+        and epilogue
+        and (regenerate or not (trip.get("epilogue") or "").strip())
+    ):
         trip["epilogue"] = _finalize_copy(str(epilogue), lim["epilogueMaxChars"])
+        trip["epilogueOrigin"] = ORIGIN_LLM
         updated.append("epilogue")
     return updated
 
@@ -316,11 +342,16 @@ def _apply_chapter_payload(
     regenerate: bool = False,
     scope: str = "frame",
 ) -> list[str]:
+    from travelogue.domain.copy_origin import ORIGIN_LLM, is_user_protected
+
     updated: list[str] = []
     lim = _manifest_limits()
     idx = chapter.get("index")
     chapters = trip.get("chapters") or []
-    if not chapter.get("edited") and chapter_lead_allowed(chapter, chapters, scope):
+    if (
+        not is_user_protected(chapter, "leadOrigin")
+        and chapter_lead_allowed(chapter, chapters, scope)
+    ):
         lead = payload.get("lead")
         if lead and (regenerate or not (chapter.get("lead") or "").strip()):
             chapter["lead"] = _finalize_copy(
@@ -328,6 +359,7 @@ def _apply_chapter_payload(
                 lim["chapterLeadMaxChars"],
                 seen=lead_seen,
             )
+            chapter["leadOrigin"] = ORIGIN_LLM
             updated.append(f"chapters[{idx}].lead")
     if not captions_allowed(scope):
         return updated
@@ -340,9 +372,9 @@ def _apply_chapter_payload(
     }
     for aid in chapter_caption_asset_ids(chapter):
         item = item_by_asset.get(aid)
-        if item and item.get("edited"):
-            continue
         asset = assets.get(aid)
+        if is_user_protected(item, "captionOrigin") or is_user_protected(asset, "captionOrigin"):
+            continue
         if asset_skips_caption(asset) and not regenerate:
             continue
         if resolve_caption(item, asset).strip() and not regenerate:
@@ -351,6 +383,9 @@ def _apply_chapter_payload(
         if cap:
             final = _finalize_copy(str(cap), 60)
             updated.extend(apply_caption_to_trip(trip, aid, final))
+            target = item if item is not None else asset
+            if isinstance(target, dict):
+                target["captionOrigin"] = ORIGIN_LLM
     return updated
 
 
@@ -754,11 +789,15 @@ def run_llm_narrate(
     """
     from travelogue.llm.shared_backoff import get_shared_backoff
 
+    from travelogue.domain.copy_origin import migrate_edited_to_origin
+
     scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     if not dry_run:
         trip.setdefault("curation", {})["narrativeScope"] = scope_val
     if chapter_id:
         _chapter_indices(trip, chapter_id)
+    # BE-SFI-00 · promote legacy edited → field origin before planning skips
+    migrate_edited_to_origin(trip)
     meta = trip.setdefault("meta", {})
     if tone:
         meta["tone"] = tone if tone in ("relaxed", "documentary") else meta.get("tone", "relaxed")

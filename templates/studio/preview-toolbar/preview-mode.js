@@ -61,7 +61,22 @@ export function ensurePreviewRefineDefault() {
   if (!document.documentElement.hasAttribute("data-preview-refine")) {
     document.documentElement.setAttribute("data-preview-refine", "off");
   }
+  syncDebugAttrFromUrl();
   syncInspectChromeVisibility();
+}
+
+/** FE-SFI-02 · ``?debug=1`` → html[data-debug="1"]（Plate 门禁） */
+export function syncDebugAttrFromUrl() {
+  try {
+    var q = new URLSearchParams(window.location.search || "");
+    if (q.get("debug") === "1") {
+      document.documentElement.setAttribute("data-debug", "1");
+    } else {
+      document.documentElement.removeAttribute("data-debug");
+    }
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 /**
