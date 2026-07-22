@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "date": "2026-07-22",
+  "note": "W0 four-tier continuation: Danger/Research seeds + heuristic Advanced for remaining False; True paths = grandfather Happy Path candidates pending product rename only.",
+  "counts": {
+    "research": 10,
+    "advanced_or_research_pending": 33,
+    "danger": 5,
+    "advanced": 5
+  },
+  "happy_path_grandfather_true_count": 97,
+  "false_tiers": {
+    "advanced": [
+      "layout.scoring.allow_burst_split",
+      "layout.scoring.enabled",
+      "layout.scoring.incremental",
+      "layout.strategy_engine.capabilities.saliency_scoring",
+      "mosaic.lse_saliency_scoring"
+    ],
+    "advanced_or_research_pending": [
+      "aesthetic.warm_learned_on_ingest",
+      "bookends.mobile_closing",
+      "clustering.deterministic_strict",
+      "cohort.enabled",
+      "cull.bucketed_blur_thresholds",
+      "cull.featured_hard_exclude",
+      "cull.recalc_strict_groups",
+      "ingest.generate_crops",
+      "ingest.webp_pyramid",
+      "layout.editorial_4mix.enabled",
+      "layout.editorial_portrait_row.enabled",
+      "layout.feedback.enabled",
+      "layout.strategy_engine.capabilities.editorial_hints",
+      "layout.strategy_engine.capabilities.highlight_windows",
+      "layout.strategy_engine.capabilities.hungarian_assignment",
+      "layout.strategy_engine.capabilities.implicit_feedback_export",
+      "layout.strategy_engine.capabilities.pace_profile",
+      "layout.strategy_engine.capabilities.quality_unified",
+      "layout.strategy_engine.capabilities.segment_order_optimizer",
+      "layout.strategy_engine.capabilities.tone_harmony",
+      "layout.strategy_engine.feedback.enabled",
+      "layout.usage_rules.enabled",
+      "mosaic.enable_size3_aux",
+      "mosaic.lse_hungarian_assignment",
+      "mosaic.lse_quality_unified",
+      "mosaic.lse_tone_harmony",
+      "mosaic.near_scene_clone_gate.enabled",
+      "mosaic.template_contract.enabled",
+      "pipeline.parallel_ingest",
+      "studio.gcs_poster_bric.enabled",
+      "studio.longshot2.smart_crop_enabled",
+      "studio.output_recipe.enabled",
+      "template_admin.require_token_on_loopback"
+    ],
+    "danger": [
+      "clustering.force_recluster",
+      "layout.strategy_engine.enabled",
+      "mosaic.allow_drop",
+      "studio.g1_confirm_structure",
+      "studio.layout_templates_internal"
+    ],
+    "research": [
+      "aesthetic.mllm.enabled",
+      "bookends.plugins.closing_vl_rerank",
+      "bookends.plugins.opening_vl_rerank",
+      "cull.allow_cpu_ml",
+      "cull.portrait.debug_per_face",
+      "geocode.enabled",
+      "layout.scoring.prefix_beam_enabled",
+      "mosaic.template_contract.shadow_log",
+      "narrative.decor_line_llm_enabled",
+      "template_router.shadow_mode"
+    ]
+  },
+  "danger_seeds": [
+    "clustering.force_recluster",
+    "layout.strategy_engine.enabled",
+    "mosaic.allow_drop",
+    "studio.g1_confirm_structure",
+    "studio.layout_templates_internal"
+  ],
+  "research_seeds": [
+    "aesthetic.mllm.enabled",
+    "bookends.plugins.closing_vl_rerank",
+    "bookends.plugins.opening_vl_rerank",
+    "cull.allow_cpu_ml",
+    "geocode.enabled",
+    "layout.scoring.prefix_beam_enabled",
+    "narrative.decor_line_llm_enabled"
+  ]
+}

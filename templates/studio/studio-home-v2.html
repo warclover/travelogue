@@ -211,7 +211,7 @@
       <div class="v2-settings-popover__head">
         <div class="v2-settings-popover__titles">
           <p id="v2-settings-title" class="v2-settings-popover__title">设置</p>
-          <p id="v2-settings-desc" class="v2-settings-popover__desc">导入 · 外观 · AI 文案（可选）</p>
+          <p id="v2-settings-desc" class="v2-settings-popover__desc">常用：导入 · 存储 · 外观；AI 可选。实验项默认折叠。</p>
         </div>
         <button type="button" class="v2-settings-popover__close" id="v2-settings-close"
                 aria-label="关闭">×</button>
@@ -219,14 +219,14 @@
 
       <div class="v2-settings-zones">
         <!-- 外观 -->
-        <details class="v2-settings-zone" id="v2-settings-zone-appearance">
+        <details class="v2-settings-zone" id="v2-settings-zone-appearance" data-csc-tier="ui-local">
           <summary class="v2-settings-zone__summary">
             外观
             <span class="v2-settings-zone__meta" id="v2-settings-meta-appearance">雾蓝纸本</span>
           </summary>
           <div class="v2-settings-zone__body">
             <label class="v2-settings-field__label" for="v2-theme-select">首页配色</label>
-            <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色">
+            <select id="v2-theme-select" class="v2-settings-popover__select" aria-label="首页配色" data-csc-tier="ui-local">
               <optgroup label="精选">
                 <option value="mist">雾蓝纸本</option>
                 <option value="folio">纸墨装帧</option>
@@ -242,15 +242,17 @@
         </details>
 
         <!-- 导入与分析（默认折叠 · 原「导入偏好」） -->
-        <details class="v2-settings-zone" id="v2-settings-zone-import">
+        <details class="v2-settings-zone" id="v2-settings-zone-import" data-csc-tier="l1">
           <summary class="v2-settings-zone__summary">
             导入与分析
             <span class="v2-settings-zone__meta" id="v2-settings-meta-import">行程·自动 · 场景·关</span>
           </summary>
           <div class="v2-settings-zone__body">
-            <p class="v2-settings-zone__note">导入偏好 · 一般无需修改</p>
+            <p class="v2-settings-zone__note">常用选项 · 一般保持默认即可
+              <button type="button" class="v2-wizard__help-link" data-help-item="H0">默认这一趟做什么 →</button>
+            </p>
 
-            <div class="v2-settings-field">
+            <div class="v2-settings-field" data-csc-tier="l1" data-csc-key="clustering.enabled">
               <span class="v2-settings-field__label" id="studio-cfg-clustering-label">行程识别</span>
               <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-clustering-label"
                    data-seg-for="studio-cfg-clustering">
@@ -268,7 +270,7 @@
               <p class="v2-advanced-popover__hint" id="studio-cfg-clustering-hint">有 GPS 时按行程分段；一般保持「自动」。</p>
             </div>
 
-            <div class="v2-settings-field">
+            <div class="v2-settings-field" data-csc-tier="l1" data-csc-key="vision.enabled">
               <span class="v2-settings-field__label" id="studio-cfg-vision-label">场景分析</span>
               <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-vision-label"
                    data-seg-for="studio-cfg-vision">
@@ -286,11 +288,11 @@
               <p class="v2-advanced-popover__hint" id="studio-cfg-vision-hint">合并同场景照片（较慢）；一般保持「关」。</p>
             </div>
 
-            <details class="v2-settings-sub" id="v2-settings-experimental">
-              <summary class="v2-settings-sub__summary">说明与实验选项</summary>
+            <details class="v2-settings-sub" id="v2-settings-experimental" data-csc-tier="advanced">
+              <summary class="v2-settings-sub__summary">实验选项（高级）</summary>
               <div class="v2-settings-sub__body">
 
-                <div class="v2-settings-field">
+                <div class="v2-settings-field" data-csc-tier="danger" data-csc-key="studio.g1_confirm_structure">
                   <span class="v2-settings-field__label" id="studio-cfg-g1-label">导入后先确认章节</span>
                   <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-g1-label"
                        data-seg-for="studio-cfg-g1">
@@ -305,7 +307,7 @@
                   <p class="v2-advanced-popover__hint" id="studio-cfg-g1-hint">开启后需在预览内确认章节顺序再生成文案</p>
                 </div>
 
-                <div class="v2-settings-field">
+                <div class="v2-settings-field" data-csc-tier="advanced" data-csc-key="layout.scoring.enabled">
                   <span class="v2-settings-field__label" id="studio-cfg-layout-scoring-label">智能排版（实验）</span>
                   <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-layout-scoring-label"
                        data-seg-for="studio-cfg-layout-scoring">
@@ -325,7 +327,7 @@
         </details>
 
         <!-- AI 文案 · zone 摘要 + CTA → Modal（D-DLLM-03） -->
-        <details class="v2-settings-zone" id="v2-settings-zone-ai">
+        <details class="v2-settings-zone" id="v2-settings-zone-ai" data-csc-tier="l0">
           <summary class="v2-settings-zone__summary">
             AI 文案
             <span class="v2-settings-zone__meta" id="v2-settings-meta-ai">未配置</span>
@@ -344,7 +346,7 @@
         </details>
 
         <!-- 存储与磁盘 -->
-        <details class="v2-settings-zone" id="v2-settings-storage-section">
+        <details class="v2-settings-zone" id="v2-settings-storage-section" data-csc-tier="l1">
           <summary class="v2-settings-zone__summary">
             存储与磁盘
             <span class="v2-settings-zone__meta" id="v2-settings-meta-storage">估算中…</span>
@@ -352,7 +354,7 @@
           <div class="v2-settings-zone__body">
             <p class="v2-settings-usage" id="studio-storage-usage-line">正在估算占用…</p>
             <p class="v2-advanced-popover__hint" id="studio-storage-mode-line" hidden></p>
-            <div class="v2-settings-field">
+            <div class="v2-settings-field" data-csc-tier="l1" data-csc-key="ingest.copy_source_files">
               <span class="v2-settings-field__label" id="studio-cfg-copy-source-label">导入时复制源文件</span>
               <div class="v2-settings-seg" role="radiogroup" aria-labelledby="studio-cfg-copy-source-label"
                    data-seg-for="studio-cfg-copy-source">

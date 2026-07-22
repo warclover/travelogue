@@ -1242,7 +1242,7 @@ def _stage_build_chapters_compose(
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
-    from travelogue.layout_engine.mosaic.trip import compose_trip
+    from travelogue.layout_engine.api import compose_trip
 
     chapters, replan_meta = compose_trip(
         chapters,
@@ -1291,9 +1291,11 @@ def _stage_build_chapters_compose(
         compact_chapter_items_for_screens(chapters)
     mosaic_logs_for_metrics = None
     if app_cfg.mosaic.enabled:
-        from travelogue.layout_engine.adapter import drain_mosaic_dropped
-        from travelogue.layout_engine.mosaic.hook import drain_mosaic_capture
-        from travelogue.layout_engine.mosaic.log import annotate_winner_plan_logs
+        from travelogue.layout_engine.api import (
+            annotate_winner_plan_logs,
+            drain_mosaic_capture,
+            drain_mosaic_dropped,
+        )
 
         mosaic_logs, mosaic_logs_for_metrics = drain_mosaic_capture()
         mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)

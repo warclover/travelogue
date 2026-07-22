@@ -4,6 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | v0.2.1-MVP |
+| **DOC-STATUS** | **archive**（MVP 已冻结 · 登记见 [DOC-STATUS.md](./DOC-STATUS.md)） |
 | **状态** | Draft · 本地验证阶段（**MVP 需求已冻结**） |
 | **交付形态** | 照片 + 可选短视频 → 杂志风 HTML 游记包（zip 离线单元） |
 | **MVP 阶段** | P0 本地工坊 + P1 轻量分享实验 |
