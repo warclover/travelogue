@@ -362,3 +362,80 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
+/* PMX FE-PMX-20 · 预览窄屏诚实门面 */
+.preview-narrow-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(56, 90, 72, 0.35), transparent 70%),
+    linear-gradient(165deg, #15241f 0%, #0d1613 55%, #121c18 100%);
+  color: #eef6f1;
+  font-family: var(--studio-font-ui, "Microsoft YaHei", "PingFang SC", sans-serif);
+}
+.preview-narrow-gate[hidden] {
+  display: none !important;
+}
+.preview-narrow-gate__card {
+  width: min(420px, 100%);
+  text-align: center;
+}
+.preview-narrow-gate__brand {
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(232, 244, 236, 0.62);
+}
+.preview-narrow-gate__title {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: #f5fbf8;
+}
+.preview-narrow-gate__lead {
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(232, 244, 236, 0.82);
+}
+.preview-narrow-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.preview-narrow-gate__btn {
+  appearance: none;
+  border: 1px solid rgba(232, 244, 236, 0.28);
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: transparent;
+  color: #eef6f1;
+  font: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.preview-narrow-gate__btn--primary {
+  background: #eef6f1;
+  border-color: #eef6f1;
+  color: #15241f;
+  font-weight: 600;
+}
+.preview-narrow-gate__btn:hover {
+  border-color: rgba(232, 244, 236, 0.55);
+}
+.preview-narrow-gate__btn--primary:hover {
+  background: #fff;
+  border-color: #fff;
+}
+html[data-preview-narrow-gate="1"] .preview-toolbar {
+  visibility: hidden;
+  pointer-events: none;
+}
+

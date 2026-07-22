@@ -249,7 +249,7 @@
 
 ### 3.5 分章体验（W1）
 
-**D-SFI-08** 章名禁「续」：回归断言 [SFC §3.5](./PRD-SHARE-FACE-CLOSEOUT-V1.md) / [FST](./PRD-FIRST-SESSION-TRUST-V1.md)（**非** Chapter Naming 条款）；同日多章用时段 / 序号。
+**D-SFI-08** 章名禁「续」：回归断言 [SFC §3.5](./PRD-SHARE-FACE-CLOSEOUT-V1.md) / [FST](./PRD-FIRST-SESSION-TRUST-V1.md)（**非** Chapter Naming 条款）；同日多章用时段 → segment → `·二`/`·三`（禁 `（N）` · [PMX D6](./PRD-POST-MERGE-UX-FIXPACK-V1.md)）。
 
 **D-SFI-09** 分章面板：
 

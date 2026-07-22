@@ -1361,9 +1361,11 @@ function startDemoAlbumImport() {
   var existing = (V2.trips || []).find(function (t) {
     return t && t.tripId === "demo-album";
   });
+  // PMX D1 · 与后端 DEMO_ALBUM_DISPLAY_TITLE 对齐；禁止「示例游记」
+  var DEMO_ALBUM_DISPLAY_TITLE = "京都雨季漫游";
   var body = {
     useDemoAlbum: true,
-    title: "示例游记",
+    title: DEMO_ALBUM_DISPLAY_TITLE,
     place: "旅途",
     mode: "quick_share",
   };
@@ -1384,6 +1386,8 @@ function startDemoAlbumImport() {
   }
 
   if (existing) {
+    // PMX D4 · 复用卡前先关 Wizard，取消则重开
+    closeImportWizard("demo_exists_prompt");
     return resolveDemoAlbumExists({
       previewUrl: "/" + (existing.tripId || "demo-album") + "/index.html",
       result: { previewUrl: "/" + (existing.tripId || "demo-album") + "/index.html" },
@@ -1394,6 +1398,7 @@ function startDemoAlbumImport() {
         return null;
       }
       if (choice === "regenerate") return kickoff(true);
+      openImportWizard();
       return null;
     });
   }

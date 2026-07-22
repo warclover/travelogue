@@ -103,6 +103,20 @@ def test_ftue_demo_album_success_emitted() -> None:
     assert "ftue_demo_album_success" in run
     assert "useDemoAlbum" in run
     assert "再做一遍" in run
+    # PMX §8 · 成功事件附展示名
+    assert "displayTitle" in run
+
+
+def test_pmx_copy_branch_telemetry_wired() -> None:
+    fs = (STUDIO / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+    init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
+    assert "first_success_copy_branch" in fs
+    assert "copy_branch" in fs
+    assert "l1_ready" in fs and "l0_degraded" in fs
+    assert "refine_copy_branch" in init
+    assert "first_success_copy_branch" in analytics
+    assert "refine_copy_branch" in analytics
 
 
 def test_ftue_reveal_folder_wired() -> None:

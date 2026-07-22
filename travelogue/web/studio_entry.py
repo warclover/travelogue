@@ -107,6 +107,9 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
     intent = trip.get("intent") or {}
     meta = trip.get("meta") or {}
     title = str(intent.get("title") or meta.get("title") or "我的旅途").strip()[:20]
+    # PMX D3 · 展示名与编辑 SSOT 分列；封面 DOM 只绑 displayTitle
+    from travelogue.domain.title_humanize import resolve_display_title
+    display_title = resolve_display_title(meta if isinstance(meta, dict) else {})
     assets = trip.get("assets") or []
     featured = sum(1 for a in assets if a.get("userTier") == "featured")
     clustering = (trip.get("curation") or {}).get("clustering") or {}
@@ -116,6 +119,7 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
     cohort = (trip.get("curation") or {}).get("cohort") or {}
     return {
         "title": title or "我的旅途",
+        "displayTitle": display_title or title or "我的旅途",
         "featuredCount": featured,
         "segmentCount": len(segments),
         "hasUserNotes": bool(user_notes),

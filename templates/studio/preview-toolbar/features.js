@@ -104,9 +104,11 @@ export function initTitleEdit(root, tripId) {
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (data && data.intentSummary && data.intentSummary.title) {
-          setTitle(data.intentSummary.title);
-        }
+        var summary = data && data.intentSummary;
+        var shown = summary
+          ? String(summary.displayTitle || "").trim()
+          : "";
+        if (shown) setTitle(shown);
       })
       .catch(function () {});
 

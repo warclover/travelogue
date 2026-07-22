@@ -9,6 +9,7 @@ import {
 } from "../js/help-onboarding.js";
 import { LS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { loadLlmReadiness } from "../js/llm-readiness.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
@@ -277,8 +278,26 @@ function populateSuccessUi(result) {
     nextHint.textContent = "";
     var lead = document.createElement("p");
     lead.className = "v2-first-success__guidance-lead";
-    lead.textContent = HELP_COPY.firstSuccessNext;
+    // PMX D2 · 先中性句，再按 llm/status 分支（禁止用导入 stub 推出「去配置」）
+    lead.textContent =
+      HELP_COPY.firstSuccessNextNeutral || HELP_COPY.firstSuccessNext;
     nextHint.appendChild(lead);
+    loadLlmReadiness().then(function (state) {
+      var branch = "neutral";
+      if (state === "available") {
+        lead.textContent =
+          HELP_COPY.firstSuccessNextReady || HELP_COPY.firstSuccessNextNeutral;
+        branch = "l1_ready";
+      } else if (state === "unavailable") {
+        lead.textContent = HELP_COPY.firstSuccessNext;
+        branch = "l0_degraded";
+      }
+      // PMX §8 · 文案分支遥测（与设置同源 readiness）
+      trackStudioEvent("first_success_copy_branch", {
+        copy_branch: branch,
+        tripId: result.tripId || null,
+      });
+    });
     // FE-FTUE-08 · 示例成稿后转化；非示例也轻提示一次（防试完就走）
     if (HELP_COPY.ftueConvertHint) {
       var nextLine = document.createElement("p");

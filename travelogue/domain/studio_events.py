@@ -105,6 +105,8 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         # FTUE Optimization V1 · PRD §7
         "ftue_demo_album_click",
         "ftue_demo_album_success",
+        "first_success_copy_branch",
+        "refine_copy_branch",
         "ftue_reveal_folder",
         "longshot_success_share_hint_shown",
         "help_funnel_reveal_folder",

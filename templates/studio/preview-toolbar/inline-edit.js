@@ -143,12 +143,15 @@ export function initCoverTitleEdit(tripId) {
     fetch("/__travelogue/trips/" + encodeURIComponent(tripId) + "/entry")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (data && data.intentSummary && data.intentSummary.title) {
-          var t = String(data.intentSummary.title).trim();
-          titleEl.textContent = t;
-          titleEl.dataset.title = t;
-          syncCoverTitleLayoutClass(titleEl);
-        }
+        // PMX D3 · 封面只绑展示名；禁止用裸 meta.title 覆盖已渲染人话名
+        var summary = data && data.intentSummary;
+        var t = summary
+          ? String(summary.displayTitle || "").trim()
+          : "";
+        if (!t) return;
+        titleEl.textContent = t;
+        titleEl.dataset.title = t;
+        syncCoverTitleLayoutClass(titleEl);
       })
       .catch(function () {});
 

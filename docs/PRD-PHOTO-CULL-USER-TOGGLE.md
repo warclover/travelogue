@@ -62,7 +62,7 @@
 | 替换全局 `cull.enabled` 管理员总闸 | 运维仍可用 config 全局关闭 |
 | 调整 cull 算法参数（阈值、保留率） | 属 config / 算法 PRD 范畴 |
 | CLI `travelogue ingest` 交互改造 | Phase 2；Studio 为主交付面 |
-| v1 跳过低清门 | Phase 2 选项 B |
+| v1 跳过低清门 | 已迁出 → [P9-F3 全部保留](./PRD-KEEP-ALL-PHOTOS-V1.md)（`keep_all` 档跳过低分闸） |
 
 ---
 

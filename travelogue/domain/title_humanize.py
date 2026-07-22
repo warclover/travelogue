@@ -147,13 +147,18 @@ def _fallback_display(meta: dict[str, Any] | None, *, limit: int) -> str:
 
 def _accept_display(candidate: str, *, limit: int) -> str | None:
     """Return humanized title when清洗后已可读；否则 None（交 resolve 做地点回退）。"""
+    from travelogue.domain.share_face_copy import is_unsafe_share_copy
+
     t = (candidate or "").strip()
     if not t:
         return None
+    # PMX · 题名禁词（如「示例游记」）不得上展示面；先清洗再判，避免裸「--」误伤
     cleaned = humanize_folder_title(t, limit=limit)
-    if cleaned and cleaned != _DEFAULT_TITLE and not is_folder_title_noise(cleaned):
-        return cleaned
-    return None
+    if not cleaned or cleaned == _DEFAULT_TITLE or is_folder_title_noise(cleaned):
+        return None
+    if is_unsafe_share_copy(cleaned, kind="title"):
+        return None
+    return cleaned
 
 
 def migrate_stale_display_title(meta: dict[str, Any] | None) -> bool:
@@ -188,6 +193,8 @@ def resolve_display_title(
     Re-validates stored ``meta.displayTitle`` (do not trust dirty history).
     Noise path: 有真实地点 → ``{地} · {日}``；否则地名抽取 → ``{地} · 旅行``（OQ-SFC-01）。
     """
+    from travelogue.domain.share_face_copy import is_unsafe_share_copy
+
     meta = meta or {}
     stored = str(meta.get("displayTitle") or "").strip()
     accepted = _accept_display(stored, limit=limit)
@@ -207,8 +214,13 @@ def resolve_display_title(
     if meta_place != "旅行":
         return _fallback_display(meta, limit=limit)
 
-    extracted = extract_place_label(raw or stored)
-    if extracted:
+    # PMX · 禁词题名不得经 extract_place_label 再拼回展示面
+    leak_source = raw or stored
+    if leak_source and is_unsafe_share_copy(leak_source, kind="title"):
+        return _fallback_display(meta, limit=limit)
+
+    extracted = extract_place_label(leak_source)
+    if extracted and not is_unsafe_share_copy(extracted, kind="title"):
         out = f"{extracted} · 旅行"
         return out[:limit] if len(out) > limit else out
 

@@ -178,7 +178,8 @@ export function ctaLabelForPlatform(platformId) {
 /** Dock / 窄栏短标签（AC-DFX-02 · 含 poster_bric，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "moments_grid") return "九宫格";
-  if (platformId === "wechat_moments") return "连读";
+  // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
+  if (platformId === "wechat_moments") return "导出连读";
   if (platformId === "xiaohongshu") return "小红书";
   if (platformId === "poster_bric") return "单屏海报";
   return "发微信群";

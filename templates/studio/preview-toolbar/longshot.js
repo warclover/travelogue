@@ -568,12 +568,15 @@ export function cancelPreviewLongshotExport(root) {
     } else {
       btn.removeAttribute("data-recipe-subtitle");
     }
+    // PMX D8 · by_chapter / 「按章」配方：可见短标签保留按章语义
+    function shortLabelForCta() {
+      if (tipRecipe && tipRecipe.needsIntent) return "选择分享";
+      if (/按章/.test(label || "")) return "按章导出";
+      return shortCtaLabelForPlatform(platform);
+    }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
-      var short =
-        tipRecipe && tipRecipe.needsIntent
-          ? "选择分享"
-          : shortCtaLabelForPlatform(platform);
+      var short = shortLabelForCta();
       var labelEl = btn.querySelector(".preview-toolbar__dock-export-label");
       if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
         labelEl.textContent = short;
@@ -582,10 +585,7 @@ export function cancelPreviewLongshotExport(root) {
       updateDockTip(btn, label);
       return;
     }
-    var shortBar =
-      tipRecipe && tipRecipe.needsIntent
-        ? "选择分享"
-        : shortCtaLabelForPlatform(platform);
+    var shortBar = shortLabelForCta();
     if (!btn.classList.contains("preview-toolbar__longshot--running")) {
       btn.textContent = shortBar;
     }

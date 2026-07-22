@@ -159,6 +159,30 @@ def test_studio_home_v2_route_redirects_to_root(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+def test_studio_home_v2_head_redirects_to_root(tmp_path: Path) -> None:
+    """PMX BE-PMX-22 · HEAD /v2 与 GET 同为 302 → /。"""
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/v2", method="HEAD")
+
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
+                return None
+
+        opener = urllib.request.build_opener(_NoRedirect)
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            opener.open(req, timeout=10)
+        assert excinfo.value.code == 302
+        assert excinfo.value.headers.get("Location") == "/"
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@pytest.mark.e2e
 def test_studio_home_classic_unchanged_on_gate_off(tmp_path: Path, monkeypatch) -> None:
     """gate off 时 GET / 仍为 classic 冻结页，且不加载 v2 bundle。"""
     monkeypatch.setenv("TRAVELOGUE_STUDIO_HOMEPAGE_V2", "off")

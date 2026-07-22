@@ -61,6 +61,11 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
+test("wechat_moments 短标签带导出动作（禁止裸「连读」）", () => {
+  assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
+  assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读/);
+});
+
 test("exportSummaryLine · draft 未确认时提示待生效", () => {
   assert.equal(
     exportSummaryLine("wechat_chat", "wechat_chat"),

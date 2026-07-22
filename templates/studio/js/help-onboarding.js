@@ -35,8 +35,12 @@ var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHel
 
 export var HELP_COPY = {
   firstSuccessNext:
-    // FE-FST-06 / AC-SFC-11 · 勿承诺杂志级完成态
+    // FE-FST-06 / AC-SFC-11 · 勿承诺杂志级完成态 · L0（未配置）
     "游记已做好，可预览与导出。当前为本机文案；配置写作引擎后可在预览升级。",
+  // PMX D2 · L1 就绪；与导入 stub 两维分离
+  firstSuccessNextReady:
+    "游记已做好，可预览与导出。AI 文案已就绪，可在预览重新生成。",
+  firstSuccessNextNeutral: "游记已做好，可预览与导出。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",

@@ -435,10 +435,19 @@ export function initToolbarV3(root, tripId) {
           llmBtn.disabled = !ok;
           llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
         }
-        // L0：未配置提示 + 配置出口；L1：保留「不会自动重写」预期（MF-06）
+        // PMX D2 · L0 显示配置引导；L1 显示就绪预期（禁止强制显示「配置写作引擎」）
         if (llmHint) llmHint.hidden = !!ok;
         if (llmSetup) llmSetup.hidden = !!ok;
-        if (llmExpect) llmExpect.hidden = false;
+        if (llmExpect) {
+          llmExpect.hidden = !ok;
+          if (ok) {
+            llmExpect.textContent =
+              "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。";
+          } else {
+            llmExpect.textContent =
+              "当前为本机文案 · 配置写作引擎后可升级";
+          }
+        }
         _wantStubTip = !ok;
         if (!ok) scheduleStubNarrateTip();
         // FE-SFI-05 · Key 就绪时提示可刷新（册级 dismiss）
@@ -452,6 +461,17 @@ export function initToolbarV3(root, tripId) {
         if (typeof refreshTaskDockState === "function") {
           refreshTaskDockState(root);
         }
+        // PMX §8 · 精修文案分支（与 FirstSuccess / 设置同源；仅状态变化时打点）
+        try {
+          var branch = ok ? "l1_ready" : "l0_degraded";
+          if (root._pmxCopyBranch !== branch) {
+            root._pmxCopyBranch = branch;
+            trackStudioEvent("refine_copy_branch", {
+              copy_branch: branch,
+              trip_id: tripId || null,
+            });
+          }
+        } catch (_eTrack) {}
       }
       setLlmAvailable(false);
       function refreshLlmStatus() {

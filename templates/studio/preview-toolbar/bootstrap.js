@@ -10,6 +10,7 @@ import {
   ensureCoverMobileFootnote,
 } from "./share.js";
 import { tripIdFromPath } from "./shell.js";
+import { initPreviewNarrowGate } from "./narrow-gate.js";
 
 var _initToolbarV3 = function (_root, _tripId) {};
 
@@ -44,6 +45,8 @@ export function initPreviewToolbar() {
 
   document.body.insertBefore(root, document.body.firstChild);
   ensureCoverMobileFootnote();
+  // PMX FE-PMX-20 · Studio 预览窄屏诚实门面（Share 模式已提前 return）
+  initPreviewNarrowGate();
   var tripId = tripIdFromPath();
   if (!tripId) return;
   _initToolbarV3(root, tripId);

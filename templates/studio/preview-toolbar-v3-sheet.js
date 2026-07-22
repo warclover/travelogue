@@ -155,6 +155,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     lenisPausedBySheet = false;
   }
 
+  function setExportControlsInert(inert) {
+    // PMX D5 · Sheet 打开时禁用导出区命中，避免挡住关闭 ×；保留返回/完成
+    var exportWrap = document.querySelector(".preview-toolbar__export-zone-wrap");
+    if (!exportWrap) return;
+    if (inert) exportWrap.setAttribute("inert", "");
+    else exportWrap.removeAttribute("inert");
+  }
+
   function beginSheetEnter() {
     sheetClosing = false;
     if (sheetCloseTimer) {
@@ -165,6 +173,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     sheet.hidden = false;
     shell.classList.remove("preview-sheet-root--closing");
     shell.classList.add("preview-sheet-root--visible");
+    setExportControlsInert(true);
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         shell.classList.add("preview-sheet-root--open");
@@ -183,6 +192,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     shell.hidden = true;
     sheet.hidden = true;
     bodyEl.innerHTML = "";
+    setExportControlsInert(false);
     if (after) after();
   }
 
@@ -195,6 +205,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     shell.classList.remove("preview-sheet-root--open");
     shell.classList.add("preview-sheet-root--closing");
     document.body.classList.remove("preview-sheet-open");
+    setExportControlsInert(false);
     resumePageFlowScroll();
 
     function onTransitionEnd(e) {
@@ -430,7 +441,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" class="preview-sheet__link" data-action="llm-setup">配置写作引擎</button>' +
       "</p>" +
       '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      "当前为本机文案 · 配置写作引擎后可升级" +
+      "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。" +
       "</p>"
     );
   }

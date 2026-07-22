@@ -81,6 +81,34 @@ def _bucket_daypart(bucket: list[str], assets_by_id: dict[str, dict]) -> str | N
     return None
 
 
+# PMX D6 · 同日后续章：时段 → segment → ·二/·三（禁止「（N）」工程后缀）
+_CN_ORDINALS = ("", "", "二", "三", "四", "五", "六", "七", "八", "九", "十")
+
+
+def _same_day_followup_title(
+    base: str,
+    n: int,
+    *,
+    daypart: str | None,
+    segment_label: str | None,
+    used: list[str],
+) -> str:
+    """``n`` is 0-based count of prior same-day chapters (follow-ups have n >= 1)."""
+    if daypart:
+        candidate = f"{base} · {daypart}"
+        if candidate not in used:
+            return _clip_title(candidate)
+    seg = (segment_label or "").strip()
+    if seg and seg != base:
+        candidate = f"{base} · {seg}"
+        if candidate not in used:
+            return _clip_title(candidate)
+    ord_idx = n + 1
+    if 2 <= ord_idx < len(_CN_ORDINALS):
+        return _clip_title(f"{base} · {_CN_ORDINALS[ord_idx]}")
+    return _clip_title(f"{base} · {ord_idx}")
+
+
 def chapter_titles(
     buckets: list[list[str]],
     assets: list[dict],
@@ -136,12 +164,21 @@ def chapter_titles(
                     or bucket,
                     assets_by_id,
                 )
-                if daypart:
-                    candidate = f"{base} · {daypart}"
-                    if candidate not in titles:
-                        titles.append(_clip_title(candidate))
-                        continue
-                titles.append(_clip_title(f"{base}（{n + 1}）"))
+                seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
+                seg_label = (
+                    _clean_segment_label(segment_labels.get(seg_id, ""), max_len=8)
+                    if seg_id and segment_labels.get(seg_id)
+                    else ""
+                )
+                titles.append(
+                    _same_day_followup_title(
+                        base,
+                        n,
+                        daypart=daypart,
+                        segment_label=seg_label or None,
+                        used=titles,
+                    )
+                )
             continue
 
         all_seg = (
@@ -182,14 +219,23 @@ def chapter_titles(
             if n == 0:
                 titles.append(_clip_title(base))
             else:
-                # BE-FST-05 / OQ-FST-01 · 禁「日期续」；优先时段，否则（n）
+                # PMX D6 · 禁「日期续」与「（N）」；时段 → segment → ·二/·三
                 daypart = _bucket_daypart(bucket, assets_by_id)
-                if daypart:
-                    candidate = f"{base} · {daypart}"
-                    if candidate not in titles:
-                        titles.append(_clip_title(candidate))
-                        continue
-                titles.append(_clip_title(f"{base}（{n + 1}）"))
+                seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
+                seg_label = (
+                    _clean_segment_label(segment_labels.get(seg_id, ""), max_len=8)
+                    if seg_id and segment_labels.get(seg_id)
+                    else ""
+                )
+                titles.append(
+                    _same_day_followup_title(
+                        base,
+                        n,
+                        daypart=daypart,
+                        segment_label=seg_label or None,
+                        used=titles,
+                    )
+                )
         elif i == 0:
             titles.append("抵达")
         elif i == len(buckets) - 1:

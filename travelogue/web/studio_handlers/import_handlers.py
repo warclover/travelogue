@@ -336,6 +336,13 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         else False
     )
     title = _resolve_import_title(payload.get("title"), user_set=title_user_set)
+    if use_demo_album:
+        from travelogue.desktop.demo_album import DEMO_ALBUM_DISPLAY_TITLE
+        from travelogue.domain.share_face_copy import is_unsafe_share_copy
+
+        # PMX D1 · 示例导入默认锁定展示名；禁词/未显式改名一律回退
+        if not title_user_set or is_unsafe_share_copy(title, kind="title"):
+            title = DEMO_ALBUM_DISPLAY_TITLE
     place_raw = str(payload.get("place") or "").strip()
     place = place_raw or "旅途"
     place_user_set = (

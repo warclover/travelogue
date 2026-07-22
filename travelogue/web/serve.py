@@ -118,6 +118,33 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def do_HEAD(self) -> None:  # noqa: N802
+        """PMX · Studio 路由对 HEAD 与 GET 对齐（至少 /v2 → 302）。"""
+        if not self.studio_mode:
+            super().do_HEAD()
+            return
+        path = self._request_path()
+        if path in FAVICON_SILENT_PATHS:
+            self.send_response(204)
+            self.end_headers()
+            return
+        # 仅走无 body 的声明式路由（如 /v2 重定向）；首页 HTML 回 200 头即可
+        from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH, HOME_V2_PATH
+        from travelogue.web.studio_handlers import static_handlers
+
+        if path == HOME_V2_PATH:
+            static_handlers.send_redirect(self, "/")
+            return
+        if path in ("/", HOME_CLASSIC_PATH):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            return
+        if self.studio_dispatch_GET(path):
+            return
+        self.send_error(404)
+
     def do_POST(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0]
         if self.studio_mode:

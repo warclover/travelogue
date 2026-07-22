@@ -60,6 +60,22 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   align-items: flex-end;
 }
 
+/*
+ * PMX D5 · Sheet 开时 Dock 默认不拦截指针，避免盖住 Sheet 关闭 ×
+ * （Dock z-index 250 > Sheet 240；子级无法突破父级层叠）。
+ * 仅保留「返回」可点；导出区一并失活。
+ */
+body.preview-sheet-open .preview-toolbar__dock {
+  pointer-events: none;
+}
+body.preview-sheet-open .preview-toolbar__dock-btn--back {
+  pointer-events: auto;
+}
+body.preview-sheet-open .preview-toolbar__export-zone-wrap,
+body.preview-sheet-open .preview-toolbar__longshot-caret {
+  pointer-events: none;
+}
+
 .preview-toolbar--v4 .preview-toolbar__export-zone {
   display: inline-flex;
   align-items: stretch;

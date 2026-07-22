@@ -39,6 +39,29 @@ def moment_enabled_for_trip(trip: dict, *, cfg_moment_enabled: bool = True) -> b
     return not skipped
 
 
+def _day_span_for_asset(trip: dict, asset_id: str) -> list[str] | None:
+    """PMX · 供 moment EXIF 与章 daySpan 对齐（抑制矛盾绝对年）。"""
+    aid = str(asset_id or "").strip()
+    if not aid:
+        return None
+    for ch in trip.get("chapters") or []:
+        curation = ch.get("curation") if isinstance(ch.get("curation"), dict) else {}
+        span = [str(d) for d in (curation.get("daySpan") or []) if d]
+        for item in ch.get("items") or []:
+            ids = item.get("assetIds") or []
+            if aid in {str(x) for x in ids if x}:
+                return span or None
+        for screen in ch.get("screens") or []:
+            for item in screen.get("items") or []:
+                ids = item.get("assetIds") or []
+                if aid in {str(x) for x in ids if x}:
+                    return span or None
+            sid = str(screen.get("assetId") or "").strip()
+            if sid and sid == aid:
+                return span or None
+    return None
+
+
 def build_moment_screen_context(
     trip: dict,
     assets: dict[str, dict],
@@ -66,7 +89,10 @@ def build_moment_screen_context(
     fx, fy = cover_focal_point(asset)
     src = pick_image_src(asset, export_layout=export_layout)
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
-    exif_line = format_moment_exif_line(asset) if show_exif else None
+    day_span = _day_span_for_asset(trip, moment_id)
+    exif_line = (
+        format_moment_exif_line(asset, day_span=day_span) if show_exif else None
+    )
 
     ar = _asset_aspect_ratio_float(asset)
     tier = _presentation_tier(ar)

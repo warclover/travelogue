@@ -9,7 +9,7 @@
 | **功能代号** | P9-F2 |
 | **方案** | A（独立开关，仅关 burst + pHash 去重；MD5 完全相同仍去重） |
 | **前置条件** | [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md)（P9-F1）已上线；Studio 首页 v2 Import Sheet 为默认入口 |
-| **关联文档** | [PRD-PHASE9.md](./PRD-PHASE9.md)、[PRD-PHASE4.md](./PRD-PHASE4.md)、[MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md)、[PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)、[algorithm-inventory.md](./algorithm-inventory.md) |
+| **关联文档** | [PRD-PHASE9.md](./PRD-PHASE9.md)、[PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md)、[PRD-KEEP-ALL-PHOTOS-V1.md](./PRD-KEEP-ALL-PHOTOS-V1.md)（P9-F3 · 全部保留）、[PRD-PHASE4.md](./PRD-PHASE4.md)、[MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md)、[PRD-PORTRAIT-CULL.md](./PRD-PORTRAIT-CULL.md)、[algorithm-inventory.md](./algorithm-inventory.md) |
 | **实现锚点** | [studio-home-v2.html](../templates/studio/studio-home-v2.html) Import Sheet；[ingest.py](../travelogue/media/ingest.py) dedupe 段 |
 | **更新日期** | 2026-07-02 |
 

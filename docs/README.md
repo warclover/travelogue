@@ -156,6 +156,10 @@
 | [acceptance-records/share-face-integrity-v1-ac12-blind-2026-07-21.md](./acceptance-records/share-face-integrity-v1-ac12-blind-2026-07-21.md) | SFI · AC-12 紧凑档盲评（脚本半门已过 · 席位待签） |
 | [acceptance-records/persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) | 典型用户+博主试用底稿（2026-07-21 首轮） |
 | [acceptance-records/persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) | 十二席深度试用底稿（2026-07-21 下午） |
+| [PRD-POST-MERGE-UX-FIXPACK-V1.md](./PRD-POST-MERGE-UX-FIXPACK-V1.md) | **合入后 UX 修复包 V1** **v0.2**（Conditional Go · 决策已锁 · [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)） |
+| [IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) | 合入后修复包 · RCA + 实施清单（分支实施中） |
+| [ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md) | PMX · 验收合同（AC-PMX-01～13） |
+| [acceptance-records/post-merge-ux-trial-2026-07-22.md](./acceptance-records/post-merge-ux-trial-2026-07-22.md) | 合入后完整 UX 走查 · P0–P2 账本（2026-07-22） |
 | [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
 | [acceptance-records/post-trip-needs-product-decision-2026-07-21.md](./acceptance-records/post-trip-needs-product-decision-2026-07-21.md) | 调研 → 产品决策备忘录（**已认可** · D1 48h 话术 · D2 小红书包收窄 · D3 ShareHandoff 北极星 · X1–X3 不追） |
 | [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) | **精修意图可感知闭环 V1** **v0.1.3**（Conditional Go · M1+M2+P0+M3 · scope=tier） |
@@ -174,6 +178,7 @@
 首访可信：**PRD-FIRST-SESSION-TRUST-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · 默认成功面不教微信 · 不自动弹文件夹 · **完成宣布待 AC-FST-15 真人狗粮**）· [IMPLEMENTATION](./IMPLEMENTATION-FIRST-SESSION-TRUST-V1.md) · [ACCEPTANCE](./ACCEPTANCE-FIRST-SESSION-TRUST-V1.md) · [狗粮清单](./acceptance-records/first-session-trust-v1-dogfood-CHECKLIST.md) · [线框](./wireframes/first-session-trust-v1-wireframe.html) · [跨职能](./acceptance-records/first-session-trust-v1-review-2026-07-17.md) · [用户联席](./acceptance-records/first-session-trust-v1-user-panel-2026-07-17.md)。  
 敢发收口：**PRD-SHARE-FACE-CLOSEOUT-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **§12 质量收口全部必修**）· [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) · [线框](./wireframes/share-face-closeout-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · [试用底稿](./acceptance-records/persona-ux-trial-2026-07-18.md) · [质量收口](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
 敢发面一致性：**PRD-SHARE-FACE-INTEGRITY-V1** **v0.2.1**（Conditional Go · **Doc 包齐 · Ready for Kickoff W0** · 硬化 SFC 执行层 + 存量兑现 · 编码另排期）· [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) · [线框](./wireframes/share-face-integrity-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md)。  
+合入后 UX 修复包：**PRD-POST-MERGE-UX-FIXPACK-V1** **v0.2**（Conditional Go · M1–M3 同包）· [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [RCA/实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)。  
 导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · **W0–W2 编码已合入** · 手测待填）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
 交叉脚注：FTUE **v1.1.2** · Help **v1.1.4** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
@@ -263,12 +268,15 @@
 | [PRD-PHASE9-C-data-model.md](./PRD-PHASE9-C-data-model.md) | trip.json · schema |
 | [PRD-PHASE9-D-studio-ux.md](./PRD-PHASE9-D-studio-ux.md) | Importing hint · 完成摘要（无被筛 UI） |
 | [PRD-PHASE9-E-subject-bridge.md](./PRD-PHASE9-E-subject-bridge.md) | Wave 3 · subjectClass 桥接 |
+| [PRD-PHOTO-CULL-USER-TOGGLE.md](./PRD-PHOTO-CULL-USER-TOGGLE.md) | P9-F1 · 智能挑选用户开关 |
+| [PRD-KEEP-BURST-TOGGLE.md](./PRD-KEEP-BURST-TOGGLE.md) | P9-F2 · 保留连拍与近似照片 |
+| [PRD-KEEP-ALL-PHOTOS-V1.md](./PRD-KEEP-ALL-PHOTOS-V1.md) | **P9-F3 · 全部保留模式** **v0.1**（Draft · 三选一 · 跳过低分闸） |
 | [IMPLEMENTATION-PHASE9.md](./IMPLEMENTATION-PHASE9.md) | 实施任务 M30 |
 | [ACCEPTANCE-PHASE9.md](./ACCEPTANCE-PHASE9.md) | W1/W2/W3 验收 |
 
 **前置**：Phase 7 ingest 基线。**代号**：P9-QualityGate · **W1 可独立发版**。
 
-阅读顺序：**PRD-PHASE9** → P9-A～E → **IMPLEMENTATION-PHASE9** → **ACCEPTANCE-PHASE9**。
+阅读顺序：**PRD-PHASE9** → P9-A～E → F1/F2/F3 → **IMPLEMENTATION-PHASE9** → **ACCEPTANCE-PHASE9**。
 
 ---
 

@@ -96,6 +96,20 @@ def test_resolve_display_title_revalidates_stored_dirty() -> None:
     assert "--" not in shown
 
 
+def test_resolve_display_title_rejects_demo_leak_title() -> None:
+    """PMX D1 · 「示例游记」不得上展示面。"""
+    shown = resolve_display_title(
+        {
+            "title": "示例游记",
+            "displayTitle": "示例游记",
+            "places": ["旅途"],
+            "dateStart": "2026-05-27",
+            "dateEnd": "2026-05-27",
+        }
+    )
+    assert "示例游记" not in shown
+
+
 def test_date_fallback_cross_year_keeps_year() -> None:
     """跨年区间不得丢年，避免书架出现「1月20–1月16日」倒挂感。"""
     shown = resolve_display_title(

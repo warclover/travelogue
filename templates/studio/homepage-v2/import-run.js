@@ -497,9 +497,13 @@ function pollImport(jobId, gen, source) {
         !!(pending && pending.useDemoAlbum) ||
         String(result.tripId || "") === "demo-album";
       if (viaDemo) {
+        // PMX §8 · 附展示名，便于抽样「示例游记」残留（期望 0）
         trackStudioEvent("ftue_demo_album_success", {
           tripId: result.tripId || null,
           source: "wizard",
+          displayTitle: String(
+            result.displayTitle || result.title || ""
+          ).trim() || null,
         });
       }
       trackImportPhotoCullPref({
