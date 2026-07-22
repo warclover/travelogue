@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2.2 |
 | **分支** | `feat/csc-w0-recipe` |
-| **状态** | **W0 Done · W1 进行中** · expose 已宣告 `happyPath`；设置 UI 已标 L1/Advanced 分层 |
+| **状态** | **W0–W1 Done · W2a Done** · facade + 深 import 棘轮；W2b/W3 未开 |
 | **根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md) |
 | **更新日期** | 2026-07-22 |
 
@@ -67,12 +67,20 @@ python -m pytest tests/unit/web/test_studio_config.py -q --maxfail=3
 | CSC-W1-04 | Happy Path 用户短文（无黑话） | **Done** · [csc-w1-happy-path-user-copy.md](./acceptance-records/csc-w1-happy-path-user-copy.md) |
 | CSC-W1-05 | 测评三题手测记录 | Pending |
 
-### W2a · facade（未开工）
+### W2a · facade
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| CSC-W2a-01 | `layout_engine/api.py` + `__all__` | Pending |
-| CSC-W2a-02 | 禁深 import CI | Pending |
+| CSC-W2a-01 | `layout_engine/api.py` + 包级 `__all__` | **Done** |
+| CSC-W2a-02 | `scripts/lint_layout_engine_facade.py` + baseline（只降不升） | **Done** |
+| CSC-W2a-03 | 调用点改经 facade（services/layout · curate compose_trip · web handlers） | **Done**（残留 3 边见 baseline） |
+
+**验证**
+
+```powershell
+python scripts/lint_layout_engine_facade.py
+python -m pytest tests/unit/layout_engine/test_public_api.py tests/unit/orchestrator/test_happy_path_recipe.py -q
+```
 
 ### W2b/c · 棘轮（未开工）
 
@@ -93,6 +101,9 @@ python -m pytest tests/unit/web/test_studio_config.py -q --maxfail=3
 | 设置库存 | `docs/acceptance-records/csc-w0-settings-surface-inventory.md` |
 | L0/L1 键表 | `docs/acceptance-records/csc-w0-l0-l1-keys.md` |
 | 单测 | `tests/unit/orchestrator/test_happy_path_recipe.py` |
+| Facade API | `travelogue/layout_engine/api.py` |
+| Facade lint | `scripts/lint_layout_engine_facade.py` |
+| Facade baseline | `docs/acceptance-records/csc-w2a-facade-deep-import-baseline.json` |
 
 **更新基线（仅在有意变更默认 / L1 名单时）**
 

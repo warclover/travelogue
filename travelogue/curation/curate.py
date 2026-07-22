@@ -1242,7 +1242,7 @@ def _stage_build_chapters_compose(
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
-    from travelogue.layout_engine.mosaic.trip import compose_trip
+    from travelogue.layout_engine.api import compose_trip
 
     chapters, replan_meta = compose_trip(
         chapters,

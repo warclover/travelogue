@@ -21,7 +21,7 @@ def handle_patch_screen_replan(
         refresh_trip_displayed_assets,
         replan_screen,
     )
-    from travelogue.layout_engine.planner.screen_planner import LAYOUT_ENGINE_SCREENS
+    from travelogue.layout_engine.api import LAYOUT_ENGINE_SCREENS
 
     payload = handler._read_json_body() or {}
     loaded = load_trip_or_404(handler, trip_id)
