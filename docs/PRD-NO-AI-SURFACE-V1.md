@@ -715,7 +715,7 @@ HTTP/1.1 403
 - [x] dark switch = env/config；无 UI（D-NAS-03）  
 - [x] OQ-NAS-04/05 关闭  
 - [ ] OQ-NAS-02 eyebrow（发版前）  
-- [ ] SFI / Help / CSC 文档指针责任人点名（W2）  
+- [x] SFI / Help / CSC 文档指针责任人点名（W2 · DOC-NAS-02：产品合同 · 工程门控 · 2026-07-22）  
 - [x] 非目标：不硬删 LLM；深度 polish 另立（MF-NAS-07）  
 - [x] AC-NAS-01～17 已写入 §10 / ACCEPTANCE  
 - [x] M1–M12 + narrate 硬拒绝纳入实施  

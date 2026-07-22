@@ -14,7 +14,11 @@
 | **验收** | [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) · 本文 §10 · [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) 指针专节 |
 | **实施清单** | [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) |
 | **线框** | [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) |
-| **更新日期** | 2026-07-17 |
+| **更新日期** | 2026-07-22 |
+
+> **默认用户面 supersede（NAS · DOC-NAS-02）**  
+> [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) 关闭默认 UI 入口；settings 写 / ping 在门控 off 时 403（实施决议严于早期 D-NAS-17）。  
+> **本文仅在 dark ON 下执行用户面验收**；工程 coerce / 隔离单测仍有效。
 
 > **定位**
 >

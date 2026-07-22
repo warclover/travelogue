@@ -14,7 +14,10 @@
 | **实施清单** | [IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) |
 | **线框** | [wireframes/share-face-integrity-v1-wireframe.html](./wireframes/share-face-integrity-v1-wireframe.html) · F0–F5（§10） |
 | **狗粮** | [acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) |
-| **更新日期** | 2026-07-21 |
+| **更新日期** | 2026-07-22 |
+
+> **默认用户面 supersede（NAS · DOC-NAS-02 · 2026-07-22）**  
+> [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) **废止默认面** FE-SFI-04 / Dock「重新生成文案」用户入口合同；有 Key 亦隐藏，narrate 403。工程栈与 dark（`TRAVELOGUE_AI_SURFACE=1`）仍可回归本主题刷新路径。责任人：产品（合同）· 工程（门控）。
 
 > **定位**
 >

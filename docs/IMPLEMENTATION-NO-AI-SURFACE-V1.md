@@ -21,9 +21,9 @@
 | 波次 | 范围 | Go / No-Go | 状态 |
 |------|------|------------|------|
 | **W0** | PRD 评审 · MF 回写 · ACCEPTANCE · 本 IMPLEMENTATION v0.2.1 | Conditional Go | ✅ |
-| **W1** | **PR-A** 门控底座 + **PR-B** 首页面（M3–M10）+ 翻转单测第一批 + W1 禁词 | AC-NAS-01～04 · 08a · 13 · 15～17a | ⏳ |
-| **W2** | **PR-C** Sheet/Dock/抽屉 + 全量禁词 + 长图狗粮 + shareCopyPack 抽检 | AC-NAS-05～07 · 11 · 14 · 08b | ⏳ |
-| **W3** | **PR-D** dark 恢复冒烟 · 文档指针 | AC-NAS-09～10 · 12 · 17b | ⏳ |
+| **W1** | **PR-A** 门控底座 + **PR-B** 首页面（M3–M10）+ 翻转单测第一批 + W1 禁词 | AC-NAS-01～04 · 08a · 13 · 15～17a | ✅ e2e/unit |
+| **W2** | **PR-C** Sheet/Dock/抽屉 + 全量禁词 + 长图狗粮 + shareCopyPack 抽检 | AC-NAS-05～07 · 11 · 14 · 08b | ✅ 自动化；07/11 手测 ☑ |
+| **W3** | **PR-D** dark 恢复冒烟 · 文档指针 | AC-NAS-09～10 · 12 · 17b | ☑ DOC ✅ · dark 手测开 |
 
 **铁律（实施时）**
 
@@ -394,7 +394,7 @@ PR-D（W3）
 | ID | 任务 | 波次 | 状态 |
 |----|------|------|------|
 | DOC-NAS-01 | ACCEPTANCE-NO-AI-SURFACE-V1 | W0 | ✅（v0.1.1 已指 PRD v0.2.1） |
-| DOC-NAS-02 | ERROR-CODES / CSC / SFI / Help 指针；PRD D-NAS-17 与 ping 决议对齐注记 | W2–W3 | ⏳ |
+| DOC-NAS-02 | ERROR-CODES / CSC / SFI / Help 指针；PRD D-NAS-17 与 ping 决议对齐注记 | W2–W3 | ✅ 2026-07-22（Help §12.4 · SFI FE-SFI-04 · CSC Happy Path · DLLM/WEA 文首；责任人：产品合同 / 工程门控） |
 | DOC-NAS-03 | README · DOC-STATUS | W0 | ✅ / 随 v0.2.1 同步 |
 | DOC-NAS-04 | 本 IMPLEMENTATION v0.2.1（S1–S10 · ping · PR 切片） | W0 | ✅ |
 

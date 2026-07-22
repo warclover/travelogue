@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 STUDIO = ROOT / "templates" / "studio"
 
-# 附录 C.2（子集 · 默认可达面）
+# 附录 C.2（默认可达面核心禁词；dark 包 / nas-allow 另分 job）
 BANNED = [
     "AI 文案",
     "写作引擎",
@@ -26,9 +26,13 @@ BANNED = [
     "杂志感文案",
     "生成杂志感",
     "按新感觉重写",
+    "按新感觉重写这段",
     "重新生成文案",
     "去配置写作引擎",
     "继续生成本机游记",
+    "本机文案",
+    "以后再升级",
+    "更好的文案",
 ]
 
 # 白名单邻近例外：版式「杂志感」且同行无 AI/文案/升级 — 简化：整行含「杂志感文案」才禁
@@ -53,6 +57,10 @@ W2_EXTRA = [
     "preview-toolbar/core.js",
     "preview-toolbar/init-v3.js",
     "preview-toolbar/drawers.js",
+    "preview-toolbar/dock.js",
+    "homepage-v2/import-run.js",
+    "homepage-v2/wait-tips-copy.js",
+    "js/llm-settings.js",  # 文件头 nas-allow+dark-only 则整文件跳过
 ]
 
 # dark-only 整文件（文件头含 nas-allow 则整文件跳过）
@@ -70,6 +78,17 @@ def _strip_nas_allow_blocks(text: str) -> str:
         text,
         flags=re.I,
     )
+    return text
+
+
+def _strip_comments(text: str, path: Path) -> str:
+    """默认可达面 = 用户可读串；注释/文档块不计入禁词命中。"""
+    suffix = path.suffix.lower()
+    if suffix in {".js", ".css"}:
+        text = re.sub(r"/\*[\s\S]*?\*/", "", text)
+        text = re.sub(r"(?m)//.*?$", "", text)
+    if suffix in {".html", ".htm"}:
+        text = re.sub(r"<!--[\s\S]*?-->", "", text)
     return text
 
 
@@ -92,7 +111,7 @@ def audit(wave: str) -> list[str]:
         head = "\n".join(raw.splitlines()[:20]).lower()
         if FILE_ALLOW_MARK in head and "dark-only" in head:
             continue
-        body = _strip_nas_allow_blocks(raw)
+        body = _strip_comments(_strip_nas_allow_blocks(raw), path)
         for i, line in enumerate(body.splitlines(), 1):
             if "nas-allow" in line.lower():
                 continue
