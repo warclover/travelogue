@@ -117,7 +117,11 @@ body.preview-sheet-open .preview-toolbar__longshot-caret {
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot-split--running .preview-toolbar__longshot-caret {
-  background: linear-gradient(165deg, #566b74 0%, #455a64 100%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--preview-muted, #5c574f) 72%, #fff) 0%,
+    var(--preview-muted, #5c574f) 100%
+  );
   color: #eceff1;
   border-left-color: rgba(255, 255, 255, 0.18);
 }
@@ -423,7 +427,11 @@ body.preview-sheet-open .preview-toolbar__longshot-caret {
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__longshot--running {
-  background: linear-gradient(165deg, #566b74 0%, #455a64 100%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--preview-muted, #5c574f) 72%, #fff) 0%,
+    var(--preview-muted, #5c574f) 100%
+  );
   color: #eceff1;
   cursor: wait;
   border-color: rgba(255, 255, 255, 0.1);

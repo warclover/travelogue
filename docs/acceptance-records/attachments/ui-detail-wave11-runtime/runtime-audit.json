@@ -1,0 +1,390 @@
+{
+  "surfaces": {
+    "S-HELP": {
+      "surface": ".studio-help-drawer",
+      "textSampleCount": 49,
+      "uniqueFontSizes": [
+        "12.0",
+        "13.0",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)"
+      ],
+      "fontSizeCount": 3,
+      "colorCount": 2,
+      "samples": [
+        {
+          "tag": "h2",
+          "className": "studio-help-drawer__title",
+          "text": "使用帮助",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "默认这一趟做了什么",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "选好旅行相册后，本机会整理行程、挑片排成杂志页，并生成可预览的游记；一般不用改设置",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "不配置 AI 文案也可以导入、排版和导出适合发群的竖版长图",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "默认不会：打断你先确认章节、打开实验排版、把照片上传到云端",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "可选常用设置：行程识别、场景分析、导入时复制源文件；实验选项在设置里默认折叠",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "怎么选照片文件夹",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "同一次旅行放同一文件夹（50–100 张最佳）",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "Day1/Day2 子夹：合并导入或分两次导入（每次一篇新游记）",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "手机照片需先传到电脑",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "「完成」和「更新版面」有什么区别",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "点字改文案：马上在预览看到，导出用当前预览",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "改拼图 / 版式相关：需点「更新版面」后才进导出",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "标精选 ★：立刻记下「这张更重要」；点已亮的 ★ 可取消；不会立刻重排整本",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "若要按精选改构图：用「按精选重排」（会确认；与「更新版面」不同）",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "点「长图」：导出当前已更新结果",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "章节顺序不对：点工具栏「分章」可跳章、看说明或重新生成（默认已排好，一般不用动）",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "点「精修」：进入精修模式（可收起面板继续改）",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "Esc / × / 再点「精修」（面板开时）：只关面板，模式可仍为 on",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "点「完成」：退出精修模式（★ 隐藏）——不是更新版面",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "「分享图需更新」是什么意思",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "改了拼图或版式相关设置后，旧分享图不要发",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "请先点「更新版面」，再点「长图」导出最新结果",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "若导出时弹出拦截，选「更新并导出」即可",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "仅标精选不会触发「分享图需更新」；精选是意图，不是立刻重排",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "怎么把长图发到微信群",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "长图已保存到本机",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "打开微信，按文件名顺序发到群聊",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "可点「在文件夹中显示」找到文件",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "分段或多平台时，以成功态发群指引为准",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "出错了怎么办",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "导入失败 → 换文件夹重试 / 新建一篇",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "导出失败 → 再点「长图」；仍失败见日志或重开 Studio",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "提示要更新版面 → 先「更新版面」再导出 · 原片不被改",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "怎么换封面封底",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)"
+        }
+      ]
+    },
+    "S-CAP": {
+      "surface": ".studio-capability-card__panel",
+      "textSampleCount": 4,
+      "uniqueFontSizes": [
+        "13.0",
+        "14.0",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)",
+        "rgb(255, 255, 255)",
+        "rgb(61, 107, 90)"
+      ],
+      "fontSizeCount": 3,
+      "colorCount": 4,
+      "samples": [
+        {
+          "tag": "p",
+          "className": "studio-capability-card__title",
+          "text": "照片留在本机，也能做成可发的游记",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)"
+        },
+        {
+          "tag": "p",
+          "className": "studio-capability-card__body",
+          "text": "选一次旅行的照片，自动分章、排版；微信长图可直接发群。更好的文案可稍后自行升级（可选）。向导里可",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)"
+        },
+        {
+          "tag": "button",
+          "className": "studio-capability-card__primary",
+          "text": "开始制作我的游记",
+          "fontSize": 14,
+          "color": "rgb(255, 255, 255)"
+        },
+        {
+          "tag": "button",
+          "className": "studio-capability-card__link",
+          "text": "以后再升级 AI 文案 →",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)"
+        }
+      ]
+    },
+    "S-TOAST": {
+      "surface": ".studio__toast",
+      "textSampleCount": 1,
+      "uniqueFontSizes": [
+        "13.0"
+      ],
+      "uniqueColors": [
+        "rgb(245, 240, 232)"
+      ],
+      "fontSizeCount": 1,
+      "colorCount": 1,
+      "samples": [
+        {
+          "tag": "div",
+          "className": "studio__toast",
+          "text": "导入与外观选项在这里",
+          "fontSize": 13,
+          "color": "rgb(245, 240, 232)"
+        }
+      ]
+    },
+    "S-UNSUPPORTED": {
+      "surface": ".v2-unsupported",
+      "textSampleCount": 4,
+      "uniqueFontSizes": [
+        "11.0",
+        "13.0",
+        "14.0",
+        "24.0"
+      ],
+      "uniqueColors": [
+        "rgb(74, 115, 148)",
+        "rgb(245, 240, 232)",
+        "rgba(245, 240, 232, 0.62)",
+        "rgb(26, 47, 40)"
+      ],
+      "fontSizeCount": 4,
+      "colorCount": 4,
+      "samples": [
+        {
+          "tag": "p",
+          "className": "v2-unsupported__brand",
+          "text": "TRAVELOGUE · STUDIO",
+          "fontSize": 11,
+          "color": "rgb(74, 115, 148)"
+        },
+        {
+          "tag": "h1",
+          "className": "v2-unsupported__title",
+          "text": "请在电脑浏览器打开 Studio",
+          "fontSize": 24,
+          "color": "rgb(245, 240, 232)"
+        },
+        {
+          "tag": "p",
+          "className": "v2-unsupported__lead",
+          "text": "请在电脑浏览器打开本页以使用工作台；手机端小程序即将上线。",
+          "fontSize": 13,
+          "color": "rgba(245, 240, 232, 0.62)"
+        },
+        {
+          "tag": "button",
+          "className": "v2-unsupported__btn",
+          "text": "复制电脑打开地址",
+          "fontSize": 14,
+          "color": "rgb(26, 47, 40)"
+        }
+      ]
+    }
+  },
+  "findings": []
+}

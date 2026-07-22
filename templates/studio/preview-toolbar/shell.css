@@ -137,7 +137,7 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
 .preview-toolbar__collapsed-strip .preview-toolbar__ctl:hover {
   background: rgba(61, 107, 90, 0.14);
   border-color: rgba(45, 74, 62, 0.32);
-  color: #1a2f28;
+  color: var(--preview-ink);
 }
 
 .preview-toolbar__handle {
@@ -151,7 +151,7 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
   border: none;
   border-radius: 999px;
   background: rgba(61, 107, 90, 0.12);
-  color: #3d6b5a;
+  color: var(--preview-accent);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -357,13 +357,17 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
 }
 .preview-toolbar__mode-seg button.is-selected {
   background: #fff;
-  color: #1a2f28;
+  color: var(--preview-ink);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
-/* PMX FE-PMX-20 · 预览窄屏诚实门面 */
+/* PMX FE-PMX-20 · 预览窄屏诚实门面（UI Detail Wave5 · cream/ink on dark） */
 .preview-narrow-gate {
+  --ng-ink: #f5f0e8;
+  --ng-muted: rgba(245, 240, 232, 0.72);
+  --ng-muted-soft: rgba(245, 240, 232, 0.55);
+  --ng-btn-ink: var(--studio-panel-accent-strong, #1a2f28);
   position: fixed;
   inset: 0;
   z-index: 400;
@@ -372,9 +376,13 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
   justify-content: center;
   padding: 24px 20px;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(56, 90, 72, 0.35), transparent 70%),
+    radial-gradient(
+      ellipse 80% 60% at 50% 20%,
+      color-mix(in srgb, var(--studio-panel-accent, #3d6b5a) 40%, transparent),
+      transparent 70%
+    ),
     linear-gradient(165deg, #15241f 0%, #0d1613 55%, #121c18 100%);
-  color: #eef6f1;
+  color: var(--ng-ink);
   font-family: var(--studio-font-ui, "Microsoft YaHei", "PingFang SC", sans-serif);
 }
 .preview-narrow-gate[hidden] {
@@ -386,22 +394,22 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
 }
 .preview-narrow-gate__brand {
   margin: 0 0 12px;
-  font-size: 11px;
+  font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: 0.14em;
-  color: rgba(232, 244, 236, 0.62);
+  color: var(--ng-muted-soft);
 }
 .preview-narrow-gate__title {
   margin: 0 0 12px;
-  font-size: 1.35rem;
+  font-size: 20px;
   font-weight: 650;
   line-height: 1.35;
-  color: #f5fbf8;
+  color: var(--ng-ink);
 }
 .preview-narrow-gate__lead {
   margin: 0 0 22px;
-  font-size: 0.95rem;
+  font-size: 13px;
   line-height: 1.55;
-  color: rgba(232, 244, 236, 0.82);
+  color: var(--ng-muted);
 }
 .preview-narrow-gate__actions {
   display: flex;
@@ -411,24 +419,24 @@ html[data-preview-share="on"] .footer-cta__studio-home-link:hover {
 }
 .preview-narrow-gate__btn {
   appearance: none;
-  border: 1px solid rgba(232, 244, 236, 0.28);
-  border-radius: 10px;
+  border: 1px solid rgba(245, 240, 232, 0.28);
+  border-radius: 8px;
   padding: 12px 16px;
   background: transparent;
-  color: #eef6f1;
+  color: var(--ng-ink);
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 14px;
   text-decoration: none;
   cursor: pointer;
 }
 .preview-narrow-gate__btn--primary {
-  background: #eef6f1;
-  border-color: #eef6f1;
-  color: #15241f;
+  background: var(--ng-ink);
+  border-color: var(--ng-ink);
+  color: var(--ng-btn-ink);
   font-weight: 600;
 }
 .preview-narrow-gate__btn:hover {
-  border-color: rgba(232, 244, 236, 0.55);
+  border-color: rgba(245, 240, 232, 0.55);
 }
 .preview-narrow-gate__btn--primary:hover {
   background: #fff;

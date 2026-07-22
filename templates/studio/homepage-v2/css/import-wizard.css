@@ -66,12 +66,14 @@
   --v2-sheet-muted-soft: rgba(226, 224, 238, .68);
   --v2-sheet-accent: #b0b3d0;
 }
+/* 空属性兜底 + 显式 sky：暗玻璃仍用 cream accent（Wave6/7 · 禁 cyan tip） */
 :root:not([data-v2-theme]) .v2-wizard,
-:root[data-v2-theme=""] .v2-wizard {
-  --v2-sheet-ink: #eaf8fb;
-  --v2-sheet-muted: rgba(202, 240, 248, .82);
-  --v2-sheet-muted-soft: rgba(202, 240, 248, .7);
-  --v2-sheet-accent: #90e0ef;
+:root[data-v2-theme=""] .v2-wizard,
+:root[data-v2-theme="sky"] .v2-wizard {
+  --v2-sheet-ink: #f5f0e8;
+  --v2-sheet-muted: rgba(255, 255, 255, .72);
+  --v2-sheet-muted-soft: rgba(255, 255, 255, .62);
+  --v2-sheet-accent: #e0c9a0;
 }
 @keyframes v2-wizard-in {
   from { transform: translateY(8px); opacity: .7; }
@@ -161,9 +163,9 @@
   margin-top: 10px;
   min-height: 52px;
   padding: 12px 16px;
-  border: 1.5px solid rgba(120, 190, 160, 0.55);
+  border: 1.5px solid color-mix(in srgb, var(--v2-sheet-accent, #d4a843) 55%, transparent);
   border-radius: 8px;
-  background: rgba(47, 107, 85, 0.22);
+  background: color-mix(in srgb, var(--v2-sheet-accent, #d4a843) 22%, transparent);
   color: var(--v2-sheet-ink);
   font-size: 13px;
   font-weight: 650;
@@ -178,7 +180,9 @@
   font-weight: 500;
   color: var(--v2-sheet-muted);
 }
-.v2-wizard__demo:hover { background: rgba(47, 107, 85, 0.32); }
+.v2-wizard__demo:hover {
+  background: color-mix(in srgb, var(--v2-sheet-accent, #d4a843) 32%, transparent);
+}
 .v2-wizard__demo:disabled { opacity: .5; cursor: not-allowed; }
 .v2-wizard__secondary {
   min-height: 48px;
@@ -300,7 +304,7 @@
 }
 .v2-wizard__verify-foot {
   margin: 4px 0 0;
-  font-size: 10px;
+  font-size: var(--studio-panel-label-size, 11px);
   color: var(--v2-sheet-muted-soft);
 }
 .v2-wizard__link {
@@ -350,7 +354,7 @@
   border-radius: 4px;
   background: rgba(20, 18, 16, .92);
   color: #f5f0e8;
-  font-size: 10px;
+  font-size: var(--studio-panel-label-size, 11px);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;

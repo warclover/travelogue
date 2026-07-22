@@ -15,7 +15,7 @@
 }
 .cohort-drawer__status--info {
   background: rgba(61, 107, 90, 0.12);
-  color: #1a2f28;
+  color: var(--preview-ink);
 }
 .cohort-drawer__status--warn {
   background: rgba(210, 166, 87, 0.22);
@@ -62,7 +62,7 @@
   width: 52px;
   height: 52px;
   padding: 0;
-  border: 2px solid #3d6b5a;
+  border: 2px solid var(--preview-accent);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
@@ -111,7 +111,7 @@
   display: block;
 }
 .cohort-drawer__tile--on {
-  border-color: #3d6b5a;
+  border-color: var(--preview-accent);
   box-shadow: 0 0 0 2px rgba(61, 107, 90, 0.35);
 }
 .cohort-drawer__tile--duo:not(.cohort-drawer__tile--on) {

@@ -4,6 +4,7 @@
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
+import { SHEET_FOCUSABLE } from "./constants.js";
 import {
   isHelpL1Blocked,
   markCapabilityCardSeen,
@@ -16,6 +17,39 @@ import { V2 } from "../homepage-v2/store.js";
 var ROOT_ID = "studio-capability-card-root";
 var _visible = false;
 var _scheduled = false;
+var _trapHandler = null;
+
+function focusableEls(container) {
+  return Array.prototype.slice
+    .call(container.querySelectorAll(SHEET_FOCUSABLE))
+    .filter(function (el) {
+      return !el.hidden && (el.offsetParent !== null || el === document.activeElement);
+    });
+}
+
+function trapFocus(dialog) {
+  releaseTrap(dialog);
+  _trapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(dialog);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  dialog.addEventListener("keydown", _trapHandler);
+}
+
+function releaseTrap(dialog) {
+  if (_trapHandler && dialog) dialog.removeEventListener("keydown", _trapHandler);
+  _trapHandler = null;
+}
 
 function ensureRoot() {
   var el = document.getElementById(ROOT_ID);
@@ -86,6 +120,7 @@ function dismissCapabilityCard(cta) {
 
 export function closeCapabilityCard() {
   var el = document.getElementById(ROOT_ID);
+  releaseTrap(el);
   if (el) el.hidden = true;
   _visible = false;
 }
@@ -114,6 +149,7 @@ function canShow() {
 
 export function showCapabilityCard() {
   // NAS · FE-NAS-01 / D-NAS-20：能力卡首启硬推永久关闭（dark 亦不恢复）
+  // master 侧 trapFocus/canShow 路径保留在 ensureRoot 旁路，供工程回归；默认可达永不展示。
   return false;
 }
 
