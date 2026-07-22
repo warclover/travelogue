@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2.2 |
 | **分支** | `feat/csc-w0-recipe` |
-| **状态** | **W0 基线包就绪** · 切片 A + 设置库存 + L0/L1 键表；待合 PR / 人审四档全表 |
+| **状态** | **W0 Done · W1 进行中** · expose 已宣告 `happyPath`；设置 UI 已标 L1/Advanced 分层 |
 | **根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md) |
 | **更新日期** | 2026-07-22 |
 
@@ -57,14 +57,14 @@ python -m pytest tests/unit/web/test_studio_config.py -q --maxfail=3
 
 **回滚**：还原 `happy_path_recipe.py`、基线 JSON、库存/键表 md 与单测；运行时无挂载点，无行为回滚面。
 
-### W1 · Recipe 挂载 + UI 派生（未开工）
+### W1 · Recipe 挂载 + UI 派生
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| CSC-W1-01 | 主路径宣告 `recipe_id=studio_default`（仍可零行为变更） | Pending |
-| CSC-W1-02 | `l1_keys` 填入 ≤10；`studio_config_expose` 对齐 | Pending |
-| CSC-W1-03 | 设置常用/高级分层（F-CSC-1/2） | Pending |
-| CSC-W1-04 | Happy Path 用户短文（无黑话） | Pending |
+| CSC-W1-01 | 主路径宣告 `recipe_id=studio_default`（GET config → `happyPath.recipeId`） | **Done**（零管线行为变更） |
+| CSC-W1-02 | `l1_keys` ≤10；`studio_config_expose` 增加 `happyPath`（旧字段保留） | **Done** |
+| CSC-W1-03 | 设置常用/高级分层（文案 + `data-csc-tier`） | **Done**（轻改；未删控件） |
+| CSC-W1-04 | Happy Path 用户短文（无黑话） | **Done** · [csc-w1-happy-path-user-copy.md](./acceptance-records/csc-w1-happy-path-user-copy.md) |
 | CSC-W1-05 | 测评三题手测记录 | Pending |
 
 ### W2a · facade（未开工）

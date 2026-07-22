@@ -98,6 +98,7 @@
 | [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC · W0 基线包（Recipe 快照 · 设置库存 · L0/L1 键表） |
 | [acceptance-records/csc-w0-settings-surface-inventory.md](./acceptance-records/csc-w0-settings-surface-inventory.md) | CSC W0 · 设置面库存 |
 | [acceptance-records/csc-w0-l0-l1-keys.md](./acceptance-records/csc-w0-l0-l1-keys.md) | CSC W0 · L0/L1 键表草案 |
+| [acceptance-records/csc-w1-happy-path-user-copy.md](./acceptance-records/csc-w1-happy-path-user-copy.md) | CSC W1 · Happy Path 用户短文（无黑话） |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) | FTUE · W0–W3 任务卡 |
 | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) | FTUE 线框 F1–F8 |
