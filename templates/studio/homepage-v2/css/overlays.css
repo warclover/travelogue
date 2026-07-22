@@ -16,6 +16,13 @@
   padding: 24px;
 }
 .v2-import-panel {
+  /* Dark import glass · ink/muted/gold only（Wave4 · no cyan tip stack） */
+  --wt-ink: #fff;
+  --wt-muted: rgba(255, 255, 255, .72);
+  --wt-label: rgba(255, 255, 255, .78);
+  --wt-gold: var(--v2-gold, #d4a843);
+  --wt-gold-soft: #f0d78c;
+  --wt-cream: rgba(255, 230, 180, .92);
   width: min(420px, 90vw);
   padding: 28px 26px;
   background: rgba(20, 18, 16, .9);
@@ -26,9 +33,9 @@
   color: rgba(255, 255, 255, .92);
 }
 .v2-import-panel__source {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: .08em;
-  color: #90e0ef;
+  color: var(--wt-gold-soft);
   margin: 0 0 10px;
 }
 .v2-import-panel__title {
@@ -48,7 +55,7 @@
   margin: -8px 0 16px;
   font-size: 11px;
   line-height: 1.45;
-  color: rgba(255, 230, 180, .92);
+  color: var(--wt-cream);
 }
 .v2-import-panel__bar {
   height: 3px;
@@ -134,33 +141,34 @@
 .v2-wait-tips__label {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .04em;
   padding: 3px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, .1);
-  color: rgba(255, 255, 255, .78);
+  color: var(--wt-label, rgba(255, 255, 255, .78));
 }
+/* Tip tones · gold/cream/white only（语义靠文案，不叠 cyan/green/blue/orange） */
 .v2-wait-tips__label[data-tone="outcome"] {
   background: rgba(212, 168, 67, .22);
-  color: #f0d78c;
+  color: var(--wt-gold-soft, #f0d78c);
 }
 .v2-wait-tips__label[data-tone="trust"] {
-  background: rgba(144, 224, 239, .18);
-  color: #9ee7f2;
+  background: rgba(245, 240, 232, .12);
+  color: rgba(255, 245, 230, .92);
 }
 .v2-wait-tips__label[data-tone="capability"] {
-  background: rgba(129, 199, 132, .18);
-  color: #a5d6a7;
+  background: rgba(212, 168, 67, .16);
+  color: #e8d5a3;
 }
 .v2-wait-tips__label[data-tone="next"] {
-  background: rgba(100, 181, 246, .18);
-  color: #90caf9;
+  background: rgba(255, 255, 255, .12);
+  color: rgba(255, 255, 255, .9);
 }
 .v2-wait-tips__label[data-tone="trial"] {
-  background: rgba(255, 183, 77, .16);
-  color: #ffcc80;
+  background: rgba(212, 168, 67, .28);
+  color: #f5e6b8;
 }
 .v2-wait-tips__close {
   border: none;
@@ -183,13 +191,13 @@
   margin: 0 0 6px;
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: var(--wt-ink, #fff);
   letter-spacing: .01em;
 }
 .v2-wait-tips__body {
   margin: 0 0 12px;
   font-size: 12px;
-  color: rgba(255, 255, 255, .72);
+  color: var(--wt-muted, rgba(255, 255, 255, .72));
   line-height: 1.5;
 }
 .v2-wait-tips__nav {
@@ -228,7 +236,7 @@
   cursor: pointer;
 }
 .v2-wait-tips__dot.is-active {
-  background: var(--v2-gold, #d4a843);
+  background: var(--wt-gold, var(--v2-gold, #d4a843));
   width: 14px;
   border-radius: 999px;
 }
@@ -258,11 +266,10 @@
   pointer-events: auto;
 }
 .v2-first-success__panel {
-  /* fixed 深色浮层：独立字色，不继承页面主题 --v2-ink */
+  /* fixed 深色浮层：独立字色，不继承页面主题 --v2-ink（Wave9） */
   --v2-fs-ink: #f5f0e8;
-  --v2-fs-muted: rgba(255, 255, 255, .62);
-  --v2-fs-accent: #d4b896;
-  --v2-fs-accent: color-mix(in srgb, var(--v2-gold) 48%, #fff 52%);
+  --v2-fs-muted: rgba(245, 240, 232, .62);
+  --v2-fs-accent: color-mix(in srgb, var(--v2-gold, #d4b896) 48%, #fff 52%);
   position: relative;
   z-index: 1;
   width: min(440px, 92vw);
@@ -543,7 +550,8 @@
 }
 .v2-failure__panel {
   --v2-fs-ink: #f5f0e8;
-  --v2-fs-muted: rgba(255, 255, 255, .62);
+  --v2-fs-muted: rgba(245, 240, 232, .62);
+  --v2-fs-coral: #e8a098;
   position: relative;
   z-index: 1;
   width: min(440px, 92vw);
@@ -559,22 +567,23 @@
   isolation: isolate;
 }
 .v2-failure__panel--auth {
-  background: rgba(18, 22, 24, .96);
-  border-color: rgba(120, 160, 150, .35);
+  /* 鉴权失败：同 cream 暗玻璃，accent 用 muted cream（禁薄荷双色） */
+  background: rgba(18, 16, 14, .96);
+  border-color: rgba(245, 240, 232, .22);
 }
 .v2-failure__panel--auth .v2-failure__eyebrow {
-  color: #9ec5b8;
+  color: var(--v2-fs-muted);
 }
 .v2-failure__eyebrow {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: .12em;
-  color: #e8a098;
+  color: var(--v2-fs-coral);
 }
 .v2-failure__echo {
   margin: 0 0 8px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, .4);
+  font-size: var(--studio-panel-label-size, 11px);
+  color: rgba(245, 240, 232, .4);
   word-break: break-all;
 }
 .v2-failure__msg {

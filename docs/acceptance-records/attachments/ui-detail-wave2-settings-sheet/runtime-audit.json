@@ -1,0 +1,1325 @@
+{
+  "surfaces": {
+    "S-SET": {
+      "surface": "#v2-settings-popover",
+      "textSampleCount": 59,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.3",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)",
+        "rgb(61, 107, 90)",
+        "rgb(255, 255, 255)",
+        "rgb(0, 0, 0)"
+      ],
+      "fontSizeCount": 4,
+      "colorCount": 5,
+      "leftDeltaFirstTwo": 0,
+      "samples": [
+        {
+          "tag": "p",
+          "className": "v2-settings-popover__title",
+          "text": "设置",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "700",
+          "left": 99.109375
+        },
+        {
+          "tag": "p",
+          "className": "v2-settings-popover__desc",
+          "text": "常用：导入 · 存储 · 外观；AI 可选。实验项默认折叠。",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 99.109375
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-zone__meta",
+          "text": "雾蓝纸本",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "500",
+          "left": 348.109375
+        },
+        {
+          "tag": "label",
+          "className": "v2-settings-field__label",
+          "text": "首页配色",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 112.109375
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "雾蓝纸本",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "纸墨装帧",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "暖阳珊瑚",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "经典深色",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "木紫文艺",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "清新浅蓝",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 0
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-zone__meta",
+          "text": "行程·关 · 场景·开",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "500",
+          "left": 312.09375
+        },
+        {
+          "tag": "button",
+          "className": "v2-wizard__help-link",
+          "text": "默认这一趟做什么 →",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 255.546875
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-field__label",
+          "text": "行程识别",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 112.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn",
+          "text": "自动",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "400",
+          "left": 115.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn",
+          "text": "开",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "400",
+          "left": 165.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn is-on",
+          "text": "关",
+          "fontSize": 12,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 203.109375
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "自动（推荐）",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "开",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "关",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "p",
+          "className": "v2-advanced-popover__hint",
+          "text": "有 GPS 时按行程分段；一般保持「自动」。",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 112.109375
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-field__label",
+          "text": "场景分析",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 112.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn",
+          "text": "关",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "400",
+          "left": 115.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn",
+          "text": "自动",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "400",
+          "left": 153.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn is-on",
+          "text": "开",
+          "fontSize": 12,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 203.109375
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "关（默认）",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "自动",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "开",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "p",
+          "className": "v2-advanced-popover__hint",
+          "text": "合并同场景照片（较慢）；一般保持「关」。",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 112.109375
+        },
+        {
+          "tag": "summary",
+          "className": "v2-settings-sub__summary",
+          "text": "实验选项（高级）",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 113.109375
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-field__label",
+          "text": "导入后先确认章节",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 123.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn is-on",
+          "text": "自动继续",
+          "fontSize": 12,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 126.109375
+        },
+        {
+          "tag": "button",
+          "className": "v2-settings-seg__btn",
+          "text": "先确认",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "400",
+          "left": 200.109375
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "自动继续（推荐）",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "option",
+          "className": "",
+          "text": "导入后先确认章节",
+          "fontSize": 13.3333,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 0
+        },
+        {
+          "tag": "p",
+          "className": "v2-advanced-popover__hint",
+          "text": "开启后需在预览内确认章节顺序再生成文案",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 123.109375
+        },
+        {
+          "tag": "span",
+          "className": "v2-settings-field__label",
+          "text": "智能排版（实验）",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 123.109375
+        }
+      ]
+    },
+    "S-SHEET": {
+      "surface": ".preview-sheet",
+      "textSampleCount": 33,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)",
+        "rgb(61, 107, 90)",
+        "rgb(0, 0, 0)",
+        "rgb(255, 255, 255)"
+      ],
+      "fontSizeCount": 5,
+      "colorCount": 5,
+      "leftDeltaFirstTwo": 8,
+      "samples": [
+        {
+          "tag": "h2",
+          "className": "preview-sheet__title",
+          "text": "精修",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "700",
+          "left": 764
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "这页",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab is-active",
+          "text": "封面",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "这本",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "p",
+          "className": "",
+          "text": "改字马上生效；改拼图请先点下方『更新版面』",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "",
+          "text": "『完成』只是退出精修，不是更新版面；精选不会立刻重排整本",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__help-hint-more",
+          "text": "了解更多 →",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__help-hint-dismiss",
+          "text": "知道了",
+          "fontSize": 11,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "600",
+          "left": 938.34375
+        },
+        {
+          "tag": "button",
+          "className": "is-on is-selected",
+          "text": "封面",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "600",
+          "left": 855
+        },
+        {
+          "tag": "button",
+          "className": "",
+          "text": "封底",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 909
+        },
+        {
+          "tag": "strong",
+          "className": "",
+          "text": "换一张封面图",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint",
+          "text": "点缩略图即可更换。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__label",
+          "text": "封面与封底",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-sub",
+          "text": "游记的第一眼与最后一眼",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-how",
+          "text": "点下方缩略图，即可更换封面或封底",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-oneliner",
+          "text": "封底与封面成对挑选，收束这一路。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-status",
+          "text": "未找到更合适的竖图，先用这张适配手机；你可手换。",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__bookends-pane-label",
+          "text": "换封面 · 点选一张",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 862
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-style",
+          "text": "版式 · split-mat",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 862
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__bookends-thumb-badge",
+          "text": "当前",
+          "fontSize": 11,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 867
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "手机封面 · 预览手机效果",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint",
+          "text": "未找到更合适的竖图，先用这张适配手机；你可手换。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 918
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__primary",
+          "text": "在画面上看封面",
+          "fontSize": 14,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__ghost",
+          "text": "在画面上看封底",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 978
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__ghost",
+          "text": "恢复自动挑选",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 1107
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__label",
+          "text": "封面版式",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact",
+          "text": "电脑预览有效；窄屏与手机版式不同。更换版式默认会重荐封面图。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "沉浸题签",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 860
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "对页叠印",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 996
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "切带题名",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 1132
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "圆窗肖像",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 860
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "海报巨字",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 996
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__cover-blurb",
+          "text": "适合右侧有景、左侧可留白的照片，标题会压在画面上。",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        }
+      ]
+    },
+    "S-SHEET-COVER": {
+      "surface": ".preview-sheet",
+      "textSampleCount": 33,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)",
+        "rgb(61, 107, 90)",
+        "rgb(0, 0, 0)",
+        "rgb(255, 255, 255)"
+      ],
+      "fontSizeCount": 5,
+      "colorCount": 5,
+      "leftDeltaFirstTwo": 8,
+      "samples": [
+        {
+          "tag": "h2",
+          "className": "preview-sheet__title",
+          "text": "精修",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "700",
+          "left": 764
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "这页",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab is-active",
+          "text": "封面",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "这本",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "p",
+          "className": "",
+          "text": "改字马上生效；改拼图请先点下方『更新版面』",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "",
+          "text": "『完成』只是退出精修，不是更新版面；精选不会立刻重排整本",
+          "fontSize": 12,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__help-hint-more",
+          "text": "了解更多 →",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__help-hint-dismiss",
+          "text": "知道了",
+          "fontSize": 11,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "600",
+          "left": 938.34375
+        },
+        {
+          "tag": "button",
+          "className": "is-on is-selected",
+          "text": "封面",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "600",
+          "left": 855
+        },
+        {
+          "tag": "button",
+          "className": "",
+          "text": "封底",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 909
+        },
+        {
+          "tag": "strong",
+          "className": "",
+          "text": "换一张封面图",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "700",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint",
+          "text": "点缩略图即可更换。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__label",
+          "text": "封面与封底",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-sub",
+          "text": "游记的第一眼与最后一眼",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-how",
+          "text": "点下方缩略图，即可更换封面或封底",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-oneliner",
+          "text": "封底与封面成对挑选，收束这一路。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-status",
+          "text": "未找到更合适的竖图，先用这张适配手机；你可手换。",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__bookends-pane-label",
+          "text": "换封面 · 点选一张",
+          "fontSize": 12,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 862
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__bookends-style",
+          "text": "版式 · split-mat",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 862
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__bookends-thumb-badge",
+          "text": "当前",
+          "fontSize": 11,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 867
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "手机封面 · 预览手机效果",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint",
+          "text": "未找到更合适的竖图，先用这张适配手机；你可手换。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 918
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__primary",
+          "text": "在画面上看封面",
+          "fontSize": 14,
+          "color": "rgb(255, 255, 255)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__ghost",
+          "text": "在画面上看封底",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 978
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__ghost",
+          "text": "恢复自动挑选",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 1107
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__label",
+          "text": "封面版式",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 852
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact",
+          "text": "电脑预览有效；窄屏与手机版式不同。更换版式默认会重荐封面图。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "沉浸题签",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 860
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "对页叠印",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 996
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "切带题名",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 1132
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "圆窗肖像",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 860
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__cover-label",
+          "text": "海报巨字",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 996
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__cover-blurb",
+          "text": "适合右侧有景、左侧可留白的照片，标题会压在画面上。",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        }
+      ]
+    },
+    "S-SHEET-BOOK": {
+      "surface": ".preview-sheet",
+      "textSampleCount": 28,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.0",
+        "15.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(92, 87, 79)",
+        "rgb(61, 107, 90)",
+        "rgb(0, 0, 0)"
+      ],
+      "fontSizeCount": 4,
+      "colorCount": 4,
+      "leftDeltaFirstTwo": 8,
+      "samples": [
+        {
+          "tag": "h2",
+          "className": "preview-sheet__title",
+          "text": "精修",
+          "fontSize": 15,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "700",
+          "left": 764
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "这页",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab",
+          "text": "封面",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 756
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__tab is-active",
+          "text": "这本",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 756
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--lead",
+          "text": "改名字与一句话。换封面/封底请到「封面」。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 852
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__zone-meta",
+          "text": "杂志名 · 一句话 · 文案",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "500",
+          "left": 1132.671875
+        },
+        {
+          "tag": "label",
+          "className": "preview-drawer__label",
+          "text": "杂志名",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "label",
+          "className": "preview-drawer__label",
+          "text": "给这本游记的一句话",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "span",
+          "className": "",
+          "text": "重新生成文案",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__link",
+          "text": "开始",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 1201
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__llm-expect",
+          "text": "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__label",
+          "text": "作品署名",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact",
+          "text": "个人署名 · 同时出现在辑封与长图尾",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "span",
+          "className": "preview-sheet__zone-meta",
+          "text": "很少需要",
+          "fontSize": 11,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "500",
+          "left": 1195
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact",
+          "text": "阅读视图、放映、换模板、旅行主角同框、分章说明。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__label",
+          "text": "预览显示",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "600",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "is-on",
+          "text": "编辑预览",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "600",
+          "left": 868
+        },
+        {
+          "tag": "button",
+          "className": "",
+          "text": "阅读视图",
+          "fontSize": 12,
+          "color": "rgb(0, 0, 0)",
+          "fontWeight": "400",
+          "left": 946
+        },
+        {
+          "tag": "span",
+          "className": "",
+          "text": "放映精选",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "small",
+          "className": "preview-sheet__present-empty",
+          "text": "先在正文点 ★",
+          "fontSize": 12,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "500",
+          "left": 1165.65625
+        },
+        {
+          "tag": "span",
+          "className": "",
+          "text": "导出 zip（自行托管）",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__link",
+          "text": "导出",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 1201
+        },
+        {
+          "tag": "span",
+          "className": "",
+          "text": "在文件夹中显示",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "button",
+          "className": "preview-sheet__link",
+          "text": "打开",
+          "fontSize": 13,
+          "color": "rgb(61, 107, 90)",
+          "fontWeight": "600",
+          "left": 1201
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint preview-sheet__hint--compact",
+          "text": "长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "span",
+          "className": "preview-toolbar__template preview-toolbar__template--sheet",
+          "text": "默认模板 · 已锁定 · visual-journal",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "500",
+          "left": 865
+        },
+        {
+          "tag": "p",
+          "className": "preview-sheet__hint",
+          "text": "结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。",
+          "fontSize": 13,
+          "color": "rgb(92, 87, 79)",
+          "fontWeight": "400",
+          "left": 865
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "为什么这样分章 / 结构说明",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "fontWeight": "400",
+          "left": 865
+        }
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "surface": "static",
+      "selector": "templates/studio/homepage-v2/css/bento.css",
+      "detail": "字号离散度偏高：12 种 → ['10px', '11px', '12px', '13px', '14px', '15px', '22px', '36px', '8px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "surface": "static",
+      "selector": "templates/studio/preview-toolbar/sheet.css",
+      "detail": "字号离散度偏高：8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "surface": "static",
+      "selector": ".v2-settings-*",
+      "detail": "Settings 选择器字号 7 种 → ['11px', '12px', '13px', '22px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "surface": "static",
+      "selector": ".preview-sheet*",
+      "detail": "Preview sheet 选择器字号 8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    },
+    {
+      "id": "D-UID-08",
+      "severity": "P1",
+      "surface": "static",
+      "selector": "settings-vs-sheet",
+      "detail": "Settings/Sheet 未同时挂到 studio-panel-* token： settingsPanel=True sheetPanel=False",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css",
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    }
+  ],
+  "summary": {
+    "findings": 5,
+    "P0": 0,
+    "P1": 1,
+    "P2": 4,
+    "staticP0": 0,
+    "staticP1": 1,
+    "staticP2": 4
+  }
+}

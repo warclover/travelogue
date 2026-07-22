@@ -4,6 +4,13 @@ html[data-preview-toolbar="on"] {
   --studio-font-ui:
     "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
     "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+  /* Align with studio-modal.css --studio-panel-* (UI Detail Wave2/3) */
+  --preview-ink: var(--studio-panel-ink, #14110d);
+  --preview-muted: var(--studio-panel-muted-solid, #5c574f);
+  --preview-accent: var(--studio-panel-accent, #3d6b5a);
+  --preview-accent-strong: var(--studio-panel-accent-strong, #1a2f28);
+  --preview-surface: var(--studio-panel-surface, #f3efe8);
+  --preview-border: var(--studio-panel-border, rgba(20, 17, 13, 0.18));
   --preview-sheet-side-w: 520px;
   --preview-sheet-float-gap: 12px;
   --preview-sheet-duration-enter: 460ms;

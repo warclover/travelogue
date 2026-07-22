@@ -141,11 +141,8 @@ export function applyTheme(theme) {
   var next = normalizeTheme(theme);
   V2.theme = next;
   try {
-    if (next === "sky") {
-      document.documentElement.removeAttribute("data-v2-theme");
-    } else {
-      document.documentElement.setAttribute("data-v2-theme", next);
-    }
+    // Wave7：sky 也写 data-v2-theme="sky"（不再靠「无属性」映射 cyan）
+    document.documentElement.setAttribute("data-v2-theme", next);
   } catch (e) {
     /* ignore */
   }

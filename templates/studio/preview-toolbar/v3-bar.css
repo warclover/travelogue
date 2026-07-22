@@ -144,7 +144,7 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v3) {
 }
 
 .preview-toolbar__longshot--v3.preview-toolbar__longshot--running {
-  background: #455a64;
+  background: var(--preview-muted);
   color: #eceff1;
   cursor: wait;
 }

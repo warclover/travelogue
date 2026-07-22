@@ -12,8 +12,12 @@
       document.documentElement.setAttribute("data-v2-theme", DEFAULT_THEME);
       return;
     }
-    if (raw === "sky" || !ALLOWED[raw]) {
-      document.documentElement.removeAttribute("data-v2-theme");
+    if (raw === "sky") {
+      document.documentElement.setAttribute("data-v2-theme", "sky");
+      return;
+    }
+    if (!ALLOWED[raw]) {
+      document.documentElement.setAttribute("data-v2-theme", DEFAULT_THEME);
       return;
     }
     document.documentElement.setAttribute("data-v2-theme", raw);

@@ -9,20 +9,21 @@
   width: min(420px, calc(100% - 32px));
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(26, 47, 40, 0.94);
-  color: #f5fbf8;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22);
+  /* Wave10 · cream dark，对齐 studio__toast */
+  background: rgba(20, 17, 13, 0.92);
+  color: #f5f0e8;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(245, 240, 232, 0.14);
   pointer-events: auto;
 }
 
 .preview-task-dock--warn {
-  border-color: rgba(255, 183, 77, 0.5);
+  border-color: color-mix(in srgb, var(--v2-gold, #d4a843) 55%, transparent);
 }
 
 /* FE-DFX-41 · <768 预览需更新条 ≤48px + safe-area */
@@ -144,13 +145,13 @@
 
 .preview-task-dock__text small {
   display: block;
-  font-size: 11px;
-  color: #a8dcc8;
+  font-size: var(--studio-panel-label-size, 11px);
+  color: rgba(245, 240, 232, 0.62);
   margin-top: 2px;
 }
 
 .preview-task-dock__remind {
-  color: rgba(255, 183, 77, 0.95) !important;
+  color: color-mix(in srgb, var(--v2-gold, #d4a843) 92%, #fff) !important;
   opacity: 0.95;
 }
 
@@ -221,7 +222,7 @@
 }
 
 .preview-task-dock__btn--accent {
-  background: #3d6b5a;
+  background: var(--preview-accent);
   color: #fff;
 }
 

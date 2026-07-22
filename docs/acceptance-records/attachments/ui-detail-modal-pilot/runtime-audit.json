@@ -1,0 +1,564 @@
+{
+  "surfaces": {
+    "S-MODAL": {
+      "surface": "S-MODAL",
+      "modal": {
+        "width": 400,
+        "padding": "22px 24px 20px",
+        "borderRadius": "10px",
+        "color": "rgb(20, 17, 13)",
+        "background": "rgb(255, 255, 255)"
+      },
+      "title": {
+        "fontSize": 17,
+        "lineHeight": "22.95px",
+        "fontWeight": "600",
+        "color": "rgb(20, 17, 13)",
+        "left": 464
+      },
+      "body": {
+        "fontSize": 14,
+        "lineHeight": "21.7px",
+        "color": "rgba(20, 17, 13, 0.72)",
+        "left": 464
+      },
+      "help": {
+        "fontSize": 13,
+        "color": "rgb(61, 107, 90)"
+      },
+      "buttons": [
+        {
+          "text": "取消",
+          "fontSize": 13,
+          "color": "rgba(20, 17, 13, 0.62)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "500"
+        },
+        {
+          "text": "删除",
+          "fontSize": 13,
+          "color": "rgb(255, 255, 255)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "600"
+        }
+      ],
+      "uniqueFontSizes": [
+        "13.0",
+        "14.0",
+        "17.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(255, 255, 255)",
+        "rgb(61, 107, 90)",
+        "rgba(20, 17, 13, 0.62)",
+        "rgba(20, 17, 13, 0.72)"
+      ],
+      "titleBodyLeftDelta": 0
+    },
+    "S-MODAL-STACKED": {
+      "surface": "S-MODAL",
+      "modal": {
+        "width": 400,
+        "padding": "22px 24px 20px",
+        "borderRadius": "10px",
+        "color": "rgb(20, 17, 13)",
+        "background": "rgb(255, 255, 255)"
+      },
+      "title": {
+        "fontSize": 17,
+        "lineHeight": "22.95px",
+        "fontWeight": "600",
+        "color": "rgb(20, 17, 13)",
+        "left": 464
+      },
+      "body": {
+        "fontSize": 14,
+        "lineHeight": "21.7px",
+        "color": "rgba(20, 17, 13, 0.72)",
+        "left": 464
+      },
+      "help": null,
+      "buttons": [
+        {
+          "text": "继续",
+          "fontSize": 13,
+          "color": "rgb(247, 242, 233)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "600"
+        },
+        {
+          "text": "重新开始",
+          "fontSize": 13,
+          "color": "rgb(20, 17, 13)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "600"
+        },
+        {
+          "text": "取消",
+          "fontSize": 13,
+          "color": "rgba(20, 17, 13, 0.62)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "500"
+        }
+      ],
+      "uniqueFontSizes": [
+        "13.0",
+        "14.0",
+        "17.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(247, 242, 233)",
+        "rgba(20, 17, 13, 0.62)",
+        "rgba(20, 17, 13, 0.72)"
+      ],
+      "titleBodyLeftDelta": 0
+    },
+    "S-FS": {
+      "surface": "#v2-first-success .v2-first-success__panel",
+      "textSampleCount": 8,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "20.0"
+      ],
+      "uniqueColors": [
+        "color(srgb 0.659294 0.736471 0.798588)",
+        "rgb(245, 240, 232)",
+        "rgba(255, 255, 255, 0.62)",
+        "rgba(245, 240, 232, 0.78)",
+        "rgba(245, 240, 232, 0.58)",
+        "rgb(26, 21, 16)",
+        "rgba(255, 255, 255, 0.48)"
+      ],
+      "fontSizeCount": 5,
+      "colorCount": 7,
+      "leftDeltaFirstTwo": 0,
+      "samples": [
+        {
+          "tag": "p",
+          "className": "v2-first-success__eyebrow",
+          "text": "✓ 生成完成",
+          "fontSize": 11,
+          "color": "color(srgb 0.659294 0.736471 0.798588)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 443
+        },
+        {
+          "tag": "p",
+          "className": "v2-first-success__msg",
+          "text": "你的第一篇游记已生成",
+          "fontSize": 20,
+          "color": "rgb(245, 240, 232)",
+          "fontWeight": "400",
+          "lineHeight": "27px",
+          "left": 443
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "12 张照片 · 3 个章节",
+          "fontSize": 13,
+          "color": "rgba(255, 255, 255, 0.62)",
+          "fontWeight": "400",
+          "lineHeight": "18.85px",
+          "left": 456
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "本机生成 · 可导出长图",
+          "fontSize": 13,
+          "color": "rgba(255, 255, 255, 0.62)",
+          "fontWeight": "400",
+          "lineHeight": "18.85px",
+          "left": 456
+        },
+        {
+          "tag": "p",
+          "className": "v2-first-success__guidance-lead",
+          "text": "游记已做好，可预览与导出。",
+          "fontSize": 13,
+          "color": "rgba(245, 240, 232, 0.78)",
+          "fontWeight": "400",
+          "lineHeight": "19.5px",
+          "left": 443
+        },
+        {
+          "tag": "p",
+          "className": "v2-first-success__guidance-next",
+          "text": "下一步可用自己的旅行照片再做一本",
+          "fontSize": 12,
+          "color": "rgba(245, 240, 232, 0.58)",
+          "fontWeight": "400",
+          "lineHeight": "18px",
+          "left": 443
+        },
+        {
+          "tag": "a",
+          "className": "v2-first-success__cta",
+          "text": "打开卷轴预览 →",
+          "fontSize": 14,
+          "color": "rgb(26, 21, 16)",
+          "fontWeight": "600",
+          "lineHeight": "normal",
+          "left": 443
+        },
+        {
+          "tag": "button",
+          "className": "v2-first-success__dismiss",
+          "text": "留在首页",
+          "fontSize": 12,
+          "color": "rgba(255, 255, 255, 0.48)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 443
+        }
+      ]
+    },
+    "S-FAIL": {
+      "surface": "#v2-failure .v2-failure__panel",
+      "textSampleCount": 6,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "13.0",
+        "14.0",
+        "18.0"
+      ],
+      "uniqueColors": [
+        "rgb(232, 160, 152)",
+        "rgb(245, 240, 232)",
+        "rgba(255, 255, 255, 0.62)",
+        "rgba(255, 255, 255, 0.85)",
+        "rgb(26, 21, 16)",
+        "rgba(255, 255, 255, 0.55)"
+      ],
+      "fontSizeCount": 5,
+      "colorCount": 6,
+      "leftDeltaFirstTwo": 0,
+      "samples": [
+        {
+          "tag": "p",
+          "className": "v2-failure__eyebrow",
+          "text": "导入失败",
+          "fontSize": 11,
+          "color": "rgb(232, 160, 152)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 447
+        },
+        {
+          "tag": "p",
+          "className": "v2-failure__msg",
+          "text": "没能读完这个文件夹",
+          "fontSize": 18,
+          "color": "rgb(245, 240, 232)",
+          "fontWeight": "400",
+          "lineHeight": "24.3px",
+          "left": 447
+        },
+        {
+          "tag": "p",
+          "className": "v2-failure__hint",
+          "text": "可换一个文件夹重试，或先用示例照片。",
+          "fontSize": 12,
+          "color": "rgba(255, 255, 255, 0.62)",
+          "fontWeight": "400",
+          "lineHeight": "18px",
+          "left": 447
+        },
+        {
+          "tag": "button",
+          "className": "v2-failure__secondary",
+          "text": "去配置写作引擎",
+          "fontSize": 13,
+          "color": "rgba(255, 255, 255, 0.85)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 577.5
+        },
+        {
+          "tag": "button",
+          "className": "v2-failure__cta",
+          "text": "重试",
+          "fontSize": 14,
+          "color": "rgb(26, 21, 16)",
+          "fontWeight": "600",
+          "lineHeight": "normal",
+          "left": 604
+        },
+        {
+          "tag": "button",
+          "className": "v2-failure__stay",
+          "text": "留在首页",
+          "fontSize": 12,
+          "color": "rgba(255, 255, 255, 0.55)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 604
+        }
+      ]
+    },
+    "S-WIZ": {
+      "surface": "#v2-import-wizard",
+      "textSampleCount": 14,
+      "uniqueFontSizes": [
+        "11.0",
+        "12.0",
+        "14.0",
+        "21.0"
+      ],
+      "uniqueColors": [
+        "rgb(242, 246, 250)",
+        "rgb(30, 58, 82)",
+        "rgba(220, 232, 242, 0.8)",
+        "rgba(220, 232, 242, 0.68)",
+        "rgb(158, 184, 208)"
+      ],
+      "fontSizeCount": 4,
+      "colorCount": 5,
+      "leftDeltaFirstTwo": 0,
+      "samples": [
+        {
+          "tag": "h2",
+          "className": "v2-wizard__title",
+          "text": "制作我的游记画册",
+          "fontSize": 21,
+          "color": "rgb(242, 246, 250)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "button",
+          "className": "v2-wizard__primary v2-wizard__primary--pick",
+          "text": "选择本次旅行的照片文件夹",
+          "fontSize": 14,
+          "color": "rgb(30, 58, 82)",
+          "fontWeight": "600",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "small",
+          "className": "",
+          "text": "本机 · 无需选文件夹",
+          "fontSize": 11,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "500",
+          "lineHeight": "14.85px",
+          "left": 351.203125
+        },
+        {
+          "tag": "p",
+          "className": "v2-wizard__hint v2-wizard__hint--center",
+          "text": "一次旅行一个文件夹，照片留在本机",
+          "fontSize": 11,
+          "color": "rgba(220, 232, 242, 0.68)",
+          "fontWeight": "400",
+          "lineHeight": "17.05px",
+          "left": 334.203125
+        },
+        {
+          "tag": "span",
+          "className": "",
+          "text": "选一次旅行的文件夹即可，不用先整理",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "400",
+          "lineHeight": "17.4px",
+          "left": 345.203125
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "不知道选哪个文件夹？",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "同一次旅行放同一文件夹（50–100 张最佳）",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.68)",
+          "fontWeight": "400",
+          "lineHeight": "18.6px",
+          "left": 348.59375
+        },
+        {
+          "tag": "strong",
+          "className": "",
+          "text": "新",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.68)",
+          "fontWeight": "700",
+          "lineHeight": "18.6px",
+          "left": 626.15625
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.68)",
+          "fontWeight": "400",
+          "lineHeight": "18.6px",
+          "left": 348.59375
+        },
+        {
+          "tag": "li",
+          "className": "",
+          "text": "手机照片需先传到电脑",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.68)",
+          "fontWeight": "400",
+          "lineHeight": "18.6px",
+          "left": 348.59375
+        },
+        {
+          "tag": "button",
+          "className": "v2-wizard__help-link",
+          "text": "了解更多 →",
+          "fontSize": 12,
+          "color": "rgb(158, 184, 208)",
+          "fontWeight": "600",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "summary",
+          "className": "",
+          "text": "其他导入方式",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "label",
+          "className": "v2-wizard__upload-btn",
+          "text": "上传小文件夹（建议 ≤200MB）",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 334.203125
+        },
+        {
+          "tag": "button",
+          "className": "",
+          "text": "使用此路径",
+          "fontSize": 12,
+          "color": "rgba(220, 232, 242, 0.8)",
+          "fontWeight": "400",
+          "lineHeight": "normal",
+          "left": 853.796875
+        }
+      ]
+    },
+    "S-MODAL-PREVIEW-DUAL": {
+      "surface": "S-MODAL",
+      "modal": {
+        "width": 400,
+        "padding": "22px 24px 20px",
+        "borderRadius": "10px",
+        "color": "rgb(20, 17, 13)",
+        "background": "rgb(255, 255, 255)"
+      },
+      "title": {
+        "fontSize": 17,
+        "lineHeight": "22.95px",
+        "fontWeight": "600",
+        "color": "rgb(20, 17, 13)",
+        "left": 464
+      },
+      "body": {
+        "fontSize": 14,
+        "lineHeight": "21.7px",
+        "color": "rgba(20, 17, 13, 0.72)",
+        "left": 464
+      },
+      "help": null,
+      "buttons": [
+        {
+          "text": "取消",
+          "fontSize": 13,
+          "color": "rgba(20, 17, 13, 0.62)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "500"
+        },
+        {
+          "text": "确定",
+          "fontSize": 13,
+          "color": "rgb(247, 242, 233)",
+          "minHeight": 40,
+          "height": 40,
+          "borderRadius": "6px",
+          "fontWeight": "600"
+        }
+      ],
+      "uniqueFontSizes": [
+        "13.0",
+        "14.0",
+        "17.0"
+      ],
+      "uniqueColors": [
+        "rgb(20, 17, 13)",
+        "rgb(247, 242, 233)",
+        "rgba(20, 17, 13, 0.62)",
+        "rgba(20, 17, 13, 0.72)"
+      ],
+      "titleBodyLeftDelta": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "D-UID-04",
+      "severity": "P1",
+      "surface": "S-FS",
+      "detail": "颜色种类 7: ['color(srgb 0.659294 0.736471 0.798588)', 'rgb(245, 240, 232)', 'rgba(255, 255, 255, 0.62)', 'rgba(245, 240, 232, 0.78)', 'rgba(245, 240, 232, 0.58)', 'rgb(26, 21, 16)', 'rgba(255, 255, 255, 0.48)']"
+    },
+    {
+      "id": "D-UID-04",
+      "severity": "P1",
+      "surface": "S-FAIL",
+      "detail": "颜色种类 6: ['rgb(232, 160, 152)', 'rgb(245, 240, 232)', 'rgba(255, 255, 255, 0.62)', 'rgba(255, 255, 255, 0.85)', 'rgb(26, 21, 16)', 'rgba(255, 255, 255, 0.55)']"
+    },
+    {
+      "id": "D-UID-04",
+      "severity": "P1",
+      "surface": "S-WIZ",
+      "detail": "颜色种类 5: ['rgb(242, 246, 250)', 'rgb(30, 58, 82)', 'rgba(220, 232, 242, 0.8)', 'rgba(220, 232, 242, 0.68)', 'rgb(158, 184, 208)']"
+    }
+  ],
+  "summary": {
+    "findings": 3,
+    "P0": 0,
+    "P1": 3,
+    "P2": 0,
+    "staticP0": 0,
+    "staticP2": 3
+  }
+}

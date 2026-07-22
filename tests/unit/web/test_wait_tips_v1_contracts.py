@@ -90,6 +90,13 @@ def test_wait_tips_css_and_a11y_markers() -> None:
     assert "prefers-reduced-motion" in ctrl
     assert "v2-wait-tips" in css
     assert "v2-wait-tips__label" in css
+    assert "--wt-gold-soft" in css
+    # Wave4 · no rainbow tip-tone / cyan source
+    assert "#90e0ef" not in css
+    assert "#9ee7f2" not in css
+    assert "#90caf9" not in css
+    assert "#a5d6a7" not in css
+    assert "#ffcc80" not in css
 
 
 def test_wait_tips_does_not_alter_help_busy_contract() -> None:

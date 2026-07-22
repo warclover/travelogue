@@ -286,6 +286,11 @@ def test_studio_home_v2_theme_palette_options() -> None:
     assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="mist"] .v2-shelf' in css
+    # UI Detail Wave7 · sky 显式主题，不再靠 removeAttribute
+    assert ':root[data-v2-theme="sky"]' in css
+    assert 'setAttribute("data-v2-theme", "sky")' in boot
+    assert 'removeAttribute("data-v2-theme")' not in boot
+    assert 'removeAttribute("data-v2-theme")' not in store
 
 
 def test_studio_home_v2_js_modules_present() -> None:

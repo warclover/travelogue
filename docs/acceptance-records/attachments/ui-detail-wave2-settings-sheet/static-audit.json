@@ -1,0 +1,141 @@
+{
+  "scope": "settings-sheet",
+  "files": [
+    "templates/studio/homepage-v2/css/bento.css",
+    "templates/studio/preview-toolbar/sheet.css"
+  ],
+  "summary": {
+    "findings": 5,
+    "P0": 0,
+    "P1": 1,
+    "P2": 4
+  },
+  "findings": [
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/bento.css",
+      "detail": "字号离散度偏高：12 种 → ['10px', '11px', '12px', '13px', '14px', '15px', '22px', '36px', '8px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/preview-toolbar/sheet.css",
+      "detail": "字号离散度偏高：8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": ".v2-settings-*",
+      "detail": "Settings 选择器字号 7 种 → ['11px', '12px', '13px', '22px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": ".preview-sheet*",
+      "detail": "Preview sheet 选择器字号 8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    },
+    {
+      "id": "D-UID-08",
+      "severity": "P1",
+      "selector": "settings-vs-sheet",
+      "detail": "Settings/Sheet 未同时挂到 studio-panel-* token： settingsPanel=True sheetPanel=False",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css",
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    }
+  ],
+  "histograms": {
+    "fontSizeHistogram": {
+      "12px": 23,
+      "13px": 13,
+      "11px": 9,
+      "10px": 6,
+      "var(--studio-panel-label-size, 11px)": 5,
+      "14px": 3,
+      "15px": 2,
+      "var(--studio-panel-title-size, 15px)": 2,
+      "var(--studio-panel-chip-size, 11px)": 2,
+      "36px": 1,
+      "22px": 1,
+      "8px": 1,
+      "18px": 1
+    },
+    "colorHistogram": {
+      "#fff": 5,
+      "#c62828": 1,
+      "#8a2b22": 1,
+      "#0f172a": 1,
+      "#b8dcc8": 1,
+      "#ffd89a": 1,
+      "#ffe8c2": 1,
+      "#f5fbf8": 1,
+      "#1a1408": 1,
+      "rgba(120, 72, 20, 0.92)": 1,
+      "rgba(120, 72, 20, 0.95)": 1
+    },
+    "perFile": {
+      "templates/studio/homepage-v2/css/bento.css": {
+        "fontSizeUnique": [
+          "10px",
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "22px",
+          "36px",
+          "8px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-label-size, 11px)",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 12,
+        "colorUnique": [
+          "#0f172a",
+          "#8a2b22",
+          "#b8dcc8",
+          "#c62828",
+          "#ffd89a",
+          "#ffe8c2",
+          "#fff"
+        ],
+        "colorCount": 7
+      },
+      "templates/studio/preview-toolbar/sheet.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "18px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 8,
+        "colorUnique": [
+          "#1a1408",
+          "#f5fbf8",
+          "#fff",
+          "rgba(120, 72, 20, 0.92)",
+          "rgba(120, 72, 20, 0.95)"
+        ],
+        "colorCount": 5
+      }
+    }
+  }
+}
