@@ -1,25 +1,5 @@
 {
-  "count": 3,
-  "edges": [
-    "travelogue/curation/curate.py::travelogue.layout_engine.mosaic.hook",
-    "travelogue/curation/curate.py::travelogue.layout_engine.mosaic.log",
-    "travelogue/web/studio_handlers/trip_replan_handlers.py::travelogue.layout_engine.mosaic.replan"
-  ],
-  "details": [
-    {
-      "file": "travelogue/curation/curate.py",
-      "line": 1295,
-      "module": "travelogue.layout_engine.mosaic.hook"
-    },
-    {
-      "file": "travelogue/curation/curate.py",
-      "line": 1296,
-      "module": "travelogue.layout_engine.mosaic.log"
-    },
-    {
-      "file": "travelogue/web/studio_handlers/trip_replan_handlers.py",
-      "line": 19,
-      "module": "travelogue.layout_engine.mosaic.replan"
-    }
-  ]
+  "count": 0,
+  "edges": [],
+  "details": []
 }

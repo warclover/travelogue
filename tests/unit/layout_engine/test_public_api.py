@@ -17,5 +17,9 @@ def test_facade_exports_core_happy_path_symbols() -> None:
     assert callable(api.attach_screens_to_chapters)
     assert callable(api.compose_trip)
     assert callable(api.resolve_layout_engine)
+    assert callable(api.drain_mosaic_capture)
+    assert callable(api.annotate_winner_plan_logs)
+    assert callable(api.replan_screen)
     assert api.LAYOUT_ENGINE_SCREENS == "screens"
     assert api.ChapterPlanRequest.__name__ == "ChapterPlanRequest"
+    assert api.ReplanError.__name__ == "ReplanError"

@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2.2 |
 | **分支** | `feat/csc-w0-recipe` |
-| **状态** | **W0–W1 Done · W2a Done** · facade + 深 import 棘轮；W2b/W3 未开 |
+| **状态** | **W0–W2b 棘轮就绪** · facade 深 import = 0；god-module 行数 ceiling 已钉；W3 清退未开 |
 | **根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md) |
 | **更新日期** | 2026-07-22 |
 
@@ -73,7 +73,8 @@ python -m pytest tests/unit/web/test_studio_config.py -q --maxfail=3
 |----|------|------|
 | CSC-W2a-01 | `layout_engine/api.py` + 包级 `__all__` | **Done** |
 | CSC-W2a-02 | `scripts/lint_layout_engine_facade.py` + baseline（只降不升） | **Done** |
-| CSC-W2a-03 | 调用点改经 facade（services/layout · curate compose_trip · web handlers） | **Done**（残留 3 边见 baseline） |
+| CSC-W2a-03 | 调用点改经 facade（services/layout · curate · web replan/pipeline） | **Done** |
+| CSC-W2a-04 | 清零 planner/mosaic 深 import（curation/services/web） | **Done** · baseline count=0 |
 
 **验证**
 
@@ -82,9 +83,21 @@ python scripts/lint_layout_engine_facade.py
 python -m pytest tests/unit/layout_engine/test_public_api.py tests/unit/orchestrator/test_happy_path_recipe.py -q
 ```
 
-### W2b/c · 棘轮（未开工）
+### W2b/c · 棘轮
 
-对齐 AAD；`curate` / `studio_pipeline` 禁堆料。
+| ID | 任务 | 状态 |
+|----|------|------|
+| CSC-W2b-01 | `lint_csc_god_module_ratchet.py` 钉 `curate.py` / `studio_pipeline.py` 行数 ceiling | **Done** |
+| CSC-W2b-02 | 与 AAD 对齐的 curate 大拆 | **Parking**（本分支不做；只禁净增） |
+| CSC-W2c-01 | pipeline 机会主义抽取 | **Parking**（棘轮已拦膨胀） |
+
+**验证**
+
+```powershell
+python scripts/lint_csc_god_module_ratchet.py
+```
+
+> 有意加行须同 PR 带 `--allow-growth` 更新 baseline，并在 PR 说明理由。
 
 ### W3 · 清退（未开工）
 
