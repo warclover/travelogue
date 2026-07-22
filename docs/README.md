@@ -107,6 +107,7 @@
 | [acceptance-records/csc-w0-diff-empty.md](./acceptance-records/csc-w0-diff-empty.md) | CSC · intentional 版式 DIFF 空表 |
 | [acceptance-records/csc-w1-happy-path-user-copy.md](./acceptance-records/csc-w1-happy-path-user-copy.md) | CSC W1 · Happy Path 用户短文（无黑话） |
 | [acceptance-records/csc-w1-dogfood-three-questions-2026-07-22.md](./acceptance-records/csc-w1-dogfood-three-questions-2026-07-22.md) | CSC W1 · 测评三题记录 |
+| [acceptance-records/csc-pre-merge-smoke-2026-07-22.md](./acceptance-records/csc-pre-merge-smoke-2026-07-22.md) | CSC · 合入前轻测（Pass） |
 | [acceptance-records/csc-w3-debt-table.md](./acceptance-records/csc-w3-debt-table.md) | CSC W3a · shim/legacy 债务表（ceiling 24） |
 | [acceptance-records/csc-w3-config-surface-split.md](./acceptance-records/csc-w3-config-surface-split.md) | CSC W3b · 用户档 / research 分层 |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
