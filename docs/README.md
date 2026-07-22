@@ -95,7 +95,9 @@
 | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
 | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
 | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe 根治 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md) · [实施](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) · 分支 `feat/csc-w0-recipe`） |
-| [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC · W0 Recipe 只读快照任务卡（切片 A 进行中） |
+| [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC · W0 基线包（Recipe 快照 · 设置库存 · L0/L1 键表） |
+| [acceptance-records/csc-w0-settings-surface-inventory.md](./acceptance-records/csc-w0-settings-surface-inventory.md) | CSC W0 · 设置面库存 |
+| [acceptance-records/csc-w0-l0-l1-keys.md](./acceptance-records/csc-w0-l0-l1-keys.md) | CSC W0 · L0/L1 键表草案 |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) | FTUE · W0–W3 任务卡 |
 | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) | FTUE 线框 F1–F8 |

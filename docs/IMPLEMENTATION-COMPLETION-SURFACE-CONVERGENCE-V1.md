@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2.2 |
 | **分支** | `feat/csc-w0-recipe` |
-| **状态** | **W0 进行中** · 切片 A（Recipe 只读快照）已编码 |
+| **状态** | **W0 基线包就绪** · 切片 A + 设置库存 + L0/L1 键表；待合 PR / 人审四档全表 |
 | **根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md) |
 | **更新日期** | 2026-07-22 |
 
@@ -29,17 +29,33 @@
 | CSC-W0-02 | 基线 JSON `csc-w0-baseline-happy-path-recipe.json` | **Done** |
 | CSC-W0-03 | 单测锁定快照 + Danger 防火墙仍为 False | **Done** |
 | CSC-W0-04 | Danger/Research 种子分档（代码常量） | **Done**（人审续标四档全表） |
-| CSC-W0-05 | 设置面库存表（FE） | Pending |
-| CSC-W0-06 | L0/L1 键表草案 | Pending |
-| CSC-W0-07 | 对照集命令写入本节 | Pending |
+| CSC-W0-05 | 设置面库存表（FE） | **Done** · [csc-w0-settings-surface-inventory.md](./acceptance-records/csc-w0-settings-surface-inventory.md) |
+| CSC-W0-06 | L0/L1 键表草案 | **Done** · [csc-w0-l0-l1-keys.md](./acceptance-records/csc-w0-l0-l1-keys.md) · `L1_RESULT_KEYS`（3≤10） |
+| CSC-W0-07 | 对照集命令写入本节 | **Done** · 见下方 |
 
 **验证**
 
 ```powershell
-pytest tests/unit/orchestrator/test_happy_path_recipe.py -q
+python -m pytest tests/unit/orchestrator/test_happy_path_recipe.py -q
 ```
 
-**回滚**：删除/还原 `happy_path_recipe.py`、基线 JSON 与单测；运行时无挂载点，无行为回滚面。
+**对照集（行为未变时的回归尺子 · CSC-W0-07）**
+
+```powershell
+# Recipe / 默认面合同
+python -m pytest tests/unit/orchestrator/test_happy_path_recipe.py -q
+
+# 编排薄面不回归
+python -m pytest tests/unit/orchestrator/test_orchestrator_studio_profile.py -q
+
+# 布局引擎快路径（有意改版式前必跑；本波应全绿）
+python -m pytest tests/unit/layout_engine -q --maxfail=5
+
+# 可选：配置 PATCH/expose 烟测
+python -m pytest tests/unit/web/test_studio_config.py -q --maxfail=3
+```
+
+**回滚**：还原 `happy_path_recipe.py`、基线 JSON、库存/键表 md 与单测；运行时无挂载点，无行为回滚面。
 
 ### W1 · Recipe 挂载 + UI 派生（未开工）
 
@@ -74,12 +90,14 @@ pytest tests/unit/orchestrator/test_happy_path_recipe.py -q
 |------|------|
 | Recipe 模块 | `travelogue/orchestrator/happy_path_recipe.py` |
 | W0 基线 | `docs/acceptance-records/csc-w0-baseline-happy-path-recipe.json` |
+| 设置库存 | `docs/acceptance-records/csc-w0-settings-surface-inventory.md` |
+| L0/L1 键表 | `docs/acceptance-records/csc-w0-l0-l1-keys.md` |
 | 单测 | `tests/unit/orchestrator/test_happy_path_recipe.py` |
 
-**更新基线（仅在有意变更默认时）**
+**更新基线（仅在有意变更默认 / L1 名单时）**
 
 ```powershell
-python -c "import json; from pathlib import Path; from travelogue.orchestrator.happy_path_recipe import studio_default_recipe as r; d=r(); g={k:d[k] for k in ('recipe_id','schema_version','orchestration','counts','appconfig_bools','danger_must_stay_false')}; g['layout_exit']={k:d['layout_exit'][k] for k in ('studio_export_layout','web_layout_engine_config')}; Path('docs/acceptance-records/csc-w0-baseline-happy-path-recipe.json').write_text(json.dumps(g,indent=2,ensure_ascii=False)+chr(10),encoding='utf-8')"
+python -c "import json; from pathlib import Path; from travelogue.orchestrator.happy_path_recipe import studio_default_recipe as r; d=r(); keys=('recipe_id','schema_version','orchestration','counts','appconfig_bools','danger_must_stay_false','l0_ops_roots','l1_keys','advanced_settings_keys'); g={k:d[k] for k in keys}; g['layout_exit']={k:d['layout_exit'][k] for k in ('studio_export_layout','web_layout_engine_config')}; Path('docs/acceptance-records/csc-w0-baseline-happy-path-recipe.json').write_text(json.dumps(g,indent=2,ensure_ascii=False)+chr(10),encoding='utf-8')"
 ```
 
 ---

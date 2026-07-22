@@ -7,7 +7,10 @@ from pathlib import Path
 
 from travelogue.config import AppConfig
 from travelogue.orchestrator.happy_path_recipe import (
+    ADVANCED_SETTINGS_KEYS,
     DANGER_DEFAULT_FALSE,
+    L0_OPS_ROOTS,
+    L1_RESULT_KEYS,
     appconfig_bool_map,
     orchestration_snapshot,
     studio_default_recipe,
@@ -34,6 +37,9 @@ def _golden_slice(recipe: dict) -> dict:
         "counts": recipe["counts"],
         "appconfig_bools": recipe["appconfig_bools"],
         "danger_must_stay_false": recipe["danger_must_stay_false"],
+        "l0_ops_roots": recipe["l0_ops_roots"],
+        "l1_keys": recipe["l1_keys"],
+        "advanced_settings_keys": recipe["advanced_settings_keys"],
     }
 
 
@@ -67,3 +73,14 @@ def test_bool_counts_match_prd_diagnostic_band() -> None:
     assert counts["bool_fields"] == 150
     assert counts["default_true"] == 97
     assert counts["default_false"] == 53
+
+
+def test_l1_budget_and_tiers_are_disjoint() -> None:
+    """CSC D-CSC-04: L1 ≤10; Danger/Advanced settings not in L1."""
+    assert len(L1_RESULT_KEYS) <= 10
+    assert len(L0_OPS_ROOTS) >= 1
+    l1 = set(L1_RESULT_KEYS)
+    assert l1.isdisjoint(DANGER_DEFAULT_FALSE)
+    assert l1.isdisjoint(ADVANCED_SETTINGS_KEYS)
+    recipe = studio_default_recipe()
+    assert recipe["l1_keys"] == list(L1_RESULT_KEYS)

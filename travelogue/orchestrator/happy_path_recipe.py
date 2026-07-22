@@ -39,6 +39,28 @@ RESEARCH_DEFAULT_FALSE: frozenset[str] = frozenset(
     }
 )
 
+# Config top-level ops roots (L0) · not counted in L1≤10 budget (CSC D-CSC-04).
+L0_OPS_ROOTS: tuple[str, ...] = (
+    "trips_dir",
+    "llm",
+    "ffmpeg",
+    "geocode",
+)
+
+# W1 target: user-visible result knobs (≤10). Settings UI should prefer these.
+# Paths are AppConfig-ish; TriState UI maps onto *.enabled where noted.
+L1_RESULT_KEYS: tuple[str, ...] = (
+    "clustering.enabled",
+    "vision.enabled",
+    "ingest.copy_source_files",
+)
+
+# Visible in settings but must stay Advanced / Danger (not L1).
+ADVANCED_SETTINGS_KEYS: tuple[str, ...] = (
+    "layout.scoring.enabled",
+    "studio.g1_confirm_structure",
+)
+
 
 def iter_bool_paths(obj: Any, prefix: str = "") -> list[tuple[str, bool]]:
     """Walk a dataclass tree and collect ``path -> bool`` leaves."""
@@ -118,11 +140,16 @@ def build_happy_path_recipe(
             "default_false": len(false_paths),
         },
         "tiers": tiers,
-        "l1_keys": [],  # W1 fills; empty means not yet mounted to settings
+        "l0_ops_roots": list(L0_OPS_ROOTS),
+        "l1_keys": list(L1_RESULT_KEYS),
+        "advanced_settings_keys": list(ADVANCED_SETTINGS_KEYS),
         "advanced": sorted(
             p for p, t in tiers.items() if t in {"advanced_or_research", "research", "danger"}
         ),
         "danger_must_stay_false": sorted(DANGER_DEFAULT_FALSE),
+        "settings_inventory": (
+            "docs/acceptance-records/csc-w0-settings-surface-inventory.md"
+        ),
     }
 
 

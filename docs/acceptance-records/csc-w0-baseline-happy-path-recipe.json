@@ -178,5 +178,20 @@
     "mosaic.allow_drop",
     "studio.g1_confirm_structure",
     "studio.layout_templates_internal"
+  ],
+  "l0_ops_roots": [
+    "trips_dir",
+    "llm",
+    "ffmpeg",
+    "geocode"
+  ],
+  "l1_keys": [
+    "clustering.enabled",
+    "vision.enabled",
+    "ingest.copy_source_files"
+  ],
+  "advanced_settings_keys": [
+    "layout.scoring.enabled",
+    "studio.g1_confirm_structure"
   ]
 }
