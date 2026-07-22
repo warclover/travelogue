@@ -64,9 +64,10 @@ const FAILURE_NEXT_HINTS = {
   E_PICK_FOLDER_DENIED: "仅允许访问本机文件夹；请确认 Studio 有权限访问该路径。",
   E_PICK_FOLDER_FAILED: "请粘贴完整路径，或安装 desktop 依赖后重试浏览文件夹。",
   E_STUDIO_PIPELINE: "通常是临时问题：检查文件夹仍可访问后点「重试」。",
-  E_LLM_AUTH: "打开设置 → AI 文案，粘贴 API Key 并测试连接。不配置也可导入、预览和导出长图。",
-  E_LLM_PROVIDER: "请选择 DeepSeek 或通义千问。",
-  E_LLM_PING: "检查 Key、网络或服务商余额后重试。",
+  E_AI_SURFACE_DISABLED: "当前版本不可用",
+  E_LLM_AUTH: "检查文件夹是否仍可访问、照片是否足够，然后点「重试」或换文件夹再试。",
+  E_LLM_PROVIDER: "当前不可用，请稍后重试。",
+  E_LLM_PING: "请稍后重试。",
   E_LLM_NETWORK: "通常是临时网络问题：检查网络或代理后点「重试」，无需重新选文件夹。",
 };
 

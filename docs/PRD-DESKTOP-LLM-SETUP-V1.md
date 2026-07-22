@@ -13,7 +13,11 @@
 | **验收** | [ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md](./ACCEPTANCE-DESKTOP-LLM-SETUP-V1.md) · 本文 §10 |
 | **实施清单** | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) |
 | **线框** | [wireframes/desktop-llm-setup-v1-wireframe.html](./wireframes/desktop-llm-setup-v1-wireframe.html)（F1–F3/F5） |
-| **更新日期** | 2026-07-15 |
+| **更新日期** | 2026-07-22 |
+
+> **默认用户面 supersede（NAS · DOC-NAS-02）**  
+> 当前发版默认门控见 [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)：隐藏能力卡 / 设置 AI zone / H7 / 预览 narrate；`POST /narrate` 与 settings 写 / ping → 403。  
+> **本文保留工程合同与 dark 回归**（`TRAVELOGUE_AI_SURFACE=1`）；验收用户面以 NAS ACCEPTANCE 为准，DLLM ACCEPTANCE 仅 dark / 工程。
 
 > **定位**
 >

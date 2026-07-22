@@ -12,7 +12,6 @@ import {
   markCapabilityCardSuppressHelpL1,
   isCapabilityCardSuppressingHelpL1,
 } from "./help-onboarding.js";
-import { openLlmSettings } from "./llm-settings.js";
 import { V2 } from "../homepage-v2/store.js";
 
 var ROOT_ID = "studio-capability-card-root";
@@ -67,13 +66,10 @@ function ensureRoot() {
     '<div class="studio-capability-card__panel">' +
     '<button type="button" class="studio-capability-card__close" data-cap-dismiss="1" aria-label="关闭">×</button>' +
     '<p id="studio-capability-card-title" class="studio-capability-card__title">照片留在本机，也能做成可发的游记</p>' +
-    '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。更好的文案可稍后自行升级（可选）。向导里可一键试用示例。</p>' +
+    '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。向导里可一键试用示例。</p>' +
     '<div class="studio-capability-card__actions">' +
     '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始制作我的游记</button>' +
     "</div>" +
-    '<p class="studio-capability-card__linkrow">' +
-    '<button type="button" class="studio-capability-card__link" id="studio-capability-upgrade">以后再升级 AI 文案 →</button>' +
-    "</p>" +
     "</div>";
   document.body.appendChild(el);
   /* Styles: capability-card.css via studio-home-v2.css（UI Detail Wave5） */
@@ -102,13 +98,6 @@ function ensureRoot() {
           if (cta) cta.click();
         } catch (_e2) {}
       }
-    });
-  }
-  var upgrade = document.getElementById("studio-capability-upgrade");
-  if (upgrade) {
-    upgrade.addEventListener("click", function () {
-      dismissCapabilityCard("configure");
-      openLlmSettings({ source: "card" });
     });
   }
   return el;
@@ -159,45 +148,17 @@ function canShow() {
 }
 
 export function showCapabilityCard() {
-  if (!canShow()) return false;
-  var el = ensureRoot();
-  el.hidden = false;
-  _visible = true;
-  trapFocus(el);
-  // D-DLLM-13：本会话压制非关键自动 Help L1
-  markCapabilityCardSuppressHelpL1();
-  trackStudioEvent("capability_card_show", {});
-  var primary = document.getElementById("studio-capability-start");
-  if (primary) {
-    try {
-      primary.focus();
-    } catch (_e) {}
-  }
-  return true;
+  // NAS · FE-NAS-01 / D-NAS-20：能力卡首启硬推永久关闭（dark 亦不恢复）
+  // master 侧 trapFocus/canShow 路径保留在 ensureRoot 旁路，供工程回归；默认可达永不展示。
+  return false;
 }
 
 /**
  * 首页 idle 后评估一次（busy 则延后）。
+ * NAS：永不调度展示。
  */
-export function maybeShowCapabilityCard(opts) {
-  opts = opts || {};
-  if (_scheduled && !opts.force) return;
-  if (isCapabilityCardSeen()) return;
-  _scheduled = true;
-  var delay = typeof opts.delayMs === "number" ? opts.delayMs : 480;
-  window.setTimeout(function () {
-    if (!canShow()) {
-      // busy：idle 后再试一次
-      if (isHelpL1Blocked() || (V2 && V2.state === "Importing")) {
-        _scheduled = false;
-        window.setTimeout(function () {
-          maybeShowCapabilityCard({ force: true, delayMs: 600 });
-        }, 1200);
-      }
-      return;
-    }
-    showCapabilityCard();
-  }, delay);
+export function maybeShowCapabilityCard(_opts) {
+  return;
 }
 
 /** 供 Help L1 仲裁：能力卡优先或本会话已压制 */

@@ -4,7 +4,9 @@
 |------|------|
 | **对应 PRD** | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) **v1.1.0** |
 | **实施** | [IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md](./IMPLEMENTATION-DESKTOP-LLM-SETUP-V1.md) |
-| **更新日期** | 2026-07-15 |
+| **更新日期** | 2026-07-22 |
+
+> **用户面 superseded**：默认发版验收以 [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) 为准。下列用例仅在 **dark**（`TRAVELOGUE_AI_SURFACE=1`）或工程回归时执行；能力卡 / H7 默认面不再验收「出现」。
 
 ## L0 Hardening（W1 · 2026-07-15）
 

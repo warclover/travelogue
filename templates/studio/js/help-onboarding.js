@@ -34,13 +34,10 @@ export var HELP_LS = {
 var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHelpL1";
 
 export var HELP_COPY = {
-  firstSuccessNext:
-    // FE-FST-06 / AC-SFC-11 · 勿承诺杂志级完成态 · L0（未配置）
-    "游记已做好，可预览与导出。当前为本机文案；配置写作引擎后可在预览升级。",
-  // PMX D2 · L1 就绪；与导入 stub 两维分离
-  firstSuccessNextReady:
-    "游记已做好，可预览与导出。AI 文案已就绪，可在预览重新生成。",
-  firstSuccessNextNeutral: "游记已做好，可预览与导出。",
+  // NAS · COPY-NAS-FS-01（精确串）；旧 L0/L1 分支串保留字段名但内容中性
+  firstSuccessNext: "游记已做好，可预览与导出长图。",
+  firstSuccessNextReady: "游记已做好，可预览与导出长图。",
+  firstSuccessNextNeutral: "游记已做好，可预览与导出长图。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
@@ -97,22 +94,22 @@ export var HELP_COPY = {
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",
   replayDoneToast:
-    "已重置。下次进入预览会再提示如何保存长图与本机文案说明；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；首页能力卡与轻状态也会再出现；下次导入等待时也会再显示小提示。",
+    "已重置。下次进入预览会再提示如何保存长图；再次打开精修时会再看到保存说明；切换分享平台、展开首尾装帧时也会再提示；下次导入等待时也会再显示小提示。",
   replayWaitTipsButton: "重播等待提示",
   replayWaitTipsDoneToast:
     "已重置等待提示。若正在生成，提示会马上出现；否则下次导入时再显示。",
   replayWaitTipsRemountToast: "已重新打开功能介绍与使用技巧。",
-  stubNarrateTip: "当前为本机文案（可随时在设置中升级）",
+  stubNarrateTip: "预览里点文字即可改；导出可选纯照片。",
   helpDeepLinkPending: "「分享图需更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
-  /** H0–H7 帮助抽屉条目（H0=CSC Happy Path；H6=封面封底；H7=AI 文案） */
+  /** H0–H6 帮助抽屉（NAS：H7 已移除 · D-NAS-20） */
   helpItems: [
     {
       id: "H0",
       title: "默认这一趟做了什么",
       body: [
-        "选好旅行相册后，本机会整理行程、挑片排成杂志页，并生成可预览的游记；一般不用改设置",
-        "不配置 AI 文案也可以导入、排版和导出适合发群的竖版长图",
+        "选好一次旅行的相册，即可在本机完成分章、排版，并导出适合发群的竖版长图。",
+        "预览里点文字即可改；导出可选纯照片，照片永远是主角。",
         "默认不会：打断你先确认章节、打开实验排版、把照片上传到云端",
         "可选常用设置：行程识别、场景分析、导入时复制源文件；实验选项在设置里默认折叠",
       ],
@@ -179,18 +176,6 @@ export var HELP_COPY = {
         "点下方缩略图，即可更换封面或封底",
         "选中的一张会标「当前」；也可点「在画面上看封面 / 封底」滚动画布",
         "封面/封底这页没有 ★ 精选与改拼图",
-      ],
-    },
-    {
-      id: "H7",
-      title: "要不要配置 AI 文案",
-      body: [
-        "不配置也可以导入、排版、预览和导出长图（本机文案）",
-        "想要杂志感文案：设置 → AI 文案 → 选服务商 → 点官方链接按其指引创建 Key → 粘贴回来 → 点「保存并测试」",
-        "通义千问请选对地域：中国站或国际站须与百炼控制台 Key 归属一致；高级可填自定义 https 地址",
-        "Key 只存在本机；调用费用由服务商账户结算；默认不上传原片",
-        "配好后不会自动重写全文：在预览「更多工具」里点「生成杂志感文案」",
-        "连接失败可自助：换 Key、改中国站/国际站、查余额/限流、检查网络后重试「保存并测试」",
       ],
     },
   ],
@@ -490,9 +475,7 @@ export function replayHelpHints() {
   clearRefineSaveSeen();
   clearPlatformPickSeen();
   clearBookendsPickSeen();
-  clearCapabilityCardSeen();
-  clearHomeStubBannerDismissed();
-  clearStubHintSeen();
+  // NAS · M9：默认面重播不得清能力卡 / stub seen（避免唤醒已休眠入口）
   clearWaitTipsDismissed();
   // 顺带清部分 legacy per-trip 脉冲键（非必须）
   try {
@@ -622,20 +605,9 @@ export function clearStubHintSeen() {
  * @param {(msg: string, opts?: object) => void} [showToast]
  * @returns {boolean}
  */
-export function maybeShowStubNarrateTip(showToast) {
-  if (isStubHintSeen()) return false;
-  if (isHelpL1Blocked()) return false;
-  if (isLongshotHelpActive()) return false;
-  // 长图关键 tip 未出示过：让位，稍后再试由调用方重试
-  if (_lsGet(HELP_LS.previewLongshotSeen) !== "1") return false;
-  markStubHintSeen();
-  trackHelpEvent("help_coach_show", { touchpoint: "T-CAP-05" });
-  if (typeof showToast === "function") {
-    showToast(HELP_COPY.stubNarrateTip || "当前为本机文案（可随时在设置中升级）", {
-      duration: 4200,
-    });
-  }
-  return true;
+export function maybeShowStubNarrateTip(_showToast) {
+  // NAS · FE-NAS-02 / D-NAS-20：stub tip 永久关闭
+  return false;
 }
 
 /**

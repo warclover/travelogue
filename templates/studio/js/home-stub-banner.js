@@ -1,7 +1,6 @@
 /**
  * L0 Hardening W2 · 首页轻状态条（T-CAP-06）
- * 未配置写作引擎时提示：基础能力可用；升级可选。
- * 与能力卡不同帧（D-DLLM-13 / D-L0G-06）。
+ * NAS：默认可达面永不展示（D-NAS-20）。
  */
 "use strict";
 
@@ -11,8 +10,8 @@ import {
   isHomeStubBannerDismissed,
   markHomeStubBannerDismissed,
 } from "./help-onboarding.js";
-import { openLlmSettings } from "./llm-settings.js";
 import { isCapabilityCardVisible } from "./capability-card.js";
+import { isAiSurfaceEnabled } from "./ai-surface.js";
 import { V2 } from "../homepage-v2/store.js";
 
 var ROOT_ID = "studio-home-stub-banner";
@@ -28,11 +27,11 @@ function ensureRoot() {
   el.className = "studio-home-stub-banner";
   el.hidden = true;
   el.setAttribute("role", "status");
+  // NAS：DOM 保留中性占位；升级条永不展示（D-NAS-20）
   el.innerHTML =
     '<div class="studio-home-stub-banner__inner">' +
-    '<span class="studio-home-stub-banner__badge">本机文案</span>' +
-    '<span class="studio-home-stub-banner__text">不配置 API 也可正常使用。</span>' +
-    '<button type="button" class="studio-home-stub-banner__link" id="studio-home-stub-upgrade">升级 AI 文案 →</button>' +
+    '<span class="studio-home-stub-banner__badge">本机</span>' +
+    '<span class="studio-home-stub-banner__text">选夹即可导入、预览与导出长图。</span>' +
     '<button type="button" class="studio-home-stub-banner__dismiss" id="studio-home-stub-dismiss" aria-label="关闭">×</button>' +
     "</div>";
   if (!document.getElementById("studio-home-stub-banner-style")) {
@@ -67,23 +66,6 @@ function wireOnce() {
   if (_wired) return;
   _wired = true;
   var el = ensureRoot();
-  var upgrade = el.querySelector("#studio-home-stub-upgrade");
-  if (upgrade) {
-    upgrade.addEventListener("click", function () {
-      trackStudioEvent("home_stub_banner_click", { action: "upgrade" });
-      openLlmSettings({
-        source: "home_banner",
-        onChange: function (st) {
-          if (st && typeof st.llmAvailable === "boolean") {
-            _llmAvailable = !!st.llmAvailable;
-            syncHomeStubBanner();
-          } else {
-            refreshLlmAndSync();
-          }
-        },
-      });
-    });
-  }
   var dismiss = el.querySelector("#studio-home-stub-dismiss");
   if (dismiss) {
     dismiss.addEventListener("click", function () {
@@ -134,45 +116,30 @@ function canShow() {
 }
 
 export function syncHomeStubBanner() {
-  wireOnce();
-  if (!canShow()) {
+  // NAS · FE-NAS-02 / D-NAS-20：stub banner 默认关闭（dark 亦不恢复）
+  if (!isAiSurfaceEnabled()) {
     hideBanner();
     return false;
   }
-  var el = ensureRoot();
-  el.hidden = false;
-  if (!_visible) {
-    _visible = true;
-    trackStudioEvent("home_stub_banner_show", {});
-  }
-  return true;
+  // 产品决议：升级条永久关闭；保留函数供测试
+  hideBanner();
+  return false;
 }
 
 function refreshLlmAndSync() {
-  fetch("/__travelogue/llm/status")
-    .then(function (r) {
-      return r.ok ? r.json() : null;
-    })
-    .then(function (st) {
-      _llmAvailable = !!(st && st.llmAvailable);
-      syncHomeStubBanner();
-    })
-    .catch(function () {
-      _llmAvailable = false;
-      syncHomeStubBanner();
-    });
+  // NAS · S3：默认面不拉 /llm/status
+  if (!isAiSurfaceEnabled()) {
+    hideBanner();
+    return;
+  }
+  hideBanner();
 }
 
 /**
  * 首页 idle 后评估（能力卡之后）。
  */
-export function maybeShowHomeStubBanner(opts) {
-  opts = opts || {};
-  wireOnce();
-  var delay = typeof opts.delayMs === "number" ? opts.delayMs : 700;
-  window.setTimeout(function () {
-    refreshLlmAndSync();
-  }, delay);
+export function maybeShowHomeStubBanner(_opts) {
+  hideBanner();
 }
 
 export function isHomeStubBannerVisible() {

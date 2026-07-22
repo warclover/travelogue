@@ -74,6 +74,10 @@ def _ensure_derivatives_for_export(trip_dir: Path) -> None:
 
 def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
+    from travelogue.web.ai_surface import (
+        ai_surface_disabled_body,
+        resolve_ai_surface_enabled,
+    )
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
 
     payload = handler._read_json_body()
@@ -86,6 +90,11 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
         return
 
     ctx = studio_ctx(handler)
+    # NAS · BE-NAS-02：硬门闩，先于 trip / Key / status / Job（有 Key 亦 403）
+    if not resolve_ai_surface_enabled(ctx.cfg):
+        handler._json_response(403, ai_surface_disabled_body())
+        return
+
     trip_dir = resolve_trip_dir(ctx, trip_id)
     if trip_dir is None:
         handler._json_response(404, {"ok": False, "error": "trip not found"})

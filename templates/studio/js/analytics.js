@@ -51,6 +51,8 @@ const ALLOWED = new Set([
   "llm_provider_change",
   "llm_switch_confirm",
   "llm_narrate_click",
+  // NAS · 会话首次门控状态（PRD §7）
+  "ai_surface_gate",
   // Wait Tips V1
   "wait_tips_show",
   "wait_tips_auto_advance",

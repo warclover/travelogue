@@ -22,6 +22,8 @@ from travelogue.web.studio_handlers import llm_settings_handlers as h
 @pytest.fixture()
 def user_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
+    # NAS · dark ON：本模块测写作引擎写/ping；默认面会 403
+    monkeypatch.setenv("TRAVELOGUE_AI_SURFACE", "1")
     clear_user_llm_secrets()
     reset_config_cache()
     return tmp_path

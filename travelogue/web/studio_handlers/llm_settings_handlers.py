@@ -138,6 +138,19 @@ def handle_llm_status(handler: StudioHandlerProtocol) -> None:
 
 
 def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
+    from travelogue.web.ai_surface import (
+        ai_surface_disabled_body,
+        resolve_ai_surface_enabled,
+    )
+    from travelogue.web.studio_handlers.common import studio_ctx
+
+    # NAS · BE-NAS-03：settings 写/删硬拒（S7）
+    if handler.command in ("POST", "DELETE") and not resolve_ai_surface_enabled(
+        studio_ctx(handler).cfg
+    ):
+        handler._json_response(403, ai_surface_disabled_body())
+        return
+
     if handler.command == "DELETE":
         clear_user_llm_secrets()
         reset_config_cache()
@@ -236,6 +249,16 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
 def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
     from travelogue.config.runtime import config_override
     from travelogue.llm.client import llm_ping
+    from travelogue.web.ai_surface import (
+        ai_surface_disabled_body,
+        resolve_ai_surface_enabled,
+    )
+    from travelogue.web.studio_handlers.common import studio_ctx
+
+    # NAS · BE-NAS-03 / S7：ping 亦硬拒（防 last_ping_ok 回写）
+    if not resolve_ai_surface_enabled(studio_ctx(handler).cfg):
+        handler._json_response(403, ai_surface_disabled_body())
+        return
 
     payload = handler._read_json_body() or {}
     provider = str(payload.get("provider") or "").strip().lower() or None

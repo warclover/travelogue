@@ -168,36 +168,18 @@ def test_settings_accordion_zones_ai_modal_and_seg(studio_server) -> None:
         assert state["appearanceOpen"] is False
         assert state["storageOpen"] is False
         assert "行程" in state["metaImport"]
-        assert state["metaAi"]
-        assert state["hasEntry"] is True
-
-        # AI zone → 打开写作引擎 Modal（失败屏仍直接 Modal；此处测设置内发现路径）
-        page.locator("#v2-settings-zone-ai > summary").click()
-        page.wait_for_function(
-            "() => { const z = document.getElementById('v2-settings-zone-ai'); return z && z.open; }",
-            timeout=5_000,
+        # NAS · AC-NAS-02：默认面隐藏 AI zone / 写作引擎入口（dark 另测）
+        ai_hidden = page.evaluate(
+            """() => {
+              const z = document.getElementById('v2-settings-zone-ai');
+              return !z || !!z.hidden;
+            }"""
         )
-        page.locator("#studio-llm-settings-entry").click()
-        page.wait_for_function(
-            "() => { const r = document.getElementById('studio-llm-settings-root'); return r && !r.hidden; }",
-            timeout=10_000,
-        )
-        assert page.locator("#studio-llm-settings-title").inner_text()
-        page.locator(".studio-llm-settings__close").click()
-        page.wait_for_function(
-            "() => { const r = document.getElementById('studio-llm-settings-root'); return !r || r.hidden; }",
-            timeout=5_000,
-        )
-
-        # Modal 关闭后设置应仍开（点击 Modal 不得关掉 Popover）
-        assert page.evaluate(
-            "() => { const p = document.getElementById('v2-settings-popover'); return p && !p.hidden; }"
-        )
+        assert ai_hidden is True
+        assert state["hasEntry"] is False or ai_hidden is True
         page.evaluate(
             """() => {
-              const ai = document.getElementById('v2-settings-zone-ai');
               const imp = document.getElementById('v2-settings-zone-import');
-              if (ai) ai.open = false;
               if (imp) imp.open = true;
             }"""
         )

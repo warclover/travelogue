@@ -1,4 +1,4 @@
-"""Desktop LLM Setup V1 · W2 能力卡 / H7 静态门禁。"""
+"""Desktop LLM Setup V1 · W2 能力卡 / H7 静态门禁（NAS 默认面翻转 · FE-NAS-14）。"""
 
 from __future__ import annotations
 
@@ -9,20 +9,28 @@ HELP_JS = STUDIO / "js" / "help-onboarding.js"
 CAP_JS = STUDIO / "js" / "capability-card.js"
 BOOT = STUDIO / "homepage-v2" / "bootstrap.js"
 LLM_JS = STUDIO / "js" / "llm-settings.js"
+DARK_COPY_JS = STUDIO / "js" / "ai-surface-dark-copy.js"
 
 
 def test_capability_card_contract() -> None:
+    """NAS · AC-NAS-01：默认可达面无能力卡 show 路径；DOM/CSS 底座可留。"""
     cap = CAP_JS.read_text(encoding="utf-8")
     help_js = HELP_JS.read_text(encoding="utf-8")
     boot = BOOT.read_text(encoding="utf-8")
     settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    dark = DARK_COPY_JS.read_text(encoding="utf-8")
+
     assert "travelogue.desktop.capabilityCard.v1" in help_js
-    # FTUE v1.1 §4.2 supersedes L0G capability-card copy
+    # 中性标题/主 CTA 可留在 DOM 工厂；AI 升级串不得出现在默认可达面
     assert "照片留在本机，也能做成可发的游记" in cap
     assert "开始制作" in cap
-    assert "以后再升级 AI 文案" in cap
+    assert "以后再升级 AI 文案" not in cap
     assert "开始导入" not in cap
+    # NAS：show / maybeShow 为永久 no-op（dark 亦不恢复 · D-NAS-20）
+    assert "export function maybeShowCapabilityCard" in cap
+    assert "export function showCapabilityCard" in cap
+    assert "return false;" in cap.split("export function showCapabilityCard", 1)[1][:200]
     assert "maybeShowCapabilityCard" in boot
     assert "markCapabilityCardSuppressHelpL1" in cap
     assert "shouldDeferHomeHelpL1ForCapabilityCard" in help_js
@@ -36,26 +44,47 @@ def test_capability_card_contract() -> None:
     assert ">设置<" in home
     assert 'aria-label="设置"' in home
     assert "导入与分析" in home
+    # AI zone 默认 hidden + nas-allow；禁词「配置写作引擎」不在默认 HTML
     assert 'id="v2-settings-zone-ai"' in home
+    assert 'data-nas-allow="1"' in home
+    assert "hidden" in home.split('id="v2-settings-zone-ai"', 1)[1][:120]
     assert 'id="studio-llm-settings-entry"' in home
-    assert "配置写作引擎" in home
+    assert "配置写作引擎" not in home
+    # ai_surface_dark：写作引擎 CTA 文案冻结在 dark-copy
+    assert "配置写作引擎" in dark
+    assert "settingsConfigure" in dark
+    # UI Detail Wave5 · styles live in CSS, not JS-injected forest palette
+    assert "studio-capability-card-style" not in cap
+    assert "#2f6b55" not in cap
+    home_css = (STUDIO / "studio-home-v2.css").read_text(encoding="utf-8")
+    assert "capability-card.css" in home_css
+    cap_css = (STUDIO / "capability-card.css").read_text(encoding="utf-8")
+    assert "--studio-panel-ink" in cap_css
+    assert "--studio-panel-title-size" in cap_css
 
 
 def test_help_h7_writing_engine_and_replay() -> None:
+    """NAS · AC-NAS-03/16：默认帮助无 H7；重播不唤醒能力卡/stub。"""
     help_js = HELP_JS.read_text(encoding="utf-8")
     llm = LLM_JS.read_text(encoding="utf-8")
-    assert 'id: "H7"' in help_js
-    assert "要不要配置 AI 文案" in help_js
-    assert "不配置也可以导入" in help_js
-    assert "点官方链接按其指引创建 Key" in help_js
-    assert "保存并测试" in help_js
-    assert "中国站或国际站" in help_js
-    assert "连接失败可自助" in help_js
-    assert "clearCapabilityCardSeen" in help_js
-    assert "首页能力卡与轻状态也会再出现" in help_js
-    assert "导入等待时也会再显示小提示" in help_js
-    assert "clearStubHintSeen" in help_js
+    assert 'id: "H7"' not in help_js
+    assert "要不要配置 AI 文案" not in help_js
+    assert "不配置也可以导入" not in help_js
+    assert "H7 已移除" in help_js or "NAS" in help_js
+    # 重播不得 clear 能力卡 / stub seen（M9）
+    replay = help_js.split("export function replayHelpHints", 1)[1].split(
+        "export function", 1
+    )[0]
+    assert "clearCapabilityCardSeen" not in replay
+    assert "clearStubHintSeen" not in replay
+    assert "clearHomeStubBannerDismissed" not in replay
+    # 底座仍导出 clear*（供 dark / 测试），但默认 replay 不用
+    assert "export function clearCapabilityCardSeen" in help_js
+    assert "export function clearStubHintSeen" in help_js
+    # ai_surface_dark：llm modal 仍可深链 H7（门控后才可达）
     assert 'itemId: "H7"' in llm
+    assert "isAiSurfaceEnabled" in llm
+    assert "if (!isAiSurfaceEnabled()) return" in llm
 
 
 def test_llm_key_official_links_simplified() -> None:
@@ -112,12 +141,25 @@ def test_wea_w2_model_switch_confirm_markers() -> None:
 
 
 def test_mf06_llm_expect_visible_when_available() -> None:
+    """NAS · AC-NAS-05：默认面不渲染 llm-expect；dark 文案在 ai-surface-dark-copy。"""
     sheet = (STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
     init = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    dark = DARK_COPY_JS.read_text(encoding="utf-8")
+
+    assert "bookCopyRefreshHtml" in sheet
+    assert "isAiSurfaceEnabled" in sheet
+    assert 'if (!isAiSurfaceEnabled()) return ""' in sheet
+    # 旧默认串已迁出默认可达面
+    assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
+    assert "配置写作引擎" not in sheet
+    # ai_surface_dark：expect / setup 冻结串
     assert "preview-sheet__llm-expect" in sheet
-    assert "本机文案 · 点此生成杂志感（不会自动重写）" in sheet
-    assert "llmExpect.hidden = false" in init
-    assert "if (llmSetup) llmSetup.hidden = !!ok;" in init
+    assert "DARK_COPY.sheetLlmExpect" in sheet or "sheetLlmExpect" in dark
+    assert "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。" in dark
+    assert "当前为本机文案 · 配置写作引擎后可升级" in dark
+    # 默认面 early-return，不跑 llm 状态机
+    assert "if (!isAiSurfaceEnabled())" in init
+    assert 'copy_branch: "nas_hidden"' in init
 
 
 def test_llm_settings_shows_trips_dir() -> None:

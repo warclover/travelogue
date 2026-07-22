@@ -72,6 +72,8 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "llm_settings_clear",
         "llm_ping",
         "llm_narrate_click",
+        # NAS · PRD-NO-AI-SURFACE §7
+        "ai_surface_gate",
         "capability_card_show",
         "capability_card_cta",
         "bench_resume_click",

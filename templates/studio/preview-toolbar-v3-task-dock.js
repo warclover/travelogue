@@ -6,6 +6,8 @@
 import { HELP_COPY, trackHelpEvent } from "./js/help-onboarding.js";
 import { openHelpDrawer } from "./js/help-drawer.js";
 import { trackStudioEvent } from "./js/analytics.js";
+import { isAiSurfaceEnabled } from "./js/ai-surface.js";
+import { DARK_COPY } from "./js/ai-surface-dark-copy.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -483,7 +485,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =
-      opts.subtitle || "请浏览各章顺序后确认，将继续生成文案并排版";
+      opts.subtitle || "请浏览各章顺序后确认，将继续排版成册";
     textWrap.appendChild(sub);
 
     var actions = document.createElement("div");
@@ -656,6 +658,8 @@ export function mountPreviewTaskDock(root, hooks) {
   /** FE-SFI-05 · 文案刷新提示（高于 longshotStale；导出/成功面外层不进此栈） */
   function showCopyRefresh(opts) {
     opts = opts || {};
+    // NAS · FE-NAS-09：默认面不渲染 copyRefresh
+    if (!isAiSurfaceEnabled()) return;
     clearTimers();
     dock.hidden = false;
     dock.className = "preview-task-dock preview-task-dock--info";
@@ -669,7 +673,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "AI 文案已就绪，可为这本重新生成文案";
+    main.textContent = opts.title || DARK_COPY.dockCopyRefreshTitle;
     textWrap.appendChild(main);
 
     var actions = document.createElement("div");
@@ -683,7 +687,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var refreshBtn = document.createElement("button");
       refreshBtn.type = "button";
       refreshBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
-      refreshBtn.textContent = "重新生成文案";
+      refreshBtn.textContent = DARK_COPY.dockCopyRefreshBtn;
       refreshBtn.addEventListener("click", function () {
         trackStudioEvent("copy_refresh_clicked", {});
         hooks.onCopyRefresh();

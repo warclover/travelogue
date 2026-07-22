@@ -6,8 +6,9 @@
 | **实施** | [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) |
 | **评审** | [acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md](./acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md) |
 | **线框** | [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) |
-| **更新日期** | 2026-07-17 |
+| **更新日期** | 2026-07-22 |
 
+> **用户面 superseded**：默认发版以 [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) 为准；本表 **仅 dark ON** 下跑用户面步骤。工程单测（coerce / ping isolation）不受影响。  
 > **就绪定义（MF-WEA-01）**：徽章「已就绪」**当且仅当** `last_ping_ok === true`（且已配置有效 provider+Key）。仅保存未 ping、或 ping 失败 → 不得显示「已就绪」。
 
 ---

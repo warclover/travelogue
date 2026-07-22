@@ -189,7 +189,11 @@
 
 | 文档 | 说明 |
 |------|------|
-| [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** |
+| [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) | **当前版无 AI 面 NAS V1**（藏 AI · 硬拒绝 · dark 回滚 · **分期/解冻指针**）**v0.2.1 Conditional Go** · **用户面现行合同** |
+| [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) | NAS 实施（FE-NAS-00～14 + BE-NAS-01～03 P0）**v0.2.1** · S1–S10 · ping 硬拒 · 可开 W1 |
+| [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) | NAS 验收 AC-NAS-01～17 · OUT-01～05 · 翻转清单 · dark 包 |
+| [acceptance-records/no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) | NAS 跨职能评审 · **Conditional Go** · MF-NAS-01～10 |
+| [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** · 用户面由 NAS supersede；工程栈仍有效 |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **写作引擎 API 配置加固 V1**（服务商隔离 · 保存并测试 · 通义地域 · 可行动错误）**v1.1 · W0–W2 编码 ✅ · 实机狗粮待填** |
 | [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 实施清单（W0–W2 编码 ✅ · 实机狗粮待填） |
 | [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 验收 AC-WEA-* |
@@ -211,7 +215,7 @@
 
 **前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。  
 **代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
-**阅读顺序**：先读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** → 若处理无 Key 死循环/首启预期则读 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)** → 若加固写作引擎配置面则读 **[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)** → **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** → [ADR-018](./adr/018-desktop-installer-layout.md) / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → IMPLEMENTATION / ACCEPTANCE；关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-WEBSITE-MARKETING.md](./PRD-WEBSITE-MARKETING.md) `/install`。
+**阅读顺序（当前版本用户面）**：先读 **[PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md)**（默认无 AI 面）→ 工程回滚/密钥再读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** / **[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)** / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → 分发读 **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** / [ADR-018](./adr/018-desktop-installer-layout.md)。历史：无 Key 死循环见 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)**。关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md)。
 
 ---
 
@@ -631,6 +635,12 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-22 | NAS：**IMPLEMENTATION v0.2.1** 回写 S1–S10 · ping 硬拒决议 · PR-A/B/C/D 切片（未改业务代码） |
+| 2026-07-22 | NAS：**PRD v0.2.1** 补分期表 · §5.5 冻结清单 · §14 AI-Return 解冻合同 · OUT-01～05（未改业务代码） |
+| 2026-07-22 | NAS：**PRD v0.2.0** MF 已回写；[ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) 初稿；**可开 W1 编码** |
+| 2026-07-22 | NAS 五席评审：[no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) · **Conditional Go** |
+| 2026-07-22 | NAS：**PRD v0.1.1** 回写 M1–M12 触点；新增 [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) 前端任务卡（未改业务代码） |
+| 2026-07-22 | 新增 [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)（当前版无 AI 面 NAS · 隐藏写作引擎/AI 文案 · 主线打磨 · dark switch 回滚）**v0.1 Draft**；桌面节阅读顺序改以 NAS 为用户面现行合同 |
 | 2026-07-16 | [PRD-ASSERTION-HARDENING-V1](./PRD-ASSERTION-HARDENING-V1.md) **Done**（M0–M3）；结案 [ash-closeout-2026-07-16.md](./acceptance-records/ash-closeout-2026-07-16.md) |
 | 2026-07-16 | 新增 [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md)（断言硬化 · 生产零 runtime assert · e2e Playwright expect · M0–M3） |
 | 2026-07-16 | 开工 [PRD-ARCH-ALGO-DEEPENING-V1](./PRD-ARCH-ALGO-DEEPENING-V1.md) 分支 `arch/algo-deepening-v1`（M1 基线）；评审纪要 [aad-prd-review-2026-07-15.md](./acceptance-records/aad-prd-review-2026-07-15.md) |

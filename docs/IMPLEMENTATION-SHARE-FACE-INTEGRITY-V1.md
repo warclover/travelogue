@@ -106,7 +106,7 @@
 
 | ID | 任务 | 建议锚点 | 估时 | AC | 状态 |
 |----|------|----------|------|-----|------|
-| **FE-SFI-04** | 替换「生成杂志感文案」→「重新生成文案」；入口提到整本信息区；确认句按 §4；去掉 LLM/hook 工程词 | `preview-toolbar-v3-sheet.js` · `core.js` | 0.5d | 05 | ✅ |
+| **FE-SFI-04** | 替换「生成杂志感文案」→「重新生成文案」；入口提到整本信息区；确认句按 §4；去掉 LLM/hook 工程词 | `preview-toolbar-v3-sheet.js` · `core.js` | 0.5d | 05 | ✅ · **默认用户面由 [NAS](./PRD-NO-AI-SURFACE-V1.md) supersede（隐藏入口；dark 可恢复）** |
 | **FE-SFI-05** | 提示条并入 task dock；排序 copyRefresh > longshotStale；册级 dismiss；导出/成功面不出 | `preview-toolbar-v3-task-dock.js` · `core.js` · `init-v3.js` | 0.5d | 05 | ✅ |
 | **BE-SFI-06** | 刷新：章名走 CN 规则链；图说/开头一句走 Copy sparse；`origin=user` 永不覆盖；全缓冲一次落盘 | `llm_narrate.py` · `chapter_titles.py` · `studio_narrate.py` | 1.0d | 05 | ✅ CN + `scope=frame` 锁定；跳过附录章名 |
 | **FE-SFI-06** | E4 落地后恢复设置「已就绪」文案（结束间隙期） | settings | 0.1d | 05 | ✅ |

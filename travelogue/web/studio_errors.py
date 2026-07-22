@@ -29,11 +29,13 @@ USER_MESSAGES: dict[str, str] = {
     "E_LNG_PLAYWRIGHT": "高清长图组件不可用，将尝试兼容模式",
     "E_LNG_CLIENT_FALLBACK": "正在使用兼容模式保存长图…",
     "E_STUDIO_SHUTDOWN": "Studio 正在退出",
-    # BE-09 / COPY-L0G-09
-    "E_LLM_AUTH": "可以继续生成本机游记；配置写作引擎后可在预览中升级杂志感文案。",
+    # NAS · 默认面中性（暗门恢复后仍可走 E_LLM_* 配置面专用句）
+    "E_AI_SURFACE_DISABLED": "当前版本不可用",
+    # BE-09 / COPY-L0G-09 · 默认面去配置引导（NAS FE-NAS-07）
+    "E_LLM_AUTH": "检查文件夹是否仍可访问、照片是否足够，然后点「重试」或换文件夹再试。",
     "E_LLM_NETWORK": "文案生成时网络中断，请重试",
-    "E_LLM_PROVIDER": "请选择支持的写作引擎服务商",
-    "E_LLM_PING": "连接测试失败，请检查 Key 或稍后重试",
+    "E_LLM_PROVIDER": "当前不可用，请稍后重试",
+    "E_LLM_PING": "连接测试失败，请稍后重试",
     "E_LLM_STUB": "当前为本机文案模式",
     "E_LLM_ENDPOINT": "当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。",
     "E_LLM_MODEL": "模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。",
@@ -60,6 +62,7 @@ USER_MESSAGES: dict[str, str] = {
 # Codes with a fixed user-facing line — do not append raw exception text.
 _PLAIN_ONLY_CODES = frozenset(
     {
+        "E_AI_SURFACE_DISABLED",
         "E_LLM_NETWORK",
         "E_LLM_AUTH",
         "E_LLM_PROVIDER",

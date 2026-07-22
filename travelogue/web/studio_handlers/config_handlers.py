@@ -27,6 +27,7 @@ def studio_capabilities(*, client_host: str = "") -> dict[str, bool]:
     }
 
 def handle_config(handler: StudioHandlerProtocol) -> None:
+    from travelogue.web.ai_surface import resolve_ai_surface_enabled
     from travelogue.web.studio_narrate import studio_llm_status
     from travelogue.web.studio_stages import pipeline_estimate_tiers
 
@@ -54,6 +55,7 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
         cfg = load_config(target if target.is_file() else None)
         body = {
             "ok": True,
+            "aiSurfaceEnabled": resolve_ai_surface_enabled(cfg),
             **studio_config_expose(cfg),
             **studio_llm_status(cfg=cfg),
             "capabilities": studio_capabilities(
@@ -73,6 +75,7 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
         200,
         {
             "ok": True,
+            "aiSurfaceEnabled": resolve_ai_surface_enabled(cfg),
             **studio_config_expose(cfg),
             **status,
             "pipelineEstimates": pipeline_estimate_tiers(),

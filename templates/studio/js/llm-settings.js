@@ -1,10 +1,14 @@
 /**
- * Desktop LLM Setup · 写作引擎 / AI 文案设置（首页+预览共用）
+ * Desktop LLM Setup · 写作引擎设置（首页+预览共用）
  * WEA W1/W2: 保存并测试 · 地域 · 模型 · 切换确认 · 埋点 · 脚注
  * MF-02: 单一组件；预览内 Modal，不跳首页。
+ *
+ * nas-allow: dark-only writing-engine settings UI (NAS D-NAS-21)
+ * 默认面由 isAiSurfaceEnabled() 门控；勿删本文件过禁词审计。
  */
 import { studioAuthHeaders } from "./http.js";
 import { trackStudioEvent } from "./analytics.js";
+import { isAiSurfaceEnabled } from "./ai-surface.js";
 
 var ROOT_ID = "studio-llm-settings-root";
 var _open = false;
@@ -797,6 +801,8 @@ function wire(root) {
 
 export function openLlmSettings(opts) {
   opts = opts || {};
+  // NAS · FE-NAS-11：默认面所有 source 早退（含 deeplink / fail / card）
+  if (!isAiSurfaceEnabled()) return;
   _source = opts.source || "settings";
   _onChange = opts.onChange || null;
   var root = ensureRoot();
@@ -828,6 +834,8 @@ export function closeLlmSettings() {
 }
 
 export function initLlmSettingsEntry() {
+  // NAS · 默认面不绑入口、不吃 deeplink
+  if (!isAiSurfaceEnabled()) return;
   var entry = document.getElementById("studio-llm-settings-entry");
   if (entry && entry.dataset.llmBound !== "1") {
     entry.dataset.llmBound = "1";

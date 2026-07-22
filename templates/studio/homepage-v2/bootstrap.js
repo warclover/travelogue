@@ -35,6 +35,11 @@ import {
 import { initLlmSettingsEntry } from "../js/llm-settings.js";
 import { maybeShowCapabilityCard } from "../js/capability-card.js";
 import { maybeShowHomeStubBanner, syncHomeStubBanner } from "../js/home-stub-banner.js";
+import {
+  ensureAiSurfaceHydrated,
+  isAiSurfaceEnabled,
+} from "../js/ai-surface.js";
+import { syncAiSettingsZone } from "./settings-panel.js";
 
 function initHelpEntry() {
   if (document.getElementById("studio-help-open-home")) return;
@@ -214,10 +219,16 @@ function init() {
   initErrorPipeline();
   initThemeSettings();
   initSettingsPanel();
-  initLlmSettingsEntry();
   initAdvancedOptionsPanel();
   initHelpEntry();
   applyPreviewDeepLink();
+  // NAS · 先水合门控，再决定是否挂 LLM 设置入口（防闪入）
+  ensureAiSurfaceHydrated().then(function () {
+    syncAiSettingsZone();
+    if (isAiSurfaceEnabled()) {
+      initLlmSettingsEntry();
+    }
+  });
   if (harnessEnabled()) {
     harnessPreseedSession();
     harnessInstallBentoPreviewMock();

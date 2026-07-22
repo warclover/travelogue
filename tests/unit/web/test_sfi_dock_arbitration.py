@@ -22,9 +22,24 @@ def test_copy_refresh_ordered_before_longshot_stale() -> None:
 
 
 def test_dock_exposes_show_copy_refresh() -> None:
+    """NAS · AC-NAS-06：dock 仍导出 showCopyRefresh，但默认早退；文案在 dark-copy。"""
     dock = DOCK.read_text(encoding="utf-8")
+    dark = (
+        ROOT / "templates" / "studio" / "js" / "ai-surface-dark-copy.js"
+    ).read_text(encoding="utf-8")
     assert "showCopyRefresh" in dock
-    assert "重新生成文案" in dock or "AI 文案已就绪" in dock
+    assert "showCopyRefresh: showCopyRefresh" in dock
+    assert "isAiSurfaceEnabled" in dock
+    show_fn = dock.split("function showCopyRefresh", 1)[1][:400]
+    assert "if (!isAiSurfaceEnabled()) return" in show_fn
+    assert "DARK_COPY.dockCopyRefreshTitle" in dock
+    assert "DARK_COPY.dockCopyRefreshBtn" in dock
+    # 默认可达字面量不得出现禁词（经 DARK_COPY 属性引用）
+    assert "重新生成文案" not in dock
+    assert "AI 文案已就绪" not in dock
+    assert "AI 文案已就绪" in dark
+    assert "重新生成文案" in dark
+    assert "dockCopyRefreshBtn" in dark
 
 
 def test_no_parallel_magazine_copy_cta() -> None:

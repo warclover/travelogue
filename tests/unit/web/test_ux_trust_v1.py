@@ -189,7 +189,9 @@ def test_homepage_p2_denoise_no_user_facing_bento():
     assert "Bento" not in joined
     assert "Bento" not in aria_labels
     assert 'id="v2-settings-desc"' in html
-    assert "导入 · 外观 · AI 文案（可选）" in html
+    # NAS · AC-NAS-02 / COPY-NAS-SET-DESC：总述去 AI 文案（可选）
+    assert "导入偏好、存储位置与界面选项。改动会立即保存。" in html
+    assert "AI 文案（可选）" not in html
     assert 'id="v2-cta"' in html
     assert "开始制作我的游记" in html
     assert "你的游记画册" in _read("templates/studio/homepage-v2/shelf.js")

@@ -18,6 +18,8 @@ import {
   toolbarConfirm,
   tripApiBase,
 } from "./shell.js";
+import { isAiSurfaceEnabled } from "../js/ai-surface.js";
+import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 
 var DRAWER_FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex="0"]';
@@ -417,8 +419,17 @@ export function initPreviewDrawers(root, tripId) {
       "</label>" +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
-      "</details>" +
-      '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">按新感觉重写这段</button>';
+      "</details>";
+
+    // NAS · 运行时门控（勿在 init 时固化；须等 ensureAiSurfaceHydrated）
+    function pageEditNarrateHtml() {
+      if (!isAiSurfaceEnabled()) return "";
+      return (
+        '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">' +
+        DARK_COPY.drawerNarrate +
+        "</button>"
+      );
+    }
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -679,9 +690,9 @@ export function initPreviewDrawers(root, tripId) {
         // overlay openEdit：整本+章字段；sheet embed 按 mode 分流
         var editHtml =
           mode === "edit-page"
-            ? pageEditTpl
+            ? pageEditTpl + pageEditNarrateHtml()
             : useOverlay
-              ? bookEditTpl + pageEditTpl
+              ? bookEditTpl + pageEditTpl + pageEditNarrateHtml()
               : bookEditTpl;
         targetBody.innerHTML = editHtml;
         var titleInput = targetBody.querySelector(".preview-drawer__title-input");
@@ -836,11 +847,7 @@ export function initPreviewDrawers(root, tripId) {
               if (!opts.skipToast) {
                 var savedIntentPayload = readCopyIntentPayload();
                 var hasIntent = savedIntentPayload && savedIntentPayload.clear !== true;
-                showToolbarToast(
-                  (hasPageFields && (anchors.length > 0 || hasIntent))
-                    ? "编辑已保存。可在「精修」中重新生成文案以写入锚点与点缀。"
-                    : "编辑已保存"
-                );
+                showToolbarToast("编辑已保存。");
               }
               if (drawerEmbedTarget) {
                 _markSheetEditBaseline(root, targetBody);
@@ -915,13 +922,13 @@ export function initPreviewDrawers(root, tripId) {
             if (btn.disabled) return;
             // D-REF-13 · 二次确认；确认后 busy，完成前不可连点
             toolbarConfirm({
-              title: "按新感觉重写这段",
-              body: "将按当前词与本章感觉重新生成文案，可能覆盖未锁定的内容。继续？",
+              title: DARK_COPY.drawerNarrateConfirmTitle,
+              body: DARK_COPY.drawerNarrateConfirmBody,
               confirmText: "重写",
             }).then(function (ok) {
               if (!ok) return;
               btn.disabled = true;
-              btn.dataset.labelIdle = "按新感觉重写这段";
+              btn.dataset.labelIdle = DARK_COPY.drawerNarrate;
               btn.textContent = "正在重写…";
               return persistEditDrawer(btn, { skipToast: true }).then(function (saved) {
                 if (!saved) {
@@ -931,7 +938,7 @@ export function initPreviewDrawers(root, tripId) {
                 }
                 return _startLlmNarrate(root, tripId, btn, {
                   skipConfirm: true,
-                  busyHint: "正在按新感觉重写这段…",
+                  busyHint: DARK_COPY.drawerNarrateBusy,
                 });
               });
             });
