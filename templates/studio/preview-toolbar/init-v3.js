@@ -133,6 +133,8 @@ var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现�
 
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
+  // NAS · 尽早水合，供 Sheet/抽屉运行时门控（AC-NAS-09）
+  ensureAiSurfaceHydrated();
 
   var dock = root.querySelector(".preview-toolbar__dock");
   var helpBtn = createHelpOpenButton({
@@ -418,115 +420,129 @@ export function initToolbarV3(root, tripId) {
             "先在正文点 ★";
         }
       });
-      // NAS · FE-NAS-09：默认面不跑 llm 状态机 / stub tip / Dock 刷新提示
+      // NAS · FE-NAS-09/13：等门控水合后再决定是否挂 llm 状态机
       root._copyRefreshHint = false;
-      if (!isAiSurfaceEnabled()) {
-        try {
-          trackStudioEvent("refine_copy_branch", {
-            copy_branch: "nas_hidden",
-            trip_id: tripId || null,
-          });
-        } catch (_eNas) {}
-        return;
-      }
-      var llmBtn = panel.querySelector('[data-action="llm"]');
-      var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
-      var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
-      var llmExpect = panel.querySelector(".preview-sheet__llm-expect");
-      var _wantStubTip = false;
-      var _stubTipTries = 0;
-      var _stubTipTimer = null;
-      function scheduleStubNarrateTip() {
-        if (!_wantStubTip || _stubTipTries > 10) return;
-        if (_stubTipTimer) return;
-        _stubTipTries += 1;
-        _stubTipTimer = window.setTimeout(function () {
-          _stubTipTimer = null;
-          if (!_wantStubTip) return;
-          if (maybeShowStubNarrateTip(showToolbarToast)) return;
-          scheduleStubNarrateTip();
-        }, _stubTipTries === 1 ? 1800 : 1600);
-      }
-      function setLlmAvailable(ok) {
-        if (llmBtn) {
-          llmBtn.disabled = !ok;
-          llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
-        }
-        if (llmHint) llmHint.hidden = !!ok;
-        if (llmSetup) llmSetup.hidden = !!ok;
-        if (llmExpect) {
-          llmExpect.hidden = !ok;
-          if (ok) {
-            llmExpect.textContent = DARK_COPY.llmExpectReady;
-          } else {
-            llmExpect.textContent = DARK_COPY.llmExpectStub;
-          }
-        }
-        _wantStubTip = !ok;
-        if (!ok) scheduleStubNarrateTip();
-        root._copyRefreshHint = !!ok;
-        try {
-          var dismissKey = "travelogue.copyRefreshDismiss." + tripId;
-          root._copyRefreshDismissed = localStorage.getItem(dismissKey) === "1";
-        } catch (_e) {
-          root._copyRefreshDismissed = false;
-        }
-        if (typeof refreshTaskDockState === "function") {
-          refreshTaskDockState(root);
-        }
-        try {
-          var branch = ok ? "l1_ready" : "l0_degraded";
-          if (root._pmxCopyBranch !== branch) {
-            root._pmxCopyBranch = branch;
+      ensureAiSurfaceHydrated().then(function () {
+        if (!isAiSurfaceEnabled()) {
+          try {
             trackStudioEvent("refine_copy_branch", {
-              copy_branch: branch,
+              copy_branch: "nas_hidden",
               trip_id: tripId || null,
             });
+          } catch (_eNas) {}
+          return;
+        }
+        var llmBtn = panel.querySelector('[data-action="llm"]');
+        var llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
+        var llmSetup = panel.querySelector(".preview-sheet__llm-setup");
+        var llmExpect = panel.querySelector(".preview-sheet__llm-expect");
+        var _wantStubTip = false;
+        var _stubTipTries = 0;
+        var _stubTipTimer = null;
+        function scheduleStubNarrateTip() {
+          if (!_wantStubTip || _stubTipTries > 10) return;
+          if (_stubTipTimer) return;
+          _stubTipTries += 1;
+          _stubTipTimer = window.setTimeout(function () {
+            _stubTipTimer = null;
+            if (!_wantStubTip) return;
+            if (maybeShowStubNarrateTip(showToolbarToast)) return;
+            scheduleStubNarrateTip();
+          }, _stubTipTries === 1 ? 1800 : 1600);
+        }
+        function setLlmAvailable(ok) {
+          if (!isAiSurfaceEnabled()) {
+            root._copyRefreshHint = false;
+            return;
           }
-        } catch (_eTrack) {}
-      }
-      setLlmAvailable(false);
-      function refreshLlmStatus() {
-        fetch("/__travelogue/llm/status")
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (cfg) {
-            setLlmAvailable(!!(cfg && cfg.llmAvailable));
-          })
-          .catch(function () {
-            setLlmAvailable(false);
+          llmBtn = panel.querySelector('[data-action="llm"]');
+          llmHint = panel.querySelector(".preview-sheet__llm-unavailable");
+          llmSetup = panel.querySelector(".preview-sheet__llm-setup");
+          llmExpect = panel.querySelector(".preview-sheet__llm-expect");
+          if (llmBtn) {
+            llmBtn.disabled = !ok;
+            llmBtn.setAttribute("aria-disabled", ok ? "false" : "true");
+          }
+          if (llmHint) llmHint.hidden = !!ok;
+          if (llmSetup) llmSetup.hidden = !!ok;
+          if (llmExpect) {
+            llmExpect.hidden = !ok;
+            if (ok) {
+              llmExpect.textContent = DARK_COPY.llmExpectReady;
+            } else {
+              llmExpect.textContent = DARK_COPY.llmExpectStub;
+            }
+          }
+          _wantStubTip = !ok;
+          if (!ok) scheduleStubNarrateTip();
+          root._copyRefreshHint = !!ok;
+          try {
+            var dismissKey = "travelogue.copyRefreshDismiss." + tripId;
+            root._copyRefreshDismissed = localStorage.getItem(dismissKey) === "1";
+          } catch (_e) {
+            root._copyRefreshDismissed = false;
+          }
+          if (typeof refreshTaskDockState === "function") {
+            refreshTaskDockState(root);
+          }
+          try {
+            var branch = ok ? "l1_ready" : "l0_degraded";
+            if (root._pmxCopyBranch !== branch) {
+              root._pmxCopyBranch = branch;
+              trackStudioEvent("refine_copy_branch", {
+                copy_branch: branch,
+                trip_id: tripId || null,
+              });
+            }
+          } catch (_eTrack) {}
+        }
+        setLlmAvailable(false);
+        function refreshLlmStatus() {
+          if (!isAiSurfaceEnabled()) return;
+          fetch("/__travelogue/llm/status")
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (cfg) {
+              setLlmAvailable(!!(cfg && cfg.llmAvailable));
+            })
+            .catch(function () {
+              setLlmAvailable(false);
+            });
+        }
+        refreshLlmStatus();
+        if (panel.dataset.nasLlmStatusBound !== "1") {
+          panel.dataset.nasLlmStatusBound = "1";
+          window.addEventListener("travelogue:llm-status", function (ev) {
+            var d = ev && ev.detail;
+            if (d && typeof d.llmAvailable === "boolean") {
+              setLlmAvailable(d.llmAvailable);
+            } else {
+              refreshLlmStatus();
+            }
           });
-      }
-      refreshLlmStatus();
-      window.addEventListener("travelogue:llm-status", function (ev) {
-        var d = ev && ev.detail;
-        if (d && typeof d.llmAvailable === "boolean") {
-          setLlmAvailable(d.llmAvailable);
-        } else {
-          refreshLlmStatus();
+        }
+        llmSetup = panel.querySelector(".preview-sheet__llm-setup");
+        if (llmSetup && llmSetup.dataset.bound !== "1") {
+          llmSetup.dataset.bound = "1";
+          var setupBtn = llmSetup.querySelector('[data-action="llm-setup"]');
+          if (setupBtn) {
+            setupBtn.addEventListener("click", function () {
+              import("/__studio/js/llm-settings.js").then(function (mod) {
+                if (mod && typeof mod.openLlmSettings === "function") {
+                  mod.openLlmSettings({
+                    source: "preview",
+                    onChange: function (st) {
+                      setLlmAvailable(!!(st && st.llmAvailable));
+                    },
+                  });
+                }
+              });
+            });
+          }
         }
       });
-      if (llmSetup && llmSetup.dataset.bound !== "1") {
-        llmSetup.dataset.bound = "1";
-        var setupBtn = llmSetup.querySelector('[data-action="llm-setup"]');
-        if (setupBtn) {
-          setupBtn.addEventListener("click", function () {
-            import("/__studio/js/llm-settings.js").then(function (mod) {
-              if (mod && typeof mod.openLlmSettings === "function") {
-                mod.openLlmSettings({
-                  source: "preview",
-                  onChange: function (st) {
-                    setLlmAvailable(!!(st && st.llmAvailable));
-                  },
-                });
-              }
-            });
-          });
-        }
-      }
     },
   };
 
-  ensureAiSurfaceHydrated();
   fetch("/__travelogue/config")
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {

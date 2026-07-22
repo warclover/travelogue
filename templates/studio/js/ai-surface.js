@@ -4,8 +4,11 @@
  */
 "use strict";
 
+import { trackStudioEvent } from "./analytics.js";
+
 var _enabled = false;
 var _hydratePromise = null;
+var _gateTracked = false;
 
 export function isAiSurfaceEnabled() {
   return !!_enabled;
@@ -20,6 +23,16 @@ export function hydrateAiSurfaceFromConfig(cfg) {
     setAiSurfaceEnabled(cfg.aiSurfaceEnabled);
   }
   return isAiSurfaceEnabled();
+}
+
+function trackAiSurfaceGateOnce() {
+  if (_gateTracked) return;
+  _gateTracked = true;
+  try {
+    trackStudioEvent("ai_surface_gate", { enabled: isAiSurfaceEnabled() });
+  } catch (_e) {
+    /* ignore */
+  }
 }
 
 /**
@@ -42,10 +55,12 @@ export function ensureAiSurfaceHydrated(opts) {
     })
     .then(function (cfg) {
       hydrateAiSurfaceFromConfig(cfg || {});
+      trackAiSurfaceGateOnce();
       return isAiSurfaceEnabled();
     })
     .catch(function () {
       setAiSurfaceEnabled(false);
+      trackAiSurfaceGateOnce();
       return false;
     });
   return _hydratePromise;

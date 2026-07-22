@@ -20,7 +20,10 @@ def _env_truthy(raw: str | None = None) -> bool:
 
 
 def resolve_ai_surface_enabled(cfg: Any | None = None) -> bool:
-    """env ∪ studio.ai_surface_enabled；默认 False。"""
+    """env ∪ studio.ai_surface_enabled；默认 False。
+
+    配置旗标须为真正的 ``True``（避免 MagicMock 等 truthy 伪阳）。
+    """
     if _env_truthy():
         return True
     if cfg is None:
@@ -28,7 +31,7 @@ def resolve_ai_surface_enabled(cfg: Any | None = None) -> bool:
     studio = getattr(cfg, "studio", None)
     if studio is None:
         return False
-    return bool(getattr(studio, "ai_surface_enabled", False))
+    return getattr(studio, "ai_surface_enabled", False) is True
 
 
 def ai_surface_disabled_body() -> dict[str, Any]:

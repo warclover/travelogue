@@ -419,12 +419,17 @@ export function initPreviewDrawers(root, tripId) {
       "</label>" +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-hint">可选填；有语音素材时会优先用原声</p>' +
       '<p class="preview-drawer__hint preview-drawer__copy-intent-voice-skip" hidden>本章有录音，已优先用原声，无需填写意图</p>' +
-      "</details>" +
-      (isAiSurfaceEnabled()
-        ? '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">' +
-          DARK_COPY.drawerNarrate +
-          "</button>"
-        : "");
+      "</details>";
+
+    // NAS · 运行时门控（勿在 init 时固化；须等 ensureAiSurfaceHydrated）
+    function pageEditNarrateHtml() {
+      if (!isAiSurfaceEnabled()) return "";
+      return (
+        '<button type="button" class="preview-drawer__primary preview-drawer__narrate-anchors">' +
+        DARK_COPY.drawerNarrate +
+        "</button>"
+      );
+    }
 
     var structTpl =
       '<div class="preview-drawer__g1"></div>' +
@@ -685,9 +690,9 @@ export function initPreviewDrawers(root, tripId) {
         // overlay openEdit：整本+章字段；sheet embed 按 mode 分流
         var editHtml =
           mode === "edit-page"
-            ? pageEditTpl
+            ? pageEditTpl + pageEditNarrateHtml()
             : useOverlay
-              ? bookEditTpl + pageEditTpl
+              ? bookEditTpl + pageEditTpl + pageEditNarrateHtml()
               : bookEditTpl;
         targetBody.innerHTML = editHtml;
         var titleInput = targetBody.querySelector(".preview-drawer__title-input");
