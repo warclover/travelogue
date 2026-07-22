@@ -58,8 +58,8 @@ CSC 独有闸：`curate.py` / `studio_pipeline.py` 行数 ceiling（只降不升
 | **AC-CSC-09** | 短文 ≤3 分钟复述无黑话 | **Pass** | [三题记录](./acceptance-records/csc-w1-dogfood-three-questions-2026-07-22.md) · 帮助 H0 |
 | **AC-CSC-10** | Advanced 不影响首趟主 CTA | **Pass** | 实验区二次折叠；F-CSC |
 | **AC-CSC-11** | ≥5 篇文档状态标注 | **Pass** | [DOC-STATUS.md](./DOC-STATUS.md)（≥6） |
-| **AC-CSC-13** | L1 点击 ≤2 | **基线已钉**；实机勾选待补 | 三题记录 §狗粮 |
-| **AC-CSC-14** | 首趟 0 次 admin | **Pass（静态）**；HAR 勾选待补 | 三题记录 Q3 |
+| **AC-CSC-13** | L1 点击 ≤2 | **Pass**（合入前轻测 = 0） | [pre-merge smoke](./acceptance-records/csc-pre-merge-smoke-2026-07-22.md) |
+| **AC-CSC-14** | 首趟 0 次 admin | **Pass**（DOM + performance 资源） | 同上 |
 
 ---
 

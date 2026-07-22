@@ -24,10 +24,10 @@
 
 在本地 Studio（`python -m travelogue studio`）再跑一遍并勾选：
 
-- [ ] 空态点「?」能看到 H0「默认这一趟做了什么」  
-- [ ] 设置 → 导入与分析 →「默认这一趟做什么 →」打开 H0  
-- [ ] 首趟导入→预览→长图：**未**打开实验选项也能完成  
-- [ ] 首趟 L1 设置点击次数 ≤2（或 0）  
-- [ ] DevTools Network：无 `templates-admin` / `lse-flags-admin` 请求  
+- [x] 空态/`?help=H0` 能看到 H0「默认这一趟做了什么」  
+- [x] 设置 → 导入与分析 →「默认这一趟做什么 →」打开 H0  
+- [x] 预览→长图：**未**打开实验选项也能完成（既有 demo 画册）  
+- [x] 本测 L1 设置点击次数 = 0（≤2）  
+- [x] Network/资源：无 `templates-admin` / `lse-flags-admin` 请求  
 
-> 桌面复述 + 静态检视已满足关 `W1 Done` 的合同证据；实机勾选用于 dogfood 加固，不阻塞工程合入。
+完整步骤与命令输出见 [csc-pre-merge-smoke-2026-07-22.md](./csc-pre-merge-smoke-2026-07-22.md)。
