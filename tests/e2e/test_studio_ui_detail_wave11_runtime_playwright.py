@@ -247,6 +247,34 @@ def test_studio_ui_detail_wave11_runtime_closeout(studio_server) -> None:
             }""",
             timeout=5_000,
         )
+        # Focus trap：Tab 从末焦点循环回卡内首焦点（aria-modal 配套）
+        if shown:
+            trap_ok = page.evaluate(
+                """
+                () => {
+                  const root = document.getElementById('studio-capability-card-root');
+                  if (!root || root.hidden) return false;
+                  const sel =
+                    'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),select:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+                  const els = [...root.querySelectorAll(sel)].filter(
+                    (el) => !el.hidden && (el.offsetParent !== null || el === document.activeElement)
+                  );
+                  if (els.length < 2) return false;
+                  const first = els[0];
+                  const last = els[els.length - 1];
+                  last.focus();
+                  const ev = new KeyboardEvent('keydown', {
+                    key: 'Tab',
+                    code: 'Tab',
+                    bubbles: true,
+                    cancelable: true,
+                  });
+                  root.dispatchEvent(ev);
+                  return document.activeElement === first;
+                }
+                """
+            )
+            assert trap_ok, "capability card Tab focus trap should cycle within dialog"
         cap_m = page.evaluate(_MEASURE_PANEL_JS, ".studio-capability-card__panel")
         runtime["surfaces"]["S-CAP"] = cap_m
         runtime["findings"].extend(

@@ -4,6 +4,7 @@
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
+import { SHEET_FOCUSABLE } from "./constants.js";
 import {
   isHelpL1Blocked,
   markCapabilityCardSeen,
@@ -17,6 +18,39 @@ import { V2 } from "../homepage-v2/store.js";
 var ROOT_ID = "studio-capability-card-root";
 var _visible = false;
 var _scheduled = false;
+var _trapHandler = null;
+
+function focusableEls(container) {
+  return Array.prototype.slice
+    .call(container.querySelectorAll(SHEET_FOCUSABLE))
+    .filter(function (el) {
+      return !el.hidden && (el.offsetParent !== null || el === document.activeElement);
+    });
+}
+
+function trapFocus(dialog) {
+  releaseTrap(dialog);
+  _trapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(dialog);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  dialog.addEventListener("keydown", _trapHandler);
+}
+
+function releaseTrap(dialog) {
+  if (_trapHandler && dialog) dialog.removeEventListener("keydown", _trapHandler);
+  _trapHandler = null;
+}
 
 function ensureRoot() {
   var el = document.getElementById(ROOT_ID);
@@ -97,6 +131,7 @@ function dismissCapabilityCard(cta) {
 
 export function closeCapabilityCard() {
   var el = document.getElementById(ROOT_ID);
+  releaseTrap(el);
   if (el) el.hidden = true;
   _visible = false;
 }
@@ -128,6 +163,7 @@ export function showCapabilityCard() {
   var el = ensureRoot();
   el.hidden = false;
   _visible = true;
+  trapFocus(el);
   // D-DLLM-13：本会话压制非关键自动 Help L1
   markCapabilityCardSuppressHelpL1();
   trackStudioEvent("capability_card_show", {});
