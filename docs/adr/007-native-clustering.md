@@ -2,6 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
+| **DOC-STATUS** | **active**（登记见 [DOC-STATUS.md](../DOC-STATUS.md)） |
 | **状态** | Accepted（v0.2 · 2026-05-28） |
 | **日期** | 2026-05-28 |
 | **决策者** | Travelogue 产品/技术 |

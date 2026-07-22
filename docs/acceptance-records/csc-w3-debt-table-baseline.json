@@ -1,0 +1,127 @@
+{
+  "count": 24,
+  "edges": [
+    "travelogue/curation/aspect_buckets.py",
+    "travelogue/curation/asset_subject.py",
+    "travelogue/curation/burst_utils.py",
+    "travelogue/curation/collage_routing.py",
+    "travelogue/curation/decision_log.py",
+    "travelogue/curation/degradation.py",
+    "travelogue/curation/editorial_4mix.py",
+    "travelogue/curation/editorial_portrait_row.py",
+    "travelogue/curation/intent_hints.py",
+    "travelogue/curation/layout_candidates.py",
+    "travelogue/curation/screen_layout_state.py",
+    "travelogue/curation/search_budget.py",
+    "travelogue/curation/solo_scoring.py",
+    "travelogue/curation/subject_tagging.py",
+    "travelogue/curation/usage_rules/context.py",
+    "travelogue/curation/usage_rules/evaluator.py",
+    "travelogue/curation/usage_rules/registry.py",
+    "travelogue/curation/usage_rules/tiebreak.py",
+    "travelogue/layout_engine/mosaic/_legacy_generated.py",
+    "travelogue/layout_engine/mosaic/legacy.py",
+    "travelogue/layout_engine/mosaic/legacy_specs.py",
+    "travelogue/layout_engine/render_contract.py",
+    "travelogue/layout_templates/legacy_bridge.py",
+    "travelogue/layout_templates/legacy_codegen.py"
+  ],
+  "details": [
+    {
+      "file": "travelogue/curation/aspect_buckets.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/asset_subject.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/burst_utils.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/collage_routing.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/decision_log.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/degradation.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/editorial_4mix.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/editorial_portrait_row.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/intent_hints.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/layout_candidates.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/screen_layout_state.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/search_budget.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/solo_scoring.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/subject_tagging.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/usage_rules/context.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/usage_rules/evaluator.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/usage_rules/registry.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/curation/usage_rules/tiebreak.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/layout_engine/mosaic/_legacy_generated.py",
+      "kind": "legacy_filename"
+    },
+    {
+      "file": "travelogue/layout_engine/mosaic/legacy.py",
+      "kind": "legacy_filename"
+    },
+    {
+      "file": "travelogue/layout_engine/mosaic/legacy_specs.py",
+      "kind": "legacy_filename"
+    },
+    {
+      "file": "travelogue/layout_engine/render_contract.py",
+      "kind": "shim_docstring"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "kind": "legacy_filename"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_codegen.py",
+      "kind": "legacy_filename"
+    }
+  ]
+}

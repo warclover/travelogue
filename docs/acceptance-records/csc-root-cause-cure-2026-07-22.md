@@ -2,6 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
+| **DOC-STATUS** | **active**（登记见 [DOC-STATUS.md](../DOC-STATUS.md)） |
 | **对象** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](../PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) v0.2 + 九席评审 |
 | **性质** | 产线代码复核后的**根因 / 根治**决议；优先于「逐项还债清单」 |
 | **结论** | 症状治理（藏设置、删 shim、拆文件）必要但不充分；**根治 = 建立唯一 Happy Path Recipe 合同 + 能力预算机制** |

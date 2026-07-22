@@ -81,7 +81,7 @@ def apply_layout_to_trip(
 
     Does not re-ingest pixels or change coverAssetId.
     """
-    from travelogue.layout_engine.planner.screen_planner import (
+    from travelogue.layout_engine.api import (
         LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,

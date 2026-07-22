@@ -4,6 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | **v0.2.2-CSC** |
+| **DOC-STATUS** | **active**（登记见 [DOC-STATUS.md](./DOC-STATUS.md)） |
 | **状态** | **Conditional Go · 九席 + 根因 + AppConfig 布尔面决议已写入** · 根治主轴 = Happy Path Recipe；W0 交付 Recipe 初稿后方可称基线完成 |
 | **特性代号** | **CSC**（Completion Surface Convergence · 完工表面积收敛） |
 | **一句话代号** | 「别再做更强的排版引擎；收成更窄、更稳、更可解释的完工器」 |
@@ -14,8 +15,8 @@
 | **关联文档** | [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) · [PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) · [PRD-ARCH-ALGO-DEEPENING-V1.md](./PRD-ARCH-ALGO-DEEPENING-V1.md) · [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) · [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md) |
 | **评审记录** | [completion-surface-convergence-v1-review-2026-07-22.md](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) |
 | **根因 / 根治** | [csc-root-cause-cure-2026-07-22.md](./acceptance-records/csc-root-cause-cure-2026-07-22.md)（**RES-CSC-ROOT-*** · 优先于逐项还债叙事） |
-| **实施清单** | `IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md`（**待建** · 本文 §9 为任务卡） |
-| **验收** | 建议 W0 后拆 `ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md`；本文 §10 为合同源 |
+| **实施清单** | [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md)（W0–W3 + 合同补齐 · 分支 `feat/csc-w0-recipe`） |
+| **验收** | [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md)；本文 §10 为合同源 |
 | **更新日期** | 2026-07-22 |
 
 > **v0.2.2 相对 v0.2.1（AppConfig 布尔面决议）**

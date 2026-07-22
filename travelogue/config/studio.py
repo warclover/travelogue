@@ -69,9 +69,22 @@ class StudioConfig:
 
 
 def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
-    """Subset of config safe for Studio GET /__travelogue/config."""
+    """Subset of config safe for Studio GET /__travelogue/config.
+
+    CSC W1: adds ``happyPath`` (recipe_id + L0/L1/Advanced key lists). Existing
+    fields stay for backward compatibility; settings UI should prefer ``l1Keys``
+    for the common zone (see csc-w0-settings-surface-inventory.md).
+    """
     or_cfg = getattr(cfg.studio, "output_recipe", None) or OutputRecipeConfig()
     bands = getattr(or_cfg, "bands", None) or OutputRecipeBandsConfig()
+    # Lazy import avoids config↔orchestrator import cycles at module load.
+    from travelogue.orchestrator.happy_path_recipe import (
+        ADVANCED_SETTINGS_KEYS,
+        L0_OPS_ROOTS,
+        L1_RESULT_KEYS,
+        RECIPE_ID_STUDIO_DEFAULT,
+    )
+
     return {
         "clustering": {
             "enabled": cfg.clustering.enabled,
@@ -128,4 +141,10 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "copySourceFiles": bool(getattr(cfg.ingest, "copy_source_files", True)),
         },
         "tripsDir": str(cfg.trips_dir) if getattr(cfg, "trips_dir", None) else None,
+        "happyPath": {
+            "recipeId": RECIPE_ID_STUDIO_DEFAULT,
+            "l1Keys": list(L1_RESULT_KEYS),
+            "advancedSettingsKeys": list(ADVANCED_SETTINGS_KEYS),
+            "l0OpsRoots": list(L0_OPS_ROOTS),
+        },
     }

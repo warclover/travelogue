@@ -2,6 +2,7 @@
 
 | 属性 | 内容 |
 |------|------|
+| **DOC-STATUS** | **superseded**（继任 [ADR-007](./007-native-clustering.md) · 登记见 [DOC-STATUS.md](../DOC-STATUS.md)） |
 | **状态** | **Superseded**（2026-05-28 · 见 [ADR-007](./007-native-clustering.md)） |
 | **日期** | 2026-05-27 |
 | **决策者** | Travelogue 产品/技术 |

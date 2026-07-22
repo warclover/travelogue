@@ -4,6 +4,8 @@
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
 | **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
+| **文档状态** | [DOC-STATUS.md](./DOC-STATUS.md)（`active` / `superseded` / `archive`） |
+| **现行导读** | CHARTER → TECH → 活跃 ADR → ACCEPTANCE → FTT / [CSC](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md)（见 DOC-STATUS） |
 | **更新日期** | 2026-07-22 |
 
 ---
@@ -95,9 +97,22 @@
 | [wireframes/help-onboarding-v1-wireframe.html](./wireframes/help-onboarding-v1-wireframe.html) | 帮助系统 V1 评审线框 · F1–F10（W1：F1–F3/F7） |
 | [acceptance-records/help-onboarding-v1-review-2026-07-14.md](./acceptance-records/help-onboarding-v1-review-2026-07-14.md) | 帮助系统 V1 跨职能评审纪要 · Conditional Go · MF 已回写 |
 | [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) | **「这一趟做完」成册防搁置 FTT V1** **v0.2.1**（Conditional Go · 认可 SFI 敢发支线 · [线框 F1–F8](./wireframes/finish-this-trip-v1-wireframe.html) 待审 · [评审](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md)） |
-| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe 根治 · AppConfig 97/53 决议 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md)） |
 | [wireframes/finish-this-trip-v1-wireframe.html](./wireframes/finish-this-trip-v1-wireframe.html) | FTT · F1–F8 线框草稿 · **待产品审核** |
 | [acceptance-records/finish-this-trip-v1-review-2026-07-20.md](./acceptance-records/finish-this-trip-v1-review-2026-07-20.md) | FTT · 七席评审纪要 · Conditional Go · BLK-FTT-01～08 |
+| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe 根治 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md) · [实施](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) · [验收](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md) · 已合 master） |
+| [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC · W0–W3 + 合同补齐（CI / 测评 / 祖父条款） |
+| [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC · 验收合同与基线数字 |
+| [DOC-STATUS.md](./DOC-STATUS.md) | 文档状态机入口（CSC W3c） |
+| [acceptance-records/csc-w0-settings-surface-inventory.md](./acceptance-records/csc-w0-settings-surface-inventory.md) | CSC W0 · 设置面库存 |
+| [acceptance-records/csc-w0-l0-l1-keys.md](./acceptance-records/csc-w0-l0-l1-keys.md) | CSC W0 · L0/L1 键表草案 |
+| [acceptance-records/csc-w0-cli-vs-studio-profile.md](./acceptance-records/csc-w0-cli-vs-studio-profile.md) | CSC · cli_default vs studio_default |
+| [acceptance-records/csc-w0-grandfather-clauses.md](./acceptance-records/csc-w0-grandfather-clauses.md) | CSC W0 · 祖父条款（97 True） |
+| [acceptance-records/csc-w0-diff-empty.md](./acceptance-records/csc-w0-diff-empty.md) | CSC · intentional 版式 DIFF 空表 |
+| [acceptance-records/csc-w1-happy-path-user-copy.md](./acceptance-records/csc-w1-happy-path-user-copy.md) | CSC W1 · Happy Path 用户短文（无黑话） |
+| [acceptance-records/csc-w1-dogfood-three-questions-2026-07-22.md](./acceptance-records/csc-w1-dogfood-three-questions-2026-07-22.md) | CSC W1 · 测评三题记录 |
+| [acceptance-records/csc-pre-merge-smoke-2026-07-22.md](./acceptance-records/csc-pre-merge-smoke-2026-07-22.md) | CSC · 合入前轻测（Pass） |
+| [acceptance-records/csc-w3-debt-table.md](./acceptance-records/csc-w3-debt-table.md) | CSC W3a · shim/legacy 债务表（ceiling 24） |
+| [acceptance-records/csc-w3-config-surface-split.md](./acceptance-records/csc-w3-config-surface-split.md) | CSC W3b · 用户档 / research 分层 |
 | [PRD-FTUE-OPTIMIZATION-V1.md](./PRD-FTUE-OPTIMIZATION-V1.md) | **新用户首次成功路径优化 V1** **v1.1.0**（W0 编码中 · [评审纪要](./acceptance-records/ftue-optimization-v1-review-2026-07-15.md)） |
 | [IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md](./IMPLEMENTATION-FTUE-OPTIMIZATION-V1.md) | FTUE · W0–W3 任务卡 |
 | [wireframes/ftue-optimization-v1-wireframe.html](./wireframes/ftue-optimization-v1-wireframe.html) | FTUE 线框 F1–F8 |
@@ -131,13 +146,14 @@
 | [wireframes/share-face-closeout-v1-wireframe.html](./wireframes/share-face-closeout-v1-wireframe.html) | 敢发收口线框 F1–F5 |
 | [acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) | 敢发收口 · 手测狗粮 F1–F5 · AC-SFC-15 |
 | [acceptance-records/persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) | 八席 Persona 完整试用 · 喜欢与吐槽底稿（Agent 模拟 · 待真人 N≥5） |
-| [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) | **敢发面一致性 V1** **v0.2.1**（Conditional Go · Doc 包齐 · **Ready for Kickoff W0** · 硬化 SFC 执行层 + 存量兑现 · [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md)） |
+| [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) | **敢发面一致性 V1** **v0.2.1**（Conditional Go · Doc 包齐 · 硬化 SFC 执行层 + 存量兑现 · [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md) · 分支 `feat/share-face-integrity-w0`） |
 | [acceptance-records/share-face-integrity-v1-review-2026-07-21.md](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) | 敢发面一致性 · 六席跨职能评审 · Conditional Go · BLK-SFI-01～10 |
-| [IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性 · W0–W2 任务卡 · **Ready for Kickoff W0** |
+| [IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性 · W0–W2 任务卡 |
 | [ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) | 敢发面一致性验收 · AC-SFI + fixture |
 | [wireframes/share-face-integrity-v1-wireframe.html](./wireframes/share-face-integrity-v1-wireframe.html) | 敢发面一致性线框 F0–F5 |
 | [acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) | 敢发面一致性 · 手测狗粮 · AC-SFI-15 |
 | [acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md](./acceptance-records/share-face-integrity-v1-des01-attribution-2026-07-21.md) | SFI · **DES-SFI-01** 仙本那真实册长图归因签字（W2 前置） |
+| [acceptance-records/share-face-integrity-v1-ac12-blind-2026-07-21.md](./acceptance-records/share-face-integrity-v1-ac12-blind-2026-07-21.md) | SFI · AC-12 紧凑档盲评（脚本半门已过 · 席位待签） |
 | [acceptance-records/persona-blogger-trial-2026-07-21.md](./acceptance-records/persona-blogger-trial-2026-07-21.md) | 典型用户+博主试用底稿（2026-07-21 首轮） |
 | [acceptance-records/persona-deep-trial-2026-07-21.md](./acceptance-records/persona-deep-trial-2026-07-21.md) | 十二席深度试用底稿（2026-07-21 下午） |
 | [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
@@ -567,7 +583,10 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | [PRD-ASSERTION-HARDENING-V1.md](./PRD-ASSERTION-HARDENING-V1.md) | **断言硬化 ASH V1**（**Done** · [结案](./acceptance-records/ash-closeout-2026-07-16.md)） |
 | [PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md](./PRD-LONGSHOT-COOPERATIVE-CANCEL-V1.md) | **长图 Job 真协作取消 V1**（**Done** · [狗粮](./acceptance-records/lcc-cancel-dogfood-2026-07-15.md)） |
 | [PRD-ARCH-ALGO-DEEPENING-V1.md](./PRD-ARCH-ALGO-DEEPENING-V1.md) | **架构收敛与算法加深 V1.1**（执行分支 `arch/algo-deepening-v1` · [评审纪要](./acceptance-records/aad-prd-review-2026-07-15.md)） |
-| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe + 布尔面决议 · [评审](./acceptance-records/completion-surface-convergence-v1-review-2026-07-22.md) · [根因](./acceptance-records/csc-root-cause-cure-2026-07-22.md)） |
+| [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) | **完工表面积收敛 CSC V1** **v0.2.2**（Conditional Go · Recipe + 布尔面决议 · [实施](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) · [验收](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md) · 已合 master） |
+| [IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md](./IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC 实施清单 · W0–W3 + 合同补齐 |
+| [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md) | CSC 验收 |
+| [DOC-STATUS.md](./DOC-STATUS.md) | 文档状态机（active / superseded / archive） |
 | [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md) | 里程碑状态追踪（实施期 SSOT） |
 | [PROMPTS-ARCH-OPTIMIZATION.md](./PROMPTS-ARCH-OPTIMIZATION.md) | Agent 执行提示词 |
 | [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) | 技术架构（M-B0 v0.9 增量；M-D1 后全量更新） |

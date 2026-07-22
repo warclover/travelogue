@@ -80,6 +80,19 @@ jobs:
       - name: Pipeline Throughput check-default-on (M5 · block accelerated defaults without signoff)
         run: python scripts/pipeline_throughput_gate.py --check-default-on
 
+      # CSC · Completion Surface Convergence ratchets (AC-CSC-01/02/03/12)
+      - name: CSC layout_engine facade deep-import ceiling
+        run: python scripts/lint_layout_engine_facade.py
+
+      - name: CSC god-module line ceiling (curate / studio_pipeline)
+        run: python scripts/lint_csc_god_module_ratchet.py
+
+      - name: CSC shim/legacy debt table ceiling
+        run: python scripts/lint_csc_debt_table.py
+
+      - name: CSC Happy Path Recipe baseline (no silent default-True growth)
+        run: python scripts/lint_csc_recipe_baseline.py
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

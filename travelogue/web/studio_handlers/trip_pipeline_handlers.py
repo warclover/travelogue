@@ -165,7 +165,7 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             if isinstance(prev_locks, dict):
                 replace_pipeline_locks(trip, prev_locks)
 
-        from travelogue.layout_engine.planner.screen_planner import (
+        from travelogue.layout_engine.api import (
             LAYOUT_ENGINE_SCREENS,
             resolve_layout_engine,
         )
