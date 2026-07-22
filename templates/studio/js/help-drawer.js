@@ -1,6 +1,6 @@
 /**
  * 帮助抽屉 L2（W2）· 首页与预览共用。
- * 固定 H1–H7；重播；深链 ?help=H2 / #help=H2。
+ * 固定 H0–H7；重播；深链 ?help=H0 / ?help=H2 / #help=H2。
  */
 "use strict";
 

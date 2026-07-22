@@ -3,6 +3,7 @@
  */
 import { trackStudioEvent } from "../js/analytics.js";
 import { bindAdvancedConfigControls } from "../js/advanced.js";
+import { openHelpDrawer } from "../js/help-drawer.js";
 import { isCapabilityCardSeen } from "../js/help-onboarding.js";
 import { harnessEnabled } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
@@ -459,6 +460,17 @@ export function initSettingsPanel() {
   syncDevSection();
   ensurePopoverPortaled(popover);
   maybeShowSettingsMovedHint();
+
+  // CSC F-CSC-3 · Happy Path 短文可从设置常用区发现（不抢主 CTA）
+  var cscHelp = popover.querySelector('[data-help-item="H0"]');
+  if (cscHelp && !cscHelp.dataset.cscHelpBound) {
+    cscHelp.dataset.cscHelpBound = "1";
+    cscHelp.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openHelpDrawer({ source: "settings_csc", itemId: "H0" });
+    });
+  }
 
   try {
     window.addEventListener("travelogue:capability-card-done", function () {
