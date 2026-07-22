@@ -222,6 +222,7 @@ export function initPhoneStrip(manifest, opts) {
 
   function go(requested, goOpts) {
     goOpts = goOpts || {};
+    var prevIndex = index;
     index = clampIndex(requested, pageCount);
     ensureSlideLoaded(slideEls[index], onSlideReady);
     if (index + 1 < slideEls.length) ensureSlideLoaded(slideEls[index + 1], onSlideReady);
@@ -244,8 +245,11 @@ export function initPhoneStrip(manifest, opts) {
         syncReleaseTimer = null;
       }, 280);
     }
-    var active = slideEls[index];
-    if (active && active.classList.contains("v2-phone-strip__slide--scroll")) active.scrollTop = 0;
+    // Only reset vertical scroll when switching pages (not resize/relayout).
+    if (index !== prevIndex) {
+      var active = slideEls[index];
+      if (active && active.classList.contains("v2-phone-strip__slide--scroll")) active.scrollTop = 0;
+    }
     syncUi();
   }
 

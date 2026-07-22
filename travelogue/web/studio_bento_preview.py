@@ -117,20 +117,74 @@ def _is_phone_vertical_file(path: Path) -> bool:
     return ratio < _WEB_LANDSCAPE_RATIO_MIN
 
 
+def _glob_export_images(trip_dir: Path, *patterns: str) -> list[Path]:
+    """Trip-root export images matching patterns; drop atomic ``*.part`` leftovers."""
+    rows: list[Path] = []
+    seen: set[str] = set()
+    for pattern in patterns:
+        for path in trip_dir.glob(pattern):
+            if path.name.endswith(".part") or path.name in seen:
+                continue
+            seen.add(path.name)
+            rows.append(path)
+    return rows
+
+
 def _pick_longshot(trip_dir: Path) -> Path | None:
+    """Whole-volume export: SFI ``*-长图.ext`` then legacy ``*-longshot.ext``."""
     rows = sorted(
-        list(trip_dir.glob("*-longshot.png"))
-        + list(trip_dir.glob("*-longshot.jpg"))
-        + list(trip_dir.glob("*-longshot.jpeg"))
+        _glob_export_images(
+            trip_dir,
+            # SFI D-SFI-07 · 人话展示名整卷
+            "*-长图.png",
+            "*-长图.jpg",
+            "*-长图.jpeg",
+            # legacy
+            "*-longshot.png",
+            "*-longshot.jpg",
+            "*-longshot.jpeg",
+        ),
+        key=lambda p: p.name.lower(),
     )
     return rows[0] if rows else None
 
 
 def _chapter_pngs(trip_dir: Path) -> list[Path]:
+    """Legacy ``*-ch*`` strips (web carousel landscape + phone fallback family)."""
     return sorted(
-        list(trip_dir.glob("*-ch*.png"))
-        + list(trip_dir.glob("*-ch*.jpg"))
-        + list(trip_dir.glob("*-ch*.jpeg")),
+        _glob_export_images(
+            trip_dir,
+            "*-ch*.png",
+            "*-ch*.jpg",
+            "*-ch*.jpeg",
+        ),
+        key=lambda p: p.name.lower(),
+    )
+
+
+def _phone_export_strips(trip_dir: Path) -> list[Path]:
+    """Segmented phone-strip exports: SFI ``*-长图-NN`` → legacy ``*-ch*`` → moments."""
+    sfi = sorted(
+        _glob_export_images(
+            trip_dir,
+            "*-长图-*.png",
+            "*-长图-*.jpg",
+            "*-长图-*.jpeg",
+        ),
+        key=lambda p: p.name.lower(),
+    )
+    if sfi:
+        return sfi
+    legacy = _chapter_pngs(trip_dir)
+    if legacy:
+        return legacy
+    return sorted(
+        _glob_export_images(
+            trip_dir,
+            "*-moments-*.png",
+            "*-moments-*.jpg",
+            "*-moments-*.jpeg",
+        ),
         key=lambda p: p.name.lower(),
     )
 
@@ -548,7 +602,7 @@ def _build_longshot_pages(
     epilogue_exclude_asset_ids: set[str] | None = None,
     epilogue_avoid_urls: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """手机框切换序列：整卷 longshot → 竖条 *-ch*.png → 按 carousel 章序竖版原图。"""
+    """手机框切换序列：整卷长图 → 分段导出竖条 → 按 carousel 章序竖版原图。"""
     longshot = _pick_longshot(trip_dir)
     if longshot:
         return [
@@ -560,7 +614,9 @@ def _build_longshot_pages(
             }
         ]
 
-    vertical_strips = [png for png in ch_pngs if _is_phone_vertical_file(png)]
+    # Prefer SFI/moments segment exports; fall back to legacy *-ch* (ch_pngs arg).
+    strip_candidates = _phone_export_strips(trip_dir) or list(ch_pngs)
+    vertical_strips = [png for png in strip_candidates if _is_phone_vertical_file(png)]
     if vertical_strips:
         pages: list[dict[str, Any]] = []
         for i, png in enumerate(vertical_strips, 1):

@@ -502,6 +502,93 @@ def test_build_trip_bento_preview_longshot_pages_single_export_jpg(tmp_path: Pat
     ]
 
 
+def test_build_trip_bento_preview_longshot_pages_sfi_display_name(tmp_path: Path) -> None:
+    """SFI D-SFI-07 · 整卷 ``*-长图.png`` 须进入手机框可滚预览。"""
+    trip_id = "sfi-whole"
+    trip_dir = tmp_path / trip_id
+    assets_dir = trip_dir / "assets"
+    assets_dir.mkdir(parents=True)
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    filename = "京都雨季漫游-长图.png"
+    _write_png(trip_dir / filename, 1080, 16000)
+    # Portrait assets must not win over the real export.
+    _write_png(assets_dir / "portrait-w1600.webp", 900, 1600)
+    trip = {
+        "meta": {"title": "京都雨季漫游"},
+        "assets": [
+            {
+                "id": "p1",
+                "type": "image",
+                "displayFile": "assets/portrait-w1600.webp",
+                "aspectKind": "portrait",
+                "width": 900,
+                "height": 1600,
+                "layoutEligible": True,
+            }
+        ],
+        "chapters": [{"id": "c1", "title": "第一章", "items": [{"type": "media-card", "assetId": "p1"}]}],
+    }
+    (trip_dir / "trip.json").write_text(__import__("json").dumps(trip), encoding="utf-8")
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert payload["longshotPages"] == [
+        {
+            "id": "longshot",
+            "label": "微信长图",
+            "url": f"/{trip_id}/{quote(filename)}",
+            "scrollPreview": True,
+        }
+    ]
+    assert payload["assets"]["longshot"] == payload["longshotPages"][0]["url"]
+
+
+def test_build_trip_bento_preview_longshot_pages_sfi_segments(tmp_path: Path) -> None:
+    """SFI 分段 ``*-长图-NN.jpg`` 按序进入手机框。"""
+    trip_id = "sfi-segments"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    Image.new("RGB", (1284, 20000), color="#808080").save(trip_dir / "精选册-长图-01.jpg")
+    Image.new("RGB", (1284, 18000), color="#808080").save(trip_dir / "精选册-长图-02.jpg")
+    Image.new("RGB", (1284, 15000), color="#808080").save(trip_dir / "精选册-长图-03.jpg")
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"精选册"},"chapters":[{"id":"c1","title":"第一章"},{"id":"c2","title":"第二章"},{"id":"c3","title":"第三章"}]}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert len(payload["longshotPages"]) == 3
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/{quote('精选册-长图-01.jpg')}"
+    assert payload["longshotPages"][1]["url"] == f"/{trip_id}/{quote('精选册-长图-02.jpg')}"
+    assert payload["longshotPages"][2]["url"] == f"/{trip_id}/{quote('精选册-长图-03.jpg')}"
+    assert all(p.get("scrollPreview") is True for p in payload["longshotPages"])
+
+
+def test_build_trip_bento_preview_longshot_pages_moments_segments(tmp_path: Path) -> None:
+    """朋友圈 ``*-moments-NN.png`` 在无整卷/分段长图时进入手机框。"""
+    trip_id = "moments-only"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    _write_png(trip_dir / "精选 · 周末-moments-01.png", 1080, 5000)
+    _write_png(trip_dir / "精选 · 周末-moments-02.png", 1080, 4800)
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"精选 · 周末"},"chapters":[{"id":"c1","title":"上"},{"id":"c2","title":"下"}]}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert len(payload["longshotPages"]) == 2
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/{quote('精选 · 周末-moments-01.png')}"
+    assert payload["longshotPages"][1]["url"] == f"/{trip_id}/{quote('精选 · 周末-moments-02.png')}"
+    assert all(p.get("scrollPreview") is True for p in payload["longshotPages"])
+
+
 def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_jpgs(tmp_path: Path) -> None:
     trip_id = "mobile-strips-jpg"
     trip_dir = tmp_path / trip_id
