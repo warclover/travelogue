@@ -1,14 +1,18 @@
-/* Homepage v2 · Dev harness panel */
+/* Homepage v2 · Dev harness panel（UI Detail Wave8 · cream dark glass） */
 /* ── Dev Panel（DEV-HARNESS §4 · loopback / ?dev=1 · v2.1 经设置唤起） ── */
 .v2-dev-panel {
+  --dev-ink: #f5f0e8;
+  --dev-muted: rgba(245, 240, 232, 0.55);
+  --dev-surface: rgba(12, 10, 8, 0.94);
+  --dev-border: rgba(245, 240, 232, 0.16);
   position: fixed;
   right: 12px;
   bottom: 12px;
   z-index: 5000;
   width: min(240px, 90vw);
-  font-family: system-ui, sans-serif;
-  font-size: 11px;
-  color: #e8e4dc;
+  font-family: var(--studio-font-ui, var(--v2-font-sans));
+  font-size: var(--studio-panel-label-size, 11px);
+  color: var(--dev-ink);
   pointer-events: none;
   display: none;
 }
@@ -23,11 +27,11 @@
   float: right;
   margin-bottom: 6px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, .2);
+  border: 1px solid var(--dev-border);
   border-radius: 6px;
-  background: rgba(12, 10, 8, .92);
+  background: var(--dev-surface);
   color: var(--v2-gold);
-  font-size: 11px;
+  font-size: var(--studio-panel-label-size, 11px);
   cursor: pointer;
 }
 .v2-dev-panel__body {
@@ -35,17 +39,17 @@
   pointer-events: auto;
   padding: 10px 12px 12px;
   border-radius: 8px;
-  background: rgba(12, 10, 8, .94);
-  border: 1px solid rgba(255, 255, 255, .12);
+  background: var(--dev-surface);
+  border: 1px solid var(--dev-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
 }
 .v2-dev-panel__body[hidden] { display: none; }
 .v2-dev-panel__title {
   margin: 0 0 8px;
-  font-size: 10px;
+  font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, .45);
+  color: var(--dev-muted);
 }
 .v2-dev-panel__field {
   display: block;
@@ -93,4 +97,4 @@
   text-align: center;
   text-decoration: none;
 }
-.v2-dev-panel__classic:hover { border-color: var(--v2-gold-soft); color: #fff; }
+.v2-dev-panel__classic:hover { border-color: var(--v2-gold-soft); color: var(--dev-ink); }

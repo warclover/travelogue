@@ -91,8 +91,8 @@ export var HELP_COPY = {
   helpAria: "使用帮助",
   helpTitle: "使用帮助",
   refineSaveLines: [
-    "改字马上生效；改拼图请先点下方『更新版面』",
-    "『完成』只是退出精修，不是更新版面；精选不会立刻重排整本",
+    "改字马上生效；改拼图请先点『更新版面』",
+    "『完成』只退出精修，不会重排整本",
   ],
   refineSaveMore: "了解更多 →",
   replayButton: "重新显示操作提示",

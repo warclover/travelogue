@@ -62,7 +62,7 @@
 .preview-toolbar__more-menu button {
   border: none;
   background: transparent;
-  color: #1a2f28;
+  color: var(--preview-ink);
   text-align: left;
   padding: 10px 12px;
   border-radius: 8px;
@@ -75,7 +75,7 @@
 }
 .preview-toolbar__apply-layout {
   font-weight: 600;
-  color: #3d6b5a !important;
+  color: var(--preview-accent) !important;
 }
 
 .preview-toolbar__notes-panel {

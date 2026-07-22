@@ -144,11 +144,11 @@
 }
 :root[data-v2-theme="classic"] .v2-carousel__dots button {
   background-color: #fff;
-  border-color: #0f172a;
+  border-color: var(--studio-panel-ink, #14110d);
 }
 :root[data-v2-theme="classic"] .v2-carousel__dots button.is-active {
   background-color: var(--v2-gold);
-  border-color: #0f172a;
+  border-color: var(--studio-panel-ink, #14110d);
 }
 :root[data-v2-theme="classic"] .v2-carousel__hint {
   color: rgba(255, 255, 255, .35);

@@ -286,6 +286,11 @@ def test_studio_home_v2_theme_palette_options() -> None:
     assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="mist"] .v2-shelf' in css
+    # UI Detail Wave7 · sky 显式主题，不再靠 removeAttribute
+    assert ':root[data-v2-theme="sky"]' in css
+    assert 'setAttribute("data-v2-theme", "sky")' in boot
+    assert 'removeAttribute("data-v2-theme")' not in boot
+    assert 'removeAttribute("data-v2-theme")' not in store
 
 
 def test_studio_home_v2_js_modules_present() -> None:
@@ -930,6 +935,16 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     # 隐藏的 fixed 覆盖层不得拦截点击
     assert "#v2-unsupported[hidden]" in css
     assert "display: none !important" in css
+    # FOUC guard：JS 写入 data-v2-layout 前窄屏先亮 Unsupported
+    assert "html:not([data-v2-layout]) #v2-unsupported[hidden]" in css
+    assert 'setAttribute("data-v2-layout"' in (
+        STUDIO_DIR / "homepage-v2" / "unsupported.js"
+    ).read_text(encoding="utf-8")
+    # Unsupported 态隐藏首页帮助 FAB
+    help_css = (STUDIO_DIR / "help-drawer.css").read_text(encoding="utf-8")
+    assert 'html[data-v2-layout^="unsupported"] .studio-help-open--home' in help_css
+    # 卷轴页点扩大命中区
+    assert ".v2-carousel__dots button::after" in css
     # CTA 触控目标 ≥44px（AC-HP2-21）
     assert "min-height: 44px" in css
 

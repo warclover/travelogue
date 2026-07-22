@@ -6,6 +6,23 @@
 #v2-wizard-root[hidden],
 #v2-lightbox[hidden] { display: none !important; }
 
+/* FOUC guard：JS 写入 data-v2-layout 前，窄屏/竖屏平板先亮 Unsupported，
+   避免压扁桌面 Bento 闪一帧（dogfood P1）。JS 就绪后由此属性接管。 */
+@media (max-width: 767px), (max-width: 1023px) and (orientation: portrait) {
+  html:not([data-v2-layout]) #v2-unsupported[hidden] {
+    display: flex !important;
+  }
+  html:not([data-v2-layout]) #v2-bento-main {
+    display: none !important;
+  }
+  html:not([data-v2-layout]) #v2-unsupported-actions[hidden] {
+    display: flex !important;
+  }
+  html:not([data-v2-layout]) #v2-unsupported-copy[hidden] {
+    display: inline-flex !important;
+  }
+}
+
 .v2-skip-link {
   position: absolute;
   left: -9999px;

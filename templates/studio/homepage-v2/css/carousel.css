@@ -101,7 +101,7 @@
   width: 36px;
   height: 36px;
   border: none;
-  background: rgba(15, 23, 42, .58);
+  background: color-mix(in srgb, var(--v2-ink) 58%, transparent);
   color: #fff;
   border-radius: 50%;
   cursor: pointer;
@@ -145,22 +145,39 @@
 .v2-phone__demo-flag {
   flex-shrink: 0;
 }
-.v2-carousel__dots { display: flex; gap: 5px; }
+.v2-carousel__dots {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+/* 视觉点保持 6px；按钮命中区 ≥28px */
 .v2-carousel__dots button {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+.v2-carousel__dots button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 6px;
   height: 6px;
-  padding: 0;
-  border: 1px solid #0f172a;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--studio-panel-ink, #14110d);
   border-radius: 50%;
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .45);
-  cursor: pointer;
 }
-.v2-carousel__dots button.is-active {
-  background-color: #fff;
+.v2-carousel__dots button.is-active::after {
   width: 16px;
   border-radius: 3px;
-  border-color: #0f172a;
   box-shadow: 0 1px 6px rgba(0, 0, 0, .5);
 }
 .v2-carousel__hint {

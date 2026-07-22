@@ -114,7 +114,11 @@ function populateFailedUi(err, pending) {
   var recent = !canContinue ? latestUserTrip() : null;
 
   setHidden(continueBtn, !authRecoverable || !canContinue);
+  // 非鉴权失败禁止露出「去配置写作引擎」（避免导入失败误导为 AI 配置）
   setHidden(settingsBtn, !authRecoverable);
+  if (settingsBtn && !authRecoverable) {
+    settingsBtn.setAttribute("hidden", "");
+  }
   setHidden(openRecent, !(authRecoverable && recent));
   if (continueBtn && authRecoverable) {
     continueBtn.textContent = "继续生成本机游记";

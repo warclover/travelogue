@@ -4,6 +4,7 @@
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
+import { SHEET_FOCUSABLE } from "./constants.js";
 import {
   isHelpL1Blocked,
   markCapabilityCardSeen,
@@ -17,6 +18,39 @@ import { V2 } from "../homepage-v2/store.js";
 var ROOT_ID = "studio-capability-card-root";
 var _visible = false;
 var _scheduled = false;
+var _trapHandler = null;
+
+function focusableEls(container) {
+  return Array.prototype.slice
+    .call(container.querySelectorAll(SHEET_FOCUSABLE))
+    .filter(function (el) {
+      return !el.hidden && (el.offsetParent !== null || el === document.activeElement);
+    });
+}
+
+function trapFocus(dialog) {
+  releaseTrap(dialog);
+  _trapHandler = function (e) {
+    if (e.key !== "Tab") return;
+    var els = focusableEls(dialog);
+    if (!els.length) return;
+    var first = els[0];
+    var last = els[els.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  dialog.addEventListener("keydown", _trapHandler);
+}
+
+function releaseTrap(dialog) {
+  if (_trapHandler && dialog) dialog.removeEventListener("keydown", _trapHandler);
+  _trapHandler = null;
+}
 
 function ensureRoot() {
   var el = document.getElementById(ROOT_ID);
@@ -42,26 +76,7 @@ function ensureRoot() {
     "</p>" +
     "</div>";
   document.body.appendChild(el);
-  if (!document.getElementById("studio-capability-card-style")) {
-    var style = document.createElement("style");
-    style.id = "studio-capability-card-style";
-    style.textContent =
-      ".studio-capability-card{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;}" +
-      ".studio-capability-card[hidden]{display:none!important;}" +
-      ".studio-capability-card__scrim{position:absolute;inset:0;background:rgba(20,28,26,.4);}" +
-      ".studio-capability-card__panel{position:relative;z-index:1;width:min(400px,92vw);background:#f7f5f0;color:#1a2420;" +
-      "border-radius:14px;padding:22px 22px 18px;border:1px solid #c5d0ca;box-sizing:border-box;}" +
-      ".studio-capability-card__close{position:absolute;top:10px;right:12px;border:0;background:transparent;" +
-      "font-size:22px;line-height:1;cursor:pointer;color:#4a5c55;}" +
-      ".studio-capability-card__title{margin:0 28px 8px 0;font-size:17px;font-weight:650;line-height:1.35;}" +
-      ".studio-capability-card__body{margin:0;font-size:13px;color:#4a5c55;line-height:1.5;}" +
-      ".studio-capability-card__actions{margin-top:16px;}" +
-      ".studio-capability-card__primary{border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;" +
-      "cursor:pointer;background:#2f6b55;color:#fff;}" +
-      ".studio-capability-card__linkrow{margin:12px 0 0;}" +
-      ".studio-capability-card__link{border:0;background:transparent;padding:0;color:#2f6b55;font-size:13px;cursor:pointer;}";
-    document.head.appendChild(style);
-  }
+  /* Styles: capability-card.css via studio-home-v2.css（UI Detail Wave5） */
   el.addEventListener("click", function (ev) {
     var t = ev.target;
     if (t && t.getAttribute && t.getAttribute("data-cap-dismiss")) {
@@ -116,6 +131,7 @@ function dismissCapabilityCard(cta) {
 
 export function closeCapabilityCard() {
   var el = document.getElementById(ROOT_ID);
+  releaseTrap(el);
   if (el) el.hidden = true;
   _visible = false;
 }
@@ -147,6 +163,7 @@ export function showCapabilityCard() {
   var el = ensureRoot();
   el.hidden = false;
   _visible = true;
+  trapFocus(el);
   // D-DLLM-13：本会话压制非关键自动 Help L1
   markCapabilityCardSuppressHelpL1();
   trackStudioEvent("capability_card_show", {});

@@ -4,6 +4,17 @@
   --studio-font-ui:
     "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
     "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+  /* Light panel family · Settings / Sheet / Capability / Help（UI Detail Wave2+） */
+  --studio-panel-ink: #14110d;
+  --studio-panel-muted-solid: #5c574f;
+  --studio-panel-accent: #3d6b5a;
+  --studio-panel-accent-strong: #1a2f28;
+  --studio-panel-surface: #f3efe8;
+  --studio-panel-border: rgba(20, 17, 13, 0.18);
+  --studio-panel-focus: rgba(61, 107, 90, 0.45);
+  --studio-panel-title-size: 15px;
+  --studio-panel-label-size: 11px;
+  --studio-panel-chip-size: 11px;
 }
 
 .studio__modal-backdrop {
@@ -49,9 +60,11 @@
 }
 
 .studio__modal-help-link {
-  display: inline-block;
-  margin: -8px 0 16px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  margin: -4px 0 12px;
+  padding: 10px 2px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: #3d6b5a;
@@ -82,8 +95,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 9px 18px;
+  min-height: 44px;
+  padding: 10px 18px;
   border: 1px solid transparent;
   border-radius: 6px;
   font-family: inherit;
@@ -94,8 +107,8 @@
 }
 
 .studio__btn--sm {
-  min-height: 40px;
-  padding: 9px 16px;
+  min-height: 44px;
+  padding: 10px 16px;
   font-size: 13px;
 }
 
@@ -169,7 +182,7 @@ body.studio-modal-open {
   font-family: var(--studio-font-ui);
   font-size: 13px;
   line-height: 1.45;
-  color: #f7f2e9;
+  color: #f5f0e8;
   background: rgba(20, 17, 13, 0.92);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
   animation: studio-toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -177,6 +190,7 @@ body.studio-modal-open {
 
 .studio__toast--warn {
   background: rgba(120, 72, 18, 0.94);
+  color: #f5f0e8;
 }
 
 .studio__toast--leaving {

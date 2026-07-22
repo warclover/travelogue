@@ -30,7 +30,7 @@
   min-height: 44px;
   border: 1px solid rgba(255, 255, 255, .25);
   background: rgba(255, 255, 255, .06);
-  color: #ece8e0;
+  color: #f5f0e8;
   border-radius: 50%;
   font-size: 20px;
   line-height: 1;
@@ -43,7 +43,7 @@
   overflow: auto;
   border-radius: 6px;
   box-shadow: 0 30px 90px rgba(0, 0, 0, .6);
-  background: #14110d;
+  background: var(--studio-panel-ink, #14110d);
 }
 .v2-lightbox__scroll img { display: block; width: 100%; height: auto; }
 .v2-lightbox__page-ph {
@@ -54,20 +54,23 @@
   justify-content: center;
   font-family: var(--v2-font-display);
   font-style: italic;
-  color: rgba(255, 255, 255, .4);
-  background: linear-gradient(135deg, #232b25, #161b17);
+  color: rgba(245, 240, 232, .4);
+  background: linear-gradient(135deg, #23201a, #161411);
   border-bottom: 1px solid rgba(255, 255, 255, .06);
 }
 .v2-lightbox__caption {
   margin: 14px 0 0;
   text-align: center;
-  font-size: 11px;
+  font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: .04em;
-  color: rgba(255, 255, 255, .55);
+  color: rgba(245, 240, 232, .55);
 }
 
-/* ── Unsupported viewport ── */
+/* ── Unsupported viewport（UI Detail Wave9 · cream dark gate） ── */
 .v2-unsupported {
+  --un-ink: #f5f0e8;
+  --un-muted: rgba(245, 240, 232, 0.62);
+  --un-btn-ink: var(--studio-panel-accent-strong, #1a2f28);
   position: fixed;
   inset: 0;
   z-index: 3000;
@@ -76,13 +79,14 @@
   justify-content: center;
   padding: 24px;
   background: radial-gradient(circle at 50% 35%, #1a1714, #0c0b0a);
+  color: var(--un-ink);
 }
 .v2-unsupported__card {
   width: min(480px, 100%);
   text-align: center;
 }
 .v2-unsupported__brand {
-  font-size: 10px;
+  font-size: var(--studio-panel-label-size, 11px);
   letter-spacing: .24em;
   color: var(--v2-gold);
   margin: 0 0 18px;
@@ -92,13 +96,13 @@
   font-family: var(--v2-font-display);
   font-size: 24px;
   font-weight: 400;
-  color: #f5f0e8;
+  color: var(--un-ink);
 }
 .v2-unsupported__lead {
   margin: 0;
   font-size: 13px;
   line-height: 1.65;
-  color: rgba(255, 255, 255, .6);
+  color: var(--un-muted);
 }
 .v2-unsupported__actions {
   margin-top: 24px;
@@ -126,11 +130,11 @@
   width: 160px;
   padding: 48px 16px;
   box-sizing: border-box;
-  border: 1px dashed rgba(255, 255, 255, .22);
+  border: 1px dashed rgba(245, 240, 232, .22);
   border-radius: 12px;
   font-size: 12px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, .55);
+  color: var(--un-muted);
 }
 .v2-unsupported__btn {
   display: inline-flex;
@@ -140,9 +144,9 @@
   min-width: 200px;
   padding: 12px 20px;
   border: none;
-  border-radius: 999px;
-  background: #f5f0e8;
-  color: #1a1714;
+  border-radius: 8px;
+  background: var(--un-ink);
+  color: var(--un-btn-ink);
   font-family: var(--v2-font-sans);
   font-size: 14px;
   font-weight: 700;

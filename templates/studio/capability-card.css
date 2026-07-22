@@ -1,0 +1,101 @@
+/* Desktop LLM Setup · 首启能力卡（UI Detail Wave5 · panel tokens） */
+
+.studio-capability-card {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--studio-font-ui);
+}
+
+.studio-capability-card[hidden] {
+  display: none !important;
+}
+
+.studio-capability-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 13, 0.4);
+}
+
+.studio-capability-card__panel {
+  position: relative;
+  z-index: 1;
+  width: min(400px, 92vw);
+  box-sizing: border-box;
+  padding: 22px 22px 18px;
+  border: 1px solid var(--studio-panel-border, rgba(20, 17, 13, 0.18));
+  border-radius: 10px;
+  background: var(--studio-panel-surface, #f3efe8);
+  color: var(--studio-panel-ink, #14110d);
+}
+
+.studio-capability-card__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--studio-panel-muted-solid, #5c574f);
+}
+
+.studio-capability-card__title {
+  margin: 0 28px 8px 0;
+  font-size: var(--studio-panel-title-size, 15px);
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--studio-panel-ink, #14110d);
+}
+
+.studio-capability-card__body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--studio-panel-muted-solid, #5c574f);
+}
+
+.studio-capability-card__actions {
+  margin-top: 16px;
+}
+
+.studio-capability-card__primary {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--studio-panel-accent, #3d6b5a);
+  color: #fff;
+}
+
+.studio-capability-card__primary:hover,
+.studio-capability-card__primary:focus-visible {
+  background: var(--studio-panel-accent-strong, #1a2f28);
+  outline: none;
+}
+
+.studio-capability-card__linkrow {
+  margin: 12px 0 0;
+}
+
+.studio-capability-card__link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--studio-panel-accent, #3d6b5a);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.studio-capability-card__link:hover,
+.studio-capability-card__link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  outline: none;
+}

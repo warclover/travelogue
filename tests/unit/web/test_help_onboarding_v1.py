@@ -98,7 +98,7 @@ def test_help_w2_drawer_and_refine_save_markers() -> None:
     preview_css = (STUDIO / "preview-toolbar.css").read_text(encoding="utf-8")
 
     assert "「完成」和「更新版面」有什么区别" in help_js
-    assert "『完成』只是退出精修，不是更新版面" in help_js
+    assert "『完成』只退出精修，不会重排整本" in help_js
     assert "replayHelpHints" in help_js
     assert "replayWaitTips" in help_js
     assert "已重置。下次进入预览会再提示如何保存长图" in help_js

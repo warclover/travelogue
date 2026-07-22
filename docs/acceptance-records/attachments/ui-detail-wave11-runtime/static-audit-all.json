@@ -1,0 +1,702 @@
+{
+  "scope": "all",
+  "files": [
+    "templates/studio/studio-modal.css",
+    "templates/studio/preview-toolbar/modal-chrome.css",
+    "templates/studio/homepage-v2/css/overlays.css",
+    "templates/studio/homepage-v2/css/import-wizard.css",
+    "templates/studio/help-drawer.css",
+    "templates/studio/homepage-v2/css/bento.css",
+    "templates/studio/preview-toolbar/sheet.css",
+    "templates/studio/preview-toolbar/tokens.css",
+    "templates/studio/preview-toolbar/shell.css",
+    "templates/studio/preview-toolbar/longshot.css",
+    "templates/studio/preview-toolbar/drawers.css",
+    "templates/studio/preview-toolbar/legacy-bar.css",
+    "templates/studio/preview-toolbar/cohort.css",
+    "templates/studio/preview-toolbar/task-dock.css",
+    "templates/studio/preview-toolbar/v3-bar.css",
+    "templates/studio/capability-card.css",
+    "templates/studio/homepage-v2/css/chrome.css",
+    "templates/studio/homepage-v2/css/bench.css",
+    "templates/studio/homepage-v2/css/carousel.css",
+    "templates/studio/homepage-v2/css/theme-classic.css",
+    "templates/studio/homepage-v2/css/tokens.css",
+    "templates/studio/homepage-v2/css/phone.css",
+    "templates/studio/homepage-v2/css/shelf.css",
+    "templates/studio/homepage-v2/css/dev-panel.css"
+  ],
+  "summary": {
+    "findings": 12,
+    "P0": 0,
+    "P1": 0,
+    "P2": 12
+  },
+  "findings": [
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/bento.css",
+      "detail": "字号离散度偏高：12 种 → ['10px', '11px', '12px', '13px', '14px', '15px', '22px', '36px', '8px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/chrome.css",
+      "detail": "字号离散度偏高：8 种 → ['12px', '13px', '14px', '20px', '24px', '26px', '28px', 'var(--studio-panel-label-size, 11px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/chrome.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/import-wizard.css",
+      "detail": "字号离散度偏高：8 种 → ['11px', '12px', '13px', '14px', '16px', '21px', '24px', 'var(--studio-panel-label-size, 11px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/import-wizard.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/overlays.css",
+      "detail": "字号离散度偏高：9 种 → ['11px', '12px', '13px', '14px', '15px', '16px', '18px', '20px', 'var(--studio-panel-label-size, 11px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/overlays.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/overlays.css",
+      "detail": "color 声明离散度偏高：18 种",
+      "files": [
+        "templates/studio/homepage-v2/css/overlays.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/homepage-v2/css/theme-classic.css",
+      "detail": "color 声明离散度偏高：12 种",
+      "files": [
+        "templates/studio/homepage-v2/css/theme-classic.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/preview-toolbar/drawers.css",
+      "detail": "color 声明离散度偏高：13 种",
+      "files": [
+        "templates/studio/preview-toolbar/drawers.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/preview-toolbar/longshot.css",
+      "detail": "字号离散度偏高：9 种 → ['11px', '12px', '13px', '14px', '15px', '18px', '22px', '24px', 'var(--studio-panel-label-size, 11px)']",
+      "files": [
+        "templates/studio/preview-toolbar/longshot.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/preview-toolbar/longshot.css",
+      "detail": "color 声明离散度偏高：29 种",
+      "files": [
+        "templates/studio/preview-toolbar/longshot.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": "templates/studio/preview-toolbar/sheet.css",
+      "detail": "字号离散度偏高：8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": ".v2-settings-*",
+      "detail": "Settings 选择器字号 7 种 → ['11px', '12px', '13px', '22px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-label-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/homepage-v2/css/bento.css"
+      ]
+    },
+    {
+      "id": "D-UID-07",
+      "severity": "P2",
+      "selector": ".preview-sheet*",
+      "detail": "Preview sheet 选择器字号 8 种 → ['11px', '12px', '13px', '14px', '15px', '18px', 'var(--studio-panel-chip-size, 11px)', 'var(--studio-panel-title-size, 15px)']",
+      "files": [
+        "templates/studio/preview-toolbar/sheet.css"
+      ]
+    }
+  ],
+  "histograms": {
+    "fontSizeHistogram": {
+      "12px": 112,
+      "13px": 62,
+      "11px": 54,
+      "var(--studio-panel-label-size, 11px)": 23,
+      "14px": 18,
+      "10px": 13,
+      "16px": 7,
+      "15px": 7,
+      "18px": 7,
+      "22px": 6,
+      "var(--studio-panel-chip-size, 11px)": 6,
+      "20px": 4,
+      "24px": 4,
+      "var(--studio-panel-title-size, 15px)": 4,
+      "28px": 2,
+      "17px": 1,
+      "21px": 1,
+      "36px": 1,
+      "8px": 1,
+      "26px": 1,
+      "34px": 1,
+      "44px": 1
+    },
+    "colorHistogram": {
+      "#fff": 48,
+      "#f5f0e8": 11,
+      "#1a1408": 6,
+      "#4a5c55": 6,
+      "#6b7f78": 5,
+      "#14110d": 4,
+      "rgba(255, 255, 255, .85)": 4,
+      "#f5fbf8": 4,
+      "#e8f5ef": 4,
+      "#5c4a1a": 4,
+      "rgba(255, 255, 255, .4)": 4,
+      "rgba(255, 255, 255, .55)": 3,
+      "rgba(255, 255, 255, .82)": 3,
+      "#1a1510": 3,
+      "rgba(245, 240, 232, 0.72)": 3,
+      "#dff5ec": 3,
+      "#eceff1": 3,
+      "#2e5c4a": 3,
+      "rgba(20, 17, 13, .72)": 2,
+      "rgba(245, 240, 232, .78)": 2,
+      "rgba(245, 240, 232, .4)": 2,
+      "#ffd89a": 2,
+      "#c8e6d8": 2,
+      "#f0e0c0": 2,
+      "rgba(255, 255, 255, 0.2)": 2,
+      "#d4b896": 2,
+      "#40554c": 2,
+      "#2a3d36": 2,
+      "#d4e8df": 2,
+      "#a33b36": 2,
+      "rgba(255, 255, 255, .95)": 2,
+      "rgba(255, 255, 255, .35)": 2,
+      "#3d6b5a": 1,
+      "rgba(20, 17, 13, .62)": 1,
+      "#f7f2e9": 1,
+      "rgba(255, 255, 255, .92)": 1,
+      "rgba(255, 255, 255, .68)": 1,
+      "rgba(255, 255, 255, .86)": 1,
+      "rgba(255, 255, 255, .78)": 1,
+      "rgba(255, 245, 230, .92)": 1,
+      "#e8d5a3": 1,
+      "rgba(255, 255, 255, .9)": 1,
+      "#f5e6b8": 1,
+      "rgba(255, 255, 255, .7)": 1,
+      "rgba(245, 240, 232, .58)": 1,
+      "rgba(255, 255, 255, .48)": 1,
+      "#f0c8c2": 1,
+      "color-mix(in srgb, var(--studio-panel-ink, #14110d) 55%, transparent)": 1,
+      "#c62828": 1,
+      "#8a2b22": 1,
+      "#b8dcc8": 1,
+      "#ffe8c2": 1,
+      "rgba(120, 72, 20, 0.92)": 1,
+      "rgba(120, 72, 20, 0.95)": 1,
+      "#2d4a3e": 1,
+      "#ffc9c9": 1,
+      "#d8ebe2": 1,
+      "#e3f7ff": 1,
+      "rgba(255, 255, 255, 0.5)": 1,
+      "#2e7d32": 1,
+      "#263238": 1,
+      "rgba(245, 240, 232, 0.58)": 1,
+      "rgba(245, 240, 232, 0.82)": 1,
+      "#b8ccc4": 1,
+      "#6b4c1e": 1,
+      "#9b2c2c": 1,
+      "#2f4f44": 1,
+      "#24352e": 1,
+      "#5c6f66": 1,
+      "#8a5a1e": 1,
+      "#2a4a40": 1,
+      "#5a6e66": 1,
+      "rgba(255, 255, 255, 0.85)": 1,
+      "#f5d76e": 1,
+      "#3a2f10": 1,
+      "#d4e8df !important": 1,
+      "#d4a843": 1,
+      "rgba(245, 240, 232, 0.62)": 1,
+      "color-mix(in srgb, var(--v2-gold, #d4a843) 92%, #fff) !important": 1,
+      "rgba(255, 255, 255, 0.72)": 1,
+      "#a8dcc8": 1,
+      "rgba(245, 240, 232, .55)": 1,
+      "rgba(255, 255, 255, .6)": 1,
+      "rgba(255, 255, 255, .3)": 1,
+      "rgba(255, 255, 255, .8)": 1,
+      "rgba(255, 255, 255, .12)": 1,
+      "rgba(0, 0, 0, .35)": 1
+    },
+    "perFile": {
+      "templates/studio/studio-modal.css": {
+        "fontSizeUnique": [
+          "13px",
+          "14px",
+          "17px"
+        ],
+        "fontSizeCount": 3,
+        "colorUnique": [
+          "#14110d",
+          "#3d6b5a",
+          "#f5f0e8",
+          "#f7f2e9",
+          "#fff",
+          "rgba(20, 17, 13, .62)",
+          "rgba(20, 17, 13, .72)"
+        ],
+        "colorCount": 7
+      },
+      "templates/studio/preview-toolbar/modal-chrome.css": {
+        "fontSizeUnique": [],
+        "fontSizeCount": 0,
+        "colorUnique": [],
+        "colorCount": 0
+      },
+      "templates/studio/homepage-v2/css/overlays.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "16px",
+          "18px",
+          "20px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 9,
+        "colorUnique": [
+          "#1a1510",
+          "#e8d5a3",
+          "#f5e6b8",
+          "#fff",
+          "rgba(245, 240, 232, .4)",
+          "rgba(245, 240, 232, .58)",
+          "rgba(245, 240, 232, .78)",
+          "rgba(255, 245, 230, .92)",
+          "rgba(255, 255, 255, .48)",
+          "rgba(255, 255, 255, .55)",
+          "rgba(255, 255, 255, .68)",
+          "rgba(255, 255, 255, .7)",
+          "rgba(255, 255, 255, .78)",
+          "rgba(255, 255, 255, .82)",
+          "rgba(255, 255, 255, .85)",
+          "rgba(255, 255, 255, .86)",
+          "rgba(255, 255, 255, .9)",
+          "rgba(255, 255, 255, .92)"
+        ],
+        "colorCount": 18
+      },
+      "templates/studio/homepage-v2/css/import-wizard.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "16px",
+          "21px",
+          "24px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 8,
+        "colorUnique": [
+          "#f0c8c2",
+          "#f5f0e8",
+          "#fff"
+        ],
+        "colorCount": 3
+      },
+      "templates/studio/help-drawer.css": {
+        "fontSizeUnique": [
+          "12px",
+          "13px",
+          "16px",
+          "22px",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 5,
+        "colorUnique": [
+          "#f5f0e8",
+          "color-mix(in srgb, var(--studio-panel-ink, #14110d) 55%, transparent)",
+          "rgba(245, 240, 232, 0.72)"
+        ],
+        "colorCount": 3
+      },
+      "templates/studio/homepage-v2/css/bento.css": {
+        "fontSizeUnique": [
+          "10px",
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "22px",
+          "36px",
+          "8px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-label-size, 11px)",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 12,
+        "colorUnique": [
+          "#8a2b22",
+          "#b8dcc8",
+          "#c62828",
+          "#ffd89a",
+          "#ffe8c2",
+          "#fff"
+        ],
+        "colorCount": 6
+      },
+      "templates/studio/preview-toolbar/sheet.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "18px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 8,
+        "colorUnique": [
+          "#1a1408",
+          "#f5f0e8",
+          "#fff",
+          "rgba(120, 72, 20, 0.92)",
+          "rgba(120, 72, 20, 0.95)"
+        ],
+        "colorCount": 5
+      },
+      "templates/studio/preview-toolbar/tokens.css": {
+        "fontSizeUnique": [],
+        "fontSizeCount": 0,
+        "colorUnique": [],
+        "colorCount": 0
+      },
+      "templates/studio/preview-toolbar/shell.css": {
+        "fontSizeUnique": [
+          "10px",
+          "12px",
+          "13px",
+          "14px",
+          "16px",
+          "20px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 7,
+        "colorUnique": [
+          "#2d4a3e",
+          "#c8e6d8",
+          "#dff5ec",
+          "#e8f5ef",
+          "#f5fbf8",
+          "#ffc9c9",
+          "#fff"
+        ],
+        "colorCount": 7
+      },
+      "templates/studio/preview-toolbar/longshot.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "15px",
+          "18px",
+          "22px",
+          "24px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 9,
+        "colorUnique": [
+          "#1a1408",
+          "#1a1510",
+          "#24352e",
+          "#263238",
+          "#2e5c4a",
+          "#2e7d32",
+          "#2f4f44",
+          "#40554c",
+          "#4a5c55",
+          "#5c6f66",
+          "#6b4c1e",
+          "#8a5a1e",
+          "#9b2c2c",
+          "#b8ccc4",
+          "#c8e6d8",
+          "#d4b896",
+          "#d8ebe2",
+          "#e3f7ff",
+          "#e8f5ef",
+          "#eceff1",
+          "#f0e0c0",
+          "#f5f0e8",
+          "#ffd89a",
+          "#fff",
+          "rgba(245, 240, 232, 0.58)",
+          "rgba(245, 240, 232, 0.72)",
+          "rgba(245, 240, 232, 0.82)",
+          "rgba(255, 255, 255, 0.2)",
+          "rgba(255, 255, 255, 0.5)"
+        ],
+        "colorCount": 29
+      },
+      "templates/studio/preview-toolbar/drawers.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "16px",
+          "18px",
+          "22px"
+        ],
+        "fontSizeCount": 7,
+        "colorUnique": [
+          "#1a1408",
+          "#2a3d36",
+          "#2a4a40",
+          "#4a5c55",
+          "#5a6e66",
+          "#5c4a1a",
+          "#6b7f78",
+          "#d4b896",
+          "#e8f5ef",
+          "#f5d76e",
+          "#f5f0e8",
+          "#fff",
+          "rgba(255, 255, 255, 0.85)"
+        ],
+        "colorCount": 13
+      },
+      "templates/studio/preview-toolbar/legacy-bar.css": {
+        "fontSizeUnique": [
+          "13px",
+          "15px"
+        ],
+        "fontSizeCount": 2,
+        "colorUnique": [
+          "#fff"
+        ],
+        "colorCount": 1
+      },
+      "templates/studio/preview-toolbar/cohort.css": {
+        "fontSizeUnique": [
+          "10px",
+          "12px",
+          "13px"
+        ],
+        "fontSizeCount": 3,
+        "colorUnique": [
+          "#3a2f10",
+          "#4a5c55",
+          "#5c4a1a",
+          "#6b7f78",
+          "#fff"
+        ],
+        "colorCount": 5
+      },
+      "templates/studio/preview-toolbar/task-dock.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "16px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 6,
+        "colorUnique": [
+          "#1a1408",
+          "#d4a843",
+          "#d4e8df",
+          "#d4e8df !important",
+          "#f5f0e8",
+          "#fff",
+          "color-mix(in srgb, var(--v2-gold, #d4a843) 92%, #fff) !important",
+          "rgba(245, 240, 232, 0.62)",
+          "rgba(255, 255, 255, 0.72)"
+        ],
+        "colorCount": 9
+      },
+      "templates/studio/preview-toolbar/v3-bar.css": {
+        "fontSizeUnique": [
+          "13px",
+          "14px"
+        ],
+        "fontSizeCount": 2,
+        "colorUnique": [
+          "#1a1408",
+          "#a8dcc8",
+          "#dff5ec",
+          "#eceff1",
+          "#f5fbf8",
+          "#fff"
+        ],
+        "colorCount": 6
+      },
+      "templates/studio/capability-card.css": {
+        "fontSizeUnique": [
+          "13px",
+          "14px",
+          "22px",
+          "var(--studio-panel-title-size, 15px)"
+        ],
+        "fontSizeCount": 4,
+        "colorUnique": [
+          "#fff"
+        ],
+        "colorCount": 1
+      },
+      "templates/studio/homepage-v2/css/chrome.css": {
+        "fontSizeUnique": [
+          "12px",
+          "13px",
+          "14px",
+          "20px",
+          "24px",
+          "26px",
+          "28px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 8,
+        "colorUnique": [
+          "#f5f0e8",
+          "rgba(245, 240, 232, .4)",
+          "rgba(245, 240, 232, .55)"
+        ],
+        "colorCount": 3
+      },
+      "templates/studio/homepage-v2/css/bench.css": {
+        "fontSizeUnique": [
+          "10px",
+          "11px",
+          "12px",
+          "24px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 6,
+        "colorUnique": [
+          "#a33b36",
+          "#d4e8df",
+          "#fff"
+        ],
+        "colorCount": 3
+      },
+      "templates/studio/homepage-v2/css/carousel.css": {
+        "fontSizeUnique": [
+          "10px",
+          "13px",
+          "18px"
+        ],
+        "fontSizeCount": 3,
+        "colorUnique": [
+          "#fff"
+        ],
+        "colorCount": 1
+      },
+      "templates/studio/homepage-v2/css/theme-classic.css": {
+        "fontSizeUnique": [
+          "11px",
+          "12px",
+          "13px",
+          "14px",
+          "22px",
+          "28px",
+          "34px"
+        ],
+        "fontSizeCount": 7,
+        "colorUnique": [
+          "#14110d",
+          "#f5f0e8",
+          "#fff",
+          "rgba(255, 255, 255, .12)",
+          "rgba(255, 255, 255, .3)",
+          "rgba(255, 255, 255, .35)",
+          "rgba(255, 255, 255, .4)",
+          "rgba(255, 255, 255, .6)",
+          "rgba(255, 255, 255, .8)",
+          "rgba(255, 255, 255, .82)",
+          "rgba(255, 255, 255, .85)",
+          "rgba(255, 255, 255, .95)"
+        ],
+        "colorCount": 12
+      },
+      "templates/studio/homepage-v2/css/tokens.css": {
+        "fontSizeUnique": [],
+        "fontSizeCount": 0,
+        "colorUnique": [],
+        "colorCount": 0
+      },
+      "templates/studio/homepage-v2/css/phone.css": {
+        "fontSizeUnique": [
+          "10px",
+          "12px"
+        ],
+        "fontSizeCount": 2,
+        "colorUnique": [
+          "rgba(0, 0, 0, .35)"
+        ],
+        "colorCount": 1
+      },
+      "templates/studio/homepage-v2/css/shelf.css": {
+        "fontSizeUnique": [
+          "12px",
+          "13px",
+          "15px",
+          "18px",
+          "44px"
+        ],
+        "fontSizeCount": 5,
+        "colorUnique": [
+          "#a33b36",
+          "#fff"
+        ],
+        "colorCount": 2
+      },
+      "templates/studio/homepage-v2/css/dev-panel.css": {
+        "fontSizeUnique": [
+          "11px",
+          "var(--studio-panel-label-size, 11px)"
+        ],
+        "fontSizeCount": 2,
+        "colorUnique": [
+          "rgba(255, 255, 255, .55)"
+        ],
+        "colorCount": 1
+      }
+    }
+  }
+}

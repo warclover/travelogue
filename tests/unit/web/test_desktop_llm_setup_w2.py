@@ -29,6 +29,9 @@ def test_capability_card_contract() -> None:
     assert "studio-capability-card-root" in help_js
     assert "travelogue:capability-card-done" in cap
     assert "travelogue:capability-card-done" in settings
+    assert "trapFocus" in cap
+    assert "SHEET_FOCUSABLE" in cap
+    assert 'aria-modal", "true"' in cap or "aria-modal" in cap
     assert "isCapabilityCardSeen" in settings
     assert ">设置<" in home
     assert 'aria-label="设置"' in home
