@@ -9,6 +9,7 @@ import {
   trackStudioEvent,
   trackImportPhotoCullPref,
   trackImportKeepDupesPref,
+  trackImportPhotoKeepMode,
 } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import {
@@ -22,6 +23,8 @@ import {
   isPhotoPrefsNonDefault,
   shouldConfirmCloseWizard,
   canLeavePickStep,
+  derivePhotoPrefsFromMode,
+  resolvePhotoKeepModeFromDraft,
 } from "./import-wizard-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 import { openSettings } from "./settings-panel.js";
@@ -45,9 +48,9 @@ var _previewState = "idle";
 var _previewGen = 0;
 var PREVIEW_TIMEOUT_MS = 8000;
 var _importStarted = false;
-var _photoCullTouched = false;
-var _keepDupesTouched = false;
+var _photoKeepModeTouched = false;
 var _activeMode = "quick_share";
+var PHOTO_KEEP_ALL_RISK_THRESHOLD = 150;
 var _drawerOpen = false;
 var _wired = false;
 var _titleUserEdited = false;
@@ -141,14 +144,27 @@ function safeSet(id, val) {
   el.value = val || "";
 }
 
+function readPhotoKeepMode() {
+  var checked = document.querySelector('input[name="v2-wizard-photo-keep-mode"]:checked');
+  var v = checked ? String(checked.value || "").trim().toLowerCase() : "recommended";
+  if (v === "keep_bursts" || v === "keep_all") return v;
+  return "recommended";
+}
+
+function setPhotoKeepMode(mode) {
+  var m = String(mode || "recommended").trim().toLowerCase();
+  if (m !== "keep_bursts" && m !== "keep_all") m = "recommended";
+  document.querySelectorAll('input[name="v2-wizard-photo-keep-mode"]').forEach(function (input) {
+    input.checked = input.value === m;
+  });
+}
+
 function readPhotoCullEnabled() {
-  var el = $("v2-wizard-photo-cull");
-  return el ? !!el.checked : true;
+  return derivePhotoPrefsFromMode(readPhotoKeepMode()).photoCullEnabled;
 }
 
 function readKeepDupesEnabled() {
-  var el = $("v2-wizard-keep-dupes");
-  return el ? !!el.checked : false;
+  return derivePhotoPrefsFromMode(readPhotoKeepMode()).keepNearDuplicates;
 }
 
 function readLayoutDensity() {
@@ -168,20 +184,14 @@ function readTemplateParams() {
 }
 
 function updatePhotoSummary() {
-  var cull = readPhotoCullEnabled();
-  var keep = readKeepDupesEnabled();
-  var line = "";
+  var mode = readPhotoKeepMode();
+  var line = "照片处理：智能挑选已开启 · 连拍自动择优";
   var warn = false;
-  if (cull && !keep) {
-    line = "照片处理：智能挑选已开启 · 连拍自动择优";
-  } else if (cull && keep) {
+  if (mode === "keep_bursts") {
     line = "照片处理：智能挑选已开启 · 已保留连拍与近似照片";
     warn = true;
-  } else if (!cull && !keep) {
-    line = "照片处理：已关闭智能挑选";
-    warn = true;
-  } else {
-    line = "照片处理：已关闭智能挑选 · 已保留连拍与近似照片";
+  } else if (mode === "keep_all") {
+    line = "照片处理：全部保留（已跳过挑选 / 连拍去重 / 低清过滤）";
     warn = true;
   }
   var summary = $("v2-wizard-photo-summary");
@@ -193,44 +203,15 @@ function updatePhotoSummary() {
   });
 }
 
-function updatePhotoCullOptoutUi() {
-  updateKeepDupesNoteUi();
-  var optout = $("v2-wizard-photo-cull-optout");
-  if (!optout) return;
-  if (readPhotoCullEnabled()) {
-    optout.textContent = "";
-    show(optout, false);
-    updatePhotoSummary();
-    return;
+function updatePhotoKeepModeUi() {
+  var risk = $("v2-wizard-photo-keep-all-risk");
+  if (risk) {
+    var showRisk =
+      readPhotoKeepMode() === "keep_all" &&
+      _pendingPhotoCount != null &&
+      _pendingPhotoCount >= PHOTO_KEEP_ALL_RISK_THRESHOLD;
+    show(risk, showRisk);
   }
-  var parts = [];
-  if (_pendingPhotoCount != null) {
-    parts.push("不做智能挑选，" + _pendingPhotoCount + " 张照片将参与排版。");
-  } else {
-    parts.push("不做智能挑选，文件夹内照片将参与排版。");
-  }
-  parts.push("相同文件仍会自动去重，与智能挑选无关。");
-  optout.textContent = parts.join(" ");
-  show(optout, true);
-  updatePhotoSummary();
-}
-
-function updateKeepDupesNoteUi() {
-  var note = $("v2-wizard-keep-dupes-note");
-  if (!note) return;
-  if (!readKeepDupesEnabled()) {
-    note.textContent = "";
-    show(note, false);
-    updatePhotoSummary();
-    return;
-  }
-  if (readPhotoCullEnabled()) {
-    note.textContent =
-      "将保留相近照片进入排版池；智能挑选仍可能在成册时择优。取消「智能挑选照片」可完整成组。";
-  } else {
-    note.textContent = "将保留时间相近或画面相似的照片，适合完整记录精彩瞬间。";
-  }
-  show(note, true);
   updatePhotoSummary();
 }
 
@@ -412,7 +393,7 @@ function fetchAlbumPreview(albumPath) {
       renderVerifyLine();
       renderThumbs(_previewThumbs);
       updateCountHint();
-      updatePhotoCullOptoutUi();
+      updatePhotoKeepModeUi();
       updateLayoutDensityWarn();
       if (_step === "fine") {
         maybePrefillFineFromPreview();
@@ -632,6 +613,7 @@ function fineFieldsDirty() {
 
 function photoPrefsNonDefault() {
   return isPhotoPrefsNonDefault({
+    photoKeepMode: readPhotoKeepMode(),
     photoCullEnabled: readPhotoCullEnabled(),
     keepNearDuplicates: readKeepDupesEnabled(),
   });
@@ -663,16 +645,12 @@ function clearFineDraftFields() {
   });
   var sel = $("v2-wizard-template-mode");
   if (sel) sel.value = "smart";
-  var cull = $("v2-wizard-photo-cull");
-  if (cull) cull.checked = true;
-  var keep = $("v2-wizard-keep-dupes");
-  if (keep) keep.checked = false;
-  _photoCullTouched = false;
-  _keepDupesTouched = false;
+  setPhotoKeepMode("recommended");
+  _photoKeepModeTouched = false;
   _titleUserEdited = false;
   _dateUserEdited = false;
   _fineEntrySnapshot = null;
-  updatePhotoCullOptoutUi();
+  updatePhotoKeepModeUi();
   try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e) { /* ignore */ }
 }
 
@@ -789,7 +767,7 @@ function goToStep2(opts) {
   renderVerifyLine();
   renderThumbs(_previewThumbs);
   updateCountHint();
-  updatePhotoCullOptoutUi();
+  updatePhotoKeepModeUi();
   updateStartLabel();
   showPanel("confirm");
   refreshFirstTip();
@@ -863,10 +841,10 @@ function saveDraft() {
     featuredDir: safeGet("v2-wizard-featured-dir"),
     materialDir: safeGet("v2-wizard-material-dir"),
     layoutDensity: readLayoutDensity(),
+    photoKeepMode: readPhotoKeepMode(),
     photoCullEnabled: readPhotoCullEnabled(),
-    photoCullTouched: _photoCullTouched,
+    photoKeepModeTouched: _photoKeepModeTouched,
     keepNearDuplicates: readKeepDupesEnabled(),
-    keepDupesTouched: _keepDupesTouched,
     photoCount: _pendingPhotoCount,
     planFileName: (function () {
       var input = $("v2-wizard-plan-file");
@@ -902,12 +880,8 @@ function restoreDraftFields(draft) {
   safeSet("v2-wizard-material-dir", draft.materialDir || "");
   _titleUserEdited = !!(draft.title && String(draft.title).trim());
   _dateUserEdited = !!(draft.dateStart || draft.dateEnd);
-  var cull = $("v2-wizard-photo-cull");
-  if (cull) cull.checked = draft.photoCullEnabled !== false;
-  var keep = $("v2-wizard-keep-dupes");
-  if (keep) keep.checked = draft.keepNearDuplicates === true;
-  _photoCullTouched = !!draft.photoCullTouched;
-  _keepDupesTouched = !!draft.keepDupesTouched;
+  setPhotoKeepMode(resolvePhotoKeepModeFromDraft(draft));
+  _photoKeepModeTouched = !!(draft.photoKeepModeTouched || draft.photoCullTouched || draft.keepDupesTouched);
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
   _previewState = _pendingPhotoCount != null ? "ready" : "idle";
   var density = draft.layoutDensity || "balanced";
@@ -915,7 +889,7 @@ function restoreDraftFields(draft) {
     input.checked = input.value === density;
   });
   updateLayoutDensityWarn();
-  updatePhotoCullOptoutUi();
+  updatePhotoKeepModeUi();
 }
 
 function validateFineFields() {
@@ -981,6 +955,7 @@ function buildWizardPayload() {
   if (featuredDir) body.featuredDir = featuredDir;
   if (materialDir) body.materialDir = materialDir;
   if (_activeMode === "fine_craft") body.layoutDensity = readLayoutDensity();
+  body.photoKeepMode = readPhotoKeepMode();
   body.photoCullEnabled = readPhotoCullEnabled();
   body.keepNearDuplicates = readKeepDupesEnabled();
   if (_pendingPhotoCount != null) body.eligibleCount = _pendingPhotoCount;
@@ -1128,6 +1103,7 @@ function startUploadFromWizard() {
     titleUserSet: !!_titleUserEdited && !!trimmedTitle,
     place: place || "旅途",
     placeUserSet: !!place,
+    photoKeepMode: readPhotoKeepMode(),
     photoCullEnabled: readPhotoCullEnabled(),
     keepNearDuplicates: readKeepDupesEnabled(),
     template_mode: tpl.template_mode,
@@ -1493,34 +1469,35 @@ export function initImportWizard() {
     if (btn) btn.addEventListener("click", function () { toggleDrawer(!_drawerOpen); });
   });
 
-  var photoCull = $("v2-wizard-photo-cull");
-  if (photoCull) {
-    photoCull.addEventListener("change", function () {
-      _photoCullTouched = true;
-      updatePhotoCullOptoutUi();
+  document.querySelectorAll('input[name="v2-wizard-photo-keep-mode"]').forEach(function (input) {
+    input.addEventListener("change", function () {
+      _photoKeepModeTouched = true;
+      updatePhotoKeepModeUi();
       saveDraft();
+      var keepMode = readPhotoKeepMode();
+      var derived = derivePhotoPrefsFromMode(keepMode);
+      trackImportPhotoKeepMode({
+        photo_keep_mode: keepMode,
+        mode: _activeMode,
+        photo_count: _pendingPhotoCount,
+        pref_source: "draft",
+      });
       trackImportPhotoCullPref({
-        enabled: readPhotoCullEnabled(),
+        enabled: derived.photoCullEnabled,
         mode: _activeMode,
         photo_count: _pendingPhotoCount,
         pref_source: "draft",
+        derived_from_mode: true,
       });
-    });
-  }
-  var keepDupes = $("v2-wizard-keep-dupes");
-  if (keepDupes) {
-    keepDupes.addEventListener("change", function () {
-      _keepDupesTouched = true;
-      updateKeepDupesNoteUi();
-      saveDraft();
       trackImportKeepDupesPref({
-        enabled: readKeepDupesEnabled(),
+        enabled: derived.keepNearDuplicates,
         mode: _activeMode,
         photo_count: _pendingPhotoCount,
         pref_source: "draft",
+        derived_from_mode: true,
       });
     });
-  }
+  });
 
   var pathBtn = $("v2-wizard-path-submit");
   if (pathBtn) pathBtn.addEventListener("click", submitWithPath);

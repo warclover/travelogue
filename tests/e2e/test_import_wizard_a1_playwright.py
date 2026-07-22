@@ -330,7 +330,7 @@ def test_ac_a1_09_close_confirm_discard_resets_to_step1(wizard_server) -> None:
 
 
 def test_ac_a1_10_warn_summary_cull_off(wizard_server) -> None:
-    """AC-A1-10 · 关智能挑选 → warn 摘要 + payload false。"""
+    """AC-A1-10 / AC-F3 · 全部保留 → warn 摘要 + payload keep_all。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -339,15 +339,16 @@ def test_ac_a1_10_warn_summary_cull_off(wizard_server) -> None:
         _route_harness_import_mocks(page, photo_cull_enabled=False)
         _wizard_quick_folder_to_confirm(page)
         page.locator("#v2-wizard-photo-adjust").click()
-        page.locator("#v2-wizard-photo-cull").uncheck()
+        page.locator("#v2-wizard-photo-mode-keep-all").check()
         summary = page.locator("#v2-wizard-photo-summary")
-        assert "已关闭智能挑选" in summary.inner_text()
+        assert "全部保留" in summary.inner_text()
         assert "v2-wizard__photo-summary--warn" in (summary.get_attribute("class") or "")
         page.locator("#v2-wizard-start").click()
         _wait_visible(page, "v2-import-cancel")
         pending = page.evaluate(
             "() => JSON.parse(sessionStorage.getItem('travelogue.studio.activePending') || '{}')"
         )
+        assert pending.get("photoKeepMode") == "keep_all"
         assert pending.get("photoCullEnabled") is False
         browser.close()
 

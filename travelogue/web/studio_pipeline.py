@@ -58,6 +58,7 @@ class StudioPipelineResult:
     photo_cull_enabled: bool = True
     layout_eligible_count: int = 0
     keep_near_duplicates: bool = False
+    photo_keep_mode: str = "recommended"
     assets_written: int = 0
     media_warn: str = ""
     title_noise_fallback: bool = False
@@ -382,8 +383,16 @@ def _finalize_pipeline_result(
     cull_summary = curation.get("cullSummary") or {}
     cull_warn = str(cull_summary.get("warnMessage") or "") if cull_summary.get("maxPhotosExceeded") else ""
     intent = trip_final.get("intent") or {}
-    photo_cull_enabled = bool(intent.get("photoCullEnabled", True))
-    keep_near_duplicates = bool(intent.get("keepNearDuplicates", False))
+    from travelogue.domain.photo_keep_mode import resolve_photo_keep_prefs
+
+    keep_resolved = resolve_photo_keep_prefs(
+        photo_keep_mode=intent.get("photoKeepMode"),
+        photo_cull_enabled=bool(intent.get("photoCullEnabled", True)),
+        keep_near_duplicates=bool(intent.get("keepNearDuplicates", False)),
+    )
+    photo_cull_enabled = keep_resolved.photo_cull_enabled
+    keep_near_duplicates = keep_resolved.keep_near_duplicates
+    photo_keep_mode = keep_resolved.mode
     assets_written = len(trip_final.get("assets") or [])
     layout_eligible_count = int(
         cull_summary.get("finalLayoutEligibleCount")
@@ -445,6 +454,7 @@ def _finalize_pipeline_result(
         photo_cull_enabled=photo_cull_enabled,
         layout_eligible_count=layout_eligible_count,
         keep_near_duplicates=keep_near_duplicates,
+        photo_keep_mode=photo_keep_mode,
         assets_written=assets_written,
         media_warn=media_warn or "",
         title_noise_fallback=title_noise_fallback,
@@ -785,9 +795,24 @@ def run_studio_pipeline(
     layout_density: str | None = None,
     photo_cull_enabled: bool = True,
     keep_near_duplicates: bool = False,
+    photo_keep_mode: str | None = None,
     stop_after: str = "full",
     force_stub: bool = False,
 ) -> StudioPipelineResult:
+    from travelogue.domain.photo_keep_mode import resolve_photo_keep_prefs
+
+    keep_prefs = resolve_photo_keep_prefs(
+        photo_keep_mode=photo_keep_mode,
+        photo_cull_enabled=photo_cull_enabled,
+        keep_near_duplicates=keep_near_duplicates,
+    )
+    photo_cull_enabled = keep_prefs.photo_cull_enabled
+    keep_near_duplicates = keep_prefs.keep_near_duplicates
+    # 仅显式 mode 落盘 keep_all；兼容路径不写 keep_all
+    resolved_photo_keep_mode = (
+        keep_prefs.mode if photo_keep_mode else None
+    )
+
     album_dir = album_dir.resolve()
     cfg_path = resolve_studio_config(config)
     if cfg_path:
@@ -963,6 +988,8 @@ def run_studio_pipeline(
         )
         intent_kwargs["photo_cull_enabled"] = bool(photo_cull_enabled)
         intent_kwargs["keep_near_duplicates"] = bool(keep_near_duplicates)
+        if resolved_photo_keep_mode:
+            intent_kwargs["photo_keep_mode"] = resolved_photo_keep_mode
         apply_intent(trip, **intent_kwargs)
         # Flush intent before ingest so mid-ingest merge never needs to push it,
         # and concurrent HTTP PATCH can CAS against a real disk revision.

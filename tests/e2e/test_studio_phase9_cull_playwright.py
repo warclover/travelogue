@@ -323,10 +323,10 @@ def test_ac_f1_07_photo_cull_checkbox_no_overflow_390(studio_server) -> None:
             () => {
               const drawer = document.getElementById('v2-wizard-photo-drawer');
               if (drawer) drawer.hidden = false;
-              const optout = document.getElementById('v2-wizard-photo-cull-optout');
-              if (optout) {
-                optout.hidden = false;
-                optout.textContent = '不做智能挑选，58 张照片将参与排版。相同文件仍会自动去重，与智能挑选无关。';
+              const risk = document.getElementById('v2-wizard-photo-keep-all-risk');
+              if (risk) {
+                risk.hidden = false;
+                risk.textContent = '照片很多时成册更密、导出更长，观感可能变碎。';
               }
             }
             """
@@ -345,7 +345,7 @@ def test_ac_f1_07_photo_cull_checkbox_no_overflow_390(studio_server) -> None:
 
 
 def test_ac_f1_08_mode_switch_keeps_photo_cull_checkbox(studio_server) -> None:
-    """AC-F1-08 · 快速/精细模式切换不重置智能挑选 checkbox。"""
+    """AC-F1-08 / AC-F3 · 快速/精细模式切换不重置照片处理三选一。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1280, "height": 900})
@@ -356,12 +356,12 @@ def test_ac_f1_08_mode_switch_keeps_photo_cull_checkbox(studio_server) -> None:
         page.locator("#v2-wizard-path-submit").click()
         _wait_visible(page, "v2-wizard-step-confirm")
         page.locator("#v2-wizard-photo-adjust").click()
-        page.locator("#v2-wizard-photo-cull").uncheck()
+        page.locator("#v2-wizard-photo-mode-keep-all").check()
         page.locator("#v2-wizard-mode-fine").click()
-        unchecked_fine = page.locator("#v2-wizard-photo-cull").is_checked() is False
+        keep_all_fine = page.locator("#v2-wizard-photo-mode-keep-all").is_checked()
         page.locator("#v2-wizard-mode-quick").click()
-        unchecked_quick = page.locator("#v2-wizard-photo-cull").is_checked() is False
-        assert unchecked_fine and unchecked_quick
+        keep_all_quick = page.locator("#v2-wizard-photo-mode-keep-all").is_checked()
+        assert keep_all_fine and keep_all_quick
         browser.close()
 
 

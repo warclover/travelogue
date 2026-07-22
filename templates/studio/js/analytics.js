@@ -10,6 +10,7 @@ const ALLOWED = new Set([
   "import_success",
   "import_photo_cull_pref",
   "import_keep_dupes_pref",
+  "import_photo_keep_mode",
   "success_primary_click",
   "prep_open",
   "demo_try",
@@ -173,13 +174,17 @@ export function trackStudioEvent(event, meta) {
 
 const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";
 
-/** PRD-P9-F1 §6.7 · session 内是否曾手动改过智能挑选开关。 */
+/** PRD-P9-F1/F3 · session 内是否曾手动改过照片处理偏好。 */
 export function readPhotoCullPrefSource() {
   try {
     var raw = sessionStorage.getItem(IMPORT_DRAFT_KEY);
     if (!raw) return "default";
     var draft = JSON.parse(raw);
-    return draft && draft.photoCullTouched ? "draft" : "default";
+    if (!draft) return "default";
+    if (draft.photoKeepModeTouched || draft.photoCullTouched || draft.keepDupesTouched) {
+      return "draft";
+    }
+    return "default";
   } catch (e) {
     return "default";
   }
@@ -199,6 +204,7 @@ export function trackImportPhotoCullPref(meta) {
       ? !!meta.cull_user_line_present
       : null,
     pref_source: meta.pref_source === "draft" ? "draft" : "default",
+    derived_from_mode: meta.derived_from_mode === true,
   });
 }
 
@@ -210,6 +216,20 @@ export function trackImportKeepDupesPref(meta) {
     mode: meta.mode || "quick_share",
     photo_count: meta.photo_count != null ? meta.photo_count : null,
     assets_written: meta.assets_written != null ? meta.assets_written : null,
+    pref_source: meta.pref_source === "draft" ? "draft" : "default",
+    derived_from_mode: meta.derived_from_mode === true,
+  });
+}
+
+/** PRD-P9-F3 · 照片处理三选一变更或 import 完成时上报。 */
+export function trackImportPhotoKeepMode(meta) {
+  meta = meta || {};
+  var keepMode = String(meta.photo_keep_mode || meta.mode_keep || "recommended").trim().toLowerCase();
+  if (keepMode !== "keep_bursts" && keepMode !== "keep_all") keepMode = "recommended";
+  trackStudioEvent("import_photo_keep_mode", {
+    photo_keep_mode: keepMode,
+    mode: meta.mode || "quick_share",
+    photo_count: meta.photo_count != null ? meta.photo_count : null,
     pref_source: meta.pref_source === "draft" ? "draft" : "default",
   });
 }

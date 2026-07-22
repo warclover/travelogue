@@ -90,6 +90,19 @@ def test_apply_intent_photo_cull_enabled() -> None:
     assert trip["intent"]["photoCullEnabled"] is True
 
 
+def test_apply_intent_photo_keep_mode() -> None:
+    trip: dict = {"meta": {"places": ["旅途"]}}
+    apply_intent(
+        trip,
+        photo_keep_mode="keep_all",
+        photo_cull_enabled=False,
+        keep_near_duplicates=True,
+    )
+    assert trip["intent"]["photoKeepMode"] == "keep_all"
+    assert trip["intent"]["photoCullEnabled"] is False
+    assert trip["intent"]["keepNearDuplicates"] is True
+
+
 def test_apply_intent_accepts_travel_notes_and_date_range() -> None:
     trip: dict = {}
     apply_intent(

@@ -163,8 +163,8 @@ def test_ac_iw_04_default_no_visible_checkbox(wizard_server) -> None:
         page.locator("#v2-wizard-path-submit").click()
         _wait_visible(page, "v2-wizard-step-confirm")
 
-        assert not page.locator("#v2-wizard-photo-cull").is_visible()
-        assert not page.locator("#v2-wizard-keep-dupes").is_visible()
+        assert not page.locator("#v2-wizard-photo-mode-recommended").is_visible()
+        assert not page.locator("#v2-wizard-photo-mode-keep-all").is_visible()
         summary = page.locator("#v2-wizard-photo-summary").inner_text()
         assert "智能挑选已开启" in summary
         assert "连拍自动择优" in summary
@@ -172,7 +172,7 @@ def test_ac_iw_04_default_no_visible_checkbox(wizard_server) -> None:
 
 
 def test_ac_iw_05_drawer_toggle_updates_summary(wizard_server) -> None:
-    """AC-IW-05 · 展开抽屉取消智能挑选 → 摘要行同步更新。"""
+    """AC-IW-05 / AC-F3 · 展开抽屉选全部保留 → 摘要行同步更新。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -186,10 +186,10 @@ def test_ac_iw_05_drawer_toggle_updates_summary(wizard_server) -> None:
 
         page.locator("#v2-wizard-photo-adjust").click()
         _wait_visible(page, "v2-wizard-photo-drawer")
-        page.locator("#v2-wizard-photo-cull").uncheck()
+        page.locator("#v2-wizard-photo-mode-keep-all").check()
 
         summary = page.locator("#v2-wizard-photo-summary").inner_text()
-        assert "已关闭智能挑选" in summary
+        assert "全部保留" in summary
         browser.close()
 
 
@@ -463,6 +463,10 @@ def _route_harness_import_mocks(
                         "photoCount": photo_count,
                         "layoutEligibleCount": layout_eligible,
                         "photoCullEnabled": photo_cull_enabled,
+                        "photoKeepMode": (
+                            "keep_all" if not photo_cull_enabled else "recommended"
+                        ),
+                        "keepNearDuplicates": not photo_cull_enabled,
                         "segmentCount": 3,
                         "mode": import_mode,
                         "importMode": import_mode,
@@ -552,15 +556,13 @@ def test_ac_iw_ds_03_cull_disabled_first_success_copy(wizard_server) -> None:
 
         page.locator("#v2-wizard-photo-adjust").click()
         _wait_visible(page, "v2-wizard-photo-drawer")
-        page.locator("#v2-wizard-photo-cull").uncheck()
+        page.locator("#v2-wizard-photo-mode-keep-all").check()
 
         page.locator("#v2-wizard-start").click()
         page.wait_for_selector("#v2-success-open", timeout=30_000)
 
         details = page.locator("#v2-success-details").inner_text()
-        assert "不做智能挑选" in details
-        assert "129" in details
-        assert "120" in details
+        assert "已尽量保留全部可用照片" in details
         assert "经挑选" not in details
         browser.close()
 

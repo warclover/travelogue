@@ -20,6 +20,7 @@ import {
   trackStudioEvent,
   trackImportPhotoCullPref,
   trackImportKeepDupesPref,
+  trackImportPhotoKeepMode,
   readPhotoCullPrefSource,
 } from "../js/analytics.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
@@ -159,6 +160,10 @@ function buildUploadForm(files, opts) {
   if (opts.materialDir) form.append("materialDir", String(opts.materialDir));
   if (opts.force) form.append("force", "true");
   if (opts.forceStub) form.append("forceStub", "true");
+  var keepMode = String(opts.photoKeepMode || "").trim().toLowerCase();
+  if (keepMode === "recommended" || keepMode === "keep_bursts" || keepMode === "keep_all") {
+    form.append("photoKeepMode", keepMode);
+  }
   form.append("photoCullEnabled", opts.photoCullEnabled === false ? "false" : "true");
   form.append("keepNearDuplicates", opts.keepNearDuplicates === true ? "true" : "false");
   for (var i = 0; i < files.length; i++) {
@@ -506,6 +511,22 @@ function pollImport(jobId, gen, source) {
           ).trim() || null,
         });
       }
+      var keepModeDone = String(
+        (pending && pending.photoKeepMode) || result.photoKeepMode || ""
+      ).trim().toLowerCase();
+      if (keepModeDone !== "keep_bursts" && keepModeDone !== "keep_all") {
+        keepModeDone = result.photoCullEnabled === false && result.keepNearDuplicates === true
+          ? "keep_all"
+          : result.keepNearDuplicates === true
+            ? "keep_bursts"
+            : "recommended";
+      }
+      trackImportPhotoKeepMode({
+        photo_keep_mode: keepModeDone,
+        mode: (pending && pending.mode) || result.importMode || "quick_share",
+        photo_count: result.photoCount,
+        pref_source: readPhotoCullPrefSource(),
+      });
       trackImportPhotoCullPref({
         enabled: result.photoCullEnabled !== false,
         mode: (pending && pending.mode) || result.importMode || "quick_share",
@@ -513,6 +534,7 @@ function pollImport(jobId, gen, source) {
         layout_eligible_final: result.layoutEligibleCount,
         cull_user_line_present: !!(result.cullUserLine),
         pref_source: readPhotoCullPrefSource(),
+        derived_from_mode: true,
       });
       trackImportKeepDupesPref({
         enabled: result.keepNearDuplicates === true,
@@ -520,6 +542,7 @@ function pollImport(jobId, gen, source) {
         photo_count: result.photoCount,
         assets_written: result.assetsWritten,
         pref_source: readPhotoCullPrefSource(),
+        derived_from_mode: true,
       });
       // FE-FST-02 · 成功面优先；书架刷新并行不阻塞 FirstSuccess
       var terminalT0 = Date.now();
@@ -577,6 +600,7 @@ export function startV2Import(body, opts) {
     layoutDensity: body && body.layoutDensity ? body.layoutDensity : null,
     eligibleCount: body && body.eligibleCount != null ? body.eligibleCount : null,
     photoCullEnabled: body && body.photoCullEnabled !== false,
+    photoKeepMode: body && body.photoKeepMode ? body.photoKeepMode : null,
   });
   trackStudioEvent("template_create_submitted", {
     template_mode: tpl.template_mode,
@@ -679,6 +703,7 @@ export function startV2UploadImport(files, opts) {
     surface: "v2_sheet",
     mode: uploadMode,
     photoCullEnabled: opts.photoCullEnabled !== false,
+    photoKeepMode: opts.photoKeepMode || null,
     forceStub: forceStub || undefined,
   });
   try {
@@ -687,6 +712,7 @@ export function startV2UploadImport(files, opts) {
       fileCount: list.length,
       title: (opts.title || guessUploadTitle(list) || "我的旅途").slice(0, 20),
       mode: uploadMode,
+      photoKeepMode: opts.photoKeepMode || null,
       photoCullEnabled: opts.photoCullEnabled !== false,
       forceStub: forceStub,
     }));
@@ -703,6 +729,7 @@ export function startV2UploadImport(files, opts) {
       placeUserSet: opts.placeUserSet,
       force: !!force,
       forceStub: forceStub,
+      photoKeepMode: opts.photoKeepMode,
       photoCullEnabled: opts.photoCullEnabled,
       keepNearDuplicates: opts.keepNearDuplicates,
       mode: uploadMode,

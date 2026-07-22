@@ -430,6 +430,30 @@ def test_handle_import_passes_photo_cull_enabled_false(tmp_path: Path) -> None:
     assert worker_payload["photoCullEnabled"] is False
 
 
+def test_handle_import_photo_keep_mode_keep_all_derives_bools(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    album = tmp_path / "album"
+    album.mkdir()
+    handler = MockStudioHandler(
+        trips_dir,
+        json_body={
+            "albumPath": str(album),
+            "photoKeepMode": "keep_all",
+            "photoCullEnabled": True,
+            "keepNearDuplicates": False,
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+        ):
+            handle_import(handler)
+    worker_payload = run_job.call_args.args[1]
+    assert worker_payload["photoKeepMode"] == "keep_all"
+    assert worker_payload["photoCullEnabled"] is False
+    assert worker_payload["keepNearDuplicates"] is True
+
+
 def test_handle_reveal_denies_path_outside_trip(tmp_path: Path) -> None:
     trips_dir = tmp_path / "trips"
     create_trip("demo-reveal", trips_dir)

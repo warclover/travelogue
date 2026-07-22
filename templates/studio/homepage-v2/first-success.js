@@ -202,13 +202,20 @@ function populateSuccessUi(result) {
       var detailLines = [];
       var tplLine = result.templateFeedbackMessage || "";
       if (tplLine) detailLines.push(tplLine);
-      if (result.cullUserLine) {
-        detailLines.push(result.cullUserLine);
-      } else if (result.photoCullEnabled === false) {
-        detailLines.push(cullDisabledDetailLine(result));
-      }
-      if (result.keepNearDuplicates === true) {
-        detailLines.push(keepDupesDetailLine(result));
+      var keepMode = String(result.photoKeepMode || "").trim().toLowerCase();
+      if (keepMode === "keep_all") {
+        detailLines.push(
+          "已尽量保留全部可用照片（仍去掉损坏与完全相同的重复文件）"
+        );
+      } else {
+        if (result.cullUserLine) {
+          detailLines.push(result.cullUserLine);
+        } else if (result.photoCullEnabled === false) {
+          detailLines.push(cullDisabledDetailLine(result));
+        }
+        if (result.keepNearDuplicates === true) {
+          detailLines.push(keepDupesDetailLine(result));
+        }
       }
       var density = String(result.layoutDensity || "").toLowerCase();
       var densityLine = densitySummaryLine(density);

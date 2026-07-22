@@ -273,6 +273,7 @@ def apply_intent(
     layout_density: Any = _UNSET,
     photo_cull_enabled: Any = _UNSET,
     keep_near_duplicates: Any = _UNSET,
+    photo_keep_mode: Any = _UNSET,
     submitted_at: str | None = None,
 ) -> dict:
     """Single writer for Phase 4 ``trip.intent`` (PRD-PHASE4 §4.1/§14).
@@ -391,6 +392,18 @@ def apply_intent(
             intent.pop("layoutDensity", None)
         else:
             intent["layoutDensity"] = normalize_layout_density(layout_density)
+
+    if photo_keep_mode is not _UNSET:
+        from travelogue.domain.photo_keep_mode import normalize_photo_keep_mode
+
+        if photo_keep_mode is None:
+            intent.pop("photoKeepMode", None)
+        else:
+            mode = normalize_photo_keep_mode(photo_keep_mode)
+            if mode:
+                intent["photoKeepMode"] = mode
+            else:
+                intent.pop("photoKeepMode", None)
 
     if photo_cull_enabled is not _UNSET:
         if photo_cull_enabled is None:

@@ -76,6 +76,23 @@ def _parse_keep_near_duplicates(raw: object) -> bool:
     return False
 
 
+def _resolve_photo_keep_from_payload(payload: dict) -> tuple[str | None, bool, bool]:
+    """P9-F3 · photoKeepMode 优先并强制派生两布尔；无 mode 时走旧布尔且不跳低分。"""
+    from travelogue.domain.photo_keep_mode import (
+        normalize_photo_keep_mode,
+        resolve_photo_keep_prefs,
+    )
+
+    mode = normalize_photo_keep_mode(payload.get("photoKeepMode"))
+    resolved = resolve_photo_keep_prefs(
+        photo_keep_mode=mode,
+        photo_cull_enabled=_parse_photo_cull_enabled(payload.get("photoCullEnabled")),
+        keep_near_duplicates=_parse_keep_near_duplicates(payload.get("keepNearDuplicates")),
+    )
+    # 仅当请求显式带 mode 时回传枚举；旧客户端不写 photoKeepMode
+    return (mode, resolved.photo_cull_enabled, resolved.keep_near_duplicates)
+
+
 def ensure_studio_trust_local_album() -> None:
     """Desktop Studio entry points: allow local folder-picker albums by default.
 
@@ -220,6 +237,9 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
             payload["layoutDensity"] = normalize_layout_density(
                 fields.get("layoutDensity")
             )
+        keep_mode = str(fields.get("photoKeepMode") or "").strip()
+        if keep_mode:
+            payload["photoKeepMode"] = keep_mode
         payload["photoCullEnabled"] = _parse_photo_cull_enabled(
             fields.get("photoCullEnabled")
         )
@@ -401,8 +421,9 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         template_mode = "smart"
     template_id_raw = payload.get("template_id") or payload.get("templateId")
     template_id_str = str(template_id_raw).strip() if template_id_raw else None
-    photo_cull_enabled = _parse_photo_cull_enabled(payload.get("photoCullEnabled"))
-    keep_near_duplicates = _parse_keep_near_duplicates(payload.get("keepNearDuplicates"))
+    photo_keep_mode, photo_cull_enabled, keep_near_duplicates = (
+        _resolve_photo_keep_from_payload(payload if isinstance(payload, dict) else {})
+    )
 
     try:
         assert_album_importable(
@@ -472,6 +493,8 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "photoCullEnabled": photo_cull_enabled,
         "keepNearDuplicates": keep_near_duplicates,
     }
+    if photo_keep_mode:
+        worker_payload["photoKeepMode"] = photo_keep_mode
     if template_id_str:
         worker_payload["template_id"] = template_id_str
     if user_notes:

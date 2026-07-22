@@ -29,14 +29,49 @@ export function isFineSnapshotDirty(entrySnapshot, current) {
 }
 
 /**
- * 照片偏好是否非默认：智能挑选开 + 保留近重复关 为默认。
- * @param {{ photoCullEnabled?: boolean, keepNearDuplicates?: boolean }} prefs
+ * 照片偏好是否非默认：推荐精简为默认（P9-F3 三选一）。
+ * @param {{
+ *   photoKeepMode?: string,
+ *   photoCullEnabled?: boolean,
+ *   keepNearDuplicates?: boolean
+ * }} prefs
  */
 export function isPhotoPrefsNonDefault(prefs) {
   var p = prefs || {};
+  var mode = String(p.photoKeepMode || "").trim().toLowerCase();
+  if (mode === "recommended" || mode === "keep_bursts" || mode === "keep_all") {
+    return mode !== "recommended";
+  }
   var cullOn = p.photoCullEnabled !== false;
   var keepDupes = p.keepNearDuplicates === true;
   return !cullOn || keepDupes;
+}
+
+/** @param {string|null|undefined} mode */
+export function derivePhotoPrefsFromMode(mode) {
+  var m = String(mode || "recommended").trim().toLowerCase();
+  if (m === "keep_all") {
+    return { photoKeepMode: "keep_all", photoCullEnabled: false, keepNearDuplicates: true };
+  }
+  if (m === "keep_bursts") {
+    return { photoKeepMode: "keep_bursts", photoCullEnabled: true, keepNearDuplicates: true };
+  }
+  return { photoKeepMode: "recommended", photoCullEnabled: true, keepNearDuplicates: false };
+}
+
+/**
+ * 旧草稿两布尔 → 三档（session 内 cull 关映射 keep_all，与读盘推断不同）。
+ * @param {{ photoKeepMode?: string, photoCullEnabled?: boolean, keepNearDuplicates?: boolean }} draft
+ */
+export function resolvePhotoKeepModeFromDraft(draft) {
+  var d = draft || {};
+  var mode = String(d.photoKeepMode || "").trim().toLowerCase();
+  if (mode === "recommended" || mode === "keep_bursts" || mode === "keep_all") {
+    return mode;
+  }
+  if (d.photoCullEnabled === false) return "keep_all";
+  if (d.keepNearDuplicates === true) return "keep_bursts";
+  return "recommended";
 }
 
 /**

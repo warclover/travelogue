@@ -148,6 +148,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "import_fail_open_settings",
         "import_keep_dupes_pref",
         "import_photo_cull_pref",
+        "import_photo_keep_mode",
         "llm_provider_change",
         "llm_save_and_ping",
         "llm_settings_resume",

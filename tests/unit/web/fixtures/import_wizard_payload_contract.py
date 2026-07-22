@@ -19,6 +19,7 @@ QUICK_SHARE_REQUIRED_KEYS = frozenset(
         "template_mode",
         "photoCullEnabled",
         "keepNearDuplicates",
+        "photoKeepMode",
     }
 )
 

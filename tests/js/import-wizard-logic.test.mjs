@@ -40,6 +40,9 @@ test("isPhotoPrefsNonDefault", () => {
     isPhotoPrefsNonDefault({ photoCullEnabled: true, keepNearDuplicates: true }),
     true
   );
+  assert.equal(isPhotoPrefsNonDefault({ photoKeepMode: "recommended" }), false);
+  assert.equal(isPhotoPrefsNonDefault({ photoKeepMode: "keep_all" }), true);
+  assert.equal(isPhotoPrefsNonDefault({ photoKeepMode: "keep_bursts" }), true);
 });
 
 test("shouldConfirmCloseWizard 风险矩阵", () => {

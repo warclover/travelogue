@@ -78,7 +78,8 @@ V2_HOME_MARKERS = (
     "v2-success-open",
     "v2-success-stay",
     "v2-success-details",
-    "v2-wizard-photo-cull",
+    "v2-wizard-photo-mode-recommended",
+    "v2-wizard-photo-mode-keep-all",
     "打开卷轴预览",
     # M20 · 设置 Popover（手风琴五区 · 导入与分析 · D-DLLM-03 AI zone）
     "v2-settings-toggle",
@@ -352,7 +353,8 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "resetPrefillableFieldsForNewFolder" in wizard
     assert "syncFineSnapshotAfterPrefill" in wizard
     assert "_countHintTrackedKey" in wizard
-    assert "照片处理：已关闭智能挑选" in wizard
+    assert "照片处理：全部保留（已跳过挑选 / 连拍去重 / 低清过滤）" in wizard
+    assert "照片处理：智能挑选已开启 · 连拍自动择优" in wizard
     assert "已关闭智能挑选 · 连拍自动择优" not in wizard
     assert "advanced_fields_toggle" in wizard
     assert "close_confirm" in wizard
@@ -478,21 +480,23 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
         "版面气质怎样？",
         'name="v2-wizard-layout-density"',
         "拼图为主",
-        "v2-wizard-photo-cull",
-        "智能挑选照片（推荐）",
-        "v2-wizard-photo-cull-hint",
-        "v2-wizard-photo-cull-optout",
+        "v2-wizard-photo-mode-recommended",
+        "推荐精简（默认）",
+        "v2-wizard-photo-mode-keep-bursts",
+        "v2-wizard-photo-mode-keep-all",
+        "全部保留",
+        "v2-wizard-photo-keep-all-risk",
     ):
         assert marker in html, marker
     assert "layoutDensity" in wizard
     assert "readLayoutDensity" in wizard
-    assert "readPhotoCullEnabled" in wizard
-    assert "photoCullEnabled" in wizard
-    assert "trackImportPhotoCullPref" in wizard
+    assert "readPhotoKeepMode" in wizard
+    assert "photoKeepMode" in wizard
+    assert "trackImportPhotoKeepMode" in wizard
     assert "layoutDensity" in first_success or "大图为主" in first_success
-    assert "cullDisabledDetailLine" in first_success
-    assert "photoCullEnabled" in first_success
-    assert "trackImportPhotoCullPref" in run or "readPhotoCullPrefSource" in run
+    assert "已尽量保留全部可用照片" in first_success
+    assert "photoKeepMode" in first_success
+    assert "trackImportPhotoKeepMode" in run or "photoKeepMode" in run
 
     for marker in (
         "setActiveMode(",

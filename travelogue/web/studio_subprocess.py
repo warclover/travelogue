@@ -111,6 +111,11 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
             layout_density=payload.get("layoutDensity"),
             photo_cull_enabled=bool(payload.get("photoCullEnabled", False)),
             keep_near_duplicates=bool(payload.get("keepNearDuplicates", False)),
+            photo_keep_mode=(
+                str(payload.get("photoKeepMode")).strip()
+                if payload.get("photoKeepMode")
+                else None
+            ),
             force_stub=bool(payload.get("forceStub")),
         )
         progress_queue.put(
@@ -143,6 +148,8 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     "photoCullEnabled": result.photo_cull_enabled,
                     "layoutEligibleCount": result.layout_eligible_count,
                     "keepNearDuplicates": result.keep_near_duplicates,
+                    "photoKeepMode": getattr(result, "photo_keep_mode", None)
+                    or "recommended",
                     "assetsWritten": result.assets_written,
                     "mediaWarn": result.media_warn or "",
                     "titleNoiseFallback": bool(

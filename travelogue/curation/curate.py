@@ -734,7 +734,12 @@ def _curate_preflight(
         from travelogue.layout_engine.adapter import resolve_lse_config_for_trip
 
         app_cfg = resolve_lse_config_for_trip(app_cfg, trip_id)
-    res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
+    from travelogue.domain.photo_keep_mode import should_skip_low_res_exclusion
+
+    if should_skip_low_res_exclusion(trip.get("intent") if isinstance(trip, dict) else None):
+        res_warn = None
+    else:
+        res_warn = apply_low_resolution_exclusion(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     # BE-SFI-08 · 时间离群打标（多段豁免在 detect 内）
     from travelogue.curation.time_outlier import apply_time_outlier_marks
     from travelogue.curation.time_segments import cluster_time_segments

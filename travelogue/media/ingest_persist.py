@@ -235,7 +235,15 @@ def make_intent_folders_merge_mutator(memory_trip: dict):
         if not isinstance(disk_intent, dict):
             disk_trip["intent"] = {"version": mem_intent.get("version", "1"), "folders": dict(mem_folders)}
             # Keep required shape if memory has more; prefer minimal seed when disk empty.
-            for key in ("title", "places", "placesUserSet", "userNotes", "photoCullEnabled", "keepNearDuplicates"):
+            for key in (
+                "title",
+                "places",
+                "placesUserSet",
+                "userNotes",
+                "photoKeepMode",
+                "photoCullEnabled",
+                "keepNearDuplicates",
+            ):
                 if key in mem_intent:
                     disk_trip["intent"][key] = mem_intent[key]
             return

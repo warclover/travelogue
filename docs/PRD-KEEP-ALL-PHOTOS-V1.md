@@ -4,8 +4,8 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **功能名称** | 全部保留照片模式（Keep All Photos Mode） |
-| **文档版本** | **v0.1** |
-| **状态** | **Draft**（待评审） |
+| **文档版本** | **v0.1.1** |
+| **状态** | **In progress**（按草案开工 · 决策暂按建议结论） |
 | **DOC-STATUS** | **active** |
 | **功能代号** | **P9-F3** |
 | **前置条件** | [P9-F1 智能挑选](./PRD-PHOTO-CULL-USER-TOGGLE.md) · [P9-F2 保留连拍](./PRD-KEEP-BURST-TOGGLE.md) 已上线；Import Wizard v3 确认区为默认入口 |
@@ -105,18 +105,18 @@ flowchart LR
 
 ## 2. 待拍板决策（评审填写）
 
-| 决策 ID | 决策项 | **建议结论** | 备选 |
-|---------|--------|--------------|------|
-| **D-F3-01** | UI 形态 | **三选一**：推荐精简 / 保留连拍 / 全部保留（radio 或等效分段） | 主开关「全部保留」勾选后强制覆盖并灰显前两框 |
+| 决策 ID | 决策项 | **结论（开工锁定）** | 备选 |
+|---------|--------|----------------------|------|
+| **D-F3-01** | UI 形态 | **三选一**：推荐精简 / 保留连拍 / 全部保留（radio） | 主开关「全部保留」勾选后强制覆盖并灰显前两框 |
 | **D-F3-02** | 字段 | `intent.photoKeepMode`: `"recommended" \| "keep_bursts" \| "keep_all"` | 仅加 `keepAllPhotos: boolean` + 派生写两旧字段 |
 | **D-F3-03** | 兼容写入 | 选档后**同时**写回 `photoCullEnabled` / `keepNearDuplicates`，旧读路径不破 | 只写新字段 |
 | **D-F3-04** | 默认档 | `recommended`（= 今日默认） | — |
-| **D-F3-05** | 低分闸 | `keep_all` 时 **跳过** `apply_low_resolution_exclusion` 硬丢（或强制全部 `layoutEligible=true` 除损坏） | 仅降阈值（不推荐，难解释） |
+| **D-F3-05** | 低分闸 | `keep_all` 时 **跳过** `apply_low_resolution_exclusion` 硬丢 | 仅降阈值（不推荐，难解释） |
 | **D-F3-06** | MD5 / 损坏 / max_photos | **仍执行** | — |
-| **D-F3-07** | 「保留连拍」档与智能挑选 | `keep_bursts` ⇒ `keepNearDuplicates=true`，**智能挑选默认仍开**（与今日 F2 提示一致：完整成组可再关挑选——但三选一后「完整成组」请用户改选「全部保留」） | `keep_bursts` 同时关 cull |
+| **D-F3-07** | 「保留连拍」档与智能挑选 | `keep_bursts` ⇒ `keepNearDuplicates=true`，**智能挑选仍开**；完整成组引导至 `keep_all` | `keep_bursts` 同时关 cull |
 | **D-F3-08** | 记忆 | 仅 session 草稿；新会话回默认 `recommended`（同 D-F1-10） | localStorage |
 | **D-F3-09** | 大册提示 | ≥150 张选 `keep_all` 时一句风险提示（更密/更长/可能更碎） | 无提示 |
-| **D-F3-10** | 遥测 | `import_photo_keep_mode` + 派生布尔；保留既有 `import_photo_cull_pref` / `import_keep_dupes_pref` 或标记 `derived_from_mode` | 只打新事件 |
+| **D-F3-10** | 遥测 | `import_photo_keep_mode` + 派生布尔（`derived_from_mode`） | 只打新事件 |
 
 **建议冻结句（供评审勾选）**：
 
@@ -339,3 +339,4 @@ flowchart TD
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v0.1 | 2026-07-22 | 初稿 · 基于「勿第三平行勾选」产品建议 · P9-F3 · 三选一 + 跳过低分闸 · AC-F3-01～09 |
+| v0.1.1 | 2026-07-22 | 按建议结论开工：D-F3-01～10 锁定为实施基线；分支 `feat/p9-f3-keep-all-photos` |

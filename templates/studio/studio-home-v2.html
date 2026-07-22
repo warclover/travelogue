@@ -700,37 +700,40 @@
     </div>
 
     <div class="v2-wizard__photo-drawer" id="v2-wizard-photo-drawer" hidden>
-      <p class="v2-wizard__drawer-title">照片处理</p>
-      <label class="v2-wizard__check">
-        <input type="checkbox" id="v2-wizard-photo-cull" checked
-               aria-describedby="v2-wizard-photo-cull-hint v2-wizard-photo-cull-optout" />
-        <span>智能挑选照片（推荐）</span>
-      </label>
-      <p class="v2-wizard__check-hint" id="v2-wizard-photo-cull-hint">
-        自动去掉过于模糊和截图类照片。
-      </p>
-      <details class="v2-wizard__check-details">
-        <summary>说明</summary>
-        <p class="v2-wizard__hint">
-          自动去掉过于模糊和截图类照片。若文件夹里已是你的精选集，可取消勾选。
+      <p class="v2-wizard__drawer-title" id="v2-wizard-photo-drawer-title">照片处理</p>
+      <fieldset class="v2-wizard__photo-modes" aria-labelledby="v2-wizard-photo-drawer-title">
+        <legend class="v2-wizard__sr-only">照片处理方式</legend>
+        <label class="v2-wizard__check">
+          <input type="radio" name="v2-wizard-photo-keep-mode" value="recommended"
+                 id="v2-wizard-photo-mode-recommended" checked
+                 aria-describedby="v2-wizard-photo-mode-recommended-hint" />
+          <span>推荐精简（默认）</span>
+        </label>
+        <p class="v2-wizard__check-hint" id="v2-wizard-photo-mode-recommended-hint">
+          自动去掉过于模糊和截图类照片；相近连拍择优保留。
         </p>
-      </details>
-      <p class="v2-wizard__check-optout" id="v2-wizard-photo-cull-optout" hidden aria-live="polite"></p>
-      <label class="v2-wizard__check">
-        <input type="checkbox" id="v2-wizard-keep-dupes"
-               aria-describedby="v2-wizard-keep-dupes-hint v2-wizard-keep-dupes-note" />
-        <span>保留连拍与近似照片</span>
-      </label>
-      <p class="v2-wizard__check-hint" id="v2-wizard-keep-dupes-hint">
-        默认会合并时间相近或画面相似的照片；勾选后全部保留。
-      </p>
-      <details class="v2-wizard__check-details">
-        <summary>说明</summary>
-        <p class="v2-wizard__hint">
-          连拍与抓拍常记录同一瞬间的连续画面。默认系统会择优保留一张；若你希望完整保留这组精彩瞬间，勾选此项。完全相同的重复文件仍会自动去重。
+        <label class="v2-wizard__check">
+          <input type="radio" name="v2-wizard-photo-keep-mode" value="keep_bursts"
+                 id="v2-wizard-photo-mode-keep-bursts"
+                 aria-describedby="v2-wizard-photo-mode-keep-bursts-hint" />
+          <span>保留连拍与近似照片</span>
+        </label>
+        <p class="v2-wizard__check-hint" id="v2-wizard-photo-mode-keep-bursts-hint">
+          连拍/画面相近的照片进入资产池；智能挑选仍可能在成册时择优。
         </p>
-      </details>
-      <p class="v2-wizard__check-optout" id="v2-wizard-keep-dupes-note" hidden aria-live="polite"></p>
+        <label class="v2-wizard__check">
+          <input type="radio" name="v2-wizard-photo-keep-mode" value="keep_all"
+                 id="v2-wizard-photo-mode-keep-all"
+                 aria-describedby="v2-wizard-photo-mode-keep-all-hint v2-wizard-photo-keep-all-risk" />
+          <span>全部保留</span>
+        </label>
+        <p class="v2-wizard__check-hint" id="v2-wizard-photo-mode-keep-all-hint">
+          跳过智能挑选、连拍去重与低清过滤；仍去掉损坏文件与完全相同的重复文件。
+        </p>
+        <p class="v2-wizard__check-optout" id="v2-wizard-photo-keep-all-risk" hidden aria-live="polite">
+          照片很多时成册更密、导出更长，观感可能变碎。
+        </p>
+      </fieldset>
     </div>
   </div>
 </div>
