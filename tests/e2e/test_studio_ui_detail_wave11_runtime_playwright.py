@@ -13,6 +13,10 @@ import pytest
 
 from scripts.studio_ui_detail_static_audit import run_audit as run_static_audit
 from tests.e2e.test_studio_home_v2_ac_playwright import _goto_v2
+from tests.e2e.ui_detail_runtime_helpers import (
+    assert_no_blocking_findings,
+    findings_from_panel_metrics,
+)
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.paths import ROOT
 from travelogue.web.studio_jobs import reset_job_store
@@ -107,35 +111,9 @@ _MEASURE_PANEL_JS = """
 def _findings_from_panel(
     metrics: dict, *, surface: str, font_cap: int, color_cap: int
 ) -> list[dict]:
-    out: list[dict] = []
-    if metrics.get("error"):
-        return [
-            {
-                "id": "D-UID-HARNESS",
-                "severity": "P0",
-                "surface": surface,
-                "detail": metrics["error"],
-            }
-        ]
-    if metrics.get("fontSizeCount", 0) > font_cap:
-        out.append(
-            {
-                "id": "D-UID-03",
-                "severity": "P1",
-                "surface": surface,
-                "detail": f"字号种类 {metrics['fontSizeCount']}: {metrics.get('uniqueFontSizes')}",
-            }
-        )
-    if metrics.get("colorCount", 0) > color_cap:
-        out.append(
-            {
-                "id": "D-UID-04",
-                "severity": "P1",
-                "surface": surface,
-                "detail": f"颜色种类 {metrics['colorCount']}: {metrics.get('uniqueColors')}",
-            }
-        )
-    return out
+    return findings_from_panel_metrics(
+        metrics, surface=surface, font_cap=font_cap, color_cap=color_cap
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -313,10 +291,7 @@ def test_studio_ui_detail_wave11_runtime_closeout(studio_server) -> None:
         encoding="utf-8",
     )
 
-    p0 = [f for f in runtime["findings"] if f.get("severity") == "P0"]
-    p1 = [f for f in runtime["findings"] if f.get("severity") == "P1"]
-    assert p0 == [], p0
-    assert p1 == [], p1
+    assert_no_blocking_findings(runtime["findings"], label="wave11-runtime")
     assert runtime["surfaces"]["S-HELP"].get("textSampleCount", 0) >= 1
     assert runtime["surfaces"]["S-CAP"].get("textSampleCount", 0) >= 1
     assert runtime["surfaces"]["S-TOAST"].get("textSampleCount", 0) >= 1

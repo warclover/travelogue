@@ -181,7 +181,7 @@
 }
 
 .preview-sheet__tab.is-active {
-  background: #e8f5ef;
+  background: color-mix(in srgb, var(--sheet-accent) 14%, #fff);
   color: var(--sheet-accent);
   font-weight: 600;
 }
@@ -668,7 +668,7 @@
 }
 
 .preview-sheet__chip.is-on {
-  background: #e8f5ef;
+  background: color-mix(in srgb, var(--sheet-accent) 14%, #fff);
   border-color: var(--sheet-accent);
   color: var(--sheet-accent);
   font-weight: 600;
@@ -734,8 +734,9 @@ body.preview-sheet-open {
   max-width: min(320px, calc(100vw - 32px));
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(26, 47, 40, 0.96);
-  color: #f5fbf8;
+  /* UI Detail · cream/gold tip（禁森林双色回潮） */
+  background: rgba(20, 17, 13, 0.94);
+  color: #f5f0e8;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(212, 168, 67, 0.45);
   font-size: 13px;
@@ -808,7 +809,7 @@ body.preview-sheet-open {
   width: 6px;
   height: 6px;
   margin-left: 6px;
-  background: #ffb74d;
+  background: var(--sheet-warn, #d4a843);
   border-radius: 50%;
   vertical-align: middle;
 }

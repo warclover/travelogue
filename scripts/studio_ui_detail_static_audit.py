@@ -20,7 +20,7 @@ Usage:
   python scripts/studio_ui_detail_static_audit.py --wave wizard-help-closeout
   python scripts/studio_ui_detail_static_audit.py --wave all
   python scripts/studio_ui_detail_static_audit.py --json out/ui-detail-static.json
-  python scripts/studio_ui_detail_static_audit.py --strict   # exit 1 if P0 findings
+  python scripts/studio_ui_detail_static_audit.py --strict   # exit 1 if P0 or P1 findings
 """
 
 from __future__ import annotations
@@ -460,6 +460,32 @@ def find_settings_sheet_family_drift() -> list[Finding]:
                 ],
             )
         )
+
+    # Sheet mint / orange / forest tip leftovers（原 D-UID-09 整文件豁免 sheet）
+    if sheet.is_file():
+        sheet_body = _strip_comments(sheet.read_text(encoding="utf-8"))
+        stripped = re.sub(r"var\([^)]*\)", "", sheet_body).lower()
+        banned_sheet = (
+            "#e8f5ef",
+            "#ffb74d",
+            "#f5fbf8",
+            "rgba(26, 47, 40",
+            "rgba(47, 107, 85",
+        )
+        found = [b for b in banned_sheet if b in stripped]
+        if found:
+            findings.append(
+                Finding(
+                    id="D-UID-08",
+                    severity="P1",
+                    selector=".preview-sheet*",
+                    detail=(
+                        f"Sheet 仍含薄荷/橙/森林硬编码 {found} "
+                        f"（激活态应用 accent color-mix；tip 用 cream/gold）"
+                    ),
+                    files=["templates/studio/preview-toolbar/sheet.css"],
+                )
+            )
     return findings
 
 
@@ -971,6 +997,21 @@ def find_wizard_help_closeout_drift(paths: list[Path]) -> list[Finding]:
                         files=[rel],
                     )
                 )
+            forest = ("rgba(47, 107, 85", "#2f6b55", "rgba(120, 190, 160")
+            found_forest = [b for b in forest if b in lower]
+            if found_forest:
+                findings.append(
+                    Finding(
+                        id="D-UID-16",
+                        severity="P1",
+                        selector=".v2-wizard__demo",
+                        detail=(
+                            f"Wizard demo CTA 仍含旧森林色 {found_forest} "
+                            f"（应对齐 --v2-sheet-accent cream/gold）"
+                        ),
+                        files=[rel],
+                    )
+                )
 
         if path.name == "help-drawer.css":
             if "rgba(26, 47, 40" in lower or "#f7faf8" in lower:
@@ -1067,7 +1108,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Which surface wave to audit",
     )
     ap.add_argument("--json", type=Path, default=None, help="Write full JSON report")
-    ap.add_argument("--strict", action="store_true", help="Exit 1 when P0 findings exist")
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit 1 when P0 or P1 findings exist (P2 不阻断)",
+    )
     args = ap.parse_args(argv)
     report = run_audit(wave=args.wave)
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
@@ -1080,7 +1125,7 @@ def main(argv: list[str] | None = None) -> int:
             encoding="utf-8",
         )
         print(f"wrote {args.json}")
-    if args.strict and report["summary"]["P0"]:
+    if args.strict and (report["summary"]["P0"] or report["summary"]["P1"]):
         return 1
     return 0
 

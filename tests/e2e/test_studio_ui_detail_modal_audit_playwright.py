@@ -6,7 +6,7 @@ Collects computed styles for:
   - Import Wizard
 
 Writes JSON + screenshots under docs/acceptance-records/attachments/ui-detail-modal-pilot/.
-Does not fail on style drift (find-only); fails only if audit harness cannot run.
+Fails on P0/P1 findings (semantic color families); P2 is reported only.
 """
 
 from __future__ import annotations
@@ -17,6 +17,10 @@ from pathlib import Path
 import pytest
 
 from scripts.studio_ui_detail_static_audit import run_audit as run_static_audit
+from tests.e2e.ui_detail_runtime_helpers import (
+    assert_no_blocking_findings,
+    findings_from_panel_metrics,
+)
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from travelogue.paths import ROOT
 
@@ -328,34 +332,10 @@ def _findings_from_modal(metrics: dict) -> list[dict]:
 
 
 def _findings_from_panel(metrics: dict, *, surface: str) -> list[dict]:
-    out: list[dict] = []
-    if metrics.get("error"):
-        return [
-            {
-                "id": "D-UID-HARNESS",
-                "severity": "P0",
-                "detail": f"{surface}: {metrics['error']}",
-            }
-        ]
-    if metrics.get("fontSizeCount", 0) > 5:
-        out.append(
-            {
-                "id": "D-UID-03",
-                "severity": "P1",
-                "surface": surface,
-                "detail": f"字号种类 {metrics['fontSizeCount']}: {metrics.get('uniqueFontSizes')}",
-            }
-        )
-    if metrics.get("colorCount", 0) > 4:
-        out.append(
-            {
-                "id": "D-UID-04",
-                "severity": "P1",
-                "surface": surface,
-                "detail": f"颜色种类 {metrics['colorCount']}: {metrics.get('uniqueColors')}",
-            }
-        )
-    return out
+    # Dark overlays: ink / muted / accent / CTA；语义色族 ≤4（透明度变体合并）
+    return findings_from_panel_metrics(
+        metrics, surface=surface, font_cap=5, color_cap=4
+    )
 
 
 def _measure_preview_chrome_dual(page, base: str) -> dict:
@@ -509,9 +489,9 @@ def test_studio_ui_detail_modal_family_audit(studio_server, tmp_path: Path) -> N
 
         browser.close()
 
-    # merge static P0 into runtime findings list for one report
+    # merge static P0/P1 into runtime findings（P2 仅保留在 static 报告）
     for f in static_report.get("findings") or []:
-        if f.get("severity") == "P0":
+        if f.get("severity") in ("P0", "P1"):
             runtime["findings"].append(
                 {
                     "id": f["id"],
@@ -536,7 +516,7 @@ def test_studio_ui_detail_modal_family_audit(studio_server, tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    # Harness health + P0 regression gates
+    # Harness health + hard gate on P0/P1（消 find-only 假绿）
     assert "S-MODAL" in runtime["surfaces"]
     assert runtime["surfaces"]["S-MODAL"].get("title", {}).get("fontSize")
     dual_p0 = [
@@ -551,3 +531,4 @@ def test_studio_ui_detail_modal_family_audit(studio_server, tmp_path: Path) -> N
         if f.get("id") == "D-UID-01" and "studio__modal" in str(f.get("selector", ""))
     ]
     assert not static_modal_p0, f"static dual-standard remains: {static_modal_p0}"
+    assert_no_blocking_findings(runtime["findings"], label="modal-pilot")

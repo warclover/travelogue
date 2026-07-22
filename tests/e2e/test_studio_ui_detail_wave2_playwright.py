@@ -1,8 +1,8 @@
-"""Studio UI Detail · wave2 runtime audit: Settings + Preview sheet (find-only).
+"""Studio UI Detail · wave2 runtime audit: Settings + Preview sheet.
 
 Writes JSON + screenshots under
 docs/acceptance-records/attachments/ui-detail-wave2-settings-sheet/.
-Does not fail on style drift; fails only if harness cannot open surfaces.
+Fails on P0/P1 (static + runtime); P2 reported only.
 """
 
 from __future__ import annotations
@@ -14,6 +14,10 @@ import pytest
 
 from scripts.studio_ui_detail_static_audit import run_audit as run_static_audit
 from tests.e2e.test_studio_home_v2_ac_playwright import _goto_v2
+from tests.e2e.ui_detail_runtime_helpers import (
+    assert_no_blocking_findings,
+    findings_from_panel_metrics,
+)
 from tests.integration.studio.test_studio_server import _free_port, _start_studio_server
 from tests.preview_arc14_fixtures import demo_assets_available, seed_arc14_preview_trip
 from travelogue.paths import ROOT
@@ -95,39 +99,21 @@ _MEASURE_PANEL_JS = """
 """
 
 
-def _findings_from_panel(metrics: dict, *, surface: str, font_cap: int = 5, color_cap: int = 4) -> list[dict]:
-    out: list[dict] = []
-    if metrics.get("error"):
-        return [{"id": "D-UID-HARNESS", "severity": "P0", "surface": surface, "detail": metrics["error"]}]
-    if metrics.get("fontSizeCount", 0) > font_cap:
+def _findings_from_panel(
+    metrics: dict, *, surface: str, font_cap: int = 5, color_cap: int = 4
+) -> list[dict]:
+    out = findings_from_panel_metrics(
+        metrics, surface=surface, font_cap=font_cap, color_cap=color_cap
+    )
+    if metrics.get("leftDeltaFirstTwo") is not None and metrics["leftDeltaFirstTwo"] > 24:
         out.append(
             {
-                "id": "D-UID-03",
-                "severity": "P1",
+                "id": "D-UID-05",
+                "severity": "P2",
                 "surface": surface,
-                "detail": f"字号种类 {metrics['fontSizeCount']}: {metrics.get('uniqueFontSizes')}",
+                "detail": f"前两行左缘差 {metrics['leftDeltaFirstTwo']:.1f}px",
             }
         )
-    if metrics.get("colorCount", 0) > color_cap:
-        out.append(
-            {
-                "id": "D-UID-04",
-                "severity": "P1",
-                "surface": surface,
-                "detail": f"颜色种类 {metrics['colorCount']}: {metrics.get('uniqueColors')}",
-            }
-        )
-    if metrics.get("leftDeltaFirstTwo") is not None and metrics["leftDeltaFirstTwo"] > 2.0:
-        # settings title vs desc often differ by design; only flag large skew
-        if metrics["leftDeltaFirstTwo"] > 24:
-            out.append(
-                {
-                    "id": "D-UID-05",
-                    "severity": "P2",
-                    "surface": surface,
-                    "detail": f"前两行左缘差 {metrics['leftDeltaFirstTwo']:.1f}px",
-                }
-            )
     return out
 
 
@@ -277,3 +263,4 @@ def test_studio_ui_detail_wave2_settings_sheet_audit(studio_server) -> None:
     assert runtime["surfaces"]["S-SET"].get("fontSizeCount", 0) >= 1
     assert "S-SHEET" in runtime["surfaces"]
     assert runtime["surfaces"]["S-SHEET"].get("fontSizeCount", 0) >= 1
+    assert_no_blocking_findings(runtime["findings"], label="wave2-settings-sheet")

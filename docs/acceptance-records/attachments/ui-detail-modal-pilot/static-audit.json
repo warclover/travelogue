@@ -18,7 +18,7 @@
       "id": "D-UID-07",
       "severity": "P2",
       "selector": "templates/studio/homepage-v2/css/import-wizard.css",
-      "detail": "字号离散度偏高：8 种 → ['10px', '11px', '12px', '13px', '14px', '16px', '21px', '24px']",
+      "detail": "字号离散度偏高：8 种 → ['11px', '12px', '13px', '14px', '16px', '21px', '24px', 'var(--studio-panel-label-size, 11px)']",
       "files": [
         "templates/studio/homepage-v2/css/import-wizard.css"
       ]
@@ -27,7 +27,7 @@
       "id": "D-UID-07",
       "severity": "P2",
       "selector": "templates/studio/homepage-v2/css/overlays.css",
-      "detail": "字号离散度偏高：9 种 → ['10px', '11px', '12px', '13px', '14px', '15px', '16px', '18px', '20px']",
+      "detail": "字号离散度偏高：9 种 → ['11px', '12px', '13px', '14px', '15px', '16px', '18px', '20px', 'var(--studio-panel-label-size, 11px)']",
       "files": [
         "templates/studio/homepage-v2/css/overlays.css"
       ]
@@ -36,7 +36,7 @@
       "id": "D-UID-07",
       "severity": "P2",
       "selector": "templates/studio/homepage-v2/css/overlays.css",
-      "detail": "color 声明离散度偏高：24 种",
+      "detail": "color 声明离散度偏高：18 种",
       "files": [
         "templates/studio/homepage-v2/css/overlays.css"
       ]
@@ -48,53 +48,46 @@
       "11px": 21,
       "13px": 17,
       "14px": 6,
-      "10px": 5,
-      "16px": 4,
+      "var(--studio-panel-label-size, 11px)": 4,
+      "16px": 3,
       "20px": 2,
       "17px": 1,
       "15px": 1,
       "18px": 1,
       "21px": 1,
       "24px": 1,
-      "22px": 1
+      "var(--studio-panel-title-size, 15px)": 1,
+      "22px": 1,
+      "var(--studio-panel-chip-size, 11px)": 1
     },
     "colorHistogram": {
-      "#fff": 11,
+      "#fff": 9,
+      "#f5f0e8": 4,
       "#14110d": 3,
       "rgba(20, 17, 13, .72)": 2,
-      "#f7f2e9": 2,
       "rgba(255, 255, 255, .55)": 2,
-      "rgba(255, 255, 255, .78)": 2,
       "rgba(255, 255, 255, .85)": 2,
       "rgba(245, 240, 232, .78)": 2,
       "#1a1510": 2,
-      "rgba(26, 47, 40, 0.78)": 2,
       "#3d6b5a": 1,
       "rgba(20, 17, 13, .62)": 1,
+      "#f7f2e9": 1,
       "rgba(255, 255, 255, .92)": 1,
-      "#90e0ef": 1,
       "rgba(255, 255, 255, .68)": 1,
-      "rgba(255, 230, 180, .92)": 1,
       "rgba(255, 255, 255, .86)": 1,
       "rgba(255, 255, 255, .82)": 1,
-      "#f0d78c": 1,
-      "#9ee7f2": 1,
-      "#a5d6a7": 1,
-      "#90caf9": 1,
-      "#ffcc80": 1,
+      "rgba(255, 255, 255, .78)": 1,
+      "rgba(255, 245, 230, .92)": 1,
+      "#e8d5a3": 1,
+      "rgba(255, 255, 255, .9)": 1,
+      "#f5e6b8": 1,
       "rgba(255, 255, 255, .7)": 1,
-      "rgba(255, 255, 255, .72)": 1,
       "rgba(245, 240, 232, .58)": 1,
       "rgba(255, 255, 255, .48)": 1,
-      "#9ec5b8": 1,
-      "#e8a098": 1,
-      "rgba(255, 255, 255, .4)": 1,
+      "rgba(245, 240, 232, .4)": 1,
       "#f0c8c2": 1,
-      "#f5f0e8": 1,
-      "rgba(26, 47, 40, 0.55)": 1,
-      "rgba(26, 47, 40, 0.9)": 1,
-      "rgba(245, 251, 248, 0.72)": 1,
-      "rgba(26, 47, 40, 0.72)": 1
+      "color-mix(in srgb, var(--studio-panel-ink, #14110d) 55%, transparent)": 1,
+      "rgba(245, 240, 232, 0.72)": 1
     },
     "perFile": {
       "templates/studio/studio-modal.css": {
@@ -107,12 +100,13 @@
         "colorUnique": [
           "#14110d",
           "#3d6b5a",
+          "#f5f0e8",
           "#f7f2e9",
           "#fff",
           "rgba(20, 17, 13, .62)",
           "rgba(20, 17, 13, .72)"
         ],
-        "colorCount": 6
+        "colorCount": 7
       },
       "templates/studio/preview-toolbar/modal-chrome.css": {
         "fontSizeUnique": [],
@@ -122,7 +116,6 @@
       },
       "templates/studio/homepage-v2/css/overlays.css": {
         "fontSizeUnique": [
-          "10px",
           "11px",
           "12px",
           "13px",
@@ -130,47 +123,42 @@
           "15px",
           "16px",
           "18px",
-          "20px"
+          "20px",
+          "var(--studio-panel-label-size, 11px)"
         ],
         "fontSizeCount": 9,
         "colorUnique": [
           "#1a1510",
-          "#90caf9",
-          "#90e0ef",
-          "#9ec5b8",
-          "#9ee7f2",
-          "#a5d6a7",
-          "#e8a098",
-          "#f0d78c",
-          "#ffcc80",
+          "#e8d5a3",
+          "#f5e6b8",
           "#fff",
+          "rgba(245, 240, 232, .4)",
           "rgba(245, 240, 232, .58)",
           "rgba(245, 240, 232, .78)",
-          "rgba(255, 230, 180, .92)",
-          "rgba(255, 255, 255, .4)",
+          "rgba(255, 245, 230, .92)",
           "rgba(255, 255, 255, .48)",
           "rgba(255, 255, 255, .55)",
           "rgba(255, 255, 255, .68)",
           "rgba(255, 255, 255, .7)",
-          "rgba(255, 255, 255, .72)",
           "rgba(255, 255, 255, .78)",
           "rgba(255, 255, 255, .82)",
           "rgba(255, 255, 255, .85)",
           "rgba(255, 255, 255, .86)",
+          "rgba(255, 255, 255, .9)",
           "rgba(255, 255, 255, .92)"
         ],
-        "colorCount": 24
+        "colorCount": 18
       },
       "templates/studio/homepage-v2/css/import-wizard.css": {
         "fontSizeUnique": [
-          "10px",
           "11px",
           "12px",
           "13px",
           "14px",
           "16px",
           "21px",
-          "24px"
+          "24px",
+          "var(--studio-panel-label-size, 11px)"
         ],
         "fontSizeCount": 8,
         "colorUnique": [
@@ -182,22 +170,20 @@
       },
       "templates/studio/help-drawer.css": {
         "fontSizeUnique": [
-          "11px",
           "12px",
           "13px",
           "16px",
-          "22px"
+          "22px",
+          "var(--studio-panel-chip-size, 11px)",
+          "var(--studio-panel-title-size, 15px)"
         ],
-        "fontSizeCount": 5,
+        "fontSizeCount": 6,
         "colorUnique": [
-          "#fff",
-          "rgba(245, 251, 248, 0.72)",
-          "rgba(26, 47, 40, 0.55)",
-          "rgba(26, 47, 40, 0.72)",
-          "rgba(26, 47, 40, 0.78)",
-          "rgba(26, 47, 40, 0.9)"
+          "#f5f0e8",
+          "color-mix(in srgb, var(--studio-panel-ink, #14110d) 55%, transparent)",
+          "rgba(245, 240, 232, 0.72)"
         ],
-        "colorCount": 6
+        "colorCount": 3
       }
     }
   }

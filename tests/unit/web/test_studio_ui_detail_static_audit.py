@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from scripts.studio_ui_detail_static_audit import run_audit
+from scripts.studio_ui_detail_static_audit import main, run_audit
+from tests.e2e.ui_detail_runtime_helpers import semantic_color_count
 
 
 def test_static_audit_no_modal_chrome_dual_standard() -> None:
@@ -76,3 +77,46 @@ def test_static_audit_all_waves_no_p0_p1() -> None:
     assert report["summary"]["P1"] == 0, [
         f for f in report["findings"] if f["severity"] == "P1"
     ]
+
+
+def test_static_audit_settings_sheet_no_mint_hardcode() -> None:
+    report = run_audit(wave="settings-sheet")
+    mint = [
+        f
+        for f in report["findings"]
+        if f["id"] == "D-UID-08" and "薄荷" in str(f.get("detail", ""))
+    ]
+    assert mint == [], mint
+
+
+def test_static_audit_strict_fails_on_p1(monkeypatch, tmp_path) -> None:
+    """--strict 须在 P1>0 时非零退出（不再只拦 P0）。"""
+    fake = {
+        "summary": {"findings": 1, "P0": 0, "P1": 1, "P2": 0},
+        "findings": [
+            {
+                "id": "D-UID-08",
+                "severity": "P1",
+                "selector": "x",
+                "detail": "probe",
+                "files": [],
+            }
+        ],
+    }
+    monkeypatch.setattr(
+        "scripts.studio_ui_detail_static_audit.run_audit",
+        lambda **_kwargs: fake,
+    )
+    assert main(["--wave", "all", "--strict"]) == 1
+
+
+def test_semantic_color_count_collapses_alpha_variants() -> None:
+    colors = [
+        "rgb(245, 240, 232)",
+        "rgba(245, 240, 232, 0.78)",
+        "rgba(245, 240, 232, 0.58)",
+        "rgba(255, 255, 255, 0.62)",
+        "rgba(255, 255, 255, 0.48)",
+        "rgb(26, 21, 16)",
+    ]
+    assert semantic_color_count(colors) == 3

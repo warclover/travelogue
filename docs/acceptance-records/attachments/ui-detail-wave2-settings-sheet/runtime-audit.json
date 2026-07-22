@@ -1300,26 +1300,15 @@
       "files": [
         "templates/studio/preview-toolbar/sheet.css"
       ]
-    },
-    {
-      "id": "D-UID-08",
-      "severity": "P1",
-      "surface": "static",
-      "selector": "settings-vs-sheet",
-      "detail": "Settings/Sheet 未同时挂到 studio-panel-* token： settingsPanel=True sheetPanel=False",
-      "files": [
-        "templates/studio/homepage-v2/css/bento.css",
-        "templates/studio/preview-toolbar/sheet.css"
-      ]
     }
   ],
   "summary": {
-    "findings": 5,
+    "findings": 4,
     "P0": 0,
-    "P1": 1,
+    "P1": 0,
     "P2": 4,
     "staticP0": 0,
-    "staticP1": 1,
+    "staticP1": 0,
     "staticP2": 4
   }
 }
