@@ -7,7 +7,7 @@
 | **评审** | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · Conditional Go |
 | **邻接实施** | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) **v0.2.2**（S7/S7b · BE-NAS-03/04） |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-C in progress**（`fix/qfx-pr-c-m2-contract`；PR-A/B 已合 master） |
+| **状态** | **Closed**（PR-A/B/C 已合；C2/D 结案就绪 · 2026-07-23） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 QFX PRD v0.2.1 的 S/D/AC 展开为可执行任务卡与 PR 切片。  
@@ -138,7 +138,7 @@
 | **锁定路径** | **`{trip_dir}/longshot-current.json`**（与 PNG 同层） |
 | **测试** | ✅ AC-11 双文件 mtime；AC-25 current 优先；helper 孤儿/半批 |
 | **验收** | AC-11 · AC-25（最小） |
-| **状态** | ✅ 编码中 / 2026-07-23 |
+| **状态** | ✅ Closed / 2026-07-23 |
 
 **`longshot-current.json` 字段（锁定）**
 
@@ -176,14 +176,13 @@
 
 ---
 
-### T-QFX-09 · UI Detail fail-closed（PR-C）
+### T-QFX-09 · UI Detail fail-closed（PR-C / C2）
 
 | 项 | 内容 |
 |----|------|
-| **动作** | ✅ helpers 空测量 P0；bare `--strict`→`all`；wave11 假 DOM / 真卡 DI / token 链 **延后或同 PR 第二刀** |
-| **路径** | `ui_detail_runtime_helpers.py` · `studio_ui_detail_static_audit.py` |
-| **验收** | AC-07/08/18/19 ✅；AC-06/16/17/20 未完 |
-| **状态** | ◐ 2026-07-23（核心门禁已落地） |
+| **动作** | ✅ helpers P0；bare `--strict`→all；wave11 真卡 DI；token 块内接线 |
+| **验收** | AC-06～08/16～20 ✅ |
+| **状态** | ✅ Closed |
 
 ---
 
@@ -191,8 +190,9 @@
 
 | 项 | 内容 |
 |----|------|
-| **动作** | 扩 `lint_layout_engine_facade.py` 扫描根；grandfather + owner/expiry；**不上**新 import-linter |
-| **验收** | AC-03 |
+| **动作** | ✅ 扩扫 `travelogue/**`（排除 layout_engine）；grandfather owner/expiry |
+| **验收** | AC-03 ✅ |
+| **状态** | ✅ Closed |
 
 ---
 
@@ -200,8 +200,9 @@
 
 | 项 | 内容 |
 |----|------|
-| **动作** | `narrow-gate.js` 复制三态；L1 `data-csc-key` == `l1Keys` 门禁；`scripts/quality_fixpack_gate.py`（或文档钉死命令列表）挂 PR required；DOC Closed 指针 |
-| **验收** | AC-14/15/24 · S-QFX-08 |
+| **动作** | ✅ 复制三态；L1==；`quality_fixpack_gate.py`；DOC Closed |
+| **验收** | AC-14/15/24 · S-QFX-08 ✅ |
+| **状态** | ✅ Closed |
 
 ---
 
@@ -234,14 +235,17 @@
 | Telemetry | handlers · ai-surface 三态收口 |
 | Facade | `lint_layout_engine_facade.py` · baseline JSON |
 
-### PR-D
+### PR-D / C2
 
 | 区域 | 文件 |
 |------|------|
-| UX | `narrow-gate.js` |
-| CSC | L1 DOM 契约测 · `studio-home-v2.html`（仅当差集非空） |
-| Gate | `scripts/quality_fixpack_gate.py` · `ci.yml` |
-| DOC | DOC-STATUS Closed 指针 · 邻接 Acceptance 勾选 |
+| UX | `copy-page-url.js` · `narrow-gate.js` · `unsupported.js` |
+| Cap | `capability-card.js` DI · wave11 e2e |
+| Token | `studio_ui_detail_static_audit.py` 块内接线 |
+| CSC | `test_l1_dom_equals_happy_path.py` |
+| Facade | `lint_layout_engine_facade.py` · baseline grandfather |
+| Gate | `quality_fixpack_gate.py` · `ci.yml` |
+| DOC | ACCEPTANCE · DOC-STATUS · PRD Closed |
 
 ---
 
@@ -270,8 +274,6 @@ python scripts/studio_ui_detail_static_audit.py --strict
 ```powershell
 python scripts/quality_fixpack_gate.py
 ```
-
-（脚本未建前，以 PRD §11.1 命令列表为等价入口。）
 
 ---
 

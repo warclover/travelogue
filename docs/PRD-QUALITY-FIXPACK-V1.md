@@ -4,15 +4,15 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.1** |
-| **状态** | **Conditional Go · Must-Fix 已回写**（[七席评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · **2026-07-23 代码探查拍板已入文** · 可开 IMPLEMENTATION） |
-| **DOC-STATUS** | **active** |
+| **状态** | **Closed**（PR-A/B/C 已合；C2/D 结案就绪 · 2026-07-23） |
+| **DOC-STATUS** | **Closed** |
 | **主题代号** | 「日更质量修复包 V1（Quality Fixpack）」— **QFX** |
 | **调研来源** | 2026-07-22 当日合入质量审查 + 七席根因评审 + **2026-07-23 开发负责人代码探查** |
 | **审查基线** | `master` @ `ed4f032`（探查日复核：recipe/god-module 仍红；CSC lint 已在 PR） |
 | **关联文档** | [CSC](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) · [NAS](./PRD-NO-AI-SURFACE-V1.md) · [Keep-All](./PRD-KEEP-ALL-PHOTOS-V1.md) · [UI Detail](./UI-DETAIL-CONTRACT-V0.md) · [SFI](./PRD-SHARE-FACE-INTEGRITY-V1.md) · [PMX](./PRD-POST-MERGE-UX-FIXPACK-V1.md) · [QUALITY-GATE](./QUALITY-GATE.md) |
 | **评审纪要** | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) |
-| **验收** | 本文 §9；落地后补 `ACCEPTANCE-QUALITY-FIXPACK-V1.md` |
-| **实施清单** | [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) **v0.1.0** |
+| **验收** | [ACCEPTANCE-QUALITY-FIXPACK-V1.md](./ACCEPTANCE-QUALITY-FIXPACK-V1.md) **Closed** |
+| **实施清单** | [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) |
 | **更新日期** | 2026-07-23 |
 
 > **v0.2.1 相对 v0.2.0（代码探查拍板 · 2026-07-23）**

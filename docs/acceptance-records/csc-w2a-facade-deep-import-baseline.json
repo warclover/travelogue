@@ -1,5 +1,234 @@
 {
-  "count": 0,
-  "edges": [],
-  "details": []
+  "count": 20,
+  "edges": [
+    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic",
+    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic.constants",
+    "travelogue/layout_contract/planner_state.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/layout_templates/admission.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/layout_templates/css_stale.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/layout_templates/geometry_solidify.py::travelogue.layout_engine.mosaic.lte_adapter",
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.constants",
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.grid_specs",
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.slot_geometry",
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/layout_templates/registry.py::travelogue.layout_engine.mosaic.constants",
+    "travelogue/layout_templates/registry.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.builders",
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.constants",
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/render/context.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/render/dual_layout_regression.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/render/engine.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/render/surface.py::travelogue.layout_engine.planner.screen_planner"
+  ],
+  "grandfather": {
+    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic.constants": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_contract/planner_state.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/admission.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/css_stale.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/geometry_solidify.py::travelogue.layout_engine.mosaic.lte_adapter": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.constants": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.grid_specs": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.mosaic.slot_geometry": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/legacy_bridge.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/registry.py::travelogue.layout_engine.mosaic.constants": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/layout_templates/registry.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.builders": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.constants": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/compare_editorial_4mix.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/context.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/dual_layout_regression.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/engine.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
+    "travelogue/render/surface.py::travelogue.layout_engine.planner.screen_planner": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    }
+  },
+  "details": [
+    {
+      "file": "travelogue/layout_contract/active_set.py",
+      "line": 93,
+      "module": "travelogue.layout_engine.mosaic"
+    },
+    {
+      "file": "travelogue/layout_contract/active_set.py",
+      "line": 103,
+      "module": "travelogue.layout_engine.mosaic.constants"
+    },
+    {
+      "file": "travelogue/layout_contract/planner_state.py",
+      "line": 318,
+      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+    },
+    {
+      "file": "travelogue/layout_templates/admission.py",
+      "line": 122,
+      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+    },
+    {
+      "file": "travelogue/layout_templates/css_stale.py",
+      "line": 9,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/layout_templates/geometry_solidify.py",
+      "line": 60,
+      "module": "travelogue.layout_engine.mosaic.lte_adapter"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 8,
+      "module": "travelogue.layout_engine.mosaic.constants"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 21,
+      "module": "travelogue.layout_engine.mosaic.grid_specs"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 26,
+      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 31,
+      "module": "travelogue.layout_engine.mosaic.slot_geometry"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 98,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 295,
+      "module": "travelogue.layout_engine.mosaic.grid_specs"
+    },
+    {
+      "file": "travelogue/layout_templates/legacy_bridge.py",
+      "line": 327,
+      "module": "travelogue.layout_engine.mosaic.constants"
+    },
+    {
+      "file": "travelogue/layout_templates/registry.py",
+      "line": 378,
+      "module": "travelogue.layout_engine.mosaic.constants"
+    },
+    {
+      "file": "travelogue/layout_templates/registry.py",
+      "line": 379,
+      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+    },
+    {
+      "file": "travelogue/render/compare_editorial_4mix.py",
+      "line": 20,
+      "module": "travelogue.layout_engine.mosaic.builders"
+    },
+    {
+      "file": "travelogue/render/compare_editorial_4mix.py",
+      "line": 21,
+      "module": "travelogue.layout_engine.mosaic.constants"
+    },
+    {
+      "file": "travelogue/render/compare_editorial_4mix.py",
+      "line": 22,
+      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+    },
+    {
+      "file": "travelogue/render/context.py",
+      "line": 605,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/dual_layout_regression.py",
+      "line": 11,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/engine.py",
+      "line": 66,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/engine.py",
+      "line": 93,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/engine.py",
+      "line": 334,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/engine.py",
+      "line": 734,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/surface.py",
+      "line": 8,
+      "module": "travelogue.layout_engine.planner.screen_planner"
+    }
+  ]
 }

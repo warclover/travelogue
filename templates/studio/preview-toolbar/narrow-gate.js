@@ -1,6 +1,7 @@
 /**
  * PMX FE-PMX-20 · 预览窄屏诚实门面（与首页同一断点）。
  * Share 只读预览不拦截；Studio 工作台预览禁止近黑屏无说明。
+ * QFX D-QFX-12 · 复制三态。
  */
 "use strict";
 
@@ -10,6 +11,7 @@ import {
   unsupportedCopy,
 } from "../homepage-v2/viewport-logic.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { bindCopyPageUrlControl } from "../js/copy-page-url.js";
 
 var GATE_ID = "preview-narrow-gate";
 var _lastLayout = null;
@@ -29,19 +31,8 @@ function currentLayout() {
   return classifyViewport(w, h, coarsePointer());
 }
 
-function copyPageUrl() {
-  var url = window.location.origin + window.location.pathname + window.location.search;
-  var done = function () {
-    if (typeof studioToast === "function") {
-      studioToast("已复制，请在电脑浏览器打开", { duration: 2200 });
-    }
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(done, done);
-  } else {
-    done();
-  }
-  trackStudioEvent("preview_narrow_gate_action", { action: "copy_link" });
+function pageUrl() {
+  return window.location.origin + window.location.pathname + window.location.search;
 }
 
 function ensureGateEl() {
@@ -63,10 +54,23 @@ function ensureGateEl() {
     '<a class="preview-narrow-gate__btn preview-narrow-gate__btn--primary" href="/">返回首页制作</a>' +
     '<button type="button" class="preview-narrow-gate__btn" id="preview-narrow-gate-copy">复制电脑打开地址</button>' +
     "</div>" +
+    '<input id="preview-narrow-gate-url" class="preview-narrow-gate__url" type="text" readonly hidden aria-label="电脑打开地址" />' +
     "</div>";
   document.body.appendChild(el);
   var copyBtn = el.querySelector("#preview-narrow-gate-copy");
-  if (copyBtn) copyBtn.addEventListener("click", copyPageUrl);
+  var urlInput = el.querySelector("#preview-narrow-gate-url");
+  bindCopyPageUrlControl({
+    button: copyBtn,
+    urlInput: urlInput,
+    getUrl: pageUrl,
+    defaultLabel: "复制电脑打开地址",
+    onTrack: function (result) {
+      trackStudioEvent("preview_narrow_gate_action", {
+        action: "copy_link",
+        result: result,
+      });
+    },
+  });
   return el;
 }
 
