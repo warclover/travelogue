@@ -1,40 +1,76 @@
 /**
- * NAS · AI 产品面门控（FE-NAS-00 / QFX D-QFX-03）
- * 仅读服务端 GET /__travelogue/config 的 aiSurfaceEnabled；不导出写 setter。
+ * NAS · AI 产品面门控（FE-NAS-00 / QFX D-QFX-09）
+ * 三态：unknown | disabled | enabled；不导出写 setter。
  */
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
 import { studioAuthHeaders } from "./http.js";
 
-var _enabled = false;
+var STATE_UNKNOWN = "unknown";
+var STATE_DISABLED = "disabled";
+var STATE_ENABLED = "enabled";
+var GATE_STORAGE_KEY = "travelogue.ai_surface_gate.v1";
+
+var _state = STATE_UNKNOWN;
 var _hydratePromise = null;
-var _gateTracked = false;
+
+export function getAiSurfaceState() {
+  return _state;
+}
 
 export function isAiSurfaceEnabled() {
-  return !!_enabled;
+  return _state === STATE_ENABLED;
 }
 
-function _applyAiSurfaceFromConfig(cfg) {
-  if (cfg && typeof cfg.aiSurfaceEnabled === "boolean") {
-    _enabled = !!cfg.aiSurfaceEnabled;
+function _setState(next) {
+  if (next === STATE_ENABLED || next === STATE_DISABLED || next === STATE_UNKNOWN) {
+    _state = next;
   }
-  return isAiSurfaceEnabled();
 }
 
-function trackAiSurfaceGateOnce() {
-  if (_gateTracked) return;
-  _gateTracked = true;
+function _gateAlreadyTracked(enabled) {
   try {
-    trackStudioEvent("ai_surface_gate", { enabled: isAiSurfaceEnabled() });
+    if (typeof sessionStorage === "undefined") return false;
+    var raw = sessionStorage.getItem(GATE_STORAGE_KEY);
+    if (!raw) return false;
+    var parsed = JSON.parse(raw);
+    return parsed && parsed.enabled === enabled;
+  } catch (_e) {
+    return false;
+  }
+}
+
+function _markGateTracked(enabled) {
+  try {
+    if (typeof sessionStorage === "undefined") return;
+    sessionStorage.setItem(
+      GATE_STORAGE_KEY,
+      JSON.stringify({ enabled: !!enabled })
+    );
   } catch (_e) {
     /* ignore */
   }
 }
 
+function trackAiSurfaceGateOnce(enabled) {
+  if (_gateAlreadyTracked(enabled)) return Promise.resolve(false);
+  return Promise.resolve()
+    .then(function () {
+      return trackStudioEvent("ai_surface_gate", { enabled: !!enabled });
+    })
+    .then(function (ok) {
+      if (ok) _markGateTracked(enabled);
+      return !!ok;
+    })
+    .catch(function () {
+      return false;
+    });
+}
+
 /**
- * 幂等：全站共享一次 config 拉取（默认 false，异步后按服务端翻转）。
- * 失败不钉死 false、不误报 gate；允许后续重试。
+ * 幂等拉取 config。失败 → unknown（可重试）；成功 → enabled/disabled 并 track。
+ * @returns {Promise<"unknown"|"disabled"|"enabled">}
  */
 export function ensureAiSurfaceHydrated(opts) {
   opts = opts || {};
@@ -43,20 +79,35 @@ export function ensureAiSurfaceHydrated(opts) {
     headers: studioAuthHeaders({}),
   })
     .then(function (r) {
-      return r && r.ok ? r.json() : null;
-    })
-    .then(function (cfg) {
-      if (!cfg || typeof cfg.aiSurfaceEnabled !== "boolean") {
+      if (!r || !r.ok) {
         _hydratePromise = null;
-        return isAiSurfaceEnabled();
+        _setState(STATE_UNKNOWN);
+        return STATE_UNKNOWN;
       }
-      _applyAiSurfaceFromConfig(cfg);
-      trackAiSurfaceGateOnce();
-      return isAiSurfaceEnabled();
+      return r.json().then(
+        function (cfg) {
+          if (!cfg || typeof cfg.aiSurfaceEnabled !== "boolean") {
+            _hydratePromise = null;
+            _setState(STATE_UNKNOWN);
+            return STATE_UNKNOWN;
+          }
+          var enabled = !!cfg.aiSurfaceEnabled;
+          _setState(enabled ? STATE_ENABLED : STATE_DISABLED);
+          return trackAiSurfaceGateOnce(enabled).then(function () {
+            return _state;
+          });
+        },
+        function () {
+          _hydratePromise = null;
+          _setState(STATE_UNKNOWN);
+          return STATE_UNKNOWN;
+        }
+      );
     })
     .catch(function () {
       _hydratePromise = null;
-      return isAiSurfaceEnabled();
+      _setState(STATE_UNKNOWN);
+      return STATE_UNKNOWN;
     });
   return _hydratePromise;
 }

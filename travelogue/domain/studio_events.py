@@ -171,9 +171,22 @@ def studio_homepage_events_path() -> Path:
     return Path.home() / ".travelogue" / "telemetry" / "studio-homepage-events.jsonl"
 
 
+def _normalize_ai_surface_gate_meta(meta: dict[str, Any] | None) -> dict[str, Any]:
+    """QFX D-QFX-14a · ai_surface_gate meta 恰好 {enabled: bool}。"""
+    if not isinstance(meta, dict):
+        raise ValueError("ai_surface_gate meta must be an object")
+    if set(meta.keys()) != {"enabled"}:
+        raise ValueError("ai_surface_gate meta must be exactly {enabled: bool}")
+    if not isinstance(meta.get("enabled"), bool):
+        raise ValueError("ai_surface_gate.enabled must be bool")
+    return {"enabled": bool(meta["enabled"])}
+
+
 def append_studio_homepage_event(event: str, meta: dict[str, Any] | None = None) -> Path:
     if event not in ALLOWED_STUDIO_HOMEPAGE_EVENTS:
         raise ValueError(f"unknown studio homepage event: {event}")
+    if event == "ai_surface_gate":
+        meta = _normalize_ai_surface_gate_meta(meta)
     path = studio_homepage_events_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     record: dict[str, Any] = {

@@ -110,6 +110,43 @@ def test_static_audit_strict_fails_on_p1(monkeypatch, tmp_path) -> None:
     assert main(["--wave", "all", "--strict"]) == 1
 
 
+def test_bare_strict_defaults_wave_to_all(monkeypatch) -> None:
+    """AC-QFX-08/19 · bare --strict ⇒ wave=all。"""
+    seen: dict = {}
+
+    def _fake(**kwargs):
+        seen.update(kwargs)
+        return {
+            "summary": {"findings": 0, "P0": 0, "P1": 0, "P2": 0},
+            "findings": [],
+        }
+
+    monkeypatch.setattr(
+        "scripts.studio_ui_detail_static_audit.run_audit",
+        _fake,
+    )
+    assert main(["--strict"]) == 0
+    assert seen.get("wave") == "all"
+
+
+def test_default_without_strict_stays_modal(monkeypatch) -> None:
+    seen: dict = {}
+
+    def _fake(**kwargs):
+        seen.update(kwargs)
+        return {
+            "summary": {"findings": 0, "P0": 0, "P1": 0, "P2": 0},
+            "findings": [],
+        }
+
+    monkeypatch.setattr(
+        "scripts.studio_ui_detail_static_audit.run_audit",
+        _fake,
+    )
+    assert main([]) == 0
+    assert seen.get("wave") == "modal"
+
+
 def test_semantic_color_count_collapses_alpha_variants() -> None:
     colors = [
         "rgb(245, 240, 232)",

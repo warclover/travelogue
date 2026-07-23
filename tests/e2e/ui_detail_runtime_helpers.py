@@ -46,6 +46,15 @@ def findings_from_panel_metrics(
     color_cap: int = 4,
 ) -> list[dict[str, Any]]:
     """Contract-oriented findings: unique fonts + semantic color families."""
+    if not isinstance(metrics, dict):
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": "metrics missing or not an object",
+            }
+        ]
     if metrics.get("error"):
         return [
             {
@@ -55,8 +64,58 @@ def findings_from_panel_metrics(
                 "detail": metrics["error"],
             }
         ]
+    # QFX D-QFX-10 / AC-07/18：缺字段 / 零样本 / 空 colors / NaN → P0
+    required = ("fontSizeCount", "uniqueFontSizes", "uniqueColors")
+    missing = [k for k in required if k not in metrics]
+    if missing:
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": f"metrics missing fields: {', '.join(missing)}",
+            }
+        ]
+    try:
+        font_count = int(metrics["fontSizeCount"])
+    except (TypeError, ValueError):
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": f"fontSizeCount not numeric: {metrics.get('fontSizeCount')!r}",
+            }
+        ]
+    if font_count != font_count:  # NaN
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": "fontSizeCount is NaN",
+            }
+        ]
+    colors_raw = metrics.get("uniqueColors")
+    if not isinstance(colors_raw, list):
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": "uniqueColors must be a list",
+            }
+        ]
+    if font_count <= 0 and len(colors_raw) == 0:
+        return [
+            {
+                "id": "D-UID-HARNESS",
+                "severity": "P0",
+                "surface": surface,
+                "detail": "empty measurement: zero fonts and colors",
+            }
+        ]
     out: list[dict[str, Any]] = []
-    font_count = int(metrics.get("fontSizeCount") or 0)
     if font_count > font_cap:
         out.append(
             {
@@ -66,7 +125,7 @@ def findings_from_panel_metrics(
                 "detail": f"字号种类 {font_count}: {metrics.get('uniqueFontSizes')}",
             }
         )
-    colors = list(metrics.get("uniqueColors") or [])
+    colors = list(colors_raw)
     family_n = semantic_color_count(colors)
     if family_n > color_cap:
         out.append(
