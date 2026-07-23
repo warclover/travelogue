@@ -656,9 +656,19 @@ def _build_longshot_pages(
             }
         ]
 
-    # Prefer SFI/moments segment exports; fall back to legacy *-ch* (ch_pngs arg).
-    # 无 current 时分段保持名序（禁止逐文件 mtime 假修）。
-    strip_candidates = _phone_export_strips(trip_dir) or list(ch_pngs)
+    # QFX AC-25 分段：仅完整 SFI 批可预览；不完整批拒绝（不名序半批混排）。
+    from travelogue.export.longshot import resolve_complete_segment_batch
+
+    complete_batch = resolve_complete_segment_batch(trip_dir)
+    if complete_batch:
+        strip_candidates = list(complete_batch)
+    else:
+        # 无完整 SFI 批时：跳过半批 *-长图-NN*，仅用 legacy ch / moments
+        strip_candidates = [
+            p
+            for p in (_phone_export_strips(trip_dir) or list(ch_pngs))
+            if "-长图-" not in p.name
+        ]
     vertical_strips = [png for png in strip_candidates if _is_phone_vertical_file(png)]
     if vertical_strips:
         pages: list[dict[str, Any]] = []

@@ -9,6 +9,7 @@ from travelogue.export.longshot import (
     LONGSHOT_CURRENT_NAME,
     maybe_write_longshot_current_after_upload,
     read_longshot_current,
+    resolve_complete_segment_batch,
     write_longshot_current,
 )
 
@@ -86,3 +87,27 @@ def test_maybe_write_after_upload_waits_for_full_segment_batch(tmp_path: Path) -
     assert cur is not None
     assert cur["kind"] == "segmented"
     assert cur["files"] == ["分段册-长图-01.png", "分段册-长图-02.png"]
+
+
+def test_resolve_complete_segment_batch_rejects_incomplete(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "t4"
+    trip_dir.mkdir()
+    (trip_dir / "册-长图-01.png").write_bytes(b"1")
+    (trip_dir / "册-长图-03.png").write_bytes(b"3")
+    assert resolve_complete_segment_batch(trip_dir) is None
+
+
+def test_resolve_complete_segment_batch_returns_newest_complete(tmp_path: Path) -> None:
+    trip_dir = tmp_path / "t5"
+    trip_dir.mkdir()
+    for name in ("旧-长图-01.png", "旧-长图-02.png"):
+        (trip_dir / name).write_bytes(b"old")
+    for name in ("新-长图-01.png", "新-长图-02.png", "新-长图-03.png"):
+        (trip_dir / name).write_bytes(b"new")
+    batch = resolve_complete_segment_batch(trip_dir)
+    assert batch is not None
+    assert [p.name for p in batch] == [
+        "新-长图-01.png",
+        "新-长图-02.png",
+        "新-长图-03.png",
+    ]

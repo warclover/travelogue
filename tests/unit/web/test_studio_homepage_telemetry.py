@@ -37,6 +37,22 @@ def test_append_rejects_unknown_event() -> None:
         append_studio_homepage_event("not_real")
 
 
+def test_ai_surface_gate_meta_exactly_enabled_bool(tmp_path, monkeypatch) -> None:
+    """AC-QFX-10 · meta 恰好 {enabled: bool}。"""
+    path = tmp_path / "studio-homepage-events.jsonl"
+    monkeypatch.setattr(
+        "travelogue.domain.studio_events.studio_homepage_events_path",
+        lambda: path,
+    )
+    append_studio_homepage_event("ai_surface_gate", {"enabled": False})
+    with pytest.raises(ValueError, match="exactly"):
+        append_studio_homepage_event(
+            "ai_surface_gate", {"enabled": True, "extra": 1}
+        )
+    with pytest.raises(ValueError, match="bool"):
+        append_studio_homepage_event("ai_surface_gate", {"enabled": "yes"})
+
+
 def test_longshot2_telemetry_events_allowed(tmp_path, monkeypatch) -> None:
     """DOC-LNG2-01 · PRD-LONGSHOT-2.0 §12 events are registered."""
     path = tmp_path / "studio-homepage-events.jsonl"

@@ -161,17 +161,28 @@ function pushEventRing(event, meta) {
   } catch (e) { /* ignore */ }
 }
 
+/**
+ * @returns {Promise<boolean>} 服务端 2xx 为 true；白名单拒绝 / 网络失败为 false（可观测）
+ */
 export function trackStudioEvent(event, meta) {
-  if (!ALLOWED.has(event)) return;
+  if (!ALLOWED.has(event)) return Promise.resolve(false);
   pushEventRing(event, meta);
   try {
-    fetch("/__travelogue/studio-event", {
+    return fetch("/__travelogue/studio-event", {
       method: "POST",
       headers: studioAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ event: event, meta: meta || {} }),
       keepalive: true,
-    }).catch(function () { /* ignore */ });
-  } catch (e) { /* ignore */ }
+    })
+      .then(function (r) {
+        return !!(r && r.ok);
+      })
+      .catch(function () {
+        return false;
+      });
+  } catch (e) {
+    return Promise.resolve(false);
+  }
 }
 
 const IMPORT_DRAFT_KEY = "travelogue.studio.importDraft";

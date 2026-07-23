@@ -1104,17 +1104,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--wave",
         choices=sorted(WAVES),
-        default="modal",
-        help="Which surface wave to audit",
+        default=None,
+        help="Which surface wave to audit (default: modal; with --strict ⇒ all)",
     )
     ap.add_argument("--json", type=Path, default=None, help="Write full JSON report")
     ap.add_argument(
         "--strict",
         action="store_true",
-        help="Exit 1 when P0 or P1 findings exist (P2 不阻断)",
+        help="Exit 1 when P0 or P1 findings exist (P2 不阻断)；裸 --strict 时 wave=all",
     )
     args = ap.parse_args(argv)
-    report = run_audit(wave=args.wave)
+    # QFX D-QFX-11 / AC-08/19：bare --strict ⇒ wave=all
+    wave = args.wave
+    if wave is None:
+        wave = "all" if args.strict else "modal"
+    report = run_audit(wave=wave)
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
     for f in report["findings"]:
         print(f"[{f['severity']}] {f['id']} {f['selector']}: {f['detail']}")

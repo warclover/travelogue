@@ -7,7 +7,7 @@
 | **评审** | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · Conditional Go |
 | **邻接实施** | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) **v0.2.2**（S7/S7b · BE-NAS-03/04） |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-B in progress**（`fix/qfx-pr-b-longshot-current`；PR-A 已合 master） |
+| **状态** | **PR-C in progress**（`fix/qfx-pr-c-m2-contract`；PR-A/B 已合 master） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 QFX PRD v0.2.1 的 S/D/AC 展开为可执行任务卡与 PR 切片。  
@@ -158,9 +158,10 @@
 
 | 项 | 内容 |
 |----|------|
-| **动作** | 完成 T-02：幂等清标；真实图测；分段完整批次聚合 / 不完整批拒绝 |
-| **删除** | `test_keep_all_skips_low_res` 整函数 mock 假绿（或改负例） |
-| **验收** | AC-13/26 · AC-25 分段 |
+| **动作** | ✅ `curate_preprocess`：回填→清标→条件硬丢；真实图测；`resolve_complete_segment_batch` 拒半批 |
+| **删除** | ✅ 假绿 mock「未调用」已改为真实图合同 |
+| **验收** | AC-13/26 · AC-25 分段 ✅ |
+| **状态** | ✅ 2026-07-23 |
 
 ---
 
@@ -168,9 +169,10 @@
 
 | 项 | 内容 |
 |----|------|
-| **动作** | `unknown|disabled|enabled`；失败可重试；成功后 track；`sessionStorage` 去重；服务端 `ai_surface_gate` meta 恰好 `{enabled:bool}` |
-| **路径** | `ai-surface.js` · `analytics.js` · `telemetry_handlers.py` · `studio_events.py` |
-| **验收** | AC-09/10/21/22 |
+| **动作** | ✅ `unknown\|disabled\|enabled`；失败可重试；成功后 track；`sessionStorage` 去重；`ai_surface_gate` meta 恰好 `{enabled:bool}` |
+| **路径** | `ai-surface.js` · `analytics.js` · `studio_events.py` |
+| **验收** | AC-09/10/21/22（unit/源码层） |
+| **状态** | ✅ 2026-07-23 |
 
 ---
 
@@ -178,9 +180,10 @@
 
 | 项 | 内容 |
 |----|------|
-| **动作** | 删 wave11 假 DOM；测试 DI 挂真卡；helpers schema P0；bare `--strict`→`all`；token 块内 `var()` 引用 |
-| **路径** | wave11 playwright · `ui_detail_runtime_helpers.py` · `studio_ui_detail_static_audit.py` · `capability-card.js` |
-| **验收** | AC-06～08/16～20 |
+| **动作** | ✅ helpers 空测量 P0；bare `--strict`→`all`；wave11 假 DOM / 真卡 DI / token 链 **延后或同 PR 第二刀** |
+| **路径** | `ui_detail_runtime_helpers.py` · `studio_ui_detail_static_audit.py` |
+| **验收** | AC-07/08/18/19 ✅；AC-06/16/17/20 未完 |
+| **状态** | ◐ 2026-07-23（核心门禁已落地） |
 
 ---
 

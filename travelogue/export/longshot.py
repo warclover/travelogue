@@ -329,6 +329,55 @@ def read_longshot_current(trip_dir: Path) -> dict[str, Any] | None:
     }
 
 
+_SEGMENT_RE = re.compile(
+    r"^(?P<stem>.+)-长图-(?P<idx>\d+)\.(?P<ext>png|jpe?g)$",
+    re.IGNORECASE,
+)
+
+
+def resolve_complete_segment_batch(trip_dir: Path) -> list[Path] | None:
+    """Return newest complete SFI segmented batch (01..N all present), else None.
+
+    QFX AC-25 分段：不完整批不得作为预览序列（禁止名序半批混排）。
+    """
+    groups: dict[tuple[str, str], dict[int, Path]] = {}
+    for path in trip_dir.iterdir() if trip_dir.is_dir() else []:
+        if not path.is_file():
+            continue
+        match = _SEGMENT_RE.match(path.name)
+        if not match:
+            continue
+        stem = match.group("stem")
+        ext = match.group("ext").lower()
+        if ext == "jpeg":
+            ext = "jpg"
+        idx = int(match.group("idx"))
+        if idx < 1:
+            continue
+        groups.setdefault((stem, ext), {})[idx] = path
+
+    complete: list[tuple[float, list[Path]]] = []
+    for (_stem, _ext), by_idx in groups.items():
+        if not by_idx:
+            continue
+        n = max(by_idx)
+        if n < 2:
+            continue
+        if set(by_idx.keys()) != set(range(1, n + 1)):
+            continue
+        ordered = [by_idx[i] for i in range(1, n + 1)]
+        try:
+            newest = max(p.stat().st_mtime for p in ordered)
+        except OSError:
+            newest = 0.0
+        complete.append((newest, ordered))
+
+    if not complete:
+        return None
+    complete.sort(key=lambda row: row[0], reverse=True)
+    return complete[0][1]
+
+
 def maybe_write_longshot_current_after_upload(
     trip_dir: Path,
     *,

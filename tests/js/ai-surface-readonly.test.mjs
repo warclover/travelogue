@@ -14,9 +14,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 test("ai-surface 仅导出只读 API", () => {
   assert.equal(typeof aiSurface.isAiSurfaceEnabled, "function");
   assert.equal(typeof aiSurface.ensureAiSurfaceHydrated, "function");
+  assert.equal(typeof aiSurface.getAiSurfaceState, "function");
   assert.equal(typeof aiSurface.whenAiSurface, "function");
   assert.equal(aiSurface.setAiSurfaceEnabled, undefined);
   assert.equal(aiSurface.hydrateAiSurfaceFromConfig, undefined);
+  assert.equal(aiSurface.getAiSurfaceState(), "unknown");
   assert.equal(aiSurface.isAiSurfaceEnabled(), false);
 });
 
