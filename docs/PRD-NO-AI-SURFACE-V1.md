@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.1** |
-| **状态** | **Conditional Go · Must-Fix 已回写**（[评审纪要](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) · MF-NAS-01～10） |
+| **文档版本** | **v0.2.3** |
+| **状态** | **Conditional Go · Must-Fix 已回写**（[评审纪要](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) · MF-NAS-01～10 · **v0.2.3** 同步 [QFX](./PRD-QUALITY-FIXPACK-V1.md) status 读门控 + **config 投影收口**） |
 | **DOC-STATUS** | **active**（本主题为当前版本**用户面**现行合同；DLLM/WEA 用户面见 §1.5） |
 | **主题代号** | 「当前版无 AI 面 · 先出图」— **NAS**（No-AI Surface） |
 | **触发来源** | 2026-07-22 产品决策：本期隐藏已具备的 AI 产品面，聚焦无 AI 下纯照片出图；**LLM 工程底座保留**，供下期（AI-Return）再聚焦杂志感文案迭代 |
@@ -247,7 +247,8 @@
 | **D-NAS-14** | **门控优先于 llmAvailable** | FE 以 `aiSurfaceEnabled` 为准；有 Key 亦不渲染入口 |
 | **D-NAS-15** | **手工改字保留** | inline-edit / 精修改字仍可用 |
 | **D-NAS-16** | **`POST /narrate` 硬拒绝（MF-NAS-01）** | 门控 off → HTTP **403** + `E_AI_SURFACE_DISABLED` + 中性 message；先于 Key/status 检查 |
-| **D-NAS-17** | **settings 写入硬拒绝（MF-NAS-03）** | 门控 off → `/llm/settings` **写** 403；status/ping 可保留；默认面 FE 不请求 status |
+| **D-NAS-17** | **settings 写 + status 读硬拒绝（MF-NAS-03 · QFX v0.2 修订）** | 门控 off → `/llm/settings` **写** 403；`GET /llm/status` **亦 403**（须在读 secrets/目录/`_status_body` **之前**；零 `maskedKey`/`userDataDir`/`tripsDir`/provider 细节）；`/llm/ping` 写路径仍 403；默认面 FE 不请求 status；dark ON 可读 status |
+| **D-NAS-17b** | **config 敏感投影收口（QFX v0.2.1 拍板）** | 门控 off → `GET /__travelogue/config` **保留** `aiSurfaceEnabled:false` 与非 LLM 业务字段；**不得**暴露 `llmAvailable` / `llmProvider` / `tripsDir` / provider 细节。dark ON 可恢复完整投影。FE hydration 只读 `aiSurfaceEnabled`；**禁止**因投影收口而对 config 整端 403 |
 | **D-NAS-18** | **`aiSurfaceEnabled` 只读下发（MF-NAS-02）** | 服务端解析 → `GET /__travelogue/config`；**禁止** PATCH；FE helper 仅读该字段 |
 | **D-NAS-19** | **`startLlmNarrate` 函数级门闩** | 藏 UI 不够；`core.js` 首行门控早退（FE-NAS-09/10） |
 | **D-NAS-20** | **dark 恢复范围冻结** | ON：设置 AI zone + Modal + ping + Sheet llm + 抽屉 narrate；**不**恢复能力卡 / stub banner / H7 / FS 分支 |
@@ -412,7 +413,9 @@ HTTP/1.1 403
 - 门控 on：保持既有 400 `E_LLM_AUTH` / 202 Job 行为。
 
 **`/llm/settings` 写入（门控 off）** → **403** + 同错误码或专用写拒绝码（中性 message）。  
-**`/llm/status` · `/llm/ping`** → 可保留（dark/回归）；默认面 FE 不调用 status。
+**`GET /llm/status`（门控 off）** → **403** + `E_AI_SURFACE_DISABLED`；**禁止**先组装再过滤敏感字段；检查点在 `_status_body` / secrets / 本机目录读取之前（[QFX](./PRD-QUALITY-FIXPACK-V1.md) D-QFX-04）。  
+**`GET /__travelogue/config`（门控 off）** → **200 可保留**（hydration 依赖），但须执行 **D-NAS-17b** 投影收口（[QFX](./PRD-QUALITY-FIXPACK-V1.md) D-QFX-04b · AC-QFX-27）。  
+**`/llm/ping`（门控 off）** → 写/探测路径 **403**；dark ON 可回归。默认面 FE 不调用 status。
 
 ### 5.4 安全与隐私
 
@@ -430,7 +433,7 @@ HTTP/1.1 403
 |------|------|
 | `travelogue/llm/**` · `llm/client.py` · presets | 文本 LLM 运行时 |
 | ADR-019 secrets · `user_settings` · launcher inject | 密钥落盘与注入 |
-| `/__travelogue/llm/status|settings|ping` | 配置 API（写路径门控 off 时 403） |
+| `/__travelogue/llm/status|settings|ping` | 配置 API（门控 off：settings 写 / status 读 / ping 均 403；dark ON 可回归） |
 | `run_studio_llm_narrate` · narrate Job · `llm_narrate` | 杂志感生成管线 |
 | WEA 配置面与 ping 状态机 | dark 下可回归 |
 | `*_ai_surface_dark` / DLLM·WEA dark 附录测试 | **禁止「删断言了事」** |

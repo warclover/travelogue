@@ -4,6 +4,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
 import {
   normalizeWizardStep,
   isFineSnapshotDirty,
@@ -11,7 +15,16 @@ import {
   shouldConfirmCloseWizard,
   canLeavePickStep,
   canNavigateWizardStep,
+  resolvePhotoKeepModeFromDraft,
 } from "../../templates/studio/homepage-v2/import-wizard-logic.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const QFX_VECTORS = JSON.parse(
+  readFileSync(
+    join(__dirname, "../fixtures/qfx/photo_keep_mode_vectors.json"),
+    "utf8"
+  )
+);
 
 test("normalizeWizardStep", () => {
   assert.equal(normalizeWizardStep("fine"), "fine");
@@ -72,4 +85,19 @@ test("canLeavePickStep / canNavigateWizardStep", () => {
   assert.equal(canNavigateWizardStep("confirm", "fine", "quick_share"), false);
   assert.equal(canNavigateWizardStep("confirm", "fine", "fine_craft"), true);
   assert.equal(canNavigateWizardStep("fine", "pick", "fine_craft"), true);
+});
+
+test("resolvePhotoKeepModeFromDraft 对齐 QFX 合同向量", () => {
+  for (const row of QFX_VECTORS.vectors) {
+    const draft = {
+      photoKeepMode: row.photoKeepMode || undefined,
+      photoCullEnabled: row.photoCullEnabled,
+      keepNearDuplicates: row.keepNearDuplicates,
+    };
+    assert.equal(
+      resolvePhotoKeepModeFromDraft(draft),
+      row.expectMode,
+      row.id
+    );
+  }
 });

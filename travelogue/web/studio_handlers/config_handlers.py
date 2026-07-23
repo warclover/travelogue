@@ -26,11 +26,37 @@ def studio_capabilities(*, client_host: str = "") -> dict[str, bool]:
         "desktopExit": bool(is_frozen()),
     }
 
-def handle_config(handler: StudioHandlerProtocol) -> None:
+def _project_config_body(
+    cfg,
+    *,
+    client_host: str = "",
+    include_pipeline_estimates: bool = False,
+) -> dict:
+    """Build GET/PATCH config body; NAS off strips LLM/path projection (D-NAS-17b)."""
     from travelogue.web.ai_surface import resolve_ai_surface_enabled
     from travelogue.web.studio_narrate import studio_llm_status
     from travelogue.web.studio_stages import pipeline_estimate_tiers
 
+    enabled = resolve_ai_surface_enabled(cfg)
+    body: dict = {
+        "ok": True,
+        "aiSurfaceEnabled": enabled,
+        **studio_config_expose(cfg),
+        "capabilities": studio_capabilities(client_host=client_host),
+    }
+    if include_pipeline_estimates:
+        body["pipelineEstimates"] = pipeline_estimate_tiers()
+    if enabled:
+        body.update(studio_llm_status(cfg=cfg))
+        return body
+    # D-QFX-04b / D-NAS-17b：off 时不得暴露 LLM 与 tripsDir
+    body.pop("tripsDir", None)
+    for key in ("llmAvailable", "llmProvider"):
+        body.pop(key, None)
+    return body
+
+
+def handle_config(handler: StudioHandlerProtocol) -> None:
     if handler.command == "PATCH":
         payload = handler._read_json_body()
         if not payload:
@@ -53,34 +79,25 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
             )
             return
         cfg = load_config(target if target.is_file() else None)
-        body = {
-            "ok": True,
-            "aiSurfaceEnabled": resolve_ai_surface_enabled(cfg),
-            **studio_config_expose(cfg),
-            **studio_llm_status(cfg=cfg),
-            "capabilities": studio_capabilities(
-                client_host=handler.client_address[0] if handler.client_address else ""
-            ),
-        }
-        handler._json_response(200, body)
+        client_host = handler.client_address[0] if handler.client_address else ""
+        handler._json_response(
+            200,
+            _project_config_body(cfg, client_host=client_host),
+        )
         return
 
     ctx = studio_ctx(handler)
     cfg = ctx.cfg
     if handler.studio_config_path and handler.studio_config_path.is_file():
         cfg = load_config(handler.studio_config_path)
-    status = studio_llm_status(cfg=cfg)
     client_host = handler.client_address[0] if handler.client_address else ""
     handler._json_response(
         200,
-        {
-            "ok": True,
-            "aiSurfaceEnabled": resolve_ai_surface_enabled(cfg),
-            **studio_config_expose(cfg),
-            **status,
-            "pipelineEstimates": pipeline_estimate_tiers(),
-            "capabilities": studio_capabilities(client_host=client_host),
-        },
+        _project_config_body(
+            cfg,
+            client_host=client_host,
+            include_pipeline_estimates=True,
+        ),
     )
 
 

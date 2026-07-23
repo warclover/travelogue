@@ -1,7 +1,7 @@
 """P9-F3 · 照片处理三档（recommended / keep_bursts / keep_all）。
 
 互斥模式 → 派生 photoCullEnabled / keepNearDuplicates / skipLowResExclusion。
-旧客户端只传两布尔时不得静默跳过低分闸（见 PRD-KEEP-ALL-PHOTOS-V1 §4.3–4.4）。
+旧客户端只传两布尔时不得静默跳过低分闸；跳低分仅认显式 keep_all（QFX D-QFX-07）。
 """
 
 from __future__ import annotations
@@ -90,8 +90,6 @@ def resolve_photo_keep_prefs(
 
 
 def should_skip_low_res_exclusion(intent: dict | None) -> bool:
-    """keep_all（或显式 skipLowResExclusion）时跳过低分硬丢。"""
+    """仅显式 photoKeepMode=keep_all 时跳过低分硬丢（QFX D-QFX-07）。"""
     data = intent if isinstance(intent, dict) else {}
-    if data.get("skipLowResExclusion") is True:
-        return True
     return normalize_photo_keep_mode(data.get("photoKeepMode")) == "keep_all"

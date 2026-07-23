@@ -27,9 +27,9 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
 import {
   ensureAiSurfaceHydrated,
-  hydrateAiSurfaceFromConfig,
   isAiSurfaceEnabled,
 } from "../js/ai-surface.js";
+import { studioAuthHeaders } from "../js/http.js";
 import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { requestExitStudio } from "../js/studio-exit.js";
 import {
@@ -543,10 +543,12 @@ export function initToolbarV3(root, tripId) {
     },
   };
 
-  fetch("/__travelogue/config")
+  fetch("/__travelogue/config", {
+    headers: studioAuthHeaders({}),
+  })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (cfg) {
-      hydrateAiSurfaceFromConfig(cfg || {});
+      // AI 门控只经 ensureAiSurfaceHydrated（已在上方调用）；此处只消费非 LLM 业务字段
       cohortEnabled = !!(cfg && cfg.cohort && cfg.cohort.enabled);
       if (cfg && cfg.studio) {
         applyLongshot2Config(cfg.studio);

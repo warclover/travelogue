@@ -515,11 +515,9 @@ function pollImport(jobId, gen, source) {
         (pending && pending.photoKeepMode) || result.photoKeepMode || ""
       ).trim().toLowerCase();
       if (keepModeDone !== "keep_bursts" && keepModeDone !== "keep_all") {
-        keepModeDone = result.photoCullEnabled === false && result.keepNearDuplicates === true
-          ? "keep_all"
-          : result.keepNearDuplicates === true
-            ? "keep_bursts"
-            : "recommended";
+        // 对齐 infer_mode_from_bools：布尔路径永不推断 keep_all
+        keepModeDone =
+          result.keepNearDuplicates === true ? "keep_bursts" : "recommended";
       }
       trackImportPhotoKeepMode({
         photo_keep_mode: keepModeDone,

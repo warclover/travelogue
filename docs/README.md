@@ -159,6 +159,9 @@
 | [PRD-POST-MERGE-UX-FIXPACK-V1.md](./PRD-POST-MERGE-UX-FIXPACK-V1.md) | **合入后 UX 修复包 V1** **v0.2**（Conditional Go · 决策已锁 · [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)） |
 | [IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) | 合入后修复包 · RCA + 实施清单（分支实施中） |
 | [ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md) | PMX · 验收合同（AC-PMX-01～13） |
+| [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md) | **日更质量修复包 V1（QFX）** **v0.2.1**（Conditional Go · 探查拍板 · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)） |
+| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | QFX 实施 **v0.1.0** · T-00～11 · PR-A→D · Ready for PR-A |
+| [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | QFX 七席评审 · 系统根因 · 根本解法 · Must-Fix |
 | [acceptance-records/post-merge-ux-trial-2026-07-22.md](./acceptance-records/post-merge-ux-trial-2026-07-22.md) | 合入后完整 UX 走查 · P0–P2 账本（2026-07-22） |
 | [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
 | [acceptance-records/post-trip-needs-product-decision-2026-07-21.md](./acceptance-records/post-trip-needs-product-decision-2026-07-21.md) | 调研 → 产品决策备忘录（**已认可** · D1 48h 话术 · D2 小红书包收窄 · D3 ShareHandoff 北极星 · X1–X3 不追） |
@@ -179,6 +182,7 @@
 敢发收口：**PRD-SHARE-FACE-CLOSEOUT-V1** **v1.0.2**（Conditional Go · **W0–W2 工程已合入** · **§12 质量收口全部必修**）· [跨职能](./acceptance-records/share-face-closeout-v1-review-2026-07-18.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-CLOSEOUT-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-CLOSEOUT-V1.md) · [线框](./wireframes/share-face-closeout-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-closeout-v1-dogfood-CHECKLIST.md) · [试用底稿](./acceptance-records/persona-ux-trial-2026-07-18.md) · [质量收口](./acceptance-records/quality-review-remediation-2026-07-18.md)。  
 敢发面一致性：**PRD-SHARE-FACE-INTEGRITY-V1** **v0.2.1**（Conditional Go · **Doc 包齐 · Ready for Kickoff W0** · 硬化 SFC 执行层 + 存量兑现 · 编码另排期）· [跨职能](./acceptance-records/share-face-integrity-v1-review-2026-07-21.md) · [IMPLEMENTATION](./IMPLEMENTATION-SHARE-FACE-INTEGRITY-V1.md) · [ACCEPTANCE](./ACCEPTANCE-SHARE-FACE-INTEGRITY-V1.md) · [线框](./wireframes/share-face-integrity-v1-wireframe.html) · [狗粮](./acceptance-records/share-face-integrity-v1-dogfood-CHECKLIST.md) · [试用首轮](./acceptance-records/persona-blogger-trial-2026-07-21.md) · [试用深走](./acceptance-records/persona-deep-trial-2026-07-21.md)。  
 合入后 UX 修复包：**PRD-POST-MERGE-UX-FIXPACK-V1** **v0.2**（Conditional Go · M1–M3 同包）· [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [RCA/实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)。  
+日更质量修复包：**PRD-QUALITY-FIXPACK-V1** **v0.2.1**（Conditional Go · 探查三项拍板已入文 · PR-A→D · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)）。  
 导入等待教育：**PRD-WAIT-TIPS-V1** **v0.2.0**（Conditional Go · **W0–W2 编码已合入** · 手测待填）· [IMPLEMENTATION](./IMPLEMENTATION-WAIT-TIPS-V1.md) · [ACCEPTANCE](./ACCEPTANCE-WAIT-TIPS-V1.md) · [线框](./wireframes/wait-tips-v1-wireframe.html) · [跨职能](./acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](./acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md) · [狗粮](./acceptance-records/wait-tips-v1-dogfood-CHECKLIST.md)。  
 交叉脚注：FTUE **v1.1.2** · Help **v1.1.4** · FST **v1.0.3** · Share-Ready **v1.0.3**（默认成功面 COPY 以 First-Session Trust 为准）。 
 精修反馈闭环：**PRD-REFINE-FEEDBACK-LOOP-V1** **v0.1.3**（Conditional Go · B′+3a · M1+M2+P0+M3 `scope=tier`；线框见 refine-feedback-loop-v1-wireframe）。
@@ -635,6 +639,11 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-07-23 | QFX：IMPLEMENTATION **v0.1.0**；NAS IMPLEMENTATION **v0.2.2**（废除 status 可 200）· ACCEPTANCE 增 AC-NAS-17d |
+| 2026-07-23 | QFX：**PRD v0.2.1** 代码探查三项拍板入文（config 投影 · 最小 current · 预处理降耦）；NAS **v0.2.3** D-NAS-17b；Keep-All **v0.1.3** |
+| 2026-07-22 | QFX：**PRD v0.2.0** 回写评审根本解法；同步 NAS D-NAS-17 / AC-NAS-17c（status 403）与 Keep-All §4.2（回填仍执行） |
+| 2026-07-22 | QFX 七席评审：[quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · **Conditional Go** |
+| 2026-07-22 | 新增 [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md)（日更质量修复包 QFX · 当日审查 Fix all · M1–M3 · 未改业务代码） |
 | 2026-07-22 | NAS：**IMPLEMENTATION v0.2.1** 回写 S1–S10 · ping 硬拒决议 · PR-A/B/C/D 切片（未改业务代码） |
 | 2026-07-22 | NAS：**PRD v0.2.1** 补分期表 · §5.5 冻结清单 · §14 AI-Return 解冻合同 · OUT-01～05（未改业务代码） |
 | 2026-07-22 | NAS：**PRD v0.2.0** MF 已回写；[ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) 初稿；**可开 W1 编码** |

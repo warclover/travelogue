@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "id": "legacy-cull-off-dupes-off",
+      "photoKeepMode": null,
+      "photoCullEnabled": false,
+      "keepNearDuplicates": false,
+      "expectMode": "recommended",
+      "expectSkipLowRes": false
+    },
+    {
+      "id": "legacy-cull-off-dupes-on",
+      "photoKeepMode": null,
+      "photoCullEnabled": false,
+      "keepNearDuplicates": true,
+      "expectMode": "keep_bursts",
+      "expectSkipLowRes": false
+    },
+    {
+      "id": "legacy-cull-on-dupes-on",
+      "photoKeepMode": null,
+      "photoCullEnabled": true,
+      "keepNearDuplicates": true,
+      "expectMode": "keep_bursts",
+      "expectSkipLowRes": false
+    },
+    {
+      "id": "explicit-keep-all",
+      "photoKeepMode": "keep_all",
+      "photoCullEnabled": false,
+      "keepNearDuplicates": true,
+      "expectMode": "keep_all",
+      "expectSkipLowRes": true
+    },
+    {
+      "id": "explicit-keep-bursts",
+      "photoKeepMode": "keep_bursts",
+      "photoCullEnabled": true,
+      "keepNearDuplicates": true,
+      "expectMode": "keep_bursts",
+      "expectSkipLowRes": false
+    },
+    {
+      "id": "skip-flag-alone-ignored",
+      "photoKeepMode": null,
+      "photoCullEnabled": true,
+      "keepNearDuplicates": false,
+      "skipLowResExclusion": true,
+      "expectMode": "recommended",
+      "expectSkipLowRes": false
+    }
+  ]
+}

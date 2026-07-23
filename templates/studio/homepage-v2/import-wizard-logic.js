@@ -60,7 +60,7 @@ export function derivePhotoPrefsFromMode(mode) {
 }
 
 /**
- * 旧草稿两布尔 → 三档（session 内 cull 关映射 keep_all，与读盘推断不同）。
+ * 旧草稿两布尔 → 三档（对齐 Python infer_mode_from_bools；永不升 keep_all）。
  * @param {{ photoKeepMode?: string, photoCullEnabled?: boolean, keepNearDuplicates?: boolean }} draft
  */
 export function resolvePhotoKeepModeFromDraft(draft) {
@@ -69,7 +69,7 @@ export function resolvePhotoKeepModeFromDraft(draft) {
   if (mode === "recommended" || mode === "keep_bursts" || mode === "keep_all") {
     return mode;
   }
-  if (d.photoCullEnabled === false) return "keep_all";
+  // QFX D-QFX-05 / AC-12：cull=false 单独不足以上 keep_all
   if (d.keepNearDuplicates === true) return "keep_bursts";
   return "recommended";
 }

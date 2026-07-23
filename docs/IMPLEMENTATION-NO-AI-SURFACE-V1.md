@@ -2,17 +2,18 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | **v0.2.1** |
-| **对应 PRD** | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) **v0.2.1** |
+| **文档版本** | **v0.2.2** |
+| **对应 PRD** | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) **v0.2.3** |
 | **评审** | [acceptance-records/no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) · **Conditional Go** · MF 已回写 PRD |
-| **验收** | [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) **v0.1.1** |
+| **交叉合同** | [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md) **v0.2.1**（status 403 · config 投影 · FE 只读） |
+| **验收** | [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) |
 | **DOC-STATUS** | **active** |
-| **范围本版** | 前端门控/入口/文案 + **BE P0**（`aiSurfaceEnabled` · narrate / settings 写 / **ping** 硬拒绝）+ 禁词审计 |
-| **编码启动** | **可开 W1**（先 PR-A 门控底座，见 §3） |
+| **范围本版** | 前端门控/入口/文案 + **BE P0**（`aiSurfaceEnabled` · narrate / settings 写 / **ping** / **status 读** / **config 投影**）+ 禁词审计 |
+| **编码启动** | W1 已落地；**QFX M1′ 收口** status/config（见 BE-NAS-03/04 · [IMPLEMENTATION-QUALITY-FIXPACK-V1](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md)） |
 | **非范围** | 不删除 `travelogue/llm/**`；不改 stub/decorLine 算法；不改长图截图链路；不解开 `scope=frame` |
-| **更新日期** | 2026-07-22 |
+| **更新日期** | 2026-07-23 |
 
-> **v0.2.1** = 编码前代码勘察回写（S1–S10）+ **ping 硬拒决议**。未改业务代码。
+> **v0.2.2** = 对齐 PRD v0.2.3 / QFX v0.2.1：**status 读 403** + **config 敏感投影收口**。取代 v0.2.1「status 可 200」实施合同。未改业务代码（文档同步）。
 
 ---
 
@@ -43,26 +44,28 @@
 | ID | 主题 | 决议 / 动作 | 落入任务 |
 |----|------|-------------|----------|
 | **S1** | HTML 字面量是禁词主战场 | `#v2-settings-zone-ai` 现网已含「AI 文案 / 配置写作引擎…」且非 hidden。默认面：zone **`hidden` + `aria-hidden`**；摘要/CTA 改中性或空，**dark ON 再填写作引擎 CTA**。失败钮可保留 id，文案改 COPY，默认永不 `hidden=false`。**禁止**只靠 CSS `display:none` | FE-NAS-03 · 06 · 14 |
-| **S2** | `llmAvailable` ≠ 可展示 AI | 有 Key 时 status/config 仍可能 `llmAvailable:true`。默认面**禁止**用其驱动 FS / stub / Sheet / Dock / settings badge | 全 FE；注释写死 |
-| **S3** | 停间接点灯 | 默认面**停调** `GET /llm/status`（`first-success` / `home-stub-banner` / `settings-panel` / `init-v3` / `llm-readiness`）；避免 `travelogue:llm-status` 唤醒 tip | FE-NAS-02 · 05 · 09 |
+| **S2** | `llmAvailable` ≠ 可展示 AI | 默认面**禁止**用其驱动 FS / stub / Sheet / Dock / settings badge。门控 off 时 config **不得再下发** `llmAvailable`/`llmProvider`/`tripsDir`（D-NAS-17b · BE-NAS-04） | 全 FE；BE-NAS-04 |
+| **S3** | 停间接点灯 | 默认面**停调** `GET /llm/status`；off 时即便 curl 亦 **403**（AC-NAS-17c）。避免 `travelogue:llm-status` 唤醒 tip | FE-NAS-02 · 05 · 09 · BE-NAS-03 |
 | **S4** | 三路 narrate 同 PR | Sheet · Dock · 抽屉 → 皆通 `startLlmNarrate`；底闸 + UI 切断同 PR | FE-NAS-09+10 |
 | **S5** | 错误文案三份镜像 | `errors.js` · `constants.js` · `studio_errors.py` 同步中性；`E_AI_SURFACE_DISABLED` 进 py + ERROR-CODES | FE-NAS-07 · BE-NAS-02 |
 | **S6** | shareCopyPack 抽检 | `_share_copy_pack_entry` 在 `llmAvailable` 时塞 body；W2 有 Key/无 Key 各导出一次，确认无禁词（OUT-04）；有问题再补卡 | PR-C 冒烟 |
-| **S7** | **Ping 决议（严于 PRD D-NAS-17）** | 门控 off：`POST /llm/ping` → **403** + `E_AI_SURFACE_DISABLED`（与「配不了」一致；现网 ping 可回写 `last_ping_ok`）。**`GET /llm/status` 仍可保留**（dark/curl）；默认面 FE 不请求。dark ON 恢复 ping（AC-NAS-09） | **BE-NAS-03** |
+| **S7** | **读/写硬拒（对齐 PRD D-NAS-17 · QFX）** | 门控 off：`POST /llm/ping` → **403**；**`GET /llm/status` → 403**（须在 `_status_body`/secrets/目录读取**之前**；零敏感键）。默认面 FE 不请求 status。dark ON 恢复 status/ping（AC-NAS-09） | **BE-NAS-03** |
+| **S7b** | **config 投影（D-NAS-17b · QFX 04b）** | 门控 off：`GET /config` 仍 **200**（hydration），但**不得**含 `llmAvailable`/`llmProvider`/`tripsDir`/provider 细节；须含 `aiSurfaceEnabled:false` | **BE-NAS-04** |
 | **S8** | 源码禁词 / `nas-allow` | 默认可达面改中性；dark 专用串集中并标 `nas-allow`，分 job；**禁止**删整文件过 AC-08 | FE-NAS-01 · 14 · D-NAS-21 |
 | **S9** | 单测翻转 Day-0 | W1 第一天同步拆 `*_nas_default` / `*_ai_surface_dark`（DLLM W2 · L0G FE · UX Trust 优先）；e2e 注入能力卡 fixture 不进默认禁词 job | FE-NAS-14 · PR-A/B |
-| **S10** | 文档指针 | 实施/验收对齐 PRD **v0.2.1**（§5.5 冻结 · §14 解冻 · OUT-01～05） | 本文 · ACCEPTANCE · DOC-STATUS |
+| **S10** | 文档指针 | 实施/验收对齐 PRD **v0.2.3** + QFX **v0.2.1** | 本文 · ACCEPTANCE · DOC-STATUS · QFX IMPLEMENTATION |
 
-### Ping / status 对照（实施合同）
+### Ping / status / config 对照（实施合同 · v0.2.2）
 
 | API | 门控 off | 默认面 FE | dark ON |
 |-----|----------|-----------|---------|
-| `GET /llm/status` | **200 可保留**（不强制 403） | **不请求** | 可请求 |
+| `GET /llm/status` | **403** + `E_AI_SURFACE_DISABLED`（早拒） | **不请求** | 可请求（完整 body） |
+| `GET /__travelogue/config` | **200** + **投影收口**（S7b） | hydration 只读 `aiSurfaceEnabled` | 完整投影可含 LLM 字段 |
 | `POST /llm/settings`（写/删） | **403** | 无 UI | 可写 |
-| `POST /llm/ping` | **403**（本决议） | 无 UI | 可 ping |
+| `POST /llm/ping` | **403** | 无 UI | 可 ping |
 | `POST /narrate` | **403**（先于 Key） | 无入口 | 可 narrate |
 
-> PRD D-NAS-17 原文写「status/ping 可保留」。**实施采纳更严：ping 硬拒**；status 仍可保留。若产品事后要放宽 ping，须改本表 + ACCEPTANCE，不得静默放行。
+> **历史注记**：v0.2.1 曾写「status 可 200」。**v0.2.2 起作废**——以 PRD D-NAS-17 / AC-NAS-17c / QFX AC-05/23 为准。放宽须改 PRD+ACCEPTANCE+本文三处，不得静默。
 
 ---
 
@@ -354,10 +357,10 @@ PR-D（W3）
 | 项 | 内容 |
 |----|------|
 | **建议路径** | 新建 `travelogue/web/ai_surface.py` → `resolve_ai_surface_enabled(cfg)`；仿 `studio_homepage_gate`：`TRAVELOGUE_AI_SURFACE` truthy **OR** `studio.ai_surface_enabled==true`；默认 **false** |
-| **暴露** | `config_handlers.handle_config` **顶层** `aiSurfaceEnabled`（与 `llmAvailable` 同级）；**不进** `patch_config_file` / `allowed_studio` |
+| **暴露** | `config_handlers.handle_config` **顶层** `aiSurfaceEnabled`；**不进** `patch_config_file` / `allowed_studio`。门控 off 时 **不得**再并列下发 `llmAvailable` 等（见 **BE-NAS-04**） |
 | **验收** | AC-NAS-13/15 联调；config 有字段；PATCH 无法自开 |
-| **波次** | W1 · PR-A · P0 |
-| **状态** | ⏳ |
+| **波次** | W1 · PR-A · P0（投影收口见 BE-NAS-04 / QFX PR-A） |
+| **状态** | ✅ 下发已落地；⬜ 投影收口待 QFX |
 
 ### BE-NAS-02 · narrate 硬拒绝
 
@@ -371,17 +374,30 @@ PR-D（W3）
 | **波次** | W1 · PR-A · P0 |
 | **状态** | ⏳ |
 
-### BE-NAS-03 · settings 写 + ping 硬拒绝（S7）
+### BE-NAS-03 · settings 写 + ping + **status 读**硬拒绝（S7）
 
 | 项 | 内容 |
 |----|------|
-| **行为** | 门控 off：`POST`/`DELETE` `/llm/settings` → **403**；**`POST /llm/ping` → 403**（同码；防 `last_ping_ok` 回写） |
-| **保留** | `GET /llm/status` **不强制 403**（dark/curl）；默认面 FE 不调用（S3） |
-| **路径** | `llm_settings_handlers.handle_llm_settings` · `handle_llm_ping` |
-| **验收** | AC-NAS-17a；另补：off 时 ping → 403（写入 ACCEPTANCE 备注或 AC 扩展） |
-| **波次** | W1 · PR-A · P0 |
-| **状态** | ⏳ |
-| **注记** | **严于 PRD D-NAS-17**（见 §0.1 Ping 对照）；dark ON 后 ping 须可用（AC-NAS-09） |
+| **行为** | 门控 off：`POST`/`DELETE` `/llm/settings` → **403**；`POST /llm/ping` → **403**；**`GET /llm/status` → 403**（同码） |
+| **status 早拒** | 在调用 `_status_body()` / `inject_secrets` / `user_data_dir` / `read_user_llm_secrets` **之前**返回；响应**零** `maskedKey`/`userDataDir`/`tripsDir`/provider |
+| **路径** | `llm_settings_handlers.handle_llm_settings` · `handle_llm_ping` · **`handle_llm_status`** |
+| **验收** | AC-NAS-17a · **AC-NAS-17c** · QFX AC-05/23 |
+| **波次** | W1 已部分落地；**status 403 = QFX M1′ / PR-A** |
+| **状态** | ⬜ status 读门控待 QFX；settings/ping 已按 W1 |
+| **注记** | 对齐 PRD D-NAS-17（v0.2.3）；dark ON 后 status/ping 须可用（AC-NAS-09） |
+
+### BE-NAS-04 · config 敏感投影收口（S7b · D-NAS-17b）
+
+| 项 | 内容 |
+|----|------|
+| **行为** | 门控 off：`handle_config` **仍 200**，但响应**不得**合并完整 `studio_llm_status` 敏感投影，**不得**暴露 `tripsDir`（或其它本机路径）于默认可达面 |
+| **必留** | `aiSurfaceEnabled: false`（及非 LLM 业务字段，如 homepage / happyPath 非敏感键） |
+| **禁止** | off 时出现 `llmAvailable` / `llmProvider` / `tripsDir` / maskedKey / userDataDir |
+| **路径** | `config_handlers.py` · `studio_config_expose` / `studio_llm_status` 合并点 |
+| **验收** | AC-NAS-17d · QFX AC-27 |
+| **波次** | **QFX M1′ / PR-A** |
+| **状态** | ⬜ |
+| **注记** | **不得**对 config 整端 403（会破坏 FE hydration） |
 
 ### 导入路径
 
@@ -396,7 +412,8 @@ PR-D（W3）
 | DOC-NAS-01 | ACCEPTANCE-NO-AI-SURFACE-V1 | W0 | ✅（v0.1.1 已指 PRD v0.2.1） |
 | DOC-NAS-02 | ERROR-CODES / CSC / SFI / Help 指针；PRD D-NAS-17 与 ping 决议对齐注记 | W2–W3 | ✅ 2026-07-22（Help §12.4 · SFI FE-SFI-04 · CSC Happy Path · DLLM/WEA 文首；责任人：产品合同 / 工程门控） |
 | DOC-NAS-03 | README · DOC-STATUS | W0 | ✅ / 随 v0.2.1 同步 |
-| DOC-NAS-04 | 本 IMPLEMENTATION v0.2.1（S1–S10 · ping · PR 切片） | W0 | ✅ |
+| DOC-NAS-04 | 本 IMPLEMENTATION（S1–S10 · ping/status/config） | W0 | ✅ v0.2.2 |
+| DOC-NAS-05 | 对齐 QFX：status 403 · config 投影 · ACCEPTANCE 17c/17d | QFX M1′ | ⬜ 与 QFX PR-A |
 
 ---
 
@@ -416,6 +433,7 @@ PR-D（W3）
 | ping 回写 secrets | BE-NAS-03 ping 403 |
 | PATCH 自开 dark | BE-NAS-01 永不进 allowlist |
 | 拆底座过禁词 | D-NAS-21 · §5.5 冻结清单 |
+| status 仍 200 / config 漏投影 | BE-NAS-03/04 · QFX PR-A；以本文 v0.2.2 为准 |
 
 ---
 
@@ -423,6 +441,7 @@ PR-D（W3）
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| **v0.2.2** | 2026-07-23 | **QFX 对齐**：S7 status→403；新增 S7b/BE-NAS-04 config 投影；废除「status 可 200」；对齐 PRD NAS v0.2.3 / QFX v0.2.1；未改业务代码 |
 | **v0.2.1** | 2026-07-22 | **编码前勘察回写**：S1–S10 · **ping 硬拒决议（严于 D-NAS-17）** · FE-NAS-11 升 W1/P0 · 错误三镜像 · PR-A/B/C/D 切片 · 对齐 PRD v0.2.1；未改业务代码 |
 | v0.2.0 | 2026-07-22 | 对齐 PRD v0.2：BE-NAS-01～03 升 P0 任务卡；FE-00/09/14 补丁；编码可开 W1 |
 | v0.1.0 | 2026-07-22 | 初稿：前端任务卡 FE-NAS-00～14（含 M1–M12 映射）；不动业务代码 |
