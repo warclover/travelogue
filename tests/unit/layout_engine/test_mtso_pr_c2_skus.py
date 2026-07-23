@@ -8,10 +8,12 @@ import pytest
 
 from travelogue.config import get_config
 from travelogue.config.mosaic import TemplateExperimentsConfig
+from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_engine.contract.evaluator import _hero_area_from_template
 from travelogue.layout_engine.contract.geometry_features import (
     compute_raw_geometry_features,
 )
+from travelogue.layout_engine.mosaic.scorer import _wasted_hero_penalty
 from travelogue.layout_engine.mosaic.builders import try_order_for_pattern
 from travelogue.layout_engine.mosaic.coarse_segments import (
     SIGNATURE_WHITELIST,
@@ -50,6 +52,47 @@ def _asset(aid: str, *, w: int, h: int, sharp: float, kind: str) -> dict:
 def test_not_in_ga_policy_tuple() -> None:
     assert PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO not in MOSAIC_5_PATTERN_IDS
     assert PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL not in MOSAIC_5_PATTERN_IDS
+
+
+def test_pattern_has_main_role_via_lte_fallback() -> None:
+    """Experimental SKUs must not be treated as equal-weight dense (main-role miss)."""
+    for pid in (
+        PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+        PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
+    ):
+        assert ScreenLayoutPlannerState.pattern_has_main_role(pid)
+        # wasted_hero must short-circuit (no 0.35 equal-weight tax)
+        screen = {
+            "slots": [
+                {"assetId": "p0", "role": "main"},
+                {"assetId": "l0"},
+                {"assetId": "l1"},
+                {"assetId": "l2"},
+                {"assetId": "l3"},
+            ]
+        }
+        assert (
+            _wasted_hero_penalty(
+                screen,
+                pid,
+                aspects={
+                    "p0": "portrait",
+                    "l0": "landscape",
+                    "l1": "landscape",
+                    "l2": "landscape",
+                    "l3": "landscape",
+                },
+                assets_by_id={
+                    "p0": _asset("p0", w=1200, h=1800, sharp=0.95, kind="portrait"),
+                    "l0": _asset("l0", w=3000, h=1687, sharp=0.5, kind="landscape"),
+                    "l1": _asset("l1", w=3000, h=1687, sharp=0.5, kind="landscape"),
+                    "l2": _asset("l2", w=3000, h=1687, sharp=0.5, kind="landscape"),
+                    "l3": _asset("l3", w=3000, h=1687, sharp=0.5, kind="landscape"),
+                },
+                median_sharp=0.5,
+            )
+            == 0.0
+        )
 
 
 def test_ac08_area_and_prominence_ratios() -> None:

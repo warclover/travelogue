@@ -127,7 +127,7 @@ def _mosaic_winner_has_main_role(
     trip_id: str | None = None,
 ) -> bool:
     """True when MCS would consume the window with a pattern that inlines a main hero slot."""
-    from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
     pick = pick_best_window(
         window,
@@ -143,8 +143,9 @@ def _mosaic_winner_has_main_role(
     )
     if pick.used_legacy or not pick.screen:
         return False
-    pat = default_registry().get(str(pick.screen.get("patternId") or ""))
-    return bool(pat and "main" in pat.roles)
+    return ScreenLayoutPlannerState.pattern_has_main_role(
+        str(pick.screen.get("patternId") or "")
+    )
 
 
 def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:

@@ -342,9 +342,21 @@ class ScreenLayoutPlannerState:
             from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
 
             pat = default_registry().get(pattern_id)
+            if pat is not None:
+                return "main" in pat.roles
+        except Exception:
+            pass
+        # MTSO · experimental SKUs are LTE-only (not in GA default_registry).
+        try:
+            from travelogue.layout_templates.registry import get_engine
+
+            tpl = get_engine().get(pattern_id)
+            return any(
+                str(getattr(slot, "role", "") or "") == "main"
+                for slot in (tpl.slots or ())
+            )
         except Exception:
             return False
-        return bool(pat and "main" in pat.roles)
 
     def is_equal_weight_dense(self, pattern_id: str) -> bool:
         """Dense collage without a main/hero slot — yields while reserve is armed."""
