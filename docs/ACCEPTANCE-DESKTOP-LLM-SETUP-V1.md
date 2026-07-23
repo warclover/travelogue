@@ -83,6 +83,14 @@ python -m pytest tests/unit/web/test_l0_guidance_hardening.py tests/unit/web/tes
 
 本文件 Setup Go（AC-DLLM-10/13）在 WEA W1 落地后，解释以 **「保存并测试」+ 就绪⇔ping ok** 为准（MF-WEA-01）。
 
+## CQA 邻接回写（2026-07-23）
+
+| 项 | 说明 |
+|----|------|
+| ping DI | `llm_ping` 显式 secrets 注入；禁模块级 `read_user_llm_secrets =` 猴子补丁（AC-CQA-03/04） |
+| FE 监听 | sheet/settings `travelogue:llm-status` 可解绑、不累加（AC-CQA-18） |
+| 详情 | [ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) |
+
 ## 自动化
 
 ```powershell

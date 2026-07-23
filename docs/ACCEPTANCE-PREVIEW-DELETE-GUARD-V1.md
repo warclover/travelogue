@@ -55,3 +55,13 @@
 | 项 | 说明 |
 |----|------|
 | Windows 真机 ≥20 张多档 WebP | 假文件体积测已绿；真图签字可选补 |
+
+---
+
+## CQA 邻接回写（2026-07-23）
+
+| 项 | 说明 |
+|----|------|
+| busy ⊇ on-demand | `JobStore.is_trip_busy` 含 on-demand 存活（AC-CQA-10b） |
+| force 导入 | HTTP `force=true` 复用 `begin_trip_delete` + tombstone，禁裸 `rmtree`（AC-CQA-15/16） |
+| 详情 | [ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) |

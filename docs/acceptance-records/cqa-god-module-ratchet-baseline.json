@@ -1,0 +1,7 @@
+{
+  "lines": {
+    "travelogue/layout_engine/mosaic/hook.py": 759,
+    "templates/studio/preview-toolbar/longshot.js": 2822
+  },
+  "note": "CQA I-CQA-14 · audit-day baseline 2026-07-23; raise only with acceptance-records note + --allow-growth"
+}

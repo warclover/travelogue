@@ -105,3 +105,4 @@ python -m pytest tests/unit/layout_engine/test_msa_pr_c.py -q
 | **v0.1.0** | 2026-07-23 | M0 拆文：AC-01～11 + variant/persist 子项；对齐 PRD v0.2.0 / BLK-MSA-05 |
 | **v0.2.0** | 2026-07-23 | PR-A/B 勾选 AC-01～08；PR-C：AC-10/11/N* · AC-09 待实册盲评 |
 | **v0.2.1** | 2026-07-23 | gap-close：竖主白名单 · 电影轨 fixture · 评分升权 · 同实例幂等（`test_msa_gap_close`） |
+| **v0.2.2** | 2026-07-23 | **CQA 回写**：删除 `trackOverrideByVariant` 写入（D-CQA-09 锁 B）；SSOT 仍为单一 `layoutGeometry.trackOverride`；见 [CQA ACCEPTANCE](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) AC-17 |

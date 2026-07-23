@@ -221,6 +221,12 @@ def generate_window_candidates_with_rejections(
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
     usage_hits: list[dict[str, Any]] = []
     orderable_pattern_ids: list[str] = []
+    # CQA D-CQA-13 / AC-20 · hoist quality pool once per window (not per pattern)
+    window_quality_pool = None
+    if cfg.lse_hungarian_assignment and cfg.lse_quality_unified:
+        from travelogue.layout_engine.quality_features import build_quality_pool
+
+        window_quality_pool = build_quality_pool(list(assets_map.values()))
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg, trip_id=trip_id):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -293,20 +299,14 @@ def generate_window_candidates_with_rejections(
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)
         if cfg.lse_hungarian_assignment:
-            from travelogue.layout_engine.quality_features import build_quality_pool
             from travelogue.layout_engine.slot_assignment import refine_asset_order_hungarian
 
-            quality = (
-                build_quality_pool(list(assets_map.values()))
-                if cfg.lse_quality_unified
-                else None
-            )
             refined, slot_fallback = refine_asset_order_hungarian(
                 ordered,
                 screen,
                 assets_map,
                 max_matrix_n=cfg.lse_slot_max_matrix_n,
-                quality=quality,
+                quality=window_quality_pool,
             )
             if refined is not None:
                 ordered = refined
