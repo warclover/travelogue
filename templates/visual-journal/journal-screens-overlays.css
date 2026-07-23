@@ -302,6 +302,15 @@ html[data-layout="auto"] .layout-screen[data-layout-hint="person-grid-8"] .layou
   object-position: center;
 }
 
+/* MSA BLK-06 · paper contain (mirror journal-screens.css) */
+html[data-layout="web"] .layout-slot--msa-contain,
+html[data-layout="auto"] .layout-slot--msa-contain {
+  background: var(
+    --msa-contain-fill,
+    var(--bg-page, var(--color-paper, #f5f2eb))
+  );
+}
+
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-2"] .layout-screen__grid--landscape-stack-2 .layout-slot,
 html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-2"] .layout-screen__grid--landscape-stack-2 .layout-slot,
 html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-3"] .layout-screen__grid--landscape-stack-3 .layout-slot,

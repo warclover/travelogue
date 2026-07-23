@@ -85,6 +85,18 @@ html[data-layout="auto"] .layout-slot__img--contain {
   object-fit: contain;
 }
 
+/*
+ * MSA BLK-06 · conditional contain letterbox uses magazine paper fill.
+ * No decorative frames / stickers. Fallback chain matches page paper tokens.
+ */
+html[data-layout="web"] .layout-slot--msa-contain,
+html[data-layout="auto"] .layout-slot--msa-contain {
+  background: var(
+    --msa-contain-fill,
+    var(--bg-page, var(--color-paper, #f5f2eb))
+  );
+}
+
 /* Fixed-track grids: slot fills cell so img height:100% resolves (stack patterns override via data-pattern overlays). */
 html[data-layout="web"] .layout-screen__grid .layout-slot,
 html[data-layout="auto"] .layout-screen__grid .layout-slot {

@@ -8,9 +8,12 @@ from travelogue.config.mosaic import (
     SlotAdaptationConfig,
     effective_slot_adaptation_enabled,
 )
+from travelogue.layout_engine.mosaic.msa_assign import refine_aux_assignment
+from travelogue.layout_engine.mosaic.msa_fit import apply_crop_risk_fits
 from travelogue.layout_engine.mosaic.msa_profile import MsaProfile, build_msa_profile
 from travelogue.layout_engine.mosaic.msa_solve import (
     MSA_M1_PATTERN_WHITELIST,
+    slot_area_fraction,
     solve_all_variants,
     stage_track_lists,
 )
@@ -52,7 +55,7 @@ def maybe_apply_slot_adaptation(
     assets_map: dict[str, Any] | None = None,
     cfg: Any | None = None,
 ) -> dict[str, Any]:
-    """Persist trackOverride + refresh displayAspect when MSA parent is ON.
+    """Persist trackOverride + fit/contain when MSA parent is ON.
 
     Parent OFF ⇒ zero writes (AC-MSA-01). Returns a log-facing summary dict.
     """
@@ -93,9 +96,8 @@ def maybe_apply_slot_adaptation(
         template, r_hero_target=float(profile.r_hero_target), cfg=sa
     )
     by_variant: dict[str, Any] = {}
-    any_ok = False
     for layout, result in variant_results.items():
-        entry = {
+        by_variant[layout] = {
             "ok": result.ok,
             "reason": result.reason,
             "cols": list(result.cols),
@@ -103,9 +105,6 @@ def maybe_apply_slot_adaptation(
             "mainDisplayAspect": result.main_display_aspect,
             "mainArea": result.main_area,
         }
-        by_variant[layout] = entry
-        if result.ok:
-            any_ok = True
 
     primary = _primary_layout_key(variant_results)
     primary_result = variant_results[primary]
@@ -119,25 +118,21 @@ def maybe_apply_slot_adaptation(
         geo["rows"] = list(track["rows"])
         summary["trackOverride"] = dict(track)
         summary["msaOutcome"] = "applied"
-        stage = TemplateStage(
-            aspect=template.stage.aspect,
-            cols=tuple(track["cols"]),
-            rows=tuple(track["rows"]),
-            gap=template.stage.gap,
-        )
+        cols, rows = list(track["cols"]), list(track["rows"])
     else:
-        # Miss: keep solidified static tracks; do not invent override (D-MSA-09).
         geo.pop("trackOverride", None)
         geo["cols"] = list(base_cols)
         geo["rows"] = list(base_rows)
         summary["trackOverride"] = None
         summary["msaOutcome"] = "msa_solve_miss"
-        stage = TemplateStage(
-            aspect=template.stage.aspect,
-            cols=tuple(base_cols),
-            rows=tuple(base_rows),
-            gap=template.stage.gap,
-        )
+        cols, rows = list(base_cols), list(base_rows)
+
+    stage = TemplateStage(
+        aspect=template.stage.aspect,
+        cols=tuple(cols),
+        rows=tuple(rows),
+        gap=template.stage.gap,
+    )
 
     if by_variant:
         geo["trackOverrideByVariant"] = {
@@ -148,31 +143,46 @@ def maybe_apply_slot_adaptation(
             )
             for k, v in by_variant.items()
         }
-        # Per-variant miss telemetry (BLK-04)
         summary["variantOutcomes"] = {
             k: ("applied" if v.get("ok") else "msa_solve_miss") for k, v in by_variant.items()
         }
 
     slot_by_index = {s.index: s for s in template.slots}
-    slot_fits: list[str] = []
+    slot_areas: list[float] = []
     for slot in screen.get("slots") or []:
         idx = int(slot.get("slot", -1))
         meta = slot_by_index.get(idx)
         if meta is None:
-            slot_fits.append(str(slot.get("fit") or "cover"))
+            slot_areas.append(0.0)
             continue
         slot["displayAspect"] = round(slot_display_aspect(meta.rect, stage), 4)
-        fit = str(slot.get("fit") or "cover")
-        slot_fits.append(fit)
+        slot_areas.append(slot_area_fraction(meta.rect, cols, rows))
+
+    # AC-07 · protect flattest aux before fit decisions
+    swapped = refine_aux_assignment(screen, assets_map=assets_map or {})
+    summary["auxSwap"] = bool(swapped)
+
+    # Recompute areas list length alignment (slots unchanged count)
+    risks, whitespace = apply_crop_risk_fits(
+        screen,
+        assets_map=assets_map or {},
+        slot_areas=slot_areas,
+        cfg=sa,
+    )
+    summary["cropRisk"] = risks
+    summary["whitespaceRatio"] = whitespace
+
+    slot_fits = [str(s.get("fit") or "cover") for s in screen.get("slots") or []]
     summary["slotFits"] = slot_fits
 
-    # Persist a compact msa blob for compose → MosaicWindowLog
     geo["msa"] = {
         "outcome": summary["msaOutcome"],
         "profile": summary["msaProfile"],
         "rHeroTarget": summary["rHeroTarget"],
         "variantOutcomes": summary.get("variantOutcomes"),
+        "cropRisk": risks,
+        "whitespaceRatio": whitespace,
+        "auxSwap": bool(swapped),
     }
-    # any_ok unused for primary-path outcome; kept for future multi-variant OR
-    _ = any_ok
+    geo["whitespaceRatio"] = whitespace
     return summary

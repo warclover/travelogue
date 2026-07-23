@@ -482,6 +482,13 @@ def _attach_msa_log_from_screen(log: MosaicWindowLog, screen: dict | None) -> No
     log.track_override = geo.get("trackOverride")
     fits = [str(s.get("fit") or "cover") for s in (screen or {}).get("slots") or []]
     log.slot_fits = fits or None
+    crop = msa.get("cropRisk")
+    log.crop_risk = list(crop) if isinstance(crop, list) else None
+    ws = msa.get("whitespaceRatio", geo.get("whitespaceRatio"))
+    try:
+        log.whitespace_ratio = float(ws) if ws is not None else None
+    except (TypeError, ValueError):
+        log.whitespace_ratio = None
     log.msa_outcome = str(msa.get("outcome") or "skipped_parent_off")
 
 

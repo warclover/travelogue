@@ -457,7 +457,7 @@ M2 可接人脸框×槽 IoU（承接 DESIGN-PHASE15 D-MCS-14 几何版）。
 | **BLK-MSA-03** | M1 | ✅ 峰判定 · PR-A fixture 已锁 |
 | **BLK-MSA-04** | M1 | ✅ variant 各自求解 · PR-A 已实现 |
 | **BLK-MSA-05** | M1 | ✅ 已拆 [ACCEPTANCE](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) / [IMPLEMENTATION](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) |
-| **BLK-MSA-06** | M2 | ☐ contain 视觉最低合同出样 |
+| **BLK-MSA-06** | M2 | ✅ [contain 纸色合同](./acceptance-records/msa-contain-visual-contract-BLK06.md) · PR-B |
 | **BLK-MSA-07** | M1 | ✅ 面积/prominence 硬断言进 AC |
 | **BLK-MSA-08** | M1 | ✅ 日志字段进 AC-08 |
 

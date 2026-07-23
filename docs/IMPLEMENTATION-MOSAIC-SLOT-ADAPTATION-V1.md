@@ -7,8 +7,8 @@
 | **验收** | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) |
 | **评审** | [msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) · Conditional Go |
 | **DOC-STATUS** | **active** |
-| **状态** | **M0 ✅ · PR-A / M1 ✅**（AC-01～05/05v/05p）；PR-B 未 Kickoff（BLK-06） |
-| **分支** | `feat/msa-pr-a` |
+| **状态** | **M0 ✅ · PR-A/M1 ✅ · PR-B/M2 ✅**（AC-06～08）；PR-C 未 Kickoff |
+| **分支** | `feat/msa-pr-b` |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MSA PRD + 七席展开为可执行任务卡。  
@@ -43,8 +43,8 @@
 | **04** | 每 variant 各自求解 | ✅ | ✅ PR-A |
 | **05** | 拆 ACCEPTANCE/IMPL | ✅ 本文 | — |
 | **07** | main 面积/prominence 硬断言 | ✅ AC-02 | ✅ PR-A |
-| **08** | D-10 字段进 AC-08 | ✅ | ☑ PR-A 子集（cropRisk/whitespace 占位至 PR-B） |
-| **06** | contain 纸色视觉 | ☐ M2 前 | ☐ PR-B |
+| **08** | D-10 字段进 AC-08 | ✅ | ✅ PR-B 全量 |
+| **06** | contain 纸色视觉 | ✅ [BLK06](./acceptance-records/msa-contain-visual-contract-BLK06.md) | ✅ PR-B |
 
 ---
 
@@ -166,11 +166,11 @@
 
 | ID | 动作 | 退出 |
 |----|------|------|
-| **T-MSA-10** | crop_risk 代理 + contain 门 + whitespace 预算 | AC-06 |
-| **T-MSA-11** | contain 杂志纸色（BLK-06 视觉签核后合码） | AC-06v |
-| **T-MSA-12** | 分配精修：最扁辅槽保护 | AC-07 |
-| **T-MSA-13** | 评分项：aspect_fit / crop_risk_penalty / whitespace_penalty | 可开关 |
-| **T-MSA-14** | 日志补齐 cropRisk[] / whitespaceRatio | AC-08 全量 |
+| **T-MSA-10** | crop_risk 代理 + contain 门 + whitespace 预算 | ✅ AC-06 |
+| **T-MSA-11** | contain 杂志纸色（BLK-06） | ✅ AC-06v |
+| **T-MSA-12** | 分配精修：最扁辅槽保护 | ✅ AC-07 |
+| **T-MSA-13** | 评分项：aspect_fit / crop_risk_penalty / whitespace_penalty | ☐ 可选（候选打分在 finalize 前，延后） |
+| **T-MSA-14** | 日志补齐 cropRisk[] / whitespaceRatio | ✅ AC-08 |
 | **T-MSA-20** | `msa-local-dogfood-GUIDE` + A/B/C 截图清单 | AC-09 |
 | **T-MSA-21** | MTSO×MSA 开关矩阵回归 | AC-10 |
 | **T-MSA-22** | 盲评记录 + 默认 on 决策（O-05） | AC-11 |
@@ -211,3 +211,4 @@
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | **v0.1.0** | 2026-07-23 | M0 拆文：PR-A 任务卡详述 · PR-B/C 大纲 · 对齐 BLK-MSA-05 |
+| **v0.2.0** | 2026-07-23 | PR-B：crop_risk contain · whitespace · aux 保护 · BLK-06 纸色合同 |

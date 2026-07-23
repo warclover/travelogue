@@ -105,7 +105,7 @@
 | **BLK-MSA-03** | 峰判定可测 | 占比≥0.60、梯子容差 0.08、clamp、wide_peak_fraction 进 AC | M1 | ✅ 阈值确认 · 待回写 |
 | **BLK-MSA-04** | mobile 变体 | **每个激活 variant 各自求解**；无解则该 variant 回退静态轨并打点 | M1 | ✅ 本场拍板 · 待回写 |
 | **BLK-MSA-05** | 拆 ACCEPTANCE/IMPL | M1 合码前必须拆文 | M1 | ✅ M0 已拆 |
-| **BLK-MSA-06** | contain 视觉 | M2 前出最低合同：底色=杂志纸色（默认）、边距不引入装饰框 | M2 | ☐ 视觉 |
+| **BLK-MSA-06** | contain 视觉 | M2 前出最低合同：底色=杂志纸色（默认）、边距不引入装饰框 | M2 | ✅ [BLK06](./msa-contain-visual-contract-BLK06.md) |
 | **BLK-MSA-07** | 面积不跌破 | 自适应后 main 面积/prominence ≥ 模板声明下限（硬断言） | M1 | ✅ 已在 D-03 · AC 强化 |
 | **BLK-MSA-08** | 日志挡门 | D-10 字段进 AC-08 fixture | M1 | ✅ 已有 D-10 · AC 强化 |
 

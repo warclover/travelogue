@@ -22,7 +22,7 @@
 | **AC-MSA-W0-02** | 本 ACCEPTANCE + IMPLEMENTATION 已拆（BLK-MSA-05） | ✅ |
 | **AC-MSA-W0-03** | 列车：M0 → PR-A(M1) → PR-B(M2) → PR-C(M3)；禁单 PR 塞满 | ✅ |
 | **AC-MSA-W0-04** | M1 合码前合同：持久化 · 峰阈值 · variant 各自求解 · 面积硬门 · 日志字段（BLK-02～04/07/08） | ✅ PR-A 代码+单测 |
-| **AC-MSA-W0-05** | M2 合码前：contain 杂志纸色最低视觉合同（BLK-06） | ☐ |
+| **AC-MSA-W0-05** | M2 合码前：contain 杂志纸色最低视觉合同（BLK-06） | ✅ [msa-contain-visual-contract-BLK06](./acceptance-records/msa-contain-visual-contract-BLK06.md) |
 
 ---
 
@@ -61,10 +61,10 @@ python -m pytest tests/unit/layout_engine/test_msa_pr_a.py -q
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MSA-06** | 高 `crop_risk` 槽 → `contain`；整页 `whitespace_ratio ≤ whitespace_max`；超预算禁 contain 或重求解 | ☐ |
-| **AC-MSA-06v** | contain 底色 = 杂志纸色（默认）；无装饰相框/贴纸（BLK-06） | ☐ |
-| **AC-MSA-07** | 窗内最扁辅槽不接收 crop_risk 最高横图（分配约束单测） | ☐ |
-| **AC-MSA-08** | raw 日志含 D-MSA-10 全字段：`msaProfile` · `rHeroTarget` · `trackOverride` · `slotFits` · `cropRisk[]` · `whitespaceRatio` · `msaOutcome` | ☐ |
+| **AC-MSA-06** | 高 `crop_risk` 槽 → `contain`；整页 `whitespace_ratio ≤ whitespace_max`；超预算禁 contain 或重求解 | ✅ `test_msa_pr_b` |
+| **AC-MSA-06v** | contain 底色 = 杂志纸色（默认）；无装饰相框/贴纸（BLK-06）；禁 blur-fill | ✅ |
+| **AC-MSA-07** | 窗内最扁辅槽不接收 crop_risk 最高横图（分配约束单测） | ✅ |
+| **AC-MSA-08** | raw 日志含 D-MSA-10 全字段：`msaProfile` · `rHeroTarget` · `trackOverride` · `slotFits` · `cropRisk[]` · `whitespaceRatio` · `msaOutcome` | ✅ |
 
 ```powershell
 python -m pytest tests/unit/layout_engine/test_msa_pr_b.py -q

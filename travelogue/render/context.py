@@ -862,6 +862,10 @@ def build_layout_screen(
         }
         if role:
             entry["role"] = role
+        # MSA BLK-06 · paper contain (suppress blur-fill decorative bands)
+        msa_contain = bool(slot.get("msaContain")) and str(fit) == "contain"
+        if msa_contain:
+            entry["msaContain"] = True
         if asset:
             srcset = compile_srcset(asset, mobile=export_layout == "mobile")
             slot_aspect = _screen_aspect_ratio_css(asset)
@@ -890,7 +894,7 @@ def build_layout_screen(
             entry["hasSrcset"] = bool(srcset)
             entry["srcset"] = srcset
             entry["slotStyle"] = slot_style
-            if should_blur_fill_slot(
+            if (not msa_contain) and should_blur_fill_slot(
                 fit=fit,
                 asset=asset,
                 pattern_id=pattern_id,

@@ -121,6 +121,7 @@ class LayoutScreenSlotContext(TypedDict, total=False):
     role: NotRequired[str]
     hasBlurFill: NotRequired[bool]
     blurSrc: NotRequired[str]
+    msaContain: NotRequired[bool]
 
 
 class LayoutScreenContext(TypedDict, total=False):
