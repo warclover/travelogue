@@ -416,6 +416,10 @@
 | [PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md](./PRD-USAGE-RULES-LAYOUT-OPTIMIZATION.md) | 模板 usage 规则驱动排版优化（URO） |
 | [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md) | 拼图密度预算 · ☑ 已合入 |
 | [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) | P21 实施清单 |
+| [PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | **拼图模板选型 MTSO V1** **v0.2.0**（Conditional Go · Kickoff M1） |
+| [IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | MTSO 实施 **v0.1.0** · Ready for PR-A · 含模板误用风险 |
+| [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | MTSO 七席联评 · Conditional Go |
+| [acceptance-records/mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) | MTSO 开发可行性 · SUP 已认可 |
 | [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |
 | [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | P22 实施清单 |
 | [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | P22 验收 |

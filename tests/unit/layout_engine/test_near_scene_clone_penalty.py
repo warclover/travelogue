@@ -65,16 +65,30 @@ def _near_scene_weighted_assets() -> tuple[dict, dict]:
 def test_candidates_hard_reject_requires_gate_enabled() -> None:
     """AC-TPC-15 · hard reject only fires when the gate is explicitly enabled."""
     from travelogue.config import get_config
+    from travelogue.config.mosaic import (
+        TemplateContractConfig,
+        TemplateExperimentsConfig,
+    )
     from travelogue.layout_engine.mosaic.candidates import (
         generate_window_candidates_with_rejections,
     )
 
     assets, aspects = _near_scene_weighted_assets()
-    cfg = get_config().mosaic
+    trip_id = "near-scene-gate-test"
+    weighted = "screen-mosaic-4-2l2p-weighted"
+    cfg = dataclasses.replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        template_experiments=TemplateExperimentsConfig(
+            enabled=True,
+            allowlist=(weighted,),
+            cohort_trip_ids=(trip_id,),
+        ),
+    )
     # Default gate is off → weighted must NOT be hard-rejected as near_scene_clone.
     assert cfg.near_scene_clone_gate.enabled is False
     res_off = generate_window_candidates_with_rejections(
-        list(assets), aspects, assets, cfg=cfg
+        list(assets), aspects, assets, cfg=cfg, trip_id=trip_id
     )
     assert not any(
         r.get("reason") == "near_scene_clone" for r in res_off.rejected
@@ -85,14 +99,11 @@ def test_candidates_hard_reject_requires_gate_enabled() -> None:
         cfg, near_scene_clone_gate=dataclasses.replace(cfg.near_scene_clone_gate, enabled=True)
     )
     res_on = generate_window_candidates_with_rejections(
-        list(assets), aspects, assets, cfg=cfg_on
+        list(assets), aspects, assets, cfg=cfg_on, trip_id=trip_id
     )
-    assert not any(
-        c.pattern_id == "screen-mosaic-4-2l2p-weighted" for c in res_on.candidates
-    )
+    assert not any(c.pattern_id == weighted for c in res_on.candidates)
     assert any(
-        r.get("templateId") == "screen-mosaic-4-2l2p-weighted"
-        and r.get("reason") == "near_scene_clone"
+        r.get("templateId") == weighted and r.get("reason") == "near_scene_clone"
         for r in res_on.rejected
     )
 
@@ -140,22 +151,32 @@ def test_candidates_hard_reject_near_scene_on_weighted() -> None:
         "a2": "portrait",
         "a3": "landscape",
     }
+    from travelogue.config.mosaic import (
+        TemplateContractConfig,
+        TemplateExperimentsConfig,
+    )
+
+    trip_id = "near-scene-weighted-test"
+    weighted = "screen-mosaic-4-2l2p-weighted"
     base_cfg = get_config().mosaic
     cfg = dataclasses.replace(
         base_cfg,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        template_experiments=TemplateExperimentsConfig(
+            enabled=True,
+            allowlist=(weighted,),
+            cohort_trip_ids=(trip_id,),
+        ),
         near_scene_clone_gate=dataclasses.replace(
             base_cfg.near_scene_clone_gate, enabled=True
         ),
     )
     res = generate_window_candidates_with_rejections(
-        list(assets), aspects, assets, cfg=cfg
+        list(assets), aspects, assets, cfg=cfg, trip_id=trip_id
     )
-    assert not any(
-        c.pattern_id == "screen-mosaic-4-2l2p-weighted" for c in res.candidates
-    )
+    assert not any(c.pattern_id == weighted for c in res.candidates)
     assert any(
-        r.get("templateId") == "screen-mosaic-4-2l2p-weighted"
-        and r.get("reason") == "near_scene_clone"
+        r.get("templateId") == weighted and r.get("reason") == "near_scene_clone"
         for r in res.rejected
     )
 

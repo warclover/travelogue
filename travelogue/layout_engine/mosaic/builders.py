@@ -207,8 +207,8 @@ def _order_by_roles(
 
     pat = mosaic_registry().get(pattern_id)
     if pat is None:
-        # Contract dogfood / AC-TPC-02: pattern may be experimental percent=0
-        # and absent from the dark-launch registry.
+        # Ordering helper: experimental SKUs may be absent from the emit registry
+        # until mosaic.template_experiments admits them.
         try:
             pat = export_mosaic_pattern(get_engine().get(pattern_id))
         except KeyError:

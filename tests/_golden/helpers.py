@@ -45,13 +45,15 @@ def intrinsic_2p3l_mcs_enabled():
     _orig_registry = lte_adapter.mosaic_registry
     _orig_rollout = lte_adapter.lte_rollout_eligible
 
-    def _allow_flagship_disabled(pattern_id: str, *, cfg=None) -> bool:
+    def _allow_flagship_disabled(
+        pattern_id: str, *, cfg=None, trip_id: str | None = None
+    ) -> bool:
         if pattern_id == FLAGSHIP_2P3L_EQUAL:
             return False
-        return _orig_disabled(pattern_id, cfg=cfg)
+        return _orig_disabled(pattern_id, cfg=cfg, trip_id=trip_id)
 
-    def _inject_flagship_registry(cfg=None):
-        reg = dict(_orig_registry(cfg))
+    def _inject_flagship_registry(cfg=None, *, trip_id: str | None = None):
+        reg = dict(_orig_registry(cfg, trip_id=trip_id))
         if FLAGSHIP_2P3L_EQUAL not in reg:
             reg[FLAGSHIP_2P3L_EQUAL] = export_mosaic_pattern(
                 get_engine().get(FLAGSHIP_2P3L_EQUAL)

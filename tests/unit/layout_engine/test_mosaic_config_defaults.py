@@ -22,6 +22,8 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.density_budget.enabled is defaults.density_budget.enabled
     assert cfg.template_contract.enabled is False
     assert cfg.template_contract.shadow_log is False
+    assert cfg.template_experiments.enabled is False
+    assert cfg.selection_optimization.enabled is False
     assert cfg.near_scene_clone_gate.enabled is defaults.near_scene_clone_gate.enabled
 
 

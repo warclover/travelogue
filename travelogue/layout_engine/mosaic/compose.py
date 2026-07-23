@@ -204,12 +204,23 @@ def pick_best_window(
     chapter_screen_count: int = 12,
 ) -> WindowPickResult:
     wh = weights_hash(cfg)
+    base_order = list(
+        getattr(getattr(cfg, "density_budget", None), "window_order", ()) or ()
+    )
     log = MosaicWindowLog(
         segment_id=segment_id,
         window_size=window_size,
         window_start=window_start,
         scorer_version=cfg.scorer_version,
         weights_hash=wh,
+        base_window_order=base_order,
+        effective_window_order=list(base_order),
+        reorder_reason=None,
+        structurally_qualified_six=False,
+        admit_six_hero=False,
+        six_hero_opportunity_state="idle",
+        six_hero_family_id=None,
+        quota_snapshot=None,
     )
     if len(asset_ids) != window_size:
         log.fallback_used = True
@@ -234,6 +245,14 @@ def pick_best_window(
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)
     log.usage_rule_hits = usage_hits
     log.candidates_count = len(scored)
+    log.reject_funnel = [
+        {
+            "templateId": r.get("templateId"),
+            "reason": r.get("reason"),
+            **({"detail": r["detail"]} if r.get("detail") else {}),
+        }
+        for r in rejected
+    ]
     if isinstance(contract_shadow, dict):
         log.window_mix = contract_shadow.get("windowMix") or None
         log.candidate_source = contract_shadow.get("candidateSource") or None
@@ -285,6 +304,9 @@ def pick_best_window(
     log.winner_penalties = dict(winner_penalties)
     log.scoring_weights = dict(cfg.weights or {})
     log.scoring_penalty_weights = dict(cfg.penalties or {})
+    from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+    log.six_hero_family_id = six_hero_family_id(winner_cand.pattern_id)
     fallback = (winner_cand.feature_summary or {}).get("slotAssignmentFallback")
     if fallback:
         log.slot_assignment_fallback = str(fallback)
@@ -318,6 +340,7 @@ def pick_best_window(
             log.winner_score = winner_score
             log.winner_reason_codes = reasons
             log.winner_penalties = dict(healed_penalties)
+            log.six_hero_family_id = six_hero_family_id(winner_cand.pattern_id)
             _attach_face_crop_proxy(
                 log,
                 winner_cand.screen,

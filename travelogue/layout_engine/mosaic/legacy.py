@@ -36,6 +36,12 @@ def build_legacy_screen(
 
     burst = burst_seconds
 
+    def _blocked(pattern_id: str) -> bool:
+        # MTSO S-06 · refuse deprecated/disabled at construct time (not only append).
+        from travelogue.layout_engine.mosaic.lifecycle import lifecycle_admit
+
+        return not lifecycle_admit(pattern_id).ok
+
     if size == 5:
         from travelogue.layout_engine.mosaic.runtime import (
             five_slot_mosaic_enabled,
@@ -107,6 +113,8 @@ def build_legacy_screen(
         return None
 
     if size == 8 and len(window) == 8:
+        if _blocked("screen-portrait-grid-8"):
+            return None
         if _can_portrait_grid8_window(
             window, aspects, assets_map, burst_seconds=burst
         ):
@@ -115,6 +123,8 @@ def build_legacy_screen(
 
     if size == 9 and len(window) == 9:
         if all(_is_std_portrait_id(x, aspects) for x in window):
+            if _blocked("screen-portrait-9"):
+                return None
             return _make_screen(
                 "screen-portrait-9",
                 window,
@@ -123,6 +133,8 @@ def build_legacy_screen(
                 assets_map=assets_map,
             )
         if all(_is_landscape_id(x, aspects) for x in window):
+            if _blocked("screen-landscape-9"):
+                return None
             return _make_screen(
                 "screen-landscape-9",
                 window,
@@ -141,6 +153,8 @@ def build_legacy_screen(
         if not mosaic_window_size_enabled(6, get_effective_mosaic_config()):
             return None
         if all(_is_std_portrait_id(x, aspects) for x in window):
+            if _blocked("screen-portrait-6"):
+                return None
             return _make_screen(
                 "screen-portrait-6",
                 window,
@@ -149,6 +163,8 @@ def build_legacy_screen(
                 assets_map=assets_map,
             )
         if all(_is_landscape_id(x, aspects) for x in window):
+            if _blocked("screen-landscape-6"):
+                return None
             return _make_screen(
                 "screen-landscape-6",
                 window,

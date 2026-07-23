@@ -156,17 +156,24 @@ def test_enabled_false_unchanged_vs_size_path(lte_pattern_enabled) -> None:
 
 
 def test_enabled_true_uses_mix_index(lte_pattern_enabled) -> None:
+    from dataclasses import replace as dc_replace
+
     from tests._golden.helpers import build_mosaic_five_2p3l_window
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
 
     ids, aspects, assets_map = build_mosaic_five_2p3l_window()
     cfg = replace(
         get_config().mosaic,
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
     )
+    # Align mix resolution with emit registry (MTSO: TPC no longer unlocks experimental).
+    reg = mosaic_registry(cfg=dc_replace(get_config(), mosaic=cfg))
     result = generate_window_candidates_with_rejections(
-        ids, aspects, assets_map, cfg=cfg
+        ids, aspects, assets_map, cfg=cfg, registry=reg
     )
-    patterns, source, mix, _sq, _inf = patterns_for_contract_window(ids, aspects)
+    patterns, source, mix, _sq, _inf = patterns_for_contract_window(
+        ids, aspects, registry=reg
+    )
     assert mix.startswith("L")
     assert source in ("exact", "fallback", "miss")
     # LTN C4 · signature may further narrow; logged source is signature on hit,

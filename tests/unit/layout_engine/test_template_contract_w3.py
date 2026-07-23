@@ -7,7 +7,10 @@ from dataclasses import replace
 import pytest
 
 from travelogue.config import get_config
-from travelogue.config.mosaic import TemplateContractConfig
+from travelogue.config.mosaic import (
+    TemplateContractConfig,
+    TemplateExperimentsConfig,
+)
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.contract.evaluator import (
     contract_pattern_ids_for_window,
@@ -115,19 +118,38 @@ def test_w3_templates_in_list_active() -> None:
         assert tid in active
 
 
-def test_enabled_contract_emits_w3_candidate() -> None:
+def test_enabled_contract_does_not_emit_w3_experimental() -> None:
+    """MTSO D-01 · TPC ON alone must not unlock experimental rails."""
     ids, aspects, assets = _assets_for_mix(landscape=1, portrait=3)
     cfg = replace(
         get_config().mosaic,
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        template_experiments=TemplateExperimentsConfig(enabled=False),
         enabled_window_sizes=(4, 5, 6, 9),
     )
     result = generate_window_candidates_with_rejections(
         ids, aspects, assets, cfg=cfg
     )
     pattern_ids = {c.pattern_id for c in result.candidates}
-    assert "screen-mosaic-4-1l3p-rail" in pattern_ids or any(
-        r.get("templateId") == "screen-mosaic-4-1l3p-rail" for r in result.rejected
+    assert "screen-mosaic-4-1l3p-rail" not in pattern_ids
+
+
+def test_template_experiments_emits_w3_candidate() -> None:
+    """MTSO · experiments triple admits W3 experimental into candidates."""
+    ids, aspects, assets = _assets_for_mix(landscape=1, portrait=3)
+    trip_id = "mtso-dogfood-trip"
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        template_experiments=TemplateExperimentsConfig(
+            enabled=True,
+            allowlist=("screen-mosaic-4-1l3p-rail",),
+            cohort_trip_ids=(trip_id,),
+        ),
+        enabled_window_sizes=(4, 5, 6, 9),
     )
-    # Prefer strong assert: should be a hard-valid candidate when geometry ok
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets, cfg=cfg, trip_id=trip_id
+    )
+    pattern_ids = {c.pattern_id for c in result.candidates}
     assert "screen-mosaic-4-1l3p-rail" in pattern_ids

@@ -265,7 +265,7 @@ def contract_pattern_ids_for_window(
     """
     if registry is None:
         # Contract resolution sees all active LTE templates (incl. experimental).
-        # Emit-time dark-launch stays in mosaic_registry / mosaic_pattern_disabled.
+        # Emit-time admission stays in lifecycle_admit / mosaic_registry.
         from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
         from travelogue.layout_templates.registry import get_engine
 
@@ -276,7 +276,7 @@ def contract_pattern_ids_for_window(
     reg = registry
     key = mix_key_from_aspects(list(asset_ids), aspects)
     # mosaic_only=False: include experimental percent=0 SKUs for contract matching
-    # (emit-time dark-launch remains mosaic_registry / mosaic_pattern_disabled).
+    # (emit-time admission remains lifecycle_admit / mosaic_registry).
     exact = [
         pid for pid in index_pattern_ids_for_mix(key, mosaic_only=False) if pid in reg
     ]
@@ -327,7 +327,7 @@ def patterns_for_contract_window(
     """Resolve patterns + source + mix label + squareRelaxed + infeasible rejects."""
     if registry is None:
         # Align with contract_pattern_ids_for_window: include experimental SKUs.
-        # Default mosaic_registry() excludes percent=0 until contract emit unlock.
+        # Default mosaic_registry() excludes experimental until template_experiments.
         from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
         from travelogue.layout_templates.registry import get_engine
 

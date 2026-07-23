@@ -60,6 +60,55 @@ _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
 
 
 @dataclass
+class TemplateExperimentsConfig:
+    """MTSO · experimental template dogfood (orthogonal to template_contract).
+
+    Fail-closed: enabled + empty cohort ⇒ nobody sees experimentals.
+    Unknown keys under this root fail-loud.
+    """
+
+    enabled: bool = False
+    allowlist: tuple[str, ...] = ()
+    cohort_trip_ids: tuple[str, ...] = ()
+
+
+_TEMPLATE_EXPERIMENTS_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "allowlist",
+        "cohort_trip_ids",
+        "cohortTripIds",
+    }
+)
+
+
+@dataclass
+class SelectionOptimizationConfig:
+    """MTSO · selection optimization parent switch (PR-B+; PR-A shell only).
+
+    When ``enabled`` is false, nested knobs are ineffective.
+    """
+
+    enabled: bool = False
+    hero_six_opportunity_enabled: bool = True
+    mixed_hero_routing_enabled: bool = True
+    hero_gap_threshold: float | None = None
+
+
+_SELECTION_OPTIMIZATION_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "hero_six_opportunity",
+        "heroSixOpportunity",
+        "mixed_hero_routing",
+        "mixedHeroRouting",
+        "hero_gap_threshold",
+        "heroGapThreshold",
+    }
+)
+
+
+@dataclass
 class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
 
@@ -77,6 +126,12 @@ class MosaicConfig:
     log_level: str = "window"
     density_budget: MosaicDensityBudgetConfig = field(default_factory=MosaicDensityBudgetConfig)
     template_contract: TemplateContractConfig = field(default_factory=TemplateContractConfig)
+    template_experiments: TemplateExperimentsConfig = field(
+        default_factory=TemplateExperimentsConfig
+    )
+    selection_optimization: SelectionOptimizationConfig = field(
+        default_factory=SelectionOptimizationConfig
+    )
     near_scene_clone_gate: NearSceneCloneGateConfig = field(
         default_factory=NearSceneCloneGateConfig
     )
@@ -202,6 +257,84 @@ def _near_scene_clone_gate_from_dict(raw: dict[str, Any]) -> NearSceneCloneGateC
     )
 
 
+def _str_tuple(raw: object) -> tuple[str, ...]:
+    if not isinstance(raw, (list, tuple)):
+        return ()
+    out: list[str] = []
+    for item in raw:
+        s = str(item).strip()
+        if s:
+            out.append(s)
+    return tuple(out)
+
+
+def _template_experiments_from_dict(raw: dict[str, Any]) -> TemplateExperimentsConfig:
+    defaults = TemplateExperimentsConfig()
+    te = raw.get("template_experiments")
+    if not isinstance(te, dict):
+        te = raw.get("templateExperiments")
+    if not isinstance(te, dict):
+        return defaults
+    unknown = sorted(str(k) for k in te if str(k) not in _TEMPLATE_EXPERIMENTS_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.template_experiments unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    return TemplateExperimentsConfig(
+        enabled=cfg_bool(te, "enabled", "enabled", defaults.enabled),
+        allowlist=_str_tuple(te.get("allowlist")),
+        cohort_trip_ids=_str_tuple(
+            te.get("cohort_trip_ids", te.get("cohortTripIds"))
+        ),
+    )
+
+
+def _nested_enabled(block: object, *, default: bool) -> bool:
+    if not isinstance(block, dict):
+        return default
+    return cfg_bool(block, "enabled", "enabled", default)
+
+
+def _selection_optimization_from_dict(raw: dict[str, Any]) -> SelectionOptimizationConfig:
+    defaults = SelectionOptimizationConfig()
+    so = raw.get("selection_optimization")
+    if not isinstance(so, dict):
+        so = raw.get("selectionOptimization")
+    if not isinstance(so, dict):
+        return defaults
+    unknown = sorted(str(k) for k in so if str(k) not in _SELECTION_OPTIMIZATION_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.selection_optimization unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    gap_raw = so.get("hero_gap_threshold", so.get("heroGapThreshold"))
+    gap: float | None
+    if gap_raw is None:
+        gap = defaults.hero_gap_threshold
+    else:
+        gap = float(gap_raw)
+    return SelectionOptimizationConfig(
+        enabled=cfg_bool(so, "enabled", "enabled", defaults.enabled),
+        hero_six_opportunity_enabled=_nested_enabled(
+            so.get("hero_six_opportunity", so.get("heroSixOpportunity")),
+            default=defaults.hero_six_opportunity_enabled,
+        ),
+        mixed_hero_routing_enabled=_nested_enabled(
+            so.get("mixed_hero_routing", so.get("mixedHeroRouting")),
+            default=defaults.mixed_hero_routing_enabled,
+        ),
+        hero_gap_threshold=gap,
+    )
+
+
+def effective_selection_optimization_enabled(cfg: MosaicConfig | None) -> bool:
+    """Parent OFF ⇒ all nested MTSO selection knobs are inert."""
+    if cfg is None:
+        return False
+    so = getattr(cfg, "selection_optimization", None)
+    return bool(so is not None and getattr(so, "enabled", False))
+
+
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
     defaults = MosaicConfig()
     sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", defaults.enabled_window_sizes))
@@ -280,6 +413,8 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         },
         density_budget=_density_budget_from_dict(raw),
         template_contract=_template_contract_from_dict(raw),
+        template_experiments=_template_experiments_from_dict(raw),
+        selection_optimization=_selection_optimization_from_dict(raw),
         near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
         enable_size3_aux=cfg_bool(
             raw, "enable_size3_aux", "enableSize3Aux", defaults.enable_size3_aux

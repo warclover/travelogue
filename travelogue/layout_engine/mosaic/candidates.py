@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from travelogue.config import MosaicConfig, get_config
@@ -113,6 +113,7 @@ def generate_window_candidates(
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
     registry: dict[str, MosaicPattern] | None = None,
+    trip_id: str | None = None,
 ) -> list[ScreenCandidate]:
     return generate_window_candidates_with_rejections(
         asset_ids,
@@ -122,6 +123,7 @@ def generate_window_candidates(
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
         registry=registry,
+        trip_id=trip_id,
     ).candidates
 
 
@@ -136,6 +138,7 @@ def generate_window_candidates_with_rejections(
     registry: dict[str, MosaicPattern] | None = None,
     window_ctx: WindowContext | None = None,
     trip_photo_total: int = 0,
+    trip_id: str | None = None,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
@@ -144,15 +147,12 @@ def generate_window_candidates_with_rejections(
     tc_enabled = bool(tc is not None and getattr(tc, "enabled", False))
     if registry is not None:
         reg = registry
-    elif tc_enabled:
-        # Dogfood / AC-TPC-02: experimental percent=0 enter when contract is on.
-        from dataclasses import replace
-
-        from travelogue.config import get_config
-
-        reg = mosaic_registry(cfg=replace(get_config(), mosaic=cfg))
     else:
-        reg = mosaic_registry()
+        # Honor MosaicConfig overrides (TPC mix path + MTSO template_experiments).
+        reg = mosaic_registry(
+            cfg=replace(get_config(), mosaic=cfg),
+            trip_id=trip_id,
+        )
     contract_source = "legacy_size"
     window_mix_label = ""
     square_relaxed = False
@@ -212,7 +212,7 @@ def generate_window_candidates_with_rejections(
     usage_hits: list[dict[str, Any]] = []
     orderable_pattern_ids: list[str] = []
     for pat in patterns:
-        if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg):
+        if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg, trip_id=trip_id):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
             continue
         ordered = try_order_for_pattern(

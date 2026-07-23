@@ -11,6 +11,7 @@ from tests._golden.helpers import (
     plan_mosaic_screens,
 )
 from travelogue.config import get_config
+from travelogue.config.mosaic import TemplateContractConfig
 from travelogue.layout_engine.mosaic.hook import drain_mosaic_logs
 from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
@@ -32,6 +33,7 @@ def test_unified_off_skips_four_window_mcs_on_mixed_aspects() -> None:
             unified_mode=False,
             enabled_window_sizes=(3, 4, 5, 6),
             min_candidate_score=0.0,
+            template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
         ),
     )
     import travelogue.config as config_mod
@@ -47,7 +49,12 @@ def test_unified_off_skips_four_window_mcs_on_mixed_aspects() -> None:
 
     patterns = {s.get("patternId") for ch in chapters for s in ch.get("screens") or []}
     assert "screen-portrait-2-landscape-2" not in patterns
-    assert logs == []
+    # unified_off may still probe size=5 and log mcs_all_sizes_failed; never size=4 MCS.
+    assert all(int(log.get("windowSize") or 0) != 4 for log in logs)
+    assert not any(
+        str(log.get("winnerPatternId") or "").startswith("screen-portrait-2-landscape-2")
+        for log in logs
+    )
 
 
 def test_unified_on_mosaic5_still_works() -> None:

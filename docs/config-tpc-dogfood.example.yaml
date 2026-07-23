@@ -10,7 +10,9 @@
 
 mosaic:
   template_contract:
-    # 打开后：混向倒排 / eligibility 求值器生效；W3 experimental（percent=0）可被命中
+    # 打开后：混向倒排 / eligibility 求值器生效
+    # 注意：不再自动解锁 experimental；W3 rail 须另开 template_experiments
+    # （见 docs/config-mtso-experiments-dogfood.example.yaml）
     enabled: true
     # 仓库默认 false（AC-TPC-16）；手测观测请显式 true
     shadow_log: true

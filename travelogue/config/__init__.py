@@ -44,7 +44,9 @@ from travelogue.config.mosaic import (
     MosaicConfig,
     MosaicDensityBudgetConfig,
     NearSceneCloneGateConfig,
+    SelectionOptimizationConfig,
     TemplateContractConfig,
+    TemplateExperimentsConfig,
 )
 from travelogue.config.phase6 import (
     Phase6AcThresholds,
@@ -104,6 +106,8 @@ __all__ = [
     "NearSceneCloneGateConfig",
     "MosaicDensityBudgetConfig",
     "TemplateContractConfig",
+    "TemplateExperimentsConfig",
+    "SelectionOptimizationConfig",
     "NarrativeConfig",
     "Phase6AcThresholds",
     "Phase6AlertThresholds",

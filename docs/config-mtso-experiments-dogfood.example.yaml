@@ -1,0 +1,30 @@
+# MTSO · template_experiments 本机狗粮示例（勿把 enabled=true 合进仓库默认）
+#
+# 用法：
+#   1. 复制下列片段到项目根 config.yaml（已 gitignore）
+#   2. cohort_trip_ids 填入你要手测的 tripId
+#   3. 重启 Studio / CLI 后再 re-curate
+#
+# 说明：
+#   - template_contract 只负责 mix/eligibility，不再解锁 experimental
+#   - experimental 必须同时：enabled=true ∧ allowlist 命中 ∧ trip 在 cohort
+#   - cohort 为空 ⇒ 无人可见（fail-closed）
+#
+# 完整手测说明见：
+#   docs/acceptance-records/tpc-local-dogfood-GUIDE.md
+
+mosaic:
+  template_contract:
+    enabled: true
+    shadow_log: true
+  template_experiments:
+    enabled: true
+    allowlist:
+      - screen-mosaic-4-1l3p-rail
+      - screen-mosaic-5-2p3l-rail
+      - screen-mosaic-4-2l2p-weighted
+    cohort_trip_ids:
+      - your-trip-id-here
+  # selection_optimization 默认关；PR-B 再开
+  selection_optimization:
+    enabled: false

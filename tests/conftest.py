@@ -224,8 +224,13 @@ def _enable_five_slot_for_mosaic_marked_tests(
 
 @pytest.fixture
 def lte_pattern_enabled(monkeypatch):
-    """Re-enable retired flagship for intrinsic geometry / MCS tests only."""
+    """Re-enable retired flagship for intrinsic geometry / MCS tests only.
+
+    Force ``template_contract`` off: TPC no longer unlocks experimental rails
+    (MTSO), and deprecated equal is injected on the size-path only.
+    """
     from tests._golden.helpers import intrinsic_2p3l_mcs_enabled
+    from travelogue.config.mosaic import TemplateContractConfig
     from travelogue.config.runtime import config_override, get_config
 
     base = get_config()
@@ -233,6 +238,10 @@ def lte_pattern_enabled(monkeypatch):
     clean = replace(
         base,
         layout=replace(base.layout, template_engine=replace(te, overrides_disable=())),
+        mosaic=replace(
+            base.mosaic,
+            template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
+        ),
     )
     with intrinsic_2p3l_mcs_enabled(), config_override(clean):
         yield clean

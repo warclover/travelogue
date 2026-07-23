@@ -46,6 +46,16 @@ class MosaicWindowLog:
     hero_prominence_ratio: float | None = None
     hero_coverage_ratio: float | None = None
     cell_area_cv: float | None = None
+    # MTSO · selection funnel (AC-MTSO-03 · assert via drain_mosaic_capture)
+    base_window_order: list[int] = field(default_factory=list)
+    effective_window_order: list[int] = field(default_factory=list)
+    reorder_reason: str | None = None
+    structurally_qualified_six: bool = False
+    admit_six_hero: bool = False
+    six_hero_opportunity_state: str = "idle"
+    six_hero_family_id: str | None = None
+    quota_snapshot: dict[str, Any] | None = None
+    reject_funnel: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -65,6 +75,15 @@ class MosaicWindowLog:
             "plannerPath": self.planner_path,
             "scorerVersion": self.scorer_version,
             "weightsHash": self.weights_hash,
+            "baseWindowOrder": list(self.base_window_order),
+            "effectiveWindowOrder": list(self.effective_window_order),
+            "reorderReason": self.reorder_reason,
+            "structurallyQualifiedSix": bool(self.structurally_qualified_six),
+            "admitSixHero": bool(self.admit_six_hero),
+            "sixHeroOpportunityState": self.six_hero_opportunity_state or "idle",
+            "sixHeroFamilyId": self.six_hero_family_id,
+            "quotaSnapshot": self.quota_snapshot,
+            "rejectFunnel": list(self.reject_funnel),
         }
         if self.top3_patterns:
             out["top3Patterns"] = list(self.top3_patterns)

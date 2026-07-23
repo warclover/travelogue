@@ -32,34 +32,28 @@ def lte_rollout_eligible(pattern_id: str) -> bool:
     return pct > 0
 
 
-def _contract_unlocks_experimental(app: AppConfig, template: object) -> bool:
-    """AC-TPC-01/02 · experimental + percent=0 visible only when contract is on."""
-    if str(getattr(template, "status", "") or "") != "experimental":
-        return False
-    tc = getattr(getattr(app, "mosaic", None), "template_contract", None)
-    return bool(tc is not None and getattr(tc, "enabled", False))
+def mosaic_registry(
+    cfg: AppConfig | None = None,
+    *,
+    trip_id: str | None = None,
+) -> dict[str, MosaicPattern]:
+    """Return MosaicPattern registry for MCS candidate generation.
 
-
-def mosaic_registry(cfg: AppConfig | None = None) -> dict[str, MosaicPattern]:
-    """Return MosaicPattern registry for MCS candidate generation."""
+    Experimental SKUs require ``mosaic.template_experiments`` (not TPC).
+    """
     if not read_templates_from_lte(cfg):
         return default_registry()
+    from travelogue.layout_engine.mosaic.lifecycle import lifecycle_admit
     from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
     from travelogue.layout_templates.registry import get_engine
 
     app = cfg or get_config()
     patterns: dict[str, MosaicPattern] = {}
     for t in get_engine().list_active():
-        if lte_rollout_eligible(t.id) or _contract_unlocks_experimental(app, t):
+        if lifecycle_admit(
+            t.id, app=app, mosaic_cfg=app.mosaic, trip_id=trip_id
+        ).ok:
             patterns[t.id] = export_mosaic_pattern(t)
-    te = getattr(app.layout, "template_engine", None)
-    if te is not None:
-        for pid in getattr(te, "overrides_disable", ()) or ():
-            patterns.pop(str(pid), None)
-    from travelogue.layout_engine.mosaic.runtime import get_mosaic_disabled_patterns
-
-    for pid in get_mosaic_disabled_patterns():
-        patterns.pop(str(pid), None)
     return patterns
 
 
@@ -270,10 +264,12 @@ def mosaic_pattern_disabled(
     pattern_id: str,
     *,
     cfg: MosaicConfig | None = None,
+    trip_id: str | None = None,
 ) -> bool:
-    """True when patternId must not be emitted (LTE status/overrides + window-size gates)."""
+    """True when patternId must not be emitted (lifecycle + window-size gates)."""
     from dataclasses import replace
 
+    from travelogue.layout_engine.mosaic.lifecycle import lifecycle_admit
     from travelogue.layout_engine.mosaic.runtime import (
         get_effective_mosaic_config,
         mosaic_window_size_enabled,
@@ -281,36 +277,12 @@ def mosaic_pattern_disabled(
 
     app = get_config()
     mosaic_cfg = cfg or get_effective_mosaic_config()
-    # Honor caller MosaicConfig.template_contract (tests / dogfood enable path).
-    unlock_app = replace(app, mosaic=mosaic_cfg) if cfg is not None else app
-
-    if read_templates_from_lte(app):
-        try:
-            tpl = _lte_template(pattern_id)
-            if tpl.status in ("deprecated", "disabled"):
-                return True
-            if not lte_rollout_eligible(pattern_id) and not _contract_unlocks_experimental(
-                unlock_app, tpl
-            ):
-                return True
-        except KeyError:
-            pass
-        te = getattr(app.layout, "template_engine", None)
-        if te is not None:
-            disabled = getattr(te, "overrides_disable", ()) or ()
-            if pattern_id in disabled:
-                return True
-    else:
-        from travelogue.layout_engine.mosaic.constants import (
-            PATTERN_MOSAIC_5_2P_3L_BALANCED,
-            PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
-        )
-
-        if pattern_id in (
-            PATTERN_MOSAIC_5_2P_3L_BALANCED,
-            PATTERN_MOSAIC_5_MAIN_LAND_2P_2L,
-        ):
-            return True
+    # Honor caller MosaicConfig (TPC / template_experiments dogfood paths).
+    admit_app = replace(app, mosaic=mosaic_cfg) if cfg is not None else app
+    if not lifecycle_admit(
+        pattern_id, app=admit_app, mosaic_cfg=mosaic_cfg, trip_id=trip_id
+    ).ok:
+        return True
 
     if mosaic_cfg is None:
         return False

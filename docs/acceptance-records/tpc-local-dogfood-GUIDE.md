@@ -36,6 +36,8 @@ mosaic:
   # 可选：开启近景连拍硬门（仓库默认 false · AC-TPC-15）
   # near_scene_clone_gate:
   #   enabled: true
+  # MTSO：若要看见 W3 experimental，须另开 template_experiments（见下）
+  # template_experiments: … → docs/config-mtso-experiments-dogfood.example.yaml
 
 features:
   gcs_poster_bric:
@@ -61,11 +63,14 @@ python -c "from travelogue.config import get_config; c=get_config(reload=True); 
 ### 3.1 Template Contract（`enabled=true`）
 
 - 候选入口走 mix 倒排 + eligibility（AC-TPC-02/03）。
-- W3 手写模板（`rollout.percent: 0` + `experimental`）在 contract on 时解锁，例如：
+- **不再**因 `template_contract.enabled=true` 自动解锁 experimental。
+- W3 手写模板（`rollout.percent: 0` + `experimental`）须同时打开
+  `mosaic.template_experiments`（enabled ∧ allowlist ∧ cohort），样例见
+  [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml)：
   - `screen-mosaic-4-1l3p-rail`
   - `screen-mosaic-5-2p3l-rail`
   - `screen-mosaic-4-2l2p-weighted`
-  - `screen-mosaic-4-hero-70-sidebar`
+- `screen-mosaic-4-hero-70-sidebar` 已转正为 ga，走常态 MCS（不依赖 experiments）。
 - `shadow_log=true` 时，窗级决策可带 `windowMix` / `candidateSource` 等字段（便于对照）。
 
 ### 3.2 poster_bric（`gcs_poster_bric.enabled=true`）
