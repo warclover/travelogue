@@ -344,6 +344,43 @@ def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
         assert trip_id_from_trip({"tripId": trip_id}) == trip_id
 
 
+def test_append_screen_admits_experimental_with_trip_id() -> None:
+    """PR-A gap · MCS admit + append must share tripId (no RuntimeError)."""
+    from travelogue.layout_engine.planner.screen_planner_stages import (
+        append_screen,
+        build_chapter_plan_context,
+    )
+
+    trip_id = "mtso-append-cohort"
+    app = replace(
+        get_config(),
+        mosaic=replace(
+            get_config().mosaic,
+            template_experiments=TemplateExperimentsConfig(
+                enabled=True,
+                allowlist=(RAIL_2P3L,),
+                cohort_trip_ids=(trip_id,),
+            ),
+        ),
+    )
+    with patch("travelogue.config.get_config", return_value=app), patch(
+        "travelogue.layout_engine.mosaic.runtime.get_effective_mosaic_config",
+        return_value=app.mosaic,
+    ):
+        assert not mosaic_pattern_disabled(
+            RAIL_2P3L, cfg=app.mosaic, trip_id=trip_id
+        )
+        assert mosaic_pattern_disabled(RAIL_2P3L, cfg=app.mosaic, trip_id=None)
+        ctx = build_chapter_plan_context(
+            ["a"],
+            {"a": "landscape"},
+            assets={"a": {"id": "a", "width": 1600, "height": 900}},
+            trip={"tripId": trip_id},
+        )
+        append_screen(ctx, {"patternId": RAIL_2P3L, "slots": []})
+        assert ctx.screens[-1]["patternId"] == RAIL_2P3L
+
+
 def test_funnel_raw_via_drain_mosaic_capture() -> None:
     """BLK-07 / AC-03 · assert funnel keys on raw capture, not formatted window log."""
     ids, aspects, assets = _l3p2_window()

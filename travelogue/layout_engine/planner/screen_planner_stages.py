@@ -330,10 +330,14 @@ def assign_screen_id(ctx: ChapterPlanContext, screen: dict) -> None:
 def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     from travelogue.layout_contract.narrative_contract import ensure_narrative_contract
     from travelogue.layout_contract.rhythm_gap import assign_rhythm_gaps_on_append
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
-    if pid and mosaic_pattern_disabled(pid):
+    # MTSO · pass tripId so experimental cohort admit matches MCS pick path.
+    if pid and mosaic_pattern_disabled(
+        pid, trip_id=trip_id_from_trip(getattr(ctx, "trip", None))
+    ):
         raise RuntimeError(f"disabled mosaic pattern must not be appended: {pid}")
     if ctx.layout_state:
         ctx.layout_state.note_screen(screen.get("patternId", ""))
@@ -382,9 +386,13 @@ def try_drain_portrait_grid8(ctx: ChapterPlanContext) -> bool:
     if ctx.layout_state is not None and not ctx.layout_state.can_use_portrait_grid8():
         return False
     # LTN C3 · pruned grid-8 must not append (pair-first tiler handles the run).
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
-    if mosaic_pattern_disabled("screen-portrait-grid-8"):
+    if mosaic_pattern_disabled(
+        "screen-portrait-grid-8",
+        trip_id=trip_id_from_trip(getattr(ctx, "trip", None)),
+    ):
         return False
     buf = [a for a in ctx.pending_portraits if _is_std_portrait_id(a, ctx.aspects)]
     if len(buf) < 8:
