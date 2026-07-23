@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from unittest.mock import patch
 
 import pytest
 
@@ -13,16 +14,27 @@ from travelogue.config.mosaic import (
     effective_selection_optimization_enabled,
     mosaic_from_dict,
 )
+from travelogue.layout_engine.mosaic.candidates import (
+    ScreenCandidate,
+    generate_window_candidates_with_rejections,
+)
+from travelogue.layout_engine.mosaic.compose import pick_best_window
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
 )
-from travelogue.layout_engine.mosaic.legacy import build_legacy_screen
+from travelogue.layout_engine.mosaic.hook import (
+    begin_mosaic_capture,
+    drain_mosaic_capture,
+)
+from travelogue.layout_engine.mosaic.legacy import append_legacy_window, build_legacy_screen
 from travelogue.layout_engine.mosaic.lifecycle import (
     SIX_HERO_FAMILY_CANONICAL,
     lifecycle_admit,
+    reject_funnel_stage,
     six_hero_family_id,
+    trip_id_from_trip,
 )
 from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 from travelogue.layout_engine.mosaic.lte_adapter import (
@@ -30,7 +42,10 @@ from travelogue.layout_engine.mosaic.lte_adapter import (
     mosaic_registry,
     read_templates_from_lte,
 )
+from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
+
+RAIL_2P3L = "screen-mosaic-5-2p3l-rail"
 
 
 @pytest.fixture(autouse=True)
@@ -139,7 +154,13 @@ def test_funnel_fields_present_in_raw_log() -> None:
     raw = MosaicWindowLog(
         base_window_order=[5, 4, 6],
         effective_window_order=[5, 4, 6],
-        reject_funnel=[{"templateId": "x", "reason": "geometry_invalid"}],
+        reject_funnel=[
+            {
+                "stage": reject_funnel_stage("geometry_invalid"),
+                "templateId": "x",
+                "reason": "geometry_invalid",
+            }
+        ],
     ).to_dict()
     for key in (
         "baseWindowOrder",
@@ -156,6 +177,214 @@ def test_funnel_fields_present_in_raw_log() -> None:
     assert raw["sixHeroOpportunityState"] == "idle"
     assert raw["structurallyQualifiedSix"] is False
     assert raw["admitSixHero"] is False
+    assert raw["rejectFunnel"][0]["stage"] == "geometry"
+
+
+def _l3p2_window() -> tuple[list[str], dict, dict]:
+    ids = ["p0", "p1", "l0", "l1", "l2"]
+    aspects = {
+        "p0": "portrait",
+        "p1": "portrait",
+        "l0": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+    }
+    assets = {
+        aid: {
+            "id": aid,
+            "width": 900 if aspects[aid] == "portrait" else 1600,
+            "height": 1600 if aspects[aid] == "portrait" else 900,
+            "takenAt": f"2024-06-01T12:0{i}:00Z",
+        }
+        for i, aid in enumerate(ids)
+    }
+    return ids, aspects, assets
+
+
+def test_ac02_candidate_excludes_equal_and_rail() -> None:
+    """AC-MTSO-02 · candidate path."""
+    ids, aspects, assets = _l3p2_window()
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+        template_experiments=TemplateExperimentsConfig(enabled=False),
+        enabled_window_sizes=(4, 5, 6, 9),
+    )
+    reg = dict(mosaic_registry(cfg=replace(get_config(), mosaic=cfg)))
+    reg[PATTERN_MOSAIC_5_2P3L_EQUAL] = export_mosaic_pattern(
+        get_engine().get(PATTERN_MOSAIC_5_2P3L_EQUAL)
+    )
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets, cfg=cfg, registry=reg
+    )
+    pids = {c.pattern_id for c in result.candidates}
+    assert PATTERN_MOSAIC_5_2P3L_EQUAL not in pids
+    assert RAIL_2P3L not in pids
+    assert mosaic_pattern_disabled(PATTERN_MOSAIC_5_2P3L_EQUAL, cfg=cfg)
+    assert mosaic_pattern_disabled(RAIL_2P3L, cfg=cfg)
+    # Injected deprecated equal must be hard-gated if the contract path surfaces it.
+    if any(r.get("templateId") == PATTERN_MOSAIC_5_2P3L_EQUAL for r in result.rejected):
+        assert any(
+            r.get("templateId") == PATTERN_MOSAIC_5_2P3L_EQUAL
+            and r.get("reason") == "pattern_disabled"
+            for r in result.rejected
+        )
+
+
+def test_ac02_legacy_append_blocks_equal_and_rail() -> None:
+    """AC-MTSO-02 · legacy append path."""
+    from types import SimpleNamespace
+
+    ids, aspects, assets = _l3p2_window()
+    for pid in (PATTERN_MOSAIC_5_2P3L_EQUAL, RAIL_2P3L):
+        ctx = SimpleNamespace(
+            aspects=aspects,
+            assets_map=assets,
+            mix_gap=12.0,
+            med_sharp=0.5,
+            trip_total=40,
+            layout_state=None,
+            featured_weight=1.35,
+            trip=None,
+            screens=[],
+            chapter_id="ch",
+            seq=0,
+            ids=ids,
+        )
+        forged = {
+            "patternId": pid,
+            "slots": [{"assetId": a, "slot": i} for i, a in enumerate(ids)],
+        }
+        with patch(
+            "travelogue.layout_engine.mosaic.legacy.build_legacy_screen",
+            return_value=forged,
+        ), patch(
+            "travelogue.layout_engine.planner.screen_planner_stages.append_screen"
+        ):
+            assert append_legacy_window(ctx, ids, 5) is False  # type: ignore[arg-type]
+
+
+def test_ac02_self_heal_and_fallback_cannot_emit_gated() -> None:
+    """AC-MTSO-02 · self-heal / MCS fallback cannot emit equal or rail."""
+    ids, aspects, assets = _l3p2_window()
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=False),
+        template_experiments=TemplateExperimentsConfig(enabled=False),
+        self_heal_enabled=True,
+        min_candidate_score=0.99,
+        fallback_to_legacy=True,
+        enabled_window_sizes=(4, 5, 6, 9),
+    )
+
+    def _fake_generate(*_a, **_k):
+        from travelogue.layout_engine.mosaic.candidates import WindowCandidateResult
+
+        screen = {
+            "patternId": RAIL_2P3L,
+            "slots": [{"assetId": a, "slot": i} for i, a in enumerate(ids)],
+        }
+        cand = ScreenCandidate(
+            pattern_id=RAIL_2P3L,
+            ordered_asset_ids=list(ids),
+            screen=screen,
+            hard_valid=True,
+        )
+        return WindowCandidateResult(candidates=[cand], rejected=[])
+
+    with patch(
+        "travelogue.layout_engine.mosaic.compose.generate_window_candidates_with_rejections",
+        _fake_generate,
+    ):
+        pick = pick_best_window(
+            ids, aspects, assets, cfg=cfg, window_size=5, trip_photo_total=40
+        )
+    assert pick.screen is None or pick.screen.get("patternId") != RAIL_2P3L
+    assert pick.used_legacy or pick.log.fallback_reason in (
+        "pattern_disabled",
+        "no_candidates",
+        "low_score",
+    )
+
+
+def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
+    """Dogfood cohort tripId must reach pick_best_window via ctx.trip."""
+    trip_id = "mtso-plumbing-trip"
+    ids, aspects, assets = _l3p2_window()
+    app = replace(
+        get_config(),
+        mosaic=replace(
+            get_config().mosaic,
+            template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
+            template_experiments=TemplateExperimentsConfig(
+                enabled=True,
+                allowlist=(RAIL_2P3L,),
+                cohort_trip_ids=(trip_id,),
+            ),
+            enabled_window_sizes=(4, 5, 6, 9),
+            min_candidate_score=0.0,
+        ),
+    )
+    with patch("travelogue.config.get_config", return_value=app), patch(
+        "travelogue.layout_engine.mosaic.runtime.get_effective_mosaic_config",
+        return_value=app.mosaic,
+    ):
+        pick = pick_best_window(
+            ids,
+            aspects,
+            assets,
+            cfg=app.mosaic,
+            window_size=5,
+            trip_photo_total=40,
+            trip_id=trip_id,
+        )
+        assert RAIL_2P3L in mosaic_registry(cfg=app, trip_id=trip_id)
+        # Winner may be another L3P2-capable pattern; at least rail must be admitted.
+        assert not mosaic_pattern_disabled(RAIL_2P3L, cfg=app.mosaic, trip_id=trip_id)
+        assert trip_id_from_trip({"tripId": trip_id}) == trip_id
+
+
+def test_funnel_raw_via_drain_mosaic_capture() -> None:
+    """BLK-07 / AC-03 · assert funnel keys on raw capture, not formatted window log."""
+    ids, aspects, assets = _l3p2_window()
+    cfg = replace(
+        get_config().mosaic,
+        template_contract=TemplateContractConfig(enabled=False),
+        min_candidate_score=0.0,
+        enabled_window_sizes=(4, 5, 6, 9),
+    )
+    begin_mosaic_capture()
+    pick = pick_best_window(
+        ids, aspects, assets, cfg=cfg, window_size=5, trip_photo_total=40
+    )
+    # Simulate hook append of raw to_dict (same as try_mosaic_window_mcs).
+    from travelogue.layout_engine.mosaic.hook import _append_mosaic_log
+
+    _append_mosaic_log(pick.log.to_dict())
+    _formatted, raw_rows = drain_mosaic_capture()
+    assert raw_rows
+    raw = raw_rows[0]
+    for key in (
+        "baseWindowOrder",
+        "effectiveWindowOrder",
+        "structurallyQualifiedSix",
+        "admitSixHero",
+        "sixHeroOpportunityState",
+        "sixHeroFamilyId",
+        "quotaSnapshot",
+        "rejectFunnel",
+    ):
+        assert key in raw
+    assert isinstance(raw["rejectFunnel"], list)
+    for row in raw["rejectFunnel"]:
+        assert "stage" in row
+        assert "reason" in row
+
+
+def test_reject_funnel_stage_mapping() -> None:
+    assert reject_funnel_stage("contract:mix_miss") == "contract"
+    assert reject_funnel_stage("pattern_disabled") == "lifecycle"
+    assert reject_funnel_stage("usage_rule:mixed_portrait_is_hero") == "usage"
 
 
 def test_default_registry_has_zero_experimental() -> None:

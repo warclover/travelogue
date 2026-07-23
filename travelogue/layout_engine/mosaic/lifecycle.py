@@ -64,6 +64,34 @@ def six_hero_family_id(pattern_id: str) -> str | None:
     return None
 
 
+def trip_id_from_trip(trip: dict | None) -> str | None:
+    """Resolve tripId for template_experiments cohort checks."""
+    if not isinstance(trip, dict):
+        return None
+    tid = str(trip.get("tripId") or trip.get("id") or "").strip()
+    return tid or None
+
+
+def reject_funnel_stage(reason: object) -> str:
+    """Map a reject reason to PRD §5.5 funnel stage label."""
+    r = str(reason or "")
+    if r.startswith("contract:"):
+        return "contract"
+    if r.startswith("usage_rule:"):
+        return "usage"
+    if r == "pattern_disabled" or r.startswith("lifecycle"):
+        return "lifecycle"
+    if r == "geometry_invalid":
+        return "geometry"
+    if r in ("ordering_failed", "hard_invalid"):
+        return "candidate"
+    if r == "near_scene_clone":
+        return "near_scene"
+    if r in ("main_ar_ineligible", "main_ar_guard"):
+        return "eligibility"
+    return "reject"
+
+
 def _read_templates_from_lte(cfg_app: AppConfig) -> bool:
     """Inline LTE switch — avoid circular import with lte_adapter."""
     te = getattr(getattr(cfg_app, "layout", None), "template_engine", None)

@@ -74,6 +74,7 @@ def try_self_heal_pick(
     burst_seconds: float,
     min_score: float,
     median_sharp: float | None = None,
+    trip_id: str | None = None,
 ) -> tuple[ScreenCandidate, float, list[str], str, list[str], dict[str, float]] | None:
     """
     Return (winner, score, reasons, step, dropped_ids) when self-heal succeeds.
@@ -149,6 +150,7 @@ def try_self_heal_pick(
                             burst_seconds=burst_seconds,
                             median_sharp=median_sharp,
                             window_ctx=window_ctx,
+                            trip_id=trip_id,
                         )
                         sub = [
                             c

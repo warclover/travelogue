@@ -1,3 +1,5 @@
+# MTSO · 非继任模板：等权双竖拓扑仅作 experimental 狗粮；禁止转 GA。
+# 2P3L 主从继任见 PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1（PR-C）。
 id: screen-mosaic-5-2p3l-rail
 version: 1
 status: experimental
@@ -6,6 +8,7 @@ displayName: 五图 · 双竖满高 + 三横右栏
 description: >
   TPC W3 混向空洞靶：L3P2（2P3L）。左中两列满高双竖 + 右栏三等高横图。
   复活已 deprecated 的 2p3l-equal 拓扑，带齐 usage/eligibility。
+  MTSO：非继任 · 勿转 GA（主从继任另 SKU）。
 aesthetic: dense
 balancePolicy: equal_height
 

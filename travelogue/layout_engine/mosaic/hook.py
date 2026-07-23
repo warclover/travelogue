@@ -63,6 +63,14 @@ def _append_mosaic_log(entry: dict) -> None:
     _logs_buf().append(entry)
 
 
+def _ctx_trip_id(ctx: "ChapterPlanContext | None" = None) -> str | None:
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
+
+    if ctx is None:
+        return None
+    return trip_id_from_trip(getattr(ctx, "trip", None))
+
+
 def window_has_candidates(
     window: list[str],
     aspects,
@@ -73,6 +81,7 @@ def window_has_candidates(
     burst_seconds: float,
     median_sharp: float | None,
     layout_state=None,
+    trip_id: str | None = None,
 ) -> bool:
     from travelogue.config import get_config
     from travelogue.layout_contract.usage_context import build_window_context
@@ -99,6 +108,7 @@ def window_has_candidates(
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
         window_ctx=window_ctx,
+        trip_id=trip_id,
     )
     return any(c.hard_valid for c in result.candidates)
 
@@ -114,6 +124,7 @@ def _mosaic_winner_has_main_role(
     trip_total: int,
     burst_seconds: float,
     median_sharp: float | None,
+    trip_id: str | None = None,
 ) -> bool:
     """True when MCS would consume the window with a pattern that inlines a main hero slot."""
     from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
@@ -128,6 +139,7 @@ def _mosaic_winner_has_main_role(
         trip_photo_total=trip_total,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
+        trip_id=trip_id,
     )
     if pick.used_legacy or not pick.screen:
         return False
@@ -156,6 +168,7 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
                 burst_seconds=ctx.mix_gap,
                 median_sharp=ctx.med_sharp,
                 layout_state=ctx.layout_state,
+                trip_id=_ctx_trip_id(ctx),
             )
         )
     if size == 5 and ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC and not cfg.enabled:
@@ -172,6 +185,7 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
         trip_total=ctx.trip_total,
         burst_seconds=ctx.mix_gap,
         median_sharp=ctx.med_sharp,
+        trip_id=_ctx_trip_id(ctx),
     )
 
 
@@ -234,6 +248,7 @@ def try_mosaic_window_mcs(
         # LTN D2 · real chapter asset progress (not fake max(12, …) denominator).
         chapter_screen_index=max(0, int(start)),
         chapter_screen_count=max(2, len(ctx.ids)),
+        trip_id=_ctx_trip_id(ctx),
     )
     if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)
@@ -542,6 +557,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             burst_seconds=ctx.mix_gap,
             median_sharp=ctx.med_sharp,
             layout_state=ctx.layout_state,
+            trip_id=_ctx_trip_id(ctx),
         ):
             continue
         if try_mosaic_window_mcs(ctx, start, size, cfg):

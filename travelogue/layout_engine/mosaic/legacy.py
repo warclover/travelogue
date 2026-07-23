@@ -210,11 +210,16 @@ def append_legacy_window(
     reject, _rule_id, _detail = evaluate_reject(pid, window_ctx, screen=screen)
     if reject:
         return False
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
     from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
     from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
 
-    if pid and mosaic_pattern_disabled(pid, cfg=get_effective_mosaic_config()):
+    if pid and mosaic_pattern_disabled(
+        pid,
+        cfg=get_effective_mosaic_config(),
+        trip_id=trip_id_from_trip(getattr(ctx, "trip", None)),
+    ):
         return False
     # Legacy size==4 emits portrait-4 (2×2) for all-portrait windows, which on the
     # 16:9 web stage puts portraits into wide cells. Reject so planning falls back

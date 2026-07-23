@@ -46,6 +46,7 @@ def score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
+    trip_id: str | None = None,
 ) -> tuple[list[tuple[ScreenCandidate, float, list[str], dict[str, float]]], list[dict], list[dict]]:
     """Score MCS window candidates and return validator-level rejections (golden probe / tests)."""
     scored, rejected, hits, _shadow = _score_window_candidates_with_rejections(
@@ -60,6 +61,7 @@ def score_window_candidates_with_rejections(
         prev_screen=prev_screen,
         chapter_screen_index=chapter_screen_index,
         chapter_screen_count=chapter_screen_count,
+        trip_id=trip_id,
     )
     return scored, rejected, hits
 
@@ -74,6 +76,7 @@ def score_window_candidates(
     trip_photo_total: int = 0,
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
+    trip_id: str | None = None,
 ) -> list[tuple[ScreenCandidate, float, list[str], dict[str, float]]]:
     """Score all MCS window candidates (shared by compose + replan)."""
     scored, _rejected, _hits, _shadow = _score_window_candidates_with_rejections(
@@ -85,6 +88,7 @@ def score_window_candidates(
         trip_photo_total=trip_photo_total,
         burst_seconds=burst_seconds,
         median_sharp=median_sharp,
+        trip_id=trip_id,
     )
     return scored
 
@@ -102,6 +106,7 @@ def _score_window_candidates_with_rejections(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
+    trip_id: str | None = None,
 ) -> tuple[
     list[tuple[ScreenCandidate, float, list[str], dict[str, float]]],
     list[dict],
@@ -125,6 +130,7 @@ def _score_window_candidates_with_rejections(
         median_sharp=median_sharp,
         window_ctx=window_ctx,
         trip_photo_total=trip_photo_total,
+        trip_id=trip_id,
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
@@ -132,7 +138,7 @@ def _score_window_candidates_with_rejections(
     contract_shadow = bundle.contract_shadow
     scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
-        if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg) or not cand.hard_valid:
+        if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg, trip_id=trip_id) or not cand.hard_valid:
             if not cand.hard_valid and not any(
                 r.get("templateId") == cand.pattern_id for r in rejected
             ):
@@ -202,6 +208,7 @@ def pick_best_window(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
+    trip_id: str | None = None,
 ) -> WindowPickResult:
     wh = weights_hash(cfg)
     base_order = list(
@@ -240,13 +247,17 @@ def pick_best_window(
         prev_screen=prev_screen,
         chapter_screen_index=chapter_screen_index,
         chapter_screen_count=chapter_screen_count,
+        trip_id=trip_id,
     )
     log.rejected_templates = rejected
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)
     log.usage_rule_hits = usage_hits
     log.candidates_count = len(scored)
+    from travelogue.layout_engine.mosaic.lifecycle import reject_funnel_stage
+
     log.reject_funnel = [
         {
+            "stage": reject_funnel_stage(r.get("reason")),
             "templateId": r.get("templateId"),
             "reason": r.get("reason"),
             **({"detail": r["detail"]} if r.get("detail") else {}),
@@ -293,7 +304,7 @@ def pick_best_window(
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]
     winner_cand, winner_score, reasons, winner_penalties = scored[0]
-    if mosaic_pattern_disabled(winner_cand.pattern_id, cfg=cfg):
+    if mosaic_pattern_disabled(winner_cand.pattern_id, cfg=cfg, trip_id=trip_id):
         log.fallback_used = True
         log.fallback_reason = "pattern_disabled"
         log.planner_path = "legacy"
@@ -333,31 +344,37 @@ def pick_best_window(
             burst_seconds=burst_seconds,
             min_score=cfg.min_candidate_score,
             median_sharp=median_sharp,
+            trip_id=trip_id,
         )
         if healed is not None:
             winner_cand, winner_score, reasons, step, dropped, healed_penalties = healed
-            log.winner_pattern_id = winner_cand.pattern_id
-            log.winner_score = winner_score
-            log.winner_reason_codes = reasons
-            log.winner_penalties = dict(healed_penalties)
-            log.six_hero_family_id = six_hero_family_id(winner_cand.pattern_id)
-            _attach_face_crop_proxy(
-                log,
-                winner_cand.screen,
-                aspects=aspects,
-                assets_map=assets_map,
-                cfg=cfg,
-                layout_state=layout_state,
-                trip_photo_total=trip_photo_total,
-                burst_seconds=burst_seconds,
-            )
-            log.self_heal_applied = True
-            log.self_heal_step = step
-            log.dropped_asset_ids = list(dropped)
-            log.planner_path = "mosaic"
-            enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
-            _attach_raw_geometry_features(log, winner_cand.pattern_id)
-            return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
+            if mosaic_pattern_disabled(
+                winner_cand.pattern_id, cfg=cfg, trip_id=trip_id
+            ):
+                healed = None
+            else:
+                log.winner_pattern_id = winner_cand.pattern_id
+                log.winner_score = winner_score
+                log.winner_reason_codes = reasons
+                log.winner_penalties = dict(healed_penalties)
+                log.six_hero_family_id = six_hero_family_id(winner_cand.pattern_id)
+                _attach_face_crop_proxy(
+                    log,
+                    winner_cand.screen,
+                    aspects=aspects,
+                    assets_map=assets_map,
+                    cfg=cfg,
+                    layout_state=layout_state,
+                    trip_photo_total=trip_photo_total,
+                    burst_seconds=burst_seconds,
+                )
+                log.self_heal_applied = True
+                log.self_heal_step = step
+                log.dropped_asset_ids = list(dropped)
+                log.planner_path = "mosaic"
+                enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
+                _attach_raw_geometry_features(log, winner_cand.pattern_id)
+                return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
         if cfg.fallback_to_legacy:
             log.fallback_used = True
             log.fallback_reason = "low_score"
