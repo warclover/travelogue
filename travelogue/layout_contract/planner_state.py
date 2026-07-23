@@ -13,6 +13,7 @@ from travelogue.layout_contract.density import (
 )
 
 HeroReserve = Literal["idle", "armed", "consumed", "released"]
+HeroSixOpportunity = Literal["idle", "armed", "consumed", "released"]
 from travelogue.layout_contract.patterns import is_editorial_composite_pattern
 from travelogue.layout_contract.rhythm import (  # re-export for curation callers
     DEFAULT_CONSECUTIVE_BANS,
@@ -151,6 +152,9 @@ class ScreenLayoutPlannerState:
     rhythm: RhythmRules = field(default_factory=RhythmRules)
     # LTN C5 · opportunity reserve (no extra quota; P21 / adjacent bans still apply)
     hero_reserve: HeroReserve = "idle"
+    # MTSO PR-B · cursor-bound six-hero opportunity (orthogonal to hero_reserve)
+    hero_six_opportunity: HeroSixOpportunity = "idle"
+    hero_six_armed_cursor: int | None = None
 
     @classmethod
     def from_trip_total(
@@ -289,6 +293,11 @@ class ScreenLayoutPlannerState:
             self.hero_reserve = "released"
         else:
             self.hero_reserve = "idle"
+        if self.hero_six_opportunity == "armed":
+            self.hero_six_opportunity = "released"
+        else:
+            self.hero_six_opportunity = "idle"
+        self.hero_six_armed_cursor = None
         late = self.rhythm.late_chapter_pairing
         if not late.is_late_chapter(chapter_index):
             return
@@ -309,6 +318,21 @@ class ScreenLayoutPlannerState:
     def release_hero_reserve(self) -> None:
         if self.hero_reserve == "armed":
             self.hero_reserve = "released"
+
+    def arm_hero_six_opportunity(self, cursor: int) -> None:
+        """Arm six-hero opportunity for this cursor (may re-arm after consumed)."""
+        self.hero_six_opportunity = "armed"
+        self.hero_six_armed_cursor = int(cursor)
+
+    def consume_hero_six_opportunity(self) -> None:
+        if self.hero_six_opportunity == "armed":
+            self.hero_six_opportunity = "consumed"
+            self.hero_six_armed_cursor = None
+
+    def release_hero_six_opportunity(self) -> None:
+        if self.hero_six_opportunity == "armed":
+            self.hero_six_opportunity = "released"
+            self.hero_six_armed_cursor = None
 
     @staticmethod
     def pattern_has_main_role(pattern_id: str) -> bool:
@@ -338,12 +362,25 @@ class ScreenLayoutPlannerState:
             return True
         return self.large_mosaic_chapter_used < self.large_mosaic_max_per_chapter
 
+    def _large_mosaic_quota_key(self, pattern_id: str) -> str:
+        # SUP-07 · twin six-hero family shares trip template quota
+        try:
+            from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+            fam = six_hero_family_id(pattern_id)
+            if fam:
+                return fam
+        except Exception:
+            pass
+        return pattern_id
+
     def can_use_large_mosaic(self, pattern_id: str) -> bool:
         if not is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             return True
         if self.large_mosaic_chapter_used >= self.large_mosaic_max_per_chapter:
             return False
-        used = self.pattern_counts.get(pattern_id, 0)
+        key = self._large_mosaic_quota_key(pattern_id)
+        used = self.pattern_counts.get(key, 0)
         return used < self.large_mosaic_max_per_template_trip
 
     def sync_large_mosaic_chapter_used(self, pattern_ids: list[str]) -> None:
@@ -406,11 +443,23 @@ class ScreenLayoutPlannerState:
     def note_screen(self, pattern_id: str) -> None:
         if pattern_id:
             self.pattern_counts[pattern_id] = self.pattern_counts.get(pattern_id, 0) + 1
+            fam_key = self._large_mosaic_quota_key(pattern_id)
+            if fam_key != pattern_id:
+                self.pattern_counts[fam_key] = self.pattern_counts.get(fam_key, 0) + 1
             if self.pattern_has_main_role(pattern_id):
                 self.consume_hero_reserve()
             elif self.hero_reserve == "armed":
                 # LTN C5 · non-hero emit while armed ⇒ opportunity assets consumed.
                 self.release_hero_reserve()
+            try:
+                from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+                if six_hero_family_id(pattern_id):
+                    self.consume_hero_six_opportunity()
+                elif self.hero_six_opportunity == "armed":
+                    self.release_hero_six_opportunity()
+            except Exception:
+                pass
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1

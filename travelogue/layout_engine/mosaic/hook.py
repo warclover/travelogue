@@ -225,7 +225,12 @@ def drain_mosaic_dropped() -> list[str]:
 
 
 def try_mosaic_window_mcs(
-    ctx: ChapterPlanContext, start: int, size: int, cfg: MosaicConfig
+    ctx: ChapterPlanContext,
+    start: int,
+    size: int,
+    cfg: MosaicConfig,
+    *,
+    funnel: dict | None = None,
 ) -> bool:
     from travelogue.layout_engine.planner.screen_planner_stages import append_screen
 
@@ -249,6 +254,7 @@ def try_mosaic_window_mcs(
         chapter_screen_index=max(0, int(start)),
         chapter_screen_count=max(2, len(ctx.ids)),
         trip_id=_ctx_trip_id(ctx),
+        funnel=funnel,
     )
     if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)
@@ -394,6 +400,12 @@ def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     return sizes
 
 
+def _prioritize_six_hero_opportunity(sizes: list[int]) -> list[int]:
+    """SUP-04 · admit six → try 6 before 5/4 (keep other sizes after)."""
+    preferred = [s for s in (6, 5, 4) if s in sizes]
+    rest = [s for s in sizes if s not in preferred]
+    return preferred + rest
+
 
 def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | None:
     """LTN C1 · single-asset hero rescue when all MCS window sizes fail.
@@ -504,18 +516,74 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         )
     else:
         sizes = list(planner_mosaic_window_sizes(cfg, density=density))
+    base_order = list(sizes)
     segment = ctx.ids[start : start + remaining]
-    sizes = _prioritize_exact_window_fit(sizes, remaining)
-    sizes = _prioritize_five_slot_single_portrait(
-        sizes, segment, ctx.aspects, remaining, cfg=cfg
-    )
     min_dense = cfg.density_budget.min_slots if cfg.density_budget.enabled else 4
     if ctx.layout_state is not None:
         ctx.layout_state.dense_collage_min_slots = min_dense
     # LTN C4 · never open a mosaic window across coarse segment boundaries.
     from travelogue.layout_engine.mosaic.coarse_segments import max_window_size_in_segment
+    from travelogue.layout_engine.mosaic.compose import _mtso_quota_snapshot
+    from travelogue.layout_engine.mosaic.hero_six import (
+        effective_hero_six_opportunity_enabled,
+        qualify_hero_six,
+    )
 
     seg_cap = max_window_size_in_segment(getattr(ctx, "coarse_segments", None), start)
+    structural_six = False
+    admit_six = False
+    reorder_reason: str | None = None
+    allow_six_hero = False
+    six_opportunity_on = (
+        effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
+    )
+    if six_opportunity_on and remaining >= 6 and 6 in sizes:
+        six_window = ctx.ids[start : start + 6]
+        q = qualify_hero_six(
+            six_window,
+            ctx.aspects,
+            ctx.assets_map,
+            cfg=cfg,
+            layout_state=ctx.layout_state,
+            seg_cap=seg_cap,
+            median_sharp=ctx.med_sharp,
+        )
+        structural_six = bool(q.structural)
+        admit_six = bool(q.admit)
+        if structural_six and ctx.layout_state is not None:
+            ctx.layout_state.arm_hero_six_opportunity(start)
+        if admit_six:
+            sizes = _prioritize_six_hero_opportunity(sizes)
+            reorder_reason = "structurally_qualified_six"
+            allow_six_hero = True
+        elif structural_six and ctx.layout_state is not None:
+            # Dense/large unavailable → release opportunity (SUP-05 path family).
+            ctx.layout_state.release_hero_six_opportunity()
+    if not admit_six:
+        sizes = _prioritize_exact_window_fit(sizes, remaining)
+        if reorder_reason is None and sizes and sizes[0] == remaining and remaining in base_order:
+            reorder_reason = "exact_tail_fit"
+        before_sp = list(sizes)
+        sizes = _prioritize_five_slot_single_portrait(
+            sizes, segment, ctx.aspects, remaining, cfg=cfg
+        )
+        if reorder_reason is None and sizes != before_sp:
+            reorder_reason = "single_portrait_tail"
+
+    funnel = {
+        "base_window_order": base_order,
+        "effective_window_order": list(sizes),
+        "reorder_reason": reorder_reason,
+        "structurally_qualified_six": structural_six,
+        "admit_six_hero": admit_six,
+        "six_hero_opportunity_state": (
+            getattr(ctx.layout_state, "hero_six_opportunity", "idle")
+            if ctx.layout_state is not None
+            else "idle"
+        ),
+        "quota_snapshot": _mtso_quota_snapshot(ctx.layout_state),
+    }
+
     for size in sizes:
         if start + size > len(ctx.ids):
             continue
@@ -545,10 +613,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if _mixed_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
-        if _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
+        if (
+            not allow_six_hero
+            and _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg)
+        ):
             continue
         # LTN C1 · size=3 aux short-circuit removed; portrait tiler owns explicit triples.
-        if not window_has_candidates(
+        # AC-04 · admitted six always runs MCS (funnel attempt) even if cheap prefilter misses.
+        has_cands = window_has_candidates(
             window,
             ctx.aspects,
             ctx.assets_map,
@@ -558,10 +630,28 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             median_sharp=ctx.med_sharp,
             layout_state=ctx.layout_state,
             trip_id=_ctx_trip_id(ctx),
-        ):
+        )
+        if not has_cands and not (size == 6 and allow_six_hero):
             continue
-        if try_mosaic_window_mcs(ctx, start, size, cfg):
+        attempt_funnel = {
+            **funnel,
+            "six_hero_opportunity_state": (
+                getattr(ctx.layout_state, "hero_six_opportunity", "idle")
+                if ctx.layout_state is not None
+                else "idle"
+            ),
+        }
+        if try_mosaic_window_mcs(ctx, start, size, cfg, funnel=attempt_funnel):
             return size
+        if (
+            size == 6
+            and allow_six_hero
+            and ctx.layout_state is not None
+            and ctx.layout_state.hero_six_opportunity == "armed"
+        ):
+            # SUP-05 · size6 attempt failed → released
+            ctx.layout_state.release_hero_six_opportunity()
+            funnel["six_hero_opportunity_state"] = "released"
     rescued = _try_mcs_single_hero_rescue(ctx, start)
     if rescued is not None:
         return rescued

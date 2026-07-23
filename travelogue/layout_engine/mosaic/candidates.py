@@ -15,7 +15,12 @@ from travelogue.layout_engine.mosaic.clone_detection import (
     near_scene_clone_penalty,
     template_prefers_burst,
 )
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
 from travelogue.layout_engine.mosaic.features import feature_summary_for_window
+from travelogue.layout_engine.mosaic.hero_six import (
+    effective_mixed_hero_routing_enabled,
+    mixed_portrait_is_hero,
+)
 from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled, mosaic_registry
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.layout_engine.mosaic.pattern_catalog import (
@@ -322,31 +327,55 @@ def generate_window_candidates_with_rejections(
             _reject(rejected, pat.pattern_id, reject_reason, detail=main_reason)
         elif not geom_ok:
             _reject(rejected, pat.pattern_id, "geometry_invalid")
-        elif geom_ok and main_ok and window_ctx is not None:
-            reject, rule_id, detail = evaluate_reject(
-                pat.pattern_id, window_ctx, screen=screen
-            )
-            if reject and rule_id:
-                reason = f"usage_rule:{rule_id}"
-                _reject(rejected, pat.pattern_id, reason, detail=detail)
-                feat = {**summary, "patternId": pat.pattern_id}
-                if slot_fallback:
-                    feat["slotAssignmentFallback"] = slot_fallback
-                if route_source:
-                    feat["candidateSource"] = route_source
-                usage_deferred.append(
-                    (
-                        ScreenCandidate(
-                            pattern_id=pat.pattern_id,
-                            ordered_asset_ids=ordered,
-                            screen=screen,
-                            feature_summary=feat,
-                            hard_valid=True,
-                        ),
-                        rule_id,
-                    )
+        elif geom_ok and main_ok:
+            # PR-C1 / SUP-06 · MTSO mixed routing: hard reject, never usage-undo.
+            if (
+                effective_mixed_hero_routing_enabled(cfg)
+                and pat.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+                and mixed_portrait_is_hero(
+                    list(asset_ids),
+                    aspects,
+                    assets_map,
+                    median_sharp=median_sharp,
+                    layout_state=(
+                        getattr(window_ctx, "layout_state", None)
+                        if window_ctx is not None
+                        else None
+                    ),
+                )
+            ):
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "usage_rule:mixed_portrait_is_hero",
+                    detail="portrait_hero_is_max",
                 )
                 continue
+            if window_ctx is not None:
+                reject, rule_id, detail = evaluate_reject(
+                    pat.pattern_id, window_ctx, screen=screen
+                )
+                if reject and rule_id:
+                    reason = f"usage_rule:{rule_id}"
+                    _reject(rejected, pat.pattern_id, reason, detail=detail)
+                    feat = {**summary, "patternId": pat.pattern_id}
+                    if slot_fallback:
+                        feat["slotAssignmentFallback"] = slot_fallback
+                    if route_source:
+                        feat["candidateSource"] = route_source
+                    usage_deferred.append(
+                        (
+                            ScreenCandidate(
+                                pattern_id=pat.pattern_id,
+                                ordered_asset_ids=ordered,
+                                screen=screen,
+                                feature_summary=feat,
+                                hard_valid=True,
+                            ),
+                            rule_id,
+                        )
+                    )
+                    continue
         feat = {**summary, "patternId": pat.pattern_id}
         if slot_fallback:
             feat["slotAssignmentFallback"] = slot_fallback

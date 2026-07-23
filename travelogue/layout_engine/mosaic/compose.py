@@ -192,6 +192,20 @@ def _usage_rule_log_entries(rejected: list[dict]) -> list[dict[str, str]]:
     return out
 
 
+def _mtso_quota_snapshot(
+    layout_state: ScreenLayoutPlannerState | None,
+) -> dict | None:
+    if layout_state is None:
+        return None
+    return {
+        "denseUsed": int(layout_state.dense_collage_used),
+        "denseMax": int(layout_state.dense_collage_max),
+        "largeChapterUsed": int(layout_state.large_mosaic_chapter_used),
+        "largeChapterMax": int(layout_state.large_mosaic_max_per_chapter),
+        "lastWasDense": bool(layout_state.last_was_dense_collage),
+    }
+
+
 def pick_best_window(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -209,25 +223,34 @@ def pick_best_window(
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
     trip_id: str | None = None,
+    funnel: dict | None = None,
 ) -> WindowPickResult:
     wh = weights_hash(cfg)
     base_order = list(
         getattr(getattr(cfg, "density_budget", None), "window_order", ()) or ()
     )
+    funnel = funnel or {}
+    opp_state = "idle"
+    if layout_state is not None:
+        opp_state = str(getattr(layout_state, "hero_six_opportunity", "idle") or "idle")
     log = MosaicWindowLog(
         segment_id=segment_id,
         window_size=window_size,
         window_start=window_start,
         scorer_version=cfg.scorer_version,
         weights_hash=wh,
-        base_window_order=base_order,
-        effective_window_order=list(base_order),
-        reorder_reason=None,
-        structurally_qualified_six=False,
-        admit_six_hero=False,
-        six_hero_opportunity_state="idle",
+        base_window_order=list(funnel.get("base_window_order") or base_order),
+        effective_window_order=list(
+            funnel.get("effective_window_order") or funnel.get("base_window_order") or base_order
+        ),
+        reorder_reason=funnel.get("reorder_reason"),
+        structurally_qualified_six=bool(funnel.get("structurally_qualified_six", False)),
+        admit_six_hero=bool(funnel.get("admit_six_hero", False)),
+        six_hero_opportunity_state=str(
+            funnel.get("six_hero_opportunity_state") or opp_state
+        ),
         six_hero_family_id=None,
-        quota_snapshot=None,
+        quota_snapshot=funnel.get("quota_snapshot") or _mtso_quota_snapshot(layout_state),
     )
     if len(asset_ids) != window_size:
         log.fallback_used = True
@@ -280,7 +303,10 @@ def pick_best_window(
         layout_state.note_dense_opportunity()
 
     # LTN C5 · arm on hero opportunity; while armed, drop equal-weight dense winners.
-    if layout_state is not None:
+    # SUP-03 · MTSO selection_optimization ON → skip old reserve arm+filter (isolated).
+    from travelogue.config.mosaic import effective_selection_optimization_enabled
+
+    if layout_state is not None and not effective_selection_optimization_enabled(cfg):
         from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
         hero_hits = [

@@ -2,12 +2,13 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | **v0.1.0** |
+| **文档版本** | **v0.2.0** |
 | **对应 PRD** | [PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) **v0.2.0** |
+| **验收** | [ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
 | **评审** | [mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) · Conditional Go |
 | **实施前调研** | [mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) · **SUP 默认已产品认可** |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-A in progress**（分支 `feat/mtso-pr-a-lifecycle`；M2/PR-B 另开任务卡） |
+| **状态** | **PR-A ✅ · PR-B/C1 in progress**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-C2 ⛔ O-1**） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MTSO PRD + 七席 + 开发可行性 SUP 展开为可执行任务卡。  
@@ -165,25 +166,29 @@
 
 ---
 
-## 3. 后续 PR 大纲（非本切片开工范围）
+## 3. PR-B / PR-C1 落地（本分支）
 
 ### PR-B · 六图机会（T-10～14）
 
-- T-10：`qualify_hero_six` 纯函数（SUP-01/02）  
-- T-11：cursor-bound `hero_six_opportunity`；compose **跳过**旧 reserve（SUP-03）  
-- T-12：重排 precedence（SUP-04）；失败 released（SUP-05）  
-- T-13：family 配额去重（SUP-07）  
-- T-14：合成 fixture AC-04/05/06/11a/13  
-- **前置**：拆 `ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md`
+| 卡 | 状态 | 落点 |
+|----|------|------|
+| T-10 `qualify_hero_six` | ✅ | `mosaic/hero_six.py`（SUP-01/02） |
+| T-11 opportunity + 跳过旧 reserve | ✅ | `planner_state.hero_six_*` · compose SUP-03 |
+| T-12 重排 / released | ✅ | `hook.try_mosaic_window`（SUP-04/05） |
+| T-13 family 配额 | ✅ | `can_use_large_mosaic` / `note_screen`（SUP-07） |
+| T-14 单测 | ✅ | `tests/unit/layout_engine/test_mtso_pr_b_c1.py` |
+| ACCEPTANCE | ✅ | 已拆 |
 
 ### PR-C1 · 混向硬拒（T-20～21）
 
-- 硬拒 `mixed_portrait_is_hero`（不可 undo）  
-- rescue → `portrait-1`（及可选 p1-l2）
+| 卡 | 状态 | 落点 |
+|----|------|------|
+| T-20 硬拒不可 undo | ✅ | `candidates.py` · `usage_rule:mixed_portrait_is_hero`（SUP-06） |
+| T-21 rescue | ☑ | 沿用 `_try_mcs_single_hero_rescue`（无新几何） |
 
-### PR-C2 · 新 SKU（T-22～25）
+### PR-C2 · 新 SKU（T-22～25）— **不开码**
 
-- O-1 冻结后：竖主 1P4L + 2P3L 主从；**不进** policy 直至转正
+- **⛔ O-1**：无冻结竖主 1P4L / 2P3L 几何稿前不写 YAML/CSS/`lte_policy`
 
 ### PR-D · 狗粮转正（T-30～32）
 
