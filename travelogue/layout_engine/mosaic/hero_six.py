@@ -38,8 +38,8 @@ def effective_mixed_hero_routing_enabled(cfg: MosaicConfig | None) -> bool:
     return bool(so is not None and getattr(so, "mixed_hero_routing_enabled", True))
 
 
-def _hero_gap_threshold(cfg: MosaicConfig) -> float:
-    so = getattr(cfg, "selection_optimization", None)
+def _hero_gap_threshold(cfg: MosaicConfig | None) -> float:
+    so = getattr(cfg, "selection_optimization", None) if cfg is not None else None
     gap = getattr(so, "hero_gap_threshold", None) if so is not None else None
     if gap is not None:
         return float(gap)
@@ -90,13 +90,13 @@ def qualify_hero_six(
     if not ok_orient:
         return HeroSixQualify(False, False, orient_reason)
 
-    from travelogue.layout_engine.mosaic.builders import _order_hero_six
+    from travelogue.layout_engine.mosaic.builders import _order_hero_six_detailed
 
-    ordered = _order_hero_six(
+    ordered, order_reason = _order_hero_six_detailed(
         list(window), aspects, assets_map, median_sharp=median_sharp
     )
     if not ordered:
-        return HeroSixQualify(False, False, "six_hero_order_failed")
+        return HeroSixQualify(False, False, order_reason or "six_hero_order_failed")
 
     from travelogue.layout_contract.usage_context import build_window_context
     from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
@@ -124,6 +124,30 @@ def qualify_hero_six(
     return HeroSixQualify(True, True, "", gap=gap)
 
 
+def six_hero_outcome_label(
+    *,
+    structural: bool,
+    admit: bool,
+    reason: str,
+    attempted_six: bool,
+    won_six: bool,
+) -> str:
+    """AC-MTSO-03 · stable window-level six-hero outcome bucket."""
+    if won_six:
+        return "won"
+    if reason.startswith("six_hero_blocked:segment_cap") or reason == "six_hero_blocked:segment_cap":
+        return "segment_blocked"
+    if reason in ("six_hero_dense_quota", "six_hero_large_quota"):
+        return "quota_blocked"
+    if not structural:
+        return "qualify_fail"
+    if structural and not admit:
+        return "quota_blocked"
+    if attempted_six:
+        return "score_lose"
+    return "not_attempted"
+
+
 def mixed_portrait_is_hero(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -132,9 +156,15 @@ def mixed_portrait_is_hero(
     median_sharp: float | None = None,
     featured_weight: float = 1.35,
     layout_state: ScreenLayoutPlannerState | None = None,
+    cfg: MosaicConfig | None = None,
 ) -> bool:
-    """PR-C1 · shared predicate with UR-04 (portrait is window hero max)."""
+    """PR-C1 · D-MTSO-03: portrait is sharpness max OR hero-score gap ≥ threshold."""
     from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_landscape_id,
+        _is_std_portrait_id,
+    )
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_engine.usage_rules.context import portrait_is_window_hero_max
 
     wctx = build_window_context(
@@ -145,4 +175,30 @@ def mixed_portrait_is_hero(
         median_sharp=median_sharp,
         featured_weight=featured_weight,
     )
-    return portrait_is_window_hero_max(wctx)
+    if portrait_is_window_hero_max(wctx):
+        return True
+
+    portraits = [
+        aid for aid in asset_ids if _is_std_portrait_id(aid, aspects)
+    ]
+    if len(portraits) != 1:
+        return False
+    lands = [aid for aid in asset_ids if _is_landscape_id(aid, aspects)]
+    if not lands:
+        return False
+    med = float(median_sharp or 0.0)
+    p_score = effective_hero_score(
+        assets_map.get(portraits[0]) or {},
+        median_sharp=med,
+        featured_weight=featured_weight,
+    )
+    land_scores = [
+        effective_hero_score(
+            assets_map.get(aid) or {},
+            median_sharp=med,
+            featured_weight=featured_weight,
+        )
+        for aid in lands
+    ]
+    thr = _hero_gap_threshold(cfg)
+    return (p_score - max(land_scores)) >= thr - 1e-9

@@ -206,6 +206,57 @@ def _mtso_quota_snapshot(
     }
 
 
+def _prefer_six_hero_canonical(scored: list) -> list:
+    """SUP-07 · when twin six-hero patterns tie at top score, emit canonical."""
+    if len(scored) < 2:
+        return scored
+    from travelogue.layout_engine.mosaic.lifecycle import (
+        SIX_HERO_FAMILY_CANONICAL,
+        six_hero_family_id,
+    )
+
+    top_score = float(scored[0][1])
+    tied_idx = [
+        i
+        for i, row in enumerate(scored)
+        if abs(float(row[1]) - top_score) <= 1e-9
+        and six_hero_family_id(row[0].pattern_id)
+    ]
+    if len(tied_idx) < 2:
+        return scored
+    can_i = next(
+        (i for i in tied_idx if scored[i][0].pattern_id == SIX_HERO_FAMILY_CANONICAL),
+        None,
+    )
+    if can_i is None or can_i == 0:
+        return scored
+    preferred = scored[can_i]
+    return [preferred] + [row for i, row in enumerate(scored) if i != can_i]
+
+
+def _apply_six_hero_outcome(log: MosaicWindowLog, *, won_six: bool) -> None:
+    if log.six_hero_outcome:
+        return
+    if not (
+        log.window_size == 6
+        or log.structurally_qualified_six
+        or log.admit_six_hero
+        or log.six_hero_qualify_reason
+    ):
+        return
+    from travelogue.layout_engine.mosaic.hero_six import six_hero_outcome_label
+    from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+    won = bool(won_six and six_hero_family_id(log.winner_pattern_id))
+    log.six_hero_outcome = six_hero_outcome_label(
+        structural=bool(log.structurally_qualified_six),
+        admit=bool(log.admit_six_hero),
+        reason=str(log.six_hero_qualify_reason or ""),
+        attempted_six=log.window_size == 6,
+        won_six=won,
+    )
+
+
 def pick_best_window(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -250,6 +301,8 @@ def pick_best_window(
             funnel.get("six_hero_opportunity_state") or opp_state
         ),
         six_hero_family_id=None,
+        six_hero_qualify_reason=funnel.get("six_hero_qualify_reason"),
+        six_hero_outcome=funnel.get("six_hero_outcome"),
         quota_snapshot=funnel.get("quota_snapshot") or _mtso_quota_snapshot(layout_state),
     )
     if len(asset_ids) != window_size:
@@ -326,6 +379,8 @@ def pick_best_window(
             if filtered:
                 scored = filtered
 
+    # SUP-07 · twin six-hero emit tie-break → canonical when scores tie.
+    scored = _prefer_six_hero_canonical(scored)
     top = scored[: min(3, cfg.candidate_top_k)]
     log.top3_patterns = [t[0].pattern_id for t in top]
     log.top3_scores = [t[1] for t in top]

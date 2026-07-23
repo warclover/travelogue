@@ -44,11 +44,12 @@ python -m pytest tests/unit/layout_engine/test_mtso_lifecycle_a.py tests/unit/la
 |----|------|------|
 | **AC-MTSO-04** | admit fixture：`effectiveWindowOrder` 前缀 `6,5,4` 且至少尝试 size=6 | ✅ `test_mtso_pr_b_c1` |
 | **AC-MTSO-05** | 非结构合格：无 `structurally_qualified_six` 重排 | ✅ |
-| **AC-MTSO-06** | dense/相邻/large/segment 红线违规=0 | ☑ 合入后 corpus |
-| **AC-MTSO-11a** | 漏斗字段含 opportunity / quotaSnapshot（双阈值狗粮见 M3） | ✅ 字段 |
-| **AC-MTSO-13** | 六图家族 large 配额按 family 去重 | ✅ |
+| **AC-MTSO-06** | dense/相邻/large/segment 红线违规=0 | ✅ 合成 chapter 不变量 |
+| **AC-MTSO-11a** | 漏斗字段含 opportunity / quotaSnapshot / qualifyReason / outcome | ✅ 字段 |
+| **AC-MTSO-13** | 六图家族 large 配额按 family 去重；emit tie-break → canonical | ✅ |
 | SUP-03 | MTSO ON 跳过旧 `hero_reserve` 过滤；armed 不挡无关 cursor | ✅ |
 | SUP-05 | size6 尝试失败 → opportunity **released** | ✅ |
+| D-10 | `_order_hero_six` 稳定原因码透传 qualify | ✅ |
 
 ```powershell
 python -m pytest tests/unit/layout_engine/test_mtso_pr_b_c1.py -q
@@ -60,9 +61,9 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_b_c1.py -q
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MTSO-07**（硬拒半） | 强竖 1P4L → 不落 `main-portrait-3land`；拒因 `mixed_portrait_is_hero`；**不可** usage undo | ✅ |
+| **AC-MTSO-07** | 强竖硬拒横主竖辅；横强可落横主竖辅；不可 usage undo | ✅ |
 | SUP-06 | 父开关 ON 即硬拒，不依赖 `usage_rules.enabled` | ✅ |
-| Rescue | MCS 全失败仍可走 `portrait-1` rescue 路径 | ☑ 既有 rescue 单测 + 手测 |
+| Rescue | MCS 全失败 + 强竖 cursor → `screen-portrait-1` | ✅ |
 
 > **PR-C2**（竖主 1P4L / 2P3L 继任 SKU）**⛔ O-1**：无冻结几何稿前不开码；不写 `lte_policy`。
 

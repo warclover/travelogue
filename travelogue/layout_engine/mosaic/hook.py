@@ -259,6 +259,16 @@ def try_mosaic_window_mcs(
     if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)
 
+    from travelogue.layout_engine.mosaic.compose import _apply_six_hero_outcome
+    from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+    won_six = bool(
+        pick.screen
+        and size == 6
+        and six_hero_family_id(pick.log.winner_pattern_id)
+    )
+    _apply_six_hero_outcome(pick.log, won_six=won_six)
+
     if pick.used_legacy:
         # LTN C1 · do not silent-fallback to size=3/equal legacy; try next window size.
         pick.log.fallback_reason = pick.log.fallback_reason or "mcs_no_winner"
@@ -410,8 +420,8 @@ def _prioritize_six_hero_opportunity(sizes: list[int]) -> list[int]:
 def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | None:
     """LTN C1 · single-asset hero rescue when all MCS window sizes fail.
 
-    Only when the cursor asset is main-eligible and hero-gap vs look-ahead peers
-    is significant. Advances by 1 so remaining assets re-enter the planner loop.
+    Portrait cursor (MTSO / S-MTSO-02) → ``screen-portrait-1``.
+    Landscape cursor → ``screen-landscape-1`` when main-eligible with hero gap.
     """
     from travelogue.config import get_config
     from travelogue.layout_contract.usage_context import build_window_context
@@ -422,16 +432,55 @@ def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | No
         pick_best_main_eligible,
         resolve_main_ar_ladder_tol,
     )
-    from travelogue.layout_engine.planner.screen_planner import _make_screen
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_std_portrait_id,
+        _make_screen,
+    )
     from travelogue.layout_engine.planner.screen_planner_stages import append_screen
-    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+    from travelogue.layout_engine.usage_rules.context import (
+        main_eligible_hero_score_gap,
+        portrait_is_window_hero_max,
+    )
 
     if start >= len(ctx.ids):
         return None
     look = ctx.ids[start : start + min(6, len(ctx.ids) - start)]
-    pattern_id = PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
     cursor = ctx.ids[start]
     asset = ctx.assets_map.get(cursor) or {}
+
+    # S-MTSO-02 · strong portrait rescue (independent of mosaic-6 main AR).
+    if _is_std_portrait_id(cursor, ctx.aspects):
+        wctx = build_window_context(
+            look,
+            ctx.aspects,
+            ctx.assets_map,
+            median_sharp=ctx.med_sharp,
+        )
+        if not portrait_is_window_hero_max(wctx):
+            return None
+        screen = _make_screen(
+            "screen-portrait-1",
+            [cursor],
+            screen_id="",
+            aspects=ctx.aspects,
+            assets_map=ctx.assets_map,
+        )
+        append_screen(ctx, screen)
+        log = MosaicWindowLog(
+            segment_id=ctx.chapter_id or "",
+            window_size=1,
+            window_start=start,
+            winner_pattern_id=str(screen.get("patternId") or "screen-portrait-1"),
+            winner_score=1.0,
+            fallback_used=True,
+            fallback_reason="mcs_single_hero_rescue",
+            planner_path="mosaic",
+            winner_reason_codes=["R_MCS_SINGLE_HERO_RESCUE", "R_PORTRAIT_1_RESCUE"],
+        )
+        _append_mosaic_log(log.to_dict())
+        return 1
+
+    pattern_id = PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
     tol = resolve_main_ar_ladder_tol(pattern_id, _mosaic_cfg())
     ok, _ = asset_eligible_for_main_slot(asset, pattern_id=pattern_id, tol=tol)
     if not ok:
@@ -532,12 +581,16 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     seg_cap = max_window_size_in_segment(getattr(ctx, "coarse_segments", None), start)
     structural_six = False
     admit_six = False
+    qualify_reason = ""
     reorder_reason: str | None = None
     allow_six_hero = False
     six_opportunity_on = (
         effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
     )
     if six_opportunity_on and remaining >= 6 and 6 in sizes:
+        from travelogue.layout_engine.mosaic.hero_six import six_hero_outcome_label
+        from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+
         six_window = ctx.ids[start : start + 6]
         q = qualify_hero_six(
             six_window,
@@ -550,15 +603,46 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         )
         structural_six = bool(q.structural)
         admit_six = bool(q.admit)
+        qualify_reason = str(q.reason or "")
         if structural_six and ctx.layout_state is not None:
             ctx.layout_state.arm_hero_six_opportunity(start)
         if admit_six:
             sizes = _prioritize_six_hero_opportunity(sizes)
             reorder_reason = "structurally_qualified_six"
             allow_six_hero = True
-        elif structural_six and ctx.layout_state is not None:
-            # Dense/large unavailable → release opportunity (SUP-05 path family).
-            ctx.layout_state.release_hero_six_opportunity()
+        else:
+            if structural_six and ctx.layout_state is not None:
+                # Dense/large unavailable → release opportunity (SUP-05 path family).
+                ctx.layout_state.release_hero_six_opportunity()
+            # AC-03 · precheck miss still emits a size=6 probe for unique bucketing.
+            probe = MosaicWindowLog(
+                segment_id=ctx.chapter_id or "",
+                window_size=6,
+                window_start=start,
+                fallback_used=True,
+                fallback_reason="six_hero_precheck",
+                planner_path="mosaic",
+                base_window_order=list(base_order),
+                effective_window_order=list(sizes),
+                reorder_reason=reorder_reason,
+                structurally_qualified_six=structural_six,
+                admit_six_hero=False,
+                six_hero_opportunity_state=(
+                    getattr(ctx.layout_state, "hero_six_opportunity", "idle")
+                    if ctx.layout_state is not None
+                    else "idle"
+                ),
+                six_hero_qualify_reason=qualify_reason or None,
+                six_hero_outcome=six_hero_outcome_label(
+                    structural=structural_six,
+                    admit=False,
+                    reason=qualify_reason,
+                    attempted_six=False,
+                    won_six=False,
+                ),
+                quota_snapshot=_mtso_quota_snapshot(ctx.layout_state),
+            )
+            _append_mosaic_log(probe.to_dict())
     if not admit_six:
         sizes = _prioritize_exact_window_fit(sizes, remaining)
         if reorder_reason is None and sizes and sizes[0] == remaining and remaining in base_order:
@@ -576,6 +660,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         "reorder_reason": reorder_reason,
         "structurally_qualified_six": structural_six,
         "admit_six_hero": admit_six,
+        "six_hero_qualify_reason": qualify_reason or None,
         "six_hero_opportunity_state": (
             getattr(ctx.layout_state, "hero_six_opportunity", "idle")
             if ctx.layout_state is not None

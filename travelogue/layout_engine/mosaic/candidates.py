@@ -342,6 +342,7 @@ def generate_window_candidates_with_rejections(
                         if window_ctx is not None
                         else None
                     ),
+                    cfg=cfg,
                 )
             ):
                 _reject(

@@ -8,7 +8,7 @@
 | **评审** | [mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) · Conditional Go |
 | **实施前调研** | [mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) · **SUP 默认已产品认可** |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-A ✅ · PR-B/C1 in progress**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-C2 ⛔ O-1**） |
+| **状态** | **PR-A ✅ · PR-B/C1 ✅（P1 缺口已补）**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-C2 ⛔ O-1**） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MTSO PRD + 七席 + 开发可行性 SUP 展开为可执行任务卡。  

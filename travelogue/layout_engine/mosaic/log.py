@@ -54,6 +54,8 @@ class MosaicWindowLog:
     admit_six_hero: bool = False
     six_hero_opportunity_state: str = "idle"
     six_hero_family_id: str | None = None
+    six_hero_qualify_reason: str | None = None
+    six_hero_outcome: str | None = None
     quota_snapshot: dict[str, Any] | None = None
     reject_funnel: list[dict[str, Any]] = field(default_factory=list)
 
@@ -82,6 +84,8 @@ class MosaicWindowLog:
             "admitSixHero": bool(self.admit_six_hero),
             "sixHeroOpportunityState": self.six_hero_opportunity_state or "idle",
             "sixHeroFamilyId": self.six_hero_family_id,
+            "sixHeroQualifyReason": self.six_hero_qualify_reason,
+            "sixHeroOutcome": self.six_hero_outcome,
             "quotaSnapshot": self.quota_snapshot,
             "rejectFunnel": list(self.reject_funnel),
         }

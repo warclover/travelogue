@@ -144,14 +144,14 @@ def _order_mixed_p2_l2(
     return orders[0]
 
 
-def _order_hero_six(
+def _order_hero_six_detailed(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
     assets_map: dict[str, dict],
     *,
     median_sharp: float | None,
-) -> list[str] | None:
-    """Main 2×2 landscape + 2 side tiles (at most 1 portrait) + 3 bottom landscapes."""
+) -> tuple[list[str] | None, str]:
+    """Order six-hero window; return (order, reason). D-MTSO-10 stable reject codes."""
     from travelogue.layout_engine.mosaic.main_eligibility import (
         main_ar_guard_enabled,
         pick_best_main_eligible,
@@ -160,9 +160,9 @@ def _order_hero_six(
 
     portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
     if len(portraits) >= 2:
-        return None
+        return None, "six_hero_portrait_overflow"
     if len(landscapes) < 4:
-        return None
+        return None, "six_hero_insufficient_landscape"
     cfg = get_effective_mosaic_config()
     if main_ar_guard_enabled(cfg):
         main = pick_best_main_eligible(
@@ -173,14 +173,16 @@ def _order_hero_six(
             cfg=cfg,
         )
         if not main:
-            return None
+            return None, "six_hero_no_main"
     else:
         main = _pick_main_landscape_id(landscapes, assets_map, median_sharp=median_sharp)
+        if not main:
+            return None, "six_hero_no_main"
     bottom_pool = _sort_asset_ids_by_taken(
         [a for a in landscapes if a != main], assets_map
     )
     if len(bottom_pool) < 3:
-        return None
+        return None, "six_hero_insufficient_landscape"
     bottom = bottom_pool[:3]
     side: list[str] = _sort_asset_ids_by_taken(portraits, assets_map)[:1]
     side_candidates = _sort_asset_ids_by_taken(
@@ -191,8 +193,22 @@ def _order_hero_six(
             break
         side.append(aid)
     if len(side) < 2:
-        return None
-    return [main, side[0], side[1], bottom[0], bottom[1], bottom[2]]
+        return None, "six_hero_insufficient_landscape"
+    return [main, side[0], side[1], bottom[0], bottom[1], bottom[2]], ""
+
+
+def _order_hero_six(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """Main 2×2 landscape + 2 side tiles (at most 1 portrait) + 3 bottom landscapes."""
+    ordered, _reason = _order_hero_six_detailed(
+        asset_ids, aspects, assets_map, median_sharp=median_sharp
+    )
+    return ordered
 
 
 def _order_by_roles(

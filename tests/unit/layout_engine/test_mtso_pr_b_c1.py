@@ -313,3 +313,175 @@ def test_prc1_off_parent_switch_no_hard_reject(monkeypatch) -> None:
     assert not any(
         r.get("reason") == "usage_rule:mixed_portrait_is_hero" for r in result.rejected
     )
+
+
+def test_d10_order_hero_six_reason_no_main(monkeypatch) -> None:
+    _mtso_cfg(monkeypatch)
+    from travelogue.layout_engine.mosaic.builders import _order_hero_six_detailed
+
+    ids = [f"l{i}" for i in range(6)]
+    aspects = {aid: "landscape" for aid in ids}
+    # All off-ladder → no eligible main
+    assets_map = {
+        aid: _asset(aid, w=1900, h=1000, sharp=0.8, kind="landscape") for aid in ids
+    }
+    ordered, reason = _order_hero_six_detailed(
+        ids, aspects, assets_map, median_sharp=0.5
+    )
+    assert ordered is None
+    assert reason == "six_hero_no_main"
+
+
+def test_sup07_canonical_tiebreak_on_emit() -> None:
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.compose import _prefer_six_hero_canonical
+    from travelogue.layout_engine.mosaic.lifecycle import SIX_HERO_FAMILY_CANONICAL
+
+    hist = ScreenCandidate(
+        pattern_id=PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
+        ordered_asset_ids=["a"] * 6,
+        screen={"patternId": PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4},
+    )
+    can = ScreenCandidate(
+        pattern_id=SIX_HERO_FAMILY_CANONICAL,
+        ordered_asset_ids=["a"] * 6,
+        screen={"patternId": SIX_HERO_FAMILY_CANONICAL},
+    )
+    scored = [(hist, 0.9, [], {}), (can, 0.9, [], {})]
+    out = _prefer_six_hero_canonical(scored)
+    assert out[0][0].pattern_id == SIX_HERO_FAMILY_CANONICAL
+
+
+def test_ac07_landscape_strong_allows_main_portrait(monkeypatch) -> None:
+    """AC-MTSO-07 · weak portrait + strong lands ⇒ main-portrait may remain."""
+    cfg = _mtso_cfg(monkeypatch)
+    ids = ["p0"] + [f"l{i}" for i in range(4)]
+    aspects = {"p0": "portrait", **{f"l{i}": "landscape" for i in range(4)}}
+    assets_map = {
+        "p0": _asset("p0", w=1200, h=1800, sharp=0.30, kind="portrait"),
+        **{
+            f"l{i}": _asset(f"l{i}", w=3000, h=1687, sharp=0.90, kind="landscape")
+            for i in range(4)
+        },
+    }
+    result = generate_window_candidates_with_rejections(
+        ids,
+        aspects,
+        assets_map,
+        cfg=cfg,
+        median_sharp=0.5,
+    )
+    assert not any(
+        r.get("reason") == "usage_rule:mixed_portrait_is_hero" for r in result.rejected
+    )
+    assert any(
+        c.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND and c.hard_valid
+        for c in result.candidates
+    )
+
+
+def test_portrait_rescue_emits_portrait_1(monkeypatch) -> None:
+    """S-MTSO-02 · after MCS fail, strong portrait cursor → screen-portrait-1."""
+    from travelogue.layout_engine.mosaic import hook as hook_mod
+
+    _mtso_cfg(monkeypatch)
+    ids = ["p0"] + [f"l{i}" for i in range(4)]
+    aspects = {"p0": "portrait", **{f"l{i}": "landscape" for i in range(4)}}
+    assets_map = {
+        "p0": _asset("p0", w=1200, h=1800, sharp=0.99, kind="portrait"),
+        **{
+            f"l{i}": _asset(f"l{i}", w=3000, h=1687, sharp=0.35, kind="landscape")
+            for i in range(4)
+        },
+    }
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets_map,
+        trip_photo_total=40,
+        include_chapter_hero=False,
+        layout_state=ScreenLayoutPlannerState.from_trip_total(40),
+    )
+    monkeypatch.setattr(
+        hook_mod,
+        "try_mosaic_window_mcs",
+        lambda *a, **k: False,
+    )
+    begin_mosaic_capture()
+    adv = try_mosaic_window(ctx, 0)
+    assert adv == 1
+    assert ctx.screens[0]["patternId"] == "screen-portrait-1"
+
+
+def test_ac06_dense_and_large_invariants(monkeypatch) -> None:
+    """AC-MTSO-06 · synthetic chapter: no adjacent dense; large chapter cap held."""
+    from travelogue.layout_contract.planner_state import is_dense_collage_pattern
+    from travelogue.layout_engine.planner.screen_planner_stages import (
+        run_planning_loop,
+    )
+
+    _mtso_cfg(monkeypatch)
+    # Two admit-friendly six packs + filler landscapes
+    ids: list[str] = []
+    aspects: dict[str, str] = {}
+    assets_map: dict[str, dict] = {}
+    for pack in range(2):
+        for i in range(6):
+            aid = f"p{pack}l{i}"
+            ids.append(aid)
+            aspects[aid] = "landscape"
+            if i == 0:
+                assets_map[aid] = _asset(aid, w=3000, h=1687, sharp=0.95, kind="landscape")
+            else:
+                assets_map[aid] = _asset(aid, w=1900, h=1000, sharp=0.4, kind="landscape")
+    for i in range(4):
+        aid = f"tail{i}"
+        ids.append(aid)
+        aspects[aid] = "landscape"
+        assets_map[aid] = _asset(aid, w=3000, h=1687, sharp=0.7, kind="landscape")
+
+    st = ScreenLayoutPlannerState.from_trip_total(80)
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets_map,
+        trip_photo_total=80,
+        include_chapter_hero=False,
+        layout_state=st,
+    )
+    run_planning_loop(ctx)
+    patterns = [str(s.get("patternId") or "") for s in ctx.screens]
+    dense_flags = [
+        is_dense_collage_pattern(pid, min_slots=st.dense_collage_min_slots)
+        for pid in patterns
+        if pid
+    ]
+    for a, b in zip(dense_flags, dense_flags[1:]):
+        assert not (a and b), f"adjacent dense: {patterns}"
+    assert st.large_mosaic_chapter_used <= st.large_mosaic_max_per_chapter
+
+
+def test_qualify_reason_on_segment_cap_probe(monkeypatch) -> None:
+    _mtso_cfg(monkeypatch)
+    ids, aspects, assets_map = _six_landscape_admit_window()
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets_map,
+        trip_photo_total=40,
+        include_chapter_hero=False,
+        layout_state=ScreenLayoutPlannerState.from_trip_total(40),
+    )
+    from travelogue.layout_engine.mosaic.coarse_segments import CoarseSegment
+
+    ctx.coarse_segments = [CoarseSegment(0, 3)]  # seg_cap < 6
+    begin_mosaic_capture()
+    try_mosaic_window(ctx, 0)
+    _formatted, raw = drain_mosaic_capture()
+    probes = [
+        e
+        for e in raw
+        if e.get("sixHeroQualifyReason") == "six_hero_blocked:segment_cap"
+        or e.get("sixHeroOutcome") == "segment_blocked"
+    ]
+    assert probes, raw

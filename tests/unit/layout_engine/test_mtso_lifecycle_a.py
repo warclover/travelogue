@@ -371,6 +371,8 @@ def test_funnel_raw_via_drain_mosaic_capture() -> None:
         "admitSixHero",
         "sixHeroOpportunityState",
         "sixHeroFamilyId",
+        "sixHeroQualifyReason",
+        "sixHeroOutcome",
         "quotaSnapshot",
         "rejectFunnel",
     ):
