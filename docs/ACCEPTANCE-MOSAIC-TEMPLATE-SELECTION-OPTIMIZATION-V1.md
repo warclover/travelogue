@@ -77,7 +77,8 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_b_c1.py -q
 | **AC-MTSO-09** | 签名 miss / 空交集 → `signature_fallback` 保留先验集；无静默空候选 | ✅ |
 | Ordering | 1P4L 竖 main 置首；2P3L 最强竖为 main | ✅ |
 | Lifecycle | 无三元组不可见；allowlist+cohort 可见 | ✅ |
-| O-1 | 左满高竖 + 11:9 轨写进 YAML + `arLadderSignOff`；截图签核 → PR-D | ✅ 合同 / ☐ 截图 |
+| O-1 | 1P4L 左满高竖合同冻结；截图签核 → PR-D | ✅ 合同 / ☐ 截图 |
+| PR-D 几何 | 2P3L 三列：辅竖满高可读（AR&lt;1），非横宽条 | ✅ `test_prd_2p3l_aux_slot_is_portrait_readable` |
 
 ```powershell
 python -m pytest tests/unit/layout_engine/test_mtso_pr_c2_skus.py -q
@@ -85,10 +86,15 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_c2_skus.py -q
 
 ---
 
-## 5. M3 / PR-D（未开工）
+## 5. M3 / PR-D（进行中）
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MTSO-10** | `selection_optimization=false` 与基线逐屏一致 | ☐ |
-| **AC-MTSO-11** | 狗粮双阈值 + deprecated leak=0 | ☐ |
+| **AC-MTSO-10** | `selection_optimization=false` 时嵌套子开关无效；与 parent-off 基线一致 | ✅ 合成窗 `test_mtso_pr_d` |
+| **AC-MTSO-11** | 狗粮双阈值 + deprecated leak=0 | ☐ 手测 · [mtso-local-dogfood-GUIDE](./acceptance-records/mtso-local-dogfood-GUIDE.md) |
 | **AC-MTSO-12** | 盲评 / 转正或归档 | ☐ |
+| 狗粮烟测 | experiments 三元组 admit 竖主 SKU | ✅ `test_dogfood_experiments_admits_portrait_hero_sku` |
+
+```powershell
+python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py -q
+```

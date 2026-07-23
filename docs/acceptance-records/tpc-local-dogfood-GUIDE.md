@@ -36,8 +36,9 @@ mosaic:
   # 可选：开启近景连拍硬门（仓库默认 false · AC-TPC-15）
   # near_scene_clone_gate:
   #   enabled: true
-  # MTSO：若要看见 W3 experimental，须另开 template_experiments（见下）
-  # template_experiments: … → docs/config-mtso-experiments-dogfood.example.yaml
+  # MTSO：experimental / SO 狗粮见
+  #   docs/config-mtso-experiments-dogfood.example.yaml
+  #   docs/acceptance-records/mtso-local-dogfood-GUIDE.md
 
 features:
   gcs_poster_bric:

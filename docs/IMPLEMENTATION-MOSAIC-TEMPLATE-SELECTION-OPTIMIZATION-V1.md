@@ -8,7 +8,7 @@
 | **评审** | [mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) · Conditional Go |
 | **实施前调研** | [mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) · **SUP 默认已产品认可** |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-A ✅ · PR-B/C1 ✅ · PR-C2 ✅（O-1 合同冻结）**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-D 未开**） |
+| **状态** | **PR-A✅ · PR-B/C1✅ · PR-C2✅ · PR-D 进行中**（同分支 `feat/mtso-pr-a-lifecycle`；AC-10/几何已落，AC-11/12 待狗粮盲评） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MTSO PRD + 七席 + 开发可行性 SUP 展开为可执行任务卡。  
@@ -199,9 +199,15 @@
 
 > **O-1 口径**：本切片采用 **算法合同冻结**（左满高竖 main + `cols:[11,9]` / `rows:[1,1,1,1]`，`arLadderSignOff`），非独立视觉像素稿。截图盲评归 **PR-D**。
 
-### PR-D · 狗粮转正（T-30～32）
+### PR-D · 狗粮转正（T-30～32）— **进行中**
 
-- compare · 盲评 · GA 或归档
+| 卡 | 状态 | 落点 |
+|----|------|------|
+| 2P3L 辅竖几何 | ✅ | 三列 `cols:[11,3,6]`；辅竖满高 AR≈0.27 |
+| T-30 AC-10 | ✅ | `test_mtso_pr_d` parent OFF 基线 |
+| 狗粮 GUIDE | ✅ | `docs/acceptance-records/mtso-local-dogfood-GUIDE.md` |
+| T-31 AC-11 | ☐ | 代表 trip 双阈值手测 |
+| T-32 AC-12 | ☐ | 盲评 → 转 GA 或归档；勿提前写 `lte_policy` |
 
 ---
 

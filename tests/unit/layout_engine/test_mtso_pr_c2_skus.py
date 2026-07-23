@@ -110,6 +110,17 @@ def test_ac08_area_and_prominence_ratios() -> None:
         assert float(feats["heroProminenceRatio"]) + 1e-9 >= 3.0
 
 
+def test_prd_2p3l_aux_slot_is_portrait_readable() -> None:
+    """PR-D · aux slot must be tall (AR < 1), not a ~3.2 landscape strip."""
+    from travelogue.layout_templates.geometry import slot_display_aspect
+
+    tpl = get_engine().get(PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL)
+    aux = next(s for s in tpl.slots if int(s.index) == 1)
+    assert str(aux.role) == "portrait"
+    ar = slot_display_aspect(aux.rect, tpl.stage)
+    assert float(ar) < 1.0, f"aux displayAspect={ar} not portrait-readable"
+
+
 def test_order_1p4l_portrait_hero() -> None:
     ids = ["p0"] + [f"l{i}" for i in range(4)]
     aspects = {"p0": "portrait", **{f"l{i}": "landscape" for i in range(4)}}
