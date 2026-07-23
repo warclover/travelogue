@@ -6,7 +6,18 @@ from typing import Literal
 
 from travelogue.errors import CodeError
 
-Stage = Literal["ingest", "clustering", "curate", "layout", "narrate", "render", "export", "lock_structure", "lock_copy"]
+Stage = Literal[
+    "ingest",
+    "clustering",
+    "shot_grouping",
+    "curate",
+    "layout",
+    "narrate",
+    "render",
+    "export",
+    "lock_structure",
+    "lock_copy",
+]
 Until = Literal["ingest", "structure", "layout", "copy", "rendered", "exported"]
 
 STATUS_ORDER = (
@@ -23,6 +34,7 @@ STATUS_ORDER = (
 STAGE_MIN_STATUS: dict[Stage, str] = {
     "ingest": "draft_ingest",
     "clustering": "ingest_ready",
+    "shot_grouping": "ingest_ready",
     "curate": "ingest_ready",
     "layout": "structure_draft",
     "narrate": "structure_locked",

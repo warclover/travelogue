@@ -548,6 +548,22 @@ clustering:
   enableSceneSubSegments: true     # Geo×Scene 子分段 (P6-F1)
   sceneSubsegmentMinPhotos: 3
 
+# Smart Shot Grouping · PRD-SMART-SHOT-GROUPING-V1（默认 auto：有 scene 簇才投影）
+# 验收狗粮见 docs/config-ssg-dogfood.example.yaml
+shotGrouping:
+  enabled: auto                    # true | false | auto
+  minShotGroupSize: 2
+  scene:
+    timeSoftSplitHours: 6
+    mergeNoise: true
+  look:
+    enabled: auto                  # M2 · 造型分镜；无脸则 skip
+    deltaThreshold: 0.28
+    sustainFrames: 2
+  mosaic:
+    sliceCrossGroupHardReject: true
+    sameGroupAntiSlice: true
+
 preview:
   width: 1080
   height: 1920

@@ -1,0 +1,27 @@
+# SSG dogfood / acceptance path · PRD-SMART-SHOT-GROUPING-V1 D-SSG-20 / SUP-10
+# Copy knobs into your local config.yaml for vision-on SSG trials.
+# Do NOT enable vision by default in GA.
+
+vision:
+  enabled: true
+
+clustering:
+  enabled: true
+  sceneClusterMode: run_aware
+
+shotGrouping:
+  enabled: true
+  minShotGroupSize: 2
+  scene:
+    timeSoftSplitHours: 6
+    mergeNoise: true
+  look:
+    enabled: false   # M2 off until PR-D
+  mosaic:
+    sliceCrossGroupHardReject: true
+    sameGroupAntiSlice: true
+
+# Legacy time-heuristic hard gate (optional; SSG cross-group reject is independent)
+mosaic:
+  near_scene_clone_gate:
+    enabled: true

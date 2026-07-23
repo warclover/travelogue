@@ -22,6 +22,7 @@ from travelogue.config.misc import (
 )
 from travelogue.config.mosaic import MosaicConfig
 from travelogue.config.phase6 import Phase6ObservabilityConfig
+from travelogue.config.shot_grouping import ShotGroupingConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.bookends import BookendsConfig
@@ -41,6 +42,7 @@ class AppConfig:
     pipeline: PipelineConfig = field(default_factory=PipelineConfig)
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     clustering: ClusteringConfig = field(default_factory=ClusteringConfig)
+    shot_grouping: ShotGroupingConfig = field(default_factory=ShotGroupingConfig)
     vision: VisionConfig = field(default_factory=VisionConfig)
     geocode: GeocodeConfig = field(default_factory=GeocodeConfig)
     curate: CurateConfig = field(default_factory=CurateConfig)

@@ -87,7 +87,7 @@ def reject_funnel_stage(reason: object) -> str:
         return "geometry"
     if r in ("ordering_failed", "hard_invalid"):
         return "candidate"
-    if r == "near_scene_clone":
+    if r in ("near_scene_clone", "shot_group_cross"):
         return "near_scene"
     if r in ("main_ar_ineligible", "main_ar_guard"):
         return "eligibility"

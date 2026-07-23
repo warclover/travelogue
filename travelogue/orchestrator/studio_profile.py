@@ -35,10 +35,16 @@ class StudioProfile:
     """Parameter surface for unified run_trip (Studio + CLI)."""
 
     run_clustering: bool = False
+    run_shot_grouping: bool | None = None  # None → follow run_clustering (D-SSG-26)
     apply_editorial_hints: bool = False
     export_layout: str = "mobile"
     apply_layout_on_curate: bool = True
     ingest: IngestProfile = field(default_factory=IngestProfile)
+
+    def should_run_shot_grouping(self) -> bool:
+        if self.run_shot_grouping is None:
+            return bool(self.run_clustering)
+        return bool(self.run_shot_grouping)
 
     @classmethod
     def cli_default(cls) -> StudioProfile:
@@ -48,6 +54,7 @@ class StudioProfile:
     def studio_default(cls) -> StudioProfile:
         return cls(
             run_clustering=True,
+            run_shot_grouping=True,
             apply_editorial_hints=True,
             export_layout="auto",
             ingest=IngestProfile(resume_ingest=True, use_parallel_embed=True),

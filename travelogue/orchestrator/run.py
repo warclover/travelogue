@@ -105,6 +105,7 @@ def _run_trip_stages(
     stages_order = [
         "ingest",
         "clustering",
+        "shot_grouping",
         "curate",
         "layout",
         "lock_structure",
@@ -128,6 +129,7 @@ def _run_trip_stages(
     stage_index = {
         "ingest": 1,
         "clustering": 2,
+        "shot_grouping": 2,
         "curate": 2,
         "layout": 2,
         "lock_structure": 2,
@@ -233,6 +235,25 @@ def _run_trip_stages(
             if cluster_result.stage_hint and studio_hooks is not None:
                 studio_hooks.report("curate", stage_index.get("curate", 2), cluster_result.stage_hint)
             result.stages.append("clustering")
+            save()
+
+        elif stage == "shot_grouping":
+            if not profile.should_run_shot_grouping():
+                continue
+            assert_stage_allowed(trip, "shot_grouping")
+            from travelogue.curation.shot_grouping import run_shot_grouping_layer
+
+            ssg_t0 = time.monotonic()
+            ssg_result = run_shot_grouping_layer(trip, trip_dir=trip_root, cfg=get_config())
+            pipeline_timings["shotGroupingMs"] = round((time.monotonic() - ssg_t0) * 1000.0, 2)
+            flush_timings()
+            if ssg_result.stage_hint and studio_hooks is not None:
+                studio_hooks.report(
+                    "shot_grouping",
+                    stage_index.get("shot_grouping", 2),
+                    ssg_result.stage_hint,
+                )
+            result.stages.append("shot_grouping")
             save()
 
         elif stage == "curate":
