@@ -48,6 +48,22 @@ function stubPopover() {
   };
 }
 
+test("CQA · needsFullExportConfirm 认 mode=full 而非 segmentMode", async () => {
+  const { needsFullExportConfirm } = await import(
+    "../../templates/studio/js/output-recipe-logic.js"
+  );
+  const cfg = {
+    enabled: true,
+    sparseMax: 12,
+    ambiguousMax: 40,
+    narrativeChapterHintAt: 41,
+  };
+  assert.equal(needsFullExportConfirm(50, "full", "wechat_chat", cfg), true);
+  assert.equal(needsFullExportConfirm(50, "chapter", "wechat_chat", cfg), false);
+  // stale segmentMode-style "auto" must not be treated as full
+  assert.equal(needsFullExportConfirm(50, "auto", "wechat_chat", cfg), false);
+});
+
 test("poster_bric 在 INTENT/PLATFORM 映射中互逆", () => {
   assert.equal(INTENT_TO_PLATFORM.poster_bric, "poster_bric");
   assert.equal(PLATFORM_TO_INTENT.poster_bric, "poster_bric");

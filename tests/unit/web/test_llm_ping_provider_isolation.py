@@ -66,13 +66,20 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
 
     seen: dict = {}
 
-    def _fake_ping(*, provider: str | None = None) -> str:
+    def _fake_ping(
+        *,
+        provider: str | None = None,
+        secrets=None,
+        cfg=None,
+        runtime=None,
+    ) -> str:
         from travelogue.llm.client import resolve_llm_runtime
 
-        rt = resolve_llm_runtime(provider)
+        rt = runtime or resolve_llm_runtime(provider, cfg=cfg, secrets=secrets)
         seen["provider"] = rt.provider
         seen["model"] = rt.model
         seen["base_url"] = rt.base_url
+        seen["api_key"] = rt.api_key
         return f"{rt.provider}/{rt.model} @ {rt.base_url}"
 
     # handle_llm_ping 在函数内 from travelogue.llm.client import llm_ping
@@ -87,6 +94,7 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
     assert seen["provider"] == "dashscope"
     assert seen["model"] == "qwen-plus"
     assert seen["base_url"] == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
+    assert seen["api_key"] == "sk-dash-new-key-xxxxxxxxxxxx"
 
 
 def test_save_dashscope_writes_qwen_not_deepseek(
@@ -156,10 +164,16 @@ def test_ping_respects_region_intl(
     )
     seen: dict = {}
 
-    def _fake_ping(*, provider: str | None = None) -> str:
+    def _fake_ping(
+        *,
+        provider: str | None = None,
+        secrets=None,
+        cfg=None,
+        runtime=None,
+    ) -> str:
         from travelogue.llm.client import resolve_llm_runtime
 
-        rt = resolve_llm_runtime(provider)
+        rt = runtime or resolve_llm_runtime(provider, cfg=cfg, secrets=secrets)
         seen["base_url"] = rt.base_url
         return f"{rt.provider}/{rt.model} @ {rt.base_url}"
 

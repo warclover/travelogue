@@ -83,7 +83,10 @@ class StudioJobStore:
             for job in self._jobs.values():
                 if job.trip_id == trip_id and job.status in ("queued", "running"):
                     return True
-            return False
+        # CQA AC-10b · on-demand materialize counts as busy (outside job lock)
+        from travelogue.media.derivatives import is_on_demand_alive_for_trip_id
+
+        return is_on_demand_alive_for_trip_id(trip_id)
 
     def is_trip_deleting(self, trip_id: str) -> bool:
         with self._lock:
