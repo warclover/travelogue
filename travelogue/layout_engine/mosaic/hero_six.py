@@ -148,6 +148,17 @@ def six_hero_outcome_label(
     return "not_attempted"
 
 
+def _mixed_portrait_strength(
+    asset: dict,
+    *,
+    featured_weight: float,
+) -> float:
+    """Same strength axis as UR-04 / portrait_is_window_hero_max."""
+    sharp = float((asset.get("quality") or {}).get("sharpness") or 0.0)
+    mult = featured_weight if asset.get("userTier") == "featured" else 1.0
+    return sharp * mult
+
+
 def mixed_portrait_is_hero(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -158,13 +169,12 @@ def mixed_portrait_is_hero(
     layout_state: ScreenLayoutPlannerState | None = None,
     cfg: MosaicConfig | None = None,
 ) -> bool:
-    """PR-C1 · D-MTSO-03: portrait is sharpness max OR hero-score gap ≥ threshold."""
+    """PR-C1 · D-MTSO-03: portrait is window max OR leads best landscape by ≥ gap thr."""
     from travelogue.layout_contract.usage_context import build_window_context
     from travelogue.layout_engine.planner.screen_planner import (
         _is_landscape_id,
         _is_std_portrait_id,
     )
-    from travelogue.layout_engine.scoring.hero import effective_hero_score
     from travelogue.layout_engine.usage_rules.context import portrait_is_window_hero_max
 
     wctx = build_window_context(
@@ -175,9 +185,12 @@ def mixed_portrait_is_hero(
         median_sharp=median_sharp,
         featured_weight=featured_weight,
     )
+    # Branch A · UR-04 shared: portrait sharpness/featured is window max.
     if portrait_is_window_hero_max(wctx):
         return True
 
+    # Branch B · D-MTSO-03 gap: portrait leads strongest landscape by ≥ threshold
+    # even when a non-L/P peer (e.g. square) is the absolute window max.
     portraits = [
         aid for aid in asset_ids if _is_std_portrait_id(aid, aspects)
     ]
@@ -186,19 +199,18 @@ def mixed_portrait_is_hero(
     lands = [aid for aid in asset_ids if _is_landscape_id(aid, aspects)]
     if not lands:
         return False
-    med = float(median_sharp or 0.0)
-    p_score = effective_hero_score(
+    p_score = _mixed_portrait_strength(
         assets_map.get(portraits[0]) or {},
-        median_sharp=med,
         featured_weight=featured_weight,
     )
-    land_scores = [
-        effective_hero_score(
+    if p_score <= 0:
+        return False
+    land_max = max(
+        _mixed_portrait_strength(
             assets_map.get(aid) or {},
-            median_sharp=med,
             featured_weight=featured_weight,
         )
         for aid in lands
-    ]
+    )
     thr = _hero_gap_threshold(cfg)
-    return (p_score - max(land_scores)) >= thr - 1e-9
+    return (p_score - land_max) >= thr - 1e-9

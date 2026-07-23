@@ -98,6 +98,9 @@ usage:
   whenNotToUse: |
     - 竖图本身是窗口里最强的一张时（它只占右列窄槽，会被主横图压制；
       此时应让竖图走 screen-portrait-1 独立成屏）
+      MTSO 硬拒码：mixed_portrait_is_hero（与 UR-04 / D-MTSO-03 同测）
+    - 竖图相对最强横图的 sharpness/featured gap ≥ hero_gap_threshold 时
+      （即便窗内另有 square 等更强非横非竖资产，仍禁横主竖辅）
     - 主槽无合格 16:9 横图时（mainSlotPolicy 硬禁全景/竖/方图入主槽）
   designIntent: 解决“横图流里孤立竖图”的收容问题：竖图不降格为被裁的方块，而是获得满高展示位。
   siblings:

@@ -25,6 +25,10 @@ mosaic:
       - screen-mosaic-4-2l2p-weighted
     cohort_trip_ids:
       - your-trip-id-here
-  # selection_optimization 默认关；PR-B 再开
+  # selection_optimization：PR-B/C1 已落地；狗粮可显式 true（仓库默认仍 false 至 M3）
   selection_optimization:
     enabled: false
+    # hero_six_opportunity:
+    #   enabled: true
+    # mixed_hero_routing:
+    #   enabled: true

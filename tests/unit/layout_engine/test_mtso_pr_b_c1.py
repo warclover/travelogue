@@ -461,6 +461,83 @@ def test_ac06_dense_and_large_invariants(monkeypatch) -> None:
     assert st.large_mosaic_chapter_used <= st.large_mosaic_max_per_chapter
 
 
+def test_d03_gap_branch_when_square_is_window_max(monkeypatch) -> None:
+    """D-MTSO-03 · Branch B: portrait≻lands by ≥thr even if square is absolute max."""
+    from travelogue.layout_engine.mosaic.hero_six import mixed_portrait_is_hero
+
+    cfg = _mtso_cfg(monkeypatch)
+    # Keep parent ON; set a known gap threshold.
+    cfg = replace(
+        cfg,
+        selection_optimization=replace(
+            cfg.selection_optimization,
+            enabled=True,
+            hero_gap_threshold=0.15,
+        ),
+    )
+    ids = ["p0", "l0", "l1", "l2", "sq"]
+    aspects = {
+        "p0": "portrait",
+        "l0": "landscape",
+        "l1": "landscape",
+        "l2": "landscape",
+        "sq": "square",
+    }
+    assets_map = {
+        "sq": _asset("sq", w=1600, h=1600, sharp=0.99, kind="square"),
+        "p0": _asset("p0", w=1200, h=1800, sharp=0.80, kind="portrait"),
+        "l0": _asset("l0", w=3000, h=1687, sharp=0.50, kind="landscape"),
+        "l1": _asset("l1", w=3000, h=1687, sharp=0.45, kind="landscape"),
+        "l2": _asset("l2", w=3000, h=1687, sharp=0.40, kind="landscape"),
+    }
+    assert mixed_portrait_is_hero(
+        ids, aspects, assets_map, median_sharp=0.5, cfg=cfg
+    )
+    # Below threshold vs lands → no gap-branch hit (and not window max).
+    assets_map["p0"] = _asset("p0", w=1200, h=1800, sharp=0.55, kind="portrait")
+    assert not mixed_portrait_is_hero(
+        ids, aspects, assets_map, median_sharp=0.5, cfg=cfg
+    )
+
+
+def test_yaml_when_not_to_use_co_tested_with_hard_reject(monkeypatch) -> None:
+    """S-MTSO-02 · YAML whenNotToUse must name the hard-reject code; same fixture rejects."""
+    from pathlib import Path
+
+    import yaml
+
+    cfg = _mtso_cfg(monkeypatch)
+    yaml_path = (
+        Path(__file__).resolve().parents[3]
+        / "travelogue"
+        / "layout_templates"
+        / "templates"
+        / "screen-mosaic-5-main-portrait-3land.yaml"
+    )
+    doc = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+    when_not = str((doc.get("usage") or {}).get("whenNotToUse") or "")
+    assert "mixed_portrait_is_hero" in when_not
+    assert "hero_gap_threshold" in when_not
+
+    ids = ["p0"] + [f"l{i}" for i in range(4)]
+    aspects = {"p0": "portrait", **{f"l{i}": "landscape" for i in range(4)}}
+    assets_map = {
+        "p0": _asset("p0", w=1200, h=1800, sharp=0.99, kind="portrait"),
+        **{
+            f"l{i}": _asset(f"l{i}", w=3000, h=1687, sharp=0.40, kind="landscape")
+            for i in range(4)
+        },
+    }
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets_map, cfg=cfg, median_sharp=0.5
+    )
+    assert any(
+        r.get("reason") == "usage_rule:mixed_portrait_is_hero"
+        and r.get("templateId") == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+        for r in result.rejected
+    )
+
+
 def test_qualify_reason_on_segment_cap_probe(monkeypatch) -> None:
     _mtso_cfg(monkeypatch)
     ids, aspects, assets_map = _six_landscape_admit_window()

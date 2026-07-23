@@ -184,7 +184,8 @@
 | 卡 | 状态 | 落点 |
 |----|------|------|
 | T-20 硬拒不可 undo | ✅ | `candidates.py` · `usage_rule:mixed_portrait_is_hero`（SUP-06） |
-| T-21 rescue | ☑ | 沿用 `_try_mcs_single_hero_rescue`（无新几何） |
+| T-21 rescue | ✅ | 强竖 → `screen-portrait-1` |
+| P2 D-03 gap + YAML 同测 | ✅ | `mixed_portrait_is_hero` Branch B · `whenNotToUse` 点名硬拒码 |
 
 ### PR-C2 · 新 SKU（T-22～25）— **不开码**
 

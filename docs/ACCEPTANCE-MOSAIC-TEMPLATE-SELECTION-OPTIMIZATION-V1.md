@@ -64,6 +64,8 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_b_c1.py -q
 | **AC-MTSO-07** | 强竖硬拒横主竖辅；横强可落横主竖辅；不可 usage undo | ✅ |
 | SUP-06 | 父开关 ON 即硬拒，不依赖 `usage_rules.enabled` | ✅ |
 | Rescue | MCS 全失败 + 强竖 cursor → `screen-portrait-1` | ✅ |
+| D-MTSO-03 gap | 相对最强横 gap≥阈值 亦硬拒（非窗绝对最大时仍可触发） | ✅ |
+| S-MTSO-02 YAML | `whenNotToUse` 点名 `mixed_portrait_is_hero` 且与硬拒同 fixture | ✅ |
 
 > **PR-C2**（竖主 1P4L / 2P3L 继任 SKU）**⛔ O-1**：无冻结几何稿前不开码；不写 `lte_policy`。
 

@@ -341,7 +341,8 @@ mosaic:
     enabled: false
     allowlist: []
     cohort_trip_ids: []
-  # MTSO · selection optimization parent switch (PR-B+; shell only in PR-A).
+  # MTSO · selection optimization (PR-B/C1 landed; default off until M3 / O-2).
+  # Nested: hero_six_opportunity / mixed_hero_routing (inert when parent false).
   selection_optimization:
     enabled: false
   weights:
