@@ -802,7 +802,7 @@ html[data-layout="auto"] .layout-screen__grid--1col {
 /* screen-portrait-1-landscape-2 */
 html[data-layout="web"] .layout-screen__grid--portrait-left-2landscape,
 html[data-layout="auto"] .layout-screen__grid--portrait-left-2landscape {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
   align-items: stretch;
 }

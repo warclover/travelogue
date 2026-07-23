@@ -6,9 +6,10 @@ displayName: portrait · 1 · landscape · 2
 description: Reverse-migrated from legacy mosaic sources (Phase 16 W1).
 stage:
   aspect: '16:9'
+  # Equal columns (was 1:2): portrait ~0.89, each landscape ~16:9.
   cols:
   - 1
-  - 2
+  - 1
   rows:
   - 1
   - 1
