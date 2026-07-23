@@ -302,6 +302,9 @@
 | | `apply_layout_eligibility_marks` | 可排版标记 |
 | `intent_hints.py` | `peak_chapter_hints` | 用户备注峰值章 |
 | `clustering.py` | `run_clustering_layer` | **聚类层主入口** |
+| `shot_grouping.py` | `run_shot_grouping_layer` | **SSG 分镜投影主入口**（scene/weak → 可选 look） |
+| `look_split.py` | `split_look_segments` | look 边界（相对造型参考帧 + sustain） |
+| `shot_group_metrics.py` | `shot_group_coverage_ratio` / `same_shot_group_rate` | AC-01/02 |
 | `curate.py` | `run_curate` | **策展主入口** |
 
 ### 2.9 服务层（非排版核心）
@@ -321,6 +324,9 @@ ingest_into_trip          → media/ingest.py
 run_clustering_layer      → curation/clustering.py
   ├ detect_geo_events     → geo_events.py
   └ compute_scene_clusters→ scene_clusters.py (+ vision/cache.py)
+run_shot_grouping_layer   → curation/shot_grouping.py
+  ├ soft-split / weak     → scene 投影
+  └ look_split + look_appearance → vision/look_appearance.py（CLIP torso cache）
 run_curate                → curation/curate.py
   ├ apply_aesthetic_ml_calibration → aesthetic_score.py（可选 PA-4）
   ├ run_photo_cull        → photo_cull.py (+ photo_cull_ml.py)

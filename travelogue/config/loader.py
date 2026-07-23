@@ -12,6 +12,7 @@ from travelogue.config.aesthetic import aesthetic_from_dict
 from travelogue.config.app import AppConfig
 from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.bookends import bookends_config_from_dict
+from travelogue.config.shot_grouping import shot_grouping_from_dict
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cull import cull_from_dict
@@ -418,6 +419,11 @@ def load_config(path: Path | None = None) -> AppConfig:
     bookends_raw = data.get("bookends") if isinstance(data.get("bookends"), dict) else {}
     render_raw = data.get("render") if isinstance(data.get("render"), dict) else {}
     clustering_raw = data.get("clustering") if isinstance(data.get("clustering"), dict) else {}
+    shot_grouping_raw = (
+        data.get("shotGrouping")
+        if isinstance(data.get("shotGrouping"), dict)
+        else (data.get("shot_grouping") if isinstance(data.get("shot_grouping"), dict) else {})
+    )
     pipeline_raw = data.get("pipeline") if isinstance(data.get("pipeline"), dict) else {}
     cull_raw = data.get("cull") if isinstance(data.get("cull"), dict) else {}
     studio_raw = data.get("studio") if isinstance(data.get("studio"), dict) else {}
@@ -479,6 +485,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             feedback=layout_feedback_from_dict(feedback_raw),
         ),
         clustering=clustering_from_dict(clustering_raw),
+        shot_grouping=shot_grouping_from_dict(shot_grouping_raw),
         vision=vision_from_dict(vision_raw),
         geocode=GeocodeConfig(enabled=bool(geocode_raw.get("enabled", False))),
         config_path=cfg_path,

@@ -57,6 +57,38 @@ def cluster_recluster(
     )
 
 
+@cluster_app.command("reshotgroup")
+def cluster_reshotgroup(
+    trip: str = typer.Argument(..., help="trip id or path to trip.json"),
+    trips_dir: Path | None = typer.Option(
+        None, "--trips-dir", help="trips root when trip is an id"
+    ),
+    look: bool = typer.Option(
+        True,
+        "--look/--no-look",
+        help="Run M2 look split when CLIP/appearance is available (default: on)",
+    ),
+) -> None:
+    """Re-run smart shot grouping from existing sceneClusterId (SSG · no recluster)."""
+    from dataclasses import replace
+
+    from travelogue.curation.shot_grouping import run_shot_grouping_layer
+
+    svc, trip_json = _cluster_resolve(trip, trips_dir=trips_dir)
+    trip_dir = trip_json.parent
+    body = svc.load(trip_json)
+    base = get_config(reload=True)
+    look_cfg = replace(base.shot_grouping.look, enabled="true" if look else "false")
+    ssg = replace(base.shot_grouping, enabled="true", look=look_cfg)
+    cfg = replace(base, shot_grouping=ssg)
+    result = run_shot_grouping_layer(body, trip_dir=trip_dir, cfg=cfg)
+    persist_trip_snapshot(svc, trip_json, body)
+    typer.echo(
+        f"OK reshotgroup · mode={result.mode} groups={result.group_count} "
+        f"softSplits={result.soft_split_count} lookGroups={result.look_group_count}"
+    )
+
+
 @cluster_app.command("cache-clear")
 def cluster_cache_clear(
     trip: str = typer.Argument(..., help="trip id or path to trip.json"),

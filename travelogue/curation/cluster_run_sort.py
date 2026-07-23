@@ -1,4 +1,4 @@
-"""Bucket asset ordering: burst > cluster run > time (Phase 3 · G-P3-C09)."""
+"""Bucket asset ordering: burst > shotGroup > cluster run > time (SSG · D-SSG-03)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from travelogue.curation.curate_scoring import asset_sharpness, sort_bucket_asse
 
 
 def sort_bucket_asset_ids_run_aware(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
-    """Preserve burst groups, then sceneClusterId runs, then takenAt order."""
+    """Preserve burst, then shotGroupId runs, then sceneClusterId runs, then time."""
     items = [(aid, assets_by_id.get(aid, {})) for aid in bucket]
     items.sort(key=lambda x: x[1].get("takenAt") or "")
 
@@ -22,6 +22,20 @@ def sort_bucket_asset_ids_run_aware(bucket: list[str], assets_by_id: dict[str, d
                 group.append(items[j][0])
                 j += 1
             group.sort(key=lambda x: -asset_sharpness(assets_by_id.get(x, {})))
+            result.extend(group)
+            i = j
+            continue
+
+        shot_id = asset.get("shotGroupId")
+        if shot_id:
+            group = [aid]
+            j = i + 1
+            while j < len(items) and items[j][1].get("shotGroupId") == shot_id:
+                if items[j][1].get("burstGroupId"):
+                    break
+                group.append(items[j][0])
+                j += 1
+            group.sort(key=lambda x: assets_by_id.get(x, {}).get("takenAt") or "")
             result.extend(group)
             i = j
             continue
@@ -53,7 +67,9 @@ def sort_bucket_asset_ids_for_clustering(
     run_aware: bool,
 ) -> list[str]:
     if run_aware and any(
-        (assets_by_id.get(aid) or {}).get("sceneClusterId") not in (None, -1) for aid in bucket
+        (assets_by_id.get(aid) or {}).get("shotGroupId")
+        or (assets_by_id.get(aid) or {}).get("sceneClusterId") not in (None, -1)
+        for aid in bucket
     ):
         return sort_bucket_asset_ids_run_aware(bucket, assets_by_id)
     return sort_bucket_asset_ids(bucket, assets_by_id)

@@ -1,0 +1,27 @@
+{
+  "version": "1",
+  "description": "Same place / same sceneCluster · 3 looks × 3 frames + 1 flash distractor (sustain should absorb)",
+  "sceneClusterId": 1,
+  "eventId": "evt-outfit",
+  "sustainFrames": 2,
+  "lockedDeltaThreshold": 0.28,
+  "minBoundaryF1": 0.7,
+  "assets": [
+    {"id": "lookA-1", "takenAt": "2025-06-01T10:00:00Z", "goldLook": "look-A"},
+    {"id": "lookA-2", "takenAt": "2025-06-01T10:01:00Z", "goldLook": "look-A"},
+    {"id": "lookA-3", "takenAt": "2025-06-01T10:02:00Z", "goldLook": "look-A"},
+    {"id": "flash-1", "takenAt": "2025-06-01T10:03:00Z", "goldLook": "look-A", "note": "single-frame flash; gold stays A"},
+    {"id": "lookA-4", "takenAt": "2025-06-01T10:04:00Z", "goldLook": "look-A"},
+    {"id": "lookB-1", "takenAt": "2025-06-01T10:10:00Z", "goldLook": "look-B"},
+    {"id": "lookB-2", "takenAt": "2025-06-01T10:11:00Z", "goldLook": "look-B"},
+    {"id": "lookB-3", "takenAt": "2025-06-01T10:12:00Z", "goldLook": "look-B"},
+    {"id": "lookC-1", "takenAt": "2025-06-01T10:20:00Z", "goldLook": "look-C"},
+    {"id": "lookC-2", "takenAt": "2025-06-01T10:21:00Z", "goldLook": "look-C"},
+    {"id": "lookC-3", "takenAt": "2025-06-01T10:22:00Z", "goldLook": "look-C"}
+  ],
+  "groups": [
+    {"id": "look-A", "kind": "look", "assetIds": ["lookA-1", "lookA-2", "lookA-3", "flash-1", "lookA-4"]},
+    {"id": "look-B", "kind": "look", "assetIds": ["lookB-1", "lookB-2", "lookB-3"]},
+    {"id": "look-C", "kind": "look", "assetIds": ["lookC-1", "lookC-2", "lookC-3"]}
+  ]
+}

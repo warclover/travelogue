@@ -699,8 +699,9 @@ flowchart LR
 | 优先级 | 约束 | 说明 |
 |--------|------|------|
 | **1（最高）** | `burstGroupId` 完整性 | 连拍组 **不可拆屏**、不可跨 run 乱序 |
-| **2** | cluster run（`run_aware`） | 同 `sceneClusterId` 尽量相邻成 run |
-| **3（最低）** | 纯 `takenAt` 时间序 | run_aware off 或 cluster 噪声时的 fallback |
+| **2** | `shotGroupId` run（SSG） | 同 `shotGroupId` 尽量相邻成 run；见 [PRD-SMART-SHOT-GROUPING-V1](./PRD-SMART-SHOT-GROUPING-V1.md) D-SSG-03（`look` 优先于 `scene` 分镜赋值） |
+| **3** | cluster run（`run_aware`） | 同 `sceneClusterId` 尽量相邻成 run |
+| **4（最低）** | 纯 `takenAt` 时间序 | run_aware off 或 cluster 噪声时的 fallback |
 
 **与现有 curate 冲突时**
 

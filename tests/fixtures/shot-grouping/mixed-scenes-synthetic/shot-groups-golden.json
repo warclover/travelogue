@@ -1,0 +1,32 @@
+{
+  "version": "1",
+  "description": "F-SSG-M0-02 / AC-01 / AC-02 · ≥2 scenes · neighbor pairs for same-group rate",
+  "minCoverage": 0.95,
+  "minSameGroupRate": 0.85,
+  "assets": [
+    {"id": "s1a", "takenAt": "2025-05-01T09:00:00Z", "sceneClusterId": 1, "eventId": "evt-tokyo"},
+    {"id": "s1b", "takenAt": "2025-05-01T09:30:00Z", "sceneClusterId": 1, "eventId": "evt-tokyo"},
+    {"id": "s1c", "takenAt": "2025-05-01T10:00:00Z", "sceneClusterId": 1, "eventId": "evt-tokyo"},
+    {"id": "s1d", "takenAt": "2025-05-01T10:30:00Z", "sceneClusterId": 2, "eventId": "evt-tokyo"},
+    {"id": "s1e", "takenAt": "2025-05-01T11:00:00Z", "sceneClusterId": 2, "eventId": "evt-tokyo"},
+    {"id": "s1f", "takenAt": "2025-05-01T11:30:00Z", "sceneClusterId": 2, "eventId": "evt-tokyo"},
+    {"id": "s2a", "takenAt": "2025-05-03T09:00:00Z", "sceneClusterId": 3, "eventId": "evt-kyoto"},
+    {"id": "s2b", "takenAt": "2025-05-03T10:00:00Z", "sceneClusterId": 3, "eventId": "evt-kyoto"},
+    {"id": "s2c", "takenAt": "2025-05-03T11:00:00Z", "sceneClusterId": 3, "eventId": "evt-kyoto"},
+    {"id": "s2d", "takenAt": "2025-05-03T12:00:00Z", "sceneClusterId": 3, "eventId": "evt-kyoto"},
+    {"id": "noise", "takenAt": "2025-05-03T15:00:00Z", "sceneClusterId": -1, "eventId": "evt-kyoto"}
+  ],
+  "neighborPairs": [
+    ["s1a", "s1b"],
+    ["s1b", "s1c"],
+    ["s1d", "s1e"],
+    ["s1e", "s1f"],
+    ["s2a", "s2b"],
+    ["s2b", "s2c"],
+    ["s2c", "s2d"]
+  ],
+  "mustDifferPairs": [
+    ["s1a", "s1d"],
+    ["s1c", "s2a"]
+  ]
+}

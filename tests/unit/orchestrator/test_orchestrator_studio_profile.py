@@ -45,10 +45,12 @@ def test_run_trip_clustering_stage_when_enabled(tmp_path: Path) -> None:
     )
     assert "ingest" in result.stages
     assert "clustering" in result.stages
+    assert "shot_grouping" in result.stages
     assert "curate" in result.stages
     trip = json.loads(trip_json.read_text(encoding="utf-8"))
     timings = (trip.get("pipeline") or {}).get("timings") or {}
     assert "clusterMs" in timings
+    assert "shotGroupingMs" in timings
 
 
 def test_run_trip_skips_clustering_by_default(tmp_path: Path) -> None:

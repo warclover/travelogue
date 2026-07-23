@@ -111,6 +111,33 @@ trips/{tripId}/
 
 **兼容**：旧版 `curation.insights.*` **不再写入**；读取时忽略。`validate_trip` L1 将 `curation.clustering` 视为 optional 子树。
 
+### 3.4b `curation.shotGrouping` 对象（可选 · SSG · v0.2.1+）
+
+由 **shot_grouping** stage（clustering 后、curate 前）写入。权威 PRD：[PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) §5。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `version` | string | 固定 `"1"` |
+| `groups[]` | array | 分镜组；见下表 |
+| `stats` | object? | `sceneGroupCount` / `lookGroupCount` / `weakGroupCount` / `softSplitCount` / `coverageRatio` / look skip 计数等 |
+| `telemetry` | object? | AC-SSG-08 摘要（与 stats 对齐的 mode/groupCount 等） |
+
+**`groups[]` 项**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 如 `sg-scene-12a` / `sg-look-03` |
+| `kind` | enum | `scene` \| `look` \| `weak` |
+| `assetIds` | string[] | 组成员 |
+| `medoidAssetId` | string? | 代表图 |
+| `sourceSceneClusterId` | number \| null | 来源簇；weak 可为 `-1` |
+| `sourceEventId` | string? | 关联 event |
+| `lookTrackId` | string? | look 轨，如 `face-main` |
+| `signals` | string[]? | 如 `clip_scene` / `clip_torso` |
+| `confidence` | number? | \[0,1\] |
+
+`validate_trip` L1：optional 子树（`additionalProperties` 宽松 stats/telemetry）。
+
 ### 3.2 `export` 对象（v0.2.1+）
 
 | 字段 | 类型 | 默认 | 说明 |
@@ -217,6 +244,9 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 | `tagsSource` | enum? | `heuristic` \| `exif` \| `clip` \| `vlm` \| `user` |
 | `eventId` | string? | Phase 3 · 关联 `curation.clustering.segments[].id` |
 | `sceneClusterId` | number? | Phase 3 · 场景簇 ID；`-1` 噪声 |
+| `shotGroupId` | string? | SSG · 分镜组 ID（拼图/切条消费） |
+| `shotGroupKind` | enum? | SSG · `scene` \| `look` \| `weak` |
+| `shotGroupConfidence` | number? | SSG · \[0,1\] |
 | `subjectClass` | enum? | Phase 3 / 排版 V2 · `person` \| `pet` \| `landscape` \| `architecture` \| `food` \| `indoor` \| `mixed` \| `unknown` |
 | `subjectConfidence` | number? | [0, 1] |
 | `clusterSource` | enum? | `clip` \| `heuristic` \| `none` |
@@ -380,5 +410,6 @@ CLI：`travelogue export … --no-longshot` 写入 `export.longShot=false`。
 | v0.2 | 2026-05-19 | P0 冻结：pipeline、items、visual-journal |
 | v0.2.1 | 2026-05-19 | ADR-001：`tags`/`tagsSource`、`memoryAnchors`；交付形态澄清 |
 | v0.2.2 | 2026-05-28 | Phase 3：`curation.clustering`；asset `eventId` / `sceneClusterId` / `subjectClass` |
+| v0.2.3 | 2026-07-23 | SSG：`curation.shotGrouping`；asset `shotGroupId` / `shotGroupKind` / `shotGroupConfidence` |
 
 > 架构决策：[adr/001-delivery-and-media.md](./adr/001-delivery-and-media.md) · Phase 3：[adr/007-native-clustering.md](./adr/007-native-clustering.md)

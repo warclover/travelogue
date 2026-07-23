@@ -53,8 +53,9 @@ def near_scene_clone_penalty(
 ) -> float:
     """Penalize same-scene clones on non-burst mosaics (fake「切条拼图」).
 
-    Ingest often assigns unique burstGroupId per frame; time span still reveals
-    a walking burst. Patterns with prefers_burst:false must not absorb them.
+    Prefer ``shotGroupId`` when present (SSG): same-group tight windows keep the
+    anti-slice penalty; cross-group mixes rely on candidate hard-reject instead.
+    Without shot groups, fall back to the legacy time heuristic.
     """
     if len(asset_ids) < _MIN_ASSETS_FOR_CLONE:
         return 0.0
@@ -64,6 +65,12 @@ def near_scene_clone_penalty(
 
     from travelogue.layout_contract.burst import parse_taken_ts
     from travelogue.layout_contract.subject import asset_has_person
+    from travelogue.layout_engine.mosaic.shot_group_gate import distinct_shot_group_ids
+
+    group_ids = distinct_shot_group_ids(asset_ids, assets_by_id)
+    # Cross-group windows: do not apply same-walk time penalty (hard-reject owns it).
+    if len(group_ids) >= 2:
+        return 0.0
 
     stamps = [parse_taken_ts(assets_by_id.get(aid) or {}) for aid in asset_ids]
     valid = [t for t in stamps if t is not None]

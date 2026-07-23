@@ -1862,6 +1862,9 @@
         "clustering": {
           "$ref": "#/$defs/tripClustering"
         },
+        "shotGrouping": {
+          "$ref": "#/$defs/tripShotGrouping"
+        },
         "aestheticAlignment": {
           "type": "object",
           "additionalProperties": true,
@@ -1942,6 +1945,80 @@
           "minimum": 0,
           "maximum": 1,
           "description": "Average HDBSCAN membership probability for cluster members (Phase 6)"
+        }
+      }
+    },
+    "tripShotGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "assetIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "scene",
+            "look",
+            "weak"
+          ]
+        },
+        "assetIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "medoidAssetId": {
+          "type": "string"
+        },
+        "sourceSceneClusterId": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sourceEventId": {
+          "type": "string"
+        },
+        "lookTrackId": {
+          "type": "string"
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "tripShotGrouping": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "const": "1"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tripShotGroup"
+          }
+        },
+        "stats": {
+          "type": "object",
+          "additionalProperties": true
         }
       }
     },
@@ -2858,6 +2935,25 @@
           "minimum": 0,
           "maximum": 1,
           "description": "HDBSCAN membership probability (Phase 6)"
+        },
+        "shotGroupId": {
+          "type": "string",
+          "description": "SSG shot group id (PRD-SMART-SHOT-GROUPING-V1)"
+        },
+        "shotGroupKind": {
+          "type": "string",
+          "enum": [
+            "scene",
+            "look",
+            "weak"
+          ],
+          "description": "SSG shot group kind"
+        },
+        "shotGroupConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "SSG shot group confidence"
         },
         "clusterSource": {
           "type": "string",
