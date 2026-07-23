@@ -20,6 +20,8 @@ from travelogue.layout_contract.orientations import (
 )
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
+    PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+    PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
@@ -50,11 +52,22 @@ SIGNATURE_WHITELIST: dict[tuple[int, int, bool], frozenset[str]] = {
     (2, 2, False): frozenset(
         {PATTERN_PORTRAIT_2_LANDSCAPE_2, PATTERN_MOSAIC_4_2L2P_WEIGHTED}
     ),
-    # Summit: (1,4) → 5-slot main family
+    # Summit / MTSO: (1,4) → 横主 + 竖主双分支；(2,3) → 主从继任（experimental）
     (1, 4, True): frozenset(
-        {PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND, PATTERN_MOSAIC_5_HERO_3_2_PLUS_4}
+        {
+            PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+            PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
+            PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+        }
     ),
-    (1, 4, False): frozenset({PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND}),
+    (1, 4, False): frozenset(
+        {
+            PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+            PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+        }
+    ),
+    (2, 3, True): frozenset({PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL}),
+    (2, 3, False): frozenset({PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL}),
 }
 
 

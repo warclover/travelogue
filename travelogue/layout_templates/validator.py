@@ -65,11 +65,27 @@ def _slot_cells(rect: tuple[int, int, int, int]) -> set[tuple[int, int]]:
     return {(c, r) for c in range(c0, c1 + 1) for r in range(r0, r1 + 1)}
 
 
+def _main_slot_counts_as_portrait(template: TemplateDef) -> bool:
+    """MTSO · portrait-hero mains declare eligibleAspectKinds: [portrait]."""
+    elig = (template.constraints or {}).get("eligibility") or {}
+    kinds = {
+        str(k).lower()
+        for k in (elig.get("eligibleAspectKinds") or elig.get("eligible_aspect_kinds") or [])
+    }
+    return "portrait" in kinds and "landscape" not in kinds
+
+
 def _role_counts(template: TemplateDef) -> tuple[int, int]:
-    portrait = sum(1 for s in template.slots if s.role == "portrait")
-    landscape_like = sum(
-        1 for s in template.slots if s.role in ("landscape", "main", "tile", "square")
-    )
+    main_as_portrait = _main_slot_counts_as_portrait(template)
+    portrait = 0
+    landscape_like = 0
+    for s in template.slots:
+        if s.role == "portrait":
+            portrait += 1
+        elif s.role == "main" and main_as_portrait:
+            portrait += 1
+        elif s.role in ("landscape", "main", "tile", "square"):
+            landscape_like += 1
     return portrait, landscape_like
 
 

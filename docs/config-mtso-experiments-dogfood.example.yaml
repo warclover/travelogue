@@ -23,6 +23,9 @@ mosaic:
       - screen-mosaic-4-1l3p-rail
       - screen-mosaic-5-2p3l-rail
       - screen-mosaic-4-2l2p-weighted
+      # MTSO PR-C2 · O-1 冻结稿（竖主；勿把 2p3l-rail 当继任）
+      - screen-mosaic-5-1p4l-portrait-hero
+      - screen-mosaic-5-2p3l-portrait-hero-rail
     cohort_trip_ids:
       - your-trip-id-here
   # selection_optimization：PR-B/C1 已落地；狗粮可显式 true（仓库默认仍 false 至 M3）

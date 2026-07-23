@@ -12,6 +12,8 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
+    PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+    PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -142,6 +144,69 @@ def _order_mixed_p2_l2(
         if _time_near_chain(order, assets_map, burst_seconds=burst_seconds):
             return order
     return orders[0]
+
+
+def _pick_strongest_portrait(
+    portrait_ids: list[str],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> str | None:
+    if not portrait_ids:
+        return None
+    from travelogue.layout_engine.scoring.hero import effective_hero_score
+
+    med = float(median_sharp or 0.0)
+
+    def key(aid: str) -> tuple[float, float]:
+        asset = assets_map.get(aid) or {}
+        sharp = float((asset.get("quality") or {}).get("sharpness") or 0.0)
+        hero = effective_hero_score(asset, median_sharp=med)
+        return (sharp, hero)
+
+    return max(portrait_ids, key=key)
+
+
+def _order_1p4l_portrait_hero(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """MTSO · portrait main + 4 landscapes (takenAt order for rails)."""
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) != 1 or len(landscapes) < 4:
+        return None
+    main = portraits[0]
+    rails = _sort_asset_ids_by_taken(landscapes, assets_map)[:4]
+    if len(rails) < 4:
+        return None
+    return [main, rails[0], rails[1], rails[2], rails[3]]
+
+
+def _order_2p3l_portrait_hero_rail(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """MTSO · strongest portrait main, second portrait aux, 3 landscape rails."""
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 2 or len(landscapes) < 3:
+        return None
+    main = _pick_strongest_portrait(
+        portraits, assets_map, median_sharp=median_sharp
+    )
+    if not main:
+        return None
+    aux_pool = [p for p in portraits if p != main]
+    aux = _sort_asset_ids_by_taken(aux_pool, assets_map)[0]
+    rails = _sort_asset_ids_by_taken(landscapes, assets_map)[:3]
+    if len(rails) < 3:
+        return None
+    return [main, aux, rails[0], rails[1], rails[2]]
 
 
 def _order_hero_six_detailed(
@@ -315,6 +380,14 @@ def try_order_for_pattern(
         # else: fall through to role-based order (TPC W3 new SKUs)
 
     if n == 5:
+        if pattern_id == PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO:
+            return _order_1p4l_portrait_hero(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
+        if pattern_id == PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL:
+            return _order_2p3l_portrait_hero_rail(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
         if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:
             if len(portraits) < 3 or len(landscapes) < 2:
                 return None

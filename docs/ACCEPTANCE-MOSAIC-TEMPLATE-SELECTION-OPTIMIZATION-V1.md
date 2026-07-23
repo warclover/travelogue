@@ -10,7 +10,7 @@
 | **更新日期** | 2026-07-23 |
 
 > **用法**：AC 断言以 **raw** `drain_mosaic_capture` / 单测为准（D-MTSO-11），禁止只读展示 Top-3。  
-> **勾选**：✅ 自动化已锁 · ☑ 工程对齐待狗粮 · ☐ 未做 · ⛔ 挡门（O-1 等）。
+> **勾选**：✅ 自动化已锁 · ☑ 工程对齐待狗粮 · ☐ 未做。
 
 ---
 
@@ -20,7 +20,7 @@
 |----|--------|------|
 | AC-MTSO-W0-01 | PRD v0.2.0 + SUP-01～10 产品认可 | ✅ |
 | AC-MTSO-W0-02 | 本 ACCEPTANCE 已拆（SUP-10 / BLK-08） | ✅ |
-| AC-MTSO-W0-03 | PR 列车：A → B → C1 → C2(O-1) → D | ✅ |
+| AC-MTSO-W0-03 | PR 列车：A → B → C1 → C2 → D | ✅ |
 
 ---
 
@@ -67,11 +67,25 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_b_c1.py -q
 | D-MTSO-03 gap | 相对最强横 gap≥阈值 亦硬拒（非窗绝对最大时仍可触发） | ✅ |
 | S-MTSO-02 YAML | `whenNotToUse` 点名 `mixed_portrait_is_hero` 且与硬拒同 fixture | ✅ |
 
-> **PR-C2**（竖主 1P4L / 2P3L 继任 SKU）**⛔ O-1**：无冻结几何稿前不开码；不写 `lte_policy`。
+---
+
+## 4. M2 / PR-C2 · 竖主 SKU（O-1 合同冻结）
+
+| ID | 期望 | 结果 |
+|----|------|------|
+| **AC-MTSO-08** | 两 SKU：`status=experimental`；主槽面积≥0.55；主从≥3:1；不进 `MOSAIC_5_PATTERN_IDS` / `lte_policy` | ✅ `test_mtso_pr_c2_skus` |
+| **AC-MTSO-09** | 签名 miss / 空交集 → `signature_fallback` 保留先验集；无静默空候选 | ✅ |
+| Ordering | 1P4L 竖 main 置首；2P3L 最强竖为 main | ✅ |
+| Lifecycle | 无三元组不可见；allowlist+cohort 可见 | ✅ |
+| O-1 | 左满高竖 + 11:9 轨写进 YAML + `arLadderSignOff`；截图签核 → PR-D | ✅ 合同 / ☐ 截图 |
+
+```powershell
+python -m pytest tests/unit/layout_engine/test_mtso_pr_c2_skus.py -q
+```
 
 ---
 
-## 4. M3 / PR-D（未开工）
+## 5. M3 / PR-D（未开工）
 
 | ID | 期望 | 结果 |
 |----|------|------|

@@ -417,8 +417,8 @@
 | [PRD-PHASE21-mosaic-density-budget.md](./PRD-PHASE21-mosaic-density-budget.md) | 拼图密度预算 · ☑ 已合入 |
 | [IMPLEMENTATION-PHASE21.md](./IMPLEMENTATION-PHASE21.md) | P21 实施清单 |
 | [PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | **拼图模板选型 MTSO V1** **v0.2.0**（Conditional Go · Kickoff M1） |
-| [IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | MTSO 实施 **v0.2.0** · PR-A✅ · PR-B/C1 |
-| [ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | MTSO 验收 · AC-01～07/13（C2 待 O-1） |
+| [IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./IMPLEMENTATION-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | MTSO 实施 **v0.2.0** · PR-A/B/C1/C2 ✅ |
+| [ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | MTSO 验收 · AC-01～09/13（PR-D 待狗粮） |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | MTSO 七席联评 · Conditional Go |
 | [acceptance-records/mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) | MTSO 开发可行性 · SUP 已认可 |
 | [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |

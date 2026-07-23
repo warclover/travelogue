@@ -8,7 +8,7 @@
 | **评审** | [mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) · Conditional Go |
 | **实施前调研** | [mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) · **SUP 默认已产品认可** |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-A ✅ · PR-B/C1 ✅（P1 缺口已补）**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-C2 ⛔ O-1**） |
+| **状态** | **PR-A ✅ · PR-B/C1 ✅ · PR-C2 ✅（O-1 合同冻结）**（同分支 `feat/mtso-pr-a-lifecycle`；**PR-D 未开**） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MTSO PRD + 七席 + 开发可行性 SUP 展开为可执行任务卡。  
@@ -42,7 +42,7 @@
 | **06** | `mixed_portrait_is_hero` 硬拒且 **不可** usage undo |
 | **07** | 孪生可双候选；emit tie-break → canonical；配额按 family |
 | **08** | cohort 空 = 无人可见 |
-| **09** | PR-C2 前 O-1 ≥1 冻结几何稿 |
+| **09** | O-1：PR-C2 以算法合同冻结稿落地（左满高竖 + 11:9 轨；非视觉像素稿） |
 | **10** | M2 合码前拆 ACCEPTANCE（本 IMPLEMENTATION 已起；ACCEPTANCE 随 PR-B） |
 
 ---
@@ -187,9 +187,17 @@
 | T-21 rescue | ✅ | 强竖 → `screen-portrait-1` |
 | P2 D-03 gap + YAML 同测 | ✅ | `mixed_portrait_is_hero` Branch B · `whenNotToUse` 点名硬拒码 |
 
-### PR-C2 · 新 SKU（T-22～25）— **不开码**
+### PR-C2 · 新 SKU（T-22～25）— **✅ O-1 合同冻结**
 
-- **⛔ O-1**：无冻结竖主 1P4L / 2P3L 几何稿前不写 YAML/CSS/`lte_policy`
+| 卡 | 状态 | 落点 |
+|----|------|------|
+| T-22 YAML×2 experimental | ✅ | `screen-mosaic-5-1p4l-portrait-hero` · `…-2p3l-portrait-hero-rail` |
+| T-23 ordering | ✅ | `builders._order_1p4l_portrait_hero` / `_order_2p3l_portrait_hero_rail` |
+| T-24 signature | ✅ | `SIGNATURE_WHITELIST` `(1,4,*)` / `(2,3,*)`；miss→`signature_fallback` |
+| T-25 校验/面积 | ✅ | validator main-as-portrait；主槽≥0.55 · 主从≥3:1 |
+| **不写** | ✅ | `lte_policy` / `MOSAIC_5_PATTERN_IDS`（GA 仍仅旧对） |
+
+> **O-1 口径**：本切片采用 **算法合同冻结**（左满高竖 main + `cols:[11,9]` / `rows:[1,1,1,1]`，`arLadderSignOff`），非独立视觉像素稿。截图盲评归 **PR-D**。
 
 ### PR-D · 狗粮转正（T-30～32）
 

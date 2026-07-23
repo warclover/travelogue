@@ -40,6 +40,10 @@ PATTERN_MOSAIC_5_2P3L_EQUAL = "screen-mosaic-5-2p3l-equal"
 PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 = "screen-mosaic-5-hero-3-2-plus-4"
 PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4 = "screen-mosaic-5-main-hero-plus-4"
 PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 = "screen-mosaic-6-main-hero-plus-5"
+# MTSO PR-C2 · experimental（勿进 MOSAIC_5_PATTERN_IDS / lte_policy 直至转正）
+PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO = "screen-mosaic-5-1p4l-portrait-hero"
+PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL = "screen-mosaic-5-2p3l-portrait-hero-rail"
+PATTERN_MOSAIC_5_2P3L_RAIL = "screen-mosaic-5-2p3l-rail"
 
 # --- 3 / 4 / 6 · reuse existing grid patterns (S2) ---
 PATTERN_PORTRAIT_3 = "screen-portrait-3"

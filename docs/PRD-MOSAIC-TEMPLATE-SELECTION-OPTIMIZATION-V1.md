@@ -389,7 +389,7 @@ idle → armed（结构合格）→ consumed（六图家族胜出）
 
 | # | 问题 | 状态（七席 2026-07-23） |
 |---|------|-------------------------|
-| O-1 | 竖主 1P4L 几何轨道 | **开放至 PR-C**：视觉出 ≥1 冻结稿（左满高竖优先探索）；算法主从比先生效 |
+| O-1 | 竖主 1P4L 几何轨道 | **已关（合同冻结）**：PR-C2 落地左满高竖 + `cols:[11,9]`；截图盲评归 PR-D |
 | O-2 | `selection_optimization` 默认 true 时机 | **已关**：保持默认 false 至 M3 盲评后另决策；父 OFF 则子无效 |
 | O-3 | hero gap 与 URO | **已关**：默认共用 `usage_rules.hero_gap_threshold`；MTSO 可覆盖须单测锁 |
 | O-4 | `2p3l-rail` 去留 | **已关**：留 YAML + 文首标非继任；默认不进 allowlist；禁止转 GA |
@@ -405,7 +405,7 @@ idle → armed（结构合格）→ consumed（六图家族胜出）
 | BLK-MTSO-03 资格两段论 | M2 | ✅ 合同已回写本文；实现待 PR-B |
 | BLK-MTSO-04 机会作用域 | M2 | ✅ 合同已回写本文；实现待 PR-B |
 | BLK-MTSO-05 AC-11 双阈值 | M2 | ✅ 合同已回写本文；测待 PR-B |
-| BLK-MTSO-06 SKU/孪生/O-1 稿 | M2/PR-C | ⬜ |
+| BLK-MTSO-06 SKU/孪生/O-1 稿 | M2/PR-C | ✅ 合同冻结 SKU 已落；截图签核 → PR-D |
 | BLK-MTSO-07 漏斗 fixture | M1 | ⬜ PR-A |
 | BLK-MTSO-08 拆 ACCEPTANCE/IMPL | M2 | ⬜ M1 豁免 · M2 前必拆 |
 
