@@ -602,13 +602,26 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
 
     filename = payload.get("filename") or payload.get("relPath")
     filename_s = str(filename).strip() if filename else None
+    # CQA AC-13 / D-07 · reject reserved + script/shell suffixes (disk name still server-owned)
+    from travelogue.export.longshot import client_longshot_filename_denied
+
+    if client_longshot_filename_denied(filename_s):
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_LNG_CAPTURE_FAILED",
+                "message": "非法输出文件名",
+            },
+        )
+        return
 
     try:
         out = write_longshot_upload(
             trip_dir,
             data,
             fmt=fmt,
-            filename=filename_s,
+            filename=None,  # I-CQA-09 · never trust client name for disk
             segment_index=seg_i,
             segment_total=seg_n,
         )

@@ -24,6 +24,7 @@ var _focusTrapHandler = null;
 var _focusRestoreEl = null;
 var _repositionHandler = null;
 var _popoverResizeObserver = null;
+var _llmStatusHandler = null;
 var POPOVER_FOCUSABLE = [
   "a[href]",
   "button:not([disabled])",
@@ -501,9 +502,13 @@ export function initSettingsPanel() {
     window.addEventListener("travelogue:capability-card-done", function () {
       maybeShowSettingsMovedHint();
     });
-    window.addEventListener("travelogue:llm-status", function (ev) {
-      applyAiStatus((ev && ev.detail) || {});
-    });
+    // CQA AC-18 · bind once (initSettingsPanel may re-enter in harness)
+    if (!_llmStatusHandler) {
+      _llmStatusHandler = function (ev) {
+        applyAiStatus((ev && ev.detail) || {});
+      };
+      window.addEventListener("travelogue:llm-status", _llmStatusHandler);
+    }
   } catch (_e) {
     /* ignore */
   }

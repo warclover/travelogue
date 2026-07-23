@@ -445,6 +445,99 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         handler._json_response(status, body)
         return
 
+    # CQA I-CQA-08 · HTTP force must pass PDG delete gate before import job starts
+    force_cleared = False
+    if force:
+        from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
+        from travelogue.web.studio_pipeline import resolve_studio_trip_dir
+        from travelogue.web.studio_trip_delete import clear_trip_dir_via_tombstone
+
+        _, force_trip_dir = resolve_studio_trip_dir(
+            album_path,
+            trips_dir=trips_root,
+            title=title,
+            place=place,
+            trip_id=trip_id_str,
+        )
+        if force_trip_dir.exists() and any(force_trip_dir.iterdir()):
+            disk_id = force_trip_dir.name
+            trip_json = force_trip_dir / "trip.json"
+            trip_meta: dict = {}
+            if trip_json.is_file():
+                try:
+                    import json
+
+                    loaded = json.loads(trip_json.read_text(encoding="utf-8"))
+                    if isinstance(loaded, dict):
+                        trip_meta = loaded
+                except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                    trip_meta = {}
+            if is_protected_demo_trip(disk_id, trip_meta):
+                if upload_dir:
+                    delete_upload_dir(upload_dir, trips_dir=trips_root)
+                if precreated_job:
+                    get_job_store().finish_import()
+                handler._json_response(
+                    403,
+                    {
+                        "ok": False,
+                        "error": "E_TRIP_DELETE_DENIED",
+                        "message": "该画册正在使用或受保护，无法覆盖导入",
+                    },
+                )
+                return
+            store_gate = get_job_store()
+            if store_gate.is_trip_busy(disk_id):
+                if upload_dir:
+                    delete_upload_dir(upload_dir, trips_dir=trips_root)
+                if precreated_job:
+                    store_gate.finish_import()
+                handler._json_response(
+                    409,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_JOB_BUSY",
+                        "message": "该画册正在使用或受保护，无法覆盖导入",
+                    },
+                )
+                return
+            if not store_gate.begin_trip_delete(disk_id):
+                if upload_dir:
+                    delete_upload_dir(upload_dir, trips_dir=trips_root)
+                if precreated_job:
+                    store_gate.finish_import()
+                handler._json_response(
+                    409,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_JOB_BUSY",
+                        "message": "该画册正在使用或受保护，无法覆盖导入",
+                    },
+                )
+                return
+            try:
+                clear_trip_dir_via_tombstone(force_trip_dir)
+                force_cleared = True
+            except OSError:
+                _log.exception("force import tombstone clear failed for %s", force_trip_dir)
+                if upload_dir:
+                    delete_upload_dir(upload_dir, trips_dir=trips_root)
+                if precreated_job:
+                    store_gate.finish_import()
+                handler._json_response(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "E_TRIP_DELETE_FAILED",
+                        "message": "该画册正在使用或受保护，无法覆盖导入",
+                    },
+                )
+                return
+            finally:
+                store_gate.end_trip_delete(disk_id)
+            if not trip_id_str:
+                trip_id_str = disk_id
+
     store = get_job_store()
     job = precreated_job or store.create_import_job()
     if job is None:
@@ -483,7 +576,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         "title": title,
         "place": place,
         "placeUserSet": place_user_set,
-        "force": force,
+        "force": bool(force) and not force_cleared,
         "forceStub": force_stub,
         "dedupe": not (use_demo_album or is_demo_album_path(str(album_path))),
         "host": host,
