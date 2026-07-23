@@ -465,6 +465,42 @@ def score_candidate(
     penalties["main_area_ratio"] = main_area_ratio_penalty(
         str(screen.get("patternId") or "")
     )
+    # MSA · S-MSA-06 · prospective mismatch penalties (finalize applies real fit later)
+    from travelogue.config.mosaic import effective_slot_adaptation_enabled
+
+    if effective_slot_adaptation_enabled(cfg):
+        from travelogue.layout_engine.mosaic.msa_fit import crop_risk_for_pair
+        from travelogue.layout_templates.geometry import slot_display_aspect
+        from travelogue.layout_templates.registry import get_engine
+
+        risks: list[float] = []
+        pid = str(screen.get("patternId") or "")
+        try:
+            tpl = get_engine().get(pid) if pid else None
+        except KeyError:
+            tpl = None
+        if tpl is not None:
+            for sl in screen.get("slots") or []:
+                idx = int(sl.get("slot", -1))
+                meta = next((s for s in tpl.slots if s.index == idx), None)
+                if meta is None:
+                    continue
+                aid = sl.get("assetId")
+                asset = assets_by_id.get(aid) if aid else None
+                try:
+                    da = float(sl.get("displayAspect") or 0.0)
+                except (TypeError, ValueError):
+                    da = 0.0
+                if da <= 0:
+                    da = float(slot_display_aspect(meta.rect, tpl.stage))
+                risks.append(crop_risk_for_pair(asset, da))
+        max_risk = max(risks) if risks else 0.0
+        mean_risk = sum(risks) / len(risks) if risks else 0.0
+        penalties["crop_risk_penalty"] = max_risk
+        # aspect_fit as penalty = mean mismatch proxy (higher = worse fit)
+        penalties["aspect_fit"] = mean_risk
+        # whitespace unknown pre-contain; reserve key at 0 for weight_map stability
+        penalties["whitespace_penalty"] = 0.0
     # Soft trip_total prior (was hard MIN_TRIP_PHOTOS_FOR_MOSAIC)
     if trip_photo_total > 0 and trip_photo_total < 20:
         penalties["trip_small"] = 0.7

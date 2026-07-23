@@ -442,7 +442,7 @@ M2 可接人脸框×槽 IoU（承接 DESIGN-PHASE15 D-MCS-14 几何版）。
 |---|------|------|
 | **O-MSA-01** | `whitespace_max` 默认 0.08 | **暂定 0.08** · M3 盲评可 ±0.02 |
 | **O-MSA-02** | contain 底色 | **默认杂志纸色** · M2 前出样（BLK-06） |
-| **O-MSA-03** | M1 族白名单最终列表 | **开放** · 候选：横主 5/6 hero、竖主 1P4L/2P3L、4-hero-sidebar |
+| **O-MSA-03** | M1 族白名单最终列表 | **已冻结** · 横主 6/5-hero + 4-hero-sidebar + 竖主 `1p4l-portrait-hero` / `2p3l-portrait-hero-rail` / `main-portrait-3land` |
 | **O-MSA-04** | screen 是否持久化 override | **已关（持久化）** · 见 D-02 / BLK-02 |
 | **O-MSA-05** | 默认 `enabled=true` 时机 | **Hold off** · 见 [决策 2026-07-23](./acceptance-records/msa-default-on-decision-2026-07-23.md)；AC-09 签核前保持 false |
 

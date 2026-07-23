@@ -423,7 +423,7 @@
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | MTSO 七席联评 · Conditional Go |
 | [acceptance-records/mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) | MTSO 开发可行性 · SUP 已认可 |
 | [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **拼图槽位自适应 MSA V1** **v0.2.0**（Conditional Go · Kickoff M0） |
-| [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 实施 · M0～PR-C ✅ · 默认仍 off |
+| [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 实施 · M0～PR-C + gap-close ✅ · 默认仍 off |
 | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 验收 · AC-01～08/10/11 ✅ · AC-09 待盲评 |
 | [acceptance-records/msa-contain-visual-contract-BLK06.md](./acceptance-records/msa-contain-visual-contract-BLK06.md) | MSA BLK-06 contain 纸色视觉合同 |
 | [acceptance-records/msa-local-dogfood-GUIDE.md](./acceptance-records/msa-local-dogfood-GUIDE.md) | MSA 本机狗粮 GUIDE |

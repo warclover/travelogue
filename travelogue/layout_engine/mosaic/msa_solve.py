@@ -9,12 +9,17 @@ from travelogue.config.mosaic import SlotAdaptationConfig, SlotAdaptationSolveCo
 from travelogue.layout_templates.geometry import slot_display_aspect, solve_tracks
 from travelogue.layout_templates.models import TemplateDef, TemplateStage
 
-# M1 whitelist · landscape-main families (O-MSA-03 candidates)
+# M1 whitelist · O-MSA-03 / 七席 S-02 冻结
 MSA_M1_PATTERN_WHITELIST: frozenset[str] = frozenset(
     {
+        # 横主 hero
         "screen-mosaic-6-main-hero-plus-5",
         "screen-mosaic-5-main-hero-plus-4",
         "screen-mosaic-4-hero-70-sidebar",
+        # 竖主（实验 SKU + GA 竖主）
+        "screen-mosaic-5-1p4l-portrait-hero",
+        "screen-mosaic-5-2p3l-portrait-hero-rail",
+        "screen-mosaic-5-main-portrait-3land",
     }
 )
 
@@ -57,8 +62,12 @@ def _main_slot(template: TemplateDef) -> Any | None:
     return template.slots[0] if template.slots else None
 
 
+def _eligibility(template: TemplateDef) -> dict[str, Any]:
+    return (template.constraints or {}).get("eligibility") or {}
+
+
 def _area_floor(template: TemplateDef) -> float:
-    elig = (template.constraints or {}).get("eligibility") or {}
+    elig = _eligibility(template)
     band = elig.get("heroAreaBand")
     if isinstance(band, (list, tuple)) and band:
         try:
@@ -69,6 +78,58 @@ def _area_floor(template: TemplateDef) -> float:
     if dominance == "extreme":
         return 0.55
     return 0.35
+
+
+def _prominence_floor(template: TemplateDef) -> float | None:
+    """Extreme hero families require main/max_aux ≥ 3 (MTSO/MGQ)."""
+    elig = _eligibility(template)
+    if str(elig.get("heroDominance") or "").lower() == "extreme":
+        return 3.0
+    return None
+
+
+def main_is_portrait_family(template: TemplateDef) -> bool:
+    elig = _eligibility(template)
+    kinds = {str(k).lower() for k in (elig.get("eligibleAspectKinds") or [])}
+    if not kinds:
+        return False
+    return "portrait" in kinds and "landscape" not in kinds
+
+
+def resolve_main_r_star(template: TemplateDef, *, r_land: float | None, r_port: float | None) -> float | None:
+    """Pick main-slot AR target: land peak for landscape-main, port peak for portrait-main."""
+    elig = _eligibility(template)
+    if main_is_portrait_family(template):
+        if r_port is not None and r_port > 0:
+            return float(r_port)
+        try:
+            target = elig.get("targetDisplayAspect")
+            if target is not None:
+                return float(target)
+        except (TypeError, ValueError):
+            pass
+        return None
+    return float(r_land) if r_land is not None and r_land > 0 else None
+
+
+def _prominence_ratio(
+    template: TemplateDef, cols: Sequence[float], rows: Sequence[float]
+) -> float | None:
+    main = _main_slot(template)
+    if main is None:
+        return None
+    main_a = slot_area_fraction(tuple(main.rect), cols, rows)
+    others = [
+        slot_area_fraction(tuple(s.rect), cols, rows)
+        for s in template.slots
+        if s.index != main.index
+    ]
+    if not others:
+        return None
+    denom = max(others)
+    if denom <= 0:
+        return None
+    return main_a / denom
 
 
 def _clamp_weights(
@@ -226,7 +287,14 @@ def solve_track_override(
     stage_f = _stage_with(aspect, solved_cols, solved_rows, gap=template.stage.gap)
     main_ar = slot_display_aspect(main_rect, stage_f)
     main_area = slot_area_fraction(main_rect, solved_cols, solved_rows)
-    if abs(main_ar - r_hero_target) > MAIN_AR_TOL or main_area + 1e-9 < amin:
+    prom = _prominence_ratio(template, solved_cols, solved_rows)
+    pmin = _prominence_floor(template)
+    prom_fail = pmin is not None and (prom is None or prom + 1e-9 < pmin)
+    if (
+        abs(main_ar - r_hero_target) > MAIN_AR_TOL
+        or main_area + 1e-9 < amin
+        or prom_fail
+    ):
         return MsaSolveResult(
             ok=False,
             cols=base_cols,

@@ -145,7 +145,9 @@ def test_ac05_solve_miss_keeps_static(monkeypatch: pytest.MonkeyPatch) -> None:
             land_peak="three_two",
             port_peak="none",
             land_median_r=1.5,
+            port_median_r=None,
             r_hero_target=0.2,
+            r_port_target=None,
         ),
     )
     summary = maybe_apply_slot_adaptation(screen, PATTERN_6, assets_map=assets, cfg=cfg.mosaic)

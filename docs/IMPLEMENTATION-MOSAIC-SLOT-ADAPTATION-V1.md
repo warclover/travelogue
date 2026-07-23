@@ -7,8 +7,8 @@
 | **验收** | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) |
 | **评审** | [msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) · Conditional Go |
 | **DOC-STATUS** | **active** |
-| **状态** | **M0～PR-C ✅**（AC-01～08/10/11 · AC-09 待实册盲评签核）；默认仍 off |
-| **分支** | `feat/msa-pr-c` |
+| **状态** | **M0～PR-C ✅ + gap-close**（白名单竖主 · 电影轨 · 评分 · prominence）；AC-09 待实册盲评；默认仍 off |
+| **分支** | `feat/msa-gap-close` |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MSA PRD + 七席展开为可执行任务卡。  
@@ -169,7 +169,7 @@
 | **T-MSA-10** | crop_risk 代理 + contain 门 + whitespace 预算 | ✅ AC-06 |
 | **T-MSA-11** | contain 杂志纸色（BLK-06） | ✅ AC-06v |
 | **T-MSA-12** | 分配精修：最扁辅槽保护 | ✅ AC-07 |
-| **T-MSA-13** | 评分项：aspect_fit / crop_risk_penalty / whitespace_penalty | ☐ 可选（候选打分在 finalize 前，延后） |
+| **T-MSA-13** | 评分项：aspect_fit / crop_risk_penalty / whitespace_penalty | ✅ 前瞻 mismatch（MSA ON；whitespace 预留 0） |
 | **T-MSA-14** | 日志补齐 cropRisk[] / whitespaceRatio | ✅ AC-08 |
 | **T-MSA-20** | `msa-local-dogfood-GUIDE` + A/B/C 截图清单 | ✅ GUIDE（AC-09 手测签核开放） |
 | **T-MSA-21** | MTSO×MSA 开关矩阵回归 | ✅ AC-10 |
@@ -216,3 +216,4 @@
 | **v0.1.0** | 2026-07-23 | M0 拆文：PR-A 任务卡详述 · PR-B/C 大纲 · 对齐 BLK-MSA-05 |
 | **v0.2.0** | 2026-07-23 | PR-B：crop_risk contain · whitespace · aux 保护 · BLK-06 纸色合同 |
 | **v0.3.0** | 2026-07-23 | PR-C：狗粮 GUIDE · AC-10 矩阵 · AC-11 默认 hold off |
+| **v0.3.1** | 2026-07-23 | gap-close：O-03 白名单竖主 · 电影轨 · S-MSA-06 评分 · prominence · 超预算重求解一次 |

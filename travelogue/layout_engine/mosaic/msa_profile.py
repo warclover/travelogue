@@ -24,7 +24,9 @@ class MsaProfile:
     land_peak: str  # three_two | four_three | sixteen_nine | mixed | none
     port_peak: str  # two_three | three_four | mixed | none
     land_median_r: float | None
-    r_hero_target: float | None
+    port_median_r: float | None
+    r_hero_target: float | None  # landscape-main target
+    r_port_target: float | None  # portrait-main target
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -34,7 +36,9 @@ class MsaProfile:
             "landPeak": self.land_peak,
             "portPeak": self.port_peak,
             "landMedianR": self.land_median_r,
+            "portMedianR": self.port_median_r,
             "rHeroTarget": self.r_hero_target,
+            "rPortTarget": self.r_port_target,
         }
 
 
@@ -149,6 +153,7 @@ def build_msa_profile(
 
     port_peak = _peak_from_labels(port_labels, single_frac=SINGLE_PEAK_FRACTION)
     land_median = _median(land_rs) if land_rs else None
+    port_median = _median(port_rs) if port_rs else None
 
     if land_peak in land_nom:
         r_hero: float | None = land_nom[land_peak]
@@ -157,6 +162,14 @@ def build_msa_profile(
     else:
         r_hero = None
 
+    port_nom = {"two_three": 2 / 3, "three_four": 0.75}
+    if port_peak in port_nom:
+        r_port: float | None = port_nom[port_peak]
+    elif port_peak == "mixed" and port_median is not None:
+        r_port = _clamp(port_median, 0.55, 0.85)
+    else:
+        r_port = None
+
     return MsaProfile(
         n_land=len(land_rs),
         n_port=len(port_rs),
@@ -164,5 +177,7 @@ def build_msa_profile(
         land_peak=land_peak,
         port_peak=port_peak,
         land_median_r=round(land_median, 4) if land_median is not None else None,
+        port_median_r=round(port_median, 4) if port_median is not None else None,
         r_hero_target=round(r_hero, 4) if r_hero is not None else None,
+        r_port_target=round(r_port, 4) if r_port is not None else None,
     )

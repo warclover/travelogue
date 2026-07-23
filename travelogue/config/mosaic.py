@@ -236,6 +236,10 @@ class MosaicConfig:
             "main_not_window_best": 0.4,
             "main_clone_in_sidebar": 0.3,
             "main_area_ratio": 0.35,
+            # MSA · S-MSA-06 soft penalties (active only when slot_adaptation ON)
+            "crop_risk_penalty": 0.25,
+            "whitespace_penalty": 0.20,
+            "aspect_fit": 0.15,
         }
     )
     # LSE W3b capability flags (set via layout_engine.adapter mosaic_config_from_pack)
