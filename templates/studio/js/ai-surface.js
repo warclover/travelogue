@@ -1,10 +1,11 @@
 /**
- * NAS · AI 产品面门控（FE-NAS-00）
- * 仅读服务端 GET /__travelogue/config 的 aiSurfaceEnabled；禁止假装读 process env。
+ * NAS · AI 产品面门控（FE-NAS-00 / QFX D-QFX-03）
+ * 仅读服务端 GET /__travelogue/config 的 aiSurfaceEnabled；不导出写 setter。
  */
 "use strict";
 
 import { trackStudioEvent } from "./analytics.js";
+import { studioAuthHeaders } from "./http.js";
 
 var _enabled = false;
 var _hydratePromise = null;
@@ -14,13 +15,9 @@ export function isAiSurfaceEnabled() {
   return !!_enabled;
 }
 
-export function setAiSurfaceEnabled(value) {
-  _enabled = !!value;
-}
-
-export function hydrateAiSurfaceFromConfig(cfg) {
+function _applyAiSurfaceFromConfig(cfg) {
   if (cfg && typeof cfg.aiSurfaceEnabled === "boolean") {
-    setAiSurfaceEnabled(cfg.aiSurfaceEnabled);
+    _enabled = !!cfg.aiSurfaceEnabled;
   }
   return isAiSurfaceEnabled();
 }
@@ -36,32 +33,30 @@ function trackAiSurfaceGateOnce() {
 }
 
 /**
- * 幂等：全站共享一次 config 拉取（默认 false，异步后翻转 dark）。
+ * 幂等：全站共享一次 config 拉取（默认 false，异步后按服务端翻转）。
+ * 失败不钉死 false、不误报 gate；允许后续重试。
  */
 export function ensureAiSurfaceHydrated(opts) {
   opts = opts || {};
   if (_hydratePromise) return _hydratePromise;
-  var headers = {};
-  try {
-    if (typeof window !== "undefined" && window.__studioAuthHeaders) {
-      headers = window.__studioAuthHeaders({}) || {};
-    }
-  } catch (_e) {
-    /* ignore */
-  }
-  _hydratePromise = fetch("/__travelogue/config", { headers: headers })
+  _hydratePromise = fetch("/__travelogue/config", {
+    headers: studioAuthHeaders({}),
+  })
     .then(function (r) {
       return r && r.ok ? r.json() : null;
     })
     .then(function (cfg) {
-      hydrateAiSurfaceFromConfig(cfg || {});
+      if (!cfg || typeof cfg.aiSurfaceEnabled !== "boolean") {
+        _hydratePromise = null;
+        return isAiSurfaceEnabled();
+      }
+      _applyAiSurfaceFromConfig(cfg);
       trackAiSurfaceGateOnce();
       return isAiSurfaceEnabled();
     })
     .catch(function () {
-      setAiSurfaceEnabled(false);
-      trackAiSurfaceGateOnce();
-      return false;
+      _hydratePromise = null;
+      return isAiSurfaceEnabled();
     });
   return _hydratePromise;
 }

@@ -16,9 +16,9 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 150,
+    "bool_fields": 151,
     "default_true": 97,
-    "default_false": 53
+    "default_false": 54
   },
   "appconfig_bools": {
     "aesthetic.enabled": true,
@@ -150,6 +150,7 @@
     "pipeline.deferred_derivatives": true,
     "pipeline.parallel_embed": true,
     "pipeline.parallel_ingest": false,
+    "studio.ai_surface_enabled": false,
     "studio.g1_confirm_structure": false,
     "studio.gcs_poster_bric.enabled": false,
     "studio.import_dual_mode_enabled": true,

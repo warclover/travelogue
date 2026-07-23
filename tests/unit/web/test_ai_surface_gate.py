@@ -171,6 +171,71 @@ def test_config_exposes_ai_surface_enabled_false(monkeypatch, tmp_path: Path):
     assert handler._captured["body"].get("aiSurfaceEnabled") is False
 
 
+def test_llm_status_403_when_surface_off(monkeypatch):
+    """AC-NAS-17c / AC-QFX-05/23：off 时早拒，不进 _status_body，零敏感键。"""
+    monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    reset_config_cache()
+    handler = _mock_handler(command="GET")
+    called = {"status_body": False}
+
+    def _boom(*_a, **_k):
+        called["status_body"] = True
+        return {"ok": True}
+
+    monkeypatch.setattr(llm_settings_handlers, "_status_body", _boom)
+    llm_settings_handlers.handle_llm_status(handler)
+    assert handler._captured["status"] == 403
+    body = handler._captured["body"]
+    assert body["error"] == "E_AI_SURFACE_DISABLED"
+    assert called["status_body"] is False
+    for key in (
+        "maskedKey",
+        "userDataDir",
+        "tripsDir",
+        "llmAvailable",
+        "llmProvider",
+        "configured",
+        "readiness",
+        "model",
+        "region",
+        "lastPingOk",
+        "capabilities",
+    ):
+        assert key not in body, key
+
+
+def test_config_projection_strips_llm_when_surface_off(monkeypatch, tmp_path: Path):
+    """AC-NAS-17d / AC-QFX-27：off 时无 llm* / tripsDir。"""
+    monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    reset_config_cache()
+    handler = _mock_handler(command="GET")
+    handler.trips_dir = tmp_path / "trips"
+    handler.trips_dir.mkdir()
+    handle_config(handler)
+    body = handler._captured["body"]
+    assert handler._captured["status"] == 200
+    assert body.get("aiSurfaceEnabled") is False
+    assert "llmAvailable" not in body
+    assert "llmProvider" not in body
+    assert "tripsDir" not in body
+    assert "clustering" in body
+
+
+def test_config_projection_includes_llm_when_surface_on(monkeypatch, tmp_path: Path):
+    monkeypatch.setenv(ENV_AI_SURFACE, "1")
+    reset_config_cache()
+    handler = _mock_handler(command="GET")
+    handler.trips_dir = tmp_path / "trips"
+    handler.trips_dir.mkdir()
+    handle_config(handler)
+    body = handler._captured["body"]
+    assert handler._captured["status"] == 200
+    assert body.get("aiSurfaceEnabled") is True
+    assert "llmAvailable" in body
+    assert "llmProvider" in body
+    assert "tripsDir" in body
+
+
 def test_patch_cannot_enable_ai_surface(tmp_path: Path, monkeypatch):
     """aiSurfaceEnabled / ai_surface_enabled 不在 PATCH allowlist。"""
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
@@ -194,3 +259,49 @@ def test_patch_cannot_enable_ai_surface(tmp_path: Path, monkeypatch):
     cfg = load_config(cfg_path)
     assert cfg.studio.ai_surface_enabled is False
     assert resolve_ai_surface_enabled(cfg) is False
+
+
+def test_ai_surface_js_exports_readonly_only() -> None:
+    """AC-QFX-04：源码层不导出写 setter / hydrate 写路径。"""
+    src = (
+        Path(__file__).resolve().parents[3]
+        / "templates"
+        / "studio"
+        / "js"
+        / "ai-surface.js"
+    ).read_text(encoding="utf-8")
+    assert "export function isAiSurfaceEnabled" in src
+    assert "export function ensureAiSurfaceHydrated" in src
+    assert "export function setAiSurfaceEnabled" not in src
+    assert "export function hydrateAiSurfaceFromConfig" not in src
+
+
+def test_settings_ai_zone_gated_by_ai_surface_flag() -> None:
+    """AC-QFX-04：设置 AI 区可见性只读 isAiSurfaceEnabled，无法经公开 API 翻转。"""
+    settings = (
+        Path(__file__).resolve().parents[3]
+        / "templates"
+        / "studio"
+        / "homepage-v2"
+        / "settings-panel.js"
+    ).read_text(encoding="utf-8")
+    assert "from \"../js/ai-surface.js\"" in settings or "from '../js/ai-surface.js'" in settings
+    assert "isAiSurfaceEnabled" in settings
+    assert "setAiSurfaceEnabled" not in settings
+    assert "zone.hidden = !on" in settings
+    llm = (
+        Path(__file__).resolve().parents[3]
+        / "templates"
+        / "studio"
+        / "js"
+        / "llm-settings.js"
+    ).read_text(encoding="utf-8")
+    assert "if (!isAiSurfaceEnabled()) return" in llm
+    readiness = (
+        Path(__file__).resolve().parents[3]
+        / "templates"
+        / "studio"
+        / "js"
+        / "llm-readiness.js"
+    )
+    assert not readiness.is_file(), "dead llm-readiness.js must stay deleted"

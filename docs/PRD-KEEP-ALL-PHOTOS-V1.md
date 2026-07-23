@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **功能名称** | 全部保留照片模式（Keep All Photos Mode） |
-| **文档版本** | **v0.1.1** |
+| **文档版本** | **v0.1.3** |
 | **状态** | **In progress**（按草案开工 · 决策暂按建议结论） |
 | **DOC-STATUS** | **active** |
 | **功能代号** | **P9-F3** |
@@ -163,7 +163,8 @@ D-F3-07 保留连拍档：同意仍开智能挑选 / 改为同时关 cull
 | MD5 完全相同去重 | **仍去重** |
 | burst / pHash | **跳过（保留）** |
 | Phase 9 photo cull | **跳过** |
-| 低分 `apply_low_resolution_exclusion` / 资格硬丢 | **跳过** |
+| 低分资格硬丢（exclusion） | **跳过**（**仅当**显式 `photoKeepMode==keep_all`；独立 `skipLowResExclusion` 不得优先于 mode — [QFX](./PRD-QUALITY-FIXPACK-V1.md) D-QFX-07） |
+| `backfill_native_dimensions`（尺寸回填） | **仍执行**（回填 ≠ 硬丢；[QFX](./PRD-QUALITY-FIXPACK-V1.md) D-QFX-08） |
 | 无法解码 / 损坏文件 | **仍排除** |
 | `max_photos` 扫描上限 | **仍执行** |
 | 分章 / 封面 / 排版算法 | **仍执行**（全留 ≠ 更好版式） |

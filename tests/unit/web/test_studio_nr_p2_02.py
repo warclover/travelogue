@@ -61,11 +61,14 @@ def test_non_studio_serve_no_preview_toolbar(tmp_path: Path) -> None:
 def test_studio_config_stub_llm_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from travelogue.config import AppConfig
     from travelogue.llm.user_settings import UserLlmSecrets
+    from travelogue.web.ai_surface import ENV_AI_SURFACE
 
     monkeypatch.setattr(
         "travelogue.llm.user_settings.read_user_llm_secrets",
         lambda: UserLlmSecrets(),
     )
+    # dark ON：完整投影才含 llm*（默认 off 走 D-NAS-17b 收口）
+    monkeypatch.setenv(ENV_AI_SURFACE, "1")
 
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
@@ -90,6 +93,7 @@ def test_studio_config_stub_llm_unavailable(tmp_path: Path, monkeypatch: pytest.
         with request.urlopen(f"http://127.0.0.1:{port}/__travelogue/config", timeout=5) as resp:
             body = __import__("json").loads(resp.read().decode("utf-8"))
         assert body.get("ok") is True
+        assert body.get("aiSurfaceEnabled") is True
         assert body.get("llmAvailable") is False
         assert body.get("llmProvider") == "stub"
         assert body.get("clustering", {}).get("enabled") == "auto"

@@ -68,11 +68,11 @@ def test_danger_tier_defaults_remain_false() -> None:
 
 
 def test_bool_counts_match_prd_diagnostic_band() -> None:
-    """PRD §0.0.1 diagnostic band: ~150 bools, ~97 True / ~53 False."""
+    """W0 baseline band: 151 bools (incl. studio.ai_surface_enabled), 97 True / 54 False."""
     counts = studio_default_recipe()["counts"]
-    assert counts["bool_fields"] == 150
+    assert counts["bool_fields"] == 151
     assert counts["default_true"] == 97
-    assert counts["default_false"] == 53
+    assert counts["default_false"] == 54
 
 
 def test_l1_budget_and_tiers_are_disjoint() -> None:

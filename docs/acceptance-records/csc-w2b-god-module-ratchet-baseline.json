@@ -1,6 +1,15 @@
 {
   "lines": {
-    "travelogue/curation/curate.py": 1940,
-    "travelogue/web/studio_pipeline.py": 1127
+    "travelogue/curation/curate.py": 1945,
+    "travelogue/web/studio_pipeline.py": 1154
+  },
+  "qfx_leave_trace": {
+    "date": "2026-07-23",
+    "decision": "D-QFX-02",
+    "record": "docs/acceptance-records/qfx-god-module-ratchet-bump-2026-07-23.md",
+    "attribution": {
+      "travelogue/curation/curate.py": "keep-all/low-res path +5; preprocess extract deferred to PR-B/C",
+      "travelogue/web/studio_pipeline.py": "pipeline orchestration growth +27 (primary); not keep-all relocate"
+    }
   }
 }

@@ -40,7 +40,8 @@
 | **AC-NAS-15** | 带 `?llmSetup=1`（及既有 deeplink）打开；并从失败/banner 等路径调 `openLlmSettings` | **不弹**写作引擎 Modal | ✅ e2e |
 | **AC-NAS-16** | 帮助「重播引导」后 idle | 仍无能力卡、无 stub tip、无 home stub banner | ✅ e2e |
 | **AC-NAS-17a** | 门控 off：`POST/DELETE` `/__travelogue/llm/settings` **与** `POST /__travelogue/llm/ping` | 皆 **403** + `E_AI_SURFACE_DISABLED`；不落盘新配置 / 不回写 `last_ping_ok`（IMPLEMENTATION S7 · 严于 PRD D-NAS-17） | ✅ unit |
-| **AC-NAS-17c** | 门控 off：`GET /__travelogue/llm/status`（curl） | **可 200**（不强制 403）；默认面 FE **不请求** | ✅ unit / 代码门控 |
+| **AC-NAS-17c** | 门控 off：`GET /__travelogue/llm/status`（curl） | **403** + `E_AI_SURFACE_DISABLED`；响应无 `maskedKey`/`userDataDir`/`tripsDir`/provider 细节；**不得**调用 `_status_body`（[QFX](./PRD-QUALITY-FIXPACK-V1.md) AC-QFX-05/23 · 替代原「可 200」） | ✅ unit（QFX PR-A） |
+| **AC-NAS-17d** | 门控 off：`GET /__travelogue/config` | **200**；含 `aiSurfaceEnabled:false`；**无** `llmAvailable`/`llmProvider`/`tripsDir`（D-NAS-17b · [QFX](./PRD-QUALITY-FIXPACK-V1.md) AC-QFX-27 · IMPLEMENTATION BE-NAS-04） | ✅ unit（QFX PR-A） |
 | **AC-NAS-M7** | （可选）导入失败面 | 无「去配置写作引擎」；焦点不落配置钮 | ✅ 静态/L0G FE |
 | **AC-NAS-M8** | （可选）失败续跑 CTA 若仍显示 | 文案为「继续生成游记」或整组隐藏 | ✅ 静态/L0G FE |
 

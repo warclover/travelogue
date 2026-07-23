@@ -134,6 +134,16 @@ def _status_body(*, cfg: Any = None) -> dict[str, Any]:
 
 
 def handle_llm_status(handler: StudioHandlerProtocol) -> None:
+    from travelogue.web.ai_surface import (
+        ai_surface_disabled_body,
+        resolve_ai_surface_enabled,
+    )
+    from travelogue.web.studio_handlers.common import studio_ctx
+
+    # NAS · D-NAS-17 / QFX D-QFX-04：off 时早拒，禁止进入 _status_body
+    if not resolve_ai_surface_enabled(studio_ctx(handler).cfg):
+        handler._json_response(403, ai_surface_disabled_body())
+        return
     handler._json_response(200, _status_body())
 
 
