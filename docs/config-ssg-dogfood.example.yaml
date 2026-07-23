@@ -16,7 +16,9 @@ shotGrouping:
     timeSoftSplitHours: 6
     mergeNoise: true
   look:
-    enabled: false   # M2 off until PR-D
+    enabled: true    # M2 dogfood · 无 CLIP 时 fail-open 保留 scene
+    deltaThreshold: 0.28
+    sustainFrames: 2
   mosaic:
     sliceCrossGroupHardReject: true
     sameGroupAntiSlice: true

@@ -6,6 +6,9 @@ from typing import Any
 
 from travelogue.layout_engine.mosaic.clone_detection import template_prefers_burst
 
+# Align with clone_detection tight window (假切条 / same-walk).
+_SAME_GROUP_ANTI_SLICE_SPAN_S = 90.0
+
 # Pattern-prefix equivalents when full screen ctx is unavailable (SUP-01).
 _EXEMPT_PATTERN_PREFIXES = (
     "screen-full-frame",
@@ -88,6 +91,40 @@ def hard_reject_cross_shot_group(
     return len(distinct_shot_group_ids(asset_ids, assets_by_id)) >= 2
 
 
+def hard_reject_same_shot_group_anti_slice(
+    pattern_id: str,
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+    *,
+    same_group_anti_slice: bool = True,
+    span_tight_s: float = _SAME_GROUP_ANTI_SLICE_SPAN_S,
+    exempt: bool | None = None,
+) -> bool:
+    """D-SSG-05 · same-group tight window on slice pattern = 假切条 → hard reject."""
+    if not same_group_anti_slice:
+        return False
+    if len(asset_ids) < 3:
+        return False
+    if exempt is None:
+        exempt = screen_exempt_from_shot_group_hard_reject(pattern_id=pattern_id)
+    if exempt:
+        return False
+    if not is_slice_pattern(pattern_id):
+        return False
+    gids = distinct_shot_group_ids(asset_ids, assets_by_id)
+    if len(gids) != 1:
+        return False
+    if not all((assets_by_id.get(aid) or {}).get("shotGroupId") for aid in asset_ids):
+        return False
+    from travelogue.layout_contract.burst import parse_taken_ts
+
+    stamps = [parse_taken_ts(assets_by_id.get(aid) or {}) for aid in asset_ids]
+    valid = [t for t in stamps if t is not None]
+    if len(valid) < 2:
+        return False
+    return (max(valid) - min(valid)) <= float(span_tight_s)
+
+
 def ssg_hard_reject_active(cfg: Any) -> bool:
     """D-SSG-22 · cross-shotGroup hard-reject follows shotGrouping.mosaic knobs.
 
@@ -100,6 +137,26 @@ def ssg_hard_reject_active(cfg: Any) -> bool:
     if getattr(ssg, "enabled", "auto") == "false":
         return False
     mosaic = getattr(ssg, "mosaic", None)
-    if mosaic is not None and not getattr(mosaic, "slice_cross_group_hard_reject", True):
+    if mosaic is None:
+        return True
+    cross = getattr(mosaic, "slice_cross_group_hard_reject", True)
+    same = getattr(mosaic, "same_group_anti_slice", True)
+    return bool(cross or same)
+
+
+def ssg_same_group_anti_slice_active(cfg: Any) -> bool:
+    if not ssg_hard_reject_active(cfg):
         return False
-    return True
+    mosaic = getattr(getattr(cfg, "shot_grouping", None), "mosaic", None)
+    if mosaic is None:
+        return True
+    return bool(getattr(mosaic, "same_group_anti_slice", True))
+
+
+def ssg_cross_group_hard_reject_active(cfg: Any) -> bool:
+    if not ssg_hard_reject_active(cfg):
+        return False
+    mosaic = getattr(getattr(cfg, "shot_grouping", None), "mosaic", None)
+    if mosaic is None:
+        return True
+    return bool(getattr(mosaic, "slice_cross_group_hard_reject", True))

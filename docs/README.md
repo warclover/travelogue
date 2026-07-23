@@ -422,13 +422,18 @@
 | [acceptance-records/mtso-local-dogfood-GUIDE.md](./acceptance-records/mtso-local-dogfood-GUIDE.md) | MTSO 本机短狗粮 GUIDE |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | MTSO 七席联评 · Conditional Go |
 | [acceptance-records/mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) | MTSO 开发可行性 · SUP 已认可 |
-| [PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) | **智能分镜 SSG V1** **v0.2.1**（SUP 会签 · M1+M2 核心 · 分支 feature/smart-shot-grouping-v1） |
-| [IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md](./IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md) | SSG 实施 · PR-A～D ✅ · PR-E 待 |
-| [ACCEPTANCE-SMART-SHOT-GROUPING-V1.md](./ACCEPTANCE-SMART-SHOT-GROUPING-V1.md) | SSG 验收 |
+| [PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) | **智能分镜 SSG V1** **v0.2.1** · Conditional Closed |
+| [IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md](./IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md) | SSG 实施 · PR-A～F ✅ |
+| [ACCEPTANCE-SMART-SHOT-GROUPING-V1.md](./ACCEPTANCE-SMART-SHOT-GROUPING-V1.md) | SSG 验收 · Conditional Closed |
+| [acceptance-records/ssg-m3-closeout-2026-07-23.md](./acceptance-records/ssg-m3-closeout-2026-07-23.md) | SSG M3 结案 |
+| [acceptance-records/ssg-local-dogfood-GUIDE.md](./acceptance-records/ssg-local-dogfood-GUIDE.md) | SSG 本机狗粮 |
+| [acceptance-records/ssg-default-on-decision-2026-07-23.md](./acceptance-records/ssg-default-on-decision-2026-07-23.md) | SSG 默认 on Hold |
+| [acceptance-records/ssg-look-threshold-calibration-2026-07-23.md](./acceptance-records/ssg-look-threshold-calibration-2026-07-23.md) | SSG PR-E · look deltaThreshold=0.28 锁定 |
 | [acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) | SSG 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/ssg-dev-feasibility-2026-07-23.md](./acceptance-records/ssg-dev-feasibility-2026-07-23.md) | SSG 开发可行性 · SUP **已会签** |
 | [config-ssg-dogfood.example.yaml](./config-ssg-dogfood.example.yaml) | SSG 狗粮配置样例（vision on） |
 | [acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md) | SSG 七席评审纪要模板 |
+| [acceptance-records/ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) | SSG 盲评记录模板 |
 | [RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md](./RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md) | 旅行照片自动排版 · 用户需求与竞品对照 |
 | [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **拼图槽位自适应 MSA V1** **v0.2.0**（Conditional Go · Kickoff M0） |
 | [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 实施 · M0～PR-C + gap-close ✅ · 默认仍 off |
@@ -662,7 +667,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
-| 2026-07-23 | SSG：**PRD v0.2.1** SUP 会签写回 · 分支 `feature/smart-shot-grouping-v1` · M1+M2 核心落地（stage/投影/mosaic 门/look/reshotgroup） |
+| 2026-07-23 | SSG：**PRD v0.2.1** · 分支 `feature/smart-shot-grouping-v1` · PR-A～F Conditional Closed（默认 on Hold · 实拍盲评另填） |
 | 2026-07-23 | SSG 七席：[ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) · **Conditional Go** · PRD **v0.2.0** 回写 · 可 Kickoff M0 |
 | 2026-07-23 | QFX：IMPLEMENTATION **v0.1.0**；NAS IMPLEMENTATION **v0.2.2**（废除 status 可 200）· ACCEPTANCE 增 AC-NAS-17d |
 | 2026-07-23 | QFX：**PRD v0.2.1** 代码探查三项拍板入文（config 投影 · 最小 current · 预处理降耦）；NAS **v0.2.3** D-NAS-17b；Keep-All **v0.1.3** |

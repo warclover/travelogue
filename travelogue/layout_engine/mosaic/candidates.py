@@ -244,10 +244,12 @@ def generate_window_candidates_with_rejections(
         # SSG · cross-shotGroup hard reject (D-SSG-05/22); independent of clone gate.
         from travelogue.layout_engine.mosaic.shot_group_gate import (
             hard_reject_cross_shot_group,
-            ssg_hard_reject_active,
+            hard_reject_same_shot_group_anti_slice,
+            ssg_cross_group_hard_reject_active,
+            ssg_same_group_anti_slice_active,
         )
 
-        if ssg_hard_reject_active(cfg) and hard_reject_cross_shot_group(
+        if ssg_cross_group_hard_reject_active(cfg) and hard_reject_cross_shot_group(
             pat.pattern_id, list(ordered), assets_map
         ):
             _reject(
@@ -255,6 +257,18 @@ def generate_window_candidates_with_rejections(
                 pat.pattern_id,
                 "shot_group_cross",
                 detail="cross_shotGroup_on_slice_pattern",
+            )
+            continue
+        if ssg_same_group_anti_slice_active(
+            cfg
+        ) and hard_reject_same_shot_group_anti_slice(
+            pat.pattern_id, list(ordered), assets_map
+        ):
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "shot_group_anti_slice",
+                detail="same_shotGroup_tight_on_slice_pattern",
             )
             continue
 
