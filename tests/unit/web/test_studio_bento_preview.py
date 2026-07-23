@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import os
+import time
 from pathlib import Path
 from urllib.parse import quote
 
 from PIL import Image
 
+from travelogue.export.longshot import write_longshot_current
 from travelogue.web.studio_bento_preview import build_trip_bento_preview
 
 
@@ -587,6 +590,66 @@ def test_build_trip_bento_preview_longshot_pages_moments_segments(tmp_path: Path
     assert payload["longshotPages"][0]["url"] == f"/{trip_id}/{quote('精选 · 周末-moments-01.png')}"
     assert payload["longshotPages"][1]["url"] == f"/{trip_id}/{quote('精选 · 周末-moments-02.png')}"
     assert all(p.get("scrollPreview") is True for p in payload["longshotPages"])
+
+
+def test_build_trip_bento_preview_picks_newer_mtime_when_no_current(tmp_path: Path) -> None:
+    """AC-QFX-11 · 无 current 时整卷选 (mtime,name) 更新者，而非名序首项。"""
+    trip_id = "mtime-pick"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    old_name = "AAA-旧标题-长图.png"
+    new_name = "ZZZ-新标题-长图.png"
+    _write_png(trip_dir / old_name, 1080, 12000)
+    time.sleep(0.02)
+    _write_png(trip_dir / new_name, 1080, 12000)
+    now = time.time()
+    os.utime(trip_dir / old_name, (now - 100, now - 100))
+    os.utime(trip_dir / new_name, (now, now))
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"改标题"}}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert payload["longshotPages"][0]["url"] == f"/{trip_id}/{quote(new_name)}"
+    assert payload["assets"]["longshot"] == payload["longshotPages"][0]["url"]
+
+
+def test_build_trip_bento_preview_prefers_current_over_name_order(tmp_path: Path) -> None:
+    """AC-QFX-25 · 有 current 时忽略名序更前的旧文件。"""
+    trip_id = "current-pick"
+    trip_dir = tmp_path / trip_id
+    trip_dir.mkdir()
+    (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    old_name = "AAA-旧标题-长图.png"
+    new_name = "ZZZ-新标题-长图.png"
+    _write_png(trip_dir / old_name, 1080, 12000)
+    _write_png(trip_dir / new_name, 1080, 12000)
+    write_longshot_current(
+        trip_dir,
+        batch_id="batch-retitle",
+        kind="whole",
+        files=[new_name],
+    )
+    (trip_dir / "trip.json").write_text(
+        '{"meta":{"title":"权威清单"}}',
+        encoding="utf-8",
+    )
+    trip = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+
+    payload = build_trip_bento_preview(trip_dir, trip, trip_id)
+    assert payload is not None
+    assert payload["longshotPages"] == [
+        {
+            "id": "longshot",
+            "label": "微信长图",
+            "url": f"/{trip_id}/{quote(new_name)}",
+            "scrollPreview": True,
+        }
+    ]
 
 
 def test_build_trip_bento_preview_longshot_pages_from_vertical_ch_jpgs(tmp_path: Path) -> None:

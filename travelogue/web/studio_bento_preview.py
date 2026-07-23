@@ -131,8 +131,11 @@ def _glob_export_images(trip_dir: Path, *patterns: str) -> list[Path]:
 
 
 def _pick_longshot(trip_dir: Path) -> Path | None:
-    """Whole-volume export: SFI ``*-长图.ext`` then legacy ``*-longshot.ext``."""
-    rows = sorted(
+    """Whole-volume export: newest ``(mtime, name)`` when no current manifesto.
+
+    QFX AC-11：无 ``longshot-current.json`` 时按 ``(st_mtime, name)`` 降序取最新整卷。
+    """
+    rows = list(
         _glob_export_images(
             trip_dir,
             # SFI D-SFI-07 · 人话展示名整卷
@@ -143,10 +146,20 @@ def _pick_longshot(trip_dir: Path) -> Path | None:
             "*-longshot.png",
             "*-longshot.jpg",
             "*-longshot.jpeg",
-        ),
-        key=lambda p: p.name.lower(),
+        )
     )
-    return rows[0] if rows else None
+    if not rows:
+        return None
+
+    def _mtime_name_key(path: Path) -> tuple[float, str]:
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        return (mtime, path.name.lower())
+
+    rows.sort(key=_mtime_name_key, reverse=True)
+    return rows[0]
 
 
 def _chapter_pngs(trip_dir: Path) -> list[Path]:
@@ -603,6 +616,35 @@ def _build_longshot_pages(
     epilogue_avoid_urls: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """手机框切换序列：整卷长图 → 分段导出竖条 → 按 carousel 章序竖版原图。"""
+    # QFX D-QFX-06b · 优先读成功导出权威清单（禁止对分段做逐文件 mtime 混排）
+    from travelogue.export.longshot import read_longshot_current
+
+    current = read_longshot_current(trip_dir)
+    if current:
+        files = list(current.get("files") or [])
+        if len(files) == 1:
+            return [
+                {
+                    "id": "longshot",
+                    "label": "微信长图",
+                    "url": _trip_static_url(trip_id, files[0]),
+                    "scrollPreview": True,
+                }
+            ]
+        pages_from_current: list[dict[str, Any]] = []
+        for i, name in enumerate(files, 1):
+            ch = chapters[i - 1] if i - 1 < len(chapters) else {}
+            pages_from_current.append(
+                {
+                    "id": str(ch.get("id") or f"ch{i:02d}"),
+                    "label": _chapter_label(ch, i) if ch else f"第{i}章",
+                    "chapterIndex": i,
+                    "url": _trip_static_url(trip_id, name),
+                    "scrollPreview": True,
+                }
+            )
+        return pages_from_current
+
     longshot = _pick_longshot(trip_dir)
     if longshot:
         return [
@@ -615,6 +657,7 @@ def _build_longshot_pages(
         ]
 
     # Prefer SFI/moments segment exports; fall back to legacy *-ch* (ch_pngs arg).
+    # 无 current 时分段保持名序（禁止逐文件 mtime 假修）。
     strip_candidates = _phone_export_strips(trip_dir) or list(ch_pngs)
     vertical_strips = [png for png in strip_candidates if _is_phone_vertical_file(png)]
     if vertical_strips:

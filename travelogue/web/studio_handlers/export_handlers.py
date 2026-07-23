@@ -498,6 +498,16 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         page_count = result.page_count if result.page_count is not None else len(result.outputs)
+        # QFX D-QFX-06b · Job 成功后写最小 current（失败则 Job 不标 succeeded）
+        from travelogue.export.longshot import write_longshot_current
+
+        if rel_outputs:
+            write_longshot_current(
+                trip_dir,
+                batch_id=job.job_id,
+                kind="segmented" if result.segmented else "whole",
+                files=rel_outputs,
+            )
         return {
             "tripId": trip_id,
             "outputs": rel_outputs,
@@ -529,6 +539,7 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
 
     from travelogue.export.longshot import (
         LongshotExportError,
+        maybe_write_longshot_current_after_upload,
         write_longshot_upload,
     )
     from travelogue.render.copy_display import COPY_DISPLAY_FULL
@@ -606,6 +617,27 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
         return
 
     rel = rel_to_trip(trip_dir, out)
+    try:
+        maybe_write_longshot_current_after_upload(
+            trip_dir,
+            rel=rel,
+            segment_index=seg_i,
+            segment_total=seg_n,
+            fmt=fmt,
+            batch_id=str(payload.get("batchId") or payload.get("jobId") or "").strip()
+            or None,
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        handler._json_response(
+            500,
+            {
+                "ok": False,
+                "error": "E_LNG_CURRENT_WRITE",
+                "message": "长图已保存，但权威清单写入失败",
+                "detail": str(exc)[:240],
+            },
+        )
+        return
     platform = str(payload.get("platform") or "wechat_chat").strip() or "wechat_chat"
     copy_display = str(payload.get("copyDisplay") or COPY_DISPLAY_FULL).strip().lower()
     publish_guide = [
