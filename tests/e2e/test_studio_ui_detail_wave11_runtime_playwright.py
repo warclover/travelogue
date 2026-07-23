@@ -183,98 +183,57 @@ def test_studio_ui_detail_wave11_runtime_closeout(studio_server) -> None:
         )
         page.screenshot(path=str(OUT_DIR / "help-drawer.png"), full_page=False)
 
-        # Force capability card: clear seen + close Help, then show
+        # QFX D-QFX-05 · 测试 DI 挂生产 ensureRoot+trap；禁止手写假 DOM
         shown = page.evaluate(
             """
             async () => {
-              try {
-                localStorage.removeItem('travelogue.desktop.capabilityCard.v1');
-              } catch (e) {}
-              const helpOn = await import('/__studio/js/help-onboarding.js');
-              if (typeof helpOn.clearCapabilityCardSeen === 'function') {
-                helpOn.clearCapabilityCardSeen();
-              }
               const hd = await import('/__studio/js/help-drawer.js');
               if (typeof hd.closeHelpDrawer === 'function') hd.closeHelpDrawer();
-              try {
-                const { V2 } = await import('/__studio/homepage-v2/store.js');
-                if (V2) {
-                  V2.trips = [];
-                  V2.tripsTotal = 0;
-                  V2.state = 'Idle';
-                }
-              } catch (e2) {}
               const mod = await import('/__studio/js/capability-card.js');
-              if (typeof mod.showCapabilityCard === 'function') {
-                return !!mod.showCapabilityCard();
-              }
-              return false;
+              if (typeof mod.__mountCapabilityCardForTest !== 'function') return false;
+              const el = mod.__mountCapabilityCardForTest();
+              return !!(el && !el.hidden && el.getAttribute('role') === 'dialog');
             }
             """
         )
-        if not shown:
-            # Fallback: mount panel markup for style measure (CSS already linked)
-            page.evaluate(
-                """
-                () => {
-                  let el = document.getElementById('studio-capability-card-root');
-                  if (!el) {
-                    el = document.createElement('div');
-                    el.id = 'studio-capability-card-root';
-                    el.className = 'studio-capability-card';
-                    el.innerHTML =
-                      '<div class="studio-capability-card__scrim"></div>' +
-                      '<div class="studio-capability-card__panel">' +
-                      '<button type="button" class="studio-capability-card__close" aria-label="关闭">×</button>' +
-                      '<p class="studio-capability-card__title">照片留在本机，也能做成可发的游记</p>' +
-                      '<p class="studio-capability-card__body">选一次旅行的照片，自动分章、排版；微信长图可直接发群。</p>' +
-                      '<div class="studio-capability-card__actions">' +
-                      '<button type="button" class="studio-capability-card__primary">开始制作我的游记</button>' +
-                      '</div>' +
-                      '<p class="studio-capability-card__linkrow">' +
-                      '<button type="button" class="studio-capability-card__link">以后再升级 AI 文案 →</button>' +
-                      '</p></div>';
-                    document.body.appendChild(el);
-                  }
-                  el.hidden = false;
-                }
-                """
-            )
+        assert shown, "capability card must mount via production ensureRoot DI"
+        runtime["renderer"] = "production"
         page.wait_for_function(
             """() => {
               const el = document.getElementById('studio-capability-card-root');
-              return el && !el.hidden && el.querySelector('.studio-capability-card__panel');
+              return el && !el.hidden && el.getAttribute('role') === 'dialog'
+                && el.getAttribute('aria-modal') === 'true'
+                && el.querySelector('.studio-capability-card__panel');
             }""",
             timeout=5_000,
         )
-        # Focus trap：Tab 从末焦点循环回卡内首焦点（aria-modal 配套）
-        if shown:
-            trap_ok = page.evaluate(
-                """
-                () => {
-                  const root = document.getElementById('studio-capability-card-root');
-                  if (!root || root.hidden) return false;
-                  const sel =
-                    'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),select:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
-                  const els = [...root.querySelectorAll(sel)].filter(
-                    (el) => !el.hidden && (el.offsetParent !== null || el === document.activeElement)
-                  );
-                  if (els.length < 2) return false;
-                  const first = els[0];
-                  const last = els[els.length - 1];
-                  last.focus();
-                  const ev = new KeyboardEvent('keydown', {
-                    key: 'Tab',
-                    code: 'Tab',
-                    bubbles: true,
-                    cancelable: true,
-                  });
-                  root.dispatchEvent(ev);
-                  return document.activeElement === first;
-                }
-                """
-            )
-            assert trap_ok, "capability card Tab focus trap should cycle within dialog"
+        # Focus trap：不得 skip（AC-QFX-06/17）
+        trap_ok = page.evaluate(
+            """
+            () => {
+              const root = document.getElementById('studio-capability-card-root');
+              if (!root || root.hidden) return false;
+              const sel =
+                'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),textarea:not([disabled]),select:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+              const els = [...root.querySelectorAll(sel)].filter(
+                (el) => !el.hidden && (el.offsetParent !== null || el === document.activeElement)
+              );
+              if (els.length < 2) return false;
+              const first = els[0];
+              const last = els[els.length - 1];
+              last.focus();
+              const ev = new KeyboardEvent('keydown', {
+                key: 'Tab',
+                code: 'Tab',
+                bubbles: true,
+                cancelable: true,
+              });
+              root.dispatchEvent(ev);
+              return document.activeElement === first;
+            }
+            """
+        )
+        assert trap_ok, "capability card Tab focus trap should cycle within dialog"
         cap_m = page.evaluate(_MEASURE_PANEL_JS, ".studio-capability-card__panel")
         runtime["surfaces"]["S-CAP"] = cap_m
         runtime["findings"].extend(

@@ -110,6 +110,29 @@ def test_static_audit_strict_fails_on_p1(monkeypatch, tmp_path) -> None:
     assert main(["--wave", "all", "--strict"]) == 1
 
 
+def test_settings_sheet_token_unrelated_selector_fails_ac20(tmp_path, monkeypatch) -> None:
+    """AC-QFX-20 · token 仅在无关选择器 → 审计失败。"""
+    from scripts import studio_ui_detail_static_audit as audit
+
+    unrelated = tmp_path / "bento.css"
+    unrelated.write_text(
+        ".unrelated-foo { color: var(--studio-panel-ink, #14110d); }\n",
+        encoding="utf-8",
+    )
+    sheet = tmp_path / "sheet.css"
+    sheet.write_text(".preview-sheet { color: #546e7a; }\n", encoding="utf-8")
+    monkeypatch.setattr(audit, "ROOT", tmp_path)
+    # Point module-level paths used inside audit_settings_sheet via Path joins — call helper directly
+    assert audit._root_blocks_use_studio_panel_ink(
+        unrelated.read_text(encoding="utf-8"),
+        (".v2-settings-popover",),
+    ) is False
+    assert audit._root_blocks_use_studio_panel_ink(
+        ".v2-settings-popover { --v2-set-ink: var(--studio-panel-ink, #000); }\n",
+        (".v2-settings-popover",),
+    ) is True
+
+
 def test_bare_strict_defaults_wave_to_all(monkeypatch) -> None:
     """AC-QFX-08/19 · bare --strict ⇒ wave=all。"""
     seen: dict = {}

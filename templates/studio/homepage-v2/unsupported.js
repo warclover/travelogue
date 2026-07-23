@@ -8,6 +8,7 @@
  */
 import { V2, $, show } from "./store.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { bindCopyPageUrlControl } from "../js/copy-page-url.js";
 import {
   classifyViewport, isSupported, unsupportedCopy,
 } from "./viewport-logic.js";
@@ -33,19 +34,24 @@ function viewportWidth() {
   return window.innerWidth || document.documentElement.clientWidth || 0;
 }
 
-function copyPageUrl() {
-  var url = window.location.origin + window.location.pathname + window.location.search;
-  var done = function () {
-    if (typeof studioToast === "function") {
-      studioToast("已复制，请在电脑浏览器打开", { duration: 2200 });
-    }
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(done, done);
-  } else {
-    done();
-  }
-  trackStudioEvent("unsupported_action_click", { action: "copy_link" });
+function pageUrl() {
+  return window.location.origin + window.location.pathname + window.location.search;
+}
+
+function ensureUnsupportedUrlInput() {
+  var existing = $("v2-unsupported-url");
+  if (existing) return existing;
+  var host = $("v2-unsupported-actions");
+  if (!host) return null;
+  var input = document.createElement("input");
+  input.id = "v2-unsupported-url";
+  input.className = "v2-unsupported__url";
+  input.type = "text";
+  input.readOnly = true;
+  input.hidden = true;
+  input.setAttribute("aria-label", "电脑打开地址");
+  host.appendChild(input);
+  return input;
 }
 
 function onQrError() {
@@ -81,7 +87,18 @@ function ensureActionHandlers() {
 
   var copyBtn = $("v2-unsupported-copy");
   if (copyBtn) {
-    copyBtn.addEventListener("click", copyPageUrl);
+    bindCopyPageUrlControl({
+      button: copyBtn,
+      urlInput: ensureUnsupportedUrlInput(),
+      getUrl: pageUrl,
+      defaultLabel: "复制电脑打开地址",
+      onTrack: function (result) {
+        trackStudioEvent("unsupported_action_click", {
+          action: "copy_link",
+          result: result,
+        });
+      },
+    });
   }
 
   var qrImg = $("v2-unsupported-qr");

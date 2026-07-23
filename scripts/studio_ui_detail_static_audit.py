@@ -223,6 +223,22 @@ def _parse_rules(css: str) -> list[tuple[str, dict[str, str]]]:
     return out
 
 
+def _root_blocks_use_studio_panel_ink(css: str, root_prefixes: tuple[str, ...]) -> bool:
+    """True when a rule under root selectors wires ``studio-panel-ink`` via var()/alias."""
+    text = _strip_comments(css or "")
+    for m in _RULE_RE.finditer(text):
+        selectors = [s.strip() for s in m.group(1).split(",") if s.strip()]
+        body = m.group(2) or ""
+        if not any(
+            any(sel == root or sel.startswith(root) for root in root_prefixes)
+            for sel in selectors
+        ):
+            continue
+        if "studio-panel-ink" in body or "var(--studio-panel" in body:
+            return True
+    return False
+
+
 def find_selector_conflicts(paths: list[Path]) -> list[Finding]:
     # selector -> prop -> [(file, value)]
     store: dict[str, dict[str, list[tuple[str, str]]]] = defaultdict(
@@ -381,17 +397,15 @@ def find_settings_sheet_family_drift() -> list[Finding]:
     sheet_has_bluegray = any(
         "546e7a" in c or "607d8b" in c or "78909c" in c for c in sheet_colors
     )
-    set_uses_panel = any(
-        "studio-panel" in props.get(k, "")
-        for _, props in set_rules
-        for k in ("color", "font-size", "background", "border")
-    ) or any("--v2-set-ink: var(--studio-panel" in str(props) for _, props in set_rules)
-    # also detect token wiring on the popover root via raw text
+    # QFX AC-20 / D-QFX-11：仅在 Settings/Sheet 根选择器块内认 token（禁全文 substring）
     bento_text = bento.read_text(encoding="utf-8") if bento.is_file() else ""
     sheet_text = sheet.read_text(encoding="utf-8") if sheet.is_file() else ""
-    set_uses_panel = "--studio-panel-ink" in bento_text or "studio-panel-ink" in bento_text
-    # Sheet may nest via --preview-* then --studio-panel-* (Wave3)
-    sheet_uses_panel = "studio-panel-ink" in sheet_text
+    set_uses_panel = _root_blocks_use_studio_panel_ink(
+        bento_text, (".v2-settings-popover", ".v2-settings-zones")
+    )
+    sheet_uses_panel = _root_blocks_use_studio_panel_ink(
+        sheet_text, (".preview-sheet",)
+    )
     if set_has_slate and sheet_has_bluegray:
         findings.append(
             Finding(

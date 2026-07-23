@@ -154,6 +154,26 @@ export function showCapabilityCard() {
 }
 
 /**
+ * QFX D-QFX-05 · 测试 DI：挂载生产 ensureRoot + trap（禁止生产 URL 开关）。
+ * 仅供审计 / 单测 / e2e 动态 import 调用。
+ */
+export function __mountCapabilityCardForTest() {
+  var el = ensureRoot();
+  el.hidden = false;
+  _visible = true;
+  trapFocus(el);
+  var els = focusableEls(el);
+  if (els.length) {
+    try {
+      els[0].focus();
+    } catch (_e) {
+      /* ignore */
+    }
+  }
+  return el;
+}
+
+/**
  * 首页 idle 后评估一次（busy 则延后）。
  * NAS：永不调度展示。
  */

@@ -93,18 +93,9 @@ jobs:
       - name: CSC Happy Path Recipe baseline (no silent default-True growth)
         run: python scripts/lint_csc_recipe_baseline.py
 
-      # QFX M1′ · PR 窄门禁起步（PRD §11.1 / AC-QFX-24）
-      # CSC recipe/god/facade 已在上方；此处补 UI Detail --strict + 相关 unit。
-      - name: QFX M1′ UI Detail static audit (--strict)
-        run: python scripts/studio_ui_detail_static_audit.py --strict
-
-      - name: QFX M1′ narrow unit gates (NAS / keep-all / recipe / UI Detail)
-        run: |
-          python -m pytest -q \
-            tests/unit/web/test_ai_surface_gate.py \
-            tests/unit/web/test_studio_ui_detail_static_audit.py \
-            tests/unit/domain/test_photo_keep_mode.py \
-            tests/unit/orchestrator/test_happy_path_recipe.py
+      # QFX · 聚合窄门禁（AC-QFX-24）；CSC recipe/god/facade 已在上方亦含于 gate
+      - name: QFX quality_fixpack_gate
+        run: python scripts/quality_fixpack_gate.py
 
       - uses: actions/setup-node@v4
         with:
