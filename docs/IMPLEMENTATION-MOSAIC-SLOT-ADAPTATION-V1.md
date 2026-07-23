@@ -7,8 +7,8 @@
 | **验收** | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) |
 | **评审** | [msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) · Conditional Go |
 | **DOC-STATUS** | **active** |
-| **状态** | **M0 ✅（文档）· M1 未 Kickoff**（合码前关 BLK-02～04/07/08 实现） |
-| **分支建议** | `feat/msa-m0-docs`（本文）→ 合入后另开 `feat/msa-pr-a` |
+| **状态** | **M0 ✅ · PR-A / M1 ✅**（AC-01～05/05v/05p）；PR-B 未 Kickoff（BLK-06） |
+| **分支** | `feat/msa-pr-a` |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 MSA PRD + 七席展开为可执行任务卡。  
@@ -38,12 +38,12 @@
 
 | BLK | 要求 | 文档 | 代码 |
 |-----|------|------|------|
-| **02** | 持久化实例 | ✅ | ☐ PR-A |
-| **03** | 峰占比≥0.60 · 容差 0.08 · clamp · wide_peak | ✅ AC §1 | ☐ PR-A |
-| **04** | 每 variant 各自求解 | ✅ | ☐ PR-A |
+| **02** | 持久化实例 | ✅ | ✅ PR-A |
+| **03** | 峰占比≥0.60 · 容差 0.08 · clamp · wide_peak | ✅ AC §1 | ✅ PR-A |
+| **04** | 每 variant 各自求解 | ✅ | ✅ PR-A |
 | **05** | 拆 ACCEPTANCE/IMPL | ✅ 本文 | — |
-| **07** | main 面积/prominence 硬断言 | ✅ AC-02 | ☐ PR-A |
-| **08** | D-10 字段进 AC-08 | ✅ | ☐ PR-A |
+| **07** | main 面积/prominence 硬断言 | ✅ AC-02 | ✅ PR-A |
+| **08** | D-10 字段进 AC-08 | ✅ | ☑ PR-A 子集（cropRisk/whitespace 占位至 PR-B） |
 | **06** | contain 纸色视觉 | ☐ M2 前 | ☐ PR-B |
 
 ---

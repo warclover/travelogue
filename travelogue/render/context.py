@@ -921,12 +921,27 @@ def build_layout_screen(
         style_parts.append(f"--screen-aspect: {stage_aspect}")
     elif screen_aspect and not viewport_fit:
         style_parts.append(f"--screen-aspect: {screen_aspect}")
-    cols = layout_geo.get("cols")
-    rows = layout_geo.get("rows")
+    track_override = layout_geo.get("trackOverride")
+    if isinstance(track_override, dict):
+        cols = track_override.get("cols", layout_geo.get("cols"))
+        rows = track_override.get("rows", layout_geo.get("rows"))
+    else:
+        cols = layout_geo.get("cols")
+        rows = layout_geo.get("rows")
     if isinstance(cols, list) and cols:
         style_parts.append(f"--grid-cols: {','.join(str(c) for c in cols)}")
+        # MSA · real CSS tracks (static gridClass alone ignores --grid-cols)
+        if isinstance(track_override, dict):
+            style_parts.append(
+                "grid-template-columns: "
+                + " ".join(f"minmax(0, {c}fr)" for c in cols)
+            )
     if isinstance(rows, list) and rows:
         style_parts.append(f"--grid-rows: {','.join(str(r) for r in rows)}")
+        if isinstance(track_override, dict):
+            style_parts.append(
+                "grid-template-rows: " + " ".join(f"minmax(0, {r}fr)" for r in rows)
+            )
     tone = screen_tone_css(screen.get("tone"))
     if tone:
         style_parts.append(f"--screen-tone: {tone}")

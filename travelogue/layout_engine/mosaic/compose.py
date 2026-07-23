@@ -454,6 +454,7 @@ def pick_best_window(
                 log.dropped_asset_ids = list(dropped)
                 log.planner_path = "mosaic"
                 enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
+                _attach_msa_log_from_screen(log, winner_cand.screen)
                 _attach_raw_geometry_features(log, winner_cand.pattern_id)
                 return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
         if cfg.fallback_to_legacy:
@@ -464,8 +465,24 @@ def pick_best_window(
 
     log.planner_path = "mosaic"
     enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
+    _attach_msa_log_from_screen(log, winner_cand.screen)
     _attach_raw_geometry_features(log, winner_cand.pattern_id)
     return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
+
+
+def _attach_msa_log_from_screen(log: MosaicWindowLog, screen: dict | None) -> None:
+    """Copy MSA instance fields from screen.layoutGeometry into raw window log."""
+    geo = (screen or {}).get("layoutGeometry") or {}
+    msa = geo.get("msa") if isinstance(geo.get("msa"), dict) else {}
+    if not msa:
+        log.msa_outcome = log.msa_outcome or "skipped_parent_off"
+        return
+    log.msa_profile = msa.get("profile")
+    log.r_hero_target = msa.get("rHeroTarget")
+    log.track_override = geo.get("trackOverride")
+    fits = [str(s.get("fit") or "cover") for s in (screen or {}).get("slots") or []]
+    log.slot_fits = fits or None
+    log.msa_outcome = str(msa.get("outcome") or "skipped_parent_off")
 
 
 def _attach_raw_geometry_features(log: MosaicWindowLog, pattern_id: str) -> None:

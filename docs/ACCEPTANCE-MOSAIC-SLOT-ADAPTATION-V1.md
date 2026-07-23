@@ -21,7 +21,7 @@
 | **AC-MSA-W0-01** | PRD v0.2.0 + 七席 Conditional Go | ✅ |
 | **AC-MSA-W0-02** | 本 ACCEPTANCE + IMPLEMENTATION 已拆（BLK-MSA-05） | ✅ |
 | **AC-MSA-W0-03** | 列车：M0 → PR-A(M1) → PR-B(M2) → PR-C(M3)；禁单 PR 塞满 | ✅ |
-| **AC-MSA-W0-04** | M1 合码前合同：持久化 · 峰阈值 · variant 各自求解 · 面积硬门 · 日志字段（BLK-02～04/07/08） | ☑ 文档锁定 · ☐ 代码 |
+| **AC-MSA-W0-04** | M1 合码前合同：持久化 · 峰阈值 · variant 各自求解 · 面积硬门 · 日志字段（BLK-02～04/07/08） | ✅ PR-A 代码+单测 |
 | **AC-MSA-W0-05** | M2 合码前：contain 杂志纸色最低视觉合同（BLK-06） | ☐ |
 
 ---
@@ -43,16 +43,15 @@
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MSA-01** | `slot_adaptation.enabled=false` 时固定 corpus 与基线逐屏一致（patternId、asset 序、静态几何）；嵌套子开关无效 | ☐ |
-| **AC-MSA-02** | 全单反横窗 fixture：求解后主槽 \(|r-1.50|≤0.08\)；main 面积/prominence **不跌破**模板声明下限 | ☐ |
-| **AC-MSA-03** | 全手机 4:3 横窗：主槽贴 \(1.33±0.08\) | ☐ |
-| **AC-MSA-04** | 混峰窗：`landPeak=mixed`，\(r^*\) 落在 clamp 内；整屏**单一** `trackOverride` | ☐ |
-| **AC-MSA-05** | 求解失败 → 静态轨道 + `msa_solve_miss`；无空屏、不改拓扑 | ☐ |
-| **AC-MSA-05v** | 每个激活 `stage.variants` **各自求解**；某 variant miss → 该 variant 回退静态轨并分 variant 打点；禁止只优化 web 16:9 | ☐ |
-| **AC-MSA-05p** | screen 持久化 `layoutGeometry.trackOverride` + `slots[].fit`（及实渲 `displayAspect`）；preview / 长图导出 / 重渲染复用同一实例 | ☐ |
+| **AC-MSA-01** | `slot_adaptation.enabled=false` 时固定 corpus 与基线逐屏一致（patternId、asset 序、静态几何）；嵌套子开关无效 | ✅ `test_msa_pr_a` |
+| **AC-MSA-02** | 全单反横窗 fixture：求解后主槽 \(|r-1.50|≤0.08\)；main 面积/prominence **不跌破**模板声明下限 | ✅ |
+| **AC-MSA-03** | 全手机 4:3 横窗：主槽贴 \(1.33±0.08\) | ✅ |
+| **AC-MSA-04** | 混峰窗：`landPeak=mixed`，\(r^*\) 落在 clamp 内；整屏**单一** `trackOverride` | ✅ |
+| **AC-MSA-05** | 求解失败 → 静态轨道 + `msa_solve_miss`；无空屏、不改拓扑 | ✅ |
+| **AC-MSA-05v** | 每个激活 `stage.variants` **各自求解**；某 variant miss → 该 variant 回退静态轨并分 variant 打点；禁止只优化 web 16:9 | ✅ |
+| **AC-MSA-05p** | screen 持久化 `layoutGeometry.trackOverride` + `slots[].fit`（及实渲 `displayAspect`）；preview / 长图导出 / 重渲染复用同一实例 | ✅ |
 
 ```powershell
-# 目标（M1 落地后）
 python -m pytest tests/unit/layout_engine/test_msa_pr_a.py -q
 ```
 

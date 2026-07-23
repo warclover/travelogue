@@ -345,6 +345,13 @@ mosaic:
   # Nested: hero_six_opportunity / mixed_hero_routing (inert when parent false).
   selection_optimization:
     enabled: false
+  # MSA · slot adaptation (topology fixed · track weights adaptive; default off to M3)
+  slot_adaptation:
+    enabled: false
+    # whitespace_max: 0.08
+    # crop_risk_contain_threshold: 0.55
+    # hero_target_clamp: [1.30, 1.60]
+    # wide_peak_fraction: 0.50
   weights:
     aspect_match: 0.20
     sharpness: 0.15

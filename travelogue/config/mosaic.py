@@ -109,6 +109,67 @@ _SELECTION_OPTIMIZATION_KNOWN_KEYS = frozenset(
 
 
 @dataclass
+class SlotAdaptationSolveConfig:
+    """MSA · track solve bounds (PRD §5.1)."""
+
+    max_iters: int = 32
+    track_weight_min: float = 0.5
+    track_weight_max: float = 24.0
+
+
+@dataclass
+class SlotAdaptationConfig:
+    """MSA · mosaic slot adaptation parent switch (PRD-MOSAIC-SLOT-ADAPTATION-V1).
+
+    When ``enabled`` is false, nested knobs are ineffective (fail-closed to M3).
+    Unknown keys under this root fail-loud.
+    """
+
+    enabled: bool = False
+    whitespace_max: float = 0.08
+    crop_risk_contain_threshold: float = 0.55
+    hero_target_clamp: tuple[float, float] = (1.30, 1.60)
+    land_peaks: dict[str, float] = field(
+        default_factory=lambda: {
+            "three_two": 1.50,
+            "four_three": 1.3333,
+            "sixteen_nine": 1.7778,
+        }
+    )
+    wide_peak_fraction: float = 0.50
+    solve: SlotAdaptationSolveConfig = field(default_factory=SlotAdaptationSolveConfig)
+
+
+_SLOT_ADAPTATION_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "whitespace_max",
+        "whitespaceMax",
+        "crop_risk_contain_threshold",
+        "cropRiskContainThreshold",
+        "hero_target_clamp",
+        "heroTargetClamp",
+        "land_peaks",
+        "landPeaks",
+        "wide_peak_fraction",
+        "widePeakFraction",
+        "solve",
+    }
+)
+
+_SLOT_ADAPTATION_SOLVE_KNOWN_KEYS = frozenset(
+    {
+        "max_iters",
+        "maxIters",
+        "track_weight_min",
+        "trackWeightMin",
+        "track_weight_max",
+        "trackWeightMax",
+    }
+)
+
+
+@dataclass
 class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
 
@@ -132,6 +193,7 @@ class MosaicConfig:
     selection_optimization: SelectionOptimizationConfig = field(
         default_factory=SelectionOptimizationConfig
     )
+    slot_adaptation: SlotAdaptationConfig = field(default_factory=SlotAdaptationConfig)
     near_scene_clone_gate: NearSceneCloneGateConfig = field(
         default_factory=NearSceneCloneGateConfig
     )
@@ -335,6 +397,76 @@ def effective_selection_optimization_enabled(cfg: MosaicConfig | None) -> bool:
     return bool(so is not None and getattr(so, "enabled", False))
 
 
+def _slot_adaptation_solve_from_dict(raw: object) -> SlotAdaptationSolveConfig:
+    defaults = SlotAdaptationSolveConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _SLOT_ADAPTATION_SOLVE_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.slot_adaptation.solve unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    return SlotAdaptationSolveConfig(
+        max_iters=int(raw.get("max_iters", raw.get("maxIters", defaults.max_iters))),
+        track_weight_min=float(
+            raw.get("track_weight_min", raw.get("trackWeightMin", defaults.track_weight_min))
+        ),
+        track_weight_max=float(
+            raw.get("track_weight_max", raw.get("trackWeightMax", defaults.track_weight_max))
+        ),
+    )
+
+
+def _slot_adaptation_from_dict(raw: dict[str, Any]) -> SlotAdaptationConfig:
+    defaults = SlotAdaptationConfig()
+    sa = raw.get("slot_adaptation")
+    if not isinstance(sa, dict):
+        sa = raw.get("slotAdaptation")
+    if not isinstance(sa, dict):
+        return defaults
+    unknown = sorted(str(k) for k in sa if str(k) not in _SLOT_ADAPTATION_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.slot_adaptation unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    clamp_raw = sa.get("hero_target_clamp", sa.get("heroTargetClamp"))
+    if isinstance(clamp_raw, (list, tuple)) and len(clamp_raw) == 2:
+        clamp = (float(clamp_raw[0]), float(clamp_raw[1]))
+    else:
+        clamp = defaults.hero_target_clamp
+    peaks_raw = sa.get("land_peaks", sa.get("landPeaks"))
+    peaks = dict(defaults.land_peaks)
+    if isinstance(peaks_raw, dict):
+        for key, val in peaks_raw.items():
+            peaks[str(key)] = float(val)
+    return SlotAdaptationConfig(
+        enabled=cfg_bool(sa, "enabled", "enabled", defaults.enabled),
+        whitespace_max=cfg_float(
+            sa, "whitespace_max", "whitespaceMax", defaults.whitespace_max
+        ),
+        crop_risk_contain_threshold=cfg_float(
+            sa,
+            "crop_risk_contain_threshold",
+            "cropRiskContainThreshold",
+            defaults.crop_risk_contain_threshold,
+        ),
+        hero_target_clamp=clamp,
+        land_peaks=peaks,
+        wide_peak_fraction=cfg_float(
+            sa, "wide_peak_fraction", "widePeakFraction", defaults.wide_peak_fraction
+        ),
+        solve=_slot_adaptation_solve_from_dict(sa.get("solve")),
+    )
+
+
+def effective_slot_adaptation_enabled(cfg: MosaicConfig | None) -> bool:
+    """Parent OFF ⇒ all nested MSA knobs are inert."""
+    if cfg is None:
+        return False
+    sa = getattr(cfg, "slot_adaptation", None)
+    return bool(sa is not None and getattr(sa, "enabled", False))
+
+
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
     defaults = MosaicConfig()
     sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", defaults.enabled_window_sizes))
@@ -415,6 +547,7 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         template_contract=_template_contract_from_dict(raw),
         template_experiments=_template_experiments_from_dict(raw),
         selection_optimization=_selection_optimization_from_dict(raw),
+        slot_adaptation=_slot_adaptation_from_dict(raw),
         near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
         enable_size3_aux=cfg_bool(
             raw, "enable_size3_aux", "enableSize3Aux", defaults.enable_size3_aux

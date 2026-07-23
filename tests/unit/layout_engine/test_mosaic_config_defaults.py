@@ -24,7 +24,21 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.template_contract.shadow_log is False
     assert cfg.template_experiments.enabled is False
     assert cfg.selection_optimization.enabled is False
+    assert cfg.slot_adaptation.enabled is False
     assert cfg.near_scene_clone_gate.enabled is defaults.near_scene_clone_gate.enabled
+
+
+def test_slot_adaptation_parses_and_fails_loud() -> None:
+    from travelogue.config.mosaic import effective_slot_adaptation_enabled
+
+    cfg = mosaic_from_dict({"slot_adaptation": {"enabled": True, "whitespace_max": 0.1}})
+    assert cfg.slot_adaptation.enabled is True
+    assert cfg.slot_adaptation.whitespace_max == 0.1
+    assert effective_slot_adaptation_enabled(cfg) is True
+    cfg_off = mosaic_from_dict({"slot_adaptation": {"enabled": False, "whitespace_max": 0.1}})
+    assert effective_slot_adaptation_enabled(cfg_off) is False
+    with pytest.raises(ValueError, match="unknown keys"):
+        mosaic_from_dict({"slot_adaptation": {"enabled": True, "bogus": 1}})
 
 
 def test_template_contract_parses_known_keys() -> None:

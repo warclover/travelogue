@@ -339,6 +339,9 @@ def _finalize_mosaic_screen(
         from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 
         solidify_screen_geometry(screen, pattern_id, assets_map=assets_map)
+        from travelogue.layout_engine.mosaic.msa_apply import maybe_apply_slot_adaptation
+
+        maybe_apply_slot_adaptation(screen, pattern_id, assets_map=assets_map)
     return screen
 
 

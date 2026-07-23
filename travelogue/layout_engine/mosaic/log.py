@@ -58,6 +58,14 @@ class MosaicWindowLog:
     six_hero_outcome: str | None = None
     quota_snapshot: dict[str, Any] | None = None
     reject_funnel: list[dict[str, Any]] = field(default_factory=list)
+    # MSA · slot adaptation (D-MSA-10 · assert via drain_mosaic_capture)
+    msa_profile: dict[str, Any] | None = None
+    r_hero_target: float | None = None
+    track_override: dict[str, Any] | None = None
+    slot_fits: list[str] | None = None
+    crop_risk: list[float] | None = None
+    whitespace_ratio: float | None = None
+    msa_outcome: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -88,6 +96,13 @@ class MosaicWindowLog:
             "sixHeroOutcome": self.six_hero_outcome,
             "quotaSnapshot": self.quota_snapshot,
             "rejectFunnel": list(self.reject_funnel),
+            "msaProfile": self.msa_profile,
+            "rHeroTarget": self.r_hero_target,
+            "trackOverride": self.track_override,
+            "slotFits": list(self.slot_fits) if self.slot_fits is not None else None,
+            "cropRisk": list(self.crop_risk) if self.crop_risk is not None else None,
+            "whitespaceRatio": self.whitespace_ratio,
+            "msaOutcome": self.msa_outcome,
         }
         if self.top3_patterns:
             out["top3Patterns"] = list(self.top3_patterns)
