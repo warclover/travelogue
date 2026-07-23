@@ -423,7 +423,10 @@ def test_funnel_raw_via_drain_mosaic_capture() -> None:
 def test_reject_funnel_stage_mapping() -> None:
     assert reject_funnel_stage("contract:mix_miss") == "contract"
     assert reject_funnel_stage("pattern_disabled") == "lifecycle"
-    assert reject_funnel_stage("usage_rule:mixed_portrait_is_hero") == "usage"
+    assert reject_funnel_stage("usage_rule:near_scene_clone") == "usage"
+    assert (
+        reject_funnel_stage("mixed_routing:mixed_portrait_is_hero") == "mixed_routing"
+    )
 
 
 def test_default_registry_has_zero_experimental() -> None:

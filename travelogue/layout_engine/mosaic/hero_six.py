@@ -24,6 +24,10 @@ class HeroSixQualify:
     gap: float | None = None
 
 
+# PR-C1 / SUP-06 · hard reject (never usage-undo). Not a ``usage_rule:`` prefix.
+MIXED_PORTRAIT_IS_HERO_REASON = "mixed_routing:mixed_portrait_is_hero"
+
+
 def effective_hero_six_opportunity_enabled(cfg: MosaicConfig | None) -> bool:
     if not effective_selection_optimization_enabled(cfg):
         return False
@@ -93,7 +97,11 @@ def qualify_hero_six(
     from travelogue.layout_engine.mosaic.builders import _order_hero_six_detailed
 
     ordered, order_reason = _order_hero_six_detailed(
-        list(window), aspects, assets_map, median_sharp=median_sharp
+        list(window),
+        aspects,
+        assets_map,
+        median_sharp=median_sharp,
+        cfg=cfg,
     )
     if not ordered:
         return HeroSixQualify(False, False, order_reason or "six_hero_order_failed")

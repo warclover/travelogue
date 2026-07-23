@@ -615,35 +615,45 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             if structural_six and ctx.layout_state is not None:
                 # Dense/large unavailable → release opportunity (SUP-05 path family).
                 ctx.layout_state.release_hero_six_opportunity()
-            # AC-03 · precheck miss still emits a size=6 probe for unique bucketing.
-            probe = MosaicWindowLog(
-                segment_id=ctx.chapter_id or "",
-                window_size=6,
-                window_start=start,
-                fallback_used=True,
-                fallback_reason="six_hero_precheck",
-                planner_path="mosaic",
-                base_window_order=list(base_order),
-                effective_window_order=list(sizes),
-                reorder_reason=reorder_reason,
-                structurally_qualified_six=structural_six,
-                admit_six_hero=False,
-                six_hero_opportunity_state=(
-                    getattr(ctx.layout_state, "hero_six_opportunity", "idle")
-                    if ctx.layout_state is not None
-                    else "idle"
-                ),
-                six_hero_qualify_reason=qualify_reason or None,
-                six_hero_outcome=six_hero_outcome_label(
-                    structural=structural_six,
-                    admit=False,
-                    reason=qualify_reason,
-                    attempted_six=False,
-                    won_six=False,
-                ),
-                quota_snapshot=_mtso_quota_snapshot(ctx.layout_state),
+            # AC-03 · precheck miss probe; dedupe by qualify reason per chapter.
+            reason_key = qualify_reason or "unknown"
+            seen = (
+                getattr(ctx.layout_state, "hero_six_probe_reasons", None)
+                if ctx.layout_state is not None
+                else None
             )
-            _append_mosaic_log(probe.to_dict())
+            emit_probe = structural_six or seen is None or reason_key not in seen
+            if emit_probe:
+                if isinstance(seen, set):
+                    seen.add(reason_key)
+                probe = MosaicWindowLog(
+                    segment_id=ctx.chapter_id or "",
+                    window_size=6,
+                    window_start=start,
+                    fallback_used=True,
+                    fallback_reason="six_hero_precheck",
+                    planner_path="mosaic",
+                    base_window_order=list(base_order),
+                    effective_window_order=list(sizes),
+                    reorder_reason=reorder_reason,
+                    structurally_qualified_six=structural_six,
+                    admit_six_hero=False,
+                    six_hero_opportunity_state=(
+                        getattr(ctx.layout_state, "hero_six_opportunity", "idle")
+                        if ctx.layout_state is not None
+                        else "idle"
+                    ),
+                    six_hero_qualify_reason=qualify_reason or None,
+                    six_hero_outcome=six_hero_outcome_label(
+                        structural=structural_six,
+                        admit=False,
+                        reason=qualify_reason,
+                        attempted_six=False,
+                        won_six=False,
+                    ),
+                    quota_snapshot=_mtso_quota_snapshot(ctx.layout_state),
+                )
+                _append_mosaic_log(probe.to_dict())
     if not admit_six:
         sizes = _prioritize_exact_window_fit(sizes, remaining)
         if reorder_reason is None and sizes and sizes[0] == remaining and remaining in base_order:

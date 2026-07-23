@@ -155,6 +155,8 @@ class ScreenLayoutPlannerState:
     # MTSO PR-B · cursor-bound six-hero opportunity (orthogonal to hero_reserve)
     hero_six_opportunity: HeroSixOpportunity = "idle"
     hero_six_armed_cursor: int | None = None
+    # Dedup six-hero precheck probe logs by qualify reason (per chapter).
+    hero_six_probe_reasons: set[str] = field(default_factory=set)
 
     @classmethod
     def from_trip_total(
@@ -298,6 +300,7 @@ class ScreenLayoutPlannerState:
         else:
             self.hero_six_opportunity = "idle"
         self.hero_six_armed_cursor = None
+        self.hero_six_probe_reasons.clear()
         late = self.rhythm.late_chapter_pairing
         if not late.is_late_chapter(chapter_index):
             return
@@ -463,15 +466,12 @@ class ScreenLayoutPlannerState:
             elif self.hero_reserve == "armed":
                 # LTN C5 · non-hero emit while armed ⇒ opportunity assets consumed.
                 self.release_hero_reserve()
-            try:
-                from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+            from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
 
-                if six_hero_family_id(pattern_id):
-                    self.consume_hero_six_opportunity()
-                elif self.hero_six_opportunity == "armed":
-                    self.release_hero_six_opportunity()
-            except Exception:
-                pass
+            if six_hero_family_id(pattern_id):
+                self.consume_hero_six_opportunity()
+            elif self.hero_six_opportunity == "armed":
+                self.release_hero_six_opportunity()
         kind = layout_kind_from_pattern(pattern_id)
         if kind == "nine":
             self.nine_used += 1

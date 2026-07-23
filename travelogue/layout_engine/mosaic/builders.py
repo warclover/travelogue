@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from travelogue.layout_contract.orientations import (
     AspectKind,
     aspect_kind_for_asset,
@@ -43,6 +45,9 @@ from travelogue.layout_engine.planner.screen_planner import (
     _sort_asset_ids_by_taken,
     _time_near_chain,
 )
+
+if TYPE_CHECKING:
+    from travelogue.config.mosaic import MosaicConfig
 
 
 def _portrait_fit(aid: str, assets_map: dict[str, dict]) -> str:
@@ -215,6 +220,7 @@ def _order_hero_six_detailed(
     assets_map: dict[str, dict],
     *,
     median_sharp: float | None,
+    cfg: "MosaicConfig | None" = None,
 ) -> tuple[list[str] | None, str]:
     """Order six-hero window; return (order, reason). D-MTSO-10 stable reject codes."""
     from travelogue.layout_engine.mosaic.main_eligibility import (
@@ -228,14 +234,14 @@ def _order_hero_six_detailed(
         return None, "six_hero_portrait_overflow"
     if len(landscapes) < 4:
         return None, "six_hero_insufficient_landscape"
-    cfg = get_effective_mosaic_config()
-    if main_ar_guard_enabled(cfg):
+    eff = cfg if cfg is not None else get_effective_mosaic_config()
+    if main_ar_guard_enabled(eff):
         main = pick_best_main_eligible(
             landscapes,
             assets_map,
             pattern_id=PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
             median_sharp=median_sharp,
-            cfg=cfg,
+            cfg=eff,
         )
         if not main:
             return None, "six_hero_no_main"

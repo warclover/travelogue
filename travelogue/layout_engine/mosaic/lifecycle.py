@@ -77,6 +77,8 @@ def reject_funnel_stage(reason: object) -> str:
     r = str(reason or "")
     if r.startswith("contract:"):
         return "contract"
+    if r.startswith("mixed_routing:"):
+        return "mixed_routing"
     if r.startswith("usage_rule:"):
         return "usage"
     if r == "pattern_disabled" or r.startswith("lifecycle"):

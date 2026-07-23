@@ -29,6 +29,8 @@ mosaic:
     cohort_trip_ids:
       - your-trip-id-here
   # selection_optimization：PR-B/C1 已落地；狗粮可显式 true（仓库默认仍 false 至 M3）
+  # 注意：mixed_hero_routing 硬拒横主竖辅后，竖主对偶 SKU 仍须靠上方 template_experiments
+  # 三元组可见；仅开 SO、不开 experiments ⇒ detail 含 dual_sku_gated，逃生为 portrait-1 rescue。
   selection_optimization:
     enabled: false
     # hero_six_opportunity:

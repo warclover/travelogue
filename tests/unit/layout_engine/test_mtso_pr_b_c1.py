@@ -280,9 +280,10 @@ def test_prc1_mixed_portrait_hard_reject_no_undo(monkeypatch) -> None:
         r
         for r in result.rejected
         if r.get("templateId") == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
-        and r.get("reason") == "usage_rule:mixed_portrait_is_hero"
+        and r.get("reason") == "mixed_routing:mixed_portrait_is_hero"
     ]
     assert hard, result.rejected
+    assert hard[0].get("detail") == "portrait_hero_is_max;dual_sku_gated"
     assert PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND not in {
         c.pattern_id for c in result.candidates if c.hard_valid
     }
@@ -311,7 +312,7 @@ def test_prc1_off_parent_switch_no_hard_reject(monkeypatch) -> None:
         median_sharp=0.5,
     )
     assert not any(
-        r.get("reason") == "usage_rule:mixed_portrait_is_hero" for r in result.rejected
+        r.get("reason") == "mixed_routing:mixed_portrait_is_hero" for r in result.rejected
     )
 
 
@@ -372,12 +373,55 @@ def test_ac07_landscape_strong_allows_main_portrait(monkeypatch) -> None:
         median_sharp=0.5,
     )
     assert not any(
-        r.get("reason") == "usage_rule:mixed_portrait_is_hero" for r in result.rejected
+        r.get("reason") == "mixed_routing:mixed_portrait_is_hero" for r in result.rejected
     )
     assert any(
         c.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND and c.hard_valid
         for c in result.candidates
     )
+
+
+def test_so_on_experiments_off_hard_reject_and_rescue(monkeypatch) -> None:
+    """SO on + experiments off: dual SKU gated, hard reject holds, rescue → portrait-1."""
+    from travelogue.layout_engine.mosaic import hook as hook_mod
+    from travelogue.layout_engine.mosaic.lifecycle import reject_funnel_stage
+
+    cfg = _mtso_cfg(monkeypatch)
+    # Default experiments stay off (fail-closed).
+    ids = ["p0"] + [f"l{i}" for i in range(4)]
+    aspects = {"p0": "portrait", **{f"l{i}": "landscape" for i in range(4)}}
+    assets_map = {
+        "p0": _asset("p0", w=1200, h=1800, sharp=0.99, kind="portrait"),
+        **{
+            f"l{i}": _asset(f"l{i}", w=3000, h=1687, sharp=0.35, kind="landscape")
+            for i in range(4)
+        },
+    }
+    result = generate_window_candidates_with_rejections(
+        ids, aspects, assets_map, cfg=cfg, median_sharp=0.5
+    )
+    hard = [
+        r
+        for r in result.rejected
+        if r.get("reason") == "mixed_routing:mixed_portrait_is_hero"
+    ]
+    assert hard
+    assert "dual_sku_gated" in str(hard[0].get("detail") or "")
+    assert reject_funnel_stage(hard[0]["reason"]) == "mixed_routing"
+
+    ctx = build_chapter_plan_context(
+        ids,
+        aspects,
+        assets=assets_map,
+        trip_photo_total=40,
+        include_chapter_hero=False,
+        layout_state=ScreenLayoutPlannerState.from_trip_total(40),
+    )
+    monkeypatch.setattr(hook_mod, "try_mosaic_window_mcs", lambda *a, **k: False)
+    begin_mosaic_capture()
+    adv = try_mosaic_window(ctx, 0)
+    assert adv == 1
+    assert ctx.screens[0]["patternId"] == "screen-portrait-1"
 
 
 def test_portrait_rescue_emits_portrait_1(monkeypatch) -> None:
@@ -532,7 +576,7 @@ def test_yaml_when_not_to_use_co_tested_with_hard_reject(monkeypatch) -> None:
         ids, aspects, assets_map, cfg=cfg, median_sharp=0.5
     )
     assert any(
-        r.get("reason") == "usage_rule:mixed_portrait_is_hero"
+        r.get("reason") == "mixed_routing:mixed_portrait_is_hero"
         and r.get("templateId") == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
         for r in result.rejected
     )

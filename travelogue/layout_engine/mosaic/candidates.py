@@ -15,9 +15,14 @@ from travelogue.layout_engine.mosaic.clone_detection import (
     near_scene_clone_penalty,
     template_prefers_burst,
 )
-from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
+from travelogue.layout_engine.mosaic.constants import (
+    PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+    PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
+    PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
+)
 from travelogue.layout_engine.mosaic.features import feature_summary_for_window
 from travelogue.layout_engine.mosaic.hero_six import (
+    MIXED_PORTRAIT_IS_HERO_REASON,
     effective_mixed_hero_routing_enabled,
     mixed_portrait_is_hero,
 )
@@ -345,11 +350,25 @@ def generate_window_candidates_with_rejections(
                     cfg=cfg,
                 )
             ):
+                from travelogue.layout_engine.mosaic.lifecycle import lifecycle_admit
+
+                dual_ok = any(
+                    lifecycle_admit(pid, mosaic_cfg=cfg, trip_id=trip_id).ok
+                    for pid in (
+                        PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+                        PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
+                    )
+                )
+                detail = (
+                    "portrait_hero_is_max"
+                    if dual_ok
+                    else "portrait_hero_is_max;dual_sku_gated"
+                )
                 _reject(
                     rejected,
                     pat.pattern_id,
-                    "usage_rule:mixed_portrait_is_hero",
-                    detail="portrait_hero_is_max",
+                    MIXED_PORTRAIT_IS_HERO_REASON,
+                    detail=detail,
                 )
                 continue
             if window_ctx is not None:
