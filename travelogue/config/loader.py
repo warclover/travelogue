@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -131,10 +132,18 @@ LSE_CAPABILITY_KEYS = frozenset(
 )
 
 
+_PATCH_CONFIG_LOCK = threading.Lock()
+
+
 def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
-    """Merge whitelisted keys into config.yaml on disk."""
+    """Merge whitelisted keys into config.yaml on disk (atomic replace)."""
     if yaml is None:
         raise RuntimeError("PyYAML required to patch config")
+    with _PATCH_CONFIG_LOCK:
+        _patch_config_file_unlocked(path, patch)
+
+
+def _patch_config_file_unlocked(path: Path, patch: dict[str, Any]) -> None:
     data: dict[str, Any] = {}
     if path.is_file():
         with path.open(encoding="utf-8") as f:
@@ -257,8 +266,14 @@ def patch_config_file(path: Path, patch: dict[str, Any]) -> None:
             norm_key = "copy_source_files" if key in ("copySourceFiles", "copy_source_files") else key
             target[norm_key] = bool(val)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+    # CQA I-CQA-12 · tmp + os.replace (no truncated YAML on concurrent PATCH)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    text = yaml.safe_dump(data, allow_unicode=True, sort_keys=False)
+    with tmp.open("w", encoding="utf-8") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
 
 
 def _read_strict_flag(data: dict[str, Any]) -> bool:

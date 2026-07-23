@@ -21,7 +21,7 @@ def test_write_longshot_upload_names_file(tmp_path: Path) -> None:
         '{"meta":{"title":"测试旅途"}}',
         encoding="utf-8",
     )
-    out = longshot_mod.write_longshot_upload(trip, b"\x89PNG\r\n", fmt="png")
+    out = longshot_mod.write_longshot_upload(trip, b"\x89PNG\r\n\x1a\n" + b"x", fmt="png")
     assert out.is_file()
     assert out.name.endswith(".png")
     # D-SFI-07 · on-disk stem uses display title (supersede FTUE tripId naming)

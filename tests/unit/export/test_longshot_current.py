@@ -53,6 +53,43 @@ def test_read_longshot_current_rejects_orphan_files(tmp_path: Path) -> None:
     assert read_longshot_current(trip_dir) is None
 
 
+def test_maybe_write_after_upload_unordered_segments_complete(tmp_path: Path) -> None:
+    """CQA AC-19 · last segment need not arrive last."""
+    trip_dir = tmp_path / "t3u"
+    trip_dir.mkdir()
+    (trip_dir / "trip.json").write_text(
+        json.dumps({"meta": {"title": "乱序册"}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (trip_dir / "乱序册-长图-02.png").write_bytes(b"2")
+    assert (
+        maybe_write_longshot_current_after_upload(
+            trip_dir,
+            rel="乱序册-长图-02.png",
+            segment_index=2,
+            segment_total=2,
+            fmt="png",
+            batch_id="batch-unordered",
+        )
+        is None
+    )
+    (trip_dir / "乱序册-长图-01.png").write_bytes(b"1")
+    path = maybe_write_longshot_current_after_upload(
+        trip_dir,
+        rel="乱序册-长图-01.png",
+        segment_index=1,
+        segment_total=2,
+        fmt="png",
+        batch_id="batch-unordered",
+    )
+    assert path is not None
+    cur = read_longshot_current(trip_dir)
+    assert cur is not None
+    assert cur["kind"] == "segmented"
+    assert cur["batchId"] == "batch-unordered"
+    assert cur["files"] == ["乱序册-长图-01.png", "乱序册-长图-02.png"]
+
+
 def test_maybe_write_after_upload_waits_for_full_segment_batch(tmp_path: Path) -> None:
     trip_dir = tmp_path / "t3"
     trip_dir.mkdir()

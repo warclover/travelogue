@@ -159,15 +159,10 @@ def maybe_apply_slot_adaptation(
         gap=template.stage.gap,
     )
 
+    # CQA D-CQA-09 / I-CQA-11 · persist only singular layoutGeometry.trackOverride.
+    # Per-variant solve remains observable via summary.variantOutcomes (no byVariant geo).
     if by_variant:
-        geo["trackOverrideByVariant"] = {
-            k: (
-                {"cols": v["cols"], "rows": v["rows"]}
-                if v.get("ok")
-                else {"miss": True, "reason": v.get("reason")}
-            )
-            for k, v in by_variant.items()
-        }
+        geo.pop("trackOverrideByVariant", None)
         summary["variantOutcomes"] = {
             k: ("applied" if v.get("ok") else "msa_solve_miss") for k, v in by_variant.items()
         }
