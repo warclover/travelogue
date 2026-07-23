@@ -189,6 +189,15 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         self.send_error(405)
 
     def _serve_trip_static(self, trip_id: str, rel_path: str) -> bool:
+        # PDG · deleting gate：拒绝再 open 即将/正在删除的目录
+        try:
+            from travelogue.web.studio_jobs import get_job_store
+
+            if get_job_store().is_trip_deleting(trip_id):
+                self.send_error(404)
+                return True
+        except Exception:
+            _log.debug("deleting gate check failed", exc_info=True)
         trip_dir = self.studio_bind_trip(trip_id)
         if trip_dir is None:
             return False
@@ -539,6 +548,12 @@ def serve_studio_directory(
     trips_dir = trips_dir.resolve()
     trips_dir.mkdir(parents=True, exist_ok=True)
     sweep_stale_uploads(trips_dir)
+    try:
+        from travelogue.web.studio_trip_delete import sweep_deleting_tombstones
+
+        sweep_deleting_tombstones(trips_dir)
+    except Exception:
+        _log.debug("sweep_deleting_tombstones skipped", exc_info=True)
 
     pinned_cfg = app_config or get_config()
     studio_token = new_studio_token() if allow_lan else None

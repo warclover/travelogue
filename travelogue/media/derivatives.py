@@ -228,6 +228,8 @@ def materialize_on_demand(
 
     def _bg() -> None:
         try:
+            if not trip_dir.is_dir():
+                return
             ensure_derivatives_for_trip(
                 trip,
                 trip_dir,
@@ -235,6 +237,8 @@ def materialize_on_demand(
                 asset_ids=need_set,
                 mark_unselected_skipped=False,
             )
+            if not trip_dir.is_dir():
+                return
             pipe2 = trip.setdefault("pipeline", {})
             pipe2["derivativesPreparing"] = 0
             still = asset_ids_needing_materialize(
@@ -244,6 +248,9 @@ def materialize_on_demand(
                 pipe2["derivativesStatus"] = "ready"
             if persist:
                 _persist_trip_json(trip_dir, trip)
+        except OSError:
+            # PDG · directory may vanish mid-flight during delete rename
+            return
         finally:
             with _on_demand_lock:
                 _on_demand_threads.pop(trip_key, None)
@@ -266,16 +273,53 @@ def materialize_on_demand(
     )
 
 
+def stop_or_join_on_demand(
+    trip_dir: Path,
+    *,
+    timeout: float = 2.0,
+) -> None:
+    """PDG · stop/join on-demand materialize thread for ``trip_dir``.
+
+    Lock is only held to pop the thread reference; join runs **outside** the lock.
+    On timeout, rename/delete may proceed; background persist must tolerate missing dir.
+    """
+    try:
+        trip_key = str(trip_dir.resolve())
+    except OSError:
+        trip_key = str(trip_dir)
+    with _on_demand_lock:
+        thread = _on_demand_threads.pop(trip_key, None)
+    if thread is None or not thread.is_alive():
+        return
+    thread.join(timeout=max(0.0, float(timeout)))
+
+
+def register_on_demand_thread_for_tests(
+    trip_dir: Path, thread: threading.Thread
+) -> None:
+    """Test hook · inject a live on-demand thread for AC-PDG-07 barrier cases."""
+    try:
+        trip_key = str(trip_dir.resolve())
+    except OSError:
+        trip_key = str(trip_dir)
+    with _on_demand_lock:
+        _on_demand_threads[trip_key] = thread
+
+
 def _persist_trip_json(trip_dir: Path, trip: dict) -> None:
     path = trip_dir / "trip.json"
     if not path.is_file():
         return
     import json
 
-    path.write_text(
-        json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    try:
+        path.write_text(
+            json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        # PDG · directory may have been renamed/deleted mid-flight
+        return
 
 
 def missing_planned_widths(asset: dict, *, planned_widths: tuple[int, ...] | list[int]) -> list[int]:

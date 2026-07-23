@@ -324,6 +324,7 @@ label + demo-flag · 内滚 · 轻点/⤢ → Lightbox（**非**真机小程序 
 | 首次访问 / 无 preference | **示例作品** |
 | 有 preference 且 trip 存在、preview 可用 | 加载该本 `bento-preview` → 渲染 Bento |
 | preference 指向已删除 trip | 清除 preference → **回示例** + toast「原预览画册已不可用，已切回示例」 |
+| 用户删除**当前预览**画册（热路径） | **强确认**（告知将切回示例）→ **先**清 preference 并回示例 → 再 `DELETE`；成功 toast 含「已切回示例」；失败保持示例。合同见 [PRD-PREVIEW-DELETE-GUARD-V1](./PRD-PREVIEW-DELETE-GUARD-V1.md) |
 | 用户选中 trip 但 `bento-preview` 404 | **保持选中**；Bento 占位帧 + bench 内联提示「预览尚未就绪」+ CTA「打开画册」；**禁止**静默换其他画册 |
 | 无用户画册 | select 仅「示例作品」一项（或 disabled + title 提示） |
 | 离线 | 用缓存 trips 填充选项；fetch 失败不清 preference |

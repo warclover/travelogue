@@ -10,7 +10,7 @@ import {
   persistBentoPreviewTripId,
   clearBentoPreviewTripId,
 } from "./store.js";
-import { renderBentoSurface } from "./bento.js";
+import { renderBentoSurface, bumpBentoMediaGeneration } from "./bento.js";
 import { syncPreviewSelectValue } from "./bento-preview-picker.js";
 import {
   persistSessionBentoTab,
@@ -107,6 +107,7 @@ export function setBentoPreviewTripId(tripId, opts) {
     V2.userManifest = null;
     V2.userPreviewTrip = null;
     V2.manifest = V2.demoManifest;
+    bumpBentoMediaGeneration();
     syncPreviewUi();
     syncPreviewSelectValue();
     renderBentoSurface(V2.manifest);

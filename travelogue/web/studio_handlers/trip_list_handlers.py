@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-import shutil
 from urllib.parse import parse_qs, urlparse
 
+from travelogue.media.derivatives import stop_or_join_on_demand
 from travelogue.web.studio_errors import internal_error_payload
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
@@ -17,6 +17,10 @@ from travelogue.web.studio_handlers.common import (
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
 from travelogue.web.studio_jobs import get_job_store
+from travelogue.web.studio_trip_delete import (
+    rename_trip_to_tombstone,
+    spawn_async_rmtree,
+)
 from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 from travelogue.web.studio_trips import list_studio_trips_page
 
@@ -41,6 +45,7 @@ def handle_trips(handler: StudioHandlerProtocol) -> None:
 
 
 def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    """PDG · begin_delete → stop on-demand → rename tombstone → 204 → async rmtree."""
     ctx = studio_ctx(handler)
     trip_dir = resolve_trip_dir_listed(ctx, trip_id)
     if trip_dir is None:
@@ -68,7 +73,7 @@ def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
         )
         return
     store = get_job_store()
-    if store.is_trip_busy(disk_id):
+    if not store.begin_trip_delete(disk_id):
         handler._json_response(
             409,
             {
@@ -79,13 +84,29 @@ def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
         )
         return
     try:
-        shutil.rmtree(trip_dir)
+        stop_or_join_on_demand(trip_dir, timeout=2.0)
+        tombstone = rename_trip_to_tombstone(trip_dir)
     except OSError:
+        _log.exception("rename trip to tombstone failed for %s", trip_dir)
+        store.end_trip_delete(disk_id)
+        handler._json_response(
+            500,
+            {
+                "ok": False,
+                "error": "E_TRIP_DELETE_FAILED",
+                "message": "删除失败，文件正被占用，请稍后再试",
+            },
+        )
+        return
+    except Exception:
         _log.exception("delete trip failed for %s", trip_dir)
+        store.end_trip_delete(disk_id)
         handler._json_response(500, internal_error_payload())
         return
     handler.send_response(204)
     handler.end_headers()
+    store.end_trip_delete(disk_id)
+    spawn_async_rmtree(tombstone)
 
 
 def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:

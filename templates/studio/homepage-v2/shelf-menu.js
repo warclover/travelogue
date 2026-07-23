@@ -1,9 +1,16 @@
 /**
  * 首页 v2 · 书架 TripCardMenu（M13 · hover ⋯ + 删除确认）。
+ * PDG · 预览中删除：强确认 → 先断开预览 → 卡片删除中 → DELETE。
  */
 import { isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { V2 } from "./store.js";
+import {
+  V2,
+  markTripDeleting,
+  clearTripDeleting,
+  isTripDeleting,
+  noteTripDeleted,
+} from "./store.js";
 import { deleteTrip } from "./trips-client.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
 import { setBentoPreviewTripId } from "./bento-tabs.js";
@@ -57,45 +64,148 @@ function openMenu(menuEl, menuBtn) {
   if (card) card.classList.add("is-menu-open");
 }
 
+function findShelfCards(tripId) {
+  var nodes = [];
+  document.querySelectorAll(
+    '.v2-shelf__card[data-trip-id="' + tripId + '"], .v2-shelf__resume[data-trip-id="' + tripId + '"]'
+  ).forEach(function (el) { nodes.push(el); });
+  return nodes;
+}
+
+function setCardDeletingUi(tripId, deleting) {
+  findShelfCards(tripId).forEach(function (card) {
+    if (deleting) {
+      card.dataset.deleting = "1";
+      card.setAttribute("aria-busy", "true");
+      card.classList.add("is-deleting");
+    } else {
+      delete card.dataset.deleting;
+      card.removeAttribute("aria-busy");
+      card.classList.remove("is-deleting");
+    }
+    card.querySelectorAll(".v2-shelf__menu-item--danger").forEach(function (btn) {
+      if (deleting) {
+        btn.disabled = true;
+        btn.textContent = "删除中";
+      } else if (!btn.dataset.demoLocked) {
+        btn.disabled = false;
+        btn.textContent = "删除画册";
+      }
+    });
+  });
+}
+
+function previewDeleteCopy(title) {
+  return {
+    title: "删除正在展示的画册？",
+    body:
+      "「" + title + "」是当前首页预览。删除后将切回示例作品，并移除其排版与预览记录。" +
+      "你电脑上的原始照片不会被删除，之后可以用同一文件夹重新导入。",
+  };
+}
+
+function genericDeleteCopy(title) {
+  return {
+    title: "删除这本画册？",
+    body:
+      "将移除画册「" + title + "」及其排版与预览记录。" +
+      "你电脑上的原始照片不会被删除，之后可以用同一文件夹重新导入。",
+  };
+}
+
 function confirmDelete(trip, surface, onSuccess) {
-  var title = trip.title || trip.tripId;
-  var body =
-    "将移除画册「" + title + "」及其排版与预览记录。" +
-    "你电脑上的原始照片不会被删除，之后可以用同一文件夹重新导入。";
+  var tripId = trip.tripId;
+  if (isTripDeleting(tripId)) return;
+
+  var title = trip.title || tripId;
+  var wasPreviewing = !!(V2.bentoPreviewTripId && V2.bentoPreviewTripId === tripId);
+  var copy = wasPreviewing ? previewDeleteCopy(title) : genericDeleteCopy(title);
 
   var runDelete = function () {
-    trackStudioEvent("shelf_delete_confirm", { trip_id: trip.tripId, surface: surface });
-    return deleteTrip(trip.tripId).then(function () {
-      trackStudioEvent("shelf_delete_success", {
-        trip_id: trip.tripId,
-        surface: surface,
-        remaining_count: Math.max(0, (V2.tripsTotal || 1) - 1),
+    if (isTripDeleting(tripId)) return Promise.resolve();
+    markTripDeleting(tripId);
+    setCardDeletingUi(tripId, true);
+    trackStudioEvent("shelf_delete_confirm", {
+      trip_id: tripId,
+      surface: surface,
+      was_previewing: wasPreviewing,
+    });
+
+    var disconnectP = Promise.resolve();
+    if (wasPreviewing || (V2.bentoPreviewTripId && V2.bentoPreviewTripId === tripId)) {
+      try {
+        // PDG §8 · 打点 bento_preview_select source=shelf_delete（trip_id:null）
+        disconnectP = setBentoPreviewTripId(null, {
+          source: "shelf_delete",
+        });
+      } catch (e) {
+        clearTripDeleting(tripId);
+        setCardDeletingUi(tripId, false);
+        toast("无法切换预览，删除已取消", { duration: 3200 });
+        trackStudioEvent("shelf_delete_fail", {
+          trip_id: tripId,
+          surface: surface,
+          was_previewing: wasPreviewing,
+          error: "disconnect_throw",
+        });
+        return Promise.resolve();
+      }
+    }
+
+    return Promise.resolve(disconnectP).catch(function () {
+      /* storage / async stale sync failures: still DELETE (D-PDG-07) */
+    }).then(function () {
+      return deleteTrip(tripId).then(function () {
+        noteTripDeleted(tripId);
+        trackStudioEvent("shelf_delete_success", {
+          trip_id: tripId,
+          surface: surface,
+          was_previewing: wasPreviewing,
+          remaining_count: Math.max(0, (V2.tripsTotal || 1) - 1),
+        });
+        toast(
+          wasPreviewing
+            ? "已删除「" + title + "」，已切回示例"
+            : "已删除「" + title + "」",
+          { duration: 3000 }
+        );
+        if (typeof onSuccess === "function") onSuccess(trip);
+        if (typeof V2.reroute === "function") V2.reroute();
+      }).catch(function (err) {
+        clearTripDeleting(tripId);
+        setCardDeletingUi(tripId, false);
+        var msg = (err && err.message) ? err.message : "删除失败，请重试";
+        if (err && err.status === 401) msg = "未授权，请刷新页面后重试";
+        toast(msg, { duration: 3200 });
+        trackStudioEvent("shelf_delete_fail", {
+          trip_id: tripId,
+          surface: surface,
+          was_previewing: wasPreviewing,
+          error: (err && err.code) || (err && err.status) || "delete_failed",
+        });
       });
-      toast("已删除「" + title + "」", { duration: 3000 });
-      if (typeof onSuccess === "function") onSuccess(trip);
-      if (typeof V2.reroute === "function") V2.reroute();
-    }).catch(function (err) {
-      var msg = (err && err.message) ? err.message : "删除失败，请重试";
-      if (err && err.status === 401) msg = "未授权，请刷新页面后重试";
-      toast(msg, { duration: 3200 });
     });
   };
 
   if (typeof studioModal !== "function") {
-    if (window.confirm("删除这本画册？\n\n" + body)) runDelete();
+    if (window.confirm(copy.title + "\n\n" + copy.body)) runDelete();
     return;
   }
 
   studioModal({
-    title: "删除这本画册？",
-    body: body,
+    title: copy.title,
+    body: copy.body,
     confirmText: "删除",
     cancelText: "取消",
     danger: true,
     focusCancel: true,
   }).then(function (ok) {
     if (!ok) {
-      trackStudioEvent("shelf_delete_cancel", { trip_id: trip.tripId, surface: surface });
+      trackStudioEvent("shelf_delete_cancel", {
+        trip_id: tripId,
+        surface: surface,
+        was_previewing: wasPreviewing,
+      });
       return;
     }
     runDelete();
@@ -112,6 +222,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   opts = opts || {};
   var surface = opts.surface || "grid";
   var demo = isDemoTrip(trip);
+  var deleting = isTripDeleting(trip.tripId);
 
   var menuBtn = document.createElement("button");
   menuBtn.type = "button";
@@ -147,10 +258,13 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   deleteItem.type = "button";
   deleteItem.className = "v2-shelf__menu-item v2-shelf__menu-item--danger";
   deleteItem.setAttribute("role", "menuitem");
-  deleteItem.textContent = "删除画册";
+  deleteItem.textContent = deleting ? "删除中" : "删除画册";
   if (demo) {
     deleteItem.disabled = true;
+    deleteItem.dataset.demoLocked = "1";
     deleteItem.title = "示例画册无法删除";
+  } else if (deleting) {
+    deleteItem.disabled = true;
   }
 
   menu.appendChild(previewItem);
@@ -191,7 +305,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   deleteItem.addEventListener("click", function (e) {
     e.preventDefault();
     e.stopPropagation();
-    if (deleteItem.disabled) return;
+    if (deleteItem.disabled || isTripDeleting(trip.tripId)) return;
     closeMenu(menu);
     confirmDelete(trip, surface, opts.onDeleted);
   });

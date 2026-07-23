@@ -28,6 +28,7 @@ const ALLOWED = new Set([
   "shelf_delete_confirm",
   "shelf_delete_success",
   "shelf_delete_cancel",
+  "shelf_delete_fail",
   "shelf_longshot_start",
   "shelf_longshot_success",
   "shelf_longshot_fail",

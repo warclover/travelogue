@@ -5,6 +5,7 @@ import {
   V2,
   $,
   readBentoPreviewTripId,
+  isTripDeleteBlocked,
   STUDIO_DEMO_SHOWCASE_BASE,
 } from "./store.js";
 import { manifestAssetUrl } from "./manifest.js";
@@ -396,6 +397,10 @@ export function applyStoredBentoPreviewPreference(trips) {
   return import("./bento-preview-migrate.js").then(function (migrate) {
     migrate.migrateD13BentoPreference(trips);
     var stored = readBentoPreviewTripId();
+    // PDG · 删除中 / 刚删 ID 不得被 reroute 复活
+    if (stored && isTripDeleteBlocked(stored)) {
+      stored = null;
+    }
     if (!stored) {
       V2.bentoPreviewTripId = null;
       return refreshBentoUserPreview(trips);

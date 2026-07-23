@@ -68,6 +68,14 @@ var _phoneFrameObserver = null;
 var _phoneFrameWired = false;
 var _phoneSyncAttempts = 0;
 var PHONE_SYNC_MAX_ATTEMPTS = 16;
+/** PDG · 背景 / bench probe 世代，过期 onload 禁止回写 DOM。 */
+var _bentoMediaGen = 0;
+
+/** @returns {number} 新世代号 */
+export function bumpBentoMediaGeneration() {
+  _bentoMediaGen += 1;
+  return _bentoMediaGen;
+}
 var _pendingPhoneManifest = null;
 var _pendingPhoneTier = "L0";
 
@@ -183,8 +191,10 @@ export function renderBackground(manifest, tier) {
   if (!bg || !manifest || !manifest.assets) return;
   var url = manifestAssetUrl(manifest, "background");
   if (!url) return;
+  var gen = _bentoMediaGen;
   var img = new Image();
   img.onload = function () {
+    if (gen !== _bentoMediaGen) return;
     var bgImg = cssBackgroundImage(url);
     if (bgImg) bg.style.backgroundImage = bgImg;
     var motionOk = tier !== "L1" && tier !== "L3";
@@ -205,8 +215,10 @@ export function renderColdStartBackground(manifest) {
   if (!manifest || !manifest.assets) return;
   var url = manifestAssetUrl(manifest, "background");
   if (!url) return;
+  var gen = _bentoMediaGen;
   var img = new Image();
   img.onload = function () {
+    if (gen !== _bentoMediaGen) return;
     var bgImg = cssBackgroundImage(url);
     if (bgImg) bg.style.backgroundImage = bgImg;
     bg.classList.remove("is-kenburns");
@@ -402,8 +414,10 @@ export function renderBench(manifest) {
   syncBenchResumeButton();
   if (thumb && manifest.assets && manifest.assets.background) {
     var url = manifestAssetUrl(manifest, "background");
+    var gen = _bentoMediaGen;
     var probe = new Image();
     probe.onload = function () {
+      if (gen !== _bentoMediaGen) return;
       var bgImg = cssBackgroundImage(url);
       if (bgImg) thumb.style.backgroundImage = bgImg;
     };
@@ -413,6 +427,7 @@ export function renderBench(manifest) {
 
 /** 重绘 Bento 预览区（manifest 变更 / 预览画册切换）。 */
 export function renderBentoSurface(manifest) {
+  bumpBentoMediaGeneration();
   resetBackgroundLayer();
   var tier = resolveLayoutTier({ manifestError: !manifest });
   V2.layoutTier = tier;

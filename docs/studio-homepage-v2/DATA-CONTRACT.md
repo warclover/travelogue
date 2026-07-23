@@ -136,6 +136,8 @@ Lightbox scroll 模式：按 `pages[]` 顺序纵向拼接全部 `webp`（或单�
 | `bentoPreviewTripId` 为有效 tripId | 请求 `GET /trips/{tripId}/bento-preview` |
 | 404 / 网络失败 | **保持用户选中**；Bento 占位 + 内联提示；**禁止**静默 fallback 到其他 trip |
 | preference 指向已删除 trip | 清除 `localStorage` 键 → 回 demo |
+| 用户删除**当前预览**画册（热路径 · PDG） | **强确认** → **先**清 `bentoPreviewTripId` 并回示例 → 再 `DELETE`；失败保持示例 + 错误 toast；`reroute` **不得**复活刚删 / 删除中 ID |
+| `DELETE /trips/{id}` 成功语义（PDG） | **204 = 逻辑摘除**（列表不可见、原 ID resolve 失败）；物理 `rmtree` 可异步；墓碑目录 `_deleting-*` 不进列表 |
 
 > D-13 曾用 `GET /trips` 第一条非 demo（`updatedAt` 降序）隐式决定预览；D-14 起仅作 select **选项排序**，不作为默认预览源（默认仍为示例作品）。
 

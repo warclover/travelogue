@@ -55,6 +55,8 @@ class StudioJobStore:
         self._import_handles: dict[str, Any] = {}
         self._longshot_active_id: str | None = None
         self._longshot_aborts: dict[str, Callable[[], None]] = {}
+        # PDG · 独立 deleting 集合（禁止伪造 StudioJob）
+        self._deleting_trip_ids: set[str] = set()
 
     def create_import_job(self) -> StudioJob | None:
         with self._lock:
@@ -76,10 +78,31 @@ class StudioJobStore:
 
     def is_trip_busy(self, trip_id: str) -> bool:
         with self._lock:
+            if trip_id in self._deleting_trip_ids:
+                return True
             for job in self._jobs.values():
                 if job.trip_id == trip_id and job.status in ("queued", "running"):
                     return True
             return False
+
+    def is_trip_deleting(self, trip_id: str) -> bool:
+        with self._lock:
+            return trip_id in self._deleting_trip_ids
+
+    def begin_trip_delete(self, trip_id: str) -> bool:
+        """Atomically mark trip deleting. False if busy (job or already deleting)."""
+        with self._lock:
+            if trip_id in self._deleting_trip_ids:
+                return False
+            for job in self._jobs.values():
+                if job.trip_id == trip_id and job.status in ("queued", "running"):
+                    return False
+            self._deleting_trip_ids.add(trip_id)
+            return True
+
+    def end_trip_delete(self, trip_id: str) -> None:
+        with self._lock:
+            self._deleting_trip_ids.discard(trip_id)
 
     def is_cancelled(self, job: StudioJob) -> bool:
         with self._lock:

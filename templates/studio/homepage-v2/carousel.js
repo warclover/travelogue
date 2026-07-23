@@ -260,6 +260,17 @@ export function initCarousel(manifest, opts) {
     if (syncReleaseTimer) clearTimeout(syncReleaseTimer);
     scrollTimer = null;
     syncReleaseTimer = null;
+    // PDG · 尽力释放：清空仍挂载的 img，减少对即将删除目录的请求占用
+    try {
+      if (track) {
+        track.querySelectorAll("img").forEach(function (img) {
+          img.onload = null;
+          img.onerror = null;
+          img.removeAttribute("srcset");
+          img.removeAttribute("src");
+        });
+      }
+    } catch (e) { /* ignore */ }
     if (_disposeActive === dispose) _disposeActive = function () {};
   }
   _disposeActive = dispose;

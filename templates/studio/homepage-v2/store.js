@@ -188,6 +188,37 @@ export function clearBentoPreviewTripId() {
   persistBentoPreviewTripId(null);
 }
 
+/** PDG · 删除中 / 刚删 ID（防 reroute 复活 preference）。 */
+var _deletingTripIds = Object.create(null);
+var _recentlyDeletedTripIds = Object.create(null);
+
+export function markTripDeleting(tripId) {
+  if (!tripId) return;
+  _deletingTripIds[String(tripId)] = true;
+}
+
+export function clearTripDeleting(tripId) {
+  if (!tripId) return;
+  delete _deletingTripIds[String(tripId)];
+}
+
+export function isTripDeleting(tripId) {
+  return !!(tripId && _deletingTripIds[String(tripId)]);
+}
+
+export function noteTripDeleted(tripId) {
+  if (!tripId) return;
+  var id = String(tripId);
+  _recentlyDeletedTripIds[id] = true;
+  delete _deletingTripIds[id];
+}
+
+export function isTripDeleteBlocked(tripId) {
+  if (!tripId) return false;
+  var id = String(tripId);
+  return !!(_deletingTripIds[id] || _recentlyDeletedTripIds[id]);
+}
+
 /** @returns {{ trips: object[], total: number } | null} */
 export function readTripsCache() {
   try {

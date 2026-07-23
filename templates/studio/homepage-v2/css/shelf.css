@@ -109,6 +109,15 @@
   transition: opacity .2s, transform .2s;
   pointer-events: none;
 }
+.v2-shelf__card.is-deleting,
+.v2-shelf__resume.is-deleting {
+  opacity: 0.72;
+  pointer-events: none;
+}
+.v2-shelf__card.is-deleting .v2-shelf__menu-btn,
+.v2-shelf__resume.is-deleting .v2-shelf__menu-btn {
+  pointer-events: none;
+}
 .v2-shelf__book {
   position: relative;
   border: none;

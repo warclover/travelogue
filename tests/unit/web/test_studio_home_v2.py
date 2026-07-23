@@ -799,6 +799,7 @@ def test_studio_home_v2_telemetry_wired() -> None:
         "sheet_close", "sheet_abandon", "lightbox_open",
         "spread_page_view", "shelf_resume_click",
         "shelf_menu_open", "shelf_delete_confirm", "shelf_delete_success",
+        "shelf_delete_fail",
         "shelf_longshot_start", "shelf_longshot_success",
         "longshot_export_start", "longshot_export_success",
         "longshot_export_fail", "longshot_platform_change",

@@ -63,7 +63,7 @@ export function deleteTrip(tripId) {
   }).then(function (r) {
     if (r.status === 204 || r.status === 200) return;
     return r.json().catch(function () { return {}; }).then(function (data) {
-      var err = new Error((data && data.message) || "delete failed");
+      var err = new Error((data && data.message) || "删除失败，请重试");
       err.code = data && data.error;
       err.status = r.status;
       throw err;

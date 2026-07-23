@@ -7,7 +7,15 @@
 import { isDemoTrip } from "../js/constants.js";
 import { cssBackgroundImage, studioAuthHeaders } from "../js/dom.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { $, show, V2 } from "./store.js";
+import {
+  $,
+  show,
+  V2,
+  clearBentoPreviewTripId,
+  noteTripDeleted,
+  clearTripDeleting,
+  syncDerivedBentoTab,
+} from "./store.js";
 import { openImportSheet } from "./import-entry.js";
 import { fetchTripsPage, SHELF_PAGE_SIZE } from "./trips-client.js";
 import { attachShelfTripMenu, closeAllShelfMenus } from "./shelf-menu.js";
@@ -96,6 +104,19 @@ function tripSubLine(trip) {
 
 function onTripDeleted(trip) {
   var tripId = trip.tripId;
+  noteTripDeleted(tripId);
+  clearTripDeleting(tripId);
+
+  // PDG · 双保险：热路径应已清空；此处幂等防止悬空 preference
+  if (V2.bentoPreviewTripId === tripId) {
+    clearBentoPreviewTripId();
+    V2.bentoPreviewTripId = null;
+    V2.userManifest = null;
+    V2.userPreviewTrip = null;
+    V2.manifest = V2.demoManifest;
+    syncDerivedBentoTab();
+  }
+
   _loadedTrips = _loadedTrips.filter(function (t) { return t.tripId !== tripId; });
   _total = Math.max(0, _total - 1);
 

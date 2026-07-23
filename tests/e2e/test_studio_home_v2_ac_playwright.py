@@ -367,10 +367,12 @@ def test_ac_d14_03_persist_refresh(studio_server) -> None:
 
 
 def test_ac_d14_04_deleted_trip_fallback(studio_server) -> None:
-    """AC-D14-04 · preference 指向已删 trip → 回示例 + toast。"""
+    """AC-D14-04 / AC-PDG-09 · preference 指向已删 trip → 回示例 + toast；storage 空 + 无 pageerror。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
+        errors: list[str] = []
+        page.on("pageerror", lambda exc: errors.append(str(exc)))
         _goto_v2(
             page,
             studio_server["base"],
@@ -384,6 +386,11 @@ def test_ac_d14_04_deleted_trip_fallback(studio_server) -> None:
         )
         assert page.locator("#v2-bento-preview-label").inner_text() == "示例作品"
         assert _visible_demo_flag_count(page) == 2
+        stored = page.evaluate(
+            "() => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')"
+        )
+        assert stored is None
+        assert not errors, f"pageerror: {errors}"
         browser.close()
 
 
@@ -2046,4 +2053,421 @@ def test_js_error_pipeline_posts_event(studio_server) -> None:
         meta = js_errors[0].get("meta", {})
         assert meta.get("variant") == "v2"
         assert "harness-js-error-probe" in (meta.get("message") or "")
+        browser.close()
+
+
+# ── PDG · 预览中删除护栏 ───────────────────────────────────────────
+
+_PDG_FETCH_SNAP_JS = """
+() => {
+  if (window.__pdgFetchWrapped) return;
+  window.__pdgFetchWrapped = true;
+  window.__pdgDeleteSnap = null;
+  window.__pdgDeleteCount = 0;
+  const orig = window.fetch.bind(window);
+  window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const method = String(
+      (init && init.method) || (input && input.method) || 'GET'
+    ).toUpperCase();
+    if (method === 'DELETE' && url.indexOf('/__travelogue/trips/') >= 0) {
+      window.__pdgDeleteCount = (window.__pdgDeleteCount || 0) + 1;
+      const select = document.getElementById('v2-bento-preview-select');
+      window.__pdgDeleteSnap = {
+        preview: localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId'),
+        select: select ? select.value : null,
+        demoFlags: Array.from(document.querySelectorAll('[data-demo-flag]'))
+          .filter((el) => {
+            if (el.hidden) return false;
+            const cs = getComputedStyle(el);
+            return cs.display !== 'none' && cs.visibility !== 'hidden'
+              && el.getClientRects().length > 0;
+          }).length,
+      };
+    }
+    return orig(input, init);
+  };
+}
+"""
+
+
+def _open_shelf_delete(page, trip_id: str) -> None:
+    card = page.locator(f'.v2-shelf__card[data-trip-id="{trip_id}"]')
+    card.scroll_into_view_if_needed()
+    card.hover()
+    menu_btn = card.locator(".v2-shelf__menu-btn")
+    menu_btn.wait_for(state="visible", timeout=5_000)
+    menu_btn.click()
+    page.get_by_role("menuitem", name="删除画册").click()
+
+
+def _confirm_studio_modal_delete(page) -> None:
+    modal = page.locator(".studio__modal")
+    modal.wait_for(state="visible", timeout=10_000)
+    modal.get_by_role("button", name="删除", exact=True).click()
+
+
+def test_ac_pdg_01_previewing_delete_strong_confirm(studio_server) -> None:
+    """AC-PDG-01 · 预览中删除：强确认标题 + 锁定子串。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select option[value=\"kyoto-rain\"]')",
+            timeout=10_000,
+        )
+        _select_preview_trip(page, "京都")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === 'kyoto-rain'",
+            timeout=10_000,
+        )
+        _open_shelf_delete(page, "kyoto-rain")
+        modal = page.locator(".studio__modal")
+        modal.wait_for(state="visible", timeout=10_000)
+        title = modal.locator("h3").first.inner_text()
+        body = modal.locator(".studio__modal-body").inner_text()
+        assert "删除正在展示的画册" in title
+        assert "当前首页预览" in body
+        assert "切回示例作品" in body
+        modal.get_by_role("button", name="取消").click()
+        browser.close()
+
+
+def test_ac_pdg_02_non_preview_delete_generic_copy(studio_server) -> None:
+    """AC-PDG-02 · 非预览册：通用文案，不出现切回示例。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "studioFixture=multi")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"hokkaido\"]')",
+            timeout=10_000,
+        )
+        # 保持默认示例预览，删除另一本用户册
+        _open_shelf_delete(page, "hokkaido")
+        modal = page.locator(".studio__modal")
+        modal.wait_for(state="visible", timeout=10_000)
+        body = modal.inner_text()
+        assert "原始照片不会被删除" in body
+        assert "切回示例" not in body
+        modal.get_by_role("button", name="取消").click()
+        browser.close()
+
+
+@pytest.fixture
+def studio_server_real_trips(tmp_path: Path):
+    from travelogue.services.trip_factory import create_trip
+
+    trips_dir = tmp_path / "trips"
+    trips_dir.mkdir()
+    for tid, title in (("album-a", "春日京都游"), ("album-b", "秋日奈良游")):
+        create_trip(tid, trips_dir, title=title)
+        (trips_dir / tid / "preview.jpg").write_bytes(
+            b"\xff\xd8\xff\xd9"
+        )  # minimal JPEG
+    port = _free_port()
+    server = _start_studio_server(trips_dir, port)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        yield {"base": base, "trips_dir": trips_dir}
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def _pdg_select_album_a(page) -> None:
+    page.locator("#v2-bento-preview-trigger").click()
+    page.locator(
+        "#v2-bento-preview-listbox .v2-preview-combobox__option",
+        has_text="春日",
+    ).click()
+    page.wait_for_function(
+        "() => document.querySelector('#v2-bento-preview-select').value === 'album-a'",
+        timeout=10_000,
+    )
+
+
+def _pdg_assert_demo_state(page, *, card_still: bool = False) -> None:
+    assert page.evaluate(
+        "() => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')"
+    ) is None
+    assert page.locator("#v2-bento-preview-label").inner_text() == "示例作品"
+    assert _visible_demo_flag_count(page) == 2
+    count = page.locator('.v2-shelf__card[data-trip-id="album-a"]').count()
+    if card_still:
+        assert count == 1
+    else:
+        assert count == 0
+
+
+def test_ac_pdg_03_04_05_disconnect_before_delete(studio_server_real_trips) -> None:
+    """AC-PDG-03/04/05 · 延迟 DELETE + 瞬间采样；aria-busy；防重入；成功回示例。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, base)
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(page)
+        page.evaluate(_PDG_FETCH_SNAP_JS)
+
+        delete_urls: list[str] = []
+
+        def _on_req(req):
+            if req.method == "DELETE" and "/__travelogue/trips/" in req.url:
+                delete_urls.append(req.url)
+
+        def _delayed_delete(route):
+            if route.request.method != "DELETE":
+                route.fallback()
+                return
+            time.sleep(1.0)
+            route.continue_()
+
+        page.on("request", _on_req)
+        page.route("**/__travelogue/trips/album-a", _delayed_delete)
+
+        _open_shelf_delete(page, "album-a")
+        _confirm_studio_modal_delete(page)
+
+        page.wait_for_function(
+            """() => {
+              const c = document.querySelector('.v2-shelf__card[data-trip-id="album-a"]');
+              return c && c.getAttribute('aria-busy') === 'true'
+                && c.classList.contains('is-deleting');
+            }""",
+            timeout=3_000,
+        )
+        # 未决期间菜单应 inert；勿用长 timeout 的 hover（会吃掉 toast 窗口）
+        assert page.evaluate(
+            """() => {
+              const c = document.querySelector('.v2-shelf__card[data-trip-id="album-a"]');
+              const btn = c && c.querySelector('.v2-shelf__menu-btn');
+              if (!c || !btn) return false;
+              const pe = getComputedStyle(btn).pointerEvents;
+              return c.classList.contains('is-deleting') && pe === 'none';
+            }"""
+        )
+
+        page.wait_for_function("() => window.__pdgDeleteCount >= 1", timeout=10_000)
+        snap = page.evaluate("() => window.__pdgDeleteSnap")
+        assert snap is not None
+        assert snap.get("preview") is None
+        assert snap.get("select") == ""
+        assert snap.get("demoFlags") == 2
+
+        page.get_by_text("已切回示例").wait_for(timeout=10_000)
+        page.wait_for_function(
+            "() => !document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=10_000,
+        )
+        _pdg_assert_demo_state(page, card_still=False)
+        assert len(delete_urls) == 1
+        assert page.evaluate("() => window.__pdgDeleteCount") == 1
+
+        page.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
+        toggle = page.locator("#v2-settings-toggle")
+        expect(toggle).to_be_enabled(timeout=5_000)
+        toggle.click()
+        page.wait_for_function(
+            "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }",
+            timeout=5_000,
+        )
+        browser.close()
+
+
+def _pdg_mock_delete_error(page, *, status: int, body: str | None, content_type: str | None):
+    def _handler(route):
+        if route.request.method != "DELETE":
+            route.fallback()
+            return
+        headers = {}
+        if content_type:
+            headers["content-type"] = content_type
+        route.fulfill(status=status, headers=headers, body=body or "")
+
+    page.route("**/__travelogue/trips/album-a", _handler)
+
+
+def test_ac_pdg_06a_delete_409_keeps_demo(studio_server_real_trips) -> None:
+    """AC-PDG-06a · DELETE 409：保持示例 + preference 空 + 卡片仍在。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, base)
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(page)
+        _pdg_mock_delete_error(
+            page,
+            status=409,
+            content_type="application/json",
+            body=json.dumps(
+                {
+                    "ok": False,
+                    "error": "E_STUDIO_JOB_BUSY",
+                    "message": "导入进行中，请稍后再试",
+                }
+            ),
+        )
+        _open_shelf_delete(page, "album-a")
+        _confirm_studio_modal_delete(page)
+        page.get_by_text("导入进行中").wait_for(timeout=10_000)
+        _pdg_assert_demo_state(page, card_still=True)
+        browser.close()
+
+
+def test_ac_pdg_06b_delete_500_json_message(studio_server_real_trips) -> None:
+    """AC-PDG-06b · DELETE 500 + JSON message：展示该 message；示例态保持。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, base)
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(page)
+        _pdg_mock_delete_error(
+            page,
+            status=500,
+            content_type="application/json",
+            body=json.dumps(
+                {
+                    "ok": False,
+                    "error": "E_TRIP_DELETE_FAILED",
+                    "message": "删除失败，文件正被占用，请稍后再试",
+                }
+            ),
+        )
+        _open_shelf_delete(page, "album-a")
+        _confirm_studio_modal_delete(page)
+        page.get_by_text("文件正被占用").wait_for(timeout=10_000)
+        _pdg_assert_demo_state(page, card_still=True)
+        browser.close()
+
+
+def test_ac_pdg_06c_delete_500_empty_body(studio_server_real_trips) -> None:
+    """AC-PDG-06c · DELETE 500 无/非 JSON body → toast「删除失败，请重试」。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, base)
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(page)
+        _pdg_mock_delete_error(
+            page,
+            status=500,
+            content_type="text/plain",
+            body="not-json",
+        )
+        _open_shelf_delete(page, "album-a")
+        _confirm_studio_modal_delete(page)
+        page.get_by_text("删除失败，请重试").wait_for(timeout=10_000)
+        _pdg_assert_demo_state(page, card_still=True)
+        browser.close()
+
+
+def test_ac_pdg_08b_preview_page_open_while_delete(studio_server_real_trips) -> None:
+    """AC-PDG-08b · 首页预览 A + 独立页打开 A 资源 → 首页删除 A，5s 内可交互且为示例。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        home = browser.new_page(viewport={"width": 1440, "height": 900})
+        asset = browser.new_page(viewport={"width": 800, "height": 600})
+        errors: list[str] = []
+        home.on("pageerror", lambda exc: errors.append(str(exc)))
+
+        asset.goto(f"{base}/album-a/preview.jpg", wait_until="load")
+        assert asset.url.endswith("/album-a/preview.jpg")
+
+        _goto_v2(home, base)
+        _wait_visible(home, "v2-frame")
+        home.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(home)
+        _open_shelf_delete(home, "album-a")
+        _confirm_studio_modal_delete(home)
+        home.get_by_text("已切回示例").wait_for(timeout=10_000)
+        _pdg_assert_demo_state(home, card_still=False)
+
+        home.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
+        toggle = home.locator("#v2-settings-toggle")
+        expect(toggle).to_be_enabled(timeout=5_000)
+        toggle.click()
+        home.wait_for_function(
+            "() => { const pop = document.getElementById('v2-settings-popover'); return pop && !pop.hidden; }",
+            timeout=5_000,
+        )
+        assert not errors, f"pageerror: {errors}"
+        # 独立页资源在删除后应 404（gate / rename）
+        status = asset.evaluate(
+            """async () => {
+              const r = await fetch('/album-a/preview.jpg', { cache: 'no-store' });
+              return r.status;
+            }"""
+        )
+        assert status in (404, 410)
+        browser.close()
+
+
+def test_ac_pdg_10_refresh_stays_demo(studio_server_real_trips) -> None:
+    """AC-PDG-10 · 热删除成功后硬刷新仍为示例（无 bentoPreviewTrip URL 重灌）。"""
+    base = studio_server_real_trips["base"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        errors: list[str] = []
+        page.on("pageerror", lambda exc: errors.append(str(exc)))
+        _goto_v2(page, base)
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('.v2-shelf__card[data-trip-id=\"album-a\"]')",
+            timeout=15_000,
+        )
+        _pdg_select_album_a(page)
+        _open_shelf_delete(page, "album-a")
+        _confirm_studio_modal_delete(page)
+        page.get_by_text("已切回示例").wait_for(timeout=10_000)
+        page.reload(wait_until="networkidle")
+        _wait_visible(page, "v2-frame")
+        page.wait_for_function(
+            "() => document.querySelector('#v2-bento-preview-select').value === ''",
+            timeout=10_000,
+        )
+        assert page.locator("#v2-bento-preview-label").inner_text() == "示例作品"
+        assert _visible_demo_flag_count(page) == 2
+        stored = page.evaluate(
+            "() => localStorage.getItem('travelogue.studio.v2.bentoPreviewTripId')"
+        )
+        assert stored is None
+        assert not errors, f"pageerror: {errors}"
+        page.evaluate(
+            "() => { const p = document.getElementById('v2-dev-panel'); if (p) p.hidden = true; }"
+        )
+        expect(page.locator("#v2-settings-toggle")).to_be_enabled(timeout=5_000)
         browser.close()

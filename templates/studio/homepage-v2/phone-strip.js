@@ -314,6 +314,17 @@ export function initPhoneStrip(manifest, opts) {
     if (syncReleaseTimer) clearTimeout(syncReleaseTimer);
     scrollTimer = null;
     syncReleaseTimer = null;
+    // PDG · 尽力释放：清空仍挂载的 img
+    try {
+      if (track) {
+        track.querySelectorAll("img").forEach(function (img) {
+          img.onload = null;
+          img.onerror = null;
+          img.removeAttribute("srcset");
+          img.removeAttribute("src");
+        });
+      }
+    } catch (e) { /* ignore */ }
     if (_disposeActive === dispose) _disposeActive = function () {};
   }
   _disposeActive = dispose;
