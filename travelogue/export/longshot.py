@@ -5,11 +5,13 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import os
 import re
 import subprocess
 import sys
 import threading
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -18,6 +20,10 @@ from travelogue.errors import CodeError
 from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
 _log = logging.getLogger(__name__)
+
+# QFX D-QFX-06b · 成功导出权威清单（相对 trip 根；与 PNG 同层）
+LONGSHOT_CURRENT_NAME = "longshot-current.json"
+LONGSHOT_CURRENT_SCHEMA_VERSION = 1
 
 CAPTURE_WIDTH = 428
 DEFAULT_EXPORT_SCALE = 2
@@ -246,6 +252,124 @@ def default_longshot_output_name(
     ):
         return f"{stem}-长图-{segment_index:02d}.{ext}"
     return f"{stem}-长图.{ext}"
+
+
+def write_longshot_current(
+    trip_dir: Path,
+    *,
+    batch_id: str,
+    kind: str,
+    files: list[str],
+) -> Path:
+    """Atomically write ``longshot-current.json`` (QFX AC-25).
+
+    Failure must raise so callers do not mark export success without a manifesto.
+    """
+    kind_norm = str(kind or "").strip().lower()
+    if kind_norm not in ("whole", "segmented"):
+        raise ValueError(f"invalid longshot current kind: {kind!r}")
+    names: list[str] = []
+    for raw in files:
+        name = Path(str(raw or "").strip()).name
+        if not name or name in (".", ".."):
+            raise ValueError("invalid longshot current file entry")
+        names.append(name)
+    if not names:
+        raise ValueError("longshot current files must be non-empty")
+    payload = {
+        "schemaVersion": LONGSHOT_CURRENT_SCHEMA_VERSION,
+        "batchId": str(batch_id or "").strip() or "unknown",
+        "createdAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+            "+00:00", "Z"
+        ),
+        "kind": kind_norm,
+        "files": names,
+    }
+    path = trip_dir / LONGSHOT_CURRENT_NAME
+    trip_dir.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+    return path
+
+
+def read_longshot_current(trip_dir: Path) -> dict[str, Any] | None:
+    """Return validated current manifesto, or None when missing/invalid/orphan."""
+    path = trip_dir / LONGSHOT_CURRENT_NAME
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    if int(data.get("schemaVersion") or 0) != LONGSHOT_CURRENT_SCHEMA_VERSION:
+        return None
+    kind = str(data.get("kind") or "").strip().lower()
+    if kind not in ("whole", "segmented"):
+        return None
+    files_raw = data.get("files")
+    if not isinstance(files_raw, list) or not files_raw:
+        return None
+    files: list[str] = []
+    for item in files_raw:
+        name = Path(str(item or "").strip()).name
+        if not name:
+            return None
+        if not (trip_dir / name).is_file():
+            return None
+        files.append(name)
+    return {
+        "schemaVersion": LONGSHOT_CURRENT_SCHEMA_VERSION,
+        "batchId": str(data.get("batchId") or ""),
+        "createdAt": str(data.get("createdAt") or ""),
+        "kind": kind,
+        "files": files,
+    }
+
+
+def maybe_write_longshot_current_after_upload(
+    trip_dir: Path,
+    *,
+    rel: str,
+    segment_index: int | None,
+    segment_total: int | None,
+    fmt: str = "png",
+    batch_id: str | None = None,
+) -> Path | None:
+    """Write current after client upload when the batch is complete (M1′ minimal)."""
+    import uuid
+
+    seg_n = int(segment_total) if segment_total not in (None, "") else None
+    seg_i = int(segment_index) if segment_index not in (None, "") else None
+    bid = (batch_id or "").strip() or str(uuid.uuid4())
+    if not seg_n or seg_n <= 1:
+        return write_longshot_current(
+            trip_dir,
+            batch_id=bid,
+            kind="whole",
+            files=[rel],
+        )
+    if seg_i != seg_n:
+        return None
+    expected = [
+        default_longshot_output_name(
+            trip_dir,
+            fmt=fmt,
+            segment_index=i,
+            segment_total=seg_n,
+        )
+        for i in range(1, seg_n + 1)
+    ]
+    if not all((trip_dir / name).is_file() for name in expected):
+        return None
+    return write_longshot_current(
+        trip_dir,
+        batch_id=bid,
+        kind="segmented",
+        files=expected,
+    )
 
 
 def cleanup_legacy_longshot_outputs(trip_dir: Path, *, keep: set[str] | None = None) -> list[str]:

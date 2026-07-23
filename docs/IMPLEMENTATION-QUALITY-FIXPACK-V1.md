@@ -7,7 +7,7 @@
 | **评审** | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · Conditional Go |
 | **邻接实施** | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) **v0.2.2**（S7/S7b · BE-NAS-03/04） |
 | **DOC-STATUS** | **active** |
-| **状态** | **PR-A in progress**（`fix/qfx-pr-a-m1-hemostasis`） |
+| **状态** | **PR-B in progress**（`fix/qfx-pr-b-longshot-current`；PR-A 已合 master） |
 | **更新日期** | 2026-07-23 |
 
 > **定位**：把 QFX PRD v0.2.1 的 S/D/AC 展开为可执行任务卡与 PR 切片。  
@@ -131,14 +131,16 @@
 
 | 项 | 内容 |
 |----|------|
-| **写** | Job `export_handlers.runner` 成功、`handle_longshot_upload` 成功 → 原子写 `current.json`（见 PRD §11.4） |
-| **读** | `_build_longshot_pages` 最前：有有效 `current` → 用其 `files`；否则整卷 `(st_mtime, name)` |
-| **禁止** | 分段逐文件 mtime 混排 |
-| **路径** | `export_handlers.py` · `studio_bento_preview.py` · `export/longshot.py`（可选下沉） |
-| **测试** | 双文件改标题场景；有 current 时忽略更旧名序文件 |
+| **写** | ✅ Job `export_handlers.runner` 成功、`handle_longshot_upload` 完整批 → 原子写 |
+| **读** | ✅ `_build_longshot_pages` 最前读 current；否则整卷 `(st_mtime, name)` 降序 |
+| **禁止** | 分段逐文件 mtime 混排（保持名序 fallback） |
+| **路径** | `export_handlers.py` · `studio_bento_preview.py` · `export/longshot.py` |
+| **锁定路径** | **`{trip_dir}/longshot-current.json`**（与 PNG 同层） |
+| **测试** | ✅ AC-11 双文件 mtime；AC-25 current 优先；helper 孤儿/半批 |
 | **验收** | AC-11 · AC-25（最小） |
+| **状态** | ✅ 编码中 / 2026-07-23 |
 
-**`current.json` 字段（锁定）**
+**`longshot-current.json` 字段（锁定）**
 
 ```json
 {
@@ -149,8 +151,6 @@
   "files": ["相对 trip 根有序文件名"]
 }
 ```
-
-建议路径：`{trip_dir}/exports/current.json` 或 trip 根 `longshot-current.json`（实施选定后写死，读写一致）。
 
 ---
 

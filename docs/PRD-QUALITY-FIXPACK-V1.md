@@ -479,7 +479,9 @@ M2′/M3′ 另加：合同向量 · wave11（真组件）· NAS e2e 窄标 · �
 | [IMPLEMENTATION-QUALITY-FIXPACK-V1](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | ✅ **v0.1.0**：T-00～11 · PR-A/B/C/D |
 | [PRD-KEEP-ALL-PHOTOS-V1](./PRD-KEEP-ALL-PHOTOS-V1.md) | §4.2 回填仍执行；策略跳低清仅 `photoKeepMode==keep_all` |
 
-### 11.4 最小 `current.json` 字段草签（M1′）
+### 11.4 最小 `longshot-current.json`（M1′ · 已锁定）
+
+路径：`{trip_dir}/longshot-current.json`（与 PNG 同层；PR-B 选定）。
 
 ```json
 {
@@ -491,7 +493,7 @@ M2′/M3′ 另加：合同向量 · wave11（真组件）· NAS e2e 窄标 · �
 }
 ```
 
-写：临时文件 + `os.replace`；失败不更新。读：存在且 `files` 非空 → 权威；否则整卷 mtime fallback。
+写：临时文件 + `os.replace`；失败不更新。读：存在且 `files` 非空且文件均在盘 → 权威；否则整卷 mtime fallback。
 
 ---
 
@@ -501,7 +503,7 @@ M2′/M3′ 另加：合同向量 · wave11（真组件）· NAS e2e 窄标 · �
 2. ~~七席评审~~ Done  
 3. ~~PRD v0.2 / v0.2.1 回写~~ **Done**  
 4. ~~同步 IMPLEMENTATION-NAS / 写 QFX IMPLEMENTATION~~ **Done**  
-5. 开 **PR-A** 编码 → PR-B → PR-C → PR-D  
+5. ~~开 **PR-A** 编码~~ **Done（已合 master）** → **PR-B 编码中** → PR-C → PR-D  
 6. ACCEPTANCE 勾选 → 宣布 QFX Closed 并归还邻接 SSOT  
 
 **结案范围：Fix all（AC-01～27）。**  
