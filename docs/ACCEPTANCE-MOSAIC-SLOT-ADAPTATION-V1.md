@@ -76,11 +76,15 @@ python -m pytest tests/unit/layout_engine/test_msa_pr_b.py -q
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MSA-09** | 三类画像狗粮：盲评「主体完整性」优于基线；无朝向 / dense 红线回退 | ☐ |
-| **AC-MSA-10** | MTSO 开关组合回归：MSA ON/OFF × `template_experiments` / `selection_optimization` 不交叉破坏 lifecycle | ☐ |
-| **AC-MSA-11** | 默认 `enabled=true` 决策前：独立盲评记录；不通过则保持默认 off（O-05） | ☐ |
+| **AC-MSA-09** | 三类画像狗粮：盲评「主体完整性」优于基线；无朝向 / dense 红线回退 | ☑ GUIDE+模板已齐 · ☐ 实册盲评签核 |
+| **AC-MSA-10** | MTSO 开关组合回归：MSA ON/OFF × `template_experiments` / `selection_optimization` 不交叉破坏 lifecycle | ✅ `test_msa_pr_c` |
+| **AC-MSA-11** | 默认 `enabled=true` 决策前：独立盲评记录；不通过则保持默认 off（O-05） | ✅ [决策 hold off](./acceptance-records/msa-default-on-decision-2026-07-23.md) |
 
-手测入口（待 M1 后补 GUIDE）：`docs/acceptance-records/msa-local-dogfood-GUIDE.md`（☐ 未建）。
+手测入口：[msa-local-dogfood-GUIDE.md](./acceptance-records/msa-local-dogfood-GUIDE.md) · 盲评模板：[msa-blind-review-TEMPLATE.md](./acceptance-records/msa-blind-review-TEMPLATE.md)
+
+```powershell
+python -m pytest tests/unit/layout_engine/test_msa_pr_c.py -q
+```
 
 ---
 
@@ -88,9 +92,9 @@ python -m pytest tests/unit/layout_engine/test_msa_pr_b.py -q
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MSA-N01** | 舞台 AR 仍为既有 16:9 / mobile 变体契约；不因 MSA 改舞台 | ☐ 随 AC-01 |
-| **AC-MSA-N02** | 不新增平行模板库；不改槽位数 / 主从拓扑 | ☐ |
-| **AC-MSA-N03** | 不放宽朝向硬门；不把 MSA 指标并进 MTSO 转正漏斗 | ☐ AC-10 |
+| **AC-MSA-N01** | 舞台 AR 仍为既有 16:9 / mobile 变体契约；不因 MSA 改舞台 | ✅ `test_msa_pr_c` |
+| **AC-MSA-N02** | 不新增平行模板库；不改槽位数 / 主从拓扑 | ✅ |
+| **AC-MSA-N03** | 不放宽朝向硬门；不把 MSA 指标并进 MTSO 转正漏斗 | ✅ AC-10 矩阵 |
 
 ---
 
@@ -99,3 +103,4 @@ python -m pytest tests/unit/layout_engine/test_msa_pr_b.py -q
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | **v0.1.0** | 2026-07-23 | M0 拆文：AC-01～11 + variant/persist 子项；对齐 PRD v0.2.0 / BLK-MSA-05 |
+| **v0.2.0** | 2026-07-23 | PR-A/B 勾选 AC-01～08；PR-C：AC-10/11/N* · AC-09 待实册盲评 |

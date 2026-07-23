@@ -72,9 +72,12 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/mtso-local-dogfood-GUIDE.md](./acceptance-records/mtso-local-dogfood-GUIDE.md) | **active** | MTSO 本机短狗粮 GUIDE |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-TEMPLATE.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-TEMPLATE.md) | **active** | MTSO 七席评审纪要**模板**（结案见日期版） |
 | [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | 拼图槽位自适应 **MSA** **v0.2.0**（Conditional Go · 可 Kickoff M0 · [评审](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md)） |
-| [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 实施 · M0/PR-A/PR-B ✅ · PR-C 未开 |
-| [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 验收 · AC-01～08 ✅ · AC-09～11 待 PR-C |
+| [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 实施 · M0～PR-C ✅ · 默认仍 off |
+| [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 验收 · AC-01～08/10/11 ✅ · AC-09 待实册盲评 |
 | [acceptance-records/msa-contain-visual-contract-BLK06.md](./acceptance-records/msa-contain-visual-contract-BLK06.md) | **active** | MSA BLK-06 contain 杂志纸色视觉合同 |
+| [acceptance-records/msa-local-dogfood-GUIDE.md](./acceptance-records/msa-local-dogfood-GUIDE.md) | **active** | MSA 本机狗粮 GUIDE |
+| [acceptance-records/msa-blind-review-TEMPLATE.md](./acceptance-records/msa-blind-review-TEMPLATE.md) | **active** | MSA 盲评记录模板 |
+| [acceptance-records/msa-default-on-decision-2026-07-23.md](./acceptance-records/msa-default-on-decision-2026-07-23.md) | **active** | MSA 默认 on 决策 · **hold off** |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) | **active** | MSA 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md) | **active** | MSA 七席评审纪要**模板**（结案见日期版） |
 | [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | **Closed** | QFX 实施 Closed · PR-A/B/C/C2/D 已合 master |

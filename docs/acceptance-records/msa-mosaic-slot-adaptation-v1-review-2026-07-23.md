@@ -115,11 +115,11 @@
 
 | ID | 建议 | 席位 | 状态 |
 |----|------|------|------|
-| **S-01** | `msa-local-dogfood-GUIDE`：A/B/C + on/off 截图清单 | UX / 产品 | ☐ |
+| **S-01** | `msa-local-dogfood-GUIDE`：A/B/C + on/off 截图清单 | UX / 产品 | ✅ PR-C |
 | **S-02** | M1 白名单：横主 5/6 hero、竖主 1P4L/2P3L、4-hero-sidebar | 算法 | ☐ 会后曝光排序确认 |
 | **S-03** | crop_risk M2 对齐 face IoU（D-MCS-14） | 算法 | ☐ |
-| **S-04** | 盲评三问表进 acceptance-records | QA / 视觉 | ☐ |
-| **S-05** | MTSO dogfood GUIDE 互链 MSA | 产品 | ☐ |
+| **S-04** | 盲评三问表进 acceptance-records | QA / 视觉 | ✅ TEMPLATE |
+| **S-05** | MTSO dogfood GUIDE 互链 MSA | 产品 | ✅ MSA GUIDE 互链 |
 
 ---
 

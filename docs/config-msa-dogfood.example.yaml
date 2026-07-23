@@ -1,5 +1,6 @@
 # MSA dogfood — enable slot adaptation on a local config overlay.
-# Default remains fail-closed (enabled: false) until M3.
+# Default remains fail-closed (enabled: false) until AC-09 blind review signs
+# and AC-11 revises the hold-off decision.
 #
 # Usage: merge under mosaic: in your local config.yaml (do not commit secrets).
 

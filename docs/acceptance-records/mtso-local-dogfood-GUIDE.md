@@ -4,6 +4,7 @@
 |------|------|
 | 日期 | 2026-07-23 |
 | 关联 | [PRD MTSO](../PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [ACCEPTANCE](../ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
+| 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） |
 | 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) |
 | 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=false`（fail-closed） |
 

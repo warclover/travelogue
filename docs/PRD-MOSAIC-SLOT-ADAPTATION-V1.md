@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.0** |
-| **状态** | **Conditional Go · 可 Kickoff M0**（[七席评审](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) · **M1 合码前关 BLK-02～05/07/08**；**M2 前关 BLK-06**） |
+| **状态** | **Conditional Go · M0～PR-C 已落地**（[七席](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) · 默认仍 off · **AC-09 实册盲评开放**） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「拼图槽位自适应 V1」— **MSA**（Mosaic Slot Adaptation） |
 | **调研来源** | 2026-07-23 实机狗粮：单反 3:2 横图进 16:9 扁槽高度不够 / cover 裁切过重；用户画像（全单反 / 全手机 / 混排）与 AR 分布补充；业界 BRIC / SoftCollage / 消费级拼贴对照 |
@@ -444,7 +444,7 @@ M2 可接人脸框×槽 IoU（承接 DESIGN-PHASE15 D-MCS-14 几何版）。
 | **O-MSA-02** | contain 底色 | **默认杂志纸色** · M2 前出样（BLK-06） |
 | **O-MSA-03** | M1 族白名单最终列表 | **开放** · 候选：横主 5/6 hero、竖主 1P4L/2P3L、4-hero-sidebar |
 | **O-MSA-04** | screen 是否持久化 override | **已关（持久化）** · 见 D-02 / BLK-02 |
-| **O-MSA-05** | 默认 `enabled=true` 时机 | **开放至 M3**（对齐 MTSO O-2 精神） |
+| **O-MSA-05** | 默认 `enabled=true` 时机 | **Hold off** · 见 [决策 2026-07-23](./acceptance-records/msa-default-on-decision-2026-07-23.md)；AC-09 签核前保持 false |
 
 ---
 
