@@ -38,6 +38,7 @@
 | M3 结案 | [ssg-m3-closeout-2026-07-23.md](./acceptance-records/ssg-m3-closeout-2026-07-23.md) |
 | §11 回写 | DATA-MODEL · algorithm-inventory · PRD-PHASE3 ✅ |
 | 配置样例 | [config-ssg-dogfood.example.yaml](./config-ssg-dogfood.example.yaml) |
+| **CQA 回写** | 重跑前 `_clear_shot_group_fields` 清孤儿簇/视频字段（AC-CQA-12）· [CQA ACCEPTANCE](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) |
 
 ```powershell
 python -m pytest tests/unit/curation/test_shot_grouping.py tests/unit/curation/test_shot_grouping_acceptance.py tests/unit/curation/test_look_split.py tests/unit/curation/test_look_threshold_calibration.py tests/unit/curation/test_look_cache_and_toggles.py tests/unit/layout_engine/test_shot_group_gate.py tests/unit/orchestrator/test_orchestrator_studio_profile.py -q

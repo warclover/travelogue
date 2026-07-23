@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import replace
 from typing import Any
@@ -257,7 +256,6 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
 
 
 def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
-    from travelogue.config.runtime import config_override
     from travelogue.llm.client import llm_ping
     from travelogue.web.ai_surface import (
         ai_surface_disabled_body,
@@ -288,7 +286,6 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
         return
 
     env_name = PROVIDER_PRESETS[prov]["api_key_env"]
-    prev = os.environ.get(env_name)
     key_to_use = api_key or secrets.api_key
     if not key_to_use:
         handler._json_response(
@@ -325,7 +322,6 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    os.environ[env_name] = key_to_use
     base_cfg = get_config(reload=True)
     # 仅复用「同一服务商」的 secrets；禁止回落到 base_cfg 里另一家的 model/URL
     raw_model = payload.get("model") or (secrets.model if same_secrets else None)
@@ -344,7 +340,7 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
     )
     cfg = replace(base_cfg, llm=llm)
 
-    # ping 时若带了 region/key，临时对齐 secrets 视图，避免 resolve 仍用旧地域
+    # Request-local secrets — no os.environ write, no global monkey-patch (CQA D-02).
     ping_secrets = UserLlmSecrets(
         provider=prov,
         api_key=key_to_use,
@@ -354,33 +350,40 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
         last_ping_ok=secrets.last_ping_ok if same_secrets else None,
     )
 
-    def _read_ping_secrets() -> UserLlmSecrets:
-        return ping_secrets
+    want_persist = (
+        bool(payload.get("persist"))
+        and secrets.configured
+        and secrets.provider == prov
+        and (not api_key or api_key == secrets.api_key)
+    )
 
     try:
-        import travelogue.llm.user_settings as us
-
-        prev_read = us.read_user_llm_secrets
-        us.read_user_llm_secrets = _read_ping_secrets  # type: ignore[assignment]
-        try:
-            with config_override(cfg):
-                msg = llm_ping(provider=prov)
-        finally:
-            us.read_user_llm_secrets = prev_read  # type: ignore[assignment]
+        msg = llm_ping(provider=prov, secrets=ping_secrets, cfg=cfg)
 
         # 成功简句（隐藏完整 URL）
         label = "通义千问" if prov == "dashscope" else "DeepSeek"
         user_ok = f"已连通 · {label} · {model_override}"
 
-        # PRD §4.3：仅测试不强制写盘；保存并测试路径传 persist=true 才落 last_ping_ok
-        persist = bool(payload.get("persist"))
-        if (
-            persist
-            and secrets.configured
-            and secrets.provider == prov
-            and (not api_key or api_key == secrets.api_key)
-        ):
-            write_user_llm_secrets(_with_ping(secrets, True))
+        persisted = False
+        if want_persist:
+            try:
+                write_user_llm_secrets(_with_ping(secrets, True))
+                persisted = True
+            except OSError:
+                status = _status_body(cfg=cfg)
+                handler._json_response(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_CONFIG_WRITE",
+                        "message": "已连通，但未能保存状态。请重试保存。",
+                        "pingOk": True,
+                        "persisted": False,
+                        **{k: v for k, v in status.items() if k != "ok"},
+                    },
+                )
+                return
+
         status = _status_body(cfg=cfg)
         handler._json_response(
             200,
@@ -388,41 +391,30 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
                 "ok": True,
                 "message": user_ok or msg,
                 "pingOk": True,
-                "persisted": persist
-                and secrets.configured
-                and secrets.provider == prov,
+                "persisted": persisted,
                 **status,
             },
         )
     except LlmError as exc:
         err_code = _classify_ping_error(exc)
-        persist = bool(payload.get("persist"))
-        if (
-            persist
-            and secrets.configured
-            and secrets.provider == prov
-            and (not api_key or api_key == secrets.api_key)
-        ):
-            write_user_llm_secrets(_with_ping(secrets, False))
+        persisted = False
+        if want_persist:
+            try:
+                write_user_llm_secrets(_with_ping(secrets, False))
+                persisted = True
+            except OSError:
+                persisted = False
         body: dict[str, Any] = {
             "ok": False,
             "error": err_code,
             "message": _settings_message(err_code, str(exc)),
             "pingOk": False,
-            "persisted": persist
-            and secrets.configured
-            and secrets.provider == prov,
+            "persisted": persisted,
         }
         try:
-            for k, v in _status_body().items():
+            for k, v in _status_body(cfg=cfg).items():
                 if k != "ok":
                     body[k] = v
         except Exception:
             pass
         handler._json_response(400, body)
-    finally:
-        if prev is None:
-            os.environ.pop(env_name, None)
-            inject_secrets_into_environ()
-        else:
-            os.environ[env_name] = prev

@@ -595,24 +595,31 @@ export function initPreviewDrawers(root, tripId) {
       return confirmG1Structure()
         .then(function (res) {
           if (res.status === 202 && res.body && res.body.jobId) {
-            pollStudioJob(res.body.jobId, function (job) {
+            // CQA D-04 · return terminal Promise (pollJobUntilDone), not 202-settle
+            return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
               if (triggerBtn) triggerBtn.disabled = false;
               if (job.status === "succeeded") {
                 showToolbarToast("章节已确认，杂志已更新");
                 window.location.reload();
-                return;
+                return job;
               }
               var err = (job.error && (job.error.message || job.error.code)) || "确认失败";
               showToolbarToast(err, { error: true });
+              var fail = new Error(err);
+              fail.job = job;
+              throw fail;
             });
-            return;
           }
           if (triggerBtn) triggerBtn.disabled = false;
           showToolbarToast((res.body && res.body.error) || "确认失败", { error: true });
+          return Promise.reject(new Error((res.body && res.body.error) || "确认失败"));
         })
-        .catch(function () {
+        .catch(function (err) {
           if (triggerBtn) triggerBtn.disabled = false;
-          showToolbarToast("确认失败", { error: true });
+          if (!(err && err.job)) {
+            showToolbarToast("确认失败", { error: true });
+          }
+          return Promise.reject(err || new Error("确认失败"));
         });
     }
 
@@ -623,12 +630,13 @@ export function initPreviewDrawers(root, tripId) {
         confirmText: "继续",
         danger: true,
       }).then(function (ok) {
-        if (!ok) return false;
+        if (!ok) return Promise.reject(new Error("cancelled"));
         if (triggerBtn) triggerBtn.disabled = true;
+        showToolbarToast("正在调整结构…");
         return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/curate", { force: true })
           .then(function (res) {
             if (res.status === 202 && res.body && res.body.jobId) {
-              pollStudioJob(res.body.jobId, function (job) {
+              return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
                 if (triggerBtn) triggerBtn.disabled = false;
                 if (job.status === "succeeded") {
                   var changed = true;
@@ -645,20 +653,25 @@ export function initPreviewDrawers(root, tripId) {
                       : "已重跑，章节结构与上次相同（照片集合未变时属正常）"
                   );
                   window.location.reload();
-                  return;
+                  return job;
                 }
                 showToolbarToast("重新生成失败", { error: true });
+                var fail = new Error("重新生成失败");
+                fail.job = job;
+                throw fail;
               });
-              return true;
             }
             if (triggerBtn) triggerBtn.disabled = false;
             showToolbarToast("无法开始", { error: true });
-            return false;
+            return Promise.reject(new Error("无法开始"));
           })
-          .catch(function () {
+          .catch(function (err) {
             if (triggerBtn) triggerBtn.disabled = false;
-            showToolbarToast("无法开始", { error: true });
-            return false;
+            if (err && err.message === "cancelled") throw err;
+            if (!(err && err.job)) {
+              showToolbarToast("无法开始", { error: true });
+            }
+            return Promise.reject(err || new Error("无法开始"));
           });
       });
     }

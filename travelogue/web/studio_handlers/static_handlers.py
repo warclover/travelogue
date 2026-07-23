@@ -5,13 +5,38 @@ from __future__ import annotations
 import html
 import mimetypes
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote, urlencode, urlparse, urlunparse
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
 from travelogue.web import studio_homepage_gate as gate
-from travelogue.web.studio_auth import STUDIO_TOKEN_COOKIE
+from travelogue.web.studio_auth import (
+    STUDIO_TOKEN_COOKIE,
+    STUDIO_TOKEN_QUERY_KEYS,
+    studio_request_authorized,
+)
 from travelogue.web.studio_handlers.paths import HOME_V2_PATH, STUDIO_ASSET_PREFIX
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+
+_LAN_GATE_HTML = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travelogue Studio · 需要授权</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.5; color: #1a1a1a; }
+    h1 { font-size: 1.25rem; font-weight: 600; }
+    p { color: #444; }
+    code { font-size: 0.9em; background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <h1>此网络需授权后才能使用 Studio</h1>
+  <p>请使用电脑上显示的启动链接打开（链接中含一次性授权参数）。</p>
+  <p>授权成功后地址栏中的 <code>studio_token</code> 会被清除；请勿把完整链接发到公共频道。</p>
+</body>
+</html>
+"""
 
 
 def _request_header(handler: StudioHandlerProtocol, key: str) -> str | None:
@@ -19,6 +44,51 @@ def _request_header(handler: StudioHandlerProtocol, key: str) -> str | None:
     if isinstance(req, dict):
         return req.get(key)
     return handler.headers.get(key)
+
+
+def _request_query(handler: StudioHandlerProtocol) -> str:
+    path = getattr(handler, "path", "") or ""
+    return path.split("?", 1)[1] if "?" in path else ""
+
+
+def _lan_authorized(handler: StudioHandlerProtocol) -> bool:
+    return studio_request_authorized(
+        host=getattr(handler, "studio_host", "127.0.0.1"),
+        token=getattr(handler, "studio_token", None),
+        headers=getattr(handler, "headers", {}) or {},
+        allow_lan=bool(getattr(handler, "studio_allow_lan", False)),
+        query=_request_query(handler),
+    )
+
+
+def _session_cookie_header(handler: StudioHandlerProtocol, token: str) -> str:
+    secure = gate._cookie_secure_flag(handler)
+    # CQA D-01 · HttpOnly session; Secure iff TLS
+    return (
+        f"{STUDIO_TOKEN_COOKIE}={token}; Path=/; HttpOnly; SameSite=Lax{secure}"
+    )
+
+
+def _path_without_token_query(handler: StudioHandlerProtocol) -> str:
+    raw = getattr(handler, "path", "/") or "/"
+    parsed = urlparse(raw)
+    qs = parse_qs(parsed.query, keep_blank_values=False)
+    for key in STUDIO_TOKEN_QUERY_KEYS:
+        qs.pop(key, None)
+    new_query = urlencode({k: v[0] for k, v in qs.items() if v}, doseq=False)
+    return urlunparse(
+        ("", "", parsed.path or "/", "", new_query, "")
+    ) or "/"
+
+
+def _serve_lan_gate(handler: StudioHandlerProtocol) -> None:
+    data = _LAN_GATE_HTML.encode("utf-8")
+    handler.send_response(401)
+    handler.send_header("Content-Type", "text/html; charset=utf-8")
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Cache-Control", "no-store")
+    handler.end_headers()
+    handler.wfile.write(data)
 
 
 def _serve_studio_home_html(
@@ -31,19 +101,60 @@ def _serve_studio_home_html(
 ) -> None:
     from travelogue.web import studio_homepage_gate as gate
 
+    allow_lan = bool(getattr(handler, "studio_allow_lan", False))
+    token = getattr(handler, "studio_token", None) or ""
+    query = _request_query(handler)
+    qs = parse_qs(query, keep_blank_values=False) if query else {}
+    query_bootstrap = ""
+    for key in STUDIO_TOKEN_QUERY_KEYS:
+        vals = qs.get(key) or []
+        if vals and vals[0]:
+            query_bootstrap = str(vals[0])
+            break
+
+    # CQA D-01 · LAN bootstrap: token must come from query (not cookie) → HttpOnly + strip URL
+    if allow_lan and token and query_bootstrap and query_bootstrap == token:
+        handler.send_response(302)
+        handler.send_header("Location", _path_without_token_query(handler))
+        handler.send_header("Set-Cookie", _session_cookie_header(handler, token))
+        if is_new:
+            gate.set_bucket_cookie(handler, bucket)
+        handler.end_headers()
+        return
+
+    if allow_lan and token and not _lan_authorized(handler):
+        _serve_lan_gate(handler)
+        return
+
     html_path = STUDIO_TEMPLATE_DIR / template_name
     page = html_path.read_text(encoding="utf-8")
-    page = gate.inject_home_placeholders(
-        page, handler, bucket, homepage_variant=homepage_variant
-    )
+    # LAN + cookie session: do not embed raw token in HTML (HttpOnly cookie is enough)
+    if allow_lan and token:
+        # Temporarily blank token for placeholder injection
+        saved = handler.studio_token
+        try:
+            handler.studio_token = None  # type: ignore[misc]
+            page = gate.inject_home_placeholders(
+                page, handler, bucket, homepage_variant=homepage_variant
+            )
+        finally:
+            handler.studio_token = saved  # type: ignore[misc]
+    else:
+        page = gate.inject_home_placeholders(
+            page, handler, bucket, homepage_variant=homepage_variant
+        )
     data = page.encode("utf-8")
     handler.send_response(200)
     if is_new:
         gate.set_bucket_cookie(handler, bucket)
-    if handler.studio_token:
+    if token and allow_lan and _lan_authorized(handler):
+        # Refresh session cookie (HttpOnly); never set non-HttpOnly token cookie on LAN
+        handler.send_header("Set-Cookie", _session_cookie_header(handler, token))
+    elif token and not allow_lan:
+        # loopback convenience: keep prior cookie behavior
         handler.send_header(
             "Set-Cookie",
-            f"{STUDIO_TOKEN_COOKIE}={handler.studio_token}; Path=/; SameSite=Lax",
+            f"{STUDIO_TOKEN_COOKIE}={token}; Path=/; SameSite=Lax",
         )
     handler.send_header("Content-Type", "text/html; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))

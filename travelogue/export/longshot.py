@@ -400,8 +400,9 @@ def maybe_write_longshot_current_after_upload(
             kind="whole",
             files=[rel],
         )
-    if seg_i != seg_n:
-        return None
+    # CQA I-CQA-10 · unordered uploads: complete when all expected files exist
+    # (do not require the last segment index to arrive last).
+    _ = seg_i
     expected = [
         default_longshot_output_name(
             trip_dir,
@@ -450,6 +451,47 @@ def cleanup_legacy_longshot_outputs(trip_dir: Path, *, keep: set[str] | None = N
     return removed
 
 
+# CQA I-CQA-09 / D-07 · never overwrite trip SSOT / shell via client upload names
+_LONGSHOT_UPLOAD_RESERVED_NAMES = frozenset(
+    {
+        "trip.json",
+        "index.html",
+        "longshot-current.json",
+        "config.yaml",
+        "config.yml",
+    }
+)
+_LONGSHOT_UPLOAD_DENIED_SUFFIXES = (".html", ".htm", ".js", ".css", ".mjs", ".json", ".yaml", ".yml")
+# Upload body ceiling (slightly above WeChat single-image gate)
+MAX_LONGSHOT_UPLOAD_BYTES = 25 * 1024 * 1024
+
+
+def client_longshot_filename_denied(filename: str | None) -> bool:
+    """True when a client-supplied name is reserved or a denied script/shell suffix."""
+    if not filename or not str(filename).strip():
+        return False
+    base = Path(str(filename).strip()).name
+    if not base or base in (".", ".."):
+        return True
+    low = base.lower()
+    if low in {n.lower() for n in _LONGSHOT_UPLOAD_RESERVED_NAMES}:
+        return True
+    return any(low.endswith(suf) for suf in _LONGSHOT_UPLOAD_DENIED_SUFFIXES)
+
+
+def _validate_longshot_upload_magic(data: bytes, *, fmt: str) -> None:
+    """Reject non-image payloads before any disk write (AC-CQA-14)."""
+    if len(data) > MAX_LONGSHOT_UPLOAD_BYTES:
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "长图数据过大")
+    fmt_n = "jpeg" if fmt in ("jpeg", "jpg") else "png"
+    if fmt_n == "jpeg":
+        if len(data) < 3 or data[:3] != b"\xff\xd8\xff":
+            raise LongshotExportError("E_LNG_CAPTURE_FAILED", "不是有效的 JPEG 图片")
+        return
+    if len(data) < 8 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "不是有效的 PNG 图片")
+
+
 def write_longshot_upload(
     trip_dir: Path,
     data: bytes,
@@ -459,19 +501,28 @@ def write_longshot_upload(
     segment_index: int | None = None,
     segment_total: int | None = None,
 ) -> Path:
-    """Write client-captured longshot bytes into the trip directory."""
+    """Write client-captured longshot bytes into the trip directory.
+
+    CQA I-CQA-09: ignore client ``filename``/``relPath`` for on-disk naming;
+    always use ``default_longshot_output_name``. Reserved names and bad magic
+    are rejected before write.
+    """
     if not data:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "空的长图数据")
-    name = filename or default_longshot_output_name(
+    _ = filename  # client-supplied names are intentionally ignored
+    _validate_longshot_upload_magic(data, fmt=fmt)
+    safe_name = default_longshot_output_name(
         trip_dir,
         fmt=fmt,
         segment_index=segment_index,
         segment_total=segment_total,
     )
-    # Keep basename only — never allow path traversal from client.
-    safe_name = Path(name).name
     if not safe_name or safe_name in (".", ".."):
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法文件名")
+    if safe_name.lower() in _LONGSHOT_UPLOAD_RESERVED_NAMES or Path(safe_name).name.lower() in {
+        n.lower() for n in _LONGSHOT_UPLOAD_RESERVED_NAMES
+    }:
+        raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法输出文件名")
     out = (trip_dir / safe_name).resolve()
     try:
         out.relative_to(trip_dir.resolve())

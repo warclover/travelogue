@@ -90,6 +90,18 @@ def spawn_async_rmtree(tombstone: Path) -> None:
     ).start()
 
 
+def clear_trip_dir_via_tombstone(trip_dir: Path, *, join_timeout: float = 2.0) -> None:
+    """CQA I-CQA-08 · replace live trip dir via PDG tombstone (no bare rmtree)."""
+    path = Path(trip_dir)
+    if not path.exists():
+        return
+    from travelogue.media.derivatives import stop_or_join_on_demand
+
+    stop_or_join_on_demand(path, timeout=join_timeout)
+    tombstone = rename_trip_to_tombstone(path)
+    spawn_async_rmtree(tombstone)
+
+
 def sweep_deleting_tombstones(trips_dir: Path) -> int:
     """Startup: remove leftover ``_deleting-*`` directories. Returns count attempted."""
     root = Path(trips_dir)

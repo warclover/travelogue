@@ -93,25 +93,34 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
     });
     panel.querySelector(".preview-chapter-panel__regen").addEventListener("click", function () {
       var btn = panel.querySelector(".preview-chapter-panel__regen");
+      var primary = panel.querySelector(".preview-chapter-panel__primary");
       if (btn) btn.disabled = true;
+      if (primary) primary.disabled = true;
       var p =
         drawers && typeof drawers.regenerateStructure === "function"
           ? drawers.regenerateStructure()
           : Promise.resolve();
       Promise.resolve(p)
         .then(function () {
+          // Terminal success only (CQA D-04) — drawers may reload; if not, refresh body
           dirtyAfterRegen = true;
           return renderBody();
         })
+        .catch(function () {
+          // Error toast owned by drawers; keep panel open for retry
+        })
         .finally(function () {
           if (btn) btn.disabled = false;
+          if (primary) primary.disabled = false;
         });
     });
     panel.querySelector(".preview-chapter-panel__primary").addEventListener("click", function () {
       var btn = panel.querySelector(".preview-chapter-panel__primary");
+      var regen = panel.querySelector(".preview-chapter-panel__regen");
       // 实验 pending，或重生后需再次锁定
       if (pendingMode || dirtyAfterRegen) {
         if (btn) btn.disabled = true;
+        if (regen) regen.disabled = true;
         var wasDirty = dirtyAfterRegen;
         var p =
           drawers && typeof drawers.confirmStructure === "function"
@@ -119,13 +128,18 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
             : Promise.resolve();
         Promise.resolve(p)
           .then(function () {
+            // Only after job terminal success — drawers may reload the page
             pendingMode = false;
             dirtyAfterRegen = false;
             closePanel();
             showToolbarToast(wasDirty ? "结构调整已保存" : "章节已确认，继续成册");
           })
+          .catch(function () {
+            // Keep panel open; no false "已保存"
+          })
           .finally(function () {
             if (btn) btn.disabled = false;
+            if (regen) regen.disabled = false;
           });
         return;
       }

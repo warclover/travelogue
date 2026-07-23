@@ -293,6 +293,9 @@ def run_shot_grouping_layer(
                 stage_hint="整理分镜…（无场景簇，已跳过）",
             )
 
+        # CQA D-06 / AC-12 · clear orphans before reassign (video / no-cluster / noise)
+        _clear_shot_group_fields(assets)
+
         by_cluster: dict[int, list[dict]] = {}
         noise: list[dict] = []
         for a in assets:

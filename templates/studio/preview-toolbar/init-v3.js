@@ -262,6 +262,27 @@ export function initToolbarV3(root, tripId) {
     });
   }
 
+  // CQA AC-18 · sheet llm-status listener is singular + removed on close/tab switch
+  var _sheetLlmStatusHandler = null;
+  function unbindSheetLlmStatus() {
+    if (_sheetLlmStatusHandler) {
+      window.removeEventListener("travelogue:llm-status", _sheetLlmStatusHandler);
+      _sheetLlmStatusHandler = null;
+    }
+  }
+  function bindSheetLlmStatus(setLlmAvailable, refreshLlmStatus) {
+    unbindSheetLlmStatus();
+    _sheetLlmStatusHandler = function (ev) {
+      var d = ev && ev.detail;
+      if (d && typeof d.llmAvailable === "boolean") {
+        setLlmAvailable(d.llmAvailable);
+      } else {
+        refreshLlmStatus();
+      }
+    };
+    window.addEventListener("travelogue:llm-status", _sheetLlmStatusHandler);
+  }
+
   var sheetHooks = {
     tripId: tripId,
     drawers: drawers,
@@ -277,6 +298,7 @@ export function initToolbarV3(root, tripId) {
       done(true);
     },
     onSheetTabShown: function (tabId) {
+      unbindSheetLlmStatus();
       if (tabId !== "book" && tabId !== "edit") {
         clearSheetEditDirty(root);
       }
@@ -298,6 +320,7 @@ export function initToolbarV3(root, tripId) {
     },
     onSheetClosed: function (meta) {
       meta = meta || {};
+      unbindSheetLlmStatus();
       // V1.1 MF-01 · 关面板不退出模式
       syncRefineDockChrome(root, { panelOpen: false });
       if (isPreviewRefineOn()) {
@@ -509,17 +532,8 @@ export function initToolbarV3(root, tripId) {
             });
         }
         refreshLlmStatus();
-        if (panel.dataset.nasLlmStatusBound !== "1") {
-          panel.dataset.nasLlmStatusBound = "1";
-          window.addEventListener("travelogue:llm-status", function (ev) {
-            var d = ev && ev.detail;
-            if (d && typeof d.llmAvailable === "boolean") {
-              setLlmAvailable(d.llmAvailable);
-            } else {
-              refreshLlmStatus();
-            }
-          });
-        }
+        bindSheetLlmStatus(setLlmAvailable, refreshLlmStatus);
+        panel.dataset.nasLlmStatusBound = "1";
         llmSetup = panel.querySelector(".preview-sheet__llm-setup");
         if (llmSetup && llmSetup.dataset.bound !== "1") {
           llmSetup.dataset.bound = "1";

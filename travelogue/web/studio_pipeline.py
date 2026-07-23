@@ -831,9 +831,10 @@ def run_studio_pipeline(
     trip_dir = trips_root / slug
 
     if force and trip_dir.exists():
-        import shutil
+        # CQA I-CQA-08 · tombstone path (HTTP force pre-clears; CLI uses same helper)
+        from travelogue.web.studio_trip_delete import clear_trip_dir_via_tombstone
 
-        shutil.rmtree(trip_dir)
+        clear_trip_dir_via_tombstone(trip_dir)
 
     try:
         photo_count = count_album_photos(album_dir, max_photos=cfg.ingest.max_photos)
