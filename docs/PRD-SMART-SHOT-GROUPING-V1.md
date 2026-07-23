@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.1** |
-| **状态** | **Conditional Go · M0/M1 可 Kickoff**（[七席](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) · [开发可行性](./acceptance-records/ssg-dev-feasibility-2026-07-23.md) · **SUP-01～10 产品会签 2026-07-23** · **M2 合码前关 BLK-SSG-03**） |
+| **状态** | **Conditional Closed**（[ACCEPTANCE](./ACCEPTANCE-SMART-SHOT-GROUPING-V1.md) · [结案](./acceptance-records/ssg-m3-closeout-2026-07-23.md) · 实拍盲评另填 · 默认 on Hold） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「智能分镜 V1」— **SSG**（Smart Shot Grouping） |
 | **调研来源** | 2026-07-23 用户需求确认（混导拼图乱 / 同景点换装须拆组）· 聚类能力对照 · 业界 CLIP 场景簇 / Photo Stacks / 服装连续性实践 · [RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1](./RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md) |
@@ -492,3 +492,4 @@ shotGrouping:
 | **v0.1.0** | 2026-07-23 | 初稿 · 双痛点入 V1 |
 | **v0.2.0** | 2026-07-23 | 七席 Conditional Go 回写：硬契约作用域 · AC 数值门 · 主脸轨 · 显式 stage · 豁免白名单 · 父对象 · OQ 关闭 |
 | **v0.2.1** | 2026-07-23 | 开发可行性 SUP-01～10 产品会签写回；豁免屏级映射 · 硬拒跟随 · timings · M2 CLIP-torso |
+| **v0.2.1+gap** | 2026-07-23 | 实施 gap-close：D-11 vision∧簇 · AC-01/02/08/09 · §11 文档回写 · Conditional Closed（实拍盲评另填） |

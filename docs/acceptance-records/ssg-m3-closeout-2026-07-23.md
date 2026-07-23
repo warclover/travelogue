@@ -24,8 +24,18 @@
 python -m pytest tests/unit/curation/test_shot_grouping.py tests/unit/curation/test_look_split.py tests/unit/curation/test_look_threshold_calibration.py tests/unit/curation/test_look_cache_and_toggles.py tests/unit/layout_engine/test_shot_group_gate.py tests/unit/orchestrator/test_orchestrator_studio_profile.py -q
 ```
 
-## 仍开放（不阻塞合码）
+## Gap-close（PRD 对照补齐 · 同日）
+
+| 项 | 状态 |
+|----|------|
+| D-SSG-11 auto = vision ∧ 簇 | ✅ |
+| AC-01/02/08/09 + mixed-scenes golden | ✅ |
+| AC-06 burst∩shotGroup · AC-07 vision off · AC-16 encode skip | ✅ |
+| `requireFaceOrSubject` 接线 | ✅ |
+| DATA-MODEL / algorithm-inventory / PRD-PHASE3 | ✅ |
+
+## 仍开放（不阻塞合码 · 真·M3 Go）
 
 - 实拍盲评日期版（填 [ssg-blind-review-TEMPLATE](./ssg-blind-review-TEMPLATE.md)）  
-- 实机 CLIP cache 狗粮路径抽查  
+- 实机 CLIP / 有脸 fixture 抽查  
 - 默认强制 vision on（另决策 PR）

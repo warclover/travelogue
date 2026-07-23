@@ -181,22 +181,29 @@ def compute_look_vectors_for_assets(
         except OSError:
             stats["lookSkippedNoFace"] += 1
             continue
-        faces = detect_faces_in_image(img)
-        if len(faces) >= int(look_cfg.max_faces_before_skip):
-            stats["lookSkippedMulti"] += 1
-            continue
-        main = select_main_face(
-            faces,
-            img_w=img.width,
-            img_h=img.height,
-            min_area_ratio=float(look_cfg.min_max_face_area_ratio),
-            max_faces=int(look_cfg.max_faces_before_skip),
-        )
-        if main is None:
-            stats["lookSkippedNoFace"] += 1
-            continue
-        bx, by, bw, bh = upper_body_crop_box(main, img_w=img.width, img_h=img.height)
-        crop = img.crop((bx, by, bx + bw, by + bh))
+        require_face = bool(getattr(look_cfg, "require_face_or_subject", True))
+        if require_face:
+            faces = detect_faces_in_image(img)
+            if len(faces) >= int(look_cfg.max_faces_before_skip):
+                stats["lookSkippedMulti"] += 1
+                continue
+            main = select_main_face(
+                faces,
+                img_w=img.width,
+                img_h=img.height,
+                min_area_ratio=float(look_cfg.min_max_face_area_ratio),
+                max_faces=int(look_cfg.max_faces_before_skip),
+            )
+            if main is None:
+                stats["lookSkippedNoFace"] += 1
+                continue
+            bx, by, bw, bh = upper_body_crop_box(
+                main, img_w=img.width, img_h=img.height
+            )
+            crop = img.crop((bx, by, bx + bw, by + bh))
+        else:
+            # Intentional full-frame fallback when face gate is off (config).
+            crop = img
         need_encode.append((aid, crop))
 
     if need_encode:

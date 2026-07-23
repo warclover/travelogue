@@ -24,6 +24,7 @@ from travelogue.config.shot_grouping import (
     resolve_shot_grouping_enabled,
 )
 from travelogue.curation.look_split import split_look_segments
+from travelogue.curation.shot_group_metrics import shot_group_coverage_ratio
 
 _log = logging.getLogger(__name__)
 
@@ -268,7 +269,16 @@ def run_shot_grouping_layer(
 
     try:
         has_clusters = _has_scene_clusters(assets)
-        if not resolve_shot_grouping_enabled(ssg, has_scene_clusters=has_clusters):
+        vision_ok: bool | None = None
+        try:
+            from travelogue.vision.clip_encoder import clip_torch_available
+
+            vision_ok = bool(clip_torch_available())
+        except Exception:
+            vision_ok = False
+        if not resolve_shot_grouping_enabled(
+            ssg, has_scene_clusters=has_clusters, vision_available=vision_ok
+        ):
             _clear_shot_group_fields(assets)
             curation.pop("shotGrouping", None)
             return ShotGroupingResult(mode="off", group_count=0, soft_split_count=0)
@@ -374,6 +384,18 @@ def run_shot_grouping_layer(
         scene_n = sum(1 for g in groups if g.get("kind") == "scene")
         weak_n = sum(1 for g in groups if g.get("kind") == "weak")
         look_n = sum(1 for g in groups if g.get("kind") == "look")
+        coverage = shot_group_coverage_ratio(assets)
+        telemetry = {
+            "mode": "scene",
+            "groupCount": len(groups),
+            "sceneGroupCount": scene_n,
+            "lookGroupCount": look_n,
+            "weakGroupCount": weak_n,
+            "softSplitCount": soft_splits,
+            "coverageRatio": round(coverage, 4),
+            "lookEnabled": want_look,
+            **look_stats,
+        }
         curation["shotGrouping"] = {
             "version": SHOT_GROUPING_VERSION,
             "groups": groups,
@@ -382,9 +404,20 @@ def run_shot_grouping_layer(
                 "lookGroupCount": look_n,
                 "weakGroupCount": weak_n,
                 "softSplitCount": soft_splits,
+                "coverageRatio": round(coverage, 4),
                 **look_stats,
             },
+            "telemetry": telemetry,
         }
+        if trip_dir is not None:
+            try:
+                from travelogue.curation.shot_group_decision_log import (
+                    write_shot_grouping_decision_log,
+                )
+
+                write_shot_grouping_decision_log(trip_dir, telemetry)
+            except Exception:
+                _log.debug("shot_grouping decision log write skipped", exc_info=True)
         hint = f"整理分镜…（{len(groups)} 组"
         if look_n:
             hint += f" · {look_n} 造型"

@@ -4,7 +4,7 @@
 |------|------|
 | **PRD** | [PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) **v0.2.1** |
 | **分支** | `feature/smart-shot-grouping-v1` |
-| **状态** | **Conditional Closed** · PR-A～F 自动化交付完成；实拍盲评另填 |
+| **状态** | **Conditional Closed** · PR-A～F + PRD gap-close；实拍盲评另填 |
 | **更新日期** | 2026-07-23 |
 
 ## 列车

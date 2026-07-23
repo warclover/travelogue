@@ -31,7 +31,8 @@ class ShotGroupingMosaicConfig:
 
     slice_cross_group_hard_reject: bool = True
     same_group_anti_slice: bool = True
-    # Logical names only — mapped at screen/pattern layer (D-SSG-17b).
+    # Documented intent names (D-SSG-17). Runtime exempt uses screen/pattern
+    # mapping in shot_group_gate (D-SSG-17b) — this list is not a live override.
     cross_group_exempt_roles: list[str] = field(
         default_factory=lambda: ["cover", "moment", "chapterHero", "solo", "bookend"]
     )
@@ -106,13 +107,25 @@ def shot_grouping_from_dict(raw: dict[str, Any] | None) -> ShotGroupingConfig:
     )
 
 
-def resolve_shot_grouping_enabled(cfg: ShotGroupingConfig, *, has_scene_clusters: bool) -> bool:
-    """auto = on only when scene clusters are available (D-SSG-11)."""
+def resolve_shot_grouping_enabled(
+    cfg: ShotGroupingConfig,
+    *,
+    has_scene_clusters: bool,
+    vision_available: bool | None = None,
+) -> bool:
+    """auto = vision available AND scene clusters non-empty (D-SSG-11)."""
     if cfg.enabled == "false":
         return False
     if cfg.enabled == "true":
         return True
-    return bool(has_scene_clusters)
+    if vision_available is None:
+        try:
+            from travelogue.vision.clip_encoder import clip_torch_available
+
+            vision_available = bool(clip_torch_available())
+        except Exception:
+            vision_available = False
+    return bool(has_scene_clusters and vision_available)
 
 
 def resolve_look_enabled(

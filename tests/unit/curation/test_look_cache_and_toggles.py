@@ -65,6 +65,31 @@ def test_look_appearance_cache_roundtrip(tmp_path: Path) -> None:
     assert float(np.dot(loaded["a1"], vectors["a1"])) > 0.99
 
 
+def test_ac16_cache_hit_skips_encode(tmp_path: Path, monkeypatch) -> None:
+    """AC-SSG-16 · cache hit must not call CLIP encode."""
+    from travelogue.config.shot_grouping import ShotGroupingConfig
+    from travelogue.vision import look_appearance as la
+
+    vectors = {"a1": _vec(1.0, 0.0), "a2": _vec(0.99, 0.01)}
+    save_look_appearance_cache(tmp_path, vectors)
+
+    def _boom(*_a, **_k):
+        raise AssertionError("encode_pil_clip should not run on full cache hit")
+
+    monkeypatch.setattr(la, "encode_pil_clip", _boom)
+    monkeypatch.setattr(la, "detect_faces_in_image", lambda _img: [(10, 10, 40, 40)])
+    assets = [
+        {"id": "a1", "type": "photo", "sourceFile": "missing.jpg"},
+        {"id": "a2", "type": "photo", "sourceFile": "missing.jpg"},
+    ]
+    out, stats = la.compute_look_vectors_for_assets(
+        assets, trip_dir=tmp_path, cfg=ShotGroupingConfig()
+    )
+    assert set(out) == {"a1", "a2"}
+    assert stats["lookCacheHits"] == 2
+    assert stats["lookEncoded"] == 0
+
+
 def test_ac17_can_disable_look_only() -> None:
     a = _vec(1.0, 0.0, 0.0)
     b = _vec(0.0, 1.0, 0.0)
