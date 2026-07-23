@@ -422,6 +422,11 @@
 | [acceptance-records/mtso-local-dogfood-GUIDE.md](./acceptance-records/mtso-local-dogfood-GUIDE.md) | MTSO 本机短狗粮 GUIDE |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | MTSO 七席联评 · Conditional Go |
 | [acceptance-records/mtso-dev-feasibility-2026-07-23.md](./acceptance-records/mtso-dev-feasibility-2026-07-23.md) | MTSO 开发可行性 · SUP 已认可 |
+| [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **拼图槽位自适应 MSA V1** **v0.2.0**（Conditional Go · Kickoff M0） |
+| [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 实施 **v0.1.0** · M0 ✅ · M1 未 Kickoff |
+| [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 验收 · AC-01～11（含 variant/persist 子项） |
+| [acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) | MSA 七席联评 · Conditional Go |
+| [acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md) | MSA 七席评审纪要模板 |
 | [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |
 | [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | P22 实施清单 |
 | [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | P22 验收 |
