@@ -32,22 +32,40 @@ def _asset(
 
 
 def test_split_look_segments_sustain_frames() -> None:
-    # sustain=2 requires two consecutive high-Δ edges before opening a new look
+    # sustain=2: need two frames far from current look ref before committing
     a = _vec(1.0, 0.0, 0.0)
     b = _vec(0.0, 1.0, 0.0)
-    c = _vec(0.0, 0.0, 1.0)
     assets = [
         {"id": "a1", "takenAt": "2025-01-01T10:00:00Z"},
-        {"id": "b1", "takenAt": "2025-01-01T10:01:00Z"},
-        {"id": "c1", "takenAt": "2025-01-01T10:02:00Z"},
+        {"id": "a2", "takenAt": "2025-01-01T10:01:00Z"},
+        {"id": "b1", "takenAt": "2025-01-01T10:02:00Z"},
+        {"id": "b2", "takenAt": "2025-01-01T10:03:00Z"},
     ]
-    vectors = {"a1": a, "b1": b, "c1": c}
+    vectors = {"a1": a, "a2": a, "b1": b, "b2": b}
     segs = split_look_segments(
         assets, vectors, delta_threshold=0.28, sustain_frames=2
     )
     assert len(segs) == 2
-    assert [x["id"] for x in segs[0]] == ["a1", "b1"]
-    assert [x["id"] for x in segs[1]] == ["c1"]
+    assert [x["id"] for x in segs[0]] == ["a1", "a2"]
+    assert [x["id"] for x in segs[1]] == ["b1", "b2"]
+
+
+def test_split_look_segments_absorb_single_flash() -> None:
+    a = _vec(1.0, 0.0, 0.0)
+    flash = _vec(0.0, 0.0, 1.0)
+    assets = [
+        {"id": "a1", "takenAt": "2025-01-01T10:00:00Z"},
+        {"id": "flash", "takenAt": "2025-01-01T10:01:00Z"},
+        {"id": "a2", "takenAt": "2025-01-01T10:02:00Z"},
+    ]
+    segs = split_look_segments(
+        assets,
+        {"a1": a, "flash": flash, "a2": a},
+        delta_threshold=0.28,
+        sustain_frames=2,
+    )
+    assert len(segs) == 1
+    assert [x["id"] for x in segs[0]] == ["a1", "flash", "a2"]
 
 
 def test_split_look_segments_sustain_one_splits_immediately() -> None:

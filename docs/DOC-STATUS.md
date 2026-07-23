@@ -72,7 +72,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/mtso-local-dogfood-GUIDE.md](./acceptance-records/mtso-local-dogfood-GUIDE.md) | **active** | MTSO 本机短狗粮 GUIDE |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-TEMPLATE.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-TEMPLATE.md) | **active** | MTSO 七席评审纪要**模板**（结案见日期版） |
 | [PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) | **active** | 智能分镜 **SSG** **v0.2.1**（SUP 会签 · 分支 `feature/smart-shot-grouping-v1` · M1+M2 核心落地） |
-| [IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md](./IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md) | **active** | SSG 实施 · PR-A～D ✅ · PR-E 阈值标定待 |
+| [IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md](./IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md) | **active** | SSG 实施 · PR-A～E ✅ · M3 狗粮待 |
+| [acceptance-records/ssg-look-threshold-calibration-2026-07-23.md](./acceptance-records/ssg-look-threshold-calibration-2026-07-23.md) | **active** | SSG PR-E · deltaThreshold=0.28 锁定 |
 | [ACCEPTANCE-SMART-SHOT-GROUPING-V1.md](./ACCEPTANCE-SMART-SHOT-GROUPING-V1.md) | **active** | SSG 验收 · M1/M2 单测门 · 数值门待狗粮 |
 | [acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) | **active** | SSG 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/ssg-dev-feasibility-2026-07-23.md](./acceptance-records/ssg-dev-feasibility-2026-07-23.md) | **active** | SSG 开发可行性 · SUP-01～10 **已会签** |

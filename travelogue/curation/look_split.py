@@ -35,9 +35,10 @@ def split_look_segments(
 ) -> list[list[dict]]:
     """Split look-eligible assets (time-ordered) into look segments.
 
-    Assets without vectors are omitted (caller keeps them on the scene group).
-    A sustained streak of Δ≥threshold over ``sustain_frames`` consecutive edges
-    opens a new look segment (D-SSG-09).
+    Distance is measured against the **current look reference** (first frame of
+    the open segment), not only the previous frame. A candidate streak of
+    ``sustain_frames`` frames with Δ≥threshold commits a new look; a shorter
+    streak is absorbed (flash rejection · D-SSG-09 / AC-SSG-12).
     """
     eligible = [a for a in assets if str(a.get("id") or "") in vectors]
     if not eligible:
@@ -52,18 +53,29 @@ def split_look_segments(
     sustain = max(1, int(sustain_frames))
     thr = float(delta_threshold)
     segments: list[list[dict]] = [[ordered[0]]]
+    ref_id = str(ordered[0].get("id"))
+    pending: list[dict] = []
     streak = 0
-    for i in range(1, len(ordered)):
-        prev_id = str(ordered[i - 1].get("id"))
-        cur_id = str(ordered[i].get("id"))
-        dist = appearance_distance(vectors[prev_id], vectors[cur_id])
+
+    for asset in ordered[1:]:
+        cur_id = str(asset.get("id"))
+        dist = appearance_distance(vectors[ref_id], vectors[cur_id])
         if dist >= thr:
             streak += 1
-        else:
-            streak = 0
-        if streak >= sustain:
-            segments.append([ordered[i]])
-            streak = 0
-        else:
-            segments[-1].append(ordered[i])
+            pending.append(asset)
+            if streak >= sustain:
+                segments.append(list(pending))
+                ref_id = str(pending[0].get("id"))
+                pending = []
+                streak = 0
+            continue
+        # Back below threshold → flash / noise; absorb pending into current look
+        if pending:
+            segments[-1].extend(pending)
+            pending = []
+        streak = 0
+        segments[-1].append(asset)
+
+    if pending:
+        segments[-1].extend(pending)
     return segments

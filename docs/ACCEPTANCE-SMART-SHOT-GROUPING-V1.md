@@ -21,9 +21,10 @@
 | AC | 状态 |
 |----|------|
 | AC-SSG-10 / 12 / 13 / 14 | ✅ 单测 `tests/unit/curation/test_look_split.py`（向量注入，无实机 CLIP） |
-| AC-SSG-11 / 16 数值门 / cache 狗粮 | ☐ PR-E / 狗粮 |
+| AC-SSG-11 | ✅ PR-E synthetic · `test_look_threshold_calibration.py` · F1≥0.70 @ 0.28 |
+| AC-SSG-16 cache 实机 | ☐ 狗粮 |
 | AC-SSG-15 mosaic 契约 | 继承 M1 gate（look 与 scene 同 `shotGroupId` 语义） |
-| AC-SSG-05 / 11 数值门 | ☐ 狗粮 / golden |
+| AC-SSG-05 假切条↓≥40% | ☐ 狗粮 / golden |
 | AC-SSG-17 | ☐ M3 · `look.enabled=false` 已单测 |
 
 ## 狗粮
