@@ -107,6 +107,13 @@ jobs:
           npm ci
           npm run tsc:preview-toolbar
 
+      # CQA · 周审计修复包窄门禁（AC-CQA-22/23；需 Node 跑 FE 契约）
+      - name: CQA god-module ratchet (hook / longshot)
+        run: python scripts/lint_cqa_god_module_ratchet.py
+
+      - name: CQA code_quality_audit_fixpack_gate
+        run: python scripts/code_quality_audit_fixpack_gate.py
+
   test-pr:
     runs-on: ubuntu-latest
     steps:

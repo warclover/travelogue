@@ -34,3 +34,10 @@
 
 - QFX 非长期 SSOT；条款归还 [NAS](./PRD-NO-AI-SURFACE-V1.md) / [Keep-All](./PRD-KEEP-ALL-PHOTOS-V1.md) / CSC。
 - 门禁入口：`scripts/quality_fixpack_gate.py` · CI lint job。
+
+## CQA 邻接回写（2026-07-23）
+
+| 项 | 说明 |
+|----|------|
+| `longshot-current.json` | schema 仍以 QFX D-QFX-06 / AC-11/25 为 SSOT |
+| 乱序分段 | CQA 只改触发：齐套即写 current（不依赖最后一段最后到达）· [AC-CQA-19](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) |

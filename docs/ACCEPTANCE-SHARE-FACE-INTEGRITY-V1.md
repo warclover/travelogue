@@ -118,3 +118,4 @@
 | v0.1.2 | 2026-07-21 | W2 工程列：FE-09～12 · QA-06；F4/F5 再签 |
 | v0.1.1 | 2026-07-21 | 回写 W0/W1 工程列；对齐补漏（gapfill 记录）；PRD v0.2.2 |
 | v0.1.0 | 2026-07-21 | 首版 · 对齐 PRD v0.2.0 AC-SFI-01～13·15 |
+| v0.1.3 | 2026-07-23 | **CQA 回写**：导出 prefs SSOT=`mode`（禁业务路径 `segmentMode`）；见 [CQA ACCEPTANCE](./ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) AC-05/06 |
