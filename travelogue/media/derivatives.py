@@ -149,6 +149,36 @@ class OnDemandMaterializeResult:
 
 _on_demand_lock = threading.Lock()
 _on_demand_threads: dict[str, threading.Thread] = {}
+_on_demand_pending: dict[str, set[str]] = {}
+
+
+def _trip_key(trip_dir: Path) -> str:
+    try:
+        return str(trip_dir.resolve())
+    except OSError:
+        return str(trip_dir)
+
+
+def is_on_demand_alive(trip_dir: Path) -> bool:
+    """True when an on-demand materialize thread is alive for ``trip_dir``."""
+    key = _trip_key(trip_dir)
+    with _on_demand_lock:
+        thread = _on_demand_threads.get(key)
+        return thread is not None and thread.is_alive()
+
+
+def is_on_demand_alive_for_trip_id(trip_id: str) -> bool:
+    """Busy probe by trip folder name (CQA AC-10b · extends ``is_trip_busy``)."""
+    tid = (trip_id or "").strip()
+    if not tid:
+        return False
+    with _on_demand_lock:
+        for key, thread in _on_demand_threads.items():
+            if thread is None or not thread.is_alive():
+                continue
+            if Path(key).name == tid:
+                return True
+    return False
 
 
 def _bump_on_demand_telemetry(trip: dict, *, count: int) -> None:
@@ -223,47 +253,87 @@ def materialize_on_demand(
     if persist:
         _persist_trip_json(trip_dir, trip)
 
-    trip_key = str(trip_dir.resolve())
+    trip_key = _trip_key(trip_dir)
     need_set = set(need)
 
     def _bg() -> None:
         try:
-            if not trip_dir.is_dir():
-                return
-            ensure_derivatives_for_trip(
-                trip,
-                trip_dir,
-                app_cfg=resolved,
-                asset_ids=need_set,
-                mark_unselected_skipped=False,
-            )
-            if not trip_dir.is_dir():
-                return
-            pipe2 = trip.setdefault("pipeline", {})
-            pipe2["derivativesPreparing"] = 0
-            still = asset_ids_needing_materialize(
-                trip, asset_ids=need_set, planned_widths=planned
-            )
-            if not still:
-                pipe2["derivativesStatus"] = "ready"
-            if persist:
-                _persist_trip_json(trip_dir, trip)
+            while True:
+                with _on_demand_lock:
+                    batch = set(_on_demand_pending.get(trip_key) or ())
+                    _on_demand_pending[trip_key] = set()
+                if not batch:
+                    break
+                if not trip_dir.is_dir():
+                    return
+                result = ensure_derivatives_for_trip(
+                    trip,
+                    trip_dir,
+                    app_cfg=resolved,
+                    asset_ids=batch,
+                    mark_unselected_skipped=False,
+                )
+                if not trip_dir.is_dir():
+                    return
+                pipe2 = trip.setdefault("pipeline", {})
+                if result.errors:
+                    pipe2["derivativesStatus"] = "error"
+                    pipe2["derivativesError"] = "; ".join(
+                        str(e) for e in result.errors[:3]
+                    )[:240]
+                still = asset_ids_needing_materialize(
+                    trip, asset_ids=batch, planned_widths=planned
+                )
+                with _on_demand_lock:
+                    more = bool(_on_demand_pending.get(trip_key))
+                if not more:
+                    pipe2["derivativesPreparing"] = 0
+                    if not result.errors:
+                        pipe2["derivativesStatus"] = "ready" if not still else "preview"
+                    if persist:
+                        _persist_trip_json(trip_dir, trip)
         except OSError:
             # PDG · directory may vanish mid-flight during delete rename
             return
+        except Exception as exc:  # noqa: BLE001 — surface to trip pipeline for UI
+            try:
+                pipe2 = trip.setdefault("pipeline", {})
+                pipe2["derivativesPreparing"] = 0
+                pipe2["derivativesStatus"] = "error"
+                pipe2["derivativesError"] = str(exc)[:240]
+                if persist:
+                    _persist_trip_json(trip_dir, trip)
+            except OSError:
+                return
         finally:
             with _on_demand_lock:
                 _on_demand_threads.pop(trip_key, None)
+                _on_demand_pending.pop(trip_key, None)
 
     with _on_demand_lock:
         prior = _on_demand_threads.get(trip_key)
         if prior is not None and prior.is_alive():
-            prior.join(timeout=0.05)
-        thread = threading.Thread(
-            target=_bg, name="derivative-ondemand", daemon=True
-        )
-        _on_demand_threads[trip_key] = thread
-        thread.start()
+            # CQA D-05 · coalesce into in-flight worker; do not spawn a second thread
+            pending = _on_demand_pending.setdefault(trip_key, set())
+            pending |= need_set
+            pipe["derivativesPreparing"] = max(
+                int(pipe.get("derivativesPreparing") or 0), len(pending)
+            )
+            if persist:
+                # persist preparing bump outside lock below
+                pass
+            coalesced = True
+        else:
+            _on_demand_pending[trip_key] = set(need_set)
+            thread = threading.Thread(
+                target=_bg, name="derivative-ondemand", daemon=True
+            )
+            _on_demand_threads[trip_key] = thread
+            thread.start()
+            coalesced = False
+
+    if coalesced and persist:
+        _persist_trip_json(trip_dir, trip)
 
     return OnDemandMaterializeResult(
         mode="async",
@@ -283,12 +353,10 @@ def stop_or_join_on_demand(
     Lock is only held to pop the thread reference; join runs **outside** the lock.
     On timeout, rename/delete may proceed; background persist must tolerate missing dir.
     """
-    try:
-        trip_key = str(trip_dir.resolve())
-    except OSError:
-        trip_key = str(trip_dir)
+    trip_key = _trip_key(trip_dir)
     with _on_demand_lock:
         thread = _on_demand_threads.pop(trip_key, None)
+        _on_demand_pending.pop(trip_key, None)
     if thread is None or not thread.is_alive():
         return
     thread.join(timeout=max(0.0, float(timeout)))
@@ -298,28 +366,40 @@ def register_on_demand_thread_for_tests(
     trip_dir: Path, thread: threading.Thread
 ) -> None:
     """Test hook · inject a live on-demand thread for AC-PDG-07 barrier cases."""
-    try:
-        trip_key = str(trip_dir.resolve())
-    except OSError:
-        trip_key = str(trip_dir)
+    trip_key = _trip_key(trip_dir)
     with _on_demand_lock:
         _on_demand_threads[trip_key] = thread
 
 
 def _persist_trip_json(trip_dir: Path, trip: dict) -> None:
+    """Atomically rewrite ``trip.json`` (tmp + os.replace · CQA D-05)."""
     path = trip_dir / "trip.json"
     if not path.is_file():
         return
     import json
+    import os
+    import tempfile
 
+    text = json.dumps(trip, ensure_ascii=False, indent=2) + "\n"
+    tmp_path: Path | None = None
     try:
-        path.write_text(
-            json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
+        fd, tmp_name = tempfile.mkstemp(
+            prefix="trip.json.", suffix=".tmp", dir=str(trip_dir)
         )
+        tmp_path = Path(tmp_name)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+        os.replace(str(tmp_path), str(path))
+        tmp_path = None
     except OSError:
         # PDG · directory may have been renamed/deleted mid-flight
         return
+    finally:
+        if tmp_path is not None:
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def missing_planned_widths(asset: dict, *, planned_widths: tuple[int, ...] | list[int]) -> list[int]:

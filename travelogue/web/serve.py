@@ -617,8 +617,10 @@ def serve_studio_directory(
     print(f"  import API: POST {url.rstrip('/')}/__travelogue/import")
     if studio_token:
         masked = f"****{studio_token[-4:]}" if len(studio_token) > 4 else "****"
-        print(f"  studio token (X-Studio-Token header / cookie): {masked}")
-        print("  LAN mode: sensitive GET + all mutations require the token")
+        bootstrap = f"{url.rstrip('/')}/?studio_token={studio_token}"
+        print(f"  LAN bootstrap (open once on this network): {bootstrap}")
+        print(f"  studio token fingerprint: {masked}")
+        print("  LAN mode: home requires bootstrap → HttpOnly session; APIs require session/token")
     print("  Ctrl+C or POST /__travelogue/shutdown to stop")
     try:
         server.serve_forever()

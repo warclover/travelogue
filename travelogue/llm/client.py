@@ -33,8 +33,18 @@ class LlmRuntime:
     timeout_sec: int
 
 
-def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = None) -> LlmRuntime:
-    """Resolve provider, model, API key, and base URL for a chat call."""
+def resolve_llm_runtime(
+    provider: str | None = None,
+    *,
+    cfg: object | None = None,
+    secrets: object | None = None,
+) -> LlmRuntime:
+    """Resolve provider, model, API key, and base URL for a chat call.
+
+    When ``secrets`` is provided (request-local ``UserLlmSecrets``), credentials
+    and endpoint are taken from that object — no ``os.environ`` mutation and no
+    global ``read_user_llm_secrets`` monkey-patch (CQA D-CQA-02).
+    """
     from travelogue.config import AppConfig, get_config
 
     if isinstance(cfg, AppConfig):
@@ -54,17 +64,44 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
         if provider and prov != (llm.provider or "").strip().lower()
         else (llm.api_key_env or preset["api_key_env"])
     )
+
+    # Request-local secrets path (Studio ping / concurrent-safe).
+    if secrets is not None:
+        sec_provider = (getattr(secrets, "provider", None) or "").strip().lower()
+        if sec_provider and sec_provider != prov:
+            raise LlmError(
+                "E_LLM_PROVIDER",
+                f"secrets provider {sec_provider!r} does not match {prov!r}",
+            )
+        api_key = str(getattr(secrets, "api_key", None) or "").strip()
+        if not api_key:
+            raise LlmError("E_LLM_AUTH", f"missing API key for provider {prov}")
+        llm_base = getattr(llm, "base_url", None)
+        model = coerce_model_for_provider(prov, getattr(secrets, "model", None))
+        base = resolve_base_url_for_provider(
+            prov,
+            getattr(secrets, "base_url", None) or llm_base,
+            getattr(secrets, "region", None),
+        )
+        return LlmRuntime(
+            provider=prov,
+            model=model,
+            api_key=api_key,
+            base_url=base,
+            timeout_sec=int(llm.timeout_sec),
+        )
+
     api_key = os.environ.get(api_key_env, "").strip()
     if not api_key:
         # Desktop LLM Setup V1: fall back to user_data secrets (MF-DLLM-03).
         try:
             from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
 
-            secrets = read_user_llm_secrets()
-            inject_secrets_into_environ(secrets)
+            disk_secrets = read_user_llm_secrets()
+            inject_secrets_into_environ(disk_secrets)
             api_key = os.environ.get(api_key_env, "").strip()
-            if not api_key and secrets.api_key and secrets.provider == prov:
-                api_key = secrets.api_key.strip()
+            if not api_key and disk_secrets.api_key and disk_secrets.provider == prov:
+                api_key = disk_secrets.api_key.strip()
         except Exception:
             pass
     if not api_key:
@@ -85,15 +122,15 @@ def resolve_llm_runtime(provider: str | None = None, *, cfg: object | None = Non
     try:
         from travelogue.llm.user_settings import read_user_llm_secrets
 
-        secrets = read_user_llm_secrets()
-        if secrets.provider == prov:
-            if secrets.model:
-                model = coerce_model_for_provider(prov, secrets.model)
+        disk_secrets = read_user_llm_secrets()
+        if disk_secrets.provider == prov:
+            if disk_secrets.model:
+                model = coerce_model_for_provider(prov, disk_secrets.model)
             # secrets.base_url 自定义优先；否则按 region / cfg 解析
             base = resolve_base_url_for_provider(
                 prov,
-                secrets.base_url if secrets.base_url else llm_base,
-                secrets.region,
+                disk_secrets.base_url if disk_secrets.base_url else llm_base,
+                disk_secrets.region,
             )
     except Exception:
         pass
@@ -257,8 +294,19 @@ def vision_chat_completion(
     )
 
 
-def llm_ping(*, provider: str | None = None) -> str:
-    """Minimal chat to verify credentials and connectivity."""
+def llm_ping(
+    *,
+    provider: str | None = None,
+    secrets: object | None = None,
+    cfg: object | None = None,
+    runtime: LlmRuntime | None = None,
+) -> str:
+    """Minimal chat to verify credentials and connectivity.
+
+    Pass request-local ``secrets`` / ``cfg`` / ``runtime`` to avoid process-global
+    credential injection (CQA D-CQA-02).
+    """
+    rt = runtime or resolve_llm_runtime(provider, cfg=cfg, secrets=secrets)
     content = chat_completion(
         [
             {"role": "system", "content": "Reply with JSON only."},
@@ -266,9 +314,9 @@ def llm_ping(*, provider: str | None = None) -> str:
         ],
         provider=provider,
         temperature=0,
+        runtime=rt,
     )
     data = parse_json_content(content)
     if data.get("ok") is not True:
         raise LlmError("E_LLM_PING", f"unexpected ping payload: {data!r}")
-    rt = resolve_llm_runtime(provider)
     return f"{rt.provider}/{rt.model} @ {rt.base_url}"

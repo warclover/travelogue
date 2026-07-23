@@ -70,6 +70,43 @@ def test_absent_scene_cluster_not_grouped() -> None:
     assert trip["assets"][1].get("shotGroupId") is None
 
 
+def test_rerun_clears_orphan_shot_group_fields() -> None:
+    """CQA AC-12 · video / absent cluster must not keep stale shotGroup*."""
+    trip = {
+        "assets": [
+            _asset("a1", taken_at="2025-01-01T10:00:00Z", cluster=1),
+            _asset("a2", taken_at="2025-01-01T10:05:00Z", cluster=1),
+            {
+                "id": "vid1",
+                "type": "video",
+                "takenAt": "2025-01-01T10:06:00Z",
+                "shotGroupId": "sg-stale-video",
+                "shotGroupKind": "scene",
+                "shotGroupConfidence": 0.9,
+            },
+            {
+                "id": "x1",
+                "type": "photo",
+                "takenAt": "2025-01-01T10:07:00Z",
+                "shotGroupId": "sg-stale-absent",
+                "shotGroupKind": "scene",
+                "shotGroupConfidence": 0.8,
+            },
+        ]
+    }
+    cfg = type(
+        "Cfg",
+        (),
+        {"shot_grouping": shot_grouping_from_dict({"enabled": "true"})},
+    )()
+    run_shot_grouping_layer(trip, cfg=cfg)  # type: ignore[arg-type]
+    by_id = {a["id"]: a for a in trip["assets"]}
+    assert by_id["a1"].get("shotGroupId")
+    assert by_id["vid1"].get("shotGroupId") is None
+    assert by_id["vid1"].get("shotGroupKind") is None
+    assert by_id["x1"].get("shotGroupId") is None
+
+
 def test_enabled_false_clears_groups() -> None:
     trip = {
         "assets": [

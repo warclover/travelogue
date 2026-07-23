@@ -40,8 +40,14 @@ def new_studio_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def extract_studio_token(headers, *, query: str = "") -> str:
-    """Resolve token from header, then cookie, then query string."""
+def extract_studio_token(
+    headers, *, query: str = "", allow_query: bool = True
+) -> str:
+    """Resolve token from header, then cookie, optionally query string.
+
+    CQA AC-02 · when ``allow_lan``, API auth must pass ``allow_query=False`` so
+    URL tokens are bootstrap-only (home exchange → HttpOnly cookie).
+    """
     supplied = headers.get("X-Studio-Token") or headers.get("x-studio-token") or ""
     if supplied:
         return str(supplied)
@@ -57,7 +63,7 @@ def extract_studio_token(headers, *, query: str = "") -> str:
         if morsel is not None and morsel.value:
             return str(morsel.value)
 
-    if query:
+    if allow_query and query:
         qs = parse_qs(query, keep_blank_values=False)
         for key in STUDIO_TOKEN_QUERY_KEYS:
             values = qs.get(key) or []
@@ -73,12 +79,18 @@ def studio_request_authorized(
     headers,
     allow_lan: bool,
     query: str = "",
+    allow_query_token: bool | None = None,
 ) -> bool:
     if is_loopback_host(host) and not allow_lan:
         return True
     if not token:
         return False
-    supplied = extract_studio_token(headers, query=query)
+    # LAN: query token is not long-lived API auth (bootstrap is handled separately).
+    if allow_query_token is None:
+        allow_query_token = not allow_lan
+    supplied = extract_studio_token(
+        headers, query=query, allow_query=bool(allow_query_token)
+    )
     if not supplied:
         return False
     return secrets.compare_digest(supplied, token)

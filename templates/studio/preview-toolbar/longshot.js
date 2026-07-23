@@ -101,6 +101,8 @@ var narratePollCancel = null;
 var longshotJobId = null;
 var _longshotDrawerTimer = null;
 var _studioExportPopoverClose = null;
+/** Active openStudioLongshotExportPanel settle(ok) — Escape/outside close must call this (CQA D-10). */
+var _activeExportPanelFinish = null;
 var _longshot2PlatformIds = ["wechat_chat", "wechat_moments"];
 var _longshot2SmartCrop = false;
 var _sparseMomentsToastAt = 0;
@@ -888,7 +890,7 @@ export function cancelPreviewLongshotExport(root) {
     syncLongshotPreviewRowVisibility(root);
   }
 
-  export function closeStudioExportPopover() {
+  function _closeStudioExportPopoverUi() {
     document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
       releaseExportPopoverFocus(pop);
       pop.hidden = true;
@@ -901,6 +903,14 @@ export function cancelPreviewLongshotExport(root) {
     try {
       document.documentElement.classList.remove("preview-export-popover-open");
     } catch (eLock) {}
+  }
+
+  export function closeStudioExportPopover() {
+    if (typeof _activeExportPanelFinish === "function") {
+      _activeExportPanelFinish(false);
+      return;
+    }
+    _closeStudioExportPopoverUi();
   }
 
   export function syncStudioExportPopoverUI(pop) {
@@ -1157,7 +1167,11 @@ export function cancelPreviewLongshotExport(root) {
     function onKey(e) {
       if (e.key === "Escape") {
         e.preventDefault();
-        closeStudioExportPopover();
+        if (typeof _activeExportPanelFinish === "function") {
+          _activeExportPanelFinish(false);
+        } else {
+          _closeStudioExportPopoverUi();
+        }
         return;
       }
       if (e.key !== "Tab" || focusables.length < 2) return;
@@ -1191,7 +1205,12 @@ export function cancelPreviewLongshotExport(root) {
         reject(new Error("no popover"));
         return;
       }
-      closeStudioExportPopover();
+      // Close any prior session without double-settle
+      if (typeof _activeExportPanelFinish === "function") {
+        _activeExportPanelFinish(false);
+      } else {
+        _closeStudioExportPopoverUi();
+      }
       pop._readDraftFromPrefs();
       applyExportPopoverLayoutMode(pop);
       pop.hidden = false;
@@ -1200,32 +1219,36 @@ export function cancelPreviewLongshotExport(root) {
       } catch (eOpen) {}
       trapExportPopoverFocus(pop);
 
-      function finish(ok) {
-        closeStudioExportPopover();
-        if (ok) resolve();
-        else reject(new Error("cancelled"));
-      }
-
+      var settled = false;
       var okBtn = pop.querySelector('[data-action="ok"]');
       var cancelBtn = pop.querySelector('[data-action="cancel"]');
 
+      function finish(ok) {
+        if (settled) return;
+        settled = true;
+        _activeExportPanelFinish = null;
+        if (okBtn) okBtn.removeEventListener("click", onOk);
+        if (cancelBtn) cancelBtn.removeEventListener("click", onCancel);
+        _closeStudioExportPopoverUi();
+        if (ok) resolve();
+        else reject(new Error("cancelled"));
+      }
+      _activeExportPanelFinish = finish;
+
       function onOk() {
-        // applyDraft 由永久 OK 处理器先行执行；此处只收尾关闭
-        if (typeof pop._applyDraft === "function") pop._applyDraft();
+        // Draft apply is owned by the permanent OK listener — settle only (CQA D-10).
         finish(true);
       }
       function onCancel() {
         finish(false);
       }
 
-      okBtn.addEventListener("click", onOk, { once: true });
-      cancelBtn.addEventListener("click", onCancel, { once: true });
+      if (okBtn) okBtn.addEventListener("click", onOk);
+      if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
 
       _studioExportPopoverClose = function (e) {
         if (pop.contains(e.target)) return;
         if (root.querySelector(".preview-toolbar__longshot-caret") === e.target) return;
-        okBtn.removeEventListener("click", onOk);
-        cancelBtn.removeEventListener("click", onCancel);
         finish(false);
       };
       window.setTimeout(function () {
@@ -2231,11 +2254,12 @@ export function cancelPreviewLongshotExport(root) {
 
   function maybeConfirmFullExportThen(root, tripId, next) {
     var prefs = readExportPrefs();
-    var mode = prefs.segmentMode || "auto";
+    // CQA D-03 · prefs SSOT is `mode` (not segmentMode)
+    var mode = prefs.mode === "full" ? "full" : "chapter";
     var platform =
       _pendingExportPlatform || prefs.platform || "wechat_chat";
     var keptN = keptNForRecipe(tripId);
-    if (!needsFullExportConfirm(keptN, mode === "full" ? "full" : mode, platform)) {
+    if (!needsFullExportConfirm(keptN, mode, platform)) {
       next();
       return;
     }
@@ -2251,7 +2275,7 @@ export function cancelPreviewLongshotExport(root) {
       if (choice === "secondary") {
         try {
           var nextPrefs = readExportPrefs();
-          nextPrefs.segmentMode = "chapter";
+          nextPrefs.mode = "chapter";
           writeExportPrefs(nextPrefs);
         } catch (_e) {}
       }
