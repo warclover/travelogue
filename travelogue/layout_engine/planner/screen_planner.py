@@ -1212,6 +1212,7 @@ def _pick_chapter_hero(
     featured_weight: float = DEFAULT_FEATURED_WEIGHT,
 ) -> tuple[str, str] | None:
     """Best landscape/panorama for opening 16:9 hero screen (web editorial rhythm)."""
+    from travelogue.curation.food_policy import should_skip_food_hero
     from travelogue.layout_contract.scoring import median_sharpness
     from travelogue.layout_engine.scoring.hero import effective_hero_score
 
@@ -1224,7 +1225,9 @@ def _pick_chapter_hero(
         kind = aspects.get(preferred_id, "square")
         if kind in ("landscape", "panorama"):
             asset = assets_map.get(preferred_id) or {}
-            if effective_hero_score(asset, median_sharp=med, featured_weight=featured_weight) > 0:
+            if not should_skip_food_hero(asset) and effective_hero_score(
+                asset, median_sharp=med, featured_weight=featured_weight
+            ) > 0:
                 return preferred_id, "screen-landscape-1"
 
     best_id = ""
@@ -1234,6 +1237,8 @@ def _pick_chapter_hero(
         if kind not in ("landscape", "panorama"):
             continue
         asset = assets_map.get(aid) or {}
+        if should_skip_food_hero(asset):
+            continue
         score = effective_hero_score(asset, median_sharp=med, featured_weight=featured_weight)
         if score > best_score:
             best_score = score

@@ -34,8 +34,8 @@
 | 用例 | 预期 |
 |------|------|
 | 3 food | 生成 `screen-square-4`，`layoutHint=food-grid` |
-| 2 food | 不触发 food grid |
-| food + 1 干扰（tolerance=1） | 仍可触发 food grid |
+| 2 food | **FRP 后触发** food-grid（square-4 · 2 slots）；Phase 10 原文「不触发」已由 [ACCEPTANCE-FOOD-ROLE-POLICY.md](./ACCEPTANCE-FOOD-ROLE-POLICY.md) AC-FRP-08 取代；回退：`food_role.grid_min_items: 3` |
+| food + 1 干扰（tolerance=1） | 仍可触发 food grid（FRP 默认 interruptions≤2） |
 | `enable_food_grid=false` | 完全回退，food grid 不出现 |
 | portrait run + food run | 两类 grid 共存 |
 | 6 food | 生成 `screen-square-6` |

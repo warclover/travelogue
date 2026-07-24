@@ -60,7 +60,8 @@ def test_food3_generates_square4_food_grid() -> None:
     assert all(slot["fit"] == "cover" for slot in food[0]["slots"])
 
 
-def test_food2_does_not_generate_food_grid() -> None:
+def test_food2_generates_food_grid() -> None:
+    """AC-FRP-08 · ≥2 food → food-grid (square-4 with 2 slots)."""
     ids = ["f1", "f2"]
     assets, aspects = _assets_and_aspects(ids, food_ids=set(ids))
     screens = plan_screens_for_chapter(
@@ -69,7 +70,33 @@ def test_food2_does_not_generate_food_grid() -> None:
         assets=assets,
         include_chapter_hero=False,
     )
-    assert not _food_screens(screens)
+    food = _food_screens(screens)
+    assert len(food) == 1
+    assert food[0]["patternId"] == "screen-square-4"
+    assert len(food[0]["slots"]) == 2
+
+
+def test_food_soft_cluster_across_one_landscape_within_window() -> None:
+    """AC-FRP-09 · same meal window + 1 interruption still grids."""
+    ids = ["f1", "l1", "f2", "f3"]
+    assets, aspects = _assets_and_aspects(ids, food_ids={"f1", "f2", "f3"})
+    # Spread within 60 minutes (default FRP window).
+    base = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
+    for i, aid in enumerate(ids):
+        assets[aid]["takenAt"] = (base + timedelta(minutes=i * 10)).isoformat().replace(
+            "+00:00", "Z"
+        )
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        include_chapter_hero=False,
+    )
+    food = _food_screens(screens)
+    assert len(food) == 1
+    assert len(food[0]["slots"]) == 3
+    used_ids = {slot["assetId"] for sc in screens for slot in (sc.get("slots") or [])}
+    assert "l1" in used_ids
 
 
 def test_food_with_one_non_mundane_interference_still_triggers() -> None:
@@ -103,6 +130,8 @@ def test_disable_food_grid_falls_back() -> None:
 
 
 def test_portrait_grid8_and_food_grid_can_coexist() -> None:
+    from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+
     portrait_ids = [f"p{i}" for i in range(8)]
     food_ids = ["f1", "f2", "f3"]
     ids = portrait_ids + food_ids
@@ -117,8 +146,18 @@ def test_portrait_grid8_and_food_grid_can_coexist() -> None:
         orientation_summary={"portrait": 50, "landscape": 20},
     )
     patterns = [sc["patternId"] for sc in screens]
-    assert PATTERN_PORTRAIT_GRID_8 in patterns
     assert _food_screens(screens)
+    # Local LTE admission may prune grid-8; when enabled, both grids coexist.
+    if not mosaic_pattern_disabled("screen-portrait-grid-8"):
+        assert PATTERN_PORTRAIT_GRID_8 in patterns
+    else:
+        portrait_used = sum(
+            1
+            for sc in screens
+            for slot in (sc.get("slots") or [])
+            if str(slot.get("assetId") or "").startswith("p")
+        )
+        assert portrait_used == 8
 
 
 def test_food6_generates_square6() -> None:

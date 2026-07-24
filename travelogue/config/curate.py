@@ -7,6 +7,7 @@ from typing import Any
 
 from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cover_scoring_v2_params import CoverScoringParamsV2
+from travelogue.config.food_role import FoodRoleConfig
 from travelogue.config.moment import MomentConfig
 
 
@@ -46,4 +47,5 @@ class CurateConfig:
     enable_arc_breath: bool = True
     enable_food_grid: bool = True
     mundane_grid_buckets: tuple[str, ...] = ("food",)
+    food_role: FoodRoleConfig = field(default_factory=FoodRoleConfig)
     moment: MomentConfig = field(default_factory=MomentConfig)

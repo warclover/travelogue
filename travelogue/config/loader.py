@@ -18,6 +18,7 @@ from travelogue.config.cohort import CohortConfig
 from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cull import cull_from_dict
 from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
+from travelogue.config.food_role import food_role_config_from_dict
 from travelogue.config.errors import ConfigError
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
@@ -593,6 +594,15 @@ def load_config(path: Path | None = None) -> AppConfig:
                     or ["food"]
                 )
                 if str(x).strip()
+            ),
+            food_role=food_role_config_from_dict(
+                curate_raw.get("food_role")
+                if isinstance(curate_raw.get("food_role"), dict)
+                else (
+                    curate_raw.get("foodRole")
+                    if isinstance(curate_raw.get("foodRole"), dict)
+                    else {}
+                )
             ),
             moment=moment_config_from_dict(
                 curate_raw.get("moment") if isinstance(curate_raw.get("moment"), dict) else {}

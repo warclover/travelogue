@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1",
+  "phase": "FRP-FoodRolePolicy",
+  "recordedAt": "2026-07-24T01:25:33Z",
+  "status": "passed",
+  "variants": {
+    "frp": {
+      "label": "frp_default",
+      "coverAssetId": "l3",
+      "coverIsFood": false,
+      "coverFoodPolicy": "demote",
+      "closingAssetId": "l_pad0",
+      "closingIsFood": false,
+      "closingFoodPolicy": "demote",
+      "momentPoolIds": [
+        "l3"
+      ],
+      "momentContainsFood": false,
+      "foodGridCount": 1,
+      "foodGridSlotCounts": [
+        4
+      ],
+      "soloFoodScreenCount": 1,
+      "foodPolicyGrids": [
+        {
+          "assetIds": [
+            "f_hero",
+            "f1",
+            "f2",
+            "f3"
+          ],
+          "windowSeconds": 3600.0,
+          "pattern": "screen-square-4",
+          "layoutHint": "food-grid"
+        }
+      ],
+      "patterns": [
+        "screen-landscape-1",
+        "screen-square-4",
+        "screen-landscape-1",
+        "screen-landscape-1",
+        "screen-landscape-1",
+        "screen-square-1",
+        "screen-landscape-4",
+        "screen-landscape-4",
+        "screen-landscape-4"
+      ]
+    },
+    "legacy": {
+      "label": "legacy_phase10",
+      "coverAssetId": "f_hero",
+      "coverIsFood": true,
+      "coverFoodPolicy": "none",
+      "closingAssetId": "l_pad0",
+      "closingIsFood": false,
+      "closingFoodPolicy": "none",
+      "momentPoolIds": [
+        "f_hero"
+      ],
+      "momentContainsFood": true,
+      "foodGridCount": 1,
+      "foodGridSlotCounts": [
+        3
+      ],
+      "soloFoodScreenCount": 2,
+      "foodPolicyGrids": [
+        {
+          "assetIds": [
+            "f1",
+            "f2",
+            "f3"
+          ],
+          "windowSeconds": 0.0,
+          "pattern": "screen-square-4",
+          "layoutHint": "food-grid"
+        }
+      ],
+      "patterns": [
+        "screen-landscape-1",
+        "screen-landscape-1",
+        "screen-landscape-1",
+        "screen-square-4",
+        "screen-landscape-1",
+        "screen-landscape-1",
+        "screen-square-1",
+        "screen-landscape-4",
+        "screen-landscape-4",
+        "screen-landscape-4"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "id": "ac-frp-d1-cover",
+      "name": "FRP cover is not food when landscape exists",
+      "passed": true,
+      "frp": "l3",
+      "legacy": "f_hero",
+      "legacyCoverIsFood": true
+    },
+    {
+      "id": "ac-frp-d1-closing",
+      "name": "FRP closing is not food when landscape exists",
+      "passed": true,
+      "frp": "l_pad0",
+      "legacy": "l_pad0"
+    },
+    {
+      "id": "ac-frp-d1-moment",
+      "name": "FRP moment pool excludes food",
+      "passed": true,
+      "frpPool": [
+        "l3"
+      ],
+      "legacyContainsFood": true
+    },
+    {
+      "id": "ac-frp-d1-grid",
+      "name": "FRP forms food-grid; solo food screens decrease vs legacy",
+      "passed": true,
+      "frpFoodGridCount": 1,
+      "frpSoloFood": 1,
+      "legacyFoodGridCount": 1,
+      "legacySoloFood": 2,
+      "frpSlotCounts": [
+        4
+      ]
+    },
+    {
+      "id": "ac-frp-d1-grids-log",
+      "name": "FRP writes foodPolicy.grids[]",
+      "passed": true,
+      "grids": [
+        {
+          "assetIds": [
+            "f_hero",
+            "f1",
+            "f2",
+            "f3"
+          ],
+          "windowSeconds": 3600.0,
+          "pattern": "screen-square-4",
+          "layoutHint": "food-grid"
+        }
+      ]
+    },
+    {
+      "id": "ac-frp-08",
+      "name": "2 food -> food-grid",
+      "passed": true
+    },
+    {
+      "id": "ac-frp-pytest",
+      "name": "unit suite green",
+      "passed": true,
+      "returnCode": 0,
+      "stdoutTail": "..............................                                           [100%]\n30 passed in 0.56s\n"
+    }
+  ],
+  "manualDogfood": {
+    "status": "pending_product",
+    "checklist": "docs/acceptance-records/food-role-policy-dogfood-CHECKLIST.md",
+    "fixturePath": "schemas/fixtures/trip.frp_mixed_travel_food.json",
+    "note": "仓库无真实混拍 trip；本记录为 fixture 量化对比。AC-FRP-D2/D3 需产品目视签字。"
+  },
+  "decisions": {
+    "Q1_cover_policy": "demote@0.15",
+    "Q2_two_food_pattern": "screen-square-4",
+    "Q3_cluster_window_seconds": 3600,
+    "Q4_food_grid_as_moment": false,
+    "Q5_sign_ticket_cover_demote": false
+  }
+}

@@ -1,0 +1,459 @@
+{
+  "tripId": "frp-mixed-travel-food-fixture",
+  "version": "0.2",
+  "exportLayout": "web",
+  "meta": {
+    "title": "FRP Mixed Travel+Food",
+    "subtitle": "dogfood fixture",
+    "dateStart": "2025-06-01",
+    "dateEnd": "2025-06-01"
+  },
+  "assets": [
+    {
+      "id": "l0",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 220.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T12:00:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l1",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 240.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T12:05:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "f_hero",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 2000,
+      "height": 1125,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 980.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T12:40:00Z",
+      "tags": [
+        "food"
+      ],
+      "subjectClass": "food",
+      "subjectConfidence": 0.92
+    },
+    {
+      "id": "f1",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1200,
+      "height": 1200,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 300.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T13:10:00Z",
+      "tags": [
+        "food"
+      ],
+      "subjectClass": "food",
+      "subjectConfidence": 0.92
+    },
+    {
+      "id": "l2",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 210.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T13:15:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "f2",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1200,
+      "height": 1200,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 310.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T13:20:00Z",
+      "tags": [
+        "food"
+      ],
+      "subjectClass": "food",
+      "subjectConfidence": 0.92
+    },
+    {
+      "id": "f3",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1200,
+      "height": 1200,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 320.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T13:25:00Z",
+      "tags": [
+        "food"
+      ],
+      "subjectClass": "food",
+      "subjectConfidence": 0.92
+    },
+    {
+      "id": "l3",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 260.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T14:00:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "f_solo",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1200,
+      "height": 1200,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 280.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:20:00Z",
+      "tags": [
+        "food"
+      ],
+      "subjectClass": "food",
+      "subjectConfidence": 0.92
+    },
+    {
+      "id": "l_pad0",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 180.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:30:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad1",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 181.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:33:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad2",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 182.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:36:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad3",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 183.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:39:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad4",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 184.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:42:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad5",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 185.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:45:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad6",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 186.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:48:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad7",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 187.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:51:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad8",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 188.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:54:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad9",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 189.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T15:57:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad10",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 190.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T16:00:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    },
+    {
+      "id": "l_pad11",
+      "type": "image",
+      "layoutEligible": true,
+      "width": 1600,
+      "height": 900,
+      "mediaClass": "photo",
+      "userTier": "material",
+      "quality": {
+        "sharpness": 191.0,
+        "overall": 0.8
+      },
+      "takenAt": "2025-06-01T16:03:00Z",
+      "tags": [
+        "landscape"
+      ],
+      "subjectClass": "landscape",
+      "subjectConfidence": 0.9
+    }
+  ],
+  "curation": {},
+  "chapters": [
+    {
+      "chapterId": "ch-01",
+      "screens": [
+        {
+          "slots": [
+            {
+              "assetId": "l0"
+            },
+            {
+              "assetId": "l1"
+            },
+            {
+              "assetId": "f_hero"
+            }
+          ]
+        },
+        {
+          "slots": [
+            {
+              "assetId": "f1"
+            },
+            {
+              "assetId": "l2"
+            },
+            {
+              "assetId": "f2"
+            }
+          ]
+        },
+        {
+          "slots": [
+            {
+              "assetId": "f3"
+            },
+            {
+              "assetId": "l3"
+            },
+            {
+              "assetId": "f_solo"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

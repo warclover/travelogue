@@ -708,6 +708,8 @@ def effective_cover_score(
     pool: list[dict] | None = None,
     person_demote_mult: float | None = None,
 ) -> float:
+    from travelogue.curation.food_policy import food_cover_score_multiplier
+
     return (
         cover_score(
             asset,
@@ -724,6 +726,7 @@ def effective_cover_score(
         )
         * featured_weight_multiplier(asset, weight=featured_weight)
         * anchor_match_multiplier(asset, memory_anchors, meta_places=meta_places)
+        * food_cover_score_multiplier(asset)
     )
 
 
@@ -866,10 +869,21 @@ def pick_cover_asset_id_with_meta(
     ver, params, params_v2 = _curate_scoring_context(
         cover_scoring, cover_scoring_v2, scoring_version
     )
+    from travelogue.curation.food_policy import (
+        annotate_food_policy,
+        filter_food_for_policy,
+        get_food_role_config,
+        is_food_asset,
+    )
+
+    role = get_food_role_config()
+    scored_assets, food_fallback = filter_food_for_policy(
+        list(assets), policy=role.cover_policy
+    )
     preferred_label = preferred_orientation_label(export_layout)
-    preferred_only = preferred_orientation_pool(assets, export_layout=export_layout)
+    preferred_only = preferred_orientation_pool(scored_assets, export_layout=export_layout)
     full_pool = cover_asset_pool(
-        assets, export_layout=export_layout, prefer_orientation=False
+        scored_assets, export_layout=export_layout, prefer_orientation=False
     )
     by_id = {a["id"]: a for a in assets if a.get("id")}
 
@@ -881,6 +895,15 @@ def pick_cover_asset_id_with_meta(
         "exportLayout": export_layout,
         "userOneLiner": None,
     }
+    if role.cover_policy == "off":
+        annotate_food_policy(meta, slot="cover", applied="none")
+    elif food_fallback:
+        annotate_food_policy(meta, slot="cover", applied="fallback")
+        meta["coverFoodFallback"] = True
+    elif role.cover_policy == "exclude":
+        annotate_food_policy(meta, slot="cover", applied="exclude")
+    else:
+        annotate_food_policy(meta, slot="cover", applied="demote")
 
     def _finalize(chosen: str, *, reason: str | None = None) -> tuple[str, dict[str, object]]:
         asset = by_id.get(chosen)
@@ -937,7 +960,7 @@ def pick_cover_asset_id_with_meta(
                     str(best_wrong["id"]), reason="soft_quality_override"
                 )
 
-    pool = cover_asset_pool(assets, export_layout=export_layout)
+    pool = cover_asset_pool(scored_assets, export_layout=export_layout)
     best_id = _score_pick_cover_in_pool(
         pool,
         export_layout=export_layout,
@@ -950,13 +973,18 @@ def pick_cover_asset_id_with_meta(
         aesthetic_enabled=aesthetic_enabled,
     )
     if best_id:
+        chosen_asset = by_id.get(best_id)
+        if chosen_asset and is_food_asset(chosen_asset) and role.cover_policy != "off":
+            if food_fallback or all(is_food_asset(a) for a in scored_assets if a.get("id") not in exclude):
+                annotate_food_policy(meta, slot="cover", applied="fallback")
+                meta["coverFoodFallback"] = True
         return _finalize(best_id)
 
-    for a in assets:
+    for a in scored_assets:
         if a["id"] not in exclude and a.get("type") != "video":
             return _finalize(a["id"])
-    if assets:
-        return _finalize(assets[0]["id"])
+    if scored_assets:
+        return _finalize(scored_assets[0]["id"])
     return "", meta
 
 

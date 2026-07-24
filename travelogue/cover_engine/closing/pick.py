@@ -37,6 +37,23 @@ def pick_closing_with_meta(
             near_dup_seconds=near_dup_seconds,
         )
 
+    from travelogue.curation.food_policy import (
+        filter_food_for_policy,
+        get_food_role_config,
+        is_food_asset,
+    )
+
+    role = get_food_role_config()
+    food_fallback = False
+    if role.closing_policy == "exclude" and candidates:
+        candidate_assets = [assets_map[aid] for aid in candidates if aid in assets_map]
+        kept_assets, food_fallback = filter_food_for_policy(
+            candidate_assets, policy="exclude"
+        )
+        kept_ids = {str(a.get("id")) for a in kept_assets if a.get("id")}
+        if not food_fallback:
+            candidates = [aid for aid in candidates if aid in kept_ids]
+
     cover = None
     for cid in cover_ids_to_exclude(trip):
         if cid in assets_map:
@@ -81,6 +98,24 @@ def pick_closing_with_meta(
 
     degraded = picked is None
     unused = bool(picked and picked not in screen_used)
+    food_policy = "none"
+    if role.closing_policy == "off":
+        food_policy = "none"
+    elif food_fallback:
+        food_policy = "fallback"
+    elif role.closing_policy == "exclude":
+        food_policy = "exclude"
+    elif picked and is_food_asset(assets_map.get(picked) or {}):
+        food_policy = "demote"
+    elif role.closing_policy == "demote":
+        food_policy = "demote"
+
+    from travelogue.curation.food_policy import annotate_trip_food_policy
+
+    annotate_trip_food_policy(trip, slot="closing", applied=food_policy)
+    if food_fallback:
+        trip.setdefault("curation", {})["closingFoodFallback"] = True
+
     return {
         "closing_asset_id": picked,
         "degraded": degraded,
@@ -90,4 +125,6 @@ def pick_closing_with_meta(
         "screen_used": screen_used,
         "assets": assets_map,
         "excluded_by_moment": moment_excluded,
+        "food_policy": food_policy,
+        "closingFoodFallback": bool(food_fallback),
     }

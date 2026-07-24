@@ -105,6 +105,19 @@ curate:
   enable_food_grid: true
   # Phase 10.1 · 可配置 mundane 组屏桶（默认仅 food）
   mundane_grid_buckets: [food]
+  # FRP · 美食角色策略（见 docs/PRD-FOOD-ROLE-POLICY-V1.md）
+  food_role:
+    cover_policy: demote          # demote | exclude | off
+    cover_multiplier: 0.15
+    closing_policy: demote
+    closing_multiplier: 0.15
+    hero_policy: skip             # skip | allow
+    allow_food_in_moment: false
+    moment_multiplier: 0.05
+    grid_min_items: 2
+    cluster_window_seconds: 3600
+    grid_max_interruptions: 2
+
   # Phase 6 · layout rhythm & diversity (M25-B)
   layout:
     enable_gravity_balance: true

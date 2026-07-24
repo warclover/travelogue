@@ -497,6 +497,12 @@ def _sync_trip_covers_core(
             if not cover_id:
                 cover_id = str(trip.get("coverAssetId") or "")
             if cover_id:
+                try:
+                    from travelogue.curation.food_policy import annotate_trip_food_policy
+
+                    annotate_trip_food_policy(trip, slot="cover", applied="override")
+                except Exception:
+                    pass
                 return cover_id
         else:
             cover_id = _apply_web_joint()

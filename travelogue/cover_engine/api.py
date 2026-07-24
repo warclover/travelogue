@@ -315,6 +315,13 @@ def resolve_closing(
         curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
         existing = curation.get("closingAssetId") if "closingAssetId" in curation else None
         cover_id = str(trip.get("coverAssetId") or "")
+        # FRP · locked closing skips demote/exclude re-pick.
+        try:
+            from travelogue.curation.food_policy import annotate_trip_food_policy
+
+            annotate_trip_food_policy(trip, slot="closing", applied="override")
+        except Exception:
+            pass
         return _decision_from_trip(
             trip,
             cover_asset_id=cover_id,

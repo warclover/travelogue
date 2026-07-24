@@ -165,6 +165,9 @@ def refresh_semantic_tag_for_asset(asset: dict) -> str:
     return category
 
 
+_FOOD_L1_CATEGORIES: set[str] = {"food", "meal", "cafe", "restaurant"}
+
+
 def is_mundane_clusterable(asset: dict) -> str | None:
     """Return mundane bucket key if asset is clusterable mundane, else None."""
     if subject_class_for_asset(asset) == "food":
@@ -191,6 +194,16 @@ def is_mundane_clusterable(asset: dict) -> str | None:
         if tags & tag_set:
             return bucket
     return None
+
+
+def is_food_asset(asset: dict) -> bool:
+    """True when asset is coarse food (CLIP / mundane / L1), for FRP demote & grid."""
+    if subject_class_for_asset(asset) == "food":
+        return True
+    if is_mundane_clusterable(asset) == "food":
+        return True
+    category = semantic_category_for_asset(asset)
+    return category in _FOOD_L1_CATEGORIES
 
 
 def mundane_run_length(

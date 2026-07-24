@@ -37,7 +37,15 @@ def _cover_ids_to_exclude(trip: dict) -> set[str]:
     return out
 
 
-def _eligible_moment_candidates(assets: list[dict], *, exclude: set[str]) -> list[dict]:
+def _eligible_moment_candidates(
+    assets: list[dict],
+    *,
+    exclude: set[str],
+    allow_food: bool | None = None,
+) -> list[dict]:
+    from travelogue.curation.food_policy import is_food_asset, moment_allows_food
+
+    food_ok = moment_allows_food() if allow_food is None else bool(allow_food)
     out: list[dict] = []
     for asset in assets:
         aid = str(asset.get("id") or "").strip()
@@ -50,6 +58,8 @@ def _eligible_moment_candidates(assets: list[dict], *, exclude: set[str]) -> lis
         if asset.get("timeOutlier"):
             continue
         if asset.get("mediaClass") in _EXCLUDED_MEDIA:
+            continue
+        if not food_ok and is_food_asset(asset):
             continue
         out.append(asset)
     return out
@@ -207,6 +217,12 @@ def peak_moment_score(
     if ctx.median_sharp > 0:
         total += 0.001 * (sharp / ctx.median_sharp)
 
+    # FRP · soft demote double-insurance when food reaches scoring
+    # (hard-exclude normally keeps food out of the pool).
+    from travelogue.curation.food_policy import food_moment_score_multiplier
+
+    total *= food_moment_score_multiplier(asset)
+
     return max(0.0, min(1.5, total))
 
 
@@ -271,8 +287,19 @@ def build_moment_pool(
     memory_anchors: list[str] | None = None,
     hero_asset_ids: set[str] | None = None,
 ) -> list[str]:
+    from travelogue.curation.food_policy import moment_allows_food
+
     exclude = _cover_ids_to_exclude(trip)
-    candidates = _eligible_moment_candidates(layout_assets, exclude=exclude)
+    allow_food = moment_allows_food()
+    candidates = _eligible_moment_candidates(
+        layout_assets, exclude=exclude, allow_food=allow_food
+    )
+    food_fallback = False
+    if not candidates and not allow_food:
+        candidates = _eligible_moment_candidates(
+            layout_assets, exclude=exclude, allow_food=True
+        )
+        food_fallback = bool(candidates)
     if not candidates:
         return []
 
@@ -310,6 +337,22 @@ def build_moment_pool(
             seen.add(aid)
             if len(pool_ids) >= target:
                 break
+    if food_fallback:
+        curation = trip.setdefault("curation", {})
+        curation["momentFoodFallback"] = True
+        food_policy = curation.get("foodPolicy")
+        if not isinstance(food_policy, dict):
+            food_policy = {}
+        food_policy["moment"] = "fallback"
+        curation["foodPolicy"] = food_policy
+    else:
+        curation = trip.setdefault("curation", {})
+        curation.pop("momentFoodFallback", None)
+        food_policy = curation.get("foodPolicy")
+        if not isinstance(food_policy, dict):
+            food_policy = {}
+        food_policy["moment"] = "none" if allow_food else "excluded"
+        curation["foodPolicy"] = food_policy
     return pool_ids
 
 

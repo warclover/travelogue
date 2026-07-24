@@ -133,6 +133,23 @@ def build_chapter_plan_context(
     )
 
 
+def _food_role_grid_params(ctx: ChapterPlanContext) -> tuple[int, int, float]:
+    """Return (min_items, max_interruptions, window_seconds) for mundane/food grid."""
+    try:
+        from travelogue.curation.food_policy import get_food_role_config
+
+        role = get_food_role_config(
+            getattr(getattr(ctx.app_config, "curate", None), "food_role", None)
+        )
+        return (
+            max(1, int(role.grid_min_items)),
+            max(0, int(role.grid_max_interruptions)),
+            float(role.cluster_window_seconds),
+        )
+    except Exception:
+        return 2, 2, 3600.0
+
+
 def stage_chapter_hero(ctx: ChapterPlanContext) -> None:
     """Opening hero screen; removes hero asset id from ctx.ids when placed."""
     from travelogue.layout_engine.mosaic.hook import chapter_should_skip_hero_for_mosaic
@@ -490,7 +507,21 @@ def _collect_mundane_ids_for_grid(
     allowed_buckets: tuple[str, ...],
     max_items: int = 9,
     tolerance: int = 1,
+    window_seconds: float = 0.0,
 ) -> list[str]:
+    from travelogue.curation.food_policy import collect_mundane_cluster_at_cursor
+
+    if target_bucket == "food" or window_seconds > 0:
+        return collect_mundane_cluster_at_cursor(
+            ids,
+            assets_map,
+            start,
+            target_bucket=target_bucket,
+            allowed_buckets=allowed_buckets,
+            max_items=max_items,
+            max_interruptions=tolerance,
+            window_seconds=window_seconds if target_bucket == "food" else 0.0,
+        )
     if start < 0 or start >= len(ids):
         return []
     out: list[str] = []
@@ -528,12 +559,18 @@ def _remove_ids_once(ids: list[str], remove_ids: list[str], *, start: int) -> No
         i += 1
 
 
-def _pick_mundane_bucket_at_cursor(ctx: ChapterPlanContext, *, tolerance: int = 1) -> str | None:
+def _pick_mundane_bucket_at_cursor(
+    ctx: ChapterPlanContext,
+    *,
+    tolerance: int = 1,
+    min_items: int = 2,
+    window_seconds: float = 3600.0,
+) -> str | None:
     """Pick a bucket that can actually form a grid at cursor.
 
     In multi-bucket mode, a simple "first bucket hit" can disagree with
-    mundane_run_length(allowed_buckets=...), causing run>=3 but chosen bucket<3.
-    Prefer the bucket that can collect the most ids (and at least 3).
+    mundane_run_length(allowed_buckets=...), causing run>=min but chosen bucket<min.
+    Prefer the bucket that can collect the most ids (and at least min_items).
     """
     best_bucket: str | None = None
     best_count = 0
@@ -546,9 +583,10 @@ def _pick_mundane_bucket_at_cursor(ctx: ChapterPlanContext, *, tolerance: int = 
             allowed_buckets=ctx.mundane_grid_buckets,
             max_items=9,
             tolerance=tolerance,
+            window_seconds=window_seconds if bucket == "food" else 0.0,
         )
         count = len(target_ids)
-        if count >= 3 and count > best_count:
+        if count >= min_items and count > best_count:
             best_bucket = bucket
             best_count = count
     if best_bucket:
@@ -561,30 +599,56 @@ def try_mundane_grid(ctx: ChapterPlanContext) -> int | None:
 
     if not ctx.enable_food_grid or ctx.pending_portraits:
         return None
-    run = mundane_run_length(
-        ctx.ids,
-        ctx.assets_map,
-        ctx.i,
-        allowed_buckets=ctx.mundane_grid_buckets,
+    min_items, max_interruptions, window_seconds = _food_role_grid_params(ctx)
+    # Probe with soft cluster first (food); fall back to classic run length.
+    bucket = _pick_mundane_bucket_at_cursor(
+        ctx,
+        tolerance=max_interruptions,
+        min_items=min_items,
+        window_seconds=window_seconds,
     )
-    if run < 3:
-        return None
-    bucket = _pick_mundane_bucket_at_cursor(ctx)
     if not bucket:
-        return None
+        run = mundane_run_length(
+            ctx.ids,
+            ctx.assets_map,
+            ctx.i,
+            allowed_buckets=ctx.mundane_grid_buckets,
+            tolerance=max_interruptions,
+        )
+        if run < min_items:
+            return None
+        bucket = _pick_mundane_bucket_at_cursor(
+            ctx,
+            tolerance=max_interruptions,
+            min_items=min_items,
+            window_seconds=window_seconds,
+        )
+        if not bucket:
+            return None
     target_ids = _collect_mundane_ids_for_grid(
         ctx.ids,
         ctx.assets_map,
         ctx.i,
         target_bucket=bucket,
         allowed_buckets=ctx.mundane_grid_buckets,
-        max_items=min(run, 9),
+        max_items=9,
+        tolerance=max_interruptions,
+        window_seconds=window_seconds if bucket == "food" else 0.0,
     )
-    if len(target_ids) < 3:
+    if len(target_ids) < min_items:
         return None
-    append_screen(
-        ctx,
-        _make_mundane_grid_screen(target_ids, bucket=bucket, assets_map=ctx.assets_map),
+    screen = _make_mundane_grid_screen(
+        target_ids, bucket=bucket, assets_map=ctx.assets_map
+    )
+    append_screen(ctx, screen)
+    from travelogue.curation.food_policy import record_food_grid_decision
+
+    record_food_grid_decision(
+        ctx.trip,
+        asset_ids=list(target_ids),
+        window_seconds=window_seconds if bucket == "food" else 0.0,
+        pattern=str(screen.get("patternId") or ""),
+        layout_hint=str(screen.get("layoutHint") or ""),
     )
     _remove_ids_once(ctx.ids, target_ids, start=ctx.i)
     return 0
@@ -899,6 +963,7 @@ def stage_flush_remaining_food(ctx: ChapterPlanContext) -> None:
     }
     if consumed_ids:
         ctx.ids = [aid for aid in ctx.ids if aid not in consumed_ids]
+    min_items, max_interruptions, _window = _food_role_grid_params(ctx)
     i = 0
     while i < len(ctx.ids):
         run = mundane_run_length(
@@ -906,8 +971,9 @@ def stage_flush_remaining_food(ctx: ChapterPlanContext) -> None:
             ctx.assets_map,
             i,
             allowed_buckets=ctx.mundane_grid_buckets,
+            tolerance=max_interruptions,
         )
-        if run < 3:
+        if run < min_items:
             i += 1
             continue
         ctx.i = i

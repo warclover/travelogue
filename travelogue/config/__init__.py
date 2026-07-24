@@ -29,6 +29,7 @@ from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import CullConfig
 from travelogue.config.curate import CurateConfig
 from travelogue.config.errors import ConfigError
+from travelogue.config.food_role import FoodRoleConfig, food_role_config_from_dict
 from travelogue.config.ingest import DEFAULT_RAW_BLOCKLIST_SUFFIXES, IngestConfig
 from travelogue.config.layout import LayoutConfig, LayoutFeedbackConfig, LayoutScoringConfig
 from travelogue.config.loader import load_config, patch_config_file
@@ -103,6 +104,8 @@ __all__ = [
     "CohortConfig",
     "CullConfig",
     "CurateConfig",
+    "FoodRoleConfig",
+    "food_role_config_from_dict",
     "ExportConfig",
     "GeoClusterConfig",
     "GeocodeConfig",

@@ -83,6 +83,10 @@ def default_mundane_grid_buckets(*, cfg: AppConfig | None = None) -> tuple[str, 
     return buckets or ("food",)
 
 
+def default_food_role(*, cfg: AppConfig | None = None):
+    return (cfg or get_config()).curate.food_role
+
+
 def reading_profile_defaults(cfg: AppConfig | None = None) -> dict[str, str]:
     """Map AppConfig.render.reading to resolve_reading_payload config_defaults."""
     app = cfg or get_config()

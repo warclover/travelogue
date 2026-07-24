@@ -95,6 +95,10 @@ def score_closing_candidate(
     elif luma > 0.88:
         score -= 0.15
 
+    from travelogue.curation.food_policy import food_closing_score_multiplier
+
+    score *= food_closing_score_multiplier(asset)
+
     return round(score, 6)
 
 
