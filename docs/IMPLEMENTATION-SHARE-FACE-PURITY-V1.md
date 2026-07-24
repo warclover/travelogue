@@ -47,6 +47,14 @@
 | curate 后序号腔闸 | ✅ `enforce_no_ordinal_face_titles` |
 | `sfp_*` 五事件埋点 | ✅ BE allowlist + FE analytics + emit |
 
+## 收口补丁（P3 · PRD 缺口）
+
+| 项 | 状态 |
+|----|------|
+| 点号日期链 noise +「精选2」软剥 | ✅ `title_humanize` · FE 同律 |
+| D-SFP-08② 跨年章名带年 | ✅ 生成 + open migrate |
+| QA fixture 加载测 | ✅ `trip.sfp_same_day_dirty_title.json` |
+
 ## W3
 
 | 项 | 状态 |

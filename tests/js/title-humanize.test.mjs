@@ -118,3 +118,18 @@ test("SFP · digit date span loses to readable title / place", () => {
     "武大樱花"
   );
 });
+
+test("SFP · dotted digit date span softens serial title", () => {
+  const dirty = "旅行 · 24.1.20–25.1.16";
+  assert.equal(looksLikeDigitDateSpan(dirty), true);
+  assert.equal(
+    resolveDisplayTitle({
+      title: "夏睿彤年度精选2",
+      displayTitle: dirty,
+      places: ["武汉"],
+      dateStart: "2024-01-20",
+      dateEnd: "2025-01-16",
+    }),
+    "夏睿彤年度精选"
+  );
+});

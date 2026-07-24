@@ -76,11 +76,15 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
                 },
             )
 
+    from travelogue.curation.chapter_titles import migrate_cross_year_chapter_titles
+
     chapter_ids = migrate_ordinal_chapter_titles(trip)
+    year_ids = migrate_cross_year_chapter_titles(trip)
+    all_chapter_ids = list(dict.fromkeys([*chapter_ids, *year_ids]))
     return {
         "displayTitle": display_migrated,
-        "chapters": chapter_ids,
-        "changed": bool(display_migrated or chapter_ids),
+        "chapters": all_chapter_ids,
+        "changed": bool(display_migrated or all_chapter_ids),
     }
 
 

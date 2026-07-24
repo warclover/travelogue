@@ -10,7 +10,7 @@
 | **前置条件** | 首页 v2（M21）；Share-Ready / SFC / SFI 工程已合入；**当前版用户面 = 无 AI**（[NAS](./PRD-NO-AI-SURFACE-V1.md)） |
 | **关联文档** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) · [PRD-CHAPTER-NAMING.md](./PRD-CHAPTER-NAMING.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) · [PRD-OUTPUT-RECIPE-V1.md](./PRD-OUTPUT-RECIPE-V1.md) · `travelogue/curation/chapter_titles.py` · `travelogue/domain/title_humanize.py` · `travelogue/domain/share_copy_pack.py` |
 | **评审记录** | [acceptance-records/share-face-purity-v1-review-2026-07-24.md](./acceptance-records/share-face-purity-v1-review-2026-07-24.md) · **Conditional Go** |
-| **验收** | [ACCEPTANCE-SHARE-FACE-PURITY-V1.md](./ACCEPTANCE-SHARE-FACE-PURITY-V1.md)（W0–W2 工程列绿 · W3 待签） |
+| **验收** | [ACCEPTANCE-SHARE-FACE-PURITY-V1.md](./ACCEPTANCE-SHARE-FACE-PURITY-V1.md)（W0–W2+P2 工程绿 · W3 工程侧绿 · 真人 N≥5 待签） |
 | **实施清单** | [IMPLEMENTATION-SHARE-FACE-PURITY-V1.md](./IMPLEMENTATION-SHARE-FACE-PURITY-V1.md) |
 | **手测狗粮** | [acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md) |
 | **线框** | [wireframes/share-face-purity-v1-wireframe.html](./wireframes/share-face-purity-v1-wireframe.html)（**已补** · F1–F5 · **F1–F5 已签核 2026-07-24**） |
@@ -458,3 +458,4 @@
 | v0.1.1 | 2026-07-24 | 多席联席 Conditional Go：OQ 冻结 · 同名优先 · 互斥升 W0 · 可重排 COPY · migrate 主路径 · 线框挡门 · USR-SFP-* |
 | v0.1.1+wire | 2026-07-24 | 线框落地；**F1–F3 产品认可**（W0 UI 挡门通过；F4/F5 待签） |
 | v0.1.1+wire2 | 2026-07-24 | **F4/F5 产品认可**；P2 pipeline migrate · curate 序号闸 · `sfp_*` 埋点 |
+| v0.1.1+p3 | 2026-07-24 | P3：点号日期链 noise · 跨年章名带年 · QA fixture 补测 |

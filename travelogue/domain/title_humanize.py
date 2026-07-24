@@ -32,12 +32,15 @@ _LEADING_YEAR = re.compile(r"^(?:19|20)\d{2}")
 _TRAILING_SERIAL = re.compile(r"\d{1,3}$")
 _CJK_PLACE = re.compile(r"^[\u4e00-\u9fff]{2,6}$")
 _DIRTY_SEP = re.compile(r"--|_{2,}|\.\.")
-# SFP D-SFP-04 · 「旅行 · 24 1 20–25 1 16」/ 数字空格日期链（勿误伤「旅行 · 1月20日」）
+# SFP D-SFP-04 · 「旅行 · 24 1 20–25 1 16」/「24.1.20–25.1.16」数字日期链
+# （勿误伤「旅行 · 1月20日」/「2024.10 京都」类文件夹名）
 _DIGIT_DATE_SPAN = re.compile(
     r"(?:"
     r"\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*[–—\-~～]\s*\d{1,2}\s+\d{1,2}\s+\d{1,2}"
     r"|"
-    r"旅行\s*·\s*\d{1,2}\s+\d{1,2}"
+    r"\d{1,2}\.\d{1,2}\.\d{1,2}\s*[–—\-~～]\s*\d{1,2}\.\d{1,2}\.\d{1,2}"
+    r"|"
+    r"旅行\s*·\s*\d{1,2}[\s.]\d{1,2}"
     r"|"
     r"(?<![月日年./])\d{1,2}\s+\d{1,2}\s+\d{1,2}(?!\s*[月日])"
     r")"
@@ -245,7 +248,7 @@ def resolve_display_title(
         if accepted:
             return accepted
 
-    # D-SFP-04 · 仅当 stored 是数字日期链时，允许「精选2」→「精选」抢面
+    # D-SFP-04 · stored 为数字日期链（含点号形）时，允许「精选2」→「精选」抢面
     if looks_like_digit_date_span(stored):
         soft = _soften_title_candidate(raw)
         if soft and soft != raw:

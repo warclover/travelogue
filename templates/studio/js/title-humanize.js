@@ -19,9 +19,9 @@ var DIRTY_SEP = /--|__|\.\./;
 var LEADING_YEAR = /^(?:19|20)\d{2}/;
 var TRAILING_SERIAL = /\d{1,3}$/;
 var CJK_PLACE = /^[\u4e00-\u9fff]{2,6}$/;
-// SFP D-SFP-04 · 与 BE ``_DIGIT_DATE_SPAN`` 对齐（勿误伤「旅行 · 1月20日」）
+// SFP D-SFP-04 · 与 BE ``_DIGIT_DATE_SPAN`` 对齐（含点号跨年链；勿误伤「旅行 · 1月20日」）
 var DIGIT_DATE_SPAN =
-  /(?:\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*[–—\-~～]\s*\d{1,2}\s+\d{1,2}\s+\d{1,2}|旅行\s*·\s*\d{1,2}\s+\d{1,2}|(?<![月日年./])\d{1,2}\s+\d{1,2}\s+\d{1,2}(?!\s*[月日]))/;
+  /(?:\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*[–—\-~～]\s*\d{1,2}\s+\d{1,2}\s+\d{1,2}|\d{1,2}\.\d{1,2}\.\d{1,2}\s*[–—\-~～]\s*\d{1,2}\.\d{1,2}\.\d{1,2}|旅行\s*·\s*\d{1,2}[\s.]\d{1,2}|(?<![月日年./])\d{1,2}\s+\d{1,2}\s+\d{1,2}(?!\s*[月日]))/;
 var TRAILING_CJK_SERIAL = /^([\u4e00-\u9fff]+)\d{1,3}$/;
 
 /**
@@ -194,7 +194,7 @@ export function resolveDisplayTitle(meta, opts) {
     if (hit) return hit;
   }
 
-  // D-SFP-04 · 仅当 stored 是数字日期链时，允许「精选2」→「精选」抢面
+  // D-SFP-04 · stored 为数字日期链（含点号形）时，允许「精选2」→「精选」抢面
   if (looksLikeDigitDateSpan(stored)) {
     var soft = _softenTitleCandidate(raw);
     if (soft && soft !== raw) {

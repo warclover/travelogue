@@ -61,6 +61,24 @@ def test_chapter_titles_cross_year_in_bucket() -> None:
     assert titles[0] == "2010–2026"
 
 
+def test_chapter_titles_cross_year_trip_prefixes_year() -> None:
+    """D-SFP-08② · 跨年混拍册单日章名带年份。"""
+    assets = [
+        {"id": "a", "takenAt": "2024-08-14T12:00:00Z"},
+        {"id": "b", "takenAt": "2025-01-16T12:00:00Z"},
+    ]
+    titles = _chapter_titles(
+        [["a"], ["b"]],
+        assets,
+        {
+            "places": ["武汉"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        },
+    )
+    assert titles == ["2024年8月14日", "2025年1月16日"]
+
+
 def test_merge_small_buckets_combines_pairs() -> None:
     buckets = [["a", "b", "c"], ["d"], ["e", "f", "g"]]
     merged = _merge_small_buckets(buckets, min_size=3)

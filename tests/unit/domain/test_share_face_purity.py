@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from travelogue.curation.bucket_planning import merge_weak_same_day_followups
+from travelogue.domain.share_face_copy import is_unsafe_share_copy
 from travelogue.domain.share_face_purity import (
     enforce_no_ordinal_face_titles,
     migrate_ordinal_chapter_titles,
@@ -13,6 +17,9 @@ from travelogue.domain.share_face_purity import (
 from travelogue.domain.studio_events import ALLOWED_STUDIO_HOMEPAGE_EVENTS
 from travelogue.domain.title_humanize import migrate_stale_display_title
 from travelogue.services.narrative_validate import validate_narrative
+
+ROOT = Path(__file__).resolve().parents[3]
+SFP_FIXTURE = ROOT / "schemas" / "fixtures" / "trip.sfp_same_day_dirty_title.json"
 
 SFP_EVENTS = (
     "sfp_chapter_title_sequence_pass",
@@ -105,6 +112,55 @@ def test_enforce_no_ordinal_face_titles() -> None:
     updated = enforce_no_ordinal_face_titles(trip)
     assert updated == ["c1"]
     assert trip["chapters"][0]["title"] == "樱花"
+
+
+def test_sfp_fixture_covers_dirty_ordinal_echo_and_order() -> None:
+    """QA-SFP-08 · schemas fixture 一册覆盖同日序号 / 点号脏题名 / 回声 / 乱序。"""
+    trip = json.loads(SFP_FIXTURE.read_text(encoding="utf-8"))
+    assert any("· 三" in str(ch.get("title") or "") for ch in trip["chapters"])
+    assert "24.1.20" in str(trip["meta"].get("displayTitle") or "")
+    cap = trip["chapters"][0]["items"][0]["caption"]
+    assert is_unsafe_share_copy(cap, title=trip["meta"]["title"], kind="caption")
+    result = migrate_share_face_purity_on_open(trip)
+    assert result["changed"] is True
+    assert trip["meta"]["displayTitle"] == "夏睿彤年度精选"
+    assert not any(
+        "· 三" in str(ch.get("title") or "") or "·三" in str(ch.get("title") or "")
+        for ch in trip["chapters"]
+    )
+    # 跨年补年后序仍保持 fixture 章序；时间 SSOT 由 sort 另测
+    assert all("年" in str(ch.get("title") or "") for ch in trip["chapters"])
+    sorted_chs, reordered = sort_chapters_by_temporal_key(
+        trip["chapters"], trip["assets"]
+    )
+    assert reordered is True
+    assert [c["id"] for c in sorted_chs] == ["ch-may-1", "ch-may-2", "ch-aug", "ch-jan"]
+
+
+def test_open_migrate_dotted_display_and_cross_year_chapter() -> None:
+    """D-SFP-04/08 · 点号脏题名软剥 + 跨年章名补年。"""
+    trip = {
+        "meta": {
+            "title": "夏睿彤年度精选2",
+            "displayTitle": "旅行 · 24.1.20–25.1.16",
+            "places": ["武汉"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        },
+        "assets": [
+            {"id": "a", "takenAt": "2024-08-14T10:00:00"},
+            {"id": "b", "takenAt": "2025-01-16T10:00:00"},
+        ],
+        "chapters": [
+            {"id": "c1", "title": "8月14日", "items": [{"type": "media-card", "assetId": "a"}]},
+            {"id": "c2", "title": "1月16日", "items": [{"type": "media-card", "assetId": "b"}]},
+        ],
+    }
+    result = migrate_share_face_purity_on_open(trip)
+    assert result["changed"] is True
+    assert trip["meta"]["displayTitle"] == "夏睿彤年度精选"
+    assert trip["chapters"][0]["title"] == "2024年8月14日"
+    assert trip["chapters"][1]["title"] == "2025年1月16日"
 
 
 def test_merge_weak_same_day_followups() -> None:
