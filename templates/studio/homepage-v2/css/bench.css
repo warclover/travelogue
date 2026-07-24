@@ -235,6 +235,13 @@
   border-radius: 999px;
   line-height: 1.2;
 }
+/* SFP D-SFP-09 · L2「可重排」次级中性 */
+.v2-bench__recent-card__stale--algo {
+  background: color-mix(in srgb, #8a8680 22%, transparent);
+  color: #5c5852;
+  border-color: color-mix(in srgb, #8a8680 40%, transparent);
+  font-weight: 600;
+}
 .v2-shelf__stale-badge {
   position: absolute;
   top: 8px;
@@ -248,6 +255,13 @@
   padding: 2px 6px;
   border-radius: 999px;
   line-height: 1.2;
+}
+/* SFP D-SFP-09 · L2「可重排」次级中性，弱于 L1「分享图需更新」 */
+.v2-shelf__stale-badge--algo {
+  background: color-mix(in srgb, #8a8680 22%, transparent);
+  color: #5c5852;
+  border: 1px solid color-mix(in srgb, #8a8680 40%, transparent);
+  font-weight: 600;
 }
 .v2-shelf__ready-badge {
   position: absolute;

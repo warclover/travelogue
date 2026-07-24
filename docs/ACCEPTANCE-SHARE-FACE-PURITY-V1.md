@@ -40,7 +40,7 @@
 | **AC-SFP-01** | 读者面章名不匹配序号腔 | 单测 + 刷新/重导 | ✅ | ⏳ |
 | **AC-SFP-02** | 脏日期 displayTitle → 体面名 | 单测 + 打开预览 migrate | ✅ | ⏳ |
 | **AC-SFP-03** | 回声 caption 读者面/长图为空 | 单测 share_face_copy | ✅ | ⏳ |
-| **AC-SFP-06** | 开分章 → 点 × 不被导出 caret 挡 | 源码契约 + 手测 | ✅ | ⏳ |
+| **AC-SFP-06** | 开分章 → 点 × 不被导出 caret 挡 | `test_sfp_chapter_panel_playwright` + 手测 | ✅ | ⏳ |
 | **USR-SFP-04** | 手改章名/题名不被 migrate 覆盖 | 负例单测 | ✅ | ⏳ |
 
 ---

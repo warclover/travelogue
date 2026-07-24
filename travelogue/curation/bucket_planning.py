@@ -15,6 +15,7 @@ class NormalizedBuckets(NamedTuple):
     buckets: list[list[str]]
     primary_segment_ids: list[str]
     segment_ids_per_bucket: list[list[str]]
+    weak_same_day_merges: int = 0
 
 
 def bucket_day_span(bucket: list[str], assets_by_id: dict[str, dict]) -> list[str]:
@@ -208,12 +209,13 @@ def normalize_bucket_counts(
             seg_all.insert(largest_i + 1, split_all)
 
     # SFP D-SFP-02④ · 弱桶合并：同日后续桶 len≤2 且无 daypart/segment → 并入前桶
+    weak_merges = 0
     if assets_by_id:
-        out, seg, seg_all = merge_weak_same_day_followups(
+        out, seg, seg_all, weak_merges = merge_weak_same_day_followups(
             out, seg, seg_all, assets_by_id=assets_by_id
         )
 
-    return NormalizedBuckets(out, seg, seg_all)
+    return NormalizedBuckets(out, seg, seg_all, weak_merges)
 
 
 def merge_weak_same_day_followups(
@@ -222,7 +224,7 @@ def merge_weak_same_day_followups(
     segment_ids_all: list[list[str]],
     *,
     assets_by_id: dict[str, dict],
-) -> tuple[list[list[str]], list[str], list[list[str]]]:
+) -> tuple[list[list[str]], list[str], list[list[str]], int]:
     """OQ-SFP-01 · merge tiny same-day follow-ups that lack daypart/segment labels."""
     from travelogue.curation.chapter_titles import _bucket_daypart
 
@@ -233,6 +235,7 @@ def merge_weak_same_day_followups(
         seg_all.append([])
     seg_all = [list(seg_all[i]) if i < len(seg_all) else [] for i in range(len(out))]
 
+    merges = 0
     i = 1
     while i < len(out):
         cur = out[i]
@@ -263,8 +266,9 @@ def merge_weak_same_day_followups(
         del out[i]
         del seg[i]
         del seg_all[i]
+        merges += 1
         # stay at i to re-check next follow-up against merged prev
-    return out, seg, seg_all
+    return out, seg, seg_all, merges
 
 def sort_buckets_in_place(buckets: list[list[str]], assets_by_id: dict[str, dict]) -> None:
     for i, bucket in enumerate(buckets):
@@ -432,4 +436,7 @@ def group_assets_by_segments(
         gap_days=segment_gap_days,
     )
     sort_buckets_in_place(norm.buckets, by_id)
+    # Caller (curate) may read weak_same_day_merges via trip when wired; stash on meta side-channel
+    if norm.weak_same_day_merges and isinstance(meta, dict):
+        meta["_sfpWeakDayMergeCount"] = int(norm.weak_same_day_merges)
     return norm.buckets, norm.primary_segment_ids, norm.segment_ids_per_bucket, segments

@@ -93,7 +93,7 @@ def test_merge_weak_same_day_followups() -> None:
         "d": {"id": "d", "takenAt": "2026-05-27T19:00:00"},
     }
     # Same morning daypart · tiny follow-up → merge
-    out, _, _ = merge_weak_same_day_followups(
+    out, _, _, merges = merge_weak_same_day_followups(
         [["a", "b"], ["c"]],
         ["", ""],
         [[], []],
@@ -101,11 +101,13 @@ def test_merge_weak_same_day_followups() -> None:
     )
     assert len(out) == 1
     assert set(out[0]) == {"a", "b", "c"}
+    assert merges == 1
     # Distinct evening daypart · keep
-    out2, _, _ = merge_weak_same_day_followups(
+    out2, _, _, merges2 = merge_weak_same_day_followups(
         [["a", "b"], ["d"]],
         ["", ""],
         [[], []],
         assets_by_id=assets,
     )
     assert len(out2) == 2
+    assert merges2 == 0

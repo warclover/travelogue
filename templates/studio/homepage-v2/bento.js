@@ -324,7 +324,9 @@ export function renderBenchRecent() {
 
     if (trip.longshotStale || trip.algorithmStale) {
       var stale = document.createElement("span");
-      stale.className = "v2-bench__recent-card__stale";
+      stale.className = trip.longshotStale
+        ? "v2-bench__recent-card__stale"
+        : "v2-bench__recent-card__stale v2-bench__recent-card__stale--algo";
       stale.textContent = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
       if (!trip.longshotStale && trip.algorithmStale) {
         stale.title = STALE_BADGE_TIP;

@@ -20,6 +20,7 @@ def test_stale_badge_is_reorder_not_update() -> None:
     bento = (STUDIO / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
     picker = (STUDIO / "homepage-v2" / "bento-preview-picker-logic.js").read_text(encoding="utf-8")
     help_js = (STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
+    css = (STUDIO / "homepage-v2" / "css" / "bench.css").read_text(encoding="utf-8")
     assert 'STALE_BADGE = "可重排"' in shelf
     assert 'STALE_BADGE = "可重排"' in bento
     assert 'return "可重排"' in picker
@@ -28,6 +29,10 @@ def test_stale_badge_is_reorder_not_update() -> None:
     assert "可更新" not in picker
     assert "版式算法有更新，可点重新排版" in shelf
     assert "「可重排」是什么意思" in help_js
+    assert "stale-badge--algo" in shelf
+    assert "recent-card__stale--algo" in bento
+    assert ".v2-shelf__stale-badge--algo" in css
+    assert ".v2-bench__recent-card__stale--algo" in css
 
 
 def test_xhs_copy_pack_in_export_settings() -> None:
