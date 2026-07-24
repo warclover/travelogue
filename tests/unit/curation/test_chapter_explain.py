@@ -39,6 +39,21 @@ def test_build_chapter_explain_date_fallback() -> None:
     assert any("缺少位置" in d for d in out["details"])
 
 
+def test_build_chapter_explain_sfp_cross_year_and_weak_merge() -> None:
+    trip = {
+        "chapters": [{"id": "c1"}, {"id": "c2"}],
+        "meta": {"dateStart": "2024-01-20", "dateEnd": "2025-01-16", "places": ["旅途"]},
+        "curation": {
+            "clustering": {"segmentMode": "date_fallback", "segments": []},
+            "sfpWeakDayMergeCount": 1,
+            "sfpChapterTimeSortApplied": True,
+        },
+    }
+    out = build_chapter_explain(trip)
+    assert any("已合并同一天过短片段" in d for d in out["details"])
+    assert any("含跨年照片" in d for d in out["details"])
+
+
 def test_attach_chapter_explain_writes_user_summary() -> None:
     trip = {
         "chapters": [{"id": "c1"}],

@@ -353,29 +353,55 @@ def _finalize_pipeline_result(
         inferred_start=meta_final.get("dateStart"),
         inferred_end=meta_final.get("dateEnd"),
     )
+    from travelogue.domain.share_face_purity import migrate_share_face_purity_on_open
     from travelogue.domain.title_humanize import (
         is_folder_title_noise,
         resolve_display_title,
     )
 
+    # SFP D-SFP-12 · pipeline 收尾静默 migrate（脏 displayTitle / 序号腔章名）
     # BE-FST-06 · 目录名噪音 → 展示名（FirstSuccess / 书架 / 封面同源）
     raw_meta_title = str(meta_final.get("title") or title).strip()
     display_title = resolve_display_title(meta_final, raw_title=raw_meta_title)
     title_noise_fallback = is_folder_title_noise(raw_meta_title)
-    if str(meta_final.get("displayTitle") or "").strip() != display_title:
+    from travelogue.curation.chapter_titles import is_ordinal_face_title
+    from travelogue.domain.copy_origin import is_user_protected
 
-        def _stamp_display_title(trip: dict) -> dict:
-            meta = dict(trip.get("meta") or {})
-            meta["displayTitle"] = display_title
-            trip["meta"] = meta
-            # Persist after render already stamped renderedRevision; a bare
-            # revision bump here false-flags「预览产物已过期」on FirstSuccess.
+    display_needs = str(meta_final.get("displayTitle") or "").strip() != display_title
+    ordinal_needs = any(
+        isinstance(ch, dict)
+        and not (ch.get("curation") or {}).get("isAppendix")
+        and is_ordinal_face_title(str(ch.get("title") or ""))
+        and not is_user_protected(ch, "titleOrigin")
+        for ch in (trip_final.get("chapters") or [])
+    )
+    # Probe full SFP migrate (incl. cross-year year prefix) without writing.
+    from copy import deepcopy
+
+    _sfp_probe = migrate_share_face_purity_on_open(deepcopy(trip_final))
+    sfp_needs = bool(display_needs or ordinal_needs or _sfp_probe.get("changed"))
+    if sfp_needs:
+
+        def _sfp_pipeline_migrate(trip: dict) -> bool:
+            result = migrate_share_face_purity_on_open(trip)
+            meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+            resolved = resolve_display_title(
+                meta, raw_title=str(meta.get("title") or title).strip()
+            )
+            if resolved and str(meta.get("displayTitle") or "").strip() != resolved:
+                meta["displayTitle"] = resolved[:32]
+                trip["meta"] = meta
+            # Always re-stamp: TripService.update bumps revision; without a
+            # watermark sync FirstSuccess false-flags「预览需更新」.
             mark_render_bundle_current(trip)
-            return trip
+            return True
 
-        svc.update(trip_json, _stamp_display_title)
+        svc.update(trip_json, _sfp_pipeline_migrate, touch_updated=False)
         trip_final = svc.load(trip_json)
         meta_final = trip_final.get("meta") or {}
+        display_title = resolve_display_title(
+            meta_final, raw_title=str(meta_final.get("title") or title).strip()
+        )
     featured_n, segment_n = _trip_import_stats(trip_final)
     intent_line = _format_intent_line(display_title, featured_n, segment_n)
     curation = trip_final.get("curation") or {}

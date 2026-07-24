@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>敢发净化 Share-Face Purity V1 · 设计评审线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1; --wf-page: #fafafa; --wf-border: #90a4ae;
+      --wf-text: #263238; --wf-muted: #607d8b; --wf-anno: #e65100;
+      --wf-rec: #2e7d32; --bar: #1a2f28; --gold: #d4a843; --gold-text: #1a1408;
+      --accent: #3d6b5a; --danger: #c62828;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--wf-bg); color: var(--wf-text); line-height: 1.55; }
+    .review-bar { position: sticky; top: 0; z-index: 2000; background: #263238; color: #eceff1; padding: 12px 20px; }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+    .tabs button .w { opacity: .7; font-size: 10px; margin-left: 4px; }
+    .layout {
+      max-width: calc(var(--max) + 300px); margin: 0 auto; padding: 22px 18px 72px;
+      display: grid; grid-template-columns: var(--max) 270px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; } .panel.is-visible { display: block; }
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle; margin-left: 6px;
+    }
+    .tag--w0 { background: #e65100; color: #fff; }
+    .tag--w1 { background: #1565c0; color: #fff; }
+    .tag--w2 { background: #6a1b9a; color: #fff; }
+    .tag--gate { background: #6a1b9a; color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7;
+    }
+    .callout--warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout--bad { background: #ffebee; border-color: #ef9a9a; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .frame {
+      background: linear-gradient(180deg, #f3f6f4 0%, #e8efe9 40%, #dfe8e2 100%);
+      border: 2px solid var(--wf-border); border-top: none; border-radius: 0 0 14px 14px;
+      min-height: 420px; position: relative; overflow: hidden;
+    }
+    .frame--pad { padding: 16px; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .compare .mini {
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 12px; font-size: 12px;
+    }
+    .compare .mini h4 { margin: 0 0 8px; font-size: 13px; }
+    .x { color: var(--danger); font-weight: 700; }
+    .ok { color: var(--wf-rec); font-weight: 700; }
+    .aside {
+      position: sticky; top: 88px; background: #fff; border-radius: 12px; padding: 14px;
+      border: 1px solid #cfd8dc; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin-bottom: 6px; }
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 4px; padding: 4px;
+      background: rgba(26,47,40,.92); border-radius: 999px;
+    }
+    .dock .ctl {
+      height: 36px; border: none; border-radius: 8px; background: transparent;
+      color: #e8f5ef; font-size: 12px; font-weight: 600; padding: 0 10px;
+    }
+    .dock .ctl.is-on { background: rgba(255,255,255,.14); }
+    .dock .export {
+      height: 36px; border: none; border-radius: 10px; background: var(--gold); color: var(--gold-text);
+      font-weight: 700; font-size: 11px; padding: 0 12px;
+    }
+    .dock .caret {
+      height: 36px; width: 32px; border: none; border-radius: 10px;
+      background: rgba(212,168,67,.35); color: var(--gold-text); font-weight: 700;
+    }
+    .magazine {
+      margin: 72px auto 24px; width: min(380px, 84%); background: #f7f3ea; border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28); overflow: hidden;
+    }
+    .magazine__cover {
+      height: 210px; background: linear-gradient(160deg, #5d4037, #3e2723 55%, #1b140f);
+      color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 18px;
+    }
+    .magazine__cover .num { font-size: 11px; opacity: .7; letter-spacing: .08em; margin-bottom: 8px; }
+    .magazine__cover h3 { margin: 0 0 6px; font-size: 22px; font-weight: 600; }
+    .magazine__cover p { margin: 0; font-size: 12px; opacity: .85; }
+    .chapter-strip {
+      margin: 0 24px 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .chapter-card {
+      background: rgba(255,255,255,.92); border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 12px 14px; display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center;
+    }
+    .chapter-card .idx {
+      width: 36px; height: 36px; border-radius: 10px; background: #e8f0ec; color: var(--bar);
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
+    }
+    .chapter-card h4 { margin: 0 0 2px; font-size: 14px; }
+    .chapter-card p { margin: 0; font-size: 11px; color: var(--wf-muted); }
+    .chapter-panel {
+      position: absolute; top: 58px; right: 18px; width: min(320px, 86%);
+      background: #fff; border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.22);
+      border: 1px solid #cfd8dc; z-index: 60; overflow: hidden;
+    }
+    .chapter-panel header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #eceff1;
+    }
+    .chapter-panel header h3 { margin: 0; font-size: 15px; }
+    .chapter-panel .close {
+      width: 36px; height: 36px; border: none; border-radius: 10px; background: #f5f7f6;
+      font-size: 18px; cursor: pointer; color: var(--bar);
+    }
+    .chapter-panel ul { margin: 0; padding: 8px 12px; list-style: none; }
+    .chapter-panel li {
+      display: flex; align-items: center; gap: 8px; padding: 8px 0;
+      border-bottom: 1px solid #f0f2f1; font-size: 13px;
+    }
+    .chapter-panel li:last-child { border-bottom: none; }
+    .chapter-panel .rename {
+      margin-left: auto; border: 1px solid #b0bec5; background: #fff;
+      border-radius: 8px; padding: 4px 8px; font-size: 11px;
+    }
+    .chapter-panel footer {
+      padding: 10px 12px; border-top: 1px solid #eceff1; display: flex; gap: 8px; justify-content: flex-end;
+    }
+    .chapter-panel footer button {
+      border: 1px solid #b0bec5; background: #fff; border-radius: 8px; padding: 7px 12px; font-size: 12px;
+    }
+    .chapter-panel footer .pri { background: var(--bar); color: #fff; border-color: var(--bar); }
+    .hit {
+      position: absolute; top: 64px; right: 22px; width: 40px; height: 40px;
+      border: 2px dashed #00897b; border-radius: 10px; z-index: 70; pointer-events: none;
+    }
+    .hit span {
+      position: absolute; top: -22px; right: 0; white-space: nowrap;
+      font-size: 10px; font-weight: 700; color: #00897b;
+    }
+    .ghost-block {
+      opacity: .35; pointer-events: none; filter: grayscale(.3);
+    }
+    .phone {
+      width: 220px; margin: 24px auto; background: #111; border-radius: 28px; padding: 10px;
+      box-shadow: 0 16px 36px rgba(0,0,0,.28);
+    }
+    .phone__screen {
+      background: #f7f3ea; border-radius: 20px; min-height: 360px; overflow: hidden;
+    }
+    .ls-block { padding: 14px 12px; border-bottom: 1px solid #e6e0d4; }
+    .ls-block h4 { margin: 0 0 8px; font-size: 13px; color: #4e342e; }
+    .ls-photo {
+      height: 96px; border-radius: 6px; background: linear-gradient(135deg, #8d6e63, #5d4037);
+      margin-bottom: 8px;
+    }
+    .ls-caption-fake {
+      height: 14px; border-radius: 4px; background: repeating-linear-gradient(
+        90deg, #d7ccc8 0 40%, #efebe9 40% 100%
+      ); margin-top: 6px;
+    }
+    .shelf {
+      margin: 36px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    .card {
+      background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #cfd8dc; font-size: 12px;
+      position: relative;
+    }
+    .card .thumb { height: 96px; background: linear-gradient(135deg, #78909c, #546e7a); position: relative; }
+    .card .meta { padding: 10px; }
+    .badge {
+      position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 999px; border: 1px solid transparent;
+    }
+    .badge--l1 { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+    .badge--ready { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+    .badge--l2 { background: #eceff1; color: #546e7a; border-color: #cfd8dc; font-weight: 600; }
+    .tooltip {
+      margin-top: 8px; background: #263238; color: #eceff1; font-size: 11px;
+      padding: 8px 10px; border-radius: 8px; max-width: 200px;
+    }
+    .export-sheet {
+      position: absolute; top: 58px; right: 16px; width: min(340px, 90%);
+      background: #fff; border-radius: 14px; border: 1px solid #cfd8dc;
+      box-shadow: 0 16px 40px rgba(0,0,0,.2); z-index: 55; padding: 14px 16px; font-size: 12px;
+    }
+    .export-sheet h3 { margin: 0 0 4px; font-size: 14px; }
+    .export-sheet .muted { color: var(--wf-muted); margin: 0 0 12px; font-size: 11px; }
+    .radio {
+      display: flex; align-items: center; gap: 8px; padding: 8px 0;
+      border-bottom: 1px solid #f0f2f1;
+    }
+    .radio.is-on { font-weight: 700; color: var(--bar); }
+    .copy-row {
+      margin-top: 12px; padding: 10px 12px; background: #f5f7f6; border-radius: 10px;
+      border: 1px dashed #90a4ae;
+    }
+    .copy-row button {
+      margin-top: 8px; border: 1px solid var(--bar); background: #fff; color: var(--bar);
+      border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 12px;
+    }
+    .copy-preview {
+      margin-top: 8px; font-size: 11px; color: var(--wf-muted); line-height: 1.6;
+    }
+    .sheet-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    .sheet-actions button {
+      border: 1px solid #b0bec5; background: #fff; border-radius: 8px; padding: 7px 12px; font-size: 12px;
+    }
+    .sheet-actions .pri { background: var(--bar); color: #fff; border-color: var(--bar); }
+    .checklist { margin: 12px 0 0; padding: 0; list-style: none; }
+    .checklist li { padding: 6px 0; border-bottom: 1px solid #eceff1; font-size: 12px; }
+    code { font-size: 11px; background: #eceff1; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>敢发净化 Share-Face Purity V1 · 线框 <span style="opacity:.7">PRD v0.1.1 · Conditional Go</span></h1>
+    <p>
+      W0 挡门：F1–F3（含分章互斥）· W1：F4 · W2：F5。
+      禁「·三」· 体面题名 · 空优于复读 · 徽标分层 · 小红书标题+话题（无 AI）。
+      联席评审 2026-07-24 · 本轮不编码。
+    </p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-panel="f1" class="is-active">F1 同名日期 · 互斥<span class="w">W0</span></button>
+      <button type="button" data-panel="f2">F2 体面题名<span class="w">W0</span></button>
+      <button type="button" data-panel="f3">F3 空图注长图<span class="w">W0</span></button>
+      <button type="button" data-panel="f4">F4 徽标分层<span class="w">W1</span></button>
+      <button type="button" data-panel="f5">F5 小红书文案包<span class="w">W2</span></button>
+      <button type="button" data-panel="gate">拍板清单</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- F1 -->
+      <section class="panel is-visible" id="f1">
+        <div class="sec">
+          <h2>F1 · 同日多章 · 同名日期 + 分章互斥 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">同日无法消歧时允许两章皆「5月27日」，靠章号区分；禁止「·三」。打开分章时导出设置必须关闭，× 命中区可点。</p>
+          <div class="callout"><strong>定案</strong>D-SFP-01/02/10 · OQ-SFP-01 · AC-SFP-01/06 · USR-SFP-01</div>
+        </div>
+
+        <div class="anno">To-Be · 同名日期（无序号腔）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 京都雨季漫游</div></div>
+        <div class="frame">
+          <div class="dock">
+            <button type="button" class="ctl">返回</button>
+            <button type="button" class="ctl is-on">分章</button>
+            <button type="button" class="ctl">精修</button>
+            <button type="button" class="export">发微信群</button>
+            <button type="button" class="caret" aria-label="导出设置已关闭">▾</button>
+          </div>
+          <div class="magazine" style="margin-top:64px;width:min(320px,78%)">
+            <div class="magazine__cover" style="height:120px">
+              <h3 style="font-size:18px">京都雨季漫游</h3>
+              <p>卷轴 · 章入口可扫读</p>
+            </div>
+          </div>
+          <div class="chapter-strip">
+            <div class="chapter-card">
+              <div class="idx">01</div>
+              <div>
+                <h4>5月27日</h4>
+                <p>同日首段 · 无后缀</p>
+              </div>
+            </div>
+            <div class="chapter-card">
+              <div class="idx">02</div>
+              <div>
+                <h4>5月27日</h4>
+                <p>同名合法 · 靠章号区分 · <span class="ok">不是「·三」</span></p>
+              </div>
+            </div>
+            <div class="chapter-card">
+              <div class="idx">03</div>
+              <div>
+                <h4>5月27日 · 晚上</h4>
+                <p>有时段则用时段 · 优先于同名</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>两章标题可以相同；读者靠 01 / 02 与照片区分。禁止「（2）」或「·三」工程后缀。</div>
+
+        <div class="anno">To-Be · 分章打开时导出层已关 · × 可点</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 分章面板</div></div>
+        <div class="frame">
+          <div class="dock">
+            <button type="button" class="ctl">返回</button>
+            <button type="button" class="ctl is-on">分章</button>
+            <button type="button" class="ctl">精修</button>
+            <button type="button" class="export">发微信群</button>
+            <button type="button" class="caret ghost-block" title="互斥：导出 popover 已关闭">▾</button>
+          </div>
+          <div class="chapter-panel">
+            <header>
+              <h3>分章</h3>
+              <button type="button" class="close" aria-label="关闭">×</button>
+            </header>
+            <p style="margin:10px 14px 0;font-size:12px;color:var(--wf-muted)">浏览各章，可改名或重新分章。</p>
+            <ul>
+              <li><span>1. 5月27日</span><button type="button" class="rename">改名</button></li>
+              <li><span>2. 5月27日</span><button type="button" class="rename">改名</button></li>
+              <li><span>3. 5月27日 · 晚上</span><button type="button" class="rename">改名</button></li>
+            </ul>
+            <footer>
+              <button type="button">重新分章</button>
+              <button type="button" class="pri">完成</button>
+            </footer>
+          </div>
+          <div class="hit"><span>命中 ≥44px</span></div>
+        </div>
+        <div class="callout"><strong>定案</strong>openChapterPanel ⇒ closeExportPopover。互斥优于只抬 z-index。</div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">禁止 · 序号腔</h4>
+            <p>章名「5月27日 · 三」——职场晒旅直接不发。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止 · × 被挡住</h4>
+            <p>导出 ▾ 叠在关闭钮上；用户以为分章坏了。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 封面体面题名同源 <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">脏日期串不得压过体面 title。封面 / 书架 / 辑封同源 <code>resolve_display_title</code>。</p>
+          <div class="callout"><strong>定案</strong>D-SFP-03/04/12 · AC-SFP-02 · 打开预览静默 migrate</div>
+        </div>
+
+        <div class="anno">To-Be · 体面名上封面</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 封面</div></div>
+        <div class="frame">
+          <div class="magazine">
+            <div class="magazine__cover">
+              <div class="num">COVER</div>
+              <h3>夏睿彤年度精选</h3>
+              <p>可点编辑 · 与书架同源</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>优先体面 <code>meta.title</code>；脏 <code>displayTitle</code> 被判 noise 后静默替换，不弹教学。</div>
+
+        <div class="anno">对照</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">As-Is 禁止上封面</h4>
+            <p style="font-size:15px;font-weight:700;margin:8px 0">旅行 · 24 1 20–25 1 16</p>
+            <p>数字空格日期链 = noise（D-SFP-04）</p>
+          </div>
+          <div class="mini">
+            <h4 class="ok">To-Be 可接受回退</h4>
+            <p style="font-size:15px;font-weight:700;margin:8px 0">夏睿彤年度精选</p>
+            <p>或「地点 · 日期」回退；不要诗，不要裸日期串。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 空图注长图（带文字模式） <span class="tag tag--w0">W0</span><span class="tag tag--gate">挡门</span></h2>
+          <p class="lead">禁止「日期 · 杂志题名」复读。无合格图注则空；带文字模式也不造灰色假行。</p>
+          <div class="callout"><strong>定案</strong>D-SFP-05/06 · lead 全空合法 · AC-SFP-03</div>
+        </div>
+
+        <div class="anno">To-Be · 有图无假图注</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">长图预览 · 带文字</div></div>
+        <div class="frame frame--pad">
+          <div class="phone">
+            <div class="phone__screen">
+              <div class="ls-block">
+                <h4>5月27日</h4>
+                <div class="ls-photo"></div>
+                <div class="ls-photo" style="height:72px;opacity:.9"></div>
+                <!-- 故意不放 caption 行 -->
+              </div>
+              <div class="ls-block">
+                <h4>5月27日 · 晚上</h4>
+                <div class="ls-photo" style="background:linear-gradient(135deg,#455a64,#263238)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>读法</strong>章名可保留；图注位不占行。空 ≠ 坏了。</div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">复读题名</h4>
+            <p>每张底下：「5月27日 · 京都雨季漫游」× N</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">灰色占位假行</h4>
+            <div class="ls-caption-fake" style="margin:8px 0"></div>
+            <p>看起来像「字丢了」，比空更糟。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · 书架徽标分层 <span class="tag tag--w1">W1</span></h2>
+          <p class="lead">同一封面最多一枚主徽标。L1 分享图态优先；L2「可重排」次级 + tooltip。废除「可更新」。</p>
+          <div class="callout"><strong>定案</strong>D-SFP-09 · OQ-SFP-04 · AC-SFP-05 · USR-SFP-02</div>
+        </div>
+
+        <div class="anno">To-Be · 三态互斥展示</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">首页 · 你的游记画册</div></div>
+        <div class="frame">
+          <div class="shelf">
+            <article class="card">
+              <div class="thumb">
+                <span class="badge badge--l1">分享图需更新</span>
+              </div>
+              <div class="meta">
+                <strong>贵州手机测试</strong>
+                <p style="margin:4px 0 0;color:var(--wf-muted)">250 张 · L1 警示</p>
+              </div>
+            </article>
+            <article class="card">
+              <div class="thumb" style="background:linear-gradient(135deg,#a1887f,#6d4c41)">
+                <span class="badge badge--ready">分享图已就绪</span>
+              </div>
+              <div class="meta">
+                <strong>京都雨季漫游</strong>
+                <p style="margin:4px 0 0;color:var(--wf-muted)">与 stale 互斥</p>
+              </div>
+            </article>
+            <article class="card">
+              <div class="thumb" style="background:linear-gradient(135deg,#90a4ae,#607d8b)">
+                <span class="badge badge--l2">可重排</span>
+              </div>
+              <div class="meta">
+                <strong>王丹昙华林半日游</strong>
+                <p style="margin:4px 0 0;color:var(--wf-muted)">L2 中性 · 不压 L1</p>
+                <div class="tooltip">版式算法有更新，可点重新排版</div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="callout callout--warn"><strong>优先级</strong>longshot stale &gt; ready &gt; algorithm。禁止同卡两枚徽标。禁止字面「可更新」。</div>
+
+        <div class="anno">As-Is 禁止</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">「可更新」</h4>
+            <p>与「分享图需更新」语义打架；U4 看不懂。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">抹平三态</h4>
+            <p>把算法态也写成「分享图需更新」——假装只有一种 stale。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 小红书文案包入口前移 <span class="tag tag--w2">W2</span></h2>
+          <p class="lead">选中小红书后，导出设置内出现一行「复制文案包」。无 AI：标题+话题必给；正文空并写明自填。</p>
+          <div class="callout"><strong>定案</strong>D-SFP-11 · OQ-SFP-03 · AC-SFP-07/08 · NAS 不承诺 AI 正文</div>
+        </div>
+
+        <div class="anno">To-Be · 设置内一行（导出前）</div>
+        <div class="browser"><div class="browser__dots"><i></i><i></i><i></i></div><div class="browser__tab">预览 · 导出设置</div></div>
+        <div class="frame">
+          <div class="dock">
+            <button type="button" class="ctl">返回</button>
+            <button type="button" class="ctl">分章</button>
+            <button type="button" class="ctl">精修</button>
+            <button type="button" class="export">发微信群</button>
+            <button type="button" class="caret">▾</button>
+          </div>
+          <div class="export-sheet">
+            <h3>导出设置</h3>
+            <p class="muted">已改选：小红书（点「确定」后生效）· 金色按钮仍按：微信群</p>
+            <div class="radio">○ 微信群</div>
+            <div class="radio">○ 朋友圈 · 长图连读</div>
+            <div class="radio is-on">● 小红书 · 3:4 配图</div>
+            <div class="radio">○ 朋友圈 · 九宫格</div>
+            <div class="radio">○ 单屏海报</div>
+            <div class="copy-row">
+              <strong>复制文案包</strong>
+              <div class="copy-preview">
+                标题　京都雨季漫游<br />
+                正文　（可自填）<br />
+                话题　#旅行日记 #京都
+              </div>
+              <p style="margin:8px 0 0;font-size:11px;color:var(--wf-muted)">标题和话题已备好 · 正文可粘贴后自填</p>
+              <button type="button">复制标题与话题</button>
+            </div>
+            <div class="sheet-actions">
+              <button type="button">取消</button>
+              <button type="button" class="pri">确定</button>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><strong>主路径</strong>选中小红书 →（可先复制）→ 确定 → 金色导出。成功面可保留第二入口，不进五目标常驻列表。</div>
+
+        <div class="anno">As-Is / 禁止暗示</div>
+        <div class="compare">
+          <div class="mini">
+            <h4 class="x">只藏在成功后 dock</h4>
+            <p>导出前找不到 → 「有图无文」。</p>
+          </div>
+          <div class="mini">
+            <h4 class="x">禁止文案</h4>
+            <p>「AI 已写好」「杂志文案已完成」——违反 NAS。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- gate -->
+      <section class="panel" id="gate">
+        <div class="sec">
+          <h2>拍板清单（W0 UI / 编码前）</h2>
+          <p class="lead">对照联席 BLK-SFP-02：W0 UI 合入前至少 F1–F3 签核。</p>
+        </div>
+        <ul class="checklist">
+          <li>☑ <strong>F1</strong> 同名日期可接受 · 章号可区分 · 无「·三」/「（2）」　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ <strong>F1</strong> 分章打开时导出 ▾ 不挡 × · 命中 ≥44px　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ <strong>F2</strong> 脏日期串不上封面 · 书架同源　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ <strong>F3</strong> 空图注不占假行 · 不回填复读题名　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ <strong>F4</strong> 徽标单枚 · L1/L2 色阶 · tooltip 一字面　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ <strong>F5</strong> 设置内一行 · 正文自填说明 · 无 AI 暗示　<span style="color:var(--wf-rec)">· 2026-07-24 产品认可</span></li>
+          <li>☑ OQ-SFP-01～04 已在 PRD v0.1.1 冻结</li>
+          <li>☑ 排除 AI 入口（NAS）</li>
+          <li>☑ <strong>线框挡门</strong> F1–F5 已过　<span style="color:var(--wf-rec)">· BLK-SFP-02 关闭</span></li>
+        </ul>
+        <div class="callout" style="margin-top:16px">
+          <strong>文档包</strong>
+          PRD v0.1.1 · 本线框（F1–F5 已签）· 评审纪要 · ACCEPTANCE/IMPL/狗粮
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>波次门</h3>
+      <ul>
+        <li><strong>W0</strong> F1–F3 + 浮层互斥</li>
+        <li><strong>W1</strong> F4 徽标分层</li>
+        <li><strong>W2</strong> F5 小红书文案包</li>
+      </ul>
+      <h3 style="margin-top:14px">铁律</h3>
+      <ul>
+        <li>空优于序号腔</li>
+        <li>展示名体面同源</li>
+        <li>空优于复读</li>
+        <li>章序时间 SSOT</li>
+        <li>状态一词一义</li>
+        <li>面板互斥</li>
+      </ul>
+      <h3 style="margin-top:14px">关联</h3>
+      <ul>
+        <li><code>PRD-SHARE-FACE-PURITY-V1</code></li>
+        <li>评审 2026-07-24</li>
+        <li>试用 persona-feedback</li>
+        <li>NAS · SFC · Chapter Naming</li>
+      </ul>
+      <h3 style="margin-top:14px">不做</h3>
+      <ul>
+        <li>恢复 AI 面</li>
+        <li>强制 lead</li>
+        <li>重做五目标配方</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      var buttons = tabs.querySelectorAll("button[data-panel]");
+      var panels = document.querySelectorAll(".panel");
+      function show(id) {
+        panels.forEach(function (p) { p.classList.toggle("is-visible", p.id === id); });
+        buttons.forEach(function (b) { b.classList.toggle("is-active", b.getAttribute("data-panel") === id); });
+      }
+      buttons.forEach(function (b) {
+        b.addEventListener("click", function () { show(b.getAttribute("data-panel")); });
+      });
+    })();
+  </script>
+</body>
+</html>

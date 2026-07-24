@@ -16,7 +16,8 @@ import { pickRecentUserTrips } from "./trip-preview.js";
 import { openImportSheet } from "./import-entry.js";
 import { HELP_COPY, trackHelpEvent } from "../js/help-onboarding.js";
 
-var STALE_BADGE = "可更新";
+var STALE_BADGE = "可重排";
+var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
 var STALE_LONGSHOT = "分享图需更新";
 var _demoConvertWired = false;
 
@@ -309,6 +310,7 @@ export function renderBenchRecent() {
     card.title = (trip.title || trip.tripId)
       + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
       + (benchStale.length ? " · " + benchStale.join(" · ") : "")
+      + (isAlgorithmStale && !trip.longshotStale ? " · " + STALE_BADGE_TIP : "")
       + (isAlgorithmStale ? " · 点击切换预览并更新" : "");
 
     if (trip.previewRelPath) {
@@ -322,8 +324,13 @@ export function renderBenchRecent() {
 
     if (trip.longshotStale || trip.algorithmStale) {
       var stale = document.createElement("span");
-      stale.className = "v2-bench__recent-card__stale";
+      stale.className = trip.longshotStale
+        ? "v2-bench__recent-card__stale"
+        : "v2-bench__recent-card__stale v2-bench__recent-card__stale--algo";
       stale.textContent = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
+      if (!trip.longshotStale && trip.algorithmStale) {
+        stale.title = STALE_BADGE_TIP;
+      }
       card.appendChild(stale);
     }
 

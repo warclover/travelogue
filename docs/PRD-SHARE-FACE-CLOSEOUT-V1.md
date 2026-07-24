@@ -17,6 +17,10 @@
 | **试用底稿** | [persona-ux-trial-2026-07-18.md](./acceptance-records/persona-ux-trial-2026-07-18.md) |
 | **更新日期** | 2026-07-18 |
 
+> **相邻主题脚注（2026-07-24 · Share-Face Purity）**  
+> ① 日期串噪声（`旅行 · 24 1 20–…`）与展示名择优见 [PRD-SHARE-FACE-PURITY-V1.md](./PRD-SHARE-FACE-PURITY-V1.md) **D-SFP-03/04**。  
+> ② 算法 stale 用户面字面由「可更新」改为 **「可重排」**（L2 次级；L1 仍为「分享图需更新」）— **D-SFP-09**；勿再平行造第三套 stale 主词。
+
 > **v1.0.1 评审回写摘要（跨职能 Conditional Go）**
 >
 > - BLK-01：QH R-QH-05 stale 一字面 → 本主题 D-SFC-06「分享图需更新」  

@@ -57,6 +57,35 @@ def _human_degradation(reason: str) -> str:
     return _DEGRADATION_LABELS.get(reason, "已回退到经典排版")
 
 
+def _parse_year(value: object) -> int | None:
+    raw = str(value or "").strip()
+    if len(raw) < 4:
+        return None
+    try:
+        return int(raw[:4])
+    except ValueError:
+        return None
+
+
+def _trip_has_cross_year_span(trip: dict) -> bool:
+    """D-SFP-08 · meta 跨年或章间拍摄年不一致。"""
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    y0 = _parse_year(meta.get("dateStart"))
+    y1 = _parse_year(meta.get("dateEnd"))
+    if y0 is not None and y1 is not None and y0 != y1:
+        return True
+    years: set[int] = set()
+    for asset in trip.get("assets") or []:
+        if not isinstance(asset, dict):
+            continue
+        y = _parse_year(asset.get("takenAt"))
+        if y is not None:
+            years.add(y)
+        if len(years) > 1:
+            return True
+    return False
+
+
 def _aggregate_score_dims(events: list[dict[str, Any]]) -> dict[str, float]:
     totals: dict[str, float] = {k: 0.0 for k in _SCORE_LABELS}
     count = 0
@@ -257,6 +286,16 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
             if len(plan_cities) > 5:
                 route += " 等"
             details.append(f"章节标题已参考您的行程单：{route}")
+
+    # SFP D-SFP-08 / §4.1 · 分章解释增补
+    curation = trip.get("curation") or {}
+    if int(curation.get("sfpWeakDayMergeCount") or 0) > 0:
+        details.append("已合并同一天过短片段")
+    cross_year = _trip_has_cross_year_span(trip)
+    if cross_year:
+        details.append("已按拍摄时间排序（含跨年照片）")
+    elif curation.get("sfpChapterTimeSortApplied"):
+        details.append("已按拍摄时间排序")
 
     # De-dupe while preserving order
     seen: set[str] = set()

@@ -164,6 +164,12 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "wait_tips_replay",
         "wait_tips_show",
         "wait_tips_suppress_short_wait",
+        # Share-Face Purity V1 · PRD §7
+        "sfp_chapter_title_sequence_pass",
+        "sfp_display_title_migrated",
+        "sfp_caption_echo_suppressed",
+        "sfp_chapter_time_sort_applied",
+        "sfp_xhs_copy_pack_copied",
     }
 )
 

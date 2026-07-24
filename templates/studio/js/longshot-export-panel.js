@@ -337,6 +337,12 @@ export function buildPanelHtml(platformIds) {
     '<button type="button" data-studio-xhs-pad="letterbox">留白边</button>' +
     '<button type="button" data-studio-xhs-pad="smart_crop" data-smart-crop-btn>智能裁切</button>' +
     "</div></div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="xhs-copy-pack" hidden>' +
+    '<span class="preview-toolbar__export-popover-label">文案包</span>' +
+    '<button type="button" class="preview-toolbar__export-copy-pack-btn" data-action="copy-xhs-pack">复制文案包</button>' +
+    '<p class="preview-toolbar__export-xhs-copy-hint" data-xhs-copy-hint>' +
+    "标题和话题已备好 · 正文可粘贴后自填" +
+    "</p></div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
@@ -470,8 +476,10 @@ export function syncPanelUI(pop, draft, opts) {
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
   var xhsPad = pop.querySelector('[data-field="xhs-pad"]');
+  var xhsPack = pop.querySelector('[data-field="xhs-copy-pack"]');
   if (xhsCount) xhsCount.hidden = !showXhs;
   if (xhsPad) xhsPad.hidden = !showXhs;
+  if (xhsPack) xhsPack.hidden = !showXhs;
 
   var est = pop.querySelector("[data-xhs-estimate]");
   if (est) {

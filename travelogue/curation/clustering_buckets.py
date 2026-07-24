@@ -319,7 +319,13 @@ def build_buckets_from_clustering(
         min_bucket_size=min_bucket_size,
         chapter_balance_enabled=cfg.curate.chapter_balance_enabled,
         chapter_balance_ratio=cfg.curate.chapter_balance_ratio,
+        assets_by_id=by_id,
     )
+    if norm.weak_same_day_merges:
+        curation = trip.setdefault("curation", {})
+        curation["sfpWeakDayMergeCount"] = int(
+            curation.get("sfpWeakDayMergeCount") or 0
+        ) + int(norm.weak_same_day_merges)
     run_aware = cfg.clustering.scene_cluster_mode == "run_aware"
     for i, bucket in enumerate(norm.buckets):
         norm.buckets[i] = sort_bucket_asset_ids_for_clustering(

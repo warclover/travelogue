@@ -157,7 +157,7 @@ def _explicit_grid_size(pattern_id: str) -> tuple[int, int]:
 
 def _stage_grid(pattern_id: str) -> dict[str, Any]:
     if pattern_id == PATTERN_PORTRAIT_1_LANDSCAPE_2:
-        return {"aspect": "16:9", "cols": [1, 2], "rows": [1, 1]}
+        return {"aspect": "16:9", "cols": [1, 1], "rows": [1, 1]}
     if pattern_id in EXPLICIT_GRID_SPECS:
         cols, rows = _explicit_grid_size(pattern_id)
         return {"aspect": legacy_stage_aspect(pattern_id), "grid": [cols, rows]}

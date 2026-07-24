@@ -9,6 +9,7 @@ import { loadChapterExplain } from "./drawers.js";
 import { fetchEntry } from "./core.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { postJsonConflictRetry } from "../js/http.js";
+import { closeStudioExportPopover } from "./longshot.js";
 
 var CHAP_HINT_KEY = "travelogue.studio.chapterHintSeen";
 
@@ -367,6 +368,12 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
       } catch (_e) {
         /* ignore */
       }
+    }
+    // SFP D-SFP-10 · 浮层互斥：打开分章前关掉导出设置
+    try {
+      closeStudioExportPopover();
+    } catch (_eExp) {
+      /* ignore */
     }
     ensureDom();
     open = true;

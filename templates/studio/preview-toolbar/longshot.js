@@ -1053,6 +1053,63 @@ export function cancelPreviewLongshotExport(root) {
       });
     }
 
+    // SFP D-SFP-11 · 小红书设置内「复制文案包」（成功前可达）
+    var xhsPackBtn = pop.querySelector('[data-action="copy-xhs-pack"]');
+    if (xhsPackBtn && !xhsPackBtn._sfpWired) {
+      xhsPackBtn._sfpWired = true;
+      xhsPackBtn.addEventListener("click", function () {
+        var tid = _tripIdFromPath() || root._tripId || "";
+        if (!tid) {
+          _showToolbarToast("先打开一本画册");
+          return;
+        }
+        xhsPackBtn.disabled = true;
+        fetch("/__travelogue/trips/" + encodeURIComponent(tid) + "/entry")
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (entry) {
+            xhsPackBtn.disabled = false;
+            var pack = (entry && entry.shareCopyPack) || {};
+            var title = String(pack.title || "").trim();
+            if (!title) {
+              _showToolbarToast("先给画册起个名字");
+              return;
+            }
+            var body = String(pack.body || "").trim();
+            var topics = String(pack.topics || "#旅行日记").trim();
+            var blob = title + "\n\n" + (body ? body + "\n\n" : "") + topics;
+            var hint = pop.querySelector("[data-xhs-copy-hint]");
+            if (hint) {
+              hint.textContent = body
+                ? "标题、正文与话题已备好"
+                : "标题和话题已备好 · 正文可粘贴后自填";
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(blob).then(
+                function () {
+                  trackStudioEvent("sfp_xhs_copy_pack_copied", {
+                    tripId: tid,
+                    bodyEmpty: !body,
+                    surface: "export_settings",
+                  });
+                  _showToolbarToast("文案包已复制");
+                },
+                function () {
+                  _showToolbarToast("复制失败，请手动选中");
+                }
+              );
+            } else {
+              _showToolbarToast("当前环境无法复制，请手动选中");
+            }
+          })
+          .catch(function () {
+            xhsPackBtn.disabled = false;
+            _showToolbarToast("文案包加载失败");
+          });
+      });
+    }
+
     pop._applyDraft = function () {
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
@@ -1204,6 +1261,14 @@ export function cancelPreviewLongshotExport(root) {
       if (!pop) {
         reject(new Error("no popover"));
         return;
+      }
+      // SFP D-SFP-10 · 浮层互斥：打开导出设置前关掉分章面板
+      try {
+        if (root && root._chapterPanel && typeof root._chapterPanel.close === "function") {
+          root._chapterPanel.close();
+        }
+      } catch (_eChap) {
+        /* ignore */
       }
       // Close any prior session without double-settle
       if (typeof _activeExportPanelFinish === "function") {

@@ -236,12 +236,11 @@ def _build_stub_caption(
     # When place equals the magazine title, also require {date} so Share-Face
     # sanitize does not wipe a pure title echo.
     title = str((meta or {}).get("displayTitle") or (meta or {}).get("title") or "").strip()
+    # SFP D-SFP-05 · place 退化成题名时不要生成「日期 · 题名」回声；宁空
+    if title and place == title:
+        return ""
     if place and place not in {"这里", "旅途", "未知"}:
         with_place = [t for t in templates if "{place}" in t]
-        if title and place == title:
-            mixed = [t for t in with_place if "{date}" in t]
-            if mixed:
-                with_place = mixed
         if with_place:
             templates = with_place
     template = _pick_template(templates, str(asset.get("id") or place))
@@ -278,10 +277,13 @@ def _apply_stub_captions(
         resolve_caption,
     )
 
+    from travelogue.domain.share_face_purity import suppress_repeated_weak_captions
+
     meta = meta if meta is not None else trip.get("meta") or {}
     intent = intent if intent is not None else trip.get("intent")
     asset_list = trip.get("assets") or []
     assets = {a["id"]: a for a in asset_list if a.get("id")}
+    pending: dict[str, str] = {}
     updated: list[str] = []
     for aid in _stub_caption_asset_ids(trip):
         asset = assets.get(aid)
@@ -311,11 +313,16 @@ def _apply_stub_captions(
         )
         if not caption:
             continue
+        pending[aid] = caption
+    # SFP §4.3 · 同一短标签 ≥3 次 → 整批降空
+    pending = suppress_repeated_weak_captions(pending, max_same=3)
+    for aid, caption in pending.items():
+        if not caption:
+            continue
         if not dry_run:
             apply_caption_to_trip(trip, aid, caption)
         updated.append(f"assets.{aid}.caption")
     return updated
-
 
 def _build_hook(
     meta: dict,

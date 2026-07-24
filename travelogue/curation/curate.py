@@ -854,6 +854,7 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
     layout_assets = preflight.layout_assets
     cover_id = preflight.cover_id
 
+    weak_merges = 0
     if should_use_clustering_buckets(trip, preflight.app_cfg):
         buckets, bucket_segment_ids, bucket_segment_ids_all, segments = build_buckets_from_clustering(
             trip,
@@ -863,6 +864,9 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
             cfg=preflight.app_cfg,
             min_bucket_size=cur_cfg.min_bucket_size,
         )
+        weak_merges = int((trip.get("curation") or {}).get("sfpWeakDayMergeCount") or 0)
+        # clustering 回退到 group_assets_by_segments 时计数写在 meta 侧写
+        weak_merges += int(meta.pop("_sfpWeakDayMergeCount", 0) or 0)
     else:
         buckets, bucket_segment_ids, bucket_segment_ids_all, segments = group_assets_by_segments(
             layout_assets,
@@ -875,11 +879,13 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
             chapter_balance_enabled=cur_cfg.chapter_balance_enabled,
             chapter_balance_ratio=cur_cfg.chapter_balance_ratio,
         )
+        weak_merges = int(meta.pop("_sfpWeakDayMergeCount", 0) or 0)
 
     if len(layout_assets) <= SMALL_ALBUM_PHOTO_CAP:
         from travelogue.curation.bucket_planning import normalize_bucket_counts
 
         max_ch = 2 if len(layout_assets) <= COMPACT_ALBUM_PHOTO_CAP else 3
+        by_id = {a["id"]: a for a in layout_assets if a.get("id")}
         norm = normalize_bucket_counts(
             buckets,
             bucket_segment_ids,
@@ -887,10 +893,15 @@ def _build_curate_buckets(trip: dict, preflight: _CuratePreflight) -> _CurateBuc
             min_bucket_size=min(2, cur_cfg.min_bucket_size),
             chapter_balance_enabled=cur_cfg.chapter_balance_enabled,
             chapter_balance_ratio=cur_cfg.chapter_balance_ratio,
+            assets_by_id=by_id,
         )
         buckets = norm.buckets
         bucket_segment_ids = norm.primary_segment_ids
         bucket_segment_ids_all = norm.segment_ids_per_bucket
+        weak_merges += int(norm.weak_same_day_merges or 0)
+
+    if weak_merges:
+        trip.setdefault("curation", {})["sfpWeakDayMergeCount"] = weak_merges
 
     from travelogue.layout_engine.adapter import (
         apply_segment_order_to_buckets,
@@ -1428,12 +1439,22 @@ def _stage_build_chapters_compose(
     degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
     decision_logs = replan_meta.get("decisionLogs") or None
 
+    # SFP D-SFP-07 · 章级时间升序 SSOT（appendix 置尾）
+    from travelogue.domain.share_face_purity import sort_chapters_by_temporal_key
+
+    from travelogue.domain.share_face_purity import enforce_no_ordinal_face_titles
+
+    chapters, sfp_reordered = sort_chapters_by_temporal_key(chapters, layout_assets)
     trip["chapters"] = chapters
+    # SFP §4.1④ · curate 后序号腔硬闸（非用户锁）
+    enforce_no_ordinal_face_titles(trip)
     trip["exportLayout"] = layout
     trip["layoutEngine"] = engine
     if engine == LAYOUT_ENGINE_SCREENS:
         trip["layoutEngineVersion"] = LAYOUT_ENGINE_VERSION_SCREENS
     curation = trip.setdefault("curation", {})
+    if sfp_reordered:
+        curation["sfpChapterTimeSortApplied"] = True
     if degradation_reason:
         curation["degradationReason"] = degradation_reason
     if decision_logs:

@@ -61,6 +61,24 @@ def test_chapter_titles_cross_year_in_bucket() -> None:
     assert titles[0] == "2010–2026"
 
 
+def test_chapter_titles_cross_year_trip_prefixes_year() -> None:
+    """D-SFP-08② · 跨年混拍册单日章名带年份。"""
+    assets = [
+        {"id": "a", "takenAt": "2024-08-14T12:00:00Z"},
+        {"id": "b", "takenAt": "2025-01-16T12:00:00Z"},
+    ]
+    titles = _chapter_titles(
+        [["a"], ["b"]],
+        assets,
+        {
+            "places": ["武汉"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        },
+    )
+    assert titles == ["2024年8月14日", "2025年1月16日"]
+
+
 def test_merge_small_buckets_combines_pairs() -> None:
     buckets = [["a", "b", "c"], ["d"], ["e", "f", "g"]]
     merged = _merge_small_buckets(buckets, min_size=3)
@@ -116,12 +134,11 @@ def test_chapter_titles_same_day_suffix() -> None:
     buckets = [["x0"], ["x1"], ["x2"]]
     titles = _chapter_titles(buckets, assets, {"places": ["京都"]})
     assert titles[0].startswith("4月2日")
-    # PMX D6：禁「日期续」与「（N）」；同日第二段用时段或 ·二
+    # SFP D-SFP-01：禁「日期续」/「（N）」/「·二」；同日后续用时段，否则允许同名
     assert "续" not in titles[1]
     assert "（" not in titles[1] and "）" not in titles[1]
+    assert "·二" not in titles[1] and "·三" not in titles[1]
     assert titles[1].startswith("4月2日")
-    assert "·" in titles[1]
-    assert titles[1] != titles[0]
 
 
 def test_chapter_titles_prefer_span_over_multi_seg_labels() -> None:

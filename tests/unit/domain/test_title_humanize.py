@@ -4,6 +4,8 @@ from travelogue.domain.title_humanize import (
     extract_place_label,
     humanize_folder_title,
     is_folder_title_noise,
+    looks_like_digit_date_span,
+    migrate_stale_display_title,
     resolve_display_title,
 )
 
@@ -111,10 +113,10 @@ def test_resolve_display_title_rejects_demo_leak_title() -> None:
 
 
 def test_date_fallback_cross_year_keeps_year() -> None:
-    """跨年区间不得丢年，避免书架出现「1月20–1月16日」倒挂感。"""
+    """跨年区间不得丢年；无体面候选时用紧凑年号回退。"""
     shown = resolve_display_title(
         {
-            "title": "夏睿彤年度精选2",
+            "title": "download",
             "displayTitle": "旅行 · 1月20–1月16日",
             "places": ["旅途"],
             "dateStart": "2024-01-20",
@@ -123,6 +125,87 @@ def test_date_fallback_cross_year_keeps_year() -> None:
     )
     assert shown == "旅行 · 24.1.20–25.1.16"
     assert "1月20–1月16日" not in shown
+
+
+def test_digit_date_span_is_noise_and_loses_to_place() -> None:
+    """D-SFP-04 · 「旅行 · 24 1 20–25 1 16」不得上封面。"""
+    dirty = "旅行 · 24 1 20–25 1 16"
+    assert looks_like_digit_date_span(dirty) is True
+    assert is_folder_title_noise(dirty) is True
+    shown = resolve_display_title(
+        {
+            "title": dirty,
+            "displayTitle": dirty,
+            "places": ["武汉"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        }
+    )
+    assert "24 1 20" not in shown
+    assert "武汉" in shown
+
+
+def test_dotted_digit_date_span_softens_serial_title() -> None:
+    """D-SFP-04 · 点号链「24.1.20–25.1.16」亦为 noise；「精选2」软剥抢面。"""
+    dirty = "旅行 · 24.1.20–25.1.16"
+    assert looks_like_digit_date_span(dirty) is True
+    shown = resolve_display_title(
+        {
+            "title": "夏睿彤年度精选2",
+            "displayTitle": dirty,
+            "places": ["武汉"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        }
+    )
+    assert shown == "夏睿彤年度精选"
+    assert "24.1.20" not in shown
+    meta = {
+        "title": "夏睿彤年度精选2",
+        "displayTitle": dirty,
+        "places": ["武汉"],
+        "dateStart": "2024-01-20",
+        "dateEnd": "2025-01-16",
+    }
+    assert migrate_stale_display_title(meta) is True
+    assert meta["displayTitle"] == "夏睿彤年度精选"
+
+
+def test_prefer_readable_title_over_dirty_display() -> None:
+    """D-SFP-03 · 可读 title 优于脏 displayTitle。"""
+    shown = resolve_display_title(
+        {
+            "title": "武大樱花",
+            "displayTitle": "旅行 · 24 1 20–25 1 16",
+            "places": ["武汉"],
+        }
+    )
+    assert shown == "武大樱花"
+
+
+def test_soften_serial_only_against_digit_date_display() -> None:
+    """尾序号软剥仅用于对抗数字日期链，不改写普通文件夹序号噪音回退。"""
+    shown = resolve_display_title(
+        {
+            "title": "精选2",
+            "displayTitle": "旅行 · 24 1 20–25 1 16",
+            "places": ["旅途"],
+            "dateStart": "2024-01-20",
+            "dateEnd": "2025-01-16",
+        }
+    )
+    assert shown == "精选"
+
+
+def test_migrate_stale_display_title_rewrites_digit_span() -> None:
+    meta = {
+        "title": "武大樱花",
+        "displayTitle": "旅行 · 24 1 20–25 1 16",
+        "places": ["武汉"],
+    }
+    assert migrate_stale_display_title(meta) is True
+    assert meta["displayTitle"] == "武大樱花"
+    assert migrate_stale_display_title(meta) is False
 
 
 def test_date_fallback_same_year_span_unchanged() -> None:

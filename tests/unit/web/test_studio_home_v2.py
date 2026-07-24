@@ -687,7 +687,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "你的游记画册" in shelf
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
     assert "更新长图" in logic            # stale → 更新长图
-    assert "可更新" in shelf
+    assert "可重排" in shelf
     assert "重新排版" in logic
     assert "longshotStale" in shelf
     assert "algorithmStale" in shelf
