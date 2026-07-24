@@ -112,6 +112,11 @@ def _same_day_followup_title(
     return _clip_title(base)
 
 
+def is_ordinal_face_title(title: str) -> bool:
+    """True when reader-facing title ends with ·二/·三/·N (SFP-01)."""
+    return bool(_ORDINAL_FACE_RE.search((title or "").strip()))
+
+
 def strip_ordinal_face_title(title: str) -> str:
     """Sequence Pass · drop reader-facing ·二/·三/·N suffixes."""
     t = (title or "").strip()

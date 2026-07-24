@@ -110,13 +110,28 @@ def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
 
 
 def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    from travelogue.domain.share_face_purity import migrate_share_face_purity_on_open
     from travelogue.web.studio_entry import build_entry
+    from travelogue.web.studio_jobs import get_job_store
 
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
         return
     _trip_dir, trip = loaded
     ctx = studio_ctx(handler)
+    # SFP D-SFP-12 · 打开预览静默 migrate（响应面立即净化；落盘 best-effort）
+    migrate_share_face_purity_on_open(trip)
+    trip_json = _trip_dir / "trip.json"
+    if not get_job_store().is_trip_busy(trip_id):
+        try:
+
+            def _sfp_migrate(t: dict) -> bool:
+                return bool(migrate_share_face_purity_on_open(t).get("changed"))
+
+            ctx.trip_service().update(trip_json, _sfp_migrate, touch_updated=False)
+        except Exception:
+            _log.debug("sfp open migrate persist skipped for %s", trip_id, exc_info=True)
+
     enabled = bool(ctx.cfg.aesthetic.enabled)
     handler._json_response(
         200,

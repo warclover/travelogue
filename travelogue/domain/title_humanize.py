@@ -198,9 +198,14 @@ def migrate_stale_display_title(meta: dict[str, Any] | None) -> bool:
 
     Returns True when ``meta`` was mutated. Idempotent when already aligned.
     Never promotes folder-noise titles into the display face.
+    Never overwrites user-protected magazine titles (USR-SFP-04).
     """
+    from travelogue.domain.copy_origin import is_user_protected
+
     meta = meta if isinstance(meta, dict) else None
     if not meta:
+        return False
+    if is_user_protected(meta, "titleOrigin"):
         return False
     resolved = resolve_display_title(meta, limit=32)
     stored = str(meta.get("displayTitle") or "").strip()

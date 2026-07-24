@@ -154,8 +154,15 @@ def validate_narrative(trip: dict, *, cfg: AppConfig | None = None) -> list[str]
                 f"WARN: overseas place {place!r} in {path} not found in asset cities (VR-N02)"
             )
 
+    from travelogue.curation.chapter_titles import is_ordinal_face_title
+
     for i, ch in enumerate(trip.get("chapters") or []):
         title = (ch.get("title") or "").strip()
+        # SFP D-SFP-01 · 读者面禁序号腔章名
+        if title and is_ordinal_face_title(title):
+            issues.append(
+                f"E_VALIDATE_MANIFEST ordinal chapter title {title!r} in chapters[{i}] (SFP-01)"
+            )
         lead = (ch.get("lead") or "").strip()
         if title and lead:
             places = (ch.get("curation") or {}).get("places") or []

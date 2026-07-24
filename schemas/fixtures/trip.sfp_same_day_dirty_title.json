@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "0.1.0",
+  "meta": {
+    "title": "武大樱花",
+    "displayTitle": "旅行 · 24 1 20–25 1 16",
+    "places": ["武汉"],
+    "dateStart": "2024-01-20",
+    "dateEnd": "2025-01-16"
+  },
+  "assets": [
+    {"id": "a1", "takenAt": "2025-05-27T10:00:00", "path": "a1.jpg"},
+    {"id": "a2", "takenAt": "2025-05-27T11:00:00", "path": "a2.jpg"},
+    {"id": "a3", "takenAt": "2025-08-01T12:00:00", "path": "a3.jpg"},
+    {"id": "a4", "takenAt": "2025-01-10T09:00:00", "path": "a4.jpg"}
+  ],
+  "chapters": [
+    {
+      "id": "ch-aug",
+      "title": "8月1日",
+      "items": [{"type": "media-card", "assetId": "a3", "caption": "5月27日 · 武大樱花"}]
+    },
+    {
+      "id": "ch-may-1",
+      "title": "5月27日 · 三",
+      "items": [{"type": "media-card", "assetId": "a1"}]
+    },
+    {
+      "id": "ch-may-2",
+      "title": "5月27日",
+      "items": [{"type": "media-card", "assetId": "a2"}]
+    },
+    {
+      "id": "ch-jan",
+      "title": "1月10日",
+      "items": [{"type": "media-card", "assetId": "a4"}]
+    }
+  ],
+  "_sfpNotes": {
+    "AC-SFP-01": "章名含 ·三 待 open migrate / refresh",
+    "AC-SFP-02": "displayTitle 数字日期链",
+    "AC-SFP-03": "caption 题名回声",
+    "AC-SFP-04": "章序未按时间（8月在1月前）"
+  }
+}

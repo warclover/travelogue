@@ -339,8 +339,15 @@ export function mountPreviewTaskDock(root, hooks) {
             var topics = String(pack.topics || "#旅行日记").trim();
             var lines = ["标题　" + title];
             if (body) lines.push("正文　" + body);
+            else lines.push("正文　（可粘贴后自填）");
             lines.push("话题　" + topics);
             packHost.innerHTML = "";
+            var hint = document.createElement("p");
+            hint.className = "preview-task-dock__copy-pack-hint";
+            hint.textContent = body
+              ? "标题、正文与话题可一键复制"
+              : "标题和话题已备好 · 正文可粘贴后自填";
+            packHost.appendChild(hint);
             var pre = document.createElement("pre");
             pre.className = "preview-task-dock__copy-pack-body";
             pre.textContent = lines.join("\n");

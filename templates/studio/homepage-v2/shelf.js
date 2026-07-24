@@ -33,7 +33,8 @@ var PREPARING_HD = "正在准备高清图";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
-var STALE_BADGE = "可更新";
+var STALE_BADGE = "可重排";
+var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
 var STALE_LONGSHOT = "分享图需更新";
 var _shelfScrollTracked = false;
 var _hostEl = null;
@@ -177,11 +178,14 @@ function buildCoverWrap(trip, surface) {
   openCover.type = "button";
   var staleBits = [];
   if (trip.longshotStale) staleBits.push("分享图需更新");
-  if (trip.algorithmStale) staleBits.push("可更新");
+  if (trip.algorithmStale) staleBits.push(STALE_BADGE);
   var readyBadge = shelfShowCoverReadyBadge(trip);
   if (readyBadge) staleBits.push(READY_LONGSHOT);
   openCover.title = (trip.title || trip.tripId)
     + (staleBits.length ? " · " + staleBits.join(" · ") : "");
+  if (trip.algorithmStale && !trip.longshotStale) {
+    openCover.title = (openCover.title || "") + " · " + STALE_BADGE_TIP;
+  }
   buildCover(trip, openCover);
   openCover.addEventListener("click", function () { openTrip(trip, false); });
   wrap.appendChild(openCover);
@@ -215,8 +219,10 @@ function buildCoverWrap(trip, surface) {
   } else if (readyBadge) {
     wrap.appendChild(el("span", "v2-shelf__ready-badge", READY_LONGSHOT));
   } else if (trip.algorithmStale && !trip.longshotStale) {
-    // 长图过期优先于「可更新」；同本不叠两枚角标
-    wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_BADGE));
+    // SFP D-SFP-09 · L2「可重排」次级；不得压过 L1 分享图态
+    var algoBadge = el("span", "v2-shelf__stale-badge v2-shelf__stale-badge--algo", STALE_BADGE);
+    algoBadge.title = STALE_BADGE_TIP;
+    wrap.appendChild(algoBadge);
   }
   attachShelfTripMenu(wrap, trip, { surface: surface, onDeleted: onTripDeleted });
   return wrap;

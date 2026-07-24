@@ -10,9 +10,9 @@
 | **前置条件** | 首页 v2（M21）；Share-Ready / SFC / SFI 工程已合入；**当前版用户面 = 无 AI**（[NAS](./PRD-NO-AI-SURFACE-V1.md)） |
 | **关联文档** | [PRD-SHARE-FACE-CLOSEOUT-V1.md](./PRD-SHARE-FACE-CLOSEOUT-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) · [PRD-CHAPTER-NAMING.md](./PRD-CHAPTER-NAMING.md) · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) · [PRD-OUTPUT-RECIPE-V1.md](./PRD-OUTPUT-RECIPE-V1.md) · `travelogue/curation/chapter_titles.py` · `travelogue/domain/title_humanize.py` · `travelogue/domain/share_copy_pack.py` |
 | **评审记录** | [acceptance-records/share-face-purity-v1-review-2026-07-24.md](./acceptance-records/share-face-purity-v1-review-2026-07-24.md) · **Conditional Go** |
-| **验收** | [ACCEPTANCE-SHARE-FACE-PURITY-V1.md](./ACCEPTANCE-SHARE-FACE-PURITY-V1.md)（Kickoff 前建骨架；本文 §10 为索引） |
-| **实施清单** | [IMPLEMENTATION-SHARE-FACE-PURITY-V1.md](./IMPLEMENTATION-SHARE-FACE-PURITY-V1.md)（Kickoff 前建骨架） |
-| **手测狗粮** | `docs/acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md`（Kickoff 前补） |
+| **验收** | [ACCEPTANCE-SHARE-FACE-PURITY-V1.md](./ACCEPTANCE-SHARE-FACE-PURITY-V1.md)（W0–W2 工程列绿 · W3 待签） |
+| **实施清单** | [IMPLEMENTATION-SHARE-FACE-PURITY-V1.md](./IMPLEMENTATION-SHARE-FACE-PURITY-V1.md) |
+| **手测狗粮** | [acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md) |
 | **线框** | [wireframes/share-face-purity-v1-wireframe.html](./wireframes/share-face-purity-v1-wireframe.html)（**已补** · F1–F5 · **F1–F3 已签核 2026-07-24**；F4/F5 随 W1/W2） |
 | **试用底稿** | [persona-feedback-trial-2026-07-24.md](./acceptance-records/persona-feedback-trial-2026-07-24.md) |
 | **更新日期** | 2026-07-24 |

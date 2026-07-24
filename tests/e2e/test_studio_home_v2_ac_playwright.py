@@ -1687,7 +1687,7 @@ def test_ac_hp21_05_settings_theme_persist(studio_server) -> None:
 
 
 def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
-    """AC-HP21-06 · stale 徽标与选择器文案为用户语言「可更新」。"""
+    """AC-HP21-06 · stale 徽标与选择器文案为用户语言「可重排」（SFP D-SFP-09）。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -1702,8 +1702,8 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             timeout=10_000,
         )
         bench_badge = page.locator(".v2-bench__recent-card__stale").first.inner_text()
-        # multi fixture · hokkaido 为 longshotStale → 「分享图需更新」；算法 stale 为「可更新」。
-        assert bench_badge in ("可更新", "分享图需更新")
+        # multi fixture · hokkaido 为 longshotStale → 「分享图需更新」；算法 stale 为「可重排」。
+        assert bench_badge in ("可重排", "分享图需更新")
         assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 
         page.locator("#v2-bento-preview-trigger").click()
@@ -1711,7 +1711,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             "() => !document.getElementById('v2-bento-preview-listbox').hidden"
         )
         picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
-        assert "分享图需更新" in picker_text or "可更新" in picker_text
+        assert "分享图需更新" in picker_text or "可重排" in picker_text
         assert "算法待更新" not in picker_text
 
         page.evaluate(
@@ -1724,8 +1724,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
         )
         shelf_badge = page.locator(".v2-shelf__stale-badge").first
         expect(shelf_badge).to_be_visible(timeout=10_000)
-        assert "可更新" in shelf_badge.inner_text()
-        browser.close()
+        assert "可重排" in shelf_badge.inner_text()        browser.close()
 
 
 def test_ac_hp21_09_carousel_controls_contrast(studio_server) -> None:

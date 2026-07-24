@@ -1428,6 +1428,10 @@ def _stage_build_chapters_compose(
     degradation_reason = degradation.reason if degradation.force_legacy and layout_cfg.scoring.enabled else None
     decision_logs = replan_meta.get("decisionLogs") or None
 
+    # SFP D-SFP-07 · 章级时间升序 SSOT（appendix 置尾）
+    from travelogue.domain.share_face_purity import sort_chapters_by_temporal_key
+
+    chapters, _sfp_reordered = sort_chapters_by_temporal_key(chapters, layout_assets)
     trip["chapters"] = chapters
     trip["exportLayout"] = layout
     trip["layoutEngine"] = engine

@@ -277,10 +277,13 @@ def _apply_stub_captions(
         resolve_caption,
     )
 
+    from travelogue.domain.share_face_purity import suppress_repeated_weak_captions
+
     meta = meta if meta is not None else trip.get("meta") or {}
     intent = intent if intent is not None else trip.get("intent")
     asset_list = trip.get("assets") or []
     assets = {a["id"]: a for a in asset_list if a.get("id")}
+    pending: dict[str, str] = {}
     updated: list[str] = []
     for aid in _stub_caption_asset_ids(trip):
         asset = assets.get(aid)
@@ -310,11 +313,16 @@ def _apply_stub_captions(
         )
         if not caption:
             continue
+        pending[aid] = caption
+    # SFP §4.3 · 同一短标签 ≥3 次 → 整批降空
+    pending = suppress_repeated_weak_captions(pending, max_same=3)
+    for aid, caption in pending.items():
+        if not caption:
+            continue
         if not dry_run:
             apply_caption_to_trip(trip, aid, caption)
         updated.append(f"assets.{aid}.caption")
     return updated
-
 
 def _build_hook(
     meta: dict,

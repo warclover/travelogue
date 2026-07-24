@@ -1,0 +1,127 @@
+"""Share-Face Purity · open-path migrate, temporal sort, weak-caption density (SFP)."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
+
+def migrate_ordinal_chapter_titles(trip: dict[str, Any] | None) -> list[str]:
+    """D-SFP-12 · strip reader-facing ·二/·三 from non-user chapter titles (idempotent)."""
+    from travelogue.curation.chapter_titles import strip_ordinal_face_title
+    from travelogue.domain.copy_origin import is_user_protected
+
+    trip = trip if isinstance(trip, dict) else None
+    if not trip:
+        return []
+    updated: list[str] = []
+    for ch in trip.get("chapters") or []:
+        if not isinstance(ch, dict):
+            continue
+        if (ch.get("curation") or {}).get("isAppendix"):
+            continue
+        if is_user_protected(ch, "titleOrigin"):
+            continue
+        raw = str(ch.get("title") or "").strip()
+        cleaned = strip_ordinal_face_title(raw)
+        if cleaned and cleaned != raw:
+            ch["title"] = cleaned[:12]
+            updated.append(str(ch.get("id") or ""))
+    return updated
+
+
+def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, Any]:
+    """D-SFP-12 · silent open migrate for dirty displayTitle + ordinal chapter titles.
+
+    Skips user-protected magazine title (meta.edited / titleOrigin=user) and
+    user-locked chapter titles. Returns ``{displayTitle, chapters, changed}``.
+    """
+    from travelogue.domain.copy_origin import is_user_protected
+    from travelogue.domain.title_humanize import migrate_stale_display_title
+
+    trip = trip if isinstance(trip, dict) else None
+    if not trip:
+        return {"displayTitle": False, "chapters": [], "changed": False}
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else None
+    display_migrated = False
+    if meta is not None and not is_user_protected(meta, "titleOrigin"):
+        display_migrated = bool(migrate_stale_display_title(meta))
+
+    chapter_ids = migrate_ordinal_chapter_titles(trip)
+    return {
+        "displayTitle": display_migrated,
+        "chapters": chapter_ids,
+        "changed": bool(display_migrated or chapter_ids),
+    }
+
+
+def chapter_temporal_key(chapter: dict[str, Any], assets_by_id: dict[str, dict]) -> tuple[int, str]:
+    """Return ``(timestamp_ms or max, chapter_id)`` for stable ascending sort."""
+    from travelogue.curation.chapter_titles import _chapter_asset_ids
+
+    best: int | None = None
+    for aid in _chapter_asset_ids(chapter):
+        asset = assets_by_id.get(str(aid)) or {}
+        raw = str(asset.get("takenAt") or "").strip()
+        if not raw:
+            continue
+        try:
+            dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        ms = int(dt.timestamp() * 1000)
+        if best is None or ms < best:
+            best = ms
+    # No reliable time → sort last (D-SFP-07)
+    return (best if best is not None else 2**62, str(chapter.get("id") or ""))
+
+
+def sort_chapters_by_temporal_key(
+    chapters: list[dict[str, Any]],
+    assets: list[dict] | None,
+) -> tuple[list[dict[str, Any]], bool]:
+    """D-SFP-07 · SSOT chapter order by min reliable takenAt; appendix stays at end."""
+    if not chapters:
+        return chapters, False
+    assets_by_id = {
+        str(a["id"]): a for a in (assets or []) if isinstance(a, dict) and a.get("id")
+    }
+    main: list[dict[str, Any]] = []
+    appendix: list[dict[str, Any]] = []
+    for ch in chapters:
+        if not isinstance(ch, dict):
+            continue
+        if (ch.get("curation") or {}).get("isAppendix"):
+            appendix.append(ch)
+        else:
+            main.append(ch)
+    keyed = [(chapter_temporal_key(ch, assets_by_id), i, ch) for i, ch in enumerate(main)]
+    sorted_main = [ch for _, _, ch in sorted(keyed, key=lambda t: (t[0], t[1]))]
+    reordered = sorted_main != main
+    out = sorted_main + appendix
+    if reordered:
+        for i, ch in enumerate(out, start=1):
+            if "index" in ch:
+                ch["index"] = i
+    return out, reordered
+
+
+def suppress_repeated_weak_captions(
+    captions_by_asset: dict[str, str],
+    *,
+    max_same: int = 3,
+) -> dict[str, str]:
+    """§4.3 · blank captions that repeat the same short label ≥ max_same times."""
+    counts: dict[str, int] = {}
+    for cap in captions_by_asset.values():
+        key = (cap or "").strip()
+        if key:
+            counts[key] = counts.get(key, 0) + 1
+    banned = {k for k, n in counts.items() if n >= max_same and len(k) <= 6}
+    if not banned:
+        return captions_by_asset
+    return {
+        aid: ("" if (cap or "").strip() in banned else cap)
+        for aid, cap in captions_by_asset.items()
+    }
