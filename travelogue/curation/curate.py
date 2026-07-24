@@ -1442,8 +1442,12 @@ def _stage_build_chapters_compose(
     # SFP D-SFP-07 · 章级时间升序 SSOT（appendix 置尾）
     from travelogue.domain.share_face_purity import sort_chapters_by_temporal_key
 
+    from travelogue.domain.share_face_purity import enforce_no_ordinal_face_titles
+
     chapters, sfp_reordered = sort_chapters_by_temporal_key(chapters, layout_assets)
     trip["chapters"] = chapters
+    # SFP §4.1④ · curate 后序号腔硬闸（非用户锁）
+    enforce_no_ordinal_face_titles(trip)
     trip["exportLayout"] = layout
     trip["layoutEngine"] = engine
     if engine == LAYOUT_ENGINE_SCREENS:

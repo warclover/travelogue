@@ -38,10 +38,19 @@ def test_stale_badge_is_reorder_not_update() -> None:
 def test_xhs_copy_pack_in_export_settings() -> None:
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
     assert 'data-action="copy-xhs-pack"' in panel
     assert "标题和话题已备好" in panel
     assert "copy-xhs-pack" in longshot
     assert "sfp_xhs_copy_pack_copied" in longshot
+    for ev in (
+        "sfp_chapter_title_sequence_pass",
+        "sfp_display_title_migrated",
+        "sfp_caption_echo_suppressed",
+        "sfp_chapter_time_sort_applied",
+        "sfp_xhs_copy_pack_copied",
+    ):
+        assert ev in analytics
 
 
 def test_no_ai_promise_in_xhs_copy_ui() -> None:

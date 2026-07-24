@@ -108,6 +108,19 @@ def sanitize_share_copy_tracked(
     if edited:
         return raw, False
     if is_unsafe_share_copy(raw, title=title, kind=kind):
+        # SFP §7 · 题名回声类 blank 单独记一笔（其它禁词仍走 sfc_stub_blanked）
+        if kind in {"caption", "alt"} and title and str(title).strip():
+            t = str(title).strip()
+            if t in raw or _norm(raw) == _norm(t):
+                try:
+                    from travelogue.domain.share_face_purity import emit_sfp_event
+
+                    emit_sfp_event(
+                        "sfp_caption_echo_suppressed",
+                        {"kind": kind, "titleLen": len(t)},
+                    )
+                except Exception:
+                    pass
         return "", True
     return raw, False
 

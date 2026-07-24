@@ -6,6 +6,16 @@ from datetime import datetime
 from typing import Any
 
 
+def emit_sfp_event(event: str, meta: dict[str, Any] | None = None) -> None:
+    """Best-effort SFP telemetry · never break curate/render/open paths."""
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        append_studio_homepage_event(event, meta)
+    except Exception:
+        pass
+
+
 def migrate_ordinal_chapter_titles(trip: dict[str, Any] | None) -> list[str]:
     """D-SFP-12 · strip reader-facing ·二/·三 from non-user chapter titles (idempotent)."""
     from travelogue.curation.chapter_titles import strip_ordinal_face_title
@@ -27,13 +37,23 @@ def migrate_ordinal_chapter_titles(trip: dict[str, Any] | None) -> list[str]:
         if cleaned and cleaned != raw:
             ch["title"] = cleaned[:12]
             updated.append(str(ch.get("id") or ""))
+    if updated:
+        emit_sfp_event(
+            "sfp_chapter_title_sequence_pass",
+            {"count": len(updated), "chapterIds": updated[:12]},
+        )
     return updated
 
 
-def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, Any]:
-    """D-SFP-12 · silent open migrate for dirty displayTitle + ordinal chapter titles.
+def enforce_no_ordinal_face_titles(trip: dict[str, Any] | None) -> list[str]:
+    """§4.1④ · curate 后闸：非用户锁章名不得残留序号腔（strip + emit）。"""
+    return migrate_ordinal_chapter_titles(trip)
 
-    Skips user-protected magazine title (meta.edited / titleOrigin=user) and
+
+def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, Any]:
+    """D-SFP-12 · silent open/pipeline migrate for dirty displayTitle + ordinal titles.
+
+    Skips user-protected magazine title (titleOrigin=user) and
     user-locked chapter titles. Returns ``{displayTitle, chapters, changed}``.
     """
     from travelogue.domain.copy_origin import is_user_protected
@@ -47,6 +67,14 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
     display_migrated = False
     if meta is not None and not is_user_protected(meta, "titleOrigin"):
         display_migrated = bool(migrate_stale_display_title(meta))
+        if display_migrated:
+            emit_sfp_event(
+                "sfp_display_title_migrated",
+                {
+                    "title": str(meta.get("title") or "")[:32],
+                    "displayTitle": str(meta.get("displayTitle") or "")[:32],
+                },
+            )
 
     chapter_ids = migrate_ordinal_chapter_titles(trip)
     return {
@@ -104,6 +132,10 @@ def sort_chapters_by_temporal_key(
         for i, ch in enumerate(out, start=1):
             if "index" in ch:
                 ch["index"] = i
+        emit_sfp_event(
+            "sfp_chapter_time_sort_applied",
+            {"chapterCount": len(sorted_main), "appendixCount": len(appendix)},
+        )
     return out, reordered
 
 

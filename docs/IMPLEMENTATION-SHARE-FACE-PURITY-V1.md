@@ -38,6 +38,15 @@
 | L2「可重排」中性徽标 CSS | ✅ |
 | AC-SFP-06 Playwright | ✅ `tests/e2e/test_sfp_chapter_panel_playwright.py` |
 
+## 收口补丁（P2）
+
+| 项 | 状态 |
+|----|------|
+| 线框 F4/F5 产品签核 | ✅ 2026-07-24 |
+| pipeline 收尾 migrate | ✅ `_finalize_pipeline_result` |
+| curate 后序号腔闸 | ✅ `enforce_no_ordinal_face_titles` |
+| `sfp_*` 五事件埋点 | ✅ BE allowlist + FE analytics + emit |
+
 ## W3
 
 | 项 | 状态 |

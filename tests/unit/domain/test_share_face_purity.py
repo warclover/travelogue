@@ -4,13 +4,23 @@ from __future__ import annotations
 
 from travelogue.curation.bucket_planning import merge_weak_same_day_followups
 from travelogue.domain.share_face_purity import (
+    enforce_no_ordinal_face_titles,
     migrate_ordinal_chapter_titles,
     migrate_share_face_purity_on_open,
     sort_chapters_by_temporal_key,
     suppress_repeated_weak_captions,
 )
+from travelogue.domain.studio_events import ALLOWED_STUDIO_HOMEPAGE_EVENTS
 from travelogue.domain.title_humanize import migrate_stale_display_title
 from travelogue.services.narrative_validate import validate_narrative
+
+SFP_EVENTS = (
+    "sfp_chapter_title_sequence_pass",
+    "sfp_display_title_migrated",
+    "sfp_caption_echo_suppressed",
+    "sfp_chapter_time_sort_applied",
+    "sfp_xhs_copy_pack_copied",
+)
 
 
 def test_migrate_ordinal_skips_user_title() -> None:
@@ -83,6 +93,18 @@ def test_suppress_repeated_weak_captions() -> None:
     out = suppress_repeated_weak_captions(caps, max_same=3)
     assert out["a"] == out["b"] == out["c"] == ""
     assert out["d"] == "京都"
+
+
+def test_sfp_events_in_homepage_allowlist() -> None:
+    for ev in SFP_EVENTS:
+        assert ev in ALLOWED_STUDIO_HOMEPAGE_EVENTS, ev
+
+
+def test_enforce_no_ordinal_face_titles() -> None:
+    trip = {"chapters": [{"id": "c1", "title": "樱花 · 二"}]}
+    updated = enforce_no_ordinal_face_titles(trip)
+    assert updated == ["c1"]
+    assert trip["chapters"][0]["title"] == "樱花"
 
 
 def test_merge_weak_same_day_followups() -> None:

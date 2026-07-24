@@ -133,6 +133,12 @@ const ALLOWED = new Set([
   "export_open_folder_clicked",
   "export_platform_mismatch",
   "mobile_gate_qr_error",
+  // Share-Face Purity V1 · PRD §7
+  "sfp_chapter_title_sequence_pass",
+  "sfp_display_title_migrated",
+  "sfp_caption_echo_suppressed",
+  "sfp_chapter_time_sort_applied",
+  "sfp_xhs_copy_pack_copied",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";
