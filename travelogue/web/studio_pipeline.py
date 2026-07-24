@@ -375,7 +375,12 @@ def _finalize_pipeline_result(
         and not is_user_protected(ch, "titleOrigin")
         for ch in (trip_final.get("chapters") or [])
     )
-    if display_needs or ordinal_needs:
+    # Probe full SFP migrate (incl. cross-year year prefix) without writing.
+    from copy import deepcopy
+
+    _sfp_probe = migrate_share_face_purity_on_open(deepcopy(trip_final))
+    sfp_needs = bool(display_needs or ordinal_needs or _sfp_probe.get("changed"))
+    if sfp_needs:
 
         def _sfp_pipeline_migrate(trip: dict) -> bool:
             result = migrate_share_face_purity_on_open(trip)
@@ -383,17 +388,13 @@ def _finalize_pipeline_result(
             resolved = resolve_display_title(
                 meta, raw_title=str(meta.get("title") or title).strip()
             )
-            stamped = False
             if resolved and str(meta.get("displayTitle") or "").strip() != resolved:
                 meta["displayTitle"] = resolved[:32]
                 trip["meta"] = meta
-                stamped = True
-            changed = bool(result.get("changed") or stamped)
-            if changed:
-                # Persist after render already stamped renderedRevision; a bare
-                # revision bump here false-flags「预览产物已过期」on FirstSuccess.
-                mark_render_bundle_current(trip)
-            return changed
+            # Always re-stamp: TripService.update bumps revision; without a
+            # watermark sync FirstSuccess false-flags「预览需更新」.
+            mark_render_bundle_current(trip)
+            return True
 
         svc.update(trip_json, _sfp_pipeline_migrate, touch_updated=False)
         trip_final = svc.load(trip_json)

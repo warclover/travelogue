@@ -55,6 +55,12 @@
 | D-SFP-08② 跨年章名带年 | ✅ 生成 + open migrate |
 | QA fixture 加载测 | ✅ `trip.sfp_same_day_dirty_title.json` |
 
+## 热修 · 印章假阳性
+
+| 项 | 状态 |
+|----|------|
+| 打开预览 no-op 仍 bump revision →「预览需更新」 | ✅ `handle_entry` 仅变更时 persist + 重盖章；漂移修复 |
+
 ## W3
 
 | 项 | 状态 |

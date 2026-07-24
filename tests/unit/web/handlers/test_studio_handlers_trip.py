@@ -93,6 +93,63 @@ def test_handle_entry_success(tmp_path: Path) -> None:
     assert body["aesthetic"]["enabled"] is True
 
 
+def test_handle_entry_idempotent_open_does_not_false_stale(tmp_path: Path) -> None:
+    """SFP open migrate must not bump revision on no-op (假阳性「预览需更新」)."""
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import (
+        mark_render_bundle_current,
+        meta_rendered_revision,
+        meta_revision,
+    )
+
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-stamp", trips_dir, title="印章", place="京都")
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=trips_dir.parent)
+    # Seed displayTitle so first open is a true no-op migrate
+    def _seed(t: dict) -> bool:
+        t.setdefault("meta", {})["displayTitle"] = "印章"
+        mark_render_bundle_current(t)
+        return True
+
+    svc.update(trip_json, _seed)
+    before = svc.load(trip_json)
+    rev0 = meta_revision(before)
+    assert meta_rendered_revision(before) == rev0
+
+    handle_entry(MockStudioHandler(trips_dir), "demo-stamp")
+    handle_entry(MockStudioHandler(trips_dir), "demo-stamp")
+    after = svc.load(trip_json)
+    assert meta_revision(after) == rev0
+    assert meta_rendered_revision(after) == rev0
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
+def test_handle_entry_repairs_false_stale_watermark(tmp_path: Path) -> None:
+    """Prior open-path bump without stamp is repaired on next entry."""
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import meta_rendered_revision, meta_revision
+
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-repair", trips_dir, title="修复", place="京都")
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=trips_dir.parent)
+
+    # Simulate historical false-stale: revision ahead of renderedRevision
+    trip = svc.load(trip_json)
+    trip.setdefault("meta", {})["revision"] = 3
+    trip["meta"]["renderedRevision"] = 2
+    svc.save(trip, trip_json)
+    assert trip_render_bundle_stale(trip_dir, svc.load(trip_json)) is True
+
+    handle_entry(MockStudioHandler(trips_dir), "demo-repair")
+    after = svc.load(trip_json)
+    assert meta_rendered_revision(after) == meta_revision(after)
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
 def test_handle_aesthetic_not_found(tmp_path: Path) -> None:
     handler = MockStudioHandler(tmp_path / "trips")
     handle_aesthetic(handler, "missing-trip")
