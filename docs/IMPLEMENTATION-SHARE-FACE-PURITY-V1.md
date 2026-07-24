@@ -51,4 +51,6 @@
 
 | 项 | 状态 |
 |----|------|
-| 存量抽检 / Persona 复测 / 真人 N≥5 | ⏳ 见 ACCEPTANCE §5 |
+| 存量抽检（打开后 0 序号 / 0 脏题名） | ✅ 见 [w3-gate](./acceptance-records/share-face-purity-v1-w3-gate-2026-07-24.md) |
+| Persona E2–E8 + P1–P5 | ✅ |
+| 真人 N≥5 | ⏳ |

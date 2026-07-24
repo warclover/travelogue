@@ -8,8 +8,9 @@
 | **手测狗粮** | [share-face-purity-v1-dogfood-CHECKLIST.md](./acceptance-records/share-face-purity-v1-dogfood-CHECKLIST.md) |
 | **线框** | [wireframes/share-face-purity-v1-wireframe.html](./wireframes/share-face-purity-v1-wireframe.html) · F1–F5 |
 | **试用底稿** | [persona-feedback-trial-2026-07-24.md](./acceptance-records/persona-feedback-trial-2026-07-24.md) |
-| **状态** | **W0–W2 工程已合入** · W3 真人门待签 |
+| **状态** | **W0–W2 + P2 工程已合入** · W3 工程侧 ✅ · 真人 N≥5 待签 |
 | **日期** | 2026-07-24 |
+| **W3 底稿** | [share-face-purity-v1-w3-gate-2026-07-24.md](./acceptance-records/share-face-purity-v1-w3-gate-2026-07-24.md) |
 
 > **验收原则**
 >
@@ -30,7 +31,7 @@
 | **W1** | ✅ | ✅ | 章序 SSOT · 「可重排」 |
 | **W2** | ✅ | ✅ | 小红书文案包入口 · fixture/狗粮 |
 | **P2 收口** | ✅ | ✅ | pipeline migrate · curate 序号闸 · `sfp_*` 埋点 |
-| **W3** | ✅ 清单 | ⏳ | Persona 复测 + 真人 N≥5 |
+| **W3** | ✅ | 🟡 | 工程抽检+Persona ✅ · 真人 N≥5 ⏳ |
 
 ---
 
@@ -68,6 +69,6 @@
 
 | ID | 标准 | 状态 |
 |----|------|------|
-| **AC-SFP-W3-01** | 存量书架抽检章名零「·二/·三」 | ⏳ |
-| **AC-SFP-W3-02** | Persona Agent 复测 E2–E8（除 AI）关闭或降 P2 | ⏳ |
-| **AC-SFP-W3-03** | 真人 N≥5 签核 | ⏳ |
+| **AC-SFP-W3-01** | 存量书架抽检章名零「·二/·三」 | ✅ 打开后 15 册 / 40 章 = 0（见 W3 底稿） |
+| **AC-SFP-W3-02** | Persona Agent 复测 E2–E8（除 AI）关闭或降 P2 | ✅ E2–E8 关闭 · P1–P5 5/5 |
+| **AC-SFP-W3-03** | 真人 N≥5 签核 | ⏳ 邀请表已备 |

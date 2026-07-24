@@ -45,5 +45,5 @@
 
 ## W3 完成门
 
-- [ ] Persona Agent 复测通过  
+- [x] Persona Agent 复测通过（见 [w3-gate](./share-face-purity-v1-w3-gate-2026-07-24.md)）  
 - [ ] 真人 N≥5（U1/U4/U7）签核  
