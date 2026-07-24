@@ -30,6 +30,14 @@
 | FE-SFP-07 | ✅ | 导出设置「复制文案包」· 成功面 NAS 提示 |
 | QA-SFP-08 | ✅ | `tests/unit/domain/test_share_face_purity.py` · dogfood |
 
+## 收口补丁（P1）
+
+| 项 | 状态 |
+|----|------|
+| `chapter_explain` 跨年 / 弱合并 COPY | ✅ |
+| L2「可重排」中性徽标 CSS | ✅ |
+| AC-SFP-06 Playwright | ✅ `tests/e2e/test_sfp_chapter_panel_playwright.py` |
+
 ## W3
 
 | 项 | 状态 |
