@@ -32,6 +32,17 @@ _LEADING_YEAR = re.compile(r"^(?:19|20)\d{2}")
 _TRAILING_SERIAL = re.compile(r"\d{1,3}$")
 _CJK_PLACE = re.compile(r"^[\u4e00-\u9fff]{2,6}$")
 _DIRTY_SEP = re.compile(r"--|_{2,}|\.\.")
+# SFP D-SFP-04 · 「旅行 · 24 1 20–25 1 16」/ 数字空格日期链（勿误伤「旅行 · 1月20日」）
+_DIGIT_DATE_SPAN = re.compile(
+    r"(?:"
+    r"\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*[–—\-~～]\s*\d{1,2}\s+\d{1,2}\s+\d{1,2}"
+    r"|"
+    r"旅行\s*·\s*\d{1,2}\s+\d{1,2}"
+    r"|"
+    r"(?<![月日年./])\d{1,2}\s+\d{1,2}\s+\d{1,2}(?!\s*[月日])"
+    r")"
+)
+_TRAILING_CJK_SERIAL = re.compile(r"([\u4e00-\u9fff]+)\d{1,3}$")
 
 
 def humanize_folder_title(raw: str | None, *, limit: int = 20) -> str:
@@ -54,6 +65,14 @@ def humanize_folder_title(raw: str | None, *, limit: int = 20) -> str:
     return name
 
 
+def looks_like_digit_date_span(title: str | None) -> bool:
+    """D-SFP-04 · bare digit / space date chains that must not win the cover face."""
+    t = (title or "").strip()
+    if not t:
+        return False
+    return bool(_DIGIT_DATE_SPAN.search(t))
+
+
 def is_folder_title_noise(title: str | None) -> bool:
     """True when title looks like a folder/export name (W1 Chinese heuristics)."""
     t = (title or "").strip()
@@ -63,11 +82,24 @@ def is_folder_title_noise(title: str | None) -> bool:
         return True
     if _EXPORT_DIRISH.search(t):
         return True
+    if looks_like_digit_date_span(t):
+        return True
     if _CJK_TRAILING_DIGIT.search(t):
         return True
     if " " not in t and "·" not in t and "—" not in t and _GLUED_ALNUM.match(t):
         return True
     return False
+
+
+def _soften_title_candidate(title: str | None) -> str:
+    """Drop trailing folder serial (「精选2」→「精选」) for display ranking only."""
+    t = (title or "").strip()
+    if not t:
+        return ""
+    m = _TRAILING_CJK_SERIAL.match(t)
+    if m:
+        return m.group(1).strip()
+    return t
 
 
 def extract_place_label(raw: str | None) -> str | None:
@@ -162,7 +194,7 @@ def _accept_display(candidate: str, *, limit: int) -> str | None:
 
 
 def migrate_stale_display_title(meta: dict[str, Any] | None) -> bool:
-    """D2 · sync stale ``displayTitle`` to a non-noise user ``title`` (save path only).
+    """D2 / D-SFP-12 · sync stale ``displayTitle`` to resolved face (save/open path).
 
     Returns True when ``meta`` was mutated. Idempotent when already aligned.
     Never promotes folder-noise titles into the display face.
@@ -170,17 +202,12 @@ def migrate_stale_display_title(meta: dict[str, Any] | None) -> bool:
     meta = meta if isinstance(meta, dict) else None
     if not meta:
         return False
-    title = str(meta.get("title") or "").strip()
-    if not title or is_folder_title_noise(title):
-        return False
-    if _accept_display(title, limit=32) is None:
-        return False
+    resolved = resolve_display_title(meta, limit=32)
     stored = str(meta.get("displayTitle") or "").strip()
-    if stored == title:
+    if not resolved or stored == resolved:
         return False
-    meta["displayTitle"] = title[:32]
+    meta["displayTitle"] = resolved[:32]
     return True
-
 
 def resolve_display_title(
     meta: dict[str, Any] | None,
@@ -188,26 +215,38 @@ def resolve_display_title(
     limit: int = 20,
     raw_title: str | None = None,
 ) -> str:
-    """Cover / FirstSuccess / shelf display name (BE-FST-06 · D-SFC-03).
+    """Cover / FirstSuccess / shelf display name (BE-FST-06 · D-SFC-03 · D-SFP-03).
 
-    Re-validates stored ``meta.displayTitle`` (do not trust dirty history).
+    Prefer readable ``title`` over dirty stored ``displayTitle`` (quality order).
     Noise path: 有真实地点 → ``{地} · {日}``；否则地名抽取 → ``{地} · 旅行``（OQ-SFC-01）。
     """
     from travelogue.domain.share_face_copy import is_unsafe_share_copy
 
     meta = meta or {}
     stored = str(meta.get("displayTitle") or "").strip()
-    accepted = _accept_display(stored, limit=limit)
-    # Cross-year trips must not keep yearless spans like「1月20–1月16日」
-    if accepted and _is_cross_year_span(meta) and _looks_like_yearless_date_span(accepted):
-        accepted = None
-    if accepted:
+    raw = (raw_title if raw_title is not None else str(meta.get("title") or "")).strip()
+
+    def _try(candidate: str) -> str | None:
+        accepted = _accept_display(candidate, limit=limit)
+        if accepted and _is_cross_year_span(meta) and _looks_like_yearless_date_span(accepted):
+            return None
+        if accepted and looks_like_digit_date_span(accepted):
+            return None
         return accepted
 
-    raw = (raw_title if raw_title is not None else str(meta.get("title") or "")).strip()
-    accepted = _accept_display(raw, limit=limit)
-    if accepted:
-        return accepted
+    # D-SFP-03 · 可读 title 优于脏 displayTitle（先试原串）
+    for candidate in (raw, stored):
+        accepted = _try(candidate)
+        if accepted:
+            return accepted
+
+    # D-SFP-04 · 仅当 stored 是数字日期链时，允许「精选2」→「精选」抢面
+    if looks_like_digit_date_span(stored):
+        soft = _soften_title_candidate(raw)
+        if soft and soft != raw:
+            accepted = _try(soft)
+            if accepted:
+                return accepted
 
     # 清洗后仍噪音：优先 meta 地点；否则文件夹地名抽取
     meta_place = _place_fallback_label(meta)

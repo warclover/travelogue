@@ -1,6 +1,7 @@
 /**
  * Share-Ready W2 · BE-SR-05 · 文件夹名 → 默认杂志标题（与 travelogue.domain.title_humanize 对齐）。
  * Share-Face Closeout W0 · D-SFC-03 / OQ-SFC-01。
+ * Share-Face Purity W0 · D-SFP-03/04。
  * 纯函数、无 DOM 依赖，可供 node --test 直接 import。
  */
 
@@ -18,6 +19,10 @@ var DIRTY_SEP = /--|__|\.\./;
 var LEADING_YEAR = /^(?:19|20)\d{2}/;
 var TRAILING_SERIAL = /\d{1,3}$/;
 var CJK_PLACE = /^[\u4e00-\u9fff]{2,6}$/;
+// SFP D-SFP-04 · 与 BE ``_DIGIT_DATE_SPAN`` 对齐（勿误伤「旅行 · 1月20日」）
+var DIGIT_DATE_SPAN =
+  /(?:\d{1,2}\s+\d{1,2}\s+\d{1,2}\s*[–—\-~～]\s*\d{1,2}\s+\d{1,2}\s+\d{1,2}|旅行\s*·\s*\d{1,2}\s+\d{1,2}|(?<![月日年./])\d{1,2}\s+\d{1,2}\s+\d{1,2}(?!\s*[月日]))/;
+var TRAILING_CJK_SERIAL = /^([\u4e00-\u9fff]+)\d{1,3}$/;
 
 /**
  * @param {string|null|undefined} raw
@@ -36,15 +41,30 @@ export function humanizeFolderTitle(raw, opts) {
   return name.length > limit ? name.slice(0, limit) : name;
 }
 
+/** D-SFP-04 · 裸数字/空格日期链不得上封面 */
+export function looksLikeDigitDateSpan(title) {
+  var t = String(title || "").trim();
+  if (!t) return false;
+  return DIGIT_DATE_SPAN.test(t);
+}
+
 /** BE-FST-06 · 中文启发式：像目录名噪音 */
 export function isFolderTitleNoise(title) {
   var t = String(title || "").trim();
   if (!t || t === DEFAULT_TITLE) return false;
   if (DIRTY_SEP.test(t)) return true;
   if (EXPORT_DIRISH.test(t)) return true;
+  if (looksLikeDigitDateSpan(t)) return true;
   if (CJK_TRAILING_DIGIT.test(t)) return true;
   if (t.indexOf(" ") < 0 && t.indexOf("·") < 0 && GLUED_ALNUM.test(t)) return true;
   return false;
+}
+
+function _softenTitleCandidate(title) {
+  var t = String(title || "").trim();
+  if (!t) return "";
+  var m = t.match(TRAILING_CJK_SERIAL);
+  return m ? String(m[1] || "").trim() : t;
 }
 
 /** OQ-SFC-01 · 抽取 2–6 字中文地名 */
@@ -142,7 +162,7 @@ function _fallbackDisplay(meta, limit) {
 }
 
 /**
- * 与 BE ``resolve_display_title`` 同源（D-SFC-03）。
+ * 与 BE ``resolve_display_title`` 同源（D-SFC-03 · D-SFP-03）。
  * @param {{ displayTitle?: string, title?: string, places?: string[] }|null} meta
  * @param {{ limit?: number, rawTitle?: string }} [opts]
  */
@@ -151,19 +171,37 @@ export function resolveDisplayTitle(meta, opts) {
   var limit = typeof opts.limit === "number" ? opts.limit : 20;
   meta = meta || {};
   var stored = String(meta.displayTitle || "").trim();
-  var accepted = _acceptDisplay(stored, limit);
-  // Cross-year trips must not keep yearless spans like「1月20–1月16日」
-  if (accepted && _isCrossYearSpan(meta) && _looksLikeYearlessDateSpan(accepted)) {
-    accepted = null;
-  }
-  if (accepted) return accepted;
-
   var raw =
     opts.rawTitle != null
       ? String(opts.rawTitle || "").trim()
       : String(meta.title || "").trim();
-  accepted = _acceptDisplay(raw, limit);
-  if (accepted) return accepted;
+
+  function tryAccept(candidate) {
+    var accepted = _acceptDisplay(candidate, limit);
+    if (accepted && _isCrossYearSpan(meta) && _looksLikeYearlessDateSpan(accepted)) {
+      return null;
+    }
+    if (accepted && looksLikeDigitDateSpan(accepted)) {
+      return null;
+    }
+    return accepted;
+  }
+
+  // D-SFP-03 · 可读 title 优于脏 displayTitle（先试原串）
+  var candidates = [raw, stored];
+  for (var i = 0; i < candidates.length; i++) {
+    var hit = tryAccept(candidates[i]);
+    if (hit) return hit;
+  }
+
+  // D-SFP-04 · 仅当 stored 是数字日期链时，允许「精选2」→「精选」抢面
+  if (looksLikeDigitDateSpan(stored)) {
+    var soft = _softenTitleCandidate(raw);
+    if (soft && soft !== raw) {
+      hit = tryAccept(soft);
+      if (hit) return hit;
+    }
+  }
 
   // 清洗后仍噪音：优先 meta 地点 → {地} · {日期}；否则文件夹地名抽取 → {地} · 旅行。
   var metaPlace = _placeFallbackLabel(meta);

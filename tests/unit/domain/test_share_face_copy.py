@@ -20,6 +20,11 @@ def test_bans_weak_daypart_enum() -> None:
 def test_bans_title_echo() -> None:
     assert sanitize_share_copy("武大--米娜", title="武大 米娜", kind="caption") == ""
     assert sanitize_share_copy("武大 米娜", title="武大 米娜", kind="alt") == ""
+    # SFP D-SFP-05 · 「日期 · 题名」回声
+    assert (
+        sanitize_share_copy("5月27日 · 武大樱花", title="武大樱花", kind="caption")
+        == ""
+    )
 
 
 def test_bans_dirty_double_dash() -> None:

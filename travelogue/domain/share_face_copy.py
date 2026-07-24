@@ -62,8 +62,17 @@ def is_unsafe_share_copy(
         return True
     # 标题复读填坑（仅图注/alt；hook 允许短题名）
     if kind in {"caption", "alt"} and title:
-        if _norm(raw) == _norm(title) and len(_norm(raw)) >= 2:
+        t = title.strip()
+        if _norm(raw) == _norm(t) and len(_norm(raw)) >= 2:
             return True
+        # SFP D-SFP-05 · 「5月27日 · 杂志题名」式回声
+        if t and len(t) >= 2 and t in raw:
+            remainder = raw.replace(t, "", 1).strip(" ·•._-—–")
+            if not remainder or re.fullmatch(
+                r"\d{1,2}月\d{1,2}日(?:\s*[–—\-~～]\s*\d{1,2}(?:月\d{1,2}日)?)?",
+                remainder,
+            ):
+                return True
     return False
 
 

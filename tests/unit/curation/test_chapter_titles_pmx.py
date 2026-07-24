@@ -1,9 +1,13 @@
-"""PMX D6 · 同日章名禁止（N），改用 ·二/·三。"""
+"""SFP D-SFP-01 · 同日章名：时段 → segment → 同名日期；禁止 ·二/·三 与（N）。"""
 
-from travelogue.curation.chapter_titles import _same_day_followup_title, chapter_titles
+from travelogue.curation.chapter_titles import (
+    _same_day_followup_title,
+    chapter_titles,
+    strip_ordinal_face_title,
+)
 
 
-def test_same_day_followup_prefers_daypart_then_ordinal() -> None:
+def test_same_day_followup_prefers_daypart_then_same_date() -> None:
     used = ["5月27日"]
     assert (
         _same_day_followup_title(
@@ -12,15 +16,16 @@ def test_same_day_followup_prefers_daypart_then_ordinal() -> None:
         == "5月27日 · 晚上"
     )
     used.append("5月27日 · 晚上")
+    # 同时段已占用 → 允许与首章同名日期（靠章号区分），不再出 ·三
     assert (
         _same_day_followup_title(
             "5月27日", 2, daypart="晚上", segment_label=None, used=used
         )
-        == "5月27日 · 三"
+        == "5月27日"
     )
 
 
-def test_chapter_titles_no_paren_ordinal_for_same_day() -> None:
+def test_chapter_titles_no_paren_or_ordinal_for_same_day() -> None:
     assets = [
         {"id": "a", "takenAt": "2026-05-27T10:00:00"},
         {"id": "b", "takenAt": "2026-05-27T10:30:00"},
@@ -29,6 +34,12 @@ def test_chapter_titles_no_paren_ordinal_for_same_day() -> None:
     titles = chapter_titles([["a"], ["b"], ["c"]], assets, {"places": ["京都"]})
     assert titles[0] == "5月27日"
     assert all("（" not in t and "）" not in t for t in titles)
-    assert titles[1] != titles[0]
-    # 同时段撞车 → ·二
-    assert "·二" in titles[1] or "上午" in titles[1]
+    assert all("·二" not in t and "·三" not in t for t in titles)
+    # 首个后续可用时段；撞车后允许同名
+    assert titles[1].startswith("5月27日")
+
+
+def test_strip_ordinal_face_title() -> None:
+    assert strip_ordinal_face_title("5月27日 · 三") == "5月27日"
+    assert strip_ordinal_face_title("4月2日 ·二") == "4月2日"
+    assert strip_ordinal_face_title("5月27日 · 晚上") == "5月27日 · 晚上"

@@ -1205,6 +1205,14 @@ export function cancelPreviewLongshotExport(root) {
         reject(new Error("no popover"));
         return;
       }
+      // SFP D-SFP-10 · 浮层互斥：打开导出设置前关掉分章面板
+      try {
+        if (root && root._chapterPanel && typeof root._chapterPanel.close === "function") {
+          root._chapterPanel.close();
+        }
+      } catch (_eChap) {
+        /* ignore */
+      }
       // Close any prior session without double-settle
       if (typeof _activeExportPanelFinish === "function") {
         _activeExportPanelFinish(false);

@@ -552,14 +552,14 @@ body.preview-sheet-open .preview-toolbar__longshot-caret {
   background: #ceb08a;
 }
 
-/* F5 分章轻面板 */
+/* F5 分章轻面板 · SFP D-SFP-10 与导出 sheet 同档（互斥为主，z 为辅） */
 .preview-chapter-panel {
   position: fixed;
   top: var(--preview-toolbar-h, 80px);
   right: 0;
   bottom: 0;
   width: min(380px, 92vw);
-  z-index: 245;
+  z-index: 520;
   display: flex;
   flex-direction: column;
   gap: 12px;

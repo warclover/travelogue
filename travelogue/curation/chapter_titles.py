@@ -81,8 +81,10 @@ def _bucket_daypart(bucket: list[str], assets_by_id: dict[str, dict]) -> str | N
     return None
 
 
-# PMX D6 · 同日后续章：时段 → segment → ·二/·三（禁止「（N）」工程后缀）
-_CN_ORDINALS = ("", "", "二", "三", "四", "五", "六", "七", "八", "九", "十")
+# SFP D-SFP-01 · 同日后续章：时段 → segment → 同名日期（禁止「·二/·三」与「（N）」上读者面）
+_ORDINAL_FACE_RE = re.compile(
+    r"·\s*(?:[二三四五六七八九十]|\d+)\s*$"
+)
 
 
 def _same_day_followup_title(
@@ -93,7 +95,11 @@ def _same_day_followup_title(
     segment_label: str | None,
     used: list[str],
 ) -> str:
-    """``n`` is 0-based count of prior same-day chapters (follow-ups have n >= 1)."""
+    """``n`` is 0-based count of prior same-day chapters (follow-ups have n >= 1).
+
+    D-SFP-01/02 · OQ-SFP-01：无时段/segment 时允许与首章同名日期，靠章号区分。
+    """
+    del n  # retained for call-site compatibility; ordinals are no longer used
     if daypart:
         candidate = f"{base} · {daypart}"
         if candidate not in used:
@@ -103,10 +109,20 @@ def _same_day_followup_title(
         candidate = f"{base} · {seg}"
         if candidate not in used:
             return _clip_title(candidate)
-    ord_idx = n + 1
-    if 2 <= ord_idx < len(_CN_ORDINALS):
-        return _clip_title(f"{base} · {_CN_ORDINALS[ord_idx]}")
-    return _clip_title(f"{base} · {ord_idx}")
+    return _clip_title(base)
+
+
+def strip_ordinal_face_title(title: str) -> str:
+    """Sequence Pass · drop reader-facing ·二/·三/·N suffixes."""
+    t = (title or "").strip()
+    if not t:
+        return t
+    cleaned = _ORDINAL_FACE_RE.sub("", t).strip().rstrip("·• ")
+    return cleaned or t
+
+
+def _sequence_pass_titles(titles: list[str]) -> list[str]:
+    return [strip_ordinal_face_title(t) for t in titles]
 
 
 def chapter_titles(
@@ -219,7 +235,7 @@ def chapter_titles(
             if n == 0:
                 titles.append(_clip_title(base))
             else:
-                # PMX D6 · 禁「日期续」与「（N）」；时段 → segment → ·二/·三
+                # SFP D-SFP-01 · 禁「日期续」与「（N）」；时段 → segment → 同名日期
                 daypart = _bucket_daypart(bucket, assets_by_id)
                 seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
                 seg_label = (
@@ -242,7 +258,7 @@ def chapter_titles(
             titles.append("尾声")
         else:
             titles.append(_clip_title(f"{place}·{i}"))
-    return titles
+    return _sequence_pass_titles(titles)
 
 
 def _chapter_asset_ids(chapter: dict) -> list[str]:

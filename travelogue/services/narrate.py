@@ -236,12 +236,11 @@ def _build_stub_caption(
     # When place equals the magazine title, also require {date} so Share-Face
     # sanitize does not wipe a pure title echo.
     title = str((meta or {}).get("displayTitle") or (meta or {}).get("title") or "").strip()
+    # SFP D-SFP-05 · place 退化成题名时不要生成「日期 · 题名」回声；宁空
+    if title and place == title:
+        return ""
     if place and place not in {"这里", "旅途", "未知"}:
         with_place = [t for t in templates if "{place}" in t]
-        if title and place == title:
-            mixed = [t for t in with_place if "{date}" in t]
-            if mixed:
-                with_place = mixed
         if with_place:
             templates = with_place
     template = _pick_template(templates, str(asset.get("id") or place))

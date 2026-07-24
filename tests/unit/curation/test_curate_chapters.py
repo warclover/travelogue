@@ -116,12 +116,11 @@ def test_chapter_titles_same_day_suffix() -> None:
     buckets = [["x0"], ["x1"], ["x2"]]
     titles = _chapter_titles(buckets, assets, {"places": ["京都"]})
     assert titles[0].startswith("4月2日")
-    # PMX D6：禁「日期续」与「（N）」；同日第二段用时段或 ·二
+    # SFP D-SFP-01：禁「日期续」/「（N）」/「·二」；同日后续用时段，否则允许同名
     assert "续" not in titles[1]
     assert "（" not in titles[1] and "）" not in titles[1]
+    assert "·二" not in titles[1] and "·三" not in titles[1]
     assert titles[1].startswith("4月2日")
-    assert "·" in titles[1]
-    assert titles[1] != titles[0]
 
 
 def test_chapter_titles_prefer_span_over_multi_seg_labels() -> None:
