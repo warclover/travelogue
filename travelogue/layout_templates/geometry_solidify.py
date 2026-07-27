@@ -69,6 +69,13 @@ def solidify_screen_geometry(
             meta.role,
             asset or {},
         )
+        # CSS-primary landscape stacks: rendered --slot-aspect follows the asset,
+        # not YAML stage×rows (~3.56). Align displayAspect before crop solve.
+        from travelogue.layout_engine.crop_solver import css_native_slot_aspect
+
+        native_ar = css_native_slot_aspect(pattern_id, asset if isinstance(asset, dict) else None)
+        if native_ar is not None and native_ar > 0:
+            slot["displayAspect"] = round(float(native_ar), 4)
 
     # Person-safe cover object-position for every solidified screen (MSA re-solves
     # after track overrides when whitelisted).

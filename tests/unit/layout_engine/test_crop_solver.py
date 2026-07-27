@@ -172,8 +172,9 @@ def test_apply_slot_crop_focals_writes_fields() -> None:
 
 def test_apply_slot_crop_focals_flips_contain_when_face_clipped() -> None:
     # Ultra-wide slot → vh tiny; face taller than window → faceClipped → contain.
+    # Use a non-stack pattern so the face-clip flip path remains covered.
     screen = {
-        "patternId": "screen-landscape-2",
+        "patternId": "screen-mosaic-5-main-portrait-3land",
         "slots": [
             {
                 "slot": 0,
@@ -259,3 +260,51 @@ def test_landscape_1_never_flips_contain_even_if_face_clipped() -> None:
     assert not screen["slots"][0].get("cropContain")
     assert summaries[0]["containFlipped"] is False
     assert summaries[0]["safety"]["faceClipped"] is True
+
+
+def test_landscape_2_stack_uses_asset_ar_and_keeps_cover() -> None:
+    """YAML stage×rows AR≈3.56 must not drive crop; CSS uses native asset AR."""
+    screen = {
+        "patternId": "screen-landscape-2",
+        "slots": [
+            {
+                "slot": 0,
+                "assetId": "a0",
+                "fit": "cover",
+                "displayAspect": 3.5556,  # YAML lie
+            },
+            {
+                "slot": 1,
+                "assetId": "a1",
+                "fit": "cover",
+                "displayAspect": 3.5556,
+            },
+        ],
+    }
+    assets = {
+        "a0": {
+            "width": 3200,
+            "height": 2136,  # ~1.498
+            "focalPoint": {"x": 0.35, "y": 0.36},
+            "protectBox": {"x": 0.21, "y": 0.02, "w": 0.27, "h": 0.79},
+            "faces": [{"x": 0.26, "y": 0.12, "w": 0.18, "h": 0.27}],
+        },
+        "a1": {
+            "width": 3200,
+            "height": 2136,
+            "focalPoint": {"x": 0.30, "y": 0.36},
+            "protectBox": {"x": 0.20, "y": 0.05, "w": 0.30, "h": 0.70},
+            "faces": [{"x": 0.25, "y": 0.15, "w": 0.20, "h": 0.24}],
+        },
+    }
+    # With YAML 3.56, faces would false-clip; with native AR they fit.
+    assert solve_slot_focal(assets["a0"], 3.5556).safety.face_clipped is True
+    assert solve_slot_focal(assets["a0"], 3200 / 2136).safety.face_clipped is False
+
+    summaries = apply_slot_crop_focals(screen, assets_map=assets)
+    for i, sl in enumerate(screen["slots"]):
+        assert sl["fit"] == "cover"
+        assert not sl.get("cropContain")
+        assert abs(float(sl["displayAspect"]) - 3200 / 2136) < 1e-3
+        assert summaries[i]["containFlipped"] is False
+        assert summaries[i]["safety"]["faceClipped"] is False

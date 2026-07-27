@@ -14,14 +14,28 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
-# Patterns whose product contract is full-bleed cover (YAML fit:cover / 铺满).
-# Never flip to contain here: letterboxing + contain-collapse CSS creates large
-# paper margins that violate the single-landscape / single-panorama rule.
+# Patterns whose product contract is full-bleed / strip cover (YAML fit:cover).
+# Never flip to contain: letterboxing + contain-collapse CSS creates large paper
+# margins that violate single-landscape and landscape-stack strip contracts.
 _COVER_BLEED_NO_CONTAIN_FLIP: frozenset[str] = frozenset(
     {
         "screen-landscape-1",
         "screen-panorama-1",
         "screen-tall-1",
+        # CSS-primary stacks: each strip uses --slot-aspect ≈ asset AR (not YAML
+        # stage/rows ultra-wide 3.56). Contain flip + collapse → centered strips
+        # with huge paper margins (demo-d6697c8dca landscape-2 dogfood).
+        "screen-landscape-2",
+        "screen-landscape-3",
+    }
+)
+
+# Stack templates whose rendered slot AR follows the asset (render context
+# ``--slot-aspect``), not ``slot_display_aspect`` from YAML stage×rows.
+_CSS_NATIVE_SLOT_ASPECT_PATTERNS: frozenset[str] = frozenset(
+    {
+        "screen-landscape-2",
+        "screen-landscape-3",
     }
 )
 
@@ -386,9 +400,24 @@ def solve_slot_focal(
 
 
 def _allow_contain_flip(screen: Mapping[str, Any] | None) -> bool:
-    """False for full-bleed single-landscape (etc.) that must stay cover."""
+    """False for full-bleed single-landscape / stack strips that must stay cover."""
     pid = str((screen or {}).get("patternId") or "")
     return pid not in _COVER_BLEED_NO_CONTAIN_FLIP
+
+
+def css_native_slot_aspect(
+    pattern_id: str,
+    asset: Mapping[str, Any] | None,
+) -> float | None:
+    """Slot AR used by CSS for CSS-primary stack strips (``--slot-aspect``).
+
+    ``screen-landscape-2/3`` render each strip at the asset's native AR, not the
+    YAML stage×rows ultra-wide (~3.56). Crop math must use the same AR or it
+    false-positive faceClipped and flips to contain.
+    """
+    if str(pattern_id or "") not in _CSS_NATIVE_SLOT_ASPECT_PATTERNS:
+        return None
+    return asset_aspect(asset)
 
 
 def apply_slot_crop_focals(
@@ -400,13 +429,14 @@ def apply_slot_crop_focals(
     """Mutate ``slots[].cropFocal`` (+ ``cropSafety``) for cover slots.
 
     When ``contain_on_unsafe`` is true and the solved cover still **clips a face**,
-    flip ``fit`` to ``contain`` (except full-bleed cover-contract patterns).
+    flip ``fit`` to ``contain`` (except full-bleed / landscape-stack cover contracts).
 
     Protect-box infeasibility alone does **not** flip: half-body pads often
-    exceed the 16:9 window of a 3:2 hero, while faces still fit after solve.
+    exceed a narrow cover window while faces still fit after solve.
     """
     assets_map = assets_map or {}
     allow_flip = contain_on_unsafe and _allow_contain_flip(screen)
+    pattern_id = str(screen.get("patternId") or "")
     summaries: list[dict[str, Any]] = []
     for slot in screen.get("slots") or []:
         if not isinstance(slot, dict):
@@ -419,6 +449,11 @@ def apply_slot_crop_focals(
         aid = slot.get("assetId")
         asset = assets_map.get(aid) if aid else None
         asset_m = asset if isinstance(asset, Mapping) else None
+
+        native = css_native_slot_aspect(pattern_id, asset_m)
+        if native is not None and native > 0:
+            sr = float(native)
+            slot["displayAspect"] = round(sr, 4)
 
         if fit != "cover" or sr <= 0 or asset_m is None:
             slot.pop("cropFocal", None)
