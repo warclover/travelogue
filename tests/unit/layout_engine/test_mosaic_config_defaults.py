@@ -24,6 +24,11 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.template_contract.shadow_log is False
     assert cfg.template_experiments.enabled is True
     assert "screen-landscape-3-asymmetric-left" in cfg.template_experiments.allowlist
+    assert "screen-mosaic-5-3p2l-portrait-hero-quad" in cfg.template_experiments.allowlist
+    assert (
+        "screen-mosaic-5-3p2l-portrait-hero-lp-stack"
+        in cfg.template_experiments.allowlist
+    )
     assert "*" in cfg.template_experiments.cohort_trip_ids
     assert cfg.selection_optimization.enabled is False
     assert cfg.slot_adaptation.enabled is False

@@ -27,8 +27,9 @@ mosaic_unified_groups:
 
 quotas:
   5:
-    max_active_composite: 6
-    max_active_total: 10
+    # 2 GA + experimental mosaic-5 SKUs (incl. 3P2L soft family pair)
+    max_active_composite: 8
+    max_active_total: 12
   9:
     max_active_primitive: 2
     max_active_total: 4

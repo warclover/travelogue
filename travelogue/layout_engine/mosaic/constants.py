@@ -44,6 +44,17 @@ PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 = "screen-mosaic-6-main-hero-plus-5"
 PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO = "screen-mosaic-5-1p4l-portrait-hero"
 PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL = "screen-mosaic-5-2p3l-portrait-hero-rail"
 PATTERN_MOSAIC_5_2P3L_RAIL = "screen-mosaic-5-2p3l-rail"
+# 3P2L left-portrait-hero family（勿进 MOSAIC_5_PATTERN_IDS 直至转正）
+PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD = "screen-mosaic-5-3p2l-portrait-hero-quad"
+PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK = (
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack"
+)
+MOSAIC_5_3P2L_PORTRAIT_HERO_IDS: frozenset[str] = frozenset(
+    {
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+    }
+)
 
 # --- 3 / 4 / 6 · reuse existing grid patterns (S2) ---
 PATTERN_PORTRAIT_3 = "screen-portrait-3"

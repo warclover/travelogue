@@ -59,12 +59,14 @@ _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
 )
 
 
-# Triple-collage product defaults (L3E asym + mixed-1p2l L2|P).
+# Product defaults: triple collage + 3P2L five-up portrait-hero family.
 # cohort ``*`` = all trips; empty cohort remains fail-closed (nobody).
 _DEFAULT_TRIPLE_COLLAGE_ALLOWLIST: tuple[str, ...] = (
     "screen-landscape-3-asymmetric-left",
     "screen-landscape-3-asymmetric-right",
     "screen-landscape-2-portrait-1",
+    "screen-mosaic-5-3p2l-portrait-hero-quad",
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
 )
 
 

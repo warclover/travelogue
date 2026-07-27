@@ -447,7 +447,9 @@ def test_default_registry_has_zero_experimental() -> None:
 
 def test_selection_optimization_shell_defaults() -> None:
     cfg = mosaic_from_dict({})
-    assert cfg.template_experiments.enabled is False
+    # Product default: triple-collage / 3P2L experiments on with cohort "*".
+    assert cfg.template_experiments.enabled is True
+    assert "*" in cfg.template_experiments.cohort_trip_ids
     assert cfg.selection_optimization.enabled is False
     assert effective_selection_optimization_enabled(cfg) is False
     on = mosaic_from_dict({"selection_optimization": {"enabled": True}})

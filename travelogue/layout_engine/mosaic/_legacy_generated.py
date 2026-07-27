@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: 7fcdc72fdca6a1e2a71ac13ef8244a3d0a6fbd566e437f70fda33f125d45c500
+Content hash: e857c8b3e5fe6ce2758b4153d3717b492647d6862a9862082a7789688ef128fb
 """
 
 from __future__ import annotations
@@ -11,6 +11,10 @@ from typing import Any
 
 EXPLICIT_GRID_SPECS: dict[str, Any] = {
     "screen-editorial-4mix": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 2), (2, 2, 2, 2)],
+    "screen-landscape-1-portrait-1": [(1, 1, 1, 1), (2, 2, 1, 1)],
+    "screen-landscape-2-portrait-1": [(1, 1, 1, 1), (1, 1, 2, 2), (2, 2, 1, 2)],
+    "screen-landscape-3-asymmetric-left": [(1, 1, 1, 2), (2, 2, 1, 1), (2, 2, 2, 2)],
+    "screen-landscape-3-asymmetric-right": [(1, 1, 1, 1), (1, 1, 2, 2), (2, 2, 1, 2)],
     "screen-mosaic-4-1l3p-rail": [(1, 1, 1, 3), (2, 2, 1, 1), (2, 2, 2, 2), (2, 2, 3, 3)],
     "screen-mosaic-4-2l2p-weighted": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 2), (2, 2, 2, 2)],
     "screen-mosaic-4-hero-70-sidebar": [(1, 1, 1, 3), (2, 2, 1, 1), (2, 2, 2, 2), (2, 2, 3, 3)],
@@ -19,17 +23,24 @@ EXPLICIT_GRID_SPECS: dict[str, Any] = {
     "screen-mosaic-5-2p3l-portrait-hero-rail": [(1, 1, 1, 3), (2, 2, 1, 3), (3, 3, 1, 1), (3, 3, 2, 2), (3, 3, 3, 3)],
     "screen-mosaic-5-2p3l-rail": [(1, 1, 1, 3), (2, 2, 1, 3), (3, 3, 1, 1), (3, 3, 2, 2), (3, 3, 3, 3)],
     "screen-mosaic-5-2portrait-3land-balanced": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 3), (2, 2, 2, 2), (2, 3, 3, 3)],
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack": [(1, 1, 1, 2), (2, 2, 1, 1), (3, 3, 1, 1), (2, 2, 2, 2), (3, 3, 2, 2)],
+    "screen-mosaic-5-3p2l-portrait-hero-quad": [(1, 1, 1, 2), (2, 2, 1, 1), (3, 3, 1, 1), (2, 2, 2, 2), (3, 3, 2, 2)],
     "screen-mosaic-5-3portrait-2land-balanced": [(1, 1, 1, 2), (2, 2, 1, 2), (3, 3, 1, 2), (1, 2, 3, 3), (3, 3, 3, 3)],
     "screen-mosaic-5-hero-3-2-plus-4": [(1, 1, 1, 2), (2, 2, 1, 1), (3, 3, 1, 1), (2, 2, 2, 2), (3, 3, 2, 2)],
     "screen-mosaic-5-main-hero-plus-4": [(1, 2, 1, 2), (3, 3, 1, 1), (3, 3, 2, 2), (1, 1, 3, 3), (2, 2, 3, 3), (3, 3, 3, 3)],
     "screen-mosaic-5-main-landscape-2portrait-2land": [(1, 2, 1, 2), (3, 3, 1, 2), (1, 1, 3, 3), (2, 2, 3, 3), (3, 3, 3, 3)],
     "screen-mosaic-5-main-portrait-3land": [(1, 2, 1, 2), (3, 3, 1, 2), (1, 1, 3, 3), (2, 2, 3, 3), (3, 3, 3, 3)],
     "screen-mosaic-6-main-hero-plus-5": [(1, 2, 1, 2), (3, 3, 1, 1), (3, 3, 2, 2), (1, 1, 3, 3), (2, 2, 3, 3), (3, 3, 3, 3)],
+    "screen-portrait-1-landscape-1": [(1, 1, 1, 1), (2, 2, 1, 1)],
     "screen-portrait-1-landscape-2": [(1, 1, 1, 2), (2, 2, 1, 1), (2, 2, 2, 2)],
 }
 
 EXPLICIT_GRID_BOUNDS: dict[str, Any] = {
     "screen-editorial-4mix": (2, 2),
+    "screen-landscape-1-portrait-1": (2, 1),
+    "screen-landscape-2-portrait-1": (2, 2),
+    "screen-landscape-3-asymmetric-left": (2, 2),
+    "screen-landscape-3-asymmetric-right": (2, 2),
     "screen-mosaic-4-1l3p-rail": (2, 3),
     "screen-mosaic-4-2l2p-weighted": (2, 2),
     "screen-mosaic-4-hero-70-sidebar": (2, 3),
@@ -38,12 +49,15 @@ EXPLICIT_GRID_BOUNDS: dict[str, Any] = {
     "screen-mosaic-5-2p3l-portrait-hero-rail": (3, 3),
     "screen-mosaic-5-2p3l-rail": (3, 3),
     "screen-mosaic-5-2portrait-3land-balanced": (3, 3),
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack": (3, 2),
+    "screen-mosaic-5-3p2l-portrait-hero-quad": (3, 2),
     "screen-mosaic-5-3portrait-2land-balanced": (3, 3),
     "screen-mosaic-5-hero-3-2-plus-4": (3, 2),
     "screen-mosaic-5-main-hero-plus-4": (3, 3),
     "screen-mosaic-5-main-landscape-2portrait-2land": (3, 3),
     "screen-mosaic-5-main-portrait-3land": (3, 3),
     "screen-mosaic-6-main-hero-plus-5": (3, 3),
+    "screen-portrait-1-landscape-1": (2, 1),
     "screen-portrait-1-landscape-2": (2, 2),
 }
 
@@ -65,8 +79,15 @@ STACK_PATTERNS = frozenset({"screen-landscape-2", "screen-landscape-3"})
 PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-editorial-4mix": 'layout-screen__grid--editorial-4mix',
     "screen-full-frame": 'layout-screen__grid--1col',
+    "screen-landscape-1-portrait-1": 'layout-screen__grid--landscape-left-portrait',
     "screen-landscape-1": 'layout-screen__grid--1col',
+    "screen-landscape-2-asymmetric-left": 'layout-screen__grid--landscape-2-asym-left',
+    "screen-landscape-2-overlap-bltr": 'layout-screen__grid--landscape-2-overlap-bltr',
+    "screen-landscape-2-overlap-tlbr": 'layout-screen__grid--landscape-2-overlap-tlbr',
+    "screen-landscape-2-portrait-1": 'layout-screen__grid--2landscape-right-portrait',
     "screen-landscape-2": 'layout-screen__grid--landscape-stack-2',
+    "screen-landscape-3-asymmetric-left": 'layout-screen__grid--landscape-3-asym-left',
+    "screen-landscape-3-asymmetric-right": 'layout-screen__grid--landscape-3-asym-right',
     "screen-landscape-3": 'layout-screen__grid--landscape-stack-3',
     "screen-landscape-4": 'layout-screen__grid--2x2',
     "screen-landscape-6": 'layout-screen__grid--3x2',
@@ -79,14 +100,20 @@ PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-mosaic-5-2p3l-portrait-hero-rail": 'layout-screen__grid--mosaic-5-2p3l-portrait-hero-rail',
     "screen-mosaic-5-2p3l-rail": 'layout-screen__grid--mosaic-5-2p3l-rail',
     "screen-mosaic-5-2portrait-3land-balanced": 'layout-screen__grid--mosaic-5-2portrait-3land-balanced',
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack": 'layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack',
+    "screen-mosaic-5-3p2l-portrait-hero-quad": 'layout-screen__grid--mosaic-5-3p2l-portrait-hero-quad',
     "screen-mosaic-5-3portrait-2land-balanced": 'layout-screen__grid--mosaic-5-3portrait-2land-balanced',
     "screen-mosaic-5-hero-3-2-plus-4": 'layout-screen__grid--mosaic-5-hero-3-2-plus-4',
     "screen-mosaic-5-main-hero-plus-4": 'layout-screen__grid--mosaic-5-main-hero-plus-4',
     "screen-mosaic-5-main-landscape-2portrait-2land": 'layout-screen__grid--mosaic-5-main-landscape-2portrait-2land',
     "screen-mosaic-5-main-portrait-3land": 'layout-screen__grid--mosaic-5-main-portrait-3land',
     "screen-mosaic-6-main-hero-plus-5": 'layout-screen__grid--mosaic-6-main-hero-plus-5',
+    "screen-portrait-1-landscape-1": 'layout-screen__grid--portrait-left-landscape',
     "screen-portrait-1-landscape-2": 'layout-screen__grid--portrait-left-2landscape',
     "screen-portrait-1": 'layout-screen__grid--1col',
+    "screen-portrait-2-asymmetric-left": 'layout-screen__grid--portrait-2-asym-left',
+    "screen-portrait-2-asymmetric-right": 'layout-screen__grid--portrait-2-asym-right',
+    "screen-portrait-2-gallery": 'layout-screen__grid--portrait-2-gallery',
     "screen-portrait-2-landscape-2": 'layout-screen__grid--2x2',
     "screen-portrait-2": 'layout-screen__grid--2col',
     "screen-portrait-3-editorial": 'layout-screen__grid--3col',

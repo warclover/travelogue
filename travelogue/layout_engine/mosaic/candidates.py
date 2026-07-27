@@ -210,6 +210,9 @@ def generate_window_candidates_with_rejections(
     patterns, signature_source = apply_signature_route(
         patterns, asset_ids, aspects, assets_map
     )
+    from travelogue.layout_engine.mosaic.mosaic_5_3p2l import soft_pick_3p2l_patterns
+
+    patterns = soft_pick_3p2l_patterns(patterns, asset_ids, aspects, assets_map)
     if signature_source == "signature":
         route_source = "signature"
     elif tc_enabled:

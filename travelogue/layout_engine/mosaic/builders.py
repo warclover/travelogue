@@ -16,6 +16,8 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
     PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
+    PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+    PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
     PATTERN_MOSAIC_5_3P_2L_BALANCED,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -214,6 +216,52 @@ def _order_2p3l_portrait_hero_rail(
     return [main, aux, rails[0], rails[1], rails[2]]
 
 
+def _order_3p2l_portrait_hero_quad(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """3P2L · strongest portrait main, 2 aux portraits, 2 landscape rails (quad)."""
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 3 or len(landscapes) < 2:
+        return None
+    main = _pick_strongest_portrait(
+        portraits, assets_map, median_sharp=median_sharp
+    )
+    if not main:
+        return None
+    aux = _sort_asset_ids_by_taken([p for p in portraits if p != main], assets_map)[:2]
+    rails = _sort_asset_ids_by_taken(landscapes, assets_map)[:2]
+    if len(aux) < 2 or len(rails) < 2:
+        return None
+    return [main, aux[0], aux[1], rails[0], rails[1]]
+
+
+def _order_3p2l_portrait_hero_lp_stack(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """3P2L · main + (L|P) × 2 stack: [main, l0, p0, l1, p1]."""
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 3 or len(landscapes) < 2:
+        return None
+    main = _pick_strongest_portrait(
+        portraits, assets_map, median_sharp=median_sharp
+    )
+    if not main:
+        return None
+    tips = _sort_asset_ids_by_taken([p for p in portraits if p != main], assets_map)[:2]
+    rails = _sort_asset_ids_by_taken(landscapes, assets_map)[:2]
+    if len(tips) < 2 or len(rails) < 2:
+        return None
+    return [main, rails[0], tips[0], rails[1], tips[1]]
+
+
 def _order_hero_six_detailed(
     asset_ids: list[str],
     aspects: dict[str, AspectKind],
@@ -395,6 +443,14 @@ def try_order_for_pattern(
             )
         if pattern_id == PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL:
             return _order_2p3l_portrait_hero_rail(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
+        if pattern_id == PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD:
+            return _order_3p2l_portrait_hero_quad(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
+        if pattern_id == PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK:
+            return _order_3p2l_portrait_hero_lp_stack(
                 asset_ids, aspects, assets_map, median_sharp=median_sharp
             )
         if pattern_id == PATTERN_MOSAIC_5_3P_2L_BALANCED:

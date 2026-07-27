@@ -60,7 +60,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # 100dvh height-adapt; CSS-primary moved into journal-screens-overlays.css SSOT.
 # Re-bumped 2026-07-27 (j): restore landscape-2-overlap edge-flush CSS-primary
 # (LTE 1×1 stack was full-bleed ghosting after sync wiped absolute slots).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}a2b570b2678d"
+# Re-bumped 2026-07-27 (k): mosaic-5 3P2L portrait-hero quad / lp-stack grids.
+# Re-bumped 2026-07-27 (l): 3P2L left rail 11/20 · readable main AR≈0.978.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}98abed815bb9"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
