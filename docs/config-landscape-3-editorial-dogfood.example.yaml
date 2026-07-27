@@ -1,0 +1,18 @@
+# Landscape-3 editorial dogfood — copy into local config.yaml (gitignore).
+# Dual switch: landscape_3_editorial.enabled AND template_experiments.
+
+layout:
+  landscape_3_editorial:
+    enabled: true
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
+
+mosaic:
+  template_experiments:
+    enabled: true
+    allowlist:
+      - screen-landscape-3-asymmetric-left
+      - screen-landscape-3-asymmetric-right
+    cohort_trip_ids:
+      - your-dogfood-trip-id

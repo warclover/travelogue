@@ -441,6 +441,8 @@ def build_chapters_from_plan(
     titles: list[str] | None = None,
     layout_engine: str = "legacy",
     assets: list[dict] | None = None,
+    cfg: AppConfig | None = None,
+    trip: dict | None = None,
 ) -> tuple[list[dict], OrientationSummary]:
     assets_map = _assets_map_from_list(assets)
     puzzle_state: MobilePuzzlePlannerState | None = None
@@ -507,10 +509,13 @@ def build_chapters_from_plan(
             assets=assets,
             orientation_summary=summary_dict,
             day_buckets=[asset_ids],
-            mixed_proximity_seconds=default_mixed_proximity_seconds(),
+            mixed_proximity_seconds=default_mixed_proximity_seconds(cfg=cfg),
             trip_photo_total=len(asset_ids),
-            enable_food_grid=default_enable_food_grid(),
-            mundane_grid_buckets=default_mundane_grid_buckets(),
+            enable_food_grid=default_enable_food_grid(cfg=cfg),
+            mundane_grid_buckets=default_mundane_grid_buckets(cfg=cfg),
+            cfg=cfg,
+            # MTSO §0 · cohort admit needs tripId (omit ⇒ fallback_fill)
+            trip=trip,
         )
         from travelogue.curation.chapter_items import compact_chapter_items_for_screens
 

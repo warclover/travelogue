@@ -358,6 +358,7 @@ def cmd_layout(
             trip,
             export_layout=layout,
             layout_engine=web_layout,
+            cfg=get_config(),
         )
     except LayoutError as exc:
         typer.echo(str(exc), err=True)

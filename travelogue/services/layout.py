@@ -118,6 +118,9 @@ def apply_layout_to_trip(
         titles=titles,
         layout_engine=engine,
         assets=assets,
+        cfg=cfg,
+        # MTSO §0 · picker cohort needs tripId + AppConfig.mosaic
+        trip=trip,
     )
 
     summary = summarize_orientations(assets, export_layout=layout)  # type: ignore[arg-type]
