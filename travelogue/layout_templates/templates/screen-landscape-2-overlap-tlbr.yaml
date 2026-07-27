@@ -1,0 +1,53 @@
+id: screen-landscape-2-overlap-tlbr
+version: 1
+status: experimental
+kind: primitive
+displayName: landscape · 2 · overlap · tlbr
+description: >
+  双横对角叠压：slot0 左上、slot1 右下前景（landscape-2-editorial · V1）。
+photoCount: { min: 2, max: 2 }
+
+stage:
+  aspect: "16:9"
+  cols: [1]
+  rows: [1]
+
+mix: { portrait: 0, landscape: 2 }
+
+slots:
+  - { index: 0, rect: [1, 1, 1, 1], role: landscape, fit: cover, visualWeight: 0.95 }
+  - { index: 1, rect: [1, 1, 1, 1], role: landscape, fit: cover, visualWeight: 1.0 }
+
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+
+scoring:
+  base_weight: 0.90
+  tags: [landscape-2, variant-overlap-tlbr, editorial]
+
+render:
+  gridClass: layout-screen__grid--landscape-2-overlap-tlbr
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+
+rollout:
+  percent: 0
+  hash_key: tripId
+
+usage:
+  summary: 双横对角叠压（左上/右下），杂志剪贴感。
+  whenToUse: |
+    - 连续 2 张横图权重接近，需要打破上下 stack
+  whenNotToUse: |
+    - 一张明显更强（应选 asymmetric-left）
+    - 只需轻量连排（应选 screen-landscape-2）
+  designIntent: landscape-2-editorial · TL/BR overlap；叠压为设计非缺陷。
+  siblings:
+    - id: screen-landscape-2
+      difference: 上下等权 stack，无叠压。
+    - id: screen-landscape-2-overlap-bltr
+      difference: 对角镜像 BL/TR。
+    - id: screen-landscape-2-asymmetric-left
+      difference: 左大右小，无叠压。

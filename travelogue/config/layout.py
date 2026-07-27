@@ -73,6 +73,7 @@ class LayoutRhythmConfig:
     """
 
     max_portrait_pair_streak: int = 2  # R-06 · portrait-2 连续上限
+    max_landscape_pair_streak: int = 2  # landscape-2 editorial 家族连续上限
     max_portrait_orientation_streak: int = 6  # R-08 · 全竖版屏朝向连续上限
     portrait_carry_max_hops: int = 0  # 0 = auto · 可顺延至后续全部章节
     post_check_mode: str = "log"  # log | enforce（OQ-09=B 渐进；CI 断言见 tests/unit/layout_engine/test_rhythm_ci_gate.py）
@@ -177,6 +178,26 @@ class Portrait2VariantsConfig:
 
 
 @dataclass
+class Mixed1l1pConfig:
+    """Mixed 1L1P · L|P / P|L soft rotation (default off)."""
+
+    enabled: bool = False
+    recent_window: int = 2
+    repeat_penalty: float = 0.55
+    strength_tie_epsilon: float = 0.08
+
+
+@dataclass
+class Landscape2EditorialConfig:
+    """Landscape-2 editorial · overlap / asym soft rotation (default off)."""
+
+    enabled: bool = False
+    recent_window: int = 2
+    repeat_penalty: float = 0.55
+    strength_tie_epsilon: float = 0.08
+
+
+@dataclass
 class UsageRulesConfig:
     """URO · usage-driven layout rules (PRD-USAGE-RULES-LAYOUT-OPTIMIZATION)."""
 
@@ -202,6 +223,10 @@ class LayoutConfig:
     editorial_4mix: Editorial4MixConfig = field(default_factory=Editorial4MixConfig)
     portrait_2_variants: Portrait2VariantsConfig = field(
         default_factory=Portrait2VariantsConfig
+    )
+    mixed_1l1p: Mixed1l1pConfig = field(default_factory=Mixed1l1pConfig)
+    landscape_2_editorial: Landscape2EditorialConfig = field(
+        default_factory=Landscape2EditorialConfig
     )
     usage_rules: UsageRulesConfig = field(default_factory=UsageRulesConfig)
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
@@ -325,6 +350,9 @@ def layout_rhythm_from_dict(raw: dict[str, Any]) -> LayoutRhythmConfig:
         max_portrait_pair_streak=int(
             raw.get("max_portrait_pair_streak", defaults.max_portrait_pair_streak)
         ),
+        max_landscape_pair_streak=int(
+            raw.get("max_landscape_pair_streak", defaults.max_landscape_pair_streak)
+        ),
         max_portrait_orientation_streak=int(
             raw.get(
                 "max_portrait_orientation_streak",
@@ -428,6 +456,36 @@ def portrait_2_variants_from_dict(raw: dict[str, Any] | None) -> Portrait2Varian
         prefer_breath_after_dense=bool(
             raw.get("prefer_breath_after_dense", defaults.prefer_breath_after_dense)
         ),
+        strength_tie_epsilon=float(
+            raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
+        ),
+    )
+
+
+def mixed_1l1p_from_dict(raw: dict[str, Any] | None) -> Mixed1l1pConfig:
+    defaults = Mixed1l1pConfig()
+    if not raw:
+        return defaults
+    return Mixed1l1pConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        recent_window=int(raw.get("recent_window", defaults.recent_window)),
+        repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),
+        strength_tie_epsilon=float(
+            raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
+        ),
+    )
+
+
+def landscape_2_editorial_from_dict(
+    raw: dict[str, Any] | None,
+) -> Landscape2EditorialConfig:
+    defaults = Landscape2EditorialConfig()
+    if not raw:
+        return defaults
+    return Landscape2EditorialConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        recent_window=int(raw.get("recent_window", defaults.recent_window)),
+        repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),
         strength_tie_epsilon=float(
             raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
         ),

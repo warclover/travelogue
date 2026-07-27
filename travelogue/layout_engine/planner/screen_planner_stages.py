@@ -254,6 +254,11 @@ def run_planning_loop(ctx: ChapterPlanContext) -> None:
             ctx.i += advance
             continue
 
+        advance = try_mixed_pair_at_cursor(ctx)
+        if advance is not None:
+            ctx.i += advance
+            continue
+
         advance = try_landscape_run(ctx)
         if advance is not None:
             ctx.i += advance
@@ -351,9 +356,13 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
 
     pid = str(screen.get("patternId") or "")
-    # MTSO · pass tripId so experimental cohort admit matches MCS pick path.
+    # MTSO · pass tripId + ctx mosaic so experimental cohort matches picker path
+    # (avoid get_config()-only drift when ChapterPlanContext carries AppConfig).
+    mosaic_cfg = getattr(getattr(ctx, "app_config", None), "mosaic", None)
     if pid and mosaic_pattern_disabled(
-        pid, trip_id=trip_id_from_trip(getattr(ctx, "trip", None))
+        pid,
+        cfg=mosaic_cfg,
+        trip_id=trip_id_from_trip(getattr(ctx, "trip", None)),
     ):
         raise RuntimeError(f"disabled mosaic pattern must not be appended: {pid}")
     if ctx.layout_state:
@@ -388,6 +397,36 @@ def try_mixed_portrait_landscape(
             portrait_id, [l1, l2], assets_map=ctx.assets_map
         ),
     )
+    return True
+
+
+def try_mixed_1l1p(ctx: ChapterPlanContext, portrait_id: str, landscape_id: str) -> bool:
+    """Emit mixed 1P+1L when picker admits; False ⇒ caller keeps split path."""
+    from travelogue.layout_engine.planner.screen_planner import (
+        _can_mixed_1l1p,
+        _make_mixed_1l1p_screen,
+    )
+
+    if not _can_mixed_1l1p(
+        portrait_id,
+        landscape_id,
+        ctx.aspects,
+        ctx.assets_map,
+        burst_seconds=ctx.mix_gap,
+    ):
+        return False
+    screen = _make_mixed_1l1p_screen(
+        portrait_id,
+        landscape_id,
+        aspects=ctx.aspects,
+        assets_map=ctx.assets_map,
+        layout_state=ctx.layout_state,
+        trip=ctx.trip,
+        cfg=ctx.app_config,
+    )
+    if screen is None:
+        return False
+    append_screen(ctx, screen)
     return True
 
 
@@ -434,15 +473,39 @@ def try_drain_portrait_grid8(ctx: ChapterPlanContext) -> bool:
 
 
 def try_mixed_with_pending(ctx: ChapterPlanContext) -> int | None:
-    """One pending portrait + two landscapes at cursor."""
-    if len(ctx.pending_portraits) != 1 or ctx.i + 1 >= len(ctx.ids):
+    """One pending portrait + two landscapes at cursor; else 1P+1L mixed."""
+    if len(ctx.pending_portraits) != 1 or ctx.i >= len(ctx.ids):
         return None
     p_id = ctx.pending_portraits[0]
-    l1, l2 = ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
-    if not try_mixed_portrait_landscape(ctx, p_id, l1, l2):
+    if ctx.i + 1 < len(ctx.ids):
+        l1, l2 = ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
+        if try_mixed_portrait_landscape(ctx, p_id, l1, l2):
+            ctx.pending_portraits.clear()
+            return 2
+    l1 = ctx.ids[ctx.i]
+    if try_mixed_1l1p(ctx, p_id, l1):
+        ctx.pending_portraits.clear()
+        return 1
+    return None
+
+
+def try_mixed_pair_at_cursor(ctx: ChapterPlanContext) -> int | None:
+    """P+L or L+P pair at cursor (mixed-1l1p)."""
+    from travelogue.layout_engine.planner.screen_planner import (
+        _is_landscape_id,
+        _is_std_portrait_id,
+    )
+
+    if ctx.i + 1 >= len(ctx.ids):
         return None
-    ctx.pending_portraits.clear()
-    return 2
+    a, b = ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
+    if _is_std_portrait_id(a, ctx.aspects) and _is_landscape_id(b, ctx.aspects):
+        if try_mixed_1l1p(ctx, a, b):
+            return 2
+    if _is_landscape_id(a, ctx.aspects) and _is_std_portrait_id(b, ctx.aspects):
+        if try_mixed_1l1p(ctx, b, a):
+            return 2
+    return None
 
 
 def try_mixed_triple_at_cursor(ctx: ChapterPlanContext) -> int | None:
@@ -473,8 +536,14 @@ def try_mixed_triple_at_cursor(ctx: ChapterPlanContext) -> int | None:
 
 
 def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
-    """2–3 consecutive landscapes → single landscape-1 screens each."""
-    from travelogue.layout_engine.planner.screen_planner import _make_screen, _run_length
+    """2–3 consecutive landscapes → singles; or landscape-2 editorial when ON."""
+    from travelogue.layout_engine.planner.screen_planner import (
+        _landscape_2_editorial_enabled,
+        _make_landscape_2_screen,
+        _make_screen,
+        _run_length,
+        _time_near_chain,
+    )
 
     if getattr(ctx.layout_state, "layout_density", "balanced") == "collage_first":
         return None
@@ -484,6 +553,40 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
     )
     if fam != "landscape" or run_len not in (2, 3) or ctx.pending_portraits:
         return None
+
+    if _landscape_2_editorial_enabled(ctx.app_config) and run_len >= 2:
+        pair = [ctx.ids[ctx.i], ctx.ids[ctx.i + 1]]
+        can_pair = (
+            ctx.layout_state is None
+            or ctx.layout_state.can_emit_pattern("screen-landscape-2")
+        )
+        if can_pair and _time_near_chain(
+            pair, ctx.assets_map, burst_seconds=ctx.mix_gap
+        ):
+            append_screen(
+                ctx,
+                _make_landscape_2_screen(
+                    pair,
+                    aspects=ctx.aspects,
+                    assets_map=ctx.assets_map,
+                    layout_state=ctx.layout_state,
+                    trip=ctx.trip,
+                    cfg=ctx.app_config,
+                ),
+            )
+            if run_len == 3:
+                append_screen(
+                    ctx,
+                    _make_screen(
+                        "screen-landscape-1",
+                        [ctx.ids[ctx.i + 2]],
+                        screen_id="",
+                        aspects=ctx.aspects,
+                        assets_map=ctx.assets_map,
+                    ),
+                )
+            return run_len
+
     for j in range(run_len):
         append_screen(
             ctx,
@@ -751,12 +854,16 @@ def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
         asset_has_person,
     )
 
-    if len(ctx.pending_portraits) == 1 and ctx.i + 1 < len(ctx.ids):
+    if len(ctx.pending_portraits) == 1 and ctx.i < len(ctx.ids):
         p_id = ctx.pending_portraits[0]
-        l1, l2 = ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
-        if try_mixed_portrait_landscape(ctx, p_id, l1, l2):
+        if ctx.i + 1 < len(ctx.ids):
+            l1, l2 = ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
+            if try_mixed_portrait_landscape(ctx, p_id, l1, l2):
+                ctx.pending_portraits.clear()
+                return 2
+        if try_mixed_1l1p(ctx, p_id, ctx.ids[ctx.i]):
             ctx.pending_portraits.clear()
-            return 2
+            return 1
     if (
         ctx.layout_state is not None
         and ctx.layout_state.orientation_budget() <= 0
@@ -866,12 +973,15 @@ def stage_flush_pending_for_other_family(ctx: ChapterPlanContext, fam: str) -> i
             ),
         )
         return 1
-    if len(ctx.pending_portraits) == 1 and fam == "landscape" and ctx.i + 1 < len(ctx.ids):
-        if try_mixed_portrait_landscape(
+    if len(ctx.pending_portraits) == 1 and fam == "landscape" and ctx.i < len(ctx.ids):
+        if ctx.i + 1 < len(ctx.ids) and try_mixed_portrait_landscape(
             ctx, ctx.pending_portraits[0], ctx.ids[ctx.i], ctx.ids[ctx.i + 1]
         ):
             ctx.pending_portraits.clear()
             return 2
+        if try_mixed_1l1p(ctx, ctx.pending_portraits[0], ctx.ids[ctx.i]):
+            ctx.pending_portraits.clear()
+            return 1
     for sc in _flush_portrait_pending(
         ctx.pending_portraits,
         ctx.aspects,
@@ -911,6 +1021,8 @@ def stage_generic_chunk(ctx: ChapterPlanContext) -> None:
         assets_map=ctx.assets_map,
         layout_state=ctx.layout_state,
         solo_exclude=ctx.skip_screen_asset_ids,
+        trip=ctx.trip,
+        cfg=ctx.app_config,
     )
     if not screen or consumed < 1:
         ctx.i += 1

@@ -66,3 +66,7 @@ usage:
       difference: 该模板 3 横 stack；本模板 2 横，更轻。
     - id: screen-portrait-1-landscape-2
       difference: 该模板 1 竖 + 2 横混排；本模板纯 2 横 stack。
+    - id: screen-landscape-2-overlap-tlbr
+      difference: 对角叠压编辑向（experimental）；本模板等权 stack。
+    - id: screen-landscape-2-asymmetric-left
+      difference: 左大右小（experimental）；本模板等权 stack。

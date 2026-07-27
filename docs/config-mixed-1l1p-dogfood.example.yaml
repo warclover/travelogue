@@ -1,0 +1,19 @@
+# Mixed 1L1P dogfood — copy into local config.yaml (gitignore).
+# Dual switch: mixed_1l1p.enabled AND template_experiments (allowlist + cohort_trip_ids).
+
+layout:
+  mixed_1l1p:
+    enabled: true
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
+
+mosaic:
+  template_experiments:
+    enabled: true
+    allowlist:
+      - screen-landscape-1-portrait-1
+      - screen-portrait-1-landscape-1
+    # Empty list ⇒ nobody sees experiments (MTSO SUP-08).
+    cohort_trip_ids:
+      - your-dogfood-trip-id

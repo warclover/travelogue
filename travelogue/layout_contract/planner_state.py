@@ -19,8 +19,10 @@ from travelogue.layout_contract.rhythm import (  # re-export for curation caller
     DEFAULT_CONSECUTIVE_BANS,
     DENSE_COLLAGE_SLOT_MIN,
     FULL_BLEED_PORTRAIT_PATTERNS,
+    MAX_LANDSCAPE_PAIR_STREAK,
     MAX_PORTRAIT_ORIENTATION_STREAK,
     MAX_PORTRAIT_PAIR_STREAK,
+    LANDSCAPE_PAIR_PATTERNS,
     PATTERN_PORTRAIT_3_EDITORIAL,
     PORTRAIT_GRID8_MIN_PHOTOS,
     PORTRAIT_ORIENTATION_PATTERNS,
@@ -31,6 +33,7 @@ from travelogue.layout_contract.rhythm import (  # re-export for curation caller
     LayoutKind,
     RhythmRules,
     dense_collage_limits_for_trip,
+    is_landscape_pair_pattern,
     is_nine_grid_pattern,
     is_portrait_orientation_pattern,
     is_portrait_pair_pattern,
@@ -50,6 +53,8 @@ __all__ = [
     "FULL_BLEED_PORTRAIT_PATTERNS",
     "LateChapterPairingPolicy",
     "LayoutKind",
+    "LANDSCAPE_PAIR_PATTERNS",
+    "MAX_LANDSCAPE_PAIR_STREAK",
     "MAX_PORTRAIT_ORIENTATION_STREAK",
     "MAX_PORTRAIT_PAIR_STREAK",
     "PATTERN_PORTRAIT_3_EDITORIAL",
@@ -62,6 +67,7 @@ __all__ = [
     "ScreenLayoutPlannerState",
     "dense_collage_limits_for_trip",
     "is_dense_collage_pattern",
+    "is_landscape_pair_pattern",
     "is_large_mosaic_pattern",
     "is_nine_grid_pattern",
     "is_portrait_orientation_pattern",
@@ -444,11 +450,22 @@ class ScreenLayoutPlannerState:
             return False
         if kind == "portrait_pair":
             return self.current_portrait_pair_streak() < self.rhythm.max_portrait_pair_streak
+        if kind == "landscape_pair":
+            return (
+                self.current_landscape_pair_streak()
+                < self.rhythm.max_landscape_pair_streak
+            )
         return True
 
     def current_portrait_pair_streak(self) -> int:
         # P2VF · family-level R-06 (always on; swapping variant ids must not reset).
         if is_portrait_pair_pattern(self.last_pattern_id):
+            return self.pattern_streak
+        return 0
+
+    def current_landscape_pair_streak(self) -> int:
+        # Landscape-2 editorial · family-level streak (fill + overlap + asym).
+        if is_landscape_pair_pattern(self.last_pattern_id):
             return self.pattern_streak
         return 0
 
@@ -496,6 +513,13 @@ class ScreenLayoutPlannerState:
             and is_portrait_pair_pattern(self.last_pattern_id)
         ):
             # Consecutive portrait-2 family members share one R-06 streak.
+            self.pattern_streak += 1
+        elif (
+            pattern_id
+            and is_landscape_pair_pattern(pattern_id)
+            and is_landscape_pair_pattern(self.last_pattern_id)
+        ):
+            # Consecutive landscape-2 editorial members share one family streak.
             self.pattern_streak += 1
         else:
             self.pattern_streak = 1 if pattern_id else 0

@@ -8,9 +8,11 @@ from typing import Any
 
 from travelogue.layout_contract.constraints import FOCAL_EDGE_MARGIN
 from travelogue.layout_contract.rhythm import (
+    MAX_LANDSCAPE_PAIR_STREAK,
     MAX_PORTRAIT_ORIENTATION_STREAK,
     MAX_PORTRAIT_PAIR_STREAK,
     PORTRAIT_SINGLE_PATTERNS,
+    is_landscape_pair_pattern,
     is_portrait_orientation_pattern,
     is_portrait_pair_pattern,
 )
@@ -279,6 +281,21 @@ def check_portrait_pair_streak(
     )
 
 
+def check_landscape_pair_streak(
+    chapters: list[dict],
+    *,
+    max_streak: int = MAX_LANDSCAPE_PAIR_STREAK,
+) -> list[LayoutConstraintViolation]:
+    """Landscape-2 editorial · 家族连续不得 > max_streak（默认 2）。"""
+    return _streak_violations(
+        chapters,
+        code="landscape_pair_streak",
+        label="landscape-2",
+        max_streak=max_streak,
+        pred=lambda sc: is_landscape_pair_pattern(sc.get("patternId")),
+    )
+
+
 def check_full_bleed_portrait_consecutive(
     chapters: list[dict],
 ) -> list[LayoutConstraintViolation]:
@@ -311,11 +328,15 @@ def audit_rhythm_violations(
     chapters: list[dict],
     *,
     max_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK,
+    max_landscape_pair_streak: int = MAX_LANDSCAPE_PAIR_STREAK,
     max_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK,
 ) -> list[LayoutConstraintViolation]:
     """汇总 v0.5 节奏规则违规（供 telemetry / 灰度 log / 测试）。"""
     violations: list[LayoutConstraintViolation] = []
     violations.extend(check_portrait_pair_streak(chapters, max_streak=max_pair_streak))
+    violations.extend(
+        check_landscape_pair_streak(chapters, max_streak=max_landscape_pair_streak)
+    )
     violations.extend(check_full_bleed_portrait_consecutive(chapters))
     violations.extend(
         check_portrait_orientation_streak(chapters, max_streak=max_orientation_streak)
@@ -325,6 +346,7 @@ def audit_rhythm_violations(
 
 RHYTHM_POSTCHECK_CODES = (
     "portrait_pair_streak",
+    "landscape_pair_streak",
     "full_bleed_portrait_consecutive",
     "portrait_orientation_streak",
 )
@@ -336,6 +358,7 @@ def run_rhythm_postcheck(
     mode: str = "log",
     trip_id: str | None = None,
     max_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK,
+    max_landscape_pair_streak: int = MAX_LANDSCAPE_PAIR_STREAK,
     max_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK,
 ) -> tuple[dict[str, int], list[LayoutConstraintViolation]]:
     """灰度 post-check（AC-RHY-07 · OQ-09=B）：审计 R-06 / R-08 / V-09 违规。
@@ -346,6 +369,7 @@ def run_rhythm_postcheck(
     violations = audit_rhythm_violations(
         chapters,
         max_pair_streak=max_pair_streak,
+        max_landscape_pair_streak=max_landscape_pair_streak,
         max_orientation_streak=max_orientation_streak,
     )
     summary: dict[str, int] = {code: 0 for code in RHYTHM_POSTCHECK_CODES}

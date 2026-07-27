@@ -47,7 +47,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-10 (c): enlarge cameo aperture circle (58vh / 520px).
 # Re-bumped 2026-07-18: TPC W3/gap template YAML + contract gating (rollout percent=0).
 # Re-bumped 2026-07-18 (b): restore journal-screens.css curly-quote escape (\201C).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}254ddd42d277"
+# Re-bumped 2026-07-27: mixed-1l1p + landscape-2 editorial grids in journal-screens.css.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}982d902bf259"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

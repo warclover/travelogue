@@ -7,7 +7,14 @@ from dataclasses import dataclass
 from typing import Literal
 
 LayoutKind = Literal[
-    "none", "nine", "triple", "six", "portrait_single", "portrait_pair", "other"
+    "none",
+    "nine",
+    "triple",
+    "six",
+    "portrait_single",
+    "portrait_pair",
+    "landscape_pair",
+    "other",
 ]
 
 _PATTERN_SLOTS_RE = re.compile(r"^screen-(?:portrait|landscape|square)-(\d+)$")
@@ -17,6 +24,7 @@ DENSE_COLLAGE_SLOT_MIN = 4
 BREATH_PATTERN = "screen-breath-pause"
 
 MAX_PORTRAIT_PAIR_STREAK = 2
+MAX_LANDSCAPE_PAIR_STREAK = 2
 MAX_PORTRAIT_ORIENTATION_STREAK = 6
 
 PORTRAIT_PAIR_PATTERN = "screen-portrait-2"
@@ -27,6 +35,21 @@ PORTRAIT_PAIR_PATTERNS = frozenset(
         "screen-portrait-2-gallery",
         "screen-portrait-2-asymmetric-left",
         "screen-portrait-2-asymmetric-right",
+    }
+)
+MIXED_1L1P_PATTERNS = frozenset(
+    {
+        "screen-landscape-1-portrait-1",
+        "screen-portrait-1-landscape-1",
+    }
+)
+LANDSCAPE_PAIR_PATTERN = "screen-landscape-2"
+LANDSCAPE_PAIR_PATTERNS = frozenset(
+    {
+        LANDSCAPE_PAIR_PATTERN,
+        "screen-landscape-2-overlap-tlbr",
+        "screen-landscape-2-overlap-bltr",
+        "screen-landscape-2-asymmetric-left",
     }
 )
 PORTRAIT_SINGLE_PATTERNS = frozenset({"screen-portrait-1", "screen-tall-1"})
@@ -77,6 +100,7 @@ class LateChapterPairingPolicy:
 @dataclass(frozen=True)
 class RhythmRules:
     max_portrait_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK
+    max_landscape_pair_streak: int = MAX_LANDSCAPE_PAIR_STREAK
     max_portrait_orientation_streak: int = MAX_PORTRAIT_ORIENTATION_STREAK
     portrait_carry_max_hops: int = 0
     consecutive_bans: frozenset[tuple[str, str]] = DEFAULT_CONSECUTIVE_BANS
@@ -103,6 +127,13 @@ class RhythmRules:
         )
         return cls(
             max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
+            max_landscape_pair_streak=int(
+                getattr(
+                    rhythm,
+                    "max_landscape_pair_streak",
+                    MAX_LANDSCAPE_PAIR_STREAK,
+                )
+            ),
             max_portrait_orientation_streak=int(rhythm.max_portrait_orientation_streak),
             portrait_carry_max_hops=int(getattr(rhythm, "portrait_carry_max_hops", 0)),
             late_chapter_pairing=late_policy,
@@ -170,6 +201,14 @@ def is_portrait_pair_pattern(pattern_id: str | None) -> bool:
     return pattern_id in PORTRAIT_PAIR_PATTERNS
 
 
+def is_mixed_1l1p_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in MIXED_1L1P_PATTERNS
+
+
+def is_landscape_pair_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in LANDSCAPE_PAIR_PATTERNS
+
+
 def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
     return pattern_id in PORTRAIT_ORIENTATION_PATTERNS
 
@@ -185,4 +224,7 @@ def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
         return "portrait_single"
     if is_portrait_pair_pattern(pattern_id):
         return "portrait_pair"
+    if is_landscape_pair_pattern(pattern_id):
+        return "landscape_pair"
+    # mixed-1l1p stays "other" (do not inflate portrait/landscape pair streaks)
     return "other"

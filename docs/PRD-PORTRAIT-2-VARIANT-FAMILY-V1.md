@@ -603,6 +603,9 @@ mosaic:
 > **跨模板合同（2026-07-27 狗粮回写）**：后续任何 `template_experiments` 新 SKU / 变体家族，实现与验收一律先过  
 > [实验模板通用接线清单](./acceptance-records/mtso-local-dogfood-GUIDE.md#0-实验模板通用接线清单必过)  
 > （tripId 贯通 · 配置≠生效 · schema 同发 · 硬路径分列验收 · config/json/html 三处对照）。P2VF 不另起方言。
+>
+> **同合同后续家族**：[Mixed 1L1P](./PRD-MIXED-1L1P-V1.md) · [Landscape-2 Editorial](./PRD-LANDSCAPE-2-EDITORIAL-V1.md)  
+> （验收：[mixed-1l1p](./acceptance-records/mixed-1l1p-v1-review-2026-07-27.md) · [landscape-2-editorial](./acceptance-records/landscape-2-editorial-v1-review-2026-07-27.md)）
 
 ---
 

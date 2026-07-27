@@ -3578,6 +3578,8 @@
             "screen-portrait-2-gallery",
             "screen-portrait-2-asymmetric-left",
             "screen-portrait-2-asymmetric-right",
+            "screen-landscape-1-portrait-1",
+            "screen-portrait-1-landscape-1",
             "screen-portrait-3",
             "screen-portrait-3-editorial",
             "screen-editorial-4mix",
@@ -3602,6 +3604,9 @@
             "screen-portrait-9",
             "screen-landscape-1",
             "screen-landscape-2",
+            "screen-landscape-2-overlap-tlbr",
+            "screen-landscape-2-overlap-bltr",
+            "screen-landscape-2-asymmetric-left",
             "screen-landscape-3",
             "screen-landscape-4",
             "screen-landscape-6",
@@ -3653,6 +3658,72 @@
             "full-frame"
           ],
           "description": "Person / food / full-frame layout hints for slot fit and CSS overlays"
+        },
+        "mixed1l1pPicker": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Mixed 1L1P picker telemetry (omit when reason=default_off)",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "default_off",
+                "fallback_split",
+                "strength",
+                "rotate"
+              ]
+            },
+            "strengthSide": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right",
+                "tie"
+              ]
+            },
+            "variantRole": {
+              "type": "string",
+              "enum": [
+                "none",
+                "landscape-left",
+                "portrait-left"
+              ]
+            }
+          }
+        },
+        "landscape2Picker": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Landscape-2 editorial picker telemetry (omit when reason=default_off)",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "default_off",
+                "fallback_fill",
+                "rotate",
+                "weight",
+                "overlap_tie"
+              ]
+            },
+            "strengthSide": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right",
+                "tie"
+              ]
+            },
+            "variantRole": {
+              "type": "string",
+              "enum": [
+                "fill",
+                "overlap-tlbr",
+                "overlap-bltr",
+                "asymmetric-left"
+              ]
+            }
+          }
         },
         "portrait2Picker": {
           "type": "object",

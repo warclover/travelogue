@@ -25,6 +25,8 @@ from travelogue.config.layout import (
     LayoutConfig,
     editorial_4mix_from_dict,
     editorial_portrait_row_from_dict,
+    landscape_2_editorial_from_dict,
+    mixed_1l1p_from_dict,
     portrait_2_variants_from_dict,
     layout_feedback_from_dict,
     layout_rhythm_from_dict,
@@ -407,6 +409,16 @@ def load_config(path: Path | None = None) -> AppConfig:
         if isinstance(layout_raw.get("portrait_2_variants"), dict)
         else {}
     )
+    mixed_1l1p_raw = (
+        layout_raw.get("mixed_1l1p")
+        if isinstance(layout_raw.get("mixed_1l1p"), dict)
+        else {}
+    )
+    landscape_2_editorial_raw = (
+        layout_raw.get("landscape_2_editorial")
+        if isinstance(layout_raw.get("landscape_2_editorial"), dict)
+        else {}
+    )
     usage_rules_raw = (
         layout_raw.get("usage_rules")
         if isinstance(layout_raw.get("usage_rules"), dict)
@@ -500,6 +512,10 @@ def load_config(path: Path | None = None) -> AppConfig:
             editorial_portrait_row=editorial_portrait_row_from_dict(editorial_row_raw),
             editorial_4mix=editorial_4mix_from_dict(editorial_4mix_raw),
             portrait_2_variants=portrait_2_variants_from_dict(portrait_2_variants_raw),
+            mixed_1l1p=mixed_1l1p_from_dict(mixed_1l1p_raw),
+            landscape_2_editorial=landscape_2_editorial_from_dict(
+                landscape_2_editorial_raw
+            ),
             usage_rules=usage_rules_from_dict(usage_rules_raw),
             rhythm=layout_rhythm_from_dict(rhythm_raw),
             template_engine=layout_template_engine_from_dict(template_engine_raw),

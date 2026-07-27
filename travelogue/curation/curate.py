@@ -1822,6 +1822,7 @@ def _stage_finalize(
             mode=rhythm_mode,
             trip_id=trip.get("tripId"),
             max_pair_streak=app_cfg.layout.rhythm.max_portrait_pair_streak,
+            max_landscape_pair_streak=app_cfg.layout.rhythm.max_landscape_pair_streak,
             max_orientation_streak=app_cfg.layout.rhythm.max_portrait_orientation_streak,
         )
         if rhythm_viol:

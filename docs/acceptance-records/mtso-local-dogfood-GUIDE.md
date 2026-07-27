@@ -4,7 +4,7 @@
 |------|------|
 | 日期 | 2026-07-27（§0 接线清单自 P2VF 狗粮回写） |
 | 关联 | [PRD MTSO](../PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [ACCEPTANCE](../ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
-| 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) |
+| 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) · [Mixed 1L1P](./mixed-1l1p-v1-review-2026-07-27.md) · [Landscape-2 Editorial](./landscape-2-editorial-v1-review-2026-07-27.md) |
 | 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) · [`docs/config-p2vf-dogfood.example.yaml`](../config-p2vf-dogfood.example.yaml) |
 | 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=false`（fail-closed） |
 

@@ -100,6 +100,21 @@ def test_check_portrait_pair_streak():
     assert bad and bad[0].code == "portrait_pair_streak"
 
 
+def test_check_landscape_pair_streak():
+    from travelogue.curation.layout_constraints import check_landscape_pair_streak
+
+    assert not check_landscape_pair_streak(_chapters(["screen-landscape-2"] * 2))
+    mixed = _chapters(
+        [
+            "screen-landscape-2",
+            "screen-landscape-2-overlap-tlbr",
+            "screen-landscape-2-asymmetric-left",
+        ]
+    )
+    bad = check_landscape_pair_streak(mixed)
+    assert bad and bad[0].code == "landscape_pair_streak"
+
+
 def test_check_full_bleed_portrait_consecutive():
     ok = _chapters(["screen-portrait-1", "screen-landscape-1", "screen-tall-1"])
     assert not check_full_bleed_portrait_consecutive(ok)

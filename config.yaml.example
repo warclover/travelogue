@@ -197,9 +197,22 @@ layout:
     repeat_penalty: 0.55
     prefer_breath_after_dense: true
     strength_tie_epsilon: 0.08
+  # Mixed 1L1P · 竖+横双图混排（L|P / P|L）· 默认关闭
+  mixed_1l1p:
+    enabled: false
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
+  # Landscape-2 editorial · 双横叠压/非对称 · 默认关闭
+  landscape_2_editorial:
+    enabled: false
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
   # 节奏阈值与后几章竖版收束（前几章维持 defer/carry outward）
   rhythm:
     max_portrait_pair_streak: 2
+    max_landscape_pair_streak: 2  # landscape-2 editorial 家族连续上限
     max_portrait_orientation_streak: 6
     portrait_carry_max_hops: 0
     late_chapter_pairing:
