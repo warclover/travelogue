@@ -27,6 +27,7 @@ from travelogue.layout_engine.mosaic.mosaic_5_3p2l import (
     soft_pick_3p2l_patterns,
 )
 from travelogue.layout_engine.mosaic.pattern_catalog import AspectProfile, MosaicPattern
+from travelogue.layout_engine.planner.screen_planner import grid_class_for_pattern
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
 
 
@@ -300,3 +301,13 @@ def test_gated_when_allowlist_empty(monkeypatch) -> None:
     keys = set(mosaic_registry(cfg=app, trip_id="any-trip").keys())
     assert PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD not in keys
     assert PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK not in keys
+
+
+def test_grid_class_for_3p2l_patterns() -> None:
+    assert grid_class_for_pattern(PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD) == (
+        "layout-screen__grid--mosaic-5-3p2l-portrait-hero-quad"
+    )
+    assert grid_class_for_pattern(PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK) == (
+        "layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack"
+    )
+    assert "1col" not in grid_class_for_pattern(PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD)

@@ -141,6 +141,23 @@ def test_tie_prefers_asym_not_fill() -> None:
     assert pick.variant_role != "fill"
 
 
+def test_preferred_side_missing_falls_back_to_fill() -> None:
+    """Left-strong but only right asym allowlisted → fill (not opposite asym)."""
+    cfg = _Cfg(allowlist=(PATTERN_LANDSCAPE_3_ASYM_RIGHT,))
+    pick = pick_landscape_3_variant(
+        ["a", "b", "c"],
+        assets_map={
+            "a": _asset(aesthetic=0.95),
+            "b": _asset(),
+            "c": _asset(aesthetic=0.2),
+        },
+        cfg=cfg,
+        trip_id="trip-dogfood",
+    )
+    assert pick.pattern_id == PATTERN_LANDSCAPE_3_FILL
+    assert pick.variant_role == "fill"
+
+
 def test_tie_rotates_asym_mirrors() -> None:
     cfg = _Cfg()
     first = pick_landscape_3_variant(

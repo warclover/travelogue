@@ -213,3 +213,57 @@ def test_family_on_short_run_emits_landscape_2_pair() -> None:
         PATTERN_LANDSCAPE_2_ASYM_LEFT,
     )
     assert "overlap" not in ctx.screens[0]["patternId"]
+
+
+def test_l2_editorial_does_not_starve_nine_grid() -> None:
+    """Long landscape run with L2 ON still prefers 4/6/9 grids over pair-first."""
+    from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
+
+    ids = [f"L{i}" for i in range(9)]
+    aspects: dict[str, AspectKind] = {aid: "landscape" for aid in ids}
+    assets = {
+        aid: {
+            "id": aid,
+            "aspectRatio": 1.5,
+            "takenAt": f"2025-04-20T10:{i:02d}:00Z",
+            "nativeWidth": 4000,
+            "nativeHeight": 2250,
+            "width": 4000,
+            "height": 2250,
+        }
+        for i, aid in enumerate(ids)
+    }
+    cfg = type(
+        "App",
+        (),
+        {
+            "layout": LayoutConfig(
+                landscape_2_editorial=Landscape2EditorialConfig(enabled=True),
+                mixed_proximity_seconds=1800.0,
+            ),
+            "mosaic": MosaicConfig(
+                template_experiments=TemplateExperimentsConfig(
+                    enabled=True,
+                    allowlist=(PATTERN_LANDSCAPE_2_ASYM_LEFT,),
+                    cohort_trip_ids=("*",),
+                )
+            ),
+        },
+    )()
+    state = ScreenLayoutPlannerState.from_trip_total(120)
+    screen, consumed = _plan_one_screen(
+        ids,
+        aspects,
+        assets_map=assets,
+        layout_state=state,
+        trip={"tripId": "trip-dogfood"},
+        cfg=cfg,
+    )
+    assert screen is not None
+    assert consumed >= 4
+    assert screen["patternId"] in (
+        "screen-landscape-4",
+        "screen-landscape-6",
+        "screen-landscape-9",
+    )
+    assert "landscape-2" not in screen["patternId"]
