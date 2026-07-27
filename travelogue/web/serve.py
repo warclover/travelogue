@@ -201,11 +201,28 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         trip_dir = self.studio_bind_trip(trip_id)
         if trip_dir is None:
             return False
+        # Directory URL -> canonical preview (matches Studio previewUrl).
+        if not rel_path or rel_path.endswith("/"):
+            from travelogue.web.studio_handlers.static_handlers import send_redirect
+
+            dest = f"/{trip_id}/{(rel_path or '')}index.html"
+            if "?" in self.path:
+                dest = f"{dest}?{self.path.split('?', 1)[1]}"
+            send_redirect(self, dest)
+            return True
         target = (trip_dir / rel_path).resolve()
         try:
             target.relative_to(trip_dir.resolve())
         except ValueError:
             return False
+        if target.is_dir():
+            from travelogue.web.studio_handlers.static_handlers import send_redirect
+
+            dest = f"/{trip_id}/{rel_path.rstrip('/')}/index.html"
+            if "?" in self.path:
+                dest = f"{dest}?{self.path.split('?', 1)[1]}"
+            send_redirect(self, dest)
+            return True
         if not target.is_file():
             self.send_error(404)
             return True

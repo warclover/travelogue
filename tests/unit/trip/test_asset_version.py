@@ -58,7 +58,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # landscape-3-editorial / person-pair|triple (export --sync-journal regression).
 # Re-bumped 2026-07-27 (i): mixed-1l1p both-cols full-height + person-pair
 # 100dvh height-adapt; CSS-primary moved into journal-screens-overlays.css SSOT.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}4fdae3dd29ae"
+# Re-bumped 2026-07-27 (j): restore landscape-2-overlap edge-flush CSS-primary
+# (LTE 1×1 stack was full-bleed ghosting after sync wiped absolute slots).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}a2b570b2678d"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

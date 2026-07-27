@@ -1350,7 +1350,62 @@ html[data-layout-engine="screens"] {
   --editorial-4mix-padding-y: clamp(16px, 3vh, 48px);
 }
 
-/* --- CSS-primary · mixed-1l1p / L3E / mixed-1p2l (must live here to survive sync-journal) --- */
+/* --- CSS-primary · mixed-1l1p / L3E / mixed-1p2l / landscape-2-overlap (must live here to survive sync-journal) --- */
+
+/*
+ * landscape-2-overlap-tlbr / bltr · edge-flush diagonal, moderate overlap.
+ * LTE emits both slots at grid 1×1; without this overlay they stack 100% and look like ghosts.
+ */
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr,
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr,
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr,
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot,
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot,
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot,
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot {
+  position: absolute;
+  /* Edge-flush corners; smaller than prior 60×66 to cut overlap (~10%×16%). */
+  width: 55%;
+  height: 58%;
+  margin: 0;
+}
+
+/* TL/BR: flush top+left / bottom+right */
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"],
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"] {
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"],
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"] {
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* BL/TR: flush bottom+left / top+right */
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"],
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"] {
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"],
+html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"] {
+  top: 0;
+  right: 0;
+  z-index: 2;
+}
 
 /*
  * mixed-1l1p · both columns fill the 16:9 stage height (cover).
