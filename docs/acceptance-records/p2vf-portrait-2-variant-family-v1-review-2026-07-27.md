@@ -90,7 +90,7 @@
 |----|------|------|-------------------|----|
 | **BLK-P2VF-01** | 家族 R-06 streak | 算法/开发 | `current_portrait_pair_streak` / late-reset / postcheck 对家族任一成员累计；禁止「换 id 清零」 | PR-B |
 | **BLK-P2VF-02** | R-08 orientation | 算法 | 四变体加入 `PORTRAIT_ORIENTATION_PATTERNS` | PR-B |
-| **BLK-P2VF-03** | experiments 配置合同 | 开发/架构 | §5.3 改为 `cohort_trip_ids`；写明双开关（`portrait_2_variants.enabled` ∧ experiments） | 文档 / 狗粮 |
+| **BLK-P2VF-03** | experiments 配置合同 | 开发/架构 | §5.3 改为 `cohort_trip_ids`；写明双开关（`portrait_2_variants.enabled` ∧ experiments）；**2026-07-27 狗粮**：tripId 须贯通 attach→picker，否则恒 `fallback_fill` — 已沉淀为 [通用接线清单](./mtso-local-dogfood-GUIDE.md#0-实验模板通用接线清单必过) | 文档 / 狗粮 |
 | **BLK-P2VF-04** | picker 可见性权威 | 架构 | 写死：MCS lifecycle **不**自动挡 2P；可见性仅 picker 内 `experimental_members_visible` | 文档 |
 | **BLK-P2VF-05** | OFF 与 streak 语义 | 架构 | 裁定：家族 streak **常驻**（即使 variants OFF，手工注入变体 id 仍计 R-06） | 文档+AC |
 | **BLK-P2VF-06** | hard gates + 人脸 | 算法/UX | 定义 `filter_hard_gates`；**任一方有人 → 仅 fill**（收紧 D-07）；去掉 id×role 双重软罚 | PR-B |

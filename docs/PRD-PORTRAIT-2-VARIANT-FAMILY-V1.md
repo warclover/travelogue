@@ -595,9 +595,14 @@ mosaic:
 | 主次反 | D-13 强弱选型；tie 不进 asym；问项 3 否决 |
 | 换 id 绕开 R-06 | 家族 streak 常驻（D-06 / AC-05b） |
 | 脸裁 | D-07 任一方有人→fill；fit 白名单（D-10） |
-| experiments 配错起不来 | `cohort_trip_ids` 样例；双开关文档 |
+| experiments 配错起不来 | `cohort_trip_ids` 样例；双开关文档；**tripId 贯通 attach→picker**（见下） |
 | 手机与电脑两套 | 产品诚实叙事；盲评不评 mobile 杂志感 |
 | 想顺手扩 3–9 / 塞 offset | N-01 / N-09；评审拒绝夹带 |
+| config 正确仍全 `fallback_fill` | 排版主路径漏传 `trip` → 实验门空放行；**通用清单**见 [mtso-local-dogfood-GUIDE §0](./acceptance-records/mtso-local-dogfood-GUIDE.md#0-实验模板通用接线清单必过) |
+
+> **跨模板合同（2026-07-27 狗粮回写）**：后续任何 `template_experiments` 新 SKU / 变体家族，实现与验收一律先过  
+> [实验模板通用接线清单](./acceptance-records/mtso-local-dogfood-GUIDE.md#0-实验模板通用接线清单必过)  
+> （tripId 贯通 · 配置≠生效 · schema 同发 · 硬路径分列验收 · config/json/html 三处对照）。P2VF 不另起方言。
 
 ---
 

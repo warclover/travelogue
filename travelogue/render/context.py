@@ -136,7 +136,7 @@ _MOBILE_IMAGE_SIZES: dict[str, str] = {
     "scroll": "86vw",
 }
 
-# Align with journal.css --page-width / --bleed-width clamps (up to 1320 / 1920px).
+# Align with journal.css --page-width (≤1320) and full-bleed screens (100vw).
 # Cap screen_full below 3200: DPR×size otherwise selects w3200 for every full-bleed
 # slot and large trips OOM the browser tab (110×~40MB decode).
 _WEB_IMAGE_SIZES: dict[str, str] = {

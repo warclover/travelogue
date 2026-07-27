@@ -469,6 +469,8 @@ def restore_auto(
         curation.pop("closingAssetId", None)
         curation.pop("closingUserPicked", None)
         curation.pop("bookendsDegraded", None)
+    # Always force rewrite after unlock; ignore caller force= to avoid kw dup.
+    kwargs.pop("force", None)
     opening = resolve_opening(trip, layout=layout, force=True, **kwargs)
     if trip_has_screens(trip):
         try:

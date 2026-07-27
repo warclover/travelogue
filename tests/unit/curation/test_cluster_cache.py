@@ -172,3 +172,54 @@ def test_force_recluster_clears_cache(tmp_path: Path) -> None:
     enc = ClipEncoder()
     _, plan = prepare_scene_embeddings(tmp_path, assets, enc, force_recluster=True)
     assert plan.mode == "full"
+
+
+def test_prepare_reuse_hydrates_missing_subject_class(tmp_path: Path) -> None:
+    """Cache reuse must backfill subjectClass (parallel_embed wrote vectors only)."""
+
+    class _HydratingEncoder:
+        def __init__(self) -> None:
+            self.hydrate_calls = 0
+
+        def apply_subject_labels_from_vectors(
+            self,
+            assets: list[dict],
+            *,
+            asset_ids: list[str],
+            vectors: object,
+            only_missing: bool = True,
+        ) -> int:
+            self.hydrate_calls += 1
+            n = 0
+            for a in assets:
+                if only_missing and a.get("subjectClass"):
+                    continue
+                if str(a.get("id")) not in set(asset_ids):
+                    continue
+                a["subjectClass"] = "food"
+                a["subjectConfidence"] = 0.91
+                n += 1
+            return n
+
+        def embed_assets(self, *args: object, **kwargs: object):  # pragma: no cover
+            raise AssertionError("reuse must not re-embed")
+
+    assets = _assets(8)
+    ids = [a["id"] for a in assets]
+    # CLIP-shaped dim so source=clip hydrate path is eligible
+    vectors = np.random.RandomState(5).rand(len(ids), 512).astype(np.float32)
+    save_embedding_cache(
+        tmp_path,
+        asset_ids=ids,
+        vectors=vectors,
+        source="clip",
+        model="ViT-B-32/openai",
+    )
+    enc = _HydratingEncoder()
+    embed, plan = prepare_scene_embeddings(
+        tmp_path, assets, enc, deterministic=True, apply_subject_class=True
+    )
+    assert plan.mode == "reuse"
+    assert embed.source == "clip"
+    assert enc.hydrate_calls == 1
+    assert all(a.get("subjectClass") == "food" for a in assets)

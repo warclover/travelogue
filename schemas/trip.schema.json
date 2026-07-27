@@ -274,6 +274,10 @@
         "version": {
           "const": "1"
         },
+        "photoKeepMode": {
+          "type": "string",
+          "description": "Studio photo keep / cull mode"
+        },
         "title": {
           "type": "string",
           "maxLength": 20
@@ -745,8 +749,8 @@
     },
     "mosaicDecisionLogEntry": {
       "type": "object",
-      "additionalProperties": false,
-      "description": "One mosaic window pick (travelogue.layout_engine.mosaic.log.MosaicWindowLog)",
+      "additionalProperties": true,
+      "description": "One mosaic window pick (travelogue.layout_engine.mosaic.log.MosaicWindowLog); MSA fields allowed",
       "properties": {
         "routerVersion": {
           "type": "string"
@@ -756,7 +760,7 @@
         },
         "windowSize": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 0
         },
         "windowStart": {
           "type": "integer",
@@ -1044,6 +1048,11 @@
         "coverJointLocked": {
           "type": "boolean",
           "description": "V6 · mirror of bookendsLock.opening (compat)"
+        },
+        "foodPolicy": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "FRP · trip-level food role policy (cover/moment/closing/grids)"
         },
         "bookendsLock": {
           "type": "object",
@@ -1984,7 +1993,10 @@
           ]
         },
         "sourceEventId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "lookTrackId": {
           "type": "string"
@@ -2019,6 +2031,11 @@
         "stats": {
           "type": "object",
           "additionalProperties": true
+        },
+        "telemetry": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "SSG / look-split telemetry"
         }
       }
     },
@@ -2367,6 +2384,11 @@
             "string",
             "null"
           ]
+        },
+        "foodPolicy": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "FRP · per-layout food cover policy annotation"
         }
       }
     },
@@ -3468,7 +3490,8 @@
           "enum": [
             "portrait",
             "landscape",
-            "main"
+            "main",
+            "food"
           ]
         },
         "displayAspect": {
@@ -3481,6 +3504,10 @@
           },
           "minItems": 4,
           "maxItems": 4
+        },
+        "msaContain": {
+          "type": "boolean",
+          "description": "MSA · slot forced contain (crop-risk / whitespace contract)"
         }
       }
     },
@@ -3514,6 +3541,20 @@
         },
         "gap": {
           "type": "string"
+        },
+        "trackOverride": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "MSA · persisted cols/rows track override"
+        },
+        "msa": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "MSA · solve telemetry (outcome, profile, cropRisk, …)"
+        },
+        "whitespaceRatio": {
+          "type": "number",
+          "description": "MSA · measured whitespace after contain/track solve"
         }
       }
     },
@@ -3534,6 +3575,9 @@
           "enum": [
             "screen-portrait-1",
             "screen-portrait-2",
+            "screen-portrait-2-gallery",
+            "screen-portrait-2-asymmetric-left",
+            "screen-portrait-2-asymmetric-right",
             "screen-portrait-3",
             "screen-portrait-3-editorial",
             "screen-editorial-4mix",
@@ -3604,9 +3648,45 @@
             "person-triple",
             "person-grid-8",
             "portrait-row-editorial",
-            "editorial-4mix"
+            "editorial-4mix",
+            "food-grid",
+            "full-frame"
           ],
-          "description": "Person portrait: 2-col pair, 3-col row, 4×2 grid (contain per slot); editorial row hint"
+          "description": "Person / food / full-frame layout hints for slot fit and CSS overlays"
+        },
+        "portrait2Picker": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "P2VF picker telemetry (omit when reason=default_off)",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "default_off",
+                "person_fill",
+                "fallback_fill",
+                "rotate",
+                "weight"
+              ]
+            },
+            "strengthSide": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right",
+                "tie"
+              ]
+            },
+            "variantRole": {
+              "type": "string",
+              "enum": [
+                "fill",
+                "gallery",
+                "asymmetric-left",
+                "asymmetric-right"
+              ]
+            }
+          }
         },
         "arcSegment": {
           "type": "string",
@@ -3922,6 +4002,14 @@
             "type": "number"
           },
           "description": "P7 telemetry: per-stage elapsed milliseconds"
+        },
+        "derivativesStatus": {
+          "type": [
+            "string",
+            "object"
+          ],
+          "additionalProperties": true,
+          "description": "Deferred WebP / derivative generation status"
         }
       }
     }

@@ -364,6 +364,8 @@ def _flush_portrait_carry_tail(
             enable_food_grid=enable_food_grid,
             mundane_grid_buckets=mundane_grid_buckets,
             **late_kwargs,
+            # P2VF cohort gate needs tripId; omit ⇒ experimental_members_visible=[] / fallback_fill
+            trip=trip,
         ),
         cfg=cfg,
     )
