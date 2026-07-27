@@ -24,7 +24,7 @@ constraints:
 
 scoring:
   base_weight: 1.0
-  tags: [portrait]
+  tags: [portrait, portrait-2, variant-fill]
 
 render:
   gridClass: layout-screen__grid--2col
@@ -35,11 +35,19 @@ usage:
   whenToUse: |
     - 连续 2 张竖图，叙事权重接近、无需第三张时
     - 末章 late pairing 偏好：收尾两张竖图对称并排时
+    - 任一方含人物（P2VF · 人物门走满幅）
+    - 需要信息密度或变体不可见时的稳妥回退
   whenNotToUse: |
-    - 其中一张明显更强（应拆成 portrait-1 + 其他，或 portrait-1-landscape-2）
+    - 其中一张明显更强且无人、可狗粮开变体时（可考虑 asymmetric）
     - 有第三张竖图可成组时（应选 portrait-3-editorial）
   siblings:
     - id: screen-portrait-1
       difference: 该模板单竖满屏（9:16）；本模板双竖并列（16:9），每张更小。
     - id: screen-portrait-3-editorial
       difference: 该模板三竖 editorial 行；本模板仅两竖，更轻。
+    - id: screen-portrait-2-gallery
+      difference: P2VF 画廊留白变体；本模板满幅。
+    - id: screen-portrait-2-asymmetric-left
+      difference: P2VF 左主变体；本模板等权满幅。
+    - id: screen-portrait-2-asymmetric-right
+      difference: P2VF 右主变体；本模板等权满幅。

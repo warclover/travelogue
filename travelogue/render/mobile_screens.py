@@ -1,12 +1,14 @@
-"""Mobile render transforms for screens engine (PRD portrait-row-editorial §5 · 4mix §12.4)."""
+"""Mobile render transforms for screens engine (PRD portrait-row-editorial §5 · 4mix §12.4 · P2VF)."""
 
 from __future__ import annotations
 
 from travelogue.layout_engine.editorial.four_mix import PATTERN_EDITORIAL_4MIX
+from travelogue.layout_engine.planner.portrait_2_picker import PORTRAIT_2_FAMILY_IDS
 
 PORTRAIT_TRIPLE_MOBILE_EXPAND = frozenset(
     {"screen-portrait-3", "screen-portrait-3-editorial"}
 )
+PORTRAIT_PAIR_MOBILE_EXPAND = PORTRAIT_2_FAMILY_IDS
 
 _MOBILE_EXPAND_STRIP_KEYS = frozenset(
     {
@@ -16,6 +18,7 @@ _MOBILE_EXPAND_STRIP_KEYS = frozenset(
         "layoutGeometry",
         "copy",
         "copyMeta",
+        "portrait2Picker",
     }
 )
 
@@ -76,6 +79,21 @@ def expand_editorial_4mix_screen(screen: dict) -> list[dict]:
     return out
 
 
+def expand_portrait_pair_screen(screen: dict) -> list[dict]:
+    """P2VF D-08 · one portrait-2 family screen → two screen-portrait-1 (L→R)."""
+    slots = screen.get("slots") or []
+    if len(slots) != 2:
+        return [screen]
+    base = {k: v for k, v in screen.items() if k not in _MOBILE_EXPAND_STRIP_KEYS}
+    out: list[dict] = []
+    for slot in slots:
+        single = dict(base)
+        single["patternId"] = "screen-portrait-1"
+        single["slots"] = [dict(slot)]
+        out.append(single)
+    return out
+
+
 def expand_screens_for_mobile(screens: list[dict]) -> list[dict]:
     expanded: list[dict] = []
     for sc in screens:
@@ -85,6 +103,8 @@ def expand_screens_for_mobile(screens: list[dict]) -> list[dict]:
             expanded.extend(expand_portrait_triple_screen(sc))
         elif pid == PATTERN_EDITORIAL_4MIX and len(slots) == 4:
             expanded.extend(expand_editorial_4mix_screen(sc))
+        elif pid in PORTRAIT_PAIR_MOBILE_EXPAND and len(slots) == 2:
+            expanded.extend(expand_portrait_pair_screen(sc))
         else:
             expanded.append(sc)
     return expanded

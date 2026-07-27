@@ -77,6 +77,9 @@ _GRID_SIZES = (9, 6, 4, 3, 2, 1)
 PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-portrait-1": "layout-screen__grid--1col",
     "screen-portrait-2": "layout-screen__grid--2col",
+    "screen-portrait-2-gallery": "layout-screen__grid--portrait-2-gallery",
+    "screen-portrait-2-asymmetric-left": "layout-screen__grid--portrait-2-asym-left",
+    "screen-portrait-2-asymmetric-right": "layout-screen__grid--portrait-2-asym-right",
     "screen-portrait-3": "layout-screen__grid--3col",
     "screen-portrait-3-editorial": "layout-screen__grid--3col",
     "screen-editorial-4mix": "layout-screen__grid--editorial-4mix",
@@ -121,6 +124,48 @@ _PORTRAIT_COLUMN_GRID_SIZES = (9, 6, 3, 2, 1)
 
 def grid_class_for_pattern(pattern_id: str) -> str:
     return PATTERN_GRID_CLASS.get(pattern_id, "layout-screen__grid--1col")
+
+
+def _make_portrait_2_screen(
+    asset_ids: list[str],
+    *,
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
+) -> dict:
+    """Emit a portrait-2 family screen via P2VF picker (person ⇒ fill)."""
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
+    from travelogue.layout_engine.planner.portrait_2_picker import pick_portrait_2_variant
+
+    assets_map = assets_map or {}
+    pick = pick_portrait_2_variant(
+        list(asset_ids),
+        assets_map=assets_map,
+        cfg=cfg,
+        trip_id=trip_id_from_trip(trip),
+        recent_pattern_ids=(
+            list(layout_state.recent_pattern_ids) if layout_state is not None else None
+        ),
+        prev_was_dense=bool(
+            layout_state.last_was_dense_collage if layout_state is not None else False
+        ),
+    )
+    screen = _make_screen(
+        pick.pattern_id,
+        list(asset_ids),
+        screen_id="",
+        aspects=aspects,
+        assets_map=assets_map,
+    )
+    if pick.reason != "default_off":
+        screen["portrait2Picker"] = {
+            "reason": pick.reason,
+            "strengthSide": pick.strength_side,
+            "variantRole": pick.variant_role,
+        }
+    return screen
 
 
 def resolve_layout_engine(trip: dict, *, override: str | None = None) -> LayoutEngine:
@@ -182,6 +227,9 @@ def _fits_for_screen(
         return ["cover"] * n
     if pattern_id in (
         "screen-portrait-2",
+        "screen-portrait-2-gallery",
+        "screen-portrait-2-asymmetric-left",
+        "screen-portrait-2-asymmetric-right",
         "screen-portrait-3",
         PATTERN_PORTRAIT_GRID_8,
     ):
@@ -1014,13 +1062,15 @@ def _flush_portrait_pending(
             or layout_state is None
             or layout_state.can_emit_pattern("screen-portrait-2")
         ):
+            # Any person ⇒ picker returns fill (D-07).
             screens.append(
-                _make_screen(
-                    "screen-portrait-2",
+                _make_portrait_2_screen(
                     list(buf),
-                    screen_id="",
                     aspects=aspects,
                     assets_map=assets_map,
+                    layout_state=layout_state,
+                    trip=trip,
+                    cfg=cfg,
                 )
             )
         else:
@@ -1074,12 +1124,13 @@ def _flush_portrait_pending(
             buf = buf[3:]
         elif size == 2:
             screens.append(
-                _make_screen(
-                    "screen-portrait-2",
+                _make_portrait_2_screen(
                     buf[:2],
-                    screen_id="",
                     aspects=aspects,
                     assets_map=assets_map,
+                    layout_state=layout_state,
+                    trip=trip,
+                    cfg=cfg,
                 )
             )
             buf = buf[2:]

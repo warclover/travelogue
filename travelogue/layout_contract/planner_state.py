@@ -146,6 +146,8 @@ class ScreenLayoutPlannerState:
     editorial_composite_chapter_used: int = 0
     last_pattern_id: str = ""
     pattern_streak: int = 0
+    # Rolling emit history for P2VF soft rotation (capped in note_screen).
+    recent_pattern_ids: list[str] = field(default_factory=list)
     portrait_orientation_streak: int = 0
     layout_density: LayoutDensity = "balanced"
     pattern_counts: dict[str, int] = field(default_factory=dict)
@@ -306,7 +308,7 @@ class ScreenLayoutPlannerState:
             return
         if late.reset_orientation_streak:
             self.portrait_orientation_streak = 0
-        if late.reset_pair_streak and self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
+        if late.reset_pair_streak and is_portrait_pair_pattern(self.last_pattern_id):
             self.last_pattern_id = ""
             self.pattern_streak = 0
 
@@ -445,7 +447,8 @@ class ScreenLayoutPlannerState:
         return True
 
     def current_portrait_pair_streak(self) -> int:
-        if self.last_pattern_id == PORTRAIT_PAIR_PATTERN:
+        # P2VF · family-level R-06 (always on; swapping variant ids must not reset).
+        if is_portrait_pair_pattern(self.last_pattern_id):
             return self.pattern_streak
         return 0
 
@@ -487,9 +490,20 @@ class ScreenLayoutPlannerState:
         self.last_kind = kind if kind != "other" else "other"
         if pattern_id and pattern_id == self.last_pattern_id:
             self.pattern_streak += 1
+        elif (
+            pattern_id
+            and is_portrait_pair_pattern(pattern_id)
+            and is_portrait_pair_pattern(self.last_pattern_id)
+        ):
+            # Consecutive portrait-2 family members share one R-06 streak.
+            self.pattern_streak += 1
         else:
             self.pattern_streak = 1 if pattern_id else 0
         self.last_pattern_id = pattern_id or ""
+        if pattern_id:
+            self.recent_pattern_ids.append(pattern_id)
+            if len(self.recent_pattern_ids) > 32:
+                self.recent_pattern_ids = self.recent_pattern_ids[-32:]
         if pattern_id and is_portrait_orientation_pattern(pattern_id):
             self.portrait_orientation_streak += 1
         elif pattern_id:

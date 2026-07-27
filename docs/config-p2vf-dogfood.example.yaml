@@ -1,0 +1,21 @@
+# P2VF dogfood example — copy keys into local config.yaml (do not commit secrets).
+# Dual switch: portrait_2_variants.enabled AND template_experiments (allowlist + cohort_trip_ids).
+
+layout:
+  portrait_2_variants:
+    enabled: true
+    recent_window: 2
+    repeat_penalty: 0.55
+    prefer_breath_after_dense: true
+    strength_tie_epsilon: 0.08
+
+mosaic:
+  template_experiments:
+    enabled: true
+    allowlist:
+      - screen-portrait-2-gallery
+      - screen-portrait-2-asymmetric-left
+      - screen-portrait-2-asymmetric-right
+    # Empty list ⇒ nobody sees experiments (MTSO SUP-08).
+    cohort_trip_ids:
+      - your-dogfood-trip-id

@@ -722,9 +722,17 @@ def _decompose_to_primitive_screens(
     """Rebuild remaining assets as valid primitive screens (pair-first portraits)."""
     from travelogue.layout_contract.families import layout_family_for_asset as _layout_family_for_asset
     from travelogue.layout_engine.adapter import make_screen as _make_screen
+    from travelogue.layout_engine.planner.portrait_2_picker import pick_portrait_2_variant
 
     if not asset_ids:
         return []
+    cfg = None
+    try:
+        from travelogue.config.loader import load_config
+
+        cfg = load_config()
+    except Exception:
+        cfg = None
     aspects = {
         aid: aspect_kind_for_asset(assets_by_id.get(aid, {})) for aid in asset_ids
     }
@@ -743,7 +751,12 @@ def _decompose_to_primitive_screens(
             if fam == "portrait":
                 if k + 2 <= len(run):
                     chunk = run[k : k + 2]
-                    pattern_id = "screen-portrait-2"
+                    # P2VF · use picker when dogfood config is loaded.
+                    pattern_id = pick_portrait_2_variant(
+                        chunk,
+                        assets_map=assets_by_id,
+                        cfg=cfg,
+                    ).pattern_id
                     k += 2
                 else:
                     chunk = run[k : k + 1]
