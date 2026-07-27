@@ -170,9 +170,14 @@ def _carry_inject_ids(
 def _consolidate_adjacent_portrait_singles(
     screens: list[dict],
     aspects: dict[str, AspectKind],
+    *,
+    assets_map: dict[str, dict] | None = None,
+    layout_state=None,
+    trip: dict | None = None,
+    cfg=None,
 ) -> list[dict]:
-    """Late chapter: merge consecutive portrait-1/tall-1 into portrait-2."""
-    from travelogue.layout_engine.planner.screen_planner import _make_screen
+    """Late chapter: merge consecutive portrait-1/tall-1 into portrait-2 family."""
+    from travelogue.layout_engine.planner.screen_planner import _make_portrait_2_screen
 
     single = frozenset({"screen-portrait-1", "screen-tall-1"})
     out: list[dict] = []
@@ -189,11 +194,13 @@ def _consolidate_adjacent_portrait_singles(
                 if len(slots1) == 1 and len(slots2) == 1:
                     aids = [slots1[0]["assetId"], slots2[0]["assetId"]]
                     out.append(
-                        _make_screen(
-                            "screen-portrait-2",
+                        _make_portrait_2_screen(
                             aids,
-                            screen_id="",
                             aspects=aspects,
+                            assets_map=assets_map,
+                            layout_state=layout_state,
+                            trip=trip,
+                            cfg=cfg,
                         )
                     )
                     i += 2
@@ -357,11 +364,20 @@ def _flush_portrait_carry_tail(
             enable_food_grid=enable_food_grid,
             mundane_grid_buckets=mundane_grid_buckets,
             **late_kwargs,
+            # P2VF cohort gate needs tripId; omit ⇒ experimental_members_visible=[] / fallback_fill
+            trip=trip,
         ),
         cfg=cfg,
     )
     if late_kwargs:
-        tail_screens = _consolidate_adjacent_portrait_singles(tail_screens, aspects)
+        tail_screens = _consolidate_adjacent_portrait_singles(
+            tail_screens,
+            aspects,
+            assets_map=assets_by_id,
+            layout_state=layout_state,
+            trip=trip,
+            cfg=cfg,
+        )
     for sc in tail_screens:
         slots = sc.get("slots") or []
         if not slots:
@@ -564,7 +580,12 @@ def attach_screens_day_buckets(
                 clear_chapter_highlight_windows()
         if late_kwargs:
             bucket_screens = _consolidate_adjacent_portrait_singles(
-                bucket_screens, aspects
+                bucket_screens,
+                aspects,
+                assets_map=assets_by_id,
+                layout_state=layout_state,
+                trip=trip,
+                cfg=cfg,
             )
         carry, carry_age, layout_state = assign_bucket_screens_with_portrait_carry(
             bucket_screens,

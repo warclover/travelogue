@@ -534,6 +534,7 @@ def build_chapters_from_buckets(
     mundane_grid_buckets: tuple[str, ...] = ("food",),
     layout_density: str | None = None,
     cfg: AppConfig | None = None,
+    trip: dict | None = None,
 ) -> list[dict]:
     """Plan items per chapter bucket (Agent 1 day groups → Agent 1.5 layout)."""
     from travelogue.curation.curate_patterns import resolve_chapter_pattern
@@ -610,6 +611,8 @@ def build_chapters_from_buckets(
                 else default_mundane_grid_buckets(cfg=cfg)
             ),
             cfg=cfg,
+            # P2VF · cohort admit needs tripId inside picker (omit ⇒ fallback_fill)
+            trip=trip,
         )
         from travelogue.curation.chapter_items import compact_chapter_items_for_screens
 

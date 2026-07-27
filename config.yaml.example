@@ -190,6 +190,13 @@ layout:
       - screen-portrait-2-landscape-2
     trip_allowlist: []
     scenery_portrait_cover_random: true   # P2 · 纯风景竖槽 cover/contain 确定性随机
+  # P2VF · 双竖变体家族软轮换 · 默认关闭（须同时开 mosaic.template_experiments）
+  portrait_2_variants:
+    enabled: false
+    recent_window: 2
+    repeat_penalty: 0.55
+    prefer_breath_after_dense: true
+    strength_tie_epsilon: 0.08
   # 节奏阈值与后几章竖版收束（前几章维持 defer/carry outward）
   rhythm:
     max_portrait_pair_streak: 2

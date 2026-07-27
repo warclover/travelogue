@@ -748,7 +748,6 @@ def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
     from travelogue.layout_engine.planner.screen_planner import (
         _emit_person_portrait_screens,
         _is_std_portrait_id,
-        _make_screen,
         asset_has_person,
     )
 
@@ -779,14 +778,19 @@ def _finish_portrait_pending_tail(ctx: ChapterPlanContext) -> int | None:
             ):
                 append_screen(ctx, sc)
         else:
+            from travelogue.layout_engine.planner.screen_planner import (
+                _make_portrait_2_screen,
+            )
+
             append_screen(
                 ctx,
-                _make_screen(
-                    "screen-portrait-2",
+                _make_portrait_2_screen(
                     pair,
-                    screen_id="",
                     aspects=ctx.aspects,
                     assets_map=ctx.assets_map,
+                    layout_state=ctx.layout_state,
+                    trip=ctx.trip,
+                    cfg=ctx.app_config,
                 ),
             )
         ctx.pending_portraits.clear()

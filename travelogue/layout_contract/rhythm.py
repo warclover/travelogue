@@ -20,7 +20,15 @@ MAX_PORTRAIT_PAIR_STREAK = 2
 MAX_PORTRAIT_ORIENTATION_STREAK = 6
 
 PORTRAIT_PAIR_PATTERN = "screen-portrait-2"
-PORTRAIT_PAIR_PATTERNS = frozenset({PORTRAIT_PAIR_PATTERN})
+# P2VF · family includes fill + V1 rotation variants (offset deferred / not required).
+PORTRAIT_PAIR_PATTERNS = frozenset(
+    {
+        PORTRAIT_PAIR_PATTERN,
+        "screen-portrait-2-gallery",
+        "screen-portrait-2-asymmetric-left",
+        "screen-portrait-2-asymmetric-right",
+    }
+)
 PORTRAIT_SINGLE_PATTERNS = frozenset({"screen-portrait-1", "screen-tall-1"})
 FULL_BLEED_PORTRAIT_PATTERNS = frozenset(
     {"screen-portrait-1", "screen-tall-1", "screen-plate"}
@@ -29,6 +37,9 @@ PORTRAIT_ORIENTATION_PATTERNS = frozenset(
     {
         "screen-portrait-1",
         "screen-portrait-2",
+        "screen-portrait-2-gallery",
+        "screen-portrait-2-asymmetric-left",
+        "screen-portrait-2-asymmetric-right",
         "screen-portrait-3",
         "screen-portrait-3-editorial",
         "screen-tall-1",

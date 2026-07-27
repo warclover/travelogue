@@ -1275,6 +1275,7 @@ def _stage_build_chapters_compose(
             mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
             layout_density=layout_density_params(trip, app_cfg=app_cfg).density,
             cfg=app_cfg,
+            trip=trip,
         )
     finally:
         if mosaic_override_active is not None:

@@ -453,6 +453,42 @@ def merge_embedding_vectors(
     return np.vstack(rows)
 
 
+def _hydrate_subject_classes_from_embed(
+    encoder: Any,
+    assets: list[dict],
+    embed: Any,
+    *,
+    apply_subject_class: bool,
+) -> int:
+    """Backfill subjectClass after cache reuse/prune/incremental merge.
+
+    Parallel embed writes CLIP vectors with ``apply_subject_class=False``; a later
+    reuse hit would otherwise leave food/person labels permanently missing.
+    """
+    if not apply_subject_class:
+        return 0
+    if str(getattr(embed, "source", "") or "") != "clip":
+        return 0
+    apply_fn = getattr(encoder, "apply_subject_labels_from_vectors", None)
+    if not callable(apply_fn):
+        return 0
+    labeled = int(
+        apply_fn(
+            assets,
+            asset_ids=list(embed.asset_ids),
+            vectors=embed.vectors,
+            only_missing=True,
+        )
+        or 0
+    )
+    if labeled:
+        _log.info(
+            "hydrated subjectClass for %s assets from cached CLIP vectors",
+            labeled,
+        )
+    return labeled
+
+
 def prepare_scene_embeddings(
     trip_dir: Path,
     assets: list[dict],
@@ -529,6 +565,9 @@ def prepare_scene_embeddings(
             str(cached.get("source") or "heuristic"),
             str(cached.get("model") or "") or None,
         )
+        _hydrate_subject_classes_from_embed(
+            encoder, assets, embed, apply_subject_class=apply_subject_class
+        )
         return embed, plan
 
     if plan.mode == "prune":
@@ -570,6 +609,9 @@ def prepare_scene_embeddings(
             cfg=cfg,
         )
         embed = EmbedResult(current_ids, vectors, source, model)
+        _hydrate_subject_classes_from_embed(
+            encoder, assets, embed, apply_subject_class=apply_subject_class
+        )
         return embed, plan
 
     cached = load_embedding_cache(trip_dir)
@@ -629,4 +671,8 @@ def prepare_scene_embeddings(
         cfg=cfg,
     )
     embed = EmbedResult(current_ids, merged, source, model)
+    # New ids already labeled by embed_assets; backfill older cached rows still missing class.
+    _hydrate_subject_classes_from_embed(
+        encoder, assets, embed, apply_subject_class=apply_subject_class
+    )
     return embed, plan

@@ -166,6 +166,17 @@ class Editorial4MixConfig:
 
 
 @dataclass
+class Portrait2VariantsConfig:
+    """P2VF · portrait-2 family soft rotation (default off)."""
+
+    enabled: bool = False
+    recent_window: int = 2
+    repeat_penalty: float = 0.55
+    prefer_breath_after_dense: bool = True
+    strength_tie_epsilon: float = 0.08
+
+
+@dataclass
 class UsageRulesConfig:
     """URO · usage-driven layout rules (PRD-USAGE-RULES-LAYOUT-OPTIMIZATION)."""
 
@@ -189,6 +200,9 @@ class LayoutConfig:
         default_factory=EditorialPortraitRowConfig
     )
     editorial_4mix: Editorial4MixConfig = field(default_factory=Editorial4MixConfig)
+    portrait_2_variants: Portrait2VariantsConfig = field(
+        default_factory=Portrait2VariantsConfig
+    )
     usage_rules: UsageRulesConfig = field(default_factory=UsageRulesConfig)
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
@@ -399,6 +413,23 @@ def editorial_4mix_from_dict(raw: dict[str, Any] | None) -> Editorial4MixConfig:
         trip_allowlist=allowlist,
         scenery_portrait_cover_random=bool(
             raw.get("scenery_portrait_cover_random", defaults.scenery_portrait_cover_random)
+        ),
+    )
+
+
+def portrait_2_variants_from_dict(raw: dict[str, Any] | None) -> Portrait2VariantsConfig:
+    defaults = Portrait2VariantsConfig()
+    if not raw:
+        return defaults
+    return Portrait2VariantsConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        recent_window=int(raw.get("recent_window", defaults.recent_window)),
+        repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),
+        prefer_breath_after_dense=bool(
+            raw.get("prefer_breath_after_dense", defaults.prefer_breath_after_dense)
+        ),
+        strength_tie_epsilon=float(
+            raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
         ),
     )
 

@@ -537,6 +537,60 @@ class ClipEncoder:
             return None
         return self._subject_labels[idx], round(float(sim[idx].cpu()), 4)
 
+    def apply_subject_labels_from_vectors(
+        self,
+        assets: list[dict],
+        *,
+        asset_ids: list[str],
+        vectors: Any,
+        only_missing: bool = True,
+    ) -> int:
+        """Write subjectClass from cached CLIP vectors (reuse/prune hydrate path).
+
+        Parallel embed persists vectors with ``apply_subject_class=False``; clustering
+        may then hit cache reuse and never call ``embed_assets``. This backfills labels
+        without re-encoding images. Returns how many assets were labeled.
+        """
+        if not asset_ids:
+            return 0
+        if not self._ensure_clip():
+            return 0
+        import numpy as np
+        import torch
+
+        id_to_asset = {str(a.get("id")): a for a in assets if a.get("id")}
+        idxs: list[int] = []
+        targets: list[dict] = []
+        for i, aid in enumerate(asset_ids):
+            asset = id_to_asset.get(str(aid))
+            if asset is None or asset.get("type", "image") == "video":
+                continue
+            if only_missing and asset.get("subjectClass"):
+                continue
+            idxs.append(i)
+            targets.append(asset)
+        if not idxs or self._text_features is None:
+            return 0
+
+        mat = np.asarray(vectors, dtype=np.float32)[idxs]
+        if mat.ndim != 2 or mat.shape[0] == 0:
+            return 0
+        norms = np.linalg.norm(mat, axis=1, keepdims=True)
+        mat = mat / np.clip(norms, 1e-8, None)
+        feats = torch.from_numpy(mat).to(self._device)
+        sim = feats @ self._text_features.T
+        best = sim.argmax(dim=-1)
+        conf = sim.max(dim=-1).values
+        labeled = 0
+        for asset, idx, score in zip(targets, best.tolist(), conf.tolist(), strict=True):
+            if idx >= len(self._subject_labels):
+                continue
+            asset["subjectClass"] = self._subject_labels[int(idx)]
+            asset["subjectConfidence"] = round(float(score), 4)
+            refresh_semantic_tag_for_asset(asset)
+            labeled += 1
+        return labeled
+
     def _ensure_clip(self) -> bool:
         if self._model is not None:
             return True

@@ -65,7 +65,8 @@
     --radius: 4px;
     --page-pad: 0 24px;
     --page-width: clamp(1100px, 88vw, 1320px);
-    --bleed-width: clamp(1400px, 94vw, 2200px);
+    /* Web 正文与封面同宽贴边；版心纸边仅保留给文字轨（--page-width） */
+    --bleed-width: 100vw;
     --ratio-cover: 16 / 9;
     --ratio-media: 16 / 9;
     --ratio-scroll: 16 / 9;
@@ -239,7 +240,8 @@ html[data-layout="web"] {
   --caption-overlay: 0;
   --page-pad: 0 24px;
   --page-width: clamp(1100px, 88vw, 1320px);
-  --bleed-width: clamp(1400px, 94vw, 2200px);
+  /* Web 正文与封面同宽贴边；版心纸边仅保留给文字轨（--page-width） */
+  --bleed-width: 100vw;
   --bg: #f7f5f2;
   --bg-page: #f7f5f2;
   --text: #1c1b1a;
