@@ -54,7 +54,11 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-27 (e): overlap lighter 55×58, keep edge flush.
 # Re-bumped 2026-07-27 (f): landscape-3 asym + mixed-1p2l L2|P grids.
 # Re-bumped 2026-07-27 (g): LTE sync + CSS-primary overlays (L3E/M1P2L/height).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7fd3c3a4ef87"
+# Re-bumped 2026-07-27 (h): restore contain-collapse opt-out for mixed-1l1p /
+# landscape-3-editorial / person-pair|triple (export --sync-journal regression).
+# Re-bumped 2026-07-27 (i): mixed-1l1p both-cols full-height + person-pair
+# 100dvh height-adapt; CSS-primary moved into journal-screens-overlays.css SSOT.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}4fdae3dd29ae"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
