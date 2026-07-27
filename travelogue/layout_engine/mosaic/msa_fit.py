@@ -68,7 +68,10 @@ def crop_risk_for_pair(
 
     solved = solve_slot_focal(asset, float(slot_display_aspect))
     safety = solved.safety
-    if safety.face_clipped or (safety.has_person and not solved.feasible):
+    # Hard floor only when faces are actually clipped after solve. Oversized
+    # half-body protect infeasibility is a soft signal (protectContainment),
+    # not a contain mandate — otherwise 3:2 heroes in 16:9 bleed get letterboxed.
+    if safety.face_clipped:
         return round(_clamp01(max(base, 0.92)), 4)
     person_pen = 0.0
     if safety.has_person:

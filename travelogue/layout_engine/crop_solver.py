@@ -2,13 +2,28 @@
 
 Maps asset protect/face boxes into a slot's cover window and solves the
 ``object-position`` focal so faces stay intact. Falls back to centering the
-protect box when no feasible offset exists (caller may then flip to contain).
+protect box when no feasible offset exists.
+
+Contain flip is a last resort for **face** clipping only — oversized half-body
+``protectBox`` infeasibility must not destroy full-bleed cover contracts
+(e.g. ``screen-landscape-1`` 单横铺满).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
+
+# Patterns whose product contract is full-bleed cover (YAML fit:cover / 铺满).
+# Never flip to contain here: letterboxing + contain-collapse CSS creates large
+# paper margins that violate the single-landscape / single-panorama rule.
+_COVER_BLEED_NO_CONTAIN_FLIP: frozenset[str] = frozenset(
+    {
+        "screen-landscape-1",
+        "screen-panorama-1",
+        "screen-tall-1",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -370,6 +385,12 @@ def solve_slot_focal(
     return CropSolveResult(px, py, feasible, safety, win)
 
 
+def _allow_contain_flip(screen: Mapping[str, Any] | None) -> bool:
+    """False for full-bleed single-landscape (etc.) that must stay cover."""
+    pid = str((screen or {}).get("patternId") or "")
+    return pid not in _COVER_BLEED_NO_CONTAIN_FLIP
+
+
 def apply_slot_crop_focals(
     screen: dict[str, Any],
     *,
@@ -378,11 +399,14 @@ def apply_slot_crop_focals(
 ) -> list[dict[str, Any]]:
     """Mutate ``slots[].cropFocal`` (+ ``cropSafety``) for cover slots.
 
-    When ``contain_on_unsafe`` is true and the solved cover still clips a face
-    (or protect is infeasible), flip ``fit`` to ``contain`` so non-MSA screens
-    get the same safety net as MSA crop_risk contain.
+    When ``contain_on_unsafe`` is true and the solved cover still **clips a face**,
+    flip ``fit`` to ``contain`` (except full-bleed cover-contract patterns).
+
+    Protect-box infeasibility alone does **not** flip: half-body pads often
+    exceed the 16:9 window of a 3:2 hero, while faces still fit after solve.
     """
     assets_map = assets_map or {}
+    allow_flip = contain_on_unsafe and _allow_contain_flip(screen)
     summaries: list[dict[str, Any]] = []
     for slot in screen.get("slots") or []:
         if not isinstance(slot, dict):
@@ -412,16 +436,13 @@ def apply_slot_crop_focals(
         result = solve_slot_focal(asset_m, sr)
         slot["cropFocal"] = {"x": round(result.focal_x, 6), "y": round(result.focal_y, 6)}
         slot["cropSafety"] = result.safety.to_dict()
+        # Drop stale flip flags when re-solving a previously flipped slot.
+        slot.pop("cropContain", None)
         flipped = False
-        if contain_on_unsafe and (
-            result.safety.face_clipped
-            or (result.safety.has_person and not result.feasible)
-        ):
-            # Respect explicit portrait_fit contain already chosen outside.
-            if not slot.get("msaContain"):
-                slot["fit"] = "contain"
-                slot["cropContain"] = True
-                flipped = True
+        if allow_flip and result.safety.face_clipped and not slot.get("msaContain"):
+            slot["fit"] = "contain"
+            slot["cropContain"] = True
+            flipped = True
         summaries.append(
             {
                 "slot": slot.get("slot"),

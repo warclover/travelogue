@@ -170,16 +170,18 @@ def test_apply_slot_crop_focals_writes_fields() -> None:
     assert summaries[1]["skipped"] is True
 
 
-def test_apply_slot_crop_focals_flips_contain_when_unsafe() -> None:
+def test_apply_slot_crop_focals_flips_contain_when_face_clipped() -> None:
+    # Ultra-wide slot → vh tiny; face taller than window → faceClipped → contain.
     screen = {
+        "patternId": "screen-landscape-2",
         "slots": [
             {
                 "slot": 0,
                 "assetId": "a0",
                 "fit": "cover",
-                "displayAspect": 3.5,  # ultra-wide stack slot
+                "displayAspect": 3.5,
             }
-        ]
+        ],
     }
     assets = {
         "a0": {
@@ -194,3 +196,66 @@ def test_apply_slot_crop_focals_flips_contain_when_unsafe() -> None:
     assert screen["slots"][0]["fit"] == "contain"
     assert screen["slots"][0].get("cropContain") is True
     assert summaries[0]["containFlipped"] is True
+    assert summaries[0]["safety"]["faceClipped"] is True
+
+
+def test_protect_infeasible_keeps_cover_when_faces_fit() -> None:
+    """3:2 person hero into 16:9 landscape-1: protect may not fit, faces do."""
+    screen = {
+        "patternId": "screen-landscape-2",
+        "slots": [
+            {
+                "slot": 0,
+                "assetId": "a0",
+                "fit": "cover",
+                "displayAspect": 16 / 9,
+            }
+        ],
+    }
+    assets = {
+        "a0": {
+            "width": 3200,
+            "height": 2136,  # ~1.50
+            "focalPoint": {"x": 0.48, "y": 0.51},
+            # Half-body pad taller than 16:9 cover window (~0.84 vh)
+            "protectBox": {"x": 0.25, "y": 0.13, "w": 0.45, "h": 0.87},
+            "faces": [{"x": 0.40, "y": 0.28, "w": 0.20, "h": 0.35}],
+        }
+    }
+    result = solve_slot_focal(assets["a0"], 16 / 9)
+    assert not result.feasible
+    assert not result.safety.face_clipped
+
+    summaries = apply_slot_crop_focals(screen, assets_map=assets)
+    assert screen["slots"][0]["fit"] == "cover"
+    assert not screen["slots"][0].get("cropContain")
+    assert summaries[0]["containFlipped"] is False
+    assert "cropFocal" in screen["slots"][0]
+
+
+def test_landscape_1_never_flips_contain_even_if_face_clipped() -> None:
+    screen = {
+        "patternId": "screen-landscape-1",
+        "slots": [
+            {
+                "slot": 0,
+                "assetId": "a0",
+                "fit": "cover",
+                "displayAspect": 3.5,
+            }
+        ],
+    }
+    assets = {
+        "a0": {
+            "width": 1000,
+            "height": 1500,
+            "focalPoint": {"x": 0.5, "y": 0.4},
+            "protectBox": {"x": 0.2, "y": 0.1, "w": 0.6, "h": 0.7},
+            "faces": [{"x": 0.35, "y": 0.15, "w": 0.3, "h": 0.25}],
+        }
+    }
+    summaries = apply_slot_crop_focals(screen, assets_map=assets)
+    assert screen["slots"][0]["fit"] == "cover"
+    assert not screen["slots"][0].get("cropContain")
+    assert summaries[0]["containFlipped"] is False
+    assert summaries[0]["safety"]["faceClipped"] is True
