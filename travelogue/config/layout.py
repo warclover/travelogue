@@ -199,9 +199,9 @@ class Landscape2EditorialConfig:
 
 @dataclass
 class Landscape3EditorialConfig:
-    """Landscape-3 editorial · 2+1 asym soft rotation (default off)."""
+    """Landscape-3 editorial · 2+1 asym soft rotation (product default on)."""
 
-    enabled: bool = False
+    enabled: bool = True
     recent_window: int = 2
     repeat_penalty: float = 0.55
     strength_tie_epsilon: float = 0.08
@@ -209,9 +209,9 @@ class Landscape3EditorialConfig:
 
 @dataclass
 class Mixed1p2lConfig:
-    """Mixed 1P2L · p1l2 fill + L2|P mirror soft rotation (default off)."""
+    """Mixed 1P2L · p1l2 fill + L2|P mirror soft rotation (product default on)."""
 
-    enabled: bool = False
+    enabled: bool = True
     recent_window: int = 2
     repeat_penalty: float = 0.55
     strength_tie_epsilon: float = 0.08

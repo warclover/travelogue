@@ -85,7 +85,8 @@ def experimental_members_visible(
     if not cohort:
         return []
     tid = str(trip_id or "").strip()
-    if not tid or tid not in cohort:
+    # ``*`` = all trips (product GA); otherwise require exact tripId membership.
+    if "*" not in cohort and (not tid or tid not in cohort):
         return []
     out = [
         pid

@@ -22,7 +22,9 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.density_budget.enabled is defaults.density_budget.enabled
     assert cfg.template_contract.enabled is False
     assert cfg.template_contract.shadow_log is False
-    assert cfg.template_experiments.enabled is False
+    assert cfg.template_experiments.enabled is True
+    assert "screen-landscape-3-asymmetric-left" in cfg.template_experiments.allowlist
+    assert "*" in cfg.template_experiments.cohort_trip_ids
     assert cfg.selection_optimization.enabled is False
     assert cfg.slot_adaptation.enabled is False
     assert cfg.near_scene_clone_gate.enabled is defaults.near_scene_clone_gate.enabled

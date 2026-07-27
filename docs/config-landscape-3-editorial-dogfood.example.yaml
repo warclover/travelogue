@@ -1,5 +1,6 @@
-# Landscape-3 editorial dogfood — copy into local config.yaml (gitignore).
+# Landscape-3 editorial — product default is ON (code defaults).
 # Dual switch: landscape_3_editorial.enabled AND template_experiments.
+# cohort ``*`` = all trips; omit this file unless overriding.
 
 layout:
   landscape_3_editorial:
@@ -14,5 +15,6 @@ mosaic:
     allowlist:
       - screen-landscape-3-asymmetric-left
       - screen-landscape-3-asymmetric-right
+      - screen-landscape-2-portrait-1
     cohort_trip_ids:
-      - your-dogfood-trip-id
+      - "*"

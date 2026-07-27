@@ -1,6 +1,7 @@
-# Mixed 1P2L dogfood — copy into local config.yaml (gitignore).
+# Mixed 1P2L — product default is ON (code defaults).
 # Dual switch: mixed_1p2l.enabled AND template_experiments (allowlist + cohort_trip_ids).
 # Fill remains GA screen-portrait-1-landscape-2 (not in allowlist).
+# cohort ``*`` = all trips.
 
 layout:
   mixed_1p2l:
@@ -15,4 +16,4 @@ mosaic:
     allowlist:
       - screen-landscape-2-portrait-1
     cohort_trip_ids:
-      - your-dogfood-trip-id
+      - "*"

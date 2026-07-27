@@ -78,6 +78,15 @@ def test_empty_cohort_fallback_fill() -> None:
     assert pick.reason == "fallback_fill"
 
 
+def test_star_cohort_admits_any_trip() -> None:
+    cfg = _Cfg(cohort=("*",))
+    visible = experimental_members_visible(
+        mosaic_cfg=cfg.mosaic, trip_id="any-trip-id"
+    )
+    assert PATTERN_LANDSCAPE_3_ASYM_LEFT in visible
+    assert PATTERN_LANDSCAPE_3_ASYM_RIGHT in visible
+
+
 def test_left_strength_prefers_asym_left() -> None:
     cfg = _Cfg()
     pick = pick_landscape_3_variant(
