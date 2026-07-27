@@ -894,47 +894,97 @@ html[data-layout="web"] .layout-screen__grid--portrait-2-gallery .layout-slot[da
   grid-row: 2;
 }
 
-/* screen-landscape-1-portrait-1 · mixed-1l1p L|P */
+/* screen-landscape-1-portrait-1 · mixed-1l1p L|P
+   Portrait = stage height at 3:4 aperture (~42.2% of 16:9 width);
+   remainder → landscape (3:2), vertically centered. */
 html[data-layout="web"] .layout-screen__grid--landscape-left-portrait,
 html[data-layout="auto"] .layout-screen__grid--landscape-left-portrait {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 6fr) minmax(0, 1fr) minmax(0, 4fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 8fr) minmax(0, 1fr);
+  --mixed-1l1p-portrait-col: 42.1875%; /* (3/4) ÷ (16/9) */
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--mixed-1l1p-portrait-col));
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: clamp(0.45rem, 1vw, 0.95rem);
+  row-gap: 0;
   align-items: stretch;
+  padding-inline: clamp(0.15rem, 0.5vw, 0.45rem);
+  box-sizing: border-box;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-left-portrait .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--landscape-left-portrait .layout-slot[data-slot="0"] {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: stretch;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  max-height: 100%;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-left-portrait .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--landscape-left-portrait .layout-slot[data-slot="1"] {
-  grid-column: 4;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  justify-self: stretch;
+  height: 100%;
+  width: 100%;
 }
 
 /* screen-portrait-1-landscape-1 · mixed-1l1p P|L */
 html[data-layout="web"] .layout-screen__grid--portrait-left-landscape,
 html[data-layout="auto"] .layout-screen__grid--portrait-left-landscape {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 4fr) minmax(0, 1fr) minmax(0, 6fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) minmax(0, 8fr) minmax(0, 1fr);
+  --mixed-1l1p-portrait-col: 42.1875%;
+  grid-template-columns: minmax(0, var(--mixed-1l1p-portrait-col)) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: clamp(0.45rem, 1vw, 0.95rem);
+  row-gap: 0;
   align-items: stretch;
+  padding-inline: clamp(0.15rem, 0.5vw, 0.45rem);
+  box-sizing: border-box;
 }
 
 html[data-layout="web"] .layout-screen__grid--portrait-left-landscape .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--portrait-left-landscape .layout-slot[data-slot="0"] {
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: stretch;
+  justify-self: stretch;
+  height: 100%;
+  width: 100%;
 }
 
 html[data-layout="web"] .layout-screen__grid--portrait-left-landscape .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--portrait-left-landscape .layout-slot[data-slot="1"] {
-  grid-column: 4;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: stretch;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  max-height: 100%;
 }
 
-/* screen-landscape-2-overlap-tlbr / bltr · absolute diagonal overlap */
+/* Fill slots (opt out of generic contain-collapse); YAML fit:cover */
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-landscape-1-portrait-1"], [data-pattern="screen-portrait-1-landscape-1"]) .layout-slot,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-landscape-1-portrait-1"], [data-pattern="screen-portrait-1-landscape-1"]) .layout-slot {
+  display: block;
+  overflow: hidden;
+  background: transparent;
+}
+
+html[data-layout="web"] .layout-screen:is([data-pattern="screen-landscape-1-portrait-1"], [data-pattern="screen-portrait-1-landscape-1"]) .layout-slot > .layout-slot__img,
+html[data-layout="auto"] .layout-screen:is([data-pattern="screen-landscape-1-portrait-1"], [data-pattern="screen-portrait-1-landscape-1"]) .layout-slot > .layout-slot__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+}
+
+/* screen-landscape-2-overlap-tlbr / bltr · cornered diagonal, light overlap */
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr,
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr,
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr,
@@ -950,36 +1000,36 @@ html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot,
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot {
   position: absolute;
-  width: 58%;
-  height: 62%;
+  width: 50%;
+  height: 54%;
   margin: 0;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"] {
-  top: 8%;
-  left: 6%;
+  top: 3%;
+  left: 3%;
   z-index: 1;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"] {
-  right: 6%;
-  bottom: 8%;
+  right: 3%;
+  bottom: 3%;
   z-index: 2;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"] {
-  left: 6%;
-  bottom: 8%;
+  left: 3%;
+  bottom: 3%;
   z-index: 1;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"] {
-  top: 8%;
-  right: 6%;
+  top: 3%;
+  right: 3%;
   z-index: 2;
 }
 
@@ -1368,9 +1418,9 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
 }
 
 /* Non-mosaic grids only — mosaics use fixed-stage cell fill above */
-html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1382,9 +1432,9 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:no
   background: transparent;
 }
 
-html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
-html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain {
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain {
   display: block;
   flex: 0 0 auto;
   width: 100%;

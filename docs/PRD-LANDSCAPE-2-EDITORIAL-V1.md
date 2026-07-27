@@ -23,7 +23,8 @@
 
 ## 3. 叠压约定
 
-- 屏级 `position: relative`；两槽 `absolute` + 固定 inset（约 55–65% 宽高）+ `z-index`（slot1 前景）
+- 屏级 `position: relative`；两槽 `absolute` + **贴对角** inset（约 50%×54%，角距约 3%）+ `z-index`（slot1 前景）
+- 重叠宜轻：槽位向 TL/BR（或 BL/TR）拉开并略缩小，避免大面积盖住
 - 禁止 blur 假第三图；纸色留白为设计
 - 两槽 `fit: cover`
 

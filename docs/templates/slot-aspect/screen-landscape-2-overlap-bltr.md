@@ -3,7 +3,7 @@
 - displayName: landscape · 2 · overlap · bltr
 - status: experimental
 - stage: 16:9
-- note: Absolute overlap (BL/TR); overlap is intentional design.
+- note: Absolute overlap (BL/TR); light cornered overlap (~50%×54%, 3% inset).
 
 | slot | role | notes |
 |------|------|-------|
