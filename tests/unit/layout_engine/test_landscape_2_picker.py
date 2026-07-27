@@ -90,8 +90,8 @@ def test_left_strength_prefers_asym() -> None:
     assert pick.pattern_id == PATTERN_LANDSCAPE_2_ASYM_LEFT
 
 
-def test_tie_prefers_overlap_not_fill() -> None:
-    """AC: 强弱接近 → overlap；不得因 fill 权重更高而落 stack。"""
+def test_tie_falls_back_fill_while_overlap_parked() -> None:
+    """Overlap diagonals are parked repo-wide; tie must not emit them."""
     cfg = _Cfg()
     pick = pick_landscape_2_variant(
         ["a", "b"],
@@ -100,34 +100,31 @@ def test_tie_prefers_overlap_not_fill() -> None:
         trip_id="trip-dogfood",
         recent_pattern_ids=[],
     )
-    assert pick.pattern_id in (
+    assert pick.pattern_id == PATTERN_LANDSCAPE_2_FILL
+    assert pick.pattern_id not in (
         PATTERN_LANDSCAPE_2_OVERLAP_TLBR,
         PATTERN_LANDSCAPE_2_OVERLAP_BLTR,
     )
-    assert pick.reason == "overlap_tie"
-    assert pick.variant_role != "asymmetric-left"
 
 
-def test_tie_rotates_overlap_diagonals() -> None:
-    cfg = _Cfg()
-    first = pick_landscape_2_variant(
-        ["a", "b"],
-        assets_map={"a": _asset(aesthetic=0.5), "b": _asset(aesthetic=0.5)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
+def test_overlap_ids_stay_invisible_even_when_allowlisted() -> None:
+    from travelogue.layout_engine.planner.landscape_2_picker import (
+        experimental_members_visible,
     )
-    second = pick_landscape_2_variant(
-        ["a", "b"],
-        assets_map={"a": _asset(aesthetic=0.5), "b": _asset(aesthetic=0.5)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
-        recent_pattern_ids=[first.pattern_id],
+
+    cfg = _Cfg(
+        allowlist=(
+            PATTERN_LANDSCAPE_2_OVERLAP_TLBR,
+            PATTERN_LANDSCAPE_2_OVERLAP_BLTR,
+            PATTERN_LANDSCAPE_2_ASYM_LEFT,
+        )
     )
-    assert first.pattern_id != second.pattern_id
-    assert {first.pattern_id, second.pattern_id} == {
-        PATTERN_LANDSCAPE_2_OVERLAP_TLBR,
-        PATTERN_LANDSCAPE_2_OVERLAP_BLTR,
-    }
+    visible = experimental_members_visible(
+        mosaic_cfg=cfg.mosaic, trip_id="trip-dogfood"
+    )
+    assert PATTERN_LANDSCAPE_2_OVERLAP_TLBR not in visible
+    assert PATTERN_LANDSCAPE_2_OVERLAP_BLTR not in visible
+    assert PATTERN_LANDSCAPE_2_ASYM_LEFT in visible
 
 
 def test_landscape_pair_family_streak() -> None:
@@ -213,7 +210,6 @@ def test_family_on_short_run_emits_landscape_2_pair() -> None:
     assert len(ctx.screens) == 1
     assert ctx.screens[0]["patternId"] in (
         PATTERN_LANDSCAPE_2_FILL,
-        PATTERN_LANDSCAPE_2_OVERLAP_TLBR,
-        PATTERN_LANDSCAPE_2_OVERLAP_BLTR,
         PATTERN_LANDSCAPE_2_ASYM_LEFT,
     )
+    assert "overlap" not in ctx.screens[0]["patternId"]

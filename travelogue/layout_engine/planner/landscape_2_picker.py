@@ -16,16 +16,23 @@ PATTERN_LANDSCAPE_2_OVERLAP_TLBR = "screen-landscape-2-overlap-tlbr"
 PATTERN_LANDSCAPE_2_OVERLAP_BLTR = "screen-landscape-2-overlap-bltr"
 PATTERN_LANDSCAPE_2_ASYM_LEFT = "screen-landscape-2-asymmetric-left"
 
-ROTATION_EXPERIMENTAL_IDS: frozenset[str] = frozenset(
+# Diagonal overlap variants parked repo-wide (full-bleed ghosting dogfood).
+# Keep IDs for family/rhythm recognition of existing trips; do not admit new picks.
+PARKED_EXPERIMENTAL_IDS: frozenset[str] = frozenset(
     {
         PATTERN_LANDSCAPE_2_OVERLAP_TLBR,
         PATTERN_LANDSCAPE_2_OVERLAP_BLTR,
+    }
+)
+
+ROTATION_EXPERIMENTAL_IDS: frozenset[str] = frozenset(
+    {
         PATTERN_LANDSCAPE_2_ASYM_LEFT,
     }
 )
 
 LANDSCAPE_2_FAMILY_IDS: frozenset[str] = frozenset(
-    {PATTERN_LANDSCAPE_2_FILL} | ROTATION_EXPERIMENTAL_IDS
+    {PATTERN_LANDSCAPE_2_FILL} | ROTATION_EXPERIMENTAL_IDS | PARKED_EXPERIMENTAL_IDS
 )
 
 _VARIANT_ROLE: dict[str, str] = {
@@ -80,7 +87,11 @@ def experimental_members_visible(
     tid = str(trip_id or "").strip()
     if not tid or tid not in cohort:
         return []
-    out = [pid for pid in allow if pid in allowlist_intersect]
+    out = [
+        pid
+        for pid in allow
+        if pid in allowlist_intersect and pid not in PARKED_EXPERIMENTAL_IDS
+    ]
     return sorted(out, key=lambda p: _STABLE_ORDER.get(p, 99))
 
 
@@ -92,7 +103,7 @@ def _l2_cfg(cfg) -> object | None:
 def _disabled_ids(cfg) -> set[str]:
     te = getattr(getattr(cfg, "layout", None), "template_engine", None) if cfg else None
     raw = getattr(te, "overrides_disable", ()) if te is not None else ()
-    return {str(x) for x in (raw or ()) if x}
+    return {str(x) for x in (raw or ()) if x} | set(PARKED_EXPERIMENTAL_IDS)
 
 
 def recent_family_pattern_ids(
