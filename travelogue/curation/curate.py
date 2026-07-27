@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,6 +74,8 @@ _normalize_bucket_counts = normalize_bucket_counts
 _title_for_bucket_span = title_for_bucket_span
 _bucket_day_span = bucket_day_span
 _parse_asset_date = parse_asset_date
+
+_log = logging.getLogger(__name__)
 
 
 class CurateError(CodeError):
@@ -303,9 +306,9 @@ def _sync_trip_covers_core(
     try:
         from travelogue.vision.subject_backfill import ensure_subject_classes
 
-        ensure_subject_classes(trip, assets)
-    except Exception:
-        pass
+        ensure_subject_classes(trip, assets, cache_only=True)
+    except Exception as exc:
+        _log.warning("subjectClass cover backfill failed: %s", exc)
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
     sync_lock_mirrors(trip)

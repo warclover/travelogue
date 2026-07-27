@@ -1,0 +1,102 @@
+# 3P2L · 左满高竖主 + 右两行（横|竖）×2。experimental；勿写 lte_policy。
+id: screen-mosaic-5-3p2l-portrait-hero-lp-stack
+version: 1
+status: experimental
+kind: composite
+displayName: 五图 · 3P2L 竖主 + 右景人栈
+description: >
+  左满高竖 main（面积 0.55，AR≈0.978）+ 右侧两行「横|小竖」成对。
+  主从面积比 ≥3:1；横景信息量更高、辅竖适合窄槽特写时优先。
+aesthetic: hero_first
+balancePolicy: weighted_tracks
+
+stage:
+  aspect: "16:9"
+  cols: [11, 6, 3]
+  rows: [1, 1]
+  gap: "3px"
+  variants:
+    - { layout: web, aspect: "16:9" }
+    - { layout: mobile, aspect: "9:16" }
+
+photoCount: { min: 5, max: 5 }
+mix: { portrait: 3, landscape: 2 }
+
+slots:
+  - { index: 0, rect: [1, 1, 1, 2], role: main, fit: cover, visualWeight: 1.0 }
+  - { index: 1, rect: [2, 2, 1, 1], role: landscape, fit: cover, visualWeight: 0.62 }
+  - { index: 2, rect: [3, 3, 1, 1], role: portrait, fit: cover, visualWeight: 0.58 }
+  - { index: 3, rect: [2, 2, 2, 2], role: landscape, fit: cover, visualWeight: 0.62 }
+  - { index: 4, rect: [3, 3, 2, 2], role: portrait, fit: cover, visualWeight: 0.58 }
+
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+  arLadderSignOff:
+    "0":
+      signedBy: 3p2l-hero-lp-stack
+      signedAt: "2026-07-27"
+      note: "Portrait-hero main ~0.978 AR / area 0.55 (11/20×16:9; align 2p3l-portrait-hero-rail)"
+    "1":
+      signedBy: 3p2l-hero-lp-stack
+      signedAt: "2026-07-27"
+      note: "Landscape mid ~1.067 AR (6/20× half-height ×16:9)"
+    "2":
+      signedBy: 3p2l-hero-lp-stack
+      signedAt: "2026-07-27"
+      note: "Narrow portrait tip ~0.533 AR (3/20× half-height ×16:9)"
+  eligibility:
+    heroDominance: extreme
+    heroAreaBand: [0.55, 0.70]
+    slotIndex: 0
+    # Gate uses target vs native AR (max ratio 1.4). Keep 0.75 so typical
+    # 2:3 portraits admit; visual slot AR remains ~0.978 via cols [11,6,3].
+    targetDisplayAspect: 0.75
+    eligibleAspectKinds: [portrait]
+    forbidKinds: [panorama, landscape, square, tall]
+    arLadderTol: 0.12
+    preferLadder: [0.75, 0.6667, 0.5625]
+
+compatibilityHints:
+  prefers_burst: true
+  min_trip_photos: 12
+
+scoring:
+  base_weight: 1.04
+  tags: [hero, portrait-main, 3p2l, lp-stack]
+  rhythm:
+    max_per_chapter: 2
+    diversity_bonus: 0.08
+
+render:
+  gridClass: layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+
+rollout:
+  percent: 100
+  hash_key: tripId
+
+_legacy:
+  accepts:
+    min_portrait: 3
+    min_landscape: 2
+    max_portrait: 3
+    max_landscape: 2
+  css_verified: true
+
+usage:
+  summary: 3P2L 竖主：左满高人物 + 右（横|竖）×2 景人成对。
+  whenToUse: |
+    - 窗口恰 3 竖 + 2 横，横图信息量较高或需成对对照
+    - 两枚辅竖适合窄槽半身/特写
+  whenNotToUse: |
+    - 辅竖更适合等权半身并排（应选 3p2l-portrait-hero-quad）
+    - 仅 2 竖（应选 2p3l-portrait-hero-rail）
+  designIntent: 左竖主杂志页；与 quad 同混比软轮换。
+  siblings:
+    - id: screen-mosaic-5-3p2l-portrait-hero-quad
+      difference: 右侧为上双竖下双横四宫，而非（横|竖）成对。
+    - id: screen-mosaic-5-2p3l-portrait-hero-rail
+      difference: 该模板 2P3L；本模板 3P2L。

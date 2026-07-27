@@ -555,6 +555,7 @@ class ClipEncoder:
             return 0
         if not self._ensure_clip():
             return 0
+        self._ensure_subject_text_features()
         import numpy as np
         import torch
 
@@ -574,6 +575,16 @@ class ClipEncoder:
 
         mat = np.asarray(vectors, dtype=np.float32)[idxs]
         if mat.ndim != 2 or mat.shape[0] == 0:
+            return 0
+        text_dim = int(self._text_features.shape[-1])
+        if int(mat.shape[1]) != text_dim:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "subjectClass hydrate skipped: vector dim %s != text dim %s",
+                mat.shape[1],
+                text_dim,
+            )
             return 0
         norms = np.linalg.norm(mat, axis=1, keepdims=True)
         mat = mat / np.clip(norms, 1e-8, None)

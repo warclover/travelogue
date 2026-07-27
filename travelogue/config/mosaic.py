@@ -59,12 +59,14 @@ _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
 )
 
 
-# Triple-collage product defaults (L3E asym + mixed-1p2l L2|P).
+# Product defaults: triple collage + 3P2L five-up portrait-hero family.
 # cohort ``*`` = all trips; empty cohort remains fail-closed (nobody).
 _DEFAULT_TRIPLE_COLLAGE_ALLOWLIST: tuple[str, ...] = (
     "screen-landscape-3-asymmetric-left",
     "screen-landscape-3-asymmetric-right",
     "screen-landscape-2-portrait-1",
+    "screen-mosaic-5-3p2l-portrait-hero-quad",
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
 )
 
 
@@ -73,7 +75,9 @@ class TemplateExperimentsConfig:
     """MTSO · experimental / soft-rotation templates (orthogonal to template_contract).
 
     Fail-closed: enabled + empty cohort ⇒ nobody sees experimentals.
-    Product default: enabled with triple-collage allowlist and cohort ``*``.
+    Product default (whole section absent): enabled with triple-collage allowlist
+    and cohort ``*``. Partial blocks that omit allowlist/cohort keep empty tuples
+    (do not silently inject product defaults).
     Unknown keys under this root fail-loud.
     """
 
@@ -356,18 +360,14 @@ def _template_experiments_from_dict(raw: dict[str, Any]) -> TemplateExperimentsC
         raise ValueError(
             "mosaic.template_experiments unknown keys (fail-loud): " + ", ".join(unknown)
         )
+    # Partial block: missing allowlist/cohort stay empty (fail-closed).
+    # Product defaults apply only when the whole template_experiments section is absent.
     allow_raw = te.get("allowlist")
     cohort_raw = te.get("cohort_trip_ids", te.get("cohortTripIds"))
     return TemplateExperimentsConfig(
         enabled=cfg_bool(te, "enabled", "enabled", defaults.enabled),
-        allowlist=(
-            defaults.allowlist if allow_raw is None else _str_tuple(allow_raw)
-        ),
-        cohort_trip_ids=(
-            defaults.cohort_trip_ids
-            if cohort_raw is None
-            else _str_tuple(cohort_raw)
-        ),
+        allowlist=_str_tuple(allow_raw) if allow_raw is not None else (),
+        cohort_trip_ids=_str_tuple(cohort_raw) if cohort_raw is not None else (),
     )
 
 

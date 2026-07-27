@@ -24,6 +24,11 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.template_contract.shadow_log is False
     assert cfg.template_experiments.enabled is True
     assert "screen-landscape-3-asymmetric-left" in cfg.template_experiments.allowlist
+    assert "screen-mosaic-5-3p2l-portrait-hero-quad" in cfg.template_experiments.allowlist
+    assert (
+        "screen-mosaic-5-3p2l-portrait-hero-lp-stack"
+        in cfg.template_experiments.allowlist
+    )
     assert "*" in cfg.template_experiments.cohort_trip_ids
     assert cfg.selection_optimization.enabled is False
     assert cfg.slot_adaptation.enabled is False
@@ -72,6 +77,24 @@ def test_partial_dict_merges_defaults() -> None:
     assert cfg.enabled_window_sizes == defaults.enabled_window_sizes
     assert cfg.min_candidate_score == defaults.min_candidate_score
 
+
+def test_template_experiments_partial_enabled_stays_fail_closed() -> None:
+    """Explicit partial block must not inject product allowlist/cohort ``*``."""
+    cfg = mosaic_from_dict({"template_experiments": {"enabled": True}})
+    assert cfg.template_experiments.enabled is True
+    assert cfg.template_experiments.allowlist == ()
+    assert cfg.template_experiments.cohort_trip_ids == ()
+
+
+def test_template_experiments_absent_uses_product_defaults() -> None:
+    defaults = MosaicConfig()
+    cfg = mosaic_from_dict({})
+    assert cfg.template_experiments.enabled is defaults.template_experiments.enabled
+    assert cfg.template_experiments.allowlist == defaults.template_experiments.allowlist
+    assert (
+        cfg.template_experiments.cohort_trip_ids
+        == defaults.template_experiments.cohort_trip_ids
+    )
 
 def test_load_config_without_mosaic_section(tmp_path) -> None:
     cfg_path = tmp_path / "config.yaml"

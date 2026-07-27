@@ -115,11 +115,11 @@ def _experiments_admit(
     if pattern_id not in allow:
         return AdmitResult(False, "lifecycle_allowlist_miss")
     cohort = tuple(getattr(te, "cohort_trip_ids", ()) or ())
-    # SUP-08 · empty cohort ⇒ nobody
+    # SUP-08 · empty cohort ⇒ nobody; ``*`` ⇒ all trips (product GA)
     if not cohort:
         return AdmitResult(False, "lifecycle_cohort_miss")
     tid = str(trip_id or "").strip()
-    if not tid or tid not in cohort:
+    if "*" not in cohort and (not tid or tid not in cohort):
         return AdmitResult(False, "lifecycle_cohort_miss")
     return AdmitResult(True, "")
 

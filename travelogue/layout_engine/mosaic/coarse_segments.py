@@ -22,6 +22,8 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
     PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
+    PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+    PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
     PATTERN_MOSAIC_5_HERO_3_2_PLUS_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
@@ -68,6 +70,19 @@ SIGNATURE_WHITELIST: dict[tuple[int, int, bool], frozenset[str]] = {
     ),
     (2, 3, True): frozenset({PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL}),
     (2, 3, False): frozenset({PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL}),
+    # 3P2L · left portrait-hero quad / lp-stack soft family
+    (3, 2, True): frozenset(
+        {
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        }
+    ),
+    (3, 2, False): frozenset(
+        {
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        }
+    ),
 }
 
 

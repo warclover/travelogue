@@ -2,11 +2,11 @@
 
 | 属性 | 内容 |
 |------|------|
-| 日期 | 2026-07-27（§0 自 P2VF 回写；§0.3 自 Mixed 1L1P / Landscape-2 / L3E / Mixed 1P2L 狗粮回写） |
+| 日期 | 2026-07-27（§0 自 P2VF 回写；§0.3 自 Mixed 1L1P / Landscape-2 / L3E / Mixed 1P2L 狗粮回写；§2.1 自 3P2L 竖主 soft family） |
 | 关联 | [PRD MTSO](../PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [ACCEPTANCE](../ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
 | 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) · [Mixed 1L1P](./mixed-1l1p-v1-review-2026-07-27.md) · [Landscape-2 Editorial](./landscape-2-editorial-v1-review-2026-07-27.md) · [Landscape-3 Editorial](./landscape-3-editorial-v1-review-2026-07-27.md) · [Mixed 1P2L](./mixed-1p2l-v1-review-2026-07-27.md) |
 | 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) · [`docs/config-p2vf-dogfood.example.yaml`](../config-p2vf-dogfood.example.yaml) · [`docs/config-mixed-1l1p-dogfood.example.yaml`](../config-mixed-1l1p-dogfood.example.yaml) · [`docs/config-landscape-2-editorial-dogfood.example.yaml`](../config-landscape-2-editorial-dogfood.example.yaml) · [`docs/config-landscape-3-editorial-dogfood.example.yaml`](../config-landscape-3-editorial-dogfood.example.yaml) · [`docs/config-mixed-1p2l-dogfood.example.yaml`](../config-mixed-1p2l-dogfood.example.yaml) |
-| 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=false`（fail-closed） |
+| 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=true`（默认 allowlist 含 L3E / mixed-1p2l / **3P2L 竖主 pair**；`cohort_trip_ids=["*"]`）。本机若覆盖 allowlist，**须显式列入**要验的 id，否则假死 |
 
 > **不是** Go exit / 转正门槛。目标：验路径不崩、漏斗可读、双 SKU 可见性符合预期。
 
@@ -81,11 +81,15 @@ mosaic:
     allowlist:
       - screen-mosaic-5-1p4l-portrait-hero
       - screen-mosaic-5-2p3l-portrait-hero-rail
+      - screen-mosaic-5-3p2l-portrait-hero-quad
+      - screen-mosaic-5-3p2l-portrait-hero-lp-stack
     cohort_trip_ids:
       - your-trip-id-here
   selection_optimization:
     enabled: true
 ```
+
+> **配额坑**：`lte_policy.quotas.5.max_active_composite` 须够容纳双 SKU soft family；否则 `list_active` 会按 id 挤掉其中一个（soft pick 废半边）。3P2L 已把该配额提到 8。
 
 ---
 
@@ -95,16 +99,32 @@ mosaic:
 |---|------|------|
 | A | SO=true + experiments 三元组 | 强竖 1P4L 窗可看见 `1p4l-portrait-hero`；2P3L 窗可看见 `2p3l-portrait-hero-rail`；硬拒 `main-portrait-3land` 时 reason=`mixed_routing:mixed_portrait_is_hero` |
 | B | SO=true + experiments OFF | 硬拒 detail 含 `dual_sku_gated`；MCS 失败后 cursor 强竖 → `screen-portrait-1` rescue |
-| C | SO=false（嵌套子开关随意） | 与仓库默认路径一致；**无** mixed_routing 硬拒；experimental 仍不可见 |
+| C | SO=false（嵌套子开关随意） | 与仓库默认路径一致；**无** mixed_routing 硬拒；关闭 experiments 或 allowlist 不含 id 时 experimental 不可见 |
 
 漏斗断言读 **raw** `drain_mosaic_capture` / 决策日志字段（D-MTSO-11），勿只看展示 Top-3。
+
+### 2.1 3P2L 竖主 soft family（与 2P3L 互补）
+
+| # | 窗条件 | 期望 |
+|---|--------|------|
+| D | 恰 3P+2L；辅竖锐度领先 | `screen-mosaic-5-3p2l-portrait-hero-quad`（右上双竖 / 下双横内容角色） |
+| E | 恰 3P+2L；横图锐度领先 | `screen-mosaic-5-3p2l-portrait-hero-lp-stack`（右（横\|竖）×2） |
+| F | 2P+3L | **不应**出 3P2L；应走 `2p3l-portrait-hero-rail`（signature 互斥） |
+
+几何签核：主槽 area=0.55、displayAspect≈0.978（左轨 11/20，对齐 2P3L）；勿用 cols=12（会变成 AR≈1.07 假竖主）。
+
+```powershell
+python -m travelogue curate demo-2025
+python -m travelogue render demo-2025 --web-layout screens
+# 三处对照：config allowlist · trip.json patternId · index.html data-pattern*=3p2l
+```
 
 ---
 
 ## 3. 自动化烟测
 
 ```powershell
-python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py tests/unit/layout_engine/test_mtso_pr_c2_skus.py -q
+python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py tests/unit/layout_engine/test_mtso_pr_c2_skus.py tests/unit/layout_engine/test_mosaic_5_3p2l.py -q
 ```
 
 ---
@@ -113,4 +133,5 @@ python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py tests/unit/layout_en
 
 - [ ] 代表 trip compare（双阈值 AC-11）
 - [ ] 2P3L 三列几何截图签核（辅竖 AR≈0.27 可读）
+- [ ] 3P2L 双 SKU 截图签核（主槽 AR≈0.978；quad / lp-stack soft pick）
 - [ ] 转正或归档（AC-12）；通过前勿写 `lte_policy`

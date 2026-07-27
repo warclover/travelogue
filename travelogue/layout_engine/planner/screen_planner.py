@@ -99,6 +99,10 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-mosaic-5-2portrait-3land-balanced": "layout-screen__grid--mosaic-5-2portrait-3land-balanced",
     "screen-mosaic-5-3portrait-2land-balanced": "layout-screen__grid--mosaic-5-3portrait-2land-balanced",
     "screen-mosaic-5-main-hero-plus-4": "layout-screen__grid--mosaic-5-main-hero-plus-4",
+    "screen-mosaic-5-3p2l-portrait-hero-quad": "layout-screen__grid--mosaic-5-3p2l-portrait-hero-quad",
+    "screen-mosaic-5-3p2l-portrait-hero-lp-stack": (
+        "layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack"
+    ),
     "screen-mosaic-6-main-hero-plus-5": "layout-screen__grid--mosaic-6-main-hero-plus-5",
     "screen-landscape-1": "layout-screen__grid--1col",
     "screen-landscape-2": "layout-screen__grid--landscape-stack-2",
@@ -1210,6 +1214,14 @@ def _landscape_2_editorial_enabled(cfg: AppConfig | None) -> bool:
     return bool(getattr(l2, "enabled", False)) if l2 is not None else False
 
 
+def _layout_mix_gap(cfg: AppConfig | None, *, default: float = 1800.0) -> float:
+    """Shared proximity threshold for mixed/L2/L3 near-chain checks."""
+    layout = getattr(cfg, "layout", None) if cfg is not None else None
+    if layout is None:
+        return default
+    return float(getattr(layout, "mixed_proximity_seconds", default) or default)
+
+
 def _landscape_3_editorial_enabled(cfg: AppConfig | None) -> bool:
     if cfg is None:
         return False
@@ -1428,21 +1440,19 @@ def _plan_one_screen(
             and layout_state.can_use_nine()
         )
         grid_pool = land_run if can_nine_pool else bucket_ids
-        # Landscape-2 editorial: when family ON, prefer pairing two landscapes.
+        # Landscape-2 editorial: only for short runs that cannot form 4/6/9 grids.
+        # Prefer grids when len(grid_pool) >= 4 so L2 never starves nine/six/four.
         can_pair = layout_state is None or layout_state.can_emit_pattern(
             "screen-landscape-2"
         )
         if (
             _landscape_2_editorial_enabled(cfg)
             and can_pair
-            and len(grid_pool) >= 2
+            and 2 <= len(grid_pool) < 4
             and _time_near_chain(
                 grid_pool[:2],
                 assets_map,
-                burst_seconds=float(
-                    getattr(getattr(cfg, "layout", None), "mixed_proximity_seconds", 1800.0)
-                    or 1800.0
-                ),
+                burst_seconds=_layout_mix_gap(cfg),
             )
         ):
             return (

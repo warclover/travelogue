@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from travelogue.config.mosaic import MosaicConfig, TemplateExperimentsConfig
+from travelogue.config.mosaic import MosaicConfig
 from travelogue.layout_contract.quality import asset_sharpness
 from travelogue.layout_contract.rhythm import (
     PORTRAIT_PAIR_PATTERN,
@@ -17,6 +17,10 @@ from travelogue.layout_contract.rhythm import (
 )
 from travelogue.layout_contract.scoring import aesthetic_overall
 from travelogue.layout_contract.subject import asset_has_person
+from travelogue.layout_engine.planner.template_experiments_gate import (
+    disabled_template_ids,
+    experimental_members_visible as _experiments_visible,
+)
 
 StrengthSide = Literal["left", "right", "tie"]
 
@@ -78,21 +82,12 @@ def experimental_members_visible(
     allowlist_intersect: frozenset[str] = ROTATION_EXPERIMENTAL_IDS,
 ) -> list[str]:
     """Picker-side experiments gate (D-15). Empty cohort ⇒ nobody."""
-    if mosaic_cfg is None:
-        return []
-    te: TemplateExperimentsConfig | None = getattr(mosaic_cfg, "template_experiments", None)
-    if te is None or not getattr(te, "enabled", False):
-        return []
-    allow = tuple(getattr(te, "allowlist", ()) or ())
-    cohort = tuple(getattr(te, "cohort_trip_ids", ()) or ())
-    if not cohort:
-        return []
-    tid = str(trip_id or "").strip()
-    # ``*`` = all trips (product GA); otherwise require exact tripId membership.
-    if "*" not in cohort and (not tid or tid not in cohort):
-        return []
-    out = [pid for pid in allow if pid in allowlist_intersect]
-    return sorted(out, key=lambda p: _STABLE_ORDER.get(p, 99))
+    return _experiments_visible(
+        mosaic_cfg=mosaic_cfg,
+        trip_id=trip_id,
+        allowlist_intersect=allowlist_intersect,
+        stable_order=_STABLE_ORDER,
+    )
 
 
 def strength_side(
@@ -136,9 +131,7 @@ def _portrait_2_cfg(cfg) -> object | None:
 
 
 def _disabled_ids(cfg) -> set[str]:
-    te = getattr(getattr(cfg, "layout", None), "template_engine", None) if cfg else None
-    raw = getattr(te, "overrides_disable", ()) if te is not None else ()
-    return {str(x) for x in (raw or ()) if x}
+    return disabled_template_ids(cfg)
 
 
 def recent_family_pattern_ids(

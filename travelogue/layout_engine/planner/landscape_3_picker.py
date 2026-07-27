@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from travelogue.config.mosaic import MosaicConfig, TemplateExperimentsConfig
+from travelogue.config.mosaic import MosaicConfig
 from travelogue.layout_contract.rhythm import is_landscape_triple_pattern
 from travelogue.layout_engine.planner.portrait_2_picker import (
     StrengthSide,
     strength_side,
+)
+from travelogue.layout_engine.planner.template_experiments_gate import (
+    disabled_template_ids,
+    experimental_members_visible as _experiments_visible,
 )
 
 PATTERN_LANDSCAPE_3_FILL = "screen-landscape-3"
@@ -63,21 +67,12 @@ def experimental_members_visible(
     trip_id: str | None,
     allowlist_intersect: frozenset[str] = ROTATION_EXPERIMENTAL_IDS,
 ) -> list[str]:
-    if mosaic_cfg is None:
-        return []
-    te: TemplateExperimentsConfig | None = getattr(mosaic_cfg, "template_experiments", None)
-    if te is None or not getattr(te, "enabled", False):
-        return []
-    allow = tuple(getattr(te, "allowlist", ()) or ())
-    cohort = tuple(getattr(te, "cohort_trip_ids", ()) or ())
-    if not cohort:
-        return []
-    tid = str(trip_id or "").strip()
-    # ``*`` = all trips (product GA); otherwise require exact tripId membership.
-    if "*" not in cohort and (not tid or tid not in cohort):
-        return []
-    out = [pid for pid in allow if pid in allowlist_intersect]
-    return sorted(out, key=lambda p: _STABLE_ORDER.get(p, 99))
+    return _experiments_visible(
+        mosaic_cfg=mosaic_cfg,
+        trip_id=trip_id,
+        allowlist_intersect=allowlist_intersect,
+        stable_order=_STABLE_ORDER,
+    )
 
 
 def _l3_cfg(cfg) -> object | None:
@@ -86,9 +81,7 @@ def _l3_cfg(cfg) -> object | None:
 
 
 def _disabled_ids(cfg) -> set[str]:
-    te = getattr(getattr(cfg, "layout", None), "template_engine", None) if cfg else None
-    raw = getattr(te, "overrides_disable", ()) if te is not None else ()
-    return {str(x) for x in (raw or ()) if x}
+    return disabled_template_ids(cfg)
 
 
 def recent_family_pattern_ids(
@@ -134,6 +127,7 @@ def pick_landscape_3_variant(
     # First vs last: left-hero vs right-hero positions in time order.
     side = strength_side(a0, a2, tie_epsilon=eps)
 
+    # AC-L3E-04: tie → asym mirrors only (not fill). Preferred side missing → fill.
     pool: list[str] = list(candidates)
     if side == "left" and PATTERN_LANDSCAPE_3_ASYM_LEFT in pool:
         pool = [PATTERN_LANDSCAPE_3_ASYM_LEFT]
@@ -145,12 +139,10 @@ def pick_landscape_3_variant(
             for p in pool
             if variant_role(p) in ("asymmetric-left", "asymmetric-right")
         ]
-        if asyms:
-            pool = asyms
-        else:
-            pool = [fill]
+        pool = asyms or [fill]
     else:
-        pool = [p for p in pool if variant_role(p) != "fill"] or [fill]
+        # Preferred asym not in pool (disabled / not allowlisted) → fail closed to fill.
+        pool = [fill]
 
     if not pool:
         pool = [fill]
