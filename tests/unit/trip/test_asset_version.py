@@ -50,7 +50,9 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-27: mixed-1l1p + landscape-2 editorial grids in journal-screens.css.
 # Re-bumped 2026-07-27 (b): mixed slot AR fix + overlap cornered shrink.
 # Re-bumped 2026-07-27 (c): mixed L|P/P|L portrait full-height + landscape remainder.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}51c3443d0574"
+# Re-bumped 2026-07-27 (d): landscape-2 overlap edge-flush enlarge.
+# Re-bumped 2026-07-27 (e): overlap lighter 55×58, keep edge flush.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}e5ce67f67471"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

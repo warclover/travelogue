@@ -3,7 +3,7 @@
 - displayName: landscape · 2 · overlap · tlbr
 - status: experimental
 - stage: 16:9
-- note: Absolute overlap (TL/BR); light cornered overlap (~50%×54%, 3% inset).
+- note: Absolute overlap (TL/BR); ~55%×58%, flush top/left & bottom/right.
 
 | slot | role | notes |
 |------|------|-------|

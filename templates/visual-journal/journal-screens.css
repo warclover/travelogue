@@ -984,7 +984,7 @@ html[data-layout="auto"] .layout-screen:is([data-pattern="screen-landscape-1-por
   object-fit: cover;
 }
 
-/* screen-landscape-2-overlap-tlbr / bltr · cornered diagonal, light overlap */
+/* screen-landscape-2-overlap-tlbr / bltr · edge-flush diagonal, moderate overlap */
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr,
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr,
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr,
@@ -1000,36 +1000,39 @@ html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot,
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot {
   position: absolute;
-  width: 50%;
-  height: 54%;
+  /* Edge-flush corners; smaller than prior 60×66 to cut overlap (~10%×16%). */
+  width: 55%;
+  height: 58%;
   margin: 0;
 }
 
+/* TL/BR: flush top+left / bottom+right */
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="0"] {
-  top: 3%;
-  left: 3%;
+  top: 0;
+  left: 0;
   z-index: 1;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-tlbr .layout-slot[data-slot="1"] {
-  right: 3%;
-  bottom: 3%;
+  right: 0;
+  bottom: 0;
   z-index: 2;
 }
 
+/* BL/TR: flush bottom+left / top+right */
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="0"] {
-  left: 3%;
-  bottom: 3%;
+  left: 0;
+  bottom: 0;
   z-index: 1;
 }
 
 html[data-layout="web"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"],
 html[data-layout="auto"] .layout-screen__grid--landscape-2-overlap-bltr .layout-slot[data-slot="1"] {
-  top: 3%;
-  right: 3%;
+  top: 0;
+  right: 0;
   z-index: 2;
 }
 

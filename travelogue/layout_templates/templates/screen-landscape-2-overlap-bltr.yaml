@@ -4,7 +4,7 @@ status: experimental
 kind: primitive
 displayName: landscape · 2 · overlap · bltr
 description: >
-  双横对角叠压：slot0 左下、slot1 右上前景（landscape-2-editorial · V1）。
+  双横对角叠压：slot0 左下贴底/左、slot1 右上贴顶/右前景（约 55%×58%，轻叠压）。
 photoCount: { min: 2, max: 2 }
 
 stage:
