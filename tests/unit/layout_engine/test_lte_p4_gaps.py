@@ -65,42 +65,50 @@ def test_collage_fixture_eval_recall() -> None:
 @pytest.mark.unit
 def test_probe_profiles_include_person() -> None:
     assert any("person" in (p.get("tags") or []) for p in PROBE_PROFILES)
-    assert _worst_saliency_for_slot(2.0) <= 1.0
+    assert _worst_saliency_for_slot(2.0, "landscape") <= 1.0
 
 
 @pytest.mark.unit
 def test_saliency_gate_is_not_a_noop() -> None:
-    """Adversarial edge-focal proof the saliency metric can drop below the gate.
+    """Person-safe face-clip gate must fire when protect exceeds the cover window.
 
-    The shipped ``PROBE_PROFILES`` all use near-center focals, so every real slot
-    currently scores 1.0 and the 0.55 threshold never fires. That makes the gate
-    indistinguishable from a no-op. These asserts pin the *mechanism*: an
-    off-center focal on the crop axis must drive retention below 1.0 — and below
-    the 0.55 warn threshold — so a future edge-focal profile (or person-tag
-    corpus) will produce real signal rather than silent passes.
+    CSS object-position percentage always keeps the focal point itself inside the
+    visible window, so the old center-crop edge-focal proof no longer applies.
+    Pin the *mechanism* on a deliberately oversized protect box instead.
     """
-    centered = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.5)
-    assert centered == pytest.approx(1.0)
+    from travelogue.layout_engine.crop_solver import NormBox
+    from travelogue.layout_templates.probe_regress import (
+        _cover_focal_retention,
+        _profile_face_clipped,
+        _profile_saliency_retention,
+    )
 
-    # Wide slot (4:1) cropping a square asset keeps only the vertical center band
-    # [0.375, 0.625]; a focal pinned to the bottom edge falls outside it.
-    edge = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.95)
-    assert edge < 1.0
-    assert edge < 0.55
+    # Focal is always visible under percentage positioning.
+    assert _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.95) == pytest.approx(1.0)
 
-    partial = _cover_focal_retention(4.0, 1.0, focal_x=0.5, focal_y=0.70)
-    assert 0.0 < partial < 1.0
-
-    # Person tag must amplify (not mask) a poor crop via the <0.75 penalty branch.
-    person_profile = {
-        "name": "edge-person",
+    # Oversized protect on a tall crop axis → faceClipped / retention collapse.
+    hostile = {
+        "name": "oversized-protect",
         "aspect": 1.0,
-        "focal": (0.5, 0.95),
+        "focal": (0.5, 0.5),
         "tags": ["person"],
+        "faces": (NormBox(0.2, 0.05, 0.6, 0.35),),
+        "protect": NormBox(0.1, 0.0, 0.8, 0.95),
     }
-    person_retention = _profile_saliency_retention(4.0, person_profile)
-    assert person_retention <= edge
-    assert person_retention < 0.55
+    assert _profile_face_clipped(4.0, hostile) is True
+    assert _profile_saliency_retention(4.0, hostile) < 0.55
+
+    # Compatible bust into a portrait-readable slot stays safe after solve.
+    bust = {
+        "name": "bust-ok",
+        "aspect": 0.75,
+        "focal": (0.5, 0.32),
+        "tags": ["person"],
+        "faces": (NormBox(0.35, 0.12, 0.30, 0.22),),
+        "protect": NormBox(0.28, 0.04, 0.44, 0.50),
+    }
+    assert _profile_face_clipped(0.75, bust) is False
+    assert _profile_saliency_retention(0.75, bust) >= 0.95
 
 
 @pytest.mark.unit

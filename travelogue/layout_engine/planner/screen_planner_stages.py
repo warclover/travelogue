@@ -354,6 +354,7 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     from travelogue.layout_contract.rhythm_gap import assign_rhythm_gaps_on_append
     from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+    from travelogue.layout_templates.geometry_solidify import solidify_screen_geometry
 
     pid = str(screen.get("patternId") or "")
     # MTSO · pass tripId + ctx mosaic so experimental cohort matches picker path
@@ -368,6 +369,9 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
     if ctx.layout_state:
         ctx.layout_state.note_screen(screen.get("patternId", ""))
     assign_screen_id(ctx, screen)
+    # Persist displayAspect + person-safe cropFocal for every emitted screen.
+    if pid and pid != "screen-breath-pause":
+        solidify_screen_geometry(screen, pid, assets_map=ctx.assets_map or {})
     # LTN B1 / ADR-020 · fill Narrative Contract defaults after screenId exists.
     ensure_narrative_contract(screen)
     # LTN D1 · L0/L1/L2 screen-gap hints (may tighten/widen previous screen).

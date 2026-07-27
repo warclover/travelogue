@@ -20,11 +20,19 @@ def _probe_regression_step(template_id: str, *, target: AdmissionTarget) -> tupl
 
     engine = get_engine()
     probe = run_probe_for_template(engine, template_id)
+    face_clip_hits = [
+        s
+        for s in (probe.get("samples") or [])
+        if s.get("worstFaceClipped")
+    ]
     step: dict[str, Any] = {
         "name": "probe_regression",
         "ok": probe["ok"],
         "warnings": probe.get("warnings") or [],
         "probeCount": probe.get("probeCount", 0),
+        "worstFaceClippedSlots": [
+            {"slot": s.get("slot"), "role": s.get("role")} for s in face_clip_hits
+        ],
     }
     if probe.get("skipped"):
         step["skipped"] = True

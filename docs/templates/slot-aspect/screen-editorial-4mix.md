@@ -1,7 +1,7 @@
 # screen-editorial-4mix
 
 - displayName: editorial · 4mix · chess-2L2P
-- status: experimental
+- status: deprecated
 - stage: 16:9
 
 | slot | role | displayAspect |

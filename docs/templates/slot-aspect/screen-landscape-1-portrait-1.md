@@ -4,7 +4,7 @@
 - status: experimental
 - stage: 16:9
 
-| slot | role | notes |
-|------|------|-------|
-| 0 | landscape | left mid-band (~1.5 AR), not full height |
-| 1 | portrait | right, full content band |
+| slot | role | displayAspect |
+|------|------|---------------|
+| 0 | landscape | 1.1378 |
+| 1 | portrait | 0.6400 |

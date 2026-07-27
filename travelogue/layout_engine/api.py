@@ -14,6 +14,7 @@ from travelogue.layout_contract.engines import (
 from travelogue.layout_engine.adapter import (
     ChapterPlanRequest,
     attach_screens_to_chapters,
+    begin_mosaic_capture,
     drain_mosaic_capture,
     drain_mosaic_dropped,
     lse_enabled,
@@ -37,6 +38,7 @@ __all__ = [
     "ReplanError",
     "annotate_winner_plan_logs",
     "attach_screens_to_chapters",
+    "begin_mosaic_capture",
     "compose_trip",
     "drain_mosaic_capture",
     "drain_mosaic_dropped",

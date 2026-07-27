@@ -64,6 +64,7 @@ class MosaicWindowLog:
     track_override: dict[str, Any] | None = None
     slot_fits: list[str] | None = None
     crop_risk: list[float] | None = None
+    crop_focals: list[dict[str, Any]] | None = None
     whitespace_ratio: float | None = None
     msa_outcome: str | None = None
 
@@ -101,6 +102,7 @@ class MosaicWindowLog:
             "trackOverride": self.track_override,
             "slotFits": list(self.slot_fits) if self.slot_fits is not None else None,
             "cropRisk": list(self.crop_risk) if self.crop_risk is not None else None,
+            "cropFocals": list(self.crop_focals) if self.crop_focals is not None else None,
             "whitespaceRatio": self.whitespace_ratio,
             "msaOutcome": self.msa_outcome,
         }

@@ -12,7 +12,10 @@ balancePolicy: weighted_tracks
 
 stage:
   aspect: "16:9"
-  cols: [11, 6, 3]
+  # Widen tip cols so narrow portraits leave 0.533 (below PORTRAIT_AR_MIN)
+  # for ~0.711; mid becomes near-square (~0.889) — signed off below.
+  # Main weight kept at 11/20 → area 0.55 / AR≈0.978 unchanged.
+  cols: [11, 5, 4]
   rows: [1, 1]
   gap: "3px"
   variants:
@@ -41,17 +44,25 @@ constraints:
     "1":
       signedBy: 3p2l-hero-lp-stack
       signedAt: "2026-07-27"
-      note: "Landscape mid ~1.067 AR (6/20× half-height ×16:9)"
+      note: "Mid scene ~0.889 AR (5/20× half-height ×16:9; near-square; person-safe crop covers)"
     "2":
       signedBy: 3p2l-hero-lp-stack
       signedAt: "2026-07-27"
-      note: "Narrow portrait tip ~0.533 AR (3/20× half-height ×16:9)"
+      note: "Narrow portrait tip ~0.711 AR (4/20× half-height ×16:9; left PORTRAIT_AR_MIN floor)"
+    "3":
+      signedBy: 3p2l-hero-lp-stack
+      signedAt: "2026-07-27"
+      note: "Mid scene ~0.889 AR (mirror of slot 1)"
+    "4":
+      signedBy: 3p2l-hero-lp-stack
+      signedAt: "2026-07-27"
+      note: "Narrow portrait tip ~0.711 AR (mirror of slot 2)"
   eligibility:
     heroDominance: extreme
     heroAreaBand: [0.55, 0.70]
     slotIndex: 0
     # Gate uses target vs native AR (max ratio 1.4). Keep 0.75 so typical
-    # 2:3 portraits admit; visual slot AR remains ~0.978 via cols [11,6,3].
+    # 2:3 portraits admit; visual slot AR remains ~0.978 via cols [11,5,4].
     targetDisplayAspect: 0.75
     eligibleAspectKinds: [portrait]
     forbidKinds: [panorama, landscape, square, tall]

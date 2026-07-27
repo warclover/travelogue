@@ -4,7 +4,7 @@
 - status: experimental
 - stage: 16:9
 
-| slot | role | notes |
-|------|------|-------|
-| 0 | landscape | large left |
-| 1 | landscape | small right, vertically centered |
+| slot | role | displayAspect |
+|------|------|---------------|
+| 0 | landscape | 1.0864 |
+| 1 | landscape | 1.1175 |

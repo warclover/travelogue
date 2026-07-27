@@ -5,7 +5,7 @@ status: experimental
 kind: composite
 displayName: 五图 · 3P2L 竖主 + 右四宫
 description: >
-  左满高竖 main（面积 0.55，AR≈0.978）+ 右上双竖对照 + 右下双横铺景。
+  左满高竖 main（面积 0.55，AR≈0.978）+ 右上双竖对照 + 右下双横铺景（≈4:3）。
   主从面积比 ≥3:1；吃竖人多、横景辅的窗口。
 aesthetic: hero_first
 balancePolicy: weighted_tracks
@@ -13,7 +13,9 @@ balancePolicy: weighted_tracks
 stage:
   aspect: "16:9"
   cols: [22, 9, 9]
-  rows: [1, 1]
+  # Unequal rows: top portraits taller, bottom landscapes reach 4:3 (1.333).
+  # Main spans both rows → AR≈0.978 / area 0.55 unchanged.
+  rows: [7, 3]
   gap: "3px"
   variants:
     - { layout: web, aspect: "16:9" }
@@ -37,7 +39,23 @@ constraints:
     "0":
       signedBy: 3p2l-hero-quad
       signedAt: "2026-07-27"
-      note: "Portrait-hero main ~0.978 AR / area 0.55 (11/20×16:9; align 2p3l-portrait-hero-rail)"
+      note: "Portrait-hero main ~0.978 AR / area 0.55 (22/40×16:9; align 2p3l-portrait-hero-rail)"
+    "1":
+      signedBy: 3p2l-hero-quad
+      signedAt: "2026-07-27"
+      note: "Top portrait tip ~0.571 AR (9/40 × 7/10 row ×16:9; near 9:16)"
+    "2":
+      signedBy: 3p2l-hero-quad
+      signedAt: "2026-07-27"
+      note: "Top portrait tip ~0.571 AR (mirror of slot 1)"
+    "3":
+      signedBy: 3p2l-hero-quad
+      signedAt: "2026-07-27"
+      note: "Bottom landscape ~1.333 AR (9/40 × 3/10 row ×16:9; on 4:3 ladder)"
+    "4":
+      signedBy: 3p2l-hero-quad
+      signedAt: "2026-07-27"
+      note: "Bottom landscape ~1.333 AR (mirror of slot 3)"
   eligibility:
     heroDominance: extreme
     heroAreaBand: [0.55, 0.70]

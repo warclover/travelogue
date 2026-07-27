@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from typing import Any
+
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
@@ -471,12 +473,43 @@ def pick_best_window(
 
 
 def _attach_msa_log_from_screen(log: MosaicWindowLog, screen: dict | None) -> None:
-    """Copy MSA instance fields from screen.layoutGeometry into raw window log."""
+    """Copy MSA instance fields from screen.layoutGeometry into raw window log.
+
+    Always mirrors slot ``cropFocal`` / ``cropSafety`` when present so person-safe
+    crop telemetry lands in mosaicDecisionLog even when MSA parent is OFF / not
+    whitelisted (no ``layoutGeometry.msa`` block).
+    """
     geo = (screen or {}).get("layoutGeometry") or {}
     msa = geo.get("msa") if isinstance(geo.get("msa"), dict) else {}
+
+    def _derive_crop_focals() -> list[dict[str, Any]] | None:
+        derived: list[dict[str, Any]] = []
+        for s in (screen or {}).get("slots") or []:
+            if not isinstance(s, dict):
+                continue
+            if not s.get("cropFocal") and not s.get("cropSafety"):
+                continue
+            derived.append(
+                {
+                    "slot": s.get("slot"),
+                    "assetId": s.get("assetId"),
+                    "cropFocal": s.get("cropFocal"),
+                    "safety": s.get("cropSafety"),
+                    "feasible": not bool((s.get("cropSafety") or {}).get("faceClipped")),
+                    "containFlipped": bool(s.get("cropContain")),
+                }
+            )
+        return derived or None
+
     if not msa:
         log.msa_outcome = log.msa_outcome or "skipped_parent_off"
+        if log.crop_focals is None:
+            log.crop_focals = _derive_crop_focals()
+        fits = [str(s.get("fit") or "cover") for s in (screen or {}).get("slots") or []]
+        if fits and log.slot_fits is None:
+            log.slot_fits = fits
         return
+
     log.msa_profile = msa.get("profile")
     log.r_hero_target = msa.get("rHeroTarget")
     log.track_override = geo.get("trackOverride")
@@ -484,6 +517,11 @@ def _attach_msa_log_from_screen(log: MosaicWindowLog, screen: dict | None) -> No
     log.slot_fits = fits or None
     crop = msa.get("cropRisk")
     log.crop_risk = list(crop) if isinstance(crop, list) else None
+    focals = msa.get("cropFocals")
+    if isinstance(focals, list):
+        log.crop_focals = list(focals)
+    else:
+        log.crop_focals = _derive_crop_focals()
     ws = msa.get("whitespaceRatio", geo.get("whitespaceRatio"))
     try:
         log.whitespace_ratio = float(ws) if ws is not None else None
