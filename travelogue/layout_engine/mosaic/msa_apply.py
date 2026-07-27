@@ -11,6 +11,7 @@ from travelogue.config.mosaic import (
 from travelogue.layout_engine.mosaic.msa_assign import refine_aux_assignment
 from travelogue.layout_engine.mosaic.msa_fit import apply_crop_risk_fits
 from travelogue.layout_engine.mosaic.msa_profile import MsaProfile, build_msa_profile
+from travelogue.layout_engine.crop_solver import apply_slot_crop_focals
 from travelogue.layout_engine.mosaic.msa_solve import (
     MSA_M1_PATTERN_WHITELIST,
     resolve_main_r_star,
@@ -171,6 +172,9 @@ def maybe_apply_slot_adaptation(
     swapped = refine_aux_assignment(screen, assets_map=assets_map or {})
     summary["auxSwap"] = bool(swapped)
 
+    crop_summaries = apply_slot_crop_focals(screen, assets_map=assets_map or {})
+    summary["cropFocals"] = crop_summaries
+
     risks, whitespace = apply_crop_risk_fits(
         screen,
         assets_map=assets_map or {},
@@ -225,6 +229,8 @@ def maybe_apply_slot_adaptation(
                     s.pop("msaContain", None)
                     if str(s.get("fit")) == "contain":
                         s["fit"] = "cover"
+            crop_summaries = apply_slot_crop_focals(screen, assets_map=assets_map or {})
+            summary["cropFocals"] = crop_summaries
             risks, whitespace = apply_crop_risk_fits(
                 screen,
                 assets_map=assets_map or {},
@@ -254,6 +260,7 @@ def maybe_apply_slot_adaptation(
         "rHeroTarget": summary["rHeroTarget"],
         "variantOutcomes": summary.get("variantOutcomes"),
         "cropRisk": risks,
+        "cropFocals": summary.get("cropFocals"),
         "whitespaceRatio": whitespace,
         "auxSwap": bool(swapped),
         "whitespaceCapped": whitespace_capped,

@@ -241,6 +241,41 @@ def test_ac08_raw_log_fields_from_screen() -> None:
     assert d["whitespaceRatio"] == 0.04
 
 
+def test_crop_focals_derived_when_msa_absent() -> None:
+    """Person-safe crop telemetry must land even when MSA parent is OFF."""
+    from travelogue.layout_engine.mosaic.compose import _attach_msa_log_from_screen
+
+    screen = {
+        "slots": [
+            {
+                "slot": 0,
+                "assetId": "a",
+                "fit": "cover",
+                "cropFocal": {"x": 0.4, "y": 0.3},
+                "cropSafety": {"faceClipped": False},
+            },
+            {
+                "slot": 1,
+                "assetId": "b",
+                "fit": "contain",
+                "cropFocal": {"x": 0.5, "y": 0.5},
+                "cropSafety": {"faceClipped": True},
+                "cropContain": True,
+            },
+        ],
+    }
+    log = MosaicWindowLog()
+    _attach_msa_log_from_screen(log, screen)
+    d = log.to_dict()
+    assert d["msaOutcome"] == "skipped_parent_off"
+    assert d["slotFits"] == ["cover", "contain"]
+    assert d["cropFocals"] is not None
+    assert len(d["cropFocals"]) == 2
+    assert d["cropFocals"][0]["feasible"] is True
+    assert d["cropFocals"][1]["containFlipped"] is True
+    assert d["cropFocals"][1]["feasible"] is False
+
+
 def test_page_whitespace_ratio_zero_when_all_cover() -> None:
     slots = [{"fit": "cover", "assetId": "a", "displayAspect": 1.5}]
     assets = {"a": _land("a", w=3000, h=2000)}

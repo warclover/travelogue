@@ -281,6 +281,10 @@ def _build_entry_from_worker_result(
         entry["contentSig"] = result.content_sig
     if result.salient_box:
         entry["salientBox"] = result.salient_box
+    if result.protect_box:
+        entry["protectBox"] = result.protect_box
+    if result.faces_norm:
+        entry["faces"] = [dict(f) for f in result.faces_norm]
     if tags:
         entry["tags"] = tags
         entry["tagsSource"] = "heuristic"

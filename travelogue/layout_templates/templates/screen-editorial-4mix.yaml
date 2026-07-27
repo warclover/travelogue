@@ -1,11 +1,16 @@
 id: screen-editorial-4mix
 version: 1
-status: experimental
+# Parked 2026-07-27 · equal 2×2 cells are landscape AR (1.778) but slots 1/2
+# declare role:portrait (validator block V-P16-04). Also mix.portrait=2 conflicts
+# with portrait_forbidden_in_wide_slots covering every cell. Keep YAML for
+# compare/dogfood tooling; do not select for new trips until redesign.
+status: deprecated
 kind: composite
 displayName: editorial · 4mix · chess-2L2P
 description: >
   四图横竖棋盘：TL/BR 横图（各≈25% 舞台面积），TR/BL 竖图（同行等高）；
   Kicker/Body 文案区（2land 同族）；视觉 intrinsic render。
+  PARKED：role/AR 矛盾 + mix vs portrait_forbidden 自相矛盾，待设计重开。
 stage:
   aspect: '16:9'
   # Equal 2×2 so each tile ≈1/4 stage (dogfood: weighted tracks read as broken puzzle).
@@ -78,21 +83,17 @@ render:
   fitPolicy: auto_delegate
   presentation: editorial-4mix
 rollout:
-  # Dark-launch until dogfood / contract on (AC-TPC-01 golden stability)
   percent: 0
-  zeroSince: "2026-07-20"  # LTN E1 · review within 4 weeks or promote/archive
   hash_key: tripId
+
 usage:
-  summary: 四图横竖棋盘 + 留白呼吸：TL/BR 横图、TR/BL 竖图呈 Z 字混排，适合密度屏之后的“换口气”。
+  summary: PARKED 四图棋盘（role/AR 矛盾待重开）；保留 YAML 供 compare 工具。
   whenToUse: |
-    - 窗口恰 2 横 + 2 竖，且四张图质量接近、不需要 hero 主次时
-    - 前一屏为 dense 拼图或九宫格，需要 airy 呼吸屏缓冲节奏时
-    - 章内有 decorLine / 用户 voice，可填 kicker/body 文案位时（experimental）
+    - 当前不选：status=deprecated（2026-07-27 park）
   whenNotToUse: |
-    - 窗口内有明确 hero 或需要主次分明时（应选 mosaic 主图类或 landscape-1）
-    - 纯横图或纯竖图连拍（mix 硬约束不满足；纯竖走 portrait-3-editorial）
-    - 章内已有 editorial 屏（rhythm max_per_chapter: 1）
-  designIntent: 加权轨道实现横竖棋盘而非等分 2×2；与 portrait-2-landscape-2 相比多了节奏配额与文案预留。
+    - Equal 2×2 cells are landscape AR 1.778 but slots 1/2 declare portrait (V-P16-04 block)
+    - mix.portrait=2 conflicts with portrait_forbidden_in_wide_slots covering every cell
+  designIntent: 加权轨道实现横竖棋盘而非等分 2×2；parked until redesign resolves role/AR + forbidden constraints.
   siblings:
     - id: screen-portrait-2-landscape-2
       difference: 该模板为 16:9 等分 2×2 无文案；本模板加权棋盘 + 每章限 1 次 editorial 节奏。

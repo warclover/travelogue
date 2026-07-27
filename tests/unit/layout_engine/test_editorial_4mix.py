@@ -109,7 +109,8 @@ def _mixed_4_assets() -> tuple[dict[str, str], dict[str, dict]]:
 def test_lte_template_loads() -> None:
     tpl = get_layout_template(PATTERN_EDITORIAL_4MIX)
     assert tpl.id == PATTERN_EDITORIAL_4MIX
-    assert tpl.status == "experimental"
+    # Parked 2026-07-27 · role/AR block + mix vs portrait_forbidden contradiction.
+    assert tpl.status == "deprecated"
     assert tpl.render_grid_class == "layout-screen__grid--editorial-4mix"
     assert tpl.photo_count_min == 4
     assert tpl.photo_count_max == 4

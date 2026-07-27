@@ -95,7 +95,9 @@ class WorkerResult:
     has_face: bool = False
     face_count: int = 0
     faces: tuple[tuple[int, int, int, int], ...] = ()
+    faces_norm: tuple[dict[str, float], ...] = ()
     salient_box: dict[str, float] | None = None
+    protect_box: dict[str, float] | None = None
     subject_tags: tuple[str, ...] = ()
     mean_luma: float = 0.0
     dominant_tone: str | None = None
@@ -198,7 +200,9 @@ def process_ingest_photo_worker(
         result.has_face = bool(subj.has_face)
         result.face_count = int(subj.face_count)
         result.faces = tuple(subj.faces)
+        result.faces_norm = tuple(dict(f) for f in (subj.faces_norm or ()))
         result.salient_box = dict(subj.salient_box) if subj.salient_box else None
+        result.protect_box = dict(subj.protect_box) if subj.protect_box else None
         result.subject_tags = tuple(subj.tags)
         result.focal_x = float(subj.focal[0])
         result.focal_y = float(subj.focal[1])
@@ -274,6 +278,8 @@ def process_ingest_photo_worker(
                 "faceCount": result.face_count,
             },
             "salientBox": result.salient_box,
+            "protectBox": result.protect_box,
+            "faces": list(result.faces_norm) if result.faces_norm else [],
         }
         from travelogue.media.media_classify import classify_media_class
 

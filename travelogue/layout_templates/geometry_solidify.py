@@ -70,4 +70,10 @@ def solidify_screen_geometry(
             asset or {},
         )
 
+    # Person-safe cover object-position for every solidified screen (MSA re-solves
+    # after track overrides when whitelisted).
+    from travelogue.layout_engine.crop_solver import apply_slot_crop_focals
+
+    apply_slot_crop_focals(screen, assets_map=assets_map)
+
     return screen

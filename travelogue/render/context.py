@@ -879,9 +879,25 @@ def build_layout_screen(
                 except (TypeError, ValueError):
                     pass
             fp = asset.get("focalPoint") or {}
+            cf = slot.get("cropFocal") if isinstance(slot.get("cropFocal"), dict) else None
             try:
-                fx = float(fp.get("x", 0.5))
-                fy = float(fp.get("y", 0.45))
+                if cf is not None and cf.get("x") is not None and cf.get("y") is not None:
+                    fx = float(cf.get("x", 0.5))
+                    fy = float(cf.get("y", 0.45))
+                else:
+                    # Ephemeral person-safe solve when MSA did not persist cropFocal
+                    from travelogue.layout_engine.crop_solver import solve_slot_focal
+
+                    try:
+                        slot_ar_f = float(slot_da) if slot_da is not None else 0.0
+                    except (TypeError, ValueError):
+                        slot_ar_f = 0.0
+                    if slot_ar_f > 0 and str(fit).lower() == "cover":
+                        solved = solve_slot_focal(asset, slot_ar_f)
+                        fx, fy = solved.focal_x, solved.focal_y
+                    else:
+                        fx = float(fp.get("x", 0.5))
+                        fy = float(fp.get("y", 0.45))
                 style_parts_slot.append(f"--focal-x: {fx}")
                 style_parts_slot.append(f"--focal-y: {fy}")
             except (TypeError, ValueError):

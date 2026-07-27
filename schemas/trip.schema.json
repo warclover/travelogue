@@ -2940,6 +2940,75 @@
           },
           "description": "Primary subject region (face box when detected)"
         },
+        "protectBox": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "w": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "h": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "description": "Expanded person-safe region (faces union + hair/shoulder padding)"
+        },
+        "faces": {
+          "type": "array",
+          "description": "Normalized face boxes {x,y,w,h} in 0..1 image coords",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "w",
+              "h"
+            ],
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "w": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "h": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
         "burstGroupId": {
           "type": "string",
           "description": "Time-proximate burst cluster id from ingest"
@@ -3508,6 +3577,36 @@
         "msaContain": {
           "type": "boolean",
           "description": "MSA · slot forced contain (crop-risk / whitespace contract)"
+        },
+        "cropFocal": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Person-safe object-position solved for this slot under cover fit",
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "cropSafety": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Person-safe crop telemetry (faceClipped, protectContainment, …)"
+        },
+        "cropContain": {
+          "type": "boolean",
+          "description": "Person-safe solver flipped cover→contain (face clipped / infeasible)"
         }
       }
     },

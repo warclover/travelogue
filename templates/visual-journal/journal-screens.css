@@ -726,7 +726,7 @@ html[data-layout="web"] .layout-screen__grid--mosaic-5-2portrait-3land-balanced 
 /* screen-mosaic-5-3p2l-portrait-hero-lp-stack */
 html[data-layout="web"] .layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack,
 html[data-layout="auto"] .layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack {
-  grid-template-columns: minmax(0, 11fr) minmax(0, 6fr) minmax(0, 3fr);
+  grid-template-columns: minmax(0, 11fr) minmax(0, 5fr) minmax(0, 4fr);
   grid-template-rows: repeat(2, 1fr);
   gap: 3px;
   align-items: stretch;
@@ -761,7 +761,7 @@ html[data-layout="web"] .layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-sta
 html[data-layout="web"] .layout-screen__grid--mosaic-5-3p2l-portrait-hero-quad,
 html[data-layout="auto"] .layout-screen__grid--mosaic-5-3p2l-portrait-hero-quad {
   grid-template-columns: minmax(0, 22fr) minmax(0, 9fr) minmax(0, 9fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
   gap: 3px;
   align-items: stretch;
 }

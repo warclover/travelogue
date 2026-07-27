@@ -85,18 +85,23 @@ def apply_layout_to_trip(
         LAYOUT_ENGINE_LEGACY,
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,
+        annotate_winner_plan_logs,
+        begin_mosaic_capture,
+        drain_mosaic_capture,
+        drain_mosaic_dropped,
     )
 
     layout = export_layout or trip.get("exportLayout") or "mobile"
     if layout not in VALID_EXPORT_LAYOUTS:
         raise LayoutError("E_LAYOUT_EXPORT", f"export_layout must be one of {sorted(VALID_EXPORT_LAYOUTS)}")
 
-    from travelogue.config import default_web_layout_engine
+    from travelogue.config import default_web_layout_engine, get_config
 
+    app_cfg = cfg or get_config()
     engine = (
         layout_engine
         or trip.get("layoutEngine")
-        or default_web_layout_engine(layout, cfg=cfg)
+        or default_web_layout_engine(layout, cfg=app_cfg)
     )
     if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
         raise LayoutError("E_LAYOUT_ENGINE", "layout_engine must be legacy or screens")
@@ -111,6 +116,8 @@ def apply_layout_to_trip(
         raise LayoutError("E_LAYOUT_TOO_FEW", "need at least 4 body assets after excluding cover")
 
     titles = _chapter_titles(trip) if preserve_titles else None
+    if app_cfg.mosaic.enabled:
+        begin_mosaic_capture()
     chapters, _ = build_chapters_from_plan(
         body_ids,
         aspects,
@@ -118,7 +125,7 @@ def apply_layout_to_trip(
         titles=titles,
         layout_engine=engine,
         assets=assets,
-        cfg=cfg,
+        cfg=app_cfg,
         # MTSO §0 · picker cohort needs tripId + AppConfig.mosaic
         trip=trip,
     )
@@ -135,6 +142,15 @@ def apply_layout_to_trip(
     curation["orientationSummary"] = summary_dict
     curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
     curation["layoutPlanRunId"] = f"layout-{_utc_now_iso()}"
+
+    if app_cfg.mosaic.enabled:
+        mosaic_logs, _raw = drain_mosaic_capture()
+        mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)
+        dropped = drain_mosaic_dropped()
+        if mosaic_logs:
+            curation["mosaicDecisionLog"] = mosaic_logs
+        if dropped:
+            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
 
     append_pipeline_run(
         trip,

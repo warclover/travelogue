@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from travelogue.layout_engine.crop_solver import (
+    NormBox,
+    cover_window,
+    solve_slot_focal,
+)
 from travelogue.layout_templates.geometry import slot_aspect_table
 from travelogue.layout_templates.validator import validate_template_def
 
@@ -44,13 +49,85 @@ def _role_probe_aspects(role: str) -> tuple[float, ...]:
         return tuple(PROBE_ASPECTS.values())
     return tuple(PROBE_ASPECTS[k] for k in keys)
 
-# Person/focal-aware saliency probes (PRD §8 · saliency-retention)
+
+# Person/protect-aware profiles (PRD §8 · saliency-retention + face safety)
 PROBE_PROFILES: tuple[dict, ...] = (
-    {"name": "neutral-center", "aspect": 16 / 9, "focal": (0.5, 0.45), "tags": []},
-    {"name": "portrait-person", "aspect": 3 / 4, "focal": (0.5, 0.35), "tags": ["person"]},
-    {"name": "landscape-person", "aspect": 16 / 9, "focal": (0.55, 0.42), "tags": ["person"]},
-    {"name": "square-subject", "aspect": 1.0, "focal": (0.48, 0.40), "tags": ["person"]},
+    {
+        "name": "neutral-center",
+        "aspect": 16 / 9,
+        "focal": (0.5, 0.45),
+        "tags": [],
+        "faces": (),
+        "protect": None,
+    },
+    {
+        "name": "portrait-bust",
+        "aspect": 3 / 4,
+        "focal": (0.5, 0.32),
+        "tags": ["person"],
+        "faces": (NormBox(0.35, 0.12, 0.30, 0.22),),
+        "protect": NormBox(0.28, 0.04, 0.44, 0.55),
+    },
+    {
+        "name": "group-three",
+        "aspect": 3 / 2,
+        "focal": (0.5, 0.40),
+        "tags": ["person"],
+        # Compact travel group (people close together) — wide spreads belong
+        # in true landscape slots (≥~1.25), not near-square mid cells.
+        "faces": (
+            NormBox(0.28, 0.28, 0.14, 0.20),
+            NormBox(0.43, 0.25, 0.14, 0.20),
+            NormBox(0.58, 0.30, 0.14, 0.20),
+        ),
+        "protect": NormBox(0.22, 0.16, 0.56, 0.52),
+    },
+    {
+        "name": "edge-standing",
+        "aspect": 16 / 9,
+        "focal": (0.18, 0.42),
+        "tags": ["person"],
+        "faces": (NormBox(0.08, 0.22, 0.14, 0.28),),
+        "protect": NormBox(0.04, 0.12, 0.22, 0.70),
+    },
+    {
+        "name": "profile-side",
+        "aspect": 3 / 4,
+        "focal": (0.62, 0.35),
+        "tags": ["person"],
+        "faces": (NormBox(0.48, 0.18, 0.28, 0.24),),
+        "protect": NormBox(0.40, 0.08, 0.42, 0.58),
+    },
 )
+
+
+def _profiles_for_slot(slot_ar: float, role: str) -> tuple[dict, ...]:
+    """Only probe person profiles whose asset orientation matches the slot role.
+
+    Putting a wide group shot into a tall portrait tip is a planner mistake, not
+    a geometry defect — role-filter keeps the face-clip gate actionable.
+    """
+    role_l = (role or "").lower()
+    portraitish = role_l == "portrait" or (
+        role_l in ("main", "hero") and slot_ar < 1.0
+    )
+    landscapish = role_l in ("landscape", "tile") or (
+        role_l in ("main", "hero") and slot_ar >= 1.0
+    )
+    out: list[dict] = []
+    for profile in PROBE_PROFILES:
+        tags = profile.get("tags") or []
+        ar = float(profile["aspect"])
+        if not tags:
+            out.append(profile)
+            continue
+        if portraitish and ar <= 1.05:
+            out.append(profile)
+        elif landscapish and ar >= 0.95:
+            out.append(profile)
+        elif not portraitish and not landscapish:
+            out.append(profile)
+    return tuple(out) if out else PROBE_PROFILES
 
 
 def _probe_fit_distance(slot_ar: float, asset_ar: float) -> float:
@@ -64,40 +141,84 @@ def _cover_focal_retention(
     focal_x: float = 0.5,
     focal_y: float = 0.45,
 ) -> float:
-    """Saliency proxy: focal point visible under object-fit cover with center crop."""
+    """Saliency proxy under CSS object-position percentage (not center crop)."""
     fx = max(0.0, min(1.0, focal_x))
     fy = max(0.0, min(1.0, focal_y))
     if slot_ar <= 0 or asset_ar <= 0:
         return 0.0
-    if slot_ar >= asset_ar:
-        visible_h = asset_ar / slot_ar
-        y0 = (1.0 - visible_h) / 2.0
-        y1 = y0 + visible_h
-        if y0 <= fy <= y1:
-            return 1.0
-        dist = min(abs(fy - y0), abs(fy - y1))
-        return max(0.0, 1.0 - dist * 4.0)
-    visible_w = slot_ar / asset_ar
-    x0 = (1.0 - visible_w) / 2.0
-    x1 = x0 + visible_w
-    if x0 <= fx <= x1:
+    win = cover_window(slot_ar, asset_ar, fx, fy)
+    if win.axis == "none":
         return 1.0
-    dist = min(abs(fx - x0), abs(fx - x1))
+    if win.axis == "y":
+        if win.y0 - 1e-9 <= fy <= win.y1 + 1e-9:
+            return 1.0
+        dist = min(abs(fy - win.y0), abs(fy - win.y1))
+        return max(0.0, 1.0 - dist * 4.0)
+    if win.x0 - 1e-9 <= fx <= win.x1 + 1e-9:
+        return 1.0
+    dist = min(abs(fx - win.x0), abs(fx - win.x1))
     return max(0.0, 1.0 - dist * 4.0)
 
 
-def _profile_saliency_retention(slot_ar: float, profile: dict) -> float:
+def _profile_as_asset(profile: dict) -> dict:
+    ar = float(profile["aspect"])
+    # Synthetic pixel size preserving aspect
+    w = 1600.0
+    h = w / ar
     fx, fy = profile.get("focal") or (0.5, 0.45)
-    asset_ar = float(profile["aspect"])
-    retention = _cover_focal_retention(slot_ar, asset_ar, focal_x=float(fx), focal_y=float(fy))
-    tags = profile.get("tags") or []
-    if "person" in tags and retention < 0.75:
-        retention *= 0.85
-    return retention
+    asset: dict = {
+        "width": w,
+        "height": h,
+        "focalPoint": {"x": float(fx), "y": float(fy)},
+        "tags": list(profile.get("tags") or []),
+    }
+    faces = profile.get("faces") or ()
+    if faces:
+        asset["faces"] = [
+            {"x": f.x, "y": f.y, "w": f.w, "h": f.h}
+            for f in faces
+            if isinstance(f, NormBox)
+        ]
+    protect = profile.get("protect")
+    if isinstance(protect, NormBox):
+        asset["protectBox"] = {
+            "x": protect.x,
+            "y": protect.y,
+            "w": protect.w,
+            "h": protect.h,
+        }
+    return asset
 
 
-def _worst_saliency_for_slot(slot_ar: float) -> float:
-    return min(_profile_saliency_retention(slot_ar, profile) for profile in PROBE_PROFILES)
+def _profile_saliency_retention(slot_ar: float, profile: dict) -> float:
+    asset = _profile_as_asset(profile)
+    if asset.get("faces") or asset.get("protectBox"):
+        solved = solve_slot_focal(asset, slot_ar)
+        if solved.safety.face_clipped:
+            return 0.0
+        return float(solved.safety.protect_containment)
+    fx, fy = profile.get("focal") or (0.5, 0.45)
+    return _cover_focal_retention(
+        slot_ar, float(profile["aspect"]), focal_x=float(fx), focal_y=float(fy)
+    )
+
+
+def _profile_face_clipped(slot_ar: float, profile: dict) -> bool:
+    asset = _profile_as_asset(profile)
+    if not (asset.get("faces") or asset.get("protectBox")):
+        return False
+    solved = solve_slot_focal(asset, slot_ar)
+    return bool(solved.safety.face_clipped)
+
+
+def _worst_saliency_for_slot(slot_ar: float, role: str = "") -> float:
+    profiles = _profiles_for_slot(slot_ar, role)
+    return min(_profile_saliency_retention(slot_ar, profile) for profile in profiles)
+
+
+def _worst_face_clipped_for_slot(slot_ar: float, role: str = "") -> bool:
+    profiles = _profiles_for_slot(slot_ar, role)
+    return any(_profile_face_clipped(slot_ar, profile) for profile in profiles)
 
 
 # Role-aware fit-distance ceiling. The GA corpus tops out at 0.75 (the legacy
@@ -116,7 +237,7 @@ def run_probe_for_template(
     warn_threshold: float = GEOMETRY_WARN_THRESHOLD,
     saliency_warn_threshold: float = 0.55,
 ) -> dict:
-    """Geometry + saliency probe for one template (admission S5)."""
+    """Geometry + saliency + face-clip probe for one template (admission S5)."""
     try:
         t = engine.get(template_id)
     except KeyError:
@@ -141,7 +262,8 @@ def run_probe_for_template(
     for slot in slot_aspect_table(t):
         probe_ars = _role_probe_aspects(slot.role)
         worst = max(_probe_fit_distance(slot.display_aspect, ar) for ar in probe_ars)
-        worst_retention = _worst_saliency_for_slot(slot.display_aspect)
+        worst_retention = _worst_saliency_for_slot(slot.display_aspect, slot.role)
+        face_clipped = _worst_face_clipped_for_slot(slot.display_aspect, slot.role)
         results.append(
             {
                 "templateId": template_id,
@@ -150,6 +272,7 @@ def run_probe_for_template(
                 "slotAspect": round(slot.display_aspect, 4),
                 "worstProbeDistance": round(worst, 4),
                 "worstSaliencyRetention": round(worst_retention, 4),
+                "worstFaceClipped": bool(face_clipped),
             }
         )
         if worst > warn_threshold:
@@ -160,6 +283,11 @@ def run_probe_for_template(
             warnings.append(
                 f"{template_id} slot {slot.index} worstSaliencyRetention={worst_retention:.3f} "
                 f"< {saliency_warn_threshold}"
+            )
+        if face_clipped:
+            warnings.append(
+                f"{template_id} slot {slot.index} worstFaceClipped=true "
+                f"(person-safe cover infeasible for at least one probe profile)"
             )
     if not report.ok:
         warnings.append(

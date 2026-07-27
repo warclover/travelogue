@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Any, Mapping, Sequence
 
 from travelogue.config.mosaic import SlotAdaptationConfig
+from travelogue.layout_engine.crop_solver import solve_slot_focal
 
 # PRD §6.5 proxy weights
 _ALPHA_MISMATCH = 0.85
 _BETA_FOCAL_EDGE = 0.35
+_GAMMA_PERSON = 0.55
 _FOCAL_EDGE_MARGIN = 0.12
 
 
@@ -54,14 +56,26 @@ def crop_risk_for_pair(
     *,
     alpha: float = _ALPHA_MISMATCH,
     beta: float = _BETA_FOCAL_EDGE,
+    gamma: float = _GAMMA_PERSON,
 ) -> float:
-    """Cover-crop risk proxy (PRD §6.5); face IoU deferred to later spike."""
+    """Cover-crop risk proxy (PRD §6.5) + person-safe face IoU after solve."""
     pr = _asset_r(asset)
     if pr is None or slot_display_aspect <= 0:
         return 0.0
     mismatch = aspect_mismatch(pr, float(slot_display_aspect))
     edge = 1.0 if asset is not None and _focal_near_edge(asset) else 0.0
-    return round(_clamp01(alpha * mismatch + beta * edge), 4)
+    base = alpha * mismatch + beta * edge
+
+    solved = solve_slot_focal(asset, float(slot_display_aspect))
+    safety = solved.safety
+    if safety.face_clipped or (safety.has_person and not solved.feasible):
+        return round(_clamp01(max(base, 0.92)), 4)
+    person_pen = 0.0
+    if safety.has_person:
+        person_pen = gamma * (1.0 - float(safety.protect_containment))
+        if not solved.feasible:
+            person_pen = max(person_pen, 0.45)
+    return round(_clamp01(base + person_pen), 4)
 
 
 def contain_whitespace_fraction(photo_r: float, slot_r: float) -> float:

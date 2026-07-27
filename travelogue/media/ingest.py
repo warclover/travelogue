@@ -482,6 +482,10 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
                 )
                 q["faceRatio"] = round(max(0.0, min(1.0, face_ratio)), 4)
                 entry["salientBox"] = subj.salient_box
+            if subj.faces_norm:
+                entry["faces"] = [dict(f) for f in subj.faces_norm]
+            if subj.protect_box:
+                entry["protectBox"] = dict(subj.protect_box)
             if cfg.portrait_analyze and subj.faces:
                 _attach_portrait(ctx, entry, photo.img, list(subj.faces))
     entry["mediaClass"] = classify_media_class(
@@ -514,6 +518,10 @@ def _build_asset_entry(ctx: IngestAssetBuildContext, photo: IngestPhotoPayload) 
         entry["burstGroupId"] = photo.burst_group_id
     if subj.salient_box:
         entry["salientBox"] = subj.salient_box
+    if subj.protect_box:
+        entry["protectBox"] = dict(subj.protect_box)
+    if subj.faces_norm:
+        entry["faces"] = [dict(f) for f in subj.faces_norm]
     q = entry.get("quality")
     if isinstance(q, dict):
         sharp_ver = str(getattr(ctx.cfg, "sharpness_version", "v2") or "v2").lower()
