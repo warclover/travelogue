@@ -198,6 +198,26 @@ class Landscape2EditorialConfig:
 
 
 @dataclass
+class Landscape3EditorialConfig:
+    """Landscape-3 editorial · 2+1 asym soft rotation (product default on)."""
+
+    enabled: bool = True
+    recent_window: int = 2
+    repeat_penalty: float = 0.55
+    strength_tie_epsilon: float = 0.08
+
+
+@dataclass
+class Mixed1p2lConfig:
+    """Mixed 1P2L · p1l2 fill + L2|P mirror soft rotation (product default on)."""
+
+    enabled: bool = True
+    recent_window: int = 2
+    repeat_penalty: float = 0.55
+    strength_tie_epsilon: float = 0.08
+
+
+@dataclass
 class UsageRulesConfig:
     """URO · usage-driven layout rules (PRD-USAGE-RULES-LAYOUT-OPTIMIZATION)."""
 
@@ -228,6 +248,10 @@ class LayoutConfig:
     landscape_2_editorial: Landscape2EditorialConfig = field(
         default_factory=Landscape2EditorialConfig
     )
+    landscape_3_editorial: Landscape3EditorialConfig = field(
+        default_factory=Landscape3EditorialConfig
+    )
+    mixed_1p2l: Mixed1p2lConfig = field(default_factory=Mixed1p2lConfig)
     usage_rules: UsageRulesConfig = field(default_factory=UsageRulesConfig)
     rhythm: LayoutRhythmConfig = field(default_factory=LayoutRhythmConfig)
     template_engine: LayoutTemplateEngineConfig = field(default_factory=LayoutTemplateEngineConfig)
@@ -483,6 +507,36 @@ def landscape_2_editorial_from_dict(
     if not raw:
         return defaults
     return Landscape2EditorialConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        recent_window=int(raw.get("recent_window", defaults.recent_window)),
+        repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),
+        strength_tie_epsilon=float(
+            raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
+        ),
+    )
+
+
+def landscape_3_editorial_from_dict(
+    raw: dict[str, Any] | None,
+) -> Landscape3EditorialConfig:
+    defaults = Landscape3EditorialConfig()
+    if not raw:
+        return defaults
+    return Landscape3EditorialConfig(
+        enabled=bool(raw.get("enabled", defaults.enabled)),
+        recent_window=int(raw.get("recent_window", defaults.recent_window)),
+        repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),
+        strength_tie_epsilon=float(
+            raw.get("strength_tie_epsilon", defaults.strength_tie_epsilon)
+        ),
+    )
+
+
+def mixed_1p2l_from_dict(raw: dict[str, Any] | None) -> Mixed1p2lConfig:
+    defaults = Mixed1p2lConfig()
+    if not raw:
+        return defaults
+    return Mixed1p2lConfig(
         enabled=bool(raw.get("enabled", defaults.enabled)),
         recent_window=int(raw.get("recent_window", defaults.recent_window)),
         repeat_penalty=float(raw.get("repeat_penalty", defaults.repeat_penalty)),

@@ -24,9 +24,10 @@
 角色固定：竖图进 portrait 槽，横图进 landscape 槽；仅左右镜像变化。
 
 - **竖槽**：与舞台**等高**；列宽 ≈ `42.1875%`（16:9 舞台上的 3:4 开孔）
-- **横槽**：占**剩余宽度**（`1fr`），`aspect-ratio: 3 / 2`，**垂直居中**
+- **横槽**：占**剩余宽度**（`1fr`），与舞台**等高**，`object-fit: cover`（不再 3:2 居中）
 - **间距**：小 `column-gap` + 极窄左右内边距；opt-out 通用 contain-collapse
 - **L\|P / P\|L**：列顺序镜像，规则相同
+- **SSOT**：几何写在 `journal-screens-overlays.css`（`export --sync-journal` 不会冲掉）
 
 ## 4. 准入与选型
 

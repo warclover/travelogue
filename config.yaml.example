@@ -209,6 +209,18 @@ layout:
     recent_window: 2
     repeat_penalty: 0.55
     strength_tie_epsilon: 0.08
+  # Landscape-3 editorial · 三横 2+1 侧栏镜像 · 默认关闭
+  landscape_3_editorial:
+    enabled: false
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
+  # Mixed 1P2L · 竖+两横（fill p1l2 + L2|P 镜像）· 默认关闭
+  mixed_1p2l:
+    enabled: false
+    recent_window: 2
+    repeat_penalty: 0.55
+    strength_tie_epsilon: 0.08
   # 节奏阈值与后几章竖版收束（前几章维持 defer/carry outward）
   rhythm:
     max_portrait_pair_streak: 2

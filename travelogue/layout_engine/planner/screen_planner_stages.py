@@ -394,7 +394,12 @@ def try_mixed_portrait_landscape(
     append_screen(
         ctx,
         _make_mixed_portrait_landscape_screen(
-            portrait_id, [l1, l2], assets_map=ctx.assets_map
+            portrait_id,
+            [l1, l2],
+            assets_map=ctx.assets_map,
+            layout_state=ctx.layout_state,
+            trip=ctx.trip,
+            cfg=ctx.app_config,
         ),
     )
     return True
@@ -536,10 +541,12 @@ def try_mixed_triple_at_cursor(ctx: ChapterPlanContext) -> int | None:
 
 
 def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
-    """2–3 consecutive landscapes → singles; or landscape-2 editorial when ON."""
+    """2–3 consecutive landscapes → singles; L2/L3 editorial when ON."""
     from travelogue.layout_engine.planner.screen_planner import (
         _landscape_2_editorial_enabled,
+        _landscape_3_editorial_enabled,
         _make_landscape_2_screen,
+        _make_landscape_3_screen,
         _make_screen,
         _run_length,
         _time_near_chain,
@@ -553,6 +560,28 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
     )
     if fam != "landscape" or run_len not in (2, 3) or ctx.pending_portraits:
         return None
+
+    if _landscape_3_editorial_enabled(ctx.app_config) and run_len == 3:
+        trio = [ctx.ids[ctx.i], ctx.ids[ctx.i + 1], ctx.ids[ctx.i + 2]]
+        can_triple = (
+            ctx.layout_state is None
+            or ctx.layout_state.can_emit_pattern("screen-landscape-3")
+        )
+        if can_triple and _time_near_chain(
+            trio, ctx.assets_map, burst_seconds=ctx.mix_gap
+        ):
+            append_screen(
+                ctx,
+                _make_landscape_3_screen(
+                    trio,
+                    aspects=ctx.aspects,
+                    assets_map=ctx.assets_map,
+                    layout_state=ctx.layout_state,
+                    trip=ctx.trip,
+                    cfg=ctx.app_config,
+                ),
+            )
+            return 3
 
     if _landscape_2_editorial_enabled(ctx.app_config) and run_len >= 2:
         pair = [ctx.ids[ctx.i], ctx.ids[ctx.i + 1]]

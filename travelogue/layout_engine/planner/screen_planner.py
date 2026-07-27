@@ -90,6 +90,7 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-portrait-9": "layout-screen__grid--3x3",
     PATTERN_PORTRAIT_GRID_8: "layout-screen__grid--portrait-2x4",
     PATTERN_PORTRAIT_1_LANDSCAPE_2: "layout-screen__grid--portrait-left-2landscape",
+    "screen-landscape-2-portrait-1": "layout-screen__grid--2landscape-right-portrait",
     PATTERN_PORTRAIT_2_LANDSCAPE_2: "layout-screen__grid--2x2",
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND: "layout-screen__grid--mosaic-5-main-portrait-3land",
     "screen-mosaic-5-2p3l-equal": "layout-screen__grid--mosaic-5-2p3l-equal",
@@ -105,6 +106,8 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-landscape-2-overlap-bltr": "layout-screen__grid--landscape-2-overlap-bltr",
     "screen-landscape-2-asymmetric-left": "layout-screen__grid--landscape-2-asym-left",
     "screen-landscape-3": "layout-screen__grid--landscape-stack-3",
+    "screen-landscape-3-asymmetric-left": "layout-screen__grid--landscape-3-asym-left",
+    "screen-landscape-3-asymmetric-right": "layout-screen__grid--landscape-3-asym-right",
     "screen-landscape-4": "layout-screen__grid--2x2",
     "screen-landscape-6": "layout-screen__grid--3x2",
     "screen-landscape-9": "layout-screen__grid--3x3",
@@ -250,6 +253,14 @@ def _fits_for_screen(
             else:
                 fits.append("cover")
         return fits
+    if pattern_id == "screen-landscape-2-portrait-1":
+        fits_m1: list[LayoutFit] = []
+        for idx, aid in enumerate(asset_ids):
+            if idx == 2:
+                fits_m1.append(portrait_fit_for_asset(assets_map.get(aid), default="cover"))
+            else:
+                fits_m1.append("cover")
+        return fits_m1
     if pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
         fits: list[LayoutFit] = []
         for idx, aid in enumerate(asset_ids):
@@ -573,18 +584,55 @@ def _make_mixed_portrait_landscape_screen(
     *,
     screen_id: str = "",
     assets_map: dict[str, dict] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
 ) -> dict:
+    """Emit mixed 1P2L via picker (fill p1l2 or L2|P mirror)."""
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
+    from travelogue.layout_engine.planner.mixed_1p2l_picker import (
+        PATTERN_MIXED_L2P1,
+        pick_mixed_1p2l_variant,
+    )
+
     assets_map = assets_map or {}
     p_fit = portrait_fit_for_asset(assets_map.get(portrait_id), default="cover")
-    return _make_screen(
-        PATTERN_PORTRAIT_1_LANDSCAPE_2,
-        screen_id=screen_id,
-        slots=[
+    pick = pick_mixed_1p2l_variant(
+        portrait_id=portrait_id,
+        landscape_ids=list(landscape_ids),
+        assets_map=assets_map,
+        cfg=cfg,
+        trip_id=trip_id_from_trip(trip),
+        recent_pattern_ids=(
+            list(layout_state.recent_pattern_ids) if layout_state is not None else None
+        ),
+    )
+    if pick.pattern_id == PATTERN_MIXED_L2P1:
+        slots = [
+            {"assetId": landscape_ids[0], "slot": 0, "fit": "cover", "role": "landscape"},
+            {"assetId": landscape_ids[1], "slot": 1, "fit": "cover", "role": "landscape"},
+            {"assetId": portrait_id, "slot": 2, "fit": p_fit, "role": "portrait"},
+        ]
+        pattern = PATTERN_MIXED_L2P1
+    else:
+        slots = [
             {"assetId": portrait_id, "slot": 0, "fit": p_fit, "role": "portrait"},
             {"assetId": landscape_ids[0], "slot": 1, "fit": "cover", "role": "landscape"},
             {"assetId": landscape_ids[1], "slot": 2, "fit": "cover", "role": "landscape"},
-        ],
+        ]
+        pattern = PATTERN_PORTRAIT_1_LANDSCAPE_2
+    screen = _make_screen(
+        pattern,
+        screen_id=screen_id,
+        slots=slots,
     )
+    if pick.reason != "default_off":
+        screen["mixed1p2lPicker"] = {
+            "reason": pick.reason,
+            "strengthSide": pick.strength_side,
+            "variantRole": pick.variant_role,
+        }
+    return screen
 
 
 def _make_mixed_1l1p_screen(
@@ -1160,6 +1208,56 @@ def _landscape_2_editorial_enabled(cfg: AppConfig | None) -> bool:
     layout = getattr(cfg, "layout", None)
     l2 = getattr(layout, "landscape_2_editorial", None) if layout is not None else None
     return bool(getattr(l2, "enabled", False)) if l2 is not None else False
+
+
+def _landscape_3_editorial_enabled(cfg: AppConfig | None) -> bool:
+    if cfg is None:
+        return False
+    layout = getattr(cfg, "layout", None)
+    l3 = getattr(layout, "landscape_3_editorial", None) if layout is not None else None
+    return bool(getattr(l3, "enabled", False)) if l3 is not None else False
+
+
+def _make_landscape_3_screen(
+    asset_ids: list[str],
+    *,
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict] | None = None,
+    layout_state: ScreenLayoutPlannerState | None = None,
+    trip: dict | None = None,
+    cfg: AppConfig | None = None,
+    screen_id: str = "",
+) -> dict:
+    """Emit landscape-3 family screen via editorial picker."""
+    from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
+    from travelogue.layout_engine.planner.landscape_3_picker import (
+        pick_landscape_3_variant,
+    )
+
+    assets_map = assets_map or {}
+    pick = pick_landscape_3_variant(
+        list(asset_ids),
+        assets_map=assets_map,
+        cfg=cfg,
+        trip_id=trip_id_from_trip(trip),
+        recent_pattern_ids=(
+            list(layout_state.recent_pattern_ids) if layout_state is not None else None
+        ),
+    )
+    screen = _make_screen(
+        pick.pattern_id,
+        list(asset_ids),
+        screen_id=screen_id,
+        aspects=aspects,
+        assets_map=assets_map,
+    )
+    if pick.reason != "default_off":
+        screen["landscape3Picker"] = {
+            "reason": pick.reason,
+            "strengthSide": pick.strength_side,
+            "variantRole": pick.variant_role,
+        }
+    return screen
 
 
 def _flush_portrait_pending(

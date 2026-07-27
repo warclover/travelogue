@@ -66,6 +66,9 @@ pattern_policy:
   blacklist: []
   lte_overrides_disable:
     - screen-mosaic-5-2p3l-equal
+    # Parked: landscape-2 diagonal overlap (ghosting when CSS-primary missing)
+    - screen-landscape-2-overlap-tlbr
+    - screen-landscape-2-overlap-bltr
 
 scoring_profiles:
   default:

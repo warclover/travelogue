@@ -43,6 +43,12 @@ MIXED_1L1P_PATTERNS = frozenset(
         "screen-portrait-1-landscape-1",
     }
 )
+MIXED_1P2L_PATTERNS = frozenset(
+    {
+        "screen-portrait-1-landscape-2",
+        "screen-landscape-2-portrait-1",
+    }
+)
 LANDSCAPE_PAIR_PATTERN = "screen-landscape-2"
 LANDSCAPE_PAIR_PATTERNS = frozenset(
     {
@@ -50,6 +56,13 @@ LANDSCAPE_PAIR_PATTERNS = frozenset(
         "screen-landscape-2-overlap-tlbr",
         "screen-landscape-2-overlap-bltr",
         "screen-landscape-2-asymmetric-left",
+    }
+)
+LANDSCAPE_TRIPLE_PATTERNS = frozenset(
+    {
+        "screen-landscape-3",
+        "screen-landscape-3-asymmetric-left",
+        "screen-landscape-3-asymmetric-right",
     }
 )
 PORTRAIT_SINGLE_PATTERNS = frozenset({"screen-portrait-1", "screen-tall-1"})
@@ -186,6 +199,9 @@ def is_nine_grid_pattern(pattern_id: str) -> bool:
 def is_triple_row_pattern(pattern_id: str) -> bool:
     if pattern_id == PATTERN_PORTRAIT_3_EDITORIAL:
         return True
+    # Asym ids do not match screen-landscape-N regex; still count as triple.
+    if pattern_id in LANDSCAPE_TRIPLE_PATTERNS:
+        return True
     return pattern_slot_count(pattern_id) == 3
 
 
@@ -205,8 +221,16 @@ def is_mixed_1l1p_pattern(pattern_id: str | None) -> bool:
     return pattern_id in MIXED_1L1P_PATTERNS
 
 
+def is_mixed_1p2l_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in MIXED_1P2L_PATTERNS
+
+
 def is_landscape_pair_pattern(pattern_id: str | None) -> bool:
     return pattern_id in LANDSCAPE_PAIR_PATTERNS
+
+
+def is_landscape_triple_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in LANDSCAPE_TRIPLE_PATTERNS
 
 
 def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
@@ -226,5 +250,6 @@ def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
         return "portrait_pair"
     if is_landscape_pair_pattern(pattern_id):
         return "landscape_pair"
-    # mixed-1l1p stays "other" (do not inflate portrait/landscape pair streaks)
+    # mixed-1l1p / mixed-1p2l stay "other" (do not inflate pair streaks;
+    # landscape-3 family is "triple" via is_triple_row_pattern).
     return "other"

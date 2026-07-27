@@ -12,8 +12,8 @@ mosaic:
   template_experiments:
     enabled: true
     allowlist:
-      - screen-landscape-2-overlap-tlbr
-      - screen-landscape-2-overlap-bltr
+      # overlap-tlbr / bltr parked in landscape_2_picker.PARKED_EXPERIMENTAL_IDS
+      # (allowlisting them has no effect until that park is lifted).
       - screen-landscape-2-asymmetric-left
     cohort_trip_ids:
       - your-dogfood-trip-id

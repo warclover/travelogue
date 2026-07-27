@@ -5,7 +5,7 @@ kind: composite
 displayName: portrait · 1 · landscape · 1
 description: >
   双图混排：左竖右横（mixed-1l1p · V1）。
-  竖槽与舞台等高；剩余宽度给横槽（3:2），垂直居中。
+  两槽均与舞台等高；竖列约 3:4 开孔，横列占剩余宽度，cover 铺满。
 photoCount: { min: 2, max: 2 }
 
 stage:
@@ -39,7 +39,7 @@ rollout:
   hash_key: tripId
 
 usage:
-  summary: 左竖右横：竖图与屏等高，横图占剩余宽度并垂直居中。
+  summary: 左竖右横：两槽均与屏等高；竖列约 3:4 开孔，横列占剩余宽度 cover 铺满。
   whenToUse: |
     - 窗口恰 1 竖 + 1 横，且竖图叙事/美学更强或接近
     - 需要混排成屏而非拆成两张单图

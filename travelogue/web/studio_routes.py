@@ -108,17 +108,21 @@ class StudioMixin:
         return dispatch_studio("POST", path, self, require_auth=self._studio_require_auth)
 
     def studio_trip_parts(self, path: str) -> tuple[str, str] | None:
-        """Parse ``/{tripId}/{rel}`` for static file fallback (not in route table)."""
+        """Parse ``/{tripId}`` or ``/{tripId}/{rel}`` for static file fallback.
+
+        Bare ``/{tripId}`` / ``/{tripId}/`` yield ``rel=""`` so the static
+        handler can default to ``index.html`` (avoids 404 on directory URLs).
+        """
         if not path.startswith("/"):
             return None
-        parts = path.strip("/").split("/", 1)
-        if len(parts) != 2:
+        stripped = path.strip("/")
+        if not stripped:
             return None
-        trip_id, rel = parts[0], parts[1]
+        parts = stripped.split("/", 1)
+        trip_id = parts[0]
         if not trip_id or trip_id.startswith("_") or trip_id.startswith("__"):
             return None
-        if not rel:
-            return None
+        rel = parts[1] if len(parts) == 2 else ""
         return trip_id, rel
 
     def studio_bind_trip(self, trip_id: str) -> Path | None:

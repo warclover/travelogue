@@ -299,6 +299,13 @@ def _sync_trip_covers_core(
     from travelogue.cover_engine.lock import is_opening_locked, sync_lock_mirrors
 
     assets = assets if assets is not None else layout_eligible_assets(trip)
+    # FRP cover demote/exclude needs subjectClass; late imports may skip clustering.
+    try:
+        from travelogue.vision.subject_backfill import ensure_subject_classes
+
+        ensure_subject_classes(trip, assets)
+    except Exception:
+        pass
     layout = export_layout or trip.get("exportLayout") or "auto"
     curation = trip.setdefault("curation", {})
     sync_lock_mirrors(trip)

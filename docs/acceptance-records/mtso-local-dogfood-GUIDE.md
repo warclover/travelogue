@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| 日期 | 2026-07-27（§0 自 P2VF 回写；§0.3 自 Mixed 1L1P / Landscape-2 狗粮回写） |
+| 日期 | 2026-07-27（§0 自 P2VF 回写；§0.3 自 Mixed 1L1P / Landscape-2 / L3E / Mixed 1P2L 狗粮回写） |
 | 关联 | [PRD MTSO](../PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [ACCEPTANCE](../ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
-| 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) · [Mixed 1L1P](./mixed-1l1p-v1-review-2026-07-27.md) · [Landscape-2 Editorial](./landscape-2-editorial-v1-review-2026-07-27.md) |
-| 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) · [`docs/config-p2vf-dogfood.example.yaml`](../config-p2vf-dogfood.example.yaml) · [`docs/config-mixed-1l1p-dogfood.example.yaml`](../config-mixed-1l1p-dogfood.example.yaml) · [`docs/config-landscape-2-editorial-dogfood.example.yaml`](../config-landscape-2-editorial-dogfood.example.yaml) |
+| 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) · [Mixed 1L1P](./mixed-1l1p-v1-review-2026-07-27.md) · [Landscape-2 Editorial](./landscape-2-editorial-v1-review-2026-07-27.md) · [Landscape-3 Editorial](./landscape-3-editorial-v1-review-2026-07-27.md) · [Mixed 1P2L](./mixed-1p2l-v1-review-2026-07-27.md) |
+| 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) · [`docs/config-p2vf-dogfood.example.yaml`](../config-p2vf-dogfood.example.yaml) · [`docs/config-mixed-1l1p-dogfood.example.yaml`](../config-mixed-1l1p-dogfood.example.yaml) · [`docs/config-landscape-2-editorial-dogfood.example.yaml`](../config-landscape-2-editorial-dogfood.example.yaml) · [`docs/config-landscape-3-editorial-dogfood.example.yaml`](../config-landscape-3-editorial-dogfood.example.yaml) · [`docs/config-mixed-1p2l-dogfood.example.yaml`](../config-mixed-1p2l-dogfood.example.yaml) |
 | 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=false`（fail-closed） |
 
 > **不是** Go exit / 转正门槛。目标：验路径不崩、漏斗可读、双 SKU 可见性符合预期。
@@ -30,7 +30,7 @@
 ### 0.1 新实验 SKU 上车检查（复制用）
 
 - [ ] `template_experiments.enabled=true` 且 allowlist 含新 id；`cohort_trip_ids` **非空且含本 tripId**（空列表 = 无人可见）
-- [ ] 若另有家族开关（如 `layout.portrait_2_variants` / `mixed_1l1p` / `landscape_2_editorial`），与 experiments **双开**
+- [ ] 若另有家族开关（如 `layout.portrait_2_variants` / `mixed_1l1p` / `landscape_2_editorial` / `landscape_3_editorial` / `mixed_1p2l`），与 experiments **双开**
 - [ ] emit / admit / `append_screen` 传入完整 `trip`（至少含 `tripId`）与 `AppConfig.mosaic`（§0 表 #1/#6）
 - [ ] `schemas/trip.schema.json`：`patternId` enum + picker 探针字段（reason 枚举如 `overlap_tie`）已登记
 - [ ] 成对家族：rhythm / streak 集合与 post-check 已接线（§0 表 #7）
@@ -50,9 +50,10 @@
 | tie 窗口总落 fill，实验权重写了却看不见 overlap | picker 平局池是否被 fill `base_weight` 压过（应用 `overlap_tie` 专池） |
 | 双横实验连发过多 | #7 家族 streak |
 
-### 0.3 视觉合同 / CSS 狗粮踩坑（Mixed 1L1P · Landscape-2 回写）
+### 0.3 视觉合同 / CSS 狗粮踩坑（Mixed 1L1P · Landscape-2 · L3E · Mixed 1P2L 回写）
 
 > picker / schema 全绿 **不等于** 版式好看。下列是本轮拼贴家族手测沉淀，后续新 `gridClass` 默认当检查项。
+> L3E：固定 16:9（勿沿用 stack `aspect-ratio: auto`）；大槽满高 + 侧栏等分。Mixed 1P2L 镜像：右竖 `row span 2` 满高，与 fill 等宽列比。
 
 | # | 合同 | 假象 | 怎么验 / 修 |
 |---|------|------|-------------|

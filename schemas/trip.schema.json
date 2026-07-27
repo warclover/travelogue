@@ -3584,6 +3584,7 @@
             "screen-portrait-3-editorial",
             "screen-editorial-4mix",
             "screen-portrait-1-landscape-2",
+            "screen-landscape-2-portrait-1",
             "screen-mosaic-5-main-portrait-3land",
             "screen-mosaic-5-main-landscape-2portrait-2land",
             "screen-mosaic-5-2portrait-3land-balanced",
@@ -3608,6 +3609,8 @@
             "screen-landscape-2-overlap-bltr",
             "screen-landscape-2-asymmetric-left",
             "screen-landscape-3",
+            "screen-landscape-3-asymmetric-left",
+            "screen-landscape-3-asymmetric-right",
             "screen-landscape-4",
             "screen-landscape-6",
             "screen-landscape-9",
@@ -3721,6 +3724,72 @@
                 "overlap-tlbr",
                 "overlap-bltr",
                 "asymmetric-left"
+              ]
+            }
+          }
+        },
+        "landscape3Picker": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Landscape-3 editorial picker telemetry (omit when reason=default_off)",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "default_off",
+                "fallback_fill",
+                "rotate",
+                "weight",
+                "strength",
+                "asym_tie"
+              ]
+            },
+            "strengthSide": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right",
+                "tie"
+              ]
+            },
+            "variantRole": {
+              "type": "string",
+              "enum": [
+                "fill",
+                "asymmetric-left",
+                "asymmetric-right"
+              ]
+            }
+          }
+        },
+        "mixed1p2lPicker": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Mixed 1P2L picker telemetry (omit when reason=default_off)",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "default_off",
+                "fallback_fill",
+                "strength",
+                "rotate"
+              ]
+            },
+            "strengthSide": {
+              "type": "string",
+              "enum": [
+                "left",
+                "right",
+                "tie"
+              ]
+            },
+            "variantRole": {
+              "type": "string",
+              "enum": [
+                "fill",
+                "portrait-left",
+                "landscape-left"
               ]
             }
           }

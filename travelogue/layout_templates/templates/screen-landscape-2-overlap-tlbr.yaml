@@ -1,6 +1,6 @@
 id: screen-landscape-2-overlap-tlbr
 version: 1
-status: experimental
+status: deprecated
 kind: primitive
 displayName: landscape · 2 · overlap · tlbr
 description: >
