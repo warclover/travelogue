@@ -30,16 +30,15 @@ def test_golden_mosaic_portrait_3_matches_mcs():
 
 
 def test_golden_mosaic_portrait_4_matches_mcs():
-    """Pair-first priority: 4 portraits tile into two portrait-2 pairs.
+    """Triple-first: 4 portraits → portrait-3 + portrait-1 (pair only as remainder-2).
 
-    Two-column pairs outrank the dense portrait-4 (2×2) grid, so a run of four
-    standard portraits never collapses into a single quad screen.
+    Dense portrait-4 (2×2) grid still must not be used for a pure portrait run.
     """
     buckets, aspects, assets = build_mosaic_portrait4_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("mosaic-portrait-4")
     patterns = [s["patternId"] for s in chapters[0]["screens"]]
-    assert patterns == ["screen-portrait-2", "screen-portrait-2"]
+    assert patterns == ["screen-portrait-3", "screen-portrait-1"]
     assert PATTERN_PORTRAIT_4 not in patterns
 
 
@@ -65,7 +64,7 @@ def test_mosaic_landscape_6_ab_unified_vs_legacy():
 
 
 def test_golden_mosaic_portrait_8_pair_first_after_grid8_prune():
-    """LTN C3 · grid-8 pruned; eight portraits fall to pair-first tiler."""
+    """LTN C3 · grid-8 pruned; eight portraits fall to triple-first tiler."""
     buckets, aspects, assets = build_mosaic_portrait8_trip()
     chapters = plan_mosaic_screens(
         buckets,
@@ -76,7 +75,8 @@ def test_golden_mosaic_portrait_8_pair_first_after_grid8_prune():
     )
     patterns = [s["patternId"] for s in chapters[0]["screens"]]
     assert "screen-portrait-grid-8" not in patterns
-    assert patterns.count("screen-portrait-2") >= 2
+    assert patterns.count("screen-portrait-3") >= 2
+    assert patterns.count("screen-portrait-2") == 1
 
 
 def test_golden_mosaic_landscape_9_after_prune():

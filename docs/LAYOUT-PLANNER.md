@@ -145,13 +145,13 @@
 | 2 | 超长竖×1 | `media-card` · `tall` |
 | 3 | 方×3 / 方×2 | `square-triple` / `square-pair` |
 | 4 | 方×1 | `media-card` · `square` |
-| 5 | 标准竖（连续游程） | `media-row` · **`portrait-pair` 优先 / `portrait-triple` 次之** |
+| 5 | 标准竖（连续游程） | `media-row` · **`portrait-triple` 优先 / `portrait-pair` 仅余 2 兜底** |
 | 6 | 标准横×3 / ×2 | `landscape-triple` / `landscape-pair` |
 | 7 | 其余×1 | `media-card` |
 
-> **竖版优先级（v0.4）**：`portrait-2`（两列）> `portrait-3`（三列）> `portrait-1`（单列，最差兜底）。对连续标准竖版游程做「pair 优先、triple 作奇偶填充、single 仅孤张兜底」的瓦片化（`portrait_group_sizes`）：`2→[2]`、`3→[3]`、`4→[2,2]`、`5→[2,3]`、`7→[2,2,3]`、`1→[1]`。screens 引擎同此优先级（`screen_planner._flush_portrait_pending` / `_emit_person_portrait_screens`）。
+> **竖版优先级（triple-first）**：`portrait-3`（三列）> `portrait-2`（两列，仅余 2 兜底）> `portrait-1`（单列，孤张收尾）。瓦片化（`portrait_group_sizes` / `_tile_portrait_run`）：`2→[2]`、`3→[3]`、`4→[3,1]`、`5→[3,2]`、`6→[3,3]`、`7→[3,3,1]`、`1→[1]`。screens 引擎同此优先级（`screen_planner._flush_portrait_pending` / `_emit_person_portrait_screens`）。竖版三列允许连续（R-02 豁免 `portrait_triple`）；朝向墙仍靠 R-08 换气。
 >
-> **v0.4.1（screens 引擎 MCS 层修正）**：连续「全标准竖版」游程**不再**塌缩为密集竖版宫格 `screen-portrait-4`（2×2）/ `-6`（3×2）/ `-9`（3×3）。MCS 窗口枚举（`mosaic/hook.py::try_mosaic_window`）对全竖版窗口跳过 `3/4/6/9` 三档，改由 pair-first 瓦片器（`stage_portrait_family` → `_drain_portrait_run_pair_first` → `_flush_portrait_pending(force=True)`）成屏：`4 连竖→两个 portrait-2`、`6 连竖→三个 portrait-2`、`3 连竖→一个 portrait-3`（force 绕过连续变化禁令，避免退化成 pair+单张）。`portrait-4/6/9` 仅保留给横版/方版或混合窗口；`portrait-grid-8`（人物 2×4）与孤立单竖 `portrait-1` 不受影响。
+> **v0.4.1（screens 引擎 MCS 层修正）**：连续「全标准竖版」游程**不再**塌缩为密集竖版宫格 `screen-portrait-4`（2×2）/ `-6`（3×2）/ `-9`（3×3）。MCS 窗口枚举（`mosaic/hook.py::try_mosaic_window`）对全竖版窗口跳过 `3/4/6/9` 三档，改由竖版瓦片器（`stage_portrait_family` → `_drain_portrait_run_pair_first` → `_flush_portrait_pending(force=True)`）成屏：`4 连竖→ portrait-3 + portrait-1`、`6 连竖→两个 portrait-3`、`3 连竖→一个 portrait-3`。`portrait-4/6/9` 仅保留给横版/方版或混合窗口；`portrait-grid-8`（人物 2×4）与孤立单竖 `portrait-1` 不受影响。
 
 ---
 
@@ -165,15 +165,15 @@
 | 数据 | `chapters[].screens[]`：`patternId` + `slots[]`（`fit`: cover \| contain） |
 | 单屏上限 | **9** 张；满屏后下一屏重算 pattern |
 | 宫格 | 横/方：1·2·3·4（2×2）·6（3×2）·9（3×3）；**竖版连续游程除外**——只用 1/2/3，4/6/9 密集宫格不用于纯竖版（见 v0.4.1） |
-| 竖版组屏优先级（v0.4） | **两列 `screen-portrait-2` > 三列 `screen-portrait-3` > 单列 `screen-portrait-1`**；连续竖版优先两列，仅奇数尾巴用一屏三列，单列仅孤张兜底 |
-| 竖三列 | `screen-portrait-3` · 三列竖槽（仅作奇偶填充） |
+| 竖版组屏优先级（triple-first） | **三列 `screen-portrait-3` > 两列 `screen-portrait-2`（仅余 2）> 单列 `screen-portrait-1`**；连续竖版优先三列，双列仅兜底，单列仅孤张收尾 |
+| 竖三列 | `screen-portrait-3` · 三列竖槽（主策略；允许连续） |
 | 单竖 | `screen-portrait-1` · 满屏兜底；或 `screen-portrait-1-landscape-2`（1 竖+2 横，时间邻近） |
-| 跨天顺延单竖（v0.4.2） | **仅 `screen_plan_scope=day`（默认）**：某天桶遗留的孤张 `screen-portrait-1` 不立即落地，而是顺延注入**后续天桶**首个竖版之后，尝试 pair-first 配对；最多顺延 `_PORTRAIT_CARRY_MAX_HOPS=3` 个天桶，仍无法配对则就地出单张。配对成屏按「首槽归属」分配章节（顺延照片渲染在较后章节）。**排除 featured / 章节 hero**（其单张为有意编排）。trip 末尾残余由 `_flush_portrait_carry_tail` 统一拼（≥2→pair/triple，1→单张回落到原章节）。见 `screen_planner_attach.py`。 |
+| 跨天顺延单竖（v0.4.2） | **仅 `screen_plan_scope=day`（默认）**：某天桶遗留的孤张 `screen-portrait-1` 不立即落地，而是顺延注入**后续天桶**首个竖版之后，尝试与后续竖版一起按 triple-first 组屏；最多顺延 `_PORTRAIT_CARRY_MAX_HOPS=3` 个天桶，仍无法组屏则就地出单张。配对成屏按「首槽归属」分配章节（顺延照片渲染在较后章节）。**排除 featured / 章节 hero**（其单张为有意编排）。trip 末尾残余由 `_flush_portrait_carry_tail` 统一拼（≥2→triple/pair，1→单张回落到原章节）。见 `screen_planner_attach.py`。 |
 | 五图拼版 | `screen-mosaic-5-main-portrait-3land`：左上主横图（cover 分最高）+ 右上 1 竖 + 底行 3 横；连续 5 张且 `takenAt` 跨度 ≤ `burst_seconds`；整章恰好 5 张时不另起章首 Hero |
 | 八竖 2×4 | `screen-portrait-grid-8`：总量 **>50** 且 **竖图多于横图**；连续 8 竖、相邻 `takenAt` ≤ `burst_seconds`；配额 51–100 **2** 屏 / 101–200 **4** / >200 **6**（不计九宫格）；人物 `layoutHint: person-grid-8` + `contain` |
-| 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格（**仅横/方**；纯竖版连拍仍走 pair-first 两列瓦片，见 v0.4.1） |
+| 连拍 | `takenAt` 间隔 ≤ `ingest.burst_seconds` 且同构图族 → 优先 4/9 宫格（**仅横/方**；纯竖版连拍仍走 triple-first 瓦片，见 v0.4.1） |
 | 九宫格配额 | 按游记**布局可用照片总数**：≤50 最多 1 次；51–100 为 2–5 次；101–200 为 4–8 次；>200 为 6–10 次；**禁止连续两屏均为 `*-9`** |
-| 连续排版禁令 | 禁止连续两屏 `*-3`（三张一排）；禁止连续两屏 `*-6`（六张两排）；禁止 `*-3` 与 `*-6` 相邻（任意顺序）；禁止连续两屏 `screen-portrait-1` / `screen-tall-1` |
+| 连续排版禁令 | 禁止连续横版/宫格三列（`LayoutKind=triple`）；**竖版三列可连续**；禁止连续两屏 `*-6`；禁止三列与 `*-6` 相邻；禁止连续两屏 `screen-portrait-1` / `screen-tall-1` |
 | gallery 章 | screens 引擎下仍从 items 展平为 **多屏 mosaic**；渲染不用 `media-scroll` |
 | legacy | `layoutEngine=legacy` 仍走 §5 上表 `media-row` / `media-card` |
 

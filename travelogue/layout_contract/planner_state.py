@@ -29,6 +29,7 @@ from travelogue.layout_contract.rhythm import (  # re-export for curation caller
     PORTRAIT_PAIR_PATTERN,
     PORTRAIT_PAIR_PATTERNS,
     PORTRAIT_SINGLE_PATTERNS,
+    PORTRAIT_TRIPLE_PATTERNS,
     LateChapterPairingPolicy,
     LayoutKind,
     RhythmRules,
@@ -38,6 +39,7 @@ from travelogue.layout_contract.rhythm import (  # re-export for curation caller
     is_portrait_orientation_pattern,
     is_portrait_pair_pattern,
     is_portrait_single_pattern,
+    is_portrait_triple_pattern,
     is_six_grid_pattern,
     is_triple_row_pattern,
     layout_kind_from_pattern,
@@ -63,6 +65,7 @@ __all__ = [
     "PORTRAIT_PAIR_PATTERN",
     "PORTRAIT_PAIR_PATTERNS",
     "PORTRAIT_SINGLE_PATTERNS",
+    "PORTRAIT_TRIPLE_PATTERNS",
     "RhythmRules",
     "ScreenLayoutPlannerState",
     "dense_collage_limits_for_trip",
@@ -73,6 +76,7 @@ __all__ = [
     "is_portrait_orientation_pattern",
     "is_portrait_pair_pattern",
     "is_portrait_single_pattern",
+    "is_portrait_triple_pattern",
     "is_six_grid_pattern",
     "is_triple_row_pattern",
     "large_mosaic_limits_from_config",
@@ -425,9 +429,9 @@ class ScreenLayoutPlannerState:
         if size == 9:
             return self.can_use_nine()
         if size == 3:
-            return self.last_kind not in ("triple", "six")
+            return self.last_kind not in ("triple", "portrait_triple", "six")
         if size == 6:
-            return self.last_kind not in ("six", "triple")
+            return self.last_kind not in ("six", "triple", "portrait_triple")
         return True
 
     def can_emit_pattern(self, pattern_id: str) -> bool:

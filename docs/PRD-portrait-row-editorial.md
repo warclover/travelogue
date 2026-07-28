@@ -204,7 +204,7 @@ _maybe_editorial_portrait_row(pattern_id, asset_ids, assets_map, config) → pat
 
 输出：`patternId = screen-portrait-3-editorial`，`layoutHint = portrait-row-editorial`。
 
-**节奏 state 等价（§10.2）：** 与 `screen-portrait-3` 同等计入 `triple` streak 与 R-02「不连三列」——须改代码，**非** regex 自动继承。
+**节奏 state 等价（§10.2）：** 与 `screen-portrait-3` 同等计入 `portrait_triple`（竖版三列连续 R-02 豁免；与 `six` 相邻仍禁）——须改代码，**非** regex 自动继承。
 
 ### 4.2 人物 vs 风景 fit
 

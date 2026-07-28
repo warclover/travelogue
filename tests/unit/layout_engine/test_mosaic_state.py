@@ -20,4 +20,4 @@ def test_note_screens_batch_records_nine_grid() -> None:
         ],
     )
     assert state.nine_used == 1
-    assert state.last_kind == "triple"
+    assert state.last_kind == "portrait_triple"

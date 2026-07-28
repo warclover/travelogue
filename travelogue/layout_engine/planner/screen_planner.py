@@ -931,47 +931,28 @@ def _tile_portrait_run(
     seed_pair_streak: int = 0,
     max_pair_streak: int = MAX_PORTRAIT_PAIR_STREAK,
 ) -> list[int]:
-    """竖版游程分组（pair-first + R-06 + R-02）。
+    """竖版游程分组（triple-first；双列仅兜底）。
 
-    返回每屏吃图数序列（2=双列, 3=三列, 1=单列兜底）：
-    - 优先双列（pair-first）；
-    - 连续双列不超过 ``max_pair_streak``（R-06，默认 2，G-07 可配置），
-      触顶或会被逼入死角时用三列打断；
-    - 不连续三列（R-02）；
-    - 仅在收尾无法成对时落单列（1）。
-    ``seed_pair_streak`` 为跨 flush 已累计的连续双列数。
+    返回每屏吃图数序列（3=三列, 2=双列兜底, 1=单列收尾）：
+    - 优先三列（triple-first）；
+    - 仅当余量恰为 2 时落双列（避免拆成两张单竖）；
+    - 余量 1 时落单列。
+    ``seed_pair_streak`` / ``max_pair_streak`` 保留签名兼容；瓦片决策不再使用
+    （R-06 仍在 ``can_emit_pattern`` 作双列连续安全网）。
     """
+    del seed_pair_streak, max_pair_streak  # signature compat only
     groups: list[int] = []
-    streak = max(0, seed_pair_streak)
-    last_was_triple = False
-    while n > 0:
-        if n == 1:
-            groups.append(1)
-            n = 0
-            continue
-        if n == 2:
-            groups.append(2)
-            n = 0
-            continue
-        if n == 3:
-            if last_was_triple:
-                groups.extend((2, 1))
-            else:
-                groups.append(3)
-            n = 0
-            continue
-        # n >= 4：判断是否需要用三列打断（触顶，或成对后会把恰好 2 张逼到顶）。
-        corner_after_pair = (n - 2 == 2) and (streak + 1 >= max_pair_streak)
-        if (streak >= max_pair_streak or corner_after_pair) and not last_was_triple:
+    remaining = max(0, int(n))
+    while remaining > 0:
+        if remaining >= 3:
             groups.append(3)
-            n -= 3
-            streak = 0
-            last_was_triple = True
-        else:
+            remaining -= 3
+        elif remaining == 2:
             groups.append(2)
-            n -= 2
-            streak += 1
-            last_was_triple = False
+            remaining = 0
+        else:
+            groups.append(1)
+            remaining = 0
     return groups
 
 
@@ -992,8 +973,8 @@ def _emit_person_portrait_screens(
     buf = list(person_ids)
     defer: list[str] = []
     tail_singles: list[str] = []
-    # 竖版分组优先级：两列(person-pair) > 三列(person-triple) > 单列。
-    # 由 _tile_portrait_run 统一裁决（pair-first + R-06 连续上限 + R-02 不连三列）。
+    # 竖版分组优先级：三列(person-triple) > 双列兜底(person-pair) > 单列。
+    # 由 _tile_portrait_run 统一裁决（triple-first；双列仅余 2）。
     seed = (
         layout_state.current_portrait_pair_streak() if layout_state is not None else 0
     )
@@ -1011,7 +992,7 @@ def _emit_person_portrait_screens(
                 and layout_state is not None
                 and not layout_state.can_emit_pattern("screen-portrait-3")
             ):
-                # 与上一屏冲突：降为双列并把第三张顺延（保持原退让行为）。
+                # 与上一屏冲突（如紧邻 six）：降为双列并把第三张顺延。
                 if layout_state.can_emit_pattern("screen-portrait-2"):
                     screen = _make_screen(
                         "screen-portrait-2",
@@ -1340,8 +1321,8 @@ def _flush_portrait_pending(
         )
     )
 
-    # 竖版分组优先级：两列(portrait-2) > 三列(portrait-3) > 单列(portrait-1)。
-    # 由 _tile_portrait_run 统一裁决（pair-first + R-06 连续上限 + R-02 不连三列）。
+    # 竖版分组优先级：三列(portrait-3) > 双列兜底(portrait-2) > 单列(portrait-1)。
+    # 由 _tile_portrait_run 统一裁决（triple-first；双列仅余 2）。
     seed = (
         layout_state.current_portrait_pair_streak() if layout_state is not None else 0
     )

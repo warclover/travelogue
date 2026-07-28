@@ -182,26 +182,29 @@ def test_mobile_portraits_never_collage_even_on_large_trip():
     assert not any(it.get("type") == "media-row" for it in items)
 
 
-def test_portrait_group_sizes_pair_first_with_triple_filler():
-    # Web 竖版优先级：pair > triple > single（单张仅孤张兜底）。
+def test_portrait_group_sizes_triple_first_pair_fallback():
+    # Web 竖版优先级：triple > pair 兜底 > single（单张仅孤张兜底）。
     assert portrait_group_sizes(1) == [1]
     assert portrait_group_sizes(2) == [2]
     assert portrait_group_sizes(3) == [3]
-    assert portrait_group_sizes(4) == [2, 2]
-    assert portrait_group_sizes(5) == [2, 3]
-    assert portrait_group_sizes(6) == [2, 2, 2]
-    assert portrait_group_sizes(7) == [2, 2, 3]
+    assert portrait_group_sizes(4) == [3, 1]
+    assert portrait_group_sizes(5) == [3, 2]
+    assert portrait_group_sizes(6) == [3, 3]
+    assert portrait_group_sizes(7) == [3, 3, 1]
 
 
-def test_web_four_portraits_prefer_two_pairs():
+def test_web_four_portraits_triple_then_single():
     ids = [f"p{i}" for i in range(4)]
     aspects = {x: "portrait" for x in ids}
     items = plan_chapter_items(ids, aspects, export_layout="web")
-    assert [it["rowLayout"] for it in items] == ["portrait-pair", "portrait-pair"]
+    assert items[0]["rowLayout"] == "portrait-triple"
+    assert items[0]["assetIds"] == ["p0", "p1", "p2"]
+    assert items[1]["type"] == "media-card"
+    assert items[1]["assetId"] == "p3"
 
 
-def test_web_five_portraits_pair_then_triple():
+def test_web_five_portraits_triple_then_pair():
     ids = [f"p{i}" for i in range(5)]
     aspects = {x: "portrait" for x in ids}
     items = plan_chapter_items(ids, aspects, export_layout="web")
-    assert [it["rowLayout"] for it in items] == ["portrait-pair", "portrait-triple"]
+    assert [it["rowLayout"] for it in items] == ["portrait-triple", "portrait-pair"]
