@@ -19,7 +19,7 @@ def test_empty_state_resume_not_in_html() -> None:
 def test_wizard_demo_album_cta() -> None:
     html = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert 'id="v2-wizard-demo-album"' in html
-    assert "用示例照片试一次" in html
+    assert "试用《斯里兰卡见闻录》" in html
     assert "上传小文件夹（建议 ≤200MB）" in html
     assert "小文件夹试用" not in html
     wiz = (STUDIO / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")

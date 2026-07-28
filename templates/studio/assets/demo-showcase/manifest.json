@@ -1,10 +1,10 @@
 {
-  "version": "2026.07.17-demo-album-bake",
-  "title": "示例 · 旅途",
+  "version": "2026.07.28-sri-lanka-bake",
+  "title": "斯里兰卡见闻录",
   "meta": {
-    "photoCount": 6,
+    "photoCount": 16,
     "chapterCount": 3,
-    "subtitle": "6 PHOTOS · DEMO"
+    "subtitle": "16 PHOTOS · DEMO"
   },
   "assets": {
     "background": "background.webp",

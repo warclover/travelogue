@@ -10,7 +10,7 @@ from travelogue.paths import DEMO_ALBUM_SENTINEL, is_demo_album_path
 
 DEMO_ALBUM_REL = Path("templates") / "studio" / "assets" / "demo-album"
 # PMX D1 · 示例册读者面展示名（禁止「示例游记」）
-DEMO_ALBUM_DISPLAY_TITLE = "京都雨季漫游"
+DEMO_ALBUM_DISPLAY_TITLE = "斯里兰卡见闻录"
 
 __all__ = [
     "DEMO_ALBUM_DISPLAY_TITLE",
