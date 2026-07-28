@@ -65,7 +65,7 @@ V2_HOME_MARKERS = (
     "v2-wizard-album-path",
     "v2-wizard-album-upload",
     "上传小文件夹（建议 ≤200MB）",
-    "用示例照片试一次",
+    "试用《斯里兰卡见闻录》",
     "v2-wizard-demo-album",
     'id="v2-bench-quick-actions"',
     "v2-wizard-close-pick",

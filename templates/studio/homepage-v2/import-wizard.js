@@ -1338,7 +1338,7 @@ function startDemoAlbumImport() {
     return t && t.tripId === "demo-album";
   });
   // PMX D1 · 与后端 DEMO_ALBUM_DISPLAY_TITLE 对齐；禁止「示例游记」
-  var DEMO_ALBUM_DISPLAY_TITLE = "京都雨季漫游";
+  var DEMO_ALBUM_DISPLAY_TITLE = "斯里兰卡见闻录";
   var body = {
     useDemoAlbum: true,
     title: DEMO_ALBUM_DISPLAY_TITLE,

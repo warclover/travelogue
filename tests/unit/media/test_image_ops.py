@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 from travelogue.media.image_ops import (
+    _parse_exif_datetime,
     center_crop_aspect,
     classify_aspect,
     crop_for_aspect_kind,
@@ -42,6 +43,15 @@ def test_center_crop_portrait_aspect():
     img = Image.new("RGB", (2000, 1000), (255, 0, 0))
     out = center_crop_aspect(img, 9 / 16)
     assert abs(out.width / out.height - 9 / 16) < 0.02
+
+
+def test_parse_exif_datetime_strips_trailing_nul():
+    assert _parse_exif_datetime("2018:07:22 16:44:11\x00") == datetime(
+        2018, 7, 22, 16, 44, 11
+    )
+    assert _parse_exif_datetime("2018:07:22 16:44:11") == datetime(
+        2018, 7, 22, 16, 44, 11
+    )
 
 
 def test_parse_datetime_from_filename():

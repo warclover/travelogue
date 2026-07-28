@@ -62,7 +62,8 @@ class ImageOpsError(PlainCodeError):
 def _parse_exif_datetime(raw: object) -> datetime | None:
     if not raw:
         return None
-    text = str(raw).strip()
+    # Nikon/Pillow ASCII EXIF often keeps a trailing NUL; strip before parse.
+    text = str(raw).replace("\x00", "").strip()
     for fmt in ("%Y:%m:%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"):
         try:
             return datetime.strptime(text, fmt)

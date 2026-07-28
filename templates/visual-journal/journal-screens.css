@@ -3314,24 +3314,26 @@ html[data-layout="auto"] .layout-slot:has(.moment-exif-bar) .layout-slot__img {
 }
 
 .layout-screen__moment-label {
+  /* Short paper tag · match EXIF bar contrast (any photo backdrop) */
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
   z-index: 2;
-  display: block;
-  padding: 0.55rem 0.85rem;
+  display: inline-block;
+  max-width: min(100%, 16rem);
+  box-sizing: border-box;
+  padding: 0.45rem 0.75rem;
   writing-mode: horizontal-tb;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: var(--folio-meta-font, var(--font-ui));
   font-size: clamp(11px, 1.2vw, 13px);
-  letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--folio-ink, #222) 72%, #fff 28%);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--folio-ink, #222) 22%, transparent) 0%,
-    transparent 100%
-  );
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.92);
+  background: #0a0a0a;
   pointer-events: none;
 }
 
