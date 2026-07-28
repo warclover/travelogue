@@ -22,6 +22,7 @@ def _planner_tests_disable_mosaic(monkeypatch, request):
     )
 
 from travelogue.layout_contract.planner_state import portrait_grid8_max_for_trip
+from travelogue.layout_contract.rhythm import is_landscape_triple_pattern, is_portrait_triple_pattern
 from travelogue.layout_engine.planner.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -36,7 +37,6 @@ from travelogue.layout_engine.planner.screen_planner import (
     is_nine_grid_pattern,
     is_portrait_single_pattern,
     is_six_grid_pattern,
-    is_triple_row_pattern,
     layout_kind_from_pattern,
     nine_grid_limits_for_trip,
     plan_screens_for_chapter,
@@ -228,7 +228,7 @@ def test_portrait_grid8_limits_by_trip_size():
 
 
 def test_plan_portrait_grid8_when_trip_over_50_and_portrait_heavy():
-    """LTN C3 · grid-8 pruned; eight portraits fall to pair-first."""
+    """LTN C3 · grid-8 pruned; eight portraits fall to triple-first."""
     ids = [f"p{i}" for i in range(8)]
     aspects = {x: "portrait" for x in ids}
     base = datetime(2025, 9, 1, 10, 0, 0, tzinfo=UTC)
@@ -478,15 +478,23 @@ def test_no_consecutive_triple_six_or_portrait_single():
         burst_seconds=3.0,
         layout_state=state,
     )
-    _assert_no_consecutive_pattern_pairs(screens, pred_a=is_triple_row_pattern)
+    # Portrait triples may be consecutive (R-02 exempt); landscape/other triples still banned.
+    _assert_no_consecutive_pattern_pairs(screens, pred_a=is_landscape_triple_pattern)
     _assert_no_consecutive_pattern_pairs(screens, pred_a=is_six_grid_pattern)
     _assert_no_consecutive_pattern_pairs(
-        screens, pred_a=is_triple_row_pattern, pred_b=is_six_grid_pattern
+        screens, pred_a=is_landscape_triple_pattern, pred_b=is_six_grid_pattern
     )
     _assert_no_consecutive_pattern_pairs(
-        screens, pred_a=is_six_grid_pattern, pred_b=is_triple_row_pattern
+        screens, pred_a=is_six_grid_pattern, pred_b=is_landscape_triple_pattern
+    )
+    _assert_no_consecutive_pattern_pairs(
+        screens, pred_a=is_portrait_triple_pattern, pred_b=is_six_grid_pattern
+    )
+    _assert_no_consecutive_pattern_pairs(
+        screens, pred_a=is_six_grid_pattern, pred_b=is_portrait_triple_pattern
     )
     _assert_no_consecutive_pattern_pairs(screens, pred_a=is_portrait_single_pattern)
+    assert any(is_portrait_triple_pattern(s["patternId"]) for s in screens)
 
 
 def test_trip_200_plus_caps_nine_and_no_consecutive():
@@ -661,11 +669,8 @@ def test_screens_layout_active_requires_web():
 
 
 def test_portrait_heavy_summary():
-    # Pair-first portrait priority under R-06 (排版规则优化 v0.5): a run of 6
-    # standard portraits can't tile into 3 consecutive two-column pairs (max 2
-    # consecutive portrait-2), so the run breaks with a triple to stay within the
-    # streak cap → portrait-2, portrait-3, portrait-1. Still never a dense
-    # portrait-6/portrait-4 grid.
+    # Triple-first: a run of 6 standard portraits → two consecutive portrait-3.
+    # Still never a dense portrait-6/portrait-4 grid; pair is remainder-2 only.
     ids = [f"p{i}" for i in range(6)]
     aspects = _aspects(ids, {x: "portrait" for x in ids})
     screens = plan_screens_for_chapter(
@@ -674,16 +679,13 @@ def test_portrait_heavy_summary():
         orientation_summary={"portrait": 10, "landscape": 2},
     )
     assert [s["patternId"] for s in screens] == [
-        "screen-portrait-2",
         "screen-portrait-3",
-        "screen-portrait-1",
+        "screen-portrait-3",
     ]
-    from travelogue.curation.layout_constraints import max_consecutive_pattern_streak
-    from travelogue.layout_contract.planner_state import MAX_PORTRAIT_PAIR_STREAK
-
-    pair_only = [s for s in screens if s["patternId"] == "screen-portrait-2"]
-    assert max_consecutive_pattern_streak(screens) <= MAX_PORTRAIT_PAIR_STREAK
-    assert pair_only  # pair-first still favored
+    assert all(s["patternId"] != "screen-portrait-2" for s in screens)
+    assert all(
+        s["patternId"] not in ("screen-portrait-4", "screen-portrait-6") for s in screens
+    )
 
 
 def test_landscape_pair_splits_into_two_single_screens():

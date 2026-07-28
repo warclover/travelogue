@@ -60,12 +60,14 @@ def test_triple_pattern_includes_editorial() -> None:
     assert not is_triple_row_pattern("screen-portrait-2")
 
 
-def test_editorial_triple_consecutive_ban_r02() -> None:
+def test_editorial_triple_allows_consecutive_portrait_r02_exempt() -> None:
+    """Portrait triples are portrait_triple kind — consecutive R-02 does not apply."""
     st = ScreenLayoutPlannerState(nine_min=0, nine_max=1)
     assert st.can_emit_pattern("screen-portrait-3")
     st.note_screen(PATTERN_PORTRAIT_3_EDITORIAL)
-    assert not st.can_emit_pattern("screen-portrait-3")
-    assert not st.can_emit_pattern(PATTERN_PORTRAIT_3_EDITORIAL)
+    assert st.can_emit_pattern("screen-portrait-3")
+    assert st.can_emit_pattern(PATTERN_PORTRAIT_3_EDITORIAL)
+    assert st.last_kind == "portrait_triple"
 
 
 def test_is_editorial_enabled_priority() -> None:

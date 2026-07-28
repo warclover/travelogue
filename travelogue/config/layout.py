@@ -61,7 +61,7 @@ class LayoutLateChapterPairingConfig:
     no_outward_portrait_carry: bool = True
     flush_lookahead_portraits: int = 3  # 0 = 关闭章内 look-ahead
     beam_portrait_single_penalty: float = 0.12
-    beam_portrait_pair_bonus: float = 0.06
+    beam_portrait_pair_bonus: float = 0.0
 
 
 @dataclass
