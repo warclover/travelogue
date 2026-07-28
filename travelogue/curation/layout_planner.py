@@ -145,24 +145,23 @@ def _can_portrait_pair(k1: AspectKind, k2: AspectKind) -> bool:
 
 
 def portrait_group_sizes(count: int) -> list[int]:
-    """竖版分组优先级（pair > triple > single）下的瓦片尺寸序列。
+    """竖版分组优先级（triple > pair兜底 > single）下的瓦片尺寸序列。
 
-    优先输出两列(2)，仅当剩余恰为 3 张时用一个三列(3)吃掉奇数尾巴；
-    单列(1)仅在孤张时出现。例：2→[2]、3→[3]、4→[2,2]、5→[2,3]、
-    7→[2,2,3]、1→[1]。
+    优先三列(3)；仅当余量恰为 2 时落双列(2)；单列(1)仅在孤张时出现。
+    例：2→[2]、3→[3]、4→[3,1]、5→[3,2]、6→[3,3]、7→[3,3,1]、1→[1]。
     """
     sizes: list[int] = []
     remaining = max(0, int(count))
     while remaining > 0:
-        if remaining == 1:
-            sizes.append(1)
-            remaining -= 1
-        elif remaining == 3:
+        if remaining >= 3:
             sizes.append(3)
             remaining -= 3
-        else:
+        elif remaining == 2:
             sizes.append(2)
-            remaining -= 2
+            remaining = 0
+        else:
+            sizes.append(1)
+            remaining = 0
     return sizes
 
 

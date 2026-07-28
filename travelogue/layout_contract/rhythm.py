@@ -10,6 +10,7 @@ LayoutKind = Literal[
     "none",
     "nine",
     "triple",
+    "portrait_triple",
     "six",
     "portrait_single",
     "portrait_pair",
@@ -83,6 +84,12 @@ PORTRAIT_ORIENTATION_PATTERNS = frozenset(
 )
 
 PATTERN_PORTRAIT_3_EDITORIAL = "screen-portrait-3-editorial"
+PORTRAIT_TRIPLE_PATTERNS = frozenset(
+    {
+        "screen-portrait-3",
+        PATTERN_PORTRAIT_3_EDITORIAL,
+    }
+)
 
 DEFAULT_CONSECUTIVE_BANS: frozenset[tuple[str, str]] = frozenset(
     {
@@ -90,6 +97,10 @@ DEFAULT_CONSECUTIVE_BANS: frozenset[tuple[str, str]] = frozenset(
         ("triple", "triple"),
         ("triple", "six"),
         ("six", "triple"),
+        # Portrait triples are exempt from R-02 consecutive bans (triple-first),
+        # but still must not sit next to dense six-grids (R-04 parity).
+        ("portrait_triple", "six"),
+        ("six", "portrait_triple"),
         ("six", "six"),
         ("portrait_single", "portrait_single"),
     }
@@ -104,7 +115,7 @@ class LateChapterPairingPolicy:
     no_outward_portrait_carry: bool = True
     flush_lookahead_portraits: int = 3
     beam_portrait_single_penalty: float = 0.12
-    beam_portrait_pair_bonus: float = 0.06
+    beam_portrait_pair_bonus: float = 0.0
 
     def is_late_chapter(self, chapter_index_1based: int) -> bool:
         return chapter_index_1based >= self.from_chapter_index
@@ -136,7 +147,7 @@ class RhythmRules:
             beam_portrait_single_penalty=float(
                 getattr(late, "beam_portrait_single_penalty", 0.12)
             ),
-            beam_portrait_pair_bonus=float(getattr(late, "beam_portrait_pair_bonus", 0.06)),
+            beam_portrait_pair_bonus=float(getattr(late, "beam_portrait_pair_bonus", 0.0)),
         )
         return cls(
             max_portrait_pair_streak=int(rhythm.max_portrait_pair_streak),
@@ -217,6 +228,10 @@ def is_portrait_pair_pattern(pattern_id: str | None) -> bool:
     return pattern_id in PORTRAIT_PAIR_PATTERNS
 
 
+def is_portrait_triple_pattern(pattern_id: str | None) -> bool:
+    return pattern_id in PORTRAIT_TRIPLE_PATTERNS
+
+
 def is_mixed_1l1p_pattern(pattern_id: str | None) -> bool:
     return pattern_id in MIXED_1L1P_PATTERNS
 
@@ -240,6 +255,10 @@ def is_portrait_orientation_pattern(pattern_id: str | None) -> bool:
 def layout_kind_from_pattern(pattern_id: str) -> LayoutKind:
     if is_nine_grid_pattern(pattern_id):
         return "nine"
+    # Portrait triples are their own kind so R-02 ("triple","triple") does not
+    # block consecutive screen-portrait-3 under triple-first tiling.
+    if is_portrait_triple_pattern(pattern_id):
+        return "portrait_triple"
     if is_triple_row_pattern(pattern_id):
         return "triple"
     if is_six_grid_pattern(pattern_id):

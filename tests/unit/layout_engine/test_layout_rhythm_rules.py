@@ -26,7 +26,7 @@ def _chapters(pids: list[str]) -> list[dict]:
     return [{"id": "ch-01", "screens": [_screen(p) for p in pids]}]
 
 
-# --- _tile_portrait_run (R-06 + R-02 + pair-first) ---
+# --- _tile_portrait_run (triple-first; pair only as remainder-2 fallback) ---
 
 
 def test_tile_run_small_cases():
@@ -34,40 +34,56 @@ def test_tile_run_small_cases():
     assert _tile_portrait_run(1) == [1]
     assert _tile_portrait_run(2) == [2]
     assert _tile_portrait_run(3) == [3]
-    assert _tile_portrait_run(4) == [2, 2]
-    assert _tile_portrait_run(5) == [2, 3]
+    assert _tile_portrait_run(4) == [3, 1]
+    assert _tile_portrait_run(5) == [3, 2]
 
 
-def test_tile_run_breaks_pair_streak():
-    # 6 cannot be 3 consecutive pairs → break with a triple.
-    assert _tile_portrait_run(6) == [2, 3, 1]
-    assert _tile_portrait_run(7) == [2, 2, 3]
-    assert _tile_portrait_run(8) == [2, 2, 3, 1]
+def test_tile_run_triple_first_matrix():
+    assert _tile_portrait_run(6) == [3, 3]
+    assert _tile_portrait_run(7) == [3, 3, 1]
+    assert _tile_portrait_run(8) == [3, 3, 2]
+    assert _tile_portrait_run(9) == [3, 3, 3]
 
 
-def test_tile_run_no_more_than_two_consecutive_pairs():
+def test_tile_run_pair_only_as_remainder_two():
     for n in range(0, 40):
         groups = _tile_portrait_run(n)
         assert sum(groups) == n, (n, groups)
-        # no 3 consecutive pairs (size==2)
+        # pairs only appear as a single trailing 2 (never consecutive pairs)
         streak = 0
         for g in groups:
             streak = streak + 1 if g == 2 else 0
+            assert streak <= 1, (n, groups)
             assert streak <= MAX_PORTRAIT_PAIR_STREAK, (n, groups)
-        # no consecutive triples
-        prev = None
-        for g in groups:
-            assert not (g == 3 and prev == 3), (n, groups)
-            prev = g
+        # when a pair is present it is the sole size-2 group and n % 3 == 2
+        if 2 in groups:
+            assert groups.count(2) == 1, (n, groups)
+            assert n % 3 == 2, (n, groups)
 
 
-def test_tile_run_respects_seed_streak():
-    # already 2 consecutive pairs → must start with a non-pair.
-    groups = _tile_portrait_run(4, seed_pair_streak=2)
-    assert groups[0] != 2, groups
+def test_tile_run_seed_streak_ignored_under_triple_first():
+    # seed/max retained for call-site compat; tiling ignores them.
+    assert _tile_portrait_run(4, seed_pair_streak=2) == [3, 1]
+    assert _tile_portrait_run(5, seed_pair_streak=2) == [3, 2]
 
 
 # --- ScreenLayoutPlannerState R-06 ---
+
+
+def test_state_allows_consecutive_portrait_triples():
+    st = ScreenLayoutPlannerState(nine_min=0, nine_max=1)
+    assert st.can_emit_pattern("screen-portrait-3")
+    st.note_screen("screen-portrait-3")
+    assert st.can_emit_pattern("screen-portrait-3")
+    assert st.last_kind == "portrait_triple"
+
+
+def test_state_blocks_consecutive_landscape_triples():
+    st = ScreenLayoutPlannerState(nine_min=0, nine_max=1)
+    assert st.can_emit_pattern("screen-landscape-3")
+    st.note_screen("screen-landscape-3")
+    assert not st.can_emit_pattern("screen-landscape-3")
+    assert st.last_kind == "triple"
 
 
 def test_state_blocks_third_consecutive_pair():
