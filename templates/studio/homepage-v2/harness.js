@@ -94,7 +94,7 @@ const FIXTURES = {
       trip("hokkaido", "北海道 · 初雪", { longshotStale: true, updatedAt: NOW - 4 * DAY }),
       trip("lisbon", "里斯本 · 电车", { updatedAt: NOW - 9 * DAY }),
       trip("yunnan", "滇西 · 茶马", { updatedAt: NOW - 20 * DAY }),
-      trip("demo-album", "示例 · 旅途", { isDemo: true, updatedAt: NOW - 40 * DAY }),
+      trip("demo-album", "斯里兰卡见闻录", { isDemo: true, updatedAt: NOW - 40 * DAY }),
     ],
   },
   "multi-templates": {
@@ -115,7 +115,7 @@ const FIXTURES = {
   "demo-only": {
     ok: true,
     total: 1,
-    trips: [trip("demo-album", "示例 · 旅途", { isDemo: true })],
+    trips: [trip("demo-album", "斯里兰卡见闻录", { isDemo: true })],
   },
   many: {
     ok: true,
