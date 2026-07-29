@@ -59,6 +59,7 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "shelf_longshot_fail",
         "shelf_longshot_reveal",
         "shelf_longshot_busy",
+        "shelf_open_longshot_folder",
         # Longshot export funnel (homepage / preview toolbar)
         "longshot_export_start",
         "longshot_export_success",

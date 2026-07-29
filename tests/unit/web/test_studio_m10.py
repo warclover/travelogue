@@ -20,6 +20,8 @@ from travelogue.web.studio_trips import (
     has_longshot_exports,
     list_studio_trips,
     longshot_outputs_stale,
+    longshot_reveal_rel_path,
+    _longshot_files,
 )
 
 pytestmark = pytest.mark.e2e
@@ -42,6 +44,39 @@ def test_studio_trips_includes_preview_path(tmp_path: Path) -> None:
     assert row.get("previewRelPath") == "preview.jpg"
     assert (trips_dir / result.trip_id / "preview.jpg").is_file()
     assert row.get("hasLongshotExport") is False
+    assert row.get("longshotRevealRelPath") is None
+
+
+def test_longshot_reveal_rel_prefers_current_manifesto(tmp_path: Path) -> None:
+    from travelogue.export.longshot import write_longshot_current
+
+    trip_dir = tmp_path / "reveal-trip"
+    trip_dir.mkdir()
+    (trip_dir / "older-longshot.png").write_bytes(b"png")
+    (trip_dir / "newer-长图.png").write_bytes(b"png")
+    write_longshot_current(
+        trip_dir,
+        batch_id="batch-1",
+        kind="whole",
+        files=["newer-长图.png"],
+    )
+    assert longshot_reveal_rel_path(trip_dir) == "newer-长图.png"
+
+
+def test_longshot_reveal_rel_falls_back_to_newest_file(tmp_path: Path) -> None:
+    import os
+    import time
+
+    trip_dir = tmp_path / "reveal-legacy"
+    trip_dir.mkdir()
+    older = trip_dir / "trip-ch01.png"
+    newer = trip_dir / "trip-ch02.png"
+    older.write_bytes(b"png")
+    newer.write_bytes(b"png")
+    base = time.time()
+    os.utime(older, (base - 20, base - 20))
+    os.utime(newer, (base - 5, base - 5))
+    assert longshot_reveal_rel_path(trip_dir) == "trip-ch02.png"
 
 
 def test_has_longshot_exports_detects_chapter_pngs(tmp_path: Path) -> None:

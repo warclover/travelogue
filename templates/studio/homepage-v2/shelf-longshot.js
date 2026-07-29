@@ -2,7 +2,7 @@
  * 首页 v2 · 书架「保存长图」Modal 流程（M14）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
-import { markLongshotReady } from "../js/longshot-ready.js";
+import { markLongshotReady, isLongshotReady } from "../js/longshot-ready.js";
 import {
   LONGSHOT_PRESETS,
   startLongshotJob,
@@ -371,5 +371,97 @@ export function runShelfLongshot(trip, opts) {
       toast("网络错误，请重试", { duration: 3200 });
     }
     return null;
+  });
+}
+
+/** 书架 ⋯ · 是否可打开已导出长图（磁盘或本会话刚导出）。 */
+export function canOpenShelfLongshotFolder(trip) {
+  trip = trip || {};
+  if (trip.longshotRevealRelPath || trip.hasLongshotExport) return true;
+  return isLongshotReady(trip.tripId);
+}
+
+/**
+ * 解析可 reveal 的长图相对路径：trips 行 → longshot-current.json → /trips 刷新。
+ * @param {object} trip
+ * @returns {Promise<string|null>}
+ */
+function resolveShelfLongshotRevealRel(trip) {
+  var tripId = trip && trip.tripId;
+  if (!tripId) return Promise.resolve(null);
+  if (trip.longshotRevealRelPath) {
+    return Promise.resolve(String(trip.longshotRevealRelPath));
+  }
+  return fetch(
+    "/" + encodeURIComponent(tripId) + "/longshot-current.json?t=" + String(Date.now())
+  )
+    .then(function (resp) {
+      if (!resp.ok) return null;
+      return resp.json();
+    })
+    .then(function (data) {
+      var files = data && data.files;
+      if (!Array.isArray(files) || !files.length) return null;
+      var name = String(files[0] || "").trim();
+      return name || null;
+    })
+    .catch(function () {
+      return null;
+    })
+    .then(function (fromManifesto) {
+      if (fromManifesto) return fromManifesto;
+      return fetch("/__travelogue/trips?limit=100&offset=0")
+        .then(function (resp) {
+          if (!resp.ok) return null;
+          return resp.json();
+        })
+        .then(function (payload) {
+          var rows = (payload && payload.trips) || [];
+          for (var i = 0; i < rows.length; i++) {
+            if (rows[i] && rows[i].tripId === tripId && rows[i].longshotRevealRelPath) {
+              return String(rows[i].longshotRevealRelPath);
+            }
+          }
+          return null;
+        })
+        .catch(function () {
+          return null;
+        });
+    });
+}
+
+/**
+ * 书架 ⋯ · 打开已导出长图所在文件夹（选中首张 PNG）。
+ * @param {object} trip
+ * @param {{ surface?: string }} [opts]
+ */
+export function openShelfLongshotFolder(trip, opts) {
+  opts = opts || {};
+  var tripId = trip && trip.tripId;
+  if (!tripId) {
+    toast("无法打开文件夹", { duration: 3200 });
+    return Promise.resolve(false);
+  }
+  if (!canOpenShelfLongshotFolder(trip)) {
+    toast("尚未导出长图，请先「保存长图」", { duration: 3200 });
+    return Promise.resolve(false);
+  }
+  trackStudioEvent("shelf_open_longshot_folder", {
+    trip_id: tripId,
+    surface: opts.surface || "grid",
+  });
+  return resolveShelfLongshotRevealRel(trip).then(function (rel) {
+    if (!rel) {
+      toast("长图文件已不在，请重新「保存长图」", { duration: 3600 });
+      return false;
+    }
+    return revealLongshotOutput(tripId, rel)
+      .then(function () {
+        return true;
+      })
+      .catch(function () {
+        toast("无法打开文件夹，文件可能已移动或删除", { duration: 3600 });
+        return false;
+      });
   });
 }

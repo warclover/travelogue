@@ -20,8 +20,8 @@ export const V2_BENTO_PREVIEW_TRIP_SESSION_KEY = "travelogue.studio.v2.bentoPrev
 export const V2_BENTO_D14_MIGRATED_KEY = "travelogue.studio.v2.bentoD14Migrated";
 /** D-14 离线：最近一次成功的 GET /trips 首屏快照（JSON `{ v, trips, total }`）。 */
 export const V2_TRIPS_CACHE_KEY = "travelogue.studio.v2.tripsCache";
-/** Bump when trips row shape changes (e.g. shelfCoverRelPath). */
-export const V2_TRIPS_CACHE_VERSION = 2;
+/** Bump when trips row shape changes (e.g. longshotRevealRelPath). */
+export const V2_TRIPS_CACHE_VERSION = 3;
 export const V2_THEME_DEFAULT = "mist";
 
 /** v2 首页运行时状态（单一可变源，勿重新赋值绑定）。 */

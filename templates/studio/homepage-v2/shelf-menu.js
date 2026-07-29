@@ -12,7 +12,7 @@ import {
   noteTripDeleted,
 } from "./store.js";
 import { deleteTrip } from "./trips-client.js";
-import { runShelfLongshot } from "./shelf-longshot.js";
+import { runShelfLongshot, openShelfLongshotFolder, canOpenShelfLongshotFolder } from "./shelf-longshot.js";
 import { setBentoPreviewTripId } from "./bento-tabs.js";
 
 var _openMenuEl = null;
@@ -254,6 +254,16 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   longshotItem.setAttribute("role", "menuitem");
   longshotItem.textContent = "保存长图";
 
+  var openLongshotItem = document.createElement("button");
+  openLongshotItem.type = "button";
+  openLongshotItem.className = "v2-shelf__menu-item";
+  openLongshotItem.setAttribute("role", "menuitem");
+  openLongshotItem.textContent = "打开长图文件夹";
+  if (!canOpenShelfLongshotFolder(trip)) {
+    openLongshotItem.disabled = true;
+    openLongshotItem.title = "尚未导出长图";
+  }
+
   var deleteItem = document.createElement("button");
   deleteItem.type = "button";
   deleteItem.className = "v2-shelf__menu-item v2-shelf__menu-item--danger";
@@ -269,6 +279,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
 
   menu.appendChild(previewItem);
   menu.appendChild(longshotItem);
+  menu.appendChild(openLongshotItem);
   menu.appendChild(deleteItem);
   coverWrap.appendChild(menuBtn);
   coverWrap.appendChild(menu);
@@ -300,6 +311,14 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     e.stopPropagation();
     closeMenu(menu);
     runShelfLongshot(trip, { surface: surface });
+  });
+
+  openLongshotItem.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (openLongshotItem.disabled) return;
+    closeMenu(menu);
+    openShelfLongshotFolder(trip, { surface: surface });
   });
 
   deleteItem.addEventListener("click", function (e) {

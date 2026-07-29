@@ -157,6 +157,22 @@ def has_longshot_exports(trip_dir: Path) -> bool:
     return bool(_longshot_files(trip_dir))
 
 
+def longshot_reveal_rel_path(trip_dir: Path) -> str | None:
+    """Prefer ``longshot-current.json`` first file; else newest matching export."""
+    from travelogue.export.longshot import read_longshot_current
+
+    current = read_longshot_current(trip_dir)
+    if current:
+        files = list(current.get("files") or [])
+        if files:
+            return str(files[0])
+    matches = _longshot_files(trip_dir)
+    if not matches:
+        return None
+    newest = max(matches, key=lambda p: (p.stat().st_mtime, p.name))
+    return newest.name
+
+
 def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
     trips_dir = trips_dir.resolve()
     if not trips_dir.is_dir():
@@ -218,6 +234,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "layoutCssStale": layout_css_stale,
                     "renderBundleStale": render_bundle_stale,
                     "hasLongshotExport": has_longshot_exports(child),
+                    "longshotRevealRelPath": longshot_reveal_rel_path(child),
                     "previewRelPath": preview_rel,
                     "shelfCoverRelPath": shelf_cover_rel,
                     "derivativesStatus": str(

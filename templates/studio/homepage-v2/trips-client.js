@@ -15,6 +15,8 @@ export const SHELF_PAGE_SIZE = 20;
  * @property {string} [previewUrl]
  * @property {string|null} [previewRelPath]
  * @property {string|null} [shelfCoverRelPath]
+ * @property {boolean} [hasLongshotExport]
+ * @property {string|null} [longshotRevealRelPath]
  * @property {boolean} [longshotStale]
  * @property {boolean} [algorithmStale]
  * @property {boolean} [aestheticStale]

@@ -733,6 +733,9 @@ def test_studio_home_v2_shelf_module() -> None:
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
     assert "保存长图" in menu
+    assert "打开长图文件夹" in menu
+    assert "openShelfLongshotFolder" in menu
+    assert "canOpenShelfLongshotFolder" in menu
     assert "删除画册" in menu
     assert "shelf_menu_open" in menu
     assert "deleteTrip" in menu
@@ -747,7 +750,15 @@ def test_studio_home_v2_shelf_module() -> None:
 
     shelf_longshot = (STUDIO_DIR / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
     assert "shelf_longshot_start" in shelf_longshot
+    assert "shelf_open_longshot_folder" in shelf_longshot
+    assert "openShelfLongshotFolder" in shelf_longshot
+    assert "longshot-current.json" in shelf_longshot
     assert "V2.reroute" in shelf_longshot
+
+    events = (REPO_ROOT / "travelogue" / "domain" / "studio_events.py").read_text(
+        encoding="utf-8"
+    )
+    assert "shelf_open_longshot_folder" in events
 
     trips_client = (STUDIO_DIR / "homepage-v2" / "trips-client.js").read_text(encoding="utf-8")
     assert "deleteTrip" in trips_client
