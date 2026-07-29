@@ -121,10 +121,7 @@
   color: rgba(255, 255, 255, .95);
 }
 :root[data-v2-theme="classic"] .v2-cell-label {
-  color: rgba(255, 255, 255, .4);
-}
-:root[data-v2-theme="classic"] .v2-cell-label__hint {
-  color: rgba(255, 255, 255, .3);
+  color: inherit;
 }
 :root[data-v2-theme="classic"] .v2-carousel__viewport {
   border-color: rgba(255, 255, 255, .1);
@@ -149,9 +146,6 @@
 :root[data-v2-theme="classic"] .v2-carousel__dots button.is-active {
   background-color: var(--v2-gold);
   border-color: var(--studio-panel-ink, #14110d);
-}
-:root[data-v2-theme="classic"] .v2-carousel__hint {
-  color: rgba(255, 255, 255, .35);
 }
 :root[data-v2-theme="classic"] .v2-phone__shell {
   background: linear-gradient(145deg, #2a2826, #10100e);
@@ -195,16 +189,42 @@
   border-left-color: rgba(255, 255, 255, .12);
 }
 :root[data-v2-theme="classic"] .v2-shelf {
-  border-top: 1px solid rgba(255, 255, 255, .08);
+  border-top: 1px solid rgba(20, 17, 13, .12);
   box-shadow: 0 -24px 64px rgba(0, 0, 0, .35);
-  /* 书架为浅色纸本，须覆盖 classic 全局浅色字（供暗色 Bento 用） */
+  background: var(--v2-paper);
+  color: var(--v2-ink);
+  /*
+   * classic 全局 token 为「暗底浅字」（服务 Bento）。
+   * 书架是浅色纸本区，必须整组覆盖 ink / surface / border，
+   * 否则续看卡（--v2-surface 深色）+ 标题（--v2-ink 深色）叠成看不见。
+   */
+  --v2-ink: #14110d;
+  --v2-title-ink: #14110d;
   --v2-text-muted: #6b6458;
   --v2-text-secondary: #524c44;
+  --v2-border: rgba(20, 17, 13, .12);
+  --v2-border-strong: rgba(20, 17, 13, .28);
+  --v2-surface: #fffdf8;
+  --v2-surface-soft: #f0e9dc;
+  --v2-primary: #2d4a3e;
+  --v2-primary-hover: #243d33;
+  --v2-shadow-soft: rgba(16, 15, 13, .08);
+}
+:root[data-v2-theme="classic"] .v2-shelf__resume-text strong {
+  color: var(--v2-ink);
+}
+:root[data-v2-theme="classic"] .v2-shelf__title-h1,
+:root[data-v2-theme="classic"] .v2-shelf__title {
+  color: var(--v2-ink);
+}
+:root[data-v2-theme="classic"] .v2-shelf__resume-actions button {
+  color: var(--v2-ink);
+  border-color: var(--v2-border-strong);
 }
 :root[data-v2-theme="classic"] .v2-shelf__resume-actions button.primary {
-  background: var(--v2-ink);
-  color: var(--v2-paper);
-  border-color: var(--v2-ink);
+  background: var(--v2-forest);
+  color: var(--v2-cream);
+  border-color: var(--v2-forest);
 }
 :root[data-v2-theme="classic"] .v2-shelf__menu-btn:focus-visible {
   outline: 2px solid var(--v2-forest);
@@ -240,6 +260,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 600;
+  color: var(--v2-ink);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

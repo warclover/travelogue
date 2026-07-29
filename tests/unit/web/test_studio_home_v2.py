@@ -286,6 +286,12 @@ def test_studio_home_v2_theme_palette_options() -> None:
     assert ':root[data-v2-theme="folio"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="atelier"] .v2-bento__veil' in css
     assert ':root[data-v2-theme="mist"] .v2-shelf' in css
+    # classic：书架浅色纸本须覆盖全局暗底 token，避免续看卡标题深色叠深色
+    assert ':root[data-v2-theme="classic"] .v2-shelf' in css
+    classic_shelf = css.split(':root[data-v2-theme="classic"] .v2-shelf {', 1)[1].split("}", 1)[0]
+    assert "--v2-surface: #fffdf8" in classic_shelf
+    assert "--v2-ink: #14110d" in classic_shelf
+    assert ".v2-shelf__resume-text strong" in css
     # UI Detail Wave7 · sky 显式主题，不再靠 removeAttribute
     assert ':root[data-v2-theme="sky"]' in css
     assert 'setAttribute("data-v2-theme", "sky")' in boot

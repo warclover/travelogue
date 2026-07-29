@@ -124,7 +124,7 @@
   margin-top: 6px;
   padding: 0 2px;
   gap: 8px;
-  min-height: 14px;
+  min-height: 22px;
   transform: translateY(calc(-1 * var(--v2-web-preview-lift, 0px)));
 }
 .v2-carousel__footer-start {
@@ -179,13 +179,5 @@
   width: 16px;
   border-radius: 3px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, .5);
-}
-.v2-carousel__hint {
-  font-size: 10px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  line-height: 1.35;
-  color: var(--v2-text-muted);
-  text-align: right;
 }
 

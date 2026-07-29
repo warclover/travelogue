@@ -589,22 +589,6 @@
 .v2-settings-popover .v2-advanced-popover__label {
   color: var(--v2-set-ink);
 }
-.v2-user-flag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--studio-panel-label-size, 11px);
-  letter-spacing: .08em;
-  padding: 3px 9px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--v2-primary) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--v2-primary) 35%, transparent);
-  color: var(--v2-primary-hover);
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .v2-bench__ghost-btn--secondary {
   border-color: var(--v2-primary);
   color: var(--v2-primary-hover);
@@ -632,11 +616,56 @@
   min-width: 0;
 }
 
+/* ── meta chip / user-flag（预览区底栏标签 · 跟随主题 demo-flag token） ── */
+.v2-meta-chip,
+.v2-user-flag,
+.v2-carousel__hint,
+.v2-cell-label__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 22px;
+  max-width: 100%;
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--v2-demo-flag-border);
+  background: var(--v2-demo-flag-bg);
+  color: var(--v2-demo-flag-ink);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.v2-user-flag::before {
+  content: "\25C6";
+  flex-shrink: 0;
+  font-size: 8px;
+  color: var(--v2-demo-flag-ink);
+}
+.v2-carousel__hint {
+  text-align: left;
+}
+.v2-cell-label__hint {
+  flex-shrink: 0;
+  text-align: left;
+}
+
 /* ── demo-flag（独立于占位槽紫） ── */
 .v2-demo-flag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  box-sizing: border-box;
+  min-height: 22px;
   font-size: 10px;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -712,19 +741,6 @@
 .v2-bench__ghost-select:hover {
   border-color: var(--v2-border-strong);
   background: rgba(255, 255, 255, .95);
-}
-.v2-user-flag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 4px;
-  background: rgba(45, 74, 62, .35);
-  border: 1px solid rgba(45, 74, 62, .55);
-  color: #b8dcc8;
 }
 .v2-bento__grid {
   flex: 1;
@@ -814,12 +830,9 @@
   align-items: center;
   gap: 8px;
   justify-content: space-between;
-  font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--v2-text-muted);
   margin: 0;
   flex-shrink: 0;
+  color: inherit;
 }
 .v2-bento__mobile .v2-cell-label {
   grid-row: 2;
@@ -828,16 +841,8 @@
   width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale, 1)));
   margin-top: 6px;
   padding: 0 2px;
-  font-size: 10px;
-  letter-spacing: .12em;
-  line-height: 1.35;
-  min-height: 14px;
+  min-height: 22px;
   box-sizing: border-box;
-  color: var(--v2-text-muted);
   transform: translateY(calc(-1 * var(--v2-web-preview-lift, 0px) + var(--v2-cell-label-nudge, 0px)));
-}
-.v2-cell-label__hint {
-  color: var(--v2-text-muted);
-  text-align: right;
 }
 
