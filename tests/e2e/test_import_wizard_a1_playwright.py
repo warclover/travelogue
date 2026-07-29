@@ -72,7 +72,7 @@ def _route_preview(page, *, photo_count: int = 134, date_start=None, date_end=No
 
 
 def test_ac_a1_01_no_back_reselect_change_returns(wizard_server) -> None:
-    """AC-A1-01 · 头栏无「重新选择」；「更换」回 Step 1。"""
+    """AC-A1-01 · 头栏无「重新选择」；「换文件夹」回 Step 1。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -81,8 +81,10 @@ def test_ac_a1_01_no_back_reselect_change_returns(wizard_server) -> None:
         _route_preview(page)
         _wizard_quick_folder_to_confirm(page)
         assert page.locator("#v2-wizard-back-confirm").count() == 0
-        assert page.locator("#v2-wizard-change-folder").get_attribute("aria-label")
-        page.locator("#v2-wizard-change-folder").click()
+        change = page.locator("#v2-wizard-change-folder")
+        assert change.get_attribute("aria-label")
+        assert "换文件夹" in (change.inner_text() or "")
+        change.click()
         _wait_visible(page, "v2-wizard-step-pick")
         browser.close()
 

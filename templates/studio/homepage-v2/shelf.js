@@ -293,7 +293,9 @@ function buildNewCard() {
   book.appendChild(cover);
   book.appendChild(el("h3", "v2-shelf__title", "新建画册"));
   book.appendChild(el("p", "v2-shelf__sub", "选择新的照片文件夹"));
-  book.addEventListener("click", function () { openImportSheet(); });
+  book.addEventListener("click", function () {
+    openImportSheet({ forceStep: "pick" });
+  });
   return book;
 }
 

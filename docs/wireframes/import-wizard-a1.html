@@ -76,6 +76,10 @@
       min-height: 48px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
       background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap;
     }
+    .btn-change-folder {
+      flex-shrink: 0; min-height: 32px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px;
+      background: rgba(255,255,255,.06); color: var(--cream); font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
     .hint { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.55; text-align: center; }
     .hint--left { text-align: left; }
     .hint--warn { color: var(--warn); text-align: left; margin: 6px 0 0; font-size: 11px; }
@@ -210,9 +214,9 @@
         <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
         <div class="verify-row">
           <span>📁 贵州暑假游 · 已清点 134 张</span>
-          <button type="button" class="link" aria-label="更换文件夹，返回选择步骤">更换</button>
+          <button type="button" class="btn-change-folder" aria-label="换文件夹，返回选择步骤">换文件夹</button>
         </div>
-        <p class="verify-foot">制作时将自动去重与挑选</p>
+        <p class="verify-foot">制作时将自动去重与挑选 · 换文件夹可再做一篇</p>
         <div class="thumbs">
           <div class="thumb" tabindex="0" data-tip="第 1 张 · IMG_1024"></div>
           <div class="thumb" tabindex="0" data-tip="第 2 张 · IMG_1025"></div>
@@ -239,7 +243,7 @@
       </div>
     </div>
     <p class="anno">
-      <strong>A1-01</strong> 头栏无「重新选择」，仅「更换」。
+      <strong>A1-01</strong> 头栏无「重新选择」，验货区「换文件夹」次按钮。
       <strong>A1-04</strong> CTA 下信任行。
       <strong>A1-06</strong> 模式副文案贴结果。
       <strong>A1-08</strong> 缩略图 hover/focus 显示 tip（悬停左侧图可见）。
@@ -255,7 +259,7 @@
         <p class="steps-line"><span class="dim">① 选文件夹 →</span> <strong>② 确认并开始</strong></p>
         <div class="verify-row">
           <span>📁 周末速写 · 已清点 3 张</span>
-          <button type="button" class="link">更换</button>
+          <button type="button" class="btn-change-folder">换文件夹</button>
         </div>
         <p class="hint--warn">照片偏少，成册可能较短</p>
         <div class="thumbs">
@@ -287,7 +291,7 @@
         <p class="steps-line"><span class="dim">① →</span> <strong>② 确认并开始</strong></p>
         <div class="verify-row">
           <span>📁 贵州暑假游 · 已清点 134 张</span>
-          <button type="button" class="link">更换</button>
+          <button type="button" class="btn-change-folder">换文件夹</button>
         </div>
         <div class="thumbs">
           <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
@@ -430,7 +434,7 @@
         <tr><th>ID</th><th>相对 v3.0.1</th><th>优先级</th></tr>
       </thead>
       <tbody>
-        <tr><td><span class="tag">A1-01</span></td><td>Step 2 头栏去掉「重新选择」，只留验货「更换」</td><td>P0</td></tr>
+        <tr><td><span class="tag">A1-01</span></td><td>Step 2 头栏去掉「重新选择」，验货「换文件夹」次按钮</td><td>P0</td></tr>
         <tr><td><span class="tag">A1-02</span></td><td>2b 进阶折叠，首屏仅名称/地点/一句话</td><td>P0</td></tr>
         <tr><td><span class="tag">A1-03</span></td><td>张数 &lt;4 / &gt;300 弱提示</td><td>P0</td></tr>
         <tr><td><span class="tag">A1-04</span></td><td>CTA 下「约 3–8 分钟 · 可关闭…」</td><td>P0</td></tr>

@@ -1120,12 +1120,13 @@ function startUploadFromWizard() {
   if (materialDir) uploadOpts.materialDir = materialDir;
   if (_activeMode === "fine_craft") uploadOpts.layoutDensity = readLayoutDensity();
 
-  saveDraft();
   markVisited();
   try { localStorage.setItem(IMPORT_MODE_KEY, _activeMode); } catch (_e) { /* ignore */ }
   _importStarted = true;
   _pendingUploadFiles = null;
-  closeImportWizard("start_upload");
+  // 已开始制作：清草稿，避免完成后「再新建」仍停在旧文件夹确认页
+  try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e2) { /* ignore */ }
+  closeImportWizard("start_upload", { persistDraft: false });
   if (typeof studioToast === "function") {
     studioToast("将新建一篇游记 · 已选择 " + files.length + " 张", { duration: 2200 });
   }
@@ -1144,11 +1145,12 @@ function startImportFromWizard() {
   if (!body) return;
   readPlanFileText().then(function (planText) {
     if (planText) body.planText = planText;
-    saveDraft();
     markVisited();
     try { localStorage.setItem(IMPORT_MODE_KEY, _activeMode); } catch (_e) { /* ignore */ }
     _importStarted = true;
-    closeImportWizard("start");
+    // 已开始制作：清草稿，避免完成后「再新建」仍停在旧文件夹确认页
+    try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e2) { /* ignore */ }
+    closeImportWizard("start", { persistDraft: false });
     if (typeof studioToast === "function") {
       var nPhotos =
         (body && typeof body.eligibleCount === "number" && body.eligibleCount) ||
@@ -1348,7 +1350,8 @@ function startDemoAlbumImport() {
 
   function kickoff(force) {
     _importStarted = true;
-    closeImportWizard("start_demo_album");
+    try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e) { /* ignore */ }
+    closeImportWizard("start_demo_album", { persistDraft: false });
     if (typeof studioToast === "function") {
       studioToast(
         force ? "正在重新生成示例…" : "正在用示例照片试做一本…",

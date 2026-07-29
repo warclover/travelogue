@@ -349,6 +349,11 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     assert "import-wizard.js" in entry and "openImportWizard" in entry
     assert "import-sheet.js" not in entry
 
+    # 开始制作后清草稿；书架「新建」强制回选夹
+    assert 'persistDraft: false' in wizard
+    assert "removeItem(IMPORT_DRAFT_KEY)" in wizard
+    assert 'forceStep: "pick"' in (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
+
     # Wizard v3（PRD v3.0.1）+ A.1
     assert "openImportWizard" in wizard and "startV2Import" in wizard
     assert "wizard_step_view" in wizard
@@ -412,7 +417,10 @@ def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
     assert "按这些偏好开始 →" in html
     assert "优先出微信长图，适合马上分享" in html
     assert "多填一点，文案和节奏更贴你" in html
-    assert 'aria-label="更换文件夹，返回选择步骤"' in html
+    assert 'aria-label="换文件夹，返回选择步骤"' in html
+    assert "换文件夹" in html
+    assert "v2-wizard__change-folder" in html
+    assert "换文件夹可再做一篇" in html
     assert "这趟旅行叫什么？" in html
     assert "想强调什么感觉？" in html
     assert "照片怎么组织？" in html
@@ -695,6 +703,8 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "triggerHomepageRecurate" in shelf
     assert "isDemoTrip" in shelf          # demo → 示例徽章
     assert "openImportSheet" in shelf     # 新建 → Sheet
+    assert 'forceStep: "pick"' in shelf   # 新建默认回选夹，避免停在旧文件夹确认页
+    assert "v2-wizard__change-folder" in V2_CSS_BUNDLE
     assert "shelfCoverRelPath" in shelf   # 书架竖版封面（mobile cover）
     assert "loadMoreShelf" in shelf
     assert "fetchTripsPage" in shelf
