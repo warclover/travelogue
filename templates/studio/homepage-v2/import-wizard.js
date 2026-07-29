@@ -3,7 +3,6 @@
  * 下游出口：startV2Import / startV2UploadImport（import-run.js）。
  */
 import { SHEET_FOCUSABLE, UPLOAD_BYTES_SOFT_LIMIT, isDemoTrip } from "../js/constants.js";
-import { studioAuthHeaders } from "../js/dom.js";
 import { postJson } from "../js/http.js";
 import {
   trackStudioEvent,
@@ -27,7 +26,6 @@ import {
   resolvePhotoKeepModeFromDraft,
 } from "./import-wizard-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
-import { openSettings } from "./settings-panel.js";
 
 var _open = false;
 var _previousFocus = null;
@@ -449,7 +447,7 @@ function updateStartLabel() {
     return;
   }
   if (_activeMode === "fine_craft") {
-    start.textContent = _fineVisited ? "继续编辑细节 →" : "填写细节 →";
+    start.textContent = _fineVisited ? "定制画册细节 →" : "填写细节 →";
   } else {
     start.textContent = "开始制作 →";
   }
@@ -726,7 +724,6 @@ function goToStep1(clearPending) {
 }
 
 function syncStorageTrustNotes() {
-  var refNote = $("v2-wizard-storage-ref-note");
   var uploadNote = $("v2-wizard-storage-upload-note");
   var isUpload = !!(
     _pendingUploadFiles && _pendingUploadFiles.length
@@ -734,26 +731,7 @@ function syncStorageTrustNotes() {
   if (uploadNote) {
     uploadNote.hidden = !isUpload;
   }
-  if (!refNote) return Promise.resolve();
-  if (isUpload) {
-    refNote.hidden = true;
-    return Promise.resolve();
-  }
-  return fetch("/__travelogue/config", { headers: studioAuthHeaders() })
-    .then(function (r) {
-      return r.json();
-    })
-    .then(function (data) {
-      var copyOn =
-        !data ||
-        data.ok === false ||
-        !data.ingest ||
-        data.ingest.copySourceFiles !== false;
-      refNote.hidden = !!copyOn;
-    })
-    .catch(function () {
-      refNote.hidden = true;
-    });
+  return Promise.resolve();
 }
 
 function goToStep2(opts) {
@@ -1158,7 +1136,7 @@ function startImportFromWizard() {
         0;
       var toastMsg =
         _activeMode === "fine_craft"
-          ? "已按精细制作启动"
+          ? "已按个性化定制画册启动"
           : nPhotos > 0
             ? "将新建一本画册 · 已选择 " + nPhotos + " 张"
             : "将新建一本画册 · 开始制作";
@@ -1419,14 +1397,6 @@ export function initImportWizard() {
 
   var changeFolder = $("v2-wizard-change-folder");
   if (changeFolder) changeFolder.addEventListener("click", function () { goToStep1(true); });
-
-  var changeStorage = $("v2-wizard-change-storage");
-  if (changeStorage) {
-    changeStorage.addEventListener("click", function () {
-      closeImportWizard("open_storage_settings");
-      openSettings({ focus: "storage", source: "import_wizard" });
-    });
-  }
 
   ["v2-wizard-back-fine", "v2-wizard-back-fine-action"].forEach(function (id) {
     var btn = $(id);

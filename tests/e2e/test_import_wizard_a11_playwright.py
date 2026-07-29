@@ -1,6 +1,6 @@
 """Import Wizard A.1.1 · P2 增量 e2e（Playwright）。
 
-A1-11 决策问句 · A1-12 chips · A1-14 继续编辑细节 · A1-15 首次弱提示 · A1-16 同名脚注。
+A1-11 决策问句 · A1-12 chips · A1-14 定制画册细节 · A1-15 首次弱提示 · A1-16 同名脚注。
 """
 
 from __future__ import annotations
@@ -57,12 +57,13 @@ def test_ac_a1_11_decision_group_titles(wizard_server) -> None:
         page.locator("#v2-wizard-start").click()
         _wait_visible(page, "v2-wizard-step-fine")
         body = page.locator("#v2-wizard-step-fine").inner_text()
-        assert "这趟旅行叫什么？" in body
-        assert "想强调什么感觉？" in body
+        assert "请为您的影像画册起一个优雅的名称" in body
+        assert "请描述您这本画册的主题风格" in body
         page.locator("#v2-wizard-advanced summary").click()
         body2 = page.locator("#v2-wizard-step-fine").inner_text()
         assert "照片怎么组织？" in body2
-        assert "版面气质怎样？" in body2
+        assert "设置画册智能排版策略" in body2
+        assert "根据天数、地点自动匹配模板" in body2
         assert "基本信息" not in body2
         browser.close()
 
@@ -90,7 +91,7 @@ def test_ac_a1_12_chip_pressed_and_extra(wizard_server) -> None:
 
 
 def test_ac_a1_14_continue_edit_cta(wizard_server) -> None:
-    """A1-14 · 从 2b 返回后 CTA「继续编辑细节 →」。"""
+    """A1-14 · 从 2b 返回后 CTA「定制画册细节 →」。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -105,7 +106,7 @@ def test_ac_a1_14_continue_edit_cta(wizard_server) -> None:
         page.locator("#v2-wizard-back-fine-action").click()
         _wait_visible(page, "v2-wizard-step-confirm")
         assert page.locator("#v2-wizard-mode-fine").get_attribute("aria-checked") == "true"
-        assert page.locator("#v2-wizard-start").inner_text().strip() == "继续编辑细节 →"
+        assert page.locator("#v2-wizard-start").inner_text().strip() == "定制画册细节 →"
         browser.close()
 
 

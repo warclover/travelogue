@@ -164,13 +164,13 @@ def test_ac_a1_04_trust_row_visible(wizard_server) -> None:
         _wizard_quick_folder_to_confirm(page)
         trust = page.locator("#v2-wizard-trust")
         assert trust.is_visible()
-        assert "约 3–8 分钟" in trust.inner_text()
+        assert "通常需要1-8分钟" in trust.inner_text()
         page.locator("#v2-wizard-mode-fine").click()
         page.locator("#v2-wizard-start").click()
         _wait_visible(page, "v2-wizard-step-fine")
         trust_fine = page.locator("#v2-wizard-trust-fine")
         assert trust_fine.is_visible()
-        assert "稍后回来" in trust_fine.inner_text()
+        assert "通常需要1-8分钟" in trust_fine.inner_text()
         browser.close()
 
 
@@ -212,7 +212,7 @@ def test_ac_a1_06_mode_copy_and_fine_cta(wizard_server) -> None:
         quick_desc = page.locator("#v2-wizard-mode-quick .v2-wizard__mode-card-desc").inner_text()
         fine_desc = page.locator("#v2-wizard-mode-fine .v2-wizard__mode-card-desc").inner_text()
         assert "优先出微信长图" in quick_desc
-        assert "多填一点" in fine_desc
+        assert "输入画册相关信息" in fine_desc
         page.locator("#v2-wizard-mode-fine").click()
         assert page.locator("#v2-wizard-start").inner_text().strip() == "填写细节 →"
         browser.close()

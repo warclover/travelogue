@@ -54,7 +54,7 @@ export function humanizeStudioError(code, message) {
 
 const FAILURE_NEXT_HINTS = {
   E_INGEST_EMPTY: "请确认文件夹里有 JPG/PNG/WebP/HEIC 照片，然后重试。",
-  E_INGEST_TOO_FEW: "确认页有足够张数仍失败时，多半是智能挑选后不足 4 张：可点「调整照片处理」选「全部保留」或「保留连拍与近似照片」后再试。",
+  E_INGEST_TOO_FEW: "确认页有足够张数仍失败时，多半是智能挑选后不足 4 张：可点「设置智能选片规则」选「全部保留」或「保留连拍与近似照片」后再试。",
   E_DEMO_TOO_FEW: "示例相册需要至少 4 张照片；请改用「制作我的杂志」选自己的文件夹。",
   E_DEMO_NOT_DIR: "请粘贴或选择本机上的文件夹路径，而不是单个文件。",
   E_STUDIO_ALBUM_DENIED: "请改用 Sheet 内的「浏览文件夹」，或检查路径是否在本机允许范围内。",

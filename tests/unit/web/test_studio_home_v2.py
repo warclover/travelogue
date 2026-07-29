@@ -61,7 +61,8 @@ V2_HOME_MARKERS = (
     "v2-import-wizard",
     'role="dialog"',
     'aria-modal="true"',
-    "选择本次旅行的照片文件夹",
+    "选择本次画册的照片文件夹",
+    "一本画册一个文件夹，无需上传照片，隐私无忧",
     "v2-wizard-album-path",
     "v2-wizard-album-upload",
     "上传小文件夹（建议 ≤200MB）",
@@ -422,15 +423,36 @@ def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
     assert 'id="v2-wizard-advanced"' in html
     assert "按这些偏好开始 →" in html
     assert "优先出微信长图，适合马上分享" in html
-    assert "多填一点，文案和节奏更贴你" in html
+    assert "输入画册相关信息，定制更多细节" in html
+    assert "设置智能选片规则" in html
+    assert "根据不同照片数量（上限250张），生成画册耗时不同，通常需要1-8分钟" in html
+    assert "不会把原片再复制进 Travelogue" not in html
+    assert "不会覆盖已有画册" not in html
+    assert 'id="v2-wizard-cover-note"' not in html
+    assert 'id="v2-wizard-storage-ref-note"' not in html
+    assert 'id="v2-wizard-change-storage"' not in html
+    assert "更改存储设置" not in html
+    assert "#v2-wizard-title-confirm" in V2_CSS_BUNDLE
+    assert 'font-size: 13px' in (
+        (STUDIO_DIR / "homepage-v2" / "css" / "import-wizard.css").read_text(encoding="utf-8")
+    )
     assert 'aria-label="换文件夹，返回选择步骤"' in html
     assert "换文件夹" in html
     assert "v2-wizard__change-folder" in html
     assert "换文件夹可再做一篇" in html
-    assert "这趟旅行叫什么？" in html
-    assert "想强调什么感觉？" in html
+    assert "请为您的影像画册起一个优雅的名称" in html
+    assert "请描述您这本画册的主题风格" in html
     assert "照片怎么组织？" in html
-    assert "版面气质怎样？" in html
+    assert "设置画册智能排版策略" in html
+    assert "画册的主要活动地点或标志性地名（可选）" in html
+    assert "照片活动中的趣事和感悟（可选），想要分享的情绪和观点" in html
+    assert "根据天数、地点自动匹配模板" in html
+    assert "这趟旅行叫什么？" not in html
+    assert "想强调什么感觉？" not in html
+    assert "版面气质怎样？" not in html
+    assert "主要地点（可选）" not in html
+    assert "旅途见闻与感悟（可选）" not in html
+    assert "视频占比" not in html
     assert 'id="v2-wizard-first-tip"' in html
     assert 'id="v2-wizard-dup-note"' in html
     assert "风光为主，少写攻略" in html
@@ -442,7 +464,7 @@ def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
     assert 'id="v2-wizard-template-mode"' in html
 
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
-    assert "继续编辑细节 →" in wizard
+    assert "定制画册细节 →" in wizard
     assert "FIRST_TIP_KEY" in wizard
     assert "updateDuplicateTitleNote" in wizard
     assert "syncChipPressedState" in wizard
@@ -486,7 +508,7 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
         "v2-wizard-mode-quick",
         "v2-wizard-mode-fine",
         "快速分享",
-        "精细制作",
+        "个性化定制画册",
         'id="v2-wizard-step-fine"',
         "v2-wizard-travel-notes",
         "v2-wizard-date-start",
@@ -496,7 +518,7 @@ def test_studio_home_v2_phase14_dual_mode_smoke() -> None:
         "按这些偏好开始 →",
         "v2-success-secondary",
         "v2-wizard-layout-density",
-        "版面气质怎样？",
+        "设置画册智能排版策略",
         'name="v2-wizard-layout-density"',
         "拼图为主",
         "v2-wizard-photo-mode-recommended",

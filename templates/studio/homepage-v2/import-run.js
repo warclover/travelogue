@@ -116,7 +116,7 @@ function postMultipartImportV2(formData, options) {
     };
     xhr.onerror = function () {
       reject(new Error(
-        "上传失败：网络中断或照片总量过大。建议改用「选择本次旅行的照片文件夹」。"
+        "上传失败：网络中断或照片总量过大。建议改用「选择本次画册的照片文件夹」。"
       ));
     };
     xhr.send(formData);

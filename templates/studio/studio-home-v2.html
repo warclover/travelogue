@@ -472,13 +472,13 @@
       </div>
       <div class="v2-wizard__body">
         <button type="button" class="v2-wizard__primary v2-wizard__primary--pick" id="v2-wizard-pick">
-          选择本次旅行的照片文件夹
+          选择本次画册的照片文件夹
         </button>
         <button type="button" class="v2-wizard__demo" id="v2-wizard-demo-album">
           试用《斯里兰卡见闻录》
           <small>本机示例 · 无需选文件夹</small>
         </button>
-        <p class="v2-wizard__hint v2-wizard__hint--center">一次旅行一个文件夹，照片留在本机</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center">一本画册一个文件夹，无需上传照片，隐私无忧</p>
         <p class="v2-wizard__first-tip" id="v2-wizard-first-tip" hidden role="status">
           <span id="v2-wizard-first-tip-text">选一次旅行的文件夹即可，不用先整理</span>
           <button type="button" class="v2-wizard__first-tip-dismiss" id="v2-wizard-first-tip-dismiss"
@@ -542,8 +542,8 @@
           </button>
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="false"
                   data-mode="fine_craft" id="v2-wizard-mode-fine">
-            <span class="v2-wizard__mode-card-title">精细制作</span>
-            <span class="v2-wizard__mode-card-desc">多填一点，文案和节奏更贴你</span>
+            <span class="v2-wizard__mode-card-title">个性化定制画册</span>
+            <span class="v2-wizard__mode-card-desc">输入画册相关信息，定制更多细节</span>
           </button>
         </div>
         <div class="v2-wizard__photo-row">
@@ -552,20 +552,13 @@
           </p>
           <button type="button" class="v2-wizard__photo-adjust" id="v2-wizard-photo-adjust"
                   aria-expanded="false" aria-controls="v2-wizard-photo-drawer">
-            调整照片处理
+            设置智能选片规则
           </button>
         </div>
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start">开始制作 →</button>
-        <p class="v2-wizard__trust" id="v2-wizard-trust">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
-        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-ref-note" hidden>
-          不会把原片再复制进 Travelogue；请保持相册目录可访问。
-        </p>
+        <p class="v2-wizard__trust" id="v2-wizard-trust">根据不同照片数量（上限250张），生成画册耗时不同，通常需要1-8分钟</p>
         <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-storage-upload-note" hidden>
           示例/上传包仍保存在作品内。
-        </p>
-        <button type="button" class="v2-wizard__link" id="v2-wizard-change-storage">更改存储设置</button>
-        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
-          每个文件夹会生成一本<strong>新的</strong>画册，不会覆盖已有画册。
         </p>
         <p class="v2-wizard__hint v2-wizard__hint--center v2-wizard__dup-note" id="v2-wizard-dup-note" hidden></p>
         <p class="v2-wizard__error" id="v2-wizard-error-confirm" role="alert" hidden></p>
@@ -575,12 +568,12 @@
     <div class="v2-wizard__panel" id="v2-wizard-step-fine" data-wizard-step="fine" hidden>
       <div class="v2-wizard__head v2-wizard__head--split">
         <button type="button" class="v2-wizard__back" id="v2-wizard-back-fine">← 返回</button>
-        <h2 class="v2-wizard__title" id="v2-wizard-title-fine">精细制作</h2>
+        <h2 class="v2-wizard__title" id="v2-wizard-title-fine">个性化定制画册</h2>
         <button type="button" class="v2-wizard__close" id="v2-wizard-close-fine" aria-label="关闭">×</button>
       </div>
       <p class="v2-wizard__verify-line v2-wizard__verify-line--compact" id="v2-wizard-fine-context"></p>
       <div class="v2-wizard__body v2-wizard__body--scroll">
-        <p class="v2-wizard__group-title">这趟旅行叫什么？</p>
+        <p class="v2-wizard__group-title">请为您的影像画册起一个优雅的名称</p>
         <div class="v2-wizard__field-grid">
           <label class="v2-wizard__field">
             <span class="v2-wizard__field-label">画册名称</span>
@@ -588,13 +581,13 @@
                    placeholder="给这本画册起个名字" />
           </label>
           <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">主要地点（可选）</span>
+            <span class="v2-wizard__field-label">画册的主要活动地点或标志性地名（可选）</span>
             <input type="text" id="v2-wizard-trip-place" maxlength="40" autocomplete="off"
                    placeholder="例如：京都、大阪" />
           </label>
         </div>
         <p class="v2-wizard__dup-note" id="v2-wizard-dup-note-fine" hidden></p>
-        <p class="v2-wizard__group-title">想强调什么感觉？</p>
+        <p class="v2-wizard__group-title">请描述您这本画册的主题风格</p>
         <label class="v2-wizard__field v2-wizard__field--full">
           <span class="v2-wizard__field-label">给这本画册的一句话（可选）</span>
           <textarea id="v2-wizard-user-notes" maxlength="200" rows="2"
@@ -626,7 +619,7 @@
               </label>
             </div>
             <label class="v2-wizard__field v2-wizard__field--full">
-              <span class="v2-wizard__field-label">旅途见闻与感悟（可选）</span>
+              <span class="v2-wizard__field-label">照片活动中的趣事和感悟（可选），想要分享的情绪和观点</span>
               <textarea id="v2-wizard-travel-notes" maxlength="500" rows="3"
                         placeholder="可写旅途细节与感受，系统会优先用于文案语料。"></textarea>
             </label>
@@ -648,7 +641,7 @@
                        placeholder="例如：素材" />
               </label>
             </div>
-            <p class="v2-wizard__group-title">版面气质怎样？</p>
+            <p class="v2-wizard__group-title">设置画册智能排版策略</p>
             <fieldset class="v2-wizard__field v2-wizard__field--full">
               <legend class="v2-wizard__field-label">版面密度（可选）</legend>
               <div class="v2-wizard__radio-group" role="radiogroup">
@@ -679,7 +672,7 @@
                 <option value="manual:visual-journal">视觉游记（手动指定）</option>
               </select>
               <p class="v2-wizard__hint" id="v2-wizard-template-hint" role="note">
-                智能匹配会根据行程天数、地点与视频占比推荐模板；不确定时自动使用视觉游记。
+                根据天数、地点自动匹配模板
               </p>
             </label>
           </div>
@@ -688,7 +681,7 @@
           <p class="v2-wizard__photo-summary" id="v2-wizard-photo-summary-fine"></p>
           <button type="button" class="v2-wizard__photo-adjust" id="v2-wizard-photo-adjust-fine"
                   aria-expanded="false" aria-controls="v2-wizard-photo-drawer">
-            调整照片处理
+            设置智能选片规则
           </button>
         </div>
         <p class="v2-wizard__error" id="v2-wizard-error-fine" role="alert" hidden></p>
@@ -696,7 +689,7 @@
       <div class="v2-wizard__actions">
         <button type="button" class="v2-wizard__primary" id="v2-wizard-start-fine">按这些偏好开始 →</button>
         <button type="button" class="v2-wizard__secondary" id="v2-wizard-back-fine-action">← 返回上一步</button>
-        <p class="v2-wizard__trust" id="v2-wizard-trust-fine">约 3–8 分钟 · 可关闭此窗，稍后回来</p>
+        <p class="v2-wizard__trust" id="v2-wizard-trust-fine">根据不同照片数量（上限250张），生成画册耗时不同，通常需要1-8分钟</p>
       </div>
     </div>
 
