@@ -1128,7 +1128,7 @@ function startUploadFromWizard() {
   try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e2) { /* ignore */ }
   closeImportWizard("start_upload", { persistDraft: false });
   if (typeof studioToast === "function") {
-    studioToast("将新建一篇游记 · 已选择 " + files.length + " 张", { duration: 2200 });
+    studioToast("将新建一本画册 · 已选择 " + files.length + " 张", { duration: 2200 });
   }
   return startV2UploadImport(files, uploadOpts).catch(function () { /* import-run handles */ });
 }
@@ -1160,8 +1160,8 @@ function startImportFromWizard() {
         _activeMode === "fine_craft"
           ? "已按精细制作启动"
           : nPhotos > 0
-            ? "将新建一篇游记 · 已选择 " + nPhotos + " 张"
-            : "将新建一篇游记 · 开始制作";
+            ? "将新建一本画册 · 已选择 " + nPhotos + " 张"
+            : "将新建一本画册 · 开始制作";
       studioToast(toastMsg, { duration: 2000 });
     }
     return startV2Import(body, { source: "本机文件夹" }).catch(function () { /* handled */ });

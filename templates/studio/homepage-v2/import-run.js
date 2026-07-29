@@ -248,7 +248,7 @@ export function renderImportingPanel(source) {
 
   var title = document.createElement("h2");
   title.className = "v2-import-panel__title";
-  title.textContent = "正在生成你的游记画册…";
+  title.textContent = "正在生成你的影像画册…";
   panel.appendChild(title);
 
   var estimate = document.createElement("p");
@@ -485,7 +485,7 @@ function pollImport(jobId, gen, source) {
       sessionStorage.removeItem(SS.activeJobId);
     } catch (e) { /* ignore */ }
     // L0 resume: only clear pending on success/cancel — keep on failure for
-    // 「继续生成本机游记」/ retry (AC-L0G-05).
+    // 「继续生成本机画册」/ retry (AC-L0G-05).
     if (shouldClearPendingOnJobTerminal(job.status) && job.status === "succeeded") {
       try {
         sessionStorage.removeItem(SS.activePending);
@@ -636,12 +636,12 @@ export function startV2Import(body, opts) {
       }
       var confirmOverwrite = typeof studioModal === "function"
         ? studioModal({
-            title: "该游记已存在",
+            title: "该画册已存在",
             body: "是否覆盖已有内容？覆盖后无法撤销。",
             confirmText: "覆盖并重新导入",
             cancelText: "取消",
           })
-        : Promise.resolve(window.confirm(data.message || "该游记已存在。是否覆盖？"));
+        : Promise.resolve(window.confirm(data.message || "该画册已存在。是否覆盖？"));
       return confirmOverwrite.then(function (ok) {
         if (!ok) {
           if (typeof V2.reroute === "function") V2.reroute();

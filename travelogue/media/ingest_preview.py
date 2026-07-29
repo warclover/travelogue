@@ -22,5 +22,5 @@ def preview_multi_journey(assets: list[dict], *, place: str = "旅途") -> str |
         preview += f" 等{len(segments)}段"
     return (
         f"检测到可能包含 {len(segments)} 次旅行（{preview}）；"
-        "默认将合成一本游记（3–5 章），可在 G1 合并段或拆成多本"
+        "默认将合成一本画册（3–5 章），可在 G1 合并段或拆成多本"
     )

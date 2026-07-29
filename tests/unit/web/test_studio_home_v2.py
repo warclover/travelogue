@@ -53,7 +53,7 @@ V2_HOME_MARKERS = (
     "v2-demo-flag",
     "每一个瞬间",
     "都值得再次相遇",
-    "开始制作我的游记",
+    "开始制作我的画册",
     "示例作品",
     "v2-unsupported",
     "v2-unsupported-copy",
@@ -92,7 +92,7 @@ V2_HOME_MARKERS = (
     'id="studio-cfg-vision"',
     'id="v2-settings-zone-ai"',
     'id="studio-llm-settings-entry"',
-    "开始制作我的游记",
+    "开始制作我的画册",
     "照片留在本机 · 无需注册",
     # Import Failed overlay
     "v2-failure",
@@ -692,7 +692,7 @@ def test_studio_home_v2_shelf_module() -> None:
     shelf = (STUDIO_DIR / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
     assert "\ufffd" not in shelf
     assert "renderShelf" in shelf
-    assert "你的游记画册" in shelf
+    assert "你的影像画册" in shelf
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
     assert "更新长图" in logic            # stale → 更新长图
     assert "可重排" in shelf

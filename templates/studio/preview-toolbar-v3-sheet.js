@@ -77,7 +77,7 @@ function describeScreenContext(el) {
     }
   }
   var label =
-    (idx ? "第 " + idx + " 页" : "游记正文") + (chapterName ? " · " + chapterName : "");
+    (idx ? "第 " + idx + " 页" : "画册正文") + (chapterName ? " · " + chapterName : "");
   var kicker = el.querySelector(".kicker, .hook-line, [data-copy-role='kicker']");
   var body = el.querySelector(".caption, .lead, .body-copy, [data-copy-role='caption'], [data-copy-role='lead']");
   var rawIds = el.getAttribute("data-asset-ids") || "";
@@ -542,12 +542,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         '<p class="preview-sheet__empty-label"><strong>' +
         emptyTitle +
         "</strong></p>" +
-        '<p class="preview-sheet__hint">点精选、改拼图要在有照片的游记页。</p>' +
+        '<p class="preview-sheet__hint">点精选、改拼图要在有照片的画册页。</p>' +
         '<div class="preview-sheet__empty-actions">' +
         '<button type="button" class="preview-sheet__primary" data-action="goto-bookends">' +
         primaryLabel +
         "</button>" +
-        '<button type="button" class="preview-sheet__ghost" data-action="goto-body">去游记正文</button>' +
+        '<button type="button" class="preview-sheet__ghost" data-action="goto-body">去画册正文</button>' +
         '<button type="button" class="preview-sheet__ghost" data-action="collapse-panel">先收起面板</button>' +
         "</div>";
       var collapsePanel = bodyEl.querySelector('[data-action="collapse-panel"]');

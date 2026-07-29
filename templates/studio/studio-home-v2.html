@@ -62,7 +62,7 @@
       <!-- ① 文案区（左列第 1 行 · layout D：Eyebrow + H1 + Lead）
            ROLLBACK legacy：body data-headline-layout="legacy"，并恢复下方注释中的 DOM -->
       <div class="v2-bento__headline" id="v2-headline" hidden>
-        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能游记画册</span>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能影像画册</span>
         <h1 class="v2-bento__title">每一个瞬间，<em>都值得再次相遇</em></h1>
         <p class="v2-bento__lead v2-bento__lead--script">
           选一次旅行的照片，<b>自动分章 · 配文 · 排版</b>，生成大屏卷轴 + 微信长图。
@@ -72,7 +72,7 @@
       </div>
       <!-- ROLLBACK legacy DOM（配合 data-headline-layout="legacy"）：
       <div class="v2-bento__headline" id="v2-headline" hidden>
-        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能游记画册</span>
+        <span class="v2-bento__eyebrow">TRAVELOGUE · 智能影像画册</span>
         <div class="v2-bento__headline-row">
           <h1 class="v2-bento__title">每一个瞬间，<em>都值得再次相遇</em></h1>
           <div class="v2-auto-tags">…</div>
@@ -204,7 +204,7 @@
     </div>
 
     <button type="button" class="v2-bench__cta-primary" id="v2-cta"
-            aria-label="开始制作我的游记">开始制作我的游记 →</button>
+            aria-label="开始制作我的画册">开始制作我的画册 →</button>
 
     <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
          aria-labelledby="v2-settings-title" aria-describedby="v2-settings-desc">
@@ -419,11 +419,11 @@
       </figure>
       <div class="v2-first-success__body">
         <p class="v2-first-success__eyebrow">✓ 生成完成</p>
-        <p class="v2-first-success__msg" id="v2-success-msg">你的第一篇游记已生成</p>
+        <p class="v2-first-success__msg" id="v2-success-msg">你的第一本画册已生成</p>
         <ul class="v2-first-success__facts" id="v2-success-details" hidden></ul>
         <div class="v2-first-success__guidance" id="v2-success-next-hint" role="status">
           <p class="v2-first-success__guidance-lead">
-            游记已做好，可预览与导出长图。
+            画册已做好，可预览与导出长图。
           </p>
           <p class="v2-first-success__guidance-next">下一步可用自己的旅行照片再做一本</p>
         </div>
@@ -450,9 +450,9 @@
       <p class="v2-failure__msg" id="v2-failure-msg"></p>
       <p class="v2-failure__hint" id="v2-failure-hint"></p>
       <div class="v2-failure__actions">
-        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>继续生成游记</button>
+        <button type="button" class="v2-failure__cta" id="v2-failure-continue-stub" hidden>继续生成画册</button>
         <button type="button" class="v2-failure__secondary" id="v2-failure-open-settings" hidden>查看设置</button>
-        <button type="button" class="v2-failure__secondary" id="v2-failure-open-recent" hidden>打开最近游记预览</button>
+        <button type="button" class="v2-failure__secondary" id="v2-failure-open-recent" hidden>打开最近画册预览</button>
         <button type="button" class="v2-failure__cta" id="v2-failure-retry">重试</button>
         <button type="button" class="v2-failure__stay" id="v2-failure-stay">留在首页</button>
       </div>
@@ -467,7 +467,7 @@
        aria-labelledby="v2-wizard-title-pick">
     <div class="v2-wizard__panel" id="v2-wizard-step-pick" data-wizard-step="pick">
       <div class="v2-wizard__head">
-        <h2 class="v2-wizard__title" id="v2-wizard-title-pick">制作我的游记画册</h2>
+        <h2 class="v2-wizard__title" id="v2-wizard-title-pick">制作我的影像画册</h2>
         <button type="button" class="v2-wizard__close" id="v2-wizard-close-pick" aria-label="关闭">×</button>
       </div>
       <div class="v2-wizard__body">
@@ -488,7 +488,7 @@
           <summary>不知道选哪个文件夹？</summary>
           <ul class="v2-wizard__folder-points">
             <li>同一次旅行放同一文件夹（50–100 张最佳）</li>
-            <li>Day1/Day2 子夹：合并导入或分两次导入（每次一篇<strong>新</strong>游记）</li>
+            <li>Day1/Day2 子夹：合并导入或分两次导入（每次一本<strong>新</strong>画册）</li>
             <li>支持 JPG / PNG / WebP / HEIC；不移动、不修改原片</li>
             <li>手机照片需先传到电脑</li>
           </ul>
@@ -565,7 +565,7 @@
         </p>
         <button type="button" class="v2-wizard__link" id="v2-wizard-change-storage">更改存储设置</button>
         <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-cover-note">
-          每个文件夹会生成一篇<strong>新的</strong>游记，不会覆盖已有游记。
+          每个文件夹会生成一本<strong>新的</strong>画册，不会覆盖已有画册。
         </p>
         <p class="v2-wizard__hint v2-wizard__hint--center v2-wizard__dup-note" id="v2-wizard-dup-note" hidden></p>
         <p class="v2-wizard__error" id="v2-wizard-error-confirm" role="alert" hidden></p>
@@ -583,7 +583,7 @@
         <p class="v2-wizard__group-title">这趟旅行叫什么？</p>
         <div class="v2-wizard__field-grid">
           <label class="v2-wizard__field">
-            <span class="v2-wizard__field-label">游记名称</span>
+            <span class="v2-wizard__field-label">画册名称</span>
             <input type="text" id="v2-wizard-trip-title" maxlength="20" autocomplete="off"
                    placeholder="给这本画册起个名字" />
           </label>
@@ -596,7 +596,7 @@
         <p class="v2-wizard__dup-note" id="v2-wizard-dup-note-fine" hidden></p>
         <p class="v2-wizard__group-title">想强调什么感觉？</p>
         <label class="v2-wizard__field v2-wizard__field--full">
-          <span class="v2-wizard__field-label">给这本游记的一句话（可选）</span>
+          <span class="v2-wizard__field-label">给这本画册的一句话（可选）</span>
           <textarea id="v2-wizard-user-notes" maxlength="200" rows="2"
                     placeholder="例如：带娃慢走，别写成导游词"></textarea>
           <div class="v2-wizard__chips" role="list">

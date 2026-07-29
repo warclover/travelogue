@@ -23,7 +23,7 @@ def test_capability_card_contract() -> None:
 
     assert "travelogue.desktop.capabilityCard.v1" in help_js
     # 中性标题/主 CTA 可留在 DOM 工厂；AI 升级串不得出现在默认可达面
-    assert "照片留在本机，也能做成可发的游记" in cap
+    assert "照片留在本机，也能做成可发的画册" in cap
     assert "开始制作" in cap
     assert "以后再升级 AI 文案" not in cap
     assert "开始导入" not in cap

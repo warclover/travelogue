@@ -452,8 +452,8 @@ function showResumeAfterSave(source) {
   }
   if (kind === "continue_stub") {
     note.textContent =
-      "API 用于预览里升级杂志感文案，不会在本步自动改写导入文案。请继续生成本机游记，稍后在预览中升级。";
-    cta.textContent = "继续生成本机游记";
+      "API 用于预览里升级杂志感文案，不会在本步自动改写导入文案。请继续生成本机画册，稍后在预览中升级。";
+    cta.textContent = "继续生成本机画册";
   } else {
     note.textContent =
       "已保存。导入仍使用本机文案；杂志感可在预览中升级。下一步：开始导入照片。";
@@ -776,7 +776,7 @@ function wire(root) {
     }
     var confirmOpts = {
       title: "清除写作引擎配置？",
-      body: "清除后回到本机文案。已有游记不会删除。",
+      body: "清除后回到本机文案。已有画册不会删除。",
       confirmText: "清除",
       cancelText: "取消",
       danger: true,

@@ -85,7 +85,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
   root.innerHTML =
     '<div class="preview-sheet__bookends-head">' +
     '<span class="preview-sheet__label">封面与封底</span>' +
-    '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-sub">游记的第一眼与最后一眼</p>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-sub">画册的第一眼与最后一眼</p>' +
     '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__bookends-how">' +
     (HELP_COPY.bookendsPickTip || "点下方缩略图，即可更换封面或封底") +
     "</p>" +

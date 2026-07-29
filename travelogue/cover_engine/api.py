@@ -608,7 +608,7 @@ def build_bookends_studio_payload(trip: dict) -> dict[str, Any]:
         {
             "ok": True,
             "panelTitle": "封面与封底",
-            "panelSubtitle": "游记的第一眼与最后一眼",
+            "panelSubtitle": "画册的第一眼与最后一眼",
             "closingUserPicked": bool(curation.get("closingUserPicked")),
             "openingLocked": bool(decision.lock.opening),
             "closingLocked": bool(decision.lock.closing),

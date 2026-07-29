@@ -6,7 +6,7 @@ from travelogue.demo.build import DemoError
 from travelogue.errors import CodeError
 
 USER_MESSAGES: dict[str, str] = {
-    "E_DEMO_EXISTS": "该游记已存在。是否覆盖？",
+    "E_DEMO_EXISTS": "该画册已存在。是否覆盖？",
     "E_DEMO_NOT_DIR": "所选路径不是文件夹",
     "E_DEMO_TOO_FEW": "至少需要 4 张照片，请换一个文件夹",
     "E_INGEST_EMPTY": "文件夹里没有找到照片",
@@ -15,7 +15,7 @@ USER_MESSAGES: dict[str, str] = {
     "E_STUDIO_UPLOAD_EMPTY": "未收到任何照片文件",
     "E_STUDIO_CANCELLED": "已取消",
     "E_STUDIO_PIPELINE": "导入失败，请重试",
-    "E_TRIP_SAVE_BUSY": "游记文件正被占用，请关闭预览/资源管理器后重试",
+    "E_TRIP_SAVE_BUSY": "画册文件正被占用，请关闭预览/资源管理器后重试",
     "E_STUDIO_AUTH": "Studio 请求未授权",
     "E_STUDIO_BODY_TOO_LARGE": "请求体过大",
     "E_STUDIO_ALBUM_DENIED": "不允许从该路径导入",
@@ -45,7 +45,7 @@ USER_MESSAGES: dict[str, str] = {
     "E_LLM_TIMEOUT": "无法连接服务商。请检查网络后重试。",
     "E_LLM_CONNECT": "无法连接服务商。请检查网络后重试。",
     "E_NARRATE_API": "文案生成失败，请重试",
-    "E_TRIP_NOT_FOUND": "游记不存在",
+    "E_TRIP_NOT_FOUND": "画册不存在",
     "E_TRIP_CONFLICT": "内容已被其他操作更新，请刷新",
     "E_EXPORT_PRIVACY": "导出 zip 需要确认隐私设置",
     "E_SERVER": "服务内部错误，请稍后重试",

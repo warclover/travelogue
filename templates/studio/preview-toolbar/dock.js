@@ -173,7 +173,7 @@ export function setDockLongshotAria(btn, state) {
       btn.setAttribute("aria-label", "导出中");
       updateDockTip(btn, "导出中…");
     } else if (state === "done") {
-      btn.setAttribute("aria-label", "已保存到此游记文件夹");
+      btn.setAttribute("aria-label", "已保存到此画册文件夹");
       updateDockTip(btn, "已保存");
     } else {
       btn.setAttribute("aria-label", "导出长图");

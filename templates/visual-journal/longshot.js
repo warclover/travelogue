@@ -1879,7 +1879,7 @@
     }
 
     var main = document.querySelector("main");
-    if (!main) throw new Error("未找到游记正文");
+    if (!main) throw new Error("未找到画册正文");
 
     var imgTotal = main.querySelectorAll("img").length;
     var captureScale = resolveCaptureScale(options.scale);
@@ -2109,7 +2109,7 @@
   async function captureLongShotByChapter(options) {
     options = options || {};
     var main = document.querySelector("main");
-    if (!main) throw new Error("未找到游记正文");
+    if (!main) throw new Error("未找到画册正文");
     var chapters = listChapterSections(main);
     if (!chapters.length) throw new Error("未找到章节");
 

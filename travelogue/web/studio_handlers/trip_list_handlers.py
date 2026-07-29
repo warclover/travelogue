@@ -51,7 +51,7 @@ def handle_delete_trip(handler: StudioHandlerProtocol, trip_id: str) -> None:
     if trip_dir is None:
         handler._json_response(
             404,
-            {"ok": False, "error": "E_TRIP_NOT_FOUND", "message": "游记不存在"},
+            {"ok": False, "error": "E_TRIP_NOT_FOUND", "message": "画册不存在"},
         )
         return
     disk_id = trip_dir.name

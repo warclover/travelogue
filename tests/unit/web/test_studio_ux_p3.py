@@ -115,7 +115,7 @@ def test_ux_p3_03_v2_settings_markers() -> None:
         "实验选项",
         "导入后先确认章节",
         "智能排版",
-        "开始制作我的游记",
+        "开始制作我的画册",
     ):
         assert expected in html, f"missing v2 UX marker: {expected}"
     assert "结构确认（G1）" not in html

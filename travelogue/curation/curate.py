@@ -113,7 +113,7 @@ def _date_span_warning(
             preview += f" 等{len(segments)}段"
         return (
             f"检测到 {len(segments)} 个时间段（{preview}），已合成一本并按段编排；"
-            "可在 G1 合并段，或拆成多本游记"
+            "可在 G1 合并段，或拆成多本画册"
         )
 
     dates = [d for a in assets if (d := parse_asset_date(a))]

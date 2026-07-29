@@ -26,7 +26,7 @@ export var PLATFORMS = {
     cta: "导出朋友圈 · 长图连读",
     showSegmentMode: false,
     expectHtml:
-      "将按完整游记切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
+      "将按完整画册切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
   },
   moments_grid: {
     id: "moments_grid",

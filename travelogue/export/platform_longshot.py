@@ -385,7 +385,7 @@ def export_platform_longshot(
                 raise LongshotExportError(
                     "E_LNG2_BOUNDARIES_MISSING",
                     "长图脚本过旧，无法在截图布局下采集切分边界。"
-                    "请先重新渲染该游记后再导出朋友圈配图。",
+                    "请先重新渲染该画册后再导出朋友圈配图。",
                 )
 
             photo_count = count_photos_heuristic(page)

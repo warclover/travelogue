@@ -387,7 +387,7 @@ export function initPreviewDrawers(root, tripId) {
     var bookEditTpl =
       '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
       '<input id="preview-drawer-title-input" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
-      '<label class="preview-drawer__label" for="preview-drawer-notes">给这本游记的一句话</label>' +
+      '<label class="preview-drawer__label" for="preview-drawer-notes">给这本画册的一句话</label>' +
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
       STUDIO_USER_NOTES_MAX_LEN +
       '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +

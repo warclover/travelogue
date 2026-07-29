@@ -288,7 +288,7 @@ def _bookends_entry_summary(trip: dict, curation: dict) -> dict:
         lock = curation.get("bookendsLock") if isinstance(curation.get("bookendsLock"), dict) else {}
         return {
             "panelTitle": "封面与封底",
-            "panelSubtitle": "游记的第一眼与最后一眼",
+            "panelSubtitle": "画册的第一眼与最后一眼",
             "userOneLiner": "",
             "closingAssetId": curation.get("closingAssetId") if "closingAssetId" in curation else None,
             "closingPending": "closingAssetId" not in curation,

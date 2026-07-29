@@ -93,7 +93,7 @@ function populateFailedUi(err, pending) {
   var hintEl = $("v2-failure-hint");
   if (hintEl) {
     hintEl.textContent = authRecoverable
-      ? "可点「继续生成游记」；或检查文件夹后重试。"
+      ? "可点「继续生成画册」；或检查文件夹后重试。"
       : failureNextHint(code);
   }
   var echoEl = $("v2-failure-echo");
@@ -116,14 +116,14 @@ function populateFailedUi(err, pending) {
   var recent = !canContinue ? latestUserTrip() : null;
 
   setHidden(continueBtn, !authRecoverable || !canContinue);
-  // 非鉴权失败禁止露出「去配置写作引擎」（避免导入失败误导为 AI 配置）
+  // 非鉴权失败禁止露出「查看设置」作写作引擎入口（避免导入失败误导为 AI 配置）
   setHidden(settingsBtn, !authRecoverable);
   if (settingsBtn && !authRecoverable) {
     settingsBtn.setAttribute("hidden", "");
   }
   setHidden(openRecent, !(authRecoverable && recent));
   if (continueBtn && authRecoverable) {
-    continueBtn.textContent = "继续生成游记";
+    continueBtn.textContent = "继续生成画册";
   }
   // 缺引擎：重试降为次要（配置变更后仍可用）；有 pending 才显示
   var canRetry = !!canContinue;
@@ -314,7 +314,7 @@ function openRecentTripPreview() {
   var trip = latestUserTrip();
   if (!trip || !trip.tripId) {
     if (typeof studioToast === "function") {
-      studioToast("暂无可打开的游记，请重新导入", { duration: 2200 });
+      studioToast("暂无可打开的画册，请重新导入", { duration: 2200 });
     }
     return;
   }

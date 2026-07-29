@@ -382,7 +382,7 @@ export function showAmbiguousIntentCard(keptN, userHints) {
 
         label: "微信群 · 长图",
 
-        desc: "整篇游记发到群里 · 推荐",
+        desc: "整本画册发到群里 · 推荐",
 
         primary: true,
 

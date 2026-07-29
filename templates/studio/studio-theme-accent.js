@@ -1,5 +1,5 @@
 /**
- * Studio 工作台配色 → 游记预览 journal --accent 联动。
+ * Studio 工作台配色 → 画册预览 journal --accent 联动。
  * 读取 localStorage travelogue.studio.v2.theme，在首屏绘制前写入 CSS 变量。
  */
 (function () {

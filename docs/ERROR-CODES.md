@@ -97,7 +97,7 @@
 | 代码 | 说明 | Studio 用户文案（中文） |
 |------|------|-------------------------|
 | `E_STU_JOB_NOT_FOUND` | 无效 jobId | 任务不存在或已过期，请重新开始 |
-| `E_STU_IMPORT_BUSY` | 已有 import Job 运行 | 正在处理上一本游记，请稍候 |
+| `E_STU_IMPORT_BUSY` | 已有 import Job 运行 | 正在处理上一本画册，请稍候 |
 | `E_STU_UPLOAD_FAILED` | 浏览器上传写入失败 | 上传失败，请检查磁盘空间后重试 |
 | `E_LNG_PLAYWRIGHT` | 未安装 playwright/chromium | 无法生成长图。请运行：pip install 'travelogue[playwright]' && playwright install chromium |
 | `E_LNG_NO_LONGSHOT` | 无 index-longshot.html | 请先完成渲染，或检查 export.longShot 配置 |
@@ -126,7 +126,7 @@
 
 > **当前版无 AI 面（[PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md)）**：默认门控 off 时返回 `E_AI_SURFACE_DISABLED`（403）；**禁止**用 `E_LLM_AUTH` 冒充门控拒绝。用户面由 NAS supersede；dark（`TRAVELOGUE_AI_SURFACE=1`）下恢复配置/ping/narrate。
 >
-> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；默认面失败 CTA 见 NAS COPY（「继续生成游记」）。
+> **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；默认面失败 CTA 见 NAS COPY（「继续生成画册」）。
 >
 > **写作引擎配置加固（[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)）**：`E_LLM_ENDPOINT` / `E_LLM_BASE_URL` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` 为 W1–W2 落地预留码；handlers 映射完成前，UI 可先按 HTTP/消息启发式展示同方向中文，再换成稳定 code。默认 UI 入口由 NAS 关闭。
 
@@ -153,7 +153,7 @@
 | `E_INGEST_TOO_FEW` / `E_DEMO_TOO_FEW` | 至少需要 4 张照片，请换一个文件夹 |
 | `E_INGEST_EMPTY` | 文件夹里没有找到照片 |
 | `E_DEMO_NOT_DIR` | 所选路径不是文件夹 |
-| `E_DEMO_EXISTS` | 该游记已存在 | **409** body 含 `existingTripId`；确认后 `POST import` + `"force": true` |
+| `E_DEMO_EXISTS` | 该画册已存在 | **409** body 含 `existingTripId`；确认后 `POST import` + `"force": true` |
 | `E_INGEST_HEIC` | 发现 HEIC 照片无法读取。请安装 pillow-heif 或转换为 JPG |
 
 ### 聚类 `E_CLUSTER_*`（Phase 3 · Curate 聚类）

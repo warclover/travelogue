@@ -34,7 +34,7 @@
 | **AC-NAS-01** | 清 localStorage；冷启 Studio | **无**能力卡 | ✅ e2e |
 | **AC-NAS-02** | 打开设置 | 无「AI 文案」「写作引擎」zone/CTA；总述=COPY-NAS-SET-DESC | ✅ e2e |
 | **AC-NAS-03** | 打开帮助 | 无 H7；H0 无「AI 文案」句 | ✅ e2e |
-| **AC-NAS-04** | 完成一次导入至 FirstSuccess | 下一句 **精确等于**「游记已做好，可预览与导出长图。」 | ✅ e2e + 静态 |
+| **AC-NAS-04** | 完成一次导入至 FirstSuccess | 下一句 **精确等于**「画册已做好，可预览与导出长图。」 | ✅ e2e + 静态 |
 | **AC-NAS-08a** | 跑默认可达面禁词审计（**W1 分区**：首页/设置/帮助/成功/失败） | 命中 = 0（nas-allow 除外） | ✅ `studio_no_ai_surface_audit --wave w1` |
 | **AC-NAS-13** | 门控 off；磁盘可有 Key；`POST /__travelogue/narrate` | HTTP **403**；`error=E_AI_SURFACE_DISABLED`；message 中性无禁词 | ✅ unit + e2e |
 | **AC-NAS-15** | 带 `?llmSetup=1`（及既有 deeplink）打开；并从失败/banner 等路径调 `openLlmSettings` | **不弹**写作引擎 Modal | ✅ e2e |

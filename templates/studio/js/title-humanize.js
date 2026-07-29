@@ -126,10 +126,10 @@ function _looksLikeYearlessDateSpan(label) {
   return /\d{1,2}月\d{1,2}.+\d{1,2}月\d{1,2}/.test(t);
 }
 
-/** 与 BE ``_date_fallback_label`` 同源：同月日区间 / 跨年紧凑形，无日期回 "游记"。 */
+/** 与 BE ``_date_fallback_label`` 同源：同月日区间 / 跨年紧凑形，无日期回 "画册"。 */
 function _dateFallbackLabel(meta) {
   var start = _parseIsoYmd(meta && meta.dateStart);
-  if (!start) return "游记";
+  if (!start) return "画册";
   var label = start.m + "月" + start.d + "日";
   var end = _parseIsoYmd(meta && meta.dateEnd);
   if (end && !(end.y === start.y && end.m === start.m && end.d === start.d)) {
@@ -153,7 +153,7 @@ function _dateFallbackLabel(meta) {
   return label;
 }
 
-/** 与 BE ``_fallback_display`` 同源：``{地} · {日期}``（无地点→旅行，无日期→游记）。 */
+/** 与 BE ``_fallback_display`` 同源：``{地} · {日期}``（无地点→旅行，无日期→画册）。 */
 function _fallbackDisplay(meta, limit) {
   var place = _placeFallbackLabel(meta);
   var datePart = _dateFallbackLabel(meta);

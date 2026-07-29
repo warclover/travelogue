@@ -288,7 +288,7 @@ function populateSuccessUi(result) {
     lead.textContent =
       HELP_COPY.firstSuccessNextNeutral ||
       HELP_COPY.firstSuccessNext ||
-      "游记已做好，可预览与导出长图。";
+      "画册已做好，可预览与导出长图。";
     nextHint.appendChild(lead);
     trackStudioEvent("first_success_copy_branch", {
       copy_branch: "nas_hidden",

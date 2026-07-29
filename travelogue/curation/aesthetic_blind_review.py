@@ -399,7 +399,7 @@ def build_blind_review_html(
       group: "5=关键人物清晰、表情可接受 · 3=有人略糊 · 1=多人闭眼/糊脸",
       landscape: "5=构图光线舒服、有代表性 · 3=普通记录 · 1=平淡或技术硬伤",
       food: "5=诱人、主体清楚 · 3=食欲感一般 · 1=难辨认/无食欲",
-      general: "按「是否值得在这本游记里重点展示」打 1–5"
+      general: "按「是否值得在这本画册里重点展示」打 1–5"
     }};
     const STRATA = ["landscape", "person", "group", "food", "general"];
     const DEFECT_TAGS = ["closed_eyes", "blur_face"];

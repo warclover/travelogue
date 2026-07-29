@@ -923,7 +923,7 @@ def test_ac_hp2_11_idle_returning_shelf(studio_server) -> None:
         _goto_v2(page, studio_server["base"], "studioFixture=multi")
         _wait_visible(page, "v2-frame")
         _wait_visible(page, "v2-shelf")
-        assert "你的游记画册" in page.locator("#v2-shelf").inner_text()
+        assert "你的影像画册" in page.locator("#v2-shelf").inner_text()
         assert page.locator("#v2-carousel-hint").is_visible()
         browser.close()
 
@@ -1500,7 +1500,7 @@ def test_ac_hp21_02_idle_empty_headline_cta(studio_server) -> None:
         assert visible["leadVisible"]
         assert visible["trust"]
         assert visible["ctaInHeadline"]
-        assert "开始制作我的游记" in visible["ctaText"]
+        assert "开始制作我的画册" in visible["ctaText"]
         browser.close()
 
 
@@ -1608,7 +1608,7 @@ def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
             }
             """
         )
-        assert "开始制作我的游记" in metrics["text"]
+        assert "开始制作我的画册" in metrics["text"]
         assert metrics["minHeight"] >= 56
         assert metrics["ctaArea"] > metrics["cardArea"] > 0
         assert _contrast_ratio(page, "#v2-cta") >= 4.5
@@ -1868,7 +1868,7 @@ def test_ac_hp2_18_first_success_shelf_shell(studio_server) -> None:
             "() => !document.getElementById('v2-frame').hidden"
         )
         assert frame_visible
-        assert "你的游记画册" in page.locator("#v2-shelf").inner_text()
+        assert "你的影像画册" in page.locator("#v2-shelf").inner_text()
         browser.close()
 
 

@@ -349,7 +349,7 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     assert "去换封底" in sheet or "去换封面" in sheet
     assert "goto-bookends" in sheet
     assert "goto-body" in sheet
-    assert "去游记正文" in sheet
+    assert "去画册正文" in sheet
     assert "preview-toolbar__collage-select" in sheet
     assert "preview-toolbar__collage-media" not in sheet
     assert "bookendsFocus" in sheet
@@ -814,7 +814,7 @@ def test_preview_export_facade_v1_markers() -> None:
     assert "autoRevealLongshotOutputs" not in longshot
     assert "longshot_auto_reveal" not in longshot
     assert "禁止自动 reveal" in longshot
-    assert "已保存到此游记文件夹" in task_dock
+    assert "已保存到此画册文件夹" in task_dock
     assert "导出时仍会提醒" in task_dock
     assert "preview-task-dock__remind" in css
     assert "按序发到朋友圈连读" in task_dock
@@ -888,7 +888,7 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "bookEditTpl" in drawers
     assert "pageEditTpl" in drawers
     assert "edit-page" in drawers
-    assert "给这本游记的一句话" in drawers
+    assert "给这本画册的一句话" in drawers
     assert "写给编辑的一句话" not in drawers
     assert "想写进图说的词" in drawers
     assert "记忆锚点" not in drawers
@@ -933,7 +933,7 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "C" not in css_vj_overlays
 
     home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
-    assert "给这本游记的一句话" in home
+    assert "给这本画册的一句话" in home
     assert "写给编辑的一句话" not in home
 
     features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")

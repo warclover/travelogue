@@ -259,26 +259,26 @@ export function mountPreviewTaskDock(root, hooks) {
       if (result.platform === "moments_grid") {
         shareHint.textContent =
           result.publishGuide ||
-          ("已保存到此游记文件夹 · 共 " + outputs.length + " 张 1:1，有几张发几张");
+          ("已保存到此画册文件夹 · 共 " + outputs.length + " 张 1:1，有几张发几张");
         textWrap.appendChild(shareHint);
       } else if (result.platform === "wechat_moments") {
         shareHint.textContent =
           outputs.length > 1
-            ? "这不是九宫格 · 已保存到此游记文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
-            : "这不是九宫格 · 已保存到此游记文件夹 · 按序发到朋友圈连读";
+            ? "这不是九宫格 · 已保存到此画册文件夹 · 共 " + outputs.length + " 张，按序发到朋友圈连读"
+            : "这不是九宫格 · 已保存到此画册文件夹 · 按序发到朋友圈连读";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "xiaohongshu") {
         shareHint.textContent =
           outputs.length > 1
-            ? "已保存到此游记文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
-            : "已保存到此游记文件夹 · 导入小红书发布即可";
+            ? "已保存到此画册文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
+            : "已保存到此画册文件夹 · 导入小红书发布即可";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "poster_bric") {
-        shareHint.textContent = "已保存到此游记文件夹 · 单屏拼贴海报";
+        shareHint.textContent = "已保存到此画册文件夹 · 单屏拼贴海报";
         textWrap.appendChild(shareHint);
       } else {
-        // FE-DFX-30 · 稳定成功面副文案（此游记文件夹）
-        shareHint.textContent = "已保存到此游记文件夹";
+        // FE-DFX-30 · 稳定成功面副文案（此画册文件夹）
+        shareHint.textContent = "已保存到此画册文件夹";
         textWrap.appendChild(shareHint);
         // Help H4 按需；默认面不展示发群三要素（First-Session Trust）
         trackStudioEvent("longshot_success_share_hint_shown", {

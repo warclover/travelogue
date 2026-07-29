@@ -14,7 +14,7 @@ HOME_HTML = STUDIO / "studio-home-v2.html"
 
 def test_help_copy_contract_locked() -> None:
     help_js = HELP_JS.read_text(encoding="utf-8")
-    assert "游记已做好，可预览与导出" in help_js
+    assert "画册已做好，可预览与导出" in help_js
     assert "杂志级文案已完成" not in help_js
     assert "AI 已写好" not in help_js
     assert "验货没问题就点『长图』，生成可发微信的长图" in help_js
@@ -47,7 +47,7 @@ def test_first_success_scheme_a() -> None:
     assert "HELP_COPY.saveLongshotSecondary" in fs
     assert "HELP_COPY.firstSuccessNext" in fs
     assert 'v2-success-next-hint' in html
-    assert "游记已做好，可预览与导出" in html
+    assert "画册已做好，可预览与导出" in html
     # 主 CTA 不再按 quick_share 切成「保存长图」
     assert '_successMode === "fine_craft" ? "打开卷轴预览' not in fs
     assert 'open.textContent = _successMode === "fine_craft"' not in fs
@@ -82,7 +82,7 @@ def test_import_folder_scaffold_markers() -> None:
     assert "不知道选哪个文件夹？" in html
     assert "同一次旅行放同一文件夹（50–100 张最佳）" in html
     assert "手机照片需先传到电脑" in html
-    assert "每个文件夹会生成一篇" in html
+    assert "每个文件夹会生成一本" in html
     assert "试试用自己的照片做一篇" in html
     assert 'data-help-item="H1"' in html
 

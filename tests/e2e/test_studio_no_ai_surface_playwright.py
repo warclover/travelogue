@@ -24,7 +24,7 @@ from playwright.sync_api import sync_playwright
 
 pytestmark = [pytest.mark.e2e, pytest.mark.playwright_serial]
 
-COPY_NAS_FS_01 = "游记已做好，可预览与导出长图。"
+COPY_NAS_FS_01 = "画册已做好，可预览与导出长图。"
 
 
 @pytest.fixture(autouse=True)
@@ -199,7 +199,7 @@ def test_ac_nas_04_first_success_copy(studio_server) -> None:
               mod.showFirstSuccess({
                 result: {
                   tripId: 'nas-fs',
-                  title: '测试游记',
+                  title: '测试画册',
                   photoCount: 6,
                   featuredCount: 1,
                   segmentCount: 1,

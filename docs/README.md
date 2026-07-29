@@ -197,6 +197,8 @@
 | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) | NAS 实施（FE-NAS-00～14 + BE-NAS-01～03 P0）**v0.2.1** · S1–S10 · ping 硬拒 · 可开 W1 |
 | [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) | NAS 验收 AC-NAS-01～17 · OUT-01～05 · 翻转清单 · dark 包 |
 | [acceptance-records/no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) | NAS 跨职能评审 · **Conditional Go** · MF-NAS-01～10 |
+| [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md) | **AI-Return · AIR V1**（解冻写作引擎 · 三语气杂志文案 · 渠道 pack v2 / 迟晒）**v0.1.0 Draft** · 承接 NAS §14 |
+| [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 · CAD V1**（真照片 Mode A 默认 · 禁假风景默认 · 双封面）**v0.1.0 Draft** · 扩展 Bookends |
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** · 用户面由 NAS supersede；工程栈仍有效 |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **写作引擎 API 配置加固 V1**（服务商隔离 · 保存并测试 · 通义地域 · 可行动错误）**v1.1 · W0–W2 编码 ✅ · 实机狗粮待填** |
 | [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 实施清单（W0–W2 编码 ✅ · 实机狗粮待填） |
@@ -220,6 +222,8 @@
 **前置**：Phase 2 M11 骨架（`packaging/travelogue-studio.spec` · `travelogue.desktop`）已存在。  
 **代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
 **阅读顺序（当前版本用户面）**：先读 **[PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md)**（默认无 AI 面）→ 工程回滚/密钥再读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** / **[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)** / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → 分发读 **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** / [ADR-018](./adr/018-desktop-installer-layout.md)。历史：无 Key 死循环见 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)**。关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md)。
+
+**下期 AI 面（Draft）**：**[PRD-AI-RETURN-V1](./PRD-AI-RETURN-V1.md)**（解冻 + 文案/渠道）与 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（装帧导演）并行评审；未解冻发版前默认面仍以 NAS 为准。
 
 ---
 
@@ -492,12 +496,13 @@
 | [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) | V6 验收 |
 | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
 | [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
+| [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 CAD V1**（**v0.1.0 Draft**）· 真照片 Mode A · 禁假风景默认 · 扩展 Bookends |
 | [adr/017-bookends-engine.md](./adr/017-bookends-engine.md) | ADR-017 · Bookends 挂点 / 锁 / 压字分期 / B2a·b |
 | [IMPLEMENTATION-BOOKENDS-ENGINE-V1.md](./IMPLEMENTATION-BOOKENDS-ENGINE-V1.md) | Bookends 实施清单（B0→B1→B2a→B2b） |
 | [ACCEPTANCE-BOOKENDS-ENGINE-V1.md](./ACCEPTANCE-BOOKENDS-ENGINE-V1.md) | Bookends 验收追踪（B1 起勾选） |
 | [acceptance-records/bookends-prd-review-2026-07-13.md](./acceptance-records/bookends-prd-review-2026-07-13.md) | Bookends PRD 跨职能评审纪要（产品/架构/算法/UIUX/体验/视觉/流程） |
 
-阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE。
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE → 装帧增强 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（Draft）。
 
 ---
 
@@ -669,6 +674,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 |------|------|
 | 2026-07-23 | SSG：**PRD v0.2.1** · 分支 `feature/smart-shot-grouping-v1` · PR-A～F Conditional Closed（默认 on Hold · 实拍盲评另填） |
 | 2026-07-23 | SSG 七席：[ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) · **Conditional Go** · PRD **v0.2.0** 回写 · 可 Kickoff M0 |
+| 2026-07-29 | 新增 [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md)·[PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md)（AI 策略落地 Draft）；NAS §14 / DOC-STATUS / 迟晒 INSIGHT 指针已挂 |
 | 2026-07-23 | QFX：IMPLEMENTATION **v0.1.0**；NAS IMPLEMENTATION **v0.2.2**（废除 status 可 200）· ACCEPTANCE 增 AC-NAS-17d |
 | 2026-07-23 | QFX：**PRD v0.2.1** 代码探查三项拍板入文（config 投影 · 最小 current · 预处理降耦）；NAS **v0.2.3** D-NAS-17b；Keep-All **v0.1.3** |
 | 2026-07-22 | QFX：**PRD v0.2.0** 回写评审根本解法；同步 NAS D-NAS-17 / AC-NAS-17c（status 403）与 Keep-All §4.2（回填仍执行） |

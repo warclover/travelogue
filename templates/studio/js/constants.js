@@ -33,7 +33,7 @@ export const STAGE_LABELS = {
   vision_warmup: "正在准备识图（首次可能较慢）",
   ingest: "正在整理照片…",
   curate: "正在分章与挑选…",
-  narrate: "正在生成游记文案…",
+  narrate: "正在生成画册文案…",
   render: "正在排版杂志页…",
 };
 
@@ -50,7 +50,7 @@ export const STAGE_HINT_LABELS = {
 
 // P5-10.1 · mirror travelogue/web/studio_errors.py USER_MESSAGES
 export const STUDIO_ERROR_MESSAGES = {
-  E_DEMO_EXISTS: "该游记已存在。是否覆盖？",
+  E_DEMO_EXISTS: "该画册已存在。是否覆盖？",
   E_DEMO_NOT_DIR: "所选路径不是文件夹",
   E_DEMO_TOO_FEW: "至少需要 4 张照片，请换一个文件夹",
   E_INGEST_EMPTY: "文件夹里没有找到照片",
@@ -59,7 +59,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_STUDIO_UPLOAD_EMPTY: "未收到任何照片文件",
   E_STUDIO_CANCELLED: "已取消",
   E_STUDIO_PIPELINE: "导入失败，请重试",
-  E_TRIP_SAVE_BUSY: "游记文件正被占用，请关闭预览/资源管理器后重试",
+  E_TRIP_SAVE_BUSY: "画册文件正被占用，请关闭预览/资源管理器后重试",
   E_STUDIO_AUTH: "Studio 请求未授权",
   E_STUDIO_BODY_TOO_LARGE: "请求体过大",
   E_STUDIO_ALBUM_DENIED: "不允许从该路径导入",
@@ -84,7 +84,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_LLM_BASE_URL: "自定义 API 地址仅支持 https。",
   E_LLM_TIMEOUT: "无法连接服务商。请检查网络后重试。",
   E_NARRATE_API: "文案生成失败，请重试",
-  E_TRIP_NOT_FOUND: "游记不存在",
+  E_TRIP_NOT_FOUND: "画册不存在",
   E_EXPORT_PRIVACY: "导出 zip 需要确认隐私设置",
   E_TEMPLATE_LOCKED: "模板已锁定，无法更改",
   E_TEMPLATE_PERMISSION_DENIED: "模板管理权限不足",

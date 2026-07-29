@@ -836,7 +836,7 @@ def _demo_exists_response() -> dict[str, Any]:
         "body": {
             "ok": False,
             "error": "E_DEMO_EXISTS",
-            "message": "该游记已存在。是否覆盖？",
+            "message": "该画册已存在。是否覆盖？",
             "previewUrl": "/demo-album/index.html",
             "existingTripId": "demo-album",
         },

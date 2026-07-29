@@ -315,7 +315,7 @@ export function renderBenchRecent() {
 
     if (trip.previewRelPath) {
       var img = document.createElement("img");
-      img.alt = trip.title || "游记封面";
+      img.alt = trip.title || "画册封面";
       img.loading = idx === 0 ? "eager" : "lazy";
       img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
       img.onerror = function () { img.remove(); };

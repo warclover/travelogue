@@ -387,7 +387,7 @@ def _run(base: str) -> int:
         opened = False
         for sel in (
             "text=制作我的游记",
-            "text=开始制作我的游记",
+            "text=开始制作我的画册",
             "#v2-cta-primary",
             "button:has-text('制作')",
         ):

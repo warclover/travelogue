@@ -38,7 +38,7 @@ export function disconnectExportFeedback(tripId, pathname) {
       : pathname || "/";
   return {
     title: "服务已停止，长图还没有导出",
-    subtitle: "请重新启动 Studio 后打开本游记，再点「长图」",
+    subtitle: "请重新启动 Studio 后打开本画册，再点「长图」",
     linkText: "回到预览",
     linkHref: href,
   };

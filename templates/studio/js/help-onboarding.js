@@ -35,9 +35,9 @@ var CAPABILITY_SUPPRESS_HELP_SS = "travelogue.desktop.capabilityCard.suppressHel
 
 export var HELP_COPY = {
   // NAS · COPY-NAS-FS-01（精确串）；旧 L0/L1 分支串保留字段名但内容中性
-  firstSuccessNext: "游记已做好，可预览与导出长图。",
-  firstSuccessNextReady: "游记已做好，可预览与导出长图。",
-  firstSuccessNextNeutral: "游记已做好，可预览与导出长图。",
+  firstSuccessNext: "画册已做好，可预览与导出长图。",
+  firstSuccessNextReady: "画册已做好，可预览与导出长图。",
+  firstSuccessNextNeutral: "画册已做好，可预览与导出长图。",
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
@@ -46,13 +46,13 @@ export var HELP_COPY = {
   importFolderSummary: "不知道选哪个文件夹？",
   importFolderPoints: [
     "同一次旅行放同一文件夹（50–100 张最佳）",
-    "Day1/Day2 子夹：合并导入或分两次导入（每次一篇新游记）",
+    "Day1/Day2 子夹：合并导入或分两次导入（每次一本新画册）",
     "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
     "手机照片需先传到电脑",
   ],
   importNewTripLine:
-    "每个文件夹会生成一篇新的游记，不会覆盖已有游记",
-  importNewToast: "将新建一篇游记 · 已选择 N 张",
+    "每个文件夹会生成一本新的画册，不会覆盖已有画册",
+  importNewToast: "将新建一本画册 · 已选择 N 张",
   publishGuideFallback: [
     "长图已保存到本机",
     "打开微信，按文件名顺序发到群聊",
@@ -119,7 +119,7 @@ export var HELP_COPY = {
       title: "怎么选照片文件夹",
       body: [
         "同一次旅行放同一文件夹（50–100 张最佳）",
-        "Day1/Day2 子夹：合并导入或分两次导入（每次一篇新游记）",
+        "Day1/Day2 子夹：合并导入或分两次导入（每次一本新画册）",
         "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
         "手机照片需先传到电脑",
       ],

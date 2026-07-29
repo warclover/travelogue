@@ -68,7 +68,7 @@ def _goto_v2(page, base: str) -> None:
 _MEASURE_MODAL_JS = """
 async (opts) => {
   const p = window.studioModal(opts || {
-    title: '确认删除这本游记？',
+    title: '确认删除这本画册？',
     body: '删除后无法恢复，书架与本地缓存中的预览都会移除。',
     confirmText: '删除',
     cancelText: '取消',
@@ -424,7 +424,7 @@ def test_studio_ui_detail_modal_family_audit(studio_server, tmp_path: Path) -> N
               el.hidden = false;
               el.classList.add('is-open');
               const msg = document.getElementById('v2-success-msg');
-              if (msg) msg.textContent = '你的第一篇游记已生成';
+              if (msg) msg.textContent = '你的第一本画册已生成';
               const facts = document.getElementById('v2-success-details');
               if (facts) {
                 facts.hidden = false;

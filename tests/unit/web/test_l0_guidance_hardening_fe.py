@@ -20,9 +20,9 @@ def test_import_failed_auth_recoverable_contract() -> None:
     assert "isLlmAuthRecoverable" in errors
     assert "isAiSurfaceEnabled" in failed
     assert "isAiSurfaceEnabled() && isLlmAuthRecoverable" in failed
-    # 默认面 CTA =「继续生成游记」（非本机/配置引擎话术）
-    assert "继续生成游记" in failed
-    assert "继续生成游记" in home
+    # 默认面 CTA =「继续生成画册」（非本机/配置引擎话术）
+    assert "继续生成画册" in failed
+    assert "继续生成画册" in home
     assert "v2-failure-continue-stub" in home
     assert "v2-failure-open-settings" in home
     assert "v2-failure-open-recent" in home
@@ -58,7 +58,7 @@ def test_import_run_retains_pending_on_failure() -> None:
 def test_capability_card_l0g_copy() -> None:
     """NAS · AC-NAS-01：能力卡永不 show；无 AI 升级 CTA 串。"""
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
-    assert "照片留在本机，也能做成可发的游记" in cap
+    assert "照片留在本机，也能做成可发的画册" in cap
     assert "开始制作" in cap
     assert "以后再升级 AI 文案" not in cap
     assert "向导里可一键试用示例" in cap
@@ -124,7 +124,7 @@ def test_llm_settings_resume_cta_contract() -> None:
     llm = (STUDIO / "js" / "llm-settings.js").read_text(encoding="utf-8")
     analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
     assert "studio-llm-resume" in llm
-    assert "继续生成本机游记" in llm
+    assert "继续生成本机画册" in llm
     assert "开始导入" in llm
     assert "showResumeAfterSave" in llm
     assert "runResumeAfterLlmSettings" in llm
@@ -170,6 +170,6 @@ def test_w21_gap_copy_and_busy_banner() -> None:
     assert "forceStub: forceStub" in import_run
     assert "degrading to stub" in pipeline
     # COPY-NAS-FS-01
-    assert "游记已做好，可预览与导出长图。" in first
-    assert "游记已做好，可预览与导出长图。" in help_js
+    assert "画册已做好，可预览与导出长图。" in first
+    assert "画册已做好，可预览与导出长图。" in help_js
     assert "重新选择同一批照片" in failed

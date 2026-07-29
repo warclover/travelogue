@@ -148,7 +148,7 @@ def _date_fallback_label(meta: dict[str, Any] | None) -> str:
     meta = meta or {}
     start = _parse_iso_ymd(str(meta.get("dateStart") or ""))
     if not start:
-        return "游记"
+        return "画册"
     y, m, d = start
     label = f"{m}月{d}日"
     end = _parse_iso_ymd(str(meta.get("dateEnd") or ""))
