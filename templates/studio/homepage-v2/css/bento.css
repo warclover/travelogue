@@ -186,6 +186,9 @@
 .v2-bento__lead .v2-bento__trust {
   display: inline;
   white-space: nowrap;
+  font-size: inherit;
+  letter-spacing: inherit;
+  font-family: inherit;
 }
 .v2-bento__headline-cta {
   grid-area: cta;
