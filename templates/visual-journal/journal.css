@@ -462,6 +462,13 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   display: none;
 }
 
+/* 与 web 封面对齐：长图/手机框封面只保留中间书名，隐藏常含题名回声的 meta 行 */
+html[data-layout="longshot"] .cover-opening .trip-meta,
+html[data-layout="mobile"] .cover-opening .trip-meta,
+body.longshot-capturing .cover-opening .trip-meta {
+  display: none;
+}
+
 @media (min-width: 48rem) {
   html[data-layout="web"] .cover-hero__text,
   html[data-layout="auto"] .cover-hero__text {

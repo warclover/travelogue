@@ -25,6 +25,16 @@ def test_bans_title_echo() -> None:
         sanitize_share_copy("5月27日 · 武大樱花", title="武大樱花", kind="caption")
         == ""
     )
+    # 封面 lead/hook 同样抑制题名回声（手机长图三行重题）
+    assert (
+        sanitize_share_copy("王丹昙华林半日游 · 10月5日", title="王丹昙华林半日游", kind="lead")
+        == ""
+    )
+    assert sanitize_share_copy("王丹昙华林半日游", title="王丹昙华林半日游", kind="lead") == ""
+    assert (
+        sanitize_share_copy("昙华林半日，梧桐影里", title="王丹昙华林半日游", kind="lead")
+        == "昙华林半日，梧桐影里"
+    )
 
 
 def test_bans_dirty_double_dash() -> None:
