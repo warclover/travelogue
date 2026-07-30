@@ -1472,7 +1472,7 @@ def test_ac_hp2_14_ipad_portrait_rotate_hint(studio_server) -> None:
 
 
 def test_ac_hp21_02_idle_empty_headline_cta(studio_server) -> None:
-    """AC-HP21-02 · 空态：Lead + 信任 + 主 CTA 在文案区首屏可见。"""
+    """AC-HP21-02 · 空态：信任行（eyebrow）+ 主 CTA 在文案区首屏可见。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 768})
@@ -1481,24 +1481,26 @@ def test_ac_hp21_02_idle_empty_headline_cta(studio_server) -> None:
         visible = page.evaluate(
             """
             () => {
-              const ids = ['v2-headline-trust', 'v2-cta'];
-              const lead = document.querySelector('.v2-bento__lead');
+              const trust = document.getElementById('v2-headline-trust');
               const inViewport = (el) => {
                 if (!el) return false;
                 const r = el.getBoundingClientRect();
                 return r.top >= 0 && r.bottom <= window.innerHeight;
               };
               return {
-                trust: inViewport(document.getElementById('v2-headline-trust')),
+                trust: inViewport(trust),
+                trustText: trust?.textContent || '',
                 ctaInHeadline: document.getElementById('v2-cta')?.classList.contains('is-headline'),
                 ctaText: document.getElementById('v2-cta')?.textContent || '',
-                leadVisible: lead && lead.offsetParent !== null,
+                leadGone: !document.querySelector('.v2-bento__lead'),
               };
             }
             """
         )
-        assert visible["leadVisible"]
         assert visible["trust"]
+        assert "无需上传照片" in visible["trustText"]
+        assert "数字影像画册" in visible["trustText"]
+        assert visible["leadGone"]
         assert visible["ctaInHeadline"]
         assert "开始制作我的画册" in visible["ctaText"]
         browser.close()

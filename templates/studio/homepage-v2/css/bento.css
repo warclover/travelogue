@@ -18,7 +18,7 @@
   width: 100%;
   max-width: var(--v2-content-max, none);
   margin-inline: auto;
-  padding: 12px 32px 20px;
+  padding: 10px 24px 14px;
   box-sizing: border-box;
   overflow-x: clip;
   overflow-y: visible;
@@ -111,25 +111,25 @@
   100% { background-position: -200% 0; }
 }
 
-/* ── Headline / Slogan（Bento 网格内 · 左列第 1 行） ──
-   layout D（默认 · body data-headline-layout="d"）：Eyebrow + H1 + Lead 纵向排列。
+/* ── Headline / Slogan（Bento 网格内 · 通栏第 1 行） ──
+   layout D：Eyebrow 左 + H1 右同排；Lead 已并入 eyebrow。
    ROLLBACK legacy：body data-headline-layout="legacy" + 恢复 studio-home-v2.html 注释 DOM。 ── */
 [data-headline-layout="d"] .v2-bento__headline {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "eyebrow"
-    "title"
-    "lead"
-    "cta";
-  align-items: start;
+    "eyebrow title"
+    "cta cta";
+  align-items: baseline;
+  column-gap: 20px;
+  row-gap: 0;
   position: relative;
   z-index: 4;
-  /* 大屏卷轴 translateY(-lift) 会侵入本行底部，预留 clearance 避免 Lead/CTA 被裁切 */
-  padding-bottom: calc(var(--v2-web-preview-lift, 30px) + 6px);
+  padding-bottom: calc(var(--v2-web-preview-lift, 14px) + 2px);
+  padding-right: 44px; /* 避让右上角帮助入口 */
 }
 .v2-bento__headline {
-  grid-column: 1;
+  grid-column: 1 / -1;
   grid-row: 1;
   min-width: 0;
   font-family: var(--v2-font-display);
@@ -137,19 +137,23 @@
 }
 .v2-bento__eyebrow {
   display: block;
-  font-size: 11px;
-  letter-spacing: .22em;
+  font-size: 12px;
+  letter-spacing: .04em;
+  line-height: 1.45;
   color: var(--v2-primary);
-  margin-bottom: 6px;
+  margin-bottom: 0;
+  max-width: none;
+  font-family: var(--v2-font-sans);
 }
 [data-headline-layout="d"] .v2-bento__eyebrow {
   grid-area: eyebrow;
-  align-self: end;
+  align-self: baseline;
+  min-width: 0;
 }
 .v2-bento__title {
   margin: 0;
   font-family: var(--v2-font-handwriting);
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: .02em;
@@ -157,6 +161,9 @@
 }
 [data-headline-layout="d"] .v2-bento__title {
   grid-area: title;
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
   min-width: 0;
 }
 .v2-bento__title em {
@@ -195,7 +202,7 @@
 }
 .v2-bento__headline-cta {
   grid-area: cta;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .v2-bench__cta-primary {
   display: inline-flex;
@@ -749,13 +756,16 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  /* 右列略增，确保 9:16 手机可与 16:9 web 预览等高 */
-  grid-template-columns: minmax(0, 1.9fr) minmax(168px, 1.05fr);
+  /*
+   * 左列约 76%：16:9 随宽长高；右列约 24%：刚好够 9:16 与 web 等肩。
+   * 外接宽屏时左列吃满余宽，双预览同步放大。
+   */
+  grid-template-columns: minmax(0, 3.15fr) minmax(180px, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 8px 14px;
+  gap: 6px 12px;
   align-items: stretch;
-  --v2-web-preview-lift: 30px;
-  --v2-bench-nudge: 8mm;
+  --v2-web-preview-lift: 14px;
+  --v2-bench-nudge: 6mm;
 }
 .v2-bento__web {
   grid-column: 1;
@@ -816,13 +826,12 @@
 }
 .v2-bento__mobile {
   grid-column: 2;
-  grid-row: 1 / 3;
+  grid-row: 2;
   min-height: 0;
   min-width: 0;
-  /* 允许长到与 web 预览等高所需的 9:16 宽度 */
-  max-width: min(100%, 720px);
+  max-width: 100%;
   width: 100%;
-  justify-self: start;
+  justify-self: stretch;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   align-items: stretch;

@@ -133,10 +133,10 @@ function syncPhoneFrameFromWeb() {
   var visualH = clampPhoneLayoutHeight(Math.min(carouselH, byWidth));
   if (visualH <= 0) return;
 
-  /* 顶齐预览；若因列宽被迫更矮，则在预览带内垂直居中，避免「一头沉」 */
+  /* 顶齐预览（含 carousel lift）；列宽不足时在预览带内垂直居中 */
   var idealOffset = Math.round(vb.top - cellTop);
   var shortfall = Math.max(0, carouselH - visualH);
-  var offsetTop = Math.max(0, idealOffset + Math.round(shortfall / 2));
+  var offsetTop = idealOffset + Math.round(shortfall / 2);
 
   phone.style.setProperty("--v2-phone-height", visualH + "px");
   phone.style.setProperty("--v2-phone-offset-top", offsetTop + "px");
