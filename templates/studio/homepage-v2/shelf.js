@@ -1,7 +1,8 @@
 /**
  * 首页 v2 · Web 书架回访区（M20-e · §8 · 方案 A）。
  *
- * Bento 首屏下方区块：标题「你的影像画册」+ resume 卡 + 网格（新建卡首位）。
+ * Bento 首屏下方区块：标题「你的影像画册」+ 网格（新建卡首位）。
+ * 「继续编辑」resume 卡条暂隐藏（buildResume / CSS 保留便于恢复）。
  * 不整页替换 Bento；无用户画册时 hideShelf()。
  */
 import { isDemoTrip } from "../js/constants.js";
@@ -135,7 +136,6 @@ function onTripDeleted(trip) {
   if (_resumeEl && _resumeEl.dataset.tripId === tripId) {
     _resumeEl.remove();
     _resumeEl = null;
-    refreshResumeBar();
   }
 
   syncHeadCount();
@@ -148,16 +148,12 @@ function onTripDeleted(trip) {
   }
 }
 
+/** resume 卡条已下线；保留函数便于产品恢复。 */
 function refreshResumeBar() {
   if (!_hostEl) return;
-  var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];
-  if (!resumeTrip) return;
   var existing = _hostEl.querySelector(".v2-shelf__resume");
   if (existing) existing.remove();
-  _resumeEl = buildResume(resumeTrip);
-  var grid = _hostEl.querySelector(".v2-shelf__grid");
-  if (grid) _hostEl.insertBefore(_resumeEl, grid);
-  else _hostEl.appendChild(_resumeEl);
+  _resumeEl = null;
 }
 
 function syncHeadCount() {
@@ -205,8 +201,8 @@ function buildCoverWrap(trip, surface) {
   } else if (trip.g1Pending || trip.derivativesStatus === "preview") {
     wrap.appendChild(el("span", "v2-shelf__preview-badge", PREVIEW_READY));
   }
-  var resumeTrip = _loadedTrips.filter(function (t) { return !isDemoTrip(t); })[0];
-  var resumeTripId = resumeTrip ? resumeTrip.tripId : null;
+  /* resume 卡已下线：不再因「续看条占 CTA」隐藏该本的长图角标 */
+  var resumeTripId = null;
   var priorityLongshotTripId = shelfPriorityLongshotTripId(_loadedTrips, {
     resumeTripId: resumeTripId,
   });
@@ -229,8 +225,10 @@ function buildCoverWrap(trip, surface) {
 }
 
 function buildResume(trip) {
+  /* 暂不挂载；恢复：renderShelf / refreshResumeBar 调用本函数并插入 grid 前 */
   var card = el("div", "v2-shelf__resume");
   card.dataset.tripId = trip.tripId;
+  card.dataset.deferred = "1";
 
   var thumbWrap = el("div", "v2-shelf__resume-thumb-wrap");
   var thumb = el("div", "v2-shelf__resume-thumb");
@@ -402,8 +400,10 @@ export function renderShelf(trips, total) {
 
   var resumeTrip = latestNonDemo;
   if (resumeTrip) {
-    _resumeEl = buildResume(resumeTrip);
-    host.appendChild(_resumeEl);
+    /* 暂隐藏「继续编辑」卡条；恢复：_resumeEl = buildResume(resumeTrip); host.appendChild(_resumeEl) */
+    _resumeEl = null;
+    var staleResume = host.querySelector(".v2-shelf__resume");
+    if (staleResume) staleResume.remove();
   } else {
     _resumeEl = null;
   }
