@@ -413,6 +413,11 @@ body.longshot-capturing .trip-meta {
   padding: 14px 16px 8px;
 }
 
+/* 封面 trip-meta 常与书名重复；捕捉时与 web 一样隐藏，只留中间标题 */
+body.longshot-capturing .cover-opening .trip-meta {
+  display: none;
+}
+
 body.longshot-capturing .hook-line {
   font-size: 16px;
   line-height: 1.55;

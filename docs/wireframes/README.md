@@ -2,6 +2,8 @@
 
 | 文件 | 说明 |
 |------|------|
+| [studio-shelf-top-v1-wireframe.html](./studio-shelf-top-v1-wireframe.html) | **书架顶端收束 V1** · As-Is / A 弱快捷条 / B 内嵌芯片 / C 无快捷区 · **待产品审核** |
+| [studio-homepage-focus-v1-wireframe.html](./studio-homepage-focus-v1-wireframe.html) | **首页展台收焦 P0** · As-Is / 回访 / 空态 / 2K 定宽 · 文案层级 + 底栏三区 · **待产品审核** |
 | [preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) | **预览 Chrome 收敛 V1.1** · 主路径零分章打扰 · Dock「分章」按需 · D-STAT · 杀默认 G1/徽标/Help FAB · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) |
 | [writing-engine-api-hardening-v1-wireframe.html](./writing-engine-api-hardening-v1-wireframe.html) | **写作引擎 API 配置加固 V1** · F1 诊断 · F2 Modal To-Be · F3 状态机 · F4 切换确认 · F5 拍板 · [PRD](../PRD-WRITING-ENGINE-API-HARDENING-V1.md) **v1.1 Conditional Go** · [评审](../acceptance-records/writing-engine-api-hardening-v1-review-2026-07-17.md) |
 | [homepage-settings-accordion-v1-wireframe.html](./homepage-settings-accordion-v1-wireframe.html) | **首页设置 · 手风琴改版 V1.1** · 五区 + AI zone→Modal · F5 全量功能清单 · ④⑤已推荐拍板 |

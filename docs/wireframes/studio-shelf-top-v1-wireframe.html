@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio 书架顶端 · 收束线框 v1 · 待审核</title>
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #6b6b6b;
+      --line: #c8c8c8;
+      --fill: #e8e8e8;
+      --fill-deep: #d4d4d4;
+      --paper: #f4f6f8;
+      --anno: #c45c26;
+      --ok: #2d6a4f;
+      --cta: #2d5678;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #111;
+      color: #ececec;
+      line-height: 1.5;
+    }
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      padding: 10px 18px;
+      background: #0c0c0c;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .bar h1 {
+      margin: 0;
+      margin-right: auto;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .bar h1 em { font-style: normal; color: #d4a574; font-weight: 400; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tabs button {
+      border: 1px solid #444;
+      background: transparent;
+      color: #ccc;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tabs button:hover { background: #1c1c1c; }
+    .tabs button.is-on {
+      background: #d4a574;
+      border-color: #d4a574;
+      color: #111;
+      font-weight: 600;
+    }
+    .bar p {
+      width: 100%;
+      margin: 0;
+      font-size: 11px;
+      color: #888;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      min-height: calc(100vh - 78px);
+    }
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .stage {
+      padding: 28px 24px 48px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .device {
+      width: min(920px, 100%);
+      background: var(--paper);
+      color: var(--ink);
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,.45);
+    }
+    .device__label {
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #888;
+      background: #222;
+      border-bottom: 1px solid #333;
+    }
+    .shelf {
+      padding: 28px 36px 40px;
+      background: var(--paper);
+    }
+
+    /* shared wireframe bits */
+    .wf-ph {
+      background: var(--fill);
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 10px;
+      display: grid;
+      place-items: center;
+    }
+    .anno {
+      position: absolute;
+      font-size: 10px;
+      color: var(--anno);
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .anno::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--anno);
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .tag--keep { background: #dce8e0; color: var(--ok); }
+    .tag--delta { background: #fde8d8; color: var(--anno); }
+    .tag--kill { background: #f1d5d5; color: #9a3412; }
+
+    /* —— As-Is —— */
+    .as-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 16px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .as-h1 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 40px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .as-meta {
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .as-empty-right {
+      width: 120px;
+      height: 28px;
+      border: 1px dashed transparent;
+      position: relative;
+    }
+    .as-resume {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      margin-bottom: 22px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+      position: relative;
+    }
+    .as-thumb {
+      width: 52px;
+      height: 70px;
+      border-radius: 3px;
+      background: var(--fill-deep);
+      flex-shrink: 0;
+    }
+    .as-resume strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .as-resume span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .as-btn {
+      margin-left: auto;
+      padding: 10px 16px;
+      background: var(--cta);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* —— Option A：收束标题 + 语义统一快捷条 —— */
+    .a-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .a-h1 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 28px;
+      font-weight: 500;
+      line-height: 1.15;
+    }
+    .a-meta {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .a-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255,255,255,.55);
+      position: relative;
+      cursor: pointer;
+    }
+    .a-strip:hover { background: #fff; }
+    .a-thumb {
+      width: 40px;
+      height: 54px;
+      border-radius: 3px;
+      background: var(--fill-deep);
+      flex-shrink: 0;
+    }
+    .a-strip strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .a-strip span { font-size: 11px; color: var(--muted); }
+    .a-go {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cta);
+      white-space: nowrap;
+    }
+
+    /* —— Option B：标题行内嵌最近本 · 无独立卡 —— */
+    .b-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .b-h1 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 26px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .b-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      border: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .b-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--fill-deep);
+      flex-shrink: 0;
+    }
+    .b-chip strong {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .b-chip em {
+      font-style: normal;
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+    .b-count {
+      font-size: 12px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* —— Option C：去掉 resume · 网格角标 —— */
+    .c-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .c-h1 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 28px;
+      font-weight: 500;
+    }
+    .c-meta { margin: 0; font-size: 12px; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .book {
+      aspect-ratio: 3 / 4;
+      background: var(--fill);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 8px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .book--new {
+      border-style: dashed;
+      background: transparent;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+    .book__badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+    .book__badge--hot {
+      background: #e8f0f7;
+      border-color: #b7c9da;
+      color: var(--cta);
+    }
+
+    .panel {
+      padding: 20px 18px 40px;
+      background: #141414;
+      border-left: 1px solid #2a2a2a;
+      font-size: 12px;
+      color: #bbb;
+    }
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: #eee;
+    }
+    .panel h3 {
+      margin: 18px 0 6px;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    .panel ul { margin: 0; padding-left: 16px; }
+    .panel li { margin: 4px 0; }
+    .panel .rec {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      background: #1c1c1c;
+    }
+    .panel .rec strong { color: #d4a574; }
+    .ask {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .ask label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .ask label:has(input:checked) {
+      border-color: #d4a574;
+      background: #1e1a16;
+    }
+    .ask input { margin-top: 2px; }
+    .panel footer {
+      margin-top: 24px;
+      font-size: 10px;
+      color: #666;
+    }
+    .view { display: none; }
+    .view.is-on { display: block; }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>书架顶端收束 <em>v1 · 线框 · 不动代码</em></h1>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-on" data-view="asis">As-Is 现状</button>
+      <button type="button" data-view="a">A · 推荐</button>
+      <button type="button" data-view="b">B · 内嵌芯片</button>
+      <button type="button" data-view="c">C · 无快捷条</button>
+    </div>
+    <p>范围仅书架顶端（标题 + 继续编辑区）。下方网格仅示意。请在右侧勾选方案后回复拍板。</p>
+  </header>
+
+  <div class="layout">
+    <main class="stage">
+      <!-- As-Is -->
+      <div class="device view is-on" id="view-asis">
+        <div class="device__label">As-Is · 现网</div>
+        <div class="shelf">
+          <div class="as-head">
+            <div>
+              <h2 class="as-h1">你的影像画册</h2>
+              <p class="as-meta">15 本作品 · 上次编辑 2 小时前</p>
+            </div>
+            <div class="as-empty-right" aria-hidden="true"></div>
+            <span class="anno" style="top:-2px;right:0;">① 右侧常空 · 标题偏大</span>
+          </div>
+          <div class="as-resume">
+            <div class="as-thumb"></div>
+            <div>
+              <strong>继续编辑 · 2019相册精选</strong>
+              <span>232 张 · 2 小时前</span>
+            </div>
+            <button type="button" class="as-btn">打开预览</button>
+            <span class="anno" style="bottom:-18px;left:8px;">② 「继续编辑」vs「打开预览」语义打架</span>
+            <span class="anno" style="top:-18px;right:8px;">③ 厚卡 + 时间与标题区重复</span>
+          </div>
+          <div class="grid">
+            <div class="book book--new">+ 新建</div>
+            <div class="book">2019相册精选</div>
+            <div class="book">昙华林半日游</div>
+            <div class="book">斯里兰卡…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- A -->
+      <div class="device view" id="view-a">
+        <div class="device__label">方案 A · 推荐 · 标题收束 + 统一快捷条</div>
+        <div class="shelf">
+          <div class="a-head">
+            <h2 class="a-h1">你的影像画册</h2>
+            <p class="a-meta">15 本作品</p>
+            <span class="anno" style="top:-18px;left:0;"><span class="tag tag--delta">DELTA</span>字号↓ · 去掉底部分割线 · 时间不放这里</span>
+          </div>
+          <div class="a-strip" title="整条可点">
+            <div class="a-thumb"></div>
+            <div>
+              <strong>最近编辑 · 2019相册精选</strong>
+              <span>232 张 · 2 小时前</span>
+            </div>
+            <span class="a-go">继续 →</span>
+            <span class="anno" style="bottom:-18px;left:8px;"><span class="tag tag--delta">DELTA</span>文案统一为「最近/继续」· 弱化卡面 · 整条点击</span>
+          </div>
+          <div class="grid">
+            <div class="book book--new">+ 新建</div>
+            <div class="book">
+              <span class="book__badge">最近</span>
+              2019相册精选
+            </div>
+            <div class="book">昙华林半日游</div>
+            <div class="book">斯里兰卡…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B -->
+      <div class="device view" id="view-b">
+        <div class="device__label">方案 B · 标题行内嵌「最近」芯片 · 零独立卡</div>
+        <div class="shelf">
+          <div class="b-head">
+            <h2 class="b-h1">你的影像画册</h2>
+            <div class="b-chip" title="点击打开最近一本">
+              <div class="b-dot"></div>
+              <strong>2019相册精选</strong>
+              <em>继续</em>
+            </div>
+            <span class="b-count">15 本</span>
+            <span class="anno" style="bottom:-18px;left:0;"><span class="tag tag--delta">DELTA</span>一行完成：标题 + 回访入口 + 数量</span>
+          </div>
+          <div class="grid">
+            <div class="book book--new">+ 新建</div>
+            <div class="book">
+              <span class="book__badge book__badge--hot">最近</span>
+              2019相册精选
+            </div>
+            <div class="book">昙华林半日游</div>
+            <div class="book">斯里兰卡…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C -->
+      <div class="device view" id="view-c">
+        <div class="device__label">方案 C · 去掉快捷区 · 网格「最近」角标承担回访</div>
+        <div class="shelf">
+          <div class="c-head">
+            <h2 class="c-h1">你的影像画册</h2>
+            <p class="c-meta">15 本作品</p>
+            <span class="anno" style="top:-18px;right:0;"><span class="tag tag--kill">KILL</span>无 resume 卡/条</span>
+          </div>
+          <div class="grid">
+            <div class="book book--new">+ 新建</div>
+            <div class="book">
+              <span class="book__badge book__badge--hot">最近 · 2h</span>
+              2019相册精选
+            </div>
+            <div class="book">昙华林半日游</div>
+            <div class="book">斯里兰卡…</div>
+          </div>
+          <p style="margin:14px 0 0;font-size:11px;color:var(--muted);">
+            <span class="tag tag--keep">KEEP</span>回访路径改依赖网格首位附近的「最近」角标；信息更少，但少一层结构。
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <aside class="panel">
+      <h2>评审要点</h2>
+      <p>不动产品代码。本线框只定书架<strong>顶端</strong>结构与文案。</p>
+
+      <h3>现状问题</h3>
+      <ul>
+        <li>大标题右侧留白，像未完成的扉页</li>
+        <li>「继续编辑」与按钮「打开预览」语义冲突</li>
+        <li>「2 小时前」在标题区与卡内重复</li>
+        <li>厚白卡与下方网格抢层级</li>
+      </ul>
+
+      <h3>方案对比</h3>
+      <ul>
+        <li><strong>A</strong>：保回访入口，收标题、统一文案、弱卡 → <em>推荐默认</em></li>
+        <li><strong>B</strong>：最省高；芯片在窄屏可能挤</li>
+        <li><strong>C</strong>：结构最简；回访发现性略降</li>
+      </ul>
+
+      <div class="rec">
+        <strong>建议拍板 A</strong><br />
+        对齐首页「回访 5 秒内继续」目标，改动面小，不伤网格。
+      </div>
+
+      <h3>请勾选</h3>
+      <div class="ask">
+        <label><input type="radio" name="pick" value="a" checked /> A · 收束标题 + 弱快捷条（推荐）</label>
+        <label><input type="radio" name="pick" value="b" /> B · 标题行内嵌芯片</label>
+        <label><input type="radio" name="pick" value="c" /> C · 去掉快捷区，只靠角标</label>
+        <label><input type="radio" name="pick" value="asis" /> 维持 As-Is，暂不改</label>
+      </div>
+
+      <h3>文案（若选 A）</h3>
+      <ul>
+        <li>条目标题：<code>最近编辑 · {书名}</code></li>
+        <li>右侧动作：<code>继续 →</code>（整条可点，可无独立蓝钮）</li>
+        <li>标题下元信息：仅 <code>{N} 本作品</code></li>
+      </ul>
+
+      <h3>Ask（可选）</h3>
+      <ul>
+        <li>网格「最近」角标：要 / 不要？</li>
+        <li>空态（0 本）：顶端是否只留标题 + 引导新建？</li>
+      </ul>
+
+      <footer>
+        文件：docs/wireframes/studio-shelf-top-v1-wireframe.html<br />
+        对照实现：templates/studio/homepage-v2/shelf.js · css/shelf.css
+      </footer>
+    </aside>
+  </div>
+
+  <script>
+    var tabs = document.querySelectorAll(".tabs button");
+    var views = {
+      asis: document.getElementById("view-asis"),
+      a: document.getElementById("view-a"),
+      b: document.getElementById("view-b"),
+      c: document.getElementById("view-c")
+    };
+    tabs.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        tabs.forEach(function (b) { b.classList.remove("is-on"); });
+        btn.classList.add("is-on");
+        var id = btn.getAttribute("data-view");
+        Object.keys(views).forEach(function (k) {
+          views[k].classList.toggle("is-on", k === id);
+        });
+        var radio = document.querySelector('.ask input[value="' + id + '"]');
+        if (radio) radio.checked = true;
+      });
+    });
+    document.querySelectorAll(".ask input").forEach(function (r) {
+      r.addEventListener("change", function () {
+        var v = r.value;
+        if (!views[v]) return;
+        tabs.forEach(function (b) {
+          b.classList.toggle("is-on", b.getAttribute("data-view") === v);
+        });
+        Object.keys(views).forEach(function (k) {
+          views[k].classList.toggle("is-on", k === v);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

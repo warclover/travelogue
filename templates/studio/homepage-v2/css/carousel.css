@@ -1,12 +1,24 @@
 /* Homepage v2 · Carousel 16:9 */
-/* ── Carousel 16:9 ── */
-.v2-carousel { display: contents; }
-.v2-carousel__viewport {
+/* ── Carousel 16:9 ──
+ * viewport + footer 绑成一组，避免高屏 1fr 行把「我的画册」文案沉到 bench 旁。
+ */
+.v2-carousel {
   grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   align-self: end;
-  position: relative;
+  justify-self: stretch;
   width: 100%;
+  min-width: 0;
+  min-height: 0;
   max-height: 100%;
+}
+.v2-carousel__viewport {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  max-height: calc(100% - 28px);
   aspect-ratio: 16 / 9;
   min-height: 0;
   border-radius: 3px;
@@ -117,7 +129,7 @@
 .v2-carousel__arrow--next { right: 8px; }
 .v2-carousel__arrow:disabled { opacity: .25; cursor: not-allowed; pointer-events: none; }
 .v2-carousel__footer {
-  grid-row: 3;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;

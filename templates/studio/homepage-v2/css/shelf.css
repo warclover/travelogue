@@ -20,7 +20,7 @@
 }
 .v2-shelf__title-h1 {
   margin: 0;
-  font-family: var(--v2-font-display);
+  font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", sans-serif;
   font-size: 44px;
   font-weight: 500;
   letter-spacing: -0.02em;

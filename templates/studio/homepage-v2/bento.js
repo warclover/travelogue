@@ -80,16 +80,18 @@ export function bumpBentoMediaGeneration() {
 var _pendingPhoneManifest = null;
 var _pendingPhoneTier = "L0";
 
-function clampPhoneHeight(px) {
+/** 布局高度安全域。等肩模式下以 web 预览高度为准，不再用 980 硬顶矮一截。 */
+var PHONE_LAYOUT_MIN = 240;
+var PHONE_LAYOUT_MAX = 1600;
+var PHONE_CAPTION_GAP = 6;
+
+function clampPhoneLayoutHeight(px) {
   var v = Number(px) || 0;
   if (v <= 0) return 0;
-  if (v < 240) return 240;
-  if (v > 980) return 980;
+  if (v < PHONE_LAYOUT_MIN) return PHONE_LAYOUT_MIN;
+  if (v > PHONE_LAYOUT_MAX) return PHONE_LAYOUT_MAX;
   return Math.round(v);
 }
-
-var PHONE_VISUAL_SCALE = 1;
-var PHONE_CAPTION_GAP = 6;
 
 function phoneCaptionReserve() {
   var caption = document.querySelector(".v2-bento__mobile .v2-cell-label");
@@ -97,21 +99,19 @@ function phoneCaptionReserve() {
   return Math.ceil(caption.getBoundingClientRect().height) + PHONE_CAPTION_GAP;
 }
 
-/** web 卷轴预览框底边 → 手机框顶边，用于底边对齐。 */
-function webViewportAlignedMaxHeight(phone) {
-  var viewport = document.querySelector(".v2-carousel__viewport");
-  if (!viewport || !phone) return null;
-  var vb = viewport.getBoundingClientRect();
-  var pt = phone.getBoundingClientRect().top;
-  return Math.floor(vb.bottom - pt);
-}
-
-/** 右列手机框：顶边对齐 frame，底边与 web 卷轴预览框对齐。 */
+/**
+ * 右列手机框与 web 预览等肩：
+ * - 高度对齐 .v2-carousel__viewport
+ * - 顶边对齐 viewport 顶（底边随之对齐）
+ * - 列宽不够时退回 byWidth，并用 offset 垂直居中于预览带
+ */
 function syncPhoneFrameFromWeb() {
   var phone = $("v2-phone");
   if (!phone) return;
   var mobileCell = document.querySelector(".v2-bento__mobile");
   if (!mobileCell) return;
+  var viewport = document.querySelector(".v2-carousel__viewport");
+  if (!viewport) return;
 
   var cellW = mobileCell.clientWidth || 0;
   var cellH = mobileCell.clientHeight || 0;
@@ -124,14 +124,23 @@ function syncPhoneFrameFromWeb() {
   }
   _phoneSyncAttempts = 0;
 
-  var alignMaxH = webViewportAlignedMaxHeight(phone);
-  var byWidth = Math.floor((cellW * 16) / 9);
-  var byHeight = Math.floor(alignMaxH != null && alignMaxH > 0 ? alignMaxH : cellH - phoneCaptionReserve());
-  var target = clampPhoneHeight(Math.min(byWidth, byHeight));
-  if (target <= 0) return;
+  var vb = viewport.getBoundingClientRect();
+  var cellTop = mobileCell.getBoundingClientRect().top;
+  var carouselH = Math.floor(vb.height);
+  if (carouselH <= 0) return;
 
-  phone.style.setProperty("--v2-phone-height", target + "px");
-  phone.style.setProperty("--v2-phone-scale", String(PHONE_VISUAL_SCALE));
+  var byWidth = Math.floor((cellW * 16) / 9);
+  var visualH = clampPhoneLayoutHeight(Math.min(carouselH, byWidth));
+  if (visualH <= 0) return;
+
+  /* 顶齐预览（含 carousel lift）；列宽不足时在预览带内垂直居中 */
+  var idealOffset = Math.round(vb.top - cellTop);
+  var shortfall = Math.max(0, carouselH - visualH);
+  var offsetTop = idealOffset + Math.round(shortfall / 2);
+
+  phone.style.setProperty("--v2-phone-height", visualH + "px");
+  phone.style.setProperty("--v2-phone-offset-top", offsetTop + "px");
+  phone.style.setProperty("--v2-phone-scale", "1");
   syncPhoneCaptionWithWebFooter();
   if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
 }
@@ -141,11 +150,10 @@ function syncPhoneCaptionWithWebFooter() {
   var footer = document.querySelector(".v2-carousel__footer");
   var caption = document.querySelector(".v2-bento__mobile .v2-cell-label");
   if (!footer || !caption) return;
+  /* 先清旧 nudge，按未补偿位置算绝对偏移，避免残差迭代 */
+  caption.style.removeProperty("--v2-cell-label-nudge");
   var delta = Math.round(footer.getBoundingClientRect().top - caption.getBoundingClientRect().top);
-  if (Math.abs(delta) <= 0) {
-    caption.style.removeProperty("--v2-cell-label-nudge");
-    return;
-  }
+  if (Math.abs(delta) <= 1) return;
   caption.style.setProperty("--v2-cell-label-nudge", delta + "px");
 }
 
@@ -169,6 +177,10 @@ function ensurePhoneFrameSync() {
     if (webCell) _phoneFrameObserver.observe(webCell);
   }
   window.addEventListener("resize", schedulePhoneFrameSync);
+  /* 跨显示器 / 系统缩放变化时 inner* 可能不变，补 visualViewport */
+  if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+    window.visualViewport.addEventListener("resize", schedulePhoneFrameSync);
+  }
 }
 
 function prefersReducedMotion() {
@@ -250,7 +262,7 @@ export function renderPhone(manifest, tier) {
   });
 }
 
-/** 工作台左栏 · 新建卡 + 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
+/** 工作台左栏 · 新建卡（CTA 旁「最近 3 本」缩略图暂隐藏，改由预览下拉切换）。 */
 export function renderBenchRecent() {
   var sample = $("v2-bench-sample");
   var recentHost = $("v2-bench-recent");
@@ -262,92 +274,12 @@ export function renderBenchRecent() {
   list.querySelectorAll(".v2-bench__recent-card").forEach(function (el) {
     el.remove();
   });
+  show(recentHost, false);
+  if (left) left.classList.remove("v2-bench__left--recent");
+  if (bench) bench.classList.remove("v2-bench--recent");
 
   var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
-
-  if (!recent.length) {
-    show(sample, true);
-    show(recentHost, false);
-    if (left) left.classList.remove("v2-bench__left--recent");
-    if (bench) bench.classList.remove("v2-bench--recent");
-    syncCtaPlacement();
-    syncDemoConvertCta();
-    return;
-  }
-
-  recent.forEach(function (trip, idx) {
-    var card;
-    var isAlgorithmStale = !!trip.algorithmStale;
-
-    if (isAlgorithmStale) {
-      card = document.createElement("button");
-      card.type = "button";
-      card.className = "v2-bench__recent-card v2-bench__recent-card--action";
-      card.addEventListener("click", function () {
-        setBentoPreviewTripId(trip.tripId, { source: "bench_recent" }).then(function () {
-          renderBenchRecent();
-          syncBentoStaleBar();
-          var staleHost = $("v2-bento-stale");
-          var webCell = $("v2-web-cell");
-          var target = staleHost && !staleHost.hidden ? staleHost : webCell;
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
-      });
-    } else {
-      card = document.createElement("a");
-      card.className = "v2-bench__recent-card";
-      var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-      if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
-      card.href = href;
-    }
-
-    if (V2.bentoPreviewTripId && trip.tripId === V2.bentoPreviewTripId) {
-      card.classList.add("is-previewing");
-    }
-    var benchStale = [];
-    if (trip.longshotStale) benchStale.push(STALE_LONGSHOT);
-    if (trip.algorithmStale) benchStale.push(STALE_BADGE);
-    card.title = (trip.title || trip.tripId)
-      + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
-      + (benchStale.length ? " · " + benchStale.join(" · ") : "")
-      + (isAlgorithmStale && !trip.longshotStale ? " · " + STALE_BADGE_TIP : "")
-      + (isAlgorithmStale ? " · 点击切换预览并更新" : "");
-
-    if (trip.previewRelPath) {
-      var img = document.createElement("img");
-      img.alt = trip.title || "画册封面";
-      img.loading = idx === 0 ? "eager" : "lazy";
-      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
-      img.onerror = function () { img.remove(); };
-      card.appendChild(img);
-    }
-
-    if (trip.longshotStale || trip.algorithmStale) {
-      var stale = document.createElement("span");
-      stale.className = trip.longshotStale
-        ? "v2-bench__recent-card__stale"
-        : "v2-bench__recent-card__stale v2-bench__recent-card__stale--algo";
-      stale.textContent = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
-      if (!trip.longshotStale && trip.algorithmStale) {
-        stale.title = STALE_BADGE_TIP;
-      }
-      card.appendChild(stale);
-    }
-
-    var meta = document.createElement("div");
-    meta.className = "v2-bench__recent-card__meta";
-    var title = document.createElement("p");
-    title.className = "v2-bench__recent-card__title";
-    title.textContent = trip.title || trip.tripId;
-    meta.appendChild(title);
-    card.appendChild(meta);
-    list.appendChild(card);
-  });
-
-  show(sample, false);
-  show(recentHost, true);
-  if (left) left.classList.add("v2-bench__left--recent");
-  if (bench) bench.classList.add("v2-bench--recent");
+  show(sample, !recent.length);
   syncCtaPlacement();
   syncDemoConvertCta();
   syncBenchResumeButton();

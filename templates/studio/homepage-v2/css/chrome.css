@@ -165,19 +165,32 @@
 
 /* ── Responsive：≥1024 与 iPad 横屏 双列；窄视口交给 JS 切 Unsupported ── */
 @media (max-width: 1100px) {
-  .v2-bento__hero { padding: 12px 20px 18px; }
-  .v2-bento__title { font-size: 28px; }
-  .v2-bento__grid { grid-template-columns: minmax(0, 1.85fr) minmax(132px, 1fr); }
+  .v2-bento__hero { padding: 10px 18px 14px; }
+  .v2-bento__title { font-size: 22px; }
+  [data-headline-layout="d"] .v2-bento__headline {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "eyebrow"
+      "title"
+      "cta";
+    padding-right: 40px;
+  }
+  [data-headline-layout="d"] .v2-bento__title {
+    justify-self: start;
+    text-align: left;
+    white-space: normal;
+  }
+  .v2-bento__grid { grid-template-columns: minmax(0, 2.4fr) minmax(140px, 1fr); }
   .v2-bench {
-    flex-wrap: wrap;
-    align-items: stretch;
+    flex-wrap: nowrap;
+    align-items: center;
   }
   .v2-bench__left {
-    flex: 1 1 38%;
-    min-width: 210px;
+    flex: 0 0 auto;
+    min-width: 0;
   }
   .v2-bench--recent .v2-bench__left {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     max-width: none;
     min-width: 0;
   }
@@ -187,30 +200,30 @@
     max-height: var(--v2-bench-card-h, calc(108px * 0.7225));
   }
   .v2-bench--recent .v2-bench__quick {
-    flex: 1 1 100%;
-    border-left: none;
+    flex: 1 1 auto;
+    border-left: 1px solid var(--v2-border);
     border-top: none;
-    padding-left: 0;
+    padding-left: 14px;
     padding-top: 0;
   }
   .v2-bench__quick {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     min-width: 0;
-    border-left: none;
-    border-top: 1px solid var(--v2-border);
-    padding-left: 0;
-    padding-top: 12px;
+    border-left: 1px solid var(--v2-border);
+    border-top: none;
+    padding-left: 14px;
+    padding-top: 0;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 14px 18px;
+    align-items: center;
+    gap: 8px 12px;
   }
   .v2-bench__side {
-    flex: 1 1 200px;
-    min-width: 180px;
+    flex: 0 1 auto;
+    min-width: 0;
   }
   .v2-bench__side--prefs {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     border-top: none;
     padding-top: 0;
   }
@@ -219,7 +232,7 @@
 /* iPad 横屏（768–1023）：沿用 Bento 双列，绝不堆叠（D-07 / §10.1） */
 @media (min-width: 768px) and (max-width: 1023px) {
   .v2-bento__hero { padding: 10px 18px 16px; }
-  .v2-bento__title { font-size: 26px; }
+  .v2-bento__title { font-size: 22px; }
   .v2-bento__lead { font-size: 12px; max-width: 100%; }
   .v2-bento__grid {
     grid-template-columns: minmax(0, 1.75fr) minmax(120px, 1fr);
@@ -227,6 +240,51 @@
   }
   .v2-bento__frame { padding: 8px 12px 12px; }
   .v2-shelf__grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/*
+ * 高屏 / 外接显示器：
+ * - 中间行吃满剩余高度，预览按可用高度与宽度共同约束放大（保 16:9）
+ * - carousel 顶对齐并打包 footer，避免「我的画册」文案沉到 bench
+ * - 底栏沉到视口底部
+ */
+@media (min-height: 900px) {
+  .v2-bento__hero {
+    padding: 10px 28px 12px;
+  }
+  .v2-bento__grid {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .v2-bento__web {
+    grid-template-rows: auto minmax(0, 1fr);
+    container-type: size;
+  }
+  .v2-carousel {
+    align-self: start;
+    justify-self: start;
+    width: min(100%, calc(100cqh * 16 / 9));
+    max-width: 100%;
+  }
+  .v2-carousel__viewport {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100% - 28px);
+    height: auto;
+  }
+  .v2-bento__bench {
+    align-self: end;
+  }
+}
+
+@media (min-height: 1200px) {
+  .v2-bento__hero {
+    padding: 8px 32px 10px;
+  }
+  .v2-bento__grid {
+    /* 超高屏略增右列，保证等肩宽度跟得上更大的 16:9 */
+    grid-template-columns: minmax(0, 3fr) minmax(200px, 1.05fr);
+    --v2-web-preview-lift: 10px;
+  }
 }
 
 /* prefers-reduced-motion（§12.4 L1）：禁 Ken Burns / shimmer */
