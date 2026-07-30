@@ -182,15 +182,15 @@
   }
   .v2-bento__grid { grid-template-columns: minmax(0, 2.4fr) minmax(140px, 1fr); }
   .v2-bench {
-    flex-wrap: wrap;
-    align-items: stretch;
+    flex-wrap: nowrap;
+    align-items: center;
   }
   .v2-bench__left {
-    flex: 1 1 38%;
-    min-width: 210px;
+    flex: 0 0 auto;
+    min-width: 0;
   }
   .v2-bench--recent .v2-bench__left {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     max-width: none;
     min-width: 0;
   }
@@ -200,30 +200,30 @@
     max-height: var(--v2-bench-card-h, calc(108px * 0.7225));
   }
   .v2-bench--recent .v2-bench__quick {
-    flex: 1 1 100%;
-    border-left: none;
+    flex: 1 1 auto;
+    border-left: 1px solid var(--v2-border);
     border-top: none;
-    padding-left: 0;
+    padding-left: 14px;
     padding-top: 0;
   }
   .v2-bench__quick {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     min-width: 0;
-    border-left: none;
-    border-top: 1px solid var(--v2-border);
-    padding-left: 0;
-    padding-top: 12px;
+    border-left: 1px solid var(--v2-border);
+    border-top: none;
+    padding-left: 14px;
+    padding-top: 0;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 14px 18px;
+    align-items: center;
+    gap: 8px 12px;
   }
   .v2-bench__side {
-    flex: 1 1 200px;
-    min-width: 180px;
+    flex: 0 1 auto;
+    min-width: 0;
   }
   .v2-bench__side--prefs {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     border-top: none;
     padding-top: 0;
   }
@@ -245,6 +245,7 @@
 /*
  * 高屏 / 外接显示器：
  * - 中间行吃满剩余高度，预览按可用高度与宽度共同约束放大（保 16:9）
+ * - carousel 顶对齐并打包 footer，避免「我的画册」文案沉到 bench
  * - 底栏沉到视口底部
  */
 @media (min-height: 900px) {
@@ -255,15 +256,19 @@
     grid-template-rows: auto minmax(0, 1fr) auto;
   }
   .v2-bento__web {
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
     container-type: size;
   }
-  .v2-carousel__viewport {
+  .v2-carousel {
     align-self: start;
     justify-self: start;
     width: min(100%, calc(100cqh * 16 / 9));
     max-width: 100%;
-    max-height: 100%;
+  }
+  .v2-carousel__viewport {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100% - 28px);
     height: auto;
   }
   .v2-bento__bench {

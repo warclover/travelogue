@@ -954,7 +954,7 @@ def test_ac_hp2_bento_tab_mine(studio_server) -> None:
         )
         assert "Harness" in page.locator("#v2-bench-title").inner_text()
         assert not page.locator("#v2-bench-sample-flag").is_visible()
-        assert page.locator(".v2-bench__recent-card.is-previewing").count() >= 1
+        assert page.locator("#v2-bento-preview-select").input_value() == "kyoto-rain"
         browser.close()
 
 
@@ -1585,7 +1585,7 @@ def test_ac_hp21_10_settings_dev_section(studio_server) -> None:
 
 
 def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
-    """AC-HP21-01 · 主 CTA 文案正确且视觉等级高于 recent 缩略图。"""
+    """AC-HP21-01 · 主 CTA 文案正确且视觉等级高于设置等次级控件。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -1595,7 +1595,8 @@ def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
             """
             () => {
               const cta = document.getElementById('v2-cta');
-              const card = document.querySelector('.v2-bench__recent-card');
+              const settings = document.getElementById('v2-settings-toggle');
+              const recentHost = document.getElementById('v2-bench-recent');
               const area = (el) => {
                 if (!el) return 0;
                 const r = el.getBoundingClientRect();
@@ -1604,15 +1605,17 @@ def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
               return {
                 text: cta ? cta.textContent.trim() : '',
                 ctaArea: area(cta),
-                cardArea: area(card),
+                settingsArea: area(settings),
                 minHeight: cta ? parseFloat(getComputedStyle(cta).minHeight) : 0,
+                recentHidden: !recentHost || recentHost.hidden || recentHost.getAttribute('hidden') !== null,
               };
             }
             """
         )
         assert "开始制作我的画册" in metrics["text"]
-        assert metrics["minHeight"] >= 56
-        assert metrics["ctaArea"] > metrics["cardArea"] > 0
+        assert metrics["minHeight"] >= 44
+        assert metrics["ctaArea"] > metrics["settingsArea"] > 0
+        assert metrics["recentHidden"]
         assert _contrast_ratio(page, "#v2-cta") >= 4.5
         browser.close()
 
@@ -1699,15 +1702,6 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             "studioFixture=multi&bentoPreviewTrip=hokkaido",
         )
         _wait_visible(page, "v2-frame")
-        page.wait_for_function(
-            "() => document.querySelector('#v2-bench-recent-list .v2-bench__recent-card__stale')",
-            timeout=10_000,
-        )
-        bench_badge = page.locator(".v2-bench__recent-card__stale").first.inner_text()
-        # multi fixture · hokkaido 为 longshotStale → 「分享图需更新」；算法 stale 为「可重排」。
-        assert bench_badge in ("可重排", "分享图需更新")
-        assert "算法待更新" not in page.locator(".v2-bench").inner_text()
-
         page.locator("#v2-bento-preview-trigger").click()
         page.wait_for_function(
             "() => !document.getElementById('v2-bento-preview-listbox').hidden"
@@ -1715,6 +1709,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
         picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
         assert "分享图需更新" in picker_text or "可重排" in picker_text
         assert "算法待更新" not in picker_text
+        assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 
         page.evaluate(
             """
@@ -1726,7 +1721,8 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
         )
         shelf_badge = page.locator(".v2-shelf__stale-badge").first
         expect(shelf_badge).to_be_visible(timeout=10_000)
-        assert "可重排" in shelf_badge.inner_text()        browser.close()
+        assert "可重排" in shelf_badge.inner_text()
+        browser.close()
 
 
 def test_ac_hp21_09_carousel_controls_contrast(studio_server) -> None:

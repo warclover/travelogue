@@ -208,9 +208,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 56px;
-  min-width: 200px;
-  padding: 14px 22px;
+  min-height: 44px;
+  min-width: 180px;
+  padding: 10px 20px;
   border: none;
   border-radius: 999px;
   background-color: var(--v2-cta-bg);
@@ -723,8 +723,8 @@
 }
 .v2-bench__ghost-btn,
 .v2-bench__ghost-select {
-  min-height: 38px;
-  padding: 8px 14px;
+  min-height: 36px;
+  padding: 7px 12px;
   border-radius: 8px;
   border: 1px solid var(--v2-border);
   background: rgba(255, 255, 255, .7);
@@ -773,7 +773,8 @@
   min-height: 0;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* stale + (viewport∥footer 打包)；勿再给 footer 单独 1fr 行 */
+  grid-template-rows: auto minmax(0, 1fr);
   align-self: stretch;
   width: 100%;
   position: relative;
@@ -833,13 +834,22 @@
   width: 100%;
   justify-self: stretch;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   align-items: stretch;
   align-self: stretch;
   overflow: visible;
 }
 .v2-mobile-stack {
-  display: contents;
+  /* phone + caption 打包，跟随 web footer 贴合预览底边 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: start;
+  justify-self: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .v2-cell-label {
@@ -852,8 +862,7 @@
   color: inherit;
 }
 .v2-bento__mobile .v2-cell-label {
-  grid-row: 2;
-  align-self: end;
+  flex: 0 0 auto;
   justify-self: center;
   width: min(100%, calc(var(--v2-phone-height) * var(--v2-phone-ratio) * var(--v2-phone-scale, 1)));
   margin-top: 6px;

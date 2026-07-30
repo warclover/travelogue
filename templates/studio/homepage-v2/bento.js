@@ -150,11 +150,10 @@ function syncPhoneCaptionWithWebFooter() {
   var footer = document.querySelector(".v2-carousel__footer");
   var caption = document.querySelector(".v2-bento__mobile .v2-cell-label");
   if (!footer || !caption) return;
+  /* 先清旧 nudge，按未补偿位置算绝对偏移，避免残差迭代 */
+  caption.style.removeProperty("--v2-cell-label-nudge");
   var delta = Math.round(footer.getBoundingClientRect().top - caption.getBoundingClientRect().top);
-  if (Math.abs(delta) <= 0) {
-    caption.style.removeProperty("--v2-cell-label-nudge");
-    return;
-  }
+  if (Math.abs(delta) <= 1) return;
   caption.style.setProperty("--v2-cell-label-nudge", delta + "px");
 }
 
@@ -263,7 +262,7 @@ export function renderPhone(manifest, tier) {
   });
 }
 
-/** 工作台左栏 · 新建卡 + 最近 3 本画册卡（无「最近编辑」标 / 无张数，仅标题）。 */
+/** 工作台左栏 · 新建卡（CTA 旁「最近 3 本」缩略图暂隐藏，改由预览下拉切换）。 */
 export function renderBenchRecent() {
   var sample = $("v2-bench-sample");
   var recentHost = $("v2-bench-recent");
@@ -275,92 +274,12 @@ export function renderBenchRecent() {
   list.querySelectorAll(".v2-bench__recent-card").forEach(function (el) {
     el.remove();
   });
+  show(recentHost, false);
+  if (left) left.classList.remove("v2-bench__left--recent");
+  if (bench) bench.classList.remove("v2-bench--recent");
 
   var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
-
-  if (!recent.length) {
-    show(sample, true);
-    show(recentHost, false);
-    if (left) left.classList.remove("v2-bench__left--recent");
-    if (bench) bench.classList.remove("v2-bench--recent");
-    syncCtaPlacement();
-    syncDemoConvertCta();
-    return;
-  }
-
-  recent.forEach(function (trip, idx) {
-    var card;
-    var isAlgorithmStale = !!trip.algorithmStale;
-
-    if (isAlgorithmStale) {
-      card = document.createElement("button");
-      card.type = "button";
-      card.className = "v2-bench__recent-card v2-bench__recent-card--action";
-      card.addEventListener("click", function () {
-        setBentoPreviewTripId(trip.tripId, { source: "bench_recent" }).then(function () {
-          renderBenchRecent();
-          syncBentoStaleBar();
-          var staleHost = $("v2-bento-stale");
-          var webCell = $("v2-web-cell");
-          var target = staleHost && !staleHost.hidden ? staleHost : webCell;
-          if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
-      });
-    } else {
-      card = document.createElement("a");
-      card.className = "v2-bench__recent-card";
-      var href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-      if (trip.longshotStale) href = "/" + trip.tripId + "/index.html?focus=longshot";
-      card.href = href;
-    }
-
-    if (V2.bentoPreviewTripId && trip.tripId === V2.bentoPreviewTripId) {
-      card.classList.add("is-previewing");
-    }
-    var benchStale = [];
-    if (trip.longshotStale) benchStale.push(STALE_LONGSHOT);
-    if (trip.algorithmStale) benchStale.push(STALE_BADGE);
-    card.title = (trip.title || trip.tripId)
-      + (trip.updatedAt ? " · " + formatUpdatedAt(trip.updatedAt) : "")
-      + (benchStale.length ? " · " + benchStale.join(" · ") : "")
-      + (isAlgorithmStale && !trip.longshotStale ? " · " + STALE_BADGE_TIP : "")
-      + (isAlgorithmStale ? " · 点击切换预览并更新" : "");
-
-    if (trip.previewRelPath) {
-      var img = document.createElement("img");
-      img.alt = trip.title || "画册封面";
-      img.loading = idx === 0 ? "eager" : "lazy";
-      img.src = "/" + trip.tripId + "/" + trip.previewRelPath;
-      img.onerror = function () { img.remove(); };
-      card.appendChild(img);
-    }
-
-    if (trip.longshotStale || trip.algorithmStale) {
-      var stale = document.createElement("span");
-      stale.className = trip.longshotStale
-        ? "v2-bench__recent-card__stale"
-        : "v2-bench__recent-card__stale v2-bench__recent-card__stale--algo";
-      stale.textContent = trip.longshotStale ? STALE_LONGSHOT : STALE_BADGE;
-      if (!trip.longshotStale && trip.algorithmStale) {
-        stale.title = STALE_BADGE_TIP;
-      }
-      card.appendChild(stale);
-    }
-
-    var meta = document.createElement("div");
-    meta.className = "v2-bench__recent-card__meta";
-    var title = document.createElement("p");
-    title.className = "v2-bench__recent-card__title";
-    title.textContent = trip.title || trip.tripId;
-    meta.appendChild(title);
-    card.appendChild(meta);
-    list.appendChild(card);
-  });
-
-  show(sample, false);
-  show(recentHost, true);
-  if (left) left.classList.add("v2-bench__left--recent");
-  if (bench) bench.classList.add("v2-bench--recent");
+  show(sample, !recent.length);
   syncCtaPlacement();
   syncDemoConvertCta();
   syncBenchResumeButton();
