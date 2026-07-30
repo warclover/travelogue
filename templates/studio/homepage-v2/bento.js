@@ -80,16 +80,18 @@ export function bumpBentoMediaGeneration() {
 var _pendingPhoneManifest = null;
 var _pendingPhoneTier = "L0";
 
-function clampPhoneHeight(px) {
+/** 布局高度安全域。等肩模式下以 web 预览高度为准，不再用 980 硬顶矮一截。 */
+var PHONE_LAYOUT_MIN = 240;
+var PHONE_LAYOUT_MAX = 1600;
+var PHONE_CAPTION_GAP = 6;
+
+function clampPhoneLayoutHeight(px) {
   var v = Number(px) || 0;
   if (v <= 0) return 0;
-  if (v < 240) return 240;
-  if (v > 980) return 980;
+  if (v < PHONE_LAYOUT_MIN) return PHONE_LAYOUT_MIN;
+  if (v > PHONE_LAYOUT_MAX) return PHONE_LAYOUT_MAX;
   return Math.round(v);
 }
-
-var PHONE_VISUAL_SCALE = 1;
-var PHONE_CAPTION_GAP = 6;
 
 function phoneCaptionReserve() {
   var caption = document.querySelector(".v2-bento__mobile .v2-cell-label");
@@ -97,21 +99,19 @@ function phoneCaptionReserve() {
   return Math.ceil(caption.getBoundingClientRect().height) + PHONE_CAPTION_GAP;
 }
 
-/** web 卷轴预览框底边 → 手机框顶边，用于底边对齐。 */
-function webViewportAlignedMaxHeight(phone) {
-  var viewport = document.querySelector(".v2-carousel__viewport");
-  if (!viewport || !phone) return null;
-  var vb = viewport.getBoundingClientRect();
-  var pt = phone.getBoundingClientRect().top;
-  return Math.floor(vb.bottom - pt);
-}
-
-/** 右列手机框：顶边对齐 frame，底边与 web 卷轴预览框对齐。 */
+/**
+ * 右列手机框与 web 预览等肩：
+ * - 高度对齐 .v2-carousel__viewport
+ * - 顶边对齐 viewport 顶（底边随之对齐）
+ * - 列宽不够时退回 byWidth，并用 offset 垂直居中于预览带
+ */
 function syncPhoneFrameFromWeb() {
   var phone = $("v2-phone");
   if (!phone) return;
   var mobileCell = document.querySelector(".v2-bento__mobile");
   if (!mobileCell) return;
+  var viewport = document.querySelector(".v2-carousel__viewport");
+  if (!viewport) return;
 
   var cellW = mobileCell.clientWidth || 0;
   var cellH = mobileCell.clientHeight || 0;
@@ -124,14 +124,23 @@ function syncPhoneFrameFromWeb() {
   }
   _phoneSyncAttempts = 0;
 
-  var alignMaxH = webViewportAlignedMaxHeight(phone);
-  var byWidth = Math.floor((cellW * 16) / 9);
-  var byHeight = Math.floor(alignMaxH != null && alignMaxH > 0 ? alignMaxH : cellH - phoneCaptionReserve());
-  var target = clampPhoneHeight(Math.min(byWidth, byHeight));
-  if (target <= 0) return;
+  var vb = viewport.getBoundingClientRect();
+  var cellTop = mobileCell.getBoundingClientRect().top;
+  var carouselH = Math.floor(vb.height);
+  if (carouselH <= 0) return;
 
-  phone.style.setProperty("--v2-phone-height", target + "px");
-  phone.style.setProperty("--v2-phone-scale", String(PHONE_VISUAL_SCALE));
+  var byWidth = Math.floor((cellW * 16) / 9);
+  var visualH = clampPhoneLayoutHeight(Math.min(carouselH, byWidth));
+  if (visualH <= 0) return;
+
+  /* 顶齐预览；若因列宽被迫更矮，则在预览带内垂直居中，避免「一头沉」 */
+  var idealOffset = Math.round(vb.top - cellTop);
+  var shortfall = Math.max(0, carouselH - visualH);
+  var offsetTop = Math.max(0, idealOffset + Math.round(shortfall / 2));
+
+  phone.style.setProperty("--v2-phone-height", visualH + "px");
+  phone.style.setProperty("--v2-phone-offset-top", offsetTop + "px");
+  phone.style.setProperty("--v2-phone-scale", "1");
   syncPhoneCaptionWithWebFooter();
   if (_phoneStripApi && _phoneStripApi.relayout) _phoneStripApi.relayout();
 }
@@ -169,6 +178,10 @@ function ensurePhoneFrameSync() {
     if (webCell) _phoneFrameObserver.observe(webCell);
   }
   window.addEventListener("resize", schedulePhoneFrameSync);
+  /* 跨显示器 / 系统缩放变化时 inner* 可能不变，补 visualViewport */
+  if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
+    window.visualViewport.addEventListener("resize", schedulePhoneFrameSync);
+  }
 }
 
 function prefersReducedMotion() {

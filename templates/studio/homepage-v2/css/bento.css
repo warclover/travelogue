@@ -15,6 +15,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
+  max-width: var(--v2-content-max, none);
+  margin-inline: auto;
   padding: 12px 32px 20px;
   box-sizing: border-box;
   overflow-x: clip;
@@ -746,7 +749,8 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(148px, 1fr);
+  /* 右列略增，确保 9:16 手机可与 16:9 web 预览等高 */
+  grid-template-columns: minmax(0, 1.9fr) minmax(168px, 1.05fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 8px 14px;
   align-items: stretch;
@@ -815,6 +819,10 @@
   grid-row: 1 / 3;
   min-height: 0;
   min-width: 0;
+  /* 允许长到与 web 预览等高所需的 9:16 宽度 */
+  max-width: min(100%, 720px);
+  width: 100%;
+  justify-self: start;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   align-items: stretch;

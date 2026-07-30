@@ -229,6 +229,26 @@
   .v2-shelf__grid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/*
+ * 高屏 / 外接显示器：
+ * - 预览区顶对齐紧贴标题（避免 1fr 深井）
+ * - 底栏沉到视口底部，首屏纵向拉满
+ */
+@media (min-height: 1000px) {
+  .v2-bento__grid {
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .v2-bento__web {
+    grid-template-rows: auto auto auto;
+  }
+  .v2-carousel__viewport {
+    align-self: start;
+  }
+  .v2-bento__bench {
+    align-self: end;
+  }
+}
+
 /* prefers-reduced-motion（§12.4 L1）：禁 Ken Burns / shimmer */
 @media (prefers-reduced-motion: reduce) {
   .v2-shared__bg.is-kenburns { animation: none; }

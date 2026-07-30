@@ -42,6 +42,10 @@
   --v2-carousel-ph-end: #ebe4da;
   --v2-phone-shell-a: #33485c;
   --v2-phone-shell-b: #243848;
+  /* 手机框布局安全顶；等肩高度由 JS 跟 web 预览 */
+  --v2-phone-layout-max: 1600px;
+  /* 首屏默认拉满视口宽；仅保留左右 padding */
+  --v2-content-max: none;
   --v2-shadow-soft: rgba(45, 86, 120, .08);
   --v2-shadow-mid: rgba(45, 86, 120, .12);
   --v2-shadow-strong: rgba(45, 86, 120, .18);
