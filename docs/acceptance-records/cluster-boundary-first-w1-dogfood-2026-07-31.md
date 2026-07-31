@@ -111,3 +111,16 @@
 | coarse_segments | 注明 atom ⊆ segment |
 
 仍缓：§6.3 三册抽检、§6.1 指标产品化、W3 look、开 PR（本机无 gh）。
+
+---
+
+## 8. 弱 SSG 册 time_bridge（demo-d6697c8dca）
+
+**问题**：双侧无 `shotGroupId` 时旧逻辑一律 `shot_group_mismatch` → 全单张（多槽≈0.03）。
+
+**修复**：`missingShotGroupMode: time_bridge`（默认）——双侧缺 sg 时改靠 gap + 半硬 sc；有/无混装仍硬拒；双侧均有 sg 仍必须相同。
+
+| 册 | 改前多槽占比 | 改后 |
+|----|-------------|------|
+| demo-d6697c8dca | ~0.03 | **~0.57** |
+| demo-49cbe46479 | ~0.48–0.50 | 仍多槽为主；#1–#10 污染/灾难过；**#11 已知残差**（同 sg 近时换装）可再现 |

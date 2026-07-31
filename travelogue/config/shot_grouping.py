@@ -47,6 +47,10 @@ class AtomConfig:
     strong_template_span_soft_seconds: float = 900.0
     # Observe-only floor vs baseline multi-slot share (never auto-widens atom).
     mosaic_share_floor_observe: float = 0.70
+    # Both sides missing shotGroupId:
+    #   time_bridge = still join on gap + half-hard sc (weak-SSG albums)
+    #   reject = old fail-closed (every missing-sg pair becomes its own atom)
+    missing_shot_group_mode: str = "time_bridge"
 
 
 _POLICY_RESOLVE_FALLBACKS = 0
@@ -174,7 +178,18 @@ def _atom_from_dict(raw: dict[str, Any] | None) -> AtomConfig:
             "mosaicShareFloorObserve",
             0.70,
         ),
+        missing_shot_group_mode=_missing_sg_mode_from_dict(raw),
     )
+
+
+def _missing_sg_mode_from_dict(raw: dict[str, Any]) -> str:
+    mode = cfg_str(
+        raw, "missing_shot_group_mode", "missingShotGroupMode", "time_bridge"
+    )
+    mode_n = str(mode or "time_bridge").strip().lower()
+    if mode_n not in ("time_bridge", "reject"):
+        return "time_bridge"
+    return mode_n
 
 
 def _mosaic_from_dict(raw: dict[str, Any]) -> ShotGroupingMosaicConfig:

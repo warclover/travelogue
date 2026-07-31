@@ -36,11 +36,29 @@ def adjacent_compatible(
     cur: dict[str, Any],
     policy: AtomConfig,
 ) -> tuple[bool, str | None]:
-    """Whether ``cur`` may continue the atom ending at ``prev``."""
+    """Whether ``cur`` may continue the atom ending at ``prev``.
+
+    Shot-group rule:
+    - both present → must match
+    - one present / one absent → mismatch (do not mix labeled with unlabeled)
+    - both absent → ``missing_shot_group_mode``:
+        ``time_bridge`` (default) continues with gap + half-hard sc;
+        ``reject`` keeps fail-closed singleton atoms
+    """
     sg_a = prev.get("shotGroupId")
     sg_b = cur.get("shotGroupId")
-    if not sg_a or not sg_b or str(sg_a) != str(sg_b):
-        return False, "shot_group_mismatch"
+    has_a = bool(sg_a)
+    has_b = bool(sg_b)
+    if has_a and has_b:
+        if str(sg_a) != str(sg_b):
+            return False, "shot_group_mismatch"
+    elif has_a != has_b:
+        return False, "shot_group_present_absent_mix"
+    else:
+        # Both missing shotGroupId.
+        mode_sg = (policy.missing_shot_group_mode or "time_bridge").lower()
+        if mode_sg == "reject":
+            return False, "shot_group_missing"
 
     ta = parse_taken_ts(prev)
     tb = parse_taken_ts(cur)

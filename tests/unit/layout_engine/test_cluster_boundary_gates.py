@@ -126,3 +126,54 @@ def test_attach_consolidate_respects_atom_boundary() -> None:
     )
     assert len(out) == 2
     assert all(s.get("patternId") == "screen-portrait-1" for s in out)
+
+
+def test_missing_shot_group_time_bridge_allows_near_pair() -> None:
+    """Weak-SSG albums: both missing shotGroupId → join on time (+ half-hard sc)."""
+    from travelogue.layout_engine.planner.scene_atoms import adjacent_compatible
+
+    policy = AtomConfig(enabled=True, missing_shot_group_mode="time_bridge")
+    base = {"sceneClusterId": -1, "takenAt": "2015-04-27T10:00:00Z"}
+    ok, _ = adjacent_compatible(
+        {**base},
+        {**base, "takenAt": "2015-04-27T10:05:00Z"},
+        policy,
+    )
+    assert ok
+    ok, reason = adjacent_compatible(
+        {**base},
+        {**base, "takenAt": "2015-04-27T10:20:00Z"},  # >600s
+        policy,
+    )
+    assert not ok
+    assert reason == "atom_gap"
+
+
+def test_missing_shot_group_reject_mode_still_fail_closed() -> None:
+    from travelogue.layout_engine.planner.scene_atoms import adjacent_compatible
+
+    policy = AtomConfig(enabled=True, missing_shot_group_mode="reject")
+    ok, reason = adjacent_compatible(
+        {"sceneClusterId": -1, "takenAt": "2015-04-27T10:00:00Z"},
+        {"sceneClusterId": -1, "takenAt": "2015-04-27T10:01:00Z"},
+        policy,
+    )
+    assert not ok
+    assert reason == "shot_group_missing"
+
+
+def test_shot_group_present_absent_mix_hard_reject() -> None:
+    from travelogue.layout_engine.planner.scene_atoms import adjacent_compatible
+
+    policy = AtomConfig(enabled=True, missing_shot_group_mode="time_bridge")
+    ok, reason = adjacent_compatible(
+        {
+            "shotGroupId": "sg-1",
+            "sceneClusterId": -1,
+            "takenAt": "2015-04-27T10:00:00Z",
+        },
+        {"sceneClusterId": -1, "takenAt": "2015-04-27T10:01:00Z"},
+        policy,
+    )
+    assert not ok
+    assert reason == "shot_group_present_absent_mix"
