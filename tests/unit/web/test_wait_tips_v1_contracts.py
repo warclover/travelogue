@@ -19,15 +19,15 @@ def _read(path: Path) -> str:
 
 def test_wait_tips_six_cards_match_prd_section4() -> None:
     copy = _read(COPY_JS)
-    assert 'COPY_VERSION = "0.2.0"' in copy
+    assert 'COPY_VERSION = "0.2.1"' in copy
     assert 'id: "WT-01"' in copy
     assert 'id: "WT-06"' in copy
-    assert "可翻的卷轴，可发的长图" in copy
+    assert "可翻的画册，可发的长图" in copy
     assert "回忆，只放在你身边" in copy
     assert "分章配文排版，交给它" in copy
-    assert "先翻卷轴，再存长图" in copy
+    assert "先看画册，再存长图" in copy
     assert "没有照片？先用示例" in copy
-    assert "一趟旅行，一个文件夹" in copy
+    assert "一本画册，一个文件夹" in copy
     # WT-02 禁止功能说明式标题
     assert "照片留在本机" not in copy
     # 禁区

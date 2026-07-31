@@ -81,7 +81,7 @@ V2_HOME_MARKERS = (
     "v2-success-details",
     "v2-wizard-photo-mode-recommended",
     "v2-wizard-photo-mode-keep-all",
-    "打开卷轴预览",
+    "打开画册预览",
     # M20 · 设置 Popover（手风琴五区 · 导入与分析 · D-DLLM-03 AI zone）
     "v2-settings-toggle",
     "v2-settings-popover",

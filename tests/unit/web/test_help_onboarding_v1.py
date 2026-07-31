@@ -49,7 +49,7 @@ def test_first_success_scheme_a() -> None:
     assert 'v2-success-next-hint' in html
     assert "画册已做好，可预览与导出" in html
     # 主 CTA 不再按 quick_share 切成「保存长图」
-    assert '_successMode === "fine_craft" ? "打开卷轴预览' not in fs
+    assert '_successMode === "fine_craft" ? "打开画册预览' not in fs
     assert 'open.textContent = _successMode === "fine_craft"' not in fs
     assert "help_funnel_skip_preview" in fs
 
@@ -80,7 +80,7 @@ def test_task_dock_success_saved_confirm() -> None:
 def test_import_folder_scaffold_markers() -> None:
     html = HOME_HTML.read_text(encoding="utf-8")
     assert "不知道选哪个文件夹？" in html
-    assert "同一次旅行放同一文件夹（50–100 张最佳）" in html
+    assert "同一次画册放同一文件夹（50–100 张最佳）" in html
     assert "手机照片需先传到电脑" in html
     assert "每个文件夹会生成一本" in html
     assert "试试用自己的照片做一篇" in html

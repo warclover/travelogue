@@ -128,7 +128,7 @@ function updateCountdownLabel() {
     return;
   }
   el.hidden = false;
-  el.textContent = _countdownLeft + " 秒后打开卷轴预览…";
+  el.textContent = _countdownLeft + " 秒后打开画册预览…";
 }
 
 function hasUserTrips() {

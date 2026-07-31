@@ -41,11 +41,11 @@ export var HELP_COPY = {
   longshotTip:
     "验货没问题就点『长图』，生成可发微信的长图",
   longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
-  openPreviewCta: "打开卷轴预览 →",
+  openPreviewCta: "打开画册预览 →",
   saveLongshotSecondary: "保存长图",
   importFolderSummary: "不知道选哪个文件夹？",
   importFolderPoints: [
-    "同一次旅行放同一文件夹（50–100 张最佳）",
+    "同一次画册放同一文件夹（50–100 张最佳）",
     "Day1/Day2 子夹：合并导入或分两次导入（每次一本新画册）",
     "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
     "手机照片需先传到电脑",
@@ -60,7 +60,7 @@ export var HELP_COPY = {
   ],
   demoConvertCta: "试试用自己的照片做一篇 →",
   /** FE-FTUE-08 · FirstSuccess 转化句（PRD §3.2） */
-  ftueConvertHint: "下一步可用自己的旅行照片再做一本",
+  ftueConvertHint: "下一步可用自己的画册照片再做一本",
   platformPickTip:
     "会按平台切成多张；页脚有顺序。失败可改回微信群长图",
   bookendsPickTip: "点下方缩略图，即可更换封面或封底",
@@ -108,7 +108,7 @@ export var HELP_COPY = {
       id: "H0",
       title: "默认这一趟做了什么",
       body: [
-        "选好一次旅行的相册，即可在本机完成分章、排版，并导出适合发群的竖版长图。",
+        "选好一次画册的相册，即可在本机完成分章、排版，并导出适合发群的竖版长图。",
         "预览里点文字即可改；导出可选纯照片，照片永远是主角。",
         "默认不会：打断你先确认章节、打开实验排版、把照片上传到云端",
         "可选常用设置：行程识别、场景分析、导入时复制源文件；实验选项在设置里默认折叠",
@@ -118,7 +118,7 @@ export var HELP_COPY = {
       id: "H1",
       title: "怎么选照片文件夹",
       body: [
-        "同一次旅行放同一文件夹（50–100 张最佳）",
+        "同一次画册放同一文件夹（50–100 张最佳）",
         "Day1/Day2 子夹：合并导入或分两次导入（每次一本新画册）",
         "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
         "手机照片需先传到电脑",

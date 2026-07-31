@@ -56,7 +56,7 @@ def test_first_success_ftue_convert_hint() -> None:
     help_js = (STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
     fs = (STUDIO / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
     assert "ftueConvertHint" in help_js
-    assert "下一步可用自己的旅行照片再做一本" in help_js
+    assert "下一步可用自己的画册照片再做一本" in help_js
     assert "ftueConvertHint" in fs
 
 

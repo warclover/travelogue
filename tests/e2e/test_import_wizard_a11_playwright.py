@@ -128,7 +128,7 @@ def test_ac_a1_15_first_tip_once(wizard_server) -> None:
         _wait_visible(page, "v2-wizard-root")
         tip = page.locator("#v2-wizard-first-tip")
         assert tip.is_visible()
-        assert "选一次旅行的文件夹即可" in tip.inner_text()
+        assert "选一次画册的文件夹即可" in tip.inner_text()
         page.locator("#v2-wizard-first-tip-dismiss").click()
         assert tip.is_hidden()
         page.locator("#v2-wizard-close-pick").click()

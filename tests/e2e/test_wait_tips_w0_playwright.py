@@ -73,7 +73,7 @@ def test_ac_wt_01_tips_appear_under_stage_after_2s(wizard_server) -> None:
         _open_importing_with_tips(page, wizard_server["base"])
         tips = page.locator("#v2-wait-tips")
         assert tips.is_visible()
-        assert "可翻的卷轴" in tips.locator(".v2-wait-tips__title").inner_text()
+        assert "可翻的画册" in tips.locator(".v2-wait-tips__title").inner_text()
         order_ok = page.evaluate(
             """() => {
               const panel = document.querySelector('.v2-import-panel');
@@ -98,7 +98,7 @@ def test_ac_wt_02_manual_next_changes_card(wizard_server) -> None:
         page = browser.new_page(viewport={"width": 1440, "height": 900})
         _open_importing_with_tips(page, wizard_server["base"])
         title = page.locator(".v2-wait-tips__title")
-        assert "可翻的卷轴" in title.inner_text()
+        assert "可翻的画册" in title.inner_text()
         page.locator('#v2-wait-tips button[aria-label="下一张"]').click()
         page.wait_for_function(
             """() => {
@@ -141,9 +141,9 @@ def test_ac_wt_08_reduced_motion_no_auto_advance(wizard_server) -> None:
         page.emulate_media(reduced_motion="reduce")
         _open_importing_with_tips(page, wizard_server["base"])
         title = page.locator(".v2-wait-tips__title").inner_text()
-        assert "可翻的卷轴" in title
+        assert "可翻的画册" in title
         page.wait_for_timeout(3500)
-        assert "可翻的卷轴" in page.locator(".v2-wait-tips__title").inner_text()
+        assert "可翻的画册" in page.locator(".v2-wait-tips__title").inner_text()
         browser.close()
 
 

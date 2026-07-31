@@ -105,7 +105,7 @@ export function openLightbox(payload) {
   } else {
     buildScrollContent(scroll, V2.manifest);
     if (caption) {
-      caption.textContent = (isUser ? "卷轴预览 · " : "完整卷轴 · 只读 · ") + title;
+      caption.textContent = (isUser ? "画册预览 · " : "完整画册 · 只读 · ") + title;
     }
   }
 
