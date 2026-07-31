@@ -42,7 +42,7 @@ def test_resolve_policy_from_app_like_object() -> None:
     app = type("App", (), {"shot_grouping": ShotGroupingConfig()})()
     policy = resolve_shot_group_mosaic_policy(app)
     assert policy.cross_group_hard_reject is True
-    assert policy.atom.enabled is False
+    assert policy.atom.enabled is True
 
 
 def test_atom_config_from_dict() -> None:

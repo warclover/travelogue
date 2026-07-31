@@ -1,6 +1,6 @@
-# Cluster-Boundary-First V1 · dogfood snippet (PLAN 已审定稿)
-# Merge into local config.yaml under existing ``shotGrouping`` (camelCase preferred by this repo).
-# W1: keep tri-col equal experimental SKUs OFF while validating boundaries.
+# Cluster-Boundary-First V1 · atom defaults (also product default as of merge)
+# Merge into local config.yaml under existing ``shotGrouping`` if you need overrides.
+# Product default in code: atom.enabled=true. Set enabled=false to roll back.
 
 shotGrouping:
   enabled: true
@@ -19,7 +19,7 @@ shotGrouping:
       strongTemplateSpanSoftSeconds: 900
       mosaicShareFloorObserve: 0.70  # 多槽占比观察护栏（不自动放宽边界）
 
-# Optional: isolate template experiments during W1 dogfood
+# Optional: isolate template experiments during dogfood
 # mosaic:
 #   template_experiments:
 #     enabled: true

@@ -31,10 +31,11 @@ class ShotGroupingLookConfig:
 class AtomConfig:
     """Cluster-Boundary-First · Scene Atom (PLAN V1 已审定稿).
 
-    Product-safe default: ``enabled=False``. Dogfood / cohort turns it on.
+    Product default: ``enabled=True`` (全站边界门). Set ``enabled=False`` to
+    roll back to pre-atom packing for a cohort / emergency.
     """
 
-    enabled: bool = False
+    enabled: bool = True
     max_gap_seconds: float = 600.0
     max_window_span_seconds: float = 7200.0
     # compatible = 半硬 sc（两侧皆有效 id 才要求相同；-1 不与非 -1 混）
@@ -153,7 +154,7 @@ def _atom_from_dict(raw: dict[str, Any] | None) -> AtomConfig:
         except (TypeError, ValueError):
             strong_span = None
     return AtomConfig(
-        enabled=cfg_bool(raw, "enabled", "enabled", False),
+        enabled=cfg_bool(raw, "enabled", "enabled", True),
         max_gap_seconds=cfg_float(raw, "max_gap_seconds", "maxGapSeconds", 600.0),
         max_window_span_seconds=cfg_float(
             raw, "max_window_span_seconds", "maxWindowSpanSeconds", 7200.0
