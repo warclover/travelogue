@@ -19,8 +19,15 @@ def build_legacy_screen(
     burst_seconds: float = 12.0,
     median_sharp: float | None = None,
     trip_total: int = 0,
+    app_cfg=None,
+    atom_policy=None,
 ) -> dict | None:
-    """Build one legacy planner screen for a fixed asset window (no chapter mutation)."""
+    """Build one legacy planner screen for a fixed asset window (no chapter mutation).
+
+    PLAN P1 · multi-slot legacy screens must pass the same Scene Atom gate.
+    """
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
     from travelogue.layout_engine.planner.screen_planner import (
         MIN_TRIP_PHOTOS_FOR_MOSAIC,
         _can_mixed_p1_l2,
@@ -33,6 +40,13 @@ def build_legacy_screen(
         _make_portrait_grid8_screen,
         _make_screen,
     )
+
+    if len(window) >= 2:
+        policy = atom_policy
+        if policy is None:
+            policy = resolve_shot_group_mosaic_policy(app_cfg).atom
+        if window_violates_atom(list(window), assets_map, policy):
+            return None
 
     burst = burst_seconds
 
@@ -192,6 +206,7 @@ def append_legacy_window(
         burst_seconds=ctx.mix_gap,
         median_sharp=ctx.med_sharp,
         trip_total=ctx.trip_total,
+        app_cfg=ctx.app_config,
     )
     if not screen:
         return False

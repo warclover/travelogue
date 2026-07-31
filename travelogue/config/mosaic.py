@@ -254,6 +254,8 @@ class MosaicConfig:
             "crop_risk_penalty": 0.25,
             "whitespace_penalty": 0.20,
             "aspect_fit": 0.15,
+            # Cluster-Boundary-First W1 soft (category jump; hard gate is separate)
+            "category_jump_soft": 0.20,
         }
     )
     # LSE W3b capability flags (set via layout_engine.adapter mosaic_config_from_pack)

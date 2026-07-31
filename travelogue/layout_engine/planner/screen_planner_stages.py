@@ -386,11 +386,17 @@ def append_screen(ctx: ChapterPlanContext, screen: dict) -> None:
 def try_mixed_portrait_landscape(
     ctx: ChapterPlanContext, portrait_id: str, l1: str, l2: str
 ) -> bool:
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
     from travelogue.layout_engine.planner.screen_planner import (
         _can_mixed_p1_l2,
         _make_mixed_portrait_landscape_screen,
     )
 
+    ids = [portrait_id, l1, l2]
+    atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
+    if window_violates_atom(ids, ctx.assets_map, atom_policy):
+        return False
     if not _can_mixed_p1_l2(
         portrait_id, [l1, l2], ctx.aspects, ctx.assets_map, burst_seconds=ctx.mix_gap
     ):
@@ -411,11 +417,18 @@ def try_mixed_portrait_landscape(
 
 def try_mixed_1l1p(ctx: ChapterPlanContext, portrait_id: str, landscape_id: str) -> bool:
     """Emit mixed 1P+1L when picker admits; False ⇒ caller keeps split path."""
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
     from travelogue.layout_engine.planner.screen_planner import (
         _can_mixed_1l1p,
         _make_mixed_1l1p_screen,
     )
 
+    atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
+    if window_violates_atom(
+        [portrait_id, landscape_id], ctx.assets_map, atom_policy
+    ):
+        return False
     if not _can_mixed_1l1p(
         portrait_id,
         landscape_id,

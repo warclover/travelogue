@@ -65,6 +65,21 @@ def _focal_near_edge(asset: dict, margin: float = FOCAL_EDGE_MARGIN) -> bool:
     return bool(x < margin or x > 1.0 - margin or y < margin or y > 1.0 - margin)
 
 
+def _category_jump_soft_penalty(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> float:
+    """W1 soft · semantic category jumps (never hard-reject here)."""
+    if len(asset_ids) < 2:
+        return 0.0
+    from travelogue.layout_engine.planner.scene_atoms import window_category_jump_count
+
+    jumps = window_category_jump_count(asset_ids, assets_by_id)
+    if jumps <= 0:
+        return 0.0
+    return min(0.45, 0.12 * float(jumps))
+
+
 def _face_crop_penalty(screen: dict, assets_by_id: dict[str, dict]) -> float:
     pen = 0.0
     for sl in screen.get("slots") or []:
@@ -428,6 +443,7 @@ def score_candidate(
             ),
             _near_scene_clone_penalty(pattern_id_early, asset_ids, assets_by_id),
         ),
+        "category_jump_soft": _category_jump_soft_penalty(asset_ids, assets_by_id),
         "hero_narrow_tiles": _hero_narrow_tile_penalty(screen, asset_ids, aspects, cfg=cfg),
         "hero_slot_aspect": _hero_slot_aspect_penalty(screen, aspects, cfg=cfg),
         "main_ar_ineligible": _main_ar_penalty(screen, assets_by_id, cfg=cfg),

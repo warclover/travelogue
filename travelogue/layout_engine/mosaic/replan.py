@@ -139,6 +139,7 @@ def replan_screen(
             burst_seconds=burst_seconds,
             median_sharp=median_sharp,
             trip_total=trip_photo_total,
+            app_cfg=None,
         )
         reason = "legacy" if new_screen else "legacy_failed"
         rank = 0

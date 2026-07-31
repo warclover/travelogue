@@ -247,3 +247,21 @@ def test_prefer_window_sizes_for_atom_exact_and_no_orphan() -> None:
     ordered = prefer_window_sizes_for_atom([5, 4, 6], 8)
     assert ordered[0] == 4  # leave 4 packable
     assert 5 in ordered  # still attempted later
+
+
+def test_sort_ids_by_taken_at_repairs_display_shuffle() -> None:
+    from travelogue.layout_engine.planner.scene_atoms import sort_ids_by_taken_at
+
+    assets = {
+        "a": {"takenAt": "2015-04-29T08:29:02Z"},
+        "b": {"takenAt": "2015-04-29T08:26:46Z"},
+        "c": {"takenAt": "2015-04-29T08:27:55Z"},
+    }
+    # Display order shuffled like #10 (156 before 154/155).
+    assert sort_ids_by_taken_at(["a", "b", "c"], assets) == ["b", "c", "a"]
+
+
+def test_beach_series_page_packs_after_chrono_sort() -> None:
+    """#10-shaped: 9 in-atom portraits → 3+3+3 after takenAt sort."""
+    assert pack_atom_page_sizes(9) == [3, 3, 3]
+    assert pack_atom_page_sizes(8) == [3, 3, 2]

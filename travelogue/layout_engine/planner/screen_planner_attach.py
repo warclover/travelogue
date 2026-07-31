@@ -176,9 +176,17 @@ def _consolidate_adjacent_portrait_singles(
     trip: dict | None = None,
     cfg=None,
 ) -> list[dict]:
-    """Late chapter: merge consecutive portrait-1/tall-1 into portrait-2 family."""
+    """Late chapter: merge consecutive portrait-1/tall-1 into portrait-2 family.
+
+    PLAN P1-4 · when Scene Atom is on, refuse cross-atom merges unless
+    ``allow_tail_cross_atom`` is explicitly true.
+    """
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
     from travelogue.layout_engine.planner.screen_planner import _make_portrait_2_screen
 
+    assets_map = assets_map or {}
+    atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
     single = frozenset({"screen-portrait-1", "screen-tall-1"})
     out: list[dict] = []
     i = 0
@@ -193,6 +201,14 @@ def _consolidate_adjacent_portrait_singles(
                 slots2 = nxt.get("slots") or []
                 if len(slots1) == 1 and len(slots2) == 1:
                     aids = [slots1[0]["assetId"], slots2[0]["assetId"]]
+                    if (
+                        atom_policy.enabled
+                        and not atom_policy.allow_tail_cross_atom
+                        and window_violates_atom(aids, assets_map, atom_policy)
+                    ):
+                        out.append(sc)
+                        i += 1
+                        continue
                     out.append(
                         _make_portrait_2_screen(
                             aids,

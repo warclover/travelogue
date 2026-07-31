@@ -141,6 +141,43 @@ def max_prefix_in_atom(
     return n
 
 
+def sort_ids_by_taken_at(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> list[str]:
+    """Stable chronological order for page packs (display order may shuffle)."""
+
+    def _key(aid: str) -> tuple[float, str]:
+        t = parse_taken_ts(assets_by_id.get(aid) or {})
+        return (t if t is not None else 0.0, aid)
+
+    return sorted(asset_ids, key=_key)
+
+
+def window_category_jump_count(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> int:
+    """Count semantic category changes along takenAt order (W1 soft signal)."""
+    if len(asset_ids) < 2:
+        return 0
+
+    def _sort_key(aid: str) -> tuple[float, str]:
+        t = parse_taken_ts(assets_by_id.get(aid) or {})
+        return (t if t is not None else 0.0, aid)
+
+    ordered = sorted(asset_ids, key=_sort_key)
+    jumps = 0
+    prev_cat: str | None = None
+    for aid in ordered:
+        cat = _semantic_category(assets_by_id.get(aid) or {})
+        if prev_cat and cat and cat != prev_cat:
+            jumps += 1
+        if cat:
+            prev_cat = cat
+    return jumps
+
+
 def split_into_atoms(
     asset_ids: list[str],
     assets_by_id: dict[str, dict],

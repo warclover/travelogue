@@ -8,6 +8,8 @@ from typing import Any
 from travelogue.config._common import TriState, normalize_tri_state
 from travelogue.config_helpers import cfg_bool, cfg_float, cfg_int, cfg_str
 
+_UNSET = object()
+
 
 @dataclass
 class ShotGroupingSceneConfig:
@@ -40,6 +42,33 @@ class AtomConfig:
     scene_cluster_mode: str = "compatible"
     category_jump_is_hard: bool = False
     allow_tail_cross_atom: bool = False
+    # W3 scarce-template admission (null = no hard span gate; soft for scoring later)
+    strong_template_max_span_seconds: float | None = None
+    strong_template_span_soft_seconds: float = 900.0
+    # Observe-only floor vs baseline multi-slot share (never auto-widens atom).
+    mosaic_share_floor_observe: float = 0.70
+
+
+_POLICY_RESOLVE_FALLBACKS = 0
+
+
+def policy_resolve_fallback_count() -> int:
+    """P0-2 · how often resolve fell back to defaults (fail-loud counter)."""
+    return int(_POLICY_RESOLVE_FALLBACKS)
+
+
+def reset_policy_resolve_fallback_count() -> None:
+    global _POLICY_RESOLVE_FALLBACKS
+    _POLICY_RESOLVE_FALLBACKS = 0
+
+
+def _note_policy_resolve_fallback(message: str, *, warn: bool) -> None:
+    global _POLICY_RESOLVE_FALLBACKS
+    _POLICY_RESOLVE_FALLBACKS += 1
+    if warn:
+        import logging
+
+        logging.getLogger(__name__).warning("%s (count=%s)", message, _POLICY_RESOLVE_FALLBACKS)
 
 
 @dataclass
@@ -109,6 +138,16 @@ def _atom_from_dict(raw: dict[str, Any] | None) -> AtomConfig:
     mode_n = str(mode or "compatible").strip().lower()
     if mode_n not in ("compatible", "force_same", "off"):
         mode_n = "compatible"
+    strong_span_raw = raw.get("strong_template_max_span_seconds", raw.get("strongTemplateMaxSpanSeconds", _UNSET))
+    if strong_span_raw is _UNSET:
+        strong_span: float | None = None
+    elif strong_span_raw is None:
+        strong_span = None
+    else:
+        try:
+            strong_span = float(strong_span_raw)
+        except (TypeError, ValueError):
+            strong_span = None
     return AtomConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", False),
         max_gap_seconds=cfg_float(raw, "max_gap_seconds", "maxGapSeconds", 600.0),
@@ -121,6 +160,19 @@ def _atom_from_dict(raw: dict[str, Any] | None) -> AtomConfig:
         ),
         allow_tail_cross_atom=cfg_bool(
             raw, "allow_tail_cross_atom", "allowTailCrossAtom", False
+        ),
+        strong_template_max_span_seconds=strong_span,
+        strong_template_span_soft_seconds=cfg_float(
+            raw,
+            "strong_template_span_soft_seconds",
+            "strongTemplateSpanSoftSeconds",
+            900.0,
+        ),
+        mosaic_share_floor_observe=cfg_float(
+            raw,
+            "mosaic_share_floor_observe",
+            "mosaicShareFloorObserve",
+            0.70,
         ),
     )
 
@@ -148,13 +200,16 @@ def _mosaic_from_dict(raw: dict[str, Any]) -> ShotGroupingMosaicConfig:
 def resolve_shot_group_mosaic_policy(
     app_cfg: Any | None = None,
     *,
-    warn_if_missing: bool = False,
+    warn_if_missing: bool = True,
 ) -> ShotGroupMosaicPolicy:
     """Resolve SSG mosaic + atom policy from AppConfig (never MosaicConfig).
 
     PLAN-CLUSTER-BOUNDARY-FIRST P0: candidates must receive this value object
     (or resolve via this helper). Passing MosaicConfig to legacy
     ``ssg_*_active`` is a silent no-op.
+
+    P0-2 · default ``warn_if_missing=True`` so missing AppConfig / shot_grouping
+    is fail-loud (warning + counter), not a silent False gate.
     """
     cfg = app_cfg
     if cfg is None:
@@ -163,22 +218,18 @@ def resolve_shot_group_mosaic_policy(
 
             cfg = get_config()
         except Exception:
-            if warn_if_missing:
-                import logging
-
-                logging.getLogger(__name__).warning(
-                    "shot_group mosaic policy: AppConfig unavailable; using defaults"
-                )
+            _note_policy_resolve_fallback(
+                "shot_group mosaic policy: AppConfig unavailable; using defaults",
+                warn=warn_if_missing,
+            )
             return ShotGroupMosaicPolicy()
     ssg = getattr(cfg, "shot_grouping", None)
     if ssg is None:
-        if warn_if_missing:
-            import logging
-
-            logging.getLogger(__name__).warning(
-                "shot_group mosaic policy: cfg has no shot_grouping "
-                "(MosaicConfig mistake?); using defaults"
-            )
+        _note_policy_resolve_fallback(
+            "shot_group mosaic policy: cfg has no shot_grouping "
+            "(MosaicConfig mistake?); using defaults",
+            warn=warn_if_missing,
+        )
         return ShotGroupMosaicPolicy()
     mosaic = getattr(ssg, "mosaic", None) or ShotGroupingMosaicConfig()
     atom = getattr(mosaic, "atom", None) or AtomConfig()

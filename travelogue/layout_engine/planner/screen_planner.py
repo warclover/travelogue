@@ -1438,6 +1438,76 @@ def _flush_portrait_pending(
     pending.clear()
     pending.extend(overflow)
 
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import (
+        max_prefix_in_atom,
+        pack_atom_page_sizes,
+        sort_ids_by_taken_at,
+        window_violates_atom,
+    )
+
+    atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+    # W2 · keep one Scene Atom together (do not person/scenery-split across atom).
+    if atom_policy.enabled and buf:
+        while buf:
+            atom_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=len(buf))
+            if atom_n <= 0:
+                break
+            chunk = sort_ids_by_taken_at(buf[:atom_n], assets_map)
+            buf = buf[atom_n:]
+            for size in pack_atom_page_sizes(len(chunk), capacities=(3, 2, 1)):
+                page, chunk = chunk[:size], chunk[size:]
+                if size >= 3 and (
+                    force
+                    or layout_state is None
+                    or layout_state.can_emit_pattern("screen-portrait-3")
+                ):
+                    placed = _plan_portrait_triple_row(
+                        page,
+                        aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        pending=pending,
+                        force=force,
+                        trip=trip,
+                        cfg=cfg,
+                    )
+                    if placed:
+                        screens.extend(placed)
+                    else:
+                        pending.extend(page)
+                    continue
+                if size >= 2 and (
+                    force
+                    or layout_state is None
+                    or layout_state.can_emit_pattern("screen-portrait-2")
+                ):
+                    screens.append(
+                        _make_portrait_2_screen(
+                            page[:2],
+                            aspects=aspects,
+                            assets_map=assets_map,
+                            layout_state=layout_state,
+                            trip=trip,
+                            cfg=cfg,
+                        )
+                    )
+                    pending.extend(page[2:])
+                    continue
+                screens.extend(
+                    _emit_portrait_single_screens(
+                        page,
+                        aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        pending=pending,
+                        force=force,
+                        solo_exclude=solo_exclude,
+                    )
+                )
+            pending.extend(chunk)
+        return screens
+
     person_buf = _person_portrait_ids(buf, assets_map)
     scenery_buf = [a for a in buf if a not in person_buf]
 
@@ -1449,11 +1519,7 @@ def _flush_portrait_pending(
             or layout_state is None
             or layout_state.can_emit_pattern("screen-portrait-2")
         ):
-            from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
-            from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
-
             pair = list(buf)
-            atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
             if window_violates_atom(pair, assets_map, atom_policy):
                 screens.extend(
                     _emit_portrait_single_screens(

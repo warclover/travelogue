@@ -300,6 +300,7 @@ def pick_best_window(
             funnel.get("effective_window_order") or funnel.get("base_window_order") or base_order
         ),
         reorder_reason=funnel.get("reorder_reason"),
+        atom_cap=funnel.get("atom_cap"),
         structurally_qualified_six=bool(funnel.get("structurally_qualified_six", False)),
         admit_six_hero=bool(funnel.get("admit_six_hero", False)),
         six_hero_opportunity_state=str(

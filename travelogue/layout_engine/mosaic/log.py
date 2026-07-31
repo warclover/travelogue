@@ -57,6 +57,7 @@ class MosaicWindowLog:
     six_hero_qualify_reason: str | None = None
     six_hero_outcome: str | None = None
     quota_snapshot: dict[str, Any] | None = None
+    atom_cap: int | None = None
     reject_funnel: list[dict[str, Any]] = field(default_factory=list)
     # MSA · slot adaptation (D-MSA-10 · assert via drain_mosaic_capture)
     msa_profile: dict[str, Any] | None = None
@@ -89,6 +90,7 @@ class MosaicWindowLog:
             "baseWindowOrder": list(self.base_window_order),
             "effectiveWindowOrder": list(self.effective_window_order),
             "reorderReason": self.reorder_reason,
+            "atomCap": self.atom_cap,
             "structurallyQualifiedSix": bool(self.structurally_qualified_six),
             "admitSixHero": bool(self.admit_six_hero),
             "sixHeroOpportunityState": self.six_hero_opportunity_state or "idle",

@@ -706,6 +706,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         "base_window_order": base_order,
         "effective_window_order": list(sizes),
         "reorder_reason": reorder_reason,
+        "atom_cap": atom_cap if atom_policy.enabled else None,
         "structurally_qualified_six": structural_six,
         "admit_six_hero": admit_six,
         "six_hero_qualify_reason": qualify_reason or None,

@@ -4,7 +4,7 @@
 |------|------|
 | 日期 | 2026-07-31 |
 | 状态 | **已审定稿 · 实现中**（分支 `feat/cluster-boundary-first-v1`） |
-| 实现 | W0 policy 注入 + W1 Scene Atom 门 + W2 atom→page packs 初版；默认 `atom.enabled=false`，狗粮见 [config-cluster-boundary-first-dogfood.example.yaml](./config-cluster-boundary-first-dogfood.example.yaml) |
+| 实现 | W0–W2 统一门 + page packs；默认 `atom.enabled=false`；狗粮见 [config-cluster-boundary-first-dogfood.example.yaml](./config-cluster-boundary-first-dogfood.example.yaml)。**W3 look 未做**。 |
 | 评审 | [REVIEW-CLUSTER-BOUNDARY-FIRST-MOSAIC-V1-2026-07-31.md](./REVIEW-CLUSTER-BOUNDARY-FIRST-MOSAIC-V1-2026-07-31.md) · 总裁决：**有条件通过**（条件已并入本文 §3 / §9） |
 | 目标 | 让拼图选片稳定输出 **80 分**：大部分屏在逻辑上说得通，杜绝明显跨界混装 |
 | 证据 | [MCS vs 人类代理对照](./acceptance-records/mcs-vs-human-proxy-clusters-demo-49cbe46479-2026-07-31.md) · [人工 11 例标注](./acceptance-records/mcs-human-cluster-labels-demo-49cbe46479-2026-07-31.json) |

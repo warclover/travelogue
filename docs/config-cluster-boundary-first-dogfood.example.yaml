@@ -12,8 +12,11 @@ shotGrouping:
       maxGapSeconds: 600
       maxWindowSpanSeconds: 7200
       sceneClusterMode: compatible   # 半硬；勿用 force_same
-      categoryJumpIsHard: false
-      allowTailCrossAtom: false
+      categoryJumpIsHard: false      # W1 软惩罚在 scorer；勿升硬除非碎度可接受
+      allowTailCrossAtom: false      # attach 尾部合并不跨 atom
+      strongTemplateMaxSpanSeconds: null   # 禁止 300 hard
+      strongTemplateSpanSoftSeconds: 900
+      mosaicShareFloorObserve: 0.70  # 多槽占比观察护栏（不自动放宽边界）
 
 # Optional: isolate template experiments during W1 dogfood
 # mosaic:

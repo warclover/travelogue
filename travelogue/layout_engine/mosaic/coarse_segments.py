@@ -3,6 +3,13 @@
 Segments are planner memory only (not persisted as sceneId). Windows must not
 cross segment boundaries. Signature ``(nP, nL, cohesive)`` narrows the pattern
 whitelist; misses fall back to the full candidate set (never a silent empty).
+
+Hierarchy (PLAN-CLUSTER-BOUNDARY-FIRST V1)::
+
+    coarse segment（时间/城市，禁跨段开窗）
+      ⊇ shotGroup（SSG 场景组）
+        ⊇ scene atom（页级边界，planner memory · ``scene_atoms``）
+          → page pack / 模板窗
 """
 
 from __future__ import annotations
