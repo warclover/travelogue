@@ -1598,9 +1598,10 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:no
 html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
 html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
 html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--3x2:has(.layout-slot__img--contain),
-html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
-html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain) {
+/* MEGC: exclude fixed-stage equal 2×2 — those keep stretch/1fr (see MEGC block below). */
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-layout-hint="person-grid-8"]) .layout-screen__grid--2x2:has(.layout-slot__img--contain) {
   grid-template-rows: repeat(2, auto);
   align-items: start;
   height: auto;
@@ -1609,7 +1610,8 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:no
 /*
  * Portrait 2×2 (screen-portrait-4) with contain tiles: drop the forced 9:16 stage
  * box so the grid sizes to two intrinsic rows (no tall bottom blank / oversize).
- * Cover 2×2 (landscape-4 / square-4 / portrait-2-landscape-2) keep their stage box.
+ * Fixed-stage equal 2×2 (landscape-4 / portrait-2-landscape-2): see MEGC block below —
+ * they must NOT inherit the generic --2x2:has(contain) height:auto rule above.
  */
 html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain),
 html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain),
@@ -1647,11 +1649,70 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[da
   overflow: hidden;
 }
 
+/*
+ * MEGC · PR-A (D-MEGC-01/02) · Fixed-stage equal 2×2 must keep the 16:9 stage when
+ * any tile is contain. Generic --2x2:has(contain)→rows:auto;height:auto above would
+ * grow the grid past the stage; overflow:hidden then clips the bottom row
+ * (demo-2019 ch-02-sc-06). Mirror mosaic fixed-stage cell fill — letterbox inside
+ * the cell only.
+ *
+ * INCLUDE (fixed 16:9 stage): screen-landscape-4, screen-portrait-2-landscape-2
+ * EXCLUDE (intrinsic / CSS-primary — do not list here):
+ *   screen-portrait-2, screen-portrait-3, screen-portrait-4,
+ *   screen-landscape-2, screen-landscape-3, screen-mosaic-*
+ */
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid--2x2:has(.layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid--2x2:has(.layout-slot__img--contain) {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  height: 100%;
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(
+    --msa-contain-fill,
+    var(--bg-page, var(--color-paper, #f5f2eb))
+  );
+}
+
+html[data-layout="web"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-landscape-4"] .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="web"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen[data-pattern="screen-portrait-2-landscape-2"] .layout-screen__grid .layout-slot > .layout-slot__img--contain {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center center;
+}
+
 /* Non-mosaic grids only — mosaics use fixed-stage cell fill above.
  * Opt out: mixed-1l1p / L3E / mixed-1p2l / person-pair|triple (CSS-primary fill). */
-html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain),
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1663,9 +1724,9 @@ html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:no
   background: transparent;
 }
 
-html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
-html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
-html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain {
+html[data-layout="web"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout="auto"] .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain,
+html[data-layout-engine="screens"]:not([data-layout="mobile"]) .layout-screen:not([data-pattern="screen-full-frame"]):not([data-pattern^="screen-mosaic-"]):not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"]):not([data-pattern="screen-portrait-3-editorial"]):not([data-pattern="screen-editorial-4mix"]):not([data-pattern="screen-landscape-1-portrait-1"]):not([data-pattern="screen-portrait-1-landscape-1"]):not([data-pattern="screen-landscape-3-asymmetric-left"]):not([data-pattern="screen-landscape-3-asymmetric-right"]):not([data-pattern="screen-landscape-2-portrait-1"]):not([data-pattern="screen-square-1"]):not([data-layout-hint="person-grid-8"]):not([data-layout-hint="person-pair"]):not([data-layout-hint="person-triple"]):not([data-layout-hint="portrait-row-editorial"]):not([data-layout-hint="editorial-4mix"]) .layout-screen__grid .layout-slot > .layout-slot__img--contain {
   display: block;
   flex: 0 0 auto;
   width: 100%;

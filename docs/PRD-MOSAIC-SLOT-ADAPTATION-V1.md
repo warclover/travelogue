@@ -9,7 +9,7 @@
 | **主题代号** | 「拼图槽位自适应 V1」— **MSA**（Mosaic Slot Adaptation） |
 | **调研来源** | 2026-07-23 实机狗粮：单反 3:2 横图进 16:9 扁槽高度不够 / cover 裁切过重；用户画像（全单反 / 全手机 / 混排）与 AR 分布补充；业界 BRIC / SoftCollage / 消费级拼贴对照 |
 | **审查基线** | 现行 LTE YAML 固定 `cols/rows` + MCS 默认 `fit=cover` + MTSO 选型合同（选型与本主题正交） |
-| **关联文档** | [MTSO](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [P15 MCS](./PRD-PHASE15-photo-mosaic-evolution.md) · [P16 LTE](./PRD-PHASE16-layout-template-engine.md) · [MGQ](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) · [TPC](./PRD-TEMPLATE-CONTRACT-V1.md) · [6 张拼图](./PRD-6张拼图优化.md) · [DESIGN-PHASE15](./DESIGN-PHASE15-mosaic-system.md) |
+| **关联文档** | [MTSO](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [MEGC](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md)（等权空洞互补） · [P15 MCS](./PRD-PHASE15-photo-mosaic-evolution.md) · [P16 LTE](./PRD-PHASE16-layout-template-engine.md) · [MGQ](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) · [TPC](./PRD-TEMPLATE-CONTRACT-V1.md) · [6 张拼图](./PRD-6张拼图优化.md) · [DESIGN-PHASE15](./DESIGN-PHASE15-mosaic-system.md) |
 | **评审纪要** | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md)（结案）· [模板](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md) |
 | **验收** | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) · [IMPLEMENTATION-…](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md)（BLK-05 ✅）· 摘要见本文 §10 |
 | **更新日期** | 2026-07-23 |
@@ -53,6 +53,7 @@
 | [MGQ](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) | **互补** | MGQ 记几何特征；MSA 用特征驱动轨道与 crop_risk |
 | [TPC](./PRD-TEMPLATE-CONTRACT-V1.md) | **不替代** | mix/eligibility 仍权威；轨道自适应不得制造静默空候选 |
 | [P21](./PRD-PHASE21-mosaic-density-budget.md) | **继承硬上限** | 不放宽 dense/相邻/large；轨道变化不绕过配额 |
+| [MEGC](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **互补 · 等权空洞** | 等权平铺（如 `landscape-4`）**无法**用 `trackOverride` 改槽 AR；舞台 contain 合同与选型闸见 MEGC。**禁止**把等权贴 1.50 写成 MSA AC |
 | [QFX](./PRD-QUALITY-FIXPACK-V1.md) / [NAS](./PRD-NO-AI-SURFACE-V1.md) | **正交** | 不碰合入门禁 / AI 表面 |
 
 ### 0.2 非目标（明确不做）
