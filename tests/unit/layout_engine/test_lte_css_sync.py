@@ -249,6 +249,48 @@ def test_mosaic_fixed_stage_keeps_aspect_with_contain(journal_css: str) -> None:
 
 
 @pytest.mark.unit
+def test_megc_equal_2x2_fixed_stage_keeps_grid_with_contain(journal_css: str) -> None:
+    """MEGC PR-A / AC-MEGC-01: equal 2×2 fixed stage must not grow past the stage on contain.
+
+    Regression: generic --2x2:has(contain)→rows:auto;height:auto let landscape-4
+    grids exceed the 16:9 stage; overflow:hidden then clipped the bottom row
+    (demo-2019 ch-02-sc-06 / assets 086,088,089,091).
+    """
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert "MEGC · PR-A" in overlays
+    for pattern in ("screen-landscape-4", "screen-portrait-2-landscape-2"):
+        assert f'[data-pattern="{pattern}"] .layout-screen__grid--2x2:has(.layout-slot__img--contain)' in overlays
+        assert f'[data-pattern="{pattern}"] .layout-screen__grid .layout-slot:has(> .layout-slot__img--contain)' in overlays
+        assert f'[data-pattern="{pattern}"] .layout-screen__grid .layout-slot > .layout-slot__img--contain' in overlays
+    assert "grid-template-rows: repeat(2, minmax(0, 1fr))" in overlays
+    # Generic auto-grow must opt these patterns out (specificity / cascade guard).
+    assert (
+        ':not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"])'
+        in overlays
+    )
+
+
+@pytest.mark.unit
+def test_megc_does_not_block_portrait4_intrinsic_contain(journal_css: str) -> None:
+    """MEGC PR-A / AC-MEGC-02: portrait-4 keep intrinsic height:auto under contain."""
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert (
+        '[data-pattern="screen-portrait-4"]:not([data-layout-hint]):has(.layout-slot__img--contain)'
+        in overlays
+    )
+    # MEGC include list must not name portrait-4 as a fixed-stage override target.
+    megc_start = overlays.index("MEGC · PR-A")
+    megc_slice = overlays[megc_start : megc_start + 2500]
+    assert 'INCLUDE (fixed 16:9 stage): screen-landscape-4, screen-portrait-2-landscape-2' in megc_slice
+    assert "screen-portrait-4" in megc_slice  # listed under EXCLUDE
+    assert 'data-pattern="screen-portrait-4"' not in megc_slice.split("EXCLUDE")[0]
+
+
+@pytest.mark.unit
 def test_mosaic_portrait_contain_top_anchor(journal_css: str) -> None:
     """Regression: hero mosaic bottom tiles use contain + top center, not focal stretch."""
     ostart = journal_css.index(OVERLAYS_MARKER_START)
