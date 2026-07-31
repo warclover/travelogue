@@ -130,6 +130,9 @@ def _mosaic_from_dict(raw: dict[str, Any]) -> ShotGroupingMosaicConfig:
     if not isinstance(roles, list):
         roles = ["cover", "moment", "chapterHero", "solo", "bookend"]
     atom_raw = raw.get("atom") if isinstance(raw.get("atom"), dict) else {}
+    # Prefer camelCase atom nested under mosaic when both present
+    if not atom_raw and isinstance(raw.get("Atom"), dict):
+        atom_raw = raw.get("Atom") or {}
     return ShotGroupingMosaicConfig(
         slice_cross_group_hard_reject=cfg_bool(
             raw, "slice_cross_group_hard_reject", "sliceCrossGroupHardReject", True
@@ -138,7 +141,7 @@ def _mosaic_from_dict(raw: dict[str, Any]) -> ShotGroupingMosaicConfig:
             raw, "same_group_anti_slice", "sameGroupAntiSlice", True
         ),
         cross_group_exempt_roles=[str(r) for r in roles],
-        atom=_atom_from_dict(atom_raw),
+        atom=_atom_from_dict(atom_raw if isinstance(atom_raw, dict) else {}),
     )
 
 

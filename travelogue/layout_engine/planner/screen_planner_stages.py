@@ -571,6 +571,43 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
             ctx.layout_state is None
             or ctx.layout_state.can_emit_pattern("screen-landscape-3")
         )
+        from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+        from travelogue.layout_engine.planner.scene_atoms import (
+            max_prefix_in_atom,
+            window_violates_atom,
+        )
+
+        atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
+        if can_triple and window_violates_atom(trio, ctx.assets_map, atom_policy):
+            keep_n = max_prefix_in_atom(trio, ctx.assets_map, atom_policy, max_n=3)
+            if keep_n >= 2 and (
+                ctx.layout_state is None
+                or ctx.layout_state.can_emit_pattern("screen-landscape-2")
+            ):
+                append_screen(
+                    ctx,
+                    _make_landscape_2_screen(
+                        trio[:2],
+                        aspects=ctx.aspects,
+                        assets_map=ctx.assets_map,
+                        layout_state=ctx.layout_state,
+                        trip=ctx.trip,
+                        cfg=ctx.app_config,
+                    ),
+                )
+                append_screen(
+                    ctx,
+                    _make_screen(
+                        "screen-landscape-1",
+                        [trio[2]],
+                        screen_id="",
+                        aspects=ctx.aspects,
+                        assets_map=ctx.assets_map,
+                    ),
+                )
+                return 3
+            # Fall through: emit three singles below via legacy path
+            can_triple = False
         if can_triple and _time_near_chain(
             trio, ctx.assets_map, burst_seconds=ctx.mix_gap
         ):
@@ -593,6 +630,12 @@ def try_landscape_run(ctx: ChapterPlanContext) -> int | None:
             ctx.layout_state is None
             or ctx.layout_state.can_emit_pattern("screen-landscape-2")
         )
+        from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+        from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+        atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
+        if can_pair and window_violates_atom(pair, ctx.assets_map, atom_policy):
+            can_pair = False
         if can_pair and _time_near_chain(
             pair, ctx.assets_map, burst_seconds=ctx.mix_gap
         ):

@@ -1,23 +1,23 @@
 # Cluster-Boundary-First V1 · dogfood snippet (PLAN 已审定稿)
-# Merge into local config.yaml for demo-49cbe46479 (or set atom.enabled globally).
+# Merge into local config.yaml under existing ``shotGrouping`` (camelCase preferred by this repo).
 # W1: keep tri-col equal experimental SKUs OFF while validating boundaries.
 
-shot_grouping:
+shotGrouping:
   enabled: true
   mosaic:
-    slice_cross_group_hard_reject: true
-    same_group_anti_slice: true
+    sliceCrossGroupHardReject: true
+    sameGroupAntiSlice: true
     atom:
       enabled: true
-      max_gap_seconds: 600
-      max_window_span_seconds: 7200
-      scene_cluster_mode: compatible   # 半硬；勿用 force_same
-      category_jump_is_hard: false
-      allow_tail_cross_atom: false
+      maxGapSeconds: 600
+      maxWindowSpanSeconds: 7200
+      sceneClusterMode: compatible   # 半硬；勿用 force_same
+      categoryJumpIsHard: false
+      allowTailCrossAtom: false
 
 # Optional: isolate template experiments during W1 dogfood
 # mosaic:
 #   template_experiments:
 #     enabled: true
-#     allowlist: []   # or omit tri-col equal family ids
+#     allowlist: []   # omit tri-col equal family ids
 #     cohort_trip_ids: ["demo-49cbe46479"]
