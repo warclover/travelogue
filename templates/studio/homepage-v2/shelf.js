@@ -115,8 +115,12 @@ function stubFingerprint(tripId) {
   return h >>> 0;
 }
 
-function stubSerial(tripId) {
-  return "NO." + String((stubFingerprint(tripId) % 90000) + 10000);
+function stubSerial(trip) {
+  var yearBit = stubYearMonth(trip && trip.updatedAt);
+  var year = yearBit ? yearBit.slice(0, 4) : String(new Date().getFullYear());
+  var n = stubFingerprint(trip && trip.tripId) % 10000;
+  var suffix = ("0000" + n).slice(-4);
+  return "NO." + year + suffix;
 }
 
 function stubCode(tripId) {
@@ -328,7 +332,7 @@ function buildBook(trip) {
   var stubMain = el("div", "v2-shelf__stub-main");
   stubMain.appendChild(el("h3", "v2-shelf__title", trip.title || trip.tripId));
   stubMain.appendChild(el("p", "v2-shelf__sub", stubMetaLine(trip)));
-  stubMain.appendChild(el("p", "v2-shelf__serial", stubSerial(trip.tripId)));
+  stubMain.appendChild(el("p", "v2-shelf__serial", stubSerial(trip)));
   openMeta.appendChild(stubMain);
 
   var code = el("div", "v2-shelf__code");

@@ -680,7 +680,7 @@
             <ul>
               <li><strong>撕边锯齿</strong> — 封面与信息区的物件分界（书架必留）。</li>
               <li><strong>纸质票根脚</strong> — 承载地名/年月，替代普通 meta 行。</li>
-              <li><strong>编号感</strong> — <code>NO.xxxxx</code> 制造「孤本收藏」；可用短 hash。</li>
+              <li><strong>编号感</strong> — <code>NO.YYYY####</code>（年 + 4 位派生）制造「孤本收藏」。</li>
               <li><strong>装饰条码 / 凹口</strong> — 满剂量可选；网格里易脏，默认建议关掉或极淡。</li>
             </ul>
             <h2 style="margin-top:18px">刻意不搬</h2>
@@ -710,7 +710,7 @@
       <ul>
         <li><strong>Name</strong> ← 画册名（单行截断）</li>
         <li><strong>Meta</strong> ← 旅行年月优先；无则用更新月 · N 张</li>
-        <li><strong>NO.</strong> ← 旅程短 id / hash（装饰）</li>
+        <li><strong>NO.</strong> ← <code>NO.YYYY####</code>（更新年 + tripId 派生 4 位）</li>
       </ul>
 
       <div class="callout">
@@ -755,7 +755,7 @@
         title: "拉萨·六月",
         name: "LASA",
         meta: "2026 · 06 · 48 张",
-        serial: "NO.90595",
+        serial: "NO.20269095",
         code: "K081V6Q7",
         badge: null,
       },
@@ -764,7 +764,7 @@
         title: "昆明·暴力熊墙",
         name: "KUNMING",
         meta: "2025 · 11 · 36 张",
-        serial: "NO.41802",
+        serial: "NO.20254182",
         code: "M2Q9H1X4",
         badge: "示例",
         coverAlt: true,
@@ -775,7 +775,7 @@
         name: "青岛",
         blankChars: "青岛",
         meta: "2024 · 09 · 12 张",
-        serial: "NO.22017",
+        serial: "NO.20242217",
         code: "P7R3C0W8",
         badge: null,
       },
