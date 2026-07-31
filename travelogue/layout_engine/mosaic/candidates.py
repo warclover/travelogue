@@ -16,6 +16,7 @@ from travelogue.layout_engine.mosaic.clone_detection import (
     template_prefers_burst,
 )
 from travelogue.layout_engine.mosaic.constants import (
+    PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
     PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -124,6 +125,7 @@ def generate_window_candidates(
     median_sharp: float | None = None,
     registry: dict[str, MosaicPattern] | None = None,
     trip_id: str | None = None,
+    ssg_policy: Any | None = None,
 ) -> list[ScreenCandidate]:
     return generate_window_candidates_with_rejections(
         asset_ids,
@@ -134,6 +136,7 @@ def generate_window_candidates(
         median_sharp=median_sharp,
         registry=registry,
         trip_id=trip_id,
+        ssg_policy=ssg_policy,
     ).candidates
 
 
@@ -149,6 +152,7 @@ def generate_window_candidates_with_rejections(
     window_ctx: WindowContext | None = None,
     trip_photo_total: int = 0,
     trip_id: str | None = None,
+    ssg_policy: Any | None = None,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
@@ -251,14 +255,25 @@ def generate_window_candidates_with_rejections(
         # scorer keeps applying the soft penalty regardless.
         # prefers_burst True → skip; False/None → reject when penalty is high.
         # SSG · cross-shotGroup hard reject (D-SSG-05/22); independent of clone gate.
+        # PLAN P0: use ShotGroupMosaicPolicy (never MosaicConfig.shot_grouping).
+        from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
         from travelogue.layout_engine.mosaic.shot_group_gate import (
             hard_reject_cross_shot_group,
             hard_reject_same_shot_group_anti_slice,
-            ssg_cross_group_hard_reject_active,
-            ssg_same_group_anti_slice_active,
         )
+        from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
 
-        if ssg_cross_group_hard_reject_active(cfg) and hard_reject_cross_shot_group(
+        policy = ssg_policy if ssg_policy is not None else resolve_shot_group_mosaic_policy()
+        atom_reason = window_violates_atom(list(ordered), assets_map, policy.atom)
+        if atom_reason:
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "atom_boundary",
+                detail=atom_reason,
+            )
+            continue
+        if policy.cross_group_hard_reject and hard_reject_cross_shot_group(
             pat.pattern_id, list(ordered), assets_map
         ):
             _reject(
@@ -268,9 +283,7 @@ def generate_window_candidates_with_rejections(
                 detail="cross_shotGroup_on_slice_pattern",
             )
             continue
-        if ssg_same_group_anti_slice_active(
-            cfg
-        ) and hard_reject_same_shot_group_anti_slice(
+        if policy.same_group_anti_slice and hard_reject_same_shot_group_anti_slice(
             pat.pattern_id, list(ordered), assets_map
         ):
             _reject(
@@ -390,6 +403,7 @@ def generate_window_candidates_with_rejections(
                     lifecycle_admit(pid, mosaic_cfg=cfg, trip_id=trip_id).ok
                     for pid in (
                         PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
+                        PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
                         PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
                     )
                 )

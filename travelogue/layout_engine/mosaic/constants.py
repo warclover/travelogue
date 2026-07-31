@@ -42,6 +42,9 @@ PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4 = "screen-mosaic-5-main-hero-plus-4"
 PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5 = "screen-mosaic-6-main-hero-plus-5"
 # MTSO PR-C2 · experimental（勿进 MOSAIC_5_PATTERN_IDS / lte_policy 直至转正）
 PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO = "screen-mosaic-5-1p4l-portrait-hero"
+PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS = (
+    "screen-mosaic-5-1p4l-portrait-center-rails"
+)
 PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL = "screen-mosaic-5-2p3l-portrait-hero-rail"
 PATTERN_MOSAIC_5_2P3L_RAIL = "screen-mosaic-5-2p3l-rail"
 # 3P2L left-portrait-hero family（勿进 MOSAIC_5_PATTERN_IDS 直至转正）
@@ -55,6 +58,8 @@ MOSAIC_5_3P2L_PORTRAIT_HERO_IDS: frozenset[str] = frozenset(
         PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
     }
 )
+# 三列等分家族 · experimental（勿进 MOSAIC_* / lte_policy 直至转正）
+PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS = "screen-mosaic-4-2p2l-portrait-bookends"
 
 # --- 3 / 4 / 6 · reuse existing grid patterns (S2) ---
 PATTERN_PORTRAIT_3 = "screen-portrait-3"

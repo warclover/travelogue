@@ -6,7 +6,7 @@
 | 关联 | [PRD MTSO](../PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) · [ACCEPTANCE](../ACCEPTANCE-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) |
 | 正交 | [MSA 狗粮](./msa-local-dogfood-GUIDE.md)（槽位自适应 · 可同开） · [P2VF 评审纪要](./p2vf-portrait-2-variant-family-v1-review-2026-07-27.md) · [Mixed 1L1P](./mixed-1l1p-v1-review-2026-07-27.md) · [Landscape-2 Editorial](./landscape-2-editorial-v1-review-2026-07-27.md) · [Landscape-3 Editorial](./landscape-3-editorial-v1-review-2026-07-27.md) · [Mixed 1P2L](./mixed-1p2l-v1-review-2026-07-27.md) |
 | 配置样例 | [`docs/config-mtso-experiments-dogfood.example.yaml`](../config-mtso-experiments-dogfood.example.yaml) · [`docs/config-p2vf-dogfood.example.yaml`](../config-p2vf-dogfood.example.yaml) · [`docs/config-mixed-1l1p-dogfood.example.yaml`](../config-mixed-1l1p-dogfood.example.yaml) · [`docs/config-landscape-2-editorial-dogfood.example.yaml`](../config-landscape-2-editorial-dogfood.example.yaml) · [`docs/config-landscape-3-editorial-dogfood.example.yaml`](../config-landscape-3-editorial-dogfood.example.yaml) · [`docs/config-mixed-1p2l-dogfood.example.yaml`](../config-mixed-1p2l-dogfood.example.yaml) |
-| 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=true`（默认 allowlist 含 L3E / mixed-1p2l / **3P2L 竖主 pair**；`cohort_trip_ids=["*"]`）。本机若覆盖 allowlist，**须显式列入**要验的 id，否则假死 |
+| 仓库默认 | `selection_optimization.enabled=false` · `template_experiments.enabled=true`（默认 allowlist 含 L3E / mixed-1p2l / **3P2L 竖主 pair**；`cohort_trip_ids=["*"]`）。本机若覆盖 allowlist，**须显式列入**要验的 id，否则假死。三列等分家族（bookends / center-rails / landscape-6 revive）**不在**产品默认 allowlist，须从样例配置抄入 |
 
 > **不是** Go exit / 转正门槛。目标：验路径不崩、漏斗可读、双 SKU 可见性符合预期。
 
@@ -59,7 +59,7 @@
 |---|------|------|-------------|
 | **V1** | **CSS-primary：用户看到的是 `journal-screens.css`** | YAML `cols/rows/rect` 只文档意图；改 YAML 不改 CSS → 视觉零变化 | 视觉 QA 以 CSS + 截图为准；YAML 注释写明 CSS-primary |
 | **V2** | **纯视觉改动：`render` + `assetVersion`，不必 `curate`** | 只硬刷新浏览器仍吃旧 bundle；或误以为要重跑排版 | `python -m travelogue render <trip>`；bump `tests/unit/trip/test_asset_version.py`；确认 `journal.css?v=ls…` 变了 |
-| **V3** | **新 pattern 必须 opt-out 通用 contain-collapse** | 全局 `.layout-slot:has(> .layout-slot__img--contain)` 会设 `align-self:start; height:auto`，把「竖槽满高」等合同打穿（Mixed 1L1P 已踩） | 在该长选择器链上加 `:not([data-pattern="…"])`，或对 pattern 写更高优先级 fill 覆盖；用 DevTools 看 computed `align-self` |
+| **V3** | **新 pattern 必须 opt-out 通用 contain-collapse** | 全局 `.layout-slot:has(> .layout-slot__img--contain)` 会设 `align-self:start; height:auto`，把「竖槽满高」等合同打穿（Mixed 1L1P 已踩） | 在该长选择器链上加 `:not([data-pattern="…"])`，或对 pattern 写更高优先级 fill 覆盖；用 DevTools 看 computed `align-self`。**手写视觉合同写进 `journal-screens-overlays.css`（SSOT）**，勿只改 `journal-screens.css`——`export --sync-journal` 会整段替换 `@journal-overlays`（MEGC / landscape-6 已踩） |
 | **V4** | **叠压类：V1 无人物遮挡规避 → 几何必须轻叠** | 槽位过大时前景盖住人脸/主体，却无算法换对角或回退 fill | 外缘可贴边（inset=0），但宽高宜控重叠面积（狗粮约屏面 1–2% 量级）；缺 face 信号前不要做「满幅叠压」 |
 | **V5** | **测量相对 stage，勿被纸色对角留白误导** | 叠压屏对角三角纸色是设计留白，不是「没贴边」 | Playwright/`getBoundingClientRect`：TL `top/left≈0`，BR `bottom/right≈0` |
 
@@ -119,12 +119,26 @@ python -m travelogue render demo-2025 --web-layout screens
 # 三处对照：config allowlist · trip.json patternId · index.html data-pattern*=3p2l
 ```
 
+### 2.2 三列等分家族（bookends / center-rails / landscape-6）
+
+| # | 窗条件 | 期望 |
+|---|--------|------|
+| G | 恰 2P+2L | `screen-mosaic-4-2p2l-portrait-bookends`（左/右满高竖 + 中双横） |
+| H | 恰 1P+4L | 可与 `1p4l-portrait-hero` 同窗竞争；中轴几何为 `…-portrait-center-rails` |
+| I | 恰 6L 且 experiments 含 `screen-landscape-6` | 可见 `screen-landscape-6`（`--3x2`）；**未**列入 allowlist 时仍走 LTN C3 默认（hero-plus，不出 flat-6） |
+
+几何签核：三列等宽；满高列 AR≈0.593，半高格 AR≈1.185（16:9）。勿写 `lte_policy`。
+
+```powershell
+python -m pytest tests/unit/layout_engine/test_tri_col_equal_family.py -q
+```
+
 ---
 
 ## 3. 自动化烟测
 
 ```powershell
-python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py tests/unit/layout_engine/test_mtso_pr_c2_skus.py tests/unit/layout_engine/test_mosaic_5_3p2l.py -q
+python -m pytest tests/unit/layout_engine/test_mtso_pr_d.py tests/unit/layout_engine/test_mtso_pr_c2_skus.py tests/unit/layout_engine/test_mosaic_5_3p2l.py tests/unit/layout_engine/test_tri_col_equal_family.py -q
 ```
 
 ---

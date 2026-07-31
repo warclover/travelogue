@@ -56,6 +56,7 @@ from travelogue.config.shot_grouping import (
     ShotGroupingSceneConfig,
     resolve_look_enabled,
     resolve_shot_grouping_enabled,
+    resolve_shot_group_mosaic_policy,
     shot_grouping_from_dict,
 )
 from travelogue.config.phase6 import (
@@ -135,6 +136,7 @@ __all__ = [
     "ShotGroupingSceneConfig",
     "resolve_look_enabled",
     "resolve_shot_grouping_enabled",
+    "resolve_shot_group_mosaic_policy",
     "shot_grouping_from_dict",
     "OutputRecipeBandsConfig",
     "GcsPosterBricConfig",

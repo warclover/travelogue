@@ -1,0 +1,4289 @@
+{
+  "summary": {
+    "tripId": "demo-49cbe46479",
+    "displayedN": 178,
+    "multiSlotScreens": 59,
+    "mosaicNamedScreens": 3,
+    "patternCounts": [
+      [
+        "screen-portrait-3",
+        18
+      ],
+      [
+        "screen-landscape-1-portrait-1",
+        11
+      ],
+      [
+        "screen-portrait-2",
+        9
+      ],
+      [
+        "screen-portrait-1-landscape-1",
+        5
+      ],
+      [
+        "screen-landscape-3-asymmetric-left",
+        4
+      ],
+      [
+        "screen-landscape-3-asymmetric-right",
+        3
+      ],
+      [
+        "screen-portrait-2-gallery",
+        2
+      ],
+      [
+        "screen-landscape-4",
+        2
+      ],
+      [
+        "screen-landscape-2",
+        2
+      ],
+      [
+        "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
+        1
+      ],
+      [
+        "screen-mosaic-4-2p2l-portrait-bookends",
+        1
+      ],
+      [
+        "screen-mosaic-4-hero-70-sidebar",
+        1
+      ]
+    ],
+    "humanProxy": {
+      "definition": "time-cohesive runs (gap<=300s) within same shotGroupId, size 2-12, on displayedAssetIds order",
+      "count": 38,
+      "sizeHist": {
+        "2": 20,
+        "3": 5,
+        "4": 3,
+        "5": 2,
+        "7": 4,
+        "8": 2,
+        "10": 1,
+        "11": 1
+      },
+      "fateCounts": {
+        "absorbed_with_foreign": 5,
+        "exact_window_match": 14,
+        "partial_with_foreign": 2,
+        "split_and_polluted": 10,
+        "split_across_screens": 5,
+        "not_in_multi_screen": 1,
+        "partial_overlap": 1
+      }
+    },
+    "burstProxyUnits_2to12": 0,
+    "screenVerdicts": {
+      "boundary_violation_burst": 30,
+      "aligned": 12,
+      "weak_or_singleton_mix": 6,
+      "undercut_series": 11
+    },
+    "mcsLog": {
+      "events": 61,
+      "winners": 5,
+      "fallbacks": 56,
+      "winnerPatterns": [
+        [
+          "screen-landscape-4",
+          2
+        ],
+        [
+          "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
+          1
+        ],
+        [
+          "screen-mosaic-4-2p2l-portrait-bookends",
+          1
+        ],
+        [
+          "screen-mosaic-4-hero-70-sidebar",
+          1
+        ]
+      ]
+    },
+    "calibrationHint": {
+      "prioritizeClusterBoundaryPenalty": true,
+      "evidence": {
+        "screen_pollution_or_burst_cross": 30,
+        "screen_aligned": 12,
+        "screen_undercut_series": 11,
+        "proxy_absorbed_or_polluted_fates": 17,
+        "proxy_split_fates": 15,
+        "proxy_exact_match": 14
+      },
+      "note": "If pollution/absorb >> exact/aligned, boundary penalty should land before new template weights."
+    }
+  },
+  "humanProxyUnits": [
+    {
+      "id": "cohesive-run-001",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-005",
+        "asset-006"
+      ],
+      "n": 2,
+      "nP": 0,
+      "nL": 2,
+      "spanSec": 295.0,
+      "shotGroupIds": [
+        "sg-weak-0"
+      ],
+      "fate": "absorbed_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-03",
+          "patternId": "screen-landscape-3-asymmetric-left",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-004"
+          ],
+          "interIds": [
+            "asset-005",
+            "asset-006"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-002",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-008",
+        "asset-009"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": 260.0,
+      "shotGroupIds": [
+        "sg-scene-1a"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-04",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-008",
+            "asset-009"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-003",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-014",
+        "asset-015"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": 39.0,
+      "shotGroupIds": [
+        "sg-scene-1a"
+      ],
+      "fate": "partial_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-06",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 1,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-013"
+          ],
+          "interIds": [
+            "asset-014"
+          ],
+          "purity": 0.5
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-004",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-028",
+        "asset-018"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": -135203.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-11",
+          "patternId": "screen-portrait-2-gallery",
+          "screenN": 2,
+          "interN": 1,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-026"
+          ],
+          "interIds": [
+            "asset-018"
+          ],
+          "purity": 0.5
+        },
+        {
+          "screenId": "ch-01-sc-10",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 1,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-024",
+            "asset-025"
+          ],
+          "interIds": [
+            "asset-028"
+          ],
+          "purity": 0.333
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-005",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-029",
+        "asset-030"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": 123.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-12",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-029",
+            "asset-030"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-006",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-031",
+        "asset-032"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": 215.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-13",
+          "patternId": "screen-portrait-1-landscape-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-031",
+            "asset-032"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-007",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-034",
+        "asset-033"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -443.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-14",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-034",
+            "asset-033"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-008",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-036",
+        "asset-035"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -603.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-15",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-036",
+            "asset-035"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-009",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-037",
+        "asset-038",
+        "asset-039",
+        "asset-040",
+        "asset-041"
+      ],
+      "n": 5,
+      "nP": 4,
+      "nL": 1,
+      "spanSec": 360.0,
+      "shotGroupIds": [
+        "sg-scene-0b"
+      ],
+      "fate": "split_across_screens",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-17",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-039",
+            "asset-040",
+            "asset-041"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-16",
+          "patternId": "screen-portrait-1-landscape-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-037",
+            "asset-038"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-010",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-056",
+        "asset-054",
+        "asset-055"
+      ],
+      "n": 3,
+      "nP": 2,
+      "nL": 1,
+      "spanSec": -189.0,
+      "shotGroupIds": [
+        "sg-scene-0c"
+      ],
+      "fate": "absorbed_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-18",
+          "patternId": "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
+          "screenN": 5,
+          "interN": 3,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-058",
+            "asset-057"
+          ],
+          "interIds": [
+            "asset-056",
+            "asset-054",
+            "asset-055"
+          ],
+          "purity": 0.6
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-011",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-058",
+        "asset-057"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -538.0,
+      "shotGroupIds": [
+        "sg-scene-0c"
+      ],
+      "fate": "absorbed_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-18",
+          "patternId": "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
+          "screenN": 5,
+          "interN": 2,
+          "foreignN": 3,
+          "foreignIds": [
+            "asset-056",
+            "asset-054",
+            "asset-055"
+          ],
+          "interIds": [
+            "asset-058",
+            "asset-057"
+          ],
+          "purity": 0.4
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-012",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-059",
+        "asset-060",
+        "asset-061",
+        "asset-062",
+        "asset-063",
+        "asset-064",
+        "asset-066",
+        "asset-067"
+      ],
+      "n": 8,
+      "nP": 3,
+      "nL": 5,
+      "spanSec": 989.0,
+      "shotGroupIds": [
+        "sg-scene-0c"
+      ],
+      "fate": "split_across_screens",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-20",
+          "patternId": "screen-landscape-4",
+          "screenN": 4,
+          "interN": 4,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-060",
+            "asset-061",
+            "asset-062",
+            "asset-063"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-21",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-064",
+            "asset-066",
+            "asset-067"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-013",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-068",
+        "asset-069",
+        "asset-070",
+        "asset-071",
+        "asset-072",
+        "asset-073",
+        "asset-074"
+      ],
+      "n": 7,
+      "nP": 0,
+      "nL": 7,
+      "spanSec": 765.0,
+      "shotGroupIds": [
+        "sg-scene-0c"
+      ],
+      "fate": "split_across_screens",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-22",
+          "patternId": "screen-landscape-4",
+          "screenN": 4,
+          "interN": 4,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-068",
+            "asset-069",
+            "asset-070",
+            "asset-071"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-23",
+          "patternId": "screen-landscape-3-asymmetric-right",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-072",
+            "asset-073",
+            "asset-074"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-014",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-077",
+        "asset-078",
+        "asset-079",
+        "asset-081"
+      ],
+      "n": 4,
+      "nP": 2,
+      "nL": 2,
+      "spanSec": 224.0,
+      "shotGroupIds": [
+        "sg-scene-0c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-24",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-077",
+            "asset-078"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-25",
+          "patternId": "screen-mosaic-4-2p2l-portrait-bookends",
+          "screenN": 4,
+          "interN": 2,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-082",
+            "asset-080"
+          ],
+          "interIds": [
+            "asset-079",
+            "asset-081"
+          ],
+          "purity": 0.5
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 1,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-015",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-084",
+        "asset-083"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -113.0,
+      "shotGroupIds": [
+        "sg-scene-0d"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-26",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-084",
+            "asset-083"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-016",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-088",
+        "asset-089"
+      ],
+      "n": 2,
+      "nP": 0,
+      "nL": 2,
+      "spanSec": 86.0,
+      "shotGroupIds": [
+        "sg-scene-0d"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-27",
+          "patternId": "screen-landscape-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-088",
+            "asset-089"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-017",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-091",
+        "asset-093",
+        "asset-095",
+        "asset-094",
+        "asset-096",
+        "asset-097",
+        "asset-098",
+        "asset-099"
+      ],
+      "n": 8,
+      "nP": 3,
+      "nL": 5,
+      "spanSec": 489.0,
+      "shotGroupIds": [
+        "sg-scene-0d"
+      ],
+      "fate": "split_across_screens",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-30",
+          "patternId": "screen-mosaic-4-hero-70-sidebar",
+          "screenN": 4,
+          "interN": 4,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-096",
+            "asset-097",
+            "asset-098",
+            "asset-099"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-28",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-091",
+            "asset-093"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-01-sc-29",
+          "patternId": "screen-portrait-1-landscape-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-095",
+            "asset-094"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 3,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 3
+    },
+    {
+      "id": "cohesive-run-018",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-102",
+        "asset-103",
+        "asset-104"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "spanSec": 117.0,
+      "shotGroupIds": [
+        "sg-scene-0d"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-01-sc-31",
+          "patternId": "screen-landscape-3-asymmetric-left",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-102",
+            "asset-103",
+            "asset-104"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-019",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-105",
+        "asset-106",
+        "asset-107",
+        "asset-108",
+        "asset-109",
+        "asset-111",
+        "asset-110"
+      ],
+      "n": 7,
+      "nP": 5,
+      "nL": 2,
+      "spanSec": 782.0,
+      "shotGroupIds": [
+        "sg-scene-0d"
+      ],
+      "fate": "split_across_screens",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-02",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-105",
+            "asset-106",
+            "asset-107"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-02-sc-03",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-108",
+            "asset-109"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-02-sc-04",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-111",
+            "asset-110"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 3,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 3
+    },
+    {
+      "id": "cohesive-run-020",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-114",
+        "asset-115",
+        "asset-116",
+        "asset-117",
+        "asset-118",
+        "asset-119",
+        "asset-120",
+        "asset-121",
+        "asset-123",
+        "asset-124"
+      ],
+      "n": 10,
+      "nP": 9,
+      "nL": 1,
+      "spanSec": 851.0,
+      "shotGroupIds": [
+        "sg-scene-0e"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-06",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-116",
+            "asset-117"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-02-sc-05",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-113"
+          ],
+          "interIds": [
+            "asset-114",
+            "asset-115"
+          ],
+          "purity": 0.667
+        },
+        {
+          "screenId": "ch-02-sc-09",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-128"
+          ],
+          "interIds": [
+            "asset-123",
+            "asset-124"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 3,
+      "crossShotGroupScreens": 2,
+      "crossBurstScreens": 3
+    },
+    {
+      "id": "cohesive-run-021",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-128",
+        "asset-129"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": 42.0,
+      "shotGroupIds": [
+        "sg-scene-2a"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-09",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 1,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-123",
+            "asset-124"
+          ],
+          "interIds": [
+            "asset-128"
+          ],
+          "purity": 0.333
+        },
+        {
+          "screenId": "ch-02-sc-10",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 1,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-011",
+            "asset-133"
+          ],
+          "interIds": [
+            "asset-129"
+          ],
+          "purity": 0.333
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 1,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-022",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-011",
+        "asset-133",
+        "asset-134",
+        "asset-135",
+        "asset-136",
+        "asset-130",
+        "asset-137"
+      ],
+      "n": 7,
+      "nP": 7,
+      "nL": 0,
+      "spanSec": 567.0,
+      "shotGroupIds": [
+        "sg-scene-2a"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-11",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-134",
+            "asset-135",
+            "asset-136"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-02-sc-10",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-129"
+          ],
+          "interIds": [
+            "asset-011",
+            "asset-133"
+          ],
+          "purity": 0.667
+        },
+        {
+          "screenId": "ch-02-sc-12",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-140"
+          ],
+          "interIds": [
+            "asset-130",
+            "asset-137"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 3,
+      "crossShotGroupScreens": 1,
+      "crossBurstScreens": 3
+    },
+    {
+      "id": "cohesive-run-023",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-138",
+        "asset-139"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": 177.0,
+      "shotGroupIds": [
+        "sg-scene-0e"
+      ],
+      "fate": "not_in_multi_screen",
+      "touchingScreens": [],
+      "nScreensTouching": 0,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 0
+    },
+    {
+      "id": "cohesive-run-024",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-141",
+        "asset-143",
+        "asset-142"
+      ],
+      "n": 3,
+      "nP": 2,
+      "nL": 1,
+      "spanSec": 129.0,
+      "shotGroupIds": [
+        "sg-scene-1b"
+      ],
+      "fate": "partial_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-15",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 1,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-145",
+            "asset-146"
+          ],
+          "interIds": [
+            "asset-142"
+          ],
+          "purity": 0.333
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-025",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-145",
+        "asset-146"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": 74.0,
+      "shotGroupIds": [
+        "sg-scene-1b"
+      ],
+      "fate": "absorbed_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-02-sc-15",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-142"
+          ],
+          "interIds": [
+            "asset-145",
+            "asset-146"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-026",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-147",
+        "asset-149",
+        "asset-150",
+        "asset-151",
+        "asset-152",
+        "asset-153",
+        "asset-156",
+        "asset-157",
+        "asset-158",
+        "asset-154",
+        "asset-155"
+      ],
+      "n": 11,
+      "nP": 10,
+      "nL": 1,
+      "spanSec": 478.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-05",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-150",
+            "asset-151",
+            "asset-152"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-06",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-153",
+            "asset-156",
+            "asset-157"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-08",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-159"
+          ],
+          "interIds": [
+            "asset-154",
+            "asset-155"
+          ],
+          "purity": 0.667
+        },
+        {
+          "screenId": "ch-03-sc-03",
+          "patternId": "screen-portrait-2-gallery",
+          "screenN": 2,
+          "interN": 1,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-144"
+          ],
+          "interIds": [
+            "asset-147"
+          ],
+          "purity": 0.5
+        }
+      ],
+      "nScreensTouching": 4,
+      "crossShotGroupScreens": 1,
+      "crossBurstScreens": 4
+    },
+    {
+      "id": "cohesive-run-027",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-162",
+        "asset-160"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -338.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-09",
+          "patternId": "screen-portrait-1-landscape-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-162",
+            "asset-160"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-028",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-165",
+        "asset-166",
+        "asset-167",
+        "asset-168",
+        "asset-169"
+      ],
+      "n": 5,
+      "nP": 3,
+      "nL": 2,
+      "spanSec": 603.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-12",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-167",
+            "asset-168",
+            "asset-169"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-11",
+          "patternId": "screen-landscape-3-asymmetric-right",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-164"
+          ],
+          "interIds": [
+            "asset-165",
+            "asset-166"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-029",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-174",
+        "asset-176",
+        "asset-177",
+        "asset-178"
+      ],
+      "n": 4,
+      "nP": 0,
+      "nL": 4,
+      "spanSec": 242.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "partial_overlap",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-14",
+          "patternId": "screen-landscape-3-asymmetric-left",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-176",
+            "asset-177",
+            "asset-178"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-030",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-182",
+        "asset-183"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": 131.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "absorbed_with_foreign",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-15",
+          "patternId": "screen-portrait-3",
+          "screenN": 3,
+          "interN": 2,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-180"
+          ],
+          "interIds": [
+            "asset-182",
+            "asset-183"
+          ],
+          "purity": 0.667
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-031",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-186",
+        "asset-187",
+        "asset-189",
+        "asset-190"
+      ],
+      "n": 4,
+      "nP": 2,
+      "nL": 2,
+      "spanSec": 560.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-16",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-186",
+            "asset-187"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-18",
+          "patternId": "screen-landscape-3-asymmetric-left",
+          "screenN": 3,
+          "interN": 1,
+          "foreignN": 2,
+          "foreignIds": [
+            "asset-193",
+            "asset-195"
+          ],
+          "interIds": [
+            "asset-190"
+          ],
+          "purity": 0.333
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-032",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-199",
+        "asset-196",
+        "asset-198"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "spanSec": -219.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-20",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-196",
+            "asset-198"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-19",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 1,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-197"
+          ],
+          "interIds": [
+            "asset-199"
+          ],
+          "purity": 0.5
+        }
+      ],
+      "nScreensTouching": 2,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 2
+    },
+    {
+      "id": "cohesive-run-033",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-200",
+        "asset-201",
+        "asset-202"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "spanSec": 252.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-21",
+          "patternId": "screen-landscape-3-asymmetric-right",
+          "screenN": 3,
+          "interN": 3,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-200",
+            "asset-201",
+            "asset-202"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-034",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-204",
+        "asset-203"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -251.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-22",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-204",
+            "asset-203"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-035",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-205",
+        "asset-206",
+        "asset-207",
+        "asset-208",
+        "asset-209",
+        "asset-210",
+        "asset-211"
+      ],
+      "n": 7,
+      "nP": 4,
+      "nL": 3,
+      "spanSec": 946.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "split_and_polluted",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-23",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-205",
+            "asset-206"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-24",
+          "patternId": "screen-portrait-1-landscape-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-207",
+            "asset-208"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-25",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-209",
+            "asset-210"
+          ],
+          "purity": 1.0
+        },
+        {
+          "screenId": "ch-03-sc-26",
+          "patternId": "screen-landscape-2",
+          "screenN": 2,
+          "interN": 1,
+          "foreignN": 1,
+          "foreignIds": [
+            "asset-007"
+          ],
+          "interIds": [
+            "asset-211"
+          ],
+          "purity": 0.5
+        }
+      ],
+      "nScreensTouching": 4,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 4
+    },
+    {
+      "id": "cohesive-run-036",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-214",
+        "asset-213"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": -225.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-27",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-214",
+            "asset-213"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-037",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-215",
+        "asset-216"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "spanSec": 126.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-28",
+          "patternId": "screen-landscape-1-portrait-1",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-215",
+            "asset-216"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    },
+    {
+      "id": "cohesive-run-038",
+      "kind": "cohesive_series",
+      "assetIds": [
+        "asset-223",
+        "asset-217"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "spanSec": -401178.0,
+      "shotGroupIds": [
+        "sg-scene-1c"
+      ],
+      "fate": "exact_window_match",
+      "touchingScreens": [
+        {
+          "screenId": "ch-03-sc-31",
+          "patternId": "screen-portrait-2",
+          "screenN": 2,
+          "interN": 2,
+          "foreignN": 0,
+          "foreignIds": [],
+          "interIds": [
+            "asset-223",
+            "asset-217"
+          ],
+          "purity": 1.0
+        }
+      ],
+      "nScreensTouching": 1,
+      "crossShotGroupScreens": 0,
+      "crossBurstScreens": 1
+    }
+  ],
+  "mcsScreens": [
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-03",
+      "patternId": "screen-landscape-3-asymmetric-left",
+      "assetIds": [
+        "asset-004",
+        "asset-005",
+        "asset-006"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-02",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-weak-0"
+        ],
+        "burstGroupIds": [
+          "burst-004",
+          "burst-005",
+          "burst-006"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-001",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 1,
+          "jaccard": 0.667
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-04",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-008",
+        "asset-009"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-03",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1a"
+        ],
+        "burstGroupIds": [
+          "burst-008",
+          "burst-009"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-002",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-06",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-013",
+        "asset-014"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-05",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1a"
+        ],
+        "burstGroupIds": [
+          "burst-013",
+          "burst-014"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-003",
+          "proxyN": 2,
+          "interN": 1,
+          "proxyOnly": 1,
+          "screenOnly": 1,
+          "jaccard": 0.333
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-09",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-017",
+        "asset-019",
+        "asset-020"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-08",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-017",
+          "burst-019",
+          "burst-020"
+        ]
+      },
+      "overlaps": [],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-10",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-024",
+        "asset-025",
+        "asset-028"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-09",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-024",
+          "burst-025",
+          "burst-028"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-004",
+          "proxyN": 2,
+          "interN": 1,
+          "proxyOnly": 1,
+          "screenOnly": 2,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-11",
+      "patternId": "screen-portrait-2-gallery",
+      "assetIds": [
+        "asset-018",
+        "asset-026"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-10",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-018",
+          "burst-026"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-004",
+          "proxyN": 2,
+          "interN": 1,
+          "proxyOnly": 1,
+          "screenOnly": 1,
+          "jaccard": 0.333
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-12",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-029",
+        "asset-030"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-11",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-029",
+          "burst-030"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-005",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-13",
+      "patternId": "screen-portrait-1-landscape-1",
+      "assetIds": [
+        "asset-031",
+        "asset-032"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-12",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-031",
+          "burst-032"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-006",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-14",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-034",
+        "asset-033"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-13",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-033",
+          "burst-034"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-007",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-15",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-036",
+        "asset-035"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-14",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-035",
+          "burst-036"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-008",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-16",
+      "patternId": "screen-portrait-1-landscape-1",
+      "assetIds": [
+        "asset-037",
+        "asset-038"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-15",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-037",
+          "burst-038"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-009",
+          "proxyN": 5,
+          "interN": 2,
+          "proxyOnly": 3,
+          "screenOnly": 0,
+          "jaccard": 0.4
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-17",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-039",
+        "asset-040",
+        "asset-041"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-17",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b"
+        ],
+        "burstGroupIds": [
+          "burst-039",
+          "burst-040",
+          "burst-041"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-009",
+          "proxyN": 5,
+          "interN": 3,
+          "proxyOnly": 2,
+          "screenOnly": 0,
+          "jaccard": 0.6
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-18",
+      "patternId": "screen-mosaic-5-3p2l-portrait-hero-lp-stack",
+      "assetIds": [
+        "asset-056",
+        "asset-054",
+        "asset-055",
+        "asset-058",
+        "asset-057"
+      ],
+      "n": 5,
+      "nP": 3,
+      "nL": 2,
+      "groupId": "day-sc-19",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-054",
+          "burst-055",
+          "burst-056",
+          "burst-057",
+          "burst-058"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-010",
+          "proxyN": 3,
+          "interN": 3,
+          "proxyOnly": 0,
+          "screenOnly": 2,
+          "jaccard": 0.6
+        },
+        {
+          "proxyId": "cohesive-run-011",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 3,
+          "jaccard": 0.4
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-20",
+      "patternId": "screen-landscape-4",
+      "assetIds": [
+        "asset-060",
+        "asset-061",
+        "asset-062",
+        "asset-063"
+      ],
+      "n": 4,
+      "nP": 0,
+      "nL": 4,
+      "groupId": "day-sc-21",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-060",
+          "burst-061",
+          "burst-062",
+          "burst-063"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-012",
+          "proxyN": 8,
+          "interN": 4,
+          "proxyOnly": 4,
+          "screenOnly": 0,
+          "jaccard": 0.5
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-21",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-064",
+        "asset-066",
+        "asset-067"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-22",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-064",
+          "burst-066",
+          "burst-067"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-012",
+          "proxyN": 8,
+          "interN": 3,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.375
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-22",
+      "patternId": "screen-landscape-4",
+      "assetIds": [
+        "asset-068",
+        "asset-069",
+        "asset-070",
+        "asset-071"
+      ],
+      "n": 4,
+      "nP": 0,
+      "nL": 4,
+      "groupId": "day-sc-24",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-070",
+          "burst-071",
+          "burst-072",
+          "burst-073"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-013",
+          "proxyN": 7,
+          "interN": 4,
+          "proxyOnly": 3,
+          "screenOnly": 0,
+          "jaccard": 0.571
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-23",
+      "patternId": "screen-landscape-3-asymmetric-right",
+      "assetIds": [
+        "asset-072",
+        "asset-073",
+        "asset-074"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-25",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-074",
+          "burst-075",
+          "burst-076"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-013",
+          "proxyN": 7,
+          "interN": 3,
+          "proxyOnly": 4,
+          "screenOnly": 0,
+          "jaccard": 0.429
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-24",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-077",
+        "asset-078"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-26",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c"
+        ],
+        "burstGroupIds": [
+          "burst-079",
+          "burst-080"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-014",
+          "proxyN": 4,
+          "interN": 2,
+          "proxyOnly": 2,
+          "screenOnly": 0,
+          "jaccard": 0.5
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-25",
+      "patternId": "screen-mosaic-4-2p2l-portrait-bookends",
+      "assetIds": [
+        "asset-079",
+        "asset-081",
+        "asset-082",
+        "asset-080"
+      ],
+      "n": 4,
+      "nP": 2,
+      "nL": 2,
+      "groupId": "day-sc-27",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c",
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-081",
+          "burst-082",
+          "burst-083",
+          "burst-084"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-014",
+          "proxyN": 4,
+          "interN": 2,
+          "proxyOnly": 2,
+          "screenOnly": 2,
+          "jaccard": 0.333
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-26",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-084",
+        "asset-083"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-28",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-085",
+          "burst-086"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-015",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-27",
+      "patternId": "screen-landscape-2",
+      "assetIds": [
+        "asset-088",
+        "asset-089"
+      ],
+      "n": 2,
+      "nP": 0,
+      "nL": 2,
+      "groupId": "day-sc-30",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-090",
+          "burst-091"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-016",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-28",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-091",
+        "asset-093"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-31",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-093",
+          "burst-095"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-017",
+          "proxyN": 8,
+          "interN": 2,
+          "proxyOnly": 6,
+          "screenOnly": 0,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-29",
+      "patternId": "screen-portrait-1-landscape-1",
+      "assetIds": [
+        "asset-095",
+        "asset-094"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-33",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-096",
+          "burst-097"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-017",
+          "proxyN": 8,
+          "interN": 2,
+          "proxyOnly": 6,
+          "screenOnly": 0,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-30",
+      "patternId": "screen-mosaic-4-hero-70-sidebar",
+      "assetIds": [
+        "asset-096",
+        "asset-097",
+        "asset-098",
+        "asset-099"
+      ],
+      "n": 4,
+      "nP": 0,
+      "nL": 4,
+      "groupId": "day-sc-34",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-098",
+          "burst-099",
+          "burst-100",
+          "burst-101"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-017",
+          "proxyN": 8,
+          "interN": 4,
+          "proxyOnly": 4,
+          "screenOnly": 0,
+          "jaccard": 0.5
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-31",
+      "patternId": "screen-landscape-3-asymmetric-left",
+      "assetIds": [
+        "asset-102",
+        "asset-103",
+        "asset-104"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-36",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-104",
+          "burst-105",
+          "burst-106"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-018",
+          "proxyN": 3,
+          "interN": 3,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-32",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-042",
+        "asset-075",
+        "asset-100"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-01",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0b",
+          "sg-scene-0c",
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-042",
+          "burst-077",
+          "burst-102"
+        ]
+      },
+      "overlaps": [],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-01",
+      "screenId": "ch-01-sc-33",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-053",
+        "asset-065",
+        "asset-092"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-03",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0c",
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-053",
+          "burst-065",
+          "burst-094"
+        ]
+      },
+      "overlaps": [],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-02",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-105",
+        "asset-106",
+        "asset-107"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-02",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-107",
+          "burst-108",
+          "burst-109"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-019",
+          "proxyN": 7,
+          "interN": 3,
+          "proxyOnly": 4,
+          "screenOnly": 0,
+          "jaccard": 0.429
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-03",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-108",
+        "asset-109"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-04",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-110",
+          "burst-111"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-019",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.286
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-04",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-111",
+        "asset-110"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-05",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d"
+        ],
+        "burstGroupIds": [
+          "burst-112",
+          "burst-113"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-019",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.286
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-05",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-113",
+        "asset-114",
+        "asset-115"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-06",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0d",
+          "sg-scene-0e"
+        ],
+        "burstGroupIds": [
+          "burst-115",
+          "burst-116",
+          "burst-117"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-020",
+          "proxyN": 10,
+          "interN": 2,
+          "proxyOnly": 8,
+          "screenOnly": 1,
+          "jaccard": 0.182
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-06",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-116",
+        "asset-117"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-07",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0e"
+        ],
+        "burstGroupIds": [
+          "burst-118",
+          "burst-119"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-020",
+          "proxyN": 10,
+          "interN": 2,
+          "proxyOnly": 8,
+          "screenOnly": 0,
+          "jaccard": 0.2
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-09",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-123",
+        "asset-124",
+        "asset-128"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-10",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-0e",
+          "sg-scene-2a"
+        ],
+        "burstGroupIds": [
+          "burst-125",
+          "burst-126",
+          "burst-130"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-021",
+          "proxyN": 2,
+          "interN": 1,
+          "proxyOnly": 1,
+          "screenOnly": 2,
+          "jaccard": 0.25
+        },
+        {
+          "proxyId": "cohesive-run-020",
+          "proxyN": 10,
+          "interN": 2,
+          "proxyOnly": 8,
+          "screenOnly": 1,
+          "jaccard": 0.182
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-10",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-129",
+        "asset-011",
+        "asset-133"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-11",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-2a"
+        ],
+        "burstGroupIds": [
+          "burst-131",
+          "burst-135",
+          "burst-136"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-021",
+          "proxyN": 2,
+          "interN": 1,
+          "proxyOnly": 1,
+          "screenOnly": 2,
+          "jaccard": 0.25
+        },
+        {
+          "proxyId": "cohesive-run-022",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 1,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-11",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-134",
+        "asset-135",
+        "asset-136"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-12",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-2a"
+        ],
+        "burstGroupIds": [
+          "burst-137",
+          "burst-138",
+          "burst-139"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-022",
+          "proxyN": 7,
+          "interN": 3,
+          "proxyOnly": 4,
+          "screenOnly": 0,
+          "jaccard": 0.429
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-12",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-130",
+        "asset-137",
+        "asset-140"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-13",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1b",
+          "sg-scene-2a"
+        ],
+        "burstGroupIds": [
+          "burst-140",
+          "burst-141",
+          "burst-144"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-022",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 1,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-02",
+      "screenId": "ch-02-sc-15",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-142",
+        "asset-145",
+        "asset-146"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-01",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1b"
+        ],
+        "burstGroupIds": [
+          "burst-146",
+          "burst-149",
+          "burst-150"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-025",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 1,
+          "jaccard": 0.667
+        },
+        {
+          "proxyId": "cohesive-run-024",
+          "proxyN": 3,
+          "interN": 1,
+          "proxyOnly": 2,
+          "screenOnly": 2,
+          "jaccard": 0.2
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-03",
+      "patternId": "screen-portrait-2-gallery",
+      "assetIds": [
+        "asset-144",
+        "asset-147"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-03",
+      "boundary": {
+        "multiShotGroup": true,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1b",
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-148",
+          "burst-151"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-026",
+          "proxyN": 11,
+          "interN": 1,
+          "proxyOnly": 10,
+          "screenOnly": 1,
+          "jaccard": 0.083
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-05",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-150",
+        "asset-151",
+        "asset-152"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-05",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-154",
+          "burst-155",
+          "burst-156"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-026",
+          "proxyN": 11,
+          "interN": 3,
+          "proxyOnly": 8,
+          "screenOnly": 0,
+          "jaccard": 0.273
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-06",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-153",
+        "asset-156",
+        "asset-157"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-06",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-157",
+          "burst-160",
+          "burst-161"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-026",
+          "proxyN": 11,
+          "interN": 3,
+          "proxyOnly": 8,
+          "screenOnly": 0,
+          "jaccard": 0.273
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-08",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-154",
+        "asset-155",
+        "asset-159"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-08",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-158",
+          "burst-159",
+          "burst-164"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-026",
+          "proxyN": 11,
+          "interN": 2,
+          "proxyOnly": 9,
+          "screenOnly": 1,
+          "jaccard": 0.167
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-09",
+      "patternId": "screen-portrait-1-landscape-1",
+      "assetIds": [
+        "asset-162",
+        "asset-160"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-09",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-165",
+          "burst-167"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-027",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-11",
+      "patternId": "screen-landscape-3-asymmetric-right",
+      "assetIds": [
+        "asset-164",
+        "asset-165",
+        "asset-166"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-11",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-169",
+          "burst-170",
+          "burst-171"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-028",
+          "proxyN": 5,
+          "interN": 2,
+          "proxyOnly": 3,
+          "screenOnly": 1,
+          "jaccard": 0.333
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-12",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-167",
+        "asset-168",
+        "asset-169"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-12",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-172",
+          "burst-173",
+          "burst-174"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-028",
+          "proxyN": 5,
+          "interN": 3,
+          "proxyOnly": 2,
+          "screenOnly": 0,
+          "jaccard": 0.6
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-14",
+      "patternId": "screen-landscape-3-asymmetric-left",
+      "assetIds": [
+        "asset-176",
+        "asset-177",
+        "asset-178"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-14",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-181",
+          "burst-182",
+          "burst-183"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-029",
+          "proxyN": 4,
+          "interN": 3,
+          "proxyOnly": 1,
+          "screenOnly": 0,
+          "jaccard": 0.75
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-15",
+      "patternId": "screen-portrait-3",
+      "assetIds": [
+        "asset-180",
+        "asset-182",
+        "asset-183"
+      ],
+      "n": 3,
+      "nP": 3,
+      "nL": 0,
+      "groupId": "day-sc-15",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-185",
+          "burst-187",
+          "burst-188"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-030",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 1,
+          "jaccard": 0.667
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-16",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-186",
+        "asset-187"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-16",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-191",
+          "burst-192"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-031",
+          "proxyN": 4,
+          "interN": 2,
+          "proxyOnly": 2,
+          "screenOnly": 0,
+          "jaccard": 0.5
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-18",
+      "patternId": "screen-landscape-3-asymmetric-left",
+      "assetIds": [
+        "asset-190",
+        "asset-193",
+        "asset-195"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-18",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-195",
+          "burst-199",
+          "burst-201"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-031",
+          "proxyN": 4,
+          "interN": 1,
+          "proxyOnly": 3,
+          "screenOnly": 2,
+          "jaccard": 0.167
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-19",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-197",
+        "asset-199"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-19",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-203",
+          "burst-205"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-032",
+          "proxyN": 3,
+          "interN": 1,
+          "proxyOnly": 2,
+          "screenOnly": 1,
+          "jaccard": 0.25
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-20",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-196",
+        "asset-198"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-20",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-202",
+          "burst-204"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-032",
+          "proxyN": 3,
+          "interN": 2,
+          "proxyOnly": 1,
+          "screenOnly": 0,
+          "jaccard": 0.667
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-21",
+      "patternId": "screen-landscape-3-asymmetric-right",
+      "assetIds": [
+        "asset-200",
+        "asset-201",
+        "asset-202"
+      ],
+      "n": 3,
+      "nP": 0,
+      "nL": 3,
+      "groupId": "day-sc-21",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-206",
+          "burst-207",
+          "burst-208"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-033",
+          "proxyN": 3,
+          "interN": 3,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "boundary_violation_burst"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-22",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-204",
+        "asset-203"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-22",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-209",
+          "burst-210"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-034",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-23",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-205",
+        "asset-206"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-23",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-211",
+          "burst-212"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-035",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.286
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-24",
+      "patternId": "screen-portrait-1-landscape-1",
+      "assetIds": [
+        "asset-207",
+        "asset-208"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-24",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-213",
+          "burst-214"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-035",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.286
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-25",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-209",
+        "asset-210"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": "day-sc-25",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-215",
+          "burst-216"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-035",
+          "proxyN": 7,
+          "interN": 2,
+          "proxyOnly": 5,
+          "screenOnly": 0,
+          "jaccard": 0.286
+        }
+      ],
+      "verdict": "undercut_series"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-26",
+      "patternId": "screen-landscape-2",
+      "assetIds": [
+        "asset-211",
+        "asset-007"
+      ],
+      "n": 2,
+      "nP": 0,
+      "nL": 2,
+      "groupId": "day-sc-26",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-217",
+          "burst-220"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-035",
+          "proxyN": 7,
+          "interN": 1,
+          "proxyOnly": 6,
+          "screenOnly": 1,
+          "jaccard": 0.125
+        }
+      ],
+      "verdict": "weak_or_singleton_mix"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-27",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-214",
+        "asset-213"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-27",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-222",
+          "burst-223"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-036",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-28",
+      "patternId": "screen-landscape-1-portrait-1",
+      "assetIds": [
+        "asset-215",
+        "asset-216"
+      ],
+      "n": 2,
+      "nP": 1,
+      "nL": 1,
+      "groupId": "day-sc-28",
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-224",
+          "burst-225"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-037",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    },
+    {
+      "chapterId": "ch-03",
+      "screenId": "ch-03-sc-31",
+      "patternId": "screen-portrait-2",
+      "assetIds": [
+        "asset-223",
+        "asset-217"
+      ],
+      "n": 2,
+      "nP": 2,
+      "nL": 0,
+      "groupId": null,
+      "boundary": {
+        "multiShotGroup": false,
+        "multiBurst": true,
+        "shotGroupIds": [
+          "sg-scene-1c"
+        ],
+        "burstGroupIds": [
+          "burst-226",
+          "burst-232"
+        ]
+      },
+      "overlaps": [
+        {
+          "proxyId": "cohesive-run-038",
+          "proxyN": 2,
+          "interN": 2,
+          "proxyOnly": 0,
+          "screenOnly": 0,
+          "jaccard": 1.0
+        }
+      ],
+      "verdict": "aligned"
+    }
+  ],
+  "burstUnits": [],
+  "shotGroupsRaw": [
+    {
+      "id": "sg-weak-0",
+      "kind": "weak",
+      "assetIds": [
+        "asset-003",
+        "asset-004",
+        "asset-005",
+        "asset-006"
+      ],
+      "medoidAssetId": "asset-003",
+      "sourceSceneClusterId": -1,
+      "sourceEventId": null,
+      "signals": [
+        "weak"
+      ],
+      "confidence": 0.5
+    },
+    {
+      "id": "sg-scene-1a",
+      "kind": "scene",
+      "assetIds": [
+        "asset-008",
+        "asset-009",
+        "asset-010",
+        "asset-013",
+        "asset-014",
+        "asset-015"
+      ],
+      "medoidAssetId": "asset-009",
+      "sourceSceneClusterId": 1,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-0b",
+      "kind": "scene",
+      "assetIds": [
+        "asset-016",
+        "asset-017",
+        "asset-018",
+        "asset-019",
+        "asset-020",
+        "asset-022",
+        "asset-024",
+        "asset-025",
+        "asset-026",
+        "asset-027",
+        "asset-028",
+        "asset-029",
+        "asset-030",
+        "asset-031",
+        "asset-032",
+        "asset-033",
+        "asset-034",
+        "asset-035",
+        "asset-036",
+        "asset-037",
+        "asset-038",
+        "asset-039",
+        "asset-040",
+        "asset-041",
+        "asset-042"
+      ],
+      "medoidAssetId": "asset-019",
+      "sourceSceneClusterId": 0,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-0c",
+      "kind": "scene",
+      "assetIds": [
+        "asset-053",
+        "asset-054",
+        "asset-055",
+        "asset-056",
+        "asset-057",
+        "asset-058",
+        "asset-059",
+        "asset-060",
+        "asset-061",
+        "asset-062",
+        "asset-063",
+        "asset-064",
+        "asset-065",
+        "asset-066",
+        "asset-067",
+        "asset-068",
+        "asset-069",
+        "asset-070",
+        "asset-071",
+        "asset-073",
+        "asset-074",
+        "asset-072",
+        "asset-075",
+        "asset-076",
+        "asset-077",
+        "asset-078",
+        "asset-079",
+        "asset-080",
+        "asset-081"
+      ],
+      "medoidAssetId": "asset-071",
+      "sourceSceneClusterId": 0,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-0d",
+      "kind": "scene",
+      "assetIds": [
+        "asset-082",
+        "asset-088",
+        "asset-089",
+        "asset-092",
+        "asset-093",
+        "asset-094",
+        "asset-095",
+        "asset-096",
+        "asset-097",
+        "asset-098",
+        "asset-099",
+        "asset-100",
+        "asset-102",
+        "asset-103",
+        "asset-083",
+        "asset-084",
+        "asset-091",
+        "asset-104",
+        "asset-105",
+        "asset-106",
+        "asset-107",
+        "asset-108",
+        "asset-109",
+        "asset-110",
+        "asset-111",
+        "asset-113"
+      ],
+      "medoidAssetId": "asset-082",
+      "sourceSceneClusterId": 0,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-0e",
+      "kind": "scene",
+      "assetIds": [
+        "asset-114",
+        "asset-115",
+        "asset-116",
+        "asset-117",
+        "asset-118",
+        "asset-119",
+        "asset-120",
+        "asset-121",
+        "asset-122",
+        "asset-138",
+        "asset-139",
+        "asset-123",
+        "asset-124"
+      ],
+      "medoidAssetId": "asset-118",
+      "sourceSceneClusterId": 0,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-2a",
+      "kind": "scene",
+      "assetIds": [
+        "asset-128",
+        "asset-129",
+        "asset-011",
+        "asset-133",
+        "asset-134",
+        "asset-135",
+        "asset-136",
+        "asset-130",
+        "asset-137"
+      ],
+      "medoidAssetId": "asset-128",
+      "sourceSceneClusterId": 2,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-1b",
+      "kind": "scene",
+      "assetIds": [
+        "asset-140",
+        "asset-141",
+        "asset-143",
+        "asset-142",
+        "asset-144",
+        "asset-145",
+        "asset-146"
+      ],
+      "medoidAssetId": "asset-140",
+      "sourceSceneClusterId": 1,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    },
+    {
+      "id": "sg-scene-1c",
+      "kind": "scene",
+      "assetIds": [
+        "asset-147",
+        "asset-148",
+        "asset-149",
+        "asset-150",
+        "asset-151",
+        "asset-152",
+        "asset-153",
+        "asset-154",
+        "asset-155",
+        "asset-156",
+        "asset-157",
+        "asset-158",
+        "asset-159",
+        "asset-160",
+        "asset-162",
+        "asset-163",
+        "asset-164",
+        "asset-165",
+        "asset-166",
+        "asset-167",
+        "asset-168",
+        "asset-169",
+        "asset-174",
+        "asset-176",
+        "asset-177",
+        "asset-178",
+        "asset-180",
+        "asset-182",
+        "asset-183",
+        "asset-186",
+        "asset-187",
+        "asset-189",
+        "asset-190",
+        "asset-193",
+        "asset-195",
+        "asset-196",
+        "asset-197",
+        "asset-198",
+        "asset-199",
+        "asset-200",
+        "asset-201",
+        "asset-202",
+        "asset-203",
+        "asset-204",
+        "asset-205",
+        "asset-206",
+        "asset-207",
+        "asset-208",
+        "asset-209",
+        "asset-210",
+        "asset-211",
+        "asset-007",
+        "asset-212",
+        "asset-213",
+        "asset-214",
+        "asset-215",
+        "asset-216",
+        "asset-217",
+        "asset-219",
+        "asset-222",
+        "asset-223"
+      ],
+      "medoidAssetId": "asset-157",
+      "sourceSceneClusterId": 1,
+      "sourceEventId": null,
+      "signals": [
+        "clip_scene",
+        "time_split"
+      ],
+      "confidence": 1.0
+    }
+  ]
+}

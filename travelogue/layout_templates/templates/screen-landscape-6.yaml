@@ -1,9 +1,11 @@
+# 三列等分 · 六横 3×2。LTN C3 曾剪出默认活跃集；2026-07-31 以 experimental 复活（勿写 lte_policy）。
 id: screen-landscape-6
-version: 1
-status: deprecated
+version: 2
+status: experimental
 kind: primitive
 displayName: landscape · 6
-description: Reverse-migrated from legacy mosaic sources (Phase 16 W1).
+description: >
+  六横 3×2 等分网格（16:9）。experimental 狗粮门可见；转正前勿进 MOSAIC_6_PATTERN_IDS。
 stage:
   aspect: '16:9'
   grid:
@@ -69,12 +71,18 @@ constraints:
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
 scoring:
-  base_weight: 1.0
-  tags: []
+  base_weight: 0.92
+  tags: [landscape-6, tri-col, equal-grid]
+  rhythm:
+    max_per_chapter: 2
+    diversity_bonus: 0.04
 render:
   gridClass: layout-screen__grid--3x2
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
+rollout:
+  percent: 100
+  hash_key: tripId
 _legacy:
   accepts:
     min_portrait: 0
@@ -88,10 +96,15 @@ usage:
     - 连续 6 张横图 run，质量均匀、无 hero 分差时
     - 需要快速消化横图连拍，且 rhythm 配额允许时
   whenNotToUse: |
-    - 窗口内有 hero 分显著领先的横图（应选 mosaic-5-main-hero-plus-4）
+    - 窗口内有 hero 分显著领先的横图（应选 mosaic-6-main-hero-plus-5 / mosaic-5-main-hero-plus-4）
     - 章内已有 dense 屏且缺少呼吸缓冲时
+  designIntent: 三列等分家族 · 纯横密度；与 bookends / center-rails 几何同族。
   siblings:
+    - id: screen-mosaic-6-main-hero-plus-5
+      difference: 该模板主 hero + 5 配图；本模板 6 图等权无主次。
     - id: screen-mosaic-5-main-hero-plus-4
-      difference: 该模板主 hero 2×2 + 5 配图；本模板 6 图等权无主次。
+      difference: 该模板主 hero 2×2 + 配图；本模板 6 图等权无主次。
+    - id: screen-mosaic-5-1p4l-portrait-center-rails
+      difference: 该模板中竖主+四翼横；本模板六横等分。
     - id: screen-landscape-9
       difference: 该模板 9 横 3×3 满格；本模板 6 横，密度低一档。

@@ -109,6 +109,7 @@ def _score_window_candidates_with_rejections(
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
     trip_id: str | None = None,
+    ssg_policy: Any | None = None,
 ) -> tuple[
     list[tuple[ScreenCandidate, float, list[str], dict[str, float]]],
     list[dict],
@@ -133,6 +134,7 @@ def _score_window_candidates_with_rejections(
         window_ctx=window_ctx,
         trip_photo_total=trip_photo_total,
         trip_id=trip_id,
+        ssg_policy=ssg_policy,
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
@@ -277,6 +279,7 @@ def pick_best_window(
     chapter_screen_count: int = 12,
     trip_id: str | None = None,
     funnel: dict | None = None,
+    ssg_policy: Any | None = None,
 ) -> WindowPickResult:
     wh = weights_hash(cfg)
     base_order = list(
@@ -326,6 +329,7 @@ def pick_best_window(
         chapter_screen_index=chapter_screen_index,
         chapter_screen_count=chapter_screen_count,
         trip_id=trip_id,
+        ssg_policy=ssg_policy,
     )
     log.rejected_templates = rejected
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)

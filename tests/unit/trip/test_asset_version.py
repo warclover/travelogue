@@ -63,7 +63,10 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-27 (k): mosaic-5 3P2L portrait-hero quad / lp-stack grids.
 # Re-bumped 2026-07-27 (l): 3P2L left rail 11/20 · readable main AR≈0.978.
 # Re-bumped 2026-07-28: moment signature label → short paper tag (EXIF contrast).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}028080c79510"
+# Re-bumped 2026-07-31: tri-col family · 2p2l bookends + 1p4l center-rails + landscape-6 revive.
+# Re-bumped 2026-07-31 (b): restore MEGC equal-2x2 + landscape-6 fixed-stage
+# contain contracts into journal-screens-overlays.css SSOT (sync regression).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}f621c648b71a"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

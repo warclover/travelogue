@@ -1,0 +1,98 @@
+# 三列等分 · 双侧竖书挡 + 中双横叠。experimental；勿写 lte_policy。
+id: screen-mosaic-4-2p2l-portrait-bookends
+version: 1
+status: experimental
+kind: composite
+displayName: 四图 · 2P2L 双侧竖书挡
+description: >
+  三列等宽：左满高竖 + 中上下双横 + 右满高竖（书挡对称）。
+  CSS-primary：cols/rows 等分；竖槽 AR≈0.593，半高横格 AR≈1.185（16:9）。
+aesthetic: airy
+balancePolicy: equal_area
+
+stage:
+  aspect: "16:9"
+  cols: [1, 1, 1]
+  rows: [1, 1]
+  gap: "3px"
+  variants:
+    - { layout: web, aspect: "16:9" }
+    - { layout: mobile, aspect: "9:16" }
+
+photoCount: { min: 4, max: 4 }
+mix: { portrait: 2, landscape: 2 }
+
+slots:
+  - { index: 0, rect: [1, 1, 1, 2], role: portrait, fit: cover, visualWeight: 1.0 }
+  - { index: 1, rect: [2, 2, 1, 1], role: landscape, fit: cover, visualWeight: 0.75 }
+  - { index: 2, rect: [2, 2, 2, 2], role: landscape, fit: cover, visualWeight: 0.75 }
+  - { index: 3, rect: [3, 3, 1, 2], role: portrait, fit: cover, visualWeight: 1.0 }
+
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps: []
+  arLadderSignOff:
+    "0":
+      signedBy: tri-col-bookends
+      signedAt: "2026-07-31"
+      note: "Left full-height col AR≈0.593 (1/3×16:9); near 9:16 ladder"
+    "3":
+      signedBy: tri-col-bookends
+      signedAt: "2026-07-31"
+      note: "Right full-height col AR≈0.593 (mirror of slot 0)"
+  eligibility:
+    heroDominance: moderate
+    heroAreaBand: [0.30, 0.40]
+    slotIndex: 0
+    targetDisplayAspect: 0.59
+    eligibleAspectKinds: [portrait]
+    forbidKinds: [panorama, landscape, square, tall]
+    arLadderTol: 0.12
+    preferLadder: [0.5625, 0.6667, 0.75]
+
+compatibilityHints:
+  prefers_burst: false
+  avoid_near_scene_clones: true
+  min_trip_photos: 10
+
+scoring:
+  base_weight: 0.95
+  tags: [mixed-4, bookends, tri-col, 2p2l]
+  rhythm:
+    max_per_chapter: 2
+    diversity_bonus: 0.06
+
+render:
+  gridClass: layout-screen__grid--mosaic-4-2p2l-portrait-bookends
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+
+rollout:
+  percent: 100
+  hash_key: tripId
+
+_legacy:
+  accepts:
+    min_portrait: 2
+    min_landscape: 2
+    max_portrait: 2
+    max_landscape: 2
+  css_verified: true
+
+usage:
+  summary: 2P2L 三列书挡：左右满高竖对称，中列上下双横。
+  whenToUse: |
+    - 窗口恰 2 竖 + 2 横，两竖质量接近、适合双侧对照时
+    - 需要比 portrait-1-landscape-2 更对称的三列阅读节奏时
+  whenNotToUse: |
+    - 仅 1 竖（应选 portrait-1-landscape-2）
+    - 四图等权棋盘感更强（应选 portrait-2-landscape-2 / mosaic-4-2l2p-weighted）
+  designIntent: 三列等分书挡；与 center-rails / landscape-6 同属三列家族。
+  siblings:
+    - id: screen-portrait-1-landscape-2
+      difference: 该模板左竖+右双横（两列）；本模板双侧竖+中双横（三列）。
+    - id: screen-portrait-2-landscape-2
+      difference: 该模板等分 2×2；本模板三列书挡拓扑。
+    - id: screen-mosaic-5-1p4l-portrait-center-rails
+      difference: 该模板中竖主+四翼横；本模板双侧竖+中双横。

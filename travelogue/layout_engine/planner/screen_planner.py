@@ -103,6 +103,13 @@ PATTERN_GRID_CLASS: dict[str, str] = {
     "screen-mosaic-5-3p2l-portrait-hero-lp-stack": (
         "layout-screen__grid--mosaic-5-3p2l-portrait-hero-lp-stack"
     ),
+    "screen-mosaic-5-1p4l-portrait-hero": "layout-screen__grid--mosaic-5-1p4l-portrait-hero",
+    "screen-mosaic-5-1p4l-portrait-center-rails": (
+        "layout-screen__grid--mosaic-5-1p4l-portrait-center-rails"
+    ),
+    "screen-mosaic-4-2p2l-portrait-bookends": (
+        "layout-screen__grid--mosaic-4-2p2l-portrait-bookends"
+    ),
     "screen-mosaic-6-main-hero-plus-5": "layout-screen__grid--mosaic-6-main-hero-plus-5",
     "screen-landscape-1": "layout-screen__grid--1col",
     "screen-landscape-2": "layout-screen__grid--landscape-stack-2",
@@ -135,7 +142,14 @@ _PORTRAIT_COLUMN_GRID_SIZES = (9, 6, 3, 2, 1)
 
 
 def grid_class_for_pattern(pattern_id: str) -> str:
-    return PATTERN_GRID_CLASS.get(pattern_id, "layout-screen__grid--1col")
+    if pattern_id in PATTERN_GRID_CLASS:
+        return PATTERN_GRID_CLASS[pattern_id]
+    # Experimental / newly synced LTE SKUs live in mosaic _legacy_generated.
+    from travelogue.layout_engine.mosaic.constants import (
+        PATTERN_GRID_CLASS as mosaic_classes,
+    )
+
+    return mosaic_classes.get(pattern_id, "layout-screen__grid--1col")
 
 
 def _make_portrait_2_screen(
@@ -987,6 +1001,35 @@ def _emit_person_portrait_screens(
         if size == 3:
             trio = buf[:3]
             buf = buf[3:]
+            from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+            from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+            atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+            if window_violates_atom(trio, assets_map, atom_policy):
+                # Degrade: keep longest atom prefix as pair/single; defer rest.
+                from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
+
+                keep_n = max_prefix_in_atom(trio, assets_map, atom_policy, max_n=3)
+                if keep_n >= 2 and (
+                    force
+                    or layout_state is None
+                    or layout_state.can_emit_pattern("screen-portrait-2")
+                ):
+                    screen = _make_screen(
+                        "screen-portrait-2",
+                        trio[:2] if keep_n >= 2 else trio[:keep_n],
+                        screen_id="",
+                        aspects=aspects,
+                        assets_map=assets_map,
+                    )
+                    # If keep_n==1 only, fall through to defer all as singles path
+                    if keep_n >= 2:
+                        screen["layoutHint"] = PERSON_LAYOUT_PAIR
+                        screens.append(screen)
+                        defer.extend(trio[2:])
+                        continue
+                defer.extend(trio)
+                continue
             if (
                 not force
                 and layout_state is not None
@@ -1026,6 +1069,13 @@ def _emit_person_portrait_screens(
         elif size == 2:
             pair = buf[:2]
             buf = buf[2:]
+            from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+            from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+            atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+            if window_violates_atom(pair, assets_map, atom_policy):
+                defer.extend(pair)
+                continue
             screen = _make_screen(
                 "screen-portrait-2",
                 pair,
@@ -1114,6 +1164,44 @@ def _plan_portrait_triple_row(
     cfg: AppConfig | None = None,
 ) -> list[dict]:
     """三张一排；若与上一屏冲突则降为双列并回退余片。"""
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import (
+        max_prefix_in_atom,
+        window_violates_atom,
+    )
+
+    atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+    if window_violates_atom(trio, assets_map, atom_policy):
+        keep_n = max_prefix_in_atom(trio, assets_map, atom_policy, max_n=3)
+        if keep_n >= 2 and (
+            force
+            or layout_state is None
+            or layout_state.can_emit_pattern("screen-portrait-2")
+        ):
+            for aid in reversed(trio[keep_n:]):
+                pending.insert(0, aid)
+            return [
+                _make_screen(
+                    "screen-portrait-2",
+                    trio[:2],
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
+            ]
+        # No safe multi-slot prefix → emit first as single; defer the rest.
+        for aid in reversed(trio[1:]):
+            pending.insert(0, aid)
+        return [
+            _make_screen(
+                "screen-portrait-1",
+                [trio[0]],
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+        ]
+
     if force or layout_state is None or layout_state.can_emit_pattern("screen-portrait-3"):
         from travelogue.layout_engine.editorial.portrait_row import (
             apply_editorial_portrait_row_to_screen,
@@ -1288,17 +1376,35 @@ def _flush_portrait_pending(
             or layout_state is None
             or layout_state.can_emit_pattern("screen-portrait-2")
         ):
-            # Any person ⇒ picker returns fill (D-07).
-            screens.append(
-                _make_portrait_2_screen(
-                    list(buf),
-                    aspects=aspects,
-                    assets_map=assets_map,
-                    layout_state=layout_state,
-                    trip=trip,
-                    cfg=cfg,
+            from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+            from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+            pair = list(buf)
+            atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+            if window_violates_atom(pair, assets_map, atom_policy):
+                screens.extend(
+                    _emit_portrait_single_screens(
+                        pair,
+                        aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        pending=pending,
+                        force=force,
+                        solo_exclude=solo_exclude,
+                    )
                 )
-            )
+            else:
+                # Any person ⇒ picker returns fill (D-07).
+                screens.append(
+                    _make_portrait_2_screen(
+                        pair,
+                        aspects=aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        trip=trip,
+                        cfg=cfg,
+                    )
+                )
         else:
             pending.extend(buf)
         buf.clear()
@@ -1349,9 +1455,29 @@ def _flush_portrait_pending(
             screens.extend(placed)
             buf = buf[3:]
         elif size == 2:
+            pair = buf[:2]
+            from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+            from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+            atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+            if window_violates_atom(pair, assets_map, atom_policy):
+                screens.extend(
+                    _emit_portrait_single_screens(
+                        pair[:1],
+                        aspects,
+                        assets_map=assets_map,
+                        layout_state=layout_state,
+                        pending=pending,
+                        force=force,
+                        solo_exclude=solo_exclude,
+                    )
+                )
+                pending.insert(0, pair[1])
+                buf = buf[2:]
+                continue
             screens.append(
                 _make_portrait_2_screen(
-                    buf[:2],
+                    pair,
                     aspects=aspects,
                     assets_map=assets_map,
                     layout_state=layout_state,

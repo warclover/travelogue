@@ -130,7 +130,14 @@ def ssg_hard_reject_active(cfg: Any) -> bool:
 
     Independent of ``near_scene_clone_gate.enabled`` (which still gates the
     legacy time-heuristic hard reject).
+
+    Prefer :func:`resolve_shot_group_mosaic_policy` + explicit policy in
+    candidates (PLAN P0). Passing ``MosaicConfig`` here returns False.
     """
+    from travelogue.config.shot_grouping import ShotGroupMosaicPolicy
+
+    if isinstance(cfg, ShotGroupMosaicPolicy):
+        return bool(cfg.cross_group_hard_reject or cfg.same_group_anti_slice)
     ssg = getattr(cfg, "shot_grouping", None)
     if ssg is None:
         return False
@@ -145,6 +152,10 @@ def ssg_hard_reject_active(cfg: Any) -> bool:
 
 
 def ssg_same_group_anti_slice_active(cfg: Any) -> bool:
+    from travelogue.config.shot_grouping import ShotGroupMosaicPolicy
+
+    if isinstance(cfg, ShotGroupMosaicPolicy):
+        return bool(cfg.same_group_anti_slice)
     if not ssg_hard_reject_active(cfg):
         return False
     mosaic = getattr(getattr(cfg, "shot_grouping", None), "mosaic", None)
@@ -154,6 +165,10 @@ def ssg_same_group_anti_slice_active(cfg: Any) -> bool:
 
 
 def ssg_cross_group_hard_reject_active(cfg: Any) -> bool:
+    from travelogue.config.shot_grouping import ShotGroupMosaicPolicy
+
+    if isinstance(cfg, ShotGroupMosaicPolicy):
+        return bool(cfg.cross_group_hard_reject)
     if not ssg_hard_reject_active(cfg):
         return False
     mosaic = getattr(getattr(cfg, "shot_grouping", None), "mosaic", None)

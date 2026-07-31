@@ -2,7 +2,7 @@
 
 Regenerate:
   python scripts/lte_export_legacy.py --sync-python
-Content hash: e857c8b3e5fe6ce2758b4153d3717b492647d6862a9862082a7789688ef128fb
+Content hash: 500da6b6e31a074ae25c4b8486f5b42be96974fcf0006d9f76c93ba73e3e31dd
 """
 
 from __future__ import annotations
@@ -17,7 +17,9 @@ EXPLICIT_GRID_SPECS: dict[str, Any] = {
     "screen-landscape-3-asymmetric-right": [(1, 1, 1, 1), (1, 1, 2, 2), (2, 2, 1, 2)],
     "screen-mosaic-4-1l3p-rail": [(1, 1, 1, 3), (2, 2, 1, 1), (2, 2, 2, 2), (2, 2, 3, 3)],
     "screen-mosaic-4-2l2p-weighted": [(1, 1, 1, 1), (2, 2, 1, 1), (1, 1, 2, 2), (2, 2, 2, 2)],
+    "screen-mosaic-4-2p2l-portrait-bookends": [(1, 1, 1, 2), (2, 2, 1, 1), (2, 2, 2, 2), (3, 3, 1, 2)],
     "screen-mosaic-4-hero-70-sidebar": [(1, 1, 1, 3), (2, 2, 1, 1), (2, 2, 2, 2), (2, 2, 3, 3)],
+    "screen-mosaic-5-1p4l-portrait-center-rails": [(2, 2, 1, 2), (1, 1, 1, 1), (1, 1, 2, 2), (3, 3, 1, 1), (3, 3, 2, 2)],
     "screen-mosaic-5-1p4l-portrait-hero": [(1, 1, 1, 4), (2, 2, 1, 1), (2, 2, 2, 2), (2, 2, 3, 3), (2, 2, 4, 4)],
     "screen-mosaic-5-2p3l-equal": [(1, 1, 1, 3), (2, 2, 1, 3), (3, 3, 1, 1), (3, 3, 2, 2), (3, 3, 3, 3)],
     "screen-mosaic-5-2p3l-portrait-hero-rail": [(1, 1, 1, 3), (2, 2, 1, 3), (3, 3, 1, 1), (3, 3, 2, 2), (3, 3, 3, 3)],
@@ -43,7 +45,9 @@ EXPLICIT_GRID_BOUNDS: dict[str, Any] = {
     "screen-landscape-3-asymmetric-right": (2, 2),
     "screen-mosaic-4-1l3p-rail": (2, 3),
     "screen-mosaic-4-2l2p-weighted": (2, 2),
+    "screen-mosaic-4-2p2l-portrait-bookends": (3, 2),
     "screen-mosaic-4-hero-70-sidebar": (2, 3),
+    "screen-mosaic-5-1p4l-portrait-center-rails": (3, 2),
     "screen-mosaic-5-1p4l-portrait-hero": (2, 4),
     "screen-mosaic-5-2p3l-equal": (3, 3),
     "screen-mosaic-5-2p3l-portrait-hero-rail": (3, 3),
@@ -94,7 +98,9 @@ PATTERN_GRID_CLASS: dict[str, Any] = {
     "screen-landscape-9": 'layout-screen__grid--3x3',
     "screen-mosaic-4-1l3p-rail": 'layout-screen__grid--mosaic-4-1l3p-rail',
     "screen-mosaic-4-2l2p-weighted": 'layout-screen__grid--mosaic-4-2l2p-weighted',
+    "screen-mosaic-4-2p2l-portrait-bookends": 'layout-screen__grid--mosaic-4-2p2l-portrait-bookends',
     "screen-mosaic-4-hero-70-sidebar": 'layout-screen__grid--mosaic-4-hero-70-sidebar',
+    "screen-mosaic-5-1p4l-portrait-center-rails": 'layout-screen__grid--mosaic-5-1p4l-portrait-center-rails',
     "screen-mosaic-5-1p4l-portrait-hero": 'layout-screen__grid--mosaic-5-1p4l-portrait-hero',
     "screen-mosaic-5-2p3l-equal": 'layout-screen__grid--mosaic-5-2p3l-equal',
     "screen-mosaic-5-2p3l-portrait-hero-rail": 'layout-screen__grid--mosaic-5-2p3l-portrait-hero-rail',

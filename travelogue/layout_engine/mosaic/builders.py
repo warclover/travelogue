@@ -14,6 +14,8 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
     PATTERN_LANDSCAPE_6,
     PATTERN_LANDSCAPE_9,
+    PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS,
+    PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
     PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
     PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
@@ -190,6 +192,43 @@ def _order_1p4l_portrait_hero(
     if len(rails) < 4:
         return None
     return [main, rails[0], rails[1], rails[2], rails[3]]
+
+
+def _order_1p4l_portrait_center_rails(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """Tri-col · center portrait main + L/R double landscape rails (takenAt)."""
+    # Slot order: [center, LT, LB, RT, RB] — same id order as left-hero 1p4l.
+    return _order_1p4l_portrait_hero(
+        asset_ids, aspects, assets_map, median_sharp=median_sharp
+    )
+
+
+def _order_2p2l_portrait_bookends(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    *,
+    median_sharp: float | None,
+) -> list[str] | None:
+    """Tri-col · left/right portraits + center stacked landscapes."""
+    portraits, landscapes = _split_portrait_landscape(asset_ids, aspects)
+    if len(portraits) < 2 or len(landscapes) < 2:
+        return None
+    p_sorted = _sort_asset_ids_by_taken(portraits, assets_map)[:2]
+    l_sorted = _sort_asset_ids_by_taken(landscapes, assets_map)[:2]
+    if len(p_sorted) < 2 or len(l_sorted) < 2:
+        return None
+    # Prefer stronger portrait on the left bookend when sharpness differs.
+    left = _pick_strongest_portrait(
+        p_sorted, assets_map, median_sharp=median_sharp
+    ) or p_sorted[0]
+    right = next(p for p in p_sorted if p != left)
+    return [left, l_sorted[0], l_sorted[1], right]
 
 
 def _order_2p3l_portrait_hero_rail(
@@ -430,6 +469,10 @@ def try_order_for_pattern(
             return _order_mixed_p2_l2(
                 asset_ids, aspects, assets_map, burst_seconds=burst_seconds
             )
+        if pattern_id == PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS:
+            return _order_2p2l_portrait_bookends(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
         if pattern_id == PATTERN_PORTRAIT_4 and len(portraits) >= 4:
             return _sort_asset_ids_by_taken(portraits[:4], assets_map)
         if pattern_id == PATTERN_LANDSCAPE_4 and len(landscapes) >= 4:
@@ -439,6 +482,10 @@ def try_order_for_pattern(
     if n == 5:
         if pattern_id == PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO:
             return _order_1p4l_portrait_hero(
+                asset_ids, aspects, assets_map, median_sharp=median_sharp
+            )
+        if pattern_id == PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS:
+            return _order_1p4l_portrait_center_rails(
                 asset_ids, aspects, assets_map, median_sharp=median_sharp
             )
         if pattern_id == PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL:

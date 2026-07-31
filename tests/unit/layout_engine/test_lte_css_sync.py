@@ -255,7 +255,17 @@ def test_megc_equal_2x2_fixed_stage_keeps_grid_with_contain(journal_css: str) ->
     Regression: generic --2x2:has(contain)→rows:auto;height:auto let landscape-4
     grids exceed the 16:9 stage; overflow:hidden then clipped the bottom row
     (demo-2019 ch-02-sc-06 / assets 086,088,089,091).
+
+    SSOT is journal-screens-overlays.css — export --sync-journal replaces the
+    @journal-overlays block, so MEGC must live there (not only in journal-screens.css).
     """
+    from pathlib import Path
+
+    overlays_ssot = Path("templates/visual-journal/journal-screens-overlays.css").read_text(
+        encoding="utf-8"
+    )
+    assert "MEGC · PR-A" in overlays_ssot
+
     ostart = journal_css.index(OVERLAYS_MARKER_START)
     oend = journal_css.index(OVERLAYS_MARKER_END)
     overlays = journal_css[ostart:oend]
@@ -270,6 +280,30 @@ def test_megc_equal_2x2_fixed_stage_keeps_grid_with_contain(journal_css: str) ->
         ':not([data-pattern="screen-landscape-4"]):not([data-pattern="screen-portrait-2-landscape-2"])'
         in overlays
     )
+
+
+@pytest.mark.unit
+def test_landscape_6_fixed_3x2_keeps_stage_with_contain(journal_css: str) -> None:
+    """Tri-col revive: landscape-6 must opt out of generic --3x2 contain-collapse."""
+    from pathlib import Path
+
+    overlays_ssot = Path("templates/visual-journal/journal-screens-overlays.css").read_text(
+        encoding="utf-8"
+    )
+    assert 'data-pattern="screen-landscape-6"' in overlays_ssot
+    assert (
+        ':not([data-pattern="screen-landscape-6"])'
+        in overlays_ssot
+    )
+
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    assert (
+        '[data-pattern="screen-landscape-6"] .layout-screen__grid--3x2:has(.layout-slot__img--contain)'
+        in overlays
+    )
+    assert "grid-template-rows: repeat(2, minmax(0, 1fr))" in overlays
 
 
 @pytest.mark.unit

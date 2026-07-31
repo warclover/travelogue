@@ -82,6 +82,7 @@ def window_has_candidates(
     median_sharp: float | None,
     layout_state=None,
     trip_id: str | None = None,
+    ssg_policy=None,
 ) -> bool:
     from travelogue.config import get_config
     from travelogue.layout_contract.usage_context import build_window_context
@@ -109,6 +110,7 @@ def window_has_candidates(
         median_sharp=median_sharp,
         window_ctx=window_ctx,
         trip_id=trip_id,
+        ssg_policy=ssg_policy,
     )
     return any(c.hard_valid for c in result.candidates)
 
@@ -238,6 +240,9 @@ def try_mosaic_window_mcs(
     if start + size > len(ctx.ids):
         return False
     window = ctx.ids[start : start + size]
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+
+    ssg_policy = resolve_shot_group_mosaic_policy(ctx.app_config)
     pick = pick_best_window(
         window,
         ctx.aspects,
@@ -256,6 +261,7 @@ def try_mosaic_window_mcs(
         chapter_screen_count=max(2, len(ctx.ids)),
         trip_id=_ctx_trip_id(ctx),
         funnel=funnel,
+        ssg_policy=ssg_policy,
     )
     if pick.log.dropped_asset_ids and mosaic_log_capture_enabled():
         _dropped_buf().extend(pick.log.dropped_asset_ids)

@@ -1,0 +1,172 @@
+{
+  "tripId": "demo-49cbe46479",
+  "labeledAt": "2026-07-31",
+  "source": "human review of mcs-vs-human-proxy-clusters HTML",
+  "purpose": "calibrate cluster-boundary penalty vs template weights",
+  "labels": [
+    {
+      "n": 1,
+      "screenId": "ch-01-sc-25",
+      "patternId": "screen-mosaic-4-2p2l-portrait-bookends",
+      "mcsAssetIds": ["asset-079", "asset-081", "asset-082", "asset-080"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-082"],
+      "keepAssetIds": ["asset-079", "asset-081", "asset-080"],
+      "reason": "船甲板救生衣场景内聚；asset-082 黑裙沙滩属另一主题/服装",
+      "signals": ["outfit_change", "scene_change", "cross_shotGroup"]
+    },
+    {
+      "n": 2,
+      "screenId": "ch-01-sc-03",
+      "patternId": "screen-landscape-3-asymmetric-left",
+      "mcsAssetIds": ["asset-004", "asset-005", "asset-006"],
+      "verdict": "do_not_cluster",
+      "removeAssetIds": ["asset-004", "asset-005", "asset-006"],
+      "keepAssetIds": [],
+      "reason": "三张无共享场景/构图逻辑（林背景近景 / 柱廊双人 / 铁轨远景），不该成一屏",
+      "signals": ["scene_change", "composition_mismatch", "false_weak_group"]
+    },
+    {
+      "n": 3,
+      "screenId": "ch-01-sc-09",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-017", "asset-019", "asset-020"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-020"],
+      "keepAssetIds": ["asset-017", "asset-019"],
+      "reason": "黑裙沙滩连拍内聚；黄 polo 礁石岸线为另一服装/场景",
+      "signals": ["outfit_change", "scene_change", "subject_or_look_change"]
+    },
+    {
+      "n": 4,
+      "screenId": "ch-01-sc-32",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-042", "asset-075", "asset-100"],
+      "verdict": "do_not_cluster",
+      "removeAssetIds": ["asset-042", "asset-075", "asset-100"],
+      "keepAssetIds": [],
+      "reason": "墨镜近景 / 园中蓝裙 / 黄衣礁石岸 三者无同一页故事；跨多个 shotGroup",
+      "signals": ["outfit_change", "scene_change", "cross_shotGroup", "forced_slot_fill"]
+    },
+    {
+      "n": 5,
+      "screenId": "ch-01-sc-33",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-053", "asset-065", "asset-092"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-092"],
+      "keepAssetIds": ["asset-053", "asset-065"],
+      "reason": "灰衣蓝短裤海滩双图内聚；asset-092 黄衣远景另一刻",
+      "signals": ["outfit_change", "composition_mismatch", "cross_shotGroup"]
+    },
+    {
+      "n": 6,
+      "screenId": "ch-02-sc-05",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-113", "asset-114", "asset-115"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-113"],
+      "keepAssetIds": ["asset-114", "asset-115"],
+      "reason": "花裙玻璃门前 vs 蓝背心黄背包礁石棕榈：服装+场景均变；跨 sg-0d/0e",
+      "signals": ["outfit_change", "scene_change", "cross_shotGroup"]
+    },
+    {
+      "n": 7,
+      "screenId": "ch-02-sc-09",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-123", "asset-124", "asset-128"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-128"],
+      "keepAssetIds": ["asset-123", "asset-124"],
+      "reason": "灰衣黄背包海边双图内聚；花裙廊柱为另一服装/场景；跨 sg-0e/2a",
+      "signals": ["outfit_change", "scene_change", "cross_shotGroup"]
+    },
+    {
+      "n": 8,
+      "screenIds": ["ch-02-sc-10", "ch-02-sc-11"],
+      "patternId": "screen-portrait-3",
+      "mcsAssetIdsByScreen": {
+        "ch-02-sc-10": ["asset-129", "asset-011", "asset-133"],
+        "ch-02-sc-11": ["asset-134", "asset-135", "asset-136"]
+      },
+      "verdict": "merge_clusters",
+      "mergedAssetIds": [
+        "asset-129",
+        "asset-011",
+        "asset-133",
+        "asset-134",
+        "asset-135",
+        "asset-136"
+      ],
+      "removeAssetIds": [],
+      "reason": "同花裙/帽廊柱系列被切成两屏，应属同一叙事簇（再按模板容量取子集）",
+      "signals": ["over_split_series", "same_outfit", "same_scene"]
+    },
+    {
+      "n": 9,
+      "screenId": "ch-02-sc-15",
+      "patternId": "screen-portrait-3",
+      "mcsAssetIds": ["asset-142", "asset-145", "asset-146"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-142"],
+      "keepAssetIds": ["asset-145", "asset-146"],
+      "reason": "人物礁石站姿 vs 地面影子双图：题材/构图母题不同，第一张不该进影子组",
+      "signals": ["theme_mismatch", "composition_mismatch"]
+    },
+    {
+      "n": 10,
+      "screenIds": ["ch-03-sc-05", "ch-03-sc-06", "ch-03-sc-08"],
+      "patternId": "screen-portrait-3",
+      "mcsAssetIdsByScreen": {
+        "ch-03-sc-05": ["asset-150", "asset-151", "asset-152"],
+        "ch-03-sc-06": ["asset-153", "asset-156", "asset-157"],
+        "ch-03-sc-08": ["asset-154", "asset-155", "asset-159"]
+      },
+      "verdict": "merge_clusters_with_pollution_remove",
+      "mergedAssetIds": [
+        "asset-150",
+        "asset-151",
+        "asset-152",
+        "asset-153",
+        "asset-156",
+        "asset-157",
+        "asset-154",
+        "asset-155"
+      ],
+      "removeAssetIds": ["asset-159"],
+      "reason": "同服海滩系列三屏应合并；最后一组末张 asset-159 廊柱场景不该并入",
+      "signals": ["over_split_series", "same_outfit", "scene_change_on_tail", "forced_slot_fill"]
+    },
+    {
+      "n": 11,
+      "screenId": "ch-03-sc-11",
+      "patternId": "screen-landscape-3-asymmetric-right",
+      "mcsAssetIds": ["asset-164", "asset-165", "asset-166"],
+      "verdict": "pollution_remove",
+      "removeAssetIds": ["asset-164"],
+      "keepAssetIds": ["asset-165", "asset-166"],
+      "reason": "暮色花裙礁石 vs 日间蓝衣防波堤：光照+服装均变",
+      "signals": ["outfit_change", "lighting_change", "scene_mood_change"]
+    }
+  ],
+  "derivedStats": {
+    "cases": 11,
+    "pollution_remove": 7,
+    "do_not_cluster": 2,
+    "merge_only": 1,
+    "merge_plus_remove": 1,
+    "cross_shotGroup_cited": 5,
+    "outfit_change_cited": 7,
+    "scene_change_cited": 7,
+    "over_split_cited": 2,
+    "forced_slot_fill_cited": 2
+  },
+  "algorithmImplications": [
+    "优先簇边界硬约束，再调模板权重；本批 11/11 均为边界/聚类错误，非缺模板。",
+    "跨 shotGroup 同屏在本批多次被判污染 → multi-shotGroup 对 mosaic/portrait-3 可作硬拒或强惩罚。",
+    "服装/场景突变比跨 burst 更贴近人类边界；burst 过细不可作主锚。",
+    "存在明显 over-split：同服同景被切成多个 portrait-3 → 需要 series 先合并再按容量切页，而非游标硬切 3。",
+    "缺第 3 张时不要跨边界凑槽（forced_slot_fill）；宁出 pair/单图。",
+    "主题母题（实体人像 vs 影子）也应进入边界，不能只靠时间邻近。"
+  ]
+}

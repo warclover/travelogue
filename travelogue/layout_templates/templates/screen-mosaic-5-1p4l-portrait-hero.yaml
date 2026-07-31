@@ -92,6 +92,8 @@ usage:
   siblings:
     - id: screen-mosaic-5-main-portrait-3land
       difference: 该模板横主竖辅；本模板竖主横辅。
+    - id: screen-mosaic-5-1p4l-portrait-center-rails
+      difference: 该模板中竖主+双侧双横；本模板左满高竖+右四横轨。
     - id: screen-portrait-1
       difference: 该模板单图 rescue；本模板保留四横细节轨。
     - id: screen-mosaic-5-2p3l-portrait-hero-rail

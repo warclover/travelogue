@@ -29,6 +29,10 @@ mosaic:
       # 3P2L 竖主 soft family（与 2P3L 混比互补；勿写 lte_policy）
       - screen-mosaic-5-3p2l-portrait-hero-quad
       - screen-mosaic-5-3p2l-portrait-hero-lp-stack
+      # 三列等分家族（2P2L 书挡 / 1P4L 中竖轨 / 复活 landscape-6）
+      - screen-mosaic-4-2p2l-portrait-bookends
+      - screen-mosaic-5-1p4l-portrait-center-rails
+      - screen-landscape-6
     cohort_trip_ids:
       - your-trip-id-here
   # selection_optimization：PR-B/C1 已落地；狗粮可显式 true（仓库默认仍 false 至 M3）
