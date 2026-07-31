@@ -998,55 +998,64 @@ def _emit_person_portrait_screens(
         else MAX_PORTRAIT_PAIR_STREAK
     )
     from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
-    from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
+    from travelogue.layout_engine.planner.scene_atoms import (
+        max_prefix_in_atom,
+        pack_atom_page_sizes,
+    )
 
     atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
-    # W2 · pack by longest in-atom prefix (≤3) when atom gate is on.
+    # W2 · take full in-atom series first, then cut by page packs (3/2/1).
     if atom_policy.enabled:
         while buf:
-            keep_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=3)
-            if keep_n >= 3 and (
-                force
-                or layout_state is None
-                or layout_state.can_emit_pattern("screen-portrait-3")
-            ):
-                trio, buf = buf[:3], buf[3:]
-                screen = _make_screen(
-                    "screen-portrait-3",
-                    trio,
-                    screen_id="",
-                    aspects=aspects,
-                    assets_map=assets_map,
-                )
-                screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
-                from travelogue.layout_engine.editorial.portrait_row import (
-                    apply_editorial_portrait_row_to_screen,
-                )
-
-                screens.append(
-                    apply_editorial_portrait_row_to_screen(
-                        screen, assets_map, trip=trip, cfg=cfg
+            atom_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=len(buf))
+            if atom_n <= 0:
+                break
+            chunk = buf[:atom_n]
+            buf = buf[atom_n:]
+            for size in pack_atom_page_sizes(len(chunk), capacities=(3, 2, 1)):
+                page, chunk = chunk[:size], chunk[size:]
+                if size >= 3 and (
+                    force
+                    or layout_state is None
+                    or layout_state.can_emit_pattern("screen-portrait-3")
+                ):
+                    screen = _make_screen(
+                        "screen-portrait-3",
+                        page,
+                        screen_id="",
+                        aspects=aspects,
+                        assets_map=assets_map,
                     )
-                )
-                continue
-            if keep_n >= 2 and (
-                force
-                or layout_state is None
-                or layout_state.can_emit_pattern("screen-portrait-2")
-            ):
-                pair, buf = buf[:2], buf[2:]
-                screen = _make_screen(
-                    "screen-portrait-2",
-                    pair,
-                    screen_id="",
-                    aspects=aspects,
-                    assets_map=assets_map,
-                )
-                screen["layoutHint"] = PERSON_LAYOUT_PAIR
-                screens.append(screen)
-                continue
-            head, buf = buf[0], buf[1:]
-            defer.append(head)
+                    screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+                    from travelogue.layout_engine.editorial.portrait_row import (
+                        apply_editorial_portrait_row_to_screen,
+                    )
+
+                    screens.append(
+                        apply_editorial_portrait_row_to_screen(
+                            screen, assets_map, trip=trip, cfg=cfg
+                        )
+                    )
+                    continue
+                if size >= 2 and (
+                    force
+                    or layout_state is None
+                    or layout_state.can_emit_pattern("screen-portrait-2")
+                ):
+                    screen = _make_screen(
+                        "screen-portrait-2",
+                        page[:2],
+                        screen_id="",
+                        aspects=aspects,
+                        assets_map=assets_map,
+                    )
+                    screen["layoutHint"] = PERSON_LAYOUT_PAIR
+                    screens.append(screen)
+                    # If pack asked for 3 but pattern blocked, defer the rest of page.
+                    defer.extend(page[2:])
+                    continue
+                defer.extend(page)
+            defer.extend(chunk)
         if defer:
             screens.extend(
                 _emit_portrait_single_screens(

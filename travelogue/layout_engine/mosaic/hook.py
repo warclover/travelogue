@@ -590,9 +590,13 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     admit_six = False
     qualify_reason = ""
     reorder_reason: str | None = None
-    # W2 · clamp MCS sizes to Scene Atom prefix (same narrative unit).
+    # W2 · clamp MCS sizes to Scene Atom prefix, then prefer page packs
+    # that leave a packable remainder inside the same atom (no cross-atom fill).
     from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
-    from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
+    from travelogue.layout_engine.planner.scene_atoms import (
+        max_prefix_in_atom,
+        prefer_window_sizes_for_atom,
+    )
 
     atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
     atom_cap = max_prefix_in_atom(
@@ -608,7 +612,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             enabled = set(planner_mosaic_window_sizes(cfg, density=density))
             if atom_cap in enabled:
                 sizes = [atom_cap]
-        if sizes != before_atom:
+        if sizes:
+            packed = prefer_window_sizes_for_atom(sizes, atom_cap)
+            if packed != sizes:
+                sizes = packed
+                reorder_reason = "atom_page_pack"
+            elif sizes != before_atom:
+                reorder_reason = "atom_prefix_cap"
+        elif sizes != before_atom:
             reorder_reason = "atom_prefix_cap"
     allow_six_hero = False
     six_opportunity_on = (

@@ -20,6 +20,8 @@ from travelogue.layout_engine.mosaic.shot_group_gate import (
 )
 from travelogue.layout_engine.planner.scene_atoms import (
     adjacent_compatible,
+    pack_atom_page_sizes,
+    prefer_window_sizes_for_atom,
     window_violates_atom,
 )
 
@@ -223,3 +225,25 @@ def test_human_label_contracts_from_json() -> None:
     labels = {row["n"]: row for row in data["labels"] if isinstance(row.get("n"), int)}
     assert 1 in labels and 4 in labels
     assert labels[11]["verdict"] == "pollution_remove"  # known residual for W1
+
+
+def test_pack_atom_page_sizes_avoids_orphan_one() -> None:
+    """W2 · n%3==1 should prefer 2+… over leaving a trailing single."""
+    assert pack_atom_page_sizes(4) == [2, 2]
+    assert pack_atom_page_sizes(5) == [3, 2]
+    assert pack_atom_page_sizes(6) == [3, 3]
+    assert pack_atom_page_sizes(7) == [2, 3, 2]
+    assert sum(pack_atom_page_sizes(7)) == 7
+    assert 1 not in pack_atom_page_sizes(7)
+    assert pack_atom_page_sizes(3) == [3]
+    assert pack_atom_page_sizes(2) == [2]
+    assert pack_atom_page_sizes(1) == [1]
+
+
+def test_prefer_window_sizes_for_atom_exact_and_no_orphan() -> None:
+    # Exact fill of atom ranks first.
+    assert prefer_window_sizes_for_atom([5, 4, 6], 4)[0] == 4
+    # Prefer leaving a packable tail (6→4) over orphan leave=1 (5→4 leave1).
+    ordered = prefer_window_sizes_for_atom([5, 4, 6], 8)
+    assert ordered[0] == 4  # leave 4 packable
+    assert 5 in ordered  # still attempted later

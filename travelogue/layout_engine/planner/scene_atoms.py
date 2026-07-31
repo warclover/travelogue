@@ -169,3 +169,104 @@ def split_into_atoms(
             cur = [aid]
     atoms.append(cur)
     return atoms
+
+
+def _remainder_packable(remaining: int, capacities: tuple[int, ...]) -> bool:
+    """Exact cover of ``remaining`` using only ``capacities`` (order irrelevant)."""
+    if remaining == 0:
+        return True
+    if remaining < 0 or not capacities:
+        return False
+    caps = tuple(sorted({int(c) for c in capacities if int(c) > 0}, reverse=True))
+    if not caps:
+        return False
+    reachable = {0}
+    for _ in range(remaining):
+        nxt: set[int] = set()
+        for r in reachable:
+            for c in caps:
+                s = r + c
+                if s == remaining:
+                    return True
+                if s < remaining:
+                    nxt.add(s)
+        if not nxt:
+            break
+        reachable = nxt
+    return remaining in reachable
+
+
+def pack_atom_page_sizes(
+    n: int,
+    capacities: tuple[int, ...] = (3, 2, 1),
+) -> list[int]:
+    """W2 · cut one atom of length ``n`` into page packs (same atom, time order).
+
+    Prefer larger capacities; when ``(3,2,*)`` is available, avoid the classic
+    ``n % 3 == 1`` orphan (e.g. 4→2+2, 7→2+2+3) instead of 3+1.
+    """
+    rem = max(0, int(n))
+    if rem <= 0:
+        return []
+    caps = tuple(sorted({int(c) for c in capacities if int(c) > 0}, reverse=True))
+    if not caps:
+        return [1] * rem
+
+    groups: list[int] = []
+    # Anti-orphan for portrait-like (3,2) packing.
+    if 3 in caps and 2 in caps and rem >= 4 and rem % 3 == 1:
+        groups.append(2)
+        rem -= 2
+
+    while rem > 0:
+        placed = False
+        for c in caps:
+            if c > rem:
+                continue
+            leave = rem - c
+            # Prefer a cut that still covers the remainder exactly when possible.
+            if leave == 0 or _remainder_packable(leave, caps):
+                groups.append(c)
+                rem = leave
+                placed = True
+                break
+        if placed:
+            continue
+        # Fallback: largest fitting capacity (may leave a soft single).
+        for c in caps:
+            if c <= rem:
+                groups.append(c)
+                rem -= c
+                placed = True
+                break
+        if not placed:
+            groups.append(rem)
+            break
+    return groups
+
+
+def prefer_window_sizes_for_atom(sizes: list[int], atom_len: int) -> list[int]:
+    """Reorder MCS window sizes so the first page leaves a packable atom tail.
+
+    Exact atom fill ranks first; orphan leave=1 ranks last. Stable among ties
+    by preserving relative order of equal scores via original index.
+    """
+    if atom_len <= 0 or not sizes:
+        return list(sizes)
+    pack = tuple(sorted({int(s) for s in sizes if int(s) > 0}, reverse=True))
+
+    def _key(item: tuple[int, int]) -> tuple[int, int, int]:
+        idx, s = item
+        leave = atom_len - s
+        if leave < 0:
+            return (9, 0, idx)
+        if leave == 0:
+            return (0, -s, idx)
+        if leave in pack or _remainder_packable(leave, pack):
+            return (1, -s, idx)
+        if leave >= 2:
+            return (2, -s, idx)
+        return (3, -s, idx)  # leave == 1
+
+    ordered = sorted(enumerate(sizes), key=_key)
+    return [s for _, s in ordered]
