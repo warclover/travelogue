@@ -232,11 +232,14 @@
 :root[data-v2-theme="classic"] .v2-shelf__cover {
   box-shadow: 0 8px 28px rgba(16, 15, 13, .12);
 }
-:root[data-v2-theme="classic"] .v2-shelf__card:hover .v2-shelf__cover,
-:root[data-v2-theme="classic"] .v2-shelf__card:focus-within .v2-shelf__cover,
-:root[data-v2-theme="classic"] .v2-shelf__card.is-menu-open .v2-shelf__cover,
-:root[data-v2-theme="classic"] .v2-shelf__book:hover .v2-shelf__cover {
-  box-shadow: 0 20px 48px rgba(16, 15, 13, .18);
+:root[data-v2-theme="classic"] .v2-shelf__ticket {
+  --v2-stub-bg: #f3ece1;
+  --v2-stub-ink: #14110d;
+  --v2-stub-muted: #6b6458;
+  --v2-stub-edge: rgba(20, 17, 13, .14);
+}
+:root[data-v2-theme="classic"] .v2-shelf__ticket .v2-shelf__title {
+  color: var(--v2-stub-ink);
 }
 
 .v2-shelf__cover--blank {

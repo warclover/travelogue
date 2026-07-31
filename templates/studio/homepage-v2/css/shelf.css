@@ -134,6 +134,194 @@
   position: relative;
   margin-bottom: 12px;
 }
+
+/* ── 满票根脚（封面 + 撕边 + stub · 脚高约初版 75%） ── */
+.v2-shelf__ticket {
+  --v2-stub-bg: color-mix(in srgb, var(--v2-surface, #fff) 82%, var(--v2-cream, #ded6cb) 18%);
+  --v2-stub-ink: var(--v2-ink);
+  --v2-stub-muted: var(--v2-text-muted);
+  --v2-stub-edge: var(--v2-border);
+  filter: drop-shadow(0 10px 22px var(--v2-shadow-mid, rgba(28, 25, 22, 0.14)));
+  transition: transform .25s ease, filter .25s ease;
+}
+.v2-shelf__ticket:hover,
+.v2-shelf__ticket:focus-within,
+.v2-shelf__ticket.is-menu-open {
+  transform: translateY(-5px);
+  filter: drop-shadow(0 18px 34px var(--v2-shadow-strong, rgba(28, 25, 22, 0.2)));
+}
+.v2-shelf__ticket-body {
+  position: relative;
+  background: var(--v2-stub-bg);
+  border: 1px solid var(--v2-stub-edge);
+  border-radius: 6px 6px 10px 10px;
+  overflow: hidden;
+  -webkit-mask-image:
+    radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px);
+  mask-image:
+    radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px);
+}
+.v2-shelf__ticket .v2-shelf__cover-wrap {
+  margin-bottom: 0;
+}
+.v2-shelf__ticket .v2-shelf__cover-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background: linear-gradient(to bottom, transparent, rgba(28, 25, 22, 0.16));
+  pointer-events: none;
+  z-index: 1;
+}
+.v2-shelf__ticket .v2-shelf__cover {
+  border-radius: 5px 5px 0 0;
+  box-shadow: none;
+}
+.v2-shelf__ticket:hover .v2-shelf__cover,
+.v2-shelf__ticket:focus-within .v2-shelf__cover,
+.v2-shelf__ticket.is-menu-open .v2-shelf__cover,
+.v2-shelf__ticket.v2-shelf__book:hover .v2-shelf__cover {
+  transform: none;
+  box-shadow: none;
+}
+.v2-shelf__perf {
+  position: relative;
+  z-index: 1;
+  height: 8px;
+  margin-top: -4px;
+  background-color: transparent;
+  background-image: radial-gradient(
+    circle at 5px 4px,
+    var(--v2-paper) 4px,
+    transparent 4.5px
+  );
+  background-size: 10px 8px;
+  background-position: 0 0;
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+.v2-shelf__perf::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--v2-stub-bg);
+}
+.v2-shelf__stub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(55px, max-content);
+  gap: 4px 10px;
+  align-items: stretch;
+  box-sizing: border-box;
+  /* 底凹口预留：底部 padding 略大于左右，避免编号/条码贴边或被 mask 切掉 */
+  padding: 8px 14px 14px;
+  min-height: 52px;
+  max-width: 100%;
+  background: var(--v2-stub-bg);
+  color: var(--v2-stub-ink);
+  overflow: hidden;
+}
+.v2-shelf__stub-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.v2-shelf__ticket .v2-shelf__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--v2-stub-ink);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset;
+}
+.v2-shelf__ticket .v2-shelf__sub {
+  margin: 3px 0 0;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--v2-stub-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v2-shelf__serial {
+  margin: 5px 0 0;
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--v2-stub-ink) 55%, transparent);
+}
+.v2-shelf__code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  align-self: stretch;
+  flex: 0 0 auto;
+  gap: 3px;
+  width: max-content;
+  min-width: 55px;
+  padding: 0;
+  overflow: visible;
+}
+.v2-shelf__code-id {
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  color: color-mix(in srgb, var(--v2-stub-ink) 50%, transparent);
+  white-space: nowrap;
+  overflow: visible;
+  flex: 0 0 auto;
+}
+.v2-shelf__barcode {
+  display: block;
+  box-sizing: border-box;
+  width: 55px;
+  min-width: 55px;
+  /* 吃满左侧三行剩余高度，与标题→编号整块等高 */
+  flex: 1 1 auto;
+  min-height: 24px;
+  align-self: flex-end;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--v2-stub-ink) 0,
+    var(--v2-stub-ink) 1px,
+    transparent 1px,
+    transparent 2px,
+    var(--v2-stub-ink) 2px,
+    var(--v2-stub-ink) 4px,
+    transparent 4px,
+    transparent 5px,
+    var(--v2-stub-ink) 5px,
+    var(--v2-stub-ink) 6px,
+    transparent 6px,
+    transparent 8px,
+    var(--v2-stub-ink) 8px,
+    var(--v2-stub-ink) 11px,
+    transparent 11px,
+    transparent 12px,
+    var(--v2-stub-ink) 12px,
+    var(--v2-stub-ink) 13px,
+    transparent 13px,
+    transparent 15px
+  );
+  background-size: 15px 100%;
+  background-repeat: repeat-x;
+  opacity: .82;
+}
+.v2-shelf__book--new > .v2-shelf__cover {
+  margin-bottom: 12px;
+}
 .v2-shelf__open {
   display: block;
   width: 100%;
@@ -144,6 +332,14 @@
   text-align: left;
   color: inherit;
   font: inherit;
+}
+/* .v2-shelf__open 的 display:block / padding:0 会盖掉 stub；票根脚需显式夺回 */
+.v2-shelf__open.v2-shelf__stub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(55px, max-content);
+  gap: 4px 10px;
+  align-items: stretch;
+  padding: 8px 14px 14px;
 }
 .v2-shelf__open--cover { margin: 0; }
 .v2-shelf__menu-btn {

@@ -104,6 +104,49 @@ function tripSubLine(trip) {
   return sub.join(" · ");
 }
 
+/** 票根脚指纹（装饰编号，非安全用途）。 */
+function stubFingerprint(tripId) {
+  var s = String(tripId || "");
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function stubSerial(tripId) {
+  return "NO." + String((stubFingerprint(tripId) % 90000) + 10000);
+}
+
+function stubCode(tripId) {
+  var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var h = stubFingerprint(tripId);
+  var out = "";
+  for (var i = 0; i < 8; i++) {
+    out += alphabet[(h + i * 17) % alphabet.length];
+    h = Math.imul(h ^ (i + 1), 31) >>> 0;
+  }
+  return out;
+}
+
+function stubYearMonth(ts) {
+  if (!ts) return "";
+  var d = new Date(ts * 1000);
+  if (isNaN(d.getTime())) return "";
+  var m = d.getMonth() + 1;
+  return d.getFullYear() + " · " + (m < 10 ? "0" + m : String(m));
+}
+
+/** 满票根 meta：年月优先（暂用 updatedAt）· 张数。 */
+function stubMetaLine(trip) {
+  var bits = [];
+  var ym = stubYearMonth(trip.updatedAt);
+  if (ym) bits.push(ym);
+  if (trip.photoCount) bits.push(trip.photoCount + " 张");
+  return bits.join(" · ") || tripSubLine(trip);
+}
+
 function onTripDeleted(trip) {
   var tripId = trip.tripId;
   noteTripDeleted(tripId);
@@ -269,17 +312,34 @@ function buildResume(trip) {
 }
 
 function buildBook(trip) {
-  var card = el("article", "v2-shelf__card v2-shelf__book");
+  var card = el("article", "v2-shelf__card v2-shelf__book v2-shelf__ticket");
   card.dataset.tripId = trip.tripId;
 
-  card.appendChild(buildCoverWrap(trip, "grid"));
+  var body = el("div", "v2-shelf__ticket-body");
+  body.appendChild(buildCoverWrap(trip, "grid"));
+  var perf = el("div", "v2-shelf__perf");
+  perf.setAttribute("aria-hidden", "true");
+  body.appendChild(perf);
 
-  var openMeta = el("button", "v2-shelf__open v2-shelf__open--meta");
+  var openMeta = el("button", "v2-shelf__open v2-shelf__open--meta v2-shelf__stub");
   openMeta.type = "button";
-  openMeta.appendChild(el("h3", "v2-shelf__title", trip.title || trip.tripId));
-  openMeta.appendChild(el("p", "v2-shelf__sub", tripSubLine(trip)));
+  openMeta.setAttribute("aria-label", "打开 " + (trip.title || trip.tripId));
+
+  var stubMain = el("div", "v2-shelf__stub-main");
+  stubMain.appendChild(el("h3", "v2-shelf__title", trip.title || trip.tripId));
+  stubMain.appendChild(el("p", "v2-shelf__sub", stubMetaLine(trip)));
+  stubMain.appendChild(el("p", "v2-shelf__serial", stubSerial(trip.tripId)));
+  openMeta.appendChild(stubMain);
+
+  var code = el("div", "v2-shelf__code");
+  code.setAttribute("aria-hidden", "true");
+  code.appendChild(el("span", "v2-shelf__code-id", stubCode(trip.tripId)));
+  code.appendChild(el("span", "v2-shelf__barcode"));
+  openMeta.appendChild(code);
+
   openMeta.addEventListener("click", function () { openTrip(trip, false); });
-  card.appendChild(openMeta);
+  body.appendChild(openMeta);
+  card.appendChild(body);
 
   return card;
 }

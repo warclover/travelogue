@@ -740,7 +740,14 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "即将上线" not in shelf
     assert "shelf-menu.js" in shelf
     assert "v2-shelf__card" in shelf
+    assert "v2-shelf__ticket" in shelf
+    assert "v2-shelf__stub" in shelf
+    assert "v2-shelf__barcode" in shelf
+    assert "stubMetaLine" in shelf
     assert "v2-shelf__menu-btn" in V2_CSS_BUNDLE
+    assert ".v2-shelf__ticket" in V2_CSS_BUNDLE
+    assert ".v2-shelf__perf" in V2_CSS_BUNDLE
+    assert ".v2-shelf__barcode" in V2_CSS_BUNDLE
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "studio-modal.css" in html
