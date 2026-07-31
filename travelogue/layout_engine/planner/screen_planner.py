@@ -997,6 +997,70 @@ def _emit_person_portrait_screens(
         if layout_state is not None
         else MAX_PORTRAIT_PAIR_STREAK
     )
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
+
+    atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
+    # W2 · pack by longest in-atom prefix (≤3) when atom gate is on.
+    if atom_policy.enabled:
+        while buf:
+            keep_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=3)
+            if keep_n >= 3 and (
+                force
+                or layout_state is None
+                or layout_state.can_emit_pattern("screen-portrait-3")
+            ):
+                trio, buf = buf[:3], buf[3:]
+                screen = _make_screen(
+                    "screen-portrait-3",
+                    trio,
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
+                screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
+                from travelogue.layout_engine.editorial.portrait_row import (
+                    apply_editorial_portrait_row_to_screen,
+                )
+
+                screens.append(
+                    apply_editorial_portrait_row_to_screen(
+                        screen, assets_map, trip=trip, cfg=cfg
+                    )
+                )
+                continue
+            if keep_n >= 2 and (
+                force
+                or layout_state is None
+                or layout_state.can_emit_pattern("screen-portrait-2")
+            ):
+                pair, buf = buf[:2], buf[2:]
+                screen = _make_screen(
+                    "screen-portrait-2",
+                    pair,
+                    screen_id="",
+                    aspects=aspects,
+                    assets_map=assets_map,
+                )
+                screen["layoutHint"] = PERSON_LAYOUT_PAIR
+                screens.append(screen)
+                continue
+            head, buf = buf[0], buf[1:]
+            defer.append(head)
+        if defer:
+            screens.extend(
+                _emit_portrait_single_screens(
+                    defer,
+                    aspects,
+                    assets_map=assets_map,
+                    layout_state=layout_state,
+                    pending=pending,
+                    force=force,
+                    solo_exclude=solo_exclude,
+                )
+            )
+        return screens
+
     for size in _tile_portrait_run(len(buf), seed_pair_streak=seed, max_pair_streak=pair_max):
         if size == 3:
             trio = buf[:3]

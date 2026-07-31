@@ -590,6 +590,26 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     admit_six = False
     qualify_reason = ""
     reorder_reason: str | None = None
+    # W2 · clamp MCS sizes to Scene Atom prefix (same narrative unit).
+    from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
+    from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
+
+    atom_policy = resolve_shot_group_mosaic_policy(ctx.app_config).atom
+    atom_cap = max_prefix_in_atom(
+        ctx.ids[start:],
+        ctx.assets_map,
+        atom_policy,
+        max_n=min(remaining, seg_cap if seg_cap < 10**8 else remaining),
+    )
+    if atom_policy.enabled and atom_cap >= 1:
+        before_atom = list(sizes)
+        sizes = [s for s in sizes if s <= atom_cap]
+        if not sizes and atom_cap >= 2:
+            enabled = set(planner_mosaic_window_sizes(cfg, density=density))
+            if atom_cap in enabled:
+                sizes = [atom_cap]
+        if sizes != before_atom:
+            reorder_reason = "atom_prefix_cap"
     allow_six_hero = False
     six_opportunity_on = (
         effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
@@ -732,6 +752,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             median_sharp=ctx.med_sharp,
             layout_state=ctx.layout_state,
             trip_id=_ctx_trip_id(ctx),
+            ssg_policy=resolve_shot_group_mosaic_policy(ctx.app_config),
         )
         if not has_cands and not (size == 6 and allow_six_hero):
             continue
