@@ -9,8 +9,8 @@ from travelogue.config.mosaic import (
     MosaicConfig,
     effective_selection_optimization_enabled,
 )
-from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 from travelogue.layout_contract.orientations import AspectKind
+from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
 
 if TYPE_CHECKING:
     from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
@@ -120,7 +120,6 @@ def qualify_hero_six(
     if gap < thr:
         return HeroSixQualify(False, False, "six_hero_gap_below", gap=gap)
 
-    structural = True
 
     if layout_state is None:
         return HeroSixQualify(True, False, "six_hero_no_layout_state", gap=gap)

@@ -129,8 +129,8 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
             self.end_headers()
             return
         # 仅走无 body 的声明式路由（如 /v2 重定向）；首页 HTML 回 200 头即可
-        from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH, HOME_V2_PATH
         from travelogue.web.studio_handlers import static_handlers
+        from travelogue.web.studio_handlers.paths import HOME_CLASSIC_PATH, HOME_V2_PATH
 
         if path == HOME_V2_PATH:
             static_handlers.send_redirect(self, "/")

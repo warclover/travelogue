@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Compare end-to-end trip generation: pre-PPF baseline worktree vs current branch.
 
 Usage:

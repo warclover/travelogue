@@ -323,7 +323,7 @@ def _order_hero_six_detailed(
     assets_map: dict[str, dict],
     *,
     median_sharp: float | None,
-    cfg: "MosaicConfig | None" = None,
+    cfg: MosaicConfig | None = None,
 ) -> tuple[list[str] | None, str]:
     """Order six-hero window; return (order, reason). D-MTSO-10 stable reject codes."""
     from travelogue.layout_engine.mosaic.main_eligibility import (

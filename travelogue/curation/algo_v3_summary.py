@@ -6,7 +6,7 @@ from collections import Counter
 from typing import Any
 
 from travelogue.config import AppConfig, get_config
-from travelogue.layout_engine.mosaic.builders import get_build_screen_calls
+from travelogue.layout_engine.adapter import get_build_screen_calls
 
 _NOISE_CLUSTER_ID = -1
 

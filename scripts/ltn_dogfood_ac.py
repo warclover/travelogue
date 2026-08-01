@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,7 +70,7 @@ def main() -> int:
             machine_ok = machine_ok and bool(row.get("machineOk"))
 
     report = {
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": datetime.now(UTC).isoformat(),
         "prd": "PRD-LAYOUT-TRUST-NARRATIVE-V1 AC-B-02 / AC-D-01..03",
         "machineOk": machine_ok,
         "humanChecklist": {

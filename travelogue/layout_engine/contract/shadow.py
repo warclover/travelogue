@@ -5,9 +5,10 @@ Shadow never changes selection. It only records diffs for sign-off.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Any, Mapping
+from typing import Any
 
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.contract.mix_index import (

@@ -1,9 +1,7 @@
 {
-  "count": 20,
+  "count": 19,
   "edges": [
-    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic",
-    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic.constants",
-    "travelogue/layout_contract/planner_state.py::travelogue.layout_engine.mosaic.pattern_catalog",
+    "travelogue/curation/moment_scoring.py::travelogue.layout_engine.planner.portrait_2_picker",
     "travelogue/layout_templates/admission.py::travelogue.layout_engine.mosaic.pattern_catalog",
     "travelogue/layout_templates/css_stale.py::travelogue.layout_engine.planner.screen_planner",
     "travelogue/layout_templates/geometry_solidify.py::travelogue.layout_engine.mosaic.lte_adapter",
@@ -20,18 +18,11 @@
     "travelogue/render/context.py::travelogue.layout_engine.planner.screen_planner",
     "travelogue/render/dual_layout_regression.py::travelogue.layout_engine.planner.screen_planner",
     "travelogue/render/engine.py::travelogue.layout_engine.planner.screen_planner",
+    "travelogue/render/mobile_screens.py::travelogue.layout_engine.planner.portrait_2_picker",
     "travelogue/render/surface.py::travelogue.layout_engine.planner.screen_planner"
   ],
   "grandfather": {
-    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic": {
-      "owner": "architecture",
-      "expiry": "2026-12-31"
-    },
-    "travelogue/layout_contract/active_set.py::travelogue.layout_engine.mosaic.constants": {
-      "owner": "architecture",
-      "expiry": "2026-12-31"
-    },
-    "travelogue/layout_contract/planner_state.py::travelogue.layout_engine.mosaic.pattern_catalog": {
+    "travelogue/curation/moment_scoring.py::travelogue.layout_engine.planner.portrait_2_picker": {
       "owner": "architecture",
       "expiry": "2026-12-31"
     },
@@ -99,6 +90,10 @@
       "owner": "architecture",
       "expiry": "2026-12-31"
     },
+    "travelogue/render/mobile_screens.py::travelogue.layout_engine.planner.portrait_2_picker": {
+      "owner": "architecture",
+      "expiry": "2026-12-31"
+    },
     "travelogue/render/surface.py::travelogue.layout_engine.planner.screen_planner": {
       "owner": "architecture",
       "expiry": "2026-12-31"
@@ -106,23 +101,13 @@
   },
   "details": [
     {
-      "file": "travelogue/layout_contract/active_set.py",
-      "line": 93,
-      "module": "travelogue.layout_engine.mosaic"
-    },
-    {
-      "file": "travelogue/layout_contract/active_set.py",
-      "line": 103,
-      "module": "travelogue.layout_engine.mosaic.constants"
-    },
-    {
-      "file": "travelogue/layout_contract/planner_state.py",
-      "line": 318,
-      "module": "travelogue.layout_engine.mosaic.pattern_catalog"
+      "file": "travelogue/curation/moment_scoring.py",
+      "line": 725,
+      "module": "travelogue.layout_engine.planner.portrait_2_picker"
     },
     {
       "file": "travelogue/layout_templates/admission.py",
-      "line": 122,
+      "line": 130,
       "module": "travelogue.layout_engine.mosaic.pattern_catalog"
     },
     {
@@ -224,6 +209,11 @@
       "file": "travelogue/render/engine.py",
       "line": 734,
       "module": "travelogue.layout_engine.planner.screen_planner"
+    },
+    {
+      "file": "travelogue/render/mobile_screens.py",
+      "line": 6,
+      "module": "travelogue.layout_engine.planner.portrait_2_picker"
     },
     {
       "file": "travelogue/render/surface.py",

@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from travelogue.config_helpers import cfg_bool, cfg_int
 from travelogue.config._common import TriState
+from travelogue.config_helpers import cfg_bool, cfg_int
 
 
 @dataclass

@@ -11,10 +11,14 @@ from travelogue.config.mosaic import MosaicConfig
 from travelogue.layout_contract.rhythm import is_mixed_1l1p_pattern
 from travelogue.layout_engine.planner.portrait_2_picker import (
     StrengthSide,
+)
+from travelogue.layout_engine.planner.portrait_2_picker import (
     strength_side as _strength_side,
 )
 from travelogue.layout_engine.planner.template_experiments_gate import (
     disabled_template_ids,
+)
+from travelogue.layout_engine.planner.template_experiments_gate import (
     experimental_members_visible as _experiments_visible,
 )
 

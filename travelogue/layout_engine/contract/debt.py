@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from travelogue.layout_contract.orientations import AspectKind, aspect_kind_for_asset
 from travelogue.layout_engine.contract.mix_index import (

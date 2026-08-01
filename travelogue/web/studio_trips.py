@@ -238,7 +238,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "previewRelPath": preview_rel,
                     "shelfCoverRelPath": shelf_cover_rel,
                     "derivativesStatus": str(
-                        ((data.get("pipeline") or {}).get("derivativesStatus") or "")
+                        (data.get("pipeline") or {}).get("derivativesStatus") or ""
                     )
                     or None,
                     "derivativesReady": (

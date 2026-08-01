@@ -79,7 +79,12 @@ ignore = ["E501", "E402"]
 # One-shot migration/split scripts; style noise is not worth blocking CI.
 "scripts/check_usage_consistency.py" = ["E741"]
 "scripts/split_preview_toolbar_*.py" = ["F841", "E731"]
+"scripts/archive/**" = ["F841", "E731"]
 "travelogue/web/studio_dispatch.py" = ["E731"]
+# Upstream vendored collage — do not restyle Optional.
+"travelogue/export/_vendor/**" = ["UP"]
+# Bag-of-mix keys use L/P/S letters; `l` is landscape count (TPC).
+"travelogue/layout_engine/contract/mix_index.py" = ["E741"]
 
 [tool.importlinter]
 root_package = "travelogue"

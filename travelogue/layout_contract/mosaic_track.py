@@ -9,11 +9,10 @@ floors live in ``asymmetric_quota.dense_opportunity_min_for`` and never force em
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Literal
-
-from travelogue.config import MosaicConfig
+from typing import Literal, TypeVar
 
 MosaicTrack = Literal["curated", "archive", "quick_share"]
+TMosaicCfg = TypeVar("TMosaicCfg")
 
 
 @dataclass(frozen=True)
@@ -76,9 +75,9 @@ def track_params_for(
 
 
 def apply_mosaic_track(
-    cfg: MosaicConfig,
+    cfg: TMosaicCfg,
     params: MosaicTrackParams,
-) -> MosaicConfig:
+) -> TMosaicCfg:
     """Overlay track knobs onto a MosaicConfig (shared MCS path)."""
     return replace(
         cfg,
@@ -91,11 +90,11 @@ def apply_mosaic_track(
 
 
 def resolve_and_apply_mosaic_track(
-    cfg: MosaicConfig,
+    cfg: TMosaicCfg,
     *,
     kept_count: int,
     intent_mode: str | None = None,
-) -> tuple[MosaicConfig, MosaicTrackParams]:
+) -> tuple[TMosaicCfg, MosaicTrackParams]:
     track = resolve_mosaic_track(kept_count=kept_count, intent_mode=intent_mode)
     params = track_params_for(track)
     return apply_mosaic_track(cfg, params), params

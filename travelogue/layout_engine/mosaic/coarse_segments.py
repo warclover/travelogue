@@ -14,9 +14,9 @@ Hierarchy (PLAN-CLUSTER-BOUNDARY-FIRST V1)::
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from statistics import median
-from typing import Iterable
 
 from travelogue.domain.time_segments import asset_city
 from travelogue.layout_contract.burst import parse_taken_ts

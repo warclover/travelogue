@@ -6,13 +6,13 @@ from datetime import datetime
 from pathlib import Path
 
 from travelogue.config import IngestConfig
+from travelogue.media.image_ops import min_edge_ok
 from travelogue.media.ingest import (
     HEIC_SUFFIXES,
     IMAGE_SUFFIXES,
     IngestError,
     _peek_photo,
 )
-from travelogue.media.image_ops import min_edge_ok
 
 TIER_FEATURED = "featured"
 TIER_MATERIAL = "material"

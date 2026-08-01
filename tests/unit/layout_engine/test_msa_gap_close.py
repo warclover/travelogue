@@ -7,7 +7,6 @@ from dataclasses import replace
 
 import pytest
 
-from travelogue.config import get_config
 from travelogue.config.mosaic import SlotAdaptationConfig, mosaic_from_dict
 from travelogue.layout_engine.mosaic.msa_apply import maybe_apply_slot_adaptation
 from travelogue.layout_engine.mosaic.msa_profile import build_msa_profile

@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 # 与 domain/share_face_copy._BANNED_SUBSTRINGS + 弱枚举样本对齐（抽检用）

@@ -224,7 +224,7 @@ def build_appendix_chapter(
     if not chapters:
         return None
     ch = chapters[0]
-    ch["id"] = f"ch-appendix"
+    ch["id"] = "ch-appendix"
     ch["index"] = int(index)
     title = appendix_title(len(outlier_ids))
     ch["title"] = title  # do not truncate; schema allows 16 for appendix titles
@@ -261,8 +261,8 @@ def bucket_gap_days(
     ]
     if not left_dates or not right_dates:
         return None
-    lo = max(min(left_dates), min(right_dates))
-    hi = min(max(left_dates), max(right_dates))
+    max(min(left_dates), min(right_dates))
+    min(max(left_dates), max(right_dates))
     # Overlap → 0; else distance between ranges
     if max(left_dates) < min(right_dates):
         return (min(right_dates) - max(left_dates)).days

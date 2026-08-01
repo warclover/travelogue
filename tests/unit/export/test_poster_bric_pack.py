@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
-from travelogue.config.studio import GcsPosterBricConfig, StudioConfig
+from travelogue.config.studio import GcsPosterBricConfig
 from travelogue.export.bric_compose import bric_compose
 from travelogue.export.longshot import LongshotExportError, export_trip_longshot
 from travelogue.export.output_recipe.resolve import ambiguous_intent_options, resolve_output_recipe
@@ -71,8 +71,9 @@ def _seed_kept_photos(
 
 
 def _cfg_on():
-    from travelogue.config import get_config
     from dataclasses import replace
+
+    from travelogue.config import get_config
 
     base = get_config()
     return replace(

@@ -11,7 +11,6 @@ import pytest
 from travelogue.config import get_config, load_config, reset_config_cache
 from travelogue.config.mosaic import TemplateContractConfig, mosaic_from_dict
 from travelogue.layout_engine.contract.geometry_features import compute_raw_geometry_features
-from travelogue.layout_engine.contract.evaluator import _fallback_feasible
 from travelogue.layout_engine.mosaic.compose import pick_best_window
 
 pytestmark = pytest.mark.unit

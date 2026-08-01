@@ -11,8 +11,9 @@ Contain flip is a last resort for **face** clipping only — oversized half-body
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 # Patterns whose product contract is full-bleed / strip cover (YAML fit:cover).
 # Never flip to contain: letterboxing + contain-collapse CSS creates large paper
@@ -369,7 +370,8 @@ def solve_slot_focal(
         return CropSolveResult(px0, py0, True, safety, win)
 
     target = protect if protect is not None else union_boxes(faces)
-    assert target is not None
+    if target is None:
+        raise RuntimeError("crop_solver: protect/faces union unexpectedly empty")
 
     if slot_ar >= ar:
         vh = ar / slot_ar

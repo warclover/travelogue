@@ -11,7 +11,7 @@ import subprocess
 import sys
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -279,7 +279,7 @@ def write_longshot_current(
     payload = {
         "schemaVersion": LONGSHOT_CURRENT_SCHEMA_VERSION,
         "batchId": str(batch_id or "").strip() or "unknown",
-        "createdAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
+        "createdAt": datetime.now(UTC).replace(microsecond=0).isoformat().replace(
             "+00:00", "Z"
         ),
         "kind": kind_norm,

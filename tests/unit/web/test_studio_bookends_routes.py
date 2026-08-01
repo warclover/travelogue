@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.web.studio_dispatch import _CAPTURE_MATCHERS, _compile_route, ROUTE_SPECS
+from travelogue.web.studio_dispatch import _CAPTURE_MATCHERS, ROUTE_SPECS, _compile_route
 from travelogue.web.studio_handlers.common import (
     match_trip_bookends,
     match_trip_bookends_repick_closing,

@@ -5,7 +5,6 @@ A1-11 决策问句 · A1-12 chips · A1-14 定制画册细节 · A1-15 首次弱
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest

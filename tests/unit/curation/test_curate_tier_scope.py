@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from tests.unit.media.test_user_tier import _dual_album, _write_photo
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.domain.pipeline_view import lock_structure
 from travelogue.media.ingest import ingest_into_trip
 from travelogue.services.trip import TripService
 from travelogue.services.trip_factory import create_trip
-from tests.unit.media.test_user_tier import _dual_album, _write_photo
 
 pytestmark = pytest.mark.integration
 

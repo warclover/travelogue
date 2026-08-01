@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from threading import RLock
-from typing import Iterable
 
 from travelogue.cover_engine.types import CoverStyleProfile, CoverStyleRecord, CoverStyleStatus
 

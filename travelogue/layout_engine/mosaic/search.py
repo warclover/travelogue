@@ -414,12 +414,13 @@ def replan_day_buckets_beam(
                     best_variant = "prefix_beam"
 
         if late_kwargs and best_plan:
+            # Beam replan has assets/cfg but no trip dict; consolidate accepts trip=None.
             best_plan = _consolidate_adjacent_portrait_singles(
                 best_plan,
                 aspects,
                 assets_map=assets_by_id,
                 layout_state=layout_state,
-                trip=trip,
+                trip=None,
                 cfg=cfg,
             )
 

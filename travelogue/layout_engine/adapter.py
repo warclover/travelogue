@@ -499,7 +499,9 @@ def editorial_hints_from_pack(raw: dict | None) -> dict[str, Any]:
 
 
 def attach_screens_to_chapters(*args: Any, **kwargs: Any) -> list[dict]:
-    from travelogue.layout_engine.planner.screen_planner import attach_screens_to_chapters as _attach
+    from travelogue.layout_engine.planner.screen_planner import (
+        attach_screens_to_chapters as _attach,
+    )
 
     return _attach(*args, **kwargs)
 
@@ -509,6 +511,24 @@ def make_screen(*args: Any, **kwargs: Any) -> dict:
     from travelogue.layout_engine.planner.screen_planner import _make_screen
 
     return _make_screen(*args, **kwargs)
+
+
+def get_build_screen_calls() -> int:
+    """ALG-V3 · facade-safe re-export of mosaic build_screen call counter."""
+    from travelogue.layout_engine.mosaic.builders import (
+        get_build_screen_calls as _get,
+    )
+
+    return _get()
+
+
+def reset_build_screen_calls() -> None:
+    """ALG-V3 · facade-safe re-export of mosaic build_screen call counter reset."""
+    from travelogue.layout_engine.mosaic.builders import (
+        reset_build_screen_calls as _reset,
+    )
+
+    _reset()
 
 
 def enrich_layout_metrics_with_mosaic(

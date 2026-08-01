@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +83,7 @@ def main() -> int:
         trips_out.append({"tripId": trip_id, "metrics": metrics})
 
     report = {
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": datetime.now(UTC).isoformat(),
         "source": "trip.json (no re-curate)",
         "prd": "PRD-LAYOUT-TRUST-NARRATIVE-V1 §12 / R-E2",
         "tripCount": len(trips_out),

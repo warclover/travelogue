@@ -183,7 +183,7 @@ def main() -> int:
         if args.reuse_log or args.from_trip_json:
             rep = _report_from_existing(trip_dir)
             if rep is None:
-                print(f"  no reusable log; falling back to curate", file=sys.stderr)
+                print("  no reusable log; falling back to curate", file=sys.stderr)
         if rep is None:
             rep = _report_via_curate(trip_dir, work_root=args.work)
         trip_reports.append(rep)

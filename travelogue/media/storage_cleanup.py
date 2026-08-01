@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from travelogue.media.source_resolve import compute_storage_mode, source_ref_path
 

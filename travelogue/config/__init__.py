@@ -49,16 +49,6 @@ from travelogue.config.mosaic import (
     TemplateContractConfig,
     TemplateExperimentsConfig,
 )
-from travelogue.config.shot_grouping import (
-    ShotGroupingConfig,
-    ShotGroupingLookConfig,
-    ShotGroupingMosaicConfig,
-    ShotGroupingSceneConfig,
-    resolve_look_enabled,
-    resolve_shot_grouping_enabled,
-    resolve_shot_group_mosaic_policy,
-    shot_grouping_from_dict,
-)
 from travelogue.config.phase6 import (
     Phase6AcThresholds,
     Phase6AlertThresholds,
@@ -76,6 +66,16 @@ from travelogue.config.runtime import (
     get_config,
     reading_profile_defaults,
     reset_config_cache,
+)
+from travelogue.config.shot_grouping import (
+    ShotGroupingConfig,
+    ShotGroupingLookConfig,
+    ShotGroupingMosaicConfig,
+    ShotGroupingSceneConfig,
+    resolve_look_enabled,
+    resolve_shot_group_mosaic_policy,
+    resolve_shot_grouping_enabled,
+    shot_grouping_from_dict,
 )
 from travelogue.config.studio import (
     GcsPosterBricConfig,

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from travelogue.layout_engine.mosaic.msa_fit import crop_risk_for_pair
 

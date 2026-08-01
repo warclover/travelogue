@@ -117,7 +117,7 @@ def test_replace_fallback_failure_preserves_dest_via_bak_and_tmp(
         def __init__(self, fh: object) -> None:
             self._fh = fh
 
-        def __enter__(self) -> "_FailingHandle":
+        def __enter__(self) -> _FailingHandle:
             return self
 
         def __exit__(self, *_a: object) -> bool:

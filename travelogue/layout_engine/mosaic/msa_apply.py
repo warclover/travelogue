@@ -8,10 +8,10 @@ from travelogue.config.mosaic import (
     SlotAdaptationConfig,
     effective_slot_adaptation_enabled,
 )
+from travelogue.layout_engine.crop_solver import apply_slot_crop_focals
 from travelogue.layout_engine.mosaic.msa_assign import refine_aux_assignment
 from travelogue.layout_engine.mosaic.msa_fit import apply_crop_risk_fits
 from travelogue.layout_engine.mosaic.msa_profile import MsaProfile, build_msa_profile
-from travelogue.layout_engine.crop_solver import apply_slot_crop_focals
 from travelogue.layout_engine.mosaic.msa_solve import (
     MSA_M1_PATTERN_WHITELIST,
     resolve_main_r_star,

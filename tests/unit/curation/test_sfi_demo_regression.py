@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from travelogue.config import get_config
 from travelogue.curation.curate import run_curate
 from travelogue.curation.time_outlier import (

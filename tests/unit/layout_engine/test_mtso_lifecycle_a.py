@@ -329,7 +329,7 @@ def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
         "travelogue.layout_engine.mosaic.runtime.get_effective_mosaic_config",
         return_value=app.mosaic,
     ):
-        pick = pick_best_window(
+        pick_best_window(
             ids,
             aspects,
             assets,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -13,16 +13,16 @@ from travelogue.vision.look_appearance import appearance_distance
 
 def _parse_taken_at(raw: Any) -> datetime:
     if raw is None:
-        return datetime.min.replace(tzinfo=timezone.utc)
+        return datetime.min.replace(tzinfo=UTC)
     text = str(raw).strip()
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     try:
         dt = datetime.fromisoformat(text)
     except ValueError:
-        return datetime.min.replace(tzinfo=timezone.utc)
+        return datetime.min.replace(tzinfo=UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 

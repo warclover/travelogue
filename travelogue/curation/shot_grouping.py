@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +53,7 @@ def _parse_taken_at(raw: Any) -> datetime | None:
     except ValueError:
         return None
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
@@ -87,7 +87,7 @@ def _soft_split_runs(
     """Split same-cluster members by time gap. Returns (runs, soft_split_count)."""
     if not members:
         return [], 0
-    ordered = sorted(members, key=lambda a: (_parse_taken_at(a.get("takenAt")) or datetime.min.replace(tzinfo=timezone.utc), a.get("id") or ""))
+    ordered = sorted(members, key=lambda a: (_parse_taken_at(a.get("takenAt")) or datetime.min.replace(tzinfo=UTC), a.get("id") or ""))
     runs: list[list[dict]] = [[ordered[0]]]
     splits = 0
     gap = max(0.0, float(split_hours)) * 3600.0

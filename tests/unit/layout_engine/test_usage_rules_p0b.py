@@ -9,7 +9,6 @@ from travelogue.config.layout import UsageRulesConfig
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_context import WindowContext, build_window_context
 from travelogue.layout_contract.usage_rules_registry import (
-    RULE_UR_05,
     RULE_UR_09,
     USAGE_RULE_UNDO_ORDER,
 )

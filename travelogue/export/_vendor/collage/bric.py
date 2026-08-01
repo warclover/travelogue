@@ -1,8 +1,7 @@
+
 import numpy as np
 
-from typing import List, Tuple
-
-from .layout import Layout, GridLayout, BalancedLayout, Size, Position
+from .layout import BalancedLayout, GridLayout, Layout, Position, Size
 
 
 def fit_pictures_balanced(
@@ -12,7 +11,7 @@ def fit_pictures_balanced(
     border=0,
     spacing=0,
     round_result=False,
-) -> Tuple[List[Size], List[Position], Size]:
+) -> tuple[list[Size], list[Position], Size]:
     if round_result:
         assert isinstance(border, int)
         assert isinstance(spacing, int)
@@ -38,7 +37,7 @@ def fit_pictures_grid(
     border=0,
     spacing=0,
     round_result=False
-) -> Tuple[List[Size], List[Position], Size]:
+) -> tuple[list[Size], list[Position], Size]:
     image_sizes = [Size(w, h) for w, h in image_sizes]
     layout = GridLayout(
         len(image_sizes),
@@ -52,7 +51,7 @@ def fit_pictures_grid(
     return fit_pictures(image_sizes, layout, round_result)
 
 
-def fit_pictures(image_sizes: List[Size], layout: Layout, round_result=False) -> Tuple[List[Size], List[Position], Size]:
+def fit_pictures(image_sizes: list[Size], layout: Layout, round_result=False) -> tuple[list[Size], list[Position], Size]:
     if round_result:
         # AC-GCS-11 · the integer path pulls python-mip (GPL); callers use the
         # float solve and round locally. Refuse instead of importing mip.
@@ -65,7 +64,7 @@ def fit_pictures(image_sizes: List[Size], layout: Layout, round_result=False) ->
     return new_sizes, positions, canvas_size
 
 
-def _compute_rescaled_image_sizes(image_sizes: List[Size], layout: Layout) -> List[Size]:
+def _compute_rescaled_image_sizes(image_sizes: list[Size], layout: Layout) -> list[Size]:
     constraints = layout.get_constraints(image_sizes)
 
     # set up and a linear equation system from the constraints, and solve it
@@ -93,7 +92,7 @@ def _compute_rescaled_image_sizes(image_sizes: List[Size], layout: Layout) -> Li
     return new_sizes
 
 
-def _compute_integer_image_sizes(image_sizes: List[Size], layout: Layout) -> List[Size]:
+def _compute_integer_image_sizes(image_sizes: list[Size], layout: Layout) -> list[Size]:
     # AC-GCS-11 · disabled: the upstream integer solve depended on the GPL
     # python-mip package. It is intentionally not imported; callers must use the
     # float path (_compute_rescaled_image_sizes) and round locally.

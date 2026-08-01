@@ -769,8 +769,8 @@ def _curate_preflight(
     )
     if _outlier_ids:
         try:
-            from travelogue.domain.studio_events import append_studio_homepage_event
             from travelogue.curation.time_segments import parse_asset_date
+            from travelogue.domain.studio_events import append_studio_homepage_event
 
             dated = [
                 parse_asset_date(a)
@@ -1021,14 +1021,7 @@ def _stage_resolve_buckets(
             mark_layout_replan(trip, reason=replan_decision.reason or "density_change")
     else:
         bucket_plan = _build_curate_buckets(trip, preflight)
-    buckets = bucket_plan.buckets
-    bucket_segment_ids = bucket_plan.bucket_segment_ids
-    bucket_segment_ids_all = bucket_plan.bucket_segment_ids_all
-    segments = bucket_plan.segments
-    segment_labels = bucket_plan.segment_labels
-    curation_segments = bucket_plan.curation_segments
-    meta_places = bucket_plan.meta_places
-    meta = trip.get("meta", {})
+    trip.get("meta", {})
     curation = trip.get("curation") or {}
     if cohort_summary:
         curation["cohort"] = cohort_summary
@@ -1053,14 +1046,12 @@ def _stage_build_chapters_compose(
     layout = preflight.layout
     engine = preflight.engine
     layout_assets = preflight.layout_assets
-    cover_id = preflight.cover_id
     skip_screen_ids = preflight.skip_screen_ids
     saved_memory_anchors = preflight.saved_memory_anchors
 
     buckets = bucket_plan.buckets
     bucket_segment_ids = bucket_plan.bucket_segment_ids
     bucket_segment_ids_all = bucket_plan.bucket_segment_ids_all
-    segments = bucket_plan.segments
     segment_labels = bucket_plan.segment_labels
     curation_segments = bucket_plan.curation_segments
     meta_places = bucket_plan.meta_places
@@ -1069,7 +1060,7 @@ def _stage_build_chapters_compose(
     curation = trip.get("curation") or {}
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
-    from travelogue.layout_engine.mosaic.builders import reset_build_screen_calls
+    from travelogue.layout_engine.adapter import reset_build_screen_calls
 
     reset_build_screen_calls()
     # Keep segment metadata aligned when empty buckets are dropped.
@@ -1161,7 +1152,6 @@ def _stage_build_chapters_compose(
 
     from travelogue.curation.moment_scoring import (
         preferred_secondary_hero_for_bucket,
-        sync_trip_moments_finalize,
         sync_trip_moments_preflight,
     )
 
@@ -1454,9 +1444,10 @@ def _stage_build_chapters_compose(
     decision_logs = replan_meta.get("decisionLogs") or None
 
     # SFP D-SFP-07 · 章级时间升序 SSOT（appendix 置尾）
-    from travelogue.domain.share_face_purity import sort_chapters_by_temporal_key
-
-    from travelogue.domain.share_face_purity import enforce_no_ordinal_face_titles
+    from travelogue.domain.share_face_purity import (
+        enforce_no_ordinal_face_titles,
+        sort_chapters_by_temporal_key,
+    )
 
     chapters, sfp_reordered = sort_chapters_by_temporal_key(chapters, layout_assets)
     trip["chapters"] = chapters
@@ -1642,23 +1633,14 @@ def _stage_finalize(
 
     buckets = bucket_plan.buckets
     segments = bucket_plan.segments
-    curation_segments = bucket_plan.curation_segments
     meta_places = bucket_plan.meta_places
 
     chapters = compose.chapters
     replan_meta = compose.replan_meta
-    non_empty_buckets = compose.non_empty_buckets
-    bucket_segment_ids = compose.bucket_segment_ids
-    pattern_hints = compose.pattern_hints
     arc_profile = compose.arc_profile
-    use_arc = compose.use_arc
     chapter_heroes = compose.chapter_heroes
-    secondary_hints = compose.secondary_hints
     trip_memory_anchors = compose.trip_memory_anchors
     summary_dict = compose.summary_dict
-    layout_metrics = compose.layout_metrics
-    degradation_reason = compose.degradation_reason
-    decision_logs = compose.decision_logs
 
     curation = trip.setdefault("curation", {})
 

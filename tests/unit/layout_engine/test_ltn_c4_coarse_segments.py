@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from travelogue.config import get_config
+from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
 from travelogue.layout_engine.mosaic.coarse_segments import (
     CoarseSegment,
     apply_signature_route,
@@ -14,7 +15,6 @@ from travelogue.layout_engine.mosaic.coarse_segments import (
     signature_key,
     window_crosses_segment,
 )
-from travelogue.layout_engine.mosaic.candidates import generate_window_candidates_with_rejections
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_4,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
@@ -48,7 +48,7 @@ def _asset(
 
 
 def test_build_coarse_segments_splits_on_time_gap():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     # tight burst then a long pause then another burst
     ids = [f"a{i}" for i in range(6)]
     assets = {
@@ -66,7 +66,7 @@ def test_build_coarse_segments_splits_on_time_gap():
 
 
 def test_build_coarse_segments_splits_on_city_change():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base, city="Tokyo"),
@@ -79,7 +79,7 @@ def test_build_coarse_segments_splits_on_city_change():
 
 
 def test_missing_timestamp_sticks_to_previous_segment():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base),
@@ -103,7 +103,7 @@ def test_window_clamp_prevents_cross_segment():
 
 
 def test_chapter_context_attaches_coarse_segments():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base, city="Tokyo"),
@@ -117,7 +117,7 @@ def test_chapter_context_attaches_coarse_segments():
 
 
 def test_signature_route_cohesive_four_landscape():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         aid: _asset(aid, taken_offset_s=i * 40, base=base) for i, aid in enumerate(ids)
@@ -132,7 +132,7 @@ def test_signature_route_cohesive_four_landscape():
 
 
 def test_signature_route_non_cohesive_drops_hero():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         aid: _asset(aid, taken_offset_s=i * 200, base=base) for i, aid in enumerate(ids)
@@ -146,7 +146,7 @@ def test_signature_route_non_cohesive_drops_hero():
 
 
 def test_signature_fallback_unknown_mix():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base, orientation="portrait"),
@@ -167,7 +167,7 @@ def test_signature_fallback_unknown_mix():
 
 
 def test_candidates_log_signature_source():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         aid: _asset(aid, taken_offset_s=i * 40, base=base) for i, aid in enumerate(ids)
@@ -188,7 +188,7 @@ def test_candidates_log_signature_source():
 
 
 def test_signature_five_slot_main():
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3", "a4"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base, orientation="portrait"),
@@ -214,7 +214,7 @@ def test_tc_intersect_signature_logs_signature():
     """TC on + known signature → candidateSource=signature (TC∩signature)."""
     from travelogue.config import TemplateContractConfig
 
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         aid: _asset(aid, taken_offset_s=i * 40, base=base) for i, aid in enumerate(ids)
@@ -237,7 +237,7 @@ def test_tc_signature_miss_keeps_contract_source():
     """Unknown signature under TC → keep exact/fallback, do not invent empty."""
     from travelogue.config import TemplateContractConfig
 
-    base = datetime(2025, 6, 1, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2025, 6, 1, 10, 0, tzinfo=UTC)
     ids = ["a0", "a1", "a2", "a3"]
     assets = {
         "a0": _asset("a0", taken_offset_s=0, base=base, orientation="portrait"),

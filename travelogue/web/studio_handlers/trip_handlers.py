@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 from travelogue.web.studio_handlers.asset_media_handlers import handle_asset_media_class
+from travelogue.web.studio_handlers.bookends_handlers import (
+    handle_get_bookends,
+    handle_post_repick_closing,
+    handle_post_repick_opening,
+    handle_post_resolve_closing,
+    handle_post_resolve_opening,
+    handle_post_restore_auto,
+)
 from travelogue.web.studio_handlers.trip_intent_handlers import (
     handle_get_cohort,
     handle_patch_cohort,
@@ -20,14 +28,6 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_entry,
     handle_patch_stratum_preference,
     handle_trips,
-)
-from travelogue.web.studio_handlers.bookends_handlers import (
-    handle_get_bookends,
-    handle_post_repick_closing,
-    handle_post_repick_opening,
-    handle_post_resolve_closing,
-    handle_post_resolve_opening,
-    handle_post_restore_auto,
 )
 from travelogue.web.studio_handlers.trip_moment_handlers import (
     handle_get_moment_curation,

@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from travelogue.config import get_config, reset_config_cache
+from travelogue.config import reset_config_cache
 from travelogue.llm.user_settings import (
     UserLlmSecrets,
     clear_user_llm_secrets,

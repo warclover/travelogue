@@ -11,14 +11,20 @@ from typing import Literal
 from travelogue.config import AppConfig
 from travelogue.layout_contract.aspect_buckets import prefix_same_bucket
 from travelogue.layout_contract.collage_routing import single_asset_screen_pattern
+from travelogue.layout_contract.engines import (
+    LAYOUT_ENGINE_LEGACY,
+    LAYOUT_ENGINE_SCREENS,
+    LAYOUT_ENGINE_VERSION_SCREENS,
+    LayoutEngine,
+)
+from travelogue.layout_contract.families import (
+    family_kind as _family_kind,
+)
+from travelogue.layout_contract.families import (
+    layout_family_for_asset as _layout_family_for_asset,
+)
 from travelogue.layout_contract.orientations import (
     effective_export_profile as _effective_profile,
-)
-from travelogue.layout_contract.orientations import (
-    is_std_landscape as _is_std_landscape,
-)
-from travelogue.layout_contract.orientations import (
-    is_std_portrait as _is_std_portrait,
 )
 from travelogue.layout_contract.planner_state import (  # noqa: F401 — re-exported API
     ScreenLayoutPlannerState,
@@ -37,18 +43,6 @@ from travelogue.layout_contract.subject import (
     any_asset_has_person,
     asset_has_person,
     portrait_fit_for_asset,
-)
-from travelogue.layout_contract.engines import (
-    LAYOUT_ENGINE_LEGACY,
-    LAYOUT_ENGINE_SCREENS,
-    LAYOUT_ENGINE_VERSION_SCREENS,
-    LayoutEngine,
-)
-from travelogue.layout_contract.families import (
-    ULTRA_WIDE_SOLO_AR,
-    asset_native_aspect_ratio as _asset_native_aspect_ratio,
-    family_kind as _family_kind,
-    layout_family_for_asset as _layout_family_for_asset,
 )
 from travelogue.media.image_ops import AspectKind
 

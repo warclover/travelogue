@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _DEGRADED_ONELINER = "可选照片太少，已省略封底图，避免与封面重复。"
 
 

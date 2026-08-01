@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from travelogue.cover_engine.joint import apply_joint_pick, pick_cover_style_and_asset
 from travelogue.cover_engine.lock import (
     is_opening_locked,
     read_lock_state,
@@ -9,7 +10,6 @@ from travelogue.cover_engine.lock import (
     sync_lock_mirrors,
     write_lock_state,
 )
-from travelogue.cover_engine.joint import apply_joint_pick, pick_cover_style_and_asset
 
 
 def _trip(*, joint: bool | None = None, bookends: dict | None = None) -> dict:

@@ -63,7 +63,7 @@ def _append_mosaic_log(entry: dict) -> None:
     _logs_buf().append(entry)
 
 
-def _ctx_trip_id(ctx: "ChapterPlanContext | None" = None) -> str | None:
+def _ctx_trip_id(ctx: ChapterPlanContext | None = None) -> str | None:
     from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
 
     if ctx is None:

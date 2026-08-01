@@ -787,9 +787,8 @@ def run_llm_narrate(
     Chapter LLM calls may run concurrently when ``llm.narrate_concurrency > 1``;
     payloads are always applied in chapter-index order (lead_seen).
     """
-    from travelogue.llm.shared_backoff import get_shared_backoff
-
     from travelogue.domain.copy_origin import migrate_edited_to_origin
+    from travelogue.llm.shared_backoff import get_shared_backoff
 
     scope_val = resolve_narrative_scope(override=scope, cfg=cfg)
     if not dry_run:

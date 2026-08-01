@@ -40,8 +40,8 @@ from travelogue.export.longshot import (
     ProgressFn,
     _apply_copy_display,
     _capture_p0_with_metrics,
-    _page_metrics,
     _longshot_file_stem,
+    _page_metrics,
     _resolve_longshot_url,
     raise_if_longshot_cancelled,
 )

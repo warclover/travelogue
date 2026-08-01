@@ -78,9 +78,7 @@ def test_saliency_gate_is_not_a_noop() -> None:
     """
     from travelogue.layout_engine.crop_solver import NormBox
     from travelogue.layout_templates.probe_regress import (
-        _cover_focal_retention,
         _profile_face_clipped,
-        _profile_saliency_retention,
     )
 
     # Focal is always visible under percentage positioning.

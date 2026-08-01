@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_engine.contract.debt import (
