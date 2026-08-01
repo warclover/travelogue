@@ -240,7 +240,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. 分支 `feat/alg-v3-w0`：D5 → probe/AC-07 → explain → `buildScreenCalls` 埋点 → 冻基线。  
-2. 合入后开 `feat/alg-v3-w1a1`（可与步骤 3 并行开分支，但 **合入必须在 W0 之后**）。  
-3. `feat/alg-v3-w1a2` **必须基于已含 D5 的主干**。  
-4. W1b 另开，带盲评日程。
+1. ~~`feat/alg-v3-w0`~~ ✅ → ~~w1a1~~ ✅ → ~~w1a2~~ ✅ → ~~w1b~~ ✅（已合 master）。  
+2. **当前**：`feat/alg-v3-w2-a1`（A1 + AC-11；默认成片等价）。  
+3. 其后：W2-A3 / A6 / A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
+4. W1b 盲评问1/3 仍为独立 dogfood，不挡码。
