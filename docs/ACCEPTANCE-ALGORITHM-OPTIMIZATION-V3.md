@@ -168,8 +168,9 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 | **FE-ALG3-05** | `mosaic_explain` 人话覆盖 PRD 所列 reason；抽屉无原始英文 reason | **W0** | ☑ |
 | **FE-ALG3-S02** | 智能排版 hint「搜索可能提前结束」 | W1a-2 后可选 | ☐ |
 | **FE-ALG3-S03** | algorithmStale / longshotStale /「更新并导出」回归 | W1b/W2 | ☑ |
+| **FE-ALG3-S04** | 「场景分析」hint / H0 与 OQ-02 对齐（默认关；禁全局自动营销） | W2 / OQ-02 | ☑ |
 
-**明确非本列车**：解冻 `#v2-settings-zone-ai`、能力卡、AIR COPY（FE-ALG3-X*）。
+**OQ-02（选项 C）**：`vision.enabled` 默认 `false`；仅 `vision.cohort_trip_ids` opt-in；nodeid=`test_alg3_oq02_vision_cohort.py`。**禁止**把全局默认改成 `auto`。
 
 ---
 
