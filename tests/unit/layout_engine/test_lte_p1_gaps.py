@@ -81,9 +81,9 @@ def test_user_3p2l_case_golden_matches_mcs() -> None:
         plan_mosaic_screens,
     )
     from travelogue.layout_engine.mosaic.constants import (
-        PATTERN_MOSAIC_5_3P_2L_BALANCED,
         PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
         PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+        PATTERN_MOSAIC_5_3P_2L_BALANCED,
     )
 
     buckets, aspects, assets = build_user_3p2l_case_trip()
