@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import os
+
 from travelogue.config import AppConfig, get_config
 from travelogue.config._common import capability_allows, normalize_tri_state
 from travelogue.llm.errors import LlmError
+
+_ENV_AI_SURFACE = "TRAVELOGUE_AI_SURFACE"
+_TRUTHY = frozenset({"1", "true", "on", "yes"})
 
 
 def _probe_provider_and_ready(
@@ -63,18 +68,55 @@ def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
     return {"llmAvailable": ready, "llmProvider": provider}
 
 
+def resolve_llm_may_call(*, cfg: AppConfig | None = None) -> bool:
+    """ALG-V3 MayCall · Surface ∨ dark env ∨ ``studio.ai_surface_enabled``.
+
+    NAS default is False. Layer-safe duplicate of ``web.ai_surface`` semantics
+    (env ∪ studio flag) so ``llm`` / ``services`` never import ``web``.
+    """
+    env = (os.environ.get(_ENV_AI_SURFACE) or "").strip().lower()
+    if env in _TRUTHY:
+        return True
+    app_cfg = cfg or get_config()
+    studio = getattr(app_cfg, "studio", None)
+    if studio is None:
+        return False
+    return getattr(studio, "ai_surface_enabled", False) is True
+
+
+def resolve_ready_provider(*, cfg: AppConfig | None = None) -> str:
+    """Return resolved provider when probe succeeds; else ``stub`` (no environ inject)."""
+    ready, provider = _probe_provider_and_ready(cfg=cfg, inject_environ=False)
+    if not ready or provider == "stub":
+        return "stub"
+    return provider
+
+
 def resolve_llm_ready_summary(*, cfg: AppConfig | None = None) -> dict[str, object]:
-    """Build ``algoV3.llm`` Ready accounting (no MayCall / no Import side effects)."""
+    """Build ``algoV3.llm`` Ready accounting (no Import side effects)."""
     app_cfg = cfg or get_config()
     capability = normalize_tri_state(getattr(app_cfg.llm, "capability", "auto"), default="auto")
+    prefer = bool(getattr(app_cfg.llm, "prefer_llm_when_ready", False))
     probe_ready = probe_llm_ready(cfg=app_cfg)
     allowed, degrade = capability_allows(capability, ready=probe_ready)
+    may_call = resolve_llm_may_call(cfg=app_cfg)
+    used_on_import = bool(prefer and allowed and may_call)
+    if not getattr(app_cfg.narrative, "decor_line_llm_enabled", False):
+        decor = "off"
+    elif not may_call:
+        decor = "skipped_may_call"
+    elif not allowed:
+        decor = "skipped_no_key"
+    else:
+        # Flag on but call-site still gates; summary is not "applied".
+        decor = "off"
     out: dict[str, object] = {
         "capability": capability,
+        "preferLlmWhenReady": prefer,
         "ready": bool(allowed),
-        "mayCall": False,  # NAS default; W1a-2 / AIR may open
-        "usedOnImport": False,
-        "decorLine": "off",
+        "mayCall": may_call,
+        "usedOnImport": used_on_import,
+        "decorLine": decor,
         "mllm": "off",
     }
     if degrade:

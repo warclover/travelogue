@@ -1370,6 +1370,7 @@ def _stage_build_chapters_compose(
         max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
         max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
         allow_burst_split=layout_cfg.scoring.allow_burst_split,
+        wall_clock_limits_output=layout_cfg.scoring.wall_clock_limits_output,
         subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
         enable_food_grid=cur_cfg.enable_food_grid,
         mundane_grid_buckets=cur_cfg.mundane_grid_buckets,

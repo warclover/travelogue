@@ -60,6 +60,8 @@ class LlmConfig:
     timeout_sec: int = 120
     # ALG-V3 · Ready 层 TriState（可解析探测；不等于 MayCall / Import 实调）
     capability: TriState = "auto"
+    # ALG-V3 · Import 层：有 Ready 时是否倾向走 LLM（默认 false → 导入恒 stub）
+    prefer_llm_when_ready: bool = False
     # Pipeline Throughput · Phase B placeholders (G2 前默认 concurrency=1)
     narrate_concurrency: int = 1
     narrate_concurrency_backoff: bool = True

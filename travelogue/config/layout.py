@@ -23,6 +23,9 @@ class LayoutScoringConfig:
     max_evaluations_per_trip: int = 500
     max_evaluations_per_segment: int = 0
     allow_burst_split: bool = False
+    # ALG-V3 C1 · when scoring is on, wall-clock expiry hard-stops search (SearchBudget.timed_out).
+    # Scoring default remains off → production path unchanged. Cohort with scoring on gets hard cut.
+    wall_clock_limits_output: bool = True
     subject_run_tolerance: int = 1
     skip_duplicate_signatures: bool = True
     incremental: bool = False
@@ -280,6 +283,12 @@ def layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
             raw.get("max_evaluations_per_segment", raw.get("maxEvaluationsPerSegment", 0))
         ),
         allow_burst_split=bool(raw.get("allow_burst_split", False)),
+        wall_clock_limits_output=cfg_bool(
+            raw,
+            "wall_clock_limits_output",
+            "wallClockLimitsOutput",
+            True,
+        ),
         subject_run_tolerance=int(raw.get("subject_run_tolerance", 1)),
         skip_duplicate_signatures=cfg_bool(
             raw, "skip_duplicate_signatures", "skipDuplicateSignatures", True

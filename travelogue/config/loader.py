@@ -163,6 +163,7 @@ def _patch_config_file_unlocked(path: Path, patch: dict[str, Any]) -> None:
                 data = loaded
     allowed_clustering = {"enabled", "segmentCurateMode", "sceneClusterMode"}
     allowed_vision = {"enabled"}
+    # wall_clock_limits_output / prefer / capability stay operator-yaml only (FE-ALG3-04).
     allowed_layout_scoring = {"enabled"}
     allowed_ingest = {"copySourceFiles", "copy_source_files"}
     allowed_studio = {
@@ -688,6 +689,12 @@ def load_config(path: Path | None = None) -> AppConfig:
             base_url=llm_base_url,
             timeout_sec=int(llm_raw.get("timeout_sec", 120)),
             capability=normalize_tri_state(llm_raw.get("capability", "auto"), default="auto"),
+            prefer_llm_when_ready=cfg_bool(
+                llm_raw,
+                "prefer_llm_when_ready",
+                "preferLlmWhenReady",
+                False,
+            ),
             narrate_concurrency=cfg_int(
                 llm_raw, "narrate_concurrency", "narrateConcurrency", 1
             ),

@@ -48,6 +48,11 @@ def should_call_llm_decor(chapter: dict, trip: dict, *, cfg: AppConfig | None = 
     nar = app_cfg.narrative
     if not nar.decor_line_llm_enabled:
         return False
+    # ALG-V3 AC-05a · MayCall=false → never outbound even when ready/flag on.
+    from travelogue.llm.ready import resolve_llm_may_call
+
+    if not resolve_llm_may_call(cfg=app_cfg):
+        return False
     if not decor_line_facts_sufficient(chapter, trip, cfg=app_cfg):
         return False
     if nar.decor_line_voice_first:

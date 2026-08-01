@@ -14,6 +14,7 @@ llm:
   # 升级杂志感文案：在 Studio「设置 → AI 文案」配置 Key，或取消注释下方 deepseek/dashscope 示例
   provider: stub                  # stub | deepseek | dashscope
   capability: auto                # ALG-V3 Ready 层：有凭证则 ready=true；无则 false（不等于会调用）
+  prefer_llm_when_ready: false    # ALG-V3 Import 层；默认 false → 导入/G1 恒 stub（不进用户 PATCH）
   model: deepseek-chat
   api_key_env: DEEPSEEK_API_KEY   # 密钥写在项目根 .env（见 .env.example），或系统环境变量
   timeout_sec: 120
@@ -278,6 +279,8 @@ layout:
     max_candidates_per_bucket: 12
     max_evaluations_per_trip: 500
     allow_burst_split: false
+    # ALG-V3 C1 · scoring 开时墙钟到期硬截断（SearchBudget.timed_out）；scoring 默认关 → 生产路径不变
+    wall_clock_limits_output: true
     subject_run_tolerance: 1
     skip_duplicate_signatures: true
     weights:
