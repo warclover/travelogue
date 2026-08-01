@@ -15,7 +15,6 @@ from travelogue.layout_engine.mosaic.clone_detection import (
     effective_clone_hard_gate,
     near_scene_clone_penalty,
 )
-from travelogue.layout_engine.mosaic.shot_group_gate import is_slice_pattern
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
@@ -35,6 +34,7 @@ from travelogue.layout_engine.mosaic.pattern_catalog import (
     patterns_for_window_size,
 )
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.layout_engine.mosaic.shot_group_gate import is_slice_pattern
 from travelogue.layout_engine.mosaic.slot_geometry import (
     pattern_geometry_precheck,
     screen_slots_geometry_ok,
