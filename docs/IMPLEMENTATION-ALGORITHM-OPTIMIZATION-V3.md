@@ -264,7 +264,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~`feat/alg-v3-w0`~~ ✅ → ~~w1a1~~ ✅ → ~~w1a2~~ ✅ → ~~w1b~~ ✅（已合 master）。  
-2. **当前**：`feat/alg-v3-w2-a3`（soft-split 自适应；**默认关**，默认成片不变）。  
-3. 其后：W2-A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
-4. W1b 盲评问1/3 仍为独立 dogfood，不挡码。
+1. ~~W0～W2-A3~~ ✅ 已合 master。  
+2. **当前**：`feat/alg-v3-debt-ac20-docs-s03`（AC-20 真下降门 + 文档勾选 + S03 + 盲评脚手架）。  
+3. **人评**：填写 `alg3-w1b-blind-review-PENDING.md` 后方可宣称 M1b。  
+4. 其后：W2-A4 / OQ-02 cohort（各另 PR）。
