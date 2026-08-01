@@ -47,6 +47,7 @@ RESEARCH_DEFAULT_FALSE: frozenset[str] = frozenset(
         "narrative.decor_line_llm_enabled",
         "cull.allow_cpu_ml",
         "geocode.enabled",
+        "shot_grouping.scene.adaptive_soft_split",
     }
 )
 

@@ -102,6 +102,69 @@ def _soft_split_runs(
     return runs, splits
 
 
+def _cluster_adjacent_gap_hours(members: list[dict]) -> list[float]:
+    """Positive adjacent takenAt gaps (hours) for members with valid timestamps."""
+    ordered = sorted(
+        members,
+        key=lambda a: (
+            _parse_taken_at(a.get("takenAt")) or datetime.min.replace(tzinfo=UTC),
+            a.get("id") or "",
+        ),
+    )
+    gaps: list[float] = []
+    prev_t = _parse_taken_at(ordered[0].get("takenAt")) if ordered else None
+    for asset in ordered[1:]:
+        cur_t = _parse_taken_at(asset.get("takenAt"))
+        if prev_t is not None and cur_t is not None:
+            delta_h = (cur_t - prev_t).total_seconds() / 3600.0
+            if delta_h > 0:
+                gaps.append(delta_h)
+        prev_t = cur_t if cur_t is not None else prev_t
+    return gaps
+
+
+def adaptive_soft_split_hours(
+    members: list[dict],
+    *,
+    k: float,
+    lo: float,
+    hi: float,
+    fallback: float,
+) -> float:
+    """ALG-V3 A3 · clamp(median(gaps_h) * k, [lo, hi]); fallback when sparse.
+
+    Independent of LTN ``coarse_segments`` (seconds / chapter scope).
+    """
+    if k <= 0:
+        return float(fallback)
+    lo_v, hi_v = (float(lo), float(hi)) if lo <= hi else (float(hi), float(lo))
+    gaps = _cluster_adjacent_gap_hours(members)
+    if len(gaps) < 1:
+        return float(fallback)
+    # Pure-Python median — avoid importing numpy on the SSG hot path.
+    ordered = sorted(gaps)
+    n = len(ordered)
+    mid = n // 2
+    if n % 2:
+        med = ordered[mid]
+    else:
+        med = 0.5 * (ordered[mid - 1] + ordered[mid])
+    return min(hi_v, max(lo_v, float(med) * float(k)))
+
+
+def resolve_soft_split_hours(members: list[dict], scene_cfg: Any) -> float:
+    """Fixed hours unless ``adaptive_soft_split`` is on."""
+    fallback = float(getattr(scene_cfg, "time_soft_split_hours", 6.0) or 6.0)
+    if not bool(getattr(scene_cfg, "adaptive_soft_split", False)):
+        return fallback
+    return adaptive_soft_split_hours(
+        members,
+        k=float(getattr(scene_cfg, "adaptive_soft_split_k", 3.0) or 3.0),
+        lo=float(getattr(scene_cfg, "adaptive_soft_split_hours_lo", 1.0) or 1.0),
+        hi=float(getattr(scene_cfg, "adaptive_soft_split_hours_hi", 12.0) or 12.0),
+        fallback=fallback,
+    )
+
 def _kind_meta(kind: str) -> tuple[float, list[str]]:
     if kind == "scene":
         return 1.0, ["clip_scene", "time_split"]
@@ -312,11 +375,13 @@ def run_shot_grouping_layer(
         groups: list[dict[str, Any]] = []
         soft_splits = 0
         seq = 0
+        adaptive_hours: list[float] = []
 
         for cid, members in sorted(by_cluster.items(), key=lambda x: x[0]):
-            runs, splits = _soft_split_runs(
-                members, split_hours=ssg.scene.time_soft_split_hours
-            )
+            split_h = resolve_soft_split_hours(members, ssg.scene)
+            if bool(getattr(ssg.scene, "adaptive_soft_split", False)):
+                adaptive_hours.append(float(split_h))
+            runs, splits = _soft_split_runs(members, split_hours=split_h)
             soft_splits += splits
             for run_i, run in enumerate(runs):
                 seq += 1
@@ -391,6 +456,13 @@ def run_shot_grouping_layer(
         weak_n = sum(1 for g in groups if g.get("kind") == "weak")
         look_n = sum(1 for g in groups if g.get("kind") == "look")
         coverage = shot_group_coverage_ratio(assets)
+        soft_split_meta: dict[str, Any] = {
+            "softSplitAdaptive": bool(getattr(ssg.scene, "adaptive_soft_split", False)),
+        }
+        if adaptive_hours:
+            soft_split_meta["softSplitHoursEffective"] = round(
+                float(sorted(adaptive_hours)[len(adaptive_hours) // 2]), 4
+            )
         telemetry = {
             "mode": "scene",
             "groupCount": len(groups),
@@ -400,6 +472,7 @@ def run_shot_grouping_layer(
             "softSplitCount": soft_splits,
             "coverageRatio": round(coverage, 4),
             "lookEnabled": want_look,
+            **soft_split_meta,
             **look_stats,
         }
         curation["shotGrouping"] = {
@@ -411,6 +484,7 @@ def run_shot_grouping_layer(
                 "weakGroupCount": weak_n,
                 "softSplitCount": soft_splits,
                 "coverageRatio": round(coverage, 4),
+                **soft_split_meta,
                 **look_stats,
             },
             "telemetry": telemetry,

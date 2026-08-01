@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A1 已合入 master** · 当前编码 **`feat/alg-v3-w2-a6`（look batch encode）** |
+| **状态** | **W0～W2-A6 已合入 master** · 当前编码 **`feat/alg-v3-w2-a3`（adaptive soft-split · 默认关）** |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | `feat/alg-v3-w0` ✅ → … → `feat/alg-v3-w2-a1` ✅ → **`feat/alg-v3-w2-a6`** → W2-A3/A4… |
+| **建议分支** | … → `feat/alg-v3-w2-a6` ✅ → **`feat/alg-v3-w2-a3`** → W2-A4 / OQ-02… |
 
 ---
 
@@ -193,11 +193,23 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 **退出**：默认 look 分组语义不变；must-green 绿；**不加**默认硬 timeout（fail-open 会改成片）。
 
+### W2-A3 · soft-split 自适应（当前 · 默认关）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-A3-01 | `adaptive_soft_split` 等键；默认 **false**；公式 `clamp(median(gaps_h)*k,[lo,hi])` | `config/shot_grouping.py` | ☑ |
+| BE-ALG3-A3-02 | 每簇解析 `resolve_soft_split_hours` → `_soft_split_runs`；flag off ≡ 固定 6h | `curation/shot_grouping.py` | ☑ |
+| BE-ALG3-A3-03 | 遥测 `softSplitAdaptive` / `softSplitHoursEffective` | shotGrouping stats | ☑ |
+| QA-ALG3-A3 | 夹紧 / fallback / flag off 等价 / 稀疏少切 | `test_alg3_w2_a3_soft_split_adaptive.py` | ☑ |
+| QA-ALG3-32c | 新 bool → CSC 重签 **174/110/64**；Research 防火墙 | CSC JSON · `RESEARCH_DEFAULT_FALSE` | ☑ |
+
+**退出**：默认路径 soft-split 与合入前一致；must-green 绿。**不**抬默认 on（成片变更须另 PR + 盲评）。
+
 ### W2 后续（提纲 · 未开工）
 
 | 包 | 要点 | 挡门 |
 |----|------|------|
-| A3 | soft-split 按簇内中位间隔自适应（夹紧） | 默认成片可变 → 须投影/盲评 |
+| ~~A3~~ | ~~soft-split 自适应~~ | ✅ W2-A3（默认关） |
 | ~~A6~~ | ~~look 批量化 encode~~ | ✅ W2-A6 |
 | A4 | Atom/soft-split **仅实验旗**；禁 observe floor 自动 widen | AC-12 + X04；旗默认关 |
 | OQ-02 | vision cohort / `fine_craft`（先 C） | 产品书面口；禁全局 auto |
@@ -253,6 +265,6 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 ## 编码启动顺序（给执行者）
 
 1. ~~`feat/alg-v3-w0`~~ ✅ → ~~w1a1~~ ✅ → ~~w1a2~~ ✅ → ~~w1b~~ ✅（已合 master）。  
-2. **当前**：`feat/alg-v3-w2-a6`（look 批量化 encode；默认分组语义不变）。  
-3. 其后：W2-A3 / A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
+2. **当前**：`feat/alg-v3-w2-a3`（soft-split 自适应；**默认关**，默认成片不变）。  
+3. 其后：W2-A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
 4. W1b 盲评问1/3 仍为独立 dogfood，不挡码。

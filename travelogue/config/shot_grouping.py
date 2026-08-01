@@ -15,6 +15,11 @@ _UNSET = object()
 class ShotGroupingSceneConfig:
     time_soft_split_hours: float = 6.0
     merge_noise: bool = True
+    # ALG-V3 A3 · opt-in adaptive soft-split (default OFF → fixed hours path).
+    adaptive_soft_split: bool = False
+    adaptive_soft_split_k: float = 3.0
+    adaptive_soft_split_hours_lo: float = 1.0
+    adaptive_soft_split_hours_hi: float = 12.0
 
 
 @dataclass
@@ -110,11 +115,27 @@ class ShotGroupingConfig:
 
 
 def _scene_from_dict(raw: dict[str, Any]) -> ShotGroupingSceneConfig:
+    lo = cfg_float(
+        raw, "adaptive_soft_split_hours_lo", "adaptiveSoftSplitHoursLo", 1.0
+    )
+    hi = cfg_float(
+        raw, "adaptive_soft_split_hours_hi", "adaptiveSoftSplitHoursHi", 12.0
+    )
+    if lo > hi:
+        lo, hi = hi, lo
     return ShotGroupingSceneConfig(
         time_soft_split_hours=cfg_float(
             raw, "time_soft_split_hours", "timeSoftSplitHours", 6.0
         ),
         merge_noise=cfg_bool(raw, "merge_noise", "mergeNoise", True),
+        adaptive_soft_split=cfg_bool(
+            raw, "adaptive_soft_split", "adaptiveSoftSplit", False
+        ),
+        adaptive_soft_split_k=cfg_float(
+            raw, "adaptive_soft_split_k", "adaptiveSoftSplitK", 3.0
+        ),
+        adaptive_soft_split_hours_lo=lo,
+        adaptive_soft_split_hours_hi=hi,
     )
 
 

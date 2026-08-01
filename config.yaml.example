@@ -608,6 +608,11 @@ shotGrouping:
   minShotGroupSize: 2
   scene:
     timeSoftSplitHours: 6
+    # ALG-V3 A3 · opt-in; false = today's fixed 6h path (default成片不变)
+    adaptiveSoftSplit: false
+    adaptiveSoftSplitK: 3.0          # median(gaps_h) * k, then clamp
+    adaptiveSoftSplitHoursLo: 1.0
+    adaptiveSoftSplitHoursHi: 12.0
     mergeNoise: true
   look:
     enabled: auto                  # M2 · 造型分镜；无脸则 skip
