@@ -1,13 +1,13 @@
 from abc import abstractmethod
-from dataclasses import dataclass
 from collections import namedtuple
+from collections.abc import Iterable
+from dataclasses import dataclass
 from functools import cached_property
-from itertools import chain, islice
 from numbers import Real
-from typing import Iterable, Optional, List, Union, Tuple
+from typing import Optional, Union
 
 LeafId = int
-SizeOrTuple = Union['Size', Tuple[Real, Real]]
+SizeOrTuple = Union['Size', tuple[Real, Real]]
 
 
 class Size(namedtuple('Size', ['w', 'h'])):
@@ -22,7 +22,7 @@ class Size(namedtuple('Size', ['w', 'h'])):
     def __round__(self):
         return Size(*map(round, self))
 
-    def __truediv__(self, divisor: Union[Real, SizeOrTuple]):
+    def __truediv__(self, divisor: Real | SizeOrTuple):
         if isinstance(divisor, Real):
             return Size(self.w / divisor, self.h / divisor)
         else:
@@ -43,21 +43,21 @@ class Position(namedtuple('Position', ['x', 'y'])):
         return Size(*map(round, self))
 
 
-_BoundingBoxChildren = Optional[List['BoundingBox']]
+_BoundingBoxChildren = Optional[list['BoundingBox']]
 
 
 @dataclass(frozen=True)
 class Constraint:
     is_height: bool
-    positive_ids: List[LeafId]
-    negative_ids: List[LeafId]
+    positive_ids: list[LeafId]
+    negative_ids: list[LeafId]
     result: Real = 0
 
     @classmethod
     def make_constraint(_,
                         is_height: bool,
-                        positive_ids: List[LeafId],
-                        negative_ids: List[LeafId],
+                        positive_ids: list[LeafId],
+                        negative_ids: list[LeafId],
                         result: Real = 0,
                         border: int = 0,
                         spacing: int = 0):
@@ -70,15 +70,15 @@ class Constraint:
 
 
 class BoundingBox:
-    is_horizontal: Optional[bool]
+    is_horizontal: bool | None
     children: _BoundingBoxChildren
-    leaf_id: Optional[LeafId]
-    width_ids: List[LeafId]
-    height_ids: List[LeafId]
+    leaf_id: LeafId | None
+    width_ids: list[LeafId]
+    height_ids: list[LeafId]
 
-    def __init__(self, is_horizontal: Optional[bool] = None, *,
+    def __init__(self, is_horizontal: bool | None = None, *,
                  children: _BoundingBoxChildren = None,
-                 leaf_id: Optional[LeafId] = None):
+                 leaf_id: LeafId | None = None):
         if children is None and leaf_id is None:
             raise ValueError("Either children or leaf_id must be set")
 
@@ -129,7 +129,7 @@ class BoundingBox:
             assert self.children is not None
             return sum([c.n_images for c in self.children])
 
-    def get_constraints(self, border: Real = 0, spacing: Real = 0) -> List[Constraint]:
+    def get_constraints(self, border: Real = 0, spacing: Real = 0) -> list[Constraint]:
         if self.is_leaf:
             constraints = []
         else:
@@ -155,9 +155,9 @@ class BoundingBox:
         return constraints
 
     def compute_positions(self,
-                          image_sizes: List[Size],
+                          image_sizes: list[Size],
                           border: Real = 0,
-                          spacing: Real = 0) -> Tuple[List[Position], Size]:
+                          spacing: Real = 0) -> tuple[list[Position], Size]:
         def _recurse(bbox, top_left: Position = Position(0, 0)):
             if bbox.is_leaf:
                 positions = [(bbox.leaf_id, top_left + (border, border))]
@@ -196,13 +196,13 @@ class BoundingBox:
         return positions, canvas_size
 
 
-class Layout(object):
+class Layout:
 
     def __init__(
         self,
         n_images: int,
-        width: Optional[Real] = None,
-        height: Optional[Real] = None,
+        width: Real | None = None,
+        height: Real | None = None,
         border: Real = 0,
         spacing: Real = 0,
     ):
@@ -213,11 +213,11 @@ class Layout(object):
         self.spacing = spacing
 
     @abstractmethod
-    def get_constraints(self, image_sizes: List[Size]) -> List[Constraint]:
+    def get_constraints(self, image_sizes: list[Size]) -> list[Constraint]:
         pass
 
     @abstractmethod
-    def compute_positions(self, image_sizes: List[Size]) -> Tuple[List[Position], Size]:
+    def compute_positions(self, image_sizes: list[Size]) -> tuple[list[Position], Size]:
         pass
 
 
@@ -225,8 +225,8 @@ class BoundingBoxLayout(Layout):
     def __init__(
         self,
         root_bbox: BoundingBox,
-        width: Optional[Real] = None,
-        height: Optional[Real] = None,
+        width: Real | None = None,
+        height: Real | None = None,
         border: Real = 0,
         spacing: Real = 0,
     ):
@@ -239,7 +239,7 @@ class BoundingBoxLayout(Layout):
         )
         self.root_bbox = root_bbox
 
-    def get_constraints(self, image_sizes: List[Size]) -> List[Constraint]:
+    def get_constraints(self, image_sizes: list[Size]) -> list[Constraint]:
         constraints = self.root_bbox.get_constraints(
             border=self.border, spacing=self.spacing
         )
@@ -252,10 +252,10 @@ class BoundingBoxLayout(Layout):
 
         return constraints
 
-    def compute_positions(self, image_sizes: List[Size]) -> Tuple[List[Position], Size]:
+    def compute_positions(self, image_sizes: list[Size]) -> tuple[list[Position], Size]:
         return self.root_bbox.compute_positions(image_sizes, self.border, self.spacing)
 
-    def _get_scale_constraint(self, image_sizes: List[Size]) -> Constraint:
+    def _get_scale_constraint(self, image_sizes: list[Size]) -> Constraint:
         if self.height is not None:
             border_height = 2 * len(self.root_bbox.height_ids) * self.border
             spacing_height = (len(self.root_bbox.height_ids) - 1) * self.spacing
@@ -289,8 +289,8 @@ class BalancedLayout(BoundingBoxLayout):
     def __init__(self,
                  n_images: int, *,
                  horizontal_root: bool = True,
-                 width: Optional[Real] = None,
-                 height: Optional[Real] = None,
+                 width: Real | None = None,
+                 height: Real | None = None,
                  border: Real = 0,
                  spacing: Real = 0):
 
@@ -309,10 +309,10 @@ class BalancedLayout(BoundingBoxLayout):
 
 class GridLayout(BoundingBoxLayout):
     def __init__(self, n_images: int, *,
-                 cols: Optional[int] = None,
-                 rows: Optional[int] = None,
-                 width: Optional[Real] = None,
-                 height: Optional[Real] = None,
+                 cols: int | None = None,
+                 rows: int | None = None,
+                 width: Real | None = None,
+                 height: Real | None = None,
                  border: Real = 0,
                  spacing: Real = 0):
 

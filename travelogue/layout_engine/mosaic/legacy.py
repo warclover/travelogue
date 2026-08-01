@@ -206,7 +206,7 @@ def append_legacy_window(
         burst_seconds=ctx.mix_gap,
         median_sharp=ctx.med_sharp,
         trip_total=ctx.trip_total,
-        app_cfg=ctx.app_config,
+        app_cfg=getattr(ctx, "app_config", None),
     )
     if not screen:
         return False

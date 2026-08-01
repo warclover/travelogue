@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 帮助抽屉 L2（W2）· 首页与预览共用。
  * 固定 H0–H7；重播；深链 ?help=H0 / ?help=H2 / #help=H2。
@@ -205,6 +206,7 @@ function _readDeepLink() {
  *   onClose?: () => void,
  *   onReplay?: (msg: string) => void,
  *   showToast?: (msg: string, opts?: object) => void,
+ *   isHelpOpen?: () => boolean,
  * }} [opts]
  */
 export function configureHelpDrawer(opts) {

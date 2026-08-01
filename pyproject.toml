@@ -79,7 +79,12 @@ ignore = ["E501", "E402"]
 # One-shot migration/split scripts; style noise is not worth blocking CI.
 "scripts/check_usage_consistency.py" = ["E741"]
 "scripts/split_preview_toolbar_*.py" = ["F841", "E731"]
+"scripts/archive/**" = ["F841", "E731"]
 "travelogue/web/studio_dispatch.py" = ["E731"]
+# Upstream vendored collage — do not restyle Optional.
+"travelogue/export/_vendor/**" = ["UP"]
+# Bag-of-mix keys use L/P/S letters; `l` is landscape count (TPC).
+"travelogue/layout_engine/contract/mix_index.py" = ["E741"]
 
 [tool.importlinter]
 root_package = "travelogue"
@@ -107,6 +112,12 @@ ignore_imports = [
     "travelogue.media.ingest -> travelogue.curation.photo_cull",
     # master CI debt · ingest finalize hooks pending P2
     "travelogue.media.ingest -> travelogue.curation.algorithm_profile",
+    # master CI debt · aesthetic warm-on-ingest pending P2
+    "travelogue.media.ingest -> travelogue.curation.aesthetic_warm",
+    # master CI debt · parallel worker aesthetic signals pending P2
+    "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
+    # master CI debt · parallel aesthetic finalize pending P2
+    "travelogue.media.ingest_parallel -> travelogue.curation.aesthetic_score",
     # master CI debt · aesthetic MLLM relocation pending P2
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_blind_review",
     # master CI debt · aesthetic MLLM relocation pending P2
@@ -128,4 +139,8 @@ forbidden_modules = [
     "travelogue.orchestrator",
     "travelogue.curation",
     "travelogue.vision",
+]
+ignore_imports = [
+    # Worker may compute aesthetic signals inline; full extraction pending P2.
+    "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
 ]

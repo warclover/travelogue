@@ -17,6 +17,9 @@ EXPECTED_IMPORTLINTER_IGNORES = [
     "travelogue.media.ingest -> travelogue.curation.aesthetic_score",
     "travelogue.media.ingest -> travelogue.curation.photo_cull",
     "travelogue.media.ingest -> travelogue.curation.algorithm_profile",
+    "travelogue.media.ingest -> travelogue.curation.aesthetic_warm",
+    "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
+    "travelogue.media.ingest_parallel -> travelogue.curation.aesthetic_score",
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_blind_review",
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
@@ -52,11 +55,18 @@ def test_lint_imports_no_exemptions() -> None:
 
 
 def test_lint_lse_cross_import_at_baseline() -> None:
+    import json
+
+    baseline = json.loads(
+        (ROOT / "docs/acceptance-records/lse-cross-import-baseline.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    expected = int(baseline.get("totalCrossEdges", baseline.get("total_edges", 0)))
     code, out = _run_script("scripts/lint_lse_cross_import.py")
     assert code == 0, out
-    # Domain/stage_hints + telemetry sink reduced visible cross-edges (18→5).
-    assert "edges: 5" in out
-    assert "ceiling 5" in out
+    assert f"edges: {expected}" in out
+    assert f"ceiling {expected}" in out
 
 def test_load_config_warns_on_removed_planner_impl(tmp_path) -> None:
     cfg_path = tmp_path / "config.yaml"

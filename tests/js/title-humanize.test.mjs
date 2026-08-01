@@ -74,22 +74,22 @@ test("displayTitle · noise + meta place uses {地} · {日期} (AC-SFC-12)", ()
     }),
     "武汉 · 7月1日"
   );
-  // 有地点但无日期 → 兜底日期标签 "游记"
+  // 有地点但无日期 → 兜底日期标签 "画册"
   assert.equal(
     resolveDisplayTitle({ title: "王丹昙华林2", places: ["武汉"] }),
-    "武汉 · 游记"
+    "武汉 · 画册"
   );
 });
 
-test("displayTitle · final fallback uses date label then 旅行 · 游记", () => {
+test("displayTitle · final fallback uses date label then 旅行 · 画册", () => {
   // 无可读标题（导出目录腔，且抽不出中文地名）、无地点，但有日期 → 旅行 · {日期}
   assert.equal(
     resolveDisplayTitle({ title: "download", dateStart: "2026-07-01" }),
     "旅行 · 7月1日"
   );
-  // 无日期才 旅行 · 游记
-  assert.equal(resolveDisplayTitle({ title: "download" }), "旅行 · 游记");
-  assert.equal(resolveDisplayTitle(null), "旅行 · 游记");
+  // 无日期才 旅行 · 画册
+  assert.equal(resolveDisplayTitle({ title: "download" }), "旅行 · 画册");
+  assert.equal(resolveDisplayTitle(null), "旅行 · 画册");
 });
 
 test("displayTitle · cross-year span keeps year (no inverted month feel)", () => {

@@ -5,8 +5,8 @@ from __future__ import annotations
 from travelogue.config.mosaic import MosaicConfig
 from travelogue.config.shot_grouping import (
     AtomConfig,
-    ShotGroupMosaicPolicy,
     ShotGroupingConfig,
+    ShotGroupMosaicPolicy,
     resolve_shot_group_mosaic_policy,
     shot_grouping_from_dict,
 )

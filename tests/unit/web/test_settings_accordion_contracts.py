@@ -30,7 +30,7 @@ def test_settings_accordion_html_inventory() -> None:
         'id="studio-cfg-g1"',
         'id="studio-cfg-layout-scoring"',
         'id="v2-settings-experimental"',
-        "说明与实验选项",
+        "实验选项（高级）",
         'id="studio-llm-settings-entry"',
         'id="studio-llm-settings-help"',
         'id="studio-llm-settings-badge"',

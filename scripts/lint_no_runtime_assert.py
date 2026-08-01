@@ -44,6 +44,9 @@ def main() -> int:
     for path in sorted(travelogue.rglob("*.py")):
         if "__pycache__" in path.parts:
             continue
+        # Third-party vendored collage keeps upstream asserts.
+        if "_vendor" in path.parts:
+            continue
         violations.extend(lint_file(path))
     if violations:
         print("\n".join(violations), file=sys.stderr)

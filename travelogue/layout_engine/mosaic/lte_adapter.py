@@ -239,6 +239,15 @@ def resolve_slot_fit(
         if str(pattern_id).startswith("screen-mosaic-"):
             return "cover"
         return default
+    # Face safety: person portraits keep contain even when YAML declares cover
+    # (screen-portrait-1 solidify must not downgrade _fits_for_screen).
+    if (
+        str(declared) == "cover"
+        and role == "portrait"
+        and portrait_fit_for_asset(asset, default="cover") == "contain"
+        and not str(pattern_id).startswith("screen-mosaic-")
+    ):
+        return "contain"
     return str(declared)
 
 

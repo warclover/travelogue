@@ -7,8 +7,6 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from travelogue.config import get_config
 from travelogue.curation.curate import run_curate
 from travelogue.layout_contract.active_set import inventory_report

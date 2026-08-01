@@ -154,11 +154,11 @@ def is_ordinal_face_title(title: str) -> bool:
 
 def strip_ordinal_face_title(title: str) -> str:
     """Sequence Pass · drop reader-facing ·二/·三/·N suffixes."""
-    t = (title or "").strip()
-    if not t:
-        return t
-    cleaned = _ORDINAL_FACE_RE.sub("", t).strip().rstrip("·• ")
-    return cleaned or t
+    from travelogue.domain.share_face_purity import (
+        strip_ordinal_face_title as _strip,
+    )
+
+    return _strip(title)
 
 
 def _sequence_pass_titles(titles: list[str]) -> list[str]:
@@ -235,6 +235,12 @@ def chapter_titles(
             continue
 
         span = bucket_day_span(bucket, assets_by_id)
+        # Travel-plan cities win over calendar day titles when still available.
+        if plan_idx < len(plan_cities):
+            titles.append(_clip_title(plan_cities[plan_idx]))
+            plan_idx += 1
+            continue
+
         # 多日章节优先日期跨度，避免多段 label 硬截断出「2月9–12日··4月4」
         if len(span) > 1:
             span_title = title_for_bucket_span(span, with_year=with_year)
@@ -294,11 +300,6 @@ def chapter_titles(
             if labels:
                 titles.append(_clip_title("·".join(labels[:2])))
                 continue
-
-        if plan_idx < len(plan_cities):
-            titles.append(_clip_title(plan_cities[plan_idx]))
-            plan_idx += 1
-            continue
 
         seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
         if seg_id and segment_labels.get(seg_id):

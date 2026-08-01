@@ -68,7 +68,7 @@ def filter_food_for_policy(
     For exclude: drop food; if empty, fall back to original and mark fallback.
     For demote/off: return original unchanged (scoring applies multiplier).
     """
-    role = get_food_role_config(cfg)
+    get_food_role_config(cfg)
     effective = policy if policy in {"demote", "exclude", "off"} else "demote"
     if effective != "exclude":
         return assets, False

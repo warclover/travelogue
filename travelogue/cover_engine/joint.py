@@ -10,7 +10,6 @@ from travelogue.cover_engine.fit import style_avoid_penalty, style_fit_score
 from travelogue.cover_engine.registry import (
     get_default_style_id,
     get_profile,
-    get_style,
     is_assignable,
     list_assignable_styles,
 )
@@ -110,7 +109,7 @@ def score_pair(
 
 
 def _tie_break_key(trip_id: str, style_id: str, asset_id: str) -> int:
-    digest = hashlib.sha256(f"{trip_id}|{style_id}|{asset_id}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(f"{trip_id}|{style_id}|{asset_id}".encode()).hexdigest()
     return int(digest[:8], 16)
 
 

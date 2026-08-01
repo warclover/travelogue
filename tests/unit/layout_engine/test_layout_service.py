@@ -98,12 +98,16 @@ def test_apply_layout_mobile_landscape_stacks_in_one_column():
 
 
 def test_apply_layout_web_portrait_mosaic():
-    # MCS unified planner: web export uses screens engine; mixed portrait windows
-    # land in unified MCS patterns (e.g. screen-portrait-3) instead of legacy rows.
+    # MCS unified planner: web export uses screens engine; mixed 3P+2L windows
+    # land in product-default MCS patterns (3P2L hero-quad under experiments).
     from dataclasses import replace
 
     from travelogue.config import get_config
     from travelogue.config.mosaic import TemplateContractConfig
+    from travelogue.layout_engine.mosaic.constants import (
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+    )
     from travelogue.layout_engine.mosaic.runtime import (
         reset_mosaic_config_override,
         set_mosaic_config_override,
@@ -129,7 +133,12 @@ def test_apply_layout_web_portrait_mosaic():
         result = apply_layout_to_trip(trip, export_layout="web")
         assert result.orientation_summary["export_layout"] == "web"
         screens = [sc for ch in trip["chapters"] for sc in ch.get("screens") or []]
-        assert any(sc.get("patternId") == "screen-portrait-3" for sc in screens)
+        mcs_ids = {
+            "screen-portrait-3",
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        }
+        assert any(sc.get("patternId") in mcs_ids for sc in screens)
         placed = {sl.get("assetId") for sc in screens for sl in sc.get("slots") or []}
         assert {"a1", "a2", "a3"} <= placed
     finally:

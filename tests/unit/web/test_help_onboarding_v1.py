@@ -79,10 +79,12 @@ def test_task_dock_success_saved_confirm() -> None:
 
 def test_import_folder_scaffold_markers() -> None:
     html = HOME_HTML.read_text(encoding="utf-8")
+    help_js = HELP_JS.read_text(encoding="utf-8")
     assert "不知道选哪个文件夹？" in html
     assert "同一次画册放同一文件夹（50–100 张最佳）" in html
     assert "手机照片需先传到电脑" in html
-    assert "每个文件夹会生成一本" in html
+    # 第 4 条在 help-onboarding 文案源；HTML 脚手架由 JS 注入时也会读到
+    assert "每个文件夹会生成一本" in help_js
     assert "试试用自己的照片做一篇" in html
     assert 'data-help-item="H1"' in html
 

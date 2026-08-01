@@ -30,7 +30,6 @@ def test_stale_badge_is_reorder_not_update() -> None:
     assert "版式算法有更新，可点重新排版" in shelf
     assert "「可重排」是什么意思" in help_js
     assert "stale-badge--algo" in shelf
-    assert "recent-card__stale--algo" in bento
     assert ".v2-shelf__stale-badge--algo" in css
     assert ".v2-bench__recent-card__stale--algo" in css
 

@@ -191,7 +191,6 @@ def test_lifecycle_experimental_to_ga_admission_chain(tmp_path, monkeypatch) -> 
 
 @pytest.mark.unit
 def test_rejected_templates_top3_in_window_full_in_debug() -> None:
-    from travelogue.layout_engine.mosaic.log import MosaicWindowLog, format_log_entry
 
     raw = MosaicWindowLog(
         rejected_templates=[{"templateId": "x", "reason": "hard_invalid"}]

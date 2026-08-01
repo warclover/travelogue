@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.paths import ROOT, TEMPLATE_VISUAL_JOURNAL
+from travelogue.paths import ROOT
 from travelogue.web.studio_chrome import inject_studio_chrome
 
 JOURNAL_CSS = ROOT / "templates" / "visual-journal" / "journal.css"

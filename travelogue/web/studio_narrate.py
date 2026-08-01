@@ -6,32 +6,24 @@ from pathlib import Path
 
 from travelogue.config import AppConfig, get_config
 from travelogue.llm.errors import LlmError
+from travelogue.llm.ready import (
+    probe_llm_ready,
+    resolve_llm_ready_summary,
+    studio_llm_status,
+)
 from travelogue.orchestrator.run import run_trip
 from travelogue.services.narrate import run_narrate
 from travelogue.services.trip import TripService
 
-
-def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
-    app_cfg = cfg or get_config()
-    provider = (app_cfg.llm.provider or "stub").strip().lower()
-    try:
-        from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
-
-        secrets = read_user_llm_secrets()
-        inject_secrets_into_environ(secrets)
-        if secrets.configured and secrets.provider:
-            provider = secrets.provider
-    except Exception:
-        pass
-    if provider == "stub":
-        return {"llmAvailable": False, "llmProvider": "stub"}
-    try:
-        from travelogue.llm.client import resolve_llm_runtime
-
-        resolve_llm_runtime(provider, cfg=app_cfg)
-        return {"llmAvailable": True, "llmProvider": provider}
-    except LlmError:
-        return {"llmAvailable": False, "llmProvider": provider}
+# Re-export Ready helpers for Studio callers (implementation lives in llm.ready).
+__all__ = [
+    "probe_llm_ready",
+    "resolve_llm_ready_summary",
+    "resolve_studio_narrate_provider",
+    "resolve_studio_narrate_provider_if_ready",
+    "run_studio_llm_narrate",
+    "studio_llm_status",
+]
 
 
 def resolve_studio_narrate_provider(

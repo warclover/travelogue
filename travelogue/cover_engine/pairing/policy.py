@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 
 from travelogue.domain.closing_view import (
     _read_dominant_tone,

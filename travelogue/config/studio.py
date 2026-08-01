@@ -79,8 +79,8 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
     """
     or_cfg = getattr(cfg.studio, "output_recipe", None) or OutputRecipeConfig()
     bands = getattr(or_cfg, "bands", None) or OutputRecipeBandsConfig()
-    # Lazy import avoids config↔orchestrator import cycles at module load.
-    from travelogue.orchestrator.happy_path_recipe import (
+    # Layer-0 constants (must not import orchestrator from config).
+    from travelogue.constants import (
         ADVANCED_SETTINGS_KEYS,
         L0_OPS_ROOTS,
         L1_RESULT_KEYS,

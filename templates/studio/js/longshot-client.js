@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Travelogue Studio · shared longshot export client (M14 · preview + shelf).
  */

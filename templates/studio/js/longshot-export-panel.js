@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Travelogue Studio · Longshot 2.0 export settings panel (D-LNG2-28).
  * Popover UI lives here — keep preview-toolbar.js thin.

@@ -2,12 +2,28 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
 from travelogue.layout_contract.orientations import (
     AspectKind,
     aspect_kind_for_asset,
 )
+
+# ALG-V3 · AC-20 · absolute build_screen call counter (trip-scoped via reset).
+_build_screen_calls: ContextVar[int] = ContextVar("mosaic_build_screen_calls", default=0)
+
+
+def reset_build_screen_calls() -> None:
+    _build_screen_calls.set(0)
+
+
+def get_build_screen_calls() -> int:
+    return int(_build_screen_calls.get())
+
+
+def _note_build_screen_call() -> None:
+    _build_screen_calls.set(_build_screen_calls.get() + 1)
 from travelogue.layout_contract.subject import asset_has_person, portrait_fit_for_asset
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_3,
@@ -307,7 +323,7 @@ def _order_hero_six_detailed(
     assets_map: dict[str, dict],
     *,
     median_sharp: float | None,
-    cfg: "MosaicConfig | None" = None,
+    cfg: MosaicConfig | None = None,
 ) -> tuple[list[str] | None, str]:
     """Order six-hero window; return (order, reason). D-MTSO-10 stable reject codes."""
     from travelogue.layout_engine.mosaic.main_eligibility import (
@@ -549,6 +565,7 @@ def build_screen(
     trip: dict | None = None,
     cfg=None,
 ) -> dict:
+    _note_build_screen_call()
     if pattern.pattern_id == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND:
         return _finalize_mosaic_screen(
             _make_mosaic_5_main_portrait_3land_screen(

@@ -90,8 +90,9 @@ def policy_mosaic_ids(*, root: Path | None = None) -> set[str]:
 
 
 def codegen_mosaic_ids() -> set[str]:
-    from travelogue.layout_engine.mosaic import _legacy_generated as gen
+    import importlib
 
+    gen = importlib.import_module("travelogue.layout_engine.mosaic._legacy_generated")
     out: set[str] = set()
     for name in POLICY_GROUPS:
         out.update(getattr(gen, name))
@@ -100,9 +101,10 @@ def codegen_mosaic_ids() -> set[str]:
 
 def legacy_registry_ids() -> frozenset[str]:
     """E1 · LEGACY = codegen unified groups (no hand-maintained fourth list)."""
-    from travelogue.layout_engine.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
+    import importlib
 
-    return frozenset(MOSAIC_UNIFIED_PATTERN_IDS)
+    constants = importlib.import_module("travelogue.layout_engine.mosaic.constants")
+    return frozenset(constants.MOSAIC_UNIFIED_PATTERN_IDS)
 
 
 def schema_all_pattern_ids(*, root: Path | None = None) -> set[str]:
@@ -181,7 +183,7 @@ def contract_extra_ids(*, root: Path | None = None) -> tuple[set[str], set[str]]
         if raw.get("status") == "deprecated":
             continue
         is_extra = any(tid.startswith(p) or tid == p for p in CONTRACT_EXTRA_PREFIXES) or (
-            "rail" in tid
+            tid.endswith("-rail")
         )
         if not is_extra or tid in policy:
             continue

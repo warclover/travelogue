@@ -137,7 +137,8 @@ def test_try_mosaic_window_six_landscapes(monkeypatch):
     adv = try_mosaic_window(ctx, 0)
     if adv is not None:
         assert ctx.screens[0]["patternId"] != "screen-landscape-6"
-        assert adv in (4, 5, 6)
+        # Product-default experiments may admit asymmetric landscape-3 (adv=3).
+        assert adv in (3, 4, 5, 6)
 
 
 def test_try_mosaic_window_nine_landscapes(monkeypatch):

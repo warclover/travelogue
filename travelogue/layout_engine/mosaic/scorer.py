@@ -562,7 +562,10 @@ def score_candidate(
             total = min(1.0, total * 1.05)
             reasons.append("R_SINGLE_PORTRAIT_3LAND")
     # LTN H6/S2 · R_GRID9_LAND ×1.06 removed (conflicts with pruning 9-grid SKUs).
-    if layout_state and layout_state.can_emit_pattern(screen.get("patternId", "")):
+    # No layout_state ⇒ no rhythm constraints to enforce (unit/MCS probes).
+    if layout_state is None or layout_state.can_emit_pattern(
+        screen.get("patternId", "")
+    ):
         reasons.append("R_RHYTHM_OK")
     else:
         total *= 0.5

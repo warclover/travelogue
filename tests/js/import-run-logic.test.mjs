@@ -106,7 +106,7 @@ test("FE-FST-01 · resolveImportStageCopy：N/N 后切 curate，计数不霸屏"
   assert.equal(afterIngest.secondary, "");
 
   const narrate = resolveImportStageCopy({ stage: "narrate", stageHint: "" });
-  assert.match(narrate.main, /游记文案/);
+  assert.match(narrate.main, /画册文案/);
 });
 
 test("SFC W0 · vision_warmup 主句非空", () => {

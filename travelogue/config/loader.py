@@ -8,18 +8,22 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from travelogue.config._common import normalize_arc_mode, normalize_narrative_scope, yaml
+from travelogue.config._common import (
+    normalize_arc_mode,
+    normalize_narrative_scope,
+    normalize_tri_state,
+    yaml,
+)
 from travelogue.config.aesthetic import aesthetic_from_dict
 from travelogue.config.app import AppConfig
-from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.bookends import bookends_config_from_dict
-from travelogue.config.shot_grouping import shot_grouping_from_dict
+from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cover_scoring_params import CoverScoringParams
 from travelogue.config.cull import cull_from_dict
 from travelogue.config.curate import CurateConfig, cover_scoring_v2_from_dict
-from travelogue.config.food_role import food_role_config_from_dict
 from travelogue.config.errors import ConfigError
+from travelogue.config.food_role import food_role_config_from_dict
 from travelogue.config.ingest import ingest_from_dict
 from travelogue.config.layout import (
     LayoutConfig,
@@ -27,14 +31,14 @@ from travelogue.config.layout import (
     editorial_portrait_row_from_dict,
     landscape_2_editorial_from_dict,
     landscape_3_editorial_from_dict,
-    mixed_1l1p_from_dict,
-    mixed_1p2l_from_dict,
-    portrait_2_variants_from_dict,
     layout_feedback_from_dict,
     layout_rhythm_from_dict,
     layout_scoring_from_dict,
     layout_strategy_engine_from_dict,
     layout_template_engine_from_dict,
+    mixed_1l1p_from_dict,
+    mixed_1p2l_from_dict,
+    portrait_2_variants_from_dict,
     usage_rules_from_dict,
 )
 from travelogue.config.misc import (
@@ -47,6 +51,7 @@ from travelogue.config.misc import (
 from travelogue.config.moment import moment_config_from_dict
 from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
+from travelogue.config.shot_grouping import shot_grouping_from_dict
 from travelogue.config.studio import (
     DEFAULT_LONGSHOT2_PLATFORMS,
     GcsPosterBricConfig,
@@ -682,6 +687,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             api_key_env=str(llm_raw.get("api_key_env") or llm_preset.get("api_key_env", "DEEPSEEK_API_KEY")),
             base_url=llm_base_url,
             timeout_sec=int(llm_raw.get("timeout_sec", 120)),
+            capability=normalize_tri_state(llm_raw.get("capability", "auto"), default="auto"),
             narrate_concurrency=cfg_int(
                 llm_raw, "narrate_concurrency", "narrateConcurrency", 1
             ),

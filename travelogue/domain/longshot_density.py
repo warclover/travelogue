@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 Density = Literal["default", "compact"]
 

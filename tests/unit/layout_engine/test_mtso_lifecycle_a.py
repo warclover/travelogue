@@ -329,7 +329,7 @@ def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
         "travelogue.layout_engine.mosaic.runtime.get_effective_mosaic_config",
         return_value=app.mosaic,
     ):
-        pick = pick_best_window(
+        pick_best_window(
             ids,
             aspects,
             assets,
@@ -430,10 +430,23 @@ def test_reject_funnel_stage_mapping() -> None:
 
 
 def test_default_registry_has_zero_experimental() -> None:
-    """T-MTSO-07 · default emit set must not expose experimental / deprecated."""
-    keys = set(mosaic_registry().keys())
+    """T-MTSO-07 · experimental SKUs only enter the registry when experiments admit them.
+
+    Product default enables ``template_experiments`` with cohort ``*`` (see
+    ``test_selection_optimization_shell_defaults``); with experiments gated off
+    the emit set must stay free of experimental / deprecated / disabled.
+    """
     engine = get_engine()
-    for pid in keys:
+
+    app_off = replace(
+        get_config(),
+        mosaic=replace(
+            get_config().mosaic,
+            template_experiments=TemplateExperimentsConfig(enabled=False),
+        ),
+    )
+    keys_off = set(mosaic_registry(cfg=app_off).keys())
+    for pid in keys_off:
         try:
             tpl = engine.get(pid)
         except KeyError:
@@ -443,6 +456,20 @@ def test_default_registry_has_zero_experimental() -> None:
         rollout = getattr(tpl, "rollout", None) or {}
         if isinstance(rollout, dict):
             assert int(rollout.get("percent", 100)) > 0, pid
+
+    # Product defaults admit allowlisted experimentals under cohort "*".
+    cfg = mosaic_from_dict({})
+    assert cfg.template_experiments.enabled is True
+    assert "*" in cfg.template_experiments.cohort_trip_ids
+    app_on = replace(get_config(), mosaic=replace(get_config().mosaic, template_experiments=cfg.template_experiments))
+    keys_on = set(mosaic_registry(cfg=app_on, trip_id="any-trip").keys())
+    experimental_in = [
+        pid
+        for pid in keys_on
+        if pid in cfg.template_experiments.allowlist
+        and str(getattr(engine.get(pid), "status", "") or "") == "experimental"
+    ]
+    assert experimental_in, "product-default experiments must admit allowlisted SKUs"
 
 
 def test_selection_optimization_shell_defaults() -> None:

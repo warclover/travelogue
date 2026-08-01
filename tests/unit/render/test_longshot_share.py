@@ -136,7 +136,7 @@ def test_capture_dimensions_falls_back_to_natural() -> None:
 def test_share_zip_filename() -> None:
     trip = {
         "tripId": "demo-kyoto",
-        "meta": {"displayTitle": "京都雨季漫游", "title": "demo-kyoto"},
+        "meta": {"displayTitle": "京都雨季漫游", "title": "示例游记"},
     }
     assert share_zip_filename(trip) == "京都雨季漫游-分享.zip"
     assert "trip-" not in share_zip_filename(trip)

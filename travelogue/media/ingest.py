@@ -22,7 +22,6 @@ from travelogue.media.image_ops import (
     classify_aspect,
     export_webp_variants,
     load_image_normalized,
-    min_dimension_ok,
     min_edge_ok,
     peek_image_meta,
     save_jpeg_without_exif,

@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-from travelogue.config.errors import ConfigError
+from travelogue.errors import ConfigError
 
 LayoutDensity = Literal["balanced", "hero_first", "collage_first"]
 

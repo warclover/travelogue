@@ -9,7 +9,8 @@ When enabled: mix inverted index → (caller) usage_rules → eligibility.
 from __future__ import annotations
 
 import logging
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import Any, Literal
 
 from travelogue.config import MosaicConfig
 from travelogue.layout_contract.orientations import AspectKind
@@ -23,7 +24,6 @@ from travelogue.layout_engine.contract.mix_index import (
     mix_key_from_template,
 )
 from travelogue.layout_engine.contract.shadow import index_pattern_ids_for_mix
-from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
 from travelogue.layout_engine.mosaic.main_eligibility import screen_main_slot_eligible
 from travelogue.layout_engine.mosaic.pattern_catalog import MosaicPattern
 
@@ -201,7 +201,8 @@ def evaluate_contract_eligibility(
             return True, None, None
         return False, "contract:eligibility_main_ar", detail or "main_ar_ineligible"
 
-    assert spec is not None
+    if spec is None:
+        raise RuntimeError("contract evaluator: eligibility spec unexpectedly missing")
     ok, reason, detail = _evaluate_eligibility_dict(
         pattern_id, spec, trip_photo_total=trip_photo_total
     )

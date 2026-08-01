@@ -119,7 +119,6 @@ def patch_features_body(body: list[str]) -> list[str]:
 
 
 def strip_features_constants(lines: list[str]) -> list[str]:
-    drop = (r"^var COVER_OPENING_STYLE_OPTIONS",)
     out: list[str] = []
     skipping = False
     for line in lines:

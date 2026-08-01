@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from travelogue.cover_engine.fit import (
     style_avoid_penalty,
-    style_fit_below_threshold,
     style_fit_score,
 )
 from travelogue.cover_engine.joint import (
@@ -106,7 +105,7 @@ def test_band_cut_not_optimal_when_focal_in_strip() -> None:
         _asset("strip", 0.5, 0.72, score_hint=5),
         _asset("safe", 0.5, 0.3, score_hint=4.8),
     ]
-    trip = _trip(assets)
+    _trip(assets)
     # Force compare pairs for band-cut only via score_pair
     qmax = 5.0
     strip = score_pair(assets[0], "band-cut", quality=5.0, quality_max=qmax)

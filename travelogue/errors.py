@@ -19,3 +19,7 @@ class PlainCodeError(CodeError):
         self.code = code
         self.message = message
         Exception.__init__(self, message)
+
+
+class ConfigError(ValueError):
+    """Invalid or ambiguous config.yaml / intent content (layer-0 safe)."""

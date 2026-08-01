@@ -49,6 +49,7 @@ def _assets_for_mix(
     ids: list[str] = []
     aspects: dict[str, AspectKind] = {}
     assets: dict[str, dict] = {}
+    seq = 0
     for i in range(landscape):
         aid = f"l{i}"
         ids.append(aid)
@@ -57,8 +58,10 @@ def _assets_for_mix(
             "id": aid,
             "width": 1600,
             "height": 900,
-            "takenAt": f"2024-06-01T12:00:{i:02d}Z",
+            # Keep all assets inside Scene Atom gap (≤10 min) for MCS tests.
+            "takenAt": f"2024-06-01T12:00:{seq:02d}Z",
         }
+        seq += 1
     for i in range(portrait):
         aid = f"p{i}"
         ids.append(aid)
@@ -67,8 +70,9 @@ def _assets_for_mix(
             "id": aid,
             "width": 900,
             "height": 1600,
-            "takenAt": f"2024-06-01T13:00:{i:02d}Z",
+            "takenAt": f"2024-06-01T12:00:{seq:02d}Z",
         }
+        seq += 1
     return ids, aspects, assets
 
 
@@ -136,10 +140,12 @@ def test_enabled_contract_does_not_emit_w3_experimental() -> None:
 
 def test_template_experiments_emits_w3_candidate() -> None:
     """MTSO · experiments triple admits W3 experimental into candidates."""
+    from travelogue.config.app import AppConfig
+
     ids, aspects, assets = _assets_for_mix(landscape=1, portrait=3)
     trip_id = "mtso-dogfood-trip"
     cfg = replace(
-        get_config().mosaic,
+        AppConfig().mosaic,
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
         template_experiments=TemplateExperimentsConfig(
             enabled=True,

@@ -193,7 +193,7 @@ def resolve_opening(
     title_mark = _annotate_opening_title_safe(trip)
 
     ms = round((time.perf_counter() - t0) * 1000.0, 3)
-    lock = read_lock_state(trip)
+    read_lock_state(trip)
     curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
     style_explain = curation.get("coverStyleExplain") if isinstance(curation, dict) else None
     explain: dict[str, Any] = {

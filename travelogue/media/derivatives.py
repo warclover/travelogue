@@ -13,7 +13,6 @@ from typing import Any
 
 from travelogue.config import AppConfig, IngestConfig, get_config
 from travelogue.media.image_ops import export_webp_variants, focal_from_asset
-from travelogue.media.ingest import IngestError, _load_photo
 
 DERIVED_PLAN_VERSION = "ppf-v1"
 
@@ -58,13 +57,9 @@ def sync_derived_plan_from_srcset(
 
 def effective_ingest_widths(cfg: IngestConfig, *, deferred: bool) -> tuple[int, ...]:
     """Widths written during ingest."""
-    full = tuple(int(w) for w in (cfg.webp_widths or (800, 1600)))
-    if not deferred:
-        return full
-    ingest = tuple(int(w) for w in (cfg.webp_ingest_widths or (800, 1600)))
-    allowed = set(full)
-    filtered = tuple(w for w in sorted(ingest) if w in allowed)
-    return filtered or full[: min(2, len(full))]
+    from travelogue.media.ingest_widths import effective_ingest_widths as _impl
+
+    return _impl(cfg, deferred=deferred)
 
 
 def selected_asset_ids(trip: dict) -> set[str]:
@@ -423,6 +418,7 @@ def materialize_asset_widths(
     need = [int(w) for w in widths if int(w) > 0]
     if not need:
         return []
+    from travelogue.media.ingest import IngestError, _load_photo
     from travelogue.media.source_resolve import MediaSourceMissingError, resolve_source_path
 
     try:

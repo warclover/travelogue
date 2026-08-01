@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from travelogue.cover_engine.api import build_bookends_studio_payload
 from travelogue.curation.curate import sync_trip_covers
 from travelogue.curation.curate_scoring import (
     pick_cover_asset_id,
     pick_cover_asset_id_with_meta,
 )
-from travelogue.cover_engine.api import build_bookends_studio_payload
 
 
 def _asset(aid: str, w: int, h: int, *, sharp: float = 120.0, overall: float = 0.6) -> dict:

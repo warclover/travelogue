@@ -19,10 +19,10 @@ from travelogue.layout_contract.rhythm import (  # re-export for curation caller
     DEFAULT_CONSECUTIVE_BANS,
     DENSE_COLLAGE_SLOT_MIN,
     FULL_BLEED_PORTRAIT_PATTERNS,
+    LANDSCAPE_PAIR_PATTERNS,
     MAX_LANDSCAPE_PAIR_STREAK,
     MAX_PORTRAIT_ORIENTATION_STREAK,
     MAX_PORTRAIT_PAIR_STREAK,
-    LANDSCAPE_PAIR_PATTERNS,
     PATTERN_PORTRAIT_3_EDITORIAL,
     PORTRAIT_GRID8_MIN_PHOTOS,
     PORTRAIT_ORIENTATION_PATTERNS,
@@ -354,8 +354,11 @@ class ScreenLayoutPlannerState:
         if not pattern_id:
             return False
         try:
-            from travelogue.layout_engine.mosaic.pattern_catalog import default_registry
+            import importlib
 
+            default_registry = importlib.import_module(
+                "travelogue.layout_engine.mosaic.pattern_catalog"
+            ).default_registry
             pat = default_registry().get(pattern_id)
             if pat is not None:
                 return "main" in pat.roles
@@ -363,8 +366,11 @@ class ScreenLayoutPlannerState:
             pass
         # MTSO · experimental SKUs are LTE-only (not in GA default_registry).
         try:
-            from travelogue.layout_templates.registry import get_engine
+            import importlib
 
+            get_engine = importlib.import_module(
+                "travelogue.layout_templates.registry"
+            ).get_engine
             tpl = get_engine().get(pattern_id)
             return any(
                 str(getattr(slot, "role", "") or "") == "main"
@@ -392,8 +398,11 @@ class ScreenLayoutPlannerState:
     def _large_mosaic_quota_key(self, pattern_id: str) -> str:
         # SUP-07 · twin six-hero family shares trip template quota
         try:
-            from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+            import importlib
 
+            six_hero_family_id = importlib.import_module(
+                "travelogue.layout_engine.mosaic.lifecycle"
+            ).six_hero_family_id
             fam = six_hero_family_id(pattern_id)
             if fam:
                 return fam
@@ -490,8 +499,11 @@ class ScreenLayoutPlannerState:
             elif self.hero_reserve == "armed":
                 # LTN C5 · non-hero emit while armed ⇒ opportunity assets consumed.
                 self.release_hero_reserve()
-            from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+            import importlib
 
+            six_hero_family_id = importlib.import_module(
+                "travelogue.layout_engine.mosaic.lifecycle"
+            ).six_hero_family_id
             if six_hero_family_id(pattern_id):
                 self.consume_hero_six_opportunity()
             elif self.hero_six_opportunity == "armed":

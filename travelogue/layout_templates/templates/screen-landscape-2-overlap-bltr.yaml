@@ -22,6 +22,7 @@ constraints:
   portrait_forbidden_in_wide_slots: []
   landscape_forbidden_in_tall_slots: []
   intentionalGaps: []
+  intentionalOverlaps: true
 
 scoring:
   base_weight: 0.90

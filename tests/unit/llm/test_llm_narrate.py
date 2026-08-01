@@ -85,7 +85,13 @@ def test_run_narrate_defaults_to_stub():
     result = run_narrate(trip, provider="stub", scope="full")
     assert trip["meta"]["hook"]
     assert result.fields_updated
-    assert trip["pipeline"]["runs"][-1]["model"] == "rule-stub"
+    # decor_line may append a later storyteller-lite metrics run without model
+    stub_runs = [
+        r
+        for r in trip["pipeline"]["runs"]
+        if isinstance(r, dict) and r.get("model") == "rule-stub"
+    ]
+    assert stub_runs, trip["pipeline"]["runs"]
 
 
 def test_llm_narrate_mock_meta_and_chapters():

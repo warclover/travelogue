@@ -192,6 +192,34 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     # window: drop top3 score arrays; keep Top3 rejects + geom/mainAr summaries
     out = dict(raw)
     out.pop("top3Scores", None)
+    # MTSO / MSA funnel fields stay in raw (drain_mosaic_capture) + debug only.
+    for heavy in (
+        "baseWindowOrder",
+        "effectiveWindowOrder",
+        "reorderReason",
+        "atomCap",
+        "structurallyQualifiedSix",
+        "admitSixHero",
+        "sixHeroOpportunityState",
+        "sixHeroFamilyId",
+        "sixHeroQualifyReason",
+        "sixHeroOutcome",
+        "quotaSnapshot",
+        "rejectFunnel",
+        "msaProfile",
+        "rHeroTarget",
+        "trackOverride",
+        "slotFits",
+        "cropRisk",
+        "cropFocals",
+        "whitespaceRatio",
+        "msaOutcome",
+        "candidatesCount",
+        "weightsHash",
+        "droppedAssetIds",
+        "selfHealStep",
+    ):
+        out.pop(heavy, None)
     rejected = list(raw.get("rejectedTemplates") or [])
     geom_rejected = [
         {"templateId": r["templateId"], "reason": r["reason"]}

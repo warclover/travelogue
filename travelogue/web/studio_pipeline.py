@@ -383,7 +383,7 @@ def _finalize_pipeline_result(
     if sfp_needs:
 
         def _sfp_pipeline_migrate(trip: dict) -> bool:
-            result = migrate_share_face_purity_on_open(trip)
+            migrate_share_face_purity_on_open(trip)
             meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
             resolved = resolve_display_title(
                 meta, raw_title=str(meta.get("title") or title).strip()

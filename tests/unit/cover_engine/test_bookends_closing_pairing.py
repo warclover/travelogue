@@ -10,11 +10,9 @@ from travelogue.cover_engine.api import (
     ClosingPendingError,
     maybe_resolve_closing_after_layout,
     resolve_closing,
-    resolve_opening,
 )
 from travelogue.cover_engine.joint import pick_cover_style_and_asset
 from travelogue.cover_engine.pairing.policy import pairing_hard_violations
-from travelogue.domain.closing_view import resolve_closing_asset_id
 
 
 def _img(aid: str, *, w: int = 1600, h: int = 900, **extra) -> dict:

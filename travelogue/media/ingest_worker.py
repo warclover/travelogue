@@ -47,7 +47,7 @@ class WorkerIngestConfig:
         aesthetic_cfg: Any | None = None,
     ) -> WorkerIngestConfig:
         copy = bool(getattr(cfg, "copy_source_files", True)) or bool(force_materialize)
-        from travelogue.media.derivatives import effective_ingest_widths
+        from travelogue.media.ingest_widths import effective_ingest_widths
 
         widths = effective_ingest_widths(cfg, deferred=bool(deferred_derivatives))
         ae = aesthetic_cfg

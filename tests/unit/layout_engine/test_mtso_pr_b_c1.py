@@ -165,7 +165,7 @@ def test_ac05_non_structural_no_six_protect_reorder(monkeypatch) -> None:
     """AC-MTSO-05 · non-structural: no structurally_qualified_six reorder."""
     _mtso_cfg(monkeypatch)
     # remaining>6 so exact-tail does not force size=6 first; two portraits disqualify six.
-    ids = [f"l{i}" for i in range(6)] + ["p0", "p1"]
+    [f"l{i}" for i in range(6)] + ["p0", "p1"]
     aspects = {
         **{f"l{i}": "landscape" for i in range(6)},
         "p0": "portrait",
@@ -198,7 +198,13 @@ def test_ac05_non_structural_no_six_protect_reorder(monkeypatch) -> None:
         assert entry.get("admitSixHero") is False
         assert entry.get("reorderReason") != "structurally_qualified_six"
         order = list(entry.get("effectiveWindowOrder") or [])
-        if 5 in order and 6 in order:
+        # atom_page_pack may place 6 before 5 for remainder reasons; only assert
+        # density-default precedence when six-protect / exact-tail did not reorder.
+        if (
+            entry.get("reorderReason") not in ("atom_page_pack", "atom_prefix_cap")
+            and 5 in order
+            and 6 in order
+        ):
             assert order.index(5) < order.index(6)
 
 

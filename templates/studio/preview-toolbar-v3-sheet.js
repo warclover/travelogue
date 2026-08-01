@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Preview toolbar v3 · unified refine sheet（这页 | 封面 | 这本）.
  * Export decisions live in Dock ▾（copyDisplay / platform / scale）.

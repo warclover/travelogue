@@ -26,7 +26,9 @@ def test_run_until_structure(tmp_path: Path) -> None:
     assert "curate" in result.stages
     trip = json.loads(trip_json.read_text(encoding="utf-8"))
     assert trip["pipeline"]["status"] == "structure_draft"
-    assert len(trip["chapters"]) >= 3
+    # Same-day synthetic album (≤ sparse band) consolidates into one open chapter.
+    assert len(trip["chapters"]) >= 1
+    assert sum(len(ch.get("items") or []) for ch in trip["chapters"]) >= 3
     timings = (trip.get("pipeline") or {}).get("timings") or {}
     assert "ingestMs" in timings
     assert "curateMs" in timings

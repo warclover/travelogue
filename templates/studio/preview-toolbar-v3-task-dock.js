@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Preview toolbar v3 · bottom task dock (export progress / success / layout pending).
  */

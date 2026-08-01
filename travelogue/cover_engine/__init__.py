@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+# Ensure catalog is registered on first import.
+from travelogue.cover_engine import catalog as _catalog  # noqa: F401
 from travelogue.cover_engine.api import (
     ClosingConflictError,
     ClosingPendingError,
@@ -13,6 +15,19 @@ from travelogue.cover_engine.api import (
     resolve_opening,
     restore_auto,
 )
+from travelogue.cover_engine.fit import (
+    style_avoid_penalty,
+    style_fit_below_threshold,
+    style_fit_score,
+)
+from travelogue.cover_engine.joint import (
+    apply_joint_pick,
+    apply_style_keep_cover,
+    hash_fallback_pick,
+    pick_cover_style_and_asset,
+    repick_cover_for_style,
+    score_pair,
+)
 from travelogue.cover_engine.lock import (
     is_closing_locked,
     is_opening_locked,
@@ -22,6 +37,7 @@ from travelogue.cover_engine.lock import (
     sync_lock_mirrors,
     write_lock_state,
 )
+from travelogue.cover_engine.opening.title_safe import mark_title_safe
 from travelogue.cover_engine.registry import (
     get_default_style_id,
     get_profile,
@@ -39,20 +55,6 @@ from travelogue.cover_engine.resolve import (
     resolve_cover_opening_style,
     resolve_style_id,
 )
-from travelogue.cover_engine.fit import (
-    style_avoid_penalty,
-    style_fit_below_threshold,
-    style_fit_score,
-)
-from travelogue.cover_engine.joint import (
-    apply_joint_pick,
-    apply_style_keep_cover,
-    hash_fallback_pick,
-    pick_cover_style_and_asset,
-    repick_cover_for_style,
-    score_pair,
-)
-from travelogue.cover_engine.opening.title_safe import mark_title_safe
 from travelogue.cover_engine.studio import (
     list_preview_matrix,
     render_preview_context,
@@ -66,9 +68,6 @@ from travelogue.cover_engine.types import (
     CoverStyleRecord,
     CoverStyleStatus,
 )
-
-# Ensure catalog is registered on first import.
-from travelogue.cover_engine import catalog as _catalog  # noqa: F401
 
 __all__ = [
     "BookendsDecision",

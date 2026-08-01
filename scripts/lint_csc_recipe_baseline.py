@@ -27,6 +27,8 @@ def _golden_slice(recipe: dict) -> dict:
         },
         "counts": recipe["counts"],
         "appconfig_bools": recipe["appconfig_bools"],
+        # ALG-V3 D5 · TriState leaves live outside appconfig_bools
+        "tristate_flags": recipe.get("tristate_flags") or {},
         "danger_must_stay_false": recipe["danger_must_stay_false"],
         "l0_ops_roots": recipe["l0_ops_roots"],
         "l1_keys": recipe["l1_keys"],

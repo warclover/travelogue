@@ -83,7 +83,7 @@ def finalize(dist_dir: Path, *, make_zip: bool = True) -> Path:
 
     print(f"OK: {onedir}")
     print(f"    VERSION={version}")
-    print(f"    sidecar: portable.flag, 使用说明.txt, VERSION.txt, SHA256SUMS")
+    print("    sidecar: portable.flag, 使用说明.txt, VERSION.txt, SHA256SUMS")
     if gate_a_dst.is_dir():
         print(f"    gate-a invite materials: {gate_a_dst}")
 

@@ -95,7 +95,10 @@ def resolve_llm_runtime(
     if not api_key:
         # Desktop LLM Setup V1: fall back to user_data secrets (MF-DLLM-03).
         try:
-            from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
+            from travelogue.llm.user_settings import (
+                inject_secrets_into_environ,
+                read_user_llm_secrets,
+            )
 
             disk_secrets = read_user_llm_secrets()
             inject_secrets_into_environ(disk_secrets)

@@ -17,11 +17,11 @@ from tests.studio_test_helpers import wait_for_job
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 from travelogue.web.studio_pipeline import run_studio_pipeline
 from travelogue.web.studio_trips import (
+    _longshot_files,
     has_longshot_exports,
     list_studio_trips,
     longshot_outputs_stale,
     longshot_reveal_rel_path,
-    _longshot_files,
 )
 
 pytestmark = pytest.mark.e2e
@@ -97,7 +97,6 @@ def test_has_longshot_exports_detects_chapter_jpgs(tmp_path: Path) -> None:
 
 def test_has_longshot_exports_detects_moments_png(tmp_path: Path) -> None:
     """AC-LNG2-06 · moments glob participates in longshot file set."""
-    from travelogue.web.studio_trips import _longshot_files
 
     trip_dir = tmp_path / "demo-moments"
     trip_dir.mkdir()
@@ -128,7 +127,6 @@ def test_longshot_stale_when_moments_older_than_trip(tmp_path: Path) -> None:
 
 def test_has_longshot_exports_detects_xhs_png(tmp_path: Path) -> None:
     """AC-LNG2-06 · xhs glob participates in longshot file set."""
-    from travelogue.web.studio_trips import _longshot_files
 
     trip_dir = tmp_path / "demo-xhs"
     trip_dir.mkdir()

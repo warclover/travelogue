@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """One-off perf probe: per-step ingest cost on real photos (research only)."""
 from __future__ import annotations
 
@@ -8,10 +7,9 @@ import tempfile
 import time
 from pathlib import Path
 
-from PIL import Image
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from travelogue.media.color_metrics import color_metrics_from_thumb
 from travelogue.media.image_ops import (
     export_webp_variants,
     load_image_normalized,
@@ -20,7 +18,6 @@ from travelogue.media.image_ops import (
 from travelogue.media.phash import dhash_hex
 from travelogue.media.sharpness import sharpness_score, sharpness_score_v2
 from travelogue.media.subject_detect import analyze_subject
-from travelogue.media.color_metrics import color_metrics_from_thumb
 
 
 def probe(photo: Path, out_dir: Path) -> dict:

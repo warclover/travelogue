@@ -44,8 +44,8 @@ def test_generate_bundle_non_empty(engine: LayoutTemplateEngine) -> None:
 
 @pytest.mark.unit
 def test_portrait_left_weighted_tracks(engine: LayoutTemplateEngine) -> None:
+    # Equal columns (YAML comment): portrait ~0.89, each landscape ~16:9.
     t = engine.get("screen-portrait-1-landscape-2")
     cols, rows = grid_templates_for(t)
-    assert "minmax(0, 1fr)" in cols
-    assert "minmax(0, 2fr)" in cols
+    assert cols == "repeat(2, 1fr)"
     assert rows == "repeat(2, 1fr)"

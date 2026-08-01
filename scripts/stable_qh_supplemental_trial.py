@@ -15,6 +15,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from datetime import UTC
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -233,9 +234,9 @@ def trial_stale_vocab(base: str) -> None:
         meta = data.setdefault("meta", {})
         meta["title"] = str(meta.get("title") or trip_id) + "·精修试"
         meta["revision"] = int(meta.get("revision") or 0) + 1
-        from datetime import datetime, timezone
+        from datetime import datetime
 
-        data["updatedAt"] = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        data["updatedAt"] = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         patch_note = f"file_bump; intent_http={pst}/{pbody}"
     else:
@@ -264,7 +265,6 @@ def trial_stale_vocab(base: str) -> None:
     # UI check
     from playwright.sync_api import sync_playwright
 
-    ui_ok = False
     bad = 0
     badge = 0
     resume = 0
@@ -281,7 +281,6 @@ def trial_stale_vocab(base: str) -> None:
         page.wait_for_timeout(2000)
         content = page.content() or ""
         dock_ok = "分享图需更新" in content or "更新长图" in content or page.locator(".preview-toolbar__longshot--stale").count() > 0
-        ui_ok = bad == 0 and (badge > 0 or resume > 0 or dock_ok or api_stale)
         browser.close()
 
     # Product AC: no「长图待更新」; shelf/API/dock use「分享图需更新」

@@ -223,7 +223,7 @@ def format_markdown(m: dict[str, Any]) -> str:
         f"| 封面题名出现次数 | {len(m.get('coverTitleOccurrences') or [])} · maxDup={m.get('coverTitleDupMax')} |",
         f"| 封面题名文本 | {m.get('coverTitleOccurrences')} |",
         f"| 复用资产（>1 次入屏） | {m.get('reusedAssetCount')} / unique={m.get('uniquePhotoAssetIds')} |",
-        f"| 屏缝 | 合同保持 4px（CSS `--longshot-gap` / journal） |",
+        "| 屏缝 | 合同保持 4px（CSS `--longshot-gap` / journal） |",
         "",
         "## 处方对照（D-SFI-11）",
         "",

@@ -7,13 +7,13 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.studio_test_helpers import MockStudioHandler
 from tests.unit.web.fixtures.import_wizard_payload_contract import (
     ALLOWED_KEYS,
     FINE_CRAFT_REQUIRED_KEYS,
     OPTIONAL_KEYS,
     QUICK_SHARE_REQUIRED_KEYS,
 )
-from tests.studio_test_helpers import MockStudioHandler
 from travelogue.web.studio_handlers.import_handlers import handle_import
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
 

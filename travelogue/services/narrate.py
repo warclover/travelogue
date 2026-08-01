@@ -276,7 +276,6 @@ def _apply_stub_captions(
         find_item_for_asset,
         resolve_caption,
     )
-
     from travelogue.domain.share_face_purity import suppress_repeated_weak_captions
 
     meta = meta if meta is not None else trip.get("meta") or {}

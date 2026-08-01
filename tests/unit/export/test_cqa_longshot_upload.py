@@ -10,7 +10,6 @@ import pytest
 from travelogue.export.longshot import LongshotExportError, write_longshot_upload
 from travelogue.web.studio_handlers import export_handlers
 
-
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n" + b"payload"
 
 

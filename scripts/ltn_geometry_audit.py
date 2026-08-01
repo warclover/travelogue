@@ -38,6 +38,13 @@ def audit() -> dict:
         target = elig.get("targetDisplayAspect")
         if target is None:
             continue
+        slot_idx = int(elig.get("slotIndex") or 0)
+        # Signed AR exemptions document intentional target≠cell (admission vs geometry).
+        sign_off = (tpl.constraints or {}).get("arLadderSignOff") or {}
+        if isinstance(sign_off, dict) and (
+            str(slot_idx) in sign_off or slot_idx in sign_off
+        ):
+            continue
         try:
             target_f = float(target)
         except (TypeError, ValueError):
@@ -45,7 +52,6 @@ def audit() -> dict:
             continue
         tol = float(elig.get("arLadderTol") or DEFAULT_TOL)
         table = {r.index: r.display_aspect for r in slot_aspect_table(tpl)}
-        slot_idx = int(elig.get("slotIndex") or 0)
         cell = table.get(slot_idx)
         if cell is None:
             failures.append({"id": tid, "error": f"missing slot {slot_idx}"})

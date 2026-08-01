@@ -18,7 +18,6 @@ from travelogue.layout_engine.mosaic.scorer import (
     _wasted_hero_penalty,
 )
 
-
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "tests" / "fixtures" / "ltn"
 
@@ -151,10 +150,10 @@ def test_h8_active_set_gate_ok():
 def _oracle_hero_window_count(trip: dict) -> int:
     """Quota-free opportunity oracle proxy on fixture assets (AC-C-02 sample)."""
     from travelogue.config import MosaicConfig
+    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
     from travelogue.layout_engine.mosaic.candidates import (
         generate_window_candidates_with_rejections,
     )
-    from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 
     assets = {a["id"]: a for a in trip.get("assets") or [] if a.get("id")}
     aspects = {

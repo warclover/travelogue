@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Real-album smoke for Pipeline Perf V1 (ingest → curate → materialize → render)."""
 from __future__ import annotations
 
@@ -11,10 +10,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from travelogue.config import get_config, app_config_scope
+from travelogue.config import app_config_scope, get_config
 from travelogue.orchestrator.run import run_trip
 from travelogue.services.trip_factory import create_trip
-from travelogue.runtime import AppContext
 
 
 def main() -> None:
@@ -71,7 +69,7 @@ def main() -> None:
     missing_hi = []
     for a in assets:
         widths = [e.get("width") for e in (a.get("srcset") or [])]
-        plan = a.get("derivedPlan") or {}
+        a.get("derivedPlan") or {}
         aid = a.get("id")
         if aid in selected:
             if 2400 in widths or 3200 in widths:

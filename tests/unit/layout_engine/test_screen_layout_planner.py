@@ -22,13 +22,15 @@ def _planner_tests_disable_mosaic(monkeypatch, request):
     )
 
 from travelogue.layout_contract.planner_state import portrait_grid8_max_for_trip
-from travelogue.layout_contract.rhythm import is_landscape_triple_pattern, is_portrait_triple_pattern
+from travelogue.layout_contract.rhythm import (
+    is_landscape_triple_pattern,
+    is_portrait_triple_pattern,
+)
 from travelogue.layout_engine.planner.screen_planner import (
     MIN_TRIP_PHOTOS_FOR_MOSAIC,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
     PATTERN_PORTRAIT_1_LANDSCAPE_2,
     PATTERN_PORTRAIT_GRID_8,
-    PERSON_LAYOUT_GRID_8,
     ScreenLayoutPlannerState,
     attach_screens_day_buckets,
     attach_screens_to_chapters,

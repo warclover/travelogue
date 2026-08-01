@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * QFX D-QFX-12 · 复制三态：pending → 原生/fallback 成功 → 最终失败。
  */

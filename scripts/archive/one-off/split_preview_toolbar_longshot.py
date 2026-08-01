@@ -282,8 +282,6 @@ def main() -> None:
 
     # Remove longshot function bodies by rebuilding from order
     rebuilt: list[str] = []
-    skip_name: str | None = None
-    skip_indent = 0
     i = 0
     while i < len(lines):
         m = re.match(r"^(\s*)function (\w+)", lines[i])

@@ -13,21 +13,21 @@ from travelogue.layout_engine.contract.evaluator import _hero_area_from_template
 from travelogue.layout_engine.contract.geometry_features import (
     compute_raw_geometry_features,
 )
-from travelogue.layout_engine.mosaic.scorer import _wasted_hero_penalty
 from travelogue.layout_engine.mosaic.builders import try_order_for_pattern
 from travelogue.layout_engine.mosaic.coarse_segments import (
     SIGNATURE_WHITELIST,
     apply_signature_route,
 )
 from travelogue.layout_engine.mosaic.constants import (
+    MOSAIC_5_PATTERN_IDS,
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_HERO,
     PATTERN_MOSAIC_5_2P3L_PORTRAIT_HERO_RAIL,
     PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND,
-    MOSAIC_5_PATTERN_IDS,
 )
 from travelogue.layout_engine.mosaic.lifecycle import lifecycle_admit
 from travelogue.layout_engine.mosaic.lte_adapter import mosaic_registry
 from travelogue.layout_engine.mosaic.pattern_catalog import MosaicPattern
+from travelogue.layout_engine.mosaic.scorer import _wasted_hero_penalty
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
 
 

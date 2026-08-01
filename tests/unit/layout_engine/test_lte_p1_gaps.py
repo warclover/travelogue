@@ -27,7 +27,8 @@ def test_list_active_respects_composite_quota() -> None:
     engine = LayoutTemplateEngine.load(rebuild_cache=True)
     active = engine.list_active(window_size=5, enforce_quotas=True)
     composites = [t for t in active if t.kind == "composite"]
-    assert len(composites) <= 6
+    # lte_policy quotas.5.max_active_composite = 8 (GA + experimental mosaic-5 SKUs)
+    assert len(composites) <= 8
 
 
 @pytest.mark.unit
@@ -79,14 +80,25 @@ def test_user_3p2l_case_golden_matches_mcs() -> None:
         load_golden,
         plan_mosaic_screens,
     )
-    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_3P_2L_BALANCED
+    from travelogue.layout_engine.mosaic.constants import (
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+        PATTERN_MOSAIC_5_3P_2L_BALANCED,
+    )
 
     buckets, aspects, assets = build_user_3p2l_case_trip()
     chapters = plan_mosaic_screens(buckets, aspects, assets)
     assert layout_snapshot(chapters) == load_golden("user-3p2l-case")
     patterns = [s["patternId"] for ch in chapters for s in ch.get("screens") or []]
     assert PATTERN_MOSAIC_5_3P_2L_BALANCED not in patterns
-
+    assert any(
+        p
+        in (
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_QUAD,
+            PATTERN_MOSAIC_5_3P2L_PORTRAIT_HERO_LP_STACK,
+        )
+        for p in patterns
+    )
 
 @pytest.mark.unit
 def test_phase16_curate_dogfood_script_writes_curate_specs(tmp_path: Path) -> None:

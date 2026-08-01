@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from travelogue.cover_engine.registry import get_default_style_id, get_style, list_assignable_styles, list_styles
+from travelogue.cover_engine.registry import (
+    get_default_style_id,
+    get_style,
+    list_assignable_styles,
+    list_styles,
+)
 from travelogue.cover_engine.resolve import resolve_style_id
 
 

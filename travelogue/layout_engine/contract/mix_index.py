@@ -6,7 +6,8 @@ W1: build + shadow only. Candidate entry switch requires AC-TPC-12 sign-off.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from travelogue.layout_contract.orientations import AspectKind
 

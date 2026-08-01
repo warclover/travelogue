@@ -610,7 +610,11 @@ def test_g2_serve_demote_asset_from_featured() -> None:
 
 
 def test_tier_patch_via_serve_api_shape() -> None:
-    from travelogue.web.tier_patch import TierPatchError, apply_tier_demotions, apply_tier_promotions
+    from travelogue.web.tier_patch import (
+        TierPatchError,
+        apply_tier_demotions,
+        apply_tier_promotions,
+    )
 
     trip = {"assets": [{"id": "x1", "userTier": "material"}]}
     promoted = apply_tier_promotions(trip, ["x1"])

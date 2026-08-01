@@ -96,6 +96,39 @@ def test_build_mosaic_explain_success_summary():
     assert "1 处拼图胜出" in out["summary"]
 
 
+def test_fe_alg3_05_reject_labels_are_chinese_not_raw_reason():
+    """FE-ALG3-05 · SSG/atom/clone reasons must not leak English keys."""
+    reasons = [
+        "atom_boundary",
+        "shot_group_cross",
+        "shot_group_anti_slice",
+        "near_scene_clone",
+        "main_ar_mismatch",
+        "sidebar_min_short_side",
+        "contract:mix_miss",
+        "mixed_routing:mixed_portrait_is_hero",
+    ]
+    curation = {
+        "mosaicDecisionLog": [
+            {
+                "isWinnerPlan": True,
+                "fallbackUsed": True,
+                "fallbackReason": "no_candidates",
+                "rejectedTemplates": [
+                    {"templateId": f"screen-demo-{i}", "reason": r}
+                    for i, r in enumerate(reasons)
+                ],
+            }
+        ]
+    }
+    out = build_mosaic_explain(curation)
+    assert out is not None
+    blob = " ".join(out["details"])
+    for r in reasons:
+        assert r not in blob, f"raw reason leaked: {r}"
+    assert "切条" in blob or "原子" in blob or "连拍" in blob
+
+
 def test_chapter_layout_handler_includes_mosaic_explain(monkeypatch):
     from travelogue.web.studio_handlers import trip_list_handlers as mod
 

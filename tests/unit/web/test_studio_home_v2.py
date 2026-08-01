@@ -971,7 +971,9 @@ def test_studio_home_v2_harness_and_ac_hooks() -> None:
     assert "v2-preview-combobox__option" in picker
     shelf_menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
     assert "在上方预览" in shelf_menu
-    assert "is-previewing" in (STUDIO_DIR / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    assert "is-previewing" in (STUDIO_DIR / "homepage-v2" / "css" / "bench.css").read_text(
+        encoding="utf-8"
+    )
     assert "bentoPreviewTrip" in (
         STUDIO_DIR / "homepage-v2" / "harness.js"
     ).read_text(encoding="utf-8")

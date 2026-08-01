@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """One-off perf probe: serial vs parallel ingest on a real album subset."""
 from __future__ import annotations
 
@@ -11,10 +10,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from travelogue.config import get_config, app_config_scope
+from travelogue.config import app_config_scope, get_config
 from travelogue.media.ingest import ingest_into_trip
-from travelogue.services.trip_factory import create_trip
 from travelogue.runtime import AppContext
+from travelogue.services.trip_factory import create_trip
 
 
 def run_once(album: Path, trips_root: Path, tag: str, *, parallel: bool, workers: int, max_photos: int) -> dict:

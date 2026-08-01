@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from travelogue.config.aesthetic import AestheticConfig
+from travelogue.config.bookends import BookendsConfig
 from travelogue.config.clustering import ClusteringConfig, GeocodeConfig
 from travelogue.config.cohort import CohortConfig
 from travelogue.config.cull import CullConfig
@@ -25,7 +26,6 @@ from travelogue.config.phase6 import Phase6ObservabilityConfig
 from travelogue.config.shot_grouping import ShotGroupingConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
-from travelogue.config.bookends import BookendsConfig
 from travelogue.config.vision import VisionConfig
 
 _log = logging.getLogger(__name__)

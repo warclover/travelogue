@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from travelogue.config.mosaic import SlotAdaptationConfig
 from travelogue.layout_engine.crop_solver import solve_slot_focal

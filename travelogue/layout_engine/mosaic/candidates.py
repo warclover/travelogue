@@ -34,7 +34,10 @@ from travelogue.layout_engine.mosaic.pattern_catalog import (
     patterns_for_window_size,
 )
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
-from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
+from travelogue.layout_engine.mosaic.slot_geometry import (
+    pattern_geometry_precheck,
+    screen_slots_geometry_ok,
+)
 from travelogue.layout_engine.usage_rules.evaluator import evaluate_reject
 from travelogue.media.media_classify import is_collage_asset
 
@@ -311,6 +314,20 @@ def generate_window_candidates_with_rejections(
                     detail=f"penalty={clone_pen:.2f}",
                 )
                 continue
+        # ALG-V3 B2a · static geometry precheck (skip build_screen when definite fail).
+        # MSA on → None (displayAspect may diverge after adaptation).
+        # Hungarian may reorder into a valid fit — do not hard-reject before refine.
+        pre = pattern_geometry_precheck(
+            pat.pattern_id, list(ordered), aspects, cfg=cfg
+        )
+        if pre is False and not bool(getattr(cfg, "lse_hungarian_assignment", False)):
+            _reject(
+                rejected,
+                pat.pattern_id,
+                "geometry_invalid",
+                detail="static_precheck",
+            )
+            continue
         orderable_pattern_ids.append(pat.pattern_id)
         slot_fallback: str | None = None
         screen = build_screen(pat, ordered, assets_map=assets_map)

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 from travelogue.config.mosaic import SlotAdaptationConfig, SlotAdaptationSolveConfig
 from travelogue.layout_templates.geometry import slot_display_aspect, solve_tracks

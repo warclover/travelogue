@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -130,10 +129,7 @@ def _ea_base_config(*, deferred: bool, parallel: bool) -> Any:
     from dataclasses import replace
 
     from travelogue.config import (
-        AestheticConfig,
         AppConfig,
-        IngestConfig,
-        PipelineConfig,
         VisionConfig,
     )
 

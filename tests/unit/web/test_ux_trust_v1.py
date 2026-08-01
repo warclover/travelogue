@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Trust V1 · 静态门禁与标题启发式单测."""
 from __future__ import annotations
 

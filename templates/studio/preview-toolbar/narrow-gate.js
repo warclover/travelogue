@@ -57,8 +57,10 @@ function ensureGateEl() {
     '<input id="preview-narrow-gate-url" class="preview-narrow-gate__url" type="text" readonly hidden aria-label="电脑打开地址" />' +
     "</div>";
   document.body.appendChild(el);
-  var copyBtn = el.querySelector("#preview-narrow-gate-copy");
-  var urlInput = el.querySelector("#preview-narrow-gate-url");
+  var copyBtn = /** @type {HTMLElement|null} */ (el.querySelector("#preview-narrow-gate-copy"));
+  var urlInput = /** @type {HTMLInputElement|null} */ (
+    el.querySelector("#preview-narrow-gate-url")
+  );
   bindCopyPageUrlControl({
     button: copyBtn,
     urlInput: urlInput,

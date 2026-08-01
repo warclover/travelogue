@@ -116,14 +116,18 @@ def _asset(
 
 
 def build_portrait_heavy_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
-    """6 portrait assets in 2 buckets — matches golden portrait-heavy fixture."""
+    """6 portrait assets in 2 buckets — matches golden portrait-heavy fixture.
+
+    Within each chapter, timestamps stay inside the Scene Atom gap (≤10 min) so
+    portrait-3 tiling is admitted; chapters themselves are a day apart.
+    """
     assets = [
         _asset("p1", 900, 1600, offset_hours=0),
-        _asset("p2", 900, 1600, offset_hours=1),
-        _asset("p3", 900, 1600, offset_hours=2),
+        _asset("p2", 900, 1600, offset_hours=0.01),
+        _asset("p3", 900, 1600, offset_hours=0.02),
         _asset("p4", 900, 1600, offset_hours=24),
-        _asset("p5", 900, 1600, offset_hours=25),
-        _asset("p6", 900, 1600, offset_hours=26),
+        _asset("p5", 900, 1600, offset_hours=24.01),
+        _asset("p6", 900, 1600, offset_hours=24.02),
     ]
     buckets = [["p1", "p2", "p3"], ["p4", "p5", "p6"]]
     aspects = {a["id"]: a["aspectKind"] for a in assets}
@@ -221,8 +225,9 @@ def build_mosaic_five_2p3l_window() -> tuple[list[str], dict[str, str], dict[str
 def build_user_3p2l_case_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
     """PRD §13.3 · user-reported 5-photo window (3 portrait + 2 landscape).
 
-    MCS must not pick deprecated ``screen-mosaic-5-3portrait-2land-balanced``; the
-    window is planned as smaller screens (landscape-1 + portrait-3 + landscape-1).
+    MCS must not pick deprecated ``screen-mosaic-5-3portrait-2land-balanced``;
+    product-default ``template_experiments`` (cohort ``*``) admits the 3P2L
+    portrait-hero family instead.
     """
     kinds = ["portrait", "portrait", "portrait", "landscape", "landscape"]
     assets: list[dict] = []
