@@ -6,7 +6,7 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0 + W1a-1 编码在 `feat/alg-v3-w0`** · AC-20/21 基线已冻结 · 门测已入 must-green |
+| **状态** | **W1a-2 编码在 `feat/alg-v3-w1a2`**（基于 `feat/alg-v3-w0`） |
 | **更新日期** | 2026-08-01 |
 | **建议分支** | **`feat/alg-v3-w0`（当前）** → `feat/alg-v3-w1a1` → `feat/alg-v3-w1a2`（可并行开发、**串行合入**） |
 
@@ -66,7 +66,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 |----|------|----------|------|
 | DOC-ALG3-01 | PRD v0.3.0 + 评审纪要 DEV 回写 | `docs/PRD-…` · `acceptance-records/…` | ☑ |
 | DOC-ALG3-02 | ACCEPTANCE（含 AC-21 白名单）+ 本清单 + must-green | 本目录 | ☑ |
-| DOC-ALG3-03 | 冻结 `alg3-build-screen-calls-baseline.json` | `docs/acceptance-records/` | ☐ 计数器已埋点；固定语料跑数后冻 |
+| DOC-ALG3-03 | 冻结 `alg3-build-screen-calls-baseline.json` | `docs/acceptance-records/` | ☑ 2026-08-01 · W0=8 |
 | DOC-ALG3-04 | example `decor_line_llm_enabled: false`（对齐代码） | `config.yaml.example` | ☑ |
 | DOC-ALG3-05 | FE-ALG3-05 人话终稿（可微调 ACCEPTANCE §8） | ACCEPTANCE §8 | ☑ |
 
@@ -131,19 +131,21 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
-| BE-ALG3-C1-01 | `layout.scoring.wall_clock_limits_output`（名以 PR 为准）进 `LayoutScoringConfig` + loader | `config/layout.py` | ☐ |
-| BE-ALG3-C1-02 | `layout_search` / `compose_trip` / `curate` 贯通传入 `SearchBudget` | `layout_search.py` · `trip.py` · `curate.py` | ☐ |
-| BE-ALG3-C1-03 | scoring 开时默认硬截断 `true`；scoring 关时行为与今日一致 | 配置默认 | ☐ |
-| BE-ALG3-LLM-01 | `llm.capability` TriState 默认 `auto`；接 `probe_llm_ready` | `config` · narrate | ☑ W0 已落（W1a-2 再收敛 prefer） |
-| BE-ALG3-LLM-02 | 收敛 `resolve_studio_narrate_provider`：`prefer ∧ ready ∧ may_call` 否则 stub | `studio_narrate.py` | ☐ |
-| BE-ALG3-LLM-03 | prefer/capability **不进**用户 PATCH 白名单 | `config_handlers` / loader | ☐ |
-| BE-ALG3-M04 | 每趟写入完整 `algoV3`（含 llm 段） | curate | ☑ W0 已写；W1a-2 补 prefer 字段 |
-| QA-ALG3-01/02/06 | AC-01/02/06 | `test_alg3_llm_ready.py` | ☐ |
-| QA-ALG3-22 | AC-22 cohort + **默认路径投影不变** | 待建 | ☐ |
-| QA-ALG3-32 | C1 新 bool → 同 PR 更新 CSC（X09 解释增量） | happy_path 测 | ☐ |
-| FE-ALG3-01/02/04 | 回归：无解冻、无新设置控件 | 手动 / 现有 NAS 测 | ☐ |
+| BE-ALG3-C1-01 | `layout.scoring.wall_clock_limits_output`（名以 PR 为准）进 `LayoutScoringConfig` + loader | `config/layout.py` | ☑ 默认 true |
+| BE-ALG3-C1-02 | `layout_search` / `compose_trip` / `curate` 贯通传入 `SearchBudget` | `layout_search.py` · `trip.py` · `curate.py` | ☑ |
+| BE-ALG3-C1-03 | scoring 开时默认硬截断 `true`；scoring 关时行为与今日一致 | 配置默认 | ☑ |
+| BE-ALG3-LLM-01 | `llm.capability` TriState 默认 `auto`；接 `probe_llm_ready` | `config` · narrate | ☑ |
+| BE-ALG3-LLM-02 | 收敛 `resolve_studio_narrate_provider`：`prefer ∧ ready ∧ may_call` 否则 stub | `studio_narrate.py` | ☑ |
+| BE-ALG3-LLM-03 | prefer/capability **不进**用户 PATCH 白名单 | `config_handlers` / loader | ☑ 本就不在白名单；测锁死 |
+| BE-ALG3-M04 | 每趟写入完整 `algoV3`（含 llm 段） | curate | ☑ 含 preferLlmWhenReady |
+| QA-ALG3-01/02/06 | AC-01/02/06 | `test_alg3_w1a2_contracts.py` | ☑ |
+| QA-ALG3-22 | AC-22 cohort + **默认路径投影不变** | `test_alg3_ac22_wall_clock.py` | ☑ |
+| QA-ALG3-32 | C1 新 bool → 同 PR 更新 CSC（X09 解释增量） | happy_path 测 · CSC JSON | ☑ 172/109/63 |
+| FE-ALG3-01/02/04 | 回归：无解冻、无新设置控件 | 手动 / 现有 NAS 测 + PATCH 测 | ☑ 契约测 |
 
 **退出**：AC-01/02/04/05a/06/07/22/30/32 绿；默认配置 AC-21 投影与合入前一致。
+
+**AC-32 / X09 增量说明（W1a-2）**：新增 `layout.scoring.wall_clock_limits_output`（default **true**）与 `llm.prefer_llm_when_ready`（default **false**）→ CSC 三计数 **172 / 109 / 63**（相对 W0 的 170/108/62）。
 
 ---
 

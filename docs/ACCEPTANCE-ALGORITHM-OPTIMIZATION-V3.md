@@ -113,13 +113,13 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 
 | ID | 断言 | 夹具要点 | 计划 nodeid / 证据 | 波次 |
 |----|------|----------|-------------------|------|
-| **AC-01** | 无 Key：零 outbound LLM；import 成功；无用户错误页；`ready=false`·`usedOnImport=false` | spy/mock HTTP；清 secrets | `tests/unit/web/test_alg3_llm_ready.py`（待建）+ 既有 import stub | W1a-2 |
-| **AC-02** | 有 Key + prefer=false：import stub；`ready=true`·`usedOnImport=false`·`mayCall=false` | inject secrets + mock resolve；非 ping | 同上 | W1a-2 |
+| **AC-01** | 无 Key：零 outbound LLM；import 成功；无用户错误页；`ready=false`·`usedOnImport=false` | spy/mock HTTP；清 secrets | `test_alg3_w1a2_contracts.py::test_ac01_*` | W1a-2 |
+| **AC-02** | 有 Key + prefer=false：import stub；`ready=true`·`usedOnImport=false`·`mayCall=false` | inject secrets + mock resolve；非 ping | `test_alg3_w1a2_contracts.py::test_ac02_*` | W1a-2 |
 | **AC-03** | prefer=true 且 MayCall 允许：可走 LLM；401/超时→stub | **dark/mock**；非默认 CI | dogfood / dark job | 后置 |
 | **AC-04** | Surface=off：无 AI 入口；有 Key 亦然 | NAS AC + 本回归 | 指针 [ACCEPTANCE-NO-AI-SURFACE-V1](./ACCEPTANCE-NO-AI-SURFACE-V1.md) | W1a-2 |
-| **AC-05a** | decor：MayCall=false → 不实调 | 契约 | 待建 | W1a-2 |
+| **AC-05a** | decor：MayCall=false → 不实调 | 契约 | `test_alg3_w1a2_contracts.py::test_ac05a_*` | W1a-2 |
 | **AC-05b** | mllm：无 VL 或 MayCall=false → skip | `supports_vision` | 待建 / W3 | 后置 |
-| **AC-06** | `capability=true` 无凭证 → `ready=false` + `llm_no_key` + 导入成稿；`auto` 无凭证**不**写 `llm_no_key` | 清 secrets；auto/true 两跑 | 待建 | W1a-2 |
+| **AC-06** | `capability=true` 无凭证 → `ready=false` + `llm_no_key` + 导入成稿；`auto` 无凭证**不**写 `llm_no_key` | 清 secrets；auto/true 两跑 | `test_alg3_w1a2_contracts.py::test_ac06_*` | W1a-2 |
 | **AC-07** | `probe_llm_ready()` 前后 `os.environ` 无差异；零网络 | environ 快照 + outbound spy | 待建（W0 可先合同测） | **W0** |
 
 ### 3.2 质量
@@ -136,7 +136,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 |----|------|----------|------|
 | **AC-20** | 固定语料 `algoV3.buildScreenCalls`（或探针等价字段）**总数**较 §2.4 基线下降且有数；CI 用计数门；墙钟 ≥10% 仅本机记录 | **禁**「拒前 build_screen ↓」自证（X08）；nodeid=`test_alg3_ac20_ac21.py::test_ac20_*` | W1a-1 |
 | **AC-21** | §2.1 投影与基线逐屏等价 | 白名单=§2.2；非自反双跑；nodeid=`test_alg3_ac20_ac21.py::test_ac21_*` | W1a-1 |
-| **AC-22** | scoring cohort 开 + 硬截断：`timedOut∧wallClockExceeded`；evaluations 不再增长；chapters 合法非空；**且**默认配置投影与合入前一致 | 贯通测 | W1a-2 |
+| **AC-22** | scoring cohort 开 + 硬截断：`timedOut∧wallClockExceeded`；evaluations 不再增长；chapters 合法非空；**且**默认配置投影与合入前一致 | `test_alg3_ac22_wall_clock.py` | W1a-2 |
 | **AC-30** | §7.1 必填键（含 `buildScreenCalls`）；无 Key / SSG empty 两场景值分化 | schema；nodeid=`test_ac30_no_key_vs_ssg_empty_values_diverge` | W0 |
 | **AC-31** | §5.3 实验旗默认关；与 happy_path/CSC 单源 | 快照 | W0 |
 | **AC-32** | 新增/改型开关：同 PR 更新 recipe 快照与三计数；TriState 进 `tristate_flags` 不消失；Research/Danger 集合不丢项 | `test_happy_path_recipe.py` · CSC JSON | **W0 挡门** |
@@ -162,9 +162,9 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 
 | ID | 要求 | 波次 | 结果 |
 |----|------|------|------|
-| **FE-ALG3-01** | 禁止为 Ready/MayCall 解冻 AI 区 / Wait Tips「升级」 | 全程 | ☐ |
-| **FE-ALG3-02** | 禁止向普通用户暴露 prefer/capability/clone/algoV3 营销 | 全程 | ☐ |
-| **FE-ALG3-04** | prefer/capability 不进用户 PATCH 白名单；前端不加控件 | W1a-2 | ☐ |
+| **FE-ALG3-01** | 禁止为 Ready/MayCall 解冻 AI 区 / Wait Tips「升级」 | 全程 | ☑ |
+| **FE-ALG3-02** | 禁止向普通用户暴露 prefer/capability/clone/algoV3 营销 | 全程 | ☑ |
+| **FE-ALG3-04** | prefer/capability 不进用户 PATCH 白名单；前端不加控件 | W1a-2 | ☑ |
 | **FE-ALG3-05** | `mosaic_explain` 人话覆盖 PRD 所列 reason；抽屉无原始英文 reason | **W0** | ☐ |
 | **FE-ALG3-S02** | 智能排版 hint「搜索可能提前结束」 | W1a-2 后可选 | ☐ |
 | **FE-ALG3-S03** | algorithmStale / longshotStale / 更新并导出回归 | W1b/W2 | ☐ |

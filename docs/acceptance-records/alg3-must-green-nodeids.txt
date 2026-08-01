@@ -51,5 +51,10 @@ tests/unit/layout_engine/test_mosaic_self_heal.py::test_self_heal_max_drop_attem
 tests/unit/layout_engine/test_alg3_ac20_ac21.py
 tests/unit/curation/test_alg3_algo_v3_summary.py::test_ac30_no_key_vs_ssg_empty_values_diverge
 
+# === ALG-V3 W1a-2 · C1 / Ready / MayCall ===
+tests/unit/web/test_alg3_w1a2_contracts.py
+tests/unit/layout_engine/test_alg3_ac22_wall_clock.py
+tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provider_if_ready_blocked_without_may_call
+
 # === planned ===
-# tests/unit/orchestrator/test_alg3_flag_paths.py
+# (W1b+)

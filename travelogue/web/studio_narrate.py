@@ -5,10 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from travelogue.config import AppConfig, get_config
+from travelogue.config._common import capability_allows, normalize_tri_state
 from travelogue.llm.errors import LlmError
 from travelogue.llm.ready import (
     probe_llm_ready,
+    resolve_llm_may_call,
     resolve_llm_ready_summary,
+    resolve_ready_provider,
     studio_llm_status,
 )
 from travelogue.orchestrator.run import run_trip
@@ -18,6 +21,7 @@ from travelogue.services.trip import TripService
 # Re-export Ready helpers for Studio callers (implementation lives in llm.ready).
 __all__ = [
     "probe_llm_ready",
+    "resolve_llm_may_call",
     "resolve_llm_ready_summary",
     "resolve_studio_narrate_provider",
     "resolve_studio_narrate_provider_if_ready",
@@ -33,26 +37,37 @@ def resolve_studio_narrate_provider(
 ) -> str:
     """Resolve narrate provider for Studio **import** / G1 continue.
 
-    Product contract (D-DLLM-02 / D-L0G-01):
-    - Import main chain always uses stub (magazine LLM is preview-only).
-    - ``force_stub=True`` is explicit (BE-08「用本机文案继续」).
-    - Even if callers forget ``force_stub``, missing credentials still → stub.
-
-    Optional「生成杂志感文案」uses :func:`run_studio_llm_narrate`, not this helper.
+    Product contract (ALG-V3 §3.5 / D-DLLM-02):
+    - Default ``prefer_llm_when_ready=false`` → stub.
+    - LLM only when ``prefer ∧ ready ∧ may_call`` (and not ``force_stub``).
+    - NAS MayCall is false unless Surface/dark is on.
     """
     if force_stub:
         return "stub"
-    # Import never auto-calls LLM — avoids end-of-import E_LLM_AUTH dead loops.
-    _ = cfg  # reserved for future prefer-LLM opt-in behind an explicit flag
-    return "stub"
+    app_cfg = cfg or get_config()
+    prefer = bool(getattr(app_cfg.llm, "prefer_llm_when_ready", False))
+    if not prefer:
+        return "stub"
+    if not resolve_llm_may_call(cfg=app_cfg):
+        return "stub"
+    capability = normalize_tri_state(getattr(app_cfg.llm, "capability", "auto"), default="auto")
+    probe_ready = probe_llm_ready(cfg=app_cfg)
+    allowed, _degrade = capability_allows(capability, ready=probe_ready)
+    if not allowed:
+        return "stub"
+    return resolve_ready_provider(cfg=app_cfg)
 
 
 def resolve_studio_narrate_provider_if_ready(*, cfg: AppConfig | None = None) -> str:
     """Return configured LLM provider when credentials resolve; else stub.
 
     Not used by import. Kept for callers that intentionally want LLM-when-ready.
+    Still respects MayCall (NAS) so dark-only surfaces can open the path.
     """
-    status = studio_llm_status(cfg=cfg)
+    app_cfg = cfg or get_config()
+    if not resolve_llm_may_call(cfg=app_cfg):
+        return "stub"
+    status = studio_llm_status(cfg=app_cfg)
     if status.get("llmAvailable"):
         return str(status["llmProvider"])
     return "stub"
@@ -65,6 +80,10 @@ def run_studio_llm_narrate(
     trips_dir: Path | None = None,
 ) -> dict[str, str]:
     app_cfg = cfg or get_config()
+    if not resolve_llm_may_call(cfg=app_cfg):
+        from travelogue.web.studio_errors import user_message
+
+        raise LlmError("E_AI_SURFACE_DISABLED", user_message("E_AI_SURFACE_DISABLED"))
     status = studio_llm_status(cfg=app_cfg)
     if not status.get("llmAvailable"):
         from travelogue.web.studio_errors import user_message

@@ -16,9 +16,9 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 170,
-    "default_true": 108,
-    "default_false": 62,
+    "bool_fields": 172,
+    "default_true": 109,
+    "default_false": 63,
     "tristate_fields": 5
   },
   "appconfig_bools": {
@@ -106,6 +106,7 @@
     "layout.scoring.incremental": false,
     "layout.scoring.prefix_beam_enabled": false,
     "layout.scoring.skip_duplicate_signatures": true,
+    "layout.scoring.wall_clock_limits_output": true,
     "layout.strategy_engine.capabilities.editorial_hints": false,
     "layout.strategy_engine.capabilities.highlight_windows": false,
     "layout.strategy_engine.capabilities.hungarian_assignment": false,
@@ -126,6 +127,7 @@
     "layout.usage_rules.log_rejections": true,
     "layout.usage_rules.tiebreak_enabled": true,
     "llm.narrate_concurrency_backoff": true,
+    "llm.prefer_llm_when_ready": false,
     "mosaic.allow_drop": false,
     "mosaic.density_budget.enabled": true,
     "mosaic.deterministic_strict": true,

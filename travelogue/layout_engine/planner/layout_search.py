@@ -49,6 +49,7 @@ def maybe_replan_chapters(
     max_evaluations_per_trip: int = 500,
     max_evaluations_per_segment: int = 0,
     allow_burst_split: bool = False,
+    wall_clock_limits_output: bool | None = None,
     subject_run_tolerance: int = 1,
     enable_food_grid: bool = True,
     mundane_grid_buckets: tuple[str, ...] = ("food",),
@@ -77,12 +78,19 @@ def maybe_replan_chapters(
     if trip_photo_total is None:
         trip_photo_total = len(assets_by_id) or sum(len(b) for b in buckets)
 
+    # ALG-V3 C1: scoring-on default hard-cuts on wall clock; explicit arg wins.
+    if wall_clock_limits_output is None:
+        scoring_cfg = getattr(getattr(cfg, "layout", None), "scoring", None) if cfg else None
+        wall_clock_limits_output = bool(
+            getattr(scoring_cfg, "wall_clock_limits_output", True)
+        )
     budget = SearchBudget(
         search_timeout_ms=search_timeout_ms,
         max_candidates_per_bucket=max_candidates_per_bucket,
         max_evaluations_per_trip=max_evaluations_per_trip,
         max_evaluations_per_segment=max_evaluations_per_segment,
         allow_burst_split=allow_burst_split,
+        wall_clock_limits_output=bool(wall_clock_limits_output),
     )
     out, logs, budget = _replan_day_buckets_beam(
         chapters,

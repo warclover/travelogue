@@ -39,10 +39,28 @@ def test_resolve_studio_narrate_provider_if_ready_with_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
+        "travelogue.web.studio_narrate.resolve_llm_may_call",
+        lambda *, cfg=None: True,
+    )
+    monkeypatch.setattr(
         "travelogue.web.studio_narrate.studio_llm_status",
         lambda *, cfg=None: {"llmAvailable": True, "llmProvider": "deepseek"},
     )
     assert resolve_studio_narrate_provider_if_ready() == "deepseek"
+
+
+def test_resolve_studio_narrate_provider_if_ready_blocked_without_may_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "travelogue.web.studio_narrate.resolve_llm_may_call",
+        lambda *, cfg=None: False,
+    )
+    monkeypatch.setattr(
+        "travelogue.web.studio_narrate.studio_llm_status",
+        lambda *, cfg=None: {"llmAvailable": True, "llmProvider": "deepseek"},
+    )
+    assert resolve_studio_narrate_provider_if_ready() == "stub"
 
 
 def test_job_error_payload_marks_llm_auth_recoverable() -> None:
@@ -121,6 +139,10 @@ def test_run_studio_llm_narrate_auth_does_not_require_trip_mutation(
     trip_dir.mkdir()
     (trip_dir / "trip.json").write_text('{"meta":{"title":"x"}}', encoding="utf-8")
     before = (trip_dir / "trip.json").read_text(encoding="utf-8")
+    monkeypatch.setattr(
+        "travelogue.web.studio_narrate.resolve_llm_may_call",
+        lambda *, cfg=None: True,
+    )
     monkeypatch.setattr(
         "travelogue.web.studio_narrate.studio_llm_status",
         lambda *, cfg=None: {"llmAvailable": False, "llmProvider": "stub"},
