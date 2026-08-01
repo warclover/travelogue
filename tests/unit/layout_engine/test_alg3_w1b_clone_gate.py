@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from pathlib import Path
 
 import pytest
 
@@ -206,3 +207,56 @@ def test_fe_alg3_s03_algo_v3_does_not_false_flag_stale() -> None:
     trip["curation"]["algoV3"] = build_algo_v3_summary(trip, cfg=cfg, build_screen_calls=2)
     after = assess_algorithm_freshness(trip, app_cfg=cfg)
     assert before["algorithmStale"] == after["algorithmStale"]
+
+
+def test_fe_alg3_s03_algo_v3_does_not_false_flag_longshot_stale(
+    tmp_path: Path,
+) -> None:
+    """FE-ALG3-S03: algoV3 meta must not alone make longshot exports look stale."""
+    import os
+    import time
+
+    from travelogue.web.studio_trips import longshot_outputs_stale
+
+    trip_dir = tmp_path / "alg3-s03-longshot"
+    trip_dir.mkdir()
+    moments = trip_dir / "demo-moments-01.png"
+    moments.write_bytes(b"png")
+    # Export newer than trip watermark → not stale.
+    now = time.time()
+    os.utime(moments, (now, now))
+    trip_mtime = now - 60.0
+    assert longshot_outputs_stale(trip_dir, trip_mtime=trip_mtime) is False
+
+    trip = {
+        "chapters": [{"id": "ch-01", "screens": []}],
+        "curation": {},
+        "updatedAt": "2025-01-01T00:00:00Z",
+    }
+    trip["curation"]["algoV3"] = build_algo_v3_summary(
+        trip, cfg=AppConfig(), build_screen_calls=3
+    )
+    # Same filesystem watermark → still not stale (algoV3 is trip JSON meta only).
+    assert longshot_outputs_stale(trip_dir, trip_mtime=trip_mtime) is False
+
+
+def test_fe_alg3_s03_shelf_cta_not_forced_by_algo_v3_alone() -> None:
+    """FE-ALG3-S03: shelf resume CTA stays「打开预览」when both stale flags false."""
+    from pathlib import Path
+
+    logic = (
+        Path(__file__).resolve().parents[3]
+        / "templates"
+        / "studio"
+        / "homepage-v2"
+        / "shelf-actions-logic.js"
+    ).read_text(encoding="utf-8")
+    assert "function shelfResumeActions" in logic
+    assert 'label: "更新长图"' in logic
+    assert 'label: "重新排版"' in logic
+    assert 'label: "打开预览"' in logic
+    # Contract: longshot/algorithm CTAs are gated on their stale flags only —
+    # nothing in this module reads curation.algoV3.
+    assert "algoV3" not in logic
+    assert "algorithmStale" in logic
+    assert "longshotStale" in logic

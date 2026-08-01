@@ -22,6 +22,7 @@ from travelogue.layout_engine.mosaic.candidates import (
 )
 
 CORPUS_ID = "alg3-default-mcs-v1"
+AC20_PROBE_ID = "alg3-ac20-mismatch-probe-v1"
 _BASELINE_DIR = (
     Path(__file__).resolve().parents[3] / "docs" / "acceptance-records"
 )
@@ -173,22 +174,114 @@ def run_alg3_corpus(*, precheck_enabled: bool = True) -> dict[str, Any]:
     }
 
 
+def run_ac20_mismatch_probe(*, precheck_enabled: bool = True) -> dict[str, Any]:
+    """AC-20 stress: mono-portrait window forced onto a landscape-mix auto-flow SKU.
+
+    Production signature routing often collapses try-sets to aspect-matched SKUs,
+    so the main corpus never reaches a definite ``pattern_geometry_precheck=False``.
+    This probe keeps ordering successful while orientation is statically wrong —
+    B2a must skip ``build_screen``; W0-equivalent (precheck forced None) must call it.
+    """
+    import travelogue.layout_engine.mosaic.candidates as cand_mod
+    from travelogue.layout_engine.mosaic.constants import PATTERN_PORTRAIT_2_LANDSCAPE_2
+    from travelogue.layout_engine.mosaic.pattern_catalog import AspectProfile, MosaicPattern
+
+    ids, aspects, assets_map = _window_assets(
+        "ac20-mismatch", ("portrait", "portrait", "portrait", "portrait")
+    )
+    reg = {
+        PATTERN_PORTRAIT_2_LANDSCAPE_2: MosaicPattern(
+            pattern_id=PATTERN_PORTRAIT_2_LANDSCAPE_2,
+            slot_count=4,
+            grid_class="mixed",
+            roles=("a", "b", "c", "d"),
+            accepts=AspectProfile(),
+        )
+    }
+    cfg = MosaicConfig(
+        enabled=True,
+        enabled_window_sizes=(4,),
+        unified_mode=True,
+        min_candidate_score=0.0,
+        template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
+    )
+
+    orig_pre = cand_mod.pattern_geometry_precheck
+    orig_order = cand_mod.try_order_for_pattern
+
+    def _order(*_a, **_k):
+        return list(ids)
+
+    def _precheck_off(*_a, **_k):
+        return None
+
+    cand_mod.try_order_for_pattern = _order  # type: ignore[assignment]
+    if not precheck_enabled:
+        cand_mod.pattern_geometry_precheck = _precheck_off  # type: ignore[assignment]
+    reset_build_screen_calls()
+    try:
+        result = generate_window_candidates_with_rejections(
+            ids,
+            aspects,  # type: ignore[arg-type]
+            assets_map,
+            cfg=cfg,
+            registry=reg,
+            trip_photo_total=40,
+            burst_seconds=3600.0,
+        )
+        calls = int(get_build_screen_calls())
+    finally:
+        cand_mod.pattern_geometry_precheck = orig_pre  # type: ignore[assignment]
+        cand_mod.try_order_for_pattern = orig_order  # type: ignore[assignment]
+
+    static_rejects = [
+        r
+        for r in (result.rejected or [])
+        if r.get("reason") == "geometry_invalid"
+        and r.get("detail") == "static_precheck"
+    ]
+    return {
+        "probeId": AC20_PROBE_ID,
+        "buildScreenCalls": calls,
+        "staticPrecheckRejects": len(static_rejects),
+        "candidateCount": len(result.candidates or []),
+    }
+
+
+def ac20_total_build_screen_calls(*, precheck_enabled: bool) -> dict[str, Any]:
+    """Main MCS corpus + mismatch probe (AC-20 absolute count)."""
+    main = run_alg3_corpus(precheck_enabled=precheck_enabled)
+    probe = run_ac20_mismatch_probe(precheck_enabled=precheck_enabled)
+    return {
+        "corpusId": CORPUS_ID,
+        "probeId": AC20_PROBE_ID,
+        "mainBuildScreenCalls": int(main["buildScreenCalls"]),
+        "probeBuildScreenCalls": int(probe["buildScreenCalls"]),
+        "buildScreenCalls": int(main["buildScreenCalls"]) + int(probe["buildScreenCalls"]),
+        "probe": probe,
+        "chapters": main["chapters"],
+    }
+
+
 def freeze_alg3_baselines(*, frozen_at: str) -> dict[str, Any]:
     """Write W0-equivalent buildScreenCalls baseline + B2a-on AC-21 layout baseline."""
-    w0 = run_alg3_corpus(precheck_enabled=False)
-    w1 = run_alg3_corpus(precheck_enabled=True)
+    w0 = ac20_total_build_screen_calls(precheck_enabled=False)
+    w1_main = run_alg3_corpus(precheck_enabled=True)
+    w1_probe = run_ac20_mismatch_probe(precheck_enabled=True)
+    w1_total = int(w1_main["buildScreenCalls"]) + int(w1_probe["buildScreenCalls"])
 
     build_payload = {
         "schemaVersion": 1,
         "status": "frozen",
         "note": (
             "W0-equivalent: candidates.pattern_geometry_precheck forced None. "
-            "AC-20: B2a-on totalBuildScreenCalls must be < this baseline. "
-            "Corpus = generate_window_candidates over _CORPUS_WINDOWS "
-            "(not full-trip plan_mosaic_screens)."
+            "AC-20: B2a-on totalBuildScreenCalls must be strictly < this baseline. "
+            "Corpus = _CORPUS_WINDOWS + AC20_PROBE_ID mismatch probe "
+            "(signature routing alone never hits definite precheck False)."
         ),
         "frozenAt": frozen_at,
         "corpusId": CORPUS_ID,
+        "probeId": AC20_PROBE_ID,
         "configNote": (
             "MosaicConfig enabled; window sizes (4,5,6,9); unified; "
             "min_candidate_score=0; template_contract off; scoring/LSE off"
@@ -196,10 +289,12 @@ def freeze_alg3_baselines(*, frozen_at: str) -> dict[str, Any]:
         "precheckEnabled": False,
         "windows": [
             {"windowKey": w["windowKey"], "buildScreenCalls": w["buildScreenCalls"]}
-            for w in w0["windows"]
+            for w in run_alg3_corpus(precheck_enabled=False)["windows"]
         ],
-        "totalBuildScreenCalls": w0["buildScreenCalls"],
-        "b2aOnBuildScreenCalls": w1["buildScreenCalls"],
+        "probeBuildScreenCalls": int(w0["probeBuildScreenCalls"]),
+        "totalBuildScreenCalls": int(w0["buildScreenCalls"]),
+        "b2aOnBuildScreenCalls": w1_total,
+        "b2aOnProbeBuildScreenCalls": int(w1_probe["buildScreenCalls"]),
     }
     BUILD_SCREEN_BASELINE.write_text(
         json.dumps(build_payload, indent=2, ensure_ascii=False) + "\n",
@@ -218,8 +313,8 @@ def freeze_alg3_baselines(*, frozen_at: str) -> dict[str, Any]:
         "corpusId": CORPUS_ID,
         "projection": "patternId+slotAssetIds(+slotRoles)",
         "stripWhitelistRef": "ACCEPTANCE §2.2",
-        "buildScreenCalls": w1["buildScreenCalls"],
-        "chapters": w1["chapters"],
+        "buildScreenCalls": int(w1_main["buildScreenCalls"]),
+        "chapters": w1_main["chapters"],
     }
     AC21_LAYOUT_BASELINE.write_text(
         json.dumps(layout_payload, indent=2, ensure_ascii=False) + "\n",
