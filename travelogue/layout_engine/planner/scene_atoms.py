@@ -5,9 +5,8 @@ See docs/PLAN-CLUSTER-BOUNDARY-FIRST-MOSAIC-V1.md §3 P1 (已审定稿).
 
 from __future__ import annotations
 
+from dataclasses import is_dataclass, replace
 from typing import Any
-
-from dataclasses import replace
 
 from travelogue.config.shot_grouping import AtomConfig
 from travelogue.layout_contract.burst import parse_taken_ts
@@ -23,7 +22,7 @@ def atom_gate_limits(policy: AtomConfig) -> tuple[float, float]:
     """
     gap = float(policy.max_gap_seconds)
     span = float(policy.max_window_span_seconds)
-    if policy.experimental_relax:
+    if getattr(policy, "experimental_relax", False) is True:
         gap *= max(1.0, float(policy.experimental_relax_gap_scale))
         span *= max(1.0, float(policy.experimental_relax_span_scale))
     return gap, span
@@ -34,8 +33,12 @@ def resolve_atom_gate_policy(policy: AtomConfig) -> AtomConfig:
 
     Does not read ``mosaic_share_floor_observe``. Clears ``experimental_relax`` on
     the copy so nested calls cannot double-scale.
+
+    Non-dataclass duck/mocks (unit tests) pass through unchanged.
     """
-    if not policy.experimental_relax:
+    if not is_dataclass(policy):
+        return policy
+    if policy.experimental_relax is not True:
         return policy
     gap, span = atom_gate_limits(policy)
     return replace(

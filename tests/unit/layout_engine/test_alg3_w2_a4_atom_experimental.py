@@ -124,6 +124,15 @@ def test_a4_observe_floor_never_auto_widens() -> None:
     assert loose_floor.experimental_relax is False
 
 
+def test_a4_resolve_passthrough_for_non_dataclass_mock() -> None:
+    """LTN / hook tests pass MagicMock atom policies — must not TypeError."""
+    from unittest.mock import MagicMock
+
+    mock = MagicMock()
+    mock.experimental_relax = MagicMock()  # truthy but not True
+    assert resolve_atom_gate_policy(mock) is mock
+
+
 def test_a4_research_firewall_lists_new_flag() -> None:
     assert "shot_grouping.mosaic.atom.experimental_relax" in RESEARCH_DEFAULT_FALSE
 
