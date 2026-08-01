@@ -63,4 +63,7 @@ tests/unit/layout_engine/test_near_scene_clone_penalty.py::test_candidates_hard_
 # === ALG-V3 W2-A1 · selection_epsilon honesty / AC-11 ===
 tests/unit/curation/test_alg3_w2_a1_ac11.py
 
+# === ALG-V3 W2-A6 · look batch encode ===
+tests/unit/curation/test_alg3_w2_a6_look_batch.py
+
 # === planned ===

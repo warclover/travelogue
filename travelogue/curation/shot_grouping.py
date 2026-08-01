@@ -351,7 +351,7 @@ def run_shot_grouping_layer(
             groups, assets_by_id, min_size=ssg.min_shot_group_size
         )
 
-        look_stats: dict[str, int] = {
+        look_stats: dict[str, int | float] = {
             "lookSkippedNoFace": 0,
             "lookSkippedMulti": 0,
             "lookEncoded": 0,
@@ -368,7 +368,10 @@ def run_shot_grouping_layer(
                     )
 
                     vectors, look_stats = compute_look_vectors_for_assets(
-                        assets, trip_dir=trip_dir, cfg=ssg
+                        assets,
+                        trip_dir=trip_dir,
+                        cfg=ssg,
+                        app_cfg=app_cfg,
                     )
                 except Exception:
                     _log.exception("look appearance encode failed; keep scene groups")
