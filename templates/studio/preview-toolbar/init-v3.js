@@ -540,6 +540,7 @@ export function initToolbarV3(root, tripId) {
           var setupBtn = llmSetup.querySelector('[data-action="llm-setup"]');
           if (setupBtn) {
             setupBtn.addEventListener("click", function () {
+              // @ts-expect-error runtime Studio absolute URL (not a TS-resolvable module path)
               import("/__studio/js/llm-settings.js").then(function (mod) {
                 if (mod && typeof mod.openLlmSettings === "function") {
                   mod.openLlmSettings({

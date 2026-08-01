@@ -37,7 +37,9 @@ def test_build_chapter_plan_context_sorts_by_taken_at() -> None:
     assert ctx.ids == taken_order
 
 
-def test_chapter_hero_not_skipped_when_mosaic_winner_lacks_main_role() -> None:
+def test_chapter_hero_not_skipped_when_mosaic_winner_lacks_main_role(
+    monkeypatch,
+) -> None:
     ids = [f"a{i}" for i in range(1, 7)]
     aspects = {aid: "landscape" for aid in ids}
     assets = _assets(ids)
@@ -48,6 +50,27 @@ def test_chapter_hero_not_skipped_when_mosaic_winner_lacks_main_role() -> None:
         chapter_id="ch-hero",
         include_chapter_hero=True,
         trip_photo_total=20,
+    )
+    # Clean AppConfig admits mosaic-6-main-hero for equal landscapes; pin a
+    # non-main winner so this test exercises the skip=False branch.
+    no_main_screen = {
+        "patternId": "screen-landscape-4-grid",
+        "slots": [
+            {"assetId": aid, "slot": i, "fit": "cover", "role": "tile"}
+            for i, aid in enumerate(ids[:4])
+        ],
+    }
+
+    def _fake_pick(*_args, **_kwargs):
+        return WindowPickResult(
+            screen=no_main_screen,
+            log=MosaicWindowLog(segment_id="ch-hero", window_size=6, window_start=0),
+            used_legacy=False,
+        )
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.hook.pick_best_window",
+        _fake_pick,
     )
     assert chapter_should_skip_hero_for_mosaic(ctx) is False
 
@@ -90,7 +113,9 @@ def test_chapter_hero_skipped_when_mosaic_winner_has_main_role(monkeypatch) -> N
 
 
 def test_stage_chapter_hero_prepends_hero_screen() -> None:
-    ids = [f"a{i}" for i in range(1, 7)]
+    # Use a chapter size outside mosaic window sizes so hero is not skipped
+    # (clean AppConfig admits mosaic-6-main-hero for a full 6-landscape chapter).
+    ids = [f"a{i}" for i in range(1, 8)]
     aspects = {aid: "landscape" for aid in ids}
     assets = _assets(ids)
     ctx = build_chapter_plan_context(
@@ -103,7 +128,7 @@ def test_stage_chapter_hero_prepends_hero_screen() -> None:
     stage_chapter_hero(ctx)
     assert len(ctx.hero_preface) == 1
     assert ctx.hero_preface[0]["patternId"]
-    assert len(ctx.ids) == 5
+    assert len(ctx.ids) == 6
 
 
 def test_chapter_screen_planner_returns_numbered_screens() -> None:

@@ -5,16 +5,8 @@
       "patternId": "open",
       "screens": [
         {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": ["u3"]
-        },
-        {
-          "patternId": "screen-portrait-3",
-          "slotAssetIds": ["u0", "u1", "u2"]
-        },
-        {
-          "patternId": "screen-landscape-1",
-          "slotAssetIds": ["u4"]
+          "patternId": "screen-mosaic-5-3p2l-portrait-hero-quad",
+          "slotAssetIds": ["u0", "u1", "u2", "u3", "u4"]
         }
       ]
     }

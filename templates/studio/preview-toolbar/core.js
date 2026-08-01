@@ -293,6 +293,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                 cancelText: "知道了",
               }).then(function (ok) {
                 if (!ok) return;
+                // @ts-expect-error runtime Studio absolute URL (not a TS-resolvable module path)
                 import("/__studio/js/llm-settings.js")
                   .then(function (mod) {
                     if (mod && typeof mod.openLlmSettings === "function") {
@@ -352,6 +353,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                   cancelText: "知道了",
                 }).then(function (ok) {
                   if (!ok) return;
+                  // @ts-expect-error runtime Studio absolute URL (not a TS-resolvable module path)
                   import("/__studio/js/llm-settings.js")
                     .then(function (mod) {
                       if (mod && typeof mod.openLlmSettings === "function") {

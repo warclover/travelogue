@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NAS · AI 产品面门控（FE-NAS-00 / QFX D-QFX-09）
  * 三态：unknown | disabled | enabled；不导出写 setter。

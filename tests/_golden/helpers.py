@@ -225,8 +225,9 @@ def build_mosaic_five_2p3l_window() -> tuple[list[str], dict[str, str], dict[str
 def build_user_3p2l_case_trip() -> tuple[list[list[str]], dict[str, str], list[dict]]:
     """PRD §13.3 · user-reported 5-photo window (3 portrait + 2 landscape).
 
-    MCS must not pick deprecated ``screen-mosaic-5-3portrait-2land-balanced``; the
-    window is planned as smaller screens (landscape-1 + portrait-3 + landscape-1).
+    MCS must not pick deprecated ``screen-mosaic-5-3portrait-2land-balanced``;
+    product-default ``template_experiments`` (cohort ``*``) admits the 3P2L
+    portrait-hero family instead.
     """
     kinds = ["portrait", "portrait", "portrait", "landscape", "landscape"]
     assets: list[dict] = []

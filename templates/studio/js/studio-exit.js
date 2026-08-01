@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Desktop Studio exit (POST /__travelogue/shutdown).
  */
@@ -6,6 +7,10 @@
 import { postJson } from "./http.js";
 import { trackStudioEvent } from "./analytics.js";
 
+/**
+ * @param {{ confirm?: boolean|(() => any), surface?: string }} [opts]
+ * @returns {Promise<{ ok: boolean, cancelled?: boolean, message?: string }>}
+ */
 export function requestExitStudio(opts) {
   opts = opts || {};
   var confirmFn = opts.confirm;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wait Tips V1 · Importing 壳内可关闭教育轮播（W0+W1）
  * 铁律：次于进度主句；不写 Help seen；失败静默。

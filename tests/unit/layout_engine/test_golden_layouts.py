@@ -53,10 +53,30 @@ def test_scoring_aspect_only_equivalent_to_legacy():
 
 
 def test_mosaic5_exposure_ab_fixture():
-    """P15-4f · mosaic on raises unified MCS exposure vs off on synthetic fixture."""
+    """P15-4f · mosaic on raises unified MCS exposure vs off on synthetic fixture.
+
+    Gates ``template_experiments`` so this AB measures core MCS vs legacy — product
+    default cohort ``*`` admits 3P2L SKUs that can pack this fixture differently.
+    """
+    from dataclasses import replace
+
+    from travelogue.config import get_config
+    from travelogue.config.mosaic import TemplateExperimentsConfig
+    from travelogue.config.runtime import config_override
+
     buckets, aspects, assets = build_mosaic_eligible_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
-    on = plan_mosaic_screens(buckets, aspects, assets)
+    base = get_config()
+    with config_override(
+        replace(
+            base,
+            mosaic=replace(
+                base.mosaic,
+                template_experiments=TemplateExperimentsConfig(enabled=False),
+            ),
+        )
+    ):
+        on = plan_mosaic_screens(buckets, aspects, assets)
     assert mcs_unified_exposure_rate(on) >= mcs_unified_exposure_rate(off)
 
 

@@ -136,8 +136,12 @@ def test_request_folder_reads_out_file_not_polluted_stdout(
     """Regression: native WARNING on stdout must not break pick-folder API."""
     import json
     import subprocess
+    import sys
 
     from travelogue.desktop import folder_picker_service as fps
+
+    # request_folder is Windows-only; CI Linux must exercise the out-file path.
+    monkeypatch.setattr(sys, "platform", "win32")
 
     album = tmp_path / "相册"
     album.mkdir()

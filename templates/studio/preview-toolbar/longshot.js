@@ -108,6 +108,7 @@ var _longshot2SmartCrop = false;
 var _sparseMomentsToastAt = 0;
 
 var _showToolbarToast = function (_message, _opts) {};
+/** @type {(opts?: any) => Promise<any>} */
 var _toolbarConfirm = function (_opts) {
   return Promise.resolve(false);
 };
@@ -132,7 +133,8 @@ var _toolbarBody = function (root) {
 };
 var _setLayoutPending = function (_on) {};
 var _setLayoutPendingMessage = function (_msg) {};
-var _applyLayoutRerender = function (_tripId, _root) {
+/** @type {(tripId: string, root: any, opts?: any) => Promise<any>} */
+var _applyLayoutRerender = function (_tripId, _root, _opts) {
   return Promise.resolve(false);
 };
 
