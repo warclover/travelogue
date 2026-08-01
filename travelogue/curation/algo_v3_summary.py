@@ -21,11 +21,23 @@ _FUNNEL_KEYS = (
 )
 
 
-def _vision_effective(cfg: AppConfig) -> str:
+def _vision_effective(cfg: AppConfig, trip: dict | None = None) -> str:
+    """Effective vision arm for algoV3 summary.
+
+    Values: ``true`` | ``off`` | ``cohort`` | ``auto_skipped``.
+    ``cohort`` = TriState false but tripId matched ``vision.cohort_trip_ids``.
+    """
+    from travelogue.config.vision import vision_cohort_allows
+
     raw = str(getattr(cfg.vision, "enabled", "false") or "false").strip().lower()
     if raw in ("true", "1", "on", "yes"):
         return "true"
     if raw in ("false", "0", "off", "no"):
+        tid = None
+        if isinstance(trip, dict):
+            tid = str(trip.get("id") or trip.get("tripId") or "").strip() or None
+        if vision_cohort_allows(tid, getattr(cfg.vision, "cohort_trip_ids", ())):
+            return "cohort"
         return "off"
     return "auto_skipped"  # auto without distinguishing ran/skipped in W0
 
@@ -135,7 +147,7 @@ def build_algo_v3_summary(
     )
 
     return {
-        "visionEffective": _vision_effective(app_cfg),
+        "visionEffective": _vision_effective(app_cfg, trip),
         "ssgMode": _ssg_mode(trip),
         "clusterNoiseRatio": _cluster_noise_ratio(trip),
         "cloneGateEffective": clone_on,
