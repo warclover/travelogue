@@ -16,8 +16,8 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 172,
-    "default_true": 109,
+    "bool_fields": 173,
+    "default_true": 110,
     "default_false": 63,
     "tristate_fields": 5
   },
@@ -141,6 +141,7 @@
     "mosaic.lse_tone_harmony": false,
     "mosaic.main_ar_guard": true,
     "mosaic.main_ar_prefer_16_9": true,
+    "mosaic.near_scene_clone_gate.conditional": true,
     "mosaic.near_scene_clone_gate.enabled": false,
     "mosaic.prefer_five_slot_single_portrait": true,
     "mosaic.selection_optimization.enabled": false,

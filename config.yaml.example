@@ -377,6 +377,11 @@ mosaic:
   self_heal:
     enabled: true
     allow_drop: false
+  # ALG-V3 B7 · near-scene clone hard gate
+  # enabled: force-on；conditional: 无 SSG / vision 降级时自动开（默认 true；关=回滚）
+  near_scene_clone_gate:
+    enabled: false
+    conditional: true
   # TPC · unified template contract (PRD-TEMPLATE-CONTRACT-V1)
   # 仓库默认保持 false（AC-TPC-01）。本机手测请见：
   #   docs/config-tpc-dogfood.example.yaml

@@ -126,7 +126,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 
 | ID | 断言 | 夹具要点 | 波次 |
 |----|------|----------|------|
-| **AC-10** | 无 vision/SSG：条件 clone vs off；切条类假切条窗率相对↓≥40% 或 funnel+盲评问1≥平 | 冻结 corpus；**不得**用「SSG 已绿」代替 | W1b |
+| **AC-10** | 无 vision/SSG：条件 clone vs off；切条类假切条窗率相对↓≥40% 或 funnel+盲评问1≥平 | 冻结 corpus；**不得**用「SSG 已绿」代替；nodeid=`test_alg3_w1b_clone_gate.py` | W1b |
 | **AC-11** | fixture 噪声比 ≤ 基线+0.03；改 HDBSCAN 消费参数须 cache fingerprint 变 | meta | W2 |
 | **AC-12** | Atom/soft-split **实验旗 on**：funnel↓≥25% 且 multi-slot share 门 + 盲评问1+2 | 旗默认关 | W2 实验 |
 
