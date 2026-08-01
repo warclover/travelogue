@@ -1,0 +1,17 @@
+{
+  "schema": "alg3-ac11-noise-baseline/v1",
+  "frozen": "2026-08-01",
+  "note": "ALG-V3 AC-11 · synthetic HDBSCAN fixture (seed=42, 3×12 + 4 outliers, dim=8). Gate: measured noise ≤ baseline + 0.03.",
+  "fixture": {
+    "seed": 42,
+    "centers": 3,
+    "per_center": 12,
+    "outliers": 4,
+    "dim": 8,
+    "min_samples": 5,
+    "algorithm": "hdbscan",
+    "cluster_selection_epsilon": 0.0
+  },
+  "baseline_noise_ratio": 0.075,
+  "tolerance": 0.03
+}

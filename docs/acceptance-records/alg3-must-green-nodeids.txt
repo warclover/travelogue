@@ -60,4 +60,7 @@ tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provid
 tests/unit/layout_engine/test_alg3_w1b_clone_gate.py
 tests/unit/layout_engine/test_near_scene_clone_penalty.py::test_candidates_hard_reject_requires_gate_enabled
 
+# === ALG-V3 W2-A1 · selection_epsilon honesty / AC-11 ===
+tests/unit/curation/test_alg3_w2_a1_ac11.py
+
 # === planned ===

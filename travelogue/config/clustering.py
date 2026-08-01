@@ -28,7 +28,11 @@ class GeoClusterConfig:
 @dataclass
 class SceneClusterConfig:
     algorithm: Literal["hdbscan", "dbscan"] = "hdbscan"
+    # DBSCAN eps only — HDBSCAN does **not** consume this (ALG-V3 A1 · no silent remap).
     cluster_eps: float = 0.07
+    # HDBSCAN ``cluster_selection_epsilon``; default 0.0 matches today's sklearn default
+    # (behavior-equivalent to pre-A1 when the key was absent).
+    cluster_selection_epsilon: float = 0.0
     cluster_min_samples: int = 10
     timeout_sec: int = 480
 
@@ -72,6 +76,12 @@ def scene_cluster_from_dict(raw: dict[str, Any]) -> SceneClusterConfig:
     return SceneClusterConfig(
         algorithm=algo,  # type: ignore[arg-type]
         cluster_eps=cfg_float(raw, "cluster_eps", "clusterEps", 0.07),
+        cluster_selection_epsilon=cfg_float(
+            raw,
+            "cluster_selection_epsilon",
+            "clusterSelectionEpsilon",
+            0.0,
+        ),
         cluster_min_samples=cfg_int(raw, "cluster_min_samples", "clusterMinSamples", 10),
         timeout_sec=cfg_int(raw, "timeout_sec", "timeoutSec", 480),
     )

@@ -346,6 +346,7 @@ class ClusteringLayer:
                 eps=scene_cfg.cluster_eps,
                 min_samples=scene_cfg.cluster_min_samples,
                 algorithm=scene_cfg.algorithm,
+                cluster_selection_epsilon=scene_cfg.cluster_selection_epsilon,
                 deterministic=cfg.clustering.deterministic,
             )
             if scene_result.algorithm_used != scene_cfg.algorithm:

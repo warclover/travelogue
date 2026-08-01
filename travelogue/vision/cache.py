@@ -76,13 +76,19 @@ def manifest_path_for_trip(trip_dir: Path) -> Path:
 
 
 def compute_cache_config_fingerprint(cfg: Any) -> str:
-    """P7-G3 · stable fingerprint for cache invalidation."""
+    """P7-G3 · stable fingerprint for cache invalidation.
+
+    ALG-V3 A1: only **consumed** scene-cluster knobs enter the payload.
+    Under ``algorithm=hdbscan``, ``cluster_eps`` is a dead knob (DBSCAN-only) and
+    must not invalidate the embedding cache when tweaked. Under ``dbscan``,
+    ``cluster_selection_epsilon`` is unused and likewise omitted.
+    """
     vis = cfg.vision
     clu = cfg.clustering
     scene = clu.scene
     from travelogue.vision.clip_encoder import HEURISTIC_MODEL_V2
 
-    payload = {
+    payload: dict[str, Any] = {
         "abi": clu.cache_abi_version,
         "model": vis.model,
         "pretrained": getattr(vis, "pretrained", "openai"),
@@ -90,10 +96,15 @@ def compute_cache_config_fingerprint(cfg: Any) -> str:
         "prefer_web": vis.prefer_web_derivative,
         "web_cosine_max": getattr(vis, "web_derivative_cosine_max", 0.02),
         "scene_algorithm": scene.algorithm,
-        "scene_eps": scene.cluster_eps,
         "scene_min_samples": scene.cluster_min_samples,
         "heuristic_model": HEURISTIC_MODEL_V2,
     }
+    if scene.algorithm == "hdbscan":
+        payload["scene_selection_epsilon"] = float(
+            getattr(scene, "cluster_selection_epsilon", 0.0)
+        )
+    else:
+        payload["scene_eps"] = scene.cluster_eps
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     return digest[:16]
 
