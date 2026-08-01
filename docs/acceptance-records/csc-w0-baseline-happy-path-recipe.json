@@ -16,9 +16,9 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 174,
+    "bool_fields": 175,
     "default_true": 110,
-    "default_false": 64,
+    "default_false": 65,
     "tristate_fields": 5
   },
   "appconfig_bools": {
@@ -170,6 +170,7 @@
     "shot_grouping.mosaic.atom.allow_tail_cross_atom": false,
     "shot_grouping.mosaic.atom.category_jump_is_hard": false,
     "shot_grouping.mosaic.atom.enabled": true,
+    "shot_grouping.mosaic.atom.experimental_relax": false,
     "shot_grouping.mosaic.same_group_anti_slice": true,
     "shot_grouping.mosaic.slice_cross_group_hard_reject": true,
     "shot_grouping.scene.adaptive_soft_split": false,

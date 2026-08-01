@@ -7,6 +7,7 @@
 | **alg3Wave** | W1b / W2 / W3 |
 | **cloneGateOn** | true / false（对照臂） |
 | **adaptiveSoftSplit** | true / false / n/a |
+| **experimentalRelax** | true / false / n/a（W2-A4） |
 | **visionEffective** | off / auto_ran / auto_skipped / true |
 | **关联 GUIDE** | [ssg-local-dogfood-GUIDE.md](./ssg-local-dogfood-GUIDE.md) · [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](../ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) §5 |
 | **Trip / 语料** | |

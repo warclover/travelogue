@@ -5,12 +5,48 @@ See docs/PLAN-CLUSTER-BOUNDARY-FIRST-MOSAIC-V1.md §3 P1 (已审定稿).
 
 from __future__ import annotations
 
+from dataclasses import is_dataclass, replace
 from typing import Any
 
 from travelogue.config.shot_grouping import AtomConfig
 from travelogue.layout_contract.burst import parse_taken_ts
 
 _INVALID_SCENE_CLUSTER = frozenset({None, "", -1, "-1"})
+
+
+def atom_gate_limits(policy: AtomConfig) -> tuple[float, float]:
+    """Effective ``(max_gap_seconds, max_window_span_seconds)`` for hard gates.
+
+    ALG-V3 W2-A4: scales only when ``experimental_relax`` is True.
+    ``mosaic_share_floor_observe`` is intentionally unused (BLK-08 / never auto-widen).
+    """
+    gap = float(policy.max_gap_seconds)
+    span = float(policy.max_window_span_seconds)
+    if getattr(policy, "experimental_relax", False) is True:
+        gap *= max(1.0, float(policy.experimental_relax_gap_scale))
+        span *= max(1.0, float(policy.experimental_relax_span_scale))
+    return gap, span
+
+
+def resolve_atom_gate_policy(policy: AtomConfig) -> AtomConfig:
+    """Return policy with experimental gap/span scales applied (idempotent copy).
+
+    Does not read ``mosaic_share_floor_observe``. Clears ``experimental_relax`` on
+    the copy so nested calls cannot double-scale.
+
+    Non-dataclass duck/mocks (unit tests) pass through unchanged.
+    """
+    if not is_dataclass(policy):
+        return policy
+    if policy.experimental_relax is not True:
+        return policy
+    gap, span = atom_gate_limits(policy)
+    return replace(
+        policy,
+        max_gap_seconds=gap,
+        max_window_span_seconds=span,
+        experimental_relax=False,
+    )
 
 
 def _scene_cluster_value(asset: dict[str, Any]) -> Any:
@@ -45,6 +81,7 @@ def adjacent_compatible(
         ``time_bridge`` (default) continues with gap + half-hard sc;
         ``reject`` keeps fail-closed singleton atoms
     """
+    policy = resolve_atom_gate_policy(policy)
     sg_a = prev.get("shotGroupId")
     sg_b = cur.get("shotGroupId")
     has_a = bool(sg_a)
@@ -111,6 +148,7 @@ def window_violates_atom(
 
     ``None`` means OK (or policy disabled / too few ids).
     """
+    policy = resolve_atom_gate_policy(policy)
     if not policy.enabled:
         return None
     if len(asset_ids) < 2:
