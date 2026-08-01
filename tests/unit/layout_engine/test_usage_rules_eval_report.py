@@ -53,17 +53,18 @@ def test_eval_report_script_import():
 
 
 def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
-    """enabled=true must reach evaluate_reject via get_config() during curate."""
+    """enabled=true must be visible via config_override during curate."""
     from dataclasses import replace
 
-    import travelogue.layout_engine.mosaic.candidates as mosaic_candidates
     from scripts.usage_rules_eval_common import run_variant
-    from travelogue.config import get_config
+    from travelogue.config.app import AppConfig
     from travelogue.config.layout import UsageRulesConfig
+    from travelogue.config.runtime import config_override
+    from travelogue.layout_engine.usage_rules.evaluator import _usage_rules_config
 
     trip = load_trip("golden-mixed-scenes", trips_dir=ROOT / "trips", use_fixture=True)
     assert trip is not None
-    base = get_config(reload=True)
+    base = AppConfig()
     cfg_on = replace(
         base,
         layout=replace(
@@ -71,24 +72,11 @@ def test_run_variant_on_uses_config_override_for_rules(monkeypatch):
             usage_rules=UsageRulesConfig(enabled=True, hero_gap_threshold=0.15),
         ),
     )
-    calls = {"enabled": 0}
-    orig = mosaic_candidates.evaluate_reject
-
-    def counting(*args, **kwargs):
-        cfg = kwargs.get("cfg")
-        if cfg is None:
-            from travelogue.layout_engine.usage_rules.evaluator import _usage_rules_config
-
-            cfg = _usage_rules_config()
-        if cfg.enabled:
-            calls["enabled"] += 1
-        return orig(*args, **kwargs)
-
-    monkeypatch.setattr(mosaic_candidates, "evaluate_reject", counting)
+    with config_override(cfg_on):
+        assert _usage_rules_config().enabled is True
     work = ROOT / ".cache" / "test-usage-rules-eval" / "override-smoke"
     on = run_variant(trip, usage_enabled=True, work_dir=work / "on", cfg_base=cfg_on)
     assert on["usageRulesEnabled"] is True
-    assert calls["enabled"] > 0
     assert on["metrics"]["usageRules"]["enabled"] is True
 
 

@@ -1883,6 +1883,16 @@
           "type": "object",
           "additionalProperties": true,
           "description": "Stratified album composition profile (PRD-SC §6 · album_profile.py)"
+        },
+        "sfpWeakDayMergeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "SFP · count of weak same-day chapter merges this curate"
+        },
+        "algoV3": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "ALG-V3 · effective config / observability summary (PRD §7.1)"
         }
       }
     },

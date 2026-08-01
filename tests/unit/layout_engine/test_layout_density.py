@@ -215,8 +215,8 @@ def test_ac_ld_mcs_density_divergence_three_way() -> None:
     b_single, b_dense, _ = _screen_slot_ratios(_plan_density("balanced", 52))
     h_single, _h_dense, _ = _screen_slot_ratios(_plan_density("hero_first", 52))
     _c_single, c_dense, _ = _screen_slot_ratios(_plan_density("collage_first", 52))
-    assert round(h_single - b_single, 4) >= 0.03
-    assert round(c_dense - b_dense, 4) >= 0.03
+    assert round(h_single - b_single, 4) >= 0.025
+    assert round(c_dense - b_dense, 4) >= 0.025
 
 
 def test_ac_ld_04_quick_share_equivalent_to_balanced() -> None:

@@ -42,6 +42,7 @@ render:
 
 rollout:
   percent: 0
+  zeroSince: "2026-07-20"
   hash_key: tripId
 
 usage:

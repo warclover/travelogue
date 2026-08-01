@@ -15,7 +15,9 @@ from travelogue.layout_engine.planner.screen_planner_stages import build_chapter
 
 
 def _patch_cfg(monkeypatch):
-    base = get_config()
+    from travelogue.config.app import AppConfig
+
+    base = AppConfig()
     mosaic = replace(
         base.mosaic,
         enabled=True,
@@ -31,7 +33,10 @@ def _patch_cfg(monkeypatch):
 
 
 def test_two_portrait_six_window_skips_hero_and_uses_five_slot(monkeypatch):
-    _patch_cfg(monkeypatch)
+    mosaic = _patch_cfg(monkeypatch)
+    from travelogue.config.app import AppConfig
+    from travelogue.config.runtime import config_override
+
     taken = "2024-06-01T12:00:00Z"
     assets = [
         {
@@ -60,15 +65,18 @@ def test_two_portrait_six_window_skips_hero_and_uses_five_slot(monkeypatch):
     ]
     aspects = {a["id"]: a["aspectKind"] for a in assets}
     assets_map = {a["id"]: a for a in assets}
-    ctx = build_chapter_plan_context(
-        [a["id"] for a in assets],
-        aspects,
-        assets=assets_map,
-        trip_photo_total=40,
-        include_chapter_hero=False,
-        layout_state=ScreenLayoutPlannerState.from_trip_total(40),
-    )
-    adv = try_mosaic_window(ctx, 0)
+    app = replace(AppConfig(), mosaic=mosaic)
+    with config_override(app):
+        ctx = build_chapter_plan_context(
+            [a["id"] for a in assets],
+            aspects,
+            assets=assets_map,
+            trip_photo_total=40,
+            include_chapter_hero=False,
+            layout_state=ScreenLayoutPlannerState.from_trip_total(40),
+            app_config=app,
+        )
+        adv = try_mosaic_window(ctx, 0)
     assert adv == 5
     assert ctx.screens[0]["patternId"] == PATTERN_MOSAIC_5_MAIN_PORTRAIT_3LAND
     assert ctx.screens[0]["patternId"] != PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5

@@ -212,13 +212,14 @@ def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None =
         return issues
     cols, rows = grid_templates_for(template)
     if template.kind == "composite" or (template.kind == "primitive" and len(template.slots) > 1):
+        allow_overlap = bool((template.constraints or {}).get("intentionalOverlaps"))
         covered: set[tuple[int, int]] = set()
         for slot in template.slots:
             cells = slot_cells(template.stage, slot.rect)
             if not cells:
                 issues.append(f"slot {slot.index} rect {slot.rect} covers no cells (V-P16-06)")
             overlap = covered & cells
-            if overlap:
+            if overlap and not allow_overlap:
                 issues.append(f"slot {slot.index} placement overlaps {sorted(overlap)} (V-P16-06)")
             covered |= cells
     css_text = journal_css_text or _read_journal_css()

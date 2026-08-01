@@ -107,6 +107,8 @@ def _ar_ladder_sign_off(template: TemplateDef, slot_index: int) -> bool:
 
 
 def _check_overlaps(template: TemplateDef, report: ValidationReport) -> None:
+    if (template.constraints or {}).get("intentionalOverlaps"):
+        return
     for i, a in enumerate(template.slots):
         cells_a = _slot_cells(a.rect)
         for b in template.slots[i + 1 :]:

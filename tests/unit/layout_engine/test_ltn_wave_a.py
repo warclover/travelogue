@@ -50,7 +50,7 @@ def test_c2_hero_first_attempts_mcs(monkeypatch) -> None:
     )
     called: list[int] = []
 
-    def fake_mcs(ctx, start, size, mosaic_cfg):
+    def fake_mcs(ctx, start, size, mosaic_cfg, **_kwargs):
         called.append(size)
         return False
 
@@ -164,12 +164,13 @@ def test_c3_pruned_flats_deprecated() -> None:
     engine = get_engine()
     for tid in (
         "screen-portrait-6",
-        "screen-landscape-6",
         "screen-portrait-9",
         "screen-landscape-9",
         "screen-portrait-grid-8",
     ):
         assert engine.get(tid).status == "deprecated", tid
+    # 2026-07-31 · landscape-6 revived as experimental (not lte_policy / not MCS-6)
+    assert engine.get("screen-landscape-6").status == "experimental"
 
 
 def test_c1_no_aux3_in_planner_sizes() -> None:

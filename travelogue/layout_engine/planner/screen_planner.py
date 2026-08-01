@@ -179,6 +179,8 @@ def _make_portrait_2_screen(
         aspects=aspects,
         assets_map=assets_map,
     )
+    if any_asset_has_person(list(asset_ids), assets_map):
+        screen["layoutHint"] = PERSON_LAYOUT_PAIR
     if pick.reason != "default_off":
         screen["portrait2Picker"] = {
             "reason": pick.reason,
@@ -992,13 +994,10 @@ def _emit_person_portrait_screens(
         else MAX_PORTRAIT_PAIR_STREAK
     )
     from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
-    from travelogue.layout_engine.planner.scene_atoms import (
-        max_prefix_in_atom,
-        pack_atom_page_sizes,
-    )
+    from travelogue.layout_engine.planner.scene_atoms import max_prefix_in_atom
 
     atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
-    # W2 · take full in-atom series first, then cut by page packs (3/2/1).
+    # W2 · take full in-atom series first, then triple-first page packs.
     if atom_policy.enabled:
         while buf:
             atom_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=len(buf))
@@ -1006,7 +1005,9 @@ def _emit_person_portrait_screens(
                 break
             chunk = buf[:atom_n]
             buf = buf[atom_n:]
-            for size in pack_atom_page_sizes(len(chunk), capacities=(3, 2, 1)):
+            for size in _tile_portrait_run(
+                len(chunk), seed_pair_streak=seed, max_pair_streak=pair_max
+            ):
                 page, chunk = chunk[:size], chunk[size:]
                 if size >= 3 and (
                     force
@@ -1281,6 +1282,8 @@ def _plan_portrait_triple_row(
             aspects=aspects,
             assets_map=assets_map,
         )
+        if any_asset_has_person(trio, assets_map):
+            screen["layoutHint"] = PERSON_LAYOUT_TRIPLE
         return [
             apply_editorial_portrait_row_to_screen(
                 screen, assets_map, trip=trip, cfg=cfg
@@ -1288,15 +1291,16 @@ def _plan_portrait_triple_row(
         ]
     if layout_state and layout_state.can_emit_pattern("screen-portrait-2"):
         pending.insert(0, trio[2])
-        return [
-            _make_screen(
-                "screen-portrait-2",
-                trio[:2],
-                screen_id="",
-                aspects=aspects,
-                assets_map=assets_map,
-            )
-        ]
+        screen = _make_screen(
+            "screen-portrait-2",
+            trio[:2],
+            screen_id="",
+            aspects=aspects,
+            assets_map=assets_map,
+        )
+        if any_asset_has_person(trio[:2], assets_map):
+            screen["layoutHint"] = PERSON_LAYOUT_PAIR
+        return [screen]
     return []
 
 
@@ -1435,13 +1439,13 @@ def _flush_portrait_pending(
     from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
     from travelogue.layout_engine.planner.scene_atoms import (
         max_prefix_in_atom,
-        pack_atom_page_sizes,
         sort_ids_by_taken_at,
         window_violates_atom,
     )
 
     atom_policy = resolve_shot_group_mosaic_policy(cfg).atom
     # W2 · keep one Scene Atom together (do not person/scenery-split across atom).
+    # Portrait pages still use triple-first tiling (3+1), not anti-orphan 2+2.
     if atom_policy.enabled and buf:
         while buf:
             atom_n = max_prefix_in_atom(buf, assets_map, atom_policy, max_n=len(buf))
@@ -1449,7 +1453,19 @@ def _flush_portrait_pending(
                 break
             chunk = sort_ids_by_taken_at(buf[:atom_n], assets_map)
             buf = buf[atom_n:]
-            for size in pack_atom_page_sizes(len(chunk), capacities=(3, 2, 1)):
+            seed = (
+                layout_state.current_portrait_pair_streak()
+                if layout_state is not None
+                else 0
+            )
+            pair_max = (
+                layout_state.rhythm.max_portrait_pair_streak
+                if layout_state is not None
+                else MAX_PORTRAIT_PAIR_STREAK
+            )
+            for size in _tile_portrait_run(
+                len(chunk), seed_pair_streak=seed, max_pair_streak=pair_max
+            ):
                 page, chunk = chunk[:size], chunk[size:]
                 if size >= 3 and (
                     force

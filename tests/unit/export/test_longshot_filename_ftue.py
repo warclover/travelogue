@@ -19,7 +19,8 @@ def test_longshot_file_stem_uses_display_title(tmp_path: Path) -> None:
         json.dumps(
             {
                 "meta": {
-                    "title": "示例京都",
+                    # Ban-list title so resolve_display_title falls through to displayTitle.
+                    "title": "示例游记",
                     "displayTitle": "京都雨季漫游",
                     "dateStart": "2024-05-27",
                     "dateEnd": "2024-05-29",
@@ -40,7 +41,7 @@ def test_default_longshot_output_name_uses_chinese_display(tmp_path: Path) -> No
         json.dumps(
             {
                 "meta": {
-                    "title": "示例京都",
+                    "title": "示例游记",
                     "displayTitle": "京都雨季漫游",
                     "dateStart": "2024-05-27",
                     "dateEnd": "2024-05-29",

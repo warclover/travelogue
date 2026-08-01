@@ -27,7 +27,8 @@ def test_list_active_respects_composite_quota() -> None:
     engine = LayoutTemplateEngine.load(rebuild_cache=True)
     active = engine.list_active(window_size=5, enforce_quotas=True)
     composites = [t for t in active if t.kind == "composite"]
-    assert len(composites) <= 6
+    # lte_policy quotas.5.max_active_composite = 8 (GA + experimental mosaic-5 SKUs)
+    assert len(composites) <= 8
 
 
 @pytest.mark.unit

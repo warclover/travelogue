@@ -9,12 +9,12 @@ import pytest
 from travelogue.config import AppConfig
 from travelogue.config._common import capability_allows
 from travelogue.config.misc import LlmConfig
-from travelogue.llm.user_settings import UserLlmSecrets
 from travelogue.llm.ready import (
     probe_llm_ready,
     resolve_llm_ready_summary,
     studio_llm_status,
 )
+from travelogue.llm.user_settings import UserLlmSecrets
 
 
 def test_capability_allows_truth_table() -> None:

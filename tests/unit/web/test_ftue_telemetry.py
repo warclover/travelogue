@@ -113,7 +113,8 @@ def test_pmx_copy_branch_telemetry_wired() -> None:
     analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
     assert "first_success_copy_branch" in fs
     assert "copy_branch" in fs
-    assert "l1_ready" in fs and "l0_degraded" in fs
+    # L1/L0 branch labels live on refine copy path (init-v3); FS path uses nas_hidden.
+    assert "l1_ready" in init and "l0_degraded" in init
     assert "refine_copy_branch" in init
     assert "first_success_copy_branch" in analytics
     assert "refine_copy_branch" in analytics

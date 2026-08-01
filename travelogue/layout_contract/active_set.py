@@ -183,7 +183,7 @@ def contract_extra_ids(*, root: Path | None = None) -> tuple[set[str], set[str]]
         if raw.get("status") == "deprecated":
             continue
         is_extra = any(tid.startswith(p) or tid == p for p in CONTRACT_EXTRA_PREFIXES) or (
-            "rail" in tid
+            tid.endswith("-rail")
         )
         if not is_extra or tid in policy:
             continue

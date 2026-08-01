@@ -323,8 +323,10 @@ def test_stub_caption_uses_title_not_exif_city() -> None:
         intent=intent,
         assets=assets,
     )
-    assert "小学毕业" in cap
+    # Editorial subject wins over EXIF city; Share-Face prefers empty over
+    # pure title-echo captions when place collapses to the magazine title.
     assert "大理" not in cap
+    assert cap == "" or "小学毕业" in cap
 
 
 def test_geo_segment_name_uses_editorial_subject_not_exif() -> None:

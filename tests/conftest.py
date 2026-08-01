@@ -209,17 +209,28 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
 def _enable_five_slot_for_mosaic_marked_tests(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Five-slot mosaics are off by default in app config; @pytest.mark.mosaic tests opt in."""
+    """Five-slot mosaics opt-in via @pytest.mark.mosaic.
+
+    Start from ``AppConfig()`` defaults so a local dogfood ``config.yaml``
+    (near_scene_clone_gate / template_experiments / slot_adaptation) cannot
+    poison MCS unit tests that call ``get_config()``.
+    """
     if request.node.get_closest_marker("mosaic") is None:
         yield
         return
     from travelogue import config as config_mod
+    from travelogue.config.app import AppConfig
+    from travelogue.config.runtime import config_override
 
-    base = config_mod.get_config()
+    base = AppConfig()
     sizes = tuple(sorted(set(base.mosaic.enabled_window_sizes) | {5}))
-    patched = replace(base, mosaic=replace(base.mosaic, enabled_window_sizes=sizes))
+    patched = replace(
+        base,
+        mosaic=replace(base.mosaic, enabled=True, enabled_window_sizes=sizes),
+    )
     monkeypatch.setattr(config_mod, "get_config", lambda: patched)
-    yield
+    with config_override(patched):
+        yield
 
 
 @pytest.fixture

@@ -397,14 +397,23 @@ def _prioritize_five_slot_single_portrait(
     *,
     cfg: MosaicConfig,
 ) -> list[int]:
-    """When a 6-photo tail is 1P+5L with portrait in the first 5, try size=5 first."""
-    if not cfg.prefer_five_slot_single_portrait or remaining != 6 or 5 not in sizes:
+    """Prefer size=5 when a 6-photo tail should not collapse into dense 6.
+
+    - Classic 1P+5L with portrait in the first 5 → five-slot mix first.
+    - Multi-portrait (≥2) with skip_dense_window_multi_portrait → also promote 5
+      so atom anti-orphan reorder does not land on size=4 before five-slot.
+    """
+    if remaining != 6 or 5 not in sizes:
         return sizes
     from travelogue.layout_engine.planner.screen_planner import _is_std_portrait_id
 
+    n_p_total = sum(1 for aid in segment if _is_std_portrait_id(aid, aspects))
+    if n_p_total >= 2 and cfg.skip_dense_window_multi_portrait:
+        return [5] + [s for s in sizes if s != 5]
+    if not cfg.prefer_five_slot_single_portrait:
+        return sizes
     prefix = segment[:5]
     n_p_prefix = sum(1 for aid in prefix if _is_std_portrait_id(aid, aspects))
-    n_p_total = sum(1 for aid in segment if _is_std_portrait_id(aid, aspects))
     if n_p_total != 1 or n_p_prefix != 1:
         return sizes
     return [5] + [s for s in sizes if s != 5]
@@ -625,7 +634,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     six_opportunity_on = (
         effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
     )
-    if six_opportunity_on and remaining >= 6 and 6 in sizes:
+    if six_opportunity_on and remaining >= 6 and (6 in sizes or int(seg_cap) < 6):
         from travelogue.layout_engine.mosaic.hero_six import six_hero_outcome_label
         from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 
@@ -644,11 +653,11 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         qualify_reason = str(q.reason or "")
         if structural_six and ctx.layout_state is not None:
             ctx.layout_state.arm_hero_six_opportunity(start)
-        if admit_six:
+        if admit_six and 6 in sizes:
             sizes = _prioritize_six_hero_opportunity(sizes)
             reorder_reason = "structurally_qualified_six"
             allow_six_hero = True
-        else:
+        elif not admit_six:
             if structural_six and ctx.layout_state is not None:
                 # Dense/large unavailable → release opportunity (SUP-05 path family).
                 ctx.layout_state.release_hero_six_opportunity()

@@ -180,7 +180,7 @@ def test_journal_css_v6_tokens_and_skins() -> None:
     for needle in (
         "--cover-font-title",
         "--cover-veil-fog-height",
-        "--cover-band-center: 72%",
+        "--cover-band-center: 78%",
         "--cover-folio-fade",
         "--cover-cameo-ring",
         "--cover-monument-dim",
