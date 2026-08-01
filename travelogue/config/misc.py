@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from travelogue.config_helpers import cfg_bool, cfg_int
+from travelogue.config._common import TriState
 
 
 @dataclass
@@ -57,6 +58,8 @@ class LlmConfig:
     api_key_env: str = "DEEPSEEK_API_KEY"
     base_url: str | None = None
     timeout_sec: int = 120
+    # ALG-V3 · Ready 层 TriState（可解析探测；不等于 MayCall / Import 实调）
+    capability: TriState = "auto"
     # Pipeline Throughput · Phase B placeholders (G2 前默认 concurrency=1)
     narrate_concurrency: int = 1
     narrate_concurrency_backoff: bool = True

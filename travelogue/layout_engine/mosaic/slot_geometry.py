@@ -216,3 +216,61 @@ def screen_slots_geometry_ok(
             stage_aspect=_stage_aspect_for_auto_flow(pattern_id),
         )
     return _lte_template_geometry_ok(pattern_id, screen, aspects)
+
+
+def pattern_geometry_precheck(
+    pattern_id: str,
+    ordered_ids: list[str],
+    aspects: dict[str, AspectKind],
+    *,
+    cfg=None,
+) -> bool | None:
+    """ALG-V3 B2a · static geometry gate before ``build_screen``.
+
+    Returns
+    -------
+    False
+        Definite fail under legacy explicit/auto-flow rules → skip ``build_screen``.
+    None
+        Cannot decide cheaply (MSA on, LTE-only pattern, empty order, size mismatch)
+        → caller must ``build_screen`` as today.
+    True
+        Static rules pass (still build; other hard gates may reject).
+    """
+    from travelogue.config.mosaic import effective_slot_adaptation_enabled
+
+    if effective_slot_adaptation_enabled(cfg):
+        return None
+    if not ordered_ids:
+        return None
+
+    pid = str(pattern_id or "")
+    # Synthetic screen without displayAspect/rect → cell AR comes from static specs only.
+    fake_screen = {
+        "patternId": pid,
+        "slots": [
+            {"slot": i, "assetId": aid} for i, aid in enumerate(ordered_ids) if aid
+        ],
+    }
+    specs = explicit_grid_specs().get(pid)
+    if specs is not None:
+        if len(fake_screen["slots"]) > len(specs):
+            return None
+        return True if _explicit_geometry_ok(pid, specs, fake_screen, aspects) else False
+
+    auto = auto_flow_grids().get(pid)
+    if auto is not None:
+        cols, rows, n = auto
+        if n and len(fake_screen["slots"]) != int(n):
+            return None
+        ok = _auto_flow_geometry_ok(
+            cols,
+            rows,
+            fake_screen,
+            aspects,
+            stage_aspect=_stage_aspect_for_auto_flow(pid),
+        )
+        return True if ok else False
+
+    # LTE-only / unknown: do not guess (displayAspect may differ after solidify).
+    return None

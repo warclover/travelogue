@@ -8,7 +8,12 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from travelogue.config._common import normalize_arc_mode, normalize_narrative_scope, yaml
+from travelogue.config._common import (
+    normalize_arc_mode,
+    normalize_narrative_scope,
+    normalize_tri_state,
+    yaml,
+)
 from travelogue.config.aesthetic import aesthetic_from_dict
 from travelogue.config.app import AppConfig
 from travelogue.config.clustering import GeocodeConfig, clustering_from_dict
@@ -682,6 +687,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             api_key_env=str(llm_raw.get("api_key_env") or llm_preset.get("api_key_env", "DEEPSEEK_API_KEY")),
             base_url=llm_base_url,
             timeout_sec=int(llm_raw.get("timeout_sec", 120)),
+            capability=normalize_tri_state(llm_raw.get("capability", "auto"), default="auto"),
             narrate_concurrency=cfg_int(
                 llm_raw, "narrate_concurrency", "narrateConcurrency", 1
             ),

@@ -145,6 +145,15 @@ def mosaic_config_from_pack(
         self_heal_enabled=bool(self_heal.get("enabled", base.self_heal_enabled)),
         allow_drop=bool(self_heal.get("allow_drop", base.allow_drop)),
         max_drop_ratio=float(self_heal.get("max_drop_ratio", base.max_drop_ratio)),
+        self_heal_max_rescore=int(
+            self_heal.get("max_rescore", self_heal.get("maxRescore", base.self_heal_max_rescore))
+        ),
+        self_heal_max_drop_attempts=int(
+            self_heal.get(
+                "max_drop_attempts",
+                self_heal.get("maxDropAttempts", base.self_heal_max_drop_attempts),
+            )
+        ),
         lse_saliency_scoring=caps.saliency_scoring,
         lse_tone_harmony=caps.tone_harmony,
         lse_beat_profile=str(caps.beat_profile or "flat"),

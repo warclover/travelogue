@@ -1069,6 +1069,9 @@ def _stage_build_chapters_compose(
     curation = trip.get("curation") or {}
 
     aspects = {a["id"]: aspect_kind_for_asset(a) for a in layout_assets}
+    from travelogue.layout_engine.mosaic.builders import reset_build_screen_calls
+
+    reset_build_screen_calls()
     # Keep segment metadata aligned when empty buckets are dropped.
     if len(bucket_segment_ids) == len(buckets) and len(bucket_segment_ids_all) == len(
         buckets
@@ -1851,6 +1854,9 @@ def _stage_finalize(
         export_layout=layout,
         layout_engine=engine,
     )
+    from travelogue.curation.algo_v3_summary import attach_algo_v3_summary
+
+    attach_algo_v3_summary(trip, cfg=app_cfg)
     if apply_layout:
         from travelogue.layout_engine.adapter import record_applied_layout_density
 

@@ -21,6 +21,15 @@ _REJECT_LABELS: dict[str, str] = {
     "hard_invalid": "硬性条件未通过",
     "pattern_disabled": "模板未启用",
     "contract:infeasible_mix": "横竖混排与模板要求不符",
+    "contract:mix_miss": "横竖混排未命中可用模板合同",
+    "atom_boundary": "跨场景原子边界，不宜拼在同一窗",
+    "shot_group_cross": "跨分镜硬边界，拼在一起会像切条",
+    "shot_group_anti_slice": "同分镜过密，该模板易呈切条感",
+    "near_scene_clone": "同场景过近/近似连拍，未做成切条拼图",
+    "main_ar_mismatch": "主图画幅与主槽不匹配",
+    "sidebar_min_short_side": "侧栏短边过窄，版式不成立",
+    "mixed_portrait_is_hero": "竖图更适合主图，当前模板已排除",
+    "mixed_routing:mixed_portrait_is_hero": "竖图更适合主图，当前模板已排除",
 }
 
 _SOURCE_LABELS: dict[str, str] = {

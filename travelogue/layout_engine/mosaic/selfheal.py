@@ -98,7 +98,8 @@ def try_self_heal_pick(
 
     tight_cfg = _tightened_cfg(cfg)
     best: tuple[ScreenCandidate, float, list[str], dict[str, float]] | None = None
-    for cand, _, _, _ in scored:
+    rescore_cap = max(0, int(getattr(cfg, "self_heal_max_rescore", 8) or 0))
+    for cand, _, _, _ in scored[:rescore_cap]:
         sr = score_candidate(
             cand.screen,
             aspects=aspects,
@@ -113,7 +114,8 @@ def try_self_heal_pick(
     if best is not None:
         return best[0], best[1], best[2], "tightened_rescore", [], best[3]
 
-    if cfg.allow_drop and len(asset_ids) > 2:
+    drop_attempts = max(0, int(getattr(cfg, "self_heal_max_drop_attempts", 1) or 0))
+    if cfg.allow_drop and len(asset_ids) > 2 and drop_attempts >= 1:
         penalties = [
             (_asset_drop_penalty(aid, aspects=aspects, assets_map=assets_map, cfg=cfg), aid)
             for aid in asset_ids

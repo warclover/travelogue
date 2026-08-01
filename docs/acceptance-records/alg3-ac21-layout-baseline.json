@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "status": "frozen",
+  "note": "AC-21 projection with B2a on. Fields: patternId + slotAssetIds (+ slotRoles when present). Empty patternId means no hard_valid winner for that window.",
+  "frozenAt": "2026-08-01",
+  "corpusId": "alg3-default-mcs-v1",
+  "projection": "patternId+slotAssetIds(+slotRoles)",
+  "stripWhitelistRef": "ACCEPTANCE §2.2",
+  "buildScreenCalls": 4,
+  "chapters": [
+    {
+      "id": "alg3-corpus",
+      "patternId": "open",
+      "screens": [
+        {
+          "windowKey": "mix-2p2l-a",
+          "patternId": null,
+          "slotAssetIds": []
+        },
+        {
+          "windowKey": "mix-2p2l-b",
+          "patternId": null,
+          "slotAssetIds": []
+        },
+        {
+          "windowKey": "mix-2p2l-c",
+          "patternId": null,
+          "slotAssetIds": []
+        },
+        {
+          "windowKey": "mix-2p2l-d",
+          "patternId": null,
+          "slotAssetIds": []
+        },
+        {
+          "windowKey": "land-4-a",
+          "patternId": "screen-landscape-4",
+          "slotAssetIds": [
+            "land-4-a-0",
+            "land-4-a-1",
+            "land-4-a-2",
+            "land-4-a-3"
+          ],
+          "slotRoles": [
+            "landscape",
+            "landscape",
+            "landscape",
+            "landscape"
+          ]
+        },
+        {
+          "windowKey": "land-4-b",
+          "patternId": "screen-landscape-4",
+          "slotAssetIds": [
+            "land-4-b-0",
+            "land-4-b-1",
+            "land-4-b-2",
+            "land-4-b-3"
+          ],
+          "slotRoles": [
+            "landscape",
+            "landscape",
+            "landscape",
+            "landscape"
+          ]
+        },
+        {
+          "windowKey": "port-4-a",
+          "patternId": "screen-portrait-4",
+          "slotAssetIds": [
+            "port-4-a-0",
+            "port-4-a-1",
+            "port-4-a-2",
+            "port-4-a-3"
+          ],
+          "slotRoles": [
+            "portrait",
+            "portrait",
+            "portrait",
+            "portrait"
+          ]
+        },
+        {
+          "windowKey": "port-4-b",
+          "patternId": "screen-portrait-4",
+          "slotAssetIds": [
+            "port-4-b-0",
+            "port-4-b-1",
+            "port-4-b-2",
+            "port-4-b-3"
+          ],
+          "slotRoles": [
+            "portrait",
+            "portrait",
+            "portrait",
+            "portrait"
+          ]
+        },
+        {
+          "windowKey": "mix-3p1l",
+          "patternId": null,
+          "slotAssetIds": []
+        },
+        {
+          "windowKey": "mix-1p3l",
+          "patternId": null,
+          "slotAssetIds": []
+        }
+      ]
+    }
+  ]
+}

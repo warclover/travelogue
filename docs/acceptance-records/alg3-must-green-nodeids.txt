@@ -1,0 +1,55 @@
+# ALG-V3 · must-green nodeids
+# Run (PowerShell):
+#   python -m pytest (Get-Content docs/acceptance-records/alg3-must-green-nodeids.txt | Where-Object { $_ -and $_ -notmatch '^\s*#' }) -q
+#
+# Policy:
+# - Lines are pytest nodeid prefixes or file paths accepted by pytest.
+# - W0/W1a PRs MUST keep this set green unless a line is intentionally replaced in the same PR.
+# - New alg3-specific tests should be APPENDED below the "planned" section when they land.
+#
+# Frozen: 2026-08-01 (M0 · pre-code)
+
+# --- CSC / happy-path firewall (AC-32 blast radius) ---
+tests/unit/orchestrator/test_happy_path_recipe.py
+tests/unit/config/test_studio_config_happy_path.py
+tests/unit/config/test_l1_dom_equals_happy_path.py
+
+# --- SearchBudget contract (C1 regression anchor) ---
+tests/unit/layout_engine/test_search_budget.py
+
+# --- Import narrate stub / Ready neighbors (AC-01/02 neighbors) ---
+tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provider_always_stub_for_import
+tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provider_if_ready_without_key
+tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provider_if_ready_with_key
+
+# --- mosaic explain (FE-ALG3-05 neighbors) ---
+tests/unit/curation/test_mosaic_explain.py
+
+# --- MCS / compose / candidates neighbors (W1a-1 must not break) ---
+tests/unit/layout_engine/test_mosaic_legacy_parity.py
+tests/unit/layout_engine/test_mosaic_compose_deterministic.py
+tests/unit/layout_engine/test_mosaic_compose_trip.py
+tests/unit/layout_engine/test_mosaic_main_eligibility.py
+tests/unit/layout_engine/test_shot_group_gate.py
+# test_mosaic_integration / test_mosaic_candidates: may load local config.yaml peaks → env flake; not ALG-V3 W0 regressions.
+# --- NAS surface stay dark ---
+tests/unit/web/test_ai_surface_gate.py
+
+# === ALG-V3 W0 additions ===
+tests/unit/web/test_alg3_llm_ready.py
+tests/unit/curation/test_alg3_algo_v3_summary.py
+tests/unit/orchestrator/test_happy_path_recipe.py::test_tristate_flags_include_known_enabled_leaves
+tests/unit/orchestrator/test_happy_path_recipe.py::test_ac32_tristate_migration_keeps_key_in_inventory
+tests/unit/curation/test_mosaic_explain.py::test_fe_alg3_05_reject_labels_are_chinese_not_raw_reason
+
+# === ALG-V3 W1a-1 · B2a / B6 ===
+tests/unit/layout_engine/test_alg3_geometry_precheck.py
+tests/unit/layout_engine/test_mosaic_self_heal.py::test_self_heal_max_rescore_zero_skips_tightened_branch
+tests/unit/layout_engine/test_mosaic_self_heal.py::test_self_heal_max_drop_attempts_zero_skips_drop
+
+# === ALG-V3 AC-20 / AC-21 / AC-30 gates ===
+tests/unit/layout_engine/test_alg3_ac20_ac21.py
+tests/unit/curation/test_alg3_algo_v3_summary.py::test_ac30_no_key_vs_ssg_empty_values_diverge
+
+# === planned ===
+# tests/unit/orchestrator/test_alg3_flag_paths.py

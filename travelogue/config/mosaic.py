@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from travelogue.config_helpers import cfg_bool, cfg_float
+from travelogue.config_helpers import cfg_bool, cfg_float, cfg_int
 
 
 @dataclass
@@ -197,6 +197,9 @@ class MosaicConfig:
     self_heal_enabled: bool = True
     allow_drop: bool = False
     max_drop_ratio: float = 0.5
+    # ALG-V3 B6 · cap expensive self-heal branches (tightened rescore / drop rebuild).
+    self_heal_max_rescore: int = 8
+    self_heal_max_drop_attempts: int = 1
     candidate_top_k: int = 4
     log_level: str = "window"
     density_budget: MosaicDensityBudgetConfig = field(default_factory=MosaicDensityBudgetConfig)
@@ -523,6 +526,18 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         self_heal_enabled=self_heal_enabled,
         allow_drop=allow_drop,
         max_drop_ratio=float(max_drop) if max_drop is not None else defaults.max_drop_ratio,
+        self_heal_max_rescore=cfg_int(
+            self_heal,
+            "max_rescore",
+            "maxRescore",
+            defaults.self_heal_max_rescore,
+        ),
+        self_heal_max_drop_attempts=cfg_int(
+            self_heal,
+            "max_drop_attempts",
+            "maxDropAttempts",
+            defaults.self_heal_max_drop_attempts,
+        ),
         candidate_top_k=int(raw.get("candidate_top_k", raw.get("candidateTopK", defaults.candidate_top_k))),
         log_level=str(raw.get("log_level", raw.get("logLevel", defaults.log_level))),
         hero_weighted_geometry_guard=cfg_bool(

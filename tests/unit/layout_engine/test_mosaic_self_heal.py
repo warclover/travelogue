@@ -265,3 +265,97 @@ def test_self_heal_drop_respects_usage_reject(monkeypatch):
     assert captured.get("window_ctx") is not None
     assert list(captured["window_ctx"].window_asset_ids) == ["b", "c", "d", "e"]
     assert "a" not in captured["window_ctx"].window_asset_ids
+
+
+def test_self_heal_max_rescore_zero_skips_tightened_branch(monkeypatch):
+    """ALG-V3 B6 · self_heal_max_rescore=0 disables tightened rescore."""
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
+
+    screen = {"patternId": "screen-portrait-3", "slots": []}
+    cand = ScreenCandidate(
+        pattern_id="screen-portrait-3",
+        ordered_asset_ids=["a", "b", "c"],
+        screen=screen,
+        hard_valid=True,
+    )
+    scored = [(cand, 0.2, [], {})]
+    cfg = replace(
+        get_config().mosaic,
+        self_heal_enabled=True,
+        self_heal_max_rescore=0,
+        allow_drop=False,
+        min_candidate_score=0.6,
+    )
+    calls = {"n": 0}
+
+    def _score(*_a, **_k):
+        calls["n"] += 1
+        return MosaicScoreResult(total=0.9, base=0.9, penalties={}, reason_codes=[])
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.selfheal.score_candidate",
+        _score,
+    )
+    healed = try_self_heal_pick(
+        scored,
+        asset_ids=["a", "b", "c"],
+        aspects={},
+        assets_map={"a": {"id": "a"}, "b": {"id": "b"}, "c": {"id": "c"}},
+        cfg=cfg,
+        layout_state=None,
+        trip_photo_total=10,
+        burst_seconds=12.0,
+        min_score=0.6,
+    )
+    assert calls["n"] == 0
+    assert healed is None
+
+
+def test_self_heal_max_drop_attempts_zero_skips_drop(monkeypatch):
+    """ALG-V3 B6 · self_heal_max_drop_attempts=0 disables drop_worst_asset."""
+    from travelogue.layout_engine.mosaic.candidates import ScreenCandidate
+    from travelogue.layout_engine.mosaic.selfheal import try_self_heal_pick
+
+    screen = {"patternId": "screen-portrait-3", "slots": []}
+    cand = ScreenCandidate(
+        pattern_id="screen-x",
+        ordered_asset_ids=["a", "b", "c"],
+        screen=screen,
+        hard_valid=True,
+    )
+    scored = [(cand, 0.1, [], {})]
+    cfg = replace(
+        get_config().mosaic,
+        self_heal_enabled=True,
+        self_heal_max_rescore=0,
+        self_heal_max_drop_attempts=0,
+        allow_drop=True,
+        min_candidate_score=0.9,
+    )
+    gen_calls = {"n": 0}
+
+    def _fake_gen(*_a, **_k):
+        gen_calls["n"] += 1
+        from travelogue.layout_engine.mosaic.candidates import WindowCandidateResult
+
+        return WindowCandidateResult(candidates=[], rejected=[])
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.candidates."
+        "generate_window_candidates_with_rejections",
+        _fake_gen,
+    )
+    healed = try_self_heal_pick(
+        scored,
+        asset_ids=["a", "b", "c"],
+        aspects={},
+        assets_map={"a": {"id": "a"}, "b": {"id": "b"}, "c": {"id": "c"}},
+        cfg=cfg,
+        layout_state=None,
+        trip_photo_total=10,
+        burst_seconds=12.0,
+        min_score=0.9,
+    )
+    assert gen_calls["n"] == 0
+    assert healed is None

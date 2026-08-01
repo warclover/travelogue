@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "status": "frozen",
+  "note": "W0-equivalent: candidates.pattern_geometry_precheck forced None. AC-20: B2a-on totalBuildScreenCalls must be < this baseline. Corpus = generate_window_candidates over _CORPUS_WINDOWS (not full-trip plan_mosaic_screens).",
+  "frozenAt": "2026-08-01",
+  "corpusId": "alg3-default-mcs-v1",
+  "configNote": "MosaicConfig enabled; window sizes (4,5,6,9); unified; min_candidate_score=0; template_contract off; scoring/LSE off",
+  "precheckEnabled": false,
+  "windows": [
+    {
+      "windowKey": "mix-2p2l-a",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "mix-2p2l-b",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "mix-2p2l-c",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "mix-2p2l-d",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "land-4-a",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "land-4-b",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "port-4-a",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "port-4-b",
+      "buildScreenCalls": 1
+    },
+    {
+      "windowKey": "mix-3p1l",
+      "buildScreenCalls": 0
+    },
+    {
+      "windowKey": "mix-1p3l",
+      "buildScreenCalls": 0
+    }
+  ],
+  "totalBuildScreenCalls": 8,
+  "b2aOnBuildScreenCalls": 4
+}

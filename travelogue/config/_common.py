@@ -45,3 +45,20 @@ def normalize_tri_state(raw: object, *, default: str = "auto") -> str:
         return "auto"
     _log.warning("invalid tri-state %r, using %s", raw, default)
     return default
+
+
+def capability_allows(flag: object, *, ready: bool) -> tuple[bool, str | None]:
+    """ALG-V3 §3.2.1 · Ready 层真值（不蕴含 MayCall / 实调）.
+
+    Returns ``(allowed, degrade_reason)``. ``degrade_reason`` is ``llm_no_key`` only
+    when the user explicitly set ``true`` but credentials are missing.
+    """
+    state = normalize_tri_state(flag, default="auto")
+    if state == "false":
+        return False, None
+    if state == "true":
+        if ready:
+            return True, None
+        return False, "llm_no_key"
+    # auto
+    return (True, None) if ready else (False, None)
