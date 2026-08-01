@@ -1,9 +1,15 @@
 # SSG dogfood / acceptance path · PRD-SMART-SHOT-GROUPING-V1 D-SSG-20 / SUP-10
 # Copy knobs into your local config.yaml for vision-on SSG trials.
 # Do NOT enable vision by default in GA.
+#
+# ALG-V3 OQ-02 · prefer cohort over global true when possible:
+#   vision:
+#     enabled: false
+#     cohortTripIds: ["demo-xxx", "*"]   # empty=nobody; *=all trips (dogfood only)
 
 vision:
   enabled: true
+  # cohortTripIds: ["*"]  # alternative to enabled:true for OQ-02 option C
 
 clustering:
   enabled: true

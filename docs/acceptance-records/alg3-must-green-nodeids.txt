@@ -72,4 +72,7 @@ tests/unit/curation/test_alg3_w2_a3_soft_split_adaptive.py
 # === ALG-V3 W2-A4 · Atom experimental_relax + AC-12 (default off) ===
 tests/unit/layout_engine/test_alg3_w2_a4_atom_experimental.py
 
-# === planned (OQ-02 / W3+) ===
+# === ALG-V3 OQ-02 · vision cohort (option C; no global auto) ===
+tests/unit/curation/test_alg3_oq02_vision_cohort.py
+
+# === planned (W3+) ===

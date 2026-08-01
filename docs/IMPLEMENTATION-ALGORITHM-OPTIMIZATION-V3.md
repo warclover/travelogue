@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A3 已合入** · **当前 PR：W2-A4**（Atom `experimental_relax` + AC-12；旗默认关） |
+| **状态** | **W0～W2-A4 已合入** · **当前 PR：OQ-02**（vision cohort opt-in；禁全局 auto） |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | master ← **`feat/alg-v3-w2-a4`** → 其后 OQ-02 / 人评填盲评记录 |
+| **建议分支** | master ← **`feat/alg-v3-oq02-vision-cohort`** → 其后人评盲评 / FE 余量 |
 
 ---
 
@@ -212,8 +212,9 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 | ~~A3~~ | ~~soft-split 自适应~~ | ✅ W2-A3（默认关） |
 | ~~A6~~ | ~~look 批量化 encode~~ | ✅ W2-A6 |
 | ~~A4~~ | ~~Atom **仅实验旗**；禁 observe floor 自动 widen~~ | ✅ W2-A4（AC-12 自动化 + CSC **175/110/65**；人评问1+2 另记） |
-| OQ-02 | vision cohort / `fine_craft`（先 C） | 产品书面口；禁全局 auto |
-| FE-ALG3-S04 | 「场景分析」hint 与 OQ-02 对齐 | 跟 vision 包 |
+| ~~OQ-02~~ | ~~vision cohort（选项 C）；禁全局 auto~~ | ✅ 本 PR（`cohort_trip_ids`；默认 false；FE-S04 hint） |
+| FE-ALG3-S04 | 「场景分析」hint / H0 已跟本包 | ✅ 本 PR |
+| — | fine_craft 入口持久化（评审 Should） | 另 PR（须产品钉入口） |
 
 ### W2-A4 · Atom experimental_relax + AC-12（当前）
 
@@ -225,6 +226,18 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 | QA-ALG3-32d | 新 bool → CSC 重签 **175/110/65**；Research 防火墙 | CSC JSON · `RESEARCH_DEFAULT_FALSE` | ☑ |
 
 **退出**：默认路径 atom 硬拒与合入前一致；must-green 绿。**不**抬默认 on（成片变更须另开 + 盲评问1+2）。
+
+### OQ-02 · vision cohort（选项 C · 当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-OQ02-01 | `vision.cohort_trip_ids`（空=无人；`*`=全开仅 dogfood） | `config/vision.py` | ☑ |
+| BE-ALG3-OQ02-02 | `enabled=false` 时仅 cohort 强制开；**不**改默认 TriState / 禁全局 auto | `curation/clustering.py` | ☑ |
+| BE-ALG3-OQ02-03 | `visionEffective=cohort` 摘要 | `algo_v3_summary.py` | ☑ |
+| FE-ALG3-S04 | 设置 hint + Help H0：默认关、勿全局自动 | `studio-home-v2.html` · `help-onboarding.js` | ☑ |
+| QA-ALG3-OQ02 | 默认关 / 命中开 / true·auto 不回归 / 摘要 | `test_alg3_oq02_vision_cohort.py` | ☑ |
+
+**退出**：默认路径 vision 仍关；CSC TriState `vision.enabled=false` 不变（无新 bool → 计数仍 **175/110/65**）。
 
 ---
 
@@ -275,8 +288,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A3~~ ✅ 已合 master。  
-2. ~~债务 AC-20 / S03 / 盲评脚手架~~ ✅ #37。  
-3. **当前**：`feat/alg-v3-w2-a4`（Atom `experimental_relax` + AC-12）。  
-4. **人评**：W1b 盲评仍挡 M1b 宣称；A4 抬默认 on 前须问1+2。  
-5. 其后：OQ-02 cohort（另 PR）。
+1. ~~W0～W2-A4~~ ✅ 已合 master（含 #38）。  
+2. **当前**：`feat/alg-v3-oq02-vision-cohort`（OQ-02 选项 C + FE-S04）。  
+3. **人评**：W1b / A4 盲评仍挡对应宣称。  
+4. 其后：fine_craft 入口（若产品钉）或 W3 holdback。

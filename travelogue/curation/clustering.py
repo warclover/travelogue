@@ -60,12 +60,26 @@ def resolve_clustering_mode(assets: list[dict], cfg: AppConfig) -> ClusteringMod
     return "off"
 
 
-def resolve_vision_mode(assets: list[dict], cfg: AppConfig) -> bool:
+def resolve_vision_mode(
+    assets: list[dict],
+    cfg: AppConfig,
+    *,
+    trip_id: str | None = None,
+) -> bool:
+    """Whether scene vision should run for this trip.
+
+    ALG-V3 OQ-02 · option C: when ``vision.enabled=false`` (default), only
+    ``vision.cohort_trip_ids`` may opt a trip in (force-on). Global ``auto``
+    remains an explicit TriState choice — never the product default.
+    """
+    from travelogue.config.vision import vision_cohort_allows
+
     enabled = cfg.vision.enabled
-    if enabled == "false":
-        return False
     if enabled == "true":
         return True
+    if enabled == "false":
+        return vision_cohort_allows(trip_id, getattr(cfg.vision, "cohort_trip_ids", ()))
+    # auto
     eligible = layout_eligible_assets({"assets": assets})
     if not eligible:
         return False
@@ -113,7 +127,8 @@ class ClusteringLayer:
 
         geo = self._run_geo(trip, body, cfg=cfg, log=log)
 
-        want_vision = resolve_vision_mode(body, cfg)
+        trip_id = str(trip.get("id") or trip.get("tripId") or "").strip() or None
+        want_vision = resolve_vision_mode(body, cfg, trip_id=trip_id)
         scene_count = 0
         vision_hint = ""
         if want_vision:
