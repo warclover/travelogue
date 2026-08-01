@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from travelogue.config import AppConfig, NarrativeConfig
+from travelogue.config.studio import StudioConfig
 from travelogue.services.copy_intent_infer import infer_copy_intent, resolve_copy_intent
 from travelogue.services.decor_line import (
     apply_decor_lines,
@@ -233,7 +234,8 @@ def test_llm_decor_candidates_via_mock() -> None:
         narrative=NarrativeConfig(
             decor_line_llm_enabled=True,
             decor_line_voice_first=False,
-        )
+        ),
+        studio=StudioConfig(ai_surface_enabled=True),
     )
     cands = generate_decor_line_candidates(chapter, trip, cfg=cfg, chat_fn=fake_chat)
     assert calls
@@ -273,7 +275,8 @@ def test_llm_decor_prefers_llm_over_tag_template() -> None:
         narrative=NarrativeConfig(
             decor_line_llm_enabled=True,
             decor_line_voice_first=False,
-        )
+        ),
+        studio=StudioConfig(ai_surface_enabled=True),
     )
     picked = pick_best_decor_line(
         generate_decor_line_candidates(chapter, trip, cfg=cfg, chat_fn=fake_chat),
