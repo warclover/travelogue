@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A6 已合入 master** · 当前编码 **`feat/alg-v3-w2-a3`（adaptive soft-split · 默认关）** |
+| **状态** | **W0～W2-A3 已合入** · 债务修复 PR：`feat/alg-v3-debt-ac20-docs-s03`（AC-20 真下降 / 文档勾选 / S03 / 盲评脚手架） |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | … → `feat/alg-v3-w2-a6` ✅ → **`feat/alg-v3-w2-a3`** → W2-A4 / OQ-02… |
+| **建议分支** | master ← **本债务 PR** → 其后 W2-A4 / OQ-02 / 人评填盲评记录 |
 
 ---
 
@@ -66,7 +66,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 |----|------|----------|------|
 | DOC-ALG3-01 | PRD v0.3.0 + 评审纪要 DEV 回写 | `docs/PRD-…` · `acceptance-records/…` | ☑ |
 | DOC-ALG3-02 | ACCEPTANCE（含 AC-21 白名单）+ 本清单 + must-green | 本目录 | ☑ |
-| DOC-ALG3-03 | 冻结 `alg3-build-screen-calls-baseline.json` | `docs/acceptance-records/` | ☑ 2026-08-01 · W0=8 |
+| DOC-ALG3-03 | 冻结 `alg3-build-screen-calls-baseline.json` | `docs/acceptance-records/` | ☑ 2026-08-01 · W0=9（+probe） |
 | DOC-ALG3-04 | example `decor_line_llm_enabled: false`（对齐代码） | `config.yaml.example` | ☑ |
 | DOC-ALG3-05 | FE-ALG3-05 人话终稿（可微调 ACCEPTANCE §8） | ACCEPTANCE §8 | ☑ |
 
@@ -117,7 +117,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 | BE-ALG3-B2A-02 | 在 `near_scene_clone` 之后、`build_screen` 之前调用；`False` → reject `geometry_invalid` + detail `static_precheck`；`None` → 建 screen | `candidates.py` | ☑ |
 | BE-ALG3-B2A-03 | **MSA 开启时一律 `None`**（`effective_slot_adaptation_enabled`） | 同上 | ☑ |
 | BE-ALG3-B6-01 | self-heal 限次 / 限 SKU（`self_heal_max_rescore` / `self_heal_max_drop_attempts`） | `selfheal.py` · `config/mosaic.py` | ☑ |
-| QA-ALG3-20 | AC-20：固定语料 `buildScreenCalls` 总数 < 基线 | `test_alg3_ac20_ac21.py` + baseline JSON | ☑ W0=8 → B2a=4 |
+| QA-ALG3-20 | AC-20：固定语料(+mismatch probe) `buildScreenCalls` **严格 <** 基线 | `test_alg3_ac20_ac21.py` + baseline JSON | ☑ W0=9 → B2a=8 |
 | QA-ALG3-21 | AC-21：§2.1 投影 vs `alg3-ac21-layout-baseline.json` | `test_alg3_ac20_ac21.py` | ☑ |
 | DOC-ALG3-06 | 冻结 AC-21 版式基线 JSON | `acceptance-records/` | ☑ 2026-08-01 |
 
@@ -158,7 +158,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 | BE-ALG3-B7-03 | `algoV3.cloneGateEffective` 反映条件生效 | `algo_v3_summary.py` | ☑ |
 | QA-ALG3-10 | AC-10：无 SSG 语料 B7 on vs off；↓≥40% 或 funnel 硬可见 | `test_alg3_w1b_clone_gate.py` | ☑ |
 | QA-ALG3-32b | `near_scene_clone_gate.conditional` → CSC 重签 | CSC JSON | ☑ 173/110/63 |
-| FE-ALG3-S03 | algoV3 写入不单独误亮 `algorithmStale` | `test_alg3_w1b_clone_gate.py` | ☑ |
+| FE-ALG3-S03 | algoV3 不误亮 algorithmStale / longshotStale；书架 CTA 不因 algoV3 强推「更新并导出」 | `test_alg3_w1b_clone_gate.py` · shelf-actions 合同 | ☑ |
 
 **退出**：AC-10 绿；must-green 全绿；盲评问1/3 另开 dogfood（本 PR 不挡码）。
 
@@ -264,7 +264,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~`feat/alg-v3-w0`~~ ✅ → ~~w1a1~~ ✅ → ~~w1a2~~ ✅ → ~~w1b~~ ✅（已合 master）。  
-2. **当前**：`feat/alg-v3-w2-a3`（soft-split 自适应；**默认关**，默认成片不变）。  
-3. 其后：W2-A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
-4. W1b 盲评问1/3 仍为独立 dogfood，不挡码。
+1. ~~W0～W2-A3~~ ✅ 已合 master。  
+2. **当前**：`feat/alg-v3-debt-ac20-docs-s03`（AC-20 真下降门 + 文档勾选 + S03 + 盲评脚手架）。  
+3. **人评**：填写 `alg3-w1b-blind-review-PENDING.md` 后方可宣称 M1b。  
+4. 其后：W2-A4 / OQ-02 cohort（各另 PR）。

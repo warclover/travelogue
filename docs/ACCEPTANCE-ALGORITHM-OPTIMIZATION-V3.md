@@ -6,7 +6,7 @@
 | **评审纪要** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **M0 文档就绪 · 编码未开**（W0 挡门先行） |
+| **状态** | **W0～W2-A3 已合入 master** · 债务修复中（AC-20 真下降门 / FE 勾选 / S03 / 盲评脚手架） |
 | **更新日期** | 2026-08-01 |
 
 > **验收原则（承 PRD §10.4 / X01～X10）**
@@ -85,7 +85,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 | 资产 | 路径 | 状态 |
 |------|------|------|
 | 版式投影基线（AC-21） | `docs/acceptance-records/alg3-ac21-layout-baseline.json` | ☑ 2026-08-01 冻结（B2a-on · `_alg3_corpus`） |
-| `buildScreenCalls` 基线（AC-20） | `docs/acceptance-records/alg3-build-screen-calls-baseline.json` | ☑ 2026-08-01 冻结（W0 等价 · total=8） |
+| `buildScreenCalls` 基线（AC-20） | `docs/acceptance-records/alg3-build-screen-calls-baseline.json` | ☑ 2026-08-01 冻结（W0=9 含 probe · B2a-on=8） |
 | CSC happy-path 快照 | `docs/acceptance-records/csc-w0-baseline-happy-path-recipe.json` | ✅ 已有；**AC-32 改动时同 PR 更新** |
 | mosaic golden（回归锚） | `tests/_golden/mosaic-*` | ✅ 已有；W1a-1 不得无故改 expected |
 
@@ -104,7 +104,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 }
 ```
 
-> **语料说明（2026-08-01）**：AC-20/21 使用 `tests/unit/layout_engine/_alg3_corpus.py` 的固定窗口集，经 `generate_window_candidates_with_rejections` 计数（全行程 `plan_mosaic_screens` 在原子回退下几乎不碰 `build_screen`）。W0 等价路径强制 `pattern_geometry_precheck→None`；B2a-on 须严格 `< totalBuildScreenCalls`。
+> **语料说明（2026-08-01 · 债务修复）**：AC-20/21 主窗仍用 `tests/unit/layout_engine/_alg3_corpus.py` 的 `_CORPUS_WINDOWS`。签名路由常把错配 SKU 滤掉，主窗 alone 可能 **0 下降**；AC-20 **必须**计入 `run_ac20_mismatch_probe`（强制 ordering + 定静几何失败）→ 冻结 **W0=9 / B2a-on=8**，CI 门为严格 `<`。
 ---
 
 ## 3. AC 矩阵（合同级 · nodeid 在编码期补全）
@@ -165,9 +165,9 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 | **FE-ALG3-01** | 禁止为 Ready/MayCall 解冻 AI 区 / Wait Tips「升级」 | 全程 | ☑ |
 | **FE-ALG3-02** | 禁止向普通用户暴露 prefer/capability/clone/algoV3 营销 | 全程 | ☑ |
 | **FE-ALG3-04** | prefer/capability 不进用户 PATCH 白名单；前端不加控件 | W1a-2 | ☑ |
-| **FE-ALG3-05** | `mosaic_explain` 人话覆盖 PRD 所列 reason；抽屉无原始英文 reason | **W0** | ☐ |
+| **FE-ALG3-05** | `mosaic_explain` 人话覆盖 PRD 所列 reason；抽屉无原始英文 reason | **W0** | ☑ |
 | **FE-ALG3-S02** | 智能排版 hint「搜索可能提前结束」 | W1a-2 后可选 | ☐ |
-| **FE-ALG3-S03** | algorithmStale / longshotStale / 更新并导出回归 | W1b/W2 | ☐ |
+| **FE-ALG3-S03** | algorithmStale / longshotStale /「更新并导出」回归 | W1b/W2 | ☑ |
 
 **明确非本列车**：解冻 `#v2-settings-zone-ai`、能力卡、AIR COPY（FE-ALG3-X*）。
 
@@ -176,7 +176,9 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 ## 5. 盲评（W1b+）
 
 四问：1 假切条 · 2 跳戏 · 3 混拼/过碎 · 4 节奏。  
-模板可复用 [ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md)，字段加 `alg3Wave` / `cloneGateOn`。  
+- **模板**：[alg3-blind-review-TEMPLATE.md](./acceptance-records/alg3-blind-review-TEMPLATE.md)（含 `alg3Wave` / `cloneGateOn`）  
+- **亦可**复用 [ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) 并手填同上字段  
+- **W1b 脚手架**：[alg3-w1b-blind-review-PENDING.md](./acceptance-records/alg3-w1b-blind-review-PENDING.md)（人评未完成 → **不可宣称 M1b**）  
 语料：混导密连拍、换装同地、横竖混拼、小册、无 vision 对照；含窄屏长图。
 
 | 门 | 标准 |
@@ -206,9 +208,9 @@ python -m pytest (Get-Content docs/acceptance-records/alg3-must-green-nodeids.tx
 | 2 | `iter_flag_paths` / `tristate_flags` 设计与 AC-32 夹具写进 IMPL | ☑ 见 IMPL D5 |
 | 3 | `probe_llm_ready` 只读合同与 AC-07 夹具写进 IMPL | ☑ 见 IMPL |
 | 4 | FE-ALG3-05 人话表终稿（中文文案）写入 IMPL 或本文件附录 | ☑ 本文件 §8 + mosaic_explain |
-| 5 | `alg3-build-screen-calls-baseline.json` 冻结 | ☑ 2026-08-01 · total=8 |
+| 5 | `alg3-build-screen-calls-baseline.json` 冻结 | ☑ 2026-08-01 · **W0 total=9（含 mismatch probe）· B2a-on=8** |
 | 6 | `alg3-ac21-layout-baseline.json` 冻结 | ☑ 2026-08-01 · B2a-on |
-| 7 | CSC 基线：若 W0 已改 recipe 结构，同 PR 更新三计数 | ☑ bool 170/108/62 + tristate_fields:5 |
+| 7 | CSC 基线：若 W0 已改 recipe 结构，同 PR 更新三计数 | ☑ 现网 **174/110/64**（含 W2-A3） |
 
 ---
 

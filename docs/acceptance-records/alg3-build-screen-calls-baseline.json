@@ -1,9 +1,10 @@
 {
   "schemaVersion": 1,
   "status": "frozen",
-  "note": "W0-equivalent: candidates.pattern_geometry_precheck forced None. AC-20: B2a-on totalBuildScreenCalls must be < this baseline. Corpus = generate_window_candidates over _CORPUS_WINDOWS (not full-trip plan_mosaic_screens).",
+  "note": "W0-equivalent: candidates.pattern_geometry_precheck forced None. AC-20: B2a-on totalBuildScreenCalls must be strictly < this baseline. Corpus = _CORPUS_WINDOWS + AC20_PROBE_ID mismatch probe (signature routing alone never hits definite precheck False).",
   "frozenAt": "2026-08-01",
   "corpusId": "alg3-default-mcs-v1",
+  "probeId": "alg3-ac20-mismatch-probe-v1",
   "configNote": "MosaicConfig enabled; window sizes (4,5,6,9); unified; min_candidate_score=0; template_contract off; scoring/LSE off",
   "precheckEnabled": false,
   "windows": [
@@ -48,6 +49,8 @@
       "buildScreenCalls": 0
     }
   ],
-  "totalBuildScreenCalls": 8,
-  "b2aOnBuildScreenCalls": 8
+  "probeBuildScreenCalls": 1,
+  "totalBuildScreenCalls": 9,
+  "b2aOnBuildScreenCalls": 8,
+  "b2aOnProbeBuildScreenCalls": 0
 }
