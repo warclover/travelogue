@@ -68,6 +68,7 @@ def _cluster_labels(
     algorithm: ClusterAlgorithm,
     eps: float,
     min_samples_eff: int,
+    cluster_selection_epsilon: float = 0.0,
 ) -> tuple[Any, Any | None, ClusterAlgorithm]:
     """Return (labels, probabilities_, effective_algorithm)."""
     if algorithm == "hdbscan":
@@ -79,6 +80,7 @@ def _cluster_labels(
                 min_samples=max(2, min_samples_eff // 2),
                 metric="cosine",
                 cluster_selection_method="eom",
+                cluster_selection_epsilon=float(cluster_selection_epsilon),
                 copy=True,
             )
             labels = clusterer.fit_predict(mat)
@@ -114,6 +116,7 @@ def compute_scene_clusters(
     eps: float = 0.07,
     min_samples: int = 10,
     algorithm: ClusterAlgorithm = "hdbscan",
+    cluster_selection_epsilon: float = 0.0,
     deterministic: bool = True,  # reserved; stable output via re-numbering below
 ) -> SceneClusterResult:
     """Cluster L2-normalized embeddings; default HDBSCAN (Phase 6).
@@ -121,6 +124,10 @@ def compute_scene_clusters(
     Raw cluster labels reflect discovery order and can shift between runs.
     We re-number clusters deterministically (member count desc, then first asset_id).
     The ``deterministic`` flag is accepted for API compatibility with clustering cfg.
+
+    ALG-V3 A1: ``cluster_selection_epsilon`` is consumed by HDBSCAN only;
+    ``eps`` is consumed by DBSCAN (including HDBSCAN fallback). Never remap one
+    onto the other.
     """
     _ = deterministic
     import numpy as np
@@ -138,6 +145,7 @@ def compute_scene_clusters(
         algorithm=algorithm,
         eps=eps,
         min_samples_eff=min_samples_eff,
+        cluster_selection_epsilon=cluster_selection_epsilon,
     )
 
     vectors_by_id = {aid: mat[i] for i, aid in enumerate(asset_ids)}

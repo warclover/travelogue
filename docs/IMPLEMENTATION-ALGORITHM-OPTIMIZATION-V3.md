@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W1b 编码在 `feat/alg-v3-w1b`**（含未合入的 W1a-2 工作区改动；合入前请先拆/提交 W1a-2） |
+| **状态** | **W0–W1b 已合入 master** · 当前编码 **`feat/alg-v3-w2-a1`（A1 + AC-11）** |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | **`feat/alg-v3-w0`（当前）** → `feat/alg-v3-w1a1` → `feat/alg-v3-w1a2`（可并行开发、**串行合入**） |
+| **建议分支** | `feat/alg-v3-w0` ✅ → `feat/alg-v3-w1a1` ✅ → `feat/alg-v3-w1a2` ✅ → `feat/alg-v3-w1b` ✅ → **`feat/alg-v3-w2-a1`** → W2-A3/A6… |
 
 ---
 
@@ -166,6 +166,33 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 ---
 
+## W2 · 上游准确度（分 PR）
+
+> IMPL 原则：W2 按包拆 PR；**首 PR 只做 A1 + AC-11**，默认成片字节不变（`cluster_selection_epsilon=0.0` ≡ 今日 sklearn 默认）。A3/A6/A4/OQ-02 后续另开。
+
+### W2-A1 · HDBSCAN 诚实接线 + AC-11（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-A1-01 | 新键 `clustering.scene.cluster_selection_epsilon`（默认 `0.0`）进 HDBSCAN；**禁止**把 `cluster_eps` silent remap | `config/clustering.py` · `scene_clusters.py` · `clustering.py` | ☑ |
+| BE-ALG3-A1-02 | cache fingerprint **只含实际消费参数**（hdbscan→selection_epsilon；dbscan→eps） | `vision/cache.py` | ☑ |
+| DOC-ALG3-A1-01 | example 注释对齐死旋钮 / 新键 | `config.yaml.example` | ☑ |
+| QA-ALG3-11 | AC-11：噪声基线门 + 消费参数改 fingerprint / 死旋钮不改 | `test_alg3_w2_a1_ac11.py` · `alg3-ac11-noise-baseline.json` | ☑ |
+
+**退出**：AC-11 绿；must-green 全绿；默认路径 HDBSCAN 行为与合入前等价（epsilon=0）。
+
+### W2 后续（提纲 · 未开工）
+
+| 包 | 要点 | 挡门 |
+|----|------|------|
+| A3 | soft-split 按簇内中位间隔自适应（夹紧） | 默认成片可变 → 须投影/盲评 |
+| A6 | look 批量化 encode + 超时可观测 | Perf P95 共背 |
+| A4 | Atom/soft-split **仅实验旗**；禁 observe floor 自动 widen | AC-12 + X04；旗默认关 |
+| OQ-02 | vision cohort / `fine_craft`（先 C） | 产品书面口；禁全局 auto |
+| FE-ALG3-S04 | 「场景分析」hint 与 OQ-02 对齐 | 跟 vision 包 |
+
+---
+
 ## W1b+（提纲 · 已拆上方）
 
 | 包 | 要点 |
@@ -175,7 +202,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 | FE-ALG3-S03 | ✅ |
 | 禁止 | 用「SSG 已绿」代替 AC-10 |
 
-W2/W3/W4 任务按 PRD §4 拆第二份 IMPL 增补，不在本文件扩写。
+W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ---
 
@@ -194,6 +221,8 @@ W2/W3/W4 任务按 PRD §4 拆第二份 IMPL 增补，不在本文件扩写。
 | explain | `curation/mosaic_explain.py` |
 | stale | `curation/algorithm_profile.py` |
 | CSC 基线 | `docs/acceptance-records/csc-w0-baseline-happy-path-recipe.json` |
+| 场景簇 / A1 | `curation/scene_clusters.py` · `config/clustering.py` · `vision/cache.py` |
+| AC-11 噪声基线 | `docs/acceptance-records/alg3-ac11-noise-baseline.json` |
 
 ---
 

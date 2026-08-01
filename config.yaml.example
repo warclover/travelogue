@@ -594,7 +594,8 @@ clustering:
     maxEventDays: 4
   scene:
     algorithm: hdbscan              # hdbscan | dbscan (Phase 6)
-    clusterEps: 0.07              # used by dbscan fallback
+    clusterEps: 0.07              # DBSCAN only (incl. HDBSCAN fallback); NOT remapped to HDBSCAN
+    clusterSelectionEpsilon: 0.0  # HDBSCAN cluster_selection_epsilon (ALG-V3 A1); 0 = sklearn default
     clusterMinSamples: 10
     timeoutSec: 480
   enableSceneSubSegments: true     # Geo×Scene 子分段 (P6-F1)
