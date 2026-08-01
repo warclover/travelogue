@@ -154,11 +154,11 @@ def is_ordinal_face_title(title: str) -> bool:
 
 def strip_ordinal_face_title(title: str) -> str:
     """Sequence Pass · drop reader-facing ·二/·三/·N suffixes."""
-    t = (title or "").strip()
-    if not t:
-        return t
-    cleaned = _ORDINAL_FACE_RE.sub("", t).strip().rstrip("·• ")
-    return cleaned or t
+    from travelogue.domain.share_face_purity import (
+        strip_ordinal_face_title as _strip,
+    )
+
+    return _strip(title)
 
 
 def _sequence_pass_titles(titles: list[str]) -> list[str]:

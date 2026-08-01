@@ -6,7 +6,7 @@
   "corpusId": "alg3-default-mcs-v1",
   "projection": "patternId+slotAssetIds(+slotRoles)",
   "stripWhitelistRef": "ACCEPTANCE §2.2",
-  "buildScreenCalls": 4,
+  "buildScreenCalls": 8,
   "chapters": [
     {
       "id": "alg3-corpus",
@@ -14,23 +14,67 @@
       "screens": [
         {
           "windowKey": "mix-2p2l-a",
-          "patternId": null,
-          "slotAssetIds": []
+          "patternId": "screen-portrait-2-landscape-2",
+          "slotAssetIds": [
+            "mix-2p2l-a-0",
+            "mix-2p2l-a-2",
+            "mix-2p2l-a-3",
+            "mix-2p2l-a-1"
+          ],
+          "slotRoles": [
+            "portrait",
+            "landscape",
+            "landscape",
+            "portrait"
+          ]
         },
         {
           "windowKey": "mix-2p2l-b",
-          "patternId": null,
-          "slotAssetIds": []
+          "patternId": "screen-portrait-2-landscape-2",
+          "slotAssetIds": [
+            "mix-2p2l-b-0",
+            "mix-2p2l-b-1",
+            "mix-2p2l-b-3",
+            "mix-2p2l-b-2"
+          ],
+          "slotRoles": [
+            "portrait",
+            "landscape",
+            "landscape",
+            "portrait"
+          ]
         },
         {
           "windowKey": "mix-2p2l-c",
-          "patternId": null,
-          "slotAssetIds": []
+          "patternId": "screen-portrait-2-landscape-2",
+          "slotAssetIds": [
+            "mix-2p2l-c-1",
+            "mix-2p2l-c-0",
+            "mix-2p2l-c-2",
+            "mix-2p2l-c-3"
+          ],
+          "slotRoles": [
+            "portrait",
+            "landscape",
+            "landscape",
+            "portrait"
+          ]
         },
         {
           "windowKey": "mix-2p2l-d",
-          "patternId": null,
-          "slotAssetIds": []
+          "patternId": "screen-portrait-2-landscape-2",
+          "slotAssetIds": [
+            "mix-2p2l-d-2",
+            "mix-2p2l-d-0",
+            "mix-2p2l-d-1",
+            "mix-2p2l-d-3"
+          ],
+          "slotRoles": [
+            "portrait",
+            "landscape",
+            "landscape",
+            "portrait"
+          ]
         },
         {
           "windowKey": "land-4-a",

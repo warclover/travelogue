@@ -254,14 +254,22 @@ def pattern_geometry_precheck(
     }
     specs = explicit_grid_specs().get(pid)
     if specs is not None:
-        if len(fake_screen["slots"]) > len(specs):
-            return None
-        return True if _explicit_geometry_ok(pid, specs, fake_screen, aspects) else False
+        # Explicit multi-role grids depend on slot assignment; without built
+        # displayAspect / hungarian refine, a False here is not definite.
+        return None
 
     auto = auto_flow_grids().get(pid)
     if auto is not None:
         cols, rows, n = auto
         if n and len(fake_screen["slots"]) != int(n):
+            return None
+        # Uniform auto-flow cells: mixed orientation needs assign/order — not definite.
+        orients = {
+            aspects.get(aid)
+            for aid in ordered_ids
+            if aid and aspects.get(aid) is not None
+        }
+        if len(orients) > 1:
             return None
         ok = _auto_flow_geometry_ok(
             cols,

@@ -105,7 +105,7 @@ def build_algo_v3_summary(
     app_cfg = cfg or get_config()
     curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
 
-    from travelogue.web.studio_narrate import resolve_llm_ready_summary
+    from travelogue.llm.ready import resolve_llm_ready_summary
 
     llm = resolve_llm_ready_summary(cfg=app_cfg)
     degrade = llm.pop("degradeReason", None)

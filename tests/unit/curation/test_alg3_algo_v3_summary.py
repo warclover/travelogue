@@ -25,7 +25,7 @@ def test_build_screen_calls_counter_increments() -> None:
 
 def test_algo_v3_summary_schema_keys(monkeypatch) -> None:
     monkeypatch.setattr(
-        "travelogue.web.studio_narrate.probe_llm_ready",
+        "travelogue.llm.ready.probe_llm_ready",
         lambda *, cfg=None: False,
     )
     trip = {
@@ -74,7 +74,7 @@ def test_algo_v3_summary_schema_keys(monkeypatch) -> None:
 
 def test_attach_algo_v3_writes_curation(monkeypatch) -> None:
     monkeypatch.setattr(
-        "travelogue.web.studio_narrate.probe_llm_ready",
+        "travelogue.llm.ready.probe_llm_ready",
         lambda *, cfg=None: False,
     )
     trip: dict = {"assets": [], "curation": {}}
@@ -86,7 +86,7 @@ def test_attach_algo_v3_writes_curation(monkeypatch) -> None:
 def test_ac30_no_key_vs_ssg_empty_values_diverge(monkeypatch) -> None:
     """AC-30: 无 Key / SSG empty 两场景键齐全且值分化（禁「键存在即过」X07）。"""
     monkeypatch.setattr(
-        "travelogue.web.studio_narrate.probe_llm_ready",
+        "travelogue.llm.ready.probe_llm_ready",
         lambda *, cfg=None: False,
     )
 

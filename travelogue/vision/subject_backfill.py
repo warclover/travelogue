@@ -31,10 +31,11 @@ def resolve_trip_dir_for_backfill(trip: dict) -> Path | None:
     if not tid:
         return None
     try:
-        from travelogue.runtime import app_context_for_trips_dir
+        from travelogue.config import get_config
 
-        svc = app_context_for_trips_dir(None).trip_service()
-        return svc.resolve_trip_json(str(tid)).parent
+        root = Path(get_config().trips_dir).resolve()
+        candidate = root / str(tid)
+        return candidate if candidate.is_dir() else None
     except Exception:
         return None
 

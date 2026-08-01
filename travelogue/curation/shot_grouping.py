@@ -358,7 +358,7 @@ def run_shot_grouping_layer(
             "lookCacheHits": 0,
         }
         look_n = 0
-        want_look = resolve_look_enabled(ssg.look)
+        want_look = resolve_look_enabled(ssg.look, clip_available=vision_ok)
         if want_look:
             vectors: Mapping[str, np.ndarray] = look_vectors or {}
             if look_vectors is None and trip_dir is not None:

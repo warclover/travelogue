@@ -291,13 +291,10 @@ def resolve_shot_grouping_enabled(
         return False
     if cfg.enabled == "true":
         return True
+    # Layer rule: config must not import vision. Callers should pass
+    # vision_available; unset → auto stays off (fail-closed).
     if vision_available is None:
-        try:
-            from travelogue.vision.clip_encoder import clip_torch_available
-
-            vision_available = bool(clip_torch_available())
-        except Exception:
-            vision_available = False
+        vision_available = False
     return bool(has_scene_clusters and vision_available)
 
 
@@ -311,11 +308,7 @@ def resolve_look_enabled(
         return False
     if cfg.enabled == "true":
         return True
+    # Layer rule: config must not import vision. Callers pass clip_available.
     if clip_available is None:
-        try:
-            from travelogue.vision.clip_encoder import clip_torch_available
-
-            clip_available = bool(clip_torch_available())
-        except Exception:
-            clip_available = False
+        clip_available = False
     return bool(clip_available)

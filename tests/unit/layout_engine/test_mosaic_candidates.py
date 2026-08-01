@@ -7,6 +7,7 @@ from dataclasses import replace
 from tests._golden.helpers import build_mixed_aspects_trip
 from travelogue.config import MosaicConfig, get_config
 from travelogue.config.layout import UsageRulesConfig
+from travelogue.config.shot_grouping import AtomConfig, ShotGroupMosaicPolicy
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.usage_context import build_window_context
 from travelogue.layout_engine.mosaic.candidates import generate_window_candidates
@@ -14,6 +15,9 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_LANDSCAPE_9,
     PATTERN_PORTRAIT_2_LANDSCAPE_2,
 )
+
+# Unit fixtures often span hours without shotGroupId; atom is site-default on.
+_SSG_NO_ATOM = ShotGroupMosaicPolicy(atom=AtomConfig(enabled=False))
 
 
 def _five_assets():
@@ -42,6 +46,7 @@ def test_generate_window_candidates_multiple_patterns(lte_pattern_enabled):
         assets_map,
         cfg=cfg,
         burst_seconds=3600.0,
+        ssg_policy=_SSG_NO_ATOM,
     )
     assert len(cands) >= 1
     pids = {c.pattern_id for c in cands}
@@ -60,6 +65,7 @@ def test_time_gap_still_yields_candidates_lower_score(lte_pattern_enabled):
         assets_map,
         cfg=cfg,
         burst_seconds=3.0,
+        ssg_policy=_SSG_NO_ATOM,
     )
     assert cands
 
@@ -80,6 +86,7 @@ def test_generate_mixed_four_window_includes_p2_l2():
         assets_map,
         cfg=cfg,
         burst_seconds=3600.0,
+        ssg_policy=_SSG_NO_ATOM,
     )
     pids = {c.pattern_id for c in cands}
     assert PATTERN_PORTRAIT_2_LANDSCAPE_2 in pids
@@ -100,6 +107,7 @@ def test_window_has_candidates_requires_geometry_valid():
         cfg=cfg,
         burst_seconds=3600.0,
         median_sharp=None,
+        ssg_policy=_SSG_NO_ATOM,
     )
     assert window_has_candidates(
         buckets[0],
@@ -109,6 +117,7 @@ def test_window_has_candidates_requires_geometry_valid():
         cfg=cfg,
         burst_seconds=3600.0,
         median_sharp=None,
+        ssg_policy=_SSG_NO_ATOM,
     )
 
 

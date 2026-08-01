@@ -15,15 +15,15 @@ from travelogue.layout_engine.mosaic.slot_geometry import (
 )
 
 
-def test_precheck_rejects_portrait_in_wide_mixed_grid():
+def test_precheck_defers_mixed_orientation_auto_flow():
+    """Mixed P/L windows need assignment — not a definite static fail."""
     aspects = {"p0": "portrait", "p1": "portrait", "l0": "landscape", "l1": "landscape"}
-    # same ordering as screen_slots_geometry_ok failing case
     ordered = ["p0", "p1", "l0", "l1"]
     assert (
         pattern_geometry_precheck(
             "screen-portrait-2-landscape-2", ordered, aspects, cfg=MosaicConfig()
         )
-        is False
+        is None
     )
 
 

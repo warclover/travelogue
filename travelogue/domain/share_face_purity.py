@@ -2,8 +2,40 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any
+
+_ORDINAL_FACE_RE = re.compile(r"·\s*(?:[二三四五六七八九十]|\d+)\s*$")
+
+
+def strip_ordinal_face_title(title: str) -> str:
+    """Sequence Pass · drop reader-facing ·二/·三/·N suffixes (layer-0)."""
+    t = (title or "").strip()
+    if not t:
+        return t
+    cleaned = _ORDINAL_FACE_RE.sub("", t).strip().rstrip("·• ")
+    return cleaned or t
+
+
+def _chapter_asset_ids_local(chapter: dict[str, Any]) -> list[str]:
+    """Layer-0 chapter asset id collect (avoid curation import)."""
+    try:
+        from travelogue.layout_contract.chapter_items import collect_screen_asset_ids
+
+        if chapter.get("screens"):
+            return list(collect_screen_asset_ids(chapter))
+    except Exception:
+        pass
+    ids: list[str] = []
+    for item in chapter.get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "media-card" and item.get("assetId"):
+            ids.append(str(item["assetId"]))
+        elif item.get("type") in ("media-row", "media-scroll"):
+            ids.extend(str(a) for a in (item.get("assetIds") or []) if a)
+    return ids
 
 
 def emit_sfp_event(event: str, meta: dict[str, Any] | None = None) -> None:
@@ -18,7 +50,6 @@ def emit_sfp_event(event: str, meta: dict[str, Any] | None = None) -> None:
 
 def migrate_ordinal_chapter_titles(trip: dict[str, Any] | None) -> list[str]:
     """D-SFP-12 · strip reader-facing ·二/·三 from non-user chapter titles (idempotent)."""
-    from travelogue.curation.chapter_titles import strip_ordinal_face_title
     from travelogue.domain.copy_origin import is_user_protected
 
     trip = trip if isinstance(trip, dict) else None
@@ -76,7 +107,11 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
                 },
             )
 
-    from travelogue.curation.chapter_titles import migrate_cross_year_chapter_titles
+    import importlib
+
+    migrate_cross_year_chapter_titles = importlib.import_module(
+        "travelogue.curation.chapter_titles"
+    ).migrate_cross_year_chapter_titles
 
     chapter_ids = migrate_ordinal_chapter_titles(trip)
     year_ids = migrate_cross_year_chapter_titles(trip)
@@ -90,10 +125,8 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
 
 def chapter_temporal_key(chapter: dict[str, Any], assets_by_id: dict[str, dict]) -> tuple[int, str]:
     """Return ``(timestamp_ms or max, chapter_id)`` for stable ascending sort."""
-    from travelogue.curation.chapter_titles import _chapter_asset_ids
-
     best: int | None = None
-    for aid in _chapter_asset_ids(chapter):
+    for aid in _chapter_asset_ids_local(chapter):
         asset = assets_by_id.get(str(aid)) or {}
         raw = str(asset.get("takenAt") or "").strip()
         if not raw:

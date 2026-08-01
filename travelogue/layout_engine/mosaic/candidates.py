@@ -316,10 +316,11 @@ def generate_window_candidates_with_rejections(
                 continue
         # ALG-V3 B2a · static geometry precheck (skip build_screen when definite fail).
         # MSA on → None (displayAspect may diverge after adaptation).
+        # Hungarian may reorder into a valid fit — do not hard-reject before refine.
         pre = pattern_geometry_precheck(
             pat.pattern_id, list(ordered), aspects, cfg=cfg
         )
-        if pre is False:
+        if pre is False and not bool(getattr(cfg, "lse_hungarian_assignment", False)):
             _reject(
                 rejected,
                 pat.pattern_id,

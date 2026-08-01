@@ -15,9 +15,13 @@ from typing import Any, get_args, get_origin
 
 from travelogue.config import AppConfig
 from travelogue.config._common import TriState
+from travelogue.constants import (
+    ADVANCED_SETTINGS_KEYS,
+    L0_OPS_ROOTS,
+    L1_RESULT_KEYS,
+    RECIPE_ID_STUDIO_DEFAULT,
+)
 from travelogue.orchestrator.studio_profile import StudioProfile
-
-RECIPE_ID_STUDIO_DEFAULT = "studio_default"
 
 _TRISTATE_VALUES = frozenset({"true", "false", "auto"})
 
@@ -44,28 +48,6 @@ RESEARCH_DEFAULT_FALSE: frozenset[str] = frozenset(
         "cull.allow_cpu_ml",
         "geocode.enabled",
     }
-)
-
-# Config top-level ops roots (L0) · not counted in L1≤10 budget (CSC D-CSC-04).
-L0_OPS_ROOTS: tuple[str, ...] = (
-    "trips_dir",
-    "llm",
-    "ffmpeg",
-    "geocode",
-)
-
-# W1 target: user-visible result knobs (≤10). Settings UI should prefer these.
-# Paths are AppConfig-ish; TriState UI maps onto *.enabled where noted.
-L1_RESULT_KEYS: tuple[str, ...] = (
-    "clustering.enabled",
-    "vision.enabled",
-    "ingest.copy_source_files",
-)
-
-# Visible in settings but must stay Advanced / Danger (not L1).
-ADVANCED_SETTINGS_KEYS: tuple[str, ...] = (
-    "layout.scoring.enabled",
-    "studio.g1_confirm_structure",
 )
 
 

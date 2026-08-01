@@ -10,7 +10,7 @@ from travelogue.config import AppConfig
 from travelogue.config._common import capability_allows
 from travelogue.config.misc import LlmConfig
 from travelogue.llm.user_settings import UserLlmSecrets
-from travelogue.web.studio_narrate import (
+from travelogue.llm.ready import (
     probe_llm_ready,
     resolve_llm_ready_summary,
     studio_llm_status,
@@ -66,7 +66,7 @@ def test_resolve_llm_ready_summary_auto_no_key_no_degrade(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "travelogue.web.studio_narrate.probe_llm_ready",
+        "travelogue.llm.ready.probe_llm_ready",
         lambda *, cfg=None: False,
     )
     cfg = AppConfig(llm=LlmConfig(provider="stub", capability="auto"))
@@ -82,7 +82,7 @@ def test_resolve_llm_ready_summary_true_no_key_writes_llm_no_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "travelogue.web.studio_narrate.probe_llm_ready",
+        "travelogue.llm.ready.probe_llm_ready",
         lambda *, cfg=None: False,
     )
     cfg = AppConfig(llm=LlmConfig(provider="stub", capability="true"))
