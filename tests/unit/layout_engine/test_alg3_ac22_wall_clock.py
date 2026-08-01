@@ -5,12 +5,12 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 
+from tests.unit.layout_engine._alg3_corpus import run_alg3_corpus
 from travelogue.config import AppConfig, LayoutScoringConfig, get_config
 from travelogue.curation.search_budget import SearchBudget
 from travelogue.layout_contract.degradation import DegradationAssessment
 from travelogue.layout_contract.scoring import ScoringWeights
 from travelogue.layout_engine.planner.layout_search import maybe_replan_chapters
-from tests.unit.layout_engine._alg3_corpus import run_alg3_corpus
 
 
 def test_layout_scoring_wall_clock_limits_output_default_true() -> None:

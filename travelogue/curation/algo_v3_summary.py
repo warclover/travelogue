@@ -115,7 +115,7 @@ def build_algo_v3_summary(
     clone_on = bool(gate is not None and getattr(gate, "enabled", False))
     scoring_on = bool(getattr(app_cfg.layout.scoring, "enabled", False))
     wall_clock = bool(
-        getattr(app_cfg.layout.scoring, "wall_clock_limits_output", False)
+        getattr(app_cfg.layout.scoring, "wall_clock_limits_output", True)
     )
 
     calls = (
