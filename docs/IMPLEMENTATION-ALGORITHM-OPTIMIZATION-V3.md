@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0–W1b 已合入 master** · 当前编码 **`feat/alg-v3-w2-a1`（A1 + AC-11）** |
+| **状态** | **W0～W2-A1 已合入 master** · 当前编码 **`feat/alg-v3-w2-a6`（look batch encode）** |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | `feat/alg-v3-w0` ✅ → `feat/alg-v3-w1a1` ✅ → `feat/alg-v3-w1a2` ✅ → `feat/alg-v3-w1b` ✅ → **`feat/alg-v3-w2-a1`** → W2-A3/A6… |
+| **建议分支** | `feat/alg-v3-w0` ✅ → … → `feat/alg-v3-w2-a1` ✅ → **`feat/alg-v3-w2-a6`** → W2-A3/A4… |
 
 ---
 
@@ -181,12 +181,24 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 **退出**：AC-11 绿；must-green 全绿；默认路径 HDBSCAN 行为与合入前等价（epsilon=0）。
 
+### W2-A6 · look 批量化 encode（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-A6-01 | `encode_pil_clip_batch`：stack + 一次 `encode_image`；OOM/失败回退单张 | `vision/look_appearance.py` | ☑ |
+| BE-ALG3-A6-02 | `compute_look_vectors_for_assets` 按 `vision.batch_size` 分块；`<=1` 走旧路径 | 同上 | ☑ |
+| BE-ALG3-A6-03 | 显式 `get_clip_encoder(app_cfg)`；`run_shot_grouping_layer` 传入 AppConfig | `look_appearance.py` · `shot_grouping.py` | ☑ |
+| BE-ALG3-A6-04 | 遥测：`lookElapsedMs` / `lookBatchSize` / `lookBatches` / `lookFallbackSingle` | shotGrouping stats | ☑ |
+| QA-ALG3-A6 | 分块次数、顺序、batch_size=1、cache hit、app_cfg 传递 | `test_alg3_w2_a6_look_batch.py` | ☑ |
+
+**退出**：默认 look 分组语义不变；must-green 绿；**不加**默认硬 timeout（fail-open 会改成片）。
+
 ### W2 后续（提纲 · 未开工）
 
 | 包 | 要点 | 挡门 |
 |----|------|------|
 | A3 | soft-split 按簇内中位间隔自适应（夹紧） | 默认成片可变 → 须投影/盲评 |
-| A6 | look 批量化 encode + 超时可观测 | Perf P95 共背 |
+| ~~A6~~ | ~~look 批量化 encode~~ | ✅ W2-A6 |
 | A4 | Atom/soft-split **仅实验旗**；禁 observe floor 自动 widen | AC-12 + X04；旗默认关 |
 | OQ-02 | vision cohort / `fine_craft`（先 C） | 产品书面口；禁全局 auto |
 | FE-ALG3-S04 | 「场景分析」hint 与 OQ-02 对齐 | 跟 vision 包 |
@@ -241,6 +253,6 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 ## 编码启动顺序（给执行者）
 
 1. ~~`feat/alg-v3-w0`~~ ✅ → ~~w1a1~~ ✅ → ~~w1a2~~ ✅ → ~~w1b~~ ✅（已合 master）。  
-2. **当前**：`feat/alg-v3-w2-a1`（A1 + AC-11；默认成片等价）。  
-3. 其后：W2-A3 / A6 / A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
+2. **当前**：`feat/alg-v3-w2-a6`（look 批量化 encode；默认分组语义不变）。  
+3. 其后：W2-A3 / A4 实验旗 / OQ-02 cohort（各另 PR；默认成片变更须投影+盲评）。  
 4. W1b 盲评问1/3 仍为独立 dogfood，不挡码。

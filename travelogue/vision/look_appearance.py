@@ -144,6 +144,55 @@ def encode_pil_clip(img: Image.Image, encoder: Any) -> np.ndarray | None:
         return None
 
 
+def encode_pil_clip_batch(
+    imgs: list[Image.Image], encoder: Any
+) -> list[np.ndarray | None]:
+    """ALG-V3 A6 · batch CLIP-encode PIL crops (same preprocess / L2 as single).
+
+    On OOM or batch failure, halves recursively then falls back to
+    ``encode_pil_clip`` per image so callers keep order-stable results.
+    """
+    if not imgs:
+        return []
+    try:
+        import torch
+    except ImportError:
+        return [None] * len(imgs)
+    if getattr(encoder, "_model", None) is None or getattr(encoder, "_preprocess", None) is None:
+        ensure = getattr(encoder, "_ensure_clip", None)
+        if not callable(ensure) or not ensure():
+            return [None] * len(imgs)
+
+    def _single_fallback(items: list[Image.Image]) -> list[np.ndarray | None]:
+        return [encode_pil_clip(im, encoder) for im in items]
+
+    if len(imgs) == 1:
+        return _single_fallback(imgs)
+
+    try:
+        tensors = [encoder._preprocess(im.convert("RGB")) for im in imgs]
+        with encoder._infer_lock:
+            batch = torch.stack(tensors).to(encoder._device)
+            with torch.no_grad():
+                feats = encoder._model.encode_image(batch)
+                feats = feats / feats.norm(dim=-1, keepdim=True)
+        out: list[np.ndarray | None] = []
+        for i in range(len(imgs)):
+            out.append(l2_normalize(feats.cpu().numpy()[i]))
+        return out
+    except RuntimeError as exc:
+        if "out of memory" not in str(exc).lower() or len(imgs) <= 1:
+            _log.debug("CLIP torso batch encode failed; falling back", exc_info=True)
+            return _single_fallback(imgs)
+        mid = len(imgs) // 2
+        return encode_pil_clip_batch(imgs[:mid], encoder) + encode_pil_clip_batch(
+            imgs[mid:], encoder
+        )
+    except Exception:
+        _log.debug("CLIP torso batch encode failed; falling back", exc_info=True)
+        return _single_fallback(imgs)
+
+
 def appearance_distance(a: np.ndarray, b: np.ndarray) -> float:
     """Cosine distance in [0, 2] for L2-normalized vectors."""
     return float(1.0 - cosine_similarity(a, b))
@@ -155,10 +204,27 @@ def compute_look_vectors_for_assets(
     trip_dir: Path,
     cfg: Any,
     encoder: Any | None = None,
-) -> tuple[dict[str, np.ndarray], dict[str, int]]:
-    """Return appearance vectors for look-eligible assets + skip stats."""
+    app_cfg: Any | None = None,
+) -> tuple[dict[str, np.ndarray], dict[str, int | float]]:
+    """Return appearance vectors for look-eligible assets + skip / encode stats.
+
+    ALG-V3 A6: encodes ``need_encode`` in ``vision.batch_size`` chunks via
+    ``encode_pil_clip_batch`` (order-stable). ``batch_size<=1`` keeps the
+    historical single-image path. Session uses ``get_clip_encoder(app_cfg)``.
+    """
+    import time
+
     look_cfg = cfg.look
-    stats = {"lookSkippedNoFace": 0, "lookSkippedMulti": 0, "lookEncoded": 0, "lookCacheHits": 0}
+    stats: dict[str, int | float] = {
+        "lookSkippedNoFace": 0,
+        "lookSkippedMulti": 0,
+        "lookEncoded": 0,
+        "lookCacheHits": 0,
+        "lookElapsedMs": 0,
+        "lookBatchSize": 0,
+        "lookBatches": 0,
+        "lookFallbackSingle": 0,
+    }
     cached = load_look_appearance_cache(trip_dir)
     out: dict[str, np.ndarray] = {}
     need_encode: list[tuple[str, Image.Image]] = []
@@ -169,23 +235,23 @@ def compute_look_vectors_for_assets(
             continue
         if aid in cached:
             out[aid] = cached[aid]
-            stats["lookCacheHits"] += 1
+            stats["lookCacheHits"] = int(stats["lookCacheHits"]) + 1
             continue
         path = resolve_asset_image_path(asset, trip_dir)
         if path is None:
-            stats["lookSkippedNoFace"] += 1
+            stats["lookSkippedNoFace"] = int(stats["lookSkippedNoFace"]) + 1
             continue
         try:
             with Image.open(path) as raw:
                 img = ImageOps.exif_transpose(raw.convert("RGB"))
         except OSError:
-            stats["lookSkippedNoFace"] += 1
+            stats["lookSkippedNoFace"] = int(stats["lookSkippedNoFace"]) + 1
             continue
         require_face = bool(getattr(look_cfg, "require_face_or_subject", True))
         if require_face:
             faces = detect_faces_in_image(img)
             if len(faces) >= int(look_cfg.max_faces_before_skip):
-                stats["lookSkippedMulti"] += 1
+                stats["lookSkippedMulti"] = int(stats["lookSkippedMulti"]) + 1
                 continue
             main = select_main_face(
                 faces,
@@ -195,7 +261,7 @@ def compute_look_vectors_for_assets(
                 max_faces=int(look_cfg.max_faces_before_skip),
             )
             if main is None:
-                stats["lookSkippedNoFace"] += 1
+                stats["lookSkippedNoFace"] = int(stats["lookSkippedNoFace"]) + 1
                 continue
             bx, by, bw, bh = upper_body_crop_box(
                 main, img_w=img.width, img_h=img.height
@@ -216,16 +282,48 @@ def compute_look_vectors_for_assets(
 
                 if not clip_torch_available():
                     return out, stats
-                encoder = get_clip_encoder(None)
+                encoder = get_clip_encoder(app_cfg)
             except Exception:
                 return out, stats
-        for aid, crop in need_encode:
-            vec = encode_pil_clip(crop, encoder)
-            if vec is None:
-                stats["lookSkippedNoFace"] += 1
-                continue
-            out[aid] = vec
-            stats["lookEncoded"] += 1
+        batch_size = int(getattr(encoder, "batch_size", 0) or 0)
+        if batch_size <= 0:
+            try:
+                from travelogue.config import get_config
+
+                vis = getattr(app_cfg or get_config(), "vision", None)
+                batch_size = int(getattr(vis, "batch_size", 16) or 16)
+            except Exception:
+                batch_size = 16
+        stats["lookBatchSize"] = max(1, batch_size)
+        t0 = time.monotonic()
+        if batch_size <= 1:
+            stats["lookFallbackSingle"] = len(need_encode)
+            for aid, crop in need_encode:
+                stats["lookBatches"] = int(stats["lookBatches"]) + 1
+                vec = encode_pil_clip(crop, encoder)
+                if vec is None:
+                    stats["lookSkippedNoFace"] = int(stats["lookSkippedNoFace"]) + 1
+                    continue
+                out[aid] = vec
+                stats["lookEncoded"] = int(stats["lookEncoded"]) + 1
+        else:
+            for start in range(0, len(need_encode), batch_size):
+                chunk = need_encode[start : start + batch_size]
+                stats["lookBatches"] = int(stats["lookBatches"]) + 1
+                vecs = encode_pil_clip_batch([crop for _aid, crop in chunk], encoder)
+                if len(vecs) != len(chunk):
+                    # Defensive: treat as total miss and single-fallback the chunk.
+                    stats["lookFallbackSingle"] = int(stats["lookFallbackSingle"]) + len(
+                        chunk
+                    )
+                    vecs = [encode_pil_clip(crop, encoder) for _aid, crop in chunk]
+                for (aid, _crop), vec in zip(chunk, vecs, strict=True):
+                    if vec is None:
+                        stats["lookSkippedNoFace"] = int(stats["lookSkippedNoFace"]) + 1
+                        continue
+                    out[aid] = vec
+                    stats["lookEncoded"] = int(stats["lookEncoded"]) + 1
+        stats["lookElapsedMs"] = int(round((time.monotonic() - t0) * 1000))
         # Merge into cache
         merged = dict(cached)
         merged.update(out)
