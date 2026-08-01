@@ -6,7 +6,7 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W1a-2 编码在 `feat/alg-v3-w1a2`**（基于 `feat/alg-v3-w0`） |
+| **状态** | **W1b 编码在 `feat/alg-v3-w1b`**（含未合入的 W1a-2 工作区改动；合入前请先拆/提交 W1a-2） |
 | **更新日期** | 2026-08-01 |
 | **建议分支** | **`feat/alg-v3-w0`（当前）** → `feat/alg-v3-w1a1` → `feat/alg-v3-w1a2`（可并行开发、**串行合入**） |
 
@@ -145,17 +145,34 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 **退出**：AC-01/02/04/05a/06/07/22/30/32 绿；默认配置 AC-21 投影与合入前一致。
 
-**AC-32 / X09 增量说明（W1a-2）**：新增 `layout.scoring.wall_clock_limits_output`（default **true**）与 `llm.prefer_llm_when_ready`（default **false**）→ CSC 三计数 **172 / 109 / 63**（相对 W0 的 170/108/62）。
+**AC-32 / X09 增量说明（W1a-2）**：新增 `layout.scoring.wall_clock_limits_output`（default **true**）与 `llm.prefer_llm_when_ready`（default **false**）→ CSC 三计数 **172 / 109 / 63**（相对 W0 的 170/108/62）。W1b 再 +`near_scene_clone_gate.conditional` → **173 / 110 / 63**。
 
 ---
 
-## W1b+（另 PR · 提纲）
+## W1b · 条件 clone 硬门（成片可变）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-B7-01 | `effective_clone_hard_gate`：ssg 窗无 shotGroup ∨ vision 降级 → 硬门；`conditional` 可关 | `clone_detection.py` · `candidates.py` | ☑ |
+| BE-ALG3-B7-02 | VC-01：仅 `is_slice_pattern`（prefers_burst is not True） | `shot_group_gate.is_slice_pattern` | ☑ |
+| BE-ALG3-B7-03 | `algoV3.cloneGateEffective` 反映条件生效 | `algo_v3_summary.py` | ☑ |
+| QA-ALG3-10 | AC-10：无 SSG 语料 B7 on vs off；↓≥40% 或 funnel 硬可见 | `test_alg3_w1b_clone_gate.py` | ☑ |
+| QA-ALG3-32b | `near_scene_clone_gate.conditional` → CSC 重签 | CSC JSON | ☑ 173/110/63 |
+| FE-ALG3-S03 | algoV3 写入不单独误亮 `algorithmStale` | `test_alg3_w1b_clone_gate.py` | ☑ |
+
+**退出**：AC-10 绿；must-green 全绿；盲评问1/3 另开 dogfood（本 PR 不挡码）。
+
+**AC-32 / X09 增量说明（W1b）**：新增 `mosaic.near_scene_clone_gate.conditional`（default **true**）→ CSC **173 / 110 / 63**。
+
+---
+
+## W1b+（提纲 · 已拆上方）
 
 | 包 | 要点 |
 |----|------|
-| B7 | `ssgMode∈{off,empty}` ∨ vision 降级 → clone 硬门；VC-01 仅切条类 |
-| AC-10 | 冻结无 vision/SSG corpus + funnel + 盲评问1/3 |
-| FE-ALG3-S03 | stale / 导出回归 |
+| B7 | ✅ 见上 |
+| AC-10 | ✅ 合成语料门测；盲评仍须 dogfood |
+| FE-ALG3-S03 | ✅ |
 | 禁止 | 用「SSG 已绿」代替 AC-10 |
 
 W2/W3/W4 任务按 PRD §4 拆第二份 IMPL 增补，不在本文件扩写。

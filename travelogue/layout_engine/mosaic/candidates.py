@@ -12,8 +12,8 @@ from travelogue.layout_contract.usage_rules_registry import USAGE_RULE_UNDO_ORDE
 from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
 from travelogue.layout_engine.mosaic.clone_detection import (
     NEAR_SCENE_CLONE_REJECT_THRESHOLD,
+    effective_clone_hard_gate,
     near_scene_clone_penalty,
-    template_prefers_burst,
 )
 from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
@@ -34,6 +34,7 @@ from travelogue.layout_engine.mosaic.pattern_catalog import (
     patterns_for_window_size,
 )
 from travelogue.layout_engine.mosaic.runtime import effective_mosaic_window_sizes
+from travelogue.layout_engine.mosaic.shot_group_gate import is_slice_pattern
 from travelogue.layout_engine.mosaic.slot_geometry import (
     pattern_geometry_precheck,
     screen_slots_geometry_ok,
@@ -252,11 +253,10 @@ def generate_window_candidates_with_rejections(
         if not ordered:
             _reject(rejected, pat.pattern_id, "ordering_failed")
             continue
-        # Hard gate (AC-TPC-15): mosaics that do not prefer bursts must not absorb
-        # same-scene walking clones (demo-2025 weighted/rail/5-main looked like
-        # sliced panoramas). Only rejects when the gate is explicitly enabled; the
-        # scorer keeps applying the soft penalty regardless.
-        # prefers_burst True → skip; False/None → reject when penalty is high.
+        # Hard gate (AC-TPC-15 / ALG-V3 B7): non-burst (slice) mosaics must not
+        # absorb same-scene walking clones. Soft penalty always applies in scorer;
+        # hard reject when explicit enabled **or** B7 conditional (no SSG / vision off).
+        # prefers_burst True → skip (VC-01 slice scope via is_slice_pattern).
         # SSG · cross-shotGroup hard reject (D-SSG-05/22); independent of clone gate.
         # PLAN P0: use ShotGroupMosaicPolicy (never MosaicConfig.shot_grouping).
         from travelogue.config.shot_grouping import resolve_shot_group_mosaic_policy
@@ -297,11 +297,11 @@ def generate_window_candidates_with_rejections(
             )
             continue
 
-        gate = getattr(cfg, "near_scene_clone_gate", None)
         if (
-            gate is not None
-            and getattr(gate, "enabled", False)
-            and template_prefers_burst(pat.pattern_id) is not True
+            effective_clone_hard_gate(
+                cfg, asset_ids=list(ordered), assets_map=assets_map
+            )
+            and is_slice_pattern(pat.pattern_id)
         ):
             clone_pen = near_scene_clone_penalty(
                 pat.pattern_id, list(ordered), assets_map

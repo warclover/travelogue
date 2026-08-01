@@ -28,6 +28,57 @@ NEAR_SCENE_CLONE_REJECT_THRESHOLD = 0.75
 _MIN_ASSETS_FOR_CLONE = 3
 
 
+def window_has_shot_groups(
+    asset_ids: list[str], assets_by_id: dict[str, dict]
+) -> bool:
+    """True when any asset in the window carries a shotGroupId (SSG active)."""
+    for aid in asset_ids:
+        if (assets_by_id.get(aid) or {}).get("shotGroupId"):
+            return True
+    return False
+
+
+def vision_is_degraded(*, app_cfg=None) -> bool:
+    """True when vision is explicitly off (not auto/true)."""
+    try:
+        from travelogue.config import get_config
+        from travelogue.config._common import normalize_tri_state
+
+        cfg = app_cfg or get_config()
+        raw = getattr(getattr(cfg, "vision", None), "enabled", "false")
+        state = normalize_tri_state(raw, default="false")
+        return state == "false"
+    except Exception:
+        return True
+
+
+def effective_clone_hard_gate(
+    mosaic_cfg,
+    *,
+    asset_ids: list[str],
+    assets_map: dict[str, dict],
+    app_cfg=None,
+) -> bool:
+    """ALG-V3 B7 · when the near-scene clone hard gate should fire.
+
+    - Explicit ``near_scene_clone_gate.enabled`` → always on.
+    - Else conditional (default): ``ssg`` absent on window (off/empty) **or**
+      vision degraded → on; healthy SSG+vision → off (today's default path).
+    - VC-01 slice scope is enforced by the caller via ``is_slice_pattern``.
+    """
+    gate = getattr(mosaic_cfg, "near_scene_clone_gate", None)
+    if gate is not None and getattr(gate, "enabled", False):
+        return True
+    # Force-off escape for A/B: conditional=false disables auto path.
+    if gate is not None and getattr(gate, "conditional", True) is False:
+        return False
+    if not window_has_shot_groups(asset_ids, assets_map):
+        return True
+    if vision_is_degraded(app_cfg=app_cfg):
+        return True
+    return False
+
+
 def template_prefers_burst(pattern_id: str) -> bool | None:
     """None when LTE unavailable; True/False from compatibilityHints.prefers_burst."""
     if not pattern_id:

@@ -45,16 +45,19 @@ _TEMPLATE_CONTRACT_KNOWN_KEYS = frozenset(
 class NearSceneCloneGateConfig:
     """AC-TPC-15 · hard-reject non-burst mosaics that absorb same-scene clones.
 
-    Off by default: the scorer keeps applying the soft penalty regardless; only
-    the candidate-path hard gate is toggled here. Unknown keys fail-loud.
+    ``enabled`` force-on (yaml dogfood). ``conditional`` (ALG-V3 B7, default True)
+    auto-enables when SSG is off/empty on the window or vision is degraded.
+    Unknown keys fail-loud.
     """
 
     enabled: bool = False
+    conditional: bool = True
 
 
 _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
     {
         "enabled",
+        "conditional",
     }
 )
 
@@ -339,6 +342,7 @@ def _near_scene_clone_gate_from_dict(raw: dict[str, Any]) -> NearSceneCloneGateC
         )
     return NearSceneCloneGateConfig(
         enabled=cfg_bool(gate, "enabled", "enabled", defaults.enabled),
+        conditional=cfg_bool(gate, "conditional", "conditional", defaults.conditional),
     )
 
 

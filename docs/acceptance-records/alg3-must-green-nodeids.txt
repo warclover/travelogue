@@ -56,5 +56,8 @@ tests/unit/web/test_alg3_w1a2_contracts.py
 tests/unit/layout_engine/test_alg3_ac22_wall_clock.py
 tests/unit/web/test_l0_guidance_hardening.py::test_resolve_studio_narrate_provider_if_ready_blocked_without_may_call
 
+# === ALG-V3 W1b · B7 conditional clone / AC-10 / S03 ===
+tests/unit/layout_engine/test_alg3_w1b_clone_gate.py
+tests/unit/layout_engine/test_near_scene_clone_penalty.py::test_candidates_hard_reject_requires_gate_enabled
+
 # === planned ===
-# (W1b+)
