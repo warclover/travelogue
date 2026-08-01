@@ -97,6 +97,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "mosaic: planner tests that require mosaic.enabled (Phase 15 MCS)",
     )
+    config.addinivalue_line(
+        "markers",
+        "alg3_w1b: ALG-V3 W1b B7 clone-gate contracts (keep conditional default)",
+    )
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
@@ -206,6 +210,50 @@ def _release_resources_before_playwright(request: pytest.FixtureRequest):
 
 
 @pytest.fixture(autouse=True)
+def _b7_conditional_clone_opt_in_only(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ALG-V3 W1b · keep pre-B7 hard-gate off unless the test opts in.
+
+    Product default is ``near_scene_clone_gate.conditional=True`` (auto-on when
+    SSG empty / vision off). That correctly changes dogfood/production mosaics,
+    but floods unrelated MCS/MTSO/usage-rules unit fixtures with
+    ``near_scene_clone`` rejects. Local dogfood ``config.yaml`` may also force
+    ``enabled=True``; non-clone suites must not inherit that.
+
+    Clone-gate contracts keep full B7 behavior:
+    ``test_alg3_w1b*`` · ``test_near_scene_clone*`` · ``@pytest.mark.alg3_w1b``.
+    """
+    nodeid = request.node.nodeid.replace("\\", "/")
+    if (
+        "test_alg3_w1b" in nodeid
+        or "test_near_scene_clone" in nodeid
+        or request.node.get_closest_marker("alg3_w1b")
+    ):
+        yield
+        return
+
+    def _gate_off_for_unrelated_suites(
+        mosaic_cfg,
+        *,
+        asset_ids,
+        assets_map,
+        app_cfg=None,
+    ) -> bool:
+        return False
+
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.clone_detection.effective_clone_hard_gate",
+        _gate_off_for_unrelated_suites,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.mosaic.candidates.effective_clone_hard_gate",
+        _gate_off_for_unrelated_suites,
+    )
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _enable_five_slot_for_mosaic_marked_tests(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -220,13 +268,21 @@ def _enable_five_slot_for_mosaic_marked_tests(
         return
     from travelogue import config as config_mod
     from travelogue.config.app import AppConfig
+    from travelogue.config.mosaic import NearSceneCloneGateConfig
     from travelogue.config.runtime import config_override
 
     base = AppConfig()
     sizes = tuple(sorted(set(base.mosaic.enabled_window_sizes) | {5}))
     patched = replace(
         base,
-        mosaic=replace(base.mosaic, enabled=True, enabled_window_sizes=sizes),
+        mosaic=replace(
+            base.mosaic,
+            enabled=True,
+            enabled_window_sizes=sizes,
+            near_scene_clone_gate=NearSceneCloneGateConfig(
+                enabled=False, conditional=False
+            ),
+        ),
     )
     monkeypatch.setattr(config_mod, "get_config", lambda: patched)
     with config_override(patched):

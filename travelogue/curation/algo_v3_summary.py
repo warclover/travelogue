@@ -115,10 +115,13 @@ def build_algo_v3_summary(
     clone_on = bool(gate is not None and getattr(gate, "enabled", False))
     if not clone_on:
         # B7 effective: trip-level SSG off/empty or vision degraded
-        from travelogue.layout_engine.mosaic.clone_detection import vision_is_degraded
+        # (inline vision probe — avoid curation→mosaic.clone_detection LSE edge)
+        from travelogue.config._common import normalize_tri_state
 
+        raw = getattr(getattr(app_cfg, "vision", None), "enabled", "false")
+        vision_off = normalize_tri_state(raw, default="false") == "false"
         ssg = _ssg_mode(trip)
-        if ssg in ("off", "empty") or vision_is_degraded(app_cfg=app_cfg):
+        if ssg in ("off", "empty") or vision_off:
             clone_on = bool(gate is None or getattr(gate, "conditional", True))
     scoring_on = bool(getattr(app_cfg.layout.scoring, "enabled", False))
     wall_clock = bool(
