@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A3 已合入** · 债务修复 PR：`feat/alg-v3-debt-ac20-docs-s03`（AC-20 真下降 / 文档勾选 / S03 / 盲评脚手架） |
+| **状态** | **W0～W2-A3 已合入** · **当前 PR：W2-A4**（Atom `experimental_relax` + AC-12；旗默认关） |
 | **更新日期** | 2026-08-01 |
-| **建议分支** | master ← **本债务 PR** → 其后 W2-A4 / OQ-02 / 人评填盲评记录 |
+| **建议分支** | master ← **`feat/alg-v3-w2-a4`** → 其后 OQ-02 / 人评填盲评记录 |
 
 ---
 
@@ -205,15 +205,26 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 **退出**：默认路径 soft-split 与合入前一致；must-green 绿。**不**抬默认 on（成片变更须另 PR + 盲评）。
 
-### W2 后续（提纲 · 未开工）
+### W2 后续（提纲）
 
 | 包 | 要点 | 挡门 |
 |----|------|------|
 | ~~A3~~ | ~~soft-split 自适应~~ | ✅ W2-A3（默认关） |
 | ~~A6~~ | ~~look 批量化 encode~~ | ✅ W2-A6 |
-| A4 | Atom/soft-split **仅实验旗**；禁 observe floor 自动 widen | AC-12 + X04；旗默认关 |
+| ~~A4~~ | ~~Atom **仅实验旗**；禁 observe floor 自动 widen~~ | ✅ W2-A4（AC-12 自动化 + CSC **175/110/65**；人评问1+2 另记） |
 | OQ-02 | vision cohort / `fine_craft`（先 C） | 产品书面口；禁全局 auto |
 | FE-ALG3-S04 | 「场景分析」hint 与 OQ-02 对齐 | 跟 vision 包 |
+
+### W2-A4 · Atom experimental_relax + AC-12（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-A4-01 | `experimental_relax` (+ gap/span scale)；默认 **false**；loader camelCase | `config/shot_grouping.py` · `AtomConfig` | ☑ |
+| BE-ALG3-A4-02 | `atom_gate_limits` / `resolve_atom_gate_policy`；**不**读 `mosaic_share_floor_observe` | `planner/scene_atoms.py` | ☑ |
+| QA-ALG3-A4 | off 等价 · funnel↓≥25% · multi-slot share≥floor · floor 不 widen | `test_alg3_w2_a4_atom_experimental.py` | ☑ |
+| QA-ALG3-32d | 新 bool → CSC 重签 **175/110/65**；Research 防火墙 | CSC JSON · `RESEARCH_DEFAULT_FALSE` | ☑ |
+
+**退出**：默认路径 atom 硬拒与合入前一致；must-green 绿。**不**抬默认 on（成片变更须另开 + 盲评问1+2）。
 
 ---
 
@@ -265,6 +276,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 ## 编码启动顺序（给执行者）
 
 1. ~~W0～W2-A3~~ ✅ 已合 master。  
-2. **当前**：`feat/alg-v3-debt-ac20-docs-s03`（AC-20 真下降门 + 文档勾选 + S03 + 盲评脚手架）。  
-3. **人评**：填写 `alg3-w1b-blind-review-PENDING.md` 后方可宣称 M1b。  
-4. 其后：W2-A4 / OQ-02 cohort（各另 PR）。
+2. ~~债务 AC-20 / S03 / 盲评脚手架~~ ✅ #37。  
+3. **当前**：`feat/alg-v3-w2-a4`（Atom `experimental_relax` + AC-12）。  
+4. **人评**：W1b 盲评仍挡 M1b 宣称；A4 抬默认 on 前须问1+2。  
+5. 其后：OQ-02 cohort（另 PR）。
