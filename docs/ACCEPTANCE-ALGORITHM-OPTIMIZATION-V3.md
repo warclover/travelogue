@@ -166,7 +166,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 | **FE-ALG3-02** | 禁止向普通用户暴露 prefer/capability/clone/algoV3 营销 | 全程 | ☑ |
 | **FE-ALG3-04** | prefer/capability 不进用户 PATCH 白名单；前端不加控件 | W1a-2 | ☑ |
 | **FE-ALG3-05** | `mosaic_explain` 人话覆盖 PRD 所列 reason；抽屉无原始英文 reason | **W0** | ☑ |
-| **FE-ALG3-S02** | 智能排版 hint「搜索可能提前结束」 | W1a-2 后可选 | ☐ |
+| **FE-ALG3-S02** | 智能排版 hint「搜索可能按时长提前结束」 | W1a-2 后 / 本 PR | ☑ |
 | **FE-ALG3-S03** | algorithmStale / longshotStale /「更新并导出」回归 | W1b/W2 | ☑ |
 | **FE-ALG3-S04** | 「场景分析」hint / H0 与 OQ-02 对齐（默认关；禁全局自动营销） | W2 / OQ-02 | ☑ |
 

@@ -75,4 +75,7 @@ tests/unit/layout_engine/test_alg3_w2_a4_atom_experimental.py
 # === ALG-V3 OQ-02 · vision cohort (option C; no global auto) ===
 tests/unit/curation/test_alg3_oq02_vision_cohort.py
 
+# === ALG-V3 FE-ALG3-S02 · scoring hint early-stop copy ===
+tests/unit/web/test_alg3_fe_s02_scoring_hint.py
+
 # === planned (W3+) ===
