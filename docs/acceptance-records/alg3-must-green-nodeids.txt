@@ -78,4 +78,7 @@ tests/unit/curation/test_alg3_oq02_vision_cohort.py
 # === ALG-V3 FE-ALG3-S02 · scoring hint early-stop copy ===
 tests/unit/web/test_alg3_fe_s02_scoring_hint.py
 
-# === planned (W3+) ===
+# === ALG-V3 W3-C2 · finite max_evaluations_per_segment ===
+tests/unit/layout_engine/test_alg3_w3_c2_max_evaluations.py
+
+# === planned (W3+ remainder) ===
