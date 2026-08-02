@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 已合入** · **当前 PR：OQ-02**（vision cohort opt-in；禁全局 auto） |
-| **更新日期** | 2026-08-01 |
-| **建议分支** | master ← **`feat/alg-v3-oq02-vision-cohort`** → 其后人评盲评 / FE 余量 |
+| **状态** | **W0～W2-A4 + OQ-02 已合入** · **当前 PR：FE-ALG3-S02**（智能排版 hint） |
+| **更新日期** | 2026-08-02 |
+| **建议分支** | master ← **`feat/alg-v3-fe-s02-scoring-hint`** → 其后人评盲评 / W3 holdback |
 
 ---
 
@@ -288,7 +288,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4~~ ✅ 已合 master（含 #38）。  
-2. **当前**：`feat/alg-v3-oq02-vision-cohort`（OQ-02 选项 C + FE-S04）。  
+1. ~~W0～W2-A4 + OQ-02~~ ✅ 已合 master（含 #38 / #39）。  
+2. **当前**：`feat/alg-v3-fe-s02-scoring-hint`（FE-ALG3-S02）。  
 3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：fine_craft 入口（若产品钉）或 W3 holdback。
+4. 其后：W3 holdback（B5/AAD · A5 · C2–C5；scoring 仅 cohort）或 fine_craft 入口。
