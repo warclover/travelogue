@@ -3,16 +3,33 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue（游记智能体） |
-| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2 |
+| **文档体系** | P0 立项 + P0.5 工程执行 + **Phase 2–22** + Studio 首页 v2/M21 + 算法 V2/V3 |
 | **文档状态** | [DOC-STATUS.md](./DOC-STATUS.md)（`active` / `superseded` / `archive`） |
-| **现行导读** | CHARTER → TECH → 活跃 ADR → ACCEPTANCE → FTT / [CSC](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md)（见 DOC-STATUS） |
-| **更新日期** | 2026-07-22 |
+| **现行导读** | 见下方「现行导读（2026-08）」；完整登记见 DOC-STATUS |
+| **归档候选** | [archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)（**只列清单，不搬家**） |
+| **更新日期** | 2026-08-02 |
 
 ---
 
-## 阅读顺序（新人）
+## 现行导读（2026-08）
 
-1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · 已冻结）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）→ [PRD-PHASE7.md](./PRD-PHASE7.md)（管线性能）  
+新人 / Agent **默认只读这条短链**；下方「阅读顺序（历史 Phase）」仅考古。
+
+1. [CHARTER.md](./CHARTER.md)  
+2. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) → [DEVELOPMENT.md](./DEVELOPMENT.md)  
+3. 活跃 ADR：[adr/007-native-clustering.md](./adr/007-native-clustering.md)（索引见 [adr/README.md](./adr/README.md)）  
+4. [ACCEPTANCE.md](./ACCEPTANCE.md)（单轨验收入口）  
+5. 完工与用户面：[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) · [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) · [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)  
+6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（及主题 PRD：MTSO / MSA / MEGC / SSG — 见 DOC-STATUS）  
+7. 状态与归档：[DOC-STATUS.md](./DOC-STATUS.md) · [archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)
+
+---
+
+## 阅读顺序（历史 Phase · 考古）
+
+> 以下为立项期 Phase 列车，多数**未**盖 DOC-STATUS；勿当作现行合同。归档候选见 [DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md) §C。
+
+1. [CHARTER.md](./CHARTER.md) → [PRD-MVP.md](./PRD-MVP.md)（MVP · **archive**）→ [PRD-PHASE2.md](./PRD-PHASE2.md) → [PRD-PHASE3.md](./PRD-PHASE3.md)（Curate 聚类）→ [PRD-PHASE4.md](./PRD-PHASE4.md)（编辑意图 · 杂志心智）→ [PRD-PHASE5.md](./PRD-PHASE5.md)（整体优化 · 做深做透）→ [PRD-PHASE6.md](./PRD-PHASE6.md)（稳态与治理）→ [PRD-PHASE6-ART-OPTIMIZATION.md](./PRD-PHASE6-ART-OPTIMIZATION.md)（艺术专项）→ [PRD-PHASE7.md](./PRD-PHASE7.md)（管线性能）  
 2. [AGENT-ARCHITECTURE.md](./AGENT-ARCHITECTURE.md)  
 2b. [PRD-LAYOUT.md](./PRD-LAYOUT.md)（排版布局子系统 · Agent 1.5）  
 3. [DATA-MODEL.md](./DATA-MODEL.md) + [schemas/trip.schema.json](../schemas/trip.schema.json)  
@@ -159,8 +176,8 @@
 | [PRD-POST-MERGE-UX-FIXPACK-V1.md](./PRD-POST-MERGE-UX-FIXPACK-V1.md) | **合入后 UX 修复包 V1** **v0.2**（Conditional Go · 决策已锁 · [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)） |
 | [IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) | 合入后修复包 · RCA + 实施清单（分支实施中） |
 | [ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md) | PMX · 验收合同（AC-PMX-01～13） |
-| [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md) | **日更质量修复包 V1（QFX）** **v0.2.1**（Conditional Go · 探查拍板 · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)） |
-| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | QFX 实施 **v0.1.0** · T-00～11 · PR-A→D · Ready for PR-A |
+| [archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md) | **QFX** **v0.2.1** · **archive（Closed）** · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · 根 stub 保留 |
+| [archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | QFX 实施 · Closed · 与 [CQA 包](./archive/2026/qfx-cqa/README.md) 同目录 |
 | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | QFX 七席评审 · 系统根因 · 根本解法 · Must-Fix |
 | [acceptance-records/post-merge-ux-trial-2026-07-22.md](./acceptance-records/post-merge-ux-trial-2026-07-22.md) | 合入后完整 UX 走查 · P0–P2 账本（2026-07-22） |
 | [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
@@ -670,6 +687,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 | 路径 | 说明 |
 |------|------|
 | [docs/archive/](./archive/) | 退役文档（M-C3 机制） |
+| [docs/archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md) | **文档** Closed/Done/Phase 归档候选（2026-08-02 · 不搬家） |
 | [docs/archive/ARCHIVE-CANDIDATES.md](./archive/ARCHIVE-CANDIDATES.md) | 可归档 `phaseN_*` 脚本候选清单 |
 | [scripts/archive/](../scripts/archive/) | 退役脚本（确认后 `git mv`） |
 
@@ -679,6 +697,8 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-02 | 文档卫生 A1：QFX+CQA 六件套迁入 [archive/2026/qfx-cqa/](./archive/2026/qfx-cqa/)（根 stub 保旧链） |
+| 2026-08-02 | 文档卫生 P1：新增 [DOC-ARCHIVE-CANDIDATES](./archive/DOC-ARCHIVE-CANDIDATES.md)；README/DOC-STATUS **现行导读**与历史 Phase 考古链拆分（不搬家） |
 | 2026-07-23 | SSG：**PRD v0.2.1** · 分支 `feature/smart-shot-grouping-v1` · PR-A～F Conditional Closed（默认 on Hold · 实拍盲评另填） |
 | 2026-07-23 | SSG 七席：[ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) · **Conditional Go** · PRD **v0.2.0** 回写 · 可 Kickoff M0 |
 | 2026-07-29 | 新增 [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md)·[PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md)（AI 策略落地 Draft）；NAS §14 / DOC-STATUS / 迟晒 INSIGHT 指针已挂 |
