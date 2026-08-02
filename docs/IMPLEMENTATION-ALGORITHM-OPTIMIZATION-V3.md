@@ -7,7 +7,7 @@
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
 | **产品锁** | [acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) **已锁** |
-| **状态** | **W0～W3 工程已合入** · **A5/C4–C5/fine_craft/竖单产品口已锁** · 下一挡：人评盲评 / 可选编码 A5·C4·C5（默认不成片） |
+| **状态** | **W0～W3 工程已合入** · **A5/C4/C5 默认-off 编码已齐** · 下一挡：人评盲评 |
 | **更新日期** | 2026-08-02 |
 | **建议分支** | master · 人评见 W1b/A4 PENDING · 可开 `feat/alg-v3-a5-look-reference-optin` / C4 遥测（按产品锁） |
 
@@ -294,9 +294,9 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
-| BE-ALG3-A5-01 | `look_reference_mode` 默认 `first`；`ema`/`medoid` opt-in | `config/shot_grouping.py` · `look_split.py` | ☐ |
-| BE-ALG3-A5-02 | skip / mode 可观测（漏斗或 algoV3） | `algo_v3_summary` / funnel | ☐ |
-| QA-ALG3-A5 | 默认 ≡ first；opt-in 可切换；默认路径分段不变 | `test_alg3_w3_a5_look_reference.py` | ☐ |
+| BE-ALG3-A5-01 | `look_reference_mode` 默认 `first`；`ema`/`medoid` opt-in | `config/shot_grouping.py` · `look_split.py` | ☑ |
+| BE-ALG3-A5-02 | skip / mode 可观测（漏斗或 algoV3） | `algo_v3_summary` / funnel | ☑ |
+| QA-ALG3-A5 | 默认 ≡ first；opt-in 可切换；默认路径分段不变 | `test_alg3_w3_a5_look_reference.py` | ☑ |
 
 **退出**：默认路径 look 分段与合入前一致。
 
@@ -304,8 +304,8 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
-| BE-ALG3-C4-01 | 文档/遥测统一：VC-04 = `patternId` streak；阈默认 2 | constraints · telemetry | ☐ |
-| QA-ALG3-C4 | streak 计数与 `max_consecutive_same_pattern` 合同 | unit | ☐ |
+| BE-ALG3-C4-01 | 文档/遥测统一：VC-04 = `patternId` streak；阈默认 2 | constraints · telemetry | ☑ |
+| QA-ALG3-C4 | streak 计数与 `max_consecutive_same_pattern` 合同 | unit | ☑ |
 
 **退出**：不改默认阈；不引入 layout_kind 主尺。
 
@@ -313,8 +313,8 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
-| BE-ALG3-C5-01 | holdback flag 默认 **off**；开时走既有 diversity 路径 | mosaic diversity config | ☐ |
-| QA-ALG3-C5 | 默认 off ≡ 今日；flag on 可观测 | unit | ☐ |
+| BE-ALG3-C5-01 | holdback flag 默认 **off**；开时走既有 diversity 路径 | mosaic diversity config | ☑ |
+| QA-ALG3-C5 | 默认 off ≡ 今日；flag on 可观测 | unit | ☑ |
 
 **退出**：生产默认零变化。
 
@@ -365,7 +365,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 1. ~~W0～W3 工程（含 #38～#45）~~ ✅ 已合 master。  
 2. ~~产品锁 A5 / C4–C5 / fine_craft / 竖单~~ ✅ [alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)。  
-3. **当前（非编码）**：填 [W1b 盲评](./acceptance-records/alg3-w1b-blind-review-PENDING.md) · [A4 盲评](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)。  
-4. **可编码（默认不成片）**：A5 `look_reference_mode` 默认 `first` + EMA/medoid opt-in；C4 `patternId` 口径/streak 遥测；C5 holdback flag 默认 off。  
+3. ~~A5 opt-in · C4 遥测 · C5 holdback 骨架~~ ✅（默认不成片；CSC **176/110/66**）。  
+4. **当前（非编码）**：填 [W1b 盲评](./acceptance-records/alg3-w1b-blind-review-PENDING.md) · [A4 盲评](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)。  
 5. **本波不做**：fine_craft 绑 vision；竖单默认策略；竖单×`layoutDensity` 分档（下一候选）。  
 6. **暂缓**：B5（AAD）· W4 D2/D3 · 全局 scoring/vision auto。

@@ -102,21 +102,30 @@ def template_base_weight(pattern_id: str, *, cfg: AppConfig | None = None) -> fl
         return 1.0
 
 
-def mcs_diversity_config(*, cfg: AppConfig | None = None) -> dict[str, float | str]:
-    """§9.4 MCS candidate diversity (off | mmr | dpp)."""
-    defaults: dict[str, float | str] = {"mode": "mmr", "lambda": 0.65}
+def mcs_diversity_config(*, cfg: AppConfig | None = None) -> dict[str, float | str | bool]:
+    """§9.4 MCS candidate diversity (off | mmr | dpp).
+
+    ALG-V3 C5 / PL-C5: ``diversity_holdback=True`` forces ``mode=off`` (A/B
+    withhold). Default holdback is False → production path unchanged.
+    """
+    defaults: dict[str, float | str | bool] = {"mode": "mmr", "lambda": 0.65, "holdback": False}
+    app = cfg or get_config()
+    te = getattr(getattr(app, "layout", None), "template_engine", None)
+    holdback = bool(te is not None and getattr(te, "diversity_holdback", False))
     if not read_templates_from_lte(cfg):
-        return defaults
+        out = dict(defaults)
+        out["holdback"] = holdback
+        if holdback:
+            out["mode"] = "off"
+        return out
     from pathlib import Path
 
     import yaml
 
-    app = cfg or get_config()
-    te = getattr(app.layout, "template_engine", None)
     if te is not None:
         cfg_mode = getattr(te, "diversity_mode", None)
         if cfg_mode in ("off", "mmr", "dpp"):
-            out: dict[str, float | str] = {"mode": str(cfg_mode)}
+            out = {"mode": str(cfg_mode), "holdback": holdback}
             cfg_lambda = getattr(te, "diversity_lambda", None)
             if cfg_lambda is not None:
                 try:
@@ -125,25 +134,37 @@ def mcs_diversity_config(*, cfg: AppConfig | None = None) -> dict[str, float | s
                     out["lambda"] = float(defaults["lambda"])
             else:
                 out["lambda"] = float(defaults["lambda"])
+            if holdback:
+                out["mode"] = "off"
             return out
     policy_path = Path(getattr(te, "policy_path", "travelogue/layout_templates/lte_policy.yaml"))
     if not policy_path.is_file():
-        return defaults
+        out = dict(defaults)
+        out["holdback"] = holdback
+        if holdback:
+            out["mode"] = "off"
+        return out
     try:
         doc = yaml.safe_load(policy_path.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
-        return defaults
+        out = dict(defaults)
+        out["holdback"] = holdback
+        if holdback:
+            out["mode"] = "off"
+        return out
     mcs = doc.get("mcs_integration") or {}
     scoring = mcs.get("scoring") if isinstance(mcs.get("scoring"), dict) else {}
     diversity = scoring.get("diversity") if isinstance(scoring.get("diversity"), dict) else {}
     mode = str(diversity.get("mode", defaults["mode"])).strip().lower()
     if mode not in ("off", "mmr", "dpp"):
         mode = str(defaults["mode"])
-    out: dict[str, float | str] = {"mode": mode}
+    out = {"mode": mode, "holdback": holdback}
     try:
         out["lambda"] = float(diversity.get("lambda", defaults["lambda"]))
     except (TypeError, ValueError):
         out["lambda"] = float(defaults["lambda"])
+    if holdback:
+        out["mode"] = "off"
     return out
 
 

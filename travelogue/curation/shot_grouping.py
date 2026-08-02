@@ -218,6 +218,9 @@ def _apply_look_overrides(
     *,
     delta_threshold: float,
     sustain_frames: int,
+    reference_mode: str = "first",
+    ema_alpha: float = 0.3,
+    look_meta: dict[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """Split face-eligible members inside each scene/weak group into look groups.
 
@@ -228,6 +231,7 @@ def _apply_look_overrides(
         return groups, 0
     out: list[dict[str, Any]] = []
     look_seq = 0
+    meta_acc: dict[str, Any] = {}
     for g in groups:
         if g.get("kind") == "look":
             out.append(g)
@@ -241,12 +245,18 @@ def _apply_look_overrides(
             continue
         src = g.get("sourceSceneClusterId")
         src_i = int(src) if isinstance(src, int) else None
+        seg_meta: dict[str, Any] = {}
         segments = split_look_segments(
             with_vec,
             vectors,
             delta_threshold=delta_threshold,
             sustain_frames=sustain_frames,
+            reference_mode=reference_mode,
+            ema_alpha=ema_alpha,
+            meta_out=seg_meta,
         )
+        if seg_meta and not meta_acc:
+            meta_acc.update(seg_meta)
         for seg in segments:
             if not seg:
                 continue
@@ -265,6 +275,8 @@ def _apply_look_overrides(
                 a["shotGroupKind"] = residual.get("kind") or "scene"
                 a["shotGroupConfidence"] = float(residual.get("confidence") or 0.5)
             out.append(residual)
+    if look_meta is not None and meta_acc:
+        look_meta.update(meta_acc)
     return out, look_seq
 
 
@@ -416,7 +428,7 @@ def run_shot_grouping_layer(
             groups, assets_by_id, min_size=ssg.min_shot_group_size
         )
 
-        look_stats: dict[str, int | float] = {
+        look_stats: dict[str, Any] = {
             "lookSkippedNoFace": 0,
             "lookSkippedMulti": 0,
             "lookEncoded": 0,
@@ -444,13 +456,19 @@ def run_shot_grouping_layer(
             elif look_vectors is None and trip_dir is None:
                 _log.debug("look enabled but no trip_dir; skip look")
             if vectors:
+                look_ref_meta: dict[str, Any] = {}
                 groups, look_n = _apply_look_overrides(
                     groups,
                     assets_by_id,
                     vectors,
                     delta_threshold=ssg.look.delta_threshold,
                     sustain_frames=ssg.look.sustain_frames,
+                    reference_mode=getattr(ssg.look, "reference_mode", "first"),
+                    ema_alpha=float(getattr(ssg.look, "ema_alpha", 0.3)),
+                    look_meta=look_ref_meta,
                 )
+                if look_ref_meta:
+                    look_stats.update(look_ref_meta)
 
         scene_n = sum(1 for g in groups if g.get("kind") == "scene")
         weak_n = sum(1 for g in groups if g.get("kind") == "weak")

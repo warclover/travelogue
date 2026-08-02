@@ -30,6 +30,9 @@ class ShotGroupingLookConfig:
     require_face_or_subject: bool = True
     min_max_face_area_ratio: float = 0.15
     max_faces_before_skip: int = 4
+    # ALG-V3 A5 / PL-A5 · default first (≡ today); ema/medoid opt-in only.
+    reference_mode: str = "first"
+    ema_alpha: float = 0.3
 
 
 @dataclass
@@ -145,7 +148,11 @@ def _scene_from_dict(raw: dict[str, Any]) -> ShotGroupingSceneConfig:
 
 
 def _look_from_dict(raw: dict[str, Any]) -> ShotGroupingLookConfig:
+    from travelogue.curation.look_split import normalize_look_reference_mode
+
     enabled_raw = raw.get("enabled", "auto")
+    mode_raw = raw.get("reference_mode", raw.get("referenceMode", "first"))
+    mode, _skip = normalize_look_reference_mode(mode_raw)
     return ShotGroupingLookConfig(
         enabled=normalize_tri_state(enabled_raw, default="auto"),
         delta_threshold=cfg_float(raw, "delta_threshold", "deltaThreshold", 0.28),
@@ -159,6 +166,8 @@ def _look_from_dict(raw: dict[str, Any]) -> ShotGroupingLookConfig:
         max_faces_before_skip=cfg_int(
             raw, "max_faces_before_skip", "maxFacesBeforeSkip", 4
         ),
+        reference_mode=mode,
+        ema_alpha=cfg_float(raw, "ema_alpha", "emaAlpha", 0.3),
     )
 
 
