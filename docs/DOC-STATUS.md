@@ -44,7 +44,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 
 | 档 | 动作 |
 |----|------|
-| **Closed / archive / superseded** | 可进入搬家 PR；见候选清单 §A |
+| **Closed / archive / superseded** | 可进入搬家 PR；见候选清单 §A（**A1 QFX+CQA 已迁** [`archive/2026/qfx-cqa/`](./archive/2026/qfx-cqa/)） |
 | **frozen** | 默认原地保留，索引标明即可 |
 | **Done（未盖 DOC-STATUS）** | 先盖章再迁；见 §B |
 | **Phase 未标注** | 先批量盖章；见 §C |
