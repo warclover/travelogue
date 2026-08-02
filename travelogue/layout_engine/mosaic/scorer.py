@@ -404,9 +404,10 @@ def score_candidate(
     prev_screen: dict | None = None,
     chapter_screen_index: int = 0,
     chapter_screen_count: int = 12,
+    quality_pool: Any | None = None,
 ) -> MosaicScoreResult:
-    quality_pool = None
-    if cfg.lse_quality_unified:
+    # ALG-V3 W3-B1 · reuse window-hoisted pool when provided; only build if needed.
+    if quality_pool is None and cfg.lse_quality_unified:
         from travelogue.layout_engine.quality_features import build_quality_pool
 
         quality_pool = build_quality_pool(list(assets_by_id.values()))

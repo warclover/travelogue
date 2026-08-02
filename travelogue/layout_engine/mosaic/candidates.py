@@ -232,9 +232,10 @@ def generate_window_candidates_with_rejections(
     usage_deferred: list[tuple[ScreenCandidate, str]] = []
     usage_hits: list[dict[str, Any]] = []
     orderable_pattern_ids: list[str] = []
-    # CQA D-CQA-13 / AC-20 · hoist quality pool once per window (not per pattern)
+    # CQA D-CQA-13 / ALG-V3 W3-B1 · hoist quality pool once per window when
+    # lse_quality_unified (do not require hungarian; that was the B1 hole).
     window_quality_pool = None
-    if cfg.lse_hungarian_assignment and cfg.lse_quality_unified:
+    if cfg.lse_quality_unified:
         from travelogue.layout_engine.quality_features import build_quality_pool
 
         window_quality_pool = build_quality_pool(list(assets_map.values()))

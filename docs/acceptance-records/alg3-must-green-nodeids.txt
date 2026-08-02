@@ -84,4 +84,7 @@ tests/unit/layout_engine/test_alg3_w3_c2_max_evaluations.py
 # === ALG-V3 W3-C3 · beam variant prune ===
 tests/unit/layout_engine/test_alg3_w3_c3_beam_variants.py
 
+# === ALG-V3 W3-B1 · LSE quality_pool hoist ===
+tests/unit/layout_engine/test_alg3_w3_b1_lse_quality_pool.py
+
 # === planned (W3+ remainder) ===

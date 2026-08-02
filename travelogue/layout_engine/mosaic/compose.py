@@ -139,6 +139,12 @@ def _score_window_candidates_with_rejections(
     rejected = list(bundle.rejected)
     usage_hits = list(bundle.usage_rule_hits)
     contract_shadow = bundle.contract_shadow
+    # ALG-V3 W3-B1 · one quality pool for all candidate scores in this window.
+    score_quality_pool = None
+    if cfg.lse_quality_unified:
+        from travelogue.layout_engine.quality_features import build_quality_pool
+
+        score_quality_pool = build_quality_pool(list(assets_map.values()))
     scored: list[tuple[ScreenCandidate, float, list[str], dict[str, float]]] = []
     for cand in candidates:
         if mosaic_pattern_disabled(cand.pattern_id, cfg=cfg, trip_id=trip_id) or not cand.hard_valid:
@@ -158,6 +164,7 @@ def _score_window_candidates_with_rejections(
             prev_screen=prev_screen,
             chapter_screen_index=chapter_screen_index,
             chapter_screen_count=chapter_screen_count,
+            quality_pool=score_quality_pool,
         )
         scored.append((cand, sr.total, sr.reason_codes, dict(sr.penalties)))
     scored = apply_usage_tiebreaks(
