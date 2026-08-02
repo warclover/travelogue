@@ -23,7 +23,7 @@ from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_entry import build_entry
 
 
-def test_assignable_styles_are_v6_five() -> None:
+def test_assignable_styles_are_v6_ten() -> None:
     ids = assignable_style_ids()
     assert ids == (
         "veil-footer",
@@ -31,6 +31,11 @@ def test_assignable_styles_are_v6_five() -> None:
         "band-cut",
         "cameo-aperture",
         "type-monument",
+        "scroll-head",
+        "portal-arch",
+        "horizon-split",
+        "contact-stamp",
+        "diptych-seam",
     )
     assert all(is_assignable(i) for i in ids)
     assert not is_assignable("card-br")
@@ -83,17 +88,46 @@ def test_studio_style_options_active_only_with_blurb() -> None:
 
 def test_preview_matrix_each_active_has_fixture() -> None:
     rows = list_preview_matrix()
-    assert len(rows) == 5
+    assert len(rows) == 10
     for row in rows:
         assert row["fixture_ref"]
         assert row["blurb"]
 
 
+def test_art_direction_ten_assignable_includes_new_five() -> None:
+    """十款均可分配；联合选型 / Studio 同源。"""
+    from travelogue.cover_engine.registry import get_style
+
+    for sid in (
+        "scroll-head",
+        "portal-arch",
+        "horizon-split",
+        "contact-stamp",
+        "diptych-seam",
+    ):
+        rec = get_style(sid)
+        assert rec is not None
+        assert rec.status == "active"
+        assert is_assignable(sid)
+    assert len(assignable_style_ids()) == 10
+
+
 def test_profiles_exist_for_active() -> None:
     for rec in list_assignable_styles():
         assert get_style(rec.id) is not None
-        assert rec.profile.title_max_lines >= 2
+        assert rec.profile.title_max_lines >= 1
+    # 首五款仍至少两行；巨字三行；竖排/日戳等可单行
+    for sid in (
+        "veil-footer",
+        "folio-overlap",
+        "band-cut",
+        "cameo-aperture",
+        "type-monument",
+        "horizon-split",
+    ):
+        assert get_style(sid).profile.title_max_lines >= 2
     assert get_style("type-monument").profile.title_max_lines == 3
+    assert get_style("scroll-head").profile.title_max_lines == 1
 
 
 def test_create_trip_placeholder_veil_footer(tmp_path: Path) -> None:
@@ -129,6 +163,11 @@ def test_schema_accepts_v5_and_v6_cover_opening_style() -> None:
     for style in (
         "veil-footer",
         "band-cut",
+        "scroll-head",
+        "portal-arch",
+        "horizon-split",
+        "contact-stamp",
+        "diptych-seam",
         "card-br",
         "split-mat",
         "magazine-head",
@@ -173,16 +212,19 @@ def test_set_style_status_retired_drops_assignable() -> None:
 
 
 def test_journal_css_v6_tokens_and_skins() -> None:
-    """AC-CSV6-10～14 / 12 · token + 五款选择器 + band 72%。"""
+    """AC-CSV6-10～14 / AC-CSV6AD-03 · token + 十款选择器 + band 63%。"""
     from travelogue.paths import JOURNAL_CSS
 
     css = JOURNAL_CSS.read_text(encoding="utf-8")
     for needle in (
         "--cover-font-title",
         "--cover-veil-fog-height",
-        "--cover-band-center: 78%",
+        "--cover-veil-glow",
+        "--cover-band-center: 63%",
+        "--cover-folio-margin: 33%",
         "--cover-folio-fade",
         "--cover-cameo-ring",
+        "--cover-cameo-r",
         "--cover-monument-dim",
         "--cover-dock-safe",
         "--cover-panel-z",
@@ -191,6 +233,11 @@ def test_journal_css_v6_tokens_and_skins() -> None:
         'data-cover-opening="band-cut"',
         'data-cover-opening="cameo-aperture"',
         'data-cover-opening="type-monument"',
+        'data-cover-opening="scroll-head"',
+        'data-cover-opening="portal-arch"',
+        'data-cover-opening="horizon-split"',
+        'data-cover-opening="contact-stamp"',
+        'data-cover-opening="diptych-seam"',
         "border-radius: 50%",
         "min-width: 64rem",
         "cover-opening__placeholder-badge",

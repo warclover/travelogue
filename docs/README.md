@@ -517,7 +517,8 @@
 | [wireframes/cover-styles-v5-split-mat.html](./wireframes/cover-styles-v5-split-mat.html) | `split-mat` 线框 |
 | [wireframes/cover-styles-v5-magazine-head.html](./wireframes/cover-styles-v5-magazine-head.html) | `magazine-head` 线框 |
 | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) | **封面多样式 V6** · 五款 Opening + Cover Style Engine + 图×样式联合 |
-| [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) | V6 验收 |
+| [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) | **V6 艺术指导 Delta** · 十款 active（联合/hash/Studio） |
+| [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) | V6 验收（含 AC-CSV6AD） |
 | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
 | [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 CAD V1**（**v0.1.0 Draft**）· 真照片 Mode A · 禁假风景默认 · 扩展 Bookends |

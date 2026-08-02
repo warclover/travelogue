@@ -2,13 +2,13 @@
 
 | 属性 | 内容 |
 |------|------|
-| **关联 PRD** | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) **v1.3.0**（实施母文档） |
-| **视觉真相源** | [cover-styles-v6-hi-fi-adefg.html](./wireframes/cover-styles-v6-hi-fi-adefg.html) |
-| **验收** | 封板前必建 `ACCEPTANCE-COVER-STYLES-V6.md`（对齐 PRD §10 + M1/M2） |
-| **更新日期** | 2026-07-10 |
+| **关联 PRD** | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) **v1.3.0**（产品母文档） |
+| **艺术指导 Delta** | [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) **v1.1.0**（十款 active · 联合/hash/Studio） |
+| **视觉真相源** | [cover-styles-v6-art-direction-v2-wireframe.html](./wireframes/cover-styles-v6-art-direction-v2-wireframe.html) |
+| **验收** | [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md)（含 AC-CSV6AD-*） |
+| **更新日期** | 2026-08-02 |
 
-> **冲突裁决**：IMPLEMENTATION / 现网代码与 PRD 冲突时，**以 PRD v1.3.0 为准**。  
-> 已知冲突（开工时）：① create 哈希三选一 → 占位 `veil-footer`；② resolve 默认 `card-br` → `veil-footer` + legacy_map；③ Studio / `COVER_OPENING_STYLES` 硬编码三元组 → Registry；④ 基线 CSS 实心书名卡 → `veil-footer` 雾底。
+> **冲突裁决**：IMPLEMENTATION / 现网代码与 PRD 冲突时，**产品契约以 V6 PRD v1.3.0 为准**；**视觉 token / 手法以 Art Direction Delta 为准**。
 
 ---
 
@@ -131,7 +131,7 @@
 ## 5. 测试命令
 
 ```bash
-# M1 + M2
+# M1 + M2 + Art Direction Delta
 python -m pytest tests/unit/curation/test_cover_styles_v6.py \
   tests/unit/curation/test_cover_styles_v6_joint.py \
   tests/unit/curation/test_cover_styles_v6_golden.py \
@@ -151,8 +151,24 @@ python -m pytest tests/unit/curation/test_cover_styles_v6_playwright.py -q
 # 解析（含 legacy）
 python -c "from travelogue.cover_engine import resolve_style_id; print(resolve_style_id('card-br'))"
 
-# 重渲染后浏览器看 data-cover-opening ∈ V6 五值
+# 重渲染后浏览器看 data-cover-opening ∈ V6 十值
 python -m travelogue render trips/<tripId>/trip.json
 ```
 
-打开 [hi-fi](./wireframes/cover-styles-v6-hi-fi-adefg.html) 对照五款；Studio「排版」应仅五款且带 blurb。
+打开 [art-direction-v2 线框](./wireframes/cover-styles-v6-art-direction-v2-wireframe.html) 对照十款；Studio「排版」应十款 active 且带 blurb。
+
+---
+
+## 7. Art Direction Delta · 落地清单（2026-08-02）
+
+| 项 | 文件 | 状态 |
+|----|------|------|
+| Delta 决策文档 | `docs/PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md` | ✅ v1.1 |
+| Token + 十款 CSS pack | `templates/visual-journal/journal.css` | ✅ |
+| `--cover-src` / `data-title` / focal / secondary | `templates/visual-journal/partials/cover-opening.hbs` | ✅ |
+| 十款 active + profile | `travelogue/cover_engine/catalog.py` | ✅ |
+| diptych 副图 + joint/fit | `joint.py` / `fit.py` / schema `coverSecondaryAssetId` | ✅ |
+| band 安全区 → [0.58, 0.70] | catalog + golden/joint fixtures | ✅ |
+| AC-CSV6AD-* | ACCEPTANCE § 增量 | ✅ |
+| Studio 缩略图十款 | `preview-toolbar/sheet.css` | ✅ |
+| 胶片颗粒 / 动效 | — | ⏭ P1 |

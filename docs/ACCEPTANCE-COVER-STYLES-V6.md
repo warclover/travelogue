@@ -3,10 +3,11 @@
 | 属性 | 内容 |
 |------|------|
 | **关联 PRD** | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) **v1.3.0** |
+| **艺术指导 Delta** | [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) **v1.0.0** |
 | **实施清单** | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) |
-| **视觉真相源** | [cover-styles-v6-hi-fi-adefg.html](./wireframes/cover-styles-v6-hi-fi-adefg.html) |
-| **更新日期** | 2026-07-10 |
-| **门禁结论** | **M1 + M2 代码门禁通过**；P0 缺口补齐（角标 / Dock / 黄金集 / fit 灰字 / V6 Playwright 最小套件） |
+| **视觉真相源** | [cover-styles-v6-art-direction-v2-wireframe.html](./wireframes/cover-styles-v6-art-direction-v2-wireframe.html) |
+| **更新日期** | 2026-08-02 |
+| **门禁结论** | **M1 + M2 代码门禁通过**；**Art Direction Delta v1.1 · 十款可分配**（联合最优 / hash / Studio） |
 
 ---
 
@@ -120,18 +121,35 @@ python -m pytest tests/unit/curation/test_cover_styles_v6_playwright.py -q
 
 ## 4. 人工走查清单（封板前）
 
-- [ ] 高保真 A/D/E/F/G 与实渲染五款对照（≥1024px）
-- [ ] `band-cut` 题带中线目测 ∈ 70%–74%
+- [ ] art-direction-v2 线框与实渲染五款对照（≥1024px）
+- [ ] `band-cut` 切线/标签中线目测 ∈ **60%–66%**（Delta；旧 70–74% 已废）
+- [ ] `cameo` 为全幅+圆窗，非色底头像卡
+- [ ] `type-monument` 有封面图时书名镂空可读
 - [ ] 窄屏 &lt;1024px：任意 style attribute 不变，呈现雾底
 - [ ] Icon Dock 五款可点
 - [ ] 真实 trip ≥20 本联合结果抽检（PRD §6.3.1）
 - [ ] Studio：联合后 Toast 一次；老 V5 trip 说明一次；换版式默认重荐
 - [ ] 封底在 Web+epilogue 条件下仍可用（不回归）
 
+## 4.1 Art Direction Delta AC（AC-CSV6AD）
+
+| AC ID | 状态 | 证据 |
+|-------|------|------|
+| **AC-CSV6AD-01** | ✅ 自动化 | `test_cover_styles_v6_wide_no_overflow` |
+| **AC-CSV6AD-02** | ✅ 自动化 | `test_cover_styles_v6_narrow_presents_as_veil` |
+| **AC-CSV6AD-03** | ✅ token | `--cover-band-center: 63%` + profile `[0.58,0.70]` |
+| **AC-CSV6AD-04** | ✅ CSS | cameo 全幅 hero + mask `::before` |
+| **AC-CSV6AD-05** | ✅ CSS | monument `[style*="--cover-src"]` + `background-clip:text` |
+| **AC-CSV6AD-06** | ✅ | `test_art_direction_ten_assignable_includes_new_five` |
+| **AC-CSV6AD-07** | ✅ | `test_cover_styles_v6_dock_safe_zone`（veil） |
+
 ## 5. 已知限制
 
-- V5 布局 Playwright 已 skip；V6 最小套件见 `test_cover_styles_v6_playwright.py`
-- folio 竖排跑题为 CSS 近似（一块 DOM 约束下）
+- V5 布局 Playwright 已 skip；V6 最小套件见 `test_cover_styles_v6_playwright.py`（十款）
+- folio 骑缝叠印为 CSS `background-clip` + `data-title` 套印近似（一块 DOM）
+- cameo 依赖 `backdrop-filter`；弱支持环境圆外虚化减弱
+- diptych 无副图时右栏同源回落（非强制双图）
+- 胶片颗粒 / Ken Burns 未进生产（Delta P1）
 - 换版式「保留封面图」为勾选次要路径；低 fit 时灰字依赖 `fitBelowThreshold`
 - ≥20 本真实 trip 联合抽检仍为人工封板项
 - 完整 Admin / 实验室 UI / 封底改版不在本验收范围
@@ -143,4 +161,4 @@ python -c "from travelogue.cover_engine import resolve_style_id, studio_style_op
 python -m travelogue render trips/<tripId>/trip.json
 ```
 
-浏览器打开 Studio 预览：`data-cover-opening` ∈ V6 五值；排版 Sheet 五款 + blurb。
+浏览器打开 Studio 预览：`data-cover-opening` ∈ V6 十值；排版 Sheet 十款 + blurb；对照 [art-direction-v2](./wireframes/cover-styles-v6-art-direction-v2-wireframe.html)。

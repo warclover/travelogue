@@ -23,6 +23,11 @@ _V6_STYLES = (
     "band-cut",
     "cameo-aperture",
     "type-monument",
+    "scroll-head",
+    "portal-arch",
+    "horizon-split",
+    "contact-stamp",
+    "diptych-seam",
 )
 _LONG_TITLE = "二〇二五年东澳岛夏日纪行·海风与盐粒交织的七天七夜"
 _LONG_HOOK = (
@@ -152,7 +157,7 @@ def _playwright_page(tmp_path: Path, trip_id: str, *, viewport: dict):
 @pytest.mark.playwright_serial
 @pytest.mark.parametrize("style", list(_V6_STYLES))
 def test_cover_styles_v6_wide_no_overflow(tmp_path: Path, style: str) -> None:
-    """AC-CSV6-10..14 · 五款宽屏一屏无溢出。"""
+    """AC-CSV6-10..14 · 十款宽屏一屏无溢出。"""
     trips_dir = tmp_path / "trips"
     trips_dir.mkdir()
     trip_id = _seed(trips_dir, f"v6-{style}-wide", style=style)
@@ -239,11 +244,18 @@ def test_cover_styles_v6_css_tokens_present() -> None:
         "--cover-folio-fade",
         "--cover-cameo-ground",
         "--cover-cameo-ring",
+        "--cover-cameo-r",
         "--cover-monument-dim",
         "--cover-band-ink",
+        "--cover-band-label-max",
+        "--cover-veil-glow",
+        "--cover-folio-cut",
         "--cover-dock-safe",
         "--cover-panel-z",
         "cover-opening__placeholder-badge",
         "cover-opening__explain-line",
     ):
         assert token in css, f"missing {token}"
+    assert "--cover-band-center: 63%" in css or "--cover-band-center:63%" in css.replace(" ", "")
+    assert "--cover-veil-fog-height: 68%" in css or "--cover-veil-fog-height:68%" in css.replace(" ", "")
+    assert "--cover-folio-margin: 33%" in css or "--cover-folio-margin:33%" in css.replace(" ", "")

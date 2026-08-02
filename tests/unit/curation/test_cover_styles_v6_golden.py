@@ -28,8 +28,8 @@ _GOLDEN: list[tuple[str, str, float, float, dict]] = [
     # band-cut · prefer upper/horizon; avoid band_safe_zone
     ("band-cut", "boost", 0.5, 0.32, {}),
     ("band-cut", "boost", 0.48, 0.40, {}),
-    ("band-cut", "penalty", 0.5, 0.72, {}),
-    ("band-cut", "penalty", 0.55, 0.70, {}),
+    ("band-cut", "penalty", 0.5, 0.63, {}),
+    ("band-cut", "penalty", 0.55, 0.68, {}),
     # cameo-aperture · prefer tight center (trusted focal); avoid edge
     ("cameo-aperture", "boost", 0.51, 0.44, {"faceCount": 1}),
     ("cameo-aperture", "boost", 0.48, 0.42, {"faceCount": 1}),
@@ -96,7 +96,7 @@ def test_golden_boost_beats_penalty(style_id: str) -> None:
 
 
 def test_style_fit_below_threshold_flags_bad_pair() -> None:
-    bad = _asset(0.5, 0.72)
+    bad = _asset(0.5, 0.63)
     good = _asset(0.5, 0.32)
     assert style_fit_below_threshold(bad, "band-cut") is True
     assert style_fit_below_threshold(good, "band-cut") is False

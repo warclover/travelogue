@@ -43,7 +43,7 @@ def _trip(assets: list[dict], *, locked: bool = False) -> dict:
 def test_resolve_opening_returns_legal_decision() -> None:
     assets = [
         _asset("upper", 0.5, 0.3, score_hint=2),
-        _asset("band-hit", 0.5, 0.72, score_hint=3),
+        _asset("band-hit", 0.5, 0.63, score_hint=3),
         _asset("center", 0.5, 0.45, score_hint=1.5),
     ]
     trip = _trip(assets)
@@ -104,13 +104,13 @@ def test_title_safe_marks_without_changing_top1_when_gate_off() -> None:
     from travelogue.config import get_config
     from travelogue.config.runtime import config_override
 
-    asset = _asset("strip", 0.5, 0.72)
+    asset = _asset("strip", 0.5, 0.63)
     mark = mark_title_safe(asset, "band-cut", hard_gate=False)
     assert mark["titleUnsafe"] is True
     assert mark["hardGateApplied"] is False
 
     assets = [
-        _asset("strip", 0.5, 0.72, score_hint=5),
+        _asset("strip", 0.5, 0.63, score_hint=5),
         _asset("safe", 0.5, 0.3, score_hint=4.8),
     ]
     cfg = get_config()

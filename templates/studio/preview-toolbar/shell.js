@@ -196,6 +196,11 @@ function explainToHuman(explain) {
     if (styleId === "veil-footer") return "主体偏上，适合雾底题签";
     if (styleId === "folio-overlap") return "右侧有景，适合对页叠印";
     if (styleId === "type-monument") return "氛围底图，适合海报巨字";
+    if (styleId === "scroll-head") return "竖排留白足，适合卷首题";
+    if (styleId === "portal-arch") return "中景开阔，适合天窗取景";
+    if (styleId === "horizon-split") return "地平线清晰，适合上下分带";
+    if (styleId === "contact-stamp") return "纪实感强，适合日戳档案";
+    if (styleId === "diptych-seam") return "景人成对，适合双联断字";
     if (explain.source === "joint-v6") return "已按版式与封面图联合精选";
     return "";
   }

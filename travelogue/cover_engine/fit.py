@@ -97,6 +97,14 @@ def style_fit_score(asset: dict[str, Any], profile: CoverStyleProfile) -> float:
     if profile.prefer.get("short_title"):
         # Asset-level signal unused; mild baseline so monument is not always 0-fit.
         score += 0.05
+    if profile.prefer.get("pair_scene_person"):
+        # Diptych primary prefers non-person landscape/scene.
+        from travelogue.layout_contract.subject import asset_has_person
+
+        if not asset_has_person(asset):
+            score += 0.28
+        elif trusted and fy <= 0.55:
+            score += 0.08
 
     return min(1.0, score)
 

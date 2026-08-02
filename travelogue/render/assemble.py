@@ -158,6 +158,28 @@ def build_render_context(
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)
 
+    cover_secondary_ctx: CoverRenderContext = CoverRenderContext(
+        src="", hasSrcset=False, srcset="", sizes="", alt=""
+    )
+    has_cover_secondary = False
+    if resolve_cover_opening_style(trip) == "diptych-seam":
+        sec_id = str(meta.get("coverSecondaryAssetId") or "").strip()
+        sec_asset = assets.get(sec_id) if sec_id else None
+        if sec_asset and sec_id != cover_id:
+            sfx, sfy = cover_focal_point(sec_asset)
+            cover_secondary_ctx = CoverRenderContext(
+                src=pick_image_src(sec_asset, export_layout=cover_profile),
+                hasSrcset=bool(compile_srcset(sec_asset, mobile=cover_profile == "mobile")),
+                srcset=compile_srcset(sec_asset, mobile=cover_profile == "mobile"),
+                sizes=pick_image_sizes(image_layout, "cover"),
+                alt=alt_text(None, sec_asset, meta_title),
+                useContainFit=cover_use_contain_fit(sec_asset),
+                focalX=sfx,
+                focalY=sfy,
+                hasFocal=True,
+            )
+            has_cover_secondary = bool(cover_secondary_ctx.get("src"))
+
     use_epilogue_stats = (
         surface.use_screens_global
         and not surface.is_longshot_surface
@@ -374,6 +396,8 @@ def build_render_context(
             focalY=fy,
             hasFocal=True,
         ),
+        "coverSecondary": cover_secondary_ctx,
+        "hasCoverSecondary": has_cover_secondary,
         "tripMetaLine": meta_line,
         "tripMetaSubline": meta_subline,
         "tripMetaDatetime": meta_datetime,

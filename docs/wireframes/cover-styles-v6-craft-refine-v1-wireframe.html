@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Styles V6 · 工艺改进线框 v1 · 待审核</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap");
+
+    :root {
+      --ink: #141312;
+      --paper: #f4f2ed;
+      --muted: #6a6560;
+      --line: #d5d0c8;
+      --accent: #2f5a4a;
+      --anno: #c45c26;
+      --ok: #2d6a4f;
+      --font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --serif: "Noto Serif SC", "Songti SC", Georgia, serif;
+      --frame-h: min(68vh, 640px);
+      /* 代表作横图 · Unsplash */
+      --ph-land: url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80");
+      --ph-coast: url("https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80");
+      --ph-city: url("https://images.unsplash.com/photo-1477959858617-67f85b2b74ac?auto=format&fit=crop&w=1600&q=80");
+      --ph-person: url("https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=900&q=80");
+      --ph-mood: url("https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1600&q=80");
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #111;
+      color: #ececec;
+      line-height: 1.5;
+    }
+
+    .bar {
+      position: sticky; top: 0; z-index: 40;
+      padding: 10px 18px 12px;
+      background: #0c0c0c;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .bar h1 { margin: 0; font-size: 13px; font-weight: 600; }
+    .bar h1 em { font-style: normal; color: #d4a574; font-weight: 400; }
+    .bar p { margin: 6px 0 0; font-size: 11px; color: #888; max-width: 96ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #444; background: transparent; color: #ccc;
+      padding: 5px 12px; border-radius: 999px; font-size: 11px; cursor: pointer;
+      font-family: inherit;
+    }
+    .tabs button:hover { background: #1c1c1c; }
+    .tabs button.is-on {
+      background: #d4a574; border-color: #d4a574; color: #111; font-weight: 600;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      min-height: calc(100vh - 110px);
+    }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+    .stage {
+      padding: 28px 24px 56px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .panel { display: none; width: min(1080px, 100%); }
+    .panel.is-on { display: block; }
+
+    .device {
+      background: #e8e6e1;
+      border: 2px solid #333;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,.45);
+    }
+    .device__label {
+      padding: 8px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: .04em;
+      text-transform: uppercase; color: #888; background: #141414;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .device__label strong { color: #d4a574; font-weight: 600; }
+
+    .frame {
+      position: relative;
+      width: 100%;
+      height: var(--frame-h);
+      overflow: hidden;
+      background: #111;
+    }
+    .photo {
+      position: absolute; inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .notes {
+      padding: 20px 18px 40px;
+      background: #121212;
+      border-left: 1px solid #2a2a2a;
+      font-size: 12px; color: #bdbdbd;
+    }
+    .notes h2 {
+      margin: 0 0 10px; font-size: 12px; letter-spacing: .06em;
+      text-transform: uppercase; color: #888;
+    }
+    .notes h3 { margin: 16px 0 8px; font-size: 13px; color: #eee; }
+    .notes p { margin: 0 0 8px; }
+    .notes ul { margin: 0 0 8px; padding-left: 1.15em; }
+    .notes li { margin-bottom: 5px; }
+    .notes .tag {
+      display: inline-block; margin: 0 4px 4px 0;
+      padding: 2px 8px; border-radius: 999px;
+      border: 1px solid #3a3a3a; font-size: 10px; color: #c9c9c9;
+    }
+    .notes .tag--ok { border-color: #2d6a4f; color: #8fdbb5; }
+    .notes .tag--warn { border-color: #8a5a2b; color: #e0b07a; }
+    .callout {
+      margin: 12px 0;
+      padding: 10px 12px;
+      border-left: 3px solid var(--anno);
+      background: #1a1512; color: #e8d5c4;
+    }
+    .anno { color: var(--anno); font-weight: 600; }
+
+    /* ── Overview grid ── */
+    .grid5 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    @media (min-width: 900px) {
+      .grid5 { grid-template-columns: repeat(3, 1fr); }
+    }
+    .thumb {
+      background: #0e0e0e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      width: 100%;
+    }
+    .thumb:hover { border-color: #d4a574; }
+    .thumb__stage {
+      position: relative;
+      height: 140px;
+      overflow: hidden;
+    }
+    .thumb__cap {
+      padding: 8px 10px 10px;
+      background: #161616;
+    }
+    .thumb__cap strong { display: block; font-size: 12px; color: #eee; }
+    .thumb__cap span { font-size: 10px; color: #888; }
+
+    /* ════════ A · veil-footer · craft ════════
+       改：雾更短更软；题区边距加大；字落负空间；钩子可选更淡 */
+    .veil { position: relative; height: 100%; }
+    .veil .photo { background-image: var(--ph-land); background-position: center 38%; }
+    .veil__fog {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 36%;
+      background: linear-gradient(
+        to top,
+        rgba(10, 9, 8, 0.78) 0%,
+        rgba(10, 9, 8, 0.42) 42%,
+        rgba(10, 9, 8, 0.12) 78%,
+        transparent 100%
+      );
+      pointer-events: none; z-index: 2;
+    }
+    .veil__panel {
+      position: absolute; left: 0; bottom: 0; z-index: 3;
+      padding: 0 clamp(40px, 5.5vw, 64px) clamp(36px, 5vh, 52px);
+      max-width: min(520px, 58%);
+      color: #f6f4f1;
+    }
+    .veil__place {
+      margin: 0 0 10px;
+      font-size: 10px; font-weight: 500;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: rgba(180, 210, 198, 0.88);
+    }
+    .veil__title {
+      margin: 0 0 12px;
+      font-family: var(--serif);
+      font-size: clamp(1.85rem, 3.2vw, 2.45rem);
+      font-weight: 600; line-height: 1.2; letter-spacing: 0.04em;
+    }
+    .veil__rule {
+      width: 28px; height: 1px;
+      background: rgba(255,255,255,.32);
+      margin: 0 0 12px;
+    }
+    .veil__hook {
+      margin: 0;
+      font-size: 13px; line-height: 1.5;
+      color: rgba(246,244,241,.62);
+      max-width: 28ch;
+    }
+
+    /* ════════ D · folio-overlap · craft ════════
+       改：纸白更窄像书边；去掉大块渐变卡；题名从纸压入画面 */
+    .folio { position: relative; height: 100%; background: var(--paper); }
+    .folio .photo {
+      position: absolute; top: 0; right: 0; bottom: 0; left: 8%;
+      background-image: var(--ph-coast);
+      background-position: 60% 40%;
+    }
+    .folio__spine {
+      position: absolute; top: 0; left: 0; bottom: 0; width: 8%;
+      background: var(--paper);
+      border-right: 1px solid #e2ddd4;
+      z-index: 2;
+    }
+    .folio__place {
+      position: absolute; top: 28px; left: 0; z-index: 5;
+      writing-mode: vertical-rl;
+      padding: 0 14px;
+      font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+      color: #8a847c;
+    }
+    .folio__panel {
+      position: absolute; left: 0; bottom: 0; z-index: 6;
+      width: min(48%, 460px);
+      padding: 48px 40px 40px clamp(22px, 2.8vw, 36px);
+      /* 纸白实底一小段，再淡出到照片——像印在纸上再压入画面 */
+      background: linear-gradient(
+        100deg,
+        rgba(244,242,237,1) 0%,
+        rgba(244,242,237,.96) 42%,
+        rgba(244,242,237,.55) 72%,
+        rgba(244,242,237,0) 100%
+      );
+    }
+    .folio__title {
+      margin: 0 0 14px;
+      font-family: var(--serif);
+      font-size: clamp(2.1rem, 4vw, 2.9rem);
+      font-weight: 600; line-height: 1.1; letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .folio__hook {
+      margin: 0;
+      font-size: 13px; line-height: 1.5; color: var(--muted);
+      max-width: 26ch;
+    }
+
+    /* ════════ E · band-cut · craft ════════
+       改：题带更低更薄；两栏为主；电影宽银幕字幕感 */
+    .band { position: relative; height: 100%; }
+    .band .photo { background-image: var(--ph-city); background-position: center 30%; }
+    .band__bar {
+      position: absolute; left: 0; right: 0; z-index: 3;
+      top: 74%;
+      transform: translateY(-50%);
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 20px;
+      padding: 12px clamp(28px, 4vw, 48px);
+      background: rgba(12, 11, 10, 0.78);
+      backdrop-filter: blur(2px);
+      border-top: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      color: #f4f2ef;
+    }
+    .band__place {
+      margin: 0;
+      font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      white-space: nowrap;
+    }
+    .band__title {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+      font-weight: 600; letter-spacing: 0.06em;
+      text-align: center;
+    }
+    .band__hook {
+      margin: 0;
+      font-size: 11px; color: rgba(255,255,255,.48);
+      max-width: 18ch; text-align: right;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ════════ F · cameo · craft ════════
+       改：窗是裁切工具；弱化金环；地色更中性；题名更安静 */
+    .cameo {
+      position: relative; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #1c1e20;
+      gap: 22px;
+    }
+    .cameo__aperture {
+      width: min(42vh, 340px);
+      height: min(42vh, 340px);
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.35);
+      background: #111;
+      flex-shrink: 0;
+    }
+    .cameo__aperture .photo {
+      position: relative; width: 100%; height: 100%;
+      background-image: var(--ph-person);
+      background-position: center 20%;
+    }
+    .cameo__meta { text-align: center; color: #eceae6; max-width: 28ch; }
+    .cameo__place {
+      margin: 0 0 8px;
+      font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: rgba(236,234,230,.45);
+    }
+    .cameo__title {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(1.5rem, 2.8vw, 1.95rem);
+      font-weight: 600; letter-spacing: 0.08em;
+    }
+
+    /* ════════ G · type-monument · craft ════════
+       改：短书名作图形；更重暗罩；无钩子；地名作天头小字 */
+    .mono { position: relative; height: 100%; }
+    .mono .photo { background-image: var(--ph-mood); background-position: center 45%; }
+    .mono__veil {
+      position: absolute; inset: 0; z-index: 2;
+      background: rgba(8, 8, 7, 0.48);
+      pointer-events: none;
+    }
+    .mono__place {
+      position: absolute; top: 28px; left: 0; right: 0; z-index: 4;
+      text-align: center;
+      margin: 0;
+      font-size: 10px; letter-spacing: 0.36em; text-transform: uppercase;
+      color: rgba(255,255,255,.42);
+    }
+    .mono__title {
+      position: absolute; inset: 0; z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0;
+      padding: 8% 10%;
+      font-family: var(--serif);
+      font-size: clamp(3.6rem, 9vw, 6.5rem);
+      font-weight: 700; line-height: 1.02; letter-spacing: 0.12em;
+      color: #f7f5f2;
+      text-align: center;
+      text-shadow: 0 2px 24px rgba(0,0,0,.25);
+    }
+
+    .delta {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #161616;
+      border: 1px solid #2e2e2e;
+      border-radius: 8px;
+      font-size: 12px; color: #b8b8b8;
+    }
+    .delta strong { color: #e8d5c4; }
+    .delta ul { margin: 8px 0 0; padding-left: 1.1em; }
+    .delta li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>Cover Styles V6 · 工艺改进线框 <em>v1 · 不动生产</em></h1>
+    <p>原则：照片第一 · 克制题字 · 负空间排字 · 每款只留一个强符号。对标横版摄影画册封面调研，五款骨架保留、工艺减糙。</p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-on" data-view="overview">总览</button>
+      <button type="button" data-view="veil">A · 雾底题签</button>
+      <button type="button" data-view="folio">D · 对页叠印</button>
+      <button type="button" data-view="band">E · 切带题名</button>
+      <button type="button" data-view="cameo">F · 圆窗肖像</button>
+      <button type="button" data-view="monument">G · 巨字碑</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="stage">
+      <!-- Overview -->
+      <div class="panel is-on" id="panel-overview">
+        <div class="device">
+          <div class="device__label">五款改进稿 · <strong>点击缩略进入单款</strong></div>
+          <div style="padding:16px;background:#1c1c1c">
+            <div class="grid5">
+              <button type="button" class="thumb" data-jump="veil">
+                <div class="thumb__stage"><div class="photo" style="background-image:var(--ph-land);background-position:center 38%"></div>
+                  <div style="position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(transparent,rgba(0,0,0,.75))"></div>
+                </div>
+                <div class="thumb__cap"><strong>A · 雾底题签</strong><span>雾更短 · 边距更大 · 默认款</span></div>
+              </button>
+              <button type="button" class="thumb" data-jump="folio">
+                <div class="thumb__stage" style="background:#f4f2ed">
+                  <div class="photo" style="left:12%;right:0;top:0;bottom:0;width:auto;background-image:var(--ph-coast)"></div>
+                </div>
+                <div class="thumb__cap"><strong>D · 对页叠印</strong><span>窄纸边 · 压字入画</span></div>
+              </button>
+              <button type="button" class="thumb" data-jump="band">
+                <div class="thumb__stage"><div class="photo" style="background-image:var(--ph-city)"></div>
+                  <div style="position:absolute;left:0;right:0;top:70%;height:22px;background:rgba(0,0,0,.7)"></div>
+                </div>
+                <div class="thumb__cap"><strong>E · 切带题名</strong><span>更低更薄 · 宽银幕感</span></div>
+              </button>
+              <button type="button" class="thumb" data-jump="cameo">
+                <div class="thumb__stage" style="display:grid;place-items:center;background:#1c1e20">
+                  <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,.2);background-image:var(--ph-person);background-size:cover;background-position:center 20%"></div>
+                </div>
+                <div class="thumb__cap"><strong>F · 圆窗肖像</strong><span>弱装饰 · 强裁切</span></div>
+              </button>
+              <button type="button" class="thumb" data-jump="monument">
+                <div class="thumb__stage"><div class="photo" style="background-image:var(--ph-mood);filter:brightness(.55)"></div>
+                  <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-size:28px;font-weight:700;letter-spacing:.12em;color:#fff">拉萨</div>
+                </div>
+                <div class="thumb__cap"><strong>G · 巨字碑</strong><span>短书名 · 氛围底</span></div>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现网 V6 高保真的统一改动</strong>
+          <ul>
+            <li>去掉「UI 卡片感」：少渐变块、少金环、少粗线。</li>
+            <li>信息降噪：钩子可更淡或省略；书名优先短展示名。</li>
+            <li>横图优先：示范图均为横构图或圆窗专用人像。</li>
+            <li>每款只保留一个强符号（雾 / 纸边 / 切带 / 圆窗 / 巨字）。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- A -->
+      <div class="panel" id="panel-veil">
+        <div class="device">
+          <div class="device__label">A · veil-footer · <strong>雾底题签 · 改进稿</strong></div>
+          <div class="frame">
+            <div class="veil">
+              <div class="photo"></div>
+              <div class="veil__fog"></div>
+              <div class="veil__panel">
+                <p class="veil__place">Yunnan · Lijiang</p>
+                <h2 class="veil__title">雨后古城</h2>
+                <div class="veil__rule"></div>
+                <p class="veil__hook">石板还湿着，巷口有人收伞。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现稿</strong>
+          <ul>
+            <li>雾高约 48% → <strong>36%</strong>，上半摄影更呼吸。</li>
+            <li>题区 max-width 收紧，字落在下缘负空间，不铺满宽。</li>
+            <li>细线更短；钩子对比度降低，可当可选层。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- D -->
+      <div class="panel" id="panel-folio">
+        <div class="device">
+          <div class="device__label">D · folio-overlap · <strong>对页叠印 · 改进稿</strong></div>
+          <div class="frame">
+            <div class="folio">
+              <div class="folio__spine"></div>
+              <p class="folio__place">Qingdao</p>
+              <div class="photo"></div>
+              <div class="folio__panel">
+                <h2 class="folio__title">海岸线</h2>
+                <p class="folio__hook">风从右边来，字从左边印进去。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现稿</strong>
+          <ul>
+            <li>纸白边 11% → <strong>8%</strong>，更像书口不是侧栏。</li>
+            <li>去掉厚实「白卡」感，渐变更快淡出到照片。</li>
+            <li>竖排地名贴在纸边上；题名压入画面右侧。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- E -->
+      <div class="panel" id="panel-band">
+        <div class="device">
+          <div class="device__label">E · band-cut · <strong>切带题名 · 改进稿</strong></div>
+          <div class="frame">
+            <div class="band">
+              <div class="photo"></div>
+              <div class="band__bar">
+                <p class="band__place">Shanghai</p>
+                <h2 class="band__title">外滩夜色</h2>
+                <p class="band__hook">江风很亮</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现稿</strong>
+          <ul>
+            <li>题带中线约 72% → <strong>~74%</strong>，上半大景更完整。</li>
+            <li>条带更薄；三栏变「地名 | 书名 | 短钩」，钩可省略。</li>
+            <li>像电影宽银幕字幕条，不像网页工具栏。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- F -->
+      <div class="panel" id="panel-cameo">
+        <div class="device">
+          <div class="device__label">F · cameo-aperture · <strong>圆窗肖像 · 改进稿</strong></div>
+          <div class="frame">
+            <div class="cameo">
+              <div class="cameo__aperture"><div class="photo"></div></div>
+              <div class="cameo__meta">
+                <p class="cameo__place">Portrait</p>
+                <h2 class="cameo__title">她</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现稿</strong>
+          <ul>
+            <li>去掉厚重石青径向 + 金环堆料；中性地色 + 细白环。</li>
+            <li>圆窗略收，强调<strong>裁切工具</strong>而非装饰框。</li>
+            <li>题名更短、更安静；不适配散景大风景。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- G -->
+      <div class="panel" id="panel-monument">
+        <div class="device">
+          <div class="device__label">G · type-monument · <strong>巨字碑 · 改进稿</strong></div>
+          <div class="frame">
+            <div class="mono">
+              <div class="photo"></div>
+              <div class="mono__veil"></div>
+              <p class="mono__place">Tibet · 2026</p>
+              <h2 class="mono__title">拉萨</h2>
+            </div>
+          </div>
+        </div>
+        <div class="delta">
+          <strong>相对现稿</strong>
+          <ul>
+            <li>书名强制短（示范 2 字）；长标题应降级雾底。</li>
+            <li>暗罩加重，底图只作氛围，不抢可读。</li>
+            <li>去掉钩子层；地名作天头小字。</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <aside class="notes" id="side-notes">
+      <h2>审核备注</h2>
+      <p>本线框<strong>不改生产</strong> CSS。用于确认「减糙」方向是否成立，再落到 `journal.css` token。</p>
+
+      <div class="callout" id="side-callout">
+        总览：五款骨架保留，工艺统一向「摄影书」靠拢。
+      </div>
+
+      <h3>适图提醒</h3>
+      <p>
+        <span class="tag tag--ok">A 主体偏上</span>
+        <span class="tag tag--ok">D 右侧有景</span>
+        <span class="tag tag--warn">E 避切脸</span>
+        <span class="tag tag--warn">F 仅居中人像</span>
+        <span class="tag tag--warn">G 短书名+氛围底</span>
+      </p>
+
+      <h3 id="side-detail-title">本页要点</h3>
+      <ul id="side-detail-list">
+        <li>优先打磨 A（默认 + 窄屏回落）。</li>
+        <li>F/G 提高适图门槛，配错即回退 A。</li>
+        <li>勿再加第 6 款，先把这五款做不像 UI。</li>
+      </ul>
+
+      <h3>参考</h3>
+      <p>调研 Canvas：横版摄影画册封面 · 全出血题签 / 对页压字 / 巨字短名。</p>
+    </aside>
+  </div>
+
+  <script>
+    var SIDE = {
+      overview: {
+        callout: "总览：五款骨架保留，工艺统一向「摄影书」靠拢。",
+        title: "本页要点",
+        items: [
+          "优先打磨 A（默认 + 窄屏回落）。",
+          "F/G 提高适图门槛，配错即回退 A。",
+          "勿再加第 6 款，先把这五款做不像 UI。"
+        ]
+      },
+      veil: {
+        callout: "A 是默认款也是窄屏回落——减糙收益最大。",
+        title: "雾底题签 · 改进",
+        items: [
+          "雾更短更软，把画面还给风景。",
+          "题区收窄，字落负空间。",
+          "对标：全出血摄影封面 + 克制题签。"
+        ]
+      },
+      folio: {
+        callout: "D 借编辑部摄影书：纸边是书，不是侧栏。",
+        title: "对页叠印 · 改进",
+        items: [
+          "纸白收窄到约 8%。",
+          "题名从纸压入画面。",
+          "右侧需有景，满幅人脸不宜。"
+        ]
+      },
+      band: {
+        callout: "E 像宽银幕字幕，不像工具条。",
+        title: "切带题名 · 改进",
+        items: [
+          "题带下移、变薄。",
+          "信息最多三栏，钩子可省。",
+          "严禁题带横切人脸。"
+        ]
+      },
+      cameo: {
+        callout: "F 圆窗是裁切，不是装饰相框。",
+        title: "圆窗肖像 · 改进",
+        items: [
+          "去金环与浓重石青底。",
+          "只配居中人像。",
+          "题名极短、极安静。"
+        ]
+      },
+      monument: {
+        callout: "G 书名即图形；长标题请换 A。",
+        title: "巨字碑 · 改进",
+        items: [
+          "短书名（2–4 字最佳）。",
+          "底图压暗只作氛围。",
+          "去掉钩子，地名作天头。"
+        ]
+      }
+    };
+
+    function setView(view) {
+      document.querySelectorAll(".tabs button[data-view]").forEach(function (b) {
+        b.classList.toggle("is-on", b.dataset.view === view);
+      });
+      document.querySelectorAll(".panel").forEach(function (p) {
+        p.classList.toggle("is-on", p.id === "panel-" + view);
+      });
+      var meta = SIDE[view] || SIDE.overview;
+      document.getElementById("side-callout").textContent = meta.callout;
+      document.getElementById("side-detail-title").textContent = meta.title;
+      var ul = document.getElementById("side-detail-list");
+      ul.innerHTML = meta.items.map(function (t) { return "<li>" + t + "</li>"; }).join("");
+    }
+
+    document.querySelectorAll(".tabs button[data-view]").forEach(function (btn) {
+      btn.addEventListener("click", function () { setView(btn.dataset.view); });
+    });
+    document.querySelectorAll(".thumb[data-jump]").forEach(function (btn) {
+      btn.addEventListener("click", function () { setView(btn.dataset.jump); });
+    });
+
+    setView("overview");
+  </script>
+</body>
+</html>

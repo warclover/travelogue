@@ -15,6 +15,7 @@ from travelogue.cover_engine.joint import (
     score_pair,
 )
 from travelogue.cover_engine.registry import get_profile
+from travelogue.cover_engine.types import CoverJointExplain
 from travelogue.curation.curate import sync_trip_covers
 
 
@@ -46,7 +47,7 @@ def _trip(assets: list[dict], *, locked: bool = False) -> dict:
 
 def test_band_cut_penalizes_focal_in_safe_zone() -> None:
     profile = get_profile("band-cut")
-    bad = _asset("bad", 0.5, 0.72)
+    bad = _asset("bad", 0.5, 0.63)
     good = _asset("good", 0.5, 0.35)
     assert style_avoid_penalty(bad, profile) > style_avoid_penalty(good, profile)
 
@@ -81,20 +82,16 @@ def test_score_pair_joint_formula() -> None:
 
 
 def test_pick_cover_style_and_asset_returns_assignable() -> None:
+    from travelogue.cover_engine import assignable_style_ids
+
     assets = [
         _asset("upper", 0.5, 0.3, score_hint=2),
-        _asset("band-hit", 0.5, 0.72, score_hint=3),
+        _asset("band-hit", 0.5, 0.63, score_hint=3),
         _asset("center", 0.5, 0.45, score_hint=1.5),
     ]
     trip = _trip(assets)
     explain = pick_cover_style_and_asset(trip, layout="web", k=5)
-    assert explain.style_id in {
-        "veil-footer",
-        "folio-overlap",
-        "band-cut",
-        "cameo-aperture",
-        "type-monument",
-    }
+    assert explain.style_id in set(assignable_style_ids())
     assert explain.asset_id in {a["id"] for a in assets}
     assert explain.source in ("joint-v6", "hash-fallback")
 
@@ -102,7 +99,7 @@ def test_pick_cover_style_and_asset_returns_assignable() -> None:
 def test_band_cut_not_optimal_when_focal_in_strip() -> None:
     """AC-CSV6-20 · 切带忌讳图不得成为 band-cut 最优对（有替代时）。"""
     assets = [
-        _asset("strip", 0.5, 0.72, score_hint=5),
+        _asset("strip", 0.5, 0.63, score_hint=5),
         _asset("safe", 0.5, 0.3, score_hint=4.8),
     ]
     _trip(assets)
@@ -180,10 +177,46 @@ def test_apply_style_keep_cover() -> None:
 
 
 def test_hash_fallback_pick_source() -> None:
+    from travelogue.cover_engine import assignable_style_ids
+
     trip = _trip([_asset("a1", 0.5, 0.4)])
     explain = hash_fallback_pick(trip, layout="web")
     assert explain.source == "hash-fallback"
-    assert explain.style_id
+    assert explain.style_id in set(assignable_style_ids())
+
+
+def test_diptych_joint_writes_secondary_when_person_pair() -> None:
+    scene = _asset("scene", 0.5, 0.35, score_hint=3)
+    person = _asset("person", 0.5, 0.44, score_hint=2)
+    person["faceCount"] = 1
+    trip = _trip([scene, person])
+    explain = CoverJointExplain(
+        source="joint-v6",
+        style_id="diptych-seam",
+        asset_id="scene",
+        joint=1.0,
+        quality=1.0,
+        fit=0.5,
+        avoid_penalty=0.0,
+        low_confidence=False,
+        secondary_asset_id="person",
+    )
+    apply_joint_pick(trip, explain, lock=True, layout="web")
+    assert trip["meta"]["coverOpeningStyle"] == "diptych-seam"
+    assert trip["meta"]["coverSecondaryAssetId"] == "person"
+
+    explain_clear = CoverJointExplain(
+        source="manual",
+        style_id="veil-footer",
+        asset_id="scene",
+        joint=0.5,
+        quality=0.5,
+        fit=0.3,
+        avoid_penalty=0.0,
+        low_confidence=False,
+    )
+    apply_joint_pick(trip, explain_clear, lock=True, layout="web")
+    assert "coverSecondaryAssetId" not in trip["meta"]
 
 
 def test_joint_pick_distribution_not_cameo_collapsed() -> None:
@@ -223,6 +256,8 @@ def test_joint_pick_distribution_not_cameo_collapsed() -> None:
 
 def test_loose_center_prefers_veil_or_band_over_cameo() -> None:
     """Roughly mid-upper scene must not win as cameo solely via wide center window."""
+    from travelogue.cover_engine import assignable_style_ids
+
     assets = [
         _asset("loose", 0.36, 0.33, score_hint=5),
         _asset("loose2", 0.40, 0.30, score_hint=4),
@@ -230,4 +265,4 @@ def test_loose_center_prefers_veil_or_band_over_cameo() -> None:
     trip = _trip(assets)
     explain = pick_cover_style_and_asset(trip, layout="web", k=5)
     assert explain.style_id != "cameo-aperture"
-    assert explain.style_id in {"veil-footer", "band-cut", "folio-overlap", "type-monument"}
+    assert explain.style_id in set(assignable_style_ids())

@@ -1,11 +1,31 @@
-<section class="cover-opening" data-block="cover-opening" data-cover-opening="{{coverOpeningStyle}}">
+<section
+  class="cover-opening"
+  data-block="cover-opening"
+  data-cover-opening="{{coverOpeningStyle}}"
+  style="--focal-x: {{cover.focalX}}; --focal-y: {{cover.focalY}};{{#if cover.src}} --cover-src: url('{{cover.src}}');{{/if}}"
+>
   {{> cover-hero}}
+  {{#if hasCoverSecondary}}
+  <header class="cover-hero cover-hero--secondary cover-hero--photo-only" data-block="cover-hero-secondary" aria-hidden="true">
+    <div class="cover-hero__media" style="--focal-x: {{coverSecondary.focalX}}; --focal-y: {{coverSecondary.focalY}};">
+      <img class="cover-hero__img cover-hero__img--secondary"
+        src="{{coverSecondary.src}}"
+        {{#if coverSecondary.hasSrcset}}
+        srcset="{{coverSecondary.srcset}}"
+        sizes="{{coverSecondary.sizes}}"
+        {{/if}}
+        alt=""
+        loading="eager"
+        decoding="async" />
+    </div>
+  </header>
+  {{/if}}
   <div class="cover-opening__panel">
     {{#if showCoverPlace}}
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
     {{> trip-meta}}
-    <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" itemprop="name">{{title}}</h1>
+    <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" data-title="{{title}}" itemprop="name">{{title}}</h1>
     {{#if hasSubtitle}}
     <p class="cover-opening__subtitle subtitle" data-block="cover-subtitle">{{subtitle}}</p>
     {{/if}}

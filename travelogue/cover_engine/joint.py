@@ -211,7 +211,7 @@ def pick_cover_style_and_asset(
 
     if best is None:
         raise ValueError("cover joint pick produced no candidate")
-    return best
+    return _with_diptych_secondary(best, candidates, trip_id=tid)
 
 
 def hash_fallback_pick(
@@ -260,7 +260,7 @@ def hash_fallback_pick(
 
 
 def _explain_to_dict(explain: CoverJointExplain) -> dict[str, Any]:
-    return {
+    out = {
         "source": explain.source,
         "styleId": explain.style_id,
         "assetId": explain.asset_id,
@@ -270,6 +270,58 @@ def _explain_to_dict(explain: CoverJointExplain) -> dict[str, Any]:
         "avoidPenalty": explain.avoid_penalty,
         "lowConfidence": explain.low_confidence,
     }
+    if explain.secondary_asset_id:
+        out["secondaryAssetId"] = explain.secondary_asset_id
+    return out
+
+
+def _pick_diptych_secondary(
+    primary_id: str,
+    candidates: list[dict[str, Any]],
+    *,
+    trip_id: str,
+) -> str:
+    """Best person panel distinct from primary; empty if none."""
+    from travelogue.layout_contract.subject import asset_has_person
+
+    people: list[tuple[int, str]] = []
+    for c in candidates:
+        asset = c["asset"]
+        aid = str(asset.get("id") or "")
+        if not aid or aid == primary_id:
+            continue
+        if asset_has_person(asset) or int(asset.get("faceCount") or 0) > 0:
+            people.append((_tie_break_key(trip_id, "diptych-sec", aid), aid))
+    if not people:
+        return ""
+    people.sort(reverse=True)
+    return people[0][1]
+
+
+def _with_diptych_secondary(
+    explain: CoverJointExplain,
+    candidates: list[dict[str, Any]],
+    *,
+    trip_id: str,
+) -> CoverJointExplain:
+    if explain.style_id != "diptych-seam":
+        return explain
+    secondary = _pick_diptych_secondary(
+        explain.asset_id, candidates, trip_id=trip_id
+    )
+    if not secondary:
+        return explain
+    return CoverJointExplain(
+        source=explain.source,
+        style_id=explain.style_id,
+        asset_id=explain.asset_id,
+        joint=explain.joint,
+        quality=explain.quality,
+        fit=explain.fit,
+        avoid_penalty=explain.avoid_penalty,
+        low_confidence=explain.low_confidence,
+        secondary_asset_id=secondary,
+    )
 
 
 def apply_joint_pick(
@@ -303,6 +355,12 @@ def apply_joint_pick(
             # Keep mobile primary if present; always set web slot.
             if not trip.get("coverAssetId"):
                 trip["coverAssetId"] = asset_id
+
+    secondary = (explain.secondary_asset_id or "").strip()
+    if explain.style_id == "diptych-seam" and secondary and secondary != asset_id:
+        meta["coverSecondaryAssetId"] = secondary
+    else:
+        meta.pop("coverSecondaryAssetId", None)
 
     curation["coverStyleExplain"] = _explain_to_dict(explain)
     if lock:
@@ -395,6 +453,7 @@ def repick_cover_for_style(
 
     if best is None:
         raise ValueError("cover joint repick produced no candidate")
+    best = _with_diptych_secondary(best, candidates, trip_id=tid)
     apply_joint_pick(trip, best, lock=True, layout=layout)
     return best
 

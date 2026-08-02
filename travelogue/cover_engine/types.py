@@ -48,6 +48,7 @@ class CoverJointExplain:
     fit: float = 0.0
     avoid_penalty: float = 0.0
     low_confidence: bool = False
+    secondary_asset_id: str = ""  # diptych-seam person panel; empty = CSS同源回落
 
 
 @dataclass(frozen=True)

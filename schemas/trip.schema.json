@@ -2285,11 +2285,20 @@
             "band-cut",
             "cameo-aperture",
             "type-monument",
+            "scroll-head",
+            "portal-arch",
+            "horizon-split",
+            "contact-stamp",
+            "diptych-seam",
             "card-br",
             "split-mat",
             "magazine-head"
           ],
-          "description": "Web cover opening skin. V6 assignable: first five. Last three deprecated (legacy trips only; resolve maps to V6)."
+          "description": "Web cover opening skin. Assignable: first ten (V6 five + art-direction five). Last three deprecated (legacy trips only; resolve maps to V6)."
+        },
+        "coverSecondaryAssetId": {
+          "type": "string",
+          "description": "Optional secondary cover asset for diptych-seam (person panel); omitted when unused."
         },
         "coverClosingStyle": {
           "type": "string",

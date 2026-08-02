@@ -66,7 +66,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-07-31: tri-col family · 2p2l bookends + 1p4l center-rails + landscape-6 revive.
 # Re-bumped 2026-07-31 (b): restore MEGC equal-2x2 + landscape-6 fixed-stage
 # contain contracts into journal-screens-overlays.css SSOT (sync regression).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}f621c648b71a"
+# Re-bumped 2026-08-02: Cover Styles V6 art-direction · ten opening skins CSS packs.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}5b7626fd561d"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

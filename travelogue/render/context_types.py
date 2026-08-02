@@ -313,6 +313,8 @@ class TripRenderContext(TypedDict, total=False):
     hasSubtitle: bool
     coverShowTitle: bool
     cover: CoverRenderContext
+    coverSecondary: CoverRenderContext
+    hasCoverSecondary: bool
     tripMetaLine: str
     tripMetaSubline: str
     tripMetaDatetime: str | None
