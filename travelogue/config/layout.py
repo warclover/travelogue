@@ -21,7 +21,9 @@ class LayoutScoringConfig:
     search_timeout_ms: int = 2000
     max_candidates_per_bucket: int = 12
     max_evaluations_per_trip: int = 500
-    max_evaluations_per_segment: int = 0
+    # ALG-V3 W3-C2 · finite per-segment cap when scoring is on (0 used to mean unlimited).
+    # Scoring remains default-off → production path unchanged.
+    max_evaluations_per_segment: int = 64
     allow_burst_split: bool = False
     # ALG-V3 C1 · when scoring is on, wall-clock expiry hard-stops search (SearchBudget.timed_out).
     # Scoring default remains off → production path unchanged. Cohort with scoring on gets hard cut.
@@ -280,7 +282,7 @@ def layout_scoring_from_dict(raw: dict[str, Any]) -> LayoutScoringConfig:
         max_candidates_per_bucket=int(raw.get("max_candidates_per_bucket", 12)),
         max_evaluations_per_trip=int(raw.get("max_evaluations_per_trip", 500)),
         max_evaluations_per_segment=int(
-            raw.get("max_evaluations_per_segment", raw.get("maxEvaluationsPerSegment", 0))
+            raw.get("max_evaluations_per_segment", raw.get("maxEvaluationsPerSegment", 64))
         ),
         allow_burst_split=bool(raw.get("allow_burst_split", False)),
         wall_clock_limits_output=cfg_bool(
