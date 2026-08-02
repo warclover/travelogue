@@ -2,12 +2,13 @@
 
 | 属性 | 内容 |
 |------|------|
-| **PRD** | [PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md) **v0.3.1** |
+| **PRD** | [PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md) **v0.3.2** |
 | **评审纪要** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
 | **产品锁** | [acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) **已锁** |
-| **状态** | **W0～W3 工程已合入** · **A5/C4–C5/fine_craft/竖单已锁** · **W1b 人评 Pass** · **A4 人评 Pass（持平·不抬默认）** |
+| **结案** | [acceptance-records/alg3-v3-wave-closeout-2026-08-02.md](./acceptance-records/alg3-v3-wave-closeout-2026-08-02.md) |
+| **状态** | **Done · 本波关闭**（W0～W3 · 产品锁 · W1b Pass · A4 Pass 持平·不抬默认） |
 | **更新日期** | 2026-08-02 |
 
 > **验收原则（承 PRD §10.4 / X01～X10）**
