@@ -1,0 +1,28 @@
+# ALG-V3 · W1b / W2-A4 盲评狗粮配置（复制进本地 config.yaml）
+#
+# 指南：docs/acceptance-records/alg3-blind-dogfood-GUIDE.md
+# 脚手架：alg3-w1b-blind-review-PENDING.md · alg3-w2-a4-blind-review-PENDING.md
+#
+# 本轮共用：不评 A3 / 不开 vision，避免混因。改完后重启 Studio，再对同一 trip 重跑 layout。
+
+vision:
+  enabled: false
+
+shotGrouping:
+  look:
+    enabled: false
+  scene:
+    softSplitAdaptive: false
+  mosaic:
+    atom:
+      enabled: true
+      # W2-A4 Off（默认） / On 实验臂改为 true
+      experimental_relax: false
+      # experimental_relax_gap_scale: 2.0
+      # experimental_relax_span_scale: 1.5
+
+mosaic:
+  near_scene_clone_gate:
+    enabled: false
+    # W1b On（现网默认条件开）= true；Off 对照臂 = false
+    conditional: true

@@ -366,6 +366,6 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 1. ~~W0～W3 工程（含 #38～#45）~~ ✅ 已合 master。  
 2. ~~产品锁 A5 / C4–C5 / fine_craft / 竖单~~ ✅ [alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)。  
 3. ~~A5 opt-in · C4 遥测 · C5 holdback 骨架~~ ✅（默认不成片；CSC **176/110/66**）。  
-4. **当前（非编码）**：填 [W1b 盲评](./acceptance-records/alg3-w1b-blind-review-PENDING.md) · [A4 盲评](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)。  
+4. **当前（非编码）**：按 [盲评狗粮指南](./acceptance-records/alg3-blind-dogfood-GUIDE.md) 填 [W1b 盲评](./acceptance-records/alg3-w1b-blind-review-PENDING.md) · [A4 盲评](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)。  
 5. **本波不做**：fine_craft 绑 vision；竖单默认策略；竖单×`layoutDensity` 分档（下一候选）。  
 6. **暂缓**：B5（AAD）· W4 D2/D3 · 全局 scoring/vision auto。

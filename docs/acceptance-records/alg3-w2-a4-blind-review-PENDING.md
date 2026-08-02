@@ -9,6 +9,7 @@
 | **adaptiveSoftSplit** | false（本轮不评 A3） |
 | **visionEffective** | off / 按样本 |
 | **模板** | [alg3-blind-review-TEMPLATE.md](./alg3-blind-review-TEMPLATE.md) |
+| **狗粮指南** | [alg3-blind-dogfood-GUIDE.md](./alg3-blind-dogfood-GUIDE.md) · [config 样例](../config-alg3-blind-dogfood.example.yaml) |
 | **状态** | **脚手架 · 人评未完成**（自动化 AC-12 funnel+share 已绿；本文件不挡码，挡 **抬默认 on / 宣称 M2·A4 实验过门**） |
 
 ## 成对样本
