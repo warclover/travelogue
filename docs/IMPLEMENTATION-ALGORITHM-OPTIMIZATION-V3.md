@@ -261,6 +261,15 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 **退出**：`layout.scoring.enabled` 仍 false → 默认可达成片不变。
 
+### W3-C3 · beam 变体条件枚举（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-C3-01 | `preferred_hero_id is None` 时不枚举 `no_hero` / `hero_no_pref` / `no_hero_no_mosaic` | `layout_candidates.py` | ☑ |
+| QA-ALG3-C3 | 无 hero / 有 hero+mosaic 变体集合同 | `test_alg3_w3_c3_beam_variants.py` | ☑ |
+
+**退出**：scoring 默认关 → 生产路径零调用；scoring cohort 少打无意义 `plan_screens_for_chapter`。
+
 ---
 
 ## 关键代码地图（只读索引）
