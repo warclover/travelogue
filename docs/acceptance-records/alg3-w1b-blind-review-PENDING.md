@@ -36,3 +36,5 @@
 ## 备注
 
 自动化门：`tests/unit/layout_engine/test_alg3_w1b_clone_gate.py`（合成窗 funnel / ↓≥40% 或硬可见）。人评完成后把本页状态改为 Pass/Conditional 并链截图路径。
+
+**相邻狗粮（不计入本表）**：2026-08-02 已对 master（含 #45 food-grid）做手动成片走查；那是布局回归，**不是**本文件的 clone On/Off 四问对照。

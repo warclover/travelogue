@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1 已合入** · **当前：W3-B2b** |
+| **状态** | **W0～W3 工程包已合入**（含 FE-S02 · C2/C3/B1/B2b · food-grid #45）· **下一挡：人评盲评 / 产品锁** |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master ← **`feat/alg-v3-w3-b2b-hungarian-inplace`** → 其后 W3 backlog / 人评盲评 |
+| **建议分支** | master · 人评见 W1b/A4 PENDING · 编码仅在产品钉 A5 / C4–C5 / fine_craft 后开 |
 
 ---
 
@@ -280,7 +280,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 **退出**：`MosaicConfig` 两 LSE flag 默认仍 False → 生产路径零变化。
 
-### W3-B2b · Hungarian inplace rebind（当前）
+### W3-B2b · Hungarian inplace rebind
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
@@ -288,6 +288,15 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 | QA-ALG3-B2b | rebind 不增计数；inplace < force-rebuild | `test_alg3_w3_b2b_hungarian_rebind.py` | ☑ |
 
 **退出**：`lse_hungarian_assignment` 默认 False → 生产路径零变化。
+
+### Dogfood follow-up · food-grid vs pending portraits（#45）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-LAYOUT-FOOD-01 | 可组美食屏时先 flush pending 竖图，再落 food-grid；MCS 窗勿抢美食资产 | `screen_planner_stages.py` · `mosaic/hook.py` | ☑ |
+| QA-LAYOUT-FOOD | pending+美食仍出 food-grid | `tests/unit/curation/test_food_grid.py` | ☑ |
+
+**备注**：2026-08-02 人工狗粮已过；**不**替代 W1b/A4 盲评四问。竖版单张策略仍搁置。
 
 ---
 
@@ -325,7 +334,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42 / #43）。  
-2. **当前**：`feat/alg-v3-w3-b2b-hungarian-inplace`（匈牙利后原地 rebind）。  
-3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：A5 / C4–C5（B5→AAD）或 fine_craft 入口。
+1. ~~W0～W3 工程（含 #38～#45）~~ ✅ 已合 master：W2-A4 / OQ-02 / FE-S02 / C2 / C3 / B1 / B2b / food-grid。  
+2. **当前（非编码）**：填 [W1b 盲评](./acceptance-records/alg3-w1b-blind-review-PENDING.md) · [A4 盲评](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)（挡 M1b / 抬默认宣称）。  
+3. **产品锁后再编码**：A5（默认仍 `first`）· C4–C5（先钉 VC-04）· fine_craft 入口 · 竖版单张策略。  
+4. **暂缓**：B5（所有权 AAD）· W4 D2/D3 · 全局 scoring/vision auto。

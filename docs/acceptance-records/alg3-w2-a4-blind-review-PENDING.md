@@ -36,3 +36,5 @@
 ## 备注
 
 自动化门：`tests/unit/layout_engine/test_alg3_w2_a4_atom_experimental.py`（funnel↓≥25% + multi-slot share≥floor + floor 永不自动 widen）。人评完成后把本页状态改为 Pass/Conditional 并链截图路径。**禁止**仅凭 funnel 宣称 AC-12 全绿（X04）。
+
+**相邻狗粮（不计入本表）**：2026-08-02 master 手动走查未开 `experimental_relax`；默认路径观感 ≠ A4 实验臂盲评。
