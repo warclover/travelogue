@@ -270,7 +270,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 **退出**：scoring 默认关 → 生产路径零调用；scoring cohort 少打无意义 `plan_screens_for_chapter`。
 
-### W3-B1 · LSE quality_pool hoist（当前）
+### W3-B1 · LSE quality_pool hoist
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
@@ -279,6 +279,15 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 | QA-ALG3-B1 | unified∧¬hungarian 建 1 次；双关 0；传入池不重建；默认双关 | `test_alg3_w3_b1_lse_quality_pool.py` | ☑ |
 
 **退出**：`MosaicConfig` 两 LSE flag 默认仍 False → 生产路径零变化。
+
+### W3-B2b · Hungarian inplace rebind（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-B2b-01 | `rebind_screen_asset_order`：匈牙利后原地改 slots，失败再 rebuild | `builders.py` · `candidates.py` | ☑ |
+| QA-ALG3-B2b | rebind 不增计数；inplace < force-rebuild | `test_alg3_w3_b2b_hungarian_rebind.py` | ☑ |
+
+**退出**：`lse_hungarian_assignment` 默认 False → 生产路径零变化。
 
 ---
 
