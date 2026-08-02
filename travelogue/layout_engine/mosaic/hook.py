@@ -308,6 +308,53 @@ def _defer_portrait_grid8(ctx: ChapterPlanContext, start: int) -> bool:
     )
 
 
+def _window_steals_food_grid(
+    ctx: ChapterPlanContext, start: int, size: int
+) -> bool:
+    """True when this MCS window would consume food that can still form a food-grid.
+
+    Planning already tries ``try_mundane_grid`` before mosaic when food is at the
+    cursor. Mixed portrait+food windows still let MCS swallow the first food
+    (dogfood: portrait-4 of 3P+1F, leftover foods as a thin grid / singles).
+    Prefer the food/mundane collage path over MCS in that case.
+    """
+    if not ctx.enable_food_grid or size < 2:
+        return False
+    from travelogue.layout_contract.subject_tagging import is_mundane_clusterable
+    from travelogue.layout_engine.planner.screen_planner_stages import (
+        _collect_mundane_ids_for_grid,
+        _food_role_grid_params,
+    )
+
+    min_items, max_interruptions, window_seconds = _food_role_grid_params(ctx)
+    window = ctx.ids[start : start + size]
+    first_food_offset: int | None = None
+    first_bucket: str | None = None
+    for offset, aid in enumerate(window):
+        bucket = is_mundane_clusterable(ctx.assets_map.get(aid, {}))
+        if bucket and bucket in ctx.mundane_grid_buckets:
+            first_food_offset = offset
+            first_bucket = bucket
+            break
+    if first_food_offset is None or first_bucket is None:
+        return False
+    # Food at mosaic start is try_mundane_grid's job; don't double-defer.
+    if first_food_offset == 0:
+        return False
+    food_at = start + first_food_offset
+    target_ids = _collect_mundane_ids_for_grid(
+        ctx.ids,
+        ctx.assets_map,
+        food_at,
+        target_bucket=first_bucket,
+        allowed_buckets=ctx.mundane_grid_buckets,
+        max_items=9,
+        tolerance=max_interruptions,
+        window_seconds=window_seconds if first_bucket == "food" else 0.0,
+    )
+    return len(target_ids) >= min_items
+
+
 _DENSE_PACK_SIZES = (4, 6, 9)
 
 
@@ -753,6 +800,9 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         if size in (3, 4, 6, 9) and _window_all_std_portrait(
             window, ctx.aspects
         ):
+            continue
+        # Food/mundane collage beats MCS when the window would eat grid foods.
+        if _window_steals_food_grid(ctx, start, size):
             continue
         if _mixed_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
