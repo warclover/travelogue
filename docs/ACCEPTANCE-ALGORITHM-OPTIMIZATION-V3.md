@@ -7,7 +7,7 @@
 | **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
 | **产品锁** | [acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) **已锁** |
-| **状态** | **W0～W3 工程已合入** · **A5/C4–C5/fine_craft/竖单已锁** · **盲评脚手架仍 PENDING**（挡 M1b / A4 抬默认宣称） |
+| **状态** | **W0～W3 工程已合入** · **A5/C4–C5/fine_craft/竖单已锁** · **W1b 人评 Pass** · **A4 人评 Pass（持平·不抬默认）** |
 | **更新日期** | 2026-08-02 |
 
 > **验收原则（承 PRD §10.4 / X01～X10）**
@@ -180,7 +180,7 @@ MSA / LSE 开启的语料**不**用默认 AC-21 主门；另建 cohort 夹具（
 四问：1 假切条 · 2 跳戏 · 3 混拼/过碎 · 4 节奏。  
 - **模板**：[alg3-blind-review-TEMPLATE.md](./acceptance-records/alg3-blind-review-TEMPLATE.md)（含 `alg3Wave` / `cloneGateOn`）  
 - **亦可**复用 [ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) 并手填同上字段  
-- **W1b 脚手架**：[alg3-w1b-blind-review-PENDING.md](./acceptance-records/alg3-w1b-blind-review-PENDING.md)（人评未完成 → **不可宣称 M1b**）  
+- **W1b 人评**：[alg3-w1b-blind-review-2026-08-02.md](./acceptance-records/alg3-w1b-blind-review-2026-08-02.md)（**Pass** · 2026-08-02；旧链 [PENDING 跳转](./acceptance-records/alg3-w1b-blind-review-PENDING.md)）  
 语料：混导密连拍、换装同地、横竖混拼、小册、无 vision 对照；含窄屏长图。
 
 | 门 | 标准 |

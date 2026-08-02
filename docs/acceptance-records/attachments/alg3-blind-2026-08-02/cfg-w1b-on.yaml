@@ -1,0 +1,15 @@
+﻿# W1b On · conditional clone (shipping default)
+vision:
+  enabled: false
+shotGrouping:
+  look:
+    enabled: false
+  mosaic:
+    atom:
+      enabled: true
+      experimental_relax: false
+mosaic:
+  near_scene_clone_gate:
+    enabled: false
+    conditional: true
+

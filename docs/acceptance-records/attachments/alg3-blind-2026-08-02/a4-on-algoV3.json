@@ -1,0 +1,69 @@
+{
+  "summary": {
+    "arm": "a4-on",
+    "tripId": "demo-3ee2727aea",
+    "cloneGateEffective": true,
+    "visionEffective": "off",
+    "ssgMode": "scene",
+    "rejectFunnelTop": {
+      "atom_boundary": 0,
+      "shot_group": 0,
+      "near_scene_clone": 0
+    },
+    "patternCount": 19,
+    "patternsHead": [
+      "media-card:asset-001",
+      "media-card:asset-002",
+      "media-card:asset-003",
+      "media-card:asset-006",
+      "media-card:asset-007",
+      "media-card:asset-008",
+      "media-card:asset-079",
+      "media-row:asset-009,asset-010",
+      "media-card:asset-011",
+      "media-card:asset-012",
+      "media-row:asset-013,asset-014",
+      "media-card:asset-015",
+      "media-card:asset-016",
+      "media-row:asset-018,asset-019",
+      "media-card:asset-020",
+      "media-card:asset-021",
+      "media-card:asset-022",
+      "media-card:asset-023",
+      "media-card:asset-024"
+    ]
+  },
+  "algoV3": {
+    "visionEffective": "off",
+    "ssgMode": "scene",
+    "clusterNoiseRatio": 0.4085,
+    "cloneGateEffective": true,
+    "layoutScoringEffective": false,
+    "wallClockHardLimit": false,
+    "llm": {
+      "capability": "auto",
+      "preferLlmWhenReady": false,
+      "ready": true,
+      "mayCall": false,
+      "usedOnImport": false,
+      "decorLine": "off",
+      "mllm": "off"
+    },
+    "degradeReasons": [],
+    "rejectFunnelTop": {
+      "atom_boundary": 0,
+      "shot_group": 0,
+      "near_scene_clone": 0
+    },
+    "buildScreenCalls": 0,
+    "lookReferenceMode": "first",
+    "lookReferenceSkipReason": null,
+    "rhythm": {
+      "vc04Unit": "patternId",
+      "maxConsecutiveSamePattern": 2,
+      "maxPatternIdStreakObserved": 6
+    },
+    "diversityHoldback": false,
+    "diversityModeEffective": "mmr"
+  }
+}

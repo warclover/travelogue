@@ -1,0 +1,15 @@
+﻿# A4 On · experimental_relax true
+vision:
+  enabled: false
+shotGrouping:
+  look:
+    enabled: false
+  mosaic:
+    atom:
+      enabled: true
+      experimental_relax: true
+mosaic:
+  near_scene_clone_gate:
+    enabled: false
+    conditional: true
+

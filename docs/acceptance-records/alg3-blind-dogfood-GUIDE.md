@@ -5,7 +5,7 @@
 | 日期 | 2026-08-02 |
 | 配置样例 | [config-alg3-blind-dogfood.example.yaml](../config-alg3-blind-dogfood.example.yaml) |
 | 记录模板 | [alg3-blind-review-TEMPLATE.md](./alg3-blind-review-TEMPLATE.md) |
-| 脚手架 | [W1b PENDING](./alg3-w1b-blind-review-PENDING.md) · [A4 PENDING](./alg3-w2-a4-blind-review-PENDING.md) |
+| 脚手架 | [W1b Pass](./alg3-w1b-blind-review-2026-08-02.md) · [A4 Pass 持平](./alg3-w2-a4-blind-review-2026-08-02.md) |
 | 验收 | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](../ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) §5 |
 
 > **目标**：成对 On/Off 截图 + 四问人评。自动化 AC-10 / AC-12 **不**代替本指南。  
@@ -64,3 +64,19 @@ python -m travelogue studio run <tripId> --until layout
 | W2-A4 | 问1+2 On≥Off；问3 不差（可 N/A） |
 
 填脚手架结论 → Pass / Conditional / Fail，并链截图路径。
+
+---
+
+## 5. 本机复现脚本（可选）
+
+```powershell
+# 单臂 layout + render + 快照 algoV3/HTML
+python scripts/alg3_blind_dogfood_arm.py w1b-off docs/acceptance-records/attachments/alg3-blind-2026-08-02/cfg-w1b-off.yaml
+python scripts/alg3_blind_dogfood_arm.py w1b-on  docs/acceptance-records/attachments/alg3-blind-2026-08-02/cfg-w1b-on.yaml
+
+# 截图（需 Studio 8766 已起）
+python scripts/alg3_blind_dogfood_shots.py
+python scripts/alg3_blind_dogfood_crop.py
+```
+
+2026-08-02 已对 `demo-3ee2727aea` 产出 pair1 材料，见 PENDING 页内链。
