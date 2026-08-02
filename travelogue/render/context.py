@@ -117,12 +117,30 @@ def format_duration(seconds: int | float | None) -> str:
     return f"{m}:{s:02d}"
 
 
+# HTML srcset must not advertise w3200: even with sizes capped at 1800px,
+# DPR×size (e.g. 1800×2=3600) still selects 3200w and large trips OOM the tab
+# (~27MB decoded RGBA each). Capture upgrades via available tiers; 428×scale
+# longshot never needs 3200. Assets on disk keep w3200 for optional tooling.
+_MAX_HTML_SRCSET_WIDTH = 2400
+
+
 def compile_srcset(asset: dict, *, mobile: bool = False) -> str:
     if mobile and asset.get("cropMobile"):
         return ""
     parts: list[str] = []
     for entry in asset.get("srcset") or []:
-        parts.append(f'{entry["file"]} {entry["width"]}w')
+        if not isinstance(entry, dict):
+            continue
+        file_rel = entry.get("file")
+        if not file_rel:
+            continue
+        try:
+            width = int(entry.get("width") or 0)
+        except (TypeError, ValueError):
+            continue
+        if width <= 0 or width > _MAX_HTML_SRCSET_WIDTH:
+            continue
+        parts.append(f"{file_rel} {width}w")
     return ", ".join(parts)
 
 
@@ -137,8 +155,8 @@ _MOBILE_IMAGE_SIZES: dict[str, str] = {
 }
 
 # Align with journal.css --page-width (≤1320) and full-bleed screens (100vw).
-# Cap screen_full below 3200: DPR×size otherwise selects w3200 for every full-bleed
-# slot and large trips OOM the browser tab (110×~40MB decode).
+# Descriptor px are layout CSS widths; browser multiplies by DPR when picking
+# from srcset. Pair with _MAX_HTML_SRCSET_WIDTH so retina cannot reach w3200.
 _WEB_IMAGE_SIZES: dict[str, str] = {
     "cover": (
         "(min-width: 1920px) 1800px, (min-width: 1200px) 1600px, "
@@ -164,7 +182,7 @@ _WEB_IMAGE_SIZES: dict[str, str] = {
     ),
 }
 
-# Prefer mid-tier for <img src> fallback; srcset still offers larger for capture/retina.
+# Prefer mid-tier for <img src> fallback; HTML srcset caps at 2400 (see above).
 _PREFERRED_SRC_WIDTHS: tuple[int, ...] = (1600, 1200, 800, 2400, 3200)
 
 
