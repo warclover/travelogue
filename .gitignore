@@ -56,10 +56,18 @@ _debug/
 _tmp_homepage_audit/
 _tmp*
 .tmp_prefix_tests.txt
+.tmp-*.py
+# Root-only dogfood / agent scratch (do not ignore docs/**/qa-* wireframe assets)
+/qa-*.png
+/qa-*.html
+/qa-*.txt
+/qa-overlap-shots/
 docs/reports/playwright-failures-*.log
 pytest-full.log
 docs/reports/pattern-audit-demo-*.md
 .cache/
+.ruff_cache/
+.import_linter_cache/
 trips/.cache/
 .playwright-mcp/
 page-real-mobile.png
