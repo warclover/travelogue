@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 已合入** · **当前：W3-C3** |
+| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 已合入** · **当前：W3-B1** |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master ← **`feat/alg-v3-w3-c3-beam-variant-prune`** → 其后 W3 backlog / 人评盲评 |
+| **建议分支** | master ← **`feat/alg-v3-w3-b1-lse-quality-pool-hoist`** → 其后 W3 backlog / 人评盲评 |
 
 ---
 
@@ -261,7 +261,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 **退出**：`layout.scoring.enabled` 仍 false → 默认可达成片不变。
 
-### W3-C3 · beam 变体条件枚举（当前）
+### W3-C3 · beam 变体条件枚举
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
@@ -269,6 +269,16 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 | QA-ALG3-C3 | 无 hero / 有 hero+mosaic 变体集合同 | `test_alg3_w3_c3_beam_variants.py` | ☑ |
 
 **退出**：scoring 默认关 → 生产路径零调用；scoring cohort 少打无意义 `plan_screens_for_chapter`。
+
+### W3-B1 · LSE quality_pool hoist（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-B1-01 | 窗级 hoist 门：只看 `lse_quality_unified`（不再 ∧ hungarian） | `candidates.py` | ☑ |
+| BE-ALG3-B1-02 | `score_candidate(quality_pool=…)` 可复用；compose 窗级建一次 | `scorer.py` · `compose.py` | ☑ |
+| QA-ALG3-B1 | unified∧¬hungarian 建 1 次；双关 0；传入池不重建；默认双关 | `test_alg3_w3_b1_lse_quality_pool.py` | ☑ |
+
+**退出**：`MosaicConfig` 两 LSE flag 默认仍 False → 生产路径零变化。
 
 ---
 
@@ -306,7 +316,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2~~ ✅ 已合 master（含 #38 / #39 / #40 / #41）。  
-2. **当前**：`feat/alg-v3-w3-c3-beam-variant-prune`（W3-C3）。  
+1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42）。  
+2. **当前**：`feat/alg-v3-w3-b1-lse-quality-pool-hoist`（W3-B1）。  
 3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：W3 余量（A5 / C4–C5 / B1·B2b；B5→AAD）或 fine_craft 入口。
+4. 其后：W3-B2b / A5 / C4–C5（B5→AAD）或 fine_craft 入口。
