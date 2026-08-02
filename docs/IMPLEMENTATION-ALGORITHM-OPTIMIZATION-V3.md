@@ -7,9 +7,9 @@
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
 | **产品锁** | [acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) **已锁** |
-| **状态** | **W0～W3 工程已合入** · **A5/C4/C5 默认-off 编码已齐** · **W1b 人评 Pass** · 下一挡：A4 人评 |
+| **状态** | **W0～W3 工程已合入** · **A5/C4/C5 默认-off 编码已齐** · **W1b / A4 人评 Pass**（A4 持平·不抬默认） |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master · W1b 见 [Pass 记录](./acceptance-records/alg3-w1b-blind-review-2026-08-02.md) · A4 见 PENDING |
+| **建议分支** | master · [W1b Pass](./acceptance-records/alg3-w1b-blind-review-2026-08-02.md) · [A4 Pass](./acceptance-records/alg3-w2-a4-blind-review-2026-08-02.md) |
 
 ---
 
@@ -366,6 +366,6 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 1. ~~W0～W3 工程（含 #38～#45）~~ ✅ 已合 master。  
 2. ~~产品锁 A5 / C4–C5 / fine_craft / 竖单~~ ✅ [alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)。  
 3. ~~A5 opt-in · C4 遥测 · C5 holdback 骨架~~ ✅（默认不成片；CSC **176/110/66**）。  
-4. **当前（非编码）**：W1b 人评 **Pass** → [alg3-w1b-blind-review-2026-08-02.md](./acceptance-records/alg3-w1b-blind-review-2026-08-02.md)；A4 仍待人评 → [alg3-w2-a4-blind-review-PENDING.md](./acceptance-records/alg3-w2-a4-blind-review-PENDING.md)（指南：[alg3-blind-dogfood-GUIDE.md](./acceptance-records/alg3-blind-dogfood-GUIDE.md)）。  
+4. ~~**当前（非编码）**：W1b / A4 人评~~ ✅ [W1b Pass](./acceptance-records/alg3-w1b-blind-review-2026-08-02.md) · [A4 Pass 持平·不抬默认](./acceptance-records/alg3-w2-a4-blind-review-2026-08-02.md)。  
 5. **本波不做**：fine_craft 绑 vision；竖单默认策略；竖单×`layoutDensity` 分档（下一候选）。  
 6. **暂缓**：B5（AAD）· W4 D2/D3 · 全局 scoring/vision auto。

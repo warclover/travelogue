@@ -5,7 +5,7 @@
 | 日期 | 2026-08-02 |
 | 配置样例 | [config-alg3-blind-dogfood.example.yaml](../config-alg3-blind-dogfood.example.yaml) |
 | 记录模板 | [alg3-blind-review-TEMPLATE.md](./alg3-blind-review-TEMPLATE.md) |
-| 脚手架 | [W1b Pass 2026-08-02](./alg3-w1b-blind-review-2026-08-02.md) · [A4 PENDING](./alg3-w2-a4-blind-review-PENDING.md) |
+| 脚手架 | [W1b Pass](./alg3-w1b-blind-review-2026-08-02.md) · [A4 Pass 持平](./alg3-w2-a4-blind-review-2026-08-02.md) |
 | 验收 | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](../ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) §5 |
 
 > **目标**：成对 On/Off 截图 + 四问人评。自动化 AC-10 / AC-12 **不**代替本指南。  
