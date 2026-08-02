@@ -3,9 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.3.1** |
-| **状态** | **Conditional Go · Must-Fix 已回写**（[评审纪要](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) · BLK-01～10）· **§15 FE 同步矩阵已收录** · **开发负责人代码复核已回写（DEV-01～06 · §14）** · **A5/C4–C5/fine_craft/竖单产品口已锁** |
-| **DOC-STATUS** | **active**（W0～W3 工程已合；产品锁见 [alg3-product-lock…](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)） |
+| **文档版本** | **v0.3.2** |
+| **状态** | **Done · 本波关闭**（W0～W3 + 产品锁 + W1b/A4 人评齐 · [结案](./acceptance-records/alg3-v3-wave-closeout-2026-08-02.md)）· 超出范围见结案「下一候选」 |
+| **DOC-STATUS** | **active**（布局/算法现行合同；本波完成**不**迁 archive） |
 | **主题代号** | 「管线加深 · 就绪探测 · 开关诚实」— **ALG-V3** |
 | **触发来源** | 2026-08-01 首席架构/算法审查 · 产品「LLM 默认可开、无 Key 跳过」· 五席联评 |
 | **审查基线** | [FLOW](./FLOW-TRIPOLOGUE-PIPELINE.md) · [Algorithm V2](./PRD-ALGORITHM-OPTIMIZATION-V2.md)（封面不重开）· [AAD](./PRD-ARCH-ALGO-DEEPENING-V1.md) · [SSG](./PRD-SMART-SHOT-GROUPING-V1.md) · [NAS](./PRD-NO-AI-SURFACE-V1.md) · [DLLM](./PRD-DESKTOP-LLM-SETUP-V1.md) · [AI-Return](./PRD-AI-RETURN-V1.md) · [Pipeline Perf](./PRD-PIPELINE-PERF-V1.md) · Phase15/16 |
@@ -14,8 +14,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) · must-green [alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) · **产品锁** [alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) |
 | **更新日期** | 2026-08-02 |
+| **结案** | [acceptance-records/alg3-v3-wave-closeout-2026-08-02.md](./acceptance-records/alg3-v3-wave-closeout-2026-08-02.md) |
 
-> **v0.3.0 相对 v0.2.1（开发负责人代码复核回写 · 证据见 §14）**
+> **v0.3.2（2026-08-02）**：产品宣布本波完成 — W1b Pass · A4 Pass（持平不抬默认）· 结案记录入库；DOC-STATUS 仍为 active。
 >
 > 1. **DEV-01**：**TriState 改型 / 新增 bool 会硬打穿** `happy_path_recipe` 与 CSC 基线快照。新增 **D5 工作包 + AC-32**，`iter_bool_paths` → `iter_flag_paths` 提到 **W0 挡门**。
 > 2. **DEV-02**：Ready 探测**不得**复用 `studio_llm_status()`（该函数会 `inject_secrets_into_environ`）。新增只读 `probe_llm_ready()`，D-ALG3-02 改写。

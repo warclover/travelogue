@@ -35,7 +35,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 3. 活跃 ADR（例：[adr/007-native-clustering.md](./adr/007-native-clustering.md)；索引 [adr/README.md](./adr/README.md)）  
 4. [ACCEPTANCE.md](./ACCEPTANCE.md) → 特性验收如 [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md)  
 5. 完工与用户面：[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) / [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) / [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)  
-6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（主题包 MTSO / MSA / MEGC / SSG 见本表）  
+6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（**v0.3.2 Done · 本波关闭** · 主题包 MTSO / MSA / MEGC / SSG 见本表）  
 7. 归档候选（**不搬家**）：[archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)
 
 ---
@@ -91,6 +91,10 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-SMART-SHOT-GROUPING-V1.md](./PRD-SMART-SHOT-GROUPING-V1.md) | **active** | 智能分镜 **SSG** **v0.2.1** · Conditional Closed（实拍盲评另填） |
 | [IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md](./IMPLEMENTATION-SMART-SHOT-GROUPING-V1.md) | **active** | SSG 实施 · PR-A～F ✅ |
 | [ACCEPTANCE-SMART-SHOT-GROUPING-V1.md](./ACCEPTANCE-SMART-SHOT-GROUPING-V1.md) | **active** | SSG 验收 · Conditional Closed |
+| [PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md) | **active** | **ALG-V3** **v0.3.2** · **Done · 本波关闭**（合同仍现行 · [结案](./acceptance-records/alg3-v3-wave-closeout-2026-08-02.md)） |
+| [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) | **active** | ALG-V3 实施 · 本波关闭 |
+| [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) | **active** | ALG-V3 验收 · 本波关闭 |
+| [acceptance-records/alg3-v3-wave-closeout-2026-08-02.md](./acceptance-records/alg3-v3-wave-closeout-2026-08-02.md) | **active** | ALG-V3 本波结案 |
 | [acceptance-records/ssg-m3-closeout-2026-07-23.md](./acceptance-records/ssg-m3-closeout-2026-07-23.md) | **active** | SSG M3 结案 |
 | [acceptance-records/ssg-local-dogfood-GUIDE.md](./acceptance-records/ssg-local-dogfood-GUIDE.md) | **active** | SSG 本机狗粮指南 |
 | [acceptance-records/ssg-default-on-decision-2026-07-23.md](./acceptance-records/ssg-default-on-decision-2026-07-23.md) | **active** | SSG 默认 on **Hold** |
