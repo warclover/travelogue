@@ -3,8 +3,9 @@
 | 属性 | 内容 |
 |------|------|
 | **状态** | **active**（本页即状态登记入口） |
-| **日期** | 2026-07-22 |
+| **日期** | 2026-08-02（导读刷新；登记表仍按合入增量扩） |
 | **PRD** | [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) §7.3 |
+| **归档候选** | [archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md) |
 
 ---
 
@@ -25,15 +26,31 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 
 ---
 
-## 现行导读（D-CSC-06）
+## 现行导读（D-CSC-06 · 2026-08 刷新）
 
-按此顺序读「现在有效」的合同，避免误读 superseded / archive：
+按此顺序读「现在有效」的合同，避免误读 superseded / archive。索引页同步：[README.md](./README.md) §现行导读。
 
 1. [CHARTER.md](./CHARTER.md)  
-2. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md)（现行工程骨架）  
-3. 活跃 ADR（例：[adr/007-native-clustering.md](./adr/007-native-clustering.md)）  
-4. [ACCEPTANCE.md](./ACCEPTANCE.md) 索引 → 特性验收如 [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md)  
-5. [PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) / [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md)
+2. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md)（现行工程骨架）→ [DEVELOPMENT.md](./DEVELOPMENT.md)  
+3. 活跃 ADR（例：[adr/007-native-clustering.md](./adr/007-native-clustering.md)；索引 [adr/README.md](./adr/README.md)）  
+4. [ACCEPTANCE.md](./ACCEPTANCE.md) → 特性验收如 [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md)  
+5. 完工与用户面：[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) / [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) / [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)  
+6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（主题包 MTSO / MSA / MEGC / SSG 见本表）  
+7. 归档候选（**不搬家**）：[archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)
+
+---
+
+## 归档策略（P1 · 清单先行）
+
+| 档 | 动作 |
+|----|------|
+| **Closed / archive / superseded** | 可进入搬家 PR；见候选清单 §A |
+| **frozen** | 默认原地保留，索引标明即可 |
+| **Done（未盖 DOC-STATUS）** | 先盖章再迁；见 §B |
+| **Phase 未标注** | 先批量盖章；见 §C |
+| **Conditional Closed** | **禁止归档**（例：SSG） |
+
+本波只维护清单与导读；`git mv` 另开 PR，且需 maintainer 确认。
 
 ---
 
