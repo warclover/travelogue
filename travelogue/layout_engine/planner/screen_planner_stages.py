@@ -787,9 +787,12 @@ def _pick_mundane_bucket_at_cursor(
 
 
 def try_mundane_grid(ctx: ChapterPlanContext) -> int | None:
-    from travelogue.layout_engine.planner.screen_planner import _make_mundane_grid_screen
+    from travelogue.layout_engine.planner.screen_planner import (
+        _flush_portrait_pending,
+        _make_mundane_grid_screen,
+    )
 
-    if not ctx.enable_food_grid or ctx.pending_portraits:
+    if not ctx.enable_food_grid:
         return None
     min_items, max_interruptions, window_seconds = _food_role_grid_params(ctx)
     # Probe with soft cluster first (food); fall back to classic run length.
@@ -829,6 +832,22 @@ def try_mundane_grid(ctx: ChapterPlanContext) -> int | None:
     )
     if len(target_ids) < min_items:
         return None
+    # Product: food/mundane collage beats deferred portrait singles.
+    # Old gate `if pending_portraits: return None` skipped food-grid entirely when
+    # a prior portrait run left a tail in pending — dogfood saw food as singles.
+    # Flush pending first so temporal order holds, then place the grid.
+    if ctx.pending_portraits:
+        for sc in _flush_portrait_pending(
+            ctx.pending_portraits,
+            ctx.aspects,
+            assets_map=ctx.assets_map,
+            layout_state=ctx.layout_state,
+            force=True,
+            solo_exclude=ctx.skip_screen_asset_ids,
+            trip=ctx.trip,
+            cfg=ctx.app_config,
+        ):
+            append_screen(ctx, sc)
     screen = _make_mundane_grid_screen(
         target_ids, bucket=bucket, assets_map=ctx.assets_map
     )

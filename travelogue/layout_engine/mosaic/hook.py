@@ -18,9 +18,7 @@ if TYPE_CHECKING:
 
 _mosaic_logs_var: ContextVar[list[dict] | None] = ContextVar("mosaic_logs", default=None)
 _mosaic_dropped_var: ContextVar[list[str] | None] = ContextVar("mosaic_dropped", default=None)
-_mosaic_capture_enabled_var: ContextVar[bool] = ContextVar(
-    "mosaic_capture_enabled", default=True
-)
+_mosaic_capture_enabled_var: ContextVar[bool] = ContextVar("mosaic_capture_enabled", default=True)
 _fallback_logs: list[dict] = []
 _fallback_dropped: list[str] = []
 
@@ -145,9 +143,7 @@ def _mosaic_winner_has_main_role(
     )
     if pick.used_legacy or not pick.screen:
         return False
-    return ScreenLayoutPlannerState.pattern_has_main_role(
-        str(pick.screen.get("patternId") or "")
-    )
+    return ScreenLayoutPlannerState.pattern_has_main_role(str(pick.screen.get("patternId") or ""))
 
 
 def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
@@ -160,19 +156,16 @@ def chapter_should_skip_hero_for_mosaic(ctx: ChapterPlanContext) -> bool:
         return False
     size = len(ctx.ids)
     if not cfg.enabled and size == 5:
-        return (
-            ctx.trip_total >= MIN_TRIP_PHOTOS_FOR_MOSAIC
-            and window_has_candidates(
-                ctx.ids,
-                ctx.aspects,
-                ctx.assets_map,
-                size=5,
-                cfg=cfg,
-                burst_seconds=ctx.mix_gap,
-                median_sharp=ctx.med_sharp,
-                layout_state=ctx.layout_state,
-                trip_id=_ctx_trip_id(ctx),
-            )
+        return ctx.trip_total >= MIN_TRIP_PHOTOS_FOR_MOSAIC and window_has_candidates(
+            ctx.ids,
+            ctx.aspects,
+            ctx.assets_map,
+            size=5,
+            cfg=cfg,
+            burst_seconds=ctx.mix_gap,
+            median_sharp=ctx.med_sharp,
+            layout_state=ctx.layout_state,
+            trip_id=_ctx_trip_id(ctx),
         )
     if size == 5 and ctx.trip_total < MIN_TRIP_PHOTOS_FOR_MOSAIC and not cfg.enabled:
         return False
@@ -269,11 +262,7 @@ def try_mosaic_window_mcs(
     from travelogue.layout_engine.mosaic.compose import _apply_six_hero_outcome
     from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
 
-    won_six = bool(
-        pick.screen
-        and size == 6
-        and six_hero_family_id(pick.log.winner_pattern_id)
-    )
+    won_six = bool(pick.screen and size == 6 and six_hero_family_id(pick.log.winner_pattern_id))
     _apply_six_hero_outcome(pick.log, won_six=won_six)
 
     if pick.used_legacy:
@@ -308,6 +297,51 @@ def _defer_portrait_grid8(ctx: ChapterPlanContext, start: int) -> bool:
     )
 
 
+def _window_steals_food_grid(ctx: ChapterPlanContext, start: int, size: int) -> bool:
+    """True when this MCS window would consume food that can still form a food-grid.
+
+    Planning already tries ``try_mundane_grid`` before mosaic when food is at the
+    cursor. Mixed portrait+food windows still let MCS swallow the first food
+    (dogfood: portrait-4 of 3P+1F, leftover foods as a thin grid / singles).
+    Prefer the food/mundane collage path over MCS in that case.
+    """
+    if not ctx.enable_food_grid or size < 2:
+        return False
+    from travelogue.layout_contract.subject_tagging import is_mundane_clusterable
+    from travelogue.layout_engine.planner.screen_planner_stages import (
+        _collect_mundane_ids_for_grid,
+        _food_role_grid_params,
+    )
+
+    min_items, max_interruptions, window_seconds = _food_role_grid_params(ctx)
+    window = ctx.ids[start : start + size]
+    first_food_offset: int | None = None
+    first_bucket: str | None = None
+    for offset, aid in enumerate(window):
+        bucket = is_mundane_clusterable(ctx.assets_map.get(aid, {}))
+        if bucket and bucket in ctx.mundane_grid_buckets:
+            first_food_offset = offset
+            first_bucket = bucket
+            break
+    if first_food_offset is None or first_bucket is None:
+        return False
+    # Food at mosaic start is try_mundane_grid's job; don't double-defer.
+    if first_food_offset == 0:
+        return False
+    food_at = start + first_food_offset
+    target_ids = _collect_mundane_ids_for_grid(
+        ctx.ids,
+        ctx.assets_map,
+        food_at,
+        target_bucket=first_bucket,
+        allowed_buckets=ctx.mundane_grid_buckets,
+        max_items=9,
+        tolerance=max_interruptions,
+        window_seconds=window_seconds if first_bucket == "food" else 0.0,
+    )
+    return len(target_ids) >= min_items
+
+
 _DENSE_PACK_SIZES = (4, 6, 9)
 
 
@@ -327,9 +361,7 @@ def _cleanly_packable(remaining: int, pack: tuple[int, ...]) -> bool:
     return reachable(remaining)
 
 
-def _collage_size_order(
-    sizes: list[int], remaining: int, *, fit_limit: int
-) -> list[int]:
+def _collage_size_order(sizes: list[int], remaining: int, *, fit_limit: int) -> list[int]:
     """Collage-first: prefer windows that leave a cleanly dense-packable tail.
 
     Keeps balanced/hero output untouched; only reorders MCS window attempts so a
@@ -337,11 +369,7 @@ def _collage_size_order(
     greedy (largest-first) order when no size yields a packable remainder.
     """
     pack = tuple(s for s in _DENSE_PACK_SIZES if s in sizes)
-    preferred = [
-        s
-        for s in sizes
-        if s <= fit_limit and _cleanly_packable(remaining - s, pack)
-    ]
+    preferred = [s for s in sizes if s <= fit_limit and _cleanly_packable(remaining - s, pack)]
     rest = [s for s in sizes if s not in preferred]
     return preferred + rest
 
@@ -543,9 +571,7 @@ def _try_mcs_single_hero_rescue(ctx: ChapterPlanContext, start: int) -> int | No
     return 1
 
 
-def _log_mcs_all_sizes_failed(
-    ctx: ChapterPlanContext, start: int, tried_sizes: list[int]
-) -> None:
+def _log_mcs_all_sizes_failed(ctx: ChapterPlanContext, start: int, tried_sizes: list[int]) -> None:
     """LTN C1 · fail-loud when every MCS size (and rescue) failed."""
     from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 
@@ -561,6 +587,7 @@ def _log_mcs_all_sizes_failed(
     _append_mosaic_log(log.to_dict())
     if ctx.layout_state is not None:
         ctx.layout_state.release_hero_reserve()
+
 
 def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
     """Try enabled window sizes (P21 balanced: 5→4→6). Returns advance count or None."""
@@ -631,9 +658,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         elif sizes != before_atom:
             reorder_reason = "atom_prefix_cap"
     allow_six_hero = False
-    six_opportunity_on = (
-        effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
-    )
+    six_opportunity_on = effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
     if six_opportunity_on and remaining >= 6 and (6 in sizes or int(seg_cap) < 6):
         from travelogue.layout_engine.mosaic.hero_six import six_hero_outcome_label
         from travelogue.layout_engine.mosaic.log import MosaicWindowLog
@@ -750,16 +775,14 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         # must NOT collapse into a pure portrait grid (portrait-3/4/6/9). Defer
         # such windows to the portrait pending tiler, which prefers two-column
         # pairs (portrait-2) and only uses a triple as an odd-parity filler.
-        if size in (3, 4, 6, 9) and _window_all_std_portrait(
-            window, ctx.aspects
-        ):
+        if size in (3, 4, 6, 9) and _window_all_std_portrait(window, ctx.aspects):
+            continue
+        # Food/mundane collage beats MCS when the window would eat grid foods.
+        if _window_steals_food_grid(ctx, start, size):
             continue
         if _mixed_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
-        if (
-            not allow_six_hero
-            and _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg)
-        ):
+        if not allow_six_hero and _single_portrait_dense_skip(window, ctx.aspects, size, cfg=cfg):
             continue
         # LTN C1 · size=3 aux short-circuit removed; portrait tiler owns explicit triples.
         # AC-04 · admitted six always runs MCS (funnel attempt) even if cheap prefilter misses.
