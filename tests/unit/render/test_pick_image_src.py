@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from travelogue.render.context import pick_image_sizes, pick_image_src
+from travelogue.render.context import compile_srcset, pick_image_sizes, pick_image_src
 
 
 def test_pick_image_src_prefers_w1600_over_display_w3200() -> None:
@@ -32,3 +32,21 @@ def test_web_sizes_cap_below_3200() -> None:
     assert "2200px" not in cover
     assert "1800px" in cover
     assert "1800px" in screen
+
+
+def test_compile_srcset_excludes_w3200_to_prevent_retina_oom() -> None:
+    """sizes×DPR can still request ≥3200; omit that candidate from HTML srcset."""
+    asset = {
+        "srcset": [
+            {"file": "assets/a-w800.webp", "width": 800},
+            {"file": "assets/a-w1600.webp", "width": 1600},
+            {"file": "assets/a-w2400.webp", "width": 2400},
+            {"file": "assets/a-w3200.webp", "width": 3200},
+        ],
+    }
+    srcset = compile_srcset(asset)
+    assert "3200w" not in srcset
+    assert "w3200" not in srcset
+    assert "2400w" in srcset
+    assert "1600w" in srcset
+    assert "800w" in srcset
