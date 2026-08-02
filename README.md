@@ -1,6 +1,6 @@
-# Travelogue · 游记智能体
+# Travelogue · 画册智能体
 
-> 照片 + 可选短视频 → 智能策展与短文案 → **杂志风 HTML 游记** · **预览 + 微信长图分享**  
+> 照片 + 可选短视频 → 智能策展与短文案 → **杂志风 HTML 画册** · **预览 + 微信长图分享**  
 > MVP 管线已完成；**Phase 2** 重点：非开发者可用的 Studio 工作台 + 服务端长图。
 
 | 属性 | 内容 |
@@ -102,11 +102,11 @@ travelogue/
 ├── docs/                 # MVP + Phase 2 文档
 ├── schemas/trip.schema.json
 ├── templates/
-│   ├── visual-journal/   # 游记模板 + golden
+│   ├── visual-journal/   # 画册模板 + golden
 │   └── studio/           # Phase 2 工作台（待实现）
 ├── scripts/
 │   └── start-studio.bat  # 双击启动 Studio
-├── trips/{tripId}/       # 运行时游记项目（gitignore）
+├── trips/{tripId}/       # 运行时画册项目（gitignore）
 │   ├── trip.json
 │   ├── source/
 │   ├── assets/
