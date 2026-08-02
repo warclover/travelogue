@@ -303,6 +303,35 @@ def test_mixed_bucket_prefix_still_forms_food_grid() -> None:
     assert any(sc.get("layoutHint") == FOOD_GRID_LAYOUT_HINT for sc in screens)
 
 
+def test_pending_portraits_do_not_block_food_grid() -> None:
+    """Dogfood regression: portrait tail in pending must not skip food-grid.
+
+    Sequence: odd portrait run leaves pending, then ≥2 food at cursor. Food
+    collage should still win (after flushing pending), not fall to singles.
+    """
+    # 3 portraits → pair + 1 pending tail; then 3 foods.
+    ids = ["p1", "p2", "p3", "f1", "f2", "f3"]
+    assets, aspects = _assets_and_aspects(ids, food_ids={"f1", "f2", "f3"})
+    for aid in ("p1", "p2", "p3"):
+        assets[aid]["width"] = 900
+        assets[aid]["height"] = 1600
+    screens = plan_screens_for_chapter(
+        ids,
+        aspects,
+        assets=assets,
+        include_chapter_hero=False,
+    )
+    food = _food_screens(screens)
+    assert len(food) >= 1, f"expected food-grid, got patterns={[s.get('patternId') for s in screens]}"
+    food_ids = {
+        slot.get("assetId")
+        for sc in food
+        for slot in (sc.get("slots") or [])
+        if slot.get("assetId")
+    }
+    assert {"f1", "f2", "f3"} <= food_ids
+
+
 def test_flush_does_not_duplicate_assets_after_generic_screen() -> None:
     ids = ["s1", "f1", "f2", "f3"]
     assets, aspects = _assets_and_aspects(ids, food_ids={"f1", "f2", "f3"})
