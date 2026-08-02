@@ -93,6 +93,14 @@ tests/unit/layout_engine/test_alg3_w3_b2b_hungarian_rebind.py
 # === dogfood · food-grid priority vs pending portraits (#45) ===
 tests/unit/curation/test_food_grid.py::test_pending_portraits_do_not_block_food_grid
 
-# === planned (W3+ remainder after product lock 2026-08-02) ===
-# A5 look_reference opt-in · C4 patternId streak telemetry · C5 holdback default-off
-# (encode when kicked off; do NOT raise vision via fine_craft; do NOT change portrait-single defaults)
+# === ALG-V3 W3-A5 · look reference opt-in (PL-A5) ===
+tests/unit/layout_engine/test_alg3_w3_a5_look_reference.py
+
+# === ALG-V3 W3-C4 · patternId streak telemetry (PL-VC04) ===
+tests/unit/layout_engine/test_alg3_w3_c4_pattern_streak.py
+
+# === ALG-V3 W3-C5 · diversity holdback skeleton (PL-C5) ===
+tests/unit/layout_engine/test_alg3_w3_c5_diversity_holdback.py
+
+# === planned (remainder) ===
+# fine_craft↔vision wiring · portrait-single defaults · B5/AAD · W4

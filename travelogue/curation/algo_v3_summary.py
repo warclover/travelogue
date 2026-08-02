@@ -107,6 +107,33 @@ def _reject_funnel_top(curation: dict[str, Any]) -> dict[str, int]:
     return out
 
 
+def _pattern_id_streak_telemetry(trip: dict, *, max_allowed: int) -> dict[str, Any]:
+    """ALG-V3 C4 / PL-VC04 · patternId streak (not layout_kind)."""
+    from travelogue.curation.layout_constraints import max_consecutive_pattern_streak
+
+    chapters = trip.get("chapters") if isinstance(trip.get("chapters"), list) else []
+    observed = 0
+    for ch in chapters:
+        if not isinstance(ch, dict):
+            continue
+        screens = [
+            s
+            for s in (ch.get("screens") or [])
+            if isinstance(s, dict)
+            and any(
+                isinstance(slot, dict) and slot.get("assetId")
+                for slot in (s.get("slots") or [])
+            )
+        ]
+        if screens:
+            observed = max(observed, max_consecutive_pattern_streak(screens))
+    return {
+        "vc04Unit": "patternId",
+        "maxConsecutiveSamePattern": int(max_allowed),
+        "maxPatternIdStreakObserved": int(observed),
+    }
+
+
 def build_algo_v3_summary(
     trip: dict,
     *,
@@ -146,6 +173,24 @@ def build_algo_v3_summary(
         else get_build_screen_calls()
     )
 
+    curate_cfg = getattr(app_cfg, "curate", None)
+    max_same = int(getattr(curate_cfg, "max_consecutive_same_pattern", 2) or 2)
+    look_cfg = getattr(getattr(app_cfg, "shot_grouping", None), "look", None)
+    look_mode = str(getattr(look_cfg, "reference_mode", "first") or "first")
+
+    from travelogue.layout_engine.mosaic.lte_adapter import mcs_diversity_config
+
+    div = mcs_diversity_config(cfg=app_cfg)
+    te = getattr(app_cfg.layout, "template_engine", None)
+    holdback = bool(getattr(te, "diversity_holdback", False)) if te is not None else False
+
+    sg = curation.get("shotGrouping") if isinstance(curation.get("shotGrouping"), dict) else {}
+    sg_stats = sg.get("stats") if isinstance(sg.get("stats"), dict) else {}
+    look_skip = sg_stats.get("lookReferenceSkipReason")
+    if look_skip is None:
+        telem = sg.get("telemetry") if isinstance(sg.get("telemetry"), dict) else {}
+        look_skip = telem.get("lookReferenceSkipReason")
+
     return {
         "visionEffective": _vision_effective(app_cfg, trip),
         "ssgMode": _ssg_mode(trip),
@@ -157,6 +202,11 @@ def build_algo_v3_summary(
         "degradeReasons": degrade_reasons,
         "rejectFunnelTop": _reject_funnel_top(curation or {}),
         "buildScreenCalls": calls,
+        "lookReferenceMode": look_mode,
+        "lookReferenceSkipReason": look_skip,
+        "rhythm": _pattern_id_streak_telemetry(trip, max_allowed=max_same),
+        "diversityHoldback": holdback,
+        "diversityModeEffective": str(div.get("mode") or "off"),
     }
 
 

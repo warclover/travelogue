@@ -149,6 +149,8 @@ class LayoutTemplateEngineConfig:
     overrides_disable: tuple[str, ...] = ()
     diversity_mode: str | None = None
     diversity_lambda: float | None = None
+    # ALG-V3 C5 / PL-C5 · when True, force diversity mode off (A/B holdback).
+    diversity_holdback: bool = False
 
 
 @dataclass
@@ -319,6 +321,12 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
             div_lambda = float(div_lambda_raw)
         except (TypeError, ValueError):
             div_lambda = None
+    holdback = cfg_bool(
+        diversity,
+        "holdback",
+        "holdback",
+        cfg_bool(raw, "diversity_holdback", "diversityHoldback", False),
+    )
     return LayoutTemplateEngineConfig(
         enabled=bool(raw.get("enabled", True)),
         registry_path=str(raw.get("registry_path", "travelogue/layout_templates/templates")),
@@ -336,6 +344,7 @@ def layout_template_engine_from_dict(raw: dict[str, Any]) -> LayoutTemplateEngin
         overrides_disable=disable,
         diversity_mode=div_mode,
         diversity_lambda=div_lambda,
+        diversity_holdback=holdback,
     )
 
 

@@ -16,9 +16,9 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 175,
+    "bool_fields": 176,
     "default_true": 110,
-    "default_false": 65,
+    "default_false": 66,
     "tristate_fields": 5
   },
   "appconfig_bools": {
@@ -119,6 +119,7 @@
     "layout.strategy_engine.enabled": false,
     "layout.strategy_engine.feedback.enabled": false,
     "layout.strategy_engine.telemetry.emit_per_window": true,
+    "layout.template_engine.diversity_holdback": false,
     "layout.template_engine.emit_per_template": true,
     "layout.template_engine.enabled": true,
     "layout.template_engine.exclude_collage_from_mosaic": true,

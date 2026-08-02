@@ -321,6 +321,8 @@ layout:
         diversity:
           mode: mmr   # off | mmr | dpp
           lambda: 0.65
+          # ALG-V3 C5 / PL-C5 · true 时强制 mode=off（A/B holdback）；默认 false
+          holdback: false
     # 不改 YAML 即可零曝光某 pattern（AC-P16-13）
     overrides:
       disable:
@@ -618,6 +620,9 @@ shotGrouping:
     enabled: auto                  # M2 · 造型分镜；无脸则 skip
     deltaThreshold: 0.28
     sustainFrames: 2
+    # ALG-V3 A5 / PL-A5 · first=今日默认；ema|medoid 仅 opt-in
+    referenceMode: first
+    emaAlpha: 0.3
   mosaic:
     sliceCrossGroupHardReject: true
     sameGroupAntiSlice: true
