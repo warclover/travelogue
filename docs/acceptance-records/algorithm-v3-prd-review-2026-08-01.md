@@ -118,7 +118,7 @@
 5. `template_experiments` 默认表述与代码 cohort 对齐。  
 6. AC-01：NAS 默认不调用时用 `ready=false`，勿每次堆 `llm_not_ready` 噪声。  
 7. 节奏 streak 进仪表（视觉 Should）；W3 前至少 log。  
-8. OQ-02「仅 fine_craft」须定义 preset/入口否则不可执行。  
+8. ~~OQ-02「仅 fine_craft」须定义 preset/入口否则不可执行。~~ → **已锁 PL-FC**（2026-08-02）：不绑 fine_craft；cohort SSOT。见 [alg3-product-lock…](./alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)。  
 9. vision auto 与 Pipeline Perf 共用首跑/大册 P95 退出门。  
 10. FLOW As-Is 补 lock/G1 以免实施漏 stage。
 

@@ -3,17 +3,17 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.3.0** |
-| **状态** | **Conditional Go · Must-Fix 已回写**（[评审纪要](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) · BLK-01～10）· **§15 FE 同步矩阵已收录** · **开发负责人代码复核已回写（DEV-01～06 · §14）** |
-| **DOC-STATUS** | **active-draft**（**M0 文档齐** · 下一刀 **W0 挡门编码**；未改代码默认值前不成片变更） |
+| **文档版本** | **v0.3.1** |
+| **状态** | **Conditional Go · Must-Fix 已回写**（[评审纪要](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) · BLK-01～10）· **§15 FE 同步矩阵已收录** · **开发负责人代码复核已回写（DEV-01～06 · §14）** · **A5/C4–C5/fine_craft/竖单产品口已锁** |
+| **DOC-STATUS** | **active**（W0～W3 工程已合；产品锁见 [alg3-product-lock…](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md)） |
 | **主题代号** | 「管线加深 · 就绪探测 · 开关诚实」— **ALG-V3** |
 | **触发来源** | 2026-08-01 首席架构/算法审查 · 产品「LLM 默认可开、无 Key 跳过」· 五席联评 |
 | **审查基线** | [FLOW](./FLOW-TRIPOLOGUE-PIPELINE.md) · [Algorithm V2](./PRD-ALGORITHM-OPTIMIZATION-V2.md)（封面不重开）· [AAD](./PRD-ARCH-ALGO-DEEPENING-V1.md) · [SSG](./PRD-SMART-SHOT-GROUPING-V1.md) · [NAS](./PRD-NO-AI-SURFACE-V1.md) · [DLLM](./PRD-DESKTOP-LLM-SETUP-V1.md) · [AI-Return](./PRD-AI-RETURN-V1.md) · [Pipeline Perf](./PRD-PIPELINE-PERF-V1.md) · Phase15/16 |
 | **关联实现锚点** | `curation/{clustering,scene_clusters,shot_grouping}.py` · `layout_engine/mosaic/{candidates,scorer,compose,trip,selfheal}.py` · `layout_contract/search_budget.py` · `web/{studio_narrate,ai_surface}.py` · `config/{_common,vision,clustering,shot_grouping,mosaic,layout,misc,aesthetic,studio}.py` |
 | **评审纪要** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
-| **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md)（**M0 已拆** · AC-21 白名单已钉）· must-green [alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md)（**M0 已拆** · W0 挡门优先） |
-| **更新日期** | 2026-08-01 |
+| **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) · must-green [alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) · **产品锁** [alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
+| **实施清单** | [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md) |
+| **更新日期** | 2026-08-02 |
 
 > **v0.3.0 相对 v0.2.1（开发负责人代码复核回写 · 证据见 §14）**
 >
@@ -260,7 +260,7 @@ else:
 | **VC-ALG3-01** | 切条/假一条类才跨组硬拒；合法杂志混拼可跨组（软约束）。回引 D-SSG-05/17/21 |
 | **VC-ALG3-02** | Surface=off 且无 dark/cohort 时，Capability **不改变**默认可达**文案与版式胜出**；允许 Ready 摘要 |
 | **VC-ALG3-03** | Atom/soft-split **实验性**放宽须同时过假切条+跳戏盲评（双门）；**默认不自动 widen** |
-| **VC-ALG3-04** | 连续同 `patternId`（或约定 layout_kind）超阈为质量回归项 |
+| **VC-ALG3-04** | 连续同 **`patternId`** 超阈为质量回归项（主尺锁定；阈默认 2）。`layout_kind` 不作本波主尺。见 [产品锁 PL-VC04](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | **VC-ALG3-05** | 本波禁止改 Wait Tips / FirstSuccess / Help 的 AI/「升级」话术 |
 
 本波**不需要**新线框/COPY 冻结表；释放面时由 AIR 解冻。
@@ -285,7 +285,7 @@ else:
 | **A2** | `cluster_noise_ratio` 进 meta/漏斗 | W0 观测 | — |
 | **A3** | soft-split 按簇内中位间隔自适应（夹紧） | W2 | — |
 | **A4** | Atom：**仅**显式实验旗；优先降窗/告警；**禁止** observe floor 自动 widen | W2 实验 | BLK-08 |
-| **A5** | Look EMA/medoid；skip reason | W3 | — |
+| **A5** | Look 参考：默认 **first**；EMA/medoid **opt-in** + skip 可观测 | W3 | [产品锁 PL-A5](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | **A6** | look **批量化 encode** + 共享 session；超时可观测 | W2 | 非「二次热身」 |
 
 ### 4.2 中游 MCS
@@ -312,7 +312,7 @@ else:
 | **C1** | `layout.scoring.wall_clock_limits_output`（名待定）→ loader → `SearchBudget`；scoring 开时默认 true | **W1a-2** | 贯通，非改魔法默认。**scoring 默认关 → 默认路径零行为变化**；新增 bool 键须同步 AC-32 |
 | **C2** | `max_evaluations_per_segment` 有限默认（开 scoring 时） | W3 / 先修再开包 | — |
 | **C3** | 「no_mosaic 条件枚举」**已部分落地**；W3 剪 always-on 变体（`no_hero` 等） | W3 | 勿重复造 |
-| **C4/C5** | 节奏语义统一；diversity holdback | W3 | VC-04 |
+| **C4/C5** | C4：节奏口径统一到 `patternId` streak；C5：diversity holdback **默认 off** | W3 | VC-04 · [产品锁](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | **C6** | PrefixBeam 默认关 | — | — |
 
 ### 4.4 工程
@@ -337,7 +337,7 @@ else:
 | `prefer_llm_when_ready` | **false** | Import |
 | `decor_line_llm_enabled` | W0=**false**（对齐 example）；日后 TriState，实调受 MayCall | T5 修正案 |
 | `aesthetic.mllm.enabled` | W0=**false**；日后同左 + VL 探测 | OQ-05 |
-| `vision.enabled` | **先维持 false 或仅 cohort/fine_craft**（OQ-02=C→A） | 不本波全局 auto |
+| `vision.enabled` | **先维持 false 或仅 cohort**（OQ-02=C；**不**绑 fine_craft 自动开） | [产品锁 PL-FC](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | `near_scene_clone_gate` | **条件开**（W1b） | OQ-03=A |
 | `layout.scoring.wall_clock_*` | **新键贯通**；scoring 开时默认硬截断 | C1 |
 | `layout.scoring.enabled` | **保持 false** | OQ-04=A |
@@ -571,7 +571,7 @@ NAS 默认不尝试调用时：**不要**每次堆 `llm_not_ready`；用 `ready=
 | ID | 问题 | **v0.2 建议拍板** |
 |----|------|-------------------|
 | **OQ-01** | NAS 期 import 自动 LLM？ | **A 否** |
-| **OQ-02** | vision 默认 auto？ | **先 C（fine_craft/cohort）**，狗粮后再议 A |
+| **OQ-02** | vision 默认 auto？ | **先 C（cohort SSOT）**；**不**绑 fine_craft 自动开；狗粮后再议 A · [PL-FC](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 | **OQ-03** | clone 门？ | **A 条件开** |
 | **OQ-04** | 本波开 scoring？ | **A 否** |
 | **OQ-05** | MLLM 凭证？ | **须 VL 能力；否则 skip** |
@@ -900,17 +900,13 @@ pattern_disabled → try_order_for_pattern → atom_boundary
 | v0.2.1 | 2026-08-01 | 增补 §15 FE 同步矩阵（上下游触点 · 分波 UI · Must/Should/禁止） |
 | **v0.3.0** | 2026-08-01 | **开发负责人代码复核回写（DEV-01～06）**：新增 §14 证据台账；D5 开关清单单源 + AC-32 挡门；`probe_llm_ready()` 只读探测 + AC-07；§3.2.1 capability 真值表 + AC-06；MCS 重定位（删 B3 / 拆 B2a·B2b / B1 降 W3）+ AC-20 改口径；W1a 拆 W1a-1/W1a-2；explain 人话由 S01 升 Must FE-ALG3-05 |
 | v0.3.0+M0 | 2026-08-01 | **开发前准备（不改代码）**：拆 ACCEPTANCE（钉 AC-21 白名单）· IMPLEMENTATION（W0/W1a 任务表）· must-green nodeids · 两份 baseline 占位 JSON |
+| **v0.3.1** | 2026-08-02 | **产品口锁定**：A5 默认 first / EMA·medoid opt-in；VC-04 主尺 `patternId`（阈 2）；C5 holdback 默认 off；fine_craft 不绑 vision（cohort SSOT）；竖单本波不改默认 · [产品锁](./acceptance-records/alg3-product-lock-a5-c4-fc-portrait-2026-08-02.md) |
 
 ---
 
 **下一步**
 
-1. 产品确认 §11 OQ / §5.4 T 表（默认可沿用评审建议）。  
-2. ~~拆 ACCEPTANCE + IMPLEMENTATION~~ → **已完成**（2026-08-01）：  
-   - [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md)（**AC-21 白名单已钉** · §2）  
-   - [IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md](./IMPLEMENTATION-ALGORITHM-OPTIMIZATION-V3.md)（W0 挡门任务表）  
-   - [alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt)（collect-only 79）  
-   - 基线：`alg3-build-screen-calls-baseline.json`（frozen · W0=8）· `alg3-ac21-layout-baseline.json`（frozen · B2a-on）  
-3. **授权后开工 W0（`feat/alg-v3-w0`）**：D5 → `probe_llm_ready` → FE-ALG3-05 → `buildScreenCalls` 埋点 → 冻基线。  
-4. W0 合入后：W1a-1 / W1a-2 可并行开发、**串行合入**；两者均**不改生产默认成片逻辑**。  
-5. 成片变更仅从 W1b 开始，须带基线 JSON + 盲评。
+1. ~~产品确认 A5 / C4–C5 / fine_craft / 竖单~~ → **已锁**（2026-08-02）。  
+2. 人评：W1b / A4 盲评 PENDING（挡宣称，不挡 A5/C4/C5 默认-off 编码）。  
+3. 可编码：A5 opt-in · C4 口径/遥测 · C5 flag 骨架（均默认不成片）。  
+4. 本波不做：fine_craft→vision；竖单默认策略；竖单×`layoutDensity` 分档。
