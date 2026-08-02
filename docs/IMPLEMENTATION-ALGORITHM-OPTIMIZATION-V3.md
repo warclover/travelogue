@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 已合入** · **当前：W3-B1** |
+| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1 已合入** · **当前：W3-B2b** |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master ← **`feat/alg-v3-w3-b1-lse-quality-pool-hoist`** → 其后 W3 backlog / 人评盲评 |
+| **建议分支** | master ← **`feat/alg-v3-w3-b2b-hungarian-inplace`** → 其后 W3 backlog / 人评盲评 |
 
 ---
 
@@ -270,7 +270,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 **退出**：scoring 默认关 → 生产路径零调用；scoring cohort 少打无意义 `plan_screens_for_chapter`。
 
-### W3-B1 · LSE quality_pool hoist（当前）
+### W3-B1 · LSE quality_pool hoist
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
@@ -279,6 +279,15 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 | QA-ALG3-B1 | unified∧¬hungarian 建 1 次；双关 0；传入池不重建；默认双关 | `test_alg3_w3_b1_lse_quality_pool.py` | ☑ |
 
 **退出**：`MosaicConfig` 两 LSE flag 默认仍 False → 生产路径零变化。
+
+### W3-B2b · Hungarian inplace rebind（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-B2b-01 | `rebind_screen_asset_order`：匈牙利后原地改 slots，失败再 rebuild | `builders.py` · `candidates.py` | ☑ |
+| QA-ALG3-B2b | rebind 不增计数；inplace < force-rebuild | `test_alg3_w3_b2b_hungarian_rebind.py` | ☑ |
+
+**退出**：`lse_hungarian_assignment` 默认 False → 生产路径零变化。
 
 ---
 
@@ -316,7 +325,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42）。  
-2. **当前**：`feat/alg-v3-w3-b1-lse-quality-pool-hoist`（W3-B1）。  
+1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42 / #43）。  
+2. **当前**：`feat/alg-v3-w3-b2b-hungarian-inplace`（匈牙利后原地 rebind）。  
 3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：W3-B2b / A5 / C4–C5（B5→AAD）或 fine_craft 入口。
+4. 其后：A5 / C4–C5（B5→AAD）或 fine_craft 入口。

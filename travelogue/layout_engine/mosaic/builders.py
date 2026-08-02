@@ -556,6 +556,40 @@ def try_order_for_pattern(
     return None
 
 
+def rebind_screen_asset_order(
+    screen: dict,
+    ordered_ids: list[str],
+    *,
+    assets_map: dict[str, dict],
+) -> bool:
+    """ALG-V3 W3-B2b · reassign slot assets in place after Hungarian reorder.
+
+    Avoids a second ``build_screen`` (which would double-count AC-20 and redo
+    editorial/finalize). Returns False when shapes mismatch — caller may rebuild.
+    Does **not** increment the build_screen call counter.
+    """
+    slots = screen.get("slots") or []
+    if len(slots) != len(ordered_ids):
+        return False
+    from travelogue.layout_engine.mosaic.lte_adapter import resolve_slot_fit
+
+    pattern_id = str(screen.get("patternId") or "")
+    for idx, aid in enumerate(ordered_ids):
+        sl = slots[idx]
+        if not isinstance(sl, dict):
+            return False
+        role = str(sl.get("role") or "photo")
+        sl["assetId"] = aid
+        sl["slot"] = idx
+        sl["fit"] = resolve_slot_fit(
+            pattern_id,
+            idx,
+            role,
+            assets_map.get(aid, {}),
+        )
+    return True
+
+
 def build_screen(
     pattern: MosaicPattern,
     ordered_ids: list[str],
