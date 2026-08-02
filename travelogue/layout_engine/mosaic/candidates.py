@@ -9,7 +9,11 @@ from travelogue.config import MosaicConfig, get_config
 from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.usage_context import WindowContext
 from travelogue.layout_contract.usage_rules_registry import USAGE_RULE_UNDO_ORDER
-from travelogue.layout_engine.mosaic.builders import build_screen, try_order_for_pattern
+from travelogue.layout_engine.mosaic.builders import (
+    build_screen,
+    rebind_screen_asset_order,
+    try_order_for_pattern,
+)
 from travelogue.layout_engine.mosaic.clone_detection import (
     NEAR_SCENE_CLONE_REJECT_THRESHOLD,
     effective_clone_hard_gate,
@@ -344,7 +348,11 @@ def generate_window_candidates_with_rejections(
             )
             if refined is not None:
                 ordered = refined
-                screen = build_screen(pat, ordered, assets_map=assets_map)
+                # W3-B2b · inplace rebind; rebuild only if shapes mismatch.
+                if not rebind_screen_asset_order(
+                    screen, ordered, assets_map=assets_map
+                ):
+                    screen = build_screen(pat, ordered, assets_map=assets_map)
         geom_ok = screen_slots_geometry_ok(screen, aspects)
         if tc_enabled:
             from travelogue.layout_engine.contract.evaluator import (

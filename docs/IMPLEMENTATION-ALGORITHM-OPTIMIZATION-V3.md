@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 已合入** · **当前：W3-B1** |
+| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1 已合入** · **当前：W3-B2b** |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master ← **`feat/alg-v3-w3-b1-lse-quality-pool-hoist`** → 其后 W3 backlog / 人评盲评 |
+| **建议分支** | master ← **`feat/alg-v3-w3-b2b-hungarian-inplace`** → 其后 W3 backlog / 人评盲评 |
 
 ---
 
@@ -316,7 +316,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42）。  
-2. **当前**：`feat/alg-v3-w3-b1-lse-quality-pool-hoist`（W3-B1）。  
+1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 + W3-C3 + W3-B1~~ ✅ 已合 master（含 #38 / #39 / #40 / #41 / #42 / #43）。  
+2. **当前**：`feat/alg-v3-w3-b2b-hungarian-inplace`（匈牙利后原地 rebind）。  
 3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：W3-B2b / A5 / C4–C5（B5→AAD）或 fine_craft 入口。
+4. 其后：A5 / C4–C5（B5→AAD）或 fine_craft 入口。
