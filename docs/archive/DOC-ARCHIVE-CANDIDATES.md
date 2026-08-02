@@ -13,7 +13,7 @@
 
 | 档 | 含义 | 数量 | 建议动作 |
 |----|------|------|----------|
-| **A · 强候选** | 文首已标 Closed / archive / superseded / frozen | **12**（去重后） | 下一波可批量迁 `docs/archive/2026/`（frozen 可原地保留） |
+| **A · 强候选** | 文首已标 Closed / archive / superseded / frozen | **12**（去重后） | **A1 已迁** `2026/qfx-cqa/`；其余见 §A2/A3 |
 | **B · Done 待确认** | 文首 `Done`，尚未统一标 archive | **14** | 先补 DOC-STATUS，再决定是否迁 |
 | **C · Phase 未标注** | Phase 合同无 Closed/DOC-STATUS | **58** | 先批量盖章（archive 或 active），再搬 |
 | **Hold** | Conditional Closed / 仍作现行引用 | **4+** | **禁止归档** |
@@ -22,16 +22,18 @@
 
 ## A · 强候选（可优先搬）
 
-### A1 · Closed（修复包 / 审计包）
+### A1 · Closed（修复包 / 审计包）· **已迁 2026-08-02**
 
-| 文档 | 证据 | 备注 |
+> 正文：[`2026/qfx-cqa/`](./2026/qfx-cqa/) · 根路径留 stub，旧链不断。
+
+| 文档 | 证据 | 现状 |
 |------|------|------|
-| [PRD-QUALITY-FIXPACK-V1.md](../PRD-QUALITY-FIXPACK-V1.md) | DOC-STATUS **Closed**；登记表 Closed | 与 IMPL/ACCEPTANCE 同族一并迁 |
-| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](../IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | 状态 **Closed**（文内 DOC-STATUS 仍写 active，以 Closed 为准） | 迁前可把 DOC-STATUS 改成 Closed |
-| [ACCEPTANCE-QUALITY-FIXPACK-V1.md](../ACCEPTANCE-QUALITY-FIXPACK-V1.md) | 状态 **Closed** | |
-| [PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md](../PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | DOC-STATUS **closed** | CQA 三件套 |
-| [IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md](../IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | DOC-STATUS **closed** | |
-| [ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](../ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | 状态 **Closed** | |
+| [PRD-QUALITY-FIXPACK-V1.md](./2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md) | DOC-STATUS **Closed** | ✅ archived · stub [`../PRD-QUALITY-FIXPACK-V1.md`](../PRD-QUALITY-FIXPACK-V1.md) |
+| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | **Closed** | ✅ archived · stub |
+| [ACCEPTANCE-QUALITY-FIXPACK-V1.md](./2026/qfx-cqa/ACCEPTANCE-QUALITY-FIXPACK-V1.md) | **Closed** | ✅ archived · stub |
+| [PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./2026/qfx-cqa/PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **closed** | ✅ archived · stub |
+| [IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **closed** | ✅ archived · stub |
+| [ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **Closed** | ✅ archived · stub |
 
 ### A2 · archive / superseded
 
@@ -163,7 +165,7 @@
 
 ## 建议下一波执行顺序（仍不在本 PR）
 
-1. **A1**：QFX + CQA 六件套 → `docs/archive/2026/qfx-cqa/`（改链接或留 stub 指针）。  
+1. ~~**A1**：QFX + CQA 六件套~~ → ✅ [`2026/qfx-cqa/`](./2026/qfx-cqa/)（根 stub）。  
 2. **A2**：MVP + Phase8 superseded + Gallery rhythm（ADR-006 优先原地标 superseded）。  
 3. **B**：逐个确认 Done → 盖 `archive` 后迁。  
 4. **C**：Phase 批量盖章；README「新人阅读顺序」改为短现行链 + 「历史 Phase」折叠区。

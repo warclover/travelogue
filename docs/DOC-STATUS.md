@@ -79,7 +79,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/ui-detail-wave10-wizard-help-closeout-2026-07-22.md](./acceptance-records/ui-detail-wave10-wizard-help-closeout-2026-07-22.md) | **active** | Wave10 Wizard+Help+Closeout |
 | [acceptance-records/ui-detail-wave11-runtime-2026-07-22.md](./acceptance-records/ui-detail-wave11-runtime-2026-07-22.md) | **active** | Wave11 Runtime+Contract freeze |
 | [PRD-KEEP-ALL-PHOTOS-V1.md](./PRD-KEEP-ALL-PHOTOS-V1.md) | **active** | P9-F3 全部保留模式（**v0.1.3** · 回填仍执行 · 跳低清仅显式 keep_all） |
-| [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md) | **Closed** | 日更质量修复包 QFX **v0.2.1** · Closed（[Acceptance](./ACCEPTANCE-QUALITY-FIXPACK-V1.md) · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)） |
+| [archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md) | **archive**（Closed） | QFX **v0.2.1** · 已迁（根 stub · [Acceptance](./archive/2026/qfx-cqa/ACCEPTANCE-QUALITY-FIXPACK-V1.md) · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)） |
 | [PRD-COMMERCIALIZATION-MVP-V1.md](./PRD-COMMERCIALIZATION-MVP-V1.md) | **active** | 商业化 MVP **CMZ** **v0.1.0**（Draft · 买断 + 离线许可 + 导出墙） |
 | [PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md](./PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1.md) | **active** | 拼图模板选型与使用优化 **MTSO** **v0.2.0**（Conditional Go · 可 Kickoff M1 · [评审](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md)） |
 | [acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md](./acceptance-records/mtso-mosaic-template-selection-v1-review-2026-07-23.md) | **active** | MTSO 七席联评 · Conditional Go · BLK-01～08 · 可 Kickoff M1 |
@@ -115,8 +115,11 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/msa-default-on-decision-2026-07-23.md](./acceptance-records/msa-default-on-decision-2026-07-23.md) | **active** | MSA 默认 on 决策 · **hold off** |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) | **active** | MSA 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md) | **active** | MSA 七席评审纪要**模板**（结案见日期版） |
-| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | **Closed** | QFX 实施 Closed · PR-A/B/C/C2/D 已合 master |
-| [ACCEPTANCE-QUALITY-FIXPACK-V1.md](./ACCEPTANCE-QUALITY-FIXPACK-V1.md) | **Closed** | QFX AC-01～27 结案勾选 · `quality_fixpack_gate` |
+| [archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | **archive**（Closed） | QFX 实施 · PR-A/B/C/C2/D 已合 master |
+| [archive/2026/qfx-cqa/ACCEPTANCE-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/ACCEPTANCE-QUALITY-FIXPACK-V1.md) | **archive**（Closed） | QFX AC-01～27 · `quality_fixpack_gate` |
+| [archive/2026/qfx-cqa/PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/PRD-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA · 根 stub 保留旧链 |
+| [archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 实施 |
+| [archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 验收 |
 | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | **active** | QFX 七席跨职能评审 · Conditional Go · 系统根因与根本解法 |
 | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) | **active** | NAS 用户面现行合同（**v0.2.3** · status 403 + config 投影收口 · Conditional Go） |
 | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) | **active** | NAS 实施 **v0.2.2** · status 403 · config 投影 · 对齐 QFX |

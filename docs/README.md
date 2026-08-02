@@ -176,8 +176,8 @@
 | [PRD-POST-MERGE-UX-FIXPACK-V1.md](./PRD-POST-MERGE-UX-FIXPACK-V1.md) | **合入后 UX 修复包 V1** **v0.2**（Conditional Go · 决策已锁 · [走查](./acceptance-records/post-merge-ux-trial-2026-07-22.md) · [实施](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) · [验收](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md)） |
 | [IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md](./IMPLEMENTATION-POST-MERGE-UX-FIXPACK-V1.md) | 合入后修复包 · RCA + 实施清单（分支实施中） |
 | [ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md](./ACCEPTANCE-POST-MERGE-UX-FIXPACK-V1.md) | PMX · 验收合同（AC-PMX-01～13） |
-| [PRD-QUALITY-FIXPACK-V1.md](./PRD-QUALITY-FIXPACK-V1.md) | **日更质量修复包 V1（QFX）** **v0.2.1**（Conditional Go · 探查拍板 · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md)） |
-| [IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | QFX 实施 **v0.1.0** · T-00～11 · PR-A→D · Ready for PR-A |
+| [archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/PRD-QUALITY-FIXPACK-V1.md) | **QFX** **v0.2.1** · **archive（Closed）** · [评审](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) · 根 stub 保留 |
+| [archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-QUALITY-FIXPACK-V1.md) | QFX 实施 · Closed · 与 [CQA 包](./archive/2026/qfx-cqa/README.md) 同目录 |
 | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | QFX 七席评审 · 系统根因 · 根本解法 · Must-Fix |
 | [acceptance-records/post-merge-ux-trial-2026-07-22.md](./acceptance-records/post-merge-ux-trial-2026-07-22.md) | 合入后完整 UX 走查 · P0–P2 账本（2026-07-22） |
 | [acceptance-records/post-trip-photo-needs-research-2026-07-21.md](./acceptance-records/post-trip-photo-needs-research-2026-07-21.md) | 旅行结束后照片整理需求调研（定性元分析 · P0=挑/成册/交付） |
@@ -697,6 +697,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-02 | 文档卫生 A1：QFX+CQA 六件套迁入 [archive/2026/qfx-cqa/](./archive/2026/qfx-cqa/)（根 stub 保旧链） |
 | 2026-08-02 | 文档卫生 P1：新增 [DOC-ARCHIVE-CANDIDATES](./archive/DOC-ARCHIVE-CANDIDATES.md)；README/DOC-STATUS **现行导读**与历史 Phase 考古链拆分（不搬家） |
 | 2026-07-23 | SSG：**PRD v0.2.1** · 分支 `feature/smart-shot-grouping-v1` · PR-A～F Conditional Closed（默认 on Hold · 实拍盲评另填） |
 | 2026-07-23 | SSG 七席：[ssg-smart-shot-grouping-v1-review-2026-07-23.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-2026-07-23.md) · **Conditional Go** · PRD **v0.2.0** 回写 · 可 Kickoff M0 |
