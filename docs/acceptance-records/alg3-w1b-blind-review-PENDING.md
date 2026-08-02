@@ -9,6 +9,7 @@
 | **adaptiveSoftSplit** | false（本轮不评 A3） |
 | **visionEffective** | off（无 vision / SSG empty 路径） |
 | **模板** | [alg3-blind-review-TEMPLATE.md](./alg3-blind-review-TEMPLATE.md) |
+| **狗粮指南** | [alg3-blind-dogfood-GUIDE.md](./alg3-blind-dogfood-GUIDE.md) · [config 样例](../config-alg3-blind-dogfood.example.yaml) |
 | **状态** | **脚手架 · 人评未完成**（自动化 AC-10 已绿；本文件不挡码，挡 **M1b 宣称**） |
 
 ## 成对样本
