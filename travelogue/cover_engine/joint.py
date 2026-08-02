@@ -490,11 +490,11 @@ def apply_style_keep_cover(trip: dict, style_id: str) -> CoverJointExplain:
         avoid_penalty=avoid,
         low_confidence=False,
     )
-    meta = trip.setdefault("meta", {})
-    meta["coverOpeningStyle"] = style_id
-    trip.setdefault("curation", {})["coverStyleExplain"] = _explain_to_dict(explain)
-    from travelogue.cover_engine.lock import set_opening_locked
-
-    set_opening_locked(trip, True)
-    record_cover_joint_event(_trip_id(trip), explain, locked=True)
+    if style_id == "diptych-seam":
+        candidates = iter_joint_candidates(trip, layout="web", k=8)
+        explain = _with_diptych_secondary(
+            explain, candidates, trip_id=_trip_id(trip)
+        )
+    # Persist style (+ diptych secondary / clear when leaving diptych).
+    apply_joint_pick(trip, explain, lock=True, layout="web")
     return explain

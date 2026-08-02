@@ -705,7 +705,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     section.className = "preview-sheet__section preview-sheet__cover-section";
     section.innerHTML =
       '<span class="preview-sheet__label">封面版式</span>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑预览有效；窄屏与手机版式不同。更换版式默认会重荐封面图。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑宽屏（≥1024px）生效；窄屏回落雾底呈现。更换版式默认会重荐封面图；双联款会尽量配人物副图。</p>' +
       '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>' +
       '<p class="preview-sheet__cover-blurb" hidden></p>' +
       '<label class="preview-sheet__cover-keep-label">' +

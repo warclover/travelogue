@@ -1,7 +1,10 @@
 <section
-  class="cover-opening"
+  class="cover-opening{{#if cover.src}} cover-opening--has-src{{/if}}"
   data-block="cover-opening"
   data-cover-opening="{{coverOpeningStyle}}"
+  data-cover-secondary="{{#if hasCoverSecondary}}on{{else}}off{{/if}}"
+  data-cover-seal="{{coverSealChar}}"
+  data-cover-stamp="{{coverStampLabel}}"
   style="--focal-x: {{cover.focalX}}; --focal-y: {{cover.focalY}};{{#if cover.src}} --cover-src: url('{{cover.src}}');{{/if}}"
 >
   {{> cover-hero}}
@@ -20,7 +23,7 @@
     </div>
   </header>
   {{/if}}
-  <div class="cover-opening__panel">
+  <div class="cover-opening__panel" data-cover-seal="{{coverSealChar}}" data-cover-stamp="{{coverStampLabel}}">
     {{#if showCoverPlace}}
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
@@ -31,6 +34,9 @@
     {{/if}}
     {{#if showCoverHook}}
     <p class="hook-line cover-opening__hook" data-block="hook-line"{{#if editableHook}} data-editable="hook" data-edit-path="meta.hook"{{/if}}>{{hook}}</p>
+    {{/if}}
+    {{#if hasCoverArchiveStrip}}
+    <p class="cover-opening__archive" data-block="cover-archive">{{coverArchiveStrip}}</p>
     {{/if}}
   </div>
 </section>

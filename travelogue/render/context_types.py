@@ -322,9 +322,14 @@ class TripRenderContext(TypedDict, total=False):
     hasCoverPlace: bool
     showCoverPlace: bool
     showCoverHook: bool
+    coverSealChar: str
+    coverStampLabel: str
+    coverArchiveStrip: str
+    hasCoverArchiveStrip: bool
     hook: str
     hasHook: bool
     coverOpeningStyle: str
+    coverTitleLayout: str
     editableHook: bool
     epilogue: str
     hasEpilogue: bool

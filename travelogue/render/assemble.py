@@ -158,6 +158,40 @@ def build_render_context(
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)
 
+    # Craft attrs for CSS packs (seal / archive stamp) — first title glyph + short date.
+    cover_seal_char = "行"
+    for ch in meta_title:
+        if ch.strip():
+            cover_seal_char = ch
+            break
+    cover_stamp_label = "旅行\n档案"
+    stamp_src = str(meta_datetime or meta_line or "").strip()
+    if stamp_src:
+        # Prefer compact 2-line stamp: YYYY / MM·DD
+        compact = stamp_src.replace("—", "-").replace("/", "-").replace(".", "-")
+        parts = [p for p in compact.replace(" ", "-").split("-") if p]
+        if len(parts) >= 3 and parts[0].isdigit() and len(parts[0]) == 4:
+            cover_stamp_label = f"{parts[0]}\n{parts[1]}·{parts[2][:2]}"
+        else:
+            cover_stamp_label = stamp_src[:18].replace(" ", "\n")
+
+    # Archive strip for contact-stamp (trip meta only — no camera EXIF on reader face).
+    archive_bits: list[str] = []
+    if meta_subline:
+        archive_bits.append(str(meta_subline).strip())
+    if cover_place and cover_place not in (meta_subline or ""):
+        archive_bits.append(cover_place)
+    taken_at = str(cover_asset.get("takenAt") or "").strip()
+    if taken_at:
+        try:
+            from datetime import datetime as _dt
+
+            t = _dt.fromisoformat(taken_at.replace("Z", "+00:00"))
+            archive_bits.append(t.strftime("%H:%M"))
+        except ValueError:
+            pass
+    cover_archive_strip = "\n".join(archive_bits[:3]) if archive_bits else ""
+
     cover_secondary_ctx: CoverRenderContext = CoverRenderContext(
         src="", hasSrcset=False, srcset="", sizes="", alt=""
     )
@@ -405,6 +439,10 @@ def build_render_context(
         "hasCoverPlace": bool(cover_place),
         "showCoverPlace": show_cover_place,
         "showCoverHook": show_cover_hook,
+        "coverSealChar": cover_seal_char,
+        "coverStampLabel": cover_stamp_label,
+        "coverArchiveStrip": cover_archive_strip,
+        "hasCoverArchiveStrip": bool(cover_archive_strip),
         "hook": hook,
         "hasHook": bool(hook),
         "coverOpeningStyle": resolve_cover_opening_style(trip),

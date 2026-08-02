@@ -174,6 +174,22 @@ def test_apply_style_keep_cover() -> None:
     assert explain.asset_id == "keep-me"
     assert trip["meta"]["coverOpeningStyle"] == "folio-overlap"
     assert trip["curation"]["coverJointLocked"] is True
+    assert "coverSecondaryAssetId" not in trip["meta"]
+
+
+def test_apply_style_keep_cover_diptych_attaches_and_clears_secondary() -> None:
+    scene = _asset("scene", 0.5, 0.35, score_hint=3)
+    person = _asset("person", 0.5, 0.44, score_hint=2)
+    person["faceCount"] = 1
+    trip = _trip([scene, person])
+    trip["curation"] = {"coverByLayout": {"web": "scene", "mobile": "scene"}}
+    explain = apply_style_keep_cover(trip, "diptych-seam")
+    assert explain.style_id == "diptych-seam"
+    assert explain.asset_id == "scene"
+    assert trip["meta"]["coverSecondaryAssetId"] == "person"
+    apply_style_keep_cover(trip, "veil-footer")
+    assert trip["meta"]["coverOpeningStyle"] == "veil-footer"
+    assert "coverSecondaryAssetId" not in trip["meta"]
 
 
 def test_hash_fallback_pick_source() -> None:

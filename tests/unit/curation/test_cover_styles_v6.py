@@ -238,6 +238,8 @@ def test_journal_css_v6_tokens_and_skins() -> None:
         'data-cover-opening="horizon-split"',
         'data-cover-opening="contact-stamp"',
         'data-cover-opening="diptych-seam"',
+        "cover-opening--has-src",
+        "clip-path: inset(0 calc(100% - var(--cover-folio-cut)) 0 0)",
         "border-radius: 50%",
         "min-width: 64rem",
         "cover-opening__placeholder-badge",
