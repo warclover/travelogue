@@ -90,4 +90,7 @@ tests/unit/layout_engine/test_alg3_w3_b1_lse_quality_pool.py
 # === ALG-V3 W3-B2b · Hungarian inplace rebind ===
 tests/unit/layout_engine/test_alg3_w3_b2b_hungarian_rebind.py
 
-# === planned (W3+ remainder) ===
+# === dogfood · food-grid priority vs pending portraits (#45) ===
+tests/unit/curation/test_food_grid.py::test_pending_portraits_do_not_block_food_grid
+
+# === planned (W3+ remainder: A5 / C4-C5 after product lock) ===
