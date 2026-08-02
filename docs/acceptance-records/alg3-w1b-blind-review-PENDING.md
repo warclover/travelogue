@@ -2,29 +2,39 @@
 
 | 属性 | 内容 |
 |------|------|
-| **日期** | 2026-08-01 |
-| **评分人** | （待填） |
+| **日期** | 2026-08-02 |
+| **评分人** | （待填 · 请打乱 Off/On 标签后打分） |
 | **alg3Wave** | W1b |
-| **cloneGateOn** | true（条件门默认） vs false 对照 |
+| **cloneGateOn** | true（条件门） vs false 对照 |
 | **adaptiveSoftSplit** | false（本轮不评 A3） |
-| **visionEffective** | off（无 vision / SSG empty 路径） |
+| **visionEffective** | off（本轮 arm 配置强制） |
+| **Trip** | `demo-3ee2727aea`（夏睿彤年度精选） |
 | **模板** | [alg3-blind-review-TEMPLATE.md](./alg3-blind-review-TEMPLATE.md) |
-| **狗粮指南** | [alg3-blind-dogfood-GUIDE.md](./alg3-blind-dogfood-GUIDE.md) · [config 样例](../config-alg3-blind-dogfood.example.yaml) |
-| **状态** | **脚手架 · 人评未完成**（自动化 AC-10 已绿；本文件不挡码，挡 **M1b 宣称**） |
+| **狗粮指南** | [alg3-blind-dogfood-GUIDE.md](./alg3-blind-dogfood-GUIDE.md) |
+| **状态** | **材料已备 · 等人评**（自动化 AC-10 已绿；本文件不挡码，挡 **M1b 宣称**） |
 
 ## 成对样本
 
-| 对 | Off 截图 | On 截图 | 问1 假切条 | 问2 跳戏 | 问3 混拼/过碎 | 问4 节奏 |
-|----|----------|---------|------------|----------|---------------|----------|
-| 1 | （待补） | （待补） | | | | N/A |
-| 2 | | | | | | N/A |
-| 3 | | | | | | N/A |
+| 对 | Off 截图 | On 截图 | 对照拼图 | 问1 假切条 | 问2 跳戏 | 问3 混拼/过碎 | 问4 节奏 |
+|----|----------|---------|----------|------------|----------|---------------|----------|
+| 1 | [w1b-pair1-off.png](./attachments/alg3-blind-2026-08-02/w1b-pair1-off.png) | [w1b-pair1-on.png](./attachments/alg3-blind-2026-08-02/w1b-pair1-on.png) | [compare](./attachments/alg3-blind-2026-08-02/w1b-pair1-compare.png) | | | | N/A |
+| 2 | | | | | | | N/A |
+| 3 | | | | | | | N/A |
 
-## 建议语料（从 SSG dogfood / 自有相册抽）
+全页：`w1b-pair1-off-full.png` / `w1b-pair1-on-full.png`（高度 Off≈17803 · On≈16119）。
 
-1. 无 vision、无 `shotGroupId` 的密连拍步行段（假切条高发）  
-2. 横竖混拼同场景  
-3. 窄屏长图导出对照  
+## 漏斗 / 摘要抽查（本机 arm 脚本）
+
+| 项 | Off | On |
+|----|-----|-----|
+| `cloneGateEffective` | false | true |
+| `visionEffective` | off | off |
+| `rejectFunnelTop.near_scene_clone` | 0 | 0 |
+| 版式指纹条数 | 19 | 20 |
+| 开篇差异（客观） | `media-row:001,002,003` 密拼 | `001/002/003` 拆成单张 |
+
+原始：`attachments/alg3-blind-2026-08-02/w1b-{off,on}-algoV3.json` · `*-patterns.json`  
+复现：`python scripts/alg3_blind_dogfood_arm.py w1b-off …/cfg-w1b-off.yaml`
 
 ## 结论
 
@@ -32,10 +42,10 @@
 |----|------|
 | W1b：问1 On ≥ Off | □ |
 | W1b：问3 混拼不差于 Off | □ |
-| **总评** | □ Pass　□ Conditional　□ Fail · **当前：Pending human** |
+| **总评** | □ Pass　□ Conditional　□ Fail · **当前：Pending human（材料 Ready）** |
 
 ## 备注
 
-自动化门：`tests/unit/layout_engine/test_alg3_w1b_clone_gate.py`（合成窗 funnel / ↓≥40% 或硬可见）。人评完成后把本页状态改为 Pass/Conditional 并链截图路径。
+自动化门：`tests/unit/layout_engine/test_alg3_w1b_clone_gate.py`。人评完成后改总评并填四问。
 
-**相邻狗粮（不计入本表）**：2026-08-02 已对 master（含 #45 food-grid）做手动成片走查；那是布局回归，**不是**本文件的 clone On/Off 四问对照。
+**客观提示（非评分）**：Off 开篇把近连拍三张收成一行；On 拆开。请按「假切条 / 混拼」观感打分，勿仅看条数。
