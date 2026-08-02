@@ -81,4 +81,7 @@ tests/unit/web/test_alg3_fe_s02_scoring_hint.py
 # === ALG-V3 W3-C2 · finite max_evaluations_per_segment ===
 tests/unit/layout_engine/test_alg3_w3_c2_max_evaluations.py
 
+# === ALG-V3 W3-C3 · beam variant prune ===
+tests/unit/layout_engine/test_alg3_w3_c3_beam_variants.py
+
 # === planned (W3+ remainder) ===

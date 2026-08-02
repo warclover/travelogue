@@ -6,9 +6,9 @@
 | **验收** | [ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md](./ACCEPTANCE-ALGORITHM-OPTIMIZATION-V3.md) |
 | **评审** | [acceptance-records/algorithm-v3-prd-review-2026-08-01.md](./acceptance-records/algorithm-v3-prd-review-2026-08-01.md) |
 | **Must-green** | [acceptance-records/alg3-must-green-nodeids.txt](./acceptance-records/alg3-must-green-nodeids.txt) |
-| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 已合入** · **当前：W3-C2** |
+| **状态** | **W0～W2-A4 + OQ-02 + FE-S02 + W3-C2 已合入** · **当前：W3-C3** |
 | **更新日期** | 2026-08-02 |
-| **建议分支** | master ← **`feat/alg-v3-w3-c2-max-evaluations`** → 其后 W3 backlog / 人评盲评 |
+| **建议分支** | master ← **`feat/alg-v3-w3-c3-beam-variant-prune`** → 其后 W3 backlog / 人评盲评 |
 
 ---
 
@@ -252,7 +252,7 @@ pattern_disabled → try_order → atom → shot_group_* → near_scene_clone
 
 W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
-### W3-C2 · max_evaluations_per_segment 有限默认（当前）
+### W3-C2 · max_evaluations_per_segment 有限默认
 
 | ID | 任务 | 建议位置 | 状态 |
 |----|------|----------|------|
@@ -260,6 +260,15 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 | QA-ALG3-C2 | 默认合同 · 段耗尽 · scoring-off 路径锁 | `test_alg3_w3_c2_max_evaluations.py` | ☑ |
 
 **退出**：`layout.scoring.enabled` 仍 false → 默认可达成片不变。
+
+### W3-C3 · beam 变体条件枚举（当前）
+
+| ID | 任务 | 建议位置 | 状态 |
+|----|------|----------|------|
+| BE-ALG3-C3-01 | `preferred_hero_id is None` 时不枚举 `no_hero` / `hero_no_pref` / `no_hero_no_mosaic` | `layout_candidates.py` | ☑ |
+| QA-ALG3-C3 | 无 hero / 有 hero+mosaic 变体集合同 | `test_alg3_w3_c3_beam_variants.py` | ☑ |
+
+**退出**：scoring 默认关 → 生产路径零调用；scoring cohort 少打无意义 `plan_screens_for_chapter`。
 
 ---
 
@@ -297,7 +306,7 @@ W2/W3/W4 其余任务见上方 **W2 后续**；W3/W4 另开 IMPL 增补。
 
 ## 编码启动顺序（给执行者）
 
-1. ~~W0～W2-A4 + OQ-02 + FE-S02~~ ✅ 已合 master（含 #38 / #39 / #40）。  
-2. **当前**：`feat/alg-v3-w3-c2-max-evaluations`（W3-C2）。  
+1. ~~W0～W2-A4 + OQ-02 + FE-S02 + W3-C2~~ ✅ 已合 master（含 #38 / #39 / #40 / #41）。  
+2. **当前**：`feat/alg-v3-w3-c3-beam-variant-prune`（W3-C3）。  
 3. **人评**：W1b / A4 盲评仍挡对应宣称。  
-4. 其后：W3 holdback（B5/AAD · A5 · C3–C5；scoring 仅 cohort）或 fine_craft 入口。
+4. 其后：W3 余量（A5 / C4–C5 / B1·B2b；B5→AAD）或 fine_craft 入口。

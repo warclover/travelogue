@@ -114,26 +114,29 @@ def generate_day_bucket_candidates(
                 ),
             )
         )
-    variants.extend(
-        [
-            ("no_hero", dict(include_chapter_hero=False, preferred_hero_id=preferred_hero_id)),
-            (
-                "hero_no_pref",
-                dict(include_chapter_hero=True, preferred_hero_id=None),
-            ),
-        ]
-    )
-    if has_mosaic:
-        variants.append(
-            (
-                "no_hero_no_mosaic",
-                dict(
-                    include_chapter_hero=False,
-                    preferred_hero_id=preferred_hero_id,
-                    enable_mosaic=False,
+    # ALG-V3 W3-C3 · prune always-on hero variants when they are no-ops.
+    # Without a preferred hero, no_hero / hero_no_pref collapse toward with_hero.
+    if preferred_hero_id is not None:
+        variants.extend(
+            [
+                ("no_hero", dict(include_chapter_hero=False, preferred_hero_id=preferred_hero_id)),
+                (
+                    "hero_no_pref",
+                    dict(include_chapter_hero=True, preferred_hero_id=None),
                 ),
-            )
+            ]
         )
+        if has_mosaic:
+            variants.append(
+                (
+                    "no_hero_no_mosaic",
+                    dict(
+                        include_chapter_hero=False,
+                        preferred_hero_id=preferred_hero_id,
+                        enable_mosaic=False,
+                    ),
+                )
+            )
 
     from travelogue.layout_engine.mosaic.hook import set_mosaic_log_capture
 
