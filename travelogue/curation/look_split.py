@@ -8,18 +8,19 @@ from typing import Any
 
 import numpy as np
 
+from travelogue.config.shot_grouping import (
+    LOOK_REFERENCE_MODES,
+    normalize_look_reference_mode,
+)
 from travelogue.media.face_embed import l2_normalize
 from travelogue.vision.look_appearance import appearance_distance
 
-LOOK_REFERENCE_MODES = frozenset({"first", "ema", "medoid"})
-
-
-def normalize_look_reference_mode(raw: Any) -> tuple[str, str | None]:
-    """Return ``(effective_mode, skip_reason|None)``. Unknown → ``first`` + reason."""
-    text = str(raw if raw is not None else "first").strip().lower()
-    if text in LOOK_REFERENCE_MODES:
-        return text, None
-    return "first", f"unknown_look_reference_mode:{raw}"
+# Re-export for callers/tests that import from look_split.
+__all__ = (
+    "LOOK_REFERENCE_MODES",
+    "normalize_look_reference_mode",
+    "split_look_segments",
+)
 
 
 def _parse_taken_at(raw: Any) -> datetime:
