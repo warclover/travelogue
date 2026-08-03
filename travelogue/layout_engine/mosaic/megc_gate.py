@@ -213,6 +213,30 @@ def should_block_legacy_equal_grid(decision: MegcGateDecision) -> bool:
     return decision.outcome in ("gate_penalize", "gate_reject")
 
 
+def mosaic_cfg_from_app(app_cfg: Any | None) -> MosaicConfig | None:
+    """Pull ``MosaicConfig`` from AppConfig / mosaic-only test doubles."""
+    if app_cfg is None:
+        return None
+    if isinstance(app_cfg, MosaicConfig):
+        return app_cfg
+    mosaic = getattr(app_cfg, "mosaic", None)
+    return mosaic if isinstance(mosaic, MosaicConfig) else None
+
+
+def evaluate_megc_for_emit(
+    pattern_id: str,
+    asset_ids: Sequence[str],
+    assets_map: Mapping[str, Mapping[str, Any]],
+    app_or_mosaic: Any | None,
+) -> MegcGateDecision:
+    """Gate one constructed equal-grid emit (legacy / classic planner)."""
+    return evaluate_megc_gate(
+        pattern_id,
+        window_assets_for_megc(asset_ids, assets_map),
+        mosaic_cfg_from_app(app_or_mosaic),
+    )
+
+
 def stamp_megc_on_screen(screen: dict[str, Any], decision: MegcGateDecision) -> None:
     """Persist AC-MEGC-07 fields on a constructed screen (legacy path)."""
     if not isinstance(screen, dict):

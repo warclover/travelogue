@@ -102,3 +102,44 @@ def test_legacy_build_unchanged_when_megc_off() -> None:
     assert screen is not None
     assert screen.get("patternId") == "screen-landscape-4"
     assert screen.get("megcEnabled") is False
+
+
+def test_classic_planner_demotes_3x2_landscape4_when_megc_on() -> None:
+    """Classic ``_plan_one_screen`` path (not build_legacy_screen) must also demote."""
+    from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
+
+    ids = [f"a{i}" for i in range(6)]
+    assets_map = {aid: _land(aid, w=3000, h=2000) for aid in ids}
+    aspects = {aid: "landscape" for aid in ids}
+    screen, consumed = _plan_one_screen(
+        ids,
+        aspects,
+        assets_map=assets_map,
+        cfg=_App(_cfg(enabled=True)),  # type: ignore[arg-type]
+    )
+    assert screen is not None
+    assert screen.get("patternId") != "screen-landscape-4"
+    assert consumed in (1, 2, 3)
+    assert screen.get("patternId") in {
+        "screen-landscape-1",
+        "screen-landscape-2",
+        "screen-landscape-3",
+    }
+
+
+def test_classic_planner_keeps_16x9_landscape4_when_megc_on() -> None:
+    from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
+
+    ids = [f"w{i}" for i in range(6)]
+    assets_map = {aid: _land(aid, w=3840, h=2160) for aid in ids}
+    aspects = {aid: "landscape" for aid in ids}
+    screen, consumed = _plan_one_screen(
+        ids,
+        aspects,
+        assets_map=assets_map,
+        cfg=_App(_cfg(enabled=True)),  # type: ignore[arg-type]
+    )
+    assert screen is not None
+    assert screen.get("patternId") == "screen-landscape-4"
+    assert consumed == 4
+    assert screen.get("megcOutcome") == "gate_allow"

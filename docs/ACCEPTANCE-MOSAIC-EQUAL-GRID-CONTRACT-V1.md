@@ -95,5 +95,5 @@ python -m pytest tests/unit/layout_engine/test_megc_pr_b.py -q
 
 | 锚点 | 期望（M2 后） | 2026-08-03 |
 |------|----------------|------------|
-| `demo-2019` · 原 `ch-02-sc-07`（曾记 sc-06）资产窗 086/088/089/091 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 | 闸：`gate_penalize`（3:2）；PR-B2 legacy 拒发后可再狗粮标定胜出率；**默认仍 off** |
+| `demo-2019` · 原 `ch-02-sc-07`（曾记 sc-06）资产窗 086/088/089/091 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 | 闸：`gate_penalize`（3:2）；**PR-B2 + classic `_plan_one_screen` 挂点后**：ON 无 3:2 L4、仅留 16:9 `gate_allow`（[B2 增补](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md)）；**默认仍 off** |
 | 同窗强制 contain 回归 | AC-01 绿 | ✅ `gridH=stageH` · 截图见 [megc-dogfood-2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md) |

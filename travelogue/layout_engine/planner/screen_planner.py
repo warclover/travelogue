@@ -1745,11 +1745,15 @@ def _plan_one_screen(
             portrait_heavy=portrait_heavy,
             layout_state=layout_state,
         )
-        ids = grid_pool[:n]
-        pattern = _pattern_id(family, n)
-        return _make_screen(
-            pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
-        ), n
+        return _emit_landscape_grid_with_megc(
+            grid_pool,
+            n,
+            aspects=aspects,
+            assets_map=assets_map,
+            layout_state=layout_state,
+            solo_exclude=solo_exclude,
+            cfg=cfg,
+        )
 
     if family == "panorama":
         # 单张超宽图用 landscape-1 + 渲染时原生 aspect-ratio，避免 21:9 固定槽压扁
@@ -1777,6 +1781,61 @@ def _plan_one_screen(
     return _make_screen(
         pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
     ), n
+
+
+def _emit_landscape_grid_with_megc(
+    grid_pool: list[str],
+    n: int,
+    *,
+    aspects: dict[str, AspectKind],
+    assets_map: dict[str, dict],
+    layout_state: ScreenLayoutPlannerState | None,
+    solo_exclude: set[str] | None,
+    cfg: AppConfig | None,
+) -> tuple[dict | None, int]:
+    """Emit landscape-N grid; MEGC may demote non-cinema landscape-4 → 3/1."""
+    from travelogue.layout_engine.mosaic.megc_gate import (
+        evaluate_megc_for_emit,
+        should_block_legacy_equal_grid,
+        stamp_megc_on_screen,
+    )
+
+    while n >= 1:
+        ids = grid_pool[:n]
+        pattern = _pattern_id("landscape", n)
+        decision = evaluate_megc_for_emit(pattern, ids, assets_map, cfg)
+        if should_block_legacy_equal_grid(decision):
+            # Demote equal-grid; landscape-3/2/1 are outside MEGC patterns.
+            if n >= 4:
+                n = 3
+                continue
+            if n == 3:
+                n = 1
+                continue
+            n = 1
+            continue
+        if n == 1:
+            chosen = (
+                _pick_solo_from_candidates(
+                    ids, assets_map, solo_exclude=solo_exclude
+                )
+                or ids[0]
+            )
+            screen = _make_screen(
+                "screen-landscape-1",
+                [chosen],
+                screen_id="",
+                aspects=aspects,
+                assets_map=assets_map,
+            )
+            return screen, 1
+        screen = _make_screen(
+            pattern, ids, screen_id="", aspects=aspects, assets_map=assets_map
+        )
+        if decision.active:
+            stamp_megc_on_screen(screen, decision)
+        return screen, n
+    return None, 0
 
 
 CHAPTER_HERO_MIN_ASSETS = 5

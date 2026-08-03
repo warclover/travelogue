@@ -1,0 +1,100 @@
+{
+  "label": "b2-off",
+  "screenCount": 25,
+  "patternTop": [
+    [
+      "screen-landscape-1",
+      10
+    ],
+    [
+      "screen-portrait-1",
+      6
+    ],
+    [
+      "screen-landscape-3",
+      4
+    ],
+    [
+      "screen-landscape-2",
+      2
+    ],
+    [
+      "screen-landscape-4",
+      1
+    ],
+    [
+      "screen-portrait-2",
+      1
+    ],
+    [
+      "screen-full-frame",
+      1
+    ]
+  ],
+  "equalGridScreens": [
+    {
+      "screenId": "ch-01-sc-02",
+      "patternId": "screen-landscape-4",
+      "assetIds": [
+        "asset-001",
+        "asset-006",
+        "asset-009",
+        "asset-010"
+      ],
+      "nativeAr": [
+        1.4984,
+        1.4944,
+        1.4984,
+        1.4984
+      ],
+      "peakGuess": "three_two",
+      "fits": [
+        [
+          "asset-001",
+          "cover"
+        ],
+        [
+          "asset-006",
+          "cover"
+        ],
+        [
+          "asset-009",
+          "cover"
+        ],
+        [
+          "asset-010",
+          "cover"
+        ]
+      ],
+      "hasAnchor": false,
+      "megc": {
+        "megcEnabled": false,
+        "megcOutcome": "skipped",
+        "megcLandPeak": null,
+        "megcPatternId": "screen-landscape-4"
+      }
+    }
+  ],
+  "landscape4Count": 1,
+  "megcKeySamples": [
+    {
+      "chapters[0].screens[1]": {
+        "megcEnabled": false,
+        "megcOutcome": "skipped",
+        "megcLandPeak": null,
+        "megcPatternId": "screen-landscape-4"
+      }
+    }
+  ],
+  "anchorScreens": [
+    {
+      "screenId": "ch-03-sc-05",
+      "patternId": "screen-landscape-3",
+      "aids": [
+        "asset-086",
+        "asset-088",
+        "asset-089"
+      ]
+    }
+  ]
+}

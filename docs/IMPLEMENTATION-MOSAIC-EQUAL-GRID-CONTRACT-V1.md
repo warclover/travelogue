@@ -99,7 +99,7 @@ on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 
 1. `candidates.py`：混向等权硬拒；`mode=hard_reject` 时纯横等权亦硬拒  
 2. `scorer.py`：纯横等权 soft `score_mul`（hard 回退再 emit 时同样乘）  
-3. **PR-B2** `legacy.py` / `append_legacy_window`：legacy 直构无 scorer → soft/`gate_penalize` 与 hard 一律 **拒发**（`should_block_legacy_equal_grid`），规划回退到非等权尺寸；电影峰 `gate_allow` 仍 emit 并 stamp `megc*`  
+3. **PR-B2** `legacy.py` / `append_legacy_window`：**以及**经典 `_plan_one_screen`（`_emit_landscape_grid_with_megc`）— 直构无 scorer → soft/`gate_penalize` 与 hard 一律 **拒发/降级**（L4→L3/L1）；电影峰 `gate_allow` 仍 emit 并 stamp `megc*`  
 4. `builders._finalize_mosaic_screen`：MCS 路径 stamp `megcEnabled/Outcome/LandPeak`（不在此拒）
 
 ### 2.3 测试
