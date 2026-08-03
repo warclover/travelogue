@@ -178,11 +178,17 @@ def build_algo_v3_summary(
     look_cfg = getattr(getattr(app_cfg, "shot_grouping", None), "look", None)
     look_mode = str(getattr(look_cfg, "reference_mode", "first") or "first")
 
-    from travelogue.layout_engine.mosaic.lte_adapter import mcs_diversity_config
-
-    div = mcs_diversity_config(cfg=app_cfg)
+    # Inline TE diversity probe (avoid curation→lte_adapter LSE edge; same as
+    # ca6bdb1c pattern for clone_detection).
     te = getattr(app_cfg.layout, "template_engine", None)
     holdback = bool(getattr(te, "diversity_holdback", False)) if te is not None else False
+    cfg_mode = getattr(te, "diversity_mode", None) if te is not None else None
+    if holdback:
+        diversity_mode = "off"
+    elif cfg_mode in ("off", "mmr", "dpp"):
+        diversity_mode = str(cfg_mode)
+    else:
+        diversity_mode = "mmr"
 
     sg = curation.get("shotGrouping") if isinstance(curation.get("shotGrouping"), dict) else {}
     sg_stats = sg.get("stats") if isinstance(sg.get("stats"), dict) else {}
@@ -206,7 +212,7 @@ def build_algo_v3_summary(
         "lookReferenceSkipReason": look_skip,
         "rhythm": _pattern_id_streak_telemetry(trip, max_allowed=max_same),
         "diversityHoldback": holdback,
-        "diversityModeEffective": str(div.get("mode") or "off"),
+        "diversityModeEffective": diversity_mode,
     }
 
 
