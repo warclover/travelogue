@@ -1,9 +1,12 @@
-"""MEGC · equal-grid selection gate (P-选 · PR-B / M2).
+"""MEGC · equal-grid selection gate (P-选 · PR-B / M2 + PR-B2 legacy).
 
 Pure functions: window peak via ``build_msa_profile`` (MSA parent OFF still OK),
 then allow / soft ``score_mul`` / hard reject. Mixed-orient equal grids always
 hard-reject on non-cinema peaks (D-MEGC-06). SUP-MEGC-03: empty candidate pool
 after hard reject may soft-reemit with ``megcGateFallback``.
+
+PR-B2 · legacy/planner direct construct has no scorer — use
+``should_block_legacy_equal_grid`` to refuse soft-penalized equal grids.
 """
 
 from __future__ import annotations
