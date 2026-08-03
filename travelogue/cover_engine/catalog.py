@@ -1,6 +1,13 @@
 """V6 cover style catalog + V5 legacy aliases (PRD §4 / §3.1).
 
-Art Direction Delta v1.1 (2026-08-02): ten active opening styles (joint / hash / Studio).
+Art Direction Delta v1.1 (2026-08-02): ten opening styles registered.
+
+2026-08-03: five retired after real-world testing (fit/avoid signals too
+weak for precise-composition styles — see cover-engine catalog comments on
+each record). Five remain active: veil-footer / folio-overlap / band-cut /
+scroll-head / contact-stamp. Retired records stay registered (status=
+"retired") so already-generated trips keep rendering unchanged; only the
+Studio picker / joint auto-pick stop offering them.
 """
 
 from __future__ import annotations
@@ -77,7 +84,10 @@ def bootstrap_catalog() -> None:
         CoverStyleRecord(
             id="cameo-aperture",
             label="圆窗肖像",
-            status="active",
+            # 2026-08-03 实测下线：对焦人脸/主体精度要求高，命中率不稳，先退场
+            # 不再可分配；已生成的 trip 仍按原样渲染（resolve_style_id 对
+            # retired 保持不变）。
+            status="retired",
             sort_order=40,
             studio_blurb="适合主体清晰、可落在焦点圆窗内的人像或地标；圆外会虚化。",
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
@@ -92,7 +102,8 @@ def bootstrap_catalog() -> None:
             id="type-monument",
             label="巨字碑",
             studio_label="海报巨字",
-            status="active",
+            # 2026-08-03 实测下线：效果不理想，先退场（同 cameo-aperture 备注）。
+            status="retired",
             sort_order=50,
             studio_blurb="适合氛围感强、可压暗的底图；书名宜短，字会镂空透出照片。",
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
@@ -121,7 +132,8 @@ def bootstrap_catalog() -> None:
         CoverStyleRecord(
             id="portal-arch",
             label="天窗",
-            status="active",
+            # 2026-08-03 实测下线：拱形取景对准纵深巷道/山径的难度太大，先退场。
+            status="retired",
             sort_order=70,
             studio_blurb="拱形取景如推开门；适合有纵深的巷道或山径。",
             preview_fixtures=(_FIXTURE_DEMO,),
@@ -135,7 +147,8 @@ def bootstrap_catalog() -> None:
         CoverStyleRecord(
             id="horizon-split",
             label="地平线",
-            status="active",
+            # 2026-08-03 实测下线：效果不理想，先退场（同 cameo-aperture 备注）。
+            status="retired",
             sort_order=80,
             studio_blurb="上图下纸，留白承载长标题；适合有天际线的风景。",
             preview_fixtures=(_FIXTURE_DEMO,),
@@ -166,7 +179,8 @@ def bootstrap_catalog() -> None:
         CoverStyleRecord(
             id="diptych-seam",
             label="双联断字",
-            status="active",
+            # 2026-08-03 实测下线：效果不理想，先退场（同 cameo-aperture 备注）。
+            status="retired",
             sort_order=100,
             studio_blurb="一景一人跨缝断字；有人物副图时更完整，缺省时右栏同源裁切。",
             preview_fixtures=(_FIXTURE_DEMO,),

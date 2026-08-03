@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from travelogue.cover_engine.fit import (
     style_avoid_penalty,
     style_fit_score,
@@ -151,17 +153,20 @@ def test_sync_trip_covers_force_reopens_joint() -> None:
 
 
 def test_repick_cover_for_style_keeps_lock() -> None:
+    # cameo-aperture retired 2026-08-03; use band-cut (still assignable) to
+    # exercise the same repick/lock mechanics — center focal (fy=0.44) still
+    # nets a higher band-cut fit (upper_scene + horizon) than the edge asset.
     assets = [
         _asset("center", 0.51, 0.44, score_hint=2),
         _asset("edge", 0.1, 0.2, score_hint=2),
     ]
     assets[0]["faceCount"] = 1
     trip = _trip(assets)
-    explain = repick_cover_for_style(trip, "cameo-aperture", layout="web")
-    assert explain.style_id == "cameo-aperture"
+    explain = repick_cover_for_style(trip, "band-cut", layout="web")
+    assert explain.style_id == "band-cut"
     assert explain.source == "manual"
     assert trip["curation"]["coverJointLocked"] is True
-    assert trip["meta"]["coverOpeningStyle"] == "cameo-aperture"
+    assert trip["meta"]["coverOpeningStyle"] == "band-cut"
     assert trip["curation"]["coverByLayout"]["web"] == explain.asset_id
     assert explain.asset_id == "center"
 
@@ -177,19 +182,29 @@ def test_apply_style_keep_cover() -> None:
     assert "coverSecondaryAssetId" not in trip["meta"]
 
 
-def test_apply_style_keep_cover_diptych_attaches_and_clears_secondary() -> None:
+def test_apply_style_keep_cover_rejects_retired_style() -> None:
+    """2026-08-03: diptych-seam retired — Studio keep-cover path must refuse it
+    (mirrors the Studio picker no longer offering it)."""
+    assets = [_asset("keep-me", 0.5, 0.3)]
+    trip = _trip(assets)
+    trip["curation"] = {"coverByLayout": {"web": "keep-me", "mobile": "keep-me"}}
+    with pytest.raises(ValueError):
+        apply_style_keep_cover(trip, "diptych-seam")
+
+
+def test_diptych_secondary_pick_logic_kept_for_legacy_trips() -> None:
+    """diptych-seam is retired (no longer selectable), but already-locked
+    legacy trips still render via the same secondary-panel pick logic — keep
+    it covered directly so it doesn't bitrot."""
+    from travelogue.cover_engine.joint import _with_diptych_secondary
+
     scene = _asset("scene", 0.5, 0.35, score_hint=3)
     person = _asset("person", 0.5, 0.44, score_hint=2)
     person["faceCount"] = 1
-    trip = _trip([scene, person])
-    trip["curation"] = {"coverByLayout": {"web": "scene", "mobile": "scene"}}
-    explain = apply_style_keep_cover(trip, "diptych-seam")
-    assert explain.style_id == "diptych-seam"
-    assert explain.asset_id == "scene"
-    assert trip["meta"]["coverSecondaryAssetId"] == "person"
-    apply_style_keep_cover(trip, "veil-footer")
-    assert trip["meta"]["coverOpeningStyle"] == "veil-footer"
-    assert "coverSecondaryAssetId" not in trip["meta"]
+    candidates = [{"asset": scene, "quality": 0.8}, {"asset": person, "quality": 0.6}]
+    explain = CoverJointExplain(source="manual", style_id="diptych-seam", asset_id="scene")
+    result = _with_diptych_secondary(explain, candidates, trip_id="joint-demo")
+    assert result.secondary_asset_id == "person"
 
 
 def test_hash_fallback_pick_source() -> None:
@@ -201,11 +216,15 @@ def test_hash_fallback_pick_source() -> None:
     assert explain.style_id in set(assignable_style_ids())
 
 
-def test_diptych_joint_writes_secondary_when_person_pair() -> None:
+def test_apply_joint_pick_ignores_retired_style_id() -> None:
+    """2026-08-03: diptych-seam retired — apply_joint_pick must not persist a
+    retired styleId (e.g. from a stale cached explain); trip keeps its prior
+    coverOpeningStyle instead. secondaryAssetId is only ever written when
+    style_id == 'diptych-seam', so it stays unset here too."""
     scene = _asset("scene", 0.5, 0.35, score_hint=3)
     person = _asset("person", 0.5, 0.44, score_hint=2)
     person["faceCount"] = 1
-    trip = _trip([scene, person])
+    trip = _trip([scene, person])  # _trip() defaults meta.coverOpeningStyle="veil-footer"
     explain = CoverJointExplain(
         source="joint-v6",
         style_id="diptych-seam",
@@ -218,8 +237,7 @@ def test_diptych_joint_writes_secondary_when_person_pair() -> None:
         secondary_asset_id="person",
     )
     apply_joint_pick(trip, explain, lock=True, layout="web")
-    assert trip["meta"]["coverOpeningStyle"] == "diptych-seam"
-    assert trip["meta"]["coverSecondaryAssetId"] == "person"
+    assert trip["meta"]["coverOpeningStyle"] == "veil-footer"
 
     explain_clear = CoverJointExplain(
         source="manual",

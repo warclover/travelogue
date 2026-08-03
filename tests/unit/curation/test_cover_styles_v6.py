@@ -23,23 +23,28 @@ from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_entry import build_entry
 
 
-def test_assignable_styles_are_v6_ten() -> None:
+def test_assignable_styles_are_v6_five() -> None:
+    """2026-08-03: cameo-aperture/type-monument/portal-arch/horizon-split/
+    diptych-seam retired after real-world testing; 5 remain assignable."""
     ids = assignable_style_ids()
     assert ids == (
         "veil-footer",
         "folio-overlap",
         "band-cut",
-        "cameo-aperture",
-        "type-monument",
         "scroll-head",
-        "portal-arch",
-        "horizon-split",
         "contact-stamp",
-        "diptych-seam",
     )
     assert all(is_assignable(i) for i in ids)
     assert not is_assignable("card-br")
     assert not is_assignable("split-mat")
+    for retired in (
+        "cameo-aperture",
+        "type-monument",
+        "portal-arch",
+        "horizon-split",
+        "diptych-seam",
+    ):
+        assert not is_assignable(retired)
 
 
 def test_default_style_is_veil_footer() -> None:
@@ -80,36 +85,44 @@ def test_studio_style_options_active_only_with_blurb() -> None:
         assert o["label"]
         assert o["blurb"]
         assert "sort_order" in o
-    # A/G disambiguation labels
+    # A disambiguation label (type-monument's G label retired 2026-08-03
+    # along with the style itself — see test_assignable_styles_are_v6_five)
     by_id = {o["id"]: o for o in opts}
     assert by_id["veil-footer"]["label"] == "沉浸题签"
-    assert by_id["type-monument"]["label"] == "海报巨字"
 
 
 def test_preview_matrix_each_active_has_fixture() -> None:
     rows = list_preview_matrix()
-    assert len(rows) == 10
+    # 2026-08-03: 5 styles retired after real-world testing; 5 remain active.
+    assert len(rows) == 5
     for row in rows:
         assert row["fixture_ref"]
         assert row["blurb"]
 
 
-def test_art_direction_ten_assignable_includes_new_five() -> None:
-    """十款均可分配；联合选型 / Studio 同源。"""
+def test_art_direction_five_assignable_after_2026_08_03_retirement() -> None:
+    """五款保留可分配；联合选型 / Studio 同源。退场五款仍注册但不可分配。"""
     from travelogue.cover_engine.registry import get_style
 
-    for sid in (
-        "scroll-head",
-        "portal-arch",
-        "horizon-split",
-        "contact-stamp",
-        "diptych-seam",
-    ):
+    for sid in ("veil-footer", "folio-overlap", "band-cut", "scroll-head", "contact-stamp"):
         rec = get_style(sid)
         assert rec is not None
         assert rec.status == "active"
         assert is_assignable(sid)
-    assert len(assignable_style_ids()) == 10
+
+    for sid in (
+        "cameo-aperture",
+        "type-monument",
+        "portal-arch",
+        "horizon-split",
+        "diptych-seam",
+    ):
+        rec = get_style(sid)
+        assert rec is not None  # still registered — retired trips keep rendering
+        assert rec.status == "retired"
+        assert not is_assignable(sid)
+
+    assert len(assignable_style_ids()) == 5
 
 
 def test_profiles_exist_for_active() -> None:
