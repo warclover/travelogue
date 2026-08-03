@@ -397,10 +397,11 @@ mosaic:
     enabled: false
     allowlist: []
     cohort_trip_ids: []
-  # MTSO · selection optimization (PR-B/C1 landed; default off until M3 / O-2).
+  # MTSO · selection optimization (PR-A~D landed; GA'd 2026-08-03, see
+  # docs/acceptance-records/mtso-ac11-ac12-closeout-2026-08-03.md).
   # Nested: hero_six_opportunity / mixed_hero_routing (inert when parent false).
   selection_optimization:
-    enabled: false
+    enabled: true
   # MSA · slot adaptation (topology fixed · track weights adaptive; default off to M3)
   slot_adaptation:
     enabled: false

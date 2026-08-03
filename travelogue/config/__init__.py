@@ -32,6 +32,14 @@ from travelogue.config.errors import ConfigError
 from travelogue.config.food_role import FoodRoleConfig, food_role_config_from_dict
 from travelogue.config.ingest import DEFAULT_RAW_BLOCKLIST_SUFFIXES, IngestConfig
 from travelogue.config.layout import LayoutConfig, LayoutFeedbackConfig, LayoutScoringConfig
+from travelogue.config.layout_vibe import (
+    VIBE_FIT_PHOTO_EXPERIMENTAL,
+    VIBE_MAGAZINE_DEFAULT,
+    apply_layout_vibe_to_config,
+    mosaic_profile_for_vibe,
+    resolve_layout_vibe,
+    set_trip_layout_vibe,
+)
 from travelogue.config.loader import load_config, patch_config_file
 from travelogue.config.misc import (
     ExportConfig,
@@ -114,6 +122,12 @@ __all__ = [
     "LayoutConfig",
     "LayoutFeedbackConfig",
     "LayoutScoringConfig",
+    "VIBE_FIT_PHOTO_EXPERIMENTAL",
+    "VIBE_MAGAZINE_DEFAULT",
+    "apply_layout_vibe_to_config",
+    "mosaic_profile_for_vibe",
+    "resolve_layout_vibe",
+    "set_trip_layout_vibe",
     "LlmConfig",
     "MosaicConfig",
     "NearSceneCloneGateConfig",

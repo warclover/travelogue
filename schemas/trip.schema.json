@@ -143,9 +143,28 @@
     },
     "media": {
       "$ref": "#/$defs/tripMedia"
+    },
+    "studio": {
+      "$ref": "#/$defs/tripStudio",
+      "description": "Studio per-trip preferences (LVP · layoutVibe, etc.)"
     }
   },
   "$defs": {
+    "tripStudio": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-trip Studio preferences (not process config.studio)",
+      "properties": {
+        "layoutVibe": {
+          "type": "string",
+          "enum": [
+            "magazine_default",
+            "fit_photo_experimental"
+          ],
+          "description": "LVP · Layout Vibe Picker id (PRD-LAYOUT-VIBE-PICKER-V1)"
+        }
+      }
+    },
     "fieldOrigin": {
       "type": "string",
       "enum": [

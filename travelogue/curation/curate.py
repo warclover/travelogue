@@ -750,6 +750,10 @@ def _curate_preflight(
         from travelogue.layout_engine.adapter import resolve_lse_config_for_trip
 
         app_cfg = resolve_lse_config_for_trip(app_cfg, trip_id)
+    # LVP M1 · trip.studio.layoutVibe overlays mosaic MTSO/MEGC/MSA (⊥ LSE flags)
+    from travelogue.config.layout_vibe import apply_layout_vibe_to_config
+
+    app_cfg = apply_layout_vibe_to_config(trip, app_cfg)
     from travelogue.curation.curate_preprocess import run_curation_preprocess
     res_warn = run_curation_preprocess(trip, trip_dir=trip_dir, app_cfg=app_cfg)
     # BE-SFI-08 · 时间离群打标（多段豁免在 detect 内）
@@ -1873,7 +1877,9 @@ def run_curate(
     from travelogue.config import get_config
     from travelogue.config.runtime import app_config_scope
 
-    active_cfg = cfg or get_config()
+    from travelogue.config.layout_vibe import apply_layout_vibe_to_config
+
+    active_cfg = apply_layout_vibe_to_config(trip, cfg or get_config())
     with app_config_scope(active_cfg):
         return _run_curate_inner(
             trip,
