@@ -6,8 +6,9 @@ Does not touch SSG look or LSE capability flags.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Mapping
+from typing import Any
 
 from travelogue.config.app import AppConfig
 from travelogue.config.mosaic import (

@@ -11,6 +11,7 @@ from travelogue.web.studio_handlers.bookends_handlers import (
     handle_post_resolve_opening,
     handle_post_restore_auto,
 )
+from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
 from travelogue.web.studio_handlers.trip_intent_handlers import (
     handle_get_cohort,
     handle_patch_cohort,
@@ -38,7 +39,6 @@ from travelogue.web.studio_handlers.trip_pipeline_handlers import (
     handle_rerender,
     handle_trip_curate,
 )
-from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
 from travelogue.web.studio_handlers.trip_replan_handlers import handle_patch_screen_replan
 
 __all__ = [

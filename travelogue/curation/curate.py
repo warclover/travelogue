@@ -1875,9 +1875,8 @@ def run_curate(
 ) -> CurateResult:
     """Run curation. Pins *cfg* via app_config_scope so internal get_config() matches (LTN E6b)."""
     from travelogue.config import get_config
-    from travelogue.config.runtime import app_config_scope
-
     from travelogue.config.layout_vibe import apply_layout_vibe_to_config
+    from travelogue.config.runtime import app_config_scope
 
     active_cfg = apply_layout_vibe_to_config(trip, cfg or get_config())
     with app_config_scope(active_cfg):
