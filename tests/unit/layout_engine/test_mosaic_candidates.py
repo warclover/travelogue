@@ -99,7 +99,8 @@ def test_window_has_candidates_requires_geometry_valid():
     assets_map = {a["id"]: a for a in assets}
     cfg = MosaicConfig(enabled=True, enabled_window_sizes=(3, 4))
     window4 = buckets[0] + [assets[3]["id"]] if len(buckets[0]) == 3 else buckets[0]
-    assert not window_has_candidates(
+    # Mixed 2P+2L window matches screen-portrait-2-landscape-2 (geometry valid).
+    assert window_has_candidates(
         window4[:4],
         aspects,
         assets_map,
@@ -114,6 +115,17 @@ def test_window_has_candidates_requires_geometry_valid():
         aspects,
         assets_map,
         size=3,
+        cfg=cfg,
+        burst_seconds=3600.0,
+        median_sharp=None,
+        ssg_policy=_SSG_NO_ATOM,
+    )
+    # Size mismatch → no candidates.
+    assert not window_has_candidates(
+        window4[:3],
+        aspects,
+        assets_map,
+        size=4,
         cfg=cfg,
         burst_seconds=3600.0,
         median_sharp=None,

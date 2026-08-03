@@ -96,16 +96,17 @@ def test_sheet_book_panel_hosts_layout_vibe_zone() -> None:
     assert "成册风格" in sheet
 
 
-def test_help_h7_points_to_docs_not_lse() -> None:
-    """SHD-02 · Help H7 must not link LSE admin."""
+def test_help_h8_points_to_docs_not_lse() -> None:
+    """SHD-02 · Help H8 (LVP) must not link LSE admin; H7 stays NAS-reserved."""
     text = (ROOT / "templates/studio/js/help-onboarding.js").read_text(encoding="utf-8")
-    assert 'id: "H7"' in text
+    assert 'id: "H8"' in text
+    assert 'id: "H7"' not in text
     assert "成册风格" in text
     assert "lse-flags-admin" not in text.lower()
     features = (ROOT / "templates/studio/preview-toolbar/features.js").read_text(
         encoding="utf-8"
     )
-    assert 'itemId: "H7"' in features
+    assert 'itemId: "H8"' in features
     assert "lse-flags-admin" not in features.lower()
 
 

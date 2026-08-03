@@ -189,7 +189,8 @@ export var HELP_COPY = {
       ],
     },
     {
-      id: "H7",
+      // H7 reserved for NAS writing-engine (ai_surface_dark only); LVP uses H8.
+      id: "H8",
       title: "成册风格是什么",
       body: [
         "精修 →「这本」→「成册风格」：可选「杂志成册（推荐）」或「更贴照片比例（实验）」",

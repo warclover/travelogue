@@ -57,7 +57,9 @@ def test_mosaic_landscape_6_ab_unified_vs_legacy():
     buckets, aspects, assets = build_mosaic_landscape6_trip()
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
-    assert len(off[0]["screens"]) == 3
+    # MEGC default-on (PR-B2) demotes classic landscape-4 → more singles/triples.
+    assert len(off[0]["screens"]) == 4
+    assert PATTERN_LANDSCAPE_6 not in [s["patternId"] for s in off[0]["screens"]]
     on_patterns = [s["patternId"] for s in on[0]["screens"]]
     assert PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 not in on_patterns
     assert PATTERN_LANDSCAPE_6 not in on_patterns

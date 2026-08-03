@@ -115,7 +115,7 @@
 | ID | 建议 | 状态 |
 |----|------|------|
 | **SHD-01** | 线框 F1（两卡 + 确认模态）进 `docs/wireframes/`，M2 前 | ✅ `wireframes/layout-vibe-picker-f1-wireframe.html` |
-| **SHD-02** | 帮助链「高级配置」指向文档，不链 LSE admin | ✅ Help H7 · Sheet「了解更多」→ H7（文案指向产品文档，无 `/lse-flags-admin`） |
+| **SHD-02** | 帮助链「高级配置」指向文档，不链 LSE admin | ✅ Help **H8** · Sheet「了解更多」→ H8（文案指向产品文档，无 `/lse-flags-admin`；H7 仍为 NAS 写作引擎保留号） |
 | **SHD-03** | 狗粮 GUIDE 一页：如何辨认「本册有无加权屏」 | ✅ `lvp-dogfood-GUIDE.md` |
 
 ### BLK-LVP-03 合码备注（2026-08-03）

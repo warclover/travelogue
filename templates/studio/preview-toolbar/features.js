@@ -746,7 +746,7 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
   if (helpBtn) {
     helpBtn.addEventListener("click", function (ev) {
       ev.preventDefault();
-      openHelpDrawer({ source: "layout_vibe", itemId: "H7" });
+      openHelpDrawer({ source: "layout_vibe", itemId: "H8" });
     });
   }
   if (dismissHintBtn) {

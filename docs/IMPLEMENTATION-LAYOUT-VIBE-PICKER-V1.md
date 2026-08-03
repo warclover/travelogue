@@ -36,7 +36,7 @@
 | 弱提示 | `maybeShowLayoutVibeImportHint` · FirstSuccess 打 pending | **仅导入后**打开预览提示一次；Sheet 可「不再提示」 |
 | Entry | `studio_entry` `layoutVibe` / `layoutVibeOptions` | 预览入口回读 |
 | 等待面 | `applyVibe` → Task Dock `updateExporting` | 复用精选重排等待面 |
-| 帮助 | Help **H7** · SHD-02 | 不链 LSE admin |
+| 帮助 | Help **H8** · SHD-02（H7 留给 NAS 写作引擎） | 不链 LSE admin |
 | 线框 | `docs/wireframes/layout-vibe-picker-f1-wireframe.html` | SHD-01 |
 | 测试 | `tests/unit/web/test_layout_vibe_m2.py` | AC-04/05 + 路由 |
 
