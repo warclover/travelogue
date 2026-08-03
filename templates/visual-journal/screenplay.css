@@ -399,7 +399,10 @@ body.screenplay-gate-active {
   }
 }
 
-html[data-layout-engine="screens"] .cover-hero {
+/* V6 封面（web/auto）靠 journal.css 的 position:absolute 铺满 opening；
+   本规则只用于非 web/auto 场景（如未来的纯 screens 阅读态），避免同优先级
+   覆盖掉封面各皮肤的绝对定位，导致 hero 图跑位/塌陷（见 portal-arch 等）。 */
+html[data-layout-engine="screens"]:not([data-layout="web"]):not([data-layout="auto"]) .cover-hero {
   position: relative;
 }
 

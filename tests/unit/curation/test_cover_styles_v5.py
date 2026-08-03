@@ -893,7 +893,7 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
             page.wait_for_selector(".preview-sheet__cover-styles", timeout=10_000)
             page.wait_for_selector('[data-cover-style="veil-footer"]', timeout=10_000)
             assert page.locator('[data-cover-style="veil-footer"].is-on').count() == 1
-            assert page.locator("[data-cover-style]").count() == 5
+            assert page.locator("[data-cover-style]").count() == 10
 
             # Prefer keep-cover to avoid heavy repick; still persists style via bookends.
             keep = page.locator(".preview-sheet__cover-keep-check")
@@ -938,7 +938,7 @@ def test_cover_styles_v5_sheet_switch_and_apply_layout(tmp_path: Path) -> None:
                 }}"""
             )
             assert entry and entry.get("coverOpeningStyle") == "band-cut"
-            assert len(entry.get("coverStyleOptions") or []) == 5
+            assert len(entry.get("coverStyleOptions") or []) == 10
 
             trip_data = json.loads((trips_dir / trip_id / "trip.json").read_text(encoding="utf-8"))
             assert trip_data["meta"]["coverOpeningStyle"] == "band-cut"

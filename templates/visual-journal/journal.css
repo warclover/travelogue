@@ -862,8 +862,15 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-hero {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
     left: var(--cover-folio-margin);
     width: auto;
+    height: auto;
+    aspect-ratio: auto;
+    max-height: none;
   }
 
   /* 照片侧标题托底，保证纸白半字可读 */
@@ -970,10 +977,16 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::before,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::before {
+    /* ::before/::after 默认按内容缩到最小宽度；clip-path 的百分比裁切基准会
+       和左侧实体标题（left:0;right:0;padding-left）不一致，导致骑缝断字
+       裁切点错位、重影。改用与实体标题完全一致的 box（left/right/padding），
+       让两者的 % 裁切基准（同一容器宽度）对齐到同一像素。 */
     content: attr(data-title);
     position: absolute;
-    left: clamp(28px, 3.2vw, 40px);
+    left: 0;
+    right: 0;
     top: 0;
+    padding-left: clamp(28px, 3.2vw, 40px);
     color: var(--cover-folio-ghost);
     transform: translate(2.5px, 1.5px);
     clip-path: inset(0 0 0 var(--cover-folio-cut));
@@ -986,8 +999,10 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::after {
     content: attr(data-title);
     position: absolute;
-    left: clamp(28px, 3.2vw, 40px);
+    left: 0;
+    right: 0;
     top: 0;
+    padding-left: clamp(28px, 3.2vw, 40px);
     color: #fcfaf6;
     text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
     clip-path: inset(0 0 0 var(--cover-folio-cut));
@@ -1252,10 +1267,16 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__title {
+    /* top:50%+translateY(-50%) 配 height:auto 时，换行可用高度只算到容器
+       一半，短标题也会被提前挤到第二栏、错位重影（见 A5 排查）。改成显式
+       height（容器的 74%）替代 auto：换行判断有了确定的整高基准，短标题
+       不再提前换行；超长标题仍会在这个高度内换到第二栏，不会把 box 撑
+       到溢出。transform 居中不变。 */
     position: absolute;
     right: clamp(28px, 5vw, 72px);
     top: 50%;
     transform: translateY(-50%);
+    height: 74%;
     margin: 0;
     writing-mode: vertical-rl;
     font-size: clamp(1.5rem, 3vw, 2.4rem);
@@ -1265,7 +1286,6 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: #f7f4ef;
     text-shadow: 0 2px 26px rgba(0, 0, 0, 0.6);
     -webkit-line-clamp: unset;
-    display: block;
     overflow: visible;
   }
 
@@ -1380,12 +1400,15 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="scroll-head"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="scroll-head"] .cover-hero {
+    position: absolute;
     left: 8%;
     right: 24%;
     top: 11%;
     bottom: 20%;
     width: auto;
     height: auto;
+    aspect-ratio: auto;
+    max-height: none;
     box-shadow: 0 20px 42px -26px rgba(62, 46, 24, 0.7);
     filter: saturate(0.86) contrast(1.03);
   }
@@ -1515,12 +1538,20 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="portal-arch"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="portal-arch"] .cover-hero {
-    left: 50%;
-    transform: translateX(-50%);
+    /* 不用 transform:translateX(-50%) 居中：breath.css 的
+       .cover-hero.cover-breath-reveal.is-visible 同优先级会覆盖 transform，
+       抹掉居中偏移（见 A5 排查）。改用 left/right + margin auto 居中。 */
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
     top: 21%;
     bottom: 0;
     width: min(44%, 400px);
     height: auto;
+    aspect-ratio: auto;
+    max-height: none;
     border-radius: 999px 999px 0 0;
     overflow: hidden;
     z-index: 3;
@@ -1623,9 +1654,11 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] .cover-hero {
+    position: absolute;
     top: 0;
     bottom: auto;
     height: var(--cover-horizon-cut);
+    max-height: none;
     left: 0;
     right: 0;
     width: auto;
