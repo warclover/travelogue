@@ -1,0 +1,154 @@
+[
+  {
+    "pattern": "screen-landscape-4",
+    "assetIds": "asset-086,asset-088,asset-089,asset-091",
+    "stageH": 720,
+    "gridH": 720,
+    "gridOk": true,
+    "bottomOk": true,
+    "deltaGrid": 0,
+    "imgs": [
+      {
+        "nw": 900,
+        "nh": 602,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-086-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 602,
+        "cls": "layout-slot__img layout-slot__img--contain",
+        "src": "asset-088-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-089-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-091-w1600.webp"
+      }
+    ],
+    "containClassCount": 1,
+    "name": "anchor-3x2-contain",
+    "shot": "anchor-3x2-contain.png"
+  },
+  {
+    "pattern": "screen-landscape-4",
+    "assetIds": "asset-006,asset-009,asset-010,asset-012",
+    "stageH": 720,
+    "gridH": 720,
+    "gridOk": true,
+    "bottomOk": true,
+    "deltaGrid": 0,
+    "imgs": [
+      {
+        "nw": 900,
+        "nh": 602,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-006-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-009-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-010-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-012-w1600.webp"
+      }
+    ],
+    "containClassCount": 0,
+    "name": "l4-3x2-ch01",
+    "shot": "l4-3x2-ch01.png"
+  },
+  {
+    "pattern": "screen-landscape-4",
+    "assetIds": "asset-019,asset-021,asset-023,asset-024",
+    "stageH": 720,
+    "gridH": 720,
+    "gridOk": true,
+    "bottomOk": true,
+    "deltaGrid": 0,
+    "imgs": [
+      {
+        "nw": 900,
+        "nh": 506,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-019-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 506,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-021-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 506,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-023-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 506,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-024-w1600.webp"
+      }
+    ],
+    "containClassCount": 0,
+    "name": "l4-16x9-ch01",
+    "shot": "l4-16x9-ch01.png"
+  },
+  {
+    "pattern": "screen-landscape-4",
+    "assetIds": "asset-128,asset-129,asset-130,asset-131",
+    "stageH": 720,
+    "gridH": 720,
+    "gridOk": true,
+    "bottomOk": true,
+    "deltaGrid": 0,
+    "imgs": [
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-128-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-129-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-130-w1600.webp"
+      },
+      {
+        "nw": 900,
+        "nh": 600,
+        "cls": "layout-slot__img layout-slot__img--cover",
+        "src": "asset-131-w1600.webp"
+      }
+    ],
+    "containClassCount": 0,
+    "name": "l4-3x2-ch03",
+    "shot": "l4-3x2-ch03.png"
+  }
+]

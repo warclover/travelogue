@@ -5,9 +5,9 @@
 | **对应 PRD** | [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) **v0.2.0** |
 | **验收** | [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) |
 | **DOC-STATUS** | **active** |
-| **更新日期** | 2026-07-31 |
+| **更新日期** | 2026-08-03 |
 
-> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** 本 PR · SUP-01 `score_mul` → **PR-C (M3)** 默认延期。  
+> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** ✅（分支 `feature/megc-pr-b-selection-gate` · SUP-01 `score_mul` · **默认仍 off** · [狗粮 2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）→ **PR-C (M3)** 默认延期。  
 > **紧急例外**：PR-A 可在父开关前以 `fix_stage_css` hotfix 合入（O-05 · 七席允许）。
 
 ---
@@ -62,7 +62,8 @@
 
 - [x] CSS 合入（`templates/visual-journal/journal-screens.css` · MEGC PR-A）  
 - [x] AC-01～03 守卫单测（`test_lte_css_sync` · MEGC）  
-- [x] Playwright 几何断言 `demo-2019` ch-02 plate 39（086/088 contain）：`gridH ≤ stageH + 1px`  
+- [x] Playwright 几何断言 `demo-2019` ch-02 plate（086/088 contain）：`gridH ≤ stageH + 1px`  
+- [x] demo-2019 实机截图收口（2026-08-03 · `deltaGrid=0` · [狗粮](./acceptance-records/megc-dogfood-2026-08-03.md)）  
 - [ ] 无误伤竖拼/栈屏的视觉签字（可用截图 diff）
 
 ---
@@ -111,7 +112,8 @@ on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 
 - [x] 配置 + 闸 + 日志  
 - [x] AC-04～08 绿  
-- [ ] demo-2019 同类窗行为符合 PRD（记录截图到 acceptance-records）
+- [x] demo-2019 闸语义 + 16:9 放行狗粮（[2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）；**3:2 胜出率标定未闭环**（re-layout 大量 `plannerPath=legacy`）  
+- [ ] planner/legacy finalize 自愈挂 MEGC（下一 PR；否则 soft `score_mul` 难改既有等权屏）
 
 ---
 

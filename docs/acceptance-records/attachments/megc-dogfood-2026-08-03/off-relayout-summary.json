@@ -1,0 +1,82 @@
+{
+  "label": "off",
+  "screenCount": 22,
+  "patternTop": [
+    [
+      "screen-landscape-1",
+      9
+    ],
+    [
+      "screen-portrait-1",
+      5
+    ],
+    [
+      "screen-landscape-3",
+      4
+    ],
+    [
+      "screen-landscape-2",
+      2
+    ],
+    [
+      "screen-portrait-2",
+      1
+    ],
+    [
+      "screen-landscape-4",
+      1
+    ]
+  ],
+  "equalGridScreens": [
+    {
+      "screenId": "ch-02-sc-01",
+      "patternId": "screen-landscape-4",
+      "assetIds": [
+        "asset-019",
+        "asset-021",
+        "asset-023",
+        "asset-025"
+      ],
+      "nativeAr": [
+        1.7774,
+        1.7777,
+        1.7778,
+        1.4984
+      ],
+      "peakGuess": "sixteen_nine",
+      "fits": [
+        [
+          "asset-019",
+          "cover"
+        ],
+        [
+          "asset-021",
+          "cover"
+        ],
+        [
+          "asset-023",
+          "cover"
+        ],
+        [
+          "asset-025",
+          "cover"
+        ]
+      ],
+      "hasAnchor": false,
+      "megc": {}
+    }
+  ],
+  "landscape4Count": 1,
+  "megcKeySamples": [],
+  "anchorScreens": [
+    {
+      "screenId": "ch-04-sc-02",
+      "patternId": "screen-landscape-3",
+      "aids": [
+        "asset-086",
+        "asset-088",
+        "asset-089"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+[
+  {
+    "screenId": "ch-01-sc-03",
+    "patternId": "screen-landscape-4",
+    "ars": [
+      1.4944,
+      1.4984,
+      1.4984,
+      1.4984
+    ],
+    "fits": [
+      [
+        "asset-006",
+        "cover"
+      ],
+      [
+        "asset-009",
+        "cover"
+      ],
+      [
+        "asset-010",
+        "cover"
+      ],
+      [
+        "asset-012",
+        "cover"
+      ]
+    ],
+    "outcome": "gate_penalize",
+    "peak": "three_two",
+    "score_mul": 0.62,
+    "hard": false,
+    "detail": "soft_mul=0.620;peak=three_two"
+  },
+  {
+    "screenId": "ch-01-sc-06",
+    "patternId": "screen-landscape-4",
+    "ars": [
+      1.7774,
+      1.7777,
+      1.7778,
+      1.7777
+    ],
+    "fits": [
+      [
+        "asset-019",
+        "cover"
+      ],
+      [
+        "asset-021",
+        "cover"
+      ],
+      [
+        "asset-023",
+        "cover"
+      ],
+      [
+        "asset-024",
+        "cover"
+      ]
+    ],
+    "outcome": "gate_allow",
+    "peak": "sixteen_nine",
+    "score_mul": 1.0,
+    "hard": false,
+    "detail": null
+  },
+  {
+    "screenId": "ch-01-sc-12",
+    "patternId": "screen-landscape-4",
+    "ars": [
+      1.7777,
+      1.7778,
+      1.7777,
+      1.5673
+    ],
+    "fits": [
+      [
+        "asset-035",
+        "cover"
+      ],
+      [
+        "asset-036",
+        "cover"
+      ],
+      [
+        "asset-037",
+        "cover"
+      ],
+      [
+        "asset-038",
+        "cover"
+      ]
+    ],
+    "outcome": "gate_allow",
+    "peak": "sixteen_nine",
+    "score_mul": 1.0,
+    "hard": false,
+    "detail": null
+  },
+  {
+    "screenId": "ch-02-sc-07",
+    "patternId": "screen-landscape-4",
+    "ars": [
+      1.4944,
+      1.4944,
+      1.4984,
+      1.4984
+    ],
+    "fits": [
+      [
+        "asset-086",
+        "cover"
+      ],
+      [
+        "asset-088",
+        "contain"
+      ],
+      [
+        "asset-089",
+        "cover"
+      ],
+      [
+        "asset-091",
+        "cover"
+      ]
+    ],
+    "outcome": "gate_penalize",
+    "peak": "three_two",
+    "score_mul": 0.62,
+    "hard": false,
+    "detail": "soft_mul=0.620;peak=three_two"
+  },
+  {
+    "screenId": "ch-03-sc-04",
+    "patternId": "screen-landscape-4",
+    "ars": [
+      1.4984,
+      1.4984,
+      1.4984,
+      1.4984
+    ],
+    "fits": [
+      [
+        "asset-128",
+        "cover"
+      ],
+      [
+        "asset-129",
+        "cover"
+      ],
+      [
+        "asset-130",
+        "cover"
+      ],
+      [
+        "asset-131",
+        "cover"
+      ]
+    ],
+    "outcome": "gate_penalize",
+    "peak": "three_two",
+    "score_mul": 0.62,
+    "hard": false,
+    "detail": "soft_mul=0.620;peak=three_two"
+  }
+]
