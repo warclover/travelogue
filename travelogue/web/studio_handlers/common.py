@@ -186,6 +186,12 @@ def match_trip_curate(path: str) -> str | None:
     return match_trip_suffix(path, CURATE_SUFFIX)
 
 
+def match_trip_layout_vibe(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import LAYOUT_VIBE_SUFFIX
+
+    return match_trip_suffix(path, LAYOUT_VIBE_SUFFIX)
+
+
 def match_trip_moment_curation(path: str) -> str | None:
     return match_trip_suffix(path, CURATION_MOMENT_SUFFIX)
 

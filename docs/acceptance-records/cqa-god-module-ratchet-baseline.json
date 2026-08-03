@@ -1,6 +1,6 @@
 {
   "lines": {
-    "travelogue/layout_engine/mosaic/hook.py": 807,
+    "travelogue/layout_engine/mosaic/hook.py": 830,
     "templates/studio/preview-toolbar/longshot.js": 2889
   },
   "note": "CQA I-CQA-14 · refresh with acceptance-records note when raising"

@@ -143,9 +143,28 @@
     },
     "media": {
       "$ref": "#/$defs/tripMedia"
+    },
+    "studio": {
+      "$ref": "#/$defs/tripStudio",
+      "description": "Studio per-trip preferences (LVP · layoutVibe, etc.)"
     }
   },
   "$defs": {
+    "tripStudio": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-trip Studio preferences (not process config.studio)",
+      "properties": {
+        "layoutVibe": {
+          "type": "string",
+          "enum": [
+            "magazine_default",
+            "fit_photo_experimental"
+          ],
+          "description": "LVP · Layout Vibe Picker id (PRD-LAYOUT-VIBE-PICKER-V1)"
+        }
+      }
+    },
     "fieldOrigin": {
       "type": "string",
       "enum": [
@@ -4034,6 +4053,28 @@
             "breath"
           ],
           "description": "ADR-020 / LTN B1 · layout narrative role (≠ screen.role peak pool)"
+        },
+        "megcEnabled": {
+          "type": "boolean",
+          "description": "MEGC · equal-grid gate was active for this screen (AC-MEGC-07)"
+        },
+        "megcOutcome": {
+          "type": "string",
+          "description": "MEGC · gate outcome (skipped | gate_allow | gate_penalize | gate_reject | gate_fallback)"
+        },
+        "megcLandPeak": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "MEGC · landscape peak class used by the gate"
+        },
+        "megcPatternId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "MEGC · pattern id evaluated by the gate"
         },
         "groupId": {
           "type": "string",

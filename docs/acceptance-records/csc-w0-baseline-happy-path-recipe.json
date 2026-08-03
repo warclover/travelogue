@@ -16,9 +16,9 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 176,
-    "default_true": 110,
-    "default_false": 66,
+    "bool_fields": 181,
+    "default_true": 113,
+    "default_false": 68,
     "tristate_fields": 5
   },
   "appconfig_bools": {
@@ -134,6 +134,11 @@
     "mosaic.deterministic_strict": true,
     "mosaic.enable_size3_aux": false,
     "mosaic.enabled": true,
+    "mosaic.equal_grid_contract.enabled": true,
+    "mosaic.equal_grid_contract.fix_stage_css": true,
+    "mosaic.equal_grid_contract.page_letterbox": false,
+    "mosaic.equal_grid_contract.release_stage_on_narrow_peak": false,
+    "mosaic.equal_grid_contract.selection_gate.enabled": true,
     "mosaic.fallback_to_legacy": true,
     "mosaic.hero_weighted_geometry_guard": true,
     "mosaic.lse_hungarian_assignment": false,

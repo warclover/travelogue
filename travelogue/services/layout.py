@@ -96,83 +96,90 @@ def apply_layout_to_trip(
         raise LayoutError("E_LAYOUT_EXPORT", f"export_layout must be one of {sorted(VALID_EXPORT_LAYOUTS)}")
 
     from travelogue.config import default_web_layout_engine, get_config
+    from travelogue.config.layout_vibe import apply_layout_vibe_to_config
+    from travelogue.config.runtime import app_config_scope
 
-    app_cfg = cfg or get_config()
-    engine = (
-        layout_engine
-        or trip.get("layoutEngine")
-        or default_web_layout_engine(layout, cfg=app_cfg)
-    )
-    if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
-        raise LayoutError("E_LAYOUT_ENGINE", "layout_engine must be legacy or screens")
+    base_cfg = cfg or get_config()
+    # LVP M1 · trip.studio.layoutVibe → mosaic three switches (fail-open magazine_default)
+    app_cfg = apply_layout_vibe_to_config(trip, base_cfg)
+    with app_config_scope(app_cfg):
+        engine = (
+            layout_engine
+            or trip.get("layoutEngine")
+            or default_web_layout_engine(layout, cfg=app_cfg)
+        )
+        if engine not in (LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS):
+            raise LayoutError("E_LAYOUT_ENGINE", "layout_engine must be legacy or screens")
 
-    assets = trip.get("assets") or []
-    if len(assets) < 4:
-        raise LayoutError("E_LAYOUT_TOO_FEW", "need at least 4 assets to layout")
+        assets = trip.get("assets") or []
+        if len(assets) < 4:
+            raise LayoutError("E_LAYOUT_TOO_FEW", "need at least 4 assets to layout")
 
-    aspects = {a["id"]: _aspect_kind_for_asset(a) for a in assets if a.get("id")}
-    body_ids = _body_asset_ids(trip)
-    if len(body_ids) < 4:
-        raise LayoutError("E_LAYOUT_TOO_FEW", "need at least 4 body assets after excluding cover")
+        aspects = {a["id"]: _aspect_kind_for_asset(a) for a in assets if a.get("id")}
+        body_ids = _body_asset_ids(trip)
+        if len(body_ids) < 4:
+            raise LayoutError(
+                "E_LAYOUT_TOO_FEW", "need at least 4 body assets after excluding cover"
+            )
 
-    titles = _chapter_titles(trip) if preserve_titles else None
-    if app_cfg.mosaic.enabled:
-        begin_mosaic_capture()
-    chapters, _ = build_chapters_from_plan(
-        body_ids,
-        aspects,
-        export_layout=layout,  # type: ignore[arg-type]
-        titles=titles,
-        layout_engine=engine,
-        assets=assets,
-        cfg=app_cfg,
-        # MTSO §0 · picker cohort needs tripId + AppConfig.mosaic
-        trip=trip,
-    )
+        titles = _chapter_titles(trip) if preserve_titles else None
+        if app_cfg.mosaic.enabled:
+            begin_mosaic_capture()
+        chapters, _ = build_chapters_from_plan(
+            body_ids,
+            aspects,
+            export_layout=layout,  # type: ignore[arg-type]
+            titles=titles,
+            layout_engine=engine,
+            assets=assets,
+            cfg=app_cfg,
+            # MTSO §0 · picker cohort needs tripId + AppConfig.mosaic
+            trip=trip,
+        )
 
-    summary = summarize_orientations(assets, export_layout=layout)  # type: ignore[arg-type]
-    summary_dict = summary.to_dict()
+        summary = summarize_orientations(assets, export_layout=layout)  # type: ignore[arg-type]
+        summary_dict = summary.to_dict()
 
-    trip["exportLayout"] = layout
-    trip["layoutEngine"] = engine
-    if engine == LAYOUT_ENGINE_SCREENS:
-        trip["layoutEngineVersion"] = LAYOUT_ENGINE_VERSION_SCREENS
-    trip["chapters"] = chapters
-    curation = trip.setdefault("curation", {})
-    curation["orientationSummary"] = summary_dict
-    curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
-    curation["layoutPlanRunId"] = f"layout-{_utc_now_iso()}"
+        trip["exportLayout"] = layout
+        trip["layoutEngine"] = engine
+        if engine == LAYOUT_ENGINE_SCREENS:
+            trip["layoutEngineVersion"] = LAYOUT_ENGINE_VERSION_SCREENS
+        trip["chapters"] = chapters
+        curation = trip.setdefault("curation", {})
+        curation["orientationSummary"] = summary_dict
+        curation["layoutPlanVersion"] = LAYOUT_PLAN_VERSION
+        curation["layoutPlanRunId"] = f"layout-{_utc_now_iso()}"
 
-    if app_cfg.mosaic.enabled:
-        mosaic_logs, _raw = drain_mosaic_capture()
-        mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)
-        dropped = drain_mosaic_dropped()
-        if mosaic_logs:
-            curation["mosaicDecisionLog"] = mosaic_logs
-        if dropped:
-            curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
+        if app_cfg.mosaic.enabled:
+            mosaic_logs, _raw = drain_mosaic_capture()
+            mosaic_logs = annotate_winner_plan_logs(mosaic_logs, chapters)
+            dropped = drain_mosaic_dropped()
+            if mosaic_logs:
+                curation["mosaicDecisionLog"] = mosaic_logs
+            if dropped:
+                curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
 
-    append_pipeline_run(
-        trip,
-        {
-            "runId": curation["layoutPlanRunId"],
-            "agent": "layout",
-            "startedAt": _utc_now_iso(),
-            "finishedAt": _utc_now_iso(),
-            "model": None,
-        },
-    )
-    trip["updatedAt"] = _utc_now_iso()
-    set_layout_status(trip, "layout_draft")
+        append_pipeline_run(
+            trip,
+            {
+                "runId": curation["layoutPlanRunId"],
+                "agent": "layout",
+                "startedAt": _utc_now_iso(),
+                "finishedAt": _utc_now_iso(),
+                "model": None,
+            },
+        )
+        trip["updatedAt"] = _utc_now_iso()
+        set_layout_status(trip, "layout_draft")
 
-    item_count = sum(len(ch.get("items", [])) for ch in chapters)
-    summary_text = format_layout_summary(summary_dict, chapters)
-    return LayoutResult(
-        summary_text=summary_text,
-        orientation_summary=summary_dict,
-        chapter_count=len(chapters),
-        item_count=item_count,
-    )
+        item_count = sum(len(ch.get("items", [])) for ch in chapters)
+        summary_text = format_layout_summary(summary_dict, chapters)
+        return LayoutResult(
+            summary_text=summary_text,
+            orientation_summary=summary_dict,
+            chapter_count=len(chapters),
+            item_count=item_count,
+        )
 
 
 def apply_layout_from_album_build(

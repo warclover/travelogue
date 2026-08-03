@@ -20,7 +20,7 @@
 3. 活跃 ADR：[adr/007-native-clustering.md](./adr/007-native-clustering.md)（索引见 [adr/README.md](./adr/README.md)）  
 4. [ACCEPTANCE.md](./ACCEPTANCE.md)（单轨验收入口）  
 5. 完工与用户面：[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) · [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) · [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)  
-6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（及主题 PRD：MTSO / MSA / MEGC / SSG — 见 DOC-STATUS）  
+6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（及主题 PRD：MTSO / MSA / MEGC / SSG / **LVP** — 见 DOC-STATUS）  
 7. 状态与归档：[DOC-STATUS.md](./DOC-STATUS.md) · [archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)
 
 ---
@@ -456,6 +456,12 @@
 | [acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md) | SSG 七席评审纪要模板 |
 | [acceptance-records/ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) | SSG 盲评记录模板 |
 | [RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md](./RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md) | 旅行照片自动排版 · 用户需求与竞品对照 |
+| [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) | **一句话选风格 LVP V1** **v0.2.0**（Conditional Go · M1/M2 代码 ✅ · AC-06 狗粮待 · M3 延期） |
+| [IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md](./IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md) | LVP 实施 · M1 剖面持久化 · M2 两卡 UI |
+| [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) | LVP 验收 · AC-01～05/07/08 ✅ · AC-06 待狗粮 |
+| [acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) | LVP 七席联评 · Conditional Go |
+| [acceptance-records/lvp-dogfood-GUIDE.md](./acceptance-records/lvp-dogfood-GUIDE.md) | LVP 三册狗粮 GUIDE |
+| [wireframes/layout-vibe-picker-f1-wireframe.html](./wireframes/layout-vibe-picker-f1-wireframe.html) | LVP F1 线框 · 两卡 + 确认模态 |
 | [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **拼图槽位自适应 MSA V1** **v0.2.0**（Conditional Go · Kickoff M0） |
 | [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 实施 · M0～PR-C + gap-close ✅ · 默认仍 off |
 | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | MSA 验收 · AC-01～08/10/11 ✅ · AC-09 待盲评 |

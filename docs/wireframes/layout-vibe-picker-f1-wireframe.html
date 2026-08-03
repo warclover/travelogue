@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LVP F1 · 成册风格两卡 + 确认模态线框</title>
+  <style>
+    :root {
+      --bg: #e8eaed;
+      --ink: #14110d;
+      --muted: #5c574f;
+      --accent: #3d6b5a;
+      --surface: #f3efe8;
+      --paper: #fff;
+      --border: rgba(20, 17, 13, 0.18);
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+    .bar {
+      background: #1c1b1a; color: #eceff1; padding: 14px 20px;
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 90ch; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 28px; }
+    .anno { font-size: 12px; color: #c45c26; margin: 0 0 8px; }
+    .phone {
+      width: min(420px, 100%); background: var(--paper); border-radius: 16px 16px 0 0;
+      box-shadow: 0 -8px 28px rgba(0,0,0,.12); padding: 16px 16px 28px; border: 1px solid var(--border);
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tabs span {
+      flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 13px; background: var(--surface);
+    }
+    .tabs .on { background: var(--accent); color: #fff; }
+    .label { font-size: 13px; font-weight: 650; margin: 0 0 4px; }
+    .hint { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+    .card {
+      display: block; width: 100%; text-align: left; border: 2px solid transparent;
+      border-radius: 12px; padding: 12px 14px; background: var(--surface); margin-bottom: 10px;
+    }
+    .card.on { border-color: var(--accent); background: #fff; }
+    .card strong { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+    .badge {
+      font-size: 11px; padding: 2px 7px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 18%, #fff); color: #1a2f28;
+    }
+    .card p { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .scrim {
+      position: relative; margin-top: 8px; background: rgba(0,0,0,.35); border-radius: 12px;
+      padding: 28px 16px; min-height: 200px;
+    }
+    .modal {
+      background: #fff; border-radius: 14px; padding: 18px 16px; max-width: 360px; margin: 0 auto;
+      box-shadow: 0 12px 40px rgba(0,0,0,.2);
+    }
+    .modal h2 { margin: 0 0 8px; font-size: 16px; }
+    .modal p { margin: 0 0 16px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .actions button {
+      border: 0; border-radius: 8px; padding: 8px 12px; font: inherit; cursor: default;
+    }
+    .ghost { background: var(--surface); color: var(--ink); }
+    .primary { background: var(--accent); color: #fff; }
+    .checklist { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 13px; }
+    .checklist li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>LVP F1 · 成册风格（SHD-01）</h1>
+    <p>精修 Sheet「这本」两卡 + 实验二次确认。文案为草案（待产品签字）。卡面不出现算法缩写。</p>
+  </header>
+  <main class="wrap">
+    <section>
+      <p class="anno">F1a · 精修 · 这本 · 成册风格区（与封面版式同级大卡）</p>
+      <div class="phone">
+        <div class="tabs"><span>这页</span><span>封面</span><span class="on">这本</span></div>
+        <p class="label">成册风格</p>
+        <p class="hint">整本排版气质。推荐更稳；实验更贴照片比例，页数可能变。</p>
+        <div class="card on">
+          <strong>杂志成册（推荐） <span class="badge">推荐</span></strong>
+          <p>宽画幅节奏稳，单反 3:2 少进扁四宫</p>
+        </div>
+        <div class="card">
+          <strong>更贴照片比例（实验） <span class="badge">实验</span></strong>
+          <p>加权拼图轨道更贴原图，章节页数可能变</p>
+        </div>
+      </div>
+    </section>
+    <section>
+      <p class="anno">F1b · 选实验卡 → 二次确认（须含分页风险 + 可改回推荐）</p>
+      <div class="phone">
+        <div class="scrim">
+          <div class="modal">
+            <h2>改用「更贴照片比例」？</h2>
+            <p>拼图会更贴原图比例，章节页数或篇幅可能变化。随时可在「成册风格」改回「杂志成册（推荐）」。</p>
+            <div class="actions">
+              <button type="button" class="ghost">取消</button>
+              <button type="button" class="primary">使用实验风格</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="checklist">
+      <strong>对照检查</strong>
+      <ul>
+        <li>恰好两卡；无第三卡「全关优化」</li>
+        <li>卡面无人话以外的算法缩写</li>
+        <li>确认文案含「页数/篇幅可能变」+「可改回推荐」</li>
+        <li>帮助链「高级配置」指向文档，不链 <code>/lse-flags-admin</code></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

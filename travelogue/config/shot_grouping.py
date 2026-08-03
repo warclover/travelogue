@@ -10,6 +10,19 @@ from travelogue.config_helpers import cfg_bool, cfg_float, cfg_int, cfg_str
 
 _UNSET = object()
 
+LOOK_REFERENCE_MODES = frozenset({"first", "ema", "medoid"})
+
+
+def normalize_look_reference_mode(raw: Any) -> tuple[str, str | None]:
+    """Return ``(effective_mode, skip_reason|None)``. Unknown → ``first`` + reason.
+
+    Lives in config (not curation) so loaders stay below the architectural layer line.
+    """
+    text = str(raw if raw is not None else "first").strip().lower()
+    if text in LOOK_REFERENCE_MODES:
+        return text, None
+    return "first", f"unknown_look_reference_mode:{raw}"
+
 
 @dataclass
 class ShotGroupingSceneConfig:
@@ -148,8 +161,6 @@ def _scene_from_dict(raw: dict[str, Any]) -> ShotGroupingSceneConfig:
 
 
 def _look_from_dict(raw: dict[str, Any]) -> ShotGroupingLookConfig:
-    from travelogue.curation.look_split import normalize_look_reference_mode
-
     enabled_raw = raw.get("enabled", "auto")
     mode_raw = raw.get("reference_mode", raw.get("referenceMode", "first"))
     mode, _skip = normalize_look_reference_mode(mode_raw)

@@ -70,7 +70,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-08-02 (b): cover preview/actual parity fixes (scroll/monument/diptych).
 # Re-bumped 2026-08-02 (c): wireframe craft pass (folio clip / portal halo / stamp).
 # Re-bumped 2026-08-02 (d): trip-meta unlock + contact archive strip.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}7201d51a554e"
+# Re-bumped 2026-08-03: LVP M2 · 成册风格 Sheet/help + wait/hint (studio bundle).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}6b340612ce0f"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

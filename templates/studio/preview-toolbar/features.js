@@ -24,6 +24,7 @@ import {
   toolbarConfirm,
   tripApiBase,
   toolbarBody,
+  reloadPreviewAfterLayout,
 } from "./shell.js";
 import { syncInspectChromeVisibility } from "./preview-mode.js";
 import {
@@ -697,6 +698,255 @@ export function readCoverOpeningStyleFromDom() {
     return section ? section.getAttribute("data-cover-opening") || _DEFAULT_COVER_STYLE : _DEFAULT_COVER_STYLE;
   }
 
+/** LVP M2 · 成册风格两卡（精修 · 这本） */
+var _LVP_DEFAULT_OPTIONS = [
+  {
+    id: "magazine_default",
+    label: "杂志成册（推荐）",
+    consequence: "宽画幅节奏稳，单反 3:2 少进扁四宫",
+    badge: "推荐",
+  },
+  {
+    id: "fit_photo_experimental",
+    label: "更贴照片比例（实验）",
+    consequence: "加权拼图轨道更贴原图，章节页数可能变",
+    badge: "实验",
+  },
+];
+
+var LVP_HINT_KEY = "travelogue.layoutVibeHint.";
+var LVP_HINT_OFF_KEY = "travelogue.layoutVibeHint.off";
+var LVP_HINT_PENDING_KEY = "travelogue.layoutVibeHintPending.";
+
+export function markLayoutVibeHintPending(tripId) {
+  if (!tripId) return;
+  try {
+    sessionStorage.setItem(LVP_HINT_PENDING_KEY + tripId, "1");
+  } catch (_e) {}
+}
+
+export function mountLayoutVibeControls(slot, tripId, opts) {
+  opts = opts || {};
+  if (!slot || slot.querySelector(".preview-sheet__layout-vibes")) return;
+  var section = document.createElement("div");
+  section.className = "preview-sheet__section preview-sheet__layout-vibe-section";
+  section.innerHTML =
+    '<span class="preview-sheet__label">成册风格</span>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">整本排版气质。推荐更稳；实验更贴照片比例，页数可能变。' +
+    '<button type="button" class="preview-sheet__text-link" data-lvp-help>了解更多</button></p>' +
+    '<div class="preview-sheet__layout-vibes" role="group" aria-label="成册风格"></div>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">' +
+    '<button type="button" class="preview-sheet__text-link" data-lvp-dismiss-hint>不再提示成册风格引导</button></p>';
+  var group = section.querySelector(".preview-sheet__layout-vibes");
+  var selected = "magazine_default";
+  var options = _LVP_DEFAULT_OPTIONS.slice();
+  var root = opts.root || document.querySelector(".preview-toolbar") || document.body;
+  var helpBtn = section.querySelector("[data-lvp-help]");
+  var dismissHintBtn = section.querySelector("[data-lvp-dismiss-hint]");
+  if (helpBtn) {
+    helpBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      openHelpDrawer({ source: "layout_vibe", itemId: "H8" });
+    });
+  }
+  if (dismissHintBtn) {
+    dismissHintBtn.addEventListener("click", function () {
+      try {
+        localStorage.setItem(LVP_HINT_OFF_KEY, "1");
+      } catch (_eOff) {}
+      showToolbarToast("已关闭成册风格引导");
+      trackStudioEvent("layout_vibe_hint_dismiss", { tripId: tripId });
+    });
+  }
+
+  function syncSelection(vibeId) {
+    if (!group) return;
+    group.querySelectorAll("[data-layout-vibe]").forEach(function (btn) {
+      var on = btn.getAttribute("data-layout-vibe") === vibeId;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function setBusy(busy) {
+    if (!group) return;
+    group.querySelectorAll("[data-layout-vibe]").forEach(function (btn) {
+      btn.disabled = !!busy;
+    });
+  }
+
+  function applyVibe(next, confirmedExperimental) {
+    setBusy(true);
+    showToolbarToast("正在按成册风格更新版面…", { duration: 3500 });
+    if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+      root._taskDock.updateExporting({
+        title: "正在按成册风格更新版面…",
+        subtitle: "完成后将刷新预览",
+        pct: 8,
+      });
+      root._exportDockActive = true;
+    }
+    function clearDock() {
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      if (root) root._exportDockActive = false;
+    }
+    return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/layout-vibe", {
+      layoutVibe: next,
+      confirmedExperimental: !!confirmedExperimental,
+    })
+      .then(function (res) {
+        if (res.status === 400 && res.body && res.body.error === "E_LVP_CONFIRM_REQUIRED") {
+          setBusy(false);
+          clearDock();
+          return false;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          setBusy(false);
+          clearDock();
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法更新成册风格",
+            { error: true }
+          );
+          return false;
+        }
+        return pollJobUntilDone(res.body.jobId, {
+          intervalMs: 800,
+          onTick: function (job) {
+            if (
+              root &&
+              root._taskDock &&
+              typeof root._taskDock.updateExporting === "function" &&
+              job &&
+              job.stageHint
+            ) {
+              root._taskDock.updateExporting({
+                title: "正在按成册风格更新版面…",
+                subtitle: String(job.stageHint),
+                pct: Math.min(90, 10 + (job.progress || 0) * 0.8),
+              });
+            }
+          },
+        }).then(function (job) {
+          setBusy(false);
+          clearDock();
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast("成册风格更新失败", { error: true });
+            return false;
+          }
+          selected = next;
+          syncSelection(selected);
+          trackStudioEvent("layout_vibe_change", {
+            tripId: tripId,
+            layoutVibe: next,
+          });
+          showToolbarToast("成册风格已更新");
+          reloadPreviewAfterLayout();
+          return true;
+        });
+      })
+      .catch(function () {
+        setBusy(false);
+        clearDock();
+        showToolbarToast("成册风格更新失败", { error: true });
+        return false;
+      });
+  }
+
+  function requestVibe(next) {
+    if (!next || next === selected) return;
+    if (next === "fit_photo_experimental") {
+      // AC-LVP-05 · 实验无二次确认不可保存
+      toolbarConfirm({
+        title: "改用「更贴照片比例」？",
+        body:
+          "拼图会更贴原图比例，章节页数或篇幅可能变化。随时可在「成册风格」改回「杂志成册（推荐）」。",
+        confirmText: "使用实验风格",
+        cancelText: "取消",
+      }).then(function (ok) {
+        if (!ok) {
+          trackStudioEvent("layout_vibe_experimental_cancel", { tripId: tripId });
+          return;
+        }
+        applyVibe(next, true);
+      });
+      return;
+    }
+    applyVibe(next, false);
+  }
+
+  function renderOptions(list) {
+    if (!group) return;
+    group.innerHTML = "";
+    options = list && list.length ? list : options;
+    options.forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preview-sheet__layout-vibe";
+      btn.setAttribute("data-layout-vibe", opt.id);
+      btn.setAttribute("aria-label", opt.label);
+      var badge = opt.badge
+        ? '<span class="preview-sheet__layout-vibe-badge">' + opt.badge + "</span>"
+        : "";
+      btn.innerHTML =
+        '<span class="preview-sheet__layout-vibe-title">' +
+        opt.label +
+        badge +
+        "</span>" +
+        '<span class="preview-sheet__layout-vibe-consequence">' +
+        (opt.consequence || "") +
+        "</span>";
+      btn.addEventListener("click", function () {
+        requestVibe(opt.id);
+      });
+      group.appendChild(btn);
+    });
+    syncSelection(selected);
+  }
+
+  renderOptions(options);
+  slot.appendChild(section);
+
+  fetchEntry(tripId)
+    .then(function (data) {
+      if (data && Array.isArray(data.layoutVibeOptions) && data.layoutVibeOptions.length) {
+        renderOptions(data.layoutVibeOptions);
+      }
+      if (data && data.layoutVibe) {
+        selected = data.layoutVibe;
+        syncSelection(selected);
+      }
+    })
+    .catch(function () {});
+
+  trackStudioEvent("layout_vibe_selector_impression", {
+    surface: "preview-sheet-book",
+    tripId: tripId,
+    layoutVibe: selected,
+  });
+}
+
+export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {
+  if (!tripId) return;
+  try {
+    if (localStorage.getItem(LVP_HINT_OFF_KEY) === "1") return;
+    if (localStorage.getItem(LVP_HINT_KEY + tripId) === "1") return;
+    // D-LVP-06 · 仅导入完成后打开预览时提示一次
+    if (sessionStorage.getItem(LVP_HINT_PENDING_KEY + tripId) !== "1") return;
+    sessionStorage.removeItem(LVP_HINT_PENDING_KEY + tripId);
+    localStorage.setItem(LVP_HINT_KEY + tripId, "1");
+  } catch (_e) {
+    return;
+  }
+  showToolbarToast("可在精修 · 这本选择成册风格（推荐或实验）", {
+    duration: 5200,
+  });
+  trackStudioEvent("layout_vibe_import_hint", { tripId: tripId });
+  if (typeof openSheetFn === "function") {
+    // soft: toast only; user opens Sheet themselves
+  }
+}
 
 export function mountCoverStyleControls(slot, tripId, opts) {
     opts = opts || {};
