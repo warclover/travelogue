@@ -96,6 +96,30 @@ def test_sheet_book_panel_hosts_layout_vibe_zone() -> None:
     assert "成册风格" in sheet
 
 
+def test_help_h7_points_to_docs_not_lse() -> None:
+    """SHD-02 · Help H7 must not link LSE admin."""
+    text = (ROOT / "templates/studio/js/help-onboarding.js").read_text(encoding="utf-8")
+    assert 'id: "H7"' in text
+    assert "成册风格" in text
+    assert "lse-flags-admin" not in text.lower()
+    features = (ROOT / "templates/studio/preview-toolbar/features.js").read_text(
+        encoding="utf-8"
+    )
+    assert 'itemId: "H7"' in features
+    assert "lse-flags-admin" not in features.lower()
+
+
+def test_shd01_wireframe_exists() -> None:
+    wf = ROOT / "docs/wireframes/layout-vibe-picker-f1-wireframe.html"
+    assert wf.is_file()
+    html = wf.read_text(encoding="utf-8")
+    assert "杂志成册" in html
+    assert "更贴照片比例" in html
+    assert "改用「更贴照片比例」" in html
+    for token in ("MTSO", "MEGC", "MSA", "LSE"):
+        assert token not in html
+
+
 def test_route_layout_vibe_registered() -> None:
     from travelogue.web.studio_dispatch import studio_route_snapshot
 

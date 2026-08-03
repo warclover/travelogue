@@ -715,6 +715,15 @@ var _LVP_DEFAULT_OPTIONS = [
 ];
 
 var LVP_HINT_KEY = "travelogue.layoutVibeHint.";
+var LVP_HINT_OFF_KEY = "travelogue.layoutVibeHint.off";
+var LVP_HINT_PENDING_KEY = "travelogue.layoutVibeHintPending.";
+
+export function markLayoutVibeHintPending(tripId) {
+  if (!tripId) return;
+  try {
+    sessionStorage.setItem(LVP_HINT_PENDING_KEY + tripId, "1");
+  } catch (_e) {}
+}
 
 export function mountLayoutVibeControls(slot, tripId, opts) {
   opts = opts || {};
@@ -723,12 +732,32 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
   section.className = "preview-sheet__section preview-sheet__layout-vibe-section";
   section.innerHTML =
     '<span class="preview-sheet__label">成册风格</span>' +
-    '<p class="preview-sheet__hint preview-sheet__hint--compact">整本排版气质。推荐更稳；实验更贴照片比例，页数可能变。</p>' +
-    '<div class="preview-sheet__layout-vibes" role="group" aria-label="成册风格"></div>';
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">整本排版气质。推荐更稳；实验更贴照片比例，页数可能变。' +
+    '<button type="button" class="preview-sheet__text-link" data-lvp-help>了解更多</button></p>' +
+    '<div class="preview-sheet__layout-vibes" role="group" aria-label="成册风格"></div>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">' +
+    '<button type="button" class="preview-sheet__text-link" data-lvp-dismiss-hint>不再提示成册风格引导</button></p>';
   var group = section.querySelector(".preview-sheet__layout-vibes");
   var selected = "magazine_default";
   var options = _LVP_DEFAULT_OPTIONS.slice();
   var root = opts.root || document.querySelector(".preview-toolbar") || document.body;
+  var helpBtn = section.querySelector("[data-lvp-help]");
+  var dismissHintBtn = section.querySelector("[data-lvp-dismiss-hint]");
+  if (helpBtn) {
+    helpBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      openHelpDrawer({ source: "layout_vibe", itemId: "H7" });
+    });
+  }
+  if (dismissHintBtn) {
+    dismissHintBtn.addEventListener("click", function () {
+      try {
+        localStorage.setItem(LVP_HINT_OFF_KEY, "1");
+      } catch (_eOff) {}
+      showToolbarToast("已关闭成册风格引导");
+      trackStudioEvent("layout_vibe_hint_dismiss", { tripId: tripId });
+    });
+  }
 
   function syncSelection(vibeId) {
     if (!group) return;
@@ -749,6 +778,20 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
   function applyVibe(next, confirmedExperimental) {
     setBusy(true);
     showToolbarToast("正在按成册风格更新版面…", { duration: 3500 });
+    if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+      root._taskDock.updateExporting({
+        title: "正在按成册风格更新版面…",
+        subtitle: "完成后将刷新预览",
+        pct: 8,
+      });
+      root._exportDockActive = true;
+    }
+    function clearDock() {
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      if (root) root._exportDockActive = false;
+    }
     return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/layout-vibe", {
       layoutVibe: next,
       confirmedExperimental: !!confirmedExperimental,
@@ -756,18 +799,38 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
       .then(function (res) {
         if (res.status === 400 && res.body && res.body.error === "E_LVP_CONFIRM_REQUIRED") {
           setBusy(false);
+          clearDock();
           return false;
         }
         if (!(res.status === 202 && res.body && res.body.jobId)) {
           setBusy(false);
+          clearDock();
           showToolbarToast(
             (res.body && (res.body.message || res.body.error)) || "无法更新成册风格",
             { error: true }
           );
           return false;
         }
-        return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
+        return pollJobUntilDone(res.body.jobId, {
+          intervalMs: 800,
+          onTick: function (job) {
+            if (
+              root &&
+              root._taskDock &&
+              typeof root._taskDock.updateExporting === "function" &&
+              job &&
+              job.stageHint
+            ) {
+              root._taskDock.updateExporting({
+                title: "正在按成册风格更新版面…",
+                subtitle: String(job.stageHint),
+                pct: Math.min(90, 10 + (job.progress || 0) * 0.8),
+              });
+            }
+          },
+        }).then(function (job) {
           setBusy(false);
+          clearDock();
           if (!job || job.status !== "succeeded") {
             showToolbarToast("成册风格更新失败", { error: true });
             return false;
@@ -785,6 +848,7 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
       })
       .catch(function () {
         setBusy(false);
+        clearDock();
         showToolbarToast("成册风格更新失败", { error: true });
         return false;
       });
@@ -861,15 +925,17 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
     tripId: tripId,
     layoutVibe: selected,
   });
-  void root;
 }
 
 export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {
   if (!tripId) return;
-  var key = LVP_HINT_KEY + tripId;
   try {
-    if (localStorage.getItem(key) === "1") return;
-    localStorage.setItem(key, "1");
+    if (localStorage.getItem(LVP_HINT_OFF_KEY) === "1") return;
+    if (localStorage.getItem(LVP_HINT_KEY + tripId) === "1") return;
+    // D-LVP-06 · 仅导入完成后打开预览时提示一次
+    if (sessionStorage.getItem(LVP_HINT_PENDING_KEY + tripId) !== "1") return;
+    sessionStorage.removeItem(LVP_HINT_PENDING_KEY + tripId);
+    localStorage.setItem(LVP_HINT_KEY + tripId, "1");
   } catch (_e) {
     return;
   }
@@ -878,7 +944,7 @@ export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {
   });
   trackStudioEvent("layout_vibe_import_hint", { tripId: tripId });
   if (typeof openSheetFn === "function") {
-    // soft: user can open sheet themselves; no auto-block
+    // soft: toast only; user opens Sheet themselves
   }
 }
 

@@ -33,8 +33,11 @@
 |------|------|------|
 | API | `POST …/layout-vibe` · `layout_vibe_handlers.py` | 写 vibe → layout → render（job）；实验无确认 400 |
 | UI | `features.js` `mountLayoutVibeControls` · Sheet「这本」区 | 两卡 + `toolbarConfirm` |
-| 弱提示 | `maybeShowLayoutVibeImportHint` | 每 trip 一次 toast（可关 localStorage） |
+| 弱提示 | `maybeShowLayoutVibeImportHint` · FirstSuccess 打 pending | **仅导入后**打开预览提示一次；Sheet 可「不再提示」 |
 | Entry | `studio_entry` `layoutVibe` / `layoutVibeOptions` | 预览入口回读 |
+| 等待面 | `applyVibe` → Task Dock `updateExporting` | 复用精选重排等待面 |
+| 帮助 | Help **H7** · SHD-02 | 不链 LSE admin |
+| 线框 | `docs/wireframes/layout-vibe-picker-f1-wireframe.html` | SHD-01 |
 | 测试 | `tests/unit/web/test_layout_vibe_m2.py` | AC-04/05 + 路由 |
 
 ## 禁令

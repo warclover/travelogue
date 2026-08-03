@@ -105,18 +105,23 @@
 |----|------|-------------------|----|------|
 | **BLK-LVP-01** | D/O 回写 | D-01 改写为一荐一实验；O-01～03 关闭结论写入 PRD v0.2 | M0 | ✅ 本纪要回写 |
 | **BLK-LVP-02** | 拆 ACCEPTANCE / IMPLEMENTATION | M1 合码前拆文；AC-01～08 入 ACCEPTANCE；M1 触点入 IMPL | M1 | ✅ 已拆文 |
-| **BLK-LVP-03** | 实验卡二次确认文案 | 产品+体验签字：须含「分页/章节长度可能变」「可改回推荐」 | M2 | ☐ |
-| **BLK-LVP-04** | 三册狗粮 | 王丹昙华林 / 东澳岛 / 斯里兰卡（或等价）推荐 vs 实验；无加权屏允许记录「差异小」 | M2 | ☐ |
+| **BLK-LVP-03** | 实验卡二次确认文案 | 产品+体验签字：须含「分页/章节长度可能变」「可改回推荐」 | M2 | 🔶 **草案已上线 · 可合码 · 事后补签**（见下方备注） |
+| **BLK-LVP-04** | 三册狗粮 | 王丹昙华林 / 东澳岛 / 斯里兰卡（或等价）推荐 vs 实验；无加权屏允许记录「差异小」 | M2 | ☐ GUIDE+草稿已备；待人工填 [DRAFT](./lvp-dogfood-2026-08-03-DRAFT.md) |
 | **BLK-LVP-05** | 优先级链单测 | `layoutVibe` > overlay > 仓库默认；LSE flags 不被改写（AC-07） | M1 | ✅ |
 | **BLK-LVP-06** | 回滚 AC | AC-LVP-08：清除 vibe 后行为 ≡ `magazine_default` / GA | M1 | ✅ |
 
 **Should-Fix（不阻塞 M1）**
 
-| ID | 建议 |
-|----|------|
-| **SHD-01** | 线框 F1（两卡 + 确认模态）进 `docs/wireframes/`，M2 前 |
-| **SHD-02** | 帮助链「高级配置」指向文档，不链 LSE admin |
-| **SHD-03** | 狗粮 GUIDE 一页：如何辨认「本册有无加权屏」 |
+| ID | 建议 | 状态 |
+|----|------|------|
+| **SHD-01** | 线框 F1（两卡 + 确认模态）进 `docs/wireframes/`，M2 前 | ✅ `wireframes/layout-vibe-picker-f1-wireframe.html` |
+| **SHD-02** | 帮助链「高级配置」指向文档，不链 LSE admin | ✅ Help H7 · Sheet「了解更多」→ H7（文案指向产品文档，无 `/lse-flags-admin`） |
+| **SHD-03** | 狗粮 GUIDE 一页：如何辨认「本册有无加权屏」 | ✅ `lvp-dogfood-GUIDE.md` |
+
+### BLK-LVP-03 合码备注（2026-08-03）
+
+确认文案草案已同时落在 UI 与 `layout_vibe_handlers.EXPERIMENTAL_CONFIRM_*`，字面满足「篇幅/页数可能变」+「可改回推荐」。  
+**决议**：不阻塞功能分支合入；产品/体验补签后将本行改为 ✅ 并去掉「草案」标注。
 
 ---
 

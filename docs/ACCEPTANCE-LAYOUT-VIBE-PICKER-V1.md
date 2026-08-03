@@ -27,9 +27,13 @@
 
 单测：`tests/unit/config/test_layout_vibe.py::test_blk_lvp_05_trip_vibe_beats_process_overlay`。
 
-## BLK-LVP-03 确认文案（草案 · 待产品/体验签字）
+## BLK-LVP-03 确认文案（草案 · **可合码 · 待产品/体验补签**）
 
 - 标题：`改用「更贴照片比例」？`
 - 正文：须含「章节页数或篇幅可能变化」+「可改回推荐」
 - 现网默认见 `layout_vibe_handlers.EXPERIMENTAL_CONFIRM_*` / `features.js` 确认模态
+- 线框：[wireframes/layout-vibe-picker-f1-wireframe.html](./wireframes/layout-vibe-picker-f1-wireframe.html)
 
+## AC-LVP-06
+
+待人工：见 [acceptance-records/lvp-dogfood-GUIDE.md](./acceptance-records/lvp-dogfood-GUIDE.md) · [DRAFT 记录](./acceptance-records/lvp-dogfood-2026-08-03-DRAFT.md)。

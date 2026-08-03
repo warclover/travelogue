@@ -421,6 +421,19 @@
   color: var(--sheet-muted);
 }
 
+.preview-sheet__text-link {
+  display: inline;
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sheet-accent);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .preview-sheet__cover-style {
   display: flex;
   flex-direction: column;

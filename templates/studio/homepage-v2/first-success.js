@@ -14,6 +14,14 @@ import { syncVariantGuard } from "./variant-guard.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 
 var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
+var LVP_HINT_PENDING_PREFIX = "travelogue.layoutVibeHintPending.";
+
+function markLayoutVibeHintPending(tripId) {
+  if (!tripId) return;
+  try {
+    sessionStorage.setItem(LVP_HINT_PENDING_PREFIX + String(tripId), "1");
+  } catch (_e) {}
+}
 
 function writeFtueAutoExport(tripId, platform) {
   try {
@@ -267,6 +275,7 @@ function populateSuccessUi(result) {
   var secondary = $("v2-success-secondary");
   var nextHint = $("v2-success-next-hint");
   var url = resolvePreviewUrl(result);
+  markLayoutVibeHintPending(result.tripId);
   if (open && url) open.href = url;
   // FE-DFX-43 · 次按钮链到预览并续跑 wechat_chat（禁止与主按钮同裸 URL）
   if (secondary && url) {
