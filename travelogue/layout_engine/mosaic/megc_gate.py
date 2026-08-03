@@ -198,6 +198,28 @@ def evaluate_megc_gate(
     )
 
 
+def should_block_legacy_equal_grid(decision: MegcGateDecision) -> bool:
+    """Legacy/planner direct construct has no scorer — soft cannot mul.
+
+    C-06 / dogfood 2026-08-03: refuse emit on ``gate_penalize`` and
+    ``gate_reject`` so planning falls back to non-equal-grid sizes.
+    Cinema / wide mixed (``gate_allow``) still pass.
+    """
+    if not decision.active:
+        return False
+    return decision.outcome in ("gate_penalize", "gate_reject")
+
+
+def stamp_megc_on_screen(screen: dict[str, Any], decision: MegcGateDecision) -> None:
+    """Persist AC-MEGC-07 fields on a constructed screen (legacy path)."""
+    if not isinstance(screen, dict):
+        return
+    screen["megcEnabled"] = bool(decision.active)
+    screen["megcOutcome"] = decision.outcome
+    screen["megcLandPeak"] = decision.land_peak
+    screen["megcPatternId"] = decision.pattern_id
+
+
 def resolve_megc_log_outcome(
     *,
     parent_enabled: bool,

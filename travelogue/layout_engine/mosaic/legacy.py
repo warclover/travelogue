@@ -117,13 +117,33 @@ def build_legacy_screen(
                 assets_map=assets_map,
             )
         if all(_is_landscape_id(x, aspects) for x in window):
-            return _make_screen(
+            # MEGC C-06 · legacy direct-construct bypasses MCS scorer; refuse
+            # non-cinema equal grids so planning falls back (soft has no mul here).
+            from travelogue.layout_engine.mosaic.megc_gate import (
+                evaluate_megc_gate,
+                should_block_legacy_equal_grid,
+                stamp_megc_on_screen,
+                window_assets_for_megc,
+            )
+
+            mosaic_cfg = None
+            if app_cfg is not None:
+                mosaic_cfg = getattr(app_cfg, "mosaic", None)
+            megc_assets = window_assets_for_megc(window, assets_map)
+            decision = evaluate_megc_gate(
+                "screen-landscape-4", megc_assets, mosaic_cfg
+            )
+            if should_block_legacy_equal_grid(decision):
+                return None
+            screen = _make_screen(
                 "screen-landscape-4",
                 window,
                 screen_id="",
                 aspects=aspects,
                 assets_map=assets_map,
             )
+            stamp_megc_on_screen(screen, decision)
+            return screen
         return None
 
     if size == 8 and len(window) == 8:
@@ -227,12 +247,31 @@ def append_legacy_window(
         return False
     from travelogue.layout_engine.mosaic.lifecycle import trip_id_from_trip
     from travelogue.layout_engine.mosaic.lte_adapter import mosaic_pattern_disabled
+    from travelogue.layout_engine.mosaic.megc_gate import (
+        evaluate_megc_gate,
+        should_block_legacy_equal_grid,
+        stamp_megc_on_screen,
+        window_assets_for_megc,
+    )
     from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
     from travelogue.layout_engine.mosaic.slot_geometry import screen_slots_geometry_ok
 
+    mosaic_cfg = get_effective_mosaic_config()
+    app_cfg = getattr(ctx, "app_config", None)
+    if app_cfg is not None and getattr(app_cfg, "mosaic", None) is not None:
+        mosaic_cfg = app_cfg.mosaic
+    if pid:
+        megc = evaluate_megc_gate(
+            pid,
+            window_assets_for_megc(window, ctx.assets_map),
+            mosaic_cfg,
+        )
+        if should_block_legacy_equal_grid(megc):
+            return False
+        stamp_megc_on_screen(screen, megc)
     if pid and mosaic_pattern_disabled(
         pid,
-        cfg=get_effective_mosaic_config(),
+        cfg=mosaic_cfg,
         trip_id=trip_id_from_trip(getattr(ctx, "trip", None)),
     ):
         return False

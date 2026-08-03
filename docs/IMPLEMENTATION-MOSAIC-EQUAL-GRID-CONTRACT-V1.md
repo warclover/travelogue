@@ -7,7 +7,7 @@
 | **DOC-STATUS** | **active** |
 | **更新日期** | 2026-08-03 |
 
-> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** ✅（分支 `feature/megc-pr-b-selection-gate` · SUP-01 `score_mul` · **默认仍 off** · [狗粮 2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）→ **PR-C (M3)** 默认延期。  
+> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** ✅（`score_mul` · 默认 off · [狗粮 2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）→ **PR-B2（legacy finalize 自愈）** 本 PR → **PR-C (M3)** 默认延期。  
 > **紧急例外**：PR-A 可在父开关前以 `fix_stage_css` hotfix 合入（O-05 · 七席允许）。
 
 ---
@@ -98,7 +98,9 @@ on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 **挂点（SUP-MEGC-02）**
 
 1. `candidates.py`：混向等权硬拒；`mode=hard_reject` 时纯横等权亦硬拒  
-2. `scorer.py`：纯横等权 soft `score_mul`（hard 回退再 emit 时同样乘）
+2. `scorer.py`：纯横等权 soft `score_mul`（hard 回退再 emit 时同样乘）  
+3. **PR-B2** `legacy.py` / `append_legacy_window`：legacy 直构无 scorer → soft/`gate_penalize` 与 hard 一律 **拒发**（`should_block_legacy_equal_grid`），规划回退到非等权尺寸；电影峰 `gate_allow` 仍 emit 并 stamp `megc*`  
+4. `builders._finalize_mosaic_screen`：MCS 路径 stamp `megcEnabled/Outcome/LandPeak`（不在此拒）
 
 ### 2.3 测试
 
@@ -113,7 +115,7 @@ on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 - [x] 配置 + 闸 + 日志  
 - [x] AC-04～08 绿  
 - [x] demo-2019 闸语义 + 16:9 放行狗粮（[2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）；**3:2 胜出率标定未闭环**（re-layout 大量 `plannerPath=legacy`）  
-- [ ] planner/legacy finalize 自愈挂 MEGC（下一 PR；否则 soft `score_mul` 难改既有等权屏）
+- [x] planner/legacy finalize 自愈挂 MEGC（PR-B2 · `should_block_legacy_equal_grid` · soft 亦拒发；默认仍 off）
 
 ---
 
