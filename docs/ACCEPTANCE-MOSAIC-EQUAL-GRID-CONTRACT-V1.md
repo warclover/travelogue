@@ -6,7 +6,7 @@
 | **实施** | [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) |
 | **评审** | [megc-equal-grid-contract-v1-review-2026-07-31.md](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md) · **Conditional Go** |
 | **DOC-STATUS** | **active** |
-| **更新日期** | 2026-07-31 |
+| **更新日期** | 2026-08-03 |
 
 > **用法**：DOM/几何断言以自动化为准；选型闸以 raw mosaic capture / 单测为准。  
 > **正交**：MEGC ⊥ MSA 轨道求解；**禁止**用「等权槽贴 1.50」作为 MSA AC。  
@@ -24,7 +24,7 @@
 | **AC-MEGC-W0-04** | A/B/C 模板清单与 MSA/MTSO 边界写清；D-11 web 主责 | ✅ |
 | **AC-MEGC-W0-05** | 七席 Conditional Go（2026-07-31） | ✅ |
 | **AC-MEGC-W0-06** | M1 合码前：BLK-02 CSS 名单签字 · BLK-06 trips 同步策略 | ✅ BLK-02 见 IMPL §1.4；BLK-06：render 拷模板 CSS（trips 拷贝仅狗粮） |
-| **AC-MEGC-W0-07** | M2 合码前：BLK-03 soft 默认 · BLK-07 MSA-OFF 仍可算峰 | ☐ |
+| **AC-MEGC-W0-07** | M2 合码前：BLK-03 soft 默认 · BLK-07 MSA-OFF 仍可算峰 | ✅ BLK-03 soft_penalty + score_mul；BLK-07 AC-07b |
 
 ---
 
@@ -35,7 +35,7 @@
 | 舞台/网格高度容差 | **1px** | AC-01 |
 | 峰判定 | 复用 MSA（容差 0.08 · 单峰 ≥0.60） | AC-04～06 |
 | `allow_mixed_median_min` | **1.70**（O-02 暂定） | mixed 放行 |
-| soft `penalty` | **8.0**（暂定） | AC-04 |
+| soft `score_mul` | **0.62**（SUP-MEGC-01） | AC-04 · 乘法 scorer |
 
 ---
 
@@ -43,7 +43,7 @@
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MEGC-01** | `landscape-4` fixture：3×cover + 1×contain；加载完成后 `gridH ≤ stageH + 1px`；下排槽 `bottom ≤ stage.bottom + 1px` | ✅ Playwright `demo-2019` assets 086/088/089/091：`gridH=stageH` · `bottomOk`（2026-07-31） |
+| **AC-MEGC-01** | `landscape-4` fixture：3×cover + 1×contain；加载完成后 `gridH ≤ stageH + 1px`；下排槽 `bottom ≤ stage.bottom + 1px` | ✅ Playwright `demo-2019` 086/088/089/091：`gridH=stageH=720` · `deltaGrid=0` · `bottomOk`（2026-07-31 单测 + **2026-08-03 狗粮截图** [megc-dogfood-2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)） |
 | **AC-MEGC-02** | 任选 1 个 `screen-mosaic-*` contain fixture：行为仍为格内信箱、舞台不因 contain 释高；相对 MEGC 前基线不回退 | ☑ mosaic 既有守卫未回退（`test_mosaic_fixed_stage_*`） |
 | **AC-MEGC-03** | `portrait-2` / `portrait-3` contain 屏仍为 intrinsic 高（非强制 16:9 裁盒） | ☑ `portrait-4` intrinsic 守卫 + MEGC 排除名单；portrait-2/3 未列入 INCLUDE |
 
@@ -57,12 +57,12 @@
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MEGC-04** | 全 3:2 四横窗 · `selection_gate.enabled`：soft 时 A 类得分下降且日志 `gate_penalize`；hard 时 A 类不出现在最终 screen | ☐ |
-| **AC-MEGC-05** | 全 16:9 四横窗：`landscape-4` 仍可合法胜出；日志 `gate_allow` | ☐ |
-| **AC-MEGC-06** | 2L2P / `portrait-2-landscape-2` 候选 + 非电影峰：硬纪律生效（拒或加倍罚） | ☐ |
-| **AC-MEGC-07** | raw 含 `megcEnabled` / `megcOutcome` / `megcLandPeak` / `megcPatternId` | ☐ |
-| **AC-MEGC-07b** | `slot_adaptation.enabled=false` 时 MEGC 闸仍能得到同一套 `landPeak`（只读 `build_msa_profile`）· BLK-07 | ☐ |
-| **AC-MEGC-08** | 父开关 OFF 时选型路径与基线一致（允许已合入的 CSS hotfix 单独注明） | ☐ |
+| **AC-MEGC-04** | 全 3:2 四横窗 · `selection_gate.enabled`：soft 时 A 类得分下降且日志 `gate_penalize`；hard 时 A 类不出现在最终 screen | ☑ `test_megc_pr_b` · 狗粮：原始 ch-01-sc-03 / ch-02-sc-07 / ch-03-sc-04 → `gate_penalize`·`score_mul=0.62`（[2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)） |
+| **AC-MEGC-05** | 全 16:9 四横窗：`landscape-4` 仍可合法胜出；日志 `gate_allow` | ☑ 单测 + 狗粮 ch-01-sc-06/12 → `gate_allow`；re-layout ON 仍保留 1×16:9 L4 |
+| **AC-MEGC-06** | 2L2P / `portrait-2-landscape-2` 候选 + 非电影峰：硬纪律生效（拒） | ☑ |
+| **AC-MEGC-07** | raw 含 `megcEnabled` / `megcOutcome` / `megcLandPeak` / `megcPatternId` | ☑ 单测；注意持久化 `mosaicDecisionLog` 为 summary 级不含 megc\*（读 raw/`drain_mosaic_capture`） |
+| **AC-MEGC-07b** | `slot_adaptation.enabled=false` 时 MEGC 闸仍能得到同一套 `landPeak`（只读 `build_msa_profile`）· BLK-07 | ☑ |
+| **AC-MEGC-08** | 父开关 OFF 时选型路径与基线一致（允许已合入的 CSS hotfix 单独注明） | ☑ |
 
 ```powershell
 # 实施后填真实模块路径
@@ -93,7 +93,7 @@ python -m pytest tests/unit/layout_engine/test_megc_pr_b.py -q
 
 ## 6. 实机锚点（建议狗粮）
 
-| 锚点 | 期望（M2 后） |
-|------|----------------|
-| `demo-2019` · 原 `ch-02-sc-06` 资产窗 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 |
-| 同窗强制 contain 回归 | AC-01 绿 |
+| 锚点 | 期望（M2 后） | 2026-08-03 |
+|------|----------------|------------|
+| `demo-2019` · 原 `ch-02-sc-07`（曾记 sc-06）资产窗 086/088/089/091 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 | 闸：`gate_penalize`（3:2）；**PR-B2 + classic `_plan_one_screen` 挂点后**：ON 无 3:2 L4、仅留 16:9 `gate_allow`（[B2 增补](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md)）；**默认仍 off** |
+| 同窗强制 contain 回归 | AC-01 绿 | ✅ `gridH=stageH` · 截图见 [megc-dogfood-2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md) |

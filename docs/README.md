@@ -465,11 +465,12 @@
 | [config-msa-dogfood.example.yaml](./config-msa-dogfood.example.yaml) | MSA 本机狗粮配置样例（默认勿开） |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md) | MSA 七席联评 · Conditional Go |
 | [acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-TEMPLATE.md) | MSA 七席评审纪要模板 |
-| [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **等权拼图几何合同 MEGC V1** **v0.2.0**（Conditional Go · 可 Kickoff M0/M1 · [评审](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md)） |
-| [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | MEGC 实施清单 · PR-A CSS 可 Kickoff · M3 延期 |
-| [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | MEGC 验收 · AC-01～10 |
+| [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **等权拼图几何合同 MEGC V1** **v0.2.0**（PR-A ✅ · PR-B 分支完成 · **默认仍 off** · M3 延期 · [评审](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md)） |
+| [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | MEGC 实施清单 · PR-A/PR-B ✅ · PR-B2 legacy 自愈 · M3 延期 |
+| [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | MEGC 验收 · AC-01 实机绿 · AC-04/05 狗粮 |
 | [acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md) | MEGC 七席联评 · Conditional Go |
-| [acceptance-records/megc-dev-feasibility-2026-07-31.md](./acceptance-records/megc-dev-feasibility-2026-07-31.md) | MEGC 开发负责人可行性 · PR-A Go · penalty 语义待 SUP |
+| [acceptance-records/megc-dev-feasibility-2026-07-31.md](./acceptance-records/megc-dev-feasibility-2026-07-31.md) | MEGC 开发负责人可行性 · SUP 已落 PR-B |
+| [acceptance-records/megc-dogfood-2026-08-03.md](./acceptance-records/megc-dogfood-2026-08-03.md) | MEGC demo-2019 狗粮 · 保持默认 off |
 | [acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md](./acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md) | MEGC 七席评审纪要模板 |
 | [config-megc-dogfood.example.yaml](./config-megc-dogfood.example.yaml) | MEGC 本机狗粮配置样例（默认勿开） |
 | [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |

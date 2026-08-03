@@ -243,6 +243,20 @@ def generate_window_candidates_with_rejections(
         from travelogue.layout_engine.quality_features import build_quality_pool
 
         window_quality_pool = build_quality_pool(list(assets_map.values()))
+    # MEGC · peak once per window (MSA OFF still OK · BLK-07)
+    from travelogue.config.mosaic import effective_megc_selection_gate_enabled
+    from travelogue.layout_engine.mosaic.megc_gate import (
+        MEGC_REJECT_REASON,
+        build_megc_profile,
+        evaluate_megc_gate,
+        window_assets_for_megc,
+    )
+
+    megc_profile = None
+    megc_fallback_stash: list[ScreenCandidate] = []
+    if effective_megc_selection_gate_enabled(cfg):
+        megc_assets = window_assets_for_megc(asset_ids, assets_map)
+        megc_profile = build_megc_profile(megc_assets, cfg=cfg)
     for pat in patterns:
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg, trip_id=trip_id):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
@@ -353,6 +367,36 @@ def generate_window_candidates_with_rejections(
                     screen, ordered, assets_map=assets_map
                 ):
                     screen = build_screen(pat, ordered, assets_map=assets_map)
+        # MEGC · D-06 / hard_reject — before geom so reject reason is not masked
+        if megc_profile is not None:
+            megc = evaluate_megc_gate(
+                pat.pattern_id,
+                window_assets_for_megc(ordered, assets_map),
+                cfg,
+                profile=megc_profile,
+            )
+            if megc.hard_reject:
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    MEGC_REJECT_REASON,
+                    detail=megc.detail,
+                )
+                feat_fb = {**summary, "patternId": pat.pattern_id}
+                if slot_fallback:
+                    feat_fb["slotAssignmentFallback"] = slot_fallback
+                if route_source:
+                    feat_fb["candidateSource"] = route_source
+                megc_fallback_stash.append(
+                    ScreenCandidate(
+                        pattern_id=pat.pattern_id,
+                        ordered_asset_ids=ordered,
+                        screen=screen,
+                        feature_summary=feat_fb,
+                        hard_valid=True,
+                    )
+                )
+                continue
         geom_ok = screen_slots_geometry_ok(screen, aspects)
         if tc_enabled:
             from travelogue.layout_engine.contract.evaluator import (
@@ -492,6 +536,20 @@ def generate_window_candidates_with_rejections(
             )
         )
     _restore_if_usage_emptied_candidates(out, rejected, usage_deferred, usage_hits)
+    # SUP-MEGC-03 · no alternative after MEGC hard reject → soft-reemit + fallback flag
+    if not out and megc_fallback_stash:
+        for cand in megc_fallback_stash:
+            feat = dict(cand.feature_summary or {})
+            feat["megcGateFallback"] = True
+            out.append(
+                ScreenCandidate(
+                    pattern_id=cand.pattern_id,
+                    ordered_asset_ids=list(cand.ordered_asset_ids),
+                    screen=cand.screen,
+                    feature_summary=feat,
+                    hard_valid=cand.hard_valid,
+                )
+            )
     if cfg.deterministic_strict:
         out.sort(key=lambda c: (c.pattern_id, tuple(c.ordered_asset_ids)))
     shadow_payload: dict[str, Any] | None = None

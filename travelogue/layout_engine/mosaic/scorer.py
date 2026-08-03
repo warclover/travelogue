@@ -630,6 +630,23 @@ def score_candidate(
             if tone_pen >= 0.45:
                 reasons.append("R_TONE_JUMP")
 
+    # MEGC · soft score_mul on non-cinema equal-grid peaks (SUP-MEGC-01/02)
+    from travelogue.config.mosaic import effective_megc_selection_gate_enabled
+
+    if effective_megc_selection_gate_enabled(cfg):
+        from travelogue.layout_engine.mosaic.megc_gate import (
+            evaluate_megc_gate,
+            window_assets_for_megc,
+        )
+
+        megc_assets = window_assets_for_megc(
+            [a for a in asset_ids if a], assets_by_id
+        )
+        megc = evaluate_megc_gate(pattern_id, megc_assets, cfg)
+        if megc.active and megc.score_mul < 1.0:
+            total = min(1.0, total * float(megc.score_mul))
+            reasons.append("R_MEGC_PEAK_MISMATCH")
+
     return MosaicScoreResult(
         total=_clamp01(total),
         base=base,

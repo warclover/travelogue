@@ -2,6 +2,7 @@
 
 # 复制到本地 research/config 覆盖层；勿提交已开启的生产默认。
 # 对应：docs/PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md
+# SUP-MEGC-01：soft 惩罚为乘法 score_mul（∈(0,1]），禁止加法 penalty:8.0
 
 mosaic:
   equal_grid_contract:
@@ -12,7 +13,7 @@ mosaic:
       mode: soft_penalty   # soft_penalty | hard_reject
       allow_peaks: [sixteen_nine]
       allow_mixed_median_min: 1.70
-      penalty: 8.0
+      score_mul: 0.62      # SUP-MEGC-01 · 乘法 scorer；狗粮可调
     release_stage_on_narrow_peak: false
     page_letterbox: false
     patterns:

@@ -408,6 +408,17 @@ mosaic:
     # crop_risk_contain_threshold: 0.55
     # hero_target_clamp: [1.30, 1.60]
     # wide_peak_fraction: 0.50
+  # MEGC · equal-grid contract (PR-B selection gate; default off)
+  # CSS hotfix (fix_stage_css) may already be live via PR-A / O-05.
+  # Dogfood: docs/config-megc-dogfood.example.yaml — use score_mul (not penalty).
+  equal_grid_contract:
+    enabled: false
+    # selection_gate:
+    #   enabled: true
+    #   mode: soft_penalty   # soft_penalty | hard_reject
+    #   allow_peaks: [sixteen_nine]
+    #   allow_mixed_median_min: 1.70
+    #   score_mul: 0.62
   weights:
     aspect_match: 0.20
     sharpness: 0.15

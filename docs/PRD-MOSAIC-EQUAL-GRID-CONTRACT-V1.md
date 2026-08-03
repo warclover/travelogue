@@ -198,7 +198,7 @@ mosaic:
       mode: soft_penalty             # 七席锁定默认；hard_reject 仅开关
       allow_peaks: [sixteen_nine]
       allow_mixed_median_min: 1.70   # O-02 暂定 · 狗粮可调
-      penalty: 8.0                   # SHD-01 · 狗粮可调
+      score_mul: 0.62                # SUP-MEGC-01 · 乘法 scorer；禁止 penalty:8.0
     release_stage_on_narrow_peak: false  # M3 延期
     page_letterbox: false                # M3 延期
     patterns:
@@ -268,10 +268,10 @@ MEGC **不** 另起峰算法；只消费 `landPeak` + `landMedianR`。
 | 条件 | `mode=soft_penalty` | `mode=hard_reject` |
 |------|---------------------|--------------------|
 | `landPeak=sixteen_nine` | 不罚 | 不拒 |
-| `landPeak∈{three_two,four_three}` | +penalty | 拒 A 类 |
+| `landPeak∈{three_two,four_three}` | `score *= score_mul` | 拒 A 类 |
 | `landPeak=mixed` 且 median ≥ `allow_mixed_median_min` | 不罚 | 不拒 |
-| 其他 mixed | +penalty | 拒 |
-| pattern ∈ 混向等权（D-06）且峰非电影 | （soft 路径仍可记日志） | **硬拒** |
+| 其他 mixed | `score *= score_mul` | 拒 |
+| pattern ∈ 混向等权（D-06）且峰非电影 | **硬拒**（不进 soft） | **硬拒** |
 
 替代偏好（文档约定，实施可配置）：`screen-landscape-2`、`screen-mosaic-4-hero-70-sidebar`、加权 5/6 图横主（交 MSA）。
 

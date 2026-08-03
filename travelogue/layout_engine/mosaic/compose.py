@@ -468,6 +468,14 @@ def pick_best_window(
                 log.planner_path = "mosaic"
                 enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
                 _attach_msa_log_from_screen(log, winner_cand.screen)
+                _attach_megc_log(
+                    log,
+                    winner_cand,
+                    asset_ids=asset_ids,
+                    assets_map=assets_map,
+                    cfg=cfg,
+                    rejected=rejected,
+                )
                 _attach_raw_geometry_features(log, winner_cand.pattern_id)
                 return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
         if cfg.fallback_to_legacy:
@@ -479,8 +487,58 @@ def pick_best_window(
     log.planner_path = "mosaic"
     enrich_mosaic_log_from_screen(log, winner_cand.screen, assets_map=assets_map)
     _attach_msa_log_from_screen(log, winner_cand.screen)
+    _attach_megc_log(
+        log,
+        winner_cand,
+        asset_ids=asset_ids,
+        assets_map=assets_map,
+        cfg=cfg,
+        rejected=rejected,
+    )
     _attach_raw_geometry_features(log, winner_cand.pattern_id)
     return WindowPickResult(screen=winner_cand.screen, log=log, used_legacy=False)
+
+
+def _attach_megc_log(
+    log: MosaicWindowLog,
+    winner_cand: ScreenCandidate,
+    *,
+    asset_ids: list[str],
+    assets_map: dict[str, dict],
+    cfg: MosaicConfig,
+    rejected: list[dict],
+) -> None:
+    """MEGC raw fields (AC-MEGC-07); parent OFF → megcEnabled=false / skipped."""
+    from travelogue.config.mosaic import effective_equal_grid_contract_enabled
+    from travelogue.layout_engine.mosaic.megc_gate import (
+        evaluate_megc_gate,
+        resolve_megc_log_outcome,
+        window_assets_for_megc,
+    )
+
+    parent_on = effective_equal_grid_contract_enabled(cfg)
+    log.megc_enabled = parent_on
+    if not parent_on:
+        log.megc_outcome = "skipped"
+        log.megc_land_peak = None
+        log.megc_pattern_id = winner_cand.pattern_id or None
+        return
+    assets = window_assets_for_megc(asset_ids, assets_map)
+    decision = evaluate_megc_gate(winner_cand.pattern_id, assets, cfg)
+    log.megc_land_peak = decision.land_peak
+    log.megc_pattern_id = winner_cand.pattern_id or None
+    # Peak still recorded when winner is non-MEGC (gate rejected A-class).
+    if decision.land_peak is None and assets:
+        from travelogue.layout_engine.mosaic.megc_gate import build_megc_profile
+
+        prof = build_megc_profile(assets, cfg=cfg)
+        log.megc_land_peak = prof.land_peak
+    log.megc_outcome = resolve_megc_log_outcome(
+        parent_enabled=parent_on,
+        decision=decision,
+        winner_feature_summary=winner_cand.feature_summary,
+        rejected=rejected,
+    )
 
 
 def _attach_msa_log_from_screen(log: MosaicWindowLog, screen: dict | None) -> None:

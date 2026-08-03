@@ -445,6 +445,29 @@ def _finalize_mosaic_screen(
         from travelogue.layout_engine.mosaic.msa_apply import maybe_apply_slot_adaptation
 
         maybe_apply_slot_adaptation(screen, pattern_id, assets_map=assets_map)
+    # MEGC · stamp peak decision on equal-grid screens (MCS finalize path).
+    # Does not reject here — candidates/scorer already gated; legacy refuses upstream.
+    if assets_map:
+        from travelogue.layout_engine.mosaic.megc_gate import (
+            evaluate_megc_gate,
+            stamp_megc_on_screen,
+            window_assets_for_megc,
+        )
+        from travelogue.layout_engine.mosaic.runtime import get_effective_mosaic_config
+
+        slots = screen.get("slots") or []
+        aids = [
+            str(sl.get("assetId"))
+            for sl in slots
+            if isinstance(sl, dict) and sl.get("assetId")
+        ]
+        if aids:
+            decision = evaluate_megc_gate(
+                pattern_id,
+                window_assets_for_megc(aids, assets_map),
+                get_effective_mosaic_config(),
+            )
+            stamp_megc_on_screen(screen, decision)
     return screen
 
 
