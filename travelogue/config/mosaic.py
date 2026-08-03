@@ -214,10 +214,11 @@ class EqualGridContractConfig:
 
     When ``enabled`` is false, nested knobs are ineffective (fail-closed).
     CSS hotfix (``fix_stage_css``) may ship independently of this parent (O-05).
+    Default ON since 2026-08-03 (see megc-default-on-decision); M3 knobs stay false.
     Unknown keys under this root fail-loud.
     """
 
-    enabled: bool = False
+    enabled: bool = True
     fix_stage_css: bool = True
     selection_gate: EqualGridSelectionGateConfig = field(
         default_factory=EqualGridSelectionGateConfig

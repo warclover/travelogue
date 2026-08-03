@@ -32,7 +32,7 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert "*" in cfg.template_experiments.cohort_trip_ids
     assert cfg.selection_optimization.enabled is False
     assert cfg.slot_adaptation.enabled is False
-    assert cfg.equal_grid_contract.enabled is False
+    assert cfg.equal_grid_contract.enabled is True
     assert cfg.equal_grid_contract.selection_gate.score_mul == 0.62
     assert cfg.near_scene_clone_gate.enabled is defaults.near_scene_clone_gate.enabled
 

@@ -111,7 +111,7 @@ def _screen(pattern_id: str, asset_ids: list[str]) -> dict:
 
 def test_config_score_mul_default_and_penalty_fail_loud() -> None:
     cfg = mosaic_from_dict({})
-    assert cfg.equal_grid_contract.enabled is False
+    assert cfg.equal_grid_contract.enabled is True
     assert cfg.equal_grid_contract.selection_gate.score_mul == pytest.approx(0.62)
     assert cfg.equal_grid_contract.selection_gate.mode == "soft_penalty"
     with pytest.raises(ValueError, match="unknown keys"):

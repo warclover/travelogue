@@ -6,10 +6,10 @@
 | **日期** | 2026-08-03 |
 | **分支 / 代码** | `feature/megc-pr-b-selection-gate` @ `362fde2b`（worktree `megc-pr-b-58eba1f4`） |
 | **配置样例** | [config-megc-dogfood.example.yaml](../config-megc-dogfood.example.yaml) · `score_mul=0.62` · soft_penalty |
-| **本机 config** | 临时覆盖后已还原；仓库默认仍 `equal_grid_contract.enabled=false` |
+| **本机 config** | 当时临时覆盖后已还原；**事后**仓库默认已转正为 on（见 [默认 on 决策](./megc-default-on-decision-2026-08-03.md)） |
 | **关联** | [ACCEPTANCE](../ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) · [IMPL](../IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) · [PRD v0.2.0](../PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) |
 
-> **不是**默认 on 决策。结论：保持默认 off；PR-A 几何已实机绿；PR-B 闸语义对原始等权窗正确，但整册 re-layout 大量走 legacy planner，soft 胜出率尚无法用本册闭环标定。
+> **历史记录**（转正前）：当时结论是保持默认 off——PR-A 几何已实机绿；PR-B 闸语义对原始等权窗正确，但整册 re-layout 大量走 legacy/classic，软闸胜出率未闭环。随后 PR-B2 + 实册手测后已改默认 on。
 
 ---
 
@@ -83,11 +83,13 @@ Playwright @ 1280×900 · 原始 trip + PR-A CSS 已 sync 到 `trips/demo-2019/j
 
 | 项 | 结论 |
 |----|------|
-| 默认 `enabled` | **保持 false**（不转正） |
+| 默认 `enabled` | **当时保持 false**；事后已见 [默认 on 决策](./megc-default-on-decision-2026-08-03.md) |
 | `score_mul=0.62` | **暂不调**；需下一批「走 mosaic candidates」的窗或 planner finalize 后再标定胜出率 |
 | PR-A CSS | 实机几何 ✅，可视为 demo-2019 contain 锚点收口 |
 | PR-B 选型闸 | 单元 + 原始窗 gate 表 ✅；整册视觉「少落 3:2 L4」被 legacy 旁路挡住 |
 | 下一 PR 优先 | **planner/legacy finalize 自愈挂 MEGC**（已知风险 #2）；然后再做胜出率狗粮 / 盲评（AC-10） |
 | M3 | 仍延期 |
+
+> 注：上表为 **当日** 狗粮结论；PR-B2 + 实册后默认已转正。
 
 **签名**：Agent 狗粮代记录　日期：2026-08-03

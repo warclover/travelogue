@@ -32,7 +32,7 @@
 |----|------|
 | classic + legacy 双挂点 | ✅ 3:2 等权四宫在 ON 下不再胜出 |
 | 16:9 电影峰 | ✅ 仍可 `gate_allow` |
-| 默认 enabled | **保持 false**（待 PR 合入后再议转正） |
+| 默认 enabled | **已转正 true**（[决策](./megc-default-on-decision-2026-08-03.md)） |
 | `score_mul=0.62` | MCS soft 路径仍可保留；本册胜出主战场是 classic demote |
 
 **签名**：Agent　2026-08-03

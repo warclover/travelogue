@@ -7,7 +7,7 @@
 | **DOC-STATUS** | **active** |
 | **更新日期** | 2026-08-03 |
 
-> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** ✅（`score_mul` · 默认 off · [狗粮 2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）→ **PR-B2（legacy finalize 自愈）** 本 PR → **PR-C (M3)** 默认延期。  
+> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** ✅ → **PR-B2（legacy/classic 自愈）** ✅ → **默认 on**（[决策 2026-08-03](./acceptance-records/megc-default-on-decision-2026-08-03.md)）→ **PR-C (M3)** 默认延期。  
 > **紧急例外**：PR-A 可在父开关前以 `fix_stage_css` hotfix 合入（O-05 · 七席允许）。
 
 ---
@@ -115,7 +115,8 @@ on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 - [x] 配置 + 闸 + 日志  
 - [x] AC-04～08 绿  
 - [x] demo-2019 闸语义 + 16:9 放行狗粮（[2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md)）；**3:2 胜出率标定未闭环**（re-layout 大量 `plannerPath=legacy`）  
-- [x] planner/legacy finalize 自愈挂 MEGC（PR-B2 · `should_block_legacy_equal_grid` · soft 亦拒发；默认仍 off）
+- [x] planner/legacy finalize 自愈挂 MEGC（PR-B2 · `should_block_legacy_equal_grid` · soft 亦拒发）  
+- [x] 产品默认 on（[决策](./acceptance-records/megc-default-on-decision-2026-08-03.md) · `EqualGridContractConfig.enabled=True`）
 
 ---
 

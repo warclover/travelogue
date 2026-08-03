@@ -1,12 +1,13 @@
-# MEGC · 本机狗粮配置样例（默认勿开）
+# MEGC · 本机调参 / 临时关闭样例
 
-# 复制到本地 research/config 覆盖层；勿提交已开启的生产默认。
+# 仓库默认已开启 equal_grid_contract（2026-08-03 转正）。
+# 本文件用于：调 score_mul / mode，或本机显式关闭做对照。
 # 对应：docs/PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md
 # SUP-MEGC-01：soft 惩罚为乘法 score_mul（∈(0,1]），禁止加法 penalty:8.0
 
 mosaic:
   equal_grid_contract:
-    enabled: true
+    enabled: true          # 对照关闭时改为 false
     fix_stage_css: true
     selection_gate:
       enabled: true
@@ -14,8 +15,8 @@ mosaic:
       allow_peaks: [sixteen_nine]
       allow_mixed_median_min: 1.70
       score_mul: 0.62      # SUP-MEGC-01 · 乘法 scorer；狗粮可调
-    release_stage_on_narrow_peak: false
-    page_letterbox: false
+    release_stage_on_narrow_peak: false   # M3 延期
+    page_letterbox: false                 # M3 延期
     patterns:
       - screen-landscape-4
       - screen-portrait-2-landscape-2

@@ -106,15 +106,16 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MOSAIC-SLOT-ADAPTATION-V1.md](./PRD-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | 拼图槽位自适应 **MSA** **v0.2.0**（Conditional Go · 可 Kickoff M0 · [评审](./acceptance-records/msa-mosaic-slot-adaptation-v1-review-2026-07-23.md)） |
 | [IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md](./IMPLEMENTATION-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 实施 · M0～PR-C + gap-close ✅ · 默认仍 off · AC-09 待盲评 |
 | [ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md](./ACCEPTANCE-MOSAIC-SLOT-ADAPTATION-V1.md) | **active** | MSA 验收 · AC-01～08/10/11 ✅ · AC-09 待实册盲评 |
-| [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | 等权拼图几何合同 **MEGC** **v0.2.0**（Conditional Go · PR-A ✅ · PR-B 分支完成 · **默认仍 off** · M3 延期） |
-| [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 实施 · PR-A ✅ · PR-B ✅ · PR-B2 legacy 自愈（待合）· 默认 off · M3 延期 |
-| [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 验收 · AC-01 实机绿 · AC-04/05 闸语义狗粮 · 默认 on 未开 |
+| [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | 等权拼图几何合同 **MEGC** **v0.2.0**（Conditional Go · PR-A/B/B2 ✅ · **默认 on** · M3 延期） |
+| [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 实施 · PR-A/B/B2 ✅ · **默认 on**（2026-08-03）· M3 延期 |
+| [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 验收 · AC-01 实机绿 · AC-04/05 闸语义狗粮 · **默认 on 已转正** |
 | [acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md) | **active** | MEGC 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/megc-dev-feasibility-2026-07-31.md](./acceptance-records/megc-dev-feasibility-2026-07-31.md) | **active** | MEGC 开发负责人实施前可行性 · SUP-01/02/03 已落 PR-B |
 | [acceptance-records/megc-dogfood-2026-08-03.md](./acceptance-records/megc-dogfood-2026-08-03.md) | **active** | MEGC demo-2019 狗粮 · PR-A 几何 ✅ · 闸语义 ✅ |
-| [acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md) | **active** | MEGC PR-B2 · classic planner 挂点后 off/on：ON 无 3:2 L4 · 电影峰仍 allow · **保持默认 off** |
+| [acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md) | **active** | MEGC PR-B2 · classic planner 挂点 · ON 无 3:2 L4 · 电影峰仍 allow |
+| [acceptance-records/megc-default-on-decision-2026-08-03.md](./acceptance-records/megc-default-on-decision-2026-08-03.md) | **active** | MEGC **默认 on** 决策 · 实册可接受 · M3 仍延期 |
 | [acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md](./acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md) | **active** | MEGC 七席评审纪要**模板** |
-| [config-megc-dogfood.example.yaml](./config-megc-dogfood.example.yaml) | **active** | MEGC 本机狗粮配置样例（默认勿开） |
+| [config-megc-dogfood.example.yaml](./config-megc-dogfood.example.yaml) | **active** | MEGC 本机调参 / 临时关闭样例 |
 | [acceptance-records/msa-contain-visual-contract-BLK06.md](./acceptance-records/msa-contain-visual-contract-BLK06.md) | **active** | MSA BLK-06 contain 杂志纸色视觉合同 |
 | [acceptance-records/msa-local-dogfood-GUIDE.md](./acceptance-records/msa-local-dogfood-GUIDE.md) | **active** | MSA 本机狗粮 GUIDE |
 | [acceptance-records/msa-blind-review-TEMPLATE.md](./acceptance-records/msa-blind-review-TEMPLATE.md) | **active** | MSA 盲评记录模板 |

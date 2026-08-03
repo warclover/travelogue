@@ -182,7 +182,7 @@ experimental 加重例：`mosaic-5-1p4l-portrait-hero`（侧轨 @3.2）、`mosai
 | **D-MEGC-06 混向等权** | `portrait-2-landscape-2` / 2L2P：非电影峰 → **硬拒**；禁止竖角色 cover 填 16:9 格；experimental 2L2P **不转 GA** |
 | **D-MEGC-07 与 MSA** | 不修改 MSA D-01～D-12；contain 视觉底继承 BLK-06 |
 | **D-MEGC-08 与 MTSO** | 选型闸以惩罚/硬拒候选挂接；不塞进 MTSO 转正 KPI |
-| **D-MEGC-09 开关** | 父开关 `mosaic.equal_grid_contract.enabled` 默认 false；**CSS hotfix（`fix_stage_css`）允许先于父开关合入**（O-05） |
+| **D-MEGC-09 开关** | 父开关 `mosaic.equal_grid_contract.enabled`：**产品默认 true**（[2026-08-03 决策](./acceptance-records/megc-default-on-decision-2026-08-03.md)；七席原稿默认 false 已由转正决议覆盖）；**CSS hotfix（`fix_stage_css`）允许先于父开关合入**（O-05） |
 | **D-MEGC-10 失败** | 无替代候选 → 回退次优非等权模板；禁止空屏；打点 `megc_gate_fallback` |
 | **D-MEGC-11 变体范围** | M1–M2 **主责 web 16:9**；mobile 9:16 不阻塞 PR-A；若闸启用须按 variant 记日志 |
 
@@ -191,7 +191,7 @@ experimental 加重例：`mosaic-5-1p4l-portrait-hero`（侧轨 @3.2）、`mosai
 ```yaml
 mosaic:
   equal_grid_contract:
-    enabled: false
+    enabled: true                    # 产品默认 on · 2026-08-03 转正
     fix_stage_css: true              # M1：可先于父开关合入（O-05）
     selection_gate:
       enabled: true                  # M2

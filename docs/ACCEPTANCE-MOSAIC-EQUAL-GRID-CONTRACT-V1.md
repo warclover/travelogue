@@ -77,7 +77,7 @@ python -m pytest tests/unit/layout_engine/test_megc_pr_b.py -q
 |----|------|------|
 | **AC-MEGC-09** | 若启用 P-释：非 16:9 峰等权屏 `aspect-ratio` 非强制 16:9；格 AR 贴近 \(r^*±0.08\)；导出/preview 同实例 | ☐ |
 | **AC-MEGC-09b** | 若启用 P-函：整页 whitespace ≤ 与 MSA 同源预算；与 P-释不同时默认 on | ☐ |
-| **AC-MEGC-10** | 三分峰狗粮（单反 3:2 / 手机 4:3 / 混排）盲评记录入 acceptance-records；默认 on 另决策 | ☐ |
+| **AC-MEGC-10** | 三分峰狗粮（单反 3:2 / 手机 4:3 / 混排）盲评记录入 acceptance-records；默认 on 另决策 | ☑ 正式三分峰盲评未另开；**默认 on** 以实册可接受 + 狗粮转正（[决策](./acceptance-records/megc-default-on-decision-2026-08-03.md)） |
 
 ---
 
@@ -95,5 +95,5 @@ python -m pytest tests/unit/layout_engine/test_megc_pr_b.py -q
 
 | 锚点 | 期望（M2 后） | 2026-08-03 |
 |------|----------------|------------|
-| `demo-2019` · 原 `ch-02-sc-07`（曾记 sc-06）资产窗 086/088/089/091 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 | 闸：`gate_penalize`（3:2）；**PR-B2 + classic `_plan_one_screen` 挂点后**：ON 无 3:2 L4、仅留 16:9 `gate_allow`（[B2 增补](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md)）；**默认仍 off** |
+| `demo-2019` · 原 `ch-02-sc-07`（曾记 sc-06）资产窗 086/088/089/091 | 不再稳定以砍头砍脚的 `landscape-4` cover 呈现；或等权仅在电影峰 | 闸：`gate_penalize`（3:2）；**PR-B2 + classic `_plan_one_screen` 挂点后**：ON 无 3:2 L4、仅留 16:9 `gate_allow`（[B2 增补](./acceptance-records/megc-dogfood-b2-classic-planner-2026-08-03.md)）；**默认已 on**（[决策](./acceptance-records/megc-default-on-decision-2026-08-03.md)） |
 | 同窗强制 contain 回归 | AC-01 绿 | ✅ `gridH=stageH` · 截图见 [megc-dogfood-2026-08-03](./acceptance-records/megc-dogfood-2026-08-03.md) |

@@ -408,11 +408,12 @@ mosaic:
     # crop_risk_contain_threshold: 0.55
     # hero_target_clamp: [1.30, 1.60]
     # wide_peak_fraction: 0.50
-  # MEGC · equal-grid contract (PR-B selection gate; default off)
+  # MEGC · equal-grid contract (default ON · 2026-08-03 decision)
   # CSS hotfix (fix_stage_css) may already be live via PR-A / O-05.
-  # Dogfood: docs/config-megc-dogfood.example.yaml — use score_mul (not penalty).
+  # Tunables / opt-out: docs/config-megc-dogfood.example.yaml - use score_mul (not penalty).
+  # Decision: docs/acceptance-records/megc-default-on-decision-2026-08-03.md
   equal_grid_contract:
-    enabled: false
+    enabled: true
     # selection_gate:
     #   enabled: true
     #   mode: soft_penalty   # soft_penalty | hard_reject
