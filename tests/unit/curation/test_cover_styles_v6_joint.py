@@ -192,6 +192,31 @@ def test_apply_style_keep_cover_rejects_retired_style() -> None:
         apply_style_keep_cover(trip, "diptych-seam")
 
 
+def test_repick_opening_rejects_explicit_retired_style() -> None:
+    """assetId + retired styleId must not re-activate a retired opening."""
+    from travelogue.cover_engine.api import repick_opening
+
+    assets = [_asset("keep-me", 0.5, 0.3), _asset("alt", 0.5, 0.35)]
+    trip = _trip(assets)
+    trip["meta"]["coverOpeningStyle"] = "veil-footer"
+    with pytest.raises(ValueError, match="not assignable"):
+        repick_opening(trip, asset_id="alt", style_id="diptych-seam")
+    assert trip["meta"]["coverOpeningStyle"] == "veil-footer"
+
+
+def test_repick_opening_asset_only_keeps_legacy_retired_style() -> None:
+    """Asset-only repick on a legacy retired trip must keep rendering style."""
+    from travelogue.cover_engine.api import repick_opening
+
+    assets = [_asset("keep-me", 0.5, 0.3), _asset("alt", 0.5, 0.35)]
+    trip = _trip(assets)
+    trip["meta"]["coverOpeningStyle"] = "diptych-seam"
+    trip["curation"] = {"coverByLayout": {"web": "keep-me", "mobile": "keep-me"}}
+    repick_opening(trip, asset_id="alt")
+    assert trip["meta"]["coverOpeningStyle"] == "diptych-seam"
+    assert trip["curation"]["coverByLayout"]["web"] == "alt"
+
+
 def test_diptych_secondary_pick_logic_kept_for_legacy_trips() -> None:
     """diptych-seam is retired (no longer selectable), but already-locked
     legacy trips still render via the same secondary-panel pick logic — keep

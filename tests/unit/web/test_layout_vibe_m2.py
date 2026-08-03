@@ -49,6 +49,193 @@ def test_ac_lvp_05_experimental_requires_confirm() -> None:
     assert "改回" in EXPERIMENTAL_CONFIRM_BODY
 
 
+@pytest.mark.parametrize("bad", ["false", "0", 1, "true", 0])
+def test_ac_lvp_05_confirm_rejects_non_bool_true(bad: object) -> None:
+    """Only JSON literal true satisfies AC-LVP-05 (not truthy strings/ints)."""
+    from travelogue.web.studio_handlers import layout_vibe_handlers as mod
+
+    class _H:
+        def __init__(self) -> None:
+            self.status = None
+            self.body = None
+
+        def _read_json_body(self):
+            return {
+                "layoutVibe": VIBE_FIT_PHOTO_EXPERIMENTAL,
+                "confirmedExperimental": bad,
+            }
+
+        def _json_response(self, status, body):
+            self.status = status
+            self.body = body
+
+    h = _H()
+    mod.handle_layout_vibe(h, "demo-lvp")
+    assert h.status == 400
+    assert h.body["error"] == "E_LVP_CONFIRM_REQUIRED"
+
+
+def test_lvp_binds_trip_id_before_job_runs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """Busy gate needs trip_id on the job before the worker thread starts."""
+    from travelogue.web.studio_handlers import layout_vibe_handlers as mod
+    from travelogue.web.studio_jobs import get_job_store
+
+    store = get_job_store()
+    store.finish_g1()
+    trip_dir = tmp_path / "demo-lvp-busy"
+    trip_dir.mkdir()
+    (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
+
+    class _H:
+        def __init__(self) -> None:
+            self.status = None
+            self.body = None
+
+        def _read_json_body(self):
+            return {"layoutVibe": VIBE_MAGAZINE_DEFAULT}
+
+        def _json_response(self, status, body):
+            self.status = status
+            self.body = body
+
+    class _Svc:
+        def load(self, *_a, **_k):
+            raise AssertionError("runner must not start when Thread.start is noop")
+
+        def update(self, *_a, **_k):
+            raise AssertionError("runner must not start when Thread.start is noop")
+
+    class _Ctx:
+        cfg = None
+
+        def trip_service(self):
+            return _Svc()
+
+    monkeypatch.setattr(mod, "load_trip_or_404", lambda *_a, **_k: (trip_dir, {}))
+    monkeypatch.setattr(mod, "studio_ctx", lambda *_a, **_k: _Ctx())
+
+    class _NoopThread:
+        def __init__(self, *a, **k):
+            pass
+
+        def start(self) -> None:
+            return None
+
+    monkeypatch.setattr(mod.threading, "Thread", _NoopThread)
+
+    h = _H()
+    try:
+        mod.handle_layout_vibe(h, "demo-lvp-busy")
+        assert h.status == 202
+        assert store.is_trip_busy("demo-lvp-busy")
+    finally:
+        for job in list(store._jobs.values()):
+            if job.trip_id == "demo-lvp-busy":
+                store.finalize(job, status="cancelled")
+        store.finish_g1()
+
+
+def test_lvp_runner_preserves_export_layout_auto(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """Screens apply may use web profile, but auto must remain on disk."""
+    from travelogue.web.studio_handlers import layout_vibe_handlers as mod
+    from travelogue.web.studio_jobs import get_job_store
+
+    store = get_job_store()
+    store.finish_g1()
+    trip_dir = tmp_path / "demo-auto"
+    trip_dir.mkdir()
+    (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
+    written: dict = {}
+
+    class _H:
+        def __init__(self) -> None:
+            self.status = None
+            self.body = None
+
+        def _read_json_body(self):
+            return {"layoutVibe": VIBE_MAGAZINE_DEFAULT}
+
+        def _json_response(self, status, body):
+            self.status = status
+            self.body = body
+
+    class _Svc:
+        def load(self, *_a, **_k):
+            return {
+                "exportLayout": "auto",
+                "layoutEngine": "screens",
+                "studio": {},
+                "chapters": [{"id": "c1"}],
+                "curation": {},
+                "pipeline": {},
+            }
+
+        def update(self, _path, mutator, **_k):
+            trip = {
+                "exportLayout": "auto",
+                "layoutEngine": "screens",
+                "studio": {},
+                "chapters": [{"id": "c1"}],
+                "curation": {},
+                "pipeline": {},
+            }
+            mutator(trip)
+            written.clear()
+            written.update(trip)
+            return None
+
+    class _Ctx:
+        cfg = None
+
+        def trip_service(self):
+            return _Svc()
+
+    def _apply(trip, **kwargs):
+        trip["exportLayout"] = kwargs.get("export_layout") or "web"
+        trip["chapters"] = [{"id": "rebuilt"}]
+        trip["layoutEngine"] = "screens"
+        trip["layoutEngineVersion"] = "screens-test"
+
+    monkeypatch.setattr(mod, "load_trip_or_404", lambda *_a, **_k: (trip_dir, {}))
+    monkeypatch.setattr(mod, "studio_ctx", lambda *_a, **_k: _Ctx())
+    monkeypatch.setattr(
+        "travelogue.services.layout.apply_layout_to_trip",
+        _apply,
+    )
+    monkeypatch.setattr(
+        "travelogue.render.engine.render_trip_surfaces",
+        lambda *a, **k: None,
+    )
+    monkeypatch.setattr(
+        "travelogue.layout_engine.api.resolve_layout_engine",
+        lambda trip: "screens",
+    )
+
+    class _ImmediateThread:
+        def __init__(self, target=None, daemon=None):
+            self._target = target
+
+        def start(self) -> None:
+            assert self._target is not None
+            self._target()
+
+    monkeypatch.setattr(mod.threading, "Thread", _ImmediateThread)
+
+    h = _H()
+    try:
+        mod.handle_layout_vibe(h, "demo-auto")
+        assert h.status == 202
+        assert written.get("exportLayout") == "auto"
+        assert written.get("chapters") == [{"id": "rebuilt"}]
+        assert (written.get("studio") or {}).get("layoutVibe") == VIBE_MAGAZINE_DEFAULT
+    finally:
+        store.finish_g1()
+
+
 def test_ac_lvp_05_magazine_does_not_require_confirm(monkeypatch: pytest.MonkeyPatch) -> None:
     """Recommended vibe may proceed past the confirm gate (busy/404 ok)."""
     from travelogue.web.studio_handlers import layout_vibe_handlers as mod

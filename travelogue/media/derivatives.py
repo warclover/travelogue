@@ -74,6 +74,18 @@ def selected_asset_ids(trip: dict) -> set[str]:
         closing = curation.get("closingAssetId")
         if isinstance(closing, str) and closing.strip():
             ids.add(closing.strip())
+        # exportLayout=auto · web/mobile covers may differ from root coverAssetId
+        cover_by = curation.get("coverByLayout")
+        if isinstance(cover_by, dict):
+            for slot in cover_by.values():
+                if isinstance(slot, str) and slot.strip():
+                    ids.add(slot.strip())
+    meta = trip.get("meta")
+    if isinstance(meta, dict):
+        # Legacy diptych (and any dual-panel opening) secondary asset
+        secondary = meta.get("coverSecondaryAssetId")
+        if isinstance(secondary, str) and secondary.strip():
+            ids.add(secondary.strip())
     for ch in trip.get("chapters") or []:
         if not isinstance(ch, dict):
             continue

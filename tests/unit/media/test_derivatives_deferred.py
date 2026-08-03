@@ -58,6 +58,26 @@ def test_selected_asset_ids_from_chapters() -> None:
     }
 
 
+def test_selected_asset_ids_includes_cover_by_layout_and_secondary() -> None:
+    """Deferred HD must cover auto dual covers + legacy diptych secondary."""
+    trip = {
+        "coverAssetId": "root-a",
+        "curation": {
+            "closingAssetId": "closing-a",
+            "coverByLayout": {"mobile": "mobile-a", "web": "web-a"},
+        },
+        "meta": {"coverSecondaryAssetId": "secondary-a"},
+        "chapters": [],
+    }
+    assert selected_asset_ids(trip) == {
+        "root-a",
+        "closing-a",
+        "mobile-a",
+        "web-a",
+        "secondary-a",
+    }
+
+
 def test_ingest_writes_preview_srcset_only(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     album = tmp_path / "album"

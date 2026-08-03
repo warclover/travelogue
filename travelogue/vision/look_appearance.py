@@ -176,9 +176,11 @@ def encode_pil_clip_batch(
             with torch.no_grad():
                 feats = encoder._model.encode_image(batch)
                 feats = feats / feats.norm(dim=-1, keepdim=True)
+        # One device→host copy for the whole batch (not N× full transfers).
+        arr = feats.cpu().numpy()
         out: list[np.ndarray | None] = []
         for i in range(len(imgs)):
-            out.append(l2_normalize(feats.cpu().numpy()[i]))
+            out.append(l2_normalize(arr[i]))
         return out
     except RuntimeError as exc:
         if "out of memory" not in str(exc).lower() or len(imgs) <= 1:

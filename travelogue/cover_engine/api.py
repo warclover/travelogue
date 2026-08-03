@@ -807,8 +807,15 @@ def repick_opening(
     elif style and not aid:
         repick_cover_for_style(trip, style, layout="web")
     elif aid:
-        if style:
-            meta["coverOpeningStyle"] = style
+        # Only gate *explicit* styleId writes. Asset-only repick on a legacy
+        # retired trip must keep the existing coverOpeningStyle for render.
+        explicit_style = (style_id or "").strip()
+        if explicit_style:
+            from travelogue.cover_engine.registry import is_assignable
+
+            if not is_assignable(explicit_style):
+                raise ValueError(f"style not assignable: {explicit_style!r}")
+            meta["coverOpeningStyle"] = explicit_style
         explain = CoverJointExplain(
             source="manual",
             style_id=str(meta.get("coverOpeningStyle") or style or ""),
