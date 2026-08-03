@@ -24,7 +24,7 @@
 | **AC-MEGC-W0-04** | A/B/C 模板清单与 MSA/MTSO 边界写清；D-11 web 主责 | ✅ |
 | **AC-MEGC-W0-05** | 七席 Conditional Go（2026-07-31） | ✅ |
 | **AC-MEGC-W0-06** | M1 合码前：BLK-02 CSS 名单签字 · BLK-06 trips 同步策略 | ✅ BLK-02 见 IMPL §1.4；BLK-06：render 拷模板 CSS（trips 拷贝仅狗粮） |
-| **AC-MEGC-W0-07** | M2 合码前：BLK-03 soft 默认 · BLK-07 MSA-OFF 仍可算峰 | ☐ |
+| **AC-MEGC-W0-07** | M2 合码前：BLK-03 soft 默认 · BLK-07 MSA-OFF 仍可算峰 | ✅ BLK-03 soft_penalty + score_mul；BLK-07 AC-07b |
 
 ---
 
@@ -35,7 +35,7 @@
 | 舞台/网格高度容差 | **1px** | AC-01 |
 | 峰判定 | 复用 MSA（容差 0.08 · 单峰 ≥0.60） | AC-04～06 |
 | `allow_mixed_median_min` | **1.70**（O-02 暂定） | mixed 放行 |
-| soft `penalty` | **8.0**（暂定） | AC-04 |
+| soft `score_mul` | **0.62**（SUP-MEGC-01） | AC-04 · 乘法 scorer |
 
 ---
 
@@ -57,12 +57,12 @@
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-MEGC-04** | 全 3:2 四横窗 · `selection_gate.enabled`：soft 时 A 类得分下降且日志 `gate_penalize`；hard 时 A 类不出现在最终 screen | ☐ |
-| **AC-MEGC-05** | 全 16:9 四横窗：`landscape-4` 仍可合法胜出；日志 `gate_allow` | ☐ |
-| **AC-MEGC-06** | 2L2P / `portrait-2-landscape-2` 候选 + 非电影峰：硬纪律生效（拒或加倍罚） | ☐ |
-| **AC-MEGC-07** | raw 含 `megcEnabled` / `megcOutcome` / `megcLandPeak` / `megcPatternId` | ☐ |
-| **AC-MEGC-07b** | `slot_adaptation.enabled=false` 时 MEGC 闸仍能得到同一套 `landPeak`（只读 `build_msa_profile`）· BLK-07 | ☐ |
-| **AC-MEGC-08** | 父开关 OFF 时选型路径与基线一致（允许已合入的 CSS hotfix 单独注明） | ☐ |
+| **AC-MEGC-04** | 全 3:2 四横窗 · `selection_gate.enabled`：soft 时 A 类得分下降且日志 `gate_penalize`；hard 时 A 类不出现在最终 screen | ☑ `test_megc_pr_b` |
+| **AC-MEGC-05** | 全 16:9 四横窗：`landscape-4` 仍可合法胜出；日志 `gate_allow` | ☑ |
+| **AC-MEGC-06** | 2L2P / `portrait-2-landscape-2` 候选 + 非电影峰：硬纪律生效（拒） | ☑ |
+| **AC-MEGC-07** | raw 含 `megcEnabled` / `megcOutcome` / `megcLandPeak` / `megcPatternId` | ☑ |
+| **AC-MEGC-07b** | `slot_adaptation.enabled=false` 时 MEGC 闸仍能得到同一套 `landPeak`（只读 `build_msa_profile`）· BLK-07 | ☑ |
+| **AC-MEGC-08** | 父开关 OFF 时选型路径与基线一致（允许已合入的 CSS hotfix 单独注明） | ☑ |
 
 ```powershell
 # 实施后填真实模块路径

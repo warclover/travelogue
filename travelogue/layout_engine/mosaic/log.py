@@ -68,6 +68,11 @@ class MosaicWindowLog:
     crop_focals: list[dict[str, Any]] | None = None
     whitespace_ratio: float | None = None
     msa_outcome: str | None = None
+    # MEGC · equal-grid selection gate (AC-MEGC-07 · assert via drain_mosaic_capture)
+    megc_enabled: bool = False
+    megc_outcome: str | None = None
+    megc_land_peak: str | None = None
+    megc_pattern_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -107,6 +112,10 @@ class MosaicWindowLog:
             "cropFocals": list(self.crop_focals) if self.crop_focals is not None else None,
             "whitespaceRatio": self.whitespace_ratio,
             "msaOutcome": self.msa_outcome,
+            "megcEnabled": bool(self.megc_enabled),
+            "megcOutcome": self.megc_outcome,
+            "megcLandPeak": self.megc_land_peak,
+            "megcPatternId": self.megc_pattern_id,
         }
         if self.top3_patterns:
             out["top3Patterns"] = list(self.top3_patterns)
@@ -214,6 +223,10 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
         "cropFocals",
         "whitespaceRatio",
         "msaOutcome",
+        "megcEnabled",
+        "megcOutcome",
+        "megcLandPeak",
+        "megcPatternId",
         "candidatesCount",
         "weightsHash",
         "droppedAssetIds",

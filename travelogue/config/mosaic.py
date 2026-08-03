@@ -186,6 +186,76 @@ _SLOT_ADAPTATION_SOLVE_KNOWN_KEYS = frozenset(
 )
 
 
+_DEFAULT_MEGC_PATTERNS: tuple[str, ...] = (
+    "screen-landscape-4",
+    "screen-portrait-2-landscape-2",
+    "screen-mosaic-4-2l2p-weighted",
+)
+
+
+@dataclass
+class EqualGridSelectionGateConfig:
+    """MEGC · P-选 selection gate (PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1 · M2).
+
+    Soft path uses multiplicative ``score_mul`` (SUP-MEGC-01); additive
+    ``penalty`` is rejected as an unknown key.
+    """
+
+    enabled: bool = True
+    mode: str = "soft_penalty"  # soft_penalty | hard_reject
+    allow_peaks: tuple[str, ...] = ("sixteen_nine",)
+    allow_mixed_median_min: float = 1.70
+    score_mul: float = 0.62
+
+
+@dataclass
+class EqualGridContractConfig:
+    """MEGC · equal-grid geometric contract parent switch.
+
+    When ``enabled`` is false, nested knobs are ineffective (fail-closed).
+    CSS hotfix (``fix_stage_css``) may ship independently of this parent (O-05).
+    Unknown keys under this root fail-loud.
+    """
+
+    enabled: bool = False
+    fix_stage_css: bool = True
+    selection_gate: EqualGridSelectionGateConfig = field(
+        default_factory=EqualGridSelectionGateConfig
+    )
+    release_stage_on_narrow_peak: bool = False  # M3 deferred
+    page_letterbox: bool = False  # M3 deferred
+    patterns: tuple[str, ...] = _DEFAULT_MEGC_PATTERNS
+
+
+_EQUAL_GRID_CONTRACT_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "fix_stage_css",
+        "fixStageCss",
+        "selection_gate",
+        "selectionGate",
+        "release_stage_on_narrow_peak",
+        "releaseStageOnNarrowPeak",
+        "page_letterbox",
+        "pageLetterbox",
+        "patterns",
+    }
+)
+
+_EQUAL_GRID_SELECTION_GATE_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "mode",
+        "allow_peaks",
+        "allowPeaks",
+        "allow_mixed_median_min",
+        "allowMixedMedianMin",
+        "score_mul",
+        "scoreMul",
+    }
+)
+
+
 @dataclass
 class MosaicConfig:
     """Phase 15 mosaic composition (DESIGN-PHASE15 · S1)."""
@@ -214,6 +284,9 @@ class MosaicConfig:
         default_factory=SelectionOptimizationConfig
     )
     slot_adaptation: SlotAdaptationConfig = field(default_factory=SlotAdaptationConfig)
+    equal_grid_contract: EqualGridContractConfig = field(
+        default_factory=EqualGridContractConfig
+    )
     near_scene_clone_gate: NearSceneCloneGateConfig = field(
         default_factory=NearSceneCloneGateConfig
     )
@@ -496,6 +569,103 @@ def effective_slot_adaptation_enabled(cfg: MosaicConfig | None) -> bool:
     return bool(sa is not None and getattr(sa, "enabled", False))
 
 
+def _equal_grid_selection_gate_from_dict(raw: object) -> EqualGridSelectionGateConfig:
+    defaults = EqualGridSelectionGateConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(
+        str(k) for k in raw if str(k) not in _EQUAL_GRID_SELECTION_GATE_KNOWN_KEYS
+    )
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_contract.selection_gate unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    peaks_raw = raw.get("allow_peaks", raw.get("allowPeaks", defaults.allow_peaks))
+    if isinstance(peaks_raw, (list, tuple)):
+        peaks = tuple(str(p).strip() for p in peaks_raw if str(p).strip())
+    else:
+        peaks = defaults.allow_peaks
+    mode = str(raw.get("mode", defaults.mode) or defaults.mode).strip()
+    if mode not in ("soft_penalty", "hard_reject"):
+        raise ValueError(
+            "mosaic.equal_grid_contract.selection_gate.mode must be "
+            "'soft_penalty' or 'hard_reject'"
+        )
+    mul = float(raw.get("score_mul", raw.get("scoreMul", defaults.score_mul)))
+    if not (0.0 < mul <= 1.0):
+        raise ValueError(
+            "mosaic.equal_grid_contract.selection_gate.score_mul must be in (0, 1]"
+        )
+    return EqualGridSelectionGateConfig(
+        enabled=cfg_bool(raw, "enabled", "enabled", defaults.enabled),
+        mode=mode,
+        allow_peaks=peaks or defaults.allow_peaks,
+        allow_mixed_median_min=cfg_float(
+            raw,
+            "allow_mixed_median_min",
+            "allowMixedMedianMin",
+            defaults.allow_mixed_median_min,
+        ),
+        score_mul=mul,
+    )
+
+
+def _equal_grid_contract_from_dict(raw: dict[str, Any]) -> EqualGridContractConfig:
+    defaults = EqualGridContractConfig()
+    egc = raw.get("equal_grid_contract")
+    if not isinstance(egc, dict):
+        egc = raw.get("equalGridContract")
+    if not isinstance(egc, dict):
+        return defaults
+    unknown = sorted(str(k) for k in egc if str(k) not in _EQUAL_GRID_CONTRACT_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_contract unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    patterns_raw = egc.get("patterns")
+    if patterns_raw is None:
+        patterns = defaults.patterns
+    else:
+        patterns = _str_tuple(patterns_raw) or defaults.patterns
+    return EqualGridContractConfig(
+        enabled=cfg_bool(egc, "enabled", "enabled", defaults.enabled),
+        fix_stage_css=cfg_bool(
+            egc, "fix_stage_css", "fixStageCss", defaults.fix_stage_css
+        ),
+        selection_gate=_equal_grid_selection_gate_from_dict(
+            egc.get("selection_gate", egc.get("selectionGate"))
+        ),
+        release_stage_on_narrow_peak=cfg_bool(
+            egc,
+            "release_stage_on_narrow_peak",
+            "releaseStageOnNarrowPeak",
+            defaults.release_stage_on_narrow_peak,
+        ),
+        page_letterbox=cfg_bool(
+            egc, "page_letterbox", "pageLetterbox", defaults.page_letterbox
+        ),
+        patterns=patterns,
+    )
+
+
+def effective_equal_grid_contract_enabled(cfg: MosaicConfig | None) -> bool:
+    """Parent OFF ⇒ MEGC selection gate is inert (CSS may still be live via O-05)."""
+    if cfg is None:
+        return False
+    egc = getattr(cfg, "equal_grid_contract", None)
+    return bool(egc is not None and getattr(egc, "enabled", False))
+
+
+def effective_megc_selection_gate_enabled(cfg: MosaicConfig | None) -> bool:
+    """Parent + selection_gate both ON."""
+    if not effective_equal_grid_contract_enabled(cfg):
+        return False
+    egc = getattr(cfg, "equal_grid_contract", None)
+    gate = getattr(egc, "selection_gate", None) if egc is not None else None
+    return bool(gate is not None and getattr(gate, "enabled", False))
+
+
 def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
     defaults = MosaicConfig()
     sizes_raw = raw.get("enabled_window_sizes", raw.get("enabledWindowSizes", defaults.enabled_window_sizes))
@@ -589,6 +759,7 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         template_experiments=_template_experiments_from_dict(raw),
         selection_optimization=_selection_optimization_from_dict(raw),
         slot_adaptation=_slot_adaptation_from_dict(raw),
+        equal_grid_contract=_equal_grid_contract_from_dict(raw),
         near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
         enable_size3_aux=cfg_bool(
             raw, "enable_size3_aux", "enableSize3Aux", defaults.enable_size3_aux

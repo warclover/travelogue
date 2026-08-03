@@ -7,7 +7,7 @@
 | **DOC-STATUS** | **active** |
 | **更新日期** | 2026-07-31 |
 
-> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** 可 Kickoff → **PR-B (M2 选型闸)** 待 BLK → **PR-C (M3)** 默认延期。  
+> **列车**：M0 文档 ✅ → **PR-A (M1 CSS)** ✅ → **PR-B (M2 选型闸)** 本 PR · SUP-01 `score_mul` → **PR-C (M3)** 默认延期。  
 > **紧急例外**：PR-A 可在父开关前以 `fix_stage_css` hotfix 合入（O-05 · 七席允许）。
 
 ---
@@ -75,22 +75,29 @@
 |------|----------------|------|
 | 配置 | `travelogue/config/mosaic.py` | 增加 `EqualGridContractConfig`；挂 `MosaicConfig.equal_grid_contract` |
 | Profile | 复用 `msa_profile.build_msa_profile` | 勿复制峰算法 |
-| 打分/候选 | `layout_engine/mosaic/scorer.py` 或 MCS 候选过滤 | soft penalty / hard reject |
-| 应用点 | compose/builders 在 pattern 选定前或打分时 | 读窗资产 → peak → 闸 |
-| 日志 | `layout_engine/mosaic/log.py` | `megc*` 字段 |
+| 闸 | `layout_engine/mosaic/megc_gate.py` | 纯函数：profile → decision |
+| 打分/候选 | `scorer.py` soft mul · `candidates.py` 混向硬拒 | SUP-01/02 |
+| 应用点 | compose 写 `megc*` 日志 | 读窗资产 → peak → 闸 |
+| 日志 | `layout_engine/mosaic/log.py` | `megcEnabled` / `megcOutcome` / `megcLandPeak` / `megcPatternId` |
 | 例配 | `docs/config-megc-dogfood.example.yaml` | 本机狗粮样例（默认勿开） |
 
 ### 2.2 算法要点
 
 ```text
 if pattern not in MEGC.patterns: skip
-profile = build_msa_profile(window)
+profile = build_msa_profile(window)   # MSA parent OFF 仍可算峰（BLK-07）
 if landPeak in allow_peaks: allow
 elif landPeak == mixed and landMedianR >= allow_mixed_median_min: allow
-elif mode == soft: score -= penalty (混向等权可 ×2)
-else: reject / remove candidate
-on no alternative: fallback + megb_gate_fallback
+elif mixed_orient (D-06): hard reject in candidates
+elif mode == soft: score *= score_mul   # SUP-01 · 默认 0.62；禁止加法 penalty
+elif mode == hard_reject: reject in candidates
+on no alternative after hard reject: soft-reemit + megcGateFallback（SUP-03）
 ```
+
+**挂点（SUP-MEGC-02）**
+
+1. `candidates.py`：混向等权硬拒；`mode=hard_reject` 时纯横等权亦硬拒  
+2. `scorer.py`：纯横等权 soft `score_mul`（hard 回退再 emit 时同样乘）
 
 ### 2.3 测试
 
@@ -102,8 +109,8 @@ on no alternative: fallback + megb_gate_fallback
 
 ### 2.4 完成定义
 
-- [ ] 配置 + 闸 + 日志  
-- [ ] AC-04～08 绿  
+- [x] 配置 + 闸 + 日志  
+- [x] AC-04～08 绿  
 - [ ] demo-2019 同类窗行为符合 PRD（记录截图到 acceptance-records）
 
 ---
