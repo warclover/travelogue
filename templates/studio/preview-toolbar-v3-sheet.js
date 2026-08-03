@@ -756,6 +756,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     stopPreviewFocusWatch();
     bodyEl.innerHTML =
       '<p class="preview-sheet__hint preview-sheet__hint--lead">改名字与一句话。换封面/封底请到「封面」。</p>' +
+      '<details class="preview-sheet__zone preview-sheet__zone--layout-vibe" data-book-zone="layout-vibe" open>' +
+      '<summary>成册风格 <span class="preview-sheet__zone-meta">推荐 · 实验</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<div class="preview-sheet__layout-vibe-slot"></div>' +
+      "</div></details>" +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
       '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话 · 文案</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
@@ -784,6 +789,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     if (typeof hooks.onBookTabRendered === "function") {
       hooks.onBookTabRendered();
+    }
+
+    var vibeSlot = bodyEl.querySelector(".preview-sheet__layout-vibe-slot");
+    if (vibeSlot && typeof hooks.mountLayoutVibeControls === "function") {
+      hooks.mountLayoutVibeControls(vibeSlot);
     }
 
     var editSlot = bodyEl.querySelector(".preview-sheet__embed--edit");

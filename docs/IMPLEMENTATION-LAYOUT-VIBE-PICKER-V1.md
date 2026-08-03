@@ -5,7 +5,7 @@
 | **PRD** | [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) **v0.2.0** |
 | **验收** | [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) |
 | **评审** | [lvp-layout-vibe-picker-v1-review-2026-08-03.md](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) |
-| **状态** | **M0 ✅ · M1 ✅ · M2 待 BLK · M3 延期** |
+| **状态** | **M0 ✅ · M1 ✅ · M2 代码 ✅（AC-06/BLK-03 签字待） · M3 延期** |
 | **更新日期** | 2026-08-03 |
 
 ## 列车
@@ -14,7 +14,7 @@
 |--------|------|------|
 | **M0** | 七席 · PRD v0.2 · ACCEPTANCE/IMPL 拆文 | ✅ |
 | **M1** | vibe → mosaic 剖面解析 · `trip.studio.layoutVibe` · 单测 AC-01/02/03/07/08 | ✅ |
-| **M2** | 精修 Sheet 两卡 UI · 实验确认 · 三册狗粮 | ☐ |
+| **M2** | 精修 Sheet 两卡 UI · 实验确认 · 三册狗粮 | 🔶 UI/确认 ✅ · 狗粮 ☐ |
 | **M3** | 与 CAD 同屏编组（可选） | ⏸ 延期 |
 
 ## M1 触点（已落地）
@@ -27,12 +27,15 @@
 | 仓库 GA | `config.yaml.example` | MTSO `selection_optimization.enabled: true`（与推荐 vibe 字节级对齐） |
 | 测试 | `tests/unit/config/test_layout_vibe.py` | AC-01/02/03/07/08 + BLK-05 |
 
-## M2 建议触点
+## M2 触点（已落地 · 待狗粮）
 
 | 区域 | 路径 | 动作 |
 |------|------|------|
-| UI | `templates/studio/preview-toolbar/features.js` | 封面区同级两卡 |
-| 应用 | 复用 apply-layout（`core.js`） | 不新造进度面 |
+| API | `POST …/layout-vibe` · `layout_vibe_handlers.py` | 写 vibe → layout → render（job）；实验无确认 400 |
+| UI | `features.js` `mountLayoutVibeControls` · Sheet「这本」区 | 两卡 + `toolbarConfirm` |
+| 弱提示 | `maybeShowLayoutVibeImportHint` | 每 trip 一次 toast（可关 localStorage） |
+| Entry | `studio_entry` `layoutVibe` / `layoutVibeOptions` | 预览入口回读 |
+| 测试 | `tests/unit/web/test_layout_vibe_m2.py` | AC-04/05 + 路由 |
 
 ## 禁令
 

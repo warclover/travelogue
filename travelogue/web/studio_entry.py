@@ -218,6 +218,8 @@ def build_entry(
             if isinstance(curation, dict)
             else True
         ),
+        "layoutVibe": _layout_vibe_entry(trip),
+        "layoutVibeOptions": _layout_vibe_options(),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
         "appendixOutlierCount": len(
             (curation.get("excludedTimeOutlierAssetIds") or [])
@@ -228,6 +230,18 @@ def build_entry(
         "longshotDensity": _longshot_density_entry(trip),
         "shareCopyPack": _share_copy_pack_entry(trip),
     }
+
+
+def _layout_vibe_entry(trip: dict) -> str:
+    from travelogue.config.layout_vibe import resolve_layout_vibe
+
+    return resolve_layout_vibe(trip)
+
+
+def _layout_vibe_options() -> list[dict[str, str]]:
+    from travelogue.web.studio_handlers.layout_vibe_handlers import layout_vibe_options
+
+    return layout_vibe_options()
 
 
 def _works_brand_entry(trip: dict) -> dict:

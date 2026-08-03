@@ -38,6 +38,7 @@ from travelogue.web.studio_handlers.trip_pipeline_handlers import (
     handle_rerender,
     handle_trip_curate,
 )
+from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
 from travelogue.web.studio_handlers.trip_replan_handlers import handle_patch_screen_replan
 
 __all__ = [
@@ -50,6 +51,7 @@ __all__ = [
     "handle_get_bookends",
     "handle_get_moment_curation",
     "handle_get_cohort",
+    "handle_layout_vibe",
     "handle_patch_cohort",
     "handle_patch_copy_intent",
     "handle_patch_intent",

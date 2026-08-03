@@ -107,8 +107,8 @@
 | **BLK-LVP-02** | 拆 ACCEPTANCE / IMPLEMENTATION | M1 合码前拆文；AC-01～08 入 ACCEPTANCE；M1 触点入 IMPL | M1 | ✅ 已拆文 |
 | **BLK-LVP-03** | 实验卡二次确认文案 | 产品+体验签字：须含「分页/章节长度可能变」「可改回推荐」 | M2 | ☐ |
 | **BLK-LVP-04** | 三册狗粮 | 王丹昙华林 / 东澳岛 / 斯里兰卡（或等价）推荐 vs 实验；无加权屏允许记录「差异小」 | M2 | ☐ |
-| **BLK-LVP-05** | 优先级链单测 | `layoutVibe` > overlay > 仓库默认；LSE flags 不被改写（AC-07） | M1 | ☐ |
-| **BLK-LVP-06** | 回滚 AC | AC-LVP-08：清除 vibe 后行为 ≡ `magazine_default` / GA | M1 | ☐ |
+| **BLK-LVP-05** | 优先级链单测 | `layoutVibe` > overlay > 仓库默认；LSE flags 不被改写（AC-07） | M1 | ✅ |
+| **BLK-LVP-06** | 回滚 AC | AC-LVP-08：清除 vibe 后行为 ≡ `magazine_default` / GA | M1 | ✅ |
 
 **Should-Fix（不阻塞 M1）**
 

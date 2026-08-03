@@ -108,6 +108,8 @@ import {
   initFeaturedStars,
   revealTripFolder,
   mountCoverStyleControls,
+  mountLayoutVibeControls,
+  maybeShowLayoutVibeImportHint,
   mountTemplateControls,
   snapshotReadingPayload,
   applyReaderSurfaceMode,
@@ -371,6 +373,9 @@ export function initToolbarV3(root, tripId) {
     },
     mountCoverStyleControls: function (slot) {
       mountCoverStyleControls(slot, tripId);
+    },
+    mountLayoutVibeControls: function (slot) {
+      mountLayoutVibeControls(slot, tripId, { root: root });
     },
     mountBookendsPanel: function (slot) {
       mountBookendsPanel(slot, tripId, {
@@ -836,6 +841,9 @@ export function initToolbarV3(root, tripId) {
   }
 
   maybeShowCoverOpeningStyleToast(tripId);
+  maybeShowLayoutVibeImportHint(tripId, function () {
+    if (root._sheet) root._sheet.open("book");
+  });
   syncToolbarHeight(root);
 
   // 「更新并导出」：版面刷新后自动续导出；FTUE「保存长图」query/session 续跑

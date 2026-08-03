@@ -426,6 +426,11 @@
   },
   {
     "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/layout-vibe",
+    "handler": "trip_handlers.handle_layout_vibe"
+  },
+  {
+    "method": "POST",
     "path": "{tripId}/__travelogue/promote-tier",
     "handler": "serve._handle_promote_tier"
   },
