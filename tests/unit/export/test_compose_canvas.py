@@ -38,16 +38,31 @@ def test_compose_fixed_canvas_a4(tmp_path: Path) -> None:
     assert "scale" in diag
 
 
-def test_compose_fixed_canvas_xhs(tmp_path: Path) -> None:
+def test_compose_fixed_canvas_cover_fills_frame(tmp_path: Path) -> None:
+    """短拼贴不得 letterbox 留大块底色；cover 后画布应被铺满。"""
     paths = []
-    for i in range(4):
-        p = tmp_path / f"x{i}.jpg"
-        _make_rgb(p, size=(700, 900))
+    colors = [(220, 40, 40), (40, 220, 40), (40, 40, 220)]
+    for i, color in enumerate(colors):
+        p = tmp_path / f"c{i}.jpg"
+        # Wide landscape → bric natural height << A4 → old contain left huge bands
+        _make_rgb(p, size=(1200, 400), color=color)
         paths.append(p)
-    data, diag = compose_fixed_canvas(paths, canvas_wh=XHS_CANVAS)
+    data, diag = compose_fixed_canvas(
+        paths, canvas_wh=A4_CANVAS, border=0, spacing=0
+    )
+    assert diag.get("fit") == "cover"
+    assert diag.get("cellFit") == "cover"
+    assert float(diag["scale"]) >= 1.0
     with Image.open(__import__("io").BytesIO(data)) as im:
-        assert im.size == (1080, 1440)
-    assert diag["canvas"] == [1080, 1440]
+        assert im.size == A4_CANVAS
+        # Sample mid-edge bands that used to be empty letterbox; must not be canvas bg
+        bg = (245, 245, 243)
+        samples = [
+            im.getpixel((A4_CANVAS[0] // 2, A4_CANVAS[1] // 8)),
+            im.getpixel((A4_CANVAS[0] // 2, A4_CANVAS[1] // 2)),
+            im.getpixel((A4_CANVAS[0] // 2, 7 * A4_CANVAS[1] // 8)),
+        ]
+        assert all(px != bg for px in samples)
 
 
 def test_pack_photo_pages_basic_chunking() -> None:

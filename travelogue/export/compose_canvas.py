@@ -80,25 +80,35 @@ def pack_photo_pages(
     return pages
 
 
-def _contain_paste_cell(
+def _cover_paste_cell(
     img: Image.Image,
     *,
     tw: int,
     th: int,
-    bg: tuple[int, int, int],
 ) -> Image.Image:
-    """Contain-paste photo into a cell (letterbox inside allocated box)."""
+    """Cover-paste photo into a cell (crop to fill; no letterbox inside cell)."""
     tw, th = max(1, int(tw)), max(1, int(th))
     ar_src = img.width / max(1, img.height)
     ar_box = tw / th
     if ar_src > ar_box:
-        nw, nh = tw, max(1, int(round(tw / ar_src)))
+        # Source wider than cell → fit height, crop sides
+        nh = th
+        nw = max(1, int(round(th * ar_src)))
     else:
-        nh, nw = th, max(1, int(round(th * ar_src)))
+        # Source taller → fit width, crop top/bottom
+        nw = tw
+        nh = max(1, int(round(tw / max(1e-6, ar_src))))
     fg = img.resize((nw, nh), Image.Resampling.LANCZOS)
-    cell = Image.new("RGB", (tw, th), bg)
-    cell.paste(fg, ((tw - nw) // 2, (th - nh) // 2))
+    left = max(0, (nw - tw) // 2)
+    top = max(0, (nh - th) // 2)
+    cell = fg.crop((left, top, left + tw, top + th))
     fg.close()
+    if cell.size != (tw, th):
+        # Safety for rounding drift
+        padded = Image.new("RGB", (tw, th), DEFAULT_BG)
+        padded.paste(cell, (0, 0))
+        cell.close()
+        return padded
     return cell
 
 
@@ -110,8 +120,10 @@ def compose_fixed_canvas(
     spacing: int = DEFAULT_SPACING,
     bg: tuple[int, int, int] = DEFAULT_BG,
 ) -> tuple[bytes, dict[str, Any]]:
-    """Compose photos onto a fixed canvas via bric layout + contain paste.
+    """Compose photos onto a fixed canvas via bric layout + cover fill.
 
+    Photos fill each cell (cover/crop). The collage is then cover-scaled onto
+    the target canvas so the frame is fully filled (no large letterbox bands).
     Allows n in 1–12 (callers enforce product-specific bands).
     """
     n = len(paths)
@@ -150,23 +162,23 @@ def compose_fixed_canvas(
         collage = Image.new("RGB", (nw, nh), bg)
 
         for img, (fw, fh), (x, y) in zip(images, fitted, positions, strict=True):
-            cell = _contain_paste_cell(img, tw=int(fw), th=int(fh), bg=bg)
+            cell = _cover_paste_cell(img, tw=int(fw), th=int(fh))
             collage.paste(cell, (int(x), int(y)))
             cell.close()
 
-        place_scale = 1.0
-        if nh <= canvas_h and nw <= canvas_w:
-            out = Image.new("RGB", (canvas_w, canvas_h), bg)
-            ox = (canvas_w - nw) // 2
-            oy = (canvas_h - nh) // 2
-            out.paste(collage, (ox, oy))
-        else:
-            place_scale = min(canvas_w / max(1, nw), canvas_h / max(1, nh))
-            new_w = max(1, int(round(nw * place_scale)))
-            new_h = max(1, int(round(nh * place_scale)))
-            scaled = collage.resize((new_w, new_h), Image.Resampling.LANCZOS)
-            out = Image.new("RGB", (canvas_w, canvas_h), bg)
-            out.paste(scaled, ((canvas_w - new_w) // 2, (canvas_h - new_h) // 2))
+        # Cover-fit collage onto fixed canvas (fill frame; center-crop overflow).
+        place_scale = max(canvas_w / max(1, nw), canvas_h / max(1, nh))
+        new_w = max(canvas_w, int(round(nw * place_scale)))
+        new_h = max(canvas_h, int(round(nh * place_scale)))
+        scaled = collage.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        left = max(0, (new_w - canvas_w) // 2)
+        top = max(0, (new_h - canvas_h) // 2)
+        out = scaled.crop((left, top, left + canvas_w, top + canvas_h))
+        if out.size != (canvas_w, canvas_h):
+            fixed = Image.new("RGB", (canvas_w, canvas_h), bg)
+            fixed.paste(out, (0, 0))
+            out.close()
+            out = fixed
 
         assert out is not None
         buf = io.BytesIO()
@@ -178,6 +190,8 @@ def compose_fixed_canvas(
             "spacing": spacing,
             "naturalCanvas": [nw, nh],
             "scale": float(place_scale),
+            "fit": "cover",
+            "cellFit": "cover",
         }
         return buf.getvalue(), diag
     finally:
