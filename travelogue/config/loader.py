@@ -124,7 +124,7 @@ def _parse_gcs_poster_bric_config(
     if not isinstance(raw, dict):
         raw = {}
     return GcsPosterBricConfig(
-        enabled=cfg_bool(raw, "enabled", "enabled", False) if raw else False,
+        enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
     )
 
 LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})

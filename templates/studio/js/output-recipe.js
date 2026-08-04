@@ -308,7 +308,7 @@ export function trackIntentSelected(meta) {
 
 /**
 
- * Ambiguous 意图卡（Phase B0：发群 / 九宫格 / 长图连读）
+ * Ambiguous 意图卡（发群 / 朋友圈长图连读；九宫格已从 Studio 下线）
 
  * @returns {Promise<{intent: string, exportNow: boolean}|null>}
 
@@ -320,13 +320,11 @@ export function showAmbiguousIntentCard(keptN, userHints) {
 
     var n = Number(keptN) || 0;
 
-    var nGrid = Math.min(9, Math.max(0, n));
-
     trackIntentShown({
 
       band: "ambiguous",
 
-      options: ["chat_longshot", "moments_grid", "moments_scroll"],
+      options: ["chat_longshot", "moments_scroll"],
 
       phase: "B",
 
@@ -385,18 +383,6 @@ export function showAmbiguousIntentCard(keptN, userHints) {
         desc: "整本画册发到群里 · 推荐",
 
         primary: true,
-
-      },
-
-      {
-
-        intent: "moments_grid",
-
-        label: "朋友圈 · 九宫格",
-
-        desc: "约 " + nGrid + " 张 1:1 · 有几张发几张",
-
-        primary: false,
 
       },
 

@@ -21,6 +21,7 @@ PLATFORM_SEGMENT_IDS = frozenset(
         "moments_grid",
         "poster_bric",
         "xiaohongshu",
+        "album_spread",
         "instagram",
         "weibo",
         "douyin_cover",
@@ -29,13 +30,21 @@ PLATFORM_SEGMENT_IDS = frozenset(
 )
 KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS)
 
+# Fixed-canvas collage compose (no Playwright aspect-fit longshot)
+COMPOSE_PLATFORM_IDS = frozenset({"poster_bric", "xiaohongshu", "album_spread"})
+
 # Aspect-fit platforms (letterbox / smart_crop to fixed WxH)
 ASPECT_FIT_PLATFORM_IDS = frozenset(
-    {"xiaohongshu", "instagram", "weibo", "douyin_cover", "custom"}
+    {"instagram", "weibo", "douyin_cover", "custom"}
 )
 
-# Studio UI / API allow-list default (config may override). Phase A+B.
-PHASE_A_PLATFORMS = ("wechat_moments", "xiaohongshu")
+# Studio UI / API allow-list default (config may override). Phase A+B + compose.
+PHASE_A_PLATFORMS = (
+    "wechat_moments",
+    "xiaohongshu",
+    "poster_bric",
+    "album_spread",
+)
 # Phase C platforms are CLI/API only — never auto-listed in Studio Popover
 PHASE_C_CLI_ONLY = frozenset({"instagram", "weibo", "douyin_cover", "custom"})
 
@@ -195,10 +204,10 @@ def resolve_profile(
                 "E_LNG2_INVALID_SLIDE_COUNT",
                 "slideCount 须为整数",
             ) from exc
-        # moments ignores slideCount (PRD §8.1); aspect-fit platforms validate range
-        if pid in ASPECT_FIT_PLATFORM_IDS and (
-            n < profile.min_pages or n > profile.max_pages
-        ):
+        # moments ignores slideCount (PRD §8.1); aspect-fit / collage validate range
+        if (
+            pid in ASPECT_FIT_PLATFORM_IDS or pid in ("xiaohongshu", "album_spread")
+        ) and (n < profile.min_pages or n > profile.max_pages):
             raise PlatformProfileError(
                 "E_LNG2_INVALID_SLIDE_COUNT",
                 f"slideCount 须在 {profile.min_pages}–{profile.max_pages} 之间",
@@ -438,6 +447,8 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-poster"
     if platform_id == "xiaohongshu":
         return f"{slug}-xhs"
+    if platform_id == "album_spread":
+        return f"{slug}-album"
     if platform_id == "instagram":
         return f"{slug}-ins"
     if platform_id == "weibo":

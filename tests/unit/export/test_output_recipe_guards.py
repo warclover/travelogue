@@ -34,39 +34,33 @@ def test_ac_or_11a_studio_copy_scan() -> None:
     """用户可见「九宫格」不得绑定 wechat_moments / moments_scroll 为可点主路径."""
     client = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
-    # scroll 成功态诚实声明；CTA 为长图连读
     assert 'platform === "wechat_moments"' in client
     assert "这不是九宫格" in client
     assert "长图连读已就绪" in client
-    moments_block = panel.split("wechat_moments:")[1].split("moments_grid:")[0]
+    moments_block = panel.split("wechat_moments:")[1].split("poster_bric:")[0]
     assert "九宫格" not in moments_block
     assert "长图连读" in moments_block
 
     recipe_js = (STUDIO / "js" / "output-recipe.js").read_text(encoding="utf-8")
     assert "朋友圈 · 长图连读" in recipe_js
-    assert 'intent: "moments_grid"' in recipe_js
-    assert "朋友圈 · 九宫格" in recipe_js
-    # scroll 选项文案不含九宫格冒充
+    assert 'intent: "moments_grid"' not in recipe_js
+    assert "朋友圈 · 九宫格" not in recipe_js
     assert "最多 9 段，滑动连读" in recipe_js
-    # preview toolbar 仍走意图卡，不把 scroll 标成九宫格
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
     assert "showAmbiguousIntentCard" in longshot
-    assert "导出朋友圈 · 九宫格" not in longshot or "moments_grid" in longshot
+    assert "导出朋友圈 · 九宫格" not in longshot
 
 
-def test_ac_or_11b_grid_bound_in_recipe_and_panel() -> None:
-    """AC-OR-11b · 九宫格仅绑定 moments_grid."""
+def test_ac_or_11b_studio_no_jiugongge_entry() -> None:
+    """Studio 下线九宫格入口；scroll 文案仍诚实；CLI 后端可保留 moments_grid."""
     recipe_js = (STUDIO / "js" / "output-recipe.js").read_text(encoding="utf-8")
     client = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
-    assert 'intent: "moments_grid"' in recipe_js
-    assert 'platform === "moments_grid"' in client
-    assert "九宫格已就绪" in client
-    assert 'id: "moments_grid"' in panel
-    assert "这不是九宫格" in client  # scroll 诚实声明
-    dock = (STUDIO / "preview-toolbar-v3-task-dock.js").read_text(encoding="utf-8")
-    assert 'result.platform === "moments_grid"' in dock
-    assert "九宫格已就绪" in dock
+    assert 'intent: "moments_grid"' not in recipe_js
+    assert 'id: "moments_grid"' not in panel
+    assert "朋友圈 · 九宫格" not in panel
+    assert 'if (id === "moments_grid") return;' in panel
+    assert "这不是九宫格" in client
     scroll = resolve_output_recipe(kept_n=15, enabled=True, intent="moments_scroll")
     assert scroll.platform == "wechat_moments"
     assert "九宫格" not in scroll.product_label

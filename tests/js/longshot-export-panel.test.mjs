@@ -37,6 +37,7 @@ function stubPopover() {
       if (sel === "[data-xhs-custom-row]") return { hidden: true };
       if (sel === "[data-studio-xhs-custom-input]") return null;
       if (sel === "[data-smart-crop-btn]") return null;
+      if (sel === "[data-scale-hint]") return { textContent: "" };
       if (sel === "[data-xhs-estimate]") return null;
       return null;
     },
@@ -71,9 +72,9 @@ test("poster_bric 在 INTENT/PLATFORM 映射中互逆", () => {
 });
 
 test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", () => {
-  assert.equal(ctaLabelForPlatform("poster_bric"), "导出单屏海报");
-  assert.equal(shortCtaLabelForPlatform("poster_bric"), "单屏海报");
-  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单屏海报");
+  assert.equal(ctaLabelForPlatform("poster_bric"), "导出 A4 海报");
+  assert.equal(shortCtaLabelForPlatform("poster_bric"), "A4海报");
+  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · A4");
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
@@ -112,9 +113,10 @@ test("enabledPlatformsFromConfig · gcsPosterBric on/off", () => {
   assert.ok(on.includes("wechat_chat"));
 });
 
-test("poster_bric / moments_grid 隐藏「长图要不要字」", () => {
+test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九宫格入口", () => {
   assert.equal(PLATFORMS.poster_bric.showCopyControls, false);
-  assert.equal(PLATFORMS.moments_grid.showCopyControls, false);
+  assert.equal(PLATFORMS.album_spread.showCopyControls, false);
+  assert.equal(PLATFORMS.moments_grid, undefined);
   assert.notEqual(PLATFORMS.wechat_chat.showCopyControls, false);
 
   const popPoster = stubPopover();

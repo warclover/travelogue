@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from io import BytesIO
 from pathlib import Path
 
@@ -316,97 +317,71 @@ def test_sparse_moments_hint_helpers_in_panel_source() -> None:
 
 
 def test_export_xhs_pipeline_mocked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """AC-LNG2-03 · slideCount=6 → 6×1080×1440 PNG named *-xhs-*."""
-    from io import BytesIO
+    """xiaohongshu is collage_pages (not aspect-fit longshot); export via collage_pack."""
+    from travelogue.export.platform_profiles import (
+        ASPECT_FIT_PLATFORM_IDS,
+        clear_platform_profiles_cache,
+        get_profile,
+    )
 
-    from PIL import Image
+    clear_platform_profiles_cache()
+    profile = get_profile("xiaohongshu")
+    assert profile.capture == "collage_pages"
+    assert profile.segment == "photo_led"
+    assert "xiaohongshu" not in ASPECT_FIT_PLATFORM_IDS
 
-    from travelogue.export.boundary_metrics import BoundaryMetrics
-    from travelogue.export.platform_longshot import export_platform_longshot
+    # Seed kept photos and export through the public longshot router.
+    from travelogue.services.trip_factory import create_trip
 
-    trip = tmp_path / "xhs"
-    trip.mkdir()
-    (trip / "index-longshot.html").write_text("<html></html>", encoding="utf-8")
-    (trip / "trip.json").write_text('{"meta":{"title":"XHS"}}', encoding="utf-8")
+    trips = tmp_path / "trips"
+    create_trip("xhs-collage", trips, title="XHS")
+    trip = trips / "xhs-collage"
+    data = json.loads((trip / "trip.json").read_text(encoding="utf-8"))
+    assets = []
+    ids = []
+    for i in range(8):
+        aid = f"xhs-{i:02d}"
+        ids.append(aid)
+        rel = f"source/{aid}.jpg"
+        Image.new("RGB", (800, 600), (40 + i * 10, 100, 160)).save(
+            trip / rel, format="JPEG"
+        )
+        assets.append(
+            {
+                "id": aid,
+                "type": "image",
+                "sourceFile": rel,
+                "layoutEligible": True,
+            }
+        )
+    data["assets"] = assets
+    curation = data.setdefault("curation", {})
+    curation["displayedAssetIds"] = ids
+    (trip / "trip.json").write_text(
+        json.dumps(data, ensure_ascii=False), encoding="utf-8"
+    )
 
-    # Tall canvas so 6 slices are feasible
-    canvas = Image.new("RGB", (428, 6000), (180, 120, 80))
-    buf = BytesIO()
-    canvas.save(buf, format="PNG")
-    canvas_bytes = buf.getvalue()
+    called_platform: list[str] = []
 
-    class _Page:
-        def goto(self, *a, **k):
-            return None
-
-        def wait_for_function(self, *a, **k):
-            return None
-
-        def close(self):
-            return None
-
-    class _Browser:
-        def new_page(self, **k):
-            return _Page()
+    def _should_not_run(*_a, **kwargs):
+        called_platform.append(str(kwargs.get("platform") or ""))
+        raise AssertionError("xiaohongshu must not call platform_longshot")
 
     monkeypatch.setattr(
-        "travelogue.export.platform_longshot._BROWSER_POOL.acquire",
-        lambda: _Browser(),
+        "travelogue.export.platform_longshot.export_platform_longshot",
+        _should_not_run,
     )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot._BROWSER_POOL.release", lambda: None
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot._resolve_longshot_url",
-        lambda *a, **k: ("http://127.0.0.1:9/", None),
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot._apply_copy_display", lambda *a, **k: None
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot._page_metrics",
-        lambda *_: {"scrollHeight": 3000, "chapterCount": 1, "perChapter": [20]},
-    )
-    tops = list(range(0, 3001, 150))
-    from travelogue.export.boundary_metrics import PhotoCell
-
-    cells = [
-        PhotoCell(float(y), float(min(y + 140, 3000)))
-        for y in tops[:-1]
-        if y + 140 <= 3000
-    ]
-    metrics = BoundaryMetrics(
-        3000,
-        [float(y) for y in tops],
-        ["start"] + ["photo"] * (len(tops) - 2) + ["end"],
-        photo_cells=cells,
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot.count_photos_heuristic",
-        lambda *_: max(24, len(cells)),
-    )
-    monkeypatch.setattr(
-        "travelogue.export.platform_longshot._capture_full_p0_only",
-        lambda *a, **k: (canvas_bytes, metrics),
-    )
-
-    result = export_platform_longshot(
-        trip,
-        platform="xiaohongshu",
-        scale=1,
-        slide_count=6,
-        pad_mode="letterbox",
-        smart_crop_enabled=False,
-    )
+    result = export_trip_longshot(trip, platform="xiaohongshu", slide_count=6)
+    assert called_platform == []
     assert result.platform == "xiaohongshu"
-    assert result.page_count == 6
-    assert len(result.outputs) == 6
+    assert result.capture_method == "collage_pages"
+    assert result.page_count >= 1
     for item in result.outputs:
         assert "-xhs-" in item.path.name
         assert item.path.suffix == ".png"
         im = Image.open(item.path)
         assert im.size == (1080, 1440)
-    assert "笔记正文" in (result.user_hint or "")
+    assert "竖版拼贴" in (result.user_hint or "") or "笔记正文" in (result.user_hint or "")
     assert result.publish_guide
 
 

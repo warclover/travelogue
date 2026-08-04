@@ -76,6 +76,8 @@ def preset_id_for_intent(intent: str, *, layout: str | None = None) -> str:
         return "preset.instagram_carousel"
     if intent == "poster_bric":
         return "preset.poster_bric"
+    if intent == "album_spread":
+        return "preset.album_spread"
     raise OutputRecipeError("E_OR_INVALID_INTENT", f"未知意图: {intent}")
 
 

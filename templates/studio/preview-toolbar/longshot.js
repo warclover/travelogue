@@ -519,7 +519,7 @@ export function cancelPreviewLongshotExport(root) {
       title = "正在更新版面…";
       subtitle = /自动导出/.test(hint) ? "完成后将自动导出长图" : "完成后可再点导出";
     } else if (/九宫格/.test(hint)) {
-      title = "正在生成朋友圈九宫格…";
+      title = "正在生成拼贴导出…";
     } else if (/朋友圈|连读/.test(hint)) {
       title = "正在生成朋友圈长图…";
     } else if (/小红书/.test(hint)) {
@@ -647,17 +647,21 @@ export function cancelPreviewLongshotExport(root) {
     var prefs = readLongshotExportPrefs();
     var platform = prefs.platform || "wechat_chat";
     if (platform === "wechat_moments") {
-      return "朋友圈 · " + prefs.scale + "×";
+      return "朋友圈连读 · " + prefs.scale + "×";
     }
     if (platform === "xiaohongshu") {
       var n = prefs.slideCount == null ? "auto" : String(prefs.slideCount);
-      return "小红书 · " + n + " 张 · " + prefs.scale + "×";
+      return "小红书海报 · " + n + " 张 · " + prefs.scale + "×";
     }
     if (platform === "poster_bric") {
-      return "单屏海报 · " + prefs.scale + "×";
+      return "A4 海报 · " + prefs.scale + "×";
+    }
+    if (platform === "album_spread") {
+      return "画册跨页 · " + prefs.scale + "×";
     }
     if (platform === "moments_grid") {
-      return "九宫格 · " + prefs.scale + "×";
+      // CLI / 旧 prefs 残留；Studio 已无入口
+      return "九宫格(CLI) · " + prefs.scale + "×";
     }
     var modeLabel = prefs.mode === "full" ? "完整" : "按章";
     var copyLabel = prefs.copyDisplay === "photos" ? "纯照片" : "带文字";
@@ -1858,12 +1862,19 @@ export function cancelPreviewLongshotExport(root) {
       homeHint.textContent =
         "已保存 " +
         (outputs.length || 0) +
-        " 张朋友圈配图 · 按 01→顺序发";
+        " 张朋友圈长图连读 · 按 01→顺序发";
     } else if (resultPlatform === "xiaohongshu") {
       homeHint.textContent =
         "已保存 " +
         (outputs.length || 0) +
-        " 张小红书配图 · 3:4 · 可直接上传";
+        " 张竖版拼贴海报（3:4）· 可发小红书";
+    } else if (resultPlatform === "poster_bric") {
+      homeHint.textContent = "已保存 1 张 A4 拼贴海报";
+    } else if (resultPlatform === "album_spread") {
+      homeHint.textContent =
+        "已保存 " +
+        (outputs.length || 0) +
+        " 张画册跨页（约 2.8:1）· 可预览或送印";
     } else {
       // FE-FST-04 · 默认成功面：已保存确认，不塞发群教学
       var drawerTitle = String(result.displayTitle || result.title || "").trim();
@@ -2506,14 +2517,16 @@ export function cancelPreviewLongshotExport(root) {
     }
     var runningHint =
       platform === "moments_grid"
-        ? "正在导出朋友圈九宫格…"
+        ? "正在导出九宫格（CLI）…"
         : platform === "wechat_moments"
           ? "正在导出朋友圈长图连读…"
           : platform === "xiaohongshu"
-            ? "正在导出小红书配图…"
+            ? "正在导出小红书竖版拼贴海报…"
             : platform === "poster_bric"
-              ? "正在导出单屏海报…"
-              : "正在保存…";
+              ? "正在导出 A4 海报…"
+              : platform === "album_spread"
+                ? "正在导出画册跨页…"
+                : "正在保存…";
     setLongshotExportState(root, "running", { hint: runningHint });
     _setSlowHint(root, "", false);
 
@@ -2583,10 +2596,14 @@ export function cancelPreviewLongshotExport(root) {
       onBusy: function () {
         var busyHint =
           platform === "wechat_moments"
-            ? "朋友圈配图排队中，请稍候…"
+            ? "朋友圈连读排队中，请稍候…"
             : platform === "xiaohongshu"
-              ? "小红书配图排队中，请稍候…"
-              : "排队中，请稍候…";
+              ? "小红书海报排队中，请稍候…"
+              : platform === "poster_bric"
+                ? "A4 海报排队中，请稍候…"
+                : platform === "album_spread"
+                  ? "画册跨页排队中，请稍候…"
+                  : "排队中，请稍候…";
         setLongshotExportState(root, "running", { hint: busyHint });
       },
     })

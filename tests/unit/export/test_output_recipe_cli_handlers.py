@@ -83,8 +83,9 @@ def test_ac_or_05_handle_output_recipe_and_illegal_intent(tmp_path: Path) -> Non
     assert body["recipe"]["needs_intent"] is True
     assert body["intentOptions"]
     option_intents = {o["intent"] for o in body["intentOptions"]}
-    assert "moments_grid" in option_intents
+    assert "moments_grid" not in option_intents
     assert "moments_scroll" in option_intents
+    assert "chat_longshot" in option_intents
 
     # 非法 intent
     handler_bad = MockStudioHandler(

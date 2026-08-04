@@ -1108,6 +1108,17 @@ def export_trip_longshot(
             progress=progress,
             platform=pid,
         )
+    if pid in ("xiaohongshu", "album_spread"):
+        from travelogue.export.collage_pack import export_collage_pack
+
+        return export_collage_pack(
+            trip_dir,
+            platform=pid,
+            scale=scale,
+            fmt=fmt,
+            progress=progress,
+            slide_count=slide_count,
+        )
     if pid != DEFAULT_PLATFORM:
         from travelogue.export.platform_longshot import export_platform_longshot
 

@@ -9,8 +9,13 @@ if TYPE_CHECKING:
     from travelogue.config.app import AppConfig
 
 
-# Studio Popover platforms (Phase A+B). Phase C stays CLI/API-only.
-DEFAULT_LONGSHOT2_PLATFORMS: tuple[str, ...] = ("wechat_moments", "xiaohongshu")
+# Studio Popover platforms (Phase A+B + compose). Phase C stays CLI/API-only.
+DEFAULT_LONGSHOT2_PLATFORMS: tuple[str, ...] = (
+    "wechat_moments",
+    "xiaohongshu",
+    "poster_bric",
+    "album_spread",
+)
 
 
 @dataclass
@@ -43,7 +48,7 @@ class OutputRecipeConfig:
 class GcsPosterBricConfig:
     """GCS Track B · poster_bric Writer (PRD features.gcs_poster_bric)."""
 
-    enabled: bool = False
+    enabled: bool = True
 
 
 @dataclass
@@ -131,7 +136,7 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                     getattr(
                         getattr(cfg.studio, "gcs_poster_bric", None),
                         "enabled",
-                        False,
+                        True,
                     )
                 ),
             },

@@ -135,17 +135,14 @@ def test_compose_1x1_contain_square() -> None:
             assert im.size == (540, 540)
 
 
-def test_ac_or_11b_ui_grid_bound_only_to_moments_grid() -> None:
-    """「九宫格」可点映射仅 moments_grid；scroll 仍无九宫格可点映射."""
+def test_ac_or_11b_studio_drops_jiugongge_keeps_cli_grid() -> None:
+    """Studio 意图卡无九宫格；CLI 仍可 resolve moments_grid."""
     opts_b = ambiguous_intent_options(phase="B", kept_n=12)
     intents = [o["intent"] for o in opts_b]
-    assert intents == ["chat_longshot", "moments_grid", "moments_scroll"]
-    grid_opt = next(o for o in opts_b if o["intent"] == "moments_grid")
-    assert "九宫格" in grid_opt["label"]
+    assert intents == ["chat_longshot", "moments_scroll"]
     scroll_opt = next(o for o in opts_b if o["intent"] == "moments_scroll")
     assert "九宫格" not in scroll_opt["label"]
 
-    # Phase A 卡仍无九宫格（回归）
     opts_a = ambiguous_intent_options(phase="A")
     assert {o["intent"] for o in opts_a} == {"chat_longshot", "moments_scroll"}
 
@@ -159,31 +156,13 @@ def test_ac_or_11b_ui_grid_bound_only_to_moments_grid() -> None:
     assert "九宫格" not in scroll.cta_label
 
     recipe_js = (STUDIO / "js" / "output-recipe.js").read_text(encoding="utf-8")
-    recipe_logic = (STUDIO / "js" / "output-recipe-logic.js").read_text(encoding="utf-8")
-    assert 'intent: "moments_grid"' in recipe_js
-    assert "朋友圈 · 九宫格" in recipe_js
-    assert "即将推出" not in recipe_js
-    assert (
-        'moments_grid: "moments_grid"' in recipe_js
-        or "moments_grid: 'moments_grid'" in recipe_js
-        or 'moments_grid: "moments_grid"' in recipe_logic
-    )
+    assert 'intent: "moments_grid"' not in recipe_js
+    assert "朋友圈 · 九宫格" not in recipe_js
 
     client = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
-    assert 'platform === "moments_grid"' in client
-    assert "九宫格已就绪" in client
-    # scroll 成功态仍诚实声明不是九宫格
     assert "这不是九宫格" in client
 
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
-    assert 'id: "moments_grid"' in panel
-    assert 'data-studio-longshot-platform="' in panel
-    # 导出设置 · 方案 A：2×2 平台卡（禁止 4 项单行 pill）
-    assert "preview-toolbar__export-platform-grid" in panel
-    assert "preview-toolbar__export-platform-card" in panel
-    assert 'title: "朋友圈"' in panel
-    assert 'subtitle: "长图连读"' in panel
-    assert 'subtitle: "九宫格 1:1"' in panel
-    # wechat_moments CTA 不得冒充九宫格
-    assert 'cta: "导出朋友圈 · 长图连读"' in panel
-    assert 'cta: "导出朋友圈 · 九宫格"' in panel
+    assert 'id: "moments_grid"' not in panel
+    assert 'if (id === "moments_grid") return;' in panel
+

@@ -1,20 +1,17 @@
 """GCS Track B · poster_bric Writer (TPC W4).
 
-Single-canvas collage export. Does not write trip.json screens[].
-Requires features.gcs_poster_bric / studio.gcs_poster_bric.enabled (default false).
+Single-canvas A4 collage export. Does not write trip.json screens[].
+Requires features.gcs_poster_bric / studio.gcs_poster_bric.enabled (default on).
 """
 
 from __future__ import annotations
 
-import io
 import json
 import logging
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
-
-from travelogue.export.bric_compose import bric_compose
+from travelogue.export.compose_canvas import A4_CANVAS, canvas_for_platform, compose_fixed_canvas
 from travelogue.export.longshot import (
     LongshotExportError,
     LongshotExportResult,
@@ -31,14 +28,13 @@ from travelogue.export.photo_grid_pack import (
 )
 from travelogue.export.platform_longshot import PlatformExportWriter
 from travelogue.export.platform_profiles import file_prefix_for_platform, get_profile
-from travelogue.media.image_ops import load_image_normalized
 from travelogue.media.media_classify import is_collage_asset
 
 _log = logging.getLogger(__name__)
 
 MIN_N = 3
 MAX_N = 9
-DEFAULT_WIDTH = 1080
+DEFAULT_WIDTH = A4_CANVAS[0]
 BORDER = 16
 SPACING = 8
 CANVAS_BG = (245, 245, 243)
@@ -51,7 +47,8 @@ def gcs_poster_bric_enabled(cfg: Any | None = None) -> bool:
         cfg = get_config()
     studio = getattr(cfg, "studio", None)
     flag = getattr(studio, "gcs_poster_bric", None) if studio is not None else None
-    return bool(getattr(flag, "enabled", False))
+    # Default on when flag object missing ``enabled`` (GcsPosterBricConfig.enabled=True).
+    return bool(getattr(flag, "enabled", True))
 
 
 def _screens_fingerprint(trip: dict[str, Any]) -> str:
@@ -65,7 +62,7 @@ def _screens_fingerprint(trip: dict[str, Any]) -> str:
 
 
 def list_poster_photo_paths(trip_dir: Path, *, limit: int = MAX_N) -> list[Path]:
-    """Kept image paths excluding mediaClass=collage; n capped at MAX_N."""
+    """Kept image paths excluding mediaClass=collage; n capped at ``limit``."""
     trip_dir = Path(trip_dir)
     trip = _load_trip(trip_dir)
     assets_by_id = {
@@ -92,68 +89,41 @@ def list_poster_photo_paths(trip_dir: Path, *, limit: int = MAX_N) -> list[Path]
 def compose_poster_png(
     paths: list[Path],
     *,
-    width: int = DEFAULT_WIDTH,
+    canvas_wh: tuple[int, int] | None = None,
+    width: int | None = None,
     border: int = BORDER,
     spacing: int = SPACING,
     bg: tuple[int, int, int] = CANVAS_BG,
 ) -> tuple[bytes, dict[str, Any]]:
-    """Contain-paste photos onto bric_compose layout; return PNG bytes + diagnostic."""
+    """Contain-paste photos onto fixed A4 (or ``canvas_wh``) via compose_fixed_canvas."""
     if not (MIN_N <= len(paths) <= MAX_N):
         raise LongshotExportError(
             "E_GCS_POSTER_N",
             f"单屏海报需要 {MIN_N}–{MAX_N} 张图，当前 {len(paths)} 张",
         )
 
-    natives: list[tuple[float, float]] = []
-    images: list[Image.Image] = []
-    for p in paths:
-        loaded = load_image_normalized(Path(p))
-        img = loaded.image
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        natives.append((float(img.width), float(img.height)))
-        images.append(img)
+    if canvas_wh is None:
+        if width is not None:
+            # Legacy width-only callers: keep A4 aspect, scale height to match width.
+            w = max(64, int(width))
+            h = max(64, int(round(w * A4_CANVAS[1] / A4_CANVAS[0])))
+            canvas_wh = (w, h)
+        else:
+            canvas_wh = A4_CANVAS
 
-    fitted, positions, canvas_size = bric_compose(
-        natives, width=width, border=border, spacing=spacing, round_result=True
+    png_bytes, diag = compose_fixed_canvas(
+        paths,
+        canvas_wh=canvas_wh,
+        border=border,
+        spacing=spacing,
+        bg=bg,
     )
-    cw, ch = int(canvas_size[0]), int(max(1, canvas_size[1]))
-    canvas = Image.new("RGB", (cw, ch), bg)
-
-    try:
-        for img, (fw, fh), (x, y) in zip(images, fitted, positions, strict=True):
-            tw, th = max(1, int(fw)), max(1, int(fh))
-            # Contain into cell (letterbox inside allocated box)
-            ar_src = img.width / max(1, img.height)
-            ar_box = tw / th
-            if ar_src > ar_box:
-                nw, nh = tw, max(1, int(round(tw / ar_src)))
-            else:
-                nh, nw = th, max(1, int(round(th * ar_src)))
-            fg = img.resize((nw, nh), Image.Resampling.LANCZOS)
-            cell = Image.new("RGB", (tw, th), bg)
-            cell.paste(fg, ((tw - nw) // 2, (th - nh) // 2))
-            canvas.paste(cell, (int(x), int(y)))
-            fg.close()
-            cell.close()
-    finally:
-        # Release decoded source images promptly (large PNG/JPEG buffers).
-        for img in images:
-            img.close()
-
-    buf = io.BytesIO()
-    canvas.save(buf, format="PNG", optimize=True)
     diag = {
+        **diag,
         "exportSurface": "poster_bric",
-        "n": len(paths),
-        "canvas": [cw, ch],
-        "border": border,
-        "spacing": spacing,
-        "positions": [[float(x), float(y)] for x, y in positions],
-        "fittedSizes": [[float(w), float(h)] for w, h in fitted],
         "composer": "shelf_packer_v1",
     }
-    return buf.getvalue(), diag
+    return png_bytes, diag
 
 
 def export_poster_bric_pack(
@@ -191,8 +161,8 @@ def export_poster_bric_pack(
     if progress:
         progress(0, 1, "单屏海报构图")
 
-    width = DEFAULT_WIDTH if int(scale or 2) <= 2 else int(DEFAULT_WIDTH * 1.25)
-    png_bytes, diag = compose_poster_png(paths, width=width)
+    canvas_wh = canvas_for_platform("poster_bric", scale=scale)
+    png_bytes, diag = compose_poster_png(paths, canvas_wh=canvas_wh)
 
     title = _trip_title(trip_dir)
     prefix = file_prefix_for_platform(title, "poster_bric")
@@ -248,7 +218,7 @@ def export_poster_bric_pack(
         title=_slug_title(title),
         segmented=False,
         segment_reason="poster_bric",
-        user_hint="单屏海报已生成（一张拼贴画布）",
+        user_hint="A4 单屏海报已生成（一张竖版拼贴画布）",
         platform="poster_bric",
         profile_label=profile.label,
         target_page_count=1,

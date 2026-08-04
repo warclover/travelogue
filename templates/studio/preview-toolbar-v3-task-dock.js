@@ -237,9 +237,12 @@ export function mountPreviewTaskDock(root, hooks) {
       main.textContent = "✓ " + nMoments + " 张长图连读已就绪";
     } else if (result.platform === "xiaohongshu") {
       var nXhs = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nXhs + " 张 3:4 配图已就绪";
+      main.textContent = "✓ " + nXhs + " 张竖版拼贴海报已就绪";
     } else if (result.platform === "poster_bric") {
-      main.textContent = "✓ 单屏海报已就绪";
+      main.textContent = "✓ A4 海报已就绪";
+    } else if (result.platform === "album_spread") {
+      var nAlbum = result.pageCount || outputs.length;
+      main.textContent = "✓ " + nAlbum + " 张画册跨页已就绪";
     } else {
       // FE-FST-04 / D-FST-13 · 默认微信群：已保存确认，不塞发群教学
       var displayTitle = String(
@@ -271,11 +274,15 @@ export function mountPreviewTaskDock(root, hooks) {
       } else if (result.platform === "xiaohongshu") {
         shareHint.textContent =
           outputs.length > 1
-            ? "已保存到此画册文件夹 · 共 " + outputs.length + " 张，导入小红书按序发布"
-            : "已保存到此画册文件夹 · 导入小红书发布即可";
+            ? "已保存到此画册文件夹 · 共 " + outputs.length + " 张竖版拼贴海报，导入小红书按序发布"
+            : "已保存到此画册文件夹 · 竖版拼贴海报，导入小红书发布即可";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "poster_bric") {
-        shareHint.textContent = "已保存到此画册文件夹 · 单屏拼贴海报";
+        shareHint.textContent = "已保存到此画册文件夹 · A4 拼贴海报";
+        textWrap.appendChild(shareHint);
+      } else if (result.platform === "album_spread") {
+        shareHint.textContent =
+          "已保存到此画册文件夹 · 约 2.8:1 画册跨页，可预览或送印";
         textWrap.appendChild(shareHint);
       } else {
         // FE-DFX-30 · 稳定成功面副文案（此画册文件夹）
@@ -299,6 +306,8 @@ export function mountPreviewTaskDock(root, hooks) {
       if (
         (result.platform === "wechat_moments" ||
           result.platform === "xiaohongshu" ||
+          result.platform === "poster_bric" ||
+          result.platform === "album_spread" ||
           result.platform === "moments_grid") &&
         result.publishGuide
       ) {

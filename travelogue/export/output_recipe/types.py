@@ -6,7 +6,13 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 BandId = Literal["sparse", "ambiguous", "narrative"]
-EngineId = Literal["chapter_capture", "platform_segment", "photo_grid", "poster_bric"]
+EngineId = Literal[
+    "chapter_capture",
+    "platform_segment",
+    "photo_grid",
+    "poster_bric",
+    "collage_pages",
+]
 IntentId = Literal[
     "chat_longshot",
     "moments_scroll",
@@ -14,6 +20,7 @@ IntentId = Literal[
     "xiaohongshu",
     "instagram_carousel",
     "poster_bric",
+    "album_spread",
 ]
 EntrypointId = Literal["preview", "shelf", "cli"]
 SourceId = Literal[
@@ -27,9 +34,9 @@ SourceId = Literal[
 
 # Phase A selectable intents (Ambiguous card · Phase A)
 PHASE_A_INTENTS = frozenset({"chat_longshot", "moments_scroll"})
-# Phase B Ambiguous 卡（含真九宫格）
-PHASE_B_INTENTS = frozenset({"chat_longshot", "moments_scroll", "moments_grid"})
-# Known intents (schema); Phase D may be requested but rejected until available
+# Phase B Ambiguous 卡：发群 + 朋友圈连读（九宫格已从 Studio 下线，仅 CLI）
+PHASE_B_INTENTS = frozenset({"chat_longshot", "moments_scroll"})
+# Known intents (schema); moments_grid retained for CLI alias
 ALL_INTENTS = frozenset(
     {
         "chat_longshot",
@@ -38,6 +45,7 @@ ALL_INTENTS = frozenset(
         "xiaohongshu",
         "instagram_carousel",
         "poster_bric",
+        "album_spread",
     }
 )
 # Phase B0 Writer 已交付 · 不再 unavailable
@@ -51,6 +59,7 @@ INTENT_TO_PLATFORM: dict[str, str] = {
     "xiaohongshu": "xiaohongshu",
     "instagram_carousel": "instagram",
     "poster_bric": "poster_bric",
+    "album_spread": "album_spread",
 }
 
 PLATFORM_TO_INTENT: dict[str, str] = {
@@ -60,6 +69,7 @@ PLATFORM_TO_INTENT: dict[str, str] = {
     "xiaohongshu": "xiaohongshu",
     "instagram": "instagram_carousel",
     "poster_bric": "poster_bric",
+    "album_spread": "album_spread",
 }
 
 

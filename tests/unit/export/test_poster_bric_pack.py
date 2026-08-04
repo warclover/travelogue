@@ -132,8 +132,7 @@ def test_ac_tpc_07_export_n4_no_screens_mutation(tmp_path: Path) -> None:
     finals = list(trip_dir.glob("*-poster.png"))
     assert len(finals) == 1
     with Image.open(finals[0]) as im:
-        assert im.size[0] == 1080
-        assert im.size[1] > 100
+        assert im.size == (1748, 2480)
 
     after = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
     screens_after = json.dumps(after["chapters"][0]["screens"], sort_keys=True)
@@ -230,13 +229,14 @@ def test_compose_poster_png_bytes(tmp_path: Path) -> None:
     assert diag["exportSurface"] == "poster_bric"
     assert diag["n"] == 3
     assert diag["spacing"] == 8
+    assert diag["canvas"] == [1748, 2480]
+    with Image.open(__import__("io").BytesIO(data)) as im:
+        assert im.size == (1748, 2480)
 
 
 def test_ui_copy_no_jiugongge_for_poster() -> None:
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
-    # poster_bric block must say 单屏海报 and must not claim 九宫格 as its product
     assert 'id: "poster_bric"' in panel
-    assert "单屏海报" in panel
-    # Ensure moments_grid still owns 九宫格 (regression for AC-OR-11b)
-    assert 'id: "moments_grid"' in panel
-    assert "朋友圈 · 九宫格" in panel
+    assert "A4" in panel
+    assert "九宫格" not in panel.split("poster_bric:")[1].split("xiaohongshu:")[0]
+    assert 'id: "moments_grid"' not in panel

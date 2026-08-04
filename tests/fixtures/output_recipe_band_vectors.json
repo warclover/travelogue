@@ -135,7 +135,8 @@
       "sessionIntent": "moments_grid",
       "band": "ambiguous",
       "needsIntent": false,
-      "intent": "moments_grid"
+      "intent": "moments_scroll",
+      "note": "Studio 下线九宫格：旧 session moments_grid → moments_scroll"
     },
     {
       "id": "alt-ambiguous-preview",

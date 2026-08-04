@@ -10,6 +10,7 @@ export var INTENT_TO_PLATFORM = {
   moments_grid: "moments_grid",
   xiaohongshu: "xiaohongshu",
   poster_bric: "poster_bric",
+  album_spread: "album_spread",
 };
 
 export var PLATFORM_TO_INTENT = {
@@ -18,6 +19,7 @@ export var PLATFORM_TO_INTENT = {
   moments_grid: "moments_grid",
   xiaohongshu: "xiaohongshu",
   poster_bric: "poster_bric",
+  album_spread: "album_spread",
 };
 
 export var SESSION_INTENT_PREFIX = "travelogue.studio.outputIntent.";
@@ -179,29 +181,36 @@ export function resolveClientRecipe(keptN, entrypoint, cfg, sessionIntent) {
   };
 }
 
+export function normalizeStudioIntent(intent) {
+  var id = String(intent || "").trim();
+  // Studio 已下线九宫格；旧 session / 书签映射到朋友圈连读
+  if (id === "moments_grid") return "moments_scroll";
+  return id || "";
+}
+
 export function recipeFromIntent(intent, band, keptN, source) {
-  var platform = INTENT_TO_PLATFORM[intent] || "wechat_chat";
-  var nGrid = Math.min(9, Math.max(0, Number(keptN) || 0));
+  var normalized = normalizeStudioIntent(intent);
+  var platform = INTENT_TO_PLATFORM[normalized] || "wechat_chat";
   var cta =
-    intent === "moments_grid"
-      ? "导出朋友圈 · 九宫格"
-      : intent === "moments_scroll"
-        ? "导出朋友圈 · 长图连读"
-        : band === "narrative"
-          ? "按章导出长图 · 发微信群"
-          : "导出长图 · 发微信群";
-  var hints = [];
-  if (intent === "moments_grid") {
-    hints.push("约 " + nGrid + " 张 1:1 · 有几张发几张");
-  }
+    normalized === "moments_scroll"
+      ? "导出朋友圈 · 长图连读"
+      : normalized === "xiaohongshu"
+        ? "导出小红书海报"
+        : normalized === "poster_bric"
+          ? "导出 A4 海报"
+          : normalized === "album_spread"
+            ? "导出画册跨页"
+            : band === "narrative"
+              ? "按章导出长图 · 发微信群"
+              : "导出长图 · 发微信群";
   return {
     band: band,
     needsIntent: false,
-    intent: intent,
+    intent: normalized,
     platform: platform,
     ctaLabel: cta,
-    subtitle: hints[0] || "",
-    userHints: hints,
+    subtitle: "",
+    userHints: [],
     source: source || "intent_choice",
   };
 }
@@ -271,7 +280,8 @@ export function readSessionIntentFromStorage(storage, tripId) {
     var raw = storage.getItem(SESSION_INTENT_PREFIX + String(tripId || ""));
     if (!raw) return null;
     var parsed = JSON.parse(raw);
-    return parsed && parsed.intent ? String(parsed.intent) : null;
+    if (!parsed || !parsed.intent) return null;
+    return normalizeStudioIntent(String(parsed.intent));
   } catch (e) {
     return null;
   }
@@ -280,9 +290,11 @@ export function readSessionIntentFromStorage(storage, tripId) {
 /** @param {{ setItem: Function }} storage */
 export function writeSessionIntentToStorage(storage, tripId, intent) {
   try {
+    var normalized = normalizeStudioIntent(intent);
+    if (!normalized) return;
     storage.setItem(
       SESSION_INTENT_PREFIX + String(tripId || ""),
-      JSON.stringify({ intent: intent, ts: Date.now() })
+      JSON.stringify({ intent: normalized, ts: Date.now() })
     );
   } catch (e) {}
 }
