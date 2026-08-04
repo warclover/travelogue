@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import Any, Mapping
 
 from travelogue.config import MosaicConfig, get_config
 from travelogue.layout_contract.orientations import AspectKind
@@ -86,6 +86,21 @@ def _reject(
     if detail:
         entry["detail"] = detail
     rejected.append(entry)
+
+
+def _ega_atom_same_shot_group(
+    asset_ids: list[str],
+    assets_map: Mapping[str, Mapping[str, Any]],
+) -> bool:
+    """P0 guard · only soften valid/-1 mix when all labeled shotGroups match."""
+    labels = [
+        str((assets_map.get(aid) or {}).get("shotGroupId") or "").strip()
+        for aid in asset_ids
+    ]
+    present = [x for x in labels if x]
+    if not present:
+        return True
+    return len(set(present)) == 1 and len(present) == len(labels)
 
 
 def _restore_if_usage_emptied_candidates(
@@ -307,13 +322,25 @@ def generate_window_candidates_with_rejections(
         policy = ssg_policy if ssg_policy is not None else resolve_shot_group_mosaic_policy()
         atom_reason = window_violates_atom(list(ordered), assets_map, policy.atom)
         if atom_reason:
-            _reject(
-                rejected,
-                pat.pattern_id,
-                "atom_boundary",
-                detail=atom_reason,
+            from travelogue.config.mosaic import (
+                effective_ega_soften_atom_valid_invalid_mix,
+                is_ega_equal_grid_pattern,
             )
-            continue
+
+            soften = (
+                atom_reason == "scene_cluster_valid_invalid_mix"
+                and is_ega_equal_grid_pattern(pat.pattern_id, cfg)
+                and effective_ega_soften_atom_valid_invalid_mix(cfg)
+                and _ega_atom_same_shot_group(list(ordered), assets_map)
+            )
+            if not soften:
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "atom_boundary",
+                    detail=atom_reason,
+                )
+                continue
         if policy.cross_group_hard_reject and hard_reject_cross_shot_group(
             pat.pattern_id, list(ordered), assets_map
         ):

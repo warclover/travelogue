@@ -55,6 +55,37 @@ mosaic:
 
 ---
 
+## 3b. L6 自动匹配狗粮（P0–P3）
+
+**必须** `intent.mode=fine_craft` + 解锁 structure + `curate --layout web`。  
+单独 `layout` / `quick_share` 会把章压稀，L6 对照无效。
+
+```powershell
+# 从基线备份解锁后 curate（路径以本机为准）
+python -m travelogue curate trips/demo-0ebda73294 --layout web --no-refresh-algorithms
+python -m travelogue render trips/demo-0ebda73294 --no-validate
+```
+
+| knobs（默认） | 作用 |
+|---------------|------|
+| `size6.soften_atom_valid_invalid_mix` | 同 shotGroup 放行 `-1`/`0` 混簇 atom |
+| `size6.prefer_pure_landscape_window` | 纯 6L 优先试 6 |
+| `size6.large_mosaic_quota_exempt` | L6 不占章 large-mosaic 配额 |
+| `size6.landscape1_flood_reopen_after` | 连续 L1≥N 重开 6；0=关 |
+
+**2026-08-04 锚点**（`demo-0ebda73294` · 仓库默认 size6）：
+
+| 指标 | 值 |
+|------|-----|
+| L6 | **6** |
+| max consecutive L6 | **1**（换气生效） |
+| L4 / hero-70 | 0 / 0（本跑） |
+| screens | 83 |
+
+回滚父开关：`equal_grid_admission.enabled: false`；或逐项关 size6 子开关。
+
+---
+
 ## 4. 步骤（M2 追加）
 
 - 查 size=6 probe：`egaEqualSixKept` / 是否出现对 `landscape-6` 的评估。  

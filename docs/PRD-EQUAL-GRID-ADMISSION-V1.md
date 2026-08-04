@@ -233,6 +233,11 @@ mosaic:
       score_mul: 0.85
     size6:
       keep_equal_grid_after_hero_precheck_fail: true
+      # L6 自动匹配（默认 true / reopen=4）
+      soften_atom_valid_invalid_mix: true
+      prefer_pure_landscape_window: true
+      large_mosaic_quota_exempt: true
+      landscape1_flood_reopen_after: 4   # 0 = 关
     scoring:
       flat_window_equal_bonus: 0.08  # 无主次时加给 equal-grid
       wasted_hero_ega_extra: 0.10    # 无主次时额外罚 hero 族

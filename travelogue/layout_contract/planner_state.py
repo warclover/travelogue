@@ -413,6 +413,15 @@ class ScreenLayoutPlannerState:
     def can_use_large_mosaic(self, pattern_id: str) -> bool:
         if not is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             return True
+        from travelogue.config import get_config
+        from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
+        from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+
+        if (
+            str(pattern_id) == PATTERN_LANDSCAPE_6
+            and effective_ega_l6_large_quota_exempt(get_config().mosaic)
+        ):
+            return True
         if self.large_mosaic_chapter_used >= self.large_mosaic_max_per_chapter:
             return False
         key = self._large_mosaic_quota_key(pattern_id)
@@ -420,10 +429,16 @@ class ScreenLayoutPlannerState:
         return used < self.large_mosaic_max_per_template_trip
 
     def sync_large_mosaic_chapter_used(self, pattern_ids: list[str]) -> None:
+        from travelogue.config import get_config
+        from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
+        from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+
+        exempt_l6 = effective_ega_l6_large_quota_exempt(get_config().mosaic)
         self.large_mosaic_chapter_used = sum(
             1
             for pid in pattern_ids
             if is_large_mosaic_pattern(pid, min_slots=self.large_mosaic_min_slots)
+            and not (exempt_l6 and str(pid) == PATTERN_LANDSCAPE_6)
         )
 
     def sync_editorial_composite_chapter_used(self, pattern_ids: list[str]) -> None:
@@ -517,7 +532,17 @@ class ScreenLayoutPlannerState:
         elif pattern_id:
             self.last_was_dense_collage = False
         if is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
-            self.large_mosaic_chapter_used += 1
+            # EGA P2 · landscape-6 may be exempt from large-mosaic chapter quota.
+            from travelogue.config import get_config
+            from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
+            from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+
+            exempt = (
+                str(pattern_id) == PATTERN_LANDSCAPE_6
+                and effective_ega_l6_large_quota_exempt(get_config().mosaic)
+            )
+            if not exempt:
+                self.large_mosaic_chapter_used += 1
         if is_editorial_composite_pattern(pattern_id):
             self.editorial_composite_chapter_used += 1
         self.last_kind = kind if kind != "other" else "other"

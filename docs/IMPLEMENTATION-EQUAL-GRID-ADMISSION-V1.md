@@ -33,7 +33,7 @@ M0 文档/评审
 | SSG 闸 | `travelogue/layout_engine/mosaic/shot_group_gate.py` | 可选 exempt 参数 |
 | slice 判定 | `travelogue/layout_engine/mosaic/clone_detection.py` · `template_prefers_burst` | **不**仅靠改 prefers_burst 结案 |
 | 打分 | `travelogue/layout_engine/mosaic/scorer.py` | soft mul · flat bonus · wasted_hero extra |
-| 窗漏斗 | `travelogue/layout_engine/mosaic/hook.py` | size=6 keep after precheck fail |
+| 窗漏斗 | `travelogue/layout_engine/mosaic/hook.py` | size=6 keep · L6 回注/优先/洪水重开/换气 |
 | hero-6 | `travelogue/layout_engine/mosaic/hero_six.py` | **只读**；不改资格公式 |
 | legacy MEGC | `travelogue/layout_engine/planner/screen_planner.py` · `megc_gate.py` | 仅 M3 |
 | 摘要 | `travelogue/curation/algo_v3_summary.py` | 可选 funnel 拆分 |
@@ -101,6 +101,34 @@ M0 文档/评审
 | **BE-EGA-D02** | 狗粮 ON/OFF 对比 3:2 L4 | ☐ |
 | **BE-EGA-D03** | **禁止**默认改 `allow_peaks` | ☑ 合同 |
 
+---
+
+## 5b. L6 自动匹配（P0–P3 · 已合）
+
+> 根因：`scene_cluster_valid_invalid_mix`（`-1`/`0` 混窗）+ `atom_cap` 裁掉 size=6 + 章 large-mosaic 配额 + 后段 landscape-1 洪水。  
+> **不**依赖改 `density_budget.window_order`；默认 size6 子开关多为 true。
+
+| ID | 任务 | 挂点 | 状态 |
+|----|------|------|------|
+| **BE-EGA-L6-P0** | 同 shotGroup 时放行 atom `scene_cluster` valid/-1 mix；`atom_cap` 裁掉 6 后回注 | `candidates.py` · `hook._ega_reinject_size6_despite_atom_cap` | ✅ |
+| **BE-EGA-L6-P1** | 纯 6×L 窗优先试 size=6 | `hook._prioritize_equal_six_pure_landscape` | ✅ |
+| **BE-EGA-L6-P2** | L6 不计入 / 不挡 large-mosaic 章配额 | `planner_state` · `hook._ega_size6_quota_bypass` | ✅ |
+| **BE-EGA-L6-P3** | 连续 landscape-1 ≥N 重开 size=6；L6 胜出后一步 defer size=6（换气） | `hook._ega_landscape1_flood_reopen` · `_ega_defer_size6_after_equal_six` | ✅ |
+| **BE-EGA-L6-T** | 单测 `test_ega_l6_auto_match.py` | | ✅ |
+| **BE-EGA-L6-D** | 锚点狗粮 fine_craft curate | 见 GUIDE §3b | ✅ |
+
+配置（`EqualGridAdmissionSize6Config`）：
+
+```yaml
+mosaic:
+  equal_grid_admission:
+    size6:
+      soften_atom_valid_invalid_mix: true
+      prefer_pure_landscape_window: true
+      large_mosaic_quota_exempt: true
+      landscape1_flood_reopen_after: 4   # 0 = 关
+```
+
 ### 观测债（SHD · 已收）
 
 | ID | 任务 | 状态 |
@@ -127,10 +155,10 @@ mosaic:
 
 ```powershell
 # 单元
-python -m pytest tests/unit/layout_engine/test_ega_pr_a.py tests/unit/layout_engine/test_ega_pr_b.py tests/unit/layout_engine/test_ega_pr_c.py -q
+python -m pytest tests/unit/layout_engine/test_ega_pr_a.py tests/unit/layout_engine/test_ega_pr_b.py tests/unit/layout_engine/test_ega_pr_c.py tests/unit/layout_engine/test_ega_l6_auto_match.py -q
 
-# 锚点重排（路径以本机 trips 为准）
-python -m travelogue layout trips/demo-0ebda73294 --layout auto --web-layout screens --render --no-validate
+# L6 自动匹配狗粮（必须 fine_craft + curate；勿只靠 layout / quick_share）
+# 见 ega-local-dogfood-GUIDE.md §3b
 
 # MEGC 回归册
 python -m travelogue layout trips/demo-2019 --layout auto --web-layout screens --render --no-validate
@@ -142,6 +170,7 @@ python -m travelogue layout trips/demo-2019 --layout auto --web-layout screens -
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| **v0.2.5** | 2026-08-04 | L6 自动匹配 P0–P3 · atom 软化/回注 · 配额豁免 · L1 洪水重开 · 换气 |
 | **v0.2.4** | 2026-08-04 | 收口：SHD-01/02 观测 · AC-05 A 实册 · 文档对齐 |
 | **v0.2.3** | 2026-08-04 | PR-C：flat bonus / wasted hero extra · `test_ega_pr_c` |
 | **v0.2.2** | 2026-08-04 | PR-B 收口：admit 矩阵 · AC-08 · 狗粮 BLK-06 |

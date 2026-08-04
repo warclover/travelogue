@@ -1,0 +1,24 @@
+# EGA · L6 对照（归档说明 · 密度 knobs 已非必需）
+#
+# 2026-08-04 起：L6 自动匹配（P0–P3）已进仓库默认
+#   mosaic.equal_grid_admission.size6.*
+# 不必再改 density_budget.window_order / max_large_mosaic_per_chapter。
+#
+# 正确狗粮流程（必须 fine_craft；quick_share + 单独 layout 会把册压稀）：
+#   1) intent.mode=fine_craft · 解锁 structure（可用 trip.json.ega-baseline.bak）
+#   2) python -m travelogue curate trips/demo-0ebda73294 --layout web --no-refresh-algorithms
+#   3) python -m travelogue render trips/demo-0ebda73294 --no-validate
+#
+# 锚点实测（默认 size6）：L6=6 · max consecutive L6=1
+# 详见 docs/acceptance-records/ega-local-dogfood-GUIDE.md §3b
+#
+# --- 以下仅作「旧对照」：仅改密度仍不足以出 L6（atom_boundary 硬拒）---
+
+mosaic:
+  density_budget:
+    enabled: true
+    min_slots: 4
+    window_order: [6, 4, 5, 9]
+    large_mosaic_min_slots: 5
+    max_per_template_per_trip: 2
+    max_large_mosaic_per_chapter: 4

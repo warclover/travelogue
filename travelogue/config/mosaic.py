@@ -87,9 +87,17 @@ class EqualGridAdmissionCloneConfig:
 
 @dataclass
 class EqualGridAdmissionSize6Config:
-    """PR-B · keep size=6 after hero-6 precheck fail."""
+    """PR-B/E · size=6 equal-grid funnel + auto-match knobs."""
 
     keep_equal_grid_after_hero_precheck_fail: bool = True
+    # P0 · allow sceneCluster valid/-1 mix on EGA equal-grid (same shotGroup).
+    soften_atom_valid_invalid_mix: bool = True
+    # P1 · pure 6×landscape window → try size=6 before 4/5.
+    prefer_pure_landscape_window: bool = True
+    # P2 · landscape-6 does not consume / is not blocked by large-mosaic chapter quota.
+    large_mosaic_quota_exempt: bool = True
+    # P3 · after N consecutive landscape-1, reopen size=6 MCS (0 = off).
+    landscape1_flood_reopen_after: int = 4
 
 
 @dataclass
@@ -155,6 +163,14 @@ _EGA_SIZE6_KNOWN_KEYS = frozenset(
     {
         "keep_equal_grid_after_hero_precheck_fail",
         "keepEqualGridAfterHeroPrecheckFail",
+        "soften_atom_valid_invalid_mix",
+        "softenAtomValidInvalidMix",
+        "prefer_pure_landscape_window",
+        "preferPureLandscapeWindow",
+        "large_mosaic_quota_exempt",
+        "largeMosaicQuotaExempt",
+        "landscape1_flood_reopen_after",
+        "landscape1FloodReopenAfter",
     }
 )
 _EGA_SCORING_KNOWN_KEYS = frozenset(
@@ -594,7 +610,31 @@ def _ega_size6_from_dict(raw: object) -> EqualGridAdmissionSize6Config:
             "keep_equal_grid_after_hero_precheck_fail",
             "keepEqualGridAfterHeroPrecheckFail",
             defaults.keep_equal_grid_after_hero_precheck_fail,
-        )
+        ),
+        soften_atom_valid_invalid_mix=cfg_bool(
+            raw,
+            "soften_atom_valid_invalid_mix",
+            "softenAtomValidInvalidMix",
+            defaults.soften_atom_valid_invalid_mix,
+        ),
+        prefer_pure_landscape_window=cfg_bool(
+            raw,
+            "prefer_pure_landscape_window",
+            "preferPureLandscapeWindow",
+            defaults.prefer_pure_landscape_window,
+        ),
+        large_mosaic_quota_exempt=cfg_bool(
+            raw,
+            "large_mosaic_quota_exempt",
+            "largeMosaicQuotaExempt",
+            defaults.large_mosaic_quota_exempt,
+        ),
+        landscape1_flood_reopen_after=cfg_int(
+            raw,
+            "landscape1_flood_reopen_after",
+            "landscape1FloodReopenAfter",
+            defaults.landscape1_flood_reopen_after,
+        ),
     )
 
 
@@ -761,16 +801,54 @@ def is_ega_hero70_family(pattern_id: str) -> bool:
     return pid == "screen-mosaic-4-hero-70-sidebar" or "hero-70" in pid
 
 
+def _ega_size6(cfg: MosaicConfig | None) -> EqualGridAdmissionSize6Config | None:
+    if not effective_equal_grid_admission_enabled(cfg):
+        return None
+    ega = getattr(cfg, "equal_grid_admission", None) if cfg is not None else None
+    size6 = getattr(ega, "size6", None) if ega is not None else None
+    return size6 if isinstance(size6, EqualGridAdmissionSize6Config) else None
+
+
 def effective_ega_keep_equal_six(cfg: MosaicConfig | None) -> bool:
     """PR-B · keep evaluating landscape-6 after hero-6 precheck fail."""
-    if not effective_equal_grid_admission_enabled(cfg):
+    size6 = _ega_size6(cfg)
+    if size6 is None and not effective_equal_grid_admission_enabled(cfg):
         return False
-    ega = getattr(cfg, "equal_grid_admission", None)
-    size6 = getattr(ega, "size6", None) if ega is not None else None
-    return bool(
-        size6 is None
-        or getattr(size6, "keep_equal_grid_after_hero_precheck_fail", True)
-    )
+    if size6 is None:
+        return True
+    return bool(getattr(size6, "keep_equal_grid_after_hero_precheck_fail", True))
+
+
+def effective_ega_soften_atom_valid_invalid_mix(cfg: MosaicConfig | None) -> bool:
+    """P0 · EGA equal-grid may pass scene_cluster valid/-1 mix (same shotGroup)."""
+    size6 = _ega_size6(cfg)
+    if size6 is None:
+        return False
+    return bool(getattr(size6, "soften_atom_valid_invalid_mix", True))
+
+
+def effective_ega_prefer_pure_landscape_six(cfg: MosaicConfig | None) -> bool:
+    """P1 · pure 6×L window prefers size=6 MCS order."""
+    size6 = _ega_size6(cfg)
+    if size6 is None:
+        return False
+    return bool(getattr(size6, "prefer_pure_landscape_window", True))
+
+
+def effective_ega_l6_large_quota_exempt(cfg: MosaicConfig | None) -> bool:
+    """P2 · landscape-6 exempt from large-mosaic chapter quota."""
+    size6 = _ega_size6(cfg)
+    if size6 is None:
+        return False
+    return bool(getattr(size6, "large_mosaic_quota_exempt", True))
+
+
+def effective_ega_landscape1_flood_reopen_after(cfg: MosaicConfig | None) -> int:
+    """P3 · consecutive landscape-1 count before forcing size=6 retry (0=off)."""
+    size6 = _ega_size6(cfg)
+    if size6 is None:
+        return 0
+    return max(0, int(getattr(size6, "landscape1_flood_reopen_after", 0) or 0))
 
 
 def _str_tuple(raw: object) -> tuple[str, ...]:

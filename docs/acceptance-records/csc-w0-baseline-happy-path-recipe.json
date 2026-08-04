@@ -16,8 +16,8 @@
     "web_layout_engine_config": "screens"
   },
   "counts": {
-    "bool_fields": 184,
-    "default_true": 115,
+    "bool_fields": 187,
+    "default_true": 118,
     "default_false": 69,
     "tristate_fields": 5
   },
@@ -137,6 +137,9 @@
     "mosaic.equal_grid_admission.enabled": true,
     "mosaic.equal_grid_admission.megc_legacy_demote.soften_penalize_emit": false,
     "mosaic.equal_grid_admission.size6.keep_equal_grid_after_hero_precheck_fail": true,
+    "mosaic.equal_grid_admission.size6.large_mosaic_quota_exempt": true,
+    "mosaic.equal_grid_admission.size6.prefer_pure_landscape_window": true,
+    "mosaic.equal_grid_admission.size6.soften_atom_valid_invalid_mix": true,
     "mosaic.equal_grid_contract.enabled": true,
     "mosaic.equal_grid_contract.fix_stage_css": true,
     "mosaic.equal_grid_contract.page_letterbox": false,

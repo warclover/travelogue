@@ -456,6 +456,124 @@ def _prioritize_exact_window_fit(sizes: list[int], remaining: int) -> list[int]:
     return sizes
 
 
+def _window_all_landscape(window: list[str], aspects) -> bool:
+    from travelogue.layout_engine.planner.screen_planner import _is_landscape_id
+
+    return bool(window) and all(_is_landscape_id(x, aspects) for x in window)
+
+
+def _ega_reinject_size6_despite_atom_cap(
+    sizes: list[int],
+    *,
+    base_order: list[int],
+    six_window: list[str],
+    aspects,
+    assets_map: dict,
+    atom_policy,
+    cfg: MosaicConfig,
+    layout_state=None,
+) -> list[int]:
+    """P0 companion · atom_cap may drop 6 before candidate soften sees the window."""
+    from travelogue.config.mosaic import effective_ega_soften_atom_valid_invalid_mix
+    from travelogue.layout_engine.mosaic.candidates import _ega_atom_same_shot_group
+    from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+    from travelogue.layout_engine.planner.scene_atoms import window_violates_atom
+
+    if 6 in sizes or 6 not in base_order:
+        return sizes
+    if not effective_ega_soften_atom_valid_invalid_mix(cfg):
+        return sizes
+    if (
+        layout_state is not None
+        and str(getattr(layout_state, "last_pattern_id", "") or "")
+        == PATTERN_LANDSCAPE_6
+    ):
+        return sizes
+    if len(six_window) != 6 or not _window_all_landscape(six_window, aspects):
+        return sizes
+    if not _ega_atom_same_shot_group(six_window, assets_map):
+        return sizes
+    reason = window_violates_atom(list(six_window), assets_map, atom_policy)
+    if reason not in (None, "scene_cluster_valid_invalid_mix"):
+        return sizes
+    return [6] + list(sizes)
+
+
+def _ega_defer_size6_after_equal_six(
+    sizes: list[int],
+    *,
+    layout_state=None,
+) -> list[int]:
+    """After an L6 win, drop size=6 for one step so 4/1 can breathe."""
+    from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+
+    if layout_state is None:
+        return sizes
+    if str(getattr(layout_state, "last_pattern_id", "") or "") != PATTERN_LANDSCAPE_6:
+        return sizes
+    return [s for s in sizes if s != 6]
+
+
+def _prioritize_equal_six_pure_landscape(
+    sizes: list[int],
+    window: list[str],
+    aspects,
+    *,
+    cfg: MosaicConfig,
+    layout_state=None,
+) -> list[int]:
+    """P1 · pure 6×landscape → try size=6 before 4/5 (not back-to-back L6)."""
+    from travelogue.config.mosaic import effective_ega_prefer_pure_landscape_six
+    from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
+
+    if not effective_ega_prefer_pure_landscape_six(cfg):
+        return sizes
+    if 6 not in sizes or len(window) != 6:
+        return sizes
+    if not _window_all_landscape(window, aspects):
+        return sizes
+    # Breathe: after an equal-six, let 4/1 compete before another 6.
+    if (
+        layout_state is not None
+        and str(getattr(layout_state, "last_pattern_id", "") or "")
+        == PATTERN_LANDSCAPE_6
+    ):
+        return sizes
+    return [6] + [s for s in sizes if s != 6]
+
+
+def _ega_size6_quota_bypass(
+    size: int,
+    window: list[str],
+    aspects,
+    *,
+    cfg: MosaicConfig,
+) -> bool:
+    """P2 · size=6 pure-L equal-grid bypasses large/dense chapter large-cap."""
+    from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
+
+    if size != 6 or not effective_ega_l6_large_quota_exempt(cfg):
+        return False
+    return _window_all_landscape(window, aspects)
+
+
+def _ega_landscape1_flood_reopen(
+    ctx: "ChapterPlanContext",
+    *,
+    cfg: MosaicConfig,
+    remaining: int,
+) -> bool:
+    """P3 · consecutive landscape-1 streak → reopen size=6."""
+    from travelogue.config.mosaic import effective_ega_landscape1_flood_reopen_after
+
+    after = effective_ega_landscape1_flood_reopen_after(cfg)
+    if after <= 0 or remaining < 6 or ctx.layout_state is None:
+        return False
+    if str(ctx.layout_state.last_pattern_id or "") != "screen-landscape-1":
+        return False
+    return int(ctx.layout_state.pattern_streak or 0) >= after
+
+
 def _prioritize_six_hero_opportunity(sizes: list[int]) -> list[int]:
     """SUP-04 · admit six → try 6 before 5/4 (keep other sizes after)."""
     preferred = [s for s in (6, 5, 4) if s in sizes]
@@ -753,6 +871,51 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         if reorder_reason is None and sizes != before_sp:
             reorder_reason = "single_portrait_tail"
 
+    # EGA P0/P1/P3 · reinject size=6 after atom_cap; prefer pure 6L; flood reopen.
+    if remaining >= 6:
+        six_window = ctx.ids[start : start + 6]
+        before_ega = list(sizes)
+        sizes = _ega_reinject_size6_despite_atom_cap(
+            sizes,
+            base_order=base_order,
+            six_window=six_window,
+            aspects=ctx.aspects,
+            assets_map=ctx.assets_map,
+            atom_policy=atom_policy,
+            cfg=cfg,
+            layout_state=ctx.layout_state,
+        )
+        if sizes != before_ega:
+            ega_equal_six_kept = True
+            if reorder_reason is None:
+                reorder_reason = "ega_atom_soften_reinject_six"
+        before_ega = list(sizes)
+        if _ega_landscape1_flood_reopen(ctx, cfg=cfg, remaining=remaining):
+            if 6 not in sizes and 6 in base_order:
+                sizes = [6] + list(sizes)
+            else:
+                sizes = [6] + [s for s in sizes if s != 6]
+            ega_equal_six_kept = True
+            if reorder_reason is None and sizes != before_ega:
+                reorder_reason = "ega_landscape1_flood_reopen"
+        else:
+            sizes = _prioritize_equal_six_pure_landscape(
+                sizes,
+                six_window,
+                ctx.aspects,
+                cfg=cfg,
+                layout_state=ctx.layout_state,
+            )
+            if reorder_reason is None and sizes != before_ega:
+                reorder_reason = "ega_pure_landscape_six"
+        before_breath = list(sizes)
+        if not _ega_landscape1_flood_reopen(ctx, cfg=cfg, remaining=remaining):
+            sizes = _ega_defer_size6_after_equal_six(
+                sizes, layout_state=ctx.layout_state
+            )
+            if reorder_reason is None and sizes != before_breath:
+                reorder_reason = "ega_l6_breathe"
+
     funnel = {
         "base_window_order": base_order,
         "effective_window_order": list(sizes),
@@ -775,20 +938,23 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         if size > seg_cap:
             continue
+        window = ctx.ids[start : start + size]
+        ega_l6_bypass = _ega_size6_quota_bypass(size, window, ctx.aspects, cfg=cfg)
         if (
             cfg.density_budget.enabled
             and ctx.layout_state is not None
             and size >= min_dense
+            and not ega_l6_bypass
             and not ctx.layout_state.can_use_dense_collage_window(size)
         ):
             continue
         if (
             ctx.layout_state is not None
             and size >= ctx.layout_state.large_mosaic_min_slots
+            and not ega_l6_bypass
             and not ctx.layout_state.can_use_large_mosaic_window(size)
         ):
             continue
-        window = ctx.ids[start : start + size]
         # Pair-first portrait priority: a run of consecutive standard portraits
         # must NOT collapse into a pure portrait grid (portrait-3/4/6/9). Defer
         # such windows to the portrait pending tiler, which prefers two-column
