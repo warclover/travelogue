@@ -147,7 +147,7 @@ export function maybeShowRefineStarTip(showToast) {
 }
 
 /**
- * 字段迁出后首次打开「这本」的一次性 tip（SF-01 / AC-REFUX-16）。
+ * 字段迁出后首次打开「画册」的一次性 tip（SF-01 / AC-REFUX-16）。
  * @param {(msg: string, opts?: object) => void} [showToast]
  * @param {(event: string, meta?: object) => void} [track]
  * @returns {boolean} 是否本次展示
@@ -160,7 +160,7 @@ export function maybeShowBookTabMigrateTip(showToast, track) {
     /* ignore */
   }
   if (typeof showToast === "function") {
-    showToast("章节锚点与意图已移到「这页」", { duration: 4200 });
+    showToast("章节锚点与意图已移到「页面」", { duration: 4200 });
   }
   if (typeof track === "function") {
     track("book_tab_migrate_tip_show", { once: true });

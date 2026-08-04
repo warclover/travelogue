@@ -698,7 +698,7 @@ export function readCoverOpeningStyleFromDom() {
     return section ? section.getAttribute("data-cover-opening") || _DEFAULT_COVER_STYLE : _DEFAULT_COVER_STYLE;
   }
 
-/** LVP M2 · 成册风格两卡（精修 · 这本） */
+/** LVP M2 · 成册风格两卡（精修 · 画册） */
 var _LVP_DEFAULT_OPTIONS = [
   {
     id: "magazine_default",
@@ -939,7 +939,7 @@ export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {
   } catch (_e) {
     return;
   }
-  showToolbarToast("可在精修 · 这本选择成册风格（推荐或实验）", {
+  showToolbarToast("可在精修 · 画册选择成册风格（推荐或实验）", {
     duration: 5200,
   });
   trackStudioEvent("layout_vibe_import_hint", { tripId: tripId });

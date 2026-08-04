@@ -321,7 +321,7 @@ def test_v3_task_dock_exports_g1_and_pending() -> None:
 
 def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
     sheet = SHEET_JS.read_text(encoding="utf-8")
-    for label in ("这页", "封面", "这本"):
+    for label in ("封面", "页面", "画册"):
         assert label in sheet
     assert 'label: "导出"' not in sheet
     assert "导出与更多" not in sheet
@@ -332,7 +332,7 @@ def test_v3_sheet_has_three_zone_tabs_and_leave_confirm() -> None:
 
 
 def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
-    """UX-BE · 三区（这页|封面|这本）+ 封面区内分段 + 空态深链（源码门禁）。"""
+    """UX-BE · 三区（封面|页面|画册）+ 封面区内分段 + 空态深链（源码门禁）。"""
     sheet = SHEET_JS.read_text(encoding="utf-8")
     bookends = (STUDIO / "preview-toolbar" / "bookends.js").read_text(encoding="utf-8")
     css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
@@ -534,7 +534,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             tabs = page.locator(".preview-sheet__tab")
             assert tabs.count() == 3
             tab_labels = [tabs.nth(i).inner_text().strip() for i in range(3)]
-            assert tab_labels == ["这页", "封面", "这本"]
+            assert tab_labels == ["封面", "页面", "画册"]
 
             page.locator('.preview-sheet__tab[data-sheet-tab="cover"]').click()
             page.wait_for_selector("button[data-cover-side]", timeout=5_000)
@@ -861,16 +861,16 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
         "    padding: 0;\n"
         "    width: 40px;"
     ) in dock_css or "width: 40px;\n    min-width: 40px;\n    max-width: 40px;" in dock_css
-    assert 'label: "这页"' in sheet
     assert 'label: "封面"' in sheet
-    assert 'label: "这本"' in sheet
+    assert 'label: "页面"' in sheet
+    assert 'label: "画册"' in sheet
     assert 'label: "导出"' not in sheet
     assert 'label: "导出与更多"' not in sheet
     assert "封底在「封面」里换" in sheet
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
-    assert "精修 · 这本" in shell
+    assert "精修 · 画册" in shell
     assert "可在「排版」中更换" not in shell
     assert "preview-dock-stat" in shell or "准备高清 ·" in shell
 

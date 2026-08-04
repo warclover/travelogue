@@ -170,7 +170,7 @@
 
 | 触点 | 路径 | 说明 |
 |------|------|------|
-| 精修 Sheet「这本」 | `templates/studio/preview-toolbar/features.js` | 封面版式 section 同级挂两卡 |
+| 精修 Sheet「画册」 | `templates/studio/preview-toolbar/features.js` | 封面版式 section 同级挂两卡 |
 | 应用版面 | `.preview-sheet__apply-layout` 等（`core.js`） | 复用，不新造进度面 |
 | Bookends / CAD | `bookends.js` | 不并入（O-02） |
 | LSE admin | `/lse-flags-admin` | 正交 |

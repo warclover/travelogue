@@ -110,7 +110,7 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
         source: (data.coverStyleExplain && data.coverStyleExplain.source) || "joint-v6",
       });
       showToolbarToast(
-        "已为这本画册选了「" + label + "」，并配了更合适的封面图。可在「精修 · 这本」中更换。",
+        "已为这本画册选了「" + label + "」，并配了更合适的封面图。可在「精修 · 画册」中更换。",
         { duration: 4200 }
       );
     });

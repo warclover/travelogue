@@ -1008,7 +1008,7 @@ export function initPreviewDrawers(root, tripId) {
       } else {
         g1.className = "preview-drawer__g1 preview-drawer__g1--info";
         g1.textContent =
-          "章节已按行程排好。调整请用工具栏「分章」，或在「精修 · 这本」深入编辑。";
+          "章节已按行程排好。调整请用工具栏「分章」，或在「精修 · 画册」深入编辑。";
         if (g1Actions) {
           g1Actions.hidden = false;
           var regenOnly = targetBody.querySelector(".preview-drawer__g1-regenerate");

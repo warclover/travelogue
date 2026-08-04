@@ -32,7 +32,7 @@
 | 区域 | 路径 | 动作 |
 |------|------|------|
 | API | `POST …/layout-vibe` · `layout_vibe_handlers.py` | 写 vibe → layout → render（job）；实验无确认 400 |
-| UI | `features.js` `mountLayoutVibeControls` · Sheet「这本」区 | 两卡 + `toolbarConfirm` |
+| UI | `features.js` `mountLayoutVibeControls` · Sheet「画册」区 | 两卡 + `toolbarConfirm` |
 | 弱提示 | `maybeShowLayoutVibeImportHint` · FirstSuccess 打 pending | **仅导入后**打开预览提示一次；Sheet 可「不再提示」 |
 | Entry | `studio_entry` `layoutVibe` / `layoutVibeOptions` | 预览入口回读 |
 | 等待面 | `applyVibe` → Task Dock `updateExporting` | 复用精选重排等待面 |

@@ -1,8 +1,9 @@
 // @ts-nocheck
 /**
- * Preview toolbar v3 · unified refine sheet（这页 | 封面 | 这本）.
+ * Preview toolbar v3 · unified refine sheet（封面 | 页面 | 画册）.
  * Export decisions live in Dock ▾（copyDisplay / platform / scale）.
  * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
+ * Default open tab stays contextual（封面/封底 → 封面；正文 → 页面）.
  */
 "use strict";
 
@@ -13,9 +14,9 @@ import { DARK_COPY } from "./js/ai-surface-dark-copy.js";
 import { showToolbarToast, tripApiBase, tripIdFromPath } from "./preview-toolbar/shell.js";
 
 var TAB_MODES = [
-  { id: "page", label: "这页" },
   { id: "cover", label: "封面" },
-  { id: "book", label: "这本" },
+  { id: "page", label: "页面" },
+  { id: "book", label: "画册" },
 ];
 
 var TAB_ALIASES = {
