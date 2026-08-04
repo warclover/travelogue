@@ -122,12 +122,13 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/megc-default-on-decision-2026-08-03.md](./acceptance-records/megc-default-on-decision-2026-08-03.md) | **active** | MEGC **默认 on** 决策 · 实册可接受 · M3 仍延期 |
 | [acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md](./acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md) | **active** | MEGC 七席评审纪要**模板** |
 | [config-megc-dogfood.example.yaml](./config-megc-dogfood.example.yaml) | **active** | MEGC 本机调参 / 临时关闭样例 |
-| [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) | **active** | **LVP** 一句话选风格 **v0.2.0** · Conditional Go · M1/M2 代码 ✅ · AC-06 狗粮待人工 · M3 延期 |
-| [IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md](./IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md) | **active** | LVP 实施 · M1/M2 触点 |
-| [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) | **active** | LVP 验收 · AC-01～05/07/08 ✅ · AC-06 待狗粮 |
-| [acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) | **active** | LVP 七席联评 · Conditional Go |
+| [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) | **active** | **LVP** 一句话选风格 **v0.2.0** · M0–M2 结案 · AC-06 三册差异小 · M3 延期 |
+| [IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md](./IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md) | **active** | LVP 实施 · M1/M2 触点 · M2 结案 2026-08-04 |
+| [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) | **active** | LVP 验收 · AC-01～08 ✅ · BLK-03/04 关闭 |
+| [acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) | **active** | LVP 七席联评 · Conditional Go · BLK-03/04 已关 |
 | [acceptance-records/lvp-dogfood-GUIDE.md](./acceptance-records/lvp-dogfood-GUIDE.md) | **active** | LVP 三册狗粮 GUIDE（AC-06 / BLK-04） |
-| [acceptance-records/lvp-dogfood-2026-08-03-DRAFT.md](./acceptance-records/lvp-dogfood-2026-08-03-DRAFT.md) | **active** | LVP 狗粮记录草稿（待填） |
+| [acceptance-records/lvp-dogfood-2026-08-03-DRAFT.md](./acceptance-records/lvp-dogfood-2026-08-03-DRAFT.md) | **active** | LVP 狗粮记录 · **结案 2026-08-04**（文件名保留 DRAFT） |
+| [acceptance-records/lvp-dogfood-metrics-2026-08-04.json](./acceptance-records/lvp-dogfood-metrics-2026-08-04.json) | **active** | LVP 三册推荐/实验页数与开关指标 |
 | [wireframes/layout-vibe-picker-f1-wireframe.html](./wireframes/layout-vibe-picker-f1-wireframe.html) | **active** | LVP SHD-01 · 两卡 + 确认模态线框 |
 | [acceptance-records/msa-contain-visual-contract-BLK06.md](./acceptance-records/msa-contain-visual-contract-BLK06.md) | **active** | MSA BLK-06 contain 杂志纸色视觉合同 |
 | [acceptance-records/msa-local-dogfood-GUIDE.md](./acceptance-records/msa-local-dogfood-GUIDE.md) | **active** | MSA 本机狗粮 GUIDE |

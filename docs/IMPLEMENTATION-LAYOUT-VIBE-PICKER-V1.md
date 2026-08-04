@@ -5,8 +5,8 @@
 | **PRD** | [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) **v0.2.0** |
 | **验收** | [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) |
 | **评审** | [lvp-layout-vibe-picker-v1-review-2026-08-03.md](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) |
-| **状态** | **M0 ✅ · M1 ✅ · M2 代码 ✅（AC-06/BLK-03 签字待） · M3 延期** |
-| **更新日期** | 2026-08-03 |
+| **状态** | **M0 ✅ · M1 ✅ · M2 ✅（AC-06/BLK-03/04 结案 2026-08-04）· M3 延期** |
+| **更新日期** | 2026-08-04 |
 
 ## 列车
 
@@ -14,7 +14,7 @@
 |--------|------|------|
 | **M0** | 七席 · PRD v0.2 · ACCEPTANCE/IMPL 拆文 | ✅ |
 | **M1** | vibe → mosaic 剖面解析 · `trip.studio.layoutVibe` · 单测 AC-01/02/03/07/08 | ✅ |
-| **M2** | 精修 Sheet 两卡 UI · 实验确认 · 三册狗粮 | 🔶 UI/确认 ✅ · 狗粮 ☐ |
+| **M2** | 精修 Sheet 两卡 UI · 实验确认 · 三册狗粮 | ✅ UI/确认/狗粮（三册差异小） |
 | **M3** | 与 CAD 同屏编组（可选） | ⏸ 延期 |
 
 ## M1 触点（已落地）

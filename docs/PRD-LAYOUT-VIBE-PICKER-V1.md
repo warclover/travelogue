@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.0** |
-| **状态** | **Conditional Go · 可 Kickoff M0 / M1**（[七席](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) · M2 待 BLK · M3 延期） |
+| **状态** | **M0–M2 结案**（[七席](./acceptance-records/lvp-layout-vibe-picker-v1-review-2026-08-03.md) · AC-06 三册差异小 · M3 延期） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「一句话选风格」— **LVP**（Layout Vibe Picker） |
 | **触发来源** | [INSIGHT-FLIPIN…](./INSIGHT-FLIPIN-COMPETITIVE-ANALYSIS-2026-08-03.md) · [战略优先级复盘](./INSIGHT-STRATEGIC-PRIORITY-REVIEW-2026-08-03.md) §五 #1 · 2026-08-03 算法收口后需要用户侧出口 |

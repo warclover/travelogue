@@ -1,0 +1,329 @@
+[
+  {
+    "id": "demo-d6697c8dca",
+    "name": "昙华林",
+    "mag": {
+      "screens": 23,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1-portrait-1",
+          6
+        ],
+        [
+          "screen-portrait-3",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          4
+        ],
+        [
+          "screen-portrait-1-landscape-1",
+          3
+        ],
+        [
+          "screen-landscape-1",
+          2
+        ],
+        [
+          "screen-mosaic-4-hero-70-sidebar",
+          1
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "fit": {
+      "screens": 23,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1-portrait-1",
+          6
+        ],
+        [
+          "screen-portrait-3",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          4
+        ],
+        [
+          "screen-portrait-1-landscape-1",
+          3
+        ],
+        [
+          "screen-landscape-1",
+          2
+        ],
+        [
+          "screen-mosaic-4-hero-70-sidebar",
+          1
+        ]
+      ],
+      "vibe": "fit_photo_experimental",
+      "sa": true
+    },
+    "back": {
+      "screens": 23,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1-portrait-1",
+          6
+        ],
+        [
+          "screen-portrait-3",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          4
+        ],
+        [
+          "screen-portrait-1-landscape-1",
+          3
+        ],
+        [
+          "screen-landscape-1",
+          2
+        ],
+        [
+          "screen-mosaic-4-hero-70-sidebar",
+          1
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "delta_screens": 0,
+    "rollback_screens_match_mag": true,
+    "rollback_vibe_ok": true
+  },
+  {
+    "id": "demo-2025",
+    "name": "东澳岛",
+    "mag": {
+      "screens": 32,
+      "weighted": 0,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1",
+          13
+        ],
+        [
+          "screen-landscape-2",
+          4
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-3",
+          2
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "fit": {
+      "screens": 32,
+      "weighted": 0,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1",
+          13
+        ],
+        [
+          "screen-landscape-2",
+          4
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-3",
+          2
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ]
+      ],
+      "vibe": "fit_photo_experimental",
+      "sa": true
+    },
+    "back": {
+      "screens": 32,
+      "weighted": 0,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-landscape-1",
+          13
+        ],
+        [
+          "screen-landscape-2",
+          4
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-1",
+          3
+        ],
+        [
+          "screen-portrait-3",
+          2
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "delta_screens": 0,
+    "rollback_screens_match_mag": true,
+    "rollback_vibe_ok": true
+  },
+  {
+    "id": "demo-49cbe46479",
+    "name": "斯里兰卡",
+    "mag": {
+      "screens": 28,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-portrait-3",
+          8
+        ],
+        [
+          "screen-landscape-1",
+          6
+        ],
+        [
+          "screen-portrait-1",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          2
+        ],
+        [
+          "screen-landscape-3",
+          1
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "fit": {
+      "screens": 28,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-portrait-3",
+          8
+        ],
+        [
+          "screen-landscape-1",
+          6
+        ],
+        [
+          "screen-portrait-1",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          2
+        ],
+        [
+          "screen-landscape-3",
+          1
+        ]
+      ],
+      "vibe": "fit_photo_experimental",
+      "sa": true
+    },
+    "back": {
+      "screens": 28,
+      "weighted": 1,
+      "msa_slotish": 0,
+      "msa_logish": 0,
+      "top": [
+        [
+          "screen-portrait-3",
+          8
+        ],
+        [
+          "screen-landscape-1",
+          6
+        ],
+        [
+          "screen-portrait-1",
+          4
+        ],
+        [
+          "screen-portrait-2",
+          2
+        ],
+        [
+          "screen-landscape-1-portrait-1",
+          2
+        ],
+        [
+          "screen-landscape-3",
+          1
+        ]
+      ],
+      "vibe": "magazine_default",
+      "sa": false
+    },
+    "delta_screens": 0,
+    "rollback_screens_match_mag": true,
+    "rollback_vibe_ok": true
+  }
+]
