@@ -82,6 +82,7 @@ python -m travelogue render trips/demo-0ebda73294 --no-validate
 | L4 / hero-70 | 0 / 0（本跑） |
 | screens | 83 |
 
+**产品锁（同日）**：**Go · 默认 on** — 见 [ega-l6-auto-match-dogfood-2026-08-04.md](./ega-l6-auto-match-dogfood-2026-08-04.md)。  
 回滚父开关：`equal_grid_admission.enabled: false`；或逐项关 size6 子开关。
 
 ---

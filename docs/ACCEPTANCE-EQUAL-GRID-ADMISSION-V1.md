@@ -5,9 +5,10 @@
 | **对应 PRD** | [PRD-EQUAL-GRID-ADMISSION-V1.md](./PRD-EQUAL-GRID-ADMISSION-V1.md) **v0.2.0** |
 | **评审** | [ega-equal-grid-admission-v1-review-2026-08-04.md](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md) · **Conditional Go** |
 | **实施** | [IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md](./IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md) |
-| **狗粮** | [ega-local-dogfood-GUIDE.md](./acceptance-records/ega-local-dogfood-GUIDE.md) |
+| **狗粮** | [ega-local-dogfood-GUIDE.md](./acceptance-records/ega-local-dogfood-GUIDE.md) · [L6 产品锁](./acceptance-records/ega-l6-auto-match-dogfood-2026-08-04.md) |
 | **DOC-STATUS** | **active** |
 | **更新日期** | 2026-08-04 |
+| **L6 自动匹配** | **Go · 默认 on**（产品确认 2026-08-04） |
 
 > **用法**：闸语义以单测为准；成册以锚点重排 + mosaic log 为准。  
 > **正交**：EGA ⊥ MEGC 峰闸（M1/M2 不改 `allow_peaks`）；EGA ⊥ MTSO hero-6 资格公式。  
@@ -69,6 +70,20 @@ python -m pytest tests/unit/layout_engine/test_ega_pr_a.py -q
 
 ```powershell
 python -m pytest tests/unit/layout_engine/test_ega_pr_b.py tests/unit/layout_engine/test_ega_pr_c.py -q
+```
+
+---
+
+## 3b. L6 自动匹配（P0–P3）· 产品锁默认 on
+
+| ID | 期望 | 结果 |
+|----|------|------|
+| **AC-EGA-L6-01** | 仓库默认：`soften_atom_valid_invalid_mix` / `prefer_pure_landscape_window` / `large_mosaic_quota_exempt` = true；`landscape1_flood_reopen_after` = 4 | ✅ 配置合同 · CSC recipe |
+| **AC-EGA-L6-02** | 单测：atom 同 shotGroup 软化 · 纯 6L 优先 · 配额豁免 · L1 洪水重开 · L6 后换气 | ✅ `test_ega_l6_auto_match` |
+| **AC-EGA-L6-03** | 锚点狗粮：成册出现 L6 且观感可接受；产品确认 **Go · 默认 on** | ✅ [ega-l6-auto-match-dogfood-2026-08-04](./acceptance-records/ega-l6-auto-match-dogfood-2026-08-04.md) |
+
+```powershell
+python -m pytest tests/unit/layout_engine/test_ega_l6_auto_match.py -q
 ```
 
 ---

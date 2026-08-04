@@ -87,7 +87,11 @@ class EqualGridAdmissionCloneConfig:
 
 @dataclass
 class EqualGridAdmissionSize6Config:
-    """PR-B/E · size=6 equal-grid funnel + auto-match knobs."""
+    """PR-B/E · size=6 equal-grid funnel + auto-match knobs.
+
+    Product lock 2026-08-04: L6 auto-match defaults stay **on**
+    (see docs/acceptance-records/ega-l6-auto-match-dogfood-2026-08-04.md).
+    """
 
     keep_equal_grid_after_hero_precheck_fail: bool = True
     # P0 · allow sceneCluster valid/-1 mix on EGA equal-grid (same shotGroup).

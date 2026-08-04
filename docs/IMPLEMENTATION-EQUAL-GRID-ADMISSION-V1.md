@@ -103,10 +103,10 @@ M0 文档/评审
 
 ---
 
-## 5b. L6 自动匹配（P0–P3 · 已合）
+## 5b. L6 自动匹配（P0–P3 · 已合 · **产品锁默认 on**）
 
 > 根因：`scene_cluster_valid_invalid_mix`（`-1`/`0` 混窗）+ `atom_cap` 裁掉 size=6 + 章 large-mosaic 配额 + 后段 landscape-1 洪水。  
-> **不**依赖改 `density_budget.window_order`；默认 size6 子开关多为 true。
+> **不**依赖改 `density_budget.window_order`；size6 子开关仓库默认 true（产品 2026-08-04 确认保留）。
 
 | ID | 任务 | 挂点 | 状态 |
 |----|------|------|------|
@@ -170,6 +170,7 @@ python -m travelogue layout trips/demo-2019 --layout auto --web-layout screens -
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| **v0.2.6** | 2026-08-04 | L6 自动匹配产品锁 **Go · 默认 on**（AC-EGA-L6） |
 | **v0.2.5** | 2026-08-04 | L6 自动匹配 P0–P3 · atom 软化/回注 · 配额豁免 · L1 洪水重开 · 换气 |
 | **v0.2.4** | 2026-08-04 | 收口：SHD-01/02 观测 · AC-05 A 实册 · 文档对齐 |
 | **v0.2.3** | 2026-08-04 | PR-C：flat bonus / wasted hero extra · `test_ega_pr_c` |

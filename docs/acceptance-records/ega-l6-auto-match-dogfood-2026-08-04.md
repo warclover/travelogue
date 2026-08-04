@@ -17,7 +17,12 @@
 | screens（总） | 83 |
 | max consecutive L6 | **1** |
 
-## 结论
+## 结论 · 产品锁（2026-08-04）
 
-P0–P3 生效：成册出现多屏 L6，且 L6 后换气避免连发。  
-回滚：`mosaic.equal_grid_admission.enabled: false`。
+| 决策 | 内容 |
+|------|------|
+| **判定** | **Go · 保留** |
+| **默认** | **on**（`size6` 子开关保持仓库默认 true；`landscape1_flood_reopen_after=4`） |
+| **依据** | 锚点成册观感更合理；多屏 L6 + 换气后无连发；产品确认可默认打开 |
+| **回滚** | `mosaic.equal_grid_admission.enabled: false`（或逐项关 size6 子开关） |
+| **不跟进** | EGA M3（3:2 soft demote）仍延期，与本锁无关 |

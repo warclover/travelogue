@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.0** |
-| **状态** | **Conditional Go · 可 Kickoff M0 / M1（PR-A）**（[七席](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md) · M2 待 BLK · M3 延期） |
+| **状态** | **Conditional Go**（[七席](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md)）· M1/M2 已合 · **L6 自动匹配 Go·默认 on** · M3 延期 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「等权宫准入优化 V1」— **EGA**（Equal-Grid Admission） |
 | **触发来源** | 2026-08-04 实册调查 · `demo-0ebda73294`（初中毕业照）：横图充足却 **0×** `screen-landscape-4` / `screen-landscape-6`；四横窗被 SSG/clone 硬拒后改走 `screen-mosaic-4-hero-70-sidebar`；六图窗 `six_hero_precheck` 失败后整窗放弃 |
