@@ -14,7 +14,7 @@ from travelogue.layout_engine.mosaic.candidates import (
     generate_window_candidates_with_rejections,
 )
 from travelogue.layout_engine.mosaic.diversity import apply_candidate_diversity
-from travelogue.layout_engine.mosaic.log import MosaicWindowLog
+from travelogue.layout_engine.mosaic.log import MosaicWindowLog, stamp_ega_observability
 from travelogue.layout_engine.mosaic.log_enrich import enrich_mosaic_log_from_screen
 from travelogue.layout_engine.mosaic.lte_adapter import (
     mcs_diversity_config,
@@ -109,6 +109,7 @@ def _score_window_candidates_with_rejections(
     chapter_screen_count: int = 12,
     trip_id: str | None = None,
     ssg_policy: Any | None = None,
+    allow_six_hero: bool | None = None,
 ) -> tuple[
     list[tuple[ScreenCandidate, float, list[str], dict[str, float]]],
     list[dict],
@@ -134,6 +135,7 @@ def _score_window_candidates_with_rejections(
         trip_photo_total=trip_photo_total,
         trip_id=trip_id,
         ssg_policy=ssg_policy,
+        allow_six_hero=allow_six_hero,
     )
     candidates = bundle.candidates
     rejected = list(bundle.rejected)
@@ -309,6 +311,7 @@ def pick_best_window(
         atom_cap=funnel.get("atom_cap"),
         structurally_qualified_six=bool(funnel.get("structurally_qualified_six", False)),
         admit_six_hero=bool(funnel.get("admit_six_hero", False)),
+        ega_equal_six_kept=bool(funnel.get("ega_equal_six_kept", False)),
         six_hero_opportunity_state=str(
             funnel.get("six_hero_opportunity_state") or opp_state
         ),
@@ -317,11 +320,21 @@ def pick_best_window(
         six_hero_outcome=funnel.get("six_hero_outcome"),
         quota_snapshot=funnel.get("quota_snapshot") or _mtso_quota_snapshot(layout_state),
     )
+    stamp_ega_observability(log, cfg)
     if len(asset_ids) != window_size:
         log.fallback_used = True
         log.fallback_reason = "window_size_mismatch"
         log.planner_path = "legacy"
         return WindowPickResult(screen=None, log=log, used_legacy=True)
+
+    # EGA PR-B · only gate six-hero when funnel kept equal-6 after precheck fail
+    # (do not strip hero-6 when six-opportunity is off / not evaluated).
+    allow_six_hero_flag: bool | None = None
+    if window_size == 6:
+        if funnel.get("ega_equal_six_kept"):
+            allow_six_hero_flag = False
+        elif funnel.get("admit_six_hero"):
+            allow_six_hero_flag = True
 
     scored, rejected, usage_hits, contract_shadow = _score_window_candidates_with_rejections(
         asset_ids,
@@ -337,6 +350,7 @@ def pick_best_window(
         chapter_screen_count=chapter_screen_count,
         trip_id=trip_id,
         ssg_policy=ssg_policy,
+        allow_six_hero=allow_six_hero_flag,
     )
     log.rejected_templates = rejected
     log.usage_rule_rejects = _usage_rule_log_entries(rejected)

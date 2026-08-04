@@ -81,6 +81,7 @@ def window_has_candidates(
     layout_state=None,
     trip_id: str | None = None,
     ssg_policy=None,
+    allow_six_hero: bool | None = None,
 ) -> bool:
     from travelogue.config import get_config
     from travelogue.layout_contract.usage_context import build_window_context
@@ -109,6 +110,7 @@ def window_has_candidates(
         window_ctx=window_ctx,
         trip_id=trip_id,
         ssg_policy=ssg_policy,
+        allow_six_hero=allow_six_hero,
     )
     return any(c.hard_valid for c in result.candidates)
 
@@ -658,8 +660,10 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         elif sizes != before_atom:
             reorder_reason = "atom_prefix_cap"
     allow_six_hero = False
+    ega_equal_six_kept = False
     six_opportunity_on = effective_hero_six_opportunity_enabled(cfg) and density != "collage_first"
     if six_opportunity_on and remaining >= 6 and (6 in sizes or int(seg_cap) < 6):
+        from travelogue.config.mosaic import effective_ega_keep_equal_six
         from travelogue.layout_engine.mosaic.hero_six import six_hero_outcome_label
         from travelogue.layout_engine.mosaic.log import MosaicWindowLog
 
@@ -686,6 +690,15 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             if structural_six and ctx.layout_state is not None:
                 # Dense/large unavailable → release opportunity (SUP-05 path family).
                 ctx.layout_state.release_hero_six_opportunity()
+            # EGA PR-B · keep size=6 for equal-grid (landscape-6), not whole-window drop.
+            # Do not re-inject 6 if atom/seg already removed it from ``sizes``.
+            if (
+                effective_ega_keep_equal_six(cfg)
+                and remaining >= 6
+                and int(seg_cap) >= 6
+                and 6 in sizes
+            ):
+                ega_equal_six_kept = True
             # AC-03 · precheck miss probe; dedupe by qualify reason per chapter.
             reason_key = qualify_reason or "unknown"
             seen = (
@@ -709,6 +722,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
                     reorder_reason=reorder_reason,
                     structurally_qualified_six=structural_six,
                     admit_six_hero=False,
+                    ega_equal_six_kept=ega_equal_six_kept,
                     six_hero_opportunity_state=(
                         getattr(ctx.layout_state, "hero_six_opportunity", "idle")
                         if ctx.layout_state is not None
@@ -724,6 +738,9 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
                     ),
                     quota_snapshot=_mtso_quota_snapshot(ctx.layout_state),
                 )
+                from travelogue.layout_engine.mosaic.log import stamp_ega_observability
+
+                stamp_ega_observability(probe, cfg)
                 _append_mosaic_log(probe.to_dict())
     if not admit_six:
         sizes = _prioritize_exact_window_fit(sizes, remaining)
@@ -743,6 +760,7 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
         "atom_cap": atom_cap if atom_policy.enabled else None,
         "structurally_qualified_six": structural_six,
         "admit_six_hero": admit_six,
+        "ega_equal_six_kept": ega_equal_six_kept,
         "six_hero_qualify_reason": qualify_reason or None,
         "six_hero_opportunity_state": (
             getattr(ctx.layout_state, "hero_six_opportunity", "idle")
@@ -786,6 +804,12 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             continue
         # LTN C1 · size=3 aux short-circuit removed; portrait tiler owns explicit triples.
         # AC-04 · admitted six always runs MCS (funnel attempt) even if cheap prefilter misses.
+        # EGA PR-B · equal-six-kept also forces size=6 MCS attempt (landscape-6 path).
+        allow_six_for_cands: bool | None = None
+        if size == 6 and ega_equal_six_kept:
+            allow_six_for_cands = False
+        elif size == 6 and allow_six_hero:
+            allow_six_for_cands = True
         has_cands = window_has_candidates(
             window,
             ctx.aspects,
@@ -797,8 +821,9 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             layout_state=ctx.layout_state,
             trip_id=_ctx_trip_id(ctx),
             ssg_policy=resolve_shot_group_mosaic_policy(ctx.app_config),
+            allow_six_hero=allow_six_for_cands,
         )
-        if not has_cands and not (size == 6 and allow_six_hero):
+        if not has_cands and not (size == 6 and (allow_six_hero or ega_equal_six_kept)):
             continue
         attempt_funnel = {
             **funnel,

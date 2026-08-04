@@ -134,6 +134,7 @@ def generate_window_candidates(
     registry: dict[str, MosaicPattern] | None = None,
     trip_id: str | None = None,
     ssg_policy: Any | None = None,
+    allow_six_hero: bool | None = None,
 ) -> list[ScreenCandidate]:
     return generate_window_candidates_with_rejections(
         asset_ids,
@@ -145,6 +146,7 @@ def generate_window_candidates(
         registry=registry,
         trip_id=trip_id,
         ssg_policy=ssg_policy,
+        allow_six_hero=allow_six_hero,
     ).candidates
 
 
@@ -161,6 +163,7 @@ def generate_window_candidates_with_rejections(
     trip_photo_total: int = 0,
     trip_id: str | None = None,
     ssg_policy: Any | None = None,
+    allow_six_hero: bool | None = None,
 ) -> WindowCandidateResult:
     asset_ids = _mosaic_eligible_asset_ids(asset_ids, assets_map)
     if len(asset_ids) not in effective_mosaic_window_sizes(cfg):
@@ -212,7 +215,7 @@ def generate_window_candidates_with_rejections(
                 },
             )
     else:
-        patterns = patterns_for_window_size(len(asset_ids), reg)
+        patterns = patterns_for_window_size(len(asset_ids), reg, cfg=cfg)
         contract_source = "legacy_size"
     # LTN C4 · signature on top of TC or legacy sets (TC∩signature).
     # Hit → candidateSource=signature; miss → keep prior set, log contract/legacy
@@ -261,6 +264,22 @@ def generate_window_candidates_with_rejections(
         if mosaic_pattern_disabled(pat.pattern_id, cfg=cfg, trip_id=trip_id):
             _reject(rejected, pat.pattern_id, "pattern_disabled")
             continue
+        # EGA PR-B · hero-6 not admitted → skip six-hero family; keep equal-6.
+        if (
+            allow_six_hero is False
+            and len(asset_ids) == 6
+        ):
+            from travelogue.config.mosaic import effective_ega_keep_equal_six
+            from travelogue.layout_engine.mosaic.lifecycle import six_hero_family_id
+
+            if effective_ega_keep_equal_six(cfg) and six_hero_family_id(pat.pattern_id):
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "six_hero_precheck",
+                    detail="ega_equal_six_only",
+                )
+                continue
         ordered = try_order_for_pattern(
             pat.pattern_id,
             asset_ids,
@@ -308,13 +327,26 @@ def generate_window_candidates_with_rejections(
         if policy.same_group_anti_slice and hard_reject_same_shot_group_anti_slice(
             pat.pattern_id, list(ordered), assets_map
         ):
-            _reject(
-                rejected,
-                pat.pattern_id,
-                "shot_group_anti_slice",
-                detail="same_shotGroup_tight_on_slice_pattern",
+            from travelogue.config.mosaic import (
+                ega_anti_slice_mode,
+                is_ega_equal_grid_pattern,
             )
-            continue
+
+            ega_as_mode = ega_anti_slice_mode(cfg)
+            if is_ega_equal_grid_pattern(pat.pattern_id, cfg) and ega_as_mode in (
+                "exempt",
+                "soft_penalty",
+            ):
+                # EGA D-03 · equal-grid pure landscape is not「假切条」; soft deferred to scorer.
+                pass
+            else:
+                _reject(
+                    rejected,
+                    pat.pattern_id,
+                    "shot_group_anti_slice",
+                    detail="same_shotGroup_tight_on_slice_pattern",
+                )
+                continue
 
         if (
             effective_clone_hard_gate(
@@ -326,13 +358,25 @@ def generate_window_candidates_with_rejections(
                 pat.pattern_id, list(ordered), assets_map
             )
             if clone_pen >= NEAR_SCENE_CLONE_REJECT_THRESHOLD:
-                _reject(
-                    rejected,
-                    pat.pattern_id,
-                    "near_scene_clone",
-                    detail=f"penalty={clone_pen:.2f}",
+                from travelogue.config.mosaic import (
+                    ega_clone_mode,
+                    is_ega_equal_grid_pattern,
                 )
-                continue
+
+                if (
+                    is_ega_equal_grid_pattern(pat.pattern_id, cfg)
+                    and ega_clone_mode(cfg) == "soft_penalty"
+                ):
+                    # EGA D-04 · soft into scorer (R_EGA_CLONE_SOFT); do not hard-clear.
+                    pass
+                else:
+                    _reject(
+                        rejected,
+                        pat.pattern_id,
+                        "near_scene_clone",
+                        detail=f"penalty={clone_pen:.2f}",
+                    )
+                    continue
         # ALG-V3 B2a · static geometry precheck (skip build_screen when definite fail).
         # MSA on → None (displayAspect may diverge after adaptation).
         # Hungarian may reorder into a valid fit — do not hard-reject before refine.

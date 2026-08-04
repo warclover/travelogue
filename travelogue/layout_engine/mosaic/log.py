@@ -52,6 +52,8 @@ class MosaicWindowLog:
     reorder_reason: str | None = None
     structurally_qualified_six: bool = False
     admit_six_hero: bool = False
+    # EGA PR-B · size=6 kept for equal-grid after hero-6 precheck fail
+    ega_equal_six_kept: bool = False
     six_hero_opportunity_state: str = "idle"
     six_hero_family_id: str | None = None
     six_hero_qualify_reason: str | None = None
@@ -73,6 +75,10 @@ class MosaicWindowLog:
     megc_outcome: str | None = None
     megc_land_peak: str | None = None
     megc_pattern_id: str | None = None
+    # EGA · observability (PRD §6 / SHD-01 · keep in summary+window)
+    ega_enabled: bool = False
+    ega_anti_slice_mode: str | None = None
+    ega_clone_mode: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -98,6 +104,10 @@ class MosaicWindowLog:
             "atomCap": self.atom_cap,
             "structurallyQualifiedSix": bool(self.structurally_qualified_six),
             "admitSixHero": bool(self.admit_six_hero),
+            "egaEqualSixKept": bool(self.ega_equal_six_kept),
+            "egaEnabled": bool(self.ega_enabled),
+            "egaAntiSliceMode": self.ega_anti_slice_mode,
+            "egaCloneMode": self.ega_clone_mode,
             "sixHeroOpportunityState": self.six_hero_opportunity_state or "idle",
             "sixHeroFamilyId": self.six_hero_family_id,
             "sixHeroQualifyReason": self.six_hero_qualify_reason,
@@ -163,6 +173,24 @@ class MosaicWindowLog:
 _WINDOW_REJECT_TOP_N = 3
 
 
+def stamp_ega_observability(log: MosaicWindowLog, cfg: Any = None) -> None:
+    """SHD-01 · fill egaEnabled / anti_slice / clone mode shorts on a window log."""
+    from travelogue.config.mosaic import (
+        ega_anti_slice_mode,
+        ega_clone_mode,
+        effective_equal_grid_admission_enabled,
+    )
+
+    enabled = bool(effective_equal_grid_admission_enabled(cfg))
+    log.ega_enabled = enabled
+    if enabled:
+        log.ega_anti_slice_mode = ega_anti_slice_mode(cfg)
+        log.ega_clone_mode = ega_clone_mode(cfg)
+    else:
+        log.ega_anti_slice_mode = None
+        log.ega_clone_mode = None
+
+
 def _compact_reject(entry: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {
         "templateId": entry.get("templateId"),
@@ -178,6 +206,7 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
 
     LTN H2 · window keeps rejectedTemplates Top3 (compact) for Studio/C6 explain;
     AC/metrics must consume raw buffers via drain_mosaic_capture, not this output.
+    EGA SHD-01 · summary/window keep egaEnabled / egaEqualSixKept / mode shorts.
     """
     if log_level == "debug":
         return dict(raw)
@@ -187,6 +216,7 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
         "windowStart",
         "winnerPatternId",
         "winnerScore",
+        "winnerReasonCodes",
         "fallbackUsed",
         "fallbackReason",
         "selfHealApplied",
@@ -195,6 +225,10 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
         "routerVersion",
         "isWinnerPlan",
         "planPhase",
+        "egaEnabled",
+        "egaEqualSixKept",
+        "egaAntiSliceMode",
+        "egaCloneMode",
     )
     if log_level == "summary":
         return {k: raw[k] for k in summary_keys if k in raw}
@@ -202,6 +236,7 @@ def format_log_entry(raw: dict[str, Any], log_level: str = "window") -> dict[str
     out = dict(raw)
     out.pop("top3Scores", None)
     # MTSO / MSA funnel fields stay in raw (drain_mosaic_capture) + debug only.
+    # EGA shorts (egaEnabled / egaEqualSixKept / modes) stay for G-05 dogfood.
     for heavy in (
         "baseWindowOrder",
         "effectiveWindowOrder",

@@ -77,14 +77,22 @@ def _cluster_noise_ratio(trip: dict) -> float:
 def _reject_funnel_top(curation: dict[str, Any]) -> dict[str, int]:
     logs = curation.get("mosaicDecisionLog")
     counts: Counter[str] = Counter()
+    ega_soft = 0
     if isinstance(logs, list):
         for entry in logs:
             if not isinstance(entry, dict):
                 continue
+            for code in entry.get("winnerReasonCodes") or []:
+                c = str(code or "")
+                if c.startswith("R_EGA_"):
+                    ega_soft += 1
             for rej in entry.get("rejectedTemplates") or []:
                 if not isinstance(rej, dict):
                     continue
                 reason = str(rej.get("reason") or "").strip()
+                detail = str(rej.get("detail") or "").strip()
+                if detail == "ega_equal_six_only" or reason.startswith("ega_"):
+                    ega_soft += 1
                 if not reason:
                     continue
                 if reason.startswith("shot_group"):
@@ -96,13 +104,14 @@ def _reject_funnel_top(curation: dict[str, Any]) -> dict[str, int]:
                 else:
                     continue
                 counts[key] += 1
-    # PRD §7.1 shape: keep stable keys + any observed shot_group_* 
+    # PRD §7.1 shape: keep stable keys + EGA SHD-02 ega_soft
     out = {
         "atom_boundary": int(counts.get("atom_boundary", 0)),
         "shot_group": int(
             counts.get("shot_group_cross", 0) + counts.get("shot_group_anti_slice", 0)
         ),
         "near_scene_clone": int(counts.get("near_scene_clone", 0)),
+        "ega_soft": int(ega_soft),
     }
     return out
 

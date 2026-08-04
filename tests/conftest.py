@@ -222,12 +222,13 @@ def _b7_conditional_clone_opt_in_only(
     ``enabled=True``; non-clone suites must not inherit that.
 
     Clone-gate contracts keep full B7 behavior:
-    ``test_alg3_w1b*`` · ``test_near_scene_clone*`` · ``@pytest.mark.alg3_w1b``.
+    ``test_alg3_w1b*`` · ``test_near_scene_clone*`` · ``test_ega*`` · ``@pytest.mark.alg3_w1b``.
     """
     nodeid = request.node.nodeid.replace("\\", "/")
     if (
         "test_alg3_w1b" in nodeid
         or "test_near_scene_clone" in nodeid
+        or "test_ega" in nodeid
         or request.node.get_closest_marker("alg3_w1b")
     ):
         yield

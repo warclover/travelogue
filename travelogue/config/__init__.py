@@ -50,6 +50,7 @@ from travelogue.config.misc import (
     RenderReadingConfig,
 )
 from travelogue.config.mosaic import (
+    EqualGridAdmissionConfig,
     MosaicConfig,
     MosaicDensityBudgetConfig,
     NearSceneCloneGateConfig,
@@ -130,6 +131,7 @@ __all__ = [
     "set_trip_layout_vibe",
     "LlmConfig",
     "MosaicConfig",
+    "EqualGridAdmissionConfig",
     "NearSceneCloneGateConfig",
     "MosaicDensityBudgetConfig",
     "TemplateContractConfig",

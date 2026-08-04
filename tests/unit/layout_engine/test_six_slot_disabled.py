@@ -20,14 +20,13 @@ from travelogue.layout_engine.mosaic.runtime import (
 )
 from travelogue.layout_engine.planner.screen_planner import plan_screens_for_chapter
 
-# Active 6-slot hero SKUs (LTN C3 pruned flat landscape/portrait-6).
+# Active 6-slot hero SKUs (LTN C3 pruned flat landscape/portrait-6 from MOSAIC_6 IDs).
 _FORBIDDEN_SIX = frozenset(
     {
         "screen-mosaic-6-main-hero-plus-5",
         "screen-mosaic-5-main-hero-plus-4",
     }
 )
-_PRUNED_FLAT_SIX = frozenset({"screen-landscape-6", "screen-portrait-6"})
 
 _DISABLED_5_6 = (3, 4, 8, 9)
 
@@ -80,8 +79,14 @@ def test_mosaic_pattern_policy_blocks_five_and_six_ids(lte_pattern_enabled):
         assert not mosaic_pattern_disabled(pid, cfg=on)
     for pid in MOSAIC_5_PATTERN_IDS:
         assert not mosaic_pattern_disabled(pid, cfg=on)
-    # LTN C3 · pruned flats stay disabled even when window size 6 is enabled.
-    for pid in _PRUNED_FLAT_SIX:
-        assert mosaic_pattern_disabled(pid, cfg=on)
+    # LTN C3 · portrait-6 / non-EGA pruned flats stay disabled.
+    # EGA PR-B · screen-landscape-6 is admitted when equal-grid admission is on.
+    ega_off = replace(
+        on,
+        equal_grid_admission=replace(on.equal_grid_admission, enabled=False),
+    )
+    assert mosaic_pattern_disabled("screen-portrait-6", cfg=on)
+    assert mosaic_pattern_disabled("screen-landscape-6", cfg=ega_off)
+    assert not mosaic_pattern_disabled("screen-landscape-6", cfg=on)
     for pid in (PATTERN_MOSAIC_5_2P_3L_BALANCED, PATTERN_MOSAIC_5_MAIN_LAND_2P_2L):
         assert mosaic_pattern_disabled(pid, cfg=on)
