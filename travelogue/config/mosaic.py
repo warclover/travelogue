@@ -62,6 +62,114 @@ _NEAR_SCENE_CLONE_GATE_KNOWN_KEYS = frozenset(
 )
 
 
+# EGA · pure landscape equal-grid admission (PRD-EQUAL-GRID-ADMISSION-V1).
+_DEFAULT_EGA_PATTERNS: tuple[str, ...] = (
+    "screen-landscape-4",
+    "screen-landscape-6",
+)
+
+
+@dataclass
+class EqualGridAdmissionAntiSliceConfig:
+    """anti_slice mode for EGA patterns (D-EGA-03 · OQ-01)."""
+
+    mode: str = "exempt"  # exempt | soft_penalty | hard
+    score_mul: float = 0.90
+
+
+@dataclass
+class EqualGridAdmissionCloneConfig:
+    """near_scene_clone mode for EGA patterns (D-EGA-04 · OQ-02)."""
+
+    mode: str = "soft_penalty"  # soft_penalty | hard
+    score_mul: float = 0.85
+
+
+@dataclass
+class EqualGridAdmissionSize6Config:
+    """PR-B · keep size=6 after hero-6 precheck fail."""
+
+    keep_equal_grid_after_hero_precheck_fail: bool = True
+
+
+@dataclass
+class EqualGridAdmissionScoringConfig:
+    """PR-C · flat-window equal-grid bias (defaults ready; wired in M2)."""
+
+    flat_window_equal_bonus: float = 0.08
+    wasted_hero_ega_extra: float = 0.10
+
+
+@dataclass
+class EqualGridAdmissionMegcLegacyConfig:
+    """PR-D · optional soft demote (default off · M3 deferred)."""
+
+    soften_penalize_emit: bool = False
+
+
+@dataclass
+class EqualGridAdmissionConfig:
+    """EGA · equal-grid admission parent (PRD-EQUAL-GRID-ADMISSION-V1).
+
+    When ``enabled`` is false, behavior ≡ pre-EGA (hard anti_slice / clone).
+    Unknown keys under this root fail-loud.
+    """
+
+    enabled: bool = True
+    patterns: tuple[str, ...] = _DEFAULT_EGA_PATTERNS
+    anti_slice: EqualGridAdmissionAntiSliceConfig = field(
+        default_factory=EqualGridAdmissionAntiSliceConfig
+    )
+    near_scene_clone: EqualGridAdmissionCloneConfig = field(
+        default_factory=EqualGridAdmissionCloneConfig
+    )
+    size6: EqualGridAdmissionSize6Config = field(
+        default_factory=EqualGridAdmissionSize6Config
+    )
+    scoring: EqualGridAdmissionScoringConfig = field(
+        default_factory=EqualGridAdmissionScoringConfig
+    )
+    megc_legacy_demote: EqualGridAdmissionMegcLegacyConfig = field(
+        default_factory=EqualGridAdmissionMegcLegacyConfig
+    )
+
+
+_EQUAL_GRID_ADMISSION_KNOWN_KEYS = frozenset(
+    {
+        "enabled",
+        "patterns",
+        "anti_slice",
+        "antiSlice",
+        "near_scene_clone",
+        "nearSceneClone",
+        "size6",
+        "scoring",
+        "megc_legacy_demote",
+        "megcLegacyDemote",
+    }
+)
+
+_EGA_ANTI_SLICE_KNOWN_KEYS = frozenset({"mode", "score_mul", "scoreMul"})
+_EGA_CLONE_KNOWN_KEYS = frozenset({"mode", "score_mul", "scoreMul"})
+_EGA_SIZE6_KNOWN_KEYS = frozenset(
+    {
+        "keep_equal_grid_after_hero_precheck_fail",
+        "keepEqualGridAfterHeroPrecheckFail",
+    }
+)
+_EGA_SCORING_KNOWN_KEYS = frozenset(
+    {
+        "flat_window_equal_bonus",
+        "flatWindowEqualBonus",
+        "wasted_hero_ega_extra",
+        "wastedHeroEgaExtra",
+    }
+)
+_EGA_MEGC_LEGACY_KNOWN_KEYS = frozenset(
+    {"soften_penalize_emit", "softenPenalizeEmit"}
+)
+
+
 # Product defaults: triple collage + 3P2L five-up portrait-hero family.
 # cohort ``*`` = all trips; empty cohort remains fail-closed (nobody).
 _DEFAULT_TRIPLE_COLLAGE_ALLOWLIST: tuple[str, ...] = (
@@ -291,6 +399,9 @@ class MosaicConfig:
     near_scene_clone_gate: NearSceneCloneGateConfig = field(
         default_factory=NearSceneCloneGateConfig
     )
+    equal_grid_admission: EqualGridAdmissionConfig = field(
+        default_factory=EqualGridAdmissionConfig
+    )
     # When false, restores pre-v4 hero-3-2-plus-4 geometry/scorer guards (rollback).
     hero_weighted_geometry_guard: bool = True
     # PRD-6张拼图优化 · R-MAIN-AR-01: conventional AR only for hero+tile main slot.
@@ -417,6 +528,248 @@ def _near_scene_clone_gate_from_dict(raw: dict[str, Any]) -> NearSceneCloneGateC
     return NearSceneCloneGateConfig(
         enabled=cfg_bool(gate, "enabled", "enabled", defaults.enabled),
         conditional=cfg_bool(gate, "conditional", "conditional", defaults.conditional),
+    )
+
+
+def _ega_anti_slice_from_dict(raw: object) -> EqualGridAdmissionAntiSliceConfig:
+    defaults = EqualGridAdmissionAntiSliceConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _EGA_ANTI_SLICE_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission.anti_slice unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    mode = str(raw.get("mode", defaults.mode)).strip().lower() or defaults.mode
+    if mode not in ("exempt", "soft_penalty", "hard"):
+        raise ValueError(
+            "mosaic.equal_grid_admission.anti_slice.mode must be "
+            "exempt|soft_penalty|hard"
+        )
+    mul = float(raw.get("score_mul", raw.get("scoreMul", defaults.score_mul)))
+    if not (0.0 < mul <= 1.0):
+        raise ValueError(
+            "mosaic.equal_grid_admission.anti_slice.score_mul must be in (0, 1]"
+        )
+    return EqualGridAdmissionAntiSliceConfig(mode=mode, score_mul=mul)
+
+
+def _ega_clone_from_dict(raw: object) -> EqualGridAdmissionCloneConfig:
+    defaults = EqualGridAdmissionCloneConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _EGA_CLONE_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission.near_scene_clone unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    mode = str(raw.get("mode", defaults.mode)).strip().lower() or defaults.mode
+    if mode not in ("soft_penalty", "hard"):
+        raise ValueError(
+            "mosaic.equal_grid_admission.near_scene_clone.mode must be soft_penalty|hard"
+        )
+    mul = float(raw.get("score_mul", raw.get("scoreMul", defaults.score_mul)))
+    if not (0.0 < mul <= 1.0):
+        raise ValueError(
+            "mosaic.equal_grid_admission.near_scene_clone.score_mul must be in (0, 1]"
+        )
+    return EqualGridAdmissionCloneConfig(mode=mode, score_mul=mul)
+
+
+def _ega_size6_from_dict(raw: object) -> EqualGridAdmissionSize6Config:
+    defaults = EqualGridAdmissionSize6Config()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _EGA_SIZE6_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission.size6 unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    return EqualGridAdmissionSize6Config(
+        keep_equal_grid_after_hero_precheck_fail=cfg_bool(
+            raw,
+            "keep_equal_grid_after_hero_precheck_fail",
+            "keepEqualGridAfterHeroPrecheckFail",
+            defaults.keep_equal_grid_after_hero_precheck_fail,
+        )
+    )
+
+
+def _ega_scoring_from_dict(raw: object) -> EqualGridAdmissionScoringConfig:
+    defaults = EqualGridAdmissionScoringConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _EGA_SCORING_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission.scoring unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    return EqualGridAdmissionScoringConfig(
+        flat_window_equal_bonus=cfg_float(
+            raw,
+            "flat_window_equal_bonus",
+            "flatWindowEqualBonus",
+            defaults.flat_window_equal_bonus,
+        ),
+        wasted_hero_ega_extra=cfg_float(
+            raw,
+            "wasted_hero_ega_extra",
+            "wastedHeroEgaExtra",
+            defaults.wasted_hero_ega_extra,
+        ),
+    )
+
+
+def _ega_megc_legacy_from_dict(raw: object) -> EqualGridAdmissionMegcLegacyConfig:
+    defaults = EqualGridAdmissionMegcLegacyConfig()
+    if not isinstance(raw, dict):
+        return defaults
+    unknown = sorted(str(k) for k in raw if str(k) not in _EGA_MEGC_LEGACY_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission.megc_legacy_demote unknown keys (fail-loud): "
+            + ", ".join(unknown)
+        )
+    return EqualGridAdmissionMegcLegacyConfig(
+        soften_penalize_emit=cfg_bool(
+            raw,
+            "soften_penalize_emit",
+            "softenPenalizeEmit",
+            defaults.soften_penalize_emit,
+        )
+    )
+
+
+def _equal_grid_admission_from_dict(raw: dict[str, Any]) -> EqualGridAdmissionConfig:
+    defaults = EqualGridAdmissionConfig()
+    ega = raw.get("equal_grid_admission")
+    if not isinstance(ega, dict):
+        ega = raw.get("equalGridAdmission")
+    if not isinstance(ega, dict):
+        return defaults
+    unknown = sorted(str(k) for k in ega if str(k) not in _EQUAL_GRID_ADMISSION_KNOWN_KEYS)
+    if unknown:
+        raise ValueError(
+            "mosaic.equal_grid_admission unknown keys (fail-loud): " + ", ".join(unknown)
+        )
+    patterns_raw = ega.get("patterns")
+    if patterns_raw is None:
+        patterns = defaults.patterns
+    else:
+        patterns = _str_tuple(patterns_raw) or defaults.patterns
+    return EqualGridAdmissionConfig(
+        enabled=cfg_bool(ega, "enabled", "enabled", defaults.enabled),
+        patterns=patterns,
+        anti_slice=_ega_anti_slice_from_dict(
+            ega.get("anti_slice", ega.get("antiSlice"))
+        ),
+        near_scene_clone=_ega_clone_from_dict(
+            ega.get("near_scene_clone", ega.get("nearSceneClone"))
+        ),
+        size6=_ega_size6_from_dict(ega.get("size6")),
+        scoring=_ega_scoring_from_dict(ega.get("scoring")),
+        megc_legacy_demote=_ega_megc_legacy_from_dict(
+            ega.get("megc_legacy_demote", ega.get("megcLegacyDemote"))
+        ),
+    )
+
+
+def effective_equal_grid_admission_enabled(cfg: MosaicConfig | None) -> bool:
+    """Parent OFF ⇒ EGA soft/exempt paths inert (pre-EGA hard gates)."""
+    if cfg is None:
+        return False
+    ega = getattr(cfg, "equal_grid_admission", None)
+    return bool(ega is not None and getattr(ega, "enabled", False))
+
+
+def is_ega_equal_grid_pattern(pattern_id: str, cfg: MosaicConfig | None = None) -> bool:
+    """D-EGA-02 · whitelist only (default L4+L6)."""
+    pid = str(pattern_id or "")
+    if not pid:
+        return False
+    if cfg is None:
+        patterns = _DEFAULT_EGA_PATTERNS
+    else:
+        ega = getattr(cfg, "equal_grid_admission", None)
+        patterns = (
+            getattr(ega, "patterns", None) if ega is not None else None
+        ) or _DEFAULT_EGA_PATTERNS
+    return pid in set(patterns)
+
+
+def ega_anti_slice_mode(cfg: MosaicConfig | None) -> str:
+    if not effective_equal_grid_admission_enabled(cfg):
+        return "hard"
+    ega = getattr(cfg, "equal_grid_admission", None)
+    anti = getattr(ega, "anti_slice", None) if ega is not None else None
+    mode = str(getattr(anti, "mode", "exempt") or "exempt").strip().lower()
+    return mode if mode in ("exempt", "soft_penalty", "hard") else "exempt"
+
+
+def ega_clone_mode(cfg: MosaicConfig | None) -> str:
+    if not effective_equal_grid_admission_enabled(cfg):
+        return "hard"
+    ega = getattr(cfg, "equal_grid_admission", None)
+    clone = getattr(ega, "near_scene_clone", None) if ega is not None else None
+    mode = str(getattr(clone, "mode", "soft_penalty") or "soft_penalty").strip().lower()
+    return mode if mode in ("soft_penalty", "hard") else "soft_penalty"
+
+
+def ega_clone_score_mul(cfg: MosaicConfig | None) -> float:
+    ega = getattr(cfg, "equal_grid_admission", None) if cfg is not None else None
+    clone = getattr(ega, "near_scene_clone", None) if ega is not None else None
+    mul = getattr(clone, "score_mul", 0.85) if clone is not None else 0.85
+    return float(mul)
+
+
+def ega_anti_slice_score_mul(cfg: MosaicConfig | None) -> float:
+    ega = getattr(cfg, "equal_grid_admission", None) if cfg is not None else None
+    anti = getattr(ega, "anti_slice", None) if ega is not None else None
+    mul = getattr(anti, "score_mul", 0.90) if anti is not None else 0.90
+    return float(mul)
+
+
+def ega_flat_window_equal_bonus(cfg: MosaicConfig | None) -> float:
+    """PR-C · additive score boost for equal-grid on flat windows (0 = off)."""
+    if not effective_equal_grid_admission_enabled(cfg):
+        return 0.0
+    ega = getattr(cfg, "equal_grid_admission", None)
+    scoring = getattr(ega, "scoring", None) if ega is not None else None
+    bonus = getattr(scoring, "flat_window_equal_bonus", 0.08) if scoring is not None else 0.08
+    return max(0.0, float(bonus))
+
+
+def ega_wasted_hero_extra(cfg: MosaicConfig | None) -> float:
+    """PR-C · extra mul penalty for hero-70 on flat windows (0 = off)."""
+    if not effective_equal_grid_admission_enabled(cfg):
+        return 0.0
+    ega = getattr(cfg, "equal_grid_admission", None)
+    scoring = getattr(ega, "scoring", None) if ega is not None else None
+    extra = (
+        getattr(scoring, "wasted_hero_ega_extra", 0.10) if scoring is not None else 0.10
+    )
+    return max(0.0, min(1.0, float(extra)))
+
+
+def is_ega_hero70_family(pattern_id: str) -> bool:
+    """D-EGA-07 · weighted mosaic-4 hero family (not equal-grid whitelist)."""
+    pid = str(pattern_id or "")
+    return pid == "screen-mosaic-4-hero-70-sidebar" or "hero-70" in pid
+
+
+def effective_ega_keep_equal_six(cfg: MosaicConfig | None) -> bool:
+    """PR-B · keep evaluating landscape-6 after hero-6 precheck fail."""
+    if not effective_equal_grid_admission_enabled(cfg):
+        return False
+    ega = getattr(cfg, "equal_grid_admission", None)
+    size6 = getattr(ega, "size6", None) if ega is not None else None
+    return bool(
+        size6 is None
+        or getattr(size6, "keep_equal_grid_after_hero_precheck_fail", True)
     )
 
 
@@ -762,6 +1115,7 @@ def mosaic_from_dict(raw: dict[str, Any]) -> MosaicConfig:
         slot_adaptation=_slot_adaptation_from_dict(raw),
         equal_grid_contract=_equal_grid_contract_from_dict(raw),
         near_scene_clone_gate=_near_scene_clone_gate_from_dict(raw),
+        equal_grid_admission=_equal_grid_admission_from_dict(raw),
         enable_size3_aux=cfg_bool(
             raw, "enable_size3_aux", "enableSize3Aux", defaults.enable_size3_aux
         ),

@@ -35,7 +35,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 3. 活跃 ADR（例：[adr/007-native-clustering.md](./adr/007-native-clustering.md)；索引 [adr/README.md](./adr/README.md)）  
 4. [ACCEPTANCE.md](./ACCEPTANCE.md) → 特性验收如 [ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md](./ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md)  
 5. 完工与用户面：[PRD-FINISH-THIS-TRIP-V1.md](./PRD-FINISH-THIS-TRIP-V1.md) / [PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md](./PRD-COMPLETION-SURFACE-CONVERGENCE-V1.md) / [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)  
-6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（**v0.3.2 Done · 本波关闭** · 主题包 MTSO / MSA / MEGC / SSG / **LVP** 见本表）  
+6. 布局 / 算法现行：[PRD-ALGORITHM-OPTIMIZATION-V3.md](./PRD-ALGORITHM-OPTIMIZATION-V3.md)（**v0.3.2 Done · 本波关闭** · 主题包 MTSO / MSA / MEGC / SSG / **LVP** / **EGA** 见本表）  
 7. 归档候选（**不搬家**）：[archive/DOC-ARCHIVE-CANDIDATES.md](./archive/DOC-ARCHIVE-CANDIDATES.md)
 
 ---
@@ -109,6 +109,12 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | 等权拼图几何合同 **MEGC** **v0.2.0**（Conditional Go · PR-A/B/B2 ✅ · **默认 on** · M3 延期） |
 | [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 实施 · PR-A/B/B2 ✅ · **默认 on**（2026-08-03）· M3 延期 |
 | [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 验收 · AC-01 实机绿 · AC-04/05 闸语义狗粮 · **默认 on 已转正** |
+| [PRD-EQUAL-GRID-ADMISSION-V1.md](./PRD-EQUAL-GRID-ADMISSION-V1.md) | **active** | 等权宫准入优化 **EGA** **v0.2.0**（Conditional Go · 可 Kickoff M1 · [评审](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md)） |
+| [IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md](./IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md) | **active** | EGA 实施清单 · PR-A/B/C · M3 延期 |
+| [ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md](./ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md) | **active** | EGA 验收 · AC-EGA-01～10 · W0 ✅ |
+| [acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md) | **active** | EGA 七席联评 · Conditional Go · BLK-EGA-01～06 |
+| [acceptance-records/ega-dogfood-2026-08-04.md](./acceptance-records/ega-dogfood-2026-08-04.md) | **active** | EGA PR-A 微狗粮 · AC-05 **B** 进池 |
+| [acceptance-records/ega-equal-grid-admission-v1-review-TEMPLATE.md](./acceptance-records/ega-equal-grid-admission-v1-review-TEMPLATE.md) | **active** | EGA 七席评审纪要**模板** |
 | [acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md](./acceptance-records/megc-equal-grid-contract-v1-review-2026-07-31.md) | **active** | MEGC 七席联评 · Conditional Go · BLK-01～08 |
 | [acceptance-records/megc-dev-feasibility-2026-07-31.md](./acceptance-records/megc-dev-feasibility-2026-07-31.md) | **active** | MEGC 开发负责人实施前可行性 · SUP-01/02/03 已落 PR-B |
 | [acceptance-records/megc-dogfood-2026-08-03.md](./acceptance-records/megc-dogfood-2026-08-03.md) | **active** | MEGC demo-2019 狗粮 · PR-A 几何 ✅ · 闸语义 ✅ |

@@ -55,7 +55,7 @@ constraints:
 scoring:
   # Default four-up: four landscapes, each ~1/4 of the 16:9 stage.
   base_weight: 1.12
-  tags: [equal-4, landscape-grid]
+  tags: [equal-4, equal-grid, landscape-grid]
 render:
   gridClass: layout-screen__grid--2x2
   cssBundle: journal-screens.css

@@ -26,6 +26,7 @@ _REJECT_LABELS: dict[str, str] = {
     "shot_group_cross": "跨分镜硬边界，拼在一起会像切条",
     "shot_group_anti_slice": "同分镜过密，该模板易呈切条感",
     "near_scene_clone": "同场景过近/近似连拍，未做成切条拼图",
+    "ega_clone_soft": "同场景偏近，等权宫软降权后仍可参与比分",
     "main_ar_mismatch": "主图画幅与主槽不匹配",
     "sidebar_min_short_side": "侧栏短边过窄，版式不成立",
     "mixed_portrait_is_hero": "竖图更适合主图，当前模板已排除",

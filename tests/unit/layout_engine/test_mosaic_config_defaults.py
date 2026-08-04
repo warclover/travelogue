@@ -35,6 +35,8 @@ def test_empty_dict_matches_dataclass_defaults() -> None:
     assert cfg.equal_grid_contract.enabled is True
     assert cfg.equal_grid_contract.selection_gate.score_mul == 0.62
     assert cfg.near_scene_clone_gate.enabled is defaults.near_scene_clone_gate.enabled
+    assert cfg.equal_grid_admission.enabled is True
+    assert "screen-landscape-4" in cfg.equal_grid_admission.patterns
 
 
 def test_equal_grid_contract_parses_and_fails_loud() -> None:

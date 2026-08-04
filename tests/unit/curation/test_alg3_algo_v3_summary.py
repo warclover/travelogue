@@ -67,9 +67,36 @@ def test_algo_v3_summary_schema_keys(monkeypatch) -> None:
     assert summary["rejectFunnelTop"]["atom_boundary"] == 1
     assert summary["rejectFunnelTop"]["shot_group"] == 1
     assert summary["rejectFunnelTop"]["near_scene_clone"] == 1
+    assert summary["rejectFunnelTop"]["ega_soft"] == 0
     assert summary["llm"]["ready"] is False
     assert summary["llm"]["usedOnImport"] is False
     assert summary["degradeReasons"] == []
+
+
+def test_algo_v3_reject_funnel_counts_ega_soft(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "travelogue.llm.ready.probe_llm_ready",
+        lambda *, cfg=None: False,
+    )
+    trip = {
+        "assets": [],
+        "curation": {
+            "mosaicDecisionLog": [
+                {
+                    "winnerReasonCodes": ["R_EGA_FLAT_BONUS", "R_EGA_CLONE_SOFT"],
+                    "rejectedTemplates": [
+                        {
+                            "templateId": "screen-mosaic-6-main-hero-plus-5",
+                            "reason": "six_hero_precheck",
+                            "detail": "ega_equal_six_only",
+                        }
+                    ],
+                }
+            ]
+        },
+    }
+    summary = build_algo_v3_summary(trip, cfg=AppConfig(llm=LlmConfig(capability="auto")))
+    assert summary["rejectFunnelTop"]["ega_soft"] == 3
 
 
 def test_attach_algo_v3_writes_curation(monkeypatch) -> None:

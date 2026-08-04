@@ -25,6 +25,27 @@ def test_window_log_omits_top3_scores():
     assert "top3Scores" not in slim
 
 
+def test_ega_observability_kept_in_summary_and_window():
+    """EGA SHD-01 · ega shorts survive summary + window formatting."""
+    raw = MosaicWindowLog(
+        winner_pattern_id="screen-landscape-4",
+        winner_score=0.7,
+        winner_reason_codes=["R_EGA_FLAT_BONUS"],
+        ega_enabled=True,
+        ega_equal_six_kept=True,
+        ega_anti_slice_mode="exempt",
+        ega_clone_mode="soft_penalty",
+    ).to_dict()
+    summary = format_log_entry(raw, "summary")
+    window = format_log_entry(raw, "window")
+    for view in (summary, window):
+        assert view.get("egaEnabled") is True
+        assert view.get("egaEqualSixKept") is True
+        assert view.get("egaAntiSliceMode") == "exempt"
+        assert view.get("egaCloneMode") == "soft_penalty"
+    assert "R_EGA_FLAT_BONUS" in (summary.get("winnerReasonCodes") or [])
+
+
 def test_window_log_keeps_rejected_templates_top3():
     rejected = [
         {"templateId": f"t{i}", "reason": "hard_invalid"} for i in range(5)

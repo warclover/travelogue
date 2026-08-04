@@ -481,6 +481,12 @@
 | [acceptance-records/megc-default-on-decision-2026-08-03.md](./acceptance-records/megc-default-on-decision-2026-08-03.md) | MEGC **默认 on** 决策 |
 | [acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md](./acceptance-records/megc-equal-grid-contract-v1-review-TEMPLATE.md) | MEGC 七席评审纪要模板 |
 | [config-megc-dogfood.example.yaml](./config-megc-dogfood.example.yaml) | MEGC 本机调参 / 临时关闭样例 |
+| [PRD-EQUAL-GRID-ADMISSION-V1.md](./PRD-EQUAL-GRID-ADMISSION-V1.md) | **等权宫准入优化 EGA V1** **v0.2.0**（Conditional Go · 可 Kickoff M1 · [评审](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md)） |
+| [IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md](./IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md) | EGA 实施清单 · PR-A/B/C · M3 延期 |
+| [ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md](./ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md) | EGA 验收 · AC-EGA-01～10 |
+| [acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md) | EGA 七席联评 · Conditional Go |
+| [acceptance-records/ega-local-dogfood-GUIDE.md](./acceptance-records/ega-local-dogfood-GUIDE.md) | EGA 本机狗粮 GUIDE（锚点 `demo-0ebda73294`） |
+| [acceptance-records/ega-equal-grid-admission-v1-review-TEMPLATE.md](./acceptance-records/ega-equal-grid-admission-v1-review-TEMPLATE.md) | EGA 七席评审纪要模板 |
 | [PRD-PHASE22-storage-platform.md](./PRD-PHASE22-storage-platform.md) | **存储平台纪律** · Approved · 待 Kickoff |
 | [IMPLEMENTATION-PHASE22.md](./IMPLEMENTATION-PHASE22.md) | P22 实施清单 |
 | [ACCEPTANCE-PHASE22.md](./ACCEPTANCE-PHASE22.md) | P22 验收 |

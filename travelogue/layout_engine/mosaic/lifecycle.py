@@ -162,6 +162,15 @@ def lifecycle_admit(
 
     if not _read_templates_from_lte(cfg_app):
         if pid in _LTE_OFF_HARD_DENY:
+            from travelogue.config.mosaic import (
+                effective_ega_keep_equal_six,
+                is_ega_equal_grid_pattern,
+            )
+
+            if effective_ega_keep_equal_six(mcfg) and is_ega_equal_grid_pattern(
+                pid, mcfg
+            ):
+                return AdmitResult(True, "ega_equal_grid")
             return AdmitResult(False, "lifecycle_deprecated")
         return AdmitResult(True, "")
 
@@ -178,6 +187,13 @@ def lifecycle_admit(
         return AdmitResult(False, "lifecycle_deprecated")
 
     if status == "experimental":
+        from travelogue.config.mosaic import (
+            effective_ega_keep_equal_six,
+            is_ega_equal_grid_pattern,
+        )
+
+        if effective_ega_keep_equal_six(mcfg) and is_ega_equal_grid_pattern(pid, mcfg):
+            return AdmitResult(True, "ega_equal_grid")
         if mcfg is None:
             return AdmitResult(False, "lifecycle_experimental_gated")
         return _experiments_admit(pid, mosaic_cfg=mcfg, trip_id=trip_id)

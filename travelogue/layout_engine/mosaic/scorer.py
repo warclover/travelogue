@@ -13,6 +13,7 @@ from travelogue.layout_contract.orientations import AspectKind
 from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
 from travelogue.layout_contract.scoring import ScoringWeights
 from travelogue.layout_engine.mosaic.clone_detection import (
+    NEAR_SCENE_CLONE_REJECT_THRESHOLD,
     near_scene_clone_penalty,
     template_prefers_burst,
 )
@@ -356,6 +357,39 @@ def _wasted_hero_penalty(
     return 0.35
 
 
+def _ega_window_is_flat(
+    asset_ids: list[str],
+    aspects: dict[str, AspectKind],
+    assets_by_id: dict[str, dict],
+    *,
+    cfg: MosaicConfig,
+    median_sharp: float | None = None,
+) -> bool:
+    """D-EGA-07 · low hero separation (gap below threshold) ⇒ flat / no clear main."""
+    from travelogue.config import get_config
+    from travelogue.layout_contract.usage_context import build_window_context
+    from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5
+    from travelogue.layout_engine.usage_rules.context import main_eligible_hero_score_gap
+
+    aids = [a for a in asset_ids if a]
+    if len(aids) < 2:
+        return True
+    wctx = build_window_context(
+        list(aids),
+        aspects,
+        assets_by_id,
+        median_sharp=median_sharp,
+    )
+    gap, scores = main_eligible_hero_score_gap(wctx, PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5)
+    if not scores:
+        return True
+    so = getattr(cfg, "selection_optimization", None)
+    thr = getattr(so, "hero_gap_threshold", None) if so is not None else None
+    if thr is None:
+        thr = float(get_config().layout.usage_rules.hero_gap_threshold)
+    return float(gap) < float(thr)
+
+
 def _apply_hero_gap_prior(
     total: float,
     reasons: list[str],
@@ -646,6 +680,58 @@ def score_candidate(
         if megc.active and megc.score_mul < 1.0:
             total = min(1.0, total * float(megc.score_mul))
             reasons.append("R_MEGC_PEAK_MISMATCH")
+
+    # EGA · soft clone / anti-slice mul when hard gates were waived (PR-A)
+    from travelogue.config.mosaic import (
+        ega_anti_slice_mode,
+        ega_anti_slice_score_mul,
+        ega_clone_mode,
+        ega_clone_score_mul,
+        ega_flat_window_equal_bonus,
+        ega_wasted_hero_extra,
+        effective_equal_grid_admission_enabled,
+        is_ega_equal_grid_pattern,
+        is_ega_hero70_family,
+    )
+
+    if effective_equal_grid_admission_enabled(cfg) and is_ega_equal_grid_pattern(
+        pattern_id, cfg
+    ):
+        aids = [a for a in asset_ids if a]
+        if ega_clone_mode(cfg) == "soft_penalty":
+            clone_pen = _near_scene_clone_penalty(pattern_id, aids, assets_by_id)
+            if clone_pen >= NEAR_SCENE_CLONE_REJECT_THRESHOLD:
+                total = min(1.0, total * float(ega_clone_score_mul(cfg)))
+                reasons.append("R_EGA_CLONE_SOFT")
+        if ega_anti_slice_mode(cfg) == "soft_penalty":
+            from travelogue.layout_engine.mosaic.shot_group_gate import (
+                hard_reject_same_shot_group_anti_slice,
+            )
+
+            if hard_reject_same_shot_group_anti_slice(pattern_id, aids, assets_by_id):
+                total = min(1.0, total * float(ega_anti_slice_score_mul(cfg)))
+                reasons.append("R_EGA_SLICE_SOFT")
+
+    # EGA PR-C · flat-window bias: equal-grid bonus · hero-70 wasted extra
+    if effective_equal_grid_admission_enabled(cfg):
+        aids = [a for a in asset_ids if a]
+        flat_bonus = ega_flat_window_equal_bonus(cfg)
+        wasted_extra = ega_wasted_hero_extra(cfg)
+        if flat_bonus > 0.0 or wasted_extra > 0.0:
+            is_flat = _ega_window_is_flat(
+                aids,
+                aspects,
+                assets_by_id,
+                cfg=cfg,
+            )
+            main_not_best = float(penalties.get("main_not_window_best") or 0.0) >= 0.5
+            bias_on = is_flat or main_not_best
+            if bias_on and is_ega_equal_grid_pattern(pattern_id, cfg) and flat_bonus > 0.0:
+                total = min(1.0, total + float(flat_bonus))
+                reasons.append("R_EGA_FLAT_BONUS")
+            if bias_on and is_ega_hero70_family(pattern_id) and wasted_extra > 0.0:
+                total = max(0.0, min(1.0, total * (1.0 - float(wasted_extra))))
+                reasons.append("R_EGA_WASTED_HERO")
 
     return MosaicScoreResult(
         total=_clamp01(total),
