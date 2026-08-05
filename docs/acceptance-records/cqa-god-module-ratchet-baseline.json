@@ -1,7 +1,7 @@
 {
   "lines": {
     "travelogue/layout_engine/mosaic/hook.py": 830,
-    "templates/studio/preview-toolbar/longshot.js": 2906
+    "templates/studio/preview-toolbar/longshot.js": 2917
   },
-  "note": "CQA I-CQA-14 · refresh with acceptance-records note when raising. 2026-08-05: longshot.js 2889->2906 (+17) 是 PRD-EXPORT-CARD-COMPOSE-V1 Stage 4 遗留 —— poster_bric/album_spread 状态文案随 3:4/两卡+gutter 几何更正新增的几行分支判断，已随该 PRD 走过评审与真实素材烟测（见 docs/acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md），非本次追加模板引入。hook.py 的 830->1021 差异是 origin/master 上已存在的、与本分支无关的既有回归（本分支未触碰该文件），此处基线值原样保留，不代表本 PR 认可/吸收该项债务。"
+  "note": "CQA I-CQA-14 · refresh with acceptance-records note when raising. 2026-08-05: longshot.js 2889->2906 (+17) 是 PRD-EXPORT-CARD-COMPOSE-V1 Stage 4 遗留 —— poster_bric/album_spread 状态文案随 3:4/两卡+gutter 几何更正新增的几行分支判断，已随该 PRD 走过评审与真实素材烟测（见 docs/acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md），非本次追加模板引入。2026-08-05（同日第二次刷新）：longshot.js 2906->2917 (+11) 是导出体验优化三件套（P0 导出进度文案按 platform 改写 / P1 CardRenderer 槙位缝 / P2 画册跨页数）里 P0 的落地 —— `humanExportProgress` 改为从 `longshot-export-panel.js` 引入 `detectPlatformFromProgressHint` / `progressTitleForPlatform` / `progressSynthesizingTitleForPlatform` / `isComposePlatform` 四个新符号并据此重写标题分支，以及「更新版面」流程两处 subtitle 去「长图」硬编码，未引入新的可拆分子模块。hook.py 的 830->1021 差异是 origin/master 上已存在的、与本分支无关的既有回归（本分支未触碰该文件），此处基线值原样保留，不代表本 PR 认可/吸收该项债务。"
 }

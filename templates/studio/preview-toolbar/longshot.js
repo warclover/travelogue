@@ -18,10 +18,14 @@ import {
   buildPanelHtml,
   exportSummaryLine,
   ctaLabelForPlatform,
+  detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
+  isComposePlatform,
   isSmartCropUiEnabled,
   markMomentsCoachSeen,
+  progressSynthesizingTitleForPlatform,
+  progressTitleForPlatform,
   readExportPrefs,
   shortCtaLabelForPlatform,
   shouldHintSparseMoments,
@@ -500,6 +504,9 @@ export function cancelPreviewLongshotExport(root) {
 
   /**
    * FE-SR-07 / D-SR-07 · 进度第一行人话；参数进次行。
+   * P0 · 按 platform 区分文案（禁止 Compose 平台回落到「可发微信的长图」）：
+   * 平台优先取 hint 里的即时信号（stageHint 可能比本地 prefs 更新），
+   * 兜底才用 confirmed prefs.platform（AC-DFX-02 SSOT）。
    * @returns {{ title: string, subtitle: string }}
    */
   function humanExportProgress(opts) {
@@ -507,34 +514,35 @@ export function cancelPreviewLongshotExport(root) {
     var hint = String(opts.hint || "");
     var pct = typeof opts.pct === "number" ? opts.pct : null;
     var prefs = readLongshotExportPrefs();
-    var modeLabel = prefs.mode === "full" ? "完整导出" : "按章导出";
+    var platform =
+      detectPlatformFromProgressHint(hint) || prefs.platform || "wechat_chat";
+    var composeMode = isComposePlatform(platform);
+
     var scale = Number(prefs.scale) || 2;
     var quality = scale >= 3 ? "超清" : scale >= 2 ? "高清" : "标准";
-    var subtitle = modeLabel + " · " + quality;
+    // Compose 平台没有「按章/一整张」概念；副标题改用拼贴描述，避免误导。
+    var subtitle = composeMode
+      ? "3:4 拼贴 · " + quality
+      : (prefs.mode === "full" ? "完整导出" : "按章导出") + " · " + quality;
 
-    var title = "正在生成可发微信的长图…";
-    if (/排队/.test(hint)) {
-      title = "正在排队生成长图…";
-    } else if (/更新版面/.test(hint)) {
+    var title = progressTitleForPlatform(platform);
+    if (/更新版面/.test(hint)) {
       title = "正在更新版面…";
-      subtitle = /自动导出/.test(hint) ? "完成后将自动导出长图" : "完成后可再点导出";
-    } else if (/九宫格/.test(hint)) {
-      title = "正在生成拼贴导出…";
-    } else if (/朋友圈|连读/.test(hint)) {
-      title = "正在生成朋友圈长图…";
-    } else if (/小红书/.test(hint)) {
-      title = "正在生成小红书配图…";
+      subtitle = /自动导出/.test(hint) ? "完成后将自动导出" : "完成后可再点导出";
+    } else if (/排队/.test(hint)) {
+      // busyHint 已按平台写好文案（如「小红书海报排队中…」），直接沿用。
+      title = hint;
     } else if (/兼容模式/.test(hint)) {
       title = "正在保存到本机…";
     } else if (
       /打开浏览器|准备长图组件|preparing_browser/i.test(hint) ||
       (pct != null && pct < 25)
     ) {
-      title = "正在生成可发微信的长图…";
+      title = progressTitleForPlatform(platform);
     } else if (pct != null && pct >= 70) {
       title = "正在保存到本机…";
-    } else if (/保存|合成/.test(hint) || (pct != null && pct >= 25)) {
-      title = "正在合成长图…";
+    } else if (/保存|合成|拼贴页|拼贴导出/.test(hint) || (pct != null && pct >= 25)) {
+      title = progressSynthesizingTitleForPlatform(platform);
     }
     return { title: title, subtitle: subtitle };
   }
@@ -2208,9 +2216,12 @@ export function cancelPreviewLongshotExport(root) {
 
         setLongshotExportState(root, "running", { hint: "正在更新版面…" });
         if (root._taskDock) {
+          var pendingPlatform = readExportPrefs().platform || "wechat_chat";
           root._taskDock.updateExporting({
             title: "正在更新版面…",
-            subtitle: thenExport ? "完成后将自动导出长图" : "完成后可再点「长图」",
+            subtitle: thenExport
+              ? "完成后将自动导出"
+              : "完成后可再点「" + shortCtaLabelForPlatform(pendingPlatform) + "」",
             pct: 6,
           });
           root._exportDockActive = true;
@@ -2836,7 +2847,7 @@ export function cancelPreviewLongshotExport(root) {
           root._exportDockActive = true;
           root._taskDock.updateExporting({
             title: "正在更新版面…",
-            subtitle: "即将开始导出长图",
+            subtitle: "即将开始导出",
             pct: 12,
           });
         }

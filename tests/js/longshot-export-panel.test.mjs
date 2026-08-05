@@ -10,10 +10,18 @@ import {
 } from "../../templates/studio/js/output-recipe-logic.js";
 import {
   PLATFORMS,
+  buildPanelHtml,
+  clampAlbumSlideCount,
+  clampSlideCountForPlatform,
   confirmedExportSummary,
   ctaLabelForPlatform,
+  detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   exportSummaryLine,
+  isAlbumPresetCount,
+  isComposePlatform,
+  progressSynthesizingTitleForPlatform,
+  progressTitleForPlatform,
   shortCtaLabelForPlatform,
   syncPanelUI,
 } from "../../templates/studio/js/longshot-export-panel.js";
@@ -24,6 +32,7 @@ function stubPopover() {
   const note = { textContent: "" };
   const expectField = { hidden: true };
   const expectBody = { innerHTML: "", textContent: "" };
+  const albumCountField = { hidden: true };
   return {
     querySelector(sel) {
       if (sel === '[data-field="copy"]') return copy;
@@ -31,11 +40,14 @@ function stubPopover() {
       if (sel === '[data-field="mode"]') return { hidden: false };
       if (sel === '[data-field="xhs-count"]') return { hidden: true };
       if (sel === '[data-field="xhs-pad"]') return { hidden: true };
+      if (sel === '[data-field="album-count"]') return albumCountField;
       if (sel === '[data-field="expect"]') return expectField;
       if (sel === "[data-expect-body]") return expectBody;
       if (sel === '[data-field="coach"]') return { hidden: true, textContent: "" };
       if (sel === "[data-xhs-custom-row]") return { hidden: true };
       if (sel === "[data-studio-xhs-custom-input]") return null;
+      if (sel === "[data-album-custom-row]") return { hidden: true };
+      if (sel === "[data-studio-album-custom-input]") return null;
       if (sel === "[data-smart-crop-btn]") return null;
       if (sel === "[data-scale-hint]") return { textContent: "" };
       if (sel === "[data-xhs-estimate]") return null;
@@ -46,6 +58,8 @@ function stubPopover() {
     },
     _copy: copy,
     _note: note,
+    _albumCountField: albumCountField,
+    _expectBody: expectBody,
   };
 }
 
@@ -129,4 +143,63 @@ test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九�
   syncPanelUI(popChat, { platform: "wechat_chat", mode: "chapter", scale: 2 });
   assert.equal(popChat._copy.hidden, false);
   assert.match(popChat._note.textContent, /要不要字/);
+});
+
+test("P0 · humanExportProgress 平台文案（禁止回落到「微信」）", () => {
+  assert.equal(isComposePlatform("xiaohongshu"), true);
+  assert.equal(isComposePlatform("poster_bric"), true);
+  assert.equal(isComposePlatform("album_spread"), true);
+  assert.equal(isComposePlatform("wechat_chat"), false);
+
+  assert.match(progressTitleForPlatform("xiaohongshu"), /小红书/);
+  assert.match(progressTitleForPlatform("poster_bric"), /单张海报/);
+  assert.match(progressTitleForPlatform("album_spread"), /画册/);
+  assert.doesNotMatch(progressTitleForPlatform("poster_bric"), /微信/);
+  assert.doesNotMatch(progressTitleForPlatform("album_spread"), /微信/);
+
+  assert.equal(progressSynthesizingTitleForPlatform("xiaohongshu"), "正在合成拼贴…");
+  assert.equal(progressSynthesizingTitleForPlatform("wechat_chat"), "正在合成长图…");
+
+  assert.equal(detectPlatformFromProgressHint("小红书海报排队中，请稍候…"), "xiaohongshu");
+  assert.equal(detectPlatformFromProgressHint("画册跨页排队中，请稍候…"), "album_spread");
+  assert.equal(detectPlatformFromProgressHint("单张海报排队中，请稍候…"), "poster_bric");
+  assert.equal(detectPlatformFromProgressHint("朋友圈连读排队中，请稍候…"), "wechat_moments");
+  assert.equal(detectPlatformFromProgressHint("拼贴页 1/3"), null);
+});
+
+test("P2 · 画册跨页数：夹取范围与小红书区分（1–30 vs 1–18）", () => {
+  assert.equal(clampAlbumSlideCount(0), 1);
+  assert.equal(clampAlbumSlideCount(30), 30);
+  assert.equal(clampAlbumSlideCount(99), 30);
+  assert.equal(isAlbumPresetCount(3), true);
+  assert.equal(isAlbumPresetCount(18), false);
+
+  // 同一个数字，两个平台的夹取上限不同（18 vs 30）。
+  assert.equal(clampSlideCountForPlatform("xiaohongshu", 25), 18);
+  assert.equal(clampSlideCountForPlatform("album_spread", 25), 25);
+});
+
+test("P2 · buildPanelHtml 含跨页数字段；syncPanelUI 按 platform 显隐", () => {
+  const html = buildPanelHtml(["wechat_chat", "xiaohongshu", "album_spread"]);
+  assert.match(html, /data-field="album-count"/);
+  assert.match(html, /data-studio-album-count="auto"/);
+  assert.match(html, /跨页数/);
+
+  const popAlbum = stubPopover();
+  syncPanelUI(popAlbum, { platform: "album_spread", mode: "chapter", scale: 2, slideCount: null });
+  assert.equal(popAlbum._albumCountField.hidden, false);
+
+  const popChat = stubPopover();
+  syncPanelUI(popChat, { platform: "wechat_chat", mode: "chapter", scale: 2 });
+  assert.equal(popChat._albumCountField.hidden, true);
+
+  const popManual = stubPopover();
+  syncPanelUI(popManual, {
+    platform: "album_spread",
+    mode: "chapter",
+    scale: 2,
+    slideCount: 6,
+  });
+  assert.match(popManual._expectBody.innerHTML, /6/);
+  assert.match(popManual._expectBody.innerHTML, /跨页/);
 });

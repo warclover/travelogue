@@ -137,7 +137,9 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "正在生成可发微信的长图…";
+    // P0 · 兜底文案保持平台中立；真实标题始终由调用方按 platform 传入
+    // （见 preview-toolbar/longshot.js · humanExportProgress）。
+    main.textContent = opts.title || "正在导出中…";
     textWrap.appendChild(main);
     if (opts.subtitle) {
       var sub = document.createElement("small");

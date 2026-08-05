@@ -10,6 +10,14 @@ never letterboxed. Subject-safety reuses ``layout_contract/subject.py``'s
 (AC-ECC-06), so the one crop-required slot in the whole library
 (``card-4-square-top-triband``'s ``main`` cell) biases upward instead of
 dead-center when the photo is tagged as containing a person.
+
+Slots within a single card are separated by a thin ``CARD_SLOT_GAP`` seam
+(user feedback 2026-08-05: multi-slot cards should read as "assembled tiles"
+rather than one bleed image); a multi-cell slot (``col_span``/``row_span`` >
+1) stays a continuous rectangle — the seam only appears *between* distinct
+slots, never inside one. The gap is expressed at ``CARD_CANVAS`` base scale
+and rescaled proportionally to whatever canvas width is actually rendered
+(covers both the plain 1080 base and the 1.25x "更清晰" scale bump).
 """
 
 from __future__ import annotations
@@ -35,6 +43,11 @@ CARD_CANVAS = (1080, 1440)
 #: image (PRD-EXPORT-CARD-COMPOSE-V1 §3.1).
 ALBUM_GUTTER = 48
 
+#: Seam between adjacent slots *within* one card (px, at CARD_CANVAS base
+#: scale) — thin on purpose (a divider, not a second gutter); keeps dense
+#: templates (e.g. 16-grid) from losing too much per-slot area.
+CARD_SLOT_GAP = 6
+
 
 def scale_canvas(base_wh: tuple[int, int], scale: int) -> tuple[int, int]:
     """Bump a base canvas ~1.25x for the "更清晰" (scale>2) Studio option."""
@@ -42,6 +55,13 @@ def scale_canvas(base_wh: tuple[int, int], scale: int) -> tuple[int, int]:
     if int(scale or 2) > 2:
         return int(round(w * 1.25)), int(round(h * 1.25))
     return w, h
+
+
+def _slot_gap_for_width(width: int) -> int:
+    """Scale ``CARD_SLOT_GAP`` proportionally to the rendered card width."""
+    if CARD_CANVAS[0] <= 0:
+        return CARD_SLOT_GAP
+    return max(0, round(CARD_SLOT_GAP * (width / CARD_CANVAS[0])))
 
 #: displayAspect band that forces a real crop for *every* natural photo
 #: orientation (portrait ~0.75, landscape ~1.5 both miss it) — currently only
@@ -83,19 +103,28 @@ def _paint_template(
     width: int,
     height: int,
     asset_lookup: AssetLookup | None,
+    gap: int = 0,
 ) -> None:
     if len(photos) != template.slot_count:
         raise ValueError(
             f"card_renderer: template {template.id} expects "
             f"{template.slot_count} photos, got {len(photos)}"
         )
-    cell_w = width / template.grid_cols
-    cell_h = height / template.grid_rows
+    cols, rows = template.grid_cols, template.grid_rows
+    # Reserve (cols-1)/(rows-1) internal seams from the usable area up front,
+    # so cells stay evenly sized instead of the last column/row absorbing
+    # the gap's rounding slack.
+    usable_w = max(1, width - gap * max(0, cols - 1))
+    usable_h = max(1, height - gap * max(0, rows - 1))
+    cell_w = usable_w / cols
+    cell_h = usable_h / rows
     for path, slot in zip(photos, template.slots, strict=True):
-        sx0 = x0 + round(slot.col * cell_w)
-        sy0 = y0 + round(slot.row * cell_h)
-        sx1 = x0 + round((slot.col + slot.col_span) * cell_w)
-        sy1 = y0 + round((slot.row + slot.row_span) * cell_h)
+        sx0 = x0 + round(slot.col * (cell_w + gap))
+        sy0 = y0 + round(slot.row * (cell_h + gap))
+        # A multi-cell slot (col_span/row_span > 1) is one continuous photo —
+        # the seam only separates *distinct* slots, never splits one in two.
+        sx1 = sx0 + round(slot.col_span * cell_w + max(0, slot.col_span - 1) * gap)
+        sy1 = sy0 + round(slot.row_span * cell_h + max(0, slot.row_span - 1) * gap)
         tw, th = max(1, sx1 - sx0), max(1, sy1 - sy0)
         loaded = load_image_normalized(path)
         img = loaded.image
@@ -120,8 +149,17 @@ def render_card(
     """Render a single 3:4 card. Returns ``(png_bytes, diagnostics)``."""
     width, height = canvas_wh
     canvas = Image.new("RGB", (width, height), bg)
+    gap = _slot_gap_for_width(width)
     _paint_template(
-        canvas, template, photos, x0=0, y0=0, width=width, height=height, asset_lookup=asset_lookup
+        canvas,
+        template,
+        photos,
+        x0=0,
+        y0=0,
+        width=width,
+        height=height,
+        asset_lookup=asset_lookup,
+        gap=gap,
     )
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
@@ -130,6 +168,7 @@ def render_card(
         "template": template.id,
         "n": len(photos),
         "fit": "cover",
+        "slotGap": gap,
     }
     return buf.getvalue(), diag
 
@@ -152,9 +191,18 @@ def render_spread(
     card_w, card_h = card_wh
     total_w = card_w * 2 + gutter
     canvas = Image.new("RGB", (total_w, card_h), bg)
+    slot_gap = _slot_gap_for_width(card_w)
     left_photos, left_template = left
     _paint_template(
-        canvas, left_template, left_photos, x0=0, y0=0, width=card_w, height=card_h, asset_lookup=asset_lookup
+        canvas,
+        left_template,
+        left_photos,
+        x0=0,
+        y0=0,
+        width=card_w,
+        height=card_h,
+        asset_lookup=asset_lookup,
+        gap=slot_gap,
     )
     half_page = right is None
     right_template_id = None
@@ -170,6 +218,7 @@ def render_spread(
             width=card_w,
             height=card_h,
             asset_lookup=asset_lookup,
+            gap=slot_gap,
         )
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
@@ -177,6 +226,7 @@ def render_spread(
         "canvas": [total_w, card_h],
         "templates": [left_template.id, right_template_id],
         "gutter": gutter,
+        "slotGap": slot_gap,
         "halfPage": half_page,
         "fit": "cover",
     }

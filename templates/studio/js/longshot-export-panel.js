@@ -59,6 +59,7 @@ export var PLATFORMS = {
     cta: "导出画册跨页",
     showSegmentMode: false,
     showCopyControls: false,
+    showAlbumCountOptions: true,
     expectHtml:
       "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）",
   },
@@ -153,6 +154,32 @@ export function isXhsPresetCount(slideCount) {
   return slideCount != null && !!XHS_PRESET_COUNTS[String(slideCount)];
 }
 
+/**
+ * P2 · 画册跨页数（mirrors 小红书张数控件；单位是「跨页」而非「张」— 一跨页
+ * ≈两张 3:4 卡，见 collage_pack.py `_album_target_per_card`）。
+ * 上限对齐 `config/platform_profiles.yaml` album_spread.output.max_pages。
+ */
+export var ALBUM_SLIDE_COUNT_MIN = 1;
+export var ALBUM_SLIDE_COUNT_MAX = 30;
+export var ALBUM_PRESET_COUNTS = { "3": true, "6": true, "9": true };
+
+export function clampAlbumSlideCount(value) {
+  var n = parseInt(value, 10);
+  if (!isFinite(n)) return null;
+  return Math.max(ALBUM_SLIDE_COUNT_MIN, Math.min(ALBUM_SLIDE_COUNT_MAX, n));
+}
+
+export function isAlbumPresetCount(slideCount) {
+  return slideCount != null && !!ALBUM_PRESET_COUNTS[String(slideCount)];
+}
+
+/** 与 confirmed/draft platform 联动的通用 slideCount 夹取（张数 vs 跨页数）。 */
+export function clampSlideCountForPlatform(platformId, value) {
+  return platformId === "album_spread"
+    ? clampAlbumSlideCount(value)
+    : clampXhsSlideCount(value);
+}
+
 export function isSmartCropUiEnabled(cfgStudio) {
   var l2 = (cfgStudio && cfgStudio.longshot2) || {};
   var sc = l2.smartCrop || l2.smart_crop || {};
@@ -173,12 +200,15 @@ export function readExportPrefs() {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
     if (!raw) return defaults;
     var parsed = JSON.parse(raw);
+    var platform = parsed.platform || defaults.platform;
     return {
-      platform: parsed.platform || defaults.platform,
+      platform: platform,
       mode: parsed.mode === "full" || parsed.mode === "chapter" ? parsed.mode : "chapter",
       scale: parsed.scale === 3 ? 3 : 2,
       slideCount:
-        parsed.slideCount == null ? null : clampXhsSlideCount(parsed.slideCount),
+        parsed.slideCount == null
+          ? null
+          : clampSlideCountForPlatform(platform, parsed.slideCount),
       padMode: parsed.padMode || "letterbox",
       includeAppendix: parsed.includeAppendix === true,
       density: parsed.density === "compact" ? "compact" : "default",
@@ -207,6 +237,52 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "poster_bric") return "单张海报";
   if (platformId === "album_spread") return "画册";
   return "发微信群";
+}
+
+/**
+ * 导出进度 · Task Dock 第一行标题（P0 · 禁止对 Compose 平台回落到「微信」文案）
+ * 与 `shortCtaLabelForPlatform` 同源分流，但用于进行中态而非按钮标签。
+ */
+export var PROGRESS_TITLES = {
+  wechat_chat: "正在生成可发微信的长图…",
+  wechat_moments: "正在生成朋友圈长图…",
+  moments_grid: "正在生成拼贴导出…",
+  xiaohongshu: "正在生成小红书竖版拼贴…",
+  poster_bric: "正在生成 3:4 单张海报…",
+  album_spread: "正在生成画册跨页…",
+};
+
+/** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
+export var COMPOSE_PLATFORMS = {
+  xiaohongshu: true,
+  poster_bric: true,
+  album_spread: true,
+};
+
+export function isComposePlatform(platformId) {
+  return COMPOSE_PLATFORMS[platformId] === true;
+}
+
+export function progressTitleForPlatform(platformId) {
+  return PROGRESS_TITLES[platformId] || PROGRESS_TITLES.wechat_chat;
+}
+
+export function progressSynthesizingTitleForPlatform(platformId) {
+  return isComposePlatform(platformId) ? "正在合成拼贴…" : "正在合成长图…";
+}
+
+/**
+ * 从后端/排队阶段的自由文本 hint 里识别平台（比 localStorage prefs 更即时，
+ * 用于 resume / stageHint 场景下 prefs 可能滞后的兜底），识别不到返回 null。
+ */
+export function detectPlatformFromProgressHint(hint) {
+  var text = String(hint || "");
+  if (/小红书/.test(text)) return "xiaohongshu";
+  if (/画册|跨页/.test(text)) return "album_spread";
+  if (/单(张|屏)海报/.test(text)) return "poster_bric";
+  if (/朋友圈|连读/.test(text)) return "wechat_moments";
+  if (/九宫格/.test(text)) return "moments_grid";
+  return null;
 }
 
 /** 设置入口摘要 · 「当前将导出：…」 */
@@ -355,6 +431,22 @@ export function buildPanelHtml(platformIds) {
     "</label></div>" +
     '<p class="preview-toolbar__export-xhs-estimate" data-xhs-estimate hidden></p>' +
     "</div>" +
+    '<div class="preview-toolbar__export-popover-field" data-field="album-count" hidden>' +
+    '<span class="preview-toolbar__export-popover-label">跨页数</span>' +
+    '<div class="preview-toolbar__export-popover-seg" role="group" data-album-count-seg>' +
+    '<button type="button" data-studio-album-count="auto">自动</button>' +
+    '<button type="button" data-studio-album-count="3">3</button>' +
+    '<button type="button" data-studio-album-count="6">6</button>' +
+    '<button type="button" data-studio-album-count="9">9</button>' +
+    '<button type="button" data-studio-album-count="custom">自定义</button>' +
+    "</div>" +
+    '<div class="preview-toolbar__export-xhs-custom" data-album-custom-row hidden>' +
+    '<label class="preview-toolbar__export-xhs-custom-label">' +
+    '<span>跨页数（1–30）</span>' +
+    '<input type="number" min="1" max="30" step="1" inputmode="numeric" ' +
+    'data-studio-album-custom-input class="preview-toolbar__export-xhs-custom-input" />' +
+    "</label></div>" +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="xhs-pad" hidden>' +
     '<span class="preview-toolbar__export-popover-label">填充</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
@@ -420,6 +512,7 @@ export function syncPanelUI(pop, draft, opts) {
   var platform = draft.platform || "wechat_chat";
   var meta = PLATFORMS[platform] || PLATFORMS.wechat_chat;
   var showXhs = !!meta.showXhsOptions;
+  var showAlbumCount = !!meta.showAlbumCountOptions;
   var smartOn = opts.smartCropEnabled === true;
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
@@ -462,9 +555,27 @@ export function syncPanelUI(pop, draft, opts) {
   var customRow = pop.querySelector("[data-xhs-custom-row]");
   var customInput = pop.querySelector("[data-studio-xhs-custom-input]");
   if (customRow) customRow.hidden = !(showXhs && useCustom);
-  if (customInput && useCustom) {
+  if (customInput && showXhs && useCustom) {
     if (document.activeElement !== customInput) {
       customInput.value = String(draft.slideCount);
+    }
+  }
+
+  // P2 · 画册跨页数（同一套 draft.slideCount，语义按 platform 区分）
+  var albumCountKey = draft.slideCount == null ? "auto" : String(draft.slideCount);
+  var albumUseCustom = draft.slideCount != null && !isAlbumPresetCount(draft.slideCount);
+  pop.querySelectorAll("[data-studio-album-count]").forEach(function (btn) {
+    var key = btn.getAttribute("data-studio-album-count");
+    var on = albumUseCustom ? key === "custom" : key === albumCountKey;
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  var albumCustomRow = pop.querySelector("[data-album-custom-row]");
+  var albumCustomInput = pop.querySelector("[data-studio-album-custom-input]");
+  if (albumCustomRow) albumCustomRow.hidden = !(showAlbumCount && albumUseCustom);
+  if (albumCustomInput && showAlbumCount && albumUseCustom) {
+    if (document.activeElement !== albumCustomInput) {
+      albumCustomInput.value = String(draft.slideCount);
     }
   }
   var pad = draft.padMode || "letterbox";
@@ -499,6 +610,8 @@ export function syncPanelUI(pop, draft, opts) {
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
   var xhsPad = pop.querySelector('[data-field="xhs-pad"]');
   var xhsPack = pop.querySelector('[data-field="xhs-copy-pack"]');
+  var albumCountField = pop.querySelector('[data-field="album-count"]');
+  if (albumCountField) albumCountField.hidden = !showAlbumCount;
   if (xhsCount) xhsCount.hidden = !showXhs;
   // Compose 路径不再做 letterbox/smart_crop；隐藏以免误导
   if (xhsPad) xhsPad.hidden = true;
@@ -546,6 +659,12 @@ export function syncPanelUI(pop, draft, opts) {
           "将生成 <strong>" +
           draft.slideCount +
           " 张</strong> 3:4 竖版拼贴海报 · 预计较快完成";
+      } else if (showAlbumCount && draft.slideCount != null) {
+        // Compose §5.1 · album 无 auto 公式；仅手动指定跨页数时才覆盖默认文案。
+        expectBody.innerHTML =
+          "将导出 <strong>" +
+          draft.slideCount +
+          " 张两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1）";
       } else {
         expectBody.innerHTML = meta.expectHtml;
       }
@@ -677,6 +796,48 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       }
     });
   }
+  // P2 · 画册「跨页数」— 与小红书「张数」同一 draft.slideCount 字段，按
+  // album_spread 自身的 1–30 范围夹取。
+  pop.querySelectorAll("[data-studio-album-count]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var v = btn.getAttribute("data-studio-album-count") || "auto";
+      if (v === "auto") {
+        draft.slideCount = null;
+      } else if (v === "custom") {
+        var prev = clampAlbumSlideCount(draft.slideCount);
+        draft.slideCount = prev != null ? prev : 6;
+        refresh();
+        var inp = pop.querySelector("[data-studio-album-custom-input]");
+        if (inp) {
+          try {
+            inp.focus();
+            inp.select();
+          } catch (e) {}
+        }
+        return;
+      } else {
+        draft.slideCount = clampAlbumSlideCount(v);
+      }
+      refresh();
+    });
+  });
+  var albumCustomInput = pop.querySelector("[data-studio-album-custom-input]");
+  if (albumCustomInput) {
+    function applyAlbumCustomInput() {
+      var n = clampAlbumSlideCount(albumCustomInput.value);
+      if (n == null) return;
+      draft.slideCount = n;
+      albumCustomInput.value = String(n);
+      refresh();
+    }
+    albumCustomInput.addEventListener("change", applyAlbumCustomInput);
+    albumCustomInput.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        applyAlbumCustomInput();
+      }
+    });
+  }
   pop.querySelectorAll("[data-studio-xhs-pad]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       if (btn.disabled) return;
@@ -708,7 +869,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
         mode: draft.mode,
         scale: draft.scale,
         slideCount:
-          draft.slideCount == null ? null : clampXhsSlideCount(draft.slideCount),
+          draft.slideCount == null
+            ? null
+            : clampSlideCountForPlatform(draft.platform, draft.slideCount),
         padMode: draft.padMode,
         includeAppendix: !!draft.includeAppendix,
         density: draft.density === "compact" ? "compact" : "default",
@@ -719,7 +882,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       draft.mode = next.mode || draft.mode;
       draft.scale = next.scale || draft.scale;
       draft.slideCount =
-        next.slideCount == null ? null : clampXhsSlideCount(next.slideCount);
+        next.slideCount == null
+          ? null
+          : clampSlideCountForPlatform(draft.platform, next.slideCount);
       draft.padMode = next.padMode || draft.padMode;
       if (next && typeof next.includeAppendix === "boolean") {
         draft.includeAppendix = next.includeAppendix;

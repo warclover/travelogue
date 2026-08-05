@@ -35,6 +35,7 @@ from travelogue.export.platform_longshot import PlatformExportWriter
 from travelogue.export.platform_profiles import (
     file_prefix_for_platform,
     get_profile,
+    resolve_aspect_slide_count,
     resolve_xhs_slide_count,
 )
 from travelogue.export.poster_bric_pack import list_poster_photo_paths
@@ -67,6 +68,31 @@ def _xhs_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any
     import math
 
     return max(1, int(math.ceil(n_photos / n_target)))
+
+
+def _album_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any) -> int | None:
+    """Advisory ``target_per_card`` hint for album_spread, derived from the
+    user's manual "跨页数" (spread count) request — mirrors
+    ``_xhs_target_per_card``'s "auto stays greedy, manual overrides steer
+    chunking" contract (§5.1). ``slide_count`` here counts **spreads**
+    (the platform's own output unit), so it's clamped against
+    ``album_spread``'s own profile bounds first; the target Card count is
+    then ~2x the clamped spread count (one spread = two Cards, plus a
+    possible trailing lone half-page — §3.1)."""
+    if slide_count is None:
+        return None
+    n_spreads, _hint = resolve_aspect_slide_count(
+        photo_count=n_photos,
+        slide_count=slide_count,
+        profile=profile,
+        hint_kind="album",
+    )
+    if n_spreads <= 0:
+        return None
+    target_cards = max(1, n_spreads * 2)
+    import math
+
+    return max(1, int(math.ceil(n_photos / target_cards)))
 
 
 def _pair_cards_for_spreads(
@@ -131,7 +157,10 @@ def export_collage_pack(
         )
         segment_reason = "collage_pages"
     else:
-        plans = plan_cards(paths)
+        album_target_per_card = _album_target_per_card(
+            len(paths), slide_count=slide_count, profile=profile
+        )
+        plans = plan_cards(paths, target_per_card=album_target_per_card)
         spreads = _pair_cards_for_spreads(plans)
         gutter = (
             int(round(ALBUM_GUTTER * 1.25)) if int(scale or 2) > 2 else ALBUM_GUTTER

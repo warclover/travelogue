@@ -19,6 +19,11 @@ import {
   showAmbiguousIntentCard,
   writeSessionIntent,
 } from "../js/output-recipe.js";
+import {
+  isComposePlatform,
+  progressSynthesizingTitleForPlatform,
+  progressTitleForPlatform,
+} from "../js/longshot-export-panel.js";
 import { V2 } from "./store.js";
 
 var _activeModal = null;
@@ -133,7 +138,7 @@ function openShelfLongshotModal(opts) {
       setBodyLines([
         "「" + (opts.tripTitle || "") + "」",
         LONGSHOT_PRESETS.shelf.label,
-        hint || "正在合成长图…",
+        hint || progressSynthesizingTitleForPlatform(opts.platform),
       ]);
     },
     showResult: function (formatted, tripId) {
@@ -255,8 +260,11 @@ export function runShelfLongshot(trip, opts) {
   });
 
   var modal = openShelfLongshotModal({
-    title: "正在保存长图",
+    title: isComposePlatform(preset.platform)
+      ? progressTitleForPlatform(preset.platform)
+      : "正在保存长图",
     tripTitle: title,
+    platform: preset.platform,
     initialLines: [
       "「" + title + "」",
       preset.label,
@@ -307,7 +315,7 @@ export function runShelfLongshot(trip, opts) {
       return null;
     }
 
-    modal.setProgress("正在合成长图…");
+    modal.setProgress(progressSynthesizingTitleForPlatform(preset.platform));
     var jobId = res.body.jobId;
     _backgroundJob = waitForLongshotJob(jobId, {
       onProgress: function (job) {

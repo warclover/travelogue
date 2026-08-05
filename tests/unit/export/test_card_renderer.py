@@ -58,6 +58,34 @@ def test_render_card_covers_every_pixel_no_background_bleed(tmp_path: Path) -> N
                 assert im.getpixel((x, y)) != bg
 
 
+def test_render_card_slot_gap_shows_seam_between_cells(tmp_path: Path) -> None:
+    """用户反馈 2026-08-05 · 多槙位卡片应有细缝，而非无缝贴合."""
+    template = CARD_TEMPLATES["card-2-stack-equal"]
+    top = _make_rgb(tmp_path / "top.jpg", size=(1600, 900), color=(220, 40, 40))
+    bottom = _make_rgb(tmp_path / "bottom.jpg", size=(1600, 900), color=(40, 40, 220))
+    data, diag = render_card([top, bottom], template, canvas_wh=CARD_CANVAS)
+    assert diag["slotGap"] > 0
+    bg = (245, 245, 243)
+    with Image.open(io.BytesIO(data)) as im:
+        w, h = im.size
+        seam_y = h // 2
+        # Right on the boundary between the two stacked slots: background gap.
+        assert im.getpixel((w // 2, seam_y)) == bg
+        # A few px into either slot (away from the seam): real photo content.
+        margin = diag["slotGap"] * 3
+        assert im.getpixel((w // 2, seam_y - margin)) != bg
+        assert im.getpixel((w // 2, seam_y + margin)) != bg
+
+
+def test_render_card_single_slot_has_no_gap(tmp_path: Path) -> None:
+    """1x1 网格没有内部缝隙可言——单图海报不受 gap 影响."""
+    template = CARD_TEMPLATES["card-1-full-frame"]
+    photo = _make_rgb(tmp_path / "a.jpg", size=(1600, 900), color=(220, 40, 40))
+    _data, diag = render_card([photo], template, canvas_wh=CARD_CANVAS)
+    # gap is still computed (>0) but has nowhere to apply on a single cell.
+    assert diag["slotGap"] > 0
+
+
 def test_render_card_wrong_photo_count_raises(tmp_path: Path) -> None:
     template = CARD_TEMPLATES["card-1-full-frame"]
     a = _make_rgb(tmp_path / "a.jpg", size=(800, 600), color=(1, 2, 3))
@@ -100,6 +128,7 @@ def test_render_spread_two_cards_with_gutter(tmp_path: Path) -> None:
     expected_w = CARD_CANVAS[0] * 2 + 48
     assert diag["canvas"] == [expected_w, CARD_CANVAS[1]]
     assert diag["halfPage"] is False
+    assert diag["slotGap"] > 0
     with Image.open(io.BytesIO(data)) as im:
         assert im.size == (expected_w, CARD_CANVAS[1])
         left_px = im.getpixel((CARD_CANVAS[0] // 2, CARD_CANVAS[1] // 2))

@@ -135,6 +135,30 @@ def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:
         assert im.getpixel((w - 10, h // 2)) == bg
 
 
+def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Path) -> None:
+    """P2 · 用户可指定「跨页数」，语义与小红书「张数」控件一致（一跨页≈两张 3:4 卡）。"""
+    trips = tmp_path / "trips"
+    create_trip("album-count", trips, title="画册指定跨页数")
+    trip_dir = trips / "album-count"
+    _seed_kept_photos(trip_dir, 20)
+
+    result = export_collage_pack(trip_dir, platform="album_spread", slide_count=2)
+    assert result.page_count == 2
+    finals = list(trip_dir.glob("*-album-*.png"))
+    assert len(finals) == 2
+
+
+def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None:
+    """slide_count=None（自动）不受本次改动影响 — 沿用既有贪心分页结果。"""
+    trips = tmp_path / "trips"
+    create_trip("album-auto", trips, title="画册自动分页")
+    trip_dir = trips / "album-auto"
+    _seed_kept_photos(trip_dir, 12)
+
+    auto_result = export_collage_pack(trip_dir, platform="album_spread")
+    assert auto_result.page_count == 2
+
+
 def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     create_trip("xhs-route", trips, title="路由小红书")
