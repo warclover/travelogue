@@ -31,14 +31,14 @@ export var PLATFORMS = {
   },
   poster_bric: {
     id: "poster_bric",
-    label: "单张海报 · A4",
+    label: "单张海报 · 3:4",
     title: "单张海报",
-    subtitle: "A4 拼贴",
-    cta: "导出 A4 海报",
+    subtitle: "3:4 拼贴",
+    cta: "导出单张海报",
     showSegmentMode: false,
     showCopyControls: false,
     expectHtml:
-      "将导出 <strong>1 张 A4</strong> 竖版拼贴海报（3–9 张精选）",
+      "将导出 <strong>1 张 3:4</strong> 竖版拼贴海报（1–6 张代表性精选照片）",
   },
   xiaohongshu: {
     id: "xiaohongshu",
@@ -55,12 +55,12 @@ export var PLATFORMS = {
     id: "album_spread",
     label: "画册印刷",
     title: "画册印刷",
-    subtitle: "2.8:1 跨页",
+    subtitle: "跨页拼贴",
     cta: "导出画册跨页",
     showSegmentMode: false,
     showCopyControls: false,
     expectHtml:
-      "将导出多张 <strong>约 2.8:1</strong> 横版跨页拼贴（适合印刷 / 对页预览）",
+      "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）",
   },
 };
 
@@ -120,9 +120,9 @@ export var XHS_SLIDE_COUNT_MAX = 18;
 export function scaleHintForPlatform(platformId, scale) {
   var s = scale === 3 ? 3 : 2;
   if (platformId === "poster_bric") {
-    var aw = s > 2 ? Math.round(1748 * 1.25) : 1748;
-    var ah = s > 2 ? Math.round(2480 * 1.25) : 2480;
-    return "A4 画布约 " + aw + "×" + ah + "px";
+    var aw = s > 2 ? Math.round(1080 * 1.25) : 1080;
+    var ah = s > 2 ? Math.round(1440 * 1.25) : 1440;
+    return "3:4 画布约 " + aw + "×" + ah + "px";
   }
   if (platformId === "xiaohongshu") {
     var xw = s > 2 ? Math.round(1080 * 1.25) : 1080;
@@ -130,7 +130,9 @@ export function scaleHintForPlatform(platformId, scale) {
     return "竖版海报约 " + xw + "×" + xh + "px（3:4）";
   }
   if (platformId === "album_spread") {
-    return "画册跨页约 2800×1000px（2.8:1）";
+    var sw = s > 2 ? Math.round(2208 * 1.25) : 2208;
+    var sh = s > 2 ? Math.round(1440 * 1.25) : 1440;
+    return "画册跨页约 " + sw + "×" + sh + "px（1.53:1）";
   }
   if (platformId === "wechat_moments") {
     var mw = s === 3 ? 1284 : 856;
@@ -202,7 +204,7 @@ export function shortCtaLabelForPlatform(platformId) {
   // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
   if (platformId === "wechat_moments") return "导出连读";
   if (platformId === "xiaohongshu") return "小红书";
-  if (platformId === "poster_bric") return "A4海报";
+  if (platformId === "poster_bric") return "单张海报";
   if (platformId === "album_spread") return "画册";
   return "发微信群";
 }
@@ -751,7 +753,7 @@ export function formatPlatformSuccess(result) {
   var n = result.pageCount || (result.outputs && result.outputs.length) || 0;
   var title = "✓ 长图已保存";
   if (platform === "poster_bric") {
-    title = "✓ A4 海报已就绪";
+    title = "✓ 单张海报已就绪";
   } else if (platform === "wechat_moments") {
     title = "✓ " + n + " 张长图连读已就绪";
   } else if (platform === "xiaohongshu") {

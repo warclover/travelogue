@@ -54,9 +54,9 @@ platforms:
       有几张发几张：按编号 01→N 选入朋友圈九宫格（1:1）。
       这是真九宫格配图，不是长图连读切片。
 
-  # GCS Track B · 单屏 A4 海报拼贴（不进 screens[]；不走 Playwright）
+  # PRD-EXPORT-CARD-COMPOSE-V1 · 单张 3:4 Card 海报（不进 screens[]；不走 Playwright）
   poster_bric:
-    label: 单屏海报
+    label: 单张海报
     label_en: Poster Collage
     segment: photo_led
     capture: poster_bric
@@ -66,13 +66,13 @@ platforms:
     min_pages: 1
     max_pages: 1
     output:
-      width: 1748
-      height: 2480
-      aspect: "A4"
+      width: 1080
+      height: 1440
+      aspect: "3:4"
       naming: "{title}-poster"
       single_file: true
     publish_guide: >-
-      导出一张 A4 竖版拼贴海报（3–9 张精选 · contain 保比例）。
+      导出一张 3:4 竖版拼贴海报（1–6 张代表性精选照片 · 按模板槙位铺满，无留白）。
 
   xiaohongshu:
     label: 小红书
@@ -94,7 +94,7 @@ platforms:
       发布步骤：保存到相册 → 小红书 → 发笔记 → 选图（竖版拼贴海报 3:4）；
       详情写在笔记正文，配图是视觉提纲
 
-  # Compose · 相册跨页拼贴（2.8:1；不走 Playwright）
+  # PRD-EXPORT-CARD-COMPOSE-V1 · 相册跨页拼贴（两张 3:4 Card + 中缝，约 1.53:1；不走 Playwright）
   album_spread:
     label: 画册印刷
     label_en: Album Spread
@@ -106,13 +106,13 @@ platforms:
     min_pages: 1
     max_pages: 30
     output:
-      width: 2800
-      height: 1000
-      aspect: "2.8:1"
+      width: 2208
+      height: 1440
+      aspect: "1.53:1"
       naming: "{title}-album-{nn}"
       footer: "{i}/{n}"
     publish_guide: >-
-      导出横版画册跨页拼贴（约 2.8:1），适合对页预览与印刷。
+      导出画册跨页拼贴（两张 3:4 卡片 + 中缝，约 1.53:1，类似竖版画册打开），适合对页预览与印刷。
 
   # Phase C · CLI / API only（Studio UI 不开放）
   instagram:

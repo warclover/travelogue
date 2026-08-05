@@ -57,15 +57,15 @@ presets:
     cta_key: cta.moments_grid
     product_label_key: label.moments_grid
 
-  # Compose · A4 单张海报（默认 Studio 开放）
+  # PRD-EXPORT-CARD-COMPOSE-V1 · 单张 3:4 Card 海报（默认 Studio 开放）
   preset.poster_bric:
     intent: poster_bric
     engine: poster_bric
     platform: poster_bric
     layout: collage
-    geometry: { mode: fixed_aspect, width: 1748, height: 2480, aspect: "A4" }
-    count_policy: { mode: auto, min: 3, max: 9 }
-    packing: bric_compose
+    geometry: { mode: fixed_aspect, width: 1080, height: 1440, aspect: "3:4" }
+    count_policy: { mode: auto, min: 1, max: 6 }
+    packing: card_compose
     phases: [studio, cli]
     phase: GCS
     publish_guide_key: guide.poster_bric
@@ -80,21 +80,21 @@ presets:
     layout: collage
     geometry: { mode: fixed_aspect, width: 1080, height: 1440, aspect: "3:4" }
     count_policy: { mode: auto, max: 18 }
-    packing: bric_compose
+    packing: card_compose
     phases: [studio, cli]
     phase: B
     publish_guide_key: guide.xiaohongshu
     product_label_key: label.xiaohongshu
 
-  # Compose · 画册印刷 2.8:1 跨页
+  # PRD-EXPORT-CARD-COMPOSE-V1 · 画册印刷跨页（两张 3:4 Card + 中缝，约 1.53:1）
   preset.album_spread:
     intent: album_spread
     engine: collage_pages
     platform: album_spread
     layout: collage
-    geometry: { mode: fixed_aspect, width: 2800, height: 1000, aspect: "2.8:1" }
+    geometry: { mode: fixed_aspect, width: 2208, height: 1440, aspect: "1.53:1" }
     count_policy: { mode: auto, max: 30 }
-    packing: bric_compose
+    packing: card_compose
     phases: [studio, cli]
     phase: B
     publish_guide_key: guide.album_spread
@@ -122,14 +122,14 @@ copy:
   cta.narrative_chat: "按章导出长图 · 发微信群"
   cta.moments_scroll: "导出朋友圈 · 长图连读"
   cta.moments_grid: "导出朋友圈 · 九宫格（CLI）"
-  cta.poster_bric: "导出 A4 海报"
+  cta.poster_bric: "导出单张海报"
   cta.album_spread: "导出画册跨页"
   label.chat_longshot: "微信群 · 长图"
   label.moments_scroll: "朋友圈 · 长图连读"
   label.moments_grid: "朋友圈 · 九宫格（CLI）"
-  label.poster_bric: "单张海报 · A4"
+  label.poster_bric: "单张海报 · 3:4"
   label.xiaohongshu: "小红书 · 竖版拼贴海报"
-  label.album_spread: "画册印刷 · 2.8:1 跨页"
+  label.album_spread: "画册印刷 · 跨页"
   label.instagram_carousel: "Instagram · 轮播"
   hint.ambiguous_shelf: "可到预览选择其他分享方式"
   hint.narrative_deep: "照片较多，已按章节拆成多张，方便发送"
@@ -142,7 +142,7 @@ copy:
   intent.save_only: "先选不导出"
   fail.switch_share: "换种分享方式"
   guide.moments_grid: "按 01→N 全选九宫格配图发到朋友圈；有几张发几张，不必凑满 9 张。"
-  guide.poster_bric: "导出一张 A4 竖版拼贴海报（3–9 张精选）。"
+  guide.poster_bric: "导出一张 3:4 竖版拼贴海报（1–6 张代表性精选照片 · 按模板槙位铺满，无留白）。"
   guide.xiaohongshu: "竖版 3:4 拼贴海报；保存到相册后发小红书笔记，正文另写或复制文案包。"
-  guide.album_spread: "横版约 2.8:1 跨页拼贴，适合画册对页预览与印刷。"
+  guide.album_spread: "画册跨页拼贴（两张 3:4 卡片 + 中缝，约 1.53:1），适合对页预览与印刷。"
   guide.instagram_carousel: "Instagram carousel hook（未在 zh 默认开放）。"

@@ -33,7 +33,7 @@ def test_panel_module_exists_and_exports() -> None:
         "clampXhsSlideCount",
         'data-studio-xhs-count="custom"',
         "长图连读",
-        "导出 A4 海报",
+        "导出单张海报",
         "画册印刷",
         "竖版拼贴海报",
         'if (id === "moments_grid") return;',

@@ -1,4 +1,7 @@
-"""Unit tests · collage_pack (xiaohongshu / album_spread)."""
+"""Unit tests · collage_pack (xiaohongshu 3:4 Card / album_spread paired 3:4 + gutter).
+
+PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4.
+"""
 
 from __future__ import annotations
 
@@ -70,7 +73,8 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "xiaohongshu"
     assert result.capture_method == "collage_pages"
-    assert result.page_count >= 2
+    # 8 photos greedy-chunk to [7,1] (largest available slot count ≤ 8) → 2 cards.
+    assert result.page_count == 2
     assert "竖版拼贴" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
@@ -79,7 +83,19 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
             assert im.size == (1080, 1440)
 
 
-def test_export_album_spread_aspect(tmp_path: Path) -> None:
+def test_export_xiaohongshu_covers_every_photo(tmp_path: Path) -> None:
+    """AC-ECC-01 · 每张照片都进入某个 Card，没有被 CardGrouper 丢弃。"""
+    trips = tmp_path / "trips"
+    create_trip("xhs-13", trips, title="小红书13张")
+    trip_dir = trips / "xhs-13"
+    _seed_kept_photos(trip_dir, 13)
+
+    result = export_collage_pack(trip_dir, platform="xiaohongshu")
+    # 13 → greedy [9,4] → 2 cards.
+    assert result.page_count == 2
+
+
+def test_export_album_spread_geometry(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     create_trip("album-12", trips, title="相册跨页")
     trip_dir = trips / "album-12"
@@ -88,46 +104,34 @@ def test_export_album_spread_aspect(tmp_path: Path) -> None:
     result = export_collage_pack(trip_dir, platform="album_spread")
     assert result.platform == "album_spread"
     assert result.capture_method == "collage_pages"
+    # 12 → CardGrouper greedy [9,1,1,1] → 4 cards → paired spreads: 2.
     assert result.page_count == 2
-    assert "2.8:1" in (result.user_hint or "")
+    assert "3:4" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-album-*.png"))
     assert len(finals) == 2
     for path in finals:
         with Image.open(path) as im:
-            assert im.size == (2800, 1000)
-            assert abs(im.size[0] / im.size[1] - 2.8) < 0.01
+            assert im.size == (2208, 1440)
+            assert abs(im.size[0] / im.size[1] - 1.53) < 0.02
 
 
-def test_album_pack_by_chapter(tmp_path: Path) -> None:
-    """两章各 3 张 → 两页 spread（章边界优先，非扁平 6+）。"""
-    from travelogue.export.collage_pack import pack_album_pages_by_chapter
-
+def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:
+    """OQ-ECC-02 默认解：末尾单卡独立成半页，不强行拉伸铺满整跨页。"""
     trips = tmp_path / "trips"
-    create_trip("album-ch", trips, title="按章画册")
-    trip_dir = trips / "album-ch"
-    ids = _seed_kept_photos(trip_dir, 6)
-    trip_json = trip_dir / "trip.json"
-    data = json.loads(trip_json.read_text(encoding="utf-8"))
-    data["chapters"] = [
-        {
-            "id": "ch1",
-            "screens": [{"id": "s1", "assetIds": ids[:3]}],
-        },
-        {
-            "id": "ch2",
-            "screens": [{"id": "s2", "assetIds": ids[3:]}],
-        },
-    ]
-    trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    pages = pack_album_pages_by_chapter(trip_dir)
-    assert len(pages) == 2
-    assert len(pages[0]) == 3
-    assert len(pages[1]) == 3
+    create_trip("album-odd", trips, title="奇数卡画册")
+    trip_dir = trips / "album-odd"
+    # 9 photos → CardGrouper greedy [9] → 1 card (odd count) → 1 spread with
+    # a lone card (right half stays background, no partner to pair with).
+    _seed_kept_photos(trip_dir, 9)
 
     result = export_collage_pack(trip_dir, platform="album_spread")
-    assert result.page_count == 2
-    assert "按章分页" in (result.user_hint or "")
+    assert result.page_count == 1
+    finals = list(trip_dir.glob("*-album-*.png"))
+    assert len(finals) == 1
+    with Image.open(finals[0]) as im:
+        bg = (245, 245, 243)
+        w, h = im.size
+        assert im.getpixel((w - 10, h // 2)) == bg
 
 
 def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:
@@ -141,7 +145,7 @@ def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:
     mock_b.assert_not_called()
     assert result.platform == "xiaohongshu"
     assert result.capture_method == "collage_pages"
-    assert result.page_count >= 2
+    assert result.page_count >= 1
 
 
 def test_route_album_via_export_trip_longshot(tmp_path: Path) -> None:
@@ -156,3 +160,16 @@ def test_route_album_via_export_trip_longshot(tmp_path: Path) -> None:
     assert result.platform == "album_spread"
     assert result.capture_method == "collage_pages"
     assert result.page_count == 1
+
+
+def test_export_collage_pack_empty_raises(tmp_path: Path) -> None:
+    from travelogue.export.longshot import LongshotExportError
+
+    trips = tmp_path / "trips"
+    create_trip("xhs-empty", trips, title="空")
+    trip_dir = trips / "xhs-empty"
+    _seed_kept_photos(trip_dir, 0)
+
+    with pytest.raises(LongshotExportError) as ei:
+        export_collage_pack(trip_dir, platform="xiaohongshu")
+    assert getattr(ei.value, "code", None) == "E_COLLAGE_N"

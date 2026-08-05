@@ -239,7 +239,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张竖版拼贴海报已就绪";
     } else if (result.platform === "poster_bric") {
-      main.textContent = "✓ A4 海报已就绪";
+      main.textContent = "✓ 单张海报已就绪";
     } else if (result.platform === "album_spread") {
       var nAlbum = result.pageCount || outputs.length;
       main.textContent = "✓ " + nAlbum + " 张画册跨页已就绪";
@@ -278,11 +278,11 @@ export function mountPreviewTaskDock(root, hooks) {
             : "已保存到此画册文件夹 · 竖版拼贴海报，导入小红书发布即可";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "poster_bric") {
-        shareHint.textContent = "已保存到此画册文件夹 · A4 拼贴海报";
+        shareHint.textContent = "已保存到此画册文件夹 · 3:4 拼贴海报";
         textWrap.appendChild(shareHint);
       } else if (result.platform === "album_spread") {
         shareHint.textContent =
-          "已保存到此画册文件夹 · 约 2.8:1 画册跨页，可预览或送印";
+          "已保存到此画册文件夹 · 两卡跨页拼贴（约 1.53:1），可预览或送印";
         textWrap.appendChild(shareHint);
       } else {
         // FE-DFX-30 · 稳定成功面副文案（此画册文件夹）

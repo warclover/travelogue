@@ -654,7 +654,7 @@ export function cancelPreviewLongshotExport(root) {
       return "小红书海报 · " + n + " 张 · " + prefs.scale + "×";
     }
     if (platform === "poster_bric") {
-      return "A4 海报 · " + prefs.scale + "×";
+      return "单张海报 · " + prefs.scale + "×";
     }
     if (platform === "album_spread") {
       return "画册跨页 · " + prefs.scale + "×";
@@ -1869,12 +1869,12 @@ export function cancelPreviewLongshotExport(root) {
         (outputs.length || 0) +
         " 张竖版拼贴海报（3:4）· 可发小红书";
     } else if (resultPlatform === "poster_bric") {
-      homeHint.textContent = "已保存 1 张 A4 拼贴海报";
+      homeHint.textContent = "已保存 1 张 3:4 拼贴海报";
     } else if (resultPlatform === "album_spread") {
       homeHint.textContent =
         "已保存 " +
         (outputs.length || 0) +
-        " 张画册跨页（约 2.8:1）· 可预览或送印";
+        " 张画册跨页（两卡 3:4+3:4+中缝，约 1.53:1）· 可预览或送印";
     } else {
       // FE-FST-04 · 默认成功面：已保存确认，不塞发群教学
       var drawerTitle = String(result.displayTitle || result.title || "").trim();
@@ -2523,7 +2523,7 @@ export function cancelPreviewLongshotExport(root) {
           : platform === "xiaohongshu"
             ? "正在导出小红书竖版拼贴海报…"
             : platform === "poster_bric"
-              ? "正在导出 A4 海报…"
+              ? "正在导出单张海报…"
               : platform === "album_spread"
                 ? "正在导出画册跨页…"
                 : "正在保存…";
@@ -2600,7 +2600,7 @@ export function cancelPreviewLongshotExport(root) {
             : platform === "xiaohongshu"
               ? "小红书海报排队中，请稍候…"
               : platform === "poster_bric"
-                ? "A4 海报排队中，请稍候…"
+                ? "单张海报排队中，请稍候…"
                 : platform === "album_spread"
                   ? "画册跨页排队中，请稍候…"
                   : "排队中，请稍候…";

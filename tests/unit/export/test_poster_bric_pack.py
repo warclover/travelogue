@@ -127,12 +127,12 @@ def test_ac_tpc_07_export_n4_no_screens_mutation(tmp_path: Path) -> None:
     assert result.capture_method == "poster_bric"
     assert "九宫格" not in (result.user_hint or "")
     assert "九宫格" not in (result.publish_guide or "")
-    assert result.profile_label == "单屏海报"
+    assert result.profile_label == "单张海报"
 
     finals = list(trip_dir.glob("*-poster.png"))
     assert len(finals) == 1
     with Image.open(finals[0]) as im:
-        assert im.size == (1748, 2480)
+        assert im.size == (1080, 1440)
 
     after = json.loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
     screens_after = json.dumps(after["chapters"][0]["screens"], sort_keys=True)
@@ -154,14 +154,31 @@ def test_poster_bric_ignores_jpeg_fmt(tmp_path: Path) -> None:
     assert finals[0].read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
 
-def test_ac_tpc_07_reject_n2(tmp_path: Path) -> None:
+def test_ac_tpc_07_reject_zero_photos(tmp_path: Path) -> None:
+    """PRD-EXPORT-CARD-COMPOSE-V1 §5.2 · card-1-full-frame 让 1 张精选照片
+    也是合法海报，新地板是 0（无照片）才拒绝，不再是旧的 MIN_N=3。"""
     trips = tmp_path / "trips"
-    create_trip("poster-2", trips, title="两张拒")
-    trip_dir = trips / "poster-2"
-    _seed_kept_photos(trip_dir, 2)
+    create_trip("poster-0", trips, title="零张拒")
+    trip_dir = trips / "poster-0"
+    _seed_kept_photos(trip_dir, 0)
     with pytest.raises(LongshotExportError) as ei:
         export_poster_bric_pack(trip_dir, cfg=_cfg_on())
     assert getattr(ei.value, "code", None) == "E_GCS_POSTER_N"
+
+
+def test_ac_tpc_07_single_photo_uses_full_frame(tmp_path: Path) -> None:
+    """新地板：仅 1–2 张精选照片时改用 card-1-full-frame 单图满版，不再拒绝。"""
+    trips = tmp_path / "trips"
+    create_trip("poster-2", trips, title="两张不拒")
+    trip_dir = trips / "poster-2"
+    _seed_kept_photos(trip_dir, 2)
+    result = export_poster_bric_pack(trip_dir, cfg=_cfg_on())
+    assert result.platform == "poster_bric"
+    assert result.page_count == 1
+    finals = list(trip_dir.glob("*-poster.png"))
+    assert len(finals) == 1
+    with Image.open(finals[0]) as im:
+        assert im.size == (1080, 1440)
 
 
 def test_ac_tpc_07_exclude_collage(tmp_path: Path) -> None:
@@ -227,16 +244,24 @@ def test_compose_poster_png_bytes(tmp_path: Path) -> None:
     data, diag = compose_poster_png(paths)
     assert data[:8] == b"\x89PNG\r\n\x1a\n"
     assert diag["exportSurface"] == "poster_bric"
-    assert diag["n"] == 3
-    assert diag["spacing"] == 8
-    assert diag["canvas"] == [1748, 2480]
+    # pool_size=3 < 4 → falls back to the single full-frame template (§5.2).
+    assert diag["template"] == "card-1-full-frame"
+    assert diag["n"] == 1
+    assert diag["canvas"] == [1080, 1440]
     with Image.open(__import__("io").BytesIO(data)) as im:
-        assert im.size == (1748, 2480)
+        assert im.size == (1080, 1440)
+
+
+def test_compose_poster_png_empty_raises() -> None:
+    with pytest.raises(LongshotExportError) as ei:
+        compose_poster_png([])
+    assert getattr(ei.value, "code", None) == "E_GCS_POSTER_N"
 
 
 def test_ui_copy_no_jiugongge_for_poster() -> None:
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
     assert 'id: "poster_bric"' in panel
-    assert "A4" in panel
+    assert "3:4" in panel
+    assert "A4" not in panel  # PRD-EXPORT-CARD-COMPOSE-V1 · poster_bric 已改 3:4
     assert "九宫格" not in panel.split("poster_bric:")[1].split("xiaohongshu:")[0]
     assert 'id: "moments_grid"' not in panel

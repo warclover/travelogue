@@ -72,9 +72,9 @@ test("poster_bric 在 INTENT/PLATFORM 映射中互逆", () => {
 });
 
 test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", () => {
-  assert.equal(ctaLabelForPlatform("poster_bric"), "导出 A4 海报");
-  assert.equal(shortCtaLabelForPlatform("poster_bric"), "A4海报");
-  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · A4");
+  assert.equal(ctaLabelForPlatform("poster_bric"), "导出单张海报");
+  assert.equal(shortCtaLabelForPlatform("poster_bric"), "单张海报");
+  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · 3:4");
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 

@@ -1,16 +1,27 @@
-"""Multi-page collage export · xiaohongshu (3:4) + album_spread (2.8:1)."""
+"""Multi-page collage export · xiaohongshu (3:4 Card) + album_spread (paired 3:4 Cards + gutter).
+
+PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4. Both platforms share the
+CardGrouper → CardTemplateSelector → CardRenderer pipeline
+(``card_grouper.py`` / ``card_renderer.py``); neither requires shot-grouping
+/ chapter-boundary awareness — only orientation-correct slot filling (§4 v0.2
+simplification). ``pack_album_pages_by_chapter``'s chapter-first packing is
+**retired** (BLK-ECC-05): CardGrouper's sequential slot-count consumption
+replaces it, so there is no more "按章分页" special case.
+"""
 
 from __future__ import annotations
 
 import logging
-import math
 from pathlib import Path
 from typing import Any
 
-from travelogue.export.compose_canvas import (
-    canvas_for_platform,
-    compose_fixed_canvas,
-    pack_photo_pages,
+from travelogue.export.card_grouper import CardPlan, plan_cards
+from travelogue.export.card_renderer import (
+    ALBUM_GUTTER,
+    CARD_CANVAS,
+    render_card,
+    render_spread,
+    scale_canvas,
 )
 from travelogue.export.longshot import (
     LongshotExportError,
@@ -20,28 +31,17 @@ from travelogue.export.longshot import (
     _slug_title,
     _trip_title,
 )
-from travelogue.export.photo_grid_pack import (
-    _is_kept_image,
-    _load_trip,
-    _resolve_asset_image_path,
-)
-from travelogue.export.poster_bric_pack import list_poster_photo_paths
 from travelogue.export.platform_longshot import PlatformExportWriter
 from travelogue.export.platform_profiles import (
     file_prefix_for_platform,
     get_profile,
     resolve_xhs_slide_count,
 )
-from travelogue.media.media_classify import is_collage_asset
+from travelogue.export.poster_bric_pack import list_poster_photo_paths
 
 _log = logging.getLogger(__name__)
 
 _COLLAGE_PHOTO_LIMIT = 72
-_XHS_PER_PAGE_MIN = 3
-_XHS_PER_PAGE_MAX = 6
-_ALBUM_PER_PAGE = 6
-_ALBUM_MAX_PAGES = 30
-_ALBUM_MERGE_BELOW = 2  # 章内图过少时尝试与上一 spread 合并
 
 
 def list_collage_photo_paths(trip_dir: Path, *, limit: int = _COLLAGE_PHOTO_LIMIT) -> list[Path]:
@@ -49,117 +49,37 @@ def list_collage_photo_paths(trip_dir: Path, *, limit: int = _COLLAGE_PHOTO_LIMI
     return list_poster_photo_paths(trip_dir, limit=limit)
 
 
-def _xhs_page_count(
-    n_photos: int,
-    *,
-    slide_count: int | None,
-    profile: Any,
-) -> tuple[int, str]:
-    """Resolve N pages for xiaohongshu collage (soft band 3–9 like estimate)."""
-    n, hint = resolve_xhs_slide_count(
-        photo_count=n_photos,
-        slide_count=slide_count,
-        profile=profile,
+def _xhs_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any) -> int | None:
+    """Advisory ``target_per_card`` hint — **only** when the user explicitly
+    picked a "自定义张数" ``slide_count``. PRD-EXPORT-CARD-COMPOSE-V1 §5.1:
+    the *auto* page-count estimate formula is retired outright (no longer
+    "对齐...的「切片数」公式"); auto mode must fall through to CardGrouper's
+    plain greedy largest-slot-first chunking (``target_per_card=None``).
+    A manual override is a distinct, still-legitimate UX affordance, honored
+    as a soft hint (template library has final say on exact slot counts)."""
+    if slide_count is None:
+        return None
+    n_target, _hint = resolve_xhs_slide_count(
+        photo_count=n_photos, slide_count=slide_count, profile=profile
     )
-    return n, hint
+    if n_target <= 0:
+        return None
+    import math
+
+    return max(1, int(math.ceil(n_photos / n_target)))
 
 
-def _xhs_per_page(n_photos: int, n_pages: int) -> int:
-    n_pages = max(1, int(n_pages))
-    raw = max(1, int(math.ceil(n_photos / n_pages)))
-    return max(_XHS_PER_PAGE_MIN, min(_XHS_PER_PAGE_MAX, raw)) if n_photos >= 3 else raw
-
-
-def _chapter_photo_paths(
-    trip: dict[str, Any],
-    trip_dir: Path,
-    *,
-    limit: int,
-) -> list[list[Path]]:
-    """Per-chapter ordered kept photo paths (exclude collage assets)."""
-    assets_by_id = {
-        str(a.get("id") or ""): a
-        for a in (trip.get("assets") or [])
-        if isinstance(a, dict) and str(a.get("id") or "").strip()
-    }
-    seen: set[str] = set()
-    chapters_out: list[list[Path]] = []
-    total = 0
-    for ch in trip.get("chapters") or []:
-        if not isinstance(ch, dict):
-            continue
-        batch: list[Path] = []
-        for screen in ch.get("screens") or []:
-            if not isinstance(screen, dict):
-                continue
-            for raw_id in screen.get("assetIds") or []:
-                aid = str(raw_id or "").strip()
-                if not aid or aid in seen:
-                    continue
-                asset = assets_by_id.get(aid)
-                if not asset or not _is_kept_image(asset):
-                    continue
-                if is_collage_asset(asset):
-                    continue
-                resolved = _resolve_asset_image_path(asset, trip_dir)
-                if resolved is None or not resolved.is_file():
-                    continue
-                seen.add(aid)
-                batch.append(resolved)
-                total += 1
-                if total >= limit:
-                    if batch:
-                        chapters_out.append(batch)
-                    return chapters_out
-        if batch:
-            chapters_out.append(batch)
-    return chapters_out
-
-
-def pack_album_pages_by_chapter(
-    trip_dir: Path,
-    *,
-    per_page: int = _ALBUM_PER_PAGE,
-    max_pages: int = _ALBUM_MAX_PAGES,
-    limit: int = _COLLAGE_PHOTO_LIMIT,
-) -> list[list[Path]]:
-    """Chapter-first album packing: one chapter → one+ spreads; merge tiny tails."""
-    trip_dir = Path(trip_dir)
-    trip = _load_trip(trip_dir)
-    chapter_batches = _chapter_photo_paths(trip, trip_dir, limit=limit)
-
-    if not chapter_batches:
-        flat = list_collage_photo_paths(trip_dir, limit=limit)
-        return pack_photo_pages(flat, per_page=per_page, max_pages=max_pages)
-
-    pages: list[list[Path]] = []
-    for batch in chapter_batches:
-        if len(batch) <= per_page:
-            pages.append(list(batch))
-        else:
-            pages.extend(
-                pack_photo_pages(batch, per_page=per_page, max_pages=max_pages)
-            )
-
-    # Merge tiny chapters into previous spread when it still fits.
-    merged: list[list[Path]] = []
-    for batch in pages:
-        if (
-            merged
-            and len(batch) < _ALBUM_MERGE_BELOW
-            and len(merged[-1]) + len(batch) <= per_page
-        ):
-            merged[-1].extend(batch)
-        else:
-            merged.append(batch)
-
-    if len(merged) > max_pages:
-        head = merged[: max_pages - 1]
-        tail: list[Path] = []
-        for chunk in merged[max_pages - 1 :]:
-            tail.extend(chunk)
-        return head + [tail]
-    return merged
+def _pair_cards_for_spreads(
+    plans: list[CardPlan],
+) -> list[tuple[CardPlan, CardPlan | None]]:
+    """Pair Cards two-by-two into spreads; a trailing lone Card gets a
+    stand-alone half-page (OQ-ECC-02 default resolution)."""
+    spreads: list[tuple[CardPlan, CardPlan | None]] = []
+    for i in range(0, len(plans), 2):
+        left = plans[i]
+        right = plans[i + 1] if i + 1 < len(plans) else None
+        spreads.append((left, right))
+    return spreads
 
 
 def export_collage_pack(
@@ -172,7 +92,7 @@ def export_collage_pack(
     slide_count: int | None = None,
     cfg: Any | None = None,
 ) -> LongshotExportResult:
-    """Compose multi-page fixed-canvas collages (no Playwright / gcs flag)."""
+    """Compose multi-page 3:4 Card collages (no Playwright / gcs flag)."""
     _ = cfg
     pid = str(platform or "").strip()
     if pid not in ("xiaohongshu", "album_spread"):
@@ -185,49 +105,60 @@ def export_collage_pack(
     profile = get_profile(pid)
     title = _trip_title(trip_dir)
     prefix = file_prefix_for_platform(title, pid)
-    canvas_wh = canvas_for_platform(pid, scale=scale)
     _ = fmt  # collage pages always PNG
     out_ext = "png"
 
+    paths = list_collage_photo_paths(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
+    if not paths:
+        raise LongshotExportError(
+            "E_COLLAGE_N",
+            "没有可导出的精选照片，请先完成策展",
+        )
+
+    card_wh = scale_canvas(CARD_CANVAS, scale)
+
     if pid == "xiaohongshu":
-        paths = list_collage_photo_paths(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
-        if not paths:
-            raise LongshotExportError(
-                "E_COLLAGE_N",
-                "没有可导出的精选照片，请先完成策展",
-            )
-        n_pages, _auto_hint = _xhs_page_count(
+        target_per_card = _xhs_target_per_card(
             len(paths), slide_count=slide_count, profile=profile
         )
-        per_page = _xhs_per_page(len(paths), n_pages)
-        pages = pack_photo_pages(paths, per_page=per_page, max_pages=n_pages)
+        plans = plan_cards(paths, target_per_card=target_per_card)
+        pages_render = [
+            render_card(list(plan.photos), plan.template, canvas_wh=card_wh)[0]
+            for plan in plans
+        ]
         user_hint = (
-            f"已生成 {len(pages)} 张竖版拼贴海报（3:4）· 更多细节可写在笔记正文"
+            f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在笔记正文"
         )
         segment_reason = "collage_pages"
     else:
-        pages = pack_album_pages_by_chapter(trip_dir)
-        if not pages:
-            raise LongshotExportError(
-                "E_COLLAGE_N",
-                "没有可导出的精选照片，请先完成策展",
+        plans = plan_cards(paths)
+        spreads = _pair_cards_for_spreads(plans)
+        gutter = (
+            int(round(ALBUM_GUTTER * 1.25)) if int(scale or 2) > 2 else ALBUM_GUTTER
+        )
+        pages_render = []
+        for left, right in spreads:
+            right_arg = (list(right.photos), right.template) if right else None
+            data, _diag = render_spread(
+                (list(left.photos), left.template),
+                right_arg,
+                card_wh=card_wh,
+                gutter=gutter,
             )
-        user_hint = f"已生成 {len(pages)} 张画册跨页拼贴（2.8:1 · 按章分页）"
+            pages_render.append(data)
+        user_hint = f"已生成 {len(pages_render)} 张画册跨页拼贴（两张 3:4 + 中缝）"
         segment_reason = "collage_pages"
 
     writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)
     outputs: list[LongshotOutput] = []
-    total = len(pages)
+    total = len(pages_render)
 
     try:
         with writer:
-            for i, page_paths in enumerate(pages, start=1):
+            for i, data in enumerate(pages_render, start=1):
                 if progress:
                     progress(i - 1, total, f"拼贴页 {i}/{total}")
-                png_bytes, _diag = compose_fixed_canvas(
-                    page_paths, canvas_wh=canvas_wh
-                )
-                writer.write(i, png_bytes)
+                writer.write(i, data)
             finals = writer.commit()
         for path in finals:
             outputs.append(
