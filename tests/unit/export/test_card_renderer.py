@@ -1,0 +1,122 @@
+"""Unit tests · card_renderer (PRD-EXPORT-CARD-COMPOSE-V1 §4/§6)."""
+
+from __future__ import annotations
+
+import io
+from pathlib import Path
+
+import pytest
+from PIL import Image
+
+from travelogue.export.card_renderer import render_card, render_spread
+from travelogue.export.card_templates import CARD_TEMPLATES
+
+pytestmark = pytest.mark.unit
+
+CARD_CANVAS = (1080, 1440)
+
+
+def _make_rgb(path: Path, *, size: tuple[int, int], color: tuple[int, int, int]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", size, color).save(path, format="JPEG", quality=90)
+    return path
+
+
+def test_render_card_full_frame_fills_canvas(tmp_path: Path) -> None:
+    template = CARD_TEMPLATES["card-1-full-frame"]
+    photo = _make_rgb(tmp_path / "a.jpg", size=(1600, 900), color=(220, 40, 40))
+    data, diag = render_card([photo], template, canvas_wh=CARD_CANVAS)
+    assert data[:8] == b"\x89PNG\r\n\x1a\n"
+    assert diag["canvas"] == list(CARD_CANVAS)
+    assert diag["template"] == "card-1-full-frame"
+    assert diag["fit"] == "cover"
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.size == CARD_CANVAS
+
+
+def test_render_card_covers_every_pixel_no_background_bleed(tmp_path: Path) -> None:
+    """短拼贴不得留大块底色 — AC-ECC-01."""
+    template = CARD_TEMPLATES["card-9-grid-equal"]
+    colors = [
+        (220, 40, 40), (40, 220, 40), (40, 40, 220),
+        (220, 220, 40), (220, 40, 220), (40, 220, 220),
+        (120, 60, 60), (60, 120, 60), (60, 60, 120),
+    ]
+    photos = [
+        _make_rgb(tmp_path / f"p{i}.jpg", size=(900, 1300), color=c)
+        for i, c in enumerate(colors)
+    ]
+    data, _ = render_card(photos, template, canvas_wh=CARD_CANVAS)
+    bg = (245, 245, 243)
+    with Image.open(io.BytesIO(data)) as im:
+        w, h = im.size
+        # Sample the center of each of the 9 cells; none should be raw bg.
+        for row in range(3):
+            for col in range(3):
+                x = int((col + 0.5) * w / 3)
+                y = int((row + 0.5) * h / 3)
+                assert im.getpixel((x, y)) != bg
+
+
+def test_render_card_wrong_photo_count_raises(tmp_path: Path) -> None:
+    template = CARD_TEMPLATES["card-1-full-frame"]
+    a = _make_rgb(tmp_path / "a.jpg", size=(800, 600), color=(1, 2, 3))
+    b = _make_rgb(tmp_path / "b.jpg", size=(800, 600), color=(4, 5, 6))
+    with pytest.raises(ValueError):
+        render_card([a, b], template, canvas_wh=CARD_CANVAS)
+
+
+def test_render_card_crop_required_slot_biases_for_person(tmp_path: Path) -> None:
+    """AC-ECC-06 · card-4 主图槙对人像照片走保守（上偏）裁切."""
+    template = CARD_TEMPLATES["card-4-square-top-triband"]
+    main_photo = _make_rgb(tmp_path / "main.jpg", size=(1000, 1000), color=(10, 10, 10))
+    portraits = [
+        _make_rgb(tmp_path / f"p{i}.jpg", size=(800, 1200), color=(50 * i, 60, 70))
+        for i in range(3)
+    ]
+    assets = {main_photo: {"tags": ["person", "face"]}}
+
+    def lookup(path: Path) -> dict | None:
+        return assets.get(path)
+
+    data, diag = render_card(
+        [main_photo, *portraits], template, canvas_wh=CARD_CANVAS, asset_lookup=lookup
+    )
+    assert diag["template"] == "card-4-square-top-triband"
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.size == CARD_CANVAS
+
+
+def test_render_spread_two_cards_with_gutter(tmp_path: Path) -> None:
+    template = CARD_TEMPLATES["card-1-full-frame"]
+    left_photo = _make_rgb(tmp_path / "left.jpg", size=(1000, 1000), color=(200, 40, 40))
+    right_photo = _make_rgb(tmp_path / "right.jpg", size=(1000, 1000), color=(40, 40, 200))
+    data, diag = render_spread(
+        ([left_photo], template),
+        ([right_photo], template),
+        card_wh=CARD_CANVAS,
+        gutter=48,
+    )
+    expected_w = CARD_CANVAS[0] * 2 + 48
+    assert diag["canvas"] == [expected_w, CARD_CANVAS[1]]
+    assert diag["halfPage"] is False
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.size == (expected_w, CARD_CANVAS[1])
+        left_px = im.getpixel((CARD_CANVAS[0] // 2, CARD_CANVAS[1] // 2))
+        right_px = im.getpixel((expected_w - CARD_CANVAS[0] // 2, CARD_CANVAS[1] // 2))
+        assert left_px != right_px
+
+
+def test_render_spread_lone_card_half_page(tmp_path: Path) -> None:
+    template = CARD_TEMPLATES["card-1-full-frame"]
+    left_photo = _make_rgb(tmp_path / "left.jpg", size=(1000, 1000), color=(200, 40, 40))
+    data, diag = render_spread(
+        ([left_photo], template), None, card_wh=CARD_CANVAS, gutter=48
+    )
+    assert diag["halfPage"] is True
+    assert diag["templates"][1] is None
+    expected_w = CARD_CANVAS[0] * 2 + 48
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.size == (expected_w, CARD_CANVAS[1])
+        bg = (245, 245, 243)
+        assert im.getpixel((expected_w - 10, CARD_CANVAS[1] // 2)) == bg

@@ -299,6 +299,8 @@ DP/贪心在 **等距 ideal 边界附近** 选切点时，对候选 boundary 施
 
 ### 6.4 小红书 · `xiaohongshu`
 
+> **DOC-STATUS**: superseded（2026-08-05）—— 本节「letterbox 1080×1440 切片」方案已被 [ADR-021 v0.2](./adr/021-export-compose-dual-engine.md) + [PRD-EXPORT-CARD-COMPOSE-V1](./PRD-EXPORT-CARD-COMPOSE-V1.md) 取代：小红书改为 **N 张 3:4 Card 拼贴**（CardGrouper 分组 + 模板渲染），不再走本节的 full capture 切分 + `fit_aspect(letterbox|smart_crop)`。以下内容保留存档，**不要**据此实施。OQ-LNG2-05 / P3-LNG2-01 提前于此落地。
+
 #### 6.4.1 约束
 
 | 项 | 值 |
@@ -354,7 +356,7 @@ N = clamp(N0, 5, 9)           # 常规 trip：5–9 张为主
 - **Longshot 2.0** = 导出已有杂志 scroll（切分 / 裁切）
 - **Guizang skill** = 从文稿 **创作** 新社交卡片 HTML
 
-二者可未来并列（**OQ-LNG2-05 · Phase P3**），不在 v2.0 合并管线。
+二者可未来并列（**OQ-LNG2-05 · Phase P3**），不在 v2.0 合并管线。（**2026-08-05 更新**：小红书出口已按此方向落地，见 [PRD-EXPORT-CARD-COMPOSE-V1](./PRD-EXPORT-CARD-COMPOSE-V1.md)）
 
 ---
 
@@ -611,7 +613,7 @@ M14 书架 · full/photos toggle · CLI 无 flag · ADR-005 分支 A · copy-dis
 | **OQ-LNG2-02** | 书架记住 platform | 否 |
 | **OQ-LNG2-03** | 导出前清理旧 moments 文件 | 否 |
 | **OQ-LNG2-04** | zip 子目录打包 | 独立 PRD |
-| **OQ-LNG2-05** | **社交卡片重排模式**（Guizang Page Roles · 逐页 3:4 重排） | **Phase P3 独立 PRD** |
+| **OQ-LNG2-05** | **社交卡片重排模式**（Guizang Page Roles · 逐页 3:4 重排） | **已落地**（2026-08-05）：见 [PRD-EXPORT-CARD-COMPOSE-V1](./PRD-EXPORT-CARD-COMPOSE-V1.md)，不再是独立 P3 PRD |
 
 ---
 

@@ -144,13 +144,12 @@ export function formatLongshotResult(job) {
   var lines = [];
   var title = "长图已保存";
 
-  if (platform === "moments_grid") {
-    var nGrid = result.pageCount || outputs.length;
-    title = "✓ " + nGrid + " 张九宫格已就绪";
+  if (platform === "poster_bric") {
+    title = "✓ A4 海报已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "poster_bric") {
-    title = "✓ 单屏海报已就绪";
+  } else if (platform === "album_spread") {
+    title = "✓ " + (result.pageCount || outputs.length) + " 张画册跨页已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
   } else if (platform === "wechat_moments") {
@@ -160,7 +159,13 @@ export function formatLongshotResult(job) {
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
   } else if (platform === "xiaohongshu") {
-    title = "✓ " + (result.pageCount || outputs.length) + " 张 3:4 配图已就绪";
+    title = "✓ " + (result.pageCount || outputs.length) + " 张竖版拼贴海报已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (platform === "moments_grid") {
+    // CLI / 旧 Job 兼容；Studio 已不下发此平台
+    var nGrid = result.pageCount || outputs.length;
+    title = "✓ " + nGrid + " 张九宫格已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
   } else {

@@ -29,12 +29,16 @@ def test_panel_module_exists_and_exports() -> None:
         "wechat_moments",
         "xiaohongshu",
         "poster_bric",
+        "album_spread",
         "clampXhsSlideCount",
         'data-studio-xhs-count="custom"',
         "长图连读",
-        "导出朋友圈 · 九宫格",
-        "导出单屏海报",
-        "moments_grid",
+        "导出单张海报",
+        "画册印刷",
+        "竖版拼贴海报",
+        'if (id === "moments_grid") return;',
+        "scaleHintForPlatform",
+        "输出尺寸随导出目标变化",
         "data-export-confirmed-summary",
     ):
         assert token in src, f"missing: {token}"
@@ -56,16 +60,18 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     assert "export_platform_mismatch" in longshot
     assert "shortCtaLabelForPlatform" in longshot
     assert "preview-toolbar__export-popover--sheet" in longshot
-    # Dev default: moments + xhs without requiring config.yaml
-    assert '["wechat_moments", "xiaohongshu"]' in panel
+    # Dev default platforms include compose exits
+    assert "wechat_moments" in panel and "xiaohongshu" in panel
+    assert "poster_bric" in panel and "album_spread" in panel
 
 
 def test_studio_panel_excludes_phase_c_platforms() -> None:
     """H-C-04 · Studio UI must not list Ins/微博/抖音/custom (Phase C backend only)."""
     src = PANEL.read_text(encoding="utf-8")
-    # Phase A/B allowlist includes moments_grid when Output Recipe is on
-    assert 'id === "moments_grid"' in src
+    # Studio filters out moments_grid; compose platforms allowed
+    assert 'if (id === "moments_grid") return;' in src
     assert "wechat_moments" in src and "xiaohongshu" in src
+    assert 'id === "album_spread"' in src or "album_spread" in src
     for banned in ("instagram", "weibo", "douyin_cover"):
         assert f'id: "{banned}"' not in src
     assert 'id: "custom"' not in src
@@ -85,8 +91,8 @@ def test_format_longshot_result_moments_title() -> None:
     src = CLIENT.read_text(encoding="utf-8")
     assert "wechat_moments" in src
     assert "张长图连读已就绪" in src
-    assert "九宫格已就绪" in src
     assert "这不是九宫格" in src
+    assert "竖版拼贴海报已就绪" in src
     assert "publishGuide" in src
     assert "xiaohongshu" in src
     assert 'entrypoint: "shelf"' in src

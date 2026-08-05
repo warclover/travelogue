@@ -1,0 +1,194 @@
+"""Multi-page collage export · xiaohongshu (3:4 Card) + album_spread (paired 3:4 Cards + gutter).
+
+PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4. Both platforms share the
+CardGrouper → CardTemplateSelector → CardRenderer pipeline
+(``card_grouper.py`` / ``card_renderer.py``); neither requires shot-grouping
+/ chapter-boundary awareness — only orientation-correct slot filling (§4 v0.2
+simplification). ``pack_album_pages_by_chapter``'s chapter-first packing is
+**retired** (BLK-ECC-05): CardGrouper's sequential slot-count consumption
+replaces it, so there is no more "按章分页" special case.
+"""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any
+
+from travelogue.export.card_grouper import CardPlan, plan_cards
+from travelogue.export.card_renderer import (
+    ALBUM_GUTTER,
+    CARD_CANVAS,
+    render_card,
+    render_spread,
+    scale_canvas,
+)
+from travelogue.export.longshot import (
+    LongshotExportError,
+    LongshotExportResult,
+    LongshotOutput,
+    ProgressFn,
+    _slug_title,
+    _trip_title,
+)
+from travelogue.export.platform_longshot import PlatformExportWriter
+from travelogue.export.platform_profiles import (
+    file_prefix_for_platform,
+    get_profile,
+    resolve_xhs_slide_count,
+)
+from travelogue.export.poster_bric_pack import list_poster_photo_paths
+
+_log = logging.getLogger(__name__)
+
+_COLLAGE_PHOTO_LIMIT = 72
+
+
+def list_collage_photo_paths(trip_dir: Path, *, limit: int = _COLLAGE_PHOTO_LIMIT) -> list[Path]:
+    """Kept image paths excluding collage assets (alias of list_poster_photo_paths)."""
+    return list_poster_photo_paths(trip_dir, limit=limit)
+
+
+def _xhs_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any) -> int | None:
+    """Advisory ``target_per_card`` hint — **only** when the user explicitly
+    picked a "自定义张数" ``slide_count``. PRD-EXPORT-CARD-COMPOSE-V1 §5.1:
+    the *auto* page-count estimate formula is retired outright (no longer
+    "对齐...的「切片数」公式"); auto mode must fall through to CardGrouper's
+    plain greedy largest-slot-first chunking (``target_per_card=None``).
+    A manual override is a distinct, still-legitimate UX affordance, honored
+    as a soft hint (template library has final say on exact slot counts)."""
+    if slide_count is None:
+        return None
+    n_target, _hint = resolve_xhs_slide_count(
+        photo_count=n_photos, slide_count=slide_count, profile=profile
+    )
+    if n_target <= 0:
+        return None
+    import math
+
+    return max(1, int(math.ceil(n_photos / n_target)))
+
+
+def _pair_cards_for_spreads(
+    plans: list[CardPlan],
+) -> list[tuple[CardPlan, CardPlan | None]]:
+    """Pair Cards two-by-two into spreads; a trailing lone Card gets a
+    stand-alone half-page (OQ-ECC-02 default resolution)."""
+    spreads: list[tuple[CardPlan, CardPlan | None]] = []
+    for i in range(0, len(plans), 2):
+        left = plans[i]
+        right = plans[i + 1] if i + 1 < len(plans) else None
+        spreads.append((left, right))
+    return spreads
+
+
+def export_collage_pack(
+    trip_dir: Path,
+    *,
+    platform: str,
+    scale: int = 2,
+    fmt: str = "png",
+    progress: ProgressFn | None = None,
+    slide_count: int | None = None,
+    cfg: Any | None = None,
+) -> LongshotExportResult:
+    """Compose multi-page 3:4 Card collages (no Playwright / gcs flag)."""
+    _ = cfg
+    pid = str(platform or "").strip()
+    if pid not in ("xiaohongshu", "album_spread"):
+        raise LongshotExportError(
+            "E_LNG2_INVALID_PLATFORM",
+            f"collage_pack 仅支持 xiaohongshu / album_spread，收到「{pid}」",
+        )
+
+    trip_dir = Path(trip_dir).resolve()
+    profile = get_profile(pid)
+    title = _trip_title(trip_dir)
+    prefix = file_prefix_for_platform(title, pid)
+    _ = fmt  # collage pages always PNG
+    out_ext = "png"
+
+    paths = list_collage_photo_paths(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
+    if not paths:
+        raise LongshotExportError(
+            "E_COLLAGE_N",
+            "没有可导出的精选照片，请先完成策展",
+        )
+
+    card_wh = scale_canvas(CARD_CANVAS, scale)
+
+    if pid == "xiaohongshu":
+        target_per_card = _xhs_target_per_card(
+            len(paths), slide_count=slide_count, profile=profile
+        )
+        plans = plan_cards(paths, target_per_card=target_per_card)
+        pages_render = [
+            render_card(list(plan.photos), plan.template, canvas_wh=card_wh)[0]
+            for plan in plans
+        ]
+        user_hint = (
+            f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在笔记正文"
+        )
+        segment_reason = "collage_pages"
+    else:
+        plans = plan_cards(paths)
+        spreads = _pair_cards_for_spreads(plans)
+        gutter = (
+            int(round(ALBUM_GUTTER * 1.25)) if int(scale or 2) > 2 else ALBUM_GUTTER
+        )
+        pages_render = []
+        for left, right in spreads:
+            right_arg = (list(right.photos), right.template) if right else None
+            data, _diag = render_spread(
+                (list(left.photos), left.template),
+                right_arg,
+                card_wh=card_wh,
+                gutter=gutter,
+            )
+            pages_render.append(data)
+        user_hint = f"已生成 {len(pages_render)} 张画册跨页拼贴（两张 3:4 + 中缝）"
+        segment_reason = "collage_pages"
+
+    writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)
+    outputs: list[LongshotOutput] = []
+    total = len(pages_render)
+
+    try:
+        with writer:
+            for i, data in enumerate(pages_render, start=1):
+                if progress:
+                    progress(i - 1, total, f"拼贴页 {i}/{total}")
+                writer.write(i, data)
+            finals = writer.commit()
+        for path in finals:
+            outputs.append(
+                LongshotOutput(path=path, capture_method="collage_pages")
+            )
+        if progress:
+            progress(total, total, "拼贴导出完成")
+    except LongshotExportError:
+        writer.rollback()
+        raise
+    except Exception as exc:
+        writer.rollback()
+        _log.exception("collage_pack export failed (%s)", pid)
+        raise LongshotExportError(
+            "E_COLLAGE_FAILED",
+            f"拼贴导出失败: {exc}",
+        ) from exc
+
+    guide = (profile.publish_guide or "").strip()
+    return LongshotExportResult(
+        outputs=outputs,
+        capture_method="collage_pages",
+        title=_slug_title(title),
+        segmented=len(outputs) > 1,
+        segment_reason=segment_reason,
+        user_hint=user_hint,
+        platform=pid,
+        profile_label=profile.label,
+        target_page_count=len(outputs),
+        publish_guide=guide,
+        page_count=len(outputs),
+        output_format="png",
+    )

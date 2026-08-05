@@ -93,6 +93,7 @@
 | [IMPLEMENTATION-PHASE5.md](./IMPLEMENTATION-PHASE5.md) | Phase 5 实施任务清单（M20–M23） |
 | [ACCEPTANCE-PHASE5.md](./ACCEPTANCE-PHASE5.md) | Phase 5 验收（UX-P5-80-01 · UX-P5-SCROLL-01） |
 | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) | 预览精修体验 V1（验货默认 · 更新版面 · 导出拦截） |
+| [PRD-SCREEN-COPY-REGION-V1.md](./PRD-SCREEN-COPY-REGION-V1.md) | **屏级文案区 SCR V1** **v0.2.0**（Conditional Go · [七席](./acceptance-records/scr-screen-copy-region-v1-review-2026-08-04.md) · landscape-1 首发 · 长图 L1 · [AC](./ACCEPTANCE-SCREEN-COPY-REGION-V1.md) · [IMPL](./IMPLEMENTATION-SCREEN-COPY-REGION-V1.md)） |
 | [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) | **精修可用性优化 V1.1**（模式≠面板 · 情境对齐 · 导出门面收敛）· **Conditional Go** |
 | [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 实施清单（M1–M3 代码就绪） |
 | [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 验收清单（手测待补签） |
@@ -394,7 +395,8 @@
 | [PRD-PHASE17-layout-strategy-engine.md](./PRD-PHASE17-layout-strategy-engine.md) | **智能排版引擎 LSE** v0.17.6 · P17-Core/Plus/B · 跨职能 + CTO/算法 + 前端 + 开发负责人评审已纳入 |
 | [IMPLEMENTATION-PHASE17.md](./IMPLEMENTATION-PHASE17.md) | 实施清单：融合设计 · W0 三项审计 · adapter 参数收束 · 阶段交付（分支 `feature/phase17-lse`） |
 | [PRD-PHASE17-research-stub.md](./PRD-PHASE17-research-stub.md) | P17-B：生成式 composite · 7 张 4P+3L（LTE 扩展） |
-| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.1**（轨 B 已落地 · **§12 质量收口全部必修**）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.1**（轨 B 已落地 · **§12 质量收口全部必修**）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime · §6 拼贴内核部分 superseded，见下一行 |
+| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **导出 3:4 卡片统一 V1** v0.4.0（**Conditional Go** · [七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) · Stage 1-4 已实现 · 13 套模板已交付）· 小红书/单张海报/画册三出口统一为 3:4 Card（CardGrouper/Selector/Renderer）· [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md) |
 | [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
 | [acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md](./acceptance-records/generative-collage-surfaces-v1-review-TEMPLATE.md) | GCS V1 · 跨职能评审纪要模板（备查） |
 
@@ -422,7 +424,8 @@
 | [acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl](./acceptance-records/tpc-layout-compare-notes-2026-07-18.jsonl) | TPC · layout_compare 手记（三本 prefer:tie） |
 | [config-tpc-dogfood.example.yaml](./config-tpc-dogfood.example.yaml) | TPC / poster_bric · 本机狗粮配置片段 |
 | [acceptance-records/tpc-gap-checklist-2026-07-18.md](./acceptance-records/tpc-gap-checklist-2026-07-18.md) | TPC · PRD 缺口收口清单 |
-| [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**） |
+| [acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md](./acceptance-records/tpc-w2-caption-areas-spike-2026-07-18.md) | TPC W2 · captionAreas 渲染 spike 结论（**Defer**）· 渲染切片拟由 [SCR](./PRD-SCREEN-COPY-REGION-V1.md) 承接（选版 tie-break 仍 defer） |
+| [PRD-SCREEN-COPY-REGION-V1.md](./PRD-SCREEN-COPY-REGION-V1.md) | **屏级文案区 SCR V1** **v0.2.0**（Conditional Go · `textRegions` · landscape-1 首发 · 长图 L1 · **不**绑 MCS 选版 · [评审](./acceptance-records/scr-screen-copy-region-v1-review-2026-08-04.md)） |
 | [acceptance-records/tpc-w3-template-pack-2026-07-18.md](./acceptance-records/tpc-w3-template-pack-2026-07-18.md) | TPC W3 · 手写模板包（4 experimental · L1P3/L3P2/L2P2/hero-70） |
 | [acceptance-records/template-contract-v1-review-2026-07-18.md](./acceptance-records/template-contract-v1-review-2026-07-18.md) | TPC V1 · 跨职能评审纪要（七席 · Conditional Go · 含代码事实核查） |
 | [PRD-MCS-GEOMETRIC-QUALITY-V1.md](./PRD-MCS-GEOMETRIC-QUALITY-V1.md) | **MCS 屏内几何质量与标定闭环 V1** **v0.2.1**（Conditional Go · 可 Kickoff W0 · W1 前 BLK-09～14） |

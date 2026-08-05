@@ -312,6 +312,8 @@ export / Output Recipe
 
 ## 6. 轨 B · 导出海报面（`poster_bric`）
 
+> **DOC-STATUS**: 部分 superseded（2026-08-05）—— Writer 挂点 / feature flag / 入口位置（§6.2）仍有效；**拼贴内核与画幅**改走 [ADR-021 v0.2](./adr/021-export-compose-dual-engine.md) + [PRD-EXPORT-CARD-COMPOSE-V1](./PRD-EXPORT-CARD-COMPOSE-V1.md)：画幅由本节隐含的 A4/矩形拼贴改为 **3:4 单张 Card**，选图策略见新 PRD §5.2（代表性精选，非本节 §6.3「推荐封面 + 3–6 张」的简单序）。
+
 ### 6.1 产品叙事
 
 | 用户意图（冻结文案） | 产物 |

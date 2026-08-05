@@ -1,7 +1,7 @@
 {
   "lines": {
     "travelogue/layout_engine/mosaic/hook.py": 830,
-    "templates/studio/preview-toolbar/longshot.js": 2889
+    "templates/studio/preview-toolbar/longshot.js": 2906
   },
-  "note": "CQA I-CQA-14 · refresh with acceptance-records note when raising"
+  "note": "CQA I-CQA-14 · refresh with acceptance-records note when raising. 2026-08-05: longshot.js 2889->2906 (+17) 是 PRD-EXPORT-CARD-COMPOSE-V1 Stage 4 遗留 —— poster_bric/album_spread 状态文案随 3:4/两卡+gutter 几何更正新增的几行分支判断，已随该 PRD 走过评审与真实素材烟测（见 docs/acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md），非本次追加模板引入。hook.py 的 830->1021 差异是 origin/master 上已存在的、与本分支无关的既有回归（本分支未触碰该文件），此处基线值原样保留，不代表本 PR 认可/吸收该项债务。"
 }

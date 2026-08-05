@@ -157,6 +157,18 @@ def resolve_output_recipe(
     )
 
 
+def normalize_studio_intent(intent: str | None) -> str | None:
+    """Studio 下线九宫格：旧 session moments_grid → moments_scroll（CLI 显式 intent 不走此函数）."""
+    if intent is None:
+        return None
+    raw = str(intent).strip()
+    if not raw:
+        return None
+    if raw == "moments_grid":
+        return "moments_scroll"
+    return raw
+
+
 def _merge_overrides(
     *,
     intent: str | None,
@@ -169,9 +181,16 @@ def _merge_overrides(
         si = session_override.get("intent")
         sp = session_override.get("platform")
         if si or sp:
+            norm_i = normalize_studio_intent(str(si).strip() if si else None)
+            norm_p = str(sp).strip() if sp else None
+            if norm_p == "moments_grid":
+                # session 里残留九宫格平台 → 朋友圈连读
+                norm_p = "wechat_moments"
+                if not norm_i:
+                    norm_i = "moments_scroll"
             return (
-                str(si).strip() if si else None,
-                str(sp).strip() if sp else None,
+                norm_i,
+                norm_p,
                 "session_override",
             )
     if intent or platform:
@@ -263,7 +282,9 @@ def _layout_for_intent(intent: str, band: str) -> str:
         return "grid"
     if intent == "poster_bric":
         return "collage"
-    if intent in ("xiaohongshu", "instagram_carousel"):
+    if intent in ("xiaohongshu", "album_spread"):
+        return "collage"
+    if intent == "instagram_carousel":
         return "content_balanced"
     return _default_layout(band)
 
@@ -381,41 +402,21 @@ def _build_from_intent(
 
 
 def ambiguous_intent_options(*, phase: str = "B", kept_n: int = 0) -> list[dict[str, str]]:
-    """Ambiguous 卡选项。Phase B 含真九宫格（发群 > 九宫格 > 连读）。"""
-    n = max(0, int(kept_n))
-    n_grid = min(9, n) if n else 9
+    """Ambiguous 卡选项。Studio：发群 > 朋友圈连读（九宫格已下线）。"""
+    _ = kept_n
     opts = [
         {
             "intent": "chat_longshot",
             "label": copy_text("intent.chat"),
             "weight": "primary",
         },
+        {
+            "intent": "moments_scroll",
+            "label": copy_text("intent.scroll"),
+            "weight": "secondary",
+        },
     ]
-    if str(phase).upper() in ("B", "B0", "B1"):
-        opts.append(
-            {
-                "intent": "moments_grid",
-                "label": copy_text("intent.grid", n=n_grid),
-                "weight": "secondary",
-            }
-        )
-        opts.append(
-            {
-                "intent": "moments_scroll",
-                "label": copy_text("intent.scroll"),
-                "weight": "tertiary",
-            }
-        )
-        allowed = PHASE_B_INTENTS
-    else:
-        opts.append(
-            {
-                "intent": "moments_scroll",
-                "label": copy_text("intent.scroll"),
-                "weight": "secondary",
-            }
-        )
-        allowed = PHASE_A_INTENTS
+    allowed = PHASE_B_INTENTS if str(phase).upper() in ("B", "B0", "B1") else PHASE_A_INTENTS
     for o in opts:
         if o["intent"] not in allowed:
             raise OutputRecipeError(

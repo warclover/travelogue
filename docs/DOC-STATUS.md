@@ -109,6 +109,11 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./PRD-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | 等权拼图几何合同 **MEGC** **v0.2.0**（Conditional Go · PR-A/B/B2 ✅ · **默认 on** · M3 延期） |
 | [IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./IMPLEMENTATION-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 实施 · PR-A/B/B2 ✅ · **默认 on**（2026-08-03）· M3 延期 |
 | [ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md](./ACCEPTANCE-MOSAIC-EQUAL-GRID-CONTRACT-V1.md) | **active** | MEGC 验收 · AC-01 实机绿 · AC-04/05 闸语义狗粮 · **默认 on 已转正** |
+| [PRD-SCREEN-COPY-REGION-V1.md](./PRD-SCREEN-COPY-REGION-V1.md) | **active** | 屏级文案区 **SCR** **v0.2.0**（Conditional Go · 可 Kickoff M0 · M1 挡 BLK-03～06 · [评审](./acceptance-records/scr-screen-copy-region-v1-review-2026-08-04.md)） |
+| [ACCEPTANCE-SCREEN-COPY-REGION-V1.md](./ACCEPTANCE-SCREEN-COPY-REGION-V1.md) | **active** | SCR 验收 · AC-01～10/06b · M2/M3 |
+| [IMPLEMENTATION-SCREEN-COPY-REGION-V1.md](./IMPLEMENTATION-SCREEN-COPY-REGION-V1.md) | **active** | SCR 实施 · PR-A/B/C · M3 延期 |
+| [acceptance-records/scr-screen-copy-region-v1-review-2026-08-04.md](./acceptance-records/scr-screen-copy-region-v1-review-2026-08-04.md) | **active** | SCR 七席联评 · Conditional Go · BLK-01～06 |
+| [acceptance-records/scr-screen-copy-region-v1-review-TEMPLATE.md](./acceptance-records/scr-screen-copy-region-v1-review-TEMPLATE.md) | **active** | SCR 七席评审纪要**模板** |
 | [PRD-EQUAL-GRID-ADMISSION-V1.md](./PRD-EQUAL-GRID-ADMISSION-V1.md) | **active** | 等权宫准入优化 **EGA** **v0.2.0**（Conditional Go · 可 Kickoff M1 · [评审](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md)） |
 | [IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md](./IMPLEMENTATION-EQUAL-GRID-ADMISSION-V1.md) | **active** | EGA 实施清单 · PR-A/B/C · M3 延期 |
 | [ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md](./ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md) | **active** | EGA 验收 · AC-EGA-01～10 · W0 ✅ |
@@ -156,6 +161,14 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [UI-DETAIL-SURFACE-INVENTORY-V0.md](./UI-DETAIL-SURFACE-INVENTORY-V0.md) | **active** | UI Detail 表面清单 / 波次索引 |
 | [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | **superseded** | 双引擎方案 → 见 ADR-007 |
 | [PRD-MVP.md](./PRD-MVP.md) | **archive** | MVP 已冻结；产品演进见后续 Phase PRD |
+| [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.5**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter · CardGrouper 不要求分镜边界 · 七席评审 Conditional Go · 已实现 + 追加 4 套等分模板 |
+| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.4.0**（Conditional Go · Stage 1-4 已实现 · 13 套模板已交付 · BLK-ECC-01～05 已回写）· CardGrouper/Selector/Renderer |
+| [acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) | **active** | ECC 七席联评 · Conditional Go · BLK-ECC-01～05（复用对象订正/独立实现声明/OQ 默认解/迁移清单/章节打包退役） |
+| [acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md) | **active** | ECC Stage1-4 实施收口 · 真实 trip 素材烟测（非合成色块）核对 AC-ECC-01～06 全绿 · SHD-ECC-01～03 全部核对/完成 |
+| [acceptance-records/ecc-selection-compare-2026-08-05.md](./acceptance-records/ecc-selection-compare-2026-08-05.md) | **active** | SHD-ECC-03「代表性精选 vs 前 N 张」对比册 · `cover_score_v2` 组明显优于前 N 张组（同池同模板，仅切换选图策略） |
+| [acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md](./acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md) | **active** | ECC 七席评审纪要**模板**（结案见日期版） |
+| [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4 | **superseded** | 小红书 letterbox 切片方案 → 见 PRD-EXPORT-CARD-COMPOSE-V1 |
+| [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6 | **partial superseded** | `poster_bric` 拼贴内核/画幅 → 见 PRD-EXPORT-CARD-COMPOSE-V1（Writer/flag 挂点仍 active） |
 
 ---
 

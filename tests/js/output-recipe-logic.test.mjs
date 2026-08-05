@@ -110,7 +110,8 @@ test("session storage helpers round-trip", () => {
   };
   assert.equal(readSessionIntentFromStorage(storage, "t1"), null);
   writeSessionIntentToStorage(storage, "t1", "moments_grid");
-  assert.equal(readSessionIntentFromStorage(storage, "t1"), "moments_grid");
+  // Studio 下线九宫格：旧 session 映射为朋友圈连读
+  assert.equal(readSessionIntentFromStorage(storage, "t1"), "moments_scroll");
   clearSessionIntentFromStorage(storage, "t1");
   assert.equal(readSessionIntentFromStorage(storage, "t1"), null);
 });

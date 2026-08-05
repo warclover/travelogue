@@ -29,38 +29,38 @@ export var PLATFORMS = {
     expectHtml:
       "将按完整画册切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
   },
-  moments_grid: {
-    id: "moments_grid",
-    label: "朋友圈 · 九宫格",
-    title: "朋友圈",
-    subtitle: "九宫格 1:1",
-    cta: "导出朋友圈 · 九宫格",
-    showSegmentMode: false,
-    showCopyControls: false,
-    expectHtml:
-      "将导出最多 <strong>9 张</strong> 1:1 真九宫格（有几张发几张）· 无需截长卷",
-  },
   poster_bric: {
     id: "poster_bric",
-    label: "单屏海报",
-    title: "单屏海报",
-    subtitle: "拼贴海报",
-    cta: "导出单屏海报",
+    label: "单张海报 · 3:4",
+    title: "单张海报",
+    subtitle: "3:4 拼贴",
+    cta: "导出单张海报",
     showSegmentMode: false,
     showCopyControls: false,
     expectHtml:
-      "将导出 <strong>1 张</strong>拼贴海报（3–9 张精选 · contain 保比例）",
+      "将导出 <strong>1 张 3:4</strong> 竖版拼贴海报（1–6 张代表性精选照片）",
   },
   xiaohongshu: {
     id: "xiaohongshu",
-    label: "小红书",
+    label: "小红书 · 竖版海报",
     title: "小红书",
-    subtitle: "3:4 配图",
-    cta: "导出小红书配图",
+    subtitle: "3:4 拼贴海报",
+    cta: "导出小红书海报",
     showSegmentMode: false,
     showXhsOptions: true,
     expectHtml:
-      "将生成 <strong>3:4</strong> 配图（杂志页适配 · auto 约 5–9 张）· 默认留白边填充",
+      "将生成 <strong>N 张 3:4 竖版拼贴海报</strong>（非杂志截屏）· auto 约 3–9 张",
+  },
+  album_spread: {
+    id: "album_spread",
+    label: "画册印刷",
+    title: "画册印刷",
+    subtitle: "跨页拼贴",
+    cta: "导出画册跨页",
+    showSegmentMode: false,
+    showCopyControls: false,
+    expectHtml:
+      "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）",
   },
 };
 
@@ -72,29 +72,26 @@ export function enabledPlatformsFromConfig(cfgStudio) {
   if (l2.enabled === false) return ["wechat_chat"];
   var list = Array.isArray(l2.platforms)
     ? l2.platforms.slice()
-    : ["wechat_moments", "xiaohongshu"];
-  var orCfg =
-    (cfgStudio && (cfgStudio.outputRecipe || cfgStudio.output_recipe)) || {};
-  var recipeOn = orCfg.enabled === true;
-  // Output Recipe · moments_grid is Studio-facing when recipe flag is on
-  // (H-B / AC-OR-11b); Phase C platforms stay excluded.
-  if (recipeOn && list.indexOf("moments_grid") < 0) {
-    list = list.concat(["moments_grid"]);
-  }
-  // GCS · poster_bric secondary entry when features.gcs_poster_bric is on
+    : ["wechat_moments", "xiaohongshu", "poster_bric", "album_spread"];
+  // Compose 出口默认开放；gcs 关闭时可杀停 poster_bric
   var gcs =
     (cfgStudio && (cfgStudio.gcsPosterBric || cfgStudio.gcs_poster_bric)) || {};
-  if (gcs.enabled === true && list.indexOf("poster_bric") < 0) {
+  if (gcs.enabled !== false && list.indexOf("poster_bric") < 0) {
     list = list.concat(["poster_bric"]);
+  }
+  if (list.indexOf("album_spread") < 0) {
+    list = list.concat(["album_spread"]);
   }
   var out = ["wechat_chat"];
   list.forEach(function (id) {
+    // Studio 下线九宫格；CLI 仍可走 moments_grid
+    if (id === "moments_grid") return;
     if (id && id !== "wechat_chat" && out.indexOf(id) < 0) {
       if (
         id === "wechat_moments" ||
         id === "xiaohongshu" ||
-        id === "moments_grid" ||
-        id === "poster_bric"
+        id === "poster_bric" ||
+        id === "album_spread"
       ) {
         out.push(id);
       }
@@ -118,6 +115,32 @@ export function estimateXhsAutoCount(photoCount) {
 /** FE-LNG2-20 · D-LNG2-04 · clamp user slideCount to profile 1–18. */
 export var XHS_SLIDE_COUNT_MIN = 1;
 export var XHS_SLIDE_COUNT_MAX = 18;
+
+/** Compose / Slice 清晰度提示（按平台真实画布，而非一律 428×scale） */
+export function scaleHintForPlatform(platformId, scale) {
+  var s = scale === 3 ? 3 : 2;
+  if (platformId === "poster_bric") {
+    var aw = s > 2 ? Math.round(1080 * 1.25) : 1080;
+    var ah = s > 2 ? Math.round(1440 * 1.25) : 1440;
+    return "3:4 画布约 " + aw + "×" + ah + "px";
+  }
+  if (platformId === "xiaohongshu") {
+    var xw = s > 2 ? Math.round(1080 * 1.25) : 1080;
+    var xh = s > 2 ? Math.round(1440 * 1.25) : 1440;
+    return "竖版海报约 " + xw + "×" + xh + "px（3:4）";
+  }
+  if (platformId === "album_spread") {
+    var sw = s > 2 ? Math.round(2208 * 1.25) : 2208;
+    var sh = s > 2 ? Math.round(1440 * 1.25) : 1440;
+    return "画册跨页约 " + sw + "×" + sh + "px（1.53:1）";
+  }
+  if (platformId === "wechat_moments") {
+    var mw = s === 3 ? 1284 : 856;
+    return "长图切片宽约 " + mw + "px（428×" + s + "）";
+  }
+  var px = s === 3 ? 1284 : 856;
+  return "输出宽约 " + px + "px（逻辑宽 428 × " + s + "）";
+}
 export var XHS_PRESET_COUNTS = { "6": true, "9": true, "12": true };
 
 export function clampXhsSlideCount(value) {
@@ -176,13 +199,13 @@ export function ctaLabelForPlatform(platformId) {
   return p.cta;
 }
 
-/** Dock / 窄栏短标签（AC-DFX-02 · 含 poster_bric，禁止回落到「发微信群」） */
+/** Dock / 窄栏短标签（AC-DFX-02 · 含 compose 出口，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
-  if (platformId === "moments_grid") return "九宫格";
   // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
   if (platformId === "wechat_moments") return "导出连读";
   if (platformId === "xiaohongshu") return "小红书";
-  if (platformId === "poster_bric") return "单屏海报";
+  if (platformId === "poster_bric") return "单张海报";
+  if (platformId === "album_spread") return "画册";
   return "发微信群";
 }
 
@@ -347,10 +370,10 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
-    '<button type="button" data-studio-longshot-scale="2" title="输出宽约 856px（428×2）">标准 · 856</button>' +
-    '<button type="button" data-studio-longshot-scale="3" title="输出宽约 1284px（428×3）">更清晰 · 1284</button>' +
+    '<button type="button" data-studio-longshot-scale="2" title="标准清晰度">标准</button>' +
+    '<button type="button" data-studio-longshot-scale="3" title="更高清晰度">更清晰</button>' +
     "</div>" +
-    '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出宽 = 逻辑宽 428 × 倍率</p>' +
+    '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出尺寸随导出目标变化</p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="density">' +
     '<span class="preview-toolbar__export-popover-label">长图密度</span>' +
@@ -418,9 +441,7 @@ export function syncPanelUI(pop, draft, opts) {
   });
   var scaleHint = pop.querySelector("[data-scale-hint]");
   if (scaleHint) {
-    var px = draft.scale === 3 ? 1284 : 856;
-    scaleHint.textContent =
-      "输出宽约 " + px + "px（逻辑宽 428 × " + (draft.scale === 3 ? "3" : "2") + "）";
+    scaleHint.textContent = scaleHintForPlatform(platform, draft.scale);
   }
   pop.querySelectorAll("[data-studio-longshot-density]").forEach(function (btn) {
     var on =
@@ -479,7 +500,8 @@ export function syncPanelUI(pop, draft, opts) {
   var xhsPad = pop.querySelector('[data-field="xhs-pad"]');
   var xhsPack = pop.querySelector('[data-field="xhs-copy-pack"]');
   if (xhsCount) xhsCount.hidden = !showXhs;
-  if (xhsPad) xhsPad.hidden = !showXhs;
+  // Compose 路径不再做 letterbox/smart_crop；隐藏以免误导
+  if (xhsPad) xhsPad.hidden = true;
   if (xhsPack) xhsPack.hidden = !showXhs;
 
   var est = pop.querySelector("[data-xhs-estimate]");
@@ -518,12 +540,12 @@ export function syncPanelUI(pop, draft, opts) {
         expectBody.innerHTML =
           "将生成约 <strong>" +
           autoN +
-          " 张</strong> 3:4 配图（auto）· 默认留白边 · 预计 30–60 秒";
+          " 张</strong> 3:4 竖版拼贴海报（auto）· 预计较快完成";
       } else if (showXhs && draft.slideCount != null) {
         expectBody.innerHTML =
           "将生成 <strong>" +
           draft.slideCount +
-          " 张</strong> 3:4 配图 · 预计 30–60 秒";
+          " 张</strong> 3:4 竖版拼贴海报 · 预计较快完成";
       } else {
         expectBody.innerHTML = meta.expectHtml;
       }
@@ -730,14 +752,14 @@ export function formatPlatformSuccess(result) {
   var platform = result.platform || "wechat_chat";
   var n = result.pageCount || (result.outputs && result.outputs.length) || 0;
   var title = "✓ 长图已保存";
-  if (platform === "moments_grid") {
-    title = "✓ " + n + " 张九宫格已就绪";
-  } else if (platform === "poster_bric") {
-    title = "✓ 单屏海报已就绪";
+  if (platform === "poster_bric") {
+    title = "✓ 单张海报已就绪";
   } else if (platform === "wechat_moments") {
     title = "✓ " + n + " 张长图连读已就绪";
   } else if (platform === "xiaohongshu") {
-    title = "✓ " + n + " 张 3:4 配图已就绪";
+    title = "✓ " + n + " 张竖版拼贴海报已就绪";
+  } else if (platform === "album_spread") {
+    title = "✓ " + n + " 张画册跨页已就绪";
   }
   return {
     title: title,
