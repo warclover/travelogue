@@ -1,7 +1,7 @@
 # card-6-hero-br-stack
 
 - displayName: 六图 · 顶部三等分 + 左侧堆叠 + 右下主图
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img7（2026-08-05）

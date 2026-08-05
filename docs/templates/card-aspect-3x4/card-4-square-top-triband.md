@@ -1,7 +1,7 @@
 # card-4-square-top-triband
 
 - displayName: 四图 · 顶部近方图 + 底部三竖版
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img9（2026-08-05）

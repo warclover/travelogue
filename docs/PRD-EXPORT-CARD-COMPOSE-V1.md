@@ -168,7 +168,9 @@ CardRenderer（Pillow slot 渲染，方案 A）
 
 ---
 
-## 8. 验收标准（草案）
+## 8. 验收标准
+
+> Stage 1-4 已实现并合入 `feat/export-compose-redesign`；2026-08-05 用真实 trip 素材（`demo-2025`，129 张）对三出口做了烟测，AC-ECC-01～06 均有真实素材证据支持（非仅合成色块单测），见对应验收记录。
 
 | 编号 | 内容 |
 |------|------|
@@ -198,7 +200,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | 编号 | 问题 | 备注 |
 |------|------|------|
 | OQ-ECC-01 | 单张海报「代表性精选」的具体权重公式 | 待实施阶段与精选/封面逻辑对齐后定稿 |
-| OQ-ECC-02 | 画册章末奇数卡如何配对（跨章 vs 单独半页） | 待补，不阻塞 Stage 1–2 |
+| OQ-ECC-02 | 画册章末奇数卡如何配对（跨章 vs 单独半页） | **已解决**：`collage_pack.py` 的 `_pair_cards_for_spreads` 采用「末尾单卡独立半页」（右半留背景色，见 `test_album_spread_odd_card_gets_half_page`），2026-08-05 真实素材烟测已核对（`album-03.png` 样例） |
 | OQ-ECC-03 | 模板库是否需要「小红书 3:4」与「画册 3:4」用不同留白/安全区 | 13 套模板已到位（9 套设计稿 + 4 套等分模板），待实施阶段抽样评估 |
 | OQ-ECC-04 | `card-6-hero-tl-stack` / `card-6-hero-br-stack` / `card-6-bookend-rows` / `card-6-brick-alt`（同为 6 槙）与 `card-7-triband-2-2-3` / `card-7-triband-2-3-2`（同为 7 槙）之间，CardTemplateSelector 具体按什么信号选哪一套 | **BLK-ECC-03 回写（2026-08-05 评审）**：默认解 = 同槙数候选按 Card 序号轮换（`card_index % len(候选)`）；实施阶段可升级为按横竖版构成精选，不阻塞开工 |
 

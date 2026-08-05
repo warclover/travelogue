@@ -1,7 +1,7 @@
 # card-16-grid-equal
 
 - displayName: 十六图 · 4×4 等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 4x4
 - source: 用户设计稿 img13（2026-08-05）

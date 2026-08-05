@@ -1,7 +1,7 @@
 # card-1-full-frame
 
 - displayName: 单图 · 满版
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img6（2026-08-05）

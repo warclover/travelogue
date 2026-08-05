@@ -1,7 +1,7 @@
 # card-6-brick-alt
 
 - displayName: 六图 · 逐行交替（宽图/方图左右互换）
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img8（2026-08-05）

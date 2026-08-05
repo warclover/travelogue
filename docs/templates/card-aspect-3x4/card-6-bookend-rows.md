@@ -1,7 +1,7 @@
 # card-6-bookend-rows
 
 - displayName: 六图 · 首尾呼应（1/2 行宽图+方图，第 3 行翻转）
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img4（2026-08-05）

@@ -1,7 +1,7 @@
 # card-6-hero-tl-stack
 
 - displayName: 六图 · 左上主图 + 右侧堆叠 + 底部三等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img5（2026-08-05）

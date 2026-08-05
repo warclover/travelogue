@@ -1,7 +1,7 @@
 # card-4-grid-equal
 
 - displayName: 四图 · 2×2 等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 2x2
 - source: 用户设计稿 img11（2026-08-05）

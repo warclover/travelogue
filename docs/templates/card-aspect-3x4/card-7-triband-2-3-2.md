@@ -1,7 +1,7 @@
 # card-7-triband-2-3-2
 
 - displayName: 七图 · 第1/3 行各两图，第 2 行三等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img3（2026-08-05）

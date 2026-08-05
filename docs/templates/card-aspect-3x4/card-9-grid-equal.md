@@ -1,7 +1,7 @@
 # card-9-grid-equal
 
 - displayName: 九图 · 3×3 等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 3x3
 - source: 用户设计稿 img1（2026-08-05）

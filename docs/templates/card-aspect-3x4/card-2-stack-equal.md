@@ -1,7 +1,7 @@
 # card-2-stack-equal
 
 - displayName: 两图 · 上下等分
-- status: designed
+- status: ga
 - stage: 3:4
 - grid: 2x1
 - source: 用户设计稿 img10（2026-08-05）
