@@ -410,17 +410,37 @@ class ScreenLayoutPlannerState:
             pass
         return pattern_id
 
+    def _ega_l6_large_quota_exempt(self, pattern_id: str) -> bool:
+        """EGA P2 · landscape-6 may be exempt from the large-mosaic chapter quota.
+
+        Reaches into travelogue.config / travelogue.layout_engine dynamically
+        (via importlib, swallowing failures) instead of a static import, so
+        this layer-0 kernel module keeps zero hard dependency on those layers
+        (PRD §5.3.1 · P2-C). Mirrors the six_hero_family_id lookup pattern
+        already used elsewhere in this module.
+        """
+        try:
+            import importlib
+
+            constants_mod = importlib.import_module(
+                "travelogue.layout_engine.mosaic.constants"
+            )
+            if str(pattern_id) != constants_mod.PATTERN_LANDSCAPE_6:
+                return False
+            config_mod = importlib.import_module("travelogue.config")
+            mosaic_cfg_mod = importlib.import_module("travelogue.config.mosaic")
+            return bool(
+                mosaic_cfg_mod.effective_ega_l6_large_quota_exempt(
+                    config_mod.get_config().mosaic
+                )
+            )
+        except Exception:
+            return False
+
     def can_use_large_mosaic(self, pattern_id: str) -> bool:
         if not is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             return True
-        from travelogue.config import get_config
-        from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
-        from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
-
-        if (
-            str(pattern_id) == PATTERN_LANDSCAPE_6
-            and effective_ega_l6_large_quota_exempt(get_config().mosaic)
-        ):
+        if self._ega_l6_large_quota_exempt(pattern_id):
             return True
         if self.large_mosaic_chapter_used >= self.large_mosaic_max_per_chapter:
             return False
@@ -429,16 +449,11 @@ class ScreenLayoutPlannerState:
         return used < self.large_mosaic_max_per_template_trip
 
     def sync_large_mosaic_chapter_used(self, pattern_ids: list[str]) -> None:
-        from travelogue.config import get_config
-        from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
-        from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
-
-        exempt_l6 = effective_ega_l6_large_quota_exempt(get_config().mosaic)
         self.large_mosaic_chapter_used = sum(
             1
             for pid in pattern_ids
             if is_large_mosaic_pattern(pid, min_slots=self.large_mosaic_min_slots)
-            and not (exempt_l6 and str(pid) == PATTERN_LANDSCAPE_6)
+            and not self._ega_l6_large_quota_exempt(pid)
         )
 
     def sync_editorial_composite_chapter_used(self, pattern_ids: list[str]) -> None:
@@ -533,15 +548,7 @@ class ScreenLayoutPlannerState:
             self.last_was_dense_collage = False
         if is_large_mosaic_pattern(pattern_id, min_slots=self.large_mosaic_min_slots):
             # EGA P2 · landscape-6 may be exempt from large-mosaic chapter quota.
-            from travelogue.config import get_config
-            from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
-            from travelogue.layout_engine.mosaic.constants import PATTERN_LANDSCAPE_6
-
-            exempt = (
-                str(pattern_id) == PATTERN_LANDSCAPE_6
-                and effective_ega_l6_large_quota_exempt(get_config().mosaic)
-            )
-            if not exempt:
+            if not self._ega_l6_large_quota_exempt(pattern_id):
                 self.large_mosaic_chapter_used += 1
         if is_editorial_composite_pattern(pattern_id):
             self.editorial_composite_chapter_used += 1

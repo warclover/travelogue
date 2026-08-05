@@ -6,7 +6,7 @@
 | **评审** | [ega-equal-grid-admission-v1-review-2026-08-04.md](./acceptance-records/ega-equal-grid-admission-v1-review-2026-08-04.md) · Conditional Go · 可 Kickoff M1 |
 | **验收** | [ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md](./ACCEPTANCE-EQUAL-GRID-ADMISSION-V1.md) |
 | **DOC-STATUS** | **active** |
-| **更新日期** | 2026-08-04 |
+| **更新日期** | 2026-08-05 |
 
 > **原则**：小步 PR；先闸后漏斗再评分；M3 默认不排期。  
 > **勾选**：✅ 已合 · ☑ 合同 · ☐ 未做。
@@ -137,6 +137,30 @@ mosaic:
 | **SHD-02** | `algoV3.rejectFunnelTop.ega_soft` | ✅ |
 | **SHD-03** | LTE tag `equal-grid`（L4+L6） | ✅ |
 
+### 回归基线债（**未收** · 2026-08-05 全量单测发现）
+
+> 背景：v0.2.6「L6 自动匹配产品锁 **Go · 默认 on**」合入后，`screen-landscape-6` 在默认注册表 /
+> admit-gate（`reason='ega_equal_grid'`）下会被更频繁选中；但一批早于该产品锁的回归基线测试
+> （写于假设 L6 仍是 gated-experimental 的前提下）未跟着刷新，导致 `python -m pytest tests/unit`
+> 全量跑出 29 failed（均集中在本节相关模块，与导出 `travelogue/export/*` 无关）。
+
+| 关联测试 | 现状 | 需要的动作 |
+|----|------|------|
+| `test_mtso_lifecycle_a.py::test_default_registry_has_zero_experimental` | 断言默认注册表零实验态，但 `screen-landscape-6` status 仍标 `experimental` | 按 v0.2.6 决策，把该 pattern 的生命周期状态从 `experimental` 改为 stable，或调整断言豁免 L6 |
+| `test_tri_col_family.py::test_experiments_gate_admits_tri_col_family` | 断言 `lifecycle_admit('screen-landscape-6', ...)` 应为 False，实际因 `ega_equal_grid` 返回 True | 断言需按「默认 on」重写 |
+| `test_usage_rules_baseline.py`（2 例）、`test_megc_pr_b2_legacy.py`（2 例）、`test_mosaic_integration.py`、`test_golden_mosaic_unified.py`、`test_mosaic_s2.py`、`test_mtso_pr_b_c1.py`、`test_layout_density.py`（3 例）、`test_lte_p1_gaps.py`、`test_mosaic_density_budget.py`、`test_editorial_4mix_probe.py`、`test_tri_col_equal_family.py`、`test_usage_rules_p0b.py` | 版式占比 / 曝光率 / 密度提升基线均因 L6 抢位漂移 | 逐个用 L6 默认 on 之后的真实分布重新校准基线（不是代码 bug，是基线过期） |
+| `tests/unit/curation/test_photo_cull.py::test_nr_p9_01_...`、`tests/unit/orchestrator/test_happy_path_recipe.py`（2 例）、`tests/unit/web/test_studio_m10.py::test_studio_export_zip` | 章节切分/布尔字段计数快照连带漂移 | 同上，随基线批量刷新一起处理 |
+
+已修复（本轮，2026-08-05）：`travelogue/layout_contract/planner_state.py` 曾为读取 `PATTERN_LANDSCAPE_6` /
+`effective_ega_l6_large_quota_exempt` 静态 `import travelogue.config` / `travelogue.layout_engine.*`，
+违反 layer-0 kernel 隔离契约（PRD §5.3.1 · P2-C，`test_lint_layout_contract_surface.py` /
+`test_arch_opt_gates.py::test_lint_imports_no_exemptions` 两项硬门禁）。已改为 `importlib` 动态导入
+（沿用本文件 `six_hero_family_id` 已有写法），lint 门禁复跑全绿，`tests/unit/layout_contract` +
+`tests/unit/export` 239 例复跑无回归。
+
+另有一处独立小债：`mosaic.slot_adaptation.land_peaks.{four_three,sixteen_nine,three_two}` 三个
+MSA 配置键未登记进 config schema，每次跑测试都打 `unknown keys` 警告；与本节 L6 债无关，建议一并清理。
+
 ---
 
 ## 6. 配置样例
@@ -170,6 +194,7 @@ python -m travelogue layout trips/demo-2019 --layout auto --web-layout screens -
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| **v0.2.7** | 2026-08-05 | 修复 `planner_state.py` layer-0 跨层 import 违规（lint 门禁复绿）；登记回归基线债（29 例全量单测失败，均系 L6 默认 on 转正后基线未刷新，非代码 bug）· 未刷新基线部分本轮**不动** |
 | **v0.2.6** | 2026-08-04 | L6 自动匹配产品锁 **Go · 默认 on**（AC-EGA-L6） |
 | **v0.2.5** | 2026-08-04 | L6 自动匹配 P0–P3 · atom 软化/回注 · 配额豁免 · L1 洪水重开 · 换气 |
 | **v0.2.4** | 2026-08-04 | 收口：SHD-01/02 观测 · AC-05 A 实册 · 文档对齐 |
