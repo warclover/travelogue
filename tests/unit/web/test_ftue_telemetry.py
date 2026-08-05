@@ -124,6 +124,9 @@ def test_ftue_reveal_folder_wired() -> None:
     shelf = (STUDIO / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
     dock = (STUDIO / "preview-toolbar-v3-task-dock.js").read_text(encoding="utf-8")
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     assert "ftue_reveal_folder" in shelf
     assert "ftue_reveal_folder" in dock
     assert "ftue_reveal_folder" in longshot
+    assert "ftue_reveal_folder" in init_v3
+    assert 'source: "preview_dock"' in init_v3

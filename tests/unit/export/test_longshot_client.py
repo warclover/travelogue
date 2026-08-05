@@ -51,6 +51,9 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     panel = PANEL.read_text(encoding="utf-8")
     assert "preview-toolbar__longshot-caret" in init_v3
     assert "preview-toolbar__longshot-split" in init_v3
+    assert "preview-toolbar__longshot-caret-label" in init_v3
+    assert ">设置</span>" in init_v3
+    assert 'aria-label", "导出设置"' in init_v3
     assert "openLongshotExportOptions(root)" in init_v3
     assert "startLongshot(root, tripId)" in init_v3
     assert "export function openStudioLongshotExportPanel" in longshot

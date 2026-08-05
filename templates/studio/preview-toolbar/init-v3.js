@@ -692,7 +692,10 @@ export function initToolbarV3(root, tripId) {
   caretBtn.className = "preview-toolbar__longshot-caret";
   caretBtn.setAttribute("aria-label", "导出设置");
   caretBtn.setAttribute("aria-haspopup", "dialog");
-  caretBtn.textContent = "▾";
+  // 可见短标「设置」；完整动作名放 aria（避免与主钮「小红书」抢权）
+  caretBtn.innerHTML =
+    '<span class="preview-toolbar__longshot-caret-label">设置</span>' +
+    '<span class="preview-toolbar__longshot-caret-chevron" aria-hidden="true">▾</span>';
 
   split.appendChild(longshotBtn);
   split.appendChild(caretBtn);
@@ -730,6 +733,30 @@ export function initToolbarV3(root, tripId) {
     exportDivider.className = "preview-toolbar__dock-divider";
     exportDivider.setAttribute("aria-hidden", "true");
     actions.appendChild(exportDivider);
+
+    // 打开画册文件夹（常驻；成功面 Task Dock 仍保留「在文件夹中显示」）
+    var folderBtn = document.createElement("button");
+    folderBtn.type = "button";
+    folderBtn.className =
+      "preview-toolbar__dock-btn preview-toolbar__dock-btn--folder preview-toolbar__dock-btn--labeled preview-toolbar__ctl preview-toolbar__reveal-folder";
+    folderBtn.setAttribute("aria-label", "打开文件夹");
+    folderBtn.innerHTML =
+      dockIconSvg("folder") +
+      '<span class="preview-toolbar__dock-label">文件夹</span>';
+    folderBtn.addEventListener("click", function () {
+      try {
+        trackStudioEvent("ftue_reveal_folder", {
+          tripId: tripId || null,
+          source: "preview_dock",
+        });
+        trackStudioEvent("export_open_folder_clicked", {
+          tripId: tripId || null,
+          source: "preview_dock",
+        });
+      } catch (_e) {}
+      revealTripFolder(tripId);
+    });
+    actions.appendChild(folderBtn);
     actions.appendChild(exportWrap);
   } else {
     actions.insertBefore(exportWrap, menuWrap);

@@ -77,6 +77,14 @@ export function dockIconSvg(name) {
         '<path d="M15 8h4v11h-4"/>' +
         "</svg>"
       );
+    case "folder":
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<path d="M3.5 8.5V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-6.2L10.5 6H5.5a2 2 0 0 0-2 2.5z"/>' +
+        "</svg>"
+      );
     default:
       return "";
   }

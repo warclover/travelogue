@@ -267,6 +267,9 @@ def test_v4_toolbar_mounts_screenplay_control() -> None:
     assert "insertScreenplayControl(actions, menuWrap" in init_v3
     assert "dock: true" in init_v3
     assert "preview-toolbar__screenplay--v3" in init_v3 or "preview-toolbar__screenplay--v3" in dock
+    assert 'case "folder":' in dock
+    assert "dock-btn--folder" in init_v3
+    assert "revealTripFolder(tripId)" in init_v3
     css = PREVIEW_CSS_BUNDLE
     assert "preview-toolbar__dock" in css
     assert "preview-toolbar--v4" in css
@@ -466,11 +469,12 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
             assert box is not None
             # PCU：40px 触控 + Help/?/分章；高度/宽度较 icon-only 与旧 labeled 略增
             assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
-            assert box["width"] <= 640, f"dock width expected compact-labeled, got {box['width']}"
+            assert box["width"] <= 720, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--chapters").count() == 1
+            assert page.locator(".preview-toolbar__dock-btn--folder").count() == 1
             assert page.locator("#studio-help-open-preview").count() == 1
             assert page.locator(".preview-toolbar__longshot-caret").count() == 1
             assert page.locator(".preview-toolbar__longshot-split").count() == 1
@@ -490,7 +494,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             assert page.locator(".preview-toolbar__longshot-preview-row").count() == 0
             assert page.locator(".preview-toolbar__pending-row").count() == 0
-            assert page.locator(".preview-toolbar__reveal-folder").count() == 0
+            assert page.locator(".preview-toolbar__reveal-folder").count() == 1
 
             page.locator(".preview-toolbar__menu-btn").click()
             page.wait_for_timeout(580)
@@ -845,6 +849,8 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "pcu_legacy_g1_autoconfirm" in features
     assert "_openChapterPanel" in features or "mountChapterPanel" in init_v3
     assert "dock-btn--chapters" in init_v3
+    assert "dock-btn--folder" in init_v3
+    assert 'dockIconSvg("folder")' in init_v3
     assert "preview-dock-stat" in init_v3
     assert "studio-help-open--dock" in init_v3
     assert "showG1" not in core.split("export function refreshTaskDockState")[1].split(
