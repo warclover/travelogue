@@ -162,6 +162,10 @@ export function formatLongshotResult(job) {
     title = "✓ " + (result.pageCount || outputs.length) + " 张竖版拼贴海报已就绪";
     if (result.userHint) lines.push(result.userHint);
     if (result.publishGuide) lines.push(result.publishGuide);
+  } else if (platform === "wechat_official") {
+    title = "✓ " + (result.pageCount || outputs.length) + " 张公众号配图已就绪";
+    if (result.userHint) lines.push(result.userHint);
+    if (result.publishGuide) lines.push(result.publishGuide);
   } else if (platform === "moments_grid") {
     // CLI / 旧 Job 兼容；Studio 已不下发此平台
     var nGrid = result.pageCount || outputs.length;

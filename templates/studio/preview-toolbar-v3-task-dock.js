@@ -240,6 +240,9 @@ export function mountPreviewTaskDock(root, hooks) {
     } else if (result.platform === "xiaohongshu") {
       var nXhs = result.pageCount || outputs.length;
       main.textContent = "✓ " + nXhs + " 张竖版拼贴海报已就绪";
+    } else if (result.platform === "wechat_official") {
+      var nMp = result.pageCount || outputs.length;
+      main.textContent = "✓ " + nMp + " 张公众号配图已就绪";
     } else if (result.platform === "poster_bric") {
       main.textContent = "✓ 单张海报已就绪";
     } else if (result.platform === "album_spread") {
@@ -279,6 +282,12 @@ export function mountPreviewTaskDock(root, hooks) {
             ? "已保存到此画册文件夹 · 共 " + outputs.length + " 张竖版拼贴海报，导入小红书按序发布"
             : "已保存到此画册文件夹 · 竖版拼贴海报，导入小红书发布即可";
         textWrap.appendChild(shareHint);
+      } else if (result.platform === "wechat_official") {
+        shareHint.textContent =
+          outputs.length > 1
+            ? "已保存到此画册文件夹 · 共 " + outputs.length + " 张配图，依次插入公众号图文正文即可"
+            : "已保存到此画册文件夹 · 插入公众号图文正文即可";
+        textWrap.appendChild(shareHint);
       } else if (result.platform === "poster_bric") {
         shareHint.textContent = "已保存到此画册文件夹 · 3:4 拼贴海报";
         textWrap.appendChild(shareHint);
@@ -308,6 +317,7 @@ export function mountPreviewTaskDock(root, hooks) {
       if (
         (result.platform === "wechat_moments" ||
           result.platform === "xiaohongshu" ||
+          result.platform === "wechat_official" ||
           result.platform === "poster_bric" ||
           result.platform === "album_spread" ||
           result.platform === "moments_grid") &&
@@ -318,11 +328,11 @@ export function mountPreviewTaskDock(root, hooks) {
       }
     }
 
-    // FE-SFI-12 · 小红书文案包（dock 展开，不塞单行 bar）
+    // FE-SFI-12 · 小红书/公众号文案包（dock 展开，不塞单行 bar）
     if (
       job &&
       job.status !== "failed" &&
-      result.platform === "xiaohongshu" &&
+      (result.platform === "xiaohongshu" || result.platform === "wechat_official") &&
       tripId
     ) {
       var packHost = document.createElement("div");

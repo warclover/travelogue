@@ -67,6 +67,22 @@ def test_profiles_load_phase_c() -> None:
     assert file_prefix_for_platform("林芝", "douyin_cover").endswith("-douyin-cover")
 
 
+def test_wechat_official_profile_render_identical_to_xiaohongshu() -> None:
+    """公众号（wechat_official）导出形式与小红书完全一致，仅身份/文案不同。"""
+    xhs = get_profile("xiaohongshu")
+    mp = get_profile("wechat_official")
+    assert mp.segment == xhs.segment == "photo_led"
+    assert mp.capture == xhs.capture == "collage_pages"
+    assert output_canvas_size(mp) == output_canvas_size(xhs) == (1080, 1440)
+    assert mp.min_pages == xhs.min_pages
+    assert mp.max_pages == xhs.max_pages
+    assert mp.label != xhs.label
+    assert file_prefix_for_platform("林芝", "wechat_official").endswith("-mp")
+    assert file_prefix_for_platform("林芝", "xiaohongshu").endswith("-xhs")
+    assert "图文" in mp.publish_guide
+    assert "小红书" not in mp.publish_guide
+
+
 def test_with_custom_output_overrides_size() -> None:
     base = get_profile("custom")
     overridden = with_custom_output(base, width=800, height=1200)
@@ -95,6 +111,14 @@ def test_resolve_profile_gray_list() -> None:
     # Phase C bypasses Studio allow-list (CLI/API only)
     ins = resolve_profile("instagram", allowed_platforms=["wechat_moments"])
     assert ins.id == "instagram"
+    # wechat_official follows the same gray-list gate as xiaohongshu (Phase B).
+    with pytest.raises(PlatformProfileError):
+        resolve_profile("wechat_official", allowed_platforms=["wechat_moments"])
+    mp = resolve_profile(
+        "wechat_official",
+        allowed_platforms=["wechat_moments", "wechat_official"],
+    )
+    assert mp.id == "wechat_official"
 
 
 def test_default_longshot2_platforms_include_xhs() -> None:
@@ -103,6 +127,7 @@ def test_default_longshot2_platforms_include_xhs() -> None:
 
     assert "wechat_moments" in DEFAULT_LONGSHOT2_PLATFORMS
     assert "xiaohongshu" in DEFAULT_LONGSHOT2_PLATFORMS
+    assert "wechat_official" in DEFAULT_LONGSHOT2_PLATFORMS
     assert PHASE_A_PLATFORMS == DEFAULT_LONGSHOT2_PLATFORMS
     assert Longshot2Config().platforms == DEFAULT_LONGSHOT2_PLATFORMS
 
@@ -382,6 +407,74 @@ def test_export_xhs_pipeline_mocked(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         im = Image.open(item.path)
         assert im.size == (1080, 1440)
     assert "竖版拼贴" in (result.user_hint or "") or "笔记正文" in (result.user_hint or "")
+
+
+def test_export_wechat_official_pipeline_mocked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """wechat_official routes through the same collage_pack path as xiaohongshu."""
+    from travelogue.export.platform_profiles import (
+        ASPECT_FIT_PLATFORM_IDS,
+        clear_platform_profiles_cache,
+    )
+
+    clear_platform_profiles_cache()
+    profile = get_profile("wechat_official")
+    assert profile.capture == "collage_pages"
+    assert profile.segment == "photo_led"
+    assert "wechat_official" not in ASPECT_FIT_PLATFORM_IDS
+
+    from travelogue.services.trip_factory import create_trip
+
+    trips = tmp_path / "trips"
+    create_trip("mp-collage", trips, title="公众号")
+    trip = trips / "mp-collage"
+    data = json.loads((trip / "trip.json").read_text(encoding="utf-8"))
+    assets = []
+    ids = []
+    for i in range(8):
+        aid = f"mp-{i:02d}"
+        ids.append(aid)
+        rel = f"source/{aid}.jpg"
+        Image.new("RGB", (800, 600), (40 + i * 10, 100, 160)).save(
+            trip / rel, format="JPEG"
+        )
+        assets.append(
+            {
+                "id": aid,
+                "type": "image",
+                "sourceFile": rel,
+                "layoutEligible": True,
+            }
+        )
+    data["assets"] = assets
+    curation = data.setdefault("curation", {})
+    curation["displayedAssetIds"] = ids
+    (trip / "trip.json").write_text(
+        json.dumps(data, ensure_ascii=False), encoding="utf-8"
+    )
+
+    called_platform: list[str] = []
+
+    def _should_not_run(*_a, **kwargs):
+        called_platform.append(str(kwargs.get("platform") or ""))
+        raise AssertionError("wechat_official must not call platform_longshot")
+
+    monkeypatch.setattr(
+        "travelogue.export.platform_longshot.export_platform_longshot",
+        _should_not_run,
+    )
+    result = export_trip_longshot(trip, platform="wechat_official", slide_count=6)
+    assert called_platform == []
+    assert result.platform == "wechat_official"
+    assert result.capture_method == "collage_pages"
+    assert result.page_count >= 1
+    for item in result.outputs:
+        assert "-mp-" in item.path.name
+        assert item.path.suffix == ".png"
+        im = Image.open(item.path)
+        assert im.size == (1080, 1440)
+    assert "图文正文" in (result.user_hint or "")
     assert result.publish_guide
 
 

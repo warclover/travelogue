@@ -83,6 +83,34 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
             assert im.size == (1080, 1440)
 
 
+def test_export_wechat_official_collage_pages(tmp_path: Path) -> None:
+    """wechat_official (公众号) 与 xiaohongshu 复用同一条 3:4 Card 渲染管线，
+
+    仅平台身份 / 文件名前缀 / 文案（图文正文 vs 笔记正文）不同。
+    """
+    trips = tmp_path / "trips"
+    create_trip("mp-8", trips, title="公众号拼贴")
+    trip_dir = trips / "mp-8"
+    _seed_kept_photos(trip_dir, 8)
+
+    with patch("travelogue.export.platform_longshot.export_platform_longshot") as mock_b:
+        result = export_collage_pack(trip_dir, platform="wechat_official")
+    mock_b.assert_not_called()
+
+    assert result.platform == "wechat_official"
+    assert result.capture_method == "collage_pages"
+    # Same greedy chunking as xiaohongshu: 8 → [8] → 1 card.
+    assert result.page_count == 1
+    assert "图文正文" in (result.user_hint or "")
+    assert "笔记正文" not in (result.user_hint or "")
+    finals = list(trip_dir.glob("*-mp-*.png"))
+    assert len(finals) == result.page_count
+    for path in finals:
+        with Image.open(path) as im:
+            # Render-identical canvas to xiaohongshu.
+            assert im.size == (1080, 1440)
+
+
 def test_export_xiaohongshu_covers_every_photo(tmp_path: Path) -> None:
     """AC-ECC-01 · 每张照片都进入某个 Card，没有被 CardGrouper 丢弃。"""
     trips = tmp_path / "trips"
@@ -178,6 +206,20 @@ def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:
         result = export_trip_longshot(trip_dir, platform="xiaohongshu")
     mock_b.assert_not_called()
     assert result.platform == "xiaohongshu"
+    assert result.capture_method == "collage_pages"
+    assert result.page_count >= 1
+
+
+def test_route_wechat_official_via_export_trip_longshot(tmp_path: Path) -> None:
+    trips = tmp_path / "trips"
+    create_trip("mp-route", trips, title="路由公众号")
+    trip_dir = trips / "mp-route"
+    _seed_kept_photos(trip_dir, 8)
+
+    with patch("travelogue.export.platform_longshot.export_platform_longshot") as mock_b:
+        result = export_trip_longshot(trip_dir, platform="wechat_official")
+    mock_b.assert_not_called()
+    assert result.platform == "wechat_official"
     assert result.capture_method == "collage_pages"
     assert result.page_count >= 1
 

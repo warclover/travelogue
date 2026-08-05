@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.5.1 |
+| **文档版本** | v0.6.0 |
 | **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写）· 已实现（Stage 1-4）并追加 4 套等分模板 |
 | **模块代号** | Export Card Compose（小红书 / 单张海报 / 画册三出口统一） |
 | **前置条件** | [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
@@ -46,6 +46,7 @@
 | 出口 | Card 用法 | 输出文件 |
 |------|-----------|----------|
 | 小红书 `xiaohongshu` | N 张 Card，每张独立导出 | N 张 3:4 PNG |
+| 公众号 `wechat_official`（§5.1.1，渲染同源于小红书） | N 张 Card，每张独立导出 | N 张 3:4 PNG |
 | 单张海报 `poster_bric` | 固定 **1 张** Card | 1 张 3:4 PNG |
 | 画册 `album_spread` | Card **两两成对**，中间加 gutter 拼成跨页 | M 张「2×3:4+gutter」跨页 PNG |
 
@@ -110,6 +111,12 @@ CardRenderer（Pillow slot 渲染，方案 A）
 - 每张 Card 独立导出：`{title}-xhs-{nn}.png`，footer `{i}/{n}` 沿用现有页码约定。
 - 不再有 `letterbox` / `smart_crop` 选择——Compose 卡片天然铺满画布，`padMode` UI 继续隐藏（已在 Studio 面板做过）。
 - **不要求**按分镜/聚类分组，只要求槙位横竖版正确填充（见 §4 v0.2 简化）。
+
+#### 5.1.1 公众号 `wechat_official`（2026-08-05 追加，与小红书**渲染同源**）
+
+- 与小红书**共用同一条** CardGrouper → CardTemplateSelector → CardRenderer 管线（`collage_pack.py` 同一分支），画布 / 张数公式 / 模板选型完全一致——**不是**独立实现，只是新开一个 `platform_profiles.yaml` 条目 + 接进既有分支。
+- 差异点仅三处：①`label`（公众号）；②文件命名前缀 `{title}-mp-{nn}.png`（小红书是 `-xhs-{nn}`）；③`publish_guide` 文案——公众号是「插入图文编辑器正文」的发布场景，与小红书「选图发笔记」不同，因此单独撰写指引文案（不复用小红书那份）。
+- Studio 导出面板默认展示（`PHASE_A_PLATFORMS` / `DEFAULT_LONGSHOT2_PLATFORMS` 与小红书同级），复用小红书那套「张数」选择控件与「复制文案包」入口（`showXhsOptions`），不新增 UI 组件。
 
 ### 5.2 单张海报 `poster_bric`
 
@@ -217,3 +224,5 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | v0.4.0 | 2026-08-05 | Stage 1-4 落地实现完成并合入 `feat/export-compose-redesign`；追加 Stage 5：新增 `card-2/4/8/16-grid-equal` 4 套等分模板（§6），`CardTemplate` 增加 `grid_rows`/`grid_cols` 字段支持非 3×3 基准网格，`AVAILABLE_SLOT_COUNTS` 扩充为 `{1,2,4,6,7,8,9,16}` |
 | v0.5.0 | 2026-08-05 | 用户提交第二/三批设计稿（图1/图2 重绘确认 + 补充图C-I + 第三批图1-6，含 2 张编号标注图解决此前歧义），追加 **15 套**模板（§6）：4 套新含主图零裁切模板（`card-3/5/7/9-*`，加入 `POSTER_TEMPLATE_PRIORITY` 但暂未接入 `plan_poster_card` 实际选型，见 OQ-ECC-07）+ 11 套无主图多槙位模板；`AVAILABLE_SLOT_COUNTS` 扩充为 `{1,2,3,4,5,6,7,8,9,10,12,13,16}`，全库合计 **28 套** |
 | v0.5.1 | 2026-08-05 | **OQ-ECC-07 决策收口（方案B）**：单张海报选型 `plan_poster_card` 维持现状（硬编码 3 档 pool_size 阈值，不接入 4 套新主图模板），坚持「构图优先」——池子较小时允许只用部分照片，不为用满照片牺牲主图占比/视觉冲击力；小红书/画册两个多槙位出口已借助 `AVAILABLE_SLOT_COUNTS` 扩容天然满足「照片少则优先小模板、不浪费」，无需改动 |
+| v0.6.0 | 2026-08-05 | 新增 **公众号 `wechat_official`** 出口（§5.1.1）：与小红书渲染同源（同一 `collage_pack.py` 分支/画布/张数公式/模板选型），仅 label / 文件名前缀 `-mp-{nn}` / 发布指引文案不同；接入 `PLATFORM_SEGMENT_IDS`/`COMPOSE_PLATFORM_IDS`/`PHASE_A_PLATFORMS`/`DEFAULT_LONGSHOT2_PLATFORMS`/顶层 `export_trip_longshot` 路由；Studio 导出面板默认展示，复用小红书的「张数」控件与「复制文案包」入口；Output Recipe V1（默认关闭）子系统的 intent 映射同步补齐但未深入接线，留作后续 |
+| v0.6.0 | 2026-08-05 | **新增公众号 `wechat_official` 出口**（§5.1.1）：与小红书渲染同源（同一 `collage_pack.py` 分支 / 同一 CardGrouper-Selector-Renderer 管线 / 同一 3:4 画布与张数公式），仅 `label`/文件名前缀（`-mp-{nn}`）/`publish_guide`（插图文正文场景）不同；`platform_profiles.py` 的 `PLATFORM_SEGMENT_IDS`/`COMPOSE_PLATFORM_IDS`/`PHASE_A_PLATFORMS` 及 `config/studio.py` 的 `DEFAULT_LONGSHOT2_PLATFORMS` 同步收录，Studio 导出面板默认展示（与小红书同级） |

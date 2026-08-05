@@ -9,6 +9,7 @@ export var INTENT_TO_PLATFORM = {
   moments_scroll: "wechat_moments",
   moments_grid: "moments_grid",
   xiaohongshu: "xiaohongshu",
+  wechat_official: "wechat_official",
   poster_bric: "poster_bric",
   album_spread: "album_spread",
 };
@@ -18,6 +19,7 @@ export var PLATFORM_TO_INTENT = {
   wechat_moments: "moments_scroll",
   moments_grid: "moments_grid",
   xiaohongshu: "xiaohongshu",
+  wechat_official: "wechat_official",
   poster_bric: "poster_bric",
   album_spread: "album_spread",
 };
@@ -196,7 +198,9 @@ export function recipeFromIntent(intent, band, keptN, source) {
       ? "导出朋友圈 · 长图连读"
       : normalized === "xiaohongshu"
         ? "导出小红书海报"
-        : normalized === "poster_bric"
+        : normalized === "wechat_official"
+          ? "导出公众号配图"
+          : normalized === "poster_bric"
           ? "导出 A4 海报"
           : normalized === "album_spread"
             ? "导出画册跨页"

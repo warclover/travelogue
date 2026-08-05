@@ -21,6 +21,7 @@ PLATFORM_SEGMENT_IDS = frozenset(
         "moments_grid",
         "poster_bric",
         "xiaohongshu",
+        "wechat_official",
         "album_spread",
         "instagram",
         "weibo",
@@ -31,7 +32,9 @@ PLATFORM_SEGMENT_IDS = frozenset(
 KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS)
 
 # Fixed-canvas collage compose (no Playwright aspect-fit longshot)
-COMPOSE_PLATFORM_IDS = frozenset({"poster_bric", "xiaohongshu", "album_spread"})
+COMPOSE_PLATFORM_IDS = frozenset(
+    {"poster_bric", "xiaohongshu", "wechat_official", "album_spread"}
+)
 
 # Aspect-fit platforms (letterbox / smart_crop to fixed WxH)
 ASPECT_FIT_PLATFORM_IDS = frozenset(
@@ -42,6 +45,7 @@ ASPECT_FIT_PLATFORM_IDS = frozenset(
 PHASE_A_PLATFORMS = (
     "wechat_moments",
     "xiaohongshu",
+    "wechat_official",
     "poster_bric",
     "album_spread",
 )
@@ -206,7 +210,8 @@ def resolve_profile(
             ) from exc
         # moments ignores slideCount (PRD §8.1); aspect-fit / collage validate range
         if (
-            pid in ASPECT_FIT_PLATFORM_IDS or pid in ("xiaohongshu", "album_spread")
+            pid in ASPECT_FIT_PLATFORM_IDS
+            or pid in ("xiaohongshu", "wechat_official", "album_spread")
         ) and (n < profile.min_pages or n > profile.max_pages):
             raise PlatformProfileError(
                 "E_LNG2_INVALID_SLIDE_COUNT",
@@ -447,6 +452,8 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-poster"
     if platform_id == "xiaohongshu":
         return f"{slug}-xhs"
+    if platform_id == "wechat_official":
+        return f"{slug}-mp"
     if platform_id == "album_spread":
         return f"{slug}-album"
     if platform_id == "instagram":

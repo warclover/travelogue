@@ -661,6 +661,10 @@ export function cancelPreviewLongshotExport(root) {
       var n = prefs.slideCount == null ? "auto" : String(prefs.slideCount);
       return "小红书海报 · " + n + " 张 · " + prefs.scale + "×";
     }
+    if (platform === "wechat_official") {
+      var nMp = prefs.slideCount == null ? "auto" : String(prefs.slideCount);
+      return "公众号配图 · " + nMp + " 张 · " + prefs.scale + "×";
+    }
     if (platform === "poster_bric") {
       return "单张海报 · " + prefs.scale + "×";
     }
@@ -1876,6 +1880,11 @@ export function cancelPreviewLongshotExport(root) {
         "已保存 " +
         (outputs.length || 0) +
         " 张竖版拼贴海报（3:4）· 可发小红书";
+    } else if (resultPlatform === "wechat_official") {
+      homeHint.textContent =
+        "已保存 " +
+        (outputs.length || 0) +
+        " 张竖版拼贴配图（3:4）· 可插入公众号图文";
     } else if (resultPlatform === "poster_bric") {
       homeHint.textContent = "已保存 1 张 3:4 拼贴海报";
     } else if (resultPlatform === "album_spread") {
@@ -2533,11 +2542,13 @@ export function cancelPreviewLongshotExport(root) {
           ? "正在导出朋友圈长图连读…"
           : platform === "xiaohongshu"
             ? "正在导出小红书竖版拼贴海报…"
-            : platform === "poster_bric"
-              ? "正在导出单张海报…"
-              : platform === "album_spread"
-                ? "正在导出画册跨页…"
-                : "正在保存…";
+            : platform === "wechat_official"
+              ? "正在导出公众号竖版拼贴配图…"
+              : platform === "poster_bric"
+                ? "正在导出单张海报…"
+                : platform === "album_spread"
+                  ? "正在导出画册跨页…"
+                  : "正在保存…";
     setLongshotExportState(root, "running", { hint: runningHint });
     _setSlowHint(root, "", false);
 
@@ -2610,11 +2621,13 @@ export function cancelPreviewLongshotExport(root) {
             ? "朋友圈连读排队中，请稍候…"
             : platform === "xiaohongshu"
               ? "小红书海报排队中，请稍候…"
-              : platform === "poster_bric"
-                ? "单张海报排队中，请稍候…"
-                : platform === "album_spread"
-                  ? "画册跨页排队中，请稍候…"
-                  : "排队中，请稍候…";
+              : platform === "wechat_official"
+                ? "公众号配图排队中，请稍候…"
+                : platform === "poster_bric"
+                  ? "单张海报排队中，请稍候…"
+                  : platform === "album_spread"
+                    ? "画册跨页排队中，请稍候…"
+                    : "排队中，请稍候…";
         setLongshotExportState(root, "running", { hint: busyHint });
       },
     })

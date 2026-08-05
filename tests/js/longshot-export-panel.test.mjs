@@ -203,3 +203,42 @@ test("P2 · buildPanelHtml 含跨页数字段；syncPanelUI 按 platform 显隐"
   assert.match(popManual._expectBody.innerHTML, /6/);
   assert.match(popManual._expectBody.innerHTML, /跨页/);
 });
+
+test("wechat_official（公众号）导出形式与 xiaohongshu 一致，仅文案/标识不同", () => {
+  // INTENT/PLATFORM 映射互逆，同 poster_bric 的校验方式。
+  assert.equal(INTENT_TO_PLATFORM.wechat_official, "wechat_official");
+  assert.equal(PLATFORM_TO_INTENT.wechat_official, "wechat_official");
+  assert.equal(
+    PLATFORM_TO_INTENT[INTENT_TO_PLATFORM.wechat_official],
+    "wechat_official"
+  );
+
+  // Compose 路径归属与 xiaohongshu 相同（3:4 Card 管线，非 Playwright 长图）。
+  assert.equal(isComposePlatform("wechat_official"), true);
+
+  assert.equal(shortCtaLabelForPlatform("wechat_official"), "公众号");
+  assert.notEqual(shortCtaLabelForPlatform("wechat_official"), "发微信群");
+  assert.match(ctaLabelForPlatform("wechat_official"), /公众号/);
+
+  assert.match(progressTitleForPlatform("wechat_official"), /公众号/);
+  assert.doesNotMatch(progressTitleForPlatform("wechat_official"), /微信群|小红书/);
+  assert.equal(
+    progressSynthesizingTitleForPlatform("wechat_official"),
+    "正在合成拼贴…"
+  );
+
+  assert.equal(
+    detectPlatformFromProgressHint("公众号配图排队中，请稍候…"),
+    "wechat_official"
+  );
+
+  // 默认灰度名单默认展示公众号（与小红书同级，方案见 OQ 决策 2026-08-05）。
+  const enabled = enabledPlatformsFromConfig({
+    longshot2: { enabled: true },
+  });
+  assert.ok(enabled.includes("wechat_official"));
+
+  // 弹层内复用小红书那套「张数」控件（showXhsOptions），非小红书专属文案。
+  assert.equal(PLATFORMS.wechat_official.showXhsOptions, true);
+  assert.notEqual(PLATFORMS.wechat_official.label, PLATFORMS.xiaohongshu.label);
+});

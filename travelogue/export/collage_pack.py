@@ -1,12 +1,19 @@
-"""Multi-page collage export · xiaohongshu (3:4 Card) + album_spread (paired 3:4 Cards + gutter).
+"""Multi-page collage export · xiaohongshu/wechat_official (3:4 Card) + album_spread (paired 3:4 Cards + gutter).
 
-PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4. Both platforms share the
-CardGrouper → CardTemplateSelector → CardRenderer pipeline
-(``card_grouper.py`` / ``card_renderer.py``); neither requires shot-grouping
-/ chapter-boundary awareness — only orientation-correct slot filling (§4 v0.2
+PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4. All three platforms share
+the CardGrouper → CardTemplateSelector → CardRenderer pipeline
+(``card_grouper.py`` / ``card_renderer.py``); none require shot-grouping /
+chapter-boundary awareness — only orientation-correct slot filling (§4 v0.2
 simplification). ``pack_album_pages_by_chapter``'s chapter-first packing is
 **retired** (BLK-ECC-05): CardGrouper's sequential slot-count consumption
 replaces it, so there is no more "按章分页" special case.
+
+``wechat_official``（公众号图文配图，2026-08-05 追加）is a **render-identical**
+sibling of ``xiaohongshu`` — same 3:4 Card canvas, same page-count formula,
+same CardGrouper/Selector/Renderer call path — differing only in platform
+label / file-naming prefix (``-mp-{nn}`` vs ``-xhs-{nn}``) / publish_guide
+copy (see ``config/platform_profiles.yaml``), since 公众号's publish flow is
+"insert into 图文 editor" rather than 小红书's "选图发笔记".
 """
 
 from __future__ import annotations
@@ -121,10 +128,10 @@ def export_collage_pack(
     """Compose multi-page 3:4 Card collages (no Playwright / gcs flag)."""
     _ = cfg
     pid = str(platform or "").strip()
-    if pid not in ("xiaohongshu", "album_spread"):
+    if pid not in ("xiaohongshu", "wechat_official", "album_spread"):
         raise LongshotExportError(
             "E_LNG2_INVALID_PLATFORM",
-            f"collage_pack 仅支持 xiaohongshu / album_spread，收到「{pid}」",
+            f"collage_pack 仅支持 xiaohongshu / wechat_official / album_spread，收到「{pid}」",
         )
 
     trip_dir = Path(trip_dir).resolve()
@@ -143,7 +150,7 @@ def export_collage_pack(
 
     card_wh = scale_canvas(CARD_CANVAS, scale)
 
-    if pid == "xiaohongshu":
+    if pid in ("xiaohongshu", "wechat_official"):
         target_per_card = _xhs_target_per_card(
             len(paths), slide_count=slide_count, profile=profile
         )
@@ -152,8 +159,10 @@ def export_collage_pack(
             render_card(list(plan.photos), plan.template, canvas_wh=card_wh)[0]
             for plan in plans
         ]
+        # 渲染管线与小红书完全一致；仅正文场景措辞不同（笔记 vs 图文）。
+        body_label = "图文正文" if pid == "wechat_official" else "笔记正文"
         user_hint = (
-            f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在笔记正文"
+            f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在{body_label}"
         )
         segment_reason = "collage_pages"
     else:

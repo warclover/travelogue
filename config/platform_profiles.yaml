@@ -1,5 +1,5 @@
 # Longshot 2.0 · 平台导出 Profile（ADR-016 / PRD-LONGSHOT-2.0）
-# Phase A：wechat_moments；Phase B：xiaohongshu（UI 由 studio.longshot2.platforms 灰度）
+# Phase A：wechat_moments；Phase B：xiaohongshu / wechat_official（UI 由 studio.longshot2.platforms 灰度）
 
 platforms:
   wechat_chat:
@@ -93,6 +93,28 @@ platforms:
     publish_guide: >-
       发布步骤：保存到相册 → 小红书 → 发笔记 → 选图（竖版拼贴海报 3:4）；
       详情写在笔记正文，配图是视觉提纲
+
+  # 公众号图文配图 · 导出形式与小红书完全一致（同一套 3:4 Card 拼贴管线），
+  # 仅 label / 文件名前缀 / 发布指引不同（公众号是插图到图文编辑器，非选图发笔记）。
+  wechat_official:
+    label: 公众号
+    label_en: WeChat Official Account
+    segment: photo_led
+    capture: collage_pages
+    allow_p1: false
+    phase: B
+    target_pages: null
+    min_pages: 1
+    max_pages: 18
+    output:
+      width: 1080
+      height: 1440
+      aspect: "3:4"
+      naming: "{title}-mp-{nn}"
+      footer: "{i}/{n}"
+    publish_guide: >-
+      发布步骤：保存到相册 → 公众号后台 → 图文编辑器 → 依次插入配图到正文对应段落
+      （建议每段文字配 1 张，可在图片下方加小标题）；配图是视觉提纲，细节写在正文。
 
   # PRD-EXPORT-CARD-COMPOSE-V1 · 相册跨页拼贴（两张 3:4 Card + 中缝，约 1.53:1；不走 Playwright）
   album_spread:

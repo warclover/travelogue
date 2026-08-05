@@ -51,6 +51,18 @@ export var PLATFORMS = {
     expectHtml:
       "将生成 <strong>N 张 3:4 竖版拼贴海报</strong>（非杂志截屏）· auto 约 3–9 张",
   },
+  // 导出形式与小红书一致（同一套 3:4 Card 拼贴管线），仅文案/发布场景不同。
+  wechat_official: {
+    id: "wechat_official",
+    label: "公众号 · 图文配图",
+    title: "公众号",
+    subtitle: "3:4 拼贴配图",
+    cta: "导出公众号配图",
+    showSegmentMode: false,
+    showXhsOptions: true,
+    expectHtml:
+      "将生成 <strong>N 张 3:4 竖版拼贴配图</strong>（非杂志截屏）· auto 约 3–9 张 · 可依次插入图文正文",
+  },
   album_spread: {
     id: "album_spread",
     label: "画册印刷",
@@ -73,7 +85,7 @@ export function enabledPlatformsFromConfig(cfgStudio) {
   if (l2.enabled === false) return ["wechat_chat"];
   var list = Array.isArray(l2.platforms)
     ? l2.platforms.slice()
-    : ["wechat_moments", "xiaohongshu", "poster_bric", "album_spread"];
+    : ["wechat_moments", "xiaohongshu", "wechat_official", "poster_bric", "album_spread"];
   // Compose 出口默认开放；gcs 关闭时可杀停 poster_bric
   var gcs =
     (cfgStudio && (cfgStudio.gcsPosterBric || cfgStudio.gcs_poster_bric)) || {};
@@ -91,6 +103,7 @@ export function enabledPlatformsFromConfig(cfgStudio) {
       if (
         id === "wechat_moments" ||
         id === "xiaohongshu" ||
+        id === "wechat_official" ||
         id === "poster_bric" ||
         id === "album_spread"
       ) {
@@ -125,7 +138,7 @@ export function scaleHintForPlatform(platformId, scale) {
     var ah = s > 2 ? Math.round(1440 * 1.25) : 1440;
     return "3:4 画布约 " + aw + "×" + ah + "px";
   }
-  if (platformId === "xiaohongshu") {
+  if (platformId === "xiaohongshu" || platformId === "wechat_official") {
     var xw = s > 2 ? Math.round(1080 * 1.25) : 1080;
     var xh = s > 2 ? Math.round(1440 * 1.25) : 1440;
     return "竖版海报约 " + xw + "×" + xh + "px（3:4）";
@@ -234,6 +247,7 @@ export function shortCtaLabelForPlatform(platformId) {
   // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
   if (platformId === "wechat_moments") return "导出连读";
   if (platformId === "xiaohongshu") return "小红书";
+  if (platformId === "wechat_official") return "公众号";
   if (platformId === "poster_bric") return "单张海报";
   if (platformId === "album_spread") return "画册";
   return "发微信群";
@@ -248,6 +262,7 @@ export var PROGRESS_TITLES = {
   wechat_moments: "正在生成朋友圈长图…",
   moments_grid: "正在生成拼贴导出…",
   xiaohongshu: "正在生成小红书竖版拼贴…",
+  wechat_official: "正在生成公众号竖版拼贴…",
   poster_bric: "正在生成 3:4 单张海报…",
   album_spread: "正在生成画册跨页…",
 };
@@ -255,6 +270,7 @@ export var PROGRESS_TITLES = {
 /** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
 export var COMPOSE_PLATFORMS = {
   xiaohongshu: true,
+  wechat_official: true,
   poster_bric: true,
   album_spread: true,
 };
@@ -278,6 +294,7 @@ export function progressSynthesizingTitleForPlatform(platformId) {
 export function detectPlatformFromProgressHint(hint) {
   var text = String(hint || "");
   if (/小红书/.test(text)) return "xiaohongshu";
+  if (/公众号/.test(text)) return "wechat_official";
   if (/画册|跨页/.test(text)) return "album_spread";
   if (/单(张|屏)海报/.test(text)) return "poster_bric";
   if (/朋友圈|连读/.test(text)) return "wechat_moments";
@@ -923,6 +940,8 @@ export function formatPlatformSuccess(result) {
     title = "✓ " + n + " 张长图连读已就绪";
   } else if (platform === "xiaohongshu") {
     title = "✓ " + n + " 张竖版拼贴海报已就绪";
+  } else if (platform === "wechat_official") {
+    title = "✓ " + n + " 张公众号配图已就绪";
   } else if (platform === "album_spread") {
     title = "✓ " + n + " 张画册跨页已就绪";
   }

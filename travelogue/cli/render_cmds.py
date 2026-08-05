@@ -431,7 +431,7 @@ def cmd_export_longshot(
         "--platform",
         help=(
             "wechat_chat (default) | wechat_moments | moments_grid | xiaohongshu | "
-            "instagram | weibo | douyin_cover | custom"
+            "wechat_official | album_spread | instagram | weibo | douyin_cover | custom"
         ),
     ),
     intent: str | None = typer.Option(

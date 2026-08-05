@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 DEFAULT_LONGSHOT2_PLATFORMS: tuple[str, ...] = (
     "wechat_moments",
     "xiaohongshu",
+    "wechat_official",
     "poster_bric",
     "album_spread",
 )

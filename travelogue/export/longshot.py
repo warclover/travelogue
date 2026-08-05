@@ -1108,7 +1108,7 @@ def export_trip_longshot(
             progress=progress,
             platform=pid,
         )
-    if pid in ("xiaohongshu", "album_spread"):
+    if pid in ("xiaohongshu", "wechat_official", "album_spread"):
         from travelogue.export.collage_pack import export_collage_pack
 
         return export_collage_pack(
