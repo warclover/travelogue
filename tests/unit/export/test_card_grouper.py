@@ -86,6 +86,48 @@ def test_assign_photos_to_slots_borrows_when_no_landscape_supply(tmp_path: Path)
     assert set(ordered) == set(photos)
 
 
+@pytest.mark.parametrize(
+    "template_id",
+    [
+        "card-3-mini-triband",
+        "card-5-hero-mid-landscape",
+        "card-7-triband-hero-mid",
+        "card-9-hero-mid-triband",
+    ],
+)
+def test_assign_photos_to_slots_landscape_shaped_main_prefers_landscape_photo(
+    tmp_path: Path, template_id: str
+) -> None:
+    """Regression (2026-08-05, post-wechat_official user report): these 4
+    v0.5.0 templates give ``main`` a landscape-shaped cell (display_aspect
+    1.5), not the portrait/near-square shape the original 9 templates use.
+    A landscape-shaped ``main`` must draw from the landscape photo pool —
+    otherwise it starves the template's real landscape slots and a portrait
+    photo gets force-cropped into a 1.5-aspect cell."""
+    template = CARD_TEMPLATES[template_id]
+    n = template.slot_count
+    landscape_shaped = sum(
+        1 for s in template.slots if s.role == "landscape" or s.display_aspect > 1.3
+    )
+    assert landscape_shaped >= 1  # sanity: every one of these has >=1 such slot
+    # Supply exactly as many landscape photos as there are landscape-shaped
+    # slots, and fill the rest with portrait — enough supply that nothing
+    # should need to "borrow" across pools.
+    landscapes = [_landscape(tmp_path / f"l{i}.jpg") for i in range(landscape_shaped)]
+    portraits = [_portrait(tmp_path / f"p{i}.jpg") for i in range(n - landscape_shaped)]
+    ordered = assign_photos_to_slots(landscapes + portraits, template)
+    for path, slot in zip(ordered, template.slots, strict=True):
+        is_landscape_shaped = slot.role == "landscape" or slot.display_aspect > 1.3
+        if is_landscape_shaped:
+            assert "l" in path.stem, (
+                f"{template_id}: {slot.role} slot (display_aspect="
+                f"{slot.display_aspect}) got a portrait photo despite full "
+                "landscape supply"
+            )
+        else:
+            assert "p" in path.stem
+
+
 def test_plan_cards_covers_all_photos(tmp_path: Path) -> None:
     photos = [_portrait(tmp_path / f"p{i}.jpg") for i in range(20)]
     plans = plan_cards(photos)

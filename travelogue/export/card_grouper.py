@@ -3,8 +3,10 @@
 PRD-EXPORT-CARD-COMPOSE-V1 §4 (v0.2 simplification): xiaohongshu / poster_bric /
 album_spread do **not** require shot-grouping / scene-cluster boundary
 awareness. The only hard requirement (AC-ECC-04) is that each slot receives a
-photo whose native orientation matches the slot's role (``portrait`` /
-``landscape``); ``main`` slots accept either.
+photo whose native orientation matches the slot's *actual shape*
+(``role == "landscape"``, or a ``main`` slot whose ``display_aspect`` is
+landscape-shaped, e.g. ``card-5-hero-mid-landscape``); other ``main`` slots
+(portrait/near-square shaped) accept either.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ from pathlib import Path
 from travelogue.export.card_templates import (
     AVAILABLE_SLOT_COUNTS,
     CARD_TEMPLATES,
+    CardSlot,
     CardTemplate,
     pick_template_for_count,
 )
@@ -68,10 +71,36 @@ def plan_slot_counts(total_photos: int, *, target_per_card: int | None = None) -
     return plan
 
 
+#: display_aspect above this reads as a landscape-shaped cell — used to route
+#: ``main`` slots by their *actual* geometry rather than blindly by role.
+#: card-4-square-top-triband's main (1.125, the one crop-required slot) stays
+#: below this line on purpose: it's near-square, not landscape-shaped, and
+#: always needs a real crop regardless of which pool it draws from.
+_LANDSCAPE_SHAPED_ASPECT_MIN = 1.3
+
+
+def _slot_is_landscape_shaped(slot: CardSlot) -> bool:
+    """Whether a slot should draw from the landscape photo pool.
+
+    ``role == "landscape"`` slots always do. ``main`` slots are declared
+    "accept either" orientation, but several v0.5.0 templates
+    (card-3/5/7/9-*) give ``main`` a genuinely landscape-shaped cell
+    (``display_aspect=1.5``) — those must pull from the landscape pool too,
+    or they starve real landscape slots of supply while forcing a portrait
+    photo into a 1.5-aspect cell (severe crop). Portrait/near-square
+    ``main`` cells (0.75 / 1.125) are unaffected — they keep drawing from
+    the portrait pool as before.
+    """
+    return slot.role == "landscape" or slot.display_aspect > _LANDSCAPE_SHAPED_ASPECT_MIN
+
+
 def assign_photos_to_slots(photos: list[Path], template: CardTemplate) -> list[Path]:
     """Reorder ``photos`` to match ``template.slots``, matching each photo's
-    native orientation to its slot's role (``portrait``/``landscape``);
-    ``main`` slots accept either and get first pick of the "other" pool.
+    native orientation to its slot's *actual shape* (landscape-shaped cells,
+    including a landscape-shaped ``main``, draw from the landscape pool;
+    everything else — portrait/near-square, including a portrait-shaped
+    ``main`` — draws from the portrait pool). Within each pool, a ``main``
+    slot gets first pick (best/first photo lands there).
 
     Best-effort: if supply doesn't exactly match demand (e.g. all-portrait
     trip feeding a template with landscape slots), leftovers are filled in
@@ -82,9 +111,15 @@ def assign_photos_to_slots(photos: list[Path], template: CardTemplate) -> list[P
             f"assign_photos_to_slots: template {template.id} expects "
             f"{template.slot_count} photos, got {len(photos)}"
         )
-    landscape_slot_idx = [i for i, s in enumerate(template.slots) if s.role == "landscape"]
-    other_slot_idx = [i for i, s in enumerate(template.slots) if s.role != "landscape"]
-    # `main` slots get first pick among "other" slots (best/first photo lands there).
+    landscape_slot_idx = [
+        i for i, s in enumerate(template.slots) if _slot_is_landscape_shaped(s)
+    ]
+    other_slot_idx = [
+        i for i, s in enumerate(template.slots) if not _slot_is_landscape_shaped(s)
+    ]
+    # `main` slots get first pick within whichever pool they draw from
+    # (best/first photo lands there).
+    landscape_slot_idx.sort(key=lambda i: 0 if template.slots[i].role == "main" else 1)
     other_slot_idx.sort(key=lambda i: 0 if template.slots[i].role == "main" else 1)
 
     landscape_photos = [p for p in photos if _photo_orientation(p) == "landscape"]
