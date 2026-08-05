@@ -73,8 +73,15 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "xiaohongshu"
     assert result.capture_method == "collage_pages"
-    # 8 photos greedy-chunk to [8] (card-8-grid-equal fits exactly) → 1 card.
-    assert result.page_count == 1
+    # 2026-08-05 (orientation-supply-aware CardGrouper fix): the 8 seeded
+    # photos are 4 landscape + 4 portrait (_seed_kept_photos alternates), so
+    # the pure count-based chunk [8] → card-8-grid-equal (100% landscape
+    # demand) would force 4 borrowed portrait photos into landscape-shaped
+    # slots. plan_cards now tracks real orientation supply and instead
+    # produces [7, 1] (card-7-triband-hero-mid's 3/4 split fits the actual
+    # 4/4 supply almost exactly) → 2 cards, only the unavoidable trailing
+    # single photo mismatched.
+    assert result.page_count == 2
     assert "竖版拼贴" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
@@ -99,8 +106,9 @@ def test_export_wechat_official_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "wechat_official"
     assert result.capture_method == "collage_pages"
-    # Same greedy chunking as xiaohongshu: 8 → [8] → 1 card.
-    assert result.page_count == 1
+    # Same CardGrouper as xiaohongshu (2026-08-05 fix, see that test): 4
+    # landscape + 4 portrait supply → [7, 1] → 2 cards.
+    assert result.page_count == 2
     assert "图文正文" in (result.user_hint or "")
     assert "笔记正文" not in (result.user_hint or "")
     finals = list(trip_dir.glob("*-mp-*.png"))
@@ -119,10 +127,14 @@ def test_export_xiaohongshu_covers_every_photo(tmp_path: Path) -> None:
     _seed_kept_photos(trip_dir, 13)
 
     result = export_collage_pack(trip_dir, platform="xiaohongshu")
-    # v0.5.0: card-13-hero-center-stack/card-13-hero-top-stack joined the
-    # template library, so 13 is now an exact-fit slot count on its own →
-    # greedy [13] → 1 card (was [9,4] → 2 cards pre-v0.5.0).
-    assert result.page_count == 1
+    # 2026-08-05 (orientation-supply-aware CardGrouper fix): 13 seeded photos
+    # are 7 landscape + 6 portrait. The pure count-based [13] chunk would
+    # land on card-13-hero-center-stack/top-stack — both 0% landscape —
+    # forcing all 7 landscape photos into portrait-shaped cells. plan_cards
+    # now picks [7, 6] instead (card-7-triband-hero-mid's 3 landscape-shaped
+    # slots + card-6-sandwich-bands' 4 fit the 7/6 supply with zero forced
+    # mismatches) → 2 cards.
+    assert result.page_count == 2
 
 
 def test_export_album_spread_geometry(tmp_path: Path) -> None:
@@ -134,13 +146,16 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     result = export_collage_pack(trip_dir, platform="album_spread")
     assert result.platform == "album_spread"
     assert result.capture_method == "collage_pages"
-    # v0.5.0: 3 new 12-slot templates joined the library, so 12 is now an
-    # exact-fit slot count on its own → greedy [12] → 1 card → 1 spread
-    # (lone card, half page; was [9,2,1] → 3 cards → 2 spreads pre-v0.5.0).
-    assert result.page_count == 1
+    # 2026-08-05 (orientation-supply-aware CardGrouper fix): 12 seeded photos
+    # are 6 landscape + 6 portrait. The pure count-based [12] chunk would
+    # land on a 33%-landscape 12-slot template (4 landscape-shaped slots),
+    # stranding 2 real landscape photos with no home but a portrait cell.
+    # plan_cards now produces 4 cards ([7, 2, 2, 1], zero forced mismatches)
+    # → 2 spreads instead of 1.
+    assert result.page_count == 2
     assert "3:4" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-album-*.png"))
-    assert len(finals) == 1
+    assert len(finals) == 2
     for path in finals:
         with Image.open(path) as im:
             assert im.size == (2208, 1440)
@@ -180,12 +195,14 @@ def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Pat
 
 
 def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None:
-    """slide_count=None（自动）不受本次改动影响 — 沿用既有贪心分页结果。
+    """slide_count=None（自动）不受本次改动影响 — 沿用既有自动分页结果。
 
-    v0.5.0 note: the *result* here shifted from 2→1 spread because 12 is now
-    an exact-fit slot count (see test_export_album_spread_geometry); the
-    behavior under test (auto mode still delegates to plain greedy chunking,
-    unaffected by the slide_count P2 feature) is unchanged.
+    2026-08-05 note: the *result* here is 2 spreads (see
+    test_export_album_spread_geometry for why — 12 seeded photos are 6
+    landscape + 6 portrait, and the orientation-supply-aware CardGrouper
+    fix now avoids stranding 2 landscape photos in portrait-shaped cells);
+    the behavior under test (auto mode has no externally-fixed page-count
+    target, unaffected by the slide_count P2 feature) is unchanged.
     """
     trips = tmp_path / "trips"
     create_trip("album-auto", trips, title="画册自动分页")
@@ -193,7 +210,7 @@ def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None
     _seed_kept_photos(trip_dir, 12)
 
     auto_result = export_collage_pack(trip_dir, platform="album_spread")
-    assert auto_result.page_count == 1
+    assert auto_result.page_count == 2
 
 
 def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:

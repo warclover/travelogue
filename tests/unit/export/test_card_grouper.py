@@ -8,6 +8,7 @@ import pytest
 from PIL import Image
 
 from travelogue.export.card_grouper import (
+    _slot_is_landscape_shaped,
     assign_photos_to_slots,
     plan_cards,
     plan_poster_card,
@@ -135,6 +136,94 @@ def test_plan_cards_covers_all_photos(tmp_path: Path) -> None:
     assert total == 20
     all_photos = [p for plan in plans for p in plan.photos]
     assert set(all_photos) == set(photos)
+
+
+def test_plan_cards_all_portrait_matches_pre_fix_chunking(tmp_path: Path) -> None:
+    """The 2026-08-05 supply-aware rewrite must not change behavior for the
+    common all-portrait case: with zero landscape supply, every 0%-landscape
+    template ties on "proportional fit", so the largest-count tie-break
+    should still land on the exact same chunk sequence the old pure
+    greedy-largest-first chunker produced (card-16-grid-equal x1 +
+    card-4-square-top-triband x1, same as ``plan_slot_counts(20)``)."""
+    photos = [_portrait(tmp_path / f"p{i}.jpg") for i in range(20)]
+    plans = plan_cards(photos)
+    assert [p.template.id for p in plans] == [
+        "card-16-grid-equal",
+        "card-4-square-top-triband",
+    ]
+
+
+def _mixed(tmp_path: Path, n_landscape: int, n_portrait: int) -> list[Path]:
+    photos = [_landscape(tmp_path / f"l{i}.jpg") for i in range(n_landscape)]
+    photos += [_portrait(tmp_path / f"p{i}.jpg") for i in range(n_portrait)]
+    return photos
+
+
+@pytest.mark.parametrize(
+    ("n_landscape", "n_portrait"),
+    [
+        (31, 41),  # real-trip mix that exposed the bug (2026-08-05)
+        (4, 4),  # test_export_xiaohongshu_collage_pages fixture ratio
+        (7, 6),  # test_export_xiaohongshu_covers_every_photo fixture ratio
+        (6, 6),  # test_export_album_spread_geometry fixture ratio
+        (2, 70),  # landscape-scarce trip
+        (70, 2),  # landscape-abundant trip
+    ],
+)
+def test_plan_cards_avoids_avoidable_orientation_mismatches(
+    tmp_path: Path, n_landscape: int, n_portrait: int
+) -> None:
+    """Regression (2026-08-05, user report: "还有部分模板会错误装配横版或竖版
+    照片，导致人物被裁"). Root cause: ``plan_cards`` picked each card's
+    template purely by count (greedy-largest-first + round-robin), blind to
+    how much landscape/portrait supply the trip's photos actually had. Some
+    templates are 100% one orientation (``card-2-stack-equal``,
+    ``card-5-hero-mid-landscape``, ``card-8-grid-equal``) or 0% landscape
+    (``card-16-grid-equal`` + 6 others), so greedy-largest-first heavily
+    over-used the 0%-landscape ``card-16-grid-equal`` (the single largest
+    count) while starving every other card of landscape capacity — forcing
+    dozens of landscape photos into portrait-shaped cells (or vice versa).
+
+    A card is only allowed to have a wrong-orientation slot when the
+    *global* supply genuinely can't do better — i.e. total mismatches must
+    not exceed ``abs(n_landscape - total_landscape_shaped_slots)`` (the
+    structural, unavoidable shortfall from the chosen template mix)."""
+    photos = _mixed(tmp_path, n_landscape, n_portrait)
+    plans = plan_cards(photos)
+    total = sum(len(p.photos) for p in plans)
+    assert total == n_landscape + n_portrait
+    all_photos = [p for plan in plans for p in plan.photos]
+    assert set(all_photos) == set(photos)
+
+    total_landscape_shaped_slots = 0
+    mismatches = 0
+    for plan in plans:
+        for photo, slot in zip(plan.photos, plan.template.slots, strict=True):
+            want_landscape = _slot_is_landscape_shaped(slot)
+            got_landscape = "l" in photo.stem and "p" not in photo.stem
+            if want_landscape:
+                total_landscape_shaped_slots += 1
+            if want_landscape != got_landscape:
+                mismatches += 1
+
+    structural_shortfall = abs(n_landscape - total_landscape_shaped_slots)
+    assert mismatches <= structural_shortfall, (
+        f"n_landscape={n_landscape} n_portrait={n_portrait}: {mismatches} "
+        f"mismatches exceed the {structural_shortfall} structurally "
+        "unavoidable given the chosen template mix's landscape-shaped-slot "
+        f"total ({total_landscape_shaped_slots})"
+    )
+
+
+def test_plan_cards_never_picks_card16_when_landscape_supply_is_meaningful(
+    tmp_path: Path,
+) -> None:
+    """``card-16-grid-equal`` has zero landscape-shaped slots — it's the
+    template that hoarded portrait-friendly capacity in the pre-fix bug.
+    With a healthy (~40%) landscape supply, it must not be the first pick."""
+    photos = _mixed(tmp_path, 31, 41)
+    plans = plan_cards(photos)
+    assert plans[0].template.id != "card-16-grid-equal"
 
 
 def test_plan_cards_empty() -> None:

@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.6.0 |
+| **文档版本** | v0.6.1 |
 | **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写）· 已实现（Stage 1-4）并追加 4 套等分模板 |
 | **模块代号** | Export Card Compose（小红书 / 单张海报 / 画册三出口统一） |
 | **前置条件** | [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
@@ -64,14 +64,18 @@ $$\text{spread 宽:高} = \left(2 \times \frac{3}{4} + \text{gutter 系数}\righ
 ## 4. 架构：CardGrouper → CardTemplateSelector → CardRenderer
 
 > **v0.2 简化（2026-08-05）**：小红书 / 单张海报 / 画册**均不要求**按聚类 / 分镜结果拼图——只需保证每个槙位填入**横竖版正确**的照片即可。CardGrouper 不再承担「分镜边界感知」，退化为「按模板槙数切块 + 按槙位角色（`portrait` / `landscape` / `main`）匹配照片朝向」的**顺序消耗**逻辑。分镜/聚类信号在这三出口中降级为**可选的次要平局打破项**（例如同张数候选下优先选不切断同一分镜的边界），不是硬约束。
+>
+> **v0.2.1 供给感知选型修正（2026-08-05 当日二次修复，用户报告"横竖版装配错位"）**：v0.2 的「先按张数贪心切块、再轮询选模板」对**照片池实际横竖版供给量完全不感知**——`card-16-grid-equal` 等 7 套模板 0% 横版槙位、`card-2-stack-equal`/`card-5-hero-mid-landscape`/`card-8-grid-equal` 3 套 100% 横版槙位，贪心「优先最大张数」会重度偏好槙数最大的 `card-16-grid-equal`（0% 横版），把真正的横版照片挤到别的 Card 里强行塞进竖版格子（或反之）。真实游记验证：72 张（31 横版/41 竖版）在旧算法下产生 **29 处**横竖版错位，占比 40%。修正后 CardGrouper 改为**追踪剩余横竖版供给量**，每一步都联合选择「张数 + 模板」使其尽量贴合剩余供给比例（容差 ±1.5 槙，避免为追求零误差而过度碎片化成很多小卡），同一真实游记验证降到 **1 处**（结构性不可避免的末尾单张遗留）。**代价**：自动分页张数会比纯贪心多（因为不再无脑偏好槙数最大的全竖版模板），但 AC-ECC-04（横竖版正确）是硬约束、§5.1 的「优先最大张数」只是实现策略，正确性优先于页数最省。用户手动指定「自定义张数」时**分页张数序列保持不变**（仍用 `plan_slot_counts` 的既有公式），只是同一张数下的模板选型也做同样的供给感知修正。详见 `card_grouper.py` 模块 docstring / `_best_matching_template`。
 
 ```
 kept 照片（有序，已过滤 is_kept_image / is_collage_asset）
       │
       ▼
-CardGrouper（v0.2 · 顺序消耗，非分镜感知）
-  · 决定 Card 数量 N 及每张 Card 用几槙（只能取模板库已有槙数：1/2/4/6/7/8/9/16，见 §6）
-  · 按序从 kept 照片池里为每张 Card 取出所需张数
+CardGrouper（v0.2.1 · 供给感知的张数+模板联合选型，非分镜感知）
+  · 先把照片按朝向拆成横版/竖版两条队列（各自保持原有相对顺序）
+  · 自动模式：每一步联合选「这张 Card 用几槙 + 哪套模板」，优先零借用（shortfall=0），
+    再在±1.5槙容差内选剩余供给比例最贴合、且槙数最大的候选（并列则按 OQ-ECC-04 轮换）
+  · 自定义张数模式：张数序列仍取自既有贪心公式，同张数下选型套用同一供给感知规则
   · 每张照片按朝向（横/竖）匹配槙位角色，不足则跳过/回填，不追求分镜完整性
       │
       ▼
@@ -226,3 +230,4 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | v0.5.1 | 2026-08-05 | **OQ-ECC-07 决策收口（方案B）**：单张海报选型 `plan_poster_card` 维持现状（硬编码 3 档 pool_size 阈值，不接入 4 套新主图模板），坚持「构图优先」——池子较小时允许只用部分照片，不为用满照片牺牲主图占比/视觉冲击力；小红书/画册两个多槙位出口已借助 `AVAILABLE_SLOT_COUNTS` 扩容天然满足「照片少则优先小模板、不浪费」，无需改动 |
 | v0.6.0 | 2026-08-05 | 新增 **公众号 `wechat_official`** 出口（§5.1.1）：与小红书渲染同源（同一 `collage_pack.py` 分支/画布/张数公式/模板选型），仅 label / 文件名前缀 `-mp-{nn}` / 发布指引文案不同；接入 `PLATFORM_SEGMENT_IDS`/`COMPOSE_PLATFORM_IDS`/`PHASE_A_PLATFORMS`/`DEFAULT_LONGSHOT2_PLATFORMS`/顶层 `export_trip_longshot` 路由；Studio 导出面板默认展示，复用小红书的「张数」控件与「复制文案包」入口；Output Recipe V1（默认关闭）子系统的 intent 映射同步补齐但未深入接线，留作后续 |
 | v0.6.0 | 2026-08-05 | **新增公众号 `wechat_official` 出口**（§5.1.1）：与小红书渲染同源（同一 `collage_pack.py` 分支 / 同一 CardGrouper-Selector-Renderer 管线 / 同一 3:4 画布与张数公式），仅 `label`/文件名前缀（`-mp-{nn}`）/`publish_guide`（插图文正文场景）不同；`platform_profiles.py` 的 `PLATFORM_SEGMENT_IDS`/`COMPOSE_PLATFORM_IDS`/`PHASE_A_PLATFORMS` 及 `config/studio.py` 的 `DEFAULT_LONGSHOT2_PLATFORMS` 同步收录，Studio 导出面板默认展示（与小红书同级） |
+| v0.6.1 | 2026-08-05 | **CardGrouper 供给感知选型修正**（§4 v0.2.1，用户报告"横竖版装配错位、人物被裁"的第二次修复）：`plan_cards` 原先「先按张数贪心切块、再轮询选模板」对照片池实际横竖版供给量**完全不感知**，导致 0%/100% 横版占比的极端模板（`card-16-grid-equal`/`card-2-stack-equal`/`card-5-hero-mid-landscape`/`card-8-grid-equal`）在真实横竖版混合的游记里被系统性错配（72 张真实素材验证：29 处错位，占 40%）；改为按剩余横竖版供给量联合选择张数+模板，同一素材验证降到 1 处（结构性不可避免的末尾单张）。自动模式分页张数会比纯贪心策略略多（正确性优先于页数最省，AC-ECC-04 是硬约束）；手动「自定义张数」的分页序列不受影响，仅同张数下的模板选型同步修正 |
