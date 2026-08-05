@@ -21,6 +21,6 @@
 | [018](./018-desktop-installer-layout.md) | 桌面可安装版：onedir · 资源/数据根 · portable.flag · 单实例退出 · frozen worker · 长图自动轨 2 | **Accepted** | 2026-07-14 |
 | [019](./019-desktop-user-data-llm-secrets.md) | Desktop LLM secrets（复用 ADR-018 `user_data_dir` · L0/L1） | **Accepted** | 2026-07-15 |
 | [020](./020-narrative-contract.md) | Narrative Contract：三模式组感字段 · 修订 ADR-003 longshot 展平默认 | **Accepted** | 2026-07-20 |
-| [021](./021-export-compose-dual-engine.md) | 导出双引擎：Slice 叙事切片 + Compose 3:4 卡片统一（小红书/单张海报/画册）· Studio 下线九宫格 | **Accepted** | 2026-08-04（v0.2 2026-08-05） |
+| [021](./021-export-compose-dual-engine.md) | 导出双引擎：Slice 叙事切片 + Compose 3:4 卡片统一（小红书/单张海报/画册）· Studio 下线九宫格 · 七席评审 Conditional Go | **Accepted** | 2026-08-04（v0.4 2026-08-05） |
 
 新建 ADR 请使用 `00N-简短英文名.md`，并在本表登记。

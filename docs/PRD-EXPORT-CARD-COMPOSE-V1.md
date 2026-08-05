@@ -3,10 +3,10 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.2 |
-| **状态** | Draft（决策已定 · 模板库 9 套已交付） |
+| **文档版本** | v0.3.0 |
+| **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写） |
 | **模块代号** | Export Card Compose（小红书 / 单张海报 / 画册三出口统一） |
-| **前置条件** | [ADR-021 v0.2](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
+| **前置条件** | [ADR-021 v0.4](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
 | **关联文档** | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4（**被本 PRD 取代**）· [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6（`poster_bric` 拼贴方式**被本 PRD 取代**，Writer/flag 挂点不变）· [ADR-014](./adr/014-mosaic-proximity-window-order.md)（分镜聚类信号来源） |
 | **更新日期** | 2026-08-05 |
 
@@ -74,9 +74,10 @@ CardGrouper（v0.2 · 顺序消耗，非分镜感知）
   · 每张照片按朝向（横/竖）匹配槙位角色，不足则跳过/回填，不追求分镜完整性
       │
       ▼
-CardTemplateSelector
+CardTemplateSelector（**独立新实现，不 import screen_planner.py 内部状态**）
   · 输入：该 Card 分到的照片张数 + 横竖构成
   · 从 3:4 模板库（§6）选一个槙数匹配、且横竖槙位数量能被覆盖的版式
+  · 同槙数存在多套时（6 槙×4 套 / 7 槙×2 套）按 Card 序号轮换（见 §10 OQ-ECC-04 默认解）
   · 单张海报强制只从「含主图槙」的模板中选（见 §5.2 优先级）
       │
       ▼
@@ -93,7 +94,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | 组件 | 复用来源 | 说明 |
 |------|----------|------|
 | 横竖构成信号 | [`layout_contract/subject.py`](../travelogue/layout_contract/subject.py)（`asset_has_person`、`portrait_fit_for_asset`） | 直接调用，纯 Python，无 CSS 依赖；用于判断照片朝向以匹配槙位角色 |
-| 模板选择规则 | [`screen_planner.py`](../travelogue/layout_engine/planner/screen_planner.py) 的 `PATTERN_*` 选择逻辑 | 复用「按张数+横竖比选 pattern」的判定思路，不复用其 16:9 `displayAspect` 数值 |
+| 模板选择规则 | [`screen_planner.py`](../travelogue/layout_engine/planner/screen_planner.py) 的 `PATTERN_*` 选择逻辑 | **仅借鉴**「按张数+横竖比选 pattern」的判定思路重新实现；`screen_planner.py` 是 ~1930 行状态化规划器（`ScreenLayoutPlannerState`），`CardTemplateSelector` **禁止** import 其内部函数/状态，避免耦合（对齐 [ADR-011](./adr/011-import-strategy.md) 延迟 import 精神）。**BLK-ECC-02 已回写** |
 | 已精选照片有序读取 | `photo_grid_pack.py` / `poster_bric_pack.py` 的 `_ordered_kept_ids` / `is_collage_asset` | 直接沿用，保证与预览「保留哪些照片」口径一致 |
 | 分镜/聚类信号（次要，非必需） | [`shot_grouping.py`](../travelogue/curation/shot_grouping.py)、[`scene_clusters.py`](../travelogue/curation/scene_clusters.py) | 仅用于同槙数候选下的平局打破，不阻塞出图 |
 
@@ -113,8 +114,9 @@ CardRenderer（Pillow slot 渲染，方案 A）
 ### 5.2 单张海报 `poster_bric`
 
 - 固定只产 **1 张 Card**，**模板优先级**（§6）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack`（裁切损失小）> `card-4-square-top-triband`（含裁切槙，损失较大）> 其余无主图模板（**不用**）。即优先「带主图的拼图模板」或「单张大图模板」，符合用户明确要求。
-- **选图策略：代表性精选**，不是简单取前 N 张。复用现有「精选/封面权重」信号（如 `DEFAULT_FEATURED_WEIGHT` 及封面挑选已用的加权维度），优先覆盖：开篇 / 高光 / 结尾三类时间位置。
-- 具体权重公式留在实施阶段定稿，本 PRD 先锁定「非顺序前 N 张」这个产品约束。
+- **选图策略：代表性精选**，不是简单取前 N 张。复用 [`curation/cover_scoring_v2.py`](../travelogue/curation/cover_scoring_v2.py) 的 `cover_score_v2(asset, pool, ...)` —— 逐张打封面分、对 kept 照片池排序取 top-N，优先覆盖开篇 / 高光 / 结尾三类时间位置。
+  > **BLK-ECC-01 回写（2026-08-05 评审）**：此前草稿误引 `DEFAULT_FEATURED_WEIGHT`（该常量语义是 `screen_planner.py` **屏内主图资格评分**的权重，非全书代表性排序信号，对口错误），已订正为 `cover_scoring_v2.cover_score_v2()`。
+- 具体权重公式留在实施阶段定稿，本 PRD 先锁定「非顺序前 N 张、复用 cover_score_v2 排序」这个产品约束。
 
 ### 5.3 画册 `album_spread`
 
@@ -153,7 +155,8 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | 被取代对象 | 取代方式 |
 |------------|----------|
 | ADR-021 v0.1 的 `compose_fixed_canvas`（bric + cover 装箱） | 由 CardGrouper/Selector/Renderer 三段式取代；ADR-021 同步升版 v0.2 |
-| `collage_pack.py` 的 `pack_photo_pages` / `pack_album_pages_by_chapter` 盲切页 | 由 CardGrouper（按模板槙数顺序消耗，横竖版匹配，不要求分镜边界）取代 |
+| `collage_pack.py` 的 `pack_photo_pages` 盲切页 | 由 CardGrouper（按模板槙数顺序消耗，横竖版匹配，不要求分镜边界）取代 |
+| `collage_pack.py` 的 `pack_album_pages_by_chapter`（**当前按章分页**，章节优先打包） | **BLK-ECC-05 回写**：本函数体现的「章节边界优先」正是 v0.2 明确移除的约束，Stage 2/3 需**主动退役**，由 CardGrouper 的顺序消耗逻辑取代，不得保留双轨 |
 | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4 小红书（letterbox 1080×1440 切片） | 本 PRD 全面取代；§6.4 保留存档，文首加 superseded 标注 |
 | [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6 `poster_bric` 的拼贴方式 | Writer / feature flag 挂点不变，**拼贴内核**改走本 PRD 的 CardRenderer |
 
@@ -174,10 +177,12 @@ CardRenderer（Pillow slot 渲染，方案 A）
 
 ## 9. 分阶段计划
 
+> **BLK-ECC-04 回写（2026-08-05 评审）**：以下 Stage 3/4 的落地清单**显式列出需改动的现网文件**——当前分支代码仍是 v0.1 状态（`compose_canvas.py` 的 `A4_CANVAS`/`ALBUM_CANVAS=2.8:1`/`bric_compose`；`platform_profiles.yaml` 的 `poster_bric.output.aspect="A4"` / `album_spread.output.aspect="2.8:1"` / 对应 `publish_guide` 文案；`poster_bric_pack.py` 的 `MIN_N/MAX_N=3/9`；`collage_pack.py` 的 `_XHS_PER_PAGE_MIN/MAX=3/6` / `_ALBUM_PER_PAGE=6`），**均未随本 PRD v0.2/v0.3 决策同步**，不是「结构已就位只换模板」。
+
 1. **Stage 1**：3:4 画布常量 + 模板库（**9 套已交付**，见 §6）+ `CardRenderer`（Pillow slot 渲染 + 主体安全裁切，`card-4-square-top-triband` 主图槙走保守裁切）。
-2. **Stage 2**：`CardGrouper`（按模板槙数 {1,4,6,7,9} 顺序消耗切块 + 横竖版角色匹配，不接分镜/聚类边界）+ `CardTemplateSelector`（张数+横竖构成 → 选模板；海报走 §5.2 优先级）。
-3. **Stage 3**：三出口接线——小红书（N 卡）、单张海报（1 卡 + 精选选图）、画册（配对 spread）。
-4. **Stage 4**：退役 `compose_canvas.py` 的 bric 装箱路径与 `pack_photo_pages` 盲切页；更新 Studio 文案/测试；`docs/adr/021` 升版收口。
+2. **Stage 2**：`CardGrouper`（按模板槙数 {1,4,6,7,9} 顺序消耗切块 + 横竖版角色匹配，**退役** `pack_album_pages_by_chapter` 的按章分页，不接分镜/聚类边界）+ `CardTemplateSelector`（独立实现，禁止 import `screen_planner.py`；张数+横竖构成 → 选模板，同槙数多套按 Card 序号轮换；海报走 §5.2 优先级 + `cover_scoring_v2` 选图）。
+3. **Stage 3**：三出口接线——小红书（N 卡）、单张海报（1 卡 + `cover_score_v2` 精选选图，`MIN_N/MAX_N` 按所选模板槙数动态定，不再固定 3–9）、画册（配对 spread）。
+4. **Stage 4**：退役 `compose_canvas.py` 的 `A4_CANVAS`/`ALBUM_CANVAS`/bric 装箱路径；更新 `platform_profiles.yaml` 的 `poster_bric`/`album_spread` 的 `output.aspect`/`publish_guide`（对齐 3:4 / 两卡+gutter，不再写"A4"/"2.8:1"）；更新 Studio 文案/测试；`docs/adr/021` 升版收口。
 
 ---
 
@@ -188,7 +193,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | OQ-ECC-01 | 单张海报「代表性精选」的具体权重公式 | 待实施阶段与精选/封面逻辑对齐后定稿 |
 | OQ-ECC-02 | 画册章末奇数卡如何配对（跨章 vs 单独半页） | 待补，不阻塞 Stage 1–2 |
 | OQ-ECC-03 | 模板库是否需要「小红书 3:4」与「画册 3:4」用不同留白/安全区 | 9 套模板已到位，待实施阶段抽样评估 |
-| OQ-ECC-04 | `card-6-hero-tl-stack` / `card-6-hero-br-stack` / `card-6-bookend-rows` / `card-6-brick-alt`（同为 6 槙）与 `card-7-triband-2-2-3` / `card-7-triband-2-3-2`（同为 7 槙）之间，CardTemplateSelector 具体按什么信号选哪一套（横竖版构成？还是轮换/随机？） | 待实施阶段定稿 |
+| OQ-ECC-04 | `card-6-hero-tl-stack` / `card-6-hero-br-stack` / `card-6-bookend-rows` / `card-6-brick-alt`（同为 6 槙）与 `card-7-triband-2-2-3` / `card-7-triband-2-3-2`（同为 7 槙）之间，CardTemplateSelector 具体按什么信号选哪一套 | **BLK-ECC-03 回写（2026-08-05 评审）**：默认解 = 同槙数候选按 Card 序号轮换（`card_index % len(候选)`）；实施阶段可升级为按横竖版构成精选，不阻塞开工 |
 
 ---
 
@@ -198,3 +203,4 @@ CardRenderer（Pillow slot 渲染，方案 A）
 |------|------|------|
 | v0.1 | 2026-08-05 | 初稿：三出口统一 3:4 卡片管线，锁定 CardGrouper/Selector/Renderer 架构、Pillow 渲染、画册几何更正、模板库起步规模（4 套，待设计稿） |
 | v0.2 | 2026-08-05 | 用户设计稿到位：模板库实际交付 **9 套**（槙数 1/4/6×4/7×2/9，§6）；CardGrouper 简化为「按模板槙数顺序消耗 + 横竖版角色匹配」，**不再要求**分镜/聚类边界感知；单张海报模板优先级锁定（含主图/满版 > 含裁切主图 > 不用无主图模板）；新增 `card-4-square-top-triband`（全库唯一需裁切槙位） |
+| v0.3.0 | 2026-08-05 | [七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) **Conditional Go**，回写 BLK-ECC-01～05：①海报选图复用对象订正为 `cover_scoring_v2.cover_score_v2()`（非 `DEFAULT_FEATURED_WEIGHT`）；②`CardTemplateSelector` 明确不 import `screen_planner.py` 内部状态；③OQ-ECC-04 给默认解（同槙数按序轮换）；④§9 补现网文件迁移清单；⑤§7 补 `pack_album_pages_by_chapter` 退役说明 |

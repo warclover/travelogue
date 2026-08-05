@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **状态** | 已采纳（实现中 · `feat/export-compose-redesign`） |
-| **日期** | 2026-08-04（v0.2/v0.3 修订 2026-08-05） |
-| **关联** | [ADR-016](./016-longshot-platform-export.md) · [PRD-EXPORT-CARD-COMPOSE-V1](../PRD-EXPORT-CARD-COMPOSE-V1.md)（D2/D4 的产品化展开） |
+| **日期** | 2026-08-04（v0.2/v0.3/v0.4 修订 2026-08-05） |
+| **关联** | [ADR-016](./016-longshot-platform-export.md) · [PRD-EXPORT-CARD-COMPOSE-V1](../PRD-EXPORT-CARD-COMPOSE-V1.md)（D2/D4 的产品化展开） · [七席评审 2026-08-05](../acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md)（Conditional Go） |
 | **影响范围** | `compose_canvas.py` · `collage_pack.py` · `poster_bric_pack.py` · `longshot.py` · Studio 导出面板 · Output Recipe |
 
 ---
@@ -63,7 +63,7 @@ v0.1 定义单张海报对齐 A4；v0.2 为与小红书/画册共用同一套模
 
 ### D4 · 单张海报选图策略（v0.2 新增）
 
-固定只产 1 张 3:4 Card，选图为**代表性精选**（非顺序前 N 张），复用现有精选/封面加权信号（如 `DEFAULT_FEATURED_WEIGHT`），优先覆盖开篇/高光/结尾三类时间位置。具体权重公式见 PRD-EXPORT-CARD-COMPOSE-V1 §5.2 / OQ-ECC-01。**模板优先级**（用户明确：优选带主图或单张大图模板）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-4-square-top-triband`（含裁切槙）> 其余无主图模板（不用）。
+固定只产 1 张 3:4 Card，选图为**代表性精选**（非顺序前 N 张），复用 `curation/cover_scoring_v2.py` 的 `cover_score_v2()` 排序取 top-N（**七席评审 2026-08-05 订正**：此前误引 `DEFAULT_FEATURED_WEIGHT`，该常量实为 `screen_planner.py` 屏内主图评分权重，非全书代表性排序信号），优先覆盖开篇/高光/结尾三类时间位置。具体权重公式见 PRD-EXPORT-CARD-COMPOSE-V1 §5.2 / OQ-ECC-01。**模板优先级**（用户明确：优选带主图或单张大图模板）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-4-square-top-triband`（含裁切槙）> 其余无主图模板（不用）。
 
 ---
 
@@ -82,3 +82,4 @@ v0.1 定义单张海报对齐 A4；v0.2 为与小红书/画册共用同一套模
 | v0.1 | 2026-08-04 | 初稿并随 `feat/export-compose-redesign` 落地（编号 ADR-021，避开 Bookends ADR-017） |
 | v0.2 | 2026-08-05 | 三出口统一 3:4 卡片管线（[PRD-EXPORT-CARD-COMPOSE-V1](../PRD-EXPORT-CARD-COMPOSE-V1.md)）：单张海报 A4→3:4（D2.1）；画册 2.8:1→两卡+gutter（D2.2）；Compose 内核由 `bric_compose` 装箱改为 CardGrouper/CardTemplateSelector/CardRenderer；新增 D4 单张海报代表性精选策略 |
 | v0.3 | 2026-08-05 | 用户设计稿到位（9 套模板，槙数 1/4/6×4/7×2/9）：CardGrouper 简化为顺序消耗 + 横竖版匹配，**不再要求**分镜/聚类边界感知；D4 补充单张海报模板优先级的具体模板名 |
+| v0.4 | 2026-08-05 | [七席评审](../acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) **Conditional Go**：D4 选图复用对象订正为 `cover_scoring_v2.cover_score_v2()`（非 `DEFAULT_FEATURED_WEIGHT`）；PRD 同步回写 BLK-ECC-01～05（详见 PRD v0.3.0 版本记录） |
