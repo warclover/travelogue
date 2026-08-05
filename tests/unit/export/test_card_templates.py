@@ -15,26 +15,39 @@ from travelogue.export.card_templates import (
 pytestmark = pytest.mark.unit
 
 
-def test_nine_templates_registered() -> None:
-    assert len(CARD_TEMPLATES) == 9
+def test_thirteen_templates_registered() -> None:
+    assert len(CARD_TEMPLATES) == 13
 
 
 def test_slot_counts_distribution() -> None:
     counts = sorted(t.slot_count for t in CARD_TEMPLATES.values())
-    assert counts == [1, 4, 6, 6, 6, 6, 7, 7, 9]
+    assert counts == [1, 2, 4, 4, 6, 6, 6, 6, 7, 7, 8, 9, 16]
 
 
 def test_available_slot_counts_desc() -> None:
-    assert AVAILABLE_SLOT_COUNTS == (9, 7, 6, 4, 1)
+    assert AVAILABLE_SLOT_COUNTS == (16, 9, 8, 7, 6, 4, 2, 1)
 
 
-def test_every_slot_within_3x3_grid() -> None:
+def test_every_slot_within_its_own_grid() -> None:
     for template in CARD_TEMPLATES.values():
         for slot in template.slots:
-            assert 0 <= slot.row < 3
-            assert 0 <= slot.col < 3
-            assert slot.row + slot.row_span <= 3, template.id
-            assert slot.col + slot.col_span <= 3, template.id
+            assert 0 <= slot.row < template.grid_rows, template.id
+            assert 0 <= slot.col < template.grid_cols, template.id
+            assert slot.row + slot.row_span <= template.grid_rows, template.id
+            assert slot.col + slot.col_span <= template.grid_cols, template.id
+
+
+def test_equal_grid_templates_use_own_grid_not_3x3() -> None:
+    expected_grids = {
+        "card-2-stack-equal": (2, 1),
+        "card-4-grid-equal": (2, 2),
+        "card-8-grid-equal": (4, 2),
+        "card-16-grid-equal": (4, 4),
+    }
+    for template_id, (rows, cols) in expected_grids.items():
+        template = CARD_TEMPLATES[template_id]
+        assert (template.grid_rows, template.grid_cols) == (rows, cols)
+        assert template.slot_count == rows * cols
 
 
 def test_only_card4_has_crop_required_slot() -> None:
@@ -71,4 +84,15 @@ def test_pick_template_for_count_single_candidate() -> None:
 
 def test_pick_template_for_count_unknown_raises() -> None:
     with pytest.raises(ValueError):
-        pick_template_for_count(2)
+        pick_template_for_count(3)
+
+
+def test_pick_template_for_count_new_equal_grid_templates() -> None:
+    assert pick_template_for_count(2, card_index=0).id == "card-2-stack-equal"
+    assert pick_template_for_count(8, card_index=0).id == "card-8-grid-equal"
+    assert pick_template_for_count(16, card_index=0).id == "card-16-grid-equal"
+
+
+def test_pick_template_for_count_four_round_robins_two_candidates() -> None:
+    picks = [pick_template_for_count(4, card_index=i).id for i in range(2)]
+    assert set(picks) == {"card-4-grid-equal", "card-4-square-top-triband"}

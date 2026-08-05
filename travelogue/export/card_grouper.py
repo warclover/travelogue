@@ -39,8 +39,8 @@ def _photo_orientation(path: Path) -> Orientation:
 
 def plan_slot_counts(total_photos: int, *, target_per_card: int | None = None) -> list[int]:
     """Chunk ``total_photos`` using the template library's available slot
-    counts (currently ``{1,4,6,7,9}``); ``1`` always exists so this always
-    terminates and consumes every photo exactly once.
+    counts (currently ``{1,2,4,6,7,8,9,16}``); ``1`` always exists so this
+    always terminates and consumes every photo exactly once.
 
     Default mode: greedy largest-fits-first (PRD §5.1 — no longer follows the
     old slice-count formula).

@@ -161,8 +161,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [UI-DETAIL-SURFACE-INVENTORY-V0.md](./UI-DETAIL-SURFACE-INVENTORY-V0.md) | **active** | UI Detail 表面清单 / 波次索引 |
 | [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | **superseded** | 双引擎方案 → 见 ADR-007 |
 | [PRD-MVP.md](./PRD-MVP.md) | **archive** | MVP 已冻结；产品演进见后续 Phase PRD |
-| [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.4**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter · CardGrouper 不要求分镜边界 · 七席评审 Conditional Go |
-| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.3.0**（Conditional Go · 9 套模板已交付 · BLK-ECC-01～05 已回写）· CardGrouper/Selector/Renderer |
+| [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.5**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter · CardGrouper 不要求分镜边界 · 七席评审 Conditional Go · 已实现 + 追加 4 套等分模板 |
+| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.4.0**（Conditional Go · Stage 1-4 已实现 · 13 套模板已交付 · BLK-ECC-01～05 已回写）· CardGrouper/Selector/Renderer |
 | [acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) | **active** | ECC 七席联评 · Conditional Go · BLK-ECC-01～05（复用对象订正/独立实现声明/OQ 默认解/迁移清单/章节打包退役） |
 | [acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md](./acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md) | **active** | ECC 七席评审纪要**模板**（结案见日期版） |
 | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4 | **superseded** | 小红书 letterbox 切片方案 → 见 PRD-EXPORT-CARD-COMPOSE-V1 |

@@ -73,8 +73,8 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "xiaohongshu"
     assert result.capture_method == "collage_pages"
-    # 8 photos greedy-chunk to [7,1] (largest available slot count ≤ 8) → 2 cards.
-    assert result.page_count == 2
+    # 8 photos greedy-chunk to [8] (card-8-grid-equal fits exactly) → 1 card.
+    assert result.page_count == 1
     assert "竖版拼贴" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
@@ -104,7 +104,8 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     result = export_collage_pack(trip_dir, platform="album_spread")
     assert result.platform == "album_spread"
     assert result.capture_method == "collage_pages"
-    # 12 → CardGrouper greedy [9,1,1,1] → 4 cards → paired spreads: 2.
+    # 12 → CardGrouper greedy [9,2,1] → 3 cards → paired spreads: 2
+    # (card 3 is a lone card, right half stays background).
     assert result.page_count == 2
     assert "3:4" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-album-*.png"))

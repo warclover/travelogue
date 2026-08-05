@@ -1,7 +1,9 @@
 """CardRenderer — Pillow slot-based rendering for 3:4 cards.
 
-PRD-EXPORT-CARD-COMPOSE-V1 §4/§6 (方案 A), ADR-021 v0.4. Each template slot is
-a rectangle on a 3x3 base grid; every photo is cover-cropped to its slot's
+PRD-EXPORT-CARD-COMPOSE-V1 §4/§6 (方案 A), ADR-021 v0.5. Each template slot is
+a rectangle on that template's own base grid (``grid_rows x grid_cols`` —
+3x3 for the original 9 templates, or a plain N-up grid for the 4 equal-grid
+templates added in v0.4.0); every photo is cover-cropped to its slot's
 exact aspect then pasted — the canvas is always fully covered (AC-ECC-01),
 never letterboxed. Subject-safety reuses ``layout_contract/subject.py``'s
 ``asset_has_person`` signal plus ``media/image_ops.py``'s focal-aware crop
@@ -87,8 +89,8 @@ def _paint_template(
             f"card_renderer: template {template.id} expects "
             f"{template.slot_count} photos, got {len(photos)}"
         )
-    cell_w = width / 3
-    cell_h = height / 3
+    cell_w = width / template.grid_cols
+    cell_h = height / template.grid_rows
     for path, slot in zip(photos, template.slots, strict=True):
         sx0 = x0 + round(slot.col * cell_w)
         sy0 = y0 + round(slot.row * cell_h)

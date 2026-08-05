@@ -1,21 +1,25 @@
 """3:4 card template registry (compiled mirror of docs/templates/card-aspect-3x4/*.md).
 
-PRD-EXPORT-CARD-COMPOSE-V1 v0.3.0 / ADR-021 v0.4. The `.md` files under
+PRD-EXPORT-CARD-COMPOSE-V1 v0.4.0 / ADR-021 v0.5. The `.md` files under
 ``docs/templates/card-aspect-3x4/`` are the human-authored spec of record
-(9 templates, slot counts {1,4,6,7,9}); this module is the runtime data these
-specs compile to. Keep both in sync when either changes.
+(13 templates, slot counts {1,2,4,6,7,8,9,16}); this module is the runtime
+data these specs compile to. Keep both in sync when either changes.
 
-Grid convention: every template is defined on a 3x3 base grid (``GRID=3``).
-``row``/``col`` are 0-indexed cell coordinates; ``row_span``/``col_span`` are
-merge sizes. ``display_aspect`` is width/height of the merged cell on a 3:4
-canvas — only three values occur across the whole library:
+Grid convention: each template is defined on its own ``grid_rows x
+grid_cols`` base grid (default ``3x3``; the 4 equal-grid templates added in
+v0.4.0 use ``2x1``/``2x2``/``4x2``/``4x4`` instead — a plain N-up split has no
+natural 3x3 mapping). ``row``/``col`` are 0-indexed cell coordinates within
+*that* template's own grid; ``row_span``/``col_span`` are merge sizes.
+``display_aspect`` is width/height of the merged cell on a 3:4 canvas:
 
-- ``0.75``  → portrait/square unit cell (1x1) or the 2x2 hero cell (same
-  ratio as the 3:4 canvas itself).
-- ``1.5``   → landscape cell (1 row x 2 cols merged).
-- ``1.125`` → the one near-square cell (2 rows x 3 cols merged), used only by
-  ``card-4-square-top-triband``; the only slot in the library that requires a
-  real crop (neither natural portrait nor landscape photos match it exactly).
+- ``0.75``  → portrait/square unit cell (1x1 on a 3x3/2x2/4x4 grid) or the
+  2x2 hero cell on the 3x3 grid (same ratio as the 3:4 canvas itself).
+- ``1.5``   → landscape cell (a 3x3 grid's 1x2-col merge, or a bare row on
+  the 2x1/4x2 equal-grid templates).
+- ``1.125`` → the one near-square cell (2 rows x 3 cols merged on the 3x3
+  grid), used only by ``card-4-square-top-triband``; the only slot in the
+  whole library that requires a real crop (neither natural portrait nor
+  landscape photos match it exactly).
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from typing import Literal
 
 SlotRole = Literal["portrait", "landscape", "main"]
 
+#: Legacy alias — the original 9 templates all use a 3x3 base grid.
 GRID = 3
 
 
@@ -43,6 +48,11 @@ class CardTemplate:
     id: str
     display_name: str
     slots: tuple[CardSlot, ...]
+    #: Base grid this template's slot row/col coordinates are defined on.
+    #: Defaults to 3x3 (all 9 original templates); equal-grid templates
+    #: (card-2/4/8/16-grid-equal) declare their own N-up grid instead.
+    grid_rows: int = 3
+    grid_cols: int = 3
 
     @property
     def slot_count(self) -> int:
@@ -167,16 +177,76 @@ CARD_9_GRID_EQUAL = CardTemplate(
     ),
 )
 
+# -- docs/templates/card-aspect-3x4/card-2-stack-equal.md -------------------
+# 2x1 grid (not 3x3): a single horizontal split into two wide bands.
+CARD_2_STACK_EQUAL = CardTemplate(
+    id="card-2-stack-equal",
+    display_name="两图 · 上下等分",
+    grid_rows=2,
+    grid_cols=1,
+    slots=(
+        CardSlot("landscape", 0, 0, display_aspect=1.5),
+        CardSlot("landscape", 1, 0, display_aspect=1.5),
+    ),
+)
+
+# -- docs/templates/card-aspect-3x4/card-4-grid-equal.md --------------------
+# 2x2 grid (not 3x3): plain four-up split, distinct from
+# card-4-square-top-triband (which has a main slot + forced crop).
+CARD_4_GRID_EQUAL = CardTemplate(
+    id="card-4-grid-equal",
+    display_name="四图 · 2×2 等分",
+    grid_rows=2,
+    grid_cols=2,
+    slots=tuple(
+        CardSlot("portrait", row, col, display_aspect=0.75)
+        for row in range(2)
+        for col in range(2)
+    ),
+)
+
+# -- docs/templates/card-aspect-3x4/card-8-grid-equal.md --------------------
+# 4x2 grid (not 3x3): four rows of two wide cells each.
+CARD_8_GRID_EQUAL = CardTemplate(
+    id="card-8-grid-equal",
+    display_name="八图 · 4×2 等分",
+    grid_rows=4,
+    grid_cols=2,
+    slots=tuple(
+        CardSlot("landscape", row, col, display_aspect=1.5)
+        for row in range(4)
+        for col in range(2)
+    ),
+)
+
+# -- docs/templates/card-aspect-3x4/card-16-grid-equal.md -------------------
+# 4x4 grid (not 3x3): dense equal grid, denser variant of card-9-grid-equal.
+CARD_16_GRID_EQUAL = CardTemplate(
+    id="card-16-grid-equal",
+    display_name="十六图 · 4×4 等分",
+    grid_rows=4,
+    grid_cols=4,
+    slots=tuple(
+        CardSlot("portrait", row, col, display_aspect=0.75)
+        for row in range(4)
+        for col in range(4)
+    ),
+)
+
 _ALL_TEMPLATES: tuple[CardTemplate, ...] = (
     CARD_1_FULL_FRAME,
+    CARD_2_STACK_EQUAL,
     CARD_4_SQUARE_TOP_TRIBAND,
+    CARD_4_GRID_EQUAL,
     CARD_6_HERO_TL_STACK,
     CARD_6_HERO_BR_STACK,
     CARD_6_BOOKEND_ROWS,
     CARD_6_BRICK_ALT,
     CARD_7_TRIBAND_2_2_3,
     CARD_7_TRIBAND_2_3_2,
+    CARD_8_GRID_EQUAL,
     CARD_9_GRID_EQUAL,
+    CARD_16_GRID_EQUAL,
 )
 
 CARD_TEMPLATES: dict[str, CardTemplate] = {t.id: t for t in _ALL_TEMPLATES}

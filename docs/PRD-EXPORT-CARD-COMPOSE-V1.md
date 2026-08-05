@@ -3,10 +3,10 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.3.0 |
-| **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写） |
+| **文档版本** | v0.4.0 |
+| **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写）· 已实现（Stage 1-4）并追加 4 套等分模板 |
 | **模块代号** | Export Card Compose（小红书 / 单张海报 / 画册三出口统一） |
-| **前置条件** | [ADR-021 v0.4](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
+| **前置条件** | [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
 | **关联文档** | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4（**被本 PRD 取代**）· [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6（`poster_bric` 拼贴方式**被本 PRD 取代**，Writer/flag 挂点不变）· [ADR-014](./adr/014-mosaic-proximity-window-order.md)（分镜聚类信号来源） |
 | **更新日期** | 2026-08-05 |
 
@@ -69,7 +69,7 @@ kept 照片（有序，已过滤 is_kept_image / is_collage_asset）
       │
       ▼
 CardGrouper（v0.2 · 顺序消耗，非分镜感知）
-  · 决定 Card 数量 N 及每张 Card 用几槙（只能取模板库已有槙数：1/4/6/7/9，见 §6）
+  · 决定 Card 数量 N 及每张 Card 用几槙（只能取模板库已有槙数：1/2/4/6/7/8/9/16，见 §6）
   · 按序从 kept 照片池里为每张 Card 取出所需张数
   · 每张照片按朝向（横/竖）匹配槙位角色，不足则跳过/回填，不追求分镜完整性
       │
@@ -106,7 +106,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 
 ### 5.1 小红书 `xiaohongshu`
 
-- Card 数量 N：不再对齐 [PRD-LONGSHOT-2.0.md §6.4.3](./PRD-LONGSHOT-2.0.md) 的「切片数」公式，改为按**模板库槙数**（{1,4,6,7,9}）贪心切块——优先用大槙数模板（6/7/9）消耗照片，尾部不足一整套槙数时，用较小模板（4/1）收尾，避免出现「最后一张只放 1 张照片却用了 9 槙模板」的浪费。
+- Card 数量 N：不再对齐 [PRD-LONGSHOT-2.0.md §6.4.3](./PRD-LONGSHOT-2.0.md) 的「切片数」公式，改为按**模板库槙数**（{1,2,4,6,7,8,9,16}，2026-08-05 追加 `card-2/4/8/16-grid-equal` 四套等分模板后扩充）贪心切块——优先用大槙数模板（16/9/8/7/6）消耗照片，尾部不足一整套槙数时，用较小模板（4/2/1）收尾，避免出现「最后一张只放 1 张照片却用了 9 槙模板」的浪费。
 - 每张 Card 独立导出：`{title}-xhs-{nn}.png`，footer `{i}/{n}` 沿用现有页码约定。
 - 不再有 `letterbox` / `smart_crop` 选择——Compose 卡片天然铺满画布，`padMode` UI 继续隐藏（已在 Studio 面板做过）。
 - **不要求**按分镜/聚类分组，只要求槙位横竖版正确填充（见 §4 v0.2 简化）。
@@ -126,27 +126,33 @@ CardRenderer（Pillow slot 渲染，方案 A）
 
 ---
 
-## 6. 模板库规格（v0.2 · 用户设计稿已落地）
+## 6. 模板库规格（v0.4.0 · 9 套设计稿 + 4 套等分模板已落地）
 
 新目录：`docs/templates/card-aspect-3x4/`（与既有 `docs/templates/slot-aspect/` 16:9 屏模板**分离**，避免数值混用）。
 
-用户设计稿（2026-08-05）交付 **9 套**，均基于 **3×3 等分基准网格**（合并部分格子成大槙），比原计划「每槙数 1 套共 4 套」更丰富，槙数分布为 **{1, 4, 6×4, 7×2, 9}**：
+用户设计稿（2026-08-05）首批交付 **9 套**，均基于 **3×3 等分基准网格**（合并部分格子成大槙），比原计划「每槙数 1 套共 4 套」更丰富，槙数分布为 **{1, 4, 6×4, 7×2, 9}**；同日追加 **4 套等分模板**（`card-2/4/8/16-grid-equal`），全库合计 **13 套**，槙数分布为 **{1, 2, 4×2, 6×4, 7×2, 8, 9, 16}**：
 
-| 文件 | 槙数 | 版式 | 含主图槙 | 备注 |
-|------|------|------|----------|------|
-| [`card-1-full-frame.md`](./card-1-full-frame.md) | 1 | 满版单图 | ✓ | 单张海报首选 |
-| [`card-4-square-top-triband.md`](./card-4-square-top-triband.md) | 4 | 顶部近方图 + 底部三竖版 | ✓（弱） | **唯一需裁切**的槙位（顶部 `aspect≈1.125`） |
-| [`card-6-hero-tl-stack.md`](./card-6-hero-tl-stack.md) | 6 | 左上主图 + 右侧堆叠 + 底部三等分 | ✓ | 单张海报首选 |
-| [`card-6-hero-br-stack.md`](./card-6-hero-br-stack.md) | 6 | 顶部三等分 + 左侧堆叠 + 右下主图 | ✓ | 上一版镜像；单张海报首选 |
-| [`card-6-bookend-rows.md`](./card-6-bookend-rows.md) | 6 | 首尾呼应（1/2 行宽图+方图，第 3 行翻转） | ✗ | 无主图，不作海报首选 |
-| [`card-6-brick-alt.md`](./card-6-brick-alt.md) | 6 | 逐行交替（宽图/方图左右互换） | ✗ | 无主图，不作海报首选 |
-| [`card-7-triband-2-2-3.md`](./card-7-triband-2-2-3.md) | 7 | 第 1/2 行各两图，第 3 行三等分 | ✗ | 无主图，不作海报首选 |
-| [`card-7-triband-2-3-2.md`](./card-7-triband-2-3-2.md) | 7 | 第 1/3 行各两图，第 2 行三等分 | ✗ | 上一版镜像；无主图 |
-| [`card-9-grid-equal.md`](./card-9-grid-equal.md) | 9 | 3×3 等分 | ✗ | 无主图，不作海报首选 |
+| 文件 | 槙数 | 基准网格 | 版式 | 含主图槙 | 备注 |
+|------|------|----------|------|----------|------|
+| [`card-1-full-frame.md`](./card-1-full-frame.md) | 1 | 3x3 | 满版单图 | ✓ | 单张海报首选 |
+| [`card-2-stack-equal.md`](./card-2-stack-equal.md) | 2 | 2x1 | 上下等分（两条横版带） | ✗ | **2026-08-05 追加**；无主图，不作海报首选 |
+| [`card-4-square-top-triband.md`](./card-4-square-top-triband.md) | 4 | 3x3 | 顶部近方图 + 底部三竖版 | ✓（弱） | **唯一需裁切**的槙位（顶部 `aspect≈1.125`） |
+| [`card-4-grid-equal.md`](./card-4-grid-equal.md) | 4 | 2x2 | 田字格等分 | ✗ | **2026-08-05 追加**；与 `card-4-square-top-triband` 同槙数按 Card 序号轮换 |
+| [`card-6-hero-tl-stack.md`](./card-6-hero-tl-stack.md) | 6 | 3x3 | 左上主图 + 右侧堆叠 + 底部三等分 | ✓ | 单张海报首选 |
+| [`card-6-hero-br-stack.md`](./card-6-hero-br-stack.md) | 6 | 3x3 | 顶部三等分 + 左侧堆叠 + 右下主图 | ✓ | 上一版镜像；单张海报首选 |
+| [`card-6-bookend-rows.md`](./card-6-bookend-rows.md) | 6 | 3x3 | 首尾呼应（1/2 行宽图+方图，第 3 行翻转） | ✗ | 无主图，不作海报首选 |
+| [`card-6-brick-alt.md`](./card-6-brick-alt.md) | 6 | 3x3 | 逐行交替（宽图/方图左右互换） | ✗ | 无主图，不作海报首选 |
+| [`card-7-triband-2-2-3.md`](./card-7-triband-2-2-3.md) | 7 | 3x3 | 第 1/2 行各两图，第 3 行三等分 | ✗ | 无主图，不作海报首选 |
+| [`card-7-triband-2-3-2.md`](./card-7-triband-2-3-2.md) | 7 | 3x3 | 第 1/3 行各两图，第 2 行三等分 | ✗ | 上一版镜像；无主图 |
+| [`card-8-grid-equal.md`](./card-8-grid-equal.md) | 8 | 4x2 | 4 行 × 2 列等分（横版单元） | ✗ | **2026-08-05 追加**；无主图，不作海报首选 |
+| [`card-9-grid-equal.md`](./card-9-grid-equal.md) | 9 | 3x3 | 3×3 等分 | ✗ | 无主图，不作海报首选 |
+| [`card-16-grid-equal.md`](./card-16-grid-equal.md) | 16 | 4x4 | 4×4 密网格等分 | ✗ | **2026-08-05 追加**；`card-9-grid-equal` 加密版，无主图 |
 
-**单张海报模板优先级**（§5.2）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-4-square-top-triband`（需裁切，损失更大）> 其余无主图模板（不用于海报）。
+**单张海报模板优先级**（§5.2）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-4-square-top-triband`（需裁切，损失更大）> 其余无主图模板（不用于海报，含 2026-08-05 追加的 4 套等分模板）。
 
-模板文件格式在 `docs/templates/slot-aspect/*.md` 的 slot 表约定（`slot | role | displayAspect`）基础上，**新增 `row/col/rowSpan/colSpan` 列**（3×3 网格坐标），因为本库无 CSS 网格承接位置信息，Pillow 渲染器需要直接可用的矩形坐标。`displayAspect` 均按 3:4 画布重新计算：`0.75` = 竖版/方形单元，`1.5` = 2 列合并的横版单元，`1.125` = 满宽 2 行合并的近方形单元（仅 `card-4-square-top-triband` 使用，需裁切）。
+模板文件格式在 `docs/templates/slot-aspect/*.md` 的 slot 表约定（`slot | role | displayAspect`）基础上，**新增 `row/col/rowSpan/colSpan` 列**，因为本库无 CSS 网格承接位置信息，Pillow 渲染器需要直接可用的矩形坐标。`row/col` 是**每个模板自身声明的 `grid`**（不再统一假定 3×3）——首批 9 套均为 3×3，2026-08-05 追加的 4 套等分模板各自声明 `2x1`/`2x2`/`4x2`/`4x4` 网格（纯 N 等分拼版没有自然的 3×3 落点）。`displayAspect` 均按 3:4 画布重新计算：`0.75` = 竖版/方形单元，`1.5` = 横版单元（3×3 网格的 2 列合并，或等分网格里天然较宽的一整行），`1.125` = 满宽 2 行合并的近方形单元（仅 `card-4-square-top-triband` 使用，需裁切）。
+
+**追加模板对既有行为的影响**：`AVAILABLE_SLOT_COUNTS` 扩充后，`CardGrouper.plan_slot_counts` 的贪心拆分结果随之变化（详见 [README](./templates/card-aspect-3x4/README.md) 的对照表），例如 `n=2` 从 `[1,1]` 变为 `[2]`、`n=8` 从 `[7,1]` 变为 `[8]`；这是设计意图内的行为演进，不是回归。
 
 ---
 
@@ -183,6 +189,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 2. **Stage 2**：`CardGrouper`（按模板槙数 {1,4,6,7,9} 顺序消耗切块 + 横竖版角色匹配，**退役** `pack_album_pages_by_chapter` 的按章分页，不接分镜/聚类边界）+ `CardTemplateSelector`（独立实现，禁止 import `screen_planner.py`；张数+横竖构成 → 选模板，同槙数多套按 Card 序号轮换；海报走 §5.2 优先级 + `cover_scoring_v2` 选图）。
 3. **Stage 3**：三出口接线——小红书（N 卡）、单张海报（1 卡 + `cover_score_v2` 精选选图，`MIN_N/MAX_N` 按所选模板槙数动态定，不再固定 3–9）、画册（配对 spread）。
 4. **Stage 4**：退役 `compose_canvas.py` 的 `A4_CANVAS`/`ALBUM_CANVAS`/bric 装箱路径；更新 `platform_profiles.yaml` 的 `poster_bric`/`album_spread` 的 `output.aspect`/`publish_guide`（对齐 3:4 / 两卡+gutter，不再写"A4"/"2.8:1"）；更新 Studio 文案/测试；`docs/adr/021` 升版收口。
+5. **Stage 5**（2026-08-05 追加）：模板库扩容——追加 `card-2/4/8/16-grid-equal` 4 套等分模板（见 §6），`CardTemplate` 数据结构增加 `grid_rows`/`grid_cols` 字段以支持非 3×3 基准网格；`AVAILABLE_SLOT_COUNTS` 随之扩充为 `{1,2,4,6,7,8,9,16}`，`CardGrouper`/`CardRenderer` 无需改动算法本身（`grid_rows`/`grid_cols` 已泛化取代硬编码 `/3`）。
 
 ---
 
@@ -192,7 +199,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 |------|------|------|
 | OQ-ECC-01 | 单张海报「代表性精选」的具体权重公式 | 待实施阶段与精选/封面逻辑对齐后定稿 |
 | OQ-ECC-02 | 画册章末奇数卡如何配对（跨章 vs 单独半页） | 待补，不阻塞 Stage 1–2 |
-| OQ-ECC-03 | 模板库是否需要「小红书 3:4」与「画册 3:4」用不同留白/安全区 | 9 套模板已到位，待实施阶段抽样评估 |
+| OQ-ECC-03 | 模板库是否需要「小红书 3:4」与「画册 3:4」用不同留白/安全区 | 13 套模板已到位（9 套设计稿 + 4 套等分模板），待实施阶段抽样评估 |
 | OQ-ECC-04 | `card-6-hero-tl-stack` / `card-6-hero-br-stack` / `card-6-bookend-rows` / `card-6-brick-alt`（同为 6 槙）与 `card-7-triband-2-2-3` / `card-7-triband-2-3-2`（同为 7 槙）之间，CardTemplateSelector 具体按什么信号选哪一套 | **BLK-ECC-03 回写（2026-08-05 评审）**：默认解 = 同槙数候选按 Card 序号轮换（`card_index % len(候选)`）；实施阶段可升级为按横竖版构成精选，不阻塞开工 |
 
 ---
@@ -204,3 +211,4 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | v0.1 | 2026-08-05 | 初稿：三出口统一 3:4 卡片管线，锁定 CardGrouper/Selector/Renderer 架构、Pillow 渲染、画册几何更正、模板库起步规模（4 套，待设计稿） |
 | v0.2 | 2026-08-05 | 用户设计稿到位：模板库实际交付 **9 套**（槙数 1/4/6×4/7×2/9，§6）；CardGrouper 简化为「按模板槙数顺序消耗 + 横竖版角色匹配」，**不再要求**分镜/聚类边界感知；单张海报模板优先级锁定（含主图/满版 > 含裁切主图 > 不用无主图模板）；新增 `card-4-square-top-triband`（全库唯一需裁切槙位） |
 | v0.3.0 | 2026-08-05 | [七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) **Conditional Go**，回写 BLK-ECC-01～05：①海报选图复用对象订正为 `cover_scoring_v2.cover_score_v2()`（非 `DEFAULT_FEATURED_WEIGHT`）；②`CardTemplateSelector` 明确不 import `screen_planner.py` 内部状态；③OQ-ECC-04 给默认解（同槙数按序轮换）；④§9 补现网文件迁移清单；⑤§7 补 `pack_album_pages_by_chapter` 退役说明 |
+| v0.4.0 | 2026-08-05 | Stage 1-4 落地实现完成并合入 `feat/export-compose-redesign`；追加 Stage 5：新增 `card-2/4/8/16-grid-equal` 4 套等分模板（§6），`CardTemplate` 增加 `grid_rows`/`grid_cols` 字段支持非 3×3 基准网格，`AVAILABLE_SLOT_COUNTS` 扩充为 `{1,2,4,6,7,8,9,16}` |

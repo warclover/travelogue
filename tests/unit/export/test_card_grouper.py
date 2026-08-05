@@ -39,9 +39,11 @@ def test_plan_slot_counts_exact_fits() -> None:
     assert plan_slot_counts(10) == [9, 1]
 
 
-def test_plan_slot_counts_small_all_ones() -> None:
-    assert plan_slot_counts(2) == [1, 1]
-    assert plan_slot_counts(3) == [1, 1, 1]
+def test_plan_slot_counts_small_prefers_two_slot_template() -> None:
+    # card-2-stack-equal (added in v0.4.0) is now the largest-fits-first
+    # match for n=2/3, taking priority over two 1-slot cards.
+    assert plan_slot_counts(2) == [2]
+    assert plan_slot_counts(3) == [2, 1]
 
 
 def test_plan_slot_counts_consumes_every_photo() -> None:
