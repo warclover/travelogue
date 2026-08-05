@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.4.0 |
+| **文档版本** | v0.5.1 |
 | **状态** | **Conditional Go**（[七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) 2026-08-05 · BLK-ECC-01～05 已回写）· 已实现（Stage 1-4）并追加 4 套等分模板 |
 | **模块代号** | Export Card Compose（小红书 / 单张海报 / 画册三出口统一） |
 | **前置条件** | [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md)（本 PRD 是 ADR-021 D2/D4 的产品化展开） |
@@ -148,7 +148,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | [`card-9-grid-equal.md`](./card-9-grid-equal.md) | 9 | 3x3 | 3×3 等分 | ✗ | 无主图，不作海报首选 |
 | [`card-16-grid-equal.md`](./card-16-grid-equal.md) | 16 | 4x4 | 4×4 密网格等分 | ✗ | **2026-08-05 追加**；`card-9-grid-equal` 加密版，无主图 |
 
-**单张海报模板优先级**（§5.2）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-3-mini-triband` / `card-5-hero-mid-landscape` / `card-7-triband-hero-mid` / `card-9-hero-mid-triband`（2026-08-05 追加，均零裁切）> `card-4-square-top-triband`（需裁切，损失更大）> 其余无主图模板（不用于海报）。**已知缺口（OQ-ECC-07）**：`plan_poster_card` 的实际选型仍是按 `ranked_photos` 池大小硬编码 3 档（`card-1`/`card-6-hero-*`/`card-4-square-top-triband`），尚**未**接入新追加的 4 套零裁切主图模板——它们目前只进入 `POSTER_TEMPLATE_PRIORITY`（供一致性校验）与小红书/画册的多槙位路径，不会被单张海报实际选中；是否要把它们纳入单张海报选型留待下一轮决策，详见 README。
+**单张海报模板优先级**（§5.2）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-3-mini-triband` / `card-5-hero-mid-landscape` / `card-7-triband-hero-mid` / `card-9-hero-mid-triband`（2026-08-05 追加，均零裁切）> `card-4-square-top-triband`（需裁切，损失更大）> 其余无主图模板（不用于海报）。**OQ-ECC-07 已决策（2026-08-05，方案B）**：`plan_poster_card` 的实际选型**维持现状**——按 `ranked_photos` 池大小硬编码 3 档（`card-1`/`card-6-hero-*`/`card-4-square-top-triband`），**不接入**新追加的 4 套零裁切主图模板，坚持「构图优先」（池子较小时允许只用其中一部分照片，保证主图占比与视觉冲击力，不为用满照片牺牲构图质量）。这 4 套新模板继续只服务于小红书/画册的多槙位路径，`POSTER_TEMPLATE_PRIORITY` 仅保留登记供一致性校验，详见 README。
 
 模板文件格式在 `docs/templates/slot-aspect/*.md` 的 slot 表约定（`slot | role | displayAspect`）基础上，**新增 `row/col/rowSpan/colSpan` 列**，因为本库无 CSS 网格承接位置信息，Pillow 渲染器需要直接可用的矩形坐标。`row/col` 是**每个模板自身声明的 `grid`**（不再统一假定 3×3）——首批 9 套均为 3×3，2026-08-05 追加的 4 套等分模板及同日再追加的 15 套用户设计稿模板各自声明 `2x1`/`2x2`/`4x2`/`4x4` 网格（原稿本身不是 3×3 落点）。`displayAspect` 均按 3:4 画布重新计算：`0.75` = 竖版/方形单元，`1.5` = 横版单元（3×3/4x4 网格的 2 列或 2 行合并，或等分网格里天然较宽的一整行），`1.125` = 满宽 2 行合并的近方形单元（仅 `card-4-square-top-triband` 使用，需裁切；全库 28 套中依旧只有它需要裁切）。
 
@@ -202,7 +202,7 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | OQ-ECC-01 | 单张海报「代表性精选」的具体权重公式 | 待实施阶段与精选/封面逻辑对齐后定稿 |
 | OQ-ECC-02 | 画册章末奇数卡如何配对（跨章 vs 单独半页） | **已解决**：`collage_pack.py` 的 `_pair_cards_for_spreads` 采用「末尾单卡独立半页」（右半留背景色，见 `test_album_spread_odd_card_gets_half_page`），2026-08-05 真实素材烟测已核对（`album-03.png` 样例） |
 | OQ-ECC-03 | 模板库是否需要「小红书 3:4」与「画册 3:4」用不同留白/安全区 | 28 套模板已到位（9 套设计稿 + 4 套等分模板 + 15 套用户设计稿模板），待实施阶段抽样评估 |
-| OQ-ECC-07 | 2026-08-05 追加的 4 套零裁切主图模板（`card-3/5/7/9-*`）是否要接入 `plan_poster_card` 的单张海报实际选型（目前仍是硬编码 3 档 pool_size 阈值，未感知这 4 套新候选） | 待下一轮决策；不阻塞本批模板落地——它们已可用于小红书/画册的多槙位路径 |
+| OQ-ECC-07 | 2026-08-05 追加的 4 套零裁切主图模板（`card-3/5/7/9-*`）是否要接入 `plan_poster_card` 的单张海报实际选型 | **已解决（2026-08-05，方案B）**：不接入，维持硬编码 3 档 pool_size 阈值 + 构图优先原则；这 4 套新模板继续仅用于小红书/画册的多槙位路径 |
 | OQ-ECC-04 | `card-6-hero-tl-stack` / `card-6-hero-br-stack` / `card-6-bookend-rows` / `card-6-brick-alt`（同为 6 槙）与 `card-7-triband-2-2-3` / `card-7-triband-2-3-2`（同为 7 槙）之间，CardTemplateSelector 具体按什么信号选哪一套 | **BLK-ECC-03 回写（2026-08-05 评审）**：默认解 = 同槙数候选按 Card 序号轮换（`card_index % len(候选)`）；实施阶段可升级为按横竖版构成精选，不阻塞开工 |
 
 ---
@@ -216,3 +216,4 @@ CardRenderer（Pillow slot 渲染，方案 A）
 | v0.3.0 | 2026-08-05 | [七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) **Conditional Go**，回写 BLK-ECC-01～05：①海报选图复用对象订正为 `cover_scoring_v2.cover_score_v2()`（非 `DEFAULT_FEATURED_WEIGHT`）；②`CardTemplateSelector` 明确不 import `screen_planner.py` 内部状态；③OQ-ECC-04 给默认解（同槙数按序轮换）；④§9 补现网文件迁移清单；⑤§7 补 `pack_album_pages_by_chapter` 退役说明 |
 | v0.4.0 | 2026-08-05 | Stage 1-4 落地实现完成并合入 `feat/export-compose-redesign`；追加 Stage 5：新增 `card-2/4/8/16-grid-equal` 4 套等分模板（§6），`CardTemplate` 增加 `grid_rows`/`grid_cols` 字段支持非 3×3 基准网格，`AVAILABLE_SLOT_COUNTS` 扩充为 `{1,2,4,6,7,8,9,16}` |
 | v0.5.0 | 2026-08-05 | 用户提交第二/三批设计稿（图1/图2 重绘确认 + 补充图C-I + 第三批图1-6，含 2 张编号标注图解决此前歧义），追加 **15 套**模板（§6）：4 套新含主图零裁切模板（`card-3/5/7/9-*`，加入 `POSTER_TEMPLATE_PRIORITY` 但暂未接入 `plan_poster_card` 实际选型，见 OQ-ECC-07）+ 11 套无主图多槙位模板；`AVAILABLE_SLOT_COUNTS` 扩充为 `{1,2,3,4,5,6,7,8,9,10,12,13,16}`，全库合计 **28 套** |
+| v0.5.1 | 2026-08-05 | **OQ-ECC-07 决策收口（方案B）**：单张海报选型 `plan_poster_card` 维持现状（硬编码 3 档 pool_size 阈值，不接入 4 套新主图模板），坚持「构图优先」——池子较小时允许只用部分照片，不为用满照片牺牲主图占比/视觉冲击力；小红书/画册两个多槙位出口已借助 `AVAILABLE_SLOT_COUNTS` 扩容天然满足「照片少则优先小模板、不浪费」，无需改动 |

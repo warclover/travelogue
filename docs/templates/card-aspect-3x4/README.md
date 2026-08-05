@@ -85,4 +85,4 @@
 
 ## 待决问题（2026-08-05 追加 15 套后）
 
-- **OQ-ECC-07**：新增的 4 套零裁切主图模板（`card-3-mini-triband` / `card-5-hero-mid-landscape` / `card-7-triband-hero-mid` / `card-9-hero-mid-triband`）已加入 `POSTER_TEMPLATE_PRIORITY`（供 `has_main_slot` 一致性校验），但 `card_grouper.py::plan_poster_card` 的实际选型逻辑（按 `ranked_photos` 池大小硬编码 3 档阈值）**尚未**接入这 4 套新候选——目前它们只会被小红书/画册的多槙位拼图路径选中，不会被单张海报路径选中。是否要把它们纳入单张海报选型（以及具体按什么信号在同为「零裁切主图」的候选间取舍），留待下一轮决策。
+- **OQ-ECC-07**：**已决策（2026-08-05，方案B）**——新增的 4 套零裁切主图模板（`card-3-mini-triband` / `card-5-hero-mid-landscape` / `card-7-triband-hero-mid` / `card-9-hero-mid-triband`）**不接入** `card_grouper.py::plan_poster_card`。单张海报选型维持现状（按 `ranked_photos` 池大小硬编码 3 档阈值：<4→`card-1-full-frame`，4~5→`card-4-square-top-triband`，≥6→`card-6-hero-*`），坚持「构图优先」——池子较小时（如 2/3/5/7/8/9 张）允许只用其中一部分照片，以保证主图占比与视觉冲击力，不为了「用满所有照片」牺牲构图质量。这 4 套新模板继续只服务于小红书/画册的多槙位路径；它们已在 `POSTER_TEMPLATE_PRIORITY` 中登记（供 `has_main_slot` 一致性校验），保留代码位置以便未来若产品方向反转时可低成本重新评估，但当前不接线。
