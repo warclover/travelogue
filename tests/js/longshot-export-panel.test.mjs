@@ -20,8 +20,11 @@ import {
   exportSummaryLine,
   isAlbumPresetCount,
   isComposePlatform,
+  isXhsPresetCount,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
+  resolveAlbumCustomSeed,
+  resolveXhsCustomSeed,
   shortCtaLabelForPlatform,
   syncPanelUI,
 } from "../../templates/studio/js/longshot-export-panel.js";
@@ -202,6 +205,26 @@ test("P2 · buildPanelHtml 含跨页数字段；syncPanelUI 按 platform 显隐"
   });
   assert.match(popManual._expectBody.innerHTML, /6/);
   assert.match(popManual._expectBody.innerHTML, /跨页/);
+});
+
+test("回归 2026-08-05 · 画册/小红书点击「自定义」必须落在非预设值上（否则自定义框不出现）", () => {
+  // 画册：这是用户实测复现的 bug —— 旧代码 fallback 用的 6 本身就是预设值，
+  // 导致无论从哪个入口点「自定义」，都会被 isAlbumPresetCount 打回预设态，
+  // 自定义输入框永远不出现。
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(null)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(3)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(6)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(9)), false);
+  // 已经是自定义值时，保留用户原有输入，不要跳到默认种子值。
+  assert.equal(resolveAlbumCustomSeed(7), 7);
+  assert.equal(resolveAlbumCustomSeed(20), 20);
+
+  // 小红书：同一套隐患（若用户先点了预设「6/9/12」再点「自定义」）。
+  assert.equal(isXhsPresetCount(resolveXhsCustomSeed(null)), false);
+  assert.equal(isXhsPresetCount(resolveXhsCustomSeed(6)), false);
+  assert.equal(isXhsPresetCount(resolveXhsCustomSeed(9)), false);
+  assert.equal(isXhsPresetCount(resolveXhsCustomSeed(12)), false);
+  assert.equal(resolveXhsCustomSeed(10), 10);
 });
 
 test("wechat_official（公众号）导出形式与 xiaohongshu 一致，仅文案/标识不同", () => {

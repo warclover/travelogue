@@ -156,6 +156,11 @@ export function scaleHintForPlatform(platformId, scale) {
   return "输出宽约 " + px + "px（逻辑宽 428 × " + s + "）";
 }
 export var XHS_PRESET_COUNTS = { "6": true, "9": true, "12": true };
+//: 2026-08-05 bugfix · must NOT collide with any XHS_PRESET_COUNTS value —
+//: it's reused as the "自定义" seed whenever the current slideCount is
+//: null/a preset, and the custom row's visibility is inferred purely from
+//: "value is not a preset" (see isXhsPresetCount below).
+export var XHS_CUSTOM_DEFAULT = 8;
 
 export function clampXhsSlideCount(value) {
   var n = parseInt(value, 10);
@@ -168,6 +173,17 @@ export function isXhsPresetCount(slideCount) {
 }
 
 /**
+ * 2026-08-05 bugfix · seed value used when the user clicks 张数「自定义」.
+ * MUST resolve to a non-preset value, or `isXhsPresetCount()` reclassifies
+ * it as a preset on the very next `syncPanelUI` and the custom row/input
+ * never appears — clicking "自定义" then looks like a dead button.
+ */
+export function resolveXhsCustomSeed(currentSlideCount) {
+  var prev = clampXhsSlideCount(currentSlideCount);
+  return prev != null && !isXhsPresetCount(prev) ? prev : XHS_CUSTOM_DEFAULT;
+}
+
+/**
  * P2 · 画册跨页数（mirrors 小红书张数控件；单位是「跨页」而非「张」— 一跨页
  * ≈两张 3:4 卡，见 collage_pack.py `_album_target_per_card`）。
  * 上限对齐 `config/platform_profiles.yaml` album_spread.output.max_pages。
@@ -175,6 +191,12 @@ export function isXhsPresetCount(slideCount) {
 export var ALBUM_SLIDE_COUNT_MIN = 1;
 export var ALBUM_SLIDE_COUNT_MAX = 30;
 export var ALBUM_PRESET_COUNTS = { "3": true, "6": true, "9": true };
+//: 2026-08-05 bugfix (user report: 画册「自定义」点击无反应) · must NOT
+//: collide with any ALBUM_PRESET_COUNTS value — see XHS_CUSTOM_DEFAULT above
+//: for why. The old code reused `6` here, which *is* an album preset, so
+//: clicking "自定义" always re-resolved back to the "6" preset button and
+//: the custom input never appeared.
+export var ALBUM_CUSTOM_DEFAULT = 5;
 
 export function clampAlbumSlideCount(value) {
   var n = parseInt(value, 10);
@@ -184,6 +206,19 @@ export function clampAlbumSlideCount(value) {
 
 export function isAlbumPresetCount(slideCount) {
   return slideCount != null && !!ALBUM_PRESET_COUNTS[String(slideCount)];
+}
+
+/**
+ * 2026-08-05 bugfix (user report: 画册模式导出，无法选择自定义张数) · seed
+ * value used when the user clicks 跨页数「自定义」. Same contract as
+ * resolveXhsCustomSeed above: MUST resolve to a non-preset value. The old
+ * inline fallback (`6`) was itself an ALBUM_PRESET_COUNTS member, so this
+ * previously failed unconditionally — every click on "自定义" re-resolved
+ * back to the "6" preset and the custom input never appeared.
+ */
+export function resolveAlbumCustomSeed(currentSlideCount) {
+  var prev = clampAlbumSlideCount(currentSlideCount);
+  return prev != null && !isAlbumPresetCount(prev) ? prev : ALBUM_CUSTOM_DEFAULT;
 }
 
 /** 与 confirmed/draft platform 联动的通用 slideCount 夹取（张数 vs 跨页数）。 */
@@ -779,8 +814,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       if (v === "auto") {
         draft.slideCount = null;
       } else if (v === "custom") {
-        var prev = clampXhsSlideCount(draft.slideCount);
-        draft.slideCount = prev != null ? prev : 8;
+        draft.slideCount = resolveXhsCustomSeed(draft.slideCount);
         refresh();
         var inp = pop.querySelector("[data-studio-xhs-custom-input]");
         if (inp) {
@@ -821,8 +855,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       if (v === "auto") {
         draft.slideCount = null;
       } else if (v === "custom") {
-        var prev = clampAlbumSlideCount(draft.slideCount);
-        draft.slideCount = prev != null ? prev : 6;
+        draft.slideCount = resolveAlbumCustomSeed(draft.slideCount);
         refresh();
         var inp = pop.querySelector("[data-studio-album-custom-input]");
         if (inp) {
