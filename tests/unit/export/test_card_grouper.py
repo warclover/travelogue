@@ -31,19 +31,22 @@ def _portrait(path: Path) -> Path:
 
 
 def test_plan_slot_counts_exact_fits() -> None:
+    # v0.5.0: AVAILABLE_SLOT_COUNTS gained {3,5,10,12,13} from the 2026-08-05
+    # user-mockup template batch, so several of these now resolve to a
+    # single exact-fit card instead of a multi-card split.
     assert plan_slot_counts(0) == []
     assert plan_slot_counts(1) == [1]
     assert plan_slot_counts(9) == [9]
-    assert plan_slot_counts(13) == [9, 4]
-    assert plan_slot_counts(15) == [9, 6]
-    assert plan_slot_counts(10) == [9, 1]
+    assert plan_slot_counts(13) == [13]  # was [9, 4] pre-v0.5.0
+    assert plan_slot_counts(15) == [13, 2]  # was [9, 6] pre-v0.5.0
+    assert plan_slot_counts(10) == [10]  # was [9, 1] pre-v0.5.0
 
 
-def test_plan_slot_counts_small_prefers_two_slot_template() -> None:
-    # card-2-stack-equal (added in v0.4.0) is now the largest-fits-first
-    # match for n=2/3, taking priority over two 1-slot cards.
+def test_plan_slot_counts_small_prefers_largest_exact_fit() -> None:
+    # card-2-stack-equal (v0.4.0) and card-3-mini-triband (v0.5.0) are each
+    # now the largest-fits-first exact match for n=2/3.
     assert plan_slot_counts(2) == [2]
-    assert plan_slot_counts(3) == [2, 1]
+    assert plan_slot_counts(3) == [3]  # was [2, 1] pre-v0.5.0
 
 
 def test_plan_slot_counts_consumes_every_photo() -> None:

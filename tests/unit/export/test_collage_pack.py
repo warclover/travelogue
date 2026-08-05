@@ -91,8 +91,10 @@ def test_export_xiaohongshu_covers_every_photo(tmp_path: Path) -> None:
     _seed_kept_photos(trip_dir, 13)
 
     result = export_collage_pack(trip_dir, platform="xiaohongshu")
-    # 13 → greedy [9,4] → 2 cards.
-    assert result.page_count == 2
+    # v0.5.0: card-13-hero-center-stack/card-13-hero-top-stack joined the
+    # template library, so 13 is now an exact-fit slot count on its own →
+    # greedy [13] → 1 card (was [9,4] → 2 cards pre-v0.5.0).
+    assert result.page_count == 1
 
 
 def test_export_album_spread_geometry(tmp_path: Path) -> None:
@@ -104,12 +106,13 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     result = export_collage_pack(trip_dir, platform="album_spread")
     assert result.platform == "album_spread"
     assert result.capture_method == "collage_pages"
-    # 12 → CardGrouper greedy [9,2,1] → 3 cards → paired spreads: 2
-    # (card 3 is a lone card, right half stays background).
-    assert result.page_count == 2
+    # v0.5.0: 3 new 12-slot templates joined the library, so 12 is now an
+    # exact-fit slot count on its own → greedy [12] → 1 card → 1 spread
+    # (lone card, half page; was [9,2,1] → 3 cards → 2 spreads pre-v0.5.0).
+    assert result.page_count == 1
     assert "3:4" in (result.user_hint or "")
     finals = list(trip_dir.glob("*-album-*.png"))
-    assert len(finals) == 2
+    assert len(finals) == 1
     for path in finals:
         with Image.open(path) as im:
             assert im.size == (2208, 1440)
@@ -149,14 +152,20 @@ def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Pat
 
 
 def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None:
-    """slide_count=None（自动）不受本次改动影响 — 沿用既有贪心分页结果。"""
+    """slide_count=None（自动）不受本次改动影响 — 沿用既有贪心分页结果。
+
+    v0.5.0 note: the *result* here shifted from 2→1 spread because 12 is now
+    an exact-fit slot count (see test_export_album_spread_geometry); the
+    behavior under test (auto mode still delegates to plain greedy chunking,
+    unaffected by the slide_count P2 feature) is unchanged.
+    """
     trips = tmp_path / "trips"
     create_trip("album-auto", trips, title="画册自动分页")
     trip_dir = trips / "album-auto"
     _seed_kept_photos(trip_dir, 12)
 
     auto_result = export_collage_pack(trip_dir, platform="album_spread")
-    assert auto_result.page_count == 2
+    assert auto_result.page_count == 1
 
 
 def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:
