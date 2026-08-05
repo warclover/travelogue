@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from travelogue.config.tracking import TrackedDict
 from travelogue.config_helpers import cfg_bool, cfg_float, cfg_int
 
 
@@ -975,6 +976,9 @@ def _slot_adaptation_from_dict(raw: dict[str, Any]) -> SlotAdaptationConfig:
     peaks_raw = sa.get("land_peaks", sa.get("landPeaks"))
     peaks = dict(defaults.land_peaks)
     if isinstance(peaks_raw, dict):
+        # Free-form peak map: consume via .items(), so mark keys for unknown-key tracking.
+        if isinstance(peaks_raw, TrackedDict):
+            peaks_raw.mark_keys(*(str(k) for k in peaks_raw))
         for key, val in peaks_raw.items():
             peaks[str(key)] = float(val)
     return SlotAdaptationConfig(

@@ -72,6 +72,35 @@ def test_config_yaml_example_has_zero_unknown_key_warnings(
     assert unknown_warnings == []
 
 
+def test_msa_land_peaks_keys_are_not_unknown(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """land_peaks is a free-form map; nested peak ids must not warn as unknown keys."""
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        "trips_dir: ./trips\n"
+        "mosaic:\n"
+        "  slot_adaptation:\n"
+        "    enabled: true\n"
+        "    land_peaks:\n"
+        "      three_two: 1.50\n"
+        "      four_three: 1.3333\n"
+        "      sixteen_nine: 1.7778\n",
+        encoding="utf-8",
+    )
+    caplog.set_level(logging.WARNING)
+    loaded = load_config(cfg)
+    unknown_warnings = [
+        r.getMessage()
+        for r in caplog.records
+        if r.levelno == logging.WARNING and r.getMessage().startswith("config: unknown keys:")
+    ]
+    assert unknown_warnings == []
+    assert loaded.mosaic.slot_adaptation.land_peaks["three_two"] == 1.50
+    assert loaded.mosaic.slot_adaptation.land_peaks["four_three"] == 1.3333
+    assert loaded.mosaic.slot_adaptation.land_peaks["sixteen_nine"] == 1.7778
+
+
 def test_load_yaml_mapping_duplicate_nested_key_includes_line() -> None:
     with pytest.raises(ConfigError, match=r"duplicate config key 'enabled' at line 3"):
         load_yaml_mapping("clustering:\n  enabled: true\n  enabled: false\n")
