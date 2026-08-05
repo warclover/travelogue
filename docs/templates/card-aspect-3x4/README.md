@@ -4,7 +4,7 @@
 |------|------|
 | **来源** | [PRD-EXPORT-CARD-COMPOSE-V1](../../PRD-EXPORT-CARD-COMPOSE-V1.md) §6 · [ADR-021 v0.2](../../adr/021-export-compose-dual-engine.md) |
 | **用途** | 小红书 / 单张海报 / 画册三出口共用的 3:4 卡片版式库 |
-| **状态** | Draft · 起步 4 套（每槙数 1 套），设计稿待补 |
+| **状态** | 用户设计稿已到位（2026-08-05）· **9 套** |
 
 ---
 
@@ -16,29 +16,35 @@
 
 ## 文件约定
 
-沿用 `slot-aspect/*.md` 的表头：
+在 `slot-aspect/*.md` 表头基础上，**新增 `row/col/rowSpan/colSpan` 列**（3×3 网格坐标）——本库没有 CSS 网格承接位置信息，Pillow 渲染器需要直接可用的矩形坐标：
 
 ```markdown
 # card-{n}-{name}
 
 - displayName: 中文名
-- status: pending-design | experimental | ga
+- status: designed | pending-confirm | ga
 - stage: 3:4
+- grid: 3x3
 
-| slot | role | displayAspect |
-|------|------|---------------|
-| 0 | portrait/landscape/main | 0.xxxx |
+| slot | role | row | col | rowSpan | colSpan | displayAspect |
+|------|------|-----|-----|---------|---------|---------------|
+| 0 | portrait/landscape/main | 0 | 0 | 1 | 1 | 0.75 |
 ```
 
-`displayAspect` 必须按 3:4 母版重新计算（不得复制 16:9 数值）。
+`row/col` 为 3×3 基准网格坐标（0-indexed），`rowSpan/colSpan` 为合并跨度。`displayAspect` 按 3:4 母版重新计算：`0.75` = 竖版/方形单元，`1.5` = 2 列合并横版单元，`1.125` = 满宽 2 行合并近方形单元（仅 1 处使用，需裁切）。
 
-## 起步规模（4 套，每槙数 1 套）
+## 模板全集（9 套，用户设计稿 2026-08-05）
 
-| 文件（待建） | 槙数 | 版式 | 状态 |
+| 文件 | 槙数 | 版式 | 含主图槙 |
 |---|---|---|---|
-| `card-1-full.md` | 1 | 全卡单图（cover + 主体安全裁切） | pending-design |
-| `card-2-split.md` | 2 | 双图（上下 / 左右，具体待设计稿定） | pending-design |
-| `card-3-hero-plus-2.md` | 3 | 1 主 + 2 副 | pending-design |
-| `card-4-grid.md` | 4 | 2×2 等分 | pending-design |
+| [`card-1-full-frame.md`](./card-1-full-frame.md) | 1 | 满版单图 | ✓ |
+| [`card-4-square-top-triband.md`](./card-4-square-top-triband.md) | 4 | 顶部近方图（**唯一需裁切**）+ 底部三竖版 | ✓（弱） |
+| [`card-6-hero-tl-stack.md`](./card-6-hero-tl-stack.md) | 6 | 左上主图 + 右侧堆叠 + 底部三等分 | ✓ |
+| [`card-6-hero-br-stack.md`](./card-6-hero-br-stack.md) | 6 | 顶部三等分 + 左侧堆叠 + 右下主图 | ✓ |
+| [`card-6-bookend-rows.md`](./card-6-bookend-rows.md) | 6 | 首尾呼应（1/2 行宽图+方图，第 3 行翻转） | ✗ |
+| [`card-6-brick-alt.md`](./card-6-brick-alt.md) | 6 | 逐行交替（宽图/方图左右互换） | ✗ |
+| [`card-7-triband-2-2-3.md`](./card-7-triband-2-2-3.md) | 7 | 第 1/2 行各两图，第 3 行三等分 | ✗ |
+| [`card-7-triband-2-3-2.md`](./card-7-triband-2-3-2.md) | 7 | 第 1/3 行各两图，第 2 行三等分 | ✗ |
+| [`card-9-grid-equal.md`](./card-9-grid-equal.md) | 9 | 3×3 等分 | ✗ |
 
-> 设计稿到位后，按此文件名逐套落地 slot 表；渲染侧对接 `CardTemplateSelector` / `CardRenderer`（见 PRD §4、§6）。
+**单张海报模板优先级**（详见 [PRD-EXPORT-CARD-COMPOSE-V1 §5.2](../../PRD-EXPORT-CARD-COMPOSE-V1.md)）：`card-1-full-frame` / `card-6-hero-tl-stack` / `card-6-hero-br-stack` > `card-4-square-top-triband` > 其余无主图模板（不用于海报）。

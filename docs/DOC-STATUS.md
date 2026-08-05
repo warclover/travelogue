@@ -161,8 +161,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [UI-DETAIL-SURFACE-INVENTORY-V0.md](./UI-DETAIL-SURFACE-INVENTORY-V0.md) | **active** | UI Detail 表面清单 / 波次索引 |
 | [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | **superseded** | 双引擎方案 → 见 ADR-007 |
 | [PRD-MVP.md](./PRD-MVP.md) | **archive** | MVP 已冻结；产品演进见后续 Phase PRD |
-| [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.2**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter |
-| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.1**（Draft · 模板设计稿待补）· CardGrouper/Selector/Renderer |
+| [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.3**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter · CardGrouper 不要求分镜边界 |
+| [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.2**（Draft · 9 套模板已交付）· CardGrouper/Selector/Renderer |
 | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4 | **superseded** | 小红书 letterbox 切片方案 → 见 PRD-EXPORT-CARD-COMPOSE-V1 |
 | [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6 | **partial superseded** | `poster_bric` 拼贴内核/画幅 → 见 PRD-EXPORT-CARD-COMPOSE-V1（Writer/flag 挂点仍 active） |
 
