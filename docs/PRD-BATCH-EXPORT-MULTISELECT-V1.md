@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.4 |
-| **状态** | **In Progress**——Stage 1（后端调度）+ Stage 2 MVP（前端多选面板）+ Stage 3（Task Dock 清单化进度渲染）已实现并通过单测 + 真实素材 Playwright 验证；Stage 4（真实素材回归 + 单测覆盖收尾）待续 |
+| **文档版本** | v0.5 |
+| **状态** | **Done（v1 范围内全部完成）**——Stage 1（后端调度）+ Stage 2 MVP（前端多选面板）+ Stage 3（Task Dock 清单化进度渲染）+ Stage 4（真实素材回归 + 单测覆盖收尾）均已实现并通过单测 + 真实素材 Playwright 验证。逐平台专属设置（OQ-BEX-05）明确留待产品侧后续反馈评估，不阻塞本次收尾 |
 | **模块代号** | Batch Export（导出面板多选 + 排队批量出图） |
 | **前置条件** | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md)（平台 Profile / Job Store / Task Dock 现状架构）· [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md)（小红书/公众号/画册共享的 CardGrouper 管线） |
 | **关联文档** | [ADR-016](./adr/016-longshot-platform-export.md)（朋友圈/微信群的 Playwright 截图架构） |
@@ -195,8 +195,8 @@ def export_trip_longshot_batch(
 | AC-BEX-01 | 面板可同时勾选 2 个及以上平台并提交，无需逐个重复打开面板 | ✅ Stage 2 MVP 已实现 |
 | AC-BEX-02 | 已勾选的每个平台各自的专属设置（张数/跨页数/分段模式）互不覆盖、互不影响 | ⏸️ MVP 收窄：批量态统一走自动设置，逐平台专属设置留作 OQ-BEX-05（需自定义请单选单独导出） |
 | AC-BEX-03 | 批量导出全过程中 Job Store 不出现并发长图任务（`_longshot_running` 仍是单锁语义） | ✅ Stage 1 已实现并有单测覆盖 |
-| AC-BEX-04 | 某平台导出失败时，其余平台仍继续跑完，最终结果清单标注每项成败 | ✅ Stage 1（后端）+ Stage 2（`formatBatchSuccess` 汇总文案）已实现 |
-| AC-BEX-05 | 未使用 `platforms` 字段的既有单平台请求，行为/响应结构与改动前完全一致（向后兼容回归） | ✅ 全量回归测试已验证（Python 242 项 / JS 109 项全绿） |
+| AC-BEX-04 | 某平台导出失败时，其余平台仍继续跑完，最终结果清单标注每项成败 | ✅ Stage 1（后端 mock 用例）+ Stage 4（`test_batch_real_pipeline_partial_failure_continues` 真实渲染管线用例）+ Stage 2/3（前端汇总/清单展示）均已覆盖 |
+| AC-BEX-05 | 未使用 `platforms` 字段的既有单平台请求，行为/响应结构与改动前完全一致（向后兼容回归） | ✅ 全量回归测试已验证（Python export 238 项 + handlers 117 项 / JS 111 项全绿）；Stage 4 新增显式契约测试断言批量专属字段（`batch`/`items`/`succeededCount`/`failedCount`）在单平台响应里不存在 |
 | AC-BEX-06 | Task Dock 进度清单实时反映"当前第几个平台/共几个平台"及每项状态 | ✅ Stage 3 已实现，真实素材 Playwright 验证通过 |
 
 ---
@@ -206,7 +206,7 @@ def export_trip_longshot_batch(
 1. ✅ **Stage 1**：后端 `export_trip_longshot_batch` 调度函数 + `handle_longshot` 的 `platforms` 分支（向后兼容单平台路径不动）。
 2. ✅ **Stage 2（MVP）**：前端面板多选态改造（`draft.platforms`）+ `runBatchExport` 批量提交/轮询/toast 完成提示；**范围收窄**为不做手风琴逐平台设置区（批量态统一自动设置），完成提示为简单 toast 而非 Task Dock 清单（那部分挪到 Stage 3）。
 3. ✅ **Stage 3**：Task Dock 清单化进度渲染（`showBatchChecklist`）+ 批量成功/部分失败结果的完整展示，已用真实素材 Playwright 验证。
-4. **Stage 4**：多平台组合 × 单项失败场景的自动化回归 + 单测覆盖收尾（批量调度部分失败继续、向后兼容契约的补充场景）+ 逐平台专属设置（手风琴，若产品侧确认需要，见 OQ-BEX-05）。
+4. ✅ **Stage 4（真实素材回归 + 单测覆盖收尾）**：新增 3 项**完全不 mock** `export_trip_longshot` 的真实管线用例（`test_batch_real_pipeline_multi_platform_success`/`_partial_failure_continues`/`_backward_compat_single_platform_path_unaffected`，走真实 CardGrouper/CardRenderer 渲染种子照片）+ 1 项 handler 层向后兼容契约测试（`test_handle_longshot_single_platform_request_shape_unaffected`，断言单平台响应键集合里不存在任何批量专属字段）。逐平台专属设置（手风琴）留作 **OQ-BEX-05**，明确不在 v1 范围内，需产品侧后续确认是否补齐。
 
 ---
 
@@ -227,6 +227,7 @@ def export_trip_longshot_batch(
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.5 | 2026-08-06 | **Stage 4 实施完成（v1 范围收尾）**。`tests/unit/export/test_longshot_batch.py`：新增 `_seed_kept_photos` 真实照片种子 helper（与 `test_collage_pack.py` 同款）+ 3 项**完全不 mock** `export_trip_longshot` 的真实管线用例——`test_batch_real_pipeline_multi_platform_success`（小红书+公众号+画册三平台批量，全走真实 CardGrouper/CardRenderer，验证三套文件名互不重叠）、`test_batch_real_pipeline_partial_failure_continues`（仅在数据源层 `list_collage_photo_paths` 为第 2 个调用注入真实 `E_COLLAGE_N` 空照片错误，验证 scheduler 对真实 `LongshotExportError` 的捕获/继续行为，且失败项 `writer.rollback()` 确实未产出任何文件）、`test_batch_backward_compat_single_platform_path_unaffected`（直接调用 `export_trip_longshot` vs 经批量调度层调用同一平台，产出文件名/页数完全一致）。`tests/unit/web/handlers/test_studio_handlers_longshot_batch.py`：新增 `test_handle_longshot_single_platform_request_shape_unaffected`（AC-BEX-05 显式契约：断言单平台响应体里 `batch`/`items`/`succeededCount`/`failedCount` 键**不存在**，而非值为空）。全量回归：`tests/unit/export` 238 项 + `tests/unit/web/handlers` 117 项 + JS 111 项全绿。至此 v1 范围内 Stage 1–4 全部完成，PRD 状态置为 Done；OQ-BEX-05（逐平台专属设置手风琴）留待产品侧真实使用反馈评估，作为后续独立迭代 |
 | v0.4 | 2026-08-06 | **Stage 3 实施完成**（Task Dock 清单化）。`preview-toolbar-v3-task-dock.js`：新增 `showBatchChecklist(opts)`，渲染进行中/完成态两种清单（每项 排队中/进行中/已完成/失败 图标+文案，完成态含成功页数或错误详情、「换种分享方式」「在文件夹中显示」操作按钮）。`templates/studio/preview-toolbar/task-dock.css`：新增 `.preview-task-dock--batch`/`__batch-list`/`__batch-item`/`__batch-mark`/`__batch-label` 样式。`longshot-export-panel.js`：新增纯函数 `batchChecklistItems`（按 `stageIndex` 推算进行中清单）+ `batchChecklistItemsFromResult`（按后端 `result.items` 生成完成态清单，含每项页数/错误）。`preview-toolbar/longshot.js`：`pollJob` 新增 `onTick` 回调；`runBatchExport` 改为通过 `onTick` 驱动 `showBatchChecklist` 实时刷新进度清单，完成后调用清单化的成功/部分失败展示（替代原 toast）；同时修复三处联动问题——`syncLongshotCtaLabel` 未按 `prefs.platforms.length > 1` 走批量文案（导致 CTA 文案回退单平台）、`writeExportPrefs` 未持久化 `platforms` 数组（刷新页面后批量选择丢失）、`syncPrefsPlatform`（Output Recipe 等单平台猜测逻辑复用）会无条件把已选的多平台数组收缩回单平台（导致批量选择被静默清空）——为其加了"若已有 ≥2 个平台则不覆盖"的保护。单测：`tests/js/longshot-export-panel.test.mjs` 新增 2 项覆盖 `batchChecklistItems`/`batchChecklistItemsFromResult`；全量回归 JS 111 项全绿。真实素材验证：用 Playwright 对 `demo-49cbe46479`（247 张照片）触发小红书+画册双平台批量导出，进行中清单/完成清单/落盘文件数三者一致，确认 AC-BEX-06 达标 |
 | v0.3 | 2026-08-06 | **Stage 2 MVP 实施完成**（用户确认范围：多选勾选 + 批量提交/轮询/完成提示都做，但不做手风琴逐平台设置——批量态统一自动设置）。`longshot-export-panel.js`：新增 `normalizePlatformList`/`ctaLabelForPlatforms`/`shortCtaLabelForPlatforms`/`exportSummaryLineForPlatforms`/`formatBatchSuccess`；`readExportPrefs`/`writeExportPrefs` 支持 `platforms: string[]`（`platform` 仍保留 = `platforms[0]` 向后兼容）；`buildPanelHtml`/`syncPanelUI`/`bindPanelDraft` 改造为多选（`role="checkbox"`+`aria-checked`），批量态隐藏张数/跨页数字段并展示 `data-batch-hint` 提示。`preview-toolbar/longshot.js`：新增 `runBatchExport`（`platforms.length > 1` 时从 `runLongshotExport` 分流），直接构造 `{platforms:[{platform},...]}` 批量请求体，复用既有 `postJsonBusyRetry`/`pollJob` 链路，完成后用 `formatBatchSuccess` 生成 toast 文案（不接入 `showLongshotDrawer`/Task Dock，那部分明确留给 Stage 3）。单测：`tests/js/longshot-export-panel.test.mjs` 新增 8 项覆盖多选工具函数与 `syncPanelUI`/`bindPanelDraft` 多选行为；全量回归 Python 242 项 + JS 109 项全绿。AC-BEX-02/06 因 MVP 收窄标记为待续，新增 OQ-BEX-05/06 |
 | v0.2 | 2026-08-06 | **Stage 1 实施完成**：新增 `travelogue/export/longshot_batch.py`（`export_trip_longshot_batch` 调度函数，`BatchExportRequest`/`BatchExportItemResult`）+ `export_handlers.handle_longshot` 的 `platforms[]` 分支（`_handle_longshot_batch`）。行为对齐 §4 设计：逐项校验（`resolve_profile`/重复平台/`poster_bric` flag）失败即整体拒绝提交（400）；提交成功后逐平台顺序跑，单项 `LongshotExportError`/意外异常不阻塞其余（D-BEX-05），仅 `LongshotCancelled` 中断整批；仍是同一个 `StudioJob`，`_longshot_running` 单锁不变（D-BEX-03，含单测验证批量提交遇忙返回 409）；未带 `platforms` 字段的既有单平台路径零改动（AC-BEX-05，回归测试 282 项全绿）。已知 v1 简化：批量暂不支持"部分平台需浏览器兼容模式回落"的混合态（缺 Playwright 时整体拒绝提交，见 `E_LNG2_BATCH_CLIENT_FALLBACK_UNSUPPORTED`）；批量场景跳过 Output Recipe / intent 解析（用户已显式多选，无需再猜测分享意图）；`longshot-current.json` 仍是单一清单语义，只反映批量中**最后一个成功平台**的产物（新增 OQ-BEX-04）。单测：`tests/unit/export/test_longshot_batch.py`（调度层）+ `tests/unit/web/handlers/test_studio_handlers_longshot_batch.py`（handler 层）。Stage 2（前端多选面板）/ Stage 3（Task Dock 清单化）待续 |

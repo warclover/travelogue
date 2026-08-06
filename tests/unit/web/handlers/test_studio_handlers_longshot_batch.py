@@ -210,6 +210,68 @@ def test_handle_longshot_batch_partial_failure_continues_and_reports_items(
     assert "album_spread-01.png" in current
 
 
+def test_handle_longshot_single_platform_request_shape_unaffected(tmp_path: Path) -> None:
+    """AC-BEX-05 契约测试：不带 `platforms` 字段的既有单平台请求，响应结构里
+
+    不出现任何批量专属字段（`batch`/`items`/`succeededCount`/`failedCount`），
+    仍是改动前的扁平结构（`outputs`/`pageCount`/`userHint`/`platform`）——
+    证明 D-BEX-02 的"批量分支与单平台路径完全独立"承诺在响应契约层面同样成立。
+    """
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
+    trip_dir = trips / "demo"
+
+    def fake_export(_trip_dir, *, platform, **_kwargs):
+        out_path = trip_dir / f"{platform}-01.png"
+        out_path.write_bytes(b"fake")
+        from travelogue.export.longshot import LongshotOutput
+
+        return LongshotExportResult(
+            outputs=[LongshotOutput(path=out_path)],
+            platform=platform,
+            profile_label=platform,
+            page_count=1,
+            user_hint=f"{platform} ok",
+        )
+
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platform": "xiaohongshu",
+            "allowMissingSource": True,
+        },
+    )
+    with (
+        patch(
+            "travelogue.web.studio_handlers.export_handlers._ensure_derivatives_for_export",
+        ),
+        patch(
+            "travelogue.export.longshot.playwright_longshot_available", return_value=True
+        ),
+        patch(
+            "travelogue.export.longshot.export_trip_longshot",
+            side_effect=fake_export,
+        ),
+    ):
+        handle_longshot(handler)
+        assert handler.response is not None
+        status, body = handler.response
+        assert status == 202
+        job_id = body["jobId"]
+        job_dict = wait_for_job(lambda: _fetch(job_id), timeout_sec=5)
+
+    assert job_dict["status"] == "succeeded"
+    result = job_dict["result"]
+    # 批量专属字段一律不出现——不是"为 False/None"，而是键本身不存在。
+    for batch_only_key in ("batch", "items", "succeededCount", "failedCount"):
+        assert batch_only_key not in result, f"单平台响应不应包含批量字段 {batch_only_key!r}"
+    assert result["platform"] == "xiaohongshu"
+    assert result["pageCount"] == 1
+    assert result["outputs"] == ["xiaohongshu-01.png"]
+    assert result["userHint"] == "xiaohongshu ok"
+
+
 def test_handle_longshot_batch_single_job_lock_shared_with_single_platform(
     tmp_path: Path,
 ) -> None:
