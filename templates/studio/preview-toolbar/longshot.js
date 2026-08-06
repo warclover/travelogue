@@ -2792,6 +2792,7 @@ export function cancelPreviewLongshotExport(root) {
                   );
                 } catch (_evErr) {}
               }
+            } else if (job.status === "failed") {
               var err = job.error || {};
               trackBatchFail(err.code || "E_EXPORT_LONGSHOT", err.message || "批量导出失败");
             } else if (job.status === "cancelled") {
