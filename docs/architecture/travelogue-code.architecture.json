@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Travelogue Code Architecture",
+    "subtitle": "Import-linter package layers (PRD §5.3.1) — higher may import lower only",
+    "output": "travelogue-code.html",
+    "quality_profile": "showcase",
+    "visual_preset": "blueprint",
+    "repository": {
+      "url": "https://github.com/warclover/travelogue.git",
+      "revision": "ed3f9a8e7592e06f65aef769c9f098bdc2692082"
+    },
+    "views": [
+      {
+        "id": "entry-to-orch",
+        "label": "Adapters to orchestrator",
+        "focus": ["adapters", "orchestrator"],
+        "note": "cli, web, and desktop share the top adapter layer and call into orchestrator."
+      },
+      {
+        "id": "pipeline-packages",
+        "label": "Pipeline packages",
+        "focus": ["orchestrator", "render", "export", "services", "curation", "layout"],
+        "note": "Stage ownership sits in render/export, services, and curation/layout engines."
+      },
+      {
+        "id": "foundation",
+        "label": "Media and foundation",
+        "focus": ["media-intel", "config", "foundation"],
+        "note": "Media/vision/llm sit above config and shared domain/util primitives."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [40, 80],
+    "cols": 7,
+    "gapX": 72,
+    "gapY": 100,
+    "cellW": 150,
+    "cellH": 66
+  },
+  "components": [
+    {
+      "id": "adapters",
+      "type": "frontend",
+      "label": "Adapters",
+      "sublabel": "cli · web · desktop",
+      "tag": "L1",
+      "row": 1,
+      "col": 0,
+      "sources": [
+        { "path": "travelogue/cli/__init__.py", "label": "CLI" },
+        { "path": "travelogue/web/__init__.py", "label": "web" },
+        { "path": "travelogue/desktop/__init__.py", "label": "desktop" }
+      ]
+    },
+    {
+      "id": "orchestrator",
+      "type": "backend",
+      "label": "Orchestrator",
+      "sublabel": "travelogue.orchestrator",
+      "tag": "L2",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        { "path": "travelogue/orchestrator/run.py", "label": "run_trip" }
+      ]
+    },
+    {
+      "id": "render",
+      "type": "backend",
+      "label": "Render",
+      "sublabel": "travelogue.render",
+      "tag": "L3",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        { "path": "travelogue/render/engine.py", "label": "engine" }
+      ]
+    },
+    {
+      "id": "export",
+      "type": "backend",
+      "label": "Export",
+      "sublabel": "travelogue.export",
+      "tag": "L3",
+      "row": 0,
+      "col": 2,
+      "sources": [
+        { "path": "travelogue/export/__init__.py", "label": "export pkg" }
+      ]
+    },
+    {
+      "id": "services",
+      "type": "backend",
+      "label": "Services",
+      "sublabel": "services · templating",
+      "tag": "L4",
+      "row": 1,
+      "col": 3,
+      "sources": [
+        { "path": "travelogue/services/__init__.py", "label": "services" },
+        { "path": "travelogue/templating/__init__.py", "label": "templating" }
+      ]
+    },
+    {
+      "id": "curation",
+      "type": "backend",
+      "label": "Curation",
+      "sublabel": "travelogue.curation",
+      "tag": "L5",
+      "row": 1,
+      "col": 4,
+      "sources": [
+        { "path": "travelogue/curation/curate.py", "label": "curate" }
+      ]
+    },
+    {
+      "id": "layout",
+      "type": "backend",
+      "label": "Layout Engines",
+      "sublabel": "LSE · templates",
+      "tag": "L5",
+      "row": 0,
+      "col": 4,
+      "sources": [
+        { "path": "travelogue/layout_engine/__init__.py", "label": "LSE" },
+        { "path": "travelogue/layout_templates/__init__.py", "label": "LTE" }
+      ]
+    },
+    {
+      "id": "media-intel",
+      "type": "backend",
+      "label": "Media Layer",
+      "sublabel": "media · vision · llm",
+      "tag": "L6",
+      "row": 1,
+      "col": 5,
+      "sources": [
+        { "path": "travelogue/media/__init__.py", "label": "media" },
+        { "path": "travelogue/vision/__init__.py", "label": "vision" },
+        { "path": "travelogue/llm/__init__.py", "label": "llm" }
+      ]
+    },
+    {
+      "id": "config",
+      "type": "database",
+      "label": "Config",
+      "sublabel": "travelogue.config",
+      "tag": "L7",
+      "row": 1,
+      "col": 6,
+      "sources": [
+        { "path": "travelogue/config/__init__.py", "label": "config" }
+      ]
+    },
+    {
+      "id": "foundation",
+      "type": "database",
+      "label": "Foundation",
+      "sublabel": "domain · util · types",
+      "tag": "L8",
+      "row": 2,
+      "col": 6,
+      "sources": [
+        { "path": "travelogue/domain/__init__.py", "label": "domain" },
+        { "path": "travelogue/util/__init__.py", "label": "util" },
+        { "path": "travelogue/paths.py", "label": "paths" }
+      ]
+    },
+    {
+      "id": "lint-gate",
+      "type": "security",
+      "label": "Import Linter",
+      "sublabel": "layers + worker fence",
+      "tag": "CI gate",
+      "row": 0,
+      "col": 0,
+      "sources": [
+        { "path": "pyproject.toml", "line": 84, "end_line": 101, "label": "contracts" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Entry adapters (same layer)",
+      "wraps": ["adapters"]
+    },
+    {
+      "kind": "region",
+      "label": "Application core packages",
+      "wraps": ["orchestrator", "render", "export", "services", "curation", "layout", "media-intel"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Shared kernel (config + foundation)",
+      "wraps": ["config", "foundation"]
+    }
+  ],
+  "connections": [
+    { "id": "lint-to-adapters", "from": "lint-gate", "to": "adapters", "variant": "security" },
+    { "id": "adapters-to-orch", "from": "adapters", "to": "orchestrator", "variant": "emphasis" },
+    { "id": "orch-to-render", "from": "orchestrator", "to": "render", "label": "import" },
+    { "id": "orch-to-export", "from": "orchestrator", "to": "export", "fromSide": "top", "toSide": "left" },
+    { "id": "render-to-services", "from": "render", "to": "services" },
+    { "id": "export-to-services", "from": "export", "to": "services", "fromSide": "bottom", "toSide": "top" },
+    { "id": "services-to-curation", "from": "services", "to": "curation" },
+    { "id": "services-to-layout", "from": "services", "to": "layout", "fromSide": "top", "toSide": "left" },
+    { "id": "curation-to-media", "from": "curation", "to": "media-intel" },
+    { "id": "layout-to-media", "from": "layout", "to": "media-intel", "fromSide": "bottom", "toSide": "top" },
+    { "id": "media-to-config", "from": "media-intel", "to": "config" },
+    { "id": "config-to-foundation", "from": "config", "to": "foundation", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Layer rule",
+      "items": [
+        "import-linter: higher layer may import lower only",
+        "cli / web / desktop are peers on L1",
+        "render and export are peers on L3"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Package map",
+      "items": [
+        "L4 services + templating own trip/narrate/layout apply",
+        "L5 curation + layout_engine + layout_templates",
+        "L6 media + vision + llm stay below engines"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Outside / debt",
+      "items": [
+        "cover_engine is used by curation/render/web but not listed in layers",
+        "Known ignore_imports: media/vision → curation (P2 debt)",
+        "ingest_worker forbidden from services/web/orchestrator"
+      ]
+    }
+  ]
+}

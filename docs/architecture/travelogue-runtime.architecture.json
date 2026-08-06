@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Travelogue Runtime Architecture",
+    "subtitle": "Local-first Python Studio: browser UI → loopback HTTP → job pipeline → trip filesystem",
+    "output": "travelogue-runtime.html",
+    "quality_profile": "showcase",
+    "visual_preset": "classic",
+    "repository": {
+      "url": "https://github.com/warclover/travelogue.git",
+      "revision": "0ce5df717cf2c12a49fa7ae0fd2b2226f0054d8a"
+    },
+    "views": [
+      {
+        "id": "studio-path",
+        "label": "Studio request path",
+        "focus": ["user", "studio-ui", "studio-http", "jobs", "orchestrator"],
+        "note": "Browser UI talks to loopback Studio HTTP; import work is queued in memory."
+      },
+      {
+        "id": "pipeline-engines",
+        "label": "Pipeline engines",
+        "focus": ["orchestrator", "media", "curation", "narrate", "render", "export"],
+        "note": "run_trip chains ingest → curate/LSE → narrate → render → export."
+      },
+      {
+        "id": "persistence",
+        "label": "Trip persistence",
+        "focus": ["orchestrator", "studio-http", "trip-fs"],
+        "note": "trips/{id}/trip.json plus assets is the SSOT; jobs stay in-process."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [48, 72],
+    "cols": 6,
+    "gapX": 88,
+    "gapY": 96,
+    "cellW": 148,
+    "cellH": 64
+  },
+  "components": [
+    {
+      "id": "desktop",
+      "type": "backend",
+      "label": "CLI / Desktop",
+      "sublabel": "travelogue-studio",
+      "tag": "entry",
+      "row": 0,
+      "col": 0,
+      "sources": [
+        { "path": "travelogue/desktop/launcher.py", "line": 101, "label": "launcher main" },
+        { "path": "travelogue/cli/__init__.py", "line": 20, "label": "CLI main" }
+      ]
+    },
+    {
+      "id": "narrate",
+      "type": "cloud",
+      "label": "Narrate / LLM",
+      "sublabel": "stub | DeepSeek",
+      "tag": "optional",
+      "row": 0,
+      "col": 4,
+      "sources": [
+        { "path": "travelogue/services/narrate.py", "label": "narrate service" }
+      ]
+    },
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User",
+      "sublabel": "system browser",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "studio-ui",
+      "type": "frontend",
+      "label": "Studio UI",
+      "sublabel": "Homepage + Preview",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        { "path": "templates/studio/studio-home-v2.html", "label": "home v2" },
+        { "path": "travelogue/web/studio_chrome.py", "label": "preview chrome" }
+      ]
+    },
+    {
+      "id": "studio-http",
+      "type": "backend",
+      "label": "Studio HTTP",
+      "sublabel": "ThreadingHTTPServer",
+      "tag": "loopback",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        { "path": "travelogue/web/serve.py", "line": 548, "label": "serve_studio" },
+        { "path": "travelogue/web/studio_routes.py", "line": 65, "label": "StudioMixin" }
+      ]
+    },
+    {
+      "id": "jobs",
+      "type": "messagebus",
+      "label": "Job Store",
+      "sublabel": "in-memory + spawn",
+      "row": 1,
+      "col": 3,
+      "sources": [
+        { "path": "travelogue/web/studio_jobs.py", "line": 61, "label": "create_import_job" }
+      ]
+    },
+    {
+      "id": "orchestrator",
+      "type": "backend",
+      "label": "Orchestrator",
+      "sublabel": "run_trip stages",
+      "row": 1,
+      "col": 4,
+      "sources": [
+        { "path": "travelogue/orchestrator/run.py", "line": 37, "label": "run_trip" }
+      ]
+    },
+    {
+      "id": "trip-fs",
+      "type": "database",
+      "label": "Trip FS",
+      "sublabel": "trip.json + assets",
+      "tag": "SSOT",
+      "row": 1,
+      "col": 5,
+      "sources": [
+        { "path": "travelogue/services/trip.py", "label": "persist trip" }
+      ]
+    },
+    {
+      "id": "media",
+      "type": "backend",
+      "label": "Media / Vision",
+      "sublabel": "ingest + workers",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        { "path": "travelogue/media/ingest.py", "label": "ingest" }
+      ]
+    },
+    {
+      "id": "curation",
+      "type": "backend",
+      "label": "Curation + LSE",
+      "sublabel": "cluster / mosaic",
+      "row": 2,
+      "col": 3,
+      "sources": [
+        { "path": "travelogue/curation/curate.py", "label": "curate" },
+        { "path": "travelogue/layout_engine/mosaic/trip.py", "line": 13, "label": "compose_trip" }
+      ]
+    },
+    {
+      "id": "render",
+      "type": "backend",
+      "label": "Render",
+      "sublabel": "pybars3 HTML",
+      "row": 2,
+      "col": 4,
+      "sources": [
+        { "path": "travelogue/render/engine.py", "label": "render_trip" }
+      ]
+    },
+    {
+      "id": "export",
+      "type": "backend",
+      "label": "Export",
+      "sublabel": "longshot / zip",
+      "row": 2,
+      "col": 5,
+      "sources": [
+        { "path": "travelogue/export/longshot.py", "label": "longshot" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "System browser",
+      "wraps": ["user", "studio-ui"]
+    },
+    {
+      "kind": "region",
+      "label": "Local Python host (loopback Studio)",
+      "wraps": ["desktop", "studio-http", "jobs", "orchestrator", "media", "curation", "render", "export", "trip-fs"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Optional LLM / geocode egress",
+      "wraps": ["narrate"]
+    }
+  ],
+  "connections": [
+    { "id": "user-to-ui", "from": "user", "to": "studio-ui", "variant": "emphasis" },
+    { "id": "desktop-to-http", "from": "desktop", "to": "studio-http", "label": "launch" },
+    { "id": "ui-to-http", "from": "studio-ui", "to": "studio-http", "label": "API" },
+    { "id": "http-to-jobs", "from": "studio-http", "to": "jobs" },
+    { "id": "jobs-to-orch", "from": "jobs", "to": "orchestrator", "label": "run_trip", "variant": "emphasis" },
+    { "id": "orch-to-fs", "from": "orchestrator", "to": "trip-fs", "label": "persist" },
+    { "id": "orch-to-media", "from": "orchestrator", "to": "media", "fromSide": "bottom", "toSide": "top" },
+    { "id": "orch-to-curation", "from": "orchestrator", "to": "curation", "fromSide": "bottom", "toSide": "top" },
+    { "id": "orch-to-narrate", "from": "orchestrator", "to": "narrate", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "orch-to-render", "from": "orchestrator", "to": "render", "fromSide": "bottom", "toSide": "top" },
+    { "id": "render-to-export", "from": "render", "to": "export" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Runtime shape",
+      "items": [
+        "No Electron/Tauri — PyInstaller opens the system browser",
+        "Studio is stdlib ThreadingHTTPServer on loopback",
+        "Frontend is static ES modules, not a bundled SPA"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Primary import path",
+      "items": [
+        "POST /__travelogue/import → JobStore → subprocess pipeline",
+        "Stages: ingest → cluster/SSG → curate/LSE → narrate → render → export",
+        "Progress polled via /__travelogue/jobs/{id}"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "State & egress",
+      "items": [
+        "SSOT is trips/{id}/trip.json + filesystem assets",
+        "Jobs are process-local memory only",
+        "LLM and geocode are optional network calls"
+      ]
+    }
+  ]
+}

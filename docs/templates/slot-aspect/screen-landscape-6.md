@@ -1,7 +1,7 @@
 # screen-landscape-6
 
 - displayName: landscape · 6
-- status: deprecated
+- status: experimental
 - stage: 16:9
 
 | slot | role | displayAspect |

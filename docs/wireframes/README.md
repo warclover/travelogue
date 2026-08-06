@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [studio-shelf-ticket-seal-v1-wireframe.html](./studio-shelf-ticket-seal-v1-wireframe.html) | **书架票根 · 朱砂钤印落位 v1** · reelsalon seal-B · ①封面钤印 / ②替条码 / ③stub 水印 · **待产品审核** |
 | [studio-shelf-top-v1-wireframe.html](./studio-shelf-top-v1-wireframe.html) | **书架顶端收束 V1** · As-Is / A 弱快捷条 / B 内嵌芯片 / C 无快捷区 · **待产品审核** |
 | [studio-homepage-focus-v1-wireframe.html](./studio-homepage-focus-v1-wireframe.html) | **首页展台收焦 P0** · As-Is / 回访 / 空态 / 2K 定宽 · 文案层级 + 底栏三区 · **待产品审核** |
 | [preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) | **预览 Chrome 收敛 V1.1** · 主路径零分章打扰 · Dock「分章」按需 · D-STAT · 杀默认 G1/徽标/Help FAB · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) |
