@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.1（草案，待评审） |
-| **状态** | **Draft**——2026-08-06 讨论定向后落笔，尚未排期实施 |
+| **文档版本** | v0.2 |
+| **状态** | **In Progress**——Stage 1（后端调度）已实现并通过单测；Stage 2/3（前端多选面板 + Task Dock 清单化）待续 |
 | **模块代号** | Batch Export（导出面板多选 + 排队批量出图） |
 | **前置条件** | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md)（平台 Profile / Job Store / Task Dock 现状架构）· [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md)（小红书/公众号/画册共享的 CardGrouper 管线） |
 | **关联文档** | [ADR-016](./adr/016-longshot-platform-export.md)（朋友圈/微信群的 Playwright 截图架构） |
@@ -202,6 +202,7 @@ def export_trip_longshot_batch(
 | OQ-BEX-01 | 小红书 + 公众号同时勾选时，是否共享同一份 `plan_cards`/渲染结果只出两套文件名，省一倍算力 | v1 不做（NG-BEX-02），留作 v2 优化；v1 两者各自完整跑一遍 `export_collage_pack`，实现简单、零风险 |
 | OQ-BEX-02 | 是否需要"全选"快捷按钮，一键勾满所有可用平台 | 待实施阶段与 UI 走查一并确认，不阻塞 Stage 1 后端开工 |
 | OQ-BEX-03 | 批量导出过程中用户是否可以单独取消清单中的某一项（而非整体取消） | v1 默认仅支持整体取消（复用现有 `cancel_check`/`cancel_register`）；细粒度取消留待用户反馈后再评估 |
+| OQ-BEX-04 | `longshot-current.json`（staleness 追踪清单）在批量场景下该如何表达"多平台各自都有产物" | Stage 1 已实现的简化行为：只反映批量中**最后一个成功平台**的产物，其余平台产物已落盘但不计入 staleness 追踪；影响面：若用户后续改动内容，`longshotStale` 提示可能只针对最后一个平台生效。留待前端 Stage 2/3 落地后按真实用户反馈评估是否需要扩展该文件为多条目清单 |
 
 ---
 
@@ -209,4 +210,5 @@ def export_trip_longshot_batch(
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2 | 2026-08-06 | **Stage 1 实施完成**：新增 `travelogue/export/longshot_batch.py`（`export_trip_longshot_batch` 调度函数，`BatchExportRequest`/`BatchExportItemResult`）+ `export_handlers.handle_longshot` 的 `platforms[]` 分支（`_handle_longshot_batch`）。行为对齐 §4 设计：逐项校验（`resolve_profile`/重复平台/`poster_bric` flag）失败即整体拒绝提交（400）；提交成功后逐平台顺序跑，单项 `LongshotExportError`/意外异常不阻塞其余（D-BEX-05），仅 `LongshotCancelled` 中断整批；仍是同一个 `StudioJob`，`_longshot_running` 单锁不变（D-BEX-03，含单测验证批量提交遇忙返回 409）；未带 `platforms` 字段的既有单平台路径零改动（AC-BEX-05，回归测试 282 项全绿）。已知 v1 简化：批量暂不支持"部分平台需浏览器兼容模式回落"的混合态（缺 Playwright 时整体拒绝提交，见 `E_LNG2_BATCH_CLIENT_FALLBACK_UNSUPPORTED`）；批量场景跳过 Output Recipe / intent 解析（用户已显式多选，无需再猜测分享意图）；`longshot-current.json` 仍是单一清单语义，只反映批量中**最后一个成功平台**的产物（新增 OQ-BEX-04）。单测：`tests/unit/export/test_longshot_batch.py`（调度层）+ `tests/unit/web/handlers/test_studio_handlers_longshot_batch.py`（handler 层）。Stage 2（前端多选面板）/ Stage 3（Task Dock 清单化）待续 |
 | v0.1 | 2026-08-06 | 初稿：基于当日讨论（"多选导出模式"）落笔，明确不做真并行、改为排队批量复用现有单平台管线；拍板"部分失败不阻塞其余平台继续跑"（D-BEX-05）。尚未实施，等待排期评审 |

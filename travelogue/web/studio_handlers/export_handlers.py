@@ -209,6 +209,303 @@ def handle_output_recipe(handler: StudioHandlerProtocol) -> None:
     )
 
 
+def _handle_longshot_batch(
+    handler: StudioHandlerProtocol,
+    *,
+    trip_id: str,
+    trip_dir: Path,
+    payload: dict,
+    scale: int,
+    fmt: str,
+    copy_display: str,
+    segment_mode: str,
+    longshot2_enabled: bool,
+    allowed_platforms: list[str],
+    gcs_poster_on: bool,
+) -> None:
+    """POST /__travelogue/longshot · `platforms[]` 批量分支（PRD-BATCH-EXPORT-MULTISELECT-V1）。
+
+    与单平台路径完全独立：跳过 Output Recipe / intent 解析（批量场景下用户已
+    显式多选平台，无需再猜测"该导出成什么"，见 §4 D-BEX 决策）；逐项复用单
+    平台路径已有的 `resolve_profile` / playwright fallback 校验规则，一处失败
+    即整体拒绝提交（400），提交成功后才进入"逐项跑、单项失败不阻塞其余"的
+    Job 内部循环（D-BEX-05，见 `export_trip_longshot_batch`）。
+    """
+    from travelogue.export.longshot import playwright_longshot_available
+    from travelogue.export.longshot_batch import (
+        BatchExportRequest,
+        export_trip_longshot_batch,
+    )
+    from travelogue.export.platform_profiles import (
+        DEFAULT_PLATFORM,
+        PlatformProfileError,
+        normalize_platform_id,
+        resolve_profile,
+    )
+    from travelogue.render.copy_display import COPY_DISPLAY_PHOTOS
+
+    platforms_raw = payload.get("platforms") or []
+
+    seen_ids: set[str] = set()
+    parsed: list[dict] = []
+    for idx, item in enumerate(platforms_raw):
+        if not isinstance(item, dict):
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_INVALID_BATCH_ITEM",
+                    "message": f"platforms[{idx}] 须为对象",
+                },
+            )
+            return
+        raw_platform = item.get("platform")
+        if not raw_platform:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_INVALID_BATCH_ITEM",
+                    "message": f"platforms[{idx}].platform 不能为空",
+                },
+            )
+            return
+        platform_id = normalize_platform_id(raw_platform)
+        if platform_id in seen_ids:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_DUPLICATE_PLATFORM",
+                    "message": f"重复的导出平台：{platform_id}",
+                },
+            )
+            return
+        seen_ids.add(platform_id)
+
+        if not gcs_poster_on and platform_id == "poster_bric":
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_GCS_POSTER_DISABLED",
+                    "message": "单屏海报未开启（features.gcs_poster_bric.enabled=false）",
+                },
+            )
+            return
+
+        item_slide_count_raw = item.get("slideCount")
+        item_slide_count: int | None
+        if item_slide_count_raw is None or item_slide_count_raw == "":
+            item_slide_count = None
+        else:
+            try:
+                item_slide_count = int(item_slide_count_raw)
+            except (TypeError, ValueError):
+                handler._json_response(
+                    400,
+                    {
+                        "ok": False,
+                        "error": "E_LNG2_INVALID_SLIDE_COUNT",
+                        "message": f"platforms[{idx}].slideCount 须为整数",
+                    },
+                )
+                return
+        item_pad_mode_raw = item.get("padMode")
+        item_pad_mode = (
+            None
+            if item_pad_mode_raw is None or item_pad_mode_raw == ""
+            else str(item_pad_mode_raw).strip().lower()
+        )
+
+        try:
+            profile = resolve_profile(
+                platform_id,
+                slide_count=item_slide_count,
+                pad_mode=item_pad_mode,
+                longshot2_enabled=longshot2_enabled,
+                allowed_platforms=(
+                    allowed_platforms if platform_id != DEFAULT_PLATFORM else None
+                ),
+            )
+        except PlatformProfileError as exc:
+            handler._json_response(
+                400,
+                {"ok": False, "error": exc.code, "message": f"[{platform_id}] {exc.message}"},
+            )
+            return
+
+        parsed.append(
+            {
+                "platform_id": profile.id,
+                "slide_count": item_slide_count,
+                "pad_mode": item_pad_mode,
+            }
+        )
+
+    if not parsed:
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_LNG2_EMPTY_BATCH", "message": "platforms 不能为空"},
+        )
+        return
+
+    # M-INS-0c 同款守门：批量暂不支持"部分平台走浏览器兼容模式"的混合态，
+    # 缺 Playwright 时直接拒绝提交并指名哪些平台需单独导出（远比半开更安全）。
+    force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
+    server_pack_platforms = frozenset({"moments_grid", "poster_bric"})
+    if force_client or not playwright_longshot_available():
+        needs_playwright = [
+            p["platform_id"] for p in parsed if p["platform_id"] not in server_pack_platforms
+        ]
+        if needs_playwright:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_BATCH_CLIENT_FALLBACK_UNSUPPORTED",
+                    "message": (
+                        "批量导出暂不支持兼容模式，以下平台需单独导出："
+                        + "、".join(needs_playwright)
+                    ),
+                },
+            )
+            return
+
+    include_appendix = bool(payload.get("includeAppendix"))
+
+    requests_out: list[BatchExportRequest] = []
+    for p in parsed:
+        item_segment_mode = segment_mode if p["platform_id"] == DEFAULT_PLATFORM else "auto"
+        item_copy_display = (
+            COPY_DISPLAY_PHOTOS
+            if p["platform_id"] in ("wechat_moments", "moments_grid", "poster_bric")
+            else copy_display
+        )
+        requests_out.append(
+            BatchExportRequest(
+                platform=p["platform_id"],
+                slide_count=p["slide_count"],
+                pad_mode=p["pad_mode"],
+                segment_mode=item_segment_mode,
+                copy_display=item_copy_display,
+            )
+        )
+
+    store = get_job_store()
+    job = store.create_longshot_job()
+    if job is None:
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": "已有长图任务进行中，请稍候",
+            },
+        )
+        return
+
+    def runner() -> dict:
+        from travelogue.export.longshot import write_longshot_current
+
+        def on_progress(
+            item_index: int, item_total: int, item_platform: str, cur: int, total: int, hint: str
+        ) -> None:
+            prefix = f"[{item_index + 1}/{item_total}] {item_platform}"
+            store.update(
+                job,
+                stage_hint=f"{prefix} · {hint}" if hint else prefix,
+                stage_index=item_index + 1,
+                stage_count=item_total,
+            )
+
+        def cancel_check() -> bool:
+            return store.is_cancelled(job)
+
+        def cancel_register(abort: object) -> None:
+            if callable(abort):
+                store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
+
+        _ensure_derivatives_for_export(trip_dir)
+        batch_results = export_trip_longshot_batch(
+            trip_dir,
+            requests=requests_out,
+            common={"scale": scale, "fmt": fmt, "include_appendix": include_appendix},
+            progress=on_progress,
+            cancel_check=cancel_check,
+            cancel_register=cancel_register,
+        )
+
+        items: list[dict] = []
+        succeeded = 0
+        failed = 0
+        last_success_rel_outputs: list[str] | None = None
+        last_success_kind: str | None = None
+        for item_result in batch_results:
+            if item_result.ok and item_result.result is not None:
+                succeeded += 1
+                result = item_result.result
+                rel_outputs = [rel_to_trip(trip_dir, out.path) for out in result.outputs]
+                page_count = (
+                    result.page_count if result.page_count is not None else len(result.outputs)
+                )
+                items.append(
+                    {
+                        "platform": result.platform,
+                        "ok": True,
+                        "outputs": rel_outputs,
+                        "captureMethod": result.capture_method,
+                        "segmented": result.segmented,
+                        "pageCount": page_count,
+                        "segmentReason": result.segment_reason,
+                        "userHint": result.user_hint,
+                        "profileLabel": result.profile_label,
+                        "targetPageCount": result.target_page_count,
+                        "publishGuide": result.publish_guide,
+                        "outputFormat": getattr(result, "output_format", None) or fmt,
+                    }
+                )
+                if rel_outputs:
+                    last_success_rel_outputs = rel_outputs
+                    last_success_kind = "segmented" if result.segmented else "whole"
+            else:
+                failed += 1
+                code = item_result.error_code or "E_LNG_CAPTURE_FAILED"
+                items.append(
+                    {
+                        "platform": item_result.platform,
+                        "ok": False,
+                        "error": code,
+                        "message": user_message(code, item_result.error_message),
+                    }
+                )
+
+        # QFX D-QFX-06b 同款约束：仅用最后一个成功平台的产物更新
+        # longshot-current.json（该文件本就是"单一 batch/清单"语义，暂不支持
+        # 多平台合并追踪——留作 OQ-BEX-04，见 PRD 变更记录）。
+        if last_success_rel_outputs:
+            write_longshot_current(
+                trip_dir,
+                batch_id=job.job_id,
+                kind=last_success_kind or "whole",
+                files=last_success_rel_outputs,
+            )
+
+        return {
+            "tripId": trip_id,
+            "batch": True,
+            "items": items,
+            "succeededCount": succeeded,
+            "failedCount": failed,
+        }
+
+    threading.Thread(
+        target=lambda: run_longshot_job(job, runner=runner),
+        daemon=True,
+    ).start()
+    handler._json_response(202, {"ok": True, "jobId": job.job_id})
+
+
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
     import json
 
@@ -321,6 +618,25 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     gcs_poster_on = bool(getattr(gcs_flag, "enabled", False))
     if gcs_poster_on and "poster_bric" not in allowed_platforms:
         allowed_platforms.append("poster_bric")
+
+    # PRD-BATCH-EXPORT-MULTISELECT-V1 D-BEX-02 · platforms[] 批量分支，与单平台
+    # 路径（下方）完全独立、互不影响；未带 platforms 字段时行为零改动（向后兼容）。
+    platforms_raw = payload.get("platforms")
+    if isinstance(platforms_raw, list) and platforms_raw:
+        _handle_longshot_batch(
+            handler,
+            trip_id=trip_id,
+            trip_dir=trip_dir,
+            payload=payload,
+            scale=scale,
+            fmt=fmt,
+            copy_display=copy_display,
+            segment_mode=segment_mode,
+            longshot2_enabled=longshot2_enabled,
+            allowed_platforms=allowed_platforms,
+            gcs_poster_on=gcs_poster_on,
+        )
+        return
 
     # AC-DFX-04 · flag off 时前后端双拒（禁止半开：UI 可见但任务成功走长图）
     platform_hint = (
