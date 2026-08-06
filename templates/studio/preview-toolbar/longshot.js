@@ -21,6 +21,7 @@ import {
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
+  formatBatchSuccess,
   isComposePlatform,
   isSmartCropUiEnabled,
   markMomentsCoachSeen,
@@ -634,6 +635,12 @@ export function cancelPreviewLongshotExport(root) {
       captions: captions,
       copyDisplay: resolveCopyDisplayFromDom(document),
       platform: stored.platform || "wechat_chat",
+      // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选态真实来源；单选时长度恒为 1，
+      // 与既有 `platform` 单值字段完全一致（零回归）。
+      platforms:
+        Array.isArray(stored.platforms) && stored.platforms.length
+          ? stored.platforms
+          : [stored.platform || "wechat_chat"],
       slideCount: stored.slideCount,
       padMode: stored.padMode || "letterbox",
       includeAppendix: stored.includeAppendix === true,
@@ -2517,6 +2524,162 @@ export function cancelPreviewLongshotExport(root) {
     _showToolbarToast("版面已更新 · 再点「长图」即可导出", { duration: 4000 });
   }
 
+  /**
+   * PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 2 MVP · 多选（2+ 个平台）批量提交/
+   * 轮询/完成提示。所有平台统一走「自动」设置（无手风琴逐平台自定义，见该
+   * PRD D-BEX-01 的 v1 简化范围）；完成提示为简单文案，不复用单平台的
+   * `showLongshotDrawer` / Task Dock 清单渲染（那是 Stage 3 的范围）。
+   */
+  function runBatchExport(root, tripId, prefs, platforms) {
+    var t0 = Date.now();
+    var from = _exportStartFrom || "direct";
+    _exportStartFrom = "direct";
+
+    setLongshotExportState(root, "running", {
+      hint: "正在导出 " + platforms.length + " 个模式…",
+    });
+    _setSlowHint(root, "", false);
+
+    trackStudioEvent("longshot_export_start", {
+      platform: "batch:" + platforms.join(","),
+      scale: prefs.scale,
+      slide_count: null,
+      photo_count: estimatePhotoCountFromDom(document),
+      trip_id: tripId,
+      surface: "preview",
+      from: from,
+    });
+
+    var req = {
+      tripId: tripId,
+      scale: prefs.scale,
+      format: "png",
+      copyDisplay: prefs.copyDisplay,
+      segmentMode: normalizeSegmentMode(prefs.mode),
+      entrypoint: "preview",
+      includeAppendix: prefs.includeAppendix === true,
+      platforms: platforms.map(function (id) {
+        return { platform: id };
+      }),
+    };
+
+    function trackBatchFail(errorCode, hint) {
+      trackStudioEvent("longshot_export_fail", {
+        platform: "batch:" + platforms.join(","),
+        error_code: errorCode,
+        trip_id: tripId,
+        surface: "preview",
+        from: from,
+      });
+      // hint === null → 调用方（如断连分支）自行接管 setLongshotExportState。
+      if (hint != null) {
+        setLongshotExportState(root, "error", { hint: hint });
+      }
+    }
+
+    postJsonBusyRetry("/__travelogue/longshot", req, {
+      onBusy: function () {
+        setLongshotExportState(root, "running", { hint: "批量导出排队中，请稍候…" });
+      },
+    })
+      .then(function (res) {
+        if (isJobBusy409(res)) {
+          trackBatchFail("E_STUDIO_JOB_BUSY", "导出排队超时，请稍后再试");
+          return;
+        }
+        if (res.status === 400) {
+          var msg400 = (res.body && res.body.message) || "批量导出提交失败";
+          trackBatchFail((res.body && res.body.error) || "E_LNG2_INVALID_BATCH_ITEM", msg400);
+          _showToolbarToast(msg400, { error: true });
+          return;
+        }
+        if (res.status === 409) {
+          trackBatchFail(
+            (res.body && res.body.error) || "E_STUDIO_JOB_BUSY",
+            (res.body && res.body.message) || "请稍候再试"
+          );
+          return;
+        }
+        if (res.status !== 202 || !res.body.jobId) {
+          trackBatchFail("E_LNG2_START_FAILED", "无法开始批量导出");
+          return;
+        }
+        longshotJobId = res.body.jobId;
+        pollJob(
+          res.body.jobId,
+          root,
+          function (job) {
+            _setSlowHint(root, "", false);
+            if (job.status === "succeeded") {
+              var result = job.result || {};
+              markExportPulseSeen(tripId);
+              writeExportSideEffect(tripId);
+              var summary = formatBatchSuccess(result);
+              trackStudioEvent("longshot_export_success", {
+                platform: "batch:" + platforms.join(","),
+                output_count: (result.items || []).reduce(function (n, it) {
+                  return n + ((it.outputs && it.outputs.length) || 0);
+                }, 0),
+                target_page_count: null,
+                duration_ms: Date.now() - t0,
+                trip_id: tripId,
+                surface: "preview",
+                from: from,
+                batch_succeeded: result.succeededCount,
+                batch_failed: result.failedCount,
+              });
+              setLongshotExportState(root, "done");
+              try {
+                markLongshotReady(tripId);
+              } catch (_readyErr) {}
+              try {
+                var toastMsg =
+                  summary.title + (summary.lines.length ? " · " + summary.lines.join("；") : "");
+                if (typeof studioToast === "function") {
+                  studioToast(toastMsg, { duration: 6000 });
+                } else {
+                  _showToolbarToast(toastMsg, { error: summary.failedCount > 0 });
+                }
+                trackStudioEvent("export_ok_toast_shown", {
+                  platform: "batch:" + platforms.join(","),
+                  output_count: summary.succeededCount,
+                  trip_id: tripId,
+                });
+              } catch (_toastErr) {}
+              try {
+                window.dispatchEvent(
+                  new CustomEvent("travelogue:longshot-export-ready", {
+                    detail: { tripId: tripId, platform: platforms[0], batch: true },
+                  })
+                );
+              } catch (_evErr) {}
+            } else if (job.status === "failed") {
+              var err = job.error || {};
+              trackBatchFail(err.code || "E_EXPORT_LONGSHOT", err.message || "批量导出失败");
+            } else if (job.status === "cancelled") {
+              trackStudioEvent("longshot_export_cancel", {
+                trip_id: tripId,
+                surface: "preview",
+                from: from,
+                source: "poll",
+              });
+              setLongshotExportState(root, "idle");
+              _showToolbarToast("已取消导出");
+            } else {
+              setLongshotExportState(root, "idle");
+            }
+          },
+          function () {
+            _setSlowHint(root, "比预期久一些，请耐心等待…", true);
+          }
+        );
+      })
+      .catch(function () {
+        trackBatchFail("disconnect", null);
+        applyDisconnectExportError(root, tripId);
+      });
+  }
+
   function runLongshotExport(root, tripId) {
     var btn = longshotBtnEl(root);
     if (!btn || btn.disabled) return;
@@ -2524,6 +2687,13 @@ export function cancelPreviewLongshotExport(root) {
     hideLongshotDrawer(root);
 
     var prefs = readLongshotExportPrefs();
+    // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量分支，
+    // 完全不进入下方任何单平台专属逻辑（resume-after-layout / intent 映射 /
+    // Task Dock 抽屉渲染等），避免混用两套结果形状（single vs `{batch:true}`）。
+    if (prefs.platforms && prefs.platforms.length > 1) {
+      runBatchExport(root, tripId, prefs, prefs.platforms);
+      return;
+    }
     // AC-DFX-01 · confirmed prefs 为默认权威；resume 仅在「更新版面后续跑」激活时优先
     var prefsPlatform = prefs.platform || "wechat_chat";
     var afterLayout = isExportAfterLayoutActive(tripId);

@@ -10,32 +10,70 @@ import {
 } from "../../templates/studio/js/output-recipe-logic.js";
 import {
   PLATFORMS,
+  bindPanelDraft,
   buildPanelHtml,
   clampAlbumSlideCount,
   clampSlideCountForPlatform,
   confirmedExportSummary,
   ctaLabelForPlatform,
+  ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   exportSummaryLine,
+  exportSummaryLineForPlatforms,
+  formatBatchSuccess,
   isAlbumPresetCount,
   isComposePlatform,
   isXhsPresetCount,
+  normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
   resolveAlbumCustomSeed,
   resolveXhsCustomSeed,
   shortCtaLabelForPlatform,
+  shortCtaLabelForPlatforms,
   syncPanelUI,
 } from "../../templates/studio/js/longshot-export-panel.js";
 
+/** Minimal button stub used by both querySelector and querySelectorAll below. */
+function stubBtn(attrName, attrValue) {
+  const attrs = { [attrName]: attrValue };
+  const classes = new Set();
+  return {
+    getAttribute(name) {
+      return attrs[name] != null ? attrs[name] : null;
+    },
+    setAttribute(name, value) {
+      attrs[name] = value;
+    },
+    classList: {
+      toggle(name, on) {
+        if (on) classes.add(name);
+        else classes.delete(name);
+      },
+      contains(name) {
+        return classes.has(name);
+      },
+    },
+    // bindPanelDraft wires click handlers unconditionally on every matched
+    // button; no-op here since these tests drive state via getDraft/setDraft
+    // directly rather than simulating real clicks (no jsdom in this suite).
+    addEventListener() {},
+    _attrs: attrs,
+  };
+}
+
 /** Minimal popover stub for syncPanelUI field visibility (no jsdom). */
-function stubPopover() {
+function stubPopover(platformIds) {
   const copy = { hidden: false };
   const note = { textContent: "" };
   const expectField = { hidden: true };
   const expectBody = { innerHTML: "", textContent: "" };
   const albumCountField = { hidden: true };
+  const batchHint = { hidden: true, textContent: "" };
+  const platformBtns = (platformIds || []).map((id) =>
+    stubBtn("data-studio-longshot-platform", id)
+  );
   return {
     querySelector(sel) {
       if (sel === '[data-field="copy"]') return copy;
@@ -54,15 +92,20 @@ function stubPopover() {
       if (sel === "[data-smart-crop-btn]") return null;
       if (sel === "[data-scale-hint]") return { textContent: "" };
       if (sel === "[data-xhs-estimate]") return null;
+      if (sel === "[data-batch-hint]") return batchHint;
       return null;
     },
-    querySelectorAll() {
+    querySelectorAll(sel) {
+      if (sel === "[data-studio-longshot-platform]") return platformBtns;
       return [];
     },
     _copy: copy,
     _note: note,
     _albumCountField: albumCountField,
+    _expectField: expectField,
     _expectBody: expectBody,
+    _batchHint: batchHint,
+    _platformBtns: platformBtns,
   };
 }
 
@@ -264,4 +307,112 @@ test("wechat_official（公众号）导出形式与 xiaohongshu 一致，仅文�
   // 弹层内复用小红书那套「张数」控件（showXhsOptions），非小红书专属文案。
   assert.equal(PLATFORMS.wechat_official.showXhsOptions, true);
   assert.notEqual(PLATFORMS.wechat_official.label, PLATFORMS.xiaohongshu.label);
+});
+
+// PRD-BATCH-EXPORT-MULTISELECT-V1 · Stage 2 MVP（导出面板多选，D-BEX-01 简化版）
+
+test("normalizePlatformList · 去重/去空，兜底 wechat_chat", () => {
+  assert.deepEqual(normalizePlatformList(["xiaohongshu", "xiaohongshu", "album_spread"]), [
+    "xiaohongshu",
+    "album_spread",
+  ]);
+  assert.deepEqual(normalizePlatformList([]), ["wechat_chat"]);
+  assert.deepEqual(normalizePlatformList(null), ["wechat_chat"]);
+  assert.deepEqual(normalizePlatformList(["", null, "xiaohongshu"]), ["xiaohongshu"]);
+  assert.deepEqual(normalizePlatformList([], "poster_bric"), ["poster_bric"]);
+});
+
+test("ctaLabelForPlatforms / shortCtaLabelForPlatforms · 单选=单平台文案零回归，多选='N 个模式'", () => {
+  assert.equal(ctaLabelForPlatforms(["xiaohongshu"]), ctaLabelForPlatform("xiaohongshu"));
+  assert.equal(
+    shortCtaLabelForPlatforms(["xiaohongshu"]),
+    shortCtaLabelForPlatform("xiaohongshu")
+  );
+  assert.equal(ctaLabelForPlatforms(["xiaohongshu", "wechat_moments"]), "导出 2 个模式");
+  assert.equal(shortCtaLabelForPlatforms(["xiaohongshu", "wechat_moments", "album_spread"]), "3 个模式");
+});
+
+test("exportSummaryLineForPlatforms · 单选零回归；多选展示平台清单与待确认态", () => {
+  assert.equal(
+    exportSummaryLineForPlatforms(["wechat_chat"], ["wechat_chat"]),
+    exportSummaryLine("wechat_chat", "wechat_chat")
+  );
+  const same = exportSummaryLineForPlatforms(
+    ["xiaohongshu", "wechat_moments"],
+    ["xiaohongshu", "wechat_moments"]
+  );
+  assert.match(same, /当前将导出：2 个模式/);
+  assert.match(same, /小红书/);
+  assert.match(same, /朋友圈/);
+
+  const pending = exportSummaryLineForPlatforms(["wechat_chat"], ["xiaohongshu", "wechat_moments"]);
+  assert.match(pending, /已改选：2 个模式/);
+  assert.match(pending, /点「确定」后生效/);
+  assert.match(pending, /金色按钮仍按：微信群/);
+});
+
+test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整体判失败)", () => {
+  const allOk = formatBatchSuccess({
+    batch: true,
+    succeededCount: 2,
+    failedCount: 0,
+    items: [
+      { platform: "xiaohongshu", ok: true, pageCount: 8 },
+      { platform: "wechat_moments", ok: true, outputs: ["a.png", "b.png", "c.png"] },
+    ],
+  });
+  assert.equal(allOk.title, "✓ 2 个模式已全部导出");
+  assert.match(allOk.lines[0], /小红书.*8 张/);
+  assert.match(allOk.lines[1], /连读.*3 张/);
+
+  const partial = formatBatchSuccess({
+    batch: true,
+    succeededCount: 1,
+    failedCount: 1,
+    items: [
+      { platform: "xiaohongshu", ok: true, pageCount: 8 },
+      { platform: "wechat_moments", ok: false, error: "E_LNG_CAPTURE_TOO_LARGE", message: "画布太大" },
+    ],
+  });
+  assert.equal(partial.title, "已完成 1/2 个模式（1 个失败）");
+  assert.match(partial.lines[1], /✗.*画布太大/);
+});
+
+test("syncPanelUI · 多选态隐藏张数/跨页数控件，展示批量提示", () => {
+  const popSingle = stubPopover(["xiaohongshu", "album_spread"]);
+  syncPanelUI(popSingle, { platforms: ["xiaohongshu"], mode: "chapter", scale: 2 });
+  assert.equal(popSingle._batchHint.hidden, true);
+  assert.equal(popSingle._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popSingle._platformBtns[1].getAttribute("aria-checked"), "false");
+
+  const popBatch = stubPopover(["xiaohongshu", "album_spread"]);
+  syncPanelUI(popBatch, {
+    platforms: ["xiaohongshu", "album_spread"],
+    mode: "chapter",
+    scale: 2,
+  });
+  assert.equal(popBatch._batchHint.hidden, false);
+  assert.match(popBatch._batchHint.textContent, /批量导出.*2 个模式/);
+  assert.equal(popBatch._albumCountField.hidden, true); // 批量态强制隐藏（MVP 简化）
+  assert.equal(popBatch._expectField.hidden, true);
+  assert.equal(popBatch._expectBody.textContent, "");
+  assert.equal(popBatch._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popBatch._platformBtns[1].getAttribute("aria-checked"), "true");
+});
+
+test("bindPanelDraft · getDraft/setDraft 单选零回归 + platforms 数组往返", () => {
+  const pop = stubPopover(["xiaohongshu", "album_spread"]);
+  const panel = bindPanelDraft(pop, { platform: "xiaohongshu" }, {});
+  const draft1 = panel.getDraft();
+  assert.equal(draft1.platform, "xiaohongshu");
+  assert.deepEqual(draft1.platforms, ["xiaohongshu"]);
+
+  panel.setDraft({ platforms: ["xiaohongshu", "wechat_moments"] });
+  const draft2 = panel.getDraft();
+  assert.equal(draft2.platform, "xiaohongshu");
+  assert.deepEqual(draft2.platforms, ["xiaohongshu", "wechat_moments"]);
+
+  // 向后兼容：仅传 platform（旧调用点）仍可用，等价单元素数组。
+  panel.setDraft({ platform: "poster_bric" });
+  assert.deepEqual(panel.getDraft().platforms, ["poster_bric"]);
 });

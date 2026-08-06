@@ -234,9 +234,33 @@ export function isSmartCropUiEnabled(cfgStudio) {
   return sc.enabled === true;
 }
 
+/**
+ * PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选批量导出（Stage 2 MVP，D-BEX-01）。
+ *
+ * `platforms` 是勾选态的真实来源（可 1..N 个）；`platform`（单值）作为向后
+ * 兼容字段继续保留 = `platforms[0]`，供仍按单平台假设写的旧调用点使用
+ * （output-recipe intent 映射、标题风险门禁、sparse-moments 提示等——这些
+ * 只对"主平台"生效，是 v1 的有意简化，未纳入 PRD 正式验收范围）。
+ *
+ * MVP 范围收窄（用户 2026-08-06 确认）：勾选 2 个及以上平台时，**不**提供
+ * 手风琴式逐平台设置（张数/跨页数/分段模式）——批量场景下所有平台统一走
+ * 自动/默认设置；需要自定义张数请单选该平台单独导出。真正的"每平台独立
+ * 设置"留作后续迭代（对应 PRD D-BEX-01 的完整版）。
+ */
+export function normalizePlatformList(list, fallback) {
+  var out = [];
+  (Array.isArray(list) ? list : []).forEach(function (id) {
+    var s = String(id || "").trim();
+    if (s && out.indexOf(s) < 0) out.push(s);
+  });
+  if (!out.length) out.push(fallback || "wechat_chat");
+  return out;
+}
+
 export function readExportPrefs() {
   var defaults = {
     platform: "wechat_chat",
+    platforms: ["wechat_chat"],
     mode: "chapter",
     scale: 2,
     slideCount: null,
@@ -249,8 +273,10 @@ export function readExportPrefs() {
     if (!raw) return defaults;
     var parsed = JSON.parse(raw);
     var platform = parsed.platform || defaults.platform;
+    var platforms = normalizePlatformList(parsed.platforms, platform);
     return {
       platform: platform,
+      platforms: platforms,
       mode: parsed.mode === "full" || parsed.mode === "chapter" ? parsed.mode : "chapter",
       scale: parsed.scale === 3 ? 3 : 2,
       slideCount:
@@ -277,6 +303,13 @@ export function ctaLabelForPlatform(platformId) {
   return p.cta;
 }
 
+/** 批量态 CTA 文案（G-BEX-01）· 单选时与单平台文案完全一致（零回归）。 */
+export function ctaLabelForPlatforms(platformIds) {
+  var ids = normalizePlatformList(platformIds);
+  if (ids.length <= 1) return ctaLabelForPlatform(ids[0]);
+  return "导出 " + ids.length + " 个模式";
+}
+
 /** Dock / 窄栏短标签（AC-DFX-02 · 含 compose 出口，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
   // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
@@ -286,6 +319,13 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "poster_bric") return "单张海报";
   if (platformId === "album_spread") return "画册";
   return "发微信群";
+}
+
+/** 批量态窄栏短标签 · 单选时与单平台文案完全一致（零回归）。 */
+export function shortCtaLabelForPlatforms(platformIds) {
+  var ids = normalizePlatformList(platformIds);
+  if (ids.length <= 1) return shortCtaLabelForPlatform(ids[0]);
+  return ids.length + " 个模式";
 }
 
 /**
@@ -359,6 +399,34 @@ export function exportSummaryLine(confirmedPlatform, draftPlatform) {
   }
   var draftLabel =
     (PLATFORMS[draft] && (PLATFORMS[draft].label || PLATFORMS[draft].title)) || draft;
+  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+}
+
+function _platformLabel(id) {
+  return (PLATFORMS[id] && (PLATFORMS[id].label || PLATFORMS[id].title)) || id;
+}
+
+/** 摘要行的多选变体（confirmed/draft 均为 platforms 数组）。 */
+export function exportSummaryLineForPlatforms(confirmedPlatforms, draftPlatforms) {
+  var confirmed = normalizePlatformList(confirmedPlatforms);
+  var draft = draftPlatforms && draftPlatforms.length ? normalizePlatformList(draftPlatforms) : confirmed;
+  if (confirmed.length <= 1 && draft.length <= 1) {
+    return exportSummaryLine(confirmed[0], draft[0]);
+  }
+  var same =
+    confirmed.length === draft.length &&
+    confirmed.every(function (id) {
+      return draft.indexOf(id) >= 0;
+    });
+  var draftLabel =
+    draft.length <= 1 ? _platformLabel(draft[0]) : draft.length + " 个模式（" + draft.map(_platformLabel).join("、") + "）";
+  if (same) {
+    return "当前将导出：" + draftLabel;
+  }
+  var confirmedLabel =
+    confirmed.length <= 1
+      ? _platformLabel(confirmed[0])
+      : confirmed.length + " 个模式（" + confirmed.map(_platformLabel).join("、") + "）";
   return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
 }
 
@@ -444,10 +512,12 @@ export function buildPanelHtml(platformIds) {
     '<p class="preview-toolbar__export-dual"><button type="button" class="preview-toolbar__export-dual-btn" data-ltn-dual-preview>对比网页与长图</button></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">发到哪里</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="radiogroup" aria-label="发到哪里">' +
+    '<span class="preview-toolbar__export-popover-label">发到哪里 · 可多选</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="发到哪里（可多选）">' +
     platformBtns +
-    "</div></div>" +
+    "</div>" +
+    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
+    "</div>" +
     '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
     '<span class="preview-toolbar__export-popover-label">长图要不要字</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +
@@ -561,19 +631,31 @@ export function buildPanelHtml(platformIds) {
 export function syncPanelUI(pop, draft, opts) {
   if (!pop || !draft) return;
   opts = opts || {};
-  var platform = draft.platform || "wechat_chat";
+  var platforms = normalizePlatformList(draft.platforms || [draft.platform]);
+  var isBatch = platforms.length > 1;
+  var platform = platforms[0];
   var meta = PLATFORMS[platform] || PLATFORMS.wechat_chat;
-  var showXhs = !!meta.showXhsOptions;
-  var showAlbumCount = !!meta.showAlbumCountOptions;
+  // MVP · 批量态（≥2 平台）不做手风琴逐平台设置，统一隐藏张数/跨页数控件。
+  var showXhs = !isBatch && !!meta.showXhsOptions;
+  var showAlbumCount = !isBatch && !!meta.showAlbumCountOptions;
   var smartOn = opts.smartCropEnabled === true;
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
-    var on = btn.getAttribute("data-studio-longshot-platform") === platform;
+    var on = platforms.indexOf(btn.getAttribute("data-studio-longshot-platform")) >= 0;
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.setAttribute("aria-checked", on ? "true" : "false");
-    if (!btn.getAttribute("role")) btn.setAttribute("role", "radio");
+    btn.setAttribute("role", "checkbox");
   });
+  var batchHint = pop.querySelector("[data-batch-hint]");
+  if (batchHint) {
+    batchHint.hidden = !isBatch;
+    batchHint.textContent = isBatch
+      ? "批量导出：将按顺序导出 " +
+        platforms.length +
+        " 个模式，均使用各平台默认设置（自动张数）。需要自定义张数请单选该平台单独导出。"
+      : "";
+  }
   pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
     var on = btn.getAttribute("data-studio-longshot-mode") === draft.mode;
     btn.classList.toggle("is-selected", on);
@@ -698,7 +780,11 @@ export function syncPanelUI(pop, draft, opts) {
   var expectField = pop.querySelector('[data-field="expect"]');
   var expectBody = pop.querySelector("[data-expect-body]");
   if (expectField && expectBody) {
-    if (meta.expectHtml) {
+    if (isBatch) {
+      // 批量态下预期文案由上方 batch-hint 承担，避免误导为"仅第一个平台的预期"。
+      expectField.hidden = true;
+      expectBody.textContent = "";
+    } else if (meta.expectHtml) {
       expectField.hidden = false;
       if (showXhs && draft.slideCount == null) {
         var autoN = estimateXhsAutoCount(opts.photoCount || estimatePhotoCountFromDom());
@@ -753,6 +839,10 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   };
   var draft = {
     platform: (initialDraft && initialDraft.platform) || "wechat_chat",
+    platforms: normalizePlatformList(
+      initialDraft && initialDraft.platforms,
+      (initialDraft && initialDraft.platform) || "wechat_chat"
+    ),
     mode: (initialDraft && initialDraft.mode) || "chapter",
     scale: (initialDraft && initialDraft.scale) || 2,
     slideCount: initialDraft ? initialDraft.slideCount : null,
@@ -768,7 +858,8 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     if (onDraftChange) {
       try {
         onDraftChange({
-          platform: draft.platform,
+          platform: draft.platforms[0],
+          platforms: draft.platforms.slice(),
           mode: draft.mode,
           scale: draft.scale,
           slideCount: draft.slideCount,
@@ -792,7 +883,15 @@ export function bindPanelDraft(pop, initialDraft, opts) {
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      draft.platform = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+      var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+      var idx = draft.platforms.indexOf(pid);
+      if (idx >= 0) {
+        // 至少保留 1 个勾选项，否则无法导出（不允许清空）。
+        if (draft.platforms.length > 1) draft.platforms.splice(idx, 1);
+      } else {
+        draft.platforms.push(pid);
+      }
+      draft.platform = draft.platforms[0];
       refresh();
     });
   });
@@ -915,7 +1014,8 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   return {
     getDraft: function () {
       return {
-        platform: draft.platform,
+        platform: draft.platforms[0],
+        platforms: draft.platforms.slice(),
         mode: draft.mode,
         scale: draft.scale,
         slideCount:
@@ -928,7 +1028,11 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       };
     },
     setDraft: function (next) {
-      draft.platform = next.platform || draft.platform;
+      draft.platforms = normalizePlatformList(
+        next && next.platforms,
+        (next && next.platform) || draft.platform
+      );
+      draft.platform = draft.platforms[0];
       draft.mode = next.mode || draft.mode;
       draft.scale = next.scale || draft.scale;
       draft.slideCount =
@@ -983,5 +1087,41 @@ export function formatPlatformSuccess(result) {
     publishGuide: result.publishGuide || "",
     userHint: result.userHint || "",
     outputs: result.outputs || [],
+  };
+}
+
+/**
+ * 批量导出结果的文案（result.batch === true 的形状，见
+ * PRD-BATCH-EXPORT-MULTISELECT-V1 §4.3）· 部分失败不整体判失败（D-BEX-05）。
+ */
+export function formatBatchSuccess(result) {
+  result = result || {};
+  var items = result.items || [];
+  var total = items.length;
+  var succeeded =
+    result.succeededCount != null
+      ? result.succeededCount
+      : items.filter(function (i) {
+          return i.ok;
+        }).length;
+  var failed = result.failedCount != null ? result.failedCount : total - succeeded;
+  var title =
+    failed > 0
+      ? "已完成 " + succeeded + "/" + total + " 个模式（" + failed + " 个失败）"
+      : "✓ " + total + " 个模式已全部导出";
+  var lines = items.map(function (item) {
+    var label = shortCtaLabelForPlatform(item.platform);
+    if (item.ok) {
+      var n = item.pageCount || (item.outputs && item.outputs.length) || 0;
+      return "✓ " + label + " · " + n + " 张";
+    }
+    return "✗ " + label + " · " + (item.message || item.error || "失败");
+  });
+  return {
+    title: title,
+    lines: lines,
+    items: items,
+    succeededCount: succeeded,
+    failedCount: failed,
   };
 }
