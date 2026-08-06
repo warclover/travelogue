@@ -17,7 +17,10 @@ import {
   bindPanelDraft,
   buildPanelHtml,
   exportSummaryLine,
+  batchChecklistItems,
+  batchChecklistItemsFromResult,
   ctaLabelForPlatform,
+  ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
@@ -25,10 +28,12 @@ import {
   isComposePlatform,
   isSmartCropUiEnabled,
   markMomentsCoachSeen,
+  normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
   readExportPrefs,
   shortCtaLabelForPlatform,
+  shortCtaLabelForPlatforms,
   shouldHintSparseMoments,
   sparseMomentsHintMessage,
   writeExportPrefs,
@@ -257,9 +262,21 @@ function syncPrefsPlatform(platform) {
   if (!platform) return;
   try {
     var prefs = readExportPrefs();
+    // PRD-BATCH-EXPORT-MULTISELECT-V1 · 2026-08-06 Playwright 走查发现的真实
+    // 回归：batch 态下点导出 → startLongshotWithRecipe 的 Output Recipe「猜
+    // 单一平台意图」（早于多选功能存在，不知道 platforms 数组）会在
+    // runLongshotExport 判断 batch 之前先调这里，把刚多选好的 platforms 坍缩
+    // 成单元素，导致批量选择形同摆设。所有调用方（tipRecipe / resume / 换种
+    // 分享方式…）本意都是「猜/强制收敛到单一平台」，这类启发式不该覆盖用户
+    // 刚做出的显式多选——统一在这里拦截，不逐个排查调用方。
+    if (Array.isArray(prefs.platforms) && prefs.platforms.length > 1) return;
+    // 单选态下调用方本意是「把确认平台强制收敛回这一个」，`platforms` 数组
+    // 须同步折叠成单元素，避免与 `platform` 单值字段互相矛盾（同一类 bug 见
+    // §pop._applyDraft）。
     writeExportPrefs(
       Object.assign({}, prefs, {
         platform: platform,
+        platforms: [platform],
       })
     );
   } catch (eSync) {}
@@ -554,6 +571,30 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn) return;
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
+    // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量 CTA
+    // 文案（「导出 N 个模式」），不进入下方任何单平台 Output Recipe / tipRecipe
+    // 逻辑——那套「猜意图」机制天然假设只有一个确认平台，批量场景下用户已
+    // 显式多选，无需再猜。
+    var batchPlatforms = Array.isArray(prefs.platforms) ? prefs.platforms : [];
+    if (batchPlatforms.length > 1) {
+      var batchLabel = ctaLabelForPlatforms(batchPlatforms);
+      var batchShort = shortCtaLabelForPlatforms(batchPlatforms);
+      btn.removeAttribute("data-recipe-subtitle");
+      if (isPreviewToolbarV4(root)) {
+        var batchLabelEl = btn.querySelector(".preview-toolbar__dock-export-label");
+        if (batchLabelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
+          batchLabelEl.textContent = batchShort;
+        }
+        btn.setAttribute("aria-label", batchLabel);
+        updateDockTip(btn, batchLabel);
+        return;
+      }
+      if (!btn.classList.contains("preview-toolbar__longshot--running")) {
+        btn.textContent = batchShort;
+      }
+      btn.setAttribute("aria-label", batchLabel);
+      return;
+    }
     // AC-DFX-02 · confirmed prefs 为 CTA SSOT；tipRecipe 不得覆盖用户已确认平台
     var platform = prefs.platform || "wechat_chat";
     var tipRecipe = null;
@@ -1140,10 +1181,15 @@ export function cancelPreviewLongshotExport(root) {
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
       var prevDensity = readExportPrefs().density || "default";
       var confirmedPlatform = draft.platform || "wechat_chat";
+      // PRD-BATCH-EXPORT-MULTISELECT-V1 · draft.platforms 是多选真实来源，
+      // 这里若漏写会导致确认后 localStorage 里只剩单值 platform，多选形同
+      // 摆设（2026-08-06 Playwright 走查发现的回归，务必带上）。
+      var confirmedPlatforms = normalizePlatformList(draft.platforms, confirmedPlatform);
       var nextDensity = draft.density === "compact" ? "compact" : "default";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
         platform: confirmedPlatform,
+        platforms: confirmedPlatforms,
         mode: draft.mode,
         scale: draft.scale,
         slideCount: draft.slideCount,
@@ -1411,7 +1457,7 @@ export function cancelPreviewLongshotExport(root) {
     return Math.min(100, Math.max(0, Math.round((cur / total) * 100)));
   }
 
-  export function pollJob(jobId, root, onDone, onSlow, kind) {
+  export function pollJob(jobId, root, onDone, onSlow, kind, onTick) {
     kind = kind || "longshot";
     if (kind === "narrate") {
       if (narratePollCancel) {
@@ -1440,6 +1486,9 @@ export function cancelPreviewLongshotExport(root) {
             pct: pct,
           });
         }
+        // PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 3 · 批量清单化进度，由调用方
+        // （runBatchExport）自行决定怎么渲染，此处只做无条件转发。
+        if (typeof onTick === "function") onTick(job);
       },
       onDone: function (job) {
         if (kind === "narrate") {
@@ -2525,19 +2574,49 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   /**
-   * PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 2 MVP · 多选（2+ 个平台）批量提交/
-   * 轮询/完成提示。所有平台统一走「自动」设置（无手风琴逐平台自定义，见该
-   * PRD D-BEX-01 的 v1 简化范围）；完成提示为简单文案，不复用单平台的
-   * `showLongshotDrawer` / Task Dock 清单渲染（那是 Stage 3 的范围）。
+   * PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）批量提交/轮询/完成
+   * 提示。所有平台统一走「自动」设置（无手风琴逐平台自定义，见该 PRD
+   * D-BEX-01 的 v1 简化范围）。
+   *
+   * Stage 3 · Task Dock 清单化：有 `root._taskDock.showBatchChecklist` 时
+   * （V3 Dock UI）用「批量导出中（i/N）+ 逐平台状态」清单替代单行 hint，
+   * 完成时同一清单切到成功/部分失败态（不冒泡进 `showLongshotDrawer`——
+   * 那是单结果形状的成功面，与 batch 的多结果形状不兼容）。旧版工具栏
+   * （无 `_taskDock`）走原有单行 hint + toast 兜底，行为不变。
    */
   function runBatchExport(root, tripId, prefs, platforms) {
     var t0 = Date.now();
     var from = _exportStartFrom || "direct";
     _exportStartFrom = "direct";
-
-    setLongshotExportState(root, "running", {
-      hint: "正在导出 " + platforms.length + " 个模式…",
+    var itemLabels = platforms.map(function (id) {
+      return shortCtaLabelForPlatform(id);
     });
+    function hasChecklistDock() {
+      return !!(root._taskDock && typeof root._taskDock.showBatchChecklist === "function");
+    }
+
+    /**
+     * cur1Based：当前第几个平台在跑（1-based）；仅用于展示，不代表已知成败
+     * （逐项真实成败要等 job 完成才拿到 `result.items`，见完成分支）。
+     * `titleOverride` 用于「提交排队中」等尚未真正开始跑平台的过渡态文案。
+     */
+    function renderBatchProgress(cur1Based, titleOverride) {
+      var cur = Math.max(1, Number(cur1Based) || 1);
+      var total = platforms.length;
+      var defaultTitle = "批量导出中（" + cur + "/" + total + "）";
+      setLongshotExportState(root, "running", {
+        hint: titleOverride || defaultTitle + " · " + (itemLabels[cur - 1] || ""),
+      });
+      if (hasChecklistDock()) {
+        root._taskDock.showBatchChecklist({
+          title: titleOverride || defaultTitle,
+          items: batchChecklistItems(platforms, cur),
+          done: false,
+        });
+      }
+    }
+
+    renderBatchProgress(1);
     _setSlowHint(root, "", false);
 
     trackStudioEvent("longshot_export_start", {
@@ -2579,7 +2658,7 @@ export function cancelPreviewLongshotExport(root) {
 
     postJsonBusyRetry("/__travelogue/longshot", req, {
       onBusy: function () {
-        setLongshotExportState(root, "running", { hint: "批量导出排队中，请稍候…" });
+        renderBatchProgress(1, "批量导出排队中，请稍候…");
       },
     })
       .then(function (res) {
@@ -2632,20 +2711,42 @@ export function cancelPreviewLongshotExport(root) {
               try {
                 markLongshotReady(tripId);
               } catch (_readyErr) {}
+              if (hasChecklistDock()) {
+                // Stage 3 · 清单化完成面：逐项 ✅/✗ + 各自 detail（张数/失败原因）。
+                var firstOutput = null;
+                (result.items || []).some(function (it) {
+                  if (it.ok && it.outputs && it.outputs.length) {
+                    firstOutput = it.outputs[0];
+                    return true;
+                  }
+                  return false;
+                });
+                root._taskDock.showBatchChecklist({
+                  title: summary.title,
+                  items: batchChecklistItemsFromResult(result),
+                  done: true,
+                  tripId: tripId,
+                  firstOutput: firstOutput,
+                });
+              } else {
+                try {
+                  var toastMsg =
+                    summary.title +
+                    (summary.lines.length ? " · " + summary.lines.join("；") : "");
+                  if (typeof studioToast === "function") {
+                    studioToast(toastMsg, { duration: 6000 });
+                  } else {
+                    _showToolbarToast(toastMsg, { error: summary.failedCount > 0 });
+                  }
+                } catch (_toastErr) {}
+              }
               try {
-                var toastMsg =
-                  summary.title + (summary.lines.length ? " · " + summary.lines.join("；") : "");
-                if (typeof studioToast === "function") {
-                  studioToast(toastMsg, { duration: 6000 });
-                } else {
-                  _showToolbarToast(toastMsg, { error: summary.failedCount > 0 });
-                }
                 trackStudioEvent("export_ok_toast_shown", {
                   platform: "batch:" + platforms.join(","),
                   output_count: summary.succeededCount,
                   trip_id: tripId,
                 });
-              } catch (_toastErr) {}
+              } catch (_toastErr2) {}
               try {
                 window.dispatchEvent(
                   new CustomEvent("travelogue:longshot-export-ready", {
@@ -2671,6 +2772,15 @@ export function cancelPreviewLongshotExport(root) {
           },
           function () {
             _setSlowHint(root, "比预期久一些，请耐心等待…", true);
+          },
+          "batch",
+          function (job) {
+            if (job.status !== "running") return;
+            // 后端 stageHint 形如「[1/2] xiaohongshu · 正在合成拼贴…」，英文平台
+            // id 不适合直接展示；这里只取 stageIndex 驱动清单态，展示文案统一
+            // 由 renderBatchProgress 用 itemLabels 生成，保持可读一致。
+            var cur = Number(job.stageIndex);
+            renderBatchProgress(isFinite(cur) && cur > 0 ? cur : 1);
           }
         );
       })

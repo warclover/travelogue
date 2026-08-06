@@ -232,3 +232,73 @@
   line-height: 1;
 }
 
+/* PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 3 · 批量导出清单化进度/完成面
+   （对齐 --success 面的宽度与换行策略，清单本身独占一行纵向排列）。 */
+.preview-task-dock--batch {
+  border-radius: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  width: min(520px, calc(100% - 32px));
+  row-gap: 10px;
+}
+
+.preview-task-dock--batch.preview-task-dock--success {
+  border-color: rgba(61, 107, 90, 0.6);
+}
+
+.preview-task-dock--batch .preview-task-dock__text {
+  flex: 1 1 calc(100% - 36px);
+  min-width: 12em;
+}
+
+.preview-task-dock--batch .preview-task-dock__actions {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-left: 26px;
+}
+
+.preview-task-dock__batch-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-task-dock__batch-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(245, 240, 232, 0.85);
+}
+
+.preview-task-dock__batch-item--running {
+  color: #f5f0e8;
+  font-weight: 600;
+}
+
+.preview-task-dock__batch-item--done {
+  color: #d4e8df;
+}
+
+.preview-task-dock__batch-item--failed {
+  color: #e8b4a8;
+}
+
+.preview-task-dock__batch-item--queued {
+  opacity: 0.55;
+}
+
+.preview-task-dock__batch-mark {
+  flex-shrink: 0;
+}
+
+.preview-task-dock__batch-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+

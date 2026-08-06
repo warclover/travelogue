@@ -828,6 +828,128 @@ export function mountPreviewTaskDock(root, hooks) {
     dock.appendChild(actions);
   }
 
+  /**
+   * PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 3 · 批量导出清单化进度/完成面。
+   * 进行中（`opts.done` 为假）与完成（真，成功/部分失败混在一起——D-BEX-05
+   * 不整体判失败）复用同一份渲染逻辑，仅动作区/自动隐藏策略不同。
+   * @param {object} opts
+   * @param {string} opts.title 顶部标题（如「批量导出中（1/2）」/「已完成 1/2 个模式（1 个失败）」）
+   * @param {{label:string, status:'queued'|'running'|'done'|'failed', detail?:string}[]} opts.items
+   * @param {boolean} [opts.done]
+   * @param {string} [opts.tripId]
+   * @param {string} [opts.firstOutput] 完成态「在文件夹中显示」用的首个成功产物路径
+   * @param {Function} [opts.onDismiss]
+   */
+  function showBatchChecklist(opts) {
+    opts = opts || {};
+    clearTimers();
+    dock.hidden = false;
+    dock.className =
+      "preview-task-dock preview-task-dock--batch" +
+      (opts.done ? " preview-task-dock--success" : " preview-task-dock--exporting");
+    dock.setAttribute("aria-busy", opts.done ? "false" : "true");
+    dock.innerHTML = "";
+    _progressModeTracked = "";
+    _successShownAt = opts.done ? Date.now() : 0;
+
+    var failedCount = (opts.items || []).filter(function (it) {
+      return it.status === "failed";
+    }).length;
+
+    var icon = document.createElement("span");
+    icon.className = "preview-task-dock__icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = opts.done ? (failedCount ? "!" : "✓") : "⏳";
+
+    var textWrap = document.createElement("div");
+    textWrap.className = "preview-task-dock__text";
+    var main = document.createElement("span");
+    main.className = "preview-task-dock__main";
+    main.textContent = opts.title || (opts.done ? "批量导出已完成" : "批量导出中…");
+    textWrap.appendChild(main);
+
+    var list = document.createElement("ul");
+    list.className = "preview-task-dock__batch-list";
+    (opts.items || []).forEach(function (item) {
+      var li = document.createElement("li");
+      li.className =
+        "preview-task-dock__batch-item preview-task-dock__batch-item--" +
+        (item.status || "queued");
+      var mark = document.createElement("span");
+      mark.className = "preview-task-dock__batch-mark";
+      mark.setAttribute("aria-hidden", "true");
+      mark.textContent =
+        item.status === "done"
+          ? "✅"
+          : item.status === "failed"
+            ? "✗"
+            : item.status === "running"
+              ? "⏳"
+              : "・";
+      li.appendChild(mark);
+      var label = document.createElement("span");
+      label.className = "preview-task-dock__batch-label";
+      label.textContent = item.label + (item.detail ? " · " + item.detail : "");
+      li.appendChild(label);
+      list.appendChild(li);
+    });
+    textWrap.appendChild(list);
+
+    var actions = document.createElement("div");
+    actions.className = "preview-task-dock__actions";
+    if (!opts.done) {
+      if (typeof hooks.onCancelExport === "function") {
+        var cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+        cancelBtn.textContent = "取消导出";
+        cancelBtn.addEventListener("click", function () {
+          hooks.onCancelExport();
+        });
+        actions.appendChild(cancelBtn);
+      }
+      actions.appendChild(buildCloseBtn());
+    } else {
+      // FE-SR-08 / USR-03 同款：成功/部分失败均提供「换种分享方式」
+      if (typeof hooks.onSwitchShareMethod === "function") {
+        var switchBtn = document.createElement("button");
+        switchBtn.type = "button";
+        switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+        switchBtn.setAttribute("data-share-ready-switch", "1");
+        switchBtn.textContent = "换种分享方式";
+        switchBtn.addEventListener("click", function () {
+          hooks.onSwitchShareMethod({ actionText: "换种分享方式", tripId: opts.tripId });
+        });
+        actions.appendChild(switchBtn);
+      }
+      if (
+        opts.firstOutput &&
+        typeof hooks.onRevealFolder === "function"
+      ) {
+        var revealBtn = document.createElement("button");
+        revealBtn.type = "button";
+        revealBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+        revealBtn.textContent = "在文件夹中显示";
+        revealBtn.addEventListener("click", function () {
+          hooks.onRevealFolder(opts.firstOutput, opts.tripId);
+        });
+        actions.appendChild(revealBtn);
+      }
+      actions.appendChild(buildCloseBtn(opts.onDismiss));
+    }
+
+    dock.appendChild(icon);
+    dock.appendChild(textWrap);
+    dock.appendChild(actions);
+
+    if (opts.done) {
+      // 与 showSuccess 一致：完成态才夺焦/自动隐藏；进行中态每次 tick 都会
+      // 重渲染（renderBatchProgress 轮询回调），不能像 showSuccess 那样抢焦点。
+      focusDockPrimary();
+      scheduleAutoHide(SUCCESS_AUTO_HIDE_MS, opts.onDismiss);
+    }
+  }
+
   function showError(messageOrOpts) {
     var opts =
       messageOrOpts && typeof messageOrOpts === "object"
@@ -892,6 +1014,7 @@ export function mountPreviewTaskDock(root, hooks) {
     showCopyRefresh: showCopyRefresh,
     showNextStepHint: showNextStepHint,
     showFeaturedRerankCue: showFeaturedRerankCue,
+    showBatchChecklist: showBatchChecklist,
     showError: showError,
   };
 }

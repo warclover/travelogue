@@ -1091,6 +1091,22 @@ export function formatPlatformSuccess(result) {
 }
 
 /**
+ * Stage 3 · 批量导出「进行中」清单的逐项状态（纯函数，供 Task Dock 清单化
+ * 渲染调用）。`cur1Based` 是后端 `job.stageIndex`（当前第几个平台在跑，
+ * 1-based）；早于它的记为 done、等于它的记为 running、其余 queued——这是
+ * 展示态的最佳猜测，真实逐项成败要等 job 完成才知道（`result.items`，见
+ * `formatBatchSuccess`），不代表已完成的项一定成功。
+ */
+export function batchChecklistItems(platformIds, cur1Based) {
+  var ids = normalizePlatformList(platformIds);
+  var cur = Math.max(1, Number(cur1Based) || 1);
+  return ids.map(function (id, idx) {
+    var status = idx + 1 < cur ? "done" : idx + 1 === cur ? "running" : "queued";
+    return { platform: id, label: shortCtaLabelForPlatform(id), status: status };
+  });
+}
+
+/**
  * 批量导出结果的文案（result.batch === true 的形状，见
  * PRD-BATCH-EXPORT-MULTISELECT-V1 §4.3）· 部分失败不整体判失败（D-BEX-05）。
  */
@@ -1124,4 +1140,27 @@ export function formatBatchSuccess(result) {
     succeededCount: succeeded,
     failedCount: failed,
   };
+}
+
+/**
+ * Stage 3 · 完成态清单的逐项状态（结构化 status/detail，供 Task Dock 逐项
+ * 渲染图标+文案）。与 `formatBatchSuccess` 的 `lines`（拼好的整行字符串）
+ * 是同一份 `result.items` 的两种呈现，服务不同 UI 形态。
+ */
+export function batchChecklistItemsFromResult(result) {
+  result = result || {};
+  var items = result.items || [];
+  return items.map(function (item) {
+    var label = shortCtaLabelForPlatform(item.platform);
+    if (item.ok) {
+      var n = item.pageCount || (item.outputs && item.outputs.length) || 0;
+      return { platform: item.platform, label: label, status: "done", detail: n + " 张" };
+    }
+    return {
+      platform: item.platform,
+      label: label,
+      status: "failed",
+      detail: item.message || item.error || "失败",
+    };
+  });
 }

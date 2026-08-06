@@ -10,6 +10,8 @@ import {
 } from "../../templates/studio/js/output-recipe-logic.js";
 import {
   PLATFORMS,
+  batchChecklistItems,
+  batchChecklistItemsFromResult,
   bindPanelDraft,
   buildPanelHtml,
   clampAlbumSlideCount,
@@ -376,6 +378,47 @@ test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整�
   });
   assert.equal(partial.title, "已完成 1/2 个模式（1 个失败）");
   assert.match(partial.lines[1], /✗.*画布太大/);
+});
+
+test("batchChecklistItems · 进行中清单：早于当前=done，当前=running，其余=queued", () => {
+  const items = batchChecklistItems(["xiaohongshu", "wechat_moments", "album_spread"], 2);
+  assert.deepEqual(
+    items.map((it) => [it.platform, it.status]),
+    [
+      ["xiaohongshu", "done"],
+      ["wechat_moments", "running"],
+      ["album_spread", "queued"],
+    ]
+  );
+  assert.equal(items[1].label, shortCtaLabelForPlatform("wechat_moments"));
+
+  // cur < 1 / 非数字兜底为 1（第一项 running，其余 queued）
+  const first = batchChecklistItems(["xiaohongshu", "wechat_moments"], 0);
+  assert.deepEqual(first.map((it) => it.status), ["running", "queued"]);
+
+  // cur 超过清单长度：全部视为 done（已跑完轮到下一批，仅用于展示）
+  const allDone = batchChecklistItems(["xiaohongshu", "wechat_moments"], 5);
+  assert.deepEqual(allDone.map((it) => it.status), ["done", "done"]);
+});
+
+test("batchChecklistItemsFromResult · 完成态：ok→done+张数，失败→failed+原因（D-BEX-05）", () => {
+  const items = batchChecklistItemsFromResult({
+    items: [
+      { platform: "xiaohongshu", ok: true, pageCount: 8 },
+      { platform: "wechat_moments", ok: false, error: "E_LNG_CAPTURE_TOO_LARGE", message: "画布太大" },
+      { platform: "album_spread", ok: true, outputs: ["a.png", "b.png"] },
+    ],
+  });
+  assert.deepEqual(items[0], {
+    platform: "xiaohongshu",
+    label: shortCtaLabelForPlatform("xiaohongshu"),
+    status: "done",
+    detail: "8 张",
+  });
+  assert.equal(items[1].status, "failed");
+  assert.equal(items[1].detail, "画布太大");
+  assert.equal(items[2].detail, "2 张"); // 无 pageCount 时兜底用 outputs.length
+  assert.deepEqual(batchChecklistItemsFromResult({}), []);
 });
 
 test("syncPanelUI · 多选态隐藏张数/跨页数控件，展示批量提示", () => {
