@@ -412,11 +412,16 @@ def _handle_longshot_batch(
             item_index: int, item_total: int, item_platform: str, cur: int, total: int, hint: str
         ) -> None:
             prefix = f"[{item_index + 1}/{item_total}] {item_platform}"
+            # 细粒度进度条（Task Dock 单项进度）：cur/total 来自当前平台自身的
+            # 渲染回调（如 collage_pack 的「拼贴页 i/total」），与 stage_index/
+            # stage_count（当前第几个平台/共几个平台）语义正交、互不覆盖。
             store.update(
                 job,
                 stage_hint=f"{prefix} · {hint}" if hint else prefix,
                 stage_index=item_index + 1,
                 stage_count=item_total,
+                item_stage_index=max(cur, 0),
+                item_stage_count=max(total, 1),
             )
 
         def cancel_check() -> bool:

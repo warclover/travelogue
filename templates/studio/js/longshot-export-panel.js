@@ -1096,14 +1096,50 @@ export function formatPlatformSuccess(result) {
  * 1-based）；早于它的记为 done、等于它的记为 running、其余 queued——这是
  * 展示态的最佳猜测，真实逐项成败要等 job 完成才知道（`result.items`，见
  * `formatBatchSuccess`），不代表已完成的项一定成功。
+ *
+ * `itemProgress`（可选，2026-08-06 进度条增强）：`{cur, total}`，来自后端
+ * `job.itemStageIndex`/`job.itemStageCount`——当前"运行中"平台自己内部的
+ * 真实渲染进度（如拼贴页 3/5）。有值且 `total > 0` 时，running 项会带上
+ * `progress`（0–1 比例），供 Task Dock 画细进度条；没有值就不带该字段，
+ * 调用方（Task Dock）据此决定是否渲染进度条，不画假的。
  */
-export function batchChecklistItems(platformIds, cur1Based) {
+export function batchChecklistItems(platformIds, cur1Based, itemProgress) {
   var ids = normalizePlatformList(platformIds);
   var cur = Math.max(1, Number(cur1Based) || 1);
+  var hasItemProgress =
+    itemProgress && Number(itemProgress.total) > 0 && Number(itemProgress.cur) >= 0;
   return ids.map(function (id, idx) {
     var status = idx + 1 < cur ? "done" : idx + 1 === cur ? "running" : "queued";
-    return { platform: id, label: shortCtaLabelForPlatform(id), status: status };
+    var item = { platform: id, label: shortCtaLabelForPlatform(id), status: status };
+    if (status === "running" && hasItemProgress) {
+      item.progress = Math.max(
+        0,
+        Math.min(1, Number(itemProgress.cur) / Number(itemProgress.total))
+      );
+    }
+    return item;
   });
+}
+
+/**
+ * Stage 3 · 批量导出「进行中」总进度比例（0–1，纯函数），供 Task Dock 顶部
+ * 总进度条使用。折算方式：已完成的平台各记 1 份，当前运行中的平台按其
+ * 内部真实进度（`itemProgress.cur/total`）记部分份；没有细进度数据时给
+ * 一个保守的基线份额（0.15），让条至少可见地"往前挪一点"，不是卡死在
+ * 整数格点上——比单纯的 (cur-1)/total 更"生动"，也不会在没数据时撒谎到
+ * 接近 100%。
+ */
+export function batchOverallProgressRatio(platformIds, cur1Based, itemProgress) {
+  var ids = normalizePlatformList(platformIds);
+  var total = ids.length;
+  if (!total) return 0;
+  var cur = Math.max(1, Math.min(total, Number(cur1Based) || 1));
+  var doneCount = cur - 1;
+  var currentFrac = 0.15;
+  if (itemProgress && Number(itemProgress.total) > 0 && Number(itemProgress.cur) >= 0) {
+    currentFrac = Math.max(0, Math.min(1, Number(itemProgress.cur) / Number(itemProgress.total)));
+  }
+  return Math.max(0, Math.min(1, (doneCount + currentFrac) / total));
 }
 
 /**

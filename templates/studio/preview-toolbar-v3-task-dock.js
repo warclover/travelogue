@@ -67,6 +67,26 @@ export function mountPreviewTaskDock(root, hooks) {
     _progressModeTracked = "";
   }
 
+  /**
+   * 生成一条细进度条（0–1 比例），用于批量导出清单的总进度 / 单项进度。
+   * 纯 DOM 结构 + 内联 width（CSS 里已有 transition 负责平滑动画，见
+   * task-dock.css `__batch-*-bar__fill`），不依赖任何外部状态。
+   */
+  function _buildProgressBar(ratio, className) {
+    var pct = Math.max(0, Math.min(1, Number(ratio) || 0)) * 100;
+    var wrap = document.createElement("div");
+    wrap.className = className;
+    wrap.setAttribute("role", "progressbar");
+    wrap.setAttribute("aria-valuemin", "0");
+    wrap.setAttribute("aria-valuemax", "100");
+    wrap.setAttribute("aria-valuenow", String(Math.round(pct)));
+    var fill = document.createElement("div");
+    fill.className = className + "__fill";
+    fill.style.width = pct + "%";
+    wrap.appendChild(fill);
+    return wrap;
+  }
+
   function scheduleAutoHide(ms, after) {
     clearTimers();
     autoHideTimer = setTimeout(function () {
@@ -868,6 +888,12 @@ export function mountPreviewTaskDock(root, hooks) {
     main.textContent = opts.title || (opts.done ? "批量导出已完成" : "批量导出中…");
     textWrap.appendChild(main);
 
+    // 总进度条（按「第几个平台/共几个平台」+ 当前平台内部细进度折算，见
+    // batchOverallProgressRatio）；只在进行中态渲染，完成态清单本身已是终态。
+    if (!opts.done && typeof opts.overallProgress === "number") {
+      textWrap.appendChild(_buildProgressBar(opts.overallProgress, "preview-task-dock__batch-overall-bar"));
+    }
+
     var list = document.createElement("ul");
     list.className = "preview-task-dock__batch-list";
     (opts.items || []).forEach(function (item) {
@@ -891,6 +917,13 @@ export function mountPreviewTaskDock(root, hooks) {
       label.className = "preview-task-dock__batch-label";
       label.textContent = item.label + (item.detail ? " · " + item.detail : "");
       li.appendChild(label);
+      // 单项细进度条：仅「进行中」项且拿到真实 cur/total（如「拼贴页 3/5」）
+      // 时才渲染——没有数据时不画假条，避免"看似卡住"的错觉。
+      if (item.status === "running" && typeof item.progress === "number") {
+        li.appendChild(
+          _buildProgressBar(item.progress, "preview-task-dock__batch-item-bar")
+        );
+      }
       list.appendChild(li);
     });
     textWrap.appendChild(list);

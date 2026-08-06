@@ -12,6 +12,7 @@ import {
   PLATFORMS,
   batchChecklistItems,
   batchChecklistItemsFromResult,
+  batchOverallProgressRatio,
   bindPanelDraft,
   buildPanelHtml,
   clampAlbumSlideCount,
@@ -399,6 +400,52 @@ test("batchChecklistItems · 进行中清单：早于当前=done，当前=runnin
   // cur 超过清单长度：全部视为 done（已跑完轮到下一批，仅用于展示）
   const allDone = batchChecklistItems(["xiaohongshu", "wechat_moments"], 5);
   assert.deepEqual(allDone.map((it) => it.status), ["done", "done"]);
+});
+
+test("batchChecklistItems · 2026-08-06 进度条增强：running 项带 itemProgress 比例，其余不带", () => {
+  const withProgress = batchChecklistItems(
+    ["xiaohongshu", "wechat_moments", "album_spread"],
+    2,
+    { cur: 3, total: 5 }
+  );
+  assert.equal(withProgress[0].progress, undefined); // done 项不画假进度
+  assert.equal(withProgress[1].progress, 0.6); // running 项：3/5
+  assert.equal(withProgress[2].progress, undefined); // queued 项不画
+
+  // 没有 itemProgress / total 为 0 时：running 项也不带 progress 字段
+  // （没数据不画假条，见 showBatchChecklist 里的判断）。
+  const noProgress = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2);
+  assert.equal(noProgress[1].progress, undefined);
+  const zeroTotal = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2, {
+    cur: 0,
+    total: 0,
+  });
+  assert.equal(zeroTotal[1].progress, undefined);
+
+  // 比例夹在 [0,1]：cur > total 时不超过 1。
+  const overshoot = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2, {
+    cur: 9,
+    total: 5,
+  });
+  assert.equal(overshoot[1].progress, 1);
+});
+
+test("batchOverallProgressRatio · 已完成平台各记 1 份 + 当前平台按内部真实进度折算", () => {
+  // 3 个平台，第 2 个在跑，内部进度 3/5 → (1 + 0.6) / 3
+  const ratio = batchOverallProgressRatio(["a", "b", "c"], 2, { cur: 3, total: 5 });
+  assert.ok(Math.abs(ratio - 1.6 / 3) < 1e-9);
+
+  // 没有 itemProgress 时给 0.15 基线份额，而不是 0（让条至少可见地往前挪）。
+  const baseline = batchOverallProgressRatio(["a", "b"], 1, null);
+  assert.ok(Math.abs(baseline - 0.15 / 2) < 1e-9);
+
+  // 全部完成场景（cur 超过总数）：doneCount 封顶在 total，比例不超过 1。
+  const capped = batchOverallProgressRatio(["a", "b"], 5, { cur: 1, total: 1 });
+  assert.equal(capped, 1);
+
+  // 空平台列表：normalizePlatformList 兜底成 1 项（"wechat_chat"），不会除零/
+  // 报错——与 batchChecklistItems 等同族函数的既有兜底约定一致。
+  assert.ok(Math.abs(batchOverallProgressRatio([], 1, null) - 0.15) < 1e-9);
 });
 
 test("batchChecklistItemsFromResult · 完成态：ok→done+张数，失败→failed+原因（D-BEX-05）", () => {

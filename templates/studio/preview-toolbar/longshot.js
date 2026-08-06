@@ -19,6 +19,7 @@ import {
   exportSummaryLine,
   batchChecklistItems,
   batchChecklistItemsFromResult,
+  batchOverallProgressRatio,
   ctaLabelForPlatform,
   ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
@@ -2599,8 +2600,12 @@ export function cancelPreviewLongshotExport(root) {
      * cur1Based：当前第几个平台在跑（1-based）；仅用于展示，不代表已知成败
      * （逐项真实成败要等 job 完成才拿到 `result.items`，见完成分支）。
      * `titleOverride` 用于「提交排队中」等尚未真正开始跑平台的过渡态文案。
+     * `itemProgress`（2026-08-06 进度条增强）：`{cur, total}`，来自后端
+     * `job.itemStageIndex`/`itemStageCount`——当前平台内部真实渲染进度（如
+     * 拼贴页 3/5）；驱动总进度条 + 单项细进度条，让清单在长耗时任务里也能
+     * 看到"活的"进展，而不是卡在同一个百分比不动。
      */
-    function renderBatchProgress(cur1Based, titleOverride) {
+    function renderBatchProgress(cur1Based, titleOverride, itemProgress) {
       var cur = Math.max(1, Number(cur1Based) || 1);
       var total = platforms.length;
       var defaultTitle = "批量导出中（" + cur + "/" + total + "）";
@@ -2610,7 +2615,8 @@ export function cancelPreviewLongshotExport(root) {
       if (hasChecklistDock()) {
         root._taskDock.showBatchChecklist({
           title: titleOverride || defaultTitle,
-          items: batchChecklistItems(platforms, cur),
+          items: batchChecklistItems(platforms, cur, itemProgress),
+          overallProgress: batchOverallProgressRatio(platforms, cur, itemProgress),
           done: false,
         });
       }
@@ -2780,7 +2786,15 @@ export function cancelPreviewLongshotExport(root) {
             // id 不适合直接展示；这里只取 stageIndex 驱动清单态，展示文案统一
             // 由 renderBatchProgress 用 itemLabels 生成，保持可读一致。
             var cur = Number(job.stageIndex);
-            renderBatchProgress(isFinite(cur) && cur > 0 ? cur : 1);
+            // itemStageIndex/itemStageCount：当前平台自己内部的真实渲染进度
+            // （如拼贴页 cur/total），与 stageIndex（第几个平台）语义正交。
+            var itemCur = Number(job.itemStageIndex);
+            var itemTotal = Number(job.itemStageCount);
+            var itemProgress =
+              isFinite(itemTotal) && itemTotal > 0 && isFinite(itemCur) && itemCur >= 0
+                ? { cur: itemCur, total: itemTotal }
+                : null;
+            renderBatchProgress(isFinite(cur) && cur > 0 ? cur : 1, null, itemProgress);
           }
         );
       })

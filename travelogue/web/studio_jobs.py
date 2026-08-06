@@ -25,6 +25,12 @@ class StudioJob:
     stage_index: int = 0
     stage_count: int = STAGE_COUNT
     stage_hint: str = ""
+    # PRD-BATCH-EXPORT-MULTISELECT-V1 · 批量导出的"当前平台内部"细粒度进度
+    # （如拼贴页 3/5）。语义与 stage_index/stage_count（当前第几个平台/共几个
+    # 平台）正交——两者都在跑，前者驱动 Task Dock 的单项进度条，后者驱动清单
+    # 的逐平台状态。非批量 job 不设置，默认 None（前端据此判断是否渲染细进度条）。
+    item_stage_index: int | None = None
+    item_stage_count: int | None = None
     trip_id: str | None = None
     error: dict[str, Any] | None = None
     result: dict[str, Any] | None = None
@@ -38,6 +44,8 @@ class StudioJob:
             "stageIndex": self.stage_index,
             "stageCount": self.stage_count,
             "stageHint": self.stage_hint,
+            "itemStageIndex": self.item_stage_index,
+            "itemStageCount": self.item_stage_count,
             "tripId": self.trip_id,
             "error": self.error,
             "result": self.result,
@@ -120,6 +128,8 @@ class StudioJobStore:
         stage_index: int | None = None,
         stage_count: int | None = None,
         stage_hint: str | None = None,
+        item_stage_index: int | None = None,
+        item_stage_count: int | None = None,
         trip_id: str | None = None,
         error: dict[str, Any] | None = None,
         result: dict[str, Any] | None = None,
@@ -138,6 +148,10 @@ class StudioJobStore:
                 job.stage_count = stage_count
             if stage_hint is not None:
                 job.stage_hint = stage_hint
+            if item_stage_index is not None:
+                job.item_stage_index = item_stage_index
+            if item_stage_count is not None:
+                job.item_stage_count = item_stage_count
             if trip_id is not None:
                 job.trip_id = trip_id
             if error is not None:

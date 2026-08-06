@@ -270,6 +270,7 @@
 .preview-task-dock__batch-item {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 6px;
   font-size: 12px;
   line-height: 1.4;
@@ -300,5 +301,43 @@
 .preview-task-dock__batch-label {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* 总进度条：题头下方一整条，随「当前第几个平台 + 该平台内部细进度」平滑推进
+   （见 showBatchChecklist 里的 _buildProgressBar + batchOverallProgressRatio）。 */
+.preview-task-dock__batch-overall-bar {
+  margin-top: 8px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.preview-task-dock__batch-overall-bar__fill {
+  display: block;
+  height: 100%;
+  background: #d4a843;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* 单项细进度条：只出现在「进行中」那一项下方，对齐 label（跳过图标宽度）；
+   只有拿到真实 cur/total（如「拼贴页 3/5」）时才渲染，没数据不画假条。 */
+.preview-task-dock__batch-item-bar {
+  flex: 1 1 100%;
+  margin-left: 18px;
+  max-width: calc(100% - 18px);
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.preview-task-dock__batch-item-bar__fill {
+  display: block;
+  height: 100%;
+  background: color-mix(in srgb, #d4a843 82%, #fff);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
