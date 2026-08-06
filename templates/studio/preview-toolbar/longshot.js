@@ -2615,7 +2615,7 @@ export function cancelPreviewLongshotExport(root) {
       if (hasChecklistDock()) {
         root._taskDock.showBatchChecklist({
           title: titleOverride || defaultTitle,
-          items: batchChecklistItems(platforms, cur, itemProgress),
+          items: batchChecklistItems(platforms, cur),
           overallProgress: batchOverallProgressRatio(platforms, cur, itemProgress),
           done: false,
         });

@@ -917,13 +917,8 @@ export function mountPreviewTaskDock(root, hooks) {
       label.className = "preview-task-dock__batch-label";
       label.textContent = item.label + (item.detail ? " · " + item.detail : "");
       li.appendChild(label);
-      // 单项细进度条：仅「进行中」项且拿到真实 cur/total（如「拼贴页 3/5」）
-      // 时才渲染——没有数据时不画假条，避免"看似卡住"的错觉。
-      if (item.status === "running" && typeof item.progress === "number") {
-        li.appendChild(
-          _buildProgressBar(item.progress, "preview-task-dock__batch-item-bar")
-        );
-      }
+      // 2026-08-06 用户实测：只保留顶部总进度条。单项细进度条在不同管线
+      // （拼贴有页进度、微信长图未必有）下忽有忽无，清单显得乱，也多一次 DOM。
       list.appendChild(li);
     });
     textWrap.appendChild(list);

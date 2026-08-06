@@ -402,34 +402,6 @@ test("batchChecklistItems · 进行中清单：早于当前=done，当前=runnin
   assert.deepEqual(allDone.map((it) => it.status), ["done", "done"]);
 });
 
-test("batchChecklistItems · 2026-08-06 进度条增强：running 项带 itemProgress 比例，其余不带", () => {
-  const withProgress = batchChecklistItems(
-    ["xiaohongshu", "wechat_moments", "album_spread"],
-    2,
-    { cur: 3, total: 5 }
-  );
-  assert.equal(withProgress[0].progress, undefined); // done 项不画假进度
-  assert.equal(withProgress[1].progress, 0.6); // running 项：3/5
-  assert.equal(withProgress[2].progress, undefined); // queued 项不画
-
-  // 没有 itemProgress / total 为 0 时：running 项也不带 progress 字段
-  // （没数据不画假条，见 showBatchChecklist 里的判断）。
-  const noProgress = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2);
-  assert.equal(noProgress[1].progress, undefined);
-  const zeroTotal = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2, {
-    cur: 0,
-    total: 0,
-  });
-  assert.equal(zeroTotal[1].progress, undefined);
-
-  // 比例夹在 [0,1]：cur > total 时不超过 1。
-  const overshoot = batchChecklistItems(["xiaohongshu", "wechat_moments"], 2, {
-    cur: 9,
-    total: 5,
-  });
-  assert.equal(overshoot[1].progress, 1);
-});
-
 test("batchOverallProgressRatio · 已完成平台各记 1 份 + 当前平台按内部真实进度折算", () => {
   // 3 个平台，第 2 个在跑，内部进度 3/5 → (1 + 0.6) / 3
   const ratio = batchOverallProgressRatio(["a", "b", "c"], 2, { cur: 3, total: 5 });

@@ -270,7 +270,6 @@
 .preview-task-dock__batch-item {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
   gap: 6px;
   font-size: 12px;
   line-height: 1.4;
@@ -319,25 +318,5 @@
   background: #d4a843;
   border-radius: 2px;
   transition: width 0.4s ease;
-}
-
-/* 单项细进度条：只出现在「进行中」那一项下方，对齐 label（跳过图标宽度）；
-   只有拿到真实 cur/total（如「拼贴页 3/5」）时才渲染，没数据不画假条。 */
-.preview-task-dock__batch-item-bar {
-  flex: 1 1 100%;
-  margin-left: 18px;
-  max-width: calc(100% - 18px);
-  height: 3px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.preview-task-dock__batch-item-bar__fill {
-  display: block;
-  height: 100%;
-  background: color-mix(in srgb, #d4a843 82%, #fff);
-  border-radius: 2px;
-  transition: width 0.3s ease;
 }
 

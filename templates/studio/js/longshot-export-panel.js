@@ -1097,27 +1097,15 @@ export function formatPlatformSuccess(result) {
  * 展示态的最佳猜测，真实逐项成败要等 job 完成才知道（`result.items`，见
  * `formatBatchSuccess`），不代表已完成的项一定成功。
  *
- * `itemProgress`（可选，2026-08-06 进度条增强）：`{cur, total}`，来自后端
- * `job.itemStageIndex`/`job.itemStageCount`——当前"运行中"平台自己内部的
- * 真实渲染进度（如拼贴页 3/5）。有值且 `total > 0` 时，running 项会带上
- * `progress`（0–1 比例），供 Task Dock 画细进度条；没有值就不带该字段，
- * 调用方（Task Dock）据此决定是否渲染进度条，不画假的。
+ * 细粒度页进度不进清单项（2026-08-06 用户实测：单项进度条忽有忽无、显得乱），
+ * 只留给 `batchOverallProgressRatio` 驱动顶部总进度条。
  */
-export function batchChecklistItems(platformIds, cur1Based, itemProgress) {
+export function batchChecklistItems(platformIds, cur1Based) {
   var ids = normalizePlatformList(platformIds);
   var cur = Math.max(1, Number(cur1Based) || 1);
-  var hasItemProgress =
-    itemProgress && Number(itemProgress.total) > 0 && Number(itemProgress.cur) >= 0;
   return ids.map(function (id, idx) {
     var status = idx + 1 < cur ? "done" : idx + 1 === cur ? "running" : "queued";
-    var item = { platform: id, label: shortCtaLabelForPlatform(id), status: status };
-    if (status === "running" && hasItemProgress) {
-      item.progress = Math.max(
-        0,
-        Math.min(1, Number(itemProgress.cur) / Number(itemProgress.total))
-      );
-    }
-    return item;
+    return { platform: id, label: shortCtaLabelForPlatform(id), status: status };
   });
 }
 
