@@ -2608,7 +2608,11 @@ export function cancelPreviewLongshotExport(root) {
     function renderBatchProgress(cur1Based, titleOverride, itemProgress) {
       var cur = Math.max(1, Number(cur1Based) || 1);
       var total = platforms.length;
+      var currentId = platforms[cur - 1] || "";
       var defaultTitle = "批量导出中（" + cur + "/" + total + "）";
+      if (currentId === "album_spread") {
+        defaultTitle += " · 画册照片较多时请耐心等待";
+      }
       setLongshotExportState(root, "running", {
         hint: titleOverride || defaultTitle + " · " + (itemLabels[cur - 1] || ""),
       });

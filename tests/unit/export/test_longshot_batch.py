@@ -277,16 +277,18 @@ def test_batch_real_pipeline_partial_failure_continues(tmp_path: Path) -> None:
 
     import travelogue.export.collage_pack as collage_pack_mod
 
-    real_list_paths = collage_pack_mod.list_collage_photo_paths
+    real_pairs = collage_pack_mod._poster_candidate_pairs
     call_count = {"n": 0}
 
     def _fail_only_on_second_call(trip_dir_arg, *, limit):
         # 批量按 requests 顺序调用（xiaohongshu → wechat_official → album_spread），
         # 精确模拟"第 2 项真实业务失败"（E_COLLAGE_N），其余两项走真实数据渲染。
+        # export_collage_pack 直接读 `_poster_candidate_pairs`（不再经
+        # list_collage_photo_paths），所以 patch 目标要对齐真实调用点。
         call_count["n"] += 1
         if call_count["n"] == 2:
             return []
-        return real_list_paths(trip_dir_arg, limit=limit)
+        return real_pairs(trip_dir_arg, limit=limit)
 
     requests = [
         BatchExportRequest(platform="xiaohongshu"),
@@ -294,7 +296,7 @@ def test_batch_real_pipeline_partial_failure_continues(tmp_path: Path) -> None:
         BatchExportRequest(platform="album_spread"),
     ]
     with patch(
-        "travelogue.export.collage_pack.list_collage_photo_paths",
+        "travelogue.export.collage_pack._poster_candidate_pairs",
         side_effect=_fail_only_on_second_call,
     ):
         results = export_trip_longshot_batch(trip_dir, requests=requests)

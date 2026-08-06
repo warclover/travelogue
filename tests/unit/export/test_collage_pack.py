@@ -312,3 +312,33 @@ def test_export_collage_pack_passes_asset_lookup_to_renderer(tmp_path: Path) -> 
             assert isinstance(asset, dict)
             assert asset.get("id")
     assert any_hit, "asset_lookup should resolve at least one collage photo path"
+
+
+def test_collage_photo_limit_album_250_others_72() -> None:
+    """画册单独放大到 250；小红书/公众号仍 72（发布页数不宜过多）。"""
+    from travelogue.export.collage_pack import (
+        _ALBUM_PHOTO_LIMIT,
+        _COLLAGE_PHOTO_LIMIT,
+        collage_photo_limit_for_platform,
+    )
+
+    assert _COLLAGE_PHOTO_LIMIT == 72
+    assert _ALBUM_PHOTO_LIMIT == 250
+    assert collage_photo_limit_for_platform("album_spread") == 250
+    assert collage_photo_limit_for_platform("xiaohongshu") == 72
+    assert collage_photo_limit_for_platform("wechat_official") == 72
+
+
+def test_album_pool_uses_more_than_xhs_cap(tmp_path: Path) -> None:
+    """精选超过 72 时：小红书仍截断到 72，画册可继续吃到更高上限。"""
+    from travelogue.export.collage_pack import list_collage_photo_paths
+
+    trips = tmp_path / "trips"
+    create_trip("pool-80", trips, title="池子80")
+    trip_dir = trips / "pool-80"
+    _seed_kept_photos(trip_dir, 80)
+
+    xhs = list_collage_photo_paths(trip_dir, platform="xiaohongshu")
+    album = list_collage_photo_paths(trip_dir, platform="album_spread")
+    assert len(xhs) == 72
+    assert len(album) == 80

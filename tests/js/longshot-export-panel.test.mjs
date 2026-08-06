@@ -203,8 +203,10 @@ test("P0 · humanExportProgress 平台文案（禁止回落到「微信」）", 
   assert.match(progressTitleForPlatform("xiaohongshu"), /小红书/);
   assert.match(progressTitleForPlatform("poster_bric"), /单张海报/);
   assert.match(progressTitleForPlatform("album_spread"), /画册/);
+  assert.match(progressTitleForPlatform("album_spread"), /耐心等待/);
   assert.doesNotMatch(progressTitleForPlatform("poster_bric"), /微信/);
   assert.doesNotMatch(progressTitleForPlatform("album_spread"), /微信/);
+  assert.match(PLATFORMS.album_spread.expectHtml, /1–2 分钟/);
 
   assert.equal(progressSynthesizingTitleForPlatform("xiaohongshu"), "正在合成拼贴…");
   assert.equal(progressSynthesizingTitleForPlatform("wechat_chat"), "正在合成长图…");
@@ -467,6 +469,7 @@ test("syncPanelUI · 多选态隐藏张数/跨页数控件，展示批量提示"
   });
   assert.equal(popBatch._batchHint.hidden, false);
   assert.match(popBatch._batchHint.textContent, /批量导出.*2 个模式/);
+  assert.match(popBatch._batchHint.textContent, /画册.*1–2 分钟|耐心等待/);
   assert.equal(popBatch._albumCountField.hidden, true); // 批量态强制隐藏（MVP 简化）
   assert.equal(popBatch._expectField.hidden, true);
   assert.equal(popBatch._expectBody.textContent, "");

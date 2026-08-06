@@ -54,11 +54,30 @@ from travelogue.export.poster_bric_pack import _poster_candidate_pairs, list_pos
 
 _log = logging.getLogger(__name__)
 
+# 小红书 / 公众号仍保持较低池上限（发布场景页数不宜过多）。
 _COLLAGE_PHOTO_LIMIT = 72
+# 画册印刷「尽量用完精选」：单独放大到 250；导出耗时近似随照片数线性上涨，
+# UI 侧需在选中画册时提示用户可能较久（见 longshot-export-panel expectHtml）。
+_ALBUM_PHOTO_LIMIT = 250
 
 
-def list_collage_photo_paths(trip_dir: Path, *, limit: int = _COLLAGE_PHOTO_LIMIT) -> list[Path]:
-    """Kept image paths excluding collage assets (alias of list_poster_photo_paths)."""
+def collage_photo_limit_for_platform(platform: str) -> int:
+    """Per-platform kept-photo pool cap for collage exports."""
+    if str(platform or "").strip() == "album_spread":
+        return _ALBUM_PHOTO_LIMIT
+    return _COLLAGE_PHOTO_LIMIT
+
+
+def list_collage_photo_paths(
+    trip_dir: Path, *, limit: int | None = None, platform: str | None = None
+) -> list[Path]:
+    """Kept image paths excluding collage assets (alias of list_poster_photo_paths).
+
+    ``limit`` wins when given; otherwise ``platform`` selects the pool cap
+    (album 250 / others 72).
+    """
+    if limit is None:
+        limit = collage_photo_limit_for_platform(platform or "")
     return list_poster_photo_paths(trip_dir, limit=limit)
 
 
@@ -160,7 +179,9 @@ def export_collage_pack(
     _ = fmt  # collage pages always PNG
     out_ext = "png"
 
-    pairs = _poster_candidate_pairs(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
+    pairs = _poster_candidate_pairs(
+        trip_dir, limit=collage_photo_limit_for_platform(pid)
+    )
     paths = [path for path, _ in pairs]
     if not paths:
         raise LongshotExportError(

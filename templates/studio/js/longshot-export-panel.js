@@ -73,7 +73,7 @@ export var PLATFORMS = {
     showCopyControls: false,
     showAlbumCountOptions: true,
     expectHtml:
-      "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）",
+      "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）。精选照片较多时可能需 <strong>1–2 分钟</strong>，请耐心等待",
   },
 };
 
@@ -339,7 +339,7 @@ export var PROGRESS_TITLES = {
   xiaohongshu: "正在生成小红书竖版拼贴…",
   wechat_official: "正在生成公众号竖版拼贴…",
   poster_bric: "正在生成 3:4 单张海报…",
-  album_spread: "正在生成画册跨页…",
+  album_spread: "正在生成画册跨页，照片较多时请耐心等待…",
 };
 
 /** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
@@ -650,11 +650,18 @@ export function syncPanelUI(pop, draft, opts) {
   var batchHint = pop.querySelector("[data-batch-hint]");
   if (batchHint) {
     batchHint.hidden = !isBatch;
-    batchHint.textContent = isBatch
-      ? "批量导出：将按顺序导出 " +
+    if (isBatch) {
+      var hasAlbum = platforms.indexOf("album_spread") >= 0;
+      batchHint.textContent =
+        "批量导出：将按顺序导出 " +
         platforms.length +
-        " 个模式，均使用各平台默认设置（自动张数）。需要自定义张数请单选该平台单独导出。"
-      : "";
+        " 个模式，均使用各平台默认设置（自动张数）。需要自定义张数请单选该平台单独导出。" +
+        (hasAlbum
+          ? " 含画册时精选照片较多可能需 1–2 分钟，请耐心等待。"
+          : "");
+    } else {
+      batchHint.textContent = "";
+    }
   }
   pop.querySelectorAll("[data-studio-longshot-mode]").forEach(function (btn) {
     var on = btn.getAttribute("data-studio-longshot-mode") === draft.mode;
