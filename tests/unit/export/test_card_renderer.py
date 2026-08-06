@@ -137,6 +137,11 @@ def test_render_spread_two_cards_with_gutter(tmp_path: Path) -> None:
 
 
 def test_render_spread_lone_card_half_page(tmp_path: Path) -> None:
+    """Regression (2026-08-06, user report: "空槙，就是缺失照片，违背兜底
+    原则" — a real album export's trailing spread had its entire right half
+    rendered as flat background, zero photos). A lone trailing card must
+    render at single-card width — no blank half at all — rather than the
+    full double-width spread canvas with an empty right side."""
     template = CARD_TEMPLATES["card-1-full-frame"]
     left_photo = _make_rgb(tmp_path / "left.jpg", size=(1000, 1000), color=(200, 40, 40))
     data, diag = render_spread(
@@ -144,8 +149,11 @@ def test_render_spread_lone_card_half_page(tmp_path: Path) -> None:
     )
     assert diag["halfPage"] is True
     assert diag["templates"][1] is None
-    expected_w = CARD_CANVAS[0] * 2 + 48
+    assert diag["canvas"] == [CARD_CANVAS[0], CARD_CANVAS[1]]
     with Image.open(io.BytesIO(data)) as im:
-        assert im.size == (expected_w, CARD_CANVAS[1])
+        assert im.size == CARD_CANVAS
+        # Every pixel must come from the (fully cover-cropped) left photo —
+        # no leftover background-filled area anywhere in the canvas.
         bg = (245, 245, 243)
-        assert im.getpixel((expected_w - 10, CARD_CANVAS[1] // 2)) == bg
+        assert im.getpixel((CARD_CANVAS[0] - 5, CARD_CANVAS[1] // 2)) != bg
+        assert im.getpixel((5, 5)) != bg

@@ -185,13 +185,50 @@ def render_spread(
     """Render an album spread: two 3:4 cards side by side with a gutter.
 
     ``right`` may be ``None`` for a trailing lone card (OQ-ECC-02 default:
-    stand-alone half-page — the right half stays background-filled rather
-    than stretching the left card, keeping the "two pages open" read intact).
+    stand-alone half-page). 2026-08-06 fix (user report: "空槙，就是缺失照片，
+    违背兜底原则" — a real screenshot showed the entire right half rendered
+    as flat background with zero photos in it): the *canvas* for a lone
+    card must be single-card width (``card_w``), not the full double-width
+    spread with its other half left blank — a whole half-page of nothing
+    is strictly worse than the "two pages open" visual it was meant to
+    preserve, and every other Card in the pipeline already guarantees
+    every slot gets a real photo (``assign_photos_to_slots``'s own
+    "兜底" contract); the spread canvas silently broke that guarantee at
+    the *page* level instead of the slot level. OQ-ECC-02's own intent —
+    "stand-alone half-page" — reads naturally as *half the pixel width*,
+    which is what this now does; it just wasn't implemented that way.
     """
     card_w, card_h = card_wh
+    slot_gap = _slot_gap_for_width(card_w)
+    half_page = right is None
+    if half_page:
+        canvas = Image.new("RGB", (card_w, card_h), bg)
+        left_photos, left_template = left
+        _paint_template(
+            canvas,
+            left_template,
+            left_photos,
+            x0=0,
+            y0=0,
+            width=card_w,
+            height=card_h,
+            asset_lookup=asset_lookup,
+            gap=slot_gap,
+        )
+        buf = io.BytesIO()
+        canvas.save(buf, format="PNG", optimize=True)
+        diag = {
+            "canvas": [card_w, card_h],
+            "templates": [left_template.id, None],
+            "gutter": 0,
+            "slotGap": slot_gap,
+            "halfPage": True,
+            "fit": "cover",
+        }
+        return buf.getvalue(), diag
+
     total_w = card_w * 2 + gutter
     canvas = Image.new("RGB", (total_w, card_h), bg)
-    slot_gap = _slot_gap_for_width(card_w)
     left_photos, left_template = left
     _paint_template(
         canvas,
@@ -204,30 +241,26 @@ def render_spread(
         asset_lookup=asset_lookup,
         gap=slot_gap,
     )
-    half_page = right is None
-    right_template_id = None
-    if right is not None:
-        right_photos, right_template = right
-        right_template_id = right_template.id
-        _paint_template(
-            canvas,
-            right_template,
-            right_photos,
-            x0=card_w + gutter,
-            y0=0,
-            width=card_w,
-            height=card_h,
-            asset_lookup=asset_lookup,
-            gap=slot_gap,
-        )
+    right_photos, right_template = right
+    _paint_template(
+        canvas,
+        right_template,
+        right_photos,
+        x0=card_w + gutter,
+        y0=0,
+        width=card_w,
+        height=card_h,
+        asset_lookup=asset_lookup,
+        gap=slot_gap,
+    )
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
     diag = {
         "canvas": [total_w, card_h],
-        "templates": [left_template.id, right_template_id],
+        "templates": [left_template.id, right_template.id],
         "gutter": gutter,
         "slotGap": slot_gap,
-        "halfPage": half_page,
+        "halfPage": False,
         "fit": "cover",
     }
     return buf.getvalue(), diag
