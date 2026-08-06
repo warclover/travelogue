@@ -150,16 +150,23 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     # are 6 landscape + 6 portrait. The pure count-based [12] chunk would
     # land on a 33%-landscape 12-slot template (4 landscape-shaped slots),
     # stranding 2 real landscape photos with no home but a portrait cell.
-    # plan_cards now produces 4 cards ([7, 2, 2, 1], zero forced mismatches)
-    # → 2 spreads instead of 1.
+    # plan_cards now produces 3 cards (2026-08-06 diversity-fix tie-break:
+    # [7, 3, 2], zero forced mismatches — an odd count, unlike the earlier
+    # [7, 2, 2, 1] chunking this comment used to document, but still 2
+    # spreads: one full spread (cards 1+2) + one lone trailing card
+    # rendered as a single-card-width half page per OQ-ECC-02).
     assert result.page_count == 2
     assert "3:4" in (result.user_hint or "")
-    finals = list(trip_dir.glob("*-album-*.png"))
+    finals = sorted(trip_dir.glob("*-album-*.png"))
     assert len(finals) == 2
+    sizes = []
     for path in finals:
         with Image.open(path) as im:
-            assert im.size == (2208, 1440)
-            assert abs(im.size[0] / im.size[1] - 1.53) < 0.02
+            sizes.append(im.size)
+    # One full spread (double-card width) + one lone half page (single-card
+    # width) — see test_album_spread_odd_card_gets_half_page.
+    assert (2208, 1440) in sizes
+    assert (1080, 1440) in sizes
 
 
 def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:

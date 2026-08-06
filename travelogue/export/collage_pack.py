@@ -22,7 +22,12 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from travelogue.export.card_grouper import CardPlan, count_orientation_mismatches, plan_cards
+from travelogue.export.card_grouper import (
+    CardPlan,
+    count_orientation_mismatches,
+    plan_cards,
+    plan_cards_with_dominant_opener,
+)
 from travelogue.export.card_renderer import (
     ALBUM_GUTTER,
     CARD_CANVAS,
@@ -168,7 +173,7 @@ def export_collage_pack(
         target_per_card = _xhs_target_per_card(
             len(paths), slide_count=slide_count, profile=profile
         )
-        plans = plan_cards(paths, target_per_card=target_per_card)
+        plans = plan_cards_with_dominant_opener(paths, target_per_card=target_per_card)
         pages_render = [
             render_card(list(plan.photos), plan.template, canvas_wh=card_wh)[0]
             for plan in plans
@@ -184,7 +189,9 @@ def export_collage_pack(
         album_target_per_card = _album_target_per_card(
             len(paths), slide_count=slide_count, profile=profile
         )
-        plans = plan_cards(paths, target_per_card=album_target_per_card)
+        plans = plan_cards(
+            paths, target_per_card=album_target_per_card, avoid_immediate_repeat=True
+        )
         spreads = _pair_cards_for_spreads(plans)
         gutter = (
             int(round(ALBUM_GUTTER * 1.25)) if int(scale or 2) > 2 else ALBUM_GUTTER

@@ -31,6 +31,45 @@ best-matching (template, and — in auto mode — slot count) so every card's
 demand is met by its own supply as much as globally possible, instead of
 committing to a template shape the photo pool can't actually fill. See
 ``_best_matching_template`` / ``_pull_chunk_for_template`` below.
+
+2026-08-06 diversity fix (user report: "会大量采用同一种模板，导致导出的
+拼图样式高度雷同"): two distinct causes, fixed together.
+
+1. **Fake round-robin.** The former Tier-4 tie-break was
+   ``card_index % len(candidates)`` — ``card_index`` is a *global*,
+   monotonically-increasing counter, but the tied-candidate set's identity
+   and size change from step to step as supply depletes. Whenever that set
+   happened to stay small (e.g. 2 templates) across several steps, the
+   modulo aliased back to the *same* index over and over — e.g. a real trip
+   (``demo-2019``, 72 photos) picked ``card-6-bookend-rows`` 4 times out of
+   11 cards despite 3 other equally-valid 6-slot templates existing, purely
+   because the tied set kept landing at size 2 with ``card_index`` parity
+   always even. This wasn't "the best match repeating because the photo mix
+   demanded it" (that *is* legitimate — see point 2) — it was noise.
+   ``_best_matching_template`` now tracks real usage counts across the
+   whole plan (``usage_counts``) and picks the *least-used-so-far*
+   candidate among ties, which naturally spreads usage evenly over the
+   whole export regardless of how the tied set's membership fluctuates
+   step to step.
+2. **Structural repetition.** Separately, a photo pool overwhelmingly
+   skewed to one orientation (e.g. 96% landscape) genuinely has only one
+   good template at a given size — no amount of round-robin can or should
+   "fix" that without reintroducing AC-ECC-04 violations. `xiaohongshu` /
+   `wechat_official` address the *perceived* sameness for this case with a
+   dedicated **opening "总览宫格" card** (``plan_cards_with_dominant_
+   opener``): when one orientation is clearly dominant (≥60% of the whole
+   pool) and there's enough supply, the very first card is a fixed equal
+   grid (``card-9-grid-equal`` for portrait-dominant, ``card-8-grid-equal``
+   for landscape-dominant) — mirroring the common "总览宫格 + 后续特写" 小红书
+   排版习惯— after which the remaining photos flow through the normal
+   algorithm unchanged. `album_spread` doesn't get this opener (it isn't a
+   "feed" with a first-impression card the same way), but gets an extra
+   hard constraint instead: ``avoid_immediate_repeat`` forbids two
+   consecutive cards from using the identical template unless it's the
+   *only* eligible candidate (an unavoidable structural repeat, per point
+   2) — album readers flip through spread by spread, so back-to-back
+   identical templates read as more repetitive there than in a scrolling
+   feed.
 """
 
 from __future__ import annotations
@@ -210,8 +249,9 @@ def _best_matching_template(
     *,
     landscape_remaining: int,
     portrait_remaining: int,
-    card_index: int,
+    usage_counts: dict[str, int],
     target_per_card: int | None = None,
+    avoid_template_id: str | None = None,
 ) -> CardTemplate:
     """Pick the best template among ``candidates`` given how much
     landscape/portrait supply *actually remains* trip-wide.
@@ -240,8 +280,33 @@ def _best_matching_template(
       · otherwise, prefer the larger slot count (fewer total cards; keeps
         the "greedy largest" spirit of §5.1 as the deciding factor once
         orientation-fit is already good, not an override of it).
-    Tier 4 — round-robin by ``card_index`` for visual variety (OQ-ECC-04),
-    same spirit as the original ``pick_template_for_count``.
+    Tier 3.5 (2026-08-06 diversity fix — see module docstring) — ``tier``
+    (min-shortfall) already guarantees every member is *equally fillable*
+    from current supply with zero forced-orientation borrowing; the
+    ``_PROPORTION_SLOT_TOLERANCE`` window above only exists to decide *how
+    big* the card should be (max_size), by anchoring to whichever template
+    (of any size) best matches the remaining ratio. Once max_size is
+    settled, re-widen the pool back to *every* same-``max_size`` member of
+    ``tier`` — not just the ones that happened to also fall inside that
+    size-selection tolerance window — since they're all zero-mismatch for
+    this step regardless of exact proportion fit. This is what stops a
+    template like ``card-7-triband-hero-mid`` from becoming the *sole*
+    eligible 7-slot template for many consecutive steps just because the
+    ratio anchor point drifted a few percent and pushed its siblings
+    (``card-7-triband-2-2-3`` / ``-2-3-2``) barely outside the window.
+    Tier 3.75 — if ``avoid_template_id`` is given (album_spread's
+    "相邻跨页不得重复" hard constraint), drop it from contention *unless* it's
+    the only survivor at this point (an unavoidable structural repeat —
+    never sacrifice orientation-fit just to dodge a repeat).
+    Tier 4 — among the max-size survivors, pick whichever has been used
+    *least so far this plan* (``usage_counts``, 2026-08-06 real round-robin
+    fix — see module docstring for why the old ``card_index % len(...)``
+    scheme wasn't actually round-robining); ties on usage count (e.g. the
+    very first time a size is picked, before any usage history exists) fall
+    back to the *best* proportion fit — this is what keeps that first pick
+    from landing on a genuinely poorly-fitting sibling (e.g.
+    ``card-7-hero-top-halves``, 0% landscape) purely because it happens to
+    sort first alphabetically — then finally template id for determinism.
     """
     total_remaining = landscape_remaining + portrait_remaining
     target_ratio = (landscape_remaining / total_remaining) if total_remaining > 0 else 0.0
@@ -272,9 +337,22 @@ def _best_matching_template(
             t for t in close_enough if abs(t.slot_count - target_per_card) == best_size_gap
         ]
 
+    # Tier 3.5: max_size is decided from the (possibly target-narrowed)
+    # proportion window, but the final candidate pool re-widens to every
+    # zero-extra-shortfall sibling of that same size (see docstring above).
     max_size = max(t.slot_count for t in close_enough)
-    finalists = sorted((t for t in close_enough if t.slot_count == max_size), key=lambda t: t.id)
-    return finalists[card_index % len(finalists)]
+    finalists = [t for t in tier if t.slot_count == max_size]
+
+    if avoid_template_id is not None:
+        without_avoided = [t for t in finalists if t.id != avoid_template_id]
+        if without_avoided:
+            finalists = without_avoided
+
+    finalists = sorted(
+        finalists,
+        key=lambda t: (usage_counts.get(t.id, 0), proportion_deviation(t), t.id),
+    )
+    return finalists[0]
 
 
 def _pull_chunk_for_template(
@@ -304,14 +382,20 @@ def _pull_chunk_for_template(
     return chunk
 
 
-def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> list[CardPlan]:
+def plan_cards(
+    photos: list[Path],
+    *,
+    target_per_card: int | None = None,
+    avoid_immediate_repeat: bool = False,
+) -> list[CardPlan]:
     """Group ``photos`` into cards per §4: orientation-supply-aware slot-count
     + template selection (§4 v0.2 simplification's *only* hard requirement,
     AC-ECC-04, is that every slot's photo actually matches its shape — see
-    module docstring for the 2026-08-05 fix) + round-robin template pick
-    among equally-good matches (OQ-ECC-04) + orientation role matching.
-    Returns ``[]`` for an empty input (callers should validate minimum
-    kept-photo count before calling, per platform's own N floor).
+    module docstring for the 2026-08-05 fix) + usage-balanced template pick
+    among equally-good matches (OQ-ECC-04, 2026-08-06 real-round-robin fix)
+    + orientation role matching. Returns ``[]`` for an empty input (callers
+    should validate minimum kept-photo count before calling, per platform's
+    own N floor).
 
     Photos are split into two orientation queues, each preserving its own
     relative order — a card may therefore combine, e.g., an earlier
@@ -332,6 +416,13 @@ def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> lis
     page count may therefore drift from a literal reading of
     ``target_per_card`` when the photo mix doesn't support it exactly —
     that's intentional (AC-ECC-04 outranks the page-count preference).
+
+    ``avoid_immediate_repeat`` (album_spread only, 2026-08-06 diversity
+    decision — see module docstring): forbids picking the *same* template
+    as the immediately-preceding card unless it's the only eligible
+    candidate at that step. Combined with the usage-balanced tie-break
+    above, this is what keeps facing/adjacent album pages from reading as
+    copy-pasted.
     """
     if not photos:
         return []
@@ -339,7 +430,8 @@ def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> lis
     portrait_queue = [p for p in photos if _photo_orientation(p) != "landscape"]
 
     plans: list[CardPlan] = []
-    card_index = 0
+    usage_counts: dict[str, int] = {}
+    last_template_id: str | None = None
     while landscape_queue or portrait_queue:
         remaining_total = len(landscape_queue) + len(portrait_queue)
         candidates = [t for t in CARD_TEMPLATES.values() if t.slot_count <= remaining_total]
@@ -347,15 +439,83 @@ def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> lis
             candidates,
             landscape_remaining=len(landscape_queue),
             portrait_remaining=len(portrait_queue),
-            card_index=card_index,
+            usage_counts=usage_counts,
             target_per_card=target_per_card,
+            avoid_template_id=last_template_id if avoid_immediate_repeat else None,
         )
         chunk = _pull_chunk_for_template(template, landscape_queue, portrait_queue)
         ordered = assign_photos_to_slots(chunk, template)
         plans.append(CardPlan(template=template, photos=tuple(ordered)))
-        card_index += 1
+        usage_counts[template.id] = usage_counts.get(template.id, 0) + 1
+        last_template_id = template.id
 
     return plans
+
+
+#: Opener-card decision thresholds (2026-08-06, "开篇总览宫格" — see module
+#: docstring). A pool needs to be *clearly* dominated by one orientation
+#: (not just a bare majority) before the opener kicks in, so a near-50/50
+#: mix still goes straight through the normal supply-aware algorithm.
+_DOMINANT_ORIENTATION_THRESHOLD = 0.6
+_OPENER_LANDSCAPE_TEMPLATE_ID = "card-8-grid-equal"
+_OPENER_PORTRAIT_TEMPLATE_ID = "card-9-grid-equal"
+
+
+def plan_cards_with_dominant_opener(
+    photos: list[Path],
+    *,
+    target_per_card: int | None = None,
+    avoid_immediate_repeat: bool = False,
+) -> list[CardPlan]:
+    """``plan_cards`` with a fixed "开篇总览宫格" first card (xiaohongshu /
+    wechat_official, 2026-08-06): when one orientation makes up at least
+    ``_DOMINANT_ORIENTATION_THRESHOLD`` of the *whole* pool and there's
+    enough of it to fill the corresponding equal-grid template outright
+    (``card-9-grid-equal`` for portrait-dominant, ``card-8-grid-equal`` for
+    landscape-dominant — no partial/undersized opener), the first card is
+    fixed to that grid, drawn from the front of the pool in original
+    relative order; the rest of the pool then flows through the regular
+    ``plan_cards`` unchanged. Falls through to plain ``plan_cards`` (no
+    opener) whenever the pool isn't clearly dominated by one orientation,
+    or is too small for the opener template it would otherwise pick — this
+    is a UX nicety, not something worth inventing a smaller/awkward grid
+    for.
+    """
+    if not photos:
+        return []
+    landscape = [p for p in photos if _photo_orientation(p) == "landscape"]
+    portrait = [p for p in photos if _photo_orientation(p) != "landscape"]
+    total = len(photos)
+    landscape_ratio = len(landscape) / total if total else 0.0
+
+    if landscape_ratio >= _DOMINANT_ORIENTATION_THRESHOLD:
+        opener_template_id, opener_pool = _OPENER_LANDSCAPE_TEMPLATE_ID, landscape
+    elif (1.0 - landscape_ratio) >= _DOMINANT_ORIENTATION_THRESHOLD:
+        opener_template_id, opener_pool = _OPENER_PORTRAIT_TEMPLATE_ID, portrait
+    else:
+        opener_template_id, opener_pool = None, []
+
+    opener_template = CARD_TEMPLATES.get(opener_template_id) if opener_template_id else None
+    if opener_template is None or len(opener_pool) < opener_template.slot_count:
+        return plan_cards(
+            photos,
+            target_per_card=target_per_card,
+            avoid_immediate_repeat=avoid_immediate_repeat,
+        )
+
+    opener_photos = opener_pool[: opener_template.slot_count]
+    opener_ids = {id(p) for p in opener_photos}
+    remaining_photos = [p for p in photos if id(p) not in opener_ids]
+    opener_plan = CardPlan(
+        template=opener_template,
+        photos=tuple(assign_photos_to_slots(opener_photos, opener_template)),
+    )
+    rest = plan_cards(
+        remaining_photos,
+        target_per_card=target_per_card,
+        avoid_immediate_repeat=avoid_immediate_repeat,
+    )
+    return [opener_plan, *rest]
 
 
 def count_orientation_mismatches(plans: list[CardPlan]) -> int:

@@ -12,6 +12,7 @@ from travelogue.export.card_grouper import (
     assign_photos_to_slots,
     count_orientation_mismatches,
     plan_cards,
+    plan_cards_with_dominant_opener,
     plan_poster_card,
     plan_slot_counts,
 )
@@ -140,18 +141,22 @@ def test_plan_cards_covers_all_photos(tmp_path: Path) -> None:
 
 
 def test_plan_cards_all_portrait_matches_pre_fix_chunking(tmp_path: Path) -> None:
-    """The 2026-08-05 supply-aware rewrite must not change behavior for the
-    common all-portrait case: with zero landscape supply, every 0%-landscape
-    template ties on "proportional fit", so the largest-count tie-break
-    should still land on the exact same chunk sequence the old pure
-    greedy-largest-first chunker produced (card-16-grid-equal x1 +
-    card-4-square-top-triband x1, same as ``plan_slot_counts(20)``)."""
+    """The 2026-08-05 supply-aware rewrite must not change *chunk sizes* for
+    the common all-portrait case: with zero landscape supply, every
+    0%-landscape template ties on "proportional fit", so the largest-count
+    tie-break should still land on the exact same chunk-size sequence the
+    old pure greedy-largest-first chunker produced (16 + 4, same as
+    ``plan_slot_counts(20)``). Which *specific* 4-slot template wins the
+    remaining tie (card-4-grid-equal vs card-4-square-top-triband, both 0%
+    landscape) is decided by the 2026-08-06 usage-count tie-break
+    (alphabetically-first among untouched templates) rather than the old
+    ``card_index % len(...)`` scheme — that's an intentional behavior
+    change (see card_grouper module docstring), not something this test is
+    pinning down."""
     photos = [_portrait(tmp_path / f"p{i}.jpg") for i in range(20)]
     plans = plan_cards(photos)
-    assert [p.template.id for p in plans] == [
-        "card-16-grid-equal",
-        "card-4-square-top-triband",
-    ]
+    assert [p.template.slot_count for p in plans] == [16, 4]
+    assert plans[0].template.id == "card-16-grid-equal"
 
 
 def _mixed(tmp_path: Path, n_landscape: int, n_portrait: int) -> list[Path]:
@@ -286,6 +291,106 @@ def test_count_orientation_mismatches_matches_manual_computation(tmp_path: Path)
 
 def test_plan_cards_empty() -> None:
     assert plan_cards([]) == []
+
+
+# --- 2026-08-06 diversity fix: usage-count tie-break, dominant opener, ------
+# --- album's "no immediate repeat" hard constraint. -------------------------
+
+
+def test_plan_cards_usage_count_tie_break_spreads_evenly(tmp_path: Path) -> None:
+    """A perfectly-balanced 50/50 pool has several 6-slot templates tied at
+    zero proportion deviation (card-6-bookend-rows / card-6-brick-alt, both
+    3/6 landscape-shaped); the old ``card_index % len(...)`` scheme could
+    alias onto the same one repeatedly depending on how the tied set's size
+    happened to fluctuate. The 2026-08-06 real usage-count tie-break must
+    not let any single template dominate when equally-good alternatives
+    exist throughout."""
+    photos = _mixed(tmp_path, 36, 36)
+    plans = plan_cards(photos)
+    from collections import Counter
+
+    counts = Counter(p.template.id for p in plans)
+    most_common_id, most_common_n = counts.most_common(1)[0]
+    assert most_common_n <= len(plans) // 2, (
+        f"{most_common_id} used {most_common_n}/{len(plans)} times — "
+        "usage-count tie-break should have spread usage across the "
+        "several equally-good tied templates instead of favoring one"
+    )
+
+
+def test_plan_cards_with_dominant_opener_landscape(tmp_path: Path) -> None:
+    """≥60% landscape pool with ≥8 landscape photos: first card is the fixed
+    8-slot all-landscape "总览宫格" opener, entirely landscape photos."""
+    photos = _mixed(tmp_path, 50, 22)  # 72 total, 69% landscape
+    plans = plan_cards_with_dominant_opener(photos)
+    assert plans[0].template.id == "card-8-grid-equal"
+    assert all("l" in p.stem for p in plans[0].photos)
+    # every photo still gets placed exactly once, opener included
+    all_photos = [p for plan in plans for p in plan.photos]
+    assert set(all_photos) == set(photos)
+
+
+def test_plan_cards_with_dominant_opener_portrait(tmp_path: Path) -> None:
+    """≥60% portrait pool with ≥9 portrait photos: first card is the fixed
+    9-slot all-portrait "总览宫格" opener."""
+    photos = _mixed(tmp_path, 10, 40)  # 50 total, 80% portrait
+    plans = plan_cards_with_dominant_opener(photos)
+    assert plans[0].template.id == "card-9-grid-equal"
+    assert all("p" in p.stem for p in plans[0].photos)
+
+
+def test_plan_cards_with_dominant_opener_skips_when_balanced(tmp_path: Path) -> None:
+    """A 50/50 pool isn't "clearly dominated" — no opener; identical output
+    to plain ``plan_cards``."""
+    photos = _mixed(tmp_path, 36, 36)
+    with_opener = plan_cards_with_dominant_opener(photos)
+    plain = plan_cards(photos)
+    assert [p.template.id for p in with_opener] == [p.template.id for p in plain]
+
+
+def test_plan_cards_with_dominant_opener_skips_when_supply_too_small(tmp_path: Path) -> None:
+    """Dominant orientation but not enough of it to fill the opener template
+    outright (e.g. 5 landscape photos, need 8): falls through to plain
+    ``plan_cards`` rather than inventing an undersized/awkward opener."""
+    photos = _mixed(tmp_path, 5, 2)  # 100% landscape share, only 5 available
+    with_opener = plan_cards_with_dominant_opener(photos)
+    plain = plan_cards(photos)
+    assert [p.template.id for p in with_opener] == [p.template.id for p in plain]
+    assert with_opener[0].template.id != "card-8-grid-equal" or len(with_opener[0].photos) != 8
+
+
+def test_plan_cards_avoid_immediate_repeat_breaks_ties(tmp_path: Path) -> None:
+    """Album's hard constraint: when more than one same-size, same-shortfall
+    template is eligible, two consecutive cards must not use the same
+    template id. (A heavily orientation-skewed pool, e.g. demo-2019's
+    71%-landscape mix, genuinely has *no* alternative 8-slot template tied
+    at zero shortfall for several consecutive steps — ``card-8-pinwheel-
+    diagonal`` needs 6 real portrait slots the remaining supply can't always
+    cover — so repeats there are legitimate and covered by the "unavoidable
+    repeat" test below, not this one. This test uses a milder 42/30 mix
+    where alternatives stay available throughout.)"""
+    photos = _mixed(tmp_path, 30, 42)
+    plans = plan_cards(photos, avoid_immediate_repeat=True)
+    ids = [p.template.id for p in plans]
+    consecutive_repeats = [
+        (a, b) for a, b in zip(ids, ids[1:], strict=False) if a == b
+    ]
+    assert not consecutive_repeats, f"unexpected consecutive repeats: {consecutive_repeats}"
+
+
+def test_plan_cards_avoid_immediate_repeat_allows_unavoidable_repeat(tmp_path: Path) -> None:
+    """When a template is the *only* eligible candidate at consecutive
+    steps (extreme orientation skew), ``avoid_immediate_repeat`` must not
+    force a worse (mismatch-inducing) pick just to dodge the repeat —
+    AC-ECC-04 always outranks the diversity nicety."""
+    photos = _mixed(tmp_path, 69, 3)  # ~96% landscape, same as demo-1d4f92d534
+    plans = plan_cards(photos, avoid_immediate_repeat=True)
+    mismatches = count_orientation_mismatches(plans)
+    plain_mismatches = count_orientation_mismatches(plan_cards(photos))
+    assert mismatches == plain_mismatches, (
+        "avoid_immediate_repeat should never increase forced-crop mismatches "
+        "beyond what plain plan_cards already needed"
+    )
 
 
 def test_plan_poster_card_small_pool_uses_full_frame(tmp_path: Path) -> None:
