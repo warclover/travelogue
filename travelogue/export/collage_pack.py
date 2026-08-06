@@ -22,7 +22,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from travelogue.export.card_grouper import CardPlan, plan_cards
+from travelogue.export.card_grouper import CardPlan, count_orientation_mismatches, plan_cards
 from travelogue.export.card_renderer import (
     ALBUM_GUTTER,
     CARD_CANVAS,
@@ -102,6 +102,20 @@ def _album_target_per_card(n_photos: int, *, slide_count: int | None, profile: A
     return max(1, int(math.ceil(n_photos / target_cards)))
 
 
+def _mismatch_hint_suffix(plans: list[CardPlan]) -> str:
+    """Post-hoc mismatch heads-up (2026-08-06 product decision: warn, don't
+    block/pre-estimate). Appended to ``user_hint`` whenever CardGrouper's
+    supply-aware selection still had to force ``n`` slots to take a
+    wrong-orientation photo — always possible at the structural extremes
+    (e.g. an almost-entirely-portrait pool, or a manual "自定义张数" request
+    that skews the size distribution) even though it's now rare in
+    practice. Empty string when ``n == 0`` (the common case)."""
+    n = count_orientation_mismatches(plans)
+    if n <= 0:
+        return ""
+    return f"；其中 {n} 处因素材横竖版比例特殊被迫裁切，如觉不理想可调整自定义张数或补充相应方向的照片"
+
+
 def _pair_cards_for_spreads(
     plans: list[CardPlan],
 ) -> list[tuple[CardPlan, CardPlan | None]]:
@@ -164,6 +178,7 @@ def export_collage_pack(
         user_hint = (
             f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在{body_label}"
         )
+        user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
     else:
         album_target_per_card = _album_target_per_card(
@@ -185,6 +200,7 @@ def export_collage_pack(
             )
             pages_render.append(data)
         user_hint = f"已生成 {len(pages_render)} 张画册跨页拼贴（两张 3:4 + 中缝）"
+        user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
 
     writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)

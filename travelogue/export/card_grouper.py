@@ -43,7 +43,6 @@ from travelogue.export.card_templates import (
     CARD_TEMPLATES,
     CardSlot,
     CardTemplate,
-    templates_by_slot_count,
 )
 from travelogue.media.image_ops import peek_image_meta
 
@@ -212,6 +211,7 @@ def _best_matching_template(
     landscape_remaining: int,
     portrait_remaining: int,
     card_index: int,
+    target_per_card: int | None = None,
 ) -> CardTemplate:
     """Pick the best template among ``candidates`` given how much
     landscape/portrait supply *actually remains* trip-wide.
@@ -228,10 +228,18 @@ def _best_matching_template(
     while real landscape photos still need a home elsewhere in the plan —
     see module docstring — without forcing the planner to chase a
     near-perfect ratio match at the cost of many tiny cards.
-    Tier 3 — among the surviving "close enough" candidates, prefer the
-    larger slot count (fewer total cards; keeps the "greedy largest"
-    spirit of §5.1 as the deciding factor once orientation-fit is already
-    good, not an override of it).
+    Tier 3 — among the surviving "close enough" candidates:
+      · if ``target_per_card`` is given (2026-08-06, "自定义张数" soft-target
+        decision — see module docstring), prefer whichever slot count sits
+        closest to it, since orientation-fit (tiers 1-2) already ruled out
+        anything meaningfully worse — the user's requested card size is a
+        *preference* to honor once correctness is no longer at stake, not a
+        hard override of it (that was the pre-fix bug: a fixed target size
+        could force a template like ``card-5-hero-mid-landscape``, 100%
+        landscape, onto a mostly-portrait remainder).
+      · otherwise, prefer the larger slot count (fewer total cards; keeps
+        the "greedy largest" spirit of §5.1 as the deciding factor once
+        orientation-fit is already good, not an override of it).
     Tier 4 — round-robin by ``card_index`` for visual variety (OQ-ECC-04),
     same spirit as the original ``pick_template_for_count``.
     """
@@ -257,6 +265,13 @@ def _best_matching_template(
         for t in tier
         if proportion_deviation(t) <= best_deviation + _PROPORTION_SLOT_TOLERANCE
     ]
+
+    if target_per_card and target_per_card > 0:
+        best_size_gap = min(abs(t.slot_count - target_per_card) for t in close_enough)
+        close_enough = [
+            t for t in close_enough if abs(t.slot_count - target_per_card) == best_size_gap
+        ]
+
     max_size = max(t.slot_count for t in close_enough)
     finalists = sorted((t for t in close_enough if t.slot_count == max_size), key=lambda t: t.id)
     return finalists[card_index % len(finalists)]
@@ -303,6 +318,20 @@ def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> lis
     landscape photo with a later portrait photo (grouping/shot-order is
     explicitly *not* required by §4); what's guaranteed is every slot gets
     a photo of the shape it actually wants whenever *global* supply allows.
+
+    ``target_per_card`` (manual "自定义张数", 2026-08-06 soft-target
+    decision): no longer a hard chunk-size sequence (that's what let a
+    5-photo remainder get force-locked onto the 100%-landscape
+    ``card-5-hero-mid-landscape`` with no alternative — see module
+    docstring for the incident this fixes). It's now just one more scoring
+    input to the *same* per-step joint size+template selection auto mode
+    uses: orientation-fit is decided first (tiers 1-2 of
+    ``_best_matching_template``), and only among the templates that are
+    already "close enough" on that front does the planner then prefer
+    whichever size sits closest to what the user asked for. The resulting
+    page count may therefore drift from a literal reading of
+    ``target_per_card`` when the photo mix doesn't support it exactly —
+    that's intentional (AC-ECC-04 outranks the page-count preference).
     """
     if not photos:
         return []
@@ -311,47 +340,37 @@ def plan_cards(photos: list[Path], *, target_per_card: int | None = None) -> lis
 
     plans: list[CardPlan] = []
     card_index = 0
-
-    if target_per_card and target_per_card > 0:
-        # Manual "自定义张数" override: keep the *chunk-size sequence* the
-        # user asked for (plan_slot_counts' existing page-count contract),
-        # but still pick the best-orientation-matching template at each
-        # fixed size instead of blind round-robin — e.g. an 8-photo chunk
-        # with only 2 landscape photos left in supply should prefer
-        # card-8-pinwheel-diagonal (2 landscape-shaped slots) over
-        # card-8-grid-equal (8, which would force 6 borrowed photos).
-        for n in plan_slot_counts(len(photos), target_per_card=target_per_card):
-            template = _best_matching_template(
-                templates_by_slot_count(n),
-                landscape_remaining=len(landscape_queue),
-                portrait_remaining=len(portrait_queue),
-                card_index=card_index,
-            )
-            chunk = _pull_chunk_for_template(template, landscape_queue, portrait_queue)
-            ordered = assign_photos_to_slots(chunk, template)
-            plans.append(CardPlan(template=template, photos=tuple(ordered)))
-            card_index += 1
-    else:
-        # Auto mode (§5.1): no externally-fixed chunk sizes, so pick *both*
-        # the slot count and the template jointly at each step — otherwise
-        # committing to a count before checking supply is exactly how the
-        # "picked card-16-grid-equal because it's the largest count" bug
-        # happened (see module docstring).
-        while landscape_queue or portrait_queue:
-            remaining_total = len(landscape_queue) + len(portrait_queue)
-            candidates = [t for t in CARD_TEMPLATES.values() if t.slot_count <= remaining_total]
-            template = _best_matching_template(
-                candidates,
-                landscape_remaining=len(landscape_queue),
-                portrait_remaining=len(portrait_queue),
-                card_index=card_index,
-            )
-            chunk = _pull_chunk_for_template(template, landscape_queue, portrait_queue)
-            ordered = assign_photos_to_slots(chunk, template)
-            plans.append(CardPlan(template=template, photos=tuple(ordered)))
-            card_index += 1
+    while landscape_queue or portrait_queue:
+        remaining_total = len(landscape_queue) + len(portrait_queue)
+        candidates = [t for t in CARD_TEMPLATES.values() if t.slot_count <= remaining_total]
+        template = _best_matching_template(
+            candidates,
+            landscape_remaining=len(landscape_queue),
+            portrait_remaining=len(portrait_queue),
+            card_index=card_index,
+            target_per_card=target_per_card,
+        )
+        chunk = _pull_chunk_for_template(template, landscape_queue, portrait_queue)
+        ordered = assign_photos_to_slots(chunk, template)
+        plans.append(CardPlan(template=template, photos=tuple(ordered)))
+        card_index += 1
 
     return plans
+
+
+def count_orientation_mismatches(plans: list[CardPlan]) -> int:
+    """How many slots across ``plans`` ended up with a photo whose native
+    orientation doesn't match the slot's actual shape — i.e. a forced crop
+    AC-ECC-04 couldn't avoid given the trip's real landscape/portrait
+    supply (2026-08-06, post-hoc mismatch surfacing decision: callers use
+    this to append a heads-up to the export result rather than silently
+    shipping the crop — see ``export_collage_pack``)."""
+    return sum(
+        1
+        for plan in plans
+        for photo, slot in zip(plan.photos, plan.template.slots, strict=True)
+        if _slot_is_landscape_shaped(slot) != (_photo_orientation(photo) == "landscape")
+    )
 
 
 def plan_poster_card(ranked_photos: list[Path]) -> CardPlan:

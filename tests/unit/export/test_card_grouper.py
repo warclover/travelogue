@@ -10,6 +10,7 @@ from PIL import Image
 from travelogue.export.card_grouper import (
     _slot_is_landscape_shaped,
     assign_photos_to_slots,
+    count_orientation_mismatches,
     plan_cards,
     plan_poster_card,
     plan_slot_counts,
@@ -224,6 +225,63 @@ def test_plan_cards_never_picks_card16_when_landscape_supply_is_meaningful(
     photos = _mixed(tmp_path, 31, 41)
     plans = plan_cards(photos)
     assert plans[0].template.id != "card-16-grid-equal"
+
+
+@pytest.mark.parametrize(
+    ("n_landscape", "n_portrait", "target_per_card"),
+    [
+        (20, 27, 6),  # demo-1547c68851 repro ratio (2026-08-06 user report)
+        (20, 27, 5),  # target itself equals the all-landscape template's size
+        (2, 45, 6),  # landscape-scarce, same target as above
+    ],
+)
+def test_plan_cards_manual_target_per_card_still_avoids_avoidable_mismatches(
+    tmp_path: Path, n_landscape: int, n_portrait: int, target_per_card: int
+) -> None:
+    """Regression (2026-08-06, user report: 自定义张数=8 张即 target_per_card=6
+    时，``card-5-hero-mid-landscape`` 的横版槙位被塞进竖版照片). Root cause:
+    manual mode used to walk a *fixed* chunk-size sequence
+    (``plan_slot_counts``' repeat-nearest-count contract) and pick a
+    template only *within* that exact size — so a trailing 5-photo chunk
+    had no choice but the one 100%-landscape template that size offers,
+    however little landscape supply actually remained. ``target_per_card``
+    is now a **soft** bias on the same joint size+template selection auto
+    mode uses (2026-08-06 "soft-target" decision): AC-ECC-04 orientation
+    correctness always outranks hitting the requested size exactly, so the
+    resulting page count may drift from a literal reading of
+    ``target_per_card`` — that's intentional, not a regression."""
+    photos = _mixed(tmp_path, n_landscape, n_portrait)
+    plans = plan_cards(photos, target_per_card=target_per_card)
+    total = sum(len(p.photos) for p in plans)
+    assert total == n_landscape + n_portrait
+    assert set(p for plan in plans for p in plan.photos) == set(photos)
+
+    total_landscape_shaped_slots = sum(
+        1 for plan in plans for slot in plan.template.slots if _slot_is_landscape_shaped(slot)
+    )
+    structural_shortfall = abs(n_landscape - total_landscape_shaped_slots)
+    mismatches = count_orientation_mismatches(plans)
+    assert mismatches <= structural_shortfall, (
+        f"target_per_card={target_per_card} n_landscape={n_landscape} "
+        f"n_portrait={n_portrait}: {mismatches} mismatches exceed the "
+        f"{structural_shortfall} structurally unavoidable given the chosen "
+        f"template mix's landscape-shaped-slot total ({total_landscape_shaped_slots})"
+    )
+
+
+def test_count_orientation_mismatches_matches_manual_computation(tmp_path: Path) -> None:
+    """Sanity check for the helper itself (used by ``export_collage_pack``'s
+    post-hoc "被迫裁切" hint, 2026-08-06): must agree with the same per-slot
+    orientation comparison the regression tests above compute inline."""
+    photos = _mixed(tmp_path, 31, 41)
+    plans = plan_cards(photos)
+    expected = sum(
+        1
+        for plan in plans
+        for photo, slot in zip(plan.photos, plan.template.slots, strict=True)
+        if _slot_is_landscape_shaped(slot) != ("l" in photo.stem and "p" not in photo.stem)
+    )
+    assert count_orientation_mismatches(plans) == expected
 
 
 def test_plan_cards_empty() -> None:

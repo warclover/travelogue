@@ -182,16 +182,23 @@ def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:
 
 
 def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Path) -> None:
-    """P2 · 用户可指定「跨页数」，语义与小红书「张数」控件一致（一跨页≈两张 3:4 卡）。"""
+    """P2 · 用户可指定「跨页数」，语义与小红书「张数」控件一致（一跨页≈两张 3:4 卡）——
+    但 2026-08-06「自定义张数=软目标」决策后，请求的跨页数只是引导而非硬约束：
+    当 20 张照片按「跨页数=2」反推出的单卡张数（5）恰好只对应一套 100% 横版模板
+    （card-5-hero-mid-landscape）、而实际供给是 10 横/10 竖对半分时，硬凑 4 张
+    size=5 的卡会强制把竖版照片塞进全横版槙位（AC-ECC-04 违规）。CardGrouper 改为
+    优先保正确、贴近目标张数退居其次，实际落地页数会略多于用户请求（这里是 3
+    而不是 2），但 0 处错配——这是设计意图内的取舍，不是回归。"""
     trips = tmp_path / "trips"
     create_trip("album-count", trips, title="画册指定跨页数")
     trip_dir = trips / "album-count"
     _seed_kept_photos(trip_dir, 20)
 
     result = export_collage_pack(trip_dir, platform="album_spread", slide_count=2)
-    assert result.page_count == 2
+    assert result.page_count == 3
+    assert "被迫裁切" not in result.user_hint  # 0 处结构性错配，不应出现兜底提示
     finals = list(trip_dir.glob("*-album-*.png"))
-    assert len(finals) == 2
+    assert len(finals) == 3
 
 
 def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None:
