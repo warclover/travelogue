@@ -274,6 +274,22 @@ def test_plan_cards_manual_target_per_card_still_avoids_avoidable_mismatches(
     )
 
 
+def test_plan_cards_soft_target_does_not_exceed_auto_mismatches(tmp_path: Path) -> None:
+    """Soft target must not create *more* orientation mismatches than plain auto.
+
+    Repro: 5 landscape + target_per_card=2 used to greedily pick card-2 thrice
+    and leave a landscape photo in portrait-shaped card-1 (1 mismatch), while
+    auto picks card-5-hero-mid-landscape (0 mismatch). Correctness rail must
+    fall back to the auto plan.
+    """
+    photos = _mixed(tmp_path, 5, 0)
+    soft = plan_cards(photos, target_per_card=2)
+    auto = plan_cards(photos)
+    assert count_orientation_mismatches(soft) <= count_orientation_mismatches(auto)
+    assert count_orientation_mismatches(soft) == 0
+    assert [p.template.id for p in soft] == [p.template.id for p in auto]
+
+
 def test_count_orientation_mismatches_matches_manual_computation(tmp_path: Path) -> None:
     """Sanity check for the helper itself (used by ``export_collage_pack``'s
     post-hoc "被迫裁切" hint, 2026-08-06): must agree with the same per-slot

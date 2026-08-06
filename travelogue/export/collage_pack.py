@@ -50,7 +50,7 @@ from travelogue.export.platform_profiles import (
     resolve_aspect_slide_count,
     resolve_xhs_slide_count,
 )
-from travelogue.export.poster_bric_pack import list_poster_photo_paths
+from travelogue.export.poster_bric_pack import _poster_candidate_pairs, list_poster_photo_paths
 
 _log = logging.getLogger(__name__)
 
@@ -160,12 +160,15 @@ def export_collage_pack(
     _ = fmt  # collage pages always PNG
     out_ext = "png"
 
-    paths = list_collage_photo_paths(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
+    pairs = _poster_candidate_pairs(trip_dir, limit=_COLLAGE_PHOTO_LIMIT)
+    paths = [path for path, _ in pairs]
     if not paths:
         raise LongshotExportError(
             "E_COLLAGE_N",
             "没有可导出的精选照片，请先完成策展",
         )
+    # AC-ECC-06 · 与 poster_bric_pack 同源注入资产元数据，启用人物保守焦点。
+    asset_lookup = dict(pairs).get
 
     card_wh = scale_canvas(CARD_CANVAS, scale)
 
@@ -175,7 +178,12 @@ def export_collage_pack(
         )
         plans = plan_cards_with_dominant_opener(paths, target_per_card=target_per_card)
         pages_render = [
-            render_card(list(plan.photos), plan.template, canvas_wh=card_wh)[0]
+            render_card(
+                list(plan.photos),
+                plan.template,
+                canvas_wh=card_wh,
+                asset_lookup=asset_lookup,
+            )[0]
             for plan in plans
         ]
         # 渲染管线与小红书完全一致；仅正文场景措辞不同（笔记 vs 图文）。
@@ -204,6 +212,7 @@ def export_collage_pack(
                 right_arg,
                 card_wh=card_wh,
                 gutter=gutter,
+                asset_lookup=asset_lookup,
             )
             pages_render.append(data)
         user_hint = f"已生成 {len(pages_render)} 张画册跨页拼贴（两张 3:4 + 中缝）"

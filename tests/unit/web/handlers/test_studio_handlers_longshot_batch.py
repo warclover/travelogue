@@ -293,3 +293,122 @@ def test_handle_longshot_batch_single_job_lock_shared_with_single_platform(
     status, body = handler.response
     assert status == 409
     assert body["error"] == "E_STUDIO_JOB_BUSY"
+
+
+def test_handle_longshot_batch_rejects_empty_platforms_array(tmp_path: Path) -> None:
+    """显式携带 platforms:[] 必须 400，禁止静默退回单平台默认导出。"""
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platforms": [],
+            "allowMissingSource": True,
+        },
+    )
+    handle_longshot(handler)
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_LNG2_EMPTY_BATCH"
+
+
+def test_handle_longshot_batch_rejects_non_list_platforms(tmp_path: Path) -> None:
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platforms": "xiaohongshu",
+            "allowMissingSource": True,
+        },
+    )
+    handle_longshot(handler)
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_LNG2_INVALID_BATCH_ITEM"
+
+
+def test_handle_longshot_batch_compose_only_ok_without_playwright(
+    tmp_path: Path,
+) -> None:
+    """AC-ECC-05 / PRD-BATCH §2 · 纯 Compose 批量在缺 Playwright 时仍应可提交。"""
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
+    trip_dir = trips / "demo"
+
+    def fake_export(_trip_dir, *, platform, **_kwargs):
+        out_path = trip_dir / f"{platform}-01.png"
+        out_path.write_bytes(b"fake")
+        from travelogue.export.longshot import LongshotOutput
+
+        return LongshotExportResult(
+            outputs=[LongshotOutput(path=out_path)],
+            platform=platform,
+            profile_label=platform,
+            page_count=1,
+            user_hint=f"{platform} ok",
+        )
+
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platforms": [
+                {"platform": "xiaohongshu"},
+                {"platform": "wechat_official"},
+                {"platform": "album_spread"},
+            ],
+            "allowMissingSource": True,
+        },
+    )
+
+    with (
+        patch(
+            "travelogue.web.studio_handlers.export_handlers._ensure_derivatives_for_export",
+        ),
+        patch(
+            "travelogue.export.longshot.playwright_longshot_available",
+            return_value=False,
+        ),
+        patch(
+            "travelogue.export.longshot_batch.export_trip_longshot",
+            side_effect=fake_export,
+        ),
+    ):
+        handle_longshot(handler)
+        status, body = handler.response
+        assert status == 202, body
+        job = wait_for_job(lambda: _fetch(body["jobId"]), timeout_sec=5)
+        assert job["status"] == "succeeded"
+        assert job["result"]["succeededCount"] == 3
+
+
+def test_handle_longshot_batch_still_rejects_playwright_platforms_without_browser(
+    tmp_path: Path,
+) -> None:
+    """含 wechat_moments 的批量在缺 Playwright 时仍应整体拒绝（v1 已知简化）。"""
+    trips = tmp_path / "trips"
+    create_trip("demo", trips, title="demo")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "demo",
+            "platforms": [
+                {"platform": "xiaohongshu"},
+                {"platform": "wechat_moments"},
+            ],
+            "allowMissingSource": True,
+        },
+    )
+    with patch(
+        "travelogue.export.longshot.playwright_longshot_available",
+        return_value=False,
+    ):
+        handle_longshot(handler)
+        status, body = handler.response
+        assert status == 400
+        assert body["error"] == "E_LNG2_BATCH_CLIENT_FALLBACK_UNSUPPORTED"
+        assert "wechat_moments" in body["message"]
+        assert "xiaohongshu" not in body["message"]

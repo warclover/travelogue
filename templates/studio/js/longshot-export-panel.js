@@ -1145,10 +1145,16 @@ export function formatBatchSuccess(result) {
           return i.ok;
         }).length;
   var failed = result.failedCount != null ? result.failedCount : total - succeeded;
-  var title =
-    failed > 0
-      ? "已完成 " + succeeded + "/" + total + " 个模式（" + failed + " 个失败）"
-      : "✓ " + total + " 个模式已全部导出";
+  var title;
+  if (total > 0 && succeeded === 0) {
+    // 全失败仍可能以 job.status=succeeded 收尾（D-BEX-05 容器语义），
+    // 文案必须与「部分成功」区分开，避免「已完成 0/N」误导。
+    title = total + " 个模式全部失败";
+  } else if (failed > 0) {
+    title = "已完成 " + succeeded + "/" + total + " 个模式（" + failed + " 个失败）";
+  } else {
+    title = "✓ " + total + " 个模式已全部导出";
+  }
   var lines = items.map(function (item) {
     var label = shortCtaLabelForPlatform(item.platform);
     if (item.ok) {

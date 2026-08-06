@@ -280,3 +280,35 @@ def test_export_collage_pack_empty_raises(tmp_path: Path) -> None:
     with pytest.raises(LongshotExportError) as ei:
         export_collage_pack(trip_dir, platform="xiaohongshu")
     assert getattr(ei.value, "code", None) == "E_COLLAGE_N"
+
+
+def test_export_collage_pack_passes_asset_lookup_to_renderer(tmp_path: Path) -> None:
+    """AC-ECC-06 wiring · collage 必须把 trip 资产元数据注入 CardRenderer。"""
+    trips = tmp_path / "trips"
+    create_trip("xhs-lookup", trips, title="lookup")
+    trip_dir = trips / "xhs-lookup"
+    _seed_kept_photos(trip_dir, 4)
+
+    seen: list[object] = []
+
+    def _fake_render_card(photos, template, *, canvas_wh, asset_lookup=None, **_kw):
+        seen.append(asset_lookup)
+        from travelogue.export.card_renderer import render_card as real_render
+
+        return real_render(
+            photos, template, canvas_wh=canvas_wh, asset_lookup=asset_lookup
+        )
+
+    with patch("travelogue.export.collage_pack.render_card", side_effect=_fake_render_card):
+        export_collage_pack(trip_dir, platform="xiaohongshu")
+
+    assert seen, "render_card was not called"
+    assert all(callable(lookup) for lookup in seen)
+    any_hit = False
+    for path in (trip_dir / "source").glob("*.jpg"):
+        asset = seen[0](path)
+        if asset is not None:
+            any_hit = True
+            assert isinstance(asset, dict)
+            assert asset.get("id")
+    assert any_hit, "asset_lookup should resolve at least one collage photo path"

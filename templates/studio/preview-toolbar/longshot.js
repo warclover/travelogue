@@ -2697,26 +2697,51 @@ export function cancelPreviewLongshotExport(root) {
             _setSlowHint(root, "", false);
             if (job.status === "succeeded") {
               var result = job.result || {};
-              markExportPulseSeen(tripId);
-              writeExportSideEffect(tripId);
+              var batchSucceeded =
+                result.succeededCount != null
+                  ? Number(result.succeededCount)
+                  : (result.items || []).filter(function (it) {
+                      return it && it.ok;
+                    }).length;
+              // D-BEX-05 下 job 容器几乎总是 succeeded；全失败时不得触发
+              // 「分享图已就绪」侧效应 / 成功埋点，避免陈旧产物被当成新导出。
+              var anyBatchOk = batchSucceeded > 0;
+              if (anyBatchOk) {
+                markExportPulseSeen(tripId);
+                writeExportSideEffect(tripId);
+              }
               var summary = formatBatchSuccess(result);
-              trackStudioEvent("longshot_export_success", {
-                platform: "batch:" + platforms.join(","),
-                output_count: (result.items || []).reduce(function (n, it) {
-                  return n + ((it.outputs && it.outputs.length) || 0);
-                }, 0),
-                target_page_count: null,
-                duration_ms: Date.now() - t0,
-                trip_id: tripId,
-                surface: "preview",
-                from: from,
-                batch_succeeded: result.succeededCount,
-                batch_failed: result.failedCount,
-              });
+              if (anyBatchOk) {
+                trackStudioEvent("longshot_export_success", {
+                  platform: "batch:" + platforms.join(","),
+                  output_count: (result.items || []).reduce(function (n, it) {
+                    return n + ((it.outputs && it.outputs.length) || 0);
+                  }, 0),
+                  target_page_count: null,
+                  duration_ms: Date.now() - t0,
+                  trip_id: tripId,
+                  surface: "preview",
+                  from: from,
+                  batch_succeeded: result.succeededCount,
+                  batch_failed: result.failedCount,
+                });
+              } else {
+                trackStudioEvent("longshot_export_fail", {
+                  platform: "batch:" + platforms.join(","),
+                  error: "E_LNG2_BATCH_ALL_FAILED",
+                  message: summary.title,
+                  trip_id: tripId,
+                  surface: "preview",
+                  from: from,
+                  batch_failed: result.failedCount,
+                });
+              }
               setLongshotExportState(root, "done");
-              try {
-                markLongshotReady(tripId);
-              } catch (_readyErr) {}
+              if (anyBatchOk) {
+                try {
+                  markLongshotReady(tripId);
+                } catch (_readyErr) {}
+              }
               if (hasChecklistDock()) {
                 // Stage 3 · 清单化完成面：逐项 ✅/✗ + 各自 detail（张数/失败原因）。
                 var firstOutput = null;
@@ -2740,27 +2765,33 @@ export function cancelPreviewLongshotExport(root) {
                     summary.title +
                     (summary.lines.length ? " · " + summary.lines.join("；") : "");
                   if (typeof studioToast === "function") {
-                    studioToast(toastMsg, { duration: 6000 });
+                    studioToast(toastMsg, {
+                      duration: 6000,
+                      error: !anyBatchOk,
+                    });
                   } else {
-                    _showToolbarToast(toastMsg, { error: summary.failedCount > 0 });
+                    _showToolbarToast(toastMsg, {
+                      error: summary.failedCount > 0 || !anyBatchOk,
+                    });
                   }
                 } catch (_toastErr) {}
               }
-              try {
-                trackStudioEvent("export_ok_toast_shown", {
-                  platform: "batch:" + platforms.join(","),
-                  output_count: summary.succeededCount,
-                  trip_id: tripId,
-                });
-              } catch (_toastErr2) {}
-              try {
-                window.dispatchEvent(
-                  new CustomEvent("travelogue:longshot-export-ready", {
-                    detail: { tripId: tripId, platform: platforms[0], batch: true },
-                  })
-                );
-              } catch (_evErr) {}
-            } else if (job.status === "failed") {
+              if (anyBatchOk) {
+                try {
+                  trackStudioEvent("export_ok_toast_shown", {
+                    platform: "batch:" + platforms.join(","),
+                    output_count: summary.succeededCount,
+                    trip_id: tripId,
+                  });
+                } catch (_toastErr2) {}
+                try {
+                  window.dispatchEvent(
+                    new CustomEvent("travelogue:longshot-export-ready", {
+                      detail: { tripId: tripId, platform: platforms[0], batch: true },
+                    })
+                  );
+                } catch (_evErr) {}
+              }
               var err = job.error || {};
               trackBatchFail(err.code || "E_EXPORT_LONGSHOT", err.message || "批量导出失败");
             } else if (job.status === "cancelled") {

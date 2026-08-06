@@ -237,6 +237,7 @@ def _handle_longshot_batch(
         export_trip_longshot_batch,
     )
     from travelogue.export.platform_profiles import (
+        COMPOSE_PLATFORM_IDS,
         DEFAULT_PLATFORM,
         PlatformProfileError,
         normalize_platform_id,
@@ -352,8 +353,9 @@ def _handle_longshot_batch(
 
     # M-INS-0c 同款守门：批量暂不支持"部分平台走浏览器兼容模式"的混合态，
     # 缺 Playwright 时直接拒绝提交并指名哪些平台需单独导出（远比半开更安全）。
+    # Compose / 九宫格走 Pillow，不依赖 Playwright（AC-ECC-05 / PRD-BATCH §2）。
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    server_pack_platforms = frozenset({"moments_grid", "poster_bric"})
+    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"}
     if force_client or not playwright_longshot_available():
         needs_playwright = [
             p["platform_id"] for p in parsed if p["platform_id"] not in server_pack_platforms
@@ -626,8 +628,30 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     # PRD-BATCH-EXPORT-MULTISELECT-V1 D-BEX-02 · platforms[] 批量分支，与单平台
     # 路径（下方）完全独立、互不影响；未带 platforms 字段时行为零改动（向后兼容）。
-    platforms_raw = payload.get("platforms")
-    if isinstance(platforms_raw, list) and platforms_raw:
+    # 一旦请求显式携带 platforms 键，必须走批量校验（空数组/非 list 直接 400），
+    # 禁止静默退回单平台默认导出（避免契约错配）。
+    if "platforms" in payload:
+        platforms_raw = payload.get("platforms")
+        if not isinstance(platforms_raw, list):
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_INVALID_BATCH_ITEM",
+                    "message": "platforms 须为数组",
+                },
+            )
+            return
+        if not platforms_raw:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_LNG2_EMPTY_BATCH",
+                    "message": "platforms 不能为空",
+                },
+            )
+            return
         _handle_longshot_batch(
             handler,
             trip_id=trip_id,
@@ -751,9 +775,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    # M-INS-0c · 真九宫格 / 单屏海报不需 Playwright；其余保留 client fallback。
+    # M-INS-0c · 真九宫格 / Compose 拼贴（小红书/公众号/画册/海报）不需 Playwright；
+    # 其余保留 client fallback（AC-ECC-05）。
+    from travelogue.export.platform_profiles import COMPOSE_PLATFORM_IDS
+
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    server_pack_platforms = frozenset({"moments_grid", "poster_bric"})
+    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"}
     if profile.id not in server_pack_platforms and (
         force_client or not playwright_longshot_available()
     ):

@@ -379,6 +379,18 @@ test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整�
   });
   assert.equal(partial.title, "已完成 1/2 个模式（1 个失败）");
   assert.match(partial.lines[1], /✗.*画布太大/);
+
+  const allFailed = formatBatchSuccess({
+    batch: true,
+    succeededCount: 0,
+    failedCount: 2,
+    items: [
+      { platform: "xiaohongshu", ok: false, message: "无照片" },
+      { platform: "album_spread", ok: false, message: "无照片" },
+    ],
+  });
+  assert.equal(allFailed.title, "2 个模式全部失败");
+  assert.equal(allFailed.succeededCount, 0);
 });
 
 test("batchChecklistItems · 进行中清单：早于当前=done，当前=running，其余=queued", () => {

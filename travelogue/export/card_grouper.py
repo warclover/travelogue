@@ -423,9 +423,40 @@ def plan_cards(
     candidate at that step. Combined with the usage-balanced tie-break
     above, this is what keeps facing/adjacent album pages from reading as
     copy-pasted.
+
+    Soft-target safety rail (2026-08-06 follow-up): if a ``target_per_card``
+    bias produces *strictly more* orientation mismatches than the same pool
+    under plain auto mode, fall back to the auto plan. Per-step soft bias
+    can otherwise prefer near-target sizes that leave awkward remainders
+    (e.g. landscape leftovers forced into portrait-shaped ``card-1``) even
+    though a zero-mismatch auto plan exists — which would violate the
+    product rule that AC-ECC-04 outranks page-count preference.
     """
     if not photos:
         return []
+    plans = _plan_cards_once(
+        photos,
+        target_per_card=target_per_card,
+        avoid_immediate_repeat=avoid_immediate_repeat,
+    )
+    if target_per_card and target_per_card > 0:
+        auto_plans = _plan_cards_once(
+            photos,
+            target_per_card=None,
+            avoid_immediate_repeat=avoid_immediate_repeat,
+        )
+        if count_orientation_mismatches(plans) > count_orientation_mismatches(auto_plans):
+            return auto_plans
+    return plans
+
+
+def _plan_cards_once(
+    photos: list[Path],
+    *,
+    target_per_card: int | None = None,
+    avoid_immediate_repeat: bool = False,
+) -> list[CardPlan]:
+    """Single greedy pass used by ``plan_cards`` (and its soft-target rail)."""
     landscape_queue = [p for p in photos if _photo_orientation(p) == "landscape"]
     portrait_queue = [p for p in photos if _photo_orientation(p) != "landscape"]
 
