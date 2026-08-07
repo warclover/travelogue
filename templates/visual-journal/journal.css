@@ -490,8 +490,15 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   user-select: none;
 }
 
+/* D-CAL-20（v0.6）：白名单在 whitelist.py 的 DEFAULT_ENABLED_STYLES 每加一个
+   styleId，这里也要跟着补一行选择器——两处目前没有自动同步机制，是已知的
+   手动维护点（Python 侧/CSS 侧各自一份白名单）。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art,
-html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art {
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art,
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art {
   display: block;
   position: absolute;
   left: var(--title-art-x, 50%);
