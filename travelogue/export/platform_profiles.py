@@ -371,6 +371,45 @@ def resolve_xhs_slide_count(
     )
 
 
+def resolve_album_slide_count(
+    *,
+    photo_count: int,
+    slide_count: int | None = None,
+    profile: PlatformProfile | None = None,
+) -> tuple[int, str]:
+    """Album body-spread count (跨页数) for ``album_spread``.
+
+    Manual ``slide_count``: clamp to profile min/max only — custom values need
+    not be multiples of 4.
+
+    Auto (``slide_count is None``): estimate ~8 photos per spread (≈4/card ×
+    2 cards), then **ceil to a multiple of 4** for print signatures. Small
+    albums whose raw estimate is ``< 3`` keep 1–2 spreads (do not force 4).
+    Auto results are soft targets for CardGrouper (orientation still wins).
+    """
+    import math
+
+    profile = profile or get_profile("album_spread")
+    min_pages = int(profile.min_pages or 1)
+    max_pages = int(profile.max_pages or 30)
+    photos = max(0, int(photo_count))
+    # Largest print-friendly quantum that still fits profile.max_pages (30 → 28).
+    max_quantum = max(4, (max_pages // 4) * 4)
+
+    if slide_count is not None:
+        n = max(min_pages, min(int(slide_count), max_pages))
+        return n, f"目标 {n} 张画册跨页"
+
+    n0 = max(1, int(math.ceil(photos / 8))) if photos else 1
+    if n0 < 3:
+        n = max(min_pages, min(n0, max_pages))
+        return n, f"目标 {n} 张画册跨页（小本自动）"
+
+    n = ((n0 + 3) // 4) * 4
+    n = max(4, min(n, max_quantum, max_pages))
+    return n, f"目标 {n} 张画册跨页（自动 · 印刷 4 的倍数）"
+
+
 def resolve_aspect_slide_count(
     *,
     photo_count: int,

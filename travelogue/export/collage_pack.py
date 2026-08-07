@@ -22,6 +22,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from travelogue.export.card_bookends import render_closing_card, render_cover_card
 from travelogue.export.card_grouper import (
     CardPlan,
     count_orientation_mismatches,
@@ -43,11 +44,12 @@ from travelogue.export.longshot import (
     _slug_title,
     _trip_title,
 )
+from travelogue.export.photo_grid_pack import _load_trip, _resolve_asset_image_path
 from travelogue.export.platform_longshot import PlatformExportWriter
 from travelogue.export.platform_profiles import (
     file_prefix_for_platform,
     get_profile,
-    resolve_aspect_slide_count,
+    resolve_album_slide_count,
     resolve_xhs_slide_count,
 )
 from travelogue.export.poster_bric_pack import _poster_candidate_pairs, list_poster_photo_paths
@@ -102,23 +104,24 @@ def _xhs_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any
 
 
 def _album_target_per_card(n_photos: int, *, slide_count: int | None, profile: Any) -> int | None:
-    """Advisory ``target_per_card`` hint for album_spread, derived from the
-    user's manual "跨页数" (spread count) request — mirrors
-    ``_xhs_target_per_card``'s "auto stays greedy, manual overrides steer
-    chunking" contract (§5.1). ``slide_count`` here counts **spreads**
-    (the platform's own output unit), so it's clamped against
-    ``album_spread``'s own profile bounds first; the target Card count is
-    then ~2x the clamped spread count (one spread = two Cards, plus a
-    possible trailing lone half-page — §3.1)."""
-    if slide_count is None:
-        return None
-    n_spreads, _hint = resolve_aspect_slide_count(
+    """Advisory ``target_per_card`` hint for album_spread.
+
+    ``slide_count`` counts **body spreads** (跨页). Manual values are clamped
+    only; auto (``None``) uses ``resolve_album_slide_count`` (ceil to a
+    multiple of 4 for print, with a small-album guard). Soft-steer contract
+    matches xhs: orientation correctness still outranks exact page count.
+
+    Small-album auto (resolved spreads ``< 4``) returns ``None`` so CardGrouper
+    stays greedy — avoids forcing a sparse 4-spread book on tiny pools.
+    """
+    n_spreads, _hint = resolve_album_slide_count(
         photo_count=n_photos,
         slide_count=slide_count,
         profile=profile,
-        hint_kind="album",
     )
     if n_spreads <= 0:
+        return None
+    if slide_count is None and n_spreads < 4:
         return None
     target_cards = max(1, n_spreads * 2)
     import math
@@ -151,6 +154,89 @@ def _pair_cards_for_spreads(
         right = plans[i + 1] if i + 1 < len(plans) else None
         spreads.append((left, right))
     return spreads
+
+
+def _album_subtitle(meta: dict[str, Any]) -> str:
+    """subtitle → hook → empty (PRD-ALBUM-EXPORT-BOOKENDS-V1 §3)."""
+    for key in ("subtitle", "hook"):
+        text = str(meta.get(key) or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _try_album_bookends(
+    trip_dir: Path,
+    *,
+    card_wh: tuple[int, int],
+) -> tuple[bytes | None, bytes | None, set[str]]:
+    """Render cover/closing when assets resolve; return PNG bytes + ids to
+    exclude from the body pool (only successfully rendered bookends).
+
+    Failures are swallowed (G-ABE-05) — never raise into the album body path.
+    """
+    cover_bytes: bytes | None = None
+    closing_bytes: bytes | None = None
+    exclude_ids: set[str] = set()
+    try:
+        trip = _load_trip(trip_dir)
+    except LongshotExportError:
+        return None, None, exclude_ids
+    except Exception:
+        _log.exception("album bookends: trip load failed")
+        return None, None, exclude_ids
+
+    assets_by_id = {
+        str(a.get("id") or ""): a
+        for a in (trip.get("assets") or [])
+        if isinstance(a, dict) and str(a.get("id") or "").strip()
+    }
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    title = str(meta.get("title") or "").strip() or _trip_title(trip_dir)
+    subtitle = _album_subtitle(meta)
+
+    cover_id = str(trip.get("coverAssetId") or "").strip()
+    if cover_id:
+        asset = assets_by_id.get(cover_id)
+        path = _resolve_asset_image_path(asset, trip_dir) if asset else None
+        if path is not None and path.is_file():
+            cover_bytes = render_cover_card(
+                path, title=title, subtitle=subtitle, canvas_wh=card_wh
+            )
+            if cover_bytes:
+                exclude_ids.add(cover_id)
+
+    closing_id = ""
+    curation = trip.get("curation")
+    if isinstance(curation, dict):
+        closing_id = str(curation.get("closingAssetId") or "").strip()
+    if closing_id:
+        asset = assets_by_id.get(closing_id)
+        path = _resolve_asset_image_path(asset, trip_dir) if asset else None
+        if path is not None and path.is_file():
+            closing_bytes = render_closing_card(
+                path, title=title, canvas_wh=card_wh
+            )
+            if closing_bytes:
+                exclude_ids.add(closing_id)
+
+    return cover_bytes, closing_bytes, exclude_ids
+
+
+def _album_bookends_hint(
+    *,
+    page_count: int,
+    has_cover: bool,
+    has_closing: bool,
+) -> str:
+    parts: list[str] = []
+    if has_cover:
+        parts.append("封面 1 张")
+    parts.append("正文跨页拼贴")
+    if has_closing:
+        parts.append("封底 1 张")
+    detail = " + ".join(parts)
+    return f"已生成 {page_count} 张画册页面（含{detail}）"
 
 
 def export_collage_pack(
@@ -215,29 +301,65 @@ def export_collage_pack(
         user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
     else:
-        album_target_per_card = _album_target_per_card(
-            len(paths), slide_count=slide_count, profile=profile
+        # PRD-ALBUM-EXPORT-BOOKENDS-V1 · cover/closing are album-only add-ons.
+        # Exclude only successfully rendered bookend asset ids from the body
+        # pool (D-ABE-03/05); shared upstream ``pairs`` stay untouched for
+        # xhs/mp (G-ABE-04).
+        cover_bytes, closing_bytes, exclude_ids = _try_album_bookends(
+            trip_dir, card_wh=card_wh
         )
-        plans = plan_cards(
-            paths, target_per_card=album_target_per_card, avoid_immediate_repeat=True
-        )
-        spreads = _pair_cards_for_spreads(plans)
-        gutter = (
-            int(round(ALBUM_GUTTER * 1.25)) if int(scale or 2) > 2 else ALBUM_GUTTER
-        )
-        pages_render = []
-        for left, right in spreads:
-            right_arg = (list(right.photos), right.template) if right else None
-            data, _diag = render_spread(
-                (list(left.photos), left.template),
-                right_arg,
-                card_wh=card_wh,
-                gutter=gutter,
-                asset_lookup=asset_lookup,
+        body_pairs = [
+            (p, a)
+            for p, a in pairs
+            if str(a.get("id") or "") not in exclude_ids
+        ]
+        body_paths = [p for p, _ in body_pairs]
+        if not body_paths and not cover_bytes and not closing_bytes:
+            raise LongshotExportError(
+                "E_COLLAGE_N",
+                "没有可导出的精选照片，请先完成策展",
             )
-            pages_render.append(data)
-        user_hint = f"已生成 {len(pages_render)} 张画册跨页拼贴（两张 3:4 + 中缝）"
-        user_hint += _mismatch_hint_suffix(plans)
+
+        body_pages: list[bytes] = []
+        plans: list[CardPlan] = []
+        if body_paths:
+            album_target_per_card = _album_target_per_card(
+                len(body_paths), slide_count=slide_count, profile=profile
+            )
+            plans = plan_cards(
+                body_paths,
+                target_per_card=album_target_per_card,
+                avoid_immediate_repeat=True,
+            )
+            spreads = _pair_cards_for_spreads(plans)
+            gutter = (
+                int(round(ALBUM_GUTTER * 1.25))
+                if int(scale or 2) > 2
+                else ALBUM_GUTTER
+            )
+            for left, right in spreads:
+                right_arg = (list(right.photos), right.template) if right else None
+                data, _diag = render_spread(
+                    (list(left.photos), left.template),
+                    right_arg,
+                    card_wh=card_wh,
+                    gutter=gutter,
+                    asset_lookup=asset_lookup,
+                )
+                body_pages.append(data)
+
+        pages_render = (
+            ([cover_bytes] if cover_bytes else [])
+            + body_pages
+            + ([closing_bytes] if closing_bytes else [])
+        )
+        user_hint = _album_bookends_hint(
+            page_count=len(pages_render),
+            has_cover=bool(cover_bytes),
+            has_closing=bool(closing_bytes),
+        )
+        if plans:
+            user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
 
     writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)

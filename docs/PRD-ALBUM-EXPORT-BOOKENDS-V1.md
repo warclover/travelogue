@@ -3,12 +3,12 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | v0.1 |
-| **状态** | Draft（方案已拍板，待排期实施） |
+| **文档版本** | v0.2 |
+| **状态** | Implemented（Stage 1–3 已落地；真材视觉核对见版本记录） |
 | **模块代号** | ABE（Album Bookends Export · 画册导出封面/封底页） |
 | **前置条件** | [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md)（小红书/公众号/画册共享的 CardGrouper→CardTemplateSelector→CardRenderer 管线）· [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md)（Web 端封面/封底引擎，`coverAssetId`/`curation.closingAssetId` 数据来源） |
 | **关联文档** | [PRD-BATCH-EXPORT-MULTISELECT-V1.md](./PRD-BATCH-EXPORT-MULTISELECT-V1.md)（画册照片池上限 250 张的最新决策，与本 PRD 的候选池排除逻辑衔接） |
-| **更新日期** | 2026-08-06 |
+| **更新日期** | 2026-08-07 |
 
 ---
 
@@ -183,4 +183,5 @@ body_paths = [p for p, _ in body_pairs]
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2 | 2026-08-07 | 落地：`card_bookends.py` + `collage_pack` album 分支接入；AC-ABE-01～07 单测齐全；真材核对 `demo-album` / `demo-49cbe46479`（封面首页、封底末页、正文排除） |
 | v0.1 | 2026-08-06 | 初稿：基于当日讨论（画册缺封面封底 → 拍板方案）落笔，明确复用手法而非跨层复用代码、封底排除统计文字改用极简落款+虚线撕边、`closingAssetId` 缺失时优雅跳过。尚未实施，等待排期 |

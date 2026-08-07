@@ -156,7 +156,8 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     # spreads: one full spread (cards 1+2) + one lone trailing card
     # rendered as a single-card-width half page per OQ-ECC-02).
     assert result.page_count == 2
-    assert "3:4" in (result.user_hint or "")
+    assert "画册页面" in (result.user_hint or "")
+    assert "正文跨页拼贴" in (result.user_hint or "")
     finals = sorted(trip_dir.glob("*-album-*.png"))
     assert len(finals) == 2
     sizes = []
@@ -167,6 +168,287 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     # width) — see test_album_spread_odd_card_gets_half_page.
     assert (2208, 1440) in sizes
     assert (1080, 1440) in sizes
+
+
+def _seed_album_with_bookends(
+    trip_dir: Path,
+    n_body: int,
+    *,
+    with_closing: bool = True,
+    cover_in_pool: bool = True,
+    closing_in_pool: bool = True,
+) -> tuple[str, str | None]:
+    """Seed kept photos plus cover/closing assets for ABE acceptance tests."""
+    trip_json = trip_dir / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    assets: list[dict] = []
+    displayed: list[str] = []
+
+    cover_id = "abe-cover"
+    cover_rel = f"source/{cover_id}.jpg"
+    _make_rgb(trip_dir / cover_rel, size=(900, 1200), color=(200, 80, 60))
+    assets.append(
+        {
+            "id": cover_id,
+            "type": "image",
+            "sourceFile": cover_rel,
+            "layoutEligible": True,
+        }
+    )
+    if cover_in_pool:
+        displayed.append(cover_id)
+
+    closing_id: str | None = None
+    if with_closing:
+        closing_id = "abe-closing"
+        closing_rel = f"source/{closing_id}.jpg"
+        _make_rgb(trip_dir / closing_rel, size=(900, 1200), color=(60, 80, 200))
+        assets.append(
+            {
+                "id": closing_id,
+                "type": "image",
+                "sourceFile": closing_rel,
+                "layoutEligible": True,
+            }
+        )
+        if closing_in_pool:
+            displayed.append(closing_id)
+
+    for i in range(n_body):
+        aid = f"abe-body-{i:02d}"
+        displayed.append(aid)
+        rel = f"source/{aid}.jpg"
+        size = (900, 600) if i % 2 == 0 else (600, 900)
+        _make_rgb(trip_dir / rel, size=size, color=(30 + i * 10, 80, 160))
+        assets.append(
+            {
+                "id": aid,
+                "type": "image",
+                "sourceFile": rel,
+                "layoutEligible": True,
+            }
+        )
+
+    data["assets"] = assets
+    data["coverAssetId"] = cover_id
+    meta = data.setdefault("meta", {})
+    meta["title"] = "ABE测试游记"
+    meta["subtitle"] = ""
+    meta["hook"] = "七天 · 慢行"
+    curation = data.setdefault("curation", {})
+    curation["displayedAssetIds"] = displayed
+    curation["closingAssetId"] = closing_id
+    cull = curation.setdefault("cullSummary", {})
+    cull["layoutEligibleCount"] = len(assets)
+    cull["finalLayoutEligibleCount"] = len(assets)
+    trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return cover_id, closing_id
+
+
+def test_album_bookends_cover_first_closing_last(tmp_path: Path) -> None:
+    """AC-ABE-01/02 · 第 1 页封面、最后 1 页封底，均为单卡宽度且内容匹配渲染器。"""
+    from travelogue.export.card_bookends import render_closing_card, render_cover_card
+    from travelogue.export.card_renderer import CARD_CANVAS
+
+    trips = tmp_path / "trips"
+    create_trip("abe-ends", trips, title="ABE封面封底")
+    trip_dir = trips / "abe-ends"
+    _seed_album_with_bookends(trip_dir, 8, with_closing=True)
+
+    result = export_collage_pack(trip_dir, platform="album_spread")
+    finals = sorted(trip_dir.glob("*-album-*.png"))
+    assert len(finals) == result.page_count
+    assert result.page_count >= 3
+    assert "封面 1 张" in (result.user_hint or "")
+    assert "封底 1 张" in (result.user_hint or "")
+
+    expected_cover = render_cover_card(
+        trip_dir / "source" / "abe-cover.jpg",
+        title="ABE测试游记",
+        subtitle="七天 · 慢行",  # empty subtitle → hook fallback
+        canvas_wh=CARD_CANVAS,
+    )
+    expected_closing = render_closing_card(
+        trip_dir / "source" / "abe-closing.jpg",
+        title="ABE测试游记",
+        canvas_wh=CARD_CANVAS,
+    )
+    assert expected_cover is not None and expected_closing is not None
+    assert finals[0].read_bytes() == expected_cover
+    assert finals[-1].read_bytes() == expected_closing
+
+    with Image.open(finals[0]) as first:
+        assert first.size == (1080, 1440)
+    with Image.open(finals[-1]) as last:
+        assert last.size == (1080, 1440)
+
+
+def test_album_bookends_exclude_from_body(tmp_path: Path) -> None:
+    """AC-ABE-03 · 封面/封底图不进入正文跨页。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-excl", trips, title="ABE排除")
+    trip_dir = trips / "abe-excl"
+    cover_id, closing_id = _seed_album_with_bookends(
+        trip_dir, 6, cover_in_pool=True, closing_in_pool=True
+    )
+
+    seen_ids: list[str] = []
+
+    def _fake_render_spread(left, right, **kwargs):
+        from travelogue.export.card_renderer import render_spread as real
+
+        for plan in (left, right):
+            if plan is None:
+                continue
+            photos, _tmpl = plan
+            for path in photos:
+                # path stem is asset id for our seeded source/{id}.jpg layout
+                seen_ids.append(path.stem)
+        return real(left, right, **kwargs)
+
+    with patch(
+        "travelogue.export.collage_pack.render_spread", side_effect=_fake_render_spread
+    ):
+        export_collage_pack(trip_dir, platform="album_spread")
+
+    assert cover_id not in seen_ids
+    assert closing_id not in seen_ids
+    assert any(s.startswith("abe-body-") for s in seen_ids)
+
+
+def test_album_bookends_skip_closing_when_missing(tmp_path: Path) -> None:
+    """AC-ABE-04 · closingAssetId 为空时正常导出且无封底页。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-noclose", trips, title="ABE无封底")
+    trip_dir = trips / "abe-noclose"
+    _seed_album_with_bookends(trip_dir, 8, with_closing=False)
+
+    result = export_collage_pack(trip_dir, platform="album_spread")
+    assert result.page_count >= 2
+    assert "封面 1 张" in (result.user_hint or "")
+    assert "封底" not in (result.user_hint or "")
+
+
+def test_album_bookends_render_failure_does_not_block(tmp_path: Path) -> None:
+    """AC-ABE-06 · 封面素材不可读时跳过该页，正文仍导出。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-fail", trips, title="ABE容错")
+    trip_dir = trips / "abe-fail"
+    cover_id, _ = _seed_album_with_bookends(trip_dir, 8, with_closing=False)
+
+    # Remove the file and break every resolve key so bookend render is skipped
+    # without aborting the album body export.
+    (trip_dir / "source" / f"{cover_id}.jpg").unlink(missing_ok=True)
+    trip_json = trip_dir / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    for asset in data["assets"]:
+        if asset.get("id") == cover_id:
+            asset["sourceFile"] = "source/missing-cover.jpg"
+            break
+    trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    result = export_collage_pack(trip_dir, platform="album_spread")
+    assert result.page_count >= 1
+    assert "封面" not in (result.user_hint or "")
+
+
+def test_album_bookends_render_exception_skipped(tmp_path: Path) -> None:
+    """AC-ABE-06 · 渲染内部异常捕获跳过，不抛 LongshotExportError。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-exc", trips, title="ABE异常")
+    trip_dir = trips / "abe-exc"
+    _seed_album_with_bookends(trip_dir, 8, with_closing=True)
+
+    with patch(
+        "travelogue.export.card_bookends._cover_crop_to_canvas",
+        side_effect=RuntimeError("inject"),
+    ):
+        result = export_collage_pack(trip_dir, platform="album_spread")
+    assert result.page_count >= 1
+    assert "封面" not in (result.user_hint or "")
+    assert "封底" not in (result.user_hint or "")
+
+
+def test_album_bookends_target_uses_body_count(tmp_path: Path) -> None:
+    """AC-ABE-07 · _album_target_per_card 按排除后的正文张数计算。"""
+    from travelogue.export import collage_pack as cp
+
+    trips = tmp_path / "trips"
+    create_trip("abe-target", trips, title="ABE页数")
+    trip_dir = trips / "abe-target"
+    # 20 body + cover + closing in pool → body after exclude = 20
+    _seed_album_with_bookends(
+        trip_dir, 20, cover_in_pool=True, closing_in_pool=True
+    )
+
+    captured: list[int] = []
+    real = cp._album_target_per_card
+
+    def _spy_target(n_photos, **kwargs):
+        captured.append(n_photos)
+        return real(n_photos, **kwargs)
+
+    with patch.object(cp, "_album_target_per_card", side_effect=_spy_target):
+        export_collage_pack(trip_dir, platform="album_spread", slide_count=2)
+
+    assert captured == [20]
+
+
+def test_xhs_unchanged_when_bookends_present(tmp_path: Path) -> None:
+    """AC-ABE-05 · 小红书不受 album bookends 影响（页数/池仍含 cover|closing）。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-xhs", trips, title="ABE小红书回归")
+    trip_dir = trips / "abe-xhs"
+    _seed_album_with_bookends(trip_dir, 6, cover_in_pool=True, closing_in_pool=True)
+
+    result = export_collage_pack(trip_dir, platform="xiaohongshu")
+    assert result.platform == "xiaohongshu"
+    # 8 kept photos in pool (6 body + cover + closing); hint must stay xhs wording
+    assert "竖版拼贴" in (result.user_hint or "")
+    assert "封面" not in (result.user_hint or "")
+    assert result.page_count >= 1
+    finals = list(trip_dir.glob("*-xhs-*.png"))
+    assert len(finals) == result.page_count
+
+
+def test_wechat_official_unchanged_when_bookends_present(tmp_path: Path) -> None:
+    """AC-ABE-05 · 公众号不受 album bookends 影响。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-mp", trips, title="ABE公众号回归")
+    trip_dir = trips / "abe-mp"
+    _seed_album_with_bookends(trip_dir, 6, cover_in_pool=True, closing_in_pool=True)
+
+    result = export_collage_pack(trip_dir, platform="wechat_official")
+    assert result.platform == "wechat_official"
+    assert "图文正文" in (result.user_hint or "")
+    assert "封面" not in (result.user_hint or "")
+    assert "封底" not in (result.user_hint or "")
+    finals = list(trip_dir.glob("*-mp-*.png"))
+    assert len(finals) == result.page_count
+    for path in finals:
+        with Image.open(path) as im:
+            assert im.size == (1080, 1440)
+
+
+def test_poster_bric_unchanged_when_bookends_present(tmp_path: Path) -> None:
+    """AC-ABE-05 · 单张海报不受 album bookends 影响（仍单页、无封面封底语义）。"""
+    from travelogue.export.poster_bric_pack import export_poster_bric_pack
+
+    trips = tmp_path / "trips"
+    create_trip("abe-poster", trips, title="ABE海报回归")
+    trip_dir = trips / "abe-poster"
+    _seed_album_with_bookends(trip_dir, 6, cover_in_pool=True, closing_in_pool=True)
+
+    result = export_poster_bric_pack(trip_dir)
+    assert result.platform == "poster_bric"
+    assert result.page_count == 1
+    assert "封面" not in (result.user_hint or "")
+    assert "封底" not in (result.user_hint or "")
+    finals = list(trip_dir.glob("*-poster-*.png")) + list(trip_dir.glob("*-bric-*.png"))
+    # prefix varies by profile; fall back to result.outputs
+    if not finals:
+        finals = [Path(o.path) for o in result.outputs]
+    assert len(finals) == 1
 
 
 def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:
@@ -208,23 +490,16 @@ def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Pat
     assert len(finals) == 3
 
 
-def test_album_spread_slide_count_none_stays_auto_greedy(tmp_path: Path) -> None:
-    """slide_count=None（自动）不受本次改动影响 — 沿用既有自动分页结果。
-
-    2026-08-05 note: the *result* here is 2 spreads (see
-    test_export_album_spread_geometry for why — 12 seeded photos are 6
-    landscape + 6 portrait, and the orientation-supply-aware CardGrouper
-    fix now avoids stranding 2 landscape photos in portrait-shaped cells);
-    the behavior under test (auto mode has no externally-fixed page-count
-    target, unaffected by the slide_count P2 feature) is unchanged.
-    """
+def test_album_spread_auto_medium_soft_steers_toward_four(tmp_path: Path) -> None:
+    """中等本自动：软引导到 4 跨页档（软目标，允许因横竖版选型略有偏差）。"""
     trips = tmp_path / "trips"
-    create_trip("album-auto", trips, title="画册自动分页")
-    trip_dir = trips / "album-auto"
-    _seed_kept_photos(trip_dir, 12)
+    create_trip("album-auto-mid", trips, title="画册自动中等")
+    trip_dir = trips / "album-auto-mid"
+    _seed_kept_photos(trip_dir, 24)
 
-    auto_result = export_collage_pack(trip_dir, platform="album_spread")
-    assert auto_result.page_count == 2
+    result = export_collage_pack(trip_dir, platform="album_spread")
+    # 24 张 → resolve=4；无封面封底时 page_count≈正文跨页数，软目标附近。
+    assert 3 <= result.page_count <= 6
 
 
 def test_route_xiaohongshu_via_export_trip_longshot(tmp_path: Path) -> None:

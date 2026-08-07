@@ -22,12 +22,14 @@ import {
   ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
+  estimateAlbumAutoCount,
   exportSummaryLine,
   exportSummaryLineForPlatforms,
   formatBatchSuccess,
   isAlbumPresetCount,
   isComposePlatform,
   isXhsPresetCount,
+  migrateAlbumLegacyPreset,
   normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
@@ -95,6 +97,7 @@ function stubPopover(platformIds) {
       if (sel === "[data-smart-crop-btn]") return null;
       if (sel === "[data-scale-hint]") return { textContent: "" };
       if (sel === "[data-xhs-estimate]") return null;
+      if (sel === "[data-album-estimate]") return null;
       if (sel === "[data-batch-hint]") return batchHint;
       return null;
     },
@@ -222,7 +225,11 @@ test("P2 · 画册跨页数：夹取范围与小红书区分（1–30 vs 1–18�
   assert.equal(clampAlbumSlideCount(0), 1);
   assert.equal(clampAlbumSlideCount(30), 30);
   assert.equal(clampAlbumSlideCount(99), 30);
-  assert.equal(isAlbumPresetCount(3), true);
+  assert.equal(isAlbumPresetCount(3), false);
+  assert.equal(isAlbumPresetCount(4), true);
+  assert.equal(isAlbumPresetCount(8), true);
+  assert.equal(isAlbumPresetCount(12), true);
+  assert.equal(isAlbumPresetCount(16), true);
   assert.equal(isAlbumPresetCount(18), false);
 
   // 同一个数字，两个平台的夹取上限不同（18 vs 30）。
@@ -230,10 +237,28 @@ test("P2 · 画册跨页数：夹取范围与小红书区分（1–30 vs 1–18�
   assert.equal(clampSlideCountForPlatform("album_spread", 25), 25);
 });
 
+test("画册自动跨页 · 与后端 resolve_album_slide_count 对齐（ceil 到 4 的倍数）", () => {
+  assert.equal(estimateAlbumAutoCount(8), 1); // ceil(8/8)=1 · 小本
+  assert.equal(estimateAlbumAutoCount(12), 2); // ceil(12/8)=2 · 小本
+  assert.equal(estimateAlbumAutoCount(20), 4); // ceil(20/8)=3 → ceil→4
+  assert.equal(estimateAlbumAutoCount(32), 4); // ceil(32/8)=4
+  assert.equal(estimateAlbumAutoCount(40), 8); // ceil(40/8)=5 → ceil→8
+  assert.equal(migrateAlbumLegacyPreset(3), 4);
+  assert.equal(migrateAlbumLegacyPreset(6), 8);
+  assert.equal(migrateAlbumLegacyPreset(9), 12);
+  assert.equal(migrateAlbumLegacyPreset(5), 5);
+  assert.equal(migrateAlbumLegacyPreset(null), null);
+});
+
 test("P2 · buildPanelHtml 含跨页数字段；syncPanelUI 按 platform 显隐", () => {
   const html = buildPanelHtml(["wechat_chat", "xiaohongshu", "album_spread"]);
   assert.match(html, /data-field="album-count"/);
   assert.match(html, /data-studio-album-count="auto"/);
+  assert.match(html, /data-studio-album-count="4"/);
+  assert.match(html, /data-studio-album-count="8"/);
+  assert.match(html, /data-studio-album-count="12"/);
+  assert.match(html, /data-studio-album-count="16"/);
+  assert.doesNotMatch(html, /data-studio-album-count="3"/);
   assert.match(html, /跨页数/);
 
   const popAlbum = stubPopover();
@@ -249,10 +274,21 @@ test("P2 · buildPanelHtml 含跨页数字段；syncPanelUI 按 platform 显隐"
     platform: "album_spread",
     mode: "chapter",
     scale: 2,
-    slideCount: 6,
+    slideCount: 8,
   });
-  assert.match(popManual._expectBody.innerHTML, /6/);
+  assert.match(popManual._expectBody.innerHTML, /8/);
   assert.match(popManual._expectBody.innerHTML, /跨页/);
+
+  // 旧预设 6 打开画册面板时迁移为 8
+  const popLegacy = stubPopover();
+  const legacyDraft = {
+    platform: "album_spread",
+    mode: "chapter",
+    scale: 2,
+    slideCount: 6,
+  };
+  syncPanelUI(popLegacy, legacyDraft);
+  assert.equal(legacyDraft.slideCount, 8);
 });
 
 test("回归 2026-08-05 · 画册/小红书点击「自定义」必须落在非预设值上（否则自定义框不出现）", () => {
@@ -260,12 +296,15 @@ test("回归 2026-08-05 · 画册/小红书点击「自定义」必须落在非�
   // 导致无论从哪个入口点「自定义」，都会被 isAlbumPresetCount 打回预设态，
   // 自定义输入框永远不出现。
   assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(null)), false);
-  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(3)), false);
-  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(6)), false);
-  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(9)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(4)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(8)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(12)), false);
+  assert.equal(isAlbumPresetCount(resolveAlbumCustomSeed(16)), false);
   // 已经是自定义值时，保留用户原有输入，不要跳到默认种子值。
   assert.equal(resolveAlbumCustomSeed(7), 7);
   assert.equal(resolveAlbumCustomSeed(20), 20);
+  // 旧档 3/6/9 已不是预设，点自定义时保留原值（面板另有 migrate）
+  assert.equal(resolveAlbumCustomSeed(3), 3);
 
   // 小红书：同一套隐患（若用户先点了预设「6/9/12」再点「自定义」）。
   assert.equal(isXhsPresetCount(resolveXhsCustomSeed(null)), false);

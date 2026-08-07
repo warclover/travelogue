@@ -94,7 +94,7 @@ V2_HOME_MARKERS = (
     'id="v2-settings-zone-ai"',
     'id="studio-llm-settings-entry"',
     "开始制作我的画册",
-    "无需上传照片 · 隐私无忧 · 智能拼图排版",
+    "无需上传照片 · 个人隐私无忧 · 智能拼图排版 · 一键多种输出",
     # Import Failed overlay
     "v2-failure",
     "v2-failure-retry",
@@ -1354,6 +1354,6 @@ def test_homepage_v21_markers_present() -> None:
         'data-homepage-v21="1"',
         'id="v2-headline-trust"',
         'id="v2-settings-toggle"',
-        "无需上传照片 · 隐私无忧 · 智能拼图排版",
+        "无需上传照片 · 个人隐私无忧 · 智能拼图排版 · 一键多种输出",
     ):
         assert marker in html

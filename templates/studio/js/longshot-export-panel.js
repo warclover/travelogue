@@ -187,16 +187,33 @@ export function resolveXhsCustomSeed(currentSlideCount) {
  * P2 · 画册跨页数（mirrors 小红书张数控件；单位是「跨页」而非「张」— 一跨页
  * ≈两张 3:4 卡，见 collage_pack.py `_album_target_per_card`）。
  * 上限对齐 `config/platform_profiles.yaml` album_spread.output.max_pages。
+ * 印刷友好：快捷预设为 4 的倍数；自动模式见 ``estimateAlbumAutoCount`` /
+ * 后端 ``resolve_album_slide_count``。
  */
 export var ALBUM_SLIDE_COUNT_MIN = 1;
 export var ALBUM_SLIDE_COUNT_MAX = 30;
-export var ALBUM_PRESET_COUNTS = { "3": true, "6": true, "9": true };
+export var ALBUM_PRESET_COUNTS = { "4": true, "8": true, "12": true, "16": true };
+/** 旧版 3/6/9 预设 → 最近印刷档，打开画册面板时迁移。 */
+export var ALBUM_LEGACY_PRESET_MIGRATE = { "3": 4, "6": 8, "9": 12 };
 //: 2026-08-05 bugfix (user report: 画册「自定义」点击无反应) · must NOT
 //: collide with any ALBUM_PRESET_COUNTS value — see XHS_CUSTOM_DEFAULT above
 //: for why. The old code reused `6` here, which *is* an album preset, so
 //: clicking "自定义" always re-resolved back to the "6" preset button and
-//: the custom input never appeared.
+//: the custom input never appeared. 5 仍不在 4/8/12/16 内，可继续当种子。
 export var ALBUM_CUSTOM_DEFAULT = 5;
+
+/**
+ * 画册自动跨页数 · 与后端 ``resolve_album_slide_count`` 对齐：
+ * ~8 张/跨页估算，原始估算 ≥3 时向上取整到 4 的倍数；小本保持 1–2。
+ */
+export function estimateAlbumAutoCount(photoCount) {
+  var n = Number(photoCount) || 0;
+  var n0 = n > 0 ? Math.max(1, Math.ceil(n / 8)) : 1;
+  if (n0 < 3) return n0;
+  var maxQuantum = Math.max(4, Math.floor(ALBUM_SLIDE_COUNT_MAX / 4) * 4);
+  var out = Math.ceil(n0 / 4) * 4;
+  return Math.max(4, Math.min(out, maxQuantum, ALBUM_SLIDE_COUNT_MAX));
+}
 
 export function clampAlbumSlideCount(value) {
   var n = parseInt(value, 10);
@@ -206,6 +223,14 @@ export function clampAlbumSlideCount(value) {
 
 export function isAlbumPresetCount(slideCount) {
   return slideCount != null && !!ALBUM_PRESET_COUNTS[String(slideCount)];
+}
+
+/** 旧快捷档 3/6/9 → 4/8/12；其它值原样夹取。 */
+export function migrateAlbumLegacyPreset(slideCount) {
+  if (slideCount == null) return null;
+  var mapped = ALBUM_LEGACY_PRESET_MIGRATE[String(slideCount)];
+  if (mapped != null) return mapped;
+  return clampAlbumSlideCount(slideCount);
 }
 
 /**
@@ -557,9 +582,10 @@ export function buildPanelHtml(platformIds) {
     '<span class="preview-toolbar__export-popover-label">跨页数</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-album-count-seg>' +
     '<button type="button" data-studio-album-count="auto">自动</button>' +
-    '<button type="button" data-studio-album-count="3">3</button>' +
-    '<button type="button" data-studio-album-count="6">6</button>' +
-    '<button type="button" data-studio-album-count="9">9</button>' +
+    '<button type="button" data-studio-album-count="4">4</button>' +
+    '<button type="button" data-studio-album-count="8">8</button>' +
+    '<button type="button" data-studio-album-count="12">12</button>' +
+    '<button type="button" data-studio-album-count="16">16</button>' +
     '<button type="button" data-studio-album-count="custom">自定义</button>' +
     "</div>" +
     '<div class="preview-toolbar__export-xhs-custom" data-album-custom-row hidden>' +
@@ -568,6 +594,7 @@ export function buildPanelHtml(platformIds) {
     '<input type="number" min="1" max="30" step="1" inputmode="numeric" ' +
     'data-studio-album-custom-input class="preview-toolbar__export-xhs-custom-input" />' +
     "</label></div>" +
+    '<p class="preview-toolbar__export-xhs-estimate" data-album-estimate hidden></p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="xhs-pad" hidden>' +
     '<span class="preview-toolbar__export-popover-label">填充</span>' +
@@ -639,6 +666,14 @@ export function syncPanelUI(pop, draft, opts) {
   var showXhs = !isBatch && !!meta.showXhsOptions;
   var showAlbumCount = !isBatch && !!meta.showAlbumCountOptions;
   var smartOn = opts.smartCropEnabled === true;
+
+  // 旧快捷档 3/6/9 → 4/8/12（仅画册单选态；自定义其它值不动）
+  if (showAlbumCount && draft.slideCount != null) {
+    var migratedAlbum = migrateAlbumLegacyPreset(draft.slideCount);
+    if (migratedAlbum != null && migratedAlbum !== draft.slideCount) {
+      draft.slideCount = migratedAlbum;
+    }
+  }
 
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     var on = platforms.indexOf(btn.getAttribute("data-studio-longshot-platform")) >= 0;
@@ -769,6 +804,22 @@ export function syncPanelUI(pop, draft, opts) {
       est.textContent = "";
     }
   }
+  var albumEst = pop.querySelector("[data-album-estimate]");
+  if (albumEst) {
+    if (showAlbumCount && draft.slideCount == null) {
+      var albumN = estimateAlbumAutoCount(
+        opts.photoCount || estimatePhotoCountFromDom()
+      );
+      albumEst.hidden = false;
+      albumEst.textContent =
+        albumN < 4
+          ? "预计约 " + albumN + " 跨页（小本自动）"
+          : "预计约 " + albumN + " 跨页（自动 · 印刷 4 的倍数）";
+    } else {
+      albumEst.hidden = true;
+      albumEst.textContent = "";
+    }
+  }
 
   var appendixField = pop.querySelector('[data-field="appendix"]');
   var appendixInput = pop.querySelector("[data-studio-include-appendix]");
@@ -804,8 +855,17 @@ export function syncPanelUI(pop, draft, opts) {
           "将生成 <strong>" +
           draft.slideCount +
           " 张</strong> 3:4 竖版拼贴海报 · 预计较快完成";
+      } else if (showAlbumCount && draft.slideCount == null) {
+        var albumAutoN = estimateAlbumAutoCount(
+          opts.photoCount || estimatePhotoCountFromDom()
+        );
+        expectBody.innerHTML =
+          "将导出约 <strong>" +
+          albumAutoN +
+          " 张两卡跨页</strong>拼贴（自动" +
+          (albumAutoN >= 4 ? " · 印刷 4 的倍数" : " · 小本") +
+          "，约 1.53:1）";
       } else if (showAlbumCount && draft.slideCount != null) {
-        // Compose §5.1 · album 无 auto 公式；仅手动指定跨页数时才覆盖默认文案。
         expectBody.innerHTML =
           "将导出 <strong>" +
           draft.slideCount +
