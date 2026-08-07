@@ -22,7 +22,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from travelogue.export.card_bookends import render_closing_card, render_cover_card
+from travelogue.export.card_bookends import (
+    pick_portrait_preferring_id,
+    render_closing_card,
+    render_cover_card,
+)
 from travelogue.export.card_grouper import (
     CardPlan,
     count_orientation_mismatches,
@@ -165,6 +169,64 @@ def _album_subtitle(meta: dict[str, Any]) -> str:
     return ""
 
 
+def _album_cover_candidate_ids(trip: dict[str, Any]) -> list[str]:
+    """Portrait-leaning cover candidates for the album 3:4 canvas."""
+    curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+    ids: list[str] = []
+
+    def _add(raw: Any) -> None:
+        aid = str(raw or "").strip()
+        if aid:
+            ids.append(aid)
+
+    _add(trip.get("coverAssetId"))
+    by_layout = curation.get("coverByLayout")
+    if isinstance(by_layout, dict):
+        _add(by_layout.get("mobile"))
+    orient_by = curation.get("coverOrientationByLayout")
+    if isinstance(orient_by, dict):
+        mobile_orient = orient_by.get("mobile")
+        if isinstance(mobile_orient, dict):
+            _add(mobile_orient.get("preferredCandidateId"))
+    cands_by = curation.get("coverCandidatesByLayout")
+    if isinstance(cands_by, dict) and isinstance(cands_by.get("mobile"), list):
+        for item in cands_by["mobile"]:
+            _add(item)
+    else:
+        for item in trip.get("coverCandidates") or []:
+            _add(item)
+    # Last-resort: any kept photo so a portrait substitute exists when the
+    # cover candidate list is landscape-only (album 3:4 mismatch dogfood).
+    displayed = curation.get("displayedAssetIds")
+    if isinstance(displayed, list):
+        for item in displayed:
+            _add(item)
+    return ids
+
+
+def _album_closing_candidate_ids(
+    trip: dict[str, Any], *, exclude_ids: set[str]
+) -> list[str]:
+    """Closing candidates: declared id first, then displayed pool end→start."""
+    curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+    ids: list[str] = []
+    seen: set[str] = set()
+
+    def _add(raw: Any) -> None:
+        aid = str(raw or "").strip()
+        if not aid or aid in seen or aid in exclude_ids:
+            return
+        seen.add(aid)
+        ids.append(aid)
+
+    _add(curation.get("closingAssetId"))
+    displayed = curation.get("displayedAssetIds")
+    if isinstance(displayed, list):
+        for aid in reversed(displayed):
+            _add(aid)
+    return ids
+
+
 def _try_album_bookends(
     trip_dir: Path,
     *,
@@ -174,6 +236,7 @@ def _try_album_bookends(
     exclude from the body pool (only successfully rendered bookends).
 
     Failures are swallowed (G-ABE-05) — never raise into the album body path.
+    Portrait-preferring pick avoids landscape→3:4 cover-crop mismatch.
     """
     cover_bytes: bytes | None = None
     closing_bytes: bytes | None = None
@@ -195,27 +258,46 @@ def _try_album_bookends(
     title = str(meta.get("title") or "").strip() or _trip_title(trip_dir)
     subtitle = _album_subtitle(meta)
 
-    cover_id = str(trip.get("coverAssetId") or "").strip()
-    if cover_id:
+    def _resolve(asset: dict[str, Any]):
+        return _resolve_asset_image_path(asset, trip_dir)
+
+    cover_primary = str(trip.get("coverAssetId") or "").strip()
+    if cover_primary:
+        cover_id = pick_portrait_preferring_id(
+            cover_primary,
+            _album_cover_candidate_ids(trip),
+            assets_by_id=assets_by_id,
+            resolve_path=_resolve,
+        )
         asset = assets_by_id.get(cover_id)
-        path = _resolve_asset_image_path(asset, trip_dir) if asset else None
+        path = _resolve(asset) if asset else None
         if path is not None and path.is_file():
             cover_bytes = render_cover_card(
-                path, title=title, subtitle=subtitle, canvas_wh=card_wh
+                path,
+                title=title,
+                subtitle=subtitle,
+                canvas_wh=card_wh,
+                asset=asset,
             )
             if cover_bytes:
                 exclude_ids.add(cover_id)
 
-    closing_id = ""
+    closing_primary = ""
     curation = trip.get("curation")
     if isinstance(curation, dict):
-        closing_id = str(curation.get("closingAssetId") or "").strip()
-    if closing_id:
+        closing_primary = str(curation.get("closingAssetId") or "").strip()
+    if closing_primary:
+        closing_id = pick_portrait_preferring_id(
+            closing_primary,
+            _album_closing_candidate_ids(trip, exclude_ids=set(exclude_ids)),
+            assets_by_id=assets_by_id,
+            resolve_path=_resolve,
+        )
         asset = assets_by_id.get(closing_id)
-        path = _resolve_asset_image_path(asset, trip_dir) if asset else None
+        path = _resolve(asset) if asset else None
         if path is not None and path.is_file():
             closing_bytes = render_closing_card(
-                path, title=title, canvas_wh=card_wh
+                path, title=title, canvas_wh=card_wh, asset=asset
             )
             if closing_bytes:
                 exclude_ids.add(closing_id)

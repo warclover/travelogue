@@ -193,6 +193,9 @@ def _seed_album_with_bookends(
             "type": "image",
             "sourceFile": cover_rel,
             "layoutEligible": True,
+            "aspectKind": "portrait",
+            "width": 900,
+            "height": 1200,
         }
     )
     if cover_in_pool:
@@ -209,6 +212,9 @@ def _seed_album_with_bookends(
                 "type": "image",
                 "sourceFile": closing_rel,
                 "layoutEligible": True,
+                "aspectKind": "portrait",
+                "width": 900,
+                "height": 1200,
             }
         )
         if closing_in_pool:
@@ -281,6 +287,56 @@ def test_album_bookends_cover_first_closing_last(tmp_path: Path) -> None:
         assert first.size == (1080, 1440)
     with Image.open(finals[-1]) as last:
         assert last.size == (1080, 1440)
+
+
+def test_album_bookends_prefers_portrait_over_landscape_cover(tmp_path: Path) -> None:
+    """横版 coverAssetId + 竖版候选时，封面改用竖版，避免 3:4 错配硬裁。"""
+    trips = tmp_path / "trips"
+    create_trip("abe-orient", trips, title="ABE方向")
+    trip_dir = trips / "abe-orient"
+    cover_id, closing_id = _seed_album_with_bookends(trip_dir, 6, with_closing=True)
+
+    trip_json = trip_dir / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    # Turn declared cover into landscape; keep a portrait body photo as candidate.
+    land_rel = "source/abe-cover.jpg"
+    _make_rgb(trip_dir / land_rel, size=(1600, 900), color=(220, 40, 40))
+    for asset in data["assets"]:
+        if asset.get("id") == cover_id:
+            asset["aspectKind"] = "landscape"
+            asset["width"] = 1600
+            asset["height"] = 900
+        if asset.get("id") == "abe-body-01":
+            asset["aspectKind"] = "portrait"
+            asset["width"] = 600
+            asset["height"] = 900
+    data["coverCandidates"] = [cover_id, "abe-body-01"]
+    curation = data.setdefault("curation", {})
+    curation["coverCandidatesByLayout"] = {"mobile": [cover_id, "abe-body-01"]}
+    trip_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    seen_body: list[str] = []
+
+    def _fake_render_spread(left, right, **kwargs):
+        from travelogue.export.card_renderer import render_spread as real
+
+        for plan in (left, right):
+            if plan is None:
+                continue
+            photos, _tmpl = plan
+            for path in photos:
+                seen_body.append(path.stem)
+        return real(left, right, **kwargs)
+
+    with patch(
+        "travelogue.export.collage_pack.render_spread", side_effect=_fake_render_spread
+    ):
+        result = export_collage_pack(trip_dir, platform="album_spread")
+
+    assert "封面 1 张" in (result.user_hint or "")
+    # Portrait substitute used as cover → excluded from body.
+    assert "abe-body-01" not in seen_body
+    assert closing_id not in seen_body
 
 
 def test_album_bookends_exclude_from_body(tmp_path: Path) -> None:
@@ -360,7 +416,7 @@ def test_album_bookends_render_exception_skipped(tmp_path: Path) -> None:
     _seed_album_with_bookends(trip_dir, 8, with_closing=True)
 
     with patch(
-        "travelogue.export.card_bookends._cover_crop_to_canvas",
+        "travelogue.export.card_bookends._fit_photo_to_canvas",
         side_effect=RuntimeError("inject"),
     ):
         result = export_collage_pack(trip_dir, platform="album_spread")
