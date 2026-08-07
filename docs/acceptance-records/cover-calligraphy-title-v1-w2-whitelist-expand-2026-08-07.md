@@ -7,7 +7,7 @@
 | **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格 |
 | **日期** | 2026-08-07 |
 | **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp` 因仓内暂无真实样例，用同一份真实照片临时拷贝一份 trip 改 `coverOpeningStyle` 做视觉核对（验证后已删除临时目录，未提交） |
-| **结论** | **通过——过程中发现 1 处 CSS 侧白名单未同步的集成缺口，已定位修复** |
+| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复** |
 
 ---
 
@@ -37,6 +37,14 @@
 - **修复**：把 `band-cut` / `contact-stamp` 两个 `data-cover-opening` 值追加进同一条选择器列表（复用同一套 `left/top: var(--title-art-x/y)` 定位规则，因为 §6.2 算出来的百分比本身跟风格无关，只是矩形来源不同）。顺手在 CSS 里加了一行注释标注这是手动维护点，两处目前没有自动同步机制。
 - **验证**：修复前 `getComputedStyle(img).display === 'none'`；修复后重渲染 + 截图，贴纸正常显示在断带区域，见 §2 附件。
 
+### 1.3 【已修复】contact-stamp 自动配色未考虑固定深色渐罩 → 深墨读不出来
+
+- **现象**：1.2 修复上线并宣布完成后，用户直接拿 `http://127.0.0.1:8798/`（本记录 §1.2 用来核对的临时 contact-stamp trip）截图反馈：「文字都被遮挡了，且颜色一致，看不出来」。截图显示笔画只在照片区露出极小的笔尖，进入黑色面板区域后完全消失，只有红色印章还看得清。
+- **根因**：`journal.css` 里 `contact-stamp` 用 `.cover-opening[data-cover-opening="contact-stamp"]::after` 在**整张封面**上叠加一层不透明度约 0.3～0.72 的黑色渐变（跟原始照片内容无关），且该风格的原生 `<h1>` 因此固定用浅色 `#f5f2ec`、从不跟随照片亮度。但 §6.1 的自动配色（`roi_average_color`）采样的是**渐罩叠加前**的原始照片像素——这张真实毕业照在候选矩形区域内偏亮（浅蓝色校服/白色围栏花纹），算法据此判断「背景够亮，选深墨」，`pick_readable_color` 的达标判定（`contrast_ratio ≥ 3.0`）也是拿深墨去跟这个**虚高**的亮度估计比对，误判为达标——实际渲染出来的背景早被渐罩压到接近全黑，深墨完全读不出来。这跟 §1.2 是两个独立缺口：§1.2 是「贴纸看不见」（CSS 白名单没同步），本条是「贴纸看得见但读不出来」（配色输入信号跟渐罩前后不一致）。
+- **修复**：`PlacementPreset` 新增 `assume_dark_veil: bool` 字段；`contact-stamp` 标记为 `True`（其它三款白名单风格均为 `False`，均无这类全幅深色渐罩）。`engine.py` 在算出 `bg_rgb` 后，若命中该字段则直接改用近黑背景估计（`(10,10,10)`），让 §6.1 的对比度算法必然回到白色墨迹——不再信任「渐罩前」的原始照片采样。
+- **验证**：同一张真实照片、同一份真实 trip 数据，临时改风格为 `contact-stamp` 重新生成 + 渲染 + Playwright 截图核对，`trip.meta.titleArt.mainColor` 由修复前的深色变为 `#ffffff`，`explain` 新增一条 `"contact-stamp 固定深色渐罩 · 忽略照片原始亮度采样"`；视觉上标题字清晰可辨，见 §2.3。
+- **回归**：新增 `test_assume_dark_veil_flag`（`test_title_art_whitelist.py`，参数化核对四款白名单风格的该字段取值）；新增 `test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo`（`test_title_art_engine.py`，用一张纯白模拟照片断言即便原始 ROI 很亮，`assume_dark_veil` 生效后仍强制选回白色）。
+
 ---
 
 ## 2. 视觉核对
@@ -51,7 +59,13 @@
 
 贴纸落在左下角（左块候选），跨在照片底缘与做旧面板衔接处；右下角日戳档案号（"2026.05.27－06.23"）与左侧贴纸 x 轴无交集，互不干扰。
 
-![contact-stamp 临时核对](attachments/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07/contact-stamp-synthetic-scratch.png)
+![contact-stamp 临时核对（修复前，笔画进入黑色面板区后不可辨）](attachments/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07/contact-stamp-synthetic-scratch.png)
+
+### 2.3 contact-stamp · 深色渐罩配色修复后
+
+同一张真实照片、同一份数据，`assume_dark_veil` 生效后墨色改为白色，标题在黑色面板区域清晰可辨：
+
+![contact-stamp 深色渐罩修复后](attachments/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07/contact-stamp-dark-veil-fix.png)
 
 ---
 
@@ -59,7 +73,8 @@
 
 - `tests/unit/cover_engine/test_title_art_whitelist.py`：新增/更新 —— `band-cut`/`contact-stamp` 默认白名单断言；新增参数化测试逐一核对 `band-cut`/`contact-stamp`/`folio-overlap` 的 `rect` 与 `get_profile(style_id).text_safe_regions[i]` 完全一致（防止未来再度手搓脱节）；新增 `test_contact_stamp_rect_avoids_hook_region` 断言左右两块不重叠。
 - `test_other_styles_are_not_whitelisted` 参数化列表移除已转正的 `band-cut`，补充其它仍下线/非白名单风格覆盖。
-- 全量 `tests/unit/cover_engine/` 129 passed；`ruff check` 全绿。
+- 新增 `test_assume_dark_veil_flag`（`test_title_art_whitelist.py`）+ `test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo`（`test_title_art_engine.py`），见 §1.3。
+- 全量 `tests/unit/cover_engine/` 134 passed；`ruff check` 全绿。
 
 ---
 
@@ -71,5 +86,6 @@
 | `band-cut` 开放白名单 | ✅ 真实 trip 核对通过 |
 | `contact-stamp` 开放白名单 | ✅ 临时改风格核对通过（仓内暂无真实样例，建议后续遇到真实 contact-stamp trip 时补一次留痕） |
 | CSS 侧白名单同步缺口 | ✅ 已发现并修复 |
+| contact-stamp 自动配色未考虑深色渐罩 | ✅ 已发现并修复（用户实测反馈发现） |
 | `veil-footer` 现有矩形风险（D-CAL-20 优先顺位④） | ⏳ 未处理，本次范围外，见 OQ-CAL-08 |
 | `folio-overlap` 开放为默认白名单（优先顺位③） | ⏳ 未处理，矩形已对齐 registry 但仍保持默认关闭 |

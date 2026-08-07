@@ -198,6 +198,31 @@ def test_route_c_generation_failure_falls_back_to_route_b() -> None:
     assert trip["meta"]["titleArt"]["fallbackFrom"] == "diffusion-fixed-prompt-v1"
 
 
+def test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo(tmp_path) -> None:
+    # 2026-08-07 真实视觉核对：contact-stamp 全幅深色渐罩会把「原始照片很亮」
+    # 误判成「背景够亮，选深墨」，实际渲染深墨读不出来。用一张纯白照片模拟
+    # 「原始 ROI 很亮」，断言 assume_dark_veil 生效后必然选回白色墨迹。
+    photo_path = tmp_path / "bright.png"
+    Image.new("RGB", (800, 600), (245, 245, 245)).save(photo_path)
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "contact-stamp"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1"}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(
+        trip, resolve_asset_path=_resolve_asset_path, write_png=write_png
+    )
+    assert result is not None
+    assert len(written) == 1
+    assert result.main_color == "#ffffff"
+    assert any("固定深色渐罩" in line for line in result.explain)
+
+
 def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()

@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.6.1** |
-| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · [W1 真实素材视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）**；**v0.5 真实素材视觉验收发现并修复 3 处集成缺口（字库资产路径 / 贴纸容器定位 / stale 未接线），AC-CAL-03/07/08/09/12 转为通过**；**v0.6 产品复核 §6.2 定位策略（讨论向，未动代码），确认 Opening Registry `text_safe_regions` 应作为 placement 候选区的权威数据源，收窄 D-CAL-13 并新增 D-CAL-20，W2 白名单开放顺序定为 band-cut → contact-stamp → folio-overlap → veil-footer 修复 → scroll-head 暂缓**；**v0.6.1 落地 D-CAL-20 优先顺位①②：`whitelist.py` 改为从 `text_safe_regions` 派生坐标，开放 `band-cut`/`contact-stamp` 白名单，真实 trip 视觉核对通过，过程中发现并修复 CSS 侧白名单未同步的集成缺口（[验收记录](./acceptance-records/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07.md)）** |
+| **文档版本** | **v0.6.2** |
+| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · [W1 真实素材视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）**；**v0.5 真实素材视觉验收发现并修复 3 处集成缺口（字库资产路径 / 贴纸容器定位 / stale 未接线），AC-CAL-03/07/08/09/12 转为通过**；**v0.6 产品复核 §6.2 定位策略（讨论向，未动代码），确认 Opening Registry `text_safe_regions` 应作为 placement 候选区的权威数据源，收窄 D-CAL-13 并新增 D-CAL-20，W2 白名单开放顺序定为 band-cut → contact-stamp → folio-overlap → veil-footer 修复 → scroll-head 暂缓**；**v0.6.1 落地 D-CAL-20 优先顺位①②：`whitelist.py` 改为从 `text_safe_regions` 派生坐标，开放 `band-cut`/`contact-stamp` 白名单，真实 trip 视觉核对通过，过程中发现并修复 CSS 侧白名单未同步的集成缺口**；**v0.6.2 用户实测反馈 contact-stamp 贴纸文字读不出来，追查为自动配色未考虑该风格固定深色渐罩，已修复（[验收记录](./acceptance-records/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07.md)）** |
 | **DOC-STATUS** | **kickoff-w1** |
 | **主题代号** | 「点睛」— **CAL**（Calligraphy Title） |
 | **触发来源** | 2026-08-06 产品讨论：用户希望游记封面标题达到「即梦」文生图那种手写体艺术感；经过对既有内部 demo（`arttext-miniapp`）的实证分析，确认了可落地路径 |
@@ -34,6 +34,14 @@
 > - **过程中发现并修复 1 处集成缺口**：`journal.css` 存在一份独立于 `whitelist.py` 的 CSS 侧白名单（`.cover-opening__title-art` 默认 `display:none`，仅 `veil-footer` 一行覆盖为 `display:block`）——Python 侧加了新风格，CSS 侧未同步，贴纸 DOM 元素正确但不可见；已补 `band-cut`/`contact-stamp` 两行选择器并在 CSS 中注释标注这是手动维护点。
 > - **veil-footer 现有矩形**（D-CAL-20 优先顺位④）与 `folio-overlap` 默认开启（优先顺位③）本版**未处理**，维持 v0.6.0 结论。
 > - 新增/更新测试：`test_title_art_whitelist.py`（新增 `band-cut`/`contact-stamp` 白名单断言 + 矩形与 registry 一致性回归 + 避让 hook 区域断言）；`tests/unit/cover_engine/` 129 passed；`ruff check` 全绿。
+
+> **v0.6.2 相对 v0.6.1（contact-stamp 深色渐罩配色修复 · 2026-08-07 · [验收记录 §1.3](./acceptance-records/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07.md#13-已修复contact-stamp-自动配色未考虑固定深色渐罩--深墨读不出来)）**
+>
+> - **用户实测反馈**：v0.6.1 宣布完成后，用户直接截图反馈 `contact-stamp` 贴纸「文字都被遮挡了，且颜色一致，看不出来」。
+> - **根因**：`contact-stamp` 在 `journal.css` 里用 `::after` 给整张封面叠加一层与照片内容无关的黑色渐变（不透明度约 0.3～0.72），原生 `<h1>` 因此固定用浅色 `#f5f2ec`；但 §6.1 自动配色的 `roi_average_color` 采样的是**渐罩叠加前**的原始照片像素，真实照片在候选区域偏亮，算法据此选了深墨，`contrast_ratio` 达标判定也是拿深墨去跟这个**虚高**的亮度估计比对——实际渲染背景已被渐罩压近全黑，深墨读不出来。
+> - **修复**：`PlacementPreset` 新增 `assume_dark_veil: bool` 字段，`contact-stamp` 标记为 `True`（其余三款白名单风格均无此类全幅渐罩，为 `False`）；`engine.py` 命中该字段时改用近黑背景估计，让对比度算法必然回落白色。
+> - **验证**：同一真实照片临时改风格重新生成，`titleArt.mainColor` 由深色变为 `#ffffff`；Playwright 截图确认标题在黑色面板区域清晰可辨。
+> - 新增测试：`test_assume_dark_veil_flag`（`test_title_art_whitelist.py`）+ `test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo`（`test_title_art_engine.py`）；`tests/unit/cover_engine/` 134 passed；`ruff check` 全绿。
 
 > **v0.5.0 相对 v0.4.0（W1 真实素材视觉验收 · 2026-08-07 · [验收记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）**
 >
@@ -639,3 +647,4 @@
 | **v0.5.0** | 2026-08-07 | **W1 真实素材视觉验收**（[记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）：用真实 trip 跑通 AC-CAL-03/07/08/09/12，发现并修复 3 处 83 条单测未捕获的真实集成缺口——① 字库资产未随包分发致生产环境静默退化成微软雅黑（补 `assets/fonts/` + `LICENSE-NOTES.md`）；② 艺术字贴纸误嵌雾带文案面板致与 hook 文案重叠 + §6.2 定位坐标从未接进渲染上下文（死代码）+ 出稿未裁剪致居中锚点对不上可见字形（三处一并修）；③ `mark_title_art_stale` 从未被 `copy_patch.py` 调用致改标题不触发 stale（AC-CAL-09 实测不通过，已接线）。AC-CAL-03/07/08/09/12 转为 ✅；AC-CAL-11 仍待完整 W0.5 Spike |
 | **v0.6.0** | 2026-08-07 | **§6.2 定位策略复核**（讨论向，本版未改代码）：复核 Opening Registry 发现 `CoverStyleProfile.text_safe_regions` 已覆盖全部 10 款风格且已被 `title_safe.py::mark_title_safe` 生产使用，与真实渲染坐标高度吻合——收窄 D-CAL-13 并新增 **D-CAL-20**：placement 候选须从 `text_safe_regions` 派生而非自建独立矩形表；多候选须真正打分择优；补文案占位排除校验；复用 `mark_title_safe` 信号做统一闸门。逐风格结论：`veil-footer` 现矩形与 `focal_y_max:0.55` 冲突待修；`folio-overlap` 应对齐 registry 候选；`band-cut`/`contact-stamp` registry 矩形与真实渲染坐标精确吻合，评估为 W2 优先开放对象；`scroll-head` 竖排版式与现有横版画布不兼容，暂缓。更新 §5.4/§6.2/§11 W2 里程碑；新增 OQ-CAL-08 |
 | **v0.6.1** | 2026-08-07 | **落地 D-CAL-20 优先顺位①②**（[验收记录](./acceptance-records/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07.md)）：`whitelist.py` 改为从 `text_safe_regions` 派生矩形（不再手搓数值）；新开放 `band-cut`/`contact-stamp` 白名单；真实 trip（`demo-0ebda73294`）跑通视觉核对，`contact-stamp` 因仓内无真实样例改用临时改风格核对（未提交）。过程中发现并修复 1 处集成缺口：`journal.css` 存在独立于 `whitelist.py` 的 CSS 侧白名单（`display:none` 默认，仅 `veil-footer` 一行覆盖），新风格加入后未同步导致贴纸 DOM 正确但不可见——已补 `band-cut`/`contact-stamp` 两行选择器。`veil-footer` 现有矩形（优先顺位④）与 `folio-overlap` 默认开启（优先顺位③）本版未处理。新增/更新 `test_title_art_whitelist.py`；`tests/unit/cover_engine/` 129 passed；ruff 全绿 |
+| **v0.6.2** | 2026-08-07 | **contact-stamp 深色渐罩配色修复**（用户实测反馈发现，[验收记录 §1.3](./acceptance-records/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07.md)）：`contact-stamp` 的全幅深色渐罩（`journal.css` `::after`）与照片内容无关，但 §6.1 自动配色采样的是渐罩叠加前的原始照片，误判够亮选了深墨，实际渲染读不出来。`PlacementPreset` 新增 `assume_dark_veil` 字段，`engine.py` 命中时改用近黑背景估计强制回落白色；同一真实照片验证 `mainColor` 由深色变白色，视觉核对清晰可辨。新增 2 条回归测试；`tests/unit/cover_engine/` 134 passed；ruff 全绿 |

@@ -136,6 +136,13 @@ def resolve_title_art(
                 }
             bg_rgb = roi_average_color(cover_img, cand.box)
             explain.extend(cand.explain)
+            if preset.assume_dark_veil:
+                # 该风格会在此区域固定叠加与照片无关的深色渐罩（journal.css），
+                # 原始照片 ROI 的亮度采样是「遮罩前」的，直接采信会误判成够亮
+                # 从而选深墨，实际渲染出来深墨读不出来——改用近黑背景估计，
+                # §6.1 contrast_ratio 算法必然选回白色（2026-08-07 真实视觉核对）。
+                bg_rgb = (10, 10, 10)
+                explain.append(f"{style_id} 固定深色渐罩 · 忽略照片原始亮度采样")
 
     contrast = pick_readable_color(bg_rgb)
 

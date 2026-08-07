@@ -12,6 +12,13 @@ class PlacementPreset:
     opening_style_id: str
     label: str
     rect: dict[str, float]  # 画布归一化坐标 x/y/w/h
+    #: 该风格是否在 rect 覆盖的区域上固定叠加一层与照片内容无关的深色渐罩
+    #: （如 ``journal.css`` 里 ``.cover-opening[data-cover-opening="..."]::after``
+    #: 的全幅深色渐变）。为真时，§6.1 的自动配色不能只看原始照片 ROI 的亮度
+    #: 采样——采样结果是「遮罩前」的颜色，会误判成够亮从而选深墨，实际渲染
+    #: 出来的背景早被渐罩压到接近全黑，深墨读不出来（2026-08-07 真实视觉核
+    #: 对发现，contact-stamp 首例）。见 ``engine.py`` 里对该字段的消费。
+    assume_dark_veil: bool = False
 
 
 def _registry_rect(style_id: str, region_index: int) -> dict[str, float]:
@@ -68,6 +75,11 @@ WHITELIST: dict[str, PlacementPreset] = {
         opening_style_id="contact-stamp",
         label="日戳左下角文案区（registry 候选 #0，避让右下角 hook/日戳号）",
         rect=_registry_rect("contact-stamp", 0),
+        # journal.css 该风格用 .cover-opening[data-cover-opening="contact-stamp"]
+        # ::after 在整张封面上叠加一层不透明度约 0.3～0.72 的黑色渐变（且原生
+        # <h1> 固定用浅色 #f5f2ec，从不跟随照片亮度）——跟原始照片的实际亮度
+        # 无关，此处的原始照片 ROI 采样对这个风格是失真的。
+        assume_dark_veil=True,
     ),
 }
 

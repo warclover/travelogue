@@ -86,6 +86,23 @@ def test_placement_preset_rect_matches_registry_text_safe_region(
     }
 
 
+@pytest.mark.parametrize(
+    ("style_id", "expected"),
+    [
+        ("veil-footer", False),
+        ("band-cut", False),
+        ("folio-overlap", False),
+        ("contact-stamp", True),
+    ],
+)
+def test_assume_dark_veil_flag(style_id: str, expected: bool) -> None:
+    # 2026-08-07 真实视觉核对：contact-stamp 全幅深色渐罩与照片亮度无关，
+    # 自动配色不能只信原始照片 ROI 采样（见 engine.py 消费该字段）。
+    preset = placement_preset(style_id)
+    assert preset is not None
+    assert preset.assume_dark_veil is expected
+
+
 def test_contact_stamp_rect_avoids_hook_region() -> None:
     # 左块（title）与右块（hook/日戳号）不应重叠，确认贴纸只占左块。
     preset = placement_preset("contact-stamp")
