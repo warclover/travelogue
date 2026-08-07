@@ -23,13 +23,27 @@
     </div>
   </header>
   {{/if}}
+  {{#if hasTitleArt}}
+  {{! PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：贴纸挂在 cover-opening 直接子层，
+      而不是雾带底部的 cover-opening__panel——后者高度只由文案（钩子行等）撑
+      起，一旦贴纸嵌在里面，§6.2 算出的定位百分比就是相对这个矮面板算的，
+      几乎总会跟面板自身文案重叠。挪到这里后，百分比相对整张封面画布计算，
+      与 placement_score 的 rect 语义一致。 }}
+  <img
+    class="cover-opening__title-art"
+    src="{{titleArtSrc}}"
+    alt="{{titleArtAlt}}"
+    style="--title-art-x: {{titleArtX}}; --title-art-y: {{titleArtY}};"
+    loading="eager"
+    decoding="async"
+  />
+  {{/if}}
   <div class="cover-opening__panel" data-cover-seal="{{coverSealChar}}" data-cover-stamp="{{coverStampLabel}}">
     {{#if showCoverPlace}}
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
     {{> trip-meta}}
     {{#if hasTitleArt}}
-    <img class="cover-opening__title-art" src="{{titleArtSrc}}" alt="{{titleArtAlt}}" loading="eager" decoding="async" />
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}} sr-only" data-title="{{title}}" itemprop="name">{{title}}</h1>
     {{else}}
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" data-title="{{title}}" itemprop="name">{{title}}</h1>

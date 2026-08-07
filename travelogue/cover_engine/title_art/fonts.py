@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from PIL import ImageFont
 
@@ -12,6 +13,11 @@ FALLBACK_STACK: tuple[str, ...] = (
     "simhei.ttf",
     "NotoSerifSC-Regular.otf",
 )
+
+#: 随包分发的字库资产目录（D-CAL-07 授权字库实际落地位置）。
+#: 仅打包已核查 ``licensed=True`` 的字体文件——不随包分发未核查授权的候选，
+#: 避免误用；未核查字体保留在候选池仅用于评估，永不进 :func:`pick_default_font`。
+_ASSET_DIR = Path(__file__).resolve().parent / "assets" / "fonts"
 
 
 @dataclass(frozen=True)
@@ -41,6 +47,25 @@ def pick_default_font() -> FontCandidate:
     return pool[0]
 
 
+def resolve_font_source(filename: str) -> str:
+    """Resolve a pool filename to a loadable source for :class:`PIL.ImageFont`.
+
+    Prefers the bundled asset under ``assets/fonts/`` (works regardless of
+    whether the font is installed as an OS font — the original bug this
+    fixes: ``ImageFont.truetype("ZhiMangXing-Regular.ttf", ...)`` silently
+    fails on any machine without that font *installed*, degrading every
+    render to the generic ``msyh.ttc`` fallback and defeating the "calligraphy
+    sticker" premise while still *looking* fine because the fallback chain
+    never raises). Falls back to the bare filename (OS-resolvable) when no
+    bundled asset exists, so unlicensed pool entries (not shipped as assets)
+    still resolve the same way they did before.
+    """
+    bundled = _ASSET_DIR / filename
+    if bundled.is_file():
+        return str(bundled)
+    return filename
+
+
 def load_truetype(
     font: FontCandidate, size: int
 ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -53,20 +78,23 @@ def load_truetype(
 def load_truetype_named(
     font: FontCandidate, size: int
 ) -> tuple[ImageFont.FreeTypeFont | ImageFont.ImageFont, str]:
-    """Try the named font file, then the CJK fallback stack, then Pillow default.
+    """Try the bundled asset, then the bare filename (OS-installed), then the
+    CJK fallback stack, then Pillow default.
 
-    Dev/CI machines may not have the licensed font file installed as a system
-    font; falling back keeps rendering possible (degrades to a generic CJK
-    face rather than failing outright — same safety-net spirit as
+    Falling back keeps rendering possible (degrades to a generic CJK face
+    rather than failing outright — same safety-net spirit as
     ``travelogue.export.card_bookends._load_font``). Returns the *actually
-    loaded* font name alongside the font object, so callers can report which
-    face rendered the text instead of the originally requested candidate.
+    loaded* font's reported name alongside the font object, so callers can
+    report which face rendered the text instead of the originally requested
+    candidate.
     """
-    for name in (font.filename, *FALLBACK_STACK):
+    for name in (resolve_font_source(font.filename), *FALLBACK_STACK):
         try:
-            return ImageFont.truetype(name, size=size), name
+            loaded = ImageFont.truetype(name, size=size)
         except OSError:
             continue
+        reported = font.filename if name == resolve_font_source(font.filename) else name
+        return loaded, reported
     return ImageFont.load_default(), "pillow-default"
 
 
@@ -76,12 +104,17 @@ def glyphs_covered(font_candidates: tuple[str, ...], text: str) -> bool:
     尝试加载候选字体列表中第一个可用的字体，逐字检查 ``getmask`` 是否非空。
     一个字体文件都加载不了（dev/CI 环境缺少 CJK 字体）时，视为不可渲染中文，
     直接判定未覆盖 → 调用方 fail-open，避免输出乱码/缺字方块。
+
+    每个候选名先经 :func:`resolve_font_source` 解析——确保这里探测的是
+    render_b.py 实际会用的那款字库（例如随包字体资产），而不是因为裸文件名
+    在系统里解析不到就静默降级去探测 ``msyh.ttc`` 的覆盖率（那样探测出来的
+    "覆盖"跟实际渲染用的字体是两张脸，字形覆盖检查形同虚设）。
     """
     if not text:
         return True
     for name in font_candidates:
         try:
-            face = ImageFont.truetype(name, size=64)
+            face = ImageFont.truetype(resolve_font_source(name), size=64)
         except OSError:
             continue
         for ch in text:

@@ -14,30 +14,58 @@ from travelogue.render.context_types import (
 )
 from travelogue.render.surface import resolve_surface_context
 
+#: §6.2 兜底位置（whitelist rect 的近似几何中心），仅在 ``titleArt.position``
+#: 缺失时使用——正常路径下这两个百分比来自 placement_score 的实际算出坐标。
+_TITLE_ART_FALLBACK_X = "50%"
+_TITLE_ART_FALLBACK_Y = "25%"
 
-def _resolve_title_art_src(trip: dict, opening_style_id: str) -> tuple[str | None, bool]:
+
+def _resolve_title_art_src(
+    trip: dict, opening_style_id: str
+) -> tuple[str | None, bool, str, str]:
     """PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：白名单内 + 非 stale + enabled 才叠加。
 
     ``titleArt.assetPath`` 是相对 trip 根目录的路径（index.html 同级），可直接
     作为 ``<img src>`` 使用，不做磁盘存在性校验（信任 trip.json 状态，与其余
     computed 字段一致）。
+
+    同时回传 §6.2 ``position.x``/``position.y``（0~1 归一化，相对整个
+    ``cover-opening`` 画布，非某个文案面板）供模板转成 CSS 百分比——此前这两个
+    字段只落库、未接进渲染表面，模板用的是写死的 ``50%/28%``，恰好与
+    ``.cover-opening__title-art`` 当时误嵌在 ``.cover-opening__panel``
+    （雾带底部文案面板，随内容自适应矮高度）内部的 bug 绑在一起：面板高度只由
+    hook 文案撑起，写死的 28% 几乎总是与 hook 文案重叠。§7 修复：贴纸挪到
+    ``.cover-opening`` 直接子层，百分比改用这里回传的真实定位。
     """
     from travelogue.cover_engine.title_art.whitelist import is_whitelisted
 
     if not is_whitelisted(opening_style_id):
-        return None, False
+        return None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y
     meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
     title_art = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
     if not isinstance(title_art, dict):
-        return None, False
+        return None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y
     if not title_art.get("enabled") or title_art.get("stale"):
-        return None, False
+        return None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y
     if str(title_art.get("openingStyleId") or "") != opening_style_id:
-        return None, False
+        return None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y
     asset_path = str(title_art.get("assetPath") or "").strip()
     if not asset_path:
-        return None, False
-    return asset_path, True
+        return None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y
+    position = title_art.get("position") if isinstance(title_art.get("position"), dict) else {}
+    x_pct = _title_art_pct(position.get("x"), _TITLE_ART_FALLBACK_X)
+    y_pct = _title_art_pct(position.get("y"), _TITLE_ART_FALLBACK_Y)
+    return asset_path, True, x_pct, y_pct
+
+
+def _title_art_pct(value: object, fallback: str) -> str:
+    try:
+        ratio = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return fallback
+    if not (0.0 <= ratio <= 1.0):
+        return fallback
+    return f"{ratio * 100:.2f}%"
 
 
 def build_render_context(
@@ -427,7 +455,9 @@ def build_render_context(
             placeholder_script = ""
 
     resolved_opening_style = resolve_cover_opening_style(trip)
-    title_art_src, has_title_art = _resolve_title_art_src(trip, resolved_opening_style)
+    title_art_src, has_title_art, title_art_x, title_art_y = _resolve_title_art_src(
+        trip, resolved_opening_style
+    )
 
     ctx: TripRenderContext = {
         "lang": "zh-CN",
@@ -482,6 +512,8 @@ def build_render_context(
         "hasTitleArt": has_title_art,
         "titleArtSrc": title_art_src,
         "titleArtAlt": meta_title,
+        "titleArtX": title_art_x,
+        "titleArtY": title_art_y,
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": has_epilogue,

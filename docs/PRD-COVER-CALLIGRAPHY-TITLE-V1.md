@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.3.0** |
-| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）** |
+| **文档版本** | **v0.5.0** |
+| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · [W1 真实素材视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）**；**v0.5 真实素材视觉验收发现并修复 3 处集成缺口（字库资产路径 / 贴纸容器定位 / stale 未接线），AC-CAL-03/07/08/09/12 转为通过** |
 | **DOC-STATUS** | **kickoff-w1** |
 | **主题代号** | 「点睛」— **CAL**（Calligraphy Title） |
 | **触发来源** | 2026-08-06 产品讨论：用户希望游记封面标题达到「即梦」文生图那种手写体艺术感；经过对既有内部 demo（`arttext-miniapp`）的实证分析，确认了可落地路径 |
@@ -13,6 +13,15 @@
 | **验收** | 启动开发时拆 `ACCEPTANCE-COVER-CALLIGRAPHY-TITLE-V1.md`；本文 §12 为源 |
 | **实施清单** | 启动开发时拆 `IMPLEMENTATION-COVER-CALLIGRAPHY-TITLE-V1.md` |
 | **更新日期** | 2026-08-07 |
+
+> **v0.5.0 相对 v0.4.0（W1 真实素材视觉验收 · 2026-08-07 · [验收记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）**
+>
+> - 用真实 trip（非 fixture/mock）跑通 `title-art` CLI → `render` → Playwright 实际渲染核对 AC-CAL-03/07/08/09/12，过程中发现并修复 **3 处 83 条单测未捕获的真实集成缺口**：
+>   1. **字库资产未随包分发**：`ZhiMangXing-Regular.ttf` 裸文件名交给 Pillow，未装该字体的机器会静默退化到 `msyh.ttc`（微软雅黑），产品核心卖点「书法感」不生效但不报错——已随包分发字体资产（`assets/fonts/`）+ 核实并留痕 SIL OFL 1.1 授权。
+>   2. **贴纸容器嵌套错误**：`<img class="cover-opening__title-art">` 嵌在雾带底部文案面板 `.cover-opening__panel` 内部（该面板矮高度由 hook 文案撑起），CSS 百分比定位对不上 §6.2 rect 语义，实测与 hook 文案物理重叠；且 §6.2 算出的 `position.x/y` 从未接进渲染上下文（死代码，CSS 一直用写死的 `50%/28%`）——已把贴纸挪到 `.cover-opening` 直接子层，接通真实定位坐标，`render_b.py` 新增出稿前裁剪到墨迹 bbox（避免居中锚点对齐到大片透明留白的几何中心而非可见字形中心）。
+>   3. **`meta.title` 编辑不触发 `titleArt.stale`**：`mark_title_art_stale()` 此前是死代码，`copy_patch.py` 从未调用——用户改标题后旧贴纸会继续展示（AC-CAL-09 实测不通过）；已接线并补 3 条回归测试。
+> - AC-CAL-03/07/08/09/12 转为 ✅ 通过；AC-CAL-11 仍待完整 W0.5 Spike，`route_c_enabled` 维持默认 `false`。
+> - 新增/更新测试：`test_title_art_render_b.py`（裁剪相关断言）、`test_copy_patch.py`（3 条 stale 回归）；关键子集回归 359 passed, 6 skipped。
 
 > **v0.4.0 相对 v0.3.0（Kickoff 落地 · 2026-08-07 · 分支 `feat/cover-calligraphy-title-v1`）**
 >
@@ -501,7 +510,7 @@
 | **W0** | PRD v0.2 + 七席 BLK 关闭；v0.3 新增路线 C 候选设计 | ✅ |
 | **W0.5**（不占用工程排期，先于启动触发） | 路线 C 技术验证 Spike：通义万相为主，即梦（若可申请）/腾讯混元陪跑；用 20～30 个真实/边界标题（含生僻字）测字形准确率（OCR/人审）+ 成本 + 延迟 + 审核拒绝率 | ⚠️ **未完整完成**——仅现场实测 2 组标题（v0.4.0），得出「plus 优于 turbo」的方向性结论，**不足以**支撑 20～30 条样本量的正式验收；`route_c_enabled` 配置默认仍为 `false` |
 | **启动触发** | 产品显式拉起 **「封面装帧增强」** 窗口 | ✅ **2026-08-07 已拉起**（本次对话）；不绑定 AIR |
-| **W1**（**Kickoff · 开发中**，分支 `feat/cover-calligraphy-title-v1`） | `cover_engine/title_art/` 干净管线（路线 B）+ 授权字库 + 自制/公版印章；固定配色/位；`meta.titleArt`；仅 `veil-footer`；路线 C 引擎 + 风格库 Registry（初始 5 款）同步实现（因 W0.5 未完整完成，`route_c_enabled` 默认关闭，代码路径已具备） | ✅ 代码已落地：`travelogue/cover_engine/title_art/` 全模块 + CLI `title-art` + 渲染表面 §7 接入 + 83 条单测；⏳ AC-CAL-03/07/08/11/12 尚需真实素材人工核对补齐验收记录 |
+| **W1**（**Kickoff · 开发中**，分支 `feat/cover-calligraphy-title-v1`） | `cover_engine/title_art/` 干净管线（路线 B）+ 授权字库 + 自制/公版印章；固定配色/位；`meta.titleArt`；仅 `veil-footer`；路线 C 引擎 + 风格库 Registry（初始 5 款）同步实现（因 W0.5 未完整完成，`route_c_enabled` 默认关闭，代码路径已具备） | ✅ 代码已落地：`travelogue/cover_engine/title_art/` 全模块 + CLI `title-art` + 渲染表面 §7 接入 + 83 条单测；✅ AC-CAL-03/07/08/09/12 已用真实素材人工核对（见 [W1 视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)，过程中发现并修复 3 处集成缺口）；⏳ AC-CAL-11 仍待完整 W0.5 Spike |
 | **W2** | placement_score + 自动配色（路线 B/C 共用，已随 W1 一并落地）；`enabled` 默认 false；可选开 `folio-overlap` | AC-CAL-01～06、09、13（待补验收记录） |
 | **W3** | 盲评：现网 CSS Opening 标题 vs `titleArt=on`（含路线 B/C 分别对比）≥55% | AC-CAL-BLIND（未开始） |
 
@@ -543,16 +552,16 @@
 |----|------|
 | **AC-CAL-01** | `enabled=false`（或无字段）时 Opening ≡ 现网 HTML/CSS 金样 |
 | **AC-CAL-02** | 干净管线输出对照证据②；W1 起可用固定 fixture + 感知哈希容差（SHD-CAL-01） |
-| **AC-CAL-03** | 代码审查：无 brush_effects / engine v3/v4 生产路径 |
+| **AC-CAL-03** ✅ | 代码审查：无 brush_effects / engine v3/v4 生产路径（[核对记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)） |
 | **AC-CAL-04** | 测试集封面上对比度达书面阈值（W2 钉数） |
 | **AC-CAL-05** | placement 遮挡主体显著区 ≤35%（自测口径） |
 | **AC-CAL-06** | 默认路径无用户参数即可完成生成与叠加 |
-| **AC-CAL-07** | 生产字库/印章均有授权或公版溯源记录 |
-| **AC-CAL-08** | 缺字形或非白名单 style → 不叠加贴纸且 h1 可见正常 |
-| **AC-CAL-09** | 修改 `meta.title` 后 `stale`（或等价）生效，禁止继续展示旧文案贴纸为「已更新」 |
+| **AC-CAL-07** ✅ | 生产字库/印章均有授权或公版溯源记录（核对时发现 `ZhiMangXing-Regular.ttf` 未随包分发导致生产环境不可加载，已修复 + 补 `LICENSE-NOTES.md`，见验收记录 §1.1） |
+| **AC-CAL-08** ✅ | 缺字形或非白名单 style → 不叠加贴纸且 h1 可见正常（真实非白名单 trip 实测通过） |
+| **AC-CAL-09** ✅ | 修改 `meta.title` 后 `stale`（或等价）生效，禁止继续展示旧文案贴纸为「已更新」（核对时发现 `mark_title_art_stale` 从未接线，`copy_patch.py` 改标题不会置 stale——已修复 + 端到端验证 + 3 条回归测试，见验收记录 §1.3） |
 | **AC-CAL-10** | Web 预览与长图引用同一 `assetPath` |
 | **AC-CAL-11**（v0.3 新增 · 路线 C 生效） | 路线 C 输出的 OCR 回读校验通过率达 W0.5 Spike 钉定阈值方可进入生产候选池；未达标不得默认启用 |
-| **AC-CAL-12**（v0.3 新增 · 路线 C 生效） | 路线 C 失败（超时/审核不过/OCR 不过）→ 必定按 D-CAL-16 降级路线 B 或 fail-open HTML，**不允许**任何情况下展示错误态或半成品贴纸 |
+| **AC-CAL-12** ✅（v0.3 新增 · 路线 C 生效） | 路线 C 失败（超时/审核不过/OCR 不过）→ 必定按 D-CAL-16 降级路线 B 或 fail-open HTML，**不允许**任何情况下展示错误态或半成品贴纸（真实条件下——未设置 `DASHSCOPE_API_KEY`——强制路线 C 实测通过） |
 | **AC-CAL-13**（v0.3 新增 · 路线 C 生效） | 路线 C 抠字重上色结果同样满足 §6.1 对比度合同，默认兜底白色路径可复现 |
 | **AC-CAL-BLIND** | vs **现网 CSS Opening 标题**（非 CAD Mode A）偏好 ≥55% 才可默认 `enabled=true`（路线 B/C 分别计） |
 
@@ -599,3 +608,4 @@
 | **v0.2.0** | 2026-08-06 | 七席回写 BLK-CAL-01～05：独立 `meta.titleArt` · 文案/表面合同 · V6 白名单 · 与 AIR 解耦 · 印章自制/公版 · placement_score · D-CAL-09～13 · AC-08～10 |
 | **v0.3.0** | 2026-08-07 | 产品复议：新增**路线 C（固定提示词分层生图）**为候选（与路线 B 主+备，非替代）；新增 D-CAL-14～19；新增 §5.5 路线 C 规格（风格库 Registry、抠字重上色管线、模型优先级=通义万相优先）；新增 W0.5 技术验证 Spike 里程碑；数据模型新增 `styleId`/`modelProvider`/`promptVersion`/`ocrVerified`/`fallbackFrom`；新增 AC-11～13、OQ-06～07、P-CAL-07；§9/§10/§13 补充路线 C 合规与归因文案条目；归档路线 C 参考样本 `cover-calligraphy-title-route-c-refs-2026-08-07/` |
 | **v0.4.0** | 2026-08-07 | **Kickoff**：产品拉起「封面装帧增强」窗口，分支 `feat/cover-calligraphy-title-v1` 落地路线 B + 路线 C 全模块（`travelogue/cover_engine/title_art/`）、CLI `title-art`、渲染表面 §7 接入、`AppConfig.title_art` 配置（默认关闭）、83 条单测；§5.5.1 五款风格 `promptTemplate` 定稿（关闭 OQ-CAL-07）；D-CAL-18 模型选型更新为 `wanx2.1-t2i-plus`（现场实测优于 turbo，但**非**完整 W0.5 Spike，`route_c_enabled` 保持默认 `false`）；真实 demo trip 人工核对路线 B 全链路可用 |
+| **v0.5.0** | 2026-08-07 | **W1 真实素材视觉验收**（[记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）：用真实 trip 跑通 AC-CAL-03/07/08/09/12，发现并修复 3 处 83 条单测未捕获的真实集成缺口——① 字库资产未随包分发致生产环境静默退化成微软雅黑（补 `assets/fonts/` + `LICENSE-NOTES.md`）；② 艺术字贴纸误嵌雾带文案面板致与 hook 文案重叠 + §6.2 定位坐标从未接进渲染上下文（死代码）+ 出稿未裁剪致居中锚点对不上可见字形（三处一并修）；③ `mark_title_art_stale` 从未被 `copy_patch.py` 调用致改标题不触发 stale（AC-CAL-09 实测不通过，已接线）。AC-CAL-03/07/08/09/12 转为 ✅；AC-CAL-11 仍待完整 W0.5 Spike |

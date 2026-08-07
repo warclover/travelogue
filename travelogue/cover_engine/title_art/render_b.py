@@ -138,8 +138,39 @@ def render_title_art(
             seal = _seal_image(seal_d, seal_char, seal_color)
             canvas.alpha_composite(seal, (int((width - seal_d) / 2), int(baseline_y)))
 
+    canvas = _crop_to_content(canvas)
+
     return RenderedTitleArt(
         png_bytes=image_to_png_bytes(canvas),
         font_name=main_font_name,
         template=template,
     )
+
+
+def _crop_to_content(canvas: Image.Image, *, pad_ratio: float = 0.06) -> Image.Image:
+    """Crop the fixed 1200×720 working canvas down to its actual ink bbox.
+
+    ``CANVAS_SIZE`` is a generous fixed working area so every template/length
+    combination has room; most of it stays fully transparent. Shipping the
+    padded canvas as-is breaks §6.2 placement: consumers (``cover-opening.hbs``
+    + ``journal.css``) center the sticker via ``transform: translate(-50%,
+    -50%)`` at the placement rect's *visual* center — but that transform
+    centers on the *box*, so an untrimmed canvas puts the empty lower half of
+    the 720px-tall working area below the anchor point, shoving the actual
+    glyphs well above the intended rect (observed: title clipped by the
+    viewport's top edge on a real cover). Cropping to the non-transparent
+    bbox (plus a little breathing-room padding) makes the shipped PNG's own
+    center coincide with the glyphs' visual center, so the CSS anchor lines
+    up with what's actually drawn.
+    """
+    bbox = canvas.getbbox()
+    if bbox is None:
+        return canvas
+    left, top, right, bottom = bbox
+    pad_x = max(4, int((right - left) * pad_ratio))
+    pad_y = max(4, int((bottom - top) * pad_ratio))
+    left = max(0, left - pad_x)
+    top = max(0, top - pad_y)
+    right = min(canvas.width, right + pad_x)
+    bottom = min(canvas.height, bottom + pad_y)
+    return canvas.crop((left, top, right, bottom))

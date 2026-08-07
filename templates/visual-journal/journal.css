@@ -470,10 +470,21 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
 }
 
 /* 艺术字贴纸：透明 PNG，随 §6.2 定位落在 style 自身留白区（当前仅 veil-footer
-   进白名单）；不预设固定尺寸——由生成画布比例 + 容器宽度共同决定。 */
+   进白名单）；不预设固定尺寸——由生成画布比例 + 容器宽度共同决定。
+   直接挂在 .cover-opening（position:relative，见上）下——不嵌进
+   .cover-opening__panel，因为面板高度只由雾带底部文案撑起，贴纸嵌在里面会
+   导致 top 百分比按面板矮高度算，几乎总与面板自身文案重叠。
+   left/top 走 --title-art-x/--title-art-y（assemble.py 按 §6.2
+   position.x/position.y 算出的真实百分比，缺失时回退到 rect 几何中心）。 */
 .cover-opening__title-art {
   display: none;
-  max-width: 68%;
+  /* 双约束（宽 + 高）保序缩放：即便裁剪后单张贴纸的长宽比因标题字数/模板不同
+     而变化，也不会让某一张因为特别「矮胖」而在 translate(-50%,-50%) 居中
+     时把可视区域顶穿 rect 上边界（白名单 rect h:0.22，这里 20% 略紧一点留
+     安全边）。 */
+  max-width: 60%;
+  max-height: 20%;
+  width: auto;
   height: auto;
   pointer-events: none;
   user-select: none;
@@ -483,9 +494,10 @@ html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-
 html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art {
   display: block;
   position: absolute;
-  left: 50%;
-  top: 28%;
+  left: var(--title-art-x, 50%);
+  top: var(--title-art-y, 25%);
   transform: translate(-50%, -50%);
+  z-index: 2;
 }
 
 .cover-opening__hook {
