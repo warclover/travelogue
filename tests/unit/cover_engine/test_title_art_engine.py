@@ -10,6 +10,7 @@ from PIL import Image
 from travelogue.cover_engine.title_art import engine as engine_mod
 from travelogue.cover_engine.title_art.engine import mark_title_art_stale, resolve_title_art
 from travelogue.cover_engine.title_art.route_c import RouteCFailure
+from travelogue.cover_engine.title_art.whitelist import FALLBACK_PRESETS, placement_preset
 
 pytestmark = pytest.mark.unit
 
@@ -258,6 +259,98 @@ def test_focal_outside_placement_rect_still_renders_normally() -> None:
     assert result is not None
     assert len(written) == 1
     assert trip["meta"]["titleArt"]["enabled"] is True
+
+
+def test_contact_stamp_archive_check_true_for_realistic_minimal_trip() -> None:
+    # 实测发现（D-CAL-20 优先顺位⑤落地时）：format_trip_meta 的天数兜底
+    # （"N 天"）几乎总是非空，导致这个占用判定在现网几乎总是 True——备选
+    # 候选设计上正确，但真实触发窗口很窄，这里留痕说明，避免误以为它会
+    # 经常生效。
+    trip = {"meta": {"title": "拾光", "coverOpeningStyle": "contact-stamp"}}
+    assert engine_mod._contact_stamp_hook_or_archive_present(trip, {}) is True
+
+
+def test_contact_stamp_falls_back_to_secondary_when_primary_focal_conflicts(
+    monkeypatch,
+) -> None:
+    # D-CAL-20 优先顺位⑤：主候选（左块）跟镜头焦点冲突时，若备选候选（右块）
+    # 未被占用，应换到备选而不是整体 fail-open。真实 trip 里备选几乎总被
+    # archive strip 占用（见上一条测试），这里直接把占用判定打成"未占用"
+    # 来构造这个场景，专门验证多候选切换机制本身。
+    monkeypatch.setattr(engine_mod, "_contact_stamp_hook_or_archive_present", lambda *_a: False)
+
+    primary_rect = placement_preset("contact-stamp").rect
+    focal_x = primary_rect["x"] + primary_rect["w"] / 2
+    focal_y = primary_rect["y"] + primary_rect["h"] / 2
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "contact-stamp"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": focal_x, "y": focal_y}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["enabled"] is True
+
+
+def test_contact_stamp_uses_secondary_candidate_box_when_primary_conflicts(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(engine_mod, "_contact_stamp_hook_or_archive_present", lambda *_a: False)
+
+    photo_path = tmp_path / "photo.png"
+    Image.new("RGB", (1000, 1000), (200, 200, 200)).save(photo_path)
+
+    primary_rect = placement_preset("contact-stamp").rect
+    focal_x = primary_rect["x"] + primary_rect["w"] / 2
+    focal_y = primary_rect["y"] + primary_rect["h"] / 2
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "contact-stamp"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": focal_x, "y": focal_y}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(
+        trip, resolve_asset_path=_resolve_asset_path, write_png=write_png
+    )
+
+    assert result is not None
+    assert len(written) == 1
+    fallback_rect = FALLBACK_PRESETS["contact-stamp"][0].rect
+    expected_x = round(fallback_rect["x"] + fallback_rect["w"] / 2, 4)
+    expected_y = round(fallback_rect["y"] + fallback_rect["h"] / 2, 4)
+    assert abs(result.position["x"] - expected_x) < 0.01
+    assert abs(result.position["y"] - expected_y) < 0.01
+    # 备选候选跟主候选一样带 assume_dark_veil，即便原图偏亮也应强制选白墨。
+    assert result.main_color == "#ffffff"
+
+
+def test_contact_stamp_fails_open_when_primary_conflicts_and_fallback_occupied() -> None:
+    # 默认（未 monkeypatch）情况下备选几乎总被判定占用，主候选又跟焦点冲突
+    # 时应整体 fail-open，不硬贴。
+    primary_rect = placement_preset("contact-stamp").rect
+    focal_x = primary_rect["x"] + primary_rect["w"] / 2
+    focal_y = primary_rect["y"] + primary_rect["h"] / 2
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "contact-stamp"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": focal_x, "y": focal_y}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+
+    assert result is None
+    assert written == []
+    assert trip["meta"]["titleArt"]["enabled"] is False
+    assert trip["meta"]["titleArt"]["reason"] == "focal_conflict:contact-stamp"
 
 
 def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:

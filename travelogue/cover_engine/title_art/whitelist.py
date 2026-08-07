@@ -19,6 +19,13 @@ class PlacementPreset:
     #: 出来的背景早被渐罩压到接近全黑，深墨读不出来（2026-08-07 真实视觉核
     #: 对发现，contact-stamp 首例）。见 ``engine.py`` 里对该字段的消费。
     assume_dark_veil: bool = False
+    #: D-CAL-20 优先顺位⑤：该候选是否有「条件性占用风险」——即某些 trip 下
+    #: 会被本风格自身的可选 UI 元素（hook/档案条等）实际占用，另一些 trip
+    #: 下则完全空置、可以安全使用。非空时取值是 engine.py
+    #: ``_CONDITIONAL_OCCUPANT_CHECKS`` 里注册的检查函数名；``placement_presets``
+    #: 只返回候选定义，真正"这次这个 trip 是否被占用"的判定延后到 engine.py
+    #: （需要 trip/cover_asset 数据，whitelist.py 保持零 I/O、纯数据表）。
+    conditional_occupant: str | None = None
 
 
 def _registry_rect(style_id: str, region_index: int) -> dict[str, float]:
@@ -101,7 +108,7 @@ WHITELIST: dict[str, PlacementPreset] = {
     ),
     "contact-stamp": PlacementPreset(
         opening_style_id="contact-stamp",
-        label="日戳左下角文案区（registry 候选 #0，避让右下角 hook/日戳号）",
+        label="日戳左下角文案区（registry 候选 #0 · 主候选，跟 sr-only <h1> 同一位置）",
         rect=_registry_rect("contact-stamp", 0),
         # journal.css 该风格用 .cover-opening[data-cover-opening="contact-stamp"]
         # ::after 在整张封面上叠加一层不透明度约 0.3～0.72 的黑色渐变（且原生
@@ -109,6 +116,25 @@ WHITELIST: dict[str, PlacementPreset] = {
         # 无关，此处的原始照片 ROI 采样对这个风格是失真的。
         assume_dark_veil=True,
     ),
+}
+
+#: D-CAL-20 优先顺位⑤：已知安全、但只在特定 trip 条件下才不冲突的备选候选
+#: （见各条目上的注释）。主候选（``WHITELIST``）永远排在 ``placement_presets``
+#: 返回列表的第一位——只有主候选被 focal 冲突或占用检查淘汰时才会用到这里；
+#: 多数风格目前没有已验证安全的备选，留空。
+FALLBACK_PRESETS: dict[str, list[PlacementPreset]] = {
+    "contact-stamp": [
+        PlacementPreset(
+            opening_style_id="contact-stamp",
+            label=(
+                "日戳右下角备选（registry 候选 #1）——仅当该 trip 没有 hook 文案"
+                "且没有档案条文案时才安全，两者任一存在都会被这个矩形正好压住"
+            ),
+            rect=_registry_rect("contact-stamp", 1),
+            assume_dark_veil=True,
+            conditional_occupant="contact_stamp_hook_or_archive",
+        ),
+    ],
 }
 
 DEFAULT_ENABLED_STYLES: frozenset[str] = frozenset({"veil-footer", "band-cut", "contact-stamp"})
@@ -121,3 +147,19 @@ def is_whitelisted(style_id: str, *, enabled_styles: frozenset[str] | None = Non
 
 def placement_preset(style_id: str) -> PlacementPreset | None:
     return WHITELIST.get(style_id)
+
+
+def placement_presets(style_id: str) -> list[PlacementPreset]:
+    """主候选 + 已知安全的备选候选（D-CAL-20 优先顺位⑤），主候选永远在前。
+
+    ``engine.py`` 负责在此基础上做两层过滤：① 备选候选若带
+    ``conditional_occupant``，先按该 trip 的实际内容判定是否被占用；②
+    对剩余候选做 focal 冲突淘汰。淘汰后仍有 ≥2 个候选存活时，才真正交给
+    ``placement.best_placement`` 打分择优——单个风格今天大多仍只有 1 个
+    已验证安全的候选，这种情况下打分是形式化的（只有一个选项），跟 v0.6.1
+    之前"固定绑死一个矩形"在行为上完全等价，不引入额外随机性。
+    """
+    primary = WHITELIST.get(style_id)
+    if primary is None:
+        return []
+    return [primary, *FALLBACK_PRESETS.get(style_id, [])]

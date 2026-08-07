@@ -26,6 +26,11 @@ class PlacementCandidate:
     box: tuple[int, int, int, int]  # x, y, w, h 像素坐标
     score: float
     explain: list[str]
+    #: 命中的候选来源（D-CAL-20 优先顺位⑤ 多候选打分）。调用方（engine.py）
+    #: 需要知道具体是哪一个 preset 赢了打分，才能读取它自己的
+    #: ``assume_dark_veil``/``conditional_occupant`` 等每候选独立的字段——
+    #: 不能假设永远是列表里的第一个。
+    preset: PlacementPreset
 
 
 def _brightness_variance(img: Image.Image, box: tuple[int, int, int, int]) -> float:
@@ -84,7 +89,7 @@ def score_candidate(
         explain.append(f"遮挡显著区比例 {overlap_ratio:.2f} 超阈值 {_OVERLAP_THRESHOLD}")
 
     score = max(0.0, openness - penalty)
-    return PlacementCandidate(box=box, score=score, explain=explain)
+    return PlacementCandidate(box=box, score=score, explain=explain, preset=preset)
 
 
 def focal_conflict(asset: dict, rect: dict[str, float]) -> bool:

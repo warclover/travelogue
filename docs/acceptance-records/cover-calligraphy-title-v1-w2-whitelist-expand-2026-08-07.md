@@ -4,10 +4,10 @@
 |------|------|
 | **文档** | [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](../PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（**CAL**）§3 D-CAL-20 · §5.4 · §11 W2 |
 | **分支** | `feat/cover-calligraphy-title-v1` |
-| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格；开放前 CSS 暗坑排查（§5）；D-CAL-20 优先顺位④ veil-footer focal 安全网 + OQ-CAL-08 结论修正（§6） |
+| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格；开放前 CSS 暗坑排查（§5）；D-CAL-20 优先顺位④ veil-footer focal 安全网 + OQ-CAL-08 结论修正（§6）；D-CAL-20 优先顺位⑤ 多候选打分择优（§7，D-CAL-20 全部五项完成） |
 | **日期** | 2026-08-07 |
 | **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp` 因仓内暂无真实样例，用同一份真实照片临时拷贝一份 trip 改 `coverOpeningStyle` 做视觉核对（验证后已删除临时目录，未提交） |
-| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09；落地 D-CAL-20 优先顺位④，修正并关闭 OQ-CAL-08，veil-footer 补齐 focal 安全网（§6）** |
+| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09；落地 D-CAL-20 优先顺位④，修正并关闭 OQ-CAL-08，veil-footer 补齐 focal 安全网（§6）；落地 D-CAL-20 优先顺位⑤，多候选打分择优，contact-stamp 首个双候选落地，D-CAL-20 全部五项完成（§7）** |
 
 ---
 
@@ -163,4 +163,50 @@ OQ-CAL-08 里 focal 校验确实能解决的那一半问题是存在的：雾带
 | veil-footer 切换到 registry 派生矩形 | ❌ **不做**：registry 唯一候选跟自身面板结构性冲突，v0.5 手工矩形转正为既定候选区 |
 | veil-footer 补 focal 安全网 | ✅ 已完成：`focal_conflict()` + `engine.py` 接线，冲突时回退纯 HTML 标题 |
 | D-CAL-20 优先顺位④ | ✅ 完成 |
-| D-CAL-20 优先顺位⑤（多候选打分统一闸门） | ⏳ 部分完成：单候选场景下的 focal 拒绝闸门已有；真正的"多候选择优"仍未落地，遇冲突时只能整体 fail-open，不能换一个候选区重试 |
+| D-CAL-20 优先顺位⑤（多候选打分统一闸门） | ✅ 已完成，见 §7 |
+
+---
+
+## 7. 落地 D-CAL-20 优先顺位⑤：多候选打分择优
+
+### 7.1 设计
+
+在 §6 的基础上补齐"遇冲突时能换一个候选区，而不是整体 fail-open"这一层：
+
+- `whitelist.py`：`PlacementPreset` 新增 `conditional_occupant: str | None` 字段；新增 `FALLBACK_PRESETS: dict[str, list[PlacementPreset]]`（目前只有 `contact-stamp` 有一条）；新增 `placement_presets(style_id) -> list[PlacementPreset]`，返回"主候选 + 已知安全备选"，主候选永远排在第一位。
+- `placement.py`：`PlacementCandidate` 新增 `preset` 字段（记录具体是哪个候选赢了打分），`score_candidate` 相应回填。
+- `engine.py`：候选列表 = `placement_presets(style_id)`；两层淘汰——① 备选若带 `conditional_occupant`，按该 trip 实际内容判定是否被占用（`_candidate_occupied`，判定失败保守当作已占用）；② 对剩余候选逐一做 `focal_conflict` 淘汰。剩下的候选交给 `best_placement` 真正打分择优；全部淘汰才整体 fail-open（复用 §6 的 `disabled_meta_dict(reason=...)`）。
+
+`contact-stamp` 落地了第一个双候选：主候选（左块，跟 sr-only `<h1>` 同一位置）+ 备选（右下角，`conditional_occupant="contact_stamp_hook_or_archive"`）。占用判定复用从 `assemble.py` 抽出的 `render.cover_opening.build_cover_archive_strip()`（新函数，跟 `show_hook_on_cover` 放一起）——不在 `title_art` 里重新手搓一份可能跟渲染层脱节的逻辑，直接吃 `assemble.py` 同款输入（`format_trip_meta` 的 `cover_place`/`meta_subline` + `cover_asset.takenAt`）。
+
+### 7.2 实测发现：备选候选在现网几乎总被判定占用
+
+验证 `_contact_stamp_hook_or_archive_present` 时发现：`format_trip_meta` 对天数字段有个兜底——即便完全没有 `dateStart`/`dateEnd`，也会返回形如 `"1 天"` 的 `meta_subline`，从不为空字符串：
+
+```text
+>>> format_trip_meta({}, intent=None, assets=[])
+('旅途 · 1 天', '', '旅途', '1 天')
+```
+
+`build_cover_archive_strip` 只要 `meta_subline` 非空就会往档案条里塞一行，这意味着**几乎所有 trip 的档案条文案都非空**——不管 hook 是否显示，右下角这个备选候选在现网基本总是被判定为"已占用"。
+
+这不是 bug，是 `format_trip_meta` 既有默认行为（超出本次范围，不动）；`conditional_occupant` 的判定逻辑是**正确、安全**的——它准确反映了"只要档案条有任何文字（即便只是'1 天'），视觉上就会跟贴纸重叠"这一事实，只是现实中触发窗口比预想的窄很多。单测里通过 `monkeypatch` 直接把判定函数打成"未占用"来验证多候选切换机制本身；同时新增一条测试直接断言"现实最小 trip 数据下该判定确实是 True"，把这个发现固化成回归防线，避免以后有人以为这条备选候选会经常生效。
+
+### 7.3 回归测试
+
+- `test_title_art_whitelist.py`：新增 6 条——`placement_presets` 对单候选风格（veil-footer/band-cut）等价于旧的单候选返回值；contact-stamp 主候选+备选顺序；未知风格返回空列表；主候选均无 `conditional_occupant`；contact-stamp 备选的 `conditional_occupant`/`assume_dark_veil`/矩形数值核对。
+- `test_title_art_engine.py`：新增 4 条——现实最小 trip 数据下占用判定为 True；monkeypatch 占用判定为 False 后主候选冲突时正确切到备选（不 fail-open）；有真实照片时验证 `position` 落在备选矩形中心、且备选的 `assume_dark_veil` 生效（`mainColor="#ffffff"`）；不 monkeypatch（默认几乎总占用）时主候选冲突应整体 fail-open。
+- `test_cover_opening.py`：新增 3 条——`build_cover_archive_strip` 抽取后的行为核对（空输入/拼接顺序/地名去重）。
+- 修复一处 monkeypatch 陷阱：`_CONDITIONAL_OCCUPANT_CHECKS` 最初直接存函数对象引用，会在模块加载时锚定旧引用，导致 `monkeypatch.setattr(engine, "_contact_stamp_hook_or_archive_present", stub)` 静默失效（测试跑起来不报错但断言失败）——改成存函数**名字**、调用时 `globals()` 动态取值，跟 `monkeypatch` 替换模块属性的方式对齐。
+- 全量 `tests/unit/cover_engine/` 151 passed；`tests/unit/curation/test_cover_opening.py` + `tests/unit/render/test_build_render_context.py` + `test_render_cover_and_card.py` + `test_render.py` + `tests/unit/domain/test_copy_patch.py` 42 passed；`ruff check` 全绿。
+
+### 7.4 结论
+
+| 事项 | 结果 |
+|------|------|
+| `placement_presets()` 主候选+备选 API | ✅ 已完成，单候选风格行为完全等价，无回归 |
+| `PlacementCandidate.preset` 回填 | ✅ 已完成，调用方可知道具体命中哪个候选 |
+| contact-stamp 首个双候选落地 | ✅ 已完成 |
+| 占用检查复用 `assemble.py` 同款逻辑（避免脱节） | ✅ 已完成（`build_cover_archive_strip` 抽取为共享函数） |
+| 备选候选现网真实触发率 | ⚠️ 很低（`format_trip_meta` 天数兜底几乎总非空）——设计正确但收益有限，如实记录 |
+| D-CAL-20 五个优先顺位 | 全部完成（①②③④⑤） |

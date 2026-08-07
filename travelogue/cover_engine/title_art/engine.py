@@ -36,7 +36,11 @@ from travelogue.cover_engine.title_art.render_b import render_title_art
 from travelogue.cover_engine.title_art.route_c import RouteCFailure
 from travelogue.cover_engine.title_art.route_c import generate_raw as _default_generate_raw
 from travelogue.cover_engine.title_art.style_registry import default_style_id
-from travelogue.cover_engine.title_art.whitelist import is_whitelisted, placement_preset
+from travelogue.cover_engine.title_art.whitelist import (
+    PlacementPreset,
+    is_whitelisted,
+    placement_presets,
+)
 
 _log = logging.getLogger(__name__)
 
@@ -55,6 +59,58 @@ def _cover_asset(trip: dict) -> dict[str, Any] | None:
     return next(
         (a for a in assets if isinstance(a, dict) and str(a.get("id") or "") == asset_id), None
     )
+
+
+def _contact_stamp_hook_or_archive_present(trip: dict, cover_asset: dict[str, Any]) -> bool:
+    """contact-stamp 右下角备选候选是否被 hook/档案条占用（D-CAL-20 优先顺位⑤）。
+
+    必须跟 ``assemble.py`` 用同一套判定，否则会重演"两处各自维护一份数据"
+    的接线缺口（2026-08-07 CSS 侧白名单未同步那次教训）——复用
+    ``render.cover_opening`` 里已抽出的共享函数，不在这里重新手搓一份可能
+    跟渲染层脱节的逻辑。刻意不接分享面的 ``sanitize_share_copy_tracked``
+    护栏：draft 面永远展示未过滤的 hook，为了让同一张 title-art PNG 在两个
+    面都安全，这里按"draft 会不会显示"保守判定——宁可少用一个候选，不要
+    在分享面才发现冲突。
+    """
+    from travelogue.render.context import format_trip_meta
+    from travelogue.render.cover_opening import build_cover_archive_strip, show_hook_on_cover
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    hook = str(meta.get("hook") or "").strip()
+    if show_hook_on_cover(hook):
+        return True
+    _, _, cover_place, meta_subline = format_trip_meta(
+        meta, intent=trip.get("intent"), assets=trip.get("assets") or []
+    )
+    archive_strip = build_cover_archive_strip(
+        meta_subline=meta_subline, cover_place=cover_place, cover_asset=cover_asset
+    )
+    return bool(archive_strip)
+
+
+#: tag → 本模块内检查函数的**名字**（不是函数对象本身）。故意存名字、用
+#: ``globals()`` 动态取值而不是直接存函数引用——直接存引用会在模块加载时
+#: 把字典值锚定到当时的函数对象，之后 ``monkeypatch.setattr(engine, "_xxx",
+#: stub)`` 替换的是模块属性，不会影响字典里已经绑死的旧引用，单测想 mock
+#: 这个检查函数会安静地失效（无报错但行为对不上）。
+_CONDITIONAL_OCCUPANT_CHECKS: dict[str, str] = {
+    "contact_stamp_hook_or_archive": "_contact_stamp_hook_or_archive_present",
+}
+
+
+def _candidate_occupied(preset: PlacementPreset, trip: dict, cover_asset: dict[str, Any]) -> bool:
+    tag = preset.conditional_occupant
+    if not tag:
+        return False
+    fn_name = _CONDITIONAL_OCCUPANT_CHECKS.get(tag)
+    check = globals().get(fn_name) if fn_name else None
+    if check is None:
+        return False
+    try:
+        return bool(check(trip, cover_asset))
+    except Exception:
+        # 判定失败时保守当作"已占用"——不要冒险选一个可能真的冲突的候选。
+        return True
 
 
 def _cover_image_for_placement(
@@ -117,24 +173,34 @@ def resolve_title_art(
 
     cover_asset = _cover_asset(trip)
     cover_img = _cover_image_for_placement(trip, resolve_asset_path=resolve_asset_path)
-    preset = placement_preset(style_id)
-    if preset is not None and cover_asset is not None and focal_conflict(cover_asset, preset.rect):
-        # D-CAL-20 优先顺位④ / OQ-CAL-08：该风格目前只有单一固定候选框，没有
-        # 备选位置可切换（多候选打分是优先顺位⑤，尚未落地）。镜头焦点正好落
-        # 在这个框内，强行贴上艺术字大概率会压住人脸/主体——比起硬贴一个可
-        # 能读不出来还挡脸的贴纸，回退纯 HTML 标题（现网金样）更安全。
+
+    # D-CAL-20 优先顺位⑤：候选列表 = 主候选 + 已知安全的备选（多数风格今天
+    # 仍只有 1 个，contact-stamp 有 2 个）。两层淘汰：① 备选若带
+    # conditional_occupant，按该 trip 实际内容判定是否被占用；② 焦点冲突
+    # 淘汰（D-CAL-20 优先顺位④）。剩余候选交给 best_placement 真正打分择优
+    # ——如果剩到只有 1 个，打分是形式化的（唯一选项），跟"固定绑死一个矩形"
+    # 行为完全等价，不引入额外随机性。
+    candidates = placement_presets(style_id)
+    if cover_asset is not None:
+        candidates = [c for c in candidates if not _candidate_occupied(c, trip, cover_asset)]
+        candidates = [c for c in candidates if not focal_conflict(cover_asset, c.rect)]
+
+    if not candidates:
+        # 主 + 备选全部被淘汰——要么跟镜头焦点冲突，要么被本风格自身 UI
+        # （面板/hook/档案条）占用，没有安全位置可用。宁可回退纯 HTML 标题，
+        # 也不要硬贴一个大概率读不出来/挡脸的贴纸。
         _log.info(
-            "title_art focal conflict with placement rect → fail-open: style=%s", style_id
+            "title_art all candidates rejected (focal conflict / occupied) → fail-open: "
+            "style=%s",
+            style_id,
         )
-        meta["titleArt"] = disabled_meta_dict(
-            reason=f"focal_conflict:{style_id}"
-        )
+        meta["titleArt"] = disabled_meta_dict(reason=f"focal_conflict:{style_id}")
         return None
 
     bg_rgb = (60, 60, 60)
     placement_pos = {"x": 0.5, "y": 0.28}
     explain: list[str] = []
-    if cover_img is not None and preset is not None:
+    if cover_img is not None:
         from travelogue.cover_engine.title_art.color import roi_average_color
 
         face_fn = detect_faces
@@ -143,7 +209,7 @@ def resolve_title_art(
                 from travelogue.media.subject_detect import detect_faces_in_image as face_fn
             except Exception:
                 face_fn = None
-        cand = best_placement(cover_img, [preset], detect_faces=face_fn)
+        cand = best_placement(cover_img, candidates, detect_faces=face_fn)
         if cand is not None:
             x, y, w, h = cand.box
             iw, ih = cover_img.size
@@ -154,7 +220,7 @@ def resolve_title_art(
                 }
             bg_rgb = roi_average_color(cover_img, cand.box)
             explain.extend(cand.explain)
-            if preset.assume_dark_veil:
+            if cand.preset.assume_dark_veil:
                 # 该风格会在此区域固定叠加与照片无关的深色渐罩（journal.css），
                 # 原始照片 ROI 的亮度采样是「遮罩前」的，直接采信会误判成够亮
                 # 从而选深墨，实际渲染出来深墨读不出来——改用近黑背景估计，

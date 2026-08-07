@@ -7,8 +7,10 @@ import pytest
 from travelogue.cover_engine.registry import get_profile
 from travelogue.cover_engine.title_art.whitelist import (
     DEFAULT_ENABLED_STYLES,
+    FALLBACK_PRESETS,
     is_whitelisted,
     placement_preset,
+    placement_presets,
 )
 
 pytestmark = pytest.mark.unit
@@ -109,3 +111,46 @@ def test_contact_stamp_rect_avoids_hook_region() -> None:
     assert preset is not None
     hook_region = get_profile("contact-stamp").text_safe_regions[1]
     assert preset.rect["x"] + preset.rect["w"] <= hook_region["x"]
+
+
+@pytest.mark.parametrize("style_id", ["veil-footer", "band-cut"])
+def test_placement_presets_single_candidate_styles_return_only_primary(style_id: str) -> None:
+    # D-CAL-20 优先顺位⑤：目前只有 contact-stamp 有已验证安全的备选候选；
+    # 其它风格没有备选时，placement_presets 应跟旧的单候选行为完全等价。
+    primary = placement_preset(style_id)
+    assert primary is not None
+    assert placement_presets(style_id) == [primary]
+
+
+def test_placement_presets_contact_stamp_has_primary_and_fallback() -> None:
+    presets = placement_presets("contact-stamp")
+    assert len(presets) == 2
+    assert presets[0] is placement_preset("contact-stamp")  # 主候选永远在前
+    assert presets[1] is FALLBACK_PRESETS["contact-stamp"][0]
+
+
+def test_placement_presets_unknown_style_returns_empty_list() -> None:
+    assert placement_presets("does-not-exist") == []
+
+
+def test_primary_presets_have_no_conditional_occupant() -> None:
+    # 主候选（WHITELIST 里的值）都是已验证坐标，不该带条件占用标记——那是
+    # 专属于「备选」的机制。
+    for style_id in ("veil-footer", "band-cut", "contact-stamp", "folio-overlap"):
+        preset = placement_preset(style_id)
+        assert preset is not None
+        assert preset.conditional_occupant is None
+
+
+def test_contact_stamp_fallback_has_conditional_occupant_tag() -> None:
+    fallback = FALLBACK_PRESETS["contact-stamp"][0]
+    assert fallback.conditional_occupant == "contact_stamp_hook_or_archive"
+    assert fallback.assume_dark_veil is True
+    # 备选矩形须对应 registry 候选 #1（右下角，跟主候选左下角不重叠）。
+    hook_region = get_profile("contact-stamp").text_safe_regions[1]
+    assert fallback.rect == {
+        "x": float(hook_region["x"]),
+        "y": float(hook_region["y"]),
+        "w": float(hook_region["w"]),
+        "h": float(hook_region["h"]),
+    }

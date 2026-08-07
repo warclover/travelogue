@@ -101,6 +101,7 @@ def build_render_context(
         show_closing_title,
     )
     from travelogue.render.cover_opening import (
+        build_cover_archive_strip,
         cover_focal_point,
         cover_place_is_distinct,
         cover_use_contain_fit,
@@ -229,21 +230,9 @@ def build_render_context(
             cover_stamp_label = stamp_src[:18].replace(" ", "\n")
 
     # Archive strip for contact-stamp (trip meta only — no camera EXIF on reader face).
-    archive_bits: list[str] = []
-    if meta_subline:
-        archive_bits.append(str(meta_subline).strip())
-    if cover_place and cover_place not in (meta_subline or ""):
-        archive_bits.append(cover_place)
-    taken_at = str(cover_asset.get("takenAt") or "").strip()
-    if taken_at:
-        try:
-            from datetime import datetime as _dt
-
-            t = _dt.fromisoformat(taken_at.replace("Z", "+00:00"))
-            archive_bits.append(t.strftime("%H:%M"))
-        except ValueError:
-            pass
-    cover_archive_strip = "\n".join(archive_bits[:3]) if archive_bits else ""
+    cover_archive_strip = build_cover_archive_strip(
+        meta_subline=meta_subline, cover_place=cover_place, cover_asset=cover_asset
+    )
 
     cover_secondary_ctx: CoverRenderContext = CoverRenderContext(
         src="", hasSrcset=False, srcset="", sizes="", alt=""
