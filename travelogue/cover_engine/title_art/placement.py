@@ -87,6 +87,39 @@ def score_candidate(
     return PlacementCandidate(box=box, score=score, explain=explain)
 
 
+def focal_conflict(asset: dict, rect: dict[str, float]) -> bool:
+    """镜头焦点是否落在 ``rect``（真正用于渲染贴纸的候选框）内。
+
+    D-CAL-20 优先顺位④ / OQ-CAL-08：``score_candidate`` 的人脸重叠惩罚依赖
+    运行时人脸检测器（可能不可用/成本高），这里补一层更轻量、确定性的信号
+    ——复用选图环节已经算好的 ``asset.focalPoint``（`travelogue.cover_engine
+    .fit.focal_is_trusted`，同一套"是否为可信焦点"判定，跟 `opening
+    /title_safe.py::mark_title_safe` 一致）。
+
+    注意：``rect`` 传的是该风格 **实际用来渲染贴纸** 的 ``PlacementPreset.
+    rect``，不是 registry 原始 ``text_safe_regions``——两者对 veil-footer
+    并不相同（registry 唯一候选在雾带底部，跟自身面板 DOM 占位冲突，v0.5
+    视觉验收后改用手工收窄过的雾带上方矩形；这层冲突是布局占位问题，
+    focal 校验管不着，见 PRD OQ-CAL-08 结论修正）。这里要检查的是「实际
+    贴纸框」有没有正好压在镜头主体上，跟 registry 原始候选是两件事。
+    """
+    from travelogue.cover_engine.fit import focal_is_trusted
+
+    if not focal_is_trusted(asset):
+        return False
+    fp = asset.get("focalPoint") or {}
+    try:
+        fx = float(fp.get("x", 0.5))
+        fy = float(fp.get("y", 0.45))
+    except (TypeError, ValueError):
+        return False
+    x = float(rect.get("x", 0.0))
+    y = float(rect.get("y", 0.0))
+    w = float(rect.get("w", 0.0))
+    h = float(rect.get("h", 0.0))
+    return x <= fx <= x + w and y <= fy <= y + h
+
+
 def best_placement(
     img: Image.Image,
     presets: list[PlacementPreset],

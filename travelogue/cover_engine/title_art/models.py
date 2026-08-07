@@ -72,6 +72,14 @@ class TitleArtResult:
         return out
 
 
-def disabled_meta_dict() -> dict[str, Any]:
-    """Fail-open / 非白名单 / 空标题时写回的最小占位（≡ 现网 HTML 标题）。"""
-    return {"version": 1, "enabled": False, "stale": False}
+def disabled_meta_dict(reason: str | None = None) -> dict[str, Any]:
+    """Fail-open / 非白名单 / 空标题时写回的最小占位（≡ 现网 HTML 标题）。
+
+    ``reason`` 默认不写（保持跟既有调用点完全一致的最小形状），仅在调用方
+    想为某次 fail-open 留痕时显式传入（如 D-CAL-20 ④ 的 focal 冲突回退），
+    便于事后从 trip.json 直接读出「这次为什么没生成艺术字」。
+    """
+    out: dict[str, Any] = {"version": 1, "enabled": False, "stale": False}
+    if reason:
+        out["reason"] = reason
+    return out

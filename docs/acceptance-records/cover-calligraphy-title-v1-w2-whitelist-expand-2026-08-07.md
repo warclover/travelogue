@@ -4,10 +4,10 @@
 |------|------|
 | **文档** | [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](../PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（**CAL**）§3 D-CAL-20 · §5.4 · §11 W2 |
 | **分支** | `feat/cover-calligraphy-title-v1` |
-| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格 |
+| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格；开放前 CSS 暗坑排查（§5）；D-CAL-20 优先顺位④ veil-footer focal 安全网 + OQ-CAL-08 结论修正（§6） |
 | **日期** | 2026-08-07 |
 | **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp` 因仓内暂无真实样例，用同一份真实照片临时拷贝一份 trip 改 `coverOpeningStyle` 做视觉核对（验证后已删除临时目录，未提交） |
-| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09** |
+| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09；落地 D-CAL-20 优先顺位④，修正并关闭 OQ-CAL-08，veil-footer 补齐 focal 安全网（§6）** |
 
 ---
 
@@ -127,3 +127,40 @@
 ### 5.5 回归
 
 仅新增代码注释（`whitelist.py`），未改动任何 `rect` 数值、逻辑分支或默认启用集合；`tests/unit/cover_engine/` 134 passed 不变。
+
+---
+
+## 6. veil-footer 已知矩形风险修复（D-CAL-20 优先顺位④ · OQ-CAL-08）
+
+### 6.1 重新审视：OQ-CAL-08 的原倾向站不住脚
+
+`whitelist.py` 里 `veil-footer` 的 `TODO(D-CAL-20 优先顺位④)` 一直标注着：该风格 registry 里唯一的 `text_safe_regions`（雾带底部 `{x:0,y:0.55,w:0.58,h:0.45}`）跟现有 hook/trip-meta 面板是**同一块区域**，直接派生会重新引入 v0.5 刚修的重叠问题；OQ-CAL-08 原本倾向"先接 `mark_title_safe` 的 focal 校验兜底"再决定是否需要额外补一层排除校验。
+
+重新审视这条倾向时发现前提有误：`mark_title_safe`/focal 校验解决的是「**镜头主体**是否落在候选区」，跟「**候选区本身有没有被本风格自身 UI（面板/hook/trip-meta）占用**」是两个完全独立的信号——前者关心照片内容，后者关心页面布局，focal 校验对后者无能为力。而 veil-footer 的这条冲突恰恰是后者：面板是**真实存在的 DOM 元素**，不管镜头焦点在哪，只要贴纸落在面板范围内就会被文案压住/压住文案。
+
+**结论**：不再考虑把 veil-footer 切换到 registry 派生的雾带底部矩形——v0.5 视觉验收后手工收窄出来的雾带上方矩形（`{x:0.08,y:0.14,w:0.84,h:0.22}`）本身就是刻意避开面板占位的正确选择，转为该风格的**既定候选区**，不再是"临时占位待替换"。「候选区是否被自身 UI 占用」这类布局冲突，目前只能靠人工设计矩形时主动避让（如本次），暂不值得为此建一套自动化排除机制——4 款已开放风格里只有 veil-footer 有这个问题，投入产出比不高。
+
+### 6.2 真正该做的：给"实际候选框"补一层 focal 安全网
+
+OQ-CAL-08 里 focal 校验确实能解决的那一半问题是存在的：雾带上方矩形虽然避开了面板，但没人验证过它会不会正好落在**镜头主体**（人脸/人像）上——`score_candidate` 的人脸重叠惩罚依赖运行时人脸检测器（`detect_faces_in_image`，成本更高、且并非任何环境都可用），此前没有更轻量、确定性的兜底信号。
+
+新增 `travelogue.cover_engine.title_art.placement.focal_conflict(asset, rect)`：复用选图环节已经算好的 `asset.focalPoint` + `travelogue.cover_engine.fit.focal_is_trusted`（跟 `title_safe.py::mark_title_safe` 同一套"是否为可信焦点"判定），检查这个焦点是否落在**实际用来渲染贴纸的候选框**内（注意：不是 registry 原始 `text_safe_regions`，veil-footer 这两者本就不同，见 §6.1）。
+
+`engine.py` 接线：在算出 `preset` 后，若 `cover_asset` 存在且命中 `focal_conflict`，直接回退纯 HTML 标题（`disabled_meta_dict(reason="focal_conflict:<style_id>")`），不再往下走配色/渲染——因为该风格目前只有单一固定候选框，没有备选位置可切换（多候选打分是 D-CAL-20 优先顺位⑤，尚未落地），检测到冲突后除了整体让路别无选择。`disabled_meta_dict` 新增可选 `reason` 字段（默认不写，不影响既有调用点的最小形状），用于事后从 `trip.json` 直接读出这次为什么没生成艺术字。
+
+### 6.3 回归测试
+
+- `test_title_art_placement.py`：新增 4 条 `focal_conflict` 单测——可信焦点落在框内/框外、焦点不可信（等于默认兜底值且无真实人脸信号）、完全没有 `focalPoint` 字段。
+- `test_title_art_engine.py`：新增 `test_focal_conflict_with_placement_rect_fails_open_to_html_title`（断言 fail-open、`reason` 字段正确、不落盘任何 PNG）+ `test_focal_outside_placement_rect_still_renders_normally`（焦点在框外时不受影响，正常生成）。
+- `test_title_art_models.py`：新增 `test_disabled_meta_dict_with_reason_adds_field_without_changing_base_shape`。
+- 全量 `tests/unit/cover_engine/` 141 passed；`tests/unit/domain/test_copy_patch.py` + `tests/unit/render/test_build_render_context.py` 20 passed（确认未影响既有 stale/渲染接线）；`ruff check` 全绿。
+
+### 6.4 结论
+
+| 事项 | 结果 |
+|------|------|
+| OQ-CAL-08 结论修正 | ✅ 已定案并关闭：focal 校验与"候选区被自身 UI 占用"是两个问题，不再混为一谈 |
+| veil-footer 切换到 registry 派生矩形 | ❌ **不做**：registry 唯一候选跟自身面板结构性冲突，v0.5 手工矩形转正为既定候选区 |
+| veil-footer 补 focal 安全网 | ✅ 已完成：`focal_conflict()` + `engine.py` 接线，冲突时回退纯 HTML 标题 |
+| D-CAL-20 优先顺位④ | ✅ 完成 |
+| D-CAL-20 优先顺位⑤（多候选打分统一闸门） | ⏳ 部分完成：单候选场景下的 focal 拒绝闸门已有；真正的"多候选择优"仍未落地，遇冲突时只能整体 fail-open，不能换一个候选区重试 |

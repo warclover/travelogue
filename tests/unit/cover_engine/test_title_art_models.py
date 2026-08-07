@@ -19,6 +19,14 @@ def test_disabled_meta_dict_shape() -> None:
     assert d == {"version": 1, "enabled": False, "stale": False}
 
 
+def test_disabled_meta_dict_with_reason_adds_field_without_changing_base_shape() -> None:
+    d = disabled_meta_dict(reason="focal_conflict:veil-footer")
+    assert d["version"] == 1
+    assert d["enabled"] is False
+    assert d["stale"] is False
+    assert d["reason"] == "focal_conflict:veil-footer"
+
+
 def test_route_b_result_serialization_omits_route_c_fields() -> None:
     result = TitleArtResult(
         enabled=True,

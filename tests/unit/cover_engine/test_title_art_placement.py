@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 from PIL import Image
 
-from travelogue.cover_engine.title_art.placement import best_placement, score_candidate
+from travelogue.cover_engine.title_art.placement import (
+    best_placement,
+    focal_conflict,
+    score_candidate,
+)
 from travelogue.cover_engine.title_art.whitelist import placement_preset
 
 pytestmark = pytest.mark.unit
@@ -56,6 +60,32 @@ def test_best_placement_picks_highest_scoring_preset() -> None:
 def test_best_placement_empty_presets_returns_none() -> None:
     img = Image.new("RGB", (100, 100), (0, 0, 0))
     assert best_placement(img, []) is None
+
+
+def test_focal_conflict_true_when_trusted_focal_inside_rect() -> None:
+    # D-CAL-20 优先顺位④/OQ-CAL-08：veil-footer 实际用的贴纸框（雾带上方）。
+    rect = {"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22}
+    asset = {"focalPoint": {"x": 0.5, "y": 0.25}}
+    assert focal_conflict(asset, rect) is True
+
+
+def test_focal_conflict_false_when_focal_outside_rect() -> None:
+    rect = {"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22}
+    asset = {"focalPoint": {"x": 0.5, "y": 0.8}}
+    assert focal_conflict(asset, rect) is False
+
+
+def test_focal_conflict_false_when_focal_untrusted() -> None:
+    # 没有真实人脸信号、又恰好等于默认兜底值（0.5, 0.45）→ focal_is_trusted
+    # 判定为不可信，不应误报冲突（跟 mark_title_safe 同一套判定口径）。
+    rect = {"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22}
+    asset = {"focalPoint": {"x": 0.5, "y": 0.45}}
+    assert focal_conflict(asset, rect) is False
+
+
+def test_focal_conflict_false_when_no_focal_point_at_all() -> None:
+    rect = {"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22}
+    assert focal_conflict({}, rect) is False
 
 
 def test_best_placement_detect_faces_exception_is_swallowed() -> None:

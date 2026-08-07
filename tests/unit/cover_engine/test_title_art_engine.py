@@ -223,6 +223,43 @@ def test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo(tmp_path)
     assert any("固定深色渐罩" in line for line in result.explain)
 
 
+def test_focal_conflict_with_placement_rect_fails_open_to_html_title() -> None:
+    # D-CAL-20 优先顺位④/OQ-CAL-08：veil-footer 只有单一固定候选框（雾带上
+    # 方），没有备选位置——镜头焦点正好落在这个框内时，宁可回退纯 HTML 标
+    # 题，也不要硬贴一个大概率压脸的艺术字贴纸。
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.5, "y": 0.25}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    result = resolve_title_art(
+        trip, resolve_asset_path=_no_asset_path, write_png=write_png
+    )
+    assert result is None
+    assert written == []
+    meta_dict = trip["meta"]["titleArt"]
+    assert meta_dict["enabled"] is False
+    assert meta_dict["reason"] == "focal_conflict:veil-footer"
+
+
+def test_focal_outside_placement_rect_still_renders_normally() -> None:
+    trip = {
+        "meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.5, "y": 0.8}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    result = resolve_title_art(
+        trip, resolve_asset_path=_no_asset_path, write_png=write_png
+    )
+    assert result is not None
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["enabled"] is True
+
+
 def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()

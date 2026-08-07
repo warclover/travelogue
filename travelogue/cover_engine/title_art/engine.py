@@ -31,7 +31,7 @@ from travelogue.cover_engine.title_art.fonts import (
 )
 from travelogue.cover_engine.title_art.models import TitleArtResult, disabled_meta_dict
 from travelogue.cover_engine.title_art.ocr_verify import ocr_verify as _default_ocr_verify
-from travelogue.cover_engine.title_art.placement import best_placement
+from travelogue.cover_engine.title_art.placement import best_placement, focal_conflict
 from travelogue.cover_engine.title_art.render_b import render_title_art
 from travelogue.cover_engine.title_art.route_c import RouteCFailure
 from travelogue.cover_engine.title_art.route_c import generate_raw as _default_generate_raw
@@ -47,16 +47,20 @@ WritePngFn = Callable[[bytes], str]
 DetectFacesFn = Callable[[Image.Image], list[tuple[int, int, int, int]]]
 
 
-def _cover_image_for_placement(
-    trip: dict, *, resolve_asset_path: ResolveAssetPathFn
-) -> Image.Image | None:
+def _cover_asset(trip: dict) -> dict[str, Any] | None:
     asset_id = str(trip.get("coverAssetId") or "")
     if not asset_id:
         return None
     assets = trip.get("assets") if isinstance(trip.get("assets"), list) else []
-    asset = next(
+    return next(
         (a for a in assets if isinstance(a, dict) and str(a.get("id") or "") == asset_id), None
     )
+
+
+def _cover_image_for_placement(
+    trip: dict, *, resolve_asset_path: ResolveAssetPathFn
+) -> Image.Image | None:
+    asset = _cover_asset(trip)
     if asset is None:
         return None
     try:
@@ -111,8 +115,22 @@ def resolve_title_art(
         meta["titleArt"] = disabled_meta_dict()
         return None
 
+    cover_asset = _cover_asset(trip)
     cover_img = _cover_image_for_placement(trip, resolve_asset_path=resolve_asset_path)
     preset = placement_preset(style_id)
+    if preset is not None and cover_asset is not None and focal_conflict(cover_asset, preset.rect):
+        # D-CAL-20 优先顺位④ / OQ-CAL-08：该风格目前只有单一固定候选框，没有
+        # 备选位置可切换（多候选打分是优先顺位⑤，尚未落地）。镜头焦点正好落
+        # 在这个框内，强行贴上艺术字大概率会压住人脸/主体——比起硬贴一个可
+        # 能读不出来还挡脸的贴纸，回退纯 HTML 标题（现网金样）更安全。
+        _log.info(
+            "title_art focal conflict with placement rect → fail-open: style=%s", style_id
+        )
+        meta["titleArt"] = disabled_meta_dict(
+            reason=f"focal_conflict:{style_id}"
+        )
+        return None
+
     bg_rgb = (60, 60, 60)
     placement_pos = {"x": 0.5, "y": 0.28}
     explain: list[str] = []
