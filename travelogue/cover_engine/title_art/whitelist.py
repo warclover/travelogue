@@ -49,6 +49,19 @@ def _registry_rect(style_id: str, region_index: int) -> dict[str, float]:
 #: folio-overlap 已注册但默认不在 DEFAULT_ENABLED_STYLES 内（D-CAL-10 · D-CAL-20
 #: 优先顺位③，狗粮后再开）。scroll-head 竖排版式与现有横版画布不兼容，暂不
 #: 注册（D-CAL-20 优先顺位⑤）。其它 styleId 不注册 → 非白名单，强制不叠加。
+#:
+#: 2026-08-07 开放前 CSS 暗坑排查（呼应 contact-stamp assume_dark_veil 那次教训，
+#: 见 W2 验收记录 §4）：逐个风格翻了 journal.css 找类似"渐罩/filter 让实际渲染
+#: 亮度跟原图采样不一致"的坑——
+#:   - veil-footer 的 ::before 暖色 mix-blend-mode:screen 渐罩：z-index 与本贴纸
+#:     相同但是伪元素，绘制顺序在真实子元素（贴纸 <img>）之前，不会遮住贴纸；
+#:     且最高不透明度仅 0.30，非阻断项。
+#:   - band-cut/contact-stamp/folio-overlap 等风格共用的左下角暖色
+#:     mix-blend-mode:soft-light 渐罩（.cover-opening:not([data-cover-opening=
+#:     "veil-footer"])::before）：同理绘制顺序在贴纸之下，且 soft-light+低不透明度
+#:     只是轻微暖调，band-cut 真机视觉核对已验证不影响可读性。
+#:   - contact-stamp 的强黑渐罩已在上面用 assume_dark_veil 修复。
+#:   - folio-overlap 发现真正的阻断项，见下方 TODO/OQ-CAL-09，暂不开放。
 WHITELIST: dict[str, PlacementPreset] = {
     "veil-footer": PlacementPreset(
         opening_style_id="veil-footer",
@@ -61,9 +74,24 @@ WHITELIST: dict[str, PlacementPreset] = {
         # 本次不动。
         rect={"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22},
     ),
+    # TODO(OQ-CAL-09 · D-CAL-20 优先顺位③ 开放前排查，2026-08-07)：folio-overlap
+    # 两条 text_safe_regions 都不能直接拿来贴纯色艺术字 PNG——
+    #   候选 #0（左侧纸列 x:0~0.33,全高）：视觉上被 .cover-opening__place
+    #   （地点标签，vertical-rl 竖排）常驻占用，贴上去会重叠。
+    #   候选 #1（本行选用，y:0.58~0.78,x:0~0.7）：横跨"纸面栏(0~0.33，纯色
+    #   #f4f1ea 米纸)→骑缝渐变(0.33~0.7，.cover-hero::after 90deg 黑渐变
+    #   0.46→0.16，且被竖向 mask 限制在 y:0.22~0.74)→原图"三种背景。原生
+    #   <h1> 用两份 content:attr(data-title) 叠加不同 clip-path + 配色
+    #   （纸面侧深墨 #141312 / 照片侧浅色 #fcfaf6+投影）实现"书名骑缝切开
+    #   压进画面"的双色断字效果（studio_blurb 原话）——这是 folio-overlap
+    #   的核心设计语言，单一纯色 PNG 贴纸做不出来，套用会在某一侧读不出。
+    # 结论：先别急着照抄 band-cut/contact-stamp 的"直接派生+开白名单"流程；
+    # 需要专门方案（如收窄矩形只落在纯纸面栏内并挪开 __place，或做双色
+    # 渐变贴纸）才能开放，见 PRD OQ-CAL-09。当前 rect 仍占位为候选 #1，
+    # 该风格本就不在 DEFAULT_ENABLED_STYLES 内，无现网影响。
     "folio-overlap": PlacementPreset(
         opening_style_id="folio-overlap",
-        label="folio 题区约定矩形（registry 候选 #1 · 底部横条，横版画布友好）",
+        label="folio 题区候选 #1（占位，尚不可直接开放，见上方 TODO/OQ-CAL-09）",
         rect=_registry_rect("folio-overlap", 1),
     ),
     "band-cut": PlacementPreset(

@@ -7,7 +7,7 @@
 | **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格 |
 | **日期** | 2026-08-07 |
 | **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp` 因仓内暂无真实样例，用同一份真实照片临时拷贝一份 trip 改 `coverOpeningStyle` 做视觉核对（验证后已删除临时目录，未提交） |
-| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复** |
+| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09** |
 
 ---
 
@@ -88,4 +88,42 @@
 | CSS 侧白名单同步缺口 | ✅ 已发现并修复 |
 | contact-stamp 自动配色未考虑深色渐罩 | ✅ 已发现并修复（用户实测反馈发现） |
 | `veil-footer` 现有矩形风险（D-CAL-20 优先顺位④） | ⏳ 未处理，本次范围外，见 OQ-CAL-08 |
-| `folio-overlap` 开放为默认白名单（优先顺位③） | ⏳ 未处理，矩形已对齐 registry 但仍保持默认关闭 |
+| `folio-overlap` 开放为默认白名单（优先顺位③） | ⏳ 未处理，矩形已对齐 registry 但**发现新的开放阻断项**，见 §5、OQ-CAL-09 |
+
+---
+
+## 5. 前瞻审计：开放前排查其余风格的 CSS 暗坑（2026-08-07 追加）
+
+§1.3 的教训是「配色输入信号跟 CSS 实际渐罩不一致」这一类坑要等真机截图才暴露。为避免同类坑逐个"等用户截图反馈才发现"，这次趁热把 `journal.css` 里已注册/待注册的 4 款风格（`veil-footer` / `band-cut` / `contact-stamp` / `folio-overlap`）逐一过了一遍，专门找"实际渲染跟原始照片采样不一致"或"矩形跟既有元素冲突"这两类坑。
+
+### 5.1 排查方法
+
+对每款风格检查三类信号：
+1. `.cover-hero`（照片本体）是否有 `filter:`（会让屏幕上的颜色跟 Python 侧读取的原始文件像素不一致）；
+2. 风格专属的 `::before`/`::after` 是否有覆盖候选矩形区域的渐变/半透明遮罩（跟 §1.3 contact-stamp 同类坑）；
+3. 候选矩形范围内是否已经有其它常驻 DOM 元素（地点标签、trip-meta、hook 文案等），会造成视觉重叠而不是配色错误。
+
+### 5.2 结论：veil-footer / band-cut — 排查通过，非阻断
+
+- **veil-footer**：`.cover-hero` 无 `filter`；风格专属的 `::before`（暖色 `mix-blend-mode:screen` 渐罩，最高不透明度 0.30）虽然 `z-index` 跟贴纸 `<img>` 相同，但伪元素在绘制顺序上等价于"最先出生的子元素"，本贴纸是真实子元素且在源码顺序里更靠后，天然叠在渐罩上方，不会被其遮住；且渐罩本身透明度低，非阻断项。矩形本身的既知风险（跟 hook/trip-meta 面板重叠）仍是 OQ-CAL-08 未解决的旧账，本次未处理。
+- **band-cut**：`.cover-hero` 无 `filter`；唯一覆盖候选矩形范围的是**四款风格共用**的左下角暖色 `mix-blend-mode:soft-light` 渐罩（`.cover-opening:not([data-cover-opening="veil-footer"])::before`，最高不透明度 0.30），同理绘制顺序在贴纸之下；且 §2.1 真机核对已经验证深墨清晰可辨，说明这层低透明度暖罩实测不影响可读性。
+
+### 5.3 结论：contact-stamp — 已在 §1.3 修复，无新增发现
+
+`.cover-hero` 有 `filter: saturate(0.48) contrast(1.12) sepia(0.22)`（做旧滤镜），但 §1.3 的 `assume_dark_veil` 修复已经让配色直接假设近黑背景、不再信任原始像素采样，这层做旧滤镜对最终选色结论没有额外影响。
+
+### 5.4 新发现：folio-overlap 两条候选矩形都不能直接套用同一套"贴纯色 PNG"流程（OQ-CAL-09）
+
+这是本次排查最大的收获——`folio-overlap` 的 `text_safe_regions` 有两条，逐一核对发现两条都有问题，跟 band-cut/contact-stamp「派生矩形 + 开白名单」的直给流程不一样：
+
+- **候选 #0**（`{x:0, y:0, w:0.33, h:1.0}`，左侧纸列，全高）：`journal.css` 里这一整块区域被 `.cover-opening__place`（地点标签，`writing-mode: vertical-rl` 竖排）常驻占用——`left:0; top:32px;` 且 `pointer-events:auto`，贴纸落在这里会跟地点标签直接视觉重叠，不是配色问题，是布局占位冲突。
+- **候选 #1**（`{x:0, y:0.58, w:0.7, h:0.2}`，此前 `whitelist.py` 选用的那条）：横向跨了三种不同背景——
+  - `x: 0~0.33`：纸面栏，纯色 `#f4f1ea`（米白纸张底色）；
+  - `x: 0.33~0.7`：照片区靠近骑缝处，叠着 `.cover-hero::after` 的 90° 黑色渐变（`0.46 → 0.16` 不透明度，且被竖向 mask 限制只在 `y: 0.22~0.74` 生效——跟本候选的 `y: 0.58~0.78` 只有部分重合，底部 `0.74~0.78` 这一小段完全没有渐罩）；
+  - 而且原生 `<h1>` 在这个位置本来就不是单色渲染：用两份 `content: attr(data-title)` 叠加不同 `clip-path`，纸面侧走深墨 `#141312`、照片侧走浅色 `#fcfaf6` + 投影，**故意做出"书名骑缝切开压进画面"的双色断字效果**（这是 `studio_blurb` 里原话描述的核心设计语言，不是意外）。单一纯色 PNG 贴纸没法在这条矩形范围内同时兼顾三种背景，套哪个颜色都会在另一侧读不出来。
+
+**结论**：`folio-overlap` 暂不适合直接复用 `band-cut`/`contact-stamp` 那种"矩形派生 + 翻开关"的路径，需要专门方案（例如把矩形收窄到只落在纯纸面栏内且避开 `__place`，或做一版双色渡色贴纸）才能安全开放。已在 `whitelist.py` 补充详细 TODO 注释，`PRD` 补充 `OQ-CAL-09`，本次**不改变**默认关闭状态、**不改** rect 数值（矩形仍占位为候选 #1，等真正方案定下来再动）。
+
+### 5.5 回归
+
+仅新增代码注释（`whitelist.py`），未改动任何 `rect` 数值、逻辑分支或默认启用集合；`tests/unit/cover_engine/` 134 passed 不变。
