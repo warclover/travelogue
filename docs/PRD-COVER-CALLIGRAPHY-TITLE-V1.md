@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.5.0** |
-| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · [W1 真实素材视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）**；**v0.5 真实素材视觉验收发现并修复 3 处集成缺口（字库资产路径 / 贴纸容器定位 / stale 未接线），AC-CAL-03/07/08/09/12 转为通过** |
+| **文档版本** | **v0.6.0** |
+| **状态** | **Kickoff · W1 开发中**（分支 `feat/cover-calligraphy-title-v1`）· [七席评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · [W1 真实素材视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md) · **BLK-CAL-01～05 已回写**；**v0.4 产品显式拉起「封面装帧增强」窗口，路线 B + 路线 C 引擎均已实现（`travelogue/cover_engine/title_art/`），路线 C 走 W0.5-lite 现场实测（非完整 20～30 条样本 Spike，见 v0.4.0 变更记录）**；**v0.5 真实素材视觉验收发现并修复 3 处集成缺口（字库资产路径 / 贴纸容器定位 / stale 未接线），AC-CAL-03/07/08/09/12 转为通过**；**v0.6 产品复核 §6.2 定位策略（讨论向，未动代码），确认 Opening Registry `text_safe_regions` 应作为 placement 候选区的权威数据源，收窄 D-CAL-13 并新增 D-CAL-20，W2 白名单开放顺序定为 band-cut → contact-stamp → folio-overlap → veil-footer 修复 → scroll-head 暂缓** |
 | **DOC-STATUS** | **kickoff-w1** |
 | **主题代号** | 「点睛」— **CAL**（Calligraphy Title） |
 | **触发来源** | 2026-08-06 产品讨论：用户希望游记封面标题达到「即梦」文生图那种手写体艺术感；经过对既有内部 demo（`arttext-miniapp`）的实证分析，确认了可落地路径 |
@@ -13,6 +13,18 @@
 | **验收** | 启动开发时拆 `ACCEPTANCE-COVER-CALLIGRAPHY-TITLE-V1.md`；本文 §12 为源 |
 | **实施清单** | 启动开发时拆 `IMPLEMENTATION-COVER-CALLIGRAPHY-TITLE-V1.md` |
 | **更新日期** | 2026-08-07 |
+
+> **v0.6.0 相对 v0.5.0（§6.2 定位策略复核 · 2026-08-07 · 讨论向，本版未改动代码）**
+>
+> - **背景**：W1 视觉验收（v0.5.0）暴露 `veil-footer` 贴纸曾与主体/文案重叠，产品追问「文字位置如何选取，结合目前 5 款封面样式如何无缝融合」。复核 `travelogue/cover_engine/registry.py`/`catalog.py` 发现：V6 Opening Registry 早已给**全部 10 款风格**（5 款 active + 5 款 retired）定义了 `text_safe_regions`（`CoverStyleProfile` 字段），且已在生产链路（`travelogue/cover_engine/opening/title_safe.py::mark_title_safe`，自动选图环节判断镜头主体是否落进文案留白区）中使用；对照真实渲染 CSS（`.cover-opening__title`/`.cover-opening__panel` 实际坐标）核实，该数据与各风格真实版式高度吻合。**结论**：CAL 自建的 `WHITELIST`/`PlacementPreset`（`whitelist.py`）应改为从 `text_safe_regions` 派生，而非另起一份手搓矩形——这比 D-CAL-13「自建最小信号集」的原始假设（现网无 `textSafe` 数据）更进一步：数据本身**已经存在**，只是此前未被 CAL 复用。
+> - **逐风格结论**（详见 D-CAL-20）：
+>   1. `veil-footer`（已上线）：现有矩形 `{x:0.08,y:0.14,w:0.84,h:0.22}` 与该风格 `prefer.focal_y_max:0.55`（主体常驻上半区）存在潜在冲突——此前视觉验收中贴纸压到头饰即此风险的实例；建议收窄矩形或接入 `mark_title_safe` 的 focal 校验信号作为落地前的最后一道闸门。
+>   2. `folio-overlap`（W2 计划开放）：现有矩形 `{x:0.10,y:0.42,w:0.80,h:0.20}` 与 registry 候选 `{x:0,y:0.58,w:0.7,h:0.2}` 大致重叠但数值不精确；建议直接对齐 registry 候选，不再自造数值。
+>   3. `band-cut`（现网真实出现，非白名单）：registry 矩形 `{x:0,y:0.60,w:0.55,h:0.14}` 与真实渲染的 `--cover-band-center:63%` 断带位置精确吻合，且宽高比对横版画布友好——**评估为下一个最应开放的白名单风格**。
+>   4. `contact-stamp`（非白名单）：registry 给了左右两块候选（`{x:0,y:0.72,w:0.55,h:0.28}` 对应真实 `<h1>` 位置 / `{x:0.62,y:0.72,w:0.38,h:0.28}` 对应 hook/日戳号位置），建议贴纸仅占左块，不与右块 hook/archive 抢位。
+>   5. `scroll-head`（非白名单）：唯一采用 `writing-mode: vertical-rl` 竖排的风格，registry 安全区为窄高竖列，与 Route B/C 现有横版画布假设不兼容——建议明确排除在近期开放范围外，待竖排模板能力补齐再评估。
+> - **新增方法论建议**（落入 D-CAL-20，均为 W2 待办，本版未改代码）：placement 候选应统一从 `text_safe_regions` 派生；一个风格有多候选区域时应让 `placement_score` 真正参与打分择优，而非固定绑死单一矩形；`text_safe_regions` 只保证"避开镜头主体"不保证"未被本风格自身文案占用"，需补一层面板占位排除校验；落地前复用既有 `mark_title_safe` 的 focal 校验信号作为统一闸门，避免两套逻辑对同一张照片给出矛盾结论。
+> - **本版无代码变更**；结论落为 D-CAL-20（§3）+ §5.4/§6.2 更新 + W2 里程碑细化（§11）+ OQ-CAL-08（§12.2）。
 
 > **v0.5.0 相对 v0.4.0（W1 真实素材视觉验收 · 2026-08-07 · [验收记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）**
 >
@@ -238,6 +250,7 @@
 | **D-CAL-17**（v0.3 新增） | **色彩后处理，不在 prompt 里描述颜色** | 路线 C 固定生成「白底黑字」高对比稿；目标墨色由 §6.1 算法在生成后对笔迹层重新填色决定，默认白色兜底（与路线 B 共用同一配色算法） |
 | **D-CAL-18**（v0.3 新增） | **模型优先级** | 技术验证与落地优先测 **阿里云通义万相（DashScope wanx）**；即梦（火山引擎 API，若能申请到）/腾讯混元生图作为陪跑对比；**不采用 DeepSeek**（无成熟商用文生图 API，中文书法准确率未验证） |
 | **D-CAL-19**（v0.3 新增） | **字形 OCR 校验门禁** | 路线 C 输出必须过 OCR 回读校验（识别结果与 `mainRendered` 一致）方可判定为「有效贴纸」；未过校验 → 触发 D-CAL-16 fallback，不计入生产可用素材 |
+| **D-CAL-20**（v0.6 新增 · 收窄 D-CAL-13） | **placement 候选须从 Opening Registry `text_safe_regions` 派生，不再自建独立矩形表** | D-CAL-13「不假设现网存在 `textSafe` API」的前提已不成立——`travelogue/cover_engine/registry.py`/`catalog.py` 的 `CoverStyleProfile.text_safe_regions` 已覆盖全部 10 款风格且已被 `opening/title_safe.py::mark_title_safe` 生产使用，与真实渲染坐标高度吻合。W2 落地时：① `whitelist.py` 的 `PlacementPreset.rect` 改为从对应风格的 `text_safe_regions` 派生而非手搓数值；② 一个风格有多个候选区域时，`placement_score` 须对候选逐一打分择优，而非固定绑死一个矩形；③ 补一层「候选区域是否已被本风格自身文案（hook/trip-meta/archive）占用」的排除校验，`text_safe_regions` 本身只保证避开镜头主体，不保证未被现有文案占用；④ 落地前复用 `mark_title_safe` 已算出的 focal 校验信号作为统一闸门，两套逻辑对同一张照片不应给出矛盾结论。白名单开放顺序：`band-cut` → `contact-stamp` → `folio-overlap`（对齐 registry 候选）→ `veil-footer`（收紧现有矩形/接入 focal 校验）→ `scroll-head`（暂缓，待竖排模板能力） |
 
 ---
 
@@ -290,13 +303,16 @@
 | `Aa剑豪体.ttf` | 待核查 | 核查通过前不得生产默认 |
 | `鸿雷板书简体-测试版.ttf` | 待核查 + 确认非仅测试版 | 同上 |
 
-### 5.4 Opening 白名单与 placement preset（BLK-CAL-04）
+### 5.4 Opening 白名单与 placement preset（BLK-CAL-04；v0.6 更新见 D-CAL-20）
 
-| `coverOpeningStyle` | V1 | placement preset（示意） |
+| `coverOpeningStyle` | V1 状态 | placement preset（v0.6 更新：应对齐 registry `text_safe_regions`） |
 |---------------------|-----|-------------------------|
-| `veil-footer` | **白名单 · 首发** | 贴纸偏上中或雾带上方留白区；避开底栏 meta |
-| `folio-overlap` | **白名单 · 可选第二款**（默认关，W2 开） | 叠在 folio 题区约定矩形内 |
-| 其它（含竖排/题带横切等） | **非白名单** | `titleArt` 不生效；HTML 标题照旧 |
+| `veil-footer` | **白名单 · 首发**；现有矩形有主体碰撞风险，待修复 | 现矩形 `{x:0.08,y:0.14,w:0.84,h:0.22}` 与 `prefer.focal_y_max:0.55` 冲突；W2 收窄或接入 focal 校验 |
+| `folio-overlap` | **白名单 · 可选第二款**（默认关，W2 拟第 3 顺位开） | 对齐 registry 候选 `{x:0,y:0.58,w:0.7,h:0.2}`（现有自造矩形数值不精确） |
+| `band-cut` | **非白名单 · W2 拟第 1 顺位开** | registry `{x:0,y:0.60,w:0.55,h:0.14}`，实测与真实断带位置（`--cover-band-center:63%`）精确吻合 |
+| `contact-stamp` | **非白名单 · W2 拟第 2 顺位开** | registry 左块 `{x:0,y:0.72,w:0.55,h:0.28}`（仅占左块，避让右块 hook/archive） |
+| `scroll-head` | **非白名单 · 暂缓** | registry 安全区为竖排窄列，与横版画布假设不兼容，待竖排模板能力 |
+| 其它（cameo-aperture/type-monument/portal-arch/horizon-split/diptych-seam，均已 retired） | **非白名单** | `titleArt` 不生效；HTML 标题照旧 |
 
 非白名单时即使 `meta.titleArt.enabled=true`，渲染层也**必须**忽略贴纸（防错误叠加）。
 
@@ -398,6 +414,8 @@
 4. 遮挡「主体显著区」面积比（阈值 35%，与 CAD 精神对齐，**自实现**）
 
 取最高分候选；全员不达标 → fail-open。
+
+**v0.6 更新（D-CAL-20，W2 待落地，本版未改代码）**：`placement preset 矩形`（信号 3）不应继续由 `whitelist.py` 手搓维护，应改为直接读取该 `coverOpeningStyle` 在 Cover Style Registry 中的 `text_safe_regions`（`travelogue/cover_engine/catalog.py`）；风格有多个候选区域时（如 `folio-overlap`/`contact-stamp`），四项信号应对每个候选逐一打分，取最高分而非固定绑死一个矩形。此外建议新增第 5 项信号：**该候选区域是否落在本风格自身既有文案（hook/trip-meta/archive-strip）的实际渲染范围内**——`text_safe_regions` 只保证避开镜头主体，不保证未被现有文案占用，这正是 v0.5 视觉验收发现重叠问题的根因之一；可直接复用 `opening/title_safe.py::mark_title_safe` 已经计算的 focal 校验结果作为落地前的统一闸门，避免选图与选位置两套逻辑对同一张照片给出矛盾结论。
 
 ---
 
@@ -511,7 +529,7 @@
 | **W0.5**（不占用工程排期，先于启动触发） | 路线 C 技术验证 Spike：通义万相为主，即梦（若可申请）/腾讯混元陪跑；用 20～30 个真实/边界标题（含生僻字）测字形准确率（OCR/人审）+ 成本 + 延迟 + 审核拒绝率 | ⚠️ **未完整完成**——仅现场实测 2 组标题（v0.4.0），得出「plus 优于 turbo」的方向性结论，**不足以**支撑 20～30 条样本量的正式验收；`route_c_enabled` 配置默认仍为 `false` |
 | **启动触发** | 产品显式拉起 **「封面装帧增强」** 窗口 | ✅ **2026-08-07 已拉起**（本次对话）；不绑定 AIR |
 | **W1**（**Kickoff · 开发中**，分支 `feat/cover-calligraphy-title-v1`） | `cover_engine/title_art/` 干净管线（路线 B）+ 授权字库 + 自制/公版印章；固定配色/位；`meta.titleArt`；仅 `veil-footer`；路线 C 引擎 + 风格库 Registry（初始 5 款）同步实现（因 W0.5 未完整完成，`route_c_enabled` 默认关闭，代码路径已具备） | ✅ 代码已落地：`travelogue/cover_engine/title_art/` 全模块 + CLI `title-art` + 渲染表面 §7 接入 + 83 条单测；✅ AC-CAL-03/07/08/09/12 已用真实素材人工核对（见 [W1 视觉验收](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)，过程中发现并修复 3 处集成缺口）；⏳ AC-CAL-11 仍待完整 W0.5 Spike |
-| **W2** | placement_score + 自动配色（路线 B/C 共用，已随 W1 一并落地）；`enabled` 默认 false；可选开 `folio-overlap` | AC-CAL-01～06、09、13（待补验收记录） |
+| **W2** | placement_score + 自动配色（路线 B/C 共用，已随 W1 一并落地）；`enabled` 默认 false；按 D-CAL-20 顺序开放白名单：① `whitelist.py` 改为从 `text_safe_regions` 派生 preset（不再手搓矩形）② 开 `band-cut` ③ 开 `contact-stamp` ④ 开 `folio-overlap`（对齐 registry 候选）⑤ 修复 `veil-footer` 现有矩形（接入 `mark_title_safe` focal 校验）；`scroll-head` 暂缓 | AC-CAL-01～06、09、13（待补验收记录） |
 | **W3** | 盲评：现网 CSS Opening 标题 vs `titleArt=on`（含路线 B/C 分别对比）≥55% | AC-CAL-BLIND（未开始） |
 
 ---
@@ -545,6 +563,7 @@
 | **OQ-CAL-05** | ECC/Card 是否二期消费贴纸？ | 默认倾向：二期可选；不挡 V1（路线 B/C 均适用） |
 | **OQ-CAL-06**（v0.3 新增） | 路线 C 何时从「候选」升级为「默认主路径」？ | 倾向：W0.5 Spike 通过 **且** W3 盲评达标才可；否则长期作为可选高级项，不默认开启 |
 | **OQ-CAL-07** | 路线 C 的 5 款风格 `promptTemplate` 具体文案何时定稿？ | ✅ **已关闭（v0.4.0）**：5 款已定稿，见 §5.5.1 与 `style_registry.py`。**新开放问题**：W0.5 完整 Spike（20～30 条真实/边界标题系统性验证）何时补齐？— 在此之前 `route_c_enabled` 保持默认 `false`，不建议默认对用户开启 |
+| **OQ-CAL-08**（v0.6 新增） | `whitelist.py` 改为从 `text_safe_regions` 派生后，是否需要保留一份「CAL 专属排除子区域」标注（用于扣除被 hook/trip-meta/archive 占用的部分），还是直接靠 `mark_title_safe` 的 focal 校验兜底即可？ | 倾向：W2 先只接 focal 校验（成本低，复用现成信号）；若上线后仍观测到与文案重叠的案例，再补排除子区域标注 |
 
 ### 12.3 验收（AC-CAL-*，Kickoff 后生效）
 
@@ -609,3 +628,4 @@
 | **v0.3.0** | 2026-08-07 | 产品复议：新增**路线 C（固定提示词分层生图）**为候选（与路线 B 主+备，非替代）；新增 D-CAL-14～19；新增 §5.5 路线 C 规格（风格库 Registry、抠字重上色管线、模型优先级=通义万相优先）；新增 W0.5 技术验证 Spike 里程碑；数据模型新增 `styleId`/`modelProvider`/`promptVersion`/`ocrVerified`/`fallbackFrom`；新增 AC-11～13、OQ-06～07、P-CAL-07；§9/§10/§13 补充路线 C 合规与归因文案条目；归档路线 C 参考样本 `cover-calligraphy-title-route-c-refs-2026-08-07/` |
 | **v0.4.0** | 2026-08-07 | **Kickoff**：产品拉起「封面装帧增强」窗口，分支 `feat/cover-calligraphy-title-v1` 落地路线 B + 路线 C 全模块（`travelogue/cover_engine/title_art/`）、CLI `title-art`、渲染表面 §7 接入、`AppConfig.title_art` 配置（默认关闭）、83 条单测；§5.5.1 五款风格 `promptTemplate` 定稿（关闭 OQ-CAL-07）；D-CAL-18 模型选型更新为 `wanx2.1-t2i-plus`（现场实测优于 turbo，但**非**完整 W0.5 Spike，`route_c_enabled` 保持默认 `false`）；真实 demo trip 人工核对路线 B 全链路可用 |
 | **v0.5.0** | 2026-08-07 | **W1 真实素材视觉验收**（[记录](./acceptance-records/cover-calligraphy-title-v1-w1-visual-review-2026-08-07.md)）：用真实 trip 跑通 AC-CAL-03/07/08/09/12，发现并修复 3 处 83 条单测未捕获的真实集成缺口——① 字库资产未随包分发致生产环境静默退化成微软雅黑（补 `assets/fonts/` + `LICENSE-NOTES.md`）；② 艺术字贴纸误嵌雾带文案面板致与 hook 文案重叠 + §6.2 定位坐标从未接进渲染上下文（死代码）+ 出稿未裁剪致居中锚点对不上可见字形（三处一并修）；③ `mark_title_art_stale` 从未被 `copy_patch.py` 调用致改标题不触发 stale（AC-CAL-09 实测不通过，已接线）。AC-CAL-03/07/08/09/12 转为 ✅；AC-CAL-11 仍待完整 W0.5 Spike |
+| **v0.6.0** | 2026-08-07 | **§6.2 定位策略复核**（讨论向，本版未改代码）：复核 Opening Registry 发现 `CoverStyleProfile.text_safe_regions` 已覆盖全部 10 款风格且已被 `title_safe.py::mark_title_safe` 生产使用，与真实渲染坐标高度吻合——收窄 D-CAL-13 并新增 **D-CAL-20**：placement 候选须从 `text_safe_regions` 派生而非自建独立矩形表；多候选须真正打分择优；补文案占位排除校验；复用 `mark_title_safe` 信号做统一闸门。逐风格结论：`veil-footer` 现矩形与 `focal_y_max:0.55` 冲突待修；`folio-overlap` 应对齐 registry 候选；`band-cut`/`contact-stamp` registry 矩形与真实渲染坐标精确吻合，评估为 W2 优先开放对象；`scroll-head` 竖排版式与现有横版画布不兼容，暂缓。更新 §5.4/§6.2/§11 W2 里程碑；新增 OQ-CAL-08 |
