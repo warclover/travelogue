@@ -73,16 +73,19 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "xiaohongshu"
     assert result.capture_method == "collage_pages"
-    # 2026-08-05 (orientation-supply-aware CardGrouper fix): the 8 seeded
-    # photos are 4 landscape + 4 portrait (_seed_kept_photos alternates), so
-    # the pure count-based chunk [8] → card-8-grid-equal (100% landscape
-    # demand) would force 4 borrowed portrait photos into landscape-shaped
-    # slots. plan_cards now tracks real orientation supply and instead
-    # produces [7, 1] (card-7-triband-hero-mid's 3/4 split fits the actual
-    # 4/4 supply almost exactly) → 2 cards, only the unavoidable trailing
-    # single photo mismatched.
-    assert result.page_count == 2
+    # 2026-08-07 (quality-aware small-pool feed default, plan_cards_for_feed):
+    # 8 photos ≤ the 10-photo small-pool threshold → collage budget = 1 card.
+    # Every seeded asset lacks width/height/aspectKind, so cover_score_v2
+    # returns 0.0 for all of them (kind falls back to "square" → empty
+    # feature vector) — the tie-break degrades to original order, so the
+    # first 6 photos (3 landscape + 3 portrait) fill one compact collage
+    # card, and the trailing 2 (1 landscape + 1 portrait) become their own
+    # singles (the first of which is promoted to the opening "cover" card,
+    # ties broken by original order too) → 3 cards total: 1 opener single +
+    # 1 collage + 1 single.
+    assert result.page_count == 3
     assert "竖版拼贴" in (result.user_hint or "")
+    assert "精选单图" in (result.user_hint or "")
     finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
     for path in finals:
@@ -106,9 +109,10 @@ def test_export_wechat_official_collage_pages(tmp_path: Path) -> None:
 
     assert result.platform == "wechat_official"
     assert result.capture_method == "collage_pages"
-    # Same CardGrouper as xiaohongshu (2026-08-05 fix, see that test): 4
-    # landscape + 4 portrait supply → [7, 1] → 2 cards.
-    assert result.page_count == 2
+    # Same CardGrouper as xiaohongshu (2026-08-07 quality-aware small-pool
+    # default, see that test): 8 photos → 1 opener single + 1 compact
+    # collage + 1 trailing single = 3 cards.
+    assert result.page_count == 3
     assert "图文正文" in (result.user_hint or "")
     assert "笔记正文" not in (result.user_hint or "")
     finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-mp-*.png"))
@@ -127,14 +131,41 @@ def test_export_xiaohongshu_covers_every_photo(tmp_path: Path) -> None:
     _seed_kept_photos(trip_dir, 13)
 
     result = export_collage_pack(trip_dir, platform="xiaohongshu")
-    # 2026-08-05 (orientation-supply-aware CardGrouper fix): 13 seeded photos
-    # are 7 landscape + 6 portrait. The pure count-based [13] chunk would
-    # land on card-13-hero-center-stack/top-stack — both 0% landscape —
-    # forcing all 7 landscape photos into portrait-shaped cells. plan_cards
-    # now picks [7, 6] instead (card-7-triband-hero-mid's 3 landscape-shaped
-    # slots + card-6-sandwich-bands' 4 fit the 7/6 supply with zero forced
-    # mismatches) → 2 cards.
-    assert result.page_count == 2
+    # 2026-08-07 (quality-aware small-pool feed default): 13 photos falls in
+    # the 11-20 "medium pool" band → collage budget = 2 compact cards (all
+    # scores tie at 0.0, see test_export_xiaohongshu_collage_pages, so the
+    # tie-break is original order): photos[0:6] and [6:12] each fill one
+    # 6-slot compact collage, leaving a single trailing photo (photos[12])
+    # promoted straight to the opener single → 3 cards, all 13 photos
+    # accounted for (6 + 6 + 1).
+    assert result.page_count == 3
+
+
+def test_export_xiaohongshu_large_pool_no_quality_split(tmp_path: Path) -> None:
+    """>20 photos: plan_cards_for_feed falls through unchanged to the
+    dominant-opener behavior — no "精选单图" quality-split hint."""
+    trips = tmp_path / "trips"
+    create_trip("xhs-30", trips, title="小红书大池")
+    trip_dir = trips / "xhs-30"
+    _seed_kept_photos(trip_dir, 30)
+
+    result = export_collage_pack(trip_dir, platform="xiaohongshu")
+    assert "精选单图" not in (result.user_hint or "")
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-xhs-*.png"))
+    assert len(finals) == result.page_count
+
+
+def test_export_xiaohongshu_manual_slide_count_skips_quality_split(tmp_path: Path) -> None:
+    """A manual "自定义张数" request bypasses the small-pool quality-aware
+    split entirely — result must match plain ``plan_cards_with_dominant_
+    opener`` (via a fixed slide_count), not the quality-aware allocation."""
+    trips = tmp_path / "trips"
+    create_trip("xhs-manual", trips, title="小红书自定义张数")
+    trip_dir = trips / "xhs-manual"
+    _seed_kept_photos(trip_dir, 8)
+
+    result = export_collage_pack(trip_dir, platform="xiaohongshu", slide_count=4)
+    assert "精选单图" not in (result.user_hint or "")
 
 
 def test_export_album_spread_geometry(tmp_path: Path) -> None:

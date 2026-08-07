@@ -70,6 +70,28 @@ committing to a template shape the photo pool can't actually fill. See
    2) — album readers flip through spread by spread, so back-to-back
    identical templates read as more repetitive there than in a scrolling
    feed.
+
+2026-08-07 quality-aware small-pool feed default (user request: "如果用户
+的图片较少...允许单张图片优先...一起凑够4-6张居多"). Product review of the
+literal ask (cap collage count, rest singles) surfaced a sharper version
+worth implementing instead of a blind count cap: 小红书/公众号创作者普遍把
+"最强的照片"独立成单图（尤其是第一张，它同时是 feed 缩略图），把普通/相似的
+照片凑进拼贴省版面 —— i.e. the split should be *quality*-driven, not just
+"first N are singles". ``plan_cards_for_feed`` implements this:
+  · Pools of >20 kept photos are entirely unaffected (falls straight through
+    to ``plan_cards_with_dominant_opener`` — this feature only targets the
+    "较少" case the user actually asked about).
+  · A manual "自定义张数" request (``target_per_card`` set) also falls
+    straight through unchanged — a user who explicitly asked for N slides
+    gets the existing supply-aware behavior, not a surprise quality re-split.
+  · Otherwise (auto mode, ≤20 photos): a small "collage budget" (1 card for
+    ≤10 photos, 2 cards for 11-20) is filled with the *lowest*-scoring
+    photos (``cover_score_v2``-ranked, ascending) in compact 2-6 slot
+    templates (never the big 7/8/9/16-slot grids — those would recreate the
+    exact "过度雷同宫格" problem this feature exists to avoid for small
+    pools). Every other photo becomes its own ``card-1-full-frame`` single;
+    the single strongest-scoring photo among those is promoted to the very
+    first card (feed thumbnail hook) instead of a fixed opener grid.
 """
 
 from __future__ import annotations
@@ -387,6 +409,7 @@ def plan_cards(
     *,
     target_per_card: int | None = None,
     avoid_immediate_repeat: bool = False,
+    max_slot_count: int | None = None,
 ) -> list[CardPlan]:
     """Group ``photos`` into cards per §4: orientation-supply-aware slot-count
     + template selection (§4 v0.2 simplification's *only* hard requirement,
@@ -431,6 +454,12 @@ def plan_cards(
     (e.g. landscape leftovers forced into portrait-shaped ``card-1``) even
     though a zero-mismatch auto plan exists — which would violate the
     product rule that AC-ECC-04 outranks page-count preference.
+
+    ``max_slot_count`` (2026-08-07, ``plan_cards_for_feed`` building block):
+    optional hard ceiling on candidate templates' slot count — e.g. capping
+    at 6 restricts selection to the "compact" 2-6 slot templates, excluding
+    the big 7/8/9/16-slot grids. ``None`` (default) considers the full
+    library, unchanged from prior behavior.
     """
     if not photos:
         return []
@@ -438,12 +467,14 @@ def plan_cards(
         photos,
         target_per_card=target_per_card,
         avoid_immediate_repeat=avoid_immediate_repeat,
+        max_slot_count=max_slot_count,
     )
     if target_per_card and target_per_card > 0:
         auto_plans = _plan_cards_once(
             photos,
             target_per_card=None,
             avoid_immediate_repeat=avoid_immediate_repeat,
+            max_slot_count=max_slot_count,
         )
         if count_orientation_mismatches(plans) > count_orientation_mismatches(auto_plans):
             return auto_plans
@@ -455,6 +486,7 @@ def _plan_cards_once(
     *,
     target_per_card: int | None = None,
     avoid_immediate_repeat: bool = False,
+    max_slot_count: int | None = None,
 ) -> list[CardPlan]:
     """Single greedy pass used by ``plan_cards`` (and its soft-target rail)."""
     landscape_queue = [p for p in photos if _photo_orientation(p) == "landscape"]
@@ -465,7 +497,12 @@ def _plan_cards_once(
     last_template_id: str | None = None
     while landscape_queue or portrait_queue:
         remaining_total = len(landscape_queue) + len(portrait_queue)
-        candidates = [t for t in CARD_TEMPLATES.values() if t.slot_count <= remaining_total]
+        candidates = [
+            t
+            for t in CARD_TEMPLATES.values()
+            if t.slot_count <= remaining_total
+            and (max_slot_count is None or t.slot_count <= max_slot_count)
+        ]
         template = _best_matching_template(
             candidates,
             landscape_remaining=len(landscape_queue),
@@ -547,6 +584,111 @@ def plan_cards_with_dominant_opener(
         avoid_immediate_repeat=avoid_immediate_repeat,
     )
     return [opener_plan, *rest]
+
+
+#: Small-pool feed quality-aware allocation thresholds (2026-08-07 — see
+#: module docstring). ≤10 photos → 1 collage-card budget; 11-20 → 2; above
+#: that, ``plan_cards_for_feed`` falls straight through to the existing
+#: dominant-opener behavior (unchanged for larger pools).
+_FEED_SMALL_POOL_MAX = 10
+_FEED_MEDIUM_POOL_MAX = 20
+#: Collage-card sizes considered for the budgeted cards, largest-fits-first;
+#: derived from the template library's own available counts within [2, 6] —
+#: deliberately excludes 1 (that's a "single", not a collage) and anything
+#: above 6 (the "总览宫格"-style big grids this feature exists to de-emphasize
+#: for small pools).
+_FEED_COMPACT_SIZES: tuple[int, ...] = tuple(
+    sorted({c for c in AVAILABLE_SLOT_COUNTS if 2 <= c <= 6}, reverse=True)
+)
+
+
+def feed_collage_budget(n_photos: int) -> int | None:
+    """Max number of collage cards ``plan_cards_for_feed`` will build for a
+    pool of ``n_photos`` kept photos; ``None`` means "no cap" (falls through
+    to the existing dominant-opener algorithm unchanged — see module
+    docstring). Exposed (no leading underscore) so callers can decide
+    whether to surface a "quality-aware split" hint without duplicating the
+    thresholds."""
+    if n_photos <= _FEED_SMALL_POOL_MAX:
+        return 1
+    if n_photos <= _FEED_MEDIUM_POOL_MAX:
+        return 2
+    return None
+
+
+def _pick_feed_collage_size(available: int) -> int | None:
+    """Largest compact size (see ``_FEED_COMPACT_SIZES``) that fits within
+    ``available`` remaining candidate photos; ``None`` when even the
+    smallest compact size (2) doesn't fit — caller should stop budgeting
+    collage cards and let the rest fall through as singles."""
+    for size in _FEED_COMPACT_SIZES:
+        if available >= size:
+            return size
+    return None
+
+
+def plan_cards_for_feed(
+    photos: list[Path],
+    *,
+    scores: dict[Path, float] | None = None,
+    target_per_card: int | None = None,
+) -> list[CardPlan]:
+    """xiaohongshu / wechat_official entry point (2026-08-07): quality-aware
+    small-pool allocation — see module docstring for the full rationale.
+    Falls through unchanged to ``plan_cards_with_dominant_opener`` when the
+    pool is >20 photos or a manual ``target_per_card`` was requested.
+
+    ``scores``: optional ``cover_score_v2``-style per-photo score (higher =
+    stronger solo-card candidate); missing/``None`` entries default to 0.0,
+    which — combined with the stable sort's original-index tie-break —
+    degrades gracefully to "front-loaded" chunking when no signal is
+    available (e.g. every photo scores 0.0 for whatever reason).
+    """
+    if not photos:
+        return []
+    budget = feed_collage_budget(len(photos))
+    if budget is None or (target_per_card and target_per_card > 0):
+        return plan_cards_with_dominant_opener(photos, target_per_card=target_per_card)
+
+    def _score_of(path: Path) -> float:
+        return (scores or {}).get(path, 0.0)
+
+    # Weakest-first (ascending score); ties keep original relative order —
+    # this is what makes an all-zero-score pool degrade to "first N get
+    # bundled" rather than an arbitrary/unstable ordering.
+    weak_order = sorted(
+        range(len(photos)), key=lambda i: (_score_of(photos[i]), i)
+    )
+    remaining_weak: list[Path] = [photos[i] for i in weak_order]
+
+    collage_plans: list[CardPlan] = []
+    collage_ids: set[int] = set()
+    for _ in range(budget):
+        size = _pick_feed_collage_size(len(remaining_weak))
+        if size is None:
+            break
+        chunk, remaining_weak = remaining_weak[:size], remaining_weak[size:]
+        sub_plans = plan_cards(chunk, max_slot_count=size)
+        if not sub_plans:
+            break
+        collage_plans.extend(sub_plans)
+        collage_ids.update(id(p) for plan in sub_plans for p in plan.photos)
+
+    singles_photos = [p for p in photos if id(p) not in collage_ids]
+    if not singles_photos:
+        return collage_plans
+
+    # Opener: the single strongest-scoring photo becomes the very first
+    # card — it doubles as the feed thumbnail, so a real single "hero" beats
+    # a fixed grid for a small pool (the grid opener is still used for
+    # larger pools via the >20-photo fallback above).
+    cover_idx = max(range(len(singles_photos)), key=lambda i: _score_of(singles_photos[i]))
+    cover_photo = singles_photos.pop(cover_idx)
+
+    card1 = CARD_TEMPLATES["card-1-full-frame"]
+    opener_plan = CardPlan(template=card1, photos=(cover_photo,))
+    single_plans = [CardPlan(template=card1, photos=(p,)) for p in singles_photos]
+    return [opener_plan, *collage_plans, *single_plans]
 
 
 def count_orientation_mismatches(plans: list[CardPlan]) -> int:

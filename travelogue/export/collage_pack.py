@@ -22,6 +22,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from travelogue.curation.cover_scoring_v2 import cover_score_v2
 from travelogue.export.card_bookends import (
     pick_portrait_preferring_id,
     render_closing_card,
@@ -30,8 +31,9 @@ from travelogue.export.card_bookends import (
 from travelogue.export.card_grouper import (
     CardPlan,
     count_orientation_mismatches,
+    feed_collage_budget,
     plan_cards,
-    plan_cards_with_dominant_opener,
+    plan_cards_for_feed,
 )
 from travelogue.export.card_renderer import (
     ALBUM_GUTTER,
@@ -132,6 +134,45 @@ def _album_target_per_card(n_photos: int, *, slide_count: int | None, profile: A
     import math
 
     return max(1, int(math.ceil(n_photos / target_cards)))
+
+
+def _feed_quality_scores(pairs: list[tuple[Path, dict[str, Any]]]) -> dict[Path, float]:
+    """cover_score_v2-ranked per-photo score (2026-08-07, ``plan_cards_for_feed``
+    quality-aware small-pool default) — higher means a stronger solo-card
+    candidate. Same source/params as ``poster_bric_pack._rank_by_cover_score``
+    (BLK-ECC-01: trip-wide "代表性精选" signal, not an in-screen hero weight);
+    kept local here rather than imported to avoid a cross-module dependency
+    on poster_bric_pack's private ranking helper. Per-photo failures degrade
+    to 0.0 rather than aborting the whole export."""
+    pool = [asset for _, asset in pairs]
+    scores: dict[Path, float] = {}
+    for path, asset in pairs:
+        try:
+            scores[path] = cover_score_v2(asset, "mobile", pool=pool)
+        except Exception:
+            _log.debug("cover_score_v2 failed for %s (feed quality scoring)", path, exc_info=True)
+            scores[path] = 0.0
+    return scores
+
+
+def _feed_mix_hint_suffix(
+    plans: list[CardPlan], *, n_photos: int, target_per_card: int | None
+) -> str:
+    """Small-pool quality-aware mode (2026-08-07) heads-up: explains the
+    collage/single split so the page count doesn't read as arbitrary.
+    Empty whenever ``plan_cards_for_feed`` fell through to the unlimited
+    dominant-opener behavior unchanged — either a >20-photo pool, or a
+    manual "自定义张数" request (``target_per_card`` set), both of which
+    skip the quality-aware split entirely (see ``plan_cards_for_feed``)."""
+    if target_per_card and target_per_card > 0:
+        return ""
+    if feed_collage_budget(n_photos) is None:
+        return ""
+    collages = sum(1 for p in plans if p.template.slot_count > 1)
+    singles = len(plans) - collages
+    if collages <= 0 or singles <= 0:
+        return ""
+    return f"（优先保留 {singles} 张精选单图 + {collages} 张拼贴）"
 
 
 def _mismatch_hint_suffix(plans: list[CardPlan]) -> str:
@@ -366,7 +407,8 @@ def export_collage_pack(
         target_per_card = _xhs_target_per_card(
             len(paths), slide_count=slide_count, profile=profile
         )
-        plans = plan_cards_with_dominant_opener(paths, target_per_card=target_per_card)
+        scores = _feed_quality_scores(pairs)
+        plans = plan_cards_for_feed(paths, scores=scores, target_per_card=target_per_card)
         pages_render = [
             render_card(
                 list(plan.photos),
@@ -380,6 +422,9 @@ def export_collage_pack(
         body_label = "图文正文" if pid == "wechat_official" else "笔记正文"
         user_hint = (
             f"已生成 {len(pages_render)} 张竖版拼贴卡片（3:4）· 更多细节可写在{body_label}"
+        )
+        user_hint += _feed_mix_hint_suffix(
+            plans, n_photos=len(paths), target_per_card=target_per_card
         )
         user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"

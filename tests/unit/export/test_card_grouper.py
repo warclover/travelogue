@@ -11,7 +11,9 @@ from travelogue.export.card_grouper import (
     _slot_is_landscape_shaped,
     assign_photos_to_slots,
     count_orientation_mismatches,
+    feed_collage_budget,
     plan_cards,
+    plan_cards_for_feed,
     plan_cards_with_dominant_opener,
     plan_poster_card,
     plan_slot_counts,
@@ -436,3 +438,94 @@ def test_plan_poster_card_rich_pool_uses_hero_template(tmp_path: Path) -> None:
 def test_plan_poster_card_empty_raises() -> None:
     with pytest.raises(ValueError):
         plan_poster_card([])
+
+
+# --- plan_cards_for_feed (2026-08-07 quality-aware small-pool default) ----
+
+
+def test_feed_collage_budget_thresholds() -> None:
+    assert feed_collage_budget(1) == 1
+    assert feed_collage_budget(10) == 1
+    assert feed_collage_budget(11) == 2
+    assert feed_collage_budget(20) == 2
+    assert feed_collage_budget(21) is None
+    assert feed_collage_budget(100) is None
+
+
+def test_plan_cards_for_feed_small_pool_budgets_one_collage(tmp_path: Path) -> None:
+    """≤10 photos: at most 1 card may have >1 slot; every other card is a
+    single ``card-1-full-frame``."""
+    photos = _mixed(tmp_path, 4, 4)  # 8 photos
+    plans = plan_cards_for_feed(photos)
+    collage_cards = [p for p in plans if p.template.slot_count > 1]
+    assert len(collage_cards) <= 1
+    # every photo still placed exactly once
+    all_photos = [p for plan in plans for p in plan.photos]
+    assert set(all_photos) == set(photos)
+    assert len(all_photos) == len(photos)
+
+
+def test_plan_cards_for_feed_medium_pool_budgets_two_collages(tmp_path: Path) -> None:
+    """11-20 photos: at most 2 collage cards."""
+    photos = _mixed(tmp_path, 7, 6)  # 13 photos
+    plans = plan_cards_for_feed(photos)
+    collage_cards = [p for p in plans if p.template.slot_count > 1]
+    assert len(collage_cards) <= 2
+    all_photos = [p for plan in plans for p in plan.photos]
+    assert set(all_photos) == set(photos)
+
+
+def test_plan_cards_for_feed_collage_cards_stay_compact(tmp_path: Path) -> None:
+    """Budgeted collage cards never use the big 7/8/9/13/16-slot grids —
+    those recreate exactly the "过度雷同宫格" problem this feature exists to
+    avoid for small pools."""
+    photos = _mixed(tmp_path, 10, 10)  # 20 photos (medium-pool ceiling)
+    plans = plan_cards_for_feed(photos)
+    for plan in plans:
+        if plan.template.slot_count > 1:
+            assert 2 <= plan.template.slot_count <= 6
+
+
+def test_plan_cards_for_feed_large_pool_falls_through_unchanged(tmp_path: Path) -> None:
+    """>20 photos: identical output to plan_cards_with_dominant_opener —
+    this feature only targets small/medium pools."""
+    photos = _mixed(tmp_path, 15, 15)  # 30 photos
+    fed = plan_cards_for_feed(photos, scores={p: float(i) for i, p in enumerate(photos)})
+    opener = plan_cards_with_dominant_opener(photos)
+    assert [p.template.id for p in fed] == [p.template.id for p in opener]
+    assert [p.photos for p in fed] == [p.photos for p in opener]
+
+
+def test_plan_cards_for_feed_manual_target_falls_through_unchanged(tmp_path: Path) -> None:
+    """A manual "自定义张数" request (target_per_card set) skips the
+    quality-aware split entirely, even for a small pool."""
+    photos = _mixed(tmp_path, 4, 4)  # 8 photos
+    fed = plan_cards_for_feed(photos, target_per_card=4)
+    opener = plan_cards_with_dominant_opener(photos, target_per_card=4)
+    assert [p.template.id for p in fed] == [p.template.id for p in opener]
+
+
+def test_plan_cards_for_feed_promotes_highest_score_as_opener(tmp_path: Path) -> None:
+    """The single strongest-scoring photo (not consumed by the collage
+    budget) becomes the very first card — the feed thumbnail hook."""
+    photos = _mixed(tmp_path, 4, 4)  # 8 photos
+    star = photos[-1]  # last photo — would otherwise land in a trailing single
+    scores = {p: 0.0 for p in photos}
+    scores[star] = 99.0
+    plans = plan_cards_for_feed(photos, scores=scores)
+    assert plans[0].template.id == "card-1-full-frame"
+    assert plans[0].photos == (star,)
+
+
+def test_plan_cards_for_feed_bundles_lowest_scoring_photos(tmp_path: Path) -> None:
+    """The weakest-scoring photos are the ones pulled into the collage
+    card; the strongest stay as (or become) singles."""
+    photos = _mixed(tmp_path, 4, 4)  # 8 photos
+    # Rank strictly by original index (ascending score == ascending index),
+    # so photos[0:6] are unambiguously "weaker" than photos[6:8].
+    scores = {p: float(i) for i, p in enumerate(photos)}
+    plans = plan_cards_for_feed(photos, scores=scores)
+    collage_photos = {p for plan in plans for p in plan.photos if plan.template.slot_count > 1}
+    assert collage_photos == set(photos[:6])
+    single_photos = {p for plan in plans for p in plan.photos if plan.template.slot_count == 1}
+    assert single_photos == set(photos[6:])
