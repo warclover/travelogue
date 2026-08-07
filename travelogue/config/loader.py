@@ -61,6 +61,7 @@ from travelogue.config.studio import (
     StudioConfig,
 )
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.title_art import title_art_config_from_dict
 from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
 from travelogue.config.yaml_loader import load_yaml_mapping
@@ -484,6 +485,10 @@ def load_config(path: Path | None = None) -> AppConfig:
     template_admin_raw = data.get("template_admin") if isinstance(data.get("template_admin"), dict) else {}
     cohort_raw = data.get("cohort") if isinstance(data.get("cohort"), dict) else {}
     aesthetic_raw = data.get("aesthetic") if isinstance(data.get("aesthetic"), dict) else {}
+    title_art_raw = (
+        data.get("title_art") if isinstance(data.get("title_art"), dict) else data.get("titleArt")
+    )
+    title_art_raw = title_art_raw if isinstance(title_art_raw, dict) else {}
     mosaic_raw = data.get("mosaic") if isinstance(data.get("mosaic"), dict) else {}
     layout_top = data.get("layout") if isinstance(data.get("layout"), dict) else {}
     if isinstance(layout_top, TrackedDict):
@@ -814,6 +819,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             mosaic_weight=float(cohort_raw.get("mosaic_weight", cohort_raw.get("mosaicWeight", 0.05))),
         ),
         aesthetic=aesthetic_from_dict(aesthetic_raw),
+        title_art=title_art_config_from_dict(title_art_raw),
     )
     if isinstance(data, TrackedDict):
         _report_unknown_config_keys(collect_unknown_keys(data), strict=strict)

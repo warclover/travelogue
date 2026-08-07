@@ -28,7 +28,12 @@
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
     {{> trip-meta}}
+    {{#if hasTitleArt}}
+    <img class="cover-opening__title-art" src="{{titleArtSrc}}" alt="{{titleArtAlt}}" loading="eager" decoding="async" />
+    <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}} sr-only" data-title="{{title}}" itemprop="name">{{title}}</h1>
+    {{else}}
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" data-title="{{title}}" itemprop="name">{{title}}</h1>
+    {{/if}}
     {{#if hasSubtitle}}
     <p class="cover-opening__subtitle subtitle" data-block="cover-subtitle">{{subtitle}}</p>
     {{/if}}

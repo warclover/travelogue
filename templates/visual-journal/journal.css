@@ -454,6 +454,40 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   line-height: 1.08;
 }
 
+/* PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：文本 <h1> 仍在 DOM 里（SEO/朗读器），
+   艺术字贴纸叠加时视觉隐藏，只保留可访问性语义。 */
+.cover-opening__title.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  display: block;
+}
+
+/* 艺术字贴纸：透明 PNG，随 §6.2 定位落在 style 自身留白区（当前仅 veil-footer
+   进白名单）；不预设固定尺寸——由生成画布比例 + 容器宽度共同决定。 */
+.cover-opening__title-art {
+  display: none;
+  max-width: 68%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translate(-50%, -50%);
+}
+
 .cover-opening__hook {
   margin-bottom: 0;
 }

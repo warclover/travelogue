@@ -15,6 +15,31 @@ from travelogue.render.context_types import (
 from travelogue.render.surface import resolve_surface_context
 
 
+def _resolve_title_art_src(trip: dict, opening_style_id: str) -> tuple[str | None, bool]:
+    """PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：白名单内 + 非 stale + enabled 才叠加。
+
+    ``titleArt.assetPath`` 是相对 trip 根目录的路径（index.html 同级），可直接
+    作为 ``<img src>`` 使用，不做磁盘存在性校验（信任 trip.json 状态，与其余
+    computed 字段一致）。
+    """
+    from travelogue.cover_engine.title_art.whitelist import is_whitelisted
+
+    if not is_whitelisted(opening_style_id):
+        return None, False
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    title_art = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
+    if not isinstance(title_art, dict):
+        return None, False
+    if not title_art.get("enabled") or title_art.get("stale"):
+        return None, False
+    if str(title_art.get("openingStyleId") or "") != opening_style_id:
+        return None, False
+    asset_path = str(title_art.get("assetPath") or "").strip()
+    if not asset_path:
+        return None, False
+    return asset_path, True
+
+
 def build_render_context(
     trip: dict,
     *,
@@ -401,6 +426,9 @@ def build_render_context(
         except Exception:
             placeholder_script = ""
 
+    resolved_opening_style = resolve_cover_opening_style(trip)
+    title_art_src, has_title_art = _resolve_title_art_src(trip, resolved_opening_style)
+
     ctx: TripRenderContext = {
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
@@ -449,8 +477,11 @@ def build_render_context(
         "hasCoverArchiveStrip": bool(cover_archive_strip),
         "hook": hook,
         "hasHook": bool(hook),
-        "coverOpeningStyle": resolve_cover_opening_style(trip),
+        "coverOpeningStyle": resolved_opening_style,
         "coverTitleLayout": resolve_split_mat_title_layout(meta_title),
+        "hasTitleArt": has_title_art,
+        "titleArtSrc": title_art_src,
+        "titleArtAlt": meta_title,
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": has_epilogue,

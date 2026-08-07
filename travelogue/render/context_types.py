@@ -330,6 +330,9 @@ class TripRenderContext(TypedDict, total=False):
     hasHook: bool
     coverOpeningStyle: str
     coverTitleLayout: str
+    hasTitleArt: bool
+    titleArtSrc: str | None
+    titleArtAlt: str
     editableHook: bool
     epilogue: str
     hasEpilogue: bool
