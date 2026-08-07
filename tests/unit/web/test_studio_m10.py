@@ -48,19 +48,23 @@ def test_studio_trips_includes_preview_path(tmp_path: Path) -> None:
 
 
 def test_longshot_reveal_rel_prefers_current_manifesto(tmp_path: Path) -> None:
-    from travelogue.export.longshot import write_longshot_current
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME, write_longshot_current
 
     trip_dir = tmp_path / "reveal-trip"
-    trip_dir.mkdir()
-    (trip_dir / "older-longshot.png").write_bytes(b"png")
-    (trip_dir / "newer-长图.png").write_bytes(b"png")
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    export_dir.mkdir(parents=True)
+    (export_dir / "older-longshot.png").write_bytes(b"png")
+    (export_dir / "newer-长图.png").write_bytes(b"png")
     write_longshot_current(
         trip_dir,
         batch_id="batch-1",
         kind="whole",
         files=["newer-长图.png"],
     )
-    assert longshot_reveal_rel_path(trip_dir) == "newer-长图.png"
+    # 清单里存的是与清单同层（子目录内）的裸文件名；relPath 需补回子目录前缀。
+    assert (
+        longshot_reveal_rel_path(trip_dir) == f"{EXPORT_OUTPUT_DIRNAME}/newer-长图.png"
+    )
 
 
 def test_longshot_reveal_rel_falls_back_to_newest_file(tmp_path: Path) -> None:

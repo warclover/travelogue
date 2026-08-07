@@ -17,6 +17,7 @@ import pytest
 from PIL import Image
 
 from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
     LongshotCancelled,
     LongshotExportError,
     LongshotExportResult,
@@ -253,9 +254,10 @@ def test_batch_real_pipeline_multi_platform_success(tmp_path: Path) -> None:
         (r.platform, r.error_code, r.error_message) for r in results if not r.ok
     ]
 
-    xhs_files = sorted(trip_dir.glob("*-xhs-*.png"))
-    mp_files = sorted(trip_dir.glob("*-mp-*.png"))
-    album_files = sorted(trip_dir.glob("*-album-*.png"))
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    xhs_files = sorted(export_dir.glob("*-xhs-*.png"))
+    mp_files = sorted(export_dir.glob("*-mp-*.png"))
+    album_files = sorted(export_dir.glob("*-album-*.png"))
     assert len(xhs_files) == results[0].result.page_count > 0
     assert len(mp_files) == results[1].result.page_count > 0
     assert len(album_files) == results[2].result.page_count > 0
@@ -307,9 +309,10 @@ def test_batch_real_pipeline_partial_failure_continues(tmp_path: Path) -> None:
     assert results[1].error_code == "E_COLLAGE_N"
     assert results[2].ok is True  # D-BEX-05：第 2 项真实失败未阻塞第 3 项
 
-    xhs_files = list(trip_dir.glob("*-xhs-*.png"))
-    album_files = list(trip_dir.glob("*-album-*.png"))
-    mp_files = list(trip_dir.glob("*-mp-*.png"))
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    xhs_files = list(export_dir.glob("*-xhs-*.png"))
+    album_files = list(export_dir.glob("*-album-*.png"))
+    mp_files = list(export_dir.glob("*-mp-*.png"))
     assert len(xhs_files) > 0
     assert len(album_files) > 0
     assert len(mp_files) == 0  # 失败项未产出任何文件（writer.rollback 生效）
@@ -325,15 +328,16 @@ def test_batch_backward_compat_single_platform_path_unaffected(tmp_path: Path) -
     trip_dir = trips / "batch-compat"
     _seed_kept_photos(trip_dir, 8)
 
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
     direct_result = export_trip_longshot(trip_dir, platform="xiaohongshu")
-    direct_files = sorted(p.name for p in trip_dir.glob("*-xhs-*.png"))
-    for p in trip_dir.glob("*-xhs-*.png"):
+    direct_files = sorted(p.name for p in export_dir.glob("*-xhs-*.png"))
+    for p in export_dir.glob("*-xhs-*.png"):
         p.unlink()
 
     batch_results = export_trip_longshot_batch(
         trip_dir, requests=[BatchExportRequest(platform="xiaohongshu")]
     )
-    batch_files = sorted(p.name for p in trip_dir.glob("*-xhs-*.png"))
+    batch_files = sorted(p.name for p in export_dir.glob("*-xhs-*.png"))
 
     assert batch_results[0].ok is True
     assert batch_results[0].result.page_count == direct_result.page_count

@@ -11,7 +11,11 @@ from PIL import Image
 
 from travelogue.config.studio import GcsPosterBricConfig
 from travelogue.export.bric_compose import bric_compose
-from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
+    LongshotExportError,
+    export_trip_longshot,
+)
 from travelogue.export.output_recipe.resolve import ambiguous_intent_options, resolve_output_recipe
 from travelogue.export.poster_bric_pack import (
     compose_poster_png,
@@ -129,7 +133,7 @@ def test_ac_tpc_07_export_n4_no_screens_mutation(tmp_path: Path) -> None:
     assert "九宫格" not in (result.publish_guide or "")
     assert result.profile_label == "单张海报"
 
-    finals = list(trip_dir.glob("*-poster.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-poster.png"))
     assert len(finals) == 1
     with Image.open(finals[0]) as im:
         assert im.size == (1080, 1440)
@@ -148,8 +152,8 @@ def test_poster_bric_ignores_jpeg_fmt(tmp_path: Path) -> None:
     _seed_kept_photos(trip_dir, 4)
     result = export_poster_bric_pack(trip_dir, cfg=_cfg_on(), fmt="jpeg")
     assert result.output_format == "png"
-    assert list(trip_dir.glob("*-poster.jpg")) == []
-    finals = list(trip_dir.glob("*-poster.png"))
+    assert list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-poster.jpg")) == []
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-poster.png"))
     assert len(finals) == 1
     assert finals[0].read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
@@ -175,7 +179,7 @@ def test_ac_tpc_07_single_photo_uses_full_frame(tmp_path: Path) -> None:
     result = export_poster_bric_pack(trip_dir, cfg=_cfg_on())
     assert result.platform == "poster_bric"
     assert result.page_count == 1
-    finals = list(trip_dir.glob("*-poster.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-poster.png"))
     assert len(finals) == 1
     with Image.open(finals[0]) as im:
         assert im.size == (1080, 1440)

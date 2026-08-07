@@ -376,7 +376,11 @@ def build_render_context(
     html_attrs.extend(reading_html_attrs(surface.reading_payload))
 
     asset_version = _longshot_bundle_version(trip)
-    zip_name = share_zip_filename(trip)
+    # EOI · 分享 zip 落盘在 EXPORT_OUTPUT_DIRNAME 子目录；下载链接需带上子目录前缀
+    # 才能相对 index.html（trip 根）正确解析（见 share.js downloadZip）。
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    zip_name = f"{EXPORT_OUTPUT_DIRNAME}/{share_zip_filename(trip)}"
     zip_ready = has_share_zip(trip, trip_root)
 
     placeholder_script = ""

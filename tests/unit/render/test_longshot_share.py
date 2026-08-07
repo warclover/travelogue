@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
 from travelogue.paths import ROOT, TEMPLATE_VISUAL_JOURNAL
 from travelogue.render.context import (
     build_render_context,
@@ -146,7 +147,9 @@ def test_has_share_zip_when_file_exists(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
     assert not has_share_zip(trip, trip_workspace)
     zip_name = share_zip_filename(trip)
-    (trip_workspace / zip_name).write_bytes(b"PK")
+    export_dir = trip_workspace / EXPORT_OUTPUT_DIRNAME
+    export_dir.mkdir(parents=True, exist_ok=True)
+    (export_dir / zip_name).write_bytes(b"PK")
     assert has_share_zip(trip, trip_workspace)
 
 
@@ -163,10 +166,14 @@ def test_render_includes_share_toolbar(trip_workspace: Path) -> None:
 
 def test_render_shows_download_zip_when_published(trip_workspace: Path) -> None:
     trip = json.loads((trip_workspace / "trip.json").read_text(encoding="utf-8"))
-    (trip_workspace / share_zip_filename(trip)).write_bytes(b"PK")
+    export_dir = trip_workspace / EXPORT_OUTPUT_DIRNAME
+    export_dir.mkdir(parents=True, exist_ok=True)
+    (export_dir / share_zip_filename(trip)).write_bytes(b"PK")
     ctx = build_render_context(trip, trip_root=trip_workspace)
     assert ctx["hasShareZip"] is True
-    assert ctx["shareZipFile"] == share_zip_filename(trip)
+    # EOI · 分享 zip 落盘在 EXPORT_OUTPUT_DIRNAME 子目录，下载链接需带该前缀
+    # 才能相对 index.html（trip 根）正确解析。
+    assert ctx["shareZipFile"] == f"{EXPORT_OUTPUT_DIRNAME}/{share_zip_filename(trip)}"
     assert "trip-" not in ctx["shareZipFile"]
     html = render_html(trip, trip_root=trip_workspace)
     assert "下载分享包" in html

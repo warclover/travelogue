@@ -118,15 +118,24 @@ def _is_phone_vertical_file(path: Path) -> bool:
 
 
 def _glob_export_images(trip_dir: Path, *patterns: str) -> list[Path]:
-    """Trip-root export images matching patterns; drop atomic ``*.part`` leftovers."""
+    """Export images matching patterns; drop atomic ``*.part`` leftovers.
+
+    EOI · 新导出统一落在 ``EXPORT_OUTPUT_DIRNAME`` 子目录；trip_dir 根目录仍一并扫描，
+    兼容本次改动前已导出、未迁移的老游记（D-EOI-05 · 不迁移不清理）。
+    """
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    search_dirs = [trip_dir, export_dir] if export_dir.is_dir() else [trip_dir]
     rows: list[Path] = []
     seen: set[str] = set()
-    for pattern in patterns:
-        for path in trip_dir.glob(pattern):
-            if path.name.endswith(".part") or path.name in seen:
-                continue
-            seen.add(path.name)
-            rows.append(path)
+    for base in search_dirs:
+        for pattern in patterns:
+            for path in base.glob(pattern):
+                if path.name.endswith(".part") or path.name in seen:
+                    continue
+                seen.add(path.name)
+                rows.append(path)
     return rows
 
 
@@ -617,17 +626,21 @@ def _build_longshot_pages(
 ) -> list[dict[str, Any]]:
     """手机框切换序列：整卷长图 → 分段导出竖条 → 按 carousel 章序竖版原图。"""
     # QFX D-QFX-06b · 优先读成功导出权威清单（禁止对分段做逐文件 mtime 混排）
-    from travelogue.export.longshot import read_longshot_current
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME, read_longshot_current
 
     current = read_longshot_current(trip_dir)
     if current:
         files = list(current.get("files") or [])
+        # 清单里存的是"与清单同层"的裸文件名（现指子目录内），补回子目录前缀才是
+        # 相对 trip_dir 的正确路径。
         if len(files) == 1:
             return [
                 {
                     "id": "longshot",
                     "label": "微信长图",
-                    "url": _trip_static_url(trip_id, files[0]),
+                    "url": _trip_static_url(
+                        trip_id, f"{EXPORT_OUTPUT_DIRNAME}/{files[0]}"
+                    ),
                     "scrollPreview": True,
                 }
             ]
@@ -639,7 +652,9 @@ def _build_longshot_pages(
                     "id": str(ch.get("id") or f"ch{i:02d}"),
                     "label": _chapter_label(ch, i) if ch else f"第{i}章",
                     "chapterIndex": i,
-                    "url": _trip_static_url(trip_id, name),
+                    "url": _trip_static_url(
+                        trip_id, f"{EXPORT_OUTPUT_DIRNAME}/{name}"
+                    ),
                     "scrollPreview": True,
                 }
             )
@@ -651,7 +666,7 @@ def _build_longshot_pages(
             {
                 "id": "longshot",
                 "label": "微信长图",
-                "url": _trip_static_url(trip_id, longshot.name),
+                "url": _trip_static_url(trip_id, longshot.relative_to(trip_dir)),
                 "scrollPreview": True,
             }
         ]
@@ -679,7 +694,7 @@ def _build_longshot_pages(
                     "id": str(ch.get("id") or f"ch{i:02d}"),
                     "label": _chapter_label(ch, i) if ch else f"第{i}章",
                     "chapterIndex": i,
-                    "url": _trip_static_url(trip_id, png.name),
+                    "url": _trip_static_url(trip_id, png.relative_to(trip_dir)),
                     "scrollPreview": True,
                 }
             )
@@ -790,7 +805,7 @@ def _chapter_page_url(
     if index <= len(ch_pngs):
         png = ch_pngs[index - 1]
         if _is_web_landscape_file(png):
-            url = _trip_static_url(trip_id, png.name)
+            url = _trip_static_url(trip_id, png.relative_to(trip_dir))
             if url not in used_urls:
                 return url
 
@@ -859,7 +874,7 @@ def build_trip_bento_preview(trip_dir: Path, trip: dict, trip_id: str) -> dict[s
             )
     elif ch_pngs:
         for i, png in enumerate(ch_pngs, 1):
-            png_url = _trip_static_url(trip_id, png.name)
+            png_url = _trip_static_url(trip_id, png.relative_to(trip_dir))
             if _is_web_landscape_file(png) and png_url not in used_carousel_urls:
                 url = png_url
             else:

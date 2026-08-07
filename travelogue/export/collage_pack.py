@@ -41,6 +41,7 @@ from travelogue.export.card_renderer import (
     scale_canvas,
 )
 from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
     LongshotExportError,
     LongshotExportResult,
     LongshotOutput,
@@ -444,7 +445,9 @@ def export_collage_pack(
             user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
 
-    writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)
+    writer = PlatformExportWriter(
+        trip_dir / EXPORT_OUTPUT_DIRNAME, prefix, ext=out_ext, single_file=False
+    )
     outputs: list[LongshotOutput] = []
     total = len(pages_render)
 

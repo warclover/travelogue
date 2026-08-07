@@ -7,42 +7,55 @@ from datetime import datetime
 from pathlib import Path
 
 
+_LONGSHOT_FILE_PATTERNS: tuple[str, ...] = (
+    # SFI D-SFI-07 · 人话展示名产物
+    "*-长图.png",
+    "*-长图.jpg",
+    "*-长图.jpeg",
+    "*-长图-*.png",
+    "*-长图-*.jpg",
+    "*-长图-*.jpeg",
+    # 兼容旧 tripId / -longshot / -chNN 命名（迁移期；新导出后会清理）
+    "*-longshot.png",
+    "*-longshot.jpg",
+    "*-longshot.jpeg",
+    "*-ch*.png",
+    "*-ch*.jpg",
+    "*-ch*.jpeg",
+    # Longshot 2.0 platform outputs (ADR-016 D7 / AC-LNG2-06)
+    "*-moments-*.png",
+    "*-moments-*.jpg",
+    "*-moments-*.jpeg",
+    "*-xhs-*.png",
+    "*-xhs-*.jpg",
+    "*-xhs-*.jpeg",
+    "*-ins-*.png",
+    "*-ins-*.jpg",
+    "*-weibo-*.png",
+    "*-weibo-*.jpg",
+    "*-douyin-cover.png",
+    "*-douyin-cover.jpg",
+    "*-custom-*.png",
+    "*-custom-*.jpg",
+    "*-poster*.png",
+    "*-poster*.jpg",
+)
+
+
+def _export_search_dirs(trip_dir: Path) -> list[Path]:
+    """EOI · 新导出统一落在 EXPORT_OUTPUT_DIRNAME 子目录；trip_dir 根目录仍一并扫描，
+    兼容本次改动前已导出、未迁移的老游记（D-EOI-05 · 不迁移不清理）。"""
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    return [trip_dir, export_dir] if export_dir.is_dir() else [trip_dir]
+
+
 def _longshot_files(trip_dir: Path) -> list[Path]:
     files: list[Path] = []
-    for pattern in (
-        # SFI D-SFI-07 · 人话展示名产物
-        "*-长图.png",
-        "*-长图.jpg",
-        "*-长图.jpeg",
-        "*-长图-*.png",
-        "*-长图-*.jpg",
-        "*-长图-*.jpeg",
-        # 兼容旧 tripId / -longshot / -chNN 命名（迁移期；新导出后会清理）
-        "*-longshot.png",
-        "*-longshot.jpg",
-        "*-longshot.jpeg",
-        "*-ch*.png",
-        "*-ch*.jpg",
-        "*-ch*.jpeg",
-        # Longshot 2.0 platform outputs (ADR-016 D7 / AC-LNG2-06)
-        "*-moments-*.png",
-        "*-moments-*.jpg",
-        "*-moments-*.jpeg",
-        "*-xhs-*.png",
-        "*-xhs-*.jpg",
-        "*-xhs-*.jpeg",
-        "*-ins-*.png",
-        "*-ins-*.jpg",
-        "*-weibo-*.png",
-        "*-weibo-*.jpg",
-        "*-douyin-cover.png",
-        "*-douyin-cover.jpg",
-        "*-custom-*.png",
-        "*-custom-*.jpg",
-        "*-poster*.png",
-        "*-poster*.jpg",
-    ):
-        files.extend(trip_dir.glob(pattern))
+    for base in _export_search_dirs(trip_dir):
+        for pattern in _LONGSHOT_FILE_PATTERNS:
+            files.extend(base.glob(pattern))
     # Drop atomic temp leftovers if any
     return [p for p in files if not p.name.endswith(".part")]
 
@@ -113,34 +126,42 @@ def _pick_preview(trip_dir: Path) -> str | None:
     primary = trip_dir / "preview.jpg"
     if primary.is_file():
         return "preview.jpg"
+
+    def _glob(*patterns: str) -> list[Path]:
+        rows: list[Path] = []
+        for base in _export_search_dirs(trip_dir):
+            for pattern in patterns:
+                rows.extend(base.glob(pattern))
+        return rows
+
     # Prefer new SFI names, then legacy
     preferred = sorted(
-        list(trip_dir.glob("*-长图-01.png"))
-        + list(trip_dir.glob("*-长图-01.jpg"))
-        + list(trip_dir.glob("*-长图.png"))
-        + list(trip_dir.glob("*-长图.jpg"))
-        + list(trip_dir.glob("*-ch01.png"))
-        + list(trip_dir.glob("*-ch01.jpg"))
-        + list(trip_dir.glob("*-ch01.jpeg"))
+        _glob(
+            "*-长图-01.png",
+            "*-长图-01.jpg",
+            "*-长图.png",
+            "*-长图.jpg",
+            "*-ch01.png",
+            "*-ch01.jpg",
+            "*-ch01.jpeg",
+        )
     )
     if preferred:
-        return preferred[0].name
-    longshots = sorted(
-        list(trip_dir.glob("*-longshot.png"))
-        + list(trip_dir.glob("*-longshot.jpg"))
-        + list(trip_dir.glob("*-longshot.jpeg"))
-    )
+        return preferred[0].relative_to(trip_dir).as_posix()
+    longshots = sorted(_glob("*-longshot.png", "*-longshot.jpg", "*-longshot.jpeg"))
     if longshots:
-        return longshots[0].name
+        return longshots[0].relative_to(trip_dir).as_posix()
     any_ch = sorted(
-        list(trip_dir.glob("*-长图-*.png"))
-        + list(trip_dir.glob("*-长图-*.jpg"))
-        + list(trip_dir.glob("*-ch*.png"))
-        + list(trip_dir.glob("*-ch*.jpg"))
-        + list(trip_dir.glob("*-ch*.jpeg"))
+        _glob(
+            "*-长图-*.png",
+            "*-长图-*.jpg",
+            "*-ch*.png",
+            "*-ch*.jpg",
+            "*-ch*.jpeg",
+        )
     )
     if any_ch:
-        return any_ch[0].name
+        return any_ch[0].relative_to(trip_dir).as_posix()
     return None
 
 
@@ -159,18 +180,20 @@ def has_longshot_exports(trip_dir: Path) -> bool:
 
 def longshot_reveal_rel_path(trip_dir: Path) -> str | None:
     """Prefer ``longshot-current.json`` first file; else newest matching export."""
-    from travelogue.export.longshot import read_longshot_current
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME, read_longshot_current
 
     current = read_longshot_current(trip_dir)
     if current:
         files = list(current.get("files") or [])
         if files:
-            return str(files[0])
+            # 清单文件里存的是"与清单同层"的裸文件名（现指子目录内），补回子目录前缀
+            # 才是相对 trip_dir 的正确 relPath（供前端直传 /__travelogue/reveal）。
+            return (Path(EXPORT_OUTPUT_DIRNAME) / str(files[0])).as_posix()
     matches = _longshot_files(trip_dir)
     if not matches:
         return None
     newest = max(matches, key=lambda p: (p.stat().st_mtime, p.name))
-    return newest.name
+    return newest.relative_to(trip_dir).as_posix()
 
 
 def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:

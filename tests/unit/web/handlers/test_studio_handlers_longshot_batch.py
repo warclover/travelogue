@@ -206,7 +206,12 @@ def test_handle_longshot_batch_partial_failure_continues_and_reports_items(
     assert items[2]["ok"] is True
 
     # QFX 同款约束：longshot-current.json 反映最后一个成功平台（album_spread）。
-    current = (trip_dir / "longshot-current.json").read_text(encoding="utf-8")
+    # EOI · 清单落在 EXPORT_OUTPUT_DIRNAME 子目录（与产物同层）而非 trip_dir 根。
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    current = (trip_dir / EXPORT_OUTPUT_DIRNAME / "longshot-current.json").read_text(
+        encoding="utf-8"
+    )
     assert "album_spread-01.png" in current
 
 

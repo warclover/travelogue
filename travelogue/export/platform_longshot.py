@@ -31,6 +31,7 @@ from travelogue.export.longshot import (
     _BROWSER_POOL,
     CAPTURE_WIDTH,
     DEFAULT_EXPORT_SCALE,
+    EXPORT_OUTPUT_DIRNAME,
     CancelCheckFn,
     CancelRegisterFn,
     LongshotCancelled,
@@ -514,7 +515,7 @@ def export_platform_longshot(
             f"正在切分{label_noun}（0/{page_count}）…",
         )
         writer = PlatformExportWriter(
-            trip_dir, prefix, ext=out_ext, single_file=single_file
+            trip_dir / EXPORT_OUTPUT_DIRNAME, prefix, ext=out_ext, single_file=single_file
         )
         try:
             with writer:

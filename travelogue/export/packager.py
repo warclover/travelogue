@@ -137,11 +137,15 @@ def _export_trip_stages(
     if not no_preview:
         render_preview_jpg(trip_path, preview_path, trip_root=trip_root)
 
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
     from travelogue.render.context import share_zip_filename
 
     default_zip_name = share_zip_filename(trip) or f"{trip_root.name}-分享.zip"
-    zip_path = (output_zip or trip_root / default_zip_name).resolve()
-    # D-SFI-07 · 清掉旧 trip-{id}.zip，避免书架/用户看到工程名
+    zip_path = (
+        output_zip or trip_root / EXPORT_OUTPUT_DIRNAME / default_zip_name
+    ).resolve()
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    # D-SFI-07 · 清掉旧 trip-{id}.zip，避免书架/用户看到工程名（老命名，一直在 trip 根目录）
     legacy_zip = trip_root / f"trip-{trip.get('tripId', trip_root.name)}.zip"
     if legacy_zip.is_file() and legacy_zip.resolve() != zip_path:
         try:

@@ -19,6 +19,7 @@ from travelogue.curation.cover_scoring_v2 import cover_score_v2
 from travelogue.export.card_grouper import plan_poster_card
 from travelogue.export.card_renderer import CARD_CANVAS, render_card, scale_canvas
 from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
     LongshotExportError,
     LongshotExportResult,
     LongshotOutput,
@@ -204,7 +205,9 @@ def export_poster_bric_pack(
     # BE-DFX-21 · poster always PNG (ignore job jpeg default / capacity fallback)
     _ = fmt
     out_ext = "png"
-    writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=True)
+    writer = PlatformExportWriter(
+        trip_dir / EXPORT_OUTPUT_DIRNAME, prefix, ext=out_ext, single_file=True
+    )
 
     try:
         with writer:

@@ -14,6 +14,7 @@ from typing import Any
 from PIL import Image
 
 from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
     LongshotExportError,
     LongshotExportResult,
     LongshotOutput,
@@ -126,7 +127,9 @@ def export_photo_grid_pack(
     guide = (profile.publish_guide or copy_text("guide.moments_grid")).strip()
 
     out_ext = "jpg" if str(fmt).lower() in ("jpeg", "jpg") else "png"
-    writer = PlatformExportWriter(trip_dir, prefix, ext=out_ext, single_file=False)
+    writer = PlatformExportWriter(
+        trip_dir / EXPORT_OUTPUT_DIRNAME, prefix, ext=out_ext, single_file=False
+    )
     outputs: list[LongshotOutput] = []
 
     try:

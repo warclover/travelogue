@@ -26,6 +26,10 @@ import {
 } from "../js/longshot-export-panel.js";
 import { V2 } from "./store.js";
 
+// EOI · 需与 travelogue/export/longshot.py 的 EXPORT_OUTPUT_DIRNAME 保持一致——
+// longshot-current.json 现在落在 trip 根目录下的这个子目录里，不再是根目录。
+var EXPORT_OUTPUT_DIRNAME = "导出文件";
+
 var _activeModal = null;
 var _backgroundJob = null;
 
@@ -401,7 +405,12 @@ function resolveShelfLongshotRevealRel(trip) {
     return Promise.resolve(String(trip.longshotRevealRelPath));
   }
   return fetch(
-    "/" + encodeURIComponent(tripId) + "/longshot-current.json?t=" + String(Date.now())
+    "/" +
+      encodeURIComponent(tripId) +
+      "/" +
+      encodeURIComponent(EXPORT_OUTPUT_DIRNAME) +
+      "/longshot-current.json?t=" +
+      String(Date.now())
   )
     .then(function (resp) {
       if (!resp.ok) return null;
@@ -411,7 +420,8 @@ function resolveShelfLongshotRevealRel(trip) {
       var files = data && data.files;
       if (!Array.isArray(files) || !files.length) return null;
       var name = String(files[0] || "").trim();
-      return name || null;
+      // 清单里存的是裸文件名（与清单同层的约定），拼回子目录前缀才是可 reveal 的相对路径。
+      return name ? EXPORT_OUTPUT_DIRNAME + "/" + name : null;
     })
     .catch(function () {
       return null;

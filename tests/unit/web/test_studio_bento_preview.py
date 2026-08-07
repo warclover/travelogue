@@ -654,14 +654,19 @@ def test_build_trip_bento_preview_rejects_incomplete_sfi_segments(tmp_path: Path
 
 def test_build_trip_bento_preview_prefers_current_over_name_order(tmp_path: Path) -> None:
     """AC-QFX-25 · 有 current 时忽略名序更前的旧文件。"""
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
     trip_id = "current-pick"
     trip_dir = tmp_path / trip_id
     trip_dir.mkdir()
     (trip_dir / "preview.jpg").write_bytes(b"jpg")
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    export_dir.mkdir(parents=True)
     old_name = "AAA-旧标题-长图.png"
     new_name = "ZZZ-新标题-长图.png"
-    _write_png(trip_dir / old_name, 1080, 12000)
-    _write_png(trip_dir / new_name, 1080, 12000)
+    # EOI · 清单与产物同层（子目录内）
+    _write_png(export_dir / old_name, 1080, 12000)
+    _write_png(export_dir / new_name, 1080, 12000)
     write_longshot_current(
         trip_dir,
         batch_id="batch-retitle",
@@ -680,7 +685,7 @@ def test_build_trip_bento_preview_prefers_current_over_name_order(tmp_path: Path
         {
             "id": "longshot",
             "label": "微信长图",
-            "url": f"/{trip_id}/{quote(new_name)}",
+            "url": f"/{trip_id}/{quote(EXPORT_OUTPUT_DIRNAME)}/{quote(new_name)}",
             "scrollPreview": True,
         }
     ]

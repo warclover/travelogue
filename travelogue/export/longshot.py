@@ -21,9 +21,14 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME
 
 _log = logging.getLogger(__name__)
 
-# QFX D-QFX-06b · 成功导出权威清单（相对 trip 根；与 PNG 同层）
+# QFX D-QFX-06b · 成功导出权威清单（与产物同层；产物同层现指 EXPORT_OUTPUT_DIRNAME 子目录）
 LONGSHOT_CURRENT_NAME = "longshot-current.json"
 LONGSHOT_CURRENT_SCHEMA_VERSION = 1
+
+# EOI D-EOI-01 · 所有面向用户的导出产物（长图/平台配图/画册/PDF/分享zip）统一落盘的
+# 专属子目录（相对 trip_dir），使「在文件夹中显示」打开的窗口里只有产物 + 权威清单，
+# 不再混着 index.html/*.js/*.css 等工程文件。见 PRD-EXPORT-OUTPUT-ISOLATION-V1.md。
+EXPORT_OUTPUT_DIRNAME = "导出文件"
 
 CAPTURE_WIDTH = 428
 DEFAULT_EXPORT_SCALE = 2
@@ -285,8 +290,10 @@ def write_longshot_current(
         "kind": kind_norm,
         "files": names,
     }
-    path = trip_dir / LONGSHOT_CURRENT_NAME
-    trip_dir.mkdir(parents=True, exist_ok=True)
+    # EOI D-EOI-04 · 清单与产物同层，现指 EXPORT_OUTPUT_DIRNAME 子目录（非 trip_dir 根）
+    out_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    path = out_dir / LONGSHOT_CURRENT_NAME
+    out_dir.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, path)
@@ -295,7 +302,8 @@ def write_longshot_current(
 
 def read_longshot_current(trip_dir: Path) -> dict[str, Any] | None:
     """Return validated current manifesto, or None when missing/invalid/orphan."""
-    path = trip_dir / LONGSHOT_CURRENT_NAME
+    out_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    path = out_dir / LONGSHOT_CURRENT_NAME
     if not path.is_file():
         return None
     try:
@@ -317,7 +325,7 @@ def read_longshot_current(trip_dir: Path) -> dict[str, Any] | None:
         name = Path(str(item or "").strip()).name
         if not name:
             return None
-        if not (trip_dir / name).is_file():
+        if not (out_dir / name).is_file():
             return None
         files.append(name)
     return {
@@ -335,13 +343,9 @@ _SEGMENT_RE = re.compile(
 )
 
 
-def resolve_complete_segment_batch(trip_dir: Path) -> list[Path] | None:
-    """Return newest complete SFI segmented batch (01..N all present), else None.
-
-    QFX AC-25 分段：不完整批不得作为预览序列（禁止名序半批混排）。
-    """
+def _resolve_complete_segment_batch_in(base: Path) -> list[Path] | None:
     groups: dict[tuple[str, str], dict[int, Path]] = {}
-    for path in trip_dir.iterdir() if trip_dir.is_dir() else []:
+    for path in base.iterdir() if base.is_dir() else []:
         if not path.is_file():
             continue
         match = _SEGMENT_RE.match(path.name)
@@ -378,6 +382,20 @@ def resolve_complete_segment_batch(trip_dir: Path) -> list[Path] | None:
     return complete[0][1]
 
 
+def resolve_complete_segment_batch(trip_dir: Path) -> list[Path] | None:
+    """Return newest complete SFI segmented batch (01..N all present), else None.
+
+    QFX AC-25 分段：不完整批不得作为预览序列（禁止名序半批混排）。
+    EOI · 新导出统一落在 ``EXPORT_OUTPUT_DIRNAME`` 子目录，优先在那里找；子目录不存在
+    时（本次改动前已导出、尚未清理的老游记）退回 trip_dir 根目录（D-EOI-05 · 不迁移）。
+    """
+    for base in (trip_dir / EXPORT_OUTPUT_DIRNAME, trip_dir):
+        result = _resolve_complete_segment_batch_in(base)
+        if result is not None:
+            return result
+    return None
+
+
 def maybe_write_longshot_current_after_upload(
     trip_dir: Path,
     *,
@@ -412,7 +430,8 @@ def maybe_write_longshot_current_after_upload(
         )
         for i in range(1, seg_n + 1)
     ]
-    if not all((trip_dir / name).is_file() for name in expected):
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    if not all((export_dir / name).is_file() for name in expected):
         return None
     return write_longshot_current(
         trip_dir,
@@ -523,7 +542,7 @@ def write_longshot_upload(
         n.lower() for n in _LONGSHOT_UPLOAD_RESERVED_NAMES
     }:
         raise LongshotExportError("E_LNG_CAPTURE_FAILED", "非法输出文件名")
-    out = (trip_dir / safe_name).resolve()
+    out = (trip_dir / EXPORT_OUTPUT_DIRNAME / safe_name).resolve()
     try:
         out.relative_to(trip_dir.resolve())
     except ValueError as exc:
@@ -1035,7 +1054,7 @@ def _capture_chapters_job_locked(
                 fmt=active_fmt,
                 watermark=watermark,
             )
-            out_path = trip_dir / default_longshot_output_name(
+            out_path = trip_dir / EXPORT_OUTPUT_DIRNAME / default_longshot_output_name(
                 trip_dir,
                 fmt=active_fmt,
                 segment_index=idx + 1,
@@ -1222,7 +1241,7 @@ def export_trip_longshot(
             )
             raise_if_longshot_cancelled(cancel_check)
             capture_method = method
-            out_path = output or trip_dir / default_longshot_output_name(
+            out_path = output or trip_dir / EXPORT_OUTPUT_DIRNAME / default_longshot_output_name(
                 trip_dir,
                 fmt=fmt,
                 segment_index=chapter,
@@ -1271,7 +1290,7 @@ def export_trip_longshot(
                 )
                 user_hint = _segment_user_hint(chapter_count, segment_reason)
             else:
-                out_path = output or trip_dir / default_longshot_output_name(
+                out_path = output or trip_dir / EXPORT_OUTPUT_DIRNAME / default_longshot_output_name(
                     trip_dir, fmt=fmt
                 )
                 _write_output_tracked(out_path, data, session_writes)

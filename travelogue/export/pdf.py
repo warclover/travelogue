@@ -59,8 +59,11 @@ def export_trip_pdf(
         meta = (json.loads(trip_json.read_text(encoding="utf-8")).get("meta") or {})
         title = str(meta.get("title") or title).strip() or title
 
-    out_path = output or trip_dir / f"{title}-print.pdf"
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    out_path = output or trip_dir / EXPORT_OUTPUT_DIRNAME / f"{title}-print.pdf"
     out_path = out_path.resolve()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
 
     server = _start_static_server(trip_dir, host, port or 0)
     bound_port = server.server_address[1]

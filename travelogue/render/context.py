@@ -103,10 +103,12 @@ def share_zip_filename(trip: dict) -> str:
 
 
 def has_share_zip(trip: dict, trip_root: Path | None) -> bool:
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
     name = share_zip_filename(trip)
     if not name or trip_root is None:
         return False
-    return (trip_root / name).is_file()
+    return (trip_root / EXPORT_OUTPUT_DIRNAME / name).is_file()
 
 
 def format_duration(seconds: int | float | None) -> str:

@@ -9,7 +9,11 @@ from unittest.mock import patch
 import pytest
 from PIL import Image
 
-from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
+    LongshotExportError,
+    export_trip_longshot,
+)
 from travelogue.export.output_recipe.resolve import ambiguous_intent_options, resolve_output_recipe
 from travelogue.export.photo_grid_pack import (
     compose_1x1_contain,
@@ -77,9 +81,10 @@ def test_ac_or_09_kept_n6_no_padding(tmp_path: Path) -> None:
     assert result.capture_method == "photo_grid"
     assert "九宫格" in (result.publish_guide or "")
     # 无灌水文件
-    finals = list(trip_dir.glob("*-moments-grid-*.png"))
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    finals = list(export_dir.glob("*-moments-grid-*.png"))
     assert len(finals) == 6
-    assert not list(trip_dir.glob("*.part"))
+    assert not list(export_dir.glob("*.part"))
     # 1:1 像素
     for out in result.outputs:
         with Image.open(out.path) as im:
@@ -106,7 +111,7 @@ def test_ac_or_09b_filename_and_rollback(tmp_path: Path) -> None:
         with pytest.raises(LongshotExportError) as ei:
             export_photo_grid_pack(trip_dir)
     assert getattr(ei.value, "code", None) == "E_OR_GRID_FAILED"
-    assert not list(trip_dir.glob("*.part"))
+    assert not list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*.part"))
 
 
 def test_ac_or_09_route_via_export_trip_longshot(tmp_path: Path) -> None:

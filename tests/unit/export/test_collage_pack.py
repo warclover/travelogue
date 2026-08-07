@@ -13,7 +13,7 @@ import pytest
 from PIL import Image
 
 from travelogue.export.collage_pack import export_collage_pack
-from travelogue.export.longshot import export_trip_longshot
+from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME, export_trip_longshot
 from travelogue.export.platform_profiles import clear_platform_profiles_cache
 from travelogue.services.trip_factory import create_trip
 
@@ -83,7 +83,7 @@ def test_export_xiaohongshu_collage_pages(tmp_path: Path) -> None:
     # single photo mismatched.
     assert result.page_count == 2
     assert "竖版拼贴" in (result.user_hint or "")
-    finals = list(trip_dir.glob("*-xhs-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
     for path in finals:
         with Image.open(path) as im:
@@ -111,7 +111,7 @@ def test_export_wechat_official_collage_pages(tmp_path: Path) -> None:
     assert result.page_count == 2
     assert "图文正文" in (result.user_hint or "")
     assert "笔记正文" not in (result.user_hint or "")
-    finals = list(trip_dir.glob("*-mp-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-mp-*.png"))
     assert len(finals) == result.page_count
     for path in finals:
         with Image.open(path) as im:
@@ -158,7 +158,7 @@ def test_export_album_spread_geometry(tmp_path: Path) -> None:
     assert result.page_count == 2
     assert "画册页面" in (result.user_hint or "")
     assert "正文跨页拼贴" in (result.user_hint or "")
-    finals = sorted(trip_dir.glob("*-album-*.png"))
+    finals = sorted((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-album-*.png"))
     assert len(finals) == 2
     sizes = []
     for path in finals:
@@ -262,7 +262,7 @@ def test_album_bookends_cover_first_closing_last(tmp_path: Path) -> None:
     _seed_album_with_bookends(trip_dir, 8, with_closing=True)
 
     result = export_collage_pack(trip_dir, platform="album_spread")
-    finals = sorted(trip_dir.glob("*-album-*.png"))
+    finals = sorted((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-album-*.png"))
     assert len(finals) == result.page_count
     assert result.page_count >= 3
     assert "封面 1 张" in (result.user_hint or "")
@@ -463,7 +463,7 @@ def test_xhs_unchanged_when_bookends_present(tmp_path: Path) -> None:
     assert "竖版拼贴" in (result.user_hint or "")
     assert "封面" not in (result.user_hint or "")
     assert result.page_count >= 1
-    finals = list(trip_dir.glob("*-xhs-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-xhs-*.png"))
     assert len(finals) == result.page_count
 
 
@@ -479,7 +479,7 @@ def test_wechat_official_unchanged_when_bookends_present(tmp_path: Path) -> None
     assert "图文正文" in (result.user_hint or "")
     assert "封面" not in (result.user_hint or "")
     assert "封底" not in (result.user_hint or "")
-    finals = list(trip_dir.glob("*-mp-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-mp-*.png"))
     assert len(finals) == result.page_count
     for path in finals:
         with Image.open(path) as im:
@@ -500,7 +500,9 @@ def test_poster_bric_unchanged_when_bookends_present(tmp_path: Path) -> None:
     assert result.page_count == 1
     assert "封面" not in (result.user_hint or "")
     assert "封底" not in (result.user_hint or "")
-    finals = list(trip_dir.glob("*-poster-*.png")) + list(trip_dir.glob("*-bric-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-poster-*.png")) + list(
+        (trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-bric-*.png")
+    )
     # prefix varies by profile; fall back to result.outputs
     if not finals:
         finals = [Path(o.path) for o in result.outputs]
@@ -518,7 +520,7 @@ def test_album_spread_odd_card_gets_half_page(tmp_path: Path) -> None:
 
     result = export_collage_pack(trip_dir, platform="album_spread")
     assert result.page_count == 1
-    finals = list(trip_dir.glob("*-album-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-album-*.png"))
     assert len(finals) == 1
     with Image.open(finals[0]) as im:
         bg = (245, 245, 243)
@@ -542,7 +544,7 @@ def test_album_spread_manual_slide_count_targets_requested_spreads(tmp_path: Pat
     result = export_collage_pack(trip_dir, platform="album_spread", slide_count=2)
     assert result.page_count == 3
     assert "被迫裁切" not in result.user_hint  # 0 处结构性错配，不应出现兜底提示
-    finals = list(trip_dir.glob("*-album-*.png"))
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-album-*.png"))
     assert len(finals) == 3
 
 

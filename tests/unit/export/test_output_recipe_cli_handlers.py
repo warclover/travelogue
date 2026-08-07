@@ -252,7 +252,9 @@ def test_ac_or_07b_cli_moments_grid_green(tmp_path: Path) -> None:
     out = result.stdout + result.stderr
     assert "OK export-longshot" in out
     assert "photo_grid" in out
-    finals = list(trip_dir.glob("*-moments-grid-*.png"))
+    from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME
+
+    finals = list((trip_dir / EXPORT_OUTPUT_DIRNAME).glob("*-moments-grid-*.png"))
     assert len(finals) == 3
     assert "有几张发几张" in out or "九宫格" in out
 

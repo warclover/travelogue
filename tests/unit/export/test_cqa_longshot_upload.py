@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from travelogue.export.longshot import LongshotExportError, write_longshot_upload
+from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
+    LongshotExportError,
+    write_longshot_upload,
+)
 from travelogue.web.studio_handlers import export_handlers
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n" + b"payload"
@@ -33,7 +37,10 @@ def test_write_longshot_upload_ignores_client_filename(tmp_path: Path) -> None:
         filename="not-a-shell-name.png",
     )
     assert out.name == "白名单册-长图.png"
+    # AC-EOI-06 · P2 客户端兼容模式上传的产物同样落在 EXPORT_OUTPUT_DIRNAME 子目录。
+    assert out.parent == trip / EXPORT_OUTPUT_DIRNAME
     assert not (trip / "not-a-shell-name.png").exists()
+    assert not (trip / out.name).exists()  # 不落根目录，只落子目录
     assert (trip / "trip.json").read_text(encoding="utf-8")
 
 
