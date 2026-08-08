@@ -159,14 +159,13 @@ def test_contact_stamp_fallback_has_conditional_occupant_tag() -> None:
     ("style_id", "expected"),
     [
         ("veil-footer", False),
-        ("band-cut", False),
+        ("band-cut", True),  # W3：D-CAL-23 纸签烧入后须固定纸色配深墨
         ("contact-stamp", False),
         ("folio-overlap", True),
     ],
 )
 def test_assume_paper_bg_flag(style_id: str, expected: bool) -> None:
-    # OQ-CAL-09 收尾：folio-overlap 主候选压在左侧纸面栏（跟照片无关的固定
-    # 底色），自动配色不能采样原始照片——见 engine.py 对该字段的消费。
+    # folio-overlap：左侧纸面栏；band-cut：贴纸内烧入纸签——两者都不能采照片 ROI。
     preset = placement_preset(style_id)
     assert preset is not None
     assert preset.assume_paper_bg is expected

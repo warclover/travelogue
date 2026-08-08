@@ -12,6 +12,7 @@ from travelogue.web.studio_handlers.bookends_handlers import (
     handle_post_restore_auto,
 )
 from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
+from travelogue.web.studio_handlers.title_art_handlers import handle_post_resolve_title_art
 from travelogue.web.studio_handlers.trip_intent_handlers import (
     handle_get_cohort,
     handle_patch_cohort,
@@ -66,6 +67,7 @@ __all__ = [
     "handle_post_repick_opening",
     "handle_post_resolve_closing",
     "handle_post_resolve_opening",
+    "handle_post_resolve_title_art",
     "handle_post_restore_auto",
     "handle_rerender",
     "handle_trip_curate",

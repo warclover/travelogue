@@ -145,6 +145,10 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
         "cohort": {
             "enabled": cfg.cohort.enabled,
         },
+        "titleArt": {
+            "enabled": bool(cfg.title_art.enabled),
+            "routeCEnabled": bool(cfg.title_art.route_c_enabled),
+        },
         "ingest": {
             "copySourceFiles": bool(getattr(cfg.ingest, "copy_source_files", True)),
         },

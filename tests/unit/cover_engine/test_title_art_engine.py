@@ -85,7 +85,14 @@ def test_existing_non_stale_result_skips_recompute_without_force() -> None:
         "meta": {
             "title": "拾光",
             "coverOpeningStyle": "veil-footer",
-            "titleArt": {"version": 1, "enabled": True, "stale": False, "assetPath": "x.png"},
+            "titleArt": {
+                "version": 1,
+                "enabled": True,
+                "stale": False,
+                "assetPath": "x.png",
+                "engine": "clean-pipeline-v1",
+                "template": "plain",
+            },
         }
     }
     write_png, written = _write_png_recorder()
@@ -93,6 +100,30 @@ def test_existing_non_stale_result_skips_recompute_without_force() -> None:
     assert result is None
     assert written == []
     assert trip["meta"]["titleArt"]["assetPath"] == "x.png"  # 未被覆盖
+
+
+def test_legacy_seal_template_recomputes_to_plain_without_force() -> None:
+    """旧 inline_seal* 缓存即使 enabled+非 stale，也要重算为 plain（W3 去印章）。"""
+    trip = {
+        "meta": {
+            "title": "拾光",
+            "coverOpeningStyle": "veil-footer",
+            "titleArt": {
+                "version": 1,
+                "enabled": True,
+                "stale": False,
+                "assetPath": "old-seal.png",
+                "engine": "clean-pipeline-v1",
+                "template": "inline_seal_wide",
+            },
+        }
+    }
+    write_png, written = _write_png_recorder()
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+    assert result is not None
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["template"] == "plain"
+    assert trip["meta"]["titleArt"]["assetPath"] != "old-seal.png"
 
 
 def test_stale_result_recomputes_even_without_force() -> None:
@@ -249,10 +280,8 @@ def test_route_c_generation_failure_falls_back_to_route_b() -> None:
     assert trip["meta"]["titleArt"]["fallbackFrom"] == "diffusion-fixed-prompt-v1"
 
 
-def test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo(tmp_path) -> None:
-    # 2026-08-07 真实视觉核对：contact-stamp 全幅深色渐罩会把「原始照片很亮」
-    # 误判成「背景够亮，选深墨」，实际渲染深墨读不出来。用一张纯白照片模拟
-    # 「原始 ROI 很亮」，断言 assume_dark_veil 生效后必然选回白色墨迹。
+def test_contact_stamp_dark_veil_uses_native_light_ink_despite_bright_photo(tmp_path) -> None:
+    # contact-stamp 全幅深色渐罩 + 原生标题色 #f5f2ec（不再靠 ROI 挑白/深）。
     photo_path = tmp_path / "bright.png"
     Image.new("RGB", (800, 600), (245, 245, 245)).save(photo_path)
     trip = {
@@ -270,18 +299,17 @@ def test_contact_stamp_dark_veil_forces_white_ink_despite_bright_photo(tmp_path)
     )
     assert result is not None
     assert len(written) == 1
-    assert result.main_color == "#ffffff"
+    assert result.main_color == "#f5f2ec"
     assert any("固定深色渐罩" in line for line in result.explain)
+    assert any("原生标题墨色" in line for line in result.explain)
 
 
 def test_focal_conflict_with_placement_rect_fails_open_to_html_title() -> None:
-    # D-CAL-20 优先顺位④/OQ-CAL-08：veil-footer 只有单一固定候选框（雾带上
-    # 方），没有备选位置——镜头焦点正好落在这个框内时，宁可回退纯 HTML 标
-    # 题，也不要硬贴一个大概率压脸的艺术字贴纸。
+    # veil-footer 原生标题位在底部浓黑区（y≈0.80–0.98）；焦点落在该区则 fail-open。
     trip = {
         "meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"},
         "coverAssetId": "asset-1",
-        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.5, "y": 0.25}}],
+        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.25, "y": 0.88}}],
     }
     write_png, written = _write_png_recorder()
 
@@ -299,7 +327,7 @@ def test_focal_outside_placement_rect_still_renders_normally() -> None:
     trip = {
         "meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"},
         "coverAssetId": "asset-1",
-        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.5, "y": 0.8}}],
+        "assets": [{"id": "asset-1", "focalPoint": {"x": 0.5, "y": 0.35}}],
     }
     write_png, written = _write_png_recorder()
 
@@ -374,12 +402,12 @@ def test_contact_stamp_uses_secondary_candidate_box_when_primary_conflicts(
     assert result is not None
     assert len(written) == 1
     fallback_rect = FALLBACK_PRESETS["contact-stamp"][0].rect
-    expected_x = round(fallback_rect["x"] + fallback_rect["w"] / 2, 4)
-    expected_y = round(fallback_rect["y"] + fallback_rect["h"] / 2, 4)
+    expected_x = round(fallback_rect["x"] + min(fallback_rect["w"] * 0.08, 0.02), 4)
+    expected_y = round(fallback_rect["y"] + fallback_rect["h"] * 0.45, 4)
     assert abs(result.position["x"] - expected_x) < 0.01
     assert abs(result.position["y"] - expected_y) < 0.01
-    # 备选候选跟主候选一样带 assume_dark_veil，即便原图偏亮也应强制选白墨。
-    assert result.main_color == "#ffffff"
+    # 备选同样走原生浅墨，而非 ROI 挑白。
+    assert result.main_color == "#f5f2ec"
 
 
 def test_contact_stamp_fails_open_when_primary_conflicts_and_fallback_occupied() -> None:
@@ -461,8 +489,32 @@ def test_folio_overlap_forces_paper_color_regardless_of_bright_or_dark_photo(
 
     assert result is not None
     assert len(written) == 1
-    assert result.main_color == "#1a1a1a"
+    assert result.main_color == "#141312"
     assert any("纸面底色区" in line for line in result.explain)
+    assert any("原生标题墨色" in line for line in result.explain)
+
+
+def test_band_cut_uses_native_dark_ink_on_paper(tmp_path) -> None:
+    # band-cut 原生标题 #141312；assume_paper_bg 避免按深色照片误选浅墨。
+    photo_path = tmp_path / "photo.png"
+    Image.new("RGB", (1000, 1000), (10, 10, 10)).save(photo_path)
+    trip = {
+        "meta": {"title": "初中毕业照", "coverOpeningStyle": "band-cut"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1"}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(trip, resolve_asset_path=_resolve_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    assert result.main_color == "#141312"
+    assert any("纸面底色区" in line for line in result.explain)
+    assert any("原生标题墨色" in line for line in result.explain)
 
 
 def test_folio_overlap_uses_full_column_fallback_when_place_absent(
@@ -486,8 +538,8 @@ def test_folio_overlap_uses_full_column_fallback_when_place_absent(
     assert result is not None
     assert len(written) == 1
     fallback_rect = FALLBACK_PRESETS["folio-overlap"][0].rect
-    expected_x = round(fallback_rect["x"] + fallback_rect["w"] / 2, 4)
-    expected_y = round(fallback_rect["y"] + fallback_rect["h"] / 2, 4)
+    expected_x = round(fallback_rect["x"] + min(fallback_rect["w"] * 0.08, 0.02), 4)
+    expected_y = round(fallback_rect["y"] + fallback_rect["h"] * 0.45, 4)
     assert abs(result.position["x"] - expected_x) < 0.01
     assert abs(result.position["y"] - expected_y) < 0.01
 
@@ -513,8 +565,8 @@ def test_folio_overlap_uses_narrow_primary_when_place_present(
     assert result is not None
     assert len(written) == 1
     primary_rect = placement_preset("folio-overlap").rect
-    expected_x = round(primary_rect["x"] + primary_rect["w"] / 2, 4)
-    expected_y = round(primary_rect["y"] + primary_rect["h"] / 2, 4)
+    expected_x = round(primary_rect["x"] + min(primary_rect["w"] * 0.08, 0.02), 4)
+    expected_y = round(primary_rect["y"] + primary_rect["h"] * 0.45, 4)
     assert abs(result.position["x"] - expected_x) < 0.01
     assert abs(result.position["y"] - expected_y) < 0.01
 

@@ -331,10 +331,12 @@ class TripRenderContext(TypedDict, total=False):
     coverOpeningStyle: str
     coverTitleLayout: str
     hasTitleArt: bool
+    titleArtInPanel: bool
     titleArtSrc: str | None
     titleArtAlt: str
     titleArtX: str
     titleArtY: str
+    titleArtAttribution: str
     editableHook: bool
     epilogue: str
     hasEpilogue: bool

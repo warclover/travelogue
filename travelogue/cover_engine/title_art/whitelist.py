@@ -37,6 +37,12 @@ class PlacementPreset:
     #: 合并成一个「背景色覆盖值」——数值不同、成因不同，各自的注释各自能
     #: 独立讲清楚，合并后调用点反而要多一层"这里的覆盖色具体是什么"的追问。
     assume_paper_bg: bool = False
+    #: 锚点模式：``center`` 用矩形几何中心；``left`` 贴矩形左侧（呼应原生
+    #: 左起标题），CSS 侧配合 ``translate(0,-50%)``。
+    anchor: str = "center"
+    #: 与该风格原生 ``.cover-opening__title`` 颜色一致的固定墨色；非空时
+    #: engine 跳过 ROI 对比度挑色，直接用此色（W3：大小/颜色跟封面样式匹配）。
+    native_ink: tuple[int, int, int] | None = None
 
 
 def _registry_rect(style_id: str, region_index: int) -> dict[str, float]:
@@ -84,59 +90,38 @@ def _registry_rect(style_id: str, region_index: int) -> dict[str, float]:
 WHITELIST: dict[str, PlacementPreset] = {
     "veil-footer": PlacementPreset(
         opening_style_id="veil-footer",
-        label="雾带上方留白区",
-        # TODO(D-CAL-20 优先顺位④)：该风格 registry 里唯一的 text_safe_regions
-        # 是雾带底部——跟现有 hook/trip-meta 面板是同一块区域，跟这里"雾带
-        # 上方"的留白语义并非同一件事（面板已被现有文案占用，直接派生会
-        # 重新引入 v0.5 视觉验收刚修复的重叠问题）。需要先解决 OQ-CAL-08
-        # （面板占位排除 / 接入 mark_title_safe 的 focal 校验）才能改成派生值，
-        # 本次不动。
-        rect={"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22},
+        label="底部浓黑题签区（对齐 panel 左下原生 <h1>）",
+        # 底部约 18%：与 journal.css panel bottom padding + 标题字号同量级。
+        # 渲染侧 titleArtInPanel：贴纸进 panel 文档流；此 rect 仍供 focal /
+        # 元数据 position 使用。
+        rect={"x": 0.04, "y": 0.80, "w": 0.52, "h": 0.18},
+        anchor="left",
+        native_ink=(0xF5, 0xF3, 0xF0),  # journal.css 默认 title #f5f3f0
     ),
-    # OQ-CAL-09 收尾（v0.6.6，专门方案）：v0.6.3 排查发现 registry 的两条
-    # text_safe_regions 都不能直接套用 band-cut/contact-stamp 那套"派生矩形
-    # +翻开关"流程——候选 #0 被竖排 __place 地点标签占用；候选 #1 横跨纸面/
-    # 骑缝渐变/原图三种背景，且冲突原生 <h1> 的双色断字设计语言。
-    #
-    # 深挖后发现根子问题比"选错候选"更底层：``text_safe_regions`` 描述的是
-    # **原始照片自身坐标系**里的焦点安全区（`opening/title_safe.py::
-    # mark_title_safe` 只拿它去比对 ``asset.focalPoint``），跟"DOM 里这块
-    # 矩形长什么样"完全是两件事——对 veil-footer/band-cut/contact-stamp 这类
-    # 全幅铺满照片的风格，两个坐标系刚好重合，能直接派生；但 folio-overlap
-    # 的 ``.cover-hero`` 只占 DOM 右侧 ``100% - var(--cover-folio-margin)``
-    # 那部分（左侧纸面栏 33% 压根不显示照片），派生出来的矩形套到"照片自身
-    # 坐标系"和"实际渲染出来的纸面"根本不是同一块视觉内容，无论怎么挑候选
-    # 都跳不出这个坑。
-    #
-    # 方案：不再尝试派生，改用手工矩形直接描述 DOM 语义（跟 veil-footer 那次
-    # OQ-CAL-08 收尾同一个思路）——只落在左侧纸面栏（``--cover-folio-margin``
-    # =33%）内，两端各留边避开纸面/照片接缝；配合新增的 ``assume_paper_bg``
-    # 字段告知 engine.py 这里的自动配色不能采样原始照片（那块区域根本不是
-    # 照片），改用纸色固定估计。两个候选按"地点标签是否会占用纸面栏顶部"
-    # 分层（见 D-CAL-20 优先顺位⑤ 同款 conditional_occupant 机制）：
-    #   - 主候选（本行）：纸面栏下半段，不管地点标签在不在都安全。
-    #   - 备选（见 FALLBACK_PRESETS）：纸面栏全高，只在没有地点标签占用时
-    #     才用（更大留白，构图更松）。
     "folio-overlap": PlacementPreset(
         opening_style_id="folio-overlap",
-        label="纸面栏下半段（主候选 · 不管地点标签是否占用顶部都安全）",
-        rect={"x": 0.03, "y": 0.46, "w": 0.27, "h": 0.49},
+        label="纸面栏原生标题位（对齐 top:60% 左起书名）",
+        rect={"x": 0.03, "y": 0.48, "w": 0.27, "h": 0.28},
         assume_paper_bg=True,
+        anchor="left",
+        native_ink=(0x14, 0x13, 0x12),  # #141312
     ),
     "band-cut": PlacementPreset(
         opening_style_id="band-cut",
-        label="切带断带留白区（registry 候选 #0，与真实断带位置精确吻合）",
+        label="断带纸签原生标题位（registry 候选 #0 · 对齐 --cover-band-center）",
         rect=_registry_rect("band-cut", 0),
+        assume_paper_bg=True,
+        anchor="left",
+        native_ink=(0x14, 0x13, 0x12),  # #141312
     ),
     "contact-stamp": PlacementPreset(
         opening_style_id="contact-stamp",
-        label="日戳左下角文案区（registry 候选 #0 · 主候选，跟 sr-only <h1> 同一位置）",
+        label="日戳左下角原生标题位（registry 候选 #0）",
+        # CSS 侧 title-art 已 bottom 钉死对齐原生 h1；此 rect 供 focal / 元数据
         rect=_registry_rect("contact-stamp", 0),
-        # journal.css 该风格用 .cover-opening[data-cover-opening="contact-stamp"]
-        # ::after 在整张封面上叠加一层不透明度约 0.3～0.72 的黑色渐变（且原生
-        # <h1> 固定用浅色 #f5f2ec，从不跟随照片亮度）——跟原始照片的实际亮度
-        # 无关，此处的原始照片 ROI 采样对这个风格是失真的。
         assume_dark_veil=True,
+        anchor="left",
+        native_ink=(0xF5, 0xF2, 0xEC),  # #f5f2ec
     ),
 }
 
@@ -155,6 +140,8 @@ FALLBACK_PRESETS: dict[str, list[PlacementPreset]] = {
             rect=_registry_rect("contact-stamp", 1),
             assume_dark_veil=True,
             conditional_occupant="contact_stamp_hook_or_archive",
+            anchor="left",
+            native_ink=(0xF5, 0xF2, 0xEC),
         ),
     ],
     "folio-overlap": [
@@ -167,6 +154,8 @@ FALLBACK_PRESETS: dict[str, list[PlacementPreset]] = {
             rect={"x": 0.03, "y": 0.05, "w": 0.27, "h": 0.90},
             assume_paper_bg=True,
             conditional_occupant="folio_place_present",
+            anchor="left",
+            native_ink=(0x14, 0x13, 0x12),
         ),
     ],
 }

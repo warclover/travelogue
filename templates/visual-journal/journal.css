@@ -505,7 +505,8 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
   position: absolute;
   left: var(--title-art-x, 50%);
   top: var(--title-art-y, 25%);
-  transform: translate(-50%, -50%);
+  /* 左锚点：对齐原生左起标题，不再用 translate(-50%,-50%) 把字拽到锚点右侧 */
+  transform: translate(0, -50%);
   z-index: 2;
 }
 
@@ -515,8 +516,112 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
    竖向空间更宽裕（rect h 最深到 0.49），相应放宽高度上限。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
 html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
-  max-width: 26%;
-  max-height: 40%;
+  max-width: 28%;
+  max-height: 16%;
+  z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
+}
+
+/* W3：尺寸贴近各风格原生标题（band 最小、veil 偏大）；位置已由 left 锚点对齐 */
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art {
+  /* 绝对定位回退（非 panel 流时）；panel 流见下方 --panel */
+  max-width: 48%;
+  max-height: 10%;
+  z-index: calc(var(--cover-panel-z) + 1);
+}
+
+/* band-cut：艺术字嵌在纸签 panel 内，上下 padding 直接托住笔画 */
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art--panel {
+  display: block;
+  position: static;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: 100%;
+  height: calc(var(--cover-band-title-size) * 1.45);
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+  object-position: left center;
+  z-index: auto;
+  filter: none;
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art {
+  /* 对齐原生 <h1>：bottom 钉死，避免 placement 百分比把字顶到浓黑区上沿 */
+  left: clamp(34px, 5vw, 62px);
+  top: auto;
+  bottom: clamp(30px, 7vh, 54px);
+  transform: none;
+  max-width: 50%;
+  max-height: 12%;
+  object-fit: contain;
+  object-position: left bottom;
+  z-index: 7;
+}
+
+/* veil-footer：艺术字嵌在 panel 内（见 titleArtInPanel） */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art--panel {
+  display: block;
+  position: static;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: 100%;
+  /* 比原生标题略放大，避免艺术字在浓黑底上显小 */
+  height: calc(var(--cover-veil-title-size) * 1.38);
+  max-height: none;
+  margin: 0 0 12px;
+  object-fit: contain;
+  object-position: left center;
+  z-index: auto;
+  /* 呼应原生 title text-shadow，轻量投影而非烧进 PNG 的大柔光浮块 */
+  filter: drop-shadow(0 3px 18px rgba(0, 0, 0, 0.5));
+}
+
+/* titleArt：拉高浓黑题签区，艺术字在色块内垂直居中；hook 仍贴底 */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__panel {
+  /* 子项绝对定位后不再撑宽，显式给题签区宽度 */
+  width: var(--cover-veil-panel-max);
+  max-width: var(--cover-veil-panel-max);
+  min-height: clamp(9.5rem, 24vh, 13.5rem);
+  padding-top: clamp(20px, 3vh, 32px);
+  padding-bottom: clamp(32px, 5vh, 52px);
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  right: auto;
+  /* 在「扣掉底 padding + hook」后的题签区内垂直居中，避免贴顶或压住 hook */
+  top: calc((100% - clamp(32px, 5vh, 52px) - 1.7em) / 2);
+  bottom: auto;
+  transform: translateY(-50%);
+  margin: 0;
+  width: auto;
+  max-width: calc(100% - 2 * clamp(36px, 5.4vw, 64px));
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"]:not(:has(.cover-opening__hook)) .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"]:not(:has(.cover-opening__hook)) .cover-opening__title-art--panel {
+  top: 50%;
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  bottom: clamp(32px, 5vh, 52px);
+  margin: 0;
 }
 
 .cover-opening__hook {
@@ -1156,6 +1261,13 @@ body.longshot-capturing .cover-opening .trip-meta {
     backdrop-filter: none;
     z-index: var(--cover-panel-z);
     overflow: visible;
+  }
+
+  /* titleArt 时艺术字在 panel 内；加高纸签上下内边距完整托住笔画 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"][data-title-art="on"] .cover-opening__panel,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"][data-title-art="on"] .cover-opening__panel {
+    min-height: 0;
+    padding: clamp(26px, 3.8vh, 38px) clamp(28px, 4.2vw, 56px) clamp(28px, 4vh, 40px);
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__place,
@@ -1951,12 +2063,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     right: clamp(34px, 5vw, 62px);
     bottom: clamp(30px, 7vh, 54px);
     margin: 0;
-    width: min(34%, 260px);
+    width: min(38%, 300px);
     text-align: right;
-    color: rgba(255, 255, 255, 0.46);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(11px, 1.15vw, 13px);
+    letter-spacing: 0.14em;
+    line-height: 1.75;
     max-width: none;
     z-index: 6;
     display: block;
@@ -2196,12 +2308,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     right: clamp(34px, 5vw, 62px);
     bottom: clamp(30px, 7vh, 54px);
     margin: 0;
-    width: min(34%, 260px);
+    width: min(38%, 300px);
     text-align: right;
-    color: rgba(255, 255, 255, 0.46);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(11px, 1.15vw, 13px);
+    letter-spacing: 0.14em;
+    line-height: 1.75;
     white-space: pre-line;
     z-index: 6;
   }
@@ -2478,6 +2590,15 @@ body.longshot-capturing .cover-opening .trip-meta {
 .cover-closing__brand--custom {
   text-transform: none;
   letter-spacing: 0.04em;
+}
+
+.cover-closing__title-art-attr {
+  margin: 0.45rem 0 0;
+  max-width: 22em;
+  font-size: 9px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .cover-closing__end {

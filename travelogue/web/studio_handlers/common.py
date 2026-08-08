@@ -218,6 +218,12 @@ def match_trip_bookends_resolve_closing(path: str) -> str | None:
     return match_trip_suffix(path, BOOKENDS_RESOLVE_CLOSING_SUFFIX)
 
 
+def match_trip_title_art_resolve(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import TITLE_ART_RESOLVE_SUFFIX
+
+    return match_trip_suffix(path, TITLE_ART_RESOLVE_SUFFIX)
+
+
 def match_trip_bookends_repick_opening(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import BOOKENDS_REPICK_OPENING_SUFFIX
 

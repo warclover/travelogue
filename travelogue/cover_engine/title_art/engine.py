@@ -45,11 +45,12 @@ from travelogue.cover_engine.title_art.whitelist import (
 
 _log = logging.getLogger(__name__)
 
-_SEAL_CHAR_DEFAULT = "旅"
-
 #: ``journal.css`` ``--cover-folio-paper: #f4f1ea``——folio-overlap 左侧纸面栏
 #: 的固定底色，与 asset 内容无关（OQ-CAL-09 收尾，见 ``assume_paper_bg``）。
 _FOLIO_PAPER_RGB = (0xF4, 0xF1, 0xEA)
+#: ``journal.css`` ``--cover-band-paper: rgba(246, 243, 236, …)`` / render_b
+#: ``_BAND_CUT_PAPER_RGB``——band-cut 烧入纸签的固定底色（W3 盲评后补）。
+_BAND_CUT_PAPER_RGB = (246, 243, 236)
 
 ResolveAssetPathFn = Callable[[dict[str, Any]], "Path | None"]
 WritePngFn = Callable[[bytes], str]
@@ -183,7 +184,19 @@ def resolve_title_art(
     meta = trip.setdefault("meta", {})
     existing = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
     if existing and not force and not existing.get("stale") and existing.get("enabled"):
-        return None
+        # W3：去印章后，旧 inline_seal* 结果必须重算，不能靠缓存一直带着红印。
+        from travelogue.cover_engine.title_art.render_b import SEAL_TEMPLATES, TEMPLATE_PLAIN
+
+        cached_template = str(existing.get("template") or "")
+        engine_name = str(existing.get("engine") or "")
+        legacy_seal = cached_template in SEAL_TEMPLATES
+        legacy_non_plain_b = (
+            engine_name == "clean-pipeline-v1"
+            and cached_template
+            and cached_template != TEMPLATE_PLAIN
+        )
+        if not legacy_seal and not legacy_non_plain_b:
+            return None
 
     style_id = str(meta.get("coverOpeningStyle") or "")
     if not is_whitelisted(style_id):
@@ -253,10 +266,17 @@ def resolve_title_art(
             x, y, w, h = cand.box
             iw, ih = cover_img.size
             if iw > 0 and ih > 0:
-                placement_pos = {
-                    "x": round((x + w / 2) / iw, 4),
-                    "y": round((y + h / 2) / ih, 4),
-                }
+                # left 锚点：贴原生标题左缘；center：矩形几何中心（旧行为）
+                if cand.preset.anchor == "left":
+                    placement_pos = {
+                        "x": round((x + min(w * 0.08, iw * 0.02)) / iw, 4),
+                        "y": round((y + h * 0.45) / ih, 4),
+                    }
+                else:
+                    placement_pos = {
+                        "x": round((x + w / 2) / iw, 4),
+                        "y": round((y + h / 2) / ih, 4),
+                    }
             bg_rgb = roi_average_color(cover_img, cand.box)
             explain.extend(cand.explain)
             if cand.preset.assume_dark_veil:
@@ -267,14 +287,36 @@ def resolve_title_art(
                 bg_rgb = (10, 10, 10)
                 explain.append(f"{style_id} 固定深色渐罩 · 忽略照片原始亮度采样")
             elif cand.preset.assume_paper_bg:
-                # OQ-CAL-09 收尾：该候选压在跟照片内容完全无关的固定纸面色块
-                # 上（如 folio-overlap 左侧纸面栏——那块区域压根不显示照片），
-                # 原始照片 ROI 采样出来的像素跟实际渲染背景毫无关系，直接改用
-                # 该风格的纸面色（journal.css ``--cover-folio-paper``）固定估计。
-                bg_rgb = _FOLIO_PAPER_RGB
+                # folio-overlap 纸面栏 / band-cut 原生纸签：固定纸色估计。
+                bg_rgb = (
+                    _BAND_CUT_PAPER_RGB if style_id == "band-cut" else _FOLIO_PAPER_RGB
+                )
                 explain.append(f"{style_id} 纸面底色区 · 忽略照片原始像素采样")
 
-    contrast = pick_readable_color(bg_rgb)
+            if cand.preset.native_ink is not None:
+                ink = cand.preset.native_ink
+                from travelogue.cover_engine.title_art.color import (
+                    MIN_CONTRAST_RATIO,
+                    ContrastPick,
+                    contrast_ratio,
+                )
+
+                ratio = contrast_ratio(ink, bg_rgb)
+                contrast = ContrastPick(
+                    color_hex="#{:02x}{:02x}{:02x}".format(*ink),
+                    color_rgb=ink,
+                    ratio=round(ratio, 3),
+                    ok=ratio >= MIN_CONTRAST_RATIO,
+                )
+                explain.append(
+                    f"{style_id} 原生标题墨色 #{ink[0]:02x}{ink[1]:02x}{ink[2]:02x}"
+                )
+            else:
+                contrast = pick_readable_color(bg_rgb)
+        else:
+            contrast = pick_readable_color(bg_rgb)
+    else:
+        contrast = pick_readable_color(bg_rgb)
 
     fallback_from: str | None = None
     if route_c_enabled:
@@ -330,8 +372,8 @@ def resolve_title_art(
         text.main,
         subtitle=text.subtitle,
         main_color=contrast.color_rgb,
-        seal_char=_SEAL_CHAR_DEFAULT,
         font=default_font,
+        opening_style_id=style_id,
     )
     asset_path = write_png(rendered.png_bytes)
     result = TitleArtResult(

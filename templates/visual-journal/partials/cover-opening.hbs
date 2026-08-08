@@ -3,6 +3,7 @@
   data-block="cover-opening"
   data-cover-opening="{{coverOpeningStyle}}"
   data-cover-secondary="{{#if hasCoverSecondary}}on{{else}}off{{/if}}"
+  data-title-art="{{#if hasTitleArt}}on{{else}}off{{/if}}"
   data-cover-seal="{{coverSealChar}}"
   data-cover-stamp="{{coverStampLabel}}"
   style="--focal-x: {{cover.focalX}}; --focal-y: {{cover.focalY}};{{#if cover.src}} --cover-src: url('{{cover.src}}');{{/if}}"
@@ -24,11 +25,9 @@
   </header>
   {{/if}}
   {{#if hasTitleArt}}
-  {{! PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：贴纸挂在 cover-opening 直接子层，
-      而不是雾带底部的 cover-opening__panel——后者高度只由文案（钩子行等）撑
-      起，一旦贴纸嵌在里面，§6.2 算出的定位百分比就是相对这个矮面板算的，
-      几乎总会跟面板自身文案重叠。挪到这里后，百分比相对整张封面画布计算，
-      与 placement_score 的 rect 语义一致。 }}
+  {{#unless titleArtInPanel}}
+  {{! PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：多数风格贴纸挂在 cover-opening 直接子层。
+      veil-footer / band-cut 例外：见下方 panel 内嵌（titleArtInPanel）。 }}
   <img
     class="cover-opening__title-art"
     src="{{titleArtSrc}}"
@@ -37,6 +36,7 @@
     loading="eager"
     decoding="async"
   />
+  {{/unless}}
   {{/if}}
   <div class="cover-opening__panel" data-cover-seal="{{coverSealChar}}" data-cover-stamp="{{coverStampLabel}}">
     {{#if showCoverPlace}}
@@ -44,6 +44,16 @@
     {{/if}}
     {{> trip-meta}}
     {{#if hasTitleArt}}
+    {{#if titleArtInPanel}}
+    {{! veil-footer / band-cut：艺术字进 panel 文档流，由原生雾带/纸签托住。 }}
+    <img
+      class="cover-opening__title-art cover-opening__title-art--panel"
+      src="{{titleArtSrc}}"
+      alt="{{titleArtAlt}}"
+      loading="eager"
+      decoding="async"
+    />
+    {{/if}}
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}} sr-only" data-title="{{title}}" itemprop="name">{{title}}</h1>
     {{else}}
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" data-title="{{title}}" itemprop="name">{{title}}</h1>

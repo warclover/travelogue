@@ -961,13 +961,111 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       '<label class="preview-sheet__cover-keep-label">' +
       '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
       ' 更换时保留当前封面图</label>' +
-      '<p class="preview-sheet__cover-fit-hint" hidden></p>';
+      '<p class="preview-sheet__cover-fit-hint" hidden></p>' +
+      '<div class="preview-sheet__title-art" data-title-art hidden>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">给标题加一层艺术字贴纸（此版式支持时才会生效，不会覆盖你写的文字）</p>' +
+      '<p class="preview-sheet__title-art-attr" data-title-art-attr>使用你的照片装帧 · 未生成风景</p>' +
+      '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
+      '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
+      ' 尝试 AI 手写体（偶尔不稳定，未命中会自动退回默认样式）</label>' +
+      '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成装帧标题</button>' +
+      '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
+      '</div>';
     var group = section.querySelector(".preview-sheet__cover-styles");
     var blurbEl = section.querySelector(".preview-sheet__cover-blurb");
     var fitHintEl = section.querySelector(".preview-sheet__cover-fit-hint");
     var keepCheck = section.querySelector(".preview-sheet__cover-keep-check");
+    var titleArtBlock = section.querySelector("[data-title-art]");
+    var titleArtAttr = section.querySelector("[data-title-art-attr]");
+    var titleArtRouteCLabel = section.querySelector("[data-title-art-routec-label]");
+    var titleArtRouteCCheck = section.querySelector("[data-title-art-routec-check]");
+    var titleArtBtn = section.querySelector("[data-title-art-btn]");
+    var titleArtStatus = section.querySelector("[data-title-art-status]");
     var selectedStyle = readCoverOpeningStyleFromDom();
     var options = COVER_OPENING_STYLE_OPTIONS.slice();
+
+    function setTitleArtAttribution(engine) {
+      if (!titleArtAttr) return;
+      var base = "使用你的照片装帧 · 未生成风景";
+      var detail =
+        engine === "diffusion-fixed-prompt-v1"
+          ? "标题字迹由 AI 书法风格生成"
+          : "标题为程序化字库合成，非 AI 绘图";
+      titleArtAttr.textContent = engine ? base + "。" + detail : base;
+    }
+
+    function setTitleArtStatus(text, isError) {
+      if (!titleArtStatus) return;
+      if (!text) {
+        titleArtStatus.hidden = true;
+        titleArtStatus.textContent = "";
+        return;
+      }
+      titleArtStatus.hidden = false;
+      titleArtStatus.textContent = text;
+      titleArtStatus.classList.toggle("is-error", !!isError);
+    }
+
+    function requestTitleArt() {
+      if (!titleArtBtn) return;
+      titleArtBtn.disabled = true;
+      setTitleArtStatus("生成中…");
+      var body = { force: true };
+      if (titleArtRouteCCheck && titleArtRouteCCheck.checked) body.routeC = true;
+      postJson(
+        "/__travelogue/trips/" + encodeURIComponent(tripId) + "/title-art/resolve",
+        body
+      )
+        .then(function (res) {
+          titleArtBtn.disabled = false;
+          if (res.status !== 200 || !res.body || !res.body.ok) {
+            setTitleArtStatus((res.body && res.body.message) || "生成失败，请稍后重试", true);
+            return;
+          }
+          if (!res.body.enabled) {
+            setTitleArtStatus("此版式或标题暂不支持艺术字，已保持默认样式");
+            return;
+          }
+          var engineLabel =
+            res.body.engine === "diffusion-fixed-prompt-v1" ? "AI 手写体" : "字库合成";
+          var msg = "已生成 · " + engineLabel;
+          if (res.body.fallbackFrom) {
+            msg += "（AI 手写体未通过校验，已自动退回默认样式）";
+          }
+          setTitleArtStatus(msg);
+          setTitleArtAttribution(res.body.engine || "clean-pipeline-v1");
+          showToolbarToast("装帧标题已更新", { duration: 2200 });
+          reloadPreviewAfterLayout();
+          trackStudioEvent("title_art_resolve", {
+            tripId: tripId,
+            engine: res.body.engine || "",
+            routeCRequested: !!res.body.routeCRequested,
+            fallback: !!res.body.fallbackFrom,
+          });
+        })
+        .catch(function () {
+          titleArtBtn.disabled = false;
+          setTitleArtStatus("生成失败，请稍后重试", true);
+        });
+    }
+
+    if (titleArtBtn) {
+      titleArtBtn.addEventListener("click", requestTitleArt);
+    }
+
+    // Studio 高级面板触发入口：服务端总闸（config.title_art）决定是否展示
+    // 这一整块，以及是否展示「尝试 AI 手写体」勾选框（OQ-CAL-06）。
+    fetch("/__travelogue/config")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cfg) {
+        var titleArtCfg = cfg && cfg.titleArt;
+        if (!titleArtCfg || !titleArtCfg.enabled || !titleArtBlock) return;
+        titleArtBlock.hidden = false;
+        if (titleArtCfg.routeCEnabled && titleArtRouteCLabel) {
+          titleArtRouteCLabel.hidden = false;
+        }
+      })
+      .catch(function () {});
 
     function syncSelection(style) {
       if (!group) return;

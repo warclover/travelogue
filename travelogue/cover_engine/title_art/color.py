@@ -14,7 +14,13 @@ WHITE: tuple[int, int, int] = (255, 255, 255)
 DARK: tuple[int, int, int] = (26, 26, 26)  # #1a1a1a
 DEFAULT_SEAL: tuple[int, int, int] = (176, 58, 46)  # #B03A2E
 
-#: 策划阶段占位阈值（WCAG 风格对比度比值）；Kickoff 时写入 AC（SHD-CAL-02）后可调。
+#: WCAG 风格对比度比值。Kickoff 时先写入占位值（SHD-CAL-02），W2 用 14 条
+#: 真实 trip 封面照片测试集实测 4 款白名单风格候选矩形，观测 ratio 区间
+#: 4.27~19.80（band-cut/veil-footer 走真实照片 ROI 采样；contact-stamp/
+#: folio-overlap 因 assume_dark_veil/assume_paper_bg 走固定背景估计，见
+#: whitelist.py），均有充足冗余（AC-CAL-04 钉定，见验收记录
+#: cover-calligraphy-title-v1-ac04-05-06-13-2026-08-08.md）——3.0 予以确认
+#: 定稿，不再是占位值。
 MIN_CONTRAST_RATIO = 3.0
 
 

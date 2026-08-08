@@ -17,7 +17,7 @@ class TitleArtResult:
     engine: str = ENGINE_ROUTE_B
     template: str = ""
     font: str = ""
-    main_source: str = "meta.title"
+    main_source: str = "displayTitle"
     main_rendered: str = ""
     truncated: bool = False
     subtitle: str | None = None
