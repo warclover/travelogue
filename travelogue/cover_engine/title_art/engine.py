@@ -22,6 +22,7 @@ from typing import Any
 
 from PIL import Image
 
+from travelogue.cover_engine.title_art.char_frequency import title_has_only_common_chars
 from travelogue.cover_engine.title_art.color import pick_readable_color, recolor_ink_on_white
 from travelogue.cover_engine.title_art.contract import resolve_title_text
 from travelogue.cover_engine.title_art.fonts import (
@@ -278,39 +279,52 @@ def resolve_title_art(
     fallback_from: str | None = None
     if route_c_enabled:
         style_c = route_c_style_id or default_style_id()
-        try:
-            raw = generate_raw(style_c, title=text.main, subtitle=text.subtitle)
-            if not ocr_verify(raw.image, text.main):
-                raise RouteCFailure("E_CAL_C_OCR_MISMATCH")
-            ink = recolor_ink_on_white(raw.image, contrast.color_rgb)
-            asset_path = write_png(_png_bytes(ink))
-            result = TitleArtResult(
-                enabled=True,
-                stale=False,
-                engine="diffusion-fixed-prompt-v1",
-                template=style_c,
-                font="",
-                main_rendered=text.main,
-                truncated=text.truncated,
-                subtitle=text.subtitle,
-                main_color=contrast.color_hex,
-                seal_color="#B03A2E",
-                opening_style_id=style_id,
-                position=placement_pos,
-                asset_path=asset_path,
-                source_title=text.main,
-                explain=[*explain, f"路线C · {style_c} · {raw.model}"],
-                style_id=style_c,
-                prompt_version="v1",
-                model_provider="wanxiang",
-                ocr_verified=True,
-                fallback_from=None,
+        if not title_has_only_common_chars(text.main):
+            # D-CAL-21 · Route C W0.5 Spike 数据驱动预筛选：标题含生僻字
+            # （GB2312 一级常用字表以外）时大概率 OCR 不过（Spike 实测生僻
+            # 字类目通过率仅 55.6%），直接短路到路线 B——省一次注定大概率
+            # 失败的 15~28 秒 API 调用，不改变最终正确性（D-CAL-19 OCR 回读
+            # 校验依旧是唯一真正的安全闸门；被本条拦下跟"调用了但 OCR 没
+            # 过"最终展示效果完全等价，都是路线 B）。
+            _log.info(
+                "title_art route C skipped by char-frequency prefilter: style=%s", style_c
             )
-            meta["titleArt"] = result.to_meta_dict()
-            return result
-        except RouteCFailure as exc:
-            _log.info("title_art route C → fallback to route B: %s", exc)
             fallback_from = "diffusion-fixed-prompt-v1"
+            explain.append(f"{style_c} 预筛选：标题含生僻字，直接走路线B（未调用API，D-CAL-21）")
+        else:
+            try:
+                raw = generate_raw(style_c, title=text.main, subtitle=text.subtitle)
+                if not ocr_verify(raw.image, text.main):
+                    raise RouteCFailure("E_CAL_C_OCR_MISMATCH")
+                ink = recolor_ink_on_white(raw.image, contrast.color_rgb)
+                asset_path = write_png(_png_bytes(ink))
+                result = TitleArtResult(
+                    enabled=True,
+                    stale=False,
+                    engine="diffusion-fixed-prompt-v1",
+                    template=style_c,
+                    font="",
+                    main_rendered=text.main,
+                    truncated=text.truncated,
+                    subtitle=text.subtitle,
+                    main_color=contrast.color_hex,
+                    seal_color="#B03A2E",
+                    opening_style_id=style_id,
+                    position=placement_pos,
+                    asset_path=asset_path,
+                    source_title=text.main,
+                    explain=[*explain, f"路线C · {style_c} · {raw.model}"],
+                    style_id=style_c,
+                    prompt_version="v1",
+                    model_provider="wanxiang",
+                    ocr_verified=True,
+                    fallback_from=None,
+                )
+                meta["titleArt"] = result.to_meta_dict()
+                return result
+            except RouteCFailure as exc:
+                _log.info("title_art route C → fallback to route B: %s", exc)
+                fallback_from = "diffusion-fixed-prompt-v1"
 
     rendered = render_title_art(
         text.main,

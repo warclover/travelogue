@@ -178,6 +178,56 @@ def test_route_c_success_path_marks_engine_and_ocr_verified() -> None:
     assert trip["meta"]["titleArt"]["ocrVerified"] is True
 
 
+def test_route_c_uncommon_title_prefilter_skips_api_call() -> None:
+    """D-CAL-21：标题含生僻字（表外汉字）时，预筛选应在调用 API 之前短路到
+    路线 B——``generate_raw`` 完全不应被调用（Spike 数据驱动的降本设计）。"""
+    trip = {"meta": {"title": "婺源篁岭", "coverOpeningStyle": "veil-footer"}}
+    write_png, written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append("called")
+        raise AssertionError("generate_raw 不应被调用——预筛选应已短路")
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+    )
+    assert calls == []
+    assert result is not None
+    assert result.engine == "clean-pipeline-v1"
+    assert result.fallback_from == "diffusion-fixed-prompt-v1"
+    assert any("预筛选" in line for line in result.explain)
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["fallbackFrom"] == "diffusion-fixed-prompt-v1"
+
+
+def test_route_c_common_title_still_attempts_api_call() -> None:
+    """常用字标题不受 D-CAL-21 预筛选影响，行为跟预筛选落地前完全一致。"""
+    trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
+    write_png, _written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(style_id, *, title, subtitle=None, **_kw):
+        calls.append(title)
+        return _FakeRawResult(image=Image.new("RGB", (32, 32), (255, 255, 255)))
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+    )
+    assert calls == ["拾光"]
+    assert result is not None
+    assert result.engine == "diffusion-fixed-prompt-v1"
+
+
 def test_route_c_generation_failure_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()
