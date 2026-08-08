@@ -10,7 +10,9 @@ from typing import Any
 class TitleArtConfig:
     #: D-CAL-05 · 未过验收前默认关闭；显式开启后才会写 trip.meta.titleArt。
     enabled: bool = False
-    #: D-CAL-14 · 路线 C 仅是候选，W0.5 Spike 全绿前默认关闭，走路线 B 兜底。
+    #: D-CAL-14 · 路线 C 仅是候选；W0.5 Spike（2026-08-08，26 条真实/边界标题）
+    #: 实测 OCR 回读通过率仅 57.7%，远低于生产可用门槛（见 AC-CAL-11），默认关
+    #: 闭，走路线 B 兜底。
     route_c_enabled: bool = False
     route_c_style_id: str | None = None  # None → style_registry.default_style_id()
     model_provider: str = "wanxiang"
