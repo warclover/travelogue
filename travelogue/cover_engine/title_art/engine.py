@@ -46,6 +46,10 @@ _log = logging.getLogger(__name__)
 
 _SEAL_CHAR_DEFAULT = "旅"
 
+#: ``journal.css`` ``--cover-folio-paper: #f4f1ea``——folio-overlap 左侧纸面栏
+#: 的固定底色，与 asset 内容无关（OQ-CAL-09 收尾，见 ``assume_paper_bg``）。
+_FOLIO_PAPER_RGB = (0xF4, 0xF1, 0xEA)
+
 ResolveAssetPathFn = Callable[[dict[str, Any]], "Path | None"]
 WritePngFn = Callable[[bytes], str]
 DetectFacesFn = Callable[[Image.Image], list[tuple[int, int, int, int]]]
@@ -88,6 +92,31 @@ def _contact_stamp_hook_or_archive_present(trip: dict, cover_asset: dict[str, An
     return bool(archive_strip)
 
 
+def _folio_place_present(trip: dict, cover_asset: dict[str, Any]) -> bool:
+    """folio-overlap 全高备选是否被地点标签（``.cover-opening__place``）占用（OQ-CAL-09）。
+
+    该风格的地点标签跟纸面栏共享 DOM（竖排贴在纸面栏顶部），是否渲染取决于
+    ``resolve_show_cover_place``——跟 ``assemble.py`` 完全同一套判定（同一个
+    共享函数），否则会重演"两处各自维护一份数据"的接线缺口。``cover_asset``
+    参数在这里没被用到（folio 的占用判定跟封面照片无关，只看标题/地点文案），
+    保留是为了跟 ``_CONDITIONAL_OCCUPANT_CHECKS`` 统一的函数签名。
+    """
+    del cover_asset
+    from travelogue.domain.title_humanize import resolve_display_title
+    from travelogue.render.context import format_trip_meta
+    from travelogue.render.cover_opening import resolve_show_cover_place
+
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    meta_title = resolve_display_title(meta)
+    _, _, cover_place, _ = format_trip_meta(
+        meta, intent=trip.get("intent"), assets=trip.get("assets") or []
+    )
+    raw_meta_title = str(meta.get("title") or "").strip()
+    return resolve_show_cover_place(
+        cover_place=cover_place, meta_title=meta_title, raw_meta_title=raw_meta_title
+    )
+
+
 #: tag → 本模块内检查函数的**名字**（不是函数对象本身）。故意存名字、用
 #: ``globals()`` 动态取值而不是直接存函数引用——直接存引用会在模块加载时
 #: 把字典值锚定到当时的函数对象，之后 ``monkeypatch.setattr(engine, "_xxx",
@@ -95,6 +124,7 @@ def _contact_stamp_hook_or_archive_present(trip: dict, cover_asset: dict[str, An
 #: 这个检查函数会安静地失效（无报错但行为对不上）。
 _CONDITIONAL_OCCUPANT_CHECKS: dict[str, str] = {
     "contact_stamp_hook_or_archive": "_contact_stamp_hook_or_archive_present",
+    "folio_place_present": "_folio_place_present",
 }
 
 
@@ -183,7 +213,15 @@ def resolve_title_art(
     candidates = placement_presets(style_id)
     if cover_asset is not None:
         candidates = [c for c in candidates if not _candidate_occupied(c, trip, cover_asset)]
-        candidates = [c for c in candidates if not focal_conflict(cover_asset, c.rect)]
+        # OQ-CAL-09 收尾：assume_paper_bg 候选压在跟照片无关的固定纸面色块上
+        # （如 folio-overlap 左侧纸面栏，该区域根本不显示 .cover-hero 照片）。
+        # focal_conflict 检查的是"镜头焦点是否落在这块矩形对应的照片区域
+        # 内"——对这类候选而言这个问题本身就不成立（矩形对应的不是照片内容，
+        # 镜头主体不可能视觉上出现在纸面上），跳过它，否则会因为焦点恰好落在
+        # 原始照片的对应坐标而误判"冲突"，冤枉淘汰一个实际完全安全的候选。
+        candidates = [
+            c for c in candidates if c.assume_paper_bg or not focal_conflict(cover_asset, c.rect)
+        ]
 
     if not candidates:
         # 主 + 备选全部被淘汰——要么跟镜头焦点冲突，要么被本风格自身 UI
@@ -227,6 +265,13 @@ def resolve_title_art(
                 # §6.1 contrast_ratio 算法必然选回白色（2026-08-07 真实视觉核对）。
                 bg_rgb = (10, 10, 10)
                 explain.append(f"{style_id} 固定深色渐罩 · 忽略照片原始亮度采样")
+            elif cand.preset.assume_paper_bg:
+                # OQ-CAL-09 收尾：该候选压在跟照片内容完全无关的固定纸面色块
+                # 上（如 folio-overlap 左侧纸面栏——那块区域压根不显示照片），
+                # 原始照片 ROI 采样出来的像素跟实际渲染背景毫无关系，直接改用
+                # 该风格的纸面色（journal.css ``--cover-folio-paper``）固定估计。
+                bg_rgb = _FOLIO_PAPER_RGB
+                explain.append(f"{style_id} 纸面底色区 · 忽略照片原始像素采样")
 
     contrast = pick_readable_color(bg_rgb)
 

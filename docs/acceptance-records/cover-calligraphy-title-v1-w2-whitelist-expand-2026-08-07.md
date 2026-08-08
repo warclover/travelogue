@@ -4,10 +4,10 @@
 |------|------|
 | **文档** | [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](../PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（**CAL**）§3 D-CAL-20 · §5.4 · §11 W2 |
 | **分支** | `feat/cover-calligraphy-title-v1` |
-| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格；开放前 CSS 暗坑排查（§5）；D-CAL-20 优先顺位④ veil-footer focal 安全网 + OQ-CAL-08 结论修正（§6）；D-CAL-20 优先顺位⑤ 多候选打分择优（§7，D-CAL-20 全部五项完成） |
-| **日期** | 2026-08-07 |
-| **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp` 因仓内暂无真实样例，用同一份真实照片临时拷贝一份 trip 改 `coverOpeningStyle` 做视觉核对（验证后已删除临时目录，未提交） |
-| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09；落地 D-CAL-20 优先顺位④，修正并关闭 OQ-CAL-08，veil-footer 补齐 focal 安全网（§6）；落地 D-CAL-20 优先顺位⑤，多候选打分择优，contact-stamp 首个双候选落地，D-CAL-20 全部五项完成（§7）** |
+| **覆盖事项** | D-CAL-20 优先顺位①②：`whitelist.py` 改为从 Opening Registry `text_safe_regions` 派生坐标；新开放 `band-cut` / `contact-stamp` 两款白名单风格；开放前 CSS 暗坑排查（§5）；D-CAL-20 优先顺位④ veil-footer focal 安全网 + OQ-CAL-08 结论修正（§6）；D-CAL-20 优先顺位⑤ 多候选打分择优（§7，D-CAL-20 全部五项完成）；OQ-CAL-09 收尾，`folio-overlap` 专门方案开放（§8） |
+| **日期** | 2026-08-07 ～ 2026-08-08 |
+| **方式** | 真实 trip（`demo-0ebda73294`，`coverOpeningStyle=band-cut`）跑通 CLI `title-art` → `render` → Playwright 实际渲染核对；`contact-stamp`/`folio-overlap` 因仓内暂无真实样例，用同一份真实照片临时拷贝 trip 改 `coverOpeningStyle`（及必要时改 `meta.places`/`intent.placesUserSet`）做视觉核对（验证后已删除临时目录，未提交） |
+| **结论** | **通过——过程中发现 2 处集成缺口（CSS 侧白名单未同步 + contact-stamp 自动配色未考虑深色渐罩），均已定位修复；追加对 4 款风格的开放前 CSS 排查（§5），发现 `folio-overlap` 尚不能直接开放，记为 OQ-CAL-09；落地 D-CAL-20 优先顺位④，修正并关闭 OQ-CAL-08，veil-footer 补齐 focal 安全网（§6）；落地 D-CAL-20 优先顺位⑤，多候选打分择优，contact-stamp 首个双候选落地，D-CAL-20 全部五项完成（§7）；找到 OQ-CAL-09 根因并用专门方案收尾开放 `folio-overlap`，两种真实场景视觉核对通过（§8）** |
 
 ---
 
@@ -210,3 +210,74 @@ OQ-CAL-08 里 focal 校验确实能解决的那一半问题是存在的：雾带
 | 占用检查复用 `assemble.py` 同款逻辑（避免脱节） | ✅ 已完成（`build_cover_archive_strip` 抽取为共享函数） |
 | 备选候选现网真实触发率 | ⚠️ 很低（`format_trip_meta` 天数兜底几乎总非空）——设计正确但收益有限，如实记录 |
 | D-CAL-20 五个优先顺位 | 全部完成（①②③④⑤） |
+
+---
+
+## 8. OQ-CAL-09 收尾：folio-overlap 纸面栏专门方案
+
+### 8.1 先想清楚阻断的根因，而不是急着挑候选
+
+v0.6.3 排查记录（§5.4）已经发现 `folio-overlap` 两条 `text_safe_regions` 都不能直接照抄 band-cut/contact-stamp 的"派生矩形+翻开关"流程。但那次记录停在"候选 #0 被地点标签占用、候选 #1 横跨两种背景"这一层——本次收尾往下多挖了一层：**这两个候选为什么天生就不合适，是不是选别的候选就能躲开？**
+
+答案是躲不开，因为问题出在坐标系本身，不是选址运气不好：
+
+- `CoverStyleProfile.text_safe_regions` 的实际消费方只有 `opening/title_safe.py::mark_title_safe`，它拿这份数据去比对 `asset.focalPoint`——即**照片自身**（原始图片文件）坐标系里，镜头主体落在哪个区间会被认为"跟这个风格的版式冲突"。这跟"DOM 里这块矩形长什么样、贴纸该往哪儿摆"完全是两个问题，只是恰好对 veil-footer / band-cut / contact-stamp 这三款风格重合了——它们的 `.cover-hero`（照片）都是 `inset:0` 铺满整个 `.cover-opening`，所以"照片第 x% 处"跟"DOM 第 x% 处"是同一件事，`whitelist.py` 直接拿 `text_safe_regions` 当 DOM 矩形用，蒙对了。
+- `folio-overlap` 的 `.cover-hero` 只占 DOM 里 `left: var(--cover-folio-margin)`（33%）往右的部分——**左侧纸面栏 33% 宽的区域压根不显示照片**，是纯色 `--cover-folio-paper`（#f4f1ea）背景。`text_safe_regions` 描述的两个候选，无论数值怎么标，本质上问的都是"照片里这块区域有没有人脸"，跟"纸面栏这块区域有没有被地点标签占用/贴纸配色该怎么定"完全不是一件事——继续在这个坐标系里找"更合适的候选"是徒劳的，根上就该换成手工描述 DOM 语义（跟 veil-footer 在 OQ-CAL-08 走的路一样）。
+
+### 8.2 方案：手工纸面栏矩形 + `assume_paper_bg`
+
+不再尝试从 `text_safe_regions` 派生，直接在 `whitelist.py` 手工写两个候选，两者都严格落在纸面栏（`--cover-folio-margin` = 33%）内，两端各留边避开纸面/骑缝渐变接缝：
+
+- **主候选**（纸面栏下半段）：`{x:0.03, y:0.46, w:0.27, h:0.49}`——不管地点标签 `.cover-opening__place`（竖排贴在纸面栏顶部）是否渲染都安全，因为足够靠下。
+- **备选**（纸面栏全高，`conditional_occupant="folio_place_present"`）：`{x:0.03, y:0.05, w:0.27, h:0.90}`——留白更松，但只有在该 trip 不会渲染地点标签时才安全使用。占用判定复用从 `assemble.py` 抽出的共享函数 `cover_opening.resolve_show_cover_place()`（跟 §7 `build_cover_archive_strip` 同一思路：不新建一份独立判定逻辑，避免"两处各自维护一份数据"再次脱节）。
+
+`PlacementPreset` 新增 `assume_paper_bg: bool` 字段，两个候选都标记为 `True`，让 `engine.py`/`placement.py` 知道"这块矩形对应的不是照片内容"：
+
+- **自动配色**（`engine.py`）：命中时把 `bg_rgb` 强制设为纸面色 `(0xF4, 0xF1, 0xEA)`，不再对 `cover_img`（原始照片文件）做 ROI 采样——采样出来的像素跟纸面栏实际显示的颜色毫无关系，跟 contact-stamp 的 `assume_dark_veil` 是同一类"ROI 采样对这块区域失真"问题的另一种成因（那边是"渐罩把亮背景压成暗"，这边是"这块区域压根不是照片"），所以特意用了两个独立字段而非合并成一个通用的"背景色覆盖值"——数值不同、成因不同，各自的字段名和注释都能独立讲清楚是为什么。
+- **`focal_conflict`**（`engine.py` 候选过滤层）：命中时**跳过**这项检查。焦点冲突问的是"镜头主体是否落在这块矩形对应的照片区域内"——对纸面栏候选这个问题根本不成立（矩形对应的不是照片内容，镜头主体不可能视觉上出现在纸面上），继续做这项检查只会因为焦点恰好落在原始照片的对应像素坐标而冤枉淘汰一个实际完全安全的候选。
+- **`score_candidate`**（`placement.py` 打分层）：命中时跳过亮度方差与人脸重叠惩罚两项信号，直接给满分 openness——这两项信号衡量的是"照片这块区域好不好看/有没有压到脸"，对纸面栏而言现实中永远是均匀留白，用照片像素去衡量一块不显示照片的区域没有意义。
+
+### 8.3 一个连带修的通用打分问题
+
+`assume_paper_bg` 的两个候选跳过照片信号后，openness 恒为 1.0、无惩罚项——只要两者都存活，打分永远打平。`best_placement` 原来的 `max(candidates, key=lambda c: c.score)` 在平分时固定返回列表里第一个（也就是主候选），这意味着"地点标签不占用时应该换到留白更松的备选"这条设计路径在打分层面**永远选不中**，形同虚设——跟"备选写了但打不中"是同一类问题的另一次出现（呼应 §7.2 contact-stamp 那次"设计对但触发窗口窄"的发现，这次是"设计对但根本选不中"，更彻底）。
+
+修法：`best_placement` 排序 key 从 `c.score` 改成 `(c.score, c.box[2] * c.box[3])`——分数打平时优先选面积更大的候选。这是一个通用改进，不只是给 folio-overlap 打补丁：对任何未来出现真正打平分的多候选风格都有意义；对已有的 contact-stamp 场景无影响（该场景下主候选一旦被淘汰，`best_placement` 收到的候选列表里通常只剩一个，平分无从谈起）。
+
+### 8.4 视觉核对：两种真实场景
+
+用真实 trip（`demo-0ebda73294`，含真实操场毕业照）临时拷贝改 `coverOpeningStyle=folio-overlap`（验证后已删除临时目录，未提交），构造两种场景：
+
+**场景 A：地点标签不渲染**（`meta.title` 与推导出的地点同名，即该 trip 原始状态）——`resolve_show_cover_place` 返回 `False`，备选（全高）未被占用，跟主候选打平分后按 §8.3 的面积次序选中备选，`titleArt.position = {x:0.1646, y:0.4998}`（对应备选矩形几何中心），`mainColor = "#1a1a1a"`（深墨，跟米纸底色对比度达标）。
+
+![folio-overlap 无地点标签场景](attachments/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07/folio-overlap-no-place.png)
+
+**场景 B：地点标签渲染**（临时设置 `meta.places=["呼伦贝尔草原"]` + `intent.placesUserSet=True`，使推导出的地点跟标题不同名）——`resolve_show_cover_place` 返回 `True`，备选被判定占用后从候选列表淘汰，只剩主候选存活，`titleArt.position = {x:0.1646, y:0.7047}`（对应主候选矩形几何中心，比场景 A 更靠下），`mainColor` 同为 `"#1a1a1a"`。
+
+![folio-overlap 有地点标签场景](attachments/cover-calligraphy-title-v1-w2-whitelist-expand-2026-08-07/folio-overlap-with-place.png)
+
+两张截图均确认：艺术字贴纸完整落在纸面栏内，未溢出骑缝渐变/照片区（`journal.css` 新增该风格专属 `max-width:26%` 覆盖共享的 60% 上限，纸面栏只有 33% 宽，沿用共享值会溢出）；场景 B 下贴纸明显比场景 A 更靠下，未与顶部竖排地点标签重叠；深墨字迹在米纸底色上清晰可辨。
+
+### 8.5 CSS 侧白名单同步（老毛病，顺手补）
+
+沿用 §1.2 已发现的"两处各自维护一份白名单"教训——`journal.css` 里 `.cover-opening__title-art` 的 `display:block` 选择器列表补上 `folio-overlap`，否则贴纸 DOM 正确但视觉不可见。同时新增一条该风格专属的 `max-width:26%; max-height:40%;` 覆盖规则（源码顺序在共享规则之后，选择器同优先级下靠后者生效）——纸面栏候选宽度只占画布 27%，沿用其它三款风格共用的 `max-width:60%` 会让贴纸横向溢出到骑缝渐变/照片区，这是本次实测截图前就发现并修正的，未流入最终验收截图。
+
+### 8.6 回归测试
+
+- `test_title_art_whitelist.py`：新增 4 条——`assume_paper_bg` 各风格取值核对；主候选矩形严格落在纸面栏（`x+w ≤ 0.33`）内；备选带 `conditional_occupant="folio_place_present"` 且覆盖面积比主候选大；`placement_presets("folio-overlap")` 返回主+备选、顺序正确。
+- `test_title_art_placement.py`：新增 2 条——`assume_paper_bg` 候选跳过照片信号给满分 openness；`best_placement` 在两个 `assume_paper_bg` 候选打平分时按面积选中更大的那个。
+- `test_title_art_engine.py`：新增 5 条——`_folio_place_present` 对地点/标题同名与不同名两种真实数据结构的判定；`focal_conflict` 对 `assume_paper_bg` 候选不生效；自动配色强制纸面色（不管原图明暗）；地点标签缺失/存在两种场景下分别选中备选/主候选（`monkeypatch` 直接控制占用判定，跟 contact-stamp 那组测试同一手法）。
+- `test_cover_opening.py`：新增 3 条——`resolve_show_cover_place` 抽取后的行为核对（不同名/同名/展示名回退但原始标题同名三种组合）。
+- 全量 `tests/unit/cover_engine/` + `tests/unit/render/` + `tests/unit/config/` + `tests/unit/domain/test_copy_patch.py` + `tests/unit/curation/test_cover_opening.py`：465 passed, 6 skipped；`ruff check` 全绿。
+
+### 8.7 结论
+
+| 事项 | 结果 |
+|------|------|
+| OQ-CAL-09 根因定位 | ✅ 已完成——`text_safe_regions` 是照片坐标系，跟 folio-overlap "纸面栏不显示照片" 的 DOM 语义不是同一件事 |
+| 手工纸面栏矩形 + `assume_paper_bg` | ✅ 已完成，`focal_conflict`/亮度方差/人脸惩罚三项信号一并跳过 |
+| 双候选（主候选恒安全 + 备选视占用切换） | ✅ 已完成，复用 `resolve_show_cover_place` 避免逻辑脱节 |
+| `best_placement` 平分次序（按面积） | ✅ 已完成，通用改进，不止服务 folio-overlap |
+| CSS 侧白名单 + 专属宽度上限同步 | ✅ 已完成 |
+| 真实 trip 两种场景视觉核对 | ✅ 通过 |
+| `folio-overlap` 转入 `DEFAULT_ENABLED_STYLES` | ✅ 已完成 |
+| **OQ-CAL-09** | **✅ 关闭** |

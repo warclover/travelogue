@@ -103,9 +103,9 @@ def build_render_context(
     from travelogue.render.cover_opening import (
         build_cover_archive_strip,
         cover_focal_point,
-        cover_place_is_distinct,
         cover_use_contain_fit,
         resolve_cover_subtitle,
+        resolve_show_cover_place,
         resolve_split_mat_title_layout,
         show_hook_on_cover,
     )
@@ -206,8 +206,8 @@ def build_render_context(
     # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
     show_cover_hook = show_hook_on_cover(hook)
     raw_meta_title = str(meta.get("title") or "").strip()
-    show_cover_place = cover_place_is_distinct(cover_place, meta_title) and (
-        not raw_meta_title or cover_place_is_distinct(cover_place, raw_meta_title)
+    show_cover_place = resolve_show_cover_place(
+        cover_place=cover_place, meta_title=meta_title, raw_meta_title=raw_meta_title
     )
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)

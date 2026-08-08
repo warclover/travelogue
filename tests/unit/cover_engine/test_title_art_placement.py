@@ -10,7 +10,7 @@ from travelogue.cover_engine.title_art.placement import (
     focal_conflict,
     score_candidate,
 )
-from travelogue.cover_engine.title_art.whitelist import placement_preset
+from travelogue.cover_engine.title_art.whitelist import FALLBACK_PRESETS, placement_preset
 
 pytestmark = pytest.mark.unit
 
@@ -86,6 +86,34 @@ def test_focal_conflict_false_when_focal_untrusted() -> None:
 def test_focal_conflict_false_when_no_focal_point_at_all() -> None:
     rect = {"x": 0.08, "y": 0.14, "w": 0.84, "h": 0.22}
     assert focal_conflict({}, rect) is False
+
+
+def test_score_candidate_paper_bg_skips_photo_signals_and_scores_max_openness() -> None:
+    # OQ-CAL-09 收尾：folio-overlap 候选压在纸面栏上，图片里那块区域的原始
+    # 像素跟实际渲染出来的纸面毫无关系——哪怕原图那块区域全黑（正常路径下
+    # openness 会判定成 0），assume_paper_bg 候选也应跳过该信号给满分。
+    img = Image.new("RGB", (1000, 1000), (0, 0, 0))
+    preset = placement_preset("folio-overlap")
+    assert preset is not None
+    assert preset.assume_paper_bg is True
+    cand = score_candidate(img, preset)
+    assert cand.score == pytest.approx(1.0)
+    assert any("纸面底色区" in line for line in cand.explain)
+
+
+def test_best_placement_breaks_tie_by_larger_area() -> None:
+    # assume_paper_bg 候选之间打分几乎总打平（openness 恒为满分），若不
+    # 额外按面积排序，``max()`` 平分时固定选列表第一个，folio-overlap 的
+    # 全高备选在"地点标签不占用"时也永远选不中——加一层面积次序修好这点。
+    img = Image.new("RGB", (1000, 1000), (0, 0, 0))
+    small = placement_preset("folio-overlap")
+    large = FALLBACK_PRESETS["folio-overlap"][0]
+    assert small is not None
+    assert large.rect["h"] > small.rect["h"]
+
+    result = best_placement(img, [small, large])
+    assert result is not None
+    assert result.preset is large
 
 
 def test_best_placement_detect_faces_exception_is_swallowed() -> None:

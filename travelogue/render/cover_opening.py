@@ -90,6 +90,22 @@ def resolve_split_mat_title_layout(title: str) -> str:
     return "horizontal"
 
 
+def resolve_show_cover_place(
+    *, cover_place: str, meta_title: str, raw_meta_title: str
+) -> bool:
+    """是否在封面渲染 ``.cover-opening__place``（D-CAL-20 优先顺位⑤延伸）。
+
+    从 ``assemble.py`` 抽出，供 ``travelogue.cover_engine.title_art.engine``
+    复用——引擎需要判定某个 trip 在 folio-overlap 风格下，左侧纸面栏顶部是否
+    会被竖排地点标签实际占用，从而决定 title-art 全列候选是否安全，必须跟
+    这里完全同一套判定，否则会重演"两处各自维护一份数据"的接线缺口（呼应
+    2026-08-07 CSS 侧白名单未同步 / contact-stamp 档案条判定那两次教训）。
+    """
+    return cover_place_is_distinct(cover_place, meta_title) and (
+        not raw_meta_title or cover_place_is_distinct(cover_place, raw_meta_title)
+    )
+
+
 def build_cover_archive_strip(
     *, meta_subline: str, cover_place: str, cover_asset: dict[str, Any]
 ) -> str:

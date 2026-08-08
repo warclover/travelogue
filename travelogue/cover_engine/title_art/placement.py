@@ -71,17 +71,28 @@ def score_candidate(
     )
     explain: list[str] = [f"{preset.opening_style_id} 白名单 · {preset.label}"]
 
-    variance = _brightness_variance(img, box)
-    openness = max(0.0, 1.0 - min(variance, _VARIANCE_NORM) / _VARIANCE_NORM)
-
     penalty = 0.0
-    if faces:
-        best_iou = max((_iou(box, f) for f in faces), default=0.0)
-        if best_iou > 0:
-            penalty += best_iou * _FACE_PENALTY_WEIGHT
-            explain.append(f"人脸重叠惩罚 {best_iou:.2f}")
+    if preset.assume_paper_bg:
+        # OQ-CAL-09 收尾：这个候选压在跟照片内容无关的固定纸面色块上（如
+        # folio-overlap 左侧纸面栏），`img` 传进来的是原始照片文件，这块
+        # rect 对应的像素跟实际渲染出来的纸面毫无关系——亮度方差/人脸 IoU
+        # 两项信号都是在测「照片这块区域是否好看」，但这里根本不会显示照片，
+        # 现实里纸面永远是均匀留白，直接给满分 openness、跳过人脸惩罚，
+        # 不要让不相关的照片像素数据参与打分（比"数值恰好碰巧合理"更重要
+        # 的是这套打分对这类候选而言概念上就不成立）。
+        openness = 1.0
+        explain.append(f"{preset.opening_style_id} 纸面底色区 · 跳过照片亮度/人脸信号")
     else:
-        explain.append("未检测到人脸 · 跳过该项")
+        variance = _brightness_variance(img, box)
+        openness = max(0.0, 1.0 - min(variance, _VARIANCE_NORM) / _VARIANCE_NORM)
+
+        if faces:
+            best_iou = max((_iou(box, f) for f in faces), default=0.0)
+            if best_iou > 0:
+                penalty += best_iou * _FACE_PENALTY_WEIGHT
+                explain.append(f"人脸重叠惩罚 {best_iou:.2f}")
+        else:
+            explain.append("未检测到人脸 · 跳过该项")
 
     overlap_ratio = (box[2] * box[3]) / max(1, w * h)
     if overlap_ratio > _OVERLAP_THRESHOLD:
@@ -141,4 +152,10 @@ def best_placement(
     candidates = [score_candidate(img, p, faces=faces) for p in presets]
     if not candidates:
         return None
-    return max(candidates, key=lambda c: c.score)
+    # 分数打平时优先选面积更大的候选（更宽裕的构图留白）——OQ-CAL-09 收尾时
+    # 发现：assume_paper_bg 候选（如 folio-overlap）跳过照片信号后 openness
+    # 恒为满分，多候选之间几乎总打平分，若只按 score 排序，``max()`` 在平分
+    # 时固定选列表里第一个（即主候选），会让"地点标签不占用时换更宽裕的
+    # 备选"这条设计路径在打分层面永远选不中，形同虚设。加一层面积次序既
+    # 修好这个具体场景，也对任何未来出现真正打平分的多候选风格通用有益。
+    return max(candidates, key=lambda c: (c.score, c.box[2] * c.box[3]))

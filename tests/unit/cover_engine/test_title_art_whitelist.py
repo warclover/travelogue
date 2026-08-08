@@ -30,12 +30,12 @@ def test_contact_stamp_is_whitelisted_by_default() -> None:
     assert is_whitelisted("contact-stamp") is True
 
 
-def test_folio_overlap_registered_but_disabled_by_default() -> None:
-    # D-CAL-10 · D-CAL-20 优先顺位③: folio-overlap 已注册 preset，但默认不进
-    # DEFAULT_ENABLED_STYLES（W2 狗粮后再开）。
+def test_folio_overlap_is_whitelisted_by_default() -> None:
+    # OQ-CAL-09 收尾（v0.6.6）：手工纸面栏矩形 + assume_paper_bg 落地后转正，
+    # 见 whitelist.py 该条目上方的详细注释。
     assert placement_preset("folio-overlap") is not None
-    assert "folio-overlap" not in DEFAULT_ENABLED_STYLES
-    assert is_whitelisted("folio-overlap") is False
+    assert "folio-overlap" in DEFAULT_ENABLED_STYLES
+    assert is_whitelisted("folio-overlap") is True
 
 
 @pytest.mark.parametrize(
@@ -56,8 +56,8 @@ def test_other_styles_are_not_whitelisted(style_id: str) -> None:
 
 
 def test_explicit_enabled_styles_override_default() -> None:
-    assert is_whitelisted("folio-overlap", enabled_styles=frozenset({"folio-overlap"})) is True
-    assert is_whitelisted("veil-footer", enabled_styles=frozenset({"folio-overlap"})) is False
+    assert is_whitelisted("band-cut", enabled_styles=frozenset({"band-cut"})) is True
+    assert is_whitelisted("veil-footer", enabled_styles=frozenset({"band-cut"})) is False
 
 
 def test_placement_preset_unknown_returns_none() -> None:
@@ -69,7 +69,6 @@ def test_placement_preset_unknown_returns_none() -> None:
     [
         ("band-cut", 0),
         ("contact-stamp", 0),
-        ("folio-overlap", 1),
     ],
 )
 def test_placement_preset_rect_matches_registry_text_safe_region(
@@ -154,3 +153,47 @@ def test_contact_stamp_fallback_has_conditional_occupant_tag() -> None:
         "w": float(hook_region["w"]),
         "h": float(hook_region["h"]),
     }
+
+
+@pytest.mark.parametrize(
+    ("style_id", "expected"),
+    [
+        ("veil-footer", False),
+        ("band-cut", False),
+        ("contact-stamp", False),
+        ("folio-overlap", True),
+    ],
+)
+def test_assume_paper_bg_flag(style_id: str, expected: bool) -> None:
+    # OQ-CAL-09 收尾：folio-overlap 主候选压在左侧纸面栏（跟照片无关的固定
+    # 底色），自动配色不能采样原始照片——见 engine.py 对该字段的消费。
+    preset = placement_preset(style_id)
+    assert preset is not None
+    assert preset.assume_paper_bg is expected
+
+
+def test_folio_overlap_rect_stays_within_paper_column() -> None:
+    # --cover-folio-margin: 33%——纸面栏止于此，主候选须留出安全边距，
+    # 不能碰到骑缝渐变/照片区（OQ-CAL-09 的阻断根因）。
+    preset = placement_preset("folio-overlap")
+    assert preset is not None
+    assert preset.rect["x"] >= 0.0
+    assert preset.rect["x"] + preset.rect["w"] <= 0.33
+
+
+def test_folio_overlap_fallback_has_conditional_occupant_and_larger_area() -> None:
+    fallback = FALLBACK_PRESETS["folio-overlap"][0]
+    primary = placement_preset("folio-overlap")
+    assert primary is not None
+    assert fallback.conditional_occupant == "folio_place_present"
+    assert fallback.assume_paper_bg is True
+    assert fallback.rect["x"] + fallback.rect["w"] <= 0.33
+    # 备选（无地点标签占用时可用）覆盖的纸面栏纵向范围应比主候选更宽松。
+    assert fallback.rect["h"] > primary.rect["h"]
+
+
+def test_placement_presets_folio_overlap_has_primary_and_fallback() -> None:
+    presets = placement_presets("folio-overlap")
+    assert len(presets) == 2
+    assert presets[0] is placement_preset("folio-overlap")  # 主候选永远在前
+    assert presets[1] is FALLBACK_PRESETS["folio-overlap"][0]

@@ -353,6 +353,122 @@ def test_contact_stamp_fails_open_when_primary_conflicts_and_fallback_occupied()
     assert trip["meta"]["titleArt"]["reason"] == "focal_conflict:contact-stamp"
 
 
+def test_folio_place_present_true_when_place_distinct_from_title() -> None:
+    # OQ-CAL-09 收尾：地点跟标题不同名时 .cover-opening__place 会渲染，占用
+    # 纸面栏顶部——须跟 assemble.py 用同一套 resolve_show_cover_place 判定。
+    trip = {
+        "meta": {"title": "毕业照精选", "places": ["呼伦贝尔草原"]},
+        "intent": {"placesUserSet": True},
+    }
+    assert engine_mod._folio_place_present(trip, {}) is True
+
+
+def test_folio_place_present_false_when_place_duplicates_title() -> None:
+    trip = {"meta": {"title": "呼伦贝尔"}}
+    assert engine_mod._folio_place_present(trip, {}) is False
+
+
+def test_folio_overlap_ignores_focal_conflict_for_paper_bg_candidate() -> None:
+    # 主候选 assume_paper_bg=True：矩形对应的不是照片内容（那块区域压根不
+    # 显示 .cover-hero 照片），镜头焦点落在同名照片坐标里跟视觉上"压脸"是
+    # 两件事——focal_conflict 不该淘汰这个候选。
+    primary_rect = placement_preset("folio-overlap").rect
+    focal_x = primary_rect["x"] + primary_rect["w"] / 2
+    focal_y = primary_rect["y"] + primary_rect["h"] / 2
+    trip = {
+        "meta": {"title": "呼伦贝尔", "coverOpeningStyle": "folio-overlap"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1", "focalPoint": {"x": focal_x, "y": focal_y}}],
+    }
+    write_png, written = _write_png_recorder()
+
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["enabled"] is True
+
+
+def test_folio_overlap_forces_paper_color_regardless_of_bright_or_dark_photo(
+    tmp_path,
+) -> None:
+    # assume_paper_bg：候选压在跟照片无关的固定纸面色块上，自动配色须忽略
+    # 原图像素采样，改用纸色（--cover-folio-paper #f4f1ea，近白）固定估计，
+    # 对比度算法应回到深墨 #1a1a1a，不管原图本身是纯黑还是纯白。
+    photo_path = tmp_path / "photo.png"
+    Image.new("RGB", (1000, 1000), (10, 10, 10)).save(photo_path)  # 原图本身很暗
+    trip = {
+        "meta": {"title": "呼伦贝尔", "coverOpeningStyle": "folio-overlap"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1"}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(trip, resolve_asset_path=_resolve_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    assert result.main_color == "#1a1a1a"
+    assert any("纸面底色区" in line for line in result.explain)
+
+
+def test_folio_overlap_uses_full_column_fallback_when_place_absent(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(engine_mod, "_folio_place_present", lambda *_a: False)
+    photo_path = tmp_path / "photo.png"
+    Image.new("RGB", (1000, 1000), (200, 200, 200)).save(photo_path)
+    trip = {
+        "meta": {"title": "呼伦贝尔", "coverOpeningStyle": "folio-overlap"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1"}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(trip, resolve_asset_path=_resolve_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    fallback_rect = FALLBACK_PRESETS["folio-overlap"][0].rect
+    expected_x = round(fallback_rect["x"] + fallback_rect["w"] / 2, 4)
+    expected_y = round(fallback_rect["y"] + fallback_rect["h"] / 2, 4)
+    assert abs(result.position["x"] - expected_x) < 0.01
+    assert abs(result.position["y"] - expected_y) < 0.01
+
+
+def test_folio_overlap_uses_narrow_primary_when_place_present(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(engine_mod, "_folio_place_present", lambda *_a: True)
+    photo_path = tmp_path / "photo.png"
+    Image.new("RGB", (1000, 1000), (200, 200, 200)).save(photo_path)
+    trip = {
+        "meta": {"title": "呼伦贝尔", "coverOpeningStyle": "folio-overlap"},
+        "coverAssetId": "asset-1",
+        "assets": [{"id": "asset-1"}],
+    }
+    write_png, written = _write_png_recorder()
+
+    def _resolve_asset_path(_asset):
+        return photo_path
+
+    result = resolve_title_art(trip, resolve_asset_path=_resolve_asset_path, write_png=write_png)
+
+    assert result is not None
+    assert len(written) == 1
+    primary_rect = placement_preset("folio-overlap").rect
+    expected_x = round(primary_rect["x"] + primary_rect["w"] / 2, 4)
+    expected_y = round(primary_rect["y"] + primary_rect["h"] / 2, 4)
+    assert abs(result.position["x"] - expected_x) < 0.01
+    assert abs(result.position["y"] - expected_y) < 0.01
+
+
 def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()
