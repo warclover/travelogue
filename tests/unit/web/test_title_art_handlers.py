@@ -28,6 +28,10 @@ class _Cfg:
         def __init__(self, enabled: bool, route_c_enabled: bool) -> None:
             self.enabled = enabled
             self.route_c_enabled = route_c_enabled
+            self.model_name = "wanx2.1-t2i-plus"
+            self.prompt_version = "v2"
+            self.route_c_max_attempts = 2
+            self.ocr_verify = True
 
     def __init__(self, route_c_enabled: bool = False) -> None:
         self.title_art = _Cfg._TitleArt(True, route_c_enabled)

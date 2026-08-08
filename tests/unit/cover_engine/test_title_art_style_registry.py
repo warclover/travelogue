@@ -34,7 +34,23 @@ def test_get_style_unknown_returns_none() -> None:
 
 
 def test_list_styles_returns_full_tuple() -> None:
-    assert list_styles() == STYLE_REGISTRY
+    assert list_styles(prompt_version="v1") == STYLE_REGISTRY
+    v2 = list_styles(prompt_version="v2")
+    assert len(v2) == len(STYLE_REGISTRY)
+    assert all(s.prompt_version == "v2" for s in v2)
+    assert all("逐字完全一致" in s.prompt_template for s in v2)
+    assert all("错字" in s.negative_prompt for s in v2)
+
+
+def test_get_style_defaults_to_v2() -> None:
+    style = get_style(default_style_id())
+    assert style is not None
+    assert style.prompt_version == "v2"
+    assert "逐字完全一致" in style.prompt_template
+
+
+def test_get_style_unknown_version_returns_none() -> None:
+    assert get_style(default_style_id(), prompt_version="v9") is None
 
 
 @pytest.mark.parametrize("style", STYLE_REGISTRY, ids=[s.style_id for s in STYLE_REGISTRY])

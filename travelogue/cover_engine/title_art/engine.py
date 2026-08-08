@@ -34,6 +34,7 @@ from travelogue.cover_engine.title_art.models import TitleArtResult, disabled_me
 from travelogue.cover_engine.title_art.ocr_verify import ocr_verify as _default_ocr_verify
 from travelogue.cover_engine.title_art.placement import best_placement, focal_conflict
 from travelogue.cover_engine.title_art.render_b import render_title_art
+from travelogue.cover_engine.title_art.risk_rules import route_c_risk_reason
 from travelogue.cover_engine.title_art.route_c import RouteCFailure
 from travelogue.cover_engine.title_art.route_c import generate_raw as _default_generate_raw
 from travelogue.cover_engine.title_art.style_registry import default_style_id
@@ -174,6 +175,10 @@ def resolve_title_art(
     detect_faces: DetectFacesFn | None = None,
     generate_raw: Callable[..., Any] = _default_generate_raw,
     ocr_verify: Callable[..., bool] = _default_ocr_verify,
+    model_name: str | None = None,
+    prompt_version: str = "v2",
+    route_c_max_attempts: int = 2,
+    ocr_verify_enabled: bool = True,
 ) -> TitleArtResult | None:
     """计算并写入 ``trip["meta"]["titleArt"]``；同一 trip 非 force 且已有非
     stale 结果时跳过重算（避免每次「优化装帧」都重打路线 C API）。
@@ -321,6 +326,8 @@ def resolve_title_art(
     fallback_from: str | None = None
     if route_c_enabled:
         style_c = route_c_style_id or default_style_id()
+        max_attempts = max(1, min(int(route_c_max_attempts or 1), 3))
+        use_prompt_version = (prompt_version or "v2").strip() or "v2"
         if not title_has_only_common_chars(text.main):
             # D-CAL-21 · Route C W0.5 Spike 数据驱动预筛选：标题含生僻字
             # （GB2312 一级常用字表以外）时大概率 OCR 不过（Spike 实测生僻
@@ -334,38 +341,75 @@ def resolve_title_art(
             fallback_from = "diffusion-fixed-prompt-v1"
             explain.append(f"{style_c} 预筛选：标题含生僻字，直接走路线B（未调用API，D-CAL-21）")
         else:
-            try:
-                raw = generate_raw(style_c, title=text.main, subtitle=text.subtitle)
-                if not ocr_verify(raw.image, text.main):
-                    raise RouteCFailure("E_CAL_C_OCR_MISMATCH")
-                ink = recolor_ink_on_white(raw.image, contrast.color_rgb)
-                asset_path = write_png(_png_bytes(ink))
-                result = TitleArtResult(
-                    enabled=True,
-                    stale=False,
-                    engine="diffusion-fixed-prompt-v1",
-                    template=style_c,
-                    font="",
-                    main_rendered=text.main,
-                    truncated=text.truncated,
-                    subtitle=text.subtitle,
-                    main_color=contrast.color_hex,
-                    seal_color="#B03A2E",
-                    opening_style_id=style_id,
-                    position=placement_pos,
-                    asset_path=asset_path,
-                    source_title=text.main,
-                    explain=[*explain, f"路线C · {style_c} · {raw.model}"],
-                    style_id=style_c,
-                    prompt_version="v1",
-                    model_provider="wanxiang",
-                    ocr_verified=True,
-                    fallback_from=None,
+            risk = route_c_risk_reason(text.main)
+            if risk is not None:
+                _log.info(
+                    "title_art route C skipped by risk rule %s: style=%s", risk, style_c
                 )
-                meta["titleArt"] = result.to_meta_dict()
-                return result
-            except RouteCFailure as exc:
-                _log.info("title_art route C → fallback to route B: %s", exc)
+                fallback_from = "diffusion-fixed-prompt-v1"
+                explain.append(
+                    f"{style_c} 风险规则：{risk}，直接走路线B（未调用API，W0.5b）"
+                )
+            else:
+                last_exc: RouteCFailure | None = None
+                for attempt in range(max_attempts):
+                    try:
+                        raw = generate_raw(
+                            style_c,
+                            title=text.main,
+                            subtitle=text.subtitle,
+                            model=model_name,
+                            prompt_version=use_prompt_version,
+                        )
+                        if ocr_verify_enabled and not ocr_verify(raw.image, text.main):
+                            raise RouteCFailure("E_CAL_C_OCR_MISMATCH")
+                        ink = recolor_ink_on_white(raw.image, contrast.color_rgb)
+                        asset_path = write_png(_png_bytes(ink))
+                        retry_note = (
+                            f" · retry={attempt}" if attempt > 0 else ""
+                        )
+                        result = TitleArtResult(
+                            enabled=True,
+                            stale=False,
+                            engine="diffusion-fixed-prompt-v1",
+                            template=style_c,
+                            font="",
+                            main_rendered=text.main,
+                            truncated=text.truncated,
+                            subtitle=text.subtitle,
+                            main_color=contrast.color_hex,
+                            seal_color="#B03A2E",
+                            opening_style_id=style_id,
+                            position=placement_pos,
+                            asset_path=asset_path,
+                            source_title=text.main,
+                            explain=[
+                                *explain,
+                                f"路线C · {style_c} · {raw.model} · "
+                                f"prompt={use_prompt_version}{retry_note}",
+                            ],
+                            style_id=style_c,
+                            prompt_version=use_prompt_version,
+                            model_provider="wanxiang",
+                            ocr_verified=bool(ocr_verify_enabled),
+                            fallback_from=None,
+                        )
+                        meta["titleArt"] = result.to_meta_dict()
+                        return result
+                    except RouteCFailure as exc:
+                        last_exc = exc
+                        if (
+                            exc.reason == "E_CAL_C_OCR_MISMATCH"
+                            and attempt + 1 < max_attempts
+                        ):
+                            _log.info(
+                                "title_art route C OCR mismatch, retrying (%s/%s)",
+                                attempt + 2,
+                                max_attempts,
+                            )
+                            continue
+                        break
+                _log.info("title_art route C → fallback to route B: %s", last_exc)
                 fallback_from = "diffusion-fixed-prompt-v1"
 
     rendered = render_title_art(

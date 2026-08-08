@@ -967,7 +967,10 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       '<p class="preview-sheet__title-art-attr" data-title-art-attr>使用你的照片装帧 · 未生成风景</p>' +
       '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
       '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
-      ' 尝试 AI 手写体（偶尔不稳定，未命中会自动退回默认样式）</label>' +
+      '<span class="preview-sheet__title-art-routec-copy">' +
+      '<span class="preview-sheet__title-art-routec-title">尝试 AI 手写体</span>' +
+      '<span class="preview-sheet__title-art-routec-hint">高级项 · 可能回退默认样式 · 约十几秒</span>' +
+      '</span></label>' +
       '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成装帧标题</button>' +
       '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
       '</div>';
@@ -1009,9 +1012,12 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     function requestTitleArt() {
       if (!titleArtBtn) return;
       titleArtBtn.disabled = true;
-      setTitleArtStatus("生成中…");
+      var wantRouteC = !!(titleArtRouteCCheck && titleArtRouteCCheck.checked);
+      setTitleArtStatus(
+        wantRouteC ? "生成中（AI 手写体；未通过会回退默认样式）…" : "生成中…"
+      );
       var body = { force: true };
-      if (titleArtRouteCCheck && titleArtRouteCCheck.checked) body.routeC = true;
+      if (wantRouteC) body.routeC = true;
       postJson(
         "/__travelogue/trips/" + encodeURIComponent(tripId) + "/title-art/resolve",
         body

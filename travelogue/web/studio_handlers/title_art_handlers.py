@@ -64,6 +64,11 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
     ctx = studio_ctx(handler)
     route_c_allowed = bool(ctx.cfg.title_art.route_c_enabled)
     route_c_enabled = route_c_requested and route_c_allowed
+    ta = ctx.cfg.title_art
+    model_name = getattr(ta, "model_name", None) or "wanx2.1-t2i-plus"
+    prompt_version = getattr(ta, "prompt_version", None) or "v2"
+    max_attempts = int(getattr(ta, "route_c_max_attempts", 2) or 2)
+    ocr_enabled = bool(getattr(ta, "ocr_verify", True))
 
     art_dir = trip_dir / "trip-derived" / "title-art"
 
@@ -88,6 +93,10 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
                 route_c_enabled=route_c_enabled,
                 route_c_style_id=style_id,
                 force=force,
+                model_name=model_name,
+                prompt_version=prompt_version,
+                route_c_max_attempts=max_attempts,
+                ocr_verify_enabled=ocr_enabled,
             )
         except Exception:
             _log.exception("title-art resolve failed for trip %s", trip_id)

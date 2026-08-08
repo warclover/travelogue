@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from travelogue.cover_engine.title_art.fonts import (
@@ -9,6 +11,7 @@ from travelogue.cover_engine.title_art.fonts import (
     glyphs_covered,
     licensed_fonts,
     pick_default_font,
+    resolve_font_source,
 )
 
 pytestmark = pytest.mark.unit
@@ -23,6 +26,13 @@ def test_licensed_fonts_excludes_unlicensed_entries() -> None:
 def test_pick_default_font_returns_licensed_entry() -> None:
     font = pick_default_font()
     assert font.licensed is True
+
+
+def test_licensed_fonts_are_bundled_as_assets() -> None:
+    """D-CAL-07：licensed=True 必须随包有真实文件，避免静默退化到系统字体。"""
+    for font in licensed_fonts():
+        src = Path(resolve_font_source(font.filename))
+        assert src.is_file(), f"missing bundled font asset: {font.filename}"
 
 
 def test_glyphs_covered_empty_text_is_true() -> None:

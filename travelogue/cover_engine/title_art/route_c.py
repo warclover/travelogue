@@ -141,14 +141,18 @@ def generate_raw(
     title: str,
     subtitle: str | None = None,
     model: str | None = None,
+    prompt_version: str = "v2",
 ) -> RouteCRawResult:
     """提交 + 轮询通义万相；返回未抠字/未上色的原图。
 
     失败即抛 :class:`RouteCFailure`；调用方必须 fallback（D-CAL-16）。
     """
-    style = get_style(style_id)
+    style = get_style(style_id, prompt_version=prompt_version)
     if style is None:
-        raise RouteCFailure("E_CAL_C_UNKNOWN_STYLE", detail=style_id)
+        raise RouteCFailure(
+            "E_CAL_C_UNKNOWN_STYLE",
+            detail=f"{style_id}@{prompt_version}",
+        )
     prompt = render_prompt(style, title=title, subtitle=subtitle)
     use_model = model or DEFAULT_MODEL
     task_id = _submit_task(prompt, style.negative_prompt, model=use_model)

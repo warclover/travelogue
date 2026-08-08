@@ -259,6 +259,155 @@ def test_route_c_common_title_still_attempts_api_call() -> None:
     assert result.engine == "diffusion-fixed-prompt-v1"
 
 
+def test_route_c_risk_punctuation_skips_api_call() -> None:
+    trip = {"meta": {"title": "一路向西…", "coverOpeningStyle": "veil-footer"}}
+    write_png, written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append("called")
+        raise AssertionError("risk rule should skip API")
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+    )
+    assert calls == []
+    assert result is not None
+    assert result.engine == "clean-pipeline-v1"
+    assert result.fallback_from == "diffusion-fixed-prompt-v1"
+    assert any("风险规则" in line for line in result.explain)
+    assert len(written) == 1
+
+
+def test_route_c_risk_repeated_char_skips_api_call() -> None:
+    trip = {"meta": {"title": "一茶一饭间", "coverOpeningStyle": "veil-footer"}}
+    write_png, _written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append("called")
+        raise AssertionError("risk rule should skip API")
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+    )
+    assert calls == []
+    assert result is not None
+    assert result.engine == "clean-pipeline-v1"
+    assert any("repeated_char" in line for line in result.explain)
+
+
+def test_route_c_risk_digit_mix_skips_api_call() -> None:
+    trip = {"meta": {"title": "重走318国道", "coverOpeningStyle": "veil-footer"}}
+    write_png, _written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append("called")
+        raise AssertionError("digit_mix risk should skip API")
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+    )
+    assert calls == []
+    assert result is not None
+    assert result.engine == "clean-pipeline-v1"
+    assert any("digit_mix" in line for line in result.explain)
+
+
+def test_route_c_ocr_mismatch_retries_once_then_succeeds() -> None:
+    trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
+    write_png, written = _write_png_recorder()
+    calls: list[int] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append(len(calls) + 1)
+        return _FakeRawResult(image=Image.new("RGB", (32, 32), (255, 255, 255)))
+
+    def _fake_ocr(_img, _expected, **_kw):
+        return len(calls) >= 2
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=_fake_ocr,
+        route_c_max_attempts=2,
+    )
+    assert calls == [1, 2]
+    assert result is not None
+    assert result.engine == "diffusion-fixed-prompt-v1"
+    assert any("retry=1" in line for line in result.explain)
+    assert len(written) == 1
+
+
+def test_route_c_passes_model_and_prompt_version_to_generate_raw() -> None:
+    trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
+    write_png, _written = _write_png_recorder()
+    seen: dict[str, object] = {}
+
+    def _fake_generate_raw(style_id, *, title, subtitle=None, **kw):
+        seen.update(kw)
+        seen["style_id"] = style_id
+        seen["title"] = title
+        return _FakeRawResult(image=Image.new("RGB", (32, 32), (255, 255, 255)))
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+        model_name="wanx2.1-t2i-turbo",
+        prompt_version="v2",
+    )
+    assert result is not None
+    assert seen.get("model") == "wanx2.1-t2i-turbo"
+    assert seen.get("prompt_version") == "v2"
+    assert result.prompt_version == "v2"
+
+
+def test_route_c_risk_digit_mix_skips_api_call() -> None:
+    trip = {"meta": {"title": "重走318国道", "coverOpeningStyle": "veil-footer"}}
+    write_png, _written = _write_png_recorder()
+    calls: list[str] = []
+
+    def _fake_generate_raw(*_a, **_kw):
+        calls.append("called")
+        raise AssertionError("digit_mix risk should skip API")
+
+    result = resolve_title_art(
+        trip,
+        resolve_asset_path=_no_asset_path,
+        write_png=write_png,
+        route_c_enabled=True,
+        generate_raw=_fake_generate_raw,
+        ocr_verify=lambda *_a, **_kw: True,
+    )
+    assert calls == []
+    assert result is not None
+    assert result.engine == "clean-pipeline-v1"
+    assert any("digit_mix" in line for line in result.explain)
+
+
 def test_route_c_generation_failure_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()
@@ -574,8 +723,10 @@ def test_folio_overlap_uses_narrow_primary_when_place_present(
 def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:
     trip = {"meta": {"title": "拾光", "coverOpeningStyle": "veil-footer"}}
     write_png, written = _write_png_recorder()
+    calls: list[str] = []
 
     def _fake_generate_raw(style_id, *, title, subtitle=None, **_kw):
+        calls.append(title)
         return _FakeRawResult(image=Image.new("RGB", (32, 32), (255, 255, 255)))
 
     def _fake_ocr_verify(_img, _expected, **_kw):
@@ -588,7 +739,9 @@ def test_route_c_ocr_mismatch_falls_back_to_route_b() -> None:
         route_c_enabled=True,
         generate_raw=_fake_generate_raw,
         ocr_verify=_fake_ocr_verify,
+        route_c_max_attempts=2,
     )
+    assert calls == ["拾光", "拾光"]
     assert result is not None
     assert result.engine == "clean-pipeline-v1"
     assert result.fallback_from == "diffusion-fixed-prompt-v1"

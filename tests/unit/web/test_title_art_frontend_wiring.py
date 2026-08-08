@@ -36,6 +36,8 @@ def test_title_art_panel_gates_on_server_config() -> None:
     chunk = text[start:next_export]
     assert "titleArtCfg.enabled" in chunk
     assert "titleArtCfg.routeCEnabled" in chunk
+    assert "可能回退默认样式" in chunk
+    assert "尝试 AI 手写体" in chunk
     assert '"/__travelogue/config"' in chunk
 
 

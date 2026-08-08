@@ -319,9 +319,9 @@
 
 | 字库 | 授权 | V1 |
 |------|------|-----|
-| `ZhiMangXing-Regular.ttf` | SIL OFL | 默认可入池 |
-| `Aa剑豪体.ttf` | 待核查 | 核查通过前不得生产默认 |
-| `鸿雷板书简体-测试版.ttf` | 待核查 + 确认非仅测试版 | 同上 |
+| `ZhiMangXing-Regular.ttf` | SIL OFL | 生产默认；已随包分发 |
+| `鸿雷板书体（简+繁）3.001.ttf` | 作者免费商用（含嵌入式应用） | ✅ 可入池、已随包分发（替换原「测试版」） |
+| `Aa剑豪体.ttf` | 通用商用≠嵌入授权 | 核查通过嵌入条款前不得生产默认 / 不随包 |
 
 ### 5.4 Opening 白名单与 placement preset（BLK-CAL-04；v0.6 更新见 D-CAL-20）
 
@@ -397,16 +397,17 @@
 
 **W0.5 完整 Spike 结论（v0.6.7 · 2026-08-08）**：26 条真实/边界标题（覆盖极短/极长、生僻字地名、多音字、数字英文混排、标点、叠字、古诗词句），`wanx2.1-t2i-plus` 生成 100% 成功（无超时/审核拒绝）、延迟均值 18s，但 **OCR 回读通过率仅 57.7%**（常见地名/纯数字 100% 稳定，生僻字/古诗词句/标点/叠字系统性出错，非局部缺笔而是整字被换成不相关字形）。详见 [验收记录](./acceptance-records/cover-calligraphy-title-v1-w05-route-c-spike-2026-08-08.md)。
 
-#### 5.5.5 待验证事项（v0.6.7 更新：W0.5 完整 Spike 已补齐，AC-CAL-11 判定不通过）
+#### 5.5.5 待验证事项（v0.6.15 更新：W0.5b 冲质量代码已落地，真实 API 矩阵待 Key）
 
 | 事项 | 状态 |
 |------|----------|
 | 字形准确率（尤其生僻字/多笔画字） | ✅ **已完成完整 Spike**（26 条真实/边界标题，2026-08-08）——OCR 回读通过率 57.7%，**未达 AC-CAL-11 钉定阈值（≥90%）**，判定不通过；`route_c_enabled` 继续默认 `false` |
 | 单次生成成本与延迟 | ✅ 已系统统计：延迟均值 18.0s（15.3s～28.3s，P95 19.2s）；成本无 API 计费字段，需人工对照阿里云百炼账单核算单价 |
 | 内容审核拒绝率 | ✅ 本批次 26 条实测 0%（样本量有限，非长期统计） |
-| 5 款风格的具体 `promptTemplate` 文案定稿 | ✅ 已定稿，见 §5.5.1 与 `style_registry.py` |
+| 5 款风格的具体 `promptTemplate` 文案定稿 | ✅ 已定稿，见 §5.5.1 与 `style_registry.py`；**v2** 增加逐字准确约束（默认） |
 | OCR 回读校验机制 | ✅ 已实现（`ocr_verify.py`，复用 `vision_chat_completion` + `qwen-vl-plus`）；校验通过率阈值（AC-CAL-11）✅ **已钉定为 ≥90%**，本次实测 57.7% 不达标 |
 | 标题预筛选（降本，非安全机制） | ✅ **已落地（v0.6.8，D-CAL-21）**：`char_frequency.py` 拦截含表外生僻字的标题，尝试子集通过率 57.7%→64.7%，仍不足以解锁默认开启 |
+| OCR 失败重试 / Prompt v2 / 风险规则（W0.5b） | ✅ **代码 + 真实 Spike 已完成（v0.6.15/16）**：`after_retry_rate=90.0%`（30 次尝试，v2+重试1+风险短路），见 [结果](./acceptance-records/cover-calligraphy-title-v1-route-c-w05b-result-2026-08-08.md)。**AC-CAL-11 在该协议下达标**；`route_c_enabled` 默认仍 `false`，仅允许显式高级项开启 |
 | 生成内容版权与模型服务条款 | 待核查各候选服务商的商用条款（§9），未完成 |
 
 ---
@@ -604,7 +605,7 @@
 | **AC-CAL-08** ✅ | 缺字形或非白名单 style → 不叠加贴纸且 h1 可见正常（真实非白名单 trip 实测通过） |
 | **AC-CAL-09** ✅ | 修改 `meta.title` 后 `stale`（或等价）生效，禁止继续展示旧文案贴纸为「已更新」（核对时发现 `mark_title_art_stale` 从未接线，`copy_patch.py` 改标题不会置 stale——已修复 + 端到端验证 + 3 条回归测试，见验收记录 §1.3） |
 | **AC-CAL-10** ✅ | Web 预览与长图引用同一 `assetPath`（真实 trip `index.html` / `index-longshot.html` 同源核对通过） |
-| **AC-CAL-11**（v0.3 新增 · 路线 C 生效） ❌ | 路线 C 输出的 OCR 回读校验通过率达 W0.5 Spike 钉定阈值方可进入生产候选池；未达标不得默认启用。**v0.6.7 阈值钉定为 ≥90%，实测 26 条样本仅 57.7%，判定不通过**，`route_c_enabled` 继续默认 `false`（见 [验收记录](./acceptance-records/cover-calligraphy-title-v1-w05-route-c-spike-2026-08-08.md)） |
+| **AC-CAL-11**（v0.3 新增 · 路线 C 生效） ✅（v0.6.16 · W0.5b 协议） | 阈值 ≥90%。W0.5 裸跑全量单次仅 57.7%（❌）。**W0.5b**（Prompt v2 + 生僻字/标点/叠字短路 + OCR 失败重试 1 次）尝试子集 **30** 次采样：`after_retry_rate=90.0%` → **达标**（见 [结果](./acceptance-records/cover-calligraphy-title-v1-route-c-w05b-result-2026-08-08.md)）。**不**因此改 `route_c_enabled` 默认值（OQ-CAL-06）；仅允许配置层显式开启高级项 |
 | **AC-CAL-12** ✅（v0.3 新增 · 路线 C 生效） | 路线 C 失败（超时/审核不过/OCR 不过）→ 必定按 D-CAL-16 降级路线 B 或 fail-open HTML，**不允许**任何情况下展示错误态或半成品贴纸（真实条件下——未设置 `DASHSCOPE_API_KEY`——强制路线 C 实测通过） |
 | **AC-CAL-13**（v0.3 新增 · 路线 C 生效） ✅ | 路线 C 抠字重上色结果同样满足 §6.1 对比度合同，默认兜底白色路径可复现（复用 W0.5 Spike 真实产出图核对，6/6 达标 + 3 组中性灰边界场景核对回落白色分支，见验收记录） |
 | **AC-CAL-BLIND** | vs **现网 CSS Opening 标题**（非 CAD Mode A）偏好 ≥55% 才可默认 `enabled=true`（路线 B/C 分别计）。**样本已备 · 待评委**（[方案](./acceptance-records/cover-calligraphy-title-v1-w3-blind-plan-2026-08-08.md) · [进度](./acceptance-records/cover-calligraphy-title-v1-w3-blind-2026-08-08.md)）；**未通过前不得改默认** |
@@ -668,3 +669,6 @@
 | **v0.6.12** | 2026-08-08 | **补齐 D-CAL-23 验收记录**（[验收记录](./acceptance-records/cover-calligraphy-title-v1-d-cal-23-backdrop-2026-08-08.md)）：`band-cut` 用同一条真实 trip（`demo-0ebda73294`）改造前用户报告截图 vs 改造后真机截图直接对比，证据链最直观；`veil-footer`（`demo-3ee2727aea`）与 `contact-stamp`（`demo-1547c68851`，临时切换验证后已完整还原）均补做 Playwright `getBoundingClientRect()` 实测（非估算），核对贴纸实际渲染宽高占比未超出 `journal.css` 收紧后的 `max-width/max-height` 上限；`contact-stamp` 借此把 v0.6.11 遗留的"模拟合成"升级为真实 trip 实测，仓内暂无该风格真实样例的限制不再是结论依据。发现 1 处非阻塞观察项：`band-cut` 纸签实际渲染宽度远小于候选矩形宽度，衬底左边缘未完全贴合候选区左边界（视觉上仍清晰可读，不阻塞验收，记为后续可选优化）。回归：`tests/unit/cover_engine -q` 全部通过；ruff 全绿 |
 | **v0.6.13** | 2026-08-08 | **清账：AC-CAL-01/02/10 + §10 归因 + OQ-CAL-10 + W3 方案**。对照 PRD 发现 W2 口头「AC-01～06 已补齐」但 §12.3 未打勾——补 [`scripts/verify_title_art_ac01_02_10.py`](../scripts/verify_title_art_ac01_02_10.py) + [验收记录](./acceptance-records/cover-calligraphy-title-v1-ac01-02-10-2026-08-08.md)：① `enabled=false`/无字段/stale 不叠加；② 固定金样 aHash（SHD-CAL-01，Hamming 0）；③ 真实 trip `index.html`/`index-longshot.html` 同源 `assetPath`。落地 §10 归因（`attribution.py` + Studio 面板 + 封底/长图页脚，路线 B/C 区分措辞）。关闭 **OQ-CAL-10**：`contract.resolve_title_text` 改走 `resolve_display_title`（`mainSource=displayTitle`）。W3 盲评方案定稿（[方案](./acceptance-records/cover-calligraphy-title-v1-w3-blind-plan-2026-08-08.md)），执行未开始。修正 §6.2「W2 待落地」过期表述。回归：相关单测 + verify 脚本 PASS |
 | **v0.6.14** | 2026-08-08 | **W3 盲评样本出图（评委前）**：[`scripts/title_art_w3_blind_shots.py`](../scripts/title_art_w3_blind_shots.py) 从 12 条真实 demo trip 产出路线 B 成对封面截图（`band-cut`×4 / `veil-footer`×4 / `contact-stamp`×2 / `folio-overlap`×2），写入 [附件目录](./acceptance-records/attachments/cover-calligraphy-title-v1-w3-blind-2026-08-08/)（`manifest` + `scores.csv` + `answer-key.csv` + `review.html`）。截图路径隐藏草稿工具栏与 `folio-plate-meta`（直出 trips HTML 无 Studio shell.css）。进度记录：[W3 盲评进度](./acceptance-records/cover-calligraphy-title-v1-w3-blind-2026-08-08.md)。**评委打分未开始；不宣称 AC-CAL-BLIND 通过；`enabled` 默认仍 `false`。** 路线 C 本轮延期。 |
+| **v0.6.15** | 2026-08-08 | **路线 C 冲质量（W0.5b · 1A+2A）代码落地**：对 W0.5 的 11 张 OCR 失败图做人工审计（[审计](./acceptance-records/cover-calligraphy-title-v1-route-c-w05b-audit-2026-08-08.md)：9 glyph_wrong / 1 ambiguous / 1 ocr_false_reject）→ **不放松 D-CAL-19**。落地：`style_registry` Prompt **v2**（默认）、`engine` OCR mismatch **重试 1 次**、`risk_rules` 标点/叠字短路、`TitleArtConfig` 接线 `model_name`/`prompt_version`/`route_c_max_attempts`/`ocr_verify`（Studio+CLI）。新增矩阵脚本 [`title_art_route_c_w05b_spike.py`](../scripts/title_art_route_c_w05b_spike.py)（E1/E2/E3）；本机无 `DASHSCOPE_API_KEY`，仅完成 dry-run 分配（[落地记录](./acceptance-records/cover-calligraphy-title-v1-route-c-w05b-landing-2026-08-08.md)）。**AC-CAL-11 仍 ❌**；`route_c_enabled` 默认仍 `false`。 |
+| **v0.6.16** | 2026-08-08 | **W0.5b 真实 Spike 完成，AC-CAL-11 在新协议下达标**（[结果](./acceptance-records/cover-calligraphy-title-v1-route-c-w05b-result-2026-08-08.md)）：`v2 + retries=1 + samples=2`，跳过生僻字/标点/叠字后尝试 **30** 次——首次 OCR 83.3%，**重试后 90.0%（27/30）**。残留失败：`厦门老城区`（非确定）、`重走318国道`×2（数字混排）。**默认 `route_c_enabled` 仍 false**；允许配置显式开高级项并告知可能回退 B。不启动 vendor bakeoff。 |
+| **v0.6.17** | 2026-08-08 | **Studio 高级项 + 数字混排风险规则**：`route_c_enabled` 代码默认改为 `true`（仅控制勾选框是否出现；仍须用户勾选才走 AI，OQ-CAL-06）。UI 文案改为「尝试 AI 手写体」+「高级项 · 可能回退默认样式 · 约十几秒」。新增 `digit_mix` 风险规则（汉字后再嵌阿拉伯数字如「重走318国道」直接 B；「918公里」不拦）。样例配置 `config.user.example.yaml` / `config.yaml.example` 补 `title_art` 段。 |

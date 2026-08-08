@@ -167,6 +167,8 @@ def cmd_title_art(
     trip = svc.load(trip_path)
     trip_dir = trip_path.parent
     art_dir = trip_dir / "trip-derived" / "title-art"
+    cfg = get_config()
+    ta = cfg.title_art
 
     def _resolve_asset_path(asset: dict) -> Path | None:
         return resolve_source_path(asset, trip_dir)
@@ -186,6 +188,10 @@ def cmd_title_art(
             route_c_enabled=route_c,
             route_c_style_id=style,
             force=force,
+            model_name=ta.model_name,
+            prompt_version=ta.prompt_version,
+            route_c_max_attempts=ta.route_c_max_attempts,
+            ocr_verify_enabled=ta.ocr_verify,
         )
     except Exception as exc:  # noqa: BLE001 — CLI 边界统一报错，不让异常裸奔
         typer.echo(f"E_TITLE_ART: {exc}", err=True)

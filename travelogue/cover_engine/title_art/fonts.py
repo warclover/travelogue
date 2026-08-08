@@ -30,8 +30,12 @@ class FontCandidate:
 #: §5.3 字库候选池。未核查授权的字体 ``licensed=False``，不得进生产默认。
 FONT_POOL: tuple[FontCandidate, ...] = (
     FontCandidate(name="ZhiMangXing-Regular", filename="ZhiMangXing-Regular.ttf", licensed=True),
+    FontCandidate(
+        name="鸿雷板书体（简+繁）3.001",
+        filename="鸿雷板书体（简+繁）3.001.ttf",
+        licensed=True,
+    ),
     FontCandidate(name="Aa剑豪体", filename="Aa剑豪体.ttf", licensed=False),
-    FontCandidate(name="鸿雷板书简体-测试版", filename="鸿雷板书简体-测试版.ttf", licensed=False),
 )
 
 
