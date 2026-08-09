@@ -7,7 +7,9 @@ import io
 import pytest
 from PIL import Image
 
+from travelogue.cover_engine.title_art.fonts import pick_font_for_style
 from travelogue.cover_engine.title_art.render_b import (
+    _MAIN_TEXT_MAX_WIDTH_RATIO_BY_STYLE,
     CANVAS_SIZE,
     TEMPLATE_INLINE_SEAL,
     TEMPLATE_INLINE_SEAL_WIDE,
@@ -68,6 +70,54 @@ def test_render_title_art_seal_corner_template() -> None:
     img = _decode(rendered.png_bytes)
     assert img.width <= CANVAS_SIZE[0]
     assert img.height <= CANVAS_SIZE[1]
+
+
+def _glyph_bbox_height(png_bytes: bytes) -> int:
+    """非透明像素的竖直跨度（近似主字字形高度）。"""
+    img = _decode(png_bytes).convert("RGBA")
+    bbox = img.getchannel("A").getbbox()
+    assert bbox is not None
+    return bbox[3] - bbox[1]
+
+
+def test_veil_footer_max_width_ratio_wider_than_shared_default() -> None:
+    """W3 b06（见 cover-calligraphy-title-v1-w3-blind-2026-08-08.md）：veil-footer
+    长标题贴纸字号偏小，放宽本风格的最大宽度比让收缩循环少收一档。"""
+    assert _MAIN_TEXT_MAX_WIDTH_RATIO_BY_STYLE["veil-footer"] > 0.86
+
+
+def test_veil_footer_long_title_renders_bigger_with_relaxed_max_width(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """同一 7 字长标题，放宽后的宽度比应比共享默认 0.86 收缩得更少（字形更大）。"""
+    long_title = "夏睿彤年度精选"
+    font = pick_font_for_style("veil-footer")
+
+    relaxed = render_title_art(long_title, opening_style_id="veil-footer", font=font)
+    relaxed_height = _glyph_bbox_height(relaxed.png_bytes)
+
+    monkeypatch.setitem(_MAIN_TEXT_MAX_WIDTH_RATIO_BY_STYLE, "veil-footer", 0.86)
+    shared_default = render_title_art(long_title, opening_style_id="veil-footer", font=font)
+    shared_default_height = _glyph_bbox_height(shared_default.png_bytes)
+
+    assert relaxed_height > shared_default_height
+
+
+def test_veil_footer_short_title_unaffected_by_wider_max_width(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """短标题本就不会触发收缩循环，放宽 max_w 不应改变其字形高度。"""
+    short_title = "拾光"
+    font = pick_font_for_style("veil-footer")
+
+    relaxed = render_title_art(short_title, opening_style_id="veil-footer", font=font)
+    relaxed_height = _glyph_bbox_height(relaxed.png_bytes)
+
+    monkeypatch.setitem(_MAIN_TEXT_MAX_WIDTH_RATIO_BY_STYLE, "veil-footer", 0.86)
+    shared_default = render_title_art(short_title, opening_style_id="veil-footer", font=font)
+    shared_default_height = _glyph_bbox_height(shared_default.png_bytes)
+
+    assert relaxed_height == shared_default_height
 
 
 def test_render_title_art_without_subtitle_still_renders() -> None:

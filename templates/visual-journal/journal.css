@@ -1517,6 +1517,19 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：钉在左下角 place
+     标签正下方（hook 本风格恒隐藏，不用避让）。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 5vw, 64px);
+    bottom: clamp(4px, 1.5vh, 10px);
+    right: auto;
+    top: auto;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
   /* —— type-monument · 镂空巨字 —— */
   html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"] .cover-hero {
@@ -1598,6 +1611,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     text-align: right;
     font-size: 0.85rem;
     letter-spacing: 0.12em;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
+     flex-column + justify-content:space-between，直接追加 flex 子项会
+     挤动现有 place/title/hook 的间距分布——改成绝对定位跳出 flex 流。
+     锚点选左下角（跟 place 同一侧）而不是右下角：右下角跟阅读器自带
+     的 screenplay-toolbar（复制文案/长图按钮，约 x:1076~1268,
+     y:703~784@1280x800）重叠，会被工具条盖住或叠字。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 4.5vw, 56px);
+    right: auto;
+    bottom: clamp(6px, 1.5vh, 12px);
+    margin: 0;
+    color: rgba(245, 243, 240, 0.45);
   }
 
   /* —— scroll-head · 卷首竖题 —— */
@@ -1712,6 +1741,21 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: #4b4238;
     font-family: var(--cover-font-title);
     font-size: 13px;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是右侧窄列
+     flex-column（title 竖排字 + 朱印 ::after），追加普通 flex 子项会把
+     朱印挤下去——改绝对定位跳出流，钉在窄列下方留白区（panel 本身
+     bottom:20%，右侧留白足够），配纸面底色用暗墨色。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__brand {
+    position: absolute;
+    right: 7%;
+    bottom: 12%;
+    left: auto;
+    margin: 0;
+    text-align: center;
+    color: rgba(75, 66, 56, 0.6);
   }
 
   /* —— portal-arch · 天窗 —— */
@@ -1845,6 +1889,19 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: rgba(246, 240, 232, 0.82);
   }
 
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：hook 底部居中
+     bottom:8%，这里钉在更贴近真实底边处，同一居中锚点。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="portal-arch"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="portal-arch"] .cover-opening__brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 3%;
+    margin: 0;
+    text-align: center;
+    color: rgba(246, 240, 232, 0.5);
+  }
+
   /* —— horizon-split · 地平线 —— */
   html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"],
   html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] {
@@ -1961,6 +2018,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     line-height: 1.7;
     flex: 0 0 auto;
     padding-bottom: 6px;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
+     flex-row + justify-content:space-between（title/hook 两端对齐），
+     直接追加第 3 个 flex 子项会挤动两端间距——改绝对定位跳出 flex 流。
+     hook 本身贴真实底边（仅 padding-bottom:6px），若署名行贴得更低会
+     撞进阅读器自带的 screenplay-toolbar（复制文案/长图按钮，约
+     y:703~784@1280x800）；改成钉在 hook 上方的天然留白区，仍同一右侧
+     锚点，只是 bottom 取更大值，跳出工具条命中区。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__brand {
+    position: absolute;
+    right: clamp(24px, 4vw, 56px);
+    bottom: clamp(100px, 13vh, 120px);
+    margin: 0;
+    color: rgba(138, 131, 120, 0.7);
   }
 
   /* —— contact-stamp · 日戳档案 —— */
@@ -2251,6 +2324,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     margin: 0;
     text-align: right;
     color: rgba(255, 255, 255, 0.72);
+    z-index: 7;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：本想贴 hook 同一
+     右侧锚点，但右下角跟阅读器自带的 screenplay-toolbar（复制文案/长图
+     按钮）重叠，会被工具条盖住——改成跟 place 同一左侧锚点，贴更靠近
+     真实底边。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(26px, 4.4vw, 56px);
+    right: auto;
+    bottom: 3%;
+    margin: 0;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.42);
     z-index: 7;
   }
 

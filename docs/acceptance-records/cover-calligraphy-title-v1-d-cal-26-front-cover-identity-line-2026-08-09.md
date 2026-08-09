@@ -55,6 +55,42 @@ D-SFI-13 原文（`PRD-SHARE-FACE-INTEGRITY-V1.md` §3.7）：
 - 新增 `tests/unit/render/test_cover_opening_identity_line.py`（9 条），覆盖：4 款风格默认显示、白名单外不显示、`worksBrandMode=hidden` 优先级、自定义署名文案、模板真实渲染有/无标记（含"误改白名单常量"回归防线）。
 - 回归：`tests/unit/render` + `tests/unit/domain/test_works_brand_sfi.py` + `tests/unit/cover_engine` 464 passed, 6 skipped；ruff 全绿。
 
-## 7. 后续
+## 7. 后续（首批 4 款落地时的预留项，已在 §8 完成）
 
 若日后要把其它旧风格（`type-monument` / `scroll-head` / `portal-arch` 等）也纳入，需要重复本记录 §4 的绝对定位排查——不能假设"追加进白名单常量就自动生效"，必须先按该风格的标题/hook 坐标写专门的 CSS 覆盖并截图核对，否则会重演飘位 bug。
+
+## 8. 扩展到其余 6 款风格（2026-08-09 同日追加）
+
+产品负责人确认"排除印章/图形因素后继续推进纯文字署名"并拍板 4 款默认开启后，追加把剩余 6 款风格（`cameo-aperture` / `type-monument` / `scroll-head` / `portal-arch` / `horizon-split` / `diptych-seam`）也纳入白名单——`_COVER_OPENING_BRAND_STYLES` 现覆盖 `catalog.py` 里全部 10 款封面风格。
+
+### 8.1 排查方式
+
+按 §7 的告诫，逐款核对：先看该风格 `title`/`hook`/`place` 的现有绝对定位坐标，挑一个不冲突的角落写专门的 CSS 覆盖，再用 `render_html` 生成真实 trip 的预览页 + Python `playwright` 截图核对（未使用 IDE 内置的 playwright-mcp 工具——它的截图保存路径在本机解析异常，改用 `pip install playwright` 已有的 Python SDK 直接控制 headless Chromium，路径完全自控）。
+
+### 8.2 踩坑记录（本轮新增两类）
+
+1. **测试用 CSS 缓存陈旧**：`render_html` 生成的 draft 预览页链接的是 trip 输出目录自带的 `journal.css` 副本，不是 `templates/visual-journal/journal.css` 源文件——第一轮截图全部显示 `position: static`（没生效），排查后发现是没把最新源文件同步过去。修复：截图前先 `Copy-Item` 覆盖一次。**这也回头印证了 §5 的 4 款截图当时应该是同源验证过的（否则不会通过），但提醒以后任何"改 CSS 后截图核对"的流程都要显式检查这一步，不能默认.**
+2. **跟阅读器自带工具栏撞位**：`type-monument` / `horizon-split` / `diptych-seam` 三款最初选了跟 `hook` 同侧的右下角/左下角锚点，结果跟页面自带的 `screenplay-toolbar`（复制文案/长图按钮，固定在右下角约 `x:1076~1268, y:703~784`@1280×800）叠在一起，署名被工具条盖住或看不清。修复：`type-monument`/`diptych-seam` 改成跟 `place` 同侧的左下角锚点；`horizon-split` 保留右侧锚点但把 `bottom` 从贴地抬高到工具条上方的天然留白区（`clamp(100px, 13vh, 120px)`）。
+
+### 8.3 视觉验证（6 款全部通过）
+
+| 风格 | 结果 |
+|---|---|
+| `cameo-aperture` | ✅ 左下角，避开右侧竖排标题与右下角控件区 |
+| `type-monument` | ✅ 左下角，小号署名干净可读（注：本风格镂空巨字对 7 字标题会重叠错位，是跟本次改动无关的既有渲染问题，见 §8.4） |
+| `scroll-head` | ✅ 钉在右侧窄列朱印下方，跟随纸面色调 |
+| `portal-arch` | ✅ hook 正下方居中，跟 hook 同一淡化程度，融入拱窗照片 |
+| `horizon-split` | ✅ 右上（抬高避让工具条），纸面区干净可读 |
+| `diptych-seam` | ✅ 左下角暗色区，跟 place 同侧 |
+
+截图见 `attachments/cover-calligraphy-title-v1-front-cover-identity-line-2026-08-09/`（`cameo-aperture.png` / `type-monument.png` / `scroll-head.png` / `portal-arch.png` / `horizon-split.png` / `diptych-seam.png`）。
+
+### 8.4 顺带发现（不在本记录范围，另行跟踪）
+
+`type-monument`（镂空巨字）风格对 7 字标题「斯里兰卡见闻录」渲染时，`-webkit-line-clamp:3` 的大字号文本出现斜向重叠、字形错位，视觉上比较混乱——这是标题排版本身的既有问题，跟本次署名扩展无关，未在本记录内处理，仅作记录供后续单独排查（该风格设计初衷可能是给 2~4 字短标题用的，长标题的降级/换行策略需要重新评估）。
+
+### 8.5 当前落地状态（更新 §6）
+
+- `_COVER_OPENING_BRAND_STYLES` 现为全部 10 款：`("band-cut", "veil-footer", "contact-stamp", "folio-overlap", "cameo-aperture", "type-monument", "scroll-head", "portal-arch", "horizon-split", "diptych-seam")`。
+- `tests/unit/render/test_cover_opening_identity_line.py` 的默认开启参数化用例扩展到全部 10 款；"白名单外不显示"的回归用例改用不存在的假 style id（因为已经没有真实风格留在白名单外）。
+- 回归：`tests/unit/render/test_cover_opening_identity_line.py` 15 passed。

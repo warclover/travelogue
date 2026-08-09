@@ -29,6 +29,12 @@ _COVER_OPENING_BRAND_STYLES: tuple[str, ...] = (
     "veil-footer",
     "contact-stamp",
     "folio-overlap",
+    "cameo-aperture",
+    "type-monument",
+    "scroll-head",
+    "portal-arch",
+    "horizon-split",
+    "diptych-seam",
 )
 
 

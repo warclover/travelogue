@@ -1,8 +1,11 @@
 """装帧身份线前封回声（D-SFI-13 扩容 / D-CAL-26，2026-08-09）。
 
-复用已有的 ``works_brand`` 署名三态，往 4 款艺术字白名单风格追加第三处渲染位
+复用已有的 ``works_brand`` 署名三态，往全部 10 款封面风格追加第三处渲染位
 （原仅 ``cover-closing__brand`` + ``longshot-boundary-footer__brand`` 两处）。
-4 款风格均已用真实渲染截图核对（见决策记录 §5），产品负责人拍板默认开启。
+首批 4 款（band-cut/veil-footer/contact-stamp/folio-overlap）与扩展的 6 款
+（cameo-aperture/type-monument/scroll-head/portal-arch/horizon-split/
+diptych-seam）均已用真实渲染截图逐个核对（见决策记录 §5、§8），产品负责人
+拍板默认开启。
 """
 
 from __future__ import annotations
@@ -35,12 +38,23 @@ def trip_workspace(tmp_path: Path) -> Path:
 
 @pytest.mark.parametrize(
     "style_id",
-    ["band-cut", "veil-footer", "contact-stamp", "folio-overlap"],
+    [
+        "band-cut",
+        "veil-footer",
+        "contact-stamp",
+        "folio-overlap",
+        "cameo-aperture",
+        "type-monument",
+        "scroll-head",
+        "portal-arch",
+        "horizon-split",
+        "diptych-seam",
+    ],
 )
 def test_show_cover_opening_brand_defaults_on_for_whitelisted_styles(
     trip_workspace, style_id: str
 ) -> None:
-    """4 款已核对风格默认显示（showWorksBrand 默认 True → Travelogue）。"""
+    """全部 10 款已核对风格默认显示（showWorksBrand 默认 True → Travelogue）。"""
     ws, trip = trip_workspace
     trip = copy.deepcopy(trip)
     trip.setdefault("meta", {})["coverOpeningStyle"] = style_id
@@ -49,11 +63,16 @@ def test_show_cover_opening_brand_defaults_on_for_whitelisted_styles(
     assert ctx["worksBrandLine"] == "Travelogue"
 
 
-def test_show_cover_opening_brand_off_for_style_outside_allowlist(trip_workspace) -> None:
-    """未核对过绝对定位布局的旧风格不在白名单里 → 不显示，避免盲开出 bug。"""
+def test_show_cover_opening_brand_off_for_style_outside_allowlist(
+    trip_workspace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """不在白名单里的风格 id 不显示，避免盲开出 bug——10 款已全部核对完，
+    这里用一个不存在的假 style id 撑住回归防线（真实风格目前无人在白名单
+    外）。"""
     ws, trip = trip_workspace
     trip = copy.deepcopy(trip)
-    trip.setdefault("meta", {})["coverOpeningStyle"] = "type-monument"
+    trip.setdefault("meta", {})["coverOpeningStyle"] = "band-cut"
+    monkeypatch.setattr(assemble_module, "_COVER_OPENING_BRAND_STYLES", ("some-other-style",))
     ctx = build_render_context(trip, export_mode="draft", trip_root=ws)
     assert ctx["showCoverOpeningBrand"] is False
 

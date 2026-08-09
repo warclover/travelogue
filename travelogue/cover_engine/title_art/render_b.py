@@ -37,9 +37,19 @@ _MAIN_TEXT_MIN_SIZE_RATIO = 0.14  # 收缩下限，避免过度缩小到不可�
 #: contact-stamp 同理收紧——卡片会在文字四周各加 16% 内边距再旋转 -2°，沿用
 #: 通用 0.86 会让卡片宽度超出 1200px 工作画布、被硬裁出一条直边（旋转卡片
 #: 却带直边缺口，一看就是穿帮），实测见 D-CAL-23 记录。
+#: veil-footer 放宽到 0.94（比通用 0.86 更贴近画布边缘）——W3 盲评唯一一例
+#: 现网 CSS 胜出（b06，见
+#: ``docs/acceptance-records/cover-calligraphy-title-v1-w3-blind-2026-08-08.md``
+#: §「结论」）：7 字长标题触发收缩循环收得比短标题小很多，视觉冲击力打折。
+#: 放宽本风格的最大宽度比让收缩循环少收一档、字号能大一截（实测同一 7 字
+#: 标题 size ≈157→171px，+9%），不影响短标题（本就用不到收缩循环）。未做
+#: 更激进的改动（如拆两行）：产品负责人当时把这个发现定性为"留痕参考，
+#: 样本量 n=1 不足以定性为系统性问题、不建 OQ"，这里只做低风险微调，不做
+#: 结构性重排。
 _MAIN_TEXT_MAX_WIDTH_RATIO_BY_STYLE: dict[str, float] = {
     "band-cut": 0.62,
     "contact-stamp": 0.62,
+    "veil-footer": 0.94,
 }
 
 TEMPLATE_PLAIN = "plain"
