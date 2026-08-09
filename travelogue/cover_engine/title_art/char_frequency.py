@@ -65,6 +65,7 @@ def _common_hanzi() -> frozenset[str]:
 
 
 def _is_han(ch: str) -> bool:
+    """单个字符是否为 CJK 统一汉字（供本模块与 risk_rules 共用）。"""
     return "CJK UNIFIED" in unicodedata.name(ch, "")
 
 

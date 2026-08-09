@@ -196,3 +196,27 @@ def test_placement_presets_folio_overlap_has_primary_and_fallback() -> None:
     assert len(presets) == 2
     assert presets[0] is placement_preset("folio-overlap")  # 主候选永远在前
     assert presets[1] is FALLBACK_PRESETS["folio-overlap"][0]
+
+
+def test_whitelist_registry_rects_resolvable_at_import() -> None:
+    """契约：WHITELIST / FALLBACK 引用的 registry region 在当前 catalog 下可解析。
+
+    防止 catalog 删减 text_safe_regions 后，``import title_art.whitelist`` 在
+    模块顶层构造字典时直接炸（与 fail-open 气质相悖）。
+    """
+    from travelogue.cover_engine.title_art import whitelist as wl
+
+    # 能 import 且 WHITELIST 非空已是最基本信号；再钉死 band-cut / contact-stamp
+    # 与 registry 的索引契约。
+    assert "band-cut" in wl.WHITELIST
+    assert "contact-stamp" in wl.WHITELIST
+    band = get_profile("band-cut").text_safe_regions
+    contact = get_profile("contact-stamp").text_safe_regions
+    assert len(band) >= 1
+    assert len(contact) >= 2
+    assert wl.WHITELIST["band-cut"].rect == {
+        "x": float(band[0]["x"]),
+        "y": float(band[0]["y"]),
+        "w": float(band[0]["w"]),
+        "h": float(band[0]["h"]),
+    }

@@ -30,7 +30,11 @@ from travelogue.cover_engine.title_art.fonts import (
     glyphs_covered,
     pick_font_for_style,
 )
-from travelogue.cover_engine.title_art.models import TitleArtResult, disabled_meta_dict
+from travelogue.cover_engine.title_art.models import (
+    TitleArtResult,
+    disabled_meta_dict,
+    title_art_result_from_meta,
+)
 from travelogue.cover_engine.title_art.ocr_verify import ocr_verify as _default_ocr_verify
 from travelogue.cover_engine.title_art.placement import best_placement, focal_conflict
 from travelogue.cover_engine.title_art.render_b import render_title_art
@@ -181,12 +185,16 @@ def resolve_title_art(
     ocr_verify_enabled: bool = True,
 ) -> TitleArtResult | None:
     """计算并写入 ``trip["meta"]["titleArt"]``；同一 trip 非 force 且已有非
-    stale 结果时跳过重算（避免每次「优化装帧」都重打路线 C API）。
+    stale 结果、且封面 asset 未变时跳过重算（避免每次「优化装帧」都重打路线 C
+    API）。
 
-    返回写入的 :class:`TitleArtResult`；fail-open（非白名单/空标题/字形不
-    覆盖）时写回禁用占位并返回 ``None``。
+    返回写入的 :class:`TitleArtResult`；缓存命中时也返回已有结果（不再用
+    ``None`` 表示「跳过」——``None`` 仅表示 fail-open 未生成）。fail-open
+    （非白名单/空标题/字形不覆盖）时写回禁用占位并返回 ``None``。
     """
     meta = trip.setdefault("meta", {})
+    current_cover_id = str(trip.get("coverAssetId") or "")
+    style_id = str(meta.get("coverOpeningStyle") or "")
     existing = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
     if existing and not force and not existing.get("stale") and existing.get("enabled"):
         # W3：去印章后，旧 inline_seal* 结果必须重算，不能靠缓存一直带着红印。
@@ -200,10 +208,21 @@ def resolve_title_art(
             and cached_template
             and cached_template != TEMPLATE_PLAIN
         )
-        if not legacy_seal and not legacy_non_plain_b:
-            return None
+        # 有 coverAssetId 指纹且与当前封面不一致 → 必须重算（换封面后旧贴纸
+        # 的定位/墨色是按旧照片算的）。缺字段的旧数据兼容放行（展示层另有
+        # 校验；见 assemble._resolve_title_art_src）。
+        cached_cover = str(existing.get("coverAssetId") or "")
+        cover_mismatch = bool(cached_cover) and cached_cover != current_cover_id
+        cached_style = str(existing.get("openingStyleId") or "")
+        style_mismatch = bool(cached_style) and cached_style != style_id
+        if (
+            not legacy_seal
+            and not legacy_non_plain_b
+            and not cover_mismatch
+            and not style_mismatch
+        ):
+            return title_art_result_from_meta(existing)
 
-    style_id = str(meta.get("coverOpeningStyle") or "")
     if not is_whitelisted(style_id):
         meta["titleArt"] = disabled_meta_dict()
         return None
@@ -382,6 +401,7 @@ def resolve_title_art(
                             main_color=contrast.color_hex,
                             seal_color="#B03A2E",
                             opening_style_id=style_id,
+                            cover_asset_id=current_cover_id,
                             position=placement_pos,
                             asset_path=asset_path,
                             source_title=text.main,
@@ -434,6 +454,7 @@ def resolve_title_art(
         main_color=contrast.color_hex,
         seal_color="#B03A2E",
         opening_style_id=style_id,
+        cover_asset_id=current_cover_id,
         position=placement_pos,
         asset_path=asset_path,
         source_title=text.main,
@@ -451,7 +472,13 @@ def _png_bytes(img: Image.Image) -> bytes:
 
 
 def mark_title_art_stale(trip: dict) -> None:
-    """封面照片/标题/coverOpeningStyle 变更后调用，下一次 resolve 强制重算。"""
+    """标题 / coverOpeningStyle / 封面照片变更后调用，下一次 resolve 强制重算。
+
+    封面变更的**根因防护**不依赖本函数被每个写点调用：``meta.titleArt.coverAssetId``
+    会在生成时落库，展示层（``assemble._resolve_title_art_src``）与缓存短路
+    都会比对当前 ``trip.coverAssetId``。本函数仍应在已知写点主动调用，让
+    ``stale=true`` 状态对用户/调试可见。
+    """
     meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else None
     if not isinstance(meta, dict):
         return

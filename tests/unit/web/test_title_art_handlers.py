@@ -156,3 +156,34 @@ def test_rerender_failure_returns_500(monkeypatch: pytest.MonkeyPatch, tmp_path)
     h = _H({})
     mod.handle_post_resolve_title_art(h, "demo-title-art")
     assert h.status == 500
+
+
+def test_resolve_runs_outside_cas_mutator(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """付费/耗时 resolve 必须在 TripService.update mutator 之外执行。"""
+    mod = _mount(monkeypatch, tmp_path)
+    order: list[str] = []
+
+    def _fake_resolve(_trip, **_kwargs):
+        order.append("resolve")
+        return TitleArtResult(enabled=True, engine="clean-pipeline-v1", asset_path="x.png")
+
+    class _Svc:
+        def update(self, _path, mutator, **_kwargs):
+            order.append("update")
+            return mutator({"meta": {}})
+
+    class _Ctx:
+        cfg = _Cfg(route_c_enabled=False)
+
+        def trip_service(self):
+            return _Svc()
+
+    monkeypatch.setattr(mod, "resolve_title_art", _fake_resolve)
+    monkeypatch.setattr(mod, "studio_ctx", lambda *_a, **_k: _Ctx())
+    h = _H({})
+    mod.handle_post_resolve_title_art(h, "demo-title-art")
+    assert order == ["resolve", "update"]
+    assert h.status == 200
+    assert h.resp_body["enabled"] is True

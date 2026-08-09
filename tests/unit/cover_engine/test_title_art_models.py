@@ -34,14 +34,34 @@ def test_route_b_result_serialization_omits_route_c_fields() -> None:
         main_rendered="拾光",
         asset_path="trip-derived/title-art/abc.png",
         opening_style_id="veil-footer",
+        cover_asset_id="asset-1",
     )
     d = result.to_meta_dict()
     assert d["engine"] == ENGINE_ROUTE_B
     assert d["enabled"] is True
     assert d["assetPath"] == "trip-derived/title-art/abc.png"
+    assert d["coverAssetId"] == "asset-1"
     assert "styleId" not in d
     assert "ocrVerified" not in d
     assert "fallbackFrom" not in d
+
+
+def test_title_art_result_from_meta_roundtrip() -> None:
+    from travelogue.cover_engine.title_art.models import title_art_result_from_meta
+
+    original = TitleArtResult(
+        enabled=True,
+        engine=ENGINE_ROUTE_B,
+        main_rendered="拾光",
+        opening_style_id="veil-footer",
+        cover_asset_id="a1",
+        asset_path="x.png",
+    )
+    restored = title_art_result_from_meta(original.to_meta_dict())
+    assert restored.enabled is True
+    assert restored.cover_asset_id == "a1"
+    assert restored.asset_path == "x.png"
+    assert restored.opening_style_id == "veil-footer"
 
 
 def test_route_b_result_with_fallback_from_still_records_it() -> None:

@@ -42,6 +42,9 @@ _POLL_INTERVAL_SEC = 2.0
 _POLL_MAX_ATTEMPTS = 30
 _REQUEST_TIMEOUT_SEC = 20
 _API_KEY_ENV = "DASHSCOPE_API_KEY"
+#: 下载原图硬上限（纵深防御：厂商 URL 被异常内容替换时不全量灌内存）。
+_DOWNLOAD_MAX_BYTES = 20 * 1024 * 1024
+_ALLOWED_DOWNLOAD_SCHEMES = frozenset({"https"})
 
 
 class RouteCFailure(RuntimeError):
@@ -127,9 +130,43 @@ def _poll_task(task_id: str) -> dict:
 
 
 def _download_image(url: str) -> Image.Image:
+    from urllib.parse import urlparse
+
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in _ALLOWED_DOWNLOAD_SCHEMES:
+        raise RouteCFailure(
+            "E_CAL_C_DOWNLOAD",
+            detail=f"refusing non-https url scheme={parsed.scheme!r}",
+        )
     try:
         with urllib.request.urlopen(url, timeout=_REQUEST_TIMEOUT_SEC) as resp:
-            raw = resp.read()
+            # 先看 Content-Length（若有），再流式读并硬截断。
+            content_length = resp.headers.get("Content-Length")
+            if content_length is not None:
+                try:
+                    if int(content_length) > _DOWNLOAD_MAX_BYTES:
+                        raise RouteCFailure(
+                            "E_CAL_C_DOWNLOAD",
+                            detail=f"Content-Length {content_length} exceeds cap",
+                        )
+                except ValueError:
+                    pass
+            chunks: list[bytes] = []
+            total = 0
+            while True:
+                chunk = resp.read(64 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > _DOWNLOAD_MAX_BYTES:
+                    raise RouteCFailure(
+                        "E_CAL_C_DOWNLOAD",
+                        detail=f"body exceeds {_DOWNLOAD_MAX_BYTES} bytes",
+                    )
+                chunks.append(chunk)
+            raw = b"".join(chunks)
+    except RouteCFailure:
+        raise
     except urllib.error.URLError as exc:
         raise RouteCFailure("E_CAL_C_DOWNLOAD", detail=str(exc)) from exc
     return Image.open(io.BytesIO(raw)).convert("RGBA")

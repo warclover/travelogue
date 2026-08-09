@@ -122,6 +122,32 @@ def test_apply_joint_pick_locks() -> None:
     assert trip["curation"]["coverStyleExplain"]["source"] == explain.source
 
 
+def test_apply_joint_pick_marks_title_art_stale_when_cover_changes() -> None:
+    """换封面照片时主动置 titleArt.stale（展示层另有 coverAssetId 指纹比对）。"""
+    trip = _trip([_asset("a1", 0.5, 0.4), _asset("a2", 0.55, 0.45)])
+    trip["exportLayout"] = "web"
+    trip["coverAssetId"] = "a1"
+    trip["meta"]["titleArt"] = {
+        "enabled": True,
+        "stale": False,
+        "coverAssetId": "a1",
+        "assetPath": "x.png",
+    }
+    explain = CoverJointExplain(
+        source="test",
+        style_id="veil-footer",
+        asset_id="a2",
+        joint=1.0,
+        quality=1.0,
+        fit=1.0,
+        avoid_penalty=0.0,
+        low_confidence=False,
+    )
+    apply_joint_pick(trip, explain, lock=True, layout="web")
+    assert trip["coverAssetId"] == "a2"
+    assert trip["meta"]["titleArt"]["stale"] is True
+
+
 def test_sync_trip_covers_respects_lock() -> None:
     assets = [
         _asset("a1", 0.5, 0.3, score_hint=2),

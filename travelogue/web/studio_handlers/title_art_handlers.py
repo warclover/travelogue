@@ -19,10 +19,15 @@ W1 落地路线 B/C 引擎与 CLI ``title-art`` 命令后，Studio 里一直没�
 - 未知异常按 D-CAL-16 fail-open 原则处理：绝不 500，写回禁用占位并
   200 返回（跟引擎自身「非白名单/空标题/字形不覆盖」的 fail-open 语义
   一致），前端只需要判断 ``enabled`` 字段，不需要特殊处理错误态。
+- **付费/耗时副作用在 CAS 之外执行**：``resolve_title_art``（含路线 C
+  网络轮询与写 PNG）先在 trip 快照上算完，``TripService.update`` 的
+  mutator 只写入已算好的 ``meta.titleArt``。否则：① 持锁期间阻塞可达
+  分钟级，卡住同 trip 其它写；② CAS 重放会重复打付费 API。
 """
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import logging
 
@@ -59,7 +64,7 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
         return
-    trip_dir, _trip0 = loaded
+    trip_dir, trip0 = loaded
     trip_json = trip_dir / "trip.json"
     ctx = studio_ctx(handler)
     route_c_allowed = bool(ctx.cfg.title_art.route_c_enabled)
@@ -84,27 +89,49 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
         out_path.write_bytes(data)
         return str(art_dir.relative_to(trip_dir) / out_path.name).replace("\\", "/")
 
-    def mutator(t: dict):
-        try:
-            return resolve_title_art(
-                t,
-                resolve_asset_path=_resolve_asset_path,
-                write_png=_write_png,
-                route_c_enabled=route_c_enabled,
-                route_c_style_id=style_id,
-                force=force,
-                model_name=model_name,
-                prompt_version=prompt_version,
-                route_c_max_attempts=max_attempts,
-                ocr_verify_enabled=ocr_enabled,
-            )
-        except Exception:
-            _log.exception("title-art resolve failed for trip %s", trip_id)
-            meta = t.setdefault("meta", {})
-            meta["titleArt"] = disabled_meta_dict(reason="E_TITLE_ART_UNEXPECTED")
-            return None
+    # 在 CAS / 跨进程锁之外跑耗时计算（含 Route C 网络）。mutator 只写字典。
+    trip_work = copy.deepcopy(trip0)
+    result = None
+    try:
+        result = resolve_title_art(
+            trip_work,
+            resolve_asset_path=_resolve_asset_path,
+            write_png=_write_png,
+            route_c_enabled=route_c_enabled,
+            route_c_style_id=style_id,
+            force=force,
+            model_name=model_name,
+            prompt_version=prompt_version,
+            route_c_max_attempts=max_attempts,
+            ocr_verify_enabled=ocr_enabled,
+        )
+    except Exception:
+        _log.exception("title-art resolve failed for trip %s", trip_id)
+        trip_work.setdefault("meta", {})["titleArt"] = disabled_meta_dict(
+            reason="E_TITLE_ART_UNEXPECTED"
+        )
+        result = None
 
-    ok, result = trip_update_or_respond(handler, ctx.trip_service(), trip_json, mutator)
+    if result is not None:
+        title_art_payload = result.to_meta_dict()
+    else:
+        title_art_payload = (
+            trip_work.get("meta", {}).get("titleArt")
+            if isinstance(trip_work.get("meta"), dict)
+            else None
+        )
+        if not isinstance(title_art_payload, dict):
+            title_art_payload = disabled_meta_dict(reason="E_TITLE_ART_UNEXPECTED")
+
+    def mutator(t: dict):
+        meta = t.setdefault("meta", {})
+        if not isinstance(meta, dict):
+            meta = {}
+            t["meta"] = meta
+        meta["titleArt"] = copy.deepcopy(title_art_payload)
+        return result
+
+    ok, _persisted = trip_update_or_respond(handler, ctx.trip_service(), trip_json, mutator)
     if not ok:
         return
     if not _rerender(trip_json):

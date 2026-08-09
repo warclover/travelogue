@@ -12,16 +12,12 @@
 
 from __future__ import annotations
 
-import unicodedata
+from travelogue.cover_engine.title_art.char_frequency import _is_han
 
 #: 明确会触发「标点被吞 / 标点难生成」风险的字符（中英文常见标题标点）。
 _RISKY_PUNCTUATION = frozenset(
     "·…—–-—～~!！?？,，.。:：;；'\"“”‘’（）()【】[]《》<>/\\|@#*&"
 )
-
-
-def _is_han(ch: str) -> bool:
-    return "CJK UNIFIED" in unicodedata.name(ch, "")
 
 
 def title_has_risky_punctuation(text: str) -> bool:

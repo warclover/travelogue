@@ -199,12 +199,11 @@ def cmd_title_art(
 
     persist_trip_snapshot(svc, trip_path, trip)
     if result is None:
-        title_art = (trip.get("meta") or {}).get("titleArt") or {}
-        if title_art.get("enabled"):
-            typer.echo("OK title-art · 已有有效结果，未重算（加 --force 强制刷新）")
-        else:
-            typer.echo("OK title-art · 未生成（非白名单 openingStyle / 标题为空 / 字形不覆盖，已 fail-open）")
+        typer.echo(
+            "OK title-art · 未生成（非白名单 openingStyle / 标题为空 / 字形不覆盖，已 fail-open）"
+        )
         return
+    # 缓存命中（非 force）时引擎仍返回已有结果，但不会改写 trip / 不写新 PNG。
     engine_label = "路线C" if result.engine == "diffusion-fixed-prompt-v1" else "路线B"
     typer.echo(f"OK title-art · {engine_label} · {result.asset_path}")
     if result.fallback_from:

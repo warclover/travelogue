@@ -49,9 +49,17 @@ def test_generate_raw_unknown_style_raises() -> None:
 class _FakeResponse:
     def __init__(self, payload: bytes):
         self._payload = payload
+        self._offset = 0
+        self.headers = {}
 
-    def read(self) -> bytes:
-        return self._payload
+    def read(self, n: int = -1) -> bytes:
+        if n is None or n < 0:
+            chunk = self._payload[self._offset :]
+            self._offset = len(self._payload)
+            return chunk
+        chunk = self._payload[self._offset : self._offset + n]
+        self._offset += len(chunk)
+        return chunk
 
     def __enter__(self):
         return self
@@ -132,7 +140,7 @@ def test_generate_raw_success_downloads_image(monkeypatch) -> None:
             "output": {
                 "task_status": "SUCCEEDED",
                 "results": [
-                    {"url": "http://fake/img.png", "actual_prompt": "毛笔字·拾光"}
+                    {"url": "https://fake/img.png", "actual_prompt": "毛笔字·拾光"}
                 ],
             }
         }
@@ -155,3 +163,32 @@ def test_generate_raw_success_downloads_image(monkeypatch) -> None:
     assert result.style.style_id == "cascade-seal"
     assert result.image.size == (8, 8)
     assert "拾光" in result.actual_prompt
+
+
+def test_download_image_rejects_non_https_scheme() -> None:
+    with pytest.raises(RouteCFailure) as exc:
+        route_c._download_image("http://evil.example/img.png")
+    assert exc.value.reason == "E_CAL_C_DOWNLOAD"
+    assert "non-https" in exc.value.detail
+
+
+def test_download_image_rejects_oversized_content_length(monkeypatch) -> None:
+    class _Huge:
+        headers = {"Content-Length": str(route_c._DOWNLOAD_MAX_BYTES + 1)}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_a):
+            return False
+
+        def read(self, *_a, **_k):
+            return b""
+
+    monkeypatch.setattr(
+        route_c.urllib.request, "urlopen", lambda *_a, **_k: _Huge()
+    )
+    with pytest.raises(RouteCFailure) as exc:
+        route_c._download_image("https://cdn.example/huge.png")
+    assert exc.value.reason == "E_CAL_C_DOWNLOAD"
+    assert "Content-Length" in exc.value.detail

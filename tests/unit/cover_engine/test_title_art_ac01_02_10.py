@@ -65,6 +65,7 @@ def test_ac_cal_01_enabled_whitelisted_title_art_overlays() -> None:
             "stale": False,
             "engine": "clean-pipeline-v1",
             "openingStyleId": "veil-footer",
+            "coverAssetId": "a1",
             "assetPath": "trip-derived/title-art/demo.png",
             "position": {"x": 0.5, "y": 0.25},
         }
@@ -76,6 +77,40 @@ def test_ac_cal_01_enabled_whitelisted_title_art_overlays() -> None:
     assert y == "25.00%"
     assert ATTR_BASE in attr
     assert ATTR_ROUTE_B in attr
+
+
+def test_resolve_title_art_src_hides_when_cover_asset_mismatches() -> None:
+    """换封面后旧贴纸不叠加（coverAssetId 指纹比对）。"""
+    trip = _minimal_trip(
+        title_art={
+            "enabled": True,
+            "stale": False,
+            "openingStyleId": "veil-footer",
+            "coverAssetId": "old-cover",
+            "assetPath": "trip-derived/title-art/x.png",
+            "position": {"x": 0.5, "y": 0.25},
+        }
+    )
+    # _minimal_trip 的 coverAssetId 是 a1，与 old-cover 不一致
+    src, has, *_ = _resolve_title_art_src(trip, "veil-footer")
+    assert has is False
+    assert src is None
+
+
+def test_resolve_title_art_src_legacy_without_cover_fingerprint_still_shows() -> None:
+    """缺 coverAssetId 的历史数据兼容放行。"""
+    trip = _minimal_trip(
+        title_art={
+            "enabled": True,
+            "stale": False,
+            "openingStyleId": "veil-footer",
+            "assetPath": "trip-derived/title-art/legacy.png",
+            "position": {"x": 0.5, "y": 0.25},
+        }
+    )
+    src, has, *_ = _resolve_title_art_src(trip, "veil-footer")
+    assert has is True
+    assert src == "trip-derived/title-art/legacy.png"
 
 
 def test_ac_cal_02_clean_pipeline_matches_golden_fixture() -> None:

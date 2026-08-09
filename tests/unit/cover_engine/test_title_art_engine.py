@@ -110,14 +110,44 @@ def test_existing_non_stale_result_skips_recompute_without_force() -> None:
                 "assetPath": "x.png",
                 "engine": "clean-pipeline-v1",
                 "template": "plain",
+                "openingStyleId": "veil-footer",
             },
         }
     }
     write_png, written = _write_png_recorder()
     result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
-    assert result is None
+    # 缓存命中返回已有结果（不再用 None 表示跳过）；不写新 PNG。
+    assert result is not None
+    assert result.asset_path == "x.png"
     assert written == []
     assert trip["meta"]["titleArt"]["assetPath"] == "x.png"  # 未被覆盖
+
+
+def test_cover_asset_id_mismatch_forces_recompute_without_force() -> None:
+    """换封面后即使 enabled+非 stale，有指纹不一致也必须重算。"""
+    trip = {
+        "coverAssetId": "asset-new",
+        "meta": {
+            "title": "拾光",
+            "coverOpeningStyle": "veil-footer",
+            "titleArt": {
+                "version": 1,
+                "enabled": True,
+                "stale": False,
+                "assetPath": "old.png",
+                "engine": "clean-pipeline-v1",
+                "template": "plain",
+                "openingStyleId": "veil-footer",
+                "coverAssetId": "asset-old",
+            },
+        },
+    }
+    write_png, written = _write_png_recorder()
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+    assert result is not None
+    assert len(written) == 1
+    assert trip["meta"]["titleArt"]["coverAssetId"] == "asset-new"
+    assert trip["meta"]["titleArt"]["assetPath"] != "old.png"
 
 
 def test_legacy_seal_template_recomputes_to_plain_without_force() -> None:

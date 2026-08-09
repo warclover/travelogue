@@ -21,9 +21,9 @@ _TITLE_ART_FALLBACK_Y = "25%"
 
 #: 装帧身份线前封回声（D-CAL-26 / D-SFI-13 扩容，2026-08-09）：署名三态原仅
 #: 驱动 cover-closing__brand + longshot-boundary-footer__brand 两处；这里新增
-#: 第三处渲染位。4 款艺术字白名单风格已用真实渲染截图逐个核对（band-cut /
-#: veil-footer / contact-stamp / folio-overlap，见决策记录 §5），产品负责人
-#: 拍板默认开启。风格外（type-monument 等未核对布局的旧风格）仍不显示。
+#: 第三处渲染位。**全部 10 款**封面风格已用真实渲染截图逐个核对后默认开启
+#: （首批 4 款见决策记录 §5；扩展 6 款见 §8），不再保留「风格外不显示」的
+#: 过渡白名单语义——元组即全量 catalog 风格 id。
 _COVER_OPENING_BRAND_STYLES: tuple[str, ...] = (
     "band-cut",
     "veil-footer",
@@ -70,6 +70,12 @@ def _resolve_title_art_src(
     if not title_art.get("enabled") or title_art.get("stale"):
         return empty
     if str(title_art.get("openingStyleId") or "") != opening_style_id:
+        return empty
+    # 换封面后旧贴纸的定位/墨色按旧照片算——有指纹且不一致则不叠加。
+    # 缺 coverAssetId 的旧数据兼容放行（生成时未落库的历史结果）。
+    cached_cover = str(title_art.get("coverAssetId") or "")
+    current_cover = str(trip.get("coverAssetId") or "")
+    if cached_cover and cached_cover != current_cover:
         return empty
     asset_path = str(title_art.get("assetPath") or "").strip()
     if not asset_path:

@@ -334,6 +334,7 @@ def apply_joint_pick(
     """Write cover + style + explain; optionally set coverJointLocked."""
     meta = trip.setdefault("meta", {})
     curation = trip.setdefault("curation", {})
+    prev_cover_id = str(trip.get("coverAssetId") or "")
 
     if explain.style_id and is_assignable(explain.style_id):
         meta["coverOpeningStyle"] = explain.style_id
@@ -355,6 +356,15 @@ def apply_joint_pick(
             # Keep mobile primary if present; always set web slot.
             if not trip.get("coverAssetId"):
                 trip["coverAssetId"] = asset_id
+
+    new_cover_id = str(trip.get("coverAssetId") or "")
+    if new_cover_id and new_cover_id != prev_cover_id:
+        # 换了封面照片：title-art 贴纸的定位/墨色按旧照片算，必须过期。
+        # 展示层另有 coverAssetId 指纹比对作根因防护；这里主动置 stale 让
+        # 状态对用户/调试可见（见 engine.mark_title_art_stale 文档）。
+        from travelogue.cover_engine.title_art.engine import mark_title_art_stale
+
+        mark_title_art_stale(trip)
 
     secondary = (explain.secondary_asset_id or "").strip()
     if explain.style_id == "diptych-seam" and secondary and secondary != asset_id:
