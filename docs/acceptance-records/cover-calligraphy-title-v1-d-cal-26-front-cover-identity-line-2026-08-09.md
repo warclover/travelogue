@@ -89,6 +89,36 @@ D-SFI-13 原文（`PRD-SHARE-FACE-INTEGRITY-V1.md` §3.7）：
 
 `type-monument`（镂空巨字）风格对 7 字标题「斯里兰卡见闻录」渲染时，`-webkit-line-clamp:3` 的大字号文本出现斜向重叠、字形错位，视觉上比较混乱——这是标题排版本身的既有问题，跟本次署名扩展无关，未在本记录内处理，仅作记录供后续单独排查（该风格设计初衷可能是给 2~4 字短标题用的，长标题的降级/换行策略需要重新评估）。
 
+### 8.6 §8.4 跟进修复（2026-08-09 同日追加）
+
+产品负责人选中"修 type-monument 长标题重叠错位"作为下一步，当日一并完成。
+
+**根因**：`--cover-monument-title-size: min(25vw, 45vh)` 配 `line-height: 0.88` 是给 2~4 字单行巨字设计的尺寸——数值本身不随标题字数变化。字数一多，`-webkit-line-clamp:3` 会把文字换到 2~3 行，但 0.88 的行高比 1 更紧，配上 `font-weight:900` 的粗笔画在纵向本就有溢出，换行后相邻两行的笔画会真的视觉重叠，不是渲染引擎的 bug，是"巨字尺寸没有随标题变长收敛"这一步没做。
+
+**修复**（低风险，纯 CSS + 一个新的字数分档函数，不改既有短标题效果）：
+
+1. `travelogue/render/cover_opening.py` 新增 `resolve_monument_title_layout(title)`：≤4 字 `compact`（原尺寸不变）／5~7 字 `wrapped`／≥8 字 `wrapped-long`。
+2. `travelogue/render/assemble.py` context 新增 `coverMonumentTitleLayout` 字段；`templates/visual-journal/partials/cover-opening.hbs` 的 `<section>` 上追加 `data-monument-title-layout="{{coverMonumentTitleLayout}}"`。
+3. `templates/visual-journal/journal.css`：`wrapped` 档降到 `min(15vw, 27vh)` + `line-height:1.08`；`wrapped-long` 档降到 `min(10vw, 18vh)` + `line-height:1.26`（10 字标题实测仍需要比 `wrapped` 更松的行高才能完全消除重叠，中途从 1.14 调到 1.26 才干净）。
+
+**验证**：用同一 demo 标题「斯里兰卡见闻录」（7 字，`wrapped` 档）+ 2 字短标题（`compact` 档，确认不受影响）+ 10 字标题（`wrapped-long` 档）分别渲染截图核对。修复前后对比：
+
+![type-monument 长标题重叠修复前后对比](attachments/cover-calligraphy-title-v1-front-cover-identity-line-2026-08-09/monument-overlap-fix-before-after.png)
+
+左：修复前（真实 demo trip 截图，7 字标题斜向重叠错位）；右：修复后（同一标题，换行清晰无重叠）。
+
+短标题（`compact` 档）确认不受影响：
+
+![type-monument 短标题（compact 档）不受影响](attachments/cover-calligraphy-title-v1-front-cover-identity-line-2026-08-09/monument-fix-compact-tier.png)
+
+10 字长标题（`wrapped-long` 档）：
+
+![type-monument 长标题（wrapped-long 档）](attachments/cover-calligraphy-title-v1-front-cover-identity-line-2026-08-09/monument-fix-wrapped-long-tier.png)
+
+**测试**：`tests/unit/curation/test_cover_styles_v5.py` 新增 `test_resolve_monument_title_layout_tiers`（分档边界值）、`test_build_render_context_monument_title_layout_tiers`（context 接线）、`test_cover_styles_v5_journal_css_tokens` 补充两个 CSS token 断言。
+
+**影响范围**：仅 `type-monument` 一款风格；只有当标题 ≥5 字时才会触发降尺寸分支，≤4 字的既有短标题渲染结果完全不变（`compact` 档复用原 CSS 规则，未新增覆盖）。
+
 ### 8.5 当前落地状态（更新 §6）
 
 - `_COVER_OPENING_BRAND_STYLES` 现为全部 10 款：`("band-cut", "veil-footer", "contact-stamp", "folio-overlap", "cameo-aperture", "type-monument", "scroll-head", "portal-arch", "horizon-split", "diptych-seam")`。

@@ -90,6 +90,29 @@ def resolve_split_mat_title_layout(title: str) -> str:
     return "horizontal"
 
 
+def resolve_monument_title_layout(title: str) -> str:
+    """type-monument 镂空巨字尺寸档：compact | wrapped | wrapped-long。
+
+    起因：`--cover-monument-title-size: min(25vw, 45vh)` 是给 2~4 字短标题
+    设计的巨字尺寸（单行，`line-height:0.88` 紧排出"石刻碑文"的厚重感）。
+    该尺寸对更长的标题原样使用时，`-webkit-line-clamp:3` 会把文字换到 2~3
+    行，但 0.88 的行高比 1 更紧，大字重笔画又有纵向溢出（尤其粗体/毛笔感
+    字形），换行后相邻两行会真的视觉重叠——不是排版 bug，是"巨字尺寸没有
+    随标题变长收敛"这件事本身没做（详见 D-CAL-26 附带发现 §8.4）。
+
+    分档给 CSS 用（不做完全动态度量，避免引入 JS 运行时测量）：短标题维持
+    原尺寸单行效果；中/长标题按经验档降字号 + 放宽行高，用真实标题渲染
+    截图核对过（见决策记录）。
+    """
+    text = (title or "").strip()
+    n = len(text)
+    if n <= 4:
+        return "compact"
+    if n <= 7:
+        return "wrapped"
+    return "wrapped-long"
+
+
 def resolve_show_cover_place(
     *, cover_place: str, meta_title: str, raw_meta_title: str
 ) -> bool:

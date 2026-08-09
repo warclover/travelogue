@@ -1585,6 +1585,24 @@ body.longshot-capturing .cover-opening .trip-meta {
     text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
   }
 
+  /* type-monument 长标题换行重叠修复（附带发现，2026-08-09，见 D-CAL-26
+     决策记录 §8.4）：`--cover-monument-title-size: min(25vw, 45vh)` 配
+     `line-height: 0.88` 是给 2~4 字单行巨字设计的——`-webkit-line-clamp:3`
+     让更长的标题换到 2~3 行时，紧行高 + 大字重笔画纵向溢出会让相邻行真的
+     视觉重叠。按 ``resolve_monument_title_layout`` 算出的字数档降字号 +
+     放宽行高（真实标题渲染截图核对，见决策记录）。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped"] .cover-opening__title,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped"] .cover-opening__title {
+    font-size: min(15vw, 27vh);
+    line-height: 1.08;
+  }
+
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped-long"] .cover-opening__title,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped-long"] .cover-opening__title {
+    font-size: min(10vw, 18vh);
+    line-height: 1.26;
+  }
+
   html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"].cover-opening--has-src .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"].cover-opening--has-src .cover-opening__title {
     color: transparent;

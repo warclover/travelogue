@@ -127,6 +127,7 @@ def build_render_context(
         cover_focal_point,
         cover_use_contain_fit,
         resolve_cover_subtitle,
+        resolve_monument_title_layout,
         resolve_show_cover_place,
         resolve_split_mat_title_layout,
         show_hook_on_cover,
@@ -520,6 +521,7 @@ def build_render_context(
         "hasHook": bool(hook),
         "coverOpeningStyle": resolved_opening_style,
         "coverTitleLayout": resolve_split_mat_title_layout(meta_title),
+        "coverMonumentTitleLayout": resolve_monument_title_layout(meta_title),
         "hasTitleArt": has_title_art,
         # veil-footer / band-cut：艺术字进 panel 文档流，由原生纸签/雾带托住；
         # 其它风格仍绝对定位。
