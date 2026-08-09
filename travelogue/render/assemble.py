@@ -19,6 +19,18 @@ from travelogue.render.surface import resolve_surface_context
 _TITLE_ART_FALLBACK_X = "50%"
 _TITLE_ART_FALLBACK_Y = "25%"
 
+#: 装帧身份线前封回声（D-CAL-26 / D-SFI-13 扩容，2026-08-09）：署名三态原仅
+#: 驱动 cover-closing__brand + longshot-boundary-footer__brand 两处；这里新增
+#: 第三处渲染位。4 款艺术字白名单风格已用真实渲染截图逐个核对（band-cut /
+#: veil-footer / contact-stamp / folio-overlap，见决策记录 §5），产品负责人
+#: 拍板默认开启。风格外（type-monument 等未核对布局的旧风格）仍不显示。
+_COVER_OPENING_BRAND_STYLES: tuple[str, ...] = (
+    "band-cut",
+    "veil-footer",
+    "contact-stamp",
+    "folio-overlap",
+)
+
 
 def _resolve_title_art_src(
     trip: dict, opening_style_id: str
@@ -546,6 +558,10 @@ def build_render_context(
         "showWorksBrand": works_brand["showWorksBrand"],
         "worksBrandLine": works_brand["worksBrandLine"],
         "worksBrandCustom": works_brand["worksBrandCustom"],
+        "showCoverOpeningBrand": (
+            bool(works_brand["showWorksBrand"])
+            and resolved_opening_style in _COVER_OPENING_BRAND_STYLES
+        ),
         "longshotDensity": density,
         "compactLongshot": density == "compact" and surface.is_longshot_surface,
         "hasMomentScreen": False,

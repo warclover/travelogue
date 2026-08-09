@@ -436,6 +436,22 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   display: none;
 }
 
+/* 装帧身份线前封回声试点（D-SFI-13 扩容，PRD-COVER-CALLIGRAPHY-TITLE-V1
+   附注 2026-08-09）：跟 .cover-closing__brand 同一套字号/字重，弱化到不跟
+   标题/副标题抢注意力；具体定位按风格逐个核对后在下方补 per-style 规则。 */
+.cover-opening__brand {
+  margin: 0.4rem 0 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.cover-opening__brand--custom {
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
 .cover-opening__subtitle {
   margin: 0.35rem 0 0;
   font-size: clamp(0.85rem, 1.6vw, 1.05rem);
@@ -622,6 +638,20 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-t
   left: clamp(36px, 5.4vw, 64px);
   bottom: clamp(32px, 5vh, 52px);
   margin: 0;
+}
+
+/* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：只在贴纸开启（hook 也走
+   绝对定位）时跟着切绝对定位，钉在 hook 下方留白区——hook 从 bottom
+   32~52px 往上长，这里的 10~16px 保证不管 hook 几行都不会撞上。贴纸关闭
+   （hook 走文档流）时 .cover-opening__brand 保持基础规则的文档流，自然排
+   在 hook 之后，不需要额外规则。 */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__brand,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__brand {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  bottom: clamp(10px, 1.8vh, 16px);
+  margin: 0;
+  color: rgba(245, 243, 240, 0.5);
 }
 
 .cover-opening__hook {
@@ -1199,6 +1229,17 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: block;
     -webkit-line-clamp: 3;
     overflow: hidden;
+  }
+
+  /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：钉在纸面栏 hook 下方
+     留白区，hook 最多 3 行仍从 bottom 40~56px 往上长，10~22px 留白够用。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 3.2vw, 40px);
+    bottom: clamp(10px, 2vh, 22px);
+    margin: 0;
+    color: rgba(111, 106, 99, 0.7);
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__explain-line,
@@ -2055,6 +2096,18 @@ body.longshot-capturing .cover-opening .trip-meta {
     z-index: 6;
     display: block;
     -webkit-line-clamp: 1;
+  }
+
+  /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：钉在原生标题正下方
+     （同一 left 锚点），避开 archive/hook 占用的右下角列。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(34px, 5vw, 62px);
+    bottom: clamp(8px, 1.5vh, 14px);
+    margin: 0;
+    color: rgba(255, 255, 255, 0.4);
+    z-index: 6;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__hook,

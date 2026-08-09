@@ -67,5 +67,12 @@
     {{#if hasCoverArchiveStrip}}
     <p class="cover-opening__archive" data-block="cover-archive">{{coverArchiveStrip}}</p>
     {{/if}}
+    {{#if showCoverOpeningBrand}}
+    {{! D-SFI-13 扩容（CAL 分支「装帧身份线」，2026-08-09）：署名三态原仅驱动
+      cover-closing__brand + longshot-boundary-footer__brand 两处；这里加第三处
+      前封回声，跟后封/长图脚保持视觉呼应。默认关（showCoverOpeningBrand 需
+      style 白名单 + 未来单独打开），先只接线，视觉验证后再决定放开哪些风格。}}
+    <p class="cover-opening__brand{{#if worksBrandCustom}} cover-opening__brand--custom{{/if}}" data-block="cover-opening-brand">{{worksBrandLine}}</p>
+    {{/if}}
   </div>
 </section>

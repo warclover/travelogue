@@ -271,7 +271,7 @@
 |------|------|
 | **D-SFI-11** | 长图「紧凑」档。**前置**：用 ≥1 本**真实照片册**（非 demo-album 合成占位）重放归因表后方可编码。杠杆：**章头带瘦身**（首章全头，第 2 章起 ≤48px 薄 divider；日期与章名同义时二选一）+ **封面文案去重**（题名/日期各一次）+ **moment 复用屏折叠**（LTN B2 第②级：代表图 + N 徽标）。屏缝 4px **保持不动**。须进 B3 双预览；不得跳过 B2 保组感。切换密度档走「更新版面」流程。 |
 | **D-SFI-12** | 清晰度档位标注须与真实产物换算一致：写清「输出宽 = 逻辑宽 × scale」或改造为真 1080/1440；禁止上线即失信的参数 |
-| **D-SFI-13** | 署名三态（默认 / 自定义 ≤14 全角单行 / 不显示）为**册级唯一字段**，同时驱动 `cover-closing__brand` 与 `longshot-boundary-footer__brand`，两处格式统一。自定义取消 `uppercase`。关闭态辑封保留 stats 行作版脚锚。系个人诉求，非机构接口 |
+| **D-SFI-13** | 署名三态（默认 / 自定义 ≤14 全角单行 / 不显示）为**册级唯一字段**，同时驱动 `cover-closing__brand` 与 `longshot-boundary-footer__brand`，两处格式统一。自定义取消 `uppercase`。关闭态辑封保留 stats 行作版脚锚。系个人诉求，非机构接口。**2026-08-09 扩容（跨主题，见 CAL 分支 [D-CAL-26](./acceptance-records/cover-calligraphy-title-v1-d-cal-26-front-cover-identity-line-2026-08-09.md)）**：新增第三处渲染位 `cover-opening__brand`（前封），「两处」实质变为「三处」，4 款艺术字白名单风格默认开启；`assemble.py::_COVER_OPENING_BRAND_STYLES` 限定这 4 款，白名单外旧风格不受影响，本条既有两处行为不变 |
 | **D-SFI-14** | 小红书导出成功面追加「复制标题 + 正文 + 话题」；无 Key 时仅标题 + 话题模板（OQ-2 倾向冻结）。成功面用 dock 展开/popover，不得硬塞进单行 bar |
 
 ---
