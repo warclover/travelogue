@@ -171,6 +171,9 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "sfp_caption_echo_suppressed",
         "sfp_chapter_time_sort_applied",
         "sfp_xhs_copy_pack_copied",
+        # Cover Calligraphy Title V1 · D-CAL-27（title_art 漏斗）
+        "title_art_impression",
+        "title_art_resolve",
     }
 )
 

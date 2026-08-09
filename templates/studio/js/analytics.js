@@ -139,6 +139,9 @@ const ALLOWED = new Set([
   "sfp_caption_echo_suppressed",
   "sfp_chapter_time_sort_applied",
   "sfp_xhs_copy_pack_copied",
+  // Cover Calligraphy Title V1 · D-CAL-27
+  "title_art_impression",
+  "title_art_resolve",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

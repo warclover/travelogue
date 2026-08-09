@@ -1009,6 +1009,21 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       titleArtStatus.classList.toggle("is-error", !!isError);
     }
 
+    function emitTitleArtResolve(meta) {
+      // D-CAL-27：漏斗事件；meta.outcome 区分 success/disabled/error/network，
+      // 配合 engine + routeCRequested + fallback 可算出 B/C 使用率与失败率。
+      trackStudioEvent(
+        "title_art_resolve",
+        Object.assign(
+          {
+            tripId: tripId,
+            coverOpeningStyle: selectedStyle || "",
+          },
+          meta || {}
+        )
+      );
+    }
+
     function requestTitleArt() {
       if (!titleArtBtn) return;
       titleArtBtn.disabled = true;
@@ -1026,10 +1041,25 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           titleArtBtn.disabled = false;
           if (res.status !== 200 || !res.body || !res.body.ok) {
             setTitleArtStatus((res.body && res.body.message) || "生成失败，请稍后重试", true);
+            emitTitleArtResolve({
+              outcome: "error",
+              enabled: false,
+              engine: "",
+              routeCRequested: wantRouteC,
+              fallback: false,
+            });
             return;
           }
           if (!res.body.enabled) {
             setTitleArtStatus("此版式或标题暂不支持艺术字，已保持默认样式");
+            emitTitleArtResolve({
+              outcome: "disabled",
+              enabled: false,
+              engine: res.body.engine || "",
+              routeCRequested: !!res.body.routeCRequested,
+              routeCAllowedByConfig: !!res.body.routeCAllowedByConfig,
+              fallback: !!res.body.fallbackFrom,
+            });
             return;
           }
           var engineLabel =
@@ -1042,16 +1072,27 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           setTitleArtAttribution(res.body.engine || "clean-pipeline-v1");
           showToolbarToast("装帧标题已更新", { duration: 2200 });
           reloadPreviewAfterLayout();
-          trackStudioEvent("title_art_resolve", {
-            tripId: tripId,
+          emitTitleArtResolve({
+            outcome: "success",
+            enabled: true,
             engine: res.body.engine || "",
             routeCRequested: !!res.body.routeCRequested,
+            routeCAllowedByConfig: !!res.body.routeCAllowedByConfig,
             fallback: !!res.body.fallbackFrom,
+            ocrVerified:
+              typeof res.body.ocrVerified === "boolean" ? res.body.ocrVerified : null,
           });
         })
         .catch(function () {
           titleArtBtn.disabled = false;
           setTitleArtStatus("生成失败，请稍后重试", true);
+          emitTitleArtResolve({
+            outcome: "network",
+            enabled: false,
+            engine: "",
+            routeCRequested: wantRouteC,
+            fallback: false,
+          });
         });
     }
 
@@ -1067,9 +1108,16 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         var titleArtCfg = cfg && cfg.titleArt;
         if (!titleArtCfg || !titleArtCfg.enabled || !titleArtBlock) return;
         titleArtBlock.hidden = false;
-        if (titleArtCfg.routeCEnabled && titleArtRouteCLabel) {
+        var routeCShown = !!(titleArtCfg.routeCEnabled && titleArtRouteCLabel);
+        if (routeCShown) {
           titleArtRouteCLabel.hidden = false;
         }
+        // D-CAL-27：入口曝光——配合 title_art_resolve 可算点击转化率。
+        trackStudioEvent("title_art_impression", {
+          tripId: tripId,
+          coverOpeningStyle: selectedStyle || "",
+          routeCShown: routeCShown,
+        });
       })
       .catch(function () {});
 
