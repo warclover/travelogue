@@ -8,8 +8,10 @@ from typing import Any
 
 @dataclass
 class TitleArtConfig:
-    #: D-CAL-05 · 未过验收前默认关闭；显式开启后才会写 trip.meta.titleArt。
-    enabled: bool = False
+    #: D-CAL-05 · 2026-08-09 AC-CAL-BLIND 通过（W3 单一评委协议，艺术字侧胜率
+    #: 91.7%）后默认改为开启；仍受路线 B fail-open 兜底（非白名单/focal 冲突/
+    #: 生成失败均静默回落现网 CSS 标题），无需人工再确认单个 trip。
+    enabled: bool = True
     #: D-CAL-14 / OQ-CAL-06 · 路线 C 为**用户可选高级项**总闸。
     #: W0.5b 后默认 ``True``：Studio 在 ``enabled=True`` 时展示「尝试 AI 手写体」
     #: 勾选框；用户**仍须勾选**才会尝试路线 C（不会自动走 AI）。
@@ -34,7 +36,7 @@ def title_art_config_from_dict(raw: dict[str, Any] | None) -> TitleArtConfig:
         attempts = 2
     attempts = max(1, min(attempts, 3))
     return TitleArtConfig(
-        enabled=bool(raw.get("enabled", False)),
+        enabled=bool(raw.get("enabled", True)),
         route_c_enabled=bool(raw.get("route_c_enabled", raw.get("routeCEnabled", True))),
         route_c_style_id=(
             str(raw.get("route_c_style_id", raw.get("routeCStyleId")) or "").strip() or None

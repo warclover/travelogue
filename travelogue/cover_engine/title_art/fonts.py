@@ -51,6 +51,47 @@ def pick_default_font() -> FontCandidate:
     return pool[0]
 
 
+#: Typeface Voice Matrix（字体-调性映射表）：不同 Opening 风格气质不同（见
+#: ``catalog.py`` 各风格 ``studio_blurb``），产品复盘认为无差别共用同一款
+#: 艺术字体会抹平这层差异化。仅覆盖 4 款白名单风格
+#: （``whitelist.py::DEFAULT_ENABLED_STYLES``）；未覆盖/未知 ``style_id``
+#: 落回 :func:`pick_default_font`，行为与改动前完全一致（零回归）。
+#:
+#: 分组依据（纯编辑决策，不是可读性判定——见下方 :func:`pick_font_for_style`
+#: 文档字符串里 D-CAL-24 的教训）：
+#: - ``veil-footer``（雾底题签 · 电影感抒情）/ ``band-cut``（切带题名 ·
+#:   风景天际线）→ ``ZhiMangXing``：狂草连笔，情绪化/大气，延续现网既有观感；
+#: - ``contact-stamp``（日戳档案 · 纪实档案气质）/ ``folio-overlap``（对页
+#:   叠印 · 书信感）→ ``鸿雷板书体``：笔画相对独立分离，呼应"档案记录/手写
+#:   书信"更克制的调性。
+FONT_VOICE_BY_STYLE: dict[str, str] = {
+    "veil-footer": "ZhiMangXing-Regular",
+    "band-cut": "ZhiMangXing-Regular",
+    "contact-stamp": "鸿雷板书体（简+繁）3.001",
+    "folio-overlap": "鸿雷板书体（简+繁）3.001",
+}
+
+
+def pick_font_for_style(style_id: str | None) -> FontCandidate:
+    """按 Opening 风格调性挑字体（Typeface Voice Matrix）。
+
+    **不是**可读性判定——D-CAL-24 已用小样本证伪"候选字体 vs 规整字体连通
+    域比值"这类算法信号（同句里未被误读的字比值反而低于真正被误读的字，
+    详见该决策记录），因此这里刻意**不**引入任何"哪款字体更易读"的自动化
+    判断；映射表纯粹是调性搭配的编辑决策，两款字体本身仍都是
+    ``licensed=True`` 的艺术字体，只是分别更贴近不同 Opening 风格的气质。
+
+    未命中映射表（非白名单/未知 style_id）→ 落回 :func:`pick_default_font`，
+    不改变现网既有行为。
+    """
+    name = FONT_VOICE_BY_STYLE.get(style_id or "")
+    if name:
+        for candidate in licensed_fonts():
+            if candidate.name == name:
+                return candidate
+    return pick_default_font()
+
+
 def resolve_font_source(filename: str) -> str:
     """Resolve a pool filename to a loadable source for :class:`PIL.ImageFont`.
 

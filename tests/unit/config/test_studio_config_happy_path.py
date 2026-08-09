@@ -34,4 +34,4 @@ def test_studio_config_expose_title_art_gate() -> None:
     """Front-end needs this to decide whether to show the title-art button /
     the Route C checkbox (Studio 高级面板触发入口 · OQ-CAL-06)."""
     exposed = studio_config_expose(AppConfig())
-    assert exposed["titleArt"] == {"enabled": False, "routeCEnabled": True}
+    assert exposed["titleArt"] == {"enabled": True, "routeCEnabled": True}

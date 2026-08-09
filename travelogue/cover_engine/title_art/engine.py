@@ -28,7 +28,7 @@ from travelogue.cover_engine.title_art.contract import resolve_title_text
 from travelogue.cover_engine.title_art.fonts import (
     FALLBACK_STACK,
     glyphs_covered,
-    pick_default_font,
+    pick_font_for_style,
 )
 from travelogue.cover_engine.title_art.models import TitleArtResult, disabled_meta_dict
 from travelogue.cover_engine.title_art.ocr_verify import ocr_verify as _default_ocr_verify
@@ -213,7 +213,9 @@ def resolve_title_art(
         meta["titleArt"] = disabled_meta_dict()
         return None
 
-    default_font = pick_default_font()
+    # 字体-调性映射表（D-CAL-25）：按 Opening 风格气质挑字体，不是可读性判定
+    # （D-CAL-24 已证伪该类算法信号）；未命中映射表落回默认字体，零回归。
+    default_font = pick_font_for_style(style_id)
     fallback_fonts = (default_font.filename, *FALLBACK_STACK)
     probe_text = text.main + (text.subtitle or "")
     if not glyphs_covered(fallback_fonts, probe_text):

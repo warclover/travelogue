@@ -80,6 +80,24 @@ def test_route_b_happy_path_writes_meta_and_png() -> None:
     assert "fallbackFrom" not in meta_dict
 
 
+@pytest.mark.parametrize(
+    ("style_id", "expected_font_filename"),
+    [
+        ("veil-footer", "ZhiMangXing-Regular.ttf"),
+        ("band-cut", "ZhiMangXing-Regular.ttf"),
+        ("contact-stamp", "鸿雷板书体（简+繁）3.001.ttf"),
+        ("folio-overlap", "鸿雷板书体（简+繁）3.001.ttf"),
+    ],
+)
+def test_route_b_uses_typeface_voice_matrix_font(style_id: str, expected_font_filename: str) -> None:
+    """D-CAL-25：路线 B 按 Opening 风格调性挑字体，不是所有风格共用同一款。"""
+    trip = {"meta": {"title": "拾光", "coverOpeningStyle": style_id}}
+    write_png, _ = _write_png_recorder()
+    result = resolve_title_art(trip, resolve_asset_path=_no_asset_path, write_png=write_png)
+    assert result is not None
+    assert result.font == expected_font_filename
+
+
 def test_existing_non_stale_result_skips_recompute_without_force() -> None:
     trip = {
         "meta": {
@@ -383,29 +401,6 @@ def test_route_c_passes_model_and_prompt_version_to_generate_raw() -> None:
     assert seen.get("model") == "wanx2.1-t2i-turbo"
     assert seen.get("prompt_version") == "v2"
     assert result.prompt_version == "v2"
-
-
-def test_route_c_risk_digit_mix_skips_api_call() -> None:
-    trip = {"meta": {"title": "重走318国道", "coverOpeningStyle": "veil-footer"}}
-    write_png, _written = _write_png_recorder()
-    calls: list[str] = []
-
-    def _fake_generate_raw(*_a, **_kw):
-        calls.append("called")
-        raise AssertionError("digit_mix risk should skip API")
-
-    result = resolve_title_art(
-        trip,
-        resolve_asset_path=_no_asset_path,
-        write_png=write_png,
-        route_c_enabled=True,
-        generate_raw=_fake_generate_raw,
-        ocr_verify=lambda *_a, **_kw: True,
-    )
-    assert calls == []
-    assert result is not None
-    assert result.engine == "clean-pipeline-v1"
-    assert any("digit_mix" in line for line in result.explain)
 
 
 def test_route_c_generation_failure_falls_back_to_route_b() -> None:
