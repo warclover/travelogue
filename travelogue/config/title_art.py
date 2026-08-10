@@ -12,9 +12,10 @@ class TitleArtConfig:
     #: 91.7%）后默认改为开启；仍受路线 B fail-open 兜底（非白名单/focal 冲突/
     #: 生成失败均静默回落现网 CSS 标题），无需人工再确认单个 trip。
     enabled: bool = True
-    #: D-CAL-14 / OQ-CAL-06 · 路线 C 为**用户可选高级项**总闸。
-    #: W0.5b 后默认 ``True``：Studio 在 ``enabled=True`` 时展示「尝试 AI 手写体」
-    #: 勾选框；用户**仍须勾选**才会尝试路线 C（不会自动走 AI）。
+    #: D-CAL-14 / OQ-CAL-06 · 路线 C 为可退回的优先路径总闸。
+    #: Studio 在 ``enabled=True`` 时展示「优先 AI 手写体」勾选框，且**默认勾选**；
+    #: 用户可取消（偏好记 localStorage）；仍须点击「生成装帧标题」才会触发，
+    #: 不会在渲染管线自动走 AI。效果不好 / OCR 不过时按既有分层回退路线 B。
     #: 关掉本开关则勾选框隐藏，请求里的 ``routeC`` 也会被服务端静默忽略。
     route_c_enabled: bool = True
     route_c_style_id: str | None = None  # None → style_registry.default_style_id()

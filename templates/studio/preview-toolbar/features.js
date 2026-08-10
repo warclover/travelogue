@@ -77,6 +77,8 @@ function showFeaturedRerankDockCue(root) {
 
 var COVER_OPENING_STYLE_OPTIONS = [];
 var READER_VIEW_KEY = "travelogue.studio.readerView";
+/** 路线 C 勾选偏好：缺省优先 AI；用户取消后记 "0"，再勾回记 "1"。 */
+var TITLE_ART_ROUTE_C_PREF_KEY = "travelogue.studio.titleArtRouteC";
 var _DEFAULT_COVER_STYLE = "veil-footer";
 
 
@@ -955,8 +957,8 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
       '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
       '<span class="preview-sheet__title-art-routec-copy">' +
-      '<span class="preview-sheet__title-art-routec-title">尝试 AI 手写体</span>' +
-      '<span class="preview-sheet__title-art-routec-hint">高级项 · 可能回退默认样式 · 约十几秒</span>' +
+      '<span class="preview-sheet__title-art-routec-title">优先 AI 手写体</span>' +
+      '<span class="preview-sheet__title-art-routec-hint">未通过自动用字库 · 约十几秒</span>' +
       '</span></label>' +
       '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成装帧标题</button>' +
       '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
@@ -1088,7 +1090,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     }
 
     // Studio 高级面板触发入口：服务端总闸（config.title_art）决定是否展示
-    // 这一整块，以及是否展示「尝试 AI 手写体」勾选框（OQ-CAL-06）。
+    // 这一整块，以及是否展示「优先 AI 手写体」勾选框（OQ-CAL-06 · 默认勾选）。
     fetch("/__travelogue/config")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (cfg) {
@@ -1098,12 +1100,32 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         var routeCShown = !!(titleArtCfg.routeCEnabled && titleArtRouteCLabel);
         if (routeCShown) {
           titleArtRouteCLabel.hidden = false;
+          // 默认勾选优先 AI；仅当用户曾显式取消时保持未勾选。
+          var pref = null;
+          try {
+            pref = localStorage.getItem(TITLE_ART_ROUTE_C_PREF_KEY);
+          } catch (_e) {}
+          if (titleArtRouteCCheck) {
+            titleArtRouteCCheck.checked = pref !== "0";
+            if (!titleArtRouteCCheck._titleArtRouteCPrefBound) {
+              titleArtRouteCCheck._titleArtRouteCPrefBound = true;
+              titleArtRouteCCheck.addEventListener("change", function () {
+                try {
+                  localStorage.setItem(
+                    TITLE_ART_ROUTE_C_PREF_KEY,
+                    titleArtRouteCCheck.checked ? "1" : "0"
+                  );
+                } catch (_e2) {}
+              });
+            }
+          }
         }
         // D-CAL-27：入口曝光——配合 title_art_resolve 可算点击转化率。
         trackStudioEvent("title_art_impression", {
           tripId: tripId,
           coverOpeningStyle: selectedStyle || "",
           routeCShown: routeCShown,
+          routeCChecked: !!(titleArtRouteCCheck && titleArtRouteCCheck.checked),
         });
       })
       .catch(function () {});

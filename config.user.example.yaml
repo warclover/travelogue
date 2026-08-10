@@ -35,10 +35,10 @@ vision:
 ingest:
   copy_source_files: true         # 导入时复制源文件
 
-# --- 封面装帧标题（高级项；复制到 config.yaml 后按需改）---
+# --- 封面装帧标题（复制到 config.yaml 后按需改）---
 title_art:
   enabled: true                   # 总闸：Studio「封面版式」下显示「生成装帧标题」
-  route_c_enabled: true           # 高级项：显示「尝试 AI 手写体」勾选；须勾选才走 AI
+  route_c_enabled: true           # 显示「优先 AI 手写体」勾选（默认勾选；可取消）
                                   # （未勾选 / 校验失败 → 静默回退字库合成默认样式）
 
 # 其余能力（bookends / curate / layout / aesthetic / …）使用代码默认，

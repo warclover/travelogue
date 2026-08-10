@@ -29,16 +29,21 @@ def test_title_art_panel_calls_the_registered_endpoint() -> None:
 
 
 def test_title_art_panel_gates_on_server_config() -> None:
-    """服务端总闸关闭时不能展示按钮/勾选框（OQ-CAL-06）。"""
+    """服务端总闸关闭时不能展示按钮/勾选框；展示时默认优先 AI（可取消）。"""
     text = _features_js()
     start = text.find("export function mountCoverStyleControls")
     next_export = text.find("\nexport function", start + 1)
     chunk = text[start:next_export]
     assert "titleArtCfg.enabled" in chunk
     assert "titleArtCfg.routeCEnabled" in chunk
-    assert "可能回退默认样式" in chunk
-    assert "尝试 AI 手写体" in chunk
+    assert "未通过自动用字库" in chunk
+    assert "优先 AI 手写体" in chunk
     assert '"/__travelogue/config"' in chunk
+    assert "TITLE_ART_ROUTE_C_PREF_KEY" in text
+    assert 'pref !== "0"' in chunk
+    assert "routeCChecked" in chunk
+    assert "localStorage.setItem" in chunk
+    assert "localStorage.getItem(TITLE_ART_ROUTE_C_PREF_KEY)" in chunk
 
 
 def test_title_art_panel_uses_existing_toast_and_reload_helpers() -> None:
