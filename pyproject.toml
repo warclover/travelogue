@@ -99,7 +99,8 @@ layers = [
     "travelogue.orchestrator",
     "travelogue.render : travelogue.export",
     "travelogue.services : travelogue.templating",
-    "travelogue.curation : travelogue.layout_engine : travelogue.layout_templates",
+    # ACP D-ACP-01a · cover_engine co-layer with curation (imports curate_scoring/food_policy)
+    "travelogue.curation : travelogue.layout_engine : travelogue.layout_templates : travelogue.cover_engine",
     "travelogue.media : travelogue.vision : travelogue.llm : travelogue.ai",
     "travelogue.config",
     "travelogue.util : travelogue.types : travelogue.layout_contract : travelogue.constants : travelogue.paths : travelogue.manifest_limits : travelogue.errors : travelogue.domain",
@@ -118,15 +119,9 @@ ignore_imports = [
     "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
     # master CI debt · parallel aesthetic finalize pending P2
     "travelogue.media.ingest_parallel -> travelogue.curation.aesthetic_score",
-    # master CI debt · aesthetic MLLM relocation pending P2
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_blind_review",
-    # master CI debt · aesthetic MLLM relocation pending P2
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
-    # master CI debt · aesthetic MLLM relocation pending P2
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
-    # ACP W1a · cover_engine not yet in layers (D-ACP-01a deferred to W1b); CAL title_art → render
+    # ACP W1b · cover_engine in layers (D-ACP-01a); title_art still reads render helpers (pending extract to domain)
     "travelogue.cover_engine.title_art.engine -> travelogue.render.context",
-    # ACP W1a · cover_engine not yet in layers (D-ACP-01a deferred to W1b); CAL title_art → render
+    # ACP W1b · cover_engine in layers (D-ACP-01a); title_art still reads render helpers (pending extract to domain)
     "travelogue.cover_engine.title_art.engine -> travelogue.render.cover_opening",
 ]
 
