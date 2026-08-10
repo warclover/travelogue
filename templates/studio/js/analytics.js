@@ -142,6 +142,14 @@ const ALLOWED = new Set([
   // Cover Calligraphy Title V1 · D-CAL-27
   "title_art_impression",
   "title_art_resolve",
+  // ACP · PRD-AI-CAPABILITY-PLATFORM-V1 §9
+  "ai_agent_call",
+  "ai_agent_budget_exceeded",
+  "intent_brief_applied",
+  "layout_critic_suggestion_shown",
+  "layout_critic_suggestion_accepted",
+  "mosaic_judge_invoked",
+  "ai_unlock_gate_result",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

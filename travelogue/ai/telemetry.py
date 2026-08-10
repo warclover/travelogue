@@ -101,6 +101,24 @@ def _update_summary(record: AgentCallRecord) -> None:
         if record.ok:
             slot["ok"] += 1
         slot["latencyMsSum"] += float(record.latency_ms)
+    try:
+        emit_acp_event(
+            "ai_agent_call",
+            {
+                "agent": record.agent,
+                "source": record.source,
+                "ok": record.ok,
+                "latencyMs": round(float(record.latency_ms), 1),
+                "tripId": record.trip_id or "",
+            },
+        )
+        if record.reason == "budget_exceeded":
+            emit_acp_event(
+                "ai_agent_budget_exceeded",
+                {"agent": record.agent, "tripId": record.trip_id or ""},
+            )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 # AC-ACP-10 · ops admin always surfaces these agents (zeros until first call).
@@ -149,6 +167,32 @@ def clear_ops_summary() -> None:
     """Test helper."""
     with _SUMMARY_LOCK:
         _SUMMARY.clear()
+
+
+# PRD §9 ACP internal events (Studio homepage jsonl allowlist).
+ACP_STUDIO_EVENTS = frozenset(
+    {
+        "ai_agent_call",
+        "ai_agent_budget_exceeded",
+        "intent_brief_applied",
+        "layout_critic_suggestion_shown",
+        "layout_critic_suggestion_accepted",
+        "mosaic_judge_invoked",
+        "ai_unlock_gate_result",
+    }
+)
+
+
+def emit_acp_event(event: str, meta: dict[str, Any] | None = None) -> None:
+    """Best-effort §9 telemetry into Studio homepage jsonl (never raises)."""
+    if event not in ACP_STUDIO_EVENTS:
+        return
+    try:
+        from travelogue.domain.studio_events import append_studio_homepage_event
+
+        append_studio_homepage_event(event, meta or {})
+    except Exception:  # noqa: BLE001
+        return
 
 
 class timed_call:

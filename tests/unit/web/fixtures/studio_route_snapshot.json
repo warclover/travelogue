@@ -416,6 +416,11 @@
   },
   {
     "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/ai/layout-feedback",
+    "handler": "ai_ops_handlers.handle_post_layout_feedback"
+  },
+  {
+    "method": "POST",
     "path": "/__travelogue/trips/{tripId}/asset-media-class",
     "handler": "trip_handlers.handle_asset_media_class"
   },

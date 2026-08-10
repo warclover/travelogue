@@ -525,6 +525,24 @@ def _chat_for_brief(
                 brief=brief,
                 payload=payload,
             )
+            # D-ACP-06 · dual-write into unified ai.cache (narrate_cache remains primary)
+            try:
+                from pathlib import Path as _Path
+
+                from travelogue.ai.cache import content_sig, write_cached as ai_write
+                from travelogue.config import get_config
+
+                acp = getattr(get_config(), "ai_capability", None)
+                ai_dir = _Path(
+                    getattr(getattr(acp, "cache", None), "dir", None) or ".cache/ai"
+                )
+                sig = content_sig(
+                    {"provider": provider, "model": model, "scope": scope, "brief": brief},
+                    prompt_version="narrate-dual",
+                )
+                ai_write(ai_dir, agent="narrate", sig=sig, payload=payload)
+            except Exception:
+                pass
         except NarrateError:
             pass
     return content

@@ -243,6 +243,11 @@ def build_intent_hints(trip: dict) -> dict[str, Any]:
             k: cull[k] for k in ("dropScreenshots", "keepEmotionalBlur", "keepPortraits", "foodPriority")
             if cull.get(k) is not None
         }
+    cluster = brief.get("clusterHints") if isinstance(brief.get("clusterHints"), dict) else {}
+    if brief.get("source") in ("llm", "cache") and cluster.get("preferFewerChapters") is not None:
+        hints["intentBriefClusterHints"] = {
+            "preferFewerChapters": bool(cluster.get("preferFewerChapters")),
+        }
 
     return hints
 
@@ -252,6 +257,29 @@ def apply_editorial_intent_hints(trip: dict) -> dict[str, Any]:
     curation = trip.setdefault("curation", {})
     if hints:
         curation["intentHints"] = hints
+        try:
+            from travelogue.ai.telemetry import emit_acp_event
+
+            consumed = [
+                k
+                for k in (
+                    "preferMosaic",
+                    "intentBriefCullPolicy",
+                    "intentBriefClusterHints",
+                    "intentBriefArc",
+                )
+                if k in hints
+            ]
+            if consumed:
+                emit_acp_event(
+                    "intent_brief_applied",
+                    {
+                        "fieldsConsumed": consumed,
+                        "tripId": str(trip.get("tripId") or trip.get("id") or ""),
+                    },
+                )
+        except Exception:
+            pass
     elif "intentHints" in curation:
         curation.pop("intentHints", None)
     return hints

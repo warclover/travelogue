@@ -15,12 +15,13 @@ from typing import Any
 
 from travelogue.ai.budget import budget_for_trip
 from travelogue.ai.cache import content_sig, read_cached, write_cached
-from travelogue.ai.gate import acp_instrumentation_active, check_gate, timeout_sec
+from travelogue.ai.call import chat_with_timeout
+from travelogue.ai.gate import acp_instrumentation_active, check_gate
 from travelogue.ai.telemetry import AgentCallRecord, record_agent_call, timed_call
 from travelogue.config import AppConfig, get_config
 from travelogue.layout_contract.active_set import schema_all_pattern_ids
 from travelogue.layout_contract.orientations import aspect_kind_for_asset
-from travelogue.llm.client import chat_completion, parse_json_content
+from travelogue.llm.client import parse_json_content
 from travelogue.llm.errors import LlmError
 from travelogue.llm.ready import probe_llm_ready, resolve_llm_may_call
 
@@ -87,6 +88,21 @@ def _screen_asset_ids(screen: dict[str, Any]) -> list[str]:
                 out.append(str(it["assetId"]))
         return out
     return []
+
+
+def _layout_feedback_for_prompt(trip: dict[str, Any]) -> list[dict[str, Any]]:
+    raw = (trip.get("curation") or {}).get("layoutFeedback")
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in raw[:16]:
+        if not isinstance(item, dict):
+            continue
+        ch = str(item.get("chapterId") or "").strip()
+        reason = str(item.get("reason") or "").strip()
+        if ch and reason:
+            out.append({"chapterId": ch, "reason": reason})
+    return out
 
 
 def build_chapter_screen_summaries(trip: dict[str, Any]) -> list[dict[str, Any]]:
@@ -321,6 +337,7 @@ def run_layout_critic(
     payload = {
         "chapters": summaries,
         "allowedPatternIds": sorted(allow_set)[:120],
+        "layoutFeedback": _layout_feedback_for_prompt(trip),
     }
     sig = content_sig(payload, prompt_version=PROMPT_VERSION)
     cache_root = cache_dir
@@ -370,11 +387,7 @@ def run_layout_critic(
     ]
     try:
         with timed_call() as clock:
-            if chat_fn is not None:
-                content = chat_fn(messages)
-            else:
-                _ = timeout_sec(cfg=app_cfg)
-                content = chat_completion(messages)
+            content = chat_with_timeout(messages, cfg=app_cfg, chat_fn=chat_fn)
         parsed = parse_json_content(content)
         if not isinstance(parsed, dict):
             raise LlmError("E_LAYOUT_CRITIC_PARSE", "non-object JSON")

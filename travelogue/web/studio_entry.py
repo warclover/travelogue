@@ -199,6 +199,7 @@ def build_entry(
         "coverAssetId": str(trip.get("coverAssetId") or "") or None,
         "chapters": build_chapter_summaries(trip),
         "layoutSuggestions": _layout_suggestions_entry(curation if isinstance(curation, dict) else {}),
+        "layoutFeedback": _layout_feedback_entry(curation if isinstance(curation, dict) else {}),
         "telemetry": telemetry,
         "aesthetic": build_aesthetic_entry_summary(
             trip,
@@ -253,6 +254,28 @@ def _layout_suggestions_entry(curation: dict) -> list[dict[str, Any]]:
                 "suggestion": text[:36],
                 "accepted": bool(item.get("accepted")),
                 "confidence": item.get("confidence"),
+            }
+        )
+    return out
+
+
+def _layout_feedback_entry(curation: dict) -> list[dict[str, Any]]:
+    raw = curation.get("layoutFeedback")
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in raw[:32]:
+        if not isinstance(item, dict):
+            continue
+        ch = str(item.get("chapterId") or "").strip()
+        reason = str(item.get("reason") or "").strip()
+        if not ch or not reason:
+            continue
+        out.append(
+            {
+                "chapterId": ch,
+                "reason": reason,
+                "notedAt": item.get("notedAt"),
             }
         )
     return out

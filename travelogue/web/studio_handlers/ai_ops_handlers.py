@@ -50,6 +50,12 @@ def handle_get_unlock_gate(handler: StudioHandlerProtocol) -> None:
     from travelogue.ai.eval.unlock_gate import format_unlock_report, run_unlock_gate
 
     result = run_unlock_gate(thresholds=_unlock_thresholds_from_cfg())
+    try:
+        from travelogue.ai.telemetry import emit_acp_event
+
+        emit_acp_event("ai_unlock_gate_result", {"verdict": result.verdict})
+    except Exception:
+        pass
     handler._json_response(
         200,
         {
@@ -105,6 +111,12 @@ def handle_post_unlock_gate(handler: StudioHandlerProtocol) -> None:
             (metrics_raw or {}).get("source") if isinstance(metrics_raw, dict) else "request"
         ) or "request"
         result = run_unlock_gate(metrics=metrics, thresholds=thresholds)
+    try:
+        from travelogue.ai.telemetry import emit_acp_event
+
+        emit_acp_event("ai_unlock_gate_result", {"verdict": result.verdict})
+    except Exception:
+        pass
     handler._json_response(
         200,
         {
@@ -214,6 +226,62 @@ def handle_post_layout_critic(handler: StudioHandlerProtocol, trip_id: str) -> N
     )
 
 
+def handle_post_layout_feedback(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    """POST .../ai/layout-feedback — G1「这章不对」(curation.layoutFeedback)."""
+    from datetime import datetime, timezone
+
+    body = handler._read_json_body() or {}
+    chapter_id = str(body.get("chapterId") or "").strip()
+    reason = str(body.get("reason") or "").strip()
+    allowed = {
+        "too_many_photos",
+        "too_few_photos",
+        "wrong_order",
+        "style_mismatch",
+        "other",
+    }
+    if not chapter_id or reason not in allowed:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_LAYOUT_FEEDBACK",
+                "message": "chapterId + valid reason required",
+            },
+        )
+        return
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, _trip0 = loaded
+    trip_json = trip_dir / "trip.json"
+    ctx = studio_ctx(handler)
+    noted = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    entry = {"chapterId": chapter_id, "reason": reason, "notedAt": noted}
+
+    def mutator(t: dict) -> dict[str, Any]:
+        curation = t.setdefault("curation", {})
+        if not isinstance(curation, dict):
+            curation = {}
+            t["curation"] = curation
+        rows = curation.setdefault("layoutFeedback", [])
+        if not isinstance(rows, list):
+            rows = []
+            curation["layoutFeedback"] = rows
+        # replace same chapter prior note
+        curation["layoutFeedback"] = [
+            r
+            for r in rows
+            if not (isinstance(r, dict) and str(r.get("chapterId") or "") == chapter_id)
+        ] + [entry]
+        return entry
+
+    ok, _ = trip_update_or_respond(handler, ctx.trip_service(), trip_json, mutator)
+    if not ok:
+        return
+    handler._json_response(200, {"ok": True, "tripId": trip_id, "layoutFeedback": entry})
+
+
 def handle_post_layout_critic_accept(handler: StudioHandlerProtocol, trip_id: str) -> None:
     """POST .../ai/layout-critic/accept — mark suggestion accepted (advisory only)."""
     from travelogue.ai.agents.layout_critic import accept_layout_suggestion
@@ -259,6 +327,15 @@ def handle_post_layout_critic_accept(handler: StudioHandlerProtocol, trip_id: st
     ok, _ = trip_update_or_respond(handler, ctx.trip_service(), trip_json, mutator)
     if not ok:
         return
+    try:
+        from travelogue.ai.telemetry import emit_acp_event
+
+        emit_acp_event(
+            "layout_critic_suggestion_accepted",
+            {"chapterId": chapter_id, "tripId": trip_id},
+        )
+    except Exception:
+        pass
     handler._json_response(
         200,
         {

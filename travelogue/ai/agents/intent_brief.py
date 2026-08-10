@@ -15,10 +15,11 @@ from typing import Any
 
 from travelogue.ai.budget import budget_for_trip
 from travelogue.ai.cache import content_sig, read_cached, write_cached
-from travelogue.ai.gate import acp_instrumentation_active, check_gate, timeout_sec
+from travelogue.ai.gate import acp_instrumentation_active, check_gate
 from travelogue.ai.telemetry import AgentCallRecord, record_agent_call, timed_call
 from travelogue.config import AppConfig, get_config
-from travelogue.llm.client import chat_completion, parse_json_content
+from travelogue.ai.call import chat_with_timeout
+from travelogue.llm.client import parse_json_content
 from travelogue.llm.errors import LlmError
 from travelogue.llm.ready import probe_llm_ready, resolve_llm_may_call
 
@@ -272,13 +273,7 @@ def run_intent_brief(
     ]
     try:
         with timed_call() as clock:
-            if chat_fn is not None:
-                content = chat_fn(messages)
-            else:
-                # Best-effort timeout via client default; ACP timeout_sec is documented
-                # for async callers (studio_jobs) to cancel around this call.
-                _ = timeout_sec(cfg=app_cfg)
-                content = chat_completion(messages)
+            content = chat_with_timeout(messages, cfg=app_cfg, chat_fn=chat_fn)
         parsed = parse_json_content(content)
         if not isinstance(parsed, dict):
             raise LlmError("E_INTENT_BRIEF_PARSE", "non-object JSON")

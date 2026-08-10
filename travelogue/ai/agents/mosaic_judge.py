@@ -15,10 +15,11 @@ from datetime import datetime, timezone
 from typing import Any
 
 from travelogue.ai.budget import budget_for_trip
-from travelogue.ai.gate import acp_instrumentation_active, check_gate, timeout_sec
+from travelogue.ai.call import chat_with_timeout
+from travelogue.ai.gate import acp_instrumentation_active, check_gate
 from travelogue.ai.telemetry import AgentCallRecord, record_agent_call, timed_call
 from travelogue.config import AppConfig, get_config
-from travelogue.llm.client import chat_completion, parse_json_content
+from travelogue.llm.client import parse_json_content
 from travelogue.llm.errors import LlmError
 from travelogue.llm.ready import probe_llm_ready, resolve_llm_may_call
 
@@ -234,11 +235,7 @@ def review_mosaic_tie(
     ]
     try:
         with timed_call() as clock:
-            if chat_fn is not None:
-                content = chat_fn(messages)
-            else:
-                _ = timeout_sec(cfg=app_cfg)
-                content = chat_completion(messages)
+            content = chat_with_timeout(messages, cfg=app_cfg, chat_fn=chat_fn)
         parsed = parse_json_content(content)
         if not isinstance(parsed, dict):
             raise LlmError("E_MOSAIC_JUDGE_PARSE", "non-object JSON")
@@ -268,3 +265,118 @@ def review_mosaic_tie(
     except Exception as exc:  # noqa: BLE001 — fail-open
         _log.warning("mosaic judge fail-open for %s/%s: %s", trip_id, window_id, exc)
         return _result(first, source="fallback", reason="exception", ok=False)
+
+
+def collect_tie_windows_from_logs(
+    raw_logs: list[Any] | None,
+    *,
+    epsilon: float,
+) -> list[dict[str, Any]]:
+    """Extract tie windows from raw mosaic decision logs (keep top3Scores)."""
+    out: list[dict[str, Any]] = []
+    for i, row in enumerate(raw_logs or []):
+        if not isinstance(row, dict):
+            continue
+        scores = row.get("top3Scores") or row.get("top3_scores") or []
+        patterns = row.get("top3Patterns") or row.get("top3_patterns") or []
+        if not isinstance(scores, list) or len(scores) < 2:
+            continue
+        try:
+            score_f = [float(s) for s in scores[:3]]
+        except (TypeError, ValueError):
+            continue
+        if not is_tie_window(score_f, epsilon=epsilon):
+            continue
+        winner = str(
+            row.get("winnerPatternId") or row.get("winner_pattern_id") or ""
+        )
+        if not winner and patterns:
+            winner = str(patterns[0])
+        window_id = str(
+            row.get("windowId")
+            or f"{row.get('segmentId') or 'seg'}:{row.get('windowStart')}:{row.get('windowSize')}:{i}"
+        )
+        cands = []
+        for j, pid in enumerate(patterns):
+            cands.append(
+                {
+                    "id": str(pid),
+                    "score": score_f[j] if j < len(score_f) else None,
+                    "summary": str(pid),
+                }
+            )
+        if winner and winner not in {c["id"] for c in cands}:
+            cands.insert(0, {"id": winner, "score": score_f[0] if score_f else None, "summary": winner})
+        out.append(
+            {
+                "windowId": window_id,
+                "firstPassCandidateId": winner,
+                "candidates": cands,
+                "scoreMargin": round(score_f[0] - score_f[1], 6) if len(score_f) >= 2 else None,
+            }
+        )
+    return out
+
+
+def run_post_compose_mosaic_judge(
+    trip: dict[str, Any],
+    raw_logs: list[Any] | None,
+    *,
+    cfg: AppConfig | None = None,
+    chat_fn: Callable[[list[dict[str, str]]], str] | None = None,
+    async_schedule: bool = False,
+) -> list[dict[str, Any]]:
+    """D-ACP-15 stage-2 entry: call only after compose/drain (never in beam).
+
+    When ``async_schedule`` is True, reviews run on a daemon thread and this
+    returns []. Otherwise runs inline (tests / dogfood sync).
+    """
+    app_cfg = cfg or get_config()
+    if not _feature_enabled(app_cfg):
+        return []
+    ties = collect_tie_windows_from_logs(raw_logs, epsilon=tie_epsilon(app_cfg))
+    if not ties:
+        return []
+
+    def _run() -> list[dict[str, Any]]:
+        results: list[dict[str, Any]] = []
+        for tie in ties:
+            try:
+                entry = review_mosaic_tie(
+                    window_id=str(tie["windowId"]),
+                    candidates=list(tie.get("candidates") or []),
+                    first_pass_candidate_id=str(tie.get("firstPassCandidateId") or ""),
+                    trip=trip,
+                    cfg=app_cfg,
+                    chat_fn=chat_fn,
+                    persist=True,
+                    score_margin=tie.get("scoreMargin"),
+                )
+                results.append(entry)
+                try:
+                    from travelogue.ai.telemetry import emit_acp_event
+
+                    emit_acp_event(
+                        "mosaic_judge_invoked",
+                        {
+                            "tripId": _trip_id(trip),
+                            "tieMargin": tie.get("scoreMargin"),
+                            "overridden": bool(entry.get("overriddenFromFirstPass")),
+                        },
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            except Exception:  # noqa: BLE001 — fail-open
+                _log.exception("post-compose mosaic judge failed for %s", tie.get("windowId"))
+        return results
+
+    if async_schedule:
+        import threading
+
+        threading.Thread(
+            target=_run,
+            daemon=True,
+            name=f"mosaic-judge-{_trip_id(trip)}",
+        ).start()
+        return []
+    return _run()

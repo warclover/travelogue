@@ -287,7 +287,23 @@ def build_buckets_from_clustering(
     clustering = (trip.get("curation") or {}).get("clustering") or {}
     raw_segments = [dict(s) for s in (clustering.get("segments") or [])]
     segments = merge_small_geo_events(raw_segments)
-    segments = cap_geo_segments(segments)
+    max_chapters = 5
+    hints = (trip.get("curation") or {}).get("intentHints") or {}
+    cluster_h = (
+        hints.get("intentBriefClusterHints") if isinstance(hints, dict) else None
+    )
+    if isinstance(cluster_h, dict) and cluster_h.get("preferFewerChapters") is True:
+        max_chapters = 3
+    else:
+        intent = trip.get("intent") if isinstance(trip.get("intent"), dict) else {}
+        brief = intent.get("intentBrief") if isinstance(intent.get("intentBrief"), dict) else {}
+        chints = brief.get("clusterHints") if isinstance(brief.get("clusterHints"), dict) else {}
+        if (
+            brief.get("source") in ("llm", "cache")
+            and chints.get("preferFewerChapters") is True
+        ):
+            max_chapters = 3
+    segments = cap_geo_segments(segments, max_chapters=max_chapters)
     buckets, bucket_segment_ids = segments_to_buckets(segments, layout_assets, cover_id)
     segments, buckets, bucket_segment_ids, recovered = recover_uncovered_geo_bucket_assets(
         segments,
