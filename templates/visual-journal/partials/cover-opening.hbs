@@ -3,6 +3,8 @@
   data-block="cover-opening"
   data-cover-opening="{{coverOpeningStyle}}"
   data-cover-secondary="{{#if hasCoverSecondary}}on{{else}}off{{/if}}"
+  data-title-art="{{#if hasTitleArt}}on{{else}}off{{/if}}"
+  data-monument-title-layout="{{coverMonumentTitleLayout}}"
   data-cover-seal="{{coverSealChar}}"
   data-cover-stamp="{{coverStampLabel}}"
   style="--focal-x: {{cover.focalX}}; --focal-y: {{cover.focalY}};{{#if cover.src}} --cover-src: url('{{cover.src}}');{{/if}}"
@@ -23,12 +25,40 @@
     </div>
   </header>
   {{/if}}
+  {{#if hasTitleArt}}
+  {{#unless titleArtInPanel}}
+  {{! PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：多数风格贴纸挂在 cover-opening 直接子层。
+      veil-footer / band-cut 例外：见下方 panel 内嵌（titleArtInPanel）。 }}
+  <img
+    class="cover-opening__title-art"
+    src="{{titleArtSrc}}"
+    alt="{{titleArtAlt}}"
+    style="--title-art-x: {{titleArtX}}; --title-art-y: {{titleArtY}};"
+    loading="eager"
+    decoding="async"
+  />
+  {{/unless}}
+  {{/if}}
   <div class="cover-opening__panel" data-cover-seal="{{coverSealChar}}" data-cover-stamp="{{coverStampLabel}}">
     {{#if showCoverPlace}}
     <p class="cover-opening__place">{{coverPlace}}</p>
     {{/if}}
     {{> trip-meta}}
+    {{#if hasTitleArt}}
+    {{#if titleArtInPanel}}
+    {{! veil-footer / band-cut：艺术字进 panel 文档流，由原生雾带/纸签托住。 }}
+    <img
+      class="cover-opening__title-art cover-opening__title-art--panel"
+      src="{{titleArtSrc}}"
+      alt="{{titleArtAlt}}"
+      loading="eager"
+      decoding="async"
+    />
+    {{/if}}
+    <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}} sr-only" data-title="{{title}}" itemprop="name">{{title}}</h1>
+    {{else}}
     <h1 class="cover-opening__title cover-opening__title--{{coverTitleLayout}}" data-title="{{title}}" itemprop="name">{{title}}</h1>
+    {{/if}}
     {{#if hasSubtitle}}
     <p class="cover-opening__subtitle subtitle" data-block="cover-subtitle">{{subtitle}}</p>
     {{/if}}
@@ -37,6 +67,13 @@
     {{/if}}
     {{#if hasCoverArchiveStrip}}
     <p class="cover-opening__archive" data-block="cover-archive">{{coverArchiveStrip}}</p>
+    {{/if}}
+    {{#if showCoverOpeningBrand}}
+    {{! D-SFI-13 扩容（CAL 分支「装帧身份线」，2026-08-09）：署名三态原仅驱动
+      cover-closing__brand + longshot-boundary-footer__brand 两处；这里加第三处
+      前封回声，跟后封/长图脚保持视觉呼应。默认关（showCoverOpeningBrand 需
+      style 白名单 + 未来单独打开），先只接线，视觉验证后再决定放开哪些风格。}}
+    <p class="cover-opening__brand{{#if worksBrandCustom}} cover-opening__brand--custom{{/if}}" data-block="cover-opening-brand">{{worksBrandLine}}</p>
     {{/if}}
   </div>
 </section>

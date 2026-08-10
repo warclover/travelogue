@@ -436,6 +436,22 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   display: none;
 }
 
+/* 装帧身份线前封回声试点（D-SFI-13 扩容，PRD-COVER-CALLIGRAPHY-TITLE-V1
+   附注 2026-08-09）：跟 .cover-closing__brand 同一套字号/字重，弱化到不跟
+   标题/副标题抢注意力；具体定位按风格逐个核对后在下方补 per-style 规则。 */
+.cover-opening__brand {
+  margin: 0.4rem 0 0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.cover-opening__brand--custom {
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
 .cover-opening__subtitle {
   margin: 0.35rem 0 0;
   font-size: clamp(0.85rem, 1.6vw, 1.05rem);
@@ -452,6 +468,190 @@ html[data-layout="auto"] .cover-hero--contain-fit .cover-hero__img--main {
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1.08;
+}
+
+/* PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：文本 <h1> 仍在 DOM 里（SEO/朗读器），
+   艺术字贴纸叠加时视觉隐藏，只保留可访问性语义。 */
+.cover-opening__title.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  display: block;
+}
+
+/* 艺术字贴纸：透明 PNG，随 §6.2 定位落在 style 自身留白区（当前仅 veil-footer
+   进白名单）；不预设固定尺寸——由生成画布比例 + 容器宽度共同决定。
+   直接挂在 .cover-opening（position:relative，见上）下——不嵌进
+   .cover-opening__panel，因为面板高度只由雾带底部文案撑起，贴纸嵌在里面会
+   导致 top 百分比按面板矮高度算，几乎总与面板自身文案重叠。
+   left/top 走 --title-art-x/--title-art-y（assemble.py 按 §6.2
+   position.x/position.y 算出的真实百分比，缺失时回退到 rect 几何中心）。 */
+.cover-opening__title-art {
+  display: none;
+  /* 双约束（宽 + 高）保序缩放：即便裁剪后单张贴纸的长宽比因标题字数/模板不同
+     而变化，也不会让某一张因为特别「矮胖」而在 translate(-50%,-50%) 居中
+     时把可视区域顶穿 rect 上边界（白名单 rect h:0.22，这里 20% 略紧一点留
+     安全边）。 */
+  max-width: 60%;
+  max-height: 20%;
+  width: auto;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* D-CAL-20（v0.6）：白名单在 whitelist.py 的 DEFAULT_ENABLED_STYLES 每加一个
+   styleId，这里也要跟着补一行选择器——两处目前没有自动同步机制，是已知的
+   手动维护点（Python 侧/CSS 侧各自一份白名单）。 */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art,
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art,
+html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
+  display: block;
+  position: absolute;
+  left: var(--title-art-x, 50%);
+  top: var(--title-art-y, 25%);
+  /* 左锚点：对齐原生左起标题，不再用 translate(-50%,-50%) 把字拽到锚点右侧 */
+  transform: translate(0, -50%);
+  z-index: 2;
+}
+
+/* folio-overlap 纸面栏很窄（--cover-folio-margin 33%，候选 rect x:0.03~0.30，
+   见 whitelist.py OQ-CAL-09 收尾注释），沿用其它风格共用的 60% 宽上限会直接
+   溢出到骑缝渐变/照片区——单独收紧宽度，只在纸面栏内安全展示；纸面栏留白
+   竖向空间更宽裕（rect h 最深到 0.49），相应放宽高度上限。 */
+html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
+  max-width: 28%;
+  max-height: 16%;
+  z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
+}
+
+/* W3：尺寸贴近各风格原生标题（band 最小、veil 偏大）；位置已由 left 锚点对齐 */
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art {
+  /* 绝对定位回退（非 panel 流时）；panel 流见下方 --panel */
+  max-width: 48%;
+  max-height: 10%;
+  z-index: calc(var(--cover-panel-z) + 1);
+}
+
+/* band-cut：艺术字嵌在纸签 panel 内，上下 padding 直接托住笔画 */
+html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__title-art--panel {
+  display: block;
+  position: static;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: 100%;
+  height: calc(var(--cover-band-title-size) * 1.45);
+  max-height: none;
+  margin: 0;
+  object-fit: contain;
+  object-position: left center;
+  z-index: auto;
+  filter: none;
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art,
+html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__title-art {
+  /* 对齐原生 <h1>：bottom 钉死，避免 placement 百分比把字顶到浓黑区上沿 */
+  left: clamp(34px, 5vw, 62px);
+  top: auto;
+  bottom: clamp(30px, 7vh, 54px);
+  transform: none;
+  max-width: 50%;
+  max-height: 12%;
+  object-fit: contain;
+  object-position: left bottom;
+  z-index: 7;
+}
+
+/* veil-footer：艺术字嵌在 panel 内（见 titleArtInPanel） */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"] .cover-opening__title-art--panel {
+  display: block;
+  position: static;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  transform: none;
+  width: auto;
+  max-width: 100%;
+  /* 比原生标题略放大，避免艺术字在浓黑底上显小 */
+  height: calc(var(--cover-veil-title-size) * 1.38);
+  max-height: none;
+  margin: 0 0 12px;
+  object-fit: contain;
+  object-position: left center;
+  z-index: auto;
+  /* 呼应原生 title text-shadow，轻量投影而非烧进 PNG 的大柔光浮块 */
+  filter: drop-shadow(0 3px 18px rgba(0, 0, 0, 0.5));
+}
+
+/* titleArt：拉高浓黑题签区，艺术字在色块内垂直居中；hook 仍贴底 */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__panel {
+  /* 子项绝对定位后不再撑宽，显式给题签区宽度 */
+  width: var(--cover-veil-panel-max);
+  max-width: var(--cover-veil-panel-max);
+  min-height: clamp(9.5rem, 24vh, 13.5rem);
+  padding-top: clamp(20px, 3vh, 32px);
+  padding-bottom: clamp(32px, 5vh, 52px);
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  right: auto;
+  /* 在「扣掉底 padding + hook」后的题签区内垂直居中，避免贴顶或压住 hook */
+  top: calc((100% - clamp(32px, 5vh, 52px) - 1.7em) / 2);
+  bottom: auto;
+  transform: translateY(-50%);
+  margin: 0;
+  width: auto;
+  max-width: calc(100% - 2 * clamp(36px, 5.4vw, 64px));
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"]:not(:has(.cover-opening__hook)) .cover-opening__title-art--panel,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"]:not(:has(.cover-opening__hook)) .cover-opening__title-art--panel {
+  top: 50%;
+}
+
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  bottom: clamp(32px, 5vh, 52px);
+  margin: 0;
+}
+
+/* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：只在贴纸开启（hook 也走
+   绝对定位）时跟着切绝对定位，钉在 hook 下方留白区——hook 从 bottom
+   32~52px 往上长，这里的 10~16px 保证不管 hook 几行都不会撞上。贴纸关闭
+   （hook 走文档流）时 .cover-opening__brand 保持基础规则的文档流，自然排
+   在 hook 之后，不需要额外规则。 */
+html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__brand,
+html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__brand {
+  position: absolute;
+  left: clamp(36px, 5.4vw, 64px);
+  bottom: clamp(10px, 1.8vh, 16px);
+  margin: 0;
+  color: rgba(245, 243, 240, 0.5);
 }
 
 .cover-opening__hook {
@@ -1031,6 +1231,17 @@ body.longshot-capturing .cover-opening .trip-meta {
     overflow: hidden;
   }
 
+  /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：钉在纸面栏 hook 下方
+     留白区，hook 最多 3 行仍从 bottom 40~56px 往上长，10~22px 留白够用。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 3.2vw, 40px);
+    bottom: clamp(10px, 2vh, 22px);
+    margin: 0;
+    color: rgba(111, 106, 99, 0.7);
+  }
+
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__explain-line,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__explain-line {
     color: rgba(20, 19, 18, 0.45);
@@ -1091,6 +1302,13 @@ body.longshot-capturing .cover-opening .trip-meta {
     backdrop-filter: none;
     z-index: var(--cover-panel-z);
     overflow: visible;
+  }
+
+  /* titleArt 时艺术字在 panel 内；加高纸签上下内边距完整托住笔画 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"][data-title-art="on"] .cover-opening__panel,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"][data-title-art="on"] .cover-opening__panel {
+    min-height: 0;
+    padding: clamp(26px, 3.8vh, 38px) clamp(28px, 4.2vw, 56px) clamp(28px, 4vh, 40px);
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__place,
@@ -1299,6 +1517,19 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：钉在左下角 place
+     标签正下方（hook 本风格恒隐藏，不用避让）。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="cameo-aperture"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 5vw, 64px);
+    bottom: clamp(4px, 1.5vh, 10px);
+    right: auto;
+    top: auto;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
   /* —— type-monument · 镂空巨字 —— */
   html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"] .cover-hero {
@@ -1354,6 +1585,24 @@ body.longshot-capturing .cover-opening .trip-meta {
     text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
   }
 
+  /* type-monument 长标题换行重叠修复（附带发现，2026-08-09，见 D-CAL-26
+     决策记录 §8.4）：`--cover-monument-title-size: min(25vw, 45vh)` 配
+     `line-height: 0.88` 是给 2~4 字单行巨字设计的——`-webkit-line-clamp:3`
+     让更长的标题换到 2~3 行时，紧行高 + 大字重笔画纵向溢出会让相邻行真的
+     视觉重叠。按 ``resolve_monument_title_layout`` 算出的字数档降字号 +
+     放宽行高（真实标题渲染截图核对，见决策记录）。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped"] .cover-opening__title,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped"] .cover-opening__title {
+    font-size: min(15vw, 27vh);
+    line-height: 1.08;
+  }
+
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped-long"] .cover-opening__title,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"][data-monument-title-layout="wrapped-long"] .cover-opening__title {
+    font-size: min(10vw, 18vh);
+    line-height: 1.26;
+  }
+
   html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"].cover-opening--has-src .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"].cover-opening--has-src .cover-opening__title {
     color: transparent;
@@ -1380,6 +1629,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     text-align: right;
     font-size: 0.85rem;
     letter-spacing: 0.12em;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
+     flex-column + justify-content:space-between，直接追加 flex 子项会
+     挤动现有 place/title/hook 的间距分布——改成绝对定位跳出 flex 流。
+     锚点选左下角（跟 place 同一侧）而不是右下角：右下角跟阅读器自带
+     的 screenplay-toolbar（复制文案/长图按钮，约 x:1076~1268,
+     y:703~784@1280x800）重叠，会被工具条盖住或叠字。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(28px, 4.5vw, 56px);
+    right: auto;
+    bottom: clamp(6px, 1.5vh, 12px);
+    margin: 0;
+    color: rgba(245, 243, 240, 0.45);
   }
 
   /* —— scroll-head · 卷首竖题 —— */
@@ -1494,6 +1759,21 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: #4b4238;
     font-family: var(--cover-font-title);
     font-size: 13px;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是右侧窄列
+     flex-column（title 竖排字 + 朱印 ::after），追加普通 flex 子项会把
+     朱印挤下去——改绝对定位跳出流，钉在窄列下方留白区（panel 本身
+     bottom:20%，右侧留白足够），配纸面底色用暗墨色。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__brand {
+    position: absolute;
+    right: 7%;
+    bottom: 12%;
+    left: auto;
+    margin: 0;
+    text-align: center;
+    color: rgba(75, 66, 56, 0.6);
   }
 
   /* —— portal-arch · 天窗 —— */
@@ -1627,6 +1907,19 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: rgba(246, 240, 232, 0.82);
   }
 
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：hook 底部居中
+     bottom:8%，这里钉在更贴近真实底边处，同一居中锚点。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="portal-arch"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="portal-arch"] .cover-opening__brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 3%;
+    margin: 0;
+    text-align: center;
+    color: rgba(246, 240, 232, 0.5);
+  }
+
   /* —— horizon-split · 地平线 —— */
   html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"],
   html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] {
@@ -1743,6 +2036,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     line-height: 1.7;
     flex: 0 0 auto;
     padding-bottom: 6px;
+  }
+
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
+     flex-row + justify-content:space-between（title/hook 两端对齐），
+     直接追加第 3 个 flex 子项会挤动两端间距——改绝对定位跳出 flex 流。
+     hook 本身贴真实底边（仅 padding-bottom:6px），若署名行贴得更低会
+     撞进阅读器自带的 screenplay-toolbar（复制文案/长图按钮，约
+     y:703~784@1280x800）；改成钉在 hook 上方的天然留白区，仍同一右侧
+     锚点，只是 bottom 取更大值，跳出工具条命中区。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__brand {
+    position: absolute;
+    right: clamp(24px, 4vw, 56px);
+    bottom: clamp(100px, 13vh, 120px);
+    margin: 0;
+    color: rgba(138, 131, 120, 0.7);
   }
 
   /* —— contact-stamp · 日戳档案 —— */
@@ -1880,18 +2189,30 @@ body.longshot-capturing .cover-opening .trip-meta {
     -webkit-line-clamp: 1;
   }
 
+  /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：钉在原生标题正下方
+     （同一 left 锚点），避开 archive/hook 占用的右下角列。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(34px, 5vw, 62px);
+    bottom: clamp(8px, 1.5vh, 14px);
+    margin: 0;
+    color: rgba(255, 255, 255, 0.4);
+    z-index: 6;
+  }
+
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__hook {
     position: absolute;
     right: clamp(34px, 5vw, 62px);
     bottom: clamp(30px, 7vh, 54px);
     margin: 0;
-    width: min(34%, 260px);
+    width: min(38%, 300px);
     text-align: right;
-    color: rgba(255, 255, 255, 0.46);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(11px, 1.15vw, 13px);
+    letter-spacing: 0.14em;
+    line-height: 1.75;
     max-width: none;
     z-index: 6;
     display: block;
@@ -2024,6 +2345,22 @@ body.longshot-capturing .cover-opening .trip-meta {
     z-index: 7;
   }
 
+  /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：本想贴 hook 同一
+     右侧锚点，但右下角跟阅读器自带的 screenplay-toolbar（复制文案/长图
+     按钮）重叠，会被工具条盖住——改成跟 place 同一左侧锚点，贴更靠近
+     真实底边。 */
+  html[data-layout="web"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__brand,
+  html[data-layout="auto"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__brand {
+    position: absolute;
+    left: clamp(26px, 4.4vw, 56px);
+    right: auto;
+    bottom: 3%;
+    margin: 0;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.42);
+    z-index: 7;
+  }
+
   /* —— craft meta unlocks (wireframe trip-meta / archive) —— */
   html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"] .trip-meta,
   html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] .trip-meta {
@@ -2131,12 +2468,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     right: clamp(34px, 5vw, 62px);
     bottom: clamp(30px, 7vh, 54px);
     margin: 0;
-    width: min(34%, 260px);
+    width: min(38%, 300px);
     text-align: right;
-    color: rgba(255, 255, 255, 0.46);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(11px, 1.15vw, 13px);
+    letter-spacing: 0.14em;
+    line-height: 1.75;
     white-space: pre-line;
     z-index: 6;
   }
@@ -2413,6 +2750,15 @@ body.longshot-capturing .cover-opening .trip-meta {
 .cover-closing__brand--custom {
   text-transform: none;
   letter-spacing: 0.04em;
+}
+
+.cover-closing__title-art-attr {
+  margin: 0.45rem 0 0;
+  max-width: 22em;
+  font-size: 9px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .cover-closing__end {

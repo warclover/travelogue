@@ -1,0 +1,13 @@
+﻿pairId,artSide,cssSide,artOnLeft
+b01,right,left,False
+b02,left,right,True
+b03,left,right,True
+b04,right,left,False
+b05,right,left,False
+b06,left,right,True
+b07,left,right,True
+b08,right,left,False
+b09,right,left,False
+b10,left,right,True
+b11,left,right,True
+b12,right,left,False

@@ -1,0 +1,1214 @@
+{
+  "generatedAt": "2026-08-08T13:44:19+00:00",
+  "summary": {
+    "total_rows": 56,
+    "skipped_by_policy": 26,
+    "attempted": 30,
+    "first_pass_rate": 0.8333,
+    "after_retry_rate": 0.9,
+    "by_prompt_version": {
+      "v2": {
+        "n": 30,
+        "first": 25,
+        "retry": 27,
+        "first_pass_rate": 0.8333,
+        "after_retry_rate": 0.9
+      }
+    },
+    "risk_bucket_counts": {
+      "punctuation": 4,
+      "repeated_char": 4,
+      "uncommon_chars": 18
+    },
+    "ac_cal_11_threshold": 0.9,
+    "ac_cal_11_after_retry_met": true,
+    "note": "AC-CAL-11 看 after_retry_rate（尝试子集）；skipped 含 D-CAL-21 生僻字 + 风险规则（除非 --include-risk）。未达标不得默认开启 route_c_enabled。"
+  },
+  "results": [
+    {
+      "index": 0,
+      "title": "拾光",
+      "category": "baseline_control",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15521,
+          "ocr_matched": true,
+          "ocr_recognized": "拾光",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\000-cascade-seal-pvv2-s0-a0-baseline_control.png"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "title": "拾光",
+      "category": "baseline_control",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19064,
+          "ocr_matched": true,
+          "ocr_recognized": "拾光",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\001-cascade-seal-pvv2-s1-a0-baseline_control.png"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "title": "光",
+      "category": "extreme_short_1char",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15581,
+          "ocr_matched": true,
+          "ocr_recognized": "光",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\002-flowing-brush-pvv2-s0-a0-extreme_short_1char.png"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "title": "光",
+      "category": "extreme_short_1char",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19140,
+          "ocr_matched": true,
+          "ocr_recognized": "光",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\003-flowing-brush-pvv2-s1-a0-extreme_short_1char.png"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "title": "甪直古镇",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 5,
+      "title": "甪直古镇",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 6,
+      "title": "涠洲岛落日",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 7,
+      "title": "涠洲岛落日",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 8,
+      "title": "婺源篁岭",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 9,
+      "title": "婺源篁岭",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 10,
+      "title": "黟县宏村",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 11,
+      "title": "黟县宏村",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 12,
+      "title": "龟兹寻踪",
+      "category": "rare_char_place",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19201,
+          "ocr_matched": true,
+          "ocr_recognized": "龟兹寻踪",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\012-flowing-brush-pvv2-s0-a0-rare_char_place.png"
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "title": "龟兹寻踪",
+      "category": "rare_char_place",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19079,
+          "ocr_matched": true,
+          "ocr_recognized": "龟兹寻踪",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\013-flowing-brush-pvv2-s1-a0-rare_char_place.png"
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "title": "阆中古城",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 15,
+      "title": "阆中古城",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 16,
+      "title": "措浪日记",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19154,
+          "ocr_matched": true,
+          "ocr_recognized": "措浪日记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\016-bold-vigorous-pvv2-s0-a0-rare_char_place.png"
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "title": "措浪日记",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19058,
+          "ocr_matched": true,
+          "ocr_recognized": "措浪日记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\017-bold-vigorous-pvv2-s1-a0-rare_char_place.png"
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "title": "硇洲岛",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 19,
+      "title": "硇洲岛",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 20,
+      "title": "邺城旧梦",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 21,
+      "title": "邺城旧梦",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 22,
+      "title": "麤犇靐齉爩",
+      "category": "extreme_rare_stress",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 23,
+      "title": "麤犇靐齉爩",
+      "category": "extreme_rare_stress",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 24,
+      "title": "厦门老城区",
+      "category": "polyphone_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": false,
+      "after_retry": false,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 18508,
+          "ocr_matched": false,
+          "ocr_recognized": "厦合老城区",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\024-loose-running-script-pvv2-s0-a0-polyphone_place.png"
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "latency_ms": 19214,
+          "ocr_matched": false,
+          "ocr_recognized": "厦门老开一区",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\024-loose-running-script-pvv2-s0-a1-polyphone_place.png"
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "title": "厦门老城区",
+      "category": "polyphone_place",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15456,
+          "ocr_matched": true,
+          "ocr_recognized": "厦门老城区",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\025-loose-running-script-pvv2-s1-a0-polyphone_place.png"
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "title": "重庆火锅魂",
+      "category": "polyphone_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19345,
+          "ocr_matched": true,
+          "ocr_recognized": "重庆火锅魂",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\026-bold-vigorous-pvv2-s0-a0-polyphone_place.png"
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "title": "重庆火锅魂",
+      "category": "polyphone_place",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19076,
+          "ocr_matched": true,
+          "ocr_recognized": "重庆火锅魂",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\027-bold-vigorous-pvv2-s1-a0-polyphone_place.png"
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "title": "重走318国道",
+      "category": "digits_mixed",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": false,
+      "after_retry": false,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15402,
+          "ocr_matched": false,
+          "ocr_recognized": "重走318之妖道",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\028-casual-handwritten-pvv2-s0-a0-digits_mixed.png"
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "latency_ms": 18475,
+          "ocr_matched": false,
+          "ocr_recognized": "重走3188不陪道",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\028-casual-handwritten-pvv2-s0-a1-digits_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "title": "重走318国道",
+      "category": "digits_mixed",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": false,
+      "after_retry": false,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 18599,
+          "ocr_matched": false,
+          "ocr_recognized": "重走3188自干疑",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\029-casual-handwritten-pvv2-s1-a0-digits_mixed.png"
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "latency_ms": 21714,
+          "ocr_matched": false,
+          "ocr_recognized": "重走318九道",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\029-casual-handwritten-pvv2-s1-a1-digits_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "title": "西藏骑行Vlog",
+      "category": "latin_mixed",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 21675,
+          "ocr_matched": true,
+          "ocr_recognized": "西藏骑行Vlog",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\030-cascade-seal-pvv2-s0-a0-latin_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "title": "西藏骑行Vlog",
+      "category": "latin_mixed",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": false,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19091,
+          "ocr_matched": false,
+          "ocr_recognized": "西藏骑行",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\031-cascade-seal-pvv2-s1-a0-latin_mixed.png"
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "latency_ms": 18487,
+          "ocr_matched": true,
+          "ocr_recognized": "西藏骑行Vlog",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\031-cascade-seal-pvv2-s1-a1-latin_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "title": "三亚Vlog",
+      "category": "latin_mixed",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15466,
+          "ocr_matched": true,
+          "ocr_recognized": "三亚Vlog",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\032-flowing-brush-pvv2-s0-a0-latin_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "title": "三亚Vlog",
+      "category": "latin_mixed",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 18582,
+          "ocr_matched": true,
+          "ocr_recognized": "三亚Vlog",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\033-flowing-brush-pvv2-s1-a0-latin_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "title": "海边·日落",
+      "category": "punctuation",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": "punctuation",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 35,
+      "title": "海边·日落",
+      "category": "punctuation",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": "punctuation",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 36,
+      "title": "一路向西…",
+      "category": "punctuation",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": "punctuation",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 37,
+      "title": "一路向西…",
+      "category": "punctuation",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": "punctuation",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 38,
+      "title": "稻城亚丁行",
+      "category": "common_scenic",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15446,
+          "ocr_matched": true,
+          "ocr_recognized": "稻城亚丁行",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\038-casual-handwritten-pvv2-s0-a0-common_scenic.png"
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "title": "稻城亚丁行",
+      "category": "common_scenic",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15290,
+          "ocr_matched": true,
+          "ocr_recognized": "稻城亚丁行",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\039-casual-handwritten-pvv2-s1-a0-common_scenic.png"
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "title": "阿勒泰散记",
+      "category": "common_scenic",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19288,
+          "ocr_matched": true,
+          "ocr_recognized": "阿勒泰散记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\040-cascade-seal-pvv2-s0-a0-common_scenic.png"
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "title": "阿勒泰散记",
+      "category": "common_scenic",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19049,
+          "ocr_matched": true,
+          "ocr_recognized": "阿勒泰散记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\041-cascade-seal-pvv2-s1-a0-common_scenic.png"
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "title": "918公里",
+      "category": "digits_mixed",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 18602,
+          "ocr_matched": true,
+          "ocr_recognized": "918公里",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\042-flowing-brush-pvv2-s0-a0-digits_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "title": "918公里",
+      "category": "digits_mixed",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": false,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 18438,
+          "ocr_matched": false,
+          "ocr_recognized": "9118公晋",
+          "failure_reason": "E_CAL_C_OCR_MISMATCH",
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\043-flowing-brush-pvv2-s1-a0-digits_mixed.png"
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "latency_ms": 18952,
+          "ocr_matched": true,
+          "ocr_recognized": "918公里",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\043-flowing-brush-pvv2-s1-a1-digits_mixed.png"
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "title": "秋去秋又来",
+      "category": "repeated_char",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": "repeated_char",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 45,
+      "title": "秋去秋又来",
+      "category": "repeated_char",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": "repeated_char",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 46,
+      "title": "一茶一饭间",
+      "category": "repeated_char",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": "repeated_char",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 47,
+      "title": "一茶一饭间",
+      "category": "repeated_char",
+      "style_id": "bold-vigorous",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": "repeated_char",
+      "common_chars_ok": true,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 48,
+      "title": "雾锁南迦巴瓦",
+      "category": "long_boundary_8char",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 49,
+      "title": "雾锁南迦巴瓦",
+      "category": "long_boundary_8char",
+      "style_id": "casual-handwritten",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": false,
+      "skipped_by_policy": true,
+      "first_pass": null,
+      "after_retry": null,
+      "attempts": []
+    },
+    {
+      "index": 50,
+      "title": "苔痕上阶绿",
+      "category": "poetic_phrase",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15452,
+          "ocr_matched": true,
+          "ocr_recognized": "苔痕上阶绿",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\050-cascade-seal-pvv2-s0-a0-poetic_phrase.png"
+        }
+      ]
+    },
+    {
+      "index": 51,
+      "title": "苔痕上阶绿",
+      "category": "poetic_phrase",
+      "style_id": "cascade-seal",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 19327,
+          "ocr_matched": true,
+          "ocr_recognized": "苔痕上阶绿",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\051-cascade-seal-pvv2-s1-a0-poetic_phrase.png"
+        }
+      ]
+    },
+    {
+      "index": 52,
+      "title": "拾光记",
+      "category": "common_easy_extra",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15448,
+          "ocr_matched": true,
+          "ocr_recognized": "拾光记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\052-flowing-brush-pvv2-s0-a0-common_easy_extra.png"
+        }
+      ]
+    },
+    {
+      "index": 53,
+      "title": "拾光记",
+      "category": "common_easy_extra",
+      "style_id": "flowing-brush",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15500,
+          "ocr_matched": true,
+          "ocr_recognized": "拾光记",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\053-flowing-brush-pvv2-s1-a0-common_easy_extra.png"
+        }
+      ]
+    },
+    {
+      "index": 54,
+      "title": "山海间",
+      "category": "common_easy_extra",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 0,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15522,
+          "ocr_matched": true,
+          "ocr_recognized": "山海间",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\054-loose-running-script-pvv2-s0-a0-common_easy_extra.png"
+        }
+      ]
+    },
+    {
+      "index": 55,
+      "title": "山海间",
+      "category": "common_easy_extra",
+      "style_id": "loose-running-script",
+      "model": "(default)",
+      "prompt_version": "v2",
+      "sample_i": 1,
+      "risk_reason": null,
+      "common_chars_ok": true,
+      "skipped_by_policy": false,
+      "first_pass": true,
+      "after_retry": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "latency_ms": 15402,
+          "ocr_matched": true,
+          "ocr_recognized": "山海间",
+          "failure_reason": null,
+          "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05b-spike-2026-08-08\\055-loose-running-script-pvv2-s1-a0-common_easy_extra.png"
+        }
+      ]
+    }
+  ]
+}

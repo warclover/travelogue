@@ -138,6 +138,78 @@ def cmd_render(
         typer.echo("  文案编辑: python -m travelogue serve <trip> 打开后点击文案保存到 trip.json")
 
 
+@app.command("title-art")
+def cmd_title_art(
+    path: str = typer.Argument(..., help="trip.json path or tripId"),
+    route_c: bool = typer.Option(
+        False,
+        "--route-c/--no-route-c",
+        help="尝试路线 C（通义万相文生图），失败自动 fallback 路线 B（D-CAL-16）",
+    ),
+    style: str | None = typer.Option(
+        None,
+        "--style",
+        help="路线 C styleId（cascade-seal | flowing-brush | loose-running-script | "
+        "bold-vigorous | casual-handwritten），默认取风格库第一项",
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="忽略已有非 stale 结果，强制重新生成"
+    ),
+) -> None:
+    """生成/刷新 trip.meta.titleArt（PRD-COVER-CALLIGRAPHY-TITLE-V1 §8）。"""
+    import hashlib
+
+    from travelogue.cover_engine.title_art import resolve_title_art
+    from travelogue.media.source_resolve import resolve_source_path
+
+    trip_path = _resolve(path)
+    svc = _trip_svc(trip_path)
+    trip = svc.load(trip_path)
+    trip_dir = trip_path.parent
+    art_dir = trip_dir / "trip-derived" / "title-art"
+    cfg = get_config()
+    ta = cfg.title_art
+
+    def _resolve_asset_path(asset: dict) -> Path | None:
+        return resolve_source_path(asset, trip_dir)
+
+    def _write_png(data: bytes) -> str:
+        art_dir.mkdir(parents=True, exist_ok=True)
+        digest = hashlib.sha1(data).hexdigest()[:12]
+        out_path = art_dir / f"{digest}.png"
+        out_path.write_bytes(data)
+        return str(art_dir.relative_to(trip_dir) / out_path.name).replace("\\", "/")
+
+    try:
+        result = resolve_title_art(
+            trip,
+            resolve_asset_path=_resolve_asset_path,
+            write_png=_write_png,
+            route_c_enabled=route_c,
+            route_c_style_id=style,
+            force=force,
+            model_name=ta.model_name,
+            prompt_version=ta.prompt_version,
+            route_c_max_attempts=ta.route_c_max_attempts,
+            ocr_verify_enabled=ta.ocr_verify,
+        )
+    except Exception as exc:  # noqa: BLE001 — CLI 边界统一报错，不让异常裸奔
+        typer.echo(f"E_TITLE_ART: {exc}", err=True)
+        raise typer.Exit(1) from exc
+
+    persist_trip_snapshot(svc, trip_path, trip)
+    if result is None:
+        typer.echo(
+            "OK title-art · 未生成（非白名单 openingStyle / 标题为空 / 字形不覆盖，已 fail-open）"
+        )
+        return
+    # 缓存命中（非 force）时引擎仍返回已有结果，但不会改写 trip / 不写新 PNG。
+    engine_label = "路线C" if result.engine == "diffusion-fixed-prompt-v1" else "路线B"
+    typer.echo(f"OK title-art · {engine_label} · {result.asset_path}")
+    if result.fallback_from:
+        typer.echo(f"  fallback: {result.fallback_from} → clean-pipeline-v1（D-CAL-16）")
+
+
 @app.command("studio")
 def cmd_studio(
     pick_folder: Path | None = typer.Option(

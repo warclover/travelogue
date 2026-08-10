@@ -10,7 +10,10 @@ import pytest
 
 from travelogue.paths import ROOT, TEMPLATE_VISUAL_JOURNAL
 from travelogue.render.assemble import build_render_context
-from travelogue.render.cover_opening import resolve_split_mat_title_layout
+from travelogue.render.cover_opening import (
+    resolve_monument_title_layout,
+    resolve_split_mat_title_layout,
+)
 from travelogue.render.engine import render_trip
 from travelogue.render.golden_regression import load_golden_trip
 from travelogue.services.cover_opening_style import (
@@ -403,6 +406,25 @@ def test_build_render_context_long_title_layout_horizontal() -> None:
     assert ctx["coverTitleLayout"] == "horizontal"
 
 
+def test_build_render_context_monument_title_layout_tiers() -> None:
+    """接线核对：``coverMonumentTitleLayout`` 随标题字数变档（附带发现修复，
+    见 test_resolve_monument_title_layout_tiers 同一起因）。"""
+    trip = load_golden_trip()
+    trip.setdefault("meta", {})["coverOpeningStyle"] = "type-monument"
+
+    trip["meta"]["title"] = "斯里"
+    assert build_render_context(trip, export_mode="draft")["coverMonumentTitleLayout"] == "compact"
+
+    trip["meta"]["title"] = "斯里兰卡见闻录"
+    assert build_render_context(trip, export_mode="draft")["coverMonumentTitleLayout"] == "wrapped"
+
+    trip["meta"]["title"] = "斯里兰卡见闻录斯里兰"
+    assert (
+        build_render_context(trip, export_mode="draft")["coverMonumentTitleLayout"]
+        == "wrapped-long"
+    )
+
+
 def test_build_render_context_legacy_trip_defaults_veil_footer() -> None:
     trip = load_golden_trip()
     trip.get("meta", {}).pop("coverOpeningStyle", None)
@@ -578,6 +600,20 @@ def test_resolve_split_mat_title_layout_tiers() -> None:
     assert resolve_split_mat_title_layout(_LONG_TITLE) == "horizontal"
 
 
+def test_resolve_monument_title_layout_tiers() -> None:
+    """type-monument 镂空巨字换行重叠修复（D-CAL-26 附带发现 §8.4 跟进）：
+    短标题维持原巨字单行效果，中/长标题降字号 + 放宽行高避免换行重叠
+    （真实渲染截图核对见 cover-calligraphy-title-v1-d-cal-26 决策记录 §9）。
+    """
+    assert resolve_monument_title_layout("拾光") == "compact"
+    assert resolve_monument_title_layout("斯里") == "compact"
+    assert resolve_monument_title_layout("东澳岛记") == "compact"  # 4 字，边界内
+    assert resolve_monument_title_layout("斯里兰卡见闻录") == "wrapped"  # 7 字
+    assert resolve_monument_title_layout("东澳岛夏日") == "wrapped"  # 5 字，边界内
+    assert resolve_monument_title_layout("斯里兰卡见闻录斯里兰") == "wrapped-long"  # 10 字
+    assert resolve_monument_title_layout("") == "compact"  # 空标题不应报错
+
+
 def test_cover_styles_v5_journal_css_tokens() -> None:
     """V5 selectors retained (P2) + V6 tokens/skins present."""
     css = JOURNAL_CSS.read_text(encoding="utf-8")
@@ -594,6 +630,8 @@ def test_cover_styles_v5_journal_css_tokens() -> None:
         'data-cover-opening="magazine-head"',
         "min-width: 64rem",
         "72%",
+        'data-monument-title-layout="wrapped"',
+        'data-monument-title-layout="wrapped-long"',
     ):
         assert token in css, f"missing cover style token: {token}"
 

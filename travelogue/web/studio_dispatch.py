@@ -54,6 +54,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_save_copy,
     match_trip_screen_replan,
     match_trip_template,
+    match_trip_title_art_resolve,
 )
 from travelogue.web.studio_handlers.paths import (
     ALBUM_PREVIEW_PATH,
@@ -384,6 +385,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     ),
     RouteSpec(
         "POST",
+        "/__travelogue/trips/{tripId}/title-art/resolve",
+        "trip_handlers.handle_post_resolve_title_art",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
         "/__travelogue/trips/{tripId}/asset-media-class",
         "trip_handlers.handle_asset_media_class",
         "capture",
@@ -469,6 +477,7 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/trips/{tripId}/bookends/repick-opening": match_trip_bookends_repick_opening,
     "/__travelogue/trips/{tripId}/bookends/repick-closing": match_trip_bookends_repick_closing,
     "/__travelogue/trips/{tripId}/bookends/restore-auto": match_trip_bookends_restore_auto,
+    "/__travelogue/trips/{tripId}/title-art/resolve": match_trip_title_art_resolve,
     "/__travelogue/templates/admin/{templateId}": match_template_admin_patch,
     "/__travelogue/templates/admin/{templateId}/metadata": match_template_admin_metadata,
     "/__travelogue/trips/{tripId}/intent": match_trip_intent,

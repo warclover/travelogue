@@ -1,0 +1,23 @@
+# AC-CAL-01/02/10 verify output
+
+## AC-CAL-01 · enabled=false / 无字段 ≡ 不叠加贴纸
+- 无 titleArt 字段: has=False src=None → PASS
+- enabled=false: has=False src=None → PASS
+- enabled+stale: has=False src=None → PASS
+- enabled=true 白名单: has=True src='trip-derived/title-art/demo.png' attr含装帧承诺=True → PASS
+
+## AC-CAL-02 · 干净管线 vs 金样 fixture（SHD-CAL-01）
+- aHash Hamming(current, golden)=0 ≤ 16 → PASS
+- golden fixture: tests\fixtures\title_art\ac02_clean_pipeline_golden.png
+- 证据②参考（非门禁）: 02-clean-composite-sample.png size=(1024, 1024) mode=RGB — 与现网透明裁边 PNG 构图不同，不参与 Hamming 判定
+- 当前渲染落盘: docs\acceptance-records\attachments\cover-calligraphy-title-v1-ac01-02-10-2026-08-08\ac02-current-render.png
+
+## AC-CAL-10 · Web 预览与长图同一 assetPath
+- 选用 trip: demo-0ebda73294
+- trip.json assetPath: trip-derived/title-art/39f0ae9b75b0.png
+- _resolve_title_art_src: trip-derived/title-art/39f0ae9b75b0.png
+- index.html src: 'trip-derived/title-art/39f0ae9b75b0.png'
+- index-longshot.html src: 'trip-derived/title-art/39f0ae9b75b0.png'
+- 三者一致（含 trip.json）→ PASS
+
+## OVERALL: PASS

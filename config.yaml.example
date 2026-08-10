@@ -27,6 +27,15 @@ llm:
   # model: qwen-plus
   # api_key_env: DASHSCOPE_API_KEY
 
+# 封面装帧标题（CAL）· Studio「封面版式」面板
+title_art:
+  enabled: true                   # 总闸：显示「生成装帧标题」
+  route_c_enabled: true           # 显示「优先 AI 手写体」；默认勾选，可取消；未通过回退字库
+  # model_name: wanx2.1-t2i-plus
+  # prompt_version: v2
+  # route_c_max_attempts: 2       # OCR 失败后再生成次数上限（含首次）
+  # ocr_verify: true
+
 # --- 规划预留（未接入 runtime）---
 ffmpeg:
   path: ffmpeg

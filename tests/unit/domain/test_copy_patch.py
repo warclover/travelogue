@@ -55,6 +55,35 @@ def test_apply_meta_cover_opening_style() -> None:
     assert trip["meta"]["edited"] is True
 
 
+def test_apply_meta_title_marks_existing_title_art_stale() -> None:
+    """AC-CAL-09 · PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：改 meta.title 后，已生成
+    的贴纸（字面来自旧标题）必须 stale，禁止继续展示旧文案贴纸为「已更新」。
+    """
+    trip = _sample_trip()
+    trip["meta"]["title"] = "旧标题"
+    trip["meta"]["titleArt"] = {"version": 1, "enabled": True, "stale": False}
+    apply_copy_patch(trip, "meta.title", "新标题")
+    assert trip["meta"]["titleArt"]["stale"] is True
+
+
+def test_apply_meta_title_noop_when_no_title_art() -> None:
+    """尚未生成过贴纸（未 enabled）时，改标题不应凭空生造 titleArt 字段。"""
+    trip = _sample_trip()
+    trip["meta"]["title"] = "旧标题"
+    apply_copy_patch(trip, "meta.title", "新标题")
+    assert "stale" not in trip["meta"].get("titleArt", {})
+
+
+def test_apply_cover_opening_style_marks_existing_title_art_stale() -> None:
+    """AC-CAL-09 · 换 Opening 风格会变更白名单归属（D-CAL-10）与 §6.2 定位
+    rect，已生成的贴纸同样必须 stale。
+    """
+    trip = _sample_trip()
+    trip["meta"]["titleArt"] = {"version": 1, "enabled": True, "stale": False}
+    apply_copy_patch(trip, "meta.coverOpeningStyle", "folio-overlap")
+    assert trip["meta"]["titleArt"]["stale"] is True
+
+
 def test_apply_deprecated_cover_opening_style_raises() -> None:
     trip = _sample_trip()
     with pytest.raises(CopyPatchError):

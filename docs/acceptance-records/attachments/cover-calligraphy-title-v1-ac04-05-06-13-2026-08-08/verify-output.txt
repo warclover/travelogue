@@ -1,0 +1,57 @@
+real cover 测试集（14 条）：
+  - demo-0ebda73294::初中毕业照  size=(5948, 2514)
+  - demo-1547c68851::夏睿彤贵州暑假游  size=(3373, 5082)
+  - demo-1b67b06546::斯里兰卡人文精选  size=(5735, 3226)
+  - demo-1d4f92d534::仙本那精选全集2  size=(5653, 3180)
+  - demo-2019::2019相册精选  size=(3508, 2479)
+  - demo-2025::2025东澳岛一日游  size=(3106, 4530)
+  - demo-20ecc928d6::武大 米娜  size=(1071, 1600)
+  - demo-3ee2727aea::夏睿彤年度精选2  size=(3716, 5202)
+  - demo-49551086fe::华农油菜花  size=(3155, 4417)
+  - demo-49cbe46479::张智慧仲夏日漫游斯里兰卡  size=(4000, 2670)
+  - demo-65db8fd377::凯哥拍摄精选4  size=(5760, 3840)
+  - demo-album::斯里兰卡见闻录  size=(2400, 1350)
+  - demo-d6697c8dca::王丹昙华林半日游  size=(4912, 7360)
+  - demo-e52494839a::斯里兰卡风光精选  size=(2425, 3755)
+
+======================================================================
+AC-CAL-04 + AC-CAL-05 · 4 款白名单风格 x 真实封面测试集
+======================================================================
+
+候选矩形面积占比（AC-CAL-05 自测口径，阈值 <= 0.35）：
+  veil-footer      [primary ] area=0.1848 (18.5%)  PASS
+  folio-overlap    [primary ] area=0.1323 (13.2%)  PASS
+  folio-overlap    [fallback] area=0.2430 (24.3%)  PASS
+  band-cut         [primary ] area=0.0770 (7.7%)  PASS
+  contact-stamp    [primary ] area=0.1540 (15.4%)  PASS
+  contact-stamp    [fallback] area=0.1064 (10.6%)  PASS
+
+对比度实测（AC-CAL-04，MIN_CONTRAST_RATIO=3.0）：
+测试集：14 条真实 trip 封面照片（非 fixture/非合成图）
+
+  [veil-footer   /primary ] 真实封面 N=14  ratio min=4.27 max=18.03 avg=7.08  全部达标=True
+  [folio-overlap /primary ] assume_paper_bg→固定纸面色估计(--cover-folio-paper): bg=(244, 241, 234) -> color=#1a1a1a ratio=15.429 ok=True
+  [folio-overlap /fallback] assume_paper_bg→固定纸面色估计(--cover-folio-paper): bg=(244, 241, 234) -> color=#1a1a1a ratio=15.429 ok=True
+  [band-cut      /primary ] 真实封面 N=14  ratio min=4.36 max=11.89 avg=6.66  全部达标=True
+  [contact-stamp /primary ] assume_dark_veil→固定近黑背景估计: bg=(10, 10, 10) -> color=#ffffff ratio=19.798 ok=True
+  [contact-stamp /fallback] assume_dark_veil→固定近黑背景估计: bg=(10, 10, 10) -> color=#ffffff ratio=19.798 ok=True
+
+汇总：对比度检查 32/32 达标；遮挡阈值违规 0 例
+
+======================================================================
+AC-CAL-13 · 路线 C 抠字重上色是否同样满足 §6.1 对比度合同
+======================================================================
+复用路线 C W0.5 Spike 真实产出图（非新造/非 mock）：6 张
+来源目录：docs\acceptance-records\attachments\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08
+
+  [00-cascade-seal-baseline_control.png] bg=(108, 117, 96) -> 目标色=#ffffff ratio=4.826 ok=True | 重上色后墨迹像素=(255, 255, 255, 213) 颜色一致=True
+  [01-flowing-brush-extreme_short_1char.png] bg=(94, 108, 84) -> 目标色=#ffffff ratio=5.602 ok=True | 重上色后墨迹像素=(255, 255, 255, 219) 颜色一致=True
+  [02-loose-running-script-rare_char_place.png] bg=(77, 81, 87) -> 目标色=#ffffff ratio=7.984 ok=True | 重上色后墨迹像素=(255, 255, 255, 252) 颜色一致=True
+  [03-bold-vigorous-rare_char_place.png] bg=(173, 186, 185) -> 目标色=#1a1a1a ratio=8.703 ok=True | 重上色后墨迹像素=(26, 26, 26, 199) 颜色一致=True
+  [04-casual-handwritten-rare_char_place.png] bg=(186, 203, 219) -> 目标色=#1a1a1a ratio=10.487 ok=True | 重上色后墨迹像素=(26, 26, 26, 254) 颜色一致=True
+  [05-cascade-seal-rare_char_place.png] bg=(90, 99, 63) -> 目标色=#ffffff ratio=6.381 ok=True | 重上色后墨迹像素=(255, 255, 255, 194) 颜色一致=True
+
+默认兜底白色可复现性核对（背景为中性灰，白/深均可能不达标时）：
+  bg=(128, 128, 128) white_ratio=3.95 dark_ratio=4.41 -> 选色=#1a1a1a ok=True 
+  bg=(140, 130, 120) white_ratio=3.76 dark_ratio=4.62 -> 选色=#1a1a1a ok=True 
+  bg=(110, 115, 108) white_ratio=4.85 dark_ratio=3.59 -> 选色=#ffffff ok=True （回落白色）

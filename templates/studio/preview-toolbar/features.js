@@ -15,7 +15,7 @@ import { presentAutoplayHref } from "./dock.js";
 import { saveMagazineTitle } from "./inline-edit.js";
 import { formatAestheticPurposeLine, isAestheticDebugEnabled } from "./drawers.js";
 import {
-  revealTripPath,
+  revealTripFolder,
   refreshStaleHint,
   syncLongshotPreviewRowVisibility,
 } from "./longshot.js";
@@ -39,6 +39,8 @@ import {
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+
+export { revealTripFolder };
 
 function attachFeaturedHelpLinkOnToast() {
   var el = document.getElementById("preview-toolbar-toast");
@@ -75,6 +77,8 @@ function showFeaturedRerankDockCue(root) {
 
 var COVER_OPENING_STYLE_OPTIONS = [];
 var READER_VIEW_KEY = "travelogue.studio.readerView";
+/** 路线 C 勾选偏好：缺省优先 AI；用户取消后记 "0"，再勾回记 "1"。 */
+var TITLE_ART_ROUTE_C_PREF_KEY = "travelogue.studio.titleArtRouteC";
 var _DEFAULT_COVER_STYLE = "veil-footer";
 
 
@@ -678,21 +682,6 @@ export function runFeaturedRerank(tripId, root) {
 }
 
 
-export function revealTripFolder(tripId) {
-    fetch("/__travelogue/trips")
-      .then(function (resp) { return resp.json(); })
-      .then(function (data) {
-        var trips = data.trips || [];
-        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
-        var rel = (trip && trip.previewRelPath) || "index.html";
-        return revealTripPath(tripId, rel);
-      })
-      .catch(function () {
-        showToolbarToast("无法打开文件夹", { error: true });
-      });
-  }
-
-
 export function readCoverOpeningStyleFromDom() {
     var section = document.querySelector(".cover-opening[data-cover-opening]");
     return section ? section.getAttribute("data-cover-opening") || _DEFAULT_COVER_STYLE : _DEFAULT_COVER_STYLE;
@@ -961,13 +950,185 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       '<label class="preview-sheet__cover-keep-label">' +
       '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
       ' 更换时保留当前封面图</label>' +
-      '<p class="preview-sheet__cover-fit-hint" hidden></p>';
+      '<p class="preview-sheet__cover-fit-hint" hidden></p>' +
+      '<div class="preview-sheet__title-art" data-title-art hidden>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">给标题加一层艺术字贴纸（此版式支持时才会生效，不会覆盖你写的文字）</p>' +
+      '<p class="preview-sheet__title-art-attr" data-title-art-attr>使用你的照片装帧 · 未生成风景</p>' +
+      '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
+      '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
+      '<span class="preview-sheet__title-art-routec-copy">' +
+      '<span class="preview-sheet__title-art-routec-title">优先 AI 手写体</span>' +
+      '<span class="preview-sheet__title-art-routec-hint">未通过自动用字库 · 约十几秒</span>' +
+      '</span></label>' +
+      '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成装帧标题</button>' +
+      '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
+      '</div>';
     var group = section.querySelector(".preview-sheet__cover-styles");
     var blurbEl = section.querySelector(".preview-sheet__cover-blurb");
     var fitHintEl = section.querySelector(".preview-sheet__cover-fit-hint");
     var keepCheck = section.querySelector(".preview-sheet__cover-keep-check");
+    var titleArtBlock = section.querySelector("[data-title-art]");
+    var titleArtAttr = section.querySelector("[data-title-art-attr]");
+    var titleArtRouteCLabel = section.querySelector("[data-title-art-routec-label]");
+    var titleArtRouteCCheck = section.querySelector("[data-title-art-routec-check]");
+    var titleArtBtn = section.querySelector("[data-title-art-btn]");
+    var titleArtStatus = section.querySelector("[data-title-art-status]");
     var selectedStyle = readCoverOpeningStyleFromDom();
     var options = COVER_OPENING_STYLE_OPTIONS.slice();
+
+    function setTitleArtAttribution(engine) {
+      if (!titleArtAttr) return;
+      var base = "使用你的照片装帧 · 未生成风景";
+      var detail =
+        engine === "diffusion-fixed-prompt-v1"
+          ? "标题字迹由 AI 书法风格生成"
+          : "标题为程序化字库合成，非 AI 绘图";
+      titleArtAttr.textContent = engine ? base + "。" + detail : base;
+    }
+
+    function setTitleArtStatus(text, isError) {
+      if (!titleArtStatus) return;
+      if (!text) {
+        titleArtStatus.hidden = true;
+        titleArtStatus.textContent = "";
+        return;
+      }
+      titleArtStatus.hidden = false;
+      titleArtStatus.textContent = text;
+      titleArtStatus.classList.toggle("is-error", !!isError);
+    }
+
+    function emitTitleArtResolve(meta) {
+      // D-CAL-27：漏斗事件；meta.outcome 区分 success/disabled/error/network，
+      // 配合 engine + routeCRequested + fallback 可算出 B/C 使用率与失败率。
+      trackStudioEvent(
+        "title_art_resolve",
+        Object.assign(
+          {
+            tripId: tripId,
+            coverOpeningStyle: selectedStyle || "",
+          },
+          meta || {}
+        )
+      );
+    }
+
+    function requestTitleArt() {
+      if (!titleArtBtn) return;
+      titleArtBtn.disabled = true;
+      var wantRouteC = !!(titleArtRouteCCheck && titleArtRouteCCheck.checked);
+      setTitleArtStatus(
+        wantRouteC ? "生成中（AI 手写体；未通过会回退默认样式）…" : "生成中…"
+      );
+      var body = { force: true };
+      if (wantRouteC) body.routeC = true;
+      postJson(
+        "/__travelogue/trips/" + encodeURIComponent(tripId) + "/title-art/resolve",
+        body
+      )
+        .then(function (res) {
+          titleArtBtn.disabled = false;
+          if (res.status !== 200 || !res.body || !res.body.ok) {
+            setTitleArtStatus((res.body && res.body.message) || "生成失败，请稍后重试", true);
+            emitTitleArtResolve({
+              outcome: "error",
+              enabled: false,
+              engine: "",
+              routeCRequested: wantRouteC,
+              fallback: false,
+            });
+            return;
+          }
+          if (!res.body.enabled) {
+            setTitleArtStatus("此版式或标题暂不支持艺术字，已保持默认样式");
+            emitTitleArtResolve({
+              outcome: "disabled",
+              enabled: false,
+              engine: res.body.engine || "",
+              routeCRequested: !!res.body.routeCRequested,
+              routeCAllowedByConfig: !!res.body.routeCAllowedByConfig,
+              fallback: !!res.body.fallbackFrom,
+            });
+            return;
+          }
+          var engineLabel =
+            res.body.engine === "diffusion-fixed-prompt-v1" ? "AI 手写体" : "字库合成";
+          var msg = "已生成 · " + engineLabel;
+          if (res.body.fallbackFrom) {
+            msg += "（AI 手写体未通过校验，已自动退回默认样式）";
+          }
+          setTitleArtStatus(msg);
+          setTitleArtAttribution(res.body.engine || "clean-pipeline-v1");
+          showToolbarToast("装帧标题已更新", { duration: 2200 });
+          reloadPreviewAfterLayout();
+          emitTitleArtResolve({
+            outcome: "success",
+            enabled: true,
+            engine: res.body.engine || "",
+            routeCRequested: !!res.body.routeCRequested,
+            routeCAllowedByConfig: !!res.body.routeCAllowedByConfig,
+            fallback: !!res.body.fallbackFrom,
+            ocrVerified:
+              typeof res.body.ocrVerified === "boolean" ? res.body.ocrVerified : null,
+          });
+        })
+        .catch(function () {
+          titleArtBtn.disabled = false;
+          setTitleArtStatus("生成失败，请稍后重试", true);
+          emitTitleArtResolve({
+            outcome: "network",
+            enabled: false,
+            engine: "",
+            routeCRequested: wantRouteC,
+            fallback: false,
+          });
+        });
+    }
+
+    if (titleArtBtn) {
+      titleArtBtn.addEventListener("click", requestTitleArt);
+    }
+
+    // Studio 高级面板触发入口：服务端总闸（config.title_art）决定是否展示
+    // 这一整块，以及是否展示「优先 AI 手写体」勾选框（OQ-CAL-06 · 默认勾选）。
+    fetch("/__travelogue/config")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cfg) {
+        var titleArtCfg = cfg && cfg.titleArt;
+        if (!titleArtCfg || !titleArtCfg.enabled || !titleArtBlock) return;
+        titleArtBlock.hidden = false;
+        var routeCShown = !!(titleArtCfg.routeCEnabled && titleArtRouteCLabel);
+        if (routeCShown) {
+          titleArtRouteCLabel.hidden = false;
+          // 默认勾选优先 AI；仅当用户曾显式取消时保持未勾选。
+          var pref = null;
+          try {
+            pref = localStorage.getItem(TITLE_ART_ROUTE_C_PREF_KEY);
+          } catch (_e) {}
+          if (titleArtRouteCCheck) {
+            titleArtRouteCCheck.checked = pref !== "0";
+            if (!titleArtRouteCCheck._titleArtRouteCPrefBound) {
+              titleArtRouteCCheck._titleArtRouteCPrefBound = true;
+              titleArtRouteCCheck.addEventListener("change", function () {
+                try {
+                  localStorage.setItem(
+                    TITLE_ART_ROUTE_C_PREF_KEY,
+                    titleArtRouteCCheck.checked ? "1" : "0"
+                  );
+                } catch (_e2) {}
+              });
+            }
+          }
+        }
+        // D-CAL-27：入口曝光——配合 title_art_resolve 可算点击转化率。
+        trackStudioEvent("title_art_impression", {
+          tripId: tripId,
+          coverOpeningStyle: selectedStyle || "",
+          routeCShown: routeCShown,
+          routeCChecked: !!(titleArtRouteCCheck && titleArtRouteCCheck.checked),
+        });
+      })
+      .catch(function () {});
 
     function syncSelection(style) {
       if (!group) return;

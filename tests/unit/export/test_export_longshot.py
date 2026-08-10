@@ -220,6 +220,45 @@ def test_reveal_path_allows_inside_trips(tmp_path: Path) -> None:
     reveal_path_in_folder(target, allowed_root=allowed)
 
 
+def test_reveal_path_opens_directory_without_select(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """目录目标应直接打开该目录，而非 /select 到父级。"""
+    allowed = tmp_path / "trips"
+    export_dir = allowed / "demo" / "导出文件"
+    export_dir.mkdir(parents=True)
+    calls: list[list[str]] = []
+
+    def _fake_popen(cmd: list[str], **_kwargs: object) -> object:
+        calls.append(list(cmd))
+        return object()
+
+    monkeypatch.setattr("travelogue.export.longshot.subprocess.Popen", _fake_popen)
+    monkeypatch.setattr("travelogue.export.longshot.sys.platform", "win32")
+    reveal_path_in_folder(export_dir, allowed_root=allowed)
+    assert calls == [["explorer", str(export_dir.resolve())]]
+
+
+def test_reveal_path_selects_file_on_windows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    allowed = tmp_path / "trips"
+    trip = allowed / "demo"
+    trip.mkdir(parents=True)
+    target = trip / "demo-longshot.png"
+    target.write_bytes(b"png")
+    calls: list[list[str]] = []
+
+    def _fake_popen(cmd: list[str], **_kwargs: object) -> object:
+        calls.append(list(cmd))
+        return object()
+
+    monkeypatch.setattr("travelogue.export.longshot.subprocess.Popen", _fake_popen)
+    monkeypatch.setattr("travelogue.export.longshot.sys.platform", "win32")
+    reveal_path_in_folder(target, allowed_root=allowed)
+    assert calls == [["explorer", "/select,", str(target.resolve())]]
+
+
 def test_capture_bytes_p1_fallback_preserves_chapter_index(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

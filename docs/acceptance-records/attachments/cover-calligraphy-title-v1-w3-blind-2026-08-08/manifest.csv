@@ -1,0 +1,13 @@
+﻿pairId,tripId,style,title,leftFile,rightFile,leftKind,rightKind,artOnLeft,engine,assetPath,styleOverride
+b01,demo-0ebda73294,band-cut,初中毕业照,b01-css.png,b01-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/de0ac7164497.png,band-cut
+b02,demo-2019,band-cut,2019相册精选,b02-art.png,b02-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/8caccc4d7568.png,
+b03,demo-1b67b06546,band-cut,斯里兰卡人文精选,b03-art.png,b03-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/3b8391c578f1.png,
+b04,demo-49551086fe,band-cut,华农油菜花,b04-css.png,b04-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/44341ad6e1b6.png,
+b05,demo-1547c68851,veil-footer,夏睿彤贵州暑假游,b05-css.png,b05-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/005a2fdc07c9.png,
+b06,demo-3ee2727aea,veil-footer,夏睿彤年度精选,b06-art.png,b06-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/96c5df0b1265.png,
+b07,demo-20ecc928d6,veil-footer,武大 米娜,b07-art.png,b07-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/745dfbd6f557.png,
+b08,demo-0ebda73294,veil-footer,初中毕业照,b08-css.png,b08-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/b49db310e9e5.png,veil-footer
+b09,demo-album,contact-stamp,斯里兰卡见闻录,b09-css.png,b09-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/50bc4a5c8fa9.png,contact-stamp
+b10,demo-e52494839a,contact-stamp,斯里兰卡风光精选,b10-art.png,b10-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/00e5ffb5931e.png,contact-stamp
+b11,demo-d6697c8dca,folio-overlap,王丹昙华林半日游,b11-art.png,b11-css.png,art,css,True,clean-pipeline-v1,trip-derived/title-art/370258cc9881.png,folio-overlap
+b12,demo-ef0cef1d1d,folio-overlap,我家云南自驾精选,b12-css.png,b12-art.png,css,art,False,clean-pipeline-v1,trip-derived/title-art/c162399f65c7.png,folio-overlap

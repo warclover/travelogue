@@ -63,15 +63,21 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
         return "meta.hook"
 
     if path == "meta.title":
+        from travelogue.cover_engine.title_art.engine import mark_title_art_stale
         from travelogue.services.trip import apply_intent
 
         cleaned = value[:META_TITLE_MAX].strip()
         apply_intent(trip, title=cleaned if cleaned else None)
         meta["edited"] = True
+        # PRD-COVER-CALLIGRAPHY-TITLE-V1 §7 stale 合同 / AC-CAL-09：主串是贴纸
+        # 的字面来源，题目一变，已生成的贴纸就是「旧文案」——必须置 stale，
+        # 禁止继续把改名前烧进 PNG 里的旧字当作「已更新」展示。
+        mark_title_art_stale(trip)
         return "meta.title"
 
     if path == "meta.coverOpeningStyle":
         from travelogue.cover_engine import assignable_style_ids, is_assignable
+        from travelogue.cover_engine.title_art.engine import mark_title_art_stale
 
         cleaned = value.strip()
         if not is_assignable(cleaned):
@@ -82,6 +88,8 @@ def apply_copy_patch(trip: dict, path: str, value: str) -> str:
             )
         meta["coverOpeningStyle"] = cleaned
         meta["edited"] = True
+        # 换了 Opening 风格，白名单归属（D-CAL-10）、§6.2 定位 rect 都要重算。
+        mark_title_art_stale(trip)
         return "meta.coverOpeningStyle"
 
     if path == "meta.worksBrandMode":

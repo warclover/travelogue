@@ -1155,6 +1155,14 @@ body.longshot-capturing .breath-pause-card[data-block="breath-pause-card"] {
   letter-spacing: 0.04em;
 }
 
+.longshot-boundary-footer__title-art-attr {
+  margin: 0.35rem 0 0;
+  max-width: 28em;
+  font-size: 10px;
+  line-height: 1.4;
+  opacity: 0.5;
+}
+
 body.longshot-capturing .longshot-boundary-footer[data-block="longshot-boundary-footer"] {
   padding-bottom: 48px;
 }

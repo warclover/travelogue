@@ -1,0 +1,433 @@
+{
+  "generatedAt": "2026-08-08T02:37:08+00:00",
+  "summary": {
+    "total_samples": 26,
+    "generation_success": 26,
+    "generation_success_rate": 1.0,
+    "ocr_pass_rate_of_generated": 0.5769,
+    "failure_reasons": {},
+    "latency_ms": {
+      "avg": 18016.1,
+      "min": 15285,
+      "max": 28303,
+      "p95": 19213
+    },
+    "by_category": {
+      "baseline_control": {
+        "total": 1,
+        "ocr_pass": 0
+      },
+      "extreme_short_1char": {
+        "total": 1,
+        "ocr_pass": 1
+      },
+      "rare_char_place": {
+        "total": 9,
+        "ocr_pass": 5
+      },
+      "extreme_rare_stress": {
+        "total": 1,
+        "ocr_pass": 0
+      },
+      "polyphone_place": {
+        "total": 2,
+        "ocr_pass": 1
+      },
+      "digits_mixed": {
+        "total": 2,
+        "ocr_pass": 2
+      },
+      "latin_mixed": {
+        "total": 2,
+        "ocr_pass": 1
+      },
+      "punctuation": {
+        "total": 2,
+        "ocr_pass": 1
+      },
+      "common_scenic": {
+        "total": 2,
+        "ocr_pass": 2
+      },
+      "repeated_char": {
+        "total": 2,
+        "ocr_pass": 1
+      },
+      "long_boundary_8char": {
+        "total": 1,
+        "ocr_pass": 1
+      },
+      "poetic_phrase": {
+        "total": 1,
+        "ocr_pass": 0
+      }
+    },
+    "note_on_cost": "DashScope 响应不含计费字段；请用 generation_success 张数对照阿里云百炼控制台『用量/账单』页面核算实际总价，再除以张数得单价。"
+  },
+  "results": [
+    {
+      "index": 0,
+      "title": "拾光",
+      "category": "baseline_control",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15285,
+      "ocr_matched": false,
+      "ocr_recognized": "拾玖",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\00-cascade-seal-baseline_control.png"
+    },
+    {
+      "index": 1,
+      "title": "光",
+      "category": "extreme_short_1char",
+      "style_id": "flowing-brush",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15601,
+      "ocr_matched": true,
+      "ocr_recognized": "光",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\01-flowing-brush-extreme_short_1char.png"
+    },
+    {
+      "index": 2,
+      "title": "甪直古镇",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15427,
+      "ocr_matched": false,
+      "ocr_recognized": "直古镇",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\02-loose-running-script-rare_char_place.png"
+    },
+    {
+      "index": 3,
+      "title": "涠洲岛落日",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18964,
+      "ocr_matched": false,
+      "ocr_recognized": "涠州岛落日",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\03-bold-vigorous-rare_char_place.png"
+    },
+    {
+      "index": 4,
+      "title": "婺源篁岭",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15511,
+      "ocr_matched": false,
+      "ocr_recognized": "渡洒桦洛",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\04-casual-handwritten-rare_char_place.png"
+    },
+    {
+      "index": 5,
+      "title": "黟县宏村",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 19094,
+      "ocr_matched": true,
+      "ocr_recognized": "黟县宏村",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\05-cascade-seal-rare_char_place.png"
+    },
+    {
+      "index": 6,
+      "title": "龟兹寻踪",
+      "category": "rare_char_place",
+      "style_id": "flowing-brush",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 28303,
+      "ocr_matched": true,
+      "ocr_recognized": "龟兹寻踪",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\06-flowing-brush-rare_char_place.png"
+    },
+    {
+      "index": 7,
+      "title": "阆中古城",
+      "category": "rare_char_place",
+      "style_id": "loose-running-script",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18554,
+      "ocr_matched": false,
+      "ocr_recognized": "阆台城",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\07-loose-running-script-rare_char_place.png"
+    },
+    {
+      "index": 8,
+      "title": "措浪日记",
+      "category": "rare_char_place",
+      "style_id": "bold-vigorous",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18898,
+      "ocr_matched": true,
+      "ocr_recognized": "措浪日记",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\08-bold-vigorous-rare_char_place.png"
+    },
+    {
+      "index": 9,
+      "title": "硇洲岛",
+      "category": "rare_char_place",
+      "style_id": "casual-handwritten",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15450,
+      "ocr_matched": true,
+      "ocr_recognized": "硇洲岛",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\09-casual-handwritten-rare_char_place.png"
+    },
+    {
+      "index": 10,
+      "title": "邺城旧梦",
+      "category": "rare_char_place",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15515,
+      "ocr_matched": true,
+      "ocr_recognized": "邺城旧梦",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\10-cascade-seal-rare_char_place.png"
+    },
+    {
+      "index": 11,
+      "title": "麤犇靐齉爩",
+      "category": "extreme_rare_stress",
+      "style_id": "flowing-brush",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15699,
+      "ocr_matched": false,
+      "ocr_recognized": "桀騏駜犼",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\11-flowing-brush-extreme_rare_stress.png"
+    },
+    {
+      "index": 12,
+      "title": "厦门老城区",
+      "category": "polyphone_place",
+      "style_id": "loose-running-script",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18632,
+      "ocr_matched": false,
+      "ocr_recognized": "厦门三殷老城区",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\12-loose-running-script-polyphone_place.png"
+    },
+    {
+      "index": 13,
+      "title": "重庆火锅魂",
+      "category": "polyphone_place",
+      "style_id": "bold-vigorous",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18991,
+      "ocr_matched": true,
+      "ocr_recognized": "重庆火锅魂",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\13-bold-vigorous-polyphone_place.png"
+    },
+    {
+      "index": 14,
+      "title": "重走318国道",
+      "category": "digits_mixed",
+      "style_id": "casual-handwritten",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18564,
+      "ocr_matched": true,
+      "ocr_recognized": "重走318国道",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\14-casual-handwritten-digits_mixed.png"
+    },
+    {
+      "index": 15,
+      "title": "西藏骑行Vlog",
+      "category": "latin_mixed",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18935,
+      "ocr_matched": false,
+      "ocr_recognized": "西藏骑行日目Vlog",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\15-cascade-seal-latin_mixed.png"
+    },
+    {
+      "index": 16,
+      "title": "三亚Vlog",
+      "category": "latin_mixed",
+      "style_id": "flowing-brush",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15371,
+      "ocr_matched": true,
+      "ocr_recognized": "三亚Vlog",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\16-flowing-brush-latin_mixed.png"
+    },
+    {
+      "index": 17,
+      "title": "海边·日落",
+      "category": "punctuation",
+      "style_id": "loose-running-script",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18618,
+      "ocr_matched": true,
+      "ocr_recognized": "海边·日落",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\17-loose-running-script-punctuation.png"
+    },
+    {
+      "index": 18,
+      "title": "一路向西…",
+      "category": "punctuation",
+      "style_id": "bold-vigorous",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18999,
+      "ocr_matched": false,
+      "ocr_recognized": "一路向西",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\18-bold-vigorous-punctuation.png"
+    },
+    {
+      "index": 19,
+      "title": "稻城亚丁行",
+      "category": "common_scenic",
+      "style_id": "casual-handwritten",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15357,
+      "ocr_matched": true,
+      "ocr_recognized": "稻城亚丁行",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\19-casual-handwritten-common_scenic.png"
+    },
+    {
+      "index": 20,
+      "title": "阿勒泰散记",
+      "category": "common_scenic",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 15294,
+      "ocr_matched": true,
+      "ocr_recognized": "阿勒泰散记",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\20-cascade-seal-common_scenic.png"
+    },
+    {
+      "index": 21,
+      "title": "918公里",
+      "category": "digits_mixed",
+      "style_id": "flowing-brush",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 19213,
+      "ocr_matched": true,
+      "ocr_recognized": "918公里",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\21-flowing-brush-digits_mixed.png"
+    },
+    {
+      "index": 22,
+      "title": "秋去秋又来",
+      "category": "repeated_char",
+      "style_id": "loose-running-script",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18688,
+      "ocr_matched": true,
+      "ocr_recognized": "秋去秋又来",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\22-loose-running-script-repeated_char.png"
+    },
+    {
+      "index": 23,
+      "title": "一茶一饭间",
+      "category": "repeated_char",
+      "style_id": "bold-vigorous",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 22079,
+      "ocr_matched": false,
+      "ocr_recognized": "一茶大饭间",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\23-bold-vigorous-repeated_char.png"
+    },
+    {
+      "index": 24,
+      "title": "雾锁南迦巴瓦",
+      "category": "long_boundary_8char",
+      "style_id": "casual-handwritten",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18676,
+      "ocr_matched": true,
+      "ocr_recognized": "雾锁南迦巴瓦",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\24-casual-handwritten-long_boundary_8char.png"
+    },
+    {
+      "index": 25,
+      "title": "苔痕上阶绿",
+      "category": "poetic_phrase",
+      "style_id": "cascade-seal",
+      "model": "wanx2.1-t2i-plus",
+      "ok": true,
+      "failure_reason": null,
+      "failure_detail": null,
+      "latency_ms": 18700,
+      "ocr_matched": false,
+      "ocr_recognized": "台瞑上晚绿",
+      "image_path": "docs\\acceptance-records\\attachments\\cover-calligraphy-title-v1-route-c-w05-spike-2026-08-08\\25-cascade-seal-poetic_phrase.png"
+    }
+  ]
+}

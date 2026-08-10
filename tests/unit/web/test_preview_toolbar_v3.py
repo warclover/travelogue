@@ -275,6 +275,19 @@ def test_v4_toolbar_mounts_screenplay_control() -> None:
     assert "preview-toolbar--v4" in css
 
 
+def test_preview_dock_folder_prefers_export_output_dir() -> None:
+    """常驻「文件夹」：产物路径 → 导出文件/ → 画册根目录。"""
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert 'var EXPORT_OUTPUT_DIRNAME = "导出文件"' in longshot
+    assert "longshotRevealRelPath" in longshot
+    assert "chain.push(EXPORT_OUTPUT_DIRNAME)" in longshot
+    assert "export function revealTripFolder" in longshot
+    assert "export { revealTripFolder }" in features
+    assert "function revealTripFolderQuick" in longshot
+    assert "return revealTripFolder(tripId)" in longshot
+
+
 def test_v4_css_icon_dock_and_task_dock() -> None:
     css = PREVIEW_CSS_BUNDLE
     for token in (

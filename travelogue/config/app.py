@@ -26,6 +26,7 @@ from travelogue.config.phase6 import Phase6ObservabilityConfig
 from travelogue.config.shot_grouping import ShotGroupingConfig
 from travelogue.config.studio import StudioConfig
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.title_art import TitleArtConfig
 from travelogue.config.vision import VisionConfig
 
 _log = logging.getLogger(__name__)
@@ -59,3 +60,4 @@ class AppConfig:
     mosaic: MosaicConfig = field(default_factory=MosaicConfig)
     cohort: CohortConfig = field(default_factory=CohortConfig)
     aesthetic: AestheticConfig = field(default_factory=AestheticConfig)
+    title_art: TitleArtConfig = field(default_factory=TitleArtConfig)

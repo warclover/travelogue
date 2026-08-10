@@ -1421,13 +1421,25 @@ export function cancelPreviewLongshotExport(root) {
     return postJson("/__travelogue/reveal", { tripId: tripId, relPath: relPath });
   }
 
-  /** ▾「更多输出」· 打开当前预览所在文件夹（避免 circular import features.js） */
-  function revealTripFolderQuick(tripId) {
+  // EOI · 需与 travelogue/export/longshot.py 的 EXPORT_OUTPUT_DIRNAME 保持一致
+  var EXPORT_OUTPUT_DIRNAME = "导出文件";
+
+  function _revealOk(result) {
+    return !!(result && result.status >= 200 && result.status < 300);
+  }
+
+  /**
+   * 预览工具栏「文件夹」优先序：
+   * 1) longshotRevealRelPath（最新产物，通常在 导出文件/）
+   * 2) 导出文件/ 目录本身（存在则打开；不存在则失败并继续）
+   * 3) previewRelPath / index.html（画册根目录，保持旧行为）
+   */
+  export function revealTripFolder(tripId) {
     if (!tripId) {
       _showToolbarToast("无法打开文件夹", { error: true });
-      return;
+      return Promise.resolve(false);
     }
-    fetch("/__travelogue/trips")
+    return fetch("/__travelogue/trips")
       .then(function (resp) {
         return resp.json();
       })
@@ -1436,12 +1448,41 @@ export function cancelPreviewLongshotExport(root) {
         var trip = trips.filter(function (t) {
           return t.tripId === tripId;
         })[0];
-        var rel = (trip && trip.previewRelPath) || "index.html";
-        return revealTripPath(tripId, rel);
+        var fallback = (trip && trip.previewRelPath) || "index.html";
+        var chain = [];
+        if (trip && trip.longshotRevealRelPath) {
+          chain.push(String(trip.longshotRevealRelPath));
+        }
+        chain.push(EXPORT_OUTPUT_DIRNAME);
+        chain.push(fallback);
+        var seen = {};
+        var unique = [];
+        for (var i = 0; i < chain.length; i++) {
+          if (seen[chain[i]]) continue;
+          seen[chain[i]] = true;
+          unique.push(chain[i]);
+        }
+        function tryNext(idx) {
+          if (idx >= unique.length) {
+            _showToolbarToast("无法打开文件夹", { error: true });
+            return false;
+          }
+          return revealTripPath(tripId, unique[idx]).then(function (result) {
+            if (_revealOk(result)) return result;
+            return tryNext(idx + 1);
+          });
+        }
+        return tryNext(0);
       })
       .catch(function () {
         _showToolbarToast("无法打开文件夹", { error: true });
+        return false;
       });
+  }
+
+  /** ▾「更多输出」· 与常驻「文件夹」同一优先序 */
+  function revealTripFolderQuick(tripId) {
+    return revealTripFolder(tripId);
   }
 
   // FE-FST-05 / D-FST-13 · 禁止自动 reveal（成功后仅点击「在文件夹中显示」）

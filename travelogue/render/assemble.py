@@ -14,6 +14,87 @@ from travelogue.render.context_types import (
 )
 from travelogue.render.surface import resolve_surface_context
 
+#: §6.2 兜底位置（whitelist rect 的近似几何中心），仅在 ``titleArt.position``
+#: 缺失时使用——正常路径下这两个百分比来自 placement_score 的实际算出坐标。
+_TITLE_ART_FALLBACK_X = "50%"
+_TITLE_ART_FALLBACK_Y = "25%"
+
+#: 装帧身份线前封回声（D-CAL-26 / D-SFI-13 扩容，2026-08-09）：署名三态原仅
+#: 驱动 cover-closing__brand + longshot-boundary-footer__brand 两处；这里新增
+#: 第三处渲染位。**全部 10 款**封面风格已用真实渲染截图逐个核对后默认开启
+#: （首批 4 款见决策记录 §5；扩展 6 款见 §8），不再保留「风格外不显示」的
+#: 过渡白名单语义——元组即全量 catalog 风格 id。
+_COVER_OPENING_BRAND_STYLES: tuple[str, ...] = (
+    "band-cut",
+    "veil-footer",
+    "contact-stamp",
+    "folio-overlap",
+    "cameo-aperture",
+    "type-monument",
+    "scroll-head",
+    "portal-arch",
+    "horizon-split",
+    "diptych-seam",
+)
+
+
+def _resolve_title_art_src(
+    trip: dict, opening_style_id: str
+) -> tuple[str | None, bool, str, str, str]:
+    """PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：白名单内 + 非 stale + enabled 才叠加。
+
+    ``titleArt.assetPath`` 是相对 trip 根目录的路径（index.html 同级），可直接
+    作为 ``<img src>`` 使用，不做磁盘存在性校验（信任 trip.json 状态，与其余
+    computed 字段一致）。
+
+    同时回传 §6.2 ``position.x``/``position.y``（0~1 归一化，相对整个
+    ``cover-opening`` 画布，非某个文案面板）供模板转成 CSS 百分比——此前这两个
+    字段只落库、未接进渲染表面，模板用的是写死的 ``50%/28%``，恰好与
+    ``.cover-opening__title-art`` 当时误嵌在 ``.cover-opening__panel``
+    （雾带底部文案面板，随内容自适应矮高度）内部的 bug 绑在一起：面板高度只由
+    hook 文案撑起，写死的 28% 几乎总是与 hook 文案重叠。§7 修复：贴纸挪到
+    ``.cover-opening`` 直接子层，百分比改用这里回传的真实定位。
+
+    第五返回值是 §10 归因文案（无贴纸时为空串）。
+    """
+    from travelogue.cover_engine.title_art.attribution import title_art_attribution_line
+    from travelogue.cover_engine.title_art.whitelist import is_whitelisted
+
+    empty = (None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y, "")
+    if not is_whitelisted(opening_style_id):
+        return empty
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    title_art = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
+    if not isinstance(title_art, dict):
+        return empty
+    if not title_art.get("enabled") or title_art.get("stale"):
+        return empty
+    if str(title_art.get("openingStyleId") or "") != opening_style_id:
+        return empty
+    # 换封面后旧贴纸的定位/墨色按旧照片算——有指纹且不一致则不叠加。
+    # 缺 coverAssetId 的旧数据兼容放行（生成时未落库的历史结果）。
+    cached_cover = str(title_art.get("coverAssetId") or "")
+    current_cover = str(trip.get("coverAssetId") or "")
+    if cached_cover and cached_cover != current_cover:
+        return empty
+    asset_path = str(title_art.get("assetPath") or "").strip()
+    if not asset_path:
+        return empty
+    position = title_art.get("position") if isinstance(title_art.get("position"), dict) else {}
+    x_pct = _title_art_pct(position.get("x"), _TITLE_ART_FALLBACK_X)
+    y_pct = _title_art_pct(position.get("y"), _TITLE_ART_FALLBACK_Y)
+    attribution = title_art_attribution_line(str(title_art.get("engine") or ""))
+    return asset_path, True, x_pct, y_pct, attribution
+
+def _title_art_pct(value: object, fallback: str) -> str:
+    try:
+        ratio = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return fallback
+    if not (0.0 <= ratio <= 1.0):
+        return fallback
+    return f"{ratio * 100:.2f}%"
+
 
 def build_render_context(
     trip: dict,
@@ -48,10 +129,12 @@ def build_render_context(
         show_closing_title,
     )
     from travelogue.render.cover_opening import (
+        build_cover_archive_strip,
         cover_focal_point,
-        cover_place_is_distinct,
         cover_use_contain_fit,
         resolve_cover_subtitle,
+        resolve_monument_title_layout,
+        resolve_show_cover_place,
         resolve_split_mat_title_layout,
         show_hook_on_cover,
     )
@@ -152,8 +235,8 @@ def build_render_context(
     # 真人短 hook 仍可显示。draft/精修不再旁路放行「碎片拼成」类句子）。
     show_cover_hook = show_hook_on_cover(hook)
     raw_meta_title = str(meta.get("title") or "").strip()
-    show_cover_place = cover_place_is_distinct(cover_place, meta_title) and (
-        not raw_meta_title or cover_place_is_distinct(cover_place, raw_meta_title)
+    show_cover_place = resolve_show_cover_place(
+        cover_place=cover_place, meta_title=meta_title, raw_meta_title=raw_meta_title
     )
     fx, fy = cover_focal_point(cover_asset)
     cover_contain = cover_use_contain_fit(cover_asset)
@@ -176,21 +259,9 @@ def build_render_context(
             cover_stamp_label = stamp_src[:18].replace(" ", "\n")
 
     # Archive strip for contact-stamp (trip meta only — no camera EXIF on reader face).
-    archive_bits: list[str] = []
-    if meta_subline:
-        archive_bits.append(str(meta_subline).strip())
-    if cover_place and cover_place not in (meta_subline or ""):
-        archive_bits.append(cover_place)
-    taken_at = str(cover_asset.get("takenAt") or "").strip()
-    if taken_at:
-        try:
-            from datetime import datetime as _dt
-
-            t = _dt.fromisoformat(taken_at.replace("Z", "+00:00"))
-            archive_bits.append(t.strftime("%H:%M"))
-        except ValueError:
-            pass
-    cover_archive_strip = "\n".join(archive_bits[:3]) if archive_bits else ""
+    cover_archive_strip = build_cover_archive_strip(
+        meta_subline=meta_subline, cover_place=cover_place, cover_asset=cover_asset
+    )
 
     cover_secondary_ctx: CoverRenderContext = CoverRenderContext(
         src="", hasSrcset=False, srcset="", sizes="", alt=""
@@ -401,6 +472,11 @@ def build_render_context(
         except Exception:
             placeholder_script = ""
 
+    resolved_opening_style = resolve_cover_opening_style(trip)
+    title_art_src, has_title_art, title_art_x, title_art_y, title_art_attribution = (
+        _resolve_title_art_src(trip, resolved_opening_style)
+    )
+
     ctx: TripRenderContext = {
         "lang": "zh-CN",
         "htmlExtraAttrs": " ".join(html_attrs),
@@ -449,8 +525,20 @@ def build_render_context(
         "hasCoverArchiveStrip": bool(cover_archive_strip),
         "hook": hook,
         "hasHook": bool(hook),
-        "coverOpeningStyle": resolve_cover_opening_style(trip),
+        "coverOpeningStyle": resolved_opening_style,
         "coverTitleLayout": resolve_split_mat_title_layout(meta_title),
+        "coverMonumentTitleLayout": resolve_monument_title_layout(meta_title),
+        "hasTitleArt": has_title_art,
+        # veil-footer / band-cut：艺术字进 panel 文档流，由原生纸签/雾带托住；
+        # 其它风格仍绝对定位。
+        "titleArtInPanel": bool(
+            has_title_art and resolved_opening_style in ("veil-footer", "band-cut")
+        ),
+        "titleArtSrc": title_art_src,
+        "titleArtAlt": meta_title,
+        "titleArtX": title_art_x,
+        "titleArtY": title_art_y,
+        "titleArtAttribution": title_art_attribution,
         "editableHook": surface.is_draft and bool(hook),
         "epilogue": epilogue,
         "hasEpilogue": has_epilogue,
@@ -484,6 +572,10 @@ def build_render_context(
         "showWorksBrand": works_brand["showWorksBrand"],
         "worksBrandLine": works_brand["worksBrandLine"],
         "worksBrandCustom": works_brand["worksBrandCustom"],
+        "showCoverOpeningBrand": (
+            bool(works_brand["showWorksBrand"])
+            and resolved_opening_style in _COVER_OPENING_BRAND_STYLES
+        ),
         "longshotDensity": density,
         "compactLongshot": density == "compact" and surface.is_longshot_surface,
         "hasMomentScreen": False,
