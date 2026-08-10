@@ -375,14 +375,33 @@ def resolve_title_art(
                 last_exc: RouteCFailure | None = None
                 for attempt in range(max_attempts):
                     try:
-                        raw = generate_raw(
-                            style_c,
-                            title=text.main,
-                            subtitle=text.subtitle,
-                            model=model_name,
-                            prompt_version=use_prompt_version,
+                        from travelogue.ai.agents.title_art_adapter import (
+                            AcpSkipRouteC,
+                            call_generate_raw,
+                            call_ocr_verify,
                         )
-                        if ocr_verify_enabled and not ocr_verify(raw.image, text.main):
+
+                        try:
+                            raw = call_generate_raw(
+                                generate_raw,
+                                style_c,
+                                title=text.main,
+                                subtitle=text.subtitle,
+                                model=model_name,
+                                prompt_version=use_prompt_version,
+                                trip=trip,
+                                telemetry_model=str(model_name or ""),
+                            )
+                        except AcpSkipRouteC as skip:
+                            raise RouteCFailure(
+                                "E_CAL_C_ACP_SKIP", detail=skip.reason
+                            ) from skip
+                        if ocr_verify_enabled and not call_ocr_verify(
+                            ocr_verify,
+                            raw.image,
+                            text.main,
+                            trip=trip,
+                        ):
                             raise RouteCFailure("E_CAL_C_OCR_MISMATCH")
                         ink = recolor_ink_on_white(raw.image, contrast.color_rgb)
                         asset_path = write_png(_png_bytes(ink))

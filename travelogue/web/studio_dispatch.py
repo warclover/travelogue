@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from travelogue.web.studio_handlers import (
+    ai_ops_handlers,
     config_handlers,
     export_handlers,
     import_handlers,
@@ -31,6 +32,10 @@ from travelogue.web.studio_handlers.common import (
     match_bento_preview,
     match_entry,
     match_source_status,
+    match_trip_ai_intent_brief,
+    match_trip_ai_layout_critic,
+    match_trip_ai_layout_critic_accept,
+    match_trip_ai_layout_feedback,
     match_trip_asset_media,
     match_trip_bookends,
     match_trip_bookends_repick_closing,
@@ -104,6 +109,9 @@ from travelogue.web.studio_handlers.paths import (
     TEMPLATES_ADMIN_UI_PATH,
     TEMPLATES_PATH,
     TRIPS_PATH,
+    AI_OPS_ADMIN_UI_PATH,
+    AI_OPS_SUMMARY_PATH,
+    AI_UNLOCK_GATE_PATH,
     match_layout_strategy_decisions,
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
@@ -143,6 +151,9 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     RouteSpec("GET", LLM_STATUS_PATH, "llm_settings_handlers.handle_llm_status", auth=True),
     RouteSpec("GET", TEMPLATES_ADMIN_UI_PATH, "static_handlers.handle_templates_admin_page", auth=True),
     RouteSpec("GET", LSE_FLAGS_UI_PATH, "static_handlers.handle_lse_flags_admin_page", auth=True),
+    RouteSpec("GET", AI_OPS_ADMIN_UI_PATH, "ai_ops_handlers.handle_ai_ops_admin_page", auth=True),
+    RouteSpec("GET", AI_OPS_SUMMARY_PATH, "ai_ops_handlers.handle_get_ai_ops_summary", auth=True),
+    RouteSpec("GET", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_get_unlock_gate", auth=True),
     RouteSpec("GET", LSE_CAPS_API_PATH, "layout_strategy_handlers.handle_lse_capabilities_get", auth=True),
     RouteSpec("GET", TEMPLATES_PATH, "template_handlers.handle_templates_list", auth=True),
     RouteSpec(
@@ -298,6 +309,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     # DELETE
     RouteSpec("DELETE", "/__travelogue/trips/{tripId}", "trip_handlers.handle_delete_trip", "capture", auth=True),
     # POST
+    RouteSpec("POST", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_post_unlock_gate", auth=True),
     RouteSpec("POST", IMPORT_PATH, "import_handlers.handle_import", auth=True),
     RouteSpec("POST", LONGSHOT_PATH, "export_handlers.handle_longshot", auth=True),
     RouteSpec("POST", LONGSHOT_UPLOAD_PATH, "export_handlers.handle_longshot_upload", auth=True),
@@ -392,6 +404,34 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     ),
     RouteSpec(
         "POST",
+        "/__travelogue/trips/{tripId}/ai/intent-brief",
+        "ai_ops_handlers.handle_post_intent_brief",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
+        "/__travelogue/trips/{tripId}/ai/layout-critic/accept",
+        "ai_ops_handlers.handle_post_layout_critic_accept",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
+        "/__travelogue/trips/{tripId}/ai/layout-critic",
+        "ai_ops_handlers.handle_post_layout_critic",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
+        "/__travelogue/trips/{tripId}/ai/layout-feedback",
+        "ai_ops_handlers.handle_post_layout_feedback",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
         "/__travelogue/trips/{tripId}/asset-media-class",
         "trip_handlers.handle_asset_media_class",
         "capture",
@@ -478,6 +518,10 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/trips/{tripId}/bookends/repick-closing": match_trip_bookends_repick_closing,
     "/__travelogue/trips/{tripId}/bookends/restore-auto": match_trip_bookends_restore_auto,
     "/__travelogue/trips/{tripId}/title-art/resolve": match_trip_title_art_resolve,
+    "/__travelogue/trips/{tripId}/ai/intent-brief": match_trip_ai_intent_brief,
+    "/__travelogue/trips/{tripId}/ai/layout-critic/accept": match_trip_ai_layout_critic_accept,
+    "/__travelogue/trips/{tripId}/ai/layout-critic": match_trip_ai_layout_critic,
+    "/__travelogue/trips/{tripId}/ai/layout-feedback": match_trip_ai_layout_feedback,
     "/__travelogue/templates/admin/{templateId}": match_template_admin_patch,
     "/__travelogue/templates/admin/{templateId}/metadata": match_template_admin_metadata,
     "/__travelogue/trips/{tripId}/intent": match_trip_intent,
@@ -526,6 +570,7 @@ def _resolve_handler(handler_id: str) -> Callable[..., None]:
         "export_handlers": export_handlers,
         "storage_handlers": storage_handlers,
         "telemetry_handlers": telemetry_handlers,
+        "ai_ops_handlers": ai_ops_handlers,
     }[module_name]
     return getattr(module, fn_name)
 

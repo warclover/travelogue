@@ -187,6 +187,12 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
       }
       list.innerHTML = "";
       var chapters = entry.chapters || [];
+      var suggestions = entry.layoutSuggestions || [];
+      var sugByChapter = {};
+      suggestions.forEach(function (s) {
+        if (!s || !s.chapterId) return;
+        if (!sugByChapter[s.chapterId]) sugByChapter[s.chapterId] = s;
+      });
       chapters.forEach(function (ch, idx) {
         var li = document.createElement("li");
         li.className = "preview-chapter-panel__row";
@@ -227,6 +233,42 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
             beginInlineRename(li, ch, idx, btn);
           });
           li.appendChild(rename);
+          var feedback = document.createElement("button");
+          feedback.type = "button";
+          feedback.className = "preview-chapter-panel__feedback";
+          feedback.textContent = "这章不对";
+          feedback.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            submitChapterFeedback(ch);
+          });
+          li.appendChild(feedback);
+          var sug = sugByChapter[ch.id];
+          if (sug && sug.suggestion) {
+            var hint = document.createElement("p");
+            hint.className = "preview-chapter-panel__ai-hint";
+            hint.textContent = sug.suggestion;
+            if (!sug.accepted && sug.suggestedPatternId) {
+              var accept = document.createElement("button");
+              accept.type = "button";
+              accept.className = "preview-chapter-panel__ai-accept";
+              accept.textContent = "采纳建议";
+              accept.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                acceptLayoutSuggestion(ch, sug, hint, accept);
+              });
+              li.appendChild(hint);
+              li.appendChild(accept);
+            } else {
+              if (sug.accepted) hint.textContent = sug.suggestion + "（已采纳）";
+              li.appendChild(hint);
+            }
+            trackStudioEvent("layout_critic_suggestion_shown", {
+              tripId: tripId,
+              chapterId: ch.id,
+            });
+          }
         }
         list.appendChild(li);
       });
@@ -245,6 +287,61 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
         loadChapterExplain(tripId, explainBody);
       }
     });
+  }
+
+  function submitChapterFeedback(ch) {
+    if (!ch || !ch.id) return;
+    var reason = window.prompt(
+      "这章哪里不对？\n1 too_many_photos 图太多\n2 too_few_photos 图太少\n3 wrong_order 顺序不对\n4 style_mismatch 风格不搭\n5 other\n请输入编号或 reason：",
+      "1"
+    );
+    if (reason == null) return;
+    var map = {
+      "1": "too_many_photos",
+      "2": "too_few_photos",
+      "3": "wrong_order",
+      "4": "style_mismatch",
+      "5": "other",
+    };
+    var code = map[String(reason).trim()] || String(reason).trim();
+    postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-feedback", {
+      chapterId: ch.id,
+      reason: code,
+    })
+      .then(function (res) {
+        if (!res || res.status < 200 || res.status >= 300) {
+          showToolbarToast(
+            (res && res.body && res.body.message) || "反馈未保存"
+          );
+          return;
+        }
+        showToolbarToast("已记下，下次排版建议会参考");
+      })
+      .catch(function () {
+        showToolbarToast("反馈未保存");
+      });
+  }
+
+  function acceptLayoutSuggestion(ch, sug, hintEl, acceptBtn) {
+    if (!ch || !ch.id || !sug) return;
+    postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
+      chapterId: ch.id,
+      suggestedPatternId: sug.suggestedPatternId || undefined,
+    })
+      .then(function (res) {
+        if (!res || res.status < 200 || res.status >= 300) {
+          showToolbarToast(
+            (res && res.body && res.body.message) || "采纳失败"
+          );
+          return;
+        }
+        if (hintEl) hintEl.textContent = (sug.suggestion || "") + "（已采纳）";
+        if (acceptBtn && acceptBtn.parentNode) acceptBtn.parentNode.removeChild(acceptBtn);
+        showToolbarToast("已采纳建议（下次重生时参考）");
+      })
+      .catch(function () {
+        showToolbarToast("采纳失败");
+      });
   }
 
   function restoreAppendixChapter(ch) {

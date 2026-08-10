@@ -94,6 +94,14 @@ from travelogue.config.studio import (
     studio_config_expose,
 )
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.ai_capability import (
+    AiCapabilityConfig,
+    AiEvalConfig,
+    IntentBriefConfig,
+    LayoutCriticConfig,
+    MosaicJudgeConfig,
+    ai_capability_config_from_dict,
+)
 from travelogue.config.title_art import TitleArtConfig, title_art_config_from_dict
 from travelogue.config.vision import VisionConfig
 
@@ -163,6 +171,12 @@ __all__ = [
     "TemplateRouterConfig",
     "TitleArtConfig",
     "title_art_config_from_dict",
+    "AiCapabilityConfig",
+    "AiEvalConfig",
+    "IntentBriefConfig",
+    "LayoutCriticConfig",
+    "MosaicJudgeConfig",
+    "ai_capability_config_from_dict",
     "VisionConfig",
     "app_config_scope",
     "bookends_config_from_dict",

@@ -423,6 +423,17 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                             trip_id=result.get("tripId"),
                             result=result,
                         )
+                        # ACP W2 · Intent Brief async stage (fail-open, non-blocking)
+                        try:
+                            from travelogue.web.studio_handlers.ai_ops_handlers import (
+                                maybe_run_intent_brief_async,
+                            )
+
+                            tid = str(result.get("tripId") or "")
+                            if tid:
+                                maybe_run_intent_brief_async(tid)
+                        except Exception:
+                            pass
                         finished = True
                         break
                     elif event["type"] == "error":

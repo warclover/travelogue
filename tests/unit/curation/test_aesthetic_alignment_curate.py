@@ -25,7 +25,7 @@ def test_apply_aesthetic_alignment_calls_mllm_when_enabled(tmp_path):
         ),
     )
     with patch(
-        "travelogue.vision.aesthetic_mllm.apply_aesthetic_mllm_scores",
+        "travelogue.curation.aesthetic_mllm_shortlist.apply_aesthetic_mllm_scores",
         return_value={"scored": 1},
     ) as mllm_mock:
         report = apply_aesthetic_alignment([asset], trip_dir=tmp_path, cfg=cfg)

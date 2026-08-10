@@ -32,7 +32,7 @@ from travelogue.curation.aesthetic_score import (  # noqa: E402
     apply_aesthetic_ml_calibration,
     refresh_portrait_lite_overall,
 )
-from travelogue.vision.aesthetic_mllm import (  # noqa: E402
+from travelogue.curation.aesthetic_mllm_shortlist import (  # noqa: E402
     apply_aesthetic_mllm_scores,
     apply_mllm_oracle_from_labels,
     build_mllm_shortlist,

@@ -55,7 +55,7 @@ def test_apply_aesthetic_alignment_mllm_hook_fail_open_on_exception(tmp_path):
         ),
     )
     with patch(
-        "travelogue.vision.aesthetic_mllm.apply_aesthetic_mllm_scores",
+        "travelogue.curation.aesthetic_mllm_shortlist.apply_aesthetic_mllm_scores",
         side_effect=RuntimeError("api down"),
     ):
         report = apply_aesthetic_alignment([asset], trip_dir=tmp_path, cfg=cfg)
@@ -75,7 +75,7 @@ def test_apply_aesthetic_alignment_mllm_fail_open_returns_report(tmp_path):
         ),
     )
     with patch(
-        "travelogue.vision.aesthetic_mllm.apply_aesthetic_mllm_scores",
+        "travelogue.curation.aesthetic_mllm_shortlist.apply_aesthetic_mllm_scores",
         return_value={"enabled": True, "scored": 0, "failed": 1, "calls": 1, "cached": 0},
     ):
         report = apply_aesthetic_alignment([asset], trip_dir=tmp_path, cfg=cfg)
@@ -144,7 +144,7 @@ def test_run_curate_succeeds_when_mllm_hook_fail_open(tmp_path):
         ),
     )
     with patch(
-        "travelogue.vision.aesthetic_mllm.apply_aesthetic_mllm_scores",
+        "travelogue.curation.aesthetic_mllm_shortlist.apply_aesthetic_mllm_scores",
         return_value={"enabled": True, "scored": 0, "failed": 1, "calls": 0, "cached": 0},
     ):
         result = run_curate(

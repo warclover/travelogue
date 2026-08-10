@@ -776,6 +776,48 @@ def run_photo_cull(
     return summary
 
 
+def _cull_cfg_from_intent_brief(trip: dict, cull_cfg: Any) -> Any:
+    """ACP · apply intentBrief.cullPolicy only when explicit bools are present."""
+    from dataclasses import replace
+
+    intent = trip.get("intent") if isinstance(trip.get("intent"), dict) else {}
+    brief = intent.get("intentBrief") if isinstance(intent.get("intentBrief"), dict) else {}
+    if brief.get("source") not in ("llm", "cache"):
+        hints = (trip.get("curation") or {}).get("intentHints") or {}
+        policy = hints.get("intentBriefCullPolicy") if isinstance(hints, dict) else None
+    else:
+        policy = brief.get("cullPolicy") if isinstance(brief.get("cullPolicy"), dict) else None
+    if not isinstance(policy, dict) or not policy:
+        return cull_cfg
+    hard = list(getattr(cull_cfg, "hard_exclude_media_classes", ()) or ())
+    changed = False
+    if policy.get("dropScreenshots") is False and "screenshot" in hard:
+        hard = [x for x in hard if x != "screenshot"]
+        changed = True
+    # dropScreenshots True / missing → keep existing hard exclude (already default)
+    kwargs: dict[str, Any] = {}
+    if changed:
+        kwargs["hard_exclude_media_classes"] = tuple(hard)
+    if policy.get("keepEmotionalBlur") is True:
+        try:
+            cur_blur = float(getattr(cull_cfg, "blur_percentile", 2.0) or 2.0)
+            kwargs["blur_percentile"] = max(0.5, cur_blur * 0.5)
+        except (TypeError, ValueError):
+            pass
+    if policy.get("keepPortraits") is True:
+        try:
+            cur = float(getattr(cull_cfg, "score_branch_weight_portrait", 0.15) or 0.15)
+            kwargs["score_branch_weight_portrait"] = min(0.35, cur * 1.25)
+        except (TypeError, ValueError):
+            pass
+    if not kwargs:
+        return cull_cfg
+    try:
+        return replace(cull_cfg, **kwargs)
+    except TypeError:
+        return cull_cfg
+
+
 def apply_photo_cull(
     trip: dict,
     assets: list[dict] | None = None,
@@ -786,7 +828,7 @@ def apply_photo_cull(
 ) -> dict[str, Any]:
     """Full-trip re-cull with fail-open (D-P9-14)."""
     resolved = cfg or get_config()
-    cull_cfg = resolved.cull
+    cull_cfg = _cull_cfg_from_intent_brief(trip, resolved.cull)
     body = assets if assets is not None else trip.get("assets") or []
 
     if not cull_cfg.enabled:

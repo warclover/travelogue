@@ -9,7 +9,7 @@
 | **主题代号** | 「AI 用户面回归」— **AIR**（AI-Return） |
 | **触发来源** | 2026-07-29 产品策略：在 NAS「先出图」稳态后，按章程解冻 AI 面；优先杂志文案 + 渠道敢发包，不做强制云 / 假风景 |
 | **前置条件** | [PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md) §5.5 冻结资产可解冻；[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md) / [PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) 工程可回归；`aiSurfaceEnabled` 单点门控可翻转；NAS Kickoff 交接检查（NAS §14.3）通过 |
-| **关联文档** | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) §14 · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-SHARE-READY-OPTIMIZATION-V1.md](./PRD-SHARE-READY-OPTIMIZATION-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) · [INSIGHT-MOMENTS-LATE-SHARE-COPY-2026-07-23.md](./INSIGHT-MOMENTS-LATE-SHARE-COPY-2026-07-23.md) · [INSIGHT-WECHAT-TRAVEL-PHOTO-STORYLINE-2026-07-23.md](./INSIGHT-WECHAT-TRAVEL-PHOTO-STORYLINE-2026-07-23.md) · [PRD-COMMERCIALIZATION-MVP-V1.md](./PRD-COMMERCIALIZATION-MVP-V1.md) · [CHARTER.md](./CHARTER.md) · [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) |
+| **关联文档** | [PRD-STUDIO-AI-SURFACE-V1.md](./PRD-STUDIO-AI-SURFACE-V1.md)（SAS · 预览 AI Sheet 权威入口）· [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) §14 · [PRD-COPY-OPTIMIZATION.md](./PRD-COPY-OPTIMIZATION.md) · [PRD-SHARE-READY-OPTIMIZATION-V1.md](./PRD-SHARE-READY-OPTIMIZATION-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md) · [INSIGHT-MOMENTS-LATE-SHARE-COPY-2026-07-23.md](./INSIGHT-MOMENTS-LATE-SHARE-COPY-2026-07-23.md) · [INSIGHT-WECHAT-TRAVEL-PHOTO-STORYLINE-2026-07-23.md](./INSIGHT-WECHAT-TRAVEL-PHOTO-STORYLINE-2026-07-23.md) · [PRD-COMMERCIALIZATION-MVP-V1.md](./PRD-COMMERCIALIZATION-MVP-V1.md) · [CHARTER.md](./CHARTER.md) · [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) |
 | **并行但不混交付** | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md)（装帧导演）· [PRD-HERO-INTEREST-TASTE-V1.md](./PRD-HERO-INTEREST-TASTE-V1.md)（主图品味 · 本机） |
 | **验收** | Kickoff 后拆 `ACCEPTANCE-AI-RETURN-V1.md`；本文 §10 为源 |
 | **实施清单** | Kickoff 后拆 `IMPLEMENTATION-AI-RETURN-V1.md` |
@@ -188,6 +188,7 @@
 
 - 恢复 DLLM 设置「写作引擎」组：Provider、Key、测试连通、状态徽章。  
 - 预览工具行：`llmAvailable=true` →「生成杂志感文案」；`false` →「配置写作引擎」（禁止仅 disabled 无出口）。  
+- **预览权威入口（2026-08-10 增补）**：以 [PRD-STUDIO-AI-SURFACE-V1](./PRD-STUDIO-AI-SURFACE-V1.md) AI Sheet 为预览侧权威 CTA；禁止仅恢复旧散落按钮而不整合。散落工具行 / 精修深处入口按 SAS F-SAS-08 收敛。  
 - Help **H7** 恢复默认可达（NAS 曾隐藏）。  
 - FirstSuccess / Dock **禁止**主 CTA 改为「去配置 API」。
 

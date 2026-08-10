@@ -61,6 +61,7 @@ from travelogue.config.studio import (
     StudioConfig,
 )
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
+from travelogue.config.ai_capability import ai_capability_config_from_dict
 from travelogue.config.title_art import title_art_config_from_dict
 from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
@@ -489,6 +490,12 @@ def load_config(path: Path | None = None) -> AppConfig:
         data.get("title_art") if isinstance(data.get("title_art"), dict) else data.get("titleArt")
     )
     title_art_raw = title_art_raw if isinstance(title_art_raw, dict) else {}
+    ai_capability_raw = (
+        data.get("ai_capability")
+        if isinstance(data.get("ai_capability"), dict)
+        else data.get("aiCapability")
+    )
+    ai_capability_raw = ai_capability_raw if isinstance(ai_capability_raw, dict) else {}
     mosaic_raw = data.get("mosaic") if isinstance(data.get("mosaic"), dict) else {}
     layout_top = data.get("layout") if isinstance(data.get("layout"), dict) else {}
     if isinstance(layout_top, TrackedDict):
@@ -820,6 +827,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         ),
         aesthetic=aesthetic_from_dict(aesthetic_raw),
         title_art=title_art_config_from_dict(title_art_raw),
+        ai_capability=ai_capability_config_from_dict(ai_capability_raw),
     )
     if isinstance(data, TrackedDict):
         _report_unknown_config_keys(collect_unknown_keys(data), strict=strict)

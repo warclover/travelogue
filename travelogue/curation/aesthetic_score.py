@@ -725,7 +725,7 @@ def apply_aesthetic_alignment(
             and refresh_portrait_lite_overall(a, cfg=ae_cfg)
         )
     if ae_cfg.mllm.enabled:
-        from travelogue.vision.aesthetic_mllm import apply_aesthetic_mllm_scores
+        from travelogue.curation.aesthetic_mllm_shortlist import apply_aesthetic_mllm_scores
 
         try:
             report["mllm"] = apply_aesthetic_mllm_scores(

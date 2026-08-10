@@ -20,9 +20,8 @@ EXPECTED_IMPORTLINTER_IGNORES = [
     "travelogue.media.ingest -> travelogue.curation.aesthetic_warm",
     "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
     "travelogue.media.ingest_parallel -> travelogue.curation.aesthetic_score",
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_blind_review",
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
-    "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
+    "travelogue.cover_engine.title_art.engine -> travelogue.render.context",
+    "travelogue.cover_engine.title_art.engine -> travelogue.render.cover_opening",
 ]
 
 

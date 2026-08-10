@@ -1418,6 +1418,18 @@ def _stage_build_chapters_compose(
             curation["mosaicDecisionLog"] = mosaic_logs
         if dropped:
             curation["mosaicDroppedAssetIds"] = list(dict.fromkeys(dropped))
+        # ACP D-ACP-15 · post-beam Mosaic Judge (never inside SearchBudget hot path)
+        try:
+            from travelogue.ai.agents.mosaic_judge import run_post_compose_mosaic_judge
+
+            run_post_compose_mosaic_judge(
+                trip,
+                mosaic_logs_for_metrics,
+                cfg=app_cfg,
+                async_schedule=True,
+            )
+        except Exception:
+            pass
     if mosaic_logs_for_metrics is None:
         mosaic_logs_for_metrics = (trip.get("curation") or {}).get("mosaicDecisionLog")
 

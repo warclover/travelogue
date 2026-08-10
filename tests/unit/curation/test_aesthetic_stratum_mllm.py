@@ -8,7 +8,8 @@ from travelogue.config import AestheticConfig, resolve_learned_blend
 from travelogue.curation.aesthetic_learned_eval import grid_search_stratum_blend
 from travelogue.curation.aesthetic_score import compute_aesthetic
 from travelogue.curation.portrait_lite import portrait_lite_subject_clarity_factor
-from travelogue.vision.aesthetic_mllm import build_mllm_shortlist, mllm_cache_key
+from travelogue.ai.agents.aesthetic_mllm_adapter import mllm_cache_key
+from travelogue.curation.aesthetic_mllm_shortlist import build_mllm_shortlist
 
 
 def _asset(aid: str, *, learned: float = 0.8, rules: float = 0.5, face_count: int = 0):
@@ -217,7 +218,7 @@ def test_refresh_portrait_lite_overall_updates_subject_clarity():
 
 
 def test_apply_mllm_oracle_from_labels():
-    from travelogue.vision.aesthetic_mllm import apply_mllm_oracle_from_labels
+    from travelogue.curation.aesthetic_mllm_shortlist import apply_mllm_oracle_from_labels
 
     asset = _asset("a1", learned=0.7, rules=0.5)
     cfg = AestheticConfig(

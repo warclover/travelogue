@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio AI Surface V1 · 预览顶栏入口线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --wf-rec-bg: #e8f5e9;
+      --wf-warn-bg: #fff8e1;
+      --wf-warn-border: #ffb74d;
+      --bar: #1a2f28;
+      --gold: #d4a843;
+      --gold-text: #1a1408;
+      --accent: #3d6b5a;
+      --accent-light: #e8f5ef;
+      --radius: 12px;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 960px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+    }
+    .tag--rec { background: var(--wf-rec); color: #fff; }
+    .tag--new { background: #1565c0; color: #fff; }
+    .tag--ask { background: #e65100; color: #fff; }
+
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+    .browser__ico { width: 12px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+    .frame {
+      background:
+        linear-gradient(160deg, rgba(26,47,40,.35), rgba(26,47,40,.55)),
+        repeating-linear-gradient(-45deg, #cfd8dc, #cfd8dc 8px, #b0bec5 8px, #b0bec5 16px);
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 560px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dock {
+      position: absolute; top: 14px; right: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 2px;
+      padding: 4px;
+      background: rgba(26, 47, 40, 0.9);
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .dock button, .dock a {
+      height: 36px; border: none; border-radius: 999px;
+      background: transparent; color: #e8f5ef; font-size: 12px; cursor: pointer;
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px; padding: 0 10px; text-decoration: none; font-weight: 600;
+    }
+    .dock button:hover, .dock a:hover { background: rgba(255,255,255,.1); }
+    .dock .dock__icon-only { width: 36px; padding: 0; border-radius: 50%; }
+    .dock .dock__export {
+      background: var(--gold); color: var(--gold-text); font-weight: 700;
+    }
+    .dock .dock__ai.is-active {
+      background: rgba(232, 245, 239, .18);
+      box-shadow: inset 0 0 0 1px rgba(232,245,239,.45);
+    }
+    .dock .dot::after {
+      content: ""; position: absolute; top: 6px; right: 6px;
+      width: 7px; height: 7px; border-radius: 50%; background: #ff7043;
+      box-shadow: 0 0 0 2px rgba(26,47,40,.9);
+    }
+    .dock .divider {
+      width: 1px; height: 18px; background: rgba(255,255,255,.2); margin: 0 2px;
+    }
+
+    .scroll-mock {
+      padding: 88px 28px 40px; color: rgba(255,255,255,.88); font-size: 13px;
+      max-width: 420px;
+    }
+    .scroll-mock .screen {
+      background: rgba(255,255,255,.12); border: 1px dashed rgba(255,255,255,.35);
+      border-radius: 8px; padding: 16px; margin-bottom: 14px;
+    }
+    .scroll-mock .title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .scroll-mock .hook { opacity: .8; }
+
+    .scrim {
+      position: absolute; inset: 0; background: rgba(20,28,26,.35); z-index: 35;
+    }
+
+    .sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; z-index: 50;
+      width: min(380px, 92%);
+      background: #f7f5f0;
+      border-left: 1px solid #cfd8dc;
+      box-shadow: -12px 0 40px rgba(0,0,0,.28);
+      display: flex; flex-direction: column;
+    }
+    .sheet__head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding: 16px 16px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fffef9;
+    }
+    .sheet__head h3 { margin: 0; font-size: 16px; }
+    .sheet__head p { margin: 4px 0 0; font-size: 12px; color: var(--wf-muted); }
+    .sheet__close {
+      border: 0; background: transparent; font-size: 20px; line-height: 1;
+      color: #607d8b; cursor: pointer; padding: 0 2px;
+    }
+    .sheet__body {
+      flex: 1; overflow: auto; padding: 14px 16px 28px;
+    }
+
+    .block {
+      background: #fff;
+      border: 1px solid #d7ddd8;
+      border-radius: 10px;
+      padding: 12px 12px 10px;
+      margin-bottom: 12px;
+    }
+    .block h4 {
+      margin: 0 0 4px; font-size: 13px; font-weight: 700;
+    }
+    .block .desc {
+      margin: 0 0 10px; font-size: 12px; color: var(--wf-muted);
+    }
+    .block.muted { background: #f3f4f2; }
+    .block.disabled { opacity: .62; }
+
+    .row-action {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; margin-top: 8px;
+    }
+    .check {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #37474f; margin: 8px 0;
+    }
+    .check input { margin: 0; }
+
+    .btn {
+      border: 0; border-radius: 8px; padding: 7px 12px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: var(--accent); color: #fff;
+      white-space: nowrap;
+    }
+    .btn.ghost {
+      background: #fff; color: var(--accent);
+      border: 1px solid #9bb5a8;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn.link {
+      background: transparent; color: var(--accent);
+      border: 0; padding: 0; font-weight: 600; text-decoration: underline;
+    }
+
+    .suggest {
+      border: 1px solid #c8ddd2; background: var(--accent-light);
+      border-radius: 8px; padding: 10px; margin-top: 8px; font-size: 12px;
+    }
+    .suggest strong { display: block; margin-bottom: 4px; }
+    .suggest .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+    .status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 999px; background: #e8eee9; color: #1b5e3a;
+    }
+    .status.warn { background: #fff3e0; color: #e65100; }
+    .status.err { background: #fde8e6; color: #8a2b22; }
+    .status.idle { background: #eceff1; color: #546e7a; }
+
+    .progress {
+      height: 6px; border-radius: 999px; background: #e0e0e0; overflow: hidden; margin: 8px 0;
+    }
+    .progress > i {
+      display: block; height: 100%; width: 62%;
+      background: var(--accent); border-radius: 999px;
+    }
+
+    details.adv {
+      margin-top: 4px; font-size: 12px; color: #455a64;
+      border: 1px dashed #b0bec5; border-radius: 10px; padding: 8px 10px;
+      background: #fafafa;
+    }
+    details.adv summary {
+      cursor: pointer; font-weight: 700; color: #37474f;
+    }
+    details.adv .inner { margin-top: 8px; }
+
+    .aside {
+      position: sticky; top: 88px;
+      background: var(--wf-page);
+      border: 1px solid var(--wf-border);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; }
+    .aside li { margin-bottom: 6px; }
+    .aside .ok { color: var(--wf-rec); font-weight: 700; }
+    .aside .ask { color: var(--wf-anno); font-weight: 700; }
+    .callout {
+      background: var(--wf-rec-bg); border: 1px solid #a5d6a7;
+      border-radius: 8px; padding: 10px; margin-bottom: 12px;
+    }
+    .callout.warn {
+      background: var(--wf-warn-bg); border-color: var(--wf-warn-border);
+    }
+    table.matrix {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;
+    }
+    table.matrix th, table.matrix td {
+      border: 1px solid #cfd8dc; padding: 8px; text-align: left; vertical-align: top;
+    }
+    table.matrix th { background: #eceff1; }
+
+    .mobile {
+      max-width: 360px; margin: 0 auto;
+      border: 2px solid #455a64; border-radius: 18px;
+      overflow: hidden; background: #1a2f28; min-height: 520px;
+      position: relative;
+    }
+    .mobile .sheet {
+      width: 100%; border-left: 0; border-radius: 18px 18px 0 0;
+      top: 56px;
+    }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>Studio AI Surface V1 · 预览顶栏「AI」入口线框</h1>
+    <p>
+      对齐共识：Dock 一级入口 · Sheet 三层（本册动作 / 本机连接 / 高级）· 勾选≠自动烧 API · 精修与 AI 职责拆分 · ops 不下沉主路径 · <strong>杂志文案解冻整合</strong>。
+      关联 PRD：<a href="../PRD-STUDIO-AI-SURFACE-V1.md" style="color:#80cbc4">PRD-STUDIO-AI-SURFACE-V1</a> · ACP · AIR · CAL · WEA。
+    </p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="f0" class="is-active">F0 · Dock 落位</button>
+      <button type="button" data-tab="f1">F1 · Sheet 默认</button>
+      <button type="button" data-tab="f2">F2 · 有建议徽标</button>
+      <button type="button" data-tab="f3">F3 · 生成中</button>
+      <button type="button" data-tab="f4">F4 · 能力未开</button>
+      <button type="button" data-tab="f5">F5 · 窄屏</button>
+      <button type="button" data-tab="f6">F6 · 拍板清单</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <!-- F0 -->
+      <section class="panel is-visible" id="f0">
+        <div class="sec">
+          <h2>F0 · Dock 落位 <span class="tag tag--rec">推荐</span></h2>
+          <p class="lead">示意帧。实施落位以 PRD <strong>D-SAS-02</strong> 为准：插在现网「精修」之后、导出区之前（播放/分章在精修左侧，勿按本帧理想序硬编码）。</p>
+          <div class="anno">Preview · Album · Desktop · BLK-SAS-01</div>
+          <div class="browser">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__tab"><span class="browser__ico"></span> 京都七日 · 预览</div>
+          </div>
+          <div class="frame">
+            <nav class="dock" aria-label="预览快捷操作">
+              <a href="#">← 返回</a>
+              <span class="divider"></span>
+              <button type="button">精修</button>
+              <button type="button" class="dock__ai is-active" title="AI">✦ AI</button>
+              <button type="button" class="dock__icon-only" title="播放">▶</button>
+              <button type="button" class="dock__export">导出 ▾</button>
+            </nav>
+            <div class="scroll-mock">
+              <div class="screen">
+                <div class="title">京都七日</div>
+                <div class="hook">封面主视觉（示意）</div>
+              </div>
+              <div class="screen">章节内容滚动区…</div>
+            </div>
+          </div>
+          <div class="anno">备选文案（待拍板）</div>
+          <table class="matrix">
+            <thead><tr><th>文案</th><th>利</th><th>弊</th></tr></thead>
+            <tbody>
+              <tr><td><strong>AI</strong>（推荐）</td><td>最短、占位稳</td><td>略抽象</td></tr>
+              <tr><td>智能</td><td>更口语</td><td>与「精修」语义可能打架</td></tr>
+              <tr><td>AI 应用</td><td>你原提案</td><td>Dock 过长，窄屏易挤</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- F1 -->
+      <section class="panel" id="f1">
+        <div class="sec">
+          <h2>F1 · Sheet 默认展开 <span class="tag tag--new">主路径</span></h2>
+          <p class="lead">主区=本册可执行动作；「本机连接」折叠；「高级」沉底链到 ops（内部）。不出现 Intent Brief / Mosaic Judge 等工程名。</p>
+          <div class="anno">Right sheet · 三层 IA</div>
+          <div class="browser">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__tab"><span class="browser__ico"></span> 京都七日 · 预览</div>
+          </div>
+          <div class="frame">
+            <div class="scrim"></div>
+            <nav class="dock">
+              <a href="#">← 返回</a>
+              <span class="divider"></span>
+              <button type="button">精修</button>
+              <button type="button" class="dock__ai is-active">✦ AI</button>
+              <button type="button" class="dock__icon-only">▶</button>
+              <button type="button" class="dock__export">导出 ▾</button>
+            </nav>
+            <aside class="sheet" aria-label="AI">
+              <div class="sheet__head">
+                <div>
+                  <h3>AI</h3>
+                  <p>本册智能动作 · 不自动消耗额度</p>
+                </div>
+                <button type="button" class="sheet__close" aria-label="关闭">×</button>
+              </div>
+              <div class="sheet__body">
+                <div class="block">
+                  <h4>装帧标题</h4>
+                  <p class="desc">点一次才生成。勾选只表示「优先走 AI 手写体」，不会自动开跑。</p>
+                  <label class="check">
+                    <input type="checkbox" checked /> 优先 AI 手写体
+                  </label>
+                  <div class="row-action">
+                    <span class="status idle">尚未生成</span>
+                    <button type="button" class="btn">生成装帧标题</button>
+                  </div>
+                </div>
+
+                <div class="block">
+                  <h4>意图</h4>
+                  <p class="desc">重新理解这趟旅行的节奏与篇幅偏好（影响后续选片/分章建议，不直接改结构）。</p>
+                  <div class="row-action">
+                    <span class="status">已就绪 · 偏少章</span>
+                    <button type="button" class="btn ghost">重新解析</button>
+                  </div>
+                </div>
+
+                <div class="block">
+                  <h4>排版建议</h4>
+                  <p class="desc">只读建议；采纳后才写入。结构锁定时不可覆盖章节。</p>
+                  <div class="suggest">
+                    <strong>暂无新建议</strong>
+                    成册后若有可改点，会出现在这里，Dock「AI」也会亮圆点。
+                  </div>
+                </div>
+
+                <div class="block">
+                  <h4>杂志文案</h4>
+                  <p class="desc">重写封面钩子与章节导语等版心文字；照片仍留在本机。导入默认仍用本机文案。<span style="color:#e65100">W1 无语气选择（D-SAS-16）· 三语气归 AIR 后续。</span></p>
+                  <div class="row-action">
+                    <span class="status">可生成</span>
+                    <button type="button" class="btn">生成杂志感文案</button>
+                  </div>
+                </div>
+
+                <details class="adv">
+                  <summary>本机连接</summary>
+                  <div class="inner">
+                    <div class="row-action" style="margin-top:0">
+                      <span class="status warn">未测通</span>
+                      <button type="button" class="btn ghost">配置 / 测试</button>
+                    </div>
+                    <p class="desc" style="margin:8px 0 0">本地 Key · 失败不影响出图与导出。</p>
+                  </div>
+                </details>
+
+                <details class="adv" style="margin-top:10px">
+                  <summary>高级</summary>
+                  <div class="inner">
+                    <p class="desc" style="margin:0 0 6px">工程观测与预算（内部）。普通用户可忽略。</p>
+                    <button type="button" class="btn link">打开 AI 运维台 →</button>
+                  </div>
+                </details>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- F2 -->
+      <section class="panel" id="f2">
+        <div class="sec">
+          <h2>F2 · 有建议时的发现性 <span class="tag tag--rec">推荐</span></h2>
+          <p class="lead">Critic 产出 layoutSuggestions 后：Dock「AI」亮橙点；打开 Sheet 默认滚到「排版建议」卡片，可采纳 / 忽略。</p>
+          <div class="anno">Badge + suggestion card</div>
+          <div class="browser">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__tab"><span class="browser__ico"></span> 京都七日 · 预览</div>
+          </div>
+          <div class="frame">
+            <div class="scrim"></div>
+            <nav class="dock">
+              <a href="#">← 返回</a>
+              <span class="divider"></span>
+              <button type="button">精修</button>
+              <button type="button" class="dock__ai is-active dot">✦ AI</button>
+              <button type="button" class="dock__icon-only">▶</button>
+              <button type="button" class="dock__export">导出 ▾</button>
+            </nav>
+            <aside class="sheet">
+              <div class="sheet__head">
+                <div>
+                  <h3>AI</h3>
+                  <p>有 2 条排版建议待看</p>
+                </div>
+                <button type="button" class="sheet__close">×</button>
+              </div>
+              <div class="sheet__body">
+                <div class="block" style="outline: 2px solid #3d6b5a; outline-offset: 1px;">
+                  <h4>排版建议 <span class="status">2 条</span></h4>
+                  <p class="desc">建议不会自动改册；你点「采纳」后才生效。</p>
+                  <div class="suggest">
+                    <strong>第 2 章 · 建议略收紧开头</strong>
+                    开场图偏空，可把第二张前移作开篇。
+                    <div class="actions">
+                      <button type="button" class="btn">采纳</button>
+                      <button type="button" class="btn ghost">忽略</button>
+                      <button type="button" class="btn link">这章不对</button>
+                    </div>
+                  </div>
+                  <div class="suggest">
+                    <strong>第 4 章 · 建议合并短章</strong>
+                    与第 3 章场景重叠，可并为一章。
+                    <div class="actions">
+                      <button type="button" class="btn">采纳</button>
+                      <button type="button" class="btn ghost">忽略</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="block muted">
+                  <h4>装帧标题</h4>
+                  <div class="row-action">
+                    <span class="status">已有结果</span>
+                    <button type="button" class="btn ghost">重新生成</button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- F3 -->
+      <section class="panel" id="f3">
+        <div class="sec">
+          <h2>F3 · 生成装帧标题中</h2>
+          <p class="lead">点击后进入进行中态；可关 Sheet 继续看预览，完成后 toast + Dock 轻提示。失败 fail-open，不挡浏览。</p>
+          <div class="anno">Busy · ~10s+ route C</div>
+          <div class="browser">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__tab"><span class="browser__ico"></span> 京都七日 · 预览</div>
+          </div>
+          <div class="frame">
+            <div class="scrim"></div>
+            <nav class="dock">
+              <a href="#">← 返回</a>
+              <span class="divider"></span>
+              <button type="button">精修</button>
+              <button type="button" class="dock__ai is-active">✦ AI</button>
+              <button type="button" class="dock__icon-only">▶</button>
+              <button type="button" class="dock__export">导出 ▾</button>
+            </nav>
+            <aside class="sheet">
+              <div class="sheet__head">
+                <div>
+                  <h3>AI</h3>
+                  <p>正在生成装帧标题…</p>
+                </div>
+                <button type="button" class="sheet__close">×</button>
+              </div>
+              <div class="sheet__body">
+                <div class="block">
+                  <h4>装帧标题</h4>
+                  <p class="desc">优先 AI 手写体 · 大约需要十余秒</p>
+                  <div class="progress"><i></i></div>
+                  <div class="row-action">
+                    <span class="status warn">生成中</span>
+                    <button type="button" class="btn" disabled>生成装帧标题</button>
+                  </div>
+                  <p class="desc" style="margin-top:10px">可关闭面板继续翻页；完成后会通知你。</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- F4 -->
+      <section class="panel" id="f4">
+        <div class="sec">
+          <h2>F4 · AI 表面未开启 <span class="tag tag--ask">门控</span></h2>
+          <p class="lead">按钮仍可见（保发现性），Sheet 内诚实说明；不假装可点。连接配置仍可展开（本机 Key 与能力闸分流）。</p>
+          <div class="anno">aiSurfaceEnabled = false</div>
+          <div class="browser">
+            <div class="browser__dots"><i></i><i></i><i></i></div>
+            <div class="browser__tab"><span class="browser__ico"></span> 京都七日 · 预览</div>
+          </div>
+          <div class="frame">
+            <div class="scrim"></div>
+            <nav class="dock">
+              <a href="#">← 返回</a>
+              <span class="divider"></span>
+              <button type="button">精修</button>
+              <button type="button" class="dock__ai is-active">✦ AI</button>
+              <button type="button" class="dock__icon-only">▶</button>
+              <button type="button" class="dock__export">导出 ▾</button>
+            </nav>
+            <aside class="sheet">
+              <div class="sheet__head">
+                <div>
+                  <h3>AI</h3>
+                  <p>本环境未开启智能能力</p>
+                </div>
+                <button type="button" class="sheet__close">×</button>
+              </div>
+              <div class="sheet__body">
+                <div class="block disabled">
+                  <h4>智能动作暂不可用</h4>
+                  <p class="desc">装帧标题、意图解析、排版建议等需在设置中开启 AI 能力后使用。出图与导出不受影响。</p>
+                  <button type="button" class="btn ghost">了解如何开启</button>
+                </div>
+                <details class="adv" open>
+                  <summary>本机连接</summary>
+                  <div class="inner">
+                    <div class="row-action" style="margin-top:0">
+                      <span class="status idle">可选</span>
+                      <button type="button" class="btn ghost">配置 / 测试</button>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- F5 -->
+      <section class="panel" id="f5">
+        <div class="sec">
+          <h2>F5 · 窄屏</h2>
+          <p class="lead">窄屏仍用单图标「AI」（可无文字）；Sheet 改为自底向上近全高，避免与精修双开。</p>
+          <div class="anno">Mobile / narrow gate 诚实面之上</div>
+          <div class="mobile">
+            <nav class="dock" style="left:10px; right:10px; justify-content:space-between;">
+              <a href="#" class="dock__icon-only">←</a>
+              <span style="display:flex;gap:2px">
+                <button type="button" class="dock__icon-only" title="精修">✎</button>
+                <button type="button" class="dock__ai is-active dock__icon-only" title="AI">✦</button>
+                <button type="button" class="dock__export">导出</button>
+              </span>
+            </nav>
+            <div class="scrim" style="top:0"></div>
+            <aside class="sheet">
+              <div class="sheet__head">
+                <div>
+                  <h3>AI</h3>
+                  <p>本册智能动作</p>
+                </div>
+                <button type="button" class="sheet__close">×</button>
+              </div>
+              <div class="sheet__body">
+                <div class="block">
+                  <h4>装帧标题</h4>
+                  <label class="check"><input type="checkbox" checked /> 优先 AI 手写体</label>
+                  <div class="row-action">
+                    <span class="status idle">尚未生成</span>
+                    <button type="button" class="btn">生成</button>
+                  </div>
+                </div>
+                <div class="block">
+                  <h4>意图</h4>
+                  <div class="row-action">
+                    <span class="status">已就绪</span>
+                    <button type="button" class="btn ghost">重新解析</button>
+                  </div>
+                </div>
+                <details class="adv">
+                  <summary>本机连接</summary>
+                  <div class="inner"><button type="button" class="btn ghost">配置 / 测试</button></div>
+                </details>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- F6 -->
+      <section class="panel" id="f6">
+        <div class="sec">
+          <h2>F6 · 拍板清单 <span class="tag tag--ask">请勾选</span></h2>
+          <p class="lead">线框通过后，再开薄 FE PRD。下列项需你点头或改。</p>
+          <table class="matrix">
+            <thead><tr><th>#</th><th>议题</th><th>线框默认</th><th>你的决定</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>D1</td>
+                <td>Dock 文案</td>
+                <td><strong>AI</strong>（非「AI 应用」）</td>
+                <td>□ 同意　□ 改「智能」　□ 其他：____</td>
+              </tr>
+              <tr>
+                <td>D2</td>
+                <td>相对精修的位置</td>
+                <td>精修 → <strong>AI</strong> → 播放 → 导出</td>
+                <td>□ 同意　□ AI 在精修左侧</td>
+              </tr>
+              <tr>
+                <td>D3</td>
+                <td>装帧标题入口</td>
+                <td>以 AI Sheet 为主；精修「这本」可留次要入口</td>
+                <td>□ 双入口　□ 仅 AI　□ 仅精修</td>
+              </tr>
+              <tr>
+                <td>D4</td>
+                <td>未开闸时按钮</td>
+                <td>按钮可见 + Sheet 诚实说明</td>
+                <td>□ 同意　□ 直接隐藏按钮</td>
+              </tr>
+              <tr>
+                <td>D5</td>
+                <td>「高级 / 运维台」</td>
+                <td>折叠链；普通路径不强调</td>
+                <td>□ 同意　□ V1 完全不露</td>
+              </tr>
+              <tr>
+                <td>D6</td>
+                <td>杂志文案重写</td>
+                <td><strong>解冻整合</strong>进 AI Sheet（非灰显）· 见 PRD D-SAS-06</td>
+                <td>□ 已写入 PRD　□ 要改回灰显</td>
+              </tr>
+              <tr>
+                <td>D7</td>
+                <td>与精修互斥</td>
+                <td>开 AI 关精修 Sheet（反之亦然）</td>
+                <td>□ 同意　□ 允许并排</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="anno">职责边界（建议写进 FE PRD）</div>
+          <table class="matrix">
+            <thead><tr><th>精修</th><th>AI Sheet</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>封面版式、书衣、分章结构、这页/这本手工改</td>
+                <td>装帧标题生成、意图、排版建议采纳、本机连接、（将来）文案重写</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <aside class="aside">
+      <div class="callout">
+        <strong>审核焦点</strong><br />
+        看 F0 落位 + F1 三层是否顺眼；F6 七项决定可直接回帖。
+      </div>
+      <div class="callout warn">
+        <strong>刻意不做</strong><br />
+        不在 Sheet 堆 Agent 名、预算表、unlock-gate。ACP 后台继续走运维台。
+      </div>
+      <h3>固定原则</h3>
+      <ul>
+        <li class="ok">勾选 ≠ 自动生成</li>
+        <li class="ok">建议只读，采纳才写</li>
+        <li class="ok">失败不影响浏览/导出</li>
+        <li class="ask">文案「AI」vs「智能」待拍</li>
+      </ul>
+      <h3 style="margin-top:14px">下一档</h3>
+      <ul>
+        <li>你回 F6 决定</li>
+        <li>再开薄 FE PRD（入口·IA·门控·埋点）</li>
+        <li>编码另排期</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var tabs = document.getElementById("tabs");
+      if (!tabs) return;
+      tabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-tab]");
+        if (!btn) return;
+        var id = btn.getAttribute("data-tab");
+        tabs.querySelectorAll("button").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === id);
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    })();
+  </script>
+</body>
+</html>
