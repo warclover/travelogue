@@ -229,6 +229,15 @@ def handle_trip_curate(handler: StudioHandlerProtocol, trip_id: str) -> None:
             "structure_draft" if scope == "full" else prev_status
         )
         after_fp = structure_fingerprint(trip)
+        # ACP W3 · Layout Critic async after curate (fail-open, non-blocking)
+        try:
+            from travelogue.web.studio_handlers.ai_ops_handlers import (
+                maybe_run_layout_critic_async,
+            )
+
+            maybe_run_layout_critic_async(trip_id)
+        except Exception:
+            pass
         return {
             "tripId": trip_id,
             "scope": scope,

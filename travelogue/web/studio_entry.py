@@ -198,6 +198,7 @@ def build_entry(
         "derivativesPreparing": int(pipeline.get("derivativesPreparing") or 0),
         "coverAssetId": str(trip.get("coverAssetId") or "") or None,
         "chapters": build_chapter_summaries(trip),
+        "layoutSuggestions": _layout_suggestions_entry(curation if isinstance(curation, dict) else {}),
         "telemetry": telemetry,
         "aesthetic": build_aesthetic_entry_summary(
             trip,
@@ -230,6 +231,31 @@ def build_entry(
         "longshotDensity": _longshot_density_entry(trip),
         "shareCopyPack": _share_copy_pack_entry(trip),
     }
+
+
+def _layout_suggestions_entry(curation: dict) -> list[dict[str, Any]]:
+    """ACP W3 · G1 secondary hints (advisory; SHD-ACP-02 length already clipped)."""
+    raw = curation.get("layoutSuggestions")
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in raw[:16]:
+        if not isinstance(item, dict):
+            continue
+        ch = str(item.get("chapterId") or "").strip()
+        text = str(item.get("suggestion") or "").strip()
+        if not ch or not text:
+            continue
+        out.append(
+            {
+                "chapterId": ch,
+                "suggestedPatternId": str(item.get("suggestedPatternId") or "") or None,
+                "suggestion": text[:36],
+                "accepted": bool(item.get("accepted")),
+                "confidence": item.get("confidence"),
+            }
+        )
+    return out
 
 
 def _layout_vibe_entry(trip: dict) -> str:

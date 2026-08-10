@@ -23,6 +23,22 @@ class IntentBriefConfig:
 
 
 @dataclass
+class LayoutCriticConfig:
+    """Layout Critic Agent feature flag (W3 · default off for NR)."""
+
+    enabled: bool = False
+
+
+@dataclass
+class MosaicJudgeConfig:
+    """Mosaic Judge Agent (W3 skeleton · D-ACP-15 post-beam async; default off)."""
+
+    enabled: bool = False
+    tie_epsilon: float = 0.03
+    max_calls_per_trip: int = 4
+
+
+@dataclass
 class AiCapabilityConfig:
     """Engineering capability switch (independent of ``studio.ai_surface_enabled``).
 
@@ -36,22 +52,34 @@ class AiCapabilityConfig:
     timeout_sec: float = 8.0
     cache: AiCapabilityCacheConfig = field(default_factory=AiCapabilityCacheConfig)
     intent_brief: IntentBriefConfig = field(default_factory=IntentBriefConfig)
+    layout_critic: LayoutCriticConfig = field(default_factory=LayoutCriticConfig)
+    mosaic_judge: MosaicJudgeConfig = field(default_factory=MosaicJudgeConfig)
+
+
+def _subdict(raw: dict[str, Any], *keys: str) -> dict[str, Any]:
+    for key in keys:
+        val = raw.get(key)
+        if isinstance(val, dict):
+            return val
+    return {}
 
 
 def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityConfig:
     raw = raw or {}
     cache_raw = raw.get("cache") if isinstance(raw.get("cache"), dict) else {}
-    ib_raw = (
-        raw.get("intent_brief")
-        if isinstance(raw.get("intent_brief"), dict)
-        else raw.get("intentBrief")
-    )
-    ib_raw = ib_raw if isinstance(ib_raw, dict) else {}
+    ib_raw = _subdict(raw, "intent_brief", "intentBrief")
+    lc_raw = _subdict(raw, "layout_critic", "layoutCritic")
+    mj_raw = _subdict(raw, "mosaic_judge", "mosaicJudge")
     timeout_raw = raw.get("timeout_sec", raw.get("timeoutSec", 8.0))
     try:
         timeout_sec = float(timeout_raw)
     except (TypeError, ValueError):
         timeout_sec = 8.0
+    tie_raw = mj_raw.get("tie_epsilon", mj_raw.get("tieEpsilon", 0.03))
+    try:
+        tie_epsilon = float(tie_raw)
+    except (TypeError, ValueError):
+        tie_epsilon = 0.03
     return AiCapabilityConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", False),
         max_calls_per_trip=cfg_int(
@@ -63,5 +91,16 @@ def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityCo
         ),
         intent_brief=IntentBriefConfig(
             enabled=cfg_bool(ib_raw, "enabled", "enabled", False),
+        ),
+        layout_critic=LayoutCriticConfig(
+            enabled=cfg_bool(lc_raw, "enabled", "enabled", False),
+        ),
+        mosaic_judge=MosaicJudgeConfig(
+            enabled=cfg_bool(mj_raw, "enabled", "enabled", False),
+            tie_epsilon=max(0.0, tie_epsilon),
+            max_calls_per_trip=max(
+                0,
+                cfg_int(mj_raw, "max_calls_per_trip", "maxCallsPerTrip", 4),
+            ),
         ),
     )

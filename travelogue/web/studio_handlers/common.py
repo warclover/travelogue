@@ -230,6 +230,18 @@ def match_trip_ai_intent_brief(path: str) -> str | None:
     return match_trip_suffix(path, AI_INTENT_BRIEF_SUFFIX)
 
 
+def match_trip_ai_layout_critic_accept(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import AI_LAYOUT_CRITIC_ACCEPT_SUFFIX
+
+    return match_trip_suffix(path, AI_LAYOUT_CRITIC_ACCEPT_SUFFIX)
+
+
+def match_trip_ai_layout_critic(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import AI_LAYOUT_CRITIC_SUFFIX
+
+    return match_trip_suffix(path, AI_LAYOUT_CRITIC_SUFFIX)
+
+
 def match_trip_bookends_repick_opening(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import BOOKENDS_REPICK_OPENING_SUFFIX
 

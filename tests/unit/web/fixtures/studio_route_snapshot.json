@@ -21,6 +21,11 @@
   },
   {
     "method": "GET",
+    "path": "/__travelogue/ai/ops-summary",
+    "handler": "ai_ops_handlers.handle_get_ai_ops_summary"
+  },
+  {
+    "method": "GET",
     "path": "/__travelogue/chapter-layout",
     "handler": "trip_handlers.handle_chapter_layout"
   },
@@ -148,6 +153,11 @@
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/source-status",
     "handler": "storage_handlers.handle_source_status"
+  },
+  {
+    "method": "GET",
+    "path": "/ai-ops-admin",
+    "handler": "ai_ops_handlers.handle_ai_ops_admin_page"
   },
   {
     "method": "GET",
@@ -381,6 +391,21 @@
   },
   {
     "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/ai/intent-brief",
+    "handler": "ai_ops_handlers.handle_post_intent_brief"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/ai/layout-critic",
+    "handler": "ai_ops_handlers.handle_post_layout_critic"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/ai/layout-critic/accept",
+    "handler": "ai_ops_handlers.handle_post_layout_critic_accept"
+  },
+  {
+    "method": "POST",
     "path": "/__travelogue/trips/{tripId}/asset-media-class",
     "handler": "trip_handlers.handle_asset_media_class"
   },
@@ -428,6 +453,11 @@
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/layout-vibe",
     "handler": "trip_handlers.handle_layout_vibe"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/title-art/resolve",
+    "handler": "trip_handlers.handle_post_resolve_title_art"
   },
   {
     "method": "POST",

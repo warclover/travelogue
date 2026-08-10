@@ -1,1 +1,1 @@
-"""ACP agents package (W1a title_art · W1b aesthetic_mllm · W2 intent_brief)."""
+"""ACP agents package (W1a–W3: title_art · aesthetic_mllm · intent_brief · layout_critic · mosaic_judge)."""
