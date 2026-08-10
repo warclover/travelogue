@@ -4,7 +4,12 @@
  */
 "use strict";
 
-import { showToolbarToast, tripApiBase, reloadPreviewAfterLayout } from "./shell.js";
+import {
+  showToolbarToast,
+  tripApiBase,
+  tripRestBase,
+  reloadPreviewAfterLayout,
+} from "./shell.js";
 import { loadChapterExplain } from "./drawers.js";
 import { fetchEntry } from "./core.js";
 import { trackStudioEvent } from "../js/analytics.js";
@@ -305,7 +310,7 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
       "5": "other",
     };
     var code = map[String(reason).trim()] || String(reason).trim();
-    postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-feedback", {
+    postJsonConflictRetry(tripRestBase(tripId) + "/ai/layout-feedback", {
       chapterId: ch.id,
       reason: code,
     })
@@ -326,7 +331,7 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
   function acceptLayoutSuggestion(ch, sug, hintEl, acceptBtn) {
     if (!ch || !ch.id || !sug) return;
     if (acceptBtn) acceptBtn.disabled = true;
-    postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
+    postJsonConflictRetry(tripRestBase(tripId) + "/ai/layout-critic/accept", {
       chapterId: ch.id,
       suggestedPatternId: sug.suggestedPatternId || undefined,
     })

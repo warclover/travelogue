@@ -19,7 +19,14 @@ export function tripIdFromPath() {
 
 
 export function tripApiBase(tripId) {
+    // Legacy preview-root API (promote-tier / rerender / save-copy …)
     return "/" + encodeURIComponent(tripId) + "/__travelogue";
+  }
+
+
+/** Canonical Studio trip REST base (`/__travelogue/trips/{id}` · entry / AI / title-art). */
+export function tripRestBase(tripId) {
+    return "/__travelogue/trips/" + encodeURIComponent(tripId);
   }
 
 

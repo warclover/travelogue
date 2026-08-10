@@ -66,9 +66,12 @@ def test_sas_telemetry_allowlisted() -> None:
 
 def test_sas_w2_intent_suggestions_badge() -> None:
     text = _AI_SHEET.read_text(encoding="utf-8")
+    # AI 路由必须走 canonical /__travelogue/trips/{id}/…（非 legacy /{id}/__travelogue）
+    assert "tripRestBase(tripId)" in text
     assert "/ai/intent-brief" in text
     assert "/ai/layout-critic/accept" in text
     assert "/ai/layout-feedback" in text
+    assert 'tripApiBase(tripId) + "/ai/' not in text
     assert 'trackAction("intent"' in text
     assert 'trackAction("suggestion_accept"' in text
     assert 'trackAction("suggestion_dismiss"' in text

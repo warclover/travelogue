@@ -20,6 +20,7 @@ import {
   reloadPreviewAfterLayout,
   showToolbarToast,
   tripApiBase,
+  tripRestBase,
   tripIdFromPath,
 } from "./shell.js";
 
@@ -609,7 +610,7 @@ export function mountAiSurface(root, tripId, opts) {
       intentBtn.textContent = "解析中…";
       if (statusEl) statusEl.textContent = "解析中…";
       var started = Date.now();
-      postJson(tripApiBase(tripId) + "/ai/intent-brief", { force: true })
+      postJson(tripRestBase(tripId) + "/ai/intent-brief", { force: true })
         .then(function (res) {
           intentBusy = false;
           if (!res || res.status !== 200 || !res.body || !res.body.ok) {
@@ -663,7 +664,7 @@ export function mountAiSurface(root, tripId, opts) {
           trackAction("suggestion_accept", { chapterId: sug.chapterId });
           var started = Date.now();
           acceptBtn.disabled = true;
-          postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
+          postJsonConflictRetry(tripRestBase(tripId) + "/ai/layout-critic/accept", {
             chapterId: sug.chapterId,
             suggestedPatternId: sug.suggestedPatternId || undefined,
           })
@@ -756,7 +757,7 @@ export function mountAiSurface(root, tripId, opts) {
             "5": "other",
           };
           var code = map[String(reason).trim()] || "other";
-          postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-feedback", {
+          postJsonConflictRetry(tripRestBase(tripId) + "/ai/layout-feedback", {
             chapterId: sug.chapterId,
             reason: code,
           })
