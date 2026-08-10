@@ -25,6 +25,10 @@ class MomentConfig:
     pool_solo: bool = True
     pool_exif: bool = True
     signature_label: bool = True
+    # HPPL · 次要竖版优先 3→2→1（须 pool_solo=true 才生效）
+    pool_portrait_collage: bool = True
+    pool_portrait_collage_max_per_screen: int = 3
+    pool_portrait_collage_exif: bool = False
     position: str = "inline"  # inline (layout-screen) | arc_peak (reserved)
     auto_disable_small_trip: bool = True
     small_trip_max_assets: int = 15
@@ -56,6 +60,11 @@ def moment_config_from_dict(raw: dict[str, Any] | None) -> MomentConfig:
         on_screen=float(weights_raw.get("on_screen", 0.15)),
         featured=float(weights_raw.get("featured", 0.10)),
     )
+    max_per = int(raw.get("pool_portrait_collage_max_per_screen", 3))
+    if max_per < 1:
+        max_per = 1
+    if max_per > 3:
+        max_per = 3
     return MomentConfig(
         enabled=bool(raw.get("enabled", True)),
         pool_ratio=float(raw.get("pool_ratio", 0.05)),
@@ -65,6 +74,9 @@ def moment_config_from_dict(raw: dict[str, Any] | None) -> MomentConfig:
         pool_solo=bool(raw.get("pool_solo", True)),
         pool_exif=bool(raw.get("pool_exif", True)),
         signature_label=bool(raw.get("signature_label", True)),
+        pool_portrait_collage=bool(raw.get("pool_portrait_collage", True)),
+        pool_portrait_collage_max_per_screen=max_per,
+        pool_portrait_collage_exif=bool(raw.get("pool_portrait_collage_exif", False)),
         position=str(raw.get("position", "inline")),
         auto_disable_small_trip=bool(raw.get("auto_disable_small_trip", True)),
         small_trip_max_assets=int(raw.get("small_trip_max_assets", 15)),

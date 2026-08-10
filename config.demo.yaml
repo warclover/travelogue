@@ -47,3 +47,7 @@ curate:
     pool_solo: true
     pool_exif: true
     signature_label: true
+    # HPPL · 次要竖版优先 3→2→1（默认开；false 回退全员 solo）
+    pool_portrait_collage: true
+    pool_portrait_collage_exif: false
+    pool_portrait_collage_max_per_screen: 3

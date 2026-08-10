@@ -767,6 +767,7 @@ def build_layout_screen(
     show_signature_label: bool = True,
     moment_screen_label: str = "",
     chapter_day_span: list[str] | None = None,
+    peak_collage_exif: bool = False,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if is_plate and not folio_plate_rewrite_eligible(screen):
@@ -944,7 +945,20 @@ def build_layout_screen(
             ):
                 entry["hasBlurFill"] = True
                 entry["blurSrc"] = entry["src"]
-        if show_moment_exif and str(aid or "").strip() in exif_pool and asset:
+        # HPPL · multi-slot peak collage: no per-slot EXIF unless explicitly enabled
+        allow_slot_exif = True
+        if (
+            screen_role == "peak"
+            and len(screen.get("slots") or []) > 1
+            and not peak_collage_exif
+        ):
+            allow_slot_exif = False
+        if (
+            allow_slot_exif
+            and show_moment_exif
+            and str(aid or "").strip() in exif_pool
+            and asset
+        ):
             from travelogue.render.moment_exif import format_moment_exif_line
 
             exif_line = format_moment_exif_line(

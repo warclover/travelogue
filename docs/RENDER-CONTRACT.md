@@ -72,12 +72,12 @@
 | 项 | 契约 |
 |----|------|
 | 块标记 | `data-block="layout-screen"` · `data-role="moment"`（签名 **唯一**）或 `data-role="peak"`（池内其余） |
-| 策展 | `ensure_pool_assets_solo_screens()` · 池内每张从拼版拆为单槽屏 |
+| 策展 | `ensure_pool_assets_solo_screens()` · 签名强制单槽；次要竖版默认 3→2→1 拼屏（HPPL），横版次高峰仍单槽 |
 | 标签 | `.layout-screen__moment-label` · 中文「决定性瞬间」/ 英文 `Moment` · **仅** `data-role="moment"` |
-| EXIF 脚注 | `.moment-exif-bar` · 默认池内全集（`pool_exif: true`）· 单行 mono ≤13px |
+| EXIF 脚注 | `.moment-exif-bar` · 默认池内 solo（签名 + 单槽 peak）；多槽 peak 拼屏默认不挂（`pool_portrait_collage_exif: false`） |
 | 省略 EXIF | `performance` profile · `pool_exif: false` · `show_exif: false` |
-| 保留 solo | `performance` / longshot 可省略 EXIF，**仍**拆 solo（`pool_solo: true`） |
-| 配置 | `curate.moment.pool_solo` · `pool_exif` · `signature_label` |
+| 保留 solo | `performance` / longshot 可省略 EXIF，**仍**走高光管线成屏（`pool_solo: true`） |
+| 配置 | `curate.moment.pool_solo` · `pool_exif` · `signature_label` · `pool_portrait_collage`（默认 true） |
 
 实现：`travelogue.curation.moment_scoring.ensure_pool_assets_solo_screens()`、`travelogue.render.context.build_layout_screen()`、`partials/layout-screen.hbs`。
 

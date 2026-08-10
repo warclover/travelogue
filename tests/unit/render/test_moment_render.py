@@ -353,6 +353,115 @@ def test_five_pool_members_all_solo_with_exif() -> None:
     assert "screen-landscape-5" not in html
 
 
+def test_hppl_collage_peak_hides_per_slot_exif_by_default() -> None:
+    """AC-HPPL-07 · multi-slot peak collage has no per-slot EXIF; signature may keep EXIF."""
+
+    def portrait(aid: str, *, place: str, model: str) -> dict:
+        return {
+            "id": aid,
+            "type": "image",
+            "layoutEligible": True,
+            "width": 900,
+            "height": 1600,
+            "takenAt": "2024-06-14T08:00:00+08:00",
+            "place": {"city": place},
+            "exif": {
+                "model": model,
+                "focalLengthMm": 35,
+                "aperture": 2.0,
+                "shutter": "1/200",
+                "iso": 100,
+            },
+            "paths": {"w800": f"assets/{aid}-w800.webp", "w1600": f"assets/{aid}-w1600.webp"},
+        }
+
+    trip = {
+        "tripId": "hppl-exif",
+        "title": "HPPL EXIF",
+        "meta": {"title": "HPPL EXIF", "place": "林芝"},
+        "coverAssetId": "cover",
+        "momentAssetId": "sig",
+        "exportLayout": "web",
+        "layoutEngine": "screens",
+        "assets": [
+            {
+                "id": "cover",
+                "type": "image",
+                "layoutEligible": True,
+                "width": 1600,
+                "height": 900,
+                "paths": {"w800": "assets/cover-w800.webp"},
+            },
+            {
+                "id": "sig",
+                "type": "image",
+                "layoutEligible": True,
+                "width": 1600,
+                "height": 900,
+                "takenAt": "2024-06-14T07:00:00+08:00",
+                "place": {"city": "林芝"},
+                "exif": {
+                    "model": "iPhone 15 Pro",
+                    "focalLengthMm": 24,
+                    "aperture": 1.8,
+                    "shutter": "1/200",
+                    "iso": 64,
+                },
+                "paths": {"w800": "assets/sig-w800.webp", "w1600": "assets/sig-w1600.webp"},
+            },
+            portrait("p1", place="波密", model="Cam-p1"),
+            portrait("p2", place="通麦", model="Cam-p2"),
+            portrait("p3", place="鲁朗", model="Cam-p3"),
+            {
+                "id": "filler",
+                "type": "image",
+                "layoutEligible": True,
+                "width": 1600,
+                "height": 900,
+                "paths": {"w800": "assets/filler-w800.webp"},
+            },
+        ],
+        "chapters": [
+            {
+                "id": "ch-01",
+                "title": "第一章",
+                "curation": {"assetIds": ["sig", "p1", "p2", "p3", "filler"]},
+                "screens": [
+                    {"patternId": "screen-landscape-1", "slots": [{"assetId": "filler"}]},
+                    {
+                        "patternId": "screen-portrait-3",
+                        "slots": [
+                            {"assetId": "p1"},
+                            {"assetId": "p2"},
+                            {"assetId": "p3"},
+                        ],
+                    },
+                ],
+            }
+        ],
+        "curation": {
+            "momentPoolIds": ["sig", "p1", "p2", "p3"],
+            "momentSecondaryIds": ["p1", "p2", "p3"],
+            "momentPoolSize": 4,
+        },
+        "epilogue": "尾声",
+    }
+    html = render_html(
+        trip,
+        export_mode="draft",
+        layout_engine_override="screens",
+        export_layout_override="web",
+        reading_profile_override="default_hybrid",
+        cfg=_moment_cfg(pool_portrait_collage=True, pool_portrait_collage_exif=False),
+    )
+    assert html.count('data-role="moment"') == 1
+    assert 'data-role="peak"' in html
+    assert "screen-portrait-3" in html or "layout-screen__grid--3col" in html
+    # Signature EXIF only (collage peak slots suppressed)
+    assert html.count("moment-exif-bar") == 1
+    assert "林芝" in html
+
+
 def test_signature_label_disabled_hides_moment_role_and_label() -> None:
     trip = _moment_trip()
     html = render_html(

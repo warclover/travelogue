@@ -9,7 +9,7 @@
 | **Phase 23 代号** | 「最佳时刻」— 5% 高光池 + 签名锚点 + 池内 EXIF 展柜 |
 | **验收** | [ACCEPTANCE-PHASE23.md](./ACCEPTANCE-PHASE23.md) |
 | **前置条件** | Phase 22 已合入或并行不冲突；`coverAssetId` / `resolve_closing_asset_id` 稳定；BSP 阅读面拆分（`studio_preview` / `reader_immersive`）可用；curate → render 主链可跑通 |
-| **关联文档** | [cover-selection-plan.md](./cover-selection-plan.md)、[PRD-页面优化.md](./PRD-页面优化.md) §4.5、[PRD-WEBSITE-COMPETITIVE-RESEARCH.md](./PRD-WEBSITE-COMPETITIVE-RESEARCH.md) §2 盲点 A、[DATA-MODEL.md](./DATA-MODEL.md)、[MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md) |
+| **关联文档** | [cover-selection-plan.md](./cover-selection-plan.md)、[PRD-页面优化.md](./PRD-页面优化.md) §4.5、[PRD-WEBSITE-COMPETITIVE-RESEARCH.md](./PRD-WEBSITE-COMPETITIVE-RESEARCH.md) §2 盲点 A、[DATA-MODEL.md](./DATA-MODEL.md)、[MEDIA-PIPELINE.md](./MEDIA-PIPELINE.md)、[RENDER-CONTRACT.md](./RENDER-CONTRACT.md)、[HPPL 高光池竖版布局](./PRD-HIGHLIGHT-POOL-PORTRAIT-LAYOUT-V1.md)（展示层：次要竖版 3→2→1，不改本文件选型合同） |
 | **实施清单** | [IMPLEMENTATION-PHASE23.md](./IMPLEMENTATION-PHASE23.md)（评审通过后撰写） |
 | **更新日期** | 2026-06-14 |
 
@@ -22,6 +22,8 @@
 > 3. **池内其余 `momentSecondaryIds`**：默认拆 solo 屏（`role=peak`）+ 同款 EXIF；散入各章中后段。
 >
 > **与 P22 §11 原「实验记录 DB」关系**：P22 附录中的 P23 占位项 **改由本文档承接**；pairwise 盲评 cohort DB 顺延至 **P24**（不阻塞 P23）。
+>
+> **后续修订（展示层 · 不改选型）**：[HPPL](./PRD-HIGHLIGHT-POOL-PORTRAIT-LAYOUT-V1.md) 在 `pool_solo` 管线内对**次要竖版**放开 3→2→1 拼图（签名仍强制 solo；`pool_portrait_collage` 默认 true）。选型 / 池大小 / 签名唯一性仍以本文档为准。
 
 ---
 

@@ -607,6 +607,7 @@ def sync_trip_moments_finalize(
             signature_id,
             assets_by_id=assets_by_id,
             arc_profile=arc_profile,
+            cfg=cfg,
         )
     else:
         ensure_moment_asset_in_chapters(
@@ -814,6 +815,382 @@ def _build_pool_solo_screen(
     return {"patternId": pattern, "role": role, "slots": [slot]}
 
 
+def _is_pool_collage_portrait(asset: dict) -> bool:
+    """HPPL · secondary collage candidates (portrait/tall; square stays solo)."""
+    return aspect_kind_for_asset(asset) in ("portrait", "tall")
+
+
+def _tile_pool_portrait_counts(n: int, *, max_per_screen: int = 3) -> list[int]:
+    """HPPL · triple-first tiling for secondary pool portraits (3 → 2 → 1)."""
+    max_n = max(1, min(3, int(max_per_screen or 3)))
+    groups: list[int] = []
+    remaining = max(0, int(n))
+    while remaining > 0:
+        if remaining >= 3 and max_n >= 3:
+            groups.append(3)
+            remaining -= 3
+        elif remaining >= 2 and max_n >= 2:
+            groups.append(2)
+            remaining -= 2
+        else:
+            groups.append(1)
+            remaining -= 1
+    return groups
+
+
+def _order_portraits_for_collage(
+    asset_ids: list[str],
+    assets_by_id: dict[str, dict],
+) -> list[str]:
+    """Prefer chronological takenAt; undated keep relative pool order at end."""
+    indexed = list(enumerate(asset_ids))
+
+    def sort_key(item: tuple[int, str]) -> tuple[int, str, int]:
+        idx, aid = item
+        taken = str((assets_by_id.get(aid) or {}).get("takenAt") or "").strip()
+        if taken:
+            return (0, taken, idx)
+        return (1, "", idx)
+
+    indexed.sort(key=sort_key)
+    return [aid for _, aid in indexed]
+
+
+def _build_pool_collage_screen(
+    asset_ids: list[str],
+    *,
+    role: str = "peak",
+    assets_by_id: dict[str, dict] | None = None,
+) -> dict:
+    ids = [str(a).strip() for a in asset_ids if str(a).strip()]
+    n = len(ids)
+    if n <= 1:
+        aid = ids[0] if ids else ""
+        return _build_pool_solo_screen(aid, role=role, assets_by_id=assets_by_id)
+    if n > 3:
+        ids = ids[:3]
+        n = 3
+    pattern = f"screen-portrait-{n}"
+    slots: list[dict] = [
+        {"assetId": aid, "slot": i, "fit": "cover"} for i, aid in enumerate(ids)
+    ]
+    return {"patternId": pattern, "role": role, "slots": slots}
+
+
+_HPPL_LAST_STATS: dict[str, int] = {"collage_emit": 0, "collage_fallback": 0}
+
+
+def get_hppl_last_stats() -> dict[str, int]:
+    """Return emit/fallback counters from the last collage ensure pass."""
+    return dict(_HPPL_LAST_STATS)
+
+
+def _is_highlight_role_screen(screen: dict | None) -> bool:
+    if not screen:
+        return False
+    return str(screen.get("role") or "") in ("moment", "peak")
+
+
+def _pattern_is_portrait_pair(pattern_id: str) -> bool:
+    from travelogue.layout_contract.rhythm import PORTRAIT_PAIR_PATTERNS
+
+    return str(pattern_id or "") in PORTRAIT_PAIR_PATTERNS
+
+
+def _pattern_is_portrait_multi(pattern_id: str) -> bool:
+    from travelogue.layout_contract.rhythm import (
+        PORTRAIT_PAIR_PATTERNS,
+        PORTRAIT_TRIPLE_PATTERNS,
+    )
+
+    pid = str(pattern_id or "")
+    return pid in PORTRAIT_PAIR_PATTERNS or pid in PORTRAIT_TRIPLE_PATTERNS
+
+
+def _trailing_portrait_pair_streak(screens: list[dict], end_idx: int) -> int:
+    streak = 0
+    for i in range(end_idx - 1, -1, -1):
+        if _pattern_is_portrait_pair(str(screens[i].get("patternId") or "")):
+            streak += 1
+        else:
+            break
+    return streak
+
+
+def _nudge_away_from_portrait_multi(screens: list[dict], pos: int) -> int:
+    """Prefer an insert index whose previous screen is not portrait-2/3."""
+    n = len(screens)
+    pos = max(0, min(pos, n))
+    for _ in range(n + 1):
+        prev_multi = pos > 0 and _pattern_is_portrait_multi(
+            str(screens[pos - 1].get("patternId") or "")
+        )
+        if not prev_multi:
+            return pos
+        pos += 1
+        if pos > n:
+            return n
+    return pos
+
+
+def _should_degrade_peak_collage(
+    screens: list[dict],
+    insert_at: int,
+    screen: dict,
+    *,
+    max_pair_streak: int,
+) -> bool:
+    slots = screen.get("slots") or []
+    if len(slots) <= 1:
+        return False
+    pid = str(screen.get("patternId") or "")
+    if insert_at > 0 and _pattern_is_portrait_multi(
+        str(screens[insert_at - 1].get("patternId") or "")
+    ):
+        return True
+    if _pattern_is_portrait_pair(pid) and (
+        _trailing_portrait_pair_streak(screens, insert_at) >= max_pair_streak
+    ):
+        return True
+    return False
+
+
+def _degrade_collage_to_solos(
+    screen: dict,
+    *,
+    assets_by_id: dict[str, dict],
+) -> list[dict]:
+    out: list[dict] = []
+    for slot in screen.get("slots") or []:
+        aid = str(slot.get("assetId") or "").strip()
+        if not aid:
+            continue
+        out.append(
+            _build_pool_solo_screen(
+                aid,
+                role="peak",
+                source_slot=dict(slot),
+                assets_by_id=assets_by_id,
+            )
+        )
+    return out
+
+
+def _resolve_max_portrait_pair_streak() -> int:
+    try:
+        from travelogue.config.loader import load_config
+
+        return int(load_config().layout.rhythm.max_portrait_pair_streak)
+    except Exception:
+        from travelogue.layout_contract.rhythm import MAX_PORTRAIT_PAIR_STREAK
+
+        return int(MAX_PORTRAIT_PAIR_STREAK)
+
+
+def _extract_pool_asset_from_chapters(
+    chapters: list[dict],
+    asset_id: str,
+    *,
+    assets_by_id: dict[str, dict],
+) -> tuple[int, dict | None]:
+    """Remove asset from chapter screens; return (chapter_idx, source_slot)."""
+    if not asset_id or not chapters:
+        return 0, None
+    host = _find_moment_host(chapters, asset_id)
+    if host is None:
+        return _pick_pool_asset_chapter_index(chapters, asset_id), None
+
+    ch_idx, screen_idx, slot_idx = host
+    chapter = chapters[ch_idx]
+    screens = list(chapter.get("screens") or [])
+    host_screen = dict(screens[screen_idx])
+    slots = list(host_screen.get("slots") or [])
+    if not slots or slot_idx >= len(slots):
+        return ch_idx, None
+    source_slot = dict(slots[slot_idx])
+    if len(slots) == 1:
+        screens.pop(screen_idx)
+        chapter["screens"] = screens
+        return ch_idx, source_slot
+
+    remaining = [dict(s) for i, s in enumerate(slots) if i != slot_idx]
+    normalized = _normalize_screen_after_slot_removal(
+        {**host_screen, "slots": remaining},
+        assets_by_id=assets_by_id,
+    )
+    if normalized is None:
+        screens.pop(screen_idx)
+    elif isinstance(normalized, list):
+        screens[screen_idx : screen_idx + 1] = normalized
+    else:
+        screens[screen_idx] = normalized
+    chapter["screens"] = screens
+    return ch_idx, source_slot
+
+
+def _pick_highlight_insert_index(screens: list[dict], prefer: int) -> int:
+    """Insert index that avoids adjacent moment/peak screens when possible."""
+    n = len(screens)
+    if n == 0:
+        return 0
+    pos = max(0, min(prefer, n))
+    for _ in range(n + 1):
+        prev_ok = pos == 0 or not _is_highlight_role_screen(screens[pos - 1])
+        next_ok = pos >= n or not _is_highlight_role_screen(screens[pos])
+        if prev_ok and next_ok:
+            return pos
+        pos += 1
+        if pos > n:
+            pos = 0
+    return max(1, min(prefer, n))
+
+
+def _insert_peak_screens(
+    chapter: dict,
+    new_screens: list[dict],
+    *,
+    assets_by_id: dict[str, dict],
+    max_pair_streak: int = 2,
+    stats: dict[str, int] | None = None,
+) -> None:
+    """Insert peak screens with highlight gaps, R-06 pair-streak and portrait-wall guards."""
+    if not new_screens:
+        return
+    screens = list(chapter.get("screens") or [])
+    prefer = _pick_pool_insert_index({"screens": screens}, arc_peak=False)
+    counters = stats if stats is not None else {"collage_emit": 0, "collage_fallback": 0}
+    queue: list[dict] = list(new_screens)
+
+    while queue:
+        screen = queue.pop(0)
+        insert_at = _pick_highlight_insert_index(screens, prefer)
+        insert_at = _nudge_away_from_portrait_multi(screens, insert_at)
+
+        if len(screen.get("slots") or []) > 1 and _should_degrade_peak_collage(
+            screens,
+            insert_at,
+            screen,
+            max_pair_streak=max_pair_streak,
+        ):
+            alt = _nudge_away_from_portrait_multi(
+                screens,
+                _pick_highlight_insert_index(screens, len(screens)),
+            )
+            if not _should_degrade_peak_collage(
+                screens,
+                alt,
+                screen,
+                max_pair_streak=max_pair_streak,
+            ):
+                insert_at = alt
+            else:
+                counters["collage_fallback"] = int(counters.get("collage_fallback", 0)) + 1
+                queue[0:0] = _degrade_collage_to_solos(
+                    screen, assets_by_id=assets_by_id
+                )
+                continue
+
+        if len(screen.get("slots") or []) > 1:
+            counters["collage_emit"] = int(counters.get("collage_emit", 0)) + 1
+        screens.insert(insert_at, screen)
+        prefer = insert_at + 2
+
+    chapter["screens"] = screens
+
+
+def _ensure_secondary_portrait_collage(
+    chapters: list[dict],
+    secondary_ids: list[str],
+    *,
+    assets_by_id: dict[str, dict],
+    max_per_screen: int = 3,
+    max_pair_streak: int | None = None,
+) -> int:
+    """Extract secondary pool members and re-emit: portrait 3→2→1, landscape solo."""
+    global _HPPL_LAST_STATS
+    if not secondary_ids or not chapters:
+        _HPPL_LAST_STATS = {"collage_emit": 0, "collage_fallback": 0}
+        return 0
+
+    from collections import defaultdict
+
+    pair_max = (
+        int(max_pair_streak)
+        if max_pair_streak is not None
+        else _resolve_max_portrait_pair_streak()
+    )
+    stats = {"collage_emit": 0, "collage_fallback": 0}
+
+    by_chapter: dict[int, list[str]] = defaultdict(list)
+    source_slots: dict[str, dict | None] = {}
+    for aid in secondary_ids:
+        ch_idx, source_slot = _extract_pool_asset_from_chapters(
+            chapters, aid, assets_by_id=assets_by_id
+        )
+        by_chapter[ch_idx].append(aid)
+        source_slots[aid] = source_slot
+
+    changed = 0
+    for ch_idx, aids in by_chapter.items():
+        chapter = chapters[ch_idx]
+        portraits = [
+            aid
+            for aid in aids
+            if _is_pool_collage_portrait(assets_by_id.get(aid, {}))
+        ]
+        others = [aid for aid in aids if aid not in set(portraits)]
+        portraits = _order_portraits_for_collage(portraits, assets_by_id)
+
+        to_insert: list[dict] = []
+        for aid in others:
+            to_insert.append(
+                _build_pool_solo_screen(
+                    aid,
+                    role="peak",
+                    source_slot=source_slots.get(aid),
+                    assets_by_id=assets_by_id,
+                )
+            )
+            changed += 1
+
+        cursor = 0
+        for size in _tile_pool_portrait_counts(
+            len(portraits), max_per_screen=max_per_screen
+        ):
+            chunk = portraits[cursor : cursor + size]
+            cursor += size
+            if size <= 1:
+                aid = chunk[0]
+                to_insert.append(
+                    _build_pool_solo_screen(
+                        aid,
+                        role="peak",
+                        source_slot=source_slots.get(aid),
+                        assets_by_id=assets_by_id,
+                    )
+                )
+            else:
+                to_insert.append(
+                    _build_pool_collage_screen(
+                        chunk, role="peak", assets_by_id=assets_by_id
+                    )
+                )
+            changed += 1
+
+        # Prefer portrait collages before landscape solos in the insert band.
+        collages = [s for s in to_insert if len(s.get("slots") or []) > 1]
+        solos = [s for s in to_insert if len(s.get("slots") or []) <= 1]
+        _insert_peak_screens(
+            chapter,
+            collages + solos,
+            assets_by_id=assets_by_id,
+            max_pair_streak=pair_max,
+            stats=stats,
+        )
+    _HPPL_LAST_STATS = dict(stats)
+    return changed
+
+
 def _build_moment_solo_screen(
     signature_id: str,
     *,
@@ -1010,11 +1387,20 @@ def ensure_pool_assets_solo_screens(
     *,
     assets_by_id: dict[str, dict] | None = None,
     arc_profile: str = "dynamic",
+    cfg: MomentConfig | None = None,
 ) -> int:
-    """Ensure every pool asset is a dedicated single-slot layout-screen."""
+    """Ensure pool assets leave ordinary multi-slot hosts.
+
+    Signature is always a dedicated solo ``moment`` screen.
+    When ``cfg.pool_portrait_collage`` is enabled (default) and ``pool_solo``
+    semantics apply, secondary **portrait/tall** peaks prefer 3→2→1 collage;
+    landscape secondaries stay solo. Pass ``pool_portrait_collage=False`` to
+    restore P23.1 all-solo behavior.
+    """
     if not chapters or not pool_ids:
         return 0
 
+    moment_cfg = cfg or MomentConfig()
     assets = assets_by_id or {}
     sig = str(signature_id or "").strip()
     ordered: list[str] = []
@@ -1036,9 +1422,25 @@ def ensure_pool_assets_solo_screens(
         ):
             changed += 1
 
-    for aid in ordered:
-        if aid == sig:
-            continue
+    secondary = [aid for aid in ordered if aid != sig]
+    # AC-HPPL-09 · collage only when pool_solo is on (do not entangle secondary_boost path)
+    use_collage = bool(moment_cfg.pool_portrait_collage) and bool(moment_cfg.pool_solo)
+    if moment_cfg.pool_portrait_collage and not moment_cfg.pool_solo:
+        import logging
+
+        logging.getLogger(__name__).debug(
+            "hppl: skip pool_portrait_collage because pool_solo=false"
+        )
+    if use_collage and secondary:
+        changed += _ensure_secondary_portrait_collage(
+            chapters,
+            secondary,
+            assets_by_id=assets,
+            max_per_screen=moment_cfg.pool_portrait_collage_max_per_screen,
+        )
+        return changed
+
+    for aid in secondary:
         if _ensure_pool_asset_solo_screen(
             chapters,
             aid,

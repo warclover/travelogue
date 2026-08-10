@@ -456,3 +456,493 @@ def test_featured_grid_excludes_moment_signature() -> None:
     ids = pick_featured_grid_asset_ids(assets, exclude_ids={"moment"})
     assert "moment" not in ids
     assert len(ids) >= 4
+
+
+def _portrait_asset(aid: str, *, taken_at: str = "") -> dict:
+    out = {
+        "id": aid,
+        "type": "image",
+        "width": 900,
+        "height": 1600,
+        "layoutEligible": True,
+    }
+    if taken_at:
+        out["takenAt"] = taken_at
+    return out
+
+
+def test_hppl_secondary_portraits_prefer_triple() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2", "p3", "filler"]},
+            "screens": [
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "filler", "slot": 0}]},
+                {
+                    "patternId": "screen-portrait-3",
+                    "slots": [
+                        {"assetId": "p1", "slot": 0},
+                        {"assetId": "p2", "slot": 1},
+                        {"assetId": "p3", "slot": 2},
+                    ],
+                },
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        "filler": {
+            "id": "filler",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        "p1": _portrait_asset("p1", taken_at="2024-01-01T10:00:00"),
+        "p2": _portrait_asset("p2", taken_at="2024-01-01T10:05:00"),
+        "p3": _portrait_asset("p3", taken_at="2024-01-01T10:10:00"),
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2", "p3"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    moment_screens = [s for s in chapters[0]["screens"] if s.get("role") == "moment"]
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(moment_screens) == 1
+    assert len(moment_screens[0]["slots"]) == 1
+    assert moment_screens[0]["slots"][0]["assetId"] == "sig"
+    assert len(peak_screens) == 1
+    assert peak_screens[0]["patternId"] == "screen-portrait-3"
+    assert [sl["assetId"] for sl in peak_screens[0]["slots"]] == ["p1", "p2", "p3"]
+
+
+def test_hppl_secondary_two_portraits_pair() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2"]},
+            "screens": [
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p1", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p2", "slot": 0}]},
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        "p1": _portrait_asset("p1"),
+        "p2": _portrait_asset("p2"),
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peak_screens) == 1
+    assert peak_screens[0]["patternId"] == "screen-portrait-2"
+    assert len(peak_screens[0]["slots"]) == 2
+
+
+def test_hppl_no_cross_chapter_collage() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2"]},
+            "screens": [
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p1", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p2", "slot": 0}]},
+            ],
+        },
+        {
+            "id": "ch-02",
+            "curation": {"assetIds": ["p3", "p4"]},
+            "screens": [
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p3", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p4", "slot": 0}]},
+            ],
+        },
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        **{aid: _portrait_asset(aid) for aid in ("p1", "p2", "p3", "p4")},
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2", "p3", "p4"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    peaks_ch1 = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    peaks_ch2 = [s for s in chapters[1]["screens"] if s.get("role") == "peak"]
+    assert len(peaks_ch1) == 1 and peaks_ch1[0]["patternId"] == "screen-portrait-2"
+    assert len(peaks_ch2) == 1 and peaks_ch2[0]["patternId"] == "screen-portrait-2"
+    assert "p3" not in [sl["assetId"] for sl in peaks_ch1[0]["slots"]]
+
+
+def test_hppl_off_keeps_all_solo() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2", "p3"]},
+            "screens": [
+                {
+                    "patternId": "screen-portrait-3",
+                    "slots": [
+                        {"assetId": "p1", "slot": 0},
+                        {"assetId": "p2", "slot": 1},
+                        {"assetId": "p3", "slot": 2},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        **{aid: _portrait_asset(aid) for aid in ("p1", "p2", "p3")},
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2", "p3"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=False),
+    )
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peak_screens) == 3
+    assert all(len(s.get("slots") or []) == 1 for s in peak_screens)
+
+
+def test_hppl_signature_never_in_collage() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2"]},
+            "screens": [
+                {
+                    "patternId": "screen-portrait-3",
+                    "slots": [
+                        {"assetId": "sig", "slot": 0},
+                        {"assetId": "p1", "slot": 1},
+                        {"assetId": "p2", "slot": 2},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": _portrait_asset("sig"),
+        "p1": _portrait_asset("p1"),
+        "p2": _portrait_asset("p2"),
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    moment_screens = [s for s in chapters[0]["screens"] if s.get("role") == "moment"]
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(moment_screens) == 1
+    assert len(moment_screens[0]["slots"]) == 1
+    assert moment_screens[0]["slots"][0]["assetId"] == "sig"
+    assert all(
+        "sig" not in [sl["assetId"] for sl in s.get("slots") or []]
+        for s in peak_screens
+    )
+
+
+def test_moment_config_pool_portrait_collage_defaults_on() -> None:
+    from travelogue.config.moment import MomentConfig, moment_config_from_dict
+
+    assert MomentConfig().pool_portrait_collage is True
+    assert moment_config_from_dict({}).pool_portrait_collage is True
+    assert moment_config_from_dict({"pool_portrait_collage": False}).pool_portrait_collage is False
+
+
+def test_hppl_single_secondary_portrait_solo() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1"]},
+            "screens": [
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p1", "slot": 0}]},
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        "p1": _portrait_asset("p1"),
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    peaks = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peaks) == 1
+    assert peaks[0]["patternId"] == "screen-portrait-1"
+    assert len(peaks[0]["slots"]) == 1
+
+
+def test_hppl_landscape_secondary_stays_solo() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "l1", "l2"]},
+            "screens": [
+                {
+                    "patternId": "screen-landscape-2",
+                    "slots": [
+                        {"assetId": "l1", "slot": 0},
+                        {"assetId": "l2", "slot": 1},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        aid: {
+            "id": aid,
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        }
+        for aid in ("sig", "l1", "l2")
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "l1", "l2"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    peaks = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(peaks) == 2
+    assert all(s["patternId"] == "screen-landscape-1" for s in peaks)
+    assert all(len(s.get("slots") or []) == 1 for s in peaks)
+
+
+def test_hppl_highlight_screens_not_adjacent() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2", "a", "b", "c", "d"]},
+            "screens": [
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "a", "slot": 0}]},
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "b", "slot": 0}]},
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "c", "slot": 0}]},
+                {"patternId": "screen-landscape-1", "slots": [{"assetId": "d", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p1", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p2", "slot": 0}]},
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        **{
+            aid: {
+                "id": aid,
+                "type": "image",
+                "width": 1600,
+                "height": 900,
+                "layoutEligible": True,
+            }
+            for aid in ("a", "b", "c", "d")
+        },
+        "p1": _portrait_asset("p1"),
+        "p2": _portrait_asset("p2"),
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    roles = [str(s.get("role") or "") for s in chapters[0]["screens"]]
+    for i in range(len(roles) - 1):
+        if roles[i] in ("moment", "peak") and roles[i + 1] in ("moment", "peak"):
+            raise AssertionError(f"adjacent highlight screens at {i}: {roles}")
+
+
+def test_hppl_pool_solo_false_skips_collage() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2", "p3"]},
+            "screens": [
+                {
+                    "patternId": "screen-portrait-3",
+                    "slots": [
+                        {"assetId": "p1", "slot": 0},
+                        {"assetId": "p2", "slot": 1},
+                        {"assetId": "p3", "slot": 2},
+                    ],
+                }
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        **{aid: _portrait_asset(aid) for aid in ("p1", "p2", "p3")},
+    }
+    # pool_solo=false → collage must not run even if pool_portrait_collage=true
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2", "p3"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_solo=False, pool_portrait_collage=True),
+    )
+    # Signature still solo; secondaries follow non-collage path (each solo peak)
+    moment_screens = [s for s in chapters[0]["screens"] if s.get("role") == "moment"]
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    assert len(moment_screens) == 1
+    assert len(peak_screens) == 3
+    assert all(len(s.get("slots") or []) == 1 for s in peak_screens)
+
+
+def test_hppl_degrades_pair_when_pair_streak_maxed() -> None:
+    from travelogue.config.moment import MomentConfig
+    from travelogue.curation.moment_scoring import (
+        ensure_pool_assets_solo_screens,
+        get_hppl_last_stats,
+    )
+
+    chapters = [
+        {
+            "id": "ch-01",
+            "curation": {"assetIds": ["sig", "p1", "p2", "x1", "x2", "x3", "x4"]},
+            "screens": [
+                {
+                    "patternId": "screen-portrait-2",
+                    "slots": [
+                        {"assetId": "x1", "slot": 0},
+                        {"assetId": "x2", "slot": 1},
+                    ],
+                },
+                {
+                    "patternId": "screen-portrait-2",
+                    "slots": [
+                        {"assetId": "x3", "slot": 0},
+                        {"assetId": "x4", "slot": 1},
+                    ],
+                },
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p1", "slot": 0}]},
+                {"patternId": "screen-portrait-1", "slots": [{"assetId": "p2", "slot": 0}]},
+            ],
+        }
+    ]
+    assets_by_id = {
+        "sig": {
+            "id": "sig",
+            "type": "image",
+            "width": 1600,
+            "height": 900,
+            "layoutEligible": True,
+        },
+        **{aid: _portrait_asset(aid) for aid in ("p1", "p2", "x1", "x2", "x3", "x4")},
+    }
+    ensure_pool_assets_solo_screens(
+        chapters,
+        ["sig", "p1", "p2"],
+        "sig",
+        assets_by_id=assets_by_id,
+        cfg=MomentConfig(pool_portrait_collage=True),
+    )
+    peak_screens = [s for s in chapters[0]["screens"] if s.get("role") == "peak"]
+    # Either nudged away from the pair streak wall, or degraded to solos.
+    multi = [s for s in peak_screens if len(s.get("slots") or []) > 1]
+    if multi:
+        # If a pair remains, it must not sit immediately after two portrait-2 screens
+        idx = chapters[0]["screens"].index(multi[0])
+        prev_pids = [
+            str(chapters[0]["screens"][i].get("patternId") or "")
+            for i in range(max(0, idx - 2), idx)
+        ]
+        assert not (
+            len(prev_pids) == 2
+            and all(p == "screen-portrait-2" for p in prev_pids)
+        )
+    else:
+        assert len(peak_screens) == 2
+        assert get_hppl_last_stats().get("collage_fallback", 0) >= 1

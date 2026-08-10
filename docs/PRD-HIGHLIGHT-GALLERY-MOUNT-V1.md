@@ -7,8 +7,8 @@
 | **状态** | Draft · 多方评审已完成，待产品拍板 |
 | **代号** | 「高光才进展室态，其余保持游记语法」 |
 | **前置条件** | [PRD-LAYOUT-TRUST-NARRATIVE-V1.md](./PRD-LAYOUT-TRUST-NARRATIVE-V1.md) 排版可信基线验收；[PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md) 高光池 / 签名时刻 / EXIF 能力完善（或并行强化） |
-| **关联文档** | [PRD-LAYOUT-TRUST-NARRATIVE-V1.md](./PRD-LAYOUT-TRUST-NARRATIVE-V1.md)、[PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md)、[PRD-GALLERY-NARRATIVE-RHYTHM-V1.md](./PRD-GALLERY-NARRATIVE-RHYTHM-V1.md)、[acceptance-records/hgm-multi-persona-review-2026-07-20.md](./acceptance-records/hgm-multi-persona-review-2026-07-20.md) |
-| **更新日期** | 2026-07-20 |
+| **关联文档** | [PRD-LAYOUT-TRUST-NARRATIVE-V1.md](./PRD-LAYOUT-TRUST-NARRATIVE-V1.md)、[PRD-PHASE23-peak-moment.md](./PRD-PHASE23-peak-moment.md)、[PRD-GALLERY-NARRATIVE-RHYTHM-V1.md](./PRD-GALLERY-NARRATIVE-RHYTHM-V1.md)、[HPPL 高光池竖版布局](./PRD-HIGHLIGHT-POOL-PORTRAIT-LAYOUT-V1.md)（次要竖版可 2/3 拼）、[acceptance-records/hgm-multi-persona-review-2026-07-20.md](./acceptance-records/hgm-multi-persona-review-2026-07-20.md) |
+| **更新日期** | 2026-08-10 |
 
 ---
 
@@ -136,7 +136,7 @@
 
 | 变量 | 签名（A） | 厅内高光（B） | 说明 |
 |------|-----------|---------------|------|
-| **V1 独屏** | 必须 | 必须 | 高光不进组图拼贴主槽 |
+| **V1 舞台** | **必须独屏** | **默认独屏**；[HPPL](./PRD-HIGHLIGHT-POOL-PORTRAIT-LAYOUT-V1.md) 开启时，**次要竖版**允许整屏 `screen-portrait-2/3` 作为厅内舞台 | 签名禁止进拼图；厅内竖拼仍属高光管线成屏，**禁止**塞进非高光 mosaic/组图主槽（HPPL D-HPPL-10） |
 | **V2 额外气口** | 中–强 | 弱–中 | 同色纸面上下多留白；不改全局非高光间距 |
 | **V3 题签/角标** | 「决定性瞬间」可保留 | 默认无口号；可极淡地点/日期 | 避免张张营销腔 |
 | **V4 EXIF** | 展示 | 展示（随 P23） | 专业纪念感的一部分 |

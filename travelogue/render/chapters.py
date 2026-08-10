@@ -115,6 +115,7 @@ def build_chapters_render_context(
             pool_ids,
             moment_signature_id,
             assets_by_id=assets,
+            cfg=(cfg.curate.moment if cfg is not None else None),
         )
     elif moment_signature_id:
         from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
@@ -216,6 +217,12 @@ def build_chapters_render_context(
                         show_moment_exif=show_moment_exif,
                         show_signature_label=show_signature_label,
                         moment_screen_label=moment_screen_label,
+                        peak_collage_exif=bool(
+                            cfg is not None
+                            and getattr(
+                                cfg.curate.moment, "pool_portrait_collage_exif", False
+                            )
+                        ),
                         chapter_day_span=list(
                             (ch.get("curation") or {}).get("daySpan") or []
                         )

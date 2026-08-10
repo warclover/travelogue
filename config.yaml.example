@@ -92,9 +92,13 @@ curate:
     pool_min: 1
     pool_max: 5
     show_exif: true
-    pool_solo: true          # 池内全部单独成屏（false → 仅签名 solo）
-    pool_exif: true          # 池内全部挂 EXIF（false → 仅签名）
+    pool_solo: true          # 池资产须由高光管线成屏（false → 仅签名 solo）
+    pool_exif: true          # 池内 solo 挂 EXIF（false → 仅签名）
     signature_label: true    # 仅签名显示「决定性瞬间」角标
+    # HPPL · 次要竖版优先 3→2→1（须 pool_solo=true；false 回退全员 solo）
+    pool_portrait_collage: true
+    pool_portrait_collage_exif: false   # 多槽 peak 拼屏是否每槽挂 EXIF
+    pool_portrait_collage_max_per_screen: 3
     position: inline
     auto_disable_small_trip: true
     small_trip_max_assets: 15
