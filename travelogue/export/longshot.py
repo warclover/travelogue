@@ -1357,6 +1357,17 @@ def reveal_path_in_folder(path: Path, *, allowed_root: Path) -> None:
     if not target.exists():
         raise LongshotExportError("E_STUDIO_REVEAL_DENIED", "文件不存在")
 
+    # 目录：直接打开该目录（勿 /select 目录本身，否则会停在父级只选中文件夹名）。
+    if target.is_dir():
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", str(target)], close_fds=True)
+            return
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", str(target)], close_fds=True)
+            return
+        subprocess.Popen(["xdg-open", str(target)], close_fds=True)
+        return
+
     if sys.platform == "win32":
         subprocess.Popen(["explorer", "/select,", str(target)], close_fds=True)
         return

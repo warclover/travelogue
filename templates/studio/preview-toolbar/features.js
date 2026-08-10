@@ -15,7 +15,7 @@ import { presentAutoplayHref } from "./dock.js";
 import { saveMagazineTitle } from "./inline-edit.js";
 import { formatAestheticPurposeLine, isAestheticDebugEnabled } from "./drawers.js";
 import {
-  revealTripPath,
+  revealTripFolder,
   refreshStaleHint,
   syncLongshotPreviewRowVisibility,
 } from "./longshot.js";
@@ -39,6 +39,8 @@ import {
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+
+export { revealTripFolder };
 
 function attachFeaturedHelpLinkOnToast() {
   var el = document.getElementById("preview-toolbar-toast");
@@ -676,21 +678,6 @@ export function runFeaturedRerank(tripId, root) {
       return false;
     });
 }
-
-
-export function revealTripFolder(tripId) {
-    fetch("/__travelogue/trips")
-      .then(function (resp) { return resp.json(); })
-      .then(function (data) {
-        var trips = data.trips || [];
-        var trip = trips.filter(function (t) { return t.tripId === tripId; })[0];
-        var rel = (trip && trip.previewRelPath) || "index.html";
-        return revealTripPath(tripId, rel);
-      })
-      .catch(function () {
-        showToolbarToast("无法打开文件夹", { error: true });
-      });
-  }
 
 
 export function readCoverOpeningStyleFromDom() {
