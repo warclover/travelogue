@@ -7,7 +7,7 @@
 | **评审版本** | PRD **v0.1.0** → Must-Fix 回写后升 **v0.2.0** ✅ |
 | **日期** | 2026-08-10 |
 | **结论** | **有条件通过（Conditional Go · 可冻结策划；W1 以「Dock + Sheet 壳 + 杂志文案现网解冻 + 装帧标题主入口」Kickoff；三语气 / Intent·建议汇总不得假装已有后端）** |
-| **编码** | ☑ **策划冻结（v0.2.0 · BLK 已关）**　□ W1 壳+杂志+装帧　□ W2 意图/建议/徽标/旧入口收敛　□ W3 狗粮与埋点收口 |
+| **编码** | ☑ **策划冻结（v0.2.0 · BLK 已关）**　☑ W1 壳+杂志+装帧　☑ W2 意图/建议/徽标/旧入口收敛　☑ W3 狗粮与埋点收口（见 ACCEPTANCE + dogfood 纪要） |
 | **参评角色（七席 + 1）** | 产品 · 算法 · 架构 · 开发 · 测试/QA · 视觉/排版 · 用户体验（狗粮手测） · **典型用户（真实旅行者视角）** |
 | **评审方式** | 分席只读 PRD §0～§13 · D/G/AC/OQ + 线框 F0–F6 + **对照现网**（`preview-toolbar/init-v3.js` Dock、`export_handlers.handle_narrate`、`title_art_handlers`、`features.js` 装帧标题、`chapter-panel.js` layoutSuggestions、`ai-surface.js`、`analytics.js` allowlist、`core.js` narrate） |
 | **记录人** | 七席+1 联合纪要（跨职能模拟联评 · 基于 2026-08-10 PRD v0.1.0 + 代码事实核查） |
@@ -102,12 +102,12 @@
 
 | ID | 建议 | 状态 |
 |----|------|------|
-| **SHD-SAS-01** | Sheet 状态机写入 `structure_draft` → 杂志文案 CTA 说明「请先在分章确认」（对齐全 F-08） | 待 W1 |
-| **SHD-SAS-02** | AI Sheet 与精修共用/对齐 body class（如 `preview-sheet-open`）与 z-index，避免双开残影；并与**分章面板**互斥或降级规则写清 | 待 W1 |
-| **SHD-SAS-03** | 建议卡片文案长度：优先 ≤28 字、硬顶 36（对齐 SHD-ACP-02） | 待 W2 |
-| **SHD-SAS-04** | 杂志文案生成对用户手改字段的覆盖策略：确认框补一句「将重写版心文案（含你改过的句子）」或提供保留手改 OQ | 待 W1 文案 |
-| **SHD-SAS-05** | Dock 拥挤：若窄屏放不下，优先保 导出/精修/AI，文件夹可进溢出菜单（另评，不挡 W1） | 待 W2/窄屏狗粮 |
-| **SHD-SAS-06** | 「了解如何开启」须落到真实帮助锚点或内测说明页，禁止死链 | 待 W1 |
+| **SHD-SAS-01** | Sheet 状态机写入 `structure_draft` → 杂志文案 CTA 说明「请先在分章确认」（对齐全 F-08） | ✅ W1 |
+| **SHD-SAS-02** | AI Sheet 与精修共用/对齐 body class（如 `preview-sheet-open`）与 z-index，避免双开残影；并与**分章面板**互斥或降级规则写清 | ✅ W1（AI 用 `preview-ai-sheet-open`） |
+| **SHD-SAS-03** | 建议卡片文案长度：优先 ≤28 字、硬顶 36（对齐 SHD-ACP-02） | ✅ W2 |
+| **SHD-SAS-04** | 杂志文案生成对用户手改字段的覆盖策略：确认框补一句「将重写版心文案（含你改过的句子）」或提供保留手改 OQ | ✅ W1 |
+| **SHD-SAS-05** | Dock 拥挤：若窄屏放不下，优先保 导出/精修/AI，文件夹可进溢出菜单（另评，不挡 W1） | ✅ W2（≤720 隐藏文件夹） |
+| **SHD-SAS-06** | 「了解如何开启」须落到真实帮助锚点或内测说明页，禁止死链 | ✅ W1（Sheet 内联说明） |
 
 ---
 
@@ -165,5 +165,6 @@
 
 1. ✅ **BLK-SAS-01～05 回写** PRD **v0.2.0**。
 2. 线框 F0 增加「落位以 D-SAS-02 为准」注记；F1 杂志卡去掉 W1 语气选择器（或标「AIR 后续」）。
-3. 拆 `ACCEPTANCE-STUDIO-AI-SURFACE-V1.md` / `IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md`（W1 范围）。
+3. ✅ 拆 `ACCEPTANCE-STUDIO-AI-SURFACE-V1.md` / `IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md`；W3 狗粮见 `sas-studio-ai-surface-v1-w3-dogfood-2026-08-10.md`。
 4. **不**在本主题 Kickoff 时默认可改 `aiSurfaceEnabled` 正式发版默认值（仍受 OQ-AIR-01）。
+5. ✅ 主题编码收口（W1～W3）；合入 master 后可并行 AIR / OQ-AIR-01 狗粮样本。

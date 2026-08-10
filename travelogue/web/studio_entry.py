@@ -129,6 +129,45 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
     }
 
 
+def build_intent_brief_ui(trip: dict) -> dict[str, Any]:
+    """SAS W2 · user-facing Intent Brief chip (no Agent / raw JSON names)."""
+    intent = trip.get("intent") if isinstance(trip.get("intent"), dict) else {}
+    brief = intent.get("intentBrief") if isinstance(intent.get("intentBrief"), dict) else None
+    if not brief:
+        return {
+            "ready": False,
+            "statusLabel": "尚未解析",
+            "detail": "",
+            "source": None,
+        }
+    source = str(brief.get("source") or "").strip() or None
+    bits: list[str] = []
+    if source in ("llm", "cache"):
+        bits.append("已就绪")
+    elif source == "fallback":
+        bits.append("本机兜底")
+    else:
+        bits.append("已有摘要")
+    cluster = brief.get("clusterHints") if isinstance(brief.get("clusterHints"), dict) else {}
+    if cluster.get("preferFewerChapters") is True:
+        bits.append("偏少章")
+    elif cluster.get("preferFewerChapters") is False:
+        bits.append("可多分章")
+    detail_parts: list[str] = []
+    tone = str(brief.get("tone") or "").strip()
+    if tone:
+        detail_parts.append(tone[:20])
+    title_hint = str(brief.get("titleHint") or "").strip()
+    if title_hint:
+        detail_parts.append(title_hint[:20])
+    return {
+        "ready": True,
+        "statusLabel": " · ".join(bits[:2]) or "已有摘要",
+        "detail": " · ".join(detail_parts)[:48],
+        "source": source if source in ("llm", "cache", "fallback") else None,
+    }
+
+
 def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
     """Chapter id/title/anchors for preview edit drawer."""
     rows: list[dict[str, Any]] = []
@@ -191,6 +230,7 @@ def build_entry(
         "scrollShareUrl": scroll_share_url,
         "peakScreenId": peak,
         "intentSummary": build_intent_summary(trip),
+        "intentBriefUi": build_intent_brief_ui(trip),
         "pipelineStatus": pipeline.get("status"),
         "g1Pending": pipeline.get("status") == "structure_draft",
         "derivativesStatus": str(pipeline.get("derivativesStatus") or "") or None,

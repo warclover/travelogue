@@ -85,6 +85,16 @@ export function dockIconSvg(name) {
         '<path d="M3.5 8.5V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-6.2L10.5 6H5.5a2 2 0 0 0-2 2.5z"/>' +
         "</svg>"
       );
+    case "ai":
+      // Studio AI Surface · 简洁星芒，避免与精修笔形撞车
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<path d="M12 3.5l1.6 4.4 4.4 1.6-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6L12 3.5z"/>' +
+        '<path d="M18.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>' +
+        "</svg>"
+      );
     default:
       return "";
   }

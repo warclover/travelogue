@@ -170,3 +170,56 @@ def test_accept_layout_suggestion() -> None:
     hit = accept_layout_suggestion(trip, chapter_id="ch-01")
     assert hit is not None and hit["accepted"] is True
     assert trip["curation"]["layoutSuggestions"][0]["accepted"] is True
+
+
+def test_shd_acp_03_suggestions_do_not_mutate_chapters(monkeypatch, tmp_path) -> None:
+    """SHD-ACP-03 · Critic 写入建议或采纳标记时，不得静默改 chapters/screens。"""
+    import copy
+
+    cfg = AppConfig(
+        ai_capability=AiCapabilityConfig(
+            enabled=False,
+            layout_critic=LayoutCriticConfig(enabled=True),
+        ),
+        studio=StudioConfig(ai_surface_enabled=True),
+        llm=LlmConfig(provider="deepseek"),
+    )
+    monkeypatch.setattr(
+        "travelogue.ai.agents.layout_critic.resolve_llm_may_call",
+        lambda cfg=None: True,
+    )
+    monkeypatch.setattr(
+        "travelogue.ai.agents.layout_critic.probe_llm_ready",
+        lambda cfg=None: True,
+    )
+
+    def fake_chat(_messages):
+        return json.dumps(
+            {
+                "suggestions": [
+                    {
+                        "chapterId": "ch-01",
+                        "suggestedPatternId": "screen-portrait-3",
+                        "suggestion": "三联更稳",
+                        "confidence": 0.7,
+                    }
+                ]
+            },
+            ensure_ascii=False,
+        )
+
+    trip = _trip()
+    chapters_before = copy.deepcopy(trip["chapters"])
+    with app_config_scope(cfg):
+        result = run_layout_critic(
+            trip, chat_fn=fake_chat, force=True, cache_dir=tmp_path / "c-shd03"
+        )
+    assert result["source"] == "llm"
+    assert trip["chapters"] == chapters_before
+    assert all(
+        ch.get("screens") == chapters_before[i].get("screens")
+        for i, ch in enumerate(trip["chapters"])
+    )
+    accept_layout_suggestion(trip, chapter_id="ch-01")
+    assert trip["chapters"] == chapters_before
+    assert trip["curation"]["layoutSuggestions"][0]["accepted"] is True

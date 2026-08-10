@@ -150,6 +150,12 @@ const ALLOWED = new Set([
   "layout_critic_suggestion_accepted",
   "mosaic_judge_invoked",
   "ai_unlock_gate_result",
+  // SAS · PRD-STUDIO-AI-SURFACE-V1 §7 / AC-SAS-17
+  "ai_sheet_open",
+  "ai_sheet_close",
+  "ai_sheet_action_click",
+  "ai_sheet_action_result",
+  "ai_sheet_gate_view",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

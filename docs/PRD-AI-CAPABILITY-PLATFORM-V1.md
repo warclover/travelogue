@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.3.0** |
+| **文档版本** | **v0.3.1** |
 | **状态** | **Conditional Go · 开发负责人技术可行性核查已回写 · W1 排期已按代码事实调整** |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「编辑智能收编」— **ACP**（AI Capability Platform） |
@@ -12,8 +12,8 @@
 | **关联文档** | [AGENT-ARCHITECTURE.md §17](./AGENT-ARCHITECTURE.md)（策展四子系统 LLM 增强策略，本主题的落地母文档）· [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md)（AIR · 用户面解冻，本主题为其提供解冻门槛数据）· [PRD-STUDIO-AI-SURFACE-V1.md](./PRD-STUDIO-AI-SURFACE-V1.md)（SAS · 预览 AI Sheet 用户发现面）· [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（CAL · 路线 C 生图迁移方）· [PRD-COVER-TYPESETTING-CONTINUITY-V1.md](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md)（CTS · G-CTS-05 埋点依赖本平台）· `docs/aesthetic-alignment/`（PA-MLLM 迁移方）· `TECH-ARCHITECTURE.md` §18（分层约束） |
 | **评审记录** | [acceptance-records/acp-ai-capability-platform-v1-review-2026-08-10.md](./acceptance-records/acp-ai-capability-platform-v1-review-2026-08-10.md)（七席+典型用户 · 8/8 Conditional Go） |
 | **技术可行性核查** | 2026-08-10 开发负责人对照现网代码逐项核查（无代码改动），发现 §4/§5/§7/§8 多处方案与实际调用时机/性能预算不符，已回写本版（详见各节标注） |
-| **验收** | Kickoff 后拆 `ACCEPTANCE-AI-CAPABILITY-PLATFORM-V1.md`；本文 §10 为源 |
-| **实施清单** | Kickoff 后拆 `IMPLEMENTATION-AI-CAPABILITY-PLATFORM-V1.md` |
+| **验收** | [ACCEPTANCE-AI-CAPABILITY-PLATFORM-V1.md](./ACCEPTANCE-AI-CAPABILITY-PLATFORM-V1.md)（§10 为源） |
+| **实施清单** | [IMPLEMENTATION-AI-CAPABILITY-PLATFORM-V1.md](./IMPLEMENTATION-AI-CAPABILITY-PLATFORM-V1.md) |
 | **更新日期** | 2026-08-10 |
 
 > **定位**
@@ -531,6 +531,7 @@ ai_capability:
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.3.1 | 2026-08-10 | 挂 ACCEPTANCE/IMPLEMENTATION；SHD-ACP-03 单测落地；AC-ACP-10 / OQ-AIR-01 仍待 dogfood 样本 |
 | v0.3.0 | 2026-08-10 | 开发负责人技术可行性核查回写（对照现网代码，无代码改动）：新增 D-ACP-15（Mosaic Judge 二阶段设计，取代 beam 内实时 tie-break，因 `SearchBudget=2000ms` 与 8s LLM 超时不兼容）、D-ACP-16（aesthetic_mllm 拆分边界，明确哪些函数下沉 `ai/`、哪些搬去 `curation/aesthetic_mllm_shortlist.py`）、D-ACP-17（narrate 不物理迁移，物理位置不变仅接入 budget/cache/telemetry）、D-ACP-18（`ai/budget.py` 与 `llm/shared_backoff.py` 分工：次数上限 vs 限流退避）；D-ACP-13 适用范围收窄为 Intent Brief/Layout Critic；§4.2/§4.3/§4.4 模块清单与消费关系表按上述决策更正；§5.4 Mosaic Judge 功能规格重写为二阶段设计；§7 迁移计划 M2/M4/M6 内容重写，施工顺序改为 M1→M3→M2→M4；§8 新增 W2.5 Mosaic Judge 产品/算法对齐门禁；新增 AC-ACP-17（SearchBudget 非侵入断言）；§11 新增两条风险 |
 | v0.2.0 | 2026-08-10 | 七席+1 评审（[review](./acceptance-records/acp-ai-capability-platform-v1-review-2026-08-10.md)）Must-Fix 回写：新增 D-ACP-01a（`cover_engine` 分层补齐）、D-ACP-13（延迟预算/异步不阻塞）、D-ACP-14（三方 AND 门控语义）、NG-ACP-08（W1 可独立结项长期停留）；新增 §4.6 调用前置检查、§6.5 测试与 Mock 策略；§4.5 事实更正（`cover_engine` 现状不在 `layers` 契约内）；新增 AC-ACP-13～16；§8 里程碑标注独立结项与开工前置 |
 | v0.1.0 | 2026-08-10 | 初稿：承接架构评审的「LLM 能力独立系统」诉求，收编 narrate / title_art route C / PA-MLLM 三处调用点为 `travelogue/ai/` 平台；落地 P0（Intent Brief + 统一观测）、P1（Layout Critic + Mosaic Judge + 解冻门槛）、P2（反馈闭环 + 统一盲评）路线图 |

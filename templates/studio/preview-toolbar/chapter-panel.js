@@ -459,6 +459,14 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
       });
       return;
     }
+    // SAS · D-SAS-04 / SHD-SAS-02 · 与 AI Sheet 互斥
+    try {
+      if (root._aiSheet && root._aiSheet.isOpen && root._aiSheet.isOpen()) {
+        root._aiSheet.close("chapter");
+      }
+    } catch (_eAi) {
+      /* ignore */
+    }
     if (drawers && typeof drawers.close === "function") {
       try {
         drawers.close();

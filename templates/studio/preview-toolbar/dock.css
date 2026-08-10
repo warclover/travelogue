@@ -71,9 +71,20 @@ body.preview-sheet-open .preview-toolbar__dock {
 body.preview-sheet-open .preview-toolbar__dock-btn--back {
   pointer-events: auto;
 }
+/* SAS · 精修开时仍可点「精修」关面板，以及 AI 做互斥切换（D-SAS-04） */
+body.preview-sheet-open .preview-toolbar__dock-btn--ai,
+body.preview-sheet-open .preview-toolbar__menu-btn,
+body.preview-sheet-open .preview-toolbar__menu-wrap {
+  pointer-events: auto;
+}
 body.preview-sheet-open .preview-toolbar__export-zone-wrap,
 body.preview-sheet-open .preview-toolbar__longshot-caret {
   pointer-events: none;
+}
+
+/* SAS · AI Sheet 开时 Dock 保持可点（互斥关精修/分章/再关 AI） */
+body.preview-ai-sheet-open .preview-toolbar__dock {
+  pointer-events: auto;
 }
 
 .preview-toolbar--v4 .preview-toolbar__export-zone {
@@ -776,6 +787,12 @@ body.preview-sheet-open .preview-toolbar__longshot-caret {
 }
 
 @media (max-width: 720px) {
+  /* SAS · SHD-SAS-05：窄屏优先保 导出/精修/AI；文件夹可进溢出（暂隐藏） */
+  .preview-toolbar--v4
+    .preview-toolbar__dock
+    .preview-toolbar__dock-btn--folder {
+    display: none !important;
+  }
   .preview-toolbar--v4 .preview-toolbar__dock-label,
   .preview-toolbar--v4 .preview-toolbar__longshot-caret-label {
     display: none;

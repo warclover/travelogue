@@ -480,14 +480,15 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             box = dock.bounding_box()
             assert box is not None
-            # PCU：40px 触控 + Help/?/分章；高度/宽度较 icon-only 与旧 labeled 略增
+            # PCU：40px 触控 + Help/?/分章 + SAS「AI」；高度/宽度较 icon-only 与旧 labeled 略增
             assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
-            assert box["width"] <= 720, f"dock width expected compact-labeled, got {box['width']}"
+            assert box["width"] <= 800, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--export").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--chapters").count() == 1
             assert page.locator(".preview-toolbar__dock-btn--folder").count() == 1
+            assert page.locator(".preview-toolbar__dock-btn--ai").count() == 1
             assert page.locator("#studio-help-open-preview").count() == 1
             assert page.locator(".preview-toolbar__longshot-caret").count() == 1
             assert page.locator(".preview-toolbar__longshot-split").count() == 1
@@ -688,7 +689,8 @@ def test_v3_mobile_keeps_bottom_sheet(tmp_path: Path) -> None:
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={"width": 390, "height": 700})
+            # 800×700：仍走底栏 Sheet（≥1024 才侧栏），且避开 ≤480 手机诚实门面
+            page = browser.new_page(viewport={"width": 800, "height": 700})
             page.goto(f"{base}/{trip_id}/index.html", wait_until="networkidle")
             page.locator(".preview-toolbar__menu-btn").click()
             page.locator(".preview-sheet").wait_for(state="visible", timeout=5_000)
@@ -768,10 +770,11 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "工作台设置" not in home
     assert "编辑与设置" not in bootstrap
     assert "编辑与设置" not in sheet
-    # NAS · AC-NAS-05/14：默认面无杂志感 expect 串；dark-copy + 门控
+    # NAS · AC-NAS-05/14：默认面无杂志感 expect 串；SAS W2 精修改为 AI 深链
     assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
     assert "配置写作引擎" not in sheet
-    assert "preview-sheet__llm-expect" in sheet  # dark 模板标记仍在 bookCopyRefreshHtml
+    assert 'data-action="open-ai-narrate"' in sheet
+    assert "在 AI 中打开" in sheet
     assert "isAiSurfaceEnabled" in sheet
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
@@ -918,15 +921,15 @@ def test_preview_refine_ux_v11_m2_markers() -> None:
     assert "preview-sheet__more-tools" not in sheet
     assert "长图要不要字" in panel
     assert 'data-copy-preset="full"' in panel
-    # NAS · AC-NAS-05：默认 sheet 无 llm-setup / 杂志感串；dark-copy 冻结
+    # NAS · AC-NAS-05：默认 sheet 无杂志感串；SAS W2 精修深链到 AI Sheet
     dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")
     assert "当前为本机文案 · 配置写作引擎后可升级" not in sheet
     assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
     assert "配置写作引擎" not in sheet
     assert "当前为本机文案 · 配置写作引擎后可升级" in dark
     assert "sheetLlmUnavailable" in dark
-    assert 'data-action="llm-setup"' in sheet  # dark bookCopyRefreshHtml 仍含标记
-    assert "preview-sheet__llm-expect" in sheet
+    assert 'data-action="open-ai-narrate"' in sheet
+    assert 'data-action="llm-setup"' not in sheet
     assert "isAiSurfaceEnabled" in sheet
     assert 'if (!isAiSurfaceEnabled()) return ""' in sheet
     assert "maybeShowBookTabMigrateTip" in mode

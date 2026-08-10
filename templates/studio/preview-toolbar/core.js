@@ -258,7 +258,10 @@ export function startLlmNarrate(root, tripId, btn, opts) {
     }
 
     function run() {
-      trackStudioEvent("llm_narrate_click", { available: true });
+      trackStudioEvent("llm_narrate_click", {
+        available: true,
+        source: opts.source || "preview",
+      });
       narrateStartedAt = Date.now();
       btn.disabled = true;
       if (btn.dataset && !btn.dataset.labelBusy) {

@@ -15,7 +15,7 @@ from tests.studio_test_helpers import chromium_safe_free_port
 from travelogue.services.trip import TripService, apply_intent
 from travelogue.web.copy_patch import apply_copy_patches
 from travelogue.web.serve import TripPreviewHandler
-from travelogue.web.studio_entry import build_intent_summary
+from travelogue.web.studio_entry import build_intent_brief_ui, build_intent_summary
 
 pytestmark = pytest.mark.e2e
 
@@ -110,6 +110,25 @@ def test_intent_summary_includes_user_notes_text() -> None:
     summary = build_intent_summary(trip)
     assert summary["hasUserNotes"] is True
     assert summary["userNotes"] == "带娃慢走"
+
+
+def test_intent_brief_ui_user_facing_labels() -> None:
+    trip = _minimal_trip()
+    empty = build_intent_brief_ui(trip)
+    assert empty["ready"] is False
+    assert empty["statusLabel"] == "尚未解析"
+    trip.setdefault("intent", {})["intentBrief"] = {
+        "source": "cache",
+        "tone": "quiet documentary",
+        "titleHint": "慢走大理",
+        "clusterHints": {"preferFewerChapters": True},
+    }
+    ui = build_intent_brief_ui(trip)
+    assert ui["ready"] is True
+    assert "已就绪" in ui["statusLabel"]
+    assert "偏少章" in ui["statusLabel"]
+    assert "Intent" not in ui["statusLabel"]
+    assert "intent_brief" not in (ui["detail"] or "")
 
 
 def test_patch_intent_updates_user_notes(tmp_path: Path) -> None:

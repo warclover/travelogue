@@ -190,6 +190,7 @@ export var HELP_COPY = {
     },
     {
       // H7 reserved for NAS writing-engine (ai_surface_dark only); LVP uses H8.
+      // SAS 关闸「了解如何开启」用 AI Sheet 内联说明，避免默认帮助面出现禁词。
       id: "H8",
       title: "成册风格是什么",
       body: [
