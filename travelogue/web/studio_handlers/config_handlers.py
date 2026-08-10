@@ -14,16 +14,25 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 
 def studio_capabilities(*, client_host: str = "") -> dict[str, bool]:
     """Expose client-side feature gates (not UA sniffing on the browser)."""
+    import os
+
     from travelogue.export.longshot import playwright_longshot_available
     from travelogue.paths import is_frozen
 
     host = (client_host or "").strip()
     pick_folder = sys.platform == "win32" and (not host or is_loopback_host(host))
+    # OQ-SAS-02 · 正式包（frozen）默认隐藏 AI 运维台；内测可用 TRAVELOGUE_AI_OPS=1
+    ai_ops_env = os.environ.get("TRAVELOGUE_AI_OPS", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
     return {
         "pickFolder": pick_folder,
         "longshotServer": playwright_longshot_available(),
         "longshotClientFallback": True,
         "desktopExit": bool(is_frozen()),
+        "aiOpsAdminEnabled": bool(ai_ops_env or not is_frozen()),
     }
 
 def _project_config_body(
@@ -38,11 +47,14 @@ def _project_config_body(
     from travelogue.web.studio_stages import pipeline_estimate_tiers
 
     enabled = resolve_ai_surface_enabled(cfg)
+    caps = studio_capabilities(client_host=client_host)
     body: dict = {
         "ok": True,
         "aiSurfaceEnabled": enabled,
         **studio_config_expose(cfg),
-        "capabilities": studio_capabilities(client_host=client_host),
+        "capabilities": caps,
+        # SAS · OQ-SAS-02 convenience projection (also under capabilities)
+        "aiOpsAdminEnabled": bool(caps.get("aiOpsAdminEnabled")),
     }
     if include_pipeline_estimates:
         body["pipelineEstimates"] = pipeline_estimate_tiers()

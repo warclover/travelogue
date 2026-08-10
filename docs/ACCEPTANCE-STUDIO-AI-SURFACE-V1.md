@@ -23,7 +23,7 @@ python -m pytest tests/unit/web/test_sas_ai_sheet_wiring.py -q
 | AC-SAS-01 | 预览 Dock | 「AI」在精修后、导出前（D-SAS-02） | ☑ 接线单测 + 狗粮 |
 | AC-SAS-02 | 点 AI / × / 再点 | Sheet 开合 | ☑ |
 | AC-SAS-03 | 开 AI ↔ 开精修 | 互斥；Dock「精修」「AI」在对方开时仍可点 | ☑ |
-| AC-SAS-04 | 开闸 Sheet | 本册动作 / 本机连接 / 高级（localhost） | ☑ |
+| AC-SAS-04 | 开闸 Sheet | 本册动作 / 本机连接 / 高级（`aiOpsAdminEnabled`；正式包默认藏） | ☑ |
 | AC-SAS-05 | 勾「优先 AI 手写体」 | **零** `title-art`/`narrate` 请求 | ☑ 狗粮 |
 | AC-SAS-06 | 点「生成装帧标题」 | 成功或 fail-open toast；不挡预览 | ☑ 路径存在（可选手跑烧 API） |
 | AC-SAS-07 | 无 Key → 配置；有 Key → 确认后 narrate | 不触发 curate；失败不挡导出 | ☑ 确认取消零 narrate；配置引导 ☑ |
@@ -38,7 +38,7 @@ python -m pytest tests/unit/web/test_sas_ai_sheet_wiring.py -q
 | ID | 步骤 | 期望 | 结果 |
 |----|------|------|------|
 | AC-SAS-09 | 有未处理 `layoutSuggestions` | Dock「AI」橙点；打开/处理后熄灭 | ☑ 接线 + 逻辑 |
-| AC-SAS-10 | 采纳 / 忽略 | 采纳写 `accepted`；忽略本地 dismiss；不改 `structure_locked` 章结构 | ☑ |
+| AC-SAS-10 | 采纳 / 忽略 | 采纳写 `accepted` + 章级重排 job；忽略本地 dismiss；不改 `structure_locked` 分章边界 | ☑ |
 | AC-SAS-11 | 「重新解析」 | 显式 `POST .../ai/intent-brief`；UI 无 Agent 工程名 | ☑ |
 | AC-SAS-15 | 窄屏（≤720） | AI 图标可用；Sheet 可开；文件夹隐藏保挤度 | ☑ CSS + smoke |
 | AC-SAS-16 | 精修「杂志文案」 | 「在 AI 中打开」深链；无直接 `data-action=llm` | ☑ 单测 |
@@ -50,6 +50,12 @@ python -m pytest tests/unit/web/test_sas_ai_sheet_wiring.py -q
 | COPY-SAS-08 | AI Sheet 顶 | 「版式与书衣请用「精修」；智能生成请用「AI」。」 | ☑ |
 | 狗粮 N≥5 | 见狗粮记录 | 会话勾选 | ☑ 见狗粮纪要 |
 | 埋点核对 | 打开/动作/narrate `source=ai_sheet` | allowlist 绿 + 狗粮抽检 | ☑ |
+
+## OQ 收口
+
+| ID | 说明 | 状态 |
+|----|------|------|
+| OQ-SAS-02 | 正式包（frozen）隐藏「高级」；dev/`TRAVELOGUE_AI_OPS=1`/`?aiOps=1` 可显 | ☑ |
 
 ## 不挡 Done（依赖）
 

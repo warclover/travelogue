@@ -51,7 +51,9 @@ def test_studio_capabilities_include_longshot_flags(monkeypatch: pytest.MonkeyPa
         lambda: False,
     )
     monkeypatch.setattr("travelogue.paths.is_frozen", lambda: True)
+    monkeypatch.delenv("TRAVELOGUE_AI_OPS", raising=False)
     caps = config_handlers.studio_capabilities(client_host="127.0.0.1")
     assert caps["longshotServer"] is False
     assert caps["longshotClientFallback"] is True
     assert caps["desktopExit"] is True
+    assert caps["aiOpsAdminEnabled"] is False

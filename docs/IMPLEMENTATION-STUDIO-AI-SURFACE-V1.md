@@ -54,7 +54,7 @@
 
 | ID | 默认 |
 |----|------|
-| OQ-SAS-02 | localhost 显示「高级」；正式包可后续藏 |
+| OQ-SAS-02 | **已收**：`capabilities.aiOpsAdminEnabled`（非 frozen 或 `TRAVELOGUE_AI_OPS=1`）；Sheet「高级」跟配置；`?aiOps=1` 覆盖 |
 | OQ-SAS-03 | **保留**精修装帧次入口 |
 | OQ-SAS-04 | 徽标仅未处理排版建议 |
 

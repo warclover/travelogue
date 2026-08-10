@@ -96,3 +96,25 @@ def test_ops_summary_includes_six_known_agents() -> None:
     ):
         assert name in agents
     assert len(agents) >= 6
+
+
+def test_ac_acp_10_ops_summary_six_agents_nonzero_after_calls() -> None:
+    """AC-ACP-10 · 六类 Agent 经 record_agent_call 后 ops_summary 可验非零。"""
+    from travelogue.ai.telemetry import AgentCallRecord, KNOWN_OPS_AGENTS, record_agent_call
+
+    for name in KNOWN_OPS_AGENTS:
+        record_agent_call(
+            None,
+            AgentCallRecord(
+                agent=name,
+                source="llm",
+                ok=True,
+                latency_ms=12.0,
+            ),
+        )
+    agents = ops_summary()
+    assert len(KNOWN_OPS_AGENTS) >= 6
+    for name in KNOWN_OPS_AGENTS:
+        assert agents[name]["calls"] >= 1
+        assert agents[name]["ok"] >= 1
+        assert agents[name]["avgLatencyMs"] > 0

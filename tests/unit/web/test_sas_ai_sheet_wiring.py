@@ -73,8 +73,19 @@ def test_sas_w2_intent_suggestions_badge() -> None:
     assert "has-badge" in text
     assert "请先在分章确认" in text
     assert "了解如何开启" in text
+    assert "pollJobUntilDone" in text
+    assert "已按建议更新该章版面" in text
+    assert "aiOpsAdminEnabled" in text
     css = _AI_CSS.read_text(encoding="utf-8")
     assert ".has-badge::after" in css
+
+
+def test_sas_oq_02_advanced_follows_server_flag() -> None:
+    """OQ-SAS-02 · 高级区跟 capabilities.aiOpsAdminEnabled，非 hostname 猜测。"""
+    text = _AI_SHEET.read_text(encoding="utf-8")
+    assert "aiOpsAdminEnabled" in text
+    assert "showAdvancedSection(aiOpsAdminEnabled)" in text
+    assert 'get("aiOps")' in text or "aiOps" in text
 
 
 def test_sas_w2_old_entry_deeplink() -> None:

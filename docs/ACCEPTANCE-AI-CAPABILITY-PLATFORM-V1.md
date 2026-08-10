@@ -28,15 +28,17 @@ python -m pytest tests/unit/ai -q
 | AC-ACP-07 | Critic patternId 白名单 | ☑ | `test_layout_critic_*` |
 | AC-ACP-08 | Judge 候选命中集合 | ☑ | mosaic_judge 测 |
 | AC-ACP-09 | Agent 异常 fail-open | ☑ | 各 agent exception 测 |
-| AC-ACP-10 | ops-admin ≥6 类统计 | ☐ | **需 dogfood 全开 trip** |
+| AC-ACP-10 | ops-admin ≥6 类统计 | ☑ | `test_ac_acp_10_ops_summary_*`（灌满六类可验非零；狗粮全开 trip 仍建议手验 UI） |
 | AC-ACP-11 | unlock_gate 确定性 | ☑ | `test_unlock_gate.py` |
 | AC-ACP-12 | agents 无默认像素/base64 | ☑ | 静态/单测 |
 | AC-ACP-13 | cover_engine layers | ☑ | W1b |
 | AC-ACP-14 | CI 零外呼 | ☑ | Mock / gate 测 |
-| AC-ACP-15 | 关/超时不拖导入预览 | ☑ | gap closure |
+| AC-ACP-15 | 关/超时不拖导入预览 | ☑ | gap closure + `test_ac_acp_15_intent_brief_async_*` |
 | AC-ACP-16 | 三方 AND 零外呼 | ☑ | gate 测 |
-| AC-ACP-17 | Judge 不侵入 SearchBudget 一阶段 | ☑ | gap / judge 测 |
+| AC-ACP-17 | Judge 不侵入 SearchBudget 一阶段 | ☑ | `test_ac_acp_17_*` + post_compose |
+| SHD-ACP-01 | tie_epsilon 方法/默认值 | ☑ | W2.5 纪要 + `test_tie_epsilon_stats_shd_acp_01` |
 | SHD-ACP-03 | 建议未采纳时 chapters/screens 不变 | ☑ | `test_shd_acp_03_*` |
+| §5.3 采纳→章重排 | 用户采纳触发章级 screens replan | ☑ | `layout_accept.py` + FE pollJob |
 
 ## 开放
 
