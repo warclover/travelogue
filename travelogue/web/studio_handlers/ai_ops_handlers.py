@@ -26,6 +26,95 @@ def handle_get_ai_ops_summary(handler: StudioHandlerProtocol) -> None:
     handler._json_response(200, {"ok": True, "agents": ops_summary()})
 
 
+def _unlock_thresholds_from_cfg() -> Any:
+    from travelogue.ai.eval.unlock_gate import UnlockThresholds
+    from travelogue.config import get_config
+
+    ev = getattr(getattr(get_config(), "ai_capability", None), "eval", None)
+    return UnlockThresholds(
+        min_samples=int(getattr(ev, "unlock_min_samples", 30) or 30),
+        config_conversion_rate=float(
+            getattr(ev, "unlock_config_conversion_rate", 0.40) or 0.40
+        ),
+        narrate_success_rate=float(
+            getattr(ev, "unlock_narrate_success_rate", 0.70) or 0.70
+        ),
+        channel_copy_rate=float(
+            getattr(ev, "unlock_channel_copy_rate", 0.30) or 0.30
+        ),
+    )
+
+
+def handle_get_unlock_gate(handler: StudioHandlerProtocol) -> None:
+    """GET /__travelogue/ai/unlock-gate — AIR unlock recommendation from live jsonl."""
+    from travelogue.ai.eval.unlock_gate import format_unlock_report, run_unlock_gate
+
+    result = run_unlock_gate(thresholds=_unlock_thresholds_from_cfg())
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "unlockGate": result.to_dict(),
+            "reportMarkdown": format_unlock_report(result),
+        },
+    )
+
+
+def handle_post_unlock_gate(handler: StudioHandlerProtocol) -> None:
+    """POST /__travelogue/ai/unlock-gate — compute from fixture metrics body."""
+    from travelogue.ai.eval.unlock_gate import (
+        UnlockThresholds,
+        format_unlock_report,
+        metrics_from_dict,
+        run_unlock_gate,
+    )
+
+    body = handler._read_json_body() or {}
+    thr_raw = body.get("thresholds") if isinstance(body.get("thresholds"), dict) else {}
+    base = _unlock_thresholds_from_cfg()
+    thresholds = UnlockThresholds(
+        min_samples=int(
+            thr_raw.get("minSamples")
+            or thr_raw.get("min_samples")
+            or base.min_samples
+        ),
+        config_conversion_rate=float(
+            thr_raw.get("configConversionRate")
+            or thr_raw.get("config_conversion_rate")
+            or base.config_conversion_rate
+        ),
+        narrate_success_rate=float(
+            thr_raw.get("narrateSuccessRate")
+            or thr_raw.get("narrate_success_rate")
+            or base.narrate_success_rate
+        ),
+        channel_copy_rate=float(
+            thr_raw.get("channelCopyRate")
+            or thr_raw.get("channel_copy_rate")
+            or base.channel_copy_rate
+        ),
+    )
+    if body.get("live"):
+        result = run_unlock_gate(thresholds=thresholds)
+    else:
+        metrics_raw = (
+            body.get("metrics") if isinstance(body.get("metrics"), dict) else body
+        )
+        metrics = metrics_from_dict(metrics_raw if isinstance(metrics_raw, dict) else {})
+        metrics.source = str(
+            (metrics_raw or {}).get("source") if isinstance(metrics_raw, dict) else "request"
+        ) or "request"
+        result = run_unlock_gate(metrics=metrics, thresholds=thresholds)
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "unlockGate": result.to_dict(),
+            "reportMarkdown": format_unlock_report(result),
+        },
+    )
+
+
 def handle_ai_ops_admin_page(handler: StudioHandlerProtocol) -> None:
     """GET /ai-ops-admin — internal ACP ops console."""
     html_path = STUDIO_TEMPLATE_DIR / "ai-ops-admin.html"

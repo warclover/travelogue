@@ -26,6 +26,11 @@
   },
   {
     "method": "GET",
+    "path": "/__travelogue/ai/unlock-gate",
+    "handler": "ai_ops_handlers.handle_get_unlock_gate"
+  },
+  {
+    "method": "GET",
     "path": "/__travelogue/chapter-layout",
     "handler": "trip_handlers.handle_chapter_layout"
   },
@@ -243,6 +248,11 @@
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/template",
     "handler": "trip_handlers.handle_patch_template"
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/ai/unlock-gate",
+    "handler": "ai_ops_handlers.handle_post_unlock_gate"
   },
   {
     "method": "POST",

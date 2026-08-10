@@ -103,11 +103,35 @@ def _update_summary(record: AgentCallRecord) -> None:
         slot["latencyMsSum"] += float(record.latency_ms)
 
 
-def ops_summary() -> dict[str, Any]:
-    """Process-local aggregate for future ``/ai-ops-admin`` (W2)."""
+# AC-ACP-10 · ops admin always surfaces these agents (zeros until first call).
+KNOWN_OPS_AGENTS: tuple[str, ...] = (
+    "intent_brief",
+    "layout_critic",
+    "mosaic_judge",
+    "narrate",
+    "title_art_route_c",
+    "aesthetic_mllm",
+)
+
+
+def ops_summary(*, include_known: bool = True) -> dict[str, Any]:
+    """Process-local aggregate for ``/ai-ops-admin`` / unlock_gate."""
     with _SUMMARY_LOCK:
         out: dict[str, Any] = {}
-        for agent, slot in _SUMMARY.items():
+        agents = set(_SUMMARY)
+        if include_known:
+            agents.update(KNOWN_OPS_AGENTS)
+        for agent in sorted(agents):
+            slot = _SUMMARY.get(
+                agent,
+                {
+                    "calls": 0,
+                    "ok": 0,
+                    "fallback": 0,
+                    "cache": 0,
+                    "latencyMsSum": 0.0,
+                },
+            )
             calls = int(slot["calls"])
             out[agent] = {
                 "calls": calls,

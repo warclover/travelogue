@@ -110,6 +110,7 @@ from travelogue.web.studio_handlers.paths import (
     TRIPS_PATH,
     AI_OPS_ADMIN_UI_PATH,
     AI_OPS_SUMMARY_PATH,
+    AI_UNLOCK_GATE_PATH,
     match_layout_strategy_decisions,
     match_layout_strategy_detail,
     match_layout_strategy_rollback,
@@ -151,6 +152,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     RouteSpec("GET", LSE_FLAGS_UI_PATH, "static_handlers.handle_lse_flags_admin_page", auth=True),
     RouteSpec("GET", AI_OPS_ADMIN_UI_PATH, "ai_ops_handlers.handle_ai_ops_admin_page", auth=True),
     RouteSpec("GET", AI_OPS_SUMMARY_PATH, "ai_ops_handlers.handle_get_ai_ops_summary", auth=True),
+    RouteSpec("GET", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_get_unlock_gate", auth=True),
     RouteSpec("GET", LSE_CAPS_API_PATH, "layout_strategy_handlers.handle_lse_capabilities_get", auth=True),
     RouteSpec("GET", TEMPLATES_PATH, "template_handlers.handle_templates_list", auth=True),
     RouteSpec(
@@ -306,6 +308,7 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
     # DELETE
     RouteSpec("DELETE", "/__travelogue/trips/{tripId}", "trip_handlers.handle_delete_trip", "capture", auth=True),
     # POST
+    RouteSpec("POST", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_post_unlock_gate", auth=True),
     RouteSpec("POST", IMPORT_PATH, "import_handlers.handle_import", auth=True),
     RouteSpec("POST", LONGSHOT_PATH, "export_handlers.handle_longshot", auth=True),
     RouteSpec("POST", LONGSHOT_UPLOAD_PATH, "export_handlers.handle_longshot_upload", auth=True),

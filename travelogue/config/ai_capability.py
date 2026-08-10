@@ -39,6 +39,17 @@ class MosaicJudgeConfig:
 
 
 @dataclass
+class AiEvalConfig:
+    """Eval / unlock-gate / blind-review knobs (W4)."""
+
+    blind_review_sample_rate: float = 0.1
+    unlock_min_samples: int = 30
+    unlock_config_conversion_rate: float = 0.40
+    unlock_narrate_success_rate: float = 0.70
+    unlock_channel_copy_rate: float = 0.30
+
+
+@dataclass
 class AiCapabilityConfig:
     """Engineering capability switch (independent of ``studio.ai_surface_enabled``).
 
@@ -54,6 +65,7 @@ class AiCapabilityConfig:
     intent_brief: IntentBriefConfig = field(default_factory=IntentBriefConfig)
     layout_critic: LayoutCriticConfig = field(default_factory=LayoutCriticConfig)
     mosaic_judge: MosaicJudgeConfig = field(default_factory=MosaicJudgeConfig)
+    eval: AiEvalConfig = field(default_factory=AiEvalConfig)
 
 
 def _subdict(raw: dict[str, Any], *keys: str) -> dict[str, Any]:
@@ -70,6 +82,7 @@ def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityCo
     ib_raw = _subdict(raw, "intent_brief", "intentBrief")
     lc_raw = _subdict(raw, "layout_critic", "layoutCritic")
     mj_raw = _subdict(raw, "mosaic_judge", "mosaicJudge")
+    eval_raw = _subdict(raw, "eval")
     timeout_raw = raw.get("timeout_sec", raw.get("timeoutSec", 8.0))
     try:
         timeout_sec = float(timeout_raw)
@@ -80,6 +93,19 @@ def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityCo
         tie_epsilon = float(tie_raw)
     except (TypeError, ValueError):
         tie_epsilon = 0.03
+
+    def _f(d: dict[str, Any], *keys: str, default: float) -> float:
+        for k in keys:
+            if k in d and d[k] is not None:
+                try:
+                    return float(d[k])
+                except (TypeError, ValueError):
+                    pass
+        return default
+
+    sample_rate = _f(
+        eval_raw, "blind_review_sample_rate", "blindReviewSampleRate", default=0.1
+    )
     return AiCapabilityConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", False),
         max_calls_per_trip=cfg_int(
@@ -101,6 +127,30 @@ def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityCo
             max_calls_per_trip=max(
                 0,
                 cfg_int(mj_raw, "max_calls_per_trip", "maxCallsPerTrip", 4),
+            ),
+        ),
+        eval=AiEvalConfig(
+            blind_review_sample_rate=max(0.0, min(1.0, sample_rate)),
+            unlock_min_samples=max(
+                1, cfg_int(eval_raw, "unlock_min_samples", "unlockMinSamples", 30)
+            ),
+            unlock_config_conversion_rate=_f(
+                eval_raw,
+                "unlock_config_conversion_rate",
+                "unlockConfigConversionRate",
+                default=0.40,
+            ),
+            unlock_narrate_success_rate=_f(
+                eval_raw,
+                "unlock_narrate_success_rate",
+                "unlockNarrateSuccessRate",
+                default=0.70,
+            ),
+            unlock_channel_copy_rate=_f(
+                eval_raw,
+                "unlock_channel_copy_rate",
+                "unlockChannelCopyRate",
+                default=0.30,
             ),
         ),
     )

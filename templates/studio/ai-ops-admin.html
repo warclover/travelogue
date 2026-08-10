@@ -7,13 +7,16 @@
   <style>
     body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Segoe UI", system-ui, sans-serif; margin: 24px; max-width: 920px; color: #1a2f28; }
     h1 { font-size: 1.35rem; }
+    h2 { font-size: 1.1rem; margin-top: 28px; }
     table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
     th, td { border: 1px solid #d8e5df; padding: 8px 10px; text-align: left; }
     th { background: #eef5f1; }
     .muted { color: #5a6b63; font-size: 13px; }
     .banner { background: #f4f8f6; border: 1px solid #d8e5df; padding: 14px 16px; border-radius: 6px; margin: 16px 0; }
     button { margin-right: 8px; padding: 6px 14px; cursor: pointer; }
-    #status { margin-top: 12px; font-size: 13px; }
+    #status, #gate-status { margin-top: 12px; font-size: 13px; }
+    pre { background: #f7faf8; border: 1px solid #d8e5df; padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
+    .verdict { font-weight: 700; }
   </style>
 </head>
 <body>
@@ -27,10 +30,13 @@
     <p>数据源：<code>GET /__travelogue/ai/ops-summary</code>（本机进程内存，重启清空）。</p>
     <p class="muted">Intent Brief：<code>POST /__travelogue/trips/{tripId}/ai/intent-brief</code></p>
     <p class="muted">Layout Critic：<code>POST /__travelogue/trips/{tripId}/ai/layout-critic</code></p>
+    <p class="muted">解冻门槛：<code>GET /__travelogue/ai/unlock-gate</code></p>
   </div>
   <p>
-    <button type="button" id="btn-refresh">刷新</button>
+    <button type="button" id="btn-refresh">刷新 Agent 统计</button>
+    <button type="button" id="btn-gate">计算解冻门槛</button>
   </p>
+  <h2>Agent 调用统计（≥6 类）</h2>
   <table>
     <thead>
       <tr>
@@ -47,6 +53,10 @@
     </tbody>
   </table>
   <p id="status" class="muted"></p>
+  <h2>AIR 解冻门槛</h2>
+  <p class="muted">只读建议，不会改写 <code>aiSurfaceEnabled</code>。</p>
+  <p id="gate-status" class="muted">尚未计算</p>
+  <pre id="gate-report"></pre>
   <script>
     function tokenHeaders() {
       const meta = document.querySelector('meta[name="studio-token"]');
@@ -78,12 +88,28 @@
             </tr>`;
           }).join("");
         }
-        status.textContent = "已更新 · " + new Date().toLocaleTimeString();
+        status.textContent = "已更新 · " + keys.length + " agents · " + new Date().toLocaleTimeString();
+      } catch (e) {
+        status.textContent = "失败：" + (e && e.message ? e.message : e);
+      }
+    }
+    async function refreshGate() {
+      const status = document.getElementById("gate-status");
+      const report = document.getElementById("gate-report");
+      status.textContent = "计算中…";
+      try {
+        const res = await fetch("/__travelogue/ai/unlock-gate", { headers: tokenHeaders() });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+        const v = (data.unlockGate && data.unlockGate.verdict) || "?";
+        status.innerHTML = '裁决：<span class="verdict">' + v + "</span>";
+        report.textContent = data.reportMarkdown || JSON.stringify(data.unlockGate, null, 2);
       } catch (e) {
         status.textContent = "失败：" + (e && e.message ? e.message : e);
       }
     }
     document.getElementById("btn-refresh").addEventListener("click", refresh);
+    document.getElementById("btn-gate").addEventListener("click", refreshGate);
     refresh();
   </script>
 </body>

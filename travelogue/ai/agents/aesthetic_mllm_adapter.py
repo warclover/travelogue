@@ -6,7 +6,6 @@ Pure vision-LLM call path only. Shortlist / blend / oracle live in
 
 from __future__ import annotations
 
-import base64
 import io
 import logging
 from pathlib import Path
@@ -64,6 +63,10 @@ def _asset_image_path(asset: dict, trip_dir: Path) -> Path | None:
 
 
 def _encode_image_data_url(path: Path, *, max_edge: int) -> str:
+    # ACP_THUMBNAIL_ALLOWED · D-ACP-07 exception: downscaled JPEG thumbnail only
+    # (user-selected aesthetic scoring path; never full-res / arbitrary file://).
+    import base64 as _b64  # ACP_THUMBNAIL_ALLOWED
+
     with Image.open(path) as img:
         rgb = img.convert("RGB")
         w, h = rgb.size
@@ -73,8 +76,8 @@ def _encode_image_data_url(path: Path, *, max_edge: int) -> str:
             rgb = rgb.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.Resampling.LANCZOS)
         buf = io.BytesIO()
         rgb.save(buf, format="JPEG", quality=85)
-    b64 = base64.standard_b64encode(buf.getvalue()).decode("ascii")
-    return f"data:image/jpeg;base64,{b64}"
+    encoded = _b64.standard_b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/jpeg;base64,{encoded}"  # ACP_THUMBNAIL_ALLOWED
 
 
 def _parse_mllm_response(raw: dict[str, Any]) -> tuple[float, str]:
