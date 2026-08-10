@@ -93,6 +93,7 @@ def test_post_compose_reviews_ties_without_beam_import(monkeypatch) -> None:
 
 
 def test_tie_epsilon_stats_shd_acp_01() -> None:
+    """SHD-ACP-01 · fixture 分差分布可产出推荐 ε（方法见 W2.5 纪要）。"""
     logs = [
         {"top3Scores": [1.0, 0.99]},
         {"top3Scores": [1.0, 0.5]},
@@ -103,3 +104,14 @@ def test_tie_epsilon_stats_shd_acp_01() -> None:
     assert stats.window_count == 4
     assert stats.recommended_epsilon > 0
     assert stats.mean_triggers_per_trip >= 0
+
+
+def test_ac_acp_17_mosaic_judge_source_avoids_search_budget() -> None:
+    """AC-ACP-17 · Judge 模块源码不引用 SearchBudget / try_mosaic_window。"""
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[3] / "travelogue/ai/agents/mosaic_judge.py"
+    text = src.read_text(encoding="utf-8")
+    assert "SearchBudget" not in text
+    assert "try_mosaic_window" not in text
+    assert "search_budget" not in text

@@ -12,6 +12,7 @@ import {
 import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { closeHelpDrawer, isHelpDrawerOpen } from "../js/help-drawer.js";
 import { postJson, postJsonConflictRetry, studioAuthHeaders } from "../js/http.js";
+import { pollJobUntilDone } from "../js/job-poll.js";
 import { dockIconSvg } from "./dock.js";
 import { fetchEntry, startLlmNarrate } from "./core.js";
 import { closeStudioExportPopover } from "./longshot.js";
@@ -42,13 +43,13 @@ function clipSuggestion(text) {
   return t.slice(0, 36);
 }
 
-function showAdvancedSection() {
+function showAdvancedSection(aiOpsAdminEnabled) {
   try {
-    var h = location.hostname || "";
-    return h === "127.0.0.1" || h === "localhost" || h === "::1";
-  } catch (_e) {
-    return false;
-  }
+    if (new URLSearchParams(location.search).get("aiOps") === "1") return true;
+  } catch (_e0) {}
+  // OQ-SAS-02 · 以服务端 capabilities.aiOpsAdminEnabled 为准（正式包默认关）
+  if (typeof aiOpsAdminEnabled === "boolean") return aiOpsAdminEnabled;
+  return false;
 }
 
 function suggestionKey(s) {
@@ -111,6 +112,7 @@ export function mountAiSurface(root, tripId, opts) {
   var entryCache = null;
   var pendingFocus = null;
   var hasBadge = false;
+  var aiOpsAdminEnabled = false;
 
   btn = document.createElement("button");
   btn.type = "button";
@@ -498,7 +500,7 @@ export function mountAiSurface(root, tripId, opts) {
   }
 
   function advancedDetailsHtml() {
-    if (!showAdvancedSection()) return "";
+    if (!showAdvancedSection(aiOpsAdminEnabled)) return "";
     return (
       '<details class="preview-ai-sheet__details" data-ai-advanced>' +
       "<summary>高级</summary>" +
@@ -649,12 +651,14 @@ export function mountAiSurface(root, tripId, opts) {
         acceptBtn.addEventListener("click", function () {
           trackAction("suggestion_accept", { chapterId: sug.chapterId });
           var started = Date.now();
+          acceptBtn.disabled = true;
           postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
             chapterId: sug.chapterId,
             suggestedPatternId: sug.suggestedPatternId || undefined,
           })
             .then(function (res) {
               if (!res || res.status < 200 || res.status >= 300) {
+                acceptBtn.disabled = false;
                 showToolbarToast(
                   (res && res.body && res.body.message) || "采纳失败",
                   { error: true }
@@ -664,15 +668,50 @@ export function mountAiSurface(root, tripId, opts) {
                 });
                 return;
               }
-              showToolbarToast("已采纳建议（下次重生时参考）");
+              // ACP §5.3 · 202 + jobId → 章级重排；200 skipReplan → 仅标记
+              if (res.status === 202 && res.body && res.body.jobId) {
+                showToolbarToast("正在按建议更新该章版面…");
+                return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(
+                  function (job) {
+                    if (!job || job.status !== "succeeded") {
+                      showToolbarToast("建议已记下，版面更新未完成", {
+                        error: true,
+                      });
+                      trackResult("suggestion_accept", false, {
+                        latency_ms: Date.now() - started,
+                        error_code: "replan_job",
+                      });
+                      return loadEntry().then(function () {
+                        if (isOpen()) renderBody();
+                      });
+                    }
+                    showToolbarToast("已按建议更新该章版面");
+                    trackResult("suggestion_accept", true, {
+                      latency_ms: Date.now() - started,
+                      replan: true,
+                    });
+                    reloadPreviewAfterLayout();
+                    return loadEntry().then(function () {
+                      if (isOpen()) renderBody();
+                    });
+                  }
+                );
+              }
+              showToolbarToast(
+                res.body && res.body.replan === false
+                  ? "已采纳建议"
+                  : "已按建议更新该章版面"
+              );
               trackResult("suggestion_accept", true, {
                 latency_ms: Date.now() - started,
               });
+              reloadPreviewAfterLayout();
               return loadEntry().then(function () {
                 if (isOpen()) renderBody();
               });
             })
             .catch(function () {
+              acceptBtn.disabled = false;
               showToolbarToast("采纳失败", { error: true });
               trackResult("suggestion_accept", false, {
                 latency_ms: Date.now() - started,
@@ -857,10 +896,17 @@ export function mountAiSurface(root, tripId, opts) {
           var ta = (cfg && cfg.titleArt) || {};
           titleArtEnabled = !!ta.enabled;
           titleArtRouteCEnabled = !!ta.routeCEnabled;
+          var caps = (cfg && cfg.capabilities) || {};
+          if (typeof cfg.aiOpsAdminEnabled === "boolean") {
+            aiOpsAdminEnabled = cfg.aiOpsAdminEnabled;
+          } else {
+            aiOpsAdminEnabled = !!caps.aiOpsAdminEnabled;
+          }
         })
         .catch(function () {
           titleArtEnabled = false;
           titleArtRouteCEnabled = false;
+          aiOpsAdminEnabled = false;
         }),
       loadEntry(),
     ]);

@@ -101,9 +101,9 @@
 
 | ID | 建议 | 状态 |
 |----|------|------|
-| **SHD-ACP-01** | Mosaic Judge `tie_epsilon` 默认值不得写「参考同类阈值」，需在 M6 前用现网 mosaic 候选分数分布单独统计一次初始值 | 待 W3 |
-| **SHD-ACP-02** | Layout Critic 建议文案长度上限：复用 CTS `SHD-CTS-01` 结论（优先 ≤28 字，硬顶 36） | 待 W3 |
-| **SHD-ACP-03** | 渲染确定性回归：新增 AC 断言「ACP 开启但用户未采纳任何建议时，`chapters[]`/`screens[]` 输出与关闭时逐位一致」（对应章程 O4） | 待 W1 |
+| **SHD-ACP-01** | Mosaic Judge `tie_epsilon` 默认值不得写「参考同类阈值」，需在 M6 前用现网 mosaic 候选分数分布单独统计一次初始值 | ✅ W2.5 纪要 + `tie_epsilon_stats` / 默认 0.03 |
+| **SHD-ACP-02** | Layout Critic 建议文案长度上限：复用 CTS `SHD-CTS-01` 结论（优先 ≤28 字，硬顶 36） | ✅ W3 Critic 文案截断 |
+| **SHD-ACP-03** | 渲染确定性回归：新增 AC 断言「ACP 开启但用户未采纳任何建议时，`chapters[]`/`screens[]` 输出与关闭时逐位一致」（对应章程 O4） | ✅ `test_shd_acp_03_*` |
 | **SHD-ACP-04** | 第三个 internal admin 面板（`/ai-ops-admin`）治理债务：留 OQ，未来与 `/templates-admin`、`/lse-flags-admin` 合并评估 | 待未来 |
 | **SHD-ACP-05** | `unlock_gate.py` 与 CTS `G-CTS-05` 的字段命名需要双方书面确认接口契约，避免各自另造一套观测字段 | 待 W4 |
 

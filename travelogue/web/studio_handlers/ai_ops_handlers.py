@@ -9,12 +9,15 @@ import threading
 from typing import Any
 
 from travelogue.paths import STUDIO_TEMPLATE_DIR
+from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
+    respond_if_trip_busy,
     studio_ctx,
     trip_update_or_respond,
 )
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
 
 _log = logging.getLogger(__name__)
 
@@ -283,18 +286,21 @@ def handle_post_layout_feedback(handler: StudioHandlerProtocol, trip_id: str) ->
 
 
 def handle_post_layout_critic_accept(handler: StudioHandlerProtocol, trip_id: str) -> None:
-    """POST .../ai/layout-critic/accept — mark suggestion accepted (advisory only)."""
+    """POST .../ai/layout-critic/accept — mark accepted + chapter screens replan (ACP §5.3)."""
     from travelogue.ai.agents.layout_critic import accept_layout_suggestion
 
     body = handler._read_json_body() or {}
     chapter_id = str(body.get("chapterId") or "").strip()
     pattern_id = body.get("suggestedPatternId") or body.get("patternId")
     pattern_id_s = str(pattern_id).strip() if pattern_id else None
+    skip_replan = bool(body.get("skipReplan"))
     if not chapter_id:
         handler._json_response(
             400,
             {"ok": False, "error": "E_LAYOUT_CRITIC_ACCEPT", "message": "chapterId required"},
         )
+        return
+    if respond_if_trip_busy(handler, trip_id):
         return
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
@@ -336,13 +342,103 @@ def handle_post_layout_critic_accept(handler: StudioHandlerProtocol, trip_id: st
         )
     except Exception:
         pass
+
+    if skip_replan:
+        handler._json_response(
+            200,
+            {
+                "ok": True,
+                "tripId": trip_id,
+                "accepted": probe,
+                "replan": False,
+            },
+        )
+        return
+
+    svc = ctx.trip_service()
+
+    def runner() -> dict[str, Any]:
+        from travelogue.render.engine import render_trip_surfaces
+        from travelogue.services.layout_accept import apply_accepted_suggestion_to_chapter
+
+        trip = svc.load(trip_json)
+        other_ids = [
+            str(ch.get("id") or "")
+            for ch in (trip.get("chapters") or [])
+            if isinstance(ch, dict) and str(ch.get("id") or "") != chapter_id
+        ]
+        other_snapshots = {
+            str(ch.get("id") or ""): copy.deepcopy(ch)
+            for ch in (trip.get("chapters") or [])
+            if isinstance(ch, dict) and str(ch.get("id") or "") != chapter_id
+        }
+        result = apply_accepted_suggestion_to_chapter(
+            trip,
+            chapter_id=chapter_id,
+            suggested_pattern_id=pattern_id_s,
+            cfg=ctx.cfg,
+        )
+
+        def persist(t: dict) -> None:
+            # Keep pipeline lock status; only swap chapters screens from work copy.
+            if "chapters" in trip:
+                t["chapters"] = trip["chapters"]
+            if "curation" in trip:
+                t["curation"] = trip["curation"]
+            # Guard: restore any chapter that was accidentally dropped
+            by_id = {
+                str(ch.get("id") or ""): ch
+                for ch in (t.get("chapters") or [])
+                if isinstance(ch, dict)
+            }
+            for oid in other_ids:
+                if oid and oid not in by_id and oid in other_snapshots:
+                    t.setdefault("chapters", []).append(other_snapshots[oid])
+
+        svc.update(trip_json, persist)
+        if result.get("ok"):
+            render_trip_surfaces(
+                trip_json,
+                trip_dir,
+                export_mode="draft",
+                validate=False,
+                update_pipeline=False,
+                cfg=ctx.cfg,
+            )
+        return {
+            "tripId": trip_id,
+            "chapterId": chapter_id,
+            "accepted": probe,
+            "replan": result,
+        }
+
+    store = get_job_store()
+    job = store.create_g1_continue_job()
+    if job is None:
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": user_message("E_STUDIO_JOB_BUSY"),
+                "accepted": probe,
+            },
+        )
+        return
+    store.update(job, trip_id=trip_id)
+    threading.Thread(
+        target=lambda: run_g1_continue_job(job, runner=runner),
+        daemon=True,
+        name=f"layout-accept-{trip_id}",
+    ).start()
     handler._json_response(
-        200,
+        202,
         {
             "ok": True,
             "tripId": trip_id,
+            "jobId": job.job_id,
             "accepted": probe,
-            "note": "advisory_only_no_auto_replan",
+            "replan": True,
         },
     )
 

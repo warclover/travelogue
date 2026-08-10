@@ -94,3 +94,27 @@ def test_prefer_fewer_chapters_caps_segments() -> None:
     ]
     out = cap_geo_segments(segs, max_chapters=3)
     assert len(out) <= 3
+
+
+def test_ac_acp_15_intent_brief_async_returns_immediately(monkeypatch) -> None:
+    """AC-ACP-15 / D-ACP-13 · maybe_run_intent_brief_async 不得阻塞调用方。"""
+    import time
+
+    from travelogue.web.studio_handlers import ai_ops_handlers
+
+    starts: list[bool] = []
+
+    class _FakeThread:
+        def __init__(self, *a, **k):
+            self._target = k.get("target") or (a[0] if a else None)
+
+        def start(self) -> None:
+            starts.append(True)
+            # Do not run target — simulates fire-and-forget without work.
+
+    monkeypatch.setattr(ai_ops_handlers.threading, "Thread", _FakeThread)
+    t0 = time.perf_counter()
+    ai_ops_handlers.maybe_run_intent_brief_async("trip-acp15")
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    assert elapsed_ms < 50
+    assert starts == [True]

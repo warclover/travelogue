@@ -81,6 +81,24 @@ def test_studio_capabilities_win32_loopback() -> None:
     assert studio_capabilities(client_host="203.0.113.1")["pickFolder"] is False
 
 
+def test_oq_sas_02_ai_ops_admin_hidden_when_frozen(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """OQ-SAS-02 · frozen 正式包默认隐藏高级运维台；TRAVELOGUE_AI_OPS=1 可开。"""
+    from travelogue.web.studio_handlers.config_handlers import studio_capabilities
+
+    monkeypatch.setattr("travelogue.paths.is_frozen", lambda: True)
+    monkeypatch.delenv("TRAVELOGUE_AI_OPS", raising=False)
+    assert studio_capabilities(client_host="127.0.0.1")["aiOpsAdminEnabled"] is False
+
+    monkeypatch.setenv("TRAVELOGUE_AI_OPS", "1")
+    assert studio_capabilities(client_host="127.0.0.1")["aiOpsAdminEnabled"] is True
+
+    monkeypatch.delenv("TRAVELOGUE_AI_OPS", raising=False)
+    monkeypatch.setattr("travelogue.paths.is_frozen", lambda: False)
+    assert studio_capabilities(client_host="127.0.0.1")["aiOpsAdminEnabled"] is True
+
+
 def test_handle_config_patch_empty_body(tmp_path: Path) -> None:
     handler = MockStudioHandler(tmp_path / "trips", json_body={})
     handler.command = "PATCH"

@@ -4,11 +4,12 @@
  */
 "use strict";
 
-import { showToolbarToast, tripApiBase } from "./shell.js";
+import { showToolbarToast, tripApiBase, reloadPreviewAfterLayout } from "./shell.js";
 import { loadChapterExplain } from "./drawers.js";
 import { fetchEntry } from "./core.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { postJsonConflictRetry } from "../js/http.js";
+import { pollJobUntilDone } from "../js/job-poll.js";
 import { closeStudioExportPopover } from "./longshot.js";
 
 var CHAP_HINT_KEY = "travelogue.studio.chapterHintSeen";
@@ -324,22 +325,52 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
 
   function acceptLayoutSuggestion(ch, sug, hintEl, acceptBtn) {
     if (!ch || !ch.id || !sug) return;
+    if (acceptBtn) acceptBtn.disabled = true;
     postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
       chapterId: ch.id,
       suggestedPatternId: sug.suggestedPatternId || undefined,
     })
       .then(function (res) {
         if (!res || res.status < 200 || res.status >= 300) {
+          if (acceptBtn) acceptBtn.disabled = false;
           showToolbarToast(
             (res && res.body && res.body.message) || "采纳失败"
           );
           return;
         }
-        if (hintEl) hintEl.textContent = (sug.suggestion || "") + "（已采纳）";
-        if (acceptBtn && acceptBtn.parentNode) acceptBtn.parentNode.removeChild(acceptBtn);
-        showToolbarToast("已采纳建议（下次重生时参考）");
+        function markAcceptedUi() {
+          if (hintEl) hintEl.textContent = (sug.suggestion || "") + "（已采纳）";
+          if (acceptBtn && acceptBtn.parentNode) {
+            acceptBtn.parentNode.removeChild(acceptBtn);
+          }
+        }
+        // ACP §5.3 · 采纳后章级重排（202 job）
+        if (res.status === 202 && res.body && res.body.jobId) {
+          showToolbarToast("正在按建议更新该章版面…");
+          return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(
+            function (job) {
+              markAcceptedUi();
+              if (!job || job.status !== "succeeded") {
+                showToolbarToast("建议已记下，版面更新未完成");
+                return;
+              }
+              showToolbarToast("已按建议更新该章版面");
+              reloadPreviewAfterLayout();
+            }
+          );
+        }
+        markAcceptedUi();
+        showToolbarToast(
+          res.body && res.body.replan === false
+            ? "已采纳建议"
+            : "已按建议更新该章版面"
+        );
+        if (!(res.body && res.body.replan === false)) {
+          reloadPreviewAfterLayout();
+        }
       })
       .catch(function () {
+        if (acceptBtn) acceptBtn.disabled = false;
         showToolbarToast("采纳失败");
       });
   }
