@@ -53,6 +53,9 @@ def is_unsafe_share_copy(
     raw = (text or "").strip()
     if not raw:
         return False
+    # SNR D-SNR-04 · 技术回退词不得上读者面 / 长图文字层
+    if kind in {"caption", "alt"} and raw == "旅行照片":
+        return True
     for phrase in _BANNED_SUBSTRINGS:
         if phrase in raw:
             return True
@@ -89,6 +92,61 @@ def sanitize_share_copy(
     if is_unsafe_share_copy(raw, title=title, kind=kind):
         return ""
     return raw
+
+
+def _alt_fallback_from_asset(asset: dict | None) -> str:
+    """SNR D-SNR-04 · alt 回退：地点 · 时段 → 「照片」→ 空（禁「旅行照片」）。"""
+    if not isinstance(asset, dict):
+        return ""
+    place = asset.get("place") if isinstance(asset.get("place"), dict) else {}
+    city = str((place or {}).get("city") or "").strip()
+    daypart = ""
+    taken = str(asset.get("takenAt") or "")
+    if taken:
+        try:
+            from datetime import datetime
+
+            dt = datetime.fromisoformat(taken.replace("Z", "+00:00"))
+            hour = dt.hour
+            if 5 <= hour < 12:
+                daypart = "上午"
+            elif 12 <= hour < 17:
+                daypart = "下午"
+            elif 17 <= hour < 20:
+                daypart = "傍晚"
+            else:
+                daypart = "晚上"
+        except ValueError:
+            daypart = ""
+    if city and daypart:
+        return f"{city} · {daypart}"
+    if city:
+        return city
+    if daypart:
+        return daypart
+    return "照片"
+
+
+def resolve_visible_caption(
+    text: str | None,
+    *,
+    title: str | None = None,
+    kind: str = "caption",
+    asset: dict | None = None,
+) -> str:
+    """SNR · 长图/卷轴/alt 共用可见文案解析（禁「旅行照片」上读者面）。
+
+    caption/lead：不安全 → 空。
+    alt：不安全或空 → 地点·时段 / 「照片」中性词 / 空。
+    """
+    cleaned = sanitize_share_copy(text, title=title, kind=kind)
+    if cleaned:
+        return cleaned
+    if kind == "alt":
+        fb = _alt_fallback_from_asset(asset)
+        if fb and not is_unsafe_share_copy(fb, title=title, kind="alt"):
+            return fb
+    return ""
 
 
 def sanitize_share_copy_tracked(

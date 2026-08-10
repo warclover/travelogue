@@ -16,6 +16,7 @@
 | **线框** | [wireframes/share-face-purity-v1-wireframe.html](./wireframes/share-face-purity-v1-wireframe.html)（**已补** · F1–F5 · **F1–F5 已签核 2026-07-24**） |
 | **试用底稿** | [persona-feedback-trial-2026-07-24.md](./acceptance-records/persona-feedback-trial-2026-07-24.md) |
 | **更新日期** | 2026-07-24 |
+| **后续升维** | 成册级「空壳叙事」诚实姿态与薄章名等 → [PRD-SHARE-NARRATIVE-READINESS-V1.md](./PRD-SHARE-NARRATIVE-READINESS-V1.md)（**SNR** · D-SNR-01 **扩展** D-SFP-06，不废除单章 lead 空合法） |
 
 > **v0.1.1 评审回写摘要（多席 Conditional Go）**
 >

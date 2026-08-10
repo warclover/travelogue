@@ -115,7 +115,21 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
 
     chapter_ids = migrate_ordinal_chapter_titles(trip)
     year_ids = migrate_cross_year_chapter_titles(trip)
-    all_chapter_ids = list(dict.fromkeys([*chapter_ids, *year_ids]))
+    # SNR D-SNR-03 · 非手改章名 idempotent 薄章名 refresh（与 D-SFP-12 同纪律）
+    thin_ids: list[str] = []
+    try:
+        refresh_chapter_titles_on_trip = importlib.import_module(
+            "travelogue.curation.chapter_titles"
+        ).refresh_chapter_titles_on_trip
+
+        thin_paths = refresh_chapter_titles_on_trip(trip)
+        for path in thin_paths:
+            # paths like chapters[0].title → keep chapter id when possible
+            m = path
+            thin_ids.append(str(m))
+    except Exception:
+        thin_ids = []
+    all_chapter_ids = list(dict.fromkeys([*chapter_ids, *year_ids, *thin_ids]))
     return {
         "displayTitle": display_migrated,
         "chapters": all_chapter_ids,

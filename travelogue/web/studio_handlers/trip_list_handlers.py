@@ -152,9 +152,24 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
             _log.debug("sfp open migrate persist skipped for %s", trip_id, exc_info=True)
 
     enabled = bool(ctx.cfg.aesthetic.enabled)
+    from travelogue.web.ai_surface import resolve_ai_surface_enabled
+    from travelogue.web.studio_narrate import studio_llm_status
+
+    ai_on = resolve_ai_surface_enabled(ctx.cfg)
+    llm_ok = bool(studio_llm_status(cfg=ctx.cfg).get("llmAvailable")) if ai_on else False
     handler._json_response(
         200,
-        {"ok": True, **build_entry(trip, trip_id, aesthetic_enabled=enabled, trip_dir=_trip_dir)},
+        {
+            "ok": True,
+            **build_entry(
+                trip,
+                trip_id,
+                aesthetic_enabled=enabled,
+                trip_dir=_trip_dir,
+                ai_surface_enabled=ai_on,
+                llm_ready=llm_ok,
+            ),
+        },
     )
 
 
@@ -236,7 +251,11 @@ def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:
 
 
 def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
-    from travelogue.curation.chapter_explain import build_chapter_explain, build_layout_explain
+    from travelogue.curation.chapter_explain import (
+        build_chapter_explain,
+        build_layout_explain,
+        ensure_snr_outlier_explain,
+    )
     from travelogue.curation.mosaic_explain import build_mosaic_explain
 
     trip_id = trip_id_from_query(handler)
@@ -252,6 +271,8 @@ def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
         explain = dict(stored)
     else:
         explain = build_chapter_explain(trip, trip_dir=trip_dir)
+    # SNR COPY-SNR-T02 · 即使命中缓存 userSummary 也补往年解释
+    explain = ensure_snr_outlier_explain(explain, trip)
     curation = trip.get("curation") or {}
     layout_explain = build_layout_explain(curation)
     if layout_explain:

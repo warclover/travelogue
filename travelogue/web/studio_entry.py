@@ -198,6 +198,27 @@ def build_intent_brief_ui(trip: dict) -> dict[str, Any]:
     }
 
 
+def _chapter_date_label(curation: dict) -> str:
+    """SNR F2 · 章眉副信息：daySpan →「M月D日」或跨度，主标题可让位地点/场景。"""
+    span = [str(d)[:10] for d in (curation.get("daySpan") or []) if d]
+    if not span:
+        return ""
+    try:
+        from datetime import date
+
+        d0 = date.fromisoformat(span[0])
+        if len(span) == 1:
+            return f"{d0.month}月{d0.day}日"
+        d1 = date.fromisoformat(span[-1])
+        if d0 == d1:
+            return f"{d0.month}月{d0.day}日"
+        if d0.month == d1.month and d0.year == d1.year:
+            return f"{d0.month}月{d0.day}–{d1.day}日"
+        return f"{d0.month}月{d0.day}日–{d1.month}月{d1.day}日"
+    except ValueError:
+        return ""
+
+
 def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
     """Chapter id/title/anchors for preview edit drawer."""
     rows: list[dict[str, Any]] = []
@@ -208,10 +229,16 @@ def build_chapter_summaries(trip: dict) -> list[dict[str, Any]]:
         curation = ch.get("curation") or {}
         title_cap = 16 if curation.get("isAppendix") else 12
         appendix_ids = [str(a) for a in (curation.get("appendixAssetIds") or []) if a]
+        title = str(ch.get("title") or ch_id)[:title_cap]
+        date_label = _chapter_date_label(curation if isinstance(curation, dict) else {})
+        # 主标题已含日期时不重复副信息
+        if date_label and date_label.replace("–", "")[:4] in title.replace("–", ""):
+            date_label = ""
         rows.append(
             {
                 "id": str(ch_id),
-                "title": str(ch.get("title") or ch_id)[:title_cap],
+                "title": title,
+                "dateLabel": date_label,
                 "memoryAnchors": list(curation.get("memoryAnchors") or [])[:3],
                 "copyIntent": dict(curation.get("copyIntent") or {}),
                 "hasVoice": chapter_has_voice(ch, trip),
@@ -240,6 +267,8 @@ def build_entry(
     *,
     aesthetic_enabled: bool = True,
     trip_dir: Any = None,
+    ai_surface_enabled: bool | None = None,
+    llm_ready: bool | None = None,
 ) -> dict[str, Any]:
     """Assemble the entry payload (previewUrl, peakScreenId, intentSummary)."""
     peak = resolve_peak_screen_id(trip)
@@ -255,6 +284,11 @@ def build_entry(
     resolved = resolve_cover_opening_style(trip)
     style_rec = get_style(resolved)
     explain = curation.get("coverStyleExplain") if isinstance(curation, dict) else None
+    narrative_posture = _narrative_posture_entry(
+        trip,
+        ai_surface_enabled=ai_surface_enabled,
+        llm_ready=llm_ready,
+    )
     return {
         "previewUrl": preview_url,
         "scrollShareUrl": scroll_share_url,
@@ -302,6 +336,8 @@ def build_entry(
         "worksBrand": _works_brand_entry(trip),
         "longshotDensity": _longshot_density_entry(trip),
         "shareCopyPack": _share_copy_pack_entry(trip),
+        # SNR D-SNR-01 · 成册叙事姿态（chrome 用，不进 screen copy region）
+        "narrativePosture": narrative_posture,
     }
 
 
@@ -384,7 +420,7 @@ def _longshot_density_entry(trip: dict) -> str:
 
 
 def _share_copy_pack_entry(trip: dict) -> dict:
-    """Xiaohongshu copy pack fields (D-SFI-14 / OQ-2)."""
+    """Xiaohongshu copy pack fields (D-SFI-14 / OQ-2 · SNR D-SNR-10)."""
     from travelogue.domain.share_copy_pack import build_share_copy_pack
     from travelogue.web.studio_narrate import studio_llm_status
 
@@ -396,8 +432,40 @@ def _share_copy_pack_entry(trip: dict) -> dict:
         "title": pack["title"],
         "body": pack["body"],
         "topics": pack["topics"],
+        "level": pack.get("level") or ("L1" if pack.get("body") else "L0"),
+        "hint": pack.get("hint")
+        or (
+            "已带入杂志文案摘要 · 可粘贴后微调"
+            if pack.get("body")
+            else "标题和话题已备好 · 正文可粘贴后自填"
+        ),
         "llmAvailable": bool(status.get("llmAvailable")),
     }
+
+
+def _narrative_posture_entry(
+    trip: dict,
+    *,
+    ai_surface_enabled: bool | None = None,
+    llm_ready: bool | None = None,
+) -> str:
+    """SNR · album narrativePosture for preview chrome (fail → photo_led)."""
+    try:
+        from travelogue.domain.narrative_posture import resolve_narrative_posture
+        from travelogue.web.ai_surface import resolve_ai_surface_enabled
+        from travelogue.web.studio_narrate import studio_llm_status
+
+        if ai_surface_enabled is None:
+            ai_surface_enabled = resolve_ai_surface_enabled()
+        if llm_ready is None:
+            llm_ready = bool(studio_llm_status().get("llmAvailable"))
+        return resolve_narrative_posture(
+            trip,
+            ai_surface_enabled=bool(ai_surface_enabled),
+            llm_ready=bool(llm_ready),
+        )
+    except Exception:
+        return "photo_led"
 
 
 def _bookends_entry_summary(trip: dict, curation: dict) -> dict:

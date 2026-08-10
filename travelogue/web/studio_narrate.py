@@ -101,7 +101,7 @@ def run_studio_llm_narrate(
     provider = str(status["llmProvider"])
 
     # BE-SFI-06 · 刷新锁定 Copy sparse（frame）；禁止升 full
-    run_narrate(
+    narrate_result = run_narrate(
         trip,
         provider=provider,
         scope="frame",
@@ -122,11 +122,17 @@ def run_studio_llm_narrate(
         validate=False,
         cfg=app_cfg,
     )
+    from travelogue.domain.narrate_diff import summarize_narrate_fields
     from travelogue.render.preview import render_preview_jpg
 
     preview_path = render_preview_jpg(trip_json, trip_root=trip_dir)
+    fields = list(getattr(narrate_result, "fields_updated", None) or [])
+    diff = summarize_narrate_fields(fields)
     return {
         "tripId": trip_dir.name,
         "provider": provider,
         "previewRelPath": preview_path.name,
+        # SNR D-SNR-06 · 供 FE 成功后 diff 条（空则不展示假 diff）
+        "fieldsUpdated": fields,
+        "diffSummary": diff,
     }

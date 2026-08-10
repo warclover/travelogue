@@ -328,21 +328,30 @@ export function ctaLabelForPlatform(platformId) {
   return p.cta;
 }
 
-/** 批量态 CTA 文案（G-BEX-01）· 单选时与单平台文案完全一致（零回归）。 */
+function _platformTitle(platformId) {
+  var p = PLATFORMS[platformId];
+  return (p && (p.title || p.label)) || platformId || "导出";
+}
+
+/**
+ * 批量态 CTA 文案（G-BEX-01 + SNR D-SNR-11）· 单选与单平台文案一致；
+ * 多选用人话「导出 · {主平台}等 N 项」，禁止孤立「N 个模式」作主文案。
+ */
 export function ctaLabelForPlatforms(platformIds) {
   var ids = normalizePlatformList(platformIds);
   if (ids.length <= 1) return ctaLabelForPlatform(ids[0]);
-  return "导出 " + ids.length + " 个模式";
+  return "导出 · " + _platformTitle(ids[0]) + "等 " + ids.length + " 项";
 }
 
 /** Dock / 窄栏短标签（AC-DFX-02 · 含 compose 出口，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
   // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
+  // SNR COPY-SNR-C02 · 小红书短标签带「导出」动词
   if (platformId === "wechat_moments") return "导出连读";
-  if (platformId === "xiaohongshu") return "小红书";
-  if (platformId === "wechat_official") return "公众号";
-  if (platformId === "poster_bric") return "单张海报";
-  if (platformId === "album_spread") return "画册";
+  if (platformId === "xiaohongshu") return "导出小红书";
+  if (platformId === "wechat_official") return "导出公众号";
+  if (platformId === "poster_bric") return "导出海报";
+  if (platformId === "album_spread") return "导出画册";
   return "发微信群";
 }
 
@@ -350,7 +359,7 @@ export function shortCtaLabelForPlatform(platformId) {
 export function shortCtaLabelForPlatforms(platformIds) {
   var ids = normalizePlatformList(platformIds);
   if (ids.length <= 1) return shortCtaLabelForPlatform(ids[0]);
-  return ids.length + " 个模式";
+  return _platformTitle(ids[0]) + "等" + ids.length + "项";
 }
 
 /**
@@ -604,9 +613,15 @@ export function buildPanelHtml(platformIds) {
     "</div></div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="xhs-copy-pack" hidden>' +
     '<span class="preview-toolbar__export-popover-label">文案包</span>' +
+    '<div class="preview-toolbar__export-copy-pack-row">' +
     '<button type="button" class="preview-toolbar__export-copy-pack-btn" data-action="copy-xhs-pack">复制文案包</button>' +
+    '<button type="button" class="preview-toolbar__export-copy-pack-btn preview-toolbar__export-copy-pack-btn--ghost" data-action="copy-xhs-pack-titles" hidden>仅标题和话题</button>' +
+    "</div>" +
     '<p class="preview-toolbar__export-xhs-copy-hint" data-xhs-copy-hint>' +
     "标题和话题已备好 · 正文可粘贴后自填" +
+    "</p>" +
+    '<p class="preview-toolbar__export-xhs-copy-upgrade" data-xhs-copy-upgrade hidden>' +
+    '<button type="button" class="preview-toolbar__export-xhs-upgrade-link" data-action="snr-upgrade-copy">生成杂志感后可带正文</button>' +
     "</p></div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="scale">' +
     '<span class="preview-toolbar__export-popover-label">清晰度</span>' +

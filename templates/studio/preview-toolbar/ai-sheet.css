@@ -24,8 +24,16 @@
 
 .preview-ai-sheet-root {
   position: fixed;
-  /* 从工具栏下方起，避免遮罩挡住 Dock（精修/AI 互斥需仍可点 Dock） */
-  top: var(--preview-toolbar-h, 56px);
+  /*
+   * 从 Dock 下方起，避免关闭 × 与顶栏导出 caret 重叠（SNR D-SNR-09）。
+   * v4 浮动 Dock：shell.js 会把 --preview-toolbar-h 置 0，故不能只靠该变量；
+   * 用 Dock 实际占位（约 top12 + 高40 + 余量）自让。
+   */
+  top: max(
+    72px,
+    env(safe-area-inset-top, 0px) + 60px,
+    var(--preview-toolbar-h, 56px)
+  );
   right: 0;
   bottom: 0;
   left: 0;
@@ -102,13 +110,27 @@
 }
 
 .preview-ai-sheet__close {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
   border: 0;
-  background: transparent;
+  border-radius: 10px;
+  background: #f1f3f2;
   font-size: 22px;
   line-height: 1;
-  color: #607d8b;
+  color: #455a64;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0;
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-ai-sheet__close:hover {
+  background: #e6e9e7;
+  color: #14110d;
 }
 
 .preview-ai-sheet__body {

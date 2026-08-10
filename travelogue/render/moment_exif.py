@@ -94,21 +94,45 @@ def format_moment_exif_line(
     asset: dict,
     *,
     day_span: list[str] | None = None,
+    trip_primary_year: int | None = None,
 ) -> str | None:
     """Build footnote segments; returns None when fewer than 2 valid parts.
 
     BE-SFI-09 · ``dateConfidence=low`` 或与章 ``daySpan`` 矛盾时抑制绝对年份，
     仅保留时段（+地点）。
+    SNR D-SNR-05 · 相对行程主年离群（≥2 年）→「往年 · 时段」或省略年。
     """
     segments: list[str] = []
+    taken = str(asset.get("takenAt") or "") or None
     # PMX D7 · timeOutlier 不得上读者面绝对日期
-    if asset.get("timeOutlier"):
-        daypart_only = _daypart_label(str(asset.get("takenAt") or "") or None)
+    # SNR · 行程年离群同纪律
+    year_outlier = False
+    try:
+        from travelogue.domain.narrative_posture import photo_year_is_outlier
+
+        year_outlier = photo_year_is_outlier(taken, trip_primary_year)
+    except Exception:
+        year_outlier = False
+    if asset.get("timeOutlier") or year_outlier:
+        daypart_only = _daypart_label(taken)
         place_only = _place_label(asset)
+        if year_outlier and not asset.get("timeOutlier"):
+            # COPY-SNR-T01
+            try:
+                from travelogue.domain.studio_events import append_studio_homepage_event
+
+                append_studio_homepage_event(
+                    "snr_outlier_year_suppressed",
+                    {"count": 1, "mode": "wangnian"},
+                )
+            except Exception:
+                pass
+            if daypart_only:
+                return f"往年 · {daypart_only}"
+            return "往年"
         if place_only and daypart_only:
             return f"{place_only} · {daypart_only}"
         return place_only or daypart_only
-    taken = str(asset.get("takenAt") or "") or None
     low_conf = str(asset.get("dateConfidence") or "").strip().lower() == "low"
     contradict = date_outside_day_span(taken, day_span)
     suppress_year = low_conf or contradict
@@ -139,4 +163,4 @@ def format_moment_exif_line(
             return daypart
         return None
     return " · ".join(segments)
-
+

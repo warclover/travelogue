@@ -978,3 +978,28 @@ html[data-preview-share="on"] .preview-toolbar__cover-footnote {
 html.ltn-dual-preview-open {
   overflow: hidden;
 }
+
+/* SNR · 文案包 L0/L1 */
+.preview-toolbar__export-copy-pack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.preview-toolbar__export-copy-pack-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(20, 17, 13, 0.22);
+  color: inherit;
+}
+.preview-toolbar__export-xhs-upgrade-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--preview-accent, #3d6b5a);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-family: inherit;
+}

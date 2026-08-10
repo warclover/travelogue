@@ -292,7 +292,13 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
     if int(curation.get("sfpWeakDayMergeCount") or 0) > 0:
         details.append("已合并同一天过短片段")
     cross_year = _trip_has_cross_year_span(trip)
-    if cross_year:
+    has_year_outliers = _trip_has_year_outliers(trip)
+    if has_year_outliers:
+        # SNR COPY-SNR-T02 · 优先于泛化「跨年」句，避免重复
+        details.append(
+            "含往年照片，已按拍摄时间排序；角标不强调旧年份。"
+        )
+    elif cross_year:
         details.append("已按拍摄时间排序（含跨年照片）")
     elif curation.get("sfpChapterTimeSortApplied"):
         details.append("已按拍摄时间排序")
@@ -313,7 +319,57 @@ def build_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[s
         "segmentMode": segment_mode,
         "layoutExplain": build_layout_explain(trip.get("curation") or {}),
         "mosaicExplain": build_mosaic_explain(trip.get("curation") or {}),
+        "hasYearOutliers": has_year_outliers,
     }
+
+
+COPY_SNR_T02 = "含往年照片，已按拍摄时间排序；角标不强调旧年份。"
+
+
+def _trip_has_year_outliers(trip: dict) -> bool:
+    """SNR D-SNR-05 · timeOutlier / 附录离群 / 相对行程主年 ≥2 年。"""
+    curation = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
+    if curation.get("excludedTimeOutlierAssetIds"):
+        return True
+    try:
+        from travelogue.domain.narrative_posture import (
+            photo_year_is_outlier,
+            trip_primary_year,
+        )
+
+        primary = trip_primary_year(trip)
+    except Exception:
+        primary = None
+    for asset in trip.get("assets") or []:
+        if not isinstance(asset, dict):
+            continue
+        if asset.get("timeOutlier"):
+            return True
+        if primary is not None and photo_year_is_outlier(
+            asset.get("takenAt"), primary
+        ):
+            return True
+    return False
+
+
+def ensure_snr_outlier_explain(explain: dict[str, Any], trip: dict) -> dict[str, Any]:
+    """Append COPY-SNR-T02 even when using stored userSummary (open-path stale)."""
+    explain = dict(explain or {})
+    if not _trip_has_year_outliers(trip):
+        explain["hasYearOutliers"] = False
+        return explain
+    details = list(explain.get("details") or [])
+    if COPY_SNR_T02 not in details:
+        details.append(COPY_SNR_T02)
+    # Drop redundant SFP cross-year line when T02 present
+    details = [
+        d
+        for d in details
+        if d != "已按拍摄时间排序（含跨年照片）" and d != "已按拍摄时间排序"
+    ]
+    explain["details"] = details
+    explain["hasYearOutliers"] = True
+    return explain
 
 
 def attach_chapter_explain(trip: dict, *, trip_dir: Path | None = None) -> dict[str, Any]:

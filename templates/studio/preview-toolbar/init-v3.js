@@ -14,6 +14,8 @@ import {
   initDockScrollFade,
 } from "./dock.js";
 import { mountAiSurface } from "./ai-sheet.js";
+import { mountNarrativePostureBar } from "./narrative-posture.js";
+import { mountNarrateDiffBar } from "./narrate-diff.js";
 import { isSharePreview } from "./share.js";
 import {
   ensurePreviewRefineDefault,
@@ -811,6 +813,11 @@ export function initToolbarV3(root, tripId) {
 
   refreshStaleHint(root, tripId);
   refreshPreviewCover(root);
+  // SNR · 成册姿态条（chrome；narrative_ready 时不挂主条）
+  if (isPreviewToolbarV4(root)) {
+    mountNarrativePostureBar(root, tripId);
+    mountNarrateDiffBar(root, tripId);
+  }
   fetchEntry(tripId).then(function (data) {
     initFeaturedStars(tripId);
     initCollageMediaControls(tripId, (data && data.assetMediaById) || {});

@@ -85,6 +85,12 @@ def build_chapters_render_context(
     from travelogue.render.moment_screen import moment_label_for_trip
 
     moment_screen_label = moment_label_for_trip(trip) if show_signature_label else ""
+    try:
+        from travelogue.domain.narrative_posture import trip_primary_year as _resolve_trip_year
+
+        _trip_primary_year = _resolve_trip_year(trip)
+    except Exception:
+        _trip_primary_year = None
 
     folio_plan: dict = {}
     grid_exclude: frozenset[str] = frozenset()
@@ -227,6 +233,7 @@ def build_chapters_render_context(
                             (ch.get("curation") or {}).get("daySpan") or []
                         )
                         or None,
+                        trip_primary_year=_trip_primary_year,
                     )
                 )
 

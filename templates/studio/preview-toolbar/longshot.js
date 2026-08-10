@@ -566,6 +566,19 @@ export function cancelPreviewLongshotExport(root) {
     return { title: title, subtitle: subtitle };
   }
 
+  function emitSnrCtaLabel(label, platforms) {
+    var key = String(label || "") + "|" + (platforms || []).join(",");
+    // sync 可能高频；同标签去重后打点
+    try {
+      if (typeof window !== "undefined" && window.__snrCtaLabelKey === key) return;
+      window.__snrCtaLabelKey = key;
+    } catch (_e) {}
+    trackStudioEvent("snr_cta_label", {
+      label: label,
+      platforms: (platforms || []).slice(),
+    });
+  }
+
   export function syncLongshotCtaLabel(root) {
     if (!root) return;
     var btn = longshotBtnEl(root);
@@ -573,9 +586,9 @@ export function cancelPreviewLongshotExport(root) {
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量 CTA
-    // 文案（「导出 N 个模式」），不进入下方任何单平台 Output Recipe / tipRecipe
-    // 逻辑——那套「猜意图」机制天然假设只有一个确认平台，批量场景下用户已
-    // 显式多选，无需再猜。
+    // SNR D-SNR-11 · 人话「导出 · {主平台}等 N 项」，禁止孤立「N 个模式」主文案；
+    // 不进入下方任何单平台 Output Recipe / tipRecipe 逻辑——那套「猜意图」
+    // 机制天然假设只有一个确认平台，批量场景下用户已显式多选，无需再猜。
     var batchPlatforms = Array.isArray(prefs.platforms) ? prefs.platforms : [];
     if (batchPlatforms.length > 1) {
       var batchLabel = ctaLabelForPlatforms(batchPlatforms);
@@ -588,12 +601,14 @@ export function cancelPreviewLongshotExport(root) {
         }
         btn.setAttribute("aria-label", batchLabel);
         updateDockTip(btn, batchLabel);
+        emitSnrCtaLabel(batchLabel, batchPlatforms);
         return;
       }
       if (!btn.classList.contains("preview-toolbar__longshot--running")) {
         btn.textContent = batchShort;
       }
       btn.setAttribute("aria-label", batchLabel);
+      emitSnrCtaLabel(batchLabel, batchPlatforms);
       return;
     }
     // AC-DFX-02 · confirmed prefs 为 CTA SSOT；tipRecipe 不得覆盖用户已确认平台
@@ -638,6 +653,7 @@ export function cancelPreviewLongshotExport(root) {
       }
       btn.setAttribute("aria-label", label);
       updateDockTip(btn, label);
+      emitSnrCtaLabel(label, [platform]);
       return;
     }
     var shortBar = shortLabelForCta();
@@ -645,6 +661,7 @@ export function cancelPreviewLongshotExport(root) {
       btn.textContent = shortBar;
     }
     btn.setAttribute("aria-label", label);
+    emitSnrCtaLabel(label, [platform]);
   }
 
   function maybeToastSparseMoments() {
@@ -1121,36 +1138,55 @@ export function cancelPreviewLongshotExport(root) {
     }
 
     // SFP D-SFP-11 · 小红书设置内「复制文案包」（成功前可达）
-    var xhsPackBtn = pop.querySelector('[data-action="copy-xhs-pack"]');
-    if (xhsPackBtn && !xhsPackBtn._sfpWired) {
+    function wireXhsCopyPack() {
+      var xhsPackBtn = pop.querySelector('[data-action="copy-xhs-pack"]');
+      var titlesOnlyBtn = pop.querySelector('[data-action="copy-xhs-pack-titles"]');
+      var upgradeLink = pop.querySelector('[data-action="snr-upgrade-copy"]');
+      var upgradeRow = pop.querySelector("[data-xhs-copy-upgrade]");
+      if (!xhsPackBtn || xhsPackBtn._sfpWired) return;
       xhsPackBtn._sfpWired = true;
-      xhsPackBtn.addEventListener("click", function () {
+
+      function copyPackBlob(opts) {
+        opts = opts || {};
+        var titlesOnly = !!opts.titlesOnly;
         var tid = _tripIdFromPath() || root._tripId || "";
         if (!tid) {
           _showToolbarToast("先打开一本画册");
           return;
         }
         xhsPackBtn.disabled = true;
+        if (titlesOnlyBtn) titlesOnlyBtn.disabled = true;
         fetch("/__travelogue/trips/" + encodeURIComponent(tid) + "/entry")
           .then(function (r) {
             return r.ok ? r.json() : null;
           })
           .then(function (entry) {
             xhsPackBtn.disabled = false;
+            if (titlesOnlyBtn) titlesOnlyBtn.disabled = false;
             var pack = (entry && entry.shareCopyPack) || {};
+            var posture = (entry && entry.narrativePosture) || "";
             var title = String(pack.title || "").trim();
             if (!title) {
               _showToolbarToast("先给画册起个名字");
               return;
             }
-            var body = String(pack.body || "").trim();
+            var body = titlesOnly ? "" : String(pack.body || "").trim();
             var topics = String(pack.topics || "#旅行日记").trim();
+            var level = String(pack.level || (body ? "L1" : "L0"));
             var blob = title + "\n\n" + (body ? body + "\n\n" : "") + topics;
             var hint = pop.querySelector("[data-xhs-copy-hint]");
             if (hint) {
-              hint.textContent = body
-                ? "标题、正文与话题已备好"
-                : "标题和话题已备好 · 正文可粘贴后自填";
+              hint.textContent =
+                pack.hint ||
+                (body
+                  ? "已带入杂志文案摘要 · 可粘贴后微调"
+                  : "标题和话题已备好 · 正文可粘贴后自填");
+            }
+            if (titlesOnlyBtn) {
+              titlesOnlyBtn.hidden = level !== "L1";
+            }
+            if (upgradeRow) {
+              upgradeRow.hidden = !(posture === "upgrade_ready" && level !== "L1");
             }
             if (navigator.clipboard && navigator.clipboard.writeText) {
               navigator.clipboard.writeText(blob).then(
@@ -1158,9 +1194,19 @@ export function cancelPreviewLongshotExport(root) {
                   trackStudioEvent("sfp_xhs_copy_pack_copied", {
                     tripId: tid,
                     bodyEmpty: !body,
+                    titlesOnly: titlesOnly,
+                    level: level,
                     surface: "export_settings",
                   });
-                  _showToolbarToast("文案包已复制");
+                  trackStudioEvent("snr_copy_pack", {
+                    tripId: tid,
+                    tier: level === "L1" ? "L1" : "L0",
+                    channel: "xiaohongshu",
+                    titlesOnly: titlesOnly,
+                  });
+                  _showToolbarToast(
+                    titlesOnly ? "标题和话题已复制" : "文案包已复制"
+                  );
                 },
                 function () {
                   _showToolbarToast("复制失败，请手动选中");
@@ -1172,10 +1218,55 @@ export function cancelPreviewLongshotExport(root) {
           })
           .catch(function () {
             xhsPackBtn.disabled = false;
+            if (titlesOnlyBtn) titlesOnlyBtn.disabled = false;
             _showToolbarToast("文案包加载失败");
           });
+      }
+
+      xhsPackBtn.addEventListener("click", function () {
+        copyPackBlob({ titlesOnly: false });
       });
+      if (titlesOnlyBtn) {
+        titlesOnlyBtn.addEventListener("click", function () {
+          copyPackBlob({ titlesOnly: true });
+        });
+      }
+      if (upgradeLink && !upgradeLink._snrWired) {
+        upgradeLink._snrWired = true;
+        upgradeLink.addEventListener("click", function () {
+          trackStudioEvent("snr_upgrade_cta_click", {
+            source: "copy_pack",
+            tripId: _tripIdFromPath() || root._tripId || null,
+          });
+          if (root._aiSheet && typeof root._aiSheet.open === "function") {
+            root._aiSheet.open({ source: "snr_copy_pack", focus: "narrate" });
+          }
+        });
+      }
+
+      // 打开面板时预取 hint / L1 次级按钮可见性
+      var tid0 = _tripIdFromPath() || root._tripId || "";
+      if (tid0) {
+        fetch("/__travelogue/trips/" + encodeURIComponent(tid0) + "/entry")
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (entry) {
+            var pack = (entry && entry.shareCopyPack) || {};
+            var posture = (entry && entry.narrativePosture) || "";
+            var body = String(pack.body || "").trim();
+            var level = String(pack.level || (body ? "L1" : "L0"));
+            var hint = pop.querySelector("[data-xhs-copy-hint]");
+            if (hint && pack.hint) hint.textContent = pack.hint;
+            if (titlesOnlyBtn) titlesOnlyBtn.hidden = level !== "L1";
+            if (upgradeRow) {
+              upgradeRow.hidden = !(posture === "upgrade_ready" && level !== "L1");
+            }
+          })
+          .catch(function () {});
+      }
     }
+    wireXhsCopyPack();
 
     pop._applyDraft = function () {
       var draft = panel.getDraft();
@@ -1335,12 +1426,48 @@ export function cancelPreviewLongshotExport(root) {
         return;
       }
       // SFP D-SFP-10 · 浮层互斥：打开导出设置前关掉分章面板
+      var mutexClosed = [];
       try {
-        if (root && root._chapterPanel && typeof root._chapterPanel.close === "function") {
+        if (
+          root &&
+          root._chapterPanel &&
+          typeof root._chapterPanel.isOpen === "function" &&
+          root._chapterPanel.isOpen()
+        ) {
+          root._chapterPanel.close();
+          mutexClosed.push("chapter");
+        } else if (
+          root &&
+          root._chapterPanel &&
+          typeof root._chapterPanel.close === "function"
+        ) {
           root._chapterPanel.close();
         }
       } catch (_eChap) {
         /* ignore */
+      }
+      // SNR D-SNR-08 · 打开导出设置 ⇒ 关 AI Sheet / 精修
+      try {
+        if (root && root._aiSheet && root._aiSheet.isOpen && root._aiSheet.isOpen()) {
+          root._aiSheet.close("export_settings");
+          mutexClosed.push("ai_sheet");
+        }
+      } catch (_eAi) {
+        /* ignore */
+      }
+      try {
+        if (root && root._sheet && typeof root._sheet.isOpen === "function" && root._sheet.isOpen()) {
+          root._sheet.close("export_settings");
+          mutexClosed.push("refine");
+        }
+      } catch (_eRefine) {
+        /* ignore */
+      }
+      if (mutexClosed.length) {
+        trackStudioEvent("snr_panel_mutex", {
+          opened: "export",
+          closed: mutexClosed,
+        });
       }
       // Close any prior session without double-settle
       if (typeof _activeExportPanelFinish === "function") {

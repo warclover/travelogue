@@ -32,10 +32,11 @@ def test_chapter_titles_no_paren_or_ordinal_for_same_day() -> None:
         {"id": "c", "takenAt": "2026-05-27T11:00:00"},
     ]
     titles = chapter_titles([["a"], ["b"], ["c"]], assets, {"places": ["京都"]})
-    assert titles[0] == "5月27日"
+    # SNR · 无地点时日期±时段优先于裸日期
+    assert titles[0] in {"5月27日", "5月27日 · 上午"}
     assert all("（" not in t and "）" not in t for t in titles)
     assert all("·二" not in t and "·三" not in t for t in titles)
-    # 首个后续可用时段；撞车后允许同名
+    # 后续仍以日期族起步；撞车后允许同名
     assert titles[1].startswith("5月27日")
 
 

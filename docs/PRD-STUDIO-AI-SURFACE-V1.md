@@ -15,6 +15,7 @@
 | **验收** | [ACCEPTANCE-STUDIO-AI-SURFACE-V1.md](./ACCEPTANCE-STUDIO-AI-SURFACE-V1.md)（§10 为源）· [W3 狗粮](./acceptance-records/sas-studio-ai-surface-v1-w3-dogfood-2026-08-10.md) |
 | **实施清单** | [IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md](./IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md) |
 | **更新日期** | 2026-08-10 |
+| **交互硬化** | AI↔导出互斥、关闭命中、生成后 diff → [PRD-SHARE-NARRATIVE-READINESS-V1.md](./PRD-SHARE-NARRATIVE-READINESS-V1.md)（**SNR** · D-SNR-06/08/09；不重做 Sheet IA） |
 
 > **定位**
 >

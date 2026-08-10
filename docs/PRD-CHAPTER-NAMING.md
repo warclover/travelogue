@@ -16,6 +16,9 @@
 > **相邻主题脚注（2026-07-24 · Share-Face Purity）**  
 > 同日多章读者面 **禁止**「·二 / ·三」序号腔；默认同名日期，仅弱桶合并。冻结决策见 [PRD-SHARE-FACE-PURITY-V1.md](./PRD-SHARE-FACE-PURITY-V1.md) **D-SFP-01/02**（supersede 原「时段/序号可接受」口述）。
 
+> **相邻主题脚注（2026-08-10 · Share Narrative Readiness）**  
+> 无 AI 薄章名升维：地点短标（±时段）→ 场景短标 → 日期±时段 → 同名日期（靠章号）。冻结决策见 [PRD-SHARE-NARRATIVE-READINESS-V1.md](./PRD-SHARE-NARRATIVE-READINESS-V1.md) **D-SNR-03**；实现 `chapter_titles._pick_thin_chapter_title`。本 PRD §5.2 策略链仍为正式命名愿景；SNR 为 curate/refresh 路径的近期合同。
+
 > **定位**
 >
 > Travelogue 章级入口在 **读者面** 以 **`title`（≤12 字）为主**；`decorLine` / `lead` 服从 COPY-OPT **sparse** 策略，**默认空**。当前 **章名在 curate 阶段由规则生成**（日期 / 地理 segment 为主），**narrate 不写 title**，导致：有 anchor 时章名仍可能是「4月12日」；无 anchor 时虽可接受，但与 stub `Day N · 日期 · 地点` lead **信息重复**。

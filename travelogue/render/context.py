@@ -241,25 +241,37 @@ def asset_aspect_kind(asset: dict) -> str:
 
 
 def alt_text(item: dict | None, asset: dict, meta_title: str) -> str:
-    """Accessible alt · SFC W0：禁假句与杂志名整册复读（D-SFC-01/02）。"""
-    from travelogue.domain.share_face_copy import sanitize_share_copy
+    """Accessible alt · SFC/SNR：禁假句与「旅行照片」；回退地点·时段/照片/空。"""
+    from travelogue.domain.share_face_copy import resolve_visible_caption
 
     title = (meta_title or "").strip()
     if item:
         for key in ("title", "caption"):
-            v = sanitize_share_copy((item.get(key) or "").strip(), title=title, kind="alt")
+            v = resolve_visible_caption(
+                (item.get(key) or "").strip(),
+                title=title,
+                kind="alt",
+                asset=asset,
+            )
             if v:
                 return v
     for key in ("title", "caption"):
-        raw = asset.get(key)
-        v = sanitize_share_copy(
+        raw = asset.get(key) if isinstance(asset, dict) else None
+        v = resolve_visible_caption(
             (raw or "").strip() if isinstance(raw, str) else "",
             title=title,
             kind="alt",
+            asset=asset if isinstance(asset, dict) else None,
         )
         if v:
             return v
-    return "旅行照片"
+    # 无合格 caption 时仍走 alt 回退表（地点·时段 / 照片 / 空）
+    return resolve_visible_caption(
+        "",
+        title=title,
+        kind="alt",
+        asset=asset if isinstance(asset, dict) else None,
+    )
 
 
 def media_card_classes(
@@ -767,6 +779,7 @@ def build_layout_screen(
     show_signature_label: bool = True,
     moment_screen_label: str = "",
     chapter_day_span: list[str] | None = None,
+    trip_primary_year: int | None = None,
     peak_collage_exif: bool = False,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
@@ -962,7 +975,9 @@ def build_layout_screen(
             from travelogue.render.moment_exif import format_moment_exif_line
 
             exif_line = format_moment_exif_line(
-                asset, day_span=chapter_day_span
+                asset,
+                day_span=chapter_day_span,
+                trip_primary_year=trip_primary_year,
             )
             if exif_line:
                 entry["hasMomentExif"] = True

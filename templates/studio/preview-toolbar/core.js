@@ -251,8 +251,22 @@ export function startLlmNarrate(root, tripId, btn, opts) {
     if (!btn || btn.disabled) return Promise.resolve();
     var narrateStartedAt = 0;
 
+    function setNarrateSheetStatus(label) {
+      // SNR COPY-SNR-S01 · 同步 AI Sheet 状态条
+      try {
+        var el =
+          (root &&
+            root.querySelector &&
+            root.querySelector("[data-ai-narrate-status]")) ||
+          document.querySelector("[data-ai-narrate-status]");
+        if (el && label) el.textContent = label;
+        if (typeof opts.onStatus === "function") opts.onStatus(label);
+      } catch (_e) {}
+    }
+
     function failRefresh(meta) {
       trackStudioEvent("copy_refresh_failed", meta || {});
+      setNarrateSheetStatus("失败可重试");
       showToolbarToast(COPY_REFRESH_FAIL_TOAST, { error: true, duration: 5200 });
       setSlowHint(root, "", false);
     }
@@ -267,8 +281,9 @@ export function startLlmNarrate(root, tripId, btn, opts) {
       if (btn.dataset && !btn.dataset.labelBusy) {
         btn.dataset.labelIdle = btn.textContent || "";
         btn.dataset.labelBusy = "1";
-        btn.textContent = "正在重写…";
+        btn.textContent = "正在生成…";
       }
+      setNarrateSheetStatus("生成中");
       setToolbarCollapsed(root, false, false);
       setSlowHint(root, "", false);
       setSlowHint(root, opts.busyHint || DARK_COPY.narrateBusy, true);
@@ -280,6 +295,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
             btn.disabled = false;
             if (btn.dataset.labelIdle) btn.textContent = btn.dataset.labelIdle;
             setSlowHint(root, "", false);
+            setNarrateSheetStatus("失败可重试");
             if (
               failCode === "E_LLM_AUTH" ||
               failCode === "E_LLM_NETWORK" ||
@@ -336,10 +352,36 @@ export function startLlmNarrate(root, tripId, btn, opts) {
                   duration: durationMs,
                   origin_skip_count: originSkip,
                 });
+                // SNR D-SNR-06 · 刷新前同步暂存 diff，reload 后挂条
+                try {
+                  var diff =
+                    (job.result && job.result.diffSummary) ||
+                    (job.result && job.result.diff_summary) ||
+                    null;
+                  if (diff && diff.slotsLabel) {
+                    sessionStorage.setItem(
+                      "travelogue.snr.narrateDiff.v1." + String(tripId),
+                      JSON.stringify({
+                        slotsLabel: String(diff.slotsLabel || ""),
+                        firstAnchor: String(diff.firstAnchor || ""),
+                        slotTypes: diff.slotTypes || [],
+                        count: diff.count || 0,
+                        ts: Date.now(),
+                      })
+                    );
+                    trackStudioEvent("snr_diff_show", {
+                      trip_id: tripId,
+                      slots_count: diff.count || 0,
+                      slots: String(diff.slotsLabel || ""),
+                    });
+                  }
+                } catch (_diffErr) {}
+                setNarrateSheetStatus("已是杂志文案");
                 window.location.reload();
                 return;
               }
               var errCode = job.error && job.error.code;
+              setNarrateSheetStatus("失败可重试");
               if (
                 errCode === "E_LLM_AUTH" ||
                 errCode === "E_LLM_NETWORK" ||
@@ -374,6 +416,7 @@ export function startLlmNarrate(root, tripId, btn, opts) {
               });
             },
             function () {
+              setNarrateSheetStatus("生成中");
               setSlowHint(root, "比预期久一些，请耐心等待…", true);
             },
             "narrate"

@@ -15,4 +15,6 @@
 @import url("preview-toolbar/task-dock.css");
 @import url("preview-toolbar/sheet.css");
 @import url("preview-toolbar/ai-sheet.css");
+@import url("preview-toolbar/narrative-posture.css");
+@import url("preview-toolbar/narrate-diff.css");
 @import url("help-drawer.css");

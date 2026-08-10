@@ -82,9 +82,26 @@ body.preview-sheet-open .preview-toolbar__longshot-caret {
   pointer-events: none;
 }
 
-/* SAS · AI Sheet 开时 Dock 保持可点（互斥关精修/分章/再关 AI） */
+/*
+ * SNR D-SNR-09 / SAS · AI Sheet 开时：Dock 容器不拦截指针（z-index 250 > Sheet 230），
+ * 再单独放开互斥所需按钮；导出区保持失活，避免盖住 Sheet 关闭 ×。
+ */
 body.preview-ai-sheet-open .preview-toolbar__dock {
+  pointer-events: none;
+}
+body.preview-ai-sheet-open .preview-toolbar__dock > .preview-toolbar__dock-btn,
+body.preview-ai-sheet-open .preview-toolbar__dock > a.preview-toolbar__dock-btn,
+body.preview-ai-sheet-open .preview-toolbar__menu-wrap,
+body.preview-ai-sheet-open .preview-toolbar__dock-btn--ai,
+body.preview-ai-sheet-open .preview-toolbar__dock-btn--back,
+body.preview-ai-sheet-open .preview-toolbar__menu-btn {
   pointer-events: auto;
+}
+body.preview-ai-sheet-open .preview-toolbar__export-zone-wrap,
+body.preview-ai-sheet-open .preview-toolbar__longshot-caret,
+body.preview-ai-sheet-open .preview-toolbar__longshot--main,
+body.preview-ai-sheet-open .preview-toolbar__longshot-split {
+  pointer-events: none !important;
 }
 
 .preview-toolbar--v4 .preview-toolbar__export-zone {
@@ -643,6 +660,15 @@ body.preview-ai-sheet-open .preview-toolbar__dock {
   align-items: center;
 }
 
+.preview-chapter-panel__date {
+  flex: 1 1 100%;
+  margin: 2px 0 0 4px;
+  font-size: 11px;
+  color: rgba(38, 50, 56, 0.62);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
 .preview-chapter-panel__chap {
   flex: 1 1 auto;
   text-align: left;
@@ -693,6 +719,18 @@ body.preview-ai-sheet-open .preview-toolbar__dock {
   padding: 8px 10px;
   font-size: 12px;
   cursor: pointer;
+}
+
+.preview-chapter-panel__ai-polish {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: rgba(196, 165, 116, 0.95);
+  padding: 8px 4px;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .preview-chapter-panel__feedback {

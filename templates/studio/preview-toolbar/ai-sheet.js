@@ -80,15 +80,29 @@ function writeJsonList(storageKey, list) {
 }
 
 function closePeers(root) {
+  var closed = [];
+  try {
+    var pop = document.querySelector(".preview-export-popover:not([hidden])");
+    if (pop) closed.push("export");
+  } catch (_ePop) {}
   closeStudioExportPopover();
   if (typeof isHelpDrawerOpen === "function" && isHelpDrawerOpen()) {
     closeHelpDrawer();
+    closed.push("help");
   }
   if (root._chapterPanel && root._chapterPanel.isOpen()) {
     root._chapterPanel.close();
+    closed.push("chapter");
   }
   if (root._sheet && typeof root._sheet.isOpen === "function" && root._sheet.isOpen()) {
     root._sheet.close("ai_sheet");
+    closed.push("refine");
+  }
+  if (closed.length) {
+    trackStudioEvent("snr_panel_mutex", {
+      opened: "ai_sheet",
+      closed: closed,
+    });
   }
 }
 
@@ -114,6 +128,8 @@ export function mountAiSurface(root, tripId, opts) {
   var pendingFocus = null;
   var hasBadge = false;
   var aiOpsAdminEnabled = false;
+  /** SNR COPY-SNR-S01 · 运行时覆盖：生成中 / 失败可重试（成功后由 posture 接管） */
+  var narrateRuntimeStatus = "";
 
   btn = document.createElement("button");
   btn.type = "button";
@@ -262,10 +278,21 @@ export function mountAiSurface(root, tripId, opts) {
     shell.querySelector("[data-ai-sheet-scrim]").addEventListener("click", function () {
       close("scrim");
     });
-    shell.querySelector("[data-ai-sheet-close]").addEventListener("click", function () {
+    shell.querySelector("[data-ai-sheet-close]").addEventListener("click", function (e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       close("close_btn");
     });
     return shell;
+  }
+
+  function onDocKeydown(e) {
+    if (!e || e.key !== "Escape") return;
+    if (!isOpen()) return;
+    e.preventDefault();
+    close("escape");
   }
 
   function renderBody() {
@@ -391,16 +418,31 @@ export function mountAiSurface(root, tripId, opts) {
 
   function narrateBlockHtml() {
     var g1Pending = !!(entryCache && entryCache.g1Pending);
-    var status = g1Pending
-      ? "待分章确认"
-      : llmAvailable
-        ? "可生成"
-        : "未配置";
-    var cta = g1Pending
-      ? "请先确认分章"
-      : llmAvailable
-        ? "生成杂志感文案"
-        : "配置写作引擎";
+    var posture = (entryCache && entryCache.narrativePosture) || "";
+    // SNR COPY-SNR-S01 · 未配置 / 可生成 / 生成中 / 已是杂志文案 / 失败可重试
+    // 「可生成」不得暗示预览已是杂志感；禁止「杂志文案已完成」
+    var status = "未配置";
+    var cta = "配置写作引擎";
+    var disableBtn = false;
+    if (g1Pending) {
+      status = "待分章确认";
+      cta = "请先确认分章";
+      disableBtn = true;
+    } else if (narrateRuntimeStatus === "生成中") {
+      status = "生成中";
+      cta = "正在生成…";
+      disableBtn = true;
+    } else if (narrateRuntimeStatus === "失败可重试") {
+      status = "失败可重试";
+      cta = llmAvailable ? "重试生成" : "配置写作引擎";
+    } else if (posture === "narrative_ready") {
+      status = "已是杂志文案";
+      cta = llmAvailable ? "再生成一版" : "已是杂志文案";
+      disableBtn = !llmAvailable;
+    } else if (llmAvailable) {
+      status = "可生成";
+      cta = "生成杂志感文案";
+    }
     return (
       '<div class="preview-ai-sheet__block" data-ai-narrate-block>' +
       "<h3>杂志文案</h3>" +
@@ -413,7 +455,7 @@ export function mountAiSurface(root, tripId, opts) {
       escapeHtml(status) +
       "</span>" +
       '<button type="button" class="preview-ai-sheet__btn" data-ai-narrate-btn' +
-      (g1Pending ? " disabled" : "") +
+      (disableBtn ? " disabled" : "") +
       ">" +
       escapeHtml(cta) +
       "</button>" +
@@ -582,15 +624,41 @@ export function mountAiSurface(root, tripId, opts) {
         return;
       }
       trackAction("narrate");
+      trackStudioEvent("snr_upgrade_cta_click", {
+        source: "ai_sheet",
+        tripId: tripId || null,
+      });
       var started = Date.now();
+      var wasGenerating = false;
       startLlmNarrate(root, tripId, narrateBtn, {
         source: "ai_sheet",
         confirmTitle: DARK_COPY.narrateConfirmTitle || "生成杂志感文案",
         confirmBody:
           "将调用写作引擎重写文案；照片仍留在本机。将重写版心文案（可能包括你改过的句子）。",
         confirmText: "生成杂志感文案",
-        busyHint: DARK_COPY.narrateBusy,
+        // SNR · 生成中状态人话（对齐 COPY-SNR-S01）
+        busyHint: "正在生成杂志感文案…",
+        onStatus: function (label) {
+          if (label === "生成中") {
+            narrateRuntimeStatus = "生成中";
+            wasGenerating = true;
+          } else if (label === "失败可重试") {
+            narrateRuntimeStatus = "失败可重试";
+          } else if (label === "已是杂志文案") {
+            narrateRuntimeStatus = "";
+          }
+          var el = document.querySelector("[data-ai-narrate-status]");
+          if (el && label) el.textContent = label;
+          if (label === "失败可重试" && narrateBtn) {
+            narrateBtn.textContent = "重试生成";
+            narrateBtn.disabled = false;
+          }
+        },
       }).then(function () {
+        // 用户取消确认时不会进入 run()，勿残留「生成中」
+        if (!wasGenerating && narrateRuntimeStatus === "生成中") {
+          narrateRuntimeStatus = "";
+        }
         trackResult("narrate", true, {
           latency_ms: Date.now() - started,
         });
@@ -966,6 +1034,7 @@ export function mountAiSurface(root, tripId, opts) {
         document.body.classList.add(BODY_OPEN_CLASS);
         setBtnActive(true);
         openAt = Date.now();
+        document.addEventListener("keydown", onDocKeydown, true);
         trackStudioEvent("ai_sheet_open", {
           source: openOpts.source || "dock",
           has_badge: openHadBadge,
@@ -991,6 +1060,7 @@ export function mountAiSurface(root, tripId, opts) {
     shell.hidden = true;
     document.body.classList.remove(BODY_OPEN_CLASS);
     setBtnActive(false);
+    document.removeEventListener("keydown", onDocKeydown, true);
     trackStudioEvent("ai_sheet_close", {
       reason: reason || "unknown",
       dwell_ms: dwell,

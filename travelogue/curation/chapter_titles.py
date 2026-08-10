@@ -116,6 +116,89 @@ def _bucket_daypart(bucket: list[str], assets_by_id: dict[str, dict]) -> str | N
     return None
 
 
+_SCENE_JUNK_RE = re.compile(
+    r"(?:精选|全景|精选全景|见闻录|游记|相册|照片|旅拍)\d*$"
+)
+_DATEISH_PART_RE = re.compile(
+    r"^(?:\d{4}年?)?\d{1,2}月(?:\d{1,2}日?)?(?:[–\-—~～]\d{1,2}(?:月\d{1,2}日?)?)?$"
+)
+
+
+def _bucket_place_short(bucket: list[str], assets_by_id: dict[str, dict]) -> str | None:
+    """SNR D-SNR-03 · 章内资产众数地点短标（禁泛词）。"""
+    from collections import Counter
+
+    from travelogue.domain.copy_subject import is_generic_place
+
+    cities: list[str] = []
+    for aid in bucket:
+        asset = assets_by_id.get(aid) or {}
+        if asset.get("timeOutlier"):
+            continue
+        place = asset.get("place") if isinstance(asset.get("place"), dict) else {}
+        city = str((place or {}).get("city") or "").strip()
+        if city and not is_generic_place(city):
+            cities.append(city)
+    if not cities:
+        return None
+    top = Counter(cities).most_common(1)[0][0]
+    return _clip_title(top, max_len=8) or None
+
+
+def scene_short_from_segment_label(label: str | None) -> str | None:
+    """从「日期·场景」类 segment label 抽出场景短标（非时段、非日期腔）。"""
+    from travelogue.domain.copy_subject import is_generic_place
+
+    text = (label or "").strip().strip("·• ")
+    if not text:
+        return None
+    parts = [p.strip() for p in re.split(r"[·•]", text) if p and p.strip()]
+    for part in parts:
+        if part in _DAYPART_TAILS:
+            continue
+        if _DATEISH_PART_RE.match(part) or _DATE_HEAD_RE.match(part):
+            continue
+        cleaned = _SCENE_JUNK_RE.sub("", part).strip()
+        cleaned = re.sub(r"\d+$", "", cleaned).strip(" ·•-_")
+        if cleaned and len(cleaned) >= 2 and not is_generic_place(cleaned):
+            return _clip_title(cleaned, max_len=8) or None
+    return None
+
+
+def _pick_thin_chapter_title(
+    *,
+    date_base: str,
+    daypart: str | None,
+    place: str | None,
+    scene: str | None,
+    used: list[str],
+    max_len: int = _CHAPTER_TITLE_MAX,
+) -> str:
+    """SNR D-SNR-03 · 地点±时段 → 场景±时段 → 日期±时段 → 同名日期。"""
+
+    def _push(buf: list[str], text: str) -> None:
+        t = (text or "").strip()
+        if t and len(t) <= max_len and t not in buf:
+            buf.append(t)
+
+    candidates: list[str] = []
+    if place:
+        if daypart:
+            _push(candidates, f"{place} · {daypart}")
+        _push(candidates, place)
+    if scene and scene != place:
+        if daypart:
+            _push(candidates, f"{scene} · {daypart}")
+        _push(candidates, scene)
+    if daypart:
+        _push(candidates, f"{date_base} · {daypart}")
+    _push(candidates, date_base)
+    for cand in candidates:
+        if cand not in used:
+            return cand
+    return _clip_title(date_base, max_len=max_len)
+
+
 # SFP D-SFP-01 · 同日后续章：时段 → segment → 同名日期（禁止「·二/·三」与「（N）」上读者面）
 _ORDINAL_FACE_RE = re.compile(
     r"·\s*(?:[二三四五六七八九十]|\d+)\s*$"
@@ -253,36 +336,31 @@ def chapter_titles(
         if len(span) == 1:
             d = date.fromisoformat(span[0])
             key = d.isoformat()
-            n = day_seen.get(key, 0)
-            day_seen[key] = n + 1
+            day_seen[key] = day_seen.get(key, 0) + 1
             base = _day_title(d, with_year=with_year)
-            if n == 0:
-                titles.append(_clip_title(base))
-            else:
-                daypart = _bucket_daypart(
-                    [
-                        aid
-                        for aid in bucket
-                        if not (assets_by_id.get(aid) or {}).get("timeOutlier")
-                    ]
-                    or bucket,
-                    assets_by_id,
+            live_bucket = [
+                aid
+                for aid in bucket
+                if not (assets_by_id.get(aid) or {}).get("timeOutlier")
+            ] or bucket
+            daypart = _bucket_daypart(live_bucket, assets_by_id)
+            place_short = _bucket_place_short(live_bucket, assets_by_id)
+            seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
+            scene = (
+                scene_short_from_segment_label(segment_labels.get(seg_id, ""))
+                if seg_id
+                else None
+            )
+            # SNR D-SNR-03 · 首章与同日后续共用薄章名优先级（禁序号腔）
+            titles.append(
+                _pick_thin_chapter_title(
+                    date_base=base,
+                    daypart=daypart,
+                    place=place_short,
+                    scene=scene,
+                    used=titles,
                 )
-                seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
-                seg_label = (
-                    _clean_segment_label(segment_labels.get(seg_id, ""), max_len=8)
-                    if seg_id and segment_labels.get(seg_id)
-                    else ""
-                )
-                titles.append(
-                    _same_day_followup_title(
-                        base,
-                        n,
-                        daypart=daypart,
-                        segment_label=seg_label or None,
-                        used=titles,
-                    )
-                )
+            )
             continue
 
         all_seg = (
@@ -292,7 +370,8 @@ def chapter_titles(
         )
         if len(all_seg) > 1:
             labels = [
-                _clean_segment_label(segment_labels[s], max_len=8)
+                scene_short_from_segment_label(segment_labels[s])
+                or _clean_segment_label(segment_labels[s], max_len=8)
                 for s in all_seg
                 if segment_labels.get(s)
             ]
@@ -305,6 +384,10 @@ def chapter_titles(
         if seg_id and segment_labels.get(seg_id):
             n = seg_day_seen.get(seg_id, 0)
             seg_day_seen[seg_id] = n + 1
+            scene = scene_short_from_segment_label(segment_labels[seg_id])
+            if n == 0 and scene:
+                titles.append(scene)
+                continue
             if n == 0:
                 titles.append(_clean_segment_label(segment_labels[seg_id]))
                 continue
@@ -312,29 +395,24 @@ def chapter_titles(
         d = parse_asset_date(assets_by_id.get(bucket[0], {}))
         if d:
             key = d.isoformat()
-            n = day_seen.get(key, 0)
-            day_seen[key] = n + 1
+            day_seen[key] = day_seen.get(key, 0) + 1
             base = _day_title(d, with_year=with_year)
-            if n == 0:
-                titles.append(_clip_title(base))
-            else:
-                # SFP D-SFP-01 · 禁「日期续」与「（N）」；时段 → segment → 同名日期
-                daypart = _bucket_daypart(bucket, assets_by_id)
-                seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
-                seg_label = (
-                    _clean_segment_label(segment_labels.get(seg_id, ""), max_len=8)
-                    if seg_id and segment_labels.get(seg_id)
-                    else ""
+            daypart = _bucket_daypart(bucket, assets_by_id)
+            place_short = _bucket_place_short(bucket, assets_by_id)
+            scene = (
+                scene_short_from_segment_label(segment_labels.get(seg_id, ""))
+                if seg_id
+                else None
+            )
+            titles.append(
+                _pick_thin_chapter_title(
+                    date_base=base,
+                    daypart=daypart,
+                    place=place_short,
+                    scene=scene,
+                    used=titles,
                 )
-                titles.append(
-                    _same_day_followup_title(
-                        base,
-                        n,
-                        daypart=daypart,
-                        segment_label=seg_label or None,
-                        used=titles,
-                    )
-                )
+            )
         elif i == 0:
             titles.append("抵达")
         elif i == len(buckets) - 1:
@@ -388,13 +466,18 @@ def refresh_chapter_titles_on_trip(trip: dict) -> list[str]:
         segment_labels=segment_labels or None,
     )
     updated: list[str] = []
-    for ch, title in zip(chapters, titles, strict=False):
+    for ch, title, bucket in zip(chapters, titles, buckets, strict=False):
         if (ch.get("curation") or {}).get("isAppendix"):
             continue
         if is_user_protected(ch, "titleOrigin"):
             continue
+        # 无资产桶勿用「片段N」覆盖已有可读章名（open migrate 序数清洗后仍可能无 items）
+        if not bucket:
+            continue
         new_title = (title or "").strip()
         if not new_title or new_title == str(ch.get("title") or "").strip():
+            continue
+        if new_title.startswith("片段") and str(ch.get("title") or "").strip():
             continue
         ch["title"] = new_title[:12]
         # Rule-based CN · not LLM invent; clear non-user origin so later refresh can update

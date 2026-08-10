@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [share-narrative-readiness-v1-wireframe.html](./share-narrative-readiness-v1-wireframe.html) | **敢发叙事就绪 SNR V1** · F1–F8（姿态条 · 薄章名 · 往年角标 · AI diff · 关闭命中 · 浮层互斥 · 文案包 L1 · CTA 人话）· [PRD](../PRD-SHARE-NARRATIVE-READINESS-V1.md) **v0.1.0** · [试用](../acceptance-records/persona-feedback-trial-2026-08-10.md) · **F1–F8 已签核 2026-08-10 · W0 编码中** |
 | [studio-ai-surface-v1-wireframe.html](./studio-ai-surface-v1-wireframe.html) | **Studio AI Surface V1** · 预览 Dock「AI」入口 · Sheet 三层 IA · **杂志文案解冻** · [PRD](../PRD-STUDIO-AI-SURFACE-V1.md) **v0.2.0 Conditional Go** · [七席+1 纪要](../acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md) |
 | [studio-shelf-ticket-seal-v1-wireframe.html](./studio-shelf-ticket-seal-v1-wireframe.html) | **书架票根 · 朱砂钤印落位 v1** · reelsalon seal-B · ①封面钤印 / ②替条码 / ③stub 水印 · **待产品审核** |
 | [studio-shelf-top-v1-wireframe.html](./studio-shelf-top-v1-wireframe.html) | **书架顶端收束 V1** · As-Is / A 弱快捷条 / B 内嵌芯片 / C 无快捷区 · **待产品审核** |
@@ -64,6 +65,8 @@
 **敢发面一致性 V1 评审 Tab**：**F0 精修调试串**（W0）· **F1 重新生成文案** · **F2 Dock 提示条** · **F3 分章行内改名**（W1）· **F4 署名三态** · **F5 小红书文案包**（W2）· PRD **v0.2.1 Conditional Go · Ready for Kickoff W0** · 线框：[share-face-integrity-v1-wireframe.html](./share-face-integrity-v1-wireframe.html) · [跨职能](../acceptance-records/share-face-integrity-v1-review-2026-07-21.md)
 
 **敢发净化 V1 评审 Tab**：**F1 同名日期·分章互斥** · **F2 体面题名** · **F3 空图注长图**（W0）· **F4 徽标分层**（W1）· **F5 小红书文案包**（W2）· **F1–F5 已签核 2026-07-24** · PRD **v0.1.1 Conditional Go** · 线框：[share-face-purity-v1-wireframe.html](./share-face-purity-v1-wireframe.html) · [联席评审](../acceptance-records/share-face-purity-v1-review-2026-07-24.md) · [试用底稿](../acceptance-records/persona-feedback-trial-2026-07-24.md)
+
+**敢发叙事就绪 SNR V1 评审 Tab**：**F1 姿态条** · **F2 薄章名** · **F3 往年角标** · **F4 AI diff** · **F5 关闭命中**（W0）· **F6 浮层互斥**（W0）· **F7 文案包 L1** · **F8 CTA 人话**（W0）· **拍板清单** · PRD **v0.1.0 Draft** · 线框：[share-narrative-readiness-v1-wireframe.html](./share-narrative-readiness-v1-wireframe.html) · [试用底稿](../acceptance-records/persona-feedback-trial-2026-08-10.md)
 
 **导入等待教育 V1 评审 Tab**：**F1 嵌进度壳** · **F2 文案墙** · **F3 交互** · **F4 仲裁** · **F5 禁止形态** · PRD **v0.2.0 Conditional Go** · [线框](./wait-tips-v1-wireframe.html) · [跨职能](../acceptance-records/wait-tips-v1-review-2026-07-17.md) · [润色纪要](../acceptance-records/wait-tips-v1-copy-workshop-2026-07-17.md)
 

@@ -90,8 +90,18 @@ def build_moment_screen_context(
     src = pick_image_src(asset, export_layout=export_layout)
     srcset = compile_srcset(asset, mobile=export_layout == "mobile")
     day_span = _day_span_for_asset(trip, moment_id)
+    try:
+        from travelogue.domain.narrative_posture import trip_primary_year
+
+        primary_year = trip_primary_year(trip)
+    except Exception:
+        primary_year = None
     exif_line = (
-        format_moment_exif_line(asset, day_span=day_span) if show_exif else None
+        format_moment_exif_line(
+            asset, day_span=day_span, trip_primary_year=primary_year
+        )
+        if show_exif
+        else None
     )
 
     ar = _asset_aspect_ratio_float(asset)

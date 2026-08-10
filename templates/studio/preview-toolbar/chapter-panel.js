@@ -15,6 +15,7 @@ import { fetchEntry } from "./core.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { postJsonConflictRetry } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
+import { isAiSurfaceEnabled } from "../js/ai-surface.js";
 import { closeStudioExportPopover } from "./longshot.js";
 
 var CHAP_HINT_KEY = "travelogue.studio.chapterHintSeen";
@@ -211,6 +212,13 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
           scrollToChapter(ch.id);
         });
         li.appendChild(btn);
+        // SNR F2 · 章眉副日期（主标题让位地点/场景时展示）
+        if (ch.dateLabel) {
+          var dateEl = document.createElement("span");
+          dateEl.className = "preview-chapter-panel__date";
+          dateEl.textContent = String(ch.dateLabel);
+          li.appendChild(dateEl);
+        }
         if (ch.isAppendix) {
           var reason = document.createElement("p");
           reason.className = "preview-chapter-panel__appendix-reason";
@@ -239,6 +247,24 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
             beginInlineRename(li, ch, idx, btn);
           });
           li.appendChild(rename);
+          // SNR D-SNR-03 · AI Surface ON 时次级链「用 AI 润色章名」→ AI Sheet（不内嵌第二套生成器）
+          if (isAiSurfaceEnabled()) {
+            var aiPolish = document.createElement("button");
+            aiPolish.type = "button";
+            aiPolish.className = "preview-chapter-panel__ai-polish";
+            aiPolish.textContent = "用 AI 润色章名";
+            aiPolish.addEventListener("click", function (ev) {
+              ev.preventDefault();
+              ev.stopPropagation();
+              trackStudioEvent("snr_chapter_ai_polish_click", {
+                chapterId: ch && ch.id ? ch.id : null,
+              });
+              if (root._aiSheet && typeof root._aiSheet.open === "function") {
+                root._aiSheet.open({ source: "chapter_panel", focus: "narrate" });
+              }
+            });
+            li.appendChild(aiPolish);
+          }
           var feedback = document.createElement("button");
           feedback.type = "button";
           feedback.className = "preview-chapter-panel__feedback";
@@ -496,9 +522,11 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
       return;
     }
     // SAS · D-SAS-04 / SHD-SAS-02 · 与 AI Sheet 互斥
+    var mutexClosed = [];
     try {
       if (root._aiSheet && root._aiSheet.isOpen && root._aiSheet.isOpen()) {
         root._aiSheet.close("chapter");
+        mutexClosed.push("ai_sheet");
       }
     } catch (_eAi) {
       /* ignore */
@@ -512,9 +540,17 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
     }
     // SFP D-SFP-10 · 浮层互斥：打开分章前关掉导出设置
     try {
+      var pop = document.querySelector(".preview-export-popover:not([hidden])");
+      if (pop) mutexClosed.push("export");
       closeStudioExportPopover();
     } catch (_eExp) {
       /* ignore */
+    }
+    if (mutexClosed.length) {
+      trackStudioEvent("snr_panel_mutex", {
+        opened: "chapter",
+        closed: mutexClosed,
+      });
     }
     ensureDom();
     open = true;
