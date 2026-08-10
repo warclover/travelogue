@@ -36,6 +36,15 @@ title_art:
   # route_c_max_attempts: 2       # OCR 失败后再生成次数上限（含首次）
   # ocr_verify: true
 
+# AI 能力平台（ACP · W1a）· 工程能力开关，独立于 studio.ai_surface_enabled
+# 默认 false：仅挂接观测/预算外壳，不改变现有 narrate / title_art 门控语义
+ai_capability:
+  enabled: false
+  max_calls_per_trip: 12
+  timeout_sec: 8
+  # cache:
+  #   dir: .cache/ai
+
 # --- 规划预留（未接入 runtime）---
 ffmpeg:
   path: ffmpeg

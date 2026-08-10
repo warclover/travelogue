@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from travelogue.config.aesthetic import AestheticConfig
+from travelogue.config.ai_capability import AiCapabilityConfig
 from travelogue.config.bookends import BookendsConfig
 from travelogue.config.clustering import ClusteringConfig, GeocodeConfig
 from travelogue.config.cohort import CohortConfig
@@ -61,3 +62,4 @@ class AppConfig:
     cohort: CohortConfig = field(default_factory=CohortConfig)
     aesthetic: AestheticConfig = field(default_factory=AestheticConfig)
     title_art: TitleArtConfig = field(default_factory=TitleArtConfig)
+    ai_capability: AiCapabilityConfig = field(default_factory=AiCapabilityConfig)

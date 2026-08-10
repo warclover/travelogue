@@ -4216,7 +4216,13 @@
             "layout",
             "storyteller",
             "storyteller-lite",
-            "publisher"
+            "publisher",
+            "intent_brief",
+            "layout_critic",
+            "mosaic_judge",
+            "title_art_route_c",
+            "title_art_ocr_verify",
+            "aesthetic_mllm"
           ]
         },
         "note": {

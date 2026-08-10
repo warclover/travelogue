@@ -402,7 +402,16 @@ def _chat_for_brief(
     stats: dict[str, int] | None = None,
     stats_lock: Any | None = None,
     shared_backoff: bool = False,
+    trip: dict[str, Any] | None = None,
 ) -> str:
+    from travelogue.ai.budget import budget_for_trip
+    from travelogue.ai.gate import acp_instrumentation_active, check_gate
+    from travelogue.ai.telemetry import AgentCallRecord, record_agent_call, timed_call
+
+    trip_id = ""
+    if isinstance(trip, dict):
+        trip_id = str(trip.get("tripId") or trip.get("id") or "")
+
     if cache_dir and not regenerate:
         cached = read_cached(
             cache_dir,
@@ -418,6 +427,18 @@ def _chat_for_brief(
                         stats["narrateCacheHits"] = stats.get("narrateCacheHits", 0) + 1
                 else:
                     stats["narrateCacheHits"] = stats.get("narrateCacheHits", 0) + 1
+            record_agent_call(
+                trip,
+                AgentCallRecord(
+                    agent="storyteller",
+                    source="cache",
+                    ok=True,
+                    latency_ms=0.0,
+                    model=f"{provider}/{model}",
+                    reason="cache_hit",
+                    trip_id=trip_id,
+                ),
+            )
             return json.dumps(cached, ensure_ascii=False)
     if stats is not None:
         if stats_lock is not None:
@@ -425,16 +446,74 @@ def _chat_for_brief(
                 stats["narrateCacheMisses"] = stats.get("narrateCacheMisses", 0) + 1
         else:
             stats["narrateCacheMisses"] = stats.get("narrateCacheMisses", 0) + 1
-    if chat_fn is not None:
-        if shared_backoff:
-            from travelogue.llm.shared_backoff import get_shared_backoff
 
-            get_shared_backoff().wait_turn()
-        content = chat_fn(messages)
-    else:
-        content = chat_completion(
-            messages, provider=provider, shared_backoff=shared_backoff
-        )
+    active = acp_instrumentation_active()
+    if active:
+        decision = check_gate()
+        if not decision.allow:
+            record_agent_call(
+                trip,
+                AgentCallRecord(
+                    agent="storyteller",
+                    source="fallback",
+                    ok=False,
+                    latency_ms=0.0,
+                    model=f"{provider}/{model}",
+                    reason=decision.reason,
+                    trip_id=trip_id,
+                ),
+            )
+            raise NarrateError(f"ACP gate blocked narrate: {decision.reason}")
+        budget = budget_for_trip(trip_id)
+        if not budget.try_consume("storyteller"):
+            record_agent_call(
+                trip,
+                AgentCallRecord(
+                    agent="storyteller",
+                    source="fallback",
+                    ok=False,
+                    latency_ms=0.0,
+                    model=f"{provider}/{model}",
+                    reason="budget_exceeded",
+                    trip_id=trip_id,
+                ),
+            )
+            raise NarrateError("ACP budget exceeded for narrate")
+
+    err: BaseException | None = None
+    content = ""
+    with timed_call() as clock:
+        try:
+            if chat_fn is not None:
+                if shared_backoff:
+                    from travelogue.llm.shared_backoff import get_shared_backoff
+
+                    get_shared_backoff().wait_turn()
+                content = chat_fn(messages)
+            else:
+                content = chat_completion(
+                    messages, provider=provider, shared_backoff=shared_backoff
+                )
+        except BaseException as exc:  # noqa: BLE001 — re-raised after telemetry
+            err = exc
+    record_agent_call(
+        trip,
+        AgentCallRecord(
+            agent="storyteller",
+            source="llm",
+            ok=err is None,
+            latency_ms=clock.latency_ms,
+            model=f"{provider}/{model}",
+            reason="ok" if err is None else "exception",
+            trip_id=trip_id,
+            started_at=clock.started_at,
+            finished_at=clock.finished_at,
+        ),
+    )
+    if err is not None:
+        raise err
+    if not active:
+        budget_for_trip(trip_id).force_count(1)
     if cache_dir:
         try:
             payload = parse_json_content(content)
@@ -504,6 +583,7 @@ def _fetch_chapter_payload(
             stats=stats,
             stats_lock=stats_lock,
             shared_backoff=shared_backoff,
+            trip=trip,
         )
         payload = parse_json_content(content)
         if payload.get("chapterId") and payload.get("chapterId") != ch_id:
@@ -845,6 +925,7 @@ def run_llm_narrate(
                 stats=stats,
                 stats_lock=stats_lock,
                 shared_backoff=shared_backoff,
+                trip=trip,
             )
             payload = parse_json_content(content)
             before = deepcopy(trip)

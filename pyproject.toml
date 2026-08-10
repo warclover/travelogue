@@ -100,7 +100,7 @@ layers = [
     "travelogue.render : travelogue.export",
     "travelogue.services : travelogue.templating",
     "travelogue.curation : travelogue.layout_engine : travelogue.layout_templates",
-    "travelogue.media : travelogue.vision : travelogue.llm",
+    "travelogue.media : travelogue.vision : travelogue.llm : travelogue.ai",
     "travelogue.config",
     "travelogue.util : travelogue.types : travelogue.layout_contract : travelogue.constants : travelogue.paths : travelogue.manifest_limits : travelogue.errors : travelogue.domain",
 ]
@@ -124,6 +124,10 @@ ignore_imports = [
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.aesthetic_score",
     # master CI debt · aesthetic MLLM relocation pending P2
     "travelogue.vision.aesthetic_mllm -> travelogue.curation.album_profile",
+    # ACP W1a · cover_engine not yet in layers (D-ACP-01a deferred to W1b); CAL title_art → render
+    "travelogue.cover_engine.title_art.engine -> travelogue.render.context",
+    # ACP W1a · cover_engine not yet in layers (D-ACP-01a deferred to W1b); CAL title_art → render
+    "travelogue.cover_engine.title_art.engine -> travelogue.render.cover_opening",
 ]
 
 [[tool.importlinter.contracts]]
@@ -143,4 +147,22 @@ forbidden_modules = [
 ignore_imports = [
     # Worker may compute aesthetic signals inline; full extraction pending P2.
     "travelogue.media.ingest_worker -> travelogue.curation.aesthetic_score",
+]
+
+[[tool.importlinter.contracts]]
+name = "AI capability layer must not import upward (ACP D-ACP-01)"
+type = "forbidden"
+source_modules = ["travelogue.ai"]
+forbidden_modules = [
+    "travelogue.curation",
+    "travelogue.layout_engine",
+    "travelogue.layout_templates",
+    "travelogue.cover_engine",
+    "travelogue.services",
+    "travelogue.render",
+    "travelogue.export",
+    "travelogue.web",
+    "travelogue.orchestrator",
+    "travelogue.cli",
+    "travelogue.desktop",
 ]
