@@ -2,6 +2,7 @@
 
 | 文件 | 说明 |
 |------|------|
+| [studio-ai-surface-v1-wireframe.html](./studio-ai-surface-v1-wireframe.html) | **Studio AI Surface V1** · 预览 Dock「AI」入口 · Sheet 三层 IA · **杂志文案解冻** · [PRD](../PRD-STUDIO-AI-SURFACE-V1.md) **v0.2.0 Conditional Go** · [七席+1 纪要](../acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md) |
 | [studio-shelf-ticket-seal-v1-wireframe.html](./studio-shelf-ticket-seal-v1-wireframe.html) | **书架票根 · 朱砂钤印落位 v1** · reelsalon seal-B · ①封面钤印 / ②替条码 / ③stub 水印 · **待产品审核** |
 | [studio-shelf-top-v1-wireframe.html](./studio-shelf-top-v1-wireframe.html) | **书架顶端收束 V1** · As-Is / A 弱快捷条 / B 内嵌芯片 / C 无快捷区 · **待产品审核** |
 | [studio-homepage-focus-v1-wireframe.html](./studio-homepage-focus-v1-wireframe.html) | **首页展台收焦 P0** · As-Is / 回访 / 空态 / 2K 定宽 · 文案层级 + 底栏三区 · **待产品审核** |

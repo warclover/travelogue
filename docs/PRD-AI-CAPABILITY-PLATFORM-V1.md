@@ -9,7 +9,7 @@
 | **主题代号** | 「编辑智能收编」— **ACP**（AI Capability Platform） |
 | **触发来源** | 2026-08-10 AI 能力现状架构评审：LLM/VLM 调用分散在 `services/llm_narrate.py`（叙事）、`cover_engine/title_art/route_c.py`（生图艺术字）、`vision/aesthetic_mllm.py`（审美 MLLM）三处，各自实现重试/缓存/降级，且已有明确的 import-linter 债务（`vision.aesthetic_mllm → curation.*` 三条 `ignore_imports`，标注「aesthetic MLLM relocation pending P2」）；同时 `AGENT-ARCHITECTURE.md` §17 设计的 Intent Brief / Layout Critic / Mosaic Judge 均未落地。本主题把「LLM 能力」收编为一个独立系统，并承接既往架构评审给出的 P0–P2 路线图 |
 | **前置条件** | 不推翻、不重做：[PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md)（L0/L1 铁律 · secrets）· [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)（服务商隔离）· [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md)（密钥落盘）· [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md)（默认关用户面门控） |
-| **关联文档** | [AGENT-ARCHITECTURE.md §17](./AGENT-ARCHITECTURE.md)（策展四子系统 LLM 增强策略，本主题的落地母文档）· [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md)（AIR · 用户面解冻，本主题为其提供解冻门槛数据）· [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（CAL · 路线 C 生图迁移方）· [PRD-COVER-TYPESETTING-CONTINUITY-V1.md](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md)（CTS · G-CTS-05 埋点依赖本平台）· `docs/aesthetic-alignment/`（PA-MLLM 迁移方）· `TECH-ARCHITECTURE.md` §18（分层约束） |
+| **关联文档** | [AGENT-ARCHITECTURE.md §17](./AGENT-ARCHITECTURE.md)（策展四子系统 LLM 增强策略，本主题的落地母文档）· [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md)（AIR · 用户面解冻，本主题为其提供解冻门槛数据）· [PRD-STUDIO-AI-SURFACE-V1.md](./PRD-STUDIO-AI-SURFACE-V1.md)（SAS · 预览 AI Sheet 用户发现面）· [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)（CAL · 路线 C 生图迁移方）· [PRD-COVER-TYPESETTING-CONTINUITY-V1.md](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md)（CTS · G-CTS-05 埋点依赖本平台）· `docs/aesthetic-alignment/`（PA-MLLM 迁移方）· `TECH-ARCHITECTURE.md` §18（分层约束） |
 | **评审记录** | [acceptance-records/acp-ai-capability-platform-v1-review-2026-08-10.md](./acceptance-records/acp-ai-capability-platform-v1-review-2026-08-10.md)（七席+典型用户 · 8/8 Conditional Go） |
 | **技术可行性核查** | 2026-08-10 开发负责人对照现网代码逐项核查（无代码改动），发现 §4/§5/§7/§8 多处方案与实际调用时机/性能预算不符，已回写本版（详见各节标注） |
 | **验收** | Kickoff 后拆 `ACCEPTANCE-AI-CAPABILITY-PLATFORM-V1.md`；本文 §10 为源 |
@@ -519,6 +519,7 @@ ai_capability:
 | **DLLM / WEA**（`PRD-DESKTOP-LLM-SETUP-V1` / `PRD-WRITING-ENGINE-API-HARDENING-V1`） | 无动作；`travelogue/llm/` Gateway 层保持原样被复用 | provider 隔离、secrets 落盘、ping 合同 |
 | **NAS**（`PRD-NO-AI-SURFACE-V1`） | 无动作；`aiSurfaceEnabled` 门控与本主题的 `ai_capability.enabled` 是两个独立开关（用户面 vs 工程能力面） | 默认关闭用户面 |
 | **AIR**（`PRD-AI-RETURN-V1`） | 提供 §5.5 解冻门槛计算器 + §5.2 观测面数据，回应 `OQ-AIR-01` | 三语气、渠道包内容、迟晒逻辑等业务决策不变 |
+| **SAS**（`PRD-STUDIO-AI-SURFACE-V1`） | 无强制动作；预览 AI Sheet 消费本平台 Intent/Critic 建议与门控语义 | 用户发现面、Dock/Sheet IA、杂志文案入口整合归 SAS；本主题不替代其 FE 合同 |
 | **CAL**（`PRD-COVER-CALLIGRAPHY-TITLE-V1`） | 路线 C 调用迁移进 `title_art_adapter.py`，接入统一预算/观测 | 白名单风格、OCR 校验规则、D-CAL-27 埋点定义不变 |
 | **CTS**（`PRD-COVER-TYPESETTING-CONTINUITY-V1`） | `G-CTS-05` 所需的埋点解读直接复用 §5.2 观测面，不用另起一套 | 排版契约、字数档、身份线打磨不变 |
 | **AA / PA-MLLM**（`docs/aesthetic-alignment/`） | 迁移进 `aesthetic_mllm_adapter.py`，顺带清偿 import-linter 债务 | Rubric、分层精选、校准公式不变 |
