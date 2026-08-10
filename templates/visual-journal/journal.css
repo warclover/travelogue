@@ -527,13 +527,13 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
 }
 
 /* folio-overlap 书名左侧竖排：贴纸为窄高条幅，须落在纸面栏内（--cover-folio-
-   margin 33%），不能溢出骑缝/照片区。 */
+   margin 13%），不能溢出骑缝/照片区。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
 html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
-  max-width: 16%;
+  max-width: 10%;
   max-height: 58%;
   object-fit: contain;
-  object-position: left center;
+  object-position: center center;
   z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
 }
 
@@ -756,12 +756,13 @@ body.longshot-capturing .cover-opening .trip-meta {
     --cover-veil-place-size: 11px;
     /* AI 封面一句话：再放大约两号；单行不换行，仍弱于书名 */
     --cover-veil-hook: clamp(1.32rem, 2.1vw, 1.55rem);
-    --cover-folio-margin: 33%;
-    --cover-folio-cut: 33%;
+    /* 纸面栏 ≈ 原 33% 的 40%，把更多宽度留给右页照片 */
+    --cover-folio-margin: 13%;
+    --cover-folio-cut: 13%;
     --cover-folio-paper: #f4f1ea;
     --cover-folio-panel-width: min(48%, 520px);
-    /* 左侧竖排书名：字号略收，避免竖列过「胖」占满纸面栏 */
-    --cover-folio-title-size: clamp(1.85rem, 4.2vw, 3.1rem);
+    /* 窄脊竖排：字号随栏宽再收一档 */
+    --cover-folio-title-size: clamp(1.55rem, 3.2vw, 2.45rem);
     --cover-folio-ghost: rgba(178, 58, 47, 0.35);
     --cover-folio-fade: linear-gradient(
       100deg,
@@ -1117,14 +1118,14 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__place {
     position: absolute;
     left: 0;
-    top: 32px;
+    top: 28px;
     z-index: 7;
     writing-mode: vertical-rl;
     display: block;
-    padding: 0 22px;
+    padding: 0 clamp(6px, 0.9vw, 12px);
     margin: 0;
     font-size: 10px;
-    letter-spacing: 0.36em;
+    letter-spacing: 0.28em;
     color: #8a847c;
     gap: 0;
     pointer-events: auto;
@@ -1140,10 +1141,10 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__panel::before {
     content: "";
     position: absolute;
-    left: clamp(28px, 3.2vw, 40px);
+    left: clamp(10px, 1.2vw, 18px);
     top: auto;
     bottom: calc(clamp(44px, 5.5vh, 64px) + 2.1em);
-    width: 42px;
+    width: 28px;
     height: 2px;
     background: var(--cover-accent-deep);
     z-index: 6;
@@ -1155,14 +1156,14 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
-  /* 左侧纸面栏竖排书名（对页感：字在纸上，图在右页） */
+  /* 左侧纸面栏竖排书名：居中于窄脊，把横向留给右页照片 */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title {
     position: absolute;
-    left: clamp(28px, 4.2vw, 56px);
+    left: calc(var(--cover-folio-margin) / 2);
     right: auto;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translate(-50%, -50%);
     /* 显式高度给竖排换栏一个稳定基准（同 cameo-aperture 教训） */
     width: auto;
     height: min(58vh, 520px);
@@ -1171,8 +1172,8 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: #141312;
     font-size: var(--cover-folio-title-size);
     font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: 0.18em;
+    line-height: 1.15;
+    letter-spacing: 0.16em;
     text-shadow: none;
     white-space: nowrap;
     writing-mode: vertical-rl;
@@ -1197,7 +1198,7 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook {
     position: absolute;
-    left: clamp(28px, 3.2vw, 40px);
+    left: clamp(10px, 1.2vw, 18px);
     bottom: clamp(44px, 5.5vh, 64px);
     width: max-content;
     max-width: min(56em, calc(100vw - 80px));
@@ -1219,7 +1220,7 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__brand {
     position: absolute;
-    left: clamp(28px, 3.2vw, 40px);
+    left: clamp(10px, 1.2vw, 18px);
     bottom: clamp(10px, 2vh, 22px);
     margin: 0;
     color: rgba(111, 106, 99, 0.7);

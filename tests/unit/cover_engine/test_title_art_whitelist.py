@@ -172,12 +172,12 @@ def test_assume_paper_bg_flag(style_id: str, expected: bool) -> None:
 
 
 def test_folio_overlap_rect_stays_within_paper_column() -> None:
-    # --cover-folio-margin: 33%——纸面栏止于此，主候选须留出安全边距，
+    # --cover-folio-margin: 13%——纸面栏止于此，主候选须留出安全边距，
     # 不能碰到骑缝渐变/照片区（OQ-CAL-09 的阻断根因）。
     preset = placement_preset("folio-overlap")
     assert preset is not None
     assert preset.rect["x"] >= 0.0
-    assert preset.rect["x"] + preset.rect["w"] <= 0.33
+    assert preset.rect["x"] + preset.rect["w"] <= 0.13
 
 
 def test_folio_overlap_fallback_has_conditional_occupant_and_larger_area() -> None:
@@ -186,7 +186,7 @@ def test_folio_overlap_fallback_has_conditional_occupant_and_larger_area() -> No
     assert primary is not None
     assert fallback.conditional_occupant == "folio_place_present"
     assert fallback.assume_paper_bg is True
-    assert fallback.rect["x"] + fallback.rect["w"] <= 0.33
+    assert fallback.rect["x"] + fallback.rect["w"] <= 0.13
     # 备选（无地点标签占用时可用）覆盖的纸面栏纵向范围应比主候选更宽松。
     assert fallback.rect["h"] > primary.rect["h"]
 

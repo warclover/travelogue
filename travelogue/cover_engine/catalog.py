@@ -60,7 +60,7 @@ def bootstrap_catalog() -> None:
                 prefer={"right_weighted": True},
                 avoid={"subject_left_30": True},
                 text_safe_regions=[
-                    {"x": 0.0, "y": 0.0, "w": 0.33, "h": 1.0},
+                    {"x": 0.0, "y": 0.0, "w": 0.13, "h": 1.0},
                     {"x": 0.0, "y": 0.58, "w": 0.7, "h": 0.2},
                 ],
                 title_max_lines=2,

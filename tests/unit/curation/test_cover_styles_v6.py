@@ -234,7 +234,7 @@ def test_journal_css_v6_tokens_and_skins() -> None:
         "--cover-veil-fog-height",
         "--cover-veil-glow",
         "--cover-band-center: 63%",
-        "--cover-folio-margin: 33%",
+        "--cover-folio-margin: 13%",
         "--cover-folio-fade",
         "--cover-cameo-ring",
         "--cover-cameo-r",

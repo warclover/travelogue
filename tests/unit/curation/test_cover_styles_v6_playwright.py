@@ -258,4 +258,4 @@ def test_cover_styles_v6_css_tokens_present() -> None:
         assert token in css, f"missing {token}"
     assert "--cover-band-center: 63%" in css or "--cover-band-center:63%" in css.replace(" ", "")
     assert "--cover-veil-fog-height: 70%" in css or "--cover-veil-fog-height:70%" in css.replace(" ", "")
-    assert "--cover-folio-margin: 33%" in css or "--cover-folio-margin:33%" in css.replace(" ", "")
+    assert "--cover-folio-margin: 13%" in css or "--cover-folio-margin:13%" in css.replace(" ", "")
