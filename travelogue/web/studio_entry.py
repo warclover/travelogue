@@ -129,6 +129,36 @@ def build_intent_summary(trip: dict) -> dict[str, Any]:
     }
 
 
+def build_title_art_ui(trip: dict) -> dict[str, Any]:
+    """SAS · AI Sheet 装帧标题状态（读 ``meta.titleArt``，无工程名）。"""
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    ta = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
+    if not ta or not ta.get("enabled"):
+        return {
+            "ready": False,
+            "stale": False,
+            "engine": None,
+            "statusLabel": "尚未生成",
+        }
+    engine = str(ta.get("engine") or "").strip()
+    engine_label = (
+        "AI 手写体" if engine == "diffusion-fixed-prompt-v1" else "字库合成"
+    )
+    stale = bool(ta.get("stale"))
+    if stale:
+        status = f"已过期 · {engine_label}"
+    else:
+        status = f"已生成 · {engine_label}"
+        if ta.get("fallbackFrom"):
+            status += "（已回退字库）"
+    return {
+        "ready": True,
+        "stale": stale,
+        "engine": engine or None,
+        "statusLabel": status,
+    }
+
+
 def build_intent_brief_ui(trip: dict) -> dict[str, Any]:
     """SAS W2 · user-facing Intent Brief chip (no Agent / raw JSON names)."""
     intent = trip.get("intent") if isinstance(trip.get("intent"), dict) else {}
@@ -231,6 +261,7 @@ def build_entry(
         "peakScreenId": peak,
         "intentSummary": build_intent_summary(trip),
         "intentBriefUi": build_intent_brief_ui(trip),
+        "titleArtUi": build_title_art_ui(trip),
         "pipelineStatus": pipeline.get("status"),
         "g1Pending": pipeline.get("status") == "structure_draft",
         "derivativesStatus": str(pipeline.get("derivativesStatus") or "") or None,

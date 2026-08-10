@@ -608,23 +608,23 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-t
   /* 子项绝对定位后不再撑宽，显式给题签区宽度 */
   width: var(--cover-veil-panel-max);
   max-width: var(--cover-veil-panel-max);
-  min-height: clamp(9.5rem, 24vh, 13.5rem);
+  min-height: clamp(10.5rem, 26vh, 15rem);
   padding-top: clamp(20px, 3vh, 32px);
-  padding-bottom: clamp(32px, 5vh, 52px);
+  padding-bottom: clamp(40px, 6.2vh, 64px);
 }
 
 html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel,
 html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__title-art--panel {
   position: absolute;
-  left: clamp(36px, 5.4vw, 64px);
+  left: clamp(40px, 5.8vw, 72px);
   right: auto;
-  /* 在「扣掉底 padding + hook」后的题签区内垂直居中，避免贴顶或压住 hook */
-  top: calc((100% - clamp(32px, 5vh, 52px) - 1.7em) / 2);
+  /* 扣掉底 padding + 单行 hook，避免艺术字压住 AI 一句话 */
+  top: calc((100% - clamp(40px, 6.2vh, 64px) - 1.35em) / 2);
   bottom: auto;
   transform: translateY(-50%);
   margin: 0;
   width: auto;
-  max-width: calc(100% - 2 * clamp(36px, 5.4vw, 64px));
+  max-width: calc(100% - 2 * clamp(40px, 5.8vw, 72px));
 }
 
 html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"]:not(:has(.cover-opening__hook)) .cover-opening__title-art--panel,
@@ -635,9 +635,15 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-t
 html[data-layout="web"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook,
 html[data-layout="auto"] .cover-opening[data-cover-opening="veil-footer"][data-title-art="on"] .cover-opening__hook {
   position: absolute;
-  left: clamp(36px, 5.4vw, 64px);
-  bottom: clamp(32px, 5vh, 52px);
+  left: clamp(40px, 5.8vw, 72px);
+  right: clamp(40px, 5.8vw, 72px);
+  bottom: clamp(40px, 6.2vh, 64px);
   margin: 0;
+  width: auto;
+  max-width: none;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：只在贴纸开启（hook 也走
@@ -743,10 +749,13 @@ body.longshot-capturing .cover-opening .trip-meta {
       rgba(255, 176, 104, 0.30),
       rgba(255, 176, 104, 0) 70%
     );
-    --cover-veil-panel-max: min(520px, 56%);
+    /* 加宽题签/AI 文案可用宽度（单行完整显示，不做省略） */
+    --cover-veil-panel-max: min(1100px, 92%);
+    --cover-veil-hook-max: min(56em, calc(100vw - 96px));
     --cover-veil-title-size: clamp(2.1rem, 6.6vw, 3.6rem);
     --cover-veil-place-size: 11px;
-    --cover-veil-hook: 0.95rem;
+    /* AI 封面一句话：再放大约两号；单行不换行，仍弱于书名 */
+    --cover-veil-hook: clamp(1.32rem, 2.1vw, 1.55rem);
     --cover-folio-margin: 33%;
     --cover-folio-cut: 33%;
     --cover-folio-paper: #f4f1ea;
@@ -897,8 +906,10 @@ body.longshot-capturing .cover-opening .trip-meta {
     min-width: 0;
     max-height: none;
     margin: 0;
-    padding: 0 clamp(36px, 5.4vw, 64px) clamp(32px, 5vh, 52px);
-    overflow: hidden;
+    /* 略抬底边距，给 AI 一句话更多呼吸，避开底栏工具条 */
+    padding: 0 clamp(40px, 5.8vw, 72px) clamp(40px, 6.2vh, 64px);
+    /* visible：单行 AI 文案可完整展开，不被面板裁切 */
+    overflow: visible;
     text-align: left;
     color: #f5f3f0;
     background: transparent;
@@ -979,17 +990,23 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening__hook {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: block;
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: clip;
+    -webkit-line-clamp: unset;
+    font-family: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
     font-size: var(--cover-veil-hook);
-    line-height: 1.7;
-    max-width: 17em;
-    margin: 0;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    width: max-content;
+    max-width: var(--cover-veil-hook-max);
+    margin: 14px 0 0;
     padding: 0;
     text-align: left;
-    color: rgba(245, 243, 240, 0.7);
+    color: rgba(245, 243, 240, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 28px rgba(0, 0, 0, 0.35);
   }
 
   html[data-layout="web"] .cover-opening__hook .breath-highlight__unit,
@@ -1219,16 +1236,20 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook {
     position: absolute;
     left: clamp(28px, 3.2vw, 40px);
-    bottom: clamp(40px, 5vh, 56px);
-    width: min(28%, 280px);
+    bottom: clamp(44px, 5.5vh, 64px);
+    width: max-content;
+    max-width: min(56em, calc(100vw - 80px));
     margin: 0;
-    color: #6f6a63;
-    font-size: 0.92rem;
-    max-width: none;
+    color: #4f4a44;
+    font-size: 1.32rem;
+    line-height: 1.35;
     pointer-events: auto;
     display: block;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: unset;
+    text-shadow: none;
   }
 
   /* 装帧身份线前封回声（D-SFI-13 扩容，2026-08-09）：钉在纸面栏 hook 下方
@@ -1348,16 +1369,20 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="band-cut"] .cover-opening__hook {
     position: absolute;
-    left: min(72vw, 720px);
-    top: -34px;
+    left: min(68vw, 680px);
+    right: clamp(24px, 3vw, 40px);
+    top: -40px;
     margin: 0;
-    font-size: 0.78rem;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.82);
-    max-width: 22ch;
+    font-size: 1.22rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.92);
+    width: auto;
+    max-width: none;
     text-align: left;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.85);
     white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="band-cut"]:not(:has(.cover-opening__hook)) .cover-opening__panel,
@@ -1623,12 +1648,17 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="type-monument"] .cover-opening__hook {
-    max-width: 34ch;
-    color: rgba(245, 243, 240, 0.55);
+    width: max-content;
+    max-width: min(56em, calc(100vw - 96px));
+    color: rgba(245, 243, 240, 0.88);
     align-self: flex-end;
     text-align: right;
-    font-size: 0.85rem;
-    letter-spacing: 0.12em;
+    font-size: 1.32rem;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
@@ -1753,12 +1783,19 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="scroll-head"] .cover-opening__hook {
     position: absolute;
-    left: 8%;
-    bottom: 9%;
-    max-width: 42%;
-    color: #4b4238;
+    left: 7%;
+    right: 7%;
+    bottom: 10%;
+    width: auto;
+    max-width: none;
+    color: #3a332c;
     font-family: var(--cover-font-title);
-    font-size: 13px;
+    font-size: 20px;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是右侧窄列
@@ -2027,15 +2064,19 @@ body.longshot-capturing .cover-opening .trip-meta {
 
   html[data-layout="web"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="horizon-split"] .cover-opening__hook {
-    color: #8a8378;
-    max-width: 28ch;
-    font-size: 0.78rem;
-    letter-spacing: 0.18em;
+    color: #5c564e;
+    width: max-content;
+    max-width: min(56em, calc(100vw - 120px));
+    font-size: 1.22rem;
+    letter-spacing: 0.06em;
     text-align: right;
-    text-transform: uppercase;
-    line-height: 1.7;
+    text-transform: none;
+    line-height: 1.35;
     flex: 0 0 auto;
-    padding-bottom: 6px;
+    padding-bottom: 8px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   /* 装帧身份线前封回声（D-CAL-26 扩展，2026-08-09）：panel 是
@@ -2204,19 +2245,23 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__hook {
     position: absolute;
+    left: clamp(34px, 5vw, 62px);
     right: clamp(34px, 5vw, 62px);
-    bottom: clamp(30px, 7vh, 54px);
+    bottom: clamp(36px, 7.5vh, 60px);
     margin: 0;
-    width: min(38%, 300px);
+    width: auto;
     text-align: right;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: clamp(11px, 1.15vw, 13px);
-    letter-spacing: 0.14em;
-    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(16px, 1.7vw, 20px);
+    letter-spacing: 0.04em;
+    line-height: 1.35;
     max-width: none;
     z-index: 6;
     display: block;
-    -webkit-line-clamp: 4;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: unset;
   }
 
   /* —— diptych-seam · 双联断字 —— */
@@ -2336,12 +2381,18 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="web"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="diptych-seam"] .cover-opening__hook {
     position: absolute;
-    right: clamp(20px, 3vw, 34px);
-    bottom: 9%;
-    width: min(26%, 210px);
+    left: clamp(24px, 3.4vw, 40px);
+    right: clamp(24px, 3.4vw, 40px);
+    bottom: 10%;
+    width: auto;
     margin: 0;
     text-align: right;
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.32rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
     z-index: 7;
   }
 
@@ -2607,13 +2658,16 @@ body.longshot-capturing .cover-opening .trip-meta {
     margin-top: auto;
     flex-shrink: 0;
     text-align: left;
-    font-size: 0.78rem;
-    line-height: 1.42;
-    color: rgba(245, 243, 240, 0.75);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 1.22rem;
+    line-height: 1.35;
+    color: rgba(245, 243, 240, 0.9);
+    display: block;
+    width: max-content;
+    max-width: min(56em, calc(100% - 24px));
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: unset;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"],
@@ -2681,10 +2735,14 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="magazine-head"] .cover-opening__hook {
     text-align: center;
     color: #6f6a63;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 1.32rem;
+    display: block;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: unset;
+    width: max-content;
+    max-width: min(56em, calc(100vw - 64px));
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="magazine-head"] .cover-opening__place,
@@ -2721,12 +2779,29 @@ body.longshot-capturing .cover-opening .trip-meta {
 }
 
 .cover-closing__text {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 2.2vw, 1.375rem);
-  line-height: 1.55;
-  max-width: 28em;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(1.18rem, 2.5vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  max-width: min(40em, 92%);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* 盖过通用 .epilogue { max-width:22em; text-align:center }，避免封底 AI 文案过早换行 */
+.cover-closing .cover-closing__text.epilogue,
+.cover-closing__text.epilogue {
+  text-align: left;
+  max-width: min(40em, 92%);
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: clamp(1.18rem, 2.5vw, 1.55rem);
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .cover-closing__title {
@@ -2877,15 +2952,22 @@ html[data-preview-toolbar="on"] .cover-closing__hint[data-block="closing-degrade
     max-width: min(var(--page-width), 100%);
     margin-left: auto;
     margin-right: auto;
-    padding: 28px max(24px, 5vw) calc(32px + var(--safe-bottom));
+    /* 更宽可读区：左右留白略收，底边抬高避开工具条 */
+    padding: 40px max(40px, 8vw) calc(44px + var(--safe-bottom));
     text-align: left;
     color: #fff;
     background: linear-gradient(
       to top,
-      rgba(26, 25, 24, 0.94) 0%,
-      rgba(26, 25, 24, 0.62) 52%,
+      rgba(26, 25, 24, 0.96) 0%,
+      rgba(26, 25, 24, 0.72) 48%,
+      rgba(26, 25, 24, 0.28) 78%,
       transparent 100%
     );
+  }
+
+  html[data-layout="web"] .cover-closing .cover-closing__text.epilogue,
+  html[data-layout="auto"] .cover-closing .cover-closing__text.epilogue {
+    max-width: min(42em, 88%);
   }
 
   html[data-export="share"] .cover-closing__end,

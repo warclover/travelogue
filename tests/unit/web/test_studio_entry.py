@@ -134,6 +134,50 @@ def test_build_entry_cover_opening_style_defaults_veil_footer() -> None:
     assert entry["coverOpeningStyle"] == "veil-footer"
 
 
+def test_build_entry_title_art_ui_from_meta() -> None:
+    from travelogue.web.studio_entry import build_title_art_ui
+
+    assert build_title_art_ui({})["statusLabel"] == "尚未生成"
+    assert build_title_art_ui({"meta": {}})["ready"] is False
+
+    ready = build_title_art_ui(
+        {
+            "meta": {
+                "titleArt": {
+                    "enabled": True,
+                    "engine": "clean-pipeline-v1",
+                    "stale": False,
+                }
+            }
+        }
+    )
+    assert ready["ready"] is True
+    assert ready["statusLabel"] == "已生成 · 字库合成"
+
+    route_c = build_title_art_ui(
+        {
+            "meta": {
+                "titleArt": {
+                    "enabled": True,
+                    "engine": "diffusion-fixed-prompt-v1",
+                    "stale": False,
+                }
+            }
+        }
+    )
+    assert "AI 手写体" in route_c["statusLabel"]
+
+    entry = build_entry(
+        {
+            "meta": {
+                "titleArt": {"enabled": True, "engine": "clean-pipeline-v1"}
+            }
+        },
+        "demo-trip",
+    )
+    assert entry["titleArtUi"]["ready"] is True
+
+
 def test_build_entry_includes_pipeline_and_chapters():
     trip = {
         "pipeline": {"status": "structure_draft"},

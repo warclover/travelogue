@@ -1203,12 +1203,26 @@ html[data-longshot-density="compact"] .cover-opening__panel {
 
 html[data-longshot-density="compact"] .hook-line,
 html[data-longshot-density="compact"] .cover-opening__hook {
-  font-size: 14px;
-  line-height: 1.35;
-  max-height: 3.2em;
-  overflow: hidden;
-  margin-bottom: 4px;
+  font-size: 19px;
+  line-height: 1.3;
+  max-height: none;
+  width: max-content;
+  max-width: min(56em, calc(100% - 24px));
+  white-space: nowrap;
+  text-overflow: clip;
+  overflow: visible;
+  margin-bottom: 6px;
   padding-bottom: 0;
+}
+
+html[data-longshot-density="compact"] .cover-closing__text,
+html[data-longshot-density="compact"] .cover-closing__text.epilogue {
+  font-size: 17px;
+  line-height: 1.5;
+  max-width: min(40em, 92%);
+  text-align: left;
+  margin: 0 0 10px;
+  padding: 0;
 }
 
 html[data-longshot-density="compact"] .longshot-boundary-footer[data-block="longshot-boundary-footer"],

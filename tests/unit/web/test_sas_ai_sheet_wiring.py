@@ -30,6 +30,8 @@ def test_ai_sheet_module_exists_and_exports_mount() -> None:
     assert "allowWhenSurfaceOff" in text
     assert "优先 AI 手写体" in text
     assert "不自动消耗额度" in text
+    assert "titleArtUi" in text
+    assert "已生成 · " in text
 
 
 def test_init_v3_mounts_ai_before_export_divider() -> None:

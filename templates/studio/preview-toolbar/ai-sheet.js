@@ -364,14 +364,25 @@ export function mountAiSurface(root, tripId, opts) {
         '<p class="preview-ai-sheet__hint">勾选只表示优先走手写体，不会自动开跑。未通过自动用字库 · 约十几秒。</p>'
       : '<p class="preview-ai-sheet__hint">将使用字库路线生成装帧标题。</p>';
 
+    var taUi = (entryCache && entryCache.titleArtUi) || {};
+    var statusLabel =
+      typeof taUi.statusLabel === "string" && taUi.statusLabel
+        ? taUi.statusLabel
+        : "尚未生成";
+    var btnLabel = taUi.ready ? "重新生成" : "生成装帧标题";
+
     return (
       '<div class="preview-ai-sheet__block" data-ai-title-art-block>' +
       "<h3>装帧标题</h3>" +
       '<p class="preview-ai-sheet__desc">点一次才生成。勾选只表示优先走 AI 手写体，不会自动开跑。</p>' +
       routeCRow +
       '<div class="preview-ai-sheet__row">' +
-      '<span class="preview-ai-sheet__status" data-ai-title-art-status>尚未生成</span>' +
-      '<button type="button" class="preview-ai-sheet__btn" data-ai-title-art-btn>生成装帧标题</button>' +
+      '<span class="preview-ai-sheet__status" data-ai-title-art-status>' +
+      escapeHtml(statusLabel) +
+      "</span>" +
+      '<button type="button" class="preview-ai-sheet__btn" data-ai-title-art-btn>' +
+      escapeHtml(btnLabel) +
+      "</button>" +
       "</div>" +
       "</div>"
     );
@@ -835,7 +846,24 @@ export function mountAiSurface(root, tripId, opts) {
             });
             return;
           }
-          if (statusEl) statusEl.textContent = "已有结果";
+          var engineLabel =
+            res.body.engine === "diffusion-fixed-prompt-v1"
+              ? "AI 手写体"
+              : "字库合成";
+          var readyLabel = "已生成 · " + engineLabel;
+          if (res.body.fallbackFrom) {
+            readyLabel += "（已回退字库）";
+          }
+          if (statusEl) statusEl.textContent = readyLabel;
+          artBtn.textContent = "重新生成";
+          // 预览整页重载后靠 entry.titleArtUi 回填；此处先写入 cache 防中途 re-render
+          entryCache = entryCache || {};
+          entryCache.titleArtUi = {
+            ready: true,
+            stale: false,
+            engine: res.body.engine || null,
+            statusLabel: readyLabel,
+          };
           showToolbarToast("装帧标题已更新");
           trackResult("title_art", true, {
             latency_ms: Date.now() - started,
