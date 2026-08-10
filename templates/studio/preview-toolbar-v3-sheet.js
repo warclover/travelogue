@@ -1094,6 +1094,10 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       if (root._chapterPanel && root._chapterPanel.isOpen()) {
         root._chapterPanel.close();
       }
+      // SAS · D-SAS-04 · 与 AI Sheet 互斥
+      if (root._aiSheet && root._aiSheet.isOpen && root._aiSheet.isOpen()) {
+        root._aiSheet.close("refine");
+      }
       open(null, { source: "dock" });
     });
   }

@@ -802,7 +802,8 @@ function wire(root) {
 export function openLlmSettings(opts) {
   opts = opts || {};
   // NAS · FE-NAS-11：默认面所有 source 早退（含 deeplink / fail / card）
-  if (!isAiSurfaceEnabled()) return;
+  // SAS · D-SAS-07：AI Sheet「本机连接」可在未开闸时预配 Key（allowWhenSurfaceOff）
+  if (!isAiSurfaceEnabled() && !opts.allowWhenSurfaceOff) return;
   _source = opts.source || "settings";
   _onChange = opts.onChange || null;
   var root = ensureRoot();

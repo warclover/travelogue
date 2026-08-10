@@ -13,6 +13,7 @@ import {
   initDockTooltips,
   initDockScrollFade,
 } from "./dock.js";
+import { mountAiSurface } from "./ai-sheet.js";
 import { isSharePreview } from "./share.js";
 import {
   ensurePreviewRefineDefault,
@@ -162,6 +163,9 @@ export function initToolbarV3(root, tripId) {
     beforeOpen: function (done) {
       // MF-HELP-06 / AC-16 · 精修面板开着 → 先关面板保模式，再开帮助
       var sheet = root._sheet;
+      if (root._aiSheet && root._aiSheet.isOpen && root._aiSheet.isOpen()) {
+        root._aiSheet.close("help");
+      }
       if (root._chapterPanel && root._chapterPanel.isOpen()) {
         root._chapterPanel.close();
       }
@@ -733,6 +737,9 @@ export function initToolbarV3(root, tripId) {
     exportDivider.className = "preview-toolbar__dock-divider";
     exportDivider.setAttribute("aria-hidden", "true");
     actions.appendChild(exportDivider);
+
+    // SAS · D-SAS-02：AI 插在精修之后、导出区之前（divider / 文件夹 / 导出之前）
+    mountAiSurface(root, tripId, { insertBefore: exportDivider });
 
     // 打开画册文件夹（常驻；成功面 Task Dock 仍保留「在文件夹中显示」）
     var folderBtn = document.createElement("button");
