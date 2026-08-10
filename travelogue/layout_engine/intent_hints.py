@@ -129,7 +129,23 @@ def peak_chapter_hints(user_notes: str, total_chapters: int) -> set[int]:
     return hints
 
 
+def _intent_brief(trip: dict) -> dict[str, Any]:
+    intent = trip.get("intent") if isinstance(trip.get("intent"), dict) else {}
+    brief = intent.get("intentBrief")
+    return brief if isinstance(brief, dict) else {}
+
+
 def peak_chapter_hints_for_trip(trip: dict, total_chapters: int) -> set[int]:
+    """Prefer ``intent.intentBrief.layoutHints.peakChapterIndex`` when present (ACP W2)."""
+    brief = _intent_brief(trip)
+    layout = brief.get("layoutHints") if isinstance(brief.get("layoutHints"), dict) else {}
+    peak_idx = layout.get("peakChapterIndex")
+    try:
+        idx = int(peak_idx) if peak_idx is not None else None
+    except (TypeError, ValueError):
+        idx = None
+    if idx is not None and 1 <= idx <= total_chapters:
+        return {idx}
     return peak_chapter_hints(resolve_user_notes(trip), total_chapters)
 
 
@@ -165,6 +181,28 @@ def build_intent_hints(trip: dict) -> dict[str, Any]:
 
     user_notes = resolve_user_notes(trip)
     keywords = extract_user_notes_keywords(user_notes)
+    brief = _intent_brief(trip)
+    # ACP W2 · Intent Brief keywords enrich regex tokens (do not replace when empty).
+    if brief.get("source") in ("llm", "cache"):
+        extra: list[str] = []
+        title_hint = brief.get("titleHint")
+        if isinstance(title_hint, str) and title_hint.strip():
+            extra.extend(extract_user_notes_keywords(title_hint, max_items=4))
+        for peak in brief.get("peakMoments") or []:
+            if isinstance(peak, str) and peak.strip():
+                extra.extend(extract_user_notes_keywords(peak, max_items=3))
+        if extra:
+            merged: list[str] = []
+            seen: set[str] = set()
+            for tok in [*keywords, *extra]:
+                key = _normalize(tok)
+                if key in seen:
+                    continue
+                seen.add(key)
+                merged.append(tok)
+                if len(merged) >= 12:
+                    break
+            keywords = merged
     if keywords:
         hints["userNotesKeywords"] = keywords
     else:
@@ -192,6 +230,19 @@ def build_intent_hints(trip: dict) -> dict[str, Any]:
     else:
         for key in ("layoutDensity", "preferMosaic", "nineQuotaScale"):
             hints.pop(key, None)
+
+    # ACP W2 · layoutHints.preferMosaic overrides density preferMosaic when set.
+    layout_b = brief.get("layoutHints") if isinstance(brief.get("layoutHints"), dict) else {}
+    if brief.get("source") in ("llm", "cache") and layout_b.get("preferMosaic") is not None:
+        hints["preferMosaic"] = bool(layout_b.get("preferMosaic"))
+    if brief.get("source") in ("llm", "cache") and layout_b.get("arc"):
+        hints["intentBriefArc"] = str(layout_b.get("arc"))
+    cull = brief.get("cullPolicy") if isinstance(brief.get("cullPolicy"), dict) else {}
+    if brief.get("source") in ("llm", "cache") and cull:
+        hints["intentBriefCullPolicy"] = {
+            k: cull[k] for k in ("dropScreenshots", "keepEmotionalBlur", "keepPortraits", "foodPriority")
+            if cull.get(k) is not None
+        }
 
     return hints
 

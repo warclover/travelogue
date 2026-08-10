@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 能力观测 · Travelogue Studio</title>
+  <style>
+    body { font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Segoe UI", system-ui, sans-serif; margin: 24px; max-width: 920px; color: #1a2f28; }
+    h1 { font-size: 1.35rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th, td { border: 1px solid #d8e5df; padding: 8px 10px; text-align: left; }
+    th { background: #eef5f1; }
+    .muted { color: #5a6b63; font-size: 13px; }
+    .banner { background: #f4f8f6; border: 1px solid #d8e5df; padding: 14px 16px; border-radius: 6px; margin: 16px 0; }
+    button { margin-right: 8px; padding: 6px 14px; cursor: pointer; }
+    #status { margin-top: 12px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>AI 能力观测（ACP Ops）</h1>
+  <p class="muted">
+    进程内汇总：gate / budget / agent 调用次数与延迟。不进主链 UI。
+    <a href="/templates-admin">← 模板治理</a>
+    · <a href="/lse-flags-admin">LSE 开关</a>
+  </p>
+  <div class="banner">
+    <p>数据源：<code>GET /__travelogue/ai/ops-summary</code>（本机进程内存，重启清空）。</p>
+    <p class="muted">Intent Brief 手动触发：<code>POST /__travelogue/trips/{tripId}/ai/intent-brief</code></p>
+  </div>
+  <p>
+    <button type="button" id="btn-refresh">刷新</button>
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Agent</th>
+        <th>调用</th>
+        <th>成功</th>
+        <th>缓存</th>
+        <th>降级</th>
+        <th>平均延迟 ms</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      <tr><td colspan="6" class="muted">加载中…</td></tr>
+    </tbody>
+  </table>
+  <p id="status" class="muted"></p>
+  <script>
+    function tokenHeaders() {
+      const meta = document.querySelector('meta[name="studio-token"]');
+      const t = meta && meta.getAttribute("content");
+      return t ? { "X-Studio-Token": t } : {};
+    }
+    async function refresh() {
+      const status = document.getElementById("status");
+      const rows = document.getElementById("rows");
+      status.textContent = "加载中…";
+      try {
+        const res = await fetch("/__travelogue/ai/ops-summary", { headers: tokenHeaders() });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error((data && data.error) || ("HTTP " + res.status));
+        const agents = data.agents || {};
+        const keys = Object.keys(agents).sort();
+        if (!keys.length) {
+          rows.innerHTML = '<tr><td colspan="6" class="muted">尚无调用记录</td></tr>';
+        } else {
+          rows.innerHTML = keys.map((k) => {
+            const a = agents[k];
+            return `<tr>
+              <td><code>${k}</code></td>
+              <td>${a.calls ?? 0}</td>
+              <td>${a.ok ?? 0}</td>
+              <td>${a.cache ?? 0}</td>
+              <td>${a.fallback ?? 0}</td>
+              <td>${a.avgLatencyMs ?? 0}</td>
+            </tr>`;
+          }).join("");
+        }
+        status.textContent = "已更新 · " + new Date().toLocaleTimeString();
+      } catch (e) {
+        status.textContent = "失败：" + (e && e.message ? e.message : e);
+      }
+    }
+    document.getElementById("btn-refresh").addEventListener("click", refresh);
+    refresh();
+  </script>
+</body>
+</html>

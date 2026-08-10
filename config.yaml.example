@@ -42,6 +42,8 @@ ai_capability:
   enabled: false
   max_calls_per_trip: 12
   timeout_sec: 8
+  intent_brief:
+    enabled: false                # W2 · Intent Brief 灰度；默认关保证 NR
   # cache:
   #   dir: .cache/ai
 

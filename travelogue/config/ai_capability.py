@@ -16,6 +16,13 @@ class AiCapabilityCacheConfig:
 
 
 @dataclass
+class IntentBriefConfig:
+    """Intent Brief Agent feature flag (W2 · default off for NR)."""
+
+    enabled: bool = False
+
+
+@dataclass
 class AiCapabilityConfig:
     """Engineering capability switch (independent of ``studio.ai_surface_enabled``).
 
@@ -28,11 +35,18 @@ class AiCapabilityConfig:
     max_calls_per_trip: int = 12
     timeout_sec: float = 8.0
     cache: AiCapabilityCacheConfig = field(default_factory=AiCapabilityCacheConfig)
+    intent_brief: IntentBriefConfig = field(default_factory=IntentBriefConfig)
 
 
 def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityConfig:
     raw = raw or {}
     cache_raw = raw.get("cache") if isinstance(raw.get("cache"), dict) else {}
+    ib_raw = (
+        raw.get("intent_brief")
+        if isinstance(raw.get("intent_brief"), dict)
+        else raw.get("intentBrief")
+    )
+    ib_raw = ib_raw if isinstance(ib_raw, dict) else {}
     timeout_raw = raw.get("timeout_sec", raw.get("timeoutSec", 8.0))
     try:
         timeout_sec = float(timeout_raw)
@@ -46,5 +60,8 @@ def ai_capability_config_from_dict(raw: dict[str, Any] | None) -> AiCapabilityCo
         timeout_sec=max(0.5, timeout_sec),
         cache=AiCapabilityCacheConfig(
             dir=str(cache_raw.get("dir") or ".cache/ai"),
+        ),
+        intent_brief=IntentBriefConfig(
+            enabled=cfg_bool(ib_raw, "enabled", "enabled", False),
         ),
     )
