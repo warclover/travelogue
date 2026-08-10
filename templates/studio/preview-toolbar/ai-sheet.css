@@ -5,6 +5,23 @@
   box-shadow: inset 0 0 0 1px rgba(232, 245, 239, 0.45);
 }
 
+.preview-toolbar__dock-btn--ai {
+  position: relative;
+}
+
+.preview-toolbar__dock-btn--ai.has-badge::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e07a2f;
+  box-shadow: 0 0 0 2px rgba(20, 17, 13, 0.35);
+  pointer-events: none;
+}
+
 .preview-ai-sheet-root {
   position: fixed;
   /* 从工具栏下方起，避免遮罩挡住 Dock（精修/AI 互斥需仍可点 Dock） */
@@ -209,6 +226,46 @@
   font-size: 12px;
 }
 
+.preview-ai-sheet__link-btn {
+  border: 0;
+  background: transparent;
+  color: #3d6b5a;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.preview-ai-sheet__sug {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f3f4f2;
+  border: 1px solid #d7ddd8;
+}
+
+.preview-ai-sheet__sug-meta {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5c574f;
+}
+
+.preview-ai-sheet__sug-text {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #14110d;
+}
+
+.preview-ai-sheet__sug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 @media (min-width: 1024px) {
   .preview-ai-sheet-root {
     align-items: stretch;
@@ -244,5 +301,18 @@
     width: 36px;
     padding: 0;
     border-radius: 50%;
+  }
+
+  .preview-ai-sheet {
+    max-height: 92vh;
+  }
+
+  .preview-ai-sheet__btn {
+    padding: 7px 10px;
+  }
+
+  .preview-ai-sheet__btn[data-ai-narrate-btn],
+  .preview-ai-sheet__btn[data-ai-title-art-btn] {
+    min-width: 0;
   }
 }

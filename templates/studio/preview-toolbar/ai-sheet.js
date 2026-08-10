@@ -1,6 +1,6 @@
 /**
  * Studio AI Surface V1 (SAS) · preview Dock「AI」+ Sheet
- * PRD-STUDIO-AI-SURFACE-V1 · W1：壳 / 未开闸 / 装帧标题 / 杂志文案 / 本机连接
+ * PRD-STUDIO-AI-SURFACE-V1 · W1 壳/杂志/装帧 · W2 意图/建议/徽标/旧入口深链
  */
 "use strict";
 
@@ -11,18 +11,21 @@ import {
 } from "../js/ai-surface.js";
 import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { closeHelpDrawer, isHelpDrawerOpen } from "../js/help-drawer.js";
-import { postJson, studioAuthHeaders } from "../js/http.js";
+import { postJson, postJsonConflictRetry, studioAuthHeaders } from "../js/http.js";
 import { dockIconSvg } from "./dock.js";
-import { startLlmNarrate } from "./core.js";
+import { fetchEntry, startLlmNarrate } from "./core.js";
 import { closeStudioExportPopover } from "./longshot.js";
 import {
   reloadPreviewAfterLayout,
   showToolbarToast,
+  tripApiBase,
   tripIdFromPath,
 } from "./shell.js";
 
 var TITLE_ART_ROUTE_C_PREF_KEY = "travelogue.studio.titleArtRouteC";
 var BODY_OPEN_CLASS = "preview-ai-sheet-open";
+var DISMISS_KEY_PREFIX = "travelogue.studio.aiSheet.dismissed.";
+var BADGE_SEEN_KEY_PREFIX = "travelogue.studio.aiSheet.badgeSeen.";
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -32,6 +35,13 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
+function clipSuggestion(text) {
+  var t = String(text || "").trim();
+  if (t.length <= 28) return t;
+  if (t.length <= 36) return t;
+  return t.slice(0, 36);
+}
+
 function showAdvancedSection() {
   try {
     var h = location.hostname || "";
@@ -39,6 +49,32 @@ function showAdvancedSection() {
   } catch (_e) {
     return false;
   }
+}
+
+function suggestionKey(s) {
+  if (!s) return "";
+  return (
+    String(s.chapterId || "") +
+    "|" +
+    String(s.suggestedPatternId || s.suggestion || "")
+  );
+}
+
+function readJsonList(storageKey) {
+  try {
+    var raw = localStorage.getItem(storageKey);
+    if (!raw) return [];
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch (_e) {
+    return [];
+  }
+}
+
+function writeJsonList(storageKey, list) {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(list || []));
+  } catch (_e) {}
 }
 
 function closePeers(root) {
@@ -71,6 +107,10 @@ export function mountAiSurface(root, tripId, opts) {
   var titleArtEnabled = false;
   var titleArtRouteCEnabled = false;
   var titleArtBusy = false;
+  var intentBusy = false;
+  var entryCache = null;
+  var pendingFocus = null;
+  var hasBadge = false;
 
   btn = document.createElement("button");
   btn.type = "button";
@@ -87,6 +127,82 @@ export function mountAiSurface(root, tripId, opts) {
     dock.insertBefore(btn, before);
   } else {
     dock.appendChild(btn);
+  }
+
+  function dismissKey() {
+    return DISMISS_KEY_PREFIX + String(tripId || "global");
+  }
+
+  function badgeSeenKey() {
+    return BADGE_SEEN_KEY_PREFIX + String(tripId || "global");
+  }
+
+  function dismissedSet() {
+    var out = {};
+    readJsonList(dismissKey()).forEach(function (k) {
+      out[k] = true;
+    });
+    return out;
+  }
+
+  function badgeSeenSet() {
+    var out = {};
+    readJsonList(badgeSeenKey()).forEach(function (k) {
+      out[k] = true;
+    });
+    return out;
+  }
+
+  function markDismissed(key) {
+    if (!key) return;
+    var list = readJsonList(dismissKey());
+    if (list.indexOf(key) < 0) list.push(key);
+    writeJsonList(dismissKey(), list);
+  }
+
+  function markBadgeSeen(keys) {
+    var list = readJsonList(badgeSeenKey());
+    (keys || []).forEach(function (k) {
+      if (k && list.indexOf(k) < 0) list.push(k);
+    });
+    writeJsonList(badgeSeenKey(), list);
+  }
+
+  function pendingSuggestions(entry) {
+    var dismissed = dismissedSet();
+    var list = (entry && entry.layoutSuggestions) || [];
+    return list.filter(function (s) {
+      if (!s || !s.suggestion || s.accepted) return false;
+      return !dismissed[suggestionKey(s)];
+    });
+  }
+
+  function computeBadge(entry) {
+    var pending = pendingSuggestions(entry);
+    if (!pending.length) return false;
+    var seen = badgeSeenSet();
+    return pending.some(function (s) {
+      return !seen[suggestionKey(s)];
+    });
+  }
+
+  function setBadge(on) {
+    hasBadge = !!on;
+    btn.classList.toggle("has-badge", hasBadge);
+    btn.setAttribute("data-has-badge", hasBadge ? "1" : "0");
+  }
+
+  function refreshBadgeFromEntry(entry) {
+    entryCache = entry || entryCache;
+    setBadge(computeBadge(entryCache));
+  }
+
+  function loadEntry() {
+    return fetchEntry(tripId).then(function (entry) {
+      entryCache = entry || {};
+      refreshBadgeFromEntry(entryCache);
+      return entryCache;
+    });
   }
 
   function isOpen() {
@@ -109,6 +225,16 @@ export function mountAiSurface(root, tripId, opts) {
       extra || {}
     );
     trackStudioEvent("ai_sheet_action_result", meta);
+  }
+
+  function chapterTitle(chapterId) {
+    var chapters = (entryCache && entryCache.chapters) || [];
+    for (var i = 0; i < chapters.length; i++) {
+      if (chapters[i] && chapters[i].id === chapterId) {
+        return chapters[i].title || chapterId;
+      }
+    }
+    return chapterId || "某章";
   }
 
   function ensureShell() {
@@ -155,9 +281,16 @@ export function mountAiSurface(root, tripId, opts) {
         "<h3>智能动作暂不可用</h3>" +
         "<p>装帧标题、杂志文案等需开启 AI 能力后使用。出图与导出不受影响。</p>" +
         '<p class="preview-ai-sheet__hint">内测可先展开下方「本机连接」预配 Key。</p>' +
+        '<details class="preview-ai-sheet__details" data-ai-help-gate>' +
+        "<summary>了解如何开启</summary>" +
+        '<div class="preview-ai-sheet__details-body">' +
+        '<p class="preview-ai-sheet__hint">内测：启动 Studio 前设置环境变量 <code>TRAVELOGUE_AI_SURFACE=1</code>，再打开预览。</p>' +
+        '<p class="preview-ai-sheet__hint">Key 可在下方「本机连接」预先配置；未开启智能能力时也可保存，不影响出图与导出。</p>' +
+        "</div></details>" +
         "</div>" +
         connectionDetailsHtml() +
         advancedDetailsHtml();
+      bindGateHelp(body);
       bindConnection(body);
       bindAdvanced(body);
       return;
@@ -166,12 +299,39 @@ export function mountAiSurface(root, tripId, opts) {
     body.innerHTML =
       titleArtBlockHtml() +
       narrateBlockHtml() +
+      intentBlockHtml() +
+      suggestionsBlockHtml() +
       connectionDetailsHtml() +
       advancedDetailsHtml();
     bindTitleArt(body);
     bindNarrate(body);
+    bindIntent(body);
+    bindSuggestions(body);
     bindConnection(body);
     bindAdvanced(body);
+    applyPendingFocus();
+  }
+
+  function applyPendingFocus() {
+    if (!pendingFocus || !shell) return;
+    var sel =
+      pendingFocus === "narrate"
+        ? "[data-ai-narrate-block]"
+        : pendingFocus === "intent"
+          ? "[data-ai-intent-block]"
+          : pendingFocus === "suggestions"
+            ? "[data-ai-suggestions-block]"
+            : null;
+    pendingFocus = null;
+    if (!sel) return;
+    var el = shell.querySelector(sel);
+    if (el && typeof el.scrollIntoView === "function") {
+      try {
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } catch (_e) {
+        el.scrollIntoView(true);
+      }
+    }
   }
 
   function titleArtBlockHtml() {
@@ -215,20 +375,107 @@ export function mountAiSurface(root, tripId, opts) {
   }
 
   function narrateBlockHtml() {
-    var status = llmAvailable ? "可生成" : "未配置";
-    var cta = llmAvailable ? "生成杂志感文案" : "配置写作引擎";
+    var g1Pending = !!(entryCache && entryCache.g1Pending);
+    var status = g1Pending
+      ? "待分章确认"
+      : llmAvailable
+        ? "可生成"
+        : "未配置";
+    var cta = g1Pending
+      ? "请先确认分章"
+      : llmAvailable
+        ? "生成杂志感文案"
+        : "配置写作引擎";
     return (
       '<div class="preview-ai-sheet__block" data-ai-narrate-block>' +
       "<h3>杂志文案</h3>" +
       '<p class="preview-ai-sheet__desc">重写封面钩子与章节导语等版心文字；照片仍留在本机。导入默认仍用本机文案。</p>' +
+      (g1Pending
+        ? '<p class="preview-ai-sheet__hint">请先在分章确认结构，再生成杂志感文案。</p>'
+        : "") +
       '<div class="preview-ai-sheet__row">' +
       '<span class="preview-ai-sheet__status" data-ai-narrate-status>' +
       escapeHtml(status) +
       "</span>" +
-      '<button type="button" class="preview-ai-sheet__btn" data-ai-narrate-btn>' +
+      '<button type="button" class="preview-ai-sheet__btn" data-ai-narrate-btn' +
+      (g1Pending ? " disabled" : "") +
+      ">" +
       escapeHtml(cta) +
       "</button>" +
       "</div>" +
+      "</div>"
+    );
+  }
+
+  function intentBlockHtml() {
+    var ui = (entryCache && entryCache.intentBriefUi) || {};
+    var status = ui.statusLabel || "尚未解析";
+    var detail = ui.detail
+      ? '<p class="preview-ai-sheet__hint">' + escapeHtml(ui.detail) + "</p>"
+      : "";
+    return (
+      '<div class="preview-ai-sheet__block" data-ai-intent-block>' +
+      "<h3>旅行意图</h3>" +
+      '<p class="preview-ai-sheet__desc">重新理解这趟旅行的节奏与篇幅偏好（影响后续建议，不直接改已锁定结构）。</p>' +
+      detail +
+      '<div class="preview-ai-sheet__row">' +
+      '<span class="preview-ai-sheet__status" data-ai-intent-status>' +
+      escapeHtml(status) +
+      "</span>" +
+      '<button type="button" class="preview-ai-sheet__btn preview-ai-sheet__btn--ghost" data-ai-intent-btn' +
+      (intentBusy ? " disabled" : "") +
+      ">" +
+      (intentBusy ? "解析中…" : "重新解析") +
+      "</button>" +
+      "</div>" +
+      "</div>"
+    );
+  }
+
+  function suggestionsBlockHtml() {
+    var pending = pendingSuggestions(entryCache);
+    var all = ((entryCache && entryCache.layoutSuggestions) || []).filter(function (s) {
+      return s && s.suggestion;
+    });
+    var cards = "";
+    if (!pending.length) {
+      cards =
+        '<p class="preview-ai-sheet__hint" data-ai-suggestions-empty>' +
+        (all.length
+          ? "当前没有待处理建议。"
+          : "成册后若有可改点，会出现在这里；届时顶部 AI 会亮提示点。") +
+        "</p>";
+    } else {
+      cards = pending
+        .map(function (s, idx) {
+          var text = clipSuggestion(s.suggestion);
+          var chTitle = chapterTitle(s.chapterId);
+          return (
+            '<div class="preview-ai-sheet__sug" data-ai-sug-idx="' +
+            idx +
+            '" data-chapter-id="' +
+            escapeHtml(s.chapterId || "") +
+            '">' +
+            '<p class="preview-ai-sheet__sug-meta">' +
+            escapeHtml(chTitle) +
+            "</p>" +
+            '<p class="preview-ai-sheet__sug-text">' +
+            escapeHtml(text) +
+            "</p>" +
+            '<div class="preview-ai-sheet__sug-actions">' +
+            '<button type="button" class="preview-ai-sheet__btn" data-ai-sug-accept>采纳</button>' +
+            '<button type="button" class="preview-ai-sheet__btn preview-ai-sheet__btn--ghost" data-ai-sug-dismiss>忽略</button>' +
+            '<button type="button" class="preview-ai-sheet__link-btn" data-ai-sug-feedback>这章不对</button>' +
+            "</div></div>"
+          );
+        })
+        .join("");
+    }
+    return (
+      '<div class="preview-ai-sheet__block" data-ai-suggestions-block>' +
+      "<h3>排版建议</h3>" +
+      '<p class="preview-ai-sheet__desc">只读建议；采纳后才写入。</p>' +
+      cards +
       "</div>"
     );
   }
@@ -281,6 +528,14 @@ export function mountAiSurface(root, tripId, opts) {
       });
   }
 
+  function bindGateHelp(body) {
+    var help = body.querySelector("[data-ai-help-gate]");
+    if (!help) return;
+    help.addEventListener("toggle", function () {
+      if (help.open) trackAction("open_help", { topic: "gate" });
+    });
+  }
+
   function bindConnection(body) {
     var connBtn = body.querySelector("[data-ai-conn-btn]");
     if (!connBtn) return;
@@ -302,6 +557,10 @@ export function mountAiSurface(root, tripId, opts) {
     var narrateBtn = body.querySelector("[data-ai-narrate-btn]");
     if (!narrateBtn) return;
     narrateBtn.addEventListener("click", function () {
+      if (entryCache && entryCache.g1Pending) {
+        showToolbarToast("请先在分章确认结构");
+        return;
+      }
       if (!llmAvailable) {
         trackAction("open_settings", { reason: "narrate_no_key" });
         openLlmSettingsFromSheet("ai_sheet_narrate");
@@ -321,6 +580,154 @@ export function mountAiSurface(root, tripId, opts) {
           latency_ms: Date.now() - started,
         });
       });
+    });
+  }
+
+  function bindIntent(body) {
+    var intentBtn = body.querySelector("[data-ai-intent-btn]");
+    var statusEl = body.querySelector("[data-ai-intent-status]");
+    if (!intentBtn) return;
+    intentBtn.addEventListener("click", function () {
+      if (intentBusy) return;
+      trackAction("intent");
+      intentBusy = true;
+      intentBtn.disabled = true;
+      intentBtn.textContent = "解析中…";
+      if (statusEl) statusEl.textContent = "解析中…";
+      var started = Date.now();
+      postJson(tripApiBase(tripId) + "/ai/intent-brief", { force: true })
+        .then(function (res) {
+          intentBusy = false;
+          if (!res || res.status !== 200 || !res.body || !res.body.ok) {
+            if (statusEl) statusEl.textContent = "暂时不可用";
+            intentBtn.disabled = false;
+            intentBtn.textContent = "重新解析";
+            showToolbarToast(
+              (res && res.body && res.body.message) || "意图解析暂时不可用",
+              { error: true }
+            );
+            trackResult("intent", false, {
+              latency_ms: Date.now() - started,
+              error_code: "fail",
+            });
+            return;
+          }
+          trackResult("intent", true, {
+            latency_ms: Date.now() - started,
+            source: res.body.source || null,
+          });
+          showToolbarToast("意图已更新");
+          return loadEntry().then(function () {
+            if (isOpen()) renderBody();
+          });
+        })
+        .catch(function () {
+          intentBusy = false;
+          intentBtn.disabled = false;
+          intentBtn.textContent = "重新解析";
+          if (statusEl) statusEl.textContent = "网络错误";
+          showToolbarToast("意图解析请求失败", { error: true });
+          trackResult("intent", false, {
+            latency_ms: Date.now() - started,
+            error_code: "network",
+          });
+        });
+    });
+  }
+
+  function bindSuggestions(body) {
+    var pending = pendingSuggestions(entryCache);
+    body.querySelectorAll("[data-ai-sug-idx]").forEach(function (card) {
+      var idx = parseInt(card.getAttribute("data-ai-sug-idx") || "-1", 10);
+      var sug = pending[idx];
+      if (!sug) return;
+      var acceptBtn = card.querySelector("[data-ai-sug-accept]");
+      var dismissBtn = card.querySelector("[data-ai-sug-dismiss]");
+      var feedbackBtn = card.querySelector("[data-ai-sug-feedback]");
+      if (acceptBtn) {
+        acceptBtn.addEventListener("click", function () {
+          trackAction("suggestion_accept", { chapterId: sug.chapterId });
+          var started = Date.now();
+          postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-critic/accept", {
+            chapterId: sug.chapterId,
+            suggestedPatternId: sug.suggestedPatternId || undefined,
+          })
+            .then(function (res) {
+              if (!res || res.status < 200 || res.status >= 300) {
+                showToolbarToast(
+                  (res && res.body && res.body.message) || "采纳失败",
+                  { error: true }
+                );
+                trackResult("suggestion_accept", false, {
+                  latency_ms: Date.now() - started,
+                });
+                return;
+              }
+              showToolbarToast("已采纳建议（下次重生时参考）");
+              trackResult("suggestion_accept", true, {
+                latency_ms: Date.now() - started,
+              });
+              return loadEntry().then(function () {
+                if (isOpen()) renderBody();
+              });
+            })
+            .catch(function () {
+              showToolbarToast("采纳失败", { error: true });
+              trackResult("suggestion_accept", false, {
+                latency_ms: Date.now() - started,
+                error_code: "network",
+              });
+            });
+        });
+      }
+      if (dismissBtn) {
+        dismissBtn.addEventListener("click", function () {
+          trackAction("suggestion_dismiss", { chapterId: sug.chapterId });
+          markDismissed(suggestionKey(sug));
+          trackResult("suggestion_dismiss", true, {});
+          refreshBadgeFromEntry(entryCache);
+          if (isOpen()) renderBody();
+        });
+      }
+      if (feedbackBtn) {
+        feedbackBtn.addEventListener("click", function () {
+          trackAction("suggestion_feedback", { chapterId: sug.chapterId });
+          var reason = window.prompt(
+            "这章哪里不对？\n1 图太多\n2 图太少\n3 顺序不对\n4 风格不搭\n5 其他\n请输入编号：",
+            "1"
+          );
+          if (reason == null) return;
+          var map = {
+            "1": "too_many_photos",
+            "2": "too_few_photos",
+            "3": "wrong_order",
+            "4": "style_mismatch",
+            "5": "other",
+          };
+          var code = map[String(reason).trim()] || "other";
+          postJsonConflictRetry(tripApiBase(tripId) + "/ai/layout-feedback", {
+            chapterId: sug.chapterId,
+            reason: code,
+          })
+            .then(function (res) {
+              if (!res || res.status < 200 || res.status >= 300) {
+                showToolbarToast(
+                  (res && res.body && res.body.message) || "反馈未保存"
+                );
+                trackResult("suggestion_feedback", false, {});
+                return;
+              }
+              showToolbarToast("已记下，下次排版建议会参考");
+              trackResult("suggestion_feedback", true, {});
+            })
+            .catch(function () {
+              showToolbarToast("反馈未保存");
+              trackResult("suggestion_feedback", false, {
+                error_code: "network",
+              });
+            });
+        });
+      }
     });
   }
 
@@ -454,28 +861,38 @@ export function mountAiSurface(root, tripId, opts) {
           titleArtEnabled = false;
           titleArtRouteCEnabled = false;
         }),
+      loadEntry(),
     ]);
   }
 
   function open(openOpts) {
     openOpts = openOpts || {};
+    pendingFocus = openOpts.focus || null;
     ensureAiSurfaceHydrated().then(function () {
       closePeers(root);
       ensureShell();
       refreshLlmAndConfig().then(function () {
+        var openHadBadge = computeBadge(entryCache);
+        var pending = pendingSuggestions(entryCache);
+        if (pending.length) {
+          markBadgeSeen(
+            pending.map(function (s) {
+              return suggestionKey(s);
+            })
+          );
+          refreshBadgeFromEntry(entryCache);
+        }
         renderBody();
         shell.hidden = false;
         requestAnimationFrame(function () {
           shell.classList.add("preview-ai-sheet-root--open");
         });
-        // 只用 preview-ai-sheet-open：避免沿用 preview-sheet-open 把 Dock
-        // 除「返回」外全部 pointer-events:none，导致无法点「精修」做互斥。
         document.body.classList.add(BODY_OPEN_CLASS);
         setBtnActive(true);
         openAt = Date.now();
         trackStudioEvent("ai_sheet_open", {
           source: openOpts.source || "dock",
-          has_badge: false,
+          has_badge: openHadBadge,
         });
         trackStudioEvent("ai_sheet_gate_view", {
           surfaceOn: isAiSurfaceEnabled(),
@@ -512,6 +929,11 @@ export function mountAiSurface(root, tripId, opts) {
   btn.addEventListener("click", function (e) {
     e.stopPropagation();
     toggle();
+  });
+
+  // 初次挂载拉建议徽标（不自动开 Sheet）
+  ensureAiSurfaceHydrated().then(function () {
+    if (isAiSurfaceEnabled()) loadEntry();
   });
 
   var api = {

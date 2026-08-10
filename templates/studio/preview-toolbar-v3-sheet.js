@@ -437,24 +437,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function bookCopyRefreshHtml() {
     // NAS · FE-NAS-08：默认不渲染 llm 行（dark 再开）
+    // SAS W2 · F-SAS-08：权威入口收敛到 AI Sheet，精修仅深链
     if (!isAiSurfaceEnabled()) return "";
     return (
       '<ul class="preview-sheet__list preview-sheet__list--copy-refresh">' +
-      '<li data-tool="llm"><span>' +
-      DARK_COPY.sheetLlmStart +
-      '</span><button type="button" class="preview-sheet__link" data-action="llm">开始</button></li>' +
+      '<li data-tool="llm"><span>杂志文案</span>' +
+      '<button type="button" class="preview-sheet__link" data-action="open-ai-narrate">在 AI 中打开</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint preview-sheet__llm-unavailable" hidden>' +
-      DARK_COPY.sheetLlmUnavailable +
-      "</p>" +
-      '<p class="preview-sheet__hint preview-sheet__llm-setup" hidden>' +
-      '<button type="button" class="preview-sheet__link" data-action="llm-setup">' +
-      DARK_COPY.sheetLlmSetup +
-      "</button>" +
-      "</p>" +
-      '<p class="preview-sheet__hint preview-sheet__llm-expect" hidden>' +
-      DARK_COPY.sheetLlmExpect +
-      "</p>"
+      '<p class="preview-sheet__hint">智能生成请用顶栏「AI」；版式与书衣仍在本精修面板。</p>'
     );
   }
 
@@ -491,12 +481,15 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         if (typeof hooks.onPresentFeatured === "function") hooks.onPresentFeatured();
       });
     }
-    var llmBtn = bodyEl.querySelector('[data-action="llm"]');
-    if (llmBtn) {
-      llmBtn.addEventListener("click", function () {
-        if (llmBtn.disabled) return;
+    var openAiNarrate = bodyEl.querySelector('[data-action="open-ai-narrate"]');
+    if (openAiNarrate) {
+      openAiNarrate.addEventListener("click", function () {
         close();
-        if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(llmBtn);
+        if (root && root._aiSheet && typeof root._aiSheet.open === "function") {
+          root._aiSheet.open({ source: "deep_link", focus: "narrate" });
+        } else if (typeof hooks.onLlmNarrate === "function") {
+          hooks.onLlmNarrate(openAiNarrate);
+        }
       });
     }
     if (typeof hooks.refreshAdvancedOptions === "function") {
@@ -804,16 +797,19 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     wireWorksBrandControls();
     wireBookAdvancedTools();
-    // FE-SFI-04 · 文案刷新入口在整本信息区，复用同一套 llm 接线
-    var storyLlm = bodyEl.querySelector(
-      '.preview-sheet__zone--story [data-action="llm"]'
+    // SAS W2 · 整本信息区杂志文案 → AI Sheet 深链
+    var storyAi = bodyEl.querySelector(
+      '.preview-sheet__zone--story [data-action="open-ai-narrate"]'
     );
-    if (storyLlm && !storyLlm._sfiWired) {
-      storyLlm._sfiWired = true;
-      storyLlm.addEventListener("click", function () {
-        if (storyLlm.disabled) return;
+    if (storyAi && !storyAi._sfiWired) {
+      storyAi._sfiWired = true;
+      storyAi.addEventListener("click", function () {
         close();
-        if (typeof hooks.onLlmNarrate === "function") hooks.onLlmNarrate(storyLlm);
+        if (root && root._aiSheet && typeof root._aiSheet.open === "function") {
+          root._aiSheet.open({ source: "deep_link", focus: "narrate" });
+        } else if (typeof hooks.onLlmNarrate === "function") {
+          hooks.onLlmNarrate(storyAi);
+        }
       });
     }
 
