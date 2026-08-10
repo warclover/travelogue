@@ -468,8 +468,9 @@ export function mountAiSurface(root, tripId, opts) {
         requestAnimationFrame(function () {
           shell.classList.add("preview-ai-sheet-root--open");
         });
+        // 只用 preview-ai-sheet-open：避免沿用 preview-sheet-open 把 Dock
+        // 除「返回」外全部 pointer-events:none，导致无法点「精修」做互斥。
         document.body.classList.add(BODY_OPEN_CLASS);
-        document.body.classList.add("preview-sheet-open");
         setBtnActive(true);
         openAt = Date.now();
         trackStudioEvent("ai_sheet_open", {
@@ -496,9 +497,6 @@ export function mountAiSurface(root, tripId, opts) {
     shell.classList.remove("preview-ai-sheet-root--open");
     shell.hidden = true;
     document.body.classList.remove(BODY_OPEN_CLASS);
-    if (!root._sheet || !root._sheet.isOpen || !root._sheet.isOpen()) {
-      document.body.classList.remove("preview-sheet-open");
-    }
     setBtnActive(false);
     trackStudioEvent("ai_sheet_close", {
       reason: reason || "unknown",

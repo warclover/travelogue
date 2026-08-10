@@ -71,9 +71,18 @@ body.preview-sheet-open .preview-toolbar__dock {
 body.preview-sheet-open .preview-toolbar__dock-btn--back {
   pointer-events: auto;
 }
+/* SAS · 精修开时仍可点 AI，以便 D-SAS-04 互斥切换 */
+body.preview-sheet-open .preview-toolbar__dock-btn--ai {
+  pointer-events: auto;
+}
 body.preview-sheet-open .preview-toolbar__export-zone-wrap,
 body.preview-sheet-open .preview-toolbar__longshot-caret {
   pointer-events: none;
+}
+
+/* SAS · AI Sheet 开时 Dock 保持可点（互斥关精修/分章/再关 AI） */
+body.preview-ai-sheet-open .preview-toolbar__dock {
+  pointer-events: auto;
 }
 
 .preview-toolbar--v4 .preview-toolbar__export-zone {

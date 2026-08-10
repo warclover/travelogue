@@ -7,8 +7,12 @@
 
 .preview-ai-sheet-root {
   position: fixed;
-  inset: 0;
-  z-index: 241;
+  /* 从工具栏下方起，避免遮罩挡住 Dock（精修/AI 互斥需仍可点 Dock） */
+  top: var(--preview-toolbar-h, 56px);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 230;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -209,15 +213,11 @@
   .preview-ai-sheet-root {
     align-items: stretch;
     justify-content: flex-end;
-    padding:
-      calc(var(--preview-toolbar-h, 56px) + 10px)
-      10px
-      10px;
+    padding: 10px;
     box-sizing: border-box;
   }
 
   .preview-ai-sheet-root--open .preview-ai-sheet__scrim {
-    top: var(--preview-toolbar-h, 56px);
     background: rgba(0, 0, 0, 0.28);
   }
 
