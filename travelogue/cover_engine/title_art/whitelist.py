@@ -100,8 +100,10 @@ WHITELIST: dict[str, PlacementPreset] = {
     ),
     "folio-overlap": PlacementPreset(
         opening_style_id="folio-overlap",
-        label="纸面栏原生标题位（对齐 top:60% 左起书名）",
-        rect={"x": 0.03, "y": 0.48, "w": 0.27, "h": 0.28},
+        label="纸面栏左侧竖排书名位（对齐 writing-mode:vertical-rl）",
+        # 窄高条幅：落在 --cover-folio-margin 33% 纸面栏内；y 避开顶部
+        # .cover-opening__place 竖排跑题。
+        rect={"x": 0.05, "y": 0.16, "w": 0.16, "h": 0.58},
         assume_paper_bg=True,
         anchor="left",
         native_ink=(0x14, 0x13, 0x12),  # #141312
@@ -148,10 +150,10 @@ FALLBACK_PRESETS: dict[str, list[PlacementPreset]] = {
         PlacementPreset(
             opening_style_id="folio-overlap",
             label=(
-                "纸面栏全高备选——仅当该 trip 没有地点标签（.cover-opening__place，"
+                "纸面栏竖排全高备选——仅当该 trip 没有地点标签（.cover-opening__place，"
                 "跟主标题不同名才会显示）占用纸面栏顶部时才用，留白更松"
             ),
-            rect={"x": 0.03, "y": 0.05, "w": 0.27, "h": 0.90},
+            rect={"x": 0.05, "y": 0.08, "w": 0.16, "h": 0.78},
             assume_paper_bg=True,
             conditional_occupant="folio_place_present",
             anchor="left",

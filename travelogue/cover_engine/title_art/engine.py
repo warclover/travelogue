@@ -389,6 +389,12 @@ def resolve_title_art(
                                 subtitle=text.subtitle,
                                 model=model_name,
                                 prompt_version=use_prompt_version,
+                                # folio-overlap 原生书名左侧竖排：路线 C 同步要竖幅
+                                layout=(
+                                    "vertical"
+                                    if style_id == "folio-overlap"
+                                    else "horizontal"
+                                ),
                                 trip=trip,
                                 telemetry_model=str(model_name or ""),
                             )

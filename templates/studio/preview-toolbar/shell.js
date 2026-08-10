@@ -201,7 +201,7 @@ function explainToHuman(explain) {
     if (styleId === "cameo-aperture") return "主体较居中，适合圆窗";
     if (styleId === "band-cut") return "避开了题带压到人物";
     if (styleId === "veil-footer") return "主体偏上，适合雾底题签";
-    if (styleId === "folio-overlap") return "右侧有景，适合对页叠印";
+    if (styleId === "folio-overlap") return "右侧有景，书名左侧竖排";
     if (styleId === "type-monument") return "氛围底图，适合海报巨字";
     if (styleId === "scroll-head") return "竖排留白足，适合卷首题";
     if (styleId === "portal-arch") return "中景开阔，适合天窗取景";

@@ -54,7 +54,7 @@ def bootstrap_catalog() -> None:
             label="对页叠印",
             status="active",
             sort_order=20,
-            studio_blurb="适合右侧有景、左侧可留白；书名会骑缝切开压进画面。",
+            studio_blurb="适合右侧有景、左侧可留白；书名在左侧纸面栏竖排。",
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
             profile=CoverStyleProfile(
                 prefer={"right_weighted": True},

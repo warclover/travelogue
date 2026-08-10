@@ -167,6 +167,18 @@ def test_render_title_art_band_cut_left_aligns_main_text() -> None:
     assert left_bbox[0] <= centered_bbox[0]
 
 
+def test_render_title_art_folio_overlap_stacks_vertically() -> None:
+    """对页叠印：书名左侧竖排——路线 B 产出窄高条幅（高 > 宽）。"""
+    horizontal = render_title_art("珠海东澳岛", opening_style_id=None)
+    vertical = render_title_art("珠海东澳岛", opening_style_id="folio-overlap")
+    h_img = _decode(horizontal.png_bytes)
+    v_img = _decode(vertical.png_bytes)
+    assert v_img.height > v_img.width
+    assert h_img.width > h_img.height
+    # 竖排不应比横排「扁」——同样 5 字，竖条高度应显著大于横排高度
+    assert v_img.height > h_img.height
+
+
 def test_render_title_art_content_fills_most_of_cropped_frame() -> None:
     rendered = render_title_art("夏睿彤贵州暑假游")
     img = _decode(rendered.png_bytes)

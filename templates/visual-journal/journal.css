@@ -526,14 +526,14 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
   z-index: 2;
 }
 
-/* folio-overlap 纸面栏很窄（--cover-folio-margin 33%，候选 rect x:0.03~0.30，
-   见 whitelist.py OQ-CAL-09 收尾注释），沿用其它风格共用的 60% 宽上限会直接
-   溢出到骑缝渐变/照片区——单独收紧宽度，只在纸面栏内安全展示；纸面栏留白
-   竖向空间更宽裕（rect h 最深到 0.49），相应放宽高度上限。 */
+/* folio-overlap 书名左侧竖排：贴纸为窄高条幅，须落在纸面栏内（--cover-folio-
+   margin 33%），不能溢出骑缝/照片区。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
 html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
-  max-width: 28%;
-  max-height: 16%;
+  max-width: 16%;
+  max-height: 58%;
+  object-fit: contain;
+  object-position: left center;
   z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
 }
 
@@ -760,7 +760,8 @@ body.longshot-capturing .cover-opening .trip-meta {
     --cover-folio-cut: 33%;
     --cover-folio-paper: #f4f1ea;
     --cover-folio-panel-width: min(48%, 520px);
-    --cover-folio-title-size: clamp(2.4rem, 6vw, 4.4rem);
+    /* 左侧竖排书名：字号略收，避免竖列过「胖」占满纸面栏 */
+    --cover-folio-title-size: clamp(1.85rem, 4.2vw, 3.1rem);
     --cover-folio-ghost: rgba(178, 58, 47, 0.35);
     --cover-folio-fade: linear-gradient(
       100deg,
@@ -1090,25 +1091,10 @@ body.longshot-capturing .cover-opening .trip-meta {
     max-height: none;
   }
 
-  /* 照片侧标题托底，保证纸白半字可读 */
+  /* 书名改左侧竖排后不再压进照片，去掉原骑缝横题托底渐罩 */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-hero::after,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-hero::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 56%;
-    height: 24%;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      rgba(12, 9, 6, 0.46) 0%,
-      rgba(12, 9, 6, 0.16) 55%,
-      rgba(12, 9, 6, 0) 100%
-    );
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 74%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 74%, transparent);
+    display: none;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__panel,
@@ -1149,12 +1135,14 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* accent：钉在 hook 上方，分隔竖排书名区与底部 hook */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__panel::before,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__panel::before {
     content: "";
     position: absolute;
     left: clamp(28px, 3.2vw, 40px);
-    top: calc(60% - 38px);
+    top: auto;
+    bottom: calc(clamp(44px, 5.5vh, 64px) + 2.1em);
     width: 42px;
     height: 2px;
     background: var(--cover-accent-deep);
@@ -1167,69 +1155,43 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* 左侧纸面栏竖排书名（对页感：字在纸上，图在右页） */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 60%;
+    left: clamp(28px, 4.2vw, 56px);
+    right: auto;
+    top: 50%;
     transform: translateY(-50%);
-    width: 100%;
+    /* 显式高度给竖排换栏一个稳定基准（同 cameo-aperture 教训） */
+    width: auto;
+    height: min(58vh, 520px);
     margin: 0;
-    padding: 0 0 0 clamp(28px, 3.2vw, 40px);
+    padding: 0;
     color: #141312;
     font-size: var(--cover-folio-title-size);
     font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: 0.015em;
+    line-height: 1.2;
+    letter-spacing: 0.18em;
     text-shadow: none;
     white-space: nowrap;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
     display: block;
     -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
     overflow: visible;
-    clip-path: inset(0 calc(100% - var(--cover-folio-cut)) 0 0);
+    clip-path: none;
     z-index: 5;
     pointer-events: auto;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::before,
-  html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::before {
-    /* ::before/::after 默认按内容缩到最小宽度；clip-path 的百分比裁切基准会
-       和左侧实体标题（left:0;right:0;padding-left）不一致，导致骑缝断字
-       裁切点错位、重影。改用与实体标题完全一致的 box（left/right/padding），
-       让两者的 % 裁切基准（同一容器宽度）对齐到同一像素。 */
-    content: attr(data-title);
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    padding-left: clamp(28px, 3.2vw, 40px);
-    color: var(--cover-folio-ghost);
-    transform: translate(2.5px, 1.5px);
-    clip-path: inset(0 0 0 var(--cover-folio-cut));
-    z-index: 0;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
+  html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::before,
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::after,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title::after {
-    content: attr(data-title);
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    padding-left: clamp(28px, 3.2vw, 40px);
-    color: #fcfaf6;
-    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
-    clip-path: inset(0 0 0 var(--cover-folio-cut));
-    z-index: 1;
-    pointer-events: none;
-    white-space: nowrap;
-    width: auto;
-    height: auto;
-    margin: 0;
-    background: none;
+    content: none;
+    display: none;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook,

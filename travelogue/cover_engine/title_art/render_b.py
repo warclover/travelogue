@@ -7,6 +7,9 @@
 
 各白名单风格出纯字，落在原生标题位，由封面样式自身的纸签 / 暗雾 / 纸面栏
 承托（W3 后不再烧独立衬底；D-CAL-23 曾实现的 backdrop 已删除）。
+
+``folio-overlap`` 原生书名左侧竖排，本模块对该风格按字自上而下叠字，产出
+窄高条幅贴纸，与 journal.css 竖排位对齐。
 """
 
 from __future__ import annotations
@@ -59,7 +62,19 @@ _MAIN_TEXT_SIZE_RATIO_BY_STYLE: dict[str, float] = {
 _MAIN_TEXT_SIZE_RATIO_DEFAULT = 0.42
 
 #: 画布内左对齐（呼应原生标题左起排版）；居中锚点风格不进此集合。
-_LEFT_ALIGN_STYLES = frozenset({"band-cut", "contact-stamp", "folio-overlap", "veil-footer"})
+#: folio-overlap 走竖排叠字路径，不在此集合。
+_LEFT_ALIGN_STYLES = frozenset({"band-cut", "contact-stamp", "veil-footer"})
+
+#: 原生书名竖排的 Opening 风格：路线 B 按字自上而下叠字。
+_VERTICAL_STACK_STYLES = frozenset({"folio-overlap"})
+
+#: 竖排：字号相对画布**宽度**起步（窄高条幅）；高度上限相对画布高度。
+_VERTICAL_SIZE_RATIO_BY_WIDTH: dict[str, float] = {
+    "folio-overlap": 0.18,
+}
+_VERTICAL_MAX_HEIGHT_RATIO = 0.88
+_VERTICAL_MAX_WIDTH_RATIO = 0.22
+_VERTICAL_GAP_RATIO = 0.12
 
 
 @dataclass(frozen=True)
@@ -97,6 +112,48 @@ def _seal_image(diameter: int, char: str, color: tuple[int, int, int]) -> Image.
     return img
 
 
+def _vertical_stack_metrics(
+    draw: ImageDraw.ImageDraw, text: str, font, *, gap: int
+) -> tuple[float, float]:
+    """返回竖排叠字的 (max_glyph_width, total_height)。"""
+    max_w = 0.0
+    total_h = 0.0
+    glyphs = 0
+    for ch in text:
+        if ch.isspace():
+            total_h += gap * 0.85
+            continue
+        tw, th, _ = _text_size(draw, ch, font)
+        max_w = max(max_w, tw)
+        total_h += th
+        glyphs += 1
+    if glyphs > 1:
+        total_h += gap * (glyphs - 1)
+    return max_w, total_h
+
+
+def _draw_vertical_stack(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    font,
+    *,
+    color: tuple[int, int, int],
+    origin_x: float,
+    origin_y: float,
+    gap: int,
+) -> None:
+    """在 origin 处按列中心对齐，自上而下画每个字（字正向直立）。"""
+    y = origin_y
+    for ch in text:
+        if ch.isspace():
+            y += gap * 0.85
+            continue
+        tw, th, bbox = _text_size(draw, ch, font)
+        x = origin_x - tw / 2 - bbox[0]
+        draw.text((x, y - bbox[1]), ch, font=font, fill=(*color, 255))
+        y += th + gap
+
+
 def render_title_art(
     main_text: str,
     *,
@@ -111,8 +168,20 @@ def render_title_art(
     """默认 ``TEMPLATE_PLAIN``：只出主字（+可选副标），不画印章。
 
     各白名单风格均出纯字，落点对齐原生标题位，由封面自身的纸签 / 暗雾 /
-    纸面栏承托。旧印章模板仍可显式传入。
+    纸面栏承托。旧印章模板仍可显式传入。``folio-overlap`` 走竖排叠字。
     """
+    if opening_style_id in _VERTICAL_STACK_STYLES:
+        return _render_vertical_title_art(
+            main_text,
+            subtitle=subtitle,
+            template=template,
+            main_color=main_color,
+            seal_color=seal_color,
+            seal_char=seal_char,
+            font=font,
+            opening_style_id=opening_style_id,
+        )
+
     font_candidate = font or pick_default_font()
     width, height = CANVAS_SIZE
     canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -179,6 +248,91 @@ def render_title_art(
     if sub and sub_x is not None:
         draw.text((sub_x - sub_bbox[0], sub_y), sub, font=sub_font, fill=(*main_color, 230))
     if seal_pos is not None:
+        seal = _seal_image(seal_d, seal_char, seal_color)
+        canvas.alpha_composite(seal, seal_pos)
+
+    canvas = _crop_to_content(canvas)
+
+    return RenderedTitleArt(
+        png_bytes=image_to_png_bytes(canvas),
+        font_name=main_font_name,
+        template=template,
+    )
+
+
+def _render_vertical_title_art(
+    main_text: str,
+    *,
+    subtitle: str | None = None,
+    template: str = TEMPLATE_PLAIN,
+    main_color: tuple[int, int, int] = (255, 255, 255),
+    seal_color: tuple[int, int, int] = DEFAULT_SEAL,
+    seal_char: str = "旅",
+    font: FontCandidate | None = None,
+    opening_style_id: str | None = None,
+) -> RenderedTitleArt:
+    """folio-overlap 等：单列竖排主字（字正向直立），可选副标/印章挂在列下。"""
+    font_candidate = font or pick_default_font()
+    width, height = CANVAS_SIZE
+    canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(canvas)
+
+    main = str(main_text or "").strip()
+    size_ratio = _VERTICAL_SIZE_RATIO_BY_WIDTH.get(opening_style_id or "", 0.16)
+    size = int(width * size_ratio)
+    min_size = max(1, int(width * 0.06))
+    max_h = height * _VERTICAL_MAX_HEIGHT_RATIO
+    max_w = width * _VERTICAL_MAX_WIDTH_RATIO
+
+    main_font, main_font_name = load_truetype_named(font_candidate, size=size)
+    gap = max(2, int(size * _VERTICAL_GAP_RATIO))
+    main_w, main_h = _vertical_stack_metrics(draw, main, main_font, gap=gap)
+    while (main_h > max_h or main_w > max_w) and size > min_size:
+        shrink = 0.96
+        if main_h > max_h:
+            shrink = min(shrink, (max_h / max(main_h, 1.0)) * 0.96)
+        if main_w > max_w:
+            shrink = min(shrink, (max_w / max(main_w, 1.0)) * 0.96)
+        size = max(min_size, int(size * shrink))
+        main_font, main_font_name = load_truetype_named(font_candidate, size=size)
+        gap = max(2, int(size * _VERTICAL_GAP_RATIO))
+        main_w, main_h = _vertical_stack_metrics(draw, main, main_font, gap=gap)
+
+    col_x = width * 0.5
+    start_y = (height - main_h) / 2
+    _draw_vertical_stack(
+        draw,
+        main,
+        main_font,
+        color=main_color,
+        origin_x=col_x,
+        origin_y=start_y,
+        gap=gap,
+    )
+
+    sub = str(subtitle or "").strip()
+    want_seal = template in _SEAL_TEMPLATES
+    seal_d = int(width * 0.12)
+    baseline_y = start_y + main_h + int(height * 0.04)
+
+    if sub:
+        sub_font = load_truetype(font_candidate, size=max(12, int(size * 0.42)))
+        # 副标也竖排一小列，挂在主列下方（字库合成副标极少用；保持可读）
+        sub_gap = max(1, int(size * 0.08))
+        sub_w, sub_h = _vertical_stack_metrics(draw, sub, sub_font, gap=sub_gap)
+        _draw_vertical_stack(
+            draw,
+            sub,
+            sub_font,
+            color=main_color,
+            origin_x=col_x,
+            origin_y=baseline_y,
+            gap=sub_gap,
+        )
+        baseline_y += sub_h + int(height * 0.02)
+
+    if want_seal:
+        seal_pos = (int(col_x - seal_d / 2), int(baseline_y))
         seal = _seal_image(seal_d, seal_char, seal_color)
         canvas.alpha_composite(seal, seal_pos)
 

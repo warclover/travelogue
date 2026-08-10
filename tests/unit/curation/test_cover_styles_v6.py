@@ -252,7 +252,9 @@ def test_journal_css_v6_tokens_and_skins() -> None:
         'data-cover-opening="contact-stamp"',
         'data-cover-opening="diptych-seam"',
         "cover-opening--has-src",
-        "clip-path: inset(0 calc(100% - var(--cover-folio-cut)) 0 0)",
+        # folio-overlap：左侧纸面栏竖排书名（不再骑缝横题 clip-path）
+        'data-cover-opening="folio-overlap"] .cover-opening__title',
+        "writing-mode: vertical-rl",
         "border-radius: 50%",
         "min-width: 64rem",
         "cover-opening__placeholder-badge",

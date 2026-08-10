@@ -161,9 +161,27 @@ def default_style_id() -> str:
     return STYLE_REGISTRY[0].style_id
 
 
-def render_prompt(style: CalligraphyStyle, *, title: str, subtitle: str | None = None) -> str:
-    """替换固定模板中的 ``{{title}}``/``{{subtitle}}`` 占位符（D-CAL-15）。"""
+#: folio-overlap 等竖排 Opening：在固定模板后追加版式约束（仍不含用户自由文本）。
+_VERTICAL_LAYOUT_SUFFIX = (
+    "版式为单列竖排条幅，汉字自上而下书写，每个字正向直立不侧转，"
+    "整体窄高、左右留白对称；"
+)
+
+
+def render_prompt(
+    style: CalligraphyStyle,
+    *,
+    title: str,
+    subtitle: str | None = None,
+    layout: str = "horizontal",
+) -> str:
+    """替换固定模板中的 ``{{title}}``/``{{subtitle}}`` 占位符（D-CAL-15）。
+
+    ``layout="vertical"`` 时追加竖排条幅约束（供对页叠印等左侧竖题风格）。
+    """
     text = style.prompt_template.replace("{{title}}", title)
     if "{{subtitle}}" in text:
         text = text.replace("{{subtitle}}", subtitle or "")
+    if (layout or "horizontal").strip().lower() == "vertical":
+        text = f"{text}{_VERTICAL_LAYOUT_SUFFIX}"
     return text

@@ -74,3 +74,13 @@ def test_render_prompt_only_replaces_known_placeholders_not_arbitrary_text() -> 
     assert style is not None
     prompt = render_prompt(style, title="A{{title}}B")
     assert prompt.count("A") >= 1 and prompt.count("B") >= 1
+
+
+def test_render_prompt_vertical_layout_appends_column_constraint() -> None:
+    style = get_style(default_style_id())
+    assert style is not None
+    horizontal = render_prompt(style, title="珠海东澳岛")
+    vertical = render_prompt(style, title="珠海东澳岛", layout="vertical")
+    assert "单列竖排" in vertical
+    assert "单列竖排" not in horizontal
+    assert "珠海东澳岛" in vertical

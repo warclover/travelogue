@@ -179,10 +179,12 @@ def generate_raw(
     subtitle: str | None = None,
     model: str | None = None,
     prompt_version: str = "v2",
+    layout: str = "horizontal",
 ) -> RouteCRawResult:
     """提交 + 轮询通义万相；返回未抠字/未上色的原图。
 
     失败即抛 :class:`RouteCFailure`；调用方必须 fallback（D-CAL-16）。
+    ``layout="vertical"`` 时在 prompt 追加竖排条幅约束（folio-overlap）。
     """
     style = get_style(style_id, prompt_version=prompt_version)
     if style is None:
@@ -190,9 +192,11 @@ def generate_raw(
             "E_CAL_C_UNKNOWN_STYLE",
             detail=f"{style_id}@{prompt_version}",
         )
-    prompt = render_prompt(style, title=title, subtitle=subtitle)
+    prompt = render_prompt(style, title=title, subtitle=subtitle, layout=layout)
     use_model = model or DEFAULT_MODEL
-    task_id = _submit_task(prompt, style.negative_prompt, model=use_model)
+    # 竖排条幅用竖向画幅，降低横排扩散的默认 induct
+    size = "768*1280" if (layout or "").strip().lower() == "vertical" else "1024*1024"
+    task_id = _submit_task(prompt, style.negative_prompt, model=use_model, size=size)
     payload = _poll_task(task_id)
     results = (payload.get("output") or {}).get("results") or []
     if not results:
