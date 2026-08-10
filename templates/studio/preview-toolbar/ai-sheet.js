@@ -297,6 +297,7 @@ export function mountAiSurface(root, tripId, opts) {
     }
 
     body.innerHTML =
+      '<p class="preview-ai-sheet__crosshint">版式与书衣请用「精修」；智能生成请用「AI」。</p>' +
       titleArtBlockHtml() +
       narrateBlockHtml() +
       intentBlockHtml() +

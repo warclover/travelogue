@@ -92,6 +92,15 @@ def test_sas_w2_gate_help_inline() -> None:
     assert "TRAVELOGUE_AI_SURFACE" in text
 
 
+def test_sas_w3_refine_cross_link_copy() -> None:
+    """COPY-SAS-08 · W3 精修互链文案。"""
+    text = _AI_SHEET.read_text(encoding="utf-8")
+    assert "版式与书衣请用「精修」" in text
+    assert "智能生成请用「AI」" in text
+    sheet = _SHEET.read_text(encoding="utf-8")
+    assert "智能生成请用顶栏「AI」" in sheet
+
+
 def test_sas_w2_entry_exposes_intent_brief_ui() -> None:
     text = _ENTRY.read_text(encoding="utf-8")
     assert "def build_intent_brief_ui" in text

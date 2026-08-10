@@ -117,6 +117,13 @@
   padding: 14px 16px 28px;
 }
 
+.preview-ai-sheet__crosshint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #5c574f;
+}
+
 .preview-ai-sheet__block {
   background: #fff;
   border: 1px solid #d7ddd8;

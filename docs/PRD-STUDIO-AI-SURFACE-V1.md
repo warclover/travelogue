@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.0** |
-| **状态** | **Conditional Go · 七席+1 Must-Fix 已回写**（[评审纪要](./acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md) · BLK-SAS-01～05） |
+| **文档版本** | **v0.2.1** |
+| **状态** | **编码收口 · W1～W3 Done（不含 AC-SAS-08b）** · Conditional Go BLK 已关（[评审纪要](./acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md)） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「预览 AI 应用面」— **SAS**（Studio AI Surface） |
 | **触发来源** | 2026-08-10 产品狗粮：AI 能力（装帧标题 / Intent / Critic / 杂志文案 / 本机连接）分散且难发现；ACP 偏后端收编、用户面缺一级入口。共识：在画册预览顶栏增加「AI」入口，统一本册 AI 动作与本机连接 |
@@ -12,8 +12,8 @@
 | **关联文档** | [PRD-PREVIEW-REFINE-V1.md](./PRD-PREVIEW-REFINE-V1.md) · [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) · [PRD-REFINE-FEEDBACK-LOOP-V1.md](./PRD-REFINE-FEEDBACK-LOOP-V1.md) · [AGENT-ARCHITECTURE.md §17](./AGENT-ARCHITECTURE.md) · [adr/019-desktop-user-data-llm-secrets.md](./adr/019-desktop-user-data-llm-secrets.md) |
 | **线框** | [wireframes/studio-ai-surface-v1-wireframe.html](./wireframes/studio-ai-surface-v1-wireframe.html)（F0–F6 · 落位以 D-SAS-02 为准） |
 | **评审记录** | [acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md](./acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md)（七席+典型用户 · 8/8 Conditional Go） |
-| **验收** | Kickoff 后拆 `ACCEPTANCE-STUDIO-AI-SURFACE-V1.md`；本文 §10 为源 |
-| **实施清单** | Kickoff 后拆 `IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md` |
+| **验收** | [ACCEPTANCE-STUDIO-AI-SURFACE-V1.md](./ACCEPTANCE-STUDIO-AI-SURFACE-V1.md)（§10 为源）· [W3 狗粮](./acceptance-records/sas-studio-ai-surface-v1-w3-dogfood-2026-08-10.md) |
+| **实施清单** | [IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md](./IMPLEMENTATION-STUDIO-AI-SURFACE-V1.md) |
 | **更新日期** | 2026-08-10 |
 
 > **定位**
@@ -481,5 +481,6 @@ AIR：文案产品语义；预览入口权威迁移至 SAS（D-SAS-06 / D-SAS-16
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2.1 | 2026-08-10 | W1～W3 编码收口：挂 ACCEPTANCE/IMPLEMENTATION/狗粮纪要；状态改为编码收口 Done（仍不含 AC-SAS-08b / 正式默认开闸） |
 | v0.2.0 | 2026-08-10 | 七席+1 Conditional Go 回写 BLK-SAS-01～05：Dock 现网落位 · W1 去掉 voice 假绿 · 分动作门控 D-SAS-15 · AIR 切片 D-SAS-16 · 埋点 allowlist AC-SAS-17；里程碑 W1/W2 切开 |
 | v0.1.0 | 2026-08-10 | 初稿：线框 F0–F6 产品化；杂志文案按解冻整合写入 D-SAS-06 / F-SAS-05 / AC-SAS-07～08 |
