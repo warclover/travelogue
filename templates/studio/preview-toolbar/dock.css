@@ -595,7 +595,8 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   top: var(--preview-toolbar-h, 80px);
   right: 0;
   bottom: 0;
-  width: min(380px, 92vw);
+  /* 加宽以容纳章名 + 改名 / AI 润色 / 这章不对 横向一排 */
+  width: min(520px, 94vw);
   z-index: 520;
   display: flex;
   flex-direction: column;
@@ -656,21 +657,25 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   align-items: center;
 }
 
+/* 副日期：独占次行；order 保证在操作钮后、AI 提示前 */
 .preview-chapter-panel__date {
   flex: 1 1 100%;
-  margin: 2px 0 0 4px;
+  order: 5;
+  margin: 0 0 0 4px;
   font-size: 11px;
-  color: rgba(38, 50, 56, 0.62);
+  color: rgba(232, 236, 234, 0.55);
   letter-spacing: 0.02em;
   line-height: 1.35;
 }
 
 .preview-chapter-panel__chap {
-  flex: 1 1 auto;
+  flex: 1 1 10em;
+  min-width: 8em;
   text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -679,6 +684,9 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   padding: 10px 12px;
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview-chapter-panel__chap:hover {
@@ -746,6 +754,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__ai-hint {
   flex: 1 1 100%;
+  order: 20;
   margin: 4px 0 0;
   font-size: 11px;
   line-height: 1.35;
@@ -754,6 +763,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__ai-accept {
   flex: 0 0 auto;
+  order: 21;
   margin-top: 4px;
   border: 1px solid rgba(196, 165, 116, 0.55);
   background: transparent;

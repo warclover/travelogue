@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 
 from travelogue.config.layout_vibe import (
@@ -83,8 +85,12 @@ def test_lvp_binds_trip_id_before_job_runs(
     from travelogue.web.studio_jobs import get_job_store
 
     store = get_job_store()
+    # create_g1_continue_job also refuses when import slot is held — clear both.
     store.finish_g1()
-    trip_dir = tmp_path / "demo-lvp-busy"
+    store.finish_import()
+    # Unique trip id · avoid 409 from leftover trip busy / on-demand flags.
+    trip_id = f"demo-lvp-busy-{uuid.uuid4().hex[:8]}"
+    trip_dir = tmp_path / trip_id
     trip_dir.mkdir()
     (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
 
@@ -127,12 +133,12 @@ def test_lvp_binds_trip_id_before_job_runs(
 
     h = _H()
     try:
-        mod.handle_layout_vibe(h, "demo-lvp-busy")
+        mod.handle_layout_vibe(h, trip_id)
         assert h.status == 202
-        assert store.is_trip_busy("demo-lvp-busy")
+        assert store.is_trip_busy(trip_id)
     finally:
         for job in list(store._jobs.values()):
-            if job.trip_id == "demo-lvp-busy":
+            if job.trip_id == trip_id:
                 store.finalize(job, status="cancelled")
         store.finish_g1()
 
@@ -146,7 +152,9 @@ def test_lvp_runner_preserves_export_layout_auto(
 
     store = get_job_store()
     store.finish_g1()
-    trip_dir = tmp_path / "demo-auto"
+    store.finish_import()
+    trip_id = f"demo-auto-{uuid.uuid4().hex[:8]}"
+    trip_dir = tmp_path / trip_id
     trip_dir.mkdir()
     (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
     written: dict = {}
@@ -227,12 +235,15 @@ def test_lvp_runner_preserves_export_layout_auto(
 
     h = _H()
     try:
-        mod.handle_layout_vibe(h, "demo-auto")
+        mod.handle_layout_vibe(h, trip_id)
         assert h.status == 202
         assert written.get("exportLayout") == "auto"
         assert written.get("chapters") == [{"id": "rebuilt"}]
         assert (written.get("studio") or {}).get("layoutVibe") == VIBE_MAGAZINE_DEFAULT
     finally:
+        for job in list(store._jobs.values()):
+            if job.trip_id == trip_id:
+                store.finalize(job, status="cancelled")
         store.finish_g1()
 
 

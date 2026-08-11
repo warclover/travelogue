@@ -124,6 +124,7 @@ export function mountAiSurface(root, tripId, opts) {
   var titleArtRouteCEnabled = false;
   var titleArtBusy = false;
   var intentBusy = false;
+  /** @type {Record<string, any> | null} */
   var entryCache = null;
   var pendingFocus = null;
   var hasBadge = false;

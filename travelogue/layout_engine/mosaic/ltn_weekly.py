@@ -246,8 +246,8 @@ def burst_pass_rate(
     burst_seconds: float = 1800.0,
 ) -> float | None:
     """G-LTN-07 / LRG · 1P+(N-1)L window time-near pass rate."""
-    from travelogue.curation.burst_utils import parse_taken_ts, time_near_chain
-    from travelogue.curation.layout_planner import aspect_kind_for_asset
+    from travelogue.layout_contract.burst import parse_taken_ts, time_near_chain
+    from travelogue.layout_contract.orientations import aspect_kind_for_asset
 
     assets = trip.get("assets") or []
     assets_map = {str(a["id"]): a for a in assets if a.get("id")}

@@ -120,11 +120,11 @@ def test_order_bookends_and_center_rails() -> None:
 
 def test_experiments_gate_admits_tri_col_family() -> None:
     trip = "dogfood-tri-col"
-    allow = (
+    tri_col_allow = (
         PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS,
         PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
-        PATTERN_LANDSCAPE_6,
     )
+    allow = tri_col_allow + (PATTERN_LANDSCAPE_6,)
     app = _experiments(allow=allow, trip=trip)
     for pid in allow:
         assert lifecycle_admit(
@@ -132,13 +132,16 @@ def test_experiments_gate_admits_tri_col_family() -> None:
         ).ok
     # Default path (no allowlist hit) stays gated.
     bare = get_config()
-    assert not lifecycle_admit(
-        PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS,
-        app=bare,
-        mosaic_cfg=bare.mosaic,
-        trip_id=trip,
-    ).ok
-    assert not lifecycle_admit(
+    for pid in tri_col_allow:
+        assert not lifecycle_admit(
+            pid,
+            app=bare,
+            mosaic_cfg=bare.mosaic,
+            trip_id=trip,
+        ).ok
+    # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 experiments 路径下，
+    # 只有 white-list equal-grid 的 landscape-6 会被 EGA 放行。
+    assert lifecycle_admit(
         PATTERN_LANDSCAPE_6, app=bare, mosaic_cfg=bare.mosaic, trip_id=trip
     ).ok
 

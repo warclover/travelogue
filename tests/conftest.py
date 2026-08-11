@@ -104,7 +104,16 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Auto-mark browser tests; optional --fast; run Studio UI Playwright last."""
+    """Auto-mark browser tests; optional --fast; run Studio UI Playwright last.
+
+    Auto-markers must run *before* ``--fast`` filtering: path-bucket
+    ``integration`` / ``e2e`` markers are applied here, and filtering on a
+    pre-marker snapshot leaks ``tests/integration/**`` into the fast subset
+    (Arch Opt V2 · M2-A2a / 07-09 conftest ordering regression).
+    """
+    for item in items:
+        _apply_auto_markers(item)
+
     if config.getoption("--fast"):
         deselected: list[pytest.Item] = []
         selected: list[pytest.Item] = []
@@ -116,9 +125,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if deselected:
             config.hook.pytest_deselected(items=deselected)
         items[:] = selected
-
-    for item in items:
-        _apply_auto_markers(item)
 
     serial: list[pytest.Item] = []
     other: list[pytest.Item] = []

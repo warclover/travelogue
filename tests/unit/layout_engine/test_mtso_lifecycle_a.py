@@ -23,6 +23,7 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_MOSAIC_5_2P3L_EQUAL,
     PATTERN_MOSAIC_5_MAIN_HERO_PLUS_4,
     PATTERN_MOSAIC_6_MAIN_HERO_PLUS_5,
+    PATTERN_LANDSCAPE_6,
 )
 from travelogue.layout_engine.mosaic.hook import (
     begin_mosaic_capture,
@@ -452,6 +453,12 @@ def test_default_registry_has_zero_experimental() -> None:
         except KeyError:
             continue
         status = str(getattr(tpl, "status", "") or "")
+        if pid == PATTERN_LANDSCAPE_6:
+            # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · experiments off
+            # 时，equal-grid 白名单里的 landscape-6 仍可经 EGA 准入。
+            assert status == "experimental"
+            assert lifecycle_admit(pid, app=app_off, mosaic_cfg=app_off.mosaic).reason == "ega_equal_grid"
+            continue
         assert status not in ("experimental", "deprecated", "disabled"), pid
         rollout = getattr(tpl, "rollout", None) or {}
         if isinstance(rollout, dict):

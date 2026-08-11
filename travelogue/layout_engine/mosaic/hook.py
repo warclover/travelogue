@@ -549,7 +549,10 @@ def _ega_size6_quota_bypass(
     *,
     cfg: MosaicConfig,
 ) -> bool:
-    """P2 · size=6 pure-L equal-grid bypasses large/dense chapter large-cap."""
+    """P2 · size=6 pure-L equal-grid may skip *large-mosaic chapter* quota only.
+
+    Must NOT bypass P21/MTSO adjacent-dense or dense_collage_max (G-06 / NG-01).
+    """
     from travelogue.config.mosaic import effective_ega_l6_large_quota_exempt
 
     if size != 6 or not effective_ega_l6_large_quota_exempt(cfg):
@@ -944,10 +947,19 @@ def try_mosaic_window(ctx: ChapterPlanContext, start: int) -> int | None:
             cfg.density_budget.enabled
             and ctx.layout_state is not None
             and size >= min_dense
-            and not ega_l6_bypass
             and not ctx.layout_state.can_use_dense_collage_window(size)
         ):
-            continue
+            # can_use_dense_collage_window folds large-chapter quota + adjacent/dense-max.
+            # EGA may only forgive the large-quota limb (size6.large_mosaic_quota_exempt).
+            st = ctx.layout_state
+            large_only = (
+                ega_l6_bypass
+                and st.dense_collage_used < st.dense_collage_max
+                and not st.last_was_dense_collage
+                and not st.can_use_large_mosaic_window(size)
+            )
+            if not large_only:
+                continue
         if (
             ctx.layout_state is not None
             and size >= ctx.layout_state.large_mosaic_min_slots

@@ -108,6 +108,7 @@ export function mountNarrateDiffBar(root, tripId) {
   if (jump) {
     jump.addEventListener("click", function () {
       var sel = data.firstAnchor || ".chapter-lead, [data-chapter-lead], .cover-hook";
+      /** @type {Element | null} */
       var target = null;
       sel.split(",").some(function (s) {
         target = document.querySelector(s.trim());

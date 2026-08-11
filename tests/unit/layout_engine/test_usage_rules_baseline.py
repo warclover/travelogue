@@ -34,7 +34,14 @@ def _six_landscape_window():
 
 def test_usage_rules_off_matches_no_ctx(monkeypatch):
     ids, aspects, assets_map = _six_landscape_window()
-    cfg = MosaicConfig()
+    base_cfg = MosaicConfig()
+    cfg = replace(
+        base_cfg,
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时
+        # landscape-6 会留在 size=6 候选里；本用例显式关 EGA，保持
+        # “仅剩 hero SKU → usage empty-fallback restore” 的验证意图。
+        equal_grid_admission=replace(base_cfg.equal_grid_admission, enabled=False),
+    )
     st = ScreenLayoutPlannerState.from_trip_total(40)
     st.last_was_dense_collage = True
 
@@ -100,7 +107,13 @@ def test_usage_rules_off_matches_no_ctx(monkeypatch):
 def test_usage_rules_on_restores_main_hero_when_only_heroes(monkeypatch):
     """LTN C3 · 平铺 6 剪枝后，size=6 仅 hero 候选；UR-01 拒尽 → restore。"""
     ids, aspects, assets_map = _six_landscape_window()
-    cfg = MosaicConfig()
+    base_cfg = MosaicConfig()
+    cfg = replace(
+        base_cfg,
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时
+        # equal-grid six 不再被剪空；该用例需关 EGA 才能稳定覆盖 hero-only restore。
+        equal_grid_admission=replace(base_cfg.equal_grid_admission, enabled=False),
+    )
     base = get_config()
     layout = replace(
         base.layout,

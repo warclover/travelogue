@@ -287,9 +287,11 @@ def layout_snapshot(chapters: list[dict]) -> dict[str, Any]:
 
 
 def _mosaic_cfg_for_golden():
-    from travelogue.config.mosaic import TemplateContractConfig
+    from travelogue.config.mosaic import TemplateContractConfig, mosaic_from_dict
 
     base = _lte_pattern_config()
+    # Product defaults (cohort ``*``), not local config.yaml dogfood allowlists.
+    product_te = mosaic_from_dict({}).template_experiments
     return replace(
         base,
         mosaic=replace(
@@ -299,6 +301,7 @@ def _mosaic_cfg_for_golden():
             unified_mode=True,
             scorer_version="p15-s2",
             min_candidate_score=0.0,
+            template_experiments=product_te,
             # Isolate from local config.yaml dogfood (rails not in MOSAIC_UNIFIED).
             template_contract=TemplateContractConfig(enabled=False, shadow_log=False),
         ),

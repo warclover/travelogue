@@ -156,7 +156,7 @@ def scene_short_from_segment_label(
     overseas place not covered by the trip's authoritative places (VR-N05).
     """
     from travelogue.domain.copy_subject import is_generic_place
-    from travelogue.services.narrative_validate import unauthorized_place_mentions
+    from travelogue.domain.place_names import unauthorized_place_mentions
 
     text = (label or "").strip().strip("·• ")
     if not text:
@@ -166,6 +166,10 @@ def scene_short_from_segment_label(
         if part in _DAYPART_TAILS:
             continue
         if _DATEISH_PART_RE.match(part) or _DATE_HEAD_RE.match(part):
+            continue
+        # Album-marketing tails (「…年度精选」「…游记」) are not scene shorts —
+        # skip the whole part so thin titles fall back to date±daypart (SNR).
+        if _SCENE_JUNK_RE.search(part):
             continue
         cleaned = _SCENE_JUNK_RE.sub("", part).strip()
         cleaned = re.sub(r"\d+$", "", cleaned).strip(" ·•-_")
@@ -313,7 +317,7 @@ def chapter_titles(
     segment_labels: dict[str, str] | None = None,
     plan_cities: list[str] | None = None,
 ) -> list[str]:
-    from travelogue.services.narrative_validate import allowed_place_names
+    from travelogue.domain.place_names import allowed_place_names
 
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
     assets_by_id = {a["id"]: a for a in assets}

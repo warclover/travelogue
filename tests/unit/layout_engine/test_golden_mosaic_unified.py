@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from tests._golden.helpers import (
     build_mosaic_landscape6_trip,
     build_mosaic_landscape9_trip,
@@ -19,6 +21,7 @@ from travelogue.layout_engine.mosaic.constants import (
     PATTERN_PORTRAIT_3,
     PATTERN_PORTRAIT_4,
 )
+from travelogue.config import get_config
 from travelogue.layout_engine.mosaic.metrics import mcs_unified_exposure_rate
 
 
@@ -52,14 +55,31 @@ def test_golden_mosaic_landscape_6_matches_mcs():
     assert "screen-landscape-4" in patterns or "screen-landscape-1" in patterns
 
 
-def test_mosaic_landscape_6_ab_unified_vs_legacy():
+def test_mosaic_landscape_6_ab_unified_vs_legacy(monkeypatch):
     """6 横图：MCS 不再合并为 hero-3-2（Plate 63）；flat-6 已剪除。"""
     buckets, aspects, assets = build_mosaic_landscape6_trip()
+    base = get_config()
+    legacy_cfg = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            enabled=False,
+            # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 该 AB 用例比较的是
+            # pre-EGA legacy 与 MCS；legacy 侧显式关 EGA，避免 landscape-6 改写旧基线。
+            equal_grid_admission=replace(base.mosaic.equal_grid_admission, enabled=False),
+        ),
+    )
+    monkeypatch.setattr("travelogue.config.get_config", lambda: legacy_cfg)
     off = plan_legacy_screens(buckets, aspects, assets, mosaic_enabled=False)
     on = plan_mosaic_screens(buckets, aspects, assets)
-    # MEGC default-on (PR-B2) demotes classic landscape-4 → more singles/triples.
-    assert len(off[0]["screens"]) == 4
-    assert PATTERN_LANDSCAPE_6 not in [s["patternId"] for s in off[0]["screens"]]
+    # MEGC default-on (PR-B2) demotes classic landscape-4 → legacy 侧现为 1+3+2。
+    off_patterns = [s["patternId"] for s in off[0]["screens"]]
+    assert off_patterns == [
+        "screen-landscape-1",
+        "screen-landscape-3",
+        "screen-landscape-2",
+    ]
+    assert PATTERN_LANDSCAPE_6 not in off_patterns
     on_patterns = [s["patternId"] for s in on[0]["screens"]]
     assert PATTERN_MOSAIC_5_HERO_3_2_PLUS_4 not in on_patterns
     assert PATTERN_LANDSCAPE_6 not in on_patterns

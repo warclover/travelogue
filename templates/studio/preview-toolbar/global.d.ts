@@ -10,6 +10,13 @@ declare module "/__studio/js/llm-settings.js" {
   export function openLlmSettings(opts?: Record<string, unknown>): void;
 }
 
+declare module "/__studio/js/help-drawer.js" {
+  export function openHelpDrawer(opts?: Record<string, unknown>): void;
+  export function closeHelpDrawer(): void;
+  export function isHelpDrawerOpen(): boolean;
+  export function configureHelpDrawer(opts?: Record<string, unknown>): void;
+}
+
 interface Error {
   job?: unknown;
 }
@@ -38,6 +45,8 @@ interface Window {
     profile?: string;
     scroll?: { folio?: string };
   };
+  /** SNR · CTA label dedupe key (longshot.js) */
+  __snrCtaLabelKey?: string;
 }
 
 interface Element {
@@ -68,7 +77,23 @@ interface Element {
   _savedMarkTimer?: ReturnType<typeof setTimeout>;
   _panelDraft?: { getDraft?: () => Record<string, unknown>; [key: string]: unknown };
   _chapterPanel?: { isOpen?: () => boolean; close?: () => void; [key: string]: unknown };
+  _aiSheet?: {
+    open?: (opts?: Record<string, unknown>) => void;
+    close?: (reason?: string, done?: () => void) => void;
+    isOpen?: () => boolean;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
+}
+
+interface HTMLElement {
+  /** AI Sheet API mounted on preview toolbar root (SNR / chapter panel). */
+  _aiSheet?: {
+    open?: (opts?: Record<string, unknown>) => void;
+    close?: (reason?: string, done?: () => void) => void;
+    isOpen?: () => boolean;
+    [key: string]: unknown;
+  };
 }
 
 interface HTMLInputElement {

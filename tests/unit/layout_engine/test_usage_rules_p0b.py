@@ -161,7 +161,13 @@ def test_usage_empty_fallback_restores_weakest_rule(monkeypatch):
     aspects = {f"a{i}": "landscape" for i in range(6)}
     assets_map = {f"a{i}": _asset(f"a{i}", w=3000, h=1687) for i in range(6)}
     ids = [f"a{i}" for i in range(6)]
-    cfg = MosaicConfig()
+    base_cfg = MosaicConfig()
+    cfg = replace(
+        base_cfg,
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时
+        # landscape-6 会继续参评；本用例显式关 EGA，隔离 UR empty-fallback 语义。
+        equal_grid_admission=replace(base_cfg.equal_grid_admission, enabled=False),
+    )
     st = ScreenLayoutPlannerState.from_trip_total(40)
     st.last_was_dense_collage = True
     ctx = build_window_context(ids, aspects, assets_map, layout_state=st, median_sharp=0.5)

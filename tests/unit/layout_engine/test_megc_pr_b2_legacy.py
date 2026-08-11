@@ -20,7 +20,7 @@ def _land(aid: str, *, w: int, h: int) -> dict:
     }
 
 
-def _cfg(*, enabled: bool, mode: str = "soft_penalty"):
+def _cfg(*, enabled: bool, mode: str = "soft_penalty", ega_enabled: bool = True):
     return mosaic_from_dict(
         {
             "equal_grid_contract": {
@@ -31,7 +31,10 @@ def _cfg(*, enabled: bool, mode: str = "soft_penalty"):
                     "allow_peaks": ["sixteen_nine"],
                     "score_mul": 0.62,
                 },
-            }
+            },
+            "equal_grid_admission": {
+                "enabled": ega_enabled,
+            },
         }
     )
 
@@ -108,14 +111,16 @@ def test_classic_planner_demotes_3x2_landscape4_when_megc_on() -> None:
     """Classic ``_plan_one_screen`` path (not build_legacy_screen) must also demote."""
     from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
 
-    ids = [f"a{i}" for i in range(6)]
+    ids = [f"a{i}" for i in range(4)]
     assets_map = {aid: _land(aid, w=3000, h=2000) for aid in ids}
     aspects = {aid: "landscape" for aid in ids}
     screen, consumed = _plan_one_screen(
         ids,
         aspects,
         assets_map=assets_map,
-        cfg=_App(_cfg(enabled=True)),  # type: ignore[arg-type]
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时 6L 会直接命中
+        # equal-grid six；这里收窄为四横输入，精确覆盖 classic landscape-4 的 MEGC demote。
+        cfg=_App(_cfg(enabled=True, ega_enabled=False)),  # type: ignore[arg-type]
     )
     assert screen is not None
     assert screen.get("patternId") != "screen-landscape-4"
@@ -130,14 +135,16 @@ def test_classic_planner_demotes_3x2_landscape4_when_megc_on() -> None:
 def test_classic_planner_keeps_16x9_landscape4_when_megc_on() -> None:
     from travelogue.layout_engine.planner.screen_planner import _plan_one_screen
 
-    ids = [f"w{i}" for i in range(6)]
+    ids = [f"w{i}" for i in range(4)]
     assets_map = {aid: _land(aid, w=3840, h=2160) for aid in ids}
     aspects = {aid: "landscape" for aid in ids}
     screen, consumed = _plan_one_screen(
         ids,
         aspects,
         assets_map=assets_map,
-        cfg=_App(_cfg(enabled=True)),  # type: ignore[arg-type]
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 收窄为四横输入，
+        # 避免 default-on landscape-6 抢占，从而只验证 classic landscape-4 的 cinema allow。
+        cfg=_App(_cfg(enabled=True, ega_enabled=False)),  # type: ignore[arg-type]
     )
     assert screen is not None
     assert screen.get("patternId") == "screen-landscape-4"

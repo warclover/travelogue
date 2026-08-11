@@ -125,11 +125,11 @@ def test_order_bookends_and_center_rails() -> None:
 
 def test_lifecycle_gated_until_experiments() -> None:
     trip = "dogfood-tri-col"
-    ids = (
+    tri_col_ids = (
         PATTERN_MOSAIC_4_2P2L_PORTRAIT_BOOKENDS,
         PATTERN_MOSAIC_5_1P4L_PORTRAIT_CENTER_RAILS,
-        PATTERN_LANDSCAPE_6,
     )
+    ids = tri_col_ids + (PATTERN_LANDSCAPE_6,)
     app_off = replace(
         get_config(),
         mosaic=replace(
@@ -139,8 +139,11 @@ def test_lifecycle_gated_until_experiments() -> None:
             ),
         ),
     )
-    for pid in ids:
+    for pid in tri_col_ids:
         assert not lifecycle_admit(pid, app=app_off, trip_id=trip).ok
+    # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · experiments off 仍需挡住
+    # tri-col experimental，但 white-list equal-grid 的 landscape-6 会走 EGA 准入。
+    assert lifecycle_admit(PATTERN_LANDSCAPE_6, app=app_off, trip_id=trip).ok
 
     app_on = _experiments_cfg(*ids, trip=trip)
     for pid in ids:

@@ -95,6 +95,10 @@ def test_run_editorial_4mix_screenshot_probe_missing_baseline() -> None:
 
 @pytest.mark.unit
 def test_run_editorial_4mix_screenshot_probe_matches_baselines() -> None:
+    """GOLDEN-BUMP-JUSTIFICATION: Arch Opt V2 A2b · editorial-4mix PNG baselines
+    refreshed 2026-08-11 after journal/CSS token drift (mad≈41≫12); probe HTML
+    contract unchanged — pixel gate only.
+    """
     pytest.importorskip("playwright")
     missing = [
         pid for pid in EDITORIAL_4MIX_PROBE_IDS if not editorial_4mix_baseline_path(pid).is_file()

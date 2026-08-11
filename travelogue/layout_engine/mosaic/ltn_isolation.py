@@ -116,7 +116,7 @@ def is_tiler_or_parity_stack(screen: dict[str, Any]) -> bool:
 
 
 def _ordered_asset_ids(trip: dict[str, Any], assets_map: dict[str, dict]) -> list[str]:
-    from travelogue.curation.burst_utils import parse_taken_ts
+    from travelogue.layout_contract.burst import parse_taken_ts
 
     cur = trip.get("curation") if isinstance(trip.get("curation"), dict) else {}
     ordered = [
@@ -233,7 +233,7 @@ def compute_ac_c01_on_trip(
     cfg: MosaicConfig | None = None,
 ) -> dict[str, Any]:
     """Convenience: strict AC-C-01 from a trip dict (chapters + assets)."""
-    from travelogue.curation.layout_planner import aspect_kind_for_asset
+    from travelogue.layout_contract.orientations import aspect_kind_for_asset
 
     assets = trip.get("assets") or []
     assets_map = {str(a["id"]): a for a in assets if a.get("id")}
