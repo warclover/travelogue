@@ -156,7 +156,7 @@ def scene_short_from_segment_label(
     overseas place not covered by the trip's authoritative places (VR-N05).
     """
     from travelogue.domain.copy_subject import is_generic_place
-    from travelogue.services.narrative_validate import unauthorized_place_mentions
+    from travelogue.domain.place_names import unauthorized_place_mentions
 
     text = (label or "").strip().strip("·• ")
     if not text:
@@ -313,7 +313,7 @@ def chapter_titles(
     segment_labels: dict[str, str] | None = None,
     plan_cities: list[str] | None = None,
 ) -> list[str]:
-    from travelogue.services.narrative_validate import allowed_place_names
+    from travelogue.domain.place_names import allowed_place_names
 
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
     assets_by_id = {a["id"]: a for a in assets}
