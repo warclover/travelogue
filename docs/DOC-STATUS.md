@@ -176,7 +176,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6 | **partial superseded** | `poster_bric` 拼贴内核/画幅 → 见 PRD-EXPORT-CARD-COMPOSE-V1（Writer/flag 挂点仍 active） |
 | [PRD-ARCH-OPTIMIZATION-V2.md](./PRD-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 Round 2 **v2.1.0**（评审修订稿）· 承接 PRD-ARCH-OPTIMIZATION v1.1.0 WS1 · 已吸收 2026-08-11 架构/开发/算法/测试四方评审（见 [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md)）|
 | [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md) | **active** | PRD-ARCH-OPTIMIZATION-V2 四方评审报告（有条件通过）|
-| [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片**实施准备（仅 M2-A + M2-B1；其余 Parking Lot）|
+| [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片 Done**（M2-A + M2-B1 · [#62](https://github.com/warclover/travelogue/pull/62)；其余 Parking Lot）|
+| [acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md](./acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md) | **active** | Arch Opt V2 收工记录（含 M2-A3 合入路径核实 + 门禁快照）|
 
 ---
 
