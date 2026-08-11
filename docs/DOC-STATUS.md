@@ -159,7 +159,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/persona-feedback-trial-2026-08-10.md](./acceptance-records/persona-feedback-trial-2026-08-10.md) | **active** | SNR 触发试用底稿（十席 · 2026-08-10） |
 | [acceptance-records/snr-w3-dogfood-2026-08-10.md](./acceptance-records/snr-w3-dogfood-2026-08-10.md) | **active** | SNR W3 狗粮 · C1–C8 关闭表 |
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **active** | **CAD** 封面装帧导演 **v0.1.0** Draft · Mode A 默认真照片 · 禁假风景默认 |
-| [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) | **active** | V6 Opening **craft Delta** · 十款 active（联合/hash/Studio）· v1.1.0 |
+| [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) | **active** | **CCF** 封面装帧打磨 **v0.1.0** Draft · Hero Set 三款 craft + fit + CAL 收口 · 取代 CEC |
+| [PRD-COVER-EDITORIAL-COVENANT-V1.md](./PRD-COVER-EDITORIAL-COVENANT-V1.md) | **superseded** | **CEC** → 由 [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) 取代（目标从推荐/契约纠偏为质感打磨） |
+| [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) | **active** | V6 Opening **craft Delta** · 手法基线（可分配集合以代码为准；CCF 拟收至 3 款）· v1.1.0 |
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **active（engineering）** | 写作引擎工程栈仍有效；**用户面由 NAS supersede**（解冻后由 AIR 重新激活用户面） |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **active（engineering）** | WEA 配置加固仍有效；默认 UI 入口由 NAS 关闭（AIR 解冻后恢复） |
 | [UI-DETAIL-CONTRACT-V0.md](./UI-DETAIL-CONTRACT-V0.md) | **frozen** | Studio 弹窗家族细节合同 · Wave1–10 样式落地 |
@@ -174,6 +176,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md](./acceptance-records/ecc-export-card-compose-v1-review-TEMPLATE.md) | **active** | ECC 七席评审纪要**模板**（结案见日期版） |
 | [PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) §6.4 | **superseded** | 小红书 letterbox 切片方案 → 见 PRD-EXPORT-CARD-COMPOSE-V1 |
 | [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) §6 | **partial superseded** | `poster_bric` 拼贴内核/画幅 → 见 PRD-EXPORT-CARD-COMPOSE-V1（Writer/flag 挂点仍 active） |
+| [PRD-ARCH-OPTIMIZATION-V2.md](./PRD-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 Round 2 **v2.1.0**（评审修订稿）· 承接 PRD-ARCH-OPTIMIZATION v1.1.0 WS1 · 已吸收 2026-08-11 架构/开发/算法/测试四方评审（见 [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md)）|
+| [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md) | **active** | PRD-ARCH-OPTIMIZATION-V2 四方评审报告（有条件通过）|
+| [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片**实施准备（仅 M2-A + M2-B1；其余 Parking Lot）|
 
 ---
 
