@@ -139,7 +139,8 @@ test("poster_bric 在 INTENT/PLATFORM 映射中互逆", () => {
 
 test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", () => {
   assert.equal(ctaLabelForPlatform("poster_bric"), "导出单张海报");
-  assert.equal(shortCtaLabelForPlatform("poster_bric"), "单张海报");
+  // SNR · short CTA 带「导出」动词（与小红书/公众号短标签对齐）
+  assert.equal(shortCtaLabelForPlatform("poster_bric"), "导出海报");
   assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · 3:4");
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
@@ -326,7 +327,7 @@ test("wechat_official（公众号）导出形式与 xiaohongshu 一致，仅文�
   // Compose 路径归属与 xiaohongshu 相同（3:4 Card 管线，非 Playwright 长图）。
   assert.equal(isComposePlatform("wechat_official"), true);
 
-  assert.equal(shortCtaLabelForPlatform("wechat_official"), "公众号");
+  assert.equal(shortCtaLabelForPlatform("wechat_official"), "导出公众号");
   assert.notEqual(shortCtaLabelForPlatform("wechat_official"), "发微信群");
   assert.match(ctaLabelForPlatform("wechat_official"), /公众号/);
 
@@ -366,14 +367,21 @@ test("normalizePlatformList · 去重/去空，兜底 wechat_chat", () => {
   assert.deepEqual(normalizePlatformList([], "poster_bric"), ["poster_bric"]);
 });
 
-test("ctaLabelForPlatforms / shortCtaLabelForPlatforms · 单选=单平台文案零回归，多选='N 个模式'", () => {
+test("ctaLabelForPlatforms / shortCtaLabelForPlatforms · 单选=单平台文案零回归，多选用人话「主平台等 N 项」", () => {
   assert.equal(ctaLabelForPlatforms(["xiaohongshu"]), ctaLabelForPlatform("xiaohongshu"));
   assert.equal(
     shortCtaLabelForPlatforms(["xiaohongshu"]),
     shortCtaLabelForPlatform("xiaohongshu")
   );
-  assert.equal(ctaLabelForPlatforms(["xiaohongshu", "wechat_moments"]), "导出 2 个模式");
-  assert.equal(shortCtaLabelForPlatforms(["xiaohongshu", "wechat_moments", "album_spread"]), "3 个模式");
+  // SNR D-SNR-11 · 禁止孤立「N 个模式」作主 CTA
+  assert.equal(
+    ctaLabelForPlatforms(["xiaohongshu", "wechat_moments"]),
+    "导出 · 小红书等 2 项"
+  );
+  assert.equal(
+    shortCtaLabelForPlatforms(["xiaohongshu", "wechat_moments", "album_spread"]),
+    "小红书等3项"
+  );
 });
 
 test("exportSummaryLineForPlatforms · 单选零回归；多选展示平台清单与待确认态", () => {

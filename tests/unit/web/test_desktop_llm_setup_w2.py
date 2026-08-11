@@ -152,9 +152,10 @@ def test_mf06_llm_expect_visible_when_available() -> None:
     # 旧默认串已迁出默认可达面
     assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
     assert "配置写作引擎" not in sheet
-    # ai_surface_dark：expect / setup 冻结串
-    assert "preview-sheet__llm-expect" in sheet
-    assert "DARK_COPY.sheetLlmExpect" in sheet or "sheetLlmExpect" in dark
+    # NAS · 默认 sheet 不渲染 llm-expect；dark 文案 + init 仍保留选择器/冻结串
+    assert "preview-sheet__llm-expect" not in sheet
+    assert "preview-sheet__llm-expect" in init
+    assert "sheetLlmExpect" in dark
     assert "AI 文案已就绪；重新生成不会自动覆盖你的手动修改。" in dark
     assert "当前为本机文案 · 配置写作引擎后可升级" in dark
     # 默认面 early-return，不跑 llm 状态机

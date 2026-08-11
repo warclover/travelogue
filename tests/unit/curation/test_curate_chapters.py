@@ -175,7 +175,10 @@ def test_chapter_titles_clean_long_segment_label() -> None:
         bucket_segment_ids=["seg"],
         segment_labels={"seg": "1月16日·夏睿彤年度精选"},
     )
-    assert titles[0] == "1月16日"
+    # Album-marketing tails must not become scene shorts; SNR may append daypart.
+    assert titles[0].startswith("1月16日")
+    assert "精选" not in titles[0]
+    assert "夏睿彤" not in titles[0]
 
 
 def test_run_curate_auto_attaches_screens() -> None:

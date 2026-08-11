@@ -112,7 +112,7 @@ def test_planning_loop_uses_portrait_3_for_three_portraits(monkeypatch):
 
 
 def test_try_mosaic_window_six_landscapes(monkeypatch):
-    """LTN C3 · flat landscape-6 pruned; MCS may take a smaller window or skip."""
+    """LTN C3 + EGA · pure 6L may emit equal-grid six or fall back to a smaller window."""
     _patch_s2_cfg(monkeypatch)
     assets = [
         {
@@ -136,7 +136,13 @@ def test_try_mosaic_window_six_landscapes(monkeypatch):
     )
     adv = try_mosaic_window(ctx, 0)
     if adv is not None:
-        assert ctx.screens[0]["patternId"] != "screen-landscape-6"
+        pid = ctx.screens[0]["patternId"]
+        # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时，
+        # pure 6L 会保留并尝试 equal-grid six；否则仍允许走较小窗口。
+        if adv == 6:
+            assert pid == "screen-landscape-6"
+        else:
+            assert pid != "screen-landscape-6"
         # Product-default experiments may admit asymmetric landscape-3 (adv=3).
         assert adv in (3, 4, 5, 6)
 

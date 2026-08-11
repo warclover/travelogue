@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from travelogue.config import AppConfig, LayoutConfig
+from travelogue.config import AppConfig, LayoutConfig, get_config
 from travelogue.curation.layout_density import (
     MIN_PHOTOS_COLLAGE_FULL_EFFECT,
     layout_density_effect,
@@ -176,14 +176,32 @@ def _screen_slot_ratios(chapters: list[dict]) -> tuple[float, float, int]:
 
 def _plan_density(density: str, n_assets: int = 50) -> list[dict]:
     chapters, aspects, assets = _synthetic_landscape_chapter(n_assets)
-    return attach_screens_to_chapters(
-        [dict(chapters[0])],
-        aspects,
-        assets=assets,
-        plan_scope="chapter",
-        trip_photo_total=n_assets,
-        layout_density=density,
+    import travelogue.config as config_mod
+
+    base = get_config()
+    patched = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · default-on
+            # equal-grid six 会压平 density 分化；本文件只验证 layoutDensity 策略，
+            # helper 显式关 EGA 以保持 hero/collage/balanced 的隔离对比。
+            equal_grid_admission=replace(base.mosaic.equal_grid_admission, enabled=False),
+        ),
     )
+    orig = config_mod.get_config
+    config_mod.get_config = lambda: patched  # type: ignore[assignment]
+    try:
+        return attach_screens_to_chapters(
+            [dict(chapters[0])],
+            aspects,
+            assets=assets,
+            plan_scope="chapter",
+            trip_photo_total=n_assets,
+            layout_density=density,
+        )
+    finally:
+        config_mod.get_config = orig
 
 
 # Density preferences: hero_first down-weights dense quota (LTN C2 still attempts
@@ -226,14 +244,29 @@ def test_ac_ld_04_quick_share_equivalent_to_balanced() -> None:
     apply_intent(trip_cleared, layout_density=None)
     assert "layoutDensity" not in trip_cleared.get("intent", {})
     chapters, aspects, assets = _synthetic_landscape_chapter(40)
-    no_intent = attach_screens_to_chapters(
-        [dict(chapters[0])],
-        aspects,
-        assets=assets,
-        plan_scope="chapter",
-        trip_photo_total=40,
-        layout_density=layout_density_params(trip_cleared).density,
+    import travelogue.config as config_mod
+
+    base = get_config()
+    patched = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            equal_grid_admission=replace(base.mosaic.equal_grid_admission, enabled=False),
+        ),
     )
+    orig = config_mod.get_config
+    config_mod.get_config = lambda: patched  # type: ignore[assignment]
+    try:
+        no_intent = attach_screens_to_chapters(
+            [dict(chapters[0])],
+            aspects,
+            assets=assets,
+            plan_scope="chapter",
+            trip_photo_total=40,
+            layout_density=layout_density_params(trip_cleared).density,
+        )
+    finally:
+        config_mod.get_config = orig
 
     def patterns(chs: list[dict]) -> list[str]:
         out: list[str] = []

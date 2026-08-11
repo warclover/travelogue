@@ -167,6 +167,10 @@ def scene_short_from_segment_label(
             continue
         if _DATEISH_PART_RE.match(part) or _DATE_HEAD_RE.match(part):
             continue
+        # Album-marketing tails (「…年度精选」「…游记」) are not scene shorts —
+        # skip the whole part so thin titles fall back to date±daypart (SNR).
+        if _SCENE_JUNK_RE.search(part):
+            continue
         cleaned = _SCENE_JUNK_RE.sub("", part).strip()
         cleaned = re.sub(r"\d+$", "", cleaned).strip(" ·•-_")
         if cleaned and len(cleaned) >= 2 and not is_generic_place(cleaned):

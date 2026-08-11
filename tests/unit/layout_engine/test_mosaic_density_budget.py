@@ -166,7 +166,7 @@ def test_large_mosaic_per_template_trip_cap() -> None:
     assert not st.can_use_large_mosaic(pid)
 
 
-def test_large_mosaic_per_chapter_cap() -> None:
+def test_large_mosaic_per_chapter_cap(monkeypatch) -> None:
     st = ScreenLayoutPlannerState.from_trip_total(120)
     a = "screen-landscape-5"
     b = "screen-landscape-6"
@@ -174,6 +174,18 @@ def test_large_mosaic_per_chapter_cap() -> None:
     assert st.can_use_large_mosaic_window(5)
     st.note_screen(a)
     assert not st.can_use_large_mosaic_window(6)
+    # GOLDEN-BUMP-JUSTIFICATION: EGA D-EGA-06 / AC-EGA-06 · 默认 on 时
+    # landscape-6 走 equal-grid chapter large-cap exempt，不应被这条 quota 挡掉。
+    assert st.can_use_large_mosaic(b)
+    base = get_config()
+    ega_off = replace(
+        base,
+        mosaic=replace(
+            base.mosaic,
+            equal_grid_admission=replace(base.mosaic.equal_grid_admission, enabled=False),
+        ),
+    )
+    monkeypatch.setattr("travelogue.config.get_config", lambda: ega_off)
     assert not st.can_use_large_mosaic(b)
     st.begin_chapter_bucket()
     assert st.can_use_large_mosaic(b)

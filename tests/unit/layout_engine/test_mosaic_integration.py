@@ -45,18 +45,34 @@ def _build_mosaic_eligible_trip():
 
 
 def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch, lte_pattern_enabled) -> None:
+    """GOLDEN-BUMP-JUSTIFICATION: isolate from local config.yaml dogfood cohort;
+    start from AppConfig() product defaults so MCS on/off exposure is comparable.
+    """
+    from travelogue.config.app import AppConfig
+    from travelogue.config.mosaic import mosaic_from_dict
+
     buckets, aspects, assets = _build_mosaic_eligible_trip()
-    cfg = get_config()
-    off = replace(cfg.mosaic, enabled=False)
+    # Avoid local dogfood template_experiments / clone gates poisoning the delta.
+    base = replace(
+        AppConfig(),
+        mosaic=replace(
+            mosaic_from_dict({}),
+            enabled=True,
+            enabled_window_sizes=(3, 4, 5, 6),
+            min_candidate_score=0.0,
+        ),
+        layout=get_config().layout,
+    )
+    off = replace(base.mosaic, enabled=False)
     on = replace(
-        cfg.mosaic,
+        base.mosaic,
         enabled=True,
         enabled_window_sizes=(3, 4, 5, 6),
         min_candidate_score=0.0,
     )
     monkeypatch.setattr(
         "travelogue.config.get_config",
-        lambda: replace(cfg, mosaic=off),
+        lambda: replace(base, mosaic=off),
     )
     drain_mosaic_logs()
     chapters_off = plan_legacy_screens(buckets, aspects, assets)
@@ -64,7 +80,7 @@ def test_mosaic_enabled_increases_mosaic5_exposure(monkeypatch, lte_pattern_enab
 
     monkeypatch.setattr(
         "travelogue.config.get_config",
-        lambda: replace(cfg, mosaic=on),
+        lambda: replace(base, mosaic=on),
     )
     drain_mosaic_logs()
     chapters_on = plan_legacy_screens(buckets, aspects, assets)
