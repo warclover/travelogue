@@ -1,0 +1,20 @@
+{
+  "ratchet": "lse-cross-import",
+  "currentBaseline": {
+    "totalCrossEdges": 9,
+    "layoutEngineToCuration": 2,
+    "curationToLayoutEngine": 7,
+    "edgeSignatures": [
+      "travelogue.curation.algo_v3_summary->travelogue.layout_engine.adapter",
+      "travelogue.curation.curate->travelogue.layout_engine.adapter",
+      "travelogue.curation.curate->travelogue.layout_engine.api",
+      "travelogue.curation.layout_metrics->travelogue.layout_engine.adapter",
+      "travelogue.curation.layout_planner->travelogue.layout_engine.adapter",
+      "travelogue.curation.moment_scoring->travelogue.layout_engine.adapter",
+      "travelogue.curation.moment_scoring->travelogue.layout_engine.planner.portrait_2_picker",
+      "travelogue.layout_engine.planner.screen_planner->travelogue.curation.food_policy",
+      "travelogue.layout_engine.planner.screen_planner_stages->travelogue.curation.food_policy"
+    ]
+  },
+  "entries": []
+}
