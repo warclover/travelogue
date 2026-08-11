@@ -6,6 +6,14 @@
 import { fetchEntry } from "./core.js";
 import { trackStudioEvent } from "../js/analytics.js";
 
+/** @returns {Promise<{ openHelpDrawer?: (opts?: Record<string, unknown>) => void }>} */
+function loadHelpDrawer() {
+  // Virtual Studio URL resolved by the Studio static server at runtime.
+  // tsc 5.8 + moduleResolution=bundler does not honor ambient declare module
+  // for this absolute path on dynamic import(); cast keeps the gate green.
+  return import(/** @type {any} */ ("/__studio/js/help-drawer.js"));
+}
+
 var COPY = {
   photoLed: "纯照片成册",
   upgradeReady: "纯照片成册 · 可生成杂志感文案",
@@ -40,7 +48,7 @@ export function mountNarrativePostureBar(root, tripId) {
       sheet.open({ source: "snr_posture", focus: "narrate" });
       return;
     }
-    import("/__studio/js/help-drawer.js")
+    loadHelpDrawer()
       .then(function (mod) {
         if (mod && typeof mod.openHelpDrawer === "function") {
           mod.openHelpDrawer({ source: "snr_posture", itemId: "H7" });
@@ -54,7 +62,7 @@ export function mountNarrativePostureBar(root, tripId) {
       tripId: tripId || null,
       posture: "photo_led",
     });
-    import("/__studio/js/help-drawer.js")
+    loadHelpDrawer()
       .then(function (mod) {
         if (mod && typeof mod.openHelpDrawer === "function") {
           mod.openHelpDrawer({ source: "snr_posture", itemId: "H7" });
