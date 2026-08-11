@@ -212,13 +212,6 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
           scrollToChapter(ch.id);
         });
         li.appendChild(btn);
-        // SNR F2 · 章眉副日期（主标题让位地点/场景时展示）
-        if (ch.dateLabel) {
-          var dateEl = document.createElement("span");
-          dateEl.className = "preview-chapter-panel__date";
-          dateEl.textContent = String(ch.dateLabel);
-          li.appendChild(dateEl);
-        }
         if (ch.isAppendix) {
           var reason = document.createElement("p");
           reason.className = "preview-chapter-panel__appendix-reason";
@@ -301,6 +294,13 @@ export function mountChapterPanel(root, tripId, drawers, sheet) {
               chapterId: ch.id,
             });
           }
+        }
+        // SNR F2 · 章眉副日期（插在操作钮之后，避免挤扁章名横向排列）
+        if (ch.dateLabel) {
+          var dateEl = document.createElement("span");
+          dateEl.className = "preview-chapter-panel__date";
+          dateEl.textContent = String(ch.dateLabel);
+          li.appendChild(dateEl);
         }
         list.appendChild(li);
       });
