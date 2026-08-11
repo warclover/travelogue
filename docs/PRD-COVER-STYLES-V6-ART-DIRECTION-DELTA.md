@@ -3,17 +3,17 @@
 | 属性 | 内容 |
 |------|------|
 | **文档版本** | v1.1.0 |
-| **状态** | **已批准 · 十款上架**（线框签字 2026-08-02；H–L active 2026-08-02） |
+| **状态** | **已批准 · 手法基线仍有效**；**可分配集合以代码为准**（2026-08-03 起 catalog 五款 active；2026-08-11 CCF 默认 Hero Set 三款，见 [PRD-COVER-CRAFT-FOCUS-V1](./PRD-COVER-CRAFT-FOCUS-V1.md)） |
 | **DOC-STATUS** | active |
 | **母文档** | [PRD-COVER-STYLES-V6.md](./PRD-COVER-STYLES-V6.md) v1.3.0 |
 | **视觉真相源** | [wireframes/cover-styles-v6-art-direction-v2-wireframe.html](./wireframes/cover-styles-v6-art-direction-v2-wireframe.html) |
 | **对照旧稿** | [wireframes/cover-styles-v6-craft-refine-v1-wireframe.html](./wireframes/cover-styles-v6-craft-refine-v1-wireframe.html)（参数微调版，已否决为落地基线） |
-| **关联** | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) · [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) |
-| **更新日期** | 2026-08-02 |
+| **关联** | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) · [ACCEPTANCE-COVER-STYLES-V6.md](./ACCEPTANCE-COVER-STYLES-V6.md) · **[PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md)**（现行可分配收口） |
+| **更新日期** | 2026-08-11（可分配集合纠偏注记） |
 
 > **定位**：本 Delta **不是**新产品 PRD，也不是 [PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)（装帧导演）。  
-> 它冻结「同五款 id、换视觉手法」的取舍与 token，并将五款新提案上架为 **active**（十款可分配）。  
-> 冲突裁决：视觉以本 Delta + art-direction-v2 线框为准；产品契约（引擎 / 联合选型 / Schema 写入）仍以 V6 PRD 为准；**可分配集合以 `list_assignable_styles()` 为真相源**（本轮 = 十款）。
+> 它冻结「同五款 id、换视觉手法」的取舍与 token，并将五款新提案上架为 **active**（历史：十款可分配）。  
+> 冲突裁决：视觉以本 Delta + art-direction-v2 线框为准；产品契约（引擎 / 联合选型 / Schema 写入）仍以 V6 PRD 为准；**可分配集合以 `list_assignable_styles()` 为真相源**（**现行 ≠ 十款**；CCF 默认三款 Hero Set）。
 
 ---
 

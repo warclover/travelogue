@@ -945,7 +945,8 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     section.innerHTML =
       '<span class="preview-sheet__label">封面版式</span>' +
       '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑宽屏（≥1024px）生效；窄屏回落雾底呈现。更换版式默认会重荐封面图；双联款会尽量配人物副图。</p>' +
-      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>' +
+      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式" aria-describedby="preview-cover-legacy-hint"></div>' +
+      '<p class="preview-sheet__hint preview-sheet__cover-legacy" id="preview-cover-legacy-hint" hidden></p>' +
       '<p class="preview-sheet__cover-blurb" hidden></p>' +
       '<label class="preview-sheet__cover-keep-label">' +
       '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
@@ -964,6 +965,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
       '</div>';
     var group = section.querySelector(".preview-sheet__cover-styles");
+    var legacyEl = section.querySelector(".preview-sheet__cover-legacy");
     var blurbEl = section.querySelector(".preview-sheet__cover-blurb");
     var fitHintEl = section.querySelector(".preview-sheet__cover-fit-hint");
     var keepCheck = section.querySelector(".preview-sheet__cover-keep-check");
@@ -975,6 +977,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     var titleArtStatus = section.querySelector("[data-title-art-status]");
     var selectedStyle = readCoverOpeningStyleFromDom();
     var options = COVER_OPENING_STYLE_OPTIONS.slice();
+    var coverCraft = null;
 
     function setTitleArtAttribution(engine) {
       if (!titleArtAttr) return;
@@ -1147,6 +1150,31 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           blurbEl.textContent = "";
         }
       }
+      syncLegacyHint(style);
+    }
+
+    function syncLegacyHint(style) {
+      // FE-CCF-02 / FE-CCF-04：经典版式提示；CCF 关闭时不展示
+      if (!legacyEl) return;
+      var craftOn = !!(coverCraft && coverCraft.enabled);
+      var inOptions = options.some(function (o) {
+        return o.id === style;
+      });
+      if (craftOn && style && !inOptions) {
+        var label =
+          (coverCraft && coverCraft.legacyLabel) ||
+          style;
+        if (coverCraft && coverCraft.legacyStyleId === style && coverCraft.legacyHint) {
+          legacyEl.textContent = coverCraft.legacyHint;
+        } else {
+          legacyEl.textContent =
+            "当前为经典版式「" + label + "」，可切换到现行三款。";
+        }
+        legacyEl.hidden = false;
+      } else {
+        legacyEl.hidden = true;
+        legacyEl.textContent = "";
+      }
     }
 
     function setBusy(busy) {
@@ -1261,11 +1289,19 @@ export function mountCoverStyleControls(slot, tripId, opts) {
 
     fetchEntry(tripId)
       .then(function (data) {
+        if (data && data.coverCraft) {
+          coverCraft = data.coverCraft;
+        }
         if (data && Array.isArray(data.coverStyleOptions) && data.coverStyleOptions.length) {
           renderOptions(data.coverStyleOptions);
         }
         if (data && data.coverOpeningStyle) {
           selectedStyle = data.coverOpeningStyle;
+          if (coverCraft && coverCraft.legacyCurrent) {
+            coverCraft.legacyStyleId = selectedStyle;
+            coverCraft.legacyLabel =
+              data.coverStyleLabel || coverCraft.legacyLabel || selectedStyle;
+          }
           syncSelection(selectedStyle);
         }
       })

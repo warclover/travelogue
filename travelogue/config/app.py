@@ -11,6 +11,7 @@ from travelogue.config.ai_capability import AiCapabilityConfig
 from travelogue.config.bookends import BookendsConfig
 from travelogue.config.clustering import ClusteringConfig, GeocodeConfig
 from travelogue.config.cohort import CohortConfig
+from travelogue.config.cover_craft import CoverCraftConfig
 from travelogue.config.cull import CullConfig
 from travelogue.config.curate import CurateConfig
 from travelogue.config.ingest import IngestConfig
@@ -62,4 +63,5 @@ class AppConfig:
     cohort: CohortConfig = field(default_factory=CohortConfig)
     aesthetic: AestheticConfig = field(default_factory=AestheticConfig)
     title_art: TitleArtConfig = field(default_factory=TitleArtConfig)
+    cover_craft: CoverCraftConfig = field(default_factory=CoverCraftConfig)
     ai_capability: AiCapabilityConfig = field(default_factory=AiCapabilityConfig)

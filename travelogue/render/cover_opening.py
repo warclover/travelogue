@@ -132,7 +132,10 @@ def resolve_show_cover_place(
 def build_cover_archive_strip(
     *, meta_subline: str, cover_place: str, cover_asset: dict[str, Any]
 ) -> str:
-    """contact-stamp 档案条文案（仅用 trip meta，reader 端拿不到相机 EXIF）。
+    """contact-stamp 档案条文案（行程日期 + 地点；不上封面拍摄时刻）。
+
+    ``cover_asset`` 仍保留入参，供 title-art / assemble 接线签名稳定；
+    不再把 ``takenAt`` 小时行拼进 reader 面。
 
     从 ``assemble.py`` 抽出（D-CAL-20 优先顺位⑤）：``travelogue.cover_engine
     .title_art.engine`` 需要判定某个 trip 在 contact-stamp 右下角是否会渲染
@@ -140,21 +143,13 @@ def build_cover_archive_strip(
     完全同一套逻辑，否则会重演「两处各自维护一份数据」的接线缺口（呼应
     2026-08-07 CSS 侧白名单未同步那次教训）。
     """
+    _ = cover_asset  # 签名保留给 title-art/assemble；时刻不上封面
     archive_bits: list[str] = []
     if meta_subline:
         archive_bits.append(str(meta_subline).strip())
     if cover_place and cover_place not in (meta_subline or ""):
         archive_bits.append(cover_place)
-    taken_at = str(cover_asset.get("takenAt") or "").strip()
-    if taken_at:
-        try:
-            from datetime import datetime as _dt
-
-            t = _dt.fromisoformat(taken_at.replace("Z", "+00:00"))
-            archive_bits.append(t.strftime("%H:%M"))
-        except ValueError:
-            pass
-    return "\n".join(archive_bits[:3]) if archive_bits else ""
+    return "\n".join(archive_bits[:2]) if archive_bits else ""
 
 
 def cover_focal_point(asset: dict) -> tuple[float, float]:

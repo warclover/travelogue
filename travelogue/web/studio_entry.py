@@ -10,13 +10,43 @@ from __future__ import annotations
 from typing import Any
 
 from travelogue.cover_engine import resolve_cover_opening_style, studio_style_options
+from travelogue.cover_engine.craft import HERO_SET, is_hero_style
 from travelogue.cover_engine.registry import get_style
 from travelogue.cover_engine.resolve import legacy_map
+from travelogue.config.cover_craft import CRAFT_ATTR_VALUE, is_cover_craft_enabled
 from travelogue.services.decor_line import chapter_has_voice
 from travelogue.templating.summary import build_template_summary
 from travelogue.web.studio_aesthetic import build_aesthetic_entry_summary
 from travelogue.web.studio_constants import STUDIO_USER_NOTES_MAX_LEN
 from travelogue.web.studio_telemetry import build_pipeline_telemetry_summary
+
+
+def _cover_craft_entry(resolved_style: str, style_rec: Any) -> dict[str, Any]:
+    """CCF payload for Studio cover style controls (FE-CCF-*)."""
+    enabled = is_cover_craft_enabled()
+    options = studio_style_options()
+    option_ids = {str(o.get("id") or "") for o in options}
+    in_options = resolved_style in option_ids
+    legacy = bool(enabled and resolved_style and not in_options)
+    label = ""
+    if style_rec is not None:
+        label = str(style_rec.studio_label or style_rec.label or resolved_style)
+    elif resolved_style:
+        label = resolved_style
+    return {
+        "enabled": enabled,
+        "version": CRAFT_ATTR_VALUE if enabled else None,
+        "heroSet": list(HERO_SET),
+        "legacyCurrent": legacy,
+        "legacyStyleId": resolved_style if legacy else None,
+        "legacyLabel": label if legacy else None,
+        "legacyHint": (
+            f"当前为经典版式「{label}」，可切换到现行三款。"
+            if legacy and label
+            else None
+        ),
+        "isHeroStyle": is_hero_style(resolved_style),
+    }
 
 
 def _ordered_screens(trip: dict) -> list[tuple[str, list[str], str | None]]:
@@ -313,9 +343,10 @@ def build_entry(
         ),
         "template": build_template_summary(trip),
         "assetMediaById": build_asset_media_index(trip),
-        "coverOpeningStyle": resolved,
+            "coverOpeningStyle": resolved,
         "coverOpeningStyleRaw": raw_style or None,
         "coverStyleOptions": studio_style_options(),
+        "coverCraft": _cover_craft_entry(resolved, style_rec),
         "coverJointLocked": bool(curation.get("coverJointLocked")) if isinstance(curation, dict) else False,
         "coverStyleExplain": explain if isinstance(explain, dict) else None,
         "coverStyleLabel": (style_rec.studio_label or style_rec.label) if style_rec else resolved,

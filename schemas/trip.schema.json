@@ -2508,7 +2508,7 @@
             "split-mat",
             "magazine-head"
           ],
-          "description": "Web cover opening skin. Assignable: first ten (V6 five + art-direction five). Last three deprecated (legacy trips only; resolve maps to V6)."
+          "description": "Web cover opening skin. Runtime assignable set = list_assignable_styles() (CCF on: veil-footer / folio-overlap / band-cut; CCF off: five catalog-active). Retired ids and side-dish ids may still render for existing trips."
         },
         "coverSecondaryAssetId": {
           "type": "string",

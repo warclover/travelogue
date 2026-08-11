@@ -36,13 +36,13 @@ def test_build_cover_archive_strip_empty_when_nothing_available() -> None:
     assert build_cover_archive_strip(meta_subline="", cover_place="", cover_asset={}) == ""
 
 
-def test_build_cover_archive_strip_joins_subline_place_and_time() -> None:
+def test_build_cover_archive_strip_joins_subline_and_place_without_hour() -> None:
     strip = build_cover_archive_strip(
         meta_subline="2026.05.27 – 06.23 · 4 天",
         cover_place="贵阳",
         cover_asset={"takenAt": "2026-05-27T09:30:00Z"},
     )
-    assert strip == "2026.05.27 – 06.23 · 4 天\n贵阳\n09:30"
+    assert strip == "2026.05.27 – 06.23 · 4 天\n贵阳"
 
 
 def test_build_cover_archive_strip_dedupes_place_already_in_subline() -> None:

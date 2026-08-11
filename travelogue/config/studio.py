@@ -149,6 +149,13 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
             "enabled": bool(cfg.title_art.enabled),
             "routeCEnabled": bool(cfg.title_art.route_c_enabled),
         },
+        "coverCraft": {
+            "enabled": bool(cfg.cover_craft.enabled),
+            "heroOnly": bool(cfg.cover_craft.enabled and cfg.cover_craft.hero_only),
+            "craftCss": bool(cfg.cover_craft.enabled and cfg.cover_craft.craft_css),
+            "version": "ccf-v1",
+            "heroSet": ["veil-footer", "folio-overlap", "band-cut"],
+        },
         "ingest": {
             "copySourceFiles": bool(getattr(cfg.ingest, "copy_source_files", True)),
         },

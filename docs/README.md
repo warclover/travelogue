@@ -545,13 +545,16 @@
 | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
 | [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 CAD V1**（**v0.1.0 Draft**）· 真照片 Mode A · 禁假风景默认 · 扩展 Bookends |
+| [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) | **封面装帧打磨 CCF V1**（**v0.2.0**）· Hero Set 三款 + FE-CCF + `cover_craft` 一键撤回 · 不扩版式 |
+| [PRD-COVER-EDITORIAL-COVENANT-V1.md](./PRD-COVER-EDITORIAL-COVENANT-V1.md) | **封面编辑契约 CEC V1**（**superseded**）· 由 CCF 取代 |
 | [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md) | **封面艺术字标题 · 点睛 CAL V1**（**v0.2.0 · 七席 Conditional Go · W0 策划冻结** · [评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · BLK-CAL-01～05 已回写 · 暂停排期）· 独立 `meta.titleArt` · V6 白名单 · 与 AIR 解耦 |
+| [PRD-COVER-TYPESETTING-CONTINUITY-V1.md](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md) | **封面成册感 CTS V1**（策划已冻结）· 三层信息 + 字数档 Spec + 轻提示 · 可与 CCF 并行 |
 | [adr/017-bookends-engine.md](./adr/017-bookends-engine.md) | ADR-017 · Bookends 挂点 / 锁 / 压字分期 / B2a·b |
 | [IMPLEMENTATION-BOOKENDS-ENGINE-V1.md](./IMPLEMENTATION-BOOKENDS-ENGINE-V1.md) | Bookends 实施清单（B0→B1→B2a→B2b） |
 | [ACCEPTANCE-BOOKENDS-ENGINE-V1.md](./ACCEPTANCE-BOOKENDS-ENGINE-V1.md) | Bookends 验收追踪（B1 起勾选） |
 | [acceptance-records/bookends-prd-review-2026-07-13.md](./acceptance-records/bookends-prd-review-2026-07-13.md) | Bookends PRD 跨职能评审纪要（产品/架构/算法/UIUX/体验/视觉/流程） |
 
-阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE → 装帧增强 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（Draft）→ 标题装饰层 **[PRD-COVER-CALLIGRAPHY-TITLE-V1](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)**（Draft · 暂停）。
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE → 装帧增强 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（Draft）→ 标题装饰层 **[PRD-COVER-CALLIGRAPHY-TITLE-V1](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)** → 成册感 **[PRD-COVER-TYPESETTING-CONTINUITY-V1](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md)**（CTS）→ **现行打磨** **[PRD-COVER-CRAFT-FOCUS-V1](./PRD-COVER-CRAFT-FOCUS-V1.md)**（CCF · Draft；取代 CEC）。
 
 ---
 

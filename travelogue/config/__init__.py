@@ -103,6 +103,10 @@ from travelogue.config.ai_capability import (
     ai_capability_config_from_dict,
 )
 from travelogue.config.title_art import TitleArtConfig, title_art_config_from_dict
+from travelogue.config.cover_craft import (
+    CoverCraftConfig,
+    cover_craft_config_from_dict,
+)
 from travelogue.config.vision import VisionConfig
 
 __all__ = [
@@ -171,6 +175,8 @@ __all__ = [
     "TemplateRouterConfig",
     "TitleArtConfig",
     "title_art_config_from_dict",
+    "CoverCraftConfig",
+    "cover_craft_config_from_dict",
     "AiCapabilityConfig",
     "AiEvalConfig",
     "IntentBriefConfig",
