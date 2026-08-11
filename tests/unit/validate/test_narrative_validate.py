@@ -47,6 +47,31 @@ def test_vr_n04_lead_repeats_title():
     assert errs
 
 
+def test_vr_n05_rejects_unauthorized_overseas_place_in_hook():
+    """斯里兰卡册不得落盘「京都」文案（LLM 地点幻觉闸）。"""
+    trip = _base_trip()
+    trip.setdefault("meta", {})["places"] = ["斯里兰卡"]
+    trip["meta"].pop("place", None)
+    trip["meta"]["hook"] = "雨季的京都，一场不期而遇的漫步。"
+    for a in trip.get("assets") or []:
+        a.pop("place", None)
+    # Fixture chapters may carry Kyoto curation.places — must not widen allow-list.
+    for ch in trip.get("chapters") or []:
+        cur = ch.setdefault("curation", {})
+        cur["places"] = ["斯里兰卡"]
+    errs = [e for e in validate_narrative(trip) if "VR-N05" in e]
+    assert errs
+    assert any("京都" in e for e in errs)
+
+
+def test_vr_n05_allows_place_declared_in_meta():
+    trip = _base_trip()
+    trip.setdefault("meta", {})["places"] = ["京都"]
+    trip["meta"]["hook"] = "雨季的京都，一场不期而遇的漫步。"
+    errs = [e for e in validate_narrative(trip) if "VR-N05" in e]
+    assert not errs
+
+
 def test_vr_n03_caption_transcript_overlap():
     trip = _base_trip()
     ch = trip["chapters"][1]

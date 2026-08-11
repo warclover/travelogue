@@ -106,6 +106,49 @@ def manifest_limits_brief() -> dict[str, int]:
     }
 
 
+_DATEISH_LABEL_PART = re.compile(
+    r"^(?:\d{4}年?)?\d{1,2}月(?:\d{1,2}日)?(?:\s*[–—\-~～]\s*(?:\d{4}年?)?\d{1,2}月?(?:\d{1,2}日)?)?$"
+)
+_DAYPART_LABEL_PARTS = frozenset({"上午", "下午", "傍晚", "晚上"})
+
+
+def _safe_segment_labels_for_brief(
+    segments: list[Any],
+    *,
+    allowed_places: list[str],
+) -> list[str]:
+    """Date/daypart (+ authorized place) labels only — never feed polluted scene tails to LLM."""
+    from travelogue.services.narrative_validate import unauthorized_place_mentions
+
+    allowed = {str(p).strip() for p in allowed_places if str(p).strip()}
+    out: list[str] = []
+    for seg in segments[:5]:
+        if not isinstance(seg, dict):
+            continue
+        label = str(seg.get("label") or "").strip()
+        if not label:
+            continue
+        parts = [p.strip() for p in re.split(r"[·•]", label) if p and p.strip()]
+        kept: list[str] = []
+        for part in parts:
+            if _DATEISH_LABEL_PART.match(part) or part in _DAYPART_LABEL_PARTS:
+                kept.append(part)
+                continue
+            if any(ap and (ap == part or ap in part or part in ap) for ap in allowed):
+                if not unauthorized_place_mentions(part, allowed):
+                    kept.append(part)
+                continue
+            # Drop unauthorized scene/place tails (e.g. 「京都雨季漫游」 on a 斯里兰卡 trip).
+        if kept:
+            out.append("·".join(kept)[:24])
+        else:
+            # Keep a date-only head when possible so segmentCount still has grounding.
+            head = parts[0] if parts else label
+            if _DATEISH_LABEL_PART.match(head):
+                out.append(head[:24])
+    return out
+
+
 def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict[str, Any]:
     from travelogue.services.copy_subject import (
         effective_meta_places,
@@ -118,18 +161,23 @@ def build_meta_brief(trip: dict, *, tone: str, regenerate: bool = False) -> dict
     assets = trip.get("assets") or []
     curation = trip.get("curation") or {}
     segments = curation.get("segments") or []
+    places = effective_meta_places(meta, intent=intent, assets=assets)
     trip_brief: dict[str, Any] = {
         "tripId": trip.get("tripId"),
         "title": meta.get("title"),
         "dateStart": meta.get("dateStart"),
         "dateEnd": meta.get("dateEnd"),
-        "places": effective_meta_places(meta, intent=intent, assets=assets),
+        "places": places,
         "editorialSubject": narrative_copy_subject(meta, intent=intent, assets=assets),
         "placesUserSet": places_user_set(intent),
         "tone": tone,
         "userNotes": resolve_user_notes(trip),
         "segmentCount": len(segments),
-        "segmentLabels": [s.get("label") for s in segments[:5] if s.get("label")],
+        # Authority is meta.places; labels are date scaffolding only (never invent places).
+        "segmentLabels": _safe_segment_labels_for_brief(
+            list(segments) if isinstance(segments, list) else [],
+            allowed_places=list(places),
+        ),
     }
     travel_notes = resolve_travel_notes(trip)
     if travel_notes:

@@ -145,9 +145,18 @@ def _bucket_place_short(bucket: list[str], assets_by_id: dict[str, dict]) -> str
     return _clip_title(top, max_len=8) or None
 
 
-def scene_short_from_segment_label(label: str | None) -> str | None:
-    """从「日期·场景」类 segment label 抽出场景短标（非时段、非日期腔）。"""
+def scene_short_from_segment_label(
+    label: str | None,
+    *,
+    allowed_places: set[str] | None = None,
+) -> str | None:
+    """从「日期·场景」类 segment label 抽出场景短标（非时段、非日期腔）。
+
+    When ``allowed_places`` is provided, reject scene tails that mention a known
+    overseas place not covered by the trip's authoritative places (VR-N05).
+    """
     from travelogue.domain.copy_subject import is_generic_place
+    from travelogue.services.narrative_validate import unauthorized_place_mentions
 
     text = (label or "").strip().strip("·• ")
     if not text:
@@ -161,6 +170,10 @@ def scene_short_from_segment_label(label: str | None) -> str | None:
         cleaned = _SCENE_JUNK_RE.sub("", part).strip()
         cleaned = re.sub(r"\d+$", "", cleaned).strip(" ·•-_")
         if cleaned and len(cleaned) >= 2 and not is_generic_place(cleaned):
+            if allowed_places is not None and unauthorized_place_mentions(
+                cleaned, allowed_places
+            ):
+                continue
             return _clip_title(cleaned, max_len=8) or None
     return None
 
@@ -300,6 +313,8 @@ def chapter_titles(
     segment_labels: dict[str, str] | None = None,
     plan_cities: list[str] | None = None,
 ) -> list[str]:
+    from travelogue.services.narrative_validate import allowed_place_names
+
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
     assets_by_id = {a["id"]: a for a in assets}
     titles: list[str] = []
@@ -311,6 +326,10 @@ def chapter_titles(
     plan_cities = [c for c in (plan_cities or []) if c][:10]
     plan_idx = 0
     with_year = _trip_needs_year_in_chapter_titles(meta, assets_by_id, buckets)
+    # Gate scene tails from polluted segment labels against trip places + EXIF cities.
+    allowed_places = allowed_place_names(
+        {"meta": meta, "assets": assets, "chapters": []}
+    )
 
     for i, bucket in enumerate(buckets):
         if not bucket:
@@ -347,7 +366,10 @@ def chapter_titles(
             place_short = _bucket_place_short(live_bucket, assets_by_id)
             seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
             scene = (
-                scene_short_from_segment_label(segment_labels.get(seg_id, ""))
+                scene_short_from_segment_label(
+                    segment_labels.get(seg_id, ""),
+                    allowed_places=allowed_places,
+                )
                 if seg_id
                 else None
             )
@@ -370,7 +392,10 @@ def chapter_titles(
         )
         if len(all_seg) > 1:
             labels = [
-                scene_short_from_segment_label(segment_labels[s])
+                scene_short_from_segment_label(
+                    segment_labels[s],
+                    allowed_places=allowed_places,
+                )
                 or _clean_segment_label(segment_labels[s], max_len=8)
                 for s in all_seg
                 if segment_labels.get(s)
@@ -384,7 +409,10 @@ def chapter_titles(
         if seg_id and segment_labels.get(seg_id):
             n = seg_day_seen.get(seg_id, 0)
             seg_day_seen[seg_id] = n + 1
-            scene = scene_short_from_segment_label(segment_labels[seg_id])
+            scene = scene_short_from_segment_label(
+                segment_labels[seg_id],
+                allowed_places=allowed_places,
+            )
             if n == 0 and scene:
                 titles.append(scene)
                 continue
@@ -400,7 +428,10 @@ def chapter_titles(
             daypart = _bucket_daypart(bucket, assets_by_id)
             place_short = _bucket_place_short(bucket, assets_by_id)
             scene = (
-                scene_short_from_segment_label(segment_labels.get(seg_id, ""))
+                scene_short_from_segment_label(
+                    segment_labels.get(seg_id, ""),
+                    allowed_places=allowed_places,
+                )
                 if seg_id
                 else None
             )

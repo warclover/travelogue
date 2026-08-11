@@ -131,6 +131,7 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
             # flag「预览需更新」. Also repair prior false-stale drift (rev>rendered)
             # left by older open-path writes.
             needs_persist = bool(migrated.get("changed"))
+            chapter_titles_changed = bool(migrated.get("chapters"))
             needs_stamp_repair = (not needs_persist) and trip_render_bundle_stale(
                 _trip_dir, trip
             )
@@ -139,7 +140,10 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 def _sfp_migrate(t: dict) -> bool:
                     if needs_persist:
                         migrate_share_face_purity_on_open(t)
-                    mark_render_bundle_current(t)
+                    # Chapter title changes must re-render HTML; stamping alone
+                    # would leave 分章面板 vs 正文 <h2> out of sync.
+                    if not chapter_titles_changed:
+                        mark_render_bundle_current(t)
                     return True
 
                 ctx.trip_service().update(
@@ -148,6 +152,17 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
                     touch_updated=False,
                     bump_revision=needs_persist,
                 )
+                if needs_persist and chapter_titles_changed:
+                    from travelogue.web.rerender import rerender_draft_trip
+
+                    try:
+                        rerender_draft_trip(trip_json)
+                    except Exception:
+                        _log.debug(
+                            "sfp open migrate rerender skipped for %s",
+                            trip_id,
+                            exc_info=True,
+                        )
         except Exception:
             _log.debug("sfp open migrate persist skipped for %s", trip_id, exc_info=True)
 

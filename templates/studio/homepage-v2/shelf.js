@@ -27,6 +27,7 @@ import {
   shelfShowCoverLongshotBadge,
   shelfShowCoverReadyBadge,
 } from "./shelf-actions-logic.js";
+import { stubCode, stubSerial, stubYearMonth } from "./shelf-ticket-logic.js";
 
 var READY_LONGSHOT = "分享图已就绪";
 var PREVIEW_READY = "可先预览";
@@ -102,44 +103,6 @@ function tripSubLine(trip) {
   var rel = relativeTime(trip.updatedAt);
   if (rel) sub.push(rel);
   return sub.join(" · ");
-}
-
-/** 票根脚指纹（装饰编号，非安全用途）。 */
-function stubFingerprint(tripId) {
-  var s = String(tripId || "");
-  var h = 2166136261;
-  for (var i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function stubSerial(trip) {
-  var yearBit = stubYearMonth(trip && trip.updatedAt);
-  var year = yearBit ? yearBit.slice(0, 4) : String(new Date().getFullYear());
-  var n = stubFingerprint(trip && trip.tripId) % 10000;
-  var suffix = ("0000" + n).slice(-4);
-  return "NO." + year + suffix;
-}
-
-function stubCode(tripId) {
-  var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  var h = stubFingerprint(tripId);
-  var out = "";
-  for (var i = 0; i < 8; i++) {
-    out += alphabet[(h + i * 17) % alphabet.length];
-    h = Math.imul(h ^ (i + 1), 31) >>> 0;
-  }
-  return out;
-}
-
-function stubYearMonth(ts) {
-  if (!ts) return "";
-  var d = new Date(ts * 1000);
-  if (isNaN(d.getTime())) return "";
-  var m = d.getMonth() + 1;
-  return d.getFullYear() + " · " + (m < 10 ? "0" + m : String(m));
 }
 
 /** 满票根 meta：年月优先（暂用 updatedAt）· 张数。 */
@@ -337,7 +300,7 @@ function buildBook(trip) {
 
   var code = el("div", "v2-shelf__code");
   code.setAttribute("aria-hidden", "true");
-  code.appendChild(el("span", "v2-shelf__code-id", stubCode(trip.tripId)));
+  code.appendChild(el("span", "v2-shelf__code-id", stubCode(trip)));
   code.appendChild(el("span", "v2-shelf__barcode"));
   openMeta.appendChild(code);
 

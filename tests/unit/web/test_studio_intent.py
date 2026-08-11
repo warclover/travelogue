@@ -197,6 +197,25 @@ def test_meta_brief_injects_usernotes_and_plan() -> None:
     assert brief["trip"]["travelPlanSummary"] == "D1 大阪 → D2 京都"
 
 
+def test_meta_brief_strips_unauthorized_place_from_segment_labels() -> None:
+    """污染的 segmentLabels 不得把「京都」喂给 LLM brief。"""
+    trip = {
+        "meta": {"title": "斯里兰卡见闻录", "places": ["斯里兰卡"]},
+        "assets": [],
+        "curation": {
+            "segments": [
+                {"id": "seg-01", "label": "7月22日·京都雨季漫游"},
+                {"id": "seg-02", "label": "8月18日·京都雨季漫游"},
+            ]
+        },
+    }
+    brief = build_meta_brief(trip, tone="relaxed")
+    labels = brief["trip"]["segmentLabels"]
+    assert labels == ["7月22日", "8月18日"]
+    assert brief["trip"]["places"] == ["斯里兰卡"]
+    assert not any("京都" in str(x) for x in labels)
+
+
 def test_meta_brief_usernotes_falls_back_to_intent() -> None:
     trip = {"meta": {"title": "T", "places": []}, "intent": {"userNotes": "带娃"}}
     brief = build_meta_brief(trip, tone="relaxed")

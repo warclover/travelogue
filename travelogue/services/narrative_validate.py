@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from travelogue.config import AppConfig, get_config
+from travelogue.domain.copy_subject import is_generic_place
 from travelogue.services.narrate import BANNED_PHRASES
 from travelogue.services.validate import asset_map
 
-# Common overseas destination names (Chinese) for VR-N02 heuristic.
+# Common overseas destination names (Chinese) for VR-N02 / VR-N05 heuristics.
 OVERSEAS_PLACE_HINTS: frozenset[str] = frozenset(
     {
         "东京",
@@ -44,6 +45,56 @@ OVERSEAS_PLACE_HINTS: frozenset[str] = frozenset(
         "镰仓",
     }
 )
+
+
+def allowed_place_names(trip: dict) -> set[str]:
+    """Authoritative place tokens for copy grounding (meta.places + EXIF cities).
+
+    Chapter ``curation.places`` are intentionally excluded — they can be polluted
+    by prior LLM / segment labels and must not widen the VR-N05 allow-list.
+    """
+    allowed: set[str] = set()
+    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+    for p in meta.get("places") or []:
+        if isinstance(p, str) and p.strip() and not is_generic_place(p):
+            allowed.add(p.strip())
+    legacy = meta.get("place")
+    if isinstance(legacy, str) and legacy.strip() and not is_generic_place(legacy):
+        allowed.add(legacy.strip())
+    for city in _asset_cities(asset_map(trip)):
+        if city and not is_generic_place(city):
+            allowed.add(city)
+    return allowed
+
+
+def _place_covered(hint: str, allowed: set[str]) -> bool:
+    h = (hint or "").strip()
+    if not h:
+        return True
+    for a in allowed:
+        if not a:
+            continue
+        if h == a or h in a or a in h:
+            return True
+    return False
+
+
+def unauthorized_place_mentions(text: str, allowed: set[str]) -> list[str]:
+    """Known place hints appearing in text but not covered by ``allowed`` (VR-N05)."""
+    raw = (text or "").strip()
+    if not raw:
+        return []
+    hits: list[str] = []
+    for hint in sorted(OVERSEAS_PLACE_HINTS, key=len, reverse=True):
+        if hint not in raw:
+            continue
+        if _place_covered(hint, allowed):
+            continue
+        # Prefer longest match; skip shorter hints already subsumed.
+        if any(hint in prev for prev in hits):
+            continue
+        hits.append(hint)
+    return hits
 
 
 def banned_phrases(cfg: AppConfig | None = None) -> tuple[str, ...]:
@@ -124,10 +175,11 @@ def _overlap_ratio(a: str, b: str) -> float:
 
 
 def validate_narrative(trip: dict, *, cfg: AppConfig | None = None) -> list[str]:
-    """Return VR-N01/N02/N03 messages (errors or WARN: warnings)."""
+    """Return VR-N01/N02/N03/N05 messages (errors or WARN: warnings)."""
     issues: list[str] = []
     assets = asset_map(trip)
     asset_cities = _asset_cities(assets)
+    allowed = allowed_place_names(trip)
 
     for path, text in _text_fields(trip):
         for phrase in banned_phrases(cfg):
@@ -135,6 +187,11 @@ def validate_narrative(trip: dict, *, cfg: AppConfig | None = None) -> list[str]
                 issues.append(
                     f"E_VALIDATE_MANIFEST banned phrase {phrase!r} in {path} (VR-N01)"
                 )
+        # VR-N05 · 文案不得引入 brief/meta 未授权的知名地点（防「斯里兰卡→京都」）
+        for hint in unauthorized_place_mentions(text, allowed):
+            issues.append(
+                f"E_VALIDATE_MANIFEST unauthorized place {hint!r} in {path} (VR-N05)"
+            )
 
     declared: list[tuple[str, str]] = []
     meta_places = trip.get("meta", {}).get("places") or []

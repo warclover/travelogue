@@ -2475,6 +2475,11 @@
           },
           "minItems": 1
         },
+        "place": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "Legacy singular place alias; prefer meta.places. Kept so older trips / render fallback validate under additionalProperties:false."
+        },
         "companions": {
           "type": "string",
           "maxLength": 32

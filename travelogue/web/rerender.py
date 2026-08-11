@@ -8,11 +8,13 @@ from travelogue.render.engine import LONGSHOT_INDEX_NAME, render_trip, render_tr
 
 
 def rerender_draft_trip(trip_json: Path) -> list[str]:
-    """Render index.html (+ mobile when auto) after trip.json edits.
+    """Render index.html (+ mobile + longshot) after trip.json edits.
 
-    Always refreshes ``index-longshot.html`` when screens layout is active, even if
-    ``exportLayout`` is ``mobile`` (bridge gate would otherwise skip the sidecar).
+    Always refreshes ``index-mobile.html`` even when ``exportLayout`` is not
+    ``auto``, so AI/copy edits cannot leave the mobile surface stale.
+    Always refreshes ``index-longshot.html`` when screens layout is active.
     """
+    from travelogue.layout_engine.api import LAYOUT_ENGINE_LEGACY, LAYOUT_ENGINE_SCREENS
     from travelogue.runtime import app_context_for_trip_json
 
     trip_json = trip_json.resolve()
@@ -40,9 +42,22 @@ def rerender_draft_trip(trip_json: Path) -> list[str]:
             stamp_render_bundle=True,
         )
         written = ["index.html"]
+        # Keep mobile surface in sync after copy/AI edits (exportLayout=web trips).
+        render_trip(
+            trip_json,
+            trip_root,
+            export_mode="draft",
+            validate=False,
+            copy_css=False,
+            index_name="index-mobile.html",
+            layout_engine=LAYOUT_ENGINE_LEGACY,
+            export_layout_override="mobile",
+            update_pipeline=False,
+            stamp_render_bundle=False,
+        )
+        written.append("index-mobile.html")
 
     # BE-SFI-05 / FX-SFI-03 · 勿只凭「文件存在」宣称已重渲；mobile 册也须刷新长图面
-    from travelogue.layout_engine.api import LAYOUT_ENGINE_SCREENS
     from travelogue.render.engine import write_longshot_sidecar
 
     engine = str(layout_engine or trip.get("layoutEngine") or "").strip().lower()
@@ -58,4 +73,3 @@ def rerender_draft_trip(trip_json: Path) -> list[str]:
         if LONGSHOT_INDEX_NAME not in written:
             written.append(LONGSHOT_INDEX_NAME)
     return written
-

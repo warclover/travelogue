@@ -3,6 +3,7 @@
 from travelogue.curation.chapter_titles import (
     _same_day_followup_title,
     chapter_titles,
+    scene_short_from_segment_label,
     strip_ordinal_face_title,
 )
 
@@ -44,3 +45,37 @@ def test_strip_ordinal_face_title() -> None:
     assert strip_ordinal_face_title("5月27日 · 三") == "5月27日"
     assert strip_ordinal_face_title("4月2日 ·二") == "4月2日"
     assert strip_ordinal_face_title("5月27日 · 晚上") == "5月27日 · 晚上"
+
+
+def test_scene_short_rejects_unauthorized_overseas_place() -> None:
+    assert (
+        scene_short_from_segment_label(
+            "7月22日·京都雨季漫游",
+            allowed_places={"斯里兰卡"},
+        )
+        is None
+    )
+    assert (
+        scene_short_from_segment_label(
+            "7月22日·京都雨季漫游",
+            allowed_places={"京都"},
+        )
+        == "京都雨季漫游"
+    )
+
+
+def test_chapter_titles_ignore_polluted_kyoto_segment_on_sri_lanka_trip() -> None:
+    assets = [
+        {"id": "a1", "takenAt": "2018-07-22T15:00:00"},
+        {"id": "a2", "takenAt": "2018-07-22T16:00:00"},
+    ]
+    titles = chapter_titles(
+        [["a1", "a2"]],
+        assets,
+        {"places": ["斯里兰卡"], "title": "斯里兰卡见闻录"},
+        bucket_segment_ids=["seg-01"],
+        segment_labels={"seg-01": "7月22日·京都雨季漫游"},
+    )
+    assert titles
+    assert "京都" not in titles[0]
+    assert titles[0].startswith("7月22日")
