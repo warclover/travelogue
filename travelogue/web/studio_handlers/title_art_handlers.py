@@ -19,6 +19,8 @@ W1 落地路线 B/C 引擎与 CLI ``title-art`` 命令后，Studio 里一直没�
 - 未知异常按 D-CAL-16 fail-open 原则处理：绝不 500，写回禁用占位并
   200 返回（跟引擎自身「非白名单/空标题/字形不覆盖」的 fail-open 语义
   一致），前端只需要判断 ``enabled`` 字段，不需要特殊处理错误态。
+- meta 落盘后的 rerender 失败同样 fail-open：200 + ``rendered:false`` +
+  ``E_STUDIO_RERENDER`` 人话提示，禁止再回 ``E_SERVER``。
 - **付费/耗时副作用在 CAS 之外执行**：``resolve_title_art``（含路线 C
   网络轮询与写 PNG）先在 trip 快照上算完，``TripService.update`` 的
   mutator 只写入已算好的 ``meta.titleArt``。否则：① 持锁期间阻塞可达
@@ -33,7 +35,7 @@ import logging
 
 from travelogue.cover_engine.title_art import resolve_title_art
 from travelogue.cover_engine.title_art.models import disabled_meta_dict
-from travelogue.web.studio_errors import internal_error_payload
+from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
     studio_ctx,
@@ -135,32 +137,36 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
     ok, _persisted = trip_update_or_respond(handler, ctx.trip_service(), trip_json, mutator)
     if not ok:
         return
-    if not _rerender(trip_json):
-        handler._json_response(500, internal_error_payload())
-        return
+    # D-CAL-16 · meta 已落盘后 rerender 失败不得 500/E_SERVER：字体结果仍有效，
+    # 前端可提示刷新；与 resolve 异常 fail-open 一致。
+    rendered = _rerender(trip_json)
 
     if result is None:
-        handler._json_response(
-            200,
-            {
-                "ok": True,
-                "enabled": False,
-                "routeCRequested": route_c_requested,
-                "routeCAllowedByConfig": route_c_allowed,
-            },
-        )
-        return
-
-    handler._json_response(
-        200,
-        {
+        payload = {
             "ok": True,
-            "enabled": result.enabled,
-            "engine": result.engine,
-            "assetPath": result.asset_path,
-            "fallbackFrom": result.fallback_from,
-            "ocrVerified": result.ocr_verified,
+            "enabled": False,
             "routeCRequested": route_c_requested,
             "routeCAllowedByConfig": route_c_allowed,
-        },
-    )
+            "rendered": rendered,
+        }
+        if not rendered:
+            payload["error"] = "E_STUDIO_RERENDER"
+            payload["message"] = user_message("E_STUDIO_RERENDER")
+        handler._json_response(200, payload)
+        return
+
+    payload = {
+        "ok": True,
+        "enabled": result.enabled,
+        "engine": result.engine,
+        "assetPath": result.asset_path,
+        "fallbackFrom": result.fallback_from,
+        "ocrVerified": result.ocr_verified,
+        "routeCRequested": route_c_requested,
+        "routeCAllowedByConfig": route_c_allowed,
+        "rendered": rendered,
+    }
+    if not rendered:
+        payload["error"] = "E_STUDIO_RERENDER"
+        payload["message"] = user_message("E_STUDIO_RERENDER")
+    handler._json_response(200, payload)

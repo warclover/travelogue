@@ -132,7 +132,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>在画面上看封底</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-restore>恢复自动挑选</button>' +
     "</div>" +
-    '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>';
+    // RCI · 版式改挂「封面 · 版式」分段；照片段可 omitStyleSlot
+    (opts.omitStyleSlot
+      ? ""
+      : '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>');
 
   slot.appendChild(root);
 
@@ -486,10 +489,15 @@ export function mountBookendsPanel(slot, tripId, opts) {
     });
   }
 
-  if (styleSlot && typeof opts.mountCoverStyleControls === "function") {
+  if (
+    !opts.omitStyleSlot &&
+    styleSlot &&
+    typeof opts.mountCoverStyleControls === "function"
+  ) {
     opts.mountCoverStyleControls(styleSlot, {
       viaBookends: true,
       applyStyleViaBookends: applyStyleViaBookends,
+      omitTitleArt: true,
     });
   }
 

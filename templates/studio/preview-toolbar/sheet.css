@@ -1200,6 +1200,72 @@ body.preview-sheet-open {
   margin-bottom: 12px;
 }
 
+/* RCI · 封面二级分段 */
+.preview-sheet__cover-subseg {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 12px;
+}
+.preview-sheet__cover-subseg-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  background: var(--sheet-surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.preview-sheet__cover-subseg-btn.is-on {
+  border-color: var(--sheet-accent);
+  background: color-mix(in srgb, var(--sheet-accent) 12%, #fff);
+  color: var(--sheet-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sheet-accent) 22%, transparent);
+}
+.preview-sheet__cover-subseg-hint {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--sheet-muted);
+}
+.preview-sheet__cover-subseg-btn.is-on .preview-sheet__cover-subseg-hint {
+  color: color-mix(in srgb, var(--sheet-accent) 70%, var(--sheet-muted));
+}
+.preview-sheet__cover-name-input {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  background: #fff;
+  margin: 4px 0 0;
+}
+.preview-sheet__cover-name-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.preview-sheet__cover-name-stale {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff8e1;
+  border: 1px solid #ffcc80;
+  font-size: 11px;
+  color: #e65100;
+}
+.preview-sheet__book-foot {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--sheet-muted) 40%, #fff);
+}
+
 .preview-sheet__ctx-pill {
   display: inline-flex;
   align-items: center;

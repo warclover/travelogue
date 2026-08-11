@@ -97,6 +97,10 @@
 | [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) | **精修可用性优化 V1.1**（模式≠面板 · 情境对齐 · 导出门面收敛）· **Conditional Go** |
 | [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 实施清单（M1–M3 代码就绪） |
 | [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 验收清单（手测待补签） |
+| [PRD-PREVIEW-REFINE-COVER-IA-V1.md](./PRD-PREVIEW-REFINE-COVER-IA-V1.md) | **精修封面 IA 升档 RCI**（照片｜版式｜杂志名 · 画册去重 · 字体文案） |
+| [IMPLEMENTATION-PREVIEW-REFINE-COVER-IA-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-COVER-IA-V1.md) | RCI 实施清单（W1/W2 ✅ · W3 手测待签） |
+| [ACCEPTANCE-PREVIEW-REFINE-COVER-IA-V1.md](./ACCEPTANCE-PREVIEW-REFINE-COVER-IA-V1.md) | RCI 验收清单（手测待签） |
+| [acceptance-records/preview-refine-cover-ia-v1-dogfood-GUIDE.md](./acceptance-records/preview-refine-cover-ia-v1-dogfood-GUIDE.md) | RCI 本机狗粮脚本 |
 | [acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) | 精修可用性 V1.1 跨职能评审纪要 |
 | [acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md) | 精修可用性 V1.1 · S1 新手脚本手测记录 |
 | [acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md) | 精修可用性 V1.1 · 多角色复测（Playwright） |

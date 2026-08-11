@@ -382,11 +382,20 @@ export function initPreviewDrawers(root, tripId) {
     var drawerFocusRelease = null;
     var drawerPreviousFocus = null;
     var drawerEmbedTarget = null;
+    var drawerEmbedOpts = null;
 
     // V1.1 · 整本字段（杂志名 / 一句话）与章字段（锚点 / 意图）分模板
     var bookEditTpl =
       '<label class="preview-drawer__label" for="preview-drawer-title-input">杂志名</label>' +
       '<input id="preview-drawer-title-input" class="preview-drawer__title-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途">' +
+      '<label class="preview-drawer__label" for="preview-drawer-notes">给这本画册的一句话</label>' +
+      '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
+      STUDIO_USER_NOTES_MAX_LEN +
+      '" rows="3" placeholder="例如：带娃慢走，想突出雨后的京都"></textarea>' +
+      '<p class="preview-drawer__notes-saved" hidden aria-live="polite">✓ 已保存 · 将显示在封面副标题与辑封</p>';
+
+    // RCI · 画册 Tab 去重：只嵌一句话（杂志名主入口在「封面 · 杂志名」）
+    var bookNotesOnlyTpl =
       '<label class="preview-drawer__label" for="preview-drawer-notes">给这本画册的一句话</label>' +
       '<textarea id="preview-drawer-notes" class="preview-drawer__notes" maxlength="' +
       STUDIO_USER_NOTES_MAX_LEN +
@@ -701,12 +710,15 @@ export function initPreviewDrawers(root, tripId) {
       if (mode === "edit" || mode === "edit-page") {
         if (useOverlay) titleEl.textContent = "编辑";
         // overlay openEdit：整本+章字段；sheet embed 按 mode 分流
+        var omitMagazineTitle = !!(drawerEmbedOpts && drawerEmbedOpts.omitMagazineTitle);
         var editHtml =
           mode === "edit-page"
             ? pageEditTpl + pageEditNarrateHtml()
             : useOverlay
               ? bookEditTpl + pageEditTpl + pageEditNarrateHtml()
-              : bookEditTpl;
+              : omitMagazineTitle
+                ? bookNotesOnlyTpl
+                : bookEditTpl;
         targetBody.innerHTML = editHtml;
         var titleInput = targetBody.querySelector(".preview-drawer__title-input");
         var notes = targetBody.querySelector(".preview-drawer__notes");
@@ -747,11 +759,14 @@ export function initPreviewDrawers(root, tripId) {
           }
           var tasks = [];
           if (hasBookFields) {
+            var intentBody = { userNotes: notesVal || null };
+            // RCI · notes-only embed 不得带 title:null 误清杂志名
+            if (titleInput) intentBody.title = titleVal || null;
             tasks.push(
-              patchJsonConflictRetry("/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent", {
-                title: titleVal || null,
-                userNotes: notesVal || null,
-              })
+              patchJsonConflictRetry(
+                "/__travelogue/trips/" + encodeURIComponent(tripId) + "/intent",
+                intentBody
+              )
             );
           }
           if (hasPageFields && chId) {
@@ -1056,8 +1071,9 @@ export function initPreviewDrawers(root, tripId) {
       openEdit: function () { openDrawer("edit"); },
       openStructure: function () { openDrawer("structure"); },
       openCohort: function () { openDrawer("cohort"); },
-      openEmbed: function (mode, el) {
+      openEmbed: function (mode, el, embedOpts) {
         drawerEmbedTarget = el;
+        drawerEmbedOpts = embedOpts || null;
         openDrawer(mode);
       },
       confirmStructure: function () { return runG1Confirm(null); },

@@ -43,7 +43,17 @@ export function syncCoverTitleLayoutClass(el) {
     el.classList.add(resolveSplitMatTitleLayoutClass(el.dataset.title || el.textContent || ""));
   }
 
-export function saveMagazineTitle(tripId, next, el, onDone) {
+function _friendlyApiError(body, fallback) {
+  var msg = body && body.message;
+  if (typeof msg === "string" && msg.trim()) return msg.trim();
+  var code = body && body.error;
+  // 禁止把 E_SERVER 等工程码直接抛给用户
+  if (typeof code === "string" && code && code.indexOf("E_") !== 0) return code;
+  return fallback || "操作失败，请稍后重试";
+}
+
+export function saveMagazineTitle(tripId, next, el, onDone, opts) {
+    opts = opts || {};
     var prev = (el.dataset.title || el.textContent || "").trim();
     if (next === prev) {
       if (onDone) onDone(false);
@@ -60,7 +70,7 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
         el.classList.remove("preview-toolbar__title--saving");
         el.classList.remove("cover-opening__title--saving");
         if (res.status !== 200 || !res.body.ok) {
-          _showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+          _showToolbarToast(_friendlyApiError(res.body, "保存失败"), { error: true });
           if (onDone) onDone(false);
           return;
         }
@@ -79,7 +89,9 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
         try {
           window.dispatchEvent(new CustomEvent("travelogue:copy-saved"));
         } catch (e0) {}
-        if (res.body.rendered && res.body.rendered.length) {
+        // 生成字体前先改名：跳过整页刷新，避免打断后续 resolve
+        if (res.body.rendered && res.body.rendered.length && !opts.skipReload) {
+          if (onDone) onDone(true);
           _reloadPreviewAfterLayout();
           return;
         }
@@ -94,7 +106,8 @@ export function saveMagazineTitle(tripId, next, el, onDone) {
   }
 
 /** Trust V1 · 门禁/无 DOM 节点时共用写路径 */
-export function saveMagazineTitleValue(tripId, nextTitle) {
+export function saveMagazineTitleValue(tripId, nextTitle, opts) {
+  opts = opts || {};
   var next = String(nextTitle || "").trim();
   if (!next) {
     return Promise.resolve(false);
@@ -104,14 +117,14 @@ export function saveMagazineTitleValue(tripId, nextTitle) {
     return new Promise(function (resolve) {
       saveMagazineTitle(tripId, next, el, function (ok) {
         resolve(!!ok);
-      });
+      }, opts);
     });
   }
   return postJsonConflictRetry(_tripApiBase(tripId) + "/save-copy", {
     patches: [{ path: "meta.title", value: next }],
   }).then(function (res) {
     if (res.status !== 200 || !res.body.ok) {
-      _showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
+      _showToolbarToast(_friendlyApiError(res.body, "保存失败"), { error: true });
       return false;
     }
     try {
@@ -127,7 +140,8 @@ export function saveMagazineTitleValue(tripId, nextTitle) {
   });
 }
 
-export function initCoverTitleEdit(tripId) {
+export function initCoverTitleEdit(tripId, opts) {
+    opts = opts || {};
     if (_isSharePreview()) return;
     var titleEl = document.querySelector(".cover-opening__title");
     if (!titleEl || titleEl.dataset.coverTitleEdit === "on") return;
@@ -156,6 +170,11 @@ export function initCoverTitleEdit(tripId) {
       .catch(function () {});
 
     function openEditor() {
+      // RCI · 点书名优先打开精修「封面 · 杂志名」
+      if (typeof opts.onOpenNameSeg === "function") {
+        opts.onOpenNameSeg();
+        return;
+      }
       if (titleEl.classList.contains("cover-opening__title--saving")) return;
       if (titleEl.parentElement.querySelector(".cover-opening__title-input")) return;
       var input = document.createElement("input");

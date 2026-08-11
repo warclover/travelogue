@@ -377,17 +377,23 @@ export function initToolbarV3(root, tripId) {
     mountTemplateControls: function (slot) {
       mountTemplateControls(slot, tripId, { inSheet: true });
     },
-    mountCoverStyleControls: function (slot) {
-      mountCoverStyleControls(slot, tripId);
+    mountCoverStyleControls: function (slot, styleOpts) {
+      mountCoverStyleControls(
+        slot,
+        tripId,
+        Object.assign({ mode: "style", omitTitleArt: true }, styleOpts || {})
+      );
+    },
+    mountCoverNameFontControls: function (slot) {
+      mountCoverStyleControls(slot, tripId, { mode: "name" });
     },
     mountLayoutVibeControls: function (slot) {
       mountLayoutVibeControls(slot, tripId, { root: root });
     },
     mountBookendsPanel: function (slot) {
-      mountBookendsPanel(slot, tripId, {
-        mountCoverStyleControls: function (inner, styleOpts) {
-          mountCoverStyleControls(inner, tripId, styleOpts || {});
-        },
+      // RCI · 照片段不嵌版式；版式段另行挂载并复用 applyStyleViaBookends
+      return mountBookendsPanel(slot, tripId, {
+        omitStyleSlot: true,
       });
     },
     syncCopyDisplayUi: function (container) {
@@ -658,6 +664,90 @@ export function initToolbarV3(root, tripId) {
   });
 
   root._sheet = mountPreviewUnifiedSheet(root, sheetHooks);
+
+  function openRefineCoverSeg(opts) {
+    opts = opts || {};
+    if (!root._sheet || typeof root._sheet.open !== "function") return;
+    root._sheet.open("cover", {
+      coverSeg: opts.coverSeg || "photo",
+      bookendsFocus: opts.bookendsFocus || "opening",
+      scrollToBookends: opts.scrollToBookends === true,
+      source: opts.source || "cover_deep_link",
+    });
+    try {
+      trackStudioEvent("cover_refine_deeplink", {
+        coverSeg: opts.coverSeg || "photo",
+        bookendsFocus: opts.bookendsFocus || "opening",
+        source: opts.source || "cover_deep_link",
+      });
+    } catch (_eDl) {}
+  }
+
+  function wireCoverRciDeepLinks() {
+    if (isSharePreview()) return;
+    var opening = document.querySelector(".cover-opening");
+    var closing = document.querySelector(".cover-closing");
+    function skipInteractive(target) {
+      return !!(
+        target &&
+        target.closest &&
+        target.closest(
+          "a, button, input, textarea, select, .preview-toolbar__featured-star, .preview-sheet-root, .preview-ai-sheet-root, .preview-toolbar"
+        )
+      );
+    }
+    if (opening && !opening.dataset.rciDeepLink) {
+      opening.dataset.rciDeepLink = "1";
+      opening.addEventListener(
+        "click",
+        function (e) {
+          if (skipInteractive(e.target)) return;
+          var onName = e.target.closest(
+            ".cover-opening__title, .cover-opening__title-art, .cover-opening__title-input"
+          );
+          if (onName) {
+            // 书名由 initCoverTitleEdit 处理；贴纸在此深链
+            if (
+              onName.classList.contains("cover-opening__title") ||
+              onName.classList.contains("cover-opening__title-input")
+            ) {
+              return;
+            }
+            e.preventDefault();
+            openRefineCoverSeg({
+              coverSeg: "name",
+              bookendsFocus: "opening",
+              source: "cover_title_art",
+            });
+            return;
+          }
+          openRefineCoverSeg({
+            coverSeg: "photo",
+            bookendsFocus: "opening",
+            source: "cover_hero",
+          });
+        },
+        true
+      );
+    }
+    if (closing && !closing.dataset.rciDeepLink) {
+      closing.dataset.rciDeepLink = "1";
+      closing.addEventListener(
+        "click",
+        function (e) {
+          if (skipInteractive(e.target)) return;
+          openRefineCoverSeg({
+            coverSeg: "photo",
+            bookendsFocus: "closing",
+            source: "cover_closing",
+          });
+        },
+        true
+      );
+    }
+  }
+
+  wireCoverRciDeepLinks();
   root._chapterPanel = mountChapterPanel(root, tripId, drawers, root._sheet);
   root._openChapterPanel = function (opts) {
     root._chapterPanel.open(opts || {});
@@ -878,7 +968,15 @@ export function initToolbarV3(root, tripId) {
   if (isPreviewToolbarV4(root)) {
     initDockTooltips(root);
     initDockScrollFade(root);
-    initCoverTitleEdit(tripId);
+    initCoverTitleEdit(tripId, {
+      onOpenNameSeg: function () {
+        openRefineCoverSeg({
+          coverSeg: "name",
+          bookendsFocus: "opening",
+          source: "cover_title",
+        });
+      },
+    });
   }
 
   maybeShowCoverOpeningStyleToast(tripId);

@@ -354,14 +354,35 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
 
-    assert "改名字与一句话" in sheet
+    assert "改一句话与成册风格" in sheet
     assert 'id: "cover"' in sheet
     assert 'data-book-zone="story"' in sheet
     assert 'data-book-zone="advanced"' in sheet
     assert "renderCoverPanel" in sheet
     assert "data-cover-side" in sheet
-    assert "整本信息" in sheet
+    assert "data-cover-seg" in sheet
+    assert "COVER_SEGS" in sheet
+    assert "goto-cover-name" in sheet
+    assert "goto-cover-style" in sheet
+    assert "cover_seg_switch" in sheet
+    assert "typeof tabId === \"object\"" in sheet or "typeof tabId === 'object'" in sheet
+    assert "omitMagazineTitle" in sheet
+    assert "preferCoverSeg" in sheet
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert "openRefineCoverSeg" in init_v3
+    assert "wireCoverRciDeepLinks" in init_v3
+    assert "onOpenNameSeg" in init_v3
+    ai_sheet = (STUDIO / "preview-toolbar" / "ai-sheet.js").read_text(encoding="utf-8")
+    assert "data-ai-goto-cover-name" in ai_sheet
+    assert "去精修 · 杂志名" in ai_sheet
     assert "进阶" in sheet
+    assert "omitStyleSlot" in bookends
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert "生成字体" in features
+    assert "装帧字" not in features
+    assert "mode === \"name\"" in features or "mode === 'name'" in features
+    assert "displayTitle" in features
+    assert "杂志名回填优先" in features or "封面展示名" in features
     assert "去换封底" in sheet or "去换封面" in sheet
     assert "goto-bookends" in sheet
     assert "goto-body" in sheet

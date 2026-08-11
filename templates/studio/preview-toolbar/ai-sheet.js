@@ -310,7 +310,7 @@ export function mountAiSurface(root, tripId, opts) {
       body.innerHTML =
         '<div class="preview-ai-sheet__block preview-ai-sheet__block--gate">' +
         "<h3>智能动作暂不可用</h3>" +
-        "<p>装帧标题、杂志文案等需开启 AI 能力后使用。出图与导出不受影响。</p>" +
+        "<p>封面字体、杂志文案等需开启 AI 能力后使用。出图与导出不受影响。</p>" +
         '<p class="preview-ai-sheet__hint">内测可先展开下方「本机连接」预配 Key。</p>' +
         '<details class="preview-ai-sheet__details" data-ai-help-gate>' +
         "<summary>了解如何开启</summary>" +
@@ -370,8 +370,8 @@ export function mountAiSurface(root, tripId, opts) {
     if (!titleArtEnabled) {
       return (
         '<div class="preview-ai-sheet__block preview-ai-sheet__block--muted">' +
-        "<h3>装帧标题</h3>" +
-        '<p class="preview-ai-sheet__desc">当前环境未开启装帧标题能力。</p>' +
+        "<h3>封面字体</h3>" +
+        '<p class="preview-ai-sheet__desc">当前环境未开启封面字体能力。</p>' +
         "</div>"
       );
     }
@@ -391,19 +391,19 @@ export function mountAiSurface(root, tripId, opts) {
         "<span>优先 AI 手写体</span>" +
         "</label>" +
         '<p class="preview-ai-sheet__hint">勾选只表示优先走手写体，不会自动开跑。未通过自动用字库 · 约十几秒。</p>'
-      : '<p class="preview-ai-sheet__hint">将使用字库路线生成装帧标题。</p>';
+      : '<p class="preview-ai-sheet__hint">将使用字库路线生成封面字体。</p>';
 
     var taUi = (entryCache && entryCache.titleArtUi) || {};
     var statusLabel =
       typeof taUi.statusLabel === "string" && taUi.statusLabel
         ? taUi.statusLabel
         : "尚未生成";
-    var btnLabel = taUi.ready ? "重新生成" : "生成装帧标题";
+    var btnLabel = taUi.ready ? "重新生成字体" : "生成字体";
 
     return (
       '<div class="preview-ai-sheet__block" data-ai-title-art-block>' +
-      "<h3>装帧标题</h3>" +
-      '<p class="preview-ai-sheet__desc">点一次才生成。勾选只表示优先走 AI 手写体，不会自动开跑。</p>' +
+      "<h3>封面字体</h3>" +
+      '<p class="preview-ai-sheet__desc">点一次才生成。也可在精修「封面 · 杂志名」改名后生成。勾选只表示优先走 AI 手写体。</p>' +
       routeCRow +
       '<div class="preview-ai-sheet__row">' +
       '<span class="preview-ai-sheet__status" data-ai-title-art-status>' +
@@ -413,6 +413,7 @@ export function mountAiSurface(root, tripId, opts) {
       escapeHtml(btnLabel) +
       "</button>" +
       "</div>" +
+      '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">去精修 · 杂志名</button>' +
       "</div>"
     );
   }
@@ -856,6 +857,21 @@ export function mountAiSurface(root, tripId, opts) {
     var check = body.querySelector("[data-ai-title-art-routec]");
     var artBtn = body.querySelector("[data-ai-title-art-btn]");
     var statusEl = body.querySelector("[data-ai-title-art-status]");
+    var gotoName = body.querySelector("[data-ai-goto-cover-name]");
+    if (gotoName && !gotoName._rciWired) {
+      gotoName._rciWired = true;
+      gotoName.addEventListener("click", function () {
+        close("deep_link");
+        if (root._sheet && typeof root._sheet.open === "function") {
+          root._sheet.open("cover", {
+            coverSeg: "name",
+            bookendsFocus: "opening",
+            scrollToBookends: false,
+            source: "ai_sheet",
+          });
+        }
+      });
+    }
     if (check) {
       check.addEventListener("change", function () {
         try {
@@ -886,11 +902,14 @@ export function mountAiSurface(root, tripId, opts) {
           artBtn.disabled = false;
           if (!res || res.status !== 200 || !res.body || !res.body.ok) {
             if (statusEl) statusEl.textContent = "生成失败";
-            showToolbarToast(
+            var failMsg =
               (res && res.body && res.body.message) ||
-                "装帧标题暂时不可用，可稍后重试",
-              { error: true }
-            );
+              "封面字体暂时不可用，可稍后重试";
+            // 禁止把 E_SERVER 等工程码直接展示
+            if (failMsg.indexOf("E_") === 0) {
+              failMsg = "封面字体暂时不可用，可稍后重试";
+            }
+            showToolbarToast(failMsg, { error: true });
             trackResult("title_art", false, {
               latency_ms: Date.now() - started,
               routeCRequested: wantRouteC,
@@ -934,7 +953,7 @@ export function mountAiSurface(root, tripId, opts) {
             engine: res.body.engine || null,
             statusLabel: readyLabel,
           };
-          showToolbarToast("装帧标题已更新");
+          showToolbarToast("封面字体已更新");
           trackResult("title_art", true, {
             latency_ms: Date.now() - started,
             routeCRequested: wantRouteC,
@@ -956,7 +975,7 @@ export function mountAiSurface(root, tripId, opts) {
           titleArtBusy = false;
           artBtn.disabled = false;
           if (statusEl) statusEl.textContent = "网络错误";
-          showToolbarToast("装帧标题请求失败", { error: true });
+          showToolbarToast("封面字体请求失败", { error: true });
           trackResult("title_art", false, {
             latency_ms: Date.now() - started,
             error_code: "network",
