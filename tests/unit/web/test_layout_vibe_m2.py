@@ -85,9 +85,10 @@ def test_lvp_binds_trip_id_before_job_runs(
     from travelogue.web.studio_jobs import get_job_store
 
     store = get_job_store()
+    # create_g1_continue_job also refuses when import slot is held — clear both.
     store.finish_g1()
-    # Unique trip id · avoid 409 from leftover global job-store / on-demand busy
-    # state when this runs inside the full ``pytest --fast`` suite.
+    store.finish_import()
+    # Unique trip id · avoid 409 from leftover trip busy / on-demand flags.
     trip_id = f"demo-lvp-busy-{uuid.uuid4().hex[:8]}"
     trip_dir = tmp_path / trip_id
     trip_dir.mkdir()
@@ -151,6 +152,7 @@ def test_lvp_runner_preserves_export_layout_auto(
 
     store = get_job_store()
     store.finish_g1()
+    store.finish_import()
     trip_id = f"demo-auto-{uuid.uuid4().hex[:8]}"
     trip_dir = tmp_path / trip_id
     trip_dir.mkdir()
