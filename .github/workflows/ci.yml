@@ -65,6 +65,9 @@ jobs:
       - name: LSE cross-import ceiling (ADR-015)
         run: python scripts/lint_lse_cross_import.py
 
+      - name: LSE ratchet anti-tamper + growth-log (Arch Opt V2 · AC2-05)
+        run: python scripts/lint_ratchet_growth_log.py
+
       - name: layout_contract surface (P2-C)
         run: python scripts/lint_layout_contract_surface.py
 
