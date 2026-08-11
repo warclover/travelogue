@@ -520,8 +520,56 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
+.preview-toolbar__refine-chip.is-busy {
+  animation: preview-refine-chip-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes preview-refine-chip-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
 .preview-toolbar__refine-chip[hidden] {
   display: none !important;
+}
+
+/* Cover face busy overlay (Studio chrome · swap opening / style) */
+.cover-opening.is-cover-busy,
+[data-cover-opening].is-cover-busy {
+  cursor: wait;
+}
+
+.preview-cover-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  background: rgba(18, 22, 20, 0.28);
+  backdrop-filter: blur(1.5px);
+}
+
+.preview-cover-busy[hidden] {
+  display: none !important;
+}
+
+.preview-cover-busy__label {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(26, 47, 40, 0.9);
+  color: #e8f5ef;
+  font-family: var(--studio-font-ui, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 /* Legacy fixed badge removed (D-PCU); keep hidden if any stale DOM */
@@ -915,6 +963,10 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 @media (prefers-reduced-motion: reduce) {
   .preview-toolbar__refine-chip {
     transition: none;
+  }
+  .preview-toolbar__refine-chip.is-busy {
+    animation: none;
+    opacity: 0.85;
   }
 }
 

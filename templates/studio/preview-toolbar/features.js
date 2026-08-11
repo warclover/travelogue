@@ -26,7 +26,7 @@ import {
   toolbarBody,
   reloadPreviewAfterLayout,
 } from "./shell.js";
-import { syncInspectChromeVisibility } from "./preview-mode.js";
+import { syncInspectChromeVisibility, setOpeningUpdateBusy } from "./preview-mode.js";
 import {
   activateG1Pending,
   applyLayoutRerender,
@@ -1176,16 +1176,21 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       }
     }
 
-    function setBusy(busy) {
+    function setBusy(busy, nextStyleId) {
       if (!group) return;
       group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
         btn.disabled = !!busy;
+        var sid = btn.getAttribute("data-cover-style");
+        btn.classList.toggle("is-updating", !!(busy && nextStyleId && sid === nextStyleId));
       });
       if (keepCheck) keepCheck.disabled = !!busy;
+      setOpeningUpdateBusy(!!busy, {
+        label: "正在更换封面版式…",
+      });
     }
 
     function applyStyleChange(next, keepCover) {
-      setBusy(true);
+      setBusy(true, next);
       if (fitHintEl) {
         fitHintEl.hidden = true;
         fitHintEl.textContent = "";
@@ -1218,8 +1223,8 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         keepCover: !!keepCover,
       })
         .then(function (res) {
-          setBusy(false);
           if (res.status !== 200 || !res.body.ok) {
+            setBusy(false);
             showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
             return;
           }
@@ -1233,7 +1238,8 @@ export function mountCoverStyleControls(slot, tripId, opts) {
             repickCover: !keepCover,
           });
           showToolbarToast(
-            keepCover ? "封面版式已更新（保留当前封面图）" : "封面版式已更新，并重荐了封面图"
+            keepCover ? "封面版式已更新（保留当前封面图）" : "封面版式已更新，并重荐了封面图",
+            { duration: 2200 }
           );
           if (keepCover && fitHintEl && res.body.fitBelowThreshold) {
             fitHintEl.hidden = false;
@@ -1245,9 +1251,13 @@ export function mountCoverStyleControls(slot, tripId, opts) {
             res,
             tripId,
             toolbar || section
-          ).then(function (ok) {
-            if (ok && toolbar) refreshStaleHint(toolbar, tripId);
-          });
+          )
+            .then(function (ok) {
+              if (ok && toolbar) refreshStaleHint(toolbar, tripId);
+            })
+            .finally(function () {
+              setBusy(false);
+            });
         })
         .catch(function () {
           setBusy(false);

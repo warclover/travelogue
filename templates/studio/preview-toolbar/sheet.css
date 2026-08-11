@@ -453,9 +453,26 @@
   background: #fff;
 }
 
+.preview-sheet__cover-style.is-updating {
+  border-color: var(--sheet-accent);
+  background: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sheet-accent) 28%, transparent);
+  cursor: wait;
+}
+
+.preview-sheet__cover-style.is-updating .preview-sheet__cover-label::after {
+  content: " · 更新中";
+  font-weight: 600;
+  color: var(--sheet-accent);
+}
+
 .preview-sheet__cover-style:disabled {
   opacity: 0.55;
   cursor: wait;
+}
+
+.preview-sheet__cover-style.is-updating:disabled {
+  opacity: 0.92;
 }
 
 .preview-sheet__cover-thumb {
