@@ -101,6 +101,7 @@ python scripts/gen_scripts_registry.py
 | `lint_layout_contract_surface.py` | CI | `.github/workflows/ci.yml` | `docs/ARCH-OPT-P2-BACKLOG.md`, `docs/TECH-ARCHITECTURE.md` | — |
 | `lint_layout_engine_facade.py` | CI | `.github/workflows/ci.yml` | `docs/ACCEPTANCE-COMPLETION-SURFACE-CONVERGENCE-V1.md`, `docs/IMPLEMENTATION-COMPLETION-SURFACE-CONVERGENCE-V1.md`, `docs/acceptance-records/csc-pr-body-2026-07-22.md`, `+3 more` | `scripts/quality_fixpack_gate.py` |
 | `lint_lse_cross_import.py` | CI | `.github/workflows/arch-opt-weekly.yml`, `.github/workflows/ci.yml` | `docs/ARCH-OPT-REVIEW-2026-07-09.md`, `docs/ARCH-OPT-STATUS.md`, `docs/PRD-ARCH-OPT-WS1-MERGE-FIX.md`, `+1 more` | `scripts/lse_cross_import_stats.py` |
+| `lint_ratchet_growth_log.py` | CI | `.github/workflows/arch-opt-weekly.yml`, `.github/workflows/ci.yml` | `docs/PRD-ARCH-OPTIMIZATION-V2.md`, `docs/acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md` | `scripts/lint_lse_cross_import.py`, `scripts/lse_cross_import_stats.py` |
 | `lint_no_runtime_assert.py` | CI | `.github/workflows/ci.yml` | `docs/PRD-ASSERTION-HARDENING-V1.md`, `docs/QUALITY-GATE.md`, `docs/TESTING.md`, `+1 more` | — |
 | `lint_pt_default_flags.py` | CI | `.github/workflows/ci.yml`, `.github/workflows/nightly-windows-pt.yml` | `docs/PRD-PIPELINE-THROUGHPUT.md`, `docs/TECH-ARCHITECTURE.md` | `scripts/lint_pt_default_flags.py` |
 | `lint_test_layout.py` | CI | `.github/workflows/ci.yml` | `docs/PRD-ARCH-OPT-WS1-MERGE-FIX.md` | — |
