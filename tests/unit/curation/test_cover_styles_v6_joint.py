@@ -148,6 +148,35 @@ def test_apply_joint_pick_marks_title_art_stale_when_cover_changes() -> None:
     assert trip["meta"]["titleArt"]["stale"] is True
 
 
+def test_apply_joint_pick_marks_title_art_stale_when_style_changes() -> None:
+    """换 Opening 但保留封面时也要 stale——避免旧风格条幅贴纸套到新纸栏。"""
+    trip = _trip([_asset("a1", 0.5, 0.4)])
+    trip["exportLayout"] = "web"
+    trip["coverAssetId"] = "a1"
+    trip["meta"]["coverOpeningStyle"] = "contact-stamp"
+    trip["meta"]["titleArt"] = {
+        "enabled": True,
+        "stale": False,
+        "openingStyleId": "contact-stamp",
+        "coverAssetId": "a1",
+        "assetPath": "x.png",
+    }
+    explain = CoverJointExplain(
+        source="manual",
+        style_id="folio-overlap",
+        asset_id="a1",
+        joint=1.0,
+        quality=1.0,
+        fit=1.0,
+        avoid_penalty=0.0,
+        low_confidence=False,
+    )
+    apply_joint_pick(trip, explain, lock=True, layout="web")
+    assert trip["coverAssetId"] == "a1"
+    assert trip["meta"]["coverOpeningStyle"] == "folio-overlap"
+    assert trip["meta"]["titleArt"]["stale"] is True
+
+
 def test_sync_trip_covers_respects_lock() -> None:
     assets = [
         _asset("a1", 0.5, 0.3, score_hint=2),

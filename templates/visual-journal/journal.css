@@ -526,15 +526,19 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
   z-index: 2;
 }
 
-/* folio-overlap 书名左侧竖排：贴纸为窄高条幅，须落在纸面栏内（--cover-folio-
-   margin 13%），不能溢出骑缝/照片区。 */
+/* folio-overlap 竖排条幅贴纸：钉在纸栏中线，高度优先（拒绝横幅铺满）。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
 html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
-  max-width: 10%;
-  max-height: 58%;
+  left: calc(var(--cover-folio-margin) / 2);
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: min(58vh, 520px);
+  max-width: calc(var(--cover-folio-margin) * 0.88);
+  max-height: 62%;
   object-fit: contain;
   object-position: center center;
-  z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
+  z-index: 5;
 }
 
 /* W3：尺寸贴近各风格原生标题（band 最小、veil 偏大）；位置已由 left 锚点对齐 */
@@ -833,12 +837,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     --cover-band-title-size: clamp(1.42rem, 3.05vw, 2.28rem);
     --cover-band-label-max: min(46%, 440px);
     --cover-band-pad: 14px clamp(22px, 3.6vw, 44px) 16px;
-    /* W2 folio-overlap */
+    /* W2 folio-overlap · 窄脊纸栏（约为曾用的 34% 的三分之一） */
     --cover-folio-paper: #f3efe6;
-    --cover-folio-title-size: clamp(2.55rem, 5.9vw, 4.7rem);
+    --cover-folio-title-size: clamp(1.45rem, 2.9vw, 2.35rem);
     --cover-folio-ghost: rgba(168, 52, 42, 0.26);
-    --cover-folio-margin: 34%;
-    --cover-folio-cut: 34%;
+    --cover-folio-margin: 11%;
+    --cover-folio-cut: 11%;
   }
 
   html[data-layout="web"] .cover-opening .trip-meta,
@@ -1193,7 +1197,7 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
-  /* 左侧纸面栏竖排书名：居中于窄脊，把横向留给右页照片 */
+  /* 左侧纸面栏竖排书名：必须 writing-mode:vertical-rl（勿回落成横排 -webkit-box） */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title {
     position: absolute;
@@ -1201,9 +1205,10 @@ body.longshot-capturing .cover-opening .trip-meta {
     right: auto;
     top: 50%;
     transform: translate(-50%, -50%);
-    /* 显式高度给竖排换栏一个稳定基准（同 cameo-aperture 教训） */
     width: auto;
-    height: min(58vh, 520px);
+    max-width: calc(var(--cover-folio-margin) * 0.92);
+    height: min(70vh, 620px);
+    max-height: min(70vh, 620px);
     margin: 0;
     padding: 0;
     color: #141312;
@@ -1215,10 +1220,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     white-space: nowrap;
     writing-mode: vertical-rl;
     text-orientation: mixed;
+    /* 盖过通用 .cover-opening__title 的 -webkit-box 横排钳行 */
     display: block;
     -webkit-line-clamp: unset;
-    -webkit-box-orient: unset;
-    overflow: visible;
+    line-clamp: unset;
+    -webkit-box-orient: initial;
+    overflow: hidden;
     clip-path: none;
     z-index: 5;
     pointer-events: auto;
@@ -1232,23 +1239,30 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* 底部 hook：保持横排可读，收进左侧纸栏内换行，不侵入右页照片 */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook {
     position: absolute;
-    left: clamp(10px, 1.2vw, 18px);
-    bottom: clamp(44px, 5.5vh, 64px);
-    width: max-content;
-    max-width: min(56em, calc(100vw - 80px));
+    left: clamp(8px, 0.9vw, 14px);
+    right: auto;
+    bottom: clamp(40px, 5vh, 58px);
+    width: calc(var(--cover-folio-margin) - 18px);
+    max-width: calc(var(--cover-folio-margin) - 16px);
     margin: 0;
     color: #4f4a44;
-    font-size: 1.32rem;
-    line-height: 1.35;
+    font-size: clamp(0.72rem, 1.05vw, 0.9rem);
+    line-height: 1.45;
+    letter-spacing: 0.02em;
     pointer-events: auto;
-    display: block;
-    white-space: nowrap;
-    overflow: visible;
-    text-overflow: clip;
-    -webkit-line-clamp: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-shadow: none;
   }
 

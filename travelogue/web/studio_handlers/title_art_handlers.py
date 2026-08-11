@@ -104,6 +104,7 @@ def handle_post_resolve_title_art(handler: StudioHandlerProtocol, trip_id: str) 
             prompt_version=prompt_version,
             route_c_max_attempts=max_attempts,
             ocr_verify_enabled=ocr_enabled,
+            trip_root=trip_dir,
         )
     except Exception:
         _log.exception("title-art resolve failed for trip %s", trip_id)

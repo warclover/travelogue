@@ -35,7 +35,6 @@ import {
   refreshTaskDockState,
   setLayoutPending,
   setLayoutPendingMessage,
-  syncCoverOpeningStyleInDom,
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
@@ -1193,13 +1192,14 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       }
       // Nested under Bookends: route through repick-opening for closing cascade (R-BE-14)
       if (opts.viaBookends && typeof opts.applyStyleViaBookends === "function") {
+        // FE-CCF / folio：不要乐观改 data-cover-opening。旧 HTML 套新风格
+        // 标题 CSS（尤其对页叠印竖排大字）会溢出闪屏；等 rerender 整页刷新。
         return Promise.resolve(opts.applyStyleViaBookends(next, keepCover))
           .then(function (ok) {
             setBusy(false);
             if (ok === false) return;
             selectedStyle = next;
             syncSelection(next);
-            syncCoverOpeningStyleInDom(next);
             trackStudioEvent("cover_opening_style_change", {
               tripId: tripId,
               coverOpeningStyle: next,
@@ -1226,7 +1226,6 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           var prev = selectedStyle;
           selectedStyle = next;
           syncSelection(next);
-          syncCoverOpeningStyleInDom(next);
           trackStudioEvent("cover_opening_style_change", {
             tripId: tripId,
             coverOpeningStyle: next,
@@ -1241,6 +1240,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
             fitHintEl.textContent = "当前封面图可能不太适合此版式";
           }
           var toolbar = document.querySelector(".preview-toolbar");
+          // 同上：等 rerender + reload，勿 syncCoverOpeningStyleInDom
           return refreshPreviewAfterCopySave(
             res,
             tripId,

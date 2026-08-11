@@ -10,7 +10,7 @@ import {
   syncDerivativesStatusBadge,
   toolbarConfirm,
 } from "./shell.js";
-import { applyLayoutRerender, syncCoverOpeningStyleInDom } from "./core.js";
+import { applyLayoutRerender } from "./core.js";
 import {
   HELP_COPY,
   maybeShowBookendsPickTip,
@@ -389,12 +389,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
       showToolbarToast("正在准备 " + preparingN + " 张高清图", { duration: 3600 });
     }
     syncDerivativesStatusBadge(res.body);
-    if (res.body.coverOpeningStyle) {
-      syncCoverOpeningStyleInDom(res.body.coverOpeningStyle);
-    }
+    // 勿乐观 syncCoverOpeningStyleInDom：旧 DOM 套新 Opening（尤其 folio 竖排）
+    // 会先闪溢出书名，等 rerender 整页刷新后再呈现。
     render(res.body);
-    applyLayoutRerender(tripId);
-    return true;
+    return applyLayoutRerender(tripId);
   }
 
   function applyOpening(assetId, styleId, confirmConflict, keepCover) {
