@@ -153,6 +153,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) | **active** | NAS 跨职能评审 · Conditional Go · MF 已回写 PRD v0.2 |
 | [acceptance-records/no-ai-surface-v1-e2e-doc-closeout-2026-07-22.md](./acceptance-records/no-ai-surface-v1-e2e-doc-closeout-2026-07-22.md) | **active** | NAS e2e/DOC-NAS-02 收口 · 2026-07-22 |
 | [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md) | **active** | **AIR** AI-Return **v0.1.0** Draft · 解冻最小包 · 三语气 · 渠道 pack v2 · 迟晒（承接 NAS §14） |
+| [PRD-PREVIEW-DOCK-VISUAL-V5.md](./PRD-PREVIEW-DOCK-VISUAL-V5.md) | **active** | **DIG** 预览 Dock 视觉 V5 **v0.1.11** · D-DIG-25 弹层可读/加宽 |
+| [IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md](./IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md) | **active** | DIG 实施 **v0.9.0** · 弹层 UX 修补 · W3 手测待签 |
 | [PRD-SHARE-NARRATIVE-READINESS-V1.md](./PRD-SHARE-NARRATIVE-READINESS-V1.md) | **active** | **SNR** 敢发叙事就绪 **v0.1.0** · W0–W2 已合 · Agent 狗粮通过 · 欠真人 N≥5 |
 | [IMPLEMENTATION-SHARE-NARRATIVE-READINESS-V1.md](./IMPLEMENTATION-SHARE-NARRATIVE-READINESS-V1.md) | **active** | SNR 实施 · W3 Agent 狗粮通过 |
 | [ACCEPTANCE-SHARE-NARRATIVE-READINESS-V1.md](./ACCEPTANCE-SHARE-NARRATIVE-READINESS-V1.md) | **active** | SNR 验收 · AC-SNR-01～12 |

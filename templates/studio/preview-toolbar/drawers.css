@@ -32,7 +32,7 @@
   width: 40px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(61, 107, 90, 0.35);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   margin: 10px auto 0;
 }
 .preview-drawer__head {
@@ -70,7 +70,7 @@
 .preview-drawer__anchor {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(61, 107, 90, 0.25);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 25%, transparent);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -108,7 +108,7 @@
   margin: 0 0 10px;
 }
 .preview-drawer__chip {
-  border: 1px solid rgba(61, 107, 90, 0.22);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 22%, transparent);
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 12px;
@@ -125,7 +125,7 @@
 .preview-drawer__copy-intent-note {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(61, 107, 90, 0.25);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 25%, transparent);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
@@ -146,7 +146,7 @@
   margin-bottom: 8px;
 }
 .preview-drawer__g1--info {
-  background: rgba(61, 107, 90, 0.12);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
   color: var(--preview-ink);
 }
 .preview-drawer__g1--warn {
@@ -176,7 +176,7 @@
   color: #fff;
 }
 .preview-drawer__g1-regenerate {
-  background: rgba(61, 107, 90, 0.12);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
   color: var(--preview-ink);
 }
 .preview-drawer__explain-lead {
@@ -194,7 +194,7 @@
   margin: 0 0 10px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(61, 107, 90, 0.06);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 6%, transparent);
 }
 .preview-drawer__aesthetic-head {
   margin: 0 0 4px;
@@ -219,8 +219,8 @@
   margin: 0 0 12px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(61, 107, 90, 0.1);
-  border: 1px solid rgba(61, 107, 90, 0.12);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
 }
 .preview-drawer__aesthetic-pref {
   display: flex;
@@ -229,7 +229,7 @@
   margin: 6px 0 4px;
 }
 .preview-drawer__aesthetic-pref-btn {
-  border: 1px solid rgba(61, 107, 90, 0.28);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 28%, transparent);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   color: #2a3d36;
@@ -240,12 +240,12 @@
   font-family: inherit;
 }
 .preview-drawer__aesthetic-pref-btn.is-active {
-  background: rgba(61, 107, 90, 0.18);
-  border-color: rgba(61, 107, 90, 0.55);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 18%, transparent);
+  border-color: color-mix(in srgb, var(--preview-accent, #3f454c) 55%, transparent);
   font-weight: 600;
 }
 .preview-drawer__aesthetic-pref-btn:hover {
-  background: rgba(61, 107, 90, 0.12);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
 }
 .preview-drawer__aesthetic[hidden] { display: none !important; }
 .preview-drawer__primary {
@@ -262,7 +262,7 @@
 }
 .preview-drawer__ghost {
   width: 100%;
-  border: 1px solid rgba(61, 107, 90, 0.35);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 13px;
@@ -274,7 +274,7 @@
   margin-bottom: 8px;
 }
 .preview-drawer__ghost:hover {
-  background: rgba(61, 107, 90, 0.08);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 8%, transparent);
 }
 
 .preview-toolbar__g1-banner {
@@ -286,7 +286,7 @@
   margin: 0 12px 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff8e1;
+  background: color-mix(in srgb, var(--preview-accent) 16%, var(--preview-surface));
   border: 1px solid #ffe082;
   color: #5c4a1a;
   font-size: 13px;
@@ -325,7 +325,7 @@
 }
 .preview-toolbar__g1-banner-regen,
 .preview-toolbar__g1-banner-open {
-  background: #fff;
+  background: var(--preview-surface, #ffffff);
   color: #5c4a1a;
   border: 1px solid #a1887f;
 }

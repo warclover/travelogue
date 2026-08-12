@@ -29,7 +29,7 @@ export function initPreviewToolbar() {
   var root = document.createElement("div");
   root.className = "preview-toolbar preview-toolbar--v4";
   root.innerHTML =
-    '<nav class="preview-toolbar__dock" aria-label="预览快捷操作">' +
+    '<nav class="preview-toolbar__dock preview-toolbar__dock--ink-glass" aria-label="预览快捷操作">' +
     '<a class="preview-toolbar__dock-btn preview-toolbar__dock-btn--back preview-toolbar__dock-btn--labeled preview-toolbar__ctl" href="/" aria-label="返回">' +
     dockIconSvg("back") +
     '<span class="preview-toolbar__dock-label">返回</span>' +

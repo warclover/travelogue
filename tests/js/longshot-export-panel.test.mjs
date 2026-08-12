@@ -71,6 +71,11 @@ function stubBtn(attrName, attrValue) {
 /** Minimal popover stub for syncPanelUI field visibility (no jsdom). */
 function stubPopover(platformIds) {
   const copy = { hidden: false };
+  const copyLabel = { textContent: "长图要不要字" };
+  const modeField = { hidden: false };
+  const densityField = { hidden: false };
+  const xhsCount = { hidden: true };
+  const xhsPack = { hidden: true };
   const note = { textContent: "" };
   const expectField = { hidden: true };
   const expectBody = { innerHTML: "", textContent: "" };
@@ -82,10 +87,13 @@ function stubPopover(platformIds) {
   return {
     querySelector(sel) {
       if (sel === '[data-field="copy"]') return copy;
+      if (sel === "[data-copy-label]") return copyLabel;
       if (sel === ".preview-toolbar__export-popover-note") return note;
-      if (sel === '[data-field="mode"]') return { hidden: false };
-      if (sel === '[data-field="xhs-count"]') return { hidden: true };
+      if (sel === '[data-field="mode"]') return modeField;
+      if (sel === '[data-field="density"]') return densityField;
+      if (sel === '[data-field="xhs-count"]') return xhsCount;
       if (sel === '[data-field="xhs-pad"]') return { hidden: true };
+      if (sel === '[data-field="xhs-copy-pack"]') return xhsPack;
       if (sel === '[data-field="album-count"]') return albumCountField;
       if (sel === '[data-field="expect"]') return expectField;
       if (sel === "[data-expect-body]") return expectBody;
@@ -106,6 +114,11 @@ function stubPopover(platformIds) {
       return [];
     },
     _copy: copy,
+    _copyLabel: copyLabel,
+    _modeField: modeField,
+    _densityField: densityField,
+    _xhsCount: xhsCount,
+    _xhsPack: xhsPack,
     _note: note,
     _albumCountField: albumCountField,
     _expectField: expectField,
@@ -145,9 +158,39 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
-test("wechat_moments 短标签带导出动作（禁止裸「连读」）", () => {
-  assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
-  assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读/);
+test("wechat_moments 短标签带平台名（对齐导出小红书；禁止裸「连读/按章」）", () => {
+  assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出朋友圈");
+  assert.equal(shortCtaLabelForPlatform("wechat_chat"), "发微信群");
+  assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读|朋友圈/);
+  assert.notEqual(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
+  assert.notEqual(shortCtaLabelForPlatform("wechat_chat"), "按章导出");
+});
+
+test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () => {
+  const popChat = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popChat, { platforms: ["wechat_chat"], mode: "chapter", scale: 2 });
+  assert.equal(popChat._modeField.hidden, false);
+  assert.equal(popChat._copy.hidden, false);
+  assert.match(popChat._copyLabel.textContent, /微信群/);
+  assert.equal(popChat._xhsPack.hidden, true);
+  assert.equal(popChat._densityField.hidden, false);
+
+  const popMoments = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popMoments, { platforms: ["wechat_moments"], mode: "chapter", scale: 2 });
+  assert.equal(popMoments._modeField.hidden, true); // 无按章/一整张
+  assert.equal(popMoments._copy.hidden, false);
+  assert.match(popMoments._copyLabel.textContent, /朋友圈/);
+  assert.equal(popMoments._expectField.hidden, false);
+  assert.match(popMoments._expectBody.innerHTML, /连读/);
+  assert.equal(popMoments._xhsPack.hidden, true);
+
+  const popXhs = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popXhs, { platforms: ["xiaohongshu"], mode: "chapter", scale: 2 });
+  assert.equal(popXhs._modeField.hidden, true);
+  assert.equal(popXhs._copy.hidden, true); // 文案包，非长图要不要字
+  assert.equal(popXhs._xhsCount.hidden, false);
+  assert.equal(popXhs._xhsPack.hidden, false);
+  assert.equal(popXhs._densityField.hidden, true);
 });
 
 test("exportSummaryLine · draft 未确认时提示待生效", () => {
@@ -415,7 +458,7 @@ test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整�
   });
   assert.equal(allOk.title, "✓ 2 个模式已全部导出");
   assert.match(allOk.lines[0], /小红书.*8 张/);
-  assert.match(allOk.lines[1], /连读.*3 张/);
+  assert.match(allOk.lines[1], /朋友圈.*3 张/);
 
   const partial = formatBatchSuccess({
     batch: true,

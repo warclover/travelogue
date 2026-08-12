@@ -539,10 +539,17 @@ export function cancelPreviewLongshotExport(root) {
 
     var scale = Number(prefs.scale) || 2;
     var quality = scale >= 3 ? "超清" : scale >= 2 ? "高清" : "标准";
-    // Compose 平台没有「按章/一整张」概念；副标题改用拼贴描述，避免误导。
-    var subtitle = composeMode
-      ? "3:4 拼贴 · " + quality
-      : (prefs.mode === "full" ? "完整导出" : "按章导出") + " · " + quality;
+    // 副标题跟平台：禁对朋友圈/拼贴误用「按章导出」
+    var subtitle;
+    if (composeMode) {
+      subtitle = "3:4 拼贴 · " + quality;
+    } else if (platform === "wechat_moments") {
+      subtitle = "长图连读 · " + quality;
+    } else if (platform === "wechat_chat") {
+      subtitle = (prefs.mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
+    } else {
+      subtitle = quality;
+    }
 
     var title = progressTitleForPlatform(platform);
     if (/更新版面/.test(hint)) {
@@ -638,10 +645,9 @@ export function cancelPreviewLongshotExport(root) {
     } else {
       btn.removeAttribute("data-recipe-subtitle");
     }
-    // PMX D8 · by_chapter / 「按章」配方：可见短标签保留按章语义
+    // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
     function shortLabelForCta() {
       if (tipRecipe && tipRecipe.needsIntent) return "选择分享";
-      if (/按章/.test(label || "")) return "按章导出";
       return shortCtaLabelForPlatform(platform);
     }
     var isDock = isPreviewToolbarV4(root);

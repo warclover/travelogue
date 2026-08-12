@@ -325,3 +325,35 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   background: color-mix(in srgb, var(--studio-panel-ink, #14110d) 8%, transparent);
   color: var(--studio-panel-ink, #14110d);
 }
+
+/* DIG · 混合方案：预览态帮助抽屉浅色 + 墨青（不改首页帮助默认绿） */
+html[data-preview-toolbar="on"] .studio-help-drawer {
+  background: var(--preview-panel-bg, #f7f5f0);
+  color: var(--preview-ink, #14110d);
+  box-shadow: -12px 0 36px rgba(0, 0, 0, 0.16);
+  border-left: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__head {
+  border-bottom-color: var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__close {
+  color: var(--preview-ink, #14110d);
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__close:hover {
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 14%, transparent);
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__item {
+  background: var(--preview-surface, #ffffff);
+  border-color: var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__item.is-active {
+  border-color: color-mix(in srgb, var(--preview-accent, #3f454c) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--preview-accent, #3f454c) 22%, transparent);
+}
+html[data-preview-toolbar="on"] .preview-sheet__help-hint-more {
+  color: var(--preview-accent, #3f454c);
+}
+html[data-preview-toolbar="on"] .preview-sheet__help-hint-dismiss {
+  background: var(--preview-elevated, #f3f1ec);
+  color: var(--preview-ink, #14110d);
+}

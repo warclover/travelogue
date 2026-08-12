@@ -8,7 +8,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid #c8ddd2;
-  color: var(--preview-accent-strong, #1a2f28);
+  color: var(--preview-accent-strong, #2e3338);
   font-size: 12px;
   line-height: 1.35;
   font-family: var(--studio-font-ui, inherit);
@@ -32,7 +32,7 @@
 .preview-toolbar__posture-bar-cta {
   border: none;
   border-radius: 999px;
-  background: var(--preview-accent, #3d6b5a);
+  background: var(--preview-accent, #3f454c);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -44,13 +44,13 @@
 
 .preview-toolbar__posture-bar-cta:hover,
 .preview-toolbar__posture-bar-cta:focus-visible {
-  background: var(--preview-accent-strong, #1a2f28);
+  background: var(--preview-accent-strong, #2e3338);
 }
 
 .preview-toolbar__posture-bar-help {
   border: none;
   background: transparent;
-  color: var(--preview-accent, #3d6b5a);
+  color: var(--preview-accent, #3f454c);
   font-size: 11px;
   font-weight: 600;
   padding: 4px 6px;

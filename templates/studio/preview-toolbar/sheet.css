@@ -39,20 +39,23 @@
 }
 
 .preview-sheet {
-  /* 与 Settings 共用 studio-panel-*（studio-modal.css） */
-  --sheet-ink: var(--preview-ink, var(--studio-panel-ink, #14110d));
-  --sheet-muted: var(--preview-muted, var(--studio-panel-muted-solid, #5c574f));
-  --sheet-accent: var(--preview-accent, var(--studio-panel-accent, #3d6b5a));
-  --sheet-accent-strong: var(--preview-accent-strong, var(--studio-panel-accent-strong, #1a2f28));
-  --sheet-surface: var(--preview-surface, var(--studio-panel-surface, #f3efe8));
-  --sheet-border: var(--preview-border, var(--studio-panel-border, rgba(20, 17, 13, 0.18)));
+  /* DIG · 混合方案：浅色弹层 + 铅灰强调 */
+  --sheet-ink: var(--preview-ink, #14110d);
+  --sheet-muted: var(--preview-muted, #5c574f);
+  --sheet-accent: var(--preview-accent, #3f454c);
+  --sheet-accent-strong: var(--preview-accent-strong, #2e3338);
+  --sheet-surface: var(--preview-surface, #ffffff);
+  --sheet-border: var(--preview-border, rgba(20, 17, 13, 0.12));
+  --sheet-panel-bg: var(--preview-panel-bg, #f7f5f0);
+  --sheet-accent-ink: var(--preview-accent-ink, #f5f0e8);
   position: relative;
   width: 100%;
-  max-width: 480px;
-  max-height: 72vh;
-  background: #fff;
+  max-width: min(560px, 100%);
+  max-height: 88vh;
+  background: var(--sheet-panel-bg);
+  border: 1px solid var(--sheet-border);
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.16);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -125,7 +128,7 @@
 .preview-sheet__grab {
   width: 40px;
   height: 4px;
-  background: color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  background: color-mix(in srgb, var(--sheet-muted) 45%, transparent);
   border-radius: 2px;
   margin: 8px auto 0;
   flex-shrink: 0;
@@ -161,12 +164,12 @@
   display: flex;
   gap: 4px;
   padding: 0 16px 12px;
-  border-bottom: 1px solid var(--sheet-surface);
+  border-bottom: 1px solid var(--sheet-border);
   overflow-x: auto;
   overflow-y: visible;
   position: relative;
   z-index: 1;
-  background: #fff;
+  background: var(--sheet-panel-bg);
 }
 
 .preview-sheet__tab {
@@ -181,8 +184,9 @@
 }
 
 .preview-sheet__tab.is-active {
-  background: color-mix(in srgb, var(--sheet-accent) 14%, #fff);
-  color: var(--sheet-accent);
+  /* 浅色弹层：active 用深字，禁用 accent-ink（象牙）以免浅上浅 */
+  background: color-mix(in srgb, var(--sheet-accent) 16%, transparent);
+  color: var(--sheet-ink);
   font-weight: 600;
 }
 
@@ -350,7 +354,8 @@
 }
 
 .preview-sheet__seg button.is-on {
-  background: #fff;
+  background: var(--sheet-surface);
+  color: var(--sheet-ink);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
@@ -390,7 +395,7 @@
 
 .preview-sheet__layout-vibe.is-on {
   border-color: var(--sheet-accent);
-  background: #fff;
+  background: var(--sheet-surface);
 }
 
 .preview-sheet__layout-vibe:disabled {
@@ -411,7 +416,7 @@
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--sheet-accent) 18%, #fff);
+  background: color-mix(in srgb, var(--sheet-accent) 22%, transparent);
   color: var(--sheet-accent-strong);
 }
 
@@ -450,12 +455,12 @@
 
 .preview-sheet__cover-style.is-on {
   border-color: var(--sheet-accent);
-  background: #fff;
+  background: var(--sheet-surface);
 }
 
 .preview-sheet__cover-style.is-updating {
   border-color: var(--sheet-accent);
-  background: #fff;
+  background: var(--sheet-surface);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--sheet-accent) 28%, transparent);
   cursor: wait;
 }
@@ -479,7 +484,7 @@
   display: block;
   aspect-ratio: 3 / 4;
   border-radius: 6px;
-  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  border: 1px solid var(--sheet-border);
   background: linear-gradient(160deg, #b0bec5 0%, #eceff1 55%, #cfd8dc 100%);
   position: relative;
   overflow: hidden;
@@ -620,7 +625,7 @@
 .preview-sheet__title-art {
   margin: 14px 0 0;
   padding-top: 12px;
-  border-top: 1px dashed rgba(61, 107, 90, 0.25);
+  border-top: 1px dashed color-mix(in srgb, var(--preview-accent, #3f454c) 25%, transparent);
 }
 
 .preview-sheet__title-art-routec {
@@ -794,7 +799,7 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(61, 107, 90, 0.35);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 13px;
@@ -802,12 +807,12 @@
   cursor: pointer;
   font-family: inherit;
   background: transparent;
-  color: var(--sheet-accent);
+  color: var(--sheet-ink);
   text-align: center;
 }
 
 .preview-sheet__ghost:hover {
-  background: rgba(61, 107, 90, 0.08);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 8%, transparent);
 }
 
 .preview-toolbar__template--sheet {
@@ -816,7 +821,7 @@
   display: block;
   margin-bottom: 8px;
   max-width: 100%;
-  background: rgba(61, 107, 90, 0.12);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
   color: var(--sheet-ink);
   font-size: 13px;
   font-weight: 500;
@@ -845,9 +850,9 @@
   flex: 1 1 160px;
   min-width: 0;
   padding: 8px 10px;
-  border: 1px solid rgba(61, 107, 90, 0.28);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 28%, transparent);
   border-radius: 8px;
-  background: #fff;
+  background: var(--sheet-surface);
 }
 
 .preview-sheet__body .preview-toolbar__template-adjust button {
@@ -872,18 +877,18 @@
 }
 
 .preview-sheet__chip {
-  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  border: 1px solid var(--sheet-border);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 12px;
-  background: #fff;
+  background: var(--sheet-surface);
   cursor: pointer;
 }
 
 .preview-sheet__chip.is-on {
-  background: color-mix(in srgb, var(--sheet-accent) 14%, #fff);
+  background: color-mix(in srgb, var(--sheet-accent) 14%, transparent);
   border-color: var(--sheet-accent);
-  color: var(--sheet-accent);
+  color: var(--sheet-ink);
   font-weight: 600;
 }
 
@@ -981,7 +986,7 @@ body.preview-sheet-open {
   font-size: 12px;
   line-height: 1.45;
   color: var(--sheet-muted);
-  background: #f5f7f6;
+  background: var(--sheet-elevated, var(--sheet-surface));
   border-radius: 8px;
 }
 
@@ -1212,8 +1217,8 @@ body.preview-sheet-open {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
-  background: var(--sheet-surface, #fff);
+  border: 1px solid var(--sheet-border);
+  background: var(--sheet-surface);
   color: inherit;
   font: inherit;
   font-size: 12px;
@@ -1224,26 +1229,26 @@ body.preview-sheet-open {
 }
 .preview-sheet__cover-subseg-btn.is-on {
   border-color: var(--sheet-accent);
-  background: color-mix(in srgb, var(--sheet-accent) 12%, #fff);
-  color: var(--sheet-accent);
+  background: color-mix(in srgb, var(--sheet-accent) 14%, transparent);
+  color: var(--sheet-ink);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--sheet-accent) 22%, transparent);
 }
 .preview-sheet__cover-subseg-hint {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--sheet-muted);
 }
 .preview-sheet__cover-subseg-btn.is-on .preview-sheet__cover-subseg-hint {
-  color: color-mix(in srgb, var(--sheet-accent) 70%, var(--sheet-muted));
+  color: var(--sheet-muted);
 }
 .preview-sheet__cover-name-input {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--sheet-muted) 35%, #fff);
+  border: 1px solid var(--sheet-border);
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
   font-size: 13px;
-  background: #fff;
+  background: var(--sheet-surface);
   margin: 4px 0 0;
 }
 .preview-sheet__cover-name-meta {
@@ -1255,7 +1260,7 @@ body.preview-sheet-open {
   margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: #fff8e1;
+  background: color-mix(in srgb, var(--sheet-accent) 16%, var(--sheet-surface));
   border: 1px solid #ffcc80;
   font-size: 11px;
   color: #e65100;
@@ -1263,7 +1268,7 @@ body.preview-sheet-open {
 .preview-sheet__book-foot {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px dashed color-mix(in srgb, var(--sheet-muted) 40%, #fff);
+  border-top: 1px dashed var(--sheet-border);
 }
 
 .preview-sheet__ctx-pill {
@@ -1312,7 +1317,8 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-hero {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  /* 略扁：侧栏内少占竖向，便于候选+操作同屏 */
+  aspect-ratio: 3 / 2;
   border-radius: 8px;
   background: rgba(20, 17, 13, 0.08) center / cover no-repeat;
   margin-bottom: 8px;
@@ -1450,28 +1456,40 @@ body.preview-sheet-open {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  padding: 10px 0 4px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    #fff 28%,
-    #fff 100%
-  );
+  margin-top: 12px;
+  /* 取消 sticky：避免浮在缩略图上、随滚动条「飘」 */
+  position: static;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--sheet-border);
+  background: transparent;
 }
 
 .preview-sheet__bookends-actions .preview-sheet__primary,
 .preview-sheet__bookends-actions .preview-sheet__ghost {
   width: auto;
-  flex: 0 0 auto;
+  flex: 1 1 8em;
+  min-width: 0;
   margin: 0;
+  text-align: center;
 }
 
 @media (max-width: 520px) {
   .preview-sheet__bookends-spread {
     grid-template-columns: 1fr;
   }
+}
+
+/* DIG · 混合方案：表单/主钮收口 */
+html[data-preview-toolbar="on"] .preview-sheet input,
+html[data-preview-toolbar="on"] .preview-sheet textarea,
+html[data-preview-toolbar="on"] .preview-sheet select {
+  background: var(--sheet-surface);
+  color: var(--sheet-ink);
+  border-color: var(--sheet-border);
+}
+html[data-preview-toolbar="on"] .preview-sheet button.preview-sheet__primary,
+html[data-preview-toolbar="on"] .preview-sheet .preview-sheet__btn--primary {
+  background: var(--sheet-accent, #3f454c);
+  color: var(--sheet-accent-ink, #f5f0e8);
+  border-color: var(--sheet-accent, #3f454c);
 }

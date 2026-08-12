@@ -148,6 +148,8 @@ export function initToolbarV3(root, tripId) {
       "studio-help-open studio-help-open--ghost studio-help-open--dock preview-toolbar__dock-btn",
   });
   helpBtn.setAttribute("aria-label", "使用帮助");
+  // DIG · 与 Dock 线图标同族，取代实心「?」字
+  helpBtn.innerHTML = dockIconSvg("help");
   if (dock && dock.firstChild) {
     dock.insertBefore(helpBtn, dock.firstChild);
   } else if (dock) {
@@ -683,68 +685,14 @@ export function initToolbarV3(root, tripId) {
     } catch (_eDl) {}
   }
 
+  /**
+   * DIG · 封面整面深链关闭（产品拍板 C，2026-08-12）：
+   * 点封面/封底空白不再打开精修；只走 Dock「精修」。
+   * openRefineCoverSeg 仍保留给 AI Sheet / 精修内跳转等显式入口。
+   * DIG-COVER-C
+   */
   function wireCoverRciDeepLinks() {
-    if (isSharePreview()) return;
-    var opening = document.querySelector(".cover-opening");
-    var closing = document.querySelector(".cover-closing");
-    function skipInteractive(target) {
-      return !!(
-        target &&
-        target.closest &&
-        target.closest(
-          "a, button, input, textarea, select, .preview-toolbar__featured-star, .preview-sheet-root, .preview-ai-sheet-root, .preview-toolbar"
-        )
-      );
-    }
-    if (opening && !opening.dataset.rciDeepLink) {
-      opening.dataset.rciDeepLink = "1";
-      opening.addEventListener(
-        "click",
-        function (e) {
-          if (skipInteractive(e.target)) return;
-          var onName = e.target.closest(
-            ".cover-opening__title, .cover-opening__title-art, .cover-opening__title-input"
-          );
-          if (onName) {
-            // 书名由 initCoverTitleEdit 处理；贴纸在此深链
-            if (
-              onName.classList.contains("cover-opening__title") ||
-              onName.classList.contains("cover-opening__title-input")
-            ) {
-              return;
-            }
-            e.preventDefault();
-            openRefineCoverSeg({
-              coverSeg: "name",
-              bookendsFocus: "opening",
-              source: "cover_title_art",
-            });
-            return;
-          }
-          openRefineCoverSeg({
-            coverSeg: "photo",
-            bookendsFocus: "opening",
-            source: "cover_hero",
-          });
-        },
-        true
-      );
-    }
-    if (closing && !closing.dataset.rciDeepLink) {
-      closing.dataset.rciDeepLink = "1";
-      closing.addEventListener(
-        "click",
-        function (e) {
-          if (skipInteractive(e.target)) return;
-          openRefineCoverSeg({
-            coverSeg: "photo",
-            bookendsFocus: "closing",
-            source: "cover_closing",
-          });
-        },
-        true
-      );
-    }
+    /* no-op · cover whole-surface deep link disabled (DIG-COVER-C) */
   }
 
   wireCoverRciDeepLinks();
@@ -789,9 +737,13 @@ export function initToolbarV3(root, tripId) {
   caretBtn.setAttribute("aria-label", "导出设置");
   caretBtn.setAttribute("aria-haspopup", "dialog");
   // 可见短标「设置」；完整动作名放 aria（避免与主钮「小红书」抢权）
+  // DIG · 细 chevron SVG（替代粗字符 ▾）
   caretBtn.innerHTML =
     '<span class="preview-toolbar__longshot-caret-label">设置</span>' +
-    '<span class="preview-toolbar__longshot-caret-chevron" aria-hidden="true">▾</span>';
+    '<span class="preview-toolbar__longshot-caret-chevron" aria-hidden="true">' +
+    '<svg viewBox="0 0 12 12" width="12" height="12" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    "</svg></span>";
 
   split.appendChild(longshotBtn);
   split.appendChild(caretBtn);

@@ -16,8 +16,11 @@ export var PLATFORMS = {
     label: "微信群",
     title: "微信群",
     subtitle: "长图 · 按序发群",
-    cta: "导出长图",
+    cta: "导出长图 · 发微信群",
     showSegmentMode: true,
+    copyLabel: "微信群长图 · 要不要字",
+    expectHtml:
+      "将导出<strong>可按序发群</strong>的长图；可选按章分开或一整张 · 预计视册厚而定",
   },
   wechat_moments: {
     id: "wechat_moments",
@@ -26,6 +29,7 @@ export var PLATFORMS = {
     subtitle: "长图连读",
     cta: "导出朋友圈 · 长图连读",
     showSegmentMode: false,
+    copyLabel: "朋友圈长图 · 要不要字",
     expectHtml:
       "将按完整画册切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
   },
@@ -48,6 +52,8 @@ export var PLATFORMS = {
     cta: "导出小红书海报",
     showSegmentMode: false,
     showXhsOptions: true,
+    // 拼贴出口：用「文案包」，不用长图「要不要字」
+    showCopyControls: false,
     expectHtml:
       "将生成 <strong>N 张 3:4 竖版拼贴海报</strong>（非杂志截屏）· auto 约 3–9 张",
   },
@@ -60,6 +66,7 @@ export var PLATFORMS = {
     cta: "导出公众号配图",
     showSegmentMode: false,
     showXhsOptions: true,
+    showCopyControls: false,
     expectHtml:
       "将生成 <strong>N 张 3:4 竖版拼贴配图</strong>（非杂志截屏）· auto 约 3–9 张 · 可依次插入图文正文",
   },
@@ -345,9 +352,8 @@ export function ctaLabelForPlatforms(platformIds) {
 
 /** Dock / 窄栏短标签（AC-DFX-02 · 含 compose 出口，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
-  // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
-  // SNR COPY-SNR-C02 · 小红书短标签带「导出」动词
-  if (platformId === "wechat_moments") return "导出连读";
+  // SNR COPY-SNR-C* · 短标签带平台名（对齐「导出小红书」）；禁裸「连读/按章」
+  if (platformId === "wechat_moments") return "导出朋友圈";
   if (platformId === "xiaohongshu") return "导出小红书";
   if (platformId === "wechat_official") return "导出公众号";
   if (platformId === "poster_bric") return "导出海报";
@@ -553,7 +559,7 @@ export function buildPanelHtml(platformIds) {
     '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
-    '<span class="preview-toolbar__export-popover-label">长图要不要字</span>' +
+    '<span class="preview-toolbar__export-popover-label" data-copy-label>长图要不要字</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +
     '<button type="button" data-copy-preset="photos">纯照片</button>' +
     '<button type="button" data-copy-preset="full">带文字</button>' +
@@ -783,17 +789,27 @@ export function syncPanelUI(pop, draft, opts) {
   }
 
   var modeField = pop.querySelector('[data-field="mode"]');
-  if (modeField) modeField.hidden = !meta.showSegmentMode;
+  // 仅微信群单选显「按章/一整张」；批量或其它平台隐藏（D-LNG2-15 / D-BEX-01）
+  if (modeField) modeField.hidden = isBatch || !meta.showSegmentMode;
 
   var copyField = pop.querySelector('[data-field="copy"]');
   if (copyField) {
-    // 海报 / 九宫格非长图文案语义，避免「长图要不要字」误导
-    copyField.hidden = meta.showCopyControls === false;
+    // 海报 / 拼贴文案包平台：不走长图「要不要字」
+    copyField.hidden = isBatch || meta.showCopyControls === false;
+  }
+  var copyLabelEl = pop.querySelector("[data-copy-label]");
+  if (copyLabelEl) {
+    copyLabelEl.textContent = meta.copyLabel || "长图要不要字";
+  }
+  var densityField = pop.querySelector('[data-field="density"]');
+  if (densityField) {
+    // 长图密度仅微信群/朋友圈；拼贴出口隐藏
+    densityField.hidden = isBatch || isComposePlatform(platform);
   }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
   if (noteEl) {
     noteEl.textContent =
-      meta.showCopyControls === false
+      isBatch || meta.showCopyControls === false
         ? "选好后点「确定」，再点上方金色按钮开始导出。"
         : "选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。";
   }
@@ -968,10 +984,11 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
       var idx = draft.platforms.indexOf(pid);
       if (idx >= 0) {
-        // 至少保留 1 个勾选项，否则无法导出（不允许清空）。
+        // 再点同一项：取消勾选（至少保留 1 个）
         if (draft.platforms.length > 1) draft.platforms.splice(idx, 1);
       } else {
-        draft.platforms.push(pid);
+        // 点新平台：加入多选，并提到首位 → 二级区跟刚点的平台
+        draft.platforms = [pid].concat(draft.platforms);
       }
       draft.platform = draft.platforms[0];
       refresh();

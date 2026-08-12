@@ -17,22 +17,34 @@ export function presentAutoplayHref(opts) {
   return href + "#present/1";
 }
 
-/** Folio / editorial-room SVG glyphs for v4 icon dock (PRD §6.1.1). */
+/**
+ * DIG · Dock 线图标（对齐效果图：返回圈箭 / 播放三角 / 分章列表 /
+ * 精修滑杆 / AI 星芒 / 文件夹 / 导出下行 / 帮助圈问号）。
+ */
 export function dockIconSvg(name) {
   var attrs =
     'class="preview-toolbar__dock-icon" viewBox="0 0 24 24" ' +
     'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" ' +
     'stroke-linejoin="round" aria-hidden="true" focusable="false"';
-  var accent =
-    'class="preview-toolbar__dock-icon-accent" fill="currentColor" stroke="none"';
   switch (name) {
-    case "back":
+    case "help":
       return (
         "<svg " +
         attrs +
         ">" +
-        '<path d="M19 12H7"/>' +
-        '<path d="M11 7l-5 5 5 5"/>' +
+        '<circle cx="12" cy="12" r="9"/>' +
+        '<path d="M9.6 9.4a2.4 2.4 0 0 1 4.6 1.1c0 1.6-2.2 2.1-2.2 3.5"/>' +
+        '<circle cx="12" cy="17.2" r="0.85" fill="currentColor" stroke="none"/>' +
+        "</svg>"
+      );
+    case "back":
+      // 无外圈，避免被误认成「选中芯片」
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<path d="M15 6.5L9 12l6 5.5"/>' +
+        '<path d="M9.5 12H19"/>' +
         "</svg>"
       );
     case "play":
@@ -40,21 +52,31 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<rect x="3" y="5" width="18" height="14" rx="2.5"/>' +
-        '<path d="M10 9.2v5.6L15.8 12z" ' +
-        accent +
-        "/>" +
+        '<path d="M9 7.2v9.6L18 12z"/>' +
         "</svg>"
       );
     case "refine":
-    case "settings": // 短暂别名兼容（settings → refine）
+      // 效果图：三档滑杆（精修）
       return (
         "<svg " +
         attrs +
         ">" +
-        '<path d="M13.2 5.2l5.6 5.6"/>' +
-        '<path d="M4 20l1.6-5.4L15.8 4.4a2 2 0 0 1 2.8 0l1 1a2 2 0 0 1 0 2.8L9.4 18.4 4 20z"/>' +
-        '<path d="M12.2 7.2l4.6 4.6"/>' +
+        '<path d="M5 7h14"/>' +
+        '<circle cx="9" cy="7" r="1.7" fill="currentColor" stroke="none"/>' +
+        '<path d="M5 12h14"/>' +
+        '<circle cx="14" cy="12" r="1.7" fill="currentColor" stroke="none"/>' +
+        '<path d="M5 17h14"/>' +
+        '<circle cx="11" cy="17" r="1.7" fill="currentColor" stroke="none"/>' +
+        "</svg>"
+      );
+    case "settings":
+      // 设置齿轮（caret / 兼容别名；精修请用 refine）
+      return (
+        "<svg " +
+        attrs +
+        ">" +
+        '<circle cx="12" cy="12" r="3"/>' +
+        '<path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M18 6l-1.6 1.6M7.6 16.4L6 18"/>' +
         "</svg>"
       );
     case "scroll":
@@ -62,19 +84,23 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<rect x="8" y="2.5" width="8" height="12.5" rx="1.6"/>' +
-        '<path d="M12 11.5v9"/>' +
-        '<path d="M9 17.5l3 3 3-3"/>' +
+        '<rect x="7.5" y="3" width="9" height="13" rx="1.8"/>' +
+        '<path d="M12 11.5v8"/>' +
+        '<path d="M9.2 17.2L12 20l2.8-2.8"/>' +
         "</svg>"
       );
     case "chapters":
+      // 效果图：条目列表
       return (
         "<svg " +
         attrs +
         ">" +
-        '<path d="M5 5h10v14H5z"/>' +
-        '<path d="M9 5v14"/>' +
-        '<path d="M15 8h4v11h-4"/>' +
+        '<circle cx="5.5" cy="7" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<path d="M9 7h10"/>' +
+        '<circle cx="5.5" cy="12" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<path d="M9 12h10"/>' +
+        '<circle cx="5.5" cy="17" r="1.2" fill="currentColor" stroke="none"/>' +
+        '<path d="M9 17h10"/>' +
         "</svg>"
       );
     case "folder":
@@ -82,17 +108,16 @@ export function dockIconSvg(name) {
         "<svg " +
         attrs +
         ">" +
-        '<path d="M3.5 8.5V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-6.2L10.5 6H5.5a2 2 0 0 0-2 2.5z"/>' +
+        '<path d="M3.5 8.2V18a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-6.3L10.2 5.8H5.5a2 2 0 0 0-2 2.4z"/>' +
         "</svg>"
       );
     case "ai":
-      // Studio AI Surface · 简洁星芒，避免与精修笔形撞车
+      // 效果图：单颗四角星芒
       return (
         "<svg " +
         attrs +
         ">" +
-        '<path d="M12 3.5l1.6 4.4 4.4 1.6-4.4 1.6L12 15.5l-1.6-4.4L6 9.5l4.4-1.6L12 3.5z"/>' +
-        '<path d="M18.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z"/>' +
+        '<path d="M12 3.2l1.85 5.05L19 10.1l-5.15 1.85L12 17.1l-1.85-5.15L5 10.1l5.15-1.85L12 3.2z"/>' +
         "</svg>"
       );
     default:
