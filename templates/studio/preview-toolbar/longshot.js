@@ -16,7 +16,7 @@ import {
 import {
   bindPanelDraft,
   buildPanelHtml,
-  exportSummaryLine,
+  exportSummaryLineForPlatforms,
   batchChecklistItems,
   batchChecklistItemsFromResult,
   batchOverallProgressRatio,
@@ -813,22 +813,33 @@ export function cancelPreviewLongshotExport(root) {
     return true;
   }
 
-  function syncConfirmedExportSummary(pop, draftPlatform) {
+  function syncConfirmedExportSummary(pop, draftPlatforms) {
     if (!pop) return;
     var el = pop.querySelector("[data-export-confirmed-summary]");
     if (!el) return;
     var prefs = readExportPrefs();
-    var confirmed = prefs.platform || "wechat_chat";
-    var draft = draftPlatform;
+    var confirmed = normalizePlatformList(
+      prefs.platforms,
+      prefs.platform || "wechat_chat"
+    );
+    var draft = draftPlatforms;
     if (draft == null && pop._panelDraft && typeof pop._panelDraft.getDraft === "function") {
       var d = pop._panelDraft.getDraft();
-      draft = d && d.platform;
+      draft = d && d.platforms;
     }
-    el.textContent = exportSummaryLine(confirmed, draft || confirmed);
-    el.setAttribute(
-      "data-export-summary-pending",
-      draft && draft !== confirmed ? "1" : "0"
-    );
+    // 兼容旧调用点仍传单平台字符串
+    if (typeof draft === "string") draft = [draft];
+    var draftList =
+      draft && draft.length
+        ? normalizePlatformList(draft, confirmed[0])
+        : confirmed;
+    el.textContent = exportSummaryLineForPlatforms(confirmed, draftList);
+    var same =
+      confirmed.length === draftList.length &&
+      confirmed.every(function (id) {
+        return draftList.indexOf(id) >= 0;
+      });
+    el.setAttribute("data-export-summary-pending", same ? "0" : "1");
   }
 
   export function isReaderSurfaceMode() {
@@ -1039,6 +1050,7 @@ export function cancelPreviewLongshotExport(root) {
       pop,
       {
         platform: prefs0.platform,
+        platforms: prefs0.platforms,
         mode: prefs0.mode,
         scale: prefs0.scale,
         slideCount: prefs0.slideCount,
@@ -1051,7 +1063,7 @@ export function cancelPreviewLongshotExport(root) {
         photoCount: estimatePhotoCountFromDom(document),
         appendixCount: estimateAppendixCountFromDom(document),
         onDraftChange: function (draft) {
-          syncConfirmedExportSummary(pop, draft && draft.platform);
+          syncConfirmedExportSummary(pop, draft && draft.platforms);
         },
       }
     );
@@ -1355,6 +1367,7 @@ export function cancelPreviewLongshotExport(root) {
       if (panel.setDraft) {
         panel.setDraft({
           platform: prefs.platform,
+          platforms: prefs.platforms,
           mode: prefs.mode,
           scale: prefs.scale,
           slideCount: prefs.slideCount,

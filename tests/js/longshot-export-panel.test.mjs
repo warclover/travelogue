@@ -583,3 +583,53 @@ test("bindPanelDraft · getDraft/setDraft 单选零回归 + platforms 数组往�
   panel.setDraft({ platform: "poster_bric" });
   assert.deepEqual(panel.getDraft().platforms, ["poster_bric"]);
 });
+
+test("hydrate 契约 · 漏传 platforms 会坍成单选；传入 platforms 保留多选", () => {
+  // 模拟 localStorage prefs：platform 主值 + platforms 多选真实来源
+  const prefs = {
+    platform: "xiaohongshu",
+    platforms: ["xiaohongshu", "wechat_moments"],
+    mode: "chapter",
+    scale: 2,
+  };
+
+  // 失败模式（修复前 ensureStudioExportPopover / _readDraftFromPrefs）：只传 platform
+  const popLose = stubPopover(["xiaohongshu", "wechat_moments", "album_spread"]);
+  const panelLose = bindPanelDraft(
+    popLose,
+    { platform: prefs.platform, mode: prefs.mode, scale: prefs.scale },
+    {}
+  );
+  assert.deepEqual(panelLose.getDraft().platforms, ["xiaohongshu"]);
+  assert.equal(popLose._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popLose._platformBtns[1].getAttribute("aria-checked"), "false");
+
+  // 修复后：hydrate 必须带 platforms[]
+  const popKeep = stubPopover(["xiaohongshu", "wechat_moments", "album_spread"]);
+  const panelKeep = bindPanelDraft(
+    popKeep,
+    {
+      platform: prefs.platform,
+      platforms: prefs.platforms,
+      mode: prefs.mode,
+      scale: prefs.scale,
+    },
+    {}
+  );
+  assert.deepEqual(panelKeep.getDraft().platforms, ["xiaohongshu", "wechat_moments"]);
+  assert.equal(popKeep._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popKeep._platformBtns[1].getAttribute("aria-checked"), "true");
+
+  // setDraft 回填同样必须带 platforms（对应 _readDraftFromPrefs）
+  panelKeep.setDraft({
+    platform: prefs.platform,
+    platforms: prefs.platforms,
+    mode: prefs.mode,
+    scale: prefs.scale,
+  });
+  assert.deepEqual(panelKeep.getDraft().platforms, ["xiaohongshu", "wechat_moments"]);
+
+  const summary = exportSummaryLineForPlatforms(prefs.platforms, prefs.platforms);
+  assert.match(summary, /2 个模式/);
+  assert.match(summary, /当前将导出/);
+});
