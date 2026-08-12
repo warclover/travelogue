@@ -268,7 +268,7 @@ export function mountAiSurface(root, tripId, opts) {
       '<header class="preview-ai-sheet__head">' +
       '<div class="preview-ai-sheet__head-text">' +
       '<h2 id="preview-ai-sheet-title" class="preview-ai-sheet__title">AI</h2>' +
-      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>本册智能动作 · 不自动消耗额度</p>' +
+      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>AI能力 · 需配置模型API后方可使用</p>' +
       "</div>" +
       '<button type="button" class="preview-ai-sheet__close" data-ai-sheet-close aria-label="关闭">×</button>' +
       "</header>" +
@@ -302,7 +302,7 @@ export function mountAiSurface(root, tripId, opts) {
     var surfaceOn = isAiSurfaceEnabled();
     if (sub) {
       sub.textContent = surfaceOn
-        ? "本册智能动作 · 不自动消耗额度"
+        ? "AI能力 · 需配置模型API后方可使用"
         : "本环境未开启智能能力";
     }
 
@@ -310,13 +310,15 @@ export function mountAiSurface(root, tripId, opts) {
       body.innerHTML =
         '<div class="preview-ai-sheet__block preview-ai-sheet__block--gate">' +
         "<h3>智能动作暂不可用</h3>" +
-        "<p>封面字体、杂志文案等需开启 AI 能力后使用。出图与导出不受影响。</p>" +
-        '<p class="preview-ai-sheet__hint">内测可先展开下方「本机连接」预配 Key。</p>' +
+        "<p>封面字体、杂志文案等需先开启智能能力。仅填写 API Key <strong>不会</strong>自动开启。</p>" +
+        '<p class="preview-ai-sheet__hint">出图与导出不受影响。</p>' +
         '<details class="preview-ai-sheet__details" data-ai-help-gate>' +
         "<summary>了解如何开启</summary>" +
         '<div class="preview-ai-sheet__details-body">' +
-        '<p class="preview-ai-sheet__hint">内测：启动 Studio 前设置环境变量 <code>TRAVELOGUE_AI_SURFACE=1</code>，再打开预览。</p>' +
-        '<p class="preview-ai-sheet__hint">Key 可在下方「本机连接」预先配置；未开启智能能力时也可保存，不影响出图与导出。</p>' +
+        '<p class="preview-ai-sheet__hint">任选其一后<strong>重启 Studio</strong>并刷新预览：</p>' +
+        '<p class="preview-ai-sheet__hint">1）在 <code>config.yaml</code> 设置 <code>studio.ai_surface_enabled: true</code></p>' +
+        '<p class="preview-ai-sheet__hint">2）启动前设置环境变量 <code>TRAVELOGUE_AI_SURFACE=1</code></p>' +
+        '<p class="preview-ai-sheet__hint">开启后，再用下方「本机连接」配置/测试 API Key。</p>' +
         "</div></details>" +
         "</div>" +
         connectionDetailsHtml() +
@@ -328,7 +330,6 @@ export function mountAiSurface(root, tripId, opts) {
     }
 
     body.innerHTML =
-      '<p class="preview-ai-sheet__crosshint">版式与书衣请用「精修」；智能生成请用「AI」。</p>' +
       titleArtBlockHtml() +
       narrateBlockHtml() +
       intentBlockHtml() +
@@ -390,7 +391,7 @@ export function mountAiSurface(root, tripId, opts) {
         " />" +
         "<span>优先 AI 手写体</span>" +
         "</label>" +
-        '<p class="preview-ai-sheet__hint">勾选只表示优先走手写体，不会自动开跑。未通过自动用字库 · 约十几秒。</p>'
+        '<p class="preview-ai-sheet__hint">优先尝试AI字体，耗时约几十秒</p>'
       : '<p class="preview-ai-sheet__hint">将使用字库路线生成封面字体。</p>';
 
     var taUi = (entryCache && entryCache.titleArtUi) || {};
@@ -403,7 +404,6 @@ export function mountAiSurface(root, tripId, opts) {
     return (
       '<div class="preview-ai-sheet__block" data-ai-title-art-block>' +
       "<h3>封面字体</h3>" +
-      '<p class="preview-ai-sheet__desc">点一次才生成。也可在精修「封面 · 杂志名」改名后生成。勾选只表示优先走 AI 手写体。</p>' +
       routeCRow +
       '<div class="preview-ai-sheet__row">' +
       '<span class="preview-ai-sheet__status" data-ai-title-art-status>' +
@@ -448,7 +448,7 @@ export function mountAiSurface(root, tripId, opts) {
     return (
       '<div class="preview-ai-sheet__block" data-ai-narrate-block>' +
       "<h3>杂志文案</h3>" +
-      '<p class="preview-ai-sheet__desc">重写封面钩子与章节导语等版心文字；照片仍留在本机。导入默认仍用本机文案。</p>' +
+      '<p class="preview-ai-sheet__desc">尝试AI文案</p>' +
       (g1Pending
         ? '<p class="preview-ai-sheet__hint">请先在分章确认结构，再生成杂志感文案。</p>'
         : "") +
@@ -1032,7 +1032,8 @@ export function mountAiSurface(root, tripId, opts) {
   function open(openOpts) {
     openOpts = openOpts || {};
     pendingFocus = openOpts.focus || null;
-    ensureAiSurfaceHydrated().then(function () {
+    // force：避免曾以关闸态缓存后，本机改开闸仍显示「暂不可用」
+    ensureAiSurfaceHydrated({ force: true }).then(function () {
       closePeers(root);
       ensureShell();
       refreshLlmAndConfig().then(function () {

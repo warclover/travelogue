@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -19,10 +20,16 @@ from travelogue.web.studio_handlers import export_handlers, llm_settings_handler
 from travelogue.web.studio_handlers.config_handlers import handle_config
 
 
+def _cfg_surface_off():
+    """显式关闸，避免本机 dogfood config.yaml 开闸污染断言。"""
+    cfg = get_config()
+    return replace(cfg, studio=replace(cfg.studio, ai_surface_enabled=False))
+
+
 def test_resolve_ai_surface_default_false(monkeypatch):
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
     assert resolve_ai_surface_enabled(None) is False
-    assert resolve_ai_surface_enabled(get_config()) is False
+    assert resolve_ai_surface_enabled(_cfg_surface_off()) is False
 
 
 def test_resolve_ai_surface_env_on(monkeypatch):
@@ -87,7 +94,7 @@ def _mock_handler(payload: dict | None = None, *, command: str = "POST") -> Magi
     handler = MagicMock()
     handler.command = command
     handler._read_json_body.return_value = payload
-    handler.app_config = get_config()
+    handler.app_config = _cfg_surface_off()
     handler.trips_dir = Path(".")
     handler.studio_config_path = None
     handler.client_address = ("127.0.0.1", 0)
@@ -100,6 +107,12 @@ def _mock_handler(payload: dict | None = None, *, command: str = "POST") -> Magi
     handler._json_response.side_effect = _json
     handler._captured = captured
     return handler
+
+
+def _write_surface_off_config(tmp_path: Path) -> Path:
+    cfg_path = tmp_path / "config.yaml"
+    cfg_path.write_text("studio:\n  ai_surface_enabled: false\n", encoding="utf-8")
+    return cfg_path
 
 
 def test_narrate_403_when_surface_off(monkeypatch, tmp_path: Path):
@@ -124,6 +137,7 @@ def test_narrate_403_when_surface_off(monkeypatch, tmp_path: Path):
         encoding="utf-8",
     )
     handler = MockStudioHandler(trips, json_body={"tripId": "t1-gate"})
+    handler.app_config = _cfg_surface_off()
     handler.command = "POST"
     export_handlers.handle_narrate(handler)
     assert handler.response is not None
@@ -166,6 +180,7 @@ def test_config_exposes_ai_surface_enabled_false(monkeypatch, tmp_path: Path):
     handler = _mock_handler(command="GET")
     handler.trips_dir = tmp_path / "trips"
     handler.trips_dir.mkdir()
+    handler.studio_config_path = _write_surface_off_config(tmp_path)
     handle_config(handler)
     assert handler._captured["status"] == 200
     assert handler._captured["body"].get("aiSurfaceEnabled") is False
@@ -211,6 +226,7 @@ def test_config_projection_strips_llm_when_surface_off(monkeypatch, tmp_path: Pa
     handler = _mock_handler(command="GET")
     handler.trips_dir = tmp_path / "trips"
     handler.trips_dir.mkdir()
+    handler.studio_config_path = _write_surface_off_config(tmp_path)
     handle_config(handler)
     body = handler._captured["body"]
     assert handler._captured["status"] == 200

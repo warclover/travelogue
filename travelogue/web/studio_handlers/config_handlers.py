@@ -98,10 +98,13 @@ def handle_config(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    ctx = studio_ctx(handler)
-    cfg = ctx.cfg
+    # 每次 GET 重读磁盘：本机改 studio.ai_surface_enabled / env 后无需整进程重启即可生效
     if handler.studio_config_path and handler.studio_config_path.is_file():
         cfg = load_config(handler.studio_config_path)
+    else:
+        from travelogue.config import get_config
+
+        cfg = get_config(reload=True)
     client_host = handler.client_address[0] if handler.client_address else ""
     handler._json_response(
         200,

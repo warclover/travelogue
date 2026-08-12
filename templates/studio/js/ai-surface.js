@@ -71,10 +71,14 @@ function trackAiSurfaceGateOnce(enabled) {
 
 /**
  * 幂等拉取 config。失败 → unknown（可重试）；成功 → enabled/disabled 并 track。
+ * @param {{ force?: boolean }} [opts] force=true 时重新请求（用于开闸后刷新）
  * @returns {Promise<"unknown"|"disabled"|"enabled">}
  */
 export function ensureAiSurfaceHydrated(opts) {
   opts = opts || {};
+  if (opts.force) {
+    _hydratePromise = null;
+  }
   if (_hydratePromise) return _hydratePromise;
   _hydratePromise = fetch("/__travelogue/config", {
     headers: studioAuthHeaders({}),
