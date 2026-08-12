@@ -39,6 +39,7 @@
 }
 
 .preview-sheet {
+  font-size: var(--studio-panel-ui-size, 12px);
   /* DIG · 混合方案：浅色弹层 + 铅灰强调 */
   --sheet-ink: var(--preview-ink, #14110d);
   --sheet-muted: var(--preview-muted, #5c574f);
@@ -177,7 +178,7 @@
   background: transparent;
   padding: 8px 14px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   color: var(--sheet-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -196,7 +197,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   flex: 1;
   min-height: 0;
   max-height: 100%;
@@ -330,7 +331,7 @@
 
 .preview-sheet__label {
   display: block;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 600;
   color: var(--sheet-muted);
   margin: 0 0 6px;
@@ -348,7 +349,7 @@
   border: none;
   border-radius: 999px;
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   background: transparent;
   cursor: pointer;
 }
@@ -362,7 +363,7 @@
 
 .preview-sheet__hint--compact {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   color: var(--sheet-muted);
 }
 
@@ -408,11 +409,11 @@
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--studio-panel-body-size, 13px);
 }
 
 .preview-sheet__layout-vibe-badge {
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 999px;
@@ -421,7 +422,7 @@
 }
 
 .preview-sheet__layout-vibe-consequence {
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.45;
   color: var(--sheet-muted);
 }
@@ -434,7 +435,7 @@
   background: transparent;
   color: var(--sheet-accent);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -600,14 +601,14 @@
 
 .preview-sheet__cover-blurb {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.45;
   color: var(--sheet-muted);
 }
 
 .preview-sheet__cover-fit-hint {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.4;
   color: var(--sheet-muted);
 }
@@ -617,7 +618,7 @@
   align-items: center;
   gap: 6px;
   margin: 10px 0 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: var(--sheet-muted);
   cursor: pointer;
 }
@@ -633,7 +634,7 @@
   align-items: flex-start;
   gap: 8px;
   margin: 0 0 10px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: var(--sheet-muted);
   cursor: pointer;
 }
@@ -657,7 +658,7 @@
 }
 
 .preview-sheet__title-art-routec-hint {
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.4;
   color: var(--sheet-muted);
   font-weight: 400;
@@ -665,7 +666,7 @@
 
 .preview-sheet__title-art-attr {
   margin: 0 0 10px;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.45;
   color: var(--sheet-muted);
 }
@@ -676,7 +677,7 @@
 
 .preview-sheet__title-art-status {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.4;
   color: var(--sheet-muted);
 }
@@ -717,7 +718,7 @@
 }
 
 .preview-sheet__cover-label {
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 600;
   text-align: center;
   color: var(--sheet-muted);
@@ -743,7 +744,7 @@
   color: var(--sheet-accent);
   font-weight: 600;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
 }
 
 .preview-sheet__link:disabled,
@@ -755,14 +756,14 @@
 
 .preview-sheet__present-empty {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: var(--sheet-muted);
   font-weight: 500;
 }
 
 .preview-sheet__hint {
   margin: 12px 0 0;
-  font-size: 13px;
+  font-size: var(--studio-panel-meta-size, 11px);
   color: var(--sheet-muted);
   line-height: 1.5;
 }
@@ -780,7 +781,7 @@
   background: var(--sheet-accent);
   color: #fff;
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--studio-panel-body-size, 13px);
   cursor: pointer;
 }
 
@@ -802,7 +803,7 @@
   border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   border-radius: 10px;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -823,7 +824,7 @@
   max-width: 100%;
   background: color-mix(in srgb, var(--preview-accent, #3f454c) 12%, transparent);
   color: var(--sheet-ink);
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-weight: 500;
   padding: 8px 12px;
   border-radius: 8px;
@@ -841,7 +842,7 @@
 
 .preview-sheet__body .preview-toolbar__template-adjust select,
 .preview-sheet__body .preview-toolbar__template-adjust button {
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   color: var(--sheet-ink);
   font-family: inherit;
 }
@@ -880,7 +881,7 @@
   border: 1px solid var(--sheet-border);
   border-radius: 999px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   background: var(--sheet-surface);
   cursor: pointer;
 }
@@ -957,7 +958,7 @@ body.preview-sheet-open {
   color: #f5f0e8;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(212, 168, 67, 0.45);
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   line-height: 1.45;
 }
 
@@ -972,7 +973,7 @@ body.preview-sheet-open {
   border: none;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   cursor: pointer;
   background: #d4a843;
@@ -983,7 +984,7 @@ body.preview-sheet-open {
 .preview-drawer__footnote {
   margin: 12px 0 0;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.45;
   color: var(--sheet-muted);
   background: var(--sheet-elevated, var(--sheet-surface));
@@ -992,14 +993,14 @@ body.preview-sheet-open {
 
 .preview-sheet__context {
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: var(--studio-panel-title-size, 15px);
   font-weight: 600;
   color: var(--sheet-ink);
 }
 
 .preview-sheet__empty-label {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   color: var(--sheet-muted);
 }
 
@@ -1032,10 +1033,12 @@ body.preview-sheet-open {
   vertical-align: middle;
 }
 
-.preview-sheet__body .preview-drawer__label,
+.preview-sheet__body .preview-drawer__label {
+  font-size: var(--studio-panel-meta-size, 11px);
+}
 .preview-sheet__body .preview-drawer__primary,
 .preview-sheet__body .preview-drawer__ghost {
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
 }
 
 /* 「画册」三分区 · UX-BE-01 */
@@ -1051,7 +1054,7 @@ body.preview-sheet-open {
   cursor: pointer;
   list-style: none;
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-weight: 650;
   color: var(--sheet-ink);
   display: flex;
@@ -1081,7 +1084,7 @@ body.preview-sheet-open {
 
 .preview-sheet__zone-meta {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 500;
   color: var(--sheet-muted);
 }
@@ -1133,7 +1136,7 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-oneliner {
   margin: 8px 0 12px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   line-height: 1.45;
   color: var(--sheet-muted);
 }
@@ -1145,7 +1148,7 @@ body.preview-sheet-open {
 .preview-sheet__bookends-status {
   margin: 0 0 12px;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.4;
   border-radius: 6px;
   background: rgba(20, 17, 13, 0.05);
@@ -1221,7 +1224,7 @@ body.preview-sheet-open {
   background: var(--sheet-surface);
   color: inherit;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   padding: 7px 4px;
   border-radius: 8px;
@@ -1234,7 +1237,7 @@ body.preview-sheet-open {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--sheet-accent) 22%, transparent);
 }
 .preview-sheet__cover-subseg-hint {
-  font-size: 10px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 500;
   color: var(--sheet-muted);
 }
@@ -1247,7 +1250,7 @@ body.preview-sheet-open {
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   background: var(--sheet-surface);
   margin: 4px 0 0;
 }
@@ -1262,7 +1265,7 @@ body.preview-sheet-open {
   border-radius: 8px;
   background: color-mix(in srgb, var(--sheet-accent) 16%, var(--sheet-surface));
   border: 1px solid #ffcc80;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   color: #e65100;
 }
 .preview-sheet__book-foot {
@@ -1278,7 +1281,7 @@ body.preview-sheet-open {
   border-radius: 999px;
   background: var(--sheet-surface);
   color: var(--sheet-muted);
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 700;
 }
 
@@ -1294,7 +1297,7 @@ body.preview-sheet-open {
 .preview-sheet__bookends-pane-label {
   display: block;
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--sheet-muted);
@@ -1306,7 +1309,7 @@ body.preview-sheet-open {
 }
 
 .preview-sheet__bookends-lock {
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.3;
   color: var(--sheet-muted);
   white-space: nowrap;
@@ -1333,7 +1336,7 @@ body.preview-sheet-open {
 }
 
 .preview-sheet__bookends-hero-empty {
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: var(--sheet-muted);
   text-align: center;
   padding: 0 8px;
@@ -1344,7 +1347,7 @@ body.preview-sheet-open {
 .preview-sheet__bookends-preview-note,
 .preview-sheet__bookends-empty-hint {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.35;
   color: var(--sheet-muted);
   overflow-wrap: anywhere;
@@ -1419,7 +1422,7 @@ body.preview-sheet-open {
   bottom: 3px;
   padding: 1px 4px;
   border-radius: 3px;
-  font-size: var(--studio-panel-chip-size, 11px);
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.2;
   font-weight: 600;
   color: #fff;
@@ -1429,7 +1432,7 @@ body.preview-sheet-open {
 
 .preview-sheet__bookends-mobile {
   margin: 10px 0 8px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: var(--sheet-muted);
 }
 

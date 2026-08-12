@@ -154,7 +154,10 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.equal(ctaLabelForPlatform("poster_bric"), "导出单张海报");
   // SNR · short CTA 带「导出」动词（与小红书/公众号短标签对齐）
   assert.equal(shortCtaLabelForPlatform("poster_bric"), "导出海报");
-  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · 3:4");
+  assert.equal(
+    confirmedExportSummary("poster_bric"),
+    "当前将导出：单张海报 · 3:4 · 点击右上角灰色按钮导出"
+  );
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
@@ -196,7 +199,7 @@ test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () 
 test("exportSummaryLine · draft 未确认时提示待生效", () => {
   assert.equal(
     exportSummaryLine("wechat_chat", "wechat_chat"),
-    "当前将导出：微信群"
+    "当前将导出：微信群 · 点击右上角灰色按钮导出"
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
@@ -204,7 +207,11 @@ test("exportSummaryLine · draft 未确认时提示待生效", () => {
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
-    /金色按钮仍按：微信群/
+    /点击右上角灰色按钮导出/
+  );
+  assert.doesNotMatch(
+    exportSummaryLine("wechat_chat", "wechat_moments"),
+    /灰色按钮仍按/
   );
 });
 
@@ -232,7 +239,7 @@ test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九�
   const popPoster = stubPopover();
   syncPanelUI(popPoster, { platform: "poster_bric", mode: "full", scale: 2 });
   assert.equal(popPoster._copy.hidden, true);
-  assert.match(popPoster._note.textContent, /金色按钮/);
+  assert.match(popPoster._note.textContent, /灰色按钮/);
   assert.doesNotMatch(popPoster._note.textContent, /要不要字/);
 
   const popChat = stubPopover();
@@ -443,7 +450,9 @@ test("exportSummaryLineForPlatforms · 单选零回归；多选展示平台清�
   const pending = exportSummaryLineForPlatforms(["wechat_chat"], ["xiaohongshu", "wechat_moments"]);
   assert.match(pending, /已改选：2 个模式/);
   assert.match(pending, /点「确定」后生效/);
-  assert.match(pending, /金色按钮仍按：微信群/);
+  assert.match(pending, /点击右上角灰色按钮导出/);
+  assert.doesNotMatch(pending, /灰色按钮仍按/);
+  assert.match(same, /点击右上角灰色按钮导出/);
 });
 
 test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整体判失败)", () => {

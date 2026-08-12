@@ -460,7 +460,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、导出模式 → 顶栏灰色按钮旁 ▾</p>'
     );
   }
 

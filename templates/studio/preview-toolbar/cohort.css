@@ -2,7 +2,7 @@
 /* Cohort · featured-subject seed picker */
 .cohort-drawer__lead {
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   line-height: 1.55;
   color: #4a5c55;
 }
@@ -10,7 +10,7 @@
   margin: 0 0 12px;
   padding: 8px 10px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.45;
 }
 .cohort-drawer__status--info {
@@ -43,7 +43,7 @@
   border: 1px solid rgba(61, 107, 90, 0.25);
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-family: inherit;
 }
 .cohort-drawer__id {
@@ -82,7 +82,7 @@
   height: 18px;
   background: rgba(26, 47, 40, 0.75);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 18px;
   text-align: center;
 }
@@ -123,19 +123,19 @@
   bottom: 4px;
   padding: 2px 5px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: var(--studio-panel-meta-size, 11px);
   font-weight: 600;
   background: rgba(210, 166, 87, 0.92);
   color: #3a2f10;
 }
 .cohort-drawer__empty {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: #6b7f78;
 }
 .cohort-drawer__hint {
   margin: 8px 0 12px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   color: #6b7f78;
 }
 .cohort-drawer__actions {

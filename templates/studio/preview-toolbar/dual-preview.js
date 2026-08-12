@@ -125,7 +125,7 @@ export function openDualPreview(tripId) {
         hint.textContent =
           "长图页尚未生成（" +
           resp.status +
-          "）。可先点金色按钮导出长图后再对比。";
+          "）。可先点灰色按钮导出长图后再对比。";
       }
     })
     .catch(function () {});

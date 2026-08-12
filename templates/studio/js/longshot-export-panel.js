@@ -15,7 +15,7 @@ export var PLATFORMS = {
     id: "wechat_chat",
     label: "微信群",
     title: "微信群",
-    subtitle: "长图 · 按序发群",
+    subtitle: "按序长图",
     cta: "导出长图 · 发微信群",
     showSegmentMode: true,
     copyLabel: "微信群长图 · 要不要字",
@@ -37,7 +37,7 @@ export var PLATFORMS = {
     id: "poster_bric",
     label: "单张海报 · 3:4",
     title: "单张海报",
-    subtitle: "3:4 拼贴",
+    subtitle: "3:4",
     cta: "导出单张海报",
     showSegmentMode: false,
     showCopyControls: false,
@@ -48,7 +48,7 @@ export var PLATFORMS = {
     id: "xiaohongshu",
     label: "小红书 · 竖版海报",
     title: "小红书",
-    subtitle: "3:4 拼贴海报",
+    subtitle: "3:4 海报",
     cta: "导出小红书海报",
     showSegmentMode: false,
     showXhsOptions: true,
@@ -62,7 +62,7 @@ export var PLATFORMS = {
     id: "wechat_official",
     label: "公众号 · 图文配图",
     title: "公众号",
-    subtitle: "3:4 拼贴配图",
+    subtitle: "3:4 配图",
     cta: "导出公众号配图",
     showSegmentMode: false,
     showXhsOptions: true,
@@ -74,7 +74,7 @@ export var PLATFORMS = {
     id: "album_spread",
     label: "画册印刷",
     title: "画册印刷",
-    subtitle: "跨页拼贴",
+    subtitle: "跨页",
     cta: "导出画册跨页",
     showSegmentMode: false,
     showCopyControls: false,
@@ -417,10 +417,17 @@ export function detectPlatformFromProgressHint(hint) {
   return null;
 }
 
+/** 摘要尾句 · 各模式共用（按钮文案随模式变，指引固定指右上角 CTA） */
+var EXPORT_SUMMARY_CTA_HINT = "点击右上角灰色按钮导出";
+
+function _withExportCtaHint(line) {
+  return String(line || "") + " · " + EXPORT_SUMMARY_CTA_HINT;
+}
+
 /** 设置入口摘要 · 「当前将导出：…」 */
 export function confirmedExportSummary(platformId) {
   var p = PLATFORMS[platformId] || PLATFORMS.wechat_chat;
-  return "当前将导出：" + (p.label || p.title || platformId);
+  return _withExportCtaHint("当前将导出：" + (p.label || p.title || platformId));
 }
 
 /**
@@ -435,11 +442,11 @@ export function exportSummaryLine(confirmedPlatform, draftPlatform) {
     (PLATFORMS[confirmed] && (PLATFORMS[confirmed].label || PLATFORMS[confirmed].title)) ||
     confirmed;
   if (draft === confirmed) {
-    return "当前将导出：" + confirmedLabel;
+    return _withExportCtaHint("当前将导出：" + confirmedLabel);
   }
   var draftLabel =
     (PLATFORMS[draft] && (PLATFORMS[draft].label || PLATFORMS[draft].title)) || draft;
-  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+  return _withExportCtaHint("已改选：" + draftLabel + "（点「确定」后生效）");
 }
 
 function _platformLabel(id) {
@@ -461,13 +468,9 @@ export function exportSummaryLineForPlatforms(confirmedPlatforms, draftPlatforms
   var draftLabel =
     draft.length <= 1 ? _platformLabel(draft[0]) : draft.length + " 个模式（" + draft.map(_platformLabel).join("、") + "）";
   if (same) {
-    return "当前将导出：" + draftLabel;
+    return _withExportCtaHint("当前将导出：" + draftLabel);
   }
-  var confirmedLabel =
-    confirmed.length <= 1
-      ? _platformLabel(confirmed[0])
-      : confirmed.length + " 个模式（" + confirmed.map(_platformLabel).join("、") + "）";
-  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+  return _withExportCtaHint("已改选：" + draftLabel + "（点「确定」后生效）");
 }
 
 export function shouldShowMomentsCoach() {
@@ -547,13 +550,12 @@ export function buildPanelHtml(platformIds) {
 
   return (
     '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
-    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。</p>' +
+    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
-    '<p class="preview-toolbar__export-dual"><button type="button" class="preview-toolbar__export-dual-btn" data-ltn-dual-preview>对比网页与长图</button></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">发到哪里 · 可多选</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="发到哪里（可多选）">' +
+    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
     platformBtns +
     "</div>" +
     '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
@@ -643,7 +645,7 @@ export function buildPanelHtml(platformIds) {
     '<button type="button" data-studio-longshot-density="default">默认</button>' +
     '<button type="button" data-studio-longshot-density="compact">紧凑</button>' +
     "</div>" +
-    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面；导出前可「对比网页与长图」。</p>' +
+    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面。</p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="appendix" hidden>' +
     '<label class="preview-toolbar__export-appendix">' +
@@ -661,6 +663,7 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-more-links">' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
+    '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>' +
     "</div></details>" +
     "</div>" +
     '<div class="preview-toolbar__export-popover-actions">' +
@@ -810,8 +813,8 @@ export function syncPanelUI(pop, draft, opts) {
   if (noteEl) {
     noteEl.textContent =
       isBatch || meta.showCopyControls === false
-        ? "选好后点「确定」，再点上方金色按钮开始导出。"
-        : "选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。";
+        ? "选好后点「确定」，再点上方灰色按钮开始导出。"
+        : "选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。";
   }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');

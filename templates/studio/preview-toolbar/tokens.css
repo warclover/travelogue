@@ -21,6 +21,18 @@ html[data-preview-toolbar="on"] {
   --preview-border: rgba(20, 17, 13, 0.12);
   --preview-elevated: #f3f1ec;
 
+  /* 浅色弹层字阶（与 studio-modal.css :root 对齐；预览作用域可独立微调） */
+  --studio-panel-title-size: 15px;
+  --studio-panel-body-size: 13px;
+  --studio-panel-ui-size: 12px;
+  --studio-panel-meta-size: 11px;
+  --studio-panel-label-size: var(--studio-panel-meta-size);
+  --studio-panel-chip-size: var(--studio-panel-meta-size);
+  --preview-type-title: var(--studio-panel-title-size);
+  --preview-type-body: var(--studio-panel-body-size);
+  --preview-type-ui: var(--studio-panel-ui-size);
+  --preview-type-meta: var(--studio-panel-meta-size);
+
   /* 兼容旧引用名 */
   --v2-gold: var(--preview-accent);
 
