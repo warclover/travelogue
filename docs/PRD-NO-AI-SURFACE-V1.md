@@ -247,7 +247,7 @@
 | **D-NAS-14** | **门控优先于 llmAvailable** | FE 以 `aiSurfaceEnabled` 为准；有 Key 亦不渲染入口 |
 | **D-NAS-15** | **手工改字保留** | inline-edit / 精修改字仍可用 |
 | **D-NAS-16** | **`POST /narrate` 硬拒绝（MF-NAS-01）** | 门控 off → HTTP **403** + `E_AI_SURFACE_DISABLED` + 中性 message；先于 Key/status 检查 |
-| **D-NAS-17** | **settings 写 + status 读硬拒绝（MF-NAS-03 · QFX v0.2 修订）** | 门控 off → `/llm/settings` **写** 403；`GET /llm/status` **亦 403**（须在读 secrets/目录/`_status_body` **之前**；零 `maskedKey`/`userDataDir`/`tripsDir`/provider 细节）；`/llm/ping` 写路径仍 403；默认面 FE 不请求 status；dark ON 可读 status |
+| **D-NAS-17** | **settings/status/ping 连接面（SAS 修订）** | **2026-08 · SAS D-SAS-07 修订**：门控 off 时 **允许** `/llm/status` 读与 `/llm/settings` 写、`/llm/ping`（预配 Key）；**不等于**开放烧模型。`POST /narrate` 等仍 403。`GET /config` 关闸仍剥离 `llm*`（D-NAS-17b）。旧「连接三路由一律 403」作废。 |
 | **D-NAS-17b** | **config 敏感投影收口（QFX v0.2.1 拍板）** | 门控 off → `GET /__travelogue/config` **保留** `aiSurfaceEnabled:false` 与非 LLM 业务字段；**不得**暴露 `llmAvailable` / `llmProvider` / `tripsDir` / provider 细节。dark ON 可恢复完整投影。FE hydration 只读 `aiSurfaceEnabled`；**禁止**因投影收口而对 config 整端 403 |
 | **D-NAS-18** | **`aiSurfaceEnabled` 只读下发（MF-NAS-02）** | 服务端解析 → `GET /__travelogue/config`；**禁止** PATCH；FE helper 仅读该字段 |
 | **D-NAS-19** | **`startLlmNarrate` 函数级门闩** | 藏 UI 不够；`core.js` 首行门控早退（FE-NAS-09/10） |

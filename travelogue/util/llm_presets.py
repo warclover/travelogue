@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ipaddress
+from urllib.parse import urlparse
+
 PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     "deepseek": {
         "base_url": "https://api.deepseek.com/v1",
@@ -10,7 +13,8 @@ PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     },
     "dashscope": {
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "default_model": "qwen-plus",
+        # 默认优先仍有新人免费额度的轻量模型；耗尽后由 client 级联到付费兜底
+        "default_model": "qwen3.7-flash",
         "api_key_env": "DASHSCOPE_API_KEY",
     },
 }
@@ -20,6 +24,32 @@ DASHSCOPE_REGION_BASE_URLS: dict[str, str] = {
     "cn": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "intl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
 }
+
+# 文本写作级联：免费额度友好模型 → 付费兜底（qwen-plus/turbo/max）
+# 不含 OCR / 纯视觉专用模型。
+DASHSCOPE_MODEL_CASCADE: tuple[str, ...] = (
+    "qwen3.7-flash",
+    "qwen3.7-plus",
+    "qwen3.8-max",
+    "qwen3.7-max",
+    "qwen3.6-plus",
+    "qwen-plus",
+    "qwen-turbo",
+    "qwen-max",
+)
+
+
+def dashscope_model_candidates(selected: str | None = None) -> list[str]:
+    """Ordered models to try: selected first (if any), then free-tier cascade, then paid."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for name in (selected, *DASHSCOPE_MODEL_CASCADE):
+        m = (name or "").strip()
+        if not m or m in seen:
+            continue
+        seen.add(m)
+        out.append(m)
+    return out or ["qwen-plus"]
 
 
 def normalize_llm_region(provider: str | None, region: str | None) -> str | None:
@@ -43,7 +73,7 @@ def preset_base_url(provider: str, region: str | None = None) -> str:
 
 
 def coerce_model_for_provider(provider: str, model: str | None) -> str:
-    """Pick model for provider; drop another provider's default model if sticky."""
+    """Pick model for provider; drop another provider's sticky models."""
     preset = PROVIDER_PRESETS.get(provider) or {}
     default = str(preset.get("default_model") or "").strip() or "deepseek-chat"
     raw = (model or "").strip()
@@ -54,6 +84,11 @@ def coerce_model_for_provider(provider: str, model: str | None) -> str:
         for name, p in PROVIDER_PRESETS.items()
         if name != provider and p.get("default_model")
     }
+    # 切到 DeepSeek 时丢掉整条通义级联；切到通义时丢掉 deepseek-* 族
+    if provider != "dashscope":
+        foreign.update(DASHSCOPE_MODEL_CASCADE)
+    elif raw.lower().startswith("deepseek"):
+        return default
     if raw in foreign:
         return default
     return raw
@@ -90,14 +125,49 @@ def coerce_base_url_for_provider(provider: str, base_url: str | None) -> str | N
     return raw
 
 
+def _hostname_is_blocked(host: str) -> bool:
+    """Block localhost / link-local / private / cloud metadata hosts (SSRF).
+
+    Hostname literals only — no DNS resolve (save/ping must not depend on network).
+    """
+    h = (host or "").strip().lower().rstrip(".")
+    if not h:
+        return True
+    if h in {"localhost", "metadata.google.internal", "metadata"}:
+        return True
+    if h.endswith(".localhost") or h.endswith(".local"):
+        return True
+    try:
+        ip = ipaddress.ip_address(h)
+    except ValueError:
+        return False
+    return bool(
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+        or str(ip) == "169.254.169.254"
+    )
+
+
 def validate_custom_base_url(base_url: str | None) -> str | None:
-    """Return cleaned custom URL, None if empty; raise ValueError('E_LLM_BASE_URL') if not https."""
+    """Return cleaned custom URL, None if empty.
+
+    Raises ValueError('E_LLM_BASE_URL') if not https or host looks like SSRF target.
+    """
     raw = (base_url or "").strip()
     if not raw:
         return None
     if not raw.lower().startswith("https://"):
         raise ValueError("E_LLM_BASE_URL")
-    return raw.rstrip("/")
+    cleaned = raw.rstrip("/")
+    parsed = urlparse(cleaned if "://" in cleaned else f"https://{cleaned}")
+    host = parsed.hostname or ""
+    if _hostname_is_blocked(host):
+        raise ValueError("E_LLM_BASE_URL")
+    return cleaned
 
 
 def detect_dashscope_region(base_url: str | None) -> str | None:

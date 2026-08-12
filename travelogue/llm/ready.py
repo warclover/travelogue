@@ -45,6 +45,9 @@ def _probe_provider_and_ready(
         # already-present env vars only — never inject here when inject=False.
         if secrets is not None and secrets.configured:
             resolve_llm_runtime(provider, cfg=app_cfg, secrets=secrets)
+            # DLLM L1：user_data Key 须 ping 成功才算 Available（禁止「有 Key 即就绪」）
+            if secrets.last_ping_ok is not True:
+                return False, provider
         else:
             resolve_llm_runtime(provider, cfg=app_cfg)
         return True, provider
@@ -56,15 +59,23 @@ def probe_llm_ready(*, cfg: AppConfig | None = None) -> bool:
     """ALG-V3 · read-only Ready probe (AC-07).
 
     Does **not** inject secrets into ``os.environ``, does not ping the network,
-    and does not mutate global config.
+    and does not mutate global config. User secrets require ``last_ping_ok``.
     """
     ready, _provider = _probe_provider_and_ready(cfg=cfg, inject_environ=False)
     return ready
 
 
-def studio_llm_status(*, cfg: AppConfig | None = None) -> dict[str, object]:
-    """Studio status helper. May inject secrets into environ for subsequent calls."""
-    ready, provider = _probe_provider_and_ready(cfg=cfg, inject_environ=True)
+def studio_llm_status(
+    *,
+    cfg: AppConfig | None = None,
+    inject_environ: bool = False,
+) -> dict[str, object]:
+    """Studio status helper.
+
+    Default does **not** inject secrets into process env (request-local Ready).
+    Pass ``inject_environ=True`` only for legacy desktop paths that still need it.
+    """
+    ready, provider = _probe_provider_and_ready(cfg=cfg, inject_environ=inject_environ)
     return {"llmAvailable": ready, "llmProvider": provider}
 
 

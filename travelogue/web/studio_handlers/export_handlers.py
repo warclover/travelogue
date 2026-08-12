@@ -76,7 +76,7 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
     from travelogue.services.pipeline_state import trip_status
     from travelogue.web.ai_surface import (
         ai_surface_disabled_body,
-        resolve_ai_surface_enabled,
+        resolve_ai_surface_for_request,
     )
     from travelogue.web.studio_narrate import run_studio_llm_narrate, studio_llm_status
 
@@ -91,7 +91,8 @@ def handle_narrate(handler: StudioHandlerProtocol) -> None:
 
     ctx = studio_ctx(handler)
     # NAS · BE-NAS-02：硬门闩，先于 trip / Key / status / Job（有 Key 亦 403）
-    if not resolve_ai_surface_enabled(ctx.cfg):
+    # 读盘最新旗标，避免 serve pin 的 app_config 与 GET /config 不一致
+    if not resolve_ai_surface_for_request(handler):
         handler._json_response(403, ai_surface_disabled_body())
         return
 

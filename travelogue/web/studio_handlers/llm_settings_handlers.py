@@ -38,14 +38,31 @@ _SETTINGS_MESSAGES: dict[str, str] = {
     "E_LLM_AUTH": "Key 无效或已失效。请回控制台重新创建并粘贴。",
     "E_LLM_ENDPOINT": "当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。",
     "E_LLM_MODEL": "模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。",
-    "E_LLM_QUOTA": "服务商返回余额或配额不足。请到控制台充值或检查限流。",
+    "E_LLM_QUOTA": "余额或配额不足。请到服务商控制台充值，或检查是否开启了「仅使用免费额度」。",
+    "E_LLM_QUOTA_FREE_TIER": (
+        "免费额度已用尽（Key 本身有效）。"
+        "请到通义百炼控制台关闭「仅使用免费额度」，或充值后再试。"
+    ),
     "E_LLM_RATE": "服务商繁忙，请稍后重试。",
     "E_LLM_TIMEOUT": "无法连接服务商。请检查网络后重试。",
     "E_LLM_NETWORK": "无法连接服务商。请检查网络后重试。",
     "E_LLM_CONNECT": "无法连接服务商。请检查网络后重试。",
-    "E_LLM_BASE_URL": "自定义 API 地址仅支持 https。",
+    "E_LLM_BASE_URL": "自定义 API 地址仅支持公网 https（不可用 localhost / 内网）。",
     "E_LLM_PING": "连接测试失败，请检查 Key、地域或网络后重试。",
 }
+
+_QUOTA_MARKERS = (
+    "quota",
+    "balance",
+    "insufficient",
+    "arrearage",
+    "额度",
+    "余额",
+    "freetier",
+    "free tier",
+    "free_tier",
+    "allocationquota",
+)
 
 
 def _settings_message(code: str, fallback: str = "") -> str:
@@ -55,7 +72,11 @@ def _settings_message(code: str, fallback: str = "") -> str:
 
 
 def _classify_ping_error(exc: LlmError) -> str:
-    """Map LlmError → settings-facing code (AUTH / ENDPOINT / TIMEOUT / …)."""
+    """Map LlmError → settings-facing code (AUTH / ENDPOINT / TIMEOUT / …).
+
+    DashScope「FreeTierOnly」常以 HTTP 403 返回，须在 AUTH 之前识别为配额，
+    避免误提示「Key 无效」。
+    """
     code = exc.code or "E_LLM_PING"
     detail = f"{exc.message or ''} {exc}".lower()
     if code in ("E_LLM_TIMEOUT", "E_LLM_NETWORK", "E_LLM_CONNECT"):
@@ -65,12 +86,20 @@ def _classify_ping_error(exc: LlmError) -> str:
     if code == "E_LLM_HTTP":
         m = re.search(r"http\s+(\d{3})", detail)
         status = int(m.group(1)) if m else 0
-        if status in (401, 403):
+        # 配额 / 免费额度（含 403 FreeTierOnly）优先于笼统 AUTH
+        if any(k in detail for k in _QUOTA_MARKERS):
+            if any(
+                k in detail
+                for k in ("freetier", "free tier", "free_tier", "allocationquota.freetier")
+            ):
+                return "E_LLM_QUOTA_FREE_TIER"
+            return "E_LLM_QUOTA"
+        if status == 401:
+            return "E_LLM_AUTH"
+        if status == 403:
             return "E_LLM_AUTH"
         if status == 429:
             return "E_LLM_RATE"
-        if any(k in detail for k in ("quota", "balance", "insufficient", "arrearage", "额度", "余额")):
-            return "E_LLM_QUOTA"
         if any(k in detail for k in ("model", "not exist", "not found", "does not exist", "无效的模型")):
             return "E_LLM_MODEL"
         if status in (404, 422) or any(
@@ -83,11 +112,13 @@ def _classify_ping_error(exc: LlmError) -> str:
     return "E_LLM_PING"
 
 
-def _with_ping(secrets: UserLlmSecrets, ok: bool) -> UserLlmSecrets:
+def _with_ping(
+    secrets: UserLlmSecrets, ok: bool, *, model: str | None = None
+) -> UserLlmSecrets:
     return UserLlmSecrets(
         provider=secrets.provider,
         api_key=secrets.api_key,
-        model=secrets.model,
+        model=model if model is not None else secrets.model,
         base_url=secrets.base_url,
         region=secrets.region,
         last_ping_ok=ok,
@@ -95,16 +126,14 @@ def _with_ping(secrets: UserLlmSecrets, ok: bool) -> UserLlmSecrets:
 
 
 def _status_body(*, cfg: Any = None) -> dict[str, Any]:
-    inject_secrets_into_environ()
+    # 不注入进程环境：Ready 走 request-local secrets（与 ping 隔离一致）
     app_cfg = cfg if cfg is not None else get_config(reload=True)
-    status = studio_llm_status(cfg=app_cfg)
+    status = studio_llm_status(cfg=app_cfg, inject_environ=False)
     secrets = read_user_llm_secrets()
     ready = readiness_state(secrets)
     available = bool(status.get("llmAvailable"))
-    if secrets.configured and (secrets.last_ping_ok is True or available):
-        tier = "L1"
-    else:
-        tier = "L0"
+    # L1 = 已配置且 ping 成功（与 readiness「已就绪」对齐）
+    tier = "L1" if secrets.configured and secrets.last_ping_ok is True else "L0"
     region = secrets.region if secrets.provider == "dashscope" else None
     model = secrets.model
     if not model and secrets.provider:
@@ -126,40 +155,19 @@ def _status_body(*, cfg: Any = None) -> dict[str, Any]:
             "import": True,
             "layout": True,
             "stubNarrate": True,
-            "llmNarrate": bool(status.get("llmAvailable")),
+            "llmNarrate": available,
             "longshot": True,
         },
     }
 
 
 def handle_llm_status(handler: StudioHandlerProtocol) -> None:
-    from travelogue.web.ai_surface import (
-        ai_surface_disabled_body,
-        resolve_ai_surface_enabled,
-    )
-    from travelogue.web.studio_handlers.common import studio_ctx
-
-    # NAS · D-NAS-17 / QFX D-QFX-04：off 时早拒，禁止进入 _status_body
-    if not resolve_ai_surface_enabled(studio_ctx(handler).cfg):
-        handler._json_response(403, ai_surface_disabled_body())
-        return
+    # SAS · D-SAS-07：连接状态可读（关闸亦可预配 Key）；烧模型仍由 narrate 等门控
     handler._json_response(200, _status_body())
 
 
 def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
-    from travelogue.web.ai_surface import (
-        ai_surface_disabled_body,
-        resolve_ai_surface_enabled,
-    )
-    from travelogue.web.studio_handlers.common import studio_ctx
-
-    # NAS · BE-NAS-03：settings 写/删硬拒（S7）
-    if handler.command in ("POST", "DELETE") and not resolve_ai_surface_enabled(
-        studio_ctx(handler).cfg
-    ):
-        handler._json_response(403, ai_surface_disabled_body())
-        return
-
+    # SAS · D-SAS-07：settings 写/删不要求开闸（AI Sheet allowWhenSurfaceOff）
     if handler.command == "DELETE":
         clear_user_llm_secrets()
         reset_config_cache()
@@ -257,17 +265,8 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
 
 def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
     from travelogue.llm.client import llm_ping
-    from travelogue.web.ai_surface import (
-        ai_surface_disabled_body,
-        resolve_ai_surface_enabled,
-    )
-    from travelogue.web.studio_handlers.common import studio_ctx
 
-    # NAS · BE-NAS-03 / S7：ping 亦硬拒（防 last_ping_ok 回写）
-    if not resolve_ai_surface_enabled(studio_ctx(handler).cfg):
-        handler._json_response(403, ai_surface_disabled_body())
-        return
-
+    # SAS · D-SAS-07：ping 不要求开闸（保存并测试 / 预配 Key）
     payload = handler._read_json_body() or {}
     provider = str(payload.get("provider") or "").strip().lower() or None
     api_key = str(payload.get("apiKey") or payload.get("api_key") or "").strip() or None
@@ -359,15 +358,32 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
 
     try:
         msg = llm_ping(provider=prov, secrets=ping_secrets, cfg=cfg)
+        # llm_ping 返回 "provider/model @ base"；级联后 model 可能已切换
+        used_model = model_override
+        try:
+            mid = msg.split(" @ ", 1)[0]
+            if "/" in mid:
+                used_model = mid.split("/", 1)[1].strip() or model_override
+        except Exception:
+            used_model = model_override
 
         # 成功简句（隐藏完整 URL）
         label = "通义千问" if prov == "dashscope" else "DeepSeek"
-        user_ok = f"已连通 · {label} · {model_override}"
+        user_ok = f"已连通 · {label} · {used_model}"
+        if used_model != model_override:
+            user_ok += "（已自动改用可用模型）"
 
         persisted = False
         if want_persist:
             try:
-                write_user_llm_secrets(_with_ping(secrets, True))
+                write_user_llm_secrets(_with_ping(secrets, True, model=used_model))
+                if used_model != model_override:
+                    write_user_llm_config_overlay(
+                        provider=prov,
+                        model=used_model,
+                        base_url=base_override,
+                        region=region,
+                    )
                 persisted = True
             except OSError:
                 status = _status_body(cfg=cfg)

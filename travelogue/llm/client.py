@@ -15,6 +15,7 @@ from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
 from travelogue.util.llm_presets import (
     coerce_model_for_provider,
+    dashscope_model_candidates,
     resolve_base_url_for_provider,
 )
 
@@ -197,26 +198,38 @@ def _extract_content(data: dict[str, Any]) -> str:
         raise LlmError("E_LLM_RESPONSE", f"unexpected response shape: {data!r}") from exc
 
 
-def chat_completion(
+def _is_model_quota_error(exc: LlmError) -> bool:
+    """Free-tier / quota errors that warrant trying the next DashScope model."""
+    detail = f"{exc.message or ''} {exc}".lower()
+    return any(
+        k in detail
+        for k in (
+            "freetier",
+            "free tier",
+            "free_tier",
+            "allocationquota",
+            "quota",
+            "insufficient",
+            "arrearage",
+            "额度",
+            "余额",
+        )
+    )
+
+
+def _chat_completion_single(
     messages: list[dict[str, Any]],
     *,
-    provider: str | None = None,
-    model: str | None = None,
-    temperature: float = 0.7,
-    runtime: LlmRuntime | None = None,
-    json_mode: bool = True,
-    shared_backoff: bool = False,
+    use_model: str,
+    temperature: float,
+    runtime: LlmRuntime,
+    json_mode: bool,
+    shared_backoff: bool,
+    max_attempts: int | None,
 ) -> str:
-    """Call OpenAI-compatible /chat/completions and return assistant content.
-
-    When ``shared_backoff`` is true, wait on the process-wide provider gate and
-    advance it on 429/502/503 (Pipeline Throughput · narrate concurrency).
-    """
     from travelogue.llm.shared_backoff import get_shared_backoff
 
-    rt = runtime or resolve_llm_runtime(provider)
-    use_model = model or rt.model
-    url = f"{rt.base_url}/chat/completions"
+    url = f"{runtime.base_url}/chat/completions"
     payload: dict[str, Any] = {
         "model": use_model,
         "messages": messages,
@@ -230,22 +243,23 @@ def chat_completion(
         data=body,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {rt.api_key}",
+            "Authorization": f"Bearer {runtime.api_key}",
         },
         method="POST",
     )
 
+    attempts = _MAX_ATTEMPTS if max_attempts is None else max(1, int(max_attempts))
     backoff = get_shared_backoff() if shared_backoff else None
     last_http: urllib.error.HTTPError | None = None
-    for attempt in range(_MAX_ATTEMPTS):
+    for attempt in range(attempts):
         if backoff is not None:
             backoff.wait_turn()
         try:
-            data = _post_chat(req, timeout_sec=rt.timeout_sec)
+            data = _post_chat(req, timeout_sec=runtime.timeout_sec)
             return _extract_content(data)
         except urllib.error.HTTPError as exc:
             last_http = exc
-            if not _http_error_retryable(exc) or attempt >= _MAX_ATTEMPTS - 1:
+            if not _http_error_retryable(exc) or attempt >= attempts - 1:
                 detail = exc.read().decode("utf-8", errors="replace")[:400]
                 raise LlmError("E_LLM_HTTP", f"HTTP {exc.code}: {detail}") from exc
             retry_after = None
@@ -260,7 +274,7 @@ def chat_completion(
             else:
                 time.sleep(_RETRY_BASE_SEC * (2**attempt))
         except urllib.error.URLError as exc:
-            if _url_error_retryable(exc) and attempt < _MAX_ATTEMPTS - 1:
+            if _url_error_retryable(exc) and attempt < attempts - 1:
                 if backoff is not None:
                     backoff.note_rate_limit(attempt=attempt)
                 else:
@@ -275,6 +289,54 @@ def chat_completion(
         raise LlmError("E_LLM_HTTP", "no HTTP response after retries")
     detail = last_http.read().decode("utf-8", errors="replace")[:400]
     raise LlmError("E_LLM_HTTP", f"HTTP {last_http.code}: {detail}") from last_http
+
+
+def chat_completion(
+    messages: list[dict[str, Any]],
+    *,
+    provider: str | None = None,
+    model: str | None = None,
+    temperature: float = 0.7,
+    runtime: LlmRuntime | None = None,
+    json_mode: bool = True,
+    shared_backoff: bool = False,
+    max_attempts: int | None = None,
+    model_failover: bool = True,
+) -> str:
+    """Call OpenAI-compatible /chat/completions and return assistant content.
+
+    When ``shared_backoff`` is true, wait on the process-wide provider gate and
+    advance it on 429/502/503 (Pipeline Throughput · narrate concurrency).
+
+    For DashScope, ``model_failover`` tries free-tier-friendly models then
+    qwen-plus/turbo/max when the current model hits FreeTierOnly / quota.
+    """
+    rt = runtime or resolve_llm_runtime(provider)
+    use_model = model or rt.model
+    candidates = (
+        dashscope_model_candidates(use_model)
+        if model_failover and rt.provider == "dashscope"
+        else [use_model]
+    )
+    last_err: LlmError | None = None
+    for cand in candidates:
+        try:
+            return _chat_completion_single(
+                messages,
+                use_model=cand,
+                temperature=temperature,
+                runtime=rt,
+                json_mode=json_mode,
+                shared_backoff=shared_backoff,
+                max_attempts=max_attempts,
+            )
+        except LlmError as exc:
+            last_err = exc
+            if not model_failover or not _is_model_quota_error(exc):
+                raise
+            continue
+    assert last_err is not None
+    raise last_err
 
 
 def vision_chat_completion(
@@ -294,7 +356,12 @@ def vision_chat_completion(
         temperature=temperature,
         runtime=runtime,
         json_mode=json_mode,
+        model_failover=False,
     )
+
+
+_PING_TIMEOUT_SEC = 20
+_PING_MAX_ATTEMPTS = 2
 
 
 def llm_ping(
@@ -307,19 +374,66 @@ def llm_ping(
     """Minimal chat to verify credentials and connectivity.
 
     Pass request-local ``secrets`` / ``cfg`` / ``runtime`` to avoid process-global
-    credential injection (CQA D-CQA-02).
+    credential injection (CQA D-CQA-02). Uses a short timeout; retries without
+    ``response_format`` when the model rejects JSON mode.
+
+    DashScope：按免费额度友好模型 → qwen-plus/turbo/max 级联探测，
+    返回串中的 model 为实际打通的模型。
     """
+    from dataclasses import replace
+
     rt = runtime or resolve_llm_runtime(provider, cfg=cfg, secrets=secrets)
-    content = chat_completion(
-        [
-            {"role": "system", "content": "Reply with JSON only."},
-            {"role": "user", "content": '{"ok": true}'},
-        ],
-        provider=provider,
-        temperature=0,
-        runtime=rt,
+    rt = replace(rt, timeout_sec=min(int(rt.timeout_sec), _PING_TIMEOUT_SEC))
+    messages = [
+        {"role": "system", "content": "Reply with JSON only."},
+        {"role": "user", "content": '{"ok": true}'},
+    ]
+    candidates = (
+        dashscope_model_candidates(rt.model)
+        if rt.provider == "dashscope"
+        else [rt.model]
     )
-    data = parse_json_content(content)
-    if data.get("ok") is not True:
-        raise LlmError("E_LLM_PING", f"unexpected ping payload: {data!r}")
-    return f"{rt.provider}/{rt.model} @ {rt.base_url}"
+    last_err: LlmError | None = None
+    used_model = rt.model
+
+    for cand in candidates:
+        cand_rt = replace(rt, model=cand)
+
+        def _once(*, json_mode: bool, _rt: LlmRuntime = cand_rt) -> str:
+            return chat_completion(
+                messages,
+                provider=provider,
+                temperature=0,
+                runtime=_rt,
+                json_mode=json_mode,
+                max_attempts=_PING_MAX_ATTEMPTS,
+                model_failover=False,
+            )
+
+        try:
+            try:
+                content = _once(json_mode=True)
+            except LlmError as exc:
+                if exc.code in ("E_LLM_HTTP", "E_LLM_RESPONSE", "E_LLM_MODEL"):
+                    if _is_model_quota_error(exc):
+                        raise
+                    content = _once(json_mode=False)
+                else:
+                    raise
+            try:
+                data = parse_json_content(content)
+                if data.get("ok") is not True:
+                    raise LlmError("E_LLM_PING", f"unexpected ping payload: {data!r}")
+            except LlmError:
+                if not str(content or "").strip():
+                    raise
+            used_model = cand
+            return f"{rt.provider}/{used_model} @ {rt.base_url}"
+        except LlmError as exc:
+            last_err = exc
+            if rt.provider == "dashscope" and _is_model_quota_error(exc):
+                continue
+            raise
+
+    assert last_err is not None
+    raise last_err

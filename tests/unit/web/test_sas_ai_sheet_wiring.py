@@ -80,17 +80,25 @@ def test_sas_w2_intent_suggestions_badge() -> None:
     assert "了解如何开启" in text
     assert "pollJobUntilDone" in text
     assert "已按建议更新该章版面" in text
-    assert "aiOpsAdminEnabled" in text
     css = _AI_CSS.read_text(encoding="utf-8")
     assert ".has-badge::after" in css
 
 
-def test_sas_oq_02_advanced_follows_server_flag() -> None:
-    """OQ-SAS-02 · 高级区跟 capabilities.aiOpsAdminEnabled，非 hostname 猜测。"""
+def test_sas_api_config_ia_and_no_advanced() -> None:
+    """API配置两态位置 + Sheet 主路径不再挂「高级」；就绪跟 lastPingOk。"""
     text = _AI_SHEET.read_text(encoding="utf-8")
-    assert "aiOpsAdminEnabled" in text
-    assert "showAdvancedSection(aiOpsAdminEnabled)" in text
-    assert 'get("aiOps")' in text or "aiOps" in text
+    assert "API配置" in text
+    assert "API配置 · 已就绪" in text
+    assert "本机连接" not in text
+    assert "data-ai-advanced" not in text
+    assert "showAdvancedSection" not in text
+    assert "aiOpsAdminEnabled" not in text
+    assert "lastPingOk" in text
+    assert "已保存未验证" in text
+    # 未测通置顶、已就绪沉底
+    assert "connReady ? actionsHtml + connHtml : connHtml + actionsHtml" in text
+    # 未就绪默认展开
+    assert '(ready ? "" : " open")' in text or "(ready ? '' : ' open')" in text
 
 
 def test_sas_w2_old_entry_deeplink() -> None:

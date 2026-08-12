@@ -132,12 +132,30 @@ def test_wea_w2_model_switch_confirm_markers() -> None:
     assert 'id="studio-llm-model"' in llm
     assert "LLM_MODELS" in llm
     assert "qwen-turbo" in llm
+    assert "qwen3.7-flash" in llm
+    assert "优先免费" in llm
+    assert "付费兜底" in llm
     assert "deepseek-reasoner" in llm
     assert 'id="studio-llm-model-custom"' in llm
     assert "confirmProviderSwitchIfNeeded" in llm
     assert "覆盖并继续" in llm
     assert 'trackStudioEvent("llm_switch_confirm"' in llm
     assert "persist: true" in llm
+
+
+def test_llm_switch_confirm_modal_above_settings_layer() -> None:
+    """覆盖确认不得被 LLM 设置层挡住（根因：modal 6000 < settings 12000）。"""
+    llm = LLM_JS.read_text(encoding="utf-8")
+    modal_css = (STUDIO / "studio-modal.css").read_text(encoding="utf-8")
+    assert "z-index:12000" in llm.replace(" ", "")
+    assert "z-index: 13000" in modal_css
+    # 保存点击处理器：先确认再 busy
+    handler = llm.split('studio-llm-save-ping", root)', 1)[1].split(
+        'studio-llm-clear", root)', 1
+    )[0]
+    assert "confirmProviderSwitchIfNeeded" in handler
+    assert handler.index("confirmProviderSwitchIfNeeded") < handler.index("setBusy(true)")
+    assert "保存后会覆盖已保存的" in llm
 
 
 def test_mf06_llm_expect_visible_when_available() -> None:

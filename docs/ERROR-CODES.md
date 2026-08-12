@@ -118,9 +118,10 @@
 | `E_LLM_STUB` | 内部：`provider=stub` 仍调 LLM | 不直接给终端用户；UI 应走「未配置 / 本机文案」（见 Desktop LLM Setup） |
 | `E_LLM_ENDPOINT` | 地域/endpoint 与 Key 不匹配，或 host 不可达（**WEA W1**） | 当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。 |
 | `E_LLM_MODEL` | 模型名不被服务商接受（启发式 · **WEA W1**；下拉进 W2） | 模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。 |
-| `E_LLM_QUOTA` | 余额/配额不足（启发式 · **WEA W1**） | 服务商返回余额或配额不足。请到控制台充值或检查限流。 |
+| `E_LLM_QUOTA` | 余额/配额不足（启发式 · **WEA W1**） | 余额或配额不足。请到服务商控制台充值，或检查是否开启了「仅使用免费额度」。 |
+| `E_LLM_QUOTA_FREE_TIER` | 百炼等「仅免费额度」耗尽（常 HTTP 403 · **WEA**） | 免费额度已用尽（Key 本身有效）。请到通义百炼控制台关闭「仅使用免费额度」，或充值后再试。 |
 | `E_LLM_RATE` | 429 / 限流（**WEA W1**） | 服务商繁忙，请稍后重试。 |
-| `E_LLM_BASE_URL` | 自定义 base_url 非法（非 https 等）（**WEA W1**） | 自定义 API 地址仅支持 https。 |
+| `E_LLM_BASE_URL` | 自定义 base_url 非法（非 https / localhost / 内网等）（**WEA W1**） | 自定义 API 地址仅支持公网 https（不可用 localhost / 内网）。 |
 | `E_LLM_TIMEOUT` | 连接或读写超时（与客户端 `E_LLM_TIMEOUT` 对齐） | 无法连接服务商。请检查网络后重试。 |
 | `E_EXPORT_PRIVACY` | Studio zip 未 confirmPrivacy | 导出 zip 需要确认隐私设置 |
 

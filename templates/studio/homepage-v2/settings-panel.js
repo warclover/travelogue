@@ -264,7 +264,13 @@ function applyAiStatus(st) {
   var meta = $("v2-settings-meta-ai");
   var badge = $("studio-llm-settings-badge");
   var entry = $("studio-llm-settings-entry");
-  var readiness = (st && st.readiness) || (st && st.llmAvailable ? "已就绪" : "未配置");
+  var readiness =
+    (st && st.readiness) ||
+    (st && st.lastPingOk === true
+      ? "已就绪"
+      : st && st.configured
+        ? "已保存未验证"
+        : "未配置");
   var provider = st && st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "";
   var providerLabel =
     provider === "dashscope" ? "通义千问" : provider === "deepseek" ? "DeepSeek" : "";

@@ -21,7 +21,7 @@ from travelogue.web.studio_handlers import llm_settings_handlers as h
 @pytest.fixture()
 def user_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
-    # NAS · dark ON：本模块测写作引擎写/ping；默认面会 403
+    # 连接 API 已不要求开闸；仍开 dark 以免与其它门控夹杂
     monkeypatch.setenv("TRAVELOGUE_AI_SURFACE", "1")
     clear_user_llm_secrets()
     reset_config_cache()
@@ -91,7 +91,7 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
 
     assert handler._captured["status"] == 200
     assert seen["provider"] == "dashscope"
-    assert seen["model"] == "qwen-plus"
+    assert seen["model"] == "qwen3.7-flash"
     assert seen["base_url"] == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
     assert seen["api_key"] == "sk-dash-new-key-xxxxxxxxxxxx"
 
@@ -112,7 +112,7 @@ def test_save_dashscope_writes_qwen_not_deepseek(
     assert handler._captured["status"] == 200
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
     assert "provider: dashscope" in overlay
-    assert "qwen-plus" in overlay
+    assert "qwen3.7-flash" in overlay
     assert "deepseek-chat" not in overlay
     assert "api.deepseek.com" not in overlay
 
