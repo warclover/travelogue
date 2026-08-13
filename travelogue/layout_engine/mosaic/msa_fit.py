@@ -1,4 +1,9 @@
-"""MSA · crop_risk → conditional contain + whitespace budget (S-MSA-04)."""
+"""MSA · crop_risk → conditional contain + whitespace budget (S-MSA-04).
+
+``crop_risk_for_pair`` / ``aspect_mismatch`` live in ``crop_solver`` (AEL
+D-AEL-11 / AC-AEL-23). This module re-exports them so MSA call sites stay
+stable. Album export must not import this file.
+"""
 
 from __future__ import annotations
 
@@ -6,80 +11,28 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from travelogue.config.mosaic import SlotAdaptationConfig
-from travelogue.layout_engine.crop_solver import solve_slot_focal
+from travelogue.layout_engine.crop_solver import (
+    aspect_mismatch,
+    asset_aspect,
+    crop_risk_for_pair,
+)
 
-# PRD §6.5 proxy weights
-_ALPHA_MISMATCH = 0.85
-_BETA_FOCAL_EDGE = 0.35
-_GAMMA_PERSON = 0.55
-_FOCAL_EDGE_MARGIN = 0.12
+# Re-export: MSA tests and scorer/assign keep importing from msa_fit.
+__all__ = [
+    "aspect_mismatch",
+    "crop_risk_for_pair",
+    "contain_whitespace_fraction",
+    "page_whitespace_ratio",
+    "apply_crop_risk_fits",
+]
 
 
 def _clamp01(x: float) -> float:
     return max(0.0, min(1.0, float(x)))
 
 
-def _focal_near_edge(asset: Mapping[str, Any], margin: float = _FOCAL_EDGE_MARGIN) -> bool:
-    fp = asset.get("focalPoint") or {}
-    x, y = fp.get("x"), fp.get("y")
-    if x is None or y is None:
-        return False
-    try:
-        xf, yf = float(x), float(y)
-    except (TypeError, ValueError):
-        return False
-    return bool(xf < margin or xf > 1.0 - margin or yf < margin or yf > 1.0 - margin)
-
-
 def _asset_r(asset: Mapping[str, Any] | None) -> float | None:
-    if not asset:
-        return None
-    try:
-        w = float(asset.get("width"))
-        h = float(asset.get("height"))
-    except (TypeError, ValueError):
-        return None
-    if w <= 0 or h <= 0:
-        return None
-    return w / h
-
-
-def aspect_mismatch(photo_r: float, slot_r: float) -> float:
-    """``1 - min/max`` in [0, 1]."""
-    if photo_r <= 0 or slot_r <= 0:
-        return 0.0
-    return 1.0 - (min(photo_r, slot_r) / max(photo_r, slot_r))
-
-
-def crop_risk_for_pair(
-    asset: Mapping[str, Any] | None,
-    slot_display_aspect: float,
-    *,
-    alpha: float = _ALPHA_MISMATCH,
-    beta: float = _BETA_FOCAL_EDGE,
-    gamma: float = _GAMMA_PERSON,
-) -> float:
-    """Cover-crop risk proxy (PRD §6.5) + person-safe face IoU after solve."""
-    pr = _asset_r(asset)
-    if pr is None or slot_display_aspect <= 0:
-        return 0.0
-    mismatch = aspect_mismatch(pr, float(slot_display_aspect))
-    edge = 1.0 if asset is not None and _focal_near_edge(asset) else 0.0
-    base = alpha * mismatch + beta * edge
-
-    solved = solve_slot_focal(asset, float(slot_display_aspect))
-    safety = solved.safety
-    # Hard floor only when faces are actually clipped after solve. Oversized
-    # half-body protect infeasibility is a soft signal (protectContainment),
-    # not a contain mandate — otherwise 3:2 heroes in 16:9 bleed get letterboxed.
-    if safety.face_clipped:
-        return round(_clamp01(max(base, 0.92)), 4)
-    person_pen = 0.0
-    if safety.has_person:
-        person_pen = gamma * (1.0 - float(safety.protect_containment))
-        if not solved.feasible:
-            person_pen = max(person_pen, 0.45)
-    return round(_clamp01(base + person_pen), 4)
+    return asset_aspect(asset)
 
 
 def contain_whitespace_fraction(photo_r: float, slot_r: float) -> float:
@@ -166,7 +119,6 @@ def apply_crop_risk_fits(
         candidates.append((i, risk, contrib))
 
     candidates.sort(key=lambda t: (-t[1], t[0]))
-    used_ws = 0.0
     # Count whitespace already committed by protected contain slots
     used_ws = page_whitespace_ratio(slots, assets_map=assets_map, slot_areas=slot_areas)
 

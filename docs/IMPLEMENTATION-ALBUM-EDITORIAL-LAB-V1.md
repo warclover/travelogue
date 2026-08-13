@@ -2,19 +2,19 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | **v0.1.1** |
+| **文档版本** | **v0.1.2** |
 | **对应 PRD** | [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) **v0.2.1** |
 | **验收** | [ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md](./ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md) |
 | **评审** | [ael-album-editorial-lab-v1-review-2026-08-13.md](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md) · Conditional Go |
 | **狗粮** | [ael-local-dogfood-GUIDE.md](./acceptance-records/ael-local-dogfood-GUIDE.md) · [config-ael-dogfood.example.yaml](./config-ael-dogfood.example.yaml) |
 | **DOC-STATUS** | **active** |
-| **状态** | **M0 文档列车（本文）** · L0 合码未开始 · 默认 off |
+| **状态** | **L1 合码中（PR-B）** · L0 已合 master（#66）· 默认 off |
 | **更新日期** | 2026-08-13 |
 
 > **定位**：把 AEL PRD v0.2.1 + 七席展开为可执行任务卡。  
 > **铁律**：M0 → L0 → L1 → L2 → L3；**禁止**单 PR 塞满；**禁止**把探针写入 `_ALL_TEMPLATES`；**禁止** export import `layout_engine.mosaic`；**禁止**改 xhs/海报默认 `plan_*`。  
-> **本刀（文档）**：拆 ACCEPTANCE/IMPL + GUIDE + 狗粮 YAML。**不动代码。**  
-> **下一刀合码**：仅 **L0 隔离**（T-AEL-01～08）。
+> **本刀**：PR-B / L1 SSC（T-AEL-10～17）。T-AEL-18 三册盲评为出门门，不挡合码。  
+> **禁止**：探针上场、换模板、改卡数、打开 MSA、改 xhs/海报默认。
 
 ---
 
@@ -236,5 +236,6 @@ L0 未绿不得开工。详细几何以实现时补卡，此处钉挂点，避�
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.1.2 | 2026-08-13 | PR-B / L1：crop_risk 下沉 crop_solver；album SSC；msa_fit re-export。T-18 盲评仍出门。 |
 | v0.1.1 | 2026-08-13 | 对齐 PRD v0.2.1：T-AEL-26/30b/36；混出 4 + triptych 评测-only。 |
 | v0.1.0 | 2026-08-13 | M0 拆文。下一刀仅 PR-A / L0。 |

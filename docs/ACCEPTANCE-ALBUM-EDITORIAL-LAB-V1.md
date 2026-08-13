@@ -77,13 +77,13 @@ python -m pytest tests/unit/export/test_ael_l0_isolation.py tests/unit/export/te
 
 | ID | 期望 | 结果 |
 |----|------|------|
-| **AC-AEL-04** | 单人像脸贴上/下缘夹具：不得 cover 切脸；contain 或**异 AR** 同卡换槽 | ☐ |
-| **AC-AEL-05** | `max(faceCount,len(faces))=4` 合影进竖槽：不得切掉窗内任一脸；换宽槽或 contain。皆 0 不当 group | ☐ |
-| **AC-AEL-06** | 3:2 风景、天际在上 20%：高 crop_risk 不得硬 cover；contain 或换横槽 | ☐ |
-| **AC-AEL-07** | 相对 `crop.enabled=false`：卡数与模板 id 序列 **不漂移** | ☐ |
-| **AC-AEL-08** | 槽内 contain 底色 = `(245,245,243)`；无页级半幅空白（孤卡仍单卡宽） | ☐ |
-| **AC-AEL-23** | `travelogue.export` 不 import `travelogue.layout_engine.mosaic`（静态/importlinter 或单测扫） | ☐ |
-| **AC-AEL-25** | `card-9-grid-equal`（槽 AR 全同）：L1 失败走 contain，**不**因换槽改变朝向分配 | ☐ |
+| **AC-AEL-04** | 单人像脸贴上/下缘夹具：不得 cover 切脸；contain 或**异 AR** 同卡换槽 | ✅ `test_ael_l1_ssc` |
+| **AC-AEL-05** | `max(faceCount,len(faces))=4` 合影进竖槽：不得切掉窗内任一脸；换宽槽或 contain。皆 0 不当 group | ✅ `test_ael_l1_ssc` |
+| **AC-AEL-06** | 3:2 风景、天际在上 20%：高 crop_risk 不得硬 cover；contain 或换横槽 | ✅ `test_ael_l1_ssc` |
+| **AC-AEL-07** | 相对 `crop.enabled=false`：卡数与模板 id 序列 **不漂移** | ✅ `test_ael_l1_ssc` |
+| **AC-AEL-08** | 槽内 contain 底色 = `(245, 245, 243)`；无页级半幅空白（孤卡仍单卡宽） | ✅ `test_ael_l1_ssc` · 半页宽仍走 ECC |
+| **AC-AEL-23** | `travelogue.export` 不 import `travelogue.layout_engine.mosaic`（静态/importlinter 或单测扫） | ✅ `test_crop_risk_export` + `test_ael_l1_ssc` |
+| **AC-AEL-25** | `card-9-grid-equal`（槽 AR 全同）：L1 失败走 contain，**不**因换槽改变朝向分配 | ✅ `test_ael_l1_ssc` |
 | **AC-AEL-18** | 三册盲评 A 维 on≥off；人像砍头红线为零；卡数/模板序列不漂（§1 常量） | ☐ L1 出门 |
 
 朝向错配仍禁止（AC-ECC-04 精神）：不得用 contain 掩盖装错朝向。
@@ -161,5 +161,6 @@ EDC W0 **不挡**。
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.1.2 | 2026-08-13 | L1 夹具 AC-04～08/23/25 单测锁；AC-18 仍出门。 |
 | v0.1.1 | 2026-08-13 | 对齐 PRD v0.2.1：混出 4 + triptych 评测-only；p33 角色映射；AC-26/27。 |
 | v0.1.0 | 2026-08-13 | Kickoff 拆文。源：PRD v0.2.0 §12 + 七席 BLK/OQ 结案。 |
