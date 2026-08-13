@@ -102,11 +102,16 @@ def studio_llm_status(
             except LlmError:
                 studio_ok = False
 
+    image_ready = studio_ok
+    if studio_ok and secrets is not None and secrets.last_image_ok is False:
+        image_ready = False
+
     return {
         "llmAvailable": studio_ok,
         "llmProvider": provider,
         "connectionOk": studio_ok,
         "copyReady": studio_ok,
+        "imageReady": image_ready,
     }
 
 

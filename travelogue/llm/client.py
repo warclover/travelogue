@@ -15,7 +15,9 @@ from travelogue.llm.errors import LlmError
 from travelogue.llm.presets import PROVIDER_PRESETS
 from travelogue.util.llm_presets import (
     coerce_model_for_provider,
-    dashscope_model_candidates,
+    copy_thinking_enabled,
+    dashscope_copy_candidates,
+    dashscope_ping_candidates,
     resolve_base_url_for_provider,
 )
 
@@ -78,7 +80,8 @@ def resolve_llm_runtime(
         if not api_key:
             raise LlmError("E_LLM_AUTH", f"missing API key for provider {prov}")
         llm_base = getattr(llm, "base_url", None)
-        model = coerce_model_for_provider(prov, getattr(secrets, "model", None))
+        raw_model = None if prov == "dashscope" else getattr(secrets, "model", None)
+        model = coerce_model_for_provider(prov, raw_model)
         base = resolve_base_url_for_provider(
             prov,
             getattr(secrets, "base_url", None) or llm_base,
@@ -111,12 +114,14 @@ def resolve_llm_runtime(
     if not api_key:
         raise LlmError("E_LLM_AUTH", f"missing API key env {api_key_env}")
 
-    # Provider-scoped defaults: do not keep DeepSeek model/URL when using dashscope
-    # (common after switching 服务商 while config.user.yaml still has leftovers).
     cfg_provider = (llm.provider or "").strip().lower()
     provider_switched = bool(provider and prov != cfg_provider)
     llm_base = getattr(llm, "base_url", None)
-    if provider_switched:
+    if prov == "dashscope":
+        # D-BAI-02：磁盘/overlay 用户模型忽略，走 copy 槽默认（W1b · Pro）
+        model = coerce_model_for_provider(prov, None)
+        base = resolve_base_url_for_provider(prov, llm_base, None)
+    elif provider_switched:
         model = coerce_model_for_provider(prov, None)
         # Keep explicit endpoint from ping/settings cfg (may be region preset URL)
         base = resolve_base_url_for_provider(prov, llm_base, None)
@@ -128,7 +133,7 @@ def resolve_llm_runtime(
 
         disk_secrets = read_user_llm_secrets()
         if disk_secrets.provider == prov:
-            if disk_secrets.model:
+            if prov != "dashscope" and disk_secrets.model:
                 model = coerce_model_for_provider(prov, disk_secrets.model)
             # secrets.base_url 自定义优先；否则按 region / cfg 解析
             base = resolve_base_url_for_provider(
@@ -193,7 +198,17 @@ def _post_chat(req: urllib.request.Request, *, timeout_sec: int) -> dict[str, An
 
 def _extract_content(data: dict[str, Any]) -> str:
     try:
-        return str(data["choices"][0]["message"]["content"])
+        message = data["choices"][0]["message"]
+        content = message.get("content")
+        if isinstance(content, list):
+            parts: list[str] = []
+            for block in content:
+                if isinstance(block, dict):
+                    parts.append(str(block.get("text") or ""))
+                elif isinstance(block, str):
+                    parts.append(block)
+            content = "".join(parts)
+        return str(content or "")
     except (KeyError, IndexError, TypeError) as exc:
         raise LlmError("E_LLM_RESPONSE", f"unexpected response shape: {data!r}") from exc
 
@@ -226,6 +241,7 @@ def _chat_completion_single(
     json_mode: bool,
     shared_backoff: bool,
     max_attempts: int | None,
+    enable_thinking: bool = False,
 ) -> str:
     from travelogue.llm.shared_backoff import get_shared_backoff
 
@@ -237,6 +253,9 @@ def _chat_completion_single(
     }
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
+    if enable_thinking:
+        payload["enable_thinking"] = True
+        payload["stream"] = False
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         url,
@@ -302,26 +321,34 @@ def chat_completion(
     shared_backoff: bool = False,
     max_attempts: int | None = None,
     model_failover: bool = True,
+    enable_thinking: bool | None = None,
 ) -> str:
     """Call OpenAI-compatible /chat/completions and return assistant content.
 
     When ``shared_backoff`` is true, wait on the process-wide provider gate and
     advance it on 429/502/503 (Pipeline Throughput · narrate concurrency).
 
-    For DashScope, ``model_failover`` tries free-tier-friendly models then
-    qwen-plus/turbo/max when the current model hits FreeTierOnly / quota.
+    For DashScope copy, ``model_failover`` tries the W0 copy cascade on quota.
+    ``enable_thinking`` default: on for DashScope DeepSeek-V4 copy models, off
+    otherwise. Ping must pass ``False``. JSON parse failure retries once with
+    thinking off (same model, does not change the global default).
     """
     rt = runtime or resolve_llm_runtime(provider)
     use_model = model or rt.model
     candidates = (
-        dashscope_model_candidates(use_model)
+        dashscope_copy_candidates(use_model)
         if model_failover and rt.provider == "dashscope"
         else [use_model]
     )
     last_err: LlmError | None = None
     for cand in candidates:
+        think = (
+            bool(enable_thinking)
+            if enable_thinking is not None
+            else bool(rt.provider == "dashscope" and copy_thinking_enabled(cand))
+        )
         try:
-            return _chat_completion_single(
+            content = _chat_completion_single(
                 messages,
                 use_model=cand,
                 temperature=temperature,
@@ -329,7 +356,23 @@ def chat_completion(
                 json_mode=json_mode,
                 shared_backoff=shared_backoff,
                 max_attempts=max_attempts,
+                enable_thinking=think,
             )
+            if think and json_mode:
+                try:
+                    parse_json_content(content)
+                except LlmError:
+                    content = _chat_completion_single(
+                        messages,
+                        use_model=cand,
+                        temperature=temperature,
+                        runtime=rt,
+                        json_mode=json_mode,
+                        shared_backoff=shared_backoff,
+                        max_attempts=max_attempts,
+                        enable_thinking=False,
+                    )
+            return content
         except LlmError as exc:
             last_err = exc
             if not model_failover or not _is_model_quota_error(exc):
@@ -357,6 +400,7 @@ def vision_chat_completion(
         runtime=runtime,
         json_mode=json_mode,
         model_failover=False,
+        enable_thinking=False,
     )
 
 
@@ -377,8 +421,8 @@ def llm_ping(
     credential injection (CQA D-CQA-02). Uses a short timeout; retries without
     ``response_format`` when the model rejects JSON mode.
 
-    DashScope：按免费额度友好模型 → qwen-plus/turbo/max 级联探测，
-    返回串中的 model 为实际打通的模型。
+    DashScope ping：Flash 级联、强制关思考（D-BAI-06），不走 copy 槽 Pro。
+    返回串中的 model 为实际打通的模型（仅日志；用户面不展示）。
     """
     from dataclasses import replace
 
@@ -389,7 +433,7 @@ def llm_ping(
         {"role": "user", "content": '{"ok": true}'},
     ]
     candidates = (
-        dashscope_model_candidates(rt.model)
+        dashscope_ping_candidates()
         if rt.provider == "dashscope"
         else [rt.model]
     )
@@ -408,6 +452,7 @@ def llm_ping(
                 json_mode=json_mode,
                 max_attempts=_PING_MAX_ATTEMPTS,
                 model_failover=False,
+                enable_thinking=False,
             )
 
         try:

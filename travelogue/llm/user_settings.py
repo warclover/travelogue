@@ -35,6 +35,7 @@ class UserLlmSecrets:
     base_url: str | None = None
     region: str | None = None  # dashscope: cn | intl
     last_ping_ok: bool | None = None
+    last_image_ok: bool | None = None  # None=optimistic; False=t2i/vision auth failed
 
     @property
     def configured(self) -> bool:
@@ -126,6 +127,8 @@ def read_user_llm_secrets() -> UserLlmSecrets:
     region = normalize_llm_region(provider, raw.get("region"))
     last_ping = raw.get("last_ping_ok")
     last_ping_ok = bool(last_ping) if isinstance(last_ping, bool) else None
+    last_image = raw.get("last_image_ok")
+    last_image_ok = bool(last_image) if isinstance(last_image, bool) else None
     return UserLlmSecrets(
         provider=provider,
         api_key=api_key,
@@ -133,6 +136,7 @@ def read_user_llm_secrets() -> UserLlmSecrets:
         base_url=base_url,
         region=region,
         last_ping_ok=last_ping_ok,
+        last_image_ok=last_image_ok,
     )
 
 
@@ -144,6 +148,7 @@ def write_user_llm_secrets(secrets: UserLlmSecrets) -> None:
         "model": secrets.model,
         "base_url": secrets.base_url,
         "last_ping_ok": secrets.last_ping_ok,
+        "last_image_ok": secrets.last_image_ok,
     }
     if region:
         payload["region"] = region
@@ -245,3 +250,15 @@ def readiness_state(secrets: UserLlmSecrets | None = None) -> str:
     if sec.last_ping_ok is False:
         return "连接失败"
     return "已保存未验证"
+
+
+def note_studio_image_ready(ok: bool | None) -> None:
+    """Persist imageReady honesty (D-BAI-07). None resets to optimistic."""
+    from dataclasses import replace
+
+    sec = read_user_llm_secrets()
+    if not sec.studio_configured:
+        return
+    if sec.last_image_ok is ok:
+        return
+    write_user_llm_secrets(replace(sec, last_image_ok=ok))

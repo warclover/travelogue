@@ -116,6 +116,7 @@ export function mountAiSurface(root, tripId, opts) {
   var llmConfigured = false;
   var connectionOk = false;
   var copyReady = false;
+  var imageReady = false;
   var titleArtEnabled = false;
   var titleArtRouteCEnabled = false;
   var titleArtBusy = false;
@@ -384,6 +385,19 @@ export function mountAiSurface(root, tripId, opts) {
         '<span class="preview-ai-sheet__status">未连接</span>' +
         '<button type="button" class="preview-ai-sheet__btn" data-ai-title-art-connect>去连接</button>' +
         "</div>" +
+        "</div>"
+      );
+    }
+    if (imageReady === false) {
+      return (
+        '<div class="preview-ai-sheet__block" data-ai-title-art-block>' +
+        "<h3>封面字体</h3>" +
+        '<p class="preview-ai-sheet__desc">封面字体暂时改用本机字库，不影响文案和导出</p>' +
+        '<div class="preview-ai-sheet__row">' +
+        '<span class="preview-ai-sheet__status">本机字库</span>' +
+        '<button type="button" class="preview-ai-sheet__btn" data-ai-title-art-btn>生成字体</button>' +
+        "</div>" +
+        '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">去精修 · 杂志名</button>' +
         "</div>"
       );
     }
@@ -1021,7 +1035,11 @@ export function mountAiSurface(root, tripId, opts) {
           llmConfigured = !!(st && st.configured);
           connectionOk = !!(st && st.connectionOk === true);
           copyReady = !!(st && (st.copyReady === true || st.connectionOk === true));
-          // 封面字体禁止再用单一 llmAvailable；W1a copyReady ≡ connectionOk
+          imageReady =
+            st && typeof st.imageReady === "boolean"
+              ? st.imageReady === true
+              : connectionOk;
+          // 封面字体禁止再用单一 llmAvailable；文案灯 copyReady，图像灯 imageReady
           llmAvailable = copyReady;
         })
         .catch(function () {
@@ -1030,6 +1048,7 @@ export function mountAiSurface(root, tripId, opts) {
           llmConfigured = false;
           connectionOk = false;
           copyReady = false;
+          imageReady = false;
         }),
       fetch("/__travelogue/config", {
         headers: studioAuthHeaders({}),

@@ -93,7 +93,7 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
     assert handler._captured["body"]["message"] == "已连接通义百炼"
     assert "已自动改用" not in handler._captured["body"]["message"]
     assert seen["provider"] == "dashscope"
-    assert seen["model"] == "qwen3.7-flash"
+    assert seen["model"] == "deepseek-v4-pro"
     assert seen["base_url"] == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
     assert seen["api_key"] == "sk-dash-new-key-xxxxxxxxxxxx"
     # DeepSeek-only 磁盘 Key 仍在（本次 ping 不 persist）
@@ -117,7 +117,7 @@ def test_save_dashscope_writes_qwen_not_deepseek(
     assert handler._captured["status"] == 200
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
     assert "provider: dashscope" in overlay
-    assert "qwen3.7-flash" in overlay
+    assert "deepseek-v4-pro" in overlay
     assert "deepseek-chat" not in overlay
     assert "api.deepseek.com" not in overlay
 
@@ -255,7 +255,7 @@ def test_save_ignores_client_model(user_data: Path) -> None:
     assert "model" not in handler._captured["body"]
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
     assert "qwen-turbo" not in overlay
-    assert "qwen3.7-flash" in overlay
+    assert "deepseek-v4-pro" in overlay
 
 
 def test_deepseek_only_not_studio_ready_ac_bai_04(user_data: Path) -> None:

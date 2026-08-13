@@ -2,21 +2,21 @@
 
 | 属性 | 内容 |
 |------|------|
-| **对应 PRD** | [PRD-BAILIAN-AI-INTEGRATION-V1.md](./PRD-BAILIAN-AI-INTEGRATION-V1.md) **v0.2.1** |
+| **对应 PRD** | [PRD-BAILIAN-AI-INTEGRATION-V1.md](./PRD-BAILIAN-AI-INTEGRATION-V1.md) **v0.2.2** |
 | **评审** | [acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md](./acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md) |
 | **验收** | Kickoff 后拆 [ACCEPTANCE-BAILIAN-AI-INTEGRATION-V1.md](./ACCEPTANCE-BAILIAN-AI-INTEGRATION-V1.md)；本波以 PRD §10 AC-BAI-* 为准 |
 | **更新日期** | 2026-08-13 |
-| **本刀范围** | **W1a · 连接面 + 就绪语义**（第一个 PR） |
+| **本刀范围** | **W1b · copy 路由 + OCR + imageReady** |
 
-> **本刀明确不做（留给 W0 / W1b / W2）**
+> **本刀明确不做（留给 W2 / W3）**
 >
-> - 不加 `enable_thinking`、不做流式 client（D-BAI-20）— **W0 已证明非流式可开思考**；接线留给 W1b
-> - 不改 OCR / 万相 / 审美默认 — **W0 记录见下**；W1a 代码仍走现网型号
-> - 不把 copy 生产默认切到 `deepseek-v4-pro`（**W0 已探通**；切默认留给 W1b）
-> - 不新建第二套密钥 API、不为每个模型做 ping
+> - 不切 t2i 默认（仍 `wanx2.1-t2i-plus`）；2.7 / qwen-image 不塞进现网 URL
+> - 不做流式 client；思考只走非流式 `enable_thinking`
+> - 不把 `qwen3.5-ocr` 设成封面 OCR 默认
+> - 不改审美 `qwen-vl-max`
 > - 不做帮助 H7、不做线框、不做国际站
 > - 不重写 AIR Prompt、封面版式、CAL 路线 B
-> - **不**把 `secrets.json` 改写成嵌套 `{dashscope:{…}}`（保持现网扁平）
+> - **不**把 `secrets.json` 改写成嵌套 `{dashscope:{…}}`
 
 ---
 
@@ -82,12 +82,42 @@ python -m pytest `
 
 ---
 
+## W1b · copy 路由 + OCR + imageReady
+
+依据：[W0 实机](./acceptance-records/bai-w0-live-probe-2026-08-13.md)
+
+| ID | 任务 | 状态 |
+|----|------|------|
+| BE-W1b-01 | copy 默认 `deepseek-v4-pro`；级联 Pro → Flash-V4 → Qwen3.7/3.8 → 旧名 | ✅ |
+| BE-W1b-02 | V4 文案非流式 `enable_thinking`；JSON 失败当次关思考重试 | ✅ |
+| BE-W1b-03 | ping 走 Flash 级联、强制关思考 | ✅ |
+| BE-W1b-04 | OCR 默认 `qwen3.7-flash`，链尾 `qwen-vl-plus` | ✅ |
+| BE-W1b-05 | `imageReady`：乐观=connectionOk；t2i 401/403/额度后诚实灭灯 | ✅ |
+| FE-W1b-01 | Sheet 图像诚实态 COPY-BAI-08 | ✅ |
+| FE-W1b-02 | 去掉 `llm_provider_change` / `llm_switch_confirm` 产品路径 | ✅ |
+| TE-W1b-01 | coerce 保留 `deepseek-v4-*`；丢掉官方 `deepseek-chat` | ✅ |
+| TE-W1b-02 | ping payload 无 thinking 且模型为 Flash | ✅ |
+| TE-W1b-03 | imageReady 与 copyReady 可分灯 | ✅ |
+
+```powershell
+python -m pytest `
+  tests/unit/llm/test_provider_endpoint_coerce.py `
+  tests/unit/llm/test_llm_client_retry.py `
+  tests/unit/web/test_alg3_llm_ready.py `
+  tests/unit/web/test_llm_ping_provider_isolation.py `
+  tests/unit/web/test_sas_ai_sheet_wiring.py `
+  tests/unit/web/test_desktop_llm_setup_w2.py `
+  tests/unit/web/test_user_llm_settings.py -q
+```
+
+---
+
 ## 后续波次（本文件占位，不在本 PR 编码）
 
 | 波次 | 范围 |
 |------|------|
 | **W0** | ✅ 2026-08-13 实机：[bai-w0-live-probe-2026-08-13.md](./acceptance-records/bai-w0-live-probe-2026-08-13.md)（AC-BAI-16） |
-| **W1b** | copy 默认 `deepseek-v4-pro` + 非流式思考；OCR 默认 `qwen3.7-flash`；`imageReady` 诚实态；t2i **不切** |
+| **W1b** | ✅ 本刀：copy Pro + 非流式思考；OCR `qwen3.7-flash`；`imageReady` 诚实态；t2i **不切** |
 | **W2** | 仅对同构的 `wan2.2-t2i-plus` 做字形盲评；2.7 / qwen-image 另立项协议；审美换代 |
 | **W3** | 帮助 H7「模型API 配置」+ 真人狗粮 |
 
@@ -106,4 +136,4 @@ python -m pytest `
 | 日期 | 说明 |
 |------|------|
 | 2026-08-13 | W1a 任务卡：连接面 + 就绪语义；明确本刀不做思考/换型号 |
-| 2026-08-13 | W0 实机回写：Pro/思考/OCR/t2i 协议；W1b 默认表冻结 |
+| 2026-08-13 | W1b：copy Pro + 思考；OCR 3.7-flash；imageReady 分灯 |

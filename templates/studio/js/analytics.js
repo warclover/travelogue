@@ -49,8 +49,6 @@ const ALLOWED = new Set([
   "llm_settings_resume",
   "llm_ping",
   "llm_save_and_ping",
-  "llm_provider_change",
-  "llm_switch_confirm",
   "llm_narrate_click",
   // NAS · 会话首次门控状态（PRD §7）
   "ai_surface_gate",

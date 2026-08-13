@@ -17,10 +17,11 @@ import logging
 from PIL import Image
 
 from travelogue.llm.client import LlmRuntime, parse_json_content, vision_chat_completion
+from travelogue.util.llm_presets import DASHSCOPE_OCR_DEFAULT, dashscope_ocr_candidates
 
 _log = logging.getLogger(__name__)
 
-_OCR_MODEL_DEFAULT = "qwen-vl-plus"
+_OCR_MODEL_DEFAULT = DASHSCOPE_OCR_DEFAULT
 
 
 def _image_to_data_url(img: Image.Image) -> str:
@@ -60,13 +61,26 @@ def ocr_verify(
                 ],
             },
         ]
-        content = vision_chat_completion(
-            messages,
-            provider="dashscope",
-            model=model or _OCR_MODEL_DEFAULT,
-            runtime=runtime,
-            temperature=0.0,
-        )
+        content = None
+        last_err: Exception | None = None
+        for cand in dashscope_ocr_candidates(model or _OCR_MODEL_DEFAULT):
+            try:
+                content = vision_chat_completion(
+                    messages,
+                    provider="dashscope",
+                    model=cand,
+                    runtime=runtime,
+                    temperature=0.0,
+                )
+                break
+            except Exception as exc:  # noqa: BLE001 — try next OCR model
+                last_err = exc
+                _log.info("title_art OCR model %s failed: %s", cand, exc)
+                continue
+        if content is None:
+            if last_err is not None:
+                raise last_err
+            return False
         data = parse_json_content(content)
         recognized = "".join(str(data.get("recognized") or "").split())
         matched = bool(data.get("match")) and recognized == expected

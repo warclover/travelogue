@@ -97,6 +97,8 @@ def test_sas_api_config_ia_and_no_advanced() -> None:
     assert "copyReady" in text
     assert "已保存未验证" in text
     assert "封面手写体需要通义百炼；未连接时使用本机字库" in text
+    assert "封面字体暂时改用本机字库，不影响文案和导出" in text
+    assert "imageReady" in text
     assert "连接通义百炼后可生成杂志文案" in text
     assert "去连接" in text
     assert 'data-ai-title-art-connect' in text

@@ -13,11 +13,16 @@ PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     },
     "dashscope": {
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        # 默认优先仍有新人免费额度的轻量模型；耗尽后由 client 级联到付费兜底
-        "default_model": "qwen3.7-flash",
+        # BAI W1b · copy 槽默认；ping 另走 DASHSCOPE_PING_DEFAULT（关思考）
+        "default_model": "deepseek-v4-pro",
         "api_key_env": "DASHSCOPE_API_KEY",
     },
 }
+
+# 百炼托管 DeepSeek-V4（不是 api.deepseek.com）
+DASHSCOPE_COPY_DEFAULT = "deepseek-v4-pro"
+DASHSCOPE_PING_DEFAULT = "qwen3.7-flash"
+DASHSCOPE_OCR_DEFAULT = "qwen3.7-flash"
 
 # 通义百炼 · 中国站 / 国际站（D-WEA-04）
 DASHSCOPE_REGION_BASE_URLS: dict[str, str] = {
@@ -25,9 +30,10 @@ DASHSCOPE_REGION_BASE_URLS: dict[str, str] = {
     "intl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
 }
 
-# 文本写作级联：免费额度友好模型 → 付费兜底（qwen-plus/turbo/max）
-# 不含 OCR / 纯视觉专用模型。
-DASHSCOPE_MODEL_CASCADE: tuple[str, ...] = (
+# 文案槽级联（BAI W0）：Pro → Flash-V4 → Qwen3.7/3.8 → 旧名链尾
+DASHSCOPE_COPY_CASCADE: tuple[str, ...] = (
+    "deepseek-v4-pro",
+    "deepseek-v4-flash-0731",
     "qwen3.7-flash",
     "qwen3.7-plus",
     "qwen3.8-max",
@@ -37,19 +43,68 @@ DASHSCOPE_MODEL_CASCADE: tuple[str, ...] = (
     "qwen-turbo",
     "qwen-max",
 )
+# ping 只证 Key：短超时、关思考，避免 Pro 思考烧探测
+DASHSCOPE_PING_CASCADE: tuple[str, ...] = (
+    "qwen3.7-flash",
+    "qwen3.7-plus",
+    "qwen3.8-max",
+    "qwen3.7-max",
+    "qwen3.6-plus",
+    "qwen-plus",
+    "qwen-turbo",
+    "qwen-max",
+)
+DASHSCOPE_OCR_CASCADE: tuple[str, ...] = (
+    "qwen3.7-flash",
+    "qwen-vl-plus",
+)
+# 旧名：部分调用方仍 import DASHSCOPE_MODEL_CASCADE
+DASHSCOPE_MODEL_CASCADE: tuple[str, ...] = DASHSCOPE_COPY_CASCADE
 
 
-def dashscope_model_candidates(selected: str | None = None) -> list[str]:
-    """Ordered models to try: selected first (if any), then free-tier cascade, then paid."""
+def _unique_models(*names: str | None) -> list[str]:
     out: list[str] = []
     seen: set[str] = set()
-    for name in (selected, *DASHSCOPE_MODEL_CASCADE):
+    for name in names:
         m = (name or "").strip()
         if not m or m in seen:
             continue
         seen.add(m)
         out.append(m)
-    return out or ["qwen-plus"]
+    return out
+
+
+def dashscope_copy_candidates(selected: str | None = None) -> list[str]:
+    """Copy-slot failover: selected first, then W0 copy cascade."""
+    return _unique_models(selected, *DASHSCOPE_COPY_CASCADE) or [DASHSCOPE_COPY_DEFAULT]
+
+
+def dashscope_ping_candidates(selected: str | None = None) -> list[str]:
+    """Ping-slot failover: Flash first, never start on Pro."""
+    return _unique_models(selected or DASHSCOPE_PING_DEFAULT, *DASHSCOPE_PING_CASCADE) or [
+        DASHSCOPE_PING_DEFAULT
+    ]
+
+
+def dashscope_ocr_candidates(selected: str | None = None) -> list[str]:
+    return _unique_models(selected or DASHSCOPE_OCR_DEFAULT, *DASHSCOPE_OCR_CASCADE) or [
+        DASHSCOPE_OCR_DEFAULT
+    ]
+
+
+def dashscope_model_candidates(selected: str | None = None) -> list[str]:
+    """Ordered copy-slot models (legacy name). Ping must use dashscope_ping_candidates."""
+    return dashscope_copy_candidates(selected)
+
+
+def is_dashscope_hosted_deepseek(model: str | None) -> bool:
+    """Bailian-hosted DeepSeek-V4 ids (not api.deepseek.com)."""
+    return (model or "").strip().lower().startswith("deepseek-v4")
+
+
+def copy_thinking_enabled(model: str | None) -> bool:
+    """Non-stream thinking only for V4 copy models (D-BAI-08 / W0)."""
+    return is_dashscope_hosted_deepseek(model)
 
 
 def normalize_llm_region(provider: str | None, region: str | None) -> str | None:
@@ -84,10 +139,12 @@ def coerce_model_for_provider(provider: str, model: str | None) -> str:
         for name, p in PROVIDER_PRESETS.items()
         if name != provider and p.get("default_model")
     }
-    # 切到 DeepSeek 时丢掉整条通义级联；切到通义时丢掉 deepseek-* 族
+    # 切到官方 DeepSeek 时丢掉通义 copy/ping 链（含百炼托管 V4）；
+    # 切到通义时丢掉官方 deepseek-chat，但保留 deepseek-v4-*。
     if provider != "dashscope":
-        foreign.update(DASHSCOPE_MODEL_CASCADE)
-    elif raw.lower().startswith("deepseek"):
+        foreign.update(DASHSCOPE_COPY_CASCADE)
+        foreign.update(DASHSCOPE_PING_CASCADE)
+    elif raw.lower().startswith("deepseek") and not is_dashscope_hosted_deepseek(raw):
         return default
     if raw in foreign:
         return default

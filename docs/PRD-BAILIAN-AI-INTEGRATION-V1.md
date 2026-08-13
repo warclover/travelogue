@@ -203,7 +203,7 @@
 | 能力槽 | 现网（As-Is） | **目标默认（本主题）** | 槽内兜底 | 不得作为默认的原因 |
 |--------|---------------|------------------------|----------|---------------------|
 | **copy** | `qwen3.7-flash` 级联到 `qwen-plus/turbo/max` | **`deepseek-v4-pro`** | `deepseek-v4-flash-0731` → `qwen3.7-flash` → `qwen3.7-plus` → `qwen3.8-max` | 旧名 `qwen-plus/turbo/max` 仅作 **最后兼容别名**（控制台仍有则留在链尾，不进 UI） |
-| **vision · OCR** | `qwen-vl-plus` | **`qwen3.5-ocr`** | `qwen3.7-flash`（原生视觉）→ `qwen-vl-plus` | 专用 OCR 优先于通用 VL；旧 VL 只防停服前的兼容 |
+| **vision · OCR** | `qwen-vl-plus` | **`qwen3.7-flash`**（W0：`qwen3.5-ocr` 书法贴纸两次 false） | `qwen-vl-plus` 链尾 | 3.5-ocr 合同通但飞白贴纸不如通用视觉 |
 | **vision · 审美** | `qwen-vl-max` | **`qwen3.7-plus`** | `qwen3.8-max` → `qwen-vl-max` | 3.8-max 更强但更贵；审美短名单用 plus 级 |
 | **t2i** | `wanx2.1-t2i-plus` | **W0 冠军**（候选见下） | 现网 `wanx2.1-t2i-plus` 必须留在链上直到冠军稳定 | 未测切换会毁掉 CAL 字形门（「光」字教训） |
 
@@ -302,7 +302,7 @@ Sheet 两张卡可缩按钮为「生成文案」「生成封面字」。连接�
 | capability | protocol | primary | fallbacks | 调用方 |
 |------------|----------|---------|-----------|--------|
 | `copy` | OpenAI-compat chat | `deepseek-v4-pro` | 见 §3.3 | `chat_completion` / narrate |
-| `vision_ocr` | OpenAI-compat chat + image_url | `qwen3.5-ocr` | §3.3 | `ocr_verify.py` |
+| `vision_ocr` | OpenAI-compat chat + image_url | `qwen3.7-flash` | `qwen-vl-plus` | `ocr_verify.py` |
 | `vision_aesthetic` | 同上 | `qwen3.7-plus` | §3.3 | `aesthetic_mllm_adapter.py` |
 | `t2i` | 万相/图像异步 API | W0 冠军或暂 `wanx2.1-t2i-plus` | 现网 2.1 plus | `route_c.py` |
 
@@ -459,7 +459,7 @@ W0 可与 W1 部分并行（UI 不依赖生图冠军）。
 |------|------|------|------|
 | 文案 | `qwen3.7-flash` + 旧 plus/turbo/max | `deepseek-v4-pro` | 百炼托管，不是官方 DeepSeek 域名 |
 | 文案 ping | 同级联 | Flash 或 Pro **无思考** | D-BAI-06 |
-| OCR | `qwen-vl-plus` | `qwen3.5-ocr` | 旧 VL 链尾 |
+| OCR | `qwen-vl-plus` | `qwen3.7-flash` | W0：3.5-ocr 书法贴纸不如通用视觉 |
 | 审美 | `qwen-vl-max` | `qwen3.7-plus` | W2 |
 | 封面生图 | `wanx2.1-t2i-plus` | W0 冠军 | 未测不切 |
 

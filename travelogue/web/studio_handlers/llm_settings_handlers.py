@@ -123,6 +123,7 @@ def _with_ping(
         base_url=secrets.base_url,
         region=secrets.region,
         last_ping_ok=ok,
+        last_image_ok=secrets.last_image_ok,
     )
 
 
@@ -148,6 +149,7 @@ def _status_body(*, cfg: Any = None) -> dict[str, Any]:
         "lastPingOk": secrets.last_ping_ok if studio_on else None,
         "connectionOk": connection_ok,
         "copyReady": connection_ok,
+        "imageReady": bool(status.get("imageReady")),
         "hasDashscope": studio_on,
         "legacyKeyOnDisk": bool(secrets.configured and not studio_on),
         "region": "cn" if studio_on else None,
@@ -237,6 +239,7 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
         base_url=base_s or None,
         region=region,
         last_ping_ok=None,
+        last_image_ok=None,
     )
     try:
         write_user_llm_secrets(secrets)
