@@ -10,9 +10,9 @@
 
 > **本刀明确不做（留给 W0 / W1b / W2）**
 >
-> - 不加 `enable_thinking`、不做流式 client（D-BAI-20）
-> - 不改 OCR 默认 `qwen-vl-plus`、不改万相 `wanx2.1-t2i-plus`、不改审美 `qwen-vl-max`
-> - 不把 copy 生产默认切到 `deepseek-v4-pro`（W0 未记录 Pro）；现网文本级联保留
+> - 不加 `enable_thinking`、不做流式 client（D-BAI-20）— **W0 已证明非流式可开思考**；接线留给 W1b
+> - 不改 OCR / 万相 / 审美默认 — **W0 记录见下**；W1a 代码仍走现网型号
+> - 不把 copy 生产默认切到 `deepseek-v4-pro`（**W0 已探通**；切默认留给 W1b）
 > - 不新建第二套密钥 API、不为每个模型做 ping
 > - 不做帮助 H7、不做线框、不做国际站
 > - 不重写 AIR Prompt、封面版式、CAL 路线 B
@@ -86,10 +86,18 @@ python -m pytest `
 
 | 波次 | 范围 |
 |------|------|
-| **W0** | 实机：Pro / 思考非流式 / OCR 合同 / 生图协议+字形 |
-| **W1b** | copy 槽路由（默认仍等 W0）；imageReady 诚实态 |
-| **W2** | t2i 冠军 / 审美换代 / OQ-BAI-01 |
+| **W0** | ✅ 2026-08-13 实机：[bai-w0-live-probe-2026-08-13.md](./acceptance-records/bai-w0-live-probe-2026-08-13.md)（AC-BAI-16） |
+| **W1b** | copy 默认 `deepseek-v4-pro` + 非流式思考；OCR 默认 `qwen3.7-flash`；`imageReady` 诚实态；t2i **不切** |
+| **W2** | 仅对同构的 `wan2.2-t2i-plus` 做字形盲评；2.7 / qwen-image 另立项协议；审美换代 |
 | **W3** | 帮助 H7「模型API 配置」+ 真人狗粮 |
+
+### W0 冻结给 W1b 的默认（摘录）
+
+| 槽 | 默认 | 依据 |
+|----|------|------|
+| copy | `deepseek-v4-pro`（思考开；ping 关） | OQ-BAI-02 / D-BAI-14 绿 |
+| vision · OCR | `qwen3.7-flash`（勿用 `qwen3.5-ocr` 当封面默认） | OQ-BAI-04：飞白贴纸 3.5-ocr 两次 false |
+| t2i | 仍 `wanx2.1-t2i-plus` | `wan2.2` 同构但未盲评；2.7 / qwen-image 400 不同构 |
 
 ---
 
@@ -98,3 +106,4 @@ python -m pytest `
 | 日期 | 说明 |
 |------|------|
 | 2026-08-13 | W1a 任务卡：连接面 + 就绪语义；明确本刀不做思考/换型号 |
+| 2026-08-13 | W0 实机回写：Pro/思考/OCR/t2i 协议；W1b 默认表冻结 |
