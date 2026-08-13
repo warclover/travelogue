@@ -6,15 +6,15 @@
 | **评审** | [acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md](./acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md) |
 | **验收** | Kickoff 后拆 [ACCEPTANCE-BAILIAN-AI-INTEGRATION-V1.md](./ACCEPTANCE-BAILIAN-AI-INTEGRATION-V1.md)；本波以 PRD §10 AC-BAI-* 为准 |
 | **更新日期** | 2026-08-13 |
-| **本刀范围** | **W1b · copy 路由 + OCR + imageReady** |
+| **本刀范围** | **W3 · 帮助 H7 + Sheet 文案债** |
 
-> **本刀明确不做（留给 W2 / W3）**
+> **本刀明确不做（留给 W2）**
 >
 > - 不切 t2i 默认（仍 `wanx2.1-t2i-plus`）；2.7 / qwen-image 不塞进现网 URL
 > - 不做流式 client；思考只走非流式 `enable_thinking`
 > - 不把 `qwen3.5-ocr` 设成封面 OCR 默认
 > - 不改审美 `qwen-vl-max`
-> - 不做帮助 H7、不做线框、不做国际站
+> - 不做线框、不做国际站
 > - 不重写 AIR Prompt、封面版式、CAL 路线 B
 > - **不**把 `secrets.json` 改写成嵌套 `{dashscope:{…}}`
 
@@ -112,6 +112,25 @@ python -m pytest `
 
 ---
 
+## W3 · 帮助 H7 + Sheet 文案债
+
+| ID | 任务 | 状态 |
+|----|------|------|
+| FE-W3-01 | dark 帮助 H7 标题「模型API 配置」+ COPY-BAI-12；默认帮助列表仍无 H7（NAS） | ✅ |
+| FE-W3-02 | Sheet 副标题：已连接 → COPY-BAI-12；未连接 → COPY-BAI-06 | ✅ |
+| FE-W3-03 | AI Sheet 确认框标题与主按钮均为「生成杂志感文案」 | ✅ |
+| TE-W3-01 | H7 不进 `help-onboarding.js` 默认列表；dark-copy / help-drawer 同步插入 | ✅ |
+
+真人走通仍以 [W1b 狗粮](./acceptance-records/bai-w1b-studio-dogfood-2026-08-13.md) 为准；本刀收口帮助与确认框。
+
+```powershell
+python -m pytest `
+  tests/unit/web/test_desktop_llm_setup_w2.py `
+  tests/unit/web/test_sas_ai_sheet_wiring.py -q
+```
+
+---
+
 ## 后续波次（本文件占位，不在本 PR 编码）
 
 | 波次 | 范围 |
@@ -120,7 +139,7 @@ python -m pytest `
 | **W1b** | ✅ 本刀：copy Pro + 非流式思考；OCR `qwen3.7-flash`；`imageReady` 诚实态；t2i **不切** |
 | **W1b 狗粮** | ✅ 2026-08-13 本机走通：[bai-w1b-studio-dogfood-2026-08-13.md](./acceptance-records/bai-w1b-studio-dogfood-2026-08-13.md)（AC-BAI-02/03/06 · SHD-BAI-04） |
 | **W2** | 仅对同构的 `wan2.2-t2i-plus` 做字形盲评；2.7 / qwen-image 另立项协议；审美换代 |
-| **W3** | 帮助 H7「模型API 配置」+ 真人狗粮 |
+| **W3** | ✅ 本刀：帮助 H7「模型API 配置」+ Sheet 副标题/确认框 |
 
 ### W0 冻结给 W1b 的默认（摘录）
 
@@ -138,3 +157,4 @@ python -m pytest `
 |------|------|
 | 2026-08-13 | W1a 任务卡：连接面 + 就绪语义；明确本刀不做思考/换型号 |
 | 2026-08-13 | W1b：copy Pro + 思考；OCR 3.7-flash；imageReady 分灯 |
+| 2026-08-13 | W3：dark H7「模型API 配置」；Sheet 副标题分态；确认框与按钮对齐 |

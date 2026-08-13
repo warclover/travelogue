@@ -9,7 +9,6 @@ import {
   ensureAiSurfaceHydrated,
   isAiSurfaceEnabled,
 } from "../js/ai-surface.js";
-import { DARK_COPY } from "../js/ai-surface-dark-copy.js";
 import { closeHelpDrawer, isHelpDrawerOpen } from "../js/help-drawer.js";
 import { postJson, postJsonConflictRetry, studioAuthHeaders } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
@@ -264,7 +263,7 @@ export function mountAiSurface(root, tripId, opts) {
       '<header class="preview-ai-sheet__head">' +
       '<div class="preview-ai-sheet__head-text">' +
       '<h2 id="preview-ai-sheet-title" class="preview-ai-sheet__title">AI</h2>' +
-      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>AI能力 · 需配置模型API后方可使用</p>' +
+      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>本环境未开启智能能力</p>' +
       "</div>" +
       '<button type="button" class="preview-ai-sheet__close" data-ai-sheet-close aria-label="关闭">×</button>' +
       "</header>" +
@@ -297,9 +296,13 @@ export function mountAiSurface(root, tripId, opts) {
     var sub = shell.querySelector("[data-ai-sheet-sub]");
     var surfaceOn = isAiSurfaceEnabled();
     if (sub) {
-      sub.textContent = surfaceOn
-        ? "AI能力 · 需配置模型API后方可使用"
-        : "本环境未开启智能能力";
+      if (!surfaceOn) {
+        sub.textContent = "本环境未开启智能能力";
+      } else if (connectionOk) {
+        sub.textContent = "一把通义百炼 Key，用于文案和封面字体";
+      } else {
+        sub.textContent = "连接通义百炼后可生成杂志文案";
+      }
     }
 
     if (!surfaceOn) {
@@ -659,7 +662,7 @@ export function mountAiSurface(root, tripId, opts) {
       var wasGenerating = false;
       startLlmNarrate(root, tripId, narrateBtn, {
         source: "ai_sheet",
-        confirmTitle: DARK_COPY.narrateConfirmTitle || "生成杂志感文案",
+        confirmTitle: "生成杂志感文案",
         confirmBody:
           "将调用写作引擎重写文案；照片仍留在本机。将重写版心文案（可能包括你改过的句子）。",
         confirmText: "生成杂志感文案",

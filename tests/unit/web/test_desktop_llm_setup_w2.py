@@ -91,6 +91,23 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "if (!isAiSurfaceEnabled()) return" in llm
 
 
+def test_help_h7_bai_copy_dark_only() -> None:
+    """AC-BAI-14：H7 标题「模型API 配置」+ COPY-BAI-12；默认帮助列表仍无 H7。"""
+    help_js = HELP_JS.read_text(encoding="utf-8")
+    dark = DARK_COPY_JS.read_text(encoding="utf-8")
+    drawer = (STUDIO / "js" / "help-drawer.js").read_text(encoding="utf-8")
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert 'id: "H7"' not in help_js
+    assert "DARK_HELP_H7" in dark
+    assert 'title: "模型API 配置"' in dark
+    assert "一把通义百炼 Key，用于文案和封面字体" in dark
+    assert "一把通义百炼 Key，用于文案和封面字体" in home
+    assert "DARK_HELP_H7" in drawer
+    assert "_syncDarkHelpH7" in drawer
+    assert "isAiSurfaceEnabled" in drawer
+    assert 'itemId: "H7"' in LLM_JS.read_text(encoding="utf-8")
+
+
 def test_llm_key_official_links_simplified() -> None:
     """AC-BAI-01：只链百炼控制台；无 DeepSeek / 模型下拉 / 国际站 / 自定义 URL。"""
     llm = LLM_JS.read_text(encoding="utf-8")

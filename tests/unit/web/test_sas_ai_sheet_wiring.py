@@ -29,7 +29,10 @@ def test_ai_sheet_module_exists_and_exports_mount() -> None:
     assert 'source: "ai_sheet"' in text
     assert "allowWhenSurfaceOff" in text
     assert "优先 AI 手写体" in text
-    assert "需配置模型API后方可使用" in text
+    assert "一把通义百炼 Key，用于文案和封面字体" in text
+    assert "连接通义百炼后可生成杂志文案" in text
+    assert "本环境未开启智能能力" in text
+    assert 'confirmTitle: "生成杂志感文案"' in text
     assert "titleArtUi" in text
     assert "已生成 · " in text
 

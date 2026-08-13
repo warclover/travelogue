@@ -5,9 +5,10 @@
  */
 "use strict";
 
+import { isAiSurfaceEnabled } from "./ai-surface.js";
+import { DARK_HELP_H7 } from "./ai-surface-dark-copy.js";
 import {
   HELP_COPY,
-  getHelpItem,
   replayHelpHints,
   replayWaitTips,
   trackHelpEvent,
@@ -87,28 +88,7 @@ function _ensureDom() {
   body.id = "studio-help-drawer-body";
 
   (HELP_COPY.helpItems || []).forEach(function (item) {
-    var details = document.createElement("details");
-    details.className = "studio-help-drawer__item";
-    details.id = "studio-help-item-" + item.id;
-    details.setAttribute("data-help-item", item.id);
-    var summary = document.createElement("summary");
-    // FE-DFX-45 / AC-DFX-14 · 可见标题不含「H1 ·」前缀；id 留在 data-help-item
-    summary.textContent = item.title;
-    var list = document.createElement("ul");
-    list.className = "studio-help-drawer__points";
-    (item.body || []).forEach(function (line) {
-      var li = document.createElement("li");
-      li.textContent = line;
-      list.appendChild(li);
-    });
-    details.appendChild(summary);
-    details.appendChild(list);
-    details.addEventListener("toggle", function () {
-      if (details.open) {
-        trackHelpEvent("help_drawer_item", { itemId: item.id });
-      }
-    });
-    body.appendChild(details);
+    body.appendChild(_helpItemEl(item));
   });
 
   var replay = document.createElement("div");
@@ -165,9 +145,57 @@ function _ensureDom() {
   });
 }
 
+function _helpItemEl(item) {
+  var details = document.createElement("details");
+  details.className = "studio-help-drawer__item";
+  details.id = "studio-help-item-" + item.id;
+  details.setAttribute("data-help-item", item.id);
+  var summary = document.createElement("summary");
+  // FE-DFX-45 / AC-DFX-14 · 可见标题不含「H1 ·」前缀；id 留在 data-help-item
+  summary.textContent = item.title;
+  var list = document.createElement("ul");
+  list.className = "studio-help-drawer__points";
+  (item.body || []).forEach(function (line) {
+    var li = document.createElement("li");
+    li.textContent = line;
+    list.appendChild(li);
+  });
+  details.appendChild(summary);
+  details.appendChild(list);
+  details.addEventListener("toggle", function () {
+    if (details.open) {
+      trackHelpEvent("help_drawer_item", { itemId: item.id });
+    }
+  });
+  return details;
+}
+
+/** NAS 默认面无 H7；开闸后才插入（AC-BAI-14 / D-NAS-20）。 */
+function _syncDarkHelpH7() {
+  if (!_panel) return;
+  var existing = _panel.querySelector('[data-help-item="H7"]');
+  var on = false;
+  try {
+    on = isAiSurfaceEnabled();
+  } catch (_e) {
+    on = false;
+  }
+  if (!on) {
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+    return;
+  }
+  if (existing) return;
+  var replay = _panel.querySelector(".studio-help-drawer__replay");
+  var el = _helpItemEl(DARK_HELP_H7);
+  var body = _panel.querySelector(".studio-help-drawer__body");
+  if (!body) return;
+  if (replay) body.insertBefore(el, replay);
+  else body.appendChild(el);
+}
+
 function _highlightItem(itemId) {
   var id = String(itemId || "").toUpperCase();
-  if (!id || !getHelpItem(id)) return;
+  if (!id || !_panel) return;
   var items = _panel.querySelectorAll(".studio-help-drawer__item");
   items.forEach(function (el) {
     var match = el.getAttribute("data-help-item") === id;
@@ -252,6 +280,7 @@ export function closeHelpDrawer() {
 export function openHelpDrawer(openOpts) {
   openOpts = openOpts || {};
   _ensureDom();
+  _syncDarkHelpH7();
   if (_replayNoteEl) {
     _replayNoteEl.hidden = true;
     _replayNoteEl.textContent = "";
