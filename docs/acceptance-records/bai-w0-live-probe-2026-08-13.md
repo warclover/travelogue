@@ -36,7 +36,7 @@
 
 W1b 文案默认：**`deepseek-v4-pro`**；链：Pro → Flash-0731 → `qwen3.7-flash` → …  
 Ping **继续关思考**（D-BAI-06）。  
-本轮 narrate 是精简 hook/lead schema，不是 AIR 全书；语气抽检（SHD-BAI-04）仍待 W1b/W3。
+本轮 narrate 是精简 hook/lead schema，不是 AIR 全书；语气抽检见 [W1b Studio 走通](./bai-w1b-studio-dogfood-2026-08-13.md)（SHD-BAI-04）。
 
 ---
 
