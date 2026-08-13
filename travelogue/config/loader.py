@@ -64,6 +64,7 @@ from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
 from travelogue.config.ai_capability import ai_capability_config_from_dict
 from travelogue.config.title_art import title_art_config_from_dict
 from travelogue.config.cover_craft import cover_craft_config_from_dict
+from travelogue.config.album_editorial import album_editorial_lab_from_dict
 from travelogue.config.tracking import TrackedDict, collect_unknown_keys, wrap_tracked
 from travelogue.config.vision import vision_from_dict
 from travelogue.config.yaml_loader import load_yaml_mapping
@@ -497,6 +498,14 @@ def load_config(path: Path | None = None) -> AppConfig:
         else data.get("coverCraft")
     )
     cover_craft_raw = cover_craft_raw if isinstance(cover_craft_raw, dict) else {}
+    album_editorial_raw = (
+        data.get("album_editorial_lab")
+        if isinstance(data.get("album_editorial_lab"), dict)
+        else data.get("albumEditorialLab")
+    )
+    album_editorial_raw = (
+        album_editorial_raw if isinstance(album_editorial_raw, dict) else {}
+    )
     ai_capability_raw = (
         data.get("ai_capability")
         if isinstance(data.get("ai_capability"), dict)
@@ -835,6 +844,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         aesthetic=aesthetic_from_dict(aesthetic_raw),
         title_art=title_art_config_from_dict(title_art_raw),
         cover_craft=cover_craft_config_from_dict(cover_craft_raw),
+        album_editorial_lab=album_editorial_lab_from_dict(album_editorial_raw),
         ai_capability=ai_capability_config_from_dict(ai_capability_raw),
     )
     if isinstance(data, TrackedDict):

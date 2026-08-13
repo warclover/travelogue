@@ -18,6 +18,7 @@ copy (see ``config/platform_profiles.yaml``), since 公众号's publish flow is
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Any
@@ -62,6 +63,10 @@ from travelogue.export.platform_profiles import (
 from travelogue.export.poster_bric_pack import _poster_candidate_pairs, list_poster_photo_paths
 
 _log = logging.getLogger(__name__)
+
+# Slot display_aspect above this reads as landscape-shaped (same idea as
+# card_grouper landscape-shaped main slots). Used only for AEL diagnostics.
+_AEL_LANDSCAPE_ASPECT = 1.0
 
 # 小红书 / 公众号仍保持较低池上限（发布场景页数不宜过多）。
 _COLLAGE_PHOTO_LIMIT = 72
@@ -363,6 +368,50 @@ def _album_bookends_hint(
     return f"已生成 {page_count} 张画册页面（含{detail}）"
 
 
+def _slot_orientation(slot: Any) -> str:
+    if getattr(slot, "role", "") == "landscape":
+        return "landscape"
+    aspect = float(getattr(slot, "display_aspect", 0.75) or 0.75)
+    if aspect > _AEL_LANDSCAPE_ASPECT:
+        return "landscape"
+    return "portrait"
+
+
+def collage_plan_fingerprint(plans: list[CardPlan]) -> tuple[list[str], list[list[str]]]:
+    """Template id sequence + per-card slot orientations (AEL L0 regression ruler)."""
+    template_ids = [plan.template.id for plan in plans]
+    orientations = [
+        [_slot_orientation(slot) for slot in plan.template.slots] for plan in plans
+    ]
+    return template_ids, orientations
+
+
+def _maybe_write_ael_diagnostics(
+    trip_dir: Path,
+    *,
+    ael: Any,
+    template_ids: list[str],
+    slot_orientations: list[list[str]],
+) -> None:
+    if not getattr(ael, "enabled", False):
+        return
+    payload = {
+        "aelEnabled": True,
+        "crop": bool(ael.crop),
+        "roles": bool(ael.roles),
+        "probes": bool(ael.probes),
+        "templateIds": list(template_ids),
+        "slotOrientations": slot_orientations,
+        "probeCount": 0,
+    }
+    out_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "ael.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def export_collage_pack(
     trip_dir: Path,
     *,
@@ -374,8 +423,10 @@ def export_collage_pack(
     cfg: Any | None = None,
 ) -> LongshotExportResult:
     """Compose multi-page 3:4 Card collages (no Playwright / gcs flag)."""
-    _ = cfg
+    from travelogue.config.album_editorial import effective_ael
+
     pid = str(platform or "").strip()
+    ael = effective_ael(cfg, pid)
     if pid not in ("xiaohongshu", "wechat_official", "album_spread"):
         raise LongshotExportError(
             "E_LNG2_INVALID_PLATFORM",
@@ -489,6 +540,14 @@ def export_collage_pack(
         if plans:
             user_hint += _mismatch_hint_suffix(plans)
         segment_reason = "collage_pages"
+        if ael.enabled:
+            template_ids, slot_orientations = collage_plan_fingerprint(plans)
+            _maybe_write_ael_diagnostics(
+                trip_dir,
+                ael=ael,
+                template_ids=template_ids,
+                slot_orientations=slot_orientations,
+            )
 
     writer = PlatformExportWriter(
         trip_dir / EXPORT_OUTPUT_DIRNAME, prefix, ext=out_ext, single_file=False

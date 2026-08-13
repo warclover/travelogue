@@ -1,0 +1,31 @@
+# AEL 本机狗粮配置片段（默认不要拷进仓库 config.yaml）
+
+# 用法：合并进本机 config.yaml 后导出 album_spread。
+# 仓库默认保持全关。未知键应 fail-loud（合码后）。
+
+album_editorial_lab:
+  enabled: false
+  crop:
+    enabled: false
+    face_hard_gate: true          # 不可关；写成 false 应被拒绝或强制 true
+    group_face_min: 3
+    contain_on_fail: true         # 仅 album
+    max_solve_ms: 8000            # NFR-02；L1 消费
+  roles:
+    enabled: false
+    cluster_soft: true
+  probes:
+    enabled: false
+    max_per_spread: 1
+    max_share: 0.20
+    allowlist: []                 # 空 = 即使 probes.enabled 也不选
+    # 混出四 id（合码后才存在；不要把 probe-triptych 写进本文件当默认）：
+    # - probe-square
+    # - probe-tall
+    # - probe-wide
+    # - probe-hero-mix
+
+# L0 手测：enabled true + 三子键 false ≡ GA
+# L1 手测：enabled + crop.enabled true
+# L3 手测：再开 probes，allowlist 写成上面四套
+# L3 评测：allowlist 仅 probe-triptych（夹具 job，勿提交仓库默认）

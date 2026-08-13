@@ -1130,6 +1130,13 @@ def export_trip_longshot(
     if pid in ("xiaohongshu", "wechat_official", "album_spread"):
         from travelogue.export.collage_pack import export_collage_pack
 
+        cfg = None
+        try:
+            from travelogue.config import get_config
+
+            cfg = get_config()
+        except Exception:
+            cfg = None
         return export_collage_pack(
             trip_dir,
             platform=pid,
@@ -1137,6 +1144,7 @@ def export_trip_longshot(
             fmt=fmt,
             progress=progress,
             slide_count=slide_count,
+            cfg=cfg,
         )
     if pid != DEFAULT_PLATFORM:
         from travelogue.export.platform_longshot import export_platform_longshot

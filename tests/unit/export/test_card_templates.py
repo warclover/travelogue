@@ -8,6 +8,7 @@ from travelogue.export.card_templates import (
     AVAILABLE_SLOT_COUNTS,
     CARD_TEMPLATES,
     POSTER_TEMPLATE_PRIORITY,
+    PROBE_TEMPLATES,
     pick_template_for_count,
     templates_by_slot_count,
 )
@@ -17,6 +18,15 @@ pytestmark = pytest.mark.unit
 
 def test_twenty_eight_templates_registered() -> None:
     assert len(CARD_TEMPLATES) == 28
+
+
+def test_probe_templates_empty_and_disjoint() -> None:
+    from travelogue.export.card_templates import _ALL_TEMPLATES
+
+    assert PROBE_TEMPLATES == {}
+    assert CARD_TEMPLATES.keys().isdisjoint(PROBE_TEMPLATES)
+    assert len(_ALL_TEMPLATES) == 28
+    assert AVAILABLE_SLOT_COUNTS == (16, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
 
 def test_slot_counts_distribution() -> None:
