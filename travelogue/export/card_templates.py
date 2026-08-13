@@ -572,6 +572,11 @@ _ALL_TEMPLATES: tuple[CardTemplate, ...] = (
 
 CARD_TEMPLATES: dict[str, CardTemplate] = {t.id: t for t in _ALL_TEMPLATES}
 
+#: AEL L3 probe registry (BLK-AEL-01). Independent of ``_ALL_TEMPLATES``.
+#: L0 keeps this empty; L3 writes rectangular probes here only. Never merge
+#: into ``CARD_TEMPLATES`` / ``AVAILABLE_SLOT_COUNTS``.
+PROBE_TEMPLATES: dict[str, CardTemplate] = {}
+
 #: Distinct slot counts actually available in the library, largest first.
 #: Drives CardGrouper's greedy chunking (largest-fits-first).
 AVAILABLE_SLOT_COUNTS: tuple[int, ...] = tuple(

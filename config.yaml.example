@@ -43,6 +43,25 @@ cover_craft:
   hero_only: true                 # 开启后仅 veil-footer / folio-overlap / band-cut 可分配
   craft_css: true                 # 开启后渲染写入 data-cover-craft=ccf-v1
 
+# 画册编辑试验床（AEL）· 只动画册 album_spread；默认全关 ≡ 现网画册
+# 本机狗粮片段见 docs/config-ael-dogfood.example.yaml；不要把 enabled 写成 true 提交
+# album_editorial_lab:
+#   enabled: false
+#   crop:
+#     enabled: false
+#     face_hard_gate: true        # 不可关
+#     group_face_min: 3
+#     contain_on_fail: true
+#     max_solve_ms: 8000
+#   roles:
+#     enabled: false
+#     cluster_soft: true
+#   probes:
+#     enabled: false
+#     max_per_spread: 1
+#     max_share: 0.20
+#     allowlist: []
+
 # AI 能力平台（ACP · W1a）· 工程能力开关，独立于 studio.ai_surface_enabled
 # 默认 false：仅挂接观测/预算外壳，不改变现有 narrate / title_art 门控语义
 ai_capability:

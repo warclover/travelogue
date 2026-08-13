@@ -107,6 +107,15 @@ from travelogue.config.cover_craft import (
     CoverCraftConfig,
     cover_craft_config_from_dict,
 )
+from travelogue.config.album_editorial import (
+    AlbumEditorialCropConfig,
+    AlbumEditorialLabConfig,
+    AlbumEditorialProbesConfig,
+    AlbumEditorialRolesConfig,
+    EffectiveAel,
+    album_editorial_lab_from_dict,
+    effective_ael,
+)
 from travelogue.config.vision import VisionConfig
 
 __all__ = [
@@ -177,6 +186,13 @@ __all__ = [
     "title_art_config_from_dict",
     "CoverCraftConfig",
     "cover_craft_config_from_dict",
+    "AlbumEditorialCropConfig",
+    "AlbumEditorialLabConfig",
+    "AlbumEditorialProbesConfig",
+    "AlbumEditorialRolesConfig",
+    "EffectiveAel",
+    "album_editorial_lab_from_dict",
+    "effective_ael",
     "AiCapabilityConfig",
     "AiEvalConfig",
     "IntentBriefConfig",
