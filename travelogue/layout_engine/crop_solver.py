@@ -40,6 +40,14 @@ _CSS_NATIVE_SLOT_ASPECT_PATTERNS: frozenset[str] = frozenset(
     }
 )
 
+# Shared crop_risk proxy (MSA PRD §6.5 / AEL D-AEL-11). Authority lives here;
+# mosaic.msa_fit re-exports. Album export must import this module, not mosaic.
+_ALPHA_MISMATCH = 0.85
+_BETA_FOCAL_EDGE = 0.35
+_GAMMA_PERSON = 0.55
+_FOCAL_EDGE_MARGIN = 0.12
+CROP_RISK_CONTAIN_THRESHOLD = 0.55
+
 
 @dataclass(frozen=True)
 class NormBox:
@@ -177,6 +185,15 @@ def _partially_outside(box: NormBox, win: CoverWindow, *, eps: float = 1e-6) -> 
     if inter <= eps:
         return False
     return not _fully_inside(box, win, eps=eps)
+
+
+def any_face_outside(asset: Mapping[str, Any] | None, window: CoverWindow) -> bool:
+    """True if any face box is not fully inside ``window`` (includes fully cropped-away).
+
+    Stricter than ``CropSafety.face_clipped``, which only flags *partial* clips.
+    Album SSC uses this for the face/group hard gate (AC-AEL-04/05).
+    """
+    return any(not _fully_inside(f, window) for f in faces_from_asset(asset))
 
 
 def cover_window(
@@ -399,6 +416,88 @@ def solve_slot_focal(
     win = cover_window(slot_ar, ar, px, py)
     safety = crop_safety(window=win, faces=faces, protect=protect)
     return CropSolveResult(px, py, feasible, safety, win)
+
+
+def focal_near_edge(asset: Mapping[str, Any] | None, margin: float = _FOCAL_EDGE_MARGIN) -> bool:
+    if not asset:
+        return False
+    fp = asset.get("focalPoint") or {}
+    if not isinstance(fp, Mapping):
+        return False
+    x, y = fp.get("x"), fp.get("y")
+    if x is None or y is None:
+        return False
+    try:
+        xf, yf = float(x), float(y)
+    except (TypeError, ValueError):
+        return False
+    return bool(xf < margin or xf > 1.0 - margin or yf < margin or yf > 1.0 - margin)
+
+
+def aspect_mismatch(photo_r: float, slot_r: float) -> float:
+    """``1 - min/max`` in [0, 1]."""
+    if photo_r <= 0 or slot_r <= 0:
+        return 0.0
+    return 1.0 - (min(photo_r, slot_r) / max(photo_r, slot_r))
+
+
+def group_face_count(asset: Mapping[str, Any] | None) -> int:
+    """D-AEL-28: ``max(quality.faceCount, len(faces))``. Both 0 → not a group."""
+    if not asset:
+        return 0
+    n_faces = 0
+    raw_faces = asset.get("faces")
+    if isinstance(raw_faces, (list, tuple)):
+        n_faces = len(raw_faces)
+    qn = 0
+    quality = asset.get("quality")
+    if isinstance(quality, Mapping):
+        try:
+            qn = int(quality.get("faceCount") or 0)
+        except (TypeError, ValueError):
+            qn = 0
+    return max(qn, n_faces)
+
+
+def crop_risk_for_pair(
+    asset: Mapping[str, Any] | None,
+    slot_display_aspect: float,
+    *,
+    alpha: float = _ALPHA_MISMATCH,
+    beta: float = _BETA_FOCAL_EDGE,
+    gamma: float = _GAMMA_PERSON,
+) -> float:
+    """Cover-crop risk proxy (MSA PRD §6.5) + person-safe face IoU after solve."""
+    pr = asset_aspect(asset)
+    if pr is None or slot_display_aspect <= 0:
+        return 0.0
+    mismatch = aspect_mismatch(pr, float(slot_display_aspect))
+    edge = 1.0 if asset is not None and focal_near_edge(asset) else 0.0
+    base = alpha * mismatch + beta * edge
+
+    solved = solve_slot_focal(asset, float(slot_display_aspect))
+    safety = solved.safety
+    # Hard floor only when faces are actually clipped after solve. Oversized
+    # half-body protect infeasibility is a soft signal (protectContainment),
+    # not a contain mandate — otherwise 3:2 heroes in 16:9 bleed get letterboxed.
+    if safety.face_clipped:
+        return round(_clamp01(max(base, 0.92)), 4)
+    person_pen = 0.0
+    if safety.has_person:
+        person_pen = gamma * (1.0 - float(safety.protect_containment))
+        if not solved.feasible:
+            person_pen = max(person_pen, 0.45)
+    return round(_clamp01(base + person_pen), 4)
+
+
+def cheap_crop_risk(asset: Mapping[str, Any] | None, slot_display_aspect: float) -> float:
+    """AR-mismatch + focal-edge only (no solve). Used when SSC hits max_solve_ms."""
+    pr = asset_aspect(asset)
+    if pr is None or slot_display_aspect <= 0:
+        return 0.0
+    mismatch = aspect_mismatch(pr, float(slot_display_aspect))
+    edge = 1.0 if asset is not None and focal_near_edge(asset) else 0.0
+    return round(_clamp01(_ALPHA_MISMATCH * mismatch + _BETA_FOCAL_EDGE * edge), 4)
 
 
 def _allow_contain_flip(screen: Mapping[str, Any] | None) -> bool:

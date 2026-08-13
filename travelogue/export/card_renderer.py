@@ -5,7 +5,8 @@ a rectangle on that template's own base grid (``grid_rows x grid_cols`` —
 3x3 for the original 9 templates, or a plain N-up grid for the 4 equal-grid
 templates added in v0.4.0); every photo is cover-cropped to its slot's
 exact aspect then pasted — the canvas is always fully covered (AC-ECC-01),
-never letterboxed. Subject-safety reuses ``layout_contract/subject.py``'s
+never letterboxed, unless album SSC passes per-slot ``fit=contain`` (AEL L1,
+default off). Subject-safety reuses ``layout_contract/subject.py``'s
 ``asset_has_person`` signal plus ``media/image_ops.py``'s focal-aware crop
 (AC-ECC-06), so the one crop-required slot in the whole library
 (``card-4-square-top-triband``'s ``main`` cell) biases upward instead of
@@ -23,7 +24,8 @@ and rescaled proportionally to whatever canvas width is actually rendered
 from __future__ import annotations
 
 import io
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image
@@ -76,6 +78,38 @@ _DEFAULT_FOCAL: tuple[float, float] = (0.5, 0.45)
 AssetLookup = Callable[[Path], "dict | None"]
 
 
+@dataclass(frozen=True)
+class SlotCropHint:
+    """Optional per-slot fit/focal from album SSC. xhs/mp leave this unset."""
+
+    fit: str = "cover"  # "cover" | "contain"
+    focal: tuple[float, float] | None = None
+
+
+def _fit_contain(
+    img: Image.Image,
+    tw: int,
+    th: int,
+    *,
+    bg: tuple[int, int, int],
+) -> Image.Image:
+    """Letterbox ``img`` into ``tw x th`` on paper-colored canvas (AC-AEL-08)."""
+    if tw <= 0 or th <= 0:
+        return Image.new("RGB", (max(1, tw), max(1, th)), bg)
+    ir = img.width / max(1, img.height)
+    sr = tw / th
+    if ir >= sr:
+        nw = tw
+        nh = max(1, round(tw / ir))
+    else:
+        nh = th
+        nw = max(1, round(th * ir))
+    resized = img.resize((nw, nh), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (tw, th), bg)
+    canvas.paste(resized, ((tw - nw) // 2, (th - nh) // 2))
+    return canvas
+
+
 def _focal_for_slot(
     path: Path, display_aspect: float, asset_lookup: AssetLookup | None
 ) -> tuple[float, float]:
@@ -104,11 +138,18 @@ def _paint_template(
     height: int,
     asset_lookup: AssetLookup | None,
     gap: int = 0,
+    slot_hints: Sequence[SlotCropHint] | None = None,
+    bg: tuple[int, int, int] = DEFAULT_BG,
 ) -> None:
     if len(photos) != template.slot_count:
         raise ValueError(
             f"card_renderer: template {template.id} expects "
             f"{template.slot_count} photos, got {len(photos)}"
+        )
+    if slot_hints is not None and len(slot_hints) != template.slot_count:
+        raise ValueError(
+            f"card_renderer: template {template.id} expects "
+            f"{template.slot_count} slot hints, got {len(slot_hints)}"
         )
     cols, rows = template.grid_cols, template.grid_rows
     # Reserve (cols-1)/(rows-1) internal seams from the usable area up front,
@@ -118,7 +159,7 @@ def _paint_template(
     usable_h = max(1, height - gap * max(0, rows - 1))
     cell_w = usable_w / cols
     cell_h = usable_h / rows
-    for path, slot in zip(photos, template.slots, strict=True):
+    for idx, (path, slot) in enumerate(zip(photos, template.slots, strict=True)):
         sx0 = x0 + round(slot.col * (cell_w + gap))
         sy0 = y0 + round(slot.row * (cell_h + gap))
         # A multi-cell slot (col_span/row_span > 1) is one continuous photo —
@@ -130,11 +171,20 @@ def _paint_template(
         img = loaded.image
         if img.mode != "RGB":
             img = img.convert("RGB")
-        focal = _focal_for_slot(path, slot.display_aspect, asset_lookup)
-        cropped = crop_aspect_focal(img, tw / th, focal=focal)
-        if cropped.size != (tw, th):
-            cropped = cropped.resize((tw, th), Image.Resampling.LANCZOS)
-        canvas.paste(cropped, (sx0, sy0))
+        hint = slot_hints[idx] if slot_hints is not None else None
+        fit = str(hint.fit).lower() if hint is not None else "cover"
+        if fit == "contain":
+            fitted = _fit_contain(img, tw, th, bg=bg)
+        else:
+            if hint is not None and hint.focal is not None:
+                focal = hint.focal
+            else:
+                focal = _focal_for_slot(path, slot.display_aspect, asset_lookup)
+            cropped = crop_aspect_focal(img, tw / th, focal=focal)
+            if cropped.size != (tw, th):
+                cropped = cropped.resize((tw, th), Image.Resampling.LANCZOS)
+            fitted = cropped
+        canvas.paste(fitted, (sx0, sy0))
         img.close()
 
 
@@ -145,6 +195,7 @@ def render_card(
     canvas_wh: tuple[int, int],
     asset_lookup: AssetLookup | None = None,
     bg: tuple[int, int, int] = DEFAULT_BG,
+    slot_hints: Sequence[SlotCropHint] | None = None,
 ) -> tuple[bytes, dict]:
     """Render a single 3:4 card. Returns ``(png_bytes, diagnostics)``."""
     width, height = canvas_wh
@@ -160,14 +211,18 @@ def render_card(
         height=height,
         asset_lookup=asset_lookup,
         gap=gap,
+        slot_hints=slot_hints,
+        bg=bg,
     )
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)
+    fits = [str(h.fit) for h in slot_hints] if slot_hints is not None else ["cover"] * len(photos)
     diag = {
         "canvas": [width, height],
         "template": template.id,
         "n": len(photos),
-        "fit": "cover",
+        "fit": "cover" if all(f == "cover" for f in fits) else "mixed",
+        "slotFits": fits,
         "slotGap": gap,
     }
     return buf.getvalue(), diag
@@ -181,6 +236,8 @@ def render_spread(
     gutter: int,
     asset_lookup: AssetLookup | None = None,
     bg: tuple[int, int, int] = DEFAULT_BG,
+    slot_hints_left: Sequence[SlotCropHint] | None = None,
+    slot_hints_right: Sequence[SlotCropHint] | None = None,
 ) -> tuple[bytes, dict]:
     """Render an album spread: two 3:4 cards side by side with a gutter.
 
@@ -214,6 +271,8 @@ def render_spread(
             height=card_h,
             asset_lookup=asset_lookup,
             gap=slot_gap,
+            slot_hints=slot_hints_left,
+            bg=bg,
         )
         buf = io.BytesIO()
         canvas.save(buf, format="PNG", optimize=True)
@@ -240,6 +299,8 @@ def render_spread(
         height=card_h,
         asset_lookup=asset_lookup,
         gap=slot_gap,
+        slot_hints=slot_hints_left,
+        bg=bg,
     )
     right_photos, right_template = right
     _paint_template(
@@ -252,6 +313,8 @@ def render_spread(
         height=card_h,
         asset_lookup=asset_lookup,
         gap=slot_gap,
+        slot_hints=slot_hints_right,
+        bg=bg,
     )
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", optimize=True)

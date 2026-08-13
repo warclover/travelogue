@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from pathlib import Path
 from typing import Any
 
 from travelogue.curation.cover_scoring_v2 import cover_score_v2
+from travelogue.export.album_ssc import apply_card_ssc
 from travelogue.export.card_bookends import (
     pick_portrait_preferring_id,
     render_closing_card,
@@ -516,14 +518,36 @@ def export_collage_pack(
                 if int(scale or 2) > 2
                 else ALBUM_GUTTER
             )
+            deadline = None
+            if ael.crop:
+                deadline = time.monotonic() + max(0, int(ael.max_solve_ms)) / 1000.0
             for left, right in spreads:
-                right_arg = (list(right.photos), right.template) if right else None
+                left_photos = list(left.photos)
+                left_hints = None
+                right_arg = None
+                right_hints = None
+                if ael.crop:
+                    left_ssc = apply_card_ssc(
+                        left, asset_lookup, ael, deadline=deadline
+                    )
+                    left_photos = list(left_ssc.photos)
+                    left_hints = left_ssc.hints
+                    if right is not None:
+                        right_ssc = apply_card_ssc(
+                            right, asset_lookup, ael, deadline=deadline
+                        )
+                        right_arg = (list(right_ssc.photos), right.template)
+                        right_hints = right_ssc.hints
+                elif right is not None:
+                    right_arg = (list(right.photos), right.template)
                 data, _diag = render_spread(
-                    (list(left.photos), left.template),
+                    (left_photos, left.template),
                     right_arg,
                     card_wh=card_wh,
                     gutter=gutter,
                     asset_lookup=asset_lookup,
+                    slot_hints_left=left_hints,
+                    slot_hints_right=right_hints,
                 )
                 body_pages.append(data)
 
