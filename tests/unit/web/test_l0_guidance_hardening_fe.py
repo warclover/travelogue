@@ -157,8 +157,9 @@ def test_w21_gap_copy_and_busy_banner() -> None:
         / "studio_pipeline.py"
     ).read_text(encoding="utf-8")
 
-    # llm modal 文案仍属 dark 可达底座（openLlmSettings 门控）
-    assert "不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。" in llm
+    # llm modal 文案仍属 dark 可达底座（openLlmSettings 门控）· BAI COPY-BAI-02
+    assert "使用通义百炼 API Key。杂志文案和封面字体都会用到，无需选择模型。" in llm
+    assert "不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。" not in llm
     assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
     assert "sheetLlmExpect" in dark or "llmExpectReady" in dark
     assert "action:" in cap and "capability_card_cta" in cap

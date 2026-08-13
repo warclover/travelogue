@@ -21,6 +21,7 @@ _log = logging.getLogger(__name__)
 _SECRETS_NAME = "secrets.json"
 _USER_CONFIG_NAME = "config.user.yaml"
 _ALLOWED_PROVIDERS = frozenset({"deepseek", "dashscope"})
+_STUDIO_PROVIDER = "dashscope"
 _INJECTED_ENV_NAMES = frozenset(
     str(p.get("api_key_env") or "") for p in PROVIDER_PRESETS.values() if p.get("api_key_env")
 )
@@ -37,7 +38,13 @@ class UserLlmSecrets:
 
     @property
     def configured(self) -> bool:
+        """Disk has some allowed provider+Key (CLI / leftover DeepSeek included)."""
         return bool(self.provider and self.api_key and self.provider in _ALLOWED_PROVIDERS)
+
+    @property
+    def studio_configured(self) -> bool:
+        """Studio 活跃槽：仅通义百炼 Key（AC-BAI-04）。"""
+        return bool(self.provider == _STUDIO_PROVIDER and self.api_key)
 
 
 def user_data_dir(*, ensure: bool = False) -> Path:
@@ -204,15 +211,16 @@ def load_user_llm_config_overlay() -> dict[str, Any]:
 
 
 def inject_secrets_into_environ(secrets: UserLlmSecrets | None = None) -> None:
-    """MF-DLLM-03: process-env injection for resolve_llm_runtime."""
+    """Studio launcher inject: only DASHSCOPE_API_KEY when the Bailian slot is set.
+
+    Official DeepSeek keys in secrets.json stay on disk and are **not** injected
+    into the Studio process (BAI D-BAI-10). ``.env`` ``DEEPSEEK_API_KEY`` is
+    left untouched. CLI may still read ``PROVIDER_PRESETS["deepseek"]``.
+    """
     sec = secrets if secrets is not None else read_user_llm_secrets()
-    if not sec.configured or not sec.provider or not sec.api_key:
+    if not sec.studio_configured or not sec.api_key:
         return
-    preset = PROVIDER_PRESETS.get(sec.provider)
-    if not preset:
-        return
-    env_name = preset["api_key_env"]
-    os.environ[env_name] = sec.api_key
+    os.environ["DASHSCOPE_API_KEY"] = sec.api_key
 
 
 def mask_api_key(api_key: str | None) -> str | None:
@@ -225,9 +233,12 @@ def mask_api_key(api_key: str | None) -> str | None:
 
 
 def readiness_state(secrets: UserLlmSecrets | None = None) -> str:
-    """未配置 | 已保存未验证 | 已就绪 | 连接失败"""
+    """Studio 四态：未配置 | 已保存未验证 | 已就绪 | 连接失败。
+
+    DeepSeek-only secrets count as 未配置 (AC-BAI-04).
+    """
     sec = secrets if secrets is not None else read_user_llm_secrets()
-    if not sec.configured:
+    if not sec.studio_configured:
         return "未配置"
     if sec.last_ping_ok is True:
         return "已就绪"

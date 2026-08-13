@@ -85,20 +85,28 @@ def test_sas_w2_intent_suggestions_badge() -> None:
 
 
 def test_sas_api_config_ia_and_no_advanced() -> None:
-    """API配置两态位置 + Sheet 主路径不再挂「高级」；就绪跟 lastPingOk。"""
+    """模型API 配置两态位置；就绪跟 connectionOk，禁止 llmAvailable 点亮封面字体。"""
     text = _AI_SHEET.read_text(encoding="utf-8")
-    assert "API配置" in text
-    assert "API配置 · 已就绪" in text
+    assert "模型API 配置" in text
+    assert "模型API 配置 · 已连接" in text
     assert "本机连接" not in text
     assert "data-ai-advanced" not in text
     assert "showAdvancedSection" not in text
     assert "aiOpsAdminEnabled" not in text
-    assert "lastPingOk" in text
+    assert "connectionOk" in text
+    assert "copyReady" in text
     assert "已保存未验证" in text
+    assert "封面手写体需要通义百炼；未连接时使用本机字库" in text
+    assert "连接通义百炼后可生成杂志文案" in text
+    assert "去连接" in text
+    assert 'data-ai-title-art-connect' in text
     # 未测通置顶、已就绪沉底
     assert "connReady ? actionsHtml + connHtml : connHtml + actionsHtml" in text
     # 未就绪默认展开
     assert '(ready ? "" : " open")' in text or "(ready ? '' : ' open')" in text
+    # 禁止单一 llmAvailable 点亮封面字体
+    assert "llmAvailable = copyReady" in text
+    assert "st.llmAvailable === true || st.lastPingOk === true" not in text
 
 
 def test_sas_w2_old_entry_deeplink() -> None:

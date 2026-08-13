@@ -266,16 +266,13 @@ function applyAiStatus(st) {
   var entry = $("studio-llm-settings-entry");
   var readiness =
     (st && st.readiness) ||
-    (st && st.lastPingOk === true
+    (st && (st.connectionOk === true || st.lastPingOk === true)
       ? "已就绪"
       : st && st.configured
         ? "已保存未验证"
         : "未配置");
-  var provider = st && st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "";
-  var providerLabel =
-    provider === "dashscope" ? "通义千问" : provider === "deepseek" ? "DeepSeek" : "";
   var metaText = readiness;
-  if (readiness === "已就绪" && providerLabel) metaText = "已就绪 · " + providerLabel;
+  if (readiness === "已就绪") metaText = "已连接通义百炼";
   if (meta) {
     meta.textContent = metaText;
     meta.classList.toggle("is-ok", readiness === "已就绪");
