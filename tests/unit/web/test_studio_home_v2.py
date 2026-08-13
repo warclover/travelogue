@@ -760,6 +760,8 @@ def test_studio_home_v2_shelf_module() -> None:
     modal_js = (STUDIO_DIR / "studio-modal.js").read_text(encoding="utf-8")
     assert "studio-modal-open" in modal_js
     assert "preventScroll" in modal_js
+    assert "GHOST_CLICK_MS" in modal_js
+    assert "Date.now() - openedAt < GHOST_CLICK_MS" in modal_js
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
     assert "保存长图" in menu

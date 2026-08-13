@@ -43,6 +43,13 @@ def test_m4_06_longshot_export_cooperative_cancel_cta() -> None:
     assert "longshot_export_cancel" in longshot
     assert "已取消导出" in longshot
     assert "停止导出？" in longshot
+    assert "isLiveLongshotExport" in longshot
+    assert "cancelOrphanLongshotJob" in longshot
+    assert "_longshotCancelConfirmP" in longshot
+    idx = longshot.index("function cancelPreviewLongshotExport")
+    chunk = longshot[idx : idx + 2800]
+    assert "if (_longshotCancelConfirmP) return _longshotCancelConfirmP" in chunk
+    assert "nextLongshotExportGen()" in chunk
 
 
 def test_m4_07_capture_object_fit_split() -> None:

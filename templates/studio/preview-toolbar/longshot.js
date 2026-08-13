@@ -111,6 +111,10 @@ var LONGSHOT_DRAWER_AUTO_MS = 3000;
 var longshotPollCancel = null;
 var narratePollCancel = null;
 var longshotJobId = null;
+/** Bumps on each export start and on confirmed cancel; stale POSTs must not resume UI. */
+var _longshotExportGen = 0;
+/** In-flight cancel confirm; reuse so a second 取消导出 cannot stack another modal. */
+var _longshotCancelConfirmP = null;
 var _longshotDrawerTimer = null;
 var _studioExportPopoverClose = null;
 /** Active openStudioLongshotExportPanel settle(ok) — Escape/outside close must call this (CQA D-10). */
@@ -426,52 +430,86 @@ export function registerLongshotBridge(api) {
   }
 }
 
+function nextLongshotExportGen() {
+  _longshotExportGen += 1;
+  return _longshotExportGen;
+}
+
+function isLiveLongshotExport(gen) {
+  return gen === _longshotExportGen;
+}
+
+function cancelOrphanLongshotJob(res) {
+  var orphanId = res && res.body && res.body.jobId;
+  if (!orphanId) return;
+  postJson("/__travelogue/cancel", { jobId: orphanId }).catch(function () {});
+}
+
 export function cancelPreviewLongshotExport(root) {
+  if (_longshotCancelConfirmP) return _longshotCancelConfirmP;
   var jobId = longshotJobId;
-  if (!jobId && !longshotPollCancel) {
+  var btn = longshotBtnEl(root);
+  var looksRunning =
+    (btn && btn.classList.contains("preview-toolbar__longshot--running")) ||
+    !!(root && root._exportDockActive);
+  if (!jobId && !longshotPollCancel && !looksRunning) {
     setLongshotExportState(root, "idle");
     return Promise.resolve(false);
   }
-  return _toolbarConfirm({
+  _longshotCancelConfirmP = _toolbarConfirm({
     title: "停止导出？",
     body: "已生成的本轮图片将丢弃。",
     confirmText: "停止",
     cancelText: "继续导出",
-  }).then(function (ok) {
-    if (!ok) return false;
-    // OQ-LCC-04 · 清续跑 flag，避免取消后幽灵「更新并导出」
-    clearLayoutUpdatingFlag();
-    try {
-      sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
-      sessionStorage.removeItem(EXPECT_LAYOUT_RELOAD_KEY);
-    } catch (e) {}
-    clearResumePlatform();
-    trackStudioEvent("longshot_export_cancel", {
-      trip_id: (_tripIdFromPath && _tripIdFromPath()) || undefined,
-      surface: "preview",
-    });
-    if (longshotPollCancel) {
-      longshotPollCancel();
-      longshotPollCancel = null;
-    }
-    var pending = jobId
-      ? postJson("/__travelogue/cancel", { jobId: jobId })
-      : Promise.resolve({ status: 200, body: { ok: true } });
-    longshotJobId = null;
-    return pending
-      .catch(function () {
-        return { status: 0, body: {} };
-      })
-      .then(function () {
-        setLongshotExportState(root, "idle");
-        if (root && root._taskDock && typeof root._taskDock.hide === "function") {
-          root._taskDock.hide();
-        }
-        root._exportDockActive = false;
-        _showToolbarToast("已取消导出");
-        return true;
+  })
+    .then(function (ok) {
+      if (!ok) return false;
+      // Invalidate in-flight POST /longshot so a late 202 cannot resume running UI.
+      nextLongshotExportGen();
+      // OQ-LCC-04 · 清续跑 flag，避免取消后幽灵「更新并导出」
+      clearLayoutUpdatingFlag();
+      try {
+        sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
+        sessionStorage.removeItem(EXPECT_LAYOUT_RELOAD_KEY);
+      } catch (e) {}
+      clearResumePlatform();
+      trackStudioEvent("longshot_export_cancel", {
+        trip_id: (_tripIdFromPath && _tripIdFromPath()) || undefined,
+        surface: "preview",
       });
-  });
+      if (longshotPollCancel) {
+        longshotPollCancel();
+        longshotPollCancel = null;
+      }
+      var pending = jobId
+        ? postJson("/__travelogue/cancel", { jobId: jobId })
+        : Promise.resolve({ status: 200, body: { ok: true } });
+      longshotJobId = null;
+      return pending
+        .catch(function () {
+          return { status: 0, body: {} };
+        })
+        .then(function () {
+          setLongshotExportState(root, "idle");
+          if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+            root._taskDock.hide();
+          }
+          root._exportDockActive = false;
+          _showToolbarToast("已取消导出");
+          return true;
+        });
+    })
+    .then(
+      function (result) {
+        _longshotCancelConfirmP = null;
+        return result;
+      },
+      function () {
+        _longshotCancelConfirmP = null;
+        return false;
+      }
+    );
+  return _longshotCancelConfirmP;
 }
 
 
@@ -2796,6 +2834,7 @@ export function cancelPreviewLongshotExport(root) {
    * （无 `_taskDock`）走原有单行 hint + toast 兜底，行为不变。
    */
   function runBatchExport(root, tripId, prefs, platforms) {
+    var exportGen = nextLongshotExportGen();
     var t0 = Date.now();
     var from = _exportStartFrom || "direct";
     _exportStartFrom = "direct";
@@ -2882,6 +2921,10 @@ export function cancelPreviewLongshotExport(root) {
       },
     })
       .then(function (res) {
+        if (!isLiveLongshotExport(exportGen)) {
+          cancelOrphanLongshotJob(res);
+          return;
+        }
         if (isJobBusy409(res)) {
           trackBatchFail("E_STUDIO_JOB_BUSY", "导出排队超时，请稍后再试");
           return;
@@ -3045,6 +3088,7 @@ export function cancelPreviewLongshotExport(root) {
         );
       })
       .catch(function () {
+        if (!isLiveLongshotExport(exportGen)) return;
         trackBatchFail("disconnect", null);
         applyDisconnectExportError(root, tripId);
       });
@@ -3075,6 +3119,7 @@ export function cancelPreviewLongshotExport(root) {
     if (platform !== prefsPlatform) {
       syncPrefsPlatform(platform);
     }
+    var exportGen = nextLongshotExportGen();
     var runningHint =
       platform === "moments_grid"
         ? "正在导出九宫格（CLI）…"
@@ -3172,6 +3217,10 @@ export function cancelPreviewLongshotExport(root) {
       },
     })
       .then(function (res) {
+        if (!isLiveLongshotExport(exportGen)) {
+          cancelOrphanLongshotJob(res);
+          return;
+        }
         if (isJobBusy409(res)) {
           trackStudioEvent("longshot_export_fail", {
             platform: platform,
@@ -3334,6 +3383,7 @@ export function cancelPreviewLongshotExport(root) {
         );
       })
       .catch(function () {
+        if (!isLiveLongshotExport(exportGen)) return;
         trackStudioEvent("longshot_export_fail", {
           platform: platform,
           error_code: "disconnect",

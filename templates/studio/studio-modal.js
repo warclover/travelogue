@@ -147,6 +147,10 @@
       lockBodyScroll();
 
       var previousFocus = document.activeElement;
+      var openedAt = Date.now();
+      // 从底栏「取消导出」等按钮同步打开时，同一次 click 的 mouseup 会落在
+      // backdrop 上并立刻 cleanup(false)，表现为确认框闪一下、要点两次才生效。
+      var GHOST_CLICK_MS = 400;
       var escHandler = function (e) {
         if (e.key === "Escape") {
           document.removeEventListener("keydown", escHandler);
@@ -183,7 +187,9 @@
         });
       }
       backdrop.addEventListener("click", function (e) {
-        if (e.target === backdrop) cleanup(false);
+        if (e.target !== backdrop) return;
+        if (Date.now() - openedAt < GHOST_CLICK_MS) return;
+        cleanup(false);
       });
       document.addEventListener("keydown", escHandler);
 
