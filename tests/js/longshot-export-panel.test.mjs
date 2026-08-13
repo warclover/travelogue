@@ -28,6 +28,7 @@ import {
   formatBatchSuccess,
   isAlbumPresetCount,
   isComposePlatform,
+  isConfirmedExportTarget,
   isXhsPresetCount,
   migrateAlbumLegacyPreset,
   normalizePlatformList,
@@ -641,4 +642,36 @@ test("hydrate 契约 · 漏传 platforms 会坍成单选；传入 platforms 保�
   const summary = exportSummaryLineForPlatforms(prefs.platforms, prefs.platforms);
   assert.match(summary, /2 个模式/);
   assert.match(summary, /当前将导出/);
+});
+
+test("isConfirmedExportTarget · 重启后画册/海报视为已确认，未点确定的默认微信群不算", () => {
+  assert.equal(isConfirmedExportTarget(null), false);
+  assert.equal(isConfirmedExportTarget({}), false);
+  assert.equal(
+    isConfirmedExportTarget({ platform: "wechat_chat", platforms: ["wechat_chat"] }),
+    false
+  );
+  assert.equal(
+    isConfirmedExportTarget({
+      platform: "wechat_chat",
+      platforms: ["wechat_chat"],
+      userConfirmed: true,
+    }),
+    true
+  );
+  assert.equal(
+    isConfirmedExportTarget({ platform: "album_spread", platforms: ["album_spread"] }),
+    true
+  );
+  assert.equal(
+    isConfirmedExportTarget({ platform: "poster_bric", platforms: ["poster_bric"] }),
+    true
+  );
+  assert.equal(
+    isConfirmedExportTarget({
+      platform: "xiaohongshu",
+      platforms: ["xiaohongshu", "album_spread"],
+    }),
+    true
+  );
 });

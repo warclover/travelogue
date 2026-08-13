@@ -32,6 +32,7 @@ import {
   normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
+  isConfirmedExportTarget,
   readExportPrefs,
   shortCtaLabelForPlatform,
   shortCtaLabelForPlatforms,
@@ -257,6 +258,19 @@ function readResumePlatform(tripId) {
 
 function clearResumePlatform() {
   _removeStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
+}
+
+function hydrateSessionIntentFromConfirmedPrefs(tripId) {
+  if (!tripId) return;
+  try {
+    var prefs = readExportPrefs();
+    if (!isConfirmedExportTarget(prefs)) return;
+    var mapped = PLATFORM_TO_INTENT[prefs.platform] || null;
+    if (!mapped) return;
+    if (readSessionIntent(tripId) !== mapped) {
+      writeSessionIntent(tripId, mapped);
+    }
+  } catch (_eHydrate) {}
 }
 
 function syncPrefsPlatform(platform) {
@@ -620,14 +634,18 @@ export function cancelPreviewLongshotExport(root) {
     }
     // AC-DFX-02 · confirmed prefs 为 CTA SSOT；tipRecipe 不得覆盖用户已确认平台
     var platform = prefs.platform || "wechat_chat";
+    var confirmed = isConfirmedExportTarget(prefs);
     var tipRecipe = null;
     var tripId = root._tripId || "";
+    if (confirmed) {
+      hydrateSessionIntentFromConfirmedPrefs(tripId);
+    }
     if (isOutputRecipeEnabled()) {
       var keptN = keptNForRecipe(tripId);
       tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
     }
     var label;
-    if (tipRecipe && tipRecipe.needsIntent) {
+    if (!confirmed && tipRecipe && tipRecipe.needsIntent) {
       label = tipRecipe.ctaLabel || "选择并导出";
     } else if (
       tipRecipe &&
@@ -647,7 +665,7 @@ export function cancelPreviewLongshotExport(root) {
     }
     // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
     function shortLabelForCta() {
-      if (tipRecipe && tipRecipe.needsIntent) return "选择分享";
+      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "选择分享";
       return shortCtaLabelForPlatform(platform);
     }
     var isDock = isPreviewToolbarV4(root);
@@ -1306,6 +1324,7 @@ export function cancelPreviewLongshotExport(root) {
         padMode: draft.padMode,
         includeAppendix: draft.includeAppendix === true,
         density: nextDensity,
+        userConfirmed: true,
       });
       // FE-SFI-09 · 密度档写入 trip 并走「更新版面」
       if (nextDensity !== prevDensity) {
@@ -2534,9 +2553,12 @@ export function cancelPreviewLongshotExport(root) {
       maybeCopyGateThenExport(root, tripId);
       return;
     }
+    // AC-DFX-01 · 重启后 session 丢失；先从 confirmed prefs 回灌，再问 Recipe
+    hydrateSessionIntentFromConfirmedPrefs(tripId);
     fetchServerRecipe(tripId, "preview").then(function (res) {
       var tipRecipe;
       var keptN;
+      var confirmed = isConfirmedExportTarget(readExportPrefs());
       if (res && res.ok && res.tipRecipe) {
         tipRecipe = res.tipRecipe;
         keptN = res.keptN;
@@ -2566,7 +2588,8 @@ export function cancelPreviewLongshotExport(root) {
         source: tipRecipe.source,
       });
       syncLongshotCtaLabel(root);
-      if (tipRecipe.needsIntent) {
+      // 已确认画册/海报等：禁止弹「选择分享」，也禁止 Recipe 默认微信覆盖 prefs
+      if (tipRecipe.needsIntent && !confirmed) {
         showAmbiguousIntentCard(keptN, tipRecipe.userHints).then(function (choice) {
           if (!choice || !choice.intent) return;
           writeSessionIntent(tripId, choice.intent);
@@ -2584,7 +2607,7 @@ export function cancelPreviewLongshotExport(root) {
         });
         return;
       }
-      if (tipRecipe.platform) {
+      if (!confirmed && tipRecipe.platform) {
         _pendingExportPlatform = tipRecipe.platform;
         syncPrefsPlatform(tipRecipe.platform);
       }

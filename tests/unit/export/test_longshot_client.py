@@ -40,6 +40,7 @@ def test_panel_module_exists_and_exports() -> None:
         "scaleHintForPlatform",
         "输出尺寸随导出目标变化",
         "data-export-confirmed-summary",
+        "export function isConfirmedExportTarget",
     ):
         assert token in src, f"missing: {token}"
 
@@ -63,6 +64,18 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     assert "export_platform_mismatch" in longshot
     assert "shortCtaLabelForPlatform" in longshot
     assert "preview-toolbar__export-popover--sheet" in longshot
+    assert "hydrateSessionIntentFromConfirmedPrefs" in longshot
+    assert "isConfirmedExportTarget" in longshot
+    idx = longshot.index("function startLongshotWithRecipe")
+    chunk = longshot[idx : idx + 3200]
+    assert "hydrateSessionIntentFromConfirmedPrefs" in chunk
+    assert "isConfirmedExportTarget" in chunk
+    assert "if (!confirmed && tipRecipe.platform)" in chunk
+    assert "_pendingExportPlatform = tipRecipe.platform" in chunk
+    # 不得在未判断 confirmed 时无条件覆盖 prefs
+    assert chunk.index("if (!confirmed && tipRecipe.platform)") < chunk.index(
+        "_pendingExportPlatform = tipRecipe.platform"
+    )
     # Dev default platforms include compose exits
     assert "wechat_moments" in panel and "xiaohongshu" in panel
     assert "poster_bric" in panel and "album_spread" in panel

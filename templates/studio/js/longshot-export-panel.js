@@ -299,6 +299,7 @@ export function readExportPrefs() {
     padMode: "letterbox",
     includeAppendix: false,
     density: "default",
+    userConfirmed: false,
   };
   try {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
@@ -318,10 +319,25 @@ export function readExportPrefs() {
       padMode: parsed.padMode || "letterbox",
       includeAppendix: parsed.includeAppendix === true,
       density: parsed.density === "compact" ? "compact" : "default",
+      userConfirmed: parsed.userConfirmed === true,
     };
   } catch (e) {
     return defaults;
   }
+}
+
+/**
+ * AC-DFX-01/02 · 用户已确认过导出目标（含重启后 localStorage 残留）。
+ * 未确认时才允许 Output Recipe 按册厚猜微信长图。
+ *
+ * 存量 prefs 没有 userConfirmed：非默认微信群、或多选，视为已确认。
+ */
+export function isConfirmedExportTarget(prefs) {
+  if (!prefs || typeof prefs !== "object") return false;
+  if (prefs.userConfirmed === true) return true;
+  if (Array.isArray(prefs.platforms) && prefs.platforms.length > 1) return true;
+  var platform = String(prefs.platform || "");
+  return !!(platform && platform !== "wechat_chat");
 }
 
 export function writeExportPrefs(prefs) {
