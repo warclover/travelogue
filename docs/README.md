@@ -228,6 +228,8 @@
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 · CAD V1**（真照片 Mode A 默认 · 禁假风景默认 · 双封面）**v0.1.0 Draft** · 扩展 Bookends |
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **桌面首启能力分层与写作引擎配置 V1**（L0 开箱 · L1 自带 Key）**v1.1 Conditional Go** · 用户面由 NAS supersede；工程栈仍有效 |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **写作引擎 API 配置加固 V1**（服务商隔离 · 保存并测试 · 通义地域 · 可行动错误）**v1.1 · W0–W2 编码 ✅ · 实机狗粮待填** |
+| [PRD-BAILIAN-AI-INTEGRATION-V1.md](./PRD-BAILIAN-AI-INTEGRATION-V1.md) | **百炼一体连接 · BAI V1**（模型API 配置 · 仅百炼/中国站 · 文案/图像路由）**v0.2.1 Conditional Go** · [八席评审](./acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md) |
+| [IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md](./IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md) | **BAI** 实施清单 · **W1a 连接面+就绪语义**（本刀不做思考/换型号） |
 | [IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md](./IMPLEMENTATION-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 实施清单（W0–W2 编码 ✅ · 实机狗粮待填） |
 | [ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md](./ACCEPTANCE-WRITING-ENGINE-API-HARDENING-V1.md) | WEA 验收 AC-WEA-* |
 | [wireframes/writing-engine-api-hardening-v1-wireframe.html](./wireframes/writing-engine-api-hardening-v1-wireframe.html) | WEA 线框 F1–F5 |
@@ -250,7 +252,7 @@
 **代号**：Desktop Installer V1（分发）· Desktop LLM Setup V1（首启能力分层）。  
 **阅读顺序（当前版本用户面）**：先读 **[PRD-NO-AI-SURFACE-V1](./PRD-NO-AI-SURFACE-V1.md)**（默认无 AI 面）→ 工程回滚/密钥再读 **[PRD-DESKTOP-LLM-SETUP-V1](./PRD-DESKTOP-LLM-SETUP-V1.md)** / **[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)** / [ADR-019](./adr/019-desktop-user-data-llm-secrets.md) → 分发读 **[PRD-DESKTOP-INSTALLER-V1](./PRD-DESKTOP-INSTALLER-V1.md)** / [ADR-018](./adr/018-desktop-installer-layout.md)。历史：无 Key 死循环见 **[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)**。关联 [PRD-PHASE2.md](./PRD-PHASE2.md) M11 · G-P2-05 · [PRD-HELP-ONBOARDING-V1.md](./PRD-HELP-ONBOARDING-V1.md) · [PRD-SHARE-FACE-INTEGRITY-V1.md](./PRD-SHARE-FACE-INTEGRITY-V1.md)。
 
-**下期 AI 面（Draft）**：**[PRD-AI-RETURN-V1](./PRD-AI-RETURN-V1.md)**（解冻 + 文案/渠道）与 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（装帧导演）并行评审；未解冻发版前默认面仍以 NAS 为准。
+**下期 AI 面（Draft）**：**[PRD-AI-RETURN-V1](./PRD-AI-RETURN-V1.md)**（解冻 + 文案/渠道）与 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（装帧导演）并行评审；**连接与型号**以 **[PRD-BAILIAN-AI-INTEGRATION-V1](./PRD-BAILIAN-AI-INTEGRATION-V1.md)**（BAI）为准（修订 WEA「两家平权」用户面）。未解冻发版前默认面仍以 NAS 为准。
 
 ---
 
@@ -732,6 +734,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-13 | **BAI**：[PRD-BAILIAN-AI-INTEGRATION-V1](./PRD-BAILIAN-AI-INTEGRATION-V1.md) **v0.2.1** · 主名「模型API 配置」· V1 只中国站 · [八席评审](./acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md) |
 | 2026-08-02 | 文档卫生 A1：QFX+CQA 六件套迁入 [archive/2026/qfx-cqa/](./archive/2026/qfx-cqa/)（根 stub 保旧链） |
 | 2026-08-02 | 文档卫生 P1：新增 [DOC-ARCHIVE-CANDIDATES](./archive/DOC-ARCHIVE-CANDIDATES.md)；README/DOC-STATUS **现行导读**与历史 Phase 考古链拆分（不搬家） |
 | 2026-07-23 | SSG：**PRD v0.2.1** · 分支 `feature/smart-shot-grouping-v1` · PR-A～F Conditional Closed（默认 on Hold · 实拍盲评另填） |

@@ -1,7 +1,8 @@
-"""llm/ping · 切换到通义时不得沿用 DeepSeek 的 model/base_url。"""
+"""llm/settings · BAI W1a：Studio 只接受 dashscope；DeepSeek-only 不驱动连接。"""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -11,6 +12,7 @@ from travelogue.config import reset_config_cache
 from travelogue.llm.user_settings import (
     UserLlmSecrets,
     clear_user_llm_secrets,
+    read_user_llm_secrets,
     write_user_llm_config_overlay,
     write_user_llm_secrets,
 )
@@ -46,7 +48,6 @@ def _handler(payload: dict) -> MagicMock:
 def test_ping_dashscope_ignores_sticky_deepseek_config(
     user_data: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # 先前 DeepSeek 配置残留在 overlay
     write_user_llm_config_overlay(
         provider="deepseek",
         model="deepseek-chat",
@@ -81,7 +82,6 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
         seen["api_key"] = rt.api_key
         return f"{rt.provider}/{rt.model} @ {rt.base_url}"
 
-    # handle_llm_ping 在函数内 from travelogue.llm.client import llm_ping
     monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
 
     handler = _handler(
@@ -90,10 +90,16 @@ def test_ping_dashscope_ignores_sticky_deepseek_config(
     h.handle_llm_ping(handler)
 
     assert handler._captured["status"] == 200
+    assert handler._captured["body"]["message"] == "已连接通义百炼"
+    assert "已自动改用" not in handler._captured["body"]["message"]
     assert seen["provider"] == "dashscope"
-    assert seen["model"] == "qwen3.7-flash"
+    assert seen["model"] == "deepseek-v4-pro"
     assert seen["base_url"] == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
     assert seen["api_key"] == "sk-dash-new-key-xxxxxxxxxxxx"
+    # DeepSeek-only 磁盘 Key 仍在（本次 ping 不 persist）
+    disk = json.loads((user_data / "secrets.json").read_text(encoding="utf-8"))
+    assert disk["provider"] == "deepseek"
+    assert disk["api_key"] == "sk-deepseek-old"
 
 
 def test_save_dashscope_writes_qwen_not_deepseek(
@@ -103,7 +109,6 @@ def test_save_dashscope_writes_qwen_not_deepseek(
         {
             "provider": "dashscope",
             "apiKey": "sk-dash-save-key-xxxxxxxxxxxx",
-            # 客户端误带 DeepSeek 地址时也应被丢掉
             "baseUrl": PROVIDER_PRESETS["deepseek"]["base_url"],
             "model": "deepseek-chat",
         }
@@ -112,12 +117,20 @@ def test_save_dashscope_writes_qwen_not_deepseek(
     assert handler._captured["status"] == 200
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
     assert "provider: dashscope" in overlay
-    assert "qwen3.7-flash" in overlay
+    assert "deepseek-v4-pro" in overlay
     assert "deepseek-chat" not in overlay
     assert "api.deepseek.com" not in overlay
 
 
-def test_save_rejects_http_base_url(user_data: Path) -> None:
+def test_post_provider_deepseek_rejected_ac_bai_15(user_data: Path) -> None:
+    """AC-BAI-15：POST provider=deepseek 不得写成官方 DeepSeek 活跃连接。"""
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="deepseek",
+            api_key="sk-deepseek-keep-xxxxxxxxxxxx",
+            last_ping_ok=True,
+        )
+    )
     handler = _handler(
         {
             "provider": "deepseek",
@@ -127,10 +140,15 @@ def test_save_rejects_http_base_url(user_data: Path) -> None:
     )
     h.handle_llm_settings(handler)
     assert handler._captured["status"] == 400
-    assert handler._captured["body"]["error"] == "E_LLM_BASE_URL"
+    assert handler._captured["body"]["error"] == "E_LLM_PROVIDER"
+    assert "请改用通义百炼" in handler._captured["body"]["message"]
+    disk = json.loads((user_data / "secrets.json").read_text(encoding="utf-8"))
+    assert disk["provider"] == "deepseek"
+    assert disk["api_key"] == "sk-deepseek-keep-xxxxxxxxxxxx"
 
 
-def test_save_dashscope_region_intl(user_data: Path) -> None:
+def test_save_forces_region_cn(user_data: Path) -> None:
+    """AC-BAI-17：保存后 region 为 cn。"""
     handler = _handler(
         {
             "provider": "dashscope",
@@ -141,16 +159,15 @@ def test_save_dashscope_region_intl(user_data: Path) -> None:
     h.handle_llm_settings(handler)
     assert handler._captured["status"] == 200
     body = handler._captured["body"]
-    assert body.get("region") == "intl"
+    assert body.get("region") == "cn"
     assert body.get("readiness") == "已保存未验证"
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
-    assert "dashscope-intl.aliyuncs.com" in overlay
+    assert "dashscope-intl.aliyuncs.com" not in overlay
 
 
-def test_ping_respects_region_intl(
+def test_ping_ignores_client_intl_region(
     user_data: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from travelogue.llm.user_settings import read_user_llm_secrets
     from travelogue.util.llm_presets import DASHSCOPE_REGION_BASE_URLS
 
     write_user_llm_secrets(
@@ -177,21 +194,38 @@ def test_ping_respects_region_intl(
         return f"{rt.provider}/{rt.model} @ {rt.base_url}"
 
     monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
-    # 仅测试：不 persist，不得改写 region / last_ping_ok
     handler = _handler({"provider": "dashscope", "region": "intl", "persist": False})
     h.handle_llm_ping(handler)
     assert handler._captured["status"] == 200
-    assert seen["base_url"] == DASHSCOPE_REGION_BASE_URLS["intl"].rstrip("/")
+    assert seen["base_url"] == DASHSCOPE_REGION_BASE_URLS["cn"].rstrip("/")
     sec = read_user_llm_secrets()
     assert sec.region == "cn"
     assert sec.last_ping_ok is None
 
 
-def test_ping_persist_updates_last_ping_ok(
+def test_ping_persist_updates_last_ping_ok_dashscope(
     user_data: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from travelogue.llm.user_settings import read_user_llm_secrets
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="dashscope",
+            api_key="sk-dash-persist-xxxxxxxxxxxx",
+            last_ping_ok=None,
+        )
+    )
+    monkeypatch.setattr(
+        "travelogue.llm.client.llm_ping",
+        lambda **_k: "dashscope/qwen3.7-flash @ https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+    handler = _handler({"provider": "dashscope", "persist": True})
+    h.handle_llm_ping(handler)
+    assert handler._captured["status"] == 200
+    assert handler._captured["body"]["message"] == "已连接通义百炼"
+    assert read_user_llm_secrets().last_ping_ok is True
+    assert read_user_llm_secrets().provider == "dashscope"
 
+
+def test_ping_deepseek_rejected_does_not_persist(user_data: Path) -> None:
     write_user_llm_secrets(
         UserLlmSecrets(
             provider="deepseek",
@@ -199,17 +233,15 @@ def test_ping_persist_updates_last_ping_ok(
             last_ping_ok=None,
         )
     )
-    monkeypatch.setattr(
-        "travelogue.llm.client.llm_ping",
-        lambda **_k: "deepseek/deepseek-chat @ https://api.deepseek.com/v1",
-    )
     handler = _handler({"provider": "deepseek", "persist": True})
     h.handle_llm_ping(handler)
-    assert handler._captured["status"] == 200
-    assert read_user_llm_secrets().last_ping_ok is True
+    assert handler._captured["status"] == 400
+    assert handler._captured["body"]["error"] == "E_LLM_PROVIDER"
+    assert read_user_llm_secrets().last_ping_ok is None
+    assert read_user_llm_secrets().provider == "deepseek"
 
 
-def test_save_model_qwen_turbo(user_data: Path) -> None:
+def test_save_ignores_client_model(user_data: Path) -> None:
     handler = _handler(
         {
             "provider": "dashscope",
@@ -220,6 +252,32 @@ def test_save_model_qwen_turbo(user_data: Path) -> None:
     )
     h.handle_llm_settings(handler)
     assert handler._captured["status"] == 200
-    assert handler._captured["body"].get("model") == "qwen-turbo"
+    assert "model" not in handler._captured["body"]
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
-    assert "qwen-turbo" in overlay
+    assert "qwen-turbo" not in overlay
+    assert "deepseek-v4-pro" in overlay
+
+
+def test_deepseek_only_not_studio_ready_ac_bai_04(user_data: Path) -> None:
+    """AC-BAI-04：仅官方 DeepSeek 旧 secrets → Studio 未连接；磁盘 Key 仍在。"""
+    write_user_llm_secrets(
+        UserLlmSecrets(
+            provider="deepseek",
+            api_key="sk-deepseek-legacy-xxxxxx",
+            last_ping_ok=True,
+        )
+    )
+    reset_config_cache()
+    body = h._status_body()
+    assert body["configured"] is False
+    assert body["llmAvailable"] is False
+    assert body["connectionOk"] is False
+    assert body["copyReady"] is False
+    assert body["hasDashscope"] is False
+    assert body["legacyKeyOnDisk"] is True
+    assert "hasDeepseek" not in body
+    assert body["readiness"] == "未配置"
+    assert body["maskedKey"] is None
+    disk = json.loads((user_data / "secrets.json").read_text(encoding="utf-8"))
+    assert disk["provider"] == "deepseek"
+    assert disk["api_key"] == "sk-deepseek-legacy-xxxxxx"

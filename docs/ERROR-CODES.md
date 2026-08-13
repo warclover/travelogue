@@ -2,10 +2,10 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v0.5.0 |
+| **文档版本** | v0.5.5 |
 | **格式** | `E_<域>_<名称>` |
 | **关联** | `CLI-SPEC.md`、`VALIDATION-RULES.md`、[PRD-LONGSHOT-2.0.md](./PRD-LONGSHOT-2.0.md) |
-| **更新日期** | 2026-07-09 |
+| **更新日期** | 2026-08-13 |
 
 ---
 
@@ -130,6 +130,8 @@
 > **桌面 L0（[PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1](./PRD-DESKTOP-L0-GUIDANCE-HARDENING-V1.md)）**：`E_LLM_AUTH` **不得**作为导入终止的唯一用户出口。导入 Job 若仍返回该码，须带 `recoverableWithStub: true`；默认面失败 CTA 见 NAS COPY（「继续生成画册」）。
 >
 > **写作引擎配置加固（[PRD-WRITING-ENGINE-API-HARDENING-V1](./PRD-WRITING-ENGINE-API-HARDENING-V1.md)）**：`E_LLM_ENDPOINT` / `E_LLM_BASE_URL` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` 为 W1–W2 落地预留码；handlers 映射完成前，UI 可先按 HTTP/消息启发式展示同方向中文，再换成稳定 code。默认 UI 入口由 NAS 关闭。
+>
+> **百炼一体连接（[PRD-BAILIAN-AI-INTEGRATION-V1](./PRD-BAILIAN-AI-INTEGRATION-V1.md)）**：Studio 用户面无国际站、无模型下拉、无自定义 URL。上表 `E_LLM_ENDPOINT` / `E_LLM_MODEL` / `E_LLM_BASE_URL` 的「改选中国站 / 改选模型 / 自定义地址」**不得**进 Studio Toast；设置 Modal 走 COPY-BAI-09/10。CLI 可保留原句。
 
 ### Longshot 2.0 平台导出 `E_LNG2_*`（PRD §9）
 
@@ -181,6 +183,7 @@
 | v0.3.2 | 2026-05-27 | M10 Studio Job 错误码；E_LLM_AUTH；E_STUDIO_REVEAL_DENIED |
 | v0.4.0 | 2026-05-28 | Phase 3 Curate 聚类：`E_CLUSTER_*`；废止 v0.2 洞察/引擎错误码 |
 | v0.5.0 | 2026-07-09 | Longshot 2.0：`E_LNG2_*` 平台导出错误码 |
+| v0.5.5 | 2026-08-13 | BAI：Studio Toast 不得使用 `E_LLM_ENDPOINT`/`MODEL`/`BASE_URL` 的国际站/模型下拉句 |
 | v0.5.4 | 2026-07-22 | NAS：登记 `E_AI_SURFACE_DISABLED`；默认面 `E_LLM_AUTH`/`PROVIDER`/`PING` 文案中性化 |
 | v0.5.3 | 2026-07-17 | WEA：预留 `E_LLM_ENDPOINT` / `E_LLM_MODEL` / `E_LLM_QUOTA` / `E_LLM_RATE` / `E_LLM_BASE_URL`；补登记 `E_LLM_TIMEOUT` |
 | v0.5.2 | 2026-07-15 | L0 Hardening：`E_LLM_AUTH` 不得作为导入唯一出口；`recoverableWithStub` |

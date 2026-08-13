@@ -39,8 +39,9 @@ def test_write_read_clear_secrets(user_data: Path, monkeypatch: pytest.MonkeyPat
     )
     sec = read_user_llm_secrets()
     assert sec.configured
+    assert sec.studio_configured is False
     assert sec.provider == "deepseek"
-    assert readiness_state(sec) == "已保存未验证"
+    assert readiness_state(sec) == "未配置"
     write_user_llm_secrets(
         UserLlmSecrets(
             provider="deepseek",
@@ -48,15 +49,27 @@ def test_write_read_clear_secrets(user_data: Path, monkeypatch: pytest.MonkeyPat
             last_ping_ok=True,
         )
     )
-    assert readiness_state() == "已就绪"
+    assert readiness_state() == "未配置"
     inject_secrets_into_environ()
-    assert monkeypatch is not None
     import os
 
-    assert os.environ.get("DEEPSEEK_API_KEY") == "sk-test-key-123456"
+    assert os.environ.get("DEEPSEEK_API_KEY") != "sk-test-key-123456"
     clear_user_llm_secrets()
     assert not read_user_llm_secrets().configured
     assert not (user_data / "secrets.json").exists()
+
+
+def test_inject_only_dashscope_key(user_data: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    write_user_llm_secrets(
+        UserLlmSecrets(provider="dashscope", api_key="sk-dash-inject-123456", last_ping_ok=True)
+    )
+    inject_secrets_into_environ()
+    assert os.environ.get("DASHSCOPE_API_KEY") == "sk-dash-inject-123456"
+    assert os.environ.get("DEEPSEEK_API_KEY") is None
 
 
 def test_config_overlay_and_status(user_data: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -68,6 +81,7 @@ def test_config_overlay_and_status(user_data: Path, monkeypatch: pytest.MonkeyPa
     status = studio_llm_status()
     assert status["llmProvider"] == "dashscope"
     assert status["llmAvailable"] is True
+    assert status["connectionOk"] is True
     overlay = (user_data / "config.user.yaml").read_text(encoding="utf-8")
     assert "provider: dashscope" in overlay
     assert "api_key" not in overlay or "api_key_env" in overlay
@@ -112,12 +126,11 @@ def test_clear_secrets_drops_injected_env(user_data: Path, monkeypatch: pytest.M
     from travelogue.llm.user_settings import clear_injected_llm_environ
 
     write_user_llm_secrets(
-        UserLlmSecrets(provider="deepseek", api_key="sk-clear-env-12345678", last_ping_ok=True)
+        UserLlmSecrets(provider="dashscope", api_key="sk-clear-env-12345678", last_ping_ok=True)
     )
     inject_secrets_into_environ()
-    assert os.environ.get("DEEPSEEK_API_KEY") == "sk-clear-env-12345678"
+    assert os.environ.get("DASHSCOPE_API_KEY") == "sk-clear-env-12345678"
     clear_user_llm_secrets()
-    assert os.environ.get("DEEPSEEK_API_KEY") is None
-    # idempotent
+    assert os.environ.get("DASHSCOPE_API_KEY") is None
     clear_injected_llm_environ()
-    assert os.environ.get("DEEPSEEK_API_KEY") is None
+    assert os.environ.get("DASHSCOPE_API_KEY") is None

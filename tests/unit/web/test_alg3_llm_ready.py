@@ -110,7 +110,7 @@ def test_studio_llm_status_does_not_inject_by_default(
     monkeypatch.setattr(
         "travelogue.llm.user_settings.read_user_llm_secrets",
         lambda: UserLlmSecrets(
-            provider="deepseek", api_key="sk-test", last_ping_ok=True
+            provider="dashscope", api_key="sk-test", last_ping_ok=True
         ),
     )
     calls = {"n": 0}
@@ -122,10 +122,14 @@ def test_studio_llm_status_does_not_inject_by_default(
         "travelogue.llm.user_settings.inject_secrets_into_environ",
         _inject,
     )
-    cfg = AppConfig(llm=LlmConfig(provider="deepseek"))
+    cfg = AppConfig(llm=LlmConfig(provider="dashscope"))
     status = studio_llm_status(cfg=cfg)
     assert calls["n"] == 0
     assert status["llmAvailable"] is True
+    assert status["connectionOk"] is True
+    assert status["copyReady"] is True
+    assert status["imageReady"] is True
+    assert status["llmProvider"] == "dashscope"
 
 
 def test_studio_llm_status_unavailable_without_ping(
@@ -134,9 +138,49 @@ def test_studio_llm_status_unavailable_without_ping(
     monkeypatch.setattr(
         "travelogue.llm.user_settings.read_user_llm_secrets",
         lambda: UserLlmSecrets(
-            provider="deepseek", api_key="sk-test", last_ping_ok=False
+            provider="dashscope", api_key="sk-test", last_ping_ok=False
+        ),
+    )
+    cfg = AppConfig(llm=LlmConfig(provider="dashscope"))
+    status = studio_llm_status(cfg=cfg)
+    assert status["llmAvailable"] is False
+    assert status["connectionOk"] is False
+
+
+def test_studio_llm_status_image_ready_honest_after_auth_fail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D-BAI-07：t2i 鉴权失败后 imageReady 灭，copyReady 仍亮。"""
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(
+            provider="dashscope",
+            api_key="sk-test",
+            last_ping_ok=True,
+            last_image_ok=False,
+        ),
+    )
+    cfg = AppConfig(llm=LlmConfig(provider="dashscope"))
+    status = studio_llm_status(cfg=cfg)
+    assert status["connectionOk"] is True
+    assert status["copyReady"] is True
+    assert status["imageReady"] is False
+
+
+def test_studio_llm_status_deepseek_only_not_connected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AC-BAI-04：Studio status 不把官方 DeepSeek 当已连接。"""
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(
+            provider="deepseek", api_key="sk-test", last_ping_ok=True
         ),
     )
     cfg = AppConfig(llm=LlmConfig(provider="deepseek"))
     status = studio_llm_status(cfg=cfg)
     assert status["llmAvailable"] is False
+    assert status["connectionOk"] is False
+    assert status["copyReady"] is False
+    assert status["imageReady"] is False
+    assert status["llmProvider"] == "stub"

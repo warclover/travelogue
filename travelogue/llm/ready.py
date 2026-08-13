@@ -70,13 +70,49 @@ def studio_llm_status(
     cfg: AppConfig | None = None,
     inject_environ: bool = False,
 ) -> dict[str, object]:
-    """Studio status helper.
+    """Studio status helper · BAI W1a: only DashScope + last_ping_ok.
+
+    DeepSeek-only secrets / env do **not** light Studio Ready (AC-BAI-04).
+    ALG-V3 ``probe_llm_ready`` still accepts DeepSeek env/secrets for CLI.
 
     Default does **not** inject secrets into process env (request-local Ready).
     Pass ``inject_environ=True`` only for legacy desktop paths that still need it.
     """
-    ready, provider = _probe_provider_and_ready(cfg=cfg, inject_environ=inject_environ)
-    return {"llmAvailable": ready, "llmProvider": provider}
+    app_cfg = cfg or get_config()
+    secrets = None
+    try:
+        from travelogue.llm.user_settings import inject_secrets_into_environ, read_user_llm_secrets
+
+        secrets = read_user_llm_secrets()
+        if inject_environ:
+            inject_secrets_into_environ(secrets)
+    except Exception:
+        secrets = None
+
+    studio_ok = False
+    provider = "stub"
+    if secrets is not None and secrets.studio_configured:
+        provider = "dashscope"
+        if secrets.last_ping_ok is True:
+            try:
+                from travelogue.llm.client import resolve_llm_runtime
+
+                resolve_llm_runtime("dashscope", cfg=app_cfg, secrets=secrets)
+                studio_ok = True
+            except LlmError:
+                studio_ok = False
+
+    image_ready = studio_ok
+    if studio_ok and secrets is not None and secrets.last_image_ok is False:
+        image_ready = False
+
+    return {
+        "llmAvailable": studio_ok,
+        "llmProvider": provider,
+        "connectionOk": studio_ok,
+        "copyReady": studio_ok,
+        "imageReady": image_ready,
+    }
 
 
 def resolve_llm_may_call(*, cfg: AppConfig | None = None) -> bool:

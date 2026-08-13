@@ -80,14 +80,12 @@ def test_concurrent_ping_does_not_cross_credentials(
 
     payloads = [
         {
-            "provider": "deepseek",
+            "provider": "dashscope",
             "apiKey": "sk-thread-a-xxxxxxxxxxxx",
-            "baseUrl": "https://api.deepseek.com/v1",
         },
         {
             "provider": "dashscope",
             "apiKey": "sk-thread-b-xxxxxxxxxxxx",
-            "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         },
     ]
     errors: list[BaseException] = []
@@ -108,9 +106,8 @@ def test_concurrent_ping_does_not_cross_credentials(
     assert len(seen) == 2
     keys = {row[0] for row in seen}
     assert keys == {"sk-thread-a-xxxxxxxxxxxx", "sk-thread-b-xxxxxxxxxxxx"}
-    # No cross: deepseek key must not pair with dashscope host and vice versa
     by_key = {k: u for k, u in seen}
-    assert "deepseek.com" in by_key["sk-thread-a-xxxxxxxxxxxx"]
+    assert "dashscope" in by_key["sk-thread-a-xxxxxxxxxxxx"]
     assert "dashscope" in by_key["sk-thread-b-xxxxxxxxxxxx"]
 
 
@@ -119,14 +116,14 @@ def test_ping_persist_oserror_keeps_ping_ok(
 ) -> None:
     write_user_llm_secrets(
         UserLlmSecrets(
-            provider="deepseek",
-            api_key="sk-deepseek-persist-xxxxxx",
+            provider="dashscope",
+            api_key="sk-dash-persist-xxxxxx",
             last_ping_ok=None,
         )
     )
     monkeypatch.setattr(
         "travelogue.llm.client.llm_ping",
-        lambda **_k: "deepseek/deepseek-chat @ https://api.deepseek.com/v1",
+        lambda **_k: "dashscope/qwen3.7-flash @ https://dashscope.aliyuncs.com/compatible-mode/v1",
     )
 
     def _boom(*_a, **_k):
@@ -136,7 +133,7 @@ def test_ping_persist_oserror_keeps_ping_ok(
         "travelogue.web.studio_handlers.llm_settings_handlers.write_user_llm_secrets",
         _boom,
     )
-    handler = _handler({"provider": "deepseek", "persist": True})
+    handler = _handler({"provider": "dashscope", "persist": True})
     h.handle_llm_ping(handler)
     assert handler._captured["status"] == 500
     body = handler._captured["body"]

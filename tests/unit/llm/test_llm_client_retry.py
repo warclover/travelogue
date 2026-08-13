@@ -131,7 +131,61 @@ def test_chat_completion_dashscope_failsover_on_freetier() -> None:
         )
     assert out == '{"ok": true}'
     assert seen[0] == "qwen3.7-flash"
-    assert "qwen3.7-plus" in seen or "qwen-plus" in seen
+    assert "deepseek-v4-pro" in seen or "qwen3.7-plus" in seen or "qwen-plus" in seen
+
+
+def test_chat_completion_v4_sends_nonstream_thinking() -> None:
+    rt = LlmRuntime(
+        provider="dashscope",
+        model="deepseek-v4-pro",
+        api_key="test-key",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        timeout_sec=10,
+    )
+    payloads: list[dict] = []
+
+    def fake_urlopen(req, timeout=0):
+        payloads.append(json.loads(req.data.decode("utf-8")))
+        ok = json.dumps(
+            {"choices": [{"message": {"content": '{"ok": true}'}}]}
+        ).encode("utf-8")
+        return io.BytesIO(ok)
+
+    with patch("travelogue.llm.client.urllib.request.urlopen", fake_urlopen):
+        chat_completion(
+            [{"role": "user", "content": "hi"}],
+            runtime=rt,
+            model="deepseek-v4-pro",
+            model_failover=False,
+            json_mode=True,
+        )
+    assert payloads[0]["model"] == "deepseek-v4-pro"
+    assert payloads[0]["enable_thinking"] is True
+    assert payloads[0]["stream"] is False
+
+
+def test_llm_ping_dashscope_skips_pro_and_thinking() -> None:
+    rt = LlmRuntime(
+        provider="dashscope",
+        model="deepseek-v4-pro",
+        api_key="test-key",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        timeout_sec=120,
+    )
+    payloads: list[dict] = []
+
+    def fake_urlopen(req, timeout=0):
+        payloads.append(json.loads(req.data.decode("utf-8")))
+        ok = json.dumps(
+            {"choices": [{"message": {"content": '{"ok": true}'}}]}
+        ).encode("utf-8")
+        return io.BytesIO(ok)
+
+    with patch("travelogue.llm.client.urllib.request.urlopen", fake_urlopen):
+        msg = llm_ping(runtime=rt)
+    assert "dashscope/qwen3.7-flash" in msg
+    assert payloads[0]["model"] == "qwen3.7-flash"
+    assert "enable_thinking" not in payloads[0]
 
 
 def test_llm_ping_uses_short_timeout_and_json_fallback() -> None:

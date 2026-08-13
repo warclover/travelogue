@@ -50,9 +50,13 @@ def test_capability_card_contract() -> None:
     assert "hidden" in home.split('id="v2-settings-zone-ai"', 1)[1][:120]
     assert 'id="studio-llm-settings-entry"' in home
     assert "配置写作引擎" not in home
-    # ai_surface_dark：写作引擎 CTA 文案冻结在 dark-copy
+    assert "写作增强" not in home
+    assert "模型API 配置" in home
+    assert "一把通义百炼 Key，用于文案和封面字体" in home
+    # ai_surface_dark：refine 仍可留旧 CTA 串；设置入口用 去连接
     assert "配置写作引擎" in dark
     assert "settingsConfigure" in dark
+    assert "去连接" in dark
     # UI Detail Wave5 · styles live in CSS, not JS-injected forest palette
     assert "studio-capability-card-style" not in cap
     assert "#2f6b55" not in cap
@@ -87,75 +91,87 @@ def test_help_h7_writing_engine_and_replay() -> None:
     assert "if (!isAiSurfaceEnabled()) return" in llm
 
 
+def test_help_h7_bai_copy_dark_only() -> None:
+    """AC-BAI-14：H7 标题「模型API 配置」+ COPY-BAI-12；默认帮助列表仍无 H7。"""
+    help_js = HELP_JS.read_text(encoding="utf-8")
+    dark = DARK_COPY_JS.read_text(encoding="utf-8")
+    drawer = (STUDIO / "js" / "help-drawer.js").read_text(encoding="utf-8")
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert 'id: "H7"' not in help_js
+    assert "DARK_HELP_H7" in dark
+    assert 'title: "模型API 配置"' in dark
+    assert "一把通义百炼 Key，用于文案和封面字体" in dark
+    assert "一把通义百炼 Key，用于文案和封面字体" in home
+    assert "DARK_HELP_H7" in drawer
+    assert "_syncDarkHelpH7" in drawer
+    assert "isAiSurfaceEnabled" in drawer
+    assert 'itemId: "H7"' in LLM_JS.read_text(encoding="utf-8")
+
+
 def test_llm_key_official_links_simplified() -> None:
-    """简化设计：只链官方申请入口，不在应用内复述注册教程。"""
+    """AC-BAI-01：只链百炼控制台；无 DeepSeek / 模型下拉 / 国际站 / 自定义 URL。"""
     llm = LLM_JS.read_text(encoding="utf-8")
-    assert "platform.deepseek.com/api_keys" in llm
+    home = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    assert "模型API 配置" in llm
+    assert "模型API 配置" in home
     assert "bailian.console.aliyun.com" in llm
     assert "help.aliyun.com/zh/model-studio/get-api-key" in llm
     assert "按其页面指引创建并复制" in llm
-    assert "LLM_KEY_LINKS" in llm
-    assert "LLM_DEFAULT_BASE" in llm
-    assert "clearForeignBaseUrl" in llm
-    assert "dashscope.aliyuncs.com/compatible-mode/v1" in llm
-    # 旧 DashScope 控制台域名不再作为主入口
+    assert "platform.deepseek.com" not in llm
+    assert 'option value="deepseek"' not in llm
+    assert "studio-llm-provider" not in llm
+    assert 'id="studio-llm-model"' not in llm
+    assert "LLM_MODELS" not in llm
+    assert "国际站" not in llm
+    assert "studio-llm-region" not in llm
+    assert "studio-llm-base" not in llm
+    assert "enable_thinking" not in llm
+    assert "已自动改用" not in llm
     assert "dashscope.console.aliyun.com" not in llm
 
 
 def test_wea_w1_save_and_ping_region_footnote_markers() -> None:
-    """WEA W1 FE 契约：保存并测试 · 地域 · 脚注 · 四态。"""
+    """BAI W1a FE：保存并测试 · COPY-BAI · 无国际站/自定义 URL。"""
     llm = LLM_JS.read_text(encoding="utf-8")
     settings = (STUDIO / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
     analytics = (STUDIO / "js" / "analytics.js").read_text(encoding="utf-8")
     assert "保存并测试" in llm
     assert 'id="studio-llm-save-ping"' in llm
     assert "仅测试连接" in llm
-    assert 'name="studio-llm-region"' in llm
-    assert "中国站" in llm and "国际站" in llm
-    assert "dashscope-intl.aliyuncs.com" in llm
-    assert "API Key 只保存在你的电脑" in llm
-    assert "费用由该账户结算" in llm
-    assert "导入仍用本机文案" in llm
+    assert "使用通义百炼 API Key" in llm
+    assert "密钥只保存在本机" in llm
+    assert "已连接通义百炼" in llm
+    assert "请改用通义百炼 API Key" in llm
+    assert "通义百炼额度不足" in llm
     assert "已保存未验证" in llm
     assert "is-warn" in llm
     assert "已保存未验证" in settings
     assert "llm_save_and_ping" in analytics
-    assert "llm_provider_change" in analytics
-    assert "llm_switch_confirm" in analytics
     assert 'trackStudioEvent("llm_save_and_ping"' in llm
     assert "body.persist = false" in llm
+    assert "国际站" not in llm
+    assert "studio-llm-region" not in llm
 
 
 def test_wea_w2_model_switch_confirm_markers() -> None:
-    """WEA W2：模型下拉 · 切换覆盖确认。"""
+    """BAI W1a：正式包无模型下拉、无服务商切换确认。"""
     llm = LLM_JS.read_text(encoding="utf-8")
-    assert 'id="studio-llm-model"' in llm
-    assert "LLM_MODELS" in llm
-    assert "qwen-turbo" in llm
-    assert "qwen3.7-flash" in llm
-    assert "优先免费" in llm
-    assert "付费兜底" in llm
-    assert "deepseek-reasoner" in llm
-    assert 'id="studio-llm-model-custom"' in llm
-    assert "confirmProviderSwitchIfNeeded" in llm
-    assert "覆盖并继续" in llm
-    assert 'trackStudioEvent("llm_switch_confirm"' in llm
+    assert 'id="studio-llm-model"' not in llm
+    assert "LLM_MODELS" not in llm
+    assert "deepseek-reasoner" not in llm
+    assert 'id="studio-llm-model-custom"' not in llm
+    assert "confirmProviderSwitchIfNeeded" not in llm
+    assert "覆盖并继续" not in llm
     assert "persist: true" in llm
 
 
 def test_llm_switch_confirm_modal_above_settings_layer() -> None:
-    """覆盖确认不得被 LLM 设置层挡住（根因：modal 6000 < settings 12000）。"""
+    """设置层 z-index 仍高于 scrim；不再有服务商覆盖确认。"""
     llm = LLM_JS.read_text(encoding="utf-8")
     modal_css = (STUDIO / "studio-modal.css").read_text(encoding="utf-8")
     assert "z-index:12000" in llm.replace(" ", "")
     assert "z-index: 13000" in modal_css
-    # 保存点击处理器：先确认再 busy
-    handler = llm.split('studio-llm-save-ping", root)', 1)[1].split(
-        'studio-llm-clear", root)', 1
-    )[0]
-    assert "confirmProviderSwitchIfNeeded" in handler
-    assert handler.index("confirmProviderSwitchIfNeeded") < handler.index("setBusy(true)")
-    assert "保存后会覆盖已保存的" in llm
+    assert "confirmProviderSwitchIfNeeded" not in llm
 
 
 def test_mf06_llm_expect_visible_when_available() -> None:

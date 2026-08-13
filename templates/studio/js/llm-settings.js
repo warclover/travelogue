@@ -1,7 +1,6 @@
 /**
- * Desktop LLM Setup · 写作引擎设置（首页+预览共用）
- * WEA W1/W2: 保存并测试 · 地域 · 模型 · 切换确认 · 埋点 · 脚注
- * MF-02: 单一组件；预览内 Modal，不跳首页。
+ * Desktop LLM Setup · 模型API 配置（首页+预览共用）
+ * BAI W1a：只通义百炼一把 Key；无服务商选择、模型下拉、地域切换、自定义地址
  *
  * nas-allow: dark-only writing-engine settings UI (NAS D-NAS-21)
  * 默认面由 isAiSurfaceEnabled() 门控；勿删本文件过禁词审计。
@@ -16,102 +15,36 @@ var _source = "settings";
 var _onChange = null;
 var _statusCache = null;
 
-/** 官方申请入口（简化指引：链到对方新手流程，不在应用内复述逐步教程） */
-var LLM_KEY_LINKS = {
-  deepseek: {
-    href: "https://platform.deepseek.com/api_keys",
-    label: "DeepSeek 创建 API Key",
-  },
-  dashscope: {
-    href: "https://bailian.console.aliyun.com/",
-    label: "通义百炼控制台",
-    guideHref: "https://help.aliyun.com/zh/model-studio/get-api-key",
-    guideLabel: "官方说明",
-  },
+var COPY = {
+  title: "模型API 配置",
+  desc: "使用通义百炼 API Key。杂志文案和封面字体都会用到，无需选择模型。",
+  save: "保存并测试",
+  ok: "已连接通义百炼",
+  quota: "通义百炼额度不足。请到控制台关闭「仅使用免费额度」或充值后再试。",
+  legacy: "请改用通义百炼 API Key。杂志文案和封面字体都在这一把 Key 上。",
+  foot: "密钥只保存在本机。失败不影响出图与导出。",
 };
 
-/** 与后端 PROVIDER_PRESETS / DASHSCOPE_REGION 对齐 */
-var LLM_DEFAULT_BASE = {
-  deepseek: "https://api.deepseek.com/v1",
-  dashscope: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-  dashscope_intl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-};
-
-/** D-WEA-06 常用模型 */
-var LLM_MODELS = {
-  deepseek: [
-    { value: "", label: "默认（deepseek-chat）" },
-    { value: "deepseek-chat", label: "deepseek-chat" },
-    { value: "deepseek-reasoner", label: "deepseek-reasoner" },
-  ],
-  dashscope: [
-    { value: "", label: "默认（优先免费额度 · qwen3.7-flash）" },
-    { value: "qwen3.7-flash", label: "qwen3.7-flash（优先免费）" },
-    { value: "qwen3.7-plus", label: "qwen3.7-plus（优先免费）" },
-    { value: "qwen3.8-max", label: "qwen3.8-max（优先免费）" },
-    { value: "qwen3.7-max", label: "qwen3.7-max（优先免费）" },
-    { value: "qwen3.6-plus", label: "qwen3.6-plus" },
-    { value: "qwen-plus", label: "qwen-plus（付费兜底）" },
-    { value: "qwen-turbo", label: "qwen-turbo（付费兜底）" },
-    { value: "qwen-max", label: "qwen-max（付费兜底）" },
-  ],
-};
+var BAILIAN_CONSOLE = "https://bailian.console.aliyun.com/";
+var BAILIAN_GUIDE = "https://help.aliyun.com/zh/model-studio/get-api-key";
 
 var SETTINGS_ERR = {
   E_LLM_AUTH: "Key 无效或已失效。请回控制台重新创建并粘贴。",
-  E_LLM_ENDPOINT: "当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。",
-  E_LLM_MODEL: "模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。",
-  E_LLM_QUOTA:
-    "余额或配额不足。请到服务商控制台充值，或检查是否开启了「仅使用免费额度」。",
-  E_LLM_QUOTA_FREE_TIER:
-    "免费额度已用尽（Key 本身有效）。请到通义百炼控制台关闭「仅使用免费额度」，或充值后再试。",
+  E_LLM_ENDPOINT: "无法连接通义百炼。请检查网络后重试。",
+  E_LLM_MODEL: "连接测试失败，请检查 Key 或网络后重试。",
+  E_LLM_QUOTA: COPY.quota,
+  E_LLM_QUOTA_FREE_TIER: COPY.quota,
   E_LLM_RATE: "服务商繁忙，请稍后重试。",
   E_LLM_TIMEOUT: "无法连接服务商。请检查网络后重试。",
   E_LLM_NETWORK: "无法连接服务商。请检查网络后重试。",
   E_LLM_CONNECT: "无法连接服务商。请检查网络后重试。",
-  E_LLM_BASE_URL: "自定义 API 地址仅支持公网 https（不可用 localhost / 内网）。",
-  E_LLM_PING: "连接测试失败，请检查 Key、地域或网络后重试。",
+  E_LLM_BASE_URL: "无法连接通义百炼。请检查网络后重试。",
+  E_LLM_PING: "连接测试失败，请检查 Key 或网络后重试。",
+  E_LLM_PROVIDER: COPY.legacy,
 };
-
-function normalizeBaseUrl(url) {
-  return String(url || "")
-    .trim()
-    .replace(/\/+$/, "");
-}
-
-function allDefaultBases() {
-  return Object.keys(LLM_DEFAULT_BASE).map(function (k) {
-    return normalizeBaseUrl(LLM_DEFAULT_BASE[k]);
-  });
-}
-
-function clearForeignBaseUrl(provider) {
-  var baseEl = $("#studio-llm-base");
-  if (!baseEl) return;
-  var cur = normalizeBaseUrl(baseEl.value);
-  if (!cur) return;
-  var own = [normalizeBaseUrl(LLM_DEFAULT_BASE[provider] || "")];
-  if (provider === "dashscope") {
-    own.push(normalizeBaseUrl(LLM_DEFAULT_BASE.dashscope_intl));
-  }
-  if (own.indexOf(cur) !== -1) {
-    baseEl.value = "";
-    return;
-  }
-  var foreign = allDefaultBases().filter(function (u) {
-    return own.indexOf(u) === -1;
-  });
-  if (foreign.indexOf(cur) !== -1) {
-    baseEl.value = "";
-  }
-}
 
 function $(sel, root) {
   return (root || document).querySelector(sel);
-}
-
-function providerLabel(provider) {
-  return provider === "dashscope" ? "通义千问" : "DeepSeek";
 }
 
 function ensureRoot() {
@@ -128,42 +61,30 @@ function ensureRoot() {
     '<div class="studio-llm-settings__scrim" data-llm-close="1"></div>' +
     '<div class="studio-llm-settings__panel">' +
     '<div class="studio-llm-settings__head">' +
-    '<div><p id="studio-llm-settings-title" class="studio-llm-settings__title">AI 文案（可选）</p>' +
-    '<p class="studio-llm-settings__desc">不配置也可以正常导入、排版和导出长图。配置后可在预览中生成杂志感文案。</p></div>' +
+    '<div><p id="studio-llm-settings-title" class="studio-llm-settings__title">' +
+    COPY.title +
+    "</p>" +
+    '<p class="studio-llm-settings__desc">' +
+    COPY.desc +
+    "</p></div>" +
     '<button type="button" class="studio-llm-settings__close" data-llm-close="1" aria-label="关闭">×</button>' +
     "</div>" +
     '<p class="studio-llm-settings__badge" id="studio-llm-readiness">未配置</p>' +
     '<p class="studio-llm-settings__hint" id="studio-llm-userdata" hidden></p>' +
-    '<label class="studio-llm-settings__label" for="studio-llm-provider">服务商</label>' +
-    '<select id="studio-llm-provider" class="studio-llm-settings__input">' +
-    '<option value="deepseek">DeepSeek</option>' +
-    '<option value="dashscope">通义千问（DashScope）</option>' +
-    "</select>" +
-    '<div class="studio-llm-settings__region" id="studio-llm-region-wrap" hidden>' +
-    '<span class="studio-llm-settings__label" id="studio-llm-region-label">地域</span>' +
-    '<div class="studio-llm-settings__radios" role="radiogroup" aria-labelledby="studio-llm-region-label">' +
-    '<label class="studio-llm-settings__radio"><input type="radio" name="studio-llm-region" value="cn" checked /> 中国站</label>' +
-    '<label class="studio-llm-settings__radio"><input type="radio" name="studio-llm-region" value="intl" /> 国际站</label>' +
-    "</div>" +
-    '<p class="studio-llm-settings__region-hint" id="studio-llm-region-hint" hidden>已使用自定义 API 地址，地域预设不生效。</p>' +
-    "</div>" +
-    '<label class="studio-llm-settings__label" for="studio-llm-model">模型</label>' +
-    '<select id="studio-llm-model" class="studio-llm-settings__input"></select>' +
+    '<p class="studio-llm-settings__legacy" id="studio-llm-legacy" hidden>' +
+    COPY.legacy +
+    "</p>" +
     '<label class="studio-llm-settings__label" for="studio-llm-key">API Key</label>' +
     '<div class="studio-llm-settings__keyrow">' +
     '<input id="studio-llm-key" class="studio-llm-settings__input" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />' +
     '<button type="button" class="studio-llm-settings__linkbtn" id="studio-llm-toggle-key">显示</button>' +
     "</div>" +
     '<p class="studio-llm-settings__howto" id="studio-llm-howto"></p>' +
-    '<details class="studio-llm-settings__advanced"><summary>高级</summary>' +
-    '<label class="studio-llm-settings__label" for="studio-llm-model-custom">自定义模型名（可选）</label>' +
-    '<input id="studio-llm-model-custom" class="studio-llm-settings__input" type="text" placeholder="留空则用上方所选模型" autocomplete="off" />' +
-    '<label class="studio-llm-settings__label" for="studio-llm-base">自定义 API 地址（可选）</label>' +
-    '<input id="studio-llm-base" class="studio-llm-settings__input" type="url" placeholder="留空则用默认地址（仅 https）" />' +
-    "</details>" +
     '<p class="studio-llm-settings__msg" id="studio-llm-msg" hidden></p>' +
     '<div class="studio-llm-settings__actions">' +
-    '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-save-ping">保存并测试</button>' +
+    '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-save-ping">' +
+    COPY.save +
+    "</button>" +
     '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--danger" id="studio-llm-clear">清除配置</button>' +
     "</div>" +
     '<p class="studio-llm-settings__secondary">' +
@@ -174,8 +95,7 @@ function ensureRoot() {
     '<button type="button" class="studio-llm-settings__btn studio-llm-settings__btn--primary" id="studio-llm-resume-cta"></button>' +
     "</div>" +
     '<p class="studio-llm-settings__foot" id="studio-llm-foot">' +
-    "API Key 只保存在你的电脑。调用写作引擎时，请求发往你选择的服务商，费用由该账户结算。" +
-    "导入与长图默认不依赖此项配置；导入仍用本机文案，预览中可升级杂志感。" +
+    COPY.foot +
     "</p>" +
     "</div>";
   document.body.appendChild(el);
@@ -204,14 +124,10 @@ function ensureRoot() {
       ".studio-llm-settings__keyrow{display:flex;gap:8px;align-items:center;}" +
       ".studio-llm-settings__keyrow .studio-llm-settings__input{flex:1;}" +
       ".studio-llm-settings__linkbtn{border:0;background:transparent;color:#2f6b55;font-size:13px;cursor:pointer;white-space:nowrap;}" +
-      ".studio-llm-settings__region{margin-top:4px;}" +
-      ".studio-llm-settings__region[hidden]{display:none!important;}" +
-      ".studio-llm-settings__radios{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;}" +
-      ".studio-llm-settings__radio{font-size:13px;color:#2a3d35;display:flex;align-items:center;gap:6px;cursor:pointer;}" +
-      ".studio-llm-settings__region-hint{margin:6px 0 0;font-size:11px;color:#6a5520;}" +
       ".studio-llm-settings__howto{margin:8px 0 0;font-size:12px;color:#4a5c55;line-height:1.5;}" +
       ".studio-llm-settings__howto a{color:#2f6b55;}" +
-      ".studio-llm-settings__advanced{margin-top:10px;font-size:13px;color:#4a5c55;}" +
+      ".studio-llm-settings__legacy{margin:8px 0 0;font-size:12px;color:#6a5520;line-height:1.45;}" +
+      ".studio-llm-settings__legacy[hidden]{display:none!important;}" +
       ".studio-llm-settings__msg{margin:10px 0 0;font-size:13px;}" +
       ".studio-llm-settings__msg.is-ok{color:#1b5e3a;}" +
       ".studio-llm-settings__msg.is-err{color:#8a2b22;}" +
@@ -248,66 +164,14 @@ function setMsg(text, ok) {
   msg.classList.toggle("is-err", !ok);
 }
 
-/** FE-SFI-06 · E4 落地后恢复「已就绪」（结束 W0 间隙期弱化） */
 function setBadge(readiness) {
   var badge = $("#studio-llm-readiness");
   if (!badge) return;
   var r = readiness || "未配置";
-  badge.textContent = r;
+  badge.textContent = r === "已就绪" ? COPY.ok : r;
   badge.classList.toggle("is-ready", r === "已就绪");
   badge.classList.toggle("is-fail", r === "连接失败");
   badge.classList.toggle("is-warn", r === "已保存未验证" || r === "未配置");
-}
-
-function selectedRegion() {
-  var checked = document.querySelector('input[name="studio-llm-region"]:checked');
-  return checked && checked.value === "intl" ? "intl" : "cn";
-}
-
-function setRegion(region) {
-  var want = region === "intl" ? "intl" : "cn";
-  var radios = document.querySelectorAll('input[name="studio-llm-region"]');
-  for (var i = 0; i < radios.length; i++) {
-    radios[i].checked = radios[i].value === want;
-  }
-}
-
-function fillModelSelect(provider, selectedModel) {
-  var sel = $("#studio-llm-model");
-  if (!sel) return;
-  var list = LLM_MODELS[provider] || LLM_MODELS.deepseek;
-  sel.innerHTML = "";
-  var known = {};
-  list.forEach(function (opt) {
-    known[opt.value] = true;
-    var o = document.createElement("option");
-    o.value = opt.value;
-    o.textContent = opt.label;
-    sel.appendChild(o);
-  });
-  var custom = $("#studio-llm-model-custom");
-  var model = (selectedModel || "").trim();
-  if (model && !known[model]) {
-    if (custom) custom.value = model;
-    sel.value = "";
-  } else {
-    if (custom && !custom.value) {
-      /* keep custom empty */
-    }
-    sel.value = known[model] ? model : "";
-  }
-}
-
-function syncRegionVisibility() {
-  var wrap = $("#studio-llm-region-wrap");
-  var hint = $("#studio-llm-region-hint");
-  var sel = $("#studio-llm-provider");
-  var base = normalizeBaseUrl(($("#studio-llm-base") || {}).value || "");
-  if (!wrap || !sel) return;
-  var isDash = sel.value === "dashscope";
-  wrap.hidden = !isDash;
-  var custom = !!base && allDefaultBases().indexOf(base) === -1;
-  if (hint) hint.hidden = !(isDash && custom);
 }
 
 function errMessage(j) {
@@ -320,20 +184,14 @@ function errMessage(j) {
 function applyStatus(st) {
   if (!st) return;
   _statusCache = st;
-  // 就绪以 readiness / lastPingOk 为准，禁止仅凭「有 Key」显示已就绪
   var badgeReady =
     st.readiness ||
-    (st.lastPingOk === true ? "已就绪" : st.configured ? "已保存未验证" : "未配置");
+    (st.connectionOk === true || st.lastPingOk === true
+      ? "已就绪"
+      : st.configured
+        ? "已保存未验证"
+        : "未配置");
   setBadge(badgeReady);
-  var provider = st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "deepseek";
-  if (st.configured && st.llmProvider) {
-    provider = st.llmProvider === "dashscope" ? "dashscope" : "deepseek";
-  }
-  var sel = $("#studio-llm-provider");
-  if (sel) sel.value = provider === "dashscope" ? "dashscope" : "deepseek";
-  if (st.region) setRegion(st.region);
-  else if (provider === "dashscope") setRegion("cn");
-  fillModelSelect(provider, st.model || "");
   var key = $("#studio-llm-key");
   if (key && st.maskedKey && !key.value) {
     key.placeholder = "已保存 " + st.maskedKey + " · 留空则保持原 Key";
@@ -347,33 +205,24 @@ function applyStatus(st) {
     ud.textContent = lines.join("\n");
     ud.style.whiteSpace = "pre-line";
   }
-  syncRegionVisibility();
+  var legacy = $("#studio-llm-legacy");
+  if (legacy) {
+    legacy.hidden = !st.legacyKeyOnDisk;
+  }
   updateHowto();
 }
 
 function updateHowto() {
   var howto = $("#studio-llm-howto");
-  var sel = $("#studio-llm-provider");
-  if (!howto || !sel) return;
-  var link =
-    sel.value === "dashscope" ? LLM_KEY_LINKS.dashscope : LLM_KEY_LINKS.deepseek;
-  var html =
+  if (!howto) return;
+  howto.innerHTML =
     '获取 Key：打开 <a href="' +
-    link.href +
-    '" target="_blank" rel="noopener">' +
-    link.label +
-    "</a>，按其页面指引创建并复制，粘贴到上方后点「保存并测试」。";
-  if (link.guideHref) {
-    html +=
-      ' <a href="' +
-      link.guideHref +
-      '" target="_blank" rel="noopener">' +
-      (link.guideLabel || "官方说明") +
-      "</a>";
-  }
-  html +=
+    BAILIAN_CONSOLE +
+    '" target="_blank" rel="noopener">通义百炼控制台</a>，按其页面指引创建并复制，粘贴到上方后点「保存并测试」。' +
+    ' <a href="' +
+    BAILIAN_GUIDE +
+    '" target="_blank" rel="noopener">官方说明</a>' +
     ' · <button type="button" class="studio-llm-settings__linkbtn" data-llm-help-h7="1">了解更多</button>';
-  howto.innerHTML = html;
 }
 
 function openHelpH7() {
@@ -384,50 +233,18 @@ function openHelpH7() {
   });
 }
 
-function selectedModelFromForm() {
-  var custom = (($("#studio-llm-model-custom") || {}).value || "").trim();
-  if (custom) return custom;
-  var sel = $("#studio-llm-model");
-  var v = sel ? String(sel.value || "").trim() : "";
-  return v || null;
-}
-
 function payloadFromForm(requireKey) {
-  var provider = ($("#studio-llm-provider") || {}).value || "deepseek";
-  clearForeignBaseUrl(provider);
   var keyEl = $("#studio-llm-key");
   var apiKey = ((keyEl && keyEl.value) || "").trim();
-  var base = normalizeBaseUrl(($("#studio-llm-base") || {}).value || "");
   if (
     requireKey &&
     !apiKey &&
-    !(
-      _statusCache &&
-      _statusCache.configured &&
-      _statusCache.llmProvider === provider
-    )
+    !(_statusCache && _statusCache.configured && _statusCache.hasDashscope)
   ) {
     return null;
   }
-  var body = { provider: provider };
+  var body = { provider: "dashscope" };
   if (apiKey) body.apiKey = apiKey;
-  if (provider === "dashscope") {
-    body.region = selectedRegion();
-  }
-  var model = selectedModelFromForm();
-  if (model) body.model = model;
-  var ownDefaults = [normalizeBaseUrl(LLM_DEFAULT_BASE[provider] || "")];
-  if (provider === "dashscope") {
-    ownDefaults.push(normalizeBaseUrl(LLM_DEFAULT_BASE.dashscope_intl));
-  }
-  if (base && ownDefaults.indexOf(base) === -1) {
-    var foreign = allDefaultBases().filter(function (u) {
-      return ownDefaults.indexOf(u) === -1;
-    });
-    if (foreign.indexOf(base) === -1) {
-      body.baseUrl = base;
-    }
-  }
   return body;
 }
 
@@ -532,42 +349,6 @@ function runSave(body) {
   });
 }
 
-function confirmProviderSwitchIfNeeded(nextProvider) {
-  var prev =
-    _statusCache && _statusCache.configured && _statusCache.llmProvider
-      ? _statusCache.llmProvider
-      : null;
-  if (!prev || prev === "stub" || prev === nextProvider) {
-    return Promise.resolve(true);
-  }
-  var body =
-    "将改用「" +
-    providerLabel(nextProvider) +
-    "」，并覆盖本机已保存的 " +
-    providerLabel(prev) +
-    " 配置。\n此 Key 不会上传；仅存在本机。";
-  var opts = {
-    title: "覆盖已保存的写作引擎配置？",
-    body: body,
-    confirmText: "覆盖并继续",
-    cancelText: "取消",
-    danger: true,
-    focusCancel: true,
-  };
-  function done(ok) {
-    trackStudioEvent("llm_switch_confirm", {
-      action: ok ? "continue" : "cancel",
-      from: prev,
-      to: nextProvider,
-    });
-    return ok;
-  }
-  if (typeof studioModal === "function") {
-    return studioModal(opts).then(done);
-  }
-  return Promise.resolve(done(window.confirm(body)));
-}
-
 function wire(root) {
   root.addEventListener("click", function (ev) {
     var t = ev.target;
@@ -588,49 +369,6 @@ function wire(root) {
       toggle.textContent = show ? "隐藏" : "显示";
     });
   }
-  var prov = $("#studio-llm-provider", root);
-  if (prov) {
-    prov.addEventListener("change", function () {
-      var from =
-        _statusCache && _statusCache.llmProvider
-          ? _statusCache.llmProvider
-          : "unknown";
-      trackStudioEvent("llm_provider_change", { from: from, to: prov.value });
-      clearForeignBaseUrl(prov.value);
-      fillModelSelect(prov.value, "");
-      var custom = $("#studio-llm-model-custom");
-      if (custom) custom.value = "";
-      syncRegionVisibility();
-      updateHowto();
-      // 单活跃 Key：切换服务商时提前提示将覆盖（保存时再二次确认）
-      var prev =
-        _statusCache && _statusCache.configured && _statusCache.llmProvider
-          ? _statusCache.llmProvider
-          : null;
-      if (prev && prev !== "stub" && prev !== prov.value) {
-        setMsg(
-          "将改用「" +
-            providerLabel(prov.value) +
-            "」，保存后会覆盖已保存的 " +
-            providerLabel(prev) +
-            " 配置。",
-          true
-        );
-      } else {
-        setMsg("", true);
-      }
-    });
-  }
-  var baseEl = $("#studio-llm-base", root);
-  if (baseEl) {
-    baseEl.addEventListener("input", syncRegionVisibility);
-  }
-  var regionWrap = $("#studio-llm-region-wrap", root);
-  if (regionWrap) {
-    regionWrap.addEventListener("change", function () {
-      setMsg("", true);
-    });
-  }
 
   var howto = $("#studio-llm-howto", root);
   if (howto && howto.dataset.helpBound !== "1") {
@@ -643,17 +381,10 @@ function wire(root) {
       }
     });
   }
-  fillModelSelect("deepseek", "");
   updateHowto();
 
   $("#studio-llm-ping", root).addEventListener("click", function () {
-    var body = payloadFromForm(false) || {
-      provider: ($("#studio-llm-provider") || {}).value || "deepseek",
-    };
-    if (body.provider === "dashscope" && !body.region) {
-      body.region = selectedRegion();
-    }
-    // 仅测试：不写盘
+    var body = payloadFromForm(false) || { provider: "dashscope" };
     body.persist = false;
     setBusy(true);
     setMsg("正在测试连接…", true);
@@ -661,16 +392,14 @@ function wire(root) {
       .then(function (res) {
         trackStudioEvent("llm_ping", {
           ok: !!res.ok,
-          provider: body.provider,
-          region: body.region || null,
+          provider: "dashscope",
           error_code: res.ok ? null : (res.j && (res.j.error || res.j.code)) || null,
           source: _source,
           persist: false,
         });
-        // Modal 徽章跟本次 ping；zone 仍用已落盘状态（不 notify 假就绪）
         setBadge(res.ok ? "已就绪" : "连接失败");
         if (res.ok) {
-          setMsg(res.j.message || "已连通", true);
+          setMsg(COPY.ok, true);
         } else {
           setMsg(errMessage(res.j), false);
         }
@@ -694,69 +423,54 @@ function wire(root) {
       setMsg("请先粘贴 API Key", false);
       return;
     }
-    // 先确认覆盖，再 setBusy —— 避免确认层被挡住时按钮已禁用、像「无反应」
-    confirmProviderSwitchIfNeeded(body.provider)
-      .then(function (ok) {
-        if (!ok) {
+    setBusy(true);
+    setMsg("正在保存并测试…", true);
+    runSave(body)
+      .then(function (saveRes) {
+        trackStudioEvent("llm_settings_save", {
+          ok: !!saveRes.ok,
+          provider: "dashscope",
+          error_code: saveRes.ok
+            ? null
+            : (saveRes.j && (saveRes.j.error || saveRes.j.code)) || null,
+          source: _source,
+        });
+        if (!saveRes.ok) {
+          setMsg(errMessage(saveRes.j) || "保存失败", false);
           return null;
         }
-        setBusy(true);
-        setMsg("正在保存并测试…", true);
-        return runSave(body).then(function (saveRes) {
-          trackStudioEvent("llm_settings_save", {
-            ok: !!saveRes.ok,
-            provider: body.provider,
-            region: body.region || null,
-            error_code: saveRes.ok
-              ? null
-              : (saveRes.j && (saveRes.j.error || saveRes.j.code)) || null,
+        applyStatus(saveRes.j);
+        var key = $("#studio-llm-key");
+        if (key) key.value = "";
+        var pingBody = { provider: "dashscope", persist: true };
+        return runPing(pingBody).then(function (pingRes) {
+          var errCode = pingRes.ok
+            ? null
+            : (pingRes.j && (pingRes.j.error || pingRes.j.code)) || null;
+          trackStudioEvent("llm_ping", {
+            ok: !!pingRes.ok,
+            provider: "dashscope",
+            error_code: errCode,
+            source: _source,
+            via: "save_and_ping",
+            persist: true,
+          });
+          trackStudioEvent("llm_save_and_ping", {
+            ok: !!pingRes.ok,
+            provider: "dashscope",
+            error_code: errCode,
             source: _source,
           });
-          if (!saveRes.ok) {
-            setMsg(errMessage(saveRes.j) || "保存失败", false);
-            return null;
+          if (pingRes.ok) {
+            setMsg(COPY.ok, true);
+            applyStatus(pingRes.j);
+            notifyChange(pingRes.j);
+            showResumeAfterSave(_source);
+          } else {
+            setMsg(errMessage(pingRes.j), false);
+            applyStatus(pingRes.j);
+            notifyChange(pingRes.j);
           }
-          applyStatus(saveRes.j);
-          var key = $("#studio-llm-key");
-          if (key) key.value = "";
-          var pingBody = {
-            provider: body.provider,
-            persist: true,
-          };
-          if (body.region) pingBody.region = body.region;
-          if (body.baseUrl) pingBody.baseUrl = body.baseUrl;
-          if (body.model) pingBody.model = body.model;
-          return runPing(pingBody).then(function (pingRes) {
-            var errCode = pingRes.ok
-              ? null
-              : (pingRes.j && (pingRes.j.error || pingRes.j.code)) || null;
-            trackStudioEvent("llm_ping", {
-              ok: !!pingRes.ok,
-              provider: body.provider,
-              region: body.region || null,
-              error_code: errCode,
-              source: _source,
-              via: "save_and_ping",
-              persist: true,
-            });
-            trackStudioEvent("llm_save_and_ping", {
-              ok: !!pingRes.ok,
-              provider: body.provider,
-              region: body.region || null,
-              error_code: errCode,
-              source: _source,
-            });
-            if (pingRes.ok) {
-              setMsg(pingRes.j.message || "已就绪", true);
-              applyStatus(pingRes.j);
-              notifyChange(pingRes.j);
-              showResumeAfterSave(_source);
-            } else {
-              setMsg(errMessage(pingRes.j), false);
-              applyStatus(pingRes.j);
-              notifyChange(pingRes.j);
-            }
-          });
         });
       })
       .catch(function () {
@@ -790,8 +504,6 @@ function wire(root) {
               key.value = "";
               key.placeholder = "粘贴你的 API Key";
             }
-            var custom = $("#studio-llm-model-custom");
-            if (custom) custom.value = "";
             applyStatus(res.j);
             notifyChange(res.j);
           } else {
@@ -803,7 +515,7 @@ function wire(root) {
         });
     }
     var confirmOpts = {
-      title: "清除写作引擎配置？",
+      title: "清除模型API 配置？",
       body: "清除后回到本机文案。已有画册不会删除。",
       confirmText: "清除",
       cancelText: "取消",
@@ -816,7 +528,7 @@ function wire(root) {
       });
       return;
     }
-    if (window.confirm("清除写作引擎配置并回到本机文案？")) doClear();
+    if (window.confirm("清除模型API 配置并回到本机文案？")) doClear();
   });
 
   var resumeCta = $("#studio-llm-resume-cta", root);

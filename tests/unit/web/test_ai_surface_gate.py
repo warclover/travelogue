@@ -154,7 +154,7 @@ def test_llm_settings_write_allowed_when_surface_off(monkeypatch, tmp_path: Path
     monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
     reset_config_cache()
     handler = _mock_handler(
-        {"provider": "deepseek", "apiKey": "sk-test-xxxxxxxxxxxx"}
+        {"provider": "dashscope", "apiKey": "sk-test-xxxxxxxxxxxx"}
     )
     llm_settings_handlers.handle_llm_settings(handler)
     assert handler._captured["status"] == 200
@@ -178,10 +178,10 @@ def test_llm_ping_allowed_when_surface_off(monkeypatch, tmp_path: Path):
     reset_config_cache()
 
     def _fake_ping(**_kwargs):
-        return "deepseek/deepseek-chat @ https://api.deepseek.com/v1"
+        return "dashscope/qwen3.7-flash @ https://dashscope.aliyuncs.com/compatible-mode/v1"
 
     monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
-    handler = _mock_handler({"provider": "deepseek", "apiKey": "sk-test-xxxxxxxxxxxx"})
+    handler = _mock_handler({"provider": "dashscope", "apiKey": "sk-test-xxxxxxxxxxxx"})
     llm_settings_handlers.handle_llm_ping(handler)
     assert handler._captured["status"] == 200
     assert handler._captured["body"].get("error") != "E_AI_SURFACE_DISABLED"

@@ -24,7 +24,8 @@
 >
 > Desktop LLM Setup V1 已交付「能配」：Modal、Key 落盘、测试连接、预览入口。  
 > 本主题解决「**配得对**」：服务商隔离、保存即验证、通义地域、可行动错误、切换不踩坑。  
-> **不改** L0 stub 默认、不做官方代付、不强迫填 Key、不扩展到第三家云厂商（除非评审另批）。
+> **不改** L0 stub 默认、不做官方代付、不强迫填 Key、不扩展到第三家云厂商（除非评审另批）。  
+> **连接用户面下一跳（Draft）**：[PRD-BAILIAN-AI-INTEGRATION-V1.md](./PRD-BAILIAN-AI-INTEGRATION-V1.md) 将默认改为「只配百炼、按任务路由」；本文 coerce / ping / 错误码工程合同在 BAI Kickoff 前仍有效。
 >
 > **与基线关系**
 >

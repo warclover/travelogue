@@ -50,6 +50,39 @@ from travelogue.cover_engine.title_art.whitelist import (
 
 _log = logging.getLogger(__name__)
 
+_IMAGE_AUTH_MARKERS = (
+    "401",
+    "403",
+    "invalidapikey",
+    "unauthorized",
+    "arrearage",
+    "quota",
+    "accessdenied",
+    "not authorized",
+    "freetier",
+)
+
+
+def _note_studio_image_ready(*, ok: bool, exc: RouteCFailure | None = None) -> None:
+    """D-BAI-07: persist imageReady after t2i auth success/failure; ignore OCR/timeout."""
+    try:
+        from travelogue.llm.user_settings import note_studio_image_ready
+    except Exception:
+        return
+    if ok:
+        note_studio_image_ready(True)
+        return
+    if exc is None:
+        return
+    if exc.reason == "E_CAL_C_NOKEY":
+        note_studio_image_ready(False)
+        return
+    if exc.reason != "E_CAL_C_SUBMIT_HTTP":
+        return
+    detail = f"{exc.detail or ''}".lower()
+    if any(m in detail for m in _IMAGE_AUTH_MARKERS):
+        note_studio_image_ready(False)
+
 #: ``journal.css`` ``--cover-folio-paper: #f4f1ea``——folio-overlap 左侧纸面栏
 #: 的固定底色，与 asset 内容无关（OQ-CAL-09 收尾，见 ``assume_paper_bg``）。
 _FOLIO_PAPER_RGB = (0xF4, 0xF1, 0xEA)
@@ -520,6 +553,7 @@ def resolve_title_art(
                             fallback_from=None,
                         )
                         meta["titleArt"] = result.to_meta_dict()
+                        _note_studio_image_ready(ok=True)
                         return result
                     except RouteCFailure as exc:
                         last_exc = exc
@@ -534,6 +568,7 @@ def resolve_title_art(
                             )
                             continue
                         break
+                _note_studio_image_ready(ok=False, exc=last_exc)
                 _log.info("title_art route C → fallback to route B: %s", last_exc)
                 fallback_from = "diffusion-fixed-prompt-v1"
 

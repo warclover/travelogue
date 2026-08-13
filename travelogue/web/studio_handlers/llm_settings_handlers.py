@@ -23,7 +23,6 @@ from travelogue.util.llm_presets import (
     PROVIDER_PRESETS,
     coerce_base_url_for_provider,
     coerce_model_for_provider,
-    normalize_llm_region,
     preset_base_url,
     validate_custom_base_url,
 )
@@ -31,24 +30,26 @@ from travelogue.web.studio_errors import user_message
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_narrate import studio_llm_status
 
-_ALLOWED = frozenset({"deepseek", "dashscope"})
+_STUDIO_PROVIDER = "dashscope"
 
-# 配置面可行动文案（PRD §4.7 · 与导入路径 E_LLM_AUTH 长句区分）
+COPY_BAI_04 = "已连接通义百炼"
+COPY_BAI_09 = "通义百炼额度不足。请到控制台关闭「仅使用免费额度」或充值后再试。"
+COPY_BAI_10 = "请改用通义百炼 API Key。杂志文案和封面字体都在这一把 Key 上。"
+
+# 配置面可行动文案（BAI W1a · 用户面不提 DeepSeek / 国际站 / 模型 id）
 _SETTINGS_MESSAGES: dict[str, str] = {
     "E_LLM_AUTH": "Key 无效或已失效。请回控制台重新创建并粘贴。",
-    "E_LLM_ENDPOINT": "当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。",
-    "E_LLM_MODEL": "模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。",
-    "E_LLM_QUOTA": "余额或配额不足。请到服务商控制台充值，或检查是否开启了「仅使用免费额度」。",
-    "E_LLM_QUOTA_FREE_TIER": (
-        "免费额度已用尽（Key 本身有效）。"
-        "请到通义百炼控制台关闭「仅使用免费额度」，或充值后再试。"
-    ),
+    "E_LLM_ENDPOINT": "无法连接通义百炼。请检查网络后重试。",
+    "E_LLM_MODEL": "连接测试失败，请检查 Key 或网络后重试。",
+    "E_LLM_QUOTA": COPY_BAI_09,
+    "E_LLM_QUOTA_FREE_TIER": COPY_BAI_09,
     "E_LLM_RATE": "服务商繁忙，请稍后重试。",
     "E_LLM_TIMEOUT": "无法连接服务商。请检查网络后重试。",
     "E_LLM_NETWORK": "无法连接服务商。请检查网络后重试。",
     "E_LLM_CONNECT": "无法连接服务商。请检查网络后重试。",
-    "E_LLM_BASE_URL": "自定义 API 地址仅支持公网 https（不可用 localhost / 内网）。",
-    "E_LLM_PING": "连接测试失败，请检查 Key、地域或网络后重试。",
+    "E_LLM_BASE_URL": "无法连接通义百炼。请检查网络后重试。",
+    "E_LLM_PING": "连接测试失败，请检查 Key 或网络后重试。",
+    "E_LLM_PROVIDER": COPY_BAI_10,
 }
 
 _QUOTA_MARKERS = (
@@ -122,6 +123,7 @@ def _with_ping(
         base_url=secrets.base_url,
         region=secrets.region,
         last_ping_ok=ok,
+        last_image_ok=secrets.last_image_ok,
     )
 
 
@@ -130,25 +132,27 @@ def _status_body(*, cfg: Any = None) -> dict[str, Any]:
     app_cfg = cfg if cfg is not None else get_config(reload=True)
     status = studio_llm_status(cfg=app_cfg, inject_environ=False)
     secrets = read_user_llm_secrets()
+    studio_on = secrets.studio_configured
     ready = readiness_state(secrets)
     available = bool(status.get("llmAvailable"))
-    # L1 = 已配置且 ping 成功（与 readiness「已就绪」对齐）
-    tier = "L1" if secrets.configured and secrets.last_ping_ok is True else "L0"
-    region = secrets.region if secrets.provider == "dashscope" else None
-    model = secrets.model
-    if not model and secrets.provider:
-        model = (PROVIDER_PRESETS.get(secrets.provider) or {}).get("default_model")
+    connection_ok = bool(status.get("connectionOk"))
+    # L1 = 百炼已配置且 ping 成功（DeepSeek-only 仍为 L0）
+    tier = "L1" if studio_on and secrets.last_ping_ok is True else "L0"
     return {
         "ok": True,
         **status,
         "tier": tier,
         "llmTier": tier,
-        "configured": secrets.configured,
+        "configured": studio_on,
         "readiness": ready,
-        "maskedKey": mask_api_key(secrets.api_key),
-        "lastPingOk": secrets.last_ping_ok,
-        "region": region,
-        "model": model,
+        "maskedKey": mask_api_key(secrets.api_key) if studio_on else None,
+        "lastPingOk": secrets.last_ping_ok if studio_on else None,
+        "connectionOk": connection_ok,
+        "copyReady": connection_ok,
+        "imageReady": bool(status.get("imageReady")),
+        "hasDashscope": studio_on,
+        "legacyKeyOnDisk": bool(secrets.configured and not studio_on),
+        "region": "cn" if studio_on else None,
         "userDataDir": str(user_data_dir(ensure=False)),
         "tripsDir": str(getattr(app_cfg, "trips_dir", "") or ""),
         "capabilities": {
@@ -182,29 +186,35 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
         return
 
     payload = handler._read_json_body() or {}
-    provider = str(payload.get("provider") or "").strip().lower()
+    provider_in = str(payload.get("provider") or "").strip().lower()
     api_key = str(payload.get("apiKey") or payload.get("api_key") or "").strip()
-    model = payload.get("model")
-    model_s = str(model).strip() if model else None
-    base_url = payload.get("baseUrl") or payload.get("base_url")
-    base_s = str(base_url).strip() if base_url else None
-    region = normalize_llm_region(provider, payload.get("region"))
 
-    if provider not in _ALLOWED:
+    if provider_in == "deepseek":
         handler._json_response(
             400,
             {
                 "ok": False,
                 "error": "E_LLM_PROVIDER",
-                "message": user_message("E_LLM_PROVIDER", "请选择 DeepSeek 或 通义千问"),
+                "message": COPY_BAI_10,
             },
         )
         return
 
+    if provider_in and provider_in != _STUDIO_PROVIDER:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_LLM_PROVIDER",
+                "message": COPY_BAI_10,
+            },
+        )
+        return
+
+    provider = _STUDIO_PROVIDER
     existing = read_user_llm_secrets()
     if not api_key:
-        # 允许仅改地域/地址：复用同商已存 Key
-        if existing.configured and existing.provider == provider and existing.api_key:
+        if existing.studio_configured and existing.api_key:
             api_key = existing.api_key
         else:
             handler._json_response(
@@ -217,22 +227,10 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
             )
             return
 
-    try:
-        base_s = validate_custom_base_url(base_s)
-    except ValueError:
-        handler._json_response(
-            400,
-            {
-                "ok": False,
-                "error": "E_LLM_BASE_URL",
-                "message": _settings_message("E_LLM_BASE_URL"),
-            },
-        )
-        return
-
-    # 按服务商归一：勿把 DeepSeek 的 model/base_url 写进通义配置（或反之）
-    model_s = coerce_model_for_provider(provider, model_s)
-    base_s = coerce_base_url_for_provider(provider, base_s)
+    # V1 正式包：忽略客户端模型 / 自定义 URL / 国际站；磁盘旧字段可留
+    model_s = existing.model if existing.studio_configured else None
+    base_s = existing.base_url if existing.studio_configured else None
+    region = "cn"
 
     secrets = UserLlmSecrets(
         provider=provider,
@@ -241,11 +239,12 @@ def handle_llm_settings(handler: StudioHandlerProtocol) -> None:
         base_url=base_s or None,
         region=region,
         last_ping_ok=None,
+        last_image_ok=None,
     )
     try:
         write_user_llm_secrets(secrets)
         write_user_llm_config_overlay(
-            provider=provider, model=model_s, base_url=base_s, region=region
+            provider=provider, model=None, base_url=None, region=region
         )
         inject_secrets_into_environ(secrets)
         reset_config_cache()
@@ -268,24 +267,24 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
 
     # SAS · D-SAS-07：ping 不要求开闸（保存并测试 / 预配 Key）
     payload = handler._read_json_body() or {}
-    provider = str(payload.get("provider") or "").strip().lower() or None
+    provider_in = str(payload.get("provider") or "").strip().lower() or None
     api_key = str(payload.get("apiKey") or payload.get("api_key") or "").strip() or None
 
-    secrets = read_user_llm_secrets()
-    prov = provider or secrets.provider
-    if not prov or prov not in _ALLOWED:
+    if provider_in == "deepseek" or (provider_in and provider_in != _STUDIO_PROVIDER):
         handler._json_response(
             400,
             {
                 "ok": False,
                 "error": "E_LLM_PROVIDER",
-                "message": user_message("E_LLM_PROVIDER", "请先选择服务商"),
+                "message": COPY_BAI_10,
             },
         )
         return
 
+    prov = _STUDIO_PROVIDER
+    secrets = read_user_llm_secrets()
     env_name = PROVIDER_PRESETS[prov]["api_key_env"]
-    key_to_use = api_key or secrets.api_key
+    key_to_use = api_key or (secrets.api_key if secrets.studio_configured else None)
     if not key_to_use:
         handler._json_response(
             400,
@@ -297,38 +296,19 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
         )
         return
 
-    same_secrets = secrets.provider == prov
-    region = normalize_llm_region(
-        prov,
-        payload.get("region") if payload.get("region") is not None else (secrets.region if same_secrets else None),
-    )
-
-    raw_base = (
-        payload.get("baseUrl")
-        or payload.get("base_url")
-        or (secrets.base_url if same_secrets else None)
-    )
+    same_secrets = secrets.studio_configured
+    # V1 只中国站；磁盘旧 intl/custom 仍可用于请求，但不接受客户端改写
+    region = secrets.region if same_secrets and secrets.region else "cn"
+    raw_base = secrets.base_url if same_secrets else None
     try:
         raw_base_s = validate_custom_base_url(str(raw_base).strip() if raw_base else None)
     except ValueError:
-        handler._json_response(
-            400,
-            {
-                "ok": False,
-                "error": "E_LLM_BASE_URL",
-                "message": _settings_message("E_LLM_BASE_URL"),
-            },
-        )
-        return
+        raw_base_s = None
 
     base_cfg = get_config(reload=True)
-    # 仅复用「同一服务商」的 secrets；禁止回落到 base_cfg 里另一家的 model/URL
-    raw_model = payload.get("model") or (secrets.model if same_secrets else None)
-    model_override = coerce_model_for_provider(
-        prov, str(raw_model).strip() if raw_model else None
-    )
+    # 运行时忽略用户模型字段，走服务端默认（D-BAI-02）
+    model_override = coerce_model_for_provider(prov, None)
     base_override = coerce_base_url_for_provider(prov, raw_base_s)
-    # 无自定义时按地域解析；写入 cfg 以便 resolve 在 secrets 尚未更新时仍命中正确 host
     effective_base = base_override or preset_base_url(prov, region)
     llm = replace(
         base_cfg.llm,
@@ -339,7 +319,6 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
     )
     cfg = replace(base_cfg, llm=llm)
 
-    # Request-local secrets — no os.environ write, no global monkey-patch (CQA D-02).
     ping_secrets = UserLlmSecrets(
         provider=prov,
         api_key=key_to_use,
@@ -351,39 +330,19 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
 
     want_persist = (
         bool(payload.get("persist"))
-        and secrets.configured
-        and secrets.provider == prov
+        and secrets.studio_configured
         and (not api_key or api_key == secrets.api_key)
     )
 
     try:
-        msg = llm_ping(provider=prov, secrets=ping_secrets, cfg=cfg)
-        # llm_ping 返回 "provider/model @ base"；级联后 model 可能已切换
-        used_model = model_override
-        try:
-            mid = msg.split(" @ ", 1)[0]
-            if "/" in mid:
-                used_model = mid.split("/", 1)[1].strip() or model_override
-        except Exception:
-            used_model = model_override
-
-        # 成功简句（隐藏完整 URL）
-        label = "通义千问" if prov == "dashscope" else "DeepSeek"
-        user_ok = f"已连通 · {label} · {used_model}"
-        if used_model != model_override:
-            user_ok += "（已自动改用可用模型）"
+        llm_ping(provider=prov, secrets=ping_secrets, cfg=cfg)
+        user_ok = COPY_BAI_04
 
         persisted = False
         if want_persist:
             try:
-                write_user_llm_secrets(_with_ping(secrets, True, model=used_model))
-                if used_model != model_override:
-                    write_user_llm_config_overlay(
-                        provider=prov,
-                        model=used_model,
-                        base_url=base_override,
-                        region=region,
-                    )
+                # 不把级联后的 model id 写回磁盘（D-BAI-09）
+                write_user_llm_secrets(_with_ping(secrets, True, model=secrets.model))
                 persisted = True
             except OSError:
                 status = _status_body(cfg=cfg)
@@ -405,7 +364,7 @@ def handle_llm_ping(handler: StudioHandlerProtocol) -> None:
             200,
             {
                 "ok": True,
-                "message": user_ok or msg,
+                "message": user_ok,
                 "pingOk": True,
                 "persisted": persisted,
                 **status,

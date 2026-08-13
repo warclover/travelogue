@@ -1,0 +1,82 @@
+[
+  {
+    "id": "kiyomizu-rain",
+    "model": "qwen3.7-flash",
+    "thinking": false,
+    "ok": true,
+    "caption": "雨停后的清水寺石阶，地还湿着。",
+    "chars": 15,
+    "json_ok": true,
+    "latency_ms": 20864
+  },
+  {
+    "id": "kiyomizu-rain",
+    "model": "deepseek-v4-pro",
+    "thinking": true,
+    "ok": true,
+    "caption": "雨太大，先回酒店拿伞。地还湿着。",
+    "chars": 16,
+    "json_ok": true,
+    "latency_ms": 6674
+  },
+  {
+    "id": "seaside-kids",
+    "model": "qwen3.7-flash",
+    "thinking": false,
+    "ok": true,
+    "caption": "黄昏青岛海边，孩子追浪又退回来。别追那么深。",
+    "chars": 22,
+    "json_ok": true,
+    "latency_ms": 23660
+  },
+  {
+    "id": "seaside-kids",
+    "model": "deepseek-v4-pro",
+    "thinking": true,
+    "ok": true,
+    "caption": "别追那么深，浪会咬脚。",
+    "chars": 11,
+    "json_ok": true,
+    "latency_ms": 7423
+  },
+  {
+    "id": "night-market",
+    "model": "qwen3.7-flash",
+    "thinking": false,
+    "ok": true,
+    "caption": "夜市蒸汽裹着灯牌，摊前问：这要排到几点",
+    "chars": 19,
+    "json_ok": true,
+    "latency_ms": 14795
+  },
+  {
+    "id": "night-market",
+    "model": "deepseek-v4-pro",
+    "thinking": true,
+    "ok": true,
+    "caption": "这摊要排到几点",
+    "chars": 7,
+    "json_ok": true,
+    "latency_ms": 5954
+  },
+  {
+    "id": "pass-wind",
+    "model": "qwen3.7-flash",
+    "thinking": false,
+    "ok": true,
+    "caption": "川西高山垭口风急，帽子差点飞了。",
+    "chars": 16,
+    "json_ok": true,
+    "latency_ms": 20844
+  },
+  {
+    "id": "pass-wind",
+    "model": "deepseek-v4-pro",
+    "thinking": true,
+    "ok": true,
+    "caption": "帽子差点飞了，垭口风大经幡猎猎。",
+    "chars": 16,
+    "json_ok": true,
+    "latency_ms": 5765
+  }
+]

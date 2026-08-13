@@ -41,23 +41,33 @@ def test_validate_custom_base_url_https_public_only() -> None:
 
 
 def test_coerce_drops_foreign_default_model() -> None:
-    assert coerce_model_for_provider("dashscope", "deepseek-chat") == "qwen3.7-flash"
+    assert coerce_model_for_provider("dashscope", "deepseek-chat") == "deepseek-v4-pro"
+    assert coerce_model_for_provider("dashscope", "deepseek-v4-pro") == "deepseek-v4-pro"
+    assert coerce_model_for_provider("dashscope", "deepseek-v4-flash-0731") == "deepseek-v4-flash-0731"
     assert coerce_model_for_provider("deepseek", "qwen-plus") == "deepseek-chat"
     assert coerce_model_for_provider("deepseek", "qwen3.7-flash") == "deepseek-chat"
-    assert coerce_model_for_provider("dashscope", None) == "qwen3.7-flash"
+    assert coerce_model_for_provider("dashscope", None) == "deepseek-v4-pro"
     assert coerce_model_for_provider("dashscope", "qwen-turbo") == "qwen-turbo"
 
 
 def test_dashscope_model_candidates_prefer_free_then_paid() -> None:
-    from travelogue.util.llm_presets import dashscope_model_candidates
+    from travelogue.util.llm_presets import (
+        dashscope_copy_candidates,
+        dashscope_model_candidates,
+        dashscope_ping_candidates,
+    )
 
     chain = dashscope_model_candidates(None)
-    assert chain[0] == "qwen3.7-flash"
+    assert chain[0] == "deepseek-v4-pro"
+    assert chain[1] == "deepseek-v4-flash-0731"
     assert "qwen-plus" in chain
     assert chain.index("qwen3.7-flash") < chain.index("qwen-plus")
-    selected_first = dashscope_model_candidates("qwen-max")
+    selected_first = dashscope_copy_candidates("qwen-max")
     assert selected_first[0] == "qwen-max"
-    assert "qwen3.7-flash" in selected_first
+    assert "deepseek-v4-pro" in selected_first
+    ping = dashscope_ping_candidates()
+    assert ping[0] == "qwen3.7-flash"
+    assert ping[0] != "deepseek-v4-pro"
 
 
 def test_coerce_drops_foreign_default_base_url() -> None:
@@ -105,7 +115,7 @@ def test_resolve_runtime_ignores_sticky_deepseek_when_dashscope(
         # Explicit provider=dashscope must not inherit DeepSeek endpoint/model
         rt = resolve_llm_runtime("dashscope")
     assert rt.provider == "dashscope"
-    assert rt.model == "qwen3.7-flash"
+    assert rt.model == "deepseek-v4-pro"
     assert rt.base_url == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
 
 
@@ -136,8 +146,17 @@ def test_resolve_runtime_coerces_mismatched_cfg_fields(
     )
     with config_override(contaminated):
         rt = resolve_llm_runtime("dashscope")
-    assert rt.model == "qwen3.7-flash"
+    assert rt.model == "deepseek-v4-pro"
     assert rt.base_url == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
+
+
+def test_ocr_default_is_qwen37_flash_not_vl_plus() -> None:
+    from travelogue.cover_engine.title_art.ocr_verify import _OCR_MODEL_DEFAULT
+    from travelogue.cover_engine.title_art.route_c import DEFAULT_MODEL
+
+    assert _OCR_MODEL_DEFAULT == "qwen3.7-flash"
+    assert _OCR_MODEL_DEFAULT != "qwen-vl-plus"
+    assert DEFAULT_MODEL == "wanx2.1-t2i-plus"
 
 
 def test_preset_base_url_dashscope_region() -> None:
