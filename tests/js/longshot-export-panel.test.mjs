@@ -71,6 +71,11 @@ function stubBtn(attrName, attrValue) {
 /** Minimal popover stub for syncPanelUI field visibility (no jsdom). */
 function stubPopover(platformIds) {
   const copy = { hidden: false };
+  const copyLabel = { textContent: "长图要不要字" };
+  const modeField = { hidden: false };
+  const densityField = { hidden: false };
+  const xhsCount = { hidden: true };
+  const xhsPack = { hidden: true };
   const note = { textContent: "" };
   const expectField = { hidden: true };
   const expectBody = { innerHTML: "", textContent: "" };
@@ -82,10 +87,13 @@ function stubPopover(platformIds) {
   return {
     querySelector(sel) {
       if (sel === '[data-field="copy"]') return copy;
+      if (sel === "[data-copy-label]") return copyLabel;
       if (sel === ".preview-toolbar__export-popover-note") return note;
-      if (sel === '[data-field="mode"]') return { hidden: false };
-      if (sel === '[data-field="xhs-count"]') return { hidden: true };
+      if (sel === '[data-field="mode"]') return modeField;
+      if (sel === '[data-field="density"]') return densityField;
+      if (sel === '[data-field="xhs-count"]') return xhsCount;
       if (sel === '[data-field="xhs-pad"]') return { hidden: true };
+      if (sel === '[data-field="xhs-copy-pack"]') return xhsPack;
       if (sel === '[data-field="album-count"]') return albumCountField;
       if (sel === '[data-field="expect"]') return expectField;
       if (sel === "[data-expect-body]") return expectBody;
@@ -106,6 +114,11 @@ function stubPopover(platformIds) {
       return [];
     },
     _copy: copy,
+    _copyLabel: copyLabel,
+    _modeField: modeField,
+    _densityField: densityField,
+    _xhsCount: xhsCount,
+    _xhsPack: xhsPack,
     _note: note,
     _albumCountField: albumCountField,
     _expectField: expectField,
@@ -141,19 +154,52 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.equal(ctaLabelForPlatform("poster_bric"), "导出单张海报");
   // SNR · short CTA 带「导出」动词（与小红书/公众号短标签对齐）
   assert.equal(shortCtaLabelForPlatform("poster_bric"), "导出海报");
-  assert.equal(confirmedExportSummary("poster_bric"), "当前将导出：单张海报 · 3:4");
+  assert.equal(
+    confirmedExportSummary("poster_bric"),
+    "当前将导出：单张海报 · 3:4 · 点击右上角灰色按钮导出"
+  );
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
-test("wechat_moments 短标签带导出动作（禁止裸「连读」）", () => {
-  assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
-  assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读/);
+test("wechat_moments 短标签带平台名（对齐导出小红书；禁止裸「连读/按章」）", () => {
+  assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出朋友圈");
+  assert.equal(shortCtaLabelForPlatform("wechat_chat"), "发微信群");
+  assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读|朋友圈/);
+  assert.notEqual(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
+  assert.notEqual(shortCtaLabelForPlatform("wechat_chat"), "按章导出");
+});
+
+test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () => {
+  const popChat = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popChat, { platforms: ["wechat_chat"], mode: "chapter", scale: 2 });
+  assert.equal(popChat._modeField.hidden, false);
+  assert.equal(popChat._copy.hidden, false);
+  assert.match(popChat._copyLabel.textContent, /微信群/);
+  assert.equal(popChat._xhsPack.hidden, true);
+  assert.equal(popChat._densityField.hidden, false);
+
+  const popMoments = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popMoments, { platforms: ["wechat_moments"], mode: "chapter", scale: 2 });
+  assert.equal(popMoments._modeField.hidden, true); // 无按章/一整张
+  assert.equal(popMoments._copy.hidden, false);
+  assert.match(popMoments._copyLabel.textContent, /朋友圈/);
+  assert.equal(popMoments._expectField.hidden, false);
+  assert.match(popMoments._expectBody.innerHTML, /连读/);
+  assert.equal(popMoments._xhsPack.hidden, true);
+
+  const popXhs = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  syncPanelUI(popXhs, { platforms: ["xiaohongshu"], mode: "chapter", scale: 2 });
+  assert.equal(popXhs._modeField.hidden, true);
+  assert.equal(popXhs._copy.hidden, true); // 文案包，非长图要不要字
+  assert.equal(popXhs._xhsCount.hidden, false);
+  assert.equal(popXhs._xhsPack.hidden, false);
+  assert.equal(popXhs._densityField.hidden, true);
 });
 
 test("exportSummaryLine · draft 未确认时提示待生效", () => {
   assert.equal(
     exportSummaryLine("wechat_chat", "wechat_chat"),
-    "当前将导出：微信群"
+    "当前将导出：微信群 · 点击右上角灰色按钮导出"
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
@@ -161,7 +207,11 @@ test("exportSummaryLine · draft 未确认时提示待生效", () => {
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
-    /金色按钮仍按：微信群/
+    /点击右上角灰色按钮导出/
+  );
+  assert.doesNotMatch(
+    exportSummaryLine("wechat_chat", "wechat_moments"),
+    /灰色按钮仍按/
   );
 });
 
@@ -189,7 +239,7 @@ test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九�
   const popPoster = stubPopover();
   syncPanelUI(popPoster, { platform: "poster_bric", mode: "full", scale: 2 });
   assert.equal(popPoster._copy.hidden, true);
-  assert.match(popPoster._note.textContent, /金色按钮/);
+  assert.match(popPoster._note.textContent, /灰色按钮/);
   assert.doesNotMatch(popPoster._note.textContent, /要不要字/);
 
   const popChat = stubPopover();
@@ -400,7 +450,9 @@ test("exportSummaryLineForPlatforms · 单选零回归；多选展示平台清�
   const pending = exportSummaryLineForPlatforms(["wechat_chat"], ["xiaohongshu", "wechat_moments"]);
   assert.match(pending, /已改选：2 个模式/);
   assert.match(pending, /点「确定」后生效/);
-  assert.match(pending, /金色按钮仍按：微信群/);
+  assert.match(pending, /点击右上角灰色按钮导出/);
+  assert.doesNotMatch(pending, /灰色按钮仍按/);
+  assert.match(same, /点击右上角灰色按钮导出/);
 });
 
 test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整体判失败)", () => {
@@ -415,7 +467,7 @@ test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整�
   });
   assert.equal(allOk.title, "✓ 2 个模式已全部导出");
   assert.match(allOk.lines[0], /小红书.*8 张/);
-  assert.match(allOk.lines[1], /连读.*3 张/);
+  assert.match(allOk.lines[1], /朋友圈.*3 张/);
 
   const partial = formatBatchSuccess({
     batch: true,
@@ -539,4 +591,54 @@ test("bindPanelDraft · getDraft/setDraft 单选零回归 + platforms 数组往�
   // 向后兼容：仅传 platform（旧调用点）仍可用，等价单元素数组。
   panel.setDraft({ platform: "poster_bric" });
   assert.deepEqual(panel.getDraft().platforms, ["poster_bric"]);
+});
+
+test("hydrate 契约 · 漏传 platforms 会坍成单选；传入 platforms 保留多选", () => {
+  // 模拟 localStorage prefs：platform 主值 + platforms 多选真实来源
+  const prefs = {
+    platform: "xiaohongshu",
+    platforms: ["xiaohongshu", "wechat_moments"],
+    mode: "chapter",
+    scale: 2,
+  };
+
+  // 失败模式（修复前 ensureStudioExportPopover / _readDraftFromPrefs）：只传 platform
+  const popLose = stubPopover(["xiaohongshu", "wechat_moments", "album_spread"]);
+  const panelLose = bindPanelDraft(
+    popLose,
+    { platform: prefs.platform, mode: prefs.mode, scale: prefs.scale },
+    {}
+  );
+  assert.deepEqual(panelLose.getDraft().platforms, ["xiaohongshu"]);
+  assert.equal(popLose._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popLose._platformBtns[1].getAttribute("aria-checked"), "false");
+
+  // 修复后：hydrate 必须带 platforms[]
+  const popKeep = stubPopover(["xiaohongshu", "wechat_moments", "album_spread"]);
+  const panelKeep = bindPanelDraft(
+    popKeep,
+    {
+      platform: prefs.platform,
+      platforms: prefs.platforms,
+      mode: prefs.mode,
+      scale: prefs.scale,
+    },
+    {}
+  );
+  assert.deepEqual(panelKeep.getDraft().platforms, ["xiaohongshu", "wechat_moments"]);
+  assert.equal(popKeep._platformBtns[0].getAttribute("aria-checked"), "true");
+  assert.equal(popKeep._platformBtns[1].getAttribute("aria-checked"), "true");
+
+  // setDraft 回填同样必须带 platforms（对应 _readDraftFromPrefs）
+  panelKeep.setDraft({
+    platform: prefs.platform,
+    platforms: prefs.platforms,
+    mode: prefs.mode,
+    scale: prefs.scale,
+  });
+  assert.deepEqual(panelKeep.getDraft().platforms, ["xiaohongshu", "wechat_moments"]);
+
+  const summary = exportSummaryLineForPlatforms(prefs.platforms, prefs.platforms);
+  assert.match(summary, /2 个模式/);
+  assert.match(summary, /当前将导出/);
 });

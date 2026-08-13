@@ -168,6 +168,71 @@ def _cover_image_for_placement(
         return None
 
 
+def _png_file_is_landscape(path: Path) -> bool:
+    try:
+        with Image.open(path) as im:
+            w, h = im.size
+        return bool(w > 0 and h > 0 and w > h * 1.25)
+    except Exception:
+        return False
+
+
+def _png_file_is_portrait(path: Path) -> bool:
+    try:
+        with Image.open(path) as im:
+            w, h = im.size
+        return bool(w > 0 and h > 0 and h > w * 1.25)
+    except Exception:
+        return False
+
+
+def _cached_art_path(existing: dict[str, Any], trip_root: Path | None) -> Path | None:
+    if not trip_root:
+        return None
+    rel = str(existing.get("assetPath") or "").strip().replace("\\", "/")
+    if not rel or ".." in rel.split("/"):
+        return None
+    root = trip_root.resolve()
+    path = (root / rel).resolve()
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return None
+    return path if path.is_file() else None
+
+
+def _vertical_style_cached_art_is_landscape(
+    existing: dict[str, Any],
+    *,
+    style_id: str,
+    trip_root: Path | None,
+) -> bool:
+    """竖排 Opening（folio）下若缓存仍是横幅 → 失效，须重算竖排叠字。"""
+    from travelogue.cover_engine.title_art.render_b import _VERTICAL_STACK_STYLES
+
+    if style_id not in _VERTICAL_STACK_STYLES:
+        return False
+    path = _cached_art_path(existing, trip_root)
+    return path is not None and _png_file_is_landscape(path)
+
+
+def _horizontal_style_cached_art_is_portrait(
+    existing: dict[str, Any],
+    *,
+    style_id: str,
+    trip_root: Path | None,
+) -> bool:
+    """横排 Opening（veil/band/stamp）下若缓存仍是竖幅 → 失效，须重算横排字。"""
+    from travelogue.cover_engine.title_art.render_b import _VERTICAL_STACK_STYLES
+
+    if not style_id or style_id in _VERTICAL_STACK_STYLES:
+        return False
+    if not is_whitelisted(style_id):
+        return False
+    path = _cached_art_path(existing, trip_root)
+    return path is not None and _png_file_is_portrait(path)
+
+
 def resolve_title_art(
     trip: dict,
     *,
@@ -183,6 +248,7 @@ def resolve_title_art(
     prompt_version: str = "v2",
     route_c_max_attempts: int = 2,
     ocr_verify_enabled: bool = True,
+    trip_root: Path | None = None,
 ) -> TitleArtResult | None:
     """计算并写入 ``trip["meta"]["titleArt"]``；同一 trip 非 force 且已有非
     stale 结果、且封面 asset 未变时跳过重算（避免每次「优化装帧」都重打路线 C
@@ -191,6 +257,8 @@ def resolve_title_art(
     返回写入的 :class:`TitleArtResult`；缓存命中时也返回已有结果（不再用
     ``None`` 表示「跳过」——``None`` 仅表示 fail-open 未生成）。fail-open
     （非白名单/空标题/字形不覆盖）时写回禁用占位并返回 ``None``。
+
+    ``trip_root`` 可选：用于识别竖排风格下的历史横幅 PNG 并强制重算。
     """
     meta = trip.setdefault("meta", {})
     current_cover_id = str(trip.get("coverAssetId") or "")
@@ -215,11 +283,21 @@ def resolve_title_art(
         cover_mismatch = bool(cached_cover) and cached_cover != current_cover_id
         cached_style = str(existing.get("openingStyleId") or "")
         style_mismatch = bool(cached_style) and cached_style != style_id
+        # 艺术字朝向必须跟 Opening：folio=竖排条幅，其余白名单=横排。
+        # 历史缓存若朝向反了，强制重算（不能只靠 openingStyleId 字符串）。
+        legacy_landscape_for_vertical = _vertical_style_cached_art_is_landscape(
+            existing, style_id=style_id, trip_root=trip_root
+        )
+        legacy_portrait_for_horizontal = _horizontal_style_cached_art_is_portrait(
+            existing, style_id=style_id, trip_root=trip_root
+        )
         if (
             not legacy_seal
             and not legacy_non_plain_b
             and not cover_mismatch
             and not style_mismatch
+            and not legacy_landscape_for_vertical
+            and not legacy_portrait_for_horizontal
         ):
             return title_art_result_from_meta(existing)
 

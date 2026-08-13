@@ -42,7 +42,7 @@ def bootstrap_catalog() -> None:
             studio_blurb="适合主体偏上、下半可暗的大场面；暮光雾底，像电影开场。",
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
             profile=CoverStyleProfile(
-                prefer={"focal_y_max": 0.55, "mood": "cinematic"},
+                prefer={"focal_y_max": 0.52, "mood": "cinematic", "upper_scene": True},
                 avoid={"subject_bottom": True, "high_luma_lower": True},
                 text_safe_regions=[{"x": 0.0, "y": 0.55, "w": 0.58, "h": 0.45}],
                 title_max_lines=2,
@@ -57,7 +57,7 @@ def bootstrap_catalog() -> None:
             studio_blurb="适合右侧有景、左侧可留白；书名在左侧纸面栏竖排。",
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
             profile=CoverStyleProfile(
-                prefer={"right_weighted": True},
+                prefer={"right_weighted": True, "upper_scene": True},
                 avoid={"subject_left_30": True},
                 text_safe_regions=[
                     {"x": 0.0, "y": 0.0, "w": 0.13, "h": 1.0},
@@ -76,7 +76,7 @@ def bootstrap_catalog() -> None:
             preview_fixtures=(_FIXTURE_DEMO, _FIXTURE_HIFI_LEGACY),
             profile=CoverStyleProfile(
                 prefer={"horizon": True, "upper_scene": True},
-                avoid={"band_safe_zone": [0.58, 0.70]},
+                avoid={"band_safe_zone": [0.56, 0.70]},
                 text_safe_regions=[{"x": 0.0, "y": 0.60, "w": 0.55, "h": 0.14}],
                 title_max_lines=2,
             ),

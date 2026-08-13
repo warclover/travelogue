@@ -172,30 +172,42 @@ def test_assume_paper_bg_flag(style_id: str, expected: bool) -> None:
 
 
 def test_folio_overlap_rect_stays_within_paper_column() -> None:
-    # --cover-folio-margin: 13%——纸面栏止于此，主候选须留出安全边距，
-    # 不能碰到骑缝渐变/照片区（OQ-CAL-09 的阻断根因）。
+    # 纸面栏宽度跟 journal.css --cover-folio-margin（默认 13% / CCF 34%）对齐。
+    from travelogue.cover_engine.title_art.whitelist import folio_paper_margin_frac
+
+    margin = folio_paper_margin_frac()
     preset = placement_preset("folio-overlap")
     assert preset is not None
     assert preset.rect["x"] >= 0.0
-    assert preset.rect["x"] + preset.rect["w"] <= 0.13
+    assert preset.rect["x"] + preset.rect["w"] <= margin + 1e-6
+    assert preset.rect["w"] >= margin * 0.5
 
 
 def test_folio_overlap_fallback_has_conditional_occupant_and_larger_area() -> None:
+    from travelogue.cover_engine.title_art.whitelist import folio_paper_margin_frac
+
+    margin = folio_paper_margin_frac()
     fallback = FALLBACK_PRESETS["folio-overlap"][0]
     primary = placement_preset("folio-overlap")
     assert primary is not None
     assert fallback.conditional_occupant == "folio_place_present"
     assert fallback.assume_paper_bg is True
-    assert fallback.rect["x"] + fallback.rect["w"] <= 0.13
+    # 动态重算后的备选也须落在纸栏内
+    presets = placement_presets("folio-overlap")
+    assert presets[1].rect["x"] + presets[1].rect["w"] <= margin + 1e-6
     # 备选（无地点标签占用时可用）覆盖的纸面栏纵向范围应比主候选更宽松。
-    assert fallback.rect["h"] > primary.rect["h"]
+    assert presets[1].rect["h"] > primary.rect["h"]
+    assert fallback.rect["h"] > 0.5  # 静态表仍保留更大 h 意图
 
 
 def test_placement_presets_folio_overlap_has_primary_and_fallback() -> None:
     presets = placement_presets("folio-overlap")
     assert len(presets) == 2
-    assert presets[0] is placement_preset("folio-overlap")  # 主候选永远在前
-    assert presets[1] is FALLBACK_PRESETS["folio-overlap"][0]
+    primary = placement_preset("folio-overlap")
+    assert primary is not None
+    assert presets[0] == primary  # 主候选永远在前（动态 rect 按值相等）
+    assert presets[1].conditional_occupant == "folio_place_present"
+    assert presets[1].rect["h"] > presets[0].rect["h"]
 
 
 def test_whitelist_registry_rects_resolvable_at_import() -> None:

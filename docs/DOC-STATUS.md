@@ -153,13 +153,17 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/no-ai-surface-v1-review-2026-07-22.md](./acceptance-records/no-ai-surface-v1-review-2026-07-22.md) | **active** | NAS 跨职能评审 · Conditional Go · MF 已回写 PRD v0.2 |
 | [acceptance-records/no-ai-surface-v1-e2e-doc-closeout-2026-07-22.md](./acceptance-records/no-ai-surface-v1-e2e-doc-closeout-2026-07-22.md) | **active** | NAS e2e/DOC-NAS-02 收口 · 2026-07-22 |
 | [PRD-AI-RETURN-V1.md](./PRD-AI-RETURN-V1.md) | **active** | **AIR** AI-Return **v0.1.0** Draft · 解冻最小包 · 三语气 · 渠道 pack v2 · 迟晒（承接 NAS §14） |
+| [PRD-PREVIEW-DOCK-VISUAL-V5.md](./PRD-PREVIEW-DOCK-VISUAL-V5.md) | **active** | **DIG** 预览 Dock 视觉 V5 **v0.1.11** · D-DIG-25 弹层可读/加宽 |
+| [IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md](./IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md) | **active** | DIG 实施 **v0.9.0** · 弹层 UX 修补 · W3 手测待签 |
 | [PRD-SHARE-NARRATIVE-READINESS-V1.md](./PRD-SHARE-NARRATIVE-READINESS-V1.md) | **active** | **SNR** 敢发叙事就绪 **v0.1.0** · W0–W2 已合 · Agent 狗粮通过 · 欠真人 N≥5 |
 | [IMPLEMENTATION-SHARE-NARRATIVE-READINESS-V1.md](./IMPLEMENTATION-SHARE-NARRATIVE-READINESS-V1.md) | **active** | SNR 实施 · W3 Agent 狗粮通过 |
 | [ACCEPTANCE-SHARE-NARRATIVE-READINESS-V1.md](./ACCEPTANCE-SHARE-NARRATIVE-READINESS-V1.md) | **active** | SNR 验收 · AC-SNR-01～12 |
 | [acceptance-records/persona-feedback-trial-2026-08-10.md](./acceptance-records/persona-feedback-trial-2026-08-10.md) | **active** | SNR 触发试用底稿（十席 · 2026-08-10） |
 | [acceptance-records/snr-w3-dogfood-2026-08-10.md](./acceptance-records/snr-w3-dogfood-2026-08-10.md) | **active** | SNR W3 狗粮 · C1–C8 关闭表 |
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **active** | **CAD** 封面装帧导演 **v0.1.0** Draft · Mode A 默认真照片 · 禁假风景默认 |
-| [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) | **active** | V6 Opening **craft Delta** · 十款 active（联合/hash/Studio）· v1.1.0 |
+| [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) | **active** | **CCF** 封面装帧打磨 **v0.2.0** · Hero Set 三款 + FE-CCF + `cover_craft` 一键撤回 · 取代 CEC |
+| [PRD-COVER-EDITORIAL-COVENANT-V1.md](./PRD-COVER-EDITORIAL-COVENANT-V1.md) | **superseded** | **CEC** → 由 [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) 取代（目标从推荐/契约纠偏为质感打磨） |
+| [PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md](./PRD-COVER-STYLES-V6-ART-DIRECTION-DELTA.md) | **active** | V6 Opening **craft Delta** · 手法基线；可分配以 `list_assignable` / CCF 为准（非历史「十款」） |
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **active（engineering）** | 写作引擎工程栈仍有效；**用户面由 NAS supersede**（解冻后由 AIR 重新激活用户面） |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **active（engineering）** | WEA 配置加固仍有效；默认 UI 入口由 NAS 关闭（AIR 解冻后恢复） |
 | [UI-DETAIL-CONTRACT-V0.md](./UI-DETAIL-CONTRACT-V0.md) | **frozen** | Studio 弹窗家族细节合同 · Wave1–10 样式落地 |
@@ -178,6 +182,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md) | **active** | PRD-ARCH-OPTIMIZATION-V2 四方评审报告（有条件通过）|
 | [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片 Done**（M2-A + M2-B1 · [#62](https://github.com/warclover/travelogue/pull/62)；其余 Parking Lot）|
 | [acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md](./acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md) | **active** | Arch Opt V2 收工记录（含 M2-A3 合入路径核实 + 门禁快照）|
+| [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | **active** | Photo/Zine Agent Skills 外部调研 + Travelogue 参考价值（Postcard / Abstract Editorial / Gathered / Distill / Minimal）|
 
 ---
 

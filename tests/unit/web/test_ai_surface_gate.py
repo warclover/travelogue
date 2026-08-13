@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -19,10 +20,16 @@ from travelogue.web.studio_handlers import export_handlers, llm_settings_handler
 from travelogue.web.studio_handlers.config_handlers import handle_config
 
 
+def _cfg_surface_off():
+    """显式关闸，避免本机 dogfood config.yaml 开闸污染断言。"""
+    cfg = get_config()
+    return replace(cfg, studio=replace(cfg.studio, ai_surface_enabled=False))
+
+
 def test_resolve_ai_surface_default_false(monkeypatch):
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
     assert resolve_ai_surface_enabled(None) is False
-    assert resolve_ai_surface_enabled(get_config()) is False
+    assert resolve_ai_surface_enabled(_cfg_surface_off()) is False
 
 
 def test_resolve_ai_surface_env_on(monkeypatch):
@@ -87,7 +94,7 @@ def _mock_handler(payload: dict | None = None, *, command: str = "POST") -> Magi
     handler = MagicMock()
     handler.command = command
     handler._read_json_body.return_value = payload
-    handler.app_config = get_config()
+    handler.app_config = _cfg_surface_off()
     handler.trips_dir = Path(".")
     handler.studio_config_path = None
     handler.client_address = ("127.0.0.1", 0)
@@ -100,6 +107,12 @@ def _mock_handler(payload: dict | None = None, *, command: str = "POST") -> Magi
     handler._json_response.side_effect = _json
     handler._captured = captured
     return handler
+
+
+def _write_surface_off_config(tmp_path: Path) -> Path:
+    cfg_path = tmp_path / "config.yaml"
+    cfg_path.write_text("studio:\n  ai_surface_enabled: false\n", encoding="utf-8")
+    return cfg_path
 
 
 def test_narrate_403_when_surface_off(monkeypatch, tmp_path: Path):
@@ -124,6 +137,9 @@ def test_narrate_403_when_surface_off(monkeypatch, tmp_path: Path):
         encoding="utf-8",
     )
     handler = MockStudioHandler(trips, json_body={"tripId": "t1-gate"})
+    handler.app_config = _cfg_surface_off()
+    # 请求门控读盘：勿让本机 dogfood config.yaml 开闸污染
+    handler.studio_config_path = _write_surface_off_config(tmp_path)
     handler.command = "POST"
     export_handlers.handle_narrate(handler)
     assert handler.response is not None
@@ -132,32 +148,43 @@ def test_narrate_403_when_surface_off(monkeypatch, tmp_path: Path):
     assert body["error"] == "E_AI_SURFACE_DISABLED"
 
 
-def test_llm_settings_write_403_when_surface_off(monkeypatch):
+def test_llm_settings_write_allowed_when_surface_off(monkeypatch, tmp_path: Path):
+    """SAS · D-SAS-07：关闸仍可保存 Key（预配）；不得再回 E_AI_SURFACE_DISABLED。"""
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
     reset_config_cache()
     handler = _mock_handler(
         {"provider": "deepseek", "apiKey": "sk-test-xxxxxxxxxxxx"}
     )
     llm_settings_handlers.handle_llm_settings(handler)
-    assert handler._captured["status"] == 403
-    assert handler._captured["body"]["error"] == "E_AI_SURFACE_DISABLED"
+    assert handler._captured["status"] == 200
+    assert handler._captured["body"].get("ok") is True
+    assert handler._captured["body"].get("error") != "E_AI_SURFACE_DISABLED"
 
 
-def test_llm_settings_delete_403_when_surface_off(monkeypatch):
+def test_llm_settings_delete_allowed_when_surface_off(monkeypatch, tmp_path: Path):
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
     reset_config_cache()
     handler = _mock_handler(None, command="DELETE")
     llm_settings_handlers.handle_llm_settings(handler)
-    assert handler._captured["status"] == 403
+    assert handler._captured["status"] == 200
 
 
-def test_llm_ping_403_when_surface_off(monkeypatch):
+def test_llm_ping_allowed_when_surface_off(monkeypatch, tmp_path: Path):
+    """关闸可 ping；失败应是鉴权/网络类，而非 E_AI_SURFACE_DISABLED。"""
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
     reset_config_cache()
+
+    def _fake_ping(**_kwargs):
+        return "deepseek/deepseek-chat @ https://api.deepseek.com/v1"
+
+    monkeypatch.setattr("travelogue.llm.client.llm_ping", _fake_ping)
     handler = _mock_handler({"provider": "deepseek", "apiKey": "sk-test-xxxxxxxxxxxx"})
     llm_settings_handlers.handle_llm_ping(handler)
-    assert handler._captured["status"] == 403
-    assert handler._captured["body"]["error"] == "E_AI_SURFACE_DISABLED"
+    assert handler._captured["status"] == 200
+    assert handler._captured["body"].get("error") != "E_AI_SURFACE_DISABLED"
 
 
 def test_config_exposes_ai_surface_enabled_false(monkeypatch, tmp_path: Path):
@@ -166,42 +193,37 @@ def test_config_exposes_ai_surface_enabled_false(monkeypatch, tmp_path: Path):
     handler = _mock_handler(command="GET")
     handler.trips_dir = tmp_path / "trips"
     handler.trips_dir.mkdir()
+    handler.studio_config_path = _write_surface_off_config(tmp_path)
     handle_config(handler)
     assert handler._captured["status"] == 200
     assert handler._captured["body"].get("aiSurfaceEnabled") is False
 
 
-def test_llm_status_403_when_surface_off(monkeypatch):
-    """AC-NAS-17c / AC-QFX-05/23：off 时早拒，不进 _status_body，零敏感键。"""
+def test_llm_status_allowed_when_surface_off(monkeypatch, tmp_path: Path):
+    """SAS · D-SAS-07：关闸仍可读 status（供 API 配置 Modal / Sheet）。"""
     monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    monkeypatch.setenv("TRAVELOGUE_USER_DATA", str(tmp_path))
     reset_config_cache()
     handler = _mock_handler(command="GET")
-    called = {"status_body": False}
-
-    def _boom(*_a, **_k):
-        called["status_body"] = True
-        return {"ok": True}
-
-    monkeypatch.setattr(llm_settings_handlers, "_status_body", _boom)
     llm_settings_handlers.handle_llm_status(handler)
-    assert handler._captured["status"] == 403
+    assert handler._captured["status"] == 200
     body = handler._captured["body"]
-    assert body["error"] == "E_AI_SURFACE_DISABLED"
-    assert called["status_body"] is False
-    for key in (
-        "maskedKey",
-        "userDataDir",
-        "tripsDir",
-        "llmAvailable",
-        "llmProvider",
-        "configured",
-        "readiness",
-        "model",
-        "region",
-        "lastPingOk",
-        "capabilities",
-    ):
-        assert key not in body, key
+    assert body.get("ok") is True
+    assert body.get("error") != "E_AI_SURFACE_DISABLED"
+    assert "configured" in body
+
+
+def test_resolve_ai_surface_for_request_reloads_disk(monkeypatch, tmp_path: Path):
+    """serve pin 的 app_config=False 时，读盘 True 仍应开闸。"""
+    from travelogue.web.ai_surface import resolve_ai_surface_for_request
+
+    monkeypatch.delenv(ENV_AI_SURFACE, raising=False)
+    cfg_path = tmp_path / "config.yaml"
+    cfg_path.write_text("studio:\n  ai_surface_enabled: true\n", encoding="utf-8")
+    handler = _mock_handler(command="GET")
+    handler.app_config = _cfg_surface_off()
+    handler.studio_config_path = cfg_path
+    assert resolve_ai_surface_for_request(handler) is True
 
 
 def test_config_projection_strips_llm_when_surface_off(monkeypatch, tmp_path: Path):
@@ -211,6 +233,7 @@ def test_config_projection_strips_llm_when_surface_off(monkeypatch, tmp_path: Pa
     handler = _mock_handler(command="GET")
     handler.trips_dir = tmp_path / "trips"
     handler.trips_dir.mkdir()
+    handler.studio_config_path = _write_surface_off_config(tmp_path)
     handle_config(handler)
     body = handler._captured["body"]
     assert handler._captured["status"] == 200

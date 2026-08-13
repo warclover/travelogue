@@ -12,15 +12,20 @@
   --studio-panel-surface: #f3efe8;
   --studio-panel-border: rgba(20, 17, 13, 0.18);
   --studio-panel-focus: rgba(61, 107, 90, 0.45);
+  /* 浅色弹层字阶：title / body / ui / meta（四档，禁止再散落硬编码） */
   --studio-panel-title-size: 15px;
-  --studio-panel-label-size: 11px;
-  --studio-panel-chip-size: 11px;
+  --studio-panel-body-size: 13px;
+  --studio-panel-ui-size: 12px;
+  --studio-panel-meta-size: 11px;
+  --studio-panel-label-size: var(--studio-panel-meta-size);
+  --studio-panel-chip-size: var(--studio-panel-meta-size);
 }
 
 .studio__modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 6000;
+  /* 须高于 .studio-llm-settings(12000) / capability-card(11000)，否则覆盖确认被挡住 →「无反应」 */
+  z-index: 13000;
   display: flex;
   align-items: center;
   justify-content: center;

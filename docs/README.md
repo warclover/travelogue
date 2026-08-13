@@ -97,6 +97,10 @@
 | [PRD-PREVIEW-REFINE-UX-V1.1.md](./PRD-PREVIEW-REFINE-UX-V1.1.md) | **精修可用性优化 V1.1**（模式≠面板 · 情境对齐 · 导出门面收敛）· **Conditional Go** |
 | [IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md](./IMPLEMENTATION-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 实施清单（M1–M3 代码就绪） |
 | [ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md](./ACCEPTANCE-PREVIEW-REFINE-UX-V1.1.md) | 精修可用性 V1.1 验收清单（手测待补签） |
+| [PRD-PREVIEW-REFINE-COVER-IA-V1.md](./PRD-PREVIEW-REFINE-COVER-IA-V1.md) | **精修封面 IA 升档 RCI**（照片｜版式｜杂志名 · 画册去重 · 字体文案） |
+| [IMPLEMENTATION-PREVIEW-REFINE-COVER-IA-V1.md](./IMPLEMENTATION-PREVIEW-REFINE-COVER-IA-V1.md) | RCI 实施清单（W1/W2 ✅ · W3 手测待签） |
+| [ACCEPTANCE-PREVIEW-REFINE-COVER-IA-V1.md](./ACCEPTANCE-PREVIEW-REFINE-COVER-IA-V1.md) | RCI 验收清单（手测待签） |
+| [acceptance-records/preview-refine-cover-ia-v1-dogfood-GUIDE.md](./acceptance-records/preview-refine-cover-ia-v1-dogfood-GUIDE.md) | RCI 本机狗粮脚本 |
 | [acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-review-2026-07-14.md) | 精修可用性 V1.1 跨职能评审纪要 |
 | [acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-s1-2026-07-14.md) | 精修可用性 V1.1 · S1 新手脚本手测记录 |
 | [acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md](./acceptance-records/preview-refine-ux-v1.1-dogfood-retest-2026-07-14.md) | 精修可用性 V1.1 · 多角色复测（Playwright） |
@@ -464,6 +468,7 @@
 | [acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md](./acceptance-records/ssg-smart-shot-grouping-v1-review-TEMPLATE.md) | SSG 七席评审纪要模板 |
 | [acceptance-records/ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) | SSG 盲评记录模板 |
 | [RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md](./RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md) | 旅行照片自动排版 · 用户需求与竞品对照 |
+| [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | Photo/Zine Agent Skills 调研 · 对 ECC/CAL/封面出口的参考价值 |
 | [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) | **一句话选风格 LVP V1** **v0.2.0**（Conditional Go · M1/M2 代码 ✅ · AC-06 狗粮待 · M3 延期） |
 | [IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md](./IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md) | LVP 实施 · M1 剖面持久化 · M2 两卡 UI |
 | [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) | LVP 验收 · AC-01～05/07/08 ✅ · AC-06 待狗粮 |
@@ -533,6 +538,8 @@
 | [PRD-COVER-OPTIMIZATION-V4.md](./PRD-COVER-OPTIMIZATION-V4.md) | Icon Dock + 右下书名卡 `card-br` |
 | [ACCEPTANCE-COVER-OPTIMIZATION-V4.md](./ACCEPTANCE-COVER-OPTIMIZATION-V4.md) | V4 验收 |
 | [IMPLEMENTATION-COVER-OPTIMIZATION-V4.md](./IMPLEMENTATION-COVER-OPTIMIZATION-V4.md) | V4 实施清单 |
+| [PRD-PREVIEW-DOCK-VISUAL-V5.md](./PRD-PREVIEW-DOCK-VISUAL-V5.md) | **DIG** 预览 Dock 视觉 V5（墨色轻雾玻璃 · 只换皮 · Draft v0.1.0） |
+| [IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md](./IMPLEMENTATION-PREVIEW-DOCK-VISUAL-V5.md) | DIG 实施清单（W0–W3 · 主改 `dock.css`） |
 | [PRD-COVER-STYLES-V5.md](./PRD-COVER-STYLES-V5.md) | **封面多样式 V5** · 三款 Web 皮肤 + 创建时分配 |
 | [ACCEPTANCE-COVER-STYLES-V5.md](./ACCEPTANCE-COVER-STYLES-V5.md) | V5 验收 |
 | [IMPLEMENTATION-COVER-STYLES-V5.md](./IMPLEMENTATION-COVER-STYLES-V5.md) | V5 实施清单 |
@@ -545,13 +552,16 @@
 | [IMPLEMENTATION-COVER-STYLES-V6.md](./IMPLEMENTATION-COVER-STYLES-V6.md) | V6 实施清单 |
 | [PRD-BOOKENDS-ENGINE-V1.md](./PRD-BOOKENDS-ENGINE-V1.md) | **Bookends Engine V1**（**v0.2.1** · 开发决议已合入）· 封面–封底引擎 + 成对约束 |
 | [PRD-COVER-ART-DIRECTION-V1.md](./PRD-COVER-ART-DIRECTION-V1.md) | **封面装帧导演 CAD V1**（**v0.1.0 Draft**）· 真照片 Mode A · 禁假风景默认 · 扩展 Bookends |
+| [PRD-COVER-CRAFT-FOCUS-V1.md](./PRD-COVER-CRAFT-FOCUS-V1.md) | **封面装帧打磨 CCF V1**（**v0.2.0**）· Hero Set 三款 + FE-CCF + `cover_craft` 一键撤回 · 不扩版式 |
+| [PRD-COVER-EDITORIAL-COVENANT-V1.md](./PRD-COVER-EDITORIAL-COVENANT-V1.md) | **封面编辑契约 CEC V1**（**superseded**）· 由 CCF 取代 |
 | [PRD-COVER-CALLIGRAPHY-TITLE-V1.md](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md) | **封面艺术字标题 · 点睛 CAL V1**（**v0.2.0 · 七席 Conditional Go · W0 策划冻结** · [评审](./acceptance-records/cal-cover-calligraphy-title-v1-review-2026-08-06.md) · BLK-CAL-01～05 已回写 · 暂停排期）· 独立 `meta.titleArt` · V6 白名单 · 与 AIR 解耦 |
+| [PRD-COVER-TYPESETTING-CONTINUITY-V1.md](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md) | **封面成册感 CTS V1**（策划已冻结）· 三层信息 + 字数档 Spec + 轻提示 · 可与 CCF 并行 |
 | [adr/017-bookends-engine.md](./adr/017-bookends-engine.md) | ADR-017 · Bookends 挂点 / 锁 / 压字分期 / B2a·b |
 | [IMPLEMENTATION-BOOKENDS-ENGINE-V1.md](./IMPLEMENTATION-BOOKENDS-ENGINE-V1.md) | Bookends 实施清单（B0→B1→B2a→B2b） |
 | [ACCEPTANCE-BOOKENDS-ENGINE-V1.md](./ACCEPTANCE-BOOKENDS-ENGINE-V1.md) | Bookends 验收追踪（B1 起勾选） |
 | [acceptance-records/bookends-prd-review-2026-07-13.md](./acceptance-records/bookends-prd-review-2026-07-13.md) | Bookends PRD 跨职能评审纪要（产品/架构/算法/UIUX/体验/视觉/流程） |
 
-阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE → 装帧增强 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（Draft）→ 标题装饰层 **[PRD-COVER-CALLIGRAPHY-TITLE-V1](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)**（Draft · 暂停）。
+阅读顺序：**PRD-COVER-OPTIMIZATION-V4** → **V5** → **V6** → **[PRD-BOOKENDS-ENGINE-V1](./PRD-BOOKENDS-ENGINE-V1.md)** → ADR-017 → IMPLEMENTATION → ACCEPTANCE → 装帧增强 **[PRD-COVER-ART-DIRECTION-V1](./PRD-COVER-ART-DIRECTION-V1.md)**（Draft）→ 标题装饰层 **[PRD-COVER-CALLIGRAPHY-TITLE-V1](./PRD-COVER-CALLIGRAPHY-TITLE-V1.md)** → 成册感 **[PRD-COVER-TYPESETTING-CONTINUITY-V1](./PRD-COVER-TYPESETTING-CONTINUITY-V1.md)**（CTS）→ **现行打磨** **[PRD-COVER-CRAFT-FOCUS-V1](./PRD-COVER-CRAFT-FOCUS-V1.md)**（CCF · Draft；取代 CEC）。
 
 ---
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from travelogue.cover_engine import (
     assignable_style_ids,
     get_default_style_id,
@@ -23,9 +25,17 @@ from travelogue.services.trip_factory import create_trip
 from travelogue.web.studio_entry import build_entry
 
 
-def test_assignable_styles_are_v6_five() -> None:
-    """2026-08-03: cameo-aperture/type-monument/portal-arch/horizon-split/
-    diptych-seam retired after real-world testing; 5 remain assignable."""
+def test_assignable_styles_are_v6_five(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Baseline catalog still registers five active styles; CCF filters at runtime."""
+    from dataclasses import replace
+
+    from travelogue.config.app import AppConfig
+    from travelogue.config.cover_craft import CoverCraftConfig
+
+    monkeypatch.setattr(
+        "travelogue.config.get_config",
+        lambda **_: replace(AppConfig(), cover_craft=CoverCraftConfig(enabled=False)),
+    )
     ids = assignable_style_ids()
     assert ids == (
         "veil-footer",
@@ -45,6 +55,29 @@ def test_assignable_styles_are_v6_five() -> None:
         "diptych-seam",
     ):
         assert not is_assignable(retired)
+
+
+def test_assignable_styles_ccf_hero_set_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """CCF enabled narrows assignable to Hero Set."""
+    from dataclasses import replace
+
+    from travelogue.config.app import AppConfig
+    from travelogue.config.cover_craft import CoverCraftConfig
+
+    monkeypatch.setattr(
+        "travelogue.config.get_config",
+        lambda **_: replace(
+            AppConfig(),
+            cover_craft=CoverCraftConfig(enabled=True, hero_only=True),
+        ),
+    )
+    assert assignable_style_ids() == (
+        "veil-footer",
+        "folio-overlap",
+        "band-cut",
+    )
+    assert not is_assignable("scroll-head")
+    assert not is_assignable("contact-stamp")
 
 
 def test_default_style_is_veil_footer() -> None:
@@ -100,9 +133,20 @@ def test_preview_matrix_each_active_has_fixture() -> None:
         assert row["blurb"]
 
 
-def test_art_direction_five_assignable_after_2026_08_03_retirement() -> None:
-    """五款保留可分配；联合选型 / Studio 同源。退场五款仍注册但不可分配。"""
+def test_art_direction_five_assignable_after_2026_08_03_retirement(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """五款 catalog active；CCF 关闭时均可分配。退场五款仍注册但不可分配。"""
+    from dataclasses import replace
+
+    from travelogue.config.app import AppConfig
+    from travelogue.config.cover_craft import CoverCraftConfig
     from travelogue.cover_engine.registry import get_style
+
+    monkeypatch.setattr(
+        "travelogue.config.get_config",
+        lambda **_: replace(AppConfig(), cover_craft=CoverCraftConfig(enabled=False)),
+    )
 
     for sid in ("veil-footer", "folio-overlap", "band-cut", "scroll-head", "contact-stamp"):
         rec = get_style(sid)

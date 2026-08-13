@@ -354,14 +354,39 @@ def test_ux_be_book_tab_zones_focus_and_deeplink() -> None:
     css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
     panel = (STUDIO / "js" / "longshot-export-panel.js").read_text(encoding="utf-8")
 
-    assert "改名字与一句话" in sheet
+    assert "改一句话与成册风格" in sheet
     assert 'id: "cover"' in sheet
     assert 'data-book-zone="story"' in sheet
     assert 'data-book-zone="advanced"' in sheet
     assert "renderCoverPanel" in sheet
     assert "data-cover-side" in sheet
-    assert "整本信息" in sheet
+    assert "data-cover-seg" in sheet
+    assert "COVER_SEGS" in sheet
+    assert "goto-cover-name" in sheet
+    assert "goto-cover-style" in sheet
+    assert "cover_seg_switch" in sheet
+    assert "typeof tabId === \"object\"" in sheet or "typeof tabId === 'object'" in sheet
+    assert "omitMagazineTitle" in sheet
+    assert "preferCoverSeg" in sheet
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert "openRefineCoverSeg" in init_v3
+    assert "wireCoverRciDeepLinks" in init_v3
+    # DIG-COVER-C · 整面封面深链关闭，仅保留显式入口（Dock 精修等）
+    assert "DIG-COVER-C" in init_v3
+    assert "cover whole-surface deep link disabled" in init_v3
+    assert 'source: "cover_hero"' not in init_v3
+    assert "onOpenNameSeg" in init_v3
+    ai_sheet = (STUDIO / "preview-toolbar" / "ai-sheet.js").read_text(encoding="utf-8")
+    assert "data-ai-goto-cover-name" in ai_sheet
+    assert "去精修 · 杂志名" in ai_sheet
     assert "进阶" in sheet
+    assert "omitStyleSlot" in bookends
+    features = (STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    assert "生成字体" in features
+    assert "装帧字" not in features
+    assert "mode === \"name\"" in features or "mode === 'name'" in features
+    assert "displayTitle" in features
+    assert "杂志名回填优先" in features or "封面展示名" in features
     assert "去换封底" in sheet or "去换封面" in sheet
     assert "goto-bookends" in sheet
     assert "goto-body" in sheet
@@ -1021,3 +1046,60 @@ def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     assert "未保存的编辑" not in init_v3
     assert "_longshotStale" in longshot
     assert "保存到 trip.json" not in hbs
+
+def test_dig_dock_ink_glass_v5_markers() -> None:
+    """PRD-PREVIEW-DOCK-VISUAL-V5 · DIG skin contract (visual only)."""
+    dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
+    dock_js = (STUDIO / "preview-toolbar" / "dock.js").read_text(encoding="utf-8")
+    bootstrap = (STUDIO / "preview-toolbar" / "bootstrap.js").read_text(encoding="utf-8")
+    init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+
+    assert "preview-toolbar__dock--ink-glass" in bootstrap
+    assert "--dock-bg-top" in dock_css
+    assert "--dock-accent: var(--preview-accent, #3f454c)" in dock_css
+    assert "blur(28px)" in dock_css
+    assert "saturate(1.2)" in dock_css
+    assert "rgba(22, 24, 26, 0.85)" in dock_css
+    assert "--dock-ink: #ffffff" in dock_css
+    assert (
+        ".preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl" in dock_css
+    )
+    assert "#a8dcc8" not in dock_css
+    assert "#e0ba52" not in dock_css
+    assert "#7fcbb3" not in dock_css
+    assert "#c4a574" not in dock_css  # champagne copper retired → ink-teal
+    assert "#3d6b5a" not in dock_css  # forest green retired
+    assert "letter-spacing: 0.02em" in dock_css
+    assert "rgba(200, 149, 108, 0.45)" not in dock_css  # copper gradient divider retired
+    assert 'stroke-linecap="round"' in init_v3  # thin caret SVG
+    assert "preview-toolbar__longshot-caret-chevron" in init_v3
+    assert 'dockIconSvg("help")' in init_v3
+    assert 'case "help":' in dock_js
+    # 效果图图标：滑杆精修 / 列表分章 / 三角播放
+    assert "三档滑杆" in dock_js or 'cy="7"' in dock_js
+    assert "DIG-COVER-C" in init_v3
+    tokens = (STUDIO / "preview-toolbar" / "tokens.css").read_text(encoding="utf-8")
+    assert "--preview-accent: #3f454c" in tokens
+    assert "--preview-panel-bg: #f7f5f0" in tokens  # D-DIG-23 light panels
+    assert "--preview-ink: #14110d" in tokens
+    assert "--preview-surface: #ffffff" in tokens
+    assert "--preview-sheet-side-w: 640px" in tokens  # D-DIG-25 wider sheet
+    sheet_css = (STUDIO / "preview-toolbar" / "sheet.css").read_text(encoding="utf-8")
+    # Active tab must not use light accent-ink on light wash
+    assert (
+        ".preview-sheet__tab.is-active {\n"
+        "  /* 浅色弹层：active 用深字，禁用 accent-ink（象牙）以免浅上浅 */\n"
+        "  background: color-mix(in srgb, var(--sheet-accent) 16%, transparent);\n"
+        "  color: var(--sheet-ink);"
+    ) in sheet_css or (
+        ".preview-sheet__tab.is-active" in sheet_css
+        and "color: var(--sheet-ink);" in sheet_css
+        and "color: var(--sheet-accent-ink);"
+        not in sheet_css.split(".preview-sheet__tab.is-active")[1].split("}")[0]
+    )
+    assert "preview-sheet__bookends-actions" in sheet_css
+    actions_block = sheet_css.split(".preview-sheet__bookends-actions")[1].split(
+        ".preview-sheet__bookends-actions .preview-sheet__primary"
+    )[0]
+    assert "position: sticky" not in actions_block
+    assert "position: static" in actions_block

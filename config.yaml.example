@@ -36,6 +36,13 @@ title_art:
   # route_c_max_attempts: 2       # OCR 失败后再生成次数上限（含首次）
   # ocr_verify: true
 
+# 封面装帧打磨（CCF）· Hero Set 三款 + craft CSS；一键撤回设 enabled: false
+# 或环境变量 TRAVELOGUE_COVER_CRAFT=0（重启 Studio/渲染进程后生效）
+cover_craft:
+  enabled: true
+  hero_only: true                 # 开启后仅 veil-footer / folio-overlap / band-cut 可分配
+  craft_css: true                 # 开启后渲染写入 data-cover-craft=ccf-v1
+
 # AI 能力平台（ACP · W1a）· 工程能力开关，独立于 studio.ai_surface_enabled
 # 默认 false：仅挂接观测/预算外壳，不改变现有 narrate / title_art 门控语义
 ai_capability:

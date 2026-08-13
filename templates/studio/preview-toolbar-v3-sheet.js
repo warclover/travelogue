@@ -19,6 +19,12 @@ var TAB_MODES = [
   { id: "book", label: "画册" },
 ];
 
+var COVER_SEGS = [
+  { id: "photo", label: "照片", hint: "封面/封底" },
+  { id: "style", label: "版式", hint: "样式" },
+  { id: "name", label: "杂志名", hint: "改名·字体" },
+];
+
 var TAB_ALIASES = {
   edit: "book",
   structure: "book",
@@ -27,6 +33,12 @@ var TAB_ALIASES = {
   more: "book",
   bookends: "cover",
 };
+
+function resolveCoverSeg(segId) {
+  if (segId === "style" || segId === "name" || segId === "photo") return segId;
+  if (segId === "title" || segId === "font") return "name";
+  return "photo";
+}
 
 function resolveSheetTab(tabId) {
   if (!tabId) return "page";
@@ -130,6 +142,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var menuBtn = root.querySelector(".preview-toolbar__menu-btn");
 
   var activeTab = "page";
+  /** RCI · 封面二级分段 photo | style | name */
+  var activeCoverSeg = "photo";
   var previousFocus = null;
   var pendingDot = false;
   var structureDot = false;
@@ -140,6 +154,8 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   var SHEET_ANIM_MS = 540;
   /** @type {{ side: "opening"|"closing", scroll?: boolean } | null} */
   var pendingBookendsDeepLink = null;
+  /** @type {string | null} */
+  var pendingCoverSeg = null;
   var previewFocusObs = null;
   var previewFocusScrollTimer = null;
 
@@ -285,16 +301,29 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         side: opts.bookendsFocus === "closing" ? "closing" : "opening",
         scroll: opts.scrollToBookends !== false,
       };
+      if (!opts.coverSeg) opts.coverSeg = "photo";
+    }
+    if (opts.coverSeg) {
+      pendingCoverSeg = resolveCoverSeg(opts.coverSeg);
     }
     if (tabId === activeTab) {
-      if (activeTab === "cover" && pendingBookendsDeepLink) {
-        applyBookendsFocusUi();
+      if (activeTab === "cover") {
+        if (pendingCoverSeg) {
+          activeCoverSeg = pendingCoverSeg;
+          pendingCoverSeg = null;
+          renderCoverPanel();
+          return;
+        }
+        if (pendingBookendsDeepLink) {
+          applyBookendsFocusUi();
+        }
       }
       return;
     }
     confirmLeave(function (ok) {
       if (!ok) {
         pendingBookendsDeepLink = null;
+        pendingCoverSeg = null;
         return;
       }
       switchTab(tabId);
@@ -431,7 +460,7 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<li><span>导出 zip（自行托管）</span><button type="button" class="preview-sheet__link" data-action="export-zip">导出</button></li>' +
       '<li><span>在文件夹中显示</span><button type="button" class="preview-sheet__link" data-action="reveal-folder">打开</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、发到哪里 → 顶栏金色按钮旁 ▾</p>'
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">长图要不要字、导出模式 → 顶栏灰色按钮旁 ▾</p>'
     );
   }
 
@@ -696,12 +725,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   function mountBookendsInto(slot) {
     if (!slot) return;
     if (typeof hooks.mountBookendsPanel === "function") {
-      hooks.mountBookendsPanel(slot);
+      var api = hooks.mountBookendsPanel(slot);
+      if (api) root._bookendsApi = api;
     } else if (typeof hooks.mountCoverStyleControls === "function") {
       var coverSlot = document.createElement("div");
       coverSlot.className = "preview-sheet__cover-slot";
       slot.appendChild(coverSlot);
-      hooks.mountCoverStyleControls(coverSlot);
+      hooks.mountCoverStyleControls(coverSlot, { mode: "style", omitTitleArt: true });
     }
     var scrollOpening = slot.querySelector("[data-bookends-scroll-opening]");
     var scrollClosing = slot.querySelector("[data-bookends-scroll-closing]");
@@ -717,21 +747,122 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
+  function coverSubsegHtml() {
+    return (
+      '<div class="preview-sheet__cover-subseg" role="tablist" aria-label="封面子段">' +
+      COVER_SEGS.map(function (seg) {
+        var on = seg.id === activeCoverSeg;
+        return (
+          '<button type="button" class="preview-sheet__cover-subseg-btn' +
+          (on ? " is-on" : "") +
+          '" data-cover-seg="' +
+          seg.id +
+          '" aria-selected="' +
+          (on ? "true" : "false") +
+          '">' +
+          seg.label +
+          '<span class="preview-sheet__cover-subseg-hint">' +
+          seg.hint +
+          "</span></button>"
+        );
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function wireCoverSubseg() {
+    bodyEl.querySelectorAll("[data-cover-seg]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var next = resolveCoverSeg(btn.getAttribute("data-cover-seg"));
+        if (next === activeCoverSeg) return;
+        var from = activeCoverSeg;
+        activeCoverSeg = next;
+        try {
+          trackStudioEvent("cover_seg_switch", {
+            from: from,
+            to: next,
+            source: "subseg",
+          });
+        } catch (_eTrack) {}
+        renderCoverPanel();
+      });
+    });
+  }
+
+  function ensureBookendsApiForStyle() {
+    // 版式段需要 viaBookends 回调；若尚未挂过照片段，先挂隐藏 Bookends
+    if (root._bookendsApi && typeof root._bookendsApi.applyStyleViaBookends === "function") {
+      return;
+    }
+    var host = bodyEl.querySelector("[data-bookends-hidden-host]");
+    if (!host) return;
+    mountBookendsInto(host);
+  }
+
   function renderCoverPanel() {
     stopPreviewFocusWatch();
+    if (pendingCoverSeg) {
+      activeCoverSeg = resolveCoverSeg(pendingCoverSeg);
+      pendingCoverSeg = null;
+    }
+    activeCoverSeg = resolveCoverSeg(activeCoverSeg);
+
+    if (activeCoverSeg === "style") {
+      bodyEl.innerHTML =
+        coverSubsegHtml() +
+        '<div class="preview-sheet__bookends-slot" data-bookends-hidden-host hidden aria-hidden="true"></div>' +
+        '<div class="preview-sheet__cover-style-host" data-cover-style-host></div>';
+      wireCoverSubseg();
+      ensureBookendsApiForStyle();
+      var styleHost = bodyEl.querySelector("[data-cover-style-host]");
+      if (styleHost && typeof hooks.mountCoverStyleControls === "function") {
+        var styleOpts = {
+          mode: "style",
+          omitTitleArt: true,
+          viaBookends: true,
+          applyStyleViaBookends: function (styleId, keepCover) {
+            if (root._bookendsApi && root._bookendsApi.applyStyleViaBookends) {
+              return root._bookendsApi.applyStyleViaBookends(styleId, keepCover);
+            }
+            return false;
+          },
+        };
+        hooks.mountCoverStyleControls(styleHost, styleOpts);
+      }
+      return;
+    }
+
+    if (activeCoverSeg === "name") {
+      bodyEl.innerHTML =
+        coverSubsegHtml() +
+        '<div class="preview-sheet__cover-name-host" data-cover-name-host></div>';
+      wireCoverSubseg();
+      var nameHost = bodyEl.querySelector("[data-cover-name-host]");
+      if (nameHost && typeof hooks.mountCoverNameFontControls === "function") {
+        hooks.mountCoverNameFontControls(nameHost);
+      } else if (nameHost && typeof hooks.mountCoverStyleControls === "function") {
+        hooks.mountCoverStyleControls(nameHost, { mode: "name" });
+      }
+      return;
+    }
+
+    // photo（默认）
     var side = resolveBookendsFocusSide(null) || "opening";
     if (!pendingBookendsDeepLink) {
       pendingBookendsDeepLink = { side: side, scroll: false };
     }
     bodyEl.innerHTML =
+      coverSubsegHtml() +
       '<div class="preview-sheet__seg preview-sheet__cover-side-seg" data-field="cover-side" role="tablist" aria-label="封面或封底">' +
       '<button type="button" data-cover-side="opening">封面</button>' +
       '<button type="button" data-cover-side="closing">封底</button>' +
       "</div>" +
       '<p class="preview-sheet__empty-label"><strong data-cover-panel-title>换一张封面图</strong></p>' +
-      '<p class="preview-sheet__hint">点缩略图即可更换。</p>' +
-      '<div class="preview-sheet__bookends-slot" data-book-zone="bookends"></div>';
+      '<p class="preview-sheet__hint">点缩略图即可更换。版式与杂志名见上方分段。</p>' +
+      '<div class="preview-sheet__bookends-slot" data-book-zone="bookends"></div>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="goto-cover-style">去换版式</button>';
 
+    wireCoverSubseg();
     bodyEl.querySelectorAll("button[data-cover-side]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var next = btn.getAttribute("data-cover-side") === "closing" ? "closing" : "opening";
@@ -739,6 +870,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         applyBookendsFocusUi(next);
       });
     });
+    var gotoStyle = bodyEl.querySelector('[data-action="goto-cover-style"]');
+    if (gotoStyle) {
+      gotoStyle.addEventListener("click", function () {
+        requestTabSwitch("cover", { coverSeg: "style" });
+      });
+    }
 
     var bookendsSlot = bodyEl.querySelector(".preview-sheet__bookends-slot");
     mountBookendsInto(bookendsSlot);
@@ -749,19 +886,23 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   function renderBookPanel() {
     stopPreviewFocusWatch();
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">改名字与一句话。换封面/封底请到「封面」。</p>' +
-      '<details class="preview-sheet__zone preview-sheet__zone--layout-vibe" data-book-zone="layout-vibe" open>' +
-      '<summary>成册风格 <span class="preview-sheet__zone-meta">推荐 · 实验</span></summary>' +
-      '<div class="preview-sheet__zone-body">' +
-      '<div class="preview-sheet__layout-vibe-slot"></div>' +
-      "</div></details>" +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">改一句话与成册风格。杂志名与封面字体在「封面」。</p>' +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
-      '<summary>整本信息 <span class="preview-sheet__zone-meta">杂志名 · 一句话 · 文案</span></summary>' +
+      '<summary>给这本画册的一句话 <span class="preview-sheet__zone-meta">封面副标 · 辑封</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       bookCopyRefreshHtml() +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--layout-vibe" data-book-zone="layout-vibe" open>' +
+      '<summary>成册风格 <span class="preview-sheet__zone-meta">推荐 · 实验</span></summary>' +
+      '<div class="preview-sheet__zone-body">' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">影响整本页面气质，不是封面第一眼样式。要换封面样式 → 「封面 · 版式」。</p>' +
+      '<div class="preview-sheet__layout-vibe-slot"></div>' +
+      "</div></details>" +
+      '<details class="preview-sheet__zone preview-sheet__zone--brand" data-book-zone="brand" open>' +
+      "<summary>作品署名</summary>" +
+      '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__brand" data-works-brand>' +
-      '<p class="preview-sheet__label">作品署名</p>' +
       '<p class="preview-sheet__hint preview-sheet__hint--compact">个人署名 · 同时出现在辑封与长图尾</p>' +
       '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="default" /> 默认 · Travelogue</label>' +
       '<label class="preview-sheet__radio"><input type="radio" name="works-brand" value="custom" /> 自定义（≤14 字）</label>' +
@@ -779,7 +920,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" class="preview-sheet__primary preview-sheet__apply-layout" hidden>更新版面</button>' +
       '<p class="preview-sheet__hint">结构确认见顶栏横幅（若开启）；「为什么这样分章」见下方。</p>' +
       '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>' +
-      "</div></details>";
+      "</div></details>" +
+      '<div class="preview-sheet__book-foot">' +
+      '<button type="button" class="preview-sheet__ghost" data-action="goto-cover-name">去改杂志名 / 字体</button>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact" style="text-align:center;margin-top:6px">换封面/封底 → 「封面 · 照片」</p>' +
+      "</div>";
 
     if (typeof hooks.onBookTabRendered === "function") {
       hooks.onBookTabRendered();
@@ -792,7 +937,17 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     var editSlot = bodyEl.querySelector(".preview-sheet__embed--edit");
     if (editSlot && hooks.drawers && typeof hooks.drawers.openEmbed === "function") {
-      hooks.drawers.openEmbed("edit", editSlot, { sheetMode: true });
+      hooks.drawers.openEmbed("edit", editSlot, {
+        sheetMode: true,
+        omitMagazineTitle: true,
+      });
+    }
+
+    var gotoName = bodyEl.querySelector('[data-action="goto-cover-name"]');
+    if (gotoName) {
+      gotoName.addEventListener("click", function () {
+        requestTabSwitch("cover", { coverSeg: "name" });
+      });
     }
 
     wireWorksBrandControls();
@@ -936,6 +1091,20 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     }
   }
 
+  function consumePreferCoverSeg() {
+    try {
+      var tid = tripIdFromPath();
+      if (!tid) return null;
+      var key = "travelogue.rci.preferCoverSeg." + tid;
+      var raw = sessionStorage.getItem(key);
+      if (!raw) return null;
+      sessionStorage.removeItem(key);
+      return resolveCoverSeg(raw);
+    } catch (_ePref) {
+      return null;
+    }
+  }
+
   function resolveDefaultOpenTab() {
     var ctx = describeScreenContext(findDominantScreen());
     if (ctx.detail === "cover" || ctx.detail === "closing") {
@@ -943,6 +1112,26 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         side: ctx.detail === "closing" ? "closing" : "opening",
         scroll: false,
       };
+      var prefer = consumePreferCoverSeg();
+      if (prefer) {
+        pendingCoverSeg = prefer;
+        return "cover";
+      }
+      // 书名/字体贴纸在视口中央时默认进「杂志名」
+      var titleArt = document.querySelector(
+        ".cover-opening__title-art, .cover-opening__title:not(.sr-only)"
+      );
+      if (ctx.detail === "cover" && titleArt) {
+        var tr = titleArt.getBoundingClientRect();
+        var mid = window.innerHeight * 0.45;
+        if (tr.top < mid && tr.bottom > window.innerHeight * 0.15) {
+          pendingCoverSeg = "name";
+        } else {
+          pendingCoverSeg = "photo";
+        }
+      } else {
+        pendingCoverSeg = "photo";
+      }
       return "cover";
     }
     return "page";
@@ -972,6 +1161,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   }
 
   function open(tabId, openOpts) {
+    // RCI · 兼容 open({ tab, coverSeg, bookendsFocus })
+    if (tabId && typeof tabId === "object") {
+      openOpts = tabId;
+      tabId = openOpts.tab || openOpts.tabId || null;
+    }
     openOpts = openOpts || {};
     // AC-HELP-15 · 帮助开着时禁止再开精修 Sheet
     if (typeof hooks.isHelpOpen === "function" && hooks.isHelpOpen()) {
@@ -996,6 +1190,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         side: openOpts.bookendsFocus === "closing" ? "closing" : "opening",
         scroll: openOpts.scrollToBookends !== false,
       };
+      nextTab = "cover";
+      if (!openOpts.coverSeg) openOpts.coverSeg = "photo";
+    }
+    if (openOpts.coverSeg) {
+      pendingCoverSeg = resolveCoverSeg(openOpts.coverSeg);
       nextTab = "cover";
     }
     switchTab(nextTab);

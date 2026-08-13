@@ -17,14 +17,47 @@ from travelogue.util.llm_presets import (
     coerce_model_for_provider,
     preset_base_url,
     resolve_base_url_for_provider,
+    validate_custom_base_url,
 )
 
 
+def test_validate_custom_base_url_https_public_only() -> None:
+    assert validate_custom_base_url(None) is None
+    assert validate_custom_base_url("") is None
+    assert (
+        validate_custom_base_url("https://api.example.com/v1")
+        == "https://api.example.com/v1"
+    )
+    with pytest.raises(ValueError, match="E_LLM_BASE_URL"):
+        validate_custom_base_url("http://api.example.com/v1")
+    with pytest.raises(ValueError, match="E_LLM_BASE_URL"):
+        validate_custom_base_url("https://127.0.0.1/v1")
+    with pytest.raises(ValueError, match="E_LLM_BASE_URL"):
+        validate_custom_base_url("https://localhost/v1")
+    with pytest.raises(ValueError, match="E_LLM_BASE_URL"):
+        validate_custom_base_url("https://10.0.0.8/v1")
+    with pytest.raises(ValueError, match="E_LLM_BASE_URL"):
+        validate_custom_base_url("https://169.254.169.254/latest")
+
+
 def test_coerce_drops_foreign_default_model() -> None:
-    assert coerce_model_for_provider("dashscope", "deepseek-chat") == "qwen-plus"
+    assert coerce_model_for_provider("dashscope", "deepseek-chat") == "qwen3.7-flash"
     assert coerce_model_for_provider("deepseek", "qwen-plus") == "deepseek-chat"
-    assert coerce_model_for_provider("dashscope", None) == "qwen-plus"
+    assert coerce_model_for_provider("deepseek", "qwen3.7-flash") == "deepseek-chat"
+    assert coerce_model_for_provider("dashscope", None) == "qwen3.7-flash"
     assert coerce_model_for_provider("dashscope", "qwen-turbo") == "qwen-turbo"
+
+
+def test_dashscope_model_candidates_prefer_free_then_paid() -> None:
+    from travelogue.util.llm_presets import dashscope_model_candidates
+
+    chain = dashscope_model_candidates(None)
+    assert chain[0] == "qwen3.7-flash"
+    assert "qwen-plus" in chain
+    assert chain.index("qwen3.7-flash") < chain.index("qwen-plus")
+    selected_first = dashscope_model_candidates("qwen-max")
+    assert selected_first[0] == "qwen-max"
+    assert "qwen3.7-flash" in selected_first
 
 
 def test_coerce_drops_foreign_default_base_url() -> None:
@@ -72,7 +105,7 @@ def test_resolve_runtime_ignores_sticky_deepseek_when_dashscope(
         # Explicit provider=dashscope must not inherit DeepSeek endpoint/model
         rt = resolve_llm_runtime("dashscope")
     assert rt.provider == "dashscope"
-    assert rt.model == "qwen-plus"
+    assert rt.model == "qwen3.7-flash"
     assert rt.base_url == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
 
 
@@ -103,7 +136,7 @@ def test_resolve_runtime_coerces_mismatched_cfg_fields(
     )
     with config_override(contaminated):
         rt = resolve_llm_runtime("dashscope")
-    assert rt.model == "qwen-plus"
+    assert rt.model == "qwen3.7-flash"
     assert rt.base_url == PROVIDER_PRESETS["dashscope"]["base_url"].rstrip("/")
 
 

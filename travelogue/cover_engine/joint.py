@@ -335,6 +335,7 @@ def apply_joint_pick(
     meta = trip.setdefault("meta", {})
     curation = trip.setdefault("curation", {})
     prev_cover_id = str(trip.get("coverAssetId") or "")
+    prev_style = str(meta.get("coverOpeningStyle") or "")
 
     if explain.style_id and is_assignable(explain.style_id):
         meta["coverOpeningStyle"] = explain.style_id
@@ -358,10 +359,12 @@ def apply_joint_pick(
                 trip["coverAssetId"] = asset_id
 
     new_cover_id = str(trip.get("coverAssetId") or "")
-    if new_cover_id and new_cover_id != prev_cover_id:
-        # 换了封面照片：title-art 贴纸的定位/墨色按旧照片算，必须过期。
-        # 展示层另有 coverAssetId 指纹比对作根因防护；这里主动置 stale 让
-        # 状态对用户/调试可见（见 engine.mark_title_art_stale 文档）。
+    new_style = str(meta.get("coverOpeningStyle") or "")
+    if (new_cover_id and new_cover_id != prev_cover_id) or (
+        new_style and new_style != prev_style
+    ):
+        # 换封面或换 Opening：title-art 定位/字号按旧风格纸栏几何算，必须过期。
+        # 展示层另有 coverAssetId / openingStyleId 指纹比对；这里主动置 stale。
         from travelogue.cover_engine.title_art.engine import mark_title_art_stale
 
         mark_title_art_stale(trip)

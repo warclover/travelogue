@@ -148,6 +148,8 @@ export function initToolbarV3(root, tripId) {
       "studio-help-open studio-help-open--ghost studio-help-open--dock preview-toolbar__dock-btn",
   });
   helpBtn.setAttribute("aria-label", "使用帮助");
+  // DIG · 与 Dock 线图标同族，取代实心「?」字
+  helpBtn.innerHTML = dockIconSvg("help");
   if (dock && dock.firstChild) {
     dock.insertBefore(helpBtn, dock.firstChild);
   } else if (dock) {
@@ -377,17 +379,23 @@ export function initToolbarV3(root, tripId) {
     mountTemplateControls: function (slot) {
       mountTemplateControls(slot, tripId, { inSheet: true });
     },
-    mountCoverStyleControls: function (slot) {
-      mountCoverStyleControls(slot, tripId);
+    mountCoverStyleControls: function (slot, styleOpts) {
+      mountCoverStyleControls(
+        slot,
+        tripId,
+        Object.assign({ mode: "style", omitTitleArt: true }, styleOpts || {})
+      );
+    },
+    mountCoverNameFontControls: function (slot) {
+      mountCoverStyleControls(slot, tripId, { mode: "name" });
     },
     mountLayoutVibeControls: function (slot) {
       mountLayoutVibeControls(slot, tripId, { root: root });
     },
     mountBookendsPanel: function (slot) {
-      mountBookendsPanel(slot, tripId, {
-        mountCoverStyleControls: function (inner, styleOpts) {
-          mountCoverStyleControls(inner, tripId, styleOpts || {});
-        },
+      // RCI · 照片段不嵌版式；版式段另行挂载并复用 applyStyleViaBookends
+      return mountBookendsPanel(slot, tripId, {
+        omitStyleSlot: true,
       });
     },
     syncCopyDisplayUi: function (container) {
@@ -658,6 +666,36 @@ export function initToolbarV3(root, tripId) {
   });
 
   root._sheet = mountPreviewUnifiedSheet(root, sheetHooks);
+
+  function openRefineCoverSeg(opts) {
+    opts = opts || {};
+    if (!root._sheet || typeof root._sheet.open !== "function") return;
+    root._sheet.open("cover", {
+      coverSeg: opts.coverSeg || "photo",
+      bookendsFocus: opts.bookendsFocus || "opening",
+      scrollToBookends: opts.scrollToBookends === true,
+      source: opts.source || "cover_deep_link",
+    });
+    try {
+      trackStudioEvent("cover_refine_deeplink", {
+        coverSeg: opts.coverSeg || "photo",
+        bookendsFocus: opts.bookendsFocus || "opening",
+        source: opts.source || "cover_deep_link",
+      });
+    } catch (_eDl) {}
+  }
+
+  /**
+   * DIG · 封面整面深链关闭（产品拍板 C，2026-08-12）：
+   * 点封面/封底空白不再打开精修；只走 Dock「精修」。
+   * openRefineCoverSeg 仍保留给 AI Sheet / 精修内跳转等显式入口。
+   * DIG-COVER-C
+   */
+  function wireCoverRciDeepLinks() {
+    /* no-op · cover whole-surface deep link disabled (DIG-COVER-C) */
+  }
+
+  wireCoverRciDeepLinks();
   root._chapterPanel = mountChapterPanel(root, tripId, drawers, root._sheet);
   root._openChapterPanel = function (opts) {
     root._chapterPanel.open(opts || {});
@@ -699,9 +737,13 @@ export function initToolbarV3(root, tripId) {
   caretBtn.setAttribute("aria-label", "导出设置");
   caretBtn.setAttribute("aria-haspopup", "dialog");
   // 可见短标「设置」；完整动作名放 aria（避免与主钮「小红书」抢权）
+  // DIG · 细 chevron SVG（替代粗字符 ▾）
   caretBtn.innerHTML =
     '<span class="preview-toolbar__longshot-caret-label">设置</span>' +
-    '<span class="preview-toolbar__longshot-caret-chevron" aria-hidden="true">▾</span>';
+    '<span class="preview-toolbar__longshot-caret-chevron" aria-hidden="true">' +
+    '<svg viewBox="0 0 12 12" width="12" height="12" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    "</svg></span>";
 
   split.appendChild(longshotBtn);
   split.appendChild(caretBtn);
@@ -878,7 +920,15 @@ export function initToolbarV3(root, tripId) {
   if (isPreviewToolbarV4(root)) {
     initDockTooltips(root);
     initDockScrollFade(root);
-    initCoverTitleEdit(tripId);
+    initCoverTitleEdit(tripId, {
+      onOpenNameSeg: function () {
+        openRefineCoverSeg({
+          coverSeg: "name",
+          bookendsFocus: "opening",
+          source: "cover_title",
+        });
+      },
+    });
   }
 
   maybeShowCoverOpeningStyleToast(tripId);

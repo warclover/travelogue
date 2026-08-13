@@ -526,15 +526,19 @@ html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cov
   z-index: 2;
 }
 
-/* folio-overlap 书名左侧竖排：贴纸为窄高条幅，须落在纸面栏内（--cover-folio-
-   margin 13%），不能溢出骑缝/照片区。 */
+/* folio-overlap 竖排条幅贴纸：钉在纸栏中线，高度优先（拒绝横幅铺满）。 */
 html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art,
 html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title-art {
-  max-width: 10%;
-  max-height: 58%;
+  left: calc(var(--cover-folio-margin) / 2);
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: min(58vh, 520px);
+  max-width: calc(var(--cover-folio-margin) * 0.88);
+  max-height: 62%;
   object-fit: contain;
   object-position: center center;
-  z-index: 5; /* 压过纸面栏文案层，对齐原生 title z-index */
+  z-index: 5;
 }
 
 /* W3：尺寸贴近各风格原生标题（band 最小、veil 偏大）；位置已由 left 锚点对齐 */
@@ -802,6 +806,43 @@ body.longshot-capturing .cover-opening .trip-meta {
     --cover-mag-header-text: #1c1b1a;
     --cover-mat-radius: 6px;
     --cover-panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Cover Craft Focus (CCF) · gated by html[data-cover-craft="ccf-v1"]
+     One-click rollback: cover_craft.enabled=false → attribute omitted → these tokens unused. */
+  html[data-layout="web"][data-cover-craft="ccf-v1"],
+  html[data-layout="auto"][data-cover-craft="ccf-v1"] {
+    --cover-veil-fog: linear-gradient(
+      to top,
+      rgba(5, 6, 8, 0.96) 0%,
+      rgba(5, 6, 8, 0.90) 10%,
+      rgba(5, 6, 8, 0.74) 24%,
+      rgba(5, 6, 8, 0.48) 40%,
+      rgba(5, 6, 8, 0.24) 58%,
+      rgba(5, 6, 8, 0.08) 78%,
+      rgba(5, 6, 8, 0) 100%
+    );
+    --cover-veil-fog-height: 72%;
+    --cover-veil-glow: radial-gradient(
+      48% 40% at 22% 76%,
+      rgba(255, 168, 96, 0.26),
+      rgba(255, 168, 96, 0) 68%
+    );
+    --cover-veil-panel-max: min(720px, 62%);
+    --cover-veil-title-size: clamp(2.25rem, 5.2vw, 3.75rem);
+    --cover-veil-hook: clamp(1.2rem, 1.85vw, 1.42rem);
+    /* W1b band-cut */
+    --cover-band-center: 62%;
+    --cover-band-paper: rgba(248, 244, 236, 0.98);
+    --cover-band-title-size: clamp(1.42rem, 3.05vw, 2.28rem);
+    --cover-band-label-max: min(46%, 440px);
+    --cover-band-pad: 14px clamp(22px, 3.6vw, 44px) 16px;
+    /* W2 folio-overlap · 窄脊纸栏（约为曾用的 34% 的三分之一） */
+    --cover-folio-paper: #f3efe6;
+    --cover-folio-title-size: clamp(1.45rem, 2.9vw, 2.35rem);
+    --cover-folio-ghost: rgba(168, 52, 42, 0.26);
+    --cover-folio-margin: 11%;
+    --cover-folio-cut: 11%;
   }
 
   html[data-layout="web"] .cover-opening .trip-meta,
@@ -1156,7 +1197,7 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
-  /* 左侧纸面栏竖排书名：居中于窄脊，把横向留给右页照片 */
+  /* 左侧纸面栏竖排书名：必须 writing-mode:vertical-rl（勿回落成横排 -webkit-box） */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__title {
     position: absolute;
@@ -1164,9 +1205,10 @@ body.longshot-capturing .cover-opening .trip-meta {
     right: auto;
     top: 50%;
     transform: translate(-50%, -50%);
-    /* 显式高度给竖排换栏一个稳定基准（同 cameo-aperture 教训） */
     width: auto;
-    height: min(58vh, 520px);
+    max-width: calc(var(--cover-folio-margin) * 0.92);
+    height: min(70vh, 620px);
+    max-height: min(70vh, 620px);
     margin: 0;
     padding: 0;
     color: #141312;
@@ -1178,10 +1220,12 @@ body.longshot-capturing .cover-opening .trip-meta {
     white-space: nowrap;
     writing-mode: vertical-rl;
     text-orientation: mixed;
+    /* 盖过通用 .cover-opening__title 的 -webkit-box 横排钳行 */
     display: block;
     -webkit-line-clamp: unset;
-    -webkit-box-orient: unset;
-    overflow: visible;
+    line-clamp: unset;
+    -webkit-box-orient: initial;
+    overflow: hidden;
     clip-path: none;
     z-index: 5;
     pointer-events: auto;
@@ -1195,23 +1239,30 @@ body.longshot-capturing .cover-opening .trip-meta {
     display: none;
   }
 
+  /* 底部 hook：保持横排可读，收进左侧纸栏内换行，不侵入右页照片 */
   html[data-layout="web"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook,
   html[data-layout="auto"] .cover-opening[data-cover-opening="folio-overlap"] .cover-opening__hook {
     position: absolute;
-    left: clamp(10px, 1.2vw, 18px);
-    bottom: clamp(44px, 5.5vh, 64px);
-    width: max-content;
-    max-width: min(56em, calc(100vw - 80px));
+    left: clamp(8px, 0.9vw, 14px);
+    right: auto;
+    bottom: clamp(40px, 5vh, 58px);
+    width: calc(var(--cover-folio-margin) - 18px);
+    max-width: calc(var(--cover-folio-margin) - 16px);
     margin: 0;
     color: #4f4a44;
-    font-size: 1.32rem;
-    line-height: 1.35;
+    font-size: clamp(0.72rem, 1.05vw, 0.9rem);
+    line-height: 1.45;
+    letter-spacing: 0.02em;
     pointer-events: auto;
-    display: block;
-    white-space: nowrap;
-    overflow: visible;
-    text-overflow: clip;
-    -webkit-line-clamp: unset;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-shadow: none;
   }
 
@@ -2058,10 +2109,11 @@ body.longshot-capturing .cover-opening .trip-meta {
     color: rgba(138, 131, 120, 0.7);
   }
 
-  /* —— contact-stamp · 日戳档案 —— */
+  /* —— contact-stamp · 日戳档案 ——
+     保留底缘轻雾托白字；不再整图去饱和/sepia，也不做全幅灰罩。 */
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-hero,
   html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-hero {
-    filter: saturate(0.48) contrast(1.12) sepia(0.22);
+    filter: none;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"]::before,
@@ -2087,7 +2139,13 @@ body.longshot-capturing .cover-opening .trip-meta {
   html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"]::after {
     inset: 0;
     height: auto;
-    background: linear-gradient(to top, rgba(8, 9, 10, 0.72) 0%, rgba(8, 9, 10, 0.12) 40%, rgba(8, 9, 10, 0.28) 100%);
+    background: linear-gradient(
+      to top,
+      rgba(8, 9, 10, 0.58) 0%,
+      rgba(8, 9, 10, 0.22) 22%,
+      rgba(8, 9, 10, 0.06) 42%,
+      transparent 62%
+    );
     z-index: 2;
   }
 
@@ -2105,51 +2163,13 @@ body.longshot-capturing .cover-opening .trip-meta {
     overflow: visible;
   }
 
-  /* 日戳：从 section data-cover-stamp 经 panel 属性透传 */
+  /* 日戳圆环已下线：右下角档案条承担日期信息，左上角不再叠红戳。 */
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__panel::before,
-  html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__panel::before {
-    content: attr(data-cover-stamp);
-    position: absolute;
-    left: clamp(34px, 5vw, 62px);
-    top: clamp(32px, 6vh, 56px);
-    width: 82px;
-    height: 82px;
-    margin: 0;
-    border-radius: 50%;
-    border: 2px solid rgba(232, 104, 78, 0.9);
-    display: grid;
-    place-items: center;
-    text-align: center;
-    transform: rotate(-9deg);
-    color: rgba(248, 146, 118, 1);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    line-height: 1.4;
-    white-space: pre-line;
-    mix-blend-mode: screen;
-    box-sizing: border-box;
-    padding: 10px;
-    z-index: 6;
-    pointer-events: none;
-  }
-
+  html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__panel::before,
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__panel::after,
   html[data-layout="auto"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__panel::after {
-    content: "";
-    position: absolute;
-    left: clamp(34px, 5vw, 62px);
-    top: clamp(32px, 6vh, 56px);
-    width: 82px;
-    height: 82px;
-    border-radius: 50%;
-    border: 1px solid rgba(232, 104, 78, 0.6);
-    box-sizing: border-box;
-    transform: rotate(-9deg);
-    margin: 5px 0 0 5px;
-    width: 72px;
-    height: 72px;
-    z-index: 6;
-    pointer-events: none;
+    content: none;
+    display: none;
   }
 
   html[data-layout="web"] .cover-opening[data-cover-opening="contact-stamp"] .cover-opening__place,

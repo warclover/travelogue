@@ -87,7 +87,9 @@ def list_styles(*, status: CoverStyleStatus | None = None) -> list[CoverStyleRec
 
 
 def list_assignable_styles() -> list[CoverStyleRecord]:
-    return list_styles(status="active")
+    from travelogue.cover_engine.craft import filter_assignable_records
+
+    return filter_assignable_records(list_styles(status="active"))
 
 
 def get_style(style_id: str) -> CoverStyleRecord | None:
@@ -113,7 +115,14 @@ def get_default_style_id() -> str:
 
 def is_assignable(style_id: str) -> bool:
     rec = get_style(style_id)
-    return rec is not None and rec.status == "active"
+    if rec is None or rec.status != "active":
+        return False
+    from travelogue.config.cover_craft import is_cover_craft_hero_only
+    from travelogue.cover_engine.craft import HERO_SET_FROZEN
+
+    if is_cover_craft_hero_only():
+        return style_id in HERO_SET_FROZEN
+    return True
 
 
 def set_style_status(style_id: str, status: CoverStyleStatus) -> None:

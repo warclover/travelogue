@@ -89,8 +89,16 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
             raw === "split-mat" || raw === "magazine-head"
               ? "原先两款编辑向版式，现统一呈现为「对页叠印」。"
               : "";
+          try {
+            sessionStorage.setItem(
+              "travelogue.rci.preferCoverSeg." + tripId,
+              "style"
+            );
+          } catch (_ePref0) {}
           showToolbarToast(
-            "封面已按新画册风格呈现；你的原始设定未改写。" + (extra ? " " + extra : ""),
+            "封面已按新画册风格呈现；你的原始设定未改写。" +
+              (extra ? " " + extra : "") +
+              " 可在「精修 · 封面 · 版式」更换。",
             { duration: 5200 }
           );
           trackStudioEvent("cover_opening_style_render", {
@@ -101,6 +109,30 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
           return;
         }
       } catch (e) {}
+
+      // RCI / FE-CCF · 经典版式侧菜：提示下次打开精修默认进「版式」
+      try {
+        var craftKey = "travelogue.coverCraft.legacyNotice." + tripId;
+        if (
+          data.coverCraft &&
+          data.coverCraft.legacyCurrent &&
+          !localStorage.getItem(craftKey)
+        ) {
+          localStorage.setItem(craftKey, "1");
+          sessionStorage.setItem(
+            "travelogue.rci.preferCoverSeg." + tripId,
+            "style"
+          );
+          var legacyLabel =
+            data.coverCraft.legacyLabel || data.coverStyleLabel || style;
+          showToolbarToast(
+            "当前为经典版式「" +
+              legacyLabel +
+              "」。打开精修将停在「封面 · 版式」，可切换到现行三款。",
+            { duration: 5200 }
+          );
+        }
+      } catch (_eCraft) {}
 
       // §7.2 · joint toast once per trip (after lock)
       if (!data.coverJointLocked) return;
@@ -117,7 +149,9 @@ export function maybeShowCoverOpeningStyleToast(tripId) {
         source: (data.coverStyleExplain && data.coverStyleExplain.source) || "joint-v6",
       });
       showToolbarToast(
-        "已为这本画册选了「" + label + "」，并配了更合适的封面图。可在「精修 · 画册」中更换。",
+        "已为这本画册选了「" +
+          label +
+          "」，并配了更合适的封面图。可在「精修 · 封面 · 版式」中更换。",
         { duration: 4200 }
       );
     });

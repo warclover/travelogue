@@ -432,6 +432,14 @@ def build_render_context(
     trip_id = str(trip.get("tripId") or "").strip()
     if surface.is_draft and trip_id:
         html_attrs.append(f'data-trip-id="{trip_id}"')
+    try:
+        from travelogue.cover_engine.craft import craft_attr_value
+
+        craft_v = craft_attr_value()
+        if craft_v:
+            html_attrs.append(f'data-cover-craft="{craft_v}"')
+    except Exception:
+        pass
     if surface.photos_only:
         html_attrs.append('data-copy-display="photos"')
     theme = surface.font_theme or (trip.get("export") or {}).get("fontTheme") or ""

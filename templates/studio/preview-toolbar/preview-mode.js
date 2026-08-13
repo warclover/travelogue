@@ -120,13 +120,80 @@ function ensureRefineModeChip() {
     chip.setAttribute("role", "status");
     document.body.appendChild(chip);
   }
-  chip.textContent = "精修中";
+  if (chip.getAttribute("data-refine-chip-busy") === "1") {
+    chip.textContent = "更新中";
+    chip.classList.add("is-busy");
+  } else {
+    chip.textContent = "精修中";
+    chip.classList.remove("is-busy");
+  }
   chip.hidden = false;
 }
 
 function hideRefineModeChip() {
   var chip = document.getElementById("preview-refine-mode-chip");
   if (chip) chip.hidden = true;
+}
+
+function setRefineChipUpdating(busy) {
+  var chip = document.getElementById("preview-refine-mode-chip");
+  if (busy) {
+    if (!chip) {
+      ensureRefineModeChip();
+      chip = document.getElementById("preview-refine-mode-chip");
+    }
+    if (!chip) return;
+    chip.setAttribute("data-refine-chip-busy", "1");
+    chip.textContent = "更新中";
+    chip.classList.add("is-busy");
+    chip.hidden = false;
+    return;
+  }
+  if (!chip) return;
+  chip.removeAttribute("data-refine-chip-busy");
+  chip.classList.remove("is-busy");
+  if (isPreviewRefineOn()) {
+    chip.textContent = "精修中";
+    chip.hidden = false;
+  } else {
+    hideRefineModeChip();
+  }
+}
+
+function setCoverFaceBusy(busy, label) {
+  var cover =
+    document.querySelector(".cover-opening") ||
+    document.querySelector("[data-cover-opening]");
+  if (!cover) return;
+  var overlay = cover.querySelector(".preview-cover-busy");
+  if (busy) {
+    cover.classList.add("is-cover-busy");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "preview-cover-busy";
+      overlay.setAttribute("role", "status");
+      overlay.setAttribute("aria-live", "polite");
+      overlay.innerHTML = '<span class="preview-cover-busy__label"></span>';
+      cover.appendChild(overlay);
+    }
+    var lab = overlay.querySelector(".preview-cover-busy__label");
+    if (lab) lab.textContent = label || "正在更换封面…";
+    overlay.hidden = false;
+    return;
+  }
+  cover.classList.remove("is-cover-busy");
+  if (overlay) overlay.hidden = true;
+}
+
+/**
+ * 换封面 / 换版式期间的忙态：封面脸遮罩 + 精修 chip「更新中」轻呼吸。
+ * @param {boolean} busy
+ * @param {{ label?: string }} [opts]
+ */
+export function setOpeningUpdateBusy(busy, opts) {
+  opts = opts || {};
+  setRefineChipUpdating(!!busy);
+  setCoverFaceBusy(!!busy, opts.label || "正在更换封面…");
 }
 
 /**

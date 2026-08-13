@@ -10,11 +10,12 @@ import {
   syncDerivativesStatusBadge,
   toolbarConfirm,
 } from "./shell.js";
-import { applyLayoutRerender, syncCoverOpeningStyleInDom } from "./core.js";
+import { applyLayoutRerender } from "./core.js";
 import {
   HELP_COPY,
   maybeShowBookendsPickTip,
 } from "../js/help-onboarding.js";
+import { setOpeningUpdateBusy } from "./preview-mode.js";
 
 function bookendsApi(tripId, suffix) {
   return "/__travelogue/trips/" + encodeURIComponent(tripId) + "/bookends" + (suffix || "");
@@ -131,7 +132,10 @@ export function mountBookendsPanel(slot, tripId, opts) {
     '<button type="button" class="preview-sheet__ghost" data-bookends-scroll-closing>在画面上看封底</button>' +
     '<button type="button" class="preview-sheet__ghost" data-bookends-restore>恢复自动挑选</button>' +
     "</div>" +
-    '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>';
+    // RCI · 版式改挂「封面 · 版式」分段；照片段可 omitStyleSlot
+    (opts.omitStyleSlot
+      ? ""
+      : '<div class="preview-sheet__bookends-style-slot" data-bookends-style-slot></div>');
 
   slot.appendChild(root);
 
@@ -177,10 +181,18 @@ export function mountBookendsPanel(slot, tripId, opts) {
     closingPreviewOnly: false,
   };
 
-  function setBusy(busy) {
+  function setBusy(busy, busyOpts) {
+    busyOpts = busyOpts || {};
     root.querySelectorAll("button").forEach(function (btn) {
       btn.disabled = !!busy;
     });
+    if (busy && busyOpts.kind === "opening") {
+      setOpeningUpdateBusy(true, {
+        label: busyOpts.label || "正在更换封面…",
+      });
+    } else if (!busy) {
+      setOpeningUpdateBusy(false);
+    }
   }
 
   function renderStatus(payload) {
@@ -359,8 +371,8 @@ export function mountBookendsPanel(slot, tripId, opts) {
 
   function afterMutation(res, mutOpts) {
     mutOpts = mutOpts || {};
-    setBusy(false);
     if (res.status === 409 && res.body && res.body.error === "E_BOOKENDS_CLOSING_CONFLICT") {
+      setBusy(false);
       return toolbarConfirm({
         title: "封底与新封面冲突",
         body: res.body.message || "需要重选封底",
@@ -372,6 +384,7 @@ export function mountBookendsPanel(slot, tripId, opts) {
       });
     }
     if (res.status !== 200 || !res.body || !res.body.ok) {
+      setBusy(false);
       showToolbarToast((res.body && (res.body.message || res.body.error)) || "保存失败", {
         error: true,
       });
@@ -389,16 +402,20 @@ export function mountBookendsPanel(slot, tripId, opts) {
       showToolbarToast("正在准备 " + preparingN + " 张高清图", { duration: 3600 });
     }
     syncDerivativesStatusBadge(res.body);
-    if (res.body.coverOpeningStyle) {
-      syncCoverOpeningStyleInDom(res.body.coverOpeningStyle);
-    }
+    // 勿乐观 syncCoverOpeningStyleInDom：旧 DOM 套新 Opening（尤其 folio 竖排）
+    // 会先闪溢出书名，等 rerender 整页刷新后再呈现。
     render(res.body);
-    applyLayoutRerender(tripId);
-    return true;
+    // 忙态保持到版面刷新完成，避免「点了没反应」
+    return applyLayoutRerender(tripId).finally(function () {
+      setBusy(false);
+    });
   }
 
   function applyOpening(assetId, styleId, confirmConflict, keepCover) {
-    setBusy(true);
+    setBusy(true, {
+      kind: "opening",
+      label: styleId ? "正在更换封面版式…" : "正在更换封面…",
+    });
     var body = {
       confirmClosingConflict: !!confirmConflict,
     };
@@ -411,23 +428,35 @@ export function mountBookendsPanel(slot, tripId, opts) {
     } else if (assetId) {
       body.assetId = assetId;
     }
-    return postJson(bookendsApi(tripId, "/repick-opening"), body).then(function (res) {
-      return afterMutation(res, {
-        assetId: assetId,
-        styleId: styleId,
-        keepCover: keepCover,
-        kind: "opening",
+    return postJson(bookendsApi(tripId, "/repick-opening"), body)
+      .then(function (res) {
+        return afterMutation(res, {
+          assetId: assetId,
+          styleId: styleId,
+          keepCover: keepCover,
+          kind: "opening",
+        });
+      })
+      .catch(function () {
+        setBusy(false);
+        showToolbarToast("保存失败", { error: true });
+        return false;
       });
-    });
   }
 
   function applyClosing(assetId) {
     setBusy(true);
     return postJson(bookendsApi(tripId, "/repick-closing"), {
       assetId: assetId,
-    }).then(function (res) {
-      afterMutation(res, { kind: "closing" });
-    });
+    })
+      .then(function (res) {
+        return afterMutation(res, { kind: "closing" });
+      })
+      .catch(function () {
+        setBusy(false);
+        showToolbarToast("保存失败", { error: true });
+        return false;
+      });
   }
 
   /** FE-BE-05 · style change via bookends cascade */
@@ -460,10 +489,15 @@ export function mountBookendsPanel(slot, tripId, opts) {
     });
   }
 
-  if (styleSlot && typeof opts.mountCoverStyleControls === "function") {
+  if (
+    !opts.omitStyleSlot &&
+    styleSlot &&
+    typeof opts.mountCoverStyleControls === "function"
+  ) {
     opts.mountCoverStyleControls(styleSlot, {
       viaBookends: true,
       applyStyleViaBookends: applyStyleViaBookends,
+      omitTitleArt: true,
     });
   }
 

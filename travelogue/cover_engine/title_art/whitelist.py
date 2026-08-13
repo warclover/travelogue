@@ -101,8 +101,7 @@ WHITELIST: dict[str, PlacementPreset] = {
     "folio-overlap": PlacementPreset(
         opening_style_id="folio-overlap",
         label="纸面栏左侧竖排书名位（对齐 writing-mode:vertical-rl）",
-        # 窄高条幅：落在 --cover-folio-margin 13% 纸面栏内；y 避开顶部
-        # .cover-opening__place 竖排跑题。
+        # 静态占位；placement_preset()/presets() 会按 --cover-folio-margin 重算。
         rect={"x": 0.02, "y": 0.16, "w": 0.09, "h": 0.58},
         assume_paper_bg=True,
         anchor="left",
@@ -153,6 +152,7 @@ FALLBACK_PRESETS: dict[str, list[PlacementPreset]] = {
                 "纸面栏竖排全高备选——仅当该 trip 没有地点标签（.cover-opening__place，"
                 "跟主标题不同名才会显示）占用纸面栏顶部时才用，留白更松"
             ),
+            # 静态占位；placement_presets() 按纸栏宽度重算。
             rect={"x": 0.02, "y": 0.08, "w": 0.09, "h": 0.78},
             assume_paper_bg=True,
             conditional_occupant="folio_place_present",
@@ -166,6 +166,43 @@ DEFAULT_ENABLED_STYLES: frozenset[str] = frozenset(
     {"veil-footer", "band-cut", "contact-stamp", "folio-overlap"}
 )
 
+#: journal.css ``--cover-folio-margin``：默认纸栏 vs CCF craft 窄脊。
+FOLIO_PAPER_MARGIN_BASE = 0.13
+FOLIO_PAPER_MARGIN_CRAFT = 0.11
+
+
+def folio_paper_margin_frac() -> float:
+    """与 ``journal.css`` ``--cover-folio-margin`` 对齐的纸面栏宽度（画布归一化）。"""
+    try:
+        from travelogue.config.cover_craft import is_cover_craft_css_enabled
+
+        if is_cover_craft_css_enabled():
+            return FOLIO_PAPER_MARGIN_CRAFT
+    except Exception:
+        pass
+    return FOLIO_PAPER_MARGIN_BASE
+
+
+def _folio_column_rect(*, y: float, h: float, width_frac: float = 0.72) -> dict[str, float]:
+    """在当前纸面栏内生成竖排书名安全矩形（两侧留白，不碰骑缝）。"""
+    margin = folio_paper_margin_frac()
+    width = min(margin * width_frac, max(0.04, margin - 0.02))
+    x = max(0.015, (margin - width) * 0.5)
+    return {"x": round(x, 4), "y": y, "w": round(width, 4), "h": h}
+
+
+def _with_folio_rect(preset: PlacementPreset, *, y: float, h: float) -> PlacementPreset:
+    return PlacementPreset(
+        opening_style_id=preset.opening_style_id,
+        label=preset.label,
+        rect=_folio_column_rect(y=y, h=h),
+        assume_dark_veil=preset.assume_dark_veil,
+        conditional_occupant=preset.conditional_occupant,
+        assume_paper_bg=preset.assume_paper_bg,
+        anchor=preset.anchor,
+        native_ink=preset.native_ink,
+    )
+
 
 def is_whitelisted(style_id: str, *, enabled_styles: frozenset[str] | None = None) -> bool:
     allowed = enabled_styles if enabled_styles is not None else DEFAULT_ENABLED_STYLES
@@ -173,7 +210,12 @@ def is_whitelisted(style_id: str, *, enabled_styles: frozenset[str] | None = Non
 
 
 def placement_preset(style_id: str) -> PlacementPreset | None:
-    return WHITELIST.get(style_id)
+    preset = WHITELIST.get(style_id)
+    if preset is None:
+        return None
+    if style_id == "folio-overlap":
+        return _with_folio_rect(preset, y=0.16, h=0.58)
+    return preset
 
 
 def placement_presets(style_id: str) -> list[PlacementPreset]:
@@ -186,7 +228,12 @@ def placement_presets(style_id: str) -> list[PlacementPreset]:
     已验证安全的候选，这种情况下打分是形式化的（只有一个选项），跟 v0.6.1
     之前"固定绑死一个矩形"在行为上完全等价，不引入额外随机性。
     """
-    primary = WHITELIST.get(style_id)
+    primary = placement_preset(style_id)
     if primary is None:
         return []
-    return [primary, *FALLBACK_PRESETS.get(style_id, [])]
+    fallbacks = FALLBACK_PRESETS.get(style_id, [])
+    if style_id == "folio-overlap":
+        fallbacks = [
+            _with_folio_rect(fb, y=0.08, h=0.78) for fb in fallbacks
+        ]
+    return [primary, *fallbacks]

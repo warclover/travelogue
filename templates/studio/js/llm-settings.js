@@ -45,10 +45,15 @@ var LLM_MODELS = {
     { value: "deepseek-reasoner", label: "deepseek-reasoner" },
   ],
   dashscope: [
-    { value: "", label: "默认（qwen-plus）" },
-    { value: "qwen-plus", label: "qwen-plus" },
-    { value: "qwen-turbo", label: "qwen-turbo" },
-    { value: "qwen-max", label: "qwen-max" },
+    { value: "", label: "默认（优先免费额度 · qwen3.7-flash）" },
+    { value: "qwen3.7-flash", label: "qwen3.7-flash（优先免费）" },
+    { value: "qwen3.7-plus", label: "qwen3.7-plus（优先免费）" },
+    { value: "qwen3.8-max", label: "qwen3.8-max（优先免费）" },
+    { value: "qwen3.7-max", label: "qwen3.7-max（优先免费）" },
+    { value: "qwen3.6-plus", label: "qwen3.6-plus" },
+    { value: "qwen-plus", label: "qwen-plus（付费兜底）" },
+    { value: "qwen-turbo", label: "qwen-turbo（付费兜底）" },
+    { value: "qwen-max", label: "qwen-max（付费兜底）" },
   ],
 };
 
@@ -56,12 +61,15 @@ var SETTINGS_ERR = {
   E_LLM_AUTH: "Key 无效或已失效。请回控制台重新创建并粘贴。",
   E_LLM_ENDPOINT: "当前地域与 Key 不匹配。请改选中国站/国际站，或检查自定义 API 地址。",
   E_LLM_MODEL: "模型不可用。请改选列表中的模型，或在高级中填写控制台可见的模型名。",
-  E_LLM_QUOTA: "服务商返回余额或配额不足。请到控制台充值或检查限流。",
+  E_LLM_QUOTA:
+    "余额或配额不足。请到服务商控制台充值，或检查是否开启了「仅使用免费额度」。",
+  E_LLM_QUOTA_FREE_TIER:
+    "免费额度已用尽（Key 本身有效）。请到通义百炼控制台关闭「仅使用免费额度」，或充值后再试。",
   E_LLM_RATE: "服务商繁忙，请稍后重试。",
   E_LLM_TIMEOUT: "无法连接服务商。请检查网络后重试。",
   E_LLM_NETWORK: "无法连接服务商。请检查网络后重试。",
   E_LLM_CONNECT: "无法连接服务商。请检查网络后重试。",
-  E_LLM_BASE_URL: "自定义 API 地址仅支持 https。",
+  E_LLM_BASE_URL: "自定义 API 地址仅支持公网 https（不可用 localhost / 内网）。",
   E_LLM_PING: "连接测试失败，请检查 Key、地域或网络后重试。",
 };
 
@@ -312,7 +320,11 @@ function errMessage(j) {
 function applyStatus(st) {
   if (!st) return;
   _statusCache = st;
-  setBadge(st.readiness || (st.llmAvailable ? "已就绪" : "未配置")); // setBadge 间隙期弱化
+  // 就绪以 readiness / lastPingOk 为准，禁止仅凭「有 Key」显示已就绪
+  var badgeReady =
+    st.readiness ||
+    (st.lastPingOk === true ? "已就绪" : st.configured ? "已保存未验证" : "未配置");
+  setBadge(badgeReady);
   var provider = st.llmProvider && st.llmProvider !== "stub" ? st.llmProvider : "deepseek";
   if (st.configured && st.llmProvider) {
     provider = st.llmProvider === "dashscope" ? "dashscope" : "deepseek";
@@ -590,7 +602,23 @@ function wire(root) {
       if (custom) custom.value = "";
       syncRegionVisibility();
       updateHowto();
-      setMsg("", true);
+      // 单活跃 Key：切换服务商时提前提示将覆盖（保存时再二次确认）
+      var prev =
+        _statusCache && _statusCache.configured && _statusCache.llmProvider
+          ? _statusCache.llmProvider
+          : null;
+      if (prev && prev !== "stub" && prev !== prov.value) {
+        setMsg(
+          "将改用「" +
+            providerLabel(prov.value) +
+            "」，保存后会覆盖已保存的 " +
+            providerLabel(prev) +
+            " 配置。",
+          true
+        );
+      } else {
+        setMsg("", true);
+      }
     });
   }
   var baseEl = $("#studio-llm-base", root);
@@ -666,13 +694,13 @@ function wire(root) {
       setMsg("请先粘贴 API Key", false);
       return;
     }
-    setBusy(true);
+    // 先确认覆盖，再 setBusy —— 避免确认层被挡住时按钮已禁用、像「无反应」
     confirmProviderSwitchIfNeeded(body.provider)
       .then(function (ok) {
         if (!ok) {
-          setBusy(false);
           return null;
         }
+        setBusy(true);
         setMsg("正在保存并测试…", true);
         return runSave(body).then(function (saveRes) {
           trackStudioEvent("llm_settings_save", {
@@ -802,7 +830,7 @@ function wire(root) {
 export function openLlmSettings(opts) {
   opts = opts || {};
   // NAS · FE-NAS-11：默认面所有 source 早退（含 deeplink / fail / card）
-  // SAS · D-SAS-07：AI Sheet「本机连接」可在未开闸时预配 Key（allowWhenSurfaceOff）
+  // SAS · D-SAS-07：AI Sheet「API配置」可在未开闸时预配 Key（allowWhenSurfaceOff）
   if (!isAiSurfaceEnabled() && !opts.allowWhenSurfaceOff) return;
   _source = opts.source || "settings";
   _onChange = opts.onChange || null;

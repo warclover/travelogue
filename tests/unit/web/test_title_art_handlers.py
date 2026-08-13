@@ -113,6 +113,7 @@ def test_resolve_none_reports_disabled_without_error(
         "enabled": False,
         "routeCRequested": False,
         "routeCAllowedByConfig": False,
+        "rendered": True,
     }
 
 
@@ -149,13 +150,21 @@ def test_force_defaults_true_for_one_shot_button(
     assert captured["force"] is True
 
 
-def test_rerender_failure_returns_500(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+def test_rerender_failure_keeps_200_fail_open(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """meta 已写入后 rerender 失败：仍 200 + ok，附 E_STUDIO_RERENDER 提示，不抛 E_SERVER。"""
     mod = _mount(monkeypatch, tmp_path)
     monkeypatch.setattr(mod, "resolve_title_art", lambda *_a, **_k: TitleArtResult(enabled=True))
     monkeypatch.setattr(mod, "_rerender", lambda *_a, **_k: False)
     h = _H({})
     mod.handle_post_resolve_title_art(h, "demo-title-art")
-    assert h.status == 500
+    assert h.status == 200
+    assert h.resp_body["ok"] is True
+    assert h.resp_body["enabled"] is True
+    assert h.resp_body["rendered"] is False
+    assert h.resp_body["error"] == "E_STUDIO_RERENDER"
+    assert "预览" in str(h.resp_body.get("message") or "")
 
 
 def test_resolve_runs_outside_cas_mutator(

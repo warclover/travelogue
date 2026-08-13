@@ -31,7 +31,9 @@ def test_probe_llm_ready_does_not_mutate_environ(
 ) -> None:
     monkeypatch.setattr(
         "travelogue.llm.user_settings.read_user_llm_secrets",
-        lambda: UserLlmSecrets(provider="deepseek", api_key="sk-test"),
+        lambda: UserLlmSecrets(
+            provider="deepseek", api_key="sk-test", last_ping_ok=True
+        ),
     )
     injected = {"called": False}
 
@@ -50,6 +52,17 @@ def test_probe_llm_ready_does_not_mutate_environ(
     assert injected["called"] is False
     assert before == after
     assert ready is True
+
+
+def test_probe_llm_ready_false_until_ping_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(
+            provider="deepseek", api_key="sk-test", last_ping_ok=None
+        ),
+    )
+    cfg = AppConfig(llm=LlmConfig(provider="deepseek", capability="auto"))
+    assert probe_llm_ready(cfg=cfg) is False
 
 
 def test_probe_llm_ready_false_without_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -91,12 +104,14 @@ def test_resolve_llm_ready_summary_true_no_key_writes_llm_no_key(
     assert summary["degradeReason"] == "llm_no_key"
 
 
-def test_studio_llm_status_still_may_inject(
+def test_studio_llm_status_does_not_inject_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "travelogue.llm.user_settings.read_user_llm_secrets",
-        lambda: UserLlmSecrets(provider="deepseek", api_key="sk-test"),
+        lambda: UserLlmSecrets(
+            provider="deepseek", api_key="sk-test", last_ping_ok=True
+        ),
     )
     calls = {"n": 0}
 
@@ -109,5 +124,19 @@ def test_studio_llm_status_still_may_inject(
     )
     cfg = AppConfig(llm=LlmConfig(provider="deepseek"))
     status = studio_llm_status(cfg=cfg)
-    assert calls["n"] == 1
+    assert calls["n"] == 0
     assert status["llmAvailable"] is True
+
+
+def test_studio_llm_status_unavailable_without_ping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "travelogue.llm.user_settings.read_user_llm_secrets",
+        lambda: UserLlmSecrets(
+            provider="deepseek", api_key="sk-test", last_ping_ok=False
+        ),
+    )
+    cfg = AppConfig(llm=LlmConfig(provider="deepseek"))
+    status = studio_llm_status(cfg=cfg)
+    assert status["llmAvailable"] is False

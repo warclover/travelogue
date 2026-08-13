@@ -11,6 +11,11 @@
 trips_dir: ./trips
 
 # --- L0 · 运维根（默认不进 Studio「常用」设置）---
+# 智能动作总闸：填了 API Key 仍不够；须显式开启，否则预览 AI 显示「智能动作暂不可用」。
+# 等价环境变量：TRAVELOGUE_AI_SURFACE=1
+studio:
+  ai_surface_enabled: true        # false=默认无 AI 面（NAS）；true=开启杂志文案/封面字体等
+
 llm:
   provider: stub                  # stub | deepseek | dashscope
   model: deepseek-chat

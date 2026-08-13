@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from travelogue.llm.client import LlmRuntime, _url_error_code, chat_completion
+from travelogue.llm.client import LlmRuntime, _url_error_code, chat_completion, llm_ping
 from travelogue.llm.errors import LlmError
 
 
@@ -92,3 +92,78 @@ def test_chat_completion_no_retry_on_400() -> None:
     with patch("travelogue.llm.client.urllib.request.urlopen", fake_urlopen):
         with pytest.raises(LlmError, match="E_LLM_HTTP"):
             chat_completion([{"role": "user", "content": "hi"}], runtime=rt)
+
+
+def test_chat_completion_dashscope_failsover_on_freetier() -> None:
+    rt = LlmRuntime(
+        provider="dashscope",
+        model="qwen3.7-flash",
+        api_key="test-key",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        timeout_sec=10,
+    )
+    seen: list[str] = []
+
+    def fake_urlopen(req, timeout=0):
+        body = json.loads(req.data.decode("utf-8"))
+        seen.append(body["model"])
+        if body["model"] == "qwen3.7-flash":
+            raise urllib.error.HTTPError(
+                req.full_url,
+                403,
+                "forbidden",
+                hdrs=None,
+                fp=io.BytesIO(
+                    b'{"error":{"code":"AllocationQuota.FreeTierOnly",'
+                    b'"message":"Free quota exhausted"}}'
+                ),
+            )
+        ok = json.dumps(
+            {"choices": [{"message": {"content": '{"ok": true}'}}]}
+        ).encode("utf-8")
+        return io.BytesIO(ok)
+
+    with patch("travelogue.llm.client.urllib.request.urlopen", fake_urlopen):
+        out = chat_completion(
+            [{"role": "user", "content": "hi"}],
+            runtime=rt,
+            json_mode=False,
+        )
+    assert out == '{"ok": true}'
+    assert seen[0] == "qwen3.7-flash"
+    assert "qwen3.7-plus" in seen or "qwen-plus" in seen
+
+
+def test_llm_ping_uses_short_timeout_and_json_fallback() -> None:
+    rt = LlmRuntime(
+        provider="deepseek",
+        model="deepseek-chat",
+        api_key="test-key",
+        base_url="https://example.invalid/v1",
+        timeout_sec=120,
+    )
+    seen_timeouts: list[int] = []
+    modes: list[bool] = []
+
+    def fake_urlopen(req, timeout=0):
+        seen_timeouts.append(int(timeout))
+        body = req.data.decode("utf-8") if req.data else ""
+        modes.append("response_format" in body)
+        if "response_format" in body:
+            raise urllib.error.HTTPError(
+                req.full_url,
+                400,
+                "bad",
+                hdrs=None,
+                fp=io.BytesIO(b"json mode unsupported"),
+            )
+        ok = json.dumps(
+            {"choices": [{"message": {"content": '{"ok": true}'}}]}
+        ).encode("utf-8")
+        return io.BytesIO(ok)
+
+    with patch("travelogue.llm.client.urllib.request.urlopen", fake_urlopen):
+        msg = llm_ping(runtime=rt)
+    assert "deepseek/deepseek-chat" in msg
+    assert modes == [True, False]
+    assert all(t <= 20 for t in seen_timeouts)

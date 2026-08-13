@@ -44,15 +44,6 @@ function clipSuggestion(text) {
   return t.slice(0, 36);
 }
 
-function showAdvancedSection(aiOpsAdminEnabled) {
-  try {
-    if (new URLSearchParams(location.search).get("aiOps") === "1") return true;
-  } catch (_e0) {}
-  // OQ-SAS-02 · 以服务端 capabilities.aiOpsAdminEnabled 为准（正式包默认关）
-  if (typeof aiOpsAdminEnabled === "boolean") return aiOpsAdminEnabled;
-  return false;
-}
-
 function suggestionKey(s) {
   if (!s) return "";
   return (
@@ -120,6 +111,9 @@ export function mountAiSurface(root, tripId, opts) {
   var shell = null;
   var btn = null;
   var llmAvailable = false;
+  /** @type {boolean | null} */
+  var lastPingOk = null;
+  var llmConfigured = false;
   var titleArtEnabled = false;
   var titleArtRouteCEnabled = false;
   var titleArtBusy = false;
@@ -128,7 +122,6 @@ export function mountAiSurface(root, tripId, opts) {
   var entryCache = null;
   var pendingFocus = null;
   var hasBadge = false;
-  var aiOpsAdminEnabled = false;
   /** SNR COPY-SNR-S01 · 运行时覆盖：生成中 / 失败可重试（成功后由 posture 接管） */
   var narrateRuntimeStatus = "";
 
@@ -268,7 +261,7 @@ export function mountAiSurface(root, tripId, opts) {
       '<header class="preview-ai-sheet__head">' +
       '<div class="preview-ai-sheet__head-text">' +
       '<h2 id="preview-ai-sheet-title" class="preview-ai-sheet__title">AI</h2>' +
-      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>本册智能动作 · 不自动消耗额度</p>' +
+      '<p class="preview-ai-sheet__sub" data-ai-sheet-sub>AI能力 · 需配置模型API后方可使用</p>' +
       "</div>" +
       '<button type="button" class="preview-ai-sheet__close" data-ai-sheet-close aria-label="关闭">×</button>' +
       "</header>" +
@@ -302,45 +295,50 @@ export function mountAiSurface(root, tripId, opts) {
     var surfaceOn = isAiSurfaceEnabled();
     if (sub) {
       sub.textContent = surfaceOn
-        ? "本册智能动作 · 不自动消耗额度"
+        ? "AI能力 · 需配置模型API后方可使用"
         : "本环境未开启智能能力";
     }
 
     if (!surfaceOn) {
+      // 关闸态：API 配置置顶并默认展开（未就绪）
       body.innerHTML =
+        connectionDetailsHtml({ ready: false }) +
         '<div class="preview-ai-sheet__block preview-ai-sheet__block--gate">' +
         "<h3>智能动作暂不可用</h3>" +
-        "<p>装帧标题、杂志文案等需开启 AI 能力后使用。出图与导出不受影响。</p>" +
-        '<p class="preview-ai-sheet__hint">内测可先展开下方「本机连接」预配 Key。</p>' +
+        "<p>封面字体、杂志文案等需先开启智能能力。仅填写 API Key <strong>不会</strong>自动开启。</p>" +
+        '<p class="preview-ai-sheet__hint">出图与导出不受影响。</p>' +
         '<details class="preview-ai-sheet__details" data-ai-help-gate>' +
         "<summary>了解如何开启</summary>" +
         '<div class="preview-ai-sheet__details-body">' +
-        '<p class="preview-ai-sheet__hint">内测：启动 Studio 前设置环境变量 <code>TRAVELOGUE_AI_SURFACE=1</code>，再打开预览。</p>' +
-        '<p class="preview-ai-sheet__hint">Key 可在下方「本机连接」预先配置；未开启智能能力时也可保存，不影响出图与导出。</p>' +
+        '<p class="preview-ai-sheet__hint">任选其一后<strong>重启 Studio</strong>并刷新预览：</p>' +
+        '<p class="preview-ai-sheet__hint">1）在 <code>config.yaml</code> 设置 <code>studio.ai_surface_enabled: true</code></p>' +
+        '<p class="preview-ai-sheet__hint">2）启动前设置环境变量 <code>TRAVELOGUE_AI_SURFACE=1</code></p>' +
+        '<p class="preview-ai-sheet__hint">开启后，再用上方「API配置」测试 Key。</p>' +
         "</div></details>" +
-        "</div>" +
-        connectionDetailsHtml() +
-        advancedDetailsHtml();
+        "</div>";
       bindGateHelp(body);
       bindConnection(body);
-      bindAdvanced(body);
       return;
     }
 
-    body.innerHTML =
-      '<p class="preview-ai-sheet__crosshint">版式与书衣请用「精修」；智能生成请用「AI」。</p>' +
+    var actionsHtml =
       titleArtBlockHtml() +
       narrateBlockHtml() +
       intentBlockHtml() +
-      suggestionsBlockHtml() +
-      connectionDetailsHtml() +
-      advancedDetailsHtml();
+      suggestionsBlockHtml();
+    var connReady = lastPingOk === true;
+    var connHtml = connectionDetailsHtml({
+      ready: connReady,
+      configured: llmConfigured,
+      pingFailed: lastPingOk === false,
+    });
+    // 未测通：API配置置顶并展开；已就绪：沉底折叠
+    body.innerHTML = connReady ? actionsHtml + connHtml : connHtml + actionsHtml;
     bindTitleArt(body);
     bindNarrate(body);
     bindIntent(body);
     bindSuggestions(body);
     bindConnection(body);
-    bindAdvanced(body);
     applyPendingFocus();
   }
 
@@ -370,8 +368,8 @@ export function mountAiSurface(root, tripId, opts) {
     if (!titleArtEnabled) {
       return (
         '<div class="preview-ai-sheet__block preview-ai-sheet__block--muted">' +
-        "<h3>装帧标题</h3>" +
-        '<p class="preview-ai-sheet__desc">当前环境未开启装帧标题能力。</p>' +
+        "<h3>封面字体</h3>" +
+        '<p class="preview-ai-sheet__desc">当前环境未开启封面字体能力。</p>' +
         "</div>"
       );
     }
@@ -390,20 +388,19 @@ export function mountAiSurface(root, tripId, opts) {
         " />" +
         "<span>优先 AI 手写体</span>" +
         "</label>" +
-        '<p class="preview-ai-sheet__hint">勾选只表示优先走手写体，不会自动开跑。未通过自动用字库 · 约十几秒。</p>'
-      : '<p class="preview-ai-sheet__hint">将使用字库路线生成装帧标题。</p>';
+        '<p class="preview-ai-sheet__hint">优先尝试AI字体，耗时约几十秒</p>'
+      : '<p class="preview-ai-sheet__hint">将使用字库路线生成封面字体。</p>';
 
     var taUi = (entryCache && entryCache.titleArtUi) || {};
     var statusLabel =
       typeof taUi.statusLabel === "string" && taUi.statusLabel
         ? taUi.statusLabel
         : "尚未生成";
-    var btnLabel = taUi.ready ? "重新生成" : "生成装帧标题";
+    var btnLabel = taUi.ready ? "重新生成字体" : "生成字体";
 
     return (
       '<div class="preview-ai-sheet__block" data-ai-title-art-block>' +
-      "<h3>装帧标题</h3>" +
-      '<p class="preview-ai-sheet__desc">点一次才生成。勾选只表示优先走 AI 手写体，不会自动开跑。</p>' +
+      "<h3>封面字体</h3>" +
       routeCRow +
       '<div class="preview-ai-sheet__row">' +
       '<span class="preview-ai-sheet__status" data-ai-title-art-status>' +
@@ -413,6 +410,7 @@ export function mountAiSurface(root, tripId, opts) {
       escapeHtml(btnLabel) +
       "</button>" +
       "</div>" +
+      '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">去精修 · 杂志名</button>' +
       "</div>"
     );
   }
@@ -447,7 +445,7 @@ export function mountAiSurface(root, tripId, opts) {
     return (
       '<div class="preview-ai-sheet__block" data-ai-narrate-block>' +
       "<h3>杂志文案</h3>" +
-      '<p class="preview-ai-sheet__desc">重写封面钩子与章节导语等版心文字；照片仍留在本机。导入默认仍用本机文案。</p>' +
+      '<p class="preview-ai-sheet__desc">尝试AI文案</p>' +
       (g1Pending
         ? '<p class="preview-ai-sheet__hint">请先在分章确认结构，再生成杂志感文案。</p>'
         : "") +
@@ -538,30 +536,33 @@ export function mountAiSurface(root, tripId, opts) {
     );
   }
 
-  function connectionDetailsHtml() {
+  /**
+   * @param {{ ready?: boolean, configured?: boolean, pingFailed?: boolean }} [opts]
+   * ready = lastPingOk===true → 折叠；否则默认展开
+   */
+  function connectionDetailsHtml(opts) {
+    opts = opts || {};
+    var ready = !!opts.ready;
+    var summary = ready ? "API配置 · 已就绪" : "API配置";
+    var status = "未配置 / 未测通";
+    if (ready) status = "已就绪";
+    else if (opts.pingFailed) status = "连接失败 · 请重试";
+    else if (opts.configured) status = "已保存未验证";
     return (
-      '<details class="preview-ai-sheet__details" data-ai-connection>' +
-      "<summary>本机连接</summary>" +
+      '<details class="preview-ai-sheet__details" data-ai-connection' +
+      (ready ? "" : " open") +
+      ">" +
+      "<summary>" +
+      summary +
+      "</summary>" +
       '<div class="preview-ai-sheet__details-body">' +
       '<div class="preview-ai-sheet__row">' +
       '<span class="preview-ai-sheet__status" data-ai-conn-status>' +
-      (llmAvailable ? "已就绪" : "未测通") +
+      status +
       "</span>" +
       '<button type="button" class="preview-ai-sheet__btn preview-ai-sheet__btn--ghost" data-ai-conn-btn>配置 / 测试</button>' +
       "</div>" +
       '<p class="preview-ai-sheet__hint">本地 Key · 失败不影响出图与导出。</p>' +
-      "</div></details>"
-    );
-  }
-
-  function advancedDetailsHtml() {
-    if (!showAdvancedSection(aiOpsAdminEnabled)) return "";
-    return (
-      '<details class="preview-ai-sheet__details" data-ai-advanced>' +
-      "<summary>高级</summary>" +
-      '<div class="preview-ai-sheet__details-body">' +
-      '<p class="preview-ai-sheet__hint">工程观测与预算（内部）。普通用户可忽略。</p>' +
-      '<a class="preview-ai-sheet__link" data-ai-ops-link href="/ai-ops-admin" target="_blank" rel="noopener">打开 AI 运维台 →</a>' +
       "</div></details>"
     );
   }
@@ -600,14 +601,6 @@ export function mountAiSurface(root, tripId, opts) {
     connBtn.addEventListener("click", function () {
       trackAction("open_settings");
       openLlmSettingsFromSheet("ai_sheet");
-    });
-  }
-
-  function bindAdvanced(body) {
-    var link = body.querySelector("[data-ai-ops-link]");
-    if (!link) return;
-    link.addEventListener("click", function () {
-      trackAction("open_ops");
     });
   }
 
@@ -856,6 +849,21 @@ export function mountAiSurface(root, tripId, opts) {
     var check = body.querySelector("[data-ai-title-art-routec]");
     var artBtn = body.querySelector("[data-ai-title-art-btn]");
     var statusEl = body.querySelector("[data-ai-title-art-status]");
+    var gotoName = body.querySelector("[data-ai-goto-cover-name]");
+    if (gotoName && !gotoName._rciWired) {
+      gotoName._rciWired = true;
+      gotoName.addEventListener("click", function () {
+        close("deep_link");
+        if (root._sheet && typeof root._sheet.open === "function") {
+          root._sheet.open("cover", {
+            coverSeg: "name",
+            bookendsFocus: "opening",
+            scrollToBookends: false,
+            source: "ai_sheet",
+          });
+        }
+      });
+    }
     if (check) {
       check.addEventListener("change", function () {
         try {
@@ -886,11 +894,14 @@ export function mountAiSurface(root, tripId, opts) {
           artBtn.disabled = false;
           if (!res || res.status !== 200 || !res.body || !res.body.ok) {
             if (statusEl) statusEl.textContent = "生成失败";
-            showToolbarToast(
+            var failMsg =
               (res && res.body && res.body.message) ||
-                "装帧标题暂时不可用，可稍后重试",
-              { error: true }
-            );
+              "封面字体暂时不可用，可稍后重试";
+            // 禁止把 E_SERVER 等工程码直接展示
+            if (failMsg.indexOf("E_") === 0) {
+              failMsg = "封面字体暂时不可用，可稍后重试";
+            }
+            showToolbarToast(failMsg, { error: true });
             trackResult("title_art", false, {
               latency_ms: Date.now() - started,
               routeCRequested: wantRouteC,
@@ -934,7 +945,7 @@ export function mountAiSurface(root, tripId, opts) {
             engine: res.body.engine || null,
             statusLabel: readyLabel,
           };
-          showToolbarToast("装帧标题已更新");
+          showToolbarToast("封面字体已更新");
           trackResult("title_art", true, {
             latency_ms: Date.now() - started,
             routeCRequested: wantRouteC,
@@ -956,7 +967,7 @@ export function mountAiSurface(root, tripId, opts) {
           titleArtBusy = false;
           artBtn.disabled = false;
           if (statusEl) statusEl.textContent = "网络错误";
-          showToolbarToast("装帧标题请求失败", { error: true });
+          showToolbarToast("封面字体请求失败", { error: true });
           trackResult("title_art", false, {
             latency_ms: Date.now() - started,
             error_code: "network",
@@ -979,10 +990,19 @@ export function mountAiSurface(root, tripId, opts) {
           return r && r.ok ? r.json() : null;
         })
         .then(function (st) {
-          llmAvailable = !!(st && st.llmAvailable);
+          // llmAvailable 已与 lastPingOk 对齐；双读防旧服务端
+          lastPingOk =
+            st && typeof st.lastPingOk === "boolean" ? st.lastPingOk : null;
+          llmConfigured = !!(st && st.configured);
+          llmAvailable = !!(
+            st &&
+            (st.llmAvailable === true || st.lastPingOk === true)
+          );
         })
         .catch(function () {
           llmAvailable = false;
+          lastPingOk = null;
+          llmConfigured = false;
         }),
       fetch("/__travelogue/config", {
         headers: studioAuthHeaders({}),
@@ -994,17 +1014,10 @@ export function mountAiSurface(root, tripId, opts) {
           var ta = (cfg && cfg.titleArt) || {};
           titleArtEnabled = !!ta.enabled;
           titleArtRouteCEnabled = !!ta.routeCEnabled;
-          var caps = (cfg && cfg.capabilities) || {};
-          if (typeof cfg.aiOpsAdminEnabled === "boolean") {
-            aiOpsAdminEnabled = cfg.aiOpsAdminEnabled;
-          } else {
-            aiOpsAdminEnabled = !!caps.aiOpsAdminEnabled;
-          }
         })
         .catch(function () {
           titleArtEnabled = false;
           titleArtRouteCEnabled = false;
-          aiOpsAdminEnabled = false;
         }),
       loadEntry(),
     ]);
@@ -1013,7 +1026,8 @@ export function mountAiSurface(root, tripId, opts) {
   function open(openOpts) {
     openOpts = openOpts || {};
     pendingFocus = openOpts.focus || null;
-    ensureAiSurfaceHydrated().then(function () {
+    // force：避免曾以关闸态缓存后，本机改开闸仍显示「暂不可用」
+    ensureAiSurfaceHydrated({ force: true }).then(function () {
       closePeers(root);
       ensureShell();
       refreshLlmAndConfig().then(function () {

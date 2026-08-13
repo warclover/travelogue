@@ -37,7 +37,7 @@
 | 杂志文案 narrate | 要 | Key；`structure_draft` 时 CTA 禁用 |
 | 装帧 title-art | 不强制 surface（CAL） | Sheet 主入口；精修次入口保留 |
 | Intent / Critic UI | 要 | 后端 Agent 自带 fallback |
-| 本机连接 | 关闸仍可配 | `allowWhenSurfaceOff` |
+| 本机连接 / API配置 | 关闸仍可配 | `allowWhenSurfaceOff`；BE：`status/settings/ping` **不**再因 `ai_surface` 403（废止 NAS AC-17a/c 对该三路由的硬拒）；`llmAvailable` 须 `last_ping_ok` |
 
 ## 3. SHD 回写
 

@@ -192,6 +192,7 @@ def cmd_title_art(
             prompt_version=ta.prompt_version,
             route_c_max_attempts=ta.route_c_max_attempts,
             ocr_verify_enabled=ta.ocr_verify,
+            trip_root=trip_dir,
         )
     except Exception as exc:  # noqa: BLE001 — CLI 边界统一报错，不让异常裸奔
         typer.echo(f"E_TITLE_ART: {exc}", err=True)

@@ -1,17 +1,43 @@
 /* Preview toolbar · Design tokens */
+/* DIG · 混合方案（2026-08-12）：Dock 深色墨玻 + 弹层浅色阅读面 + 铅灰强调 */
 html[data-preview-toolbar="on"] {
   --preview-toolbar-h: 56px;
   --studio-font-ui:
     "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB",
     "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
-  /* Align with studio-modal.css --studio-panel-* (UI Detail Wave2/3) */
-  --preview-ink: var(--studio-panel-ink, #14110d);
-  --preview-muted: var(--studio-panel-muted-solid, #5c574f);
-  --preview-accent: var(--studio-panel-accent, #3d6b5a);
-  --preview-accent-strong: var(--studio-panel-accent-strong, #1a2f28);
-  --preview-surface: var(--studio-panel-surface, #f3efe8);
-  --preview-border: var(--studio-panel-border, rgba(20, 17, 13, 0.18));
-  --preview-sheet-side-w: 520px;
+
+  /* 强调色：铅灰（Dock CTA / 弹层主钮共用） */
+  --preview-accent: #3f454c;
+  --preview-accent-hover: #4e555c;
+  --preview-accent-ink: #f5f0e8;
+  --preview-accent-strong: #2e3338;
+
+  /* 弹层浅色阅读面（对齐原 studio-panel 浅系，退役松绿与深炭） */
+  --preview-ink: #14110d;
+  /* 浅底上次要字：略加深，保证说明/hint ≥可读 */
+  --preview-muted: #4a453e;
+  --preview-surface: #ffffff;
+  --preview-panel-bg: #f7f5f0;
+  --preview-border: rgba(20, 17, 13, 0.12);
+  --preview-elevated: #f3f1ec;
+
+  /* 浅色弹层字阶（与 studio-modal.css :root 对齐；预览作用域可独立微调） */
+  --studio-panel-title-size: 15px;
+  --studio-panel-body-size: 13px;
+  --studio-panel-ui-size: 12px;
+  --studio-panel-meta-size: 11px;
+  --studio-panel-label-size: var(--studio-panel-meta-size);
+  --studio-panel-chip-size: var(--studio-panel-meta-size);
+  --preview-type-title: var(--studio-panel-title-size);
+  --preview-type-body: var(--studio-panel-body-size);
+  --preview-type-ui: var(--studio-panel-ui-size);
+  --preview-type-meta: var(--studio-panel-meta-size);
+
+  /* 兼容旧引用名 */
+  --v2-gold: var(--preview-accent);
+
+  /* DIG · 弹层加宽：封面/页面尽量少滚动 */
+  --preview-sheet-side-w: 640px;
   --preview-sheet-float-gap: 12px;
   --preview-sheet-duration-enter: 460ms;
   --preview-sheet-duration-exit: 380ms;
@@ -23,4 +49,3 @@ html[data-preview-toolbar="on"] {
   --preview-sheet-ease-scrim: cubic-bezier(0.22, 1, 0.36, 1);
   scroll-padding-top: var(--preview-toolbar-h);
 }
-

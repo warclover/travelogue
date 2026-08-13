@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>精修 · 封面二级分段（推荐稿）线框</title>
+  <style>
+    :root {
+      --wf-bg: #eceff1;
+      --wf-page: #fafafa;
+      --wf-border: #90a4ae;
+      --wf-text: #263238;
+      --wf-muted: #607d8b;
+      --wf-anno: #e65100;
+      --wf-rec: #2e7d32;
+      --bar: #1a2f28;
+      --bar-text: #f5fbf8;
+      --accent: #3d6b5a;
+      --sheet: #f7f4ef;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --max: 960px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--wf-bg);
+      color: var(--wf-text);
+      line-height: 1.55;
+    }
+    .review-bar {
+      position: sticky; top: 0; z-index: 2000;
+      background: #263238; color: #eceff1;
+      padding: 12px 20px;
+    }
+    .review-bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+    .review-bar p { margin: 0; font-size: 12px; color: #90a4ae; max-width: 980px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #546e7a; background: transparent; color: #eceff1;
+      padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button:hover { background: #37474f; }
+    .tabs button.is-active { background: #00897b; border-color: #00897b; color: #fff; }
+
+    .layout {
+      max-width: calc(var(--max) + 300px);
+      margin: 0 auto;
+      padding: 22px 18px 72px;
+      display: grid;
+      grid-template-columns: var(--max) 270px;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .aside { order: -1; }
+    }
+    .panel { display: none; }
+    .panel.is-visible { display: block; }
+
+    .sec h2 { margin: 0 0 6px; font-size: 18px; }
+    .sec .lead { margin: 0 0 16px; color: var(--wf-muted); font-size: 14px; }
+    .anno {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--wf-anno); margin: 16px 0 8px;
+    }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 12px 0 16px;
+    }
+    .callout--rec { background: #e8f5e9; border: 1px solid #a5d6a7; }
+    .callout--warn { background: #fff8e1; border: 1px solid #ffb74d; }
+    .callout--mute { background: #eceff1; border: 1px solid #cfd8dc; }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    .browser {
+      background: #dee1e6; border: 2px solid var(--wf-border);
+      border-bottom: none; border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #b0bec5; display: block; }
+    .browser__tab {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--wf-page); border: 1px solid #b0bec5; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600;
+    }
+
+    .frame {
+      background: #d7e0d8;
+      border: 2px solid var(--wf-border); border-top: none;
+      border-radius: 0 0 14px 14px;
+      min-height: 560px;
+      position: relative;
+      overflow: hidden;
+    }
+    .frame__cover {
+      position: absolute; inset: 0 34% 72px 0;
+      background:
+        linear-gradient(180deg, rgba(20,28,24,.15), rgba(20,28,24,.55)),
+        repeating-linear-gradient(135deg, #9aa8a0 0 10px, #8a9890 10px 20px);
+    }
+    .frame__cover-label {
+      position: absolute; left: 18px; bottom: 18px;
+      color: #f5fbf8; font-size: 22px; font-weight: 700; letter-spacing: .06em;
+      writing-mode: vertical-rl;
+      text-shadow: 0 2px 10px rgba(0,0,0,.35);
+    }
+    .chip {
+      position: absolute; top: 16px; left: 14px;
+      background: rgba(26,47,40,.92); color: #e8f5ef;
+      font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 999px;
+    }
+    .dock {
+      position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+      display: flex; gap: 6px; align-items: center;
+      background: var(--bar); color: var(--bar-text);
+      padding: 8px 10px; border-radius: 999px; font-size: 11px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.28);
+      white-space: nowrap;
+    }
+    .dock b { color: #9fd6bf; }
+
+    .sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; width: 34%;
+      background: var(--sheet);
+      border-left: 1px solid #c5bdb0;
+      display: flex; flex-direction: column;
+      box-shadow: -10px 0 28px rgba(40,30,10,.12);
+    }
+    .sheet__head {
+      padding: 12px 12px 8px;
+      border-bottom: 1px solid #e0d8cc;
+    }
+    .sheet__title {
+      margin: 0 0 8px; font-size: 13px; font-weight: 700;
+    }
+    .sheet__tabs {
+      display: flex; gap: 4px;
+    }
+    .sheet__tabs button {
+      flex: 1; border: 0; background: transparent; color: var(--wf-muted);
+      font-size: 12px; font-weight: 600; padding: 8px 4px; cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .sheet__tabs button.is-on {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(61,107,90,.06);
+    }
+
+    .subseg {
+      display: flex; gap: 4px; padding: 10px 10px 0;
+    }
+    .subseg button {
+      flex: 1; border: 1px solid #d2c8b8; background: #fff;
+      color: var(--wf-text); font-size: 11px; font-weight: 600;
+      padding: 7px 4px; border-radius: 8px; cursor: pointer;
+    }
+    .subseg button.is-on {
+      border-color: var(--accent);
+      background: #e8f5ef;
+      color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(61,107,90,.2);
+    }
+    .subseg button .hint {
+      display: block; font-size: 9px; font-weight: 500; color: var(--wf-muted);
+      margin-top: 2px;
+    }
+    .subseg button.is-on .hint { color: #5f8a78; }
+
+    .sheet__body {
+      flex: 1; overflow: auto; padding: 10px 12px 16px;
+      font-size: 12px;
+    }
+    .sheet__body h3 {
+      margin: 0 0 4px; font-size: 13px;
+    }
+    .sheet__body .muted { color: var(--wf-muted); margin: 0 0 10px; font-size: 11px; }
+
+    .seg-mini {
+      display: inline-flex; gap: 0; border: 1px solid #d2c8b8; border-radius: 8px;
+      overflow: hidden; margin-bottom: 10px;
+    }
+    .seg-mini button {
+      border: 0; background: #fff; padding: 6px 10px; font-size: 11px; cursor: pointer;
+    }
+    .seg-mini button.is-on { background: var(--accent); color: #fff; }
+
+    .thumbs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    }
+    .thumbs i {
+      display: block; aspect-ratio: 3/4; border-radius: 6px;
+      border: 2px solid transparent;
+      background: linear-gradient(160deg, #7d8b84, #c9d0cb);
+    }
+    .thumbs i.is-on { border-color: var(--accent); }
+
+    .styles {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .styles button {
+      border: 2px solid transparent; border-radius: 10px; background: #fff;
+      padding: 6px; text-align: left; cursor: pointer; font: inherit;
+    }
+    .styles button.is-on { border-color: var(--accent); }
+    .styles .swatch {
+      display: block; aspect-ratio: 3/4; border-radius: 6px; margin-bottom: 6px;
+      background: linear-gradient(180deg, #5a6b62 0 55%, #1a1816 100%);
+    }
+    .styles .swatch.folio { background: linear-gradient(90deg, #efe6d6 38%, #6d7a72 38%); }
+    .styles .swatch.band { background: linear-gradient(180deg, #6d7a72 0 48%, #efe6d6 48%); }
+    .styles .name { font-size: 11px; font-weight: 600; }
+
+    .title-art-card {
+      background: #fff; border: 1px solid #d2c8b8; border-radius: 10px; padding: 10px;
+    }
+    .title-art-card label {
+      display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 10px;
+      font-size: 11px;
+    }
+    .title-art-card .primary {
+      width: 100%; border: 0; background: var(--accent); color: #fff;
+      border-radius: 8px; padding: 9px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .title-art-card .primary:disabled {
+      opacity: 0.55; cursor: wait;
+    }
+    .title-art-card .ghost,
+    .ghost {
+      width: 100%; border: 1px solid #d2c8b8; background: #fff; color: var(--wf-text);
+      border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+      margin-top: 6px;
+    }
+    .title-art-card .attr { margin: 8px 0 0; font-size: 10px; color: var(--wf-muted); }
+    .name-field label.field-label {
+      display: block; margin: 0 0 4px; font-size: 11px; font-weight: 600; color: var(--wf-text);
+    }
+    .name-field input[type="text"] {
+      width: 100%; border: 1px solid #d2c8b8; border-radius: 8px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit; background: #fff;
+    }
+    .name-field input[type="text"]:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      border-color: var(--accent);
+    }
+    .name-field .meta-row {
+      display: flex; justify-content: space-between; gap: 8px;
+      margin: 4px 0 0; font-size: 10px; color: var(--wf-muted);
+    }
+    .stale-banner {
+      margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
+      background: #fff8e1; border: 1px solid #ffcc80; font-size: 11px; color: #e65100;
+    }
+    .flow-step {
+      display: flex; align-items: center; gap: 6px; margin: 0 0 10px;
+      font-size: 10px; font-weight: 600; color: var(--wf-muted); letter-spacing: .02em;
+    }
+    .flow-step span {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 16px; height: 16px; border-radius: 50%;
+      background: #e0d8cc; color: #5d4037; font-size: 9px;
+    }
+    .flow-step em { font-style: normal; color: #b0a090; }
+
+    .book-zone {
+      background: #fff;
+      border: 1px solid #d2c8b8;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 0 0 8px;
+    }
+    .book-zone h4 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .book-zone .zone-meta {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--wf-muted);
+    }
+    .book-zone textarea,
+    .book-zone input[type="text"] {
+      width: 100%;
+      border: 1px solid #d2c8b8;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      resize: vertical;
+      margin-top: 6px;
+    }
+    .book-zone .vibe-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .book-zone .vibe-row button {
+      border: 1px solid #d2c8b8;
+      background: #fafafa;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .book-zone .vibe-row button.is-on {
+      border-color: var(--accent);
+      background: #e8f5ef;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .book-zone .radio-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    .book-adv summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      list-style: none;
+    }
+    .book-adv summary::-webkit-details-marker { display: none; }
+    .book-adv .adv-body {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--wf-muted);
+    }
+    .book-foot {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #d2c8b8;
+    }
+
+    .compare {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff; border: 2px solid var(--wf-border); border-radius: 12px; padding: 12px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 14px; }
+    .card ul { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: var(--wf-muted); }
+    .pill {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 999px; vertical-align: middle;
+    }
+    .pill--now { background: #eceff1; color: #546e7a; }
+    .pill--rec { background: #e8f5e9; color: var(--wf-rec); }
+
+    .ia-row {
+      display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0;
+    }
+    .ia-row span {
+      border: 1px solid #cfd8dc; background: #fafafa; border-radius: 6px;
+      padding: 4px 8px; font-size: 11px; font-weight: 600;
+    }
+    .ia-row span.on { background: #e8f5ef; border-color: #81c784; color: var(--wf-rec); }
+    .ia-row span.sub {
+      background: #fff8e1; border-color: #ffcc80; color: #e65100;
+    }
+
+    .aside {
+      position: sticky; top: 76px;
+      background: #fff; border: 1px solid #cfd8dc; border-radius: 12px;
+      padding: 12px 14px; font-size: 12px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ol { margin: 0; padding-left: 18px; color: var(--wf-muted); }
+    .aside li { margin: 0 0 6px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="review-bar">
+    <h1>精修 IA · 封面二级分段（推荐稿 v1.2）· 供审核</h1>
+    <p>
+      目标：封面「照片｜版式｜杂志名」；杂志名 = 改名 + 生成字体。
+      画册去重：去掉杂志名主表单，保留一句话 / 成册风格 / 署名 / 进阶 + 弱链回封面。
+    </p>
+    <div class="tabs" id="topTabs">
+      <button type="button" class="is-active" data-panel="rec">推荐稿 · 可点</button>
+      <button type="button" data-panel="compare">现行 vs 推荐</button>
+      <button type="button" data-panel="alt">备选 · 四一级 Tab</button>
+      <button type="button" data-panel="notes">审核要点</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <!-- 推荐可点 -->
+      <section class="panel is-visible sec" id="panel-rec">
+        <h2>推荐稿 · 一级三区 + 封面内「照片｜版式｜杂志名」</h2>
+        <p class="lead">点右侧 Sheet。重点看「画册」去重后还剩什么；「杂志名」只在封面。</p>
+
+        <div class="callout callout--rec">
+          <strong>本版主张（v1.2）</strong>
+          封面 = 第一眼（照片·版式·杂志名/字体）。
+          画册 = 整本叙事与气质（一句话·成册风格·署名·进阶）。杂志名输入框从画册移除。
+        </div>
+
+        <div class="anno">Interactive mock</div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">Studio 预览 · 精修开</div>
+        </div>
+        <div class="frame" id="mock">
+          <div class="chip">精修中</div>
+          <div class="frame__cover">
+            <div class="frame__cover-label" id="coverHint">珠海东澳岛一日游</div>
+          </div>
+          <div class="dock">返回 · 分章 · <b>精修</b> · AI · 导出</div>
+
+          <aside class="sheet" aria-label="精修面板线框">
+            <div class="sheet__head">
+              <p class="sheet__title">精修</p>
+              <div class="sheet__tabs" role="tablist" id="primaryTabs">
+                <button type="button" class="is-on" data-primary="cover">封面</button>
+                <button type="button" data-primary="page">页面</button>
+                <button type="button" data-primary="book">画册</button>
+              </div>
+            </div>
+
+            <div id="coverChrome">
+              <div class="subseg" role="tablist" aria-label="封面子段" id="subseg">
+                <button type="button" class="is-on" data-sub="photo">
+                  照片
+                  <span class="hint">封面/封底</span>
+                </button>
+                <button type="button" data-sub="style">
+                  版式
+                  <span class="hint">样式</span>
+                </button>
+                <button type="button" data-sub="name">
+                  杂志名
+                  <span class="hint">改名·字体</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="sheet__body" id="sheetBody">
+              <!-- filled by JS -->
+            </div>
+          </aside>
+        </div>
+
+        <div class="callout callout--mute" style="margin-top:16px">
+          <strong>情境默认（建议）</strong>
+          点预览封面图 → 「封面 · 照片」；点封面书名/贴纸 → 「封面 · 杂志名」；
+          从版式入口进 → 「封面 · 版式」。正文页 → 「页面」。
+        </div>
+      </section>
+
+      <!-- 对比 -->
+      <section class="panel sec" id="panel-compare">
+        <h2>现行 vs 推荐</h2>
+        <p class="lead">同一信息架构容量，推荐只把封面内三件事抬到二级导航。</p>
+        <div class="compare">
+          <div class="card">
+            <h3><span class="pill pill--now">现行</span> 封面｜页面｜画册</h3>
+            <div class="ia-row">
+              <span class="on">封面</span><span>页面</span><span>画册</span>
+            </div>
+            <ul>
+              <li>封面 Tab = 长页：照片 + 版式 + 装帧标题（常需下滚）</li>
+              <li>改杂志名在「画册」，生成艺术字在「封面」——链路断开</li>
+              <li>封底用封面内分段切换</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><span class="pill pill--rec">推荐</span> 同三区 + 二级分段</h3>
+            <div class="ia-row">
+              <span class="on">封面</span><span>页面</span><span>画册</span>
+            </div>
+            <div class="ia-row">
+              <span class="sub">照片</span><span class="sub">版式</span><span class="sub">杂志名</span>
+            </div>
+            <ul>
+              <li>三件事始终可见；「杂志名」= 改名 + 生成字体</li>
+              <li>画册去掉杂志名表单；留一句话 / 成册风格 / 署名 / 进阶</li>
+              <li>成册风格 ≠ 封面版式（两边文案写清）</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout--mute" style="margin-top:14px">
+          <strong>画册去重对照</strong>
+          删除：杂志名输入、与封面重复的「改名字」主引导。
+          保留：一句话、成册风格、作品署名、进阶。弱链：去改杂志名/字体、去换封面照片。
+        </div>
+      </section>
+
+      <!-- 备选 -->
+      <section class="panel sec" id="panel-alt">
+        <h2>备选 · 四一级 Tab（不推荐为首选）</h2>
+        <p class="lead">若你坚持「全部抬到顶栏」，用 4 个而不是 5 个。</p>
+        <div class="callout callout--warn">
+          <strong>代价</strong>
+          顶栏更挤；换图与换版式跨 Tab；「画册」整本设定可能被挤到「更多」或二级。
+        </div>
+        <div class="card">
+          <div class="ia-row">
+            <span class="on">封面图</span><span>版式</span><span>杂志名</span><span>页面</span>
+          </div>
+          <ul>
+            <li>「画册」可并入页面底部或「⋯」</li>
+            <li>命名宜短：照片 / 版式 / 杂志名 / 页面</li>
+            <li>仍建议封底挂在「封面图」内；杂志名段仍含改名+艺术字</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 审核要点 -->
+      <section class="panel sec" id="panel-notes">
+        <h2>已拍板 / 待确认</h2>
+        <div class="callout callout--rec">
+          <strong>已拍板 · 二级文案</strong>
+          照片｜版式｜杂志名（副文案：封面/封底 · 样式 · 改名·字体）。
+          不用单字「名称」或「标题」；不用「装帧字」（用户难懂）。
+        </div>
+        <div class="callout callout--rec">
+          <strong>已拍板 · 画册去重</strong>
+          画册不再放杂志名输入框。骨架：一句话 → 成册风格 → 作品署名 → 进阶（折叠）→
+          底栏弱链回「封面 · 杂志名」。成册风格文案标明「影响整本页面，不是封面样式」。
+        </div>
+        <div class="callout callout--rec">
+          <strong>仍可确认 · 一级三区</strong>
+          推荐保持封面｜页面｜画册。否 → 走四 Tab 备选。
+        </div>
+        <div class="callout callout--warn">
+          <strong>仍可确认 · 封底 / 顶栏「封面」是否改「装帧」</strong>
+          封底挂「照片」；顶栏默认仍叫「封面」。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3>审核清单</h3>
+      <ol>
+        <li>画册去掉杂志名后是否干净？</li>
+        <li>一句话 / 成册风格 / 署名是否够用？</li>
+        <li>弱链回封面是否好找？</li>
+        <li>成册风格 vs 封面版式是否分得清？</li>
+      </ol>
+      <p style="margin:12px 0 0;color:#607d8b">
+        文件：<code>docs/wireframes/preview-refine-cover-subseg-v1-wireframe.html</code>
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    (function () {
+      var topTabs = document.getElementById("topTabs");
+      topTabs.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-panel]");
+        if (!btn) return;
+        topTabs.querySelectorAll("button").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        var id = btn.getAttribute("data-panel");
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.toggle("is-visible", p.id === "panel-" + id);
+        });
+      });
+
+      var body = document.getElementById("sheetBody");
+      var coverChrome = document.getElementById("coverChrome");
+      var coverHint = document.getElementById("coverHint");
+      var primary = "cover";
+      var sub = "photo";
+      var coverSide = "opening";
+
+      var magazineName = "珠海东澳岛一日游";
+      var savedName = "珠海东澳岛一日游";
+      var artStale = false;
+      var artBusy = false;
+
+      function htmlPhoto() {
+        return (
+          "<h3>" + (coverSide === "closing" ? "换一张封底图" : "换一张封面图") + "</h3>" +
+          '<p class="muted">点缩略图即可更换。版式与杂志名见上方分段。</p>' +
+          '<div class="seg-mini" id="sideSeg">' +
+          '<button type="button" data-side="opening"' + (coverSide === "opening" ? ' class="is-on"' : "") + ">封面</button>" +
+          '<button type="button" data-side="closing"' + (coverSide === "closing" ? ' class="is-on"' : "") + ">封底</button>" +
+          "</div>" +
+          '<div class="thumbs">' +
+          '<i class="is-on"></i><i></i><i></i><i></i><i></i><i></i>' +
+          "</div>" +
+          '<p class="muted" style="margin-top:10px">手选 · 可恢复自动</p>'
+        );
+      }
+
+      function htmlStyle() {
+        return (
+          "<h3>封面版式</h3>" +
+          '<p class="muted">只改封面样式（雾底/对页/断带…）。整本排版气质请到「画册 · 成册风格」。</p>' +
+          '<label style="display:flex;gap:6px;align-items:center;margin:0 0 10px;font-size:11px">' +
+          '<input type="checkbox" checked /> 保留当前封面图' +
+          "</label>" +
+          '<div class="styles">' +
+          '<button type="button" class="is-on"><span class="swatch"></span><span class="name">雾底题签</span></button>' +
+          '<button type="button"><span class="swatch folio"></span><span class="name">对页叠印</span></button>' +
+          '<button type="button"><span class="swatch band"></span><span class="name">断带题签</span></button>' +
+          "</div>"
+        );
+      }
+
+      function htmlName() {
+        var dirty = magazineName !== savedName;
+        var count = Array.from(magazineName || "").length;
+        var staleHtml = artStale
+          ? '<div class="stale-banner">杂志名已改 · 旧字体已过期，请重新生成</div>'
+          : "";
+        return (
+          "<h3>杂志名</h3>" +
+          '<p class="muted">先改成你喜欢的名字，再生成封面字体。</p>' +
+          '<div class="flow-step"><span>1</span> 改名 <em>→</em> <span>2</span> 生成字体</div>' +
+          staleHtml +
+          '<div class="title-art-card name-field">' +
+          '<label class="field-label" for="wf-mag-name">杂志名</label>' +
+          '<input id="wf-mag-name" type="text" maxlength="20" value="' +
+          magazineName.replace(/"/g, "&quot;") +
+          '" />' +
+          '<div class="meta-row"><span>最多 20 字 · 字体效果宜用更短名字</span><span id="wf-name-count">' +
+          count +
+          "/20</span></div>" +
+          (dirty
+            ? '<button type="button" class="ghost" id="wf-save-name">保存名称</button>'
+            : '<p class="attr" style="margin-top:8px">已保存</p>') +
+          "</div>" +
+          '<div class="title-art-card" style="margin-top:10px">' +
+          "<label><input type=\"checkbox\" checked /><span><strong>优先 AI 手写体</strong><br/>未通过自动用字库 · 约十几秒</span></label>" +
+          '<button type="button" class="primary" id="wf-gen-art"' +
+          (artBusy ? " disabled" : "") +
+          ">" +
+          (artBusy ? "生成中…" : artStale || !savedName ? "生成字体" : "重新生成字体") +
+          "</button>" +
+          '<p class="attr">用你的杂志名生成封面字体 · 不生成风景图。</p>' +
+          "</div>"
+        );
+      }
+
+      function htmlPage() {
+        return (
+          "<h3>这一页</h3>" +
+          '<p class="muted">精选、拼图、本页文案（示意）。</p>' +
+          '<div class="title-art-card"><p class="muted" style="margin:0">正文页控件占位…</p></div>'
+        );
+      }
+
+      function htmlBook() {
+        return (
+          '<p class="muted" style="margin:0 0 10px">改一句话与成册风格。杂志名与封面字体在「封面」。</p>' +
+          '<div class="book-zone">' +
+          "<h4>给这本画册的一句话</h4>" +
+          '<span class="zone-meta">封面副标与辑封会用到</span>' +
+          '<textarea rows="2" placeholder="写一句想留给读者的话…">海风里的东澳，一日刚好。</textarea>' +
+          "</div>" +
+          '<div class="book-zone">' +
+          "<h4>成册风格 <span class=\"zone-meta\">推荐 · 实验</span></h4>" +
+          '<p class="muted" style="margin:4px 0 0">影响整本页面气质，不是封面第一眼样式。</p>' +
+          '<div class="vibe-row" id="wf-vibe-row">' +
+          '<button type="button" class="is-on" data-vibe="rec">推荐</button>' +
+          '<button type="button" data-vibe="airy">疏朗</button>' +
+          '<button type="button" data-vibe="dense">紧凑</button>' +
+          '<button type="button" data-vibe="exp">实验</button>' +
+          "</div>" +
+          '<p class="muted" style="margin-top:8px">要换封面样式 → 「封面 · 版式」</p>' +
+          "</div>" +
+          '<div class="book-zone">' +
+          "<h4>作品署名</h4>" +
+          '<span class="zone-meta">辑封与长图尾</span>' +
+          '<div class="radio-row">' +
+          "<label><input type=\"radio\" name=\"wf-brand\" checked /> 默认 · Travelogue</label>" +
+          "<label><input type=\"radio\" name=\"wf-brand\" /> 自定义（≤14 字）</label>" +
+          "<label><input type=\"radio\" name=\"wf-brand\" /> 不显示</label>" +
+          "</div>" +
+          "</div>" +
+          '<details class="book-zone book-adv">' +
+          "<summary>进阶 <span class=\"zone-meta\">很少需要 ▾</span></summary>" +
+          '<div class="adv-body">阅读视图 · 放映 · 换模板 · 旅行主角同框 · 分章说明</div>' +
+          "</details>" +
+          '<div class="book-foot">' +
+          '<button type="button" class="ghost" id="wf-goto-name" style="width:100%">去改杂志名 / 字体</button>' +
+          '<p class="muted" style="margin:6px 0 0;text-align:center">换封面/封底 → 「封面 · 照片」</p>' +
+          "</div>"
+        );
+      }
+
+      function wireNamePanel() {
+        var input = document.getElementById("wf-mag-name");
+        if (input) {
+          input.addEventListener("input", function () {
+            magazineName = input.value.slice(0, 20);
+            var countEl = document.getElementById("wf-name-count");
+            if (countEl) {
+              countEl.textContent = Array.from(magazineName).length + "/20";
+            }
+            coverHint.textContent = magazineName || "（未命名）";
+            // re-render only when dirty state flips would be nicer; keep light: rebuild footer buttons
+            var dirty = magazineName !== savedName;
+            var saveBtn = document.getElementById("wf-save-name");
+            var card = input.closest(".title-art-card");
+            if (dirty && !saveBtn && card) {
+              var ghost = document.createElement("button");
+              ghost.type = "button";
+              ghost.className = "ghost";
+              ghost.id = "wf-save-name";
+              ghost.textContent = "保存名称";
+              var attr = card.querySelector(".attr");
+              if (attr) attr.remove();
+              card.appendChild(ghost);
+              ghost.addEventListener("click", saveName);
+            }
+            if (!dirty && saveBtn) {
+              saveBtn.remove();
+              if (card && !card.querySelector(".attr")) {
+                var p = document.createElement("p");
+                p.className = "attr";
+                p.style.marginTop = "8px";
+                p.textContent = "已保存";
+                card.appendChild(p);
+              }
+            }
+          });
+        }
+        var save = document.getElementById("wf-save-name");
+        if (save) save.addEventListener("click", saveName);
+        var gen = document.getElementById("wf-gen-art");
+        if (gen) {
+          gen.addEventListener("click", function () {
+            if (magazineName !== savedName) {
+              saveName();
+            }
+            artBusy = true;
+            render();
+            window.setTimeout(function () {
+              artBusy = false;
+              artStale = false;
+              render();
+            }, 900);
+          });
+        }
+      }
+
+      function saveName() {
+        savedName = magazineName.trim() || savedName;
+        magazineName = savedName;
+        artStale = true;
+        coverHint.textContent = savedName;
+        render();
+      }
+
+      function render() {
+        coverChrome.classList.toggle("hidden", primary !== "cover");
+        if (primary === "page") {
+          body.innerHTML = htmlPage();
+          coverHint.textContent = "正文页示意";
+          return;
+        }
+        if (primary === "book") {
+          body.innerHTML = htmlBook();
+          coverHint.textContent = "整本设定";
+          var vibeRow = document.getElementById("wf-vibe-row");
+          if (vibeRow) {
+            vibeRow.addEventListener("click", function (e) {
+              var vb = e.target.closest("button[data-vibe]");
+              if (!vb) return;
+              vibeRow.querySelectorAll("button").forEach(function (x) {
+                x.classList.toggle("is-on", x === vb);
+              });
+            });
+          }
+          var go = document.getElementById("wf-goto-name");
+          if (go) {
+            go.addEventListener("click", function () {
+              primary = "cover";
+              sub = "name";
+              document.querySelectorAll("#primaryTabs button").forEach(function (x) {
+                x.classList.toggle("is-on", x.getAttribute("data-primary") === "cover");
+              });
+              document.querySelectorAll("#subseg button").forEach(function (x) {
+                x.classList.toggle("is-on", x.getAttribute("data-sub") === "name");
+              });
+              render();
+            });
+          }
+          return;
+        }
+        if (sub === "style") {
+          body.innerHTML = htmlStyle();
+          coverHint.textContent = "版式 · 样式";
+        } else if (sub === "name") {
+          body.innerHTML = htmlName();
+          coverHint.textContent = magazineName || "杂志名";
+          wireNamePanel();
+        } else {
+          body.innerHTML = htmlPhoto();
+          coverHint.textContent = coverSide === "closing" ? "封底照片" : "封面照片";
+          var sideSeg = document.getElementById("sideSeg");
+          if (sideSeg) {
+            sideSeg.addEventListener("click", function (e) {
+              var b = e.target.closest("button[data-side]");
+              if (!b) return;
+              coverSide = b.getAttribute("data-side");
+              render();
+            });
+          }
+        }
+      }
+
+      document.getElementById("primaryTabs").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-primary]");
+        if (!b) return;
+        primary = b.getAttribute("data-primary");
+        document.querySelectorAll("#primaryTabs button").forEach(function (x) {
+          x.classList.toggle("is-on", x === b);
+        });
+        render();
+      });
+
+      document.getElementById("subseg").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-sub]");
+        if (!b) return;
+        sub = b.getAttribute("data-sub");
+        document.querySelectorAll("#subseg button").forEach(function (x) {
+          x.classList.toggle("is-on", x === b);
+        });
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

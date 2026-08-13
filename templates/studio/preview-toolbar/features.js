@@ -12,7 +12,7 @@ import {
 import { trackStudioEvent } from "../js/analytics.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
 import { presentAutoplayHref } from "./dock.js";
-import { saveMagazineTitle } from "./inline-edit.js";
+import { saveMagazineTitle, saveMagazineTitleValue } from "./inline-edit.js";
 import { formatAestheticPurposeLine, isAestheticDebugEnabled } from "./drawers.js";
 import {
   revealTripFolder,
@@ -26,7 +26,7 @@ import {
   toolbarBody,
   reloadPreviewAfterLayout,
 } from "./shell.js";
-import { syncInspectChromeVisibility } from "./preview-mode.js";
+import { syncInspectChromeVisibility, setOpeningUpdateBusy } from "./preview-mode.js";
 import {
   activateG1Pending,
   applyLayoutRerender,
@@ -35,7 +35,6 @@ import {
   refreshTaskDockState,
   setLayoutPending,
   setLayoutPendingMessage,
-  syncCoverOpeningStyleInDom,
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
@@ -939,31 +938,56 @@ export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {
 
 export function mountCoverStyleControls(slot, tripId, opts) {
     opts = opts || {};
-    if (!slot || slot.querySelector(".preview-sheet__cover-styles")) return;
+    // RCI · mode=style 仅版式；mode=name 杂志名+生成字体
+    var mode = opts.mode === "name" ? "name" : "style";
+    if (!slot) return;
+    if (mode === "style" && slot.querySelector(".preview-sheet__cover-styles")) return;
+    if (mode === "name" && slot.querySelector("[data-cover-name-font]")) return;
     var section = document.createElement("div");
     section.className = "preview-sheet__section preview-sheet__cover-section";
-    section.innerHTML =
-      '<span class="preview-sheet__label">封面版式</span>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">电脑宽屏（≥1024px）生效；窄屏回落雾底呈现。更换版式默认会重荐封面图；双联款会尽量配人物副图。</p>' +
-      '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式"></div>' +
-      '<p class="preview-sheet__cover-blurb" hidden></p>' +
-      '<label class="preview-sheet__cover-keep-label">' +
-      '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
-      ' 更换时保留当前封面图</label>' +
-      '<p class="preview-sheet__cover-fit-hint" hidden></p>' +
+    var titleArtHtml =
       '<div class="preview-sheet__title-art" data-title-art hidden>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">给标题加一层艺术字贴纸（此版式支持时才会生效，不会覆盖你写的文字）</p>' +
-      '<p class="preview-sheet__title-art-attr" data-title-art-attr>使用你的照片装帧 · 未生成风景</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">用杂志名生成封面字体（此版式支持时生效）。</p>' +
+      '<p class="preview-sheet__title-art-attr" data-title-art-attr>用你的杂志名生成封面字体 · 不生成风景图</p>' +
       '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
       '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
       '<span class="preview-sheet__title-art-routec-copy">' +
       '<span class="preview-sheet__title-art-routec-title">优先 AI 手写体</span>' +
       '<span class="preview-sheet__title-art-routec-hint">未通过自动用字库 · 约十几秒</span>' +
-      '</span></label>' +
-      '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成装帧标题</button>' +
+      "</span></label>" +
+      '<button type="button" class="preview-sheet__ghost preview-sheet__title-art-btn" data-title-art-btn>生成字体</button>' +
       '<p class="preview-sheet__title-art-status" data-title-art-status hidden></p>' +
-      '</div>';
+      "</div>";
+    if (mode === "name") {
+      section.setAttribute("data-cover-name-font", "1");
+      section.innerHTML =
+        '<span class="preview-sheet__label">杂志名</span>' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact">先改成你喜欢的名字，再生成封面字体。</p>' +
+        '<p class="preview-sheet__cover-name-stale" data-cover-name-stale hidden role="status">杂志名已改 · 旧字体已过期，请重新生成</p>' +
+        '<label class="preview-sheet__label" for="preview-cover-magazine-name">杂志名</label>' +
+        '<input id="preview-cover-magazine-name" class="preview-sheet__cover-name-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途" />' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__cover-name-meta">' +
+        '<span>最多 20 字 · 字体效果宜用更短名字</span>' +
+        '<span data-cover-name-count>0/20</span></p>' +
+        '<button type="button" class="preview-sheet__ghost" data-cover-name-save hidden>保存名称</button>' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact" data-cover-name-synced hidden>已保存</p>' +
+        titleArtHtml;
+    } else {
+      section.innerHTML =
+        '<span class="preview-sheet__label">封面版式</span>' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact">只改封面第一眼样式，不是整本「成册风格」。电脑宽屏（≥1024px）生效；窄屏回落雾底呈现。</p>' +
+        '<div class="preview-sheet__cover-styles" role="group" aria-label="封面版式" aria-describedby="preview-cover-legacy-hint"></div>' +
+        '<p class="preview-sheet__hint preview-sheet__cover-legacy" id="preview-cover-legacy-hint" hidden></p>' +
+        '<p class="preview-sheet__cover-blurb" hidden></p>' +
+        '<label class="preview-sheet__cover-keep-label">' +
+        '<input type="checkbox" class="preview-sheet__cover-keep-check" />' +
+        " 更换时保留当前封面图</label>" +
+        '<p class="preview-sheet__cover-fit-hint" hidden></p>' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact">要改整本页面气质 → 「画册 · 成册风格」</p>' +
+        (opts.omitTitleArt === false ? titleArtHtml : "");
+    }
     var group = section.querySelector(".preview-sheet__cover-styles");
+    var legacyEl = section.querySelector(".preview-sheet__cover-legacy");
     var blurbEl = section.querySelector(".preview-sheet__cover-blurb");
     var fitHintEl = section.querySelector(".preview-sheet__cover-fit-hint");
     var keepCheck = section.querySelector(".preview-sheet__cover-keep-check");
@@ -973,16 +997,23 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     var titleArtRouteCCheck = section.querySelector("[data-title-art-routec-check]");
     var titleArtBtn = section.querySelector("[data-title-art-btn]");
     var titleArtStatus = section.querySelector("[data-title-art-status]");
+    var nameInput = section.querySelector(".preview-sheet__cover-name-input");
+    var nameSaveBtn = section.querySelector("[data-cover-name-save]");
+    var nameSynced = section.querySelector("[data-cover-name-synced]");
+    var nameStaleEl = section.querySelector("[data-cover-name-stale]");
+    var nameCountEl = section.querySelector("[data-cover-name-count]");
+    var savedMagazineName = "";
     var selectedStyle = readCoverOpeningStyleFromDom();
     var options = COVER_OPENING_STYLE_OPTIONS.slice();
+    var coverCraft = null;
 
     function setTitleArtAttribution(engine) {
       if (!titleArtAttr) return;
-      var base = "使用你的照片装帧 · 未生成风景";
+      var base = "用你的杂志名生成封面字体 · 不生成风景图";
       var detail =
         engine === "diffusion-fixed-prompt-v1"
-          ? "标题字迹由 AI 书法风格生成"
-          : "标题为程序化字库合成，非 AI 绘图";
+          ? "字迹由 AI 手写体生成"
+          : "字库合成，非 AI 绘图";
       titleArtAttr.textContent = engine ? base + "。" + detail : base;
     }
 
@@ -1028,14 +1059,19 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       )
         .then(function (res) {
           titleArtBtn.disabled = false;
+          var failMsg =
+            (res.body && res.body.message) ||
+            "封面字体暂时不可用，请稍后重试";
           if (res.status !== 200 || !res.body || !res.body.ok) {
-            setTitleArtStatus((res.body && res.body.message) || "生成失败，请稍后重试", true);
+            setTitleArtStatus(failMsg, true);
+            showToolbarToast(failMsg, { error: true });
             emitTitleArtResolve({
               outcome: "error",
               enabled: false,
               engine: "",
               routeCRequested: wantRouteC,
               fallback: false,
+              error: (res.body && res.body.error) || "",
             });
             return;
           }
@@ -1059,8 +1095,20 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           }
           setTitleArtStatus(msg);
           setTitleArtAttribution(res.body.engine || "clean-pipeline-v1");
-          showToolbarToast("装帧标题已更新", { duration: 2200 });
-          reloadPreviewAfterLayout();
+          if (nameStaleEl) nameStaleEl.hidden = true;
+          if (titleArtBtn) {
+            titleArtBtn.textContent = "重新生成字体";
+          }
+          if (res.body.rendered === false) {
+            showToolbarToast(
+              (res.body && res.body.message) ||
+                "封面字体已生成，预览未刷新，请手动刷新页面",
+              { error: true, duration: 5200 }
+            );
+          } else {
+            showToolbarToast("封面字体已更新", { duration: 2200 });
+            reloadPreviewAfterLayout();
+          }
           emitTitleArtResolve({
             outcome: "success",
             enabled: true,
@@ -1068,6 +1116,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
             routeCRequested: !!res.body.routeCRequested,
             routeCAllowedByConfig: !!res.body.routeCAllowedByConfig,
             fallback: !!res.body.fallbackFrom,
+            rendered: res.body.rendered !== false,
             ocrVerified:
               typeof res.body.ocrVerified === "boolean" ? res.body.ocrVerified : null,
           });
@@ -1075,6 +1124,7 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         .catch(function () {
           titleArtBtn.disabled = false;
           setTitleArtStatus("生成失败，请稍后重试", true);
+          showToolbarToast("封面字体请求失败，请稍后重试", { error: true });
           emitTitleArtResolve({
             outcome: "network",
             enabled: false,
@@ -1085,8 +1135,86 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         });
     }
 
+    function syncNameMeta() {
+      if (!nameInput) return;
+      var v = String(nameInput.value || "");
+      if (nameCountEl) {
+        nameCountEl.textContent = Array.from(v).length + "/20";
+      }
+      var dirty = v.trim() !== savedMagazineName;
+      if (nameSaveBtn) nameSaveBtn.hidden = !dirty;
+      if (nameSynced) nameSynced.hidden = dirty || !savedMagazineName;
+    }
+
+    function persistMagazineName() {
+      if (!nameInput) return Promise.resolve(false);
+      var next = String(nameInput.value || "").trim();
+      if (!next) {
+        showToolbarToast("请填写杂志名", { error: true });
+        return Promise.resolve(false);
+      }
+      if (next.length > 20) {
+        showToolbarToast("杂志名最多 20 个字", { error: true });
+        return Promise.resolve(false);
+      }
+      if (next === savedMagazineName) {
+        syncNameMeta();
+        return Promise.resolve(true);
+      }
+      if (nameSaveBtn) nameSaveBtn.disabled = true;
+      return saveMagazineTitleValue(tripId, next, { skipReload: true }).then(function (ok) {
+        if (nameSaveBtn) nameSaveBtn.disabled = false;
+        if (!ok) return false;
+        savedMagazineName = next;
+        if (nameStaleEl) nameStaleEl.hidden = false;
+        if (titleArtBtn && !titleArtBtn.disabled) {
+          titleArtBtn.textContent = "生成字体";
+        }
+        syncNameMeta();
+        return true;
+      });
+    }
+
+    if (nameInput) {
+      nameInput.addEventListener("input", syncNameMeta);
+      if (nameSaveBtn) {
+        nameSaveBtn.addEventListener("click", function () {
+          // 仅保存：允许整页刷新以看到新杂志名
+          if (!nameInput) return;
+          var next = String(nameInput.value || "").trim();
+          if (!next || next === savedMagazineName) {
+            persistMagazineName();
+            return;
+          }
+          if (nameSaveBtn) nameSaveBtn.disabled = true;
+          saveMagazineTitleValue(tripId, next).then(function (ok) {
+            if (nameSaveBtn) nameSaveBtn.disabled = false;
+            if (!ok) return;
+            savedMagazineName = next;
+            if (nameStaleEl) nameStaleEl.hidden = false;
+            if (titleArtBtn && !titleArtBtn.disabled) {
+              titleArtBtn.textContent = "生成字体";
+            }
+            syncNameMeta();
+          });
+        });
+      }
+    }
+
     if (titleArtBtn) {
-      titleArtBtn.addEventListener("click", requestTitleArt);
+      titleArtBtn.addEventListener("click", function () {
+        var run = function () {
+          requestTitleArt();
+        };
+        if (nameInput && String(nameInput.value || "").trim() !== savedMagazineName) {
+          // 先存名且不刷新，再生成（生成成功后会 reload）
+          persistMagazineName().then(function (ok) {
+            if (ok) run();
+          });
+        } else {
+          run();
+        }
+      });
     }
 
     // Studio 高级面板触发入口：服务端总闸（config.title_art）决定是否展示
@@ -1147,31 +1275,66 @@ export function mountCoverStyleControls(slot, tripId, opts) {
           blurbEl.textContent = "";
         }
       }
+      syncLegacyHint(style);
     }
 
-    function setBusy(busy) {
-      if (!group) return;
-      group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
-        btn.disabled = !!busy;
+    function syncLegacyHint(style) {
+      // FE-CCF-02 / FE-CCF-04：经典版式提示；CCF 关闭时不展示
+      if (!legacyEl) return;
+      var craftOn = !!(coverCraft && coverCraft.enabled);
+      var inOptions = options.some(function (o) {
+        return o.id === style;
       });
+      if (craftOn && style && !inOptions) {
+        var label =
+          (coverCraft && coverCraft.legacyLabel) ||
+          style;
+        if (coverCraft && coverCraft.legacyStyleId === style && coverCraft.legacyHint) {
+          legacyEl.textContent = coverCraft.legacyHint;
+        } else {
+          legacyEl.textContent =
+            "当前为经典版式「" + label + "」，可切换到现行三款。";
+        }
+        legacyEl.hidden = false;
+      } else {
+        legacyEl.hidden = true;
+        legacyEl.textContent = "";
+      }
+    }
+
+    function setBusy(busy, nextStyleId) {
+      if (group) {
+        group.querySelectorAll("[data-cover-style]").forEach(function (btn) {
+          btn.disabled = !!busy;
+          var sid = btn.getAttribute("data-cover-style");
+          btn.classList.toggle(
+            "is-updating",
+            !!(busy && nextStyleId && sid === nextStyleId)
+          );
+        });
+      }
       if (keepCheck) keepCheck.disabled = !!busy;
+      setOpeningUpdateBusy(!!busy, {
+        label: "正在更换封面版式…",
+      });
     }
 
     function applyStyleChange(next, keepCover) {
-      setBusy(true);
+      setBusy(true, next);
       if (fitHintEl) {
         fitHintEl.hidden = true;
         fitHintEl.textContent = "";
       }
       // Nested under Bookends: route through repick-opening for closing cascade (R-BE-14)
       if (opts.viaBookends && typeof opts.applyStyleViaBookends === "function") {
+        // FE-CCF / folio：不要乐观改 data-cover-opening。旧 HTML 套新风格
+        // 标题 CSS（尤其对页叠印竖排大字）会溢出闪屏；等 rerender 整页刷新。
         return Promise.resolve(opts.applyStyleViaBookends(next, keepCover))
           .then(function (ok) {
             setBusy(false);
             if (ok === false) return;
             selectedStyle = next;
             syncSelection(next);
-            syncCoverOpeningStyleInDom(next);
             trackStudioEvent("cover_opening_style_change", {
               tripId: tripId,
               coverOpeningStyle: next,
@@ -1190,15 +1353,14 @@ export function mountCoverStyleControls(slot, tripId, opts) {
         keepCover: !!keepCover,
       })
         .then(function (res) {
-          setBusy(false);
           if (res.status !== 200 || !res.body.ok) {
+            setBusy(false);
             showToolbarToast((res.body && res.body.error) || "保存失败", { error: true });
             return;
           }
           var prev = selectedStyle;
           selectedStyle = next;
           syncSelection(next);
-          syncCoverOpeningStyleInDom(next);
           trackStudioEvent("cover_opening_style_change", {
             tripId: tripId,
             coverOpeningStyle: next,
@@ -1206,20 +1368,26 @@ export function mountCoverStyleControls(slot, tripId, opts) {
             repickCover: !keepCover,
           });
           showToolbarToast(
-            keepCover ? "封面版式已更新（保留当前封面图）" : "封面版式已更新，并重荐了封面图"
+            keepCover ? "封面版式已更新（保留当前封面图）" : "封面版式已更新，并重荐了封面图",
+            { duration: 2200 }
           );
           if (keepCover && fitHintEl && res.body.fitBelowThreshold) {
             fitHintEl.hidden = false;
             fitHintEl.textContent = "当前封面图可能不太适合此版式";
           }
           var toolbar = document.querySelector(".preview-toolbar");
+          // 同上：等 rerender + reload，勿 syncCoverOpeningStyleInDom
           return refreshPreviewAfterCopySave(
             res,
             tripId,
             toolbar || section
-          ).then(function (ok) {
-            if (ok && toolbar) refreshStaleHint(toolbar, tripId);
-          });
+          )
+            .then(function (ok) {
+              if (ok && toolbar) refreshStaleHint(toolbar, tripId);
+            })
+            .finally(function () {
+              setBusy(false);
+            });
         })
         .catch(function () {
           setBusy(false);
@@ -1256,26 +1424,68 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       syncSelection(selectedStyle);
     }
 
-    renderOptions(options);
+    if (mode === "style") {
+      renderOptions(options);
+    }
     slot.appendChild(section);
 
     fetchEntry(tripId)
       .then(function (data) {
-        if (data && Array.isArray(data.coverStyleOptions) && data.coverStyleOptions.length) {
+        if (data && data.coverCraft) {
+          coverCraft = data.coverCraft;
+        }
+        if (
+          mode === "style" &&
+          data &&
+          Array.isArray(data.coverStyleOptions) &&
+          data.coverStyleOptions.length
+        ) {
           renderOptions(data.coverStyleOptions);
         }
         if (data && data.coverOpeningStyle) {
           selectedStyle = data.coverOpeningStyle;
-          syncSelection(selectedStyle);
+          if (coverCraft && coverCraft.legacyCurrent) {
+            coverCraft.legacyStyleId = selectedStyle;
+            coverCraft.legacyLabel =
+              data.coverStyleLabel || coverCraft.legacyLabel || selectedStyle;
+          }
+          if (mode === "style") syncSelection(selectedStyle);
+        }
+        if (mode === "name" && nameInput) {
+          // RCI · 回填优先封面展示名（displayTitle / DOM），勿只信裸 meta.title
+          var summary = data && data.intentSummary;
+          var coverDom =
+            (document.querySelector(".cover-opening__title") || {}).textContent ||
+            "";
+          var title =
+            (summary && String(summary.displayTitle || "").trim()) ||
+            String(coverDom || "").trim() ||
+            (summary && String(summary.title || "").trim()) ||
+            "";
+          savedMagazineName = String(title || "").trim();
+          nameInput.value = savedMagazineName;
+          syncNameMeta();
+          var ta = data && data.titleArt;
+          if (ta && ta.stale) {
+            if (nameStaleEl) nameStaleEl.hidden = false;
+          } else if (nameStaleEl) {
+            nameStaleEl.hidden = true;
+          }
+          if (titleArtBtn && ta && ta.enabled && !ta.stale) {
+            titleArtBtn.textContent = "重新生成字体";
+          }
+          if (ta && ta.engine) setTitleArtAttribution(ta.engine);
         }
       })
       .catch(function () {});
 
-    trackStudioEvent("cover_opening_style_selector_impression", {
-      surface: "preview-sheet",
-      tripId: tripId,
-      coverOpeningStyle: selectedStyle,
-    });
+    if (mode === "style") {
+      trackStudioEvent("cover_opening_style_selector_impression", {
+        surface: "preview-sheet",
+        tripId: tripId,
+        coverOpeningStyle: selectedStyle,
+      });
+    }
   }
 
 

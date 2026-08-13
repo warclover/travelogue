@@ -101,6 +101,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
 }
 
 .studio-help-drawer {
+  font-size: var(--studio-panel-ui-size, 12px);
   position: absolute;
   top: 0;
   right: 0;
@@ -177,7 +178,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   cursor: pointer;
   list-style: none;
   padding: 12px 14px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-weight: 600;
   line-height: 1.35;
 }
@@ -198,7 +199,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
 .studio-help-drawer__points {
   margin: 0 14px 12px;
   padding-left: 1.15em;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.5;
   color: var(--studio-panel-muted-solid, #5c574f);
 }
@@ -220,7 +221,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   border: 1px solid var(--studio-panel-border, rgba(20, 17, 13, 0.18));
   background: #fff;
   color: var(--studio-panel-ink, #14110d);
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   font-weight: 600;
   cursor: pointer;
 }
@@ -242,7 +243,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
 
 .studio-help-drawer__replay-note {
   margin: 10px 0 0;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.45;
   color: var(--studio-panel-muted-solid, #5c574f);
 }
@@ -279,7 +280,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   border-radius: 10px;
   background: rgba(212, 168, 67, 0.12);
   border: 1px solid rgba(212, 168, 67, 0.35);
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   line-height: 1.5;
   color: var(--studio-panel-ink, #14110d);
 }
@@ -290,7 +291,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
 
 .preview-sheet__help-hint p + p {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: var(--studio-panel-meta-size, 11px);
   color: var(--studio-panel-muted-solid, #5c574f);
 }
 
@@ -305,7 +306,7 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   border: none;
   background: transparent;
   color: var(--studio-panel-accent, #3d6b5a);
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
@@ -319,9 +320,41 @@ html[data-v2-layout^="unsupported"] .studio-help-open--home {
   border-radius: 8px;
   padding: 6px 12px;
   min-height: 36px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   cursor: pointer;
   background: color-mix(in srgb, var(--studio-panel-ink, #14110d) 8%, transparent);
   color: var(--studio-panel-ink, #14110d);
+}
+
+/* DIG · 混合方案：预览态帮助抽屉浅色 + 墨青（不改首页帮助默认绿） */
+html[data-preview-toolbar="on"] .studio-help-drawer {
+  background: var(--preview-panel-bg, #f7f5f0);
+  color: var(--preview-ink, #14110d);
+  box-shadow: -12px 0 36px rgba(0, 0, 0, 0.16);
+  border-left: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__head {
+  border-bottom-color: var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__close {
+  color: var(--preview-ink, #14110d);
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__close:hover {
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 14%, transparent);
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__item {
+  background: var(--preview-surface, #ffffff);
+  border-color: var(--preview-border, rgba(20, 17, 13, 0.12));
+}
+html[data-preview-toolbar="on"] .studio-help-drawer__item.is-active {
+  border-color: color-mix(in srgb, var(--preview-accent, #3f454c) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--preview-accent, #3f454c) 22%, transparent);
+}
+html[data-preview-toolbar="on"] .preview-sheet__help-hint-more {
+  color: var(--preview-accent, #3f454c);
+}
+html[data-preview-toolbar="on"] .preview-sheet__help-hint-dismiss {
+  background: var(--preview-elevated, #f3f1ec);
+  color: var(--preview-ink, #14110d);
 }

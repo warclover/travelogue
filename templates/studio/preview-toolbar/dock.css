@@ -29,24 +29,69 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
   padding: 5px 7px;
   border-radius: 999px;
-  /* D-PCU-06 · Scheme A 墨炭 + 香槟铜 */
-  background:
-    linear-gradient(160deg, rgba(28, 32, 34, 0.94) 0%, rgba(18, 20, 22, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* DIG · Dock Ink Glass v1.4（试看 0.85 · 2026-08-12） */
+  --dock-bg-top: rgba(22, 24, 26, 0.85);
+  --dock-bg-bottom: rgba(14, 16, 18, 0.82);
+  --dock-border: rgba(255, 255, 255, 0.18);
+  --dock-highlight: rgba(255, 255, 255, 0.16);
+  --dock-ink: #ffffff;
+  --dock-ink-muted: rgba(255, 255, 255, 0.78);
+  --dock-hover: rgba(255, 255, 255, 0.1);
+  --dock-press: rgba(255, 255, 255, 0.14);
+  --dock-accent: var(--preview-accent, #3f454c);
+  --dock-accent-hover: var(--preview-accent-hover, #4e555c);
+  --dock-accent-ink: var(--preview-accent-ink, #f5f0e8);
+  --dock-accent-caret: color-mix(in srgb, var(--dock-accent) 88%, #1c1812);
+  --dock-active-bg: color-mix(in srgb, var(--dock-accent) 22%, transparent);
+  --dock-active-border: color-mix(in srgb, var(--dock-accent) 45%, transparent);
+  --dock-focus: color-mix(in srgb, var(--dock-accent) 55%, transparent);
+  --dock-stale: #e0a04a;
+  --dock-running: #5c574f;
+  --dock-divider: rgba(255, 255, 255, 0.18);
+  --dock-tip-bg: rgba(18, 20, 22, 0.96);
+  --dock-tip-ink: #f5f7f6;
+  --dock-folio-accent: var(--dock-accent);
+  --dock-folio-gold: var(--dock-accent);
+  background: linear-gradient(160deg, var(--dock-bg-top) 0%, var(--dock-bg-bottom) 100%);
+  border: 1px solid var(--dock-border);
   box-shadow:
-    0 6px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+    0 10px 32px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 var(--dock-highlight),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
   pointer-events: auto;
-  opacity: 0.96;
-  transition: opacity 0.25s ease;
-  --dock-folio-accent: #c4a574;
-  --dock-folio-gold: #c4a574;
-  color: rgba(245, 247, 246, 0.88);
+  opacity: 1;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  color: var(--dock-ink);
+  isolation: isolate;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.preview-toolbar__dock .preview-toolbar__dock-label {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.preview-toolbar__dock .preview-toolbar__dock-icon {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.4));
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot-split,
+.preview-toolbar--v4 .preview-toolbar__longshot--main,
+.preview-toolbar--v4 .preview-toolbar__longshot-caret,
+.preview-toolbar--v4 .preview-toolbar__dock-export-label {
+  text-shadow: none;
+}
+
+/* DIG · 无 backdrop-filter 时提高不透明度，保持可读 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .preview-toolbar__dock {
+    --dock-bg-top: rgba(22, 24, 26, 0.9);
+    --dock-bg-bottom: rgba(14, 16, 18, 0.88);
+  }
 }
 
 .preview-toolbar--v4 .preview-toolbar__menu-wrap {
@@ -115,14 +160,14 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-toolbar--v4 .preview-toolbar__longshot-split {
   height: 40px;
-  border-radius: 10px;
+  border-radius: 999px;
   border: none;
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export {
-  border-radius: 10px 0 0 10px;
+  border-radius: 999px 0 0 999px;
   height: 100%;
   min-width: 0;
 }
@@ -131,33 +176,57 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   width: auto;
   min-width: 40px;
   padding: 0 10px 0 12px;
-  gap: 3px;
-  border-radius: 0 10px 10px 0;
-  border-left: 1px solid rgba(28, 24, 18, 0.16);
-  background: #c4a574;
-  color: #1c1812;
+  gap: 4px;
+  border-radius: 0 999px 999px 0;
+  border-left: 1px solid rgba(28, 24, 18, 0.14);
+  background: var(--dock-accent-caret, color-mix(in srgb, var(--dock-accent, #3f454c) 78%, #1c1812));
+  color: var(--dock-accent-ink, #f5f0e8);
   font-family: var(--studio-font-ui);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 .preview-toolbar--v4 .preview-toolbar__longshot-caret-chevron {
-  font-size: 24px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  font-size: 0;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.78;
+}
+.preview-toolbar--v4 .preview-toolbar__longshot-caret-chevron svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+/* 压过 longshot.css idle caret 半透明黑底 */
+.preview-toolbar--v4
+  .preview-toolbar__longshot-split--idle
+  .preview-toolbar__longshot-caret {
+  background: var(--dock-accent-caret, color-mix(in srgb, var(--dock-accent, #3f454c) 78%, #1c1812));
+  color: var(--dock-accent-ink, #f5f0e8);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .preview-toolbar--v4
   .preview-toolbar__longshot-split--idle
   .preview-toolbar__longshot-caret:hover:not(:disabled) {
-  background: #ceb08a;
+  background: var(--dock-accent-hover, #4e555c);
+}
+
+.preview-toolbar--v4 .preview-toolbar__longshot-split--idle {
+  background: var(--dock-accent, #3f454c);
+  border: none;
+  box-shadow: none;
 }
 
 .preview-toolbar--v4 .preview-toolbar__longshot-split--running .preview-toolbar__longshot-caret {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--preview-muted, #5c574f) 72%, #fff) 0%,
-    var(--preview-muted, #5c574f) 100%
-  );
+  background: var(--dock-running, #5c574f);
   color: #eceff1;
   border-left-color: rgba(255, 255, 255, 0.18);
 }
@@ -214,7 +283,23 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   padding: 0;
   height: 40px;
   min-height: 40px;
-  border-radius: 8px;
+  border-radius: 999px;
+}
+
+/* DIG · 清掉 shell.css .ctl 浅底/描边，Dock 内默认全 ghost；仅真状态高亮 */
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl,
+.preview-toolbar--v4 .preview-toolbar__dock a.preview-toolbar__ctl {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--dock-ink, #ffffff);
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__ctl:hover,
+.preview-toolbar--v4 .preview-toolbar__dock a.preview-toolbar__ctl:hover {
+  background: var(--dock-hover, rgba(255, 255, 255, 0.1));
+  border: none;
+  color: #fff;
 }
 
 .preview-toolbar--v4
@@ -235,7 +320,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   padding: 0;
   width: 40px;
   min-width: 40px;
-  border-radius: 9px;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
@@ -250,7 +335,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   min-height: 40px;
   max-height: 40px;
   padding: 0 12px 0 10px;
-  border-radius: 10px;
+  border-radius: 999px;
   white-space: nowrap;
 }
 
@@ -293,8 +378,9 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   transform: translateX(-50%);
   padding: 4px 8px;
   border-radius: 6px;
-  background: rgba(26, 47, 40, 0.96);
-  color: #f5fbf8;
+  background: var(--dock-tip-bg, rgba(18, 20, 22, 0.96));
+  color: var(--dock-tip-ink, #f5f7f6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;
   line-height: 1.3;
   white-space: nowrap;
@@ -338,15 +424,16 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   min-height: 40px;
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
-  color: #a8dcc8;
+  color: var(--dock-ink, rgba(245, 247, 246, 0.92));
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   cursor: pointer;
   text-decoration: none;
   flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .preview-toolbar__dock-icon {
@@ -370,16 +457,9 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   flex: 0 0 1px;
   align-self: center;
   width: 1px;
-  height: 22px;
-  margin: 0 1px;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.22) 18%,
-    rgba(200, 149, 108, 0.45) 50%,
-    rgba(255, 255, 255, 0.22) 82%,
-    transparent 100%
-  );
+  height: 18px;
+  margin: 0 2px;
+  background: var(--dock-divider, rgba(255, 255, 255, 0.14));
 }
 
 .preview-toolbar__dock-export-inner {
@@ -398,10 +478,14 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 .preview-toolbar__dock-label {
   font-family: var(--studio-font-ui);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   line-height: 1;
   color: inherit;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-export-label {
+  font-weight: 600;
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--labeled .preview-toolbar__dock-icon {
@@ -410,94 +494,113 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export .preview-toolbar__dock-icon-accent {
-  color: rgba(26, 20, 8, 0.72);
+  color: var(--dock-accent-ink, #f5f0e8);
 }
 
 .preview-toolbar__dock-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--dock-hover, rgba(255, 255, 255, 0.08));
   color: #fff;
 }
 
+.preview-toolbar__dock-btn:active {
+  background: var(--dock-press, rgba(255, 255, 255, 0.12));
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn:focus-visible,
+.preview-toolbar--v4 .preview-toolbar__dock a.preview-toolbar__dock-btn:focus-visible,
+.preview-toolbar--v4 .preview-toolbar__longshot-caret:focus-visible,
+.preview-toolbar--v4 .preview-toolbar__longshot--main:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dock-focus, color-mix(in srgb, var(--preview-accent, #3f454c) 55%, transparent));
+}
+
 .preview-toolbar--v4 .preview-toolbar__dock-btn--back {
-  color: #b8e6d4;
-  opacity: 0.92;
+  color: var(--dock-ink, #ffffff);
+  opacity: 1;
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--back .preview-toolbar__dock-icon-accent {
-  color: var(--dock-folio-accent, #c8956c);
+  color: var(--dock-ink, rgba(245, 247, 246, 0.92));
 }
 
+/* DIG · folio 退役：保留 class 兼容，视觉统一 ghost */
 .preview-toolbar--v4 .preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--folio,
 .preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--folio {
-  border: 1px solid rgba(200, 149, 108, 0.38);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f2f8f5;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: none;
+  background: transparent;
+  color: var(--dock-ink, rgba(245, 247, 246, 0.92));
+  box-shadow: none;
 }
 
 .preview-toolbar--v4 .preview-toolbar__screenplay--v3.preview-toolbar__dock-btn--folio:hover,
 .preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--folio:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(200, 149, 108, 0.55);
+  background: var(--dock-hover, rgba(255, 255, 255, 0.08));
+  border: none;
+  color: #fff;
 }
 
-.preview-toolbar--v4 .preview-toolbar__screenplay--v3[aria-pressed="true"] {
-  background: rgba(127, 203, 179, 0.18);
-  border-color: rgba(127, 203, 179, 0.45);
-  color: #dff5ec;
+/* DIG · 真状态高亮（播放 / 精修 / 分章 / AI）同一套淡铜雾 */
+.preview-toolbar--v4 .preview-toolbar__screenplay--v3[aria-pressed="true"],
+.preview-toolbar--v4 .preview-toolbar__menu-btn[aria-pressed="true"],
+.preview-toolbar--v4 .preview-toolbar__menu-btn[aria-expanded="true"],
+.preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--done,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters.is-active,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters[aria-pressed="true"],
+.preview-toolbar--v4 .preview-toolbar__dock-btn--ai[aria-expanded="true"] {
+  background: var(--dock-active-bg, rgba(196, 165, 116, 0.16));
+  border: 1px solid var(--dock-active-border, rgba(196, 165, 116, 0.4));
+  color: #fff;
 }
 
+/* DIG · 导出唯一实心铜（清除历史金渐变） */
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__longshot--v3 {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  background: linear-gradient(165deg, #e0ba52 0%, #c8943f 52%, #b88432 100%);
-  color: #1a1408;
-  box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: none;
+  border-radius: 999px;
+  background: var(--dock-accent, #3f454c);
+  color: var(--dock-accent-ink, #f5f0e8);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__longshot--v3:hover {
-  background: linear-gradient(165deg, #e8c45e 0%, #d09a45 52%, #c08e38 100%);
-  color: #141008;
+  background: var(--dock-accent-hover, #4e555c);
+  color: var(--dock-accent-ink, #f5f0e8);
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__longshot--running {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--preview-muted, #5c574f) 72%, #fff) 0%,
-    var(--preview-muted, #5c574f) 100%
-  );
+  background: var(--dock-running, #5c574f);
   color: #eceff1;
   cursor: wait;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: none;
+  box-shadow: none;
 }
 
 .preview-toolbar--v4
   .preview-toolbar__dock-btn--export.preview-toolbar__longshot--stale,
 .preview-toolbar--v4
   .preview-toolbar__export-zone--stale
-  .preview-toolbar__dock-btn--export {
-  outline: 2px solid #ffb74d;
-  outline-offset: 1px;
+  .preview-toolbar__dock-btn--export,
+.preview-toolbar--v4
+  .preview-toolbar__export-zone--stale
+  .preview-toolbar__longshot-split {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--dock-stale, #e0a04a);
 }
 
 .preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn {
   position: relative;
 }
 
-/* V1.1 · 精修中 · 面板关 → Dock「完成」 */
 .preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--done {
-  background: rgba(127, 203, 179, 0.18);
-  border: 1px solid rgba(127, 203, 179, 0.5);
-  color: #dff5ec;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: none;
 }
 
-.preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--done:hover {
-  background: rgba(127, 203, 179, 0.26);
-  border-color: rgba(127, 203, 179, 0.65);
+.preview-toolbar--v4 .preview-toolbar__menu-btn.preview-toolbar__dock-btn--done:hover,
+.preview-toolbar--v4 .preview-toolbar__screenplay--v3[aria-pressed="true"]:hover,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters.is-active:hover,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--ai[aria-expanded="true"]:hover,
+.preview-toolbar--v4 .preview-toolbar__menu-btn[aria-expanded="true"]:hover {
+  background: var(--dock-press, rgba(255, 255, 255, 0.12));
+  border-color: var(--dock-active-border, rgba(196, 165, 116, 0.4));
   color: #fff;
 }
 
@@ -509,7 +612,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   z-index: 1090;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(26, 47, 40, 0.92);
+  background: rgba(22, 24, 26, 0.92);
   color: #e8f5ef;
   font-family: var(--studio-font-ui, inherit);
   font-size: 11px;
@@ -520,8 +623,56 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
+.preview-toolbar__refine-chip.is-busy {
+  animation: preview-refine-chip-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes preview-refine-chip-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
 .preview-toolbar__refine-chip[hidden] {
   display: none !important;
+}
+
+/* Cover face busy overlay (Studio chrome · swap opening / style) */
+.cover-opening.is-cover-busy,
+[data-cover-opening].is-cover-busy {
+  cursor: wait;
+}
+
+.preview-cover-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  background: rgba(18, 22, 20, 0.28);
+  backdrop-filter: blur(1.5px);
+}
+
+.preview-cover-busy[hidden] {
+  display: none !important;
+}
+
+.preview-cover-busy__label {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(22, 24, 26, 0.9);
+  color: #e8f5ef;
+  font-family: var(--studio-font-ui, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 /* Legacy fixed badge removed (D-PCU); keep hidden if any stale DOM */
@@ -540,7 +691,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: rgba(232, 236, 234, 0.72);
+  color: var(--preview-muted, #5c574f);
   pointer-events: none;
 }
 
@@ -549,18 +700,17 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock-btn--chapters,
-.preview-toolbar--v4 .preview-toolbar__dock-btn--folder {
+.preview-toolbar--v4 .preview-toolbar__dock-btn--folder,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--ai,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--back {
   border: none;
   background: transparent;
-  color: rgba(245, 247, 246, 0.88);
+  color: var(--dock-ink, #ffffff);
 }
 
-.preview-toolbar--v4 .preview-toolbar__dock-btn--chapters.is-active {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f5f7f6;
-}
-
-.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--dock {
+/* DIG · 压过 help-drawer.css 的 ghost 白底/描边，帮助与工具同族 */
+.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--dock,
+.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--ghost.studio-help-open--dock {
   position: static;
   flex: 0 0 40px;
   width: 40px;
@@ -568,25 +718,75 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   min-width: 40px;
   min-height: 40px;
   margin: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: transparent;
-  color: rgba(245, 247, 246, 0.8);
-  box-shadow: none;
+  border-radius: 999px;
+  border: none !important;
+  background: transparent !important;
+  color: var(--dock-ink-muted, rgba(245, 247, 246, 0.68)) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  font-size: 0;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--dock:hover,
+.preview-toolbar--v4
+  .preview-toolbar__dock
+  .studio-help-open--ghost.studio-help-open--dock:hover {
+  background: var(--dock-hover, rgba(255, 255, 255, 0.1)) !important;
+  color: #fff !important;
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock .studio-help-open--dock .preview-toolbar__dock-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .preview-toolbar--v4
   .preview-toolbar__dock
   .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export {
-  background: #c4a574;
-  color: #1c1812;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  background: var(--dock-accent, #3f454c);
+  color: var(--dock-accent-ink, #f5f0e8);
+  box-shadow: none;
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .preview-toolbar--v4
   .preview-toolbar__dock
   .preview-toolbar__longshot--main.preview-toolbar__dock-btn--export:hover:not(:disabled) {
-  background: #ceb08a;
+  background: var(--dock-accent-hover, #4e555c);
+}
+
+/* DIG · 削弱导出 FTUE 脉冲（逻辑保留，视觉克制） */
+.preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__dock-btn--pulse,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__menu-btn--pulse {
+  animation: dig-export-pulse 1.8s ease-in-out infinite;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--dock-accent, #3f454c) 35%, transparent);
+}
+
+.preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__dock-btn--pulse-static,
+.preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__dock-btn--next-hint {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dock-accent, #3f454c) 45%, transparent);
+  outline: none;
+}
+
+@keyframes dig-export-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--dock-accent, #3f454c) 28%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--dock-accent, #3f454c) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__dock-btn--pulse,
+  .preview-toolbar--v4 .preview-toolbar__dock-btn--export.preview-toolbar__menu-btn--pulse {
+    animation: none;
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--dock-accent, #3f454c) 45%, transparent);
+  }
 }
 
 /* F5 分章轻面板 · SFP D-SFP-10 与导出 sheet 同档（互斥为主，z 为辅） */
@@ -596,17 +796,18 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   right: 0;
   bottom: 0;
   /* 加宽以容纳章名 + 改名 / AI 润色 / 这章不对 横向一排 */
-  width: min(520px, 94vw);
+  width: min(640px, 94vw);
   z-index: 520;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 18px 16px 20px;
-  background: linear-gradient(160deg, rgba(28, 32, 34, 0.97), rgba(18, 20, 22, 0.96));
-  color: rgba(245, 247, 246, 0.92);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.28);
+  background: var(--preview-panel-bg, #f7f5f0);
+  color: var(--preview-ink, #14110d);
+  border-left: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.16);
   font-family: var(--studio-font-ui, inherit);
+  font-size: var(--studio-panel-ui-size, 12px);
 }
 
 .preview-chapter-panel[hidden] {
@@ -622,8 +823,8 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__head h2 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--studio-panel-title-size, 15px);
+  font-weight: 700;
 }
 
 .preview-chapter-panel__close {
@@ -639,8 +840,8 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__lead {
   margin: 0;
-  font-size: 12px;
-  color: rgba(232, 236, 234, 0.72);
+  font-size: var(--studio-panel-meta-size, 11px);
+  color: var(--preview-muted, #5c574f);
   line-height: 1.45;
 }
 
@@ -667,8 +868,8 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   flex: 1 1 100%;
   order: 5;
   margin: 0 0 0 4px;
-  font-size: 11px;
-  color: rgba(232, 236, 234, 0.55);
+  font-size: var(--studio-panel-meta-size, 11px);
+  color: color-mix(in srgb, var(--preview-muted, #5c574f) 80%, transparent);
   letter-spacing: 0.02em;
   line-height: 1.35;
 }
@@ -677,12 +878,12 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   flex: 1 1 10em;
   min-width: 8em;
   text-align: left;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--preview-surface, #ffffff);
   color: inherit;
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -690,42 +891,42 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 }
 
 .preview-chapter-panel__chap:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--preview-elevated, #f3f1ec);
 }
 
 .preview-chapter-panel__row--appendix {
   flex-wrap: wrap;
-  border-left: 2px solid rgba(61, 107, 90, 0.45);
+  border-left: 2px solid color-mix(in srgb, var(--preview-accent, #3f454c) 45%, transparent);
   padding-left: 8px;
 }
 
 .preview-chapter-panel__appendix-reason {
   flex: 1 1 100%;
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   color: rgba(38, 50, 56, 0.72);
   line-height: 1.4;
 }
 
 .preview-chapter-panel__restore {
   margin-left: auto;
-  border: 1px solid rgba(61, 107, 90, 0.4);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 40%, transparent);
   background: transparent;
-  color: #2d4a3e;
+  color: var(--preview-accent-strong, #2e3338);
   border-radius: 6px;
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   cursor: pointer;
 }
 
 .preview-chapter-panel__rename {
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.18));
   background: transparent;
   color: inherit;
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   cursor: pointer;
 }
 
@@ -733,9 +934,9 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   flex: 0 0 auto;
   border: none;
   background: transparent;
-  color: rgba(196, 165, 116, 0.95);
+  color: var(--preview-accent, #3f454c);
   padding: 8px 4px;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -743,12 +944,12 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 
 .preview-chapter-panel__feedback {
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.15));
   background: transparent;
-  color: rgba(232, 236, 234, 0.75);
+  color: var(--preview-muted, #5c574f);
   border-radius: 8px;
   padding: 8px 8px;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   cursor: pointer;
 }
 
@@ -756,48 +957,49 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   flex: 1 1 100%;
   order: 20;
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.35;
-  color: rgba(196, 165, 116, 0.95);
+  color: var(--preview-accent, #3f454c);
 }
 
 .preview-chapter-panel__ai-accept {
   flex: 0 0 auto;
   order: 21;
   margin-top: 4px;
-  border: 1px solid rgba(196, 165, 116, 0.55);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 55%, transparent);
   background: transparent;
-  color: rgba(196, 165, 116, 0.95);
+  color: var(--preview-accent, #3f454c);
   border-radius: 8px;
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: var(--studio-panel-meta-size, 11px);
   cursor: pointer;
 }
 
 .preview-chapter-panel__rename-input {
   flex: 1 1 auto;
-  border: 1px solid rgba(196, 165, 116, 0.7);
+  border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 70%, transparent);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--preview-surface, #ffffff);
   color: inherit;
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: var(--studio-panel-body-size, 13px);
 }
 
 .preview-chapter-panel__freeze {
   margin: 0 0 8px;
-  color: rgba(232, 236, 234, 0.78);
+  color: var(--preview-muted, #5c574f);
+  font-size: var(--studio-panel-meta-size, 11px);
 }
 
 .preview-chapter-panel__empty {
-  font-size: 12px;
-  color: rgba(232, 236, 234, 0.55);
+  font-size: var(--studio-panel-meta-size, 11px);
+  color: color-mix(in srgb, var(--preview-muted, #5c574f) 80%, transparent);
   padding: 8px 0;
 }
 
 .preview-chapter-panel__explain {
-  font-size: 12px;
-  color: rgba(232, 236, 234, 0.72);
+  font-size: var(--studio-panel-meta-size, 11px);
+  color: var(--preview-muted, #5c574f);
 }
 
 .preview-chapter-panel__explain summary {
@@ -813,12 +1015,12 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 }
 
 .preview-chapter-panel__regen {
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.22));
   background: transparent;
   color: inherit;
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   cursor: pointer;
 }
 
@@ -826,10 +1028,10 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 700;
-  background: #c4a574;
-  color: #1c1812;
+  background: var(--dock-accent, var(--preview-accent, #3f454c));
+  color: var(--dock-accent-ink, var(--preview-accent-ink, #f5f0e8));
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
@@ -853,7 +1055,9 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
     gap: 0;
   }
   .preview-toolbar--v4 .preview-toolbar__longshot-caret-chevron {
-    font-size: 24px;
+    font-size: 0;
+    width: 12px;
+    height: 12px;
   }
   .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled,
   .preview-toolbar--v4
@@ -915,6 +1119,10 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 @media (prefers-reduced-motion: reduce) {
   .preview-toolbar__refine-chip {
     transition: none;
+  }
+  .preview-toolbar__refine-chip.is-busy {
+    animation: none;
+    opacity: 0.85;
   }
 }
 

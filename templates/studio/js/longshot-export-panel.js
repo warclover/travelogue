@@ -15,9 +15,12 @@ export var PLATFORMS = {
     id: "wechat_chat",
     label: "微信群",
     title: "微信群",
-    subtitle: "长图 · 按序发群",
-    cta: "导出长图",
+    subtitle: "按序长图",
+    cta: "导出长图 · 发微信群",
     showSegmentMode: true,
+    copyLabel: "微信群长图 · 要不要字",
+    expectHtml:
+      "将导出<strong>可按序发群</strong>的长图；可选按章分开或一整张 · 预计视册厚而定",
   },
   wechat_moments: {
     id: "wechat_moments",
@@ -26,6 +29,7 @@ export var PLATFORMS = {
     subtitle: "长图连读",
     cta: "导出朋友圈 · 长图连读",
     showSegmentMode: false,
+    copyLabel: "朋友圈长图 · 要不要字",
     expectHtml:
       "将按完整画册切成 <strong>1–9 段</strong>长图连读（滑动连读）· 预计 30–60 秒",
   },
@@ -33,7 +37,7 @@ export var PLATFORMS = {
     id: "poster_bric",
     label: "单张海报 · 3:4",
     title: "单张海报",
-    subtitle: "3:4 拼贴",
+    subtitle: "3:4",
     cta: "导出单张海报",
     showSegmentMode: false,
     showCopyControls: false,
@@ -44,10 +48,12 @@ export var PLATFORMS = {
     id: "xiaohongshu",
     label: "小红书 · 竖版海报",
     title: "小红书",
-    subtitle: "3:4 拼贴海报",
+    subtitle: "3:4 海报",
     cta: "导出小红书海报",
     showSegmentMode: false,
     showXhsOptions: true,
+    // 拼贴出口：用「文案包」，不用长图「要不要字」
+    showCopyControls: false,
     expectHtml:
       "将生成 <strong>N 张 3:4 竖版拼贴海报</strong>（非杂志截屏）· auto 约 3–9 张",
   },
@@ -56,10 +62,11 @@ export var PLATFORMS = {
     id: "wechat_official",
     label: "公众号 · 图文配图",
     title: "公众号",
-    subtitle: "3:4 拼贴配图",
+    subtitle: "3:4 配图",
     cta: "导出公众号配图",
     showSegmentMode: false,
     showXhsOptions: true,
+    showCopyControls: false,
     expectHtml:
       "将生成 <strong>N 张 3:4 竖版拼贴配图</strong>（非杂志截屏）· auto 约 3–9 张 · 可依次插入图文正文",
   },
@@ -67,7 +74,7 @@ export var PLATFORMS = {
     id: "album_spread",
     label: "画册印刷",
     title: "画册印刷",
-    subtitle: "跨页拼贴",
+    subtitle: "跨页",
     cta: "导出画册跨页",
     showSegmentMode: false,
     showCopyControls: false,
@@ -345,9 +352,8 @@ export function ctaLabelForPlatforms(platformIds) {
 
 /** Dock / 窄栏短标签（AC-DFX-02 · 含 compose 出口，禁止回落到「发微信群」） */
 export function shortCtaLabelForPlatform(platformId) {
-  // PMX · 短标签须带导出动作；「连读」 alone 易被当成模式名而非主 CTA
-  // SNR COPY-SNR-C02 · 小红书短标签带「导出」动词
-  if (platformId === "wechat_moments") return "导出连读";
+  // SNR COPY-SNR-C* · 短标签带平台名（对齐「导出小红书」）；禁裸「连读/按章」
+  if (platformId === "wechat_moments") return "导出朋友圈";
   if (platformId === "xiaohongshu") return "导出小红书";
   if (platformId === "wechat_official") return "导出公众号";
   if (platformId === "poster_bric") return "导出海报";
@@ -411,10 +417,17 @@ export function detectPlatformFromProgressHint(hint) {
   return null;
 }
 
+/** 摘要尾句 · 各模式共用（按钮文案随模式变，指引固定指右上角 CTA） */
+var EXPORT_SUMMARY_CTA_HINT = "点击右上角灰色按钮导出";
+
+function _withExportCtaHint(line) {
+  return String(line || "") + " · " + EXPORT_SUMMARY_CTA_HINT;
+}
+
 /** 设置入口摘要 · 「当前将导出：…」 */
 export function confirmedExportSummary(platformId) {
   var p = PLATFORMS[platformId] || PLATFORMS.wechat_chat;
-  return "当前将导出：" + (p.label || p.title || platformId);
+  return _withExportCtaHint("当前将导出：" + (p.label || p.title || platformId));
 }
 
 /**
@@ -429,11 +442,11 @@ export function exportSummaryLine(confirmedPlatform, draftPlatform) {
     (PLATFORMS[confirmed] && (PLATFORMS[confirmed].label || PLATFORMS[confirmed].title)) ||
     confirmed;
   if (draft === confirmed) {
-    return "当前将导出：" + confirmedLabel;
+    return _withExportCtaHint("当前将导出：" + confirmedLabel);
   }
   var draftLabel =
     (PLATFORMS[draft] && (PLATFORMS[draft].label || PLATFORMS[draft].title)) || draft;
-  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+  return _withExportCtaHint("已改选：" + draftLabel + "（点「确定」后生效）");
 }
 
 function _platformLabel(id) {
@@ -455,13 +468,9 @@ export function exportSummaryLineForPlatforms(confirmedPlatforms, draftPlatforms
   var draftLabel =
     draft.length <= 1 ? _platformLabel(draft[0]) : draft.length + " 个模式（" + draft.map(_platformLabel).join("、") + "）";
   if (same) {
-    return "当前将导出：" + draftLabel;
+    return _withExportCtaHint("当前将导出：" + draftLabel);
   }
-  var confirmedLabel =
-    confirmed.length <= 1
-      ? _platformLabel(confirmed[0])
-      : confirmed.length + " 个模式（" + confirmed.map(_platformLabel).join("、") + "）";
-  return "已改选：" + draftLabel + "（点「确定」后生效）· 金色按钮仍按：" + confirmedLabel;
+  return _withExportCtaHint("已改选：" + draftLabel + "（点「确定」后生效）");
 }
 
 export function shouldShowMomentsCoach() {
@@ -541,19 +550,18 @@ export function buildPanelHtml(platformIds) {
 
   return (
     '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
-    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。</p>' +
+    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
-    '<p class="preview-toolbar__export-dual"><button type="button" class="preview-toolbar__export-dual-btn" data-ltn-dual-preview>对比网页与长图</button></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
     '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">发到哪里 · 可多选</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="发到哪里（可多选）">' +
+    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
     platformBtns +
     "</div>" +
     '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
-    '<span class="preview-toolbar__export-popover-label">长图要不要字</span>' +
+    '<span class="preview-toolbar__export-popover-label" data-copy-label>长图要不要字</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +
     '<button type="button" data-copy-preset="photos">纯照片</button>' +
     '<button type="button" data-copy-preset="full">带文字</button>' +
@@ -637,7 +645,7 @@ export function buildPanelHtml(platformIds) {
     '<button type="button" data-studio-longshot-density="default">默认</button>' +
     '<button type="button" data-studio-longshot-density="compact">紧凑</button>' +
     "</div>" +
-    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面；导出前可「对比网页与长图」。</p>' +
+    '<p class="preview-toolbar__export-density-hint">切换后点确定将更新版面。</p>' +
     "</div>" +
     '<div class="preview-toolbar__export-popover-field" data-field="appendix" hidden>' +
     '<label class="preview-toolbar__export-appendix">' +
@@ -655,6 +663,7 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-more-links">' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
+    '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>' +
     "</div></details>" +
     "</div>" +
     '<div class="preview-toolbar__export-popover-actions">' +
@@ -783,19 +792,29 @@ export function syncPanelUI(pop, draft, opts) {
   }
 
   var modeField = pop.querySelector('[data-field="mode"]');
-  if (modeField) modeField.hidden = !meta.showSegmentMode;
+  // 仅微信群单选显「按章/一整张」；批量或其它平台隐藏（D-LNG2-15 / D-BEX-01）
+  if (modeField) modeField.hidden = isBatch || !meta.showSegmentMode;
 
   var copyField = pop.querySelector('[data-field="copy"]');
   if (copyField) {
-    // 海报 / 九宫格非长图文案语义，避免「长图要不要字」误导
-    copyField.hidden = meta.showCopyControls === false;
+    // 海报 / 拼贴文案包平台：不走长图「要不要字」
+    copyField.hidden = isBatch || meta.showCopyControls === false;
+  }
+  var copyLabelEl = pop.querySelector("[data-copy-label]");
+  if (copyLabelEl) {
+    copyLabelEl.textContent = meta.copyLabel || "长图要不要字";
+  }
+  var densityField = pop.querySelector('[data-field="density"]');
+  if (densityField) {
+    // 长图密度仅微信群/朋友圈；拼贴出口隐藏
+    densityField.hidden = isBatch || isComposePlatform(platform);
   }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
   if (noteEl) {
     noteEl.textContent =
-      meta.showCopyControls === false
-        ? "选好后点「确定」，再点上方金色按钮开始导出。"
-        : "选好后点「确定」，再点上方金色按钮开始导出。改「要不要字」会同步预览。";
+      isBatch || meta.showCopyControls === false
+        ? "选好后点「确定」，再点上方灰色按钮开始导出。"
+        : "选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。";
   }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
@@ -968,10 +987,11 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
       var idx = draft.platforms.indexOf(pid);
       if (idx >= 0) {
-        // 至少保留 1 个勾选项，否则无法导出（不允许清空）。
+        // 再点同一项：取消勾选（至少保留 1 个）
         if (draft.platforms.length > 1) draft.platforms.splice(idx, 1);
       } else {
-        draft.platforms.push(pid);
+        // 点新平台：加入多选，并提到首位 → 二级区跟刚点的平台
+        draft.platforms = [pid].concat(draft.platforms);
       }
       draft.platform = draft.platforms[0];
       refresh();

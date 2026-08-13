@@ -754,7 +754,8 @@ def test_studio_home_v2_shelf_module() -> None:
     modal_css = (STUDIO_DIR / "studio-modal.css").read_text(encoding="utf-8")
     assert ".studio__modal-backdrop" in modal_css
     assert "position: fixed" in modal_css
-    assert "z-index: 6000" in modal_css
+    # 须高于 LLM 设置层(12000)，否则覆盖确认被挡住
+    assert "z-index: 13000" in modal_css
 
     modal_js = (STUDIO_DIR / "studio-modal.js").read_text(encoding="utf-8")
     assert "studio-modal-open" in modal_js
