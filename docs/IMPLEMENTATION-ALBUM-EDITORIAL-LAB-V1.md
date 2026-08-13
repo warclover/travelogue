@@ -2,13 +2,13 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | **v0.1.2** |
-| **对应 PRD** | [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) **v0.2.1** |
+| **文档版本** | **v0.1.4** |
+| **对应 PRD** | [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) **v0.2.2** |
 | **验收** | [ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md](./ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md) |
 | **评审** | [ael-album-editorial-lab-v1-review-2026-08-13.md](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md) · Conditional Go |
 | **狗粮** | [ael-local-dogfood-GUIDE.md](./acceptance-records/ael-local-dogfood-GUIDE.md) · [config-ael-dogfood.example.yaml](./config-ael-dogfood.example.yaml) |
 | **DOC-STATUS** | **active** |
-| **状态** | **L1 合码中（PR-B）** · L0 已合 master（#66）· 默认 off |
+| **状态** | **L3 合码（PR-D）** · L0–L2 已合 · 默认 off · T-35 盲评仍出门 |
 | **更新日期** | 2026-08-13 |
 
 > **定位**：把 AEL PRD v0.2.1 + 七席展开为可执行任务卡。  
@@ -187,6 +187,7 @@ L0 未绿不得开工。详细几何以实现时补卡，此处钉挂点，避�
 | **T-AEL-24** | 1 槽卡占比 ≤ GA+10pp 单测 | OQ-05 |
 | **T-AEL-25** | 三册盲评出门 AC-19 | AC-19 |
 | **T-AEL-26** | 单测：p33 标签 → 现有枚举可翻译；断言无 `small` / `main-photo` 键 | AC-22/27 |
+| **T-AEL-27** | punch-in（D-AEL-32）：`crop.tighten`；留脚窗优先、胸像兜底；合影不推近；SlotCropHint 可带 source window | AC-28 |
 
 ---
 
@@ -236,6 +237,8 @@ L0 未绿不得开工。详细几何以实现时补卡，此处钉挂点，避�
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.1.4 | 2026-08-13 | PR-D / L3：5 套矩形探针写入 `PROBE_TEMPLATES`；混出环 allowlist + 配额 + 失败回退（T-30～36）。仓库示例 allowlist 仍不含 `probe-triptych`。T-35 盲评仍出门。 |
+| v0.1.3 | 2026-08-13 | PR-C / L2：角色软分 + punch-in（T-20～27）。T-25 盲评仍出门。 |
 | v0.1.2 | 2026-08-13 | PR-B / L1：crop_risk 下沉 crop_solver；album SSC；msa_fit re-export。T-18 盲评仍出门。 |
 | v0.1.1 | 2026-08-13 | 对齐 PRD v0.2.1：T-AEL-26/30b/36；混出 4 + triptych 评测-only。 |
 | v0.1.0 | 2026-08-13 | M0 拆文。下一刀仅 PR-A / L0。 |

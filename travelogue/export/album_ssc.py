@@ -1,8 +1,8 @@
-"""Album L1 subject-safe crop (SSC) — after slot fill, before render.
+"""Album subject-safe crop (SSC) — after slot fill, before render.
 
-Failure chain (D-AEL-07 / 21): heterogeneous-AR same-card swap → contain.
-Equal-AR grids skip swap (AC-AEL-25). Does not change template id or card
-count (AC-AEL-07). Default loop never calls mosaic_judge (D-AEL-26).
+L1 failure chain (D-AEL-07 / 21): heterogeneous-AR same-card swap → contain.
+L2: same-slot-count mature template swap; punch-in when crop.tighten.
+Equal-AR grids skip AR-swap (AC-AEL-25). Default loop never calls mosaic_judge.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any
 
 from travelogue.config.album_editorial import EffectiveAel
-from travelogue.export.card_grouper import CardPlan
+from travelogue.export.card_grouper import CardPlan, assign_photos_to_slots
 from travelogue.export.card_renderer import SlotCropHint
-from travelogue.export.card_templates import CardTemplate
+from travelogue.export.card_templates import CARD_TEMPLATES, CardTemplate
 from travelogue.layout_engine.crop_solver import (
     CROP_RISK_CONTAIN_THRESHOLD,
     any_face_outside,
@@ -24,6 +24,7 @@ from travelogue.layout_engine.crop_solver import (
     crop_risk_for_pair,
     group_face_count,
     solve_slot_focal,
+    solve_slot_tighten,
 )
 
 _AR_EPS = 0.05
@@ -35,6 +36,7 @@ AssetLookup = Callable[[Path], dict[str, Any] | None]
 class CardSscResult:
     photos: tuple[Path, ...]
     hints: tuple[SlotCropHint, ...]
+    template: CardTemplate
 
 
 def slots_are_equal_ar(template: CardTemplate, *, eps: float = _AR_EPS) -> bool:
@@ -104,6 +106,17 @@ def _evaluate_slot(
     )
 
 
+def any_unsafe_slots(
+    photos: Sequence[Path],
+    template: CardTemplate,
+    lookup: AssetLookup | None,
+    ael: EffectiveAel,
+    *,
+    deadline: float | None,
+) -> bool:
+    return any(_unsafe_flags(photos, template, lookup, ael, deadline=deadline))
+
+
 def _unsafe_flags(
     photos: Sequence[Path],
     template: CardTemplate,
@@ -171,16 +184,45 @@ def _try_heterogeneous_rebind(
     return order
 
 
+def _try_same_count_rebind(
+    photos: list[Path],
+    template: CardTemplate,
+    lookup: AssetLookup | None,
+    ael: EffectiveAel,
+    *,
+    deadline: float | None,
+) -> tuple[list[Path], CardTemplate]:
+    """L2: swap to another mature template of the same slot count if safer."""
+    flags = _unsafe_flags(photos, template, lookup, ael, deadline=deadline)
+    best_n = sum(flags)
+    if best_n == 0:
+        return photos, template
+    best_photos, best_t = photos, template
+    for sib in CARD_TEMPLATES.values():
+        if sib.slot_count != template.slot_count or sib.id == template.id:
+            continue
+        trial = assign_photos_to_slots(list(photos), sib)
+        n_bad = sum(_unsafe_flags(trial, sib, lookup, ael, deadline=deadline))
+        if n_bad < best_n:
+            best_photos, best_t, best_n = trial, sib, n_bad
+            if n_bad == 0:
+                break
+    return best_photos, best_t
+
+
 def apply_card_ssc(
     plan: CardPlan,
     lookup: AssetLookup | None,
     ael: EffectiveAel,
     *,
     deadline: float | None = None,
+    lock_template: bool = False,
 ) -> CardSscResult:
     """Reorder photos within one card and emit per-slot cover/contain hints.
 
-    No-ops when ``ael.crop`` is false. Never changes ``plan.template``.
+    No-ops when ``ael.crop`` is false. L2 may replace ``plan.template`` with
+    another mature template of the same slot count unless ``lock_template``
+    (AEL L3 probes must not be swapped back into the mature library).
     """
     photos = list(plan.photos)
     template = plan.template
@@ -194,10 +236,15 @@ def apply_card_ssc(
         return CardSscResult(
             photos=tuple(photos),
             hints=tuple(SlotCropHint() for _ in range(n)),
+            template=template,
         )
 
     if not slots_are_equal_ar(template):
         photos = _try_heterogeneous_rebind(
+            photos, template, lookup, ael, deadline=deadline
+        )
+    if ael.roles and not lock_template:
+        photos, template = _try_same_count_rebind(
             photos, template, lookup, ael, deadline=deadline
         )
 
@@ -219,5 +266,13 @@ def apply_card_ssc(
         if unsafe and ael.contain_on_fail:
             hints.append(SlotCropHint(fit="contain", focal=focal))
         else:
-            hints.append(SlotCropHint(fit="cover", focal=focal))
-    return CardSscResult(photos=tuple(photos), hints=tuple(hints))
+            window = None
+            if ael.tighten:
+                tight = solve_slot_tighten(
+                    asset, slot_ar, group_face_min=ael.group_face_min
+                )
+                if tight is not None:
+                    win = tight.window
+                    window = (win.x0, win.y0, win.x1, win.y1)
+            hints.append(SlotCropHint(fit="cover", focal=focal, window=window))
+    return CardSscResult(photos=tuple(photos), hints=tuple(hints), template=template)

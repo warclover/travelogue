@@ -20,13 +20,57 @@ def test_twenty_eight_templates_registered() -> None:
     assert len(CARD_TEMPLATES) == 28
 
 
-def test_probe_templates_empty_and_disjoint() -> None:
-    from travelogue.export.card_templates import _ALL_TEMPLATES
+def test_probe_templates_isolated_from_mature_library() -> None:
+    from travelogue.export.card_templates import (
+        PROBE_EVAL_ONLY_IDS,
+        PROBE_MIX_IDS,
+        _ALL_TEMPLATES,
+    )
 
-    assert PROBE_TEMPLATES == {}
+    assert len(PROBE_TEMPLATES) == 5
+    assert set(PROBE_MIX_IDS) == {
+        "probe-square",
+        "probe-tall",
+        "probe-wide",
+        "probe-hero-mix",
+    }
+    assert PROBE_EVAL_ONLY_IDS == ("probe-triptych",)
+    assert set(PROBE_MIX_IDS) | set(PROBE_EVAL_ONLY_IDS) == set(PROBE_TEMPLATES)
     assert CARD_TEMPLATES.keys().isdisjoint(PROBE_TEMPLATES)
     assert len(_ALL_TEMPLATES) == 28
     assert AVAILABLE_SLOT_COUNTS == (16, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+    assert all("p33" not in tid for tid in PROBE_TEMPLATES)
+    assert all(t.slot_count != 5 for t in PROBE_TEMPLATES.values())
+
+
+def test_probe_slots_within_own_grid() -> None:
+    for template in PROBE_TEMPLATES.values():
+        for slot in template.slots:
+            assert 0 <= slot.row < template.grid_rows, template.id
+            assert 0 <= slot.col < template.grid_cols, template.id
+            assert slot.row + slot.row_span <= template.grid_rows, template.id
+            assert slot.col + slot.col_span <= template.grid_cols, template.id
+
+
+def test_probe_flush_grids_fully_covered() -> None:
+    """Hero-mix / wide / tall / triptych / square inner grid have no holes."""
+    for template_id in PROBE_TEMPLATES:
+        template = PROBE_TEMPLATES[template_id]
+        owner: list[list[int | None]] = [
+            [None] * template.grid_cols for _ in range(template.grid_rows)
+        ]
+        for idx, slot in enumerate(template.slots):
+            for r in range(slot.row, slot.row + slot.row_span):
+                for c in range(slot.col, slot.col + slot.col_span):
+                    assert owner[r][c] is None, template_id
+                    owner[r][c] = idx
+        uncovered = [
+            (r, c)
+            for r in range(template.grid_rows)
+            for c in range(template.grid_cols)
+            if owner[r][c] is None
+        ]
+        assert uncovered == [], f"{template_id}: {uncovered}"
 
 
 def test_slot_counts_distribution() -> None:

@@ -84,6 +84,8 @@ class SlotCropHint:
 
     fit: str = "cover"  # "cover" | "contain"
     focal: tuple[float, float] | None = None
+    # Normalized source window (x0, y0, x1, y1) for punch-in; None = full frame.
+    window: tuple[float, float, float, float] | None = None
 
 
 def _fit_contain(
@@ -152,16 +154,24 @@ def _paint_template(
             f"{template.slot_count} slot hints, got {len(slot_hints)}"
         )
     cols, rows = template.grid_cols, template.grid_rows
+    pad_t = round(float(template.inset[0]) * height)
+    pad_r = round(float(template.inset[1]) * width)
+    pad_b = round(float(template.inset[2]) * height)
+    pad_l = round(float(template.inset[3]) * width)
+    gx0 = x0 + pad_l
+    gy0 = y0 + pad_t
+    inner_w = max(1, width - pad_l - pad_r)
+    inner_h = max(1, height - pad_t - pad_b)
     # Reserve (cols-1)/(rows-1) internal seams from the usable area up front,
     # so cells stay evenly sized instead of the last column/row absorbing
     # the gap's rounding slack.
-    usable_w = max(1, width - gap * max(0, cols - 1))
-    usable_h = max(1, height - gap * max(0, rows - 1))
+    usable_w = max(1, inner_w - gap * max(0, cols - 1))
+    usable_h = max(1, inner_h - gap * max(0, rows - 1))
     cell_w = usable_w / cols
     cell_h = usable_h / rows
     for idx, (path, slot) in enumerate(zip(photos, template.slots, strict=True)):
-        sx0 = x0 + round(slot.col * (cell_w + gap))
-        sy0 = y0 + round(slot.row * (cell_h + gap))
+        sx0 = gx0 + round(slot.col * (cell_w + gap))
+        sy0 = gy0 + round(slot.row * (cell_h + gap))
         # A multi-cell slot (col_span/row_span > 1) is one continuous photo —
         # the seam only separates *distinct* slots, never splits one in two.
         sx1 = sx0 + round(slot.col_span * cell_w + max(0, slot.col_span - 1) * gap)
@@ -173,11 +183,28 @@ def _paint_template(
             img = img.convert("RGB")
         hint = slot_hints[idx] if slot_hints is not None else None
         fit = str(hint.fit).lower() if hint is not None else "cover"
+        if hint is not None and hint.window is not None:
+            # Do not unpack into x0/y0 — those are the canvas origin for this
+            # card (or spread half). Shadowing them breaks later slots.
+            wx0, wy0, wx1, wy1 = hint.window
+            iw, ih = img.size
+            box = (
+                max(0, int(round(float(wx0) * iw))),
+                max(0, int(round(float(wy0) * ih))),
+                min(iw, int(round(float(wx1) * iw))),
+                min(ih, int(round(float(wy1) * ih))),
+            )
+            if box[2] > box[0] + 1 and box[3] > box[1] + 1:
+                cropped_src = img.crop(box)
+                img.close()
+                img = cropped_src
         if fit == "contain":
             fitted = _fit_contain(img, tw, th, bg=bg)
         else:
-            if hint is not None and hint.focal is not None:
+            if hint is not None and hint.focal is not None and hint.window is None:
                 focal = hint.focal
+            elif hint is not None and hint.window is not None:
+                focal = (0.5, 0.5)
             else:
                 focal = _focal_for_slot(path, slot.display_aspect, asset_lookup)
             cropped = crop_aspect_focal(img, tw / th, focal=focal)

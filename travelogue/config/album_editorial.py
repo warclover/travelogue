@@ -27,6 +27,7 @@ _CROP_KNOWN = frozenset(
         "containOnFail",
         "max_solve_ms",
         "maxSolveMs",
+        "tighten",
     }
 )
 _ROLES_KNOWN = frozenset({"enabled", "cluster_soft", "clusterSoft"})
@@ -66,6 +67,7 @@ class AlbumEditorialCropConfig:
     group_face_min: int = 3
     contain_on_fail: bool = True
     max_solve_ms: int = 8000
+    tighten: bool = False
 
 
 @dataclass
@@ -103,6 +105,7 @@ class EffectiveAel:
     max_solve_ms: int = 8000
     face_hard_gate: bool = True
     cluster_soft: bool = True
+    tighten: bool = False
     max_per_spread: int = 1
     max_share: float = 0.20
     allowlist: tuple[str, ...] = ()
@@ -123,6 +126,7 @@ def _crop_from_dict(raw: dict[str, Any]) -> AlbumEditorialCropConfig:
         group_face_min=group_face_min,
         contain_on_fail=cfg_bool(raw, "contain_on_fail", "containOnFail", True),
         max_solve_ms=max_solve_ms,
+        tighten=cfg_bool(raw, "tighten", "tighten", False),
     )
 
 
@@ -188,6 +192,7 @@ def effective_ael(cfg: Any | None, platform: str) -> EffectiveAel:
         max_solve_ms=int(lab.crop.max_solve_ms),
         face_hard_gate=True,
         cluster_soft=bool(lab.roles.cluster_soft),
+        tighten=bool(lab.crop.enabled and lab.crop.tighten),
         max_per_spread=int(lab.probes.max_per_spread),
         max_share=float(lab.probes.max_share),
         allowlist=tuple(lab.probes.allowlist),

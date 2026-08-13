@@ -97,7 +97,9 @@ worth implementing instead of a blind count cap: 小红书/公众号创作者普
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any
 
 from travelogue.export.card_templates import (
     AVAILABLE_SLOT_COUNTS,
@@ -105,9 +107,13 @@ from travelogue.export.card_templates import (
     CardSlot,
     CardTemplate,
 )
+from travelogue.layout_contract.editorial_role import editorial_role_for_asset
+from travelogue.layout_contract.subject_tagging import is_food_asset
 from travelogue.media.image_ops import peek_image_meta
 
 Orientation = str  # "landscape" | "portrait"
+AssetLookup = Callable[[Path], Mapping[str, Any] | None]
+_WIDE_SLOT_AR = 1.35
 
 
 @dataclass(frozen=True)
@@ -122,6 +128,40 @@ def _photo_orientation(path: Path) -> Orientation:
         return "landscape" if meta.width > meta.height * 1.05 else "portrait"
     except Exception:
         return "portrait"
+
+
+def _role_soft_penalty(
+    template: CardTemplate,
+    peek_photos: list[Path],
+    lookup: AssetLookup | None,
+) -> float:
+    """Soft cost for photo-role vs slot-role. Orientation shortfall already won."""
+    if lookup is None or len(peek_photos) != template.slot_count:
+        return 0.0
+    ordered = assign_photos_to_slots(list(peek_photos), template)
+    tagged: list[tuple[str, bool, bool]] = []
+    for path in ordered:
+        raw = lookup(path)
+        asset = dict(raw) if isinstance(raw, Mapping) else {}
+        role, group = editorial_role_for_asset(asset)
+        tagged.append((role, group, is_food_asset(asset)))
+    has_hero = any(role in ("vista", "portrait") for role, _g, _f in tagged)
+    pen = 0.0
+    for slot, (role, group, food) in zip(template.slots, tagged, strict=True):
+        skinny = float(slot.display_aspect) >= _WIDE_SLOT_AR
+        if role == "portrait" and skinny and not group:
+            pen += 2.0
+        if group and skinny:
+            pen += 1.2
+        if role == "detail" and slot.role == "main" and has_hero:
+            pen += 1.5
+        if food and slot.role == "main":
+            pen += 3.0
+        if role == "vista" and slot.role != "main" and template.has_main_slot:
+            pen += 0.35
+        if role == "sequence" and "grid-equal" not in template.id:
+            pen += 0.25
+    return pen
 
 
 def plan_slot_counts(total_photos: int, *, target_per_card: int | None = None) -> list[int]:
@@ -274,6 +314,7 @@ def _best_matching_template(
     usage_counts: dict[str, int],
     target_per_card: int | None = None,
     avoid_template_id: str | None = None,
+    role_penalty: dict[str, float] | None = None,
 ) -> CardTemplate:
     """Pick the best template among ``candidates`` given how much
     landscape/portrait supply *actually remains* trip-wide.
@@ -372,15 +413,58 @@ def _best_matching_template(
 
     finalists = sorted(
         finalists,
-        key=lambda t: (usage_counts.get(t.id, 0), proportion_deviation(t), t.id),
+        key=lambda t: (
+            usage_counts.get(t.id, 0),
+            (role_penalty or {}).get(t.id, 0.0),
+            proportion_deviation(t),
+            t.id,
+        ),
     )
     return finalists[0]
+
+
+def _cluster_key(path: Path, lookup: AssetLookup | None) -> str:
+    if lookup is None:
+        return ""
+    asset = lookup(path)
+    if not isinstance(asset, dict):
+        return ""
+    return str(asset.get("shotGroupId") or asset.get("sceneClusterId") or "").strip()
+
+
+def _pop_with_cluster(
+    queue: list[Path],
+    n: int,
+    *,
+    pref_key: str,
+    lookup: AssetLookup | None,
+) -> list[Path]:
+    if n <= 0:
+        return []
+    if not pref_key or lookup is None:
+        taken = queue[:n]
+        del queue[:n]
+        return taken
+    taken: list[Path] = []
+    rest: list[Path] = []
+    for p in queue:
+        if len(taken) < n and _cluster_key(p, lookup) == pref_key:
+            taken.append(p)
+        else:
+            rest.append(p)
+    queue[:] = rest
+    while len(taken) < n and queue:
+        taken.append(queue.pop(0))
+    return taken
 
 
 def _pull_chunk_for_template(
     template: CardTemplate,
     landscape_queue: list[Path],
     portrait_queue: list[Path],
+    *,
+    lookup: AssetLookup | None = None,
+    cluster_soft: bool = False,
 ) -> list[Path]:
     """Consume exactly ``template.slot_count`` photos from the two global
     orientation queues (each preserving its own relative order), preferring
@@ -390,17 +474,28 @@ def _pull_chunk_for_template(
     placement below)."""
     landscape_need = _landscape_shaped_slot_count(template)
     portrait_need = template.slot_count - landscape_need
-    chunk: list[Path] = []
-    for _ in range(landscape_need):
+    pref = ""
+    if cluster_soft:
         if landscape_queue:
-            chunk.append(landscape_queue.pop(0))
+            pref = _cluster_key(landscape_queue[0], lookup)
         elif portrait_queue:
-            chunk.append(portrait_queue.pop(0))
-    for _ in range(portrait_need):
-        if portrait_queue:
-            chunk.append(portrait_queue.pop(0))
-        elif landscape_queue:
-            chunk.append(landscape_queue.pop(0))
+            pref = _cluster_key(portrait_queue[0], lookup)
+    chunk: list[Path] = []
+    chunk.extend(
+        _pop_with_cluster(
+            landscape_queue, landscape_need, pref_key=pref, lookup=lookup
+        )
+    )
+    # If landscape queue ran short, borrow portraits (same as before).
+    while len(chunk) < landscape_need and portrait_queue:
+        chunk.append(portrait_queue.pop(0))
+    chunk.extend(
+        _pop_with_cluster(
+            portrait_queue, portrait_need, pref_key=pref, lookup=lookup
+        )
+    )
+    while len(chunk) < landscape_need + portrait_need and landscape_queue:
+        chunk.append(landscape_queue.pop(0))
     return chunk
 
 
@@ -410,6 +505,9 @@ def plan_cards(
     target_per_card: int | None = None,
     avoid_immediate_repeat: bool = False,
     max_slot_count: int | None = None,
+    assets_by_path: Mapping[Path, Mapping[str, Any]] | None = None,
+    role_soft: bool = False,
+    cluster_soft: bool = False,
 ) -> list[CardPlan]:
     """Group ``photos`` into cards per §4: orientation-supply-aware slot-count
     + template selection (§4 v0.2 simplification's *only* hard requirement,
@@ -455,12 +553,15 @@ def plan_cards(
     though a zero-mismatch auto plan exists — which would violate the
     product rule that AC-ECC-04 outranks page-count preference.
 
-    ``max_slot_count`` (2026-08-07, ``plan_cards_for_feed`` building block):
-    optional hard ceiling on candidate templates' slot count — e.g. capping
-    at 6 restricts selection to the "compact" 2-6 slot templates, excluding
-    the big 7/8/9/16-slot grids. ``None`` (default) considers the full
-    library, unchanged from prior behavior.
+    ``assets_by_path`` / ``role_soft`` / ``cluster_soft`` (AEL L2): album-only
+    soft constraints. xhs/mp callers omit them. Orientation shortfall still
+    outranks role scoring. Cluster affinity never leaves a slot empty.
     """
+    extra = dict(
+        assets_by_path=assets_by_path,
+        role_soft=role_soft,
+        cluster_soft=cluster_soft,
+    )
     if not photos:
         return []
     plans = _plan_cards_once(
@@ -468,6 +569,7 @@ def plan_cards(
         target_per_card=target_per_card,
         avoid_immediate_repeat=avoid_immediate_repeat,
         max_slot_count=max_slot_count,
+        **extra,
     )
     if target_per_card and target_per_card > 0:
         auto_plans = _plan_cards_once(
@@ -475,10 +577,23 @@ def plan_cards(
             target_per_card=None,
             avoid_immediate_repeat=avoid_immediate_repeat,
             max_slot_count=max_slot_count,
+            **extra,
         )
         if count_orientation_mismatches(plans) > count_orientation_mismatches(auto_plans):
             return auto_plans
     return plans
+
+
+def _lookup_from_map(
+    assets_by_path: Mapping[Path, Mapping[str, Any]] | None,
+) -> AssetLookup | None:
+    if not assets_by_path:
+        return None
+
+    def _lookup(path: Path) -> Mapping[str, Any] | None:
+        return assets_by_path.get(path)
+
+    return _lookup
 
 
 def _plan_cards_once(
@@ -487,10 +602,14 @@ def _plan_cards_once(
     target_per_card: int | None = None,
     avoid_immediate_repeat: bool = False,
     max_slot_count: int | None = None,
+    assets_by_path: Mapping[Path, Mapping[str, Any]] | None = None,
+    role_soft: bool = False,
+    cluster_soft: bool = False,
 ) -> list[CardPlan]:
     """Single greedy pass used by ``plan_cards`` (and its soft-target rail)."""
     landscape_queue = [p for p in photos if _photo_orientation(p) == "landscape"]
     portrait_queue = [p for p in photos if _photo_orientation(p) != "landscape"]
+    lookup = _lookup_from_map(assets_by_path)
 
     plans: list[CardPlan] = []
     usage_counts: dict[str, int] = {}
@@ -503,6 +622,16 @@ def _plan_cards_once(
             if t.slot_count <= remaining_total
             and (max_slot_count is None or t.slot_count <= max_slot_count)
         ]
+        penalties: dict[str, float] | None = None
+        if role_soft and lookup is not None:
+            penalties = {}
+            for t in candidates:
+                peek = _pull_chunk_for_template(
+                    t,
+                    list(landscape_queue),
+                    list(portrait_queue),
+                )
+                penalties[t.id] = _role_soft_penalty(t, peek, lookup)
         template = _best_matching_template(
             candidates,
             landscape_remaining=len(landscape_queue),
@@ -510,8 +639,15 @@ def _plan_cards_once(
             usage_counts=usage_counts,
             target_per_card=target_per_card,
             avoid_template_id=last_template_id if avoid_immediate_repeat else None,
+            role_penalty=penalties,
         )
-        chunk = _pull_chunk_for_template(template, landscape_queue, portrait_queue)
+        chunk = _pull_chunk_for_template(
+            template,
+            landscape_queue,
+            portrait_queue,
+            lookup=lookup,
+            cluster_soft=cluster_soft,
+        )
         ordered = assign_photos_to_slots(chunk, template)
         plans.append(CardPlan(template=template, photos=tuple(ordered)))
         usage_counts[template.id] = usage_counts.get(template.id, 0) + 1

@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from travelogue.export.card_renderer import render_card, render_spread
-from travelogue.export.card_templates import CARD_TEMPLATES
+from travelogue.export.card_renderer import SlotCropHint, render_card, render_spread
+from travelogue.export.card_templates import CARD_TEMPLATES, PROBE_TEMPLATES
 
 pytestmark = pytest.mark.unit
 
@@ -157,3 +157,58 @@ def test_render_spread_lone_card_half_page(tmp_path: Path) -> None:
         bg = (245, 245, 243)
         assert im.getpixel((CARD_CANVAS[0] - 5, CARD_CANVAS[1] // 2)) != bg
         assert im.getpixel((5, 5)) != bg
+
+
+def test_render_card_punch_in_window_on_first_slot_does_not_break_later_slots(
+    tmp_path: Path,
+) -> None:
+    """Punch-in window coords must not shadow canvas origin x0/y0."""
+    template = CARD_TEMPLATES["card-2-stack-equal"]
+    photos = [
+        _make_rgb(tmp_path / "a.jpg", size=(800, 1200), color=(200, 40, 40)),
+        _make_rgb(tmp_path / "b.jpg", size=(800, 1200), color=(40, 40, 200)),
+    ]
+    hints = (
+        SlotCropHint(fit="cover", window=(0.1, 0.1, 0.9, 0.9)),
+        SlotCropHint(fit="cover", window=(0.2, 0.2, 0.8, 0.8)),
+    )
+    data, diag = render_card(
+        photos, template, canvas_wh=CARD_CANVAS, slot_hints=hints
+    )
+    assert diag["template"] == "card-2-stack-equal"
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.size == CARD_CANVAS
+        top = im.getpixel((CARD_CANVAS[0] // 2, CARD_CANVAS[1] // 4))
+        bot = im.getpixel((CARD_CANVAS[0] // 2, 3 * CARD_CANVAS[1] // 4))
+        assert top != bot
+
+
+def test_probe_hero_mix_flush_to_card_edges(tmp_path: Path) -> None:
+    template = PROBE_TEMPLATES["probe-hero-mix"]
+    colors = [(200, 40, 40), (40, 200, 40), (40, 40, 200)]
+    photos = [
+        _make_rgb(tmp_path / f"h{i}.jpg", size=(900, 1200), color=colors[i])
+        for i in range(3)
+    ]
+    data, _diag = render_card(photos, template, canvas_wh=CARD_CANVAS)
+    bg = (245, 245, 243)
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.getpixel((4, 4)) != bg
+        assert im.getpixel((CARD_CANVAS[0] - 5, 4)) != bg
+        assert im.getpixel((4, CARD_CANVAS[1] - 5)) != bg
+        assert im.getpixel((CARD_CANVAS[0] - 5, CARD_CANVAS[1] - 5)) != bg
+
+
+def test_probe_square_tiles_are_one_to_one(tmp_path: Path) -> None:
+    template = PROBE_TEMPLATES["probe-square"]
+    photos = [
+        _make_rgb(tmp_path / f"s{i}.jpg", size=(1000, 1000), color=(40 + i * 40, 80, 120))
+        for i in range(4)
+    ]
+    data, _diag = render_card(photos, template, canvas_wh=CARD_CANVAS)
+    bg = (245, 245, 243)
+    with Image.open(io.BytesIO(data)) as im:
+        assert im.getpixel((CARD_CANVAS[0] // 2, 8)) == bg
+        assert im.getpixel((CARD_CANVAS[0] // 2, CARD_CANVAS[1] - 8)) == bg
+        mid = im.getpixel((CARD_CANVAS[0] // 4, CARD_CANVAS[1] // 2 - 80))
+        assert mid != bg

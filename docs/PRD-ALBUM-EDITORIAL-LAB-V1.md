@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.1** |
+| **文档版本** | **v0.2.2** |
 | **状态** | **Conditional Go · Must-Fix 已回写**（[七席](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md) · 2026-08-13）· **v0.2.1** 产品补记探针参考页（混出 4 + 第 5 套评测-only）· L0 隔离可 Kickoff · L1 合码挡 BLK-AEL-01/02/04/07/08 · L2 挡 BLK-AEL-05 · 通行证挡 BLK-AEL-06 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「画册编辑试验床」— **AEL**（Album Editorial Lab） |
@@ -15,6 +15,11 @@
 | **实施** | [IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md](./IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md) · M0 已拆 · 下一刀 L0 |
 | **更新日期** | 2026-08-13 |
 
+> **v0.2.2 相对 v0.2.1（狗粮回写 · 2026-08-13 · 非二次七席）**
+>
+> 1. L1 三册对照：绝大部分页无变化、特写可见、全身照几乎不动——符合 L1「只在快切脸/天时改刀」。  
+> 2. **D-AEL-32**：punch-in 与 L2 角色同波次上场，不单开 L1.5。全身照 **留脚推近优先，切成胸像兜底**。人脸硬闸已够用；手/脚规避尽力（protect/salient 估计），无关键点则 fail-open，不把「切到手」当 L2 红线。  
+>
 > **v0.2.1 相对 v0.2.0（产品补记 · 2026-08-13 · 非二次七席）**
 >
 > 1. §6.4 钉死四款混出参考页：P-square←p22、P-tall←p21、P-wide←p08 上条、P-hero-mix←p12。  
@@ -228,6 +233,7 @@ AEL 承诺的是内核正确率，不是「导出后看起来已经是那 40 页
 | **D-AEL-29** | （BLK-05）现网画册 **不执行** FRP。L2 美食合同：禁止升为 `vista` / 主槽。不得把「FRP 不回退」写成回归项。 |
 | **D-AEL-30** | （产品 2026-08-13）`PROBE_TEMPLATES` 可含 **5** 套。**默认混出 allowlist** = `{probe-square, probe-tall, probe-wide, probe-hero-mix}`。**`probe-triptych` 评测-only**：可进 registry 与夹具 allowlist，**禁止**写入仓库默认 / 示例 mix allowlist；升混出须另开门（夹具 100% + 狗粮无新砍头红线）。不替代 P-tall。 |
 | **D-AEL-31** | （产品 2026-08-13）参考页 p33 的五个**中文槽标签**映射到现有 `editorialRole` + `CardSlot.role`（§6.1 表）。**禁止**新增 `small` / `main-photo` 等平行枚举。p33 **几何不进** `PROBE_TEMPLATES`。 |
+| **D-AEL-32** | （产品 2026-08-13 三册对照）L1 只平移最大 cover 窗，不推近。**punch-in**（比 cover 更小的同 AR 窗对准人）与 **L2 角色同 PR 上场**，键 `crop.tighten`（须 `crop.enabled`）。策略：单人/双人；合影 ≥`group_face_min` **不**推近。全身照 **留脚推近优先**（窗须含脸+估计脚底）；做不到目标脸占比或脚估在窗外则 **胸像兜底**。手/脚无姿态点：用 protectBox / salientBox 扩张；缺失则几何估计，**fail-open**（不因此 contain）。禁止把 punch-in 做成切成证件照的默认。 |
 
 ---
 
@@ -354,9 +360,11 @@ kept 照片（ABE 剔除不变）
 1. **感知**：face / protectBox / focalPoint；合影用 face 并集当保护框；风景用 `crop_risk_for_pair`（AR 错配），**不上**新地平线模型（与 EDC OQ-03 一致）。
 2. **几何**：`solve_slot_focal`；人脸 clipped → contain 或同卡换槽；高 crop_risk 且非 bleed 名单 → contain 或换槽。
 3. **评论（MayCall）**：可选 mosaic_judge；不可改硬闸。
-4. **L1 不做**：换模板、改卡数、打开 MSA、地平线模型。
+4. **L1 不做**：换模板、改卡数、打开 MSA、地平线模型、往人身上推近（punch-in 见 D-AEL-32 / L2）。
 
 contain 底色：`DEFAULT_BG` `(245, 245, 243)`。用户应能读成「这张图被完整放下」，而不是「没铺满的 bug」。
+
+**L2 punch-in（`crop.tighten`）**：在 L1 可行 cover 之上，对单人/双人用更小的同 AR 窗对准人。全身照先收「头到脚还在」；不行再胸像。合影不推近。
 
 ### 6.4 异常 AR 探针（L3）
 
@@ -366,8 +374,8 @@ contain 底色：`DEFAULT_BG` `(245, 245, 243)`。用户应能读成「这张图
 |------|--------|------------------|--------|----------|------|
 | **P-square** `probe-square` | p22「一餐，也是一段路程」 | 2×2 **真 1:1**（为保方形允许对称纸边，不是半幅空白 bug） | 3:2 / 4:3 进方槽是否切天际/砍头 | 圆形遮罩；餐食标题 | **混出** |
 | **P-tall** `probe-tall` | p21「这一刻，刚刚好」 | 两列铺满；派生 AR ≈0.375（约 1:2.7；参考页标 1:2，去标题后略瘦） | 合影/全身进瘦槽是否切脚 | 微倾；不做到三连 1:4 | **混出** |
-| **P-wide** `probe-wide` | p08「静而致远」上条 | 一条 ≈16:9（`display_aspect≈1.78`）+ 余高填满（禁止半幅空白）；现网最扁是 1.5 | 竖图进扁槽、风景天际被横切 | 右侧日期标题 | **混出** |
-| **P-hero-mix** `probe-hero-mix` | p12「途中的小事」 | 大方槽 ≈1:1 + 右侧两竖；矩形贴齐 | vista 进大槽、细节进小槽；异 AR 才换槽 | 胶带、圆形章 | **混出** |
+| **P-wide** `probe-wide` | p08「静而致远」上条 | 顶条 ≈16:9（`display_aspect≈1.69`）+ 余高两竖铺满（禁止半幅空白）；现网最扁是 1.5 | 竖图进扁槽、风景天际被横切 | 右侧日期标题 | **混出** |
+| **P-hero-mix** `probe-hero-mix` | p12「途中的小事」 | 左大槽铺满高度（≈0.56）+ 右侧两竖；三矩形贴齐 3:4 卡边 | vista 进大槽、细节进小槽；异 AR 才换槽 | 胶带、圆形章 | **混出** |
 | **P-triptych** `probe-triptych` | p18「一座城的普通一天」 | 三列铺满；派生 AR ≈0.25（1:4） | 同一异常 AR ×3；选错或切脚会连坐 | 不替代 P-tall；CITY WALK 标题 | **评测-only** |
 | **对照** | — | 现成 `card-4` 顶部 1.125（**成熟库内**） | 库内已有的「需裁切」槽 | 不新造、不复制进 PROBE | 成熟库 |
 
@@ -434,7 +442,7 @@ EDC 合同仍以 [PRD-EDITORIAL-COMPILER-V1.md](./PRD-EDITORIAL-COMPILER-V1.md) 
 |------|------|----------------|------|
 | **L0** | 实验旗 · album 分支隔离 · 诊断骨架 · xhs 金样对照 | 关旗 ≡ GA；开旗但 crop/roles/probes 全 false ≡ GA | 父关 |
 | **L1** | 28 套上 SSC 增量；同卡换槽；槽内 contain | AC-AEL-01～08；§7.3 L1 门 | 增量 **off** |
-| **L2** | editorialRole 软约束；同槽数换成熟模板 | AC-AEL-09～12；§7.3 L2 门 | 随父开关 |
+| **L2** | editorialRole 软约束；同槽数换成熟模板；punch-in（D-AEL-32） | AC-AEL-09～12/28；§7.3 L2 门 | 随父开关 |
 | **L3** | 4 套探针准入混出；第 5 套 triptych 评测-only | AC-AEL-13～16/26；§7.3 L3 门；失败则探针长期评测-only | **off** |
 
 L3 必须提供 **探针回滚**（只关 probes，保留 L1/L2）。
@@ -453,6 +461,7 @@ album_editorial_lab:
     face_hard_gate: true         # 不可关
     group_face_min: 3
     contain_on_fail: true        # 仅 album
+    tighten: false               # L2 punch-in（D-AEL-32）；须 crop.enabled
   roles:
     enabled: false               # L2
     cluster_soft: true
@@ -537,6 +546,7 @@ Kickoff 后已拆 ACCEPTANCE / IMPLEMENTATION；下列为合同源。
 | **AC-AEL-25** | 等权宫格夹具：L1 失败走 contain，不因换槽改变朝向分配 | L1 |
 | **AC-AEL-26** | `PROBE_TEMPLATES` 可含 `probe-triptych`；默认 / 示例 mix `allowlist` **不含**该 id；空 allowlist 仍不选任何探针 | L3 |
 | **AC-AEL-27** | p33 五标签可翻译到 `{vista,portrait,detail}` + `{main,portrait,landscape}`；无平行枚举；`PROBE_TEMPLATES` 无 p33 几何 id | L2/L3 |
+| **AC-AEL-28** | punch-in：合影不推近；全身照夹具留脚窗优先于胸像；无 protect 时几何估计 fail-open 仍 cover（不强制 contain） | L2 |
 
 ---
 
@@ -544,6 +554,7 @@ Kickoff 后已拆 ACCEPTANCE / IMPLEMENTATION；下列为合同源。
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2.2 | 2026-08-13 | 三册对照回写：D-AEL-32 punch-in 与 L2 同上场；留脚优先、胸像兜底；AC-AEL-28。 |
 | v0.2.1 | 2026-08-13 | 产品补记：§6.4 钉死四款混出参考页；P-triptych（p18）评测-only；p33 角色映射进 L2、几何不进探针。D-AEL-30/31 · AC-26/27。非二次七席。 |
 | v0.2.0 | 2026-08-13 | 七席 Conditional Go 回写。BLK-AEL-01～08 → D-AEL-21～29；G-AEL-08 / D-AEL-07/11/14 / §8 / AC-03/12 改写；OQ-01～06 结案；AC-23～25。纪要：[ael-album-editorial-lab-v1-review-2026-08-13.md](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md)。 |
 | v0.1.0 | 2026-08-13 | 初稿。产品确认：画册单独升级当 EDC 试验床；选图×裁切联立；先 28 套再 3～5 探针；隔离 xhs/海报；本轮无字无胶带；通行证 L1+L2→EDC W1/W2。灵感：[智能模板建议0813.md](./智能模板建议0813.md)。讨论结论写入本文，待七席。 |

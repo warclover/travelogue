@@ -174,9 +174,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MVP.md](./PRD-MVP.md) | **archive** | MVP 已冻结；产品演进见后续 Phase PRD |
 | [adr/021-export-compose-dual-engine.md](./adr/021-export-compose-dual-engine.md) | **active** | 导出双引擎 **v0.5**（2026-08-05）· 小红书/单张海报/画册统一 3:4 卡片 · 画册几何由 2.8:1 改两卡+gutter · CardGrouper 不要求分镜边界 · 七席评审 Conditional Go · 已实现 + 追加 4 套等分模板 |
 | [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **active** | 导出 3:4 卡片统一 **v0.4.0**（Conditional Go · Stage 1-4 已实现 · 13 套模板已交付 · BLK-ECC-01～05 已回写）· CardGrouper/Selector/Renderer |
-| [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) | **active** | **AEL** 画册编辑试验床 **v0.2.1** · Conditional Go · 混出 4 探针 + triptych 评测-only · p33 角色进 L2 |
-| [ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md](./ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md) | **active** | AEL 验收 · AC-AEL-01～27 · M0 门已齐 · L0 合码未勾 |
-| [IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md](./IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md) | **active** | AEL 实施 · M0 文档 Done · 下一刀 PR-A/L0 |
+| [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) | **active** | **AEL** 画册编辑试验床 **v0.2.2** · Conditional Go · 混出 4 探针 + triptych 评测-only · punch-in L2 |
+| [ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md](./ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md) | **active** | AEL 验收 · AC-AEL-01～28 · L3 单测可跑；盲评出门未勾 |
+| [IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md](./IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md) | **active** | AEL 实施 **v0.1.4** · L3 探针合码 · 默认 off |
 | [acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md) | **active** | AEL 七席 · Conditional Go · §11 产品补记 v0.2.1 |
 | [acceptance-records/ael-local-dogfood-GUIDE.md](./acceptance-records/ael-local-dogfood-GUIDE.md) | **active** | AEL 本机狗粮 GUIDE |
 | [acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) | **active** | ECC 七席联评 · Conditional Go · BLK-ECC-01～05（复用对象订正/独立实现声明/OQ 默认解/迁移清单/章节打包退役） |

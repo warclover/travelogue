@@ -26,6 +26,7 @@ from typing import Any
 
 from travelogue.curation.cover_scoring_v2 import cover_score_v2
 from travelogue.export.album_ssc import apply_card_ssc
+from travelogue.export.album_probes import is_probe_id, mix_probe_cards
 from travelogue.export.card_bookends import (
     pick_portrait_preferring_id,
     render_closing_card,
@@ -404,7 +405,8 @@ def _maybe_write_ael_diagnostics(
         "probes": bool(ael.probes),
         "templateIds": list(template_ids),
         "slotOrientations": slot_orientations,
-        "probeCount": 0,
+        "probeCount": sum(1 for tid in template_ids if is_probe_id(tid)),
+        "probeIds": [tid for tid in template_ids if is_probe_id(tid)],
     }
     out_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -511,37 +513,67 @@ def export_collage_pack(
                 body_paths,
                 target_per_card=album_target_per_card,
                 avoid_immediate_repeat=True,
+                assets_by_path={p: a for p, a in body_pairs} if ael.roles else None,
+                role_soft=bool(ael.roles),
+                cluster_soft=bool(ael.roles and ael.cluster_soft),
             )
+            deadline = None
+            if ael.crop:
+                deadline = time.monotonic() + max(0, int(ael.max_solve_ms)) / 1000.0
+            if ael.probes:
+                plans = mix_probe_cards(
+                    plans, asset_lookup, ael, deadline=deadline
+                )
             spreads = _pair_cards_for_spreads(plans)
             gutter = (
                 int(round(ALBUM_GUTTER * 1.25))
                 if int(scale or 2) > 2
                 else ALBUM_GUTTER
             )
-            deadline = None
-            if ael.crop:
-                deadline = time.monotonic() + max(0, int(ael.max_solve_ms)) / 1000.0
+            rendered_plans: list[CardPlan] = []
             for left, right in spreads:
                 left_photos = list(left.photos)
+                left_template = left.template
                 left_hints = None
                 right_arg = None
                 right_hints = None
                 if ael.crop:
                     left_ssc = apply_card_ssc(
-                        left, asset_lookup, ael, deadline=deadline
+                        left,
+                        asset_lookup,
+                        ael,
+                        deadline=deadline,
+                        lock_template=is_probe_id(left.template.id),
                     )
                     left_photos = list(left_ssc.photos)
+                    left_template = left_ssc.template
                     left_hints = left_ssc.hints
+                    rendered_plans.append(
+                        CardPlan(template=left_template, photos=tuple(left_photos))
+                    )
                     if right is not None:
                         right_ssc = apply_card_ssc(
-                            right, asset_lookup, ael, deadline=deadline
+                            right,
+                            asset_lookup,
+                            ael,
+                            deadline=deadline,
+                            lock_template=is_probe_id(right.template.id),
                         )
-                        right_arg = (list(right_ssc.photos), right.template)
+                        right_arg = (list(right_ssc.photos), right_ssc.template)
                         right_hints = right_ssc.hints
-                elif right is not None:
-                    right_arg = (list(right.photos), right.template)
+                        rendered_plans.append(
+                            CardPlan(
+                                template=right_ssc.template,
+                                photos=tuple(right_ssc.photos),
+                            )
+                        )
+                else:
+                    rendered_plans.append(left)
+                    if right is not None:
+                        right_arg = (list(right.photos), right.template)
+                        rendered_plans.append(right)
                 data, _diag = render_spread(
-                    (left_photos, left.template),
+                    (left_photos, left_template),
                     right_arg,
                     card_wh=card_wh,
                     gutter=gutter,
@@ -550,6 +582,9 @@ def export_collage_pack(
                     slot_hints_right=right_hints,
                 )
                 body_pages.append(data)
+            if rendered_plans:
+                plans = rendered_plans
+
 
         pages_render = (
             ([cover_bytes] if cover_bytes else [])

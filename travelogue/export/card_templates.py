@@ -57,6 +57,9 @@ class CardTemplate:
     #: (card-2/4/8/16-grid-equal) declare their own N-up grid instead.
     grid_rows: int = 3
     grid_cols: int = 3
+    #: Normalized content inset (top, right, bottom, left) in 0–1 of canvas.
+    #: Used by AEL square probes to keep 1:1 tiles without dummy grid rows.
+    inset: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 0.0)
 
     @property
     def slot_count(self) -> int:
@@ -572,10 +575,96 @@ _ALL_TEMPLATES: tuple[CardTemplate, ...] = (
 
 CARD_TEMPLATES: dict[str, CardTemplate] = {t.id: t for t in _ALL_TEMPLATES}
 
-#: AEL L3 probe registry (BLK-AEL-01). Independent of ``_ALL_TEMPLATES``.
-#: L0 keeps this empty; L3 writes rectangular probes here only. Never merge
-#: into ``CARD_TEMPLATES`` / ``AVAILABLE_SLOT_COUNTS``.
-PROBE_TEMPLATES: dict[str, CardTemplate] = {}
+# -- AEL L3 rectangular probes (D-AEL-14/30). Geometry only; no title/tape. --
+# Never merge into ``_ALL_TEMPLATES`` / ``CARD_TEMPLATES`` / ``AVAILABLE_SLOT_COUNTS``.
+
+#: p22 2×2 true 1:1. Fill width; equal top/bottom paper (not a title band).
+_SQUARE_INSET = (0.125, 0.0, 0.125, 0.0)
+PROBE_SQUARE = CardTemplate(
+    id="probe-square",
+    display_name="探针 · 四方 1:1",
+    grid_rows=2,
+    grid_cols=2,
+    inset=_SQUARE_INSET,
+    slots=(
+        CardSlot("main", 0, 0, display_aspect=1.0),
+        CardSlot("main", 0, 1, display_aspect=1.0),
+        CardSlot("main", 1, 0, display_aspect=1.0),
+        CardSlot("main", 1, 1, display_aspect=1.0),
+    ),
+)
+
+#: p21 two columns filling the 3:4 card. Slot AR = 0.75/2 = 0.375 (~1:2.7).
+PROBE_TALL = CardTemplate(
+    id="probe-tall",
+    display_name="探针 · 两列瘦槽",
+    grid_rows=1,
+    grid_cols=2,
+    slots=(
+        CardSlot("portrait", 0, 0, display_aspect=0.375),
+        CardSlot("portrait", 0, 1, display_aspect=0.375),
+    ),
+)
+
+#: p08 16:9 top strip + remainder filled with two portraits (no half-blank).
+#: 9×2 grid: top 4/9 → AR 1.6875 (flatter than mature 1.5); bottom 5/9 two-up.
+PROBE_WIDE = CardTemplate(
+    id="probe-wide",
+    display_name="探针 · 16:9 条带",
+    grid_rows=9,
+    grid_cols=2,
+    slots=(
+        CardSlot("landscape", 0, 0, row_span=4, col_span=2, display_aspect=1.6875),
+        CardSlot("portrait", 4, 0, row_span=5, col_span=1, display_aspect=0.675),
+        CardSlot("portrait", 4, 1, row_span=5, col_span=1, display_aspect=0.675),
+    ),
+)
+
+#: p12 large left + two verticals, rectangles flush to the 3:4 card.
+#: 2×4: hero 3 cols × 2 rows (AR 0.5625); side 1 col stacked (AR 0.375).
+PROBE_HERO_MIX = CardTemplate(
+    id="probe-hero-mix",
+    display_name="探针 · 大方+两竖",
+    grid_rows=2,
+    grid_cols=4,
+    slots=(
+        CardSlot("main", 0, 0, row_span=2, col_span=3, display_aspect=0.5625),
+        CardSlot("portrait", 0, 3, display_aspect=0.375),
+        CardSlot("portrait", 1, 3, display_aspect=0.375),
+    ),
+)
+
+#: p18 three columns filling the 3:4 card. Slot AR = 0.75/3 = 0.25 (~1:4).
+PROBE_TRIPTYCH = CardTemplate(
+    id="probe-triptych",
+    display_name="探针 · 三连瘦条",
+    grid_rows=1,
+    grid_cols=3,
+    slots=(
+        CardSlot("portrait", 0, 0, display_aspect=0.25),
+        CardSlot("portrait", 0, 1, display_aspect=0.25),
+        CardSlot("portrait", 0, 2, display_aspect=0.25),
+    ),
+)
+
+PROBE_MIX_IDS: tuple[str, ...] = (
+    "probe-square",
+    "probe-tall",
+    "probe-wide",
+    "probe-hero-mix",
+)
+PROBE_EVAL_ONLY_IDS: tuple[str, ...] = ("probe-triptych",)
+
+PROBE_TEMPLATES: dict[str, CardTemplate] = {
+    t.id: t
+    for t in (
+        PROBE_SQUARE,
+        PROBE_TALL,
+        PROBE_WIDE,
+        PROBE_HERO_MIX,
+        PROBE_TRIPTYCH,
+    )
+}
 
 #: Distinct slot counts actually available in the library, largest first.
 #: Drives CardGrouper's greedy chunking (largest-fits-first).

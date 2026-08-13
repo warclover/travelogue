@@ -590,3 +590,134 @@ def apply_slot_crop_focals(
             }
         )
     return summaries
+
+
+_TIGHTEN_HEADROOM = 0.35
+_TIGHTEN_FEET_FACE_H = 6.0
+_TIGHTEN_BUST_BELOW = 1.8
+_TIGHTEN_SIDE = 0.4
+
+
+def _keep_feet_box(asset: Mapping[str, Any] | None) -> NormBox | None:
+    faces = faces_from_asset(asset)
+    if not faces:
+        return None
+    fu = union_boxes(faces)
+    if fu is None:
+        return None
+    protect = protect_box_from_asset(asset)
+    salient = None
+    if asset is not None:
+        salient = _as_box(
+            asset.get("salientBox") if isinstance(asset.get("salientBox"), Mapping) else None
+        )
+    y0 = max(0.0, fu.y - _TIGHTEN_HEADROOM * fu.h)
+    y1 = min(1.0, fu.y1 + _TIGHTEN_FEET_FACE_H * fu.h)
+    x0 = max(0.0, fu.x - _TIGHTEN_SIDE * fu.w)
+    x1 = min(1.0, fu.x1 + _TIGHTEN_SIDE * fu.w)
+    extra = protect if protect is not None else salient
+    if extra is not None:
+        y1 = min(1.0, max(y1, extra.y1))
+        x0 = min(x0, extra.x)
+        x1 = max(x1, extra.x1)
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return NormBox(x=x0, y=y0, w=x1 - x0, h=y1 - y0)
+
+
+def _bust_box(asset: Mapping[str, Any] | None) -> NormBox | None:
+    faces = faces_from_asset(asset)
+    if not faces:
+        return None
+    fu = union_boxes(faces)
+    if fu is None:
+        return None
+    y0 = max(0.0, fu.y - 0.4 * fu.h)
+    y1 = min(1.0, fu.y1 + _TIGHTEN_BUST_BELOW * fu.h)
+    x0 = max(0.0, fu.x - 0.45 * fu.w)
+    x1 = min(1.0, fu.x1 + 0.45 * fu.w)
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return NormBox(x=x0, y=y0, w=x1 - x0, h=y1 - y0)
+
+
+def tightest_window_for_box(
+    box: NormBox | None,
+    slot_ar: float,
+    asset_ar: float | None,
+) -> CoverWindow | None:
+    """Smallest slot-AR rectangle in normalized image space that contains ``box``."""
+    if box is None or slot_ar <= 0 or asset_ar is None or asset_ar <= 0:
+        return None
+    if box.w <= 0 or box.h <= 0:
+        return None
+    ratio = slot_ar / asset_ar
+    if ratio <= 0:
+        return None
+    if box.w / box.h < ratio:
+        ww, wh = box.h * ratio, box.h
+    else:
+        ww, wh = box.w, box.w / ratio
+    if ww > 1.0 or wh > 1.0:
+        scale = min(1.0 / ww, 1.0 / wh)
+        ww *= scale
+        wh *= scale
+        if ww + 1e-6 < box.w or wh + 1e-6 < box.h:
+            return None
+    x0 = min(max(0.0, box.cx - ww / 2.0), 1.0 - ww)
+    y0 = min(max(0.0, box.cy - wh / 2.0), 1.0 - wh)
+    if box.x < x0:
+        x0 = max(0.0, min(box.x, 1.0 - ww))
+    if box.x1 > x0 + ww:
+        x0 = max(0.0, min(box.x1 - ww, 1.0 - ww))
+    if box.y < y0:
+        y0 = max(0.0, min(box.y, 1.0 - wh))
+    if box.y1 > y0 + wh:
+        y0 = max(0.0, min(box.y1 - wh, 1.0 - wh))
+    win = CoverWindow(x0, y0, x0 + ww, y0 + wh, ww, wh, "tight")
+    if not _fully_inside(box, win):
+        return None
+    return win
+
+
+@dataclass(frozen=True)
+class TightenResult:
+    window: CoverWindow
+    mode: str  # "keep_feet" | "bust"
+
+
+def solve_slot_tighten(
+    asset: Mapping[str, Any] | None,
+    slot_ar: float,
+    *,
+    group_face_min: int = 3,
+) -> TightenResult | None:
+    """Punch-in: keep-feet window first, bust fallback (D-AEL-32).
+
+    Groups do not punch in. If L1 cover already clips a face, return None
+    so SSC contain/swap owns the slot.
+    """
+    if group_face_count(asset) >= max(1, int(group_face_min)):
+        return None
+    if not faces_from_asset(asset):
+        return None
+    cover = solve_slot_focal(asset, slot_ar)
+    if any_face_outside(asset, cover.window):
+        return None
+    ar = asset_aspect(asset)
+    cover_area = cover.window.w * cover.window.h
+    feet_win = tightest_window_for_box(_keep_feet_box(asset), slot_ar, ar)
+    if (
+        feet_win is not None
+        and not any_face_outside(asset, feet_win)
+        and (feet_win.w * feet_win.h) < cover_area - 1e-6
+    ):
+        return TightenResult(window=feet_win, mode="keep_feet")
+    bust_win = tightest_window_for_box(_bust_box(asset), slot_ar, ar)
+    if (
+        bust_win is not None
+        and not any_face_outside(asset, bust_win)
+        and (bust_win.w * bust_win.h) < cover_area - 1e-6
+    ):
+        return TightenResult(window=bust_win, mode="bust")
+    return None

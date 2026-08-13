@@ -61,7 +61,7 @@
 | **AC-AEL-17** 〔全程〕 | 无运行时生成模板的 public API（L0 不新增 generator） | ☐ |
 | **AC-AEL-21** 〔全程〕 | 导出路径不把 `slot_adaptation.enabled` 置 true；默认仍 off | ☐ |
 
-**L0 不测**：contain、换槽、角色、探针上场（那些是 L1–L3）。L0 可先落空的 `PROBE_TEMPLATES={}`，并断言 `CARD_TEMPLATES` 不含探针 id。
+**L0 不测**：contain、换槽、角色、探针上场（那些是 L1–L3）。L0 断言 `CARD_TEMPLATES` 不含探针 id；`PROBE_TEMPLATES` 由 L3 填写且不得并进成熟库。
 
 ```powershell
 python -m pytest tests/unit/export/test_ael_l0_isolation.py tests/unit/export/test_collage_pack.py tests/unit/export/test_card_renderer.py -q
@@ -104,6 +104,7 @@ python -m pytest tests/unit/export/test_ael_l1_ssc.py tests/unit/layout_engine/t
 | **AC-AEL-11** | 无 vista/portrait 时 detail 允许主槽（降级合法） | ☐ |
 | **AC-AEL-12** | 美食不得升为 vista/主槽；朝向硬门不破；无空槽。**不**验收「FRP 回归」 | ☐ |
 | **AC-AEL-22** | `editorialRole` 枚举 ⊆ `{vista,portrait,detail,sequence,unused}`，与 EDC 可翻译。p33 五标签按 PRD §6.1 表映射，不新增枚举 | ☐ |
+| **AC-AEL-28** | punch-in：合影不推近；全身照留脚优先于胸像；无 protect 几何估计 fail-open | ☐ |
 | **AC-AEL-27** | `PROBE_TEMPLATES` 无 p33 几何 id | ☐ |
 | **AC-AEL-19** | 三册盲评：角色反例可指认下降；1 槽卡占比 ≤ GA+10pp | ☐ L2 出门 |
 
@@ -161,6 +162,7 @@ EDC W0 **不挡**。
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.1.3 | 2026-08-13 | L2 合同：D-AEL-32 punch-in；AC-AEL-28。 |
 | v0.1.2 | 2026-08-13 | L1 夹具 AC-04～08/23/25 单测锁；AC-18 仍出门。 |
 | v0.1.1 | 2026-08-13 | 对齐 PRD v0.2.1：混出 4 + triptych 评测-only；p33 角色映射；AC-26/27。 |
 | v0.1.0 | 2026-08-13 | Kickoff 拆文。源：PRD v0.2.0 §12 + 七席 BLK/OQ 结案。 |
