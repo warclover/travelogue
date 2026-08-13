@@ -88,7 +88,7 @@ Studio 面板同样支持**多平台勾选批量导出**（Task Dock 清单化�
 | **策展/选片** | 章节划分、featured/精选加权、高光时刻池（EXIF 角标）、美食/杂物组屏降权 |
 | **智能排版** | LTE 模板引擎（pattern 注册）+ MCS 拼图（equal-grid 等权合同默认开）+ LSE 策略层（评分/节奏/多样性，默认关闭以保稳态） |
 | **封面与装帧** | Cover Style Engine V6（多款开场皮肤 + Studio 可选）+ Bookends（封面–封底成对约束与锁定） |
-| **文案** | 默认**本机 stub**（零依赖）；可在 Studio「设置 → AI 文案」配置 DeepSeek / 通义千问 Key 解锁杂志感文案 |
+| **文案** | 默认**本机 stub**（零依赖）；可在 Studio「设置 → 模型API 配置」粘贴一把通义百炼 Key，解锁杂志文案和封面字体 |
 | **渲染** | Handlebars → HTML；Web 端 `screens`（16:9 舞台）引擎为主，兼容 legacy |
 | **导出/分享** | 服务端长图（Playwright）· Longshot 2.0 多平台（朋友圈/小红书/公众号/…）· 3:4 卡片统一管线（画册/小红书/单张海报共用模板库）· 批量多选导出 |
 | **桌面分发** | PyInstaller 打包的 Windows 安装版 / 绿色便携包，无需 Python 环境 |
@@ -167,7 +167,7 @@ travelogue/
 - **Pillow**：3:4 卡片统一渲染管线（确定性路径，不依赖 Playwright）
 - **scikit-learn（HDBSCAN/DBSCAN）· OpenCV**：场景聚类、人脸/构图信号（`vision` 可选依赖）
 - **CLIP（open-clip-torch，可选）**：语义聚类增强
-- **LLM API（DeepSeek / 通义千问 DashScope，可选）**：杂志感文案，默认关闭走本机 stub
+- **LLM API（通义百炼 DashScope，可选）**：一把 Key 用于杂志文案和封面字体；默认关闭走本机 stub
 - **PyInstaller**：Windows 桌面安装版打包
 
 详见 [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md)。

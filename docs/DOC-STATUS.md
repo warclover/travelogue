@@ -167,7 +167,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-DESKTOP-LLM-SETUP-V1.md](./PRD-DESKTOP-LLM-SETUP-V1.md) | **active（engineering）** | 写作引擎工程栈仍有效；**用户面由 NAS supersede**（解冻后由 AIR 重新激活用户面） |
 | [PRD-WRITING-ENGINE-API-HARDENING-V1.md](./PRD-WRITING-ENGINE-API-HARDENING-V1.md) | **active（engineering）** | WEA 配置加固仍有效；默认 UI 入口由 NAS 关闭（AIR 解冻后恢复）；**连接用户面升级见 BAI Draft** |
 | [PRD-BAILIAN-AI-INTEGRATION-V1.md](./PRD-BAILIAN-AI-INTEGRATION-V1.md) | **active** | **BAI** 百炼一体连接 **v0.2.2** · W0 实机已回写 · 主名「模型API 配置」 |
-| [IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md](./IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md) | **active** | **BAI** 实施清单 · W1a+W1b 已落地 · 下一刀 W2 生图盲评 |
+| [IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md](./IMPLEMENTATION-BAILIAN-AI-INTEGRATION-V1.md) | **active** | **BAI** 实施清单 · W0–W1–W3 已合 master（#65）· W2 生图盲评未开 |
 | [UI-DETAIL-CONTRACT-V0.md](./UI-DETAIL-CONTRACT-V0.md) | **frozen** | Studio 弹窗家族细节合同 · Wave1–10 样式落地 |
 | [UI-DETAIL-SURFACE-INVENTORY-V0.md](./UI-DETAIL-SURFACE-INVENTORY-V0.md) | **active** | UI Detail 表面清单 / 波次索引 |
 | [adr/006-media-engines-integration.md](./adr/006-media-engines-integration.md) | **superseded** | 双引擎方案 → 见 ADR-007 |

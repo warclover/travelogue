@@ -121,7 +121,7 @@ python -m pytest `
 | FE-W3-03 | AI Sheet 确认框标题与主按钮均为「生成杂志感文案」 | ✅ |
 | TE-W3-01 | H7 不进 `help-onboarding.js` 默认列表；dark-copy / help-drawer 同步插入 | ✅ |
 
-真人走通仍以 [W1b 狗粮](./acceptance-records/bai-w1b-studio-dogfood-2026-08-13.md) 为准；本刀收口帮助与确认框。
+真人走通仍以 [W1b 狗粮](./acceptance-records/bai-w1b-studio-dogfood-2026-08-13.md) 为准；合入后 H7 核对：[bai-w3-h7-dogfood-2026-08-13.md](./acceptance-records/bai-w3-h7-dogfood-2026-08-13.md)。
 
 ```powershell
 python -m pytest `
@@ -138,8 +138,8 @@ python -m pytest `
 | **W0** | ✅ 2026-08-13 实机：[bai-w0-live-probe-2026-08-13.md](./acceptance-records/bai-w0-live-probe-2026-08-13.md)（AC-BAI-16） |
 | **W1b** | ✅ 本刀：copy Pro + 非流式思考；OCR `qwen3.7-flash`；`imageReady` 诚实态；t2i **不切** |
 | **W1b 狗粮** | ✅ 2026-08-13 本机走通：[bai-w1b-studio-dogfood-2026-08-13.md](./acceptance-records/bai-w1b-studio-dogfood-2026-08-13.md)（AC-BAI-02/03/06 · SHD-BAI-04） |
-| **W2** | 仅对同构的 `wan2.2-t2i-plus` 做字形盲评；2.7 / qwen-image 另立项协议；审美换代 |
-| **W3** | ✅ 本刀：帮助 H7「模型API 配置」+ Sheet 副标题/确认框 |
+| **W2** | 仅对同构的 `wan2.2-t2i-plus` 做字形盲评；2.7 / qwen-image 另立项协议；审美换代。**万相现网已通仍不自动开刀** |
+| **W3** | ✅ 帮助 H7「模型API 配置」+ Sheet 副标题/确认框；合入后狗粮 [bai-w3-h7-dogfood-2026-08-13.md](./acceptance-records/bai-w3-h7-dogfood-2026-08-13.md) |
 
 ### W0 冻结给 W1b 的默认（摘录）
 

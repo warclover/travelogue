@@ -664,7 +664,7 @@ export function mountAiSurface(root, tripId, opts) {
         source: "ai_sheet",
         confirmTitle: "生成杂志感文案",
         confirmBody:
-          "将调用写作引擎重写文案；照片仍留在本机。将重写版心文案（可能包括你改过的句子）。",
+          "将生成杂志感文案；照片仍留在本机。可能重写版心文案（包括你改过的句子）。",
         confirmText: "生成杂志感文案",
         // SNR · 生成中状态人话（对齐 COPY-SNR-S01）
         busyHint: "正在生成杂志感文案…",

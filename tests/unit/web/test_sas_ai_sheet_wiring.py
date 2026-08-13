@@ -33,6 +33,8 @@ def test_ai_sheet_module_exists_and_exports_mount() -> None:
     assert "连接通义百炼后可生成杂志文案" in text
     assert "本环境未开启智能能力" in text
     assert 'confirmTitle: "生成杂志感文案"' in text
+    assert "将生成杂志感文案；照片仍留在本机。" in text
+    assert "写作引擎" not in text
     assert "titleArtUi" in text
     assert "已生成 · " in text
 
