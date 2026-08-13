@@ -43,11 +43,38 @@ def _respond_if_source_missing(handler: StudioHandlerProtocol, trip_id: str) -> 
     return True
 
 
+def _persist_export_derivative_trip(
+    trip_json: Path,
+    trip: dict,
+    *,
+    was_bundle_stale: bool,
+) -> None:
+    """Write derivative metadata without bumping revision / updatedAt.
+
+    Album export used to ``write_text`` the whole trip.json; file mtime then
+    false-flagged ``renderBundleStale`` on legacy trips without
+    ``meta.renderedRevision``. Stamp the watermark when HTML was already current.
+    """
+    from travelogue.runtime import app_context_for_trip_json
+    from travelogue.services.trip import mark_render_bundle_current
+
+    svc = app_context_for_trip_json(trip_json).trip_service()
+
+    def mutator(disk: dict) -> None:
+        for key, value in trip.items():
+            disk[key] = value
+        if not was_bundle_stale:
+            mark_render_bundle_current(disk)
+
+    svc.update(trip_json, mutator, bump_revision=False, touch_updated=False)
+
+
 def _ensure_derivatives_for_export(trip_dir: Path) -> None:
     """D6 · sync-materialize missing HD tiers before zip/longshot export."""
     import json
 
     from travelogue.config import get_config
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
     from travelogue.media.derivatives import ensure_derivatives_before_export
     from travelogue.media.ingest import IngestError
 
@@ -60,15 +87,19 @@ def _ensure_derivatives_for_export(trip_dir: Path) -> None:
         return
     if not isinstance(trip, dict):
         return
+    pipeline = trip.get("pipeline") if isinstance(trip.get("pipeline"), dict) else {}
+    before_status = pipeline.get("derivativesStatus")
+    was_bundle_stale = trip_render_bundle_stale(trip_dir, trip)
     result = ensure_derivatives_before_export(trip, trip_dir, app_cfg=get_config())
     if result.errors:
         raise IngestError(
             "E_DERIVATIVE_MATERIALIZE",
             f"derivative materialize failed: {result.errors[0]}",
         )
-    trip_json.write_text(
-        json.dumps(trip, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    if result.widths_written <= 0 and before_status == "ready":
+        return
+    _persist_export_derivative_trip(
+        trip_json, trip, was_bundle_stale=was_bundle_stale
     )
 
 

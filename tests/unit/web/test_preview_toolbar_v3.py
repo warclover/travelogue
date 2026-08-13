@@ -759,6 +759,8 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "仅更新版面" in longshot
     assert "_getLayoutPending()" in longshot
     assert "consumeExportAfterLayout" in longshot
+    assert "releaseLayoutUpdatingUi" in longshot
+    assert "shouldReleaseLayoutUpdatingUi" in longshot
     assert "export_after_layout_consumed" in longshot
     assert "longshot_export_blocked_pending" in longshot
     assert "EXPORT_AFTER_TTL_MS" in longshot

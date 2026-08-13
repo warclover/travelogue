@@ -11,6 +11,7 @@ import {
   isExportSideEffectActiveFor,
   shouldShowLongshotStale,
   isLongshotContentStale,
+  shouldReleaseLayoutUpdatingUi,
 } from "../../templates/studio/preview-toolbar/longshot-logic.js";
 
 test("assessMagazineTitleRisk 边界", () => {
@@ -85,5 +86,41 @@ test("isLongshotContentStale · 缺字段 fail-open", () => {
   assert.equal(
     isLongshotContentStale({ contentRevision: "1" }, { exportToken: "a" }),
     false
+  );
+});
+
+test("shouldReleaseLayoutUpdatingUi · 不续跑则释放 busy", () => {
+  assert.equal(shouldReleaseLayoutUpdatingUi({}), false);
+  assert.equal(
+    shouldReleaseLayoutUpdatingUi({
+      showedUpdating: true,
+      hasExportAfterFlag: true,
+      layoutPending: false,
+    }),
+    false
+  );
+  assert.equal(
+    shouldReleaseLayoutUpdatingUi({
+      showedUpdating: true,
+      hasExportAfterFlag: true,
+      layoutPending: true,
+    }),
+    true
+  );
+  assert.equal(
+    shouldReleaseLayoutUpdatingUi({
+      showedUpdating: true,
+      hasExportAfterFlag: false,
+      hasUpdateOnlyHint: true,
+    }),
+    false
+  );
+  assert.equal(
+    shouldReleaseLayoutUpdatingUi({
+      showedUpdating: true,
+      hasExportAfterFlag: false,
+      hasUpdateOnlyHint: false,
+    }),
+    true
   );
 });

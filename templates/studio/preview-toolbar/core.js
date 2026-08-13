@@ -494,8 +494,11 @@ export function applyLayoutRerender(tripId, root, opts) {
           var errCode =
             (res.body && (res.body.error || res.body.code)) ||
             "E_LAYOUT_RERENDER";
+          var bodyMsg =
+            (res.body && (res.body.message || res.body.error)) || "更新版面失败";
+          var busy = errCode === "E_STUDIO_JOB_BUSY";
           showToolbarToast(
-            opts.failMessage || (res.body && res.body.error) || "更新版面失败",
+            (busy && bodyMsg) || opts.failMessage || bodyMsg,
             { error: true }
           );
           setLayoutPending(true);

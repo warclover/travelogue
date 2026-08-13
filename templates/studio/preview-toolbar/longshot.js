@@ -32,6 +32,7 @@ import {
   normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
+  isConfirmedExportTarget,
   readExportPrefs,
   shortCtaLabelForPlatform,
   shortCtaLabelForPlatforms,
@@ -87,6 +88,7 @@ import {
   isFlagExpired as isFlagExpiredLogic,
   isExportSideEffectActiveFor,
   shouldShowLongshotStale,
+  shouldReleaseLayoutUpdatingUi,
 } from "./longshot-logic.js";
 
 export {
@@ -211,6 +213,14 @@ function clearLayoutUpdatingFlag() {
   _removeStorage(sessionStorage, LAYOUT_UPDATING_KEY);
 }
 
+/** 刷新后若不会续跑导出，把「正在更新版面」busy 退回 idle / pending Dock。 */
+function releaseLayoutUpdatingUi(root) {
+  clearLayoutUpdatingFlag();
+  if (!root) return;
+  root._exportDockActive = false;
+  setLongshotExportState(root, "idle");
+}
+
 function notifyHelpL1Idle(root) {
   if (!root) return;
   try {
@@ -257,6 +267,19 @@ function readResumePlatform(tripId) {
 
 function clearResumePlatform() {
   _removeStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
+}
+
+function hydrateSessionIntentFromConfirmedPrefs(tripId) {
+  if (!tripId) return;
+  try {
+    var prefs = readExportPrefs();
+    if (!isConfirmedExportTarget(prefs)) return;
+    var mapped = PLATFORM_TO_INTENT[prefs.platform] || null;
+    if (!mapped) return;
+    if (readSessionIntent(tripId) !== mapped) {
+      writeSessionIntent(tripId, mapped);
+    }
+  } catch (_eHydrate) {}
 }
 
 function syncPrefsPlatform(platform) {
@@ -620,14 +643,18 @@ export function cancelPreviewLongshotExport(root) {
     }
     // AC-DFX-02 · confirmed prefs 为 CTA SSOT；tipRecipe 不得覆盖用户已确认平台
     var platform = prefs.platform || "wechat_chat";
+    var confirmed = isConfirmedExportTarget(prefs);
     var tipRecipe = null;
     var tripId = root._tripId || "";
+    if (confirmed) {
+      hydrateSessionIntentFromConfirmedPrefs(tripId);
+    }
     if (isOutputRecipeEnabled()) {
       var keptN = keptNForRecipe(tripId);
       tipRecipe = resolveClientRecipe(keptN, tripId, "preview");
     }
     var label;
-    if (tipRecipe && tipRecipe.needsIntent) {
+    if (!confirmed && tipRecipe && tipRecipe.needsIntent) {
       label = tipRecipe.ctaLabel || "选择并导出";
     } else if (
       tipRecipe &&
@@ -647,7 +674,7 @@ export function cancelPreviewLongshotExport(root) {
     }
     // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
     function shortLabelForCta() {
-      if (tipRecipe && tipRecipe.needsIntent) return "选择分享";
+      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "选择分享";
       return shortCtaLabelForPlatform(platform);
     }
     var isDock = isPreviewToolbarV4(root);
@@ -1306,6 +1333,7 @@ export function cancelPreviewLongshotExport(root) {
         padMode: draft.padMode,
         includeAppendix: draft.includeAppendix === true,
         density: nextDensity,
+        userConfirmed: true,
       });
       // FE-SFI-09 · 密度档写入 trip 并走「更新版面」
       if (nextDensity !== prevDensity) {
@@ -2534,9 +2562,12 @@ export function cancelPreviewLongshotExport(root) {
       maybeCopyGateThenExport(root, tripId);
       return;
     }
+    // AC-DFX-01 · 重启后 session 丢失；先从 confirmed prefs 回灌，再问 Recipe
+    hydrateSessionIntentFromConfirmedPrefs(tripId);
     fetchServerRecipe(tripId, "preview").then(function (res) {
       var tipRecipe;
       var keptN;
+      var confirmed = isConfirmedExportTarget(readExportPrefs());
       if (res && res.ok && res.tipRecipe) {
         tipRecipe = res.tipRecipe;
         keptN = res.keptN;
@@ -2566,7 +2597,8 @@ export function cancelPreviewLongshotExport(root) {
         source: tipRecipe.source,
       });
       syncLongshotCtaLabel(root);
-      if (tipRecipe.needsIntent) {
+      // 已确认画册/海报等：禁止弹「选择分享」，也禁止 Recipe 默认微信覆盖 prefs
+      if (tipRecipe.needsIntent && !confirmed) {
         showAmbiguousIntentCard(keptN, tipRecipe.userHints).then(function (choice) {
           if (!choice || !choice.intent) return;
           writeSessionIntent(tripId, choice.intent);
@@ -2584,7 +2616,7 @@ export function cancelPreviewLongshotExport(root) {
         });
         return;
       }
-      if (tipRecipe.platform) {
+      if (!confirmed && tipRecipe.platform) {
         _pendingExportPlatform = tipRecipe.platform;
         syncPrefsPlatform(tipRecipe.platform);
       }
@@ -3363,15 +3395,33 @@ export function cancelPreviewLongshotExport(root) {
     return true;
   }
 
+  function abortLayoutUpdatingConsume(root, showedUpdating, extra) {
+    extra = extra || {};
+    if (
+      shouldReleaseLayoutUpdatingUi({
+        showedUpdating: showedUpdating,
+        hasExportAfterFlag: extra.hasExportAfterFlag === true,
+        layoutPending: extra.layoutPending === true,
+        hasUpdateOnlyHint: extra.hasUpdateOnlyHint === true,
+      })
+    ) {
+      releaseLayoutUpdatingUi(root);
+    } else {
+      clearLayoutUpdatingFlag();
+    }
+  }
+
   export function consumeExportAfterLayout(root, tripId) {
     bindExportAfterLayoutPagehide();
     _removeStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY);
 
+    var showedUpdating = false;
     var updating = readLayoutUpdating();
     if (updating && String(updating.tripId || "") === String(tripId || "")) {
       if (isFlagExpired(updating)) {
         clearLayoutUpdatingFlag();
       } else {
+        showedUpdating = true;
         setLongshotExportState(root, "running", { hint: "正在更新版面…" });
         if (root._taskDock) {
           root._exportDockActive = true;
@@ -3386,18 +3436,21 @@ export function cancelPreviewLongshotExport(root) {
 
     var flagged = readExportAfterLayout();
     if (!flagged) {
-      clearLayoutUpdatingFlag();
       var onlyHint = _readJsonStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
-      if (
+      var hasOnlyHint = !!(
         onlyHint &&
         String(onlyHint.tripId || "") === String(tripId || "") &&
         !isFlagExpired(onlyHint)
-      ) {
+      );
+      if (hasOnlyHint) {
         _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
         showUpdateOnlyNextStep(root);
       } else {
         _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
       }
+      abortLayoutUpdatingConsume(root, showedUpdating, {
+        hasUpdateOnlyHint: hasOnlyHint,
+      });
       return false;
     }
 
@@ -3408,12 +3461,18 @@ export function cancelPreviewLongshotExport(root) {
     _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
 
     if (isFlagExpired(flagged)) {
-      clearLayoutUpdatingFlag();
+      abortLayoutUpdatingConsume(root, showedUpdating, {
+        hasExportAfterFlag: true,
+        layoutPending: true,
+      });
       trackStudioEvent("export_after_layout_expired", { trip_id: currentId });
       return false;
     }
     if (!flaggedId || flaggedId !== currentId) {
-      clearLayoutUpdatingFlag();
+      abortLayoutUpdatingConsume(root, showedUpdating, {
+        hasExportAfterFlag: true,
+        layoutPending: true,
+      });
       trackStudioEvent("export_after_layout_trip_mismatch", {
         flagged_id: flaggedId,
         current_id: currentId,
@@ -3421,7 +3480,10 @@ export function cancelPreviewLongshotExport(root) {
       return false;
     }
     if (_getLayoutPending()) {
-      clearLayoutUpdatingFlag();
+      abortLayoutUpdatingConsume(root, showedUpdating, {
+        hasExportAfterFlag: true,
+        layoutPending: true,
+      });
       return false;
     }
 

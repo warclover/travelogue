@@ -6,7 +6,7 @@ import logging
 import threading
 
 from travelogue.demo.build import DemoError
-from travelogue.web.studio_errors import internal_error_payload
+from travelogue.web.studio_errors import internal_error_payload, user_message
 from travelogue.web.studio_handlers.common import (
     load_trip_or_404,
     studio_ctx,
@@ -16,6 +16,19 @@ from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
 from travelogue.web.studio_jobs import get_job_store, run_g1_continue_job
 
 _log = logging.getLogger(__name__)
+
+_rerender_locks: dict[str, threading.Lock] = {}
+_rerender_locks_guard = threading.Lock()
+
+
+def _rerender_lock_for(trip_json) -> threading.Lock:
+    key = str(trip_json)
+    with _rerender_locks_guard:
+        lock = _rerender_locks.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            _rerender_locks[key] = lock
+        return lock
 
 
 def normalize_curate_scope(payload: dict | None) -> str:
@@ -270,10 +283,37 @@ def handle_rerender(handler: StudioHandlerProtocol) -> None:
     if handler.trip_json_path is None or not handler.trip_json_path.is_file():
         handler._json_response(404, {"ok": False, "error": "trip not found"})
         return
-    try:
-        rendered = rerender_draft_trip(handler.trip_json_path)
-    except Exception:
-        _log.exception("rerender failed for %s", handler.trip_json_path)
+    trip_id = handler.trip_json_path.parent.name
+    if get_job_store().is_trip_busy(trip_id):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_STUDIO_JOB_BUSY",
+                "message": user_message("E_STUDIO_JOB_BUSY"),
+            },
+        )
+        return
+    # Keep the 200 sync contract, but run render off the handler thread so
+    # Event.wait releases the GIL — homepage / preview assets stay responsive.
+    trip_json = handler.trip_json_path
+    box: dict = {}
+    done = threading.Event()
+
+    def run() -> None:
+        try:
+            with _rerender_lock_for(trip_json.resolve()):
+                box["rendered"] = rerender_draft_trip(trip_json)
+            box["ok"] = True
+        except Exception:
+            _log.exception("rerender failed for %s", trip_json)
+            box["ok"] = False
+        finally:
+            done.set()
+
+    threading.Thread(target=run, daemon=True, name=f"rerender-{trip_id}").start()
+    done.wait()
+    if not box.get("ok"):
         handler._json_response(500, internal_error_payload())
         return
-    handler._json_response(200, {"ok": True, "rendered": rendered})
+    handler._json_response(200, {"ok": True, "rendered": box.get("rendered")})

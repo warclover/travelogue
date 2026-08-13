@@ -176,3 +176,83 @@ def test_mf10_export_handler_raises_when_materialize_errors(tmp_path: Path) -> N
         _ensure_derivatives_for_export(trip_dir)
     assert excinfo.value.code == "E_DERIVATIVE_MATERIALIZE"
     _ = cfg  # config used by ingest helper path
+
+
+def test_export_derivatives_skip_write_when_already_ready(tmp_path: Path, monkeypatch) -> None:
+    """Already-ready export must not rewrite trip.json (mtime false-stale)."""
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.media.derivatives import MaterializeResult
+    from travelogue.services.trip import TripService
+    from travelogue.services.trip_factory import create_trip
+    from travelogue.web.studio_handlers.export_handlers import (
+        _ensure_derivatives_for_export,
+    )
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("demo-der-ready", trips)
+    trip_dir = trip_json.parent
+    svc = TripService(root=tmp_path)
+    trip = svc.load(trip_json)
+    meta = trip.setdefault("meta", {})
+    meta.pop("renderedRevision", None)
+    trip["updatedAt"] = "2020-01-01T00:00:00Z"
+    trip["pipeline"] = {"derivativesStatus": "ready"}
+    svc.save(trip, trip_json)
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    before_mtime = trip_json.stat().st_mtime
+    before = json.loads(trip_json.read_text(encoding="utf-8"))
+    assert trip_render_bundle_stale(trip_dir, before) is False
+
+    def fake_ensure(trip_obj, _dir, *, app_cfg=None):
+        trip_obj.setdefault("pipeline", {})["derivativesStatus"] = "ready"
+        return MaterializeResult(widths_written=0)
+
+    monkeypatch.setattr(
+        "travelogue.media.derivatives.ensure_derivatives_before_export",
+        fake_ensure,
+    )
+    _ensure_derivatives_for_export(trip_dir)
+    after = json.loads(trip_json.read_text(encoding="utf-8"))
+    assert trip_json.stat().st_mtime == before_mtime
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
+def test_export_derivatives_persist_stamps_when_html_current(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Status-only persist must stamp watermark so legacy trips stay non-stale."""
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.media.derivatives import MaterializeResult
+    from travelogue.services.trip import TripService
+    from travelogue.services.trip_factory import create_trip
+    from travelogue.web.studio_handlers.export_handlers import (
+        _ensure_derivatives_for_export,
+    )
+
+    trips = tmp_path / "trips"
+    trip_json = create_trip("demo-der-stamp", trips)
+    trip_dir = trip_json.parent
+    svc = TripService(root=tmp_path)
+    trip = svc.load(trip_json)
+    meta = trip.setdefault("meta", {})
+    meta.pop("renderedRevision", None)
+    trip["updatedAt"] = "2020-01-01T00:00:00Z"
+    trip["pipeline"] = {"derivativesStatus": "preview"}
+    svc.save(trip, trip_json)
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    before = json.loads(trip_json.read_text(encoding="utf-8"))
+    assert trip_render_bundle_stale(trip_dir, before) is False
+
+    def fake_ensure(trip_obj, _dir, *, app_cfg=None):
+        trip_obj.setdefault("pipeline", {})["derivativesStatus"] = "ready"
+        return MaterializeResult(widths_written=0)
+
+    monkeypatch.setattr(
+        "travelogue.media.derivatives.ensure_derivatives_before_export",
+        fake_ensure,
+    )
+    _ensure_derivatives_for_export(trip_dir)
+    after = json.loads(trip_json.read_text(encoding="utf-8"))
+    assert after.get("pipeline", {}).get("derivativesStatus") == "ready"
+    assert "renderedRevision" in (after.get("meta") or {})
+    assert trip_render_bundle_stale(trip_dir, after) is False

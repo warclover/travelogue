@@ -3,6 +3,13 @@
  */
 "use strict";
 
+import {
+  ctaLabelForPlatform,
+  isConfirmedExportTarget,
+  readExportPrefs,
+  shortCtaLabelForPlatform,
+} from "../js/longshot-export-panel.js";
+
 export function presentPreviewUrl() {
   return document.documentElement.getAttribute("data-present-preview-url") || "";
 }
@@ -125,6 +132,26 @@ export function dockIconSvg(name) {
   }
 }
 
+function idleExportShortLabel() {
+  try {
+    var prefs = readExportPrefs();
+    if (isConfirmedExportTarget(prefs)) {
+      return shortCtaLabelForPlatform(prefs.platform);
+    }
+  } catch (_eIdle) {}
+  return "长图";
+}
+
+function idleExportAriaLabel() {
+  try {
+    var prefs = readExportPrefs();
+    if (isConfirmedExportTarget(prefs)) {
+      return ctaLabelForPlatform(prefs.platform);
+    }
+  } catch (_eAria) {}
+  return "导出长图";
+}
+
 export function dockLongshotContentHtml(state) {
   if (state === "running") {
     return (
@@ -143,7 +170,9 @@ export function dockLongshotContentHtml(state) {
   return (
     '<span class="preview-toolbar__dock-export-inner">' +
     dockIconSvg("scroll") +
-    '<span class="preview-toolbar__dock-export-label">长图</span></span>'
+    '<span class="preview-toolbar__dock-export-label">' +
+    idleExportShortLabel() +
+    "</span></span>"
   );
 }
 
@@ -219,8 +248,9 @@ export function setDockLongshotAria(btn, state) {
       btn.setAttribute("aria-label", "已保存到此画册文件夹");
       updateDockTip(btn, "已保存");
     } else {
-      btn.setAttribute("aria-label", "导出长图");
-      updateDockTip(btn, "导出长图");
+      var idleAria = idleExportAriaLabel();
+      btn.setAttribute("aria-label", idleAria);
+      updateDockTip(btn, idleAria);
     }
   }
 

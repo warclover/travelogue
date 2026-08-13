@@ -361,6 +361,23 @@ def test_handle_rerender_hides_internal_error(tmp_path: Path) -> None:
     )
 
 
+def test_handle_rerender_busy_when_export_running(tmp_path: Path) -> None:
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-rerender-busy", trips_dir)
+    handler = MockStudioHandler(trips_dir)
+    handler.trip_json_path = trip_json
+    with patch(
+        "travelogue.web.studio_handlers.trip_pipeline_handlers.get_job_store"
+    ) as store:
+        store.return_value.is_trip_busy.return_value = True
+        handle_rerender(handler)
+    status, body = handler.response
+    assert status == 409
+    assert body["ok"] is False
+    assert body["error"] == "E_STUDIO_JOB_BUSY"
+    assert "请稍候" in body["message"]
+
+
 def test_handle_trip_curate_starts_job(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.trip_handlers import handle_trip_curate
 

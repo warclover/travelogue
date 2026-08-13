@@ -123,6 +123,17 @@ def test_layout_rerender_has_timeout():
     assert "LAYOUT_RERENDER_TIMEOUT_MS" in core
     assert "E_LAYOUT_TIMEOUT" in core
     assert "layout_rerender_timeout" in core
+    assert "E_STUDIO_JOB_BUSY" in core
+    assert "res.body.message" in core
+
+
+def test_consume_export_after_layout_releases_busy_when_not_continuing():
+    longshot = _read("templates/studio/preview-toolbar/longshot.js")
+    logic = _read("templates/studio/preview-toolbar/longshot-logic.js")
+    assert "shouldReleaseLayoutUpdatingUi" in logic
+    assert "releaseLayoutUpdatingUi" in longshot
+    assert "abortLayoutUpdatingConsume" in longshot
+    assert "setLongshotExportState(root, \"idle\")" in longshot
 
 
 def test_copy_gate_06b_marks_seen_on_first_show():

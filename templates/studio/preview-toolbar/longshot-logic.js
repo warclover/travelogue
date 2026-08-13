@@ -101,3 +101,22 @@ export function isLongshotContentStale(current, exported) {
   if (curTok == null || expTok == null) return false;
   return String(curTok) !== String(expTok);
 }
+
+/**
+ * consumeExportAfterLayout 已把 Dock 打成「正在更新版面」后，若不会续跑导出，
+ * 必须释放 busy，否则会永远停在该文案（无第二道超时）。
+ * 仅更新成功的 next-step hint 会接管 Dock，不要抢。
+ * @param {{
+ *   showedUpdating?: boolean,
+ *   hasExportAfterFlag?: boolean,
+ *   layoutPending?: boolean,
+ *   hasUpdateOnlyHint?: boolean
+ * }} ctx
+ */
+export function shouldReleaseLayoutUpdatingUi(ctx) {
+  var c = ctx || {};
+  if (!c.showedUpdating) return false;
+  if (c.hasExportAfterFlag && !c.layoutPending) return false;
+  if (!c.hasExportAfterFlag && c.hasUpdateOnlyHint) return false;
+  return true;
+}
