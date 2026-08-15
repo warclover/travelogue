@@ -22,6 +22,7 @@ import {
   batchOverallProgressRatio,
   ctaLabelForPlatform,
   ctaLabelForPlatforms,
+  alsUserMessage,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   estimatePhotoCountFromDom,
@@ -599,6 +600,8 @@ export function cancelPreviewLongshotExport(root) {
       subtitle = "长图连读 · " + quality;
     } else if (platform === "wechat_chat") {
       subtitle = (prefs.mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
+    } else if (platform === "album_landscape") {
+      subtitle = "16:9 横版页";
     } else {
       subtitle = quality;
     }
@@ -799,6 +802,9 @@ export function cancelPreviewLongshotExport(root) {
     if (platform === "album_spread") {
       return "画册跨页 · " + prefs.scale + "×";
     }
+    if (platform === "album_landscape") {
+      return "横版页 · 16:9";
+    }
     if (platform === "moments_grid") {
       // CLI / 旧 prefs 残留；Studio 已无入口
       return "九宫格(CLI) · " + prefs.scale + "×";
@@ -830,6 +836,7 @@ export function cancelPreviewLongshotExport(root) {
       writeSessionIntent(tripId, mappedIntent);
     }
     var intent = mappedIntent || sessionIntent || null;
+    if (platform === "album_landscape") intent = null;
     return buildLongshotRequest(tripId, {
       scale: prefs.scale,
       format: "png",
@@ -2150,7 +2157,12 @@ export function cancelPreviewLongshotExport(root) {
 
     if (job.status === "failed") {
       title.textContent = "保存失败";
-      var err = (job.error && (job.error.message || job.error.code)) || "导出失败";
+      var err =
+        (job.error &&
+          (job.error.message ||
+            alsUserMessage(job.error.code) ||
+            job.error.code)) ||
+        "导出失败";
       var errEl = document.createElement("p");
       errEl.className = "preview-toolbar__longshot-error";
       errEl.textContent = err;
@@ -2161,16 +2173,16 @@ export function cancelPreviewLongshotExport(root) {
       return;
     }
 
-    title.textContent = "✓ 长图已保存";
-
     var result = job.result || {};
     var outputs = result.outputs || [];
     var method = result.captureMethod || "p0";
     var segmented = result.segmented || outputs.length > 1;
+    var resultPlatform = result.platform || "wechat_chat";
+    title.textContent =
+      resultPlatform === "album_landscape" ? "✓ 横版页已保存" : "✓ 长图已保存";
 
     var homeHint = document.createElement("p");
     homeHint.className = "preview-toolbar__longshot-compat preview-toolbar__longshot-share-hint";
-    var resultPlatform = result.platform || "wechat_chat";
     if (resultPlatform === "wechat_moments") {
       homeHint.textContent =
         "已保存 " +
@@ -2193,6 +2205,11 @@ export function cancelPreviewLongshotExport(root) {
         "已保存 " +
         (outputs.length || 0) +
         " 张画册跨页（两卡 3:4+3:4+中缝，约 1.53:1）· 可预览或送印";
+    } else if (resultPlatform === "album_landscape") {
+      homeHint.textContent =
+        "已生成 " +
+        (outputs.length || 0) +
+        " 张 16:9 横版页（与预览同屏）· 可预览或送印（套 A4 请留白，勿裁切）。页数较多时文件较大。";
     } else {
       // FE-FST-04 · 默认成功面：已保存确认，不塞发群教学
       var drawerTitle = String(result.displayTitle || result.title || "").trim();
@@ -2930,7 +2947,10 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         if (res.status === 400) {
-          var msg400 = (res.body && res.body.message) || "批量导出提交失败";
+          var msg400 =
+            (res.body && res.body.message) ||
+            alsUserMessage(res.body && res.body.error) ||
+            "批量导出提交失败";
           trackBatchFail((res.body && res.body.error) || "E_LNG2_INVALID_BATCH_ITEM", msg400);
           _showToolbarToast(msg400, { error: true });
           return;
@@ -3131,9 +3151,11 @@ export function cancelPreviewLongshotExport(root) {
               ? "正在导出公众号竖版拼贴配图…"
               : platform === "poster_bric"
                 ? "正在导出单张海报…"
-                : platform === "album_spread"
-                  ? "正在导出画册跨页…"
-                  : "正在保存…";
+                : platform === "album_landscape"
+                  ? "正在导出横版页…"
+                  : platform === "album_spread"
+                    ? "正在导出画册跨页…"
+                    : "正在保存…";
     setLongshotExportState(root, "running", { hint: runningHint });
     _setSlowHint(root, "", false);
 
@@ -3153,8 +3175,12 @@ export function cancelPreviewLongshotExport(root) {
     var req = buildLongshotRequestFromPage(tripId);
     if (req && platform) {
       req.platform = platform;
-      var mapped = PLATFORM_TO_INTENT[platform];
-      if (mapped) req.intent = mapped;
+      if (platform === "album_landscape") {
+        delete req.intent;
+      } else {
+        var mapped = PLATFORM_TO_INTENT[platform];
+        if (mapped) req.intent = mapped;
+      }
     }
     if (!assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)) {
       setLongshotExportState(root, "idle");
@@ -3210,9 +3236,11 @@ export function cancelPreviewLongshotExport(root) {
                 ? "公众号配图排队中，请稍候…"
                 : platform === "poster_bric"
                   ? "单张海报排队中，请稍候…"
-                  : platform === "album_spread"
-                    ? "画册跨页排队中，请稍候…"
-                    : "排队中，请稍候…";
+                  : platform === "album_landscape"
+                    ? "横版页排队中，请稍候…"
+                    : platform === "album_spread"
+                      ? "画册跨页排队中，请稍候…"
+                      : "排队中，请稍候…";
         setLongshotExportState(root, "running", { hint: busyHint });
       },
     })
@@ -3265,13 +3293,23 @@ export function cancelPreviewLongshotExport(root) {
             return;
           }
           setLongshotExportState(root, "error", {
-            hint: failHint || (res.body && res.body.message) || "请稍候再试",
+            hint:
+              failHint ||
+              (res.body && res.body.message) ||
+              alsUserMessage(res.body && res.body.error) ||
+              "请稍候再试",
           });
           return;
         }
         // M-INS-0c · server asks client to run html2canvas track
         if (res.status === 200 && res.body && res.body.fallback === "client") {
           clearResumePlatform();
+          if (platform === "album_landscape") {
+            setLongshotExportState(root, "error", {
+              hint: "横版画册需要本机浏览器组件",
+            });
+            return;
+          }
           return finishClientFallback();
         }
         if (res.status !== 202 || !res.body.jobId) {
@@ -3284,7 +3322,11 @@ export function cancelPreviewLongshotExport(root) {
           });
           clearResumePlatform();
           setLongshotExportState(root, "error", {
-            hint: failHint || "无法开始导出",
+            hint:
+              failHint ||
+              alsUserMessage(res.body && res.body.error, res.body && res.body.message) ||
+              (res.body && res.body.message) ||
+              "无法开始导出",
           });
           return;
         }
@@ -3345,7 +3387,7 @@ export function cancelPreviewLongshotExport(root) {
             } else if (job.status === "failed") {
               var err = job.error || {};
               // Playwright missing mid-job → auto client track (non-terminal).
-              if (err.code === "E_LNG_PLAYWRIGHT") {
+              if (err.code === "E_LNG_PLAYWRIGHT" && platform !== "album_landscape") {
                 finishClientFallback();
                 return;
               }

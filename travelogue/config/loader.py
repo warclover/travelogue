@@ -54,6 +54,7 @@ from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.shot_grouping import shot_grouping_from_dict
 from travelogue.config.studio import (
     DEFAULT_LONGSHOT2_PLATFORMS,
+    AlbumLandscapeConfig,
     GcsPosterBricConfig,
     Longshot2Config,
     OutputRecipeBandsConfig,
@@ -128,6 +129,29 @@ def _parse_gcs_poster_bric_config(
     if not isinstance(raw, dict):
         raw = {}
     return GcsPosterBricConfig(
+        enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
+    )
+
+
+def _parse_album_landscape_config(
+    data: dict[str, Any], studio_raw: dict[str, Any]
+) -> AlbumLandscapeConfig:
+    """PRD key features.album_landscape; also accept studio.album_landscape."""
+    features = data.get("features") if isinstance(data.get("features"), dict) else {}
+    raw = (
+        features.get("album_landscape")
+        if isinstance(features.get("album_landscape"), dict)
+        else None
+    )
+    if raw is None and isinstance(features.get("albumLandscape"), dict):
+        raw = features["albumLandscape"]
+    if raw is None:
+        raw = studio_raw.get("album_landscape")
+    if not isinstance(raw, dict):
+        raw = studio_raw.get("albumLandscape")
+    if not isinstance(raw, dict):
+        raw = {}
+    return AlbumLandscapeConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
     )
 
@@ -752,6 +776,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             longshot2=_parse_longshot2_config(studio_raw),
             output_recipe=_parse_output_recipe_config(studio_raw),
             gcs_poster_bric=_parse_gcs_poster_bric_config(data, studio_raw),
+            album_landscape=_parse_album_landscape_config(data, studio_raw),
         ),
         phase6=phase6_from_dict(phase6_raw),
         template_router=TemplateRouterConfig(

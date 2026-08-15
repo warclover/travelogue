@@ -27,6 +27,13 @@ USER_MESSAGES: dict[str, str] = {
     "E_LNG_CAPTURE_FAILED": "长图生成失败，请重试",
     "E_LNG_NO_LONGSHOT": "未找到长图页面，请先完成渲染",
     "E_LNG_PLAYWRIGHT": "高清长图组件不可用，将尝试兼容模式",
+    "E_ALS_DISABLED": "横版画册未开启",
+    "E_ALS_BATCH_FORBIDDEN": "横版画册请单独导出，暂不支持批量",
+    "E_ALS_NO_INDEX": "请先完成预览渲染",
+    "E_ALS_NOT_SCREENS": "横版画册需要 16:9 预览（screens）",
+    "E_ALS_NO_PAGES": "预览里没有可导出的屏",
+    "E_ALS_CAPTURE_FAILED": "截取横版画册失败，请重试",
+    "E_ALS_TIMEOUT": "屏数较多导致超时，请重试或减少章节后导出",
     "E_LNG_CLIENT_FALLBACK": "正在使用兼容模式保存长图…",
     "E_STUDIO_SHUTDOWN": "Studio 正在退出",
     # NAS · 默认面中性（暗门恢复后仍可走 E_LLM_* 配置面专用句）

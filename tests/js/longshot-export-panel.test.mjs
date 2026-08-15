@@ -20,6 +20,7 @@ import {
   confirmedExportSummary,
   ctaLabelForPlatform,
   ctaLabelForPlatforms,
+  alsUserMessage,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
   estimateAlbumAutoCount,
@@ -674,4 +675,54 @@ test("isConfirmedExportTarget · 重启后画册/海报视为已确认，未点�
     }),
     true
   );
+});
+
+test("ALS · album_landscape 隔离：flag 关仍是现网六种；开则在画册印刷后", () => {
+  const six = [
+    "wechat_chat",
+    "wechat_moments",
+    "xiaohongshu",
+    "wechat_official",
+    "poster_bric",
+    "album_spread",
+  ];
+  const off = enabledPlatformsFromConfig({
+    longshot2: { enabled: true },
+    albumLandscape: { enabled: false },
+  });
+  assert.deepEqual(off, six);
+  assert.ok(!off.includes("album_landscape"));
+
+  const on = enabledPlatformsFromConfig({
+    longshot2: { enabled: true },
+    albumLandscape: { enabled: true },
+  });
+  assert.equal(on[on.length - 1], "album_landscape");
+  assert.ok(on.indexOf("album_landscape") > on.indexOf("album_spread"));
+  assert.deepEqual(on.slice(0, 6), six);
+});
+
+test("ALS · 进度先匹配横版；compose 仍为 false；文案禁画册/跨页", () => {
+  assert.equal(isComposePlatform("album_landscape"), false);
+  assert.equal(progressSynthesizingTitleForPlatform("album_landscape"), "正在截取横版页…");
+  assert.doesNotMatch(progressSynthesizingTitleForPlatform("album_landscape"), /画册|跨页|合成长图/);
+  assert.match(progressTitleForPlatform("album_landscape"), /横版页/);
+  assert.doesNotMatch(progressTitleForPlatform("album_landscape"), /画册|跨页/);
+  assert.equal(
+    detectPlatformFromProgressHint("正在截取横版页 第 1/3 屏…"),
+    "album_landscape"
+  );
+  assert.equal(detectPlatformFromProgressHint("画册跨页排队中，请稍候…"), "album_spread");
+  assert.equal(PLATFORMS.album_landscape.cta, "导出横版画册");
+  assert.equal(shortCtaLabelForPlatform("album_landscape"), "导出横版画册");
+  assert.equal(PLATFORMS.album_landscape.showAlbumCountOptions, false);
+  assert.match(PLATFORMS.album_landscape.expectHtml, /16:9/);
+  assert.match(PLATFORMS.album_landscape.expectHtml, /与预览相同/);
+  assert.doesNotMatch(PLATFORMS.album_landscape.expectHtml, /\d+\s*页/);
+  assert.match(PLATFORMS.album_spread.subtitle, /3:4 对页/);
+  assert.deepEqual(normalizePlatformList(["xiaohongshu", "album_landscape"]), [
+    "xiaohongshu",
+  ]);
+  assert.deepEqual(normalizePlatformList(["album_landscape"]), ["album_landscape"]);
+  assert.equal(alsUserMessage("E_ALS_BATCH_FORBIDDEN"), "横版画册请单独导出，暂不支持批量");
 });

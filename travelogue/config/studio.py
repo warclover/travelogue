@@ -53,6 +53,13 @@ class GcsPosterBricConfig:
 
 
 @dataclass
+class AlbumLandscapeConfig:
+    """ALS · album_landscape 16:9 screen capture (PRD features.album_landscape)."""
+
+    enabled: bool = True
+
+
+@dataclass
 class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
@@ -66,6 +73,7 @@ class StudioConfig:
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
     output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
     gcs_poster_bric: GcsPosterBricConfig = field(default_factory=GcsPosterBricConfig)
+    album_landscape: AlbumLandscapeConfig = field(default_factory=AlbumLandscapeConfig)
 
     @property
     def longshot2_enabled(self) -> bool:
@@ -136,6 +144,15 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                 "enabled": bool(
                     getattr(
                         getattr(cfg.studio, "gcs_poster_bric", None),
+                        "enabled",
+                        True,
+                    )
+                ),
+            },
+            "albumLandscape": {
+                "enabled": bool(
+                    getattr(
+                        getattr(cfg.studio, "album_landscape", None),
                         "enabled",
                         True,
                     )

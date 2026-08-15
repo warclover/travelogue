@@ -136,6 +136,21 @@ platforms:
     publish_guide: >-
       导出画册跨页拼贴（两张 3:4 卡片 + 中缝，约 1.53:1，类似竖版画册打开），适合对页预览与印刷。
 
+  album_landscape:
+    label: 横版画册
+    label_en: Landscape Album
+    segment: screen_capture
+    capture: album_landscape
+    allow_p1: false
+    output:
+      width: 3840
+      height: 2160
+      aspect: "16:9"
+      naming: "{title}-landscape-{nn}"
+    publish_guide: >-
+      按 16:9 原样印刷或发图（每一页 = 预览里的一屏）。
+      若套 A4 请留白，禁止裁切。
+
   # Phase C · CLI / API only（Studio UI 不开放）
   instagram:
     label: Instagram

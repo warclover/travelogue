@@ -504,7 +504,7 @@ def cmd_export_longshot(
         "--platform",
         help=(
             "wechat_chat (default) | wechat_moments | moments_grid | xiaohongshu | "
-            "wechat_official | album_spread | instagram | weibo | douyin_cover | custom"
+            "wechat_official | album_spread | album_landscape | instagram | weibo | douyin_cover | custom"
         ),
     ),
     intent: str | None = typer.Option(
@@ -574,7 +574,10 @@ def cmd_export_longshot(
         segment_mode = "auto"
         profile = None
 
-        if recipe_enabled or intent:
+        if (platform or "") == "album_landscape":
+            # D-ALS-12 · V1 不经 Output Recipe
+            platform_id = "album_landscape"
+        elif recipe_enabled or intent:
             trip_data: dict = {}
             trip_json = serve_dir / "trip.json"
             if trip_json.is_file():

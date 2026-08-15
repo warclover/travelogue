@@ -29,7 +29,11 @@ PLATFORM_SEGMENT_IDS = frozenset(
         "custom",
     }
 )
-KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS)
+# ALS · 16:9 screen capture (D-ALS-02). Not a segment / compose platform.
+SCREEN_CAPTURE_PLATFORM_IDS = frozenset({"album_landscape"})
+KNOWN_PLATFORM_IDS = frozenset(
+    {"wechat_chat"} | PLATFORM_SEGMENT_IDS | SCREEN_CAPTURE_PLATFORM_IDS
+)
 
 # Fixed-canvas collage compose (no Playwright aspect-fit longshot)
 COMPOSE_PLATFORM_IDS = frozenset(
@@ -495,6 +499,8 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-mp"
     if platform_id == "album_spread":
         return f"{slug}-album"
+    if platform_id == "album_landscape":
+        return f"{slug}-landscape"
     if platform_id == "instagram":
         return f"{slug}-ins"
     if platform_id == "weibo":

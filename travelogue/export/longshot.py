@@ -179,6 +179,16 @@ _BROWSER_POOL = _PlaywrightBrowserPool()
 _PLAYWRIGHT_AVAILABLE: bool | None = None
 
 
+def acquire_browser() -> Any:
+    """Public browser-pool checkout (D-ALS-17). Do not import ``_BROWSER_POOL``."""
+    return _BROWSER_POOL.acquire()
+
+
+def release_browser() -> None:
+    """Public browser-pool return (D-ALS-17)."""
+    _BROWSER_POOL.release()
+
+
 def warm_playwright_browser() -> bool:
     """P5-L4 · lazy-warm Chromium pool on Studio startup (best-effort)."""
     global _PLAYWRIGHT_AVAILABLE
@@ -1126,6 +1136,23 @@ def export_trip_longshot(
             fmt=fmt,
             progress=progress,
             platform=pid,
+        )
+    if pid == "album_landscape":
+        from travelogue.export.album_landscape import export_album_landscape
+
+        return export_album_landscape(
+            trip_dir,
+            scale=scale,
+            fmt=fmt,
+            progress=progress,
+            cancel_check=cancel_check,
+            cancel_register=cancel_register,
+            base_url=base_url,
+            trip_id=trip_id,
+            host=host,
+            port=port,
+            slide_count=slide_count,
+            pad_mode=pad_mode,
         )
     if pid in ("xiaohongshu", "wechat_official", "album_spread"):
         from travelogue.export.collage_pack import export_collage_pack

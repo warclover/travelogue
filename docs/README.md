@@ -409,6 +409,8 @@
 | [PRD-GENERATIVE-COLLAGE-SURFACES-V1.md](./PRD-GENERATIVE-COLLAGE-SURFACES-V1.md) | **GCS V1** **v0.2.1**（轨 B 已落地 · **§12 质量收口全部必修**）· 轨道 SKU 工厂 + `poster_bric` 海报导出 · **禁** MCS runtime · §6 拼贴内核部分 superseded，见下一行 |
 | [PRD-EXPORT-CARD-COMPOSE-V1.md](./PRD-EXPORT-CARD-COMPOSE-V1.md) | **导出 3:4 卡片统一 V1** v0.4.0（**Conditional Go** · [七席评审](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) · Stage 1-4 已实现 · 13 套模板已交付）· 小红书/单张海报/画册三出口统一为 3:4 Card（CardGrouper/Selector/Renderer）· [ADR-021 v0.5](./adr/021-export-compose-dual-engine.md) |
 | [PRD-ALBUM-EDITORIAL-LAB-V1.md](./PRD-ALBUM-EDITORIAL-LAB-V1.md) | **画册编辑试验床 AEL V1** **v0.2.1**（**Conditional Go** · [七席](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md)）· 只升 `album_spread`：角色匹配 × 保主体裁切 · 混出 4 套异常 AR 探针 + p18 三连瘦条评测-only · p33 角色进 L2、几何不进探针 |
+| [画册编排.md](./画册编排.md) | 画册册型×页纲领备忘（**不是** PRD）· 权威单位=跨页 · 8/16 配额待产品 · 签名展开跟照片量挂钩 · **与 ALS 互不接线** |
+| [PRD-ALBUM-LANDSCAPE-SCREENS-V1.md](./PRD-ALBUM-LANDSCAPE-SCREENS-V1.md) | **横版画册 ALS**（**parked** · [截屏不可用](./acceptance-records/als-screenshot-parked-2026-08-15.md)）· 长图截屏不做 16:9 画册 · 导出等待独立 `page-*` · 不碰 3:4 跨页 / 画册编排 |
 | [ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md](./ACCEPTANCE-ALBUM-EDITORIAL-LAB-V1.md) | AEL 验收 · AC-AEL-01～27 · M0 门已齐 |
 | [IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md](./IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md) | AEL 实施 · M0 Done · 下一刀 L0 隔离 |
 | [acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md](./acceptance-records/generative-collage-surfaces-v1-review-2026-07-18.md) | GCS V1 · 跨职能评审纪要 · Conditional Go · BLK-01～08 |
@@ -474,6 +476,7 @@
 | [acceptance-records/ssg-blind-review-TEMPLATE.md](./acceptance-records/ssg-blind-review-TEMPLATE.md) | SSG 盲评记录模板 |
 | [RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md](./RESEARCH-TRAVEL-PHOTO-AUTO-LAYOUT-V1.md) | 旅行照片自动排版 · 用户需求与竞品对照 |
 | [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | Photo/Zine Agent Skills 调研 · 对 ECC/CAL/封面出口的参考价值 |
+| [裁剪算法调研.md](./裁剪算法调研.md) | 非标槽裁切调研 · 人体优先 / 人脸兜底 / 窗内构图（备忘录，非 PRD） |
 | [PRD-LAYOUT-VIBE-PICKER-V1.md](./PRD-LAYOUT-VIBE-PICKER-V1.md) | **一句话选风格 LVP V1** **v0.2.0**（Conditional Go · M1/M2 代码 ✅ · AC-06 狗粮待 · M3 延期） |
 | [IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md](./IMPLEMENTATION-LAYOUT-VIBE-PICKER-V1.md) | LVP 实施 · M1 剖面持久化 · M2 两卡 UI |
 | [ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md](./ACCEPTANCE-LAYOUT-VIBE-PICKER-V1.md) | LVP 验收 · AC-01～05/07/08 ✅ · AC-06 待狗粮 |

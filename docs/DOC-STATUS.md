@@ -179,6 +179,10 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md](./IMPLEMENTATION-ALBUM-EDITORIAL-LAB-V1.md) | **active** | AEL 实施 · M0 文档 Done · 下一刀 PR-A/L0 |
 | [acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md](./acceptance-records/ael-album-editorial-lab-v1-review-2026-08-13.md) | **active** | AEL 七席 · Conditional Go · §11 产品补记 v0.2.1 |
 | [acceptance-records/ael-local-dogfood-GUIDE.md](./acceptance-records/ael-local-dogfood-GUIDE.md) | **active** | AEL 本机狗粮 GUIDE |
+| [画册编排.md](./画册编排.md) | **active** | 画册册型×页纲领备忘（**不是** PRD）· 权威单位=跨页 · 签名展开跟照片量挂钩 · **与 ALS 横版画册互不接线** |
+| [PRD-ALBUM-LANDSCAPE-SCREENS-V1.md](./PRD-ALBUM-LANDSCAPE-SCREENS-V1.md) | **parked** | **ALS** 截屏方案停泊 · 长图逐屏截图不可用 · 横版画册导出等待独立 `page-*` |
+| [acceptance-records/als-album-landscape-screens-v1-review-2026-08-14.md](./acceptance-records/als-album-landscape-screens-v1-review-2026-08-14.md) | **archive** | ALS 七席考古 · 原 Conditional Go；产品已改「不截屏」 |
+| [acceptance-records/als-screenshot-parked-2026-08-15.md](./acceptance-records/als-screenshot-parked-2026-08-15.md) | **active** | **现行**：截屏不可用 · 横版画册导出待调整 · 三柜分立 |
 | [acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-review-2026-08-05.md) | **active** | ECC 七席联评 · Conditional Go · BLK-ECC-01～05（复用对象订正/独立实现声明/OQ 默认解/迁移清单/章节打包退役） |
 | [acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md](./acceptance-records/ecc-export-card-compose-v1-implementation-closeout-2026-08-05.md) | **active** | ECC Stage1-4 实施收口 · 真实 trip 素材烟测（非合成色块）核对 AC-ECC-01～06 全绿 · SHD-ECC-01～03 全部核对/完成 |
 | [acceptance-records/ecc-selection-compare-2026-08-05.md](./acceptance-records/ecc-selection-compare-2026-08-05.md) | **active** | SHD-ECC-03「代表性精选 vs 前 N 张」对比册 · `cover_score_v2` 组明显优于前 N 张组（同池同模板，仅切换选图策略） |
@@ -190,6 +194,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片 Done**（M2-A + M2-B1 · [#62](https://github.com/warclover/travelogue/pull/62)；其余 Parking Lot）|
 | [acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md](./acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md) | **active** | Arch Opt V2 收工记录（含 M2-A3 合入路径核实 + 门禁快照）|
 | [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | **active** | Photo/Zine Agent Skills 外部调研 + Travelogue 参考价值（Postcard / Abstract Editorial / Gathered / Distill / Minimal）|
+| [裁剪算法调研.md](./裁剪算法调研.md) | **active** | 非标槽裁切调研备忘录（人体优先 → 人脸兜底 → 窗内构图；**不是** PRD）|
 
 ---
 

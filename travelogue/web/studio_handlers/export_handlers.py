@@ -296,6 +296,17 @@ def _handle_longshot_batch(
             )
             return
 
+        if platform_id == "album_landscape":
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_ALS_BATCH_FORBIDDEN",
+                    "message": user_message("E_ALS_BATCH_FORBIDDEN"),
+                },
+            )
+            return
+
         item_slide_count_raw = item.get("slideCount")
         item_slide_count: int | None
         if item_slide_count_raw is None or item_slide_count_raw == "":
@@ -626,6 +637,10 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     gcs_poster_on = bool(getattr(gcs_flag, "enabled", False))
     if gcs_poster_on and "poster_bric" not in allowed_platforms:
         allowed_platforms.append("poster_bric")
+    als_flag = getattr(cfg.studio, "album_landscape", None)
+    als_on = bool(getattr(als_flag, "enabled", True))
+    if als_on and "album_landscape" not in allowed_platforms:
+        allowed_platforms.append("album_landscape")
 
     # PRD-BATCH-EXPORT-MULTISELECT-V1 D-BEX-02 · platforms[] 批量分支，与单平台
     # 路径（下方）完全独立、互不影响；未带 platforms 字段时行为零改动（向后兼容）。
@@ -687,10 +702,24 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             },
         )
         return
+    if not als_on and platform_hint == "album_landscape":
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_ALS_DISABLED",
+                "message": user_message("E_ALS_DISABLED"),
+            },
+        )
+        return
 
     recipe = None
     use_recipe = bool(recipe_enabled or intent)
-    if use_recipe:
+    if platform_hint == "album_landscape":
+        # D-ALS-12 · V1 不经 Output Recipe；点选即直出，忽略残留 intent
+        use_recipe = False
+        platform_id = "album_landscape"
+    elif use_recipe:
         try:
             recipe = resolve_output_recipe(
                 trip=trip if isinstance(trip, dict) else None,
@@ -727,6 +756,17 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         platform_id = DEFAULT_PLATFORM
     else:
         platform_id = normalize_platform_id(platform_raw)
+
+    if not als_on and platform_id == "album_landscape":
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_ALS_DISABLED",
+                "message": user_message("E_ALS_DISABLED"),
+            },
+        )
+        return
 
     # Moments / grid: always export pure photos (ignore preview copy mode).
     if platform_id in ("wechat_moments", "moments_grid", "poster_bric"):
@@ -782,6 +822,18 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
     server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"}
+    if profile.id == "album_landscape" and (
+        force_client or not playwright_longshot_available()
+    ):
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_LNG_PLAYWRIGHT",
+                "message": "横版画册需要本机浏览器组件",
+            },
+        )
+        return
     if profile.id not in server_pack_platforms and (
         force_client or not playwright_longshot_available()
     ):
@@ -831,6 +883,13 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
                 store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
 
         _ensure_derivatives_for_export(trip_dir)
+        als_base_url = None
+        als_trip_id = None
+        if profile.id == "album_landscape":
+            studio_port = int(getattr(handler, "studio_port", 0) or 0)
+            if studio_port:
+                als_base_url = f"http://127.0.0.1:{studio_port}"
+            als_trip_id = trip_id
         result = export_trip_longshot(
             trip_dir,
             scale=scale,
@@ -844,6 +903,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             include_appendix=include_appendix,
             cancel_check=cancel_check,
             cancel_register=cancel_register,
+            base_url=als_base_url,
+            trip_id=als_trip_id,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         page_count = result.page_count if result.page_count is not None else len(result.outputs)

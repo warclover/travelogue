@@ -74,13 +74,25 @@ export var PLATFORMS = {
     id: "album_spread",
     label: "画册印刷",
     title: "画册印刷",
-    subtitle: "跨页",
+    subtitle: "跨页 · 3:4 对页",
     cta: "导出画册跨页",
     showSegmentMode: false,
     showCopyControls: false,
     showAlbumCountOptions: true,
     expectHtml:
       "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）。精选照片较多时可能需 <strong>1–2 分钟</strong>，请耐心等待",
+  },
+  album_landscape: {
+    id: "album_landscape",
+    label: "横版画册",
+    title: "横版画册",
+    subtitle: "与预览同屏 · 16:9",
+    cta: "导出横版画册",
+    showSegmentMode: false,
+    showCopyControls: false,
+    showAlbumCountOptions: false,
+    expectHtml:
+      "将按预览顺序导出 <strong>16:9 横版页</strong>（封面/章分隔/每一屏/封底）· 页数与预览相同 · 屏数多时约 1–2 分钟",
   },
 };
 
@@ -102,10 +114,14 @@ export function enabledPlatformsFromConfig(cfgStudio) {
   if (list.indexOf("album_spread") < 0) {
     list = list.concat(["album_spread"]);
   }
+  var als =
+    (cfgStudio && (cfgStudio.albumLandscape || cfgStudio.album_landscape)) || {};
   var out = ["wechat_chat"];
   list.forEach(function (id) {
     // Studio 下线九宫格；CLI 仍可走 moments_grid
     if (id === "moments_grid") return;
+    // ALS：禁止像 album_spread 那样无条件 concat；只在 flag 开时于循环后 append
+    if (id === "album_landscape") return;
     if (id && id !== "wechat_chat" && out.indexOf(id) < 0) {
       if (
         id === "wechat_moments" ||
@@ -118,6 +134,9 @@ export function enabledPlatformsFromConfig(cfgStudio) {
       }
     }
   });
+  if (als.enabled !== false && out.indexOf("album_landscape") < 0) {
+    out.push("album_landscape");
+  }
   return out;
 }
 
@@ -285,6 +304,11 @@ export function normalizePlatformList(list, fallback) {
     var s = String(id || "").trim();
     if (s && out.indexOf(s) < 0) out.push(s);
   });
+  if (out.length > 1) {
+    out = out.filter(function (id) {
+      return id !== "album_landscape";
+    });
+  }
   if (!out.length) out.push(fallback || "wechat_chat");
   return out;
 }
@@ -374,6 +398,7 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "wechat_official") return "导出公众号";
   if (platformId === "poster_bric") return "导出海报";
   if (platformId === "album_spread") return "导出画册";
+  if (platformId === "album_landscape") return "导出横版画册";
   return "发微信群";
 }
 
@@ -396,6 +421,7 @@ export var PROGRESS_TITLES = {
   wechat_official: "正在生成公众号竖版拼贴…",
   poster_bric: "正在生成 3:4 单张海报…",
   album_spread: "正在生成画册跨页，照片较多时请耐心等待…",
+  album_landscape: "正在截取横版页…",
 };
 
 /** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
@@ -415,6 +441,7 @@ export function progressTitleForPlatform(platformId) {
 }
 
 export function progressSynthesizingTitleForPlatform(platformId) {
+  if (platformId === "album_landscape") return "正在截取横版页…";
   return isComposePlatform(platformId) ? "正在合成拼贴…" : "正在合成长图…";
 }
 
@@ -422,8 +449,23 @@ export function progressSynthesizingTitleForPlatform(platformId) {
  * 从后端/排队阶段的自由文本 hint 里识别平台（比 localStorage prefs 更即时，
  * 用于 resume / stageHint 场景下 prefs 可能滞后的兜底），识别不到返回 null。
  */
+export var ALS_USER_MESSAGES = {
+  E_ALS_DISABLED: "横版画册未开启",
+  E_ALS_BATCH_FORBIDDEN: "横版画册请单独导出，暂不支持批量",
+  E_ALS_NO_INDEX: "请先完成预览渲染",
+  E_ALS_NOT_SCREENS: "横版画册需要 16:9 预览（screens）",
+  E_ALS_NO_PAGES: "预览里没有可导出的屏",
+  E_ALS_CAPTURE_FAILED: "截取横版画册失败，请重试",
+  E_ALS_TIMEOUT: "屏数较多导致超时，请重试或减少章节后导出",
+};
+
+export function alsUserMessage(code, fallback) {
+  return ALS_USER_MESSAGES[code] || fallback || "";
+}
+
 export function detectPlatformFromProgressHint(hint) {
   var text = String(hint || "");
+  if (/横版|landscape|album_landscape/i.test(text)) return "album_landscape";
   if (/小红书/.test(text)) return "xiaohongshu";
   if (/公众号/.test(text)) return "wechat_official";
   if (/画册|跨页/.test(text)) return "album_spread";
@@ -825,6 +867,10 @@ export function syncPanelUI(pop, draft, opts) {
     // 长图密度仅微信群/朋友圈；拼贴出口隐藏
     densityField.hidden = isBatch || isComposePlatform(platform);
   }
+  var scaleField = pop.querySelector('[data-field="scale"]');
+  if (scaleField) {
+    scaleField.hidden = isBatch || platform === "album_landscape";
+  }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
   if (noteEl) {
     noteEl.textContent =
@@ -1001,6 +1047,15 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+      if (pid === "album_landscape") {
+        draft.platforms = ["album_landscape"];
+        draft.platform = "album_landscape";
+        refresh();
+        return;
+      }
+      draft.platforms = draft.platforms.filter(function (id) {
+        return id !== "album_landscape";
+      });
       var idx = draft.platforms.indexOf(pid);
       if (idx >= 0) {
         // 再点同一项：取消勾选（至少保留 1 个）
@@ -1199,6 +1254,8 @@ export function formatPlatformSuccess(result) {
     title = "✓ " + n + " 张公众号配图已就绪";
   } else if (platform === "album_spread") {
     title = "✓ " + n + " 张画册跨页已就绪";
+  } else if (platform === "album_landscape") {
+    title = "✓ " + n + " 张横版页已就绪";
   }
   return {
     title: title,

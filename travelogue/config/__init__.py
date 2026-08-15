@@ -87,6 +87,7 @@ from travelogue.config.shot_grouping import (
     shot_grouping_from_dict,
 )
 from travelogue.config.studio import (
+    AlbumLandscapeConfig,
     GcsPosterBricConfig,
     OutputRecipeBandsConfig,
     OutputRecipeConfig,
@@ -177,6 +178,7 @@ __all__ = [
     "resolve_shot_group_mosaic_policy",
     "shot_grouping_from_dict",
     "OutputRecipeBandsConfig",
+    "AlbumLandscapeConfig",
     "GcsPosterBricConfig",
     "OutputRecipeConfig",
     "StudioConfig",
