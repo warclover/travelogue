@@ -1,0 +1,78 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-1l1p-wide
+version: 1
+status: sketch
+kind: primitive
+displayName: 左宽右竖
+sketchName: 1宽1竖
+familyId: mix-1l1p-wide
+canonical: page-2-1l1p-wide
+related: [page-2-1p1l-wide]
+seeAlso: [page-2-1l1p, page-1-hero-land-wide, page-2-1s1p]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1l1p-wide
+
+stage:
+  aspect: "16:9"
+  # 主图 16:9 = 页宽 60%；竖槽 3:4 = 页宽 25%。
+  # 左右与间距未写死，剩余 15% 三等分 → 各 5% 页宽。
+  # 两槽各自按槽比求解后垂直居中。
+  margin:
+    top: 0
+    right: 0.05
+    bottom: 0
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 1, landscape: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-wide-right-port
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 横槽：禁竖，优先 16:9
+  # 竖槽：禁横，优先 3:4
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 宽图为主，一张 3:4 竖图辅
+  whenNotToUse: 横图是 4:3 → 用 page-2-1l1p；竖图更适合靠左 → 用 page-2-1p1l-wide；需要等权双横 / 双竖
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 1L1P
+  thumb: 左宽 16:9 占页宽 60%；右竖 3:4 占页宽 25%；左右与间距各 5%
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   landW = 0.60 W；16:9 → landH = 0.60 * 9/16 W = 0.3375 W = 0.60 H
+#   landLeft = 0.05 W；landTop = 0.20 H
+#   portW = 0.25 W；3:4 → portH = 0.25 * 4/3 W = 0.333333 W = 0.592593 H
+#   portLeft = 0.05 + 0.60 + 0.05 = 0.70 W
+#   portTop  = (1 - 0.592593) / 2 = 0.203704 H
+# 示意图写「高度与竖槽相同」。按写死宽与槽比：0.60 H vs 0.592593 H，差约 0.74 个百分点，不强行拉齐。
+# 用途栏只写「1 张横版人像或风景」，按图是一宽一竖。
+# 与 page-2-1l1p（4:3 横 + 3:4 竖、顶齐、有下文案）不是同一张。

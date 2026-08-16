@@ -1,0 +1,89 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-1p1l
+version: 1
+status: sketch
+kind: primitive
+displayName: 左竖右横
+sketchName: 1竖1横
+familyId: mix-1p1l
+canonical: page-2-1p1l
+related: [page-2-1l1p]
+seeAlso: [page-1-hero-port, page-1-hero-land-right, page-3-2l1p-left]
+replaces: screen-portrait-1-landscape-1
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1p1l
+
+stage:
+  aspect: "16:9"
+  # 示意图写：竖槽上下 5%、横槽右侧 5%、顶对齐。
+  # 左边距与槽间距未写，按与右侧留白同值 5% 页宽。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 1, landscape: 1 }
+
+placement:
+  groupAlign: top
+  distribute: split-left-port-right-land
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions:
+  - id: under-land
+    edge: bottom
+    optional: true
+    sizing: leftover          # 横槽下方、与竖槽底齐的剩余
+    collapse: hide-frame
+    emptySlotAlign: top
+
+admit:
+  perSlot: true
+  # 竖槽禁横，横槽禁竖；不要整页一刀切
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一竖一横成对；竖图为主、横图辅
+  whenNotToUse: 两张同朝向；横图明显更强 → 用 page-2-1l1p；需要等权双竖
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 1P1L
+  thumb: 左竖 3:4 满高带，右横 4:3 顶齐；右下剩余文案，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+# 竖槽按高求解：
+#   portH = 0.90 H = 0.50625 W
+#   portW = 0.50625 * (3/4) = 0.3796875 W
+#   portLeft = 0.05 W
+#   portTop  = 0.05 H
+# 横槽：顶齐，右侧 5%，左侧 = 竖槽右缘 + gapX
+#   landLeft  = 0.05 + 0.3796875 + 0.05 = 0.4796875 W
+#   landWidth = 1 - 0.05 - 0.4796875 = 0.4703125 W
+#   landH     = 0.4703125 * (3/4) = 0.352734375 W = 0.627083 H
+#   landTop   = 0.05 H
+# 右下文案（与竖槽底齐，不算槽）：
+#   copyTop    = 0.05 H + 0.627083 H = 0.677083 H
+#   copyHeight = 0.95 H - 0.677083 H = 0.272917 H
+#   copyLeft   = landLeft；copyWidth = landWidth
+# 没字：绿框可藏，槽位数字不变。

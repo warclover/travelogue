@@ -1,0 +1,72 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-pair-land-ultra
+version: 1
+status: sketch
+kind: primitive
+displayName: 双超宽叠放
+sketchName: 2张 超宽
+familyId: land-ultra
+canonical: page-2-pair-land-ultra
+related: [page-2-pair-land]
+seeAlso: [page-1-hero-land-ultra]
+replaces: screen-landscape-2
+aliases: []
+program: mosaic
+densityClass: standard
+role: pair-land-ultra
+
+stage:
+  aspect: "16:9"
+  # 上 / 左 / 右 各 5%。下边距与槽间距未写，按同值 5%（左右相对页宽，上下相对页高）。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapY: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 0, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: even-y
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "64:17" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "64:17" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "64:17"
+
+themes: [landscape, architecture]
+usage:
+  whenToUse: 两张超宽风景 / 全景等权叠放
+  whenNotToUse: 必须消化竖图；原图只是普通 4:3 / 16:9（改用 page-2-pair-land）；只要一张超宽（改用 page-1-hero-land-ultra）
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2L
+  thumb: 两超宽条上下均分，左右 5%；无文案栏
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+# 两张 21:9 按左右 5% 满宽叠放会高出纸面，不能写 21:9。
+# 槽比由「宽 = 0.90 W、高均分」反推：
+#   slotWidth  = 0.90 W
+#   slotHeight = (0.90 H - 0.05 H) / 2 = 0.425 H = 0.2390625 W
+#   aspect     = 0.90 / 0.2390625 = 64/17 ≈ 3.76:1
+#   slot0: left 0.05 W, top 0.05 H
+#   slot1: left 0.05 W, top 0.525 H
+# 单张超宽仍是 page-1-hero-land-ultra 的 21:9。

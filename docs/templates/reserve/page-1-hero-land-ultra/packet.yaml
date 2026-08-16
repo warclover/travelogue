@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-1-hero-land-ultra
+version: 1
+status: sketch
+kind: primitive
+displayName: 单图 · 横版英雄 · 21:9
+sketchName: 单张 超宽21:9
+familyId: hero-land
+canonical: page-1-hero-land-ultra
+related: [page-1-hero-land, page-1-hero-land-right, page-1-hero-land-wide]
+replaces: screen-panorama-1
+aliases: []
+program: hero
+densityClass: airy
+role: hero-land
+
+stage:
+  aspect: "16:9"
+  # 「四周留白 6.25%」：左右相对页宽，上下相对页高。
+  margin:
+    top: 0.0625
+    right: 0.0625
+    bottom: 0.0625
+    left: 0.0625
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 1
+mix: { portrait: 0, landscape: 1 }
+
+placement:
+  groupAlign: top
+  distribute: none
+  emptyCopyKeepsAlign: true
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "21:9" }
+
+copyRegions:
+  - id: caption
+    edge: bottom
+    optional: true
+    sizing: leftover          # 槽按宽求解并顶齐后，下方剩余即栏
+    collapse: hide-frame      # 没字：藏绿框，不改槽位
+    emptySlotAlign: top
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "21:9"
+
+themes: [landscape, portrait, architecture]
+usage:
+  whenToUse: 超宽风景或合影；原图接近 21:9 / 全景时
+  whenNotToUse: 必须消化竖图；需要 4:3 / 16:9 / 方槽；需要多图并置
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 1L
+  thumb: 一超宽槽 21:9 顶齐，四周 6.25% 留白；下为剩余文案栏，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，槽比必须等于 21:9）---
+# contentWidth  = 0.875 W
+# 21:9 比纸更扁，按宽求解（按高会超出 content 宽）：
+#   slotWidth  = 0.875 W
+#   slotHeight = 0.875 W * (9/21) = 0.375 W = (0.375 / 0.5625) H = (2/3) H
+#   slotLeft   = 0.0625 W
+#   slotTop    = 0.0625 H
+# 下文案栏 = 槽底到下页边：
+#   copyLeft   = 0.0625 W
+#   copyWidth  = 0.875 W
+#   copyTop    = 0.0625 H + (2/3) H = 0.7291667 H
+#   copyHeight = 0.875 H - (2/3) H  = 0.2083333 H
+# 没字：copy 框可藏，上列数字不变。

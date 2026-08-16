@@ -1,0 +1,87 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-pair-land
+version: 1
+status: sketch
+kind: primitive
+displayName: 双横版并排
+sketchName: 2张 横版
+familyId: land-row
+canonical: page-2-pair-land
+related: [page-2-pair-land-ultra]
+seeAlso: [page-2-pair-port, page-1-hero-land-right, page-4-grid-land]
+replaces: screen-landscape-2
+aliases: []
+program: mosaic
+densityClass: standard
+role: pair-land
+
+stage:
+  aspect: "16:9"
+  # 示意图：上 / 左 / 右 各 5%，两槽左右均分。
+  # 槽间距未写，按与左右留白同值 5% 页宽。下边距按同值 5%，避免文案贴边。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 0, landscape: 2 }
+
+placement:
+  groupAlign: top
+  distribute: even-x
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions:
+  - id: caption
+    edge: bottom
+    optional: true
+    sizing: leftover          # 两横槽下方剩余，通栏
+    collapse: hide-frame
+    emptySlotAlign: top
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "4:3"
+
+themes: [landscape, portrait, architecture, sequence]
+usage:
+  whenToUse: 高光池双张横图并排；等权对仗，无主次
+  whenNotToUse: 必须消化竖图；需要上下 stack；需要明显主次
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2L
+  thumb: 两横槽 4:3 顶齐并排；下为通栏剩余文案，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 4:3）---
+# contentWidth = 0.90 W；gapX = 0.05 W
+#   slotWidth  = (0.90 - 0.05) / 2 = 0.425 W
+#   slotHeight = 0.425 * (3/4) = 0.31875 W = 0.566667 H
+#   slotTop    = 0.05 H
+#   slot0.left = 0.05 W
+#   slot1.left = 0.05 + 0.425 + 0.05 = 0.525 W
+# 下文案（通栏，不算槽）：
+#   copyLeft   = 0.05 W
+#   copyWidth  = 0.90 W
+#   copyTop    = 0.05 H + 0.566667 H = 0.616667 H
+#   copyHeight = 0.95 H - 0.616667 H = 0.333333 H
+#
+# 示意图用途写「竖版照片展示」与横槽矛盾，按横版更正。
+# 附录 A 待画写「双横上下或左右」；本稿是左右并排。
+# 现网 screen-landscape-2 是上下 stack，不是同一张。
+# 若再画上下叠，用新 id page-2-pair-land-stack。

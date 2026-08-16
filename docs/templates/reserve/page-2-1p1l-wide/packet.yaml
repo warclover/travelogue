@@ -1,0 +1,66 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-2-1l1p-wide 左右镜像。
+
+id: page-2-1p1l-wide
+version: 1
+status: sketch
+kind: primitive
+displayName: 左竖右宽
+sketchName: 1竖1宽
+familyId: mix-1l1p-wide
+canonical: page-2-1p1l-wide
+related: [page-2-1l1p-wide]
+seeAlso: [page-2-1p1l, page-1-hero-land-wide, page-2-1p1s]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1p1l-wide
+mirroredFrom: page-2-1l1p-wide
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0
+    right: 0.05
+    bottom: 0
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 1, landscape: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-wide
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: main, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 16:9
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 宽图为主（靠右），一张 3:4 竖图辅（靠左）
+  whenNotToUse: 横图是 4:3 → 用 page-2-1p1l；宽图更适合靠左 → 用 page-2-1l1p-wide
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1P1L
+  thumb: 左竖 3:4 占页宽 25%；右宽 16:9 占页宽 60%；左右与间距各 5%
+
+sourceSketch: null
+
+# 几何 = page-2-1l1p-wide 水平镜像
+#   portLeft = 0.05 W
+#   landLeft = 0.05 + 0.25 + 0.05 = 0.35 W

@@ -1,0 +1,68 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-3-port-hero-left 左右镜像。
+
+id: page-3-port-hero-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左双小右大
+sketchName: 三竖二小一大
+familyId: port-hero
+canonical: page-3-port-hero-right
+related: [page-3-port-hero-left]
+seeAlso: [page-3-port, page-2-pair-port, page-1-hero-port]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-hero-r
+mirroredFrom: page-3-port-hero-left
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 3, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-pair-right-hero
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 一张竖图明显更大（靠右），两张竖图辅在左侧
+  whenNotToUse: 三张等权 → 用 page-3-port；主图更适合靠左 → 用 page-3-port-hero-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 3P
+  thumb: 左两辅 3:4 均分剩余宽；右主 3:4 上下 5%
+
+sourceSketch: null
+
+# 几何 = page-3-port-hero-left 水平镜像
+#   small0.left = 0.05 W
+#   small1.left = 0.28515625 W
+#   mainLeft    = 0.5703125 W

@@ -1,0 +1,57 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-2-1s1p 左右镜像。
+
+id: page-2-1p1s
+version: 1
+status: sketch
+kind: primitive
+displayName: 左竖右方
+sketchName: 一竖一方
+familyId: mix-1s1p
+canonical: page-2-1p1s
+related: [page-2-1s1p]
+seeAlso: [page-3-1s2l-right, page-2-1l1p, page-1-hero-square-right, page-2-pair-square]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1p1s
+mirroredFrom: page-2-1s1p
+
+stage:
+  aspect: "16:9"
+
+slotCount: 2
+mix: { portrait: 1, landscape: 0, square: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-square
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: main, orient: square, aspect: "1:1" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 方槽：优先 1:1，4:3 / 3:4 可进
+
+themes: [portrait, architecture, detail, sequence]
+usage:
+  whenToUse: 一张方图为主（靠右），一张 3:4 竖图辅（靠左）
+  whenNotToUse: 需要等权双方 / 双竖；方图更适合靠左 → 用 page-2-1s1p
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1P1S
+  thumb: 左竖 3:4 占页宽 25%，在左侧 50% 里居中；右方 1:1 半宽居中高
+
+sourceSketch: null
+
+# 几何 = page-2-1s1p 水平镜像
+#   portLeft = 0.125 W
+#   square: left 0.50 W, width 0.50 W

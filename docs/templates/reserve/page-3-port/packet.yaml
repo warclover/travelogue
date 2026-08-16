@@ -1,0 +1,74 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-3-port
+version: 1
+status: sketch
+kind: primitive
+displayName: 三竖并排
+sketchName: 三竖并排
+familyId: portrait-row
+canonical: page-3-port
+related: [page-2-pair-port]
+seeAlso: [page-1-hero-port]
+replaces: screen-portrait-3
+aliases: [page-3-organic-port]
+program: grid
+densityClass: standard
+role: row-port-3
+
+stage:
+  aspect: "16:9"
+  # 左右 5% 页宽。剩余宽三等分给三槽（文字未写间距 → gapX = 0）。
+  # 上下不写死边距：整组按 3:4 求解后垂直居中。
+  margin:
+    left: 0.05
+    right: 0.05
+  gapX: 0
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 3, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: even-x
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, landscape]
+usage:
+  whenToUse: 三张竖图并排、无主次；人像 / 竖构图风景 / 宠物 / 美食
+  whenNotToUse: 必须消化横图；需要一张明显更大的英雄
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 3P
+  thumb: 三竖槽 3:4 三等分，左右 5%，整组垂直居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 3:4）---
+#   slotWidth  = 0.90 W / 3 = 0.30 W
+#   slotHeight = 0.30 / 0.75 = 0.40 W = 0.711111 H
+#   slotTop    = (1 - 0.711111) / 2 H = 0.144444 H
+#   slot0.left = 0.05 W
+#   slot1.left = 0.35 W
+#   slot2.left = 0.65 W
+# 示意图细缝按描边，不另加 gapX。
+#
+# 相对附录 A 已设计稿：那边距 8/6/8/6 + gapX 2% + 顶底可空文案。
+# 本备用稿左右 5%、三等分、无文案、垂直居中。升格时以哪一版为准需你拍板。

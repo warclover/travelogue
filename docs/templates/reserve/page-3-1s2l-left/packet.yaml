@@ -1,0 +1,65 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-3-1s2l-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左方右双横
+sketchName: 一方两横
+familyId: square-land-stack
+canonical: page-3-1s2l-left
+related: [page-3-1s2l-right]
+seeAlso: [page-3-2l1p-left, page-1-hero-square-right, page-2-pair-square]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: square-stack-l
+
+stage:
+  aspect: "16:9"
+  # 主图 1:1 = 页宽 50%，左齐，垂直居中（上下自然留白）。
+  # 副图 4:3 = 页宽 25%；右侧剩余 50% 里：左缝 = 右页边 = 12.5%，上下与槽间三等分。
+
+slotCount: 3
+# 示意图表写成「槽 2 / 横 1 / 一方一横」。图上是 1 方 + 2 横，按图。
+mix: { portrait: 0, landscape: 2, square: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-square-right-stack
+
+slots:
+  - { index: 0, role: main, orient: square, aspect: "1:1" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 方槽：优先 1:1，4:3 / 3:4 可进
+  # 横槽：禁竖，优先 4:3
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张方图为主，两张 4:3 横图辅
+  whenNotToUse: 没有方图且不能接受 4:3/3:4 进方槽；需要等权三图；方图更适合靠右 → 用 page-3-1s2l-right
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1S2L
+  thumb: 左方 1:1 半宽居中高；右两横 4:3 叠在右侧 25% 宽
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   square: left 0, width 0.50 W, height 0.50 W = 0.888889 H, top 0.055556 H
+#   landW  = 0.25 W
+#   landH  = 0.25 * 3/4 W = 0.1875 W = 0.333333 H
+#   landLeft = 0.50 + 0.125 = 0.625 W
+#   剩余高 0.333333 H 三等分 → 顶 / 缝 / 底各 0.111111 H
+#   land0.top = 0.111111 H
+#   land1.top = 0.555556 H

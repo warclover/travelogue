@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-3-port-hero-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左大右双小
+sketchName: 三竖一大二小
+familyId: port-hero
+canonical: page-3-port-hero-left
+related: [page-3-port-hero-right]
+seeAlso: [page-3-port, page-2-pair-port, page-1-hero-port]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-hero-l
+
+stage:
+  aspect: "16:9"
+  # 主图 3:4，上下 5% 页高（与 page-1-hero-port / page-2-1p1l 同高）。
+  # 左边距未写，按 5% 页宽。主辅间距与右页边按辅图「左右留白 5%」。
+  # 右侧剩余宽均分给两张 3:4（文字未写辅图间距 → gapX = 0）。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 3, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-hero-right-pair
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 一张竖图明显更大，两张竖图辅在右侧
+  whenNotToUse: 三张等权 → 用 page-3-port；主图更适合靠右 → 用 page-3-port-hero-right；必须消化横图
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 3P
+  thumb: 左主 3:4 上下 5%；右两辅 3:4 均分剩余宽，垂直居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 3:4）---
+# 主图按高求解（与 page-2-1p1l 竖槽同）：
+#   mainH = 0.90 H = 0.50625 W
+#   mainW = 0.50625 * (3/4) = 0.3796875 W
+#   mainLeft = 0.05 W；mainTop = 0.05 H
+# 右侧剩余（左 5% + 主 + 缝 5% + 右 5% 之后）：
+#   restW = 1 - 0.05 - 0.3796875 - 0.05 - 0.05 = 0.4703125 W
+#   smallW = 0.4703125 / 2 = 0.23515625 W
+#   smallH = 0.23515625 * (4/3) W = 0.31354167 W = 0.557407 H
+#   smallTop = (1 - 0.557407) / 2 = 0.221296 H
+#   small0.left = 0.05 + 0.3796875 + 0.05 = 0.4796875 W
+#   small1.left = 0.4796875 + 0.23515625 = 0.71484375 W
+# 辅图细缝按描边，不另加 gap。
+# 与 page-3-port（等权三竖）不是同一张。

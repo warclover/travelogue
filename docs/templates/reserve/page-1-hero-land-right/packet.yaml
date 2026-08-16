@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-1-hero-land-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 单图 · 横版英雄 · 右齐
+sketchName: 单张横版
+familyId: hero-land
+canonical: page-1-hero-land-right
+related: [page-1-hero-land, page-1-hero-land-wide, page-1-hero-land-ultra]
+replaces: screen-landscape-1
+aliases: []
+program: hero
+densityClass: airy
+role: hero-land
+
+stage:
+  aspect: "16:9"
+  # 「四周留白 5%」：左右相对页宽，上下相对页高。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 1
+mix: { portrait: 0, landscape: 1 }
+
+placement:
+  groupAlign: right
+  distribute: none
+  emptyCopyKeepsAlign: true
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "4:3" }
+
+copyRegions:
+  - id: rail
+    edge: left
+    optional: true
+    sizing: leftover          # 槽按高求解并右齐后，左侧剩余即栏
+    collapse: hide-frame      # 没字：藏绿框，不改槽位
+    emptySlotAlign: right
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "4:3"
+
+themes: [landscape, architecture, portrait]
+usage:
+  whenToUse: 高光池单张横图；左侧要呼吸或可选字时
+  whenNotToUse: 必须消化竖图；需要多图并置；没字且不能接受左空 → 改用 page-1-hero-land
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 1L
+  thumb: 一横槽右齐，四周 5% 留白；左为剩余文案栏，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，槽比必须等于 4:3）---
+# contentWidth  = pageWidth  * (1 - margin.left - margin.right)     = 0.90 W
+# contentHeight = pageHeight * (1 - margin.top - margin.bottom)     = 0.90 H
+# 4:3 横槽在 16:9 纸上按高求解（按宽会高出纸面）：
+#   slotHeight = contentHeight                                      = 0.90 H
+#   slotWidth  = slotHeight * (4/3)                                 = 0.675 W
+#   slotLeft   = pageWidth - margin.right*W - slotWidth             = 0.275 W
+#   slotTop    = margin.top * H                                     = 0.05 H
+# 文案栏 = 左侧剩余（与槽等高，gapX = 0）：
+#   copyLeft   = 0.05 W
+#   copyWidth  = slotLeft - copyLeft                                = 0.225 W
+#   copyHeight = slotHeight                                         = 0.90 H
+# 没字：copy 框可藏，上列数字不变。

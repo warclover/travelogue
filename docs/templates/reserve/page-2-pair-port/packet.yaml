@@ -1,0 +1,76 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-pair-port
+version: 1
+status: sketch
+kind: primitive
+displayName: 双竖版并排
+sketchName: 2张 竖版
+familyId: portrait-row
+canonical: page-2-pair-port
+related: [page-3-port]
+seeAlso: [page-1-hero-port]
+replaces: screen-portrait-2-gallery
+aliases: []
+program: mosaic
+densityClass: standard
+role: pair-port
+
+stage:
+  aspect: "16:9"
+  # 上下 5% 相对页高。左右与槽间距由「平均分布」反推，不先写死左右 %。
+  margin:
+    top: 0.05
+    bottom: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 2, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: even-x          # 左边距 = 槽间距 = 右边距
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, landscape]
+usage:
+  whenToUse: 高光池双张竖图并排；双人像、竖构图风景或宠物成对
+  whenNotToUse: 必须消化横图；需要明显主次
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 2P
+  thumb: 两竖槽 3:4 并排，上下 5%；左右与间距三等分，无文案栏
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 3:4）---
+# 按宽求解会高出 16:9 纸，必须按高：
+#   slotHeight = 0.90 H = 0.50625 W
+#   slotWidth  = 0.50625 * (3/4) = 0.3796875 W
+# 剩余宽三等分（左右平均分布）：
+#   gap = margin.left = margin.right = (1 - 2 * 0.3796875) / 3 = 0.08020833 W
+#   slot0.left = 0.08020833 W
+#   slot1.left = 0.08020833 + 0.3796875 + 0.08020833 = 0.54010416 W
+#   slotTop    = 0.05 H
+#
+# 相对附录 A 已设计稿：那边距 8/6/14/6 + gapX 2% + 底栏文案；
+# 本备用稿上下 5%、无文案、间距由均分反推。升格时以哪一版为准需你拍板。

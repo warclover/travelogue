@@ -1,0 +1,86 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-1-hero-square-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 单图 · 方图英雄 · 右齐
+sketchName: 单张 正方形 1:1
+familyId: hero-square
+canonical: page-1-hero-square-right
+related: [page-2-pair-square]
+seeAlso: [page-1-hero-land, page-1-hero-land-right, page-1-hero-land-wide]
+replaces: null
+aliases: [page-1-hero-square]
+program: hero
+densityClass: airy
+role: hero-square
+
+stage:
+  aspect: "16:9"
+  # 「四周留白 6.25%」：左右相对页宽，上下相对页高。
+  margin:
+    top: 0.0625
+    right: 0.0625
+    bottom: 0.0625
+    left: 0.0625
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 1
+# 示意图表写成「横 1 / 竖 0」。1:1 不当又一种横（D-U-17），记方槽。
+mix: { portrait: 0, landscape: 0, square: 1 }
+
+placement:
+  groupAlign: right
+  distribute: none
+  emptyCopyKeepsAlign: true
+
+slots:
+  - { index: 0, role: main, orient: square, aspect: "1:1" }
+
+copyRegions:
+  - id: rail
+    edge: left
+    optional: true
+    sizing: leftover          # 方槽按高求解并右齐后，左侧剩余即栏
+    collapse: hide-frame      # 没字：藏绿框，不改槽位
+    emptySlotAlign: right
+
+admit:
+  requireOrient: [square]
+  forbidOrient: [portrait, landscape]
+  requireAspect: "1:1"
+  preferAspect: "1:1"
+  # 示意图禁用栏只写了竖版；用途写「仅限于 1:1」，按用途收成方图硬门。
+
+themes: [portrait, architecture, detail]
+usage:
+  whenToUse: 原图已是正方形 1:1；单张方图高光；左侧要呼吸或可选字时
+  whenNotToUse: 横图或竖图；需要 4:3 / 16:9 槽；需要多图并置；没字且不能接受左空
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符（含非方的横/竖）→ 禁入，不硬裁
+
+glyph:
+  badge: 1S
+  thumb: 一方槽右齐，四周 6.25% 留白；左为剩余文案栏，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，槽比必须等于 1:1）---
+# contentHeight = 0.875 H = 0.875 * (9/16) W = 0.4921875 W
+# 方槽按高求解（按宽会高出 content）：
+#   slotWidth  = slotHeight = 0.4921875 W   (= 49.21875% 页宽)
+#   slotHeight = 0.875 H
+#   slotLeft   = 1 - 0.0625 - 0.4921875     = 0.4453125 W
+#   slotTop    = 0.0625 H
+# 左文案栏 = 左页边到槽左缘：
+#   copyLeft   = 0.0625 W
+#   copyWidth  = 0.4453125 - 0.0625         = 0.3828125 W
+# 没字：copy 框可藏，上列数字不变。

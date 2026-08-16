@@ -1,0 +1,90 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-1-hero-port
+version: 1
+status: sketch
+kind: primitive
+displayName: 单图 · 竖版英雄
+sketchName: 单张 竖版
+familyId: hero-port
+canonical: page-1-hero-port
+related: []
+seeAlso: [page-1-hero-land, page-1-hero-land-right, page-1-hero-land-wide]
+replaces: screen-portrait-1
+aliases: []
+program: hero
+densityClass: airy
+role: hero-port
+
+stage:
+  aspect: "16:9"
+  # 示意图只写「上下留白 5%，左右居中」。左右页边按同值 5% 页宽，避免文案贴边。
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 1
+mix: { portrait: 1, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: none
+  emptyCopyKeepsAlign: true
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions:
+  - id: rail-left
+    edge: left
+    optional: true
+    sizing: leftover
+    collapse: hide-frame
+    emptySlotAlign: center
+  - id: rail-right
+    edge: right
+    optional: true
+    sizing: leftover
+    collapse: hide-frame
+    emptySlotAlign: center
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, architecture]
+usage:
+  whenToUse: 高光池单张竖图；人像 / 竖构图风景优先
+  whenNotToUse: 必须消化横图；需要多图并置；需要 4:3 / 16:9 / 方槽
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 1P
+  thumb: 一竖槽 3:4 居中，上下 5% 留白；左右剩余为文案栏，可空
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，槽比必须等于 3:4）---
+# contentHeight = 0.90 H = 0.90 * (9/16) W = 0.50625 W
+# 竖槽按高求解：
+#   slotHeight = 0.90 H
+#   slotWidth  = 0.50625 W * (3/4) = 0.3796875 W
+#   slotLeft   = (1 - 0.3796875) / 2 = 0.31015625 W
+#   slotTop    = 0.05 H
+# 左栏：0.05 W → 槽左缘；右栏：槽右缘 → 0.95 W
+#   copyWidth  = 0.31015625 - 0.05 = 0.26015625 W
+# 没字：两侧绿框可藏，槽位数字不变。
+#
+# 示意图用途写「高光池中的横版照片展示」与竖槽矛盾，按竖版更正。

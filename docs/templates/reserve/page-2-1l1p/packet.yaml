@@ -1,0 +1,78 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+# 无独立示意图：由 page-2-1p1l 左右镜像。
+
+id: page-2-1l1p
+version: 1
+status: sketch
+kind: primitive
+displayName: 左横右竖
+sketchName: 1横1竖
+familyId: mix-1p1l
+canonical: page-2-1l1p
+related: [page-2-1p1l]
+seeAlso: [page-1-hero-port, page-1-hero-land-right, page-3-2l1p-right]
+replaces: screen-landscape-1-portrait-1
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1l1p
+mirroredFrom: page-2-1p1l
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0.05
+    right: 0.05
+    bottom: 0.05
+    left: 0.05
+  gapX: 0.05
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+mix: { portrait: 1, landscape: 1 }
+
+placement:
+  groupAlign: top
+  distribute: split-left-land-right-port
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions:
+  - id: under-land
+    edge: bottom
+    optional: true
+    sizing: leftover          # 横槽下方、与竖槽底齐的剩余（现为左下）
+    collapse: hide-frame
+    emptySlotAlign: top
+
+admit:
+  perSlot: true
+  # 横槽禁竖，竖槽禁横；不要整页一刀切
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一横一竖成对；竖图为主、横图在左辅
+  whenNotToUse: 两张同朝向；竖图更适合靠左 → 用 page-2-1p1l；需要等权双竖
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1L1P
+  thumb: 左横 4:3 顶齐，右竖 3:4 满高带；左下剩余文案，可空
+
+sourceSketch: null
+
+# --- 几何 = page-2-1p1l 水平镜像 ---
+#   landLeft  = 0.05 W
+#   landWidth = 0.4703125 W
+#   landH     = 0.627083 H
+#   landTop   = 0.05 H
+#   portLeft  = 0.5703125 W
+#   portW     = 0.3796875 W
+#   portH     = 0.90 H
+#   copy 随横槽：左下，与竖槽底齐

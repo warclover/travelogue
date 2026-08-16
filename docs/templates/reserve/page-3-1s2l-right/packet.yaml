@@ -1,0 +1,56 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-3-1s2l-left 左右镜像。
+
+id: page-3-1s2l-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左双横右方
+sketchName: 两横一方
+familyId: square-land-stack
+canonical: page-3-1s2l-right
+related: [page-3-1s2l-left]
+seeAlso: [page-3-2l1p-right, page-1-hero-square-right, page-2-pair-square]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: stack-l-square
+mirroredFrom: page-3-1s2l-left
+
+stage:
+  aspect: "16:9"
+
+slotCount: 3
+mix: { portrait: 0, landscape: 2, square: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-stack-right-square
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: main, orient: square, aspect: "1:1" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张方图为主（靠右），两张 4:3 横图辅（靠左）
+  whenNotToUse: 需要等权三图；方图更适合靠左 → 用 page-3-1s2l-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2L1S
+  thumb: 左两横 4:3 叠在 25% 宽；右方 1:1 半宽居中高
+
+sourceSketch: null
+
+# 几何 = page-3-1s2l-left 水平镜像
+#   landLeft = 0.125 W
+#   square: left 0.50 W, width 0.50 W

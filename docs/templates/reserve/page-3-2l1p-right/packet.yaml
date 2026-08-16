@@ -1,0 +1,64 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-3-2l1p-left 左右镜像。
+
+id: page-3-2l1p-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左双横右竖
+sketchName: 2横1竖
+familyId: land-stack-port
+canonical: page-3-2l1p-right
+related: [page-3-2l1p-left]
+seeAlso: [page-2-1l1p, page-3-port]
+replaces: screen-landscape-2-portrait-1
+aliases: [page-3-organic-rport]
+program: mosaic
+densityClass: standard
+role: stack-l-port
+mirroredFrom: page-3-2l1p-left
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0
+    bottom: 0
+  gapX: 0.02
+  gapY: 0.025
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 1, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-stack-right-port
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+
+themes: [landscape, portrait, architecture, sequence]
+usage:
+  whenToUse: 右竖为主图，左两张横图辅（过程 / 对仗）
+  whenNotToUse: 三张同朝向；需要等权三竖；竖图更适合靠左 → 用 page-3-2l1p-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2L1P
+  thumb: 左两横 4:3 叠满高，右一竖 3:4 满高
+
+sourceSketch: null
+
+# 几何 = page-3-2l1p-left 水平镜像（数字见兄弟包）。
+#   land: left 0.09625 W
+#   port: left 0.481875 W

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>备用页型库 · 微缩</title>
+  <style>
+    :root {
+      --ink: #ece8e0;
+      --muted: #8a8278;
+      --paper: #0e0d0c;
+      --card: #1a1917;
+      --line: #2a2824;
+      --gold: #b8923a;
+      --port: #c45c4a;
+      --land: #3d6b8a;
+      --copy: #3d7a4a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #121110;
+      color: var(--ink);
+    }
+    header {
+      position: sticky; top: 0; z-index: 4;
+      background: #0d0c0b;
+      padding: 14px 20px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    header h1 { margin: 0; font-size: 15px; font-weight: 650; }
+    header h1 em { font-style: normal; color: var(--gold); font-weight: 400; }
+    header p { margin: 6px 0 0; font-size: 12px; color: var(--muted); max-width: 92ch; line-height: 1.55; }
+    header a { color: var(--gold); }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+    .swatch.p { background: var(--port); }
+    .swatch.l { background: var(--land); }
+    .swatch.s { background: var(--gold); }
+    .swatch.copy { background: var(--copy); }
+    main { padding: 18px 20px 64px; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 0 0 16px;
+    }
+    .toolbar button {
+      font: inherit; font-size: 12px; color: var(--ink);
+      background: #0e0d0c; border: 1px solid var(--line);
+      border-radius: 4px; padding: 5px 10px; cursor: pointer;
+    }
+    .toolbar button[aria-pressed="true"] {
+      border-color: var(--gold); color: var(--gold);
+    }
+    .toolbar .sep {
+      width: 1px; height: 16px; background: var(--line); margin: 0 4px;
+    }
+    .toolbar button .n {
+      color: var(--muted); font-variant-numeric: tabular-nums;
+    }
+    .toolbar button[aria-pressed="true"] .n { color: var(--gold); }
+    .group { margin: 0 0 28px; }
+    .group h2 {
+      margin: 0 0 10px;
+      font-size: 13px; font-weight: 650;
+    }
+    .group h2 small {
+      color: var(--gold); font-weight: 500; margin-left: 8px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .stage {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--paper);
+      border: 2px solid #111;
+      outline: 1px solid #3a3834;
+      position: relative;
+      overflow: hidden;
+    }
+    .region {
+      position: absolute;
+      border: 2px solid currentColor;
+      background: color-mix(in srgb, currentColor 18%, transparent);
+    }
+    .region.slot.p { color: var(--port); }
+    .region.slot.l { color: var(--land); }
+    .region.slot.s { color: var(--gold); }
+    .region.copy { color: var(--copy); }
+    .region.copy.is-empty {
+      border-style: dashed;
+      background: transparent;
+      opacity: 0.35;
+    }
+    .badge {
+      position: absolute; right: 6px; bottom: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      background: #0e0d0c; color: #fff; border-radius: 3px; padding: 2px 5px;
+    }
+    .meta { padding: 10px 2px 2px; }
+    .id-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .id-row code { font-size: 12px; color: #ece8e0; word-break: break-all; }
+    .name { margin: 4px 0 0; font-size: 13px; }
+    .blurb, .links { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .links a { color: var(--gold); }
+    .note {
+      margin: 8px 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>备用页型库 · 微缩 <em>黑纸 / 红竖 / 蓝横 / 金方 / 绿文案 · 引擎不读</em></h1>
+    <p>
+      设计收件箱，不是附录 A。说明见 <a href="./README.md">README</a> · <a href="./CATALOG.md">总表</a>。
+      色块：<span class="swatch p"></span> 竖槽 · <span class="swatch l"></span> 横槽 · <span class="swatch s"></span> 方槽 · <span class="swatch copy"></span> 文案（可空）。
+      微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
+    </p>
+  </header>
+  <main>
+    <div class="toolbar">
+      <button type="button" id="toggle-copy" aria-pressed="true">文案：有字</button>
+      <span class="sep" aria-hidden="true"></span>
+      <div id="filters" class="toolbar" style="margin:0;padding:0"></div>
+    </div>
+    <div id="board"></div>
+  </main>
+  <script>
+    const FACES = [
+      {
+        id: "page-1-hero-land-right",
+        displayName: "单图 · 横版英雄 · 右齐",
+        badge: "1L",
+        blurb: "高光池单横；4:3 右齐；左为剩余文案栏。没字槽仍靠右。",
+        related: "兄弟 page-1-hero-land（4:3 居中）· -wide（16:9）· -ultra（21:9）",
+        replaces: "意图顶岗 screen-landscape-1（满幅，不是同一张）",
+        href: "page-1-hero-land-right/",
+        copy: { left: 5, top: 5, width: 22.5, height: 90 },
+        slot: { left: 27.5, top: 5, width: 67.5, height: 90 }
+      },
+      {
+        id: "page-1-hero-land-wide",
+        displayName: "单图 · 横版英雄 · 16:9",
+        badge: "1L",
+        blurb: "高光池单横；16:9 槽居中，四周 6.25% 留白，无文案栏。",
+        related: "兄弟 page-1-hero-land（4:3 居中）· -right（4:3 右齐）· -ultra（21:9）",
+        replaces: "意图顶岗 screen-landscape-1（满幅，不是同一张）",
+        href: "page-1-hero-land-wide/",
+        slot: { left: 6.25, top: 6.25, width: 87.5, height: 87.5 }
+      },
+      {
+        id: "page-1-hero-square-right",
+        displayName: "单图 · 方图英雄 · 右齐",
+        badge: "1S",
+        blurb: "只进 1:1 方图；方槽按高求解后右齐。左为剩余文案栏，可空。没字槽仍靠右。",
+        related: "不同族。同构摆放参见 page-1-hero-land-right",
+        replaces: "无合格现网顶岗；不要拿 screen-landscape-1 顶",
+        href: "page-1-hero-square-right/",
+        copy: { left: 6.25, top: 6.25, width: 38.28125, height: 87.5 },
+        slot: { left: 44.53125, top: 6.25, width: 49.21875, height: 87.5 }
+      },
+      {
+        id: "page-1-hero-land-ultra",
+        displayName: "单图 · 横版英雄 · 21:9",
+        badge: "1L",
+        blurb: "超宽风景或合影；21:9 槽按宽求解后顶齐。下为剩余文案栏，可空。",
+        related: "兄弟 page-1-hero-land / -right / -wide（槽比不同）",
+        replaces: "意图顶岗 screen-panorama-1（文档有、仓库未见 YAML）",
+        href: "page-1-hero-land-ultra/",
+        copy: { left: 6.25, top: 72.916667, width: 87.5, height: 20.833333 },
+        slot: { left: 6.25, top: 6.25, width: 87.5, height: 66.666667 }
+      },
+      {
+        id: "page-1-hero-port",
+        displayName: "单图 · 竖版英雄",
+        badge: "1P",
+        blurb: "高光池单竖；3:4 居中，上下 5% 留白。左右剩余为文案栏，可空。",
+        related: "本族第一张。朝向对偶 page-1-hero-land（4:3 居中）",
+        replaces: "意图顶岗 screen-portrait-1（满幅 9:16，不是同一张）",
+        href: "page-1-hero-port/",
+        copies: [
+          { left: 5, top: 5, width: 26.015625, height: 90 },
+          { left: 68.984375, top: 5, width: 26.015625, height: 90 }
+        ],
+        slot: { left: 31.015625, top: 5, width: 37.96875, height: 90 }
+      },
+      {
+        id: "page-2-pair-port",
+        displayName: "双竖版并排",
+        badge: "2P",
+        blurb: "高光池双竖；两槽 3:4，上下 5%，左右与间距三等分。无文案栏。",
+        related: "同族 page-3-port。附录 A 已有同 id，边距不同",
+        replaces: "意图顶岗 screen-portrait-2-gallery（不是同一张）",
+        href: "page-2-pair-port/",
+        slots: [
+          { left: 8.020833, top: 5, width: 37.96875, height: 90 },
+          { left: 54.010417, top: 5, width: 37.96875, height: 90 }
+        ]
+      },
+      {
+        id: "page-2-1p1l",
+        displayName: "左竖右横",
+        badge: "1P1L",
+        blurb: "左竖 3:4 满高带，右横 4:3 顶齐。右下剩余文案，可空。按槽禁入。",
+        related: "兄弟 page-2-1l1p（左横右竖）",
+        replaces: "意图顶岗 screen-portrait-1-landscape-1（两槽满高 cover）",
+        href: "page-2-1p1l/",
+        hasSketch: true,
+        copy: { left: 47.96875, top: 67.708333, width: 47.03125, height: 27.291667 },
+        slots: [
+          { left: 5, top: 5, width: 37.96875, height: 90 },
+          { left: 47.96875, top: 5, width: 47.03125, height: 62.708333 }
+        ]
+      },
+      {
+        id: "page-2-1l1p",
+        displayName: "左横右竖",
+        badge: "1L1P",
+        blurb: "上一张的镜像：左横 4:3 顶齐，右竖 3:4 满高带。左下剩余文案，可空。",
+        related: "兄弟 page-2-1p1l（左竖右横）。无独立示意图",
+        replaces: "意图顶岗 screen-landscape-1-portrait-1（两槽满高 cover）",
+        href: "page-2-1l1p/",
+        hasSketch: false,
+        copy: { left: 5, top: 67.708333, width: 47.03125, height: 27.291667 },
+        slots: [
+          { left: 5, top: 5, width: 47.03125, height: 62.708333 },
+          { left: 57.03125, top: 5, width: 37.96875, height: 90 }
+        ]
+      },
+      {
+        id: "page-2-pair-land",
+        displayName: "双横版并排",
+        badge: "2L",
+        blurb: "两横槽 4:3 顶齐并排；下为通栏剩余文案，可空。竖版禁入。",
+        related: "朝向对偶 page-2-pair-port。现网 screen-landscape-2 是上下叠，不是同一张",
+        replaces: "意图顶岗 screen-landscape-2（上下 stack）",
+        href: "page-2-pair-land/",
+        copy: { left: 5, top: 61.666667, width: 90, height: 33.333333 },
+        slots: [
+          { left: 5, top: 5, width: 42.5, height: 56.666667 },
+          { left: 52.5, top: 5, width: 42.5, height: 56.666667 }
+        ]
+      },
+      {
+        id: "page-2-pair-land-ultra",
+        displayName: "双超宽叠放",
+        badge: "2L",
+        blurb: "两超宽条上下均分（64:17，不是 21:9）。左右 5%。竖版禁入。",
+        related: "参见 page-2-pair-land（4:3 并排）· page-1-hero-land-ultra（单张 21:9）",
+        replaces: "意图顶岗 screen-landscape-2（不是同一张）",
+        href: "page-2-pair-land-ultra/",
+        slots: [
+          { left: 5, top: 5, width: 90, height: 42.5 },
+          { left: 5, top: 52.5, width: 90, height: 42.5 }
+        ]
+      },
+      {
+        id: "page-3-port",
+        displayName: "三竖并排",
+        badge: "3P",
+        blurb: "三竖槽 3:4，左右 5%，剩余宽三等分，整组垂直居中。横版禁入。",
+        related: "同族 page-2-pair-port。附录 A 已有同 id，边距不同",
+        replaces: "意图顶岗 screen-portrait-3（9:16 满幅，不是同一张）",
+        href: "page-3-port/",
+        slots: [
+          { left: 5, top: 14.444444, width: 30, height: 71.111111 },
+          { left: 35, top: 14.444444, width: 30, height: 71.111111 },
+          { left: 65, top: 14.444444, width: 30, height: 71.111111 }
+        ]
+      },
+      {
+        id: "page-3-2l1p-left",
+        displayName: "左竖右双横",
+        badge: "1P2L",
+        blurb: "左竖 3:4 满高为主；右两横 4:3 叠满高。按槽禁入。",
+        related: "兄弟 page-3-2l1p-right（镜像）",
+        replaces: "意图顶岗 screen-portrait-1-landscape-2（不是同一张）",
+        href: "page-3-2l1p-left/",
+        hasSketch: true,
+        slots: [
+          { left: 9.625, top: 0, width: 42.1875, height: 100 },
+          { left: 53.8125, top: 0, width: 36.5625, height: 48.75 },
+          { left: 53.8125, top: 51.25, width: 36.5625, height: 48.75 }
+        ]
+      },
+      {
+        id: "page-3-2l1p-right",
+        displayName: "左双横右竖",
+        badge: "2L1P",
+        blurb: "上一张的镜像：左两横 4:3 叠满高，右竖 3:4 满高。",
+        related: "兄弟 page-3-2l1p-left。无独立示意图",
+        replaces: "意图顶岗 screen-landscape-2-portrait-1（不是同一张）",
+        href: "page-3-2l1p-right/",
+        hasSketch: false,
+        slots: [
+          { left: 9.625, top: 0, width: 36.5625, height: 48.75 },
+          { left: 9.625, top: 51.25, width: 36.5625, height: 48.75 },
+          { left: 48.1875, top: 0, width: 42.1875, height: 100 }
+        ]
+      },
+      {
+        id: "page-2-pair-square",
+        displayName: "双方图并排",
+        badge: "2S",
+        blurb: "两方槽 1:1，左右各 10%，剩余宽均分，垂直居中。优先方图，4:3/3:4 可进。",
+        related: "参见 page-1-hero-square-right（单方图，只进 1:1）",
+        replaces: "无合格现网顶岗",
+        href: "page-2-pair-square/",
+        slots: [
+          { left: 10, top: 14.444444, width: 40, height: 71.111111 },
+          { left: 50, top: 14.444444, width: 40, height: 71.111111 }
+        ]
+      },
+      {
+        id: "page-3-1s2l-left",
+        displayName: "左方右双横",
+        badge: "1S2L",
+        blurb: "左主 1:1 半宽；右两横 4:3（各 25% 宽）上下均分。表头写 2 槽，按图是 3 槽。",
+        related: "兄弟 page-3-1s2l-right（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-3-1s2l-left/",
+        hasSketch: true,
+        slots: [
+          { left: 0, top: 5.555556, width: 50, height: 88.888889 },
+          { left: 62.5, top: 11.111111, width: 25, height: 33.333333 },
+          { left: 62.5, top: 55.555556, width: 25, height: 33.333333 }
+        ]
+      },
+      {
+        id: "page-3-1s2l-right",
+        displayName: "左双横右方",
+        badge: "2L1S",
+        blurb: "上一张的镜像：左两横 4:3，右主 1:1 半宽。",
+        related: "兄弟 page-3-1s2l-left。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-3-1s2l-right/",
+        hasSketch: false,
+        slots: [
+          { left: 12.5, top: 11.111111, width: 25, height: 33.333333 },
+          { left: 12.5, top: 55.555556, width: 25, height: 33.333333 },
+          { left: 50, top: 5.555556, width: 50, height: 88.888889 }
+        ]
+      },
+      {
+        id: "page-2-1s1p",
+        displayName: "左方右竖",
+        badge: "1S1P",
+        blurb: "左主 1:1 半宽居中高；右竖 3:4 占页宽 25%，在右侧 50% 里居中。竖槽禁横。",
+        related: "兄弟 page-2-1p1s（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-2-1s1p/",
+        hasSketch: true,
+        slots: [
+          { left: 0, top: 5.555556, width: 50, height: 88.888889 },
+          { left: 62.5, top: 20.370370, width: 25, height: 59.259259 }
+        ]
+      },
+      {
+        id: "page-2-1p1s",
+        displayName: "左竖右方",
+        badge: "1P1S",
+        blurb: "上一张的镜像：左竖 3:4 占页宽 25%，右主 1:1 半宽。",
+        related: "兄弟 page-2-1s1p。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-2-1p1s/",
+        hasSketch: false,
+        slots: [
+          { left: 12.5, top: 20.370370, width: 25, height: 59.259259 },
+          { left: 50, top: 5.555556, width: 50, height: 88.888889 }
+        ]
+      },
+      {
+        id: "page-2-1l1p-wide",
+        displayName: "左宽右竖",
+        badge: "1L1P",
+        blurb: "左主 16:9 占页宽 60%；右竖 3:4 占页宽 25%；左右与间距各 5%。按槽禁入。与 4:3 的 page-2-1l1p 不是同一张。",
+        related: "兄弟 page-2-1p1l-wide（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-2-1l1p-wide/",
+        hasSketch: true,
+        slots: [
+          { left: 5, top: 20, width: 60, height: 60 },
+          { left: 70, top: 20.370370, width: 25, height: 59.259259 }
+        ]
+      },
+      {
+        id: "page-2-1p1l-wide",
+        displayName: "左竖右宽",
+        badge: "1P1L",
+        blurb: "上一张的镜像：左竖 3:4 占页宽 25%，右主 16:9 占页宽 60%。",
+        related: "兄弟 page-2-1l1p-wide。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-2-1p1l-wide/",
+        hasSketch: false,
+        slots: [
+          { left: 5, top: 20.370370, width: 25, height: 59.259259 },
+          { left: 35, top: 20, width: 60, height: 60 }
+        ]
+      },
+      {
+        id: "page-3-land",
+        displayName: "三横并排",
+        badge: "3L",
+        blurb: "三横槽 4:3 一行三等分，左右 5%。顶底通栏文案，可空。竖版禁入。现网三横是上下叠，不是同一张。",
+        related: "同族 page-2-pair-land。朝向对偶 page-3-port",
+        replaces: "意图顶岗 screen-landscape-3（上下 stack）",
+        href: "page-3-land/",
+        hasSketch: true,
+        copies: [
+          { left: 5, top: 0, width: 90, height: 30 },
+          { left: 5, top: 70, width: 90, height: 30 }
+        ],
+        slots: [
+          { left: 5, top: 30, width: 30, height: 40 },
+          { left: 35, top: 30, width: 30, height: 40 },
+          { left: 65, top: 30, width: 30, height: 40 }
+        ]
+      },
+      {
+        id: "page-3-port-hero-left",
+        displayName: "左大右双小",
+        badge: "3P",
+        blurb: "左主 3:4 上下 5%；右两辅 3:4 均分剩余宽，垂直居中。横版禁入。与等权三竖 page-3-port 不是同一张。",
+        related: "兄弟 page-3-port-hero-right（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-3-port-hero-left/",
+        hasSketch: true,
+        slots: [
+          { left: 5, top: 5, width: 37.96875, height: 90 },
+          { left: 47.96875, top: 22.129630, width: 23.515625, height: 55.740741 },
+          { left: 71.484375, top: 22.129630, width: 23.515625, height: 55.740741 }
+        ]
+      },
+      {
+        id: "page-3-port-hero-right",
+        displayName: "左双小右大",
+        badge: "3P",
+        blurb: "上一张的镜像：左两辅 3:4，右主 3:4 上下 5%。",
+        related: "兄弟 page-3-port-hero-left。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-3-port-hero-right/",
+        hasSketch: false,
+        slots: [
+          { left: 5, top: 22.129630, width: 23.515625, height: 55.740741 },
+          { left: 28.515625, top: 22.129630, width: 23.515625, height: 55.740741 },
+          { left: 57.03125, top: 5, width: 37.96875, height: 90 }
+        ]
+      },
+      {
+        id: "page-3-2l1p-hero-left",
+        displayName: "左主横右上横下竖",
+        badge: "2L1P",
+        blurb: "左主 4:3 占页宽 71%；右上横 4:3、右下竖 3:4 各占 25%；列缝 4%。按槽禁入。与竖主的 page-3-2l1p-left 不是同一张。",
+        related: "兄弟 page-3-2l1p-hero-right（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-3-2l1p-hero-left/",
+        hasSketch: true,
+        slots: [
+          { left: 0, top: 2.666667, width: 71, height: 94.666667 },
+          { left: 75, top: 2.666667, width: 25, height: 33.333333 },
+          { left: 75, top: 38.074074, width: 25, height: 59.259259 }
+        ]
+      },
+      {
+        id: "page-3-2l1p-hero-right",
+        displayName: "左上横下竖右主横",
+        badge: "1P2L",
+        blurb: "上一张的镜像：左上横 4:3、左下竖 3:4，右主 4:3 占页宽 71%。栏内仍是上横下竖。",
+        related: "兄弟 page-3-2l1p-hero-left。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-3-2l1p-hero-right/",
+        hasSketch: false,
+        slots: [
+          { left: 0, top: 2.666667, width: 25, height: 33.333333 },
+          { left: 0, top: 38.074074, width: 25, height: 59.259259 },
+          { left: 29, top: 2.666667, width: 71, height: 94.666667 }
+        ]
+      },
+      {
+        id: "page-4-grid-land",
+        displayName: "横版四宫",
+        badge: "4L",
+        blurb: "2×2 横槽 4:3；单槽高 4/9，剩余宽高各自三等分。竖版禁入。用途栏写三张，按图是四槽。与附录 A 同 id、边距不同。",
+        related: "同族 page-2-pair-land · page-3-land",
+        replaces: "意图顶岗 screen-landscape-4（偏满幅）",
+        href: "page-4-grid-land/",
+        hasSketch: true,
+        slots: [
+          { left: 11.111111, top: 3.703704, width: 33.333333, height: 44.444444 },
+          { left: 55.555556, top: 3.703704, width: 33.333333, height: 44.444444 },
+          { left: 11.111111, top: 51.851852, width: 33.333333, height: 44.444444 },
+          { left: 55.555556, top: 51.851852, width: 33.333333, height: 44.444444 }
+        ]
+      },
+      {
+        id: "page-4-1p3l-left",
+        displayName: "左竖右三横",
+        badge: "1P3L",
+        blurb: "左竖 3:4 高 8/9；右上两横各 3/16、右下横 7/16。两列等高。按槽禁入。",
+        related: "兄弟 page-4-1p3l-right（镜像）",
+        replaces: "无合格现网顶岗",
+        href: "page-4-1p3l-left/",
+        hasSketch: true,
+        slots: [
+          { left: 6.25, top: 5.555556, width: 37.5, height: 88.888889 },
+          { left: 50, top: 5.555556, width: 18.75, height: 25 },
+          { left: 75, top: 5.555556, width: 18.75, height: 25 },
+          { left: 50, top: 36.111111, width: 43.75, height: 58.333333 }
+        ]
+      },
+      {
+        id: "page-4-1p3l-right",
+        displayName: "左三横右竖",
+        badge: "3L1P",
+        blurb: "上一张的镜像：左上两横各 3/16、左下横 7/16，右竖 3:4 高 8/9。栏内仍是上二下一。",
+        related: "兄弟 page-4-1p3l-left。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-4-1p3l-right/",
+        hasSketch: false,
+        slots: [
+          { left: 6.25, top: 5.555556, width: 18.75, height: 25 },
+          { left: 31.25, top: 5.555556, width: 18.75, height: 25 },
+          { left: 6.25, top: 36.111111, width: 43.75, height: 58.333333 },
+          { left: 56.25, top: 5.555556, width: 37.5, height: 88.888889 }
+        ]
+      }
+    ];
+
+    const board = document.getElementById("board");
+    const filtersEl = document.getElementById("filters");
+    const toggle = document.getElementById("toggle-copy");
+    let showCopy = true;
+    let slotFilter = 0;
+
+    function slotCount(face) {
+      if (face.slots) return face.slots.length;
+      if (face.slot) return 1;
+      return 0;
+    }
+
+    function pct(box) {
+      return `left:${box.left}%;top:${box.top}%;width:${box.width}%;height:${box.height}%`;
+    }
+
+    function slotOrient(box) {
+      if (box.orient === "landscape" || box.orient === "portrait" || box.orient === "square") {
+        return box.orient === "landscape" ? "l" : box.orient === "portrait" ? "p" : "s";
+      }
+      const ratio = (box.width / box.height) * (16 / 9);
+      if (ratio > 1.08) return "l";
+      if (ratio < 0.92) return "p";
+      return "s";
+    }
+
+    function cardHtml(face) {
+      const copyBoxes = face.copies || (face.copy ? [face.copy] : []);
+      const slotBoxes = face.slots || (face.slot ? [face.slot] : []);
+      const copyClass = showCopy ? "region copy" : "region copy is-empty";
+      const copyHtml = copyBoxes.map((box) => `<div class="${copyClass}" style="${pct(box)}"></div>`).join("");
+      const slotHtml = slotBoxes.map((box) => `<div class="region slot ${slotOrient(box)}" style="${pct(box)}"></div>`).join("");
+      return `
+        <article class="card">
+          <div class="stage" aria-label="${face.id}">
+            ${copyHtml}
+            ${slotHtml}
+            <span class="badge">${face.badge}</span>
+          </div>
+          <div class="meta">
+            <div class="id-row"><code>${face.id}</code></div>
+            <p class="name">${face.displayName}</p>
+            <p class="blurb">${face.blurb}</p>
+            <p class="links">
+              <a href="${face.href}packet.yaml">数据包</a> ·
+              <a href="${face.href}USAGE.md">使用说明</a>${face.hasSketch === false ? "" : ` · <a href="${face.href}sketch.png">示意图</a>`}
+            </p>
+            <p class="note">${face.related}<br>${face.replaces}</p>
+          </div>
+        </article>`;
+    }
+
+    function countsBySlot() {
+      const map = new Map();
+      for (const face of FACES) {
+        const n = slotCount(face);
+        map.set(n, (map.get(n) || 0) + 1);
+      }
+      return [...map.entries()].sort((a, b) => a[0] - b[0]);
+    }
+
+    function readHash() {
+      const m = /(?:^|#|&)slots=(\d+)/.exec(location.hash);
+      slotFilter = m ? Number(m[1]) : 0;
+    }
+
+    function writeHash() {
+      const next = slotFilter ? `#slots=${slotFilter}` : "#";
+      if (location.hash !== next) history.replaceState(null, "", next);
+    }
+
+    function renderFilters() {
+      const counts = countsBySlot();
+      const allN = FACES.length;
+      const chips = [
+        { n: 0, label: `全部 <span class="n">${allN}</span>` },
+        ...counts.map(([n, c]) => ({ n, label: `${n} 张 <span class="n">${c}</span>` }))
+      ];
+      filtersEl.innerHTML = chips.map((chip) =>
+        `<button type="button" data-slots="${chip.n}" aria-pressed="${slotFilter === chip.n}">${chip.label}</button>`
+      ).join("");
+    }
+
+    function render() {
+      toggle.setAttribute("aria-pressed", showCopy ? "true" : "false");
+      toggle.textContent = showCopy ? "文案：有字" : "文案：没字（槽位不动）";
+      renderFilters();
+      const groups = countsBySlot()
+        .map(([n]) => ({ n, faces: FACES.filter((f) => slotCount(f) === n) }))
+        .filter((g) => !slotFilter || g.n === slotFilter);
+      board.innerHTML = groups.map((g) => `
+        <section class="group">
+          <h2>${g.n} 张<small>${g.faces.length} 面</small></h2>
+          <div class="grid">${g.faces.map(cardHtml).join("")}</div>
+        </section>`).join("");
+    }
+
+    filtersEl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-slots]");
+      if (!btn) return;
+      slotFilter = Number(btn.dataset.slots);
+      writeHash();
+      render();
+    });
+    toggle.addEventListener("click", () => {
+      showCopy = !showCopy;
+      render();
+    });
+    window.addEventListener("hashchange", () => {
+      readHash();
+      render();
+    });
+    readHash();
+    render();
+  </script>
+</body>
+</html>

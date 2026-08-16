@@ -1,0 +1,71 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-pair-square
+version: 1
+status: sketch
+kind: primitive
+displayName: 双方图并排
+sketchName: 2张 正方形
+familyId: square-row
+canonical: page-2-pair-square
+related: [page-1-hero-square-right]
+seeAlso: [page-2-pair-port, page-2-pair-land]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: pair-square
+
+stage:
+  aspect: "16:9"
+  # 左右各 10% 页宽。剩余宽均分给两槽（文字未写间距 → gapX = 0）。
+  # 上下不写死边距：方槽按 1:1 求解后垂直居中。
+  margin:
+    left: 0.10
+    right: 0.10
+  gapX: 0
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 2
+# 示意图表写成「横 2 / 竖 0」。1:1 不当又一种横（D-U-17），记方槽。
+mix: { portrait: 0, landscape: 0, square: 2 }
+
+placement:
+  groupAlign: center
+  distribute: even-x
+
+slots:
+  - { index: 0, role: square, orient: square, aspect: "1:1" }
+  - { index: 1, role: square, orient: square, aspect: "1:1" }
+
+copyRegions: []
+
+admit:
+  preferAspect: "1:1"
+  allowOrient: [square, landscape, portrait]
+  # 优先方图。无方图时 4:3 / 3:4 可进，走相对槽三条（不是硬裁成方）。
+  # 与 page-1-hero-square-right「只进 1:1」不同。
+
+themes: [portrait, landscape, architecture, detail]
+usage:
+  whenToUse: 两张方图并排；或一对方图感的人像 / 风景
+  whenNotToUse: 必须消化超宽；需要明显主次；只要一张方图 → 用 page-1-hero-square-right
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2S
+  thumb: 两方槽 1:1 并排，左右各 10%，整组垂直居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 1:1）---
+#   slotWidth  = 0.80 W / 2 = 0.40 W
+#   slotHeight = 0.40 W = 0.711111 H
+#   slotTop    = (1 - 0.711111) / 2 H = 0.144444 H
+#   slot0.left = 0.10 W
+#   slot1.left = 0.50 W
+# 示意图细缝按描边，不另加 gapX。

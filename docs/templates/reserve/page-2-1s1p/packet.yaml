@@ -1,0 +1,67 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-2-1s1p
+version: 1
+status: sketch
+kind: primitive
+displayName: 左方右竖
+sketchName: 一方一竖
+familyId: mix-1s1p
+canonical: page-2-1s1p
+related: [page-2-1p1s]
+seeAlso: [page-3-1s2l-left, page-2-1p1l, page-1-hero-square-right, page-2-pair-square]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: mix-1s1p
+
+stage:
+  aspect: "16:9"
+  # 主图 1:1 = 页宽 50%，左齐，垂直居中（上下自然留白）。
+  # 竖槽 3:4 = 页宽 25%；右侧剩余 50% 里：左缝 = 右页边 = 12.5%，垂直居中。
+
+slotCount: 2
+mix: { portrait: 1, landscape: 0, square: 1 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-square-right-port
+
+slots:
+  - { index: 0, role: main, orient: square, aspect: "1:1" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 方槽：优先 1:1，4:3 / 3:4 可进
+  # 竖槽：禁横，优先 3:4
+
+themes: [portrait, architecture, detail, sequence]
+usage:
+  whenToUse: 一张方图为主，一张 3:4 竖图辅
+  whenNotToUse: 没有方图且不能接受 4:3/3:4 进方槽；竖图更适合靠左 → 用 page-2-1p1s；需要等权双方 / 双竖
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图写方槽「允许裁切填满」；本库仍走相对槽三条（与 page-3-1s2l 同）。
+
+glyph:
+  badge: 1S1P
+  thumb: 左方 1:1 半宽居中高；右竖 3:4 占页宽 25%，在右侧 50% 里居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   square: left 0, width 0.50 W, height 0.50 W = 0.888889 H, top 0.055556 H
+#   portW  = 0.25 W
+#   portH  = 0.25 * (4/3) W = 0.333333 W = 0.592593 H
+#   portLeft = 0.50 + 0.125 = 0.625 W
+#   portTop  = (1 - 0.592593) / 2 = 0.203704 H
+# 用途栏只写「1 张正方形人像或风景」，按图是一方一竖。
