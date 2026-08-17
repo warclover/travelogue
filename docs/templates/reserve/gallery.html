@@ -59,6 +59,29 @@
       color: var(--muted); font-variant-numeric: tabular-nums;
     }
     .toolbar button[aria-pressed="true"] .n { color: var(--gold); }
+    .card.is-core { border-color: #5a4a28; }
+    .star-pick { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; flex-shrink: 0; }
+    .star-pick button {
+      font: inherit; font-size: 11px; line-height: 1;
+      color: var(--muted); background: #0e0d0c;
+      border: 1px solid var(--line); border-radius: 4px;
+      padding: 3px 7px; cursor: pointer;
+    }
+    .star-pick button[aria-pressed="true"] {
+      border-color: var(--gold); color: var(--gold);
+    }
+    .banner {
+      display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin: 0 0 14px; padding: 8px 10px;
+      border: 1px solid #5a4a28; border-radius: 6px;
+      font-size: 12px; color: var(--gold);
+    }
+    .banner.is-on { display: flex; }
+    .banner button {
+      font: inherit; font-size: 12px; color: var(--gold);
+      background: #0e0d0c; border: 1px solid var(--gold);
+      border-radius: 4px; padding: 4px 10px; cursor: pointer;
+    }
     .group { margin: 0 0 28px; }
     .group h2 {
       margin: 0 0 10px;
@@ -127,7 +150,7 @@
     <p>
       设计收件箱，不是附录 A。说明见 <a href="./README.md">README</a> · <a href="./CATALOG.md">总表</a>。
       色块：<span class="swatch p"></span> 竖槽 · <span class="swatch l"></span> 横槽 · <span class="swatch s"></span> 方槽 · <span class="swatch copy"></span> 文案（可空）。
-      微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
+      星级权威 <a href="./stars.yaml">stars.yaml</a>：点卡片上的无 / ★ / ★★ / ★★★，再按「写入本库」。微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
     </p>
   </header>
   <main>
@@ -135,6 +158,14 @@
       <button type="button" id="toggle-copy" aria-pressed="true">文案：有字</button>
       <span class="sep" aria-hidden="true"></span>
       <div id="filters" class="toolbar" style="margin:0;padding:0"></div>
+      <span class="sep" aria-hidden="true"></span>
+      <div id="star-filters" class="toolbar" style="margin:0;padding:0"></div>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" class="js-save-stars" id="save-stars">写入本库</button>
+    </div>
+    <div id="star-banner" class="banner" role="status">
+      草稿未写入 <code>stars.yaml</code>。
+      <button type="button" class="js-save-stars">写入本库</button>
     </div>
     <div id="board"></div>
   </main>
@@ -536,14 +567,148 @@
           { left: 6.25, top: 36.111111, width: 43.75, height: 58.333333 },
           { left: 56.25, top: 5.555556, width: 37.5, height: 88.888889 }
         ]
+      },
+      {
+        id: "page-3-2p1s",
+        displayName: "两竖夹一方",
+        badge: "2P1S",
+        blurb: "左右竖 3:4、中方 1:1，三槽同高 6/9，垂直居中。竖槽禁横。表头写竖 1，按图是 2 竖 + 1 方。",
+        related: "参见 page-3-port（等权三竖）· page-2-1s1p（一方一竖）",
+        replaces: "无合格现网顶岗",
+        href: "page-3-2p1s/",
+        hasSketch: true,
+        slots: [
+          { left: 1.5625, top: 16.666667, width: 28.125, height: 66.666667 },
+          { left: 31.25, top: 16.666667, width: 37.5, height: 66.666667 },
+          { left: 70.3125, top: 16.666667, width: 28.125, height: 66.666667 }
+        ]
       }
     ];
 
+    const STORE_KEY = "reserve-stars-draft-v1";
+    const SEED = {
+      "page-2-pair-port": 3,
+      "page-2-pair-land": 3,
+      "page-2-1l1p-wide": 3,
+      "page-3-port": 3,
+      "page-3-2l1p-left": 3,
+      "page-4-grid-land": 3,
+      "page-3-2p1s": 3
+    };
+
     const board = document.getElementById("board");
     const filtersEl = document.getElementById("filters");
+    const starFiltersEl = document.getElementById("star-filters");
     const toggle = document.getElementById("toggle-copy");
+    const banner = document.getElementById("star-banner");
     let showCopy = true;
     let slotFilter = 0;
+    let starFilter = -1;
+    let fileStars = {};
+    let liveStars = {};
+
+    function parseStarsYaml(text) {
+      const out = {};
+      for (const raw of String(text).split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith("#")) continue;
+        const m = /^([a-z0-9-]+):\s*([0-3])\s*$/.exec(line);
+        if (m) out[m[1]] = Number(m[2]);
+      }
+      return out;
+    }
+
+    function serializeStarsYaml(map) {
+      const ids = FACES.map((f) => f.id).filter((id) => (map[id] || 0) > 0);
+      ids.sort((a, b) => (map[b] - map[a]) || a.localeCompare(b));
+      const lines = [
+        "# 备用库星级 · 权威。未列出 = 0。镜像不自动继承。",
+        "# 0 无星 · 1 · 2 · 3 最常用",
+        "# 在 gallery.html 点星后用「写入本库」覆盖本文件。",
+        ""
+      ];
+      for (const id of ids) lines.push(`${id}: ${map[id]}`);
+      return `${lines.join("\n")}\n`;
+    }
+
+    function cloneStars(map) {
+      return { ...map };
+    }
+
+    function isDirty() {
+      return serializeStarsYaml(liveStars) !== serializeStarsYaml(fileStars);
+    }
+
+    function persistDraft() {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({ stars: liveStars, file: fileStars }));
+      } catch (_) { /* ignore quota */ }
+    }
+
+    function faceStars(face) {
+      return liveStars[face.id] || 0;
+    }
+
+    function setStars(id, n) {
+      const cur = liveStars[id] || 0;
+      const next = n === 0 || n === cur ? 0 : n;
+      if (next) liveStars[id] = next;
+      else delete liveStars[id];
+      persistDraft();
+      render();
+    }
+
+    function starText(n) {
+      return n ? "★".repeat(n) : "无星";
+    }
+
+    async function loadStars() {
+      let fromFile = null;
+      try {
+        const res = await fetch("./stars.yaml", { cache: "no-store" });
+        if (res.ok) fromFile = parseStarsYaml(await res.text());
+      } catch (_) { /* file:// 常读不到 */ }
+      fileStars = fromFile || cloneStars(SEED);
+      liveStars = cloneStars(fileStars);
+      try {
+        const draft = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+        if (draft && draft.stars && typeof draft.stars === "object") {
+          const fileSame = serializeStarsYaml(draft.file || {}) === serializeStarsYaml(fileStars);
+          if (fileSame) liveStars = cloneStars(draft.stars);
+        }
+      } catch (_) { /* ignore bad draft */ }
+    }
+
+    async function saveStars() {
+      const text = serializeStarsYaml(liveStars);
+      try {
+        if (window.showSaveFilePicker) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: "stars.yaml",
+            id: "reserve-stars",
+            types: [{ description: "YAML", accept: { "text/yaml": [".yaml"], "text/plain": [".yaml"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(text);
+          await writable.close();
+          fileStars = cloneStars(liveStars);
+          persistDraft();
+          render();
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      const blob = new Blob([text], { type: "text/yaml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "stars.yaml";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      fileStars = cloneStars(liveStars);
+      persistDraft();
+      render();
+    }
 
     function slotCount(face) {
       if (face.slots) return face.slots.length;
@@ -571,15 +736,23 @@
       const copyClass = showCopy ? "region copy" : "region copy is-empty";
       const copyHtml = copyBoxes.map((box) => `<div class="${copyClass}" style="${pct(box)}"></div>`).join("");
       const slotHtml = slotBoxes.map((box) => `<div class="region slot ${slotOrient(box)}" style="${pct(box)}"></div>`).join("");
+      const n = faceStars(face);
+      const cardClass = n === 3 ? "card is-core" : "card";
+      const pick = [0, 1, 2, 3].map((k) =>
+        `<button type="button" data-star="${k}" aria-pressed="${n === k}">${k ? "★".repeat(k) : "无"}</button>`
+      ).join("");
       return `
-        <article class="card">
+        <article class="${cardClass}">
           <div class="stage" aria-label="${face.id}">
             ${copyHtml}
             ${slotHtml}
             <span class="badge">${face.badge}</span>
           </div>
           <div class="meta">
-            <div class="id-row"><code>${face.id}</code></div>
+            <div class="id-row">
+              <code>${face.id}</code>
+              <div class="star-pick" data-id="${face.id}">${pick}</div>
+            </div>
             <p class="name">${face.displayName}</p>
             <p class="blurb">${face.blurb}</p>
             <p class="links">
@@ -600,13 +773,26 @@
       return [...map.entries()].sort((a, b) => a[0] - b[0]);
     }
 
+    function visibleFaces() {
+      return FACES.filter((f) => {
+        if (slotFilter && slotCount(f) !== slotFilter) return false;
+        if (starFilter >= 0 && faceStars(f) !== starFilter) return false;
+        return true;
+      });
+    }
+
     function readHash() {
-      const m = /(?:^|#|&)slots=(\d+)/.exec(location.hash);
-      slotFilter = m ? Number(m[1]) : 0;
+      const mSlots = /(?:^|#|&)slots=(\d+)/.exec(location.hash);
+      const mStars = /(?:^|#|&)stars=(\d+)/.exec(location.hash);
+      slotFilter = mSlots ? Number(mSlots[1]) : 0;
+      starFilter = mStars ? Number(mStars[1]) : -1;
     }
 
     function writeHash() {
-      const next = slotFilter ? `#slots=${slotFilter}` : "#";
+      const parts = [];
+      if (slotFilter) parts.push(`slots=${slotFilter}`);
+      if (starFilter >= 0) parts.push(`stars=${starFilter}`);
+      const next = parts.length ? `#${parts.join("&")}` : "#";
       if (location.hash !== next) history.replaceState(null, "", next);
     }
 
@@ -620,15 +806,31 @@
       filtersEl.innerHTML = chips.map((chip) =>
         `<button type="button" data-slots="${chip.n}" aria-pressed="${slotFilter === chip.n}">${chip.label}</button>`
       ).join("");
+      const starCounts = [0, 1, 2, 3].map((n) => [n, FACES.filter((f) => faceStars(f) === n).length]);
+      const starChips = [
+        { n: -1, label: "星级全部" },
+        ...starCounts.filter(([, c]) => c).map(([n, c]) => ({
+          n,
+          label: `${starText(n)} <span class="n">${c}</span>`
+        }))
+      ];
+      starFiltersEl.innerHTML = starChips.map((chip) =>
+        `<button type="button" data-stars="${chip.n}" aria-pressed="${starFilter === chip.n}">${chip.label}</button>`
+      ).join("");
     }
 
     function render() {
       toggle.setAttribute("aria-pressed", showCopy ? "true" : "false");
       toggle.textContent = showCopy ? "文案：有字" : "文案：没字（槽位不动）";
+      banner.classList.toggle("is-on", isDirty());
       renderFilters();
+      const shown = visibleFaces();
       const groups = countsBySlot()
-        .map(([n]) => ({ n, faces: FACES.filter((f) => slotCount(f) === n) }))
-        .filter((g) => !slotFilter || g.n === slotFilter);
+        .map(([n]) => ({
+          n,
+          faces: shown.filter((f) => slotCount(f) === n).sort((a, b) => faceStars(b) - faceStars(a))
+        }))
+        .filter((g) => g.faces.length);
       board.innerHTML = groups.map((g) => `
         <section class="group">
           <h2>${g.n} 张<small>${g.faces.length} 面</small></h2>
@@ -643,6 +845,23 @@
       writeHash();
       render();
     });
+    starFiltersEl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-stars]");
+      if (!btn) return;
+      starFilter = Number(btn.dataset.stars);
+      writeHash();
+      render();
+    });
+    board.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button[data-star]");
+      if (!btn) return;
+      const pick = btn.closest("[data-id]");
+      if (!pick) return;
+      setStars(pick.dataset.id, Number(btn.dataset.star));
+    });
+    document.addEventListener("click", (ev) => {
+      if (ev.target.closest(".js-save-stars")) saveStars();
+    });
     toggle.addEventListener("click", () => {
       showCopy = !showCopy;
       render();
@@ -652,7 +871,7 @@
       render();
     });
     readHash();
-    render();
+    loadStars().then(render);
   </script>
 </body>
 </html>

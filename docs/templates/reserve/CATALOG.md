@@ -1,6 +1,6 @@
 # 备用库总表
 
-人读索引。机器合同以 [catalog.yaml](./catalog.yaml) 与各夹 `packet.yaml` 为准。微缩见 [gallery.html](./gallery.html)。
+人读索引。机器合同以 [catalog.yaml](./catalog.yaml) 与各夹 `packet.yaml` 为准。微缩见 [gallery.html](./gallery.html)。星级只看 [stars.yaml](./stars.yaml)，本表不列。
 
 | 备用 id | 中文名 | 账徽 | 槽 | 角色 | 同族兄弟 | 意图顶岗 | 状态 |
 |---------|--------|------|----|------|----------|----------|------|
@@ -32,6 +32,7 @@
 | `page-4-grid-land` | 横版四宫 | `4L` | 4L | `grid-4-land` | `page-2-pair-land` · `page-3-land` | `screen-landscape-4`（偏满幅，不是同一张） | sketch |
 | `page-4-1p3l-left` | 左竖右三横 | `1P3L` | 1P3L | `port-stack-3l` | **`page-4-1p3l-right`** | 无合格现网顶岗 | sketch |
 | `page-4-1p3l-right` | 左三横右竖 | `3L1P` | 3L1P | `stack-3l-port` | **`page-4-1p3l-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-3-2p1s` | 两竖夹一方 | `2P1S` | 2P1S | `row-2p1s` | `page-3-port` · `page-2-1s1p` | 无合格现网顶岗 | sketch |
 
 ---
 
@@ -61,3 +62,6 @@
 | 0.18.0 | 2026-08-16 | 收 `page-3-2l1p-hero-left`（71% 横主 + 右上横下竖）+ 镜像 `page-3-2l1p-hero-right`。 |
 | 0.19.0 | 2026-08-16 | 收 `page-4-grid-land`（2×2 四横；用途栏「三张」已按图更正；与附录 A 同 id、边距不同）。 |
 | 0.20.0 | 2026-08-16 | 收 `page-4-1p3l-left`（左竖 8/9 + 右上二下一横）+ 镜像 `page-4-1p3l-right`。 |
+| 0.21.0 | 2026-08-17 | 收 `page-3-2p1s`（两竖夹一方；表头竖槽数已按图更正）。 |
+| 0.22.0 | 2026-08-17 | 建四档星级（0–3）；七张标 ★★★：`pair-port` / `pair-land` / `1l1p-wide` / `page-3-port` / `2l1p-left` / `grid-land` / `2p1s`。 |
+| 0.23.0 | 2026-08-17 | 星级改由 `stars.yaml` 权威；微缩页点星后「写入本库」。 |

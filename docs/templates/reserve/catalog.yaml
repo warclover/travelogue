@@ -342,3 +342,15 @@ faces:
     packet: page-4-1p3l-right/packet.yaml
     usage: page-4-1p3l-right/USAGE.md
     sketch: null
+  - id: page-3-2p1s
+    status: sketch
+    displayName: 两竖夹一方
+    badge: 2P1S
+    mix: { portrait: 2, landscape: 0, square: 1 }
+    role: row-2p1s
+    familyId: port-square-row
+    related: [page-3-port, page-2-1s1p, page-2-pair-square]
+    replaces: null
+    packet: page-3-2p1s/packet.yaml
+    usage: page-3-2p1s/USAGE.md
+    sketch: page-3-2p1s/sketch.png

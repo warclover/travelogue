@@ -1,0 +1,79 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-3-2p1s
+version: 1
+status: sketch
+kind: primitive
+displayName: 两竖夹一方
+sketchName: 两竖一方
+familyId: port-square-row
+canonical: page-3-2p1s
+related: [page-3-port, page-2-1s1p, page-2-pair-square]
+seeAlso: [page-3-port-hero-left, page-1-hero-square-right]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: row-2p1s
+
+stage:
+  aspect: "16:9"
+  # 三槽同高 6/9 页高，垂直居中。竖槽 3:4、中槽 1:1 按高求解。
+  # 剩余宽 1/16 四等分 → 左 / 缝 / 缝 / 右各 1/64。
+  margin:
+    top: 0.166667
+    right: 0.015625
+    bottom: 0.166667
+    left: 0.015625
+  gapX: 0.015625
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+# 示意图表写成「竖 1」。图上是 2 竖 + 1 方，按图。
+mix: { portrait: 2, landscape: 0, square: 1 }
+
+placement:
+  groupAlign: center
+  distribute: even-x
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: main, orient: square, aspect: "1:1" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 方槽：优先 1:1；无方图时 4:3 可进（示意图写可裁成 1:1；本库仍走相对槽三条）
+
+themes: [portrait, architecture, detail, sequence]
+usage:
+  whenToUse: 一张方图居中，左右各一张竖图，等高无主次高低
+  whenNotToUse: 三张等权竖图 → 用 page-3-port；没有方图且不能接受 4:3 进方槽；必须消化超宽
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 2P1S
+  thumb: 左右竖 3:4、中方 1:1，三槽同高 6/9，垂直居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   slotH = 6/9 H = 2/3 H = 0.375 W
+#   portW = 0.375 * (3/4) W = 0.28125 W
+#   sqW   = 0.375 W
+#   三槽合计 0.9375 W；剩余 0.0625 W 四等分 = 0.015625 W
+#   port0: left 0.015625 W, top 1/6 H
+#   square: left 0.3125 W, top 1/6 H
+#   port1: left 0.703125 W, top 1/6 H
+# 表头竖槽数按图更正为 2。左右对称，无镜像兄弟。
