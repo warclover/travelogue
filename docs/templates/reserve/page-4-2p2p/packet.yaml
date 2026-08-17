@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-4-2p2p
+version: 1
+status: sketch
+kind: primitive
+displayName: 两大夹两小竖
+sketchName: 4竖2大2小
+familyId: port-4p
+canonical: page-4-2p2p
+related: [page-5-1p4p-left]
+seeAlso: [page-4-port, page-3-port-hero-left, page-4-2p2l-cross]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-bookend-2p
+
+stage:
+  aspect: "16:9"
+  # 大/小竖尺寸与 page-5-1p4p-left 相同，只改位置：左右两大、中间两小叠。
+  # 中间两小 3:4 各宽 18.75%；顶 / 行缝 / 底各 1/27。
+  # 两大 3:4，高与中列外沿齐（25/27）。
+  # 三组剩余宽四等分（两主 + 一小列，余宽只剩 3.125%，每道缝 0.78125%）。
+  margin:
+    top: 0.037037
+    right: 0.007812
+    bottom: 0.037037
+    left: 0.007812
+  gapX: 0.007812
+  gapY: 0.037037
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 4
+mix: { portrait: 4, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: bookend-mains-center-stack
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 两张大竖夹一对小竖；人像对望或两组对照
+  whenNotToUse: 只要一张大竖四小 → 用 page-5-1p4p-left；四竖等权 → 用 page-4-port；必须消化横图
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更高则以高对齐、左右留白」。本库仍走相对槽三条。
+
+glyph:
+  badge: 2P2P
+  thumb: 左右主 3:4 高 25/27；中两小 3:4 各宽 18.75%，顶/缝/底各 1/27
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 3:4；尺寸同 page-5-1p4p-left）---
+#   smallW = 0.1875 W；smallH = 4/9 H
+#   mainH = 25/27 H；mainW = 25/64 W = 0.390625 W
+#   三组宽 0.390625 × 2 + 0.1875 = 0.96875；余宽 0.03125 / 4 = 0.007812
+#   mainL: left 0.007812
+#   small: left 0.406250
+#   mainR: left 0.601562
+#   上行 top 1/27；下行 top 14/27
+# 左右对称，无镜像兄弟。
+# 与 page-4-2p2l-cross（两竖两横十字）不是同一张。

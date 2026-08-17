@@ -486,6 +486,18 @@ faces:
     packet: page-4-port/packet.yaml
     usage: page-4-port/USAGE.md
     sketch: page-4-port/sketch.png
+  - id: page-4-2p2p
+    status: sketch
+    displayName: 两大夹两小竖
+    badge: 2P2P
+    mix: { portrait: 4, landscape: 0 }
+    role: port-bookend-2p
+    familyId: port-4p
+    related: [page-5-1p4p-left]
+    replaces: null
+    packet: page-4-2p2p/packet.yaml
+    usage: page-4-2p2p/USAGE.md
+    sketch: page-4-2p2p/sketch.png
   - id: page-5-1p4l-left
     status: sketch
     displayName: 左竖右四横
@@ -509,6 +521,30 @@ faces:
     replaces: screen-mosaic-5-1p4l-portrait-hero
     packet: page-5-1p4l-right/packet.yaml
     usage: page-5-1p4l-right/USAGE.md
+    sketch: null
+  - id: page-5-1p4p-left
+    status: sketch
+    displayName: 左大竖右四小竖
+    badge: 1P4P
+    mix: { portrait: 5, landscape: 0 }
+    role: port-grid-4p
+    familyId: port-4p
+    related: [page-5-1p4p-right]
+    replaces: null
+    packet: page-5-1p4p-left/packet.yaml
+    usage: page-5-1p4p-left/USAGE.md
+    sketch: page-5-1p4p-left/sketch.png
+  - id: page-5-1p4p-right
+    status: sketch
+    displayName: 左四小竖右大竖
+    badge: 4P1P
+    mix: { portrait: 5, landscape: 0 }
+    role: grid-4p-port
+    familyId: port-4p
+    related: [page-5-1p4p-left]
+    replaces: null
+    packet: page-5-1p4p-right/packet.yaml
+    usage: page-5-1p4p-right/USAGE.md
     sketch: null
   - id: page-7-1p6l-left
     status: sketch
@@ -642,6 +678,78 @@ faces:
     packet: page-8-grid-land/packet.yaml
     usage: page-8-grid-land/USAGE.md
     sketch: page-8-grid-land/sketch.png
+  - id: page-10-grid-port
+    status: sketch
+    displayName: 竖版十宫格
+    badge: 10P
+    mix: { portrait: 10, landscape: 0 }
+    role: grid-10-port
+    familyId: portrait-grid
+    related: [page-4-port, page-5-1p4p-left]
+    replaces: null
+    packet: page-10-grid-port/packet.yaml
+    usage: page-10-grid-port/USAGE.md
+    sketch: page-10-grid-port/sketch.png
+  - id: page-8-2l6p
+    status: sketch
+    displayName: 上横三竖下三竖横
+    badge: 2L6P
+    mix: { portrait: 6, landscape: 2 }
+    role: diag-2l6p
+    familyId: mix-2l6p
+    related: [page-8-2l6p-flip]
+    replaces: null
+    packet: page-8-2l6p/packet.yaml
+    usage: page-8-2l6p/USAGE.md
+    sketch: page-8-2l6p/sketch.png
+  - id: page-8-2l6p-flip
+    status: sketch
+    displayName: 上三竖横下横三竖
+    badge: 2L6P
+    mix: { portrait: 6, landscape: 2 }
+    role: diag-2l6p-flip
+    familyId: mix-2l6p
+    related: [page-8-2l6p]
+    replaces: null
+    packet: page-8-2l6p-flip/packet.yaml
+    usage: page-8-2l6p-flip/USAGE.md
+    sketch: null
+  - id: page-6-2l4p-left
+    status: sketch
+    displayName: 左两横右四竖
+    badge: 2L4P
+    mix: { portrait: 4, landscape: 2 }
+    role: stack-2l-grid-4p
+    familyId: mix-2l4p
+    related: [page-6-2l4p-right]
+    replaces: null
+    packet: page-6-2l4p-left/packet.yaml
+    usage: page-6-2l4p-left/USAGE.md
+    sketch: page-6-2l4p-left/sketch.png
+  - id: page-6-2l4p-right
+    status: sketch
+    displayName: 左四竖右两横
+    badge: 4P2L
+    mix: { portrait: 4, landscape: 2 }
+    role: grid-4p-stack-2l
+    familyId: mix-2l4p
+    related: [page-6-2l4p-left]
+    replaces: null
+    packet: page-6-2l4p-right/packet.yaml
+    usage: page-6-2l4p-right/USAGE.md
+    sketch: null
+  - id: page-6-4l2p
+    status: sketch
+    displayName: 四横夹两竖
+    badge: 4L2P
+    mix: { portrait: 2, landscape: 4 }
+    role: bookend-4l-2p
+    familyId: mix-2l4p
+    related: [page-6-2l4p-left]
+    replaces: null
+    packet: page-6-4l2p/packet.yaml
+    usage: page-6-4l2p/USAGE.md
+    sketch: page-6-4l2p/sketch.png
   - id: page-6-1l5l-wide-left
     status: sketch
     displayName: 左主宽横右下五小

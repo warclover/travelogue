@@ -1,0 +1,85 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-5-1p4p-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左大竖右四小竖
+sketchName: 5竖1大四小
+familyId: port-4p
+canonical: page-5-1p4p-left
+related: [page-5-1p4p-right]
+seeAlso: [page-5-1p4l-left, page-3-port-hero-left, page-4-port]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-grid-4p
+
+stage:
+  aspect: "16:9"
+  # 四小竖 3:4 各宽 18.75%。剩余高（两小叠后）三等分 → 顶 / 行缝 / 底各 1/27。
+  # 主竖 3:4，高与右两列外沿齐（25/27）。
+  # 三组（主 + 两小列）剩余宽四等分 → 左 / 列缝 / 列缝 / 右。
+  margin:
+    top: 0.037037
+    right: 0.058594
+    bottom: 0.037037
+    left: 0.058594
+  gapX: 0.058594
+  gapY: 0.037037
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+mix: { portrait: 5, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-hero-right-2x2
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 一张竖图明显更大，四张竖图 2×2 辅在右侧
+  whenNotToUse: 四辅是横图 → 用 page-5-1p4l-left；只要两辅 → 用 page-3-port-hero-left；主图更适合靠右 → 用 page-5-1p4p-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更高则以高对齐、左右留白」。本库仍走相对槽三条。
+
+glyph:
+  badge: 1P4P
+  thumb: 左主 3:4 高 25/27；右 2×2 小竖 3:4 各宽 18.75%，顶/缝/底各 1/27
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 3:4）---
+#   smallW = 0.1875 W；smallH = 0.1875 × (16/9) × (4/3) H = 4/9 H
+#   剩余高 1 − 8/9 = 1/9 → 顶 / 行缝 / 底各 1/27
+#   mainH = 8/9 + 1/27 = 25/27 H
+#   mainW = (25/27) × (9/16) × (3/4) W = 25/64 W = 0.390625 W
+#   三组宽 0.390625 + 0.1875 + 0.1875 = 0.765625；余宽 0.234375 / 4 = 0.058594
+#   main:  left 0.058594, top 1/27, 0.390625 × 25/27
+#   col1:  left 0.507812
+#   col2:  left 0.753906
+#   上行 top 1/27；下行 top 14/27
+# 与 page-5-1p4l-left（右四横）不是同一张。

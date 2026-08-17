@@ -1,0 +1,71 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-5-1p4p-left 左右镜像。
+
+id: page-5-1p4p-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左四小竖右大竖
+sketchName: 5竖四小一大
+familyId: port-4p
+canonical: page-5-1p4p-right
+related: [page-5-1p4p-left]
+seeAlso: [page-5-1p4l-right, page-3-port-hero-right, page-4-port]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: grid-4p-port
+mirroredFrom: page-5-1p4p-left
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0.037037
+    right: 0.058594
+    bottom: 0.037037
+    left: 0.058594
+  gapX: 0.058594
+  gapY: 0.037037
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+mix: { portrait: 5, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-2x2-right-hero
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: main, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 一张竖图明显更大（靠右），四张竖图 2×2 辅在左侧
+  whenNotToUse: 四辅是横图 → 用 page-5-1p4l-right；主图更适合靠左 → 用 page-5-1p4p-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 4P1P
+  thumb: 左 2×2 小竖 3:4 各宽 18.75%；右主 3:4 高 25/27
+
+sourceSketch: null
+
+# 几何 = page-5-1p4p-left 水平镜像
+#   col1.left = 0.058594 W
+#   col2.left = 0.304688 W
+#   main.left = 0.550781 W
