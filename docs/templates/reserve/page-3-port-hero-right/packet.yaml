@@ -58,11 +58,11 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 3P
-  thumb: 左两辅 3:4 均分剩余宽；右主 3:4 上下 5%
+  thumb: 左两辅 3:4 扣 5% 中缝后均分；右主 3:4 上下 5%
 
 sourceSketch: null
 
 # 几何 = page-3-port-hero-left 水平镜像
 #   small0.left = 0.05 W
-#   small1.left = 0.28515625 W
+#   small1.left = 0.31015625 W
 #   mainLeft    = 0.5703125 W

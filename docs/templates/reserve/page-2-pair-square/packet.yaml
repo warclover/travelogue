@@ -19,12 +19,12 @@ role: pair-square
 
 stage:
   aspect: "16:9"
-  # 左右各 10% 页宽。剩余宽均分给两槽（文字未写间距 → gapX = 0）。
-  # 上下不写死边距：方槽按 1:1 求解后垂直居中。
+  # 槽宽仍各 40%（1:1 按宽求解）。余下 20% 三等分：左右与中缝各 1/15。
+  # 上下不写死边距：方槽垂直居中。
   margin:
-    left: 0.10
-    right: 0.10
-  gapX: 0
+    left: 0.066667
+    right: 0.066667
+  gapX: 0.066667
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -58,14 +58,14 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 2S
-  thumb: 两方槽 1:1 并排，左右各 10%，整组垂直居中
+  thumb: 两方槽 1:1 各 40%，左右与中缝各 1/15，整组垂直居中
 
 sourceSketch: sketch.png
 
 # --- 几何（16:9 纸，每槽必须等于 1:1）---
-#   slotWidth  = 0.80 W / 2 = 0.40 W
+#   slotWidth  = 0.40 W（槽尺寸不变）
 #   slotHeight = 0.40 W = 0.711111 H
 #   slotTop    = (1 - 0.711111) / 2 H = 0.144444 H
-#   slot0.left = 0.10 W
-#   slot1.left = 0.50 W
-# 示意图细缝按描边，不另加 gapX。
+#   余宽 0.20 / 3 = 1/15
+#   slot0.left = 1/15 W
+#   slot1.left = 8/15 W

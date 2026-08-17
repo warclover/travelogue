@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-layout="web">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>备用页型库 · 2星以上真图预览</title>
+  <style>
+    :root {
+      --bg: #f7f5f2;
+      --surface: #ffffff;
+      --text: #1c1b1a;
+      --muted: #6f6a63;
+      --accent: #3d6b5a;
+      --border: #e5e0d8;
+      --tone: #e0ddd8;
+      --paper: #f5f2eb;
+      --dock: rgba(28, 27, 26, 0.88);
+      --font: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+    }
+    .dock {
+      position: sticky; top: 0; z-index: 8;
+      display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+      padding: 10px 16px;
+      background: var(--dock);
+      color: #f5f3f0;
+      backdrop-filter: blur(10px);
+    }
+    .dock h1 {
+      margin: 0; font-size: 13px; font-weight: 650; letter-spacing: .02em;
+    }
+    .dock h1 em { font-style: normal; color: #c8b27a; font-weight: 400; }
+    .dock a { color: #c8b27a; }
+    .dock .meta { font-size: 12px; color: #b8b2a8; }
+    .dock button, .dock label.btn {
+      font: inherit; font-size: 12px; color: #f5f3f0;
+      background: transparent; border: 1px solid #5a564e;
+      border-radius: 999px; padding: 5px 12px; cursor: pointer;
+    }
+    .dock button[aria-pressed="true"], .dock label.btn:hover, .dock button:hover {
+      border-color: #c8b27a; color: #c8b27a;
+    }
+    .dock input[type="file"] { display: none; }
+    .hint {
+      max-width: 72rem; margin: 28px auto; padding: 0 20px;
+      font-size: 14px; color: var(--muted); line-height: 1.65; text-align: center;
+    }
+    .hint.is-off { display: none; }
+    .reel { padding: 0 0 80px; }
+    .chapter {
+      max-width: 1320px; margin: 0 auto 8px; padding: 18px 20px 8px;
+    }
+    .chapter h2 {
+      margin: 0; text-align: center;
+      font-size: 13px; font-weight: 650; color: var(--accent);
+      letter-spacing: .08em;
+    }
+    .chapter h2::before, .chapter h2::after {
+      content: ""; display: inline-block; width: 48px; height: 1px;
+      background: var(--accent); vertical-align: 4px; margin: 0 10px; opacity: .45;
+    }
+    .page { margin: 0 0 16px; }
+    .page-head {
+      max-width: 1320px; margin: 0 auto;
+      display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline;
+      padding: 8px 20px 6px; font-size: 12px; color: var(--muted);
+    }
+    .page-head .stars { color: var(--accent); letter-spacing: .08em; }
+    .page-head code { color: var(--text); font-size: 12px; }
+    .page-head .name { color: var(--text); }
+    .stage-wrap { width: 100%; background: #d8d4cc; }
+    .stage {
+      width: min(100vw, 1600px); margin: 0 auto;
+      aspect-ratio: 16 / 9;
+      background: var(--tone);
+      position: relative; overflow: hidden;
+    }
+    .slot {
+      position: absolute; overflow: hidden;
+      background: var(--surface);
+    }
+    .slot img {
+      width: 100%; height: 100%;
+      object-position: 50% 45%;
+    }
+    html[data-fit="cover"] .slot img { object-fit: cover; }
+    html[data-fit="contain"] .slot {
+      background: var(--paper);
+    }
+    html[data-fit="contain"] .slot img { object-fit: contain; }
+    .slot.is-empty {
+      display: grid; place-items: center;
+      background: #ece8e0; color: var(--muted);
+      font-size: 12px; border: 1px dashed #c8c2b6;
+    }
+    .slot { cursor: pointer; }
+    .copy {
+      position: absolute;
+      border: 1px dashed #3d7a4a;
+      background: color-mix(in srgb, #3d7a4a 10%, transparent);
+      pointer-events: none;
+    }
+    html[data-copy="off"] .copy { display: none; }
+    html.drop-on body { outline: 3px dashed var(--accent); outline-offset: -6px; }
+  </style>
+</head>
+<body>
+  <div class="dock">
+    <h1>备用库试印 <em>2 星以上 · 引擎不读</em></h1>
+    <span class="meta" id="status">先选一个本地照片文件夹</span>
+    <label class="btn">选择文件夹
+      <input id="folder" type="file" webkitdirectory multiple accept="image/*" />
+    </label>
+    <button type="button" id="fit" aria-pressed="true">铺满（游记预览）</button>
+    <button type="button" id="copy" aria-pressed="false">文案栏：隐</button>
+    <button type="button" id="scope-all" aria-pressed="true">2星以上</button>
+    <button type="button" id="scope-3" aria-pressed="false">只看三星</button>
+    <button type="button" id="scope-dense" aria-pressed="false">密页 5 槽+</button>
+    <button type="button" id="reshuffle">换一组图</button>
+    <a href="./gallery.html">回微缩</a>
+  </div>
+  <p class="hint" id="hint">
+    像 Web 游记预览那样竖着翻 16:9 页。照片只在本机浏览器里读，不上传、不进引擎。
+    默认 <b>铺满</b> 对齐现网预览；可切到 <b>相对槽</b>（同比例，多出来留白）。
+    点某一格会换下一张同朝向的图。缺横/竖/方时格子会空着。
+  </p>
+  <div class="reel" id="reel"></div>
+  <script src="./faces.js"></script>
+  <script>
+    const FACES = window.RESERVE_FACES || [];
+    const SEED = {
+      "page-1-hero-land-wide": 3,
+      "page-2-1l1p-wide": 3,
+      "page-2-1p1l-wide": 3,
+      "page-2-pair-port": 3,
+      "page-3-port": 3,
+      "page-4-grid-land": 3,
+      "page-4-grid-land-wide": 3,
+      "page-3-2l1p-hero-left": 2,
+      "page-3-2l1p-hero-right": 2,
+      "page-3-2l1p-left": 2,
+      "page-3-2l1p-right": 2,
+      "page-3-2l1p-wide-left": 2,
+      "page-3-2l1p-wide-right": 2,
+      "page-4-1l3l-left": 2,
+      "page-4-1l3l-right": 2,
+      "page-4-1l3l-wide-left": 2,
+      "page-4-1l3l-wide-right": 2,
+      "page-4-2p2l-cross": 2,
+      "page-4-port": 2,
+      "page-5-1p4l-left": 2,
+      "page-5-1p4l-right": 2,
+      "page-5-3p2l-center": 2,
+      "page-5-3p2l-center-flip": 2,
+      "page-5-3p2l-left": 2,
+      "page-5-3p2l-right": 2,
+      "page-6-1l5l-wide-left": 2,
+      "page-6-1l5l-wide-right": 2,
+      "page-6-grid-land": 2,
+      "page-7-1p6l-left": 2,
+      "page-7-1p6l-right": 2,
+      "page-9-grid-land-wide": 2
+    };
+
+    const statusEl = document.getElementById("status");
+    const hintEl = document.getElementById("hint");
+    const reel = document.getElementById("reel");
+    const fitBtn = document.getElementById("fit");
+    const copyBtn = document.getElementById("copy");
+
+    let stars = { ...SEED };
+    let photos = { l: [], p: [], s: [] };
+    let offset = 0;
+    let scope = "all";
+    let slotClicks = {};
+
+    function parseStarsYaml(text) {
+      const out = {};
+      for (const raw of String(text).split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith("#")) continue;
+        const m = /^([a-z0-9-]+):\s*([0-3])\s*$/.exec(line);
+        if (m) out[m[1]] = Number(m[2]);
+      }
+      return out;
+    }
+
+    function faceStars(face) {
+      return Number(stars[face.id] || 0);
+    }
+
+    function slotBoxes(face) {
+      return face.slots || (face.slot ? [face.slot] : []);
+    }
+
+    function copyBoxes(face) {
+      return face.copies || (face.copy ? [face.copy] : []);
+    }
+
+    function slotOrient(box) {
+      if (box.orient === "landscape" || box.orient === "portrait" || box.orient === "square") {
+        return box.orient === "landscape" ? "l" : box.orient === "portrait" ? "p" : "s";
+      }
+      const ratio = (box.width / box.height) * (16 / 9);
+      if (ratio > 1.08) return "l";
+      if (ratio < 0.92) return "p";
+      return "s";
+    }
+
+    function photoOrient(w, h) {
+      const r = w / h;
+      if (r > 1.08) return "l";
+      if (r < 0.92) return "p";
+      return "s";
+    }
+
+    function slotCount(face) {
+      return slotBoxes(face).length;
+    }
+
+    function visibleFaces() {
+      return FACES.filter((f) => {
+        const n = faceStars(f);
+        if (n < 2) return false;
+        if (scope === "3" && n < 3) return false;
+        if (scope === "dense" && slotCount(f) < 5) return false;
+        return true;
+      }).sort((a, b) => {
+        const ds = faceStars(b) - faceStars(a);
+        if (ds) return ds;
+        const dc = slotCount(a) - slotCount(b);
+        if (dc) return dc;
+        return a.id.localeCompare(b.id);
+      });
+    }
+
+    function needLabel(need) {
+      return need === "l" ? "缺横图" : need === "p" ? "缺竖图" : "缺方图";
+    }
+
+    function pick(need, key, cursor) {
+      const pool = photos[need];
+      if (!pool.length) return null;
+      const extra = slotClicks[key] || 0;
+      const photo = pool[(cursor[need] + extra) % pool.length];
+      cursor[need] += 1;
+      return photo;
+    }
+
+    function pct(box) {
+      return `left:${box.left}%;top:${box.top}%;width:${box.width}%;height:${box.height}%`;
+    }
+
+    function render() {
+      const y = window.scrollY;
+      const faces = visibleFaces();
+      const groups = [
+        { n: 3, title: "★★★ 最常用" },
+        { n: 2, title: "★★ 常用 · 含密页" }
+      ].map((g) => ({ ...g, faces: faces.filter((f) => faceStars(f) === g.n) }))
+        .filter((g) => g.faces.length);
+
+      const cursor = { l: offset, p: offset, s: offset };
+      reel.innerHTML = groups.map((g) => {
+        const pages = g.faces.map((face) => {
+          const copies = copyBoxes(face).map((box) =>
+            `<div class="copy" style="${pct(box)}"></div>`
+          ).join("");
+          const slots = slotBoxes(face).map((box, i) => {
+            const need = slotOrient(box);
+            const key = `${face.id}:${i}`;
+            const photo = pick(need, key, cursor);
+            if (!photo) {
+              return `<div class="slot is-empty" data-key="${key}" data-need="${need}" style="${pct(box)}">${needLabel(need)}</div>`;
+            }
+            return `<div class="slot" data-key="${key}" data-need="${need}" style="${pct(box)}" title="${photo.name}">
+              <img src="${photo.url}" alt="${photo.name}" loading="lazy" decoding="async" />
+            </div>`;
+          }).join("");
+          const n = faceStars(face);
+          return `<article class="page" id="${face.id}">
+            <div class="page-head">
+              <span class="stars">${"★".repeat(n)}</span>
+              <code>${face.id}</code>
+              <span class="name">${face.displayName}</span>
+              <span>${face.badge} · ${slotCount(face)} 槽</span>
+            </div>
+            <div class="stage-wrap">
+              <div class="stage">${copies}${slots}</div>
+            </div>
+          </article>`;
+        }).join("");
+        return `<section class="chapter"><h2>${g.title}</h2></section>${pages}`;
+      }).join("");
+
+      const total = photos.l.length + photos.p.length + photos.s.length;
+      const pageN = faces.length;
+      statusEl.textContent = total
+        ? `横 ${photos.l.length} · 竖 ${photos.p.length} · 方 ${photos.s.length} · ${pageN} 页`
+        : `未选照片 · ${pageN} 页空槽`;
+      hintEl.classList.toggle("is-off", total > 0);
+      window.scrollTo(0, y);
+    }
+
+    function isImage(file) {
+      if (file.type && file.type.startsWith("image/")) return true;
+      return /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(file.name || "");
+    }
+
+    function readImage(file) {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          resolve({
+            name: file.name,
+            url,
+            w: img.naturalWidth,
+            h: img.naturalHeight,
+            orient: photoOrient(img.naturalWidth, img.naturalHeight)
+          });
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    }
+
+    async function loadFiles(fileList) {
+      const files = [...fileList].filter(isImage);
+      statusEl.textContent = `正在读 ${files.length} 张…`;
+      const next = { l: [], p: [], s: [] };
+      for (const file of files) {
+        const photo = await readImage(file);
+        if (photo) next[photo.orient].push(photo);
+      }
+      Object.values(photos).flat().forEach((p) => URL.revokeObjectURL(p.url));
+      photos = next;
+      offset = 0;
+      slotClicks = {};
+      render();
+    }
+
+    async function loadStars() {
+      try {
+        const res = await fetch("./stars.yaml", { cache: "no-store" });
+        if (res.ok) {
+          const parsed = parseStarsYaml(await res.text());
+          if (Object.keys(parsed).length) stars = parsed;
+        }
+      } catch (_) { /* file:// 用 SEED */ }
+    }
+
+    document.getElementById("folder").addEventListener("change", (ev) => {
+      loadFiles(ev.target.files || []);
+    });
+    fitBtn.addEventListener("click", () => {
+      const cover = document.documentElement.dataset.fit !== "contain";
+      const next = cover ? "contain" : "cover";
+      document.documentElement.dataset.fit = next;
+      fitBtn.setAttribute("aria-pressed", next === "cover" ? "true" : "false");
+      fitBtn.textContent = next === "cover" ? "铺满（游记预览）" : "相对槽（留白）";
+    });
+    copyBtn.addEventListener("click", () => {
+      const on = document.documentElement.dataset.copy !== "on";
+      document.documentElement.dataset.copy = on ? "on" : "off";
+      copyBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      copyBtn.textContent = on ? "文案栏：显" : "文案栏：隐";
+    });
+    function setScope(next, btn) {
+      scope = next;
+      for (const id of ["scope-all", "scope-3", "scope-dense"]) {
+        document.getElementById(id).setAttribute("aria-pressed", id === btn ? "true" : "false");
+      }
+      render();
+    }
+    document.getElementById("scope-all").addEventListener("click", () => setScope("all", "scope-all"));
+    document.getElementById("scope-3").addEventListener("click", () => setScope("3", "scope-3"));
+    document.getElementById("scope-dense").addEventListener("click", () => setScope("dense", "scope-dense"));
+    document.getElementById("reshuffle").addEventListener("click", () => {
+      offset += 1;
+      render();
+    });
+    reel.addEventListener("click", (ev) => {
+      const slot = ev.target.closest(".slot");
+      if (!slot) return;
+      const key = slot.dataset.key;
+      const need = slot.dataset.need;
+      if (!key || !photos[need] || !photos[need].length) return;
+      slotClicks[key] = (slotClicks[key] || 0) + 1;
+      render();
+    });
+
+    ["dragenter", "dragover"].forEach((type) => {
+      document.addEventListener(type, (ev) => {
+        ev.preventDefault();
+        document.documentElement.classList.add("drop-on");
+      });
+    });
+    document.addEventListener("dragleave", (ev) => {
+      if (ev.target === document.documentElement) document.documentElement.classList.remove("drop-on");
+    });
+    document.addEventListener("drop", (ev) => {
+      ev.preventDefault();
+      document.documentElement.classList.remove("drop-on");
+      if (ev.dataTransfer && ev.dataTransfer.files) loadFiles(ev.dataTransfer.files);
+    });
+
+    document.documentElement.dataset.fit = "cover";
+    document.documentElement.dataset.copy = "off";
+    loadStars().then(render);
+  </script>
+</body>
+</html>

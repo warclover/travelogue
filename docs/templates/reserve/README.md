@@ -5,9 +5,10 @@
 | **日期** | 2026-08-16 |
 | **DOC-STATUS** | **active**（设计收件箱，不是活目录合同） |
 | **正式合同** | [PAGE-PACKET-CATALOG.md](../PAGE-PACKET-CATALOG.md)（附录 A）· [PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md](../../PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) |
-| **浏览** | [gallery.html](./gallery.html) |
+| **浏览** | [gallery.html](./gallery.html) · [preview.html](./preview.html)（2 星以上真图预览） |
 | **总表** | [CATALOG.md](./CATALOG.md) · [catalog.yaml](./catalog.yaml) |
 | **星级** | [stars.yaml](./stars.yaml)（权威；微缩页点星后「写入本库」） |
+| **备忘** | [临时模板库管线讨论备忘录.md](./临时模板库管线讨论备忘录.md)（2026-08-17 · 试印与双管线） |
 
 这里只收你画好、还没升附录 A / 还没进引擎的页型。引擎、MCS、系列 YAML、CI **不读**本目录。
 
@@ -51,6 +52,8 @@
 | 3 星 | `3` | **最常用** |
 
 在 [gallery.html](./gallery.html) 每张卡片上点「无 / ★ / ★★ / ★★★」。再点同一档会取消。点完用工具条 **写入本库** 覆盖 `stars.yaml`（Chrome 会弹出保存框，请选本夹这个文件；其它浏览器会下载，把文件挪回本夹覆盖）。然后提交这一份文件即可。
+
+2 星以上可用 [preview.html](./preview.html) 选本地照片文件夹，按 Web 游记预览那样竖翻 16:9 真图。照片只在浏览器里读，不进引擎、不导出。
 
 镜像脸不自动继承，要升星请单点。
 
