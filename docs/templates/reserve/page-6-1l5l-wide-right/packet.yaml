@@ -1,0 +1,73 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-6-1l5l-wide-left 左右镜像。
+
+id: page-6-1l5l-wide-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左下五小右主宽横
+sketchName: 宽幅5小横1大横
+familyId: land-hero-5-wide
+canonical: page-6-1l5l-wide-right
+related: [page-6-1l5l-wide-left]
+seeAlso: [page-4-1l3l-wide-right, page-1-hero-land-wide]
+replaces: null
+aliases: [page-5-1l4l-wide-right]
+program: mosaic
+densityClass: standard
+role: stack-5l-land-hero-wide
+mirroredFrom: page-6-1l5l-wide-left
+
+stage:
+  aspect: "16:9"
+  # 侧栏三小改到左侧，垂直居中均分；底行三小仍占满宽；大横顶齐右齐。
+  margin:
+    top: 0.025
+    right: 0
+    bottom: 0.025
+    left: 0
+  gapX: 0.05
+  gapY: 0.025
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 6
+mix: { portrait: 0, landscape: 6 }
+
+placement:
+  groupAlign: top-right
+  distribute: split-left-3l-right-land-bottom-3l
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: main, orient: landscape, aspect: "16:9" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 5, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "16:9"
+
+themes: [landscape, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 大横顶齐右齐，左侧三小垂直均分，底行三小占满宽
+  whenNotToUse: 只要三张小横 → 用 page-4-1l3l-wide-right；六张等权 → 用 page-6-grid-land；主图更适合靠左 → 用 page-6-1l5l-wide-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 5L1L
+  thumb: 大横 65% 顶齐右齐贴底行；左侧三小垂直均分；底三小占满宽
+
+sourceSketch: null
+
+# 几何 = page-6-1l5l-wide-left 水平镜像。
+#   侧栏（左）top: 0.025 / 0.35 / 0.675；left 0
+#   底行 left: 0 / 0.35 / 0.70；top 0.675
+#   main: left 0.35, top 0.025（65% 宽，右齐）

@@ -1,0 +1,71 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-5-3p2l-center 左右镜像。
+
+id: page-5-3p2l-center-flip
+version: 1
+status: sketch
+kind: primitive
+displayName: 中大竖左上横右上竖
+sketchName: 2横3竖
+familyId: port-land-center
+canonical: page-5-3p2l-center-flip
+related: [page-5-3p2l-center]
+seeAlso: [page-5-3p2l-right, page-5-3p2l-stack-right]
+replaces: screen-mosaic-5-2p3l-portrait-hero-rail
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-center-stagger-flip
+mirroredFrom: page-5-3p2l-center
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0.055556
+    right: 0.03125
+    bottom: 0.055556
+    left: 0.03125
+  gapX: 0.03125
+  gapY: 0.046296
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+mix: { portrait: 3, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-stagger-center-port-right-stack
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张大竖居中，左右列横竖交错（左上宽横、右上小竖）
+  whenNotToUse: 大竖要靠右 → 用 page-5-3p2l-right；要左上竖右上横 → 用 page-5-3p2l-center
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2L3P
+  thumb: 中大竖 3:4 高 8/9；左上 16:9 下 3:4；右上 3:4 下 16:9
+
+sourceSketch: null
+
+# 几何 = page-5-3p2l-center 水平镜像（左右列对调，中大竖不动）。
+#   left land: left 0.03125 W, top 1/18 H
+#   left port: left 0.03125 W, top 19/54 H
+#   main: left 0.3125 W, top 1/18 H
+#   right port: left 0.71875 W, top 1/18 H
+#   right land: left 0.71875 W, top 25/36 H

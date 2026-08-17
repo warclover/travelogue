@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-7-1p6l-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左竖右六横
+sketchName: 1竖6横
+familyId: port-6land
+canonical: page-7-1p6l-left
+related: [page-7-1p6l-right]
+seeAlso: [page-5-1p4l-left, page-4-grid-land-wide]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: dense
+role: port-grid-6l
+
+stage:
+  aspect: "16:9"
+  # 竖槽 3:4 高 8/9，独自垂直居中（顶/底各 1/18）。
+  # 右 2×3 横槽 16:9 各宽 25%；上下与竖槽顶底对齐，两行缝均分剩余高。
+  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 宫缝 / 右各 3.125%。
+  margin:
+    top: 0.055556
+    right: 0.03125
+    bottom: 0.055556
+    left: 0.03125
+  gapX: 0.03125
+  gapY: 0.069444
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 7
+mix: { portrait: 1, landscape: 6 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-2x3
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 5, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 6, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 16:9
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张竖图为主，六张 16:9 宽横 2×3 辅
+  whenNotToUse: 只要四横 2×2 → 用 page-5-1p4l-left；竖图更适合靠右 → 用 page-7-1p6l-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 1P6L
+  thumb: 左竖 3:4 高 8/9；右 2×3 横 16:9 各 25%，上下与竖槽齐
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   portH = 8/9 H；3:4 → portW = 3/8 W
+#   portLeft = 0.03125 W；portTop = 1/18 H
+#   landW = landH = 0.25（16:9 槽在 16:9 纸上）
+#   两行缝 = (8/9 − 3/4) / 2 = 5/72 H = 0.069444 H
+#   land 列 left 0.4375 / 0.71875 W
+#   land 行 top 1/18 / 0.375 / 0.694444 H
+# 无合格现网顶岗。不是 page-5-1p4l-left（那边是 4:3 的 2×2）。

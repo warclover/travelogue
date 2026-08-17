@@ -1,0 +1,83 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-5-3p2l-stack-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左大竖右上二竖下二横
+sketchName: 3竖2横
+familyId: port-land-stack
+canonical: page-5-3p2l-stack-left
+related: [page-5-3p2l-stack-right, page-5-3p2l-left]
+seeAlso: [page-5-1p4l-left, page-3-2l1p-left]
+replaces: screen-mosaic-5-2p3l-portrait-hero-rail
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-stack-2p2l
+
+stage:
+  aspect: "16:9"
+  # 大竖 3:4 高 8/9，垂直居中。右两列相同：上 3:4、下 16:9，各宽 25%。
+  # 上下与大竖顶底齐，列内缝 5/108。剩余宽四等分各 3.125%。
+  margin:
+    top: 0.055556
+    right: 0.03125
+    bottom: 0.055556
+    left: 0.03125
+  gapX: 0.03125
+  gapY: 0.046296
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+# 示意图用途栏数量有笔误。图上是 3 竖 + 2 横，按图。
+mix: { portrait: 3, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-2stack
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 16:9
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张大竖为主，右两列同构（上小竖、下宽横）
+  whenNotToUse: 右栏要交错 → 用 page-5-3p2l-left；大竖更适合靠右 → 用 page-5-3p2l-stack-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 3P2L
+  thumb: 左大竖 3:4 高 8/9；右两列皆上 3:4 下 16:9
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   与 page-5-3p2l-left 同大竖与侧列宽，但两列都是上竖下横（不是交错）。
+#   main: left 0.03125 W, top 1/18 H, 0.375 × 8/9
+#   小竖 H = 16/27；宽横 H = 1/4；缝 = 5/108
+#   mid port: left 0.4375 W, top 1/18 H
+#   mid land: left 0.4375 W, top 25/36 H
+#   right port: left 0.71875 W, top 1/18 H
+#   right land: left 0.71875 W, top 25/36 H
+# 不是 page-5-3p2l-left（那边中上是横、右上是竖）。

@@ -1,0 +1,87 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-6-grid-land
+version: 1
+status: sketch
+kind: primitive
+displayName: 横版六宫格
+sketchName: 横版六宫格
+familyId: land-grid
+canonical: page-6-grid-land
+related: [page-4-grid-land, page-3-land, page-9-grid-land-wide]
+seeAlso: [page-4-grid-land-wide, page-2-pair-land]
+replaces: screen-landscape-6
+aliases: []
+program: grid
+densityClass: standard
+role: grid-6-land
+
+stage:
+  aspect: "16:9"
+  # 单槽 4:3，宽 31% 页宽 → 高 = 31/75 页高。
+  # 剩余宽 7% 四等分（左/缝/缝/右）= 1.75%。
+  # 剩余高 13/75 三等分（顶/缝/底）= 13/225。
+  margin:
+    top: 0.057778
+    right: 0.0175
+    bottom: 0.057778
+    left: 0.0175
+  gapX: 0.0175
+  gapY: 0.057778
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 6
+mix: { portrait: 0, landscape: 6 }
+
+placement:
+  groupAlign: center
+  distribute: even-grid
+  columns: 3
+  rows: 2
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 5, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "4:3"
+
+themes: [landscape, architecture, sequence]
+usage:
+  whenToUse: 六张 4:3 横图 3×2 等权并置
+  whenNotToUse: 只要四张 → 用 page-4-grid-land；槽要 16:9 → 用 page-9-grid-land-wide；必须消化竖图
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 6L
+  thumb: 3×2 横槽 4:3；单槽宽 31%，剩余宽四等分、剩余高三等分
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 4:3）---
+#   slotW = 0.31 W
+#   slotH = 0.31 × (16/9) × (3/4) H = 31/75 H
+#   剩余宽 0.07 → 左/缝/缝/右各 0.0175
+#   剩余高 13/75 → 顶/缝/底各 13/225
+#   列 left: 0.0175 / 0.345 / 0.6725
+#   行 top:  13/225 / 119/225
+# 左右对称，无镜像兄弟。
+# 不是 page-4-grid-land（那边是 2×2）。
+# 现网 screen-landscape-6 是 3×2 等分，槽比约 1.185，不是 4:3。

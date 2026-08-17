@@ -33,6 +33,32 @@
 | `page-4-1p3l-left` | 左竖右三横 | `1P3L` | 1P3L | `port-stack-3l` | **`page-4-1p3l-right`** | 无合格现网顶岗 | sketch |
 | `page-4-1p3l-right` | 左三横右竖 | `3L1P` | 3L1P | `stack-3l-port` | **`page-4-1p3l-left`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-3-2p1s` | 两竖夹一方 | `2P1S` | 2P1S | `row-2p1s` | `page-3-port` · `page-2-1s1p` | 无合格现网顶岗 | sketch |
+| `page-4-2p2l-cross` | 十字两横两竖 | `2P2L` | 2P2L | `cross-2p2l` | `page-4-grid-land` · `page-3-2p1s` | `screen-mosaic-4-2p2l-portrait-bookends`（满高书挡，不是同一张） | sketch |
+| `page-4-grid-land-wide` | 宽版横版四宫 | `4L` | 4L | `grid-4-land-wide` | `page-4-grid-land` · `page-1-hero-land-wide` | `screen-landscape-4`（偏满幅，不是同一张） | sketch |
+| `page-3-2l1p-wide-left` | 左竖右双宽横 | `1P2L` | 1P2L | `port-stack-l-wide` | **`page-3-2l1p-wide-right`** · `page-3-2l1p-left` | `screen-portrait-1-landscape-2`（不是同一张） | sketch |
+| `page-3-2l1p-wide-right` | 左双宽横右竖 | `2L1P` | 2L1P | `stack-l-port-wide` | **`page-3-2l1p-wide-left`**（镜像） | `screen-landscape-2-portrait-1`（不是同一张） | sketch |
+| `page-3-1s2l-wide-left` | 左方右双宽横 | `1S2L` | 1S2L | `square-stack-l-wide` | **`page-3-1s2l-wide-right`** · `page-3-1s2l-left` | 无合格现网顶岗 | sketch |
+| `page-3-1s2l-wide-right` | 左双宽横右方 | `2L1S` | 2L1S | `stack-l-square-wide` | **`page-3-1s2l-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-4-1l3l-left` | 左主横右三小 | `1L3L` | 1L3L | `land-hero-3l` | **`page-4-1l3l-right`** | `screen-mosaic-4-hero-70-sidebar`（约 70%，不是同一张） | sketch |
+| `page-4-1l3l-right` | 左三小右主横 | `3L1L` | 3L1L | `stack-3l-land-hero` | **`page-4-1l3l-left`**（镜像） | `screen-mosaic-4-hero-70-sidebar`（约 70%，不是同一张） | sketch |
+| `page-4-1l3l-wide-left` | 左主宽横右三小 | `1L3L` | 1L3L | `land-hero-3l-wide` | **`page-4-1l3l-wide-right`** · `page-4-1l3l-left` | `screen-mosaic-4-hero-70-sidebar`（约 70%，不是同一张） | sketch |
+| `page-4-1l3l-wide-right` | 左三小右主宽横 | `3L1L` | 3L1L | `stack-3l-land-hero-wide` | **`page-4-1l3l-wide-left`**（镜像） | `screen-mosaic-4-hero-70-sidebar`（约 70%，不是同一张） | sketch |
+| `page-4-port` | 四竖并排 | `4P` | 4P | `row-port-4` | `page-3-port` · `page-2-pair-port` | `screen-portrait-4`（9:16 四竖 2×2，不是同一张） | sketch |
+| `page-5-1p4l-left` | 左竖右四横 | `1P4L` | 1P4L | `port-grid-4l` | **`page-5-1p4l-right`** | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
+| `page-5-1p4l-right` | 左四横右竖 | `4L1P` | 4L1P | `grid-4l-port` | **`page-5-1p4l-left`**（镜像） | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
+| `page-7-1p6l-left` | 左竖右六横 | `1P6L` | 1P6L | `port-grid-6l` | **`page-7-1p6l-right`** | 无合格现网顶岗 | sketch |
+| `page-7-1p6l-right` | 左六横右竖 | `6L1P` | 6L1P | `grid-6l-port` | **`page-7-1p6l-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-5-3p2l-left` | 左大竖右交错 | `3P2L` | 3P2L | `port-stagger-2col` | **`page-5-3p2l-right`** | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-right` | 左交错右大竖 | `2L3P` | 2L3P | `stagger-2col-port` | **`page-5-3p2l-left`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-stack-left` | 左大竖右上二竖下二横 | `3P2L` | 3P2L | `port-stack-2p2l` | **`page-5-3p2l-stack-right`** · `page-5-3p2l-left` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-stack-right` | 左上二竖下二横右大竖 | `2L3P` | 2L3P | `stack-2p2l-port` | **`page-5-3p2l-stack-left`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-center` | 中大竖左上竖右上横 | `3P2L` | 3P2L | `port-center-stagger` | **`page-5-3p2l-center-flip`** · `page-5-3p2l-left` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-center-flip` | 中大竖左上横右上竖 | `2L3P` | 2L3P | `port-center-stagger-flip` | **`page-5-3p2l-center`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-9-grid-land-wide` | 宽幅九宫格 | `9L` | 9L | `grid-9-land-wide` | `page-4-grid-land-wide` · `page-3-land` | `screen-landscape-9`（文档已 deprecated，边距未必同） | sketch |
+| `page-6-grid-land` | 横版六宫格 | `6L` | 6L | `grid-6-land` | `page-4-grid-land` · `page-3-land` · `page-9-grid-land-wide` | `screen-landscape-6`（3×2 等分，槽比约 1.185，不是同一张） | sketch |
+| `page-8-grid-land` | 横版八宫格 | `8L` | 8L | `grid-8-land` | `page-4-grid-land` · `page-6-grid-land` | 无合格现网顶岗 | sketch |
+| `page-6-1l5l-wide-left` | 左主宽横右下五小 | `1L5L` | 1L5L | `land-hero-5l-wide` | **`page-6-1l5l-wide-right`** · `page-4-1l3l-wide-left` | 无合格现网顶岗 | sketch |
+| `page-6-1l5l-wide-right` | 左下五小右主宽横 | `5L1L` | 5L1L | `stack-5l-land-hero-wide` | **`page-6-1l5l-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
 
 ---
 
@@ -65,3 +91,22 @@
 | 0.21.0 | 2026-08-17 | 收 `page-3-2p1s`（两竖夹一方；表头竖槽数已按图更正）。 |
 | 0.22.0 | 2026-08-17 | 建四档星级（0–3）；七张标 ★★★：`pair-port` / `pair-land` / `1l1p-wide` / `page-3-port` / `2l1p-left` / `grid-land` / `2p1s`。 |
 | 0.23.0 | 2026-08-17 | 星级改由 `stars.yaml` 权威；微缩页点星后「写入本库」。 |
+| 0.24.0 | 2026-08-17 | 收 `page-4-2p2l-cross`（十字 2 竖 5/9 + 中 2 横 5/16；表头「方版」已按图更正；不占附录 A 的 `page-4-2p2l`）。 |
+| 0.25.0 | 2026-08-17 | 收 `page-4-grid-land-wide`（2×2 横槽 16:9，单槽宽 7/16；不是 4:3 的 `page-4-grid-land`）。 |
+| 0.26.0 | 2026-08-17 | 收宽版 `page-3-2l1p-wide-left` + 镜像 `page-3-2l1p-wide-right`（右/左栏 16:9 叠满高；剩余宽三等分；无独立示意图）。 |
+| 0.27.0 | 2026-08-17 | 收宽版 `page-3-1s2l-wide-left` + 镜像 `page-3-1s2l-wide-right`（方槽仍半宽；横槽 16:9 宽 1/3；无独立示意图）。 |
+| 0.28.0 | 2026-08-17 | 收 `page-4-1l3l-left`（主 4:3 半宽 + 右三小 22%）+ 镜像 `page-4-1l3l-right`；不占附录 A 的 `page-4-hero-rail`。 |
+| 0.29.0 | 2026-08-17 | 收宽版 `page-4-1l3l-wide-left`（主 16:9 半宽 + 右三小 25%）+ 镜像 `page-4-1l3l-wide-right`。 |
+| 0.30.0 | 2026-08-17 | 收 `page-4-port`（四竖 3:4 各 25% 顶齐无缝；底通栏文案可空；左右对称无镜像）。 |
+| 0.31.0 | 2026-08-17 | 收 `page-5-1p4l-left`（竖 8/9 + 右 2×2 横 25%）+ 镜像 `page-5-1p4l-right`。 |
+| 0.32.0 | 2026-08-17 | 收 `page-7-1p6l-left`（竖 8/9 + 右 2×3 宽横 16:9 各 25%）+ 镜像 `page-7-1p6l-right`。 |
+| 0.33.0 | 2026-08-17 | 收 `page-5-3p2l-left`（大竖 8/9 + 右两列横竖交错）+ 镜像 `page-5-3p2l-right`；表头「1竖6横」已按图更正。 |
+| 0.34.0 | 2026-08-17 | 收 `page-5-3p2l-stack-left`（大竖 + 右两列同构上竖下横）+ 镜像 `page-5-3p2l-stack-right`；与交错版不是同一张。 |
+| 0.35.0 | 2026-08-17 | 收 `page-5-3p2l-center`（中大竖 8/9 + 左上竖下横、右上横下竖）+ 镜像 `page-5-3p2l-center-flip`；与靠左/靠右大竖不是同一张。 |
+| 0.36.0 | 2026-08-17 | 收 `page-9-grid-land-wide`（3×3 横槽 16:9，单槽高 30%；左右对称无镜像）。 |
+| 0.37.0 | 2026-08-17 | 收 `page-6-grid-land`（3×2 横槽 4:3，单槽宽 31%；左右对称无镜像；不是现网等分六宫）。 |
+| 0.38.0 | 2026-08-17 | 收 `page-8-grid-land`（4×2 横槽 4:3，单槽宽 25% 贴边无横缝；剩余高三等分；左右对称无镜像）。 |
+| 0.39.0 | 2026-08-17 | 收 `page-5-1l4l-wide-left`（主 16:9 高 60% 顶齐左齐 + 右二小、下二小各 30%）+ 镜像 `page-5-1l4l-wide-right`。 |
+| 0.39.1 | 2026-08-17 | 更正为 `page-6-1l5l-wide-left`：补右下角第五小，五小靠底靠右；旧 id `page-5-1l4l-wide-*` 作废。 |
+| 0.39.2 | 2026-08-17 | 修正 `page-6-1l5l-wide-*` 留白：侧栏三小垂直居中均分；底行三小占满宽；大横顶齐左/右齐。 |
+| 0.39.3 | 2026-08-17 | 大横改为 65%：吃尽侧栏顶到的剩余高，底贴底行；右侧 5% 不对齐。 |

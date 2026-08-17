@@ -1,0 +1,85 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-4-grid-land-wide
+version: 1
+status: sketch
+kind: primitive
+displayName: 宽版横版四宫
+sketchName: 宽版横版四宫格
+familyId: land-grid
+canonical: page-4-grid-land-wide
+related: [page-4-grid-land, page-1-hero-land-wide, page-2-pair-land]
+seeAlso: [page-3-land, page-2-pair-land-ultra]
+replaces: screen-landscape-4
+aliases: []
+program: grid
+densityClass: standard
+role: grid-4-land-wide
+
+stage:
+  aspect: "16:9"
+  # 单槽 16:9，宽 7/16 页宽 → 高亦 7/16 页高。
+  # 剩余宽高各 1/8，各自三等分（顶/缝/底，左/缝/右）= 1/24。
+  margin:
+    top: 0.041667
+    right: 0.041667
+    bottom: 0.041667
+    left: 0.041667
+  gapX: 0.041667
+  gapY: 0.041667
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 4
+mix: { portrait: 0, landscape: 4 }
+
+placement:
+  groupAlign: center
+  distribute: even-grid
+  columns: 2
+  rows: 2
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "16:9"
+
+themes: [landscape, architecture, sequence]
+usage:
+  whenToUse: 四张 16:9 横图 2×2 等权并置
+  whenNotToUse: 四张是 4:3 → 用 page-4-grid-land；必须消化竖图；需要一张明显英雄
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 4L
+  thumb: 2×2 横槽 16:9；单槽宽 7/16，剩余宽高各自三等分
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，每槽必须等于 16:9）---
+#   slotW = 7/16 W = 0.4375 W
+#   slotH = 7/16 H = 0.4375 H
+#   剩余宽 = 剩余高 = 1/8 → 顶/缝/底、左/缝/右各 1/24 = 0.041667
+#   slot00: left 1/24 W, top 1/24 H
+#   slot01: left 25/48 W, top 1/24 H
+#   slot10: left 1/24 W, top 25/48 H
+#   slot11: left 25/48 W, top 25/48 H
+# 左右对称，无镜像兄弟。
+# 不是 page-4-grid-land（那边槽是 4:3、高 4/9）。
+# 现网 screen-landscape-4 偏满幅，不是同一张。

@@ -1,0 +1,87 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-5-3p2l-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左大竖右交错
+sketchName: 3竖2横
+familyId: port-land-stagger
+canonical: page-5-3p2l-left
+related: [page-5-3p2l-right]
+seeAlso: [page-5-1p4l-left, page-3-2l1p-left]
+replaces: screen-mosaic-5-2p3l-portrait-hero-rail
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-stagger-2col
+
+stage:
+  aspect: "16:9"
+  # 大竖 3:4 高 8/9，垂直居中。右两列各宽 25%，上下与大竖顶底齐。
+  # 中列上 16:9、下 3:4；右列上 3:4、下 16:9。列内缝同为 5/108。
+  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 列缝 / 右各 3.125%。
+  margin:
+    top: 0.055556
+    right: 0.03125
+    bottom: 0.055556
+    left: 0.03125
+  gapX: 0.03125
+  gapY: 0.046296
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+# 示意图用途写成「1竖6横」。图上是 3 竖 + 2 横，按图。
+mix: { portrait: 3, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-stagger
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 16:9
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张大竖为主，右两列横竖交错（中上宽横、右上小竖）
+  whenNotToUse: 右栏全是横 → 用 page-5-1p4l-left；大竖更适合靠右 → 用 page-5-3p2l-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 3P2L
+  thumb: 左大竖 3:4 高 8/9；中上 16:9 下 3:4；右上 3:4 下 16:9
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   mainH = 8/9 H；3:4 → mainW = 3/8 W；top = 1/18 H
+#   侧列宽 0.25 W
+#   16:9 → H = 0.25 H；3:4 宽 0.25 → H = 16/27 H
+#   列内缝 = 8/9 − 1/4 − 16/27 = 5/108 H
+#   main: left 0.03125 W
+#   mid land: left 0.4375 W, top 1/18 H
+#   mid port: left 0.4375 W, top 19/54 H
+#   right port: left 0.71875 W, top 1/18 H
+#   right land: left 0.71875 W, top 25/36 H
+# 表头用途按图更正为 3 竖 2 横。
+# 现网 screen-mosaic-5-2p3l-portrait-hero-rail 是竖主+辅竖+三横轨，不是同一张。

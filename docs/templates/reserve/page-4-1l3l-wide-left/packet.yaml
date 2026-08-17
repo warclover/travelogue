@@ -1,0 +1,83 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-4-1l3l-wide-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左主宽横右三小
+sketchName: 宽版横版一大三小
+familyId: land-hero-3-wide
+canonical: page-4-1l3l-wide-left
+related: [page-4-1l3l-wide-right, page-4-1l3l-left]
+seeAlso: [page-4-grid-land-wide, page-1-hero-land-wide]
+replaces: screen-mosaic-4-hero-70-sidebar
+aliases: []
+program: mosaic
+densityClass: standard
+role: land-hero-3l-wide
+
+stage:
+  aspect: "16:9"
+  # 主图 16:9 宽 50%；右三横 16:9 各宽 25%。
+  # 剩余宽 25% 三等分 → 左 / 列缝 / 右各 1/12。
+  # 主图独自垂直居中。右栏三槽剩余高 25% 四等分 → 顶 / 缝 / 缝 / 底各 1/16。
+  margin:
+    top: 0.0625
+    right: 0.083333
+    bottom: 0.0625
+    left: 0.083333
+  gapX: 0.083333
+  gapY: 0.0625
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 4
+# 示意图用途只写主图一张。图上是 1 大 + 3 小，按图。
+mix: { portrait: 0, landscape: 4 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-land-right-3l
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "16:9"
+
+themes: [landscape, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 宽横为主，三张小宽横辅成侧栏
+  whenNotToUse: 槽是 4:3 → 用 page-4-1l3l-left；四张等权 → 用 page-4-grid-land-wide；主图更适合靠右 → 用 page-4-1l3l-wide-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 1L3L
+  thumb: 左主 16:9 半宽；右三横 16:9 各 25%；剩余宽三等分
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸，槽亦 16:9 → 宽高分数相同）---
+#   mainW = mainH = 0.50；top = 0.25 H
+#   railW = railH = 0.25
+#   剩余宽 0.25 → 三等分 1/12 W
+#   三小合计 0.75 H，剩余 0.25 → 顶/缝/缝/底各 0.0625 H
+#   main: left 1/12 W, top 0.25 H
+#   rail: left 2/3 W；top 0.0625 / 0.375 / 0.6875 H
+# 右栏三槽合计比主图高，两列不顶齐。
+# 不是 page-4-1l3l-left（那边槽是 4:3、侧栏宽 22%）。

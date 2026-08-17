@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-5-1p4l-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左竖右四横
+sketchName: 1竖4横
+familyId: port-4land
+canonical: page-5-1p4l-left
+related: [page-5-1p4l-right]
+seeAlso: [page-4-1p3l-left, page-4-grid-land, page-3-2l1p-left]
+replaces: screen-mosaic-5-1p4l-portrait-hero
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-grid-4l
+
+stage:
+  aspect: "16:9"
+  # 竖槽 3:4 高 8/9，独自垂直居中（顶/底各 1/18）。
+  # 右 2×2 横槽 4:3 各宽 25%；上下与竖槽顶底对齐，行缝吃剩余高 2/9。
+  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 宫缝 / 右各 3.125%。
+  margin:
+    top: 0.055556
+    right: 0.03125
+    bottom: 0.055556
+    left: 0.03125
+  gapX: 0.03125
+  gapY: 0.222222
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+mix: { portrait: 1, landscape: 4 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-port-right-2x2
+
+slots:
+  - { index: 0, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 4, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 4:3
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 一张竖图为主，四张 4:3 横图 2×2 辅
+  whenNotToUse: 只要三横一竖 → 用 page-4-1p3l-left；竖图更适合靠右 → 用 page-5-1p4l-right；四张等权横 → 用 page-4-grid-land
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 1P4L
+  thumb: 左竖 3:4 高 8/9；右 2×2 横 4:3 各 25%，上下与竖槽齐
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   portH = 8/9 H；3:4 → portW = 3/8 W = 0.375 W
+#   portLeft = 0.03125 W；portTop = 1/18 H
+#   landW = 0.25 W；4:3 → landH = 1/3 H
+#   行缝 = 8/9 − 2/3 = 2/9 H（适应剩余，使 2×2 与竖槽顶底齐）
+#   land00: left 0.4375 W, top 1/18 H
+#   land01: left 0.71875 W, top 1/18 H
+#   land10: left 0.4375 W, top 11/18 H
+#   land11: left 0.71875 W, top 11/18 H
+# 现网 screen-mosaic-5-1p4l-portrait-hero 是满高竖 + 四条扁轨，不是同一张。

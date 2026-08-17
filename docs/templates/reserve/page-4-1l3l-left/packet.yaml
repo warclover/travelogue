@@ -1,0 +1,84 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-4-1l3l-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左主横右三小
+sketchName: 横版一大三小
+familyId: land-hero-3
+canonical: page-4-1l3l-left
+related: [page-4-1l3l-right]
+seeAlso: [page-4-grid-land, page-4-1p3l-left, page-3-2l1p-hero-left]
+replaces: screen-mosaic-4-hero-70-sidebar
+aliases: []
+program: mosaic
+densityClass: standard
+role: land-hero-3l
+
+stage:
+  aspect: "16:9"
+  # 主图 4:3 宽 50%；右三横 4:3 各宽 22%。
+  # 剩余宽 28% 三等分 → 左 / 列缝 / 右各 28/3%。
+  # 主图独自垂直居中。右栏三槽剩余高 12% 四等分 → 顶 / 缝 / 缝 / 底各 3%。
+  margin:
+    top: 0.03
+    right: 0.093333
+    bottom: 0.03
+    left: 0.093333
+  gapX: 0.093333
+  gapY: 0.03
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 4
+# 示意图用途只写主图一张。图上是 1 大 + 3 小，按图。
+mix: { portrait: 0, landscape: 4 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-land-right-3l
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "4:3" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 3, role: landscape, orient: landscape, aspect: "4:3" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [portrait]
+  requireOrient: [landscape]
+  preferAspect: "4:3"
+
+themes: [landscape, portrait, architecture, sequence]
+usage:
+  whenToUse: 一张 4:3 横图为主，三张小横图辅成侧栏
+  whenNotToUse: 四张等权 → 用 page-4-grid-land；主图更适合靠右 → 用 page-4-1l3l-right；必须消化竖图
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 1L3L
+  thumb: 左主 4:3 半宽；右三横 4:3 各 22%；剩余宽三等分
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   mainW = 0.50 W；4:3 → mainH = 2/3 H；top = 1/6 H
+#   railW = 0.22 W；4:3 → railH = 0.22 * 4/3 H = 0.293333 H
+#   剩余宽 0.28 → 三等分 0.093333 W
+#   三小合计 0.88 H，剩余 0.12 → 顶/缝/缝/底各 0.03 H
+#   main: left 0.093333 W, top 0.166667 H
+#   rail: left 0.686667 W；top 0.03 / 0.353333 / 0.676667 H
+# 右栏三槽合计比主图高，两列不顶齐。
+# 不用 page-4-hero-rail：附录 A 那张是约 70% 主图 + 侧栏。
+# 现网 screen-mosaic-4-hero-70-sidebar 也不是同一张。

@@ -1,0 +1,87 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-4-2p2l-cross
+version: 1
+status: sketch
+kind: primitive
+displayName: 十字两横两竖
+sketchName: 十字2横2竖
+familyId: port-land-cross
+canonical: page-4-2p2l-cross
+related: [page-4-grid-land, page-3-2p1s, page-2-pair-port, page-2-pair-land]
+seeAlso: [page-4-2p2l, page-4-1p3l-left]
+replaces: screen-mosaic-4-2p2l-portrait-bookends
+aliases: []
+program: mosaic
+densityClass: standard
+role: cross-2p2l
+
+stage:
+  aspect: "16:9"
+  # 竖槽 3:4 高 5/9，独自垂直居中（顶/底各 2/9）。
+  # 横槽 4:3 宽 5/16；中列剩余高 1/6 三等分 → 顶 / 缝 / 底各 1/18。
+  # 三列合计 50/64，剩余 14/64 四等分 → 左 / 缝 / 缝 / 右各 7/128。
+  margin:
+    top: 0.055556
+    right: 0.054688
+    bottom: 0.055556
+    left: 0.054688
+  gapX: 0.054688
+  gapY: 0.055556
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 4
+# 示意图表写成「2 方版」。图上是 2 横 4:3 + 2 竖 3:4，按图。
+mix: { portrait: 2, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: cross-2p-bookend-2l-stack
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 2, role: landscape, orient: landscape, aspect: "4:3" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 竖槽：禁横，优先 3:4
+  # 横槽：禁竖，优先 4:3
+
+themes: [portrait, landscape, architecture, sequence]
+usage:
+  whenToUse: 两张竖图作左右书挡，中间上下两张横图，十字无主次
+  whenNotToUse: 四张都是横 → 用 page-4-grid-land；只要两竖或两横；要 2×2 棋盘 → 附录 A 的 page-4-2p2l（待画，不是这一张）
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+# 示意图兜底写「更宽则以宽对齐、高度向下留白」（顶齐）。本库仍走相对槽三条。
+
+glyph:
+  badge: 2P2L
+  thumb: 左右竖 3:4 高 5/9；中上下横 4:3 宽 5/16；十字居中
+
+sourceSketch: sketch.png
+
+# --- 几何（16:9 纸）---
+#   portH = 5/9 H；3:4 → portW = (5/9)*(3/4)*(9/16) W = 15/64 W
+#   landW = 5/16 W；4:3 → landH = (5/16)*(3/4)*(16/9) H = 5/12 H
+#   剩余宽 1 − 30/64 − 20/64 = 14/64 → 四等分 7/128 W
+#   竖槽剩余高 4/9 → 顶/底各 2/9 H（中列更高，不与竖槽顶齐）
+#   中列剩余高 1 − 10/12 = 1/6 → 顶/缝/底各 1/18 H
+#   port0: left 7/128 W, top 2/9 H
+#   land0: left 11/32 W, top 1/18 H
+#   land1: left 11/32 W, top 19/36 H
+#   port1: left 91/128 W, top 2/9 H
+# 表头「方版」按图更正为横版。左右对称，无镜像兄弟。
+# 不用 page-4-2p2l：附录 A 那张是 2×2 棋盘。
+# 现网 screen-mosaic-4-2p2l-portrait-bookends 是满高竖书挡，不是同一张。
