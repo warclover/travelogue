@@ -350,6 +350,36 @@ window.RESERVE_FACES = [
         ]
       },
       {
+        id: "page-3-2l1p-hero-wide-left",
+        displayName: "左主宽横右上宽横下竖",
+        badge: "2L1P",
+        blurb: "由 page-3-2l1p-hero-left 改槽比：两横 16:9。主宽仍 71% 上下居中，右栏宽仍 25%。右栏余高三等分。按槽禁入。与竖主的 page-3-2l1p-wide-left 不是同一张。",
+        related: "兄弟 page-3-2l1p-hero-wide-right（镜像）· page-3-2l1p-hero-left（两横 4:3）。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-3-2l1p-hero-wide-left/",
+        hasSketch: false,
+        slots: [
+          { left: 0, top: 14.5, width: 71, height: 71 },
+          { left: 75, top: 5.246914, width: 25, height: 25 },
+          { left: 75, top: 35.493827, width: 25, height: 59.259259 }
+        ]
+      },
+      {
+        id: "page-3-2l1p-hero-wide-right",
+        displayName: "左上宽横下竖右主宽横",
+        badge: "1P2L",
+        blurb: "上一张的镜像：左上横 16:9、左下竖 3:4，右主 16:9 占页宽 71%。栏内仍是上横下竖。",
+        related: "兄弟 page-3-2l1p-hero-wide-left。无独立示意图",
+        replaces: "无合格现网顶岗",
+        href: "page-3-2l1p-hero-wide-right/",
+        hasSketch: false,
+        slots: [
+          { left: 0, top: 5.246914, width: 25, height: 25 },
+          { left: 0, top: 35.493827, width: 25, height: 59.259259 },
+          { left: 29, top: 14.5, width: 71, height: 71 }
+        ]
+      },
+      {
         id: "page-4-grid-land",
         displayName: "横版四宫",
         badge: "4L",

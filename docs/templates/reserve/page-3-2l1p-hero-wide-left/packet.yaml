@@ -1,0 +1,82 @@
+# 备用库数据包 · 非正式合同
+# 升附录 A 前只给人审几何与用途；引擎不读。
+
+id: page-3-2l1p-hero-wide-left
+version: 1
+status: sketch
+kind: primitive
+displayName: 左主宽横右上宽横下竖
+sketchName: 2宽横1竖1主
+familyId: land-hero-stack
+canonical: page-3-2l1p-hero-wide-left
+related: [page-3-2l1p-hero-wide-right]
+seeAlso: [page-3-2l1p-hero-left, page-3-2l1p-wide-left]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: land-hero-l-wide
+
+stage:
+  aspect: "16:9"
+  # 由 page-3-2l1p-hero-left 改槽比：两横 4:3 → 16:9。右栏宽仍 25%，主图宽仍 71%，列缝仍 4%。
+  # 16:9 纸上 16:9 槽：宽% = 高%。主图高 71%；右上横高 25%；右下竖 3:4 仍高 16/27。
+  # 右栏（横+竖、无缝）已高于主图，两列不能再等高。
+  # 右栏：余高 17/108 三等分（顶 / 缝 / 底）。主图单独相对整页上下居中。
+  margin:
+    top: 0.052469
+    right: 0
+    bottom: 0.052469
+    left: 0
+  gapX: 0.04
+  gapY: 0.052469
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 1, landscape: 2 }
+
+placement:
+  groupAlign: mixed
+  distribute: split-left-land-right-stack-lp
+
+slots:
+  - { index: 0, role: main, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 横槽：禁竖，优先 16:9
+  # 竖槽：禁横，优先 3:4
+
+themes: [landscape, portrait, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 横图明显更大，右上再辅一张 16:9、右下辅一张竖
+  whenNotToUse: 横槽是 4:3 → 用 page-3-2l1p-hero-left；竖图才是主图 → 用 page-3-2l1p-wide-left；主横更适合靠右 → 用 page-3-2l1p-hero-wide-right
+
+fitPolicy: relative-to-slot
+# 同比例铺满
+# 比槽更宽 → 以宽对齐，上下留白
+# 比槽更高 → 以高对齐，左右留白
+# 朝向不符 → 禁入，不硬裁
+
+glyph:
+  badge: 2L1P
+  thumb: 左主 16:9 占页宽 71% 上下居中；右上横 16:9、右下竖 3:4 各占 25%；列缝 4%；右栏余高三等分
+
+sourceSketch: null
+
+# --- 几何（16:9 纸）---
+#   右栏宽仍 0.25 W（小横槽宽不变）
+#   landH = 0.25 H；portH = 0.25 × (4/3) × (16/9) H = 16/27 H
+#   mainW = 0.71 W → 16:9 → mainH = 0.71 H
+#   余高 1 - 1/4 - 16/27 = 17/108；右栏顶 / 缝 / 底各 17/324
+#   main top = (1 - 0.71) / 2 = 0.145（整页上下居中）
+#   land top = 17/324；port top = 115/324
+#   colLeft = 0.75 W
+# 与 page-3-2l1p-hero-left（两横 4:3、两列等高）不是同一张。
+# 与 page-3-2l1p-wide-left（竖主满高 + 右双 16:9 叠满高）不是同一张。

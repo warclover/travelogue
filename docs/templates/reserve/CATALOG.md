@@ -29,6 +29,8 @@
 | `page-3-port-hero-right` | 左双小右大 | `3P` | 3P | `port-hero-r` | **`page-3-port-hero-left`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-3-2l1p-hero-left` | 左主横右上横下竖 | `2L1P` | 2L1P | `land-hero-l` | **`page-3-2l1p-hero-right`** | 无合格现网顶岗 | sketch |
 | `page-3-2l1p-hero-right` | 左上横下竖右主横 | `1P2L` | 1P2L | `land-hero-r` | **`page-3-2l1p-hero-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-3-2l1p-hero-wide-left` | 左主宽横右上宽横下竖 | `2L1P` | 2L1P | `land-hero-l-wide` | **`page-3-2l1p-hero-wide-right`** · `page-3-2l1p-hero-left` | 无合格现网顶岗 | sketch |
+| `page-3-2l1p-hero-wide-right` | 左上宽横下竖右主宽横 | `1P2L` | 1P2L | `land-hero-r-wide` | **`page-3-2l1p-hero-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-4-grid-land` | 横版四宫 | `4L` | 4L | `grid-4-land` | `page-2-pair-land` · `page-3-land` | `screen-landscape-4`（偏满幅，不是同一张） | sketch |
 | `page-4-1p3l-left` | 左竖右三横 | `1P3L` | 1P3L | `port-stack-3l` | **`page-4-1p3l-right`** | 无合格现网顶岗 | sketch |
 | `page-4-1p3l-right` | 左三横右竖 | `3L1P` | 3L1P | `stack-3l-port` | **`page-4-1p3l-left`**（镜像） | 无合格现网顶岗 | sketch |
@@ -127,3 +129,5 @@
 | 0.44.0 | 2026-08-17 | 收 `page-8-2l6p`（上横 1/3 + 三竖；下三竖 + 横；竖 18.75% / 横 1/3 等高 4/9）+ **垂直镜像** `page-8-2l6p-flip`。 |
 | 0.45.0 | 2026-08-17 | 收 `page-6-2l4p-left`（左两横 1/3 叠 + 右 2×2 竖 18.75%；两行等高 4/9）+ 镜像 `page-6-2l4p-right`。 |
 | 0.46.0 | 2026-08-17 | 收 `page-6-4l2p`（左右各两横 1/3 叠，中两竖 18.75%；同尺寸只改位置；左右对称无镜像）。 |
+| 0.47.0 | 2026-08-17 | 收 `page-3-2l1p-hero-wide-left`（两横改 16:9；右栏宽仍 25%、主宽仍 71%；顶齐，余高三等分）+ 镜像 `page-3-2l1p-hero-wide-right`。 |
+| 0.47.1 | 2026-08-17 | `page-3-2l1p-hero-wide-*` 主图改为相对整页上下居中；辅栏仍余高三等分。 |

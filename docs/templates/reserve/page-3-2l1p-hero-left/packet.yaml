@@ -10,7 +10,7 @@ sketchName: 2横1竖1主
 familyId: land-hero-stack
 canonical: page-3-2l1p-hero-left
 related: [page-3-2l1p-hero-right]
-seeAlso: [page-3-2l1p-left, page-3-1s2l-left, page-2-1l1p]
+seeAlso: [page-3-2l1p-left, page-3-1s2l-left, page-2-1l1p, page-3-2l1p-hero-wide-left]
 replaces: null
 aliases: []
 program: mosaic

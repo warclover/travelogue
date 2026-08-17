@@ -306,6 +306,30 @@ faces:
     packet: page-3-2l1p-hero-right/packet.yaml
     usage: page-3-2l1p-hero-right/USAGE.md
     sketch: null
+  - id: page-3-2l1p-hero-wide-left
+    status: sketch
+    displayName: 左主宽横右上宽横下竖
+    badge: 2L1P
+    mix: { portrait: 1, landscape: 2 }
+    role: land-hero-l-wide
+    familyId: land-hero-stack
+    related: [page-3-2l1p-hero-wide-right, page-3-2l1p-hero-left]
+    replaces: null
+    packet: page-3-2l1p-hero-wide-left/packet.yaml
+    usage: page-3-2l1p-hero-wide-left/USAGE.md
+    sketch: null
+  - id: page-3-2l1p-hero-wide-right
+    status: sketch
+    displayName: 左上宽横下竖右主宽横
+    badge: 1P2L
+    mix: { portrait: 1, landscape: 2 }
+    role: land-hero-r-wide
+    familyId: land-hero-stack
+    related: [page-3-2l1p-hero-wide-left, page-3-2l1p-hero-right]
+    replaces: null
+    packet: page-3-2l1p-hero-wide-right/packet.yaml
+    usage: page-3-2l1p-hero-wide-right/USAGE.md
+    sketch: null
   - id: page-4-grid-land
     status: sketch
     displayName: 横版四宫

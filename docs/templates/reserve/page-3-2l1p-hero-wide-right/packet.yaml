@@ -1,0 +1,68 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-3-2l1p-hero-wide-left 左右镜像。
+
+id: page-3-2l1p-hero-wide-right
+version: 1
+status: sketch
+kind: primitive
+displayName: 左上宽横下竖右主宽横
+sketchName: 1竖2宽横1主
+familyId: land-hero-stack
+canonical: page-3-2l1p-hero-wide-right
+related: [page-3-2l1p-hero-wide-left]
+seeAlso: [page-3-2l1p-hero-right, page-3-2l1p-wide-right]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: land-hero-r-wide
+mirroredFrom: page-3-2l1p-hero-wide-left
+
+stage:
+  aspect: "16:9"
+  margin:
+    top: 0.052469
+    right: 0
+    bottom: 0.052469
+    left: 0
+  gapX: 0.04
+  gapY: 0.052469
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 3
+mix: { portrait: 1, landscape: 2 }
+
+placement:
+  groupAlign: start
+  distribute: split-left-stack-lp-right-land
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: main, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+  # 横槽：禁竖，优先 16:9
+  # 竖槽：禁横，优先 3:4
+
+themes: [landscape, portrait, architecture, sequence]
+usage:
+  whenToUse: 一张 16:9 横图明显更大（靠右），左上辅一张 16:9、左下辅一张竖
+  whenNotToUse: 横槽是 4:3 → 用 page-3-2l1p-hero-right；竖图才是主图 → 用 page-3-2l1p-wide-right；主横更适合靠左 → 用 page-3-2l1p-hero-wide-left
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1P2L
+  thumb: 左上横 16:9、左下竖 3:4 各占 25%；右主 16:9 占页宽 71% 上下居中；列缝 4%；辅栏余高三等分
+
+sourceSketch: null
+
+# 几何 = page-3-2l1p-hero-wide-left 水平镜像
+#   colLeft = 0；mainLeft = 0.29 W
+# 左栏内部仍是上横下竖，不上下对调。
