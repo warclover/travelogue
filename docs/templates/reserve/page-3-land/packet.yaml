@@ -19,12 +19,12 @@ role: land-row-3
 
 stage:
   aspect: "16:9"
-  # 槽宽仍 30%（4:3 按宽求解）。余下 10% 四等分：左右与两缝各 2.5%。
-  # 上下不写死边距：整组垂直居中；顶底剩余为通栏文案。
+  # 槽宽仍 30%（4:3 按宽求解）。缝令牌 1.5%；余宽不再四等分。
+  # 三槽 + 两缝 = 93%，剩余 7% 全归左右纸边各 3.5%。整组垂直居中；顶底剩余为通栏文案。
   margin:
-    left: 0.025
-    right: 0.025
-  gapX: 0.025
+    left: 0.035
+    right: 0.035
+  gapX: 0.015
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -75,7 +75,7 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 3L
-  thumb: 三横槽 4:3 各 30%，左右与缝各 2.5%；顶底通栏文案，可空
+  thumb: 三横槽 4:3 各 30%；列缝 1.5%；左右纸边各 3.5%；顶底通栏文案，可空
 
 sourceSketch: sketch.png
 
@@ -83,12 +83,12 @@ sourceSketch: sketch.png
 #   slotWidth  = 0.30 W（槽尺寸不变）
 #   slotHeight = 0.30 * (3/4) = 0.225 W = 0.40 H
 #   slotTop    = (1 - 0.40) / 2 = 0.30 H
-#   余宽 0.10 / 4 = 0.025 → 左 / 缝 / 缝 / 右
-#   slot0.left = 0.025 W
-#   slot1.left = 0.35 W
-#   slot2.left = 0.675 W
+#   缝令牌 gapX = 0.015；余宽 0.10 − 0.03 = 0.07 → 左右纸边各 0.035
+#   slot0.left = 0.035 W
+#   slot1.left = 0.35 W（中槽不动）
+#   slot2.left = 0.665 W
 # 上文案 / 下文案（通栏，不算槽）：
-#   copyLeft   = 0.025 W；copyWidth = 0.95 W
+#   copyLeft   = 0.035 W；copyWidth = 0.93 W
 #   header: top 0, height 0.30 H
 #   caption: top 0.70 H, height 0.30 H
 # 没字：绿框可藏，槽位仍居中。

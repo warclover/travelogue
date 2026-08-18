@@ -22,10 +22,10 @@ stage:
   aspect: "16:9"
   margin:
     top: 0.037037
-    right: 0.058594
+    right: 0.102188
     bottom: 0.037037
-    left: 0.058594
-  gapX: 0.058594
+    left: 0.102188
+  gapX: 0.015
   gapY: 0.037037
   marginBasis:
     x: pageWidth

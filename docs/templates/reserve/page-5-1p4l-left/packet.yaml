@@ -21,13 +21,13 @@ stage:
   aspect: "16:9"
   # 竖槽 3:4 高 8/9，独自垂直居中（顶/底各 1/18）。
   # 右 2×2 横槽 4:3 各宽 25%；上下与竖槽顶底对齐，行缝吃剩余高 2/9。
-  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 宫缝 / 右各 3.125%。
+  # 列缝令牌 1.5%；余宽不再四等分，左右纸边各 4.75%。宫缝 left 不动。行缝仍吃剩余高（对齐反推，不改）。
   margin:
     top: 0.055556
-    right: 0.03125
+    right: 0.0475
     bottom: 0.055556
-    left: 0.03125
-  gapX: 0.03125
+    left: 0.0475
+  gapX: 0.015
   gapY: 0.222222
   marginBasis:
     x: pageWidth
@@ -74,11 +74,11 @@ sourceSketch: sketch.png
 
 # --- 几何（16:9 纸）---
 #   portH = 8/9 H；3:4 → portW = 3/8 W = 0.375 W
-#   portLeft = 0.03125 W；portTop = 1/18 H
+#   portLeft = 0.0475 W；portTop = 1/18 H
 #   landW = 0.25 W；4:3 → landH = 1/3 H
-#   行缝 = 8/9 − 2/3 = 2/9 H（适应剩余，使 2×2 与竖槽顶底齐）
-#   land00: left 0.4375 W, top 1/18 H
-#   land01: left 0.71875 W, top 1/18 H
+#   行缝 = 8/9 − 2/3 = 2/9 H（对齐反推，不改）
+#   land00: left 0.4375 W, top 1/18 H（中列不动）
+#   land01: left 0.7025 W, top 1/18 H
 #   land10: left 0.4375 W, top 11/18 H
-#   land11: left 0.71875 W, top 11/18 H
+#   land11: left 0.7025 W, top 11/18 H
 # 现网 screen-mosaic-5-1p4l-portrait-hero 是满高竖 + 四条扁轨，不是同一张。

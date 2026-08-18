@@ -20,13 +20,13 @@ role: port-stack-2p2l
 stage:
   aspect: "16:9"
   # 大竖 3:4 高 8/9，垂直居中。右两列相同：上 3:4、下 16:9，各宽 25%。
-  # 上下与大竖顶底齐，列内缝 5/108。剩余宽四等分各 3.125%。
+  # 上下与大竖顶底齐，列内缝 5/108 不动。列缝令牌 1.5%；左右纸边各 4.75%。中列 left 不动。
   margin:
     top: 0.055556
-    right: 0.03125
+    right: 0.0475
     bottom: 0.055556
-    left: 0.03125
-  gapX: 0.03125
+    left: 0.0475
+  gapX: 0.015
   gapY: 0.046296
   marginBasis:
     x: pageWidth
@@ -74,10 +74,10 @@ sourceSketch: sketch.png
 
 # --- 几何（16:9 纸）---
 #   与 page-5-3p2l-left 同大竖与侧列宽，但两列都是上竖下横（不是交错）。
-#   main: left 0.03125 W, top 1/18 H, 0.375 × 8/9
-#   小竖 H = 16/27；宽横 H = 1/4；缝 = 5/108
-#   mid port: left 0.4375 W, top 1/18 H
+#   main: left 0.0475 W, top 1/18 H, 0.375 × 8/9
+#   小竖 H = 16/27；宽横 H = 1/4；列内缝 = 5/108（不动）
+#   mid port: left 0.4375 W, top 1/18 H（中列不动）
 #   mid land: left 0.4375 W, top 25/36 H
-#   right port: left 0.71875 W, top 1/18 H
-#   right land: left 0.71875 W, top 25/36 H
+#   right port: left 0.7025 W, top 1/18 H
+#   right land: left 0.7025 W, top 25/36 H
 # 不是 page-5-3p2l-left（那边中上是横、右上是竖）。

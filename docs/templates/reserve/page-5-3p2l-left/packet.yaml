@@ -21,13 +21,13 @@ stage:
   aspect: "16:9"
   # 大竖 3:4 高 8/9，垂直居中。右两列各宽 25%，上下与大竖顶底齐。
   # 中列上 16:9、下 3:4；右列上 3:4、下 16:9。列内缝同为 5/108。
-  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 列缝 / 右各 3.125%。
+  # 列缝令牌 1.5%；余宽不再四等分，左右纸边各 4.75%。中列 left 不动。列内缝仍 5/108。
   margin:
     top: 0.055556
-    right: 0.03125
+    right: 0.0475
     bottom: 0.055556
-    left: 0.03125
-  gapX: 0.03125
+    left: 0.0475
+  gapX: 0.015
   gapY: 0.046296
   marginBasis:
     x: pageWidth
@@ -69,7 +69,7 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 3P2L
-  thumb: 左大竖 3:4 高 8/9；中上 16:9 下 3:4；右上 3:4 下 16:9
+  thumb: 左大竖 3:4 高 8/9；侧列各 25%；列缝 1.5%；列内缝不动
 
 sourceSketch: sketch.png
 
@@ -78,10 +78,11 @@ sourceSketch: sketch.png
 #   侧列宽 0.25 W
 #   16:9 → H = 0.25 H；3:4 宽 0.25 → H = 16/27 H
 #   列内缝 = 8/9 − 1/4 − 16/27 = 5/108 H
-#   main: left 0.03125 W
-#   mid land: left 0.4375 W, top 1/18 H
+#   缝令牌 gapX = 0.015；余宽 0.125 − 0.03 = 0.095 → 左右纸边各 0.0475
+#   main: left 0.0475 W
+#   mid land: left 0.4375 W, top 1/18 H（中列不动）
 #   mid port: left 0.4375 W, top 19/54 H
-#   right port: left 0.71875 W, top 1/18 H
-#   right land: left 0.71875 W, top 25/36 H
+#   right port: left 0.7025 W, top 1/18 H
+#   right land: left 0.7025 W, top 25/36 H
 # 表头用途按图更正为 3 竖 2 横。
 # 现网 screen-mosaic-5-2p3l-portrait-hero-rail 是竖主+辅竖+三横轨，不是同一张。
