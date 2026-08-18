@@ -24,8 +24,8 @@ stage:
     top: 0
     right: 0.05
     bottom: 0
-    left: 0.05
-  gapX: 0.05
+    left: 0.083333
+  gapX: 0.016667
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -57,10 +57,10 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 1P1L
-  thumb: 左竖 3:4 占页宽 25%；右宽 16:9 占页宽 60%；左右与间距各 5%
+  thumb: 左竖 3:4 占页宽 25% 整体右移；右宽 16:9 占页宽 60%；列缝为原 5% 的 1/3
 
 sourceSketch: null
 
 # 几何 = page-2-1l1p-wide 水平镜像
-#   portLeft = 0.05 W
-#   landLeft = 0.05 + 0.25 + 0.05 = 0.35 W
+#   portLeft = 1/12 W
+#   landLeft = 0.35 W（主图不动）

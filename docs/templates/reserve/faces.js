@@ -131,14 +131,14 @@ window.RESERVE_FACES = [
         id: "page-3-port",
         displayName: "三竖并排",
         badge: "3P",
-        blurb: "三竖槽 3:4 各 30%；余宽 10% 四等分（左右与两缝各 2.5%），整组垂直居中。横版禁入。",
+        blurb: "三竖槽 3:4 各 30%；列缝令牌 1.5%，左右纸边各 3.5%；整组垂直居中。横版禁入。",
         related: "同族 page-2-pair-port。附录 A 已有同 id，边距不同",
         replaces: "意图顶岗 screen-portrait-3（9:16 满幅，不是同一张）",
         href: "page-3-port/",
         slots: [
-          { left: 2.5, top: 14.444444, width: 30, height: 71.111111 },
+          { left: 3.5, top: 14.444444, width: 30, height: 71.111111 },
           { left: 35, top: 14.444444, width: 30, height: 71.111111 },
-          { left: 67.5, top: 14.444444, width: 30, height: 71.111111 }
+          { left: 66.5, top: 14.444444, width: 30, height: 71.111111 }
         ]
       },
       {
@@ -246,14 +246,14 @@ window.RESERVE_FACES = [
         id: "page-2-1l1p-wide",
         displayName: "左宽右竖",
         badge: "1L1P",
-        blurb: "左主 16:9 占页宽 60%；右竖 3:4 占页宽 25%；左右与间距各 5%。按槽禁入。与 4:3 的 page-2-1l1p 不是同一张。",
+        blurb: "左主 16:9 占页宽 60%；右竖 3:4 占页宽 25% 整体左移，列缝为原 5% 的 1/3。按槽禁入。与 4:3 的 page-2-1l1p 不是同一张。",
         related: "兄弟 page-2-1p1l-wide（镜像）",
         replaces: "无合格现网顶岗",
         href: "page-2-1l1p-wide/",
         hasSketch: true,
         slots: [
           { left: 5, top: 20, width: 60, height: 60 },
-          { left: 70, top: 20.370370, width: 25, height: 59.259259 }
+          { left: 66.666667, top: 20.370370, width: 25, height: 59.259259 }
         ]
       },
       {
@@ -266,7 +266,7 @@ window.RESERVE_FACES = [
         href: "page-2-1p1l-wide/",
         hasSketch: false,
         slots: [
-          { left: 5, top: 20.370370, width: 25, height: 59.259259 },
+          { left: 8.333333, top: 20.370370, width: 25, height: 59.259259 },
           { left: 35, top: 20, width: 60, height: 60 }
         ]
       },
@@ -323,15 +323,15 @@ window.RESERVE_FACES = [
         id: "page-3-2l1p-hero-left",
         displayName: "左主横右上横下竖",
         badge: "2L1P",
-        blurb: "左主 4:3 占页宽 71%；右上横 4:3、右下竖 3:4 各占 25%；列缝 4%。按槽禁入。与竖主的 page-3-2l1p-left 不是同一张。",
+        blurb: "左主 4:3 占页宽 71%；右上横 4:3、右下竖 3:4 各占 25%。右栏整体左移，列缝为原 4% 的 1/3。按槽禁入。与竖主的 page-3-2l1p-left 不是同一张。",
         related: "兄弟 page-3-2l1p-hero-right（镜像）",
         replaces: "无合格现网顶岗",
         href: "page-3-2l1p-hero-left/",
         hasSketch: true,
         slots: [
           { left: 0, top: 2.666667, width: 71, height: 94.666667 },
-          { left: 75, top: 2.666667, width: 25, height: 33.333333 },
-          { left: 75, top: 38.074074, width: 25, height: 59.259259 }
+          { left: 72.333333, top: 2.666667, width: 25, height: 33.333333 },
+          { left: 72.333333, top: 38.074074, width: 25, height: 59.259259 }
         ]
       },
       {
@@ -344,8 +344,8 @@ window.RESERVE_FACES = [
         href: "page-3-2l1p-hero-right/",
         hasSketch: false,
         slots: [
-          { left: 0, top: 2.666667, width: 25, height: 33.333333 },
-          { left: 0, top: 38.074074, width: 25, height: 59.259259 },
+          { left: 2.666667, top: 2.666667, width: 25, height: 33.333333 },
+          { left: 2.666667, top: 38.074074, width: 25, height: 59.259259 },
           { left: 29, top: 2.666667, width: 71, height: 94.666667 }
         ]
       },
@@ -462,16 +462,16 @@ window.RESERVE_FACES = [
         id: "page-4-grid-land-wide",
         displayName: "宽版横版四宫",
         badge: "4L",
-        blurb: "2×2 横槽 16:9；单槽宽 7/16，剩余宽高各自三等分。竖版禁入。不是 4:3 的 page-4-grid-land。",
+        blurb: "2×2 横槽 16:9；单槽宽 7/16。列缝令牌 1.5% 页宽，行缝用等价页高；剩余归纸边。竖版禁入。不是 4:3 的 page-4-grid-land。",
         related: "同族 page-4-grid-land（4:3 四宫）· page-1-hero-land-wide（单张 16:9）",
         replaces: "意图顶岗 screen-landscape-4（偏满幅，不是同一张）",
         href: "page-4-grid-land-wide/",
         hasSketch: true,
         slots: [
-          { left: 4.166667, top: 4.166667, width: 43.75, height: 43.75 },
-          { left: 52.083333, top: 4.166667, width: 43.75, height: 43.75 },
-          { left: 4.166667, top: 52.083333, width: 43.75, height: 43.75 },
-          { left: 52.083333, top: 52.083333, width: 43.75, height: 43.75 }
+          { left: 5.5, top: 4.916667, width: 43.75, height: 43.75 },
+          { left: 50.75, top: 4.916667, width: 43.75, height: 43.75 },
+          { left: 5.5, top: 51.333333, width: 43.75, height: 43.75 },
+          { left: 50.75, top: 51.333333, width: 43.75, height: 43.75 }
         ]
       },
       {
@@ -809,17 +809,17 @@ window.RESERVE_FACES = [
         id: "page-5-3p2l-center",
         displayName: "中大竖左上竖右上横",
         badge: "3P2L",
-        blurb: "中大竖 3:4 高 8/9；左上 3:4 下 16:9；右上 16:9 下 3:4。侧列各 25%，上下与大竖齐。不是靠左大竖的 page-5-3p2l-left。",
+        blurb: "中大竖 3:4 高 8/9；左上 3:4 下 16:9；右上 16:9 下 3:4。侧列各 25%，上下与大竖齐。列缝令牌 1.5%；列内缝不动。不是靠左大竖的 page-5-3p2l-left。",
         related: "兄弟 page-5-3p2l-center-flip（镜像）· page-5-3p2l-left（大竖靠左）",
         replaces: "意图顶岗 screen-mosaic-5-2p3l-portrait-hero-rail（不是同一张）",
         href: "page-5-3p2l-center/",
         hasSketch: true,
         slots: [
-          { left: 3.125, top: 5.555556, width: 25, height: 59.259259 },
-          { left: 3.125, top: 69.444444, width: 25, height: 25 },
+          { left: 4.75, top: 5.555556, width: 25, height: 59.259259 },
+          { left: 4.75, top: 69.444444, width: 25, height: 25 },
           { left: 31.25, top: 5.555556, width: 37.5, height: 88.888889 },
-          { left: 71.875, top: 5.555556, width: 25, height: 25 },
-          { left: 71.875, top: 35.185185, width: 25, height: 59.259259 }
+          { left: 70.25, top: 5.555556, width: 25, height: 25 },
+          { left: 70.25, top: 35.185185, width: 25, height: 59.259259 }
         ]
       },
       {
@@ -832,11 +832,11 @@ window.RESERVE_FACES = [
         href: "page-5-3p2l-center-flip/",
         hasSketch: false,
         slots: [
-          { left: 3.125, top: 5.555556, width: 25, height: 25 },
-          { left: 3.125, top: 35.185185, width: 25, height: 59.259259 },
+          { left: 4.75, top: 5.555556, width: 25, height: 25 },
+          { left: 4.75, top: 35.185185, width: 25, height: 59.259259 },
           { left: 31.25, top: 5.555556, width: 37.5, height: 88.888889 },
-          { left: 71.875, top: 5.555556, width: 25, height: 59.259259 },
-          { left: 71.875, top: 69.444444, width: 25, height: 25 }
+          { left: 70.25, top: 5.555556, width: 25, height: 59.259259 },
+          { left: 70.25, top: 69.444444, width: 25, height: 25 }
         ]
       },
       {
@@ -864,18 +864,18 @@ window.RESERVE_FACES = [
         id: "page-6-grid-land",
         displayName: "横版六宫格",
         badge: "6L",
-        blurb: "3×2 横槽 4:3；单槽宽 31%。剩余宽四等分、剩余高三等分。竖版禁入。不是现网等分的 screen-landscape-6。左右对称，无镜像。",
+        blurb: "3×2 横槽 4:3；单槽宽 31%。列缝令牌 1.5% 页宽，行缝用等价页高；剩余归纸边。竖版禁入。不是现网等分的 screen-landscape-6。左右对称，无镜像。",
         related: "同族 page-4-grid-land（2×2）· page-3-land · page-9-grid-land-wide（3×3 宽横）",
         replaces: "意图顶岗 screen-landscape-6（3×2 等分，槽比约 1.185，不是同一张）",
         href: "page-6-grid-land/",
         hasSketch: true,
         slots: [
-          { left: 1.75, top: 5.777778, width: 31, height: 41.333333 },
-          { left: 34.5, top: 5.777778, width: 31, height: 41.333333 },
-          { left: 67.25, top: 5.777778, width: 31, height: 41.333333 },
-          { left: 1.75, top: 52.888889, width: 31, height: 41.333333 },
-          { left: 34.5, top: 52.888889, width: 31, height: 41.333333 },
-          { left: 67.25, top: 52.888889, width: 31, height: 41.333333 }
+          { left: 2, top: 7.333333, width: 31, height: 41.333333 },
+          { left: 34.5, top: 7.333333, width: 31, height: 41.333333 },
+          { left: 67, top: 7.333333, width: 31, height: 41.333333 },
+          { left: 2, top: 51.333333, width: 31, height: 41.333333 },
+          { left: 34.5, top: 51.333333, width: 31, height: 41.333333 },
+          { left: 67, top: 51.333333, width: 31, height: 41.333333 }
         ]
       },
       {
@@ -1018,34 +1018,34 @@ window.RESERVE_FACES = [
         id: "page-6-1l5l-wide-left",
         displayName: "左主宽横右下五小",
         badge: "1L5L",
-        blurb: "大横 16:9 高 65% 顶齐左齐、底贴底行；右侧三小垂直居中均分；底行三小占满宽。右侧 5% 不对齐。竖版禁入。",
+        blurb: "大横 16:9 高 65% 顶齐左齐、底贴底行；右侧三小（含右下角）整体左移，中缝为原 5% 的 1/3。竖版禁入。",
         related: "兄弟 page-6-1l5l-wide-right（镜像）· page-4-1l3l-wide-left（1 大 3 小）",
         replaces: "无合格现网顶岗",
         href: "page-6-1l5l-wide-left/",
         hasSketch: true,
         slots: [
           { left: 0, top: 2.5, width: 65, height: 65 },
-          { left: 70, top: 2.5, width: 30, height: 30 },
-          { left: 70, top: 35, width: 30, height: 30 },
+          { left: 66.666667, top: 2.5, width: 30, height: 30 },
+          { left: 66.666667, top: 35, width: 30, height: 30 },
           { left: 0, top: 67.5, width: 30, height: 30 },
           { left: 35, top: 67.5, width: 30, height: 30 },
-          { left: 70, top: 67.5, width: 30, height: 30 }
+          { left: 66.666667, top: 67.5, width: 30, height: 30 }
         ]
       },
       {
         id: "page-6-1l5l-wide-right",
         displayName: "左下五小右主宽横",
         badge: "5L1L",
-        blurb: "上一张的镜像：大横 65% 顶齐右齐、底贴底行；左侧三小垂直居中均分；底行三小占满宽。无独立示意图。",
+        blurb: "上一张的镜像：大横 65% 顶齐右齐、底贴底行；左侧三小（含左下角）整体右移，中缝为原 5% 的 1/3。无独立示意图。",
         related: "兄弟 page-6-1l5l-wide-left。无独立示意图",
         replaces: "无合格现网顶岗",
         href: "page-6-1l5l-wide-right/",
         hasSketch: false,
         slots: [
-          { left: 0, top: 2.5, width: 30, height: 30 },
-          { left: 0, top: 35, width: 30, height: 30 },
+          { left: 3.333333, top: 2.5, width: 30, height: 30 },
+          { left: 3.333333, top: 35, width: 30, height: 30 },
           { left: 35, top: 2.5, width: 65, height: 65 },
-          { left: 0, top: 67.5, width: 30, height: 30 },
+          { left: 3.333333, top: 67.5, width: 30, height: 30 },
           { left: 35, top: 67.5, width: 30, height: 30 },
           { left: 70, top: 67.5, width: 30, height: 30 }
         ]

@@ -20,14 +20,14 @@ role: port-center-stagger
 stage:
   aspect: "16:9"
   # 中大竖 3:4 高 8/9，垂直居中。左右列各宽 25%，上下与大竖顶底齐。
-  # 左列上 3:4、下 16:9；右列上 16:9、下 3:4。列内缝同为 5/108。
-  # 剩余宽 12.5% 四等分 → 左 / 列缝 / 列缝 / 右各 3.125%。
+  # 左列上 3:4、下 16:9；右列上 16:9、下 3:4。列内缝仍 5/108（对齐反推，不改）。
+  # 列缝令牌 1.5%；余宽不再四等分，左右纸边各 4.75%。中竖 left 不动。
   margin:
     top: 0.055556
-    right: 0.03125
+    right: 0.0475
     bottom: 0.055556
-    left: 0.03125
-  gapX: 0.03125
+    left: 0.0475
+  gapX: 0.015
   gapY: 0.046296
   marginBasis:
     x: pageWidth
@@ -68,7 +68,7 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 3P2L
-  thumb: 中大竖 3:4 高 8/9；左上 3:4 下 16:9；右上 16:9 下 3:4
+  thumb: 中大竖 3:4 高 8/9；侧列各 25% 顶底齐；列缝 1.5%；列内缝不动
 
 sourceSketch: sketch.png
 
@@ -77,11 +77,13 @@ sourceSketch: sketch.png
 #   mainH = 8/9 H；3:4 → mainW = 3/8 W；top = 1/18 H；left = 5/16 W
 #   侧列宽 0.25 W
 #   16:9 → H = 0.25 H；3:4 宽 0.25 → H = 16/27 H
-#   列内缝 = 8/9 − 1/4 − 16/27 = 5/108 H
-#   left port: left 0.03125 W, top 1/18 H
-#   left land: left 0.03125 W, top 25/36 H
-#   main: left 0.3125 W, top 1/18 H
-#   right land: left 0.71875 W, top 1/18 H
-#   right port: left 0.71875 W, top 19/54 H
+#   列内缝 = 8/9 − 1/4 − 16/27 = 5/108 H（不动）
+#   缝令牌 gapX = 0.015；余宽 0.125 − 0.03 = 0.095 → 左右纸边各 0.0475
+#   left port: left 0.0475 W, top 1/18 H
+#   left land: left 0.0475 W, top 25/36 H
+#   main: left 0.3125 W, top 1/18 H（中竖不动）
+#   right land: left 0.7025 W, top 1/18 H
+#   right port: left 0.7025 W, top 19/54 H
+# 缝令牌试验：只收列缝。列内竖缝要收到令牌必须改侧列宽，本轮不做。
 # 不是 page-5-3p2l-left（那边大竖靠左）。
 # 现网 screen-mosaic-5-2p3l-portrait-hero-rail 是竖主+辅竖+三横轨，不是同一张。

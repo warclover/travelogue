@@ -19,15 +19,14 @@ role: mix-1l1p-wide
 
 stage:
   aspect: "16:9"
-  # 主图 16:9 = 页宽 60%；竖槽 3:4 = 页宽 25%。
-  # 左右与间距未写死，剩余 15% 三等分 → 各 5% 页宽。
-  # 两槽各自按槽比求解后垂直居中。
+  # 主图 16:9 = 页宽 60%；竖槽 3:4 = 页宽 25%。槽尺寸与垂直居中不动。
+  # 中缝试验：右竖整体左移 1/30，列缝 5% → 1/60。主图仍 left 5%。
   margin:
     top: 0
-    right: 0.05
+    right: 0.083333
     bottom: 0
     left: 0.05
-  gapX: 0.05
+  gapX: 0.016667
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -63,7 +62,7 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 1L1P
-  thumb: 左宽 16:9 占页宽 60%；右竖 3:4 占页宽 25%；左右与间距各 5%
+  thumb: 左宽 16:9 占页宽 60%；右竖 3:4 占页宽 25% 整体左移，列缝为原 5% 的 1/3
 
 sourceSketch: sketch.png
 
@@ -71,7 +70,7 @@ sourceSketch: sketch.png
 #   landW = 0.60 W；16:9 → landH = 0.60 * 9/16 W = 0.3375 W = 0.60 H
 #   landLeft = 0.05 W；landTop = 0.20 H
 #   portW = 0.25 W；3:4 → portH = 0.25 * 4/3 W = 0.333333 W = 0.592593 H
-#   portLeft = 0.05 + 0.60 + 0.05 = 0.70 W
+#   portLeft = 0.05 + 0.60 + 1/60 = 2/3 W
 #   portTop  = (1 - 0.592593) / 2 = 0.203704 H
 # 示意图写「高度与竖槽相同」。按写死宽与槽比：0.60 H vs 0.592593 H，差约 0.74 个百分点，不强行拉齐。
 # 用途栏只写「1 张横版人像或风景」，按图是一宽一竖。

@@ -19,15 +19,15 @@ role: grid-4-land-wide
 
 stage:
   aspect: "16:9"
-  # 单槽 16:9，宽 7/16 页宽 → 高亦 7/16 页高。
-  # 剩余宽高各 1/8，各自三等分（顶/缝/底，左/缝/右）= 1/24。
+  # 单槽 16:9，宽 7/16 页宽 → 高亦 7/16 页高。槽尺寸不动。
+  # 缝令牌 1.5% 页宽（竖缝用等价页高 0.015×16/9）。剩余全归纸边。
   margin:
-    top: 0.041667
-    right: 0.041667
-    bottom: 0.041667
-    left: 0.041667
-  gapX: 0.041667
-  gapY: 0.041667
+    top: 0.049167
+    right: 0.055
+    bottom: 0.049167
+    left: 0.055
+  gapX: 0.015
+  gapY: 0.026667
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -68,18 +68,21 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 4L
-  thumb: 2×2 横槽 16:9；单槽宽 7/16，剩余宽高各自三等分
+  thumb: 2×2 横槽 16:9；单槽宽 7/16；列缝 1.5%、行缝等价；剩余归纸边
 
 sourceSketch: sketch.png
 
 # --- 几何（16:9 纸，每槽必须等于 16:9）---
 #   slotW = 7/16 W = 0.4375 W
 #   slotH = 7/16 H = 0.4375 H
-#   剩余宽 = 剩余高 = 1/8 → 顶/缝/底、左/缝/右各 1/24 = 0.041667
-#   slot00: left 1/24 W, top 1/24 H
-#   slot01: left 25/48 W, top 1/24 H
-#   slot10: left 1/24 W, top 25/48 H
-#   slot11: left 25/48 W, top 25/48 H
+#   缝令牌：gapX = 0.015 W；gapY = 0.015 × 16/9 H = 0.026667 H
+#   余宽 1/8 − 0.015 = 0.110 → 左右纸边各 0.055
+#   余高 1/8 − 0.026667 = 0.098333 → 顶底各 0.049167
+#   slot00: left 0.055 W, top 0.049167 H
+#   slot01: left 0.5075 W, top 0.049167 H
+#   slot10: left 0.055 W, top 0.513333 H
+#   slot11: left 0.5075 W, top 0.513333 H
+# 缝令牌试验：只收缝，槽比 / 槽宽 / 2×2 对齐不动。
 # 左右对称，无镜像兄弟。
 # 不是 page-4-grid-land（那边槽是 4:3、高 4/9）。
 # 现网 screen-landscape-4 偏满幅，不是同一张。

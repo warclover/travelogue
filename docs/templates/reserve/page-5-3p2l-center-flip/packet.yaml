@@ -22,10 +22,10 @@ stage:
   aspect: "16:9"
   margin:
     top: 0.055556
-    right: 0.03125
+    right: 0.0475
     bottom: 0.055556
-    left: 0.03125
-  gapX: 0.03125
+    left: 0.0475
+  gapX: 0.015
   gapY: 0.046296
   marginBasis:
     x: pageWidth
@@ -64,8 +64,8 @@ glyph:
 sourceSketch: null
 
 # 几何 = page-5-3p2l-center 水平镜像（左右列对调，中大竖不动）。
-#   left land: left 0.03125 W, top 1/18 H
-#   left port: left 0.03125 W, top 19/54 H
-#   main: left 0.3125 W, top 1/18 H
-#   right port: left 0.71875 W, top 1/18 H
-#   right land: left 0.71875 W, top 25/36 H
+#   left land: left 0.0475 W, top 1/18 H
+#   left port: left 0.0475 W, top 19/54 H
+#   main: left 0.3125 W, top 1/18 H（中竖不动）
+#   right port: left 0.7025 W, top 1/18 H
+#   right land: left 0.7025 W, top 25/36 H

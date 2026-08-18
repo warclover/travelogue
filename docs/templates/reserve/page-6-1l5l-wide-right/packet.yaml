@@ -20,13 +20,15 @@ mirroredFrom: page-6-1l5l-wide-left
 
 stage:
   aspect: "16:9"
-  # 侧栏三小改到左侧，垂直居中均分；底行三小仍占满宽；大横顶齐右齐。
+  # 侧栏三小在左，垂直居中均分；大横顶齐右齐。槽尺寸不动。
+  # 中缝试验：左侧三小（含左下角共用格）整体右移 1/30，中缝 5% → 1/60。
+  # 底行中、右两格不动；左格跟着侧栏走。大横不动。
   margin:
     top: 0.025
     right: 0
     bottom: 0.025
-    left: 0
-  gapX: 0.05
+    left: 0.033333
+  gapX: 0.016667
   gapY: 0.025
   marginBasis:
     x: pageWidth
@@ -63,11 +65,11 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 5L1L
-  thumb: 大横 65% 顶齐右齐贴底行；左侧三小垂直均分；底三小占满宽
+  thumb: 大横 65% 顶齐右齐贴底行；左侧三小整体右移，中缝为原 5% 的 1/3
 
 sourceSketch: null
 
-# 几何 = page-6-1l5l-wide-left 水平镜像。
-#   侧栏（左）top: 0.025 / 0.35 / 0.675；left 0
-#   底行 left: 0 / 0.35 / 0.70；top 0.675
-#   main: left 0.35, top 0.025（65% 宽，右齐）
+# 几何 = page-6-1l5l-wide-left 水平镜像（中缝同样收到 1/60）。
+#   侧栏（左）top: 0.025 / 0.35 / 0.675；left 1/30
+#   底行 left: 1/30 / 0.35 / 0.70；top 0.675
+#   main: left 0.35, top 0.025（65% 宽，右齐，不动）

@@ -21,9 +21,9 @@ mirroredFrom: page-3-2l1p-hero-left
 stage:
   aspect: "16:9"
   margin:
-    left: 0
+    left: 0.026667
     right: 0
-  gapX: 0.04
+  gapX: 0.013333
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -56,10 +56,10 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 1P2L
-  thumb: 左上横 4:3、左下竖 3:4 各占 25%；右主 4:3 占页宽 71%；列缝 4%
+  thumb: 右主 4:3 占页宽 71%；左栏 25% 整体右移，列缝为原 4% 的 1/3
 
 sourceSketch: null
 
 # 几何 = page-3-2l1p-hero-left 水平镜像
-#   colLeft = 0；mainLeft = 0.29 W
+#   colLeft = 0.026667 W；mainLeft = 0.29 W
 # 右栏内部仍是上横下竖，不上下对调。

@@ -19,12 +19,12 @@ role: row-port-3
 
 stage:
   aspect: "16:9"
-  # 槽宽仍 30%（3:4 按宽求解）。余下 10% 四等分：左右与两缝各 2.5%。
-  # 上下不写死边距：整组垂直居中。
+  # 槽宽仍 30%（3:4 按宽求解）。缝令牌 1.5%；余宽不再四等分。
+  # 三槽 + 两缝 = 93%，剩余 7% 全归左右纸边各 3.5%。整组垂直居中。
   margin:
-    left: 0.025
-    right: 0.025
-  gapX: 0.025
+    left: 0.035
+    right: 0.035
+  gapX: 0.015
   marginBasis:
     x: pageWidth
     y: pageHeight
@@ -57,7 +57,7 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 3P
-  thumb: 三竖槽 3:4 各 30%，左右与缝各 2.5%，整组垂直居中
+  thumb: 三竖槽 3:4 各 30%；列缝 1.5%；左右纸边各 3.5%；整组垂直居中
 
 sourceSketch: sketch.png
 
@@ -65,10 +65,11 @@ sourceSketch: sketch.png
 #   slotWidth  = 0.30 W（槽尺寸不变）
 #   slotHeight = 0.30 / 0.75 = 0.40 W = 0.711111 H
 #   slotTop    = (1 - 0.711111) / 2 H = 0.144444 H
-#   余宽 0.10 / 4 = 0.025 → 左 / 缝 / 缝 / 右
-#   slot0.left = 0.025 W
-#   slot1.left = 0.35 W
-#   slot2.left = 0.675 W
+#   缝令牌 gapX = 0.015；余宽 0.10 − 0.03 = 0.07 → 左右纸边各 0.035
+#   slot0.left = 0.035 W
+#   slot1.left = 0.35 W（中槽不动）
+#   slot2.left = 0.665 W
 #
+# 缝令牌试验：只收列缝，槽比 / 槽宽 / 垂直居中不动。
 # 相对附录 A 已设计稿：那边距 8/6/8/6 + gapX 2% + 顶底可空文案。
-# 本备用稿槽仍 30%、余宽均分出缝、无文案、垂直居中。升格时以哪一版为准需你拍板。
+# 升格时以哪一版为准需你拍板。
