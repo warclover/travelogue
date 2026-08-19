@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>备用页型库 · 微缩</title>
+    <title>设计工坊 · 页型 / 成册</title>
   <style>
     :root {
       --ink: #ece8e0;
@@ -77,6 +77,10 @@
       font-size: 12px; color: var(--gold);
     }
     .banner.is-on { display: flex; }
+    .banner.is-bad {
+      border-color: #8a3a32; color: #f0b4ae; background: #3a1c1a;
+    }
+    .banner.is-bad button { border-color: #f0b4ae; color: #f0b4ae; }
     .banner button {
       font: inherit; font-size: 12px; color: var(--gold);
       background: #0e0d0c; border: 1px solid var(--gold);
@@ -142,18 +146,199 @@
       border-top: 1px solid var(--line);
       padding-top: 8px;
     }
+    .tabs { display: flex; gap: 6px; margin: 10px 0 0; }
+    .tabs button {
+      font: inherit; font-size: 12px; color: var(--ink);
+      background: transparent; border: 1px solid var(--line);
+      border-radius: 999px; padding: 4px 12px; cursor: pointer;
+    }
+    .tabs button[aria-selected="true"] {
+      background: var(--gold); border-color: var(--gold); color: #141210;
+    }
+    .pane[hidden] { display: none !important; }
+    #bind-banner { margin: 10px 20px 0; }
+    .bind-bar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      padding: 8px 20px; background: #1c1b19; border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+    .bind-bar .brand { font-weight: 650; margin-right: 4px; }
+    .bind-bar-spacer { flex: 1; }
+    .chip {
+      border: 1px solid #3a3834; border-radius: 6px; padding: 3px 8px; color: #cfc8bc;
+    }
+    .chip.amber { border-color: #8a6a28; color: #f0d48a; background: #2e2410; }
+    .chip.ok { border-color: #2f5c4a; color: #b8d8c8; }
+    .chip.mute { opacity: .55; }
+    .btn {
+      border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+      background: #3d3830; color: #ece8e0; font-family: inherit;
+    }
+    .btn.pri { background: var(--gold); color: #141210; }
+    .btn.warn { background: #5a3a18; color: #f0d48a; }
+    .btn[disabled] { opacity: .4; cursor: not-allowed; }
+    .bind-bar a.btn { text-decoration: none; display: inline-block; }
+    .btn.danger { background: #3a1c1a; color: #f0b4ae; margin-top: 8px; }
+    .bind-editor {
+      display: grid; grid-template-columns: 228px minmax(0, 1fr) 268px;
+      min-height: calc(100vh - 220px);
+    }
+    .bind-col { border-right: 1px solid var(--line); padding: 10px 12px 28px; overflow: auto; }
+    .bind-col:last-child { border-right: 0; }
+    .bind-col h3 { margin: 0 0 8px; font-size: 12px; font-weight: 650; }
+    .bind-col .hint { margin: 0 0 10px; font-size: 11px; color: var(--muted); line-height: 1.45; }
+    .inv-filters { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
+    .inv-filters button {
+      font: inherit; font-size: 11px; color: var(--ink);
+      background: #0e0d0c; border: 1px solid var(--line);
+      border-radius: 4px; padding: 3px 7px; cursor: pointer;
+    }
+    .inv-filters button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+    .inv-group { margin: 0 0 14px; }
+    .inv-group h3 small { color: var(--gold); font-weight: 500; margin-left: 6px; }
+    .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .inv-card {
+      display: block; width: 100%; text-align: left; cursor: grab;
+      background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+      padding: 5px; color: inherit; font: inherit; user-select: none;
+    }
+    .inv-card.is-kin { border-color: var(--gold); }
+    .inv-card.is-care { border-color: #5a3a28; }
+    .inv-meta { display: flex; justify-content: space-between; gap: 4px; margin-top: 4px; font-size: 10px; color: var(--muted); }
+    .inv-name { font-size: 10px; line-height: 1.35; margin-top: 2px; color: #cfc8bc; }
+    .stage.mini { aspect-ratio: 16 / 9; width: 100%; background: var(--paper); border: 1px solid #111; outline: 1px solid #3a3834; position: relative; overflow: hidden; }
+    .stage.mini .badge { font-size: 8px; right: 3px; bottom: 3px; padding: 1px 3px; pointer-events: none; }
+    .stage.mini .region { border-width: 1px; pointer-events: none; }
+    .mid-label { margin: 0 0 6px; font-size: 11px; color: var(--muted); }
+    .dens { display: grid; grid-template-columns: repeat(16, minmax(4px, 1fr)); gap: 3px; margin: 0 0 12px; }
+    .book-pick { display: flex; align-items: center; gap: 6px; color: #cfc8bc; }
+    .book-pick select {
+      font: inherit; font-size: 12px; color: #ece8e0; background: #0e0d0c;
+      border: 1px solid #3a3834; border-radius: 6px; padding: 3px 8px; max-width: 240px;
+    }
+    .bind-modal {
+      position: fixed; inset: 0; z-index: 20;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bind-modal[hidden] { display: none !important; }
+    .bind-modal .sheet {
+      width: min(420px, calc(100vw - 32px));
+      background: #1a1917; border: 1px solid #3a3834;
+      border-radius: 10px; padding: 16px 18px 18px;
+      max-height: calc(100vh - 48px); overflow: auto;
+    }
+    .bind-modal .sheet.wide { width: min(720px, calc(100vw - 32px)); }
+    .check-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+    .check-table th, .check-table td {
+      text-align: left; padding: 6px 4px; border-bottom: 1px solid #2a2824; vertical-align: top;
+    }
+    .check-table th { color: #8a8278; font-weight: 550; }
+    .ok { color: #b8d8c8; }
+    .bad { color: #f0b4ae; font-weight: 650; }
+    .amber { color: #f0d48a; }
+    .status-chip { font-size: 11px; color: #8a8278; }
+    .card .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .bind-modal h2 { margin: 0 0 8px; font-size: 14px; }
+    .bind-modal p { margin: 0 0 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .bind-modal label { display: block; font-size: 12px; color: #8a8278; margin: 10px 0 4px; }
+    .bind-modal input[type="number"],
+    .bind-modal input[type="text"],
+    .bind-modal select {
+      width: 100%; font: inherit; font-size: 13px; box-sizing: border-box;
+      color: #ece8e0; background: #0e0d0c;
+      border: 1px solid #3a3834; border-radius: 6px; padding: 6px 8px;
+    }
+    .bind-chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
+    .bind-modal .err { color: #f0b4ae; font-size: 12px; margin: 8px 0 0; }
+    .bind-modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .dens i { height: 8px; background: #2a2824; border-radius: 1px; }
+    .dens i.m { background: #6a5a38; }
+    .dens i.d { background: var(--gold); }
+    .rail { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; }
+    .rail .gap {
+      width: 28px; min-height: 118px; border-radius: 3px;
+      background: transparent;
+    }
+    .rail .gap:hover, .rail-empty:hover, .rail-add:hover,
+    .rail .gap.is-hot, .rail-empty.is-hot, .rail-add.is-hot {
+      background: #2a2418;
+      outline: 1px dashed var(--gold);
+    }
+    .rail-add {
+      min-width: 148px; min-height: 118px;
+      border: 1px dashed #5a4a28; border-radius: 6px;
+      color: var(--gold); font-size: 12px; line-height: 1.45;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 8px; cursor: copy;
+    }
+    .rail-add small { display: block; color: var(--muted); font-size: 10px; margin-top: 4px; }
+    .tile {
+      width: 148px; background: var(--card); border: 1px solid var(--line);
+      border-radius: 6px; padding: 6px; position: relative; cursor: grab;
+    }
+    .tile.sel { border-color: var(--gold); }
+    .tile.flex { outline: 1px dashed #8a6a28; }
+    .tile.is-reject { border-color: #c45c4a; box-shadow: 0 0 0 2px rgba(196,92,74,.35); }
+    .tile.ghost { opacity: .4; cursor: default; }
+    .tile .pg { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+    .tile .name { margin-top: 4px; font-size: 11px; }
+    .tile .name em { color: var(--gold); font-style: normal; }
+    .tile .plus {
+      position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line);
+      background: #0e0d0c; color: var(--gold); font-size: 12px; line-height: 14px;
+      padding: 0; cursor: pointer; z-index: 2;
+    }
+    .rail-empty {
+      min-height: 160px; border: 1px dashed #5a4a28; border-radius: 8px;
+      padding: 28px 16px; color: var(--gold); font-size: 13px; line-height: 1.6;
+    }
+    .stat { margin: 0 0 10px; font-size: 12px; line-height: 1.55; }
+    .prog-pick { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
+    .prog-pick button {
+      font: inherit; font-size: 11px; color: var(--ink);
+      background: #0e0d0c; border: 1px solid var(--line);
+      border-radius: 4px; padding: 3px 7px; cursor: pointer;
+    }
+    .prog-pick button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+    .flex-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; margin: 0 0 8px; }
+    .flex-toggle input[type="number"] {
+      width: 72px; font: inherit; font-size: 12px;
+      color: #ece8e0; background: #0e0d0c;
+      border: 1px solid #3a3834; border-radius: 6px; padding: 3px 6px;
+    }
+    .pair-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 0 6px; }
+    .pair-strip .tile { width: auto; cursor: default; }
+    .amber-box, .red-box {
+      margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 12px; line-height: 1.5;
+    }
+    .amber-box { border: 1px solid #8a6a28; color: #f0d48a; background: #2e2410; }
+    .red-box { border: 1px solid #8a3a32; color: #f0b4ae; background: #3a1c1a; }
+    @media (max-width: 1100px) {
+      .bind-editor { grid-template-columns: 1fr; }
+      .bind-col { border-right: 0; border-bottom: 1px solid var(--line); }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>备用页型库 · 微缩 <em>黑纸 / 红竖 / 蓝横 / 金方 / 绿文案 · 引擎不读</em></h1>
-    <p>
-      设计收件箱，不是附录 A。说明见 <a href="./README.md">README</a> · <a href="./CATALOG.md">总表</a> · <a href="./preview.html">2星以上真图预览</a>。
+    <h1>设计工坊 · 页型 / 成册 <em>黑纸 / 红竖 / 蓝横 / 金方 / 绿文案 · 引擎不读</em></h1>
+    <p id="faces-lead">
+      长期后台工坊，不是附录 A，也不是现网柜。说明见 <a href="./README.md">README</a> · <a href="./CATALOG.md">总表</a> · <a href="./preview.html">真图试印</a> · <a href="./GROUP-LOCK-GUIDE.md">一组一页</a>。
       色块：<span class="swatch p"></span> 竖槽 · <span class="swatch l"></span> 横槽 · <span class="swatch s"></span> 方槽 · <span class="swatch copy"></span> 文案（可空）。
-      星级权威 <a href="./stars.yaml">stars.yaml</a>：点卡片上的无 / ★ / ★★ / ★★★，再按「写入本库」覆盖本夹该文件；也可「复制 YAML」贴进去。微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
+      星级权威 <a href="./stars.yaml">stars.yaml</a>：点卡片上的无 / ★ / ★★ / ★★★，再按「写入星级」覆盖本夹该文件。微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
+      加脸按 README 七步；缺微缩数据源则墙不出现。状态由<strong>项目运营</strong>标。
     </p>
+    <p id="bind-lead" hidden>
+      设计工坊成册柜。一本一份 <code>series/&lt;id&gt;.yaml</code>，页数任意。金样 <a href="./series/folio-16-standard.yaml">folio-16-standard</a> 禁止新建占用。日常请双击 <a href="./serve.cmd">serve.cmd</a> 打开。书衣沿用现网默认，不编封面封底。引擎不读。写入只存工坊；导出升格系列另存给现网评审。合同 <a href="../../PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md">TDV</a> · <a href="../../PRD-RESERVE-SERIES-CABINET-V1.md">RSC</a>。
+    </p>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-faces" aria-controls="pane-faces" aria-selected="true">页型</button>
+      <button type="button" role="tab" id="tab-bind" aria-controls="pane-bind" aria-selected="false">成册</button>
+    </nav>
   </header>
-  <main>
+  <main id="pane-faces" class="pane" role="tabpanel">
     <div class="toolbar">
       <button type="button" id="toggle-copy" aria-pressed="true">文案：有字</button>
       <span class="sep" aria-hidden="true"></span>
@@ -161,17 +346,35 @@
       <span class="sep" aria-hidden="true"></span>
       <div id="star-filters" class="toolbar" style="margin:0;padding:0"></div>
       <span class="sep" aria-hidden="true"></span>
-      <button type="button" class="js-save-stars" id="save-stars">写入本库</button>
-      <button type="button" class="js-copy-stars" id="copy-stars">复制 YAML</button>
+      <button type="button" class="js-save-stars" id="save-stars">写入星级</button>
+      <button type="button" class="js-copy-stars" id="copy-stars">复制星级 YAML</button>
     </div>
+    <div id="reconcile-banner" class="banner is-bad" role="status" hidden></div>
     <div id="star-banner" class="banner" role="status">
       <span id="star-banner-text">浏览器草稿还没写进本夹 <code>stars.yaml</code>。写入时请覆盖这个文件，不要只下到「下载」。</span>
-      <button type="button" class="js-save-stars">写入本库</button>
-      <button type="button" class="js-copy-stars">复制 YAML</button>
+      <button type="button" class="js-save-stars">写入星级</button>
+      <button type="button" class="js-copy-stars">复制星级 YAML</button>
     </div>
     <div id="board"></div>
   </main>
+  <div id="pane-bind" class="pane" role="tabpanel" hidden>
+    <div class="bind-app">
+      <div class="bind-bar" id="bind-bar"></div>
+      <div class="banner" id="bind-banner" role="status"></div>
+      <div class="bind-editor">
+        <aside class="bind-col" id="bind-inv"></aside>
+        <section class="bind-col" id="bind-rail"></section>
+        <aside class="bind-col" id="bind-insp"></aside>
+      </div>
+    </div>
+    <div id="bind-modal" class="bind-modal" hidden></div>
+  </div>
+  <div id="atelier-modal" class="bind-modal" hidden></div>
   <script src="./faces.js"></script>
+  <script src="./roles.js"></script>
+  <script src="./promote.js"></script>
+  <script src="./series-folio-16.js"></script>
+  <script src="./bind.js"></script>
   <script>
     const FACES = window.RESERVE_FACES;
 
@@ -229,8 +432,10 @@
     const toggle = document.getElementById("toggle-copy");
     const banner = document.getElementById("star-banner");
     let showCopy = true;
+    let hashSeries = "";
     let slotFilter = 0;
     let starFilter = -1;
+    let activeTab = "faces";
     let repoStars = {};
     let fileStars = {};
     let liveStars = {};
@@ -422,6 +627,8 @@
       const pick = [0, 1, 2, 3].map((k) =>
         `<button type="button" data-star="${k}" aria-pressed="${n === k}">${k ? "★".repeat(k) : "无"}</button>`
       ).join("");
+      const meta = (window.ATELIER_FACE_META || {})[face.id] || {};
+      const status = meta.status || "sketch";
       return `
         <article class="${cardClass}">
           <div class="stage" aria-label="${face.id}">
@@ -435,11 +642,16 @@
               <div class="star-pick" data-id="${face.id}">${pick}</div>
             </div>
             <p class="name">${face.displayName}</p>
+            <p class="status-chip">状态 ${status} · 运营标</p>
             <p class="blurb">${face.blurb}</p>
             <p class="links">
               <a href="${face.href}packet.yaml">数据包</a> ·
               <a href="${face.href}USAGE.md">使用说明</a>${face.hasSketch === false ? "" : ` · <a href="${face.href}sketch.png">示意图</a>`}
             </p>
+            <div class="actions">
+              <button type="button" class="btn warn" data-export-page="${face.id}">导出页型包</button>
+              <button type="button" class="btn" data-mark-status="${face.id}">标状态</button>
+            </div>
             <p class="note">${face.related}<br>${face.replaces}</p>
           </div>
         </article>`;
@@ -463,18 +675,38 @@
     }
 
     function readHash() {
+      const mTab = /(?:^|#|&)tab=(faces|bind)/.exec(location.hash);
       const mSlots = /(?:^|#|&)slots=(\d+)/.exec(location.hash);
       const mStars = /(?:^|#|&)stars=(\d+)/.exec(location.hash);
+      const mSeries = /(?:^|#|&)series=([a-z0-9-]+)/.exec(location.hash);
+      activeTab = mTab ? mTab[1] : "faces";
       slotFilter = mSlots ? Number(mSlots[1]) : 0;
       starFilter = mStars ? Number(mStars[1]) : -1;
+      hashSeries = mSeries ? mSeries[1] : "";
     }
 
     function writeHash() {
       const parts = [];
+      if (activeTab === "bind") parts.push("tab=bind");
+      if (activeTab === "bind") {
+        const sid = (window.ReserveBind && window.ReserveBind.currentId) || hashSeries;
+        if (sid) parts.push(`series=${sid}`);
+      }
       if (slotFilter) parts.push(`slots=${slotFilter}`);
       if (starFilter >= 0) parts.push(`stars=${starFilter}`);
       const next = parts.length ? `#${parts.join("&")}` : "#";
       if (location.hash !== next) history.replaceState(null, "", next);
+    }
+
+    function applyTab() {
+      const facesOn = activeTab !== "bind";
+      document.getElementById("pane-faces").hidden = !facesOn;
+      document.getElementById("pane-bind").hidden = facesOn;
+      document.getElementById("faces-lead").hidden = !facesOn;
+      document.getElementById("bind-lead").hidden = facesOn;
+      document.getElementById("tab-faces").setAttribute("aria-selected", facesOn ? "true" : "false");
+      document.getElementById("tab-bind").setAttribute("aria-selected", facesOn ? "false" : "true");
+      if (!facesOn && window.ReserveBind) window.ReserveBind.render();
     }
 
     function renderFilters() {
@@ -501,6 +733,8 @@
     }
 
     function render() {
+      applyTab();
+      if (activeTab === "bind") return;
       toggle.setAttribute("aria-pressed", showCopy ? "true" : "false");
       toggle.textContent = showCopy ? "文案：有字" : "文案：没字（槽位不动）";
       const dirty = isDirty();
@@ -542,6 +776,16 @@
       render();
     });
     board.addEventListener("click", (ev) => {
+      const exp = ev.target.closest("[data-export-page]");
+      if (exp) {
+        openPageExport(exp.dataset.exportPage);
+        return;
+      }
+      const mark = ev.target.closest("[data-mark-status]");
+      if (mark) {
+        openStatusDialog(mark.dataset.markStatus);
+        return;
+      }
       const btn = ev.target.closest("button[data-star]");
       if (!btn) return;
       const pick = btn.closest("[data-id]");
@@ -556,12 +800,197 @@
       showCopy = !showCopy;
       render();
     });
-    window.addEventListener("hashchange", () => {
-      readHash();
+    document.getElementById("tab-faces").addEventListener("click", async () => {
+      if (activeTab === "bind" && window.ReserveBind && window.ReserveBind.confirmLeave) {
+        const ok = await window.ReserveBind.confirmLeave();
+        if (!ok) return;
+      }
+      activeTab = "faces";
+      writeHash();
       render();
     });
+    document.getElementById("tab-bind").addEventListener("click", () => {
+      activeTab = "bind";
+      writeHash();
+      render();
+    });
+    window.addEventListener("hashchange", async () => {
+      readHash();
+      render();
+      if (activeTab === "bind" && hashSeries && window.ReserveBind && window.ReserveBind.openFromHash) {
+        await window.ReserveBind.openFromHash(hashSeries);
+      }
+    });
+    const atelierModal = document.getElementById("atelier-modal");
+    const reconcileBanner = document.getElementById("reconcile-banner");
+
+    function hideAtelierModal() {
+      atelierModal.hidden = true;
+      atelierModal.innerHTML = "";
+    }
+
+    function showAtelierModal(html, wide) {
+      atelierModal.innerHTML = `<div class="sheet${wide ? " wide" : ""}">${html}</div>`;
+      atelierModal.hidden = false;
+    }
+
+    function renderReconcile(report) {
+      if (!reconcileBanner) return;
+      if (!report || report.ok === true) {
+        reconcileBanner.hidden = true;
+        reconcileBanner.classList.remove("is-on", "is-bad");
+        return;
+      }
+      const offline = report.ok === null;
+      const title = offline ? "对账读不到总表" : "对账红灯";
+      reconcileBanner.hidden = false;
+      reconcileBanner.classList.add("is-on");
+      reconcileBanner.classList.toggle("is-bad", !offline);
+      reconcileBanner.innerHTML = `<span><b>${title}</b> · ${(report.issues || []).map((t) => t).join("；")}</span>`;
+    }
+
+    async function runReconcile() {
+      if (!window.AtelierPromote) return;
+      const report = await window.AtelierPromote.reconcile({
+        faces: FACES,
+        roles: window.RESERVE_ROLES || {}
+      });
+      const meta = {};
+      (report.catalog || []).forEach((row) => {
+        meta[row.id] = Object.assign({}, meta[row.id], row);
+      });
+      Object.keys(report.packets || {}).forEach((id) => {
+        meta[id] = Object.assign({}, meta[id], report.packets[id]);
+      });
+      window.ATELIER_FACE_META = meta;
+      renderReconcile(report);
+      if (activeTab !== "bind") render();
+    }
+
+    async function openStatusDialog(id) {
+      const face = FACES.find((f) => f.id === id);
+      if (!face || !window.AtelierPromote) return;
+      const cur = ((window.ATELIER_FACE_META || {})[id] || {}).status || "sketch";
+      showAtelierModal(`
+        <h2>标状态 · ${id}</h2>
+        <p>业主是<strong>项目运营</strong>。产品只在把升格包交给现网评审时会签。工坊状态只有 sketch / reviewed / promote-ready。</p>
+        <label>状态</label>
+        <select data-status>
+          <option value="sketch"${cur === "sketch" ? " selected" : ""}>sketch</option>
+          <option value="reviewed"${cur === "reviewed" ? " selected" : ""}>reviewed</option>
+          <option value="promote-ready"${cur === "promote-ready" ? " selected" : ""}>promote-ready</option>
+        </select>
+        <p class="err" data-msg hidden></p>
+        <div class="actions">
+          <button type="button" class="btn" data-act="cancel">取消</button>
+          <button type="button" class="btn pri" data-act="save">写入 packet.yaml</button>
+        </div>`);
+      atelierModal.querySelector("[data-act=cancel]").onclick = hideAtelierModal;
+      atelierModal.querySelector("[data-act=save]").onclick = async () => {
+        const next = atelierModal.querySelector("[data-status]").value;
+        const msg = atelierModal.querySelector("[data-msg]");
+        try {
+          const res = await fetch(`./${id}/packet.yaml`, { cache: "no-store" });
+          if (!res.ok) throw new Error("读不到 packet.yaml");
+          const text = window.AtelierPromote.rewritePacketStatus(await res.text(), next);
+          if (window.showSaveFilePicker) {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: "packet.yaml",
+              id: `atelier-packet-${id}`,
+              types: [{ description: "YAML", accept: { "text/yaml": [".yaml"], "text/plain": [".yaml"] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(text);
+            await writable.close();
+          } else {
+            window.AtelierPromote.downloadBlob(new Blob([text], { type: "text/yaml" }), "packet.yaml");
+          }
+          window.ATELIER_FACE_META = window.ATELIER_FACE_META || {};
+          window.ATELIER_FACE_META[id] = Object.assign({}, window.ATELIER_FACE_META[id], { status: next });
+          hideAtelierModal();
+          render();
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          msg.hidden = false;
+          msg.textContent = (err && err.message) || "写入失败。请覆盖该夹 packet.yaml。";
+        }
+      };
+    }
+
+    async function openPageExport(id) {
+      const face = FACES.find((f) => f.id === id);
+      if (!face || !window.AtelierPromote) return;
+      const inspected = await window.AtelierPromote.inspectPage(face, (fid) => faceStars({ id: fid }));
+      const hardHtml = inspected.hard.length
+        ? `<div class="red-box">${inspected.hard.map((t) => t).join("<br>")}</div>`
+        : "";
+      const starNeed = inspected.stars < 3
+        ? `<label>覆盖理由（建议三星未达，覆盖是常态）</label>
+           <input type="text" data-overlay placeholder="例如：几何已审，常用度先两星" />`
+        : `<p>星级 ★★★，可过建议门槛。</p>`;
+      showAtelierModal(`
+        <h2>导出页型包 · ${id}</h2>
+        <p>必须含 packet.yaml + USAGE.md + sketch.png。无示意图硬拒。点完不是已同步。</p>
+        ${hardHtml}
+        ${starNeed}
+        <p class="err" data-msg hidden></p>
+        <div class="actions">
+          <button type="button" class="btn" data-act="cancel">取消</button>
+          <button type="button" class="btn warn" data-act="go" ${inspected.canExport ? "" : "disabled"}>复制检查单并下载</button>
+        </div>`, true);
+      atelierModal.querySelector("[data-act=cancel]").onclick = hideAtelierModal;
+      const go = atelierModal.querySelector("[data-act=go]");
+      if (!go || go.disabled) return;
+      go.onclick = async () => {
+        const overlayEl = atelierModal.querySelector("[data-overlay]");
+        const overlay = overlayEl ? overlayEl.value.trim() : "";
+        const msg = atelierModal.querySelector("[data-msg]");
+        if (inspected.stars < 3 && !overlay) {
+          msg.hidden = false;
+          msg.textContent = "建议三星未达，须写覆盖理由。";
+          return;
+        }
+        try {
+          const folder = await window.AtelierPromote.exportPageZip(face, overlay);
+          const report = [
+            "# 设计工坊页型包检查单",
+            "",
+            `- 页型：${id}`,
+            `- 文件夹：${folder}/`,
+            `- packet.yaml：有（导出态 promote-ready）`,
+            `- USAGE.md：有`,
+            `- sketch.png：有`,
+            inspected.stars < 3 ? `- 三星覆盖：${overlay}` : "- 三星：过",
+            "",
+            "已复制升格 YAML 与检查单。交给现网评审。现网尚未收下。薄柜未建，升格未闭环。"
+          ].join("\n");
+          await window.AtelierPromote.copyText(`${report}\n`);
+          msg.hidden = false;
+          msg.style.color = "#b8d8c8";
+          msg.textContent = window.AtelierPromote.SUCCESS;
+        } catch (err) {
+          msg.hidden = false;
+          msg.textContent = (err && err.message) || "导出失败。";
+        }
+      };
+    }
+
+    atelierModal.addEventListener("click", (ev) => {
+      if (ev.target === atelierModal) hideAtelierModal();
+    });
+
     readHash();
-    loadStars().then(render);
+    loadStars().then(() => {
+      render();
+      runReconcile();
+      if (window.ReserveBind) {
+        return window.ReserveBind.init({
+          getStars: (id) => faceStars({ id }),
+          initialId: hashSeries,
+          onChange: writeHash
+        });
+      }
+    });
   </script>
 </body>
 </html>

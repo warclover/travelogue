@@ -1,0 +1,46 @@
+# 备用库成册样例 · folio-24-standard。引擎不读。
+# 在 gallery.html「成册」tab 编排后用「写入系列」覆盖本文件。
+# 书衣沿用现网默认；本波不编封面封底砖。
+
+id: folio-24-standard
+kind: series
+status: sketch
+stage: "16:9"
+pageCount: 32
+density: standard
+photo_span: [96, 160]
+coverHint: veil-footer
+backHint: closing-default
+sequence:
+  - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 2, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
+  - { i: 3, role: pair-port, program: mosaic, faceHint: page-2-pair-port }
+  - { i: 4, role: mix-1l1p-wide, program: mosaic, faceHint: page-2-1l1p-wide }
+  - { i: 5, role: pair-land, program: mosaic, faceHint: page-2-pair-land }
+  - { i: 6, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
+  - { i: 7, role: row-port-3, program: grid, faceHint: page-3-port }
+  - { i: 8, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide }
+  - { i: 9, role: land-hero-l, program: mosaic, faceHint: page-3-2l1p-hero-left }
+  - { i: 10, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
+  - { i: 11, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 12, role: row-port-3, program: grid, faceHint: page-3-port }
+  - { i: 13, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide }
+  - { i: 14, role: land-hero-r, program: mosaic, faceHint: page-3-2l1p-hero-right }
+  - { i: 15, role: port-bookend-2p, program: mosaic, faceHint: page-4-2p2p }
+  - { i: 16, role: grid-4-land, program: grid, faceHint: page-4-grid-land }
+  - { i: 17, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left }
+  - { i: 18, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross }
+  - { i: 19, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip }
+  - { i: 20, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center }
+  - { i: 21, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right }
+  - { i: 22, role: bookend-4l-2p, program: mosaic, faceHint: page-6-4l2p }
+  - { i: 23, role: grid-10-port, program: grid, faceHint: page-10-grid-port }
+  - { i: 24, role: grid-6-land, program: grid, faceHint: page-6-grid-land }
+  - { i: 25, role: diag-2l6p, program: mosaic, faceHint: page-8-2l6p }
+  - { i: 26, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 27, role: grid-9-land-wide, program: grid, faceHint: page-9-grid-land-wide }
+  - { i: 28, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 29, role: grid-8-land, program: grid, faceHint: page-8-grid-land }
+  - { i: 30, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 31, role: diag-2l6p-flip, program: mosaic, faceHint: page-8-2l6p-flip }
+  - { i: 32, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }

@@ -396,6 +396,12 @@
 | [DESIGN-PHASE16-layout-template-engine.md](./DESIGN-PHASE16-layout-template-engine.md) | 工程形态与模块边界 |
 | [GUIDE-PHASE16-layout-template-engine.md](./GUIDE-PHASE16-layout-template-engine.md) | 操作指南 |
 | [LTE-ADMISSION-LAYOUT-TEMPLATES.md](./LTE-ADMISSION-LAYOUT-TEMPLATES.md) | 轻量 admission · 复用 templating 平台 |
+| [PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) | **模板体系升级 TSU V1** **v1.1.0** · **Conditional Go** · BLK 已回写 · [七席](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) |
+| [templates/PAGE-PACKET-CATALOG.md](./templates/PAGE-PACKET-CATALOG.md) | TSU 附录 A · 已画 6 张 `page-*` 数据包（16:9） |
+| [templates/ROLE-FACE-MAP.md](./templates/ROLE-FACE-MAP.md) | TSU 附录 B · 角色 → 目标脸 / 现网顶岗 / `narrativeRole` |
+| [templates/TEMPLATE-SYSTEM-UPGRADE.md](./templates/TEMPLATE-SYSTEM-UPGRADE.md) | TSU 设计理由（送审过程稿，合同以 PRD 为准） |
+| [PRD-RESERVE-SERIES-CABINET-V1.md](./PRD-RESERVE-SERIES-CABINET-V1.md) | **RSC** 备用库成册样例柜 V1 **v0.1.0** · **W1 已落地**（手编多本 YAML · `serve.cmd` 目录 · 不进引擎 · 不代替 TSU `/series-editor`） |
+| [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **TDV** 后台模板设计验证工具 V1 **v0.2.0 Conditional Go** · BLK 已回写 · 设计工坊 · 升格包 · [八席纪要](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) · [导出线框](./wireframes/tdv-atelier-promote-export-v1-wireframe.html) · [讨论备忘](./后台模板设计验证工具备忘录.md) |
 
 ---
 
@@ -737,6 +743,11 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-19 | **TDV** PRD 升 **v0.2.0**：回写 BLK-TDV-01～07 · 导出线框 F1/F2 · [纪要 1.1](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
+| 2026-08-19 | **TDV** 八席：[tdv-template-design-verification-v1-review-2026-08-19](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) · **Conditional Go** · BLK-TDV-01～07 |
+| 2026-08-19 | **TDV**：新增 [PRD-TEMPLATE-DESIGN-VERIFICATION-V1](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) **v0.1.0 Draft** · 设计工坊与现网隔离 + 升格包 · [备忘录](./后台模板设计验证工具备忘录.md) |
+| 2026-08-18 | **RSC**：新增 [PRD-RESERVE-SERIES-CABINET-V1](./PRD-RESERVE-SERIES-CABINET-V1.md) **v0.1.0** · 备用库手编样例柜（多本、任意页数、静态服、不覆盖 16 页金样） |
+| 2026-08-15 | **TSU**：[PRD-TEMPLATE-SYSTEM-UPGRADE-V1](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) 升 **v1.1.0** · 回写七席 BLK-TSU-01～08 · 线框增 F1b · [纪要](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) |
 | 2026-08-13 | **BAI**：[PRD-BAILIAN-AI-INTEGRATION-V1](./PRD-BAILIAN-AI-INTEGRATION-V1.md) **v0.2.1** · 主名「模型API 配置」· V1 只中国站 · [八席评审](./acceptance-records/bai-bailian-ai-integration-v1-review-2026-08-13.md) |
 | 2026-08-02 | 文档卫生 A1：QFX+CQA 六件套迁入 [archive/2026/qfx-cqa/](./archive/2026/qfx-cqa/)（根 stub 保旧链） |
 | 2026-08-02 | 文档卫生 P1：新增 [DOC-ARCHIVE-CANDIDATES](./archive/DOC-ARCHIVE-CANDIDATES.md)；README/DOC-STATUS **现行导读**与历史 Phase 考古链拆分（不搬家） |

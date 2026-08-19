@@ -190,6 +190,15 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片 Done**（M2-A + M2-B1 · [#62](https://github.com/warclover/travelogue/pull/62)；其余 Parking Lot）|
 | [acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md](./acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md) | **active** | Arch Opt V2 收工记录（含 M2-A3 合入路径核实 + 门禁快照）|
 | [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | **active** | Photo/Zine Agent Skills 外部调研 + Travelogue 参考价值（Postcard / Abstract Editorial / Gathered / Distill / Minimal）|
+| [PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) | **active** | **TSU** **v1.1.0** Conditional Go · BLK-TSU-01～08 已回写 · [七席](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) |
+| [acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) | **active** | TSU 七席 · 7/7 Conditional Go · Must-Fix 已回写 v1.1.0 |
+| [templates/PAGE-PACKET-CATALOG.md](./templates/PAGE-PACKET-CATALOG.md) | **active** | TSU 附录 A · 6 张已画脸数据包（16:9） |
+| [templates/ROLE-FACE-MAP.md](./templates/ROLE-FACE-MAP.md) | **active** | TSU 附录 B · 角色对照 / 现网顶岗 / `narrativeRole` |
+| [templates/TEMPLATE-SYSTEM-UPGRADE.md](./templates/TEMPLATE-SYSTEM-UPGRADE.md) | **active（rationale）** | TSU 设计理由；合同以 PRD 为准 |
+| [PRD-RESERVE-SERIES-CABINET-V1.md](./PRD-RESERVE-SERIES-CABINET-V1.md) | **active** | **RSC** 备用库成册样例柜 **v0.1.0** · **W1 已落地** · 多本手编 YAML · 引擎不读 · 工坊总合同见 TDV |
+| [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.0 Conditional Go** · 现场 W0–W2 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
+| [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
+| [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
 
 ---
 

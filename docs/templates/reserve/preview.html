@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>备用页型库 · 2星以上真图预览</title>
+    <title>设计工坊 · 真图试印</title>
   <style>
     :root {
       --bg: #f7f5f2;
@@ -38,15 +38,21 @@
     .dock h1 em { font-style: normal; color: #c8b27a; font-weight: 400; }
     .dock a { color: #c8b27a; }
     .dock .meta { font-size: 12px; color: #b8b2a8; }
-    .dock button, .dock label.btn {
+    .dock button, .dock label.btn, .dock select {
       font: inherit; font-size: 12px; color: #f5f3f0;
       background: transparent; border: 1px solid #5a564e;
       border-radius: 999px; padding: 5px 12px; cursor: pointer;
     }
+    .dock select { max-width: 240px; }
     .dock button[aria-pressed="true"], .dock label.btn:hover, .dock button:hover {
       border-color: #c8b27a; color: #c8b27a;
     }
     .dock input[type="file"] { display: none; }
+    .dock select {
+      font: inherit; font-size: 12px; color: #f5f3f0;
+      background: #2a2824; border: 1px solid #5a564e;
+      border-radius: 999px; padding: 5px 10px; max-width: 240px;
+    }
     .hint {
       max-width: 72rem; margin: 28px auto; padding: 0 20px;
       font-size: 14px; color: var(--muted); line-height: 1.65; text-align: center;
@@ -108,32 +114,58 @@
     }
     html[data-copy="off"] .copy { display: none; }
     html.drop-on body { outline: 3px dashed var(--accent); outline-offset: -6px; }
+    html[data-mode="series"] .stars-only { display: none; }
+    html[data-mode="stars"] .series-only { display: none; }
+    .albums { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+    .albums .lab { font-size: 11px; color: #8a8278; }
+    .albums button.warn { border-color: #b8923a; color: #e6d08a; }
+    .page-head .lock { color: var(--accent); }
+    .page-head .lock.miss { color: #a33; }
+    .dock .warn-chip {
+      font-size: 12px; color: #e6d08a;
+      border: 1px solid #b8923a; border-radius: 999px; padding: 4px 10px;
+    }
   </style>
 </head>
 <body>
   <div class="dock">
-    <h1>备用库试印 <em>2 星以上 · 引擎不读</em></h1>
+    <h1>设计工坊 · 试印 <em id="mode-em">现在只测几何 · 引擎不读</em></h1>
     <span class="meta" id="status">先选一个本地照片文件夹</span>
+    <span class="warn-chip" id="serve-hint" hidden>file:// 只保证金样 · 请用设计工坊打开方式（serve.cmd）</span>
+    <span class="warn-chip" id="lock-hint" hidden>密页未锁组，装错不代表脸差</span>
+    <button type="button" id="mode-stars" aria-pressed="true">按星级</button>
+    <button type="button" id="mode-series" aria-pressed="false">按系列</button>
+    <select id="series-pick" class="series-only" title="样例柜"></select>
     <label class="btn">选择文件夹
       <input id="folder" type="file" webkitdirectory multiple accept="image/*" />
     </label>
+    <label class="btn series-only">再加相册
+      <input id="folder-add" type="file" webkitdirectory multiple accept="image/*" />
+    </label>
     <button type="button" id="fit" aria-pressed="true">铺满（游记预览）</button>
     <button type="button" id="copy" aria-pressed="false">文案栏：隐</button>
-    <button type="button" id="scope-all" aria-pressed="true">2星以上</button>
-    <button type="button" id="scope-3" aria-pressed="false">只看三星</button>
-    <button type="button" id="scope-dense" aria-pressed="false">密页 5 槽+</button>
+    <button type="button" class="stars-only" id="scope-all" aria-pressed="true">2星以上</button>
+    <button type="button" class="stars-only" id="scope-3" aria-pressed="false">只看三星</button>
+    <button type="button" class="stars-only" id="scope-dense" aria-pressed="false">密页 5 槽+</button>
     <button type="button" id="reshuffle">换一组图</button>
     <a href="./gallery.html">回微缩</a>
+    <a class="series-only" id="back-bind" href="./gallery.html#tab=bind">回成册</a>
+    <div class="albums series-only" id="albums" hidden></div>
   </div>
   <p class="hint" id="hint">
-    像 Web 游记预览那样竖着翻 16:9 页。照片只在本机浏览器里读，不上传、不进引擎。
-    默认 <b>铺满</b> 对齐现网预览；可切到 <b>相对槽</b>（同比例，多出来留白）。
-    点某一格会换下一张同朝向的图。缺横/竖/方时格子会空着。
+    像 Web 游记预览那样竖着翻 16:9 页。照片只在本机浏览器里读，不上传、不进引擎、不进 trip。
+    <span class="stars-only"><b>按星级 = 未锁组 · 只测几何</b>。默认铺 <b>2 星以上</b> 各脸；按朝向轮转，可重复入座。</span>
+    <span class="series-only">按柜里已写入的本铺页序。相册下备齐子夹 <code>01</code>…<code>NN</code>（NN = 该本页数）则<b>已锁组</b>：第 n 页只吃自己的子夹。没子夹则<b>未锁组 · 只测几何</b>，按朝向消耗。备夹说明见 <a href="./GROUP-LOCK-GUIDE.md">GROUP-LOCK-GUIDE</a>。日常请用设计工坊打开方式：<a href="./serve.cmd">serve.cmd</a>。</span>
+    默认 <b>铺满</b>；可切 <b>相对槽</b>。点某一格换下一张同朝向图。
   </p>
   <div class="reel" id="reel"></div>
   <script src="./faces.js"></script>
+  <script src="./series-folio-16.js"></script>
   <script>
     const FACES = window.RESERVE_FACES || [];
+    const FACE_BY_ID = new Map(FACES.map((f) => [f.id, f]));
+    const GOLD_ID = "folio-16-standard";
+    const SERIES_ID = GOLD_ID;
     const SEED = {
       "page-1-hero-land-wide": 3,
       "page-2-1l1p-wide": 3,
@@ -178,14 +210,22 @@
     const statusEl = document.getElementById("status");
     const hintEl = document.getElementById("hint");
     const reel = document.getElementById("reel");
+    const albumsEl = document.getElementById("albums");
     const fitBtn = document.getElementById("fit");
     const copyBtn = document.getElementById("copy");
+    const modeEm = document.getElementById("mode-em");
 
     let stars = { ...SEED };
     let photos = { l: [], p: [], s: [] };
     let offset = 0;
     let scope = "all";
     let slotClicks = {};
+    let mode = "stars";
+    let series = { id: SERIES_ID, pageCount: 16, photoSpan: [48, 80], sequence: [] };
+    let books = [];
+    let albums = [];
+    let activeAlbum = "";
+    let photoSeq = 0;
 
     function parseStarsYaml(text) {
       const out = {};
@@ -264,54 +304,386 @@
       return `left:${box.left}%;top:${box.top}%;width:${box.width}%;height:${box.height}%`;
     }
 
-    function render() {
-      const y = window.scrollY;
+    function emptyPools() {
+      return { l: [], p: [], s: [] };
+    }
+
+    function poolTotal(p) {
+      return p.l.length + p.p.length + p.s.length;
+    }
+
+    function rotatePool(list) {
+      if (list.length < 2) return list.slice();
+      const n = offset % list.length;
+      return list.slice(n).concat(list.slice(0, n));
+    }
+
+    function parseSeries(text) {
+      const raw = String(text || "");
+      const grab = (key) => {
+        const m = new RegExp(`^${key}:\\s*(.+)$`, "m").exec(raw);
+        return m ? m[1].trim().replace(/^["']|["']$/g, "") : "";
+      };
+      const pageCount = Number(grab("pageCount")) || 16;
+      const span = /photo_span:\s*\[\s*(\d+)\s*,\s*(\d+)\s*\]/.exec(raw);
+      const out = {
+        id: grab("id") || GOLD_ID,
+        pageCount,
+        photoSpan: span ? [Number(span[1]), Number(span[2])] : [pageCount * 3, pageCount * 5],
+        sequence: []
+      };
+      const rowRe = /-\s*\{\s*i:\s*(\d+)\s*,\s*role:\s*([a-z0-9-]+)\s*,\s*program:\s*([a-z0-9-]+)\s*,\s*faceHint:\s*([a-z0-9-]+)/g;
+      let m;
+      while ((m = rowRe.exec(raw))) {
+        out.sequence.push({
+          i: Number(m[1]),
+          role: m[2],
+          program: m[3],
+          faceHint: m[4]
+        });
+      }
+      out.sequence.sort((a, b) => a.i - b.i);
+      return out;
+    }
+
+    function minAlbum() {
+      if (series.photoSpan && series.photoSpan[0]) return series.photoSpan[0];
+      return (series.pageCount || 16) * 3;
+    }
+
+    function relParts(file) {
+      const raw = String(file.webkitRelativePath || file.name || "").replace(/\\/g, "/");
+      return raw.split("/").filter(Boolean);
+    }
+
+    function pageKey(name) {
+      const m = /^0*([1-9]\d?)$/.exec(String(name || "").trim());
+      if (!m) return 0;
+      const n = Number(m[1]);
+      return n >= 1 && n <= 99 ? n : 0;
+    }
+
+    function groupKeys(album) {
+      if (!album || !album.groups) return [];
+      return Object.keys(album.groups).map(Number).filter((n) => n >= 1).sort((a, b) => a - b);
+    }
+
+    function lockTarget() {
+      return Math.max(1, (series.sequence && series.sequence.length) || series.pageCount || 1);
+    }
+
+    function isAlbumLocked(album) {
+      const nn = lockTarget();
+      return groupKeys(album).some((n) => n >= 1 && n <= nn);
+    }
+
+    function hasDensePages() {
+      return (series.sequence || []).some((row) => slotCount(FACE_BY_ID.get(row.faceHint)) >= 5);
+    }
+
+    function padPage(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function syncLockChrome() {
+      const album = currentAlbum();
+      const locked = mode === "series" && isAlbumLocked(album);
+      const keys = groupKeys(album).filter((n) => n <= lockTarget());
+      if (mode === "series") {
+        modeEm.textContent = locked
+          ? `按系列 · 已锁组 ${keys.length}/${lockTarget()} · 引擎不读`
+          : "按系列 · 未锁组 · 只测几何 · 引擎不读";
+      } else {
+        modeEm.textContent = "按星级 · 未锁组 · 只测几何 · 引擎不读";
+      }
+      const denseHint = document.getElementById("lock-hint");
+      if (denseHint) {
+        denseHint.hidden = !(mode === "series" && !locked && hasDensePages() && album);
+      }
+    }
+
+    function pushPhoto(pools, photo) {
+      pools[photo.orient].push(photo);
+    }
+
+    async function filesToPhotos(fileList) {
+      const files = [...fileList].filter(isImage);
+      const items = [];
+      for (const file of files) {
+        const photo = await readImage(file);
+        if (!photo) continue;
+        photo.id = `${++photoSeq}:${file.webkitRelativePath || file.name}`;
+        photo.parts = relParts(file);
+        items.push(photo);
+      }
+      return items;
+    }
+
+    function albumsFromPhotos(items, fallbackName) {
+      if (!items.length) return [];
+      const strip = items.every((p) => p.parts[0] && p.parts[0] === items[0].parts[0]);
+      const rest = items.map((p) => ({
+        photo: p,
+        segs: strip ? p.parts.slice(1) : p.parts.slice()
+      }));
+      const childDirs = new Map();
+      let loose = 0;
+      for (const row of rest) {
+        if (row.segs.length <= 1) {
+          loose += 1;
+          continue;
+        }
+        const dir = row.segs[0];
+        if (!childDirs.has(dir)) childDirs.set(dir, []);
+        childDirs.get(dir).push(row);
+      }
+      const named = [...childDirs.keys()].filter((d) => !pageKey(d));
+      if (named.length >= 2) {
+        return named.map((name) => albumFromRows(name, childDirs.get(name).map((row) => ({
+          photo: row.photo,
+          segs: row.segs.slice(1)
+        }))));
+      }
+      return [albumFromRows(fallbackName || (strip ? items[0].parts[0] : "相册"), rest)];
+    }
+
+    function albumFromRows(name, rows) {
+      const album = {
+        id: name,
+        name,
+        loose: emptyPools(),
+        groups: {},
+        all: emptyPools()
+      };
+      for (const row of rows) {
+        const segs = row.segs;
+        const photo = row.photo;
+        pushPhoto(album.all, photo);
+        const groupAt = segs.length >= 2 ? pageKey(segs[0]) : 0;
+        if (groupAt) {
+          if (!album.groups[groupAt]) album.groups[groupAt] = emptyPools();
+          pushPhoto(album.groups[groupAt], photo);
+        } else {
+          pushPhoto(album.loose, photo);
+        }
+      }
+      return album;
+    }
+
+    function albumCount(album) {
+      return poolTotal(album.all);
+    }
+
+    function currentAlbum() {
+      return albums.find((a) => a.id === activeAlbum) || albums[0] || null;
+    }
+
+    function takeSeriesPhoto(need, pageI, extra, used, album, locked) {
+      if (!album) return null;
+      const source = locked
+        ? (album.groups[pageI] ? album.groups[pageI][need] : [])
+        : album.all[need];
+      const avail = rotatePool(source || []).filter((p) => !used.has(p.id));
+      if (!avail.length) return null;
+      return avail[extra % avail.length];
+    }
+
+    function seriesSlotNeed() {
+      let n = 0;
+      const mix = { l: 0, p: 0, s: 0 };
+      for (const row of series.sequence) {
+        const face = FACE_BY_ID.get(row.faceHint);
+        if (!face) continue;
+        for (const box of slotBoxes(face)) {
+          const need = slotOrient(box);
+          mix[need] += 1;
+          n += 1;
+        }
+      }
+      return { n, mix };
+    }
+
+    function pageHtml(face, slotsHtml, copies, headExtra) {
+      return `<article class="page" id="${face.id}">
+        <div class="page-head">${headExtra}</div>
+        <div class="stage-wrap">
+          <div class="stage">${copies}${slotsHtml}</div>
+        </div>
+      </article>`;
+    }
+
+    function slotHtml(key, need, photo, box) {
+      if (!photo) {
+        return `<div class="slot is-empty" data-key="${key}" data-need="${need}" style="${pct(box)}">${needLabel(need)}</div>`;
+      }
+      return `<div class="slot" data-key="${key}" data-need="${need}" style="${pct(box)}" title="${photo.name}">
+        <img src="${photo.url}" alt="${photo.name}" loading="lazy" decoding="async" />
+      </div>`;
+    }
+
+    function renderStars() {
       const faces = visibleFaces();
       const groups = [
         { n: 3, title: "★★★ 最常用" },
         { n: 2, title: "★★ 常用 · 含密页" }
       ].map((g) => ({ ...g, faces: faces.filter((f) => faceStars(f) === g.n) }))
         .filter((g) => g.faces.length);
-
       const cursor = { l: offset, p: offset, s: offset };
       reel.innerHTML = groups.map((g) => {
         const pages = g.faces.map((face) => {
-          const copies = copyBoxes(face).map((box) =>
-            `<div class="copy" style="${pct(box)}"></div>`
-          ).join("");
+          const copies = copyBoxes(face).map((box) => `<div class="copy" style="${pct(box)}"></div>`).join("");
           const slots = slotBoxes(face).map((box, i) => {
             const need = slotOrient(box);
             const key = `${face.id}:${i}`;
-            const photo = pick(need, key, cursor);
-            if (!photo) {
-              return `<div class="slot is-empty" data-key="${key}" data-need="${need}" style="${pct(box)}">${needLabel(need)}</div>`;
-            }
-            return `<div class="slot" data-key="${key}" data-need="${need}" style="${pct(box)}" title="${photo.name}">
-              <img src="${photo.url}" alt="${photo.name}" loading="lazy" decoding="async" />
-            </div>`;
+            return slotHtml(key, need, pick(need, key, cursor), box);
           }).join("");
           const n = faceStars(face);
-          return `<article class="page" id="${face.id}">
-            <div class="page-head">
-              <span class="stars">${"★".repeat(n)}</span>
-              <code>${face.id}</code>
-              <span class="name">${face.displayName}</span>
-              <span>${face.badge} · ${slotCount(face)} 槽</span>
-            </div>
-            <div class="stage-wrap">
-              <div class="stage">${copies}${slots}</div>
-            </div>
-          </article>`;
+          return pageHtml(face, slots, copies, `
+            <span class="stars">${"★".repeat(n)}</span>
+            <code>${face.id}</code>
+            <span class="name">${face.displayName}</span>
+            <span>${face.badge} · ${slotCount(face)} 槽</span>`);
         }).join("");
         return `<section class="chapter"><h2>${g.title}</h2></section>${pages}`;
       }).join("");
-
-      const total = photos.l.length + photos.p.length + photos.s.length;
-      const pageN = faces.length;
+      const total = poolTotal(photos);
       statusEl.textContent = total
-        ? `横 ${photos.l.length} · 竖 ${photos.p.length} · 方 ${photos.s.length} · ${pageN} 页`
-        : `未选照片 · ${pageN} 页空槽`;
+        ? `未锁组 · 只测几何 · 横 ${photos.l.length} · 竖 ${photos.p.length} · 方 ${photos.s.length} · ${faces.length} 页`
+        : `未选照片 · 未锁组 · 只测几何 · ${faces.length} 页空槽`;
       hintEl.classList.toggle("is-off", total > 0);
+      syncLockChrome();
+    }
+
+    function renderSeries() {
+      const album = currentAlbum();
+      const used = new Set();
+      let filled = 0;
+      let empty = 0;
+      if (!series.sequence.length) {
+        reel.innerHTML = `<p class="hint">柜里没有 <b>${series.id}</b>。<a href="./gallery.html#tab=bind&series=${encodeURIComponent(series.id)}">回成册</a>新建并写入 <code>series/${series.id}.yaml</code>。</p>`;
+        statusEl.textContent = "柜里没有这本";
+        hintEl.classList.remove("is-off");
+        syncLockChrome();
+        return;
+      }
+      const target = series.pageCount || series.sequence.length;
+      const locked = isAlbumLocked(album);
+      const lockLabel = locked ? "已锁组" : "未锁组 · 只测几何";
+      reel.innerHTML = `<section class="chapter"><h2>${series.id} · ${lockLabel} · 目标 ${target} 页 · 现 ${series.sequence.length} 页</h2></section>` + series.sequence.map((row) => {
+        const face = FACE_BY_ID.get(row.faceHint);
+        if (!face) {
+          return `<article class="page"><div class="page-head">缺脸 ${row.faceHint}</div></article>`;
+        }
+        const copies = copyBoxes(face).map((box) => `<div class="copy" style="${pct(box)}"></div>`).join("");
+        const pageGroup = album && album.groups[row.i];
+        const pageHas = !!(pageGroup && poolTotal(pageGroup));
+        const dense = slotCount(face) >= 5;
+        const slots = slotBoxes(face).map((box, i) => {
+          const need = slotOrient(box);
+          const key = `p${row.i}:${i}`;
+          const extra = slotClicks[key] || 0;
+          const photo = album ? takeSeriesPhoto(need, row.i, extra, used, album, locked) : null;
+          if (photo) {
+            used.add(photo.id);
+            filled += 1;
+          } else {
+            empty += 1;
+          }
+          return slotHtml(key, need, photo, box);
+        }).join("");
+        let lockChip = "";
+        if (locked) {
+          lockChip = pageHas
+            ? `<span class="lock">已锁组 ${padPage(row.i)}</span>`
+            : `<span class="lock miss">未备 ${padPage(row.i)}</span>`;
+        } else if (dense) {
+          lockChip = `<span class="lock miss">密页未锁组</span>`;
+        }
+        return pageHtml(face, slots, copies, `
+          <span>${row.i}/${target}</span>
+          <span>${row.program}</span>
+          <code>${face.id}</code>
+          <span class="name">${face.displayName}</span>
+          <span>${face.badge}</span>
+          ${lockChip}`);
+      }).join("");
+      const need = seriesSlotNeed();
+      const albumN = album ? albumCount(album) : 0;
+      const mix = album ? album.all : emptyPools();
+      const needMin = minAlbum();
+      const short = album && !locked && albumN < needMin ? ` · 不足 ${needMin} 张` : "";
+      const lockNote = locked ? ` · 已锁组 ${groupKeys(album).filter((n) => n <= lockTarget()).length}/${lockTarget()}` : " · 未锁组 · 只测几何";
+      statusEl.textContent = album
+        ? `${album.name}${lockNote} · 横 ${mix.l.length} · 竖 ${mix.p.length} · 方 ${mix.s.length} · 已装 ${filled}/${need.n} · 空 ${empty}${short}`
+        : `未选相册 · 需约 ${need.n} 槽（横 ${need.mix.l} · 竖 ${need.mix.p}）`;
+      hintEl.classList.toggle("is-off", albumN > 0);
+      syncLockChrome();
+    }
+
+    function syncPhotosFromAlbum() {
+      const album = currentAlbum();
+      photos = album ? {
+        l: album.all.l.slice(),
+        p: album.all.p.slice(),
+        s: album.all.s.slice()
+      } : emptyPools();
+    }
+
+    function renderAlbums() {
+      if (!albums.length) {
+        albumsEl.hidden = true;
+        albumsEl.innerHTML = "";
+        return;
+      }
+      albumsEl.hidden = mode !== "series";
+      albumsEl.innerHTML = `<span class="lab">相册</span>` + albums.map((a) => {
+        const n = albumCount(a);
+        const needMin = minAlbum();
+        const warn = n < needMin ? " warn" : "";
+        return `<button type="button" class="${warn}" data-album="${a.id}" aria-pressed="${a.id === activeAlbum}">${a.name} · ${n}${n < needMin ? " · 少" : ""}</button>`;
+      }).join("");
+    }
+
+    function setMode(next) {
+      mode = next === "series" ? "series" : "stars";
+      document.documentElement.dataset.mode = mode;
+      document.getElementById("mode-stars").setAttribute("aria-pressed", mode === "stars" ? "true" : "false");
+      document.getElementById("mode-series").setAttribute("aria-pressed", mode === "series" ? "true" : "false");
+      writeHash();
+      renderAlbums();
+      render();
+      syncLockChrome();
+    }
+
+    function syncBindLink() {
+      const a = document.getElementById("back-bind");
+      if (!a) return;
+      const id = series.id || GOLD_ID;
+      a.href = `./gallery.html#tab=bind&series=${encodeURIComponent(id)}`;
+    }
+
+    function writeHash() {
+      const parts = [];
+      if (mode === "series") parts.push(`series=${series.id || GOLD_ID}`);
+      if (mode === "series" && activeAlbum) parts.push(`album=${encodeURIComponent(activeAlbum)}`);
+      const next = parts.length ? `#${parts.join("&")}` : "#";
+      if (location.hash !== next) history.replaceState(null, "", next);
+      syncBindLink();
+    }
+
+    function readHash() {
+      const mSeries = /(?:^|#|&)series=([a-z0-9-]+)/.exec(location.hash);
+      const mAlbum = /(?:^|#|&)album=([^&]+)/.exec(location.hash);
+      if (mSeries) mode = "series";
+      if (mAlbum) {
+        try { activeAlbum = decodeURIComponent(mAlbum[1]); } catch (_) { activeAlbum = mAlbum[1]; }
+      }
+    }
+
+    function render() {
+      const y = window.scrollY;
+      if (mode === "series") renderSeries();
+      else renderStars();
       window.scrollTo(0, y);
     }
 
@@ -341,18 +713,37 @@
       });
     }
 
-    async function loadFiles(fileList) {
+    function revokeAlbum(album) {
+      Object.values(album.all).flat().forEach((p) => URL.revokeObjectURL(p.url));
+    }
+
+    async function loadFiles(fileList, append) {
       const files = [...fileList].filter(isImage);
       statusEl.textContent = `正在读 ${files.length} 张…`;
-      const next = { l: [], p: [], s: [] };
-      for (const file of files) {
-        const photo = await readImage(file);
-        if (photo) next[photo.orient].push(photo);
+      const items = await filesToPhotos(files);
+      const incoming = albumsFromPhotos(items, "相册");
+      if (!append) {
+        albums.forEach(revokeAlbum);
+        albums = incoming;
+      } else {
+        for (const album of incoming) {
+          const hit = albums.findIndex((a) => a.id === album.id);
+          if (hit >= 0) {
+            revokeAlbum(albums[hit]);
+            albums[hit] = album;
+          } else {
+            albums.push(album);
+          }
+        }
       }
-      Object.values(photos).flat().forEach((p) => URL.revokeObjectURL(p.url));
-      photos = next;
+      if (!albums.find((a) => a.id === activeAlbum)) {
+        activeAlbum = albums[0] ? albums[0].id : "";
+      }
+      syncPhotosFromAlbum();
       offset = 0;
       slotClicks = {};
+      writeHash();
+      renderAlbums();
       render();
     }
 
@@ -367,7 +758,49 @@
     }
 
     document.getElementById("folder").addEventListener("change", (ev) => {
-      loadFiles(ev.target.files || []);
+      loadFiles(ev.target.files || [], false);
+    });
+    document.getElementById("folder-add").addEventListener("change", (ev) => {
+      loadFiles(ev.target.files || [], true);
+    });
+    albumsEl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-album]");
+      if (!btn) return;
+      activeAlbum = btn.dataset.album;
+      syncPhotosFromAlbum();
+      slotClicks = {};
+      writeHash();
+      renderAlbums();
+      render();
+    });
+    function renderSeriesPick() {
+      const pick = document.getElementById("series-pick");
+      if (!pick) return;
+      const ids = new Set(books.map((b) => b.id));
+      if (!ids.has(GOLD_ID)) ids.add(GOLD_ID);
+      const list = [...ids].sort((a, b) => (a === GOLD_ID ? -1 : b === GOLD_ID ? 1 : a.localeCompare(b)));
+      const inCabinet = ids.has(series.id);
+      let html = list.map((id) => {
+        const book = books.find((b) => b.id === id);
+        const n = book ? book.pageCount : "";
+        const label = n ? `${id} · ${n} 页` : id;
+        return `<option value="${id}"${inCabinet && id === series.id ? " selected" : ""}>${label}</option>`;
+      }).join("");
+      if (series.id && !inCabinet) {
+        html = `<option value="${series.id}" selected>${series.id} · 不在柜</option>` + html;
+      }
+      pick.innerHTML = html;
+      syncBindLink();
+    }
+
+    document.getElementById("mode-stars").addEventListener("click", () => setMode("stars"));
+    document.getElementById("mode-series").addEventListener("click", () => setMode("series"));
+    document.getElementById("series-pick").addEventListener("change", async (ev) => {
+      await loadSeriesById(ev.target.value);
+      writeHash();
+      renderSeriesPick();
+      renderAlbums();
+      render();
     });
     fitBtn.addEventListener("click", () => {
       const cover = document.documentElement.dataset.fit !== "contain";
@@ -401,7 +834,8 @@
       if (!slot) return;
       const key = slot.dataset.key;
       const need = slot.dataset.need;
-      if (!key || !photos[need] || !photos[need].length) return;
+      if (!key || !need) return;
+      if (mode === "stars" && (!photos[need] || !photos[need].length)) return;
       slotClicks[key] = (slotClicks[key] || 0) + 1;
       render();
     });
@@ -418,12 +852,71 @@
     document.addEventListener("drop", (ev) => {
       ev.preventDefault();
       document.documentElement.classList.remove("drop-on");
-      if (ev.dataTransfer && ev.dataTransfer.files) loadFiles(ev.dataTransfer.files);
+      if (ev.dataTransfer && ev.dataTransfer.files) loadFiles(ev.dataTransfer.files, false);
     });
 
     document.documentElement.dataset.fit = "cover";
     document.documentElement.dataset.copy = "off";
-    loadStars().then(render);
+    readHash();
+    function seedSeries() {
+      const seed = window.RESERVE_SERIES_SEED;
+      if (seed && seed.sequence && seed.sequence.length) {
+        return {
+          id: seed.id || GOLD_ID,
+          pageCount: seed.pageCount || 16,
+          photoSpan: seed.photoSpan ? seed.photoSpan.slice() : [48, 80],
+          sequence: seed.sequence.slice()
+        };
+      }
+      return { id: GOLD_ID, pageCount: 16, photoSpan: [48, 80], sequence: [] };
+    }
+
+    async function loadCabinet() {
+      try {
+        const res = await fetch("./series/index.json", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.books)) books = data.books;
+        }
+      } catch (_) { /* file:// 或未用本夹 serve */ }
+      if (!books.length) {
+        books = [{ id: GOLD_ID, pageCount: 16, photoSpan: [48, 80] }];
+      }
+    }
+
+    async function loadSeriesById(id) {
+      const wanted = id || GOLD_ID;
+      try {
+        const res = await fetch(`./series/${wanted}.yaml`, { cache: "no-store" });
+        if (res.ok) {
+          const parsed = parseSeries(await res.text());
+          if (parsed.id === wanted || parsed.sequence.length) {
+            series = parsed;
+            if (!books.some((b) => b.id === series.id)) {
+              books.push({ id: series.id, pageCount: series.pageCount, photoSpan: series.photoSpan });
+            }
+            return;
+          }
+        }
+      } catch (_) { /* file:// 常读不到 YAML */ }
+      if (wanted === GOLD_ID) {
+        series = seedSeries();
+        return;
+      }
+      series = { id: wanted, pageCount: 1, photoSpan: [3, 5], sequence: [] };
+    }
+
+    async function boot() {
+      const hint = document.getElementById("serve-hint");
+      if (hint) hint.hidden = location.protocol !== "file:";
+      await loadStars();
+      await loadCabinet();
+      const mSeries = /(?:^|#|&)series=([a-z0-9-]+)/.exec(location.hash);
+      await loadSeriesById(mSeries ? mSeries[1] : GOLD_ID);
+      renderSeriesPick();
+      setMode(mode);
+    }
+    boot();
   </script>
 </body>
 </html>
