@@ -10,6 +10,11 @@
   const PAGE_CHIPS = [8, 16, 20, 24, 28, 32];
 
   const faceById = new Map(FACES.map((f) => [f.id, f]));
+
+  function refreshFaces() {
+    faceById.clear();
+    for (const face of window.RESERVE_FACES || FACES) faceById.set(face.id, face);
+  }
   let getStars = function () { return 0; };
   let onSeriesChange = function () {};
   let series = makeSeries({ id: GOLD_ID, pageCount: 16 });
@@ -1254,6 +1259,7 @@
       if (!opened) await openBook(GOLD_ID);
     },
     render,
+    refreshFaces,
     get currentId() {
       return series.id;
     },

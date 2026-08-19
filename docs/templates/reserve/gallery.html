@@ -328,7 +328,7 @@
       长期后台工坊，不是附录 A，也不是现网柜。说明见 <a href="./README.md">README</a> · <a href="./CATALOG.md">总表</a> · <a href="./preview.html">真图试印</a> · <a href="./GROUP-LOCK-GUIDE.md">一组一页</a>。
       色块：<span class="swatch p"></span> 竖槽 · <span class="swatch l"></span> 横槽 · <span class="swatch s"></span> 方槽 · <span class="swatch copy"></span> 文案（可空）。
       星级权威 <a href="./stars.yaml">stars.yaml</a>：点卡片上的无 / ★ / ★★ / ★★★，再按「写入星级」覆盖本夹该文件。微缩按各夹 <code>packet.yaml</code> 计算，不手绘第二套几何。
-      加脸按 README 七步；缺微缩数据源则墙不出现。状态由<strong>项目运营</strong>标。
+      加脸用「新建页型」（扫夹后免手加 faces.js），或按 README 七步手建。状态由<strong>项目运营</strong>标。
     </p>
     <p id="bind-lead" hidden>
       设计工坊成册柜。一本一份 <code>series/&lt;id&gt;.yaml</code>，页数任意。金样 <a href="./series/folio-16-standard.yaml">folio-16-standard</a> 禁止新建占用。日常请双击 <a href="./serve.cmd">serve.cmd</a> 打开。书衣沿用现网默认，不编封面封底。引擎不读。写入只存工坊；导出升格系列另存给现网评审。合同 <a href="../../PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md">TDV</a> · <a href="../../PRD-RESERVE-SERIES-CABINET-V1.md">RSC</a>。
@@ -348,6 +348,7 @@
       <span class="sep" aria-hidden="true"></span>
       <button type="button" class="js-save-stars" id="save-stars">写入星级</button>
       <button type="button" class="js-copy-stars" id="copy-stars">复制星级 YAML</button>
+      <button type="button" class="btn warn" id="new-face">新建页型</button>
     </div>
     <div id="reconcile-banner" class="banner is-bad" role="status" hidden></div>
     <div id="star-banner" class="banner" role="status">
@@ -849,6 +850,154 @@
       reconcileBanner.innerHTML = `<span><b>${title}</b> · ${(report.issues || []).map((t) => t).join("；")}</span>`;
     }
 
+    function faceFromScan(row) {
+      return {
+        id: row.id,
+        displayName: row.displayName,
+        badge: row.badge || "?",
+        blurb: "扫夹均分草案，不是审过的几何。微缩可先出；导出仍要示意图。",
+        related: "由 packet.yaml 扫出，未手写 faces.js",
+        replaces: "",
+        href: `${row.id}/`,
+        hasSketch: !!row.hasSketch,
+        slots: (row.slots || []).map((box) => ({
+          left: box.left,
+          top: box.top,
+          width: box.width,
+          height: box.height,
+          orient: box.orient
+        }))
+      };
+    }
+
+    async function mergeScannedFaces() {
+      try {
+        const res = await fetch("./atelier/faces.json", { cache: "no-store" });
+        if (!res.ok) return false;
+        const data = await res.json();
+        window.RESERVE_ROLES = Object.assign({}, window.RESERVE_ROLES || {}, data.roles || {});
+        const have = new Set(FACES.map((f) => f.id));
+        for (const row of data.faces || []) {
+          if (have.has(row.id)) continue;
+          FACES.push(faceFromScan(row));
+          have.add(row.id);
+        }
+        if (window.ReserveBind && window.ReserveBind.refreshFaces) {
+          window.ReserveBind.refreshFaces();
+        }
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function suggestFaceId(n, slug) {
+      const word = String(slug || "draft").replace(/[^a-z0-9-]/g, "") || "draft";
+      return `page-${Math.max(1, n)}-${word}`;
+    }
+
+    function openCreateFace() {
+      if (location.protocol === "file:") {
+        showAtelierModal(`
+          <h2>新建页型</h2>
+          <p>扫夹建页必须走设计工坊打开方式。请双击本夹 <code>serve.cmd</code>。</p>
+          <div class="actions"><button type="button" class="btn pri" data-act="cancel">知道了</button></div>`);
+        atelierModal.querySelector("[data-act=cancel]").onclick = hideAtelierModal;
+        return;
+      }
+      const programs = (window.AtelierPromote && window.AtelierPromote.PROGRAMS) ||
+        ["opener", "hero", "mosaic", "grid", "breath", "peak", "closer"];
+      showAtelierModal(`
+        <h2>新建页型</h2>
+        <p>写入本夹新目录 + packet + USAGE + 总表一行。微缩由扫夹均分草案投影，<b>不手写 faces.js</b>。不做拉框改槽。无示意图可先看微缩，导出页型包仍硬拒。</p>
+        <label>中文名</label>
+        <input type="text" data-name placeholder="例如：双竖并排草案" />
+        <label>槽朝向（从左到右）</label>
+        <div class="bind-chips" data-orients></div>
+        <button type="button" class="btn" data-add="portrait">+ 竖</button>
+        <button type="button" class="btn" data-add="landscape">+ 横</button>
+        <button type="button" class="btn" data-add="square">+ 方</button>
+        <button type="button" class="btn" data-pop>去掉末槽</button>
+        <label>id · 数字必须等于槽数</label>
+        <input type="text" data-id spellcheck="false" value="page-2-draft" />
+        <label>角色</label>
+        <input type="text" data-role spellcheck="false" value="draft-pair" />
+        <label>纲领</label>
+        <select data-program>${programs.map((p) => `<option value="${p}"${p === "mosaic" ? " selected" : ""}>${p}</option>`).join("")}</select>
+        <label>家族</label>
+        <input type="text" data-family spellcheck="false" value="draft-pair" />
+        <label>何时用</label>
+        <input type="text" data-when placeholder="待写也可以，升格前再补" />
+        <label>何时不用</label>
+        <input type="text" data-not placeholder="待写也可以" />
+        <p class="err" data-msg hidden></p>
+        <div class="actions">
+          <button type="button" class="btn" data-act="cancel">取消</button>
+          <button type="button" class="btn pri" data-act="ok">写入本夹</button>
+        </div>`, true);
+      const orients = ["portrait", "portrait"];
+      const chips = atelierModal.querySelector("[data-orients]");
+      const idEl = atelierModal.querySelector("[data-id]");
+      const paint = () => {
+        const label = { portrait: "竖", landscape: "横", square: "方" };
+        chips.innerHTML = orients.map((o, i) => `<span class="chip">${i + 1} ${label[o]}</span>`).join("")
+          || "<span class=\"chip amber\">还没有槽</span>";
+        const m = /^page-\d+-([a-z0-9-]*)$/.exec(idEl.value.trim());
+        const slug = m ? m[1] : "draft";
+        idEl.value = suggestFaceId(orients.length || 1, slug);
+      };
+      paint();
+      atelierModal.querySelectorAll("[data-add]").forEach((btn) => {
+        btn.onclick = () => {
+          orients.push(btn.dataset.add);
+          paint();
+        };
+      });
+      atelierModal.querySelector("[data-pop]").onclick = () => {
+        orients.pop();
+        paint();
+      };
+      atelierModal.querySelector("[data-act=cancel]").onclick = hideAtelierModal;
+      atelierModal.querySelector("[data-act=ok]").onclick = async () => {
+        const msg = atelierModal.querySelector("[data-msg]");
+        const body = {
+          id: idEl.value.trim(),
+          displayName: atelierModal.querySelector("[data-name]").value.trim(),
+          role: atelierModal.querySelector("[data-role]").value.trim(),
+          program: atelierModal.querySelector("[data-program]").value,
+          familyId: atelierModal.querySelector("[data-family]").value.trim(),
+          whenToUse: atelierModal.querySelector("[data-when]").value.trim(),
+          whenNotToUse: atelierModal.querySelector("[data-not]").value.trim(),
+          slots: orients.map((orient) => ({ orient }))
+        };
+        try {
+          const res = await fetch("./atelier/pages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "写入失败");
+          if (!FACES.some((f) => f.id === data.face.id)) FACES.push(faceFromScan(data.face));
+          window.RESERVE_ROLES = window.RESERVE_ROLES || {};
+          window.RESERVE_ROLES[data.face.id] = {
+            role: data.face.role,
+            program: data.face.program,
+            familyId: data.face.familyId
+          };
+          if (window.ReserveBind && window.ReserveBind.refreshFaces) {
+            window.ReserveBind.refreshFaces();
+          }
+          hideAtelierModal();
+          render();
+          runReconcile();
+        } catch (err) {
+          msg.hidden = false;
+          msg.textContent = (err && err.message) || "写入失败。";
+        }
+      };
+    }
+
     async function runReconcile() {
       if (!window.AtelierPromote) return;
       const report = await window.AtelierPromote.reconcile({
@@ -978,9 +1127,11 @@
     atelierModal.addEventListener("click", (ev) => {
       if (ev.target === atelierModal) hideAtelierModal();
     });
+    document.getElementById("new-face").addEventListener("click", openCreateFace);
 
     readHash();
-    loadStars().then(() => {
+    loadStars().then(async () => {
+      await mergeScannedFaces();
       render();
       runReconcile();
       if (window.ReserveBind) {

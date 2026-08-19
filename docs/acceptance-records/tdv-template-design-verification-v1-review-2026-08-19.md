@@ -8,7 +8,7 @@
 | **相邻挡门** | [TSU](../PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [RSC](../PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](../PRD-EDITORIAL-COMPILER-V1.md) · [附录 A](../templates/PAGE-PACKET-CATALOG.md) · [附录 B](../templates/ROLE-FACE-MAP.md) · [ECC](../PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-021](../adr/021-export-compose-dual-engine.md) · [ADR-020](../adr/020-narrative-contract.md) |
 | **日期** | 2026-08-19 |
 | **结论** | **有条件通过（Conditional Go）**。主线可冻结。**BLK-TDV-01～07 已回写 v0.2.0**。W0 身份文案可继续。**W1 导出可按回写后合同 Kickoff**（须按 F1/F2 实施）。现网收件仍归 TSU。未建薄柜不得宣称闭环。 |
-| **编码** | ☑ 策划回写 v0.2（BLK-TDV-01～07）　☑ W0 身份收口　☑ W1 导出 + 对账　☑ W2 组锁定　☐ 现网收件（TSU 另波） |
+| **编码** | ☑ 策划回写 v0.2（BLK-TDV-01～07）　☑ W0 身份收口　☑ W1 导出 + 对账　☑ W2 组锁定　☑ W3 扫夹 + 新建表单　☐ 现网收件（TSU 另波） |
 | **参评角色** | **七席**：产品 · 算法 · 架构 · 开发 · 测试/QA · 视觉/排版（LTE·装裱）· 用户体验（狗粮手测）· **加席**：项目运营（设计模板与编排成册的日常使用者） |
 | **评审方式** | 分席只读 PRD v0.1.0 §0～§14 + 附录 A/B + 备忘录 + 对照现场（`gallery.html` 仍称「备用页型库」、RSC W1 柜、`folio-16-standard`、附录 A 六张、附录 B 角色表、引擎不读 `reserve/`、Studio「版式」→ `/templates-admin`） |
 | **记录人** | 八席联合纪要（跨职能模拟联评 · 2026-08-19） |

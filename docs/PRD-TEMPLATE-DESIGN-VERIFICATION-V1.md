@@ -660,7 +660,7 @@ AC-TDV-13～14 只绑 W2。AC-15/16/19 绑 W1。宣称 W1 完成不要求组锁�
 | `docs/templates/reserve/PROMOTE-ROLE-MAP.md` | W1 新增；只收附录 B 没有的角色 |
 | `docs/wireframes/tdv-atelier-promote-export-v1-wireframe.html` | 导出 F1/F2 |
 | `docs/templates/reserve/series/*.yaml` | **不改**金样页序（除非运营另改对照本） |
-| `docs/templates/reserve/serve.py` · `serve.cmd` | 文案；行为沿用 RSC |
+| `docs/templates/reserve/serve.py` · `serve.cmd` | 文案；行为沿用 RSC；W3 扫夹 `/atelier/faces.json` + 新建页 POST |
 | 现网 Studio / 引擎 | **不改**（AC-TDV-02 / 07） |
 
 ---

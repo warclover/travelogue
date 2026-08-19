@@ -164,6 +164,32 @@
   <script>
     const FACES = window.RESERVE_FACES || [];
     const FACE_BY_ID = new Map(FACES.map((f) => [f.id, f]));
+
+    function rebuildFaceMap() {
+      FACE_BY_ID.clear();
+      for (const face of FACES) FACE_BY_ID.set(face.id, face);
+    }
+
+    async function mergeScannedFaces() {
+      try {
+        const res = await fetch("./atelier/faces.json", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const have = new Set(FACES.map((f) => f.id));
+        for (const row of data.faces || []) {
+          if (have.has(row.id)) continue;
+          FACES.push({
+            id: row.id,
+            displayName: row.displayName,
+            badge: row.badge || "?",
+            href: `${row.id}/`,
+            slots: row.slots || []
+          });
+          have.add(row.id);
+        }
+        rebuildFaceMap();
+      } catch (_) { /* file:// */ }
+    }
     const GOLD_ID = "folio-16-standard";
     const SERIES_ID = GOLD_ID;
     const SEED = {
@@ -910,6 +936,7 @@
       const hint = document.getElementById("serve-hint");
       if (hint) hint.hidden = location.protocol !== "file:";
       await loadStars();
+      await mergeScannedFaces();
       await loadCabinet();
       const mSeries = /(?:^|#|&)series=([a-z0-9-]+)/.exec(location.hash);
       await loadSeriesById(mSeries ? mSeries[1] : GOLD_ID);
