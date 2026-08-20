@@ -48,18 +48,20 @@ function syncDemoConvertCta() {
 
 /** D-19 · 空态 CTA 在文案区，回访 CTA 在工作台。 */
 export function syncCtaPlacement() {
+  var group = $("v2-cta-group");
   var cta = $("v2-cta");
+  var moveEl = group || cta;
   var headlineSlot = $("v2-headline-cta-slot");
   var benchSlot = $("v2-bench-cta-slot");
   var ctaRow = document.querySelector(".v2-bench__cta-row");
-  if (!cta || !headlineSlot || !benchSlot) return;
+  if (!moveEl || !headlineSlot || !benchSlot) return;
   var isReturning = pickRecentUserTrips(V2.trips).length > 0;
   if (isReturning) {
-    benchSlot.appendChild(cta);
-    cta.classList.remove("is-headline");
+    benchSlot.appendChild(moveEl);
+    if (cta) cta.classList.remove("is-headline");
   } else {
-    headlineSlot.appendChild(cta);
-    cta.classList.add("is-headline");
+    headlineSlot.appendChild(moveEl);
+    if (cta) cta.classList.add("is-headline");
   }
   if (ctaRow) show(ctaRow, isReturning);
 }

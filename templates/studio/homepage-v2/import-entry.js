@@ -60,4 +60,12 @@ export function initImportSheet() {
       openImportSheet();
     });
   }
+  var portfolio = $("v2-cta-portfolio");
+  if (portfolio) {
+    portfolio.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      trackStudioEvent("cta_click", { surface: "portfolio_link" });
+      openImportSheet({ edition: "portfolio" });
+    });
+  }
 }

@@ -112,3 +112,36 @@ export function canNavigateWizardStep(from, to, mode) {
   if (a === "fine" && b === "confirm") return true;
   return false;
 }
+
+export function normalizeEdition(raw) {
+  var t = String(raw || "").trim().toLowerCase();
+  if (t === "portfolio" || t === "folio") return "portfolio";
+  return "journal";
+}
+
+export function parsePortfolioPipelineConfig(studioCfg) {
+  var raw = (studioCfg && (studioCfg.portfolioPipeline || studioCfg.portfolio_pipeline)) || {};
+  var minKept = raw.minKeptOverride != null ? Number(raw.minKeptOverride) : Number(raw.min_kept_override);
+  return {
+    enabled: raw.enabled === true,
+    homepageEntry: raw.homepageEntry === true || raw.homepage_entry === true,
+    allowRefineSwitch: raw.allowRefineSwitch !== false && raw.allow_refine_switch !== false,
+    maxPages: Number(raw.maxPages || raw.max_pages || 32),
+    minKept: minKept > 0 ? minKept : 12,
+  };
+}
+
+export function shouldShowEditionSegment(pipe) {
+  return !!(pipe && pipe.enabled);
+}
+
+export function shouldShowHomepagePortfolioEntry(pipe) {
+  return !!(pipe && pipe.enabled && pipe.homepageEntry);
+}
+
+export function isPortfolioLowPhoto(count, minKept) {
+  if (count == null || count === "") return false;
+  var n = Number(count);
+  if (!Number.isFinite(n)) return false;
+  return n < Number(minKept || 12);
+}

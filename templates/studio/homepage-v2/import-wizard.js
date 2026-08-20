@@ -24,6 +24,11 @@ import {
   canLeavePickStep,
   derivePhotoPrefsFromMode,
   resolvePhotoKeepModeFromDraft,
+  normalizeEdition,
+  parsePortfolioPipelineConfig,
+  shouldShowEditionSegment,
+  shouldShowHomepagePortfolioEntry,
+  isPortfolioLowPhoto,
 } from "./import-wizard-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 
@@ -31,6 +36,8 @@ var _open = false;
 var _previousFocus = null;
 var _trapHandler = null;
 var _step = "pick";
+var _activeEdition = "journal";
+var _pipelineCfg = { enabled: false, homepageEntry: false, minKept: 12 };
 var _pickInFlight = false;
 var _uploadInFlight = false;
 var _pendingAlbumPath = null;
@@ -393,6 +400,7 @@ function fetchAlbumPreview(albumPath) {
       updateCountHint();
       updatePhotoKeepModeUi();
       updateLayoutDensityWarn();
+      syncEditionUi();
       if (_step === "fine") {
         maybePrefillFineFromPreview();
         syncFineSnapshotAfterPrefill();
@@ -439,6 +447,59 @@ function setActiveMode(mode, source) {
   }
 }
 
+function setActiveEdition(edition, source) {
+  var next = normalizeEdition(edition);
+  var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
+  if (next === "portfolio" && low && source === "user") {
+    if (typeof studioToast === "function") {
+      studioToast("照片较少，作品集更适合 30 张以上。确认后仍可继续。", { duration: 2800 });
+    }
+  }
+  _activeEdition = next;
+  syncEditionUi();
+  updateStartLabel();
+}
+
+function syncEditionUi() {
+  var row = $("v2-wizard-edition");
+  var journal = $("v2-wizard-edition-journal");
+  var portfolio = $("v2-wizard-edition-portfolio");
+  var show = shouldShowEditionSegment(_pipelineCfg);
+  if (row) row.hidden = !show;
+  var homeLink = $("v2-cta-portfolio");
+  if (homeLink) homeLink.hidden = !shouldShowHomepagePortfolioEntry(_pipelineCfg);
+  if (!show) {
+    _activeEdition = "journal";
+  }
+  var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
+  if (journal) {
+    journal.setAttribute("aria-checked", _activeEdition === "journal" ? "true" : "false");
+  }
+  if (portfolio) {
+    portfolio.setAttribute("aria-checked", _activeEdition === "portfolio" ? "true" : "false");
+    portfolio.classList.toggle("is-dim", low);
+  }
+  var desc = $("v2-wizard-mode-quick-desc");
+  if (desc) {
+    desc.textContent = _activeEdition === "portfolio"
+      ? "按杂志页编排，做完能点开翻。发群请选游记。"
+      : "优先出微信长图，适合马上分享";
+  }
+}
+
+function hydratePortfolioPipeline() {
+  return fetch("/__travelogue/config", { headers: { Accept: "application/json" } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      _pipelineCfg = parsePortfolioPipelineConfig(data && data.studio);
+      syncEditionUi();
+    })
+    .catch(function () {
+      _pipelineCfg = { enabled: false, homepageEntry: false, minKept: 12 };
+      syncEditionUi();
+    });
+}
+
 function updateStartLabel() {
   var start = $("v2-wizard-start");
   if (!start) return;
@@ -448,6 +509,8 @@ function updateStartLabel() {
   }
   if (_activeMode === "fine_craft") {
     start.textContent = _fineVisited ? "定制画册细节 →" : "填写细节 →";
+  } else if (_activeEdition === "portfolio") {
+    start.textContent = "开始制作作品集 →";
   } else {
     start.textContent = "开始制作 →";
   }
@@ -907,6 +970,7 @@ function buildWizardPayload() {
     titleUserSet: !!_titleUserEdited && !!title,
   });
   body.mode = _activeMode;
+  if (_activeEdition === "portfolio") body.edition = "portfolio";
   Object.assign(body, readTemplateParams());
   var place = safeGet("v2-wizard-trip-place");
   var userNotes = safeGet("v2-wizard-user-notes");
@@ -1077,6 +1141,7 @@ function startUploadFromWizard() {
   var uploadOpts = {
     source: "浏览器上传",
     mode: _activeMode,
+    edition: _activeEdition === "portfolio" ? "portfolio" : undefined,
     title: trimmedTitle || undefined,
     titleUserSet: !!_titleUserEdited && !!trimmedTitle,
     place: place || "旅途",
@@ -1216,6 +1281,9 @@ export function openImportWizard(opts) {
   } else {
     restoreSessionIfAny(opts);
     if (_step === "pick") goToStep1(false);
+  }
+  if (opts.edition) {
+    setActiveEdition(opts.edition, "homepage");
   }
   var pick = $("v2-wizard-pick");
   if (_step === "pick" && pick) pick.focus();
@@ -1367,6 +1435,7 @@ export function initImportWizard() {
   _wired = true;
   loadTemplateSelectOptions();
   wireTemplateSelect();
+  hydratePortfolioPipeline();
 
   var folderHelpMore = $("v2-wizard-folder-help-more");
   if (folderHelpMore) {
@@ -1423,6 +1492,17 @@ export function initImportWizard() {
   });
   if (fine) fine.addEventListener("click", function () {
     setActiveMode("fine_craft", "user");
+    saveDraft();
+  });
+
+  var editionJournal = $("v2-wizard-edition-journal");
+  var editionPortfolio = $("v2-wizard-edition-portfolio");
+  if (editionJournal) editionJournal.addEventListener("click", function () {
+    setActiveEdition("journal", "user");
+    saveDraft();
+  });
+  if (editionPortfolio) editionPortfolio.addEventListener("click", function () {
+    setActiveEdition("portfolio", "user");
     saveDraft();
   });
 

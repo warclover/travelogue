@@ -16,6 +16,11 @@ import {
   canLeavePickStep,
   canNavigateWizardStep,
   resolvePhotoKeepModeFromDraft,
+  normalizeEdition,
+  parsePortfolioPipelineConfig,
+  shouldShowEditionSegment,
+  shouldShowHomepagePortfolioEntry,
+  isPortfolioLowPhoto,
 } from "../../templates/studio/homepage-v2/import-wizard-logic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -85,6 +90,23 @@ test("canLeavePickStep / canNavigateWizardStep", () => {
   assert.equal(canNavigateWizardStep("confirm", "fine", "quick_share"), false);
   assert.equal(canNavigateWizardStep("confirm", "fine", "fine_craft"), true);
   assert.equal(canNavigateWizardStep("fine", "pick", "fine_craft"), true);
+});
+
+test("PFM edition helpers default hidden", () => {
+  assert.equal(normalizeEdition(""), "journal");
+  assert.equal(normalizeEdition("folio"), "portfolio");
+  const off = parsePortfolioPipelineConfig({});
+  assert.equal(off.enabled, false);
+  assert.equal(off.homepageEntry, false);
+  assert.equal(shouldShowEditionSegment(off), false);
+  assert.equal(shouldShowHomepagePortfolioEntry(off), false);
+  const on = parsePortfolioPipelineConfig({
+    portfolioPipeline: { enabled: true, homepageEntry: false },
+  });
+  assert.equal(shouldShowEditionSegment(on), true);
+  assert.equal(shouldShowHomepagePortfolioEntry(on), false);
+  assert.equal(isPortfolioLowPhoto(8, 12), true);
+  assert.equal(isPortfolioLowPhoto(30, 12), false);
 });
 
 test("resolvePhotoKeepModeFromDraft 对齐 QFX 合同向量", () => {

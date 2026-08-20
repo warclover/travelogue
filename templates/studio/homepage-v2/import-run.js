@@ -137,6 +137,7 @@ function buildUploadForm(files, opts) {
   form.append("placeUserSet", placeUserSet ? "true" : "false");
   var mode = String(opts.mode || "quick_share");
   form.append("mode", mode);
+  if (opts.edition) form.append("edition", String(opts.edition));
   if (mode === "fine_craft" && opts.layoutDensity) {
     form.append("layoutDensity", String(opts.layoutDensity));
   }

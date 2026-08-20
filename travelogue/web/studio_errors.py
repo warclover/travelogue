@@ -58,6 +58,7 @@ USER_MESSAGES: dict[str, str] = {
     "E_MEDIA_CLEANUP_REFUSED": "无法安全删除源文件拷贝",
     "E_MEDIA_CLEANUP_PARTIAL": "清理未完成，查看详情",
     "E_MEDIA_INCREMENTAL_SOURCE": "追加导入缺少可访问的原片",
+    "E_PORTFOLIO_UNAVAILABLE": "作品集暂时排不出，可改回游记",
 }
 
 # Codes with a fixed user-facing line — do not append raw exception text.
@@ -90,6 +91,7 @@ _PLAIN_ONLY_CODES = frozenset(
         "E_STUDIO_RERENDER",
         "E_TRIP_CONFLICT",
         "E_TRIP_NOT_FOUND",
+        "E_PORTFOLIO_UNAVAILABLE",
     }
 )
 

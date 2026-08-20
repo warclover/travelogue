@@ -204,8 +204,11 @@
       </section>
     </div>
 
-    <button type="button" class="v2-bench__cta-primary" id="v2-cta"
-            aria-label="开始制作我的画册">开始制作我的画册 →</button>
+    <div id="v2-cta-group" class="v2-cta-group">
+      <button type="button" class="v2-bench__cta-primary" id="v2-cta"
+              aria-label="开始制作我的画册">开始制作我的画册 →</button>
+      <a href="#v2-cta-portfolio" class="v2-bench__cta-secondary" id="v2-cta-portfolio" hidden>做一本作品集</a>
+    </div>
 
     <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
          aria-labelledby="v2-settings-title" aria-describedby="v2-settings-desc">
@@ -535,11 +538,26 @@
           <p class="v2-wizard__count-hint" id="v2-wizard-count-hint" hidden role="status"></p>
           <div class="v2-wizard__thumbs" id="v2-wizard-thumbs" hidden></div>
         </div>
+        <div class="v2-wizard__edition" id="v2-wizard-edition" hidden>
+          <p class="v2-wizard__edition-label" id="v2-wizard-edition-label">这次做</p>
+          <div class="v2-wizard__edition-seg" role="radiogroup" aria-labelledby="v2-wizard-edition-label">
+            <button type="button" class="v2-wizard__edition-btn" role="radio" aria-checked="true"
+                    data-edition="journal" id="v2-wizard-edition-journal">
+              游记
+              <span>推荐 · 发群</span>
+            </button>
+            <button type="button" class="v2-wizard__edition-btn" role="radio" aria-checked="false"
+                    data-edition="portfolio" id="v2-wizard-edition-portfolio">
+              作品集
+              <span>杂志页</span>
+            </button>
+          </div>
+        </div>
         <div class="v2-wizard__mode-cards" role="radiogroup" aria-label="导入模式" id="v2-wizard-mode-cards">
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="true"
                   data-mode="quick_share" id="v2-wizard-mode-quick">
             <span class="v2-wizard__mode-card-title">快速分享（推荐）</span>
-            <span class="v2-wizard__mode-card-desc">优先出微信长图，适合马上分享</span>
+            <span class="v2-wizard__mode-card-desc" id="v2-wizard-mode-quick-desc">优先出微信长图，适合马上分享</span>
           </button>
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="false"
                   data-mode="fine_craft" id="v2-wizard-mode-fine">

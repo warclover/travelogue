@@ -1351,42 +1351,66 @@ def _stage_build_chapters_compose(
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
     # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
-    from travelogue.layout_engine.api import compose_trip
-
-    chapters, replan_meta = compose_trip(
-        chapters,
-        buckets=non_empty_buckets,
-        aspects=aspects,
-        assets=layout_assets,
-        app_cfg=app_cfg,
-        scoring_enabled=layout_cfg.scoring.enabled,
-        weights=scoring_weights,
-        beam_width=layout_cfg.scoring.beam_width,
-        degradation=degradation,
-        arc_mode=cur_cfg.arc_mode,
-        arc_profile=arc_profile,
-        chapter_heroes=chapter_heroes,
-        orientation_summary=summary_dict,
-        skip_screen_asset_ids=skip_screen_ids,
-        mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
-        trip_photo_total=len(layout_assets),
-        search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
-        max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
-        max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
-        allow_burst_split=layout_cfg.scoring.allow_burst_split,
-        wall_clock_limits_output=layout_cfg.scoring.wall_clock_limits_output,
-        subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
-        enable_food_grid=cur_cfg.enable_food_grid,
-        mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
-        intent_peak_chapters=intent_peak,
-        enable_gravity_balance=cur_cfg.enable_gravity_balance,
-        max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
-        skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
-        incremental_scoring=layout_cfg.scoring.incremental,
-        max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
-        moment_secondary_ids=set(secondary_hints),
-        moment_secondary_boost=effective_secondary_boost(cur_cfg.moment),
+    # PFM：作品集在 compose_trip 之前分叉；失败硬报，禁止静默掉回 journal。
+    from travelogue.config.edition import (
+        PortfolioUnavailableError,
+        is_portfolio_pipeline_enabled,
+        is_portfolio_trip,
     )
+
+    if is_portfolio_trip(trip):
+        if not is_portfolio_pipeline_enabled(app_cfg):
+            raise CurateError("E_PORTFOLIO_UNAVAILABLE", "此功能已关闭")
+        from travelogue.layout_engine.editorial_series import compose_portfolio_trip
+
+        try:
+            chapters, replan_meta = compose_portfolio_trip(
+                chapters,
+                buckets=non_empty_buckets,
+                aspects=aspects,
+                assets=layout_assets,
+                app_cfg=app_cfg,
+                trip=trip,
+            )
+        except PortfolioUnavailableError as exc:
+            raise CurateError(exc.code, exc.message) from exc
+    else:
+        from travelogue.layout_engine.api import compose_trip
+
+        chapters, replan_meta = compose_trip(
+            chapters,
+            buckets=non_empty_buckets,
+            aspects=aspects,
+            assets=layout_assets,
+            app_cfg=app_cfg,
+            scoring_enabled=layout_cfg.scoring.enabled,
+            weights=scoring_weights,
+            beam_width=layout_cfg.scoring.beam_width,
+            degradation=degradation,
+            arc_mode=cur_cfg.arc_mode,
+            arc_profile=arc_profile,
+            chapter_heroes=chapter_heroes,
+            orientation_summary=summary_dict,
+            skip_screen_asset_ids=skip_screen_ids,
+            mixed_proximity_seconds=layout_cfg.mixed_proximity_seconds,
+            trip_photo_total=len(layout_assets),
+            search_timeout_ms=layout_cfg.scoring.search_timeout_ms,
+            max_candidates_per_bucket=layout_cfg.scoring.max_candidates_per_bucket,
+            max_evaluations_per_trip=layout_cfg.scoring.max_evaluations_per_trip,
+            allow_burst_split=layout_cfg.scoring.allow_burst_split,
+            wall_clock_limits_output=layout_cfg.scoring.wall_clock_limits_output,
+            subject_run_tolerance=layout_cfg.scoring.subject_run_tolerance,
+            enable_food_grid=cur_cfg.enable_food_grid,
+            mundane_grid_buckets=cur_cfg.mundane_grid_buckets,
+            intent_peak_chapters=intent_peak,
+            enable_gravity_balance=cur_cfg.enable_gravity_balance,
+            max_consecutive_same_pattern=cur_cfg.max_consecutive_same_pattern,
+            skip_duplicate_signatures=layout_cfg.scoring.skip_duplicate_signatures,
+            incremental_scoring=layout_cfg.scoring.incremental,
+            max_evaluations_per_segment=layout_cfg.scoring.max_evaluations_per_segment,
+            moment_secondary_ids=set(secondary_hints),
+            moment_secondary_boost=effective_secondary_boost(cur_cfg.moment),
+        )
     from travelogue.layout_contract.engines import (
         LAYOUT_ENGINE_SCREENS,
         LAYOUT_ENGINE_VERSION_SCREENS,

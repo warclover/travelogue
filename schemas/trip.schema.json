@@ -146,7 +146,7 @@
     },
     "studio": {
       "$ref": "#/$defs/tripStudio",
-      "description": "Studio per-trip preferences (LVP · layoutVibe, etc.)"
+      "description": "Studio per-trip preferences (LVP layoutVibe · PFM edition)"
     }
   },
   "$defs": {
@@ -162,6 +162,66 @@
             "fit_photo_experimental"
           ],
           "description": "LVP · Layout Vibe Picker id (PRD-LAYOUT-VIBE-PICKER-V1)"
+        },
+        "edition": {
+          "type": "string",
+          "enum": [
+            "journal",
+            "portfolio"
+          ],
+          "description": "PFM · 成册身份。缺省（不写字段）≡ journal（D-PFM-32）。禁止 folio / surface。"
+        },
+        "portfolio": {
+          "$ref": "#/$defs/tripStudioPortfolio"
+        },
+        "copyOrphans": {
+          "type": "array",
+          "description": "切身份时回填不上的文案草稿（D-PFM-24）",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "tripStudioPortfolio": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "PFM · 作品集装配诊断（仅 edition=portfolio 时存在）",
+      "properties": {
+        "seriesId": {
+          "type": "string"
+        },
+        "pageCount": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 32
+        },
+        "pageCountSource": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "user"
+          ]
+        },
+        "density": {
+          "type": "string"
+        },
+        "photosPlaced": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "photosKept": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overflow": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "match": {
+          "type": "object",
+          "additionalProperties": true
         }
       }
     },

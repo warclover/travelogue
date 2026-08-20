@@ -53,6 +53,17 @@ class GcsPosterBricConfig:
 
 
 @dataclass
+class PortfolioPipelineConfig:
+    """PFM · 作品集父开关（D-PFM-02 / D-PFM-06）。默认全关 ≡ 现网 GA。"""
+
+    enabled: bool = False
+    homepage_entry: bool = False
+    allow_refine_switch: bool = True
+    max_pages: int = 32
+    min_kept_override: int | None = None
+
+
+@dataclass
 class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
 
@@ -66,6 +77,9 @@ class StudioConfig:
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
     output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
     gcs_poster_bric: GcsPosterBricConfig = field(default_factory=GcsPosterBricConfig)
+    portfolio_pipeline: PortfolioPipelineConfig = field(
+        default_factory=PortfolioPipelineConfig
+    )
 
     @property
     def longshot2_enabled(self) -> bool:
@@ -85,6 +99,7 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
     """
     or_cfg = getattr(cfg.studio, "output_recipe", None) or OutputRecipeConfig()
     bands = getattr(or_cfg, "bands", None) or OutputRecipeBandsConfig()
+    pipe = getattr(cfg.studio, "portfolio_pipeline", None) or PortfolioPipelineConfig()
     # Layer-0 constants (must not import orchestrator from config).
     from travelogue.constants import (
         ADVANCED_SETTINGS_KEYS,
@@ -140,6 +155,13 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                         True,
                     )
                 ),
+            },
+            "portfolioPipeline": {
+                "enabled": bool(pipe.enabled),
+                "homepageEntry": bool(pipe.homepage_entry),
+                "allowRefineSwitch": bool(pipe.allow_refine_switch),
+                "maxPages": int(pipe.max_pages),
+                "minKeptOverride": pipe.min_kept_override,
             },
         },
         "cohort": {

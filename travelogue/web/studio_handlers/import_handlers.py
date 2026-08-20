@@ -246,6 +246,9 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         payload["keepNearDuplicates"] = _parse_keep_near_duplicates(
             fields.get("keepNearDuplicates")
         )
+        edition_raw = str(fields.get("edition") or "").strip().lower()
+        if edition_raw:
+            payload["edition"] = edition_raw
         if plan_bytes is not None:
             import base64
 
@@ -307,6 +310,28 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
 
     if not payload:
         return
+
+    from travelogue.config import get_config
+    from travelogue.config.edition import (
+        EDITION_PORTFOLIO,
+        PortfolioUnavailableError,
+        apply_import_edition,
+        normalize_edition,
+    )
+
+    if normalize_edition(payload.get("edition")) == EDITION_PORTFOLIO:
+        try:
+            apply_import_edition({}, payload.get("edition"), get_config())
+        except PortfolioUnavailableError as exc:
+            handler._json_response(
+                409,
+                {
+                    "ok": False,
+                    "error": exc.code,
+                    "message": user_message(exc.code, exc.message),
+                },
+            )
+            return
 
     # Busy check before album validation so clients/probes see 409, not 403/400.
     if payload.get("_job") is None and get_job_store().is_import_running():
@@ -590,6 +615,9 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         worker_payload["photoKeepMode"] = photo_keep_mode
     if template_id_str:
         worker_payload["template_id"] = template_id_str
+    edition_raw = str(payload.get("edition") or "").strip().lower()
+    if edition_raw:
+        worker_payload["edition"] = edition_raw
     if user_notes:
         worker_payload["userNotes"] = user_notes
     if travel_notes:

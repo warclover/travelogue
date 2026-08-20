@@ -103,6 +103,7 @@ export const STUDIO_ERROR_MESSAGES = {
   E_MEDIA_CLEANUP_REFUSED: "无法安全删除源文件拷贝",
   E_MEDIA_CLEANUP_PARTIAL: "清理未完成，查看详情",
   E_MEDIA_INCREMENTAL_SOURCE: "追加导入缺少可访问的原片",
+  E_PORTFOLIO_UNAVAILABLE: "作品集暂时排不出，可改回游记",
 };
 
 export const DEFAULT_PIPELINE_ESTIMATES = [

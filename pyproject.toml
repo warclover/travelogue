@@ -161,3 +161,14 @@ forbidden_modules = [
     "travelogue.cli",
     "travelogue.desktop",
 ]
+
+[[tool.importlinter.contracts]]
+name = "PFM editorial_series isolation (D-U-15 / ISO-05)"
+type = "forbidden"
+source_modules = [
+    "travelogue.layout_engine.mosaic",
+    "travelogue.layout_templates",
+]
+forbidden_modules = [
+    "travelogue.layout_engine.editorial_series",
+]

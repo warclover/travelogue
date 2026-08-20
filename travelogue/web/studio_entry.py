@@ -358,6 +358,9 @@ def build_entry(
         ),
         "layoutVibe": _layout_vibe_entry(trip),
         "layoutVibeOptions": _layout_vibe_options(),
+        "layoutVibeVisible": _edition_entry(trip) != "portfolio",
+        "edition": _edition_entry(trip),
+        "portfolio": _portfolio_entry(trip),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
         "appendixOutlierCount": len(
             (curation.get("excludedTimeOutlierAssetIds") or [])
@@ -423,6 +426,34 @@ def _layout_vibe_entry(trip: dict) -> str:
     from travelogue.config.layout_vibe import resolve_layout_vibe
 
     return resolve_layout_vibe(trip)
+
+
+def _edition_entry(trip: dict) -> str:
+    from travelogue.config.edition import resolve_edition
+
+    return resolve_edition(trip)
+
+
+def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
+    from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
+
+    if resolve_edition(trip) != EDITION_PORTFOLIO:
+        return None
+    studio = trip.get("studio")
+    if not isinstance(studio, dict):
+        return {"overflow": None, "photosPlaced": None, "photosKept": None}
+    raw = studio.get("portfolio")
+    if not isinstance(raw, dict):
+        return {"overflow": None, "photosPlaced": None, "photosKept": None}
+    overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
+    return {
+        "seriesId": raw.get("seriesId"),
+        "pageCount": raw.get("pageCount"),
+        "pageCountSource": raw.get("pageCountSource") or "auto",
+        "photosPlaced": raw.get("photosPlaced"),
+        "photosKept": raw.get("photosKept"),
+        "overflow": overflow,
+    }
 
 
 def _layout_vibe_options() -> list[dict[str, str]]:

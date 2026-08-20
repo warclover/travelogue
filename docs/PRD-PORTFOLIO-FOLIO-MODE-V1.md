@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.0**（BLK-PFM-01～09 已回写） |
-| **状态** | **Conditional Go · 回写完成**（八席 2026-08-20）。**W0 可开工**；**W1 仍挡资产门 AS-PFM-01**；**W3 挡线框 F1/F3/F6 重签** |
+| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0 开工中**（`feat/pfm-portfolio-folio-mode-v1`）；**W1 仍挡资产门 AS-PFM-01**；**W3 入口可拆** |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
 | **界面用词** | **游记**（快分享）· **作品集**（杂志风卷轴）。禁止对 C 端说「第七种模式 / page-* / 成册引擎 / 画册已经按页」 |
@@ -12,10 +12,10 @@
 | **触发来源** | 2026-08-20 产品：两条管线都有需求、互不干扰；筛选/聚类与现网游记一致，页面装配走成册编排。前序：[临时模板库管线讨论备忘录 §4](./templates/reserve/临时模板库管线讨论备忘录.md) · [TSU D-U-09](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV D-TDV-22](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) |
 | **评审** | [八席纪要 2026-08-20](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md)（七席 + 典型用户 · 8/8 Conditional Go · BLK-PFM-01～09 · OQ-02 否决 / OQ-06 改判） |
 | **前置条件** | 现网游记 GA（`layoutEngine=screens` + MCS/MTSO）· 六平台导出 GA（ADR-021）· **正式 `series/` 收件目录已定（TDV OQ-03 关闭）** · **P0 系列 `magazine-16-standard` 已入现网目录** · 活目录 `page-*` 由 TSU W3 供货（PFM 只消费） |
-| **线框** | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（F0/F2/F4/F7/F8 已签；**F1/F3/F6 已按 BLK 改，待重签**） |
+| **线框** | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（**F0–F8 已签** · 2026-08-20 产品重签 F1/F3/F6） |
 | **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
-| **验收** | Kickoff 后拆 [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
-| **实施** | Kickoff 后拆 [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
+| **验收** | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
+| **实施** | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
 | **更新日期** | 2026-08-20 |
 
 > **定位**
@@ -558,16 +558,16 @@ else:                               compose_trip(...)   # 零改签名
 | 帧 | 审什么 | 八席结论 |
 |----|--------|----------|
 | **F0** | 双管线地图 + 三轴对照 | **已签** |
-| **F1** | Wizard Step 2：身份分段 + 快速/精细 | **已改待重签**（撤页数芯片、补成品副文、加置灰态） |
+| **F1** | Wizard Step 2：身份分段 + 快速/精细 | **已签**（2026-08-20 产品重签：撤页数芯片、补成品副文、置灰+知情继续） |
 | **F2** | 首页次链 | **已签**（绑 W2 才露） |
-| **F3** | 作品集预览 Dock + 成功面 | **已改待重签**（主钮「导出作品集」、成功面「打开这一本」、溢出明示） |
+| **F3** | 作品集预览 Dock + 成功面 | **已签**（2026-08-20 产品重签：主钮「导出作品集」、成功面「打开这一本」、溢出明示） |
 | **F4** | 游记预览 Dock（对照：零变化） | **已签** |
 | **F5** | 作品集导出 ▾ 换种分享 | **已签（有条件）** · 默认折叠 + 印刷副文 |
-| **F6** | 精修成册类型 + 确认模态 | **已改待重签**（补「文字可能无法全部保留」、页数芯片落此处） |
+| **F6** | 精修成册类型 + 确认模态 | **已签**（2026-08-20 产品重签：「文字可能无法全部保留」、页数芯片仅精修） |
 | **F7** | 书架标 + 菜单改身份 | **已签** |
 | **F8** | 禁止形态 | **已签** · 新增两条红线（无正式系列不得称作品集、不得静默丢照片） |
 
-**签核规则**：F0 已过 → W1 线框门通过（但仍挡 AS-PFM-01 资产门）。**F1/F3/F6 重签后**才 Kickoff W3。
+**签核规则**：F0 已过 → W1 线框门通过（但仍挡 AS-PFM-01 资产门）。**F1/F3/F6 已于 2026-08-20 重签** → W3 入口可拆。
 
 ---
 

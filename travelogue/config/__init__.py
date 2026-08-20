@@ -90,6 +90,7 @@ from travelogue.config.studio import (
     GcsPosterBricConfig,
     OutputRecipeBandsConfig,
     OutputRecipeConfig,
+    PortfolioPipelineConfig,
     StudioConfig,
     studio_config_expose,
 )
@@ -179,6 +180,7 @@ __all__ = [
     "OutputRecipeBandsConfig",
     "GcsPosterBricConfig",
     "OutputRecipeConfig",
+    "PortfolioPipelineConfig",
     "StudioConfig",
     "TemplateAdminConfig",
     "TemplateRouterConfig",

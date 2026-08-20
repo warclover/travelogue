@@ -60,6 +60,7 @@ def test_ds_03_source_still_assigns_contract_keys() -> None:
         "featuredDir",
         "materialDir",
         "planText",
+        "edition",
     ):
         assert key in wizard, f"missing key assignment surface: {key}"
 

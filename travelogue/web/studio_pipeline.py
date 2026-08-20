@@ -824,6 +824,7 @@ def run_studio_pipeline(
     photo_keep_mode: str | None = None,
     stop_after: str = "full",
     force_stub: bool = False,
+    edition: str | None = None,
 ) -> StudioPipelineResult:
     from travelogue.domain.photo_keep_mode import resolve_photo_keep_prefs
 
@@ -1023,6 +1024,18 @@ def run_studio_pipeline(
         from travelogue.media.ingest_persist import make_intent_flush_mutator
 
         svc.update(trip_json, make_intent_flush_mutator(trip))
+
+        from travelogue.config.edition import (
+            PortfolioUnavailableError,
+            apply_import_edition,
+            make_studio_edition_mutator,
+        )
+
+        try:
+            apply_import_edition(trip, edition, cfg)
+        except PortfolioUnavailableError:
+            raise
+        svc.update(trip_json, make_studio_edition_mutator(trip))
 
         if plan_bytes is not None or plan_text:
             from travelogue.services.intent_plan import ingest_travel_plan
