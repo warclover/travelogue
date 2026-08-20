@@ -379,9 +379,14 @@
     }
   }
 
-  async function reconcile({ faces, roles }) {
+  async function reconcile({ faces, roles, rolesFile, facesFileIds }) {
+    const fileRoles = rolesFile || roles || {};
+    const fileFaceIds = Array.isArray(facesFileIds)
+      ? facesFileIds.slice()
+      : (faces || []).map((f) => f.id);
     const faceIds = (faces || []).map((f) => f.id);
-    const roleIds = Object.keys(roles || {});
+    const faceById = new Map((faces || []).map((f) => [f.id, f]));
+    const roleIds = Object.keys(fileRoles);
     const issues = [];
     let catalog = [];
     let viaHttp = true;
@@ -406,8 +411,8 @@
     if (onlyCat.length) issues.push(`catalog.yaml 有、微缩没有：${onlyCat.join(" · ")}`);
     if (onlyFace.length) issues.push(`微缩有、catalog.yaml 没有：${onlyFace.join(" · ")}`);
 
-    const onlyRole = roleIds.filter((id) => faceIds.indexOf(id) < 0);
-    const missingRole = faceIds.filter((id) => roleIds.indexOf(id) < 0);
+    const onlyRole = roleIds.filter((id) => catIds.indexOf(id) < 0 && fileFaceIds.indexOf(id) < 0);
+    const missingRole = fileFaceIds.filter((id) => roleIds.indexOf(id) < 0);
     if (onlyRole.length) issues.push(`roles.js 多出：${onlyRole.join(" · ")}`);
     if (missingRole.length) issues.push(`roles.js 缺：${missingRole.join(" · ")}`);
 
@@ -421,12 +426,27 @@
         }
         const meta = parsePacketMeta(await res.text());
         packets[id] = meta;
-        const js = (roles || {})[id] || {};
-        const drift = [];
-        if ((js.role || "") !== (meta.role || "")) drift.push(`role ${js.role || "?"} ≠ ${meta.role || "?"}`);
-        if ((js.program || "") !== (meta.program || "")) drift.push(`program ${js.program || "?"} ≠ ${meta.program || "?"}`);
-        if ((js.familyId || "") !== (meta.familyId || "")) drift.push(`familyId ${js.familyId || "?"} ≠ ${meta.familyId || "?"}`);
-        if (drift.length) issues.push(`${id} roles.js 与 packet 不一致：${drift.join(" · ")}`);
+        if (fileRoles[id]) {
+          const js = fileRoles[id];
+          const drift = [];
+          if ((js.role || "") !== (meta.role || "")) drift.push(`role ${js.role || "?"} ≠ ${meta.role || "?"}`);
+          if ((js.program || "") !== (meta.program || "")) drift.push(`program ${js.program || "?"} ≠ ${meta.program || "?"}`);
+          if ((js.familyId || "") !== (meta.familyId || "")) drift.push(`familyId ${js.familyId || "?"} ≠ ${meta.familyId || "?"}`);
+          if (drift.length) issues.push(`${id} roles.js 与 packet 不一致：${drift.join(" · ")}`);
+        }
+        const face = faceById.get(id);
+        if (face && meta.mix) {
+          const geo = mixFromFace(face);
+          if (
+            meta.mix.portrait !== geo.portrait
+            || meta.mix.landscape !== geo.landscape
+            || (meta.mix.square || 0) !== geo.square
+          ) {
+            issues.push(
+              `${id} 微缩朝向账 ≠ packet mix（微缩 ${geo.portrait}P/${geo.landscape}L/${geo.square}S · 包 ${meta.mix.portrait}P/${meta.mix.landscape}L/${meta.mix.square || 0}S）`
+            );
+          }
+        }
       } catch (_) {
         issues.push(`${id} 对账失败`);
       }
@@ -471,8 +491,14 @@
     if (!meta.program) hard.push("packet 没有 program。");
     const geo = mixFromFace(face);
     if (meta.mix) {
-      if (meta.mix.portrait !== geo.portrait || meta.mix.landscape !== geo.landscape) {
-        hard.push(`mix 与槽朝向对不上（包 ${meta.mix.portrait}P/${meta.mix.landscape}L · 微缩 ${geo.portrait}P/${geo.landscape}L）。`);
+      if (
+        meta.mix.portrait !== geo.portrait
+        || meta.mix.landscape !== geo.landscape
+        || (meta.mix.square || 0) !== geo.square
+      ) {
+        hard.push(
+          `mix 与槽朝向对不上（包 ${meta.mix.portrait}P/${meta.mix.landscape}L/${meta.mix.square || 0}S · 微缩 ${geo.portrait}P/${geo.landscape}L/${geo.square}S）。`
+        );
       }
     }
     const stars = Number(getStars ? getStars(id) : 0);
@@ -610,7 +636,41 @@
     copyText,
     reconcile,
     inspectPage,
+    mixFromFace,
     rewritePacketStatus,
+    syncPacketStatus: async function syncPacketStatus(id, status) {
+      try {
+        const res = await fetch("./atelier/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status })
+        });
+        if (res.ok) return { ok: true, via: "serve" };
+        const data = await res.json().catch(() => ({}));
+        if (res.status !== 404) return { ok: false, error: data.error || "源文件未写上。" };
+      } catch (_) { /* file:// 或旧静态服 */ }
+      try {
+        const res = await fetch(`./${id}/packet.yaml`, { cache: "no-store" });
+        if (!res.ok) return { ok: false, error: "读不到 packet.yaml" };
+        const text = rewritePacketStatus(await res.text(), status);
+        if (window.showSaveFilePicker) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: "packet.yaml",
+            id: `atelier-packet-${id}`,
+            types: [{ description: "YAML", accept: { "text/yaml": [".yaml"], "text/plain": [".yaml"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(text);
+          await writable.close();
+          return { ok: true, via: "picker" };
+        }
+        downloadBlob(new Blob([text], { type: "text/yaml" }), "packet.yaml");
+        return { ok: true, via: "download" };
+      } catch (err) {
+        if (err && err.name === "AbortError") return { ok: false, aborted: true };
+        return { ok: false, error: (err && err.message) || "源文件未写上。" };
+      }
+    },
     exportPageZip,
     downloadBlob,
     stamp

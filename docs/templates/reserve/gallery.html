@@ -378,6 +378,8 @@
   <script src="./bind.js"></script>
   <script>
     const FACES = window.RESERVE_FACES;
+    const FACES_FILE_IDS = FACES.map((f) => f.id);
+    const ROLES_FILE = Object.assign({}, window.RESERVE_ROLES || {});
 
     const STORE_KEY = "reserve-stars-draft-v1";
     const SEED = {
@@ -875,7 +877,12 @@
         const res = await fetch("./atelier/faces.json", { cache: "no-store" });
         if (!res.ok) return false;
         const data = await res.json();
-        window.RESERVE_ROLES = Object.assign({}, window.RESERVE_ROLES || {}, data.roles || {});
+        window.RESERVE_ROLES = window.RESERVE_ROLES || {};
+        for (const [id, row] of Object.entries(data.roles || {})) {
+          if (!Object.prototype.hasOwnProperty.call(ROLES_FILE, id)) {
+            window.RESERVE_ROLES[id] = row;
+          }
+        }
         const have = new Set(FACES.map((f) => f.id));
         for (const row of data.faces || []) {
           if (have.has(row.id)) continue;
@@ -1002,7 +1009,9 @@
       if (!window.AtelierPromote) return;
       const report = await window.AtelierPromote.reconcile({
         faces: FACES,
-        roles: window.RESERVE_ROLES || {}
+        roles: window.RESERVE_ROLES || {},
+        rolesFile: ROLES_FILE,
+        facesFileIds: FACES_FILE_IDS
       });
       const meta = {};
       (report.catalog || []).forEach((row) => {
@@ -1038,31 +1047,17 @@
       atelierModal.querySelector("[data-act=save]").onclick = async () => {
         const next = atelierModal.querySelector("[data-status]").value;
         const msg = atelierModal.querySelector("[data-msg]");
-        try {
-          const res = await fetch(`./${id}/packet.yaml`, { cache: "no-store" });
-          if (!res.ok) throw new Error("读不到 packet.yaml");
-          const text = window.AtelierPromote.rewritePacketStatus(await res.text(), next);
-          if (window.showSaveFilePicker) {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: "packet.yaml",
-              id: `atelier-packet-${id}`,
-              types: [{ description: "YAML", accept: { "text/yaml": [".yaml"], "text/plain": [".yaml"] } }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(text);
-            await writable.close();
-          } else {
-            window.AtelierPromote.downloadBlob(new Blob([text], { type: "text/yaml" }), "packet.yaml");
-          }
-          window.ATELIER_FACE_META = window.ATELIER_FACE_META || {};
-          window.ATELIER_FACE_META[id] = Object.assign({}, window.ATELIER_FACE_META[id], { status: next });
-          hideAtelierModal();
-          render();
-        } catch (err) {
-          if (err && err.name === "AbortError") return;
+        const synced = await window.AtelierPromote.syncPacketStatus(id, next);
+        if (synced.aborted) return;
+        if (!synced.ok) {
           msg.hidden = false;
-          msg.textContent = (err && err.message) || "写入失败。请覆盖该夹 packet.yaml。";
+          msg.textContent = synced.error || "写入失败。请覆盖该夹 packet.yaml。";
+          return;
         }
+        window.ATELIER_FACE_META = window.ATELIER_FACE_META || {};
+        window.ATELIER_FACE_META[id] = Object.assign({}, window.ATELIER_FACE_META[id], { status: next });
+        hideAtelierModal();
+        render();
       };
     }
 
@@ -1101,6 +1096,12 @@
         }
         try {
           const folder = await window.AtelierPromote.exportPageZip(face, overlay);
+          const synced = await window.AtelierPromote.syncPacketStatus(id, "promote-ready");
+          if (synced.ok) {
+            window.ATELIER_FACE_META = window.ATELIER_FACE_META || {};
+            window.ATELIER_FACE_META[id] = Object.assign({}, window.ATELIER_FACE_META[id], { status: "promote-ready" });
+            if (activeTab !== "bind") render();
+          }
           const report = [
             "# 设计工坊页型包检查单",
             "",
@@ -1116,7 +1117,8 @@
           await window.AtelierPromote.copyText(`${report}\n`);
           msg.hidden = false;
           msg.style.color = "#b8d8c8";
-          msg.textContent = window.AtelierPromote.SUCCESS;
+          msg.textContent = window.AtelierPromote.SUCCESS
+            + (synced.ok ? "" : " 源文件未改成 promote-ready，请用标状态补写。");
         } catch (err) {
           msg.hidden = false;
           msg.textContent = (err && err.message) || "导出失败。";

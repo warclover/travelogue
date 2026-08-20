@@ -17,6 +17,7 @@ ID_RE = re.compile(r"^[a-z][a-z0-9-]{1,47}$")
 PAGE_ID_RE = re.compile(r"^page-(\d+)-[a-z0-9-]+$")
 PROGRAMS = ("opener", "hero", "mosaic", "grid", "breath", "peak", "closer")
 ORIENTS = ("portrait", "landscape", "square")
+STATUSES = ("sketch", "reviewed", "promote-ready")
 
 
 def grab(text: str, key: str) -> str:
@@ -313,6 +314,54 @@ def create_face(payload: dict) -> dict:
     return face
 
 
+def rewrite_status_line(text: str, status: str) -> str:
+    if re.search(r"^status:\s*\S+", text, re.M):
+        return re.sub(r"^status:\s*\S+", f"status: {status}", text, count=1, flags=re.M)
+    return f"status: {status}\n{text}"
+
+
+def patch_catalog_status(pid: str, status: str) -> None:
+    catalog = ROOT / "catalog.yaml"
+    if catalog.is_file():
+        text = catalog.read_text(encoding="utf-8")
+        patched, n = re.subn(
+            rf"(  - id: {re.escape(pid)}\n    status: )\S+",
+            rf"\1{status}",
+            text,
+            count=1,
+        )
+        if n:
+            catalog.write_text(patched, encoding="utf-8")
+    table = ROOT / "CATALOG.md"
+    if not table.is_file():
+        return
+    md = table.read_text(encoding="utf-8")
+    patched, n = re.subn(
+        rf"^(\| `{re.escape(pid)}` \|.+) \| (?:sketch|reviewed|promote-ready) \|$",
+        rf"\1 | {status} |",
+        md,
+        count=1,
+        flags=re.M,
+    )
+    if n:
+        table.write_text(patched, encoding="utf-8")
+
+
+def write_face_status(pid: str, status: str) -> dict:
+    pid = str(pid or "").strip()
+    status = str(status or "").strip()
+    if not PAGE_ID_RE.match(pid) or not ID_RE.match(pid):
+        raise ValueError("id 须为 page-{槽数}-{词}。")
+    if status not in STATUSES:
+        raise ValueError("状态只许 sketch / reviewed / promote-ready。")
+    packet = ROOT / pid / "packet.yaml"
+    if not packet.is_file():
+        raise ValueError(f"没有 {pid}/packet.yaml。")
+    packet.write_text(rewrite_status_line(packet.read_text(encoding="utf-8"), status), encoding="utf-8")
+    patch_catalog_status(pid, status)
+    return {"id": pid, "status": status}
+
+
 class Server(ThreadingHTTPServer):
     allow_reuse_address = False
 
@@ -354,7 +403,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path.rstrip("/") or "/"
-        if path != "/atelier/pages":
+        if path not in ("/atelier/pages", "/atelier/status"):
             self.send_error(404, "Not Found")
             return
         length = int(self.headers.get("Content-Length") or "0")
@@ -363,6 +412,21 @@ class Handler(SimpleHTTPRequestHandler):
             return
         try:
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except Exception:
+            self._json(400, {"error": "不是 JSON。"})
+            return
+        if path == "/atelier/status":
+            try:
+                row = write_face_status(payload.get("id"), payload.get("status"))
+            except ValueError as err:
+                self._json(400, {"error": str(err)})
+                return
+            except Exception:
+                self._json(500, {"error": "写盘失败。"})
+                return
+            self._json(200, row)
+            return
+        try:
             face = create_face(payload)
         except ValueError as err:
             self._json(400, {"error": str(err)})
@@ -387,7 +451,7 @@ def main() -> None:
         raise SystemExit("无法绑定 127.0.0.1:18765–18774")
     url = f"http://127.0.0.1:{port}/gallery.html"
     print(f"设计工坊 {url}", flush=True)
-    print("GET /series/index.json · GET /atelier/faces.json · POST /atelier/pages · 引擎不读 · Ctrl+C 结束", flush=True)
+    print("GET /series/index.json · GET /atelier/faces.json · POST /atelier/pages · POST /atelier/status · 引擎不读 · Ctrl+C 结束", flush=True)
     threading.Thread(target=webbrowser.open, args=(url,), daemon=True).start()
     try:
         httpd.serve_forever()
