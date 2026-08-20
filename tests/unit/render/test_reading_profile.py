@@ -93,6 +93,22 @@ def test_resolve_reading_payload_longshot_surface(screens_trip: tuple[Path, dict
     assert payload["longshot"]["breath"] == "off"
 
 
+def test_portfolio_web_defaults_to_magazine(screens_trip: tuple[Path, dict]) -> None:
+    """AC-PFM-34 · 作品集 web/share 默认 magazine；游记夹具仍是 default_hybrid。"""
+    _, trip = screens_trip
+    journal = resolve_reading_payload(trip, export_mode="draft", export_layout_override="web")
+    assert journal["profile"] == "default_hybrid"
+    trip["studio"] = {"edition": "portfolio"}
+    draft = resolve_reading_payload(trip, export_mode="draft", export_layout_override="web")
+    assert draft["profile"] == "magazine"
+    assert draft["scroll"]["folio"] == "full"
+    share = resolve_reading_payload(trip, export_mode="share", export_layout_override="web")
+    assert share["profile"] == "magazine"
+    trip["export"] = {"reading": {"profile": "legacy"}}
+    explicit = resolve_reading_payload(trip, export_mode="draft", export_layout_override="web")
+    assert explicit["profile"] == "legacy"
+
+
 def test_render_html_injects_reading_script(screens_trip: tuple[Path, dict]) -> None:
     ws, trip = screens_trip
     html = render_html(
@@ -108,6 +124,21 @@ def test_render_html_injects_reading_script(screens_trip: tuple[Path, dict]) -> 
     assert 'data-folio="lite"' in html
     payload = _extract_reading_json(html)
     assert payload["profile"] == "default_hybrid"
+    assert 'data-edition="portfolio"' not in html
+
+
+def test_portfolio_html_stamps_data_edition(screens_trip: tuple[Path, dict]) -> None:
+    ws, trip = screens_trip
+    trip["studio"] = {"edition": "portfolio"}
+    html = render_html(
+        trip,
+        export_mode="draft",
+        trip_root=ws,
+        layout_engine_override="screens",
+        export_layout_override="web",
+    )
+    assert 'data-edition="portfolio"' in html
+    assert 'data-reading-profile="magazine"' in html
 
 
 def test_render_html_reading_profile_override_legacy(screens_trip: tuple[Path, dict]) -> None:

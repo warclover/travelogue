@@ -37,6 +37,8 @@ def test_wait_tips_six_cards_match_prd_section4() -> None:
     assert "精修" not in copy
     assert "API Key" not in copy
     assert "杂志" not in copy
+    assert "waitTipsCardsForEdition" in copy
+    assert 'title: "分章排版，交给它"' in copy
 
 
 def test_wait_tips_dismiss_key_and_no_help_seen() -> None:

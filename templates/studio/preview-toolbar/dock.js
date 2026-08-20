@@ -9,6 +9,18 @@ import {
   readExportPrefs,
   shortCtaLabelForPlatform,
 } from "../js/longshot-export-panel.js";
+import {
+  formatOverflowLine,
+  isPortfolioEdition,
+  portfolioDockCta,
+  readToolbarEdition,
+  resolvePortfolioMainPlatform,
+} from "../js/portfolio-export-logic.js";
+import {
+  overflowJournalCta,
+  portfolioFlagOffBannerCopy,
+  shouldShowPortfolioFlagOffBanner,
+} from "../js/portfolio-edition-logic.js";
 
 export function presentPreviewUrl() {
   return document.documentElement.getAttribute("data-present-preview-url") || "";
@@ -134,6 +146,12 @@ export function dockIconSvg(name) {
 
 function idleExportShortLabel() {
   try {
+    if (readToolbarEdition(null) === "portfolio") {
+      var prefs0 = readExportPrefs();
+      var pid = resolvePortfolioMainPlatform(prefs0.platform);
+      if (pid === "portfolio_pages") return portfolioDockCta().short;
+      return shortCtaLabelForPlatform(pid);
+    }
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
       return shortCtaLabelForPlatform(prefs.platform);
@@ -144,6 +162,12 @@ function idleExportShortLabel() {
 
 function idleExportAriaLabel() {
   try {
+    if (readToolbarEdition(null) === "portfolio") {
+      var prefs0 = readExportPrefs();
+      var pid = resolvePortfolioMainPlatform(prefs0.platform);
+      if (pid === "portfolio_pages") return portfolioDockCta().aria;
+      return ctaLabelForPlatform(pid);
+    }
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
       return ctaLabelForPlatform(prefs.platform);
@@ -291,6 +315,134 @@ export function initDockTooltips(root) {
     var caretBtn = dock.querySelector(".preview-toolbar__longshot-caret");
     if (caretBtn) caretBtn.removeAttribute("title");
   }
+
+export function applyTripEdition(root, entry) {
+  var fromEntry =
+    entry && Object.prototype.hasOwnProperty.call(entry, "edition")
+      ? isPortfolioEdition(entry.edition)
+      : null;
+  var edition =
+    fromEntry == null
+      ? readToolbarEdition(root)
+      : fromEntry
+        ? "portfolio"
+        : "journal";
+    if (root) {
+    root._edition = edition;
+    if (entry) {
+      root._portfolio = entry.portfolio || null;
+      root._pipelineEnabled = entry.portfolioPipelineEnabled === true;
+      root._layoutVibeVisible = entry.layoutVibeVisible !== false;
+      root._dockCta = entry.dockCta || null;
+      root._overflowLine = entry.overflowLine || "";
+      root._overflowCta = entry.overflowCta || "";
+      root._previewUrl = String(
+        (entry.scrollShareUrl || entry.previewUrl) || ""
+      ).trim();
+    }
+  }
+  try {
+    if (typeof document !== "undefined" && document.documentElement) {
+      if (edition === "portfolio") {
+        document.documentElement.setAttribute("data-edition", "portfolio");
+      } else {
+        document.documentElement.removeAttribute("data-edition");
+      }
+    }
+  } catch (_eAttr) {}
+  if (entry) {
+    syncPortfolioOverflowBadge(root, entry.portfolio, entry);
+    syncPortfolioFlagOffBanner(root, entry);
+  }
+}
+
+export function syncPortfolioOverflowBadge(root, portfolio, entry) {
+  var host = root || (typeof document !== "undefined" ? document.body : null);
+  if (!host || !host.querySelector) return;
+  var line =
+    (entry && entry.overflowLine) ||
+    (root && root._overflowLine) ||
+    formatOverflowLine(portfolio);
+  var el = (typeof document !== "undefined" ? document : host).querySelector(
+    ".preview-portfolio-overflow"
+  );
+  if (!line) {
+    if (el) el.hidden = true;
+    return;
+  }
+  if (!el && typeof document !== "undefined") {
+    el = document.createElement("div");
+    el.className = "preview-portfolio-overflow";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  if (!el) return;
+  el.hidden = false;
+  el.replaceChildren();
+  el.appendChild(document.createTextNode(line + " · "));
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "preview-portfolio-overflow__exit";
+  btn.textContent =
+    (entry && entry.overflowCta) ||
+    (root && root._overflowCta) ||
+    overflowJournalCta();
+  btn.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (host && typeof host._onPortfolioToJournal === "function") {
+      host._onPortfolioToJournal();
+      return;
+    }
+    if (typeof root !== "undefined" && root && typeof root._onPortfolioToJournal === "function") {
+      root._onPortfolioToJournal();
+    }
+  });
+  el.appendChild(btn);
+}
+
+export function syncPortfolioFlagOffBanner(root, entry) {
+  var host = root || (typeof document !== "undefined" ? document.body : null);
+  if (!host || !host.querySelector) return;
+  var enabled = entry && entry.portfolioPipelineEnabled === true;
+  var edition =
+    entry && Object.prototype.hasOwnProperty.call(entry, "edition")
+      ? entry.edition
+      : root && root._edition;
+  var show = shouldShowPortfolioFlagOffBanner(edition, enabled);
+  var el = (typeof document !== "undefined" ? document : host).querySelector(
+    ".preview-portfolio-flag-off"
+  );
+  if (!show) {
+    if (el) el.hidden = true;
+    return;
+  }
+  if (!el && typeof document !== "undefined") {
+    el = document.createElement("div");
+    el.className = "preview-portfolio-flag-off";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  if (!el) return;
+  var copy = portfolioFlagOffBannerCopy();
+  el.hidden = false;
+  el.replaceChildren();
+  el.appendChild(document.createTextNode(copy.text + " · "));
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "preview-portfolio-flag-off__exit";
+  btn.textContent = copy.cta;
+  btn.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    if (host && typeof host._onPortfolioToJournal === "function") {
+      host._onPortfolioToJournal();
+      return;
+    }
+    if (root && typeof root._onPortfolioToJournal === "function") {
+      root._onPortfolioToJournal();
+    }
+  });
+  el.appendChild(btn);
+}
 
 export function initDockScrollFade(root) {
     if (!isPreviewToolbarV4(root)) return;

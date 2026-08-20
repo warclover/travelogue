@@ -240,6 +240,7 @@ def _handle_longshot_batch(
     from travelogue.export.platform_profiles import (
         COMPOSE_PLATFORM_IDS,
         DEFAULT_PLATFORM,
+        PORTFOLIO_PLATFORM_IDS,
         PlatformProfileError,
         normalize_platform_id,
         resolve_profile,
@@ -280,6 +281,16 @@ def _handle_longshot_batch(
                     "ok": False,
                     "error": "E_LNG2_DUPLICATE_PLATFORM",
                     "message": f"重复的导出平台：{platform_id}",
+                },
+            )
+            return
+        if platform_id in PORTFOLIO_PLATFORM_IDS:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_PORTFOLIO_NOT_BATCH",
+                    "message": "作品集页图不进批量多选",
                 },
             )
             return
@@ -688,8 +699,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         )
         return
 
+    from travelogue.export.portfolio_pages import is_portfolio_pages_platform
+
     recipe = None
-    use_recipe = bool(recipe_enabled or intent)
+    portfolio_pages_request = is_portfolio_pages_platform(platform_raw)
+    use_recipe = bool(recipe_enabled or intent) and not portfolio_pages_request
     if use_recipe:
         try:
             recipe = resolve_output_recipe(
@@ -718,15 +732,42 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             )
             return
 
+        if recipe.source == "portfolio_bypass":
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_PORTFOLIO_PACK_REQUIRED",
+                    "message": "作品集请导出这一本与页图，不要走群长图",
+                    "recipe": recipe.to_dict(),
+                },
+            )
+            return
+
         platform_id = normalize_platform_id(recipe.platform or platform_raw)
         if platform_id == DEFAULT_PLATFORM and recipe.layout in ("chapter", "by_chapter"):
             segment_mode = "chapter"
         elif platform_id == DEFAULT_PLATFORM and recipe.layout == "single":
             segment_mode = "full"
+    elif portfolio_pages_request:
+        platform_id = normalize_platform_id(platform_raw)
     elif not longshot2_enabled:
         platform_id = DEFAULT_PLATFORM
     else:
         platform_id = normalize_platform_id(platform_raw)
+
+    from travelogue.config.edition import is_portfolio_trip
+
+    if is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_PORTFOLIO_PACK_REQUIRED",
+                "message": "作品集请导出这一本与页图，不要走群长图",
+            },
+        )
+        return
 
     # Moments / grid: always export pure photos (ignore preview copy mode).
     if platform_id in ("wechat_moments", "moments_grid", "poster_bric"):
@@ -760,6 +801,15 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     )
     include_appendix = bool(payload.get("includeAppendix"))
 
+    include_zip = True
+    include_pages = True
+    if portfolio_pages_request:
+        piece = str(payload.get("portfolioPiece") or "").strip().lower()
+        if piece == "pages" or payload.get("includeZip") is False:
+            include_zip = False
+        if piece == "book" or payload.get("includePages") is False:
+            include_pages = False
+
     # Validate platform before client fallback (AC-LNG2-05c / AC-OR-R03).
     try:
         profile = resolve_profile(
@@ -778,10 +828,10 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     # M-INS-0c · 真九宫格 / Compose 拼贴（小红书/公众号/画册/海报）不需 Playwright；
     # 其余保留 client fallback（AC-ECC-05）。
-    from travelogue.export.platform_profiles import COMPOSE_PLATFORM_IDS
+    from travelogue.export.platform_profiles import COMPOSE_PLATFORM_IDS, PORTFOLIO_PLATFORM_IDS
 
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"}
+    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"} | PORTFOLIO_PLATFORM_IDS
     if profile.id not in server_pack_platforms and (
         force_client or not playwright_longshot_available()
     ):
@@ -844,6 +894,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             include_appendix=include_appendix,
             cancel_check=cancel_check,
             cancel_register=cancel_register,
+            include_zip=include_zip,
+            include_pages=include_pages,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         page_count = result.page_count if result.page_count is not None else len(result.outputs)
@@ -872,6 +924,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             "outputFormat": getattr(result, "output_format", None) or fmt,
             "keptN": count_kept_n(trip if isinstance(trip, dict) else None),
             "intent": getattr(recipe, "intent", None) if recipe else None,
+            "skippedPages": list(getattr(result, "skipped_pages", None) or []),
+            "shareZip": (
+                rel_to_trip(trip_dir, result.share_zip)
+                if getattr(result, "share_zip", None)
+                else None
+            ),
         }
 
     threading.Thread(

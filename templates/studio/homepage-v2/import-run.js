@@ -43,6 +43,8 @@ import {
   shouldClearPendingOnJobTerminal,
   shouldPerformCancelImport,
   resolveImportStageCopy,
+  importPanelCopy,
+  normalizeImportEdition,
 } from "./import-run-logic.js";
 import {
   scheduleWaitTips,
@@ -62,6 +64,7 @@ let _stageMainText = "";
 let _stageMainChangedAt = 0;
 let _stageStallEmitted = false;
 let _sfcVisionWarmupTracked = false;
+let _importEdition = "journal";
 
 /** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
 var SLOW_HINT_COPY = {
@@ -247,14 +250,15 @@ export function renderImportingPanel(source) {
   sourceP.textContent = "来源 · " + (source || "本机文件夹");
   panel.appendChild(sourceP);
 
+  var panelCopy = importPanelCopy(_importEdition);
   var title = document.createElement("h2");
   title.className = "v2-import-panel__title";
-  title.textContent = "正在生成你的影像画册…";
+  title.textContent = panelCopy.title;
   panel.appendChild(title);
 
   var estimate = document.createElement("p");
   estimate.className = "v2-import-panel__estimate";
-  estimate.textContent = "自动分章 · 配文 · 排版 · 可离开稍后回来";
+  estimate.textContent = panelCopy.estimate;
   panel.appendChild(estimate);
 
   var bar = document.createElement("div");
@@ -318,6 +322,7 @@ export function renderImportingPanel(source) {
     scheduleWaitTips(panel, {
       importStartedAt: _importStartedAt,
       beforeEl: cancelBtn,
+      edition: _importEdition,
     });
     // 曾点 × 持久隐藏时，长等待仍可一键恢复（避免「技巧卡片不见了」）
     if (isWaitTipsDismissed()) {
@@ -433,7 +438,7 @@ function pollImport(jobId, gen, source) {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
         // FE-FST-01 · 阶段主句优先；照片计数仅 ingest 次行
-        var copy = resolveImportStageCopy(job);
+        var copy = resolveImportStageCopy(job, _importEdition);
         setStage(copy.main, count ? (idx / count) * 100 : 0, copy.secondary);
         var now = Date.now();
         if (
@@ -587,6 +592,7 @@ function pollImport(jobId, gen, source) {
  * @param {{source?:string}} [opts]
  */
 export function startV2Import(body, opts) {
+  _importEdition = normalizeImportEdition(body && body.edition);
   opts = opts || {};
   var gen = ++_gen;
   var source = opts.source || "本机文件夹";
@@ -676,6 +682,7 @@ export function startV2Import(body, opts) {
  */
 export function startV2UploadImport(files, opts) {
   opts = opts || {};
+  _importEdition = normalizeImportEdition(opts.edition);
   var list = files ? Array.prototype.slice.call(files) : [];
   if (!list.length) return Promise.resolve();
   if (isImportPhotoCapExceeded(list.length, IMPORT_PHOTO_CAP)) {
@@ -714,6 +721,7 @@ export function startV2UploadImport(files, opts) {
       photoKeepMode: opts.photoKeepMode || null,
       photoCullEnabled: opts.photoCullEnabled !== false,
       forceStub: forceStub,
+      edition: opts.edition || undefined,
     }));
   } catch (e) { /* ignore */ }
 
@@ -821,6 +829,7 @@ export function resumeV2ImportIfAny() {
     return false;
   }
   var source = resolveImportResumeSource(pending);
+  _importEdition = normalizeImportEdition(pending && pending.edition);
   var gen = ++_gen;
   renderImportingPanel(source);
   setStage("恢复上次导入…", 0);

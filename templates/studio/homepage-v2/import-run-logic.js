@@ -7,6 +7,27 @@
 import { resolveDisplayTitle } from "../js/title-humanize.js";
 import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
 
+export var JOURNAL_IMPORT_TITLE = "正在生成你的影像画册…";
+export var PORTFOLIO_IMPORT_TITLE = "正在按杂志页编排…";
+export var JOURNAL_IMPORT_ESTIMATE = "自动分章 · 配文 · 排版 · 可离开稍后回来";
+export var PORTFOLIO_IMPORT_ESTIMATE = "自动分章 · 按页编排 · 可离开稍后回来";
+
+export function normalizeImportEdition(raw) {
+  var t = String(raw || "").trim().toLowerCase();
+  return t === "portfolio" || t === "folio" ? "portfolio" : "journal";
+}
+
+export function isCopyWritingPhrase(text) {
+  return /文案|正在写/.test(String(text || ""));
+}
+
+export function importPanelCopy(edition) {
+  if (normalizeImportEdition(edition) === "portfolio") {
+    return { title: PORTFOLIO_IMPORT_TITLE, estimate: PORTFOLIO_IMPORT_ESTIMATE };
+  }
+  return { title: JOURNAL_IMPORT_TITLE, estimate: JOURNAL_IMPORT_ESTIMATE };
+}
+
 /** Orchestrator 阶段名 → 产品阶段（FE-FST-01 · SFC vision_warmup） */
 export function normalizeImportProductStage(stage) {
   var s = String(stage || "");
@@ -29,9 +50,10 @@ export function normalizeImportProductStage(stage) {
  * FE-FST-01 · 导入进度主句/次行。
  * SFC W0 · D-SFC-04 · running 主句永不为空；vision_warmup 优先。
  * @param {{ stage?: string, stageHint?: string }|null} job
+ * @param {string} [edition]
  * @returns {{ main: string, secondary: string }}
  */
-export function resolveImportStageCopy(job) {
+export function resolveImportStageCopy(job, edition) {
   var stage = normalizeImportProductStage(job && job.stage);
   var rawHint = String((job && job.stageHint) || "").trim();
   var mappedHint = STAGE_HINT_LABELS[rawHint] || STAGE_HINT_LABELS[stage] || "";
@@ -40,34 +62,41 @@ export function resolveImportStageCopy(job) {
     /^已处理\s*\d+\s*\/\s*\d+/.test(rawHint) ||
     /正在导入并挑选照片/.test(rawHint);
   var fallback = "正在处理…";
+  var out;
 
   if (stage === "vision_warmup") {
-    return {
+    out = {
       main: stageMain || mappedHint || "正在准备识图（首次可能较慢）",
       secondary: "",
     };
-  }
-
-  if (stage && stage !== "ingest" && stageMain) {
-    return { main: stageMain, secondary: "" };
-  }
-
-  if (mappedHint) {
-    return { main: mappedHint, secondary: isPhotoCount ? rawHint : "" };
-  }
-
-  if (stage === "ingest" || !stage) {
+  } else if (stage && stage !== "ingest" && stageMain) {
+    out = { main: stageMain, secondary: "" };
+  } else if (mappedHint) {
+    out = { main: mappedHint, secondary: isPhotoCount ? rawHint : "" };
+  } else if (stage === "ingest" || !stage) {
     if (isPhotoCount) {
-      return {
+      out = {
         main: STAGE_LABELS.ingest || "正在整理照片…",
         secondary: rawHint,
       };
+    } else if (rawHint) {
+      out = { main: rawHint, secondary: "" };
+    } else {
+      out = { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
     }
-    if (rawHint) return { main: rawHint, secondary: "" };
-    return { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
+  } else {
+    out = { main: stageMain || rawHint || fallback, secondary: "" };
   }
 
-  return { main: stageMain || rawHint || fallback, secondary: "" };
+  if (normalizeImportEdition(edition) === "portfolio") {
+    if (stage === "narrate" || isCopyWritingPhrase(out.main)) {
+      out.main = PORTFOLIO_IMPORT_TITLE;
+    }
+    if (isCopyWritingPhrase(out.secondary)) {
+      out.secondary = "";
+    }
+  }
+  return out;
 }
 
 export function basenameTitle(path) {

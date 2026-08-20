@@ -9,6 +9,7 @@ import { openHelpDrawer } from "./js/help-drawer.js";
 import { trackStudioEvent } from "./js/analytics.js";
 import { isAiSurfaceEnabled } from "./js/ai-surface.js";
 import { DARK_COPY } from "./js/ai-surface-dark-copy.js";
+import { portfolioSuccessCopy } from "./js/portfolio-export-logic.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -268,6 +269,9 @@ export function mountPreviewTaskDock(root, hooks) {
     } else if (result.platform === "album_spread") {
       var nAlbum = result.pageCount || outputs.length;
       main.textContent = "✓ " + nAlbum + " 张画册跨页已就绪";
+    } else if (result.platform === "portfolio_pages") {
+      var packCopy = portfolioSuccessCopy(result, root && root._portfolio);
+      main.textContent = packCopy.title;
     } else {
       // FE-FST-04 / D-FST-13 · 默认微信群：已保存确认，不塞发群教学
       var displayTitle = String(
@@ -315,6 +319,29 @@ export function mountPreviewTaskDock(root, hooks) {
         shareHint.textContent =
           "已保存到此画册文件夹 · 两卡跨页拼贴（约 1.53:1），可预览或送印";
         textWrap.appendChild(shareHint);
+      } else if (result.platform === "portfolio_pages") {
+        var packHint = portfolioSuccessCopy(result, root && root._portfolio);
+        shareHint.textContent = packHint.hint;
+        textWrap.appendChild(shareHint);
+        if (packHint.overflowLine) {
+          var overflowEl = document.createElement("small");
+          overflowEl.className = "preview-task-dock__share-hint";
+          overflowEl.textContent = packHint.overflowLine;
+          if (packHint.overflowCta) {
+            overflowEl.appendChild(document.createTextNode(" · "));
+            var exitBtn = document.createElement("button");
+            exitBtn.type = "button";
+            exitBtn.className = "preview-task-dock__help-link";
+            exitBtn.textContent = packHint.overflowCta;
+            exitBtn.addEventListener("click", function () {
+              if (root && typeof root._onPortfolioToJournal === "function") {
+                root._onPortfolioToJournal();
+              }
+            });
+            overflowEl.appendChild(exitBtn);
+          }
+          textWrap.appendChild(overflowEl);
+        }
       } else {
         // FE-DFX-30 · 稳定成功面副文案（此画册文件夹）
         shareHint.textContent = "已保存到此画册文件夹";
@@ -427,6 +454,8 @@ export function mountPreviewTaskDock(root, hooks) {
     var actions = document.createElement("div");
     actions.className = "preview-task-dock__actions";
 
+    var isPortfolioPack = result.platform === "portfolio_pages";
+
     // FE-DFX-31 · 失败：重试（不改 confirmed platform）+ 换种分享方式
     if (job && job.status === "failed" && typeof hooks.onReExport === "function") {
       var retryBtn = document.createElement("button");
@@ -439,14 +468,49 @@ export function mountPreviewTaskDock(root, hooks) {
       actions.appendChild(retryBtn);
     }
 
+    if (job && job.status !== "failed" && isPortfolioPack) {
+      var packActions = portfolioSuccessCopy(result, root && root._portfolio);
+      if (typeof hooks.onOpenBook === "function") {
+        var openBookBtn = document.createElement("button");
+        openBookBtn.type = "button";
+        openBookBtn.className = "preview-task-dock__btn preview-task-dock__btn--primary";
+        openBookBtn.textContent = packActions.primary;
+        openBookBtn.addEventListener("click", function () {
+          hooks.onOpenBook(tripId);
+        });
+        actions.appendChild(openBookBtn);
+      }
+      if (result.shareZip && typeof hooks.onRevealFolder === "function") {
+        var zipBtn = document.createElement("button");
+        zipBtn.type = "button";
+        zipBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+        zipBtn.textContent = packActions.secondaryZip;
+        zipBtn.addEventListener("click", function () {
+          hooks.onRevealFolder(result.shareZip, tripId);
+        });
+        actions.appendChild(zipBtn);
+      }
+      var folderRel = (outputs && outputs[0]) || result.shareZip;
+      if (folderRel && typeof hooks.onRevealFolder === "function") {
+        var folderBtn = document.createElement("button");
+        folderBtn.type = "button";
+        folderBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
+        folderBtn.textContent = packActions.secondaryFolder;
+        folderBtn.addEventListener("click", function () {
+          hooks.onRevealFolder(folderRel, tripId);
+        });
+        actions.appendChild(folderBtn);
+      }
+    }
+
     // FE-SR-08 / USR-03 · 成功与失败均提供「换种分享方式」（禁止第二套成功面）
-    if (typeof hooks.onSwitchShareMethod === "function") {
+    if (
+      typeof hooks.onSwitchShareMethod === "function" &&
+      !(job && job.status !== "failed" && isPortfolioPack)
+    ) {
       var switchBtn = document.createElement("button");
       switchBtn.type = "button";
-      switchBtn.className =
-        job && job.status === "failed"
-          ? "preview-task-dock__btn preview-task-dock__btn--ghost"
-          : "preview-task-dock__btn preview-task-dock__btn--ghost";
+      switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
       var actionText = "换种分享方式";
       switchBtn.setAttribute("data-share-ready-switch", "1");
       switchBtn.textContent = actionText;
@@ -456,7 +520,13 @@ export function mountPreviewTaskDock(root, hooks) {
       actions.appendChild(switchBtn);
     }
 
-    if (job && job.status !== "failed" && outputs.length && typeof hooks.onRevealFolder === "function") {
+    if (
+      job &&
+      job.status !== "failed" &&
+      !isPortfolioPack &&
+      outputs.length &&
+      typeof hooks.onRevealFolder === "function"
+    ) {
       var revealBtn = document.createElement("button");
       revealBtn.type = "button";
       // FE-FST-04 / D-FST-14 · 唯一实心主钮
@@ -481,7 +551,7 @@ export function mountPreviewTaskDock(root, hooks) {
       actions.appendChild(revealBtn);
     }
 
-    if (job && job.status !== "failed" && outputs.length && typeof hooks.onCopyPath === "function") {
+    if (job && job.status !== "failed" && !isPortfolioPack && outputs.length && typeof hooks.onCopyPath === "function") {
       var copyBtn = document.createElement("button");
       copyBtn.type = "button";
       copyBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
@@ -509,7 +579,9 @@ export function mountPreviewTaskDock(root, hooks) {
         });
       } catch (_e) {}
       focusDockPrimary();
-      scheduleAutoHide(SUCCESS_AUTO_HIDE_MS, hooks.onResultDismissed);
+      if (result.platform !== "portfolio_pages") {
+        scheduleAutoHide(SUCCESS_AUTO_HIDE_MS, hooks.onResultDismissed);
+      }
     } else {
       focusDockPrimary();
     }

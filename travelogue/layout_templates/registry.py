@@ -356,6 +356,9 @@ class LayoutTemplateEngine:
             t = self._templates[tid]
             if t.status not in _ACTIVE_STATUSES:
                 continue
+            # PFM magazine faces are renderable via get() but never MCS candidates.
+            if str(tid).startswith("page-"):
+                continue
             if tags:
                 scoring_tags = set(t.scoring.get("tags") or [])
                 if not (scoring_tags & tags):

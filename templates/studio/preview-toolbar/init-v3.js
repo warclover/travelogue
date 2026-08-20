@@ -12,11 +12,13 @@ import {
   dockIconSvg,
   initDockTooltips,
   initDockScrollFade,
+  applyTripEdition,
 } from "./dock.js";
 import { mountAiSurface } from "./ai-sheet.js";
 import { mountNarrativePostureBar } from "./narrative-posture.js";
 import { mountNarrateDiffBar } from "./narrate-diff.js";
 import { isSharePreview } from "./share.js";
+import { refreshPreviewNarrowGate } from "./narrow-gate.js";
 import {
   ensurePreviewRefineDefault,
   setPreviewRefineMode,
@@ -27,6 +29,7 @@ import {
   maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { portfolioBookUrl, readToolbarEdition } from "../js/portfolio-export-logic.js";
 import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
 import {
   ensureAiSurfaceHydrated,
@@ -112,6 +115,8 @@ import {
   revealTripFolder,
   mountCoverStyleControls,
   mountLayoutVibeControls,
+  mountEditionControls,
+  bindPortfolioJournalExit,
   maybeShowLayoutVibeImportHint,
   mountTemplateControls,
   snapshotReadingPayload,
@@ -140,6 +145,7 @@ export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
   // NAS · 尽早水合，供 Sheet/抽屉运行时门控（AC-NAS-09）
   ensureAiSurfaceHydrated();
+  bindPortfolioJournalExit(root, tripId);
 
   var dock = root.querySelector(".preview-toolbar__dock");
   var helpBtn = createHelpOpenButton({
@@ -392,6 +398,12 @@ export function initToolbarV3(root, tripId) {
     mountLayoutVibeControls: function (slot) {
       mountLayoutVibeControls(slot, tripId, { root: root });
     },
+    mountEditionControls: function (slot) {
+      mountEditionControls(slot, tripId, { root: root });
+    },
+    isPortfolio: function () {
+      return readToolbarEdition(root) === "portfolio";
+    },
     mountBookendsPanel: function (slot) {
       // RCI · 照片段不嵌版式；版式段另行挂载并复用 applyStyleViaBookends
       return mountBookendsPanel(slot, tripId, {
@@ -598,6 +610,10 @@ export function initToolbarV3(root, tripId) {
     },
     onRevealFolder: function (relPath, tid) {
       revealTripPath(tid || tripId, relPath);
+    },
+    onOpenBook: function (tid) {
+      var url = (root && root._previewUrl) || portfolioBookUrl(null, tid || tripId);
+      if (url) window.open(url, "_blank", "noopener");
     },
     onCopyPath: function (text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -861,6 +877,9 @@ export function initToolbarV3(root, tripId) {
     mountNarrateDiffBar(root, tripId);
   }
   fetchEntry(tripId).then(function (data) {
+    applyTripEdition(root, data);
+    refreshPreviewNarrowGate();
+    syncLongshotCtaLabel(root);
     initFeaturedStars(tripId);
     initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
     syncInspectChromeVisibility();

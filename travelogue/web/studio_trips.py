@@ -196,6 +196,28 @@ def longshot_reveal_rel_path(trip_dir: Path) -> str | None:
     return newest.relative_to(trip_dir).as_posix()
 
 
+def _shelf_edition_fields(data: dict) -> dict:
+    """FE-PFM-11 · 仅作品集票面带 edition / pageCount；游记行不写身份字段。"""
+    if not data:
+        return {}
+    from travelogue.web.studio_entry import edition_chrome
+
+    chrome = edition_chrome(data)
+    if chrome.get("edition") != "portfolio":
+        return {}
+    out: dict = {"edition": "portfolio"}
+    folio = chrome.get("portfolio") if isinstance(chrome.get("portfolio"), dict) else {}
+    try:
+        page_count = int(folio.get("pageCount"))
+    except (TypeError, ValueError):
+        page_count = 0
+    if page_count > 0:
+        out["pageCount"] = page_count
+    if chrome.get("overflowLine"):
+        out["overflowLine"] = chrome["overflowLine"]
+    return out
+
+
 def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
     trips_dir = trips_dir.resolve()
     if not trips_dir.is_dir():
@@ -253,6 +275,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                     "previewUrl": f"/{child.name}/index.html",
                     "updatedAt": updated_at,
                     "photoCount": photo_count,
+                    **_shelf_edition_fields(data),
                     "longshotStale": longshot_outputs_stale(child, trip_mtime=updated_at),
                     "layoutCssStale": layout_css_stale,
                     "renderBundleStale": render_bundle_stale,

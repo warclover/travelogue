@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from travelogue.paths import MANIFEST_PATH, SCHEMA_PATH
+
+# Shipping magazine faces look like page-1-hero-land-wide (not matcher fixtures page-grid-4).
+_PROMOTED_PAGE_ID = re.compile(r"^page-\d+-")
 
 
 def load_json(path: Path) -> dict:
@@ -59,6 +63,45 @@ def validate_schema(trip: dict, schema_path: Path | None = None) -> list[str]:
     for err in sorted(validator.iter_errors(trip), key=lambda e: list(e.path)):
         path = ".".join(str(p) for p in err.path) or "(root)"
         errors.append(f"E_VALIDATE_SCHEMA [{path}] {err.message}")
+    errors.extend(validate_page_pattern_ids(trip))
+    return errors
+
+
+def validate_page_pattern_ids(trip: dict) -> list[str]:
+    """Allow page-* persist on portfolio trips only; promoted faces must exist in LTE.
+
+    Matcher fixtures (``page-grid-4``) stay schema-legal but are not shipping SKUs.
+    Journal MCS still cannot select ``page-*`` (list_active skip); this is persist isolation.
+    """
+    studio = trip.get("studio") if isinstance(trip.get("studio"), dict) else {}
+    is_portfolio = str(studio.get("edition") or "").strip() == "portfolio"
+    errors: list[str] = []
+    engine = None
+    for ci, ch in enumerate(trip.get("chapters") or []):
+        if not isinstance(ch, dict):
+            continue
+        for si, sc in enumerate(ch.get("screens") or []):
+            if not isinstance(sc, dict):
+                continue
+            pid = str(sc.get("patternId") or "")
+            if not pid.startswith("page-"):
+                continue
+            path = f"chapters[{ci}].screens[{si}].patternId"
+            if not is_portfolio:
+                errors.append(
+                    f"E_VALIDATE_SCHEMA [{path}] page-* is portfolio-only ({pid})"
+                )
+                continue
+            if not _PROMOTED_PAGE_ID.match(pid):
+                continue
+            if engine is None:
+                from travelogue.layout_templates.registry import get_engine
+
+                engine = get_engine()
+            try:
+                engine.get(pid)
+            except KeyError:
+                errors.append(f"E_VALIDATE_SCHEMA [{path}] unknown page face {pid}")
     return errors
 
 

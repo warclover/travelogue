@@ -11,6 +11,7 @@ from travelogue.web.studio_handlers.bookends_handlers import (
     handle_post_resolve_opening,
     handle_post_restore_auto,
 )
+from travelogue.web.studio_handlers.edition_handlers import handle_trip_edition
 from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
 from travelogue.web.studio_handlers.title_art_handlers import handle_post_resolve_title_art
 from travelogue.web.studio_handlers.trip_intent_handlers import (
@@ -53,6 +54,7 @@ __all__ = [
     "handle_get_moment_curation",
     "handle_get_cohort",
     "handle_layout_vibe",
+    "handle_trip_edition",
     "handle_patch_cohort",
     "handle_patch_copy_intent",
     "handle_patch_intent",

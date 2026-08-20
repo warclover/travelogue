@@ -15,12 +15,17 @@ import {
   shouldConfirmCloseWizard,
   canLeavePickStep,
   canNavigateWizardStep,
+  wizardHitsToStart,
   resolvePhotoKeepModeFromDraft,
   normalizeEdition,
   parsePortfolioPipelineConfig,
   shouldShowEditionSegment,
   shouldShowHomepagePortfolioEntry,
   isPortfolioLowPhoto,
+  portfolioEditionSubline,
+  shouldConfirmLowPhoto,
+  lowPhotoContinueConfirm,
+  PORTFOLIO_LOW_PHOTO_HINT,
 } from "../../templates/studio/homepage-v2/import-wizard-logic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -90,6 +95,11 @@ test("canLeavePickStep / canNavigateWizardStep", () => {
   assert.equal(canNavigateWizardStep("confirm", "fine", "quick_share"), false);
   assert.equal(canNavigateWizardStep("confirm", "fine", "fine_craft"), true);
   assert.equal(canNavigateWizardStep("fine", "pick", "fine_craft"), true);
+  assert.equal(wizardHitsToStart("quick_share", "journal"), 2);
+  assert.equal(wizardHitsToStart("quick_share", "portfolio"), 2);
+  assert.equal(wizardHitsToStart("fine_craft", "portfolio"), 3);
+  assert.equal(canNavigateWizardStep("pick", "confirm", "quick_share"), true);
+  assert.equal(canNavigateWizardStep("confirm", "fine", "quick_share"), false);
 });
 
 test("PFM edition helpers default hidden", () => {
@@ -105,8 +115,38 @@ test("PFM edition helpers default hidden", () => {
   });
   assert.equal(shouldShowEditionSegment(on), true);
   assert.equal(shouldShowHomepagePortfolioEntry(on), false);
+  assert.equal(
+    shouldShowHomepagePortfolioEntry({ enabled: false, homepageEntry: true }),
+    false
+  );
   assert.equal(isPortfolioLowPhoto(8, 12), true);
   assert.equal(isPortfolioLowPhoto(30, 12), false);
+  assert.equal(
+    parsePortfolioPipelineConfig({ portfolioPipeline: { minKept: 48 } }).minKept,
+    48
+  );
+});
+
+test("PFM FE-PFM-02 low photo grey-out + informed continue", () => {
+  assert.equal(isPortfolioLowPhoto(14, 48), true);
+  assert.equal(isPortfolioLowPhoto(48, 48), false);
+  assert.equal(isPortfolioLowPhoto(null, 48), false);
+  assert.equal(portfolioEditionSubline(true), "照片较少");
+  assert.equal(portfolioEditionSubline(false), "杂志页");
+  assert.equal(shouldConfirmLowPhoto(14, 48, "user", "journal"), true);
+  assert.equal(shouldConfirmLowPhoto(14, 48, "homepage", "journal"), false);
+  assert.equal(shouldConfirmLowPhoto(14, 48, "user", "portfolio"), false);
+  assert.equal(shouldConfirmLowPhoto(60, 48, "user", "journal"), false);
+  const copy = lowPhotoContinueConfirm();
+  assert.equal(copy.body.includes(PORTFOLIO_LOW_PHOTO_HINT), true);
+  assert.equal(copy.confirmText, "仍做作品集");
+  assert.match(
+    readFileSync(
+      join(__dirname, "../../templates/studio/homepage-v2/import-wizard.js"),
+      "utf8"
+    ),
+    /studioModal/
+  );
 });
 
 test("resolvePhotoKeepModeFromDraft 对齐 QFX 合同向量", () => {

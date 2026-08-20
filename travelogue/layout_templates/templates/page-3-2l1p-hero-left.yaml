@@ -1,0 +1,108 @@
+# Promoted page-* face · compile-time from docs/templates/reserve.
+# Engine does not read the atelier tree (ISO-05 / D-PFM-16).
+# experimental; list_active skips page-* so journal MCS never picks these SKUs.
+id: page-3-2l1p-hero-left
+version: 1
+status: experimental
+kind: composite
+displayName: 左主横右上横下竖
+description: Promoted from atelier reserve (compile-time). Engine does not read docs/templates/reserve/.
+stage:
+  aspect: '16:9'
+  cols:
+  - 71.0
+  - 1.333333
+  - 25.0
+  - 2.666667
+  rows:
+  - 2.666667
+  - 33.333333
+  - 2.074074
+  - 59.25926
+  - 2.666666
+  variants:
+  - layout: web
+    aspect: '16:9'
+  - layout: mobile
+    aspect: '9:16'
+photoCount:
+  min: 3
+  max: 3
+mix:
+  portrait: 1
+  landscape: 2
+slots:
+- index: 0
+  rect:
+  - 1
+  - 1
+  - 2
+  - 4
+  role: landscape
+  fit: cover
+- index: 1
+  rect:
+  - 3
+  - 3
+  - 2
+  - 2
+  role: landscape
+  fit: cover
+- index: 2
+  rect:
+  - 3
+  - 3
+  - 4
+  - 4
+  role: portrait
+  fit: cover
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps:
+  - - 1
+    - 4
+    - 1
+    - 1
+  - - 2
+    - 2
+    - 2
+    - 2
+  - - 4
+    - 4
+    - 2
+    - 2
+  - - 2
+    - 4
+    - 3
+    - 3
+  - - 2
+    - 2
+    - 4
+    - 4
+  - - 4
+    - 4
+    - 4
+    - 4
+  - - 1
+    - 4
+    - 5
+    - 5
+scoring:
+  base_weight: 1.0
+  tags:
+  - page
+  - portfolio
+  - atelier-promote
+render:
+  gridClass: layout-screen__grid--page-3-2l1p-hero-left
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+usage:
+  summary: 左主横右上横下竖
+  whenToUse: 一张 4:3 横图明显更大，右上再辅一张横、右下辅一张竖
+  whenNotToUse: 竖图才是主图 → 用 page-3-2l1p-left；主横更适合靠右 → 用 page-3-2l1p-hero-right；三张等权
+_legacy:
+  sourceAtelier: page-3-2l1p-hero-left
+  css_verified: true
+balancePolicy: weighted_tracks

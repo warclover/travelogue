@@ -433,6 +433,13 @@ def build_render_context(
     if surface.is_draft and trip_id:
         html_attrs.append(f'data-trip-id="{trip_id}"')
     try:
+        from travelogue.config.edition import is_portfolio_trip
+
+        if is_portfolio_trip(trip):
+            html_attrs.append('data-edition="portfolio"')
+    except Exception:
+        pass
+    try:
         from travelogue.cover_engine.craft import craft_attr_value
 
         craft_v = craft_attr_value()

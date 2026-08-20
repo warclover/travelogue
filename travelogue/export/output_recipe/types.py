@@ -30,6 +30,7 @@ SourceId = Literal[
     "session_override",
     "flag_disabled",
     "platform_alias",
+    "portfolio_bypass",
 ]
 
 # Phase A selectable intents (Ambiguous card · Phase A)

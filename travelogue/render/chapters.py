@@ -67,6 +67,13 @@ def build_chapters_render_context(
     strip_narrative_copy = surface.strip_narrative_copy
     is_draft = surface.is_draft
     folio_lite = surface.folio_lite
+    try:
+        from travelogue.config.edition import is_portfolio_trip
+
+        if is_portfolio_trip(trip):
+            folio_lite = False
+    except Exception:
+        pass
     folio_full = surface.folio_full
     use_screens_global = surface.use_screens_global
     is_longshot_surface = surface.is_longshot_surface

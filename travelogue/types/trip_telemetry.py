@@ -52,3 +52,7 @@ class PipelineTelemetrySummary(TypedDict, total=False):
     embedSkipped: bool
     visionSource: str
     ingestElapsedMs: IngestElapsedDict
+    edition: str
+    seriesId: str
+    pageCountSource: str
+    overflowCount: int

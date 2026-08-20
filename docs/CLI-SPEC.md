@@ -368,11 +368,15 @@ python -m travelogue export-longshot demo-雨后京都 --platform instagram --sl
 python -m travelogue export-longshot demo-雨后京都 --platform weibo --slide-count 6
 python -m travelogue export-longshot demo-雨后京都 --platform douyin_cover
 python -m travelogue export-longshot demo-雨后京都 --platform custom --width 720 --height 960 --slide-count 3
+python -m travelogue export-longshot 作品集trip --platform portfolio_pages
+python -m travelogue export-longshot 作品集trip --platform wechat_chat
 ```
+
+作品集 trip **必须**显式 `--platform`（`portfolio_pages` / `wechat_chat` 等），缺省不再静默走 `wechat_chat`（D-PFM-31）。游记仍默认 `wechat_chat`。
 
 | 选项 | 说明 |
 |------|------|
-| `--platform` | `wechat_chat`（默认）· `wechat_moments` · `xiaohongshu` · `instagram` · `weibo` · `douyin_cover` · `custom` |
+| `--platform` | 游记默认 `wechat_chat` · `wechat_moments` · `xiaohongshu` · `instagram` · `weibo` · `douyin_cover` · `custom` · `portfolio_pages` |
 | `--slide-count` | aspect-fit 张数（xhs 1–18 / ins 1–10 / weibo 1–9 / custom 1–18）；省略 = auto；朋友圈 / 抖音封面忽略 |
 | `--pad-mode` | `letterbox`（默认）· `smart_crop`（需 `studio.longshot2.smart_crop.enabled`；`douyin_cover` 默认 smart_crop） |
 | `--width` / `--height` | 仅 `--platform custom`；默认 1080×1440；范围 64–4096 × 64–8192 |
@@ -451,3 +455,4 @@ travelogue export demo --confirm-privacy
 | v0.3.1 | 2026-05-27 | reveal API；--trips-dir；409 body |
 | v0.4 | 2026-05-30 | **P5-12.3**：studio/export-longshot 已实现 · HTTP 路由补全 · 428px/20MB 长图 · preview-toolbar |
 | v0.5 | 2026-07-09 | Longshot 2.0：`--platform` / `--slide-count` / `--pad-mode` · SHARING §2.5 |
+| v0.6 | 2026-08-20 | PFM：作品集 `export-longshot` 缺 `--platform` 硬报错；`curate`/`run --edition` |

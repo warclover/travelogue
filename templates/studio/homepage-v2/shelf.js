@@ -28,6 +28,7 @@ import {
   shelfShowCoverReadyBadge,
 } from "./shelf-actions-logic.js";
 import { stubCode, stubSerial, stubYearMonth } from "./shelf-ticket-logic.js";
+import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
 
 var READY_LONGSHOT = "分享图已就绪";
 var PREVIEW_READY = "可先预览";
@@ -108,6 +109,8 @@ function tripSubLine(trip) {
 /** 满票根 meta：年月优先（暂用 updatedAt）· 张数。 */
 function stubMetaLine(trip) {
   var bits = [];
+  var editionLine = shelfEditionLine(trip);
+  if (editionLine) bits.push(editionLine);
   var ym = stubYearMonth(trip.updatedAt);
   if (ym) bits.push(ym);
   if (trip.photoCount) bits.push(trip.photoCount + " 张");

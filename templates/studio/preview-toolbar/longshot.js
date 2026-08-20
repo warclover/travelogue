@@ -40,6 +40,12 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
+import {
+  PORTFOLIO_PAGES_PLATFORM,
+  portfolioDockCta,
+  readToolbarEdition,
+  resolvePortfolioMainPlatform,
+} from "../js/portfolio-export-logic.js";
 import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
@@ -169,6 +175,7 @@ var _exportStartFrom = "direct";
 var _pagehideBound = false;
 var _copyGateBypassTitle = null;
 var _pendingExportPlatform = null;
+var _pendingPortfolioPiece = null;
 
 function _readJsonStorage(store, key) {
   try {
@@ -644,6 +651,28 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn) return;
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
+    if (readToolbarEdition(root) === "portfolio") {
+      var packPlatform = resolvePortfolioMainPlatform(prefs.platform);
+      if (packPlatform === PORTFOLIO_PAGES_PLATFORM) {
+        var packCta = portfolioDockCta();
+        btn.removeAttribute("data-recipe-subtitle");
+        if (isPreviewToolbarV4(root)) {
+          var packLabelEl = btn.querySelector(".preview-toolbar__dock-export-label");
+          if (packLabelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
+            packLabelEl.textContent = packCta.short;
+          }
+          btn.setAttribute("aria-label", packCta.aria);
+          updateDockTip(btn, packCta.aria);
+        } else if (!btn.classList.contains("preview-toolbar__longshot--running")) {
+          btn.textContent = packCta.short;
+          btn.setAttribute("aria-label", packCta.aria);
+        } else {
+          btn.setAttribute("aria-label", packCta.aria);
+        }
+        emitSnrCtaLabel(packCta.aria, [PORTFOLIO_PAGES_PLATFORM]);
+        return;
+      }
+    }
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量 CTA
     // SNR D-SNR-11 · 人话「导出 · {主平台}等 N 项」，禁止孤立「N 个模式」主文案；
     // 不进入下方任何单平台 Output Recipe / tipRecipe 逻辑——那套「猜意图」
@@ -1082,15 +1111,21 @@ export function cancelPreviewLongshotExport(root) {
   export function ensureStudioExportPopover(root) {
     var wrap = root.querySelector(".preview-toolbar__export-zone-wrap");
     if (!wrap) return null;
+    var edition = readToolbarEdition(root);
     var pop = wrap.querySelector(".preview-toolbar__export-popover");
+    if (pop && pop.getAttribute("data-edition") !== edition) {
+      pop.remove();
+      pop = null;
+    }
     if (pop) return pop;
 
     pop = document.createElement("div");
     pop.className = "preview-toolbar__export-popover";
     pop.hidden = true;
     pop.setAttribute("role", "dialog");
-    pop.setAttribute("aria-label", "导出设置");
-    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds);
+    pop.setAttribute("aria-label", edition === "portfolio" ? "导出" : "导出设置");
+    pop.setAttribute("data-edition", edition);
+    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, { edition: edition });
     var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
     if (dualBtn && !dualBtn._ltnBound) {
       dualBtn._ltnBound = true;
@@ -1102,11 +1137,20 @@ export function cancelPreviewLongshotExport(root) {
     }
 
     var prefs0 = readLongshotExportPrefs();
+    var initPlatform = prefs0.platform;
+    var initPlatforms = prefs0.platforms;
+    if (edition === "portfolio") {
+      var packPid = resolvePortfolioMainPlatform(prefs0.platform);
+      if (packPid === PORTFOLIO_PAGES_PLATFORM) {
+        initPlatform = PORTFOLIO_PAGES_PLATFORM;
+        initPlatforms = [PORTFOLIO_PAGES_PLATFORM];
+      }
+    }
     var panel = bindPanelDraft(
       pop,
       {
-        platform: prefs0.platform,
-        platforms: prefs0.platforms,
+        platform: initPlatform,
+        platforms: initPlatforms,
         mode: prefs0.mode,
         scale: prefs0.scale,
         slideCount: prefs0.slideCount,
@@ -1201,6 +1245,26 @@ export function cancelPreviewLongshotExport(root) {
       zipMoreBtn.addEventListener("click", function () {
         closeStudioExportPopover();
         exportZip(_tripIdFromPath());
+      });
+    }
+    var bookBtn = pop.querySelector('[data-action="export-portfolio-book"]');
+    if (bookBtn) {
+      bookBtn.addEventListener("click", function () {
+        closeStudioExportPopover();
+        exportZip(_tripIdFromPath(), {
+          title: "导出这一本",
+          body: "将打包可点开翻阅的压缩包。继续？",
+          doneTitle: "这一本已打包",
+        });
+      });
+    }
+    var pagesBtn = pop.querySelector('[data-action="export-portfolio-pages"]');
+    if (pagesBtn) {
+      pagesBtn.addEventListener("click", function () {
+        closeStudioExportPopover();
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+        _pendingPortfolioPiece = "pages";
+        startLongshot(root, _tripIdFromPath());
       });
     }
     var revealMoreBtn = pop.querySelector('[data-action="reveal-folder"]');
@@ -1351,6 +1415,13 @@ export function cancelPreviewLongshotExport(root) {
       // 这里若漏写会导致确认后 localStorage 里只剩单值 platform，多选形同
       // 摆设（2026-08-06 Playwright 走查发现的回归，务必带上）。
       var confirmedPlatforms = normalizePlatformList(draft.platforms, confirmedPlatform);
+      if (confirmedPlatform === PORTFOLIO_PAGES_PLATFORM) {
+        _pendingExportPlatform = null;
+        syncConfirmedExportSummary(pop);
+        syncLongshotCtaLabel(root);
+        refreshLongshotExportMeta(root);
+        return;
+      }
       var nextDensity = draft.density === "compact" ? "compact" : "default";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
@@ -1421,10 +1492,19 @@ export function cancelPreviewLongshotExport(root) {
     }
     pop._readDraftFromPrefs = function () {
       var prefs = readLongshotExportPrefs();
+      var platform = prefs.platform;
+      var platforms = prefs.platforms;
+      if (readToolbarEdition(root) === "portfolio") {
+        var packPid = resolvePortfolioMainPlatform(prefs.platform);
+        if (packPid === PORTFOLIO_PAGES_PLATFORM) {
+          platform = PORTFOLIO_PAGES_PLATFORM;
+          platforms = [PORTFOLIO_PAGES_PLATFORM];
+        }
+      }
       if (panel.setDraft) {
         panel.setDraft({
-          platform: prefs.platform,
-          platforms: prefs.platforms,
+          platform: platform,
+          platforms: platforms,
           mode: prefs.mode,
           scale: prefs.scale,
           slideCount: prefs.slideCount,
@@ -2445,12 +2525,14 @@ export function cancelPreviewLongshotExport(root) {
       .catch(function () {});
   }
 
-  export function exportZip(tripId) {
+  export function exportZip(tripId, opts) {
+    opts = opts || {};
     var root = document.querySelector(".preview-toolbar");
     maybeSourceMissingGate(root, tripId, function () {
       _toolbarConfirm({
-        title: "导出 zip",
-        body: "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
+        title: opts.title || "导出 zip",
+        body:
+          opts.body || "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
         confirmText: "继续",
       }).then(function (ok) {
         if (!ok) return;
@@ -2464,7 +2546,7 @@ export function cancelPreviewLongshotExport(root) {
         var zipRel = res.body.zipRelPath;
         if (!zipRel) return;
         return _toolbarConfirm({
-          title: "zip 已生成",
+          title: opts.doneTitle || "zip 已生成",
           body: "是否在文件夹中显示？",
           confirmText: "显示",
           cancelText: "关闭",
@@ -2587,6 +2669,14 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function startLongshotWithRecipe(root, tripId) {
+    if (readToolbarEdition(root) === "portfolio") {
+      var packPid = resolvePortfolioMainPlatform(readExportPrefs().platform);
+      if (packPid === PORTFOLIO_PAGES_PLATFORM) {
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+        maybeCopyGateThenExport(root, tripId);
+        return;
+      }
+    }
     if (!isOutputRecipeEnabled()) {
       maybeCopyGateThenExport(root, tripId);
       return;
@@ -3115,8 +3205,15 @@ export function cancelPreviewLongshotExport(root) {
       _pendingExportPlatform ||
       (afterLayout ? readResumePlatform(tripId) : null) ||
       prefsPlatform;
+    if (
+      readToolbarEdition(root) === "portfolio" &&
+      !_pendingExportPlatform &&
+      !afterLayout
+    ) {
+      platform = resolvePortfolioMainPlatform(prefsPlatform);
+    }
     _pendingExportPlatform = null;
-    if (platform !== prefsPlatform) {
+    if (platform !== prefsPlatform && platform !== PORTFOLIO_PAGES_PLATFORM) {
       syncPrefsPlatform(platform);
     }
     var exportGen = nextLongshotExportGen();
@@ -3133,7 +3230,9 @@ export function cancelPreviewLongshotExport(root) {
                 ? "正在导出单张海报…"
                 : platform === "album_spread"
                   ? "正在导出画册跨页…"
-                  : "正在保存…";
+                  : platform === PORTFOLIO_PAGES_PLATFORM
+                    ? "正在导出作品集…"
+                    : "正在保存…";
     setLongshotExportState(root, "running", { hint: runningHint });
     _setSlowHint(root, "", false);
 
@@ -3153,10 +3252,19 @@ export function cancelPreviewLongshotExport(root) {
     var req = buildLongshotRequestFromPage(tripId);
     if (req && platform) {
       req.platform = platform;
-      var mapped = PLATFORM_TO_INTENT[platform];
-      if (mapped) req.intent = mapped;
+      if (platform !== PORTFOLIO_PAGES_PLATFORM) {
+        var mapped = PLATFORM_TO_INTENT[platform];
+        if (mapped) req.intent = mapped;
+      } else {
+        req.intent = "";
+        if (_pendingPortfolioPiece === "pages") req.includeZip = false;
+        _pendingPortfolioPiece = null;
+      }
     }
-    if (!assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)) {
+    if (
+      platform !== PORTFOLIO_PAGES_PLATFORM &&
+      !assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)
+    ) {
       setLongshotExportState(root, "idle");
       _showToolbarToast("导出目标不一致，请重新在导出设置里确认", { error: true });
       return;

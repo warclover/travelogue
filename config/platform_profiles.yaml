@@ -219,3 +219,21 @@ platforms:
       footer: "{i}/{n}"
     publish_guide: >-
       已按自定义尺寸导出；按编号顺序使用
+
+  # PFM · 作品集页图（D-PFM-23）。不进 PHASE_A 平铺、不进批量多选。
+  portfolio_pages:
+    label: 作品集页图
+    label_en: Portfolio Pages
+    segment: magazine_pages
+    capture: screen_pages
+    allow_p1: false
+    phase: PFM
+    min_pages: 1
+    max_pages: 32
+    output:
+      width: 1920
+      height: 1080
+      aspect: "16:9"
+      naming: "{title}-portfolio-{nn}"
+    publish_guide: >-
+      每屏一张 16:9 页图，按编号顺序使用。不是社交拼贴。

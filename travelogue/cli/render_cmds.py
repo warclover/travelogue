@@ -503,8 +503,9 @@ def cmd_export_longshot(
         None,
         "--platform",
         help=(
-            "wechat_chat (default) | wechat_moments | moments_grid | xiaohongshu | "
-            "wechat_official | album_spread | instagram | weibo | douyin_cover | custom"
+            "wechat_chat (journal default) | wechat_moments | moments_grid | xiaohongshu | "
+            "wechat_official | album_spread | instagram | weibo | douyin_cover | custom | "
+            "portfolio_pages · 作品集 trip 必须显式指定"
         ),
     ),
     intent: str | None = typer.Option(
@@ -538,6 +539,10 @@ def cmd_export_longshot(
     import time
 
     from travelogue.config import get_config
+    from travelogue.config.edition import (
+        PortfolioPlatformRequiredError,
+        require_explicit_export_target,
+    )
     from travelogue.export.longshot import LongshotExportError, export_trip_longshot
     from travelogue.export.output_recipe import resolve_output_recipe
     from travelogue.export.output_recipe.types import OutputRecipeError
@@ -551,37 +556,43 @@ def cmd_export_longshot(
 
     platform_id = platform or "wechat_chat"
     t0 = time.monotonic()
-    try:
-        append_studio_homepage_event(
-            "longshot_export_start",
-            {
-                "platform": platform_id,
-                "scale": scale,
-                "slide_count": slide_count,
-                "photo_count": None,
-                "surface": "cli",
-            },
-        )
-    except Exception:
-        pass
 
     try:
         trip_path = _resolve(path)
         serve_dir = resolve_trip_serve_dir(trip_path)
+        trip_json = serve_dir / "trip.json"
+        trip_data: dict = {}
+        if trip_json.is_file():
+            try:
+                trip_data = json.loads(trip_json.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                trip_data = {}
+        require_explicit_export_target(trip_data, platform=platform)
+        platform_id = platform or "wechat_chat"
+        try:
+            append_studio_homepage_event(
+                "longshot_export_start",
+                {
+                    "platform": platform_id,
+                    "scale": scale,
+                    "slide_count": slide_count,
+                    "photo_count": None,
+                    "surface": "cli",
+                },
+            )
+        except Exception:
+            pass
         cfg = get_config()
         or_cfg = getattr(cfg.studio, "output_recipe", None)
         recipe_enabled = bool(getattr(or_cfg, "enabled", False))
         segment_mode = "auto"
         profile = None
 
-        if recipe_enabled or intent:
-            trip_data: dict = {}
-            trip_json = serve_dir / "trip.json"
-            if trip_json.is_file():
-                try:
-                    trip_data = json.loads(trip_json.read_text(encoding="utf-8"))
-                except (OSError, json.JSONDecodeError):
-                    trip_data = {}
+        from travelogue.export.portfolio_pages import is_portfolio_pages_platform
+
+        if is_portfolio_pages_platform(platform):
+            platform_id = "portfolio_pages"
+        elif recipe_enabled or intent:
             recipe = resolve_output_recipe(
                 trip=trip_data,
                 entrypoint="cli",
@@ -639,6 +650,7 @@ def cmd_export_longshot(
         LongshotExportError,
         PlatformProfileError,
         OutputRecipeError,
+        PortfolioPlatformRequiredError,
     ) as exc:
         try:
             code = getattr(exc, "code", None) or type(exc).__name__

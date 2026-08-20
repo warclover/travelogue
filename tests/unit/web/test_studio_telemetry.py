@@ -44,6 +44,32 @@ def test_format_telemetry_lines() -> None:
     assert any("totalMs=" in line for line in lines)
 
 
+def test_portfolio_telemetry_fields_only_on_portfolio() -> None:
+    journal = build_pipeline_telemetry_summary({"pipeline": {"status": "rendered"}})
+    assert "edition" not in journal
+    assert "seriesId" not in journal
+    assert "overflowCount" not in journal
+
+    trip = {
+        "pipeline": {"status": "rendered"},
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {
+                "seriesId": "magazine-16-standard",
+                "pageCountSource": "auto",
+                "overflow": {"count": 84},
+            },
+        },
+    }
+    summary = build_pipeline_telemetry_summary(trip)
+    assert summary["edition"] == "portfolio"
+    assert summary["seriesId"] == "magazine-16-standard"
+    assert summary["pageCountSource"] == "auto"
+    assert summary["overflowCount"] == 84
+    lines = format_telemetry_lines(summary)
+    assert any("overflow.count=84" in line for line in lines)
+
+
 def test_build_entry_includes_telemetry() -> None:
     trip = {
         "meta": {"title": "测试"},

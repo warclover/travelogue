@@ -6,6 +6,11 @@
 "use strict";
 
 import { HELP_COPY } from "./help-onboarding.js";
+import {
+  albumSpreadCardCopy,
+  portfolioMainProductsHtml,
+  wrapPortfolioSocialGroupHtml,
+} from "./portfolio-export-logic.js";
 
 export var LONGSHOT_EXPORT_PREFS_KEY = "travelogue.studio.longshotExportPrefs";
 export var MOMENTS_COACH_KEY = "travelogue.studio.longshotMomentsCoachSeen";
@@ -81,6 +86,16 @@ export var PLATFORMS = {
     showAlbumCountOptions: true,
     expectHtml:
       "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）。精选照片较多时可能需 <strong>1–2 分钟</strong>，请耐心等待",
+  },
+  portfolio_pages: {
+    id: "portfolio_pages",
+    label: "作品集页图",
+    title: "作品集",
+    subtitle: "这一本 + 页图",
+    cta: "导出作品集",
+    showSegmentMode: false,
+    showCopyControls: false,
+    expectHtml: "将导出可翻阅的一本与 16:9 页图序列",
   },
 };
 
@@ -374,6 +389,7 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "wechat_official") return "导出公众号";
   if (platformId === "poster_bric") return "导出海报";
   if (platformId === "album_spread") return "导出画册";
+  if (platformId === "portfolio_pages") return "导出作品集";
   return "发微信群";
 }
 
@@ -396,6 +412,7 @@ export var PROGRESS_TITLES = {
   wechat_official: "正在生成公众号竖版拼贴…",
   poster_bric: "正在生成 3:4 单张海报…",
   album_spread: "正在生成画册跨页，照片较多时请耐心等待…",
+  portfolio_pages: "正在导出作品集…",
 };
 
 /** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
@@ -415,6 +432,7 @@ export function progressTitleForPlatform(platformId) {
 }
 
 export function progressSynthesizingTitleForPlatform(platformId) {
+  if (platformId === "portfolio_pages") return "正在保存这一本与页图…";
   return isComposePlatform(platformId) ? "正在合成拼贴…" : "正在合成长图…";
 }
 
@@ -535,17 +553,46 @@ export function estimatePhotoCountFromDom(doc) {
 /**
  * Build popover inner HTML for enabled platforms.
  * @param {string[]} platformIds
+ * @param {{edition?: string}} [opts] 作品集 edition=portfolio 时换种分享默认折叠
  */
-export function buildPanelHtml(platformIds) {
+/** FE-PFM-06 · 游记 Dock / ▾ 快照。开旗与否不改变游记字面。 */
+export function journalDockChrome() {
+  return { short: "长图", aria: "导出长图" };
+}
+
+export function journalExportPanelSnapshot(platformIds) {
+  return {
+    dock: journalDockChrome(),
+    title: "导出设置",
+    html: buildPanelHtml(platformIds, { edition: "journal" }),
+  };
+}
+
+export function buildPanelHtml(platformIds, opts) {
+  opts = opts || {};
+  var edition = opts.edition === "portfolio" ? "portfolio" : "journal";
   var ids = platformIds && platformIds.length ? platformIds : ["wechat_chat", "wechat_moments"];
-  var platformBtns = ids
+  var socialIds = ids.filter(function (id) {
+    return id && id !== "portfolio_pages";
+  });
+  var platformBtns = socialIds
     .map(function (id) {
       var p = PLATFORMS[id] || { id: id, label: id };
       var title = p.title || p.label || id;
       var sub = p.subtitle || "";
       var aria = p.label || title;
+      var extraClass = "";
+      if (id === "album_spread") {
+        var albumCopy = albumSpreadCardCopy(edition);
+        title = albumCopy.title;
+        sub = albumCopy.subtitle;
+        aria = albumCopy.aria;
+        if (edition === "portfolio") extraClass = " preview-toolbar__export-platform-card--stack";
+      }
       return (
-        '<button type="button" class="preview-toolbar__export-platform-card" ' +
+        '<button type="button" class="preview-toolbar__export-platform-card' +
+        extraClass +
+        '" ' +
         'data-studio-longshot-platform="' +
         p.id +
         '" aria-label="' +
@@ -564,18 +611,27 @@ export function buildPanelHtml(platformIds) {
     })
     .join("");
 
+  var platformField =
+    edition === "portfolio"
+      ? portfolioMainProductsHtml() +
+        wrapPortfolioSocialGroupHtml(platformBtns, socialIds.length) +
+        '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>'
+      : '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
+        '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+        '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
+        platformBtns +
+        "</div>" +
+        '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
+        "</div>";
+
   return (
-    '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
+    '<p class="preview-toolbar__export-popover-title">' +
+    (edition === "portfolio" ? "导出" : "导出设置") +
+    "</p>" +
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
-    '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
-    platformBtns +
-    "</div>" +
-    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
-    "</div>" +
+    platformField +
     '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
     '<span class="preview-toolbar__export-popover-label" data-copy-label>长图要不要字</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +

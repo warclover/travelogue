@@ -107,17 +107,31 @@ def legacy_registry_ids() -> frozenset[str]:
     return frozenset(constants.MOSAIC_UNIFIED_PATTERN_IDS)
 
 
+def _string_enum_values(node: object) -> list[str]:
+    """Collect ``enum`` members from a schema node, including anyOf/oneOf/allOf."""
+    if not isinstance(node, dict):
+        return []
+    out: list[str] = []
+    raw = node.get("enum")
+    if isinstance(raw, list):
+        out.extend(str(x) for x in raw)
+    for key in ("anyOf", "oneOf", "allOf"):
+        alts = node.get(key)
+        if isinstance(alts, list):
+            for alt in alts:
+                out.extend(_string_enum_values(alt))
+    return out
+
+
 def schema_all_pattern_ids(*, root: Path | None = None) -> set[str]:
     base = root or ROOT
     schema = json.loads((base / "schemas/trip.schema.json").read_text(encoding="utf-8"))
-    enum = (
+    pid_schema = (
         ((schema.get("$defs") or {}).get("layoutScreen") or {})
         .get("properties", {})
         .get("patternId", {})
-        .get("enum")
-        or []
     )
-    return {str(pid) for pid in enum}
+    return set(_string_enum_values(pid_schema))
 
 
 def schema_mosaic_ids(*, root: Path | None = None) -> set[str]:

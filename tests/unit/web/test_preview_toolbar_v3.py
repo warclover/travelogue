@@ -917,7 +917,7 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
-    assert "精修 · 画册" in shell
+    assert "精修 · 画册" in features
     assert "可在「排版」中更换" not in shell
     assert "preview-dock-stat" in shell or "准备高清 ·" in shell
 

@@ -15,6 +15,8 @@ import {
   batchOverallProgressRatio,
   bindPanelDraft,
   buildPanelHtml,
+  journalDockChrome,
+  journalExportPanelSnapshot,
   clampAlbumSlideCount,
   clampSlideCountForPlatform,
   confirmedExportSummary,
@@ -170,6 +172,60 @@ test("wechat_moments 短标签带平台名（对齐导出小红书；禁止裸�
   assert.notEqual(shortCtaLabelForPlatform("wechat_chat"), "按章导出");
 });
 
+test("portfolio_pages 标签存在但不进平铺列表（N-PFM-15）", () => {
+  assert.equal(ctaLabelForPlatform("portfolio_pages"), "导出作品集");
+  assert.equal(shortCtaLabelForPlatform("portfolio_pages"), "导出作品集");
+  const listed = enabledPlatformsFromConfig({
+    longshot2: {
+      enabled: true,
+      platforms: ["wechat_moments", "xiaohongshu", "portfolio_pages"],
+    },
+  });
+  assert.ok(!listed.includes("portfolio_pages"));
+});
+
+test("FE-PFM-06 · 游记导出 Dock / ▾ 开旗前后零 diff", () => {
+  const ids = ["wechat_chat", "xiaohongshu", "album_spread"];
+  const snap = journalExportPanelSnapshot(ids);
+  const implicit = buildPanelHtml(ids);
+  const explicit = buildPanelHtml(ids, { edition: "journal" });
+  const flagOn = buildPanelHtml(ids, { edition: "journal", pipelineEnabled: true });
+  assert.equal(snap.html, implicit);
+  assert.equal(snap.html, explicit);
+  assert.equal(snap.html, flagOn);
+  assert.deepEqual(snap.dock, journalDockChrome());
+  assert.equal(snap.dock.aria, "导出长图");
+  assert.equal(snap.title, "导出设置");
+  assert.doesNotMatch(snap.html, /导出作品集/);
+  assert.doesNotMatch(snap.html, /用同一批照片出社交图/);
+  assert.doesNotMatch(snap.html, /印刷跨页（现网画册）/);
+  assert.match(snap.html, /画册印刷/);
+  assert.match(snap.html, /导出设置/);
+});
+
+test("作品集面板：换种分享默认折叠 + 印刷副文；游记仍画册印刷", () => {
+  const journal = buildPanelHtml(["wechat_chat", "xiaohongshu", "album_spread"]);
+  assert.match(journal, /画册印刷/);
+  assert.doesNotMatch(journal, /用同一批照片出社交图/);
+  assert.doesNotMatch(journal, /印刷跨页（现网画册）/);
+  assert.doesNotMatch(journal, /data-portfolio-share-fold/);
+  assert.doesNotMatch(journal, /data-action="export-portfolio-book"/);
+
+  const pf = buildPanelHtml(
+    ["wechat_chat", "xiaohongshu", "album_spread", "portfolio_pages"],
+    { edition: "portfolio" }
+  );
+  assert.match(pf, /data-portfolio-share-fold/);
+  assert.doesNotMatch(pf, /<details[^>]*\sopen/);
+  assert.match(pf, /用同一批照片出社交图/);
+  assert.match(pf, /印刷跨页（现网画册）/);
+  assert.match(pf, /给印刷公司的 3:4 跨页，不是这一本/);
+  assert.match(pf, /社交图仍按现网拼贴/);
+  assert.match(pf, /这本作品集/);
+  assert.doesNotMatch(pf, /data-studio-longshot-platform="portfolio_pages"/);
+  assert.doesNotMatch(pf, />画册印刷</);
+});
+
 test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () => {
   const popChat = stubPopover(["wechat_chat", "wechat_moments", "xiaohongshu"]);
   syncPanelUI(popChat, { platforms: ["wechat_chat"], mode: "chapter", scale: 2 });
@@ -229,6 +285,7 @@ test("enabledPlatformsFromConfig · gcsPosterBric on/off", () => {
   });
   assert.ok(on.includes("poster_bric"));
   assert.ok(on.includes("wechat_chat"));
+  assert.ok(!on.includes("portfolio_pages"));
 });
 
 test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九宫格入口", () => {

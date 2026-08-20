@@ -58,3 +58,23 @@ export var WAIT_TIPS_CARDS = [
     body: "同一次出行放一起就好，不必事先精挑细选。",
   },
 ];
+
+/**
+ * 作品集导入轮播：去掉「配文」口径，且本表不得出现「文案 / 正在写」。
+ * 游记六张字面不变（WAIT_TIPS 合同）。
+ */
+export function waitTipsCardsForEdition(edition) {
+  var t = String(edition || "").trim().toLowerCase();
+  if (t !== "portfolio" && t !== "folio") return WAIT_TIPS_CARDS;
+  return WAIT_TIPS_CARDS.map(function (card) {
+    if (card.id !== "WT-03") return card;
+    return {
+      id: card.id,
+      category: card.category,
+      tone: card.tone,
+      label: card.label,
+      title: "分章排版，交给它",
+      body: "选好这一趟的照片就行，不用先一张张归类。",
+    };
+  });
+}

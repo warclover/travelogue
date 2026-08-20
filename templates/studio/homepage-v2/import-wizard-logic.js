@@ -102,6 +102,12 @@ export function canLeavePickStep(albumPath) {
  * @param {"pick"|"confirm"|"fine"} to
  * @param {"quick_share"|"fine_craft"|string} mode
  */
+/** AC-PFM-14 · 作品集 + 快速仍两击（选夹 + 开始）；身份不加第三击。 */
+export function wizardHitsToStart(mode, edition) {
+  void normalizeEdition(edition);
+  return String(mode || "quick_share") === "fine_craft" ? 3 : 2;
+}
+
 export function canNavigateWizardStep(from, to, mode) {
   var a = normalizeWizardStep(from);
   var b = normalizeWizardStep(to);
@@ -121,7 +127,10 @@ export function normalizeEdition(raw) {
 
 export function parsePortfolioPipelineConfig(studioCfg) {
   var raw = (studioCfg && (studioCfg.portfolioPipeline || studioCfg.portfolio_pipeline)) || {};
-  var minKept = raw.minKeptOverride != null ? Number(raw.minKeptOverride) : Number(raw.min_kept_override);
+  var minKept = Number(raw.minKept != null ? raw.minKept : raw.min_kept);
+  if (!(minKept > 0)) {
+    minKept = raw.minKeptOverride != null ? Number(raw.minKeptOverride) : Number(raw.min_kept_override);
+  }
   return {
     enabled: raw.enabled === true,
     homepageEntry: raw.homepageEntry === true || raw.homepage_entry === true,
@@ -144,4 +153,32 @@ export function isPortfolioLowPhoto(count, minKept) {
   var n = Number(count);
   if (!Number.isFinite(n)) return false;
   return n < Number(minKept || 12);
+}
+
+/** 线框 F1c · 作品集卡副文。低照片用短句，完整提示走确认模态。 */
+export var PORTFOLIO_EDITION_SUBLINE = "杂志页";
+export var PORTFOLIO_LOW_PHOTO_SUBLINE = "照片较少";
+export var PORTFOLIO_LOW_PHOTO_HINT = "照片较少，作品集更适合 30 张以上";
+
+export function portfolioEditionSubline(low) {
+  return low ? PORTFOLIO_LOW_PHOTO_SUBLINE : PORTFOLIO_EDITION_SUBLINE;
+}
+
+/**
+ * 用户点作品集且张数低于派生阈值时，先确认再选中（不硬拒）。
+ * 首页次链预选 / 恢复草稿不弹。
+ */
+export function shouldConfirmLowPhoto(count, minKept, source, currentEdition) {
+  if (source !== "user") return false;
+  if (normalizeEdition(currentEdition) === "portfolio") return false;
+  return isPortfolioLowPhoto(count, minKept);
+}
+
+export function lowPhotoContinueConfirm() {
+  return {
+    title: "仍做作品集？",
+    body: PORTFOLIO_LOW_PHOTO_HINT + "。确认后仍可继续。",
+    confirmText: "仍做作品集",
+    cancelText: "取消",
+  };
 }

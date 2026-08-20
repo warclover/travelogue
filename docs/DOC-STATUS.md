@@ -199,9 +199,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.0 Conditional Go** · 现场 W0–W3 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
 | [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
 | [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
-| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.0 Conditional Go** · `studio.edition` 分身份 · **F0–F8 已签** · W0 开工（`feat/pfm-portfolio-folio-mode-v1`）/ W1 挡资产门 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
-| [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0 进行中 / W1 空目录硬失败 |
-| [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；本波锁 W0 + W1 骨架 |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.0 Conditional Go** · W0–W3 + §2 后续编码已清 · 游记导出快照 · entry chrome · telemetry · ISO-01/02/07 · AC-PFM-10/32/14/23 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
+| [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 主路径已落 · **§2 后续编码已清** |
+| [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；本波锁 W0–W3 + 隔离回归 + AC-PFM-10/32/14/23 |
 | [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 · F1/F3/F6 产品重签 2026-08-20 |
 | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 **v1.1** · **F0–F8 已签** |
 

@@ -29,7 +29,15 @@ import {
   shouldShowEditionSegment,
   shouldShowHomepagePortfolioEntry,
   isPortfolioLowPhoto,
+  portfolioEditionSubline,
+  shouldConfirmLowPhoto,
+  lowPhotoContinueConfirm,
 } from "./import-wizard-logic.js";
+import {
+  isRadioNavKey,
+  nextRadioId,
+  radioTabIndex,
+} from "../js/portfolio-edition-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 
 var _open = false;
@@ -62,6 +70,7 @@ var _titleUserEdited = false;
 var _dateUserEdited = false;
 var _fineEntrySnapshot = null;
 var _closeConfirmOpen = false;
+var _lowPhotoConfirmOpen = false;
 var _fineVisited = false;
 var _countHintTrackedKey = null;
 
@@ -449,15 +458,51 @@ function setActiveMode(mode, source) {
 
 function setActiveEdition(edition, source) {
   var next = normalizeEdition(edition);
-  var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
-  if (next === "portfolio" && low && source === "user") {
-    if (typeof studioToast === "function") {
-      studioToast("照片较少，作品集更适合 30 张以上。确认后仍可继续。", { duration: 2800 });
-    }
+  if (
+    next === "portfolio" &&
+    shouldConfirmLowPhoto(
+      _pendingPhotoCount,
+      _pipelineCfg.minKept,
+      source,
+      _activeEdition
+    )
+  ) {
+    requestLowPhotoContinue(next);
+    return;
   }
-  _activeEdition = next;
+  applyEditionChoice(next, source);
+}
+
+function requestLowPhotoContinue(next) {
+  if (_lowPhotoConfirmOpen) return;
+  var copy = lowPhotoContinueConfirm();
+  if (typeof studioModal === "function") {
+    _lowPhotoConfirmOpen = true;
+    studioModal({
+      title: copy.title,
+      body: copy.body,
+      confirmText: copy.confirmText,
+      cancelText: copy.cancelText,
+    }).then(function (ok) {
+      _lowPhotoConfirmOpen = false;
+      if (ok === true || ok === "confirm") applyEditionChoice(next, "user");
+    });
+    return;
+  }
+  if (window.confirm(copy.body)) applyEditionChoice(next, "user");
+}
+
+function focusEditionRadio(id) {
+  var el = $(id === "portfolio" ? "v2-wizard-edition-portfolio" : "v2-wizard-edition-journal");
+  if (el && typeof el.focus === "function") el.focus();
+}
+
+function applyEditionChoice(next, source) {
+  _activeEdition = normalizeEdition(next);
   syncEditionUi();
   updateStartLabel();
+  saveDraft();
+  if (source === "user") focusEditionRadio(_activeEdition);
 }
 
 function syncEditionUi() {
@@ -474,10 +519,14 @@ function syncEditionUi() {
   var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
   if (journal) {
     journal.setAttribute("aria-checked", _activeEdition === "journal" ? "true" : "false");
+    journal.tabIndex = radioTabIndex(_activeEdition, "journal");
   }
   if (portfolio) {
     portfolio.setAttribute("aria-checked", _activeEdition === "portfolio" ? "true" : "false");
+    portfolio.tabIndex = radioTabIndex(_activeEdition, "portfolio");
     portfolio.classList.toggle("is-dim", low);
+    var sub = portfolio.querySelector("span");
+    if (sub) sub.textContent = portfolioEditionSubline(low);
   }
   var desc = $("v2-wizard-mode-quick-desc");
   if (desc) {
@@ -810,6 +859,7 @@ function goToStep2(opts) {
   updateCountHint();
   updatePhotoKeepModeUi();
   updateStartLabel();
+  syncEditionUi();
   showPanel("confirm");
   refreshFirstTip();
   updateDuplicateTitleNote();
@@ -887,6 +937,7 @@ function saveDraft() {
     photoKeepModeTouched: _photoKeepModeTouched,
     keepNearDuplicates: readKeepDupesEnabled(),
     photoCount: _pendingPhotoCount,
+    edition: _activeEdition === "portfolio" ? "portfolio" : undefined,
     planFileName: (function () {
       var input = $("v2-wizard-plan-file");
       if (!input || !input.files || !input.files[0]) return "";
@@ -1234,6 +1285,9 @@ function restoreSessionIfAny(opts) {
   var step = draft.wizardStep === "fine" ? "fine"
     : draft.wizardStep === "confirm" ? "confirm" : "confirm";
   setActiveMode(draft.mode === "fine_craft" ? "fine_craft" : "quick_share", "draft");
+  if (draft.edition) {
+    setActiveEdition(draft.edition, "draft");
+  }
   if (step === "fine") {
     _fineVisited = true;
     goToStep2({ modeSource: true });
@@ -1499,12 +1553,19 @@ export function initImportWizard() {
   var editionPortfolio = $("v2-wizard-edition-portfolio");
   if (editionJournal) editionJournal.addEventListener("click", function () {
     setActiveEdition("journal", "user");
-    saveDraft();
   });
   if (editionPortfolio) editionPortfolio.addEventListener("click", function () {
     setActiveEdition("portfolio", "user");
-    saveDraft();
   });
+
+  function onEditionKeydown(e) {
+    if (!isRadioNavKey(e.key)) return;
+    e.preventDefault();
+    var next = nextRadioId(["journal", "portfolio"], _activeEdition, e.key);
+    setActiveEdition(next, "user");
+  }
+  if (editionJournal) editionJournal.addEventListener("keydown", onEditionKeydown);
+  if (editionPortfolio) editionPortfolio.addEventListener("keydown", onEditionKeydown);
 
   function onModeKeydown(e) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;

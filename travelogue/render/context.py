@@ -1089,7 +1089,7 @@ def build_layout_screen(
             out["isPlate"] = True
             out["patternId"] = "screen-plate"
             first_aid = slot_aids[0] if slot_aids else ""
-            if first_aid and first_aid in assets:
+            if first_aid and first_aid in assets and not strip_narrative_copy:
                 cap = asset_caption(assets[first_aid])
                 if cap:
                     out["plateCaption"] = cap

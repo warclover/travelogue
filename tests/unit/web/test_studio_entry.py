@@ -6,6 +6,7 @@ from travelogue.web.studio_entry import (
     build_chapter_summaries,
     build_entry,
     build_intent_summary,
+    edition_chrome,
     resolve_peak_screen_id,
 )
 
@@ -95,11 +96,58 @@ def test_build_entry_appends_fragment_when_peak_exists():
     assert entry["scrollShareUrl"] == "/demo-trip/index.html?share=1#screen-s1"
 
 
-def test_build_entry_no_fragment_when_no_peak():
-    entry = build_entry({"chapters": []}, "demo-trip")
-    assert entry["peakScreenId"] is None
+def test_build_entry_exposes_portfolio_edition() -> None:
+    journal = build_entry({"chapters": []}, "demo-trip")
+    assert journal["edition"] == "journal"
+    assert journal["portfolioPipelineEnabled"] is False
+    assert journal["layoutVibeVisible"] is True
+    assert journal.get("portfolio") is None
+
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"photosPlaced": 96, "photosKept": 180, "overflow": {"count": 84}},
+        },
+        "chapters": [],
+    }
+    entry = build_entry(trip, "demo-trip")
+    assert entry["edition"] == "portfolio"
+    assert entry["portfolioPipelineEnabled"] is False
+    assert entry["layoutVibeVisible"] is False
+    assert entry["portfolio"]["photosPlaced"] == 96
+    assert entry["portfolio"]["photosKept"] == 180
+    assert entry["portfolio"]["pageCountChips"] == [8, 12, 16, 20, 24, 28, 32]
     assert entry["previewUrl"] == "/demo-trip/index.html"
-    assert entry["scrollShareUrl"] == "/demo-trip/index.html?share=1"
+    assert entry["dockCta"]["aria"] == "导出作品集"
+    assert entry["overflowLine"] == "本册收录 96 / 180 张"
+    assert entry["overflowCta"] == "改用游记（全收）"
+    assert journal["dockCta"]["aria"] == "导出长图"
+    assert journal["overflowLine"] is None
+    assert journal["overflowCta"] is None
+    chrome = edition_chrome(trip)
+    assert chrome["dockCta"] == entry["dockCta"]
+    assert chrome["overflowLine"] == entry["overflowLine"]
+    assert chrome["layoutVibeVisible"] is False
+
+
+def test_build_entry_pipeline_enabled_when_flag_on() -> None:
+    from dataclasses import replace
+
+    from travelogue.config import AppConfig, PortfolioPipelineConfig
+    from travelogue.config.runtime import config_override
+
+    trip = {"studio": {"edition": "portfolio"}, "chapters": []}
+    cfg = replace(
+        AppConfig(),
+        studio=replace(
+            AppConfig().studio,
+            portfolio_pipeline=PortfolioPipelineConfig(enabled=True),
+        ),
+    )
+    with config_override(cfg):
+        entry = build_entry(trip, "demo-trip")
+    assert entry["portfolioPipelineEnabled"] is True
+    assert entry["edition"] == "portfolio"
 
 
 def test_intent_summary_reads_intent_then_meta():

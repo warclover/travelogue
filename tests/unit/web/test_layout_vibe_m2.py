@@ -292,6 +292,7 @@ def test_sheet_book_panel_hosts_layout_vibe_zone() -> None:
     assert 'data-book-zone="layout-vibe"' in sheet
     assert "mountLayoutVibeControls" in sheet
     assert "成册风格" in sheet
+    assert "成册类型" in sheet
 
 
 def test_help_h8_points_to_docs_not_lse() -> None:

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.0**（BLK-PFM-01～09 已回写） |
-| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0 开工中**（`feat/pfm-portfolio-folio-mode-v1`）；**W1 仍挡资产门 AS-PFM-01**；**W3 入口可拆** |
+| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 + §2 后续编码已清** · 游记导出快照零 diff · entry/书架同一份 chrome · telemetry edition/overflow · ISO-01/02/07 · 换种分享不读 patternId · AC-PFM-10/32/14/23（`feat/pfm-portfolio-folio-mode-v1`）；首页次链仍关 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
 | **界面用词** | **游记**（快分享）· **作品集**（杂志风卷轴）。禁止对 C 端说「第七种模式 / page-* / 成册引擎 / 画册已经按页」 |
@@ -454,6 +454,7 @@ studio:
 
 - **不改** `layoutEngine` 枚举（D-PFM-04）。  
 - `studio.edition`（enum `journal|portfolio`）、`studio.portfolio`、`studio.copyOrphans` 入 `$defs`。  
+- `layoutScreen.patternId`：游记仍走封闭 `screen-*` 枚举（H8 / Critic 白名单）；作品集允许 `page-*` 前缀（LTE 已收的脸才能过语义校验）。**不把 `page-*` 写入 mosaic 活跃集。**  
 - 关旗校验：`enabled=false` 时 API 拒绝新建作品集（已有 trip 只读提示 + 可改回游记）。
 
 ---
@@ -567,7 +568,7 @@ else:                               compose_trip(...)   # 零改签名
 | **F7** | 书架标 + 菜单改身份 | **已签** |
 | **F8** | 禁止形态 | **已签** · 新增两条红线（无正式系列不得称作品集、不得静默丢照片） |
 
-**签核规则**：F0 已过 → W1 线框门通过（但仍挡 AS-PFM-01 资产门）。**F1/F3/F6 已于 2026-08-20 重签** → W3 入口可拆。
+**签核规则**：F0 已过 → W1 线框门通过。**AS-PFM-01 P0 已入库。** 界面仍不得称作品集（等 `page-*`）。**F1/F3/F6 已于 2026-08-20 重签** → W3 入口可拆。
 
 ---
 
@@ -634,8 +635,8 @@ else:                               compose_trip(...)   # 零改签名
 
 | ID | 任务 | 业主 | 挡门 |
 |----|------|------|------|
-| **AS-PFM-01** | 正式 `series/` 收件目录定案（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 入库 | TSU + 运营 | **挡 W1 出门** |
-| **AS-PFM-02** | 活目录 `page-*` 几何入 LTE | **TSU W3** | 挡 W2 |
+| **AS-PFM-01** | 正式 `series/` 收件目录定案（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 入库 | TSU + 运营 | **P0 已入运行时目录** |
+| **AS-PFM-02** | 活目录 `page-*` 几何入 LTE | **TSU W3** | **75 张已编译（P0 11 张齐；page-10 未收）** |
 | **AS-PFM-03** | 工坊 YAML 页数与 id 对账（拒 `folio-24` 标 32） | 运营 | 挡升格 |
 | **AS-PFM-04** | CHARTER 补一行「第二产品形态：作品集」，明确不改主叙事 | 产品 | 不挡波次（SHD-05） |
 

@@ -43,6 +43,7 @@ def trip_render_fingerprint_payload(trip: dict[str, Any]) -> dict[str, Any]:
     intent = trip.get("intent")
     if isinstance(intent, dict):
         body["intent"] = {k: v for k, v in intent.items() if k != "layoutStrategy"}
+    # ISO-01 / D-PFM-32 · studio.edition must not leak into journal fingerprints.
     return body
 
 

@@ -60,7 +60,28 @@ def build_pipeline_telemetry_summary(trip: dict) -> PipelineTelemetrySummary:
         summary["visionSource"] = str(vision["source"])
     if ingest_elapsed:
         summary["ingestElapsedMs"] = ingest_elapsed
+    summary.update(_portfolio_telemetry(trip))
     return summary
+
+
+def _portfolio_telemetry(trip: dict) -> dict:
+    """AC-PFM-21 · 仅作品集写 edition / series / overflow；游记事件不加 edition。"""
+    from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
+
+    if resolve_edition(trip) != EDITION_PORTFOLIO:
+        return {}
+    studio = trip.get("studio") if isinstance(trip.get("studio"), dict) else {}
+    raw = studio.get("portfolio") if isinstance(studio.get("portfolio"), dict) else {}
+    overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else {}
+    out: dict = {"edition": EDITION_PORTFOLIO}
+    if raw.get("seriesId"):
+        out["seriesId"] = str(raw["seriesId"])
+    if raw.get("pageCountSource"):
+        out["pageCountSource"] = str(raw["pageCountSource"])
+    count = overflow.get("count")
+    if isinstance(count, (int, float)):
+        out["overflowCount"] = int(count)
+    return out
 
 
 def format_telemetry_lines(summary: PipelineTelemetrySummary) -> list[str]:
@@ -92,4 +113,13 @@ def format_telemetry_lines(summary: PipelineTelemetrySummary) -> list[str]:
     if ingest:
         parts = ", ".join(f"{k}={v:.1f}" for k, v in sorted(ingest.items()))
         lines.append(f"ingestStats.elapsedMs: {parts}")
+    if summary.get("edition"):
+        bits = [f"edition={summary['edition']}"]
+        if summary.get("seriesId"):
+            bits.append(f"seriesId={summary['seriesId']}")
+        if summary.get("pageCountSource"):
+            bits.append(f"pageCountSource={summary['pageCountSource']}")
+        if "overflowCount" in summary:
+            bits.append(f"overflow.count={summary['overflowCount']}")
+        lines.append("portfolio: " + ", ".join(bits))
     return lines

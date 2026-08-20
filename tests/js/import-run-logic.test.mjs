@@ -18,7 +18,11 @@ import {
   shouldPerformCancelImport,
   normalizeImportProductStage,
   resolveImportStageCopy,
+  importPanelCopy,
+  isCopyWritingPhrase,
+  PORTFOLIO_IMPORT_TITLE,
 } from "../../templates/studio/homepage-v2/import-run-logic.js";
+import { waitTipsCardsForEdition } from "../../templates/studio/homepage-v2/wait-tips-copy.js";
 
 test("basenameTitle / guessUploadTitle", () => {
   assert.equal(basenameTitle("C:\\\\trips\\\\京都雨后"), "京都雨后");
@@ -105,8 +109,31 @@ test("FE-FST-01 · resolveImportStageCopy：N/N 后切 curate，计数不霸屏"
   assert.match(afterIngest.main, /分章/);
   assert.equal(afterIngest.secondary, "");
 
+  assert.equal(isCopyWritingPhrase("正在生成画册文案…"), true);
+  assert.equal(isCopyWritingPhrase("正在写导语"), true);
+  assert.equal(isCopyWritingPhrase("正在按杂志页编排…"), false);
+
   const narrate = resolveImportStageCopy({ stage: "narrate", stageHint: "" });
   assert.match(narrate.main, /画册文案/);
+
+  const pfNarrate = resolveImportStageCopy({ stage: "narrate" }, "portfolio");
+  assert.equal(pfNarrate.main, PORTFOLIO_IMPORT_TITLE);
+  assert.equal(isCopyWritingPhrase(pfNarrate.main), false);
+  const pfHint = resolveImportStageCopy(
+    { stage: "", stageHint: "正在写导语" },
+    "portfolio"
+  );
+  assert.equal(pfHint.main, PORTFOLIO_IMPORT_TITLE);
+  const panel = importPanelCopy("portfolio");
+  assert.equal(panel.title, PORTFOLIO_IMPORT_TITLE);
+  assert.equal(isCopyWritingPhrase(panel.estimate), false);
+  assert.match(importPanelCopy("journal").estimate, /配文/);
+  const pfTips = waitTipsCardsForEdition("portfolio");
+  assert.ok(pfTips.every((c) => !isCopyWritingPhrase(c.title + c.body)));
+  assert.equal(
+    pfTips.find((c) => c.id === "WT-03").title,
+    "分章排版，交给它"
+  );
 });
 
 test("SFC W0 · vision_warmup 主句非空", () => {

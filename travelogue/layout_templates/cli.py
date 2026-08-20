@@ -119,6 +119,21 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_promote_pages(args: argparse.Namespace) -> int:
+    from travelogue.layout_templates.page_promote import P0_PAGE_IDS, promote_pages
+
+    ids = list(args.ids or [])
+    if args.p0_only:
+        ids = list(P0_PAGE_IDS)
+    elif not ids:
+        ids = None
+    written, skips = promote_pages(ids=ids, write=True)
+    print(f"promoted {len(written)} page-* YAML → {DEFAULT_TEMPLATES_DIR}")
+    for skip in skips:
+        print(f"skip {skip.page_id}: {skip.reason}")
+    return 0 if written else 1
+
+
 def cmd_docgen(args: argparse.Namespace) -> int:
     root = Path(args.templates) if args.templates else DEFAULT_TEMPLATES_DIR
     out_dir = Path(args.out) if args.out else Path("docs/templates/slot-aspect")
@@ -213,6 +228,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     export.set_defaults(func=cmd_export)
+
+    promote = sub.add_parser(
+        "promote-pages",
+        help="Compile atelier page-* faces into LTE YAML (does not scan reserve at runtime)",
+    )
+    promote.add_argument("--p0-only", action="store_true", help="Only magazine-16's 11 faces")
+    promote.add_argument("--id", action="append", dest="ids", help="Face id to promote")
+    promote.set_defaults(func=cmd_promote_pages)
 
     docgen = sub.add_parser("docgen", help="Generate slot-aspect markdown docs")
     docgen.add_argument("--templates", type=Path)

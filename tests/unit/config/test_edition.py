@@ -10,12 +10,18 @@ from travelogue.config import AppConfig, PortfolioPipelineConfig, studio_config_
 from travelogue.config.edition import (
     EDITION_JOURNAL,
     EDITION_PORTFOLIO,
+    E_PORTFOLIO_PLATFORM_REQUIRED,
     E_PORTFOLIO_UNAVAILABLE,
+    PortfolioPlatformRequiredError,
     PortfolioUnavailableError,
     apply_import_edition,
+    apply_refine_edition,
+    apply_refine_page_count,
+    read_page_count_intent,
     is_portfolio_pipeline_enabled,
     is_portfolio_trip,
     normalize_edition,
+    require_explicit_export_target,
     resolve_edition,
 )
 
@@ -66,6 +72,86 @@ def test_apply_import_edition_flag_on_stamps_portfolio() -> None:
     assert trip["studio"]["edition"] == "portfolio"
     assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
     assert "folio" not in trip["studio"]
+
+
+def test_min_kept_override_beats_catalog() -> None:
+    from travelogue.config.edition import min_kept_for_portfolio
+
+    cfg = _cfg(enabled=True)
+    cfg = replace(
+        cfg,
+        studio=replace(
+            cfg.studio,
+            portfolio_pipeline=PortfolioPipelineConfig(
+                enabled=True, min_kept_override=30
+            ),
+        ),
+    )
+    assert min_kept_for_portfolio(cfg, catalog_min=8) == 30
+    assert min_kept_for_portfolio(_cfg(), catalog_min=8) == 8
+    assert min_kept_for_portfolio(_cfg()) == 12
+
+
+def test_apply_refine_edition_journal_keeps_portfolio() -> None:
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"pageCount": 16, "seriesId": "magazine-16-standard"},
+            "layoutVibe": "magazine_default",
+        }
+    }
+    assert apply_refine_edition(trip, "journal", _cfg(enabled=True)) == EDITION_JOURNAL
+    assert "edition" not in trip["studio"]
+    assert trip["studio"]["portfolio"]["pageCount"] == 16
+    assert trip["studio"]["layoutVibe"] == "magazine_default"
+
+
+def test_apply_refine_page_count_auto_and_user() -> None:
+    trip: dict = {"studio": {"edition": "portfolio", "portfolio": {}}}
+    assert apply_refine_page_count(trip, 18) == ("user", 18)
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "user"
+    assert trip["studio"]["portfolio"]["pageCount"] == 18
+    assert apply_refine_page_count(trip, "auto") == ("auto", None)
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
+    assert "pageCount" not in trip["studio"]["portfolio"]
+
+
+def test_read_page_count_intent_prefers_requested() -> None:
+    trip = {
+        "studio": {
+            "portfolio": {
+                "pageCountSource": "user",
+                "pageCount": 16,
+                "match": {"pageCountRequested": 18},
+            }
+        }
+    }
+    assert read_page_count_intent(trip) == ("user", 18)
+    assert read_page_count_intent({}) == ("auto", None)
+
+
+def test_apply_refine_edition_flag_off_rejects_portfolio() -> None:
+    with pytest.raises(PortfolioUnavailableError) as exc:
+        apply_refine_edition({}, "portfolio", _cfg(enabled=False))
+    assert exc.value.code == E_PORTFOLIO_UNAVAILABLE
+
+
+def test_require_explicit_export_target_portfolio_only() -> None:
+    require_explicit_export_target({}, platform=None)
+    require_explicit_export_target({"studio": {}}, platform=None)
+    require_explicit_export_target(
+        {"studio": {"edition": "portfolio"}},
+        platform="portfolio_pages",
+    )
+    require_explicit_export_target(
+        {"studio": {"edition": "portfolio"}},
+        platform="wechat_chat",
+    )
+    with pytest.raises(PortfolioPlatformRequiredError) as exc:
+        require_explicit_export_target({"studio": {"edition": "portfolio"}}, platform=None)
+    assert exc.value.code == E_PORTFOLIO_PLATFORM_REQUIRED
+    assert "portfolio_pages" in str(exc.value)
+    assert "wechat_chat" in str(exc.value)
 
 
 def test_portfolio_pipeline_defaults_off() -> None:

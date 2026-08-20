@@ -387,12 +387,20 @@ def resolve_reading_payload(
     profile_name = reading_profile_override or export_reading.get("profile")
     if profile_name:
         profile_name = str(profile_name).strip()
+    portfolio_default = False
     if not profile_name or profile_name not in VALID_PROFILES:
-        profile_name = default_profile_for_surface(
-            surface,
-            export_mode=export_mode,
-            config_defaults=config_defaults,
-        )
+        from travelogue.config.edition import is_portfolio_trip
+
+        # D-PFM-19 · 作品集 web/present 默认 magazine；游记默认不变。
+        if is_portfolio_trip(trip) and surface in (SURFACE_WEB, SURFACE_PRESENT_PREVIEW):
+            profile_name = "magazine"
+            portfolio_default = True
+        else:
+            profile_name = default_profile_for_surface(
+                surface,
+                export_mode=export_mode,
+                config_defaults=config_defaults,
+            )
 
     mobile_profile_override = export_reading.get("mobileProfile") or export_reading.get(
         "mobile_profile"
@@ -421,6 +429,7 @@ def resolve_reading_payload(
         and not scroll_explicit
         and not profile_explicit
         and reading_profile_override is None
+        and not portfolio_default
     ):
         auto_breath = auto_breath_for_trip(trip)
         scroll["breath"] = auto_breath

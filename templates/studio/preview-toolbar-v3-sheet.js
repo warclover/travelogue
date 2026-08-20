@@ -885,6 +885,15 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
   function renderBookPanel() {
     stopPreviewFocusWatch();
+    var isPortfolio = typeof hooks.isPortfolio === "function" && hooks.isPortfolio();
+    var vibeZone = isPortfolio
+      ? ""
+      : '<details class="preview-sheet__zone preview-sheet__zone--layout-vibe" data-book-zone="layout-vibe" open>' +
+        '<summary>成册风格 <span class="preview-sheet__zone-meta">推荐 · 实验</span></summary>' +
+        '<div class="preview-sheet__zone-body">' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact">影响整本页面气质，不是封面第一眼样式。要换封面样式 → 「封面 · 版式」。</p>' +
+        '<div class="preview-sheet__layout-vibe-slot"></div>' +
+        "</div></details>";
     bodyEl.innerHTML =
       '<p class="preview-sheet__hint preview-sheet__hint--lead">改一句话与成册风格。杂志名与封面字体在「封面」。</p>' +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
@@ -893,12 +902,13 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       bookCopyRefreshHtml() +
       "</div></details>" +
-      '<details class="preview-sheet__zone preview-sheet__zone--layout-vibe" data-book-zone="layout-vibe" open>' +
-      '<summary>成册风格 <span class="preview-sheet__zone-meta">推荐 · 实验</span></summary>' +
+      '<details class="preview-sheet__zone preview-sheet__zone--edition-type" data-book-zone="edition-type" open>' +
+      '<summary>成册类型 <span class="preview-sheet__zone-meta">游记 · 作品集</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">影响整本页面气质，不是封面第一眼样式。要换封面样式 → 「封面 · 版式」。</p>' +
-      '<div class="preview-sheet__layout-vibe-slot"></div>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">换类型会重排页面，精选和分组会保留。</p>' +
+      '<div class="preview-sheet__edition-slot"></div>' +
       "</div></details>" +
+      vibeZone +
       '<details class="preview-sheet__zone preview-sheet__zone--brand" data-book-zone="brand" open>' +
       "<summary>作品署名</summary>" +
       '<div class="preview-sheet__zone-body">' +
@@ -928,6 +938,11 @@ export function mountPreviewUnifiedSheet(root, hooks) {
 
     if (typeof hooks.onBookTabRendered === "function") {
       hooks.onBookTabRendered();
+    }
+
+    var editionSlot = bodyEl.querySelector(".preview-sheet__edition-slot");
+    if (editionSlot && typeof hooks.mountEditionControls === "function") {
+      hooks.mountEditionControls(editionSlot);
     }
 
     var vibeSlot = bodyEl.querySelector(".preview-sheet__layout-vibe-slot");

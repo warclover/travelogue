@@ -50,7 +50,7 @@
 
 双击 HTML 文件，或用浏览器打开。
 
-**作品集成册 PFM V1 评审 Tab**：**F0 地图** · **F1 导入分段** · **F2 首页次链** · **F3 导出作品集** · **F4 游记对照** · **F5 换种分享** · **F6 精修成册类型** · **F7 书架** · **F8 红线** · 线框：[portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) **v1.1** · PRD：[PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.2.0** · [八席评审 2026-08-20](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) **Conditional Go** · **F0–F8 已签** · 实施分支 `feat/pfm-portfolio-folio-mode-v1` · **W0 开工 · W1 挡 AS-PFM-01**
+**作品集成册 PFM V1 评审 Tab**：**F0 地图** · **F1 导入分段** · **F2 首页次链** · **F3 导出作品集** · **F4 游记对照** · **F5 换种分享** · **F6 精修成册类型** · **F7 书架** · **F8 红线** · 线框：[portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) **v1.1** · PRD：[PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.2.0** · [八席评审 2026-08-20](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) **Conditional Go** · **F0–F8 已签** · 实施分支 `feat/pfm-portfolio-folio-mode-v1` · **W0 Done · P0 magazine-16-standard 已入库 · 75 张 page-* 已入 LTE**
 
 **预览 Chrome 收敛 V1.1 评审 Tab**：**① 诊断·对照** · **② IA** · **③ F1 主路径** · **④ F3** · **⑤ F4 按需分章** · **⑥ F5 分章工作台** · **⑦ F7** · **⑧ 任务条** · **⑨ 配色** · **⑩ 清单** · **⑪ 拍板** · 线框：[preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) · [D-PCU-07～12](../acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) · [跨职能评审](../acceptance-records/preview-chrome-unify-v1-review-2026-07-19.md) · **合同已定 · 可开工**
 

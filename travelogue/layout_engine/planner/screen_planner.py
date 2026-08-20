@@ -138,6 +138,13 @@ _PORTRAIT_COLUMN_GRID_SIZES = (9, 6, 3, 2, 1)
 def grid_class_for_pattern(pattern_id: str) -> str:
     if pattern_id in PATTERN_GRID_CLASS:
         return PATTERN_GRID_CLASS[pattern_id]
+    if str(pattern_id).startswith("page-"):
+        try:
+            from travelogue.layout_templates.registry import get_engine
+
+            return get_engine().get(pattern_id).render_grid_class
+        except Exception:
+            return f"layout-screen__grid--{pattern_id}"
     # Experimental / newly synced LTE SKUs live in mosaic _legacy_generated.
     from travelogue.layout_engine.mosaic.constants import (
         PATTERN_GRID_CLASS as mosaic_classes,

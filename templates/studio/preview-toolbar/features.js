@@ -38,6 +38,17 @@ import {
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+import {
+  editionCardOptionsForPipeline,
+  editionSwitchConfirm,
+  isRadioNavKey,
+  nextRadioId,
+  normalizeEdition,
+  pageCountChipOptions,
+  radioTabIndex,
+  selectedPageCountChip,
+  shouldMountEditionType,
+} from "../js/portfolio-edition-logic.js";
 
 export { revealTripFolder };
 
@@ -715,6 +726,8 @@ export function markLayoutVibeHintPending(tripId) {
 
 export function mountLayoutVibeControls(slot, tripId, opts) {
   opts = opts || {};
+  var rootEarly = opts.root || document.querySelector(".preview-toolbar") || document.body;
+  if (rootEarly && rootEarly._layoutVibeVisible === false) return;
   if (!slot || slot.querySelector(".preview-sheet__layout-vibes")) return;
   var section = document.createElement("div");
   section.className = "preview-sheet__section preview-sheet__layout-vibe-section";
@@ -913,6 +926,362 @@ export function mountLayoutVibeControls(slot, tripId, opts) {
     tripId: tripId,
     layoutVibe: selected,
   });
+}
+
+export function mountEditionControls(slot, tripId, opts) {
+  opts = opts || {};
+  if (!slot || slot.querySelector(".preview-sheet__editions")) return;
+  var section = document.createElement("div");
+  section.className = "preview-sheet__section preview-sheet__edition-section";
+  section.innerHTML =
+    '<span class="preview-sheet__label">成册类型</span>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">游记发群长图；作品集出杂志页和可翻阅的一本。</p>' +
+    '<div class="preview-sheet__editions" role="radiogroup" aria-label="成册类型"></div>' +
+    '<div class="preview-sheet__page-count" hidden>' +
+    '<span class="preview-sheet__label">页数</span>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">只影响这一本的杂志页数，导入时不会问。</p>' +
+    '<div class="preview-sheet__chip-row" role="group" aria-label="页数"></div>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact" data-page-count-hint hidden></p>' +
+    "</div>";
+  var group = section.querySelector(".preview-sheet__editions");
+  var pageHost = section.querySelector(".preview-sheet__page-count");
+  var pageRow = section.querySelector(".preview-sheet__chip-row");
+  var pageHint = section.querySelector("[data-page-count-hint]");
+  var selected = "journal";
+  var selectedPages = "auto";
+  var portfolioState = null;
+  var pipelineEnabled = false;
+  var root = opts.root || document.querySelector(".preview-toolbar") || document.body;
+
+  function syncSelection(editionId) {
+    if (!group) return;
+    group.querySelectorAll("[data-edition-card]").forEach(function (btn) {
+      var id = btn.getAttribute("data-edition-card");
+      var on = id === editionId;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-checked", on ? "true" : "false");
+      btn.tabIndex = radioTabIndex(editionId, id);
+    });
+  }
+
+  function focusSelectedEdition() {
+    if (!group) return;
+    var on = group.querySelector('[data-edition-card="' + selected + '"]');
+    if (on && typeof on.focus === "function") on.focus();
+  }
+
+  function setBusy(busy) {
+    if (group) {
+      group.querySelectorAll("[data-edition-card]").forEach(function (btn) {
+        btn.disabled = !!busy;
+      });
+    }
+    if (pageRow) {
+      pageRow.querySelectorAll("[data-page-count]").forEach(function (btn) {
+        btn.disabled = !!busy;
+      });
+    }
+  }
+
+  function syncPageCount(chipId) {
+    selectedPages = chipId || "auto";
+    if (!pageRow) return;
+    pageRow.querySelectorAll("[data-page-count]").forEach(function (btn) {
+      var on = btn.getAttribute("data-page-count") === selectedPages;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function renderPageCount(portfolio) {
+    portfolioState = portfolio || null;
+    if (!pageHost || !pageRow) return;
+    var show = selected === "portfolio";
+    pageHost.hidden = !show;
+    if (!show) return;
+    var chips = portfolio && portfolio.pageCountChips;
+    pageRow.innerHTML = "";
+    pageCountChipOptions(chips).forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preview-sheet__chip";
+      btn.setAttribute("data-page-count", opt.id);
+      btn.textContent = opt.label;
+      btn.addEventListener("click", function () {
+        requestPageCount(opt.id);
+      });
+      pageRow.appendChild(btn);
+    });
+    syncPageCount(selectedPageCountChip(portfolio));
+    var hint = portfolio && portfolio.pageCountHint;
+    if (pageHint) {
+      pageHint.hidden = !hint;
+      pageHint.textContent = hint || "";
+    }
+  }
+
+  function applyEdition(next) {
+    setBusy(true);
+    showToolbarToast("正在按成册类型重排页面…", { duration: 3500 });
+    if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+      root._taskDock.updateExporting({
+        title: "正在按成册类型重排页面…",
+        subtitle: "精选和分组会保留",
+        pct: 8,
+      });
+      root._exportDockActive = true;
+    }
+    function clearDock() {
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      if (root) root._exportDockActive = false;
+    }
+    return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/edition", {
+      edition: next,
+      confirmed: true,
+    })
+      .then(function (res) {
+        if (res.status === 200 && res.body && res.body.unchanged) {
+          setBusy(false);
+          clearDock();
+          selected = next;
+          syncSelection(selected);
+          focusSelectedEdition();
+          return true;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          setBusy(false);
+          clearDock();
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法切换成册类型",
+            { error: true }
+          );
+          return false;
+        }
+        return pollJobUntilDone(res.body.jobId, {
+          intervalMs: 800,
+          onTick: function (job) {
+            if (
+              root &&
+              root._taskDock &&
+              typeof root._taskDock.updateExporting === "function" &&
+              job &&
+              job.stageHint
+            ) {
+              root._taskDock.updateExporting({
+                title: "正在按成册类型重排页面…",
+                subtitle: String(job.stageHint),
+                pct: Math.min(90, 10 + (job.progress || 0) * 0.8),
+              });
+            }
+          },
+        }).then(function (job) {
+          setBusy(false);
+          clearDock();
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast(
+              (job && job.error && job.error.message) || "成册类型更新失败",
+              { error: true }
+            );
+            return false;
+          }
+          selected = next;
+          syncSelection(selected);
+          focusSelectedEdition();
+          renderPageCount(next === "portfolio" ? portfolioState || {} : null);
+          if (root) root._edition = next;
+          trackStudioEvent("edition_change", { tripId: tripId, edition: next });
+          showToolbarToast("页面已按新的成册类型重排");
+          reloadPreviewAfterLayout();
+          return true;
+        });
+      })
+      .catch(function () {
+        setBusy(false);
+        clearDock();
+        showToolbarToast("成册类型更新失败", { error: true });
+        return false;
+      });
+  }
+
+  function requestEdition(next) {
+    next = normalizeEdition(next);
+    if (!next || next === selected) return;
+    var copy = editionSwitchConfirm(selected, next);
+    toolbarConfirm({
+      title: copy.title,
+      body: copy.body,
+      confirmText: copy.confirmText,
+      cancelText: copy.cancelText,
+    }).then(function (ok) {
+      if (!ok) {
+        trackStudioEvent("edition_switch_cancel", {
+          tripId: tripId,
+          from: selected,
+          to: next,
+        });
+        return;
+      }
+      applyEdition(next);
+    });
+  }
+
+  function applyPageCount(chipId) {
+    var pageCount = chipId === "auto" ? "auto" : Number(chipId);
+    setBusy(true);
+    showToolbarToast("正在按页数重排页面…", { duration: 3500 });
+    if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+      root._taskDock.updateExporting({
+        title: "正在按页数重排页面…",
+        subtitle: "精选和分组会保留",
+        pct: 8,
+      });
+      root._exportDockActive = true;
+    }
+    function clearDock() {
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      if (root) root._exportDockActive = false;
+    }
+    return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/edition", {
+      edition: "portfolio",
+      pageCount: pageCount,
+    })
+      .then(function (res) {
+        if (res.status === 200 && res.body && res.body.unchanged) {
+          setBusy(false);
+          clearDock();
+          syncPageCount(chipId);
+          return true;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          setBusy(false);
+          clearDock();
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法更新页数",
+            { error: true }
+          );
+          return false;
+        }
+        return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
+          setBusy(false);
+          clearDock();
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast("页数更新失败", { error: true });
+            return false;
+          }
+          syncPageCount(chipId);
+          trackStudioEvent("page_count_change", { tripId: tripId, pageCount: chipId });
+          showToolbarToast("页面已按新的页数重排");
+          reloadPreviewAfterLayout();
+          return true;
+        });
+      })
+      .catch(function () {
+        setBusy(false);
+        clearDock();
+        showToolbarToast("页数更新失败", { error: true });
+        return false;
+      });
+  }
+
+  function requestPageCount(chipId) {
+    if (!chipId || chipId === selectedPages) return;
+    applyPageCount(chipId);
+  }
+
+  function renderOptions() {
+    if (!group) return;
+    group.innerHTML = "";
+    editionCardOptionsForPipeline(pipelineEnabled).forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "preview-sheet__edition";
+      btn.setAttribute("data-edition-card", opt.id);
+      btn.setAttribute("role", "radio");
+      btn.setAttribute("aria-label", opt.label);
+      btn.innerHTML =
+        '<span class="preview-sheet__edition-title">' +
+        opt.label +
+        "</span>" +
+        '<span class="preview-sheet__edition-consequence">' +
+        (opt.consequence || "") +
+        "</span>";
+      btn.addEventListener("click", function () {
+        requestEdition(opt.id);
+      });
+      btn.addEventListener("keydown", function (e) {
+        if (!isRadioNavKey(e.key)) return;
+        e.preventDefault();
+        var ids = editionCardOptionsForPipeline(pipelineEnabled).map(function (o) {
+          return o.id;
+        });
+        var next = nextRadioId(ids, selected, e.key);
+        if (next && next !== selected) requestEdition(next);
+      });
+      group.appendChild(btn);
+    });
+    syncSelection(selected);
+  }
+
+  section.hidden = true;
+  renderOptions();
+  slot.appendChild(section);
+
+  fetchEntry(tripId)
+    .then(function (data) {
+      pipelineEnabled = !!(data && data.portfolioPipelineEnabled === true);
+      if (data && data.edition) {
+        selected = normalizeEdition(data.edition);
+      }
+      section.hidden = !shouldMountEditionType(selected, pipelineEnabled);
+      renderOptions();
+      renderPageCount(data && data.portfolio);
+    })
+    .catch(function () {});
+
+  bindPortfolioJournalExit(root, tripId);
+}
+
+export function bindPortfolioJournalExit(root, tripId) {
+  if (!root || root._onPortfolioToJournal) return;
+  root._onPortfolioToJournal = function () {
+    var copy = editionSwitchConfirm("portfolio", "journal");
+    toolbarConfirm({
+      title: copy.title,
+      body: copy.body,
+      confirmText: copy.confirmText,
+      cancelText: copy.cancelText,
+    }).then(function (ok) {
+      if (!ok) return;
+      showToolbarToast("正在改回游记并重排…", { duration: 3500 });
+      return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/edition", {
+        edition: "journal",
+        confirmed: true,
+      }).then(function (res) {
+        if (res.status === 200 && res.body && res.body.unchanged) {
+          return;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法改回游记",
+            { error: true }
+          );
+          return;
+        }
+        return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast("改回游记失败", { error: true });
+            return;
+          }
+          showToolbarToast("已改回游记并重排页面");
+          reloadPreviewAfterLayout();
+        });
+      });
+    });
+  };
 }
 
 export function maybeShowLayoutVibeImportHint(tripId, openSheetFn) {

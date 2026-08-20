@@ -92,6 +92,9 @@ class LongshotExportResult:
     page_count: int | None = None
     # BE-DFX-20 · job-locked format (png|jpeg); never mixed within one job
     output_format: str = "png"
+    # BE-PFM-13 / 23 · portfolio_pages (compact success index; zip is the other piece)
+    skipped_pages: list[str] = field(default_factory=list)
+    share_zip: Path | None = None
 
     @property
     def paths(self) -> list[Path]:
@@ -1102,6 +1105,8 @@ def export_trip_longshot(
     include_appendix: bool = False,
     cancel_check: CancelCheckFn | None = None,
     cancel_register: CancelRegisterFn | None = None,
+    include_zip: bool = True,
+    include_pages: bool = True,
 ) -> LongshotExportResult:
     """Export longshot. Branch A (wechat_chat) by default; platform → branch B/D."""
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
@@ -1126,6 +1131,22 @@ def export_trip_longshot(
             fmt=fmt,
             progress=progress,
             platform=pid,
+        )
+    if pid == "portfolio_pages":
+        from travelogue.export.portfolio_pages import export_portfolio_bundle
+
+        return export_portfolio_bundle(
+            trip_dir,
+            scale=scale,
+            fmt=fmt,
+            progress=progress,
+            cancel_check=cancel_check,
+            cancel_register=cancel_register,
+            timeout_ms=timeout_ms,
+            host=host,
+            port=port,
+            include_zip=include_zip,
+            include_pages=include_pages,
         )
     if pid in ("xiaohongshu", "wechat_official", "album_spread"):
         from travelogue.export.collage_pack import export_collage_pack

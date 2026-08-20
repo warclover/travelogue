@@ -3963,8 +3963,11 @@
           "type": "string"
         },
         "patternId": {
-          "type": "string",
-          "enum": [
+          "description": "Journal SKUs stay on the closed screen-* enum (H8 / AC-ACP-07). Portfolio magazine faces use page-* promoted into LTE and must not enter journal MCS.",
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
             "screen-portrait-1",
             "screen-portrait-2",
             "screen-portrait-2-gallery",
@@ -4021,6 +4024,13 @@
             "screen-panorama-1",
             "screen-tall-1",
             "screen-breath-pause"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^page-[a-z0-9]+(-[a-z0-9]+)*$",
+              "description": "PFM promoted page-* face. Not a journal mosaic candidate."
+            }
           ]
         },
         "tone": {
@@ -4334,6 +4344,10 @@
         "groupId": {
           "type": "string",
           "description": "ADR-020 · collage / sequence group id (default = screenId)"
+        },
+        "shotGroupId": {
+          "type": "string",
+          "description": "PFM · shot group this magazine page was filled from (AC-PFM-09). Journal screens omit."
         },
         "preserveGroup": {
           "type": "boolean",

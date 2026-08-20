@@ -358,9 +358,8 @@ def build_entry(
         ),
         "layoutVibe": _layout_vibe_entry(trip),
         "layoutVibeOptions": _layout_vibe_options(),
-        "layoutVibeVisible": _edition_entry(trip) != "portfolio",
-        "edition": _edition_entry(trip),
-        "portfolio": _portfolio_entry(trip),
+        **edition_chrome(trip),
+        "portfolioPipelineEnabled": _portfolio_pipeline_enabled(),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
         "appendixOutlierCount": len(
             (curation.get("excludedTimeOutlierAssetIds") or [])
@@ -434,6 +433,45 @@ def _edition_entry(trip: dict) -> str:
     return resolve_edition(trip)
 
 
+def _overflow_line(portfolio: dict[str, Any] | None) -> str:
+    if not isinstance(portfolio, dict):
+        return ""
+    try:
+        placed = int(portfolio.get("photosPlaced"))
+        kept = int(portfolio.get("photosKept"))
+    except (TypeError, ValueError):
+        return ""
+    if placed < 0 or kept <= 0 or placed >= kept:
+        return ""
+    return f"本册收录 {placed} / {kept} 张"
+
+
+def edition_chrome(trip: dict) -> dict[str, Any]:
+    """List + preview share this chrome: CTA, overflow, LVP visibility."""
+    edition = _edition_entry(trip)
+    portfolio = _portfolio_entry(trip)
+    overflow = _overflow_line(portfolio)
+    if edition == "portfolio":
+        dock = {"short": "导出作品集", "aria": "导出作品集"}
+    else:
+        dock = {"short": "长图", "aria": "导出长图"}
+    return {
+        "edition": edition,
+        "layoutVibeVisible": edition != "portfolio",
+        "dockCta": dock,
+        "overflowLine": overflow or None,
+        "overflowCta": "改用游记（全收）" if overflow else None,
+        "portfolio": portfolio,
+    }
+
+
+def _portfolio_pipeline_enabled() -> bool:
+    from travelogue.config.edition import is_portfolio_pipeline_enabled
+    from travelogue.config.runtime import get_config
+
+    return is_portfolio_pipeline_enabled(get_config())
+
+
 def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
     from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
 
@@ -446,10 +484,16 @@ def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return {"overflow": None, "photosPlaced": None, "photosKept": None}
     overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
+    match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
+    from travelogue.layout_engine.editorial_series.match import PAGE_COUNT_CHIPS
+
     return {
         "seriesId": raw.get("seriesId"),
         "pageCount": raw.get("pageCount"),
         "pageCountSource": raw.get("pageCountSource") or "auto",
+        "pageCountRequested": match.get("pageCountRequested"),
+        "pageCountHint": match.get("pageCountHint"),
+        "pageCountChips": list(PAGE_COUNT_CHIPS),
         "photosPlaced": raw.get("photosPlaced"),
         "photosKept": raw.get("photosKept"),
         "overflow": overflow,

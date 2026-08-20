@@ -765,6 +765,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "Date.now() - openedAt < GHOST_CLICK_MS" in modal_js
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
+    assert "改为游记重排" in menu
     assert "保存长图" in menu
     assert "打开长图文件夹" in menu
     assert "openShelfLongshotFolder" in menu
