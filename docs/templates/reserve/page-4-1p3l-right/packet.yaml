@@ -9,7 +9,7 @@ displayName: 左三横右竖
 sketchName: 三横一竖
 familyId: port-3land
 canonical: page-4-1p3l-right
-related: [page-4-1p3l-left]
+related: [page-4-1p3l-left, page-4-1p3l-wide-right]
 seeAlso: [page-3-2l1p-right, page-4-grid-land, page-3-land]
 replaces: null
 aliases: []
@@ -53,7 +53,7 @@ admit:
 themes: [portrait, landscape, architecture, sequence]
 usage:
   whenToUse: 一张竖图为主（靠右），三张横图辅（左上两张小、左下一张宽）
-  whenNotToUse: 四张都是横 → 用 page-4-grid-land；竖图更适合靠左 → 用 page-4-1p3l-left
+  whenNotToUse: 四张都是横 → 用 page-4-grid-land；竖图更适合靠左 → 用 page-4-1p3l-left；上宽横下两小 → 用 page-4-1p3l-wide-right
 
 fitPolicy: relative-to-slot
 

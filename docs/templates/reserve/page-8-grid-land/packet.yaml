@@ -10,7 +10,7 @@ sketchName: 横版八宫格
 familyId: land-grid
 canonical: page-8-grid-land
 related: [page-4-grid-land, page-6-grid-land]
-seeAlso: [page-4-port, page-9-grid-land-wide]
+seeAlso: [page-8-grid-port, page-4-port, page-9-grid-land-wide]
 replaces: null
 aliases: []
 program: grid
@@ -61,7 +61,7 @@ admit:
 themes: [landscape, food, pet, sequence]
 usage:
   whenToUse: 八张 4:3 横图 4×2 等权并置；适合美食与宠物连拍
-  whenNotToUse: 只要四张 → 用 page-4-grid-land；只要六张 → 用 page-6-grid-land；必须消化竖图
+  whenNotToUse: 只要四张 → 用 page-4-grid-land；只要六张 → 用 page-6-grid-land；八张都是竖 → 用 page-8-grid-port；必须消化竖图
 
 fitPolicy: relative-to-slot
 # 同比例铺满

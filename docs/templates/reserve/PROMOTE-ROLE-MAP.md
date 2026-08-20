@@ -49,20 +49,26 @@
 | `stack-3l-land-hero-wide` | 映射到 `hero-rail-4` |
 | `port-stack-3l` | 请附录 B 增收 |
 | `stack-3l-port` | 请附录 B 增收 |
+| `port-stack-3l-wide` | 请附录 B 增收 |
+| `stack-3l-port-wide` | 请附录 B 增收 |
 | `cross-2p2l` | 映射到 `grid-2p2l` |
 | `port-bookend-2p` | 请附录 B 增收 |
 | `grid-4-land-wide` | 映射到 `grid-4-land` |
 | `row-port-4` | 映射到 `grid-4-port` |
 | `port-grid-4l` | 请附录 B 增收 |
 | `grid-4l-port` | 请附录 B 增收 |
+| `port-center-4l` | 请附录 B 增收 |
 | `port-grid-4p` | 请附录 B 增收 |
 | `grid-4p-port` | 请附录 B 增收 |
+| `port-center-4p` | 请附录 B 增收 |
 | `port-center-stagger` | 请附录 B 增收 |
 | `port-center-stagger-flip` | 请附录 B 增收 |
 | `port-stagger-2col` | 请附录 B 增收 |
 | `stagger-2col-port` | 请附录 B 增收 |
 | `port-stack-2p2l` | 请附录 B 增收 |
 | `stack-2p2l-port` | 请附录 B 增收 |
+| `port-center-stack-2p2l` | 请附录 B 增收 |
+| `row-3p-pair-l-wide` | 请附录 B 增收 |
 | `land-hero-5l-wide` | 请附录 B 增收 |
 | `stack-5l-land-hero-wide` | 请附录 B 增收 |
 | `stack-2l-grid-4p` | 请附录 B 增收 |
@@ -71,7 +77,11 @@
 | `grid-6-land` | 映射到 `grid-dense` |
 | `port-grid-6l` | 请附录 B 增收 |
 | `grid-6l-port` | 请附录 B 增收 |
+| `port-center-6l` | 请附录 B 增收 |
 | `diag-2l6p` | 请附录 B 增收 |
 | `diag-2l6p-flip` | 请附录 B 增收 |
+| `diag-2l4p-wide` | 请附录 B 增收 |
+| `diag-2l4p-wide-flip` | 请附录 B 增收 |
 | `grid-8-land` | 请附录 B 增收 |
+| `grid-8-port` | 请附录 B 增收 |
 | `grid-9-land-wide` | 请附录 B 增收 |

@@ -9,7 +9,7 @@ displayName: 左竖右四横
 sketchName: 1竖4横
 familyId: port-4land
 canonical: page-5-1p4l-left
-related: [page-5-1p4l-right]
+related: [page-5-1p4l-right, page-5-1p4l-center]
 seeAlso: [page-4-1p3l-left, page-4-grid-land, page-3-2l1p-left]
 replaces: screen-mosaic-5-1p4l-portrait-hero
 aliases: []
@@ -57,7 +57,7 @@ admit:
 themes: [portrait, landscape, architecture, sequence]
 usage:
   whenToUse: 一张竖图为主，四张 4:3 横图 2×2 辅
-  whenNotToUse: 只要三横一竖 → 用 page-4-1p3l-left；竖图更适合靠右 → 用 page-5-1p4l-right；四张等权横 → 用 page-4-grid-land
+  whenNotToUse: 只要三横一竖 → 用 page-4-1p3l-left；竖图更适合靠右 → 用 page-5-1p4l-right；居中 → 用 page-5-1p4l-center；四张等权横 → 用 page-4-grid-land
 
 fitPolicy: relative-to-slot
 # 同比例铺满

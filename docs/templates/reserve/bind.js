@@ -194,7 +194,7 @@
     if (!/(?:^|\n)kind:\s*series\b/.test(raw)) return false;
     const id = /(?:^|\n)id:\s*([a-z][a-z0-9-]*)/.exec(raw);
     if (!id) return false;
-    if (expectedId && id[1] !== expectedId) return false;
+    if (expectedId && id[1] !== expectedId && !/faceHint:\s*[a-z0-9-]+/.test(raw)) return false;
     return true;
   }
 
@@ -769,17 +769,48 @@
     return "";
   }
 
+  function copySourceChoices(copyFrom) {
+    const seen = new Set();
+    const rows = [];
+    const add = (id, note) => {
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      rows.push({ id, note: note || "" });
+    };
+    if (copyFrom) add(copyFrom, books.some((b) => b.id === copyFrom) ? "" : "当前未保存");
+    for (const book of books.slice().sort((a, b) => a.id.localeCompare(b.id))) add(book.id, "");
+    for (const id of Object.keys(store.drafts).sort()) {
+      if (!books.some((b) => b.id === id)) add(id, "未保存");
+    }
+    if (!seen.has(GOLD_ID)) add(GOLD_ID, "");
+    return rows;
+  }
+
+  async function resolveCopySource(fromId, { preferLive } = {}) {
+    if (!fromId) return null;
+    if (preferLive && fromId === series.id) return cloneSeries(series);
+    const file = await fetchYaml(fromId);
+    if (file && file.sequence.length) return file;
+    if (fromId === series.id && series.sequence.length) return cloneSeries(series);
+    const draft = store.drafts[fromId] && store.drafts[fromId].series;
+    if (draft && draft.sequence && draft.sequence.length) return cloneSeries(draft);
+    if (fromId === GOLD_ID) return seedSeries();
+    if (file) return file;
+    if (fromId === series.id) return cloneSeries(series);
+    return null;
+  }
+
   function openNewDialog({ copyFrom } = {}) {
     if (modalBusy) return;
     modalBusy = true;
     const pageCount = copyFrom ? series.pageCount : 16;
-    const savedBooks = books.slice().sort((a, b) => a.id.localeCompare(b.id));
-    let srcOpts = savedBooks.map((b) =>
-      `<option value="${escapeHtml(b.id)}"${(copyFrom || GOLD_ID) === b.id ? " selected" : ""}>${escapeHtml(b.id)}</option>`
-    ).join("");
-    if (copyFrom && !savedBooks.some((b) => b.id === copyFrom)) {
-      srcOpts = `<option value="${escapeHtml(copyFrom)}" selected>${escapeHtml(copyFrom)} · 当前未保存</option>${srcOpts}`;
-    }
+    const sources = copySourceChoices(copyFrom);
+    const canCopy = sources.length > 0;
+    const picked = copyFrom || GOLD_ID;
+    const srcOpts = sources.map((row) => {
+      const note = row.note ? ` · ${row.note}` : "";
+      return `<option value="${escapeHtml(row.id)}"${row.id === picked ? " selected" : ""}>${escapeHtml(row.id)}${escapeHtml(note)}</option>`;
+    }).join("");
     const chips = PAGE_CHIPS.map((n) => `<button type="button" class="btn" data-chip="${n}">${n}</button>`).join("");
     showModal(`
       <h2>${copyFrom ? "复制为本" : "新建样例"}</h2>
@@ -791,10 +822,11 @@
       <label>起点</label>
       <select data-start>
         <option value="empty"${copyFrom ? "" : " selected"}>空轨</option>
-        <option value="copy"${copyFrom ? " selected" : ""} ${savedBooks.length || copyFrom ? "" : "disabled"}>从已有本复制</option>
+        <option value="copy"${copyFrom ? " selected" : ""} ${canCopy ? "" : "disabled"}>从已有本复制</option>
       </select>
       <label>复制源</label>
-      <select data-from ${savedBooks.length || copyFrom ? "" : "disabled"}>${srcOpts || "<option value=\"\">柜里还没有已写入的本</option>"}</select>
+      <select data-from>${srcOpts || "<option value=\"\">柜里还没有可复制的本</option>"}</select>
+      <p class="hint" data-from-hint></p>
       <p class="err" data-err hidden></p>
       <div class="actions">
         <button type="button" class="btn" data-act="cancel">取消</button>
@@ -804,8 +836,16 @@
     const idEl = els.modal.querySelector("[data-id]");
     const startEl = els.modal.querySelector("[data-start]");
     const fromEl = els.modal.querySelector("[data-from]");
+    const hintEl = els.modal.querySelector("[data-from-hint]");
     const errEl = els.modal.querySelector("[data-err]");
     if (copyFrom && fromEl) fromEl.value = copyFrom;
+    const syncCopyControls = () => {
+      const copying = startEl.value === "copy";
+      fromEl.disabled = !copying || !canCopy;
+      hintEl.textContent = copying
+        ? "会深拷源本页序；目标页数可另写，源轨可短于目标。"
+        : "空轨不带入页序。要带入请把起点改成「从已有本复制」。";
+    };
     const syncId = () => {
       const n = Math.max(1, Number(pagesEl.value) || 1);
       idEl.value = suggestId(n);
@@ -817,6 +857,12 @@
       };
     });
     pagesEl.addEventListener("change", syncId);
+    startEl.addEventListener("change", syncCopyControls);
+    fromEl.addEventListener("change", () => {
+      if (fromEl.value) startEl.value = "copy";
+      syncCopyControls();
+    });
+    syncCopyControls();
     els.modal.querySelector("[data-act=cancel]").onclick = () => hideModal();
     els.modal.querySelector("[data-act=ok]").onclick = async () => {
       const n = Math.max(1, Math.floor(Number(pagesEl.value) || 0));
@@ -829,20 +875,27 @@
       }
       const start = startEl.value;
       const fromId = start === "copy" ? ((fromEl && fromEl.value) || copyFrom || "") : "";
+      if (start === "copy" && !fromId) {
+        errEl.hidden = false;
+        errEl.textContent = "请选复制源。";
+        return;
+      }
+      const copyErr = await createBook(id, n, fromId, { preferLive: !!copyFrom });
+      if (copyErr) {
+        errEl.hidden = false;
+        errEl.textContent = copyErr;
+        return;
+      }
       hideModal();
-      await createBook(id, n, fromId);
     };
   }
 
-  async function createBook(id, pageCount, fromId) {
+  async function createBook(id, pageCount, fromId, opts) {
     let sequence = [];
     if (fromId) {
-      if (fromId === series.id) {
-        sequence = cloneSeries(series).sequence;
-      } else {
-        const src = await fetchYaml(fromId);
-        sequence = src ? src.sequence : (fromId === GOLD_ID ? seedSeries().sequence : []);
-      }
+      const src = await resolveCopySource(fromId, opts);
+      if (!src) return `读不到复制源 ${fromId}。请确认柜里有这本，或用本夹 serve.cmd 打开。`;
+      sequence = cloneSeries(src).sequence;
     }
     series = makeSeries({
       id,
@@ -857,6 +910,7 @@
     selected = -1;
     persistDraft();
     render();
+    return "";
   }
 
   async function saveSeries() {

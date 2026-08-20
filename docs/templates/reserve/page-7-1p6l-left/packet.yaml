@@ -9,7 +9,7 @@ displayName: 左竖右六横
 sketchName: 1竖6横
 familyId: port-6land
 canonical: page-7-1p6l-left
-related: [page-7-1p6l-right]
+related: [page-7-1p6l-right, page-7-1p6l-center]
 seeAlso: [page-5-1p4l-left, page-4-grid-land-wide]
 replaces: null
 aliases: []
@@ -59,7 +59,7 @@ admit:
 themes: [portrait, landscape, architecture, sequence]
 usage:
   whenToUse: 一张竖图为主，六张 16:9 宽横 2×3 辅
-  whenNotToUse: 只要四横 2×2 → 用 page-5-1p4l-left；竖图更适合靠右 → 用 page-7-1p6l-right
+  whenNotToUse: 只要四横 2×2 → 用 page-5-1p4l-left；竖图更适合靠右 → 用 page-7-1p6l-right；居中 → 用 page-7-1p6l-center
 
 fitPolicy: relative-to-slot
 # 同比例铺满

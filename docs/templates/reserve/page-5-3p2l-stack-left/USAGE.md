@@ -16,8 +16,8 @@
 | **软偏** | 竖槽优先 3:4；横槽优先 16:9 |
 | **裁切** | 相对该槽三条；朝向不符禁入 |
 | **何时用** | 一张大竖为主，右两列同构上竖下横 |
-| **何时不用** | 右栏要交错 → 用 `page-5-3p2l-left`；大竖更适合靠右 |
-| **同族兄弟** | **`page-5-3p2l-stack-right`**（镜像）· `page-5-3p2l-left`（交错） |
+| **何时不用** | 右栏要交错 → 用 `page-5-3p2l-left`；大竖更适合靠右或居中 |
+| **同族兄弟** | **`page-5-3p2l-stack-right`**（镜像）· **`page-5-3p2l-stack-center`**（中竖）· `page-5-3p2l-left`（交错） |
 | **意图顶岗** | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） |
 | **角色 / 纲领** | `port-stack-2p2l` / `mosaic` · 密度 `standard` |
 

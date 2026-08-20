@@ -9,7 +9,7 @@ displayName: 左大竖右上二竖下二横
 sketchName: 3竖2横
 familyId: port-land-stack
 canonical: page-5-3p2l-stack-left
-related: [page-5-3p2l-stack-right, page-5-3p2l-left]
+related: [page-5-3p2l-stack-right, page-5-3p2l-stack-center, page-5-3p2l-left]
 seeAlso: [page-5-1p4l-left, page-3-2l1p-left]
 replaces: screen-mosaic-5-2p3l-portrait-hero-rail
 aliases: []
@@ -57,7 +57,7 @@ admit:
 themes: [portrait, landscape, architecture, sequence]
 usage:
   whenToUse: 一张大竖为主，右两列同构（上小竖、下宽横）
-  whenNotToUse: 右栏要交错 → 用 page-5-3p2l-left；大竖更适合靠右 → 用 page-5-3p2l-stack-right
+  whenNotToUse: 右栏要交错 → 用 page-5-3p2l-left；大竖更适合靠右 → 用 page-5-3p2l-stack-right；居中 → 用 page-5-3p2l-stack-center
 
 fitPolicy: relative-to-slot
 # 同比例铺满

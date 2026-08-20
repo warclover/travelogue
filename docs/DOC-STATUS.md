@@ -199,6 +199,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.0 Conditional Go** · 现场 W0–W3 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
 | [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
 | [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.1.0 Conditional Go** · 游记/作品集分表面 · **BLK-PFM-01～09 待回写 v0.2.0** · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) |
+| [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 未回写 · OQ-02 否决 / OQ-06 改判 |
+| [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 F0–F8 · F0/F2/F4/F7/F8 已签 · **F1/F3/F6 待改后重签** |
 
 ---
 

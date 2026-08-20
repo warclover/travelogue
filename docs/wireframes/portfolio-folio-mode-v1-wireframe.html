@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PFM V1 · 作品集成册双管线线框</title>
+  <style>
+    :root {
+      --bg: #e6e2db;
+      --ink: #14110d;
+      --muted: #5c574f;
+      --accent: #3d6b5a;
+      --gold: #c4a15a;
+      --gold-ink: #1a1408;
+      --paper: #fffdf8;
+      --surface: #f3efe8;
+      --danger: #b42318;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --border: rgba(20, 17, 13, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 40;
+      background: #1c1b1a; color: #eceff1; padding: 14px 20px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 110ch; line-height: 1.45; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #4a4744; background: transparent; color: #eceff1;
+      padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .layout {
+      max-width: 1180px; margin: 0 auto; padding: 22px 16px 80px;
+      display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; }
+    .panel.is-on { display: block; }
+    .anno {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #c45c26;
+      text-transform: uppercase; margin: 0 0 8px;
+    }
+    .lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .row { display: grid; gap: 16px; }
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
+    .phone, .desk {
+      background: var(--paper); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(20,17,13,.08); overflow: hidden;
+    }
+    .phone { max-width: 420px; }
+    .chrome {
+      background: #2a3d36; color: #e8f5f0; padding: 8px 12px; font-size: 11px;
+      display: flex; justify-content: space-between;
+    }
+    .body { padding: 14px 16px 18px; }
+    .seg {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 14px;
+    }
+    .seg b {
+      display: block; text-align: center; padding: 10px 8px; border-radius: 10px;
+      border: 2px solid transparent; background: var(--surface); font-size: 13px;
+    }
+    .seg .on { border-color: var(--accent); background: #fff; }
+    .card {
+      border: 2px solid transparent; border-radius: 12px; padding: 11px 12px;
+      background: var(--surface); margin-bottom: 8px; font-size: 13px;
+    }
+    .card.on { border-color: var(--accent); background: #fff; }
+    .card strong { display: block; font-size: 14px; }
+    .card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .cta {
+      width: 100%; border: 0; border-radius: 10px; padding: 12px; font: inherit;
+      font-weight: 700; background: var(--surface); color: var(--ink);
+    }
+    .cta.primary { background: #f5f0e8; }
+    .cta.gold { background: var(--gold); color: var(--gold-ink); }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.45; }
+    .dock {
+      display: flex; gap: 8px; justify-content: center; padding: 10px;
+      background: rgba(0,0,0,.35);
+    }
+    .dock i {
+      display: inline-block; padding: 8px 12px; border-radius: 10px;
+      background: rgba(255,255,255,.12); color: #e8f5f0; font-size: 12px; font-style: normal;
+    }
+    .dock .main { background: var(--gold); color: var(--gold-ink); font-weight: 700; }
+    .spread {
+      min-height: 220px;
+      background:
+        linear-gradient(180deg, #1e2a28 0%, #18221f 100%);
+      color: #d7c7a3; display: grid; place-items: center; font-size: 13px; letter-spacing: .08em;
+    }
+    .modal-wrap {
+      background: rgba(0,0,0,.4); padding: 28px 16px; border-radius: 12px;
+    }
+    .modal {
+      background: #fff; border-radius: 14px; padding: 16px; max-width: 340px; margin: 0 auto;
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal p { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .actions button {
+      border: 0; border-radius: 8px; padding: 8px 12px; font: inherit; white-space: nowrap;
+    }
+    .ghost { background: var(--surface); }
+    .ok { background: var(--accent); color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 0 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7; line-height: 1.5;
+    }
+    .callout.warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout.bad { background: #fdecea; border-color: #f5c2c0; }
+    .map {
+      display: grid; grid-template-columns: 140px 1fr 1fr; gap: 8px; font-size: 12px;
+    }
+    .map b { background: #1c1b1a; color: #fff; border-radius: 8px; padding: 10px; }
+    .map div { background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+    .aside {
+      position: sticky; top: 92px; background: var(--paper); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+    }
+    .aside h2 { margin: 0 0 8px; font-size: 13px; }
+    .aside label { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; margin: 8px 0; color: var(--muted); }
+    .pop {
+      background: var(--paper); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px; font-size: 12px; width: min(320px, 100%);
+    }
+    .pop h4 { margin: 0 0 8px; font-size: 13px; }
+    .grp { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .06em; margin: 10px 0 6px; }
+    .opt { padding: 7px 8px; border-radius: 8px; background: var(--surface); margin-bottom: 4px; }
+    .opt.hi { background: #fff; border: 2px solid var(--accent); }
+    .chip { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: #e8f0ec; color: #1a2f28; }
+    .bad-x { color: var(--danger); font-weight: 700; }
+    .sig {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 2px;
+    }
+    .sig.ok { background: #dfeee4; color: #1c4a32; }
+    .sig.re { background: #ffe6c9; color: #7a3f06; }
+    .seg b.off { opacity: .45; }
+    .opt.fold { background: #ece7de; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--paper); }
+    th, td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+    th { background: var(--surface); }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>PFM V1 · 作品集成册双管线线框 <span class="sig re">v1.1 · 八席回写</span></h1>
+    <p>
+      游记 = 快分享（现网，默认）。作品集 = 杂志风卷轴（新管线）。
+      不要和导入「快速/精细」、精修「成册风格」、导出「印刷跨页」混名。
+      本版按 2026-08-20 八席结论改：<strong>F1 撤页数芯片</strong> · <strong>F3 主钮改「导出作品集」+ 成品是可翻阅的一本</strong> · <strong>F6 补文字迁移告知</strong> · F5 默认折叠 · F8 加两条红线。
+      内部标识符统一 <code>edition = journal | portfolio</code>（<code>folio</code> / <code>surface</code> 现网已占，禁用）。
+      合同：<code>docs/PRD-PORTFOLIO-FOLIO-MODE-V1.md</code> v0.2.0 ·
+      纪要：<code>docs/acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md</code>
+    </p>
+    <div class="tabs" id="tabs"></div>
+  </header>
+
+  <div class="layout">
+    <main>
+      <section class="panel is-on" data-id="f0">
+        <p class="anno">F0 · 地图 · 必须先同意隔离 <span class="sig ok">已签</span></p>
+        <p class="lead">上游共用，装配分叉，导出门面按成册身份切换。印刷画册继续是第三张纸，不走 <code>page-*</code>。</p>
+        <div class="callout">共用：导入、精选、聚类、分镜。分叉：页面装配。禁止：一条管线又快又精。</div>
+        <div class="callout warn">
+          <strong>八席回写：</strong>身份只由 <code>studio.edition</code> 承担，<strong><code>layoutEngine</code> 两边都仍是 <code>screens</code></strong>——作品集产出的是同构 <code>screens[]</code>，不新增第三个引擎值（现网 <code>services/layout.py</code> 白名单与一串护栏不动）。
+        </div>
+        <div class="map" style="margin-bottom:16px">
+          <b>上游</b>
+          <div>选夹 → 精选 → 聚类 → 分镜</div>
+          <div>同一批 kept 照片</div>
+          <b>游记</b>
+          <div>现网拼图 <code>screen-*</code></div>
+          <div>主导出：长图 · 六平台</div>
+          <b>作品集</b>
+          <div>成册系列 + <code>page-*</code>（引擎仍 <code>screens</code>）</div>
+          <div>主导出：这一本 zip + 页图序列</div>
+          <b>印刷</b>
+          <div>换种分享里的「印刷跨页」</div>
+          <div>现网 3:4 两卡 · 不改几何</div>
+        </div>
+        <table>
+          <tr><th>轴</th><th>问什么</th><th>控件</th></tr>
+          <tr><td>成册身份</td><td>游记还是作品集？</td><td>本主题新增</td></tr>
+          <tr><td>导入深度</td><td>填不填细节？</td><td>快速 / 精细 · 原样保留</td></tr>
+          <tr><td>游记气质</td><td>拼图稳还是贴比例？</td><td>LVP 两卡 · 只在游记</td></tr>
+          <tr><td>发行</td><td>这张图发哪？</td><td>六平台 · 作品集主路径不走这里</td></tr>
+          <tr><td>页数</td><td>这本几页？</td><td><strong>只在精修</strong> · 导入不问（OQ-02 否决）</td></tr>
+        </table>
+      </section>
+
+      <section class="panel" data-id="f1">
+        <p class="anno">F1 · 导入 Step 2 · 主入口 <span class="sig re">已改 · 待重签</span></p>
+        <p class="lead">身份分段在快速/精细<strong>上面</strong>。默认游记。不要做成第三张大卡。</p>
+        <div class="callout warn">
+          <strong>本版改了三处：</strong>① 撤掉原 F1c 的页数芯片——用户此刻还没看过照片，让他猜 8 页还是 24 页没有意义，页数移到精修（F6）；
+          ② 作品集副文改成回答「做出来是什么」；③ 补照片过少时的置灰态（F1c）。
+        </div>
+        <div class="row row-2">
+          <div>
+            <p class="anno">F1a · 默认：游记 + 快速</p>
+            <div class="phone">
+              <div class="chrome"><span>新建游记</span><span>2 / 2</span></div>
+              <div class="body">
+                <div class="hint" style="margin-top:0">已选 128 张 · 可更换</div>
+                <p style="font-size:13px;font-weight:650;margin:12px 0 0">这次做</p>
+                <div class="seg">
+                  <b class="on">游记<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">推荐 · 发群</span></b>
+                  <b>作品集<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">杂志页</span></b>
+                </div>
+                <div class="card on">
+                  <strong>快速分享（推荐）</strong>
+                  <span>生成微信长图，即刻分享</span>
+                </div>
+                <div class="card">
+                  <strong>精细制作</strong>
+                  <span>名称、地点、密度再填一层</span>
+                </div>
+                <button class="cta primary" type="button">开始制作 →</button>
+                <p class="hint">约 3–8 分钟 · 可关闭此窗</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="anno">F1b · 作品集 + 快速（仍两击）</p>
+            <div class="phone">
+              <div class="chrome"><span>新建作品集</span><span>2 / 2</span></div>
+              <div class="body">
+                <div class="hint" style="margin-top:0">已选 128 张 · 可更换</div>
+                <p style="font-size:13px;font-weight:650;margin:12px 0 0">这次做</p>
+                <div class="seg">
+                  <b>游记<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">推荐 · 发群</span></b>
+                  <b class="on">作品集<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">杂志页</span></b>
+                </div>
+                <div class="card on">
+                  <strong>快速分享（推荐）</strong>
+                  <span>按杂志页编排，做完能点开翻。发群请选游记。</span>
+                </div>
+                <div class="card">
+                  <strong>精细制作</strong>
+                  <span>名称、地点、密度再填一层（与游记同款）</span>
+                </div>
+                <button class="cta gold" type="button">开始制作作品集 →</button>
+                <p class="hint">精选与分组与游记相同，只是页面装配不同 · 页数在做完后可改</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row row-2" style="margin-top:16px">
+          <div>
+            <p class="anno">F1c · 照片过少 · 置灰但可继续</p>
+            <div class="phone">
+              <div class="chrome"><span>新建</span><span>2 / 2</span></div>
+              <div class="body">
+                <div class="hint" style="margin-top:0">已选 14 张 · 可更换</div>
+                <p style="font-size:13px;font-weight:650;margin:12px 0 0">这次做</p>
+                <div class="seg">
+                  <b class="on">游记<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">推荐 · 发群</span></b>
+                  <b class="off">作品集<span style="display:block;font-weight:500;font-size:11px;color:var(--muted)">照片较少</span></b>
+                </div>
+                <p class="hint" style="margin-top:0">点「作品集」会先提示一次：<em>照片较少，作品集更适合 30 张以上。</em>确认后仍可继续。</p>
+                <div class="card on">
+                  <strong>快速分享（推荐）</strong>
+                  <span>生成微信长图，即刻分享</span>
+                </div>
+                <button class="cta primary" type="button">开始制作 →</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="callout">
+              <strong>阈值不写死。</strong>下限由系列库最小 <code>photo_span</code> 派生（配置只做覆盖）。
+              草案里的「12 张弱提示」改判为<strong>置灰 + 知情继续</strong>：12 张排 8 页会出空翻，一句灰字挡不住。
+            </div>
+            <div class="callout bad">
+              <span class="bad-x">已撤销</span> 原 F1c「精细 × 作品集多一排页数芯片」。导入阶段不得出现任何页数控件。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f2">
+        <p class="anno">F2 · 首页次链 · 主 CTA 不许被抢 <span class="sig ok">已签（绑 W2）</span></p>
+        <p class="lead">「开始制作」仍是做游记。作品集是弱链，父开关或首访可藏。</p>
+        <div class="desk">
+          <div class="chrome"><span>Travelogue Studio</span><span>版式</span></div>
+          <div class="body" style="padding:28px 32px">
+            <p style="margin:0 0 6px;font-size:13px;color:var(--muted)">这一趟做完</p>
+            <p style="margin:0 0 16px;font-size:22px;font-weight:650">把相册做成可发的游记</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <button class="cta primary" type="button" style="width:auto;padding:12px 22px">开始制作</button>
+              <a href="#" style="color:var(--accent);font-size:13px">做一本作品集</a>
+            </div>
+            <p class="hint">次链打开同一向导，并预选「作品集」。<strong>默认不露</strong>：真 <code>page-*</code> 入库（W2）前 <code>homepage_entry=false</code>。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f3">
+        <p class="anno">F3 · 作品集预览 · 导出门面 <span class="sig re">已改 · 待重签</span></p>
+        <p class="lead">主钮改叫「导出作品集」，一次动作出两件：可翻阅的一本 + 页图序列。成功面必须给一个用户会照做的动作。</p>
+        <div class="callout warn">
+          <strong>为什么改：</strong>典型用户席原话——「给我 16 张 16:9 的 PNG，我拿它干嘛？发微信是竖的，发小红书是方的，一张张发朋友会疯。」
+          六平台画布确实没有 16:9 出口。所以主产物补上<strong>可点开翻的这一本</strong>（复用现网分享包 <code>index.html + assets</code>），页图退为并列的第二件。
+        </div>
+        <div class="row row-2">
+          <div>
+            <p class="anno">F3a · Dock</p>
+            <div class="desk">
+              <div class="spread">作品集 · 16:9 杂志页 · 第 04 / 16 页</div>
+              <div class="dock">
+                <i>返回</i><i>放映</i><i>精修</i><i class="main">导出作品集</i>
+              </div>
+              <p class="hint" style="padding:8px 12px 10px;margin:0">预览左上角常驻溢出角标（见 F3c），没有溢出时不出现。</p>
+            </div>
+          </div>
+          <div>
+            <p class="anno">F3b · 成功面</p>
+            <div class="modal-wrap">
+              <div class="modal">
+                <h3>作品集已导出 · 共 16 页</h3>
+                <p>
+                  这一本可以直接点开翻；页图是 16 张 16:9 图片，可以交给设计或印刷缩放。
+                </p>
+                <p class="hint" style="margin:0 0 12px">本册收录 96 / 180 张 · <a href="#" style="color:var(--accent)">改用游记（全收）</a></p>
+                <div class="actions">
+                  <button type="button" class="ghost">打开文件夹</button>
+                  <button type="button" class="ghost">发送压缩包</button>
+                  <button type="button" class="ok">打开这一本</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:14px">
+          <strong>F3c 溢出明示。</strong>游记是全收，作品集受系列 <code>photo_span</code> 上限约束。装不下时先自动升档，升到 32 页仍装不下才收录上限，
+          并在<strong>预览角标 + 成功面</strong>写明「本册收录 96 / 180 张」，旁边给「改用游记（全收）」。只写日志视为验收失败。
+        </div>
+        <div class="callout bad">
+          <span class="bad-x">禁止</span> 成功面只写「已保存」「打开文件夹」。也禁止用「已智能优选 / 已为你精简」遮盖丢照片。
+        </div>
+      </section>
+
+      <section class="panel" data-id="f4">
+        <p class="anno">F4 · 对照 · 游记 Dock 零变化 <span class="sig ok">已签</span></p>
+        <p class="lead">开作品集旗之后，游记 trip 仍是这颗金钮。回归用这一帧。</p>
+        <div class="desk">
+          <div class="spread" style="letter-spacing:0;color:#c5d0cc">游记 · 现网卷轴 · 长图分享</div>
+          <div class="dock">
+            <i>返回</i><i>放映</i><i>精修</i><i class="main">导出长图</i>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f5">
+        <p class="anno">F5 · 作品集导出 ▾ · 换种分享 <span class="sig ok">已签（有条件）</span></p>
+        <p class="lead">六平台可以有，但必须降级分组 + <strong>默认折叠</strong>。禁止与主产物平铺成七个出口。</p>
+        <div class="row row-2">
+          <div>
+            <div class="desk">
+              <div class="spread">作品集预览</div>
+              <div class="dock">
+                <i>精修</i><i class="main">导出作品集 ▾</i>
+              </div>
+              <div class="body" style="display:flex;justify-content:flex-end">
+                <div class="pop">
+                  <h4>导出</h4>
+                  <div class="grp">这本作品集</div>
+                  <div class="opt hi">这一本 · 可点开翻的压缩包</div>
+                  <div class="opt hi">页图序列 · 16 张 16:9</div>
+                  <div class="grp">默认折叠</div>
+                  <div class="opt fold">▸ 用同一批照片出社交图（6）</div>
+                  <p class="hint">展开后才是：微信群长图 · 朋友圈 · 小红书 · 公众号 · 单张海报 · 印刷跨页。</p>
+                </div>
+              </div>
+            </div>
+            <p class="hint">主钮点一下＝两件主产物一起出；▾ 里可以单独只要其中一件。</p>
+          </div>
+          <div>
+            <p class="anno">F5b · 展开后</p>
+            <div class="pop">
+              <div class="grp">换种分享 · 现网拼贴</div>
+              <div class="opt">微信群长图</div>
+              <div class="opt">朋友圈</div>
+              <div class="opt">小红书</div>
+              <div class="opt">公众号</div>
+              <div class="opt">单张海报</div>
+              <div class="opt">
+                印刷跨页（现网画册）
+                <span style="display:block;color:var(--muted);font-size:11px;margin-top:2px">给印刷公司的 3:4 跨页，不是这一本</span>
+              </div>
+              <p class="hint">社交图仍按现网拼贴，不是这本作品集的页。</p>
+            </div>
+            <div class="callout" style="margin-top:12px">
+              <strong>OQ-03 已裁决：</strong>保留六平台，但默认折叠、分组标题写人话。加席反馈「作品集」和「印刷跨页」同屏易混，所以印刷项必须带这行副文。
+            </div>
+            <div class="callout bad">
+              <span class="bad-x">禁止</span> 在六平台圆点旁加第七个「作品集」。身份不是平台。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f6">
+        <p class="anno">F6 · 精修切换 · 成册类型 ≠ 成册风格 <span class="sig re">已改 · 待重签</span></p>
+        <p class="lead">切换只重排页面，不重跑精选。LVP 两卡在作品集上卸载。页数芯片<strong>只在这里</strong>。</p>
+        <div class="callout warn">
+          <strong>本版补了一句实话：</strong>确认模态原来只说「精选和分组会保留」，没说文字。用户改过标题和图注再切身份，槽位在新版式里根本不存在，
+          不告知就会丢字。后端按 assetId / 章序尽力回填，回填不上的落草稿，不直接删。
+        </div>
+        <div class="row row-2">
+          <div>
+            <p class="anno">F6a · 游记 · 仍有 LVP</p>
+            <div class="phone">
+              <div class="chrome"><span>精修 · 这本</span><span>×</span></div>
+              <div class="body">
+                <p style="font-weight:650;margin:0 0 8px">成册类型</p>
+                <div class="card on"><strong>游记</strong><span>卷轴 + 长图，适合发群</span></div>
+                <div class="card"><strong>作品集</strong><span>杂志页 + 可翻阅的一本</span></div>
+                <p style="font-weight:650;margin:16px 0 8px">成册风格</p>
+                <div class="card on"><strong>杂志成册（推荐） <span class="chip">LVP</span></strong><span>宽画幅节奏稳</span></div>
+                <div class="card"><strong>更贴照片比例（实验）</strong><span>页数可能变</span></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="anno">F6b · 改成作品集 · 确认</p>
+            <div class="phone">
+              <div class="chrome"><span>精修 · 这本</span><span>×</span></div>
+              <div class="body">
+                <p style="font-weight:650;margin:0 0 8px">成册类型</p>
+                <div class="card"><strong>游记</strong><span>卷轴 + 长图</span></div>
+                <div class="card on"><strong>作品集</strong><span>杂志页 + 可翻阅的一本</span></div>
+                <p style="font-weight:650;margin:16px 0 8px">页数 <span class="chip">唯一入口</span></p>
+                <div class="hint" style="margin:0 0 8px">自动 · 按照片量选档（导入时不问）</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <span class="chip">自动</span>
+                  <span class="chip">8</span><span class="chip">12</span>
+                  <span class="chip">16</span><span class="chip">20</span>
+                  <span class="chip">24</span><span class="chip">28</span>
+                  <span class="chip">32</span>
+                </div>
+                <p class="hint">此处不出现「成册风格 / MSA」。手动钉小页数导致收录不全时，就地提示且不再自动升档。</p>
+                <div class="modal-wrap" style="margin-top:14px">
+                  <div class="modal">
+                    <h3>改成「作品集」？</h3>
+                    <p>
+                      精选和分组会保留，页面将按另一套版式重排。<br />
+                      <strong>你手动改过的文字可能无法全部保留。</strong><br />
+                      页数可能变少，照片可能收录不全；发群请用导出里的「换种分享」。
+                    </p>
+                    <div class="actions">
+                      <button type="button" class="ghost">取消</button>
+                      <button type="button" class="ok">重排页面</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f7">
+        <p class="anno">F7 · 书架弱标 <span class="sig ok">已签</span></p>
+        <p class="lead">不要新做一种封面。票面一行字即可。</p>
+        <div class="desk">
+          <div class="body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <div class="card on" style="margin:0">
+              <strong>林芝 · 三月</strong>
+              <span>作品集 · 16 页</span>
+            </div>
+            <div class="card" style="margin:0">
+              <strong>东澳岛</strong>
+              <span>昨天 · 可导出长图</span>
+            </div>
+            <div class="card" style="margin:0">
+              <strong>毕业旅行</strong>
+              <span>游记</span>
+            </div>
+          </div>
+          <p class="hint" style="padding:0 4px 8px">⋯ 菜单可「改为游记重排」，走与 F6 相同确认。</p>
+        </div>
+      </section>
+
+      <section class="panel" data-id="f8">
+        <p class="anno">F8 · 禁止形态 · 红线 <span class="sig ok">已签 · 加两条</span></p>
+        <div class="callout bad">
+          下列任一出现，本主题不算过门。请在侧栏勾「同意红线」。
+        </div>
+        <table>
+          <tr><th>禁止</th><th>为什么</th><th>正确</th></tr>
+          <tr><td>第三张大卡与快速/精细并列「作品集」</td><td>用户以为那是更细的游记</td><td>身份分段 + 原两卡</td></tr>
+          <tr><td>六平台旁第七个圆点</td><td>身份不是发行平台</td><td>作品集主路径 = 这一本 + 页图</td></tr>
+          <tr><td>作品集主钮仍写「导出长图」</td><td>会把密页塞进微信竖条</td><td>导出作品集</td></tr>
+          <tr><td>作品集精修仍出 LVP「杂志成册」</td><td>两套杂志撞名</td><td>只出成册类型 + 页数</td></tr>
+          <tr><td>对外说「画册已经按页用 page-*」</td><td>印刷跨页还是 3:4 卡</td><td>作品集 / 印刷跨页 分说</td></tr>
+          <tr><td>默认身份改成作品集</td><td>破坏两击发群</td><td>默认游记</td></tr>
+          <tr><td>首页主 CTA 改成做作品集</td><td>抢 80% 路径</td><td>弱链即可</td></tr>
+          <tr>
+            <td><strong>新增 ·</strong> 正式系列没到位就对外称「作品集」</td>
+            <td>顶岗排出来的其实还是游记版式，用户会以为作品集就长这样</td>
+            <td>W1 内部只说「版式试验」；次链保持不露</td>
+          </tr>
+          <tr>
+            <td><strong>新增 ·</strong> 照片装不下时静默丢弃</td>
+            <td>游记是全收，用户默认「我的精选都在里面」，第一次被打破必须说</td>
+            <td>先升档；仍装不下则明示「本册收录 N / M 张」+ 改用游记出口</td>
+          </tr>
+          <tr>
+            <td><strong>新增 ·</strong> 导入阶段问页数</td>
+            <td>用户还没看过照片，猜不出 8 页还是 24 页</td>
+            <td>导入一律自动；页数只在精修（F6）</td>
+          </tr>
+        </table>
+        <div class="callout warn" style="margin-top:14px">
+          <strong>工程侧同级红线（不上界面但同样挡门）：</strong>不得新增第三个 <code>layoutEngine</code> 值；不得用 <code>folio</code> / <code>surface</code> 当本主题标识符；
+          作品集的 <code>items[]</code> 必须与 <code>screens[]</code> 实收集合同源。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h2>签核清单 · v1.1</h2>
+      <p class="hint" style="margin:0 0 8px">八席已签 F0/F2/F4/F5/F7/F8。<strong>本轮只需重签 F1、F3、F6</strong>，过后即可 Kickoff W3。</p>
+      <label><input type="checkbox" checked disabled /> F0 隔离地图 · 已签</label>
+      <label><input type="checkbox" /> <strong>F1 导入分段（撤页数芯片 + 置灰态）</strong></label>
+      <label><input type="checkbox" checked disabled /> F2 首页次链 · 已签（绑 W2）</label>
+      <label><input type="checkbox" /> <strong>F3 导出作品集 + 成功面 + 溢出明示</strong></label>
+      <label><input type="checkbox" checked disabled /> F4 游记零变化 · 已签</label>
+      <label><input type="checkbox" checked disabled /> F5 换种分享（默认折叠）· 已签</label>
+      <label><input type="checkbox" /> <strong>F6 成册类型 + 文字迁移告知</strong></label>
+      <label><input type="checkbox" checked disabled /> F7 书架弱标 · 已签</label>
+      <label><input type="checkbox" checked disabled /> F8 红线（+3 条）· 已签</label>
+      <hr style="border:0;border-top:1px solid var(--border);margin:12px 0" />
+      <h2>开放问题 · 已裁决</h2>
+      <p class="hint" style="margin:0">
+        次链<strong>要</strong>但绑 W2 ·
+        导入页数芯片<strong>否决</strong> ·
+        六平台<strong>保留但默认折叠</strong> ·
+        <strong>允许</strong>改回游记（绑文案迁移）·
+        页图<strong>含</strong>封面封底 ·
+        照片过少<strong>改判</strong>为置灰 + 知情继续。<br />
+        新答三问：溢出<strong>升档兜底 + 明示</strong> · 成品是<strong>这一本 + 页图</strong> · V1 正文<strong>无文字</strong>。
+        详见 PRD §15.2。
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    const ids = [
+      ["f0", "F0 地图"],
+        ["f1", "F1 导入 ✎"],
+      ["f2", "F2 首页"],
+      ["f3", "F3 导出作品集 ✎"],
+      ["f4", "F4 游记对照"],
+      ["f5", "F5 换种分享"],
+        ["f6", "F6 精修 ✎"],
+      ["f7", "F7 书架"],
+      ["f8", "F8 红线"]
+    ];
+    const tabs = document.getElementById("tabs");
+    const panels = [...document.querySelectorAll(".panel")];
+    ids.forEach(([id, label], i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      if (i === 0) b.className = "is-on";
+      b.addEventListener("click", () => {
+        tabs.querySelectorAll("button").forEach((x) => x.classList.remove("is-on"));
+        b.classList.add("is-on");
+        panels.forEach((p) => p.classList.toggle("is-on", p.dataset.id === id));
+        history.replaceState(null, "", "#" + id);
+      });
+      tabs.appendChild(b);
+    });
+    const hash = (location.hash || "#f0").slice(1);
+    const start = tabs.querySelectorAll("button")[Math.max(0, ids.findIndex((x) => x[0] === hash))];
+    if (start) start.click();
+  </script>
+</body>
+</html>

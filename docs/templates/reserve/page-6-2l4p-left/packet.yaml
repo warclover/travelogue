@@ -9,7 +9,7 @@ displayName: 左两横右四竖
 sketchName: 4竖2横
 familyId: mix-2l4p
 canonical: page-6-2l4p-left
-related: [page-6-2l4p-right]
+related: [page-6-2l4p-right, page-6-2l4p-wide]
 seeAlso: [page-8-2l6p, page-5-1p4p-left, page-3-2l1p-left]
 replaces: null
 aliases: []
@@ -58,7 +58,7 @@ admit:
 themes: [portrait, landscape, sequence, food]
 usage:
   whenToUse: 两张横图叠在左侧，四张竖图 2×2 辅在右侧
-  whenNotToUse: 只要一横两竖 → 用 page-3-2l1p-left；六张都是竖；横图更适合靠右 → 用 page-6-2l4p-right
+  whenNotToUse: 只要一横两竖 → 用 page-3-2l1p-left；六张都是竖；横图更适合靠右 → 用 page-6-2l4p-right；对角 16:9 宽横 → 用 page-6-2l4p-wide
 
 fitPolicy: relative-to-slot
 # 同比例铺满

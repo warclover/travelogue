@@ -32,8 +32,10 @@
 | `page-3-2l1p-hero-wide-left` | 左主宽横右上宽横下竖 | `2L1P` | 2L1P | `land-hero-l-wide` | **`page-3-2l1p-hero-wide-right`** · `page-3-2l1p-hero-left` | 无合格现网顶岗 | sketch |
 | `page-3-2l1p-hero-wide-right` | 左上宽横下竖右主宽横 | `1P2L` | 1P2L | `land-hero-r-wide` | **`page-3-2l1p-hero-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-4-grid-land` | 横版四宫 | `4L` | 4L | `grid-4-land` | `page-2-pair-land` · `page-3-land` | `screen-landscape-4`（偏满幅，不是同一张） | sketch |
-| `page-4-1p3l-left` | 左竖右三横 | `1P3L` | 1P3L | `port-stack-3l` | **`page-4-1p3l-right`** | 无合格现网顶岗 | sketch |
-| `page-4-1p3l-right` | 左三横右竖 | `3L1P` | 3L1P | `stack-3l-port` | **`page-4-1p3l-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-4-1p3l-left` | 左竖右三横 | `1P3L` | 1P3L | `port-stack-3l` | **`page-4-1p3l-right`** · `page-4-1p3l-wide-left`（上宽横，不是同一张） | 无合格现网顶岗 | sketch |
+| `page-4-1p3l-right` | 左三横右竖 | `3L1P` | 3L1P | `stack-3l-port` | **`page-4-1p3l-left`**（镜像）· `page-4-1p3l-wide-right`（上宽横，不是同一张） | 无合格现网顶岗 | sketch |
+| `page-4-1p3l-wide-right` | 左上宽横下两小横右竖 | `3L1P` | 1P3L | `stack-3l-port-wide` | **`page-4-1p3l-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-4-1p3l-wide-left` | 左竖右上宽横下两小横 | `1P3L` | 1P3L | `port-stack-3l-wide` | **`page-4-1p3l-wide-right`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-3-2p1s` | 两竖夹一方 | `2P1S` | 2P1S | `row-2p1s` | `page-3-port` · `page-2-1s1p` | 无合格现网顶岗 | sketch |
 | `page-4-2p2l-cross` | 十字两横两竖 | `2P2L` | 2P2L | `cross-2p2l` | `page-4-grid-land` · `page-3-2p1s` | `screen-mosaic-4-2p2l-portrait-bookends`（满高书挡，不是同一张） | sketch |
 | `page-4-grid-land-wide` | 宽版横版四宫 | `4L` | 4L | `grid-4-land-wide` | `page-4-grid-land` · `page-1-hero-land-wide` | `screen-landscape-4`（偏满幅，不是同一张） | sketch |
@@ -47,26 +49,34 @@
 | `page-4-1l3l-wide-right` | 左三小右主宽横 | `3L1L` | 3L1L | `stack-3l-land-hero-wide` | **`page-4-1l3l-wide-left`**（镜像） | `screen-mosaic-4-hero-70-sidebar`（约 70%，不是同一张） | sketch |
 | `page-4-port` | 四竖并排 | `4P` | 4P | `row-port-4` | `page-3-port` · `page-2-pair-port` | `screen-portrait-4`（9:16 四竖 2×2，不是同一张） | sketch |
 | `page-4-2p2p` | 两大夹两小竖 | `2P2P` | 4P | `port-bookend-2p` | `page-5-1p4p-left`（同尺寸）· `page-4-port` | 无合格现网顶岗 | sketch |
-| `page-5-1p4l-left` | 左竖右四横 | `1P4L` | 1P4L | `port-grid-4l` | **`page-5-1p4l-right`** | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
-| `page-5-1p4l-right` | 左四横右竖 | `4L1P` | 4L1P | `grid-4l-port` | **`page-5-1p4l-left`**（镜像） | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
-| `page-5-1p4p-left` | 左大竖右四小竖 | `1P4P` | 5P | `port-grid-4p` | **`page-5-1p4p-right`** · `page-5-1p4l-left`（右四横） | 无合格现网顶岗 | sketch |
-| `page-5-1p4p-right` | 左四小竖右大竖 | `4P1P` | 5P | `grid-4p-port` | **`page-5-1p4p-left`**（镜像） | 无合格现网顶岗 | sketch |
-| `page-7-1p6l-left` | 左竖右六横 | `1P6L` | 1P6L | `port-grid-6l` | **`page-7-1p6l-right`** | 无合格现网顶岗 | sketch |
-| `page-7-1p6l-right` | 左六横右竖 | `6L1P` | 6L1P | `grid-6l-port` | **`page-7-1p6l-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-5-1p4l-left` | 左竖右四横 | `1P4L` | 1P4L | `port-grid-4l` | **`page-5-1p4l-right`** · `page-5-1p4l-center` | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
+| `page-5-1p4l-right` | 左四横右竖 | `4L1P` | 4L1P | `grid-4l-port` | **`page-5-1p4l-left`**（镜像）· `page-5-1p4l-center` | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
+| `page-5-1p4l-center` | 中竖左右各两横 | `2L1P2L` | 1P4L | `port-center-4l` | **`page-5-1p4l-left`** · **`page-5-1p4l-right`** | `screen-mosaic-5-1p4l-portrait-hero`（满高+四轨，不是同一张） | sketch |
+| `page-5-1p4p-left` | 左大竖右四小竖 | `1P4P` | 5P | `port-grid-4p` | **`page-5-1p4p-right`** · `page-5-1p4p-center` · `page-5-1p4l-left`（右四横） | 无合格现网顶岗 | sketch |
+| `page-5-1p4p-right` | 左四小竖右大竖 | `4P1P` | 5P | `grid-4p-port` | **`page-5-1p4p-left`**（镜像）· `page-5-1p4p-center` | 无合格现网顶岗 | sketch |
+| `page-5-1p4p-center` | 中大竖左右各两小竖 | `2P1P2P` | 5P | `port-center-4p` | **`page-5-1p4p-left`** · **`page-5-1p4p-right`** | 无合格现网顶岗 | sketch |
+| `page-7-1p6l-left` | 左竖右六横 | `1P6L` | 1P6L | `port-grid-6l` | **`page-7-1p6l-right`** · `page-7-1p6l-center` | 无合格现网顶岗 | sketch |
+| `page-7-1p6l-right` | 左六横右竖 | `6L1P` | 6L1P | `grid-6l-port` | **`page-7-1p6l-left`**（镜像）· `page-7-1p6l-center` | 无合格现网顶岗 | sketch |
+| `page-7-1p6l-center` | 中竖左右各三横 | `3L1P3L` | 1P6L | `port-center-6l` | **`page-7-1p6l-left`** · **`page-7-1p6l-right`** | 无合格现网顶岗 | sketch |
 | `page-5-3p2l-left` | 左大竖右交错 | `3P2L` | 3P2L | `port-stagger-2col` | **`page-5-3p2l-right`** | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
 | `page-5-3p2l-right` | 左交错右大竖 | `2L3P` | 2L3P | `stagger-2col-port` | **`page-5-3p2l-left`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
-| `page-5-3p2l-stack-left` | 左大竖右上二竖下二横 | `3P2L` | 3P2L | `port-stack-2p2l` | **`page-5-3p2l-stack-right`** · `page-5-3p2l-left` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
-| `page-5-3p2l-stack-right` | 左上二竖下二横右大竖 | `2L3P` | 2L3P | `stack-2p2l-port` | **`page-5-3p2l-stack-left`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
-| `page-5-3p2l-center` | 中大竖左上竖右上横 | `3P2L` | 3P2L | `port-center-stagger` | **`page-5-3p2l-center-flip`** · `page-5-3p2l-left` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-stack-left` | 左大竖右上二竖下二横 | `3P2L` | 3P2L | `port-stack-2p2l` | **`page-5-3p2l-stack-right`** · `page-5-3p2l-stack-center` · `page-5-3p2l-left` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-stack-right` | 左上二竖下二横右大竖 | `2L3P` | 2L3P | `stack-2p2l-port` | **`page-5-3p2l-stack-left`**（镜像）· `page-5-3p2l-stack-center` | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-stack-center` | 中大竖左右上竖下横 | `3P2L` | 3P2L | `port-center-stack-2p2l` | **`page-5-3p2l-stack-left`** · **`page-5-3p2l-stack-right`** | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-center` | 中大竖左上竖右上横 | `3P2L` | 3P2L | `port-center-stagger` | **`page-5-3p2l-center-flip`** · `page-5-3p2l-left` · `page-5-3p2l-stack-center`（同构，不是同一张） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
 | `page-5-3p2l-center-flip` | 中大竖左上横右上竖 | `2L3P` | 2L3P | `port-center-stagger-flip` | **`page-5-3p2l-center`**（镜像） | `screen-mosaic-5-2p3l-portrait-hero-rail`（不是同一张） | sketch |
+| `page-5-3p2l-wide` | 上三竖下两宽横 | `3P2L` | 3P2L | `row-3p-pair-l-wide` | 左右对称，无镜像 · `page-3-port`（单行） | 无合格现网顶岗 | sketch |
 | `page-9-grid-land-wide` | 宽幅九宫格 | `9L` | 9L | `grid-9-land-wide` | `page-4-grid-land-wide` · `page-3-land` | `screen-landscape-9`（文档已 deprecated，边距未必同） | sketch |
 | `page-6-grid-land` | 横版六宫格 | `6L` | 6L | `grid-6-land` | `page-4-grid-land` · `page-3-land` · `page-9-grid-land-wide` | `screen-landscape-6`（3×2 等分，槽比约 1.185，不是同一张） | sketch |
 | `page-8-grid-land` | 横版八宫格 | `8L` | 8L | `grid-8-land` | `page-4-grid-land` · `page-6-grid-land` | 无合格现网顶岗 | sketch |
-| `page-10-grid-port` | 竖版十宫格 | `10P` | 10P | `grid-10-port` | `page-4-port` · `page-5-1p4p-left`（同宽小竖） | 无合格现网顶岗 | sketch |
+| `page-8-grid-port` | 竖版八宫格 | `8P` | 8P | `grid-8-port` | `page-10-grid-port`（5×2）· `page-4-port` | 无合格现网顶岗（`screen-portrait-grid-8` 是 9:16） | sketch |
+| `page-10-grid-port` | 竖版十宫格 | `10P` | 10P | `grid-10-port` | `page-8-grid-port`（4×2）· `page-4-port` · `page-5-1p4p-left`（同宽小竖） | 无合格现网顶岗 | sketch |
 | `page-8-2l6p` | 上横三竖下三竖横 | `2L6P` | 2L6P | `diag-2l6p` | **`page-8-2l6p-flip`**（垂直镜像） | 无合格现网顶岗 | sketch |
 | `page-8-2l6p-flip` | 上三竖横下横三竖 | `2L6P` | 2L6P | `diag-2l6p-flip` | **`page-8-2l6p`**（垂直镜像） | 无合格现网顶岗 | sketch |
-| `page-6-2l4p-left` | 左两横右四竖 | `2L4P` | 2L4P | `stack-2l-grid-4p` | **`page-6-2l4p-right`** | 无合格现网顶岗 | sketch |
+| `page-6-2l4p-left` | 左两横右四竖 | `2L4P` | 2L4P | `stack-2l-grid-4p` | **`page-6-2l4p-right`** · `page-6-2l4p-wide`（16:9 对角，不是同一张） | 无合格现网顶岗 | sketch |
 | `page-6-2l4p-right` | 左四竖右两横 | `4P2L` | 4P2L | `grid-4p-stack-2l` | **`page-6-2l4p-left`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-6-2l4p-wide` | 上两竖一宽横下一宽横两竖 | `2P1L` | 2L4P | `diag-2l4p-wide` | **`page-6-2l4p-wide-flip`**（镜像） | 无合格现网顶岗 | sketch |
+| `page-6-2l4p-wide-flip` | 上一宽横两竖下两竖一宽横 | `1L2P` | 2L4P | `diag-2l4p-wide-flip` | **`page-6-2l4p-wide`**（镜像） | 无合格现网顶岗 | sketch |
 | `page-6-4l2p` | 四横夹两竖 | `4L2P` | 4L2P | `bookend-4l-2p` | `page-6-2l4p-left`（同尺寸） | 无合格现网顶岗 | sketch |
 | `page-6-1l5l-wide-left` | 左主宽横右下五小 | `1L5L` | 1L5L | `land-hero-5l-wide` | **`page-6-1l5l-wide-right`** · `page-4-1l3l-wide-left` | 无合格现网顶岗 | sketch |
 | `page-6-1l5l-wide-right` | 左下五小右主宽横 | `5L1L` | 5L1L | `stack-5l-land-hero-wide` | **`page-6-1l5l-wide-left`**（镜像） | 无合格现网顶岗 | sketch |
@@ -139,3 +149,12 @@
 | 0.48.5 | 2026-08-18 | `page-3-2l1p-hero-*`：辅栏整体平移，列缝 4% → 4%/3；主图尺寸与两列等高不动。 |
 | 0.48.6 | 2026-08-18 | `page-2-1p1l-wide` + 镜像：竖槽整体靠向主图，列缝 5% → 1/60；宽横 60% 不动。 |
 | 0.49.0 | 2026-08-18 | 缝令牌续：均分行/宫格只收缝（`page-3-land` / `page-4-port` / `page-2-pair-square` / `page-2-pair-port` / `page-4-grid-land` 行列令牌 / `page-9-grid-land-wide` 只收列缝）；同构三列族（`page-5-3p2l-*` / `page-5-1p4l-*` / `page-7-1p6l-*` / `page-5-1p4p-*` / `page-6-2l4p-*` / `page-6-4l2p`）只收列缝；`page-3-2l1p-hero-wide-*` 辅栏平移，中缝收成 1/3。拿不准的不动。 |
+| 0.49.1 | 2026-08-18 | `page-8-2l6p` + 垂直镜像 `page-8-2l6p-flip`：每行三道竖缝 1/48 → 1.5%；槽宽不动；余宽归左右纸边。 |
+| 0.50.0 | 2026-08-20 | 收 `page-7-1p6l-center`：竖槽居中，左右各 1×3 宽横；槽尺寸与列缝令牌同 `page-7-1p6l-right`。 |
+| 0.50.1 | 2026-08-20 | 收 `page-5-1p4l-center`：竖槽居中，左右各 1×2 横 4:3；槽尺寸与列缝令牌同 `page-5-1p4l-right`。 |
+| 0.50.2 | 2026-08-20 | 收 `page-5-1p4p-center`（中大竖 + 左右各两小竖；五槽皆竖）+ `page-5-3p2l-stack-center`（中大竖 + 左右同构上竖下横）。槽尺寸与列缝令牌分别同 `page-5-1p4p-right` / `page-5-3p2l-stack-right`。不是交错的 `page-5-3p2l-center`。 |
+| 0.50.3 | 2026-08-20 | 收 `page-8-grid-port`：4×2 竖槽 3:4 各宽 18.75%；列缝/行缝令牌各 1.5%；整组居中。不是 `page-8-grid-land`，也不是现网 9:16 的 `screen-portrait-grid-8`。 |
+| 0.50.4 | 2026-08-20 | 收 `page-6-2l4p-wide`（上两竖 + 右 16:9 宽横顶齐；下左宽横 + 两竖底齐；横宽 40.625%）+ 左右镜像 `page-6-2l4p-wide-flip`。不是 4:3 叠侧的 `page-6-2l4p-left`。 |
+| 0.50.5 | 2026-08-20 | 收 `page-4-1p3l-wide-right`（右竖 8/9 + 左上 16:9 宽 53.75% + 左下两横 4:3 各 25%；列缝 1.5%）+ 左右镜像 `page-4-1p3l-wide-left`。不是 4:3 上二下一的 `page-4-1p3l-*`。 |
+| 0.50.6 | 2026-08-20 | 收 `page-5-3p2l-wide`：上三竖 3:4 各 22%（外沿与下两横齐、中间均分）+ 下两宽横 16:9 各 37.5%（中缝 1.5% 居中）。左右对称。不是大竖三列的 `page-5-3p2l-*`。 |
+| 0.50.7 | 2026-08-20 | 星级重标定：按桌上新表覆盖 `stars.yaml`；未列出仍为 0，镜像不自动继承。 |
