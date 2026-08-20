@@ -137,3 +137,35 @@ def test_ac_pfm_18_portfolio_xhs_plan_does_not_read_pattern_id(
     export_collage_pack(journal, platform="xiaohongshu")
     export_collage_pack(portfolio, platform="xiaohongshu")
     assert captured[0] == captured[1]
+
+
+def test_iso04_portfolio_wechat_does_not_flatten_page_geometry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ISO-04 · 作品集显式微信群走 kept 池，不拍 5 槽以上 page-* flatten。"""
+    from travelogue.export.longshot import export_trip_longshot
+    from travelogue.export.portfolio_wechat import list_portfolio_wechat_photo_paths
+
+    portfolio = _new_trip(tmp_path, "iso04-wechat-pf")
+    _stamp_portfolio_page_screens(portfolio)
+    (portfolio / "index-longshot.html").write_text(
+        '<div class="screen page-6-grid-land" data-pattern-id="page-6-grid-land"></div>',
+        encoding="utf-8",
+    )
+
+    def _forbid_branch_a(*_a, **_k):
+        raise AssertionError("ISO-04 must not capture page-* longshot HTML")
+
+    monkeypatch.setattr(
+        "travelogue.export.longshot._resolve_longshot_url", _forbid_branch_a
+    )
+    paths = list_portfolio_wechat_photo_paths(portfolio)
+    assert paths
+    result = export_trip_longshot(portfolio, platform="wechat_chat")
+    assert result.outputs
+    name = result.outputs[0].path.name
+    assert "长图" in name
+    assert "portfolio" not in name
+    assert result.capture_method == "kept_stack"
+    img = Image.open(result.outputs[0].path)
+    assert img.size[0] == 1080

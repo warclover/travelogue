@@ -1167,6 +1167,20 @@ def export_trip_longshot(
             slide_count=slide_count,
             cfg=cfg,
         )
+    if pid == DEFAULT_PLATFORM:
+        from travelogue.export.portfolio_wechat import (
+            export_portfolio_wechat_from_kept,
+            trip_is_portfolio,
+        )
+
+        if trip_is_portfolio(trip_dir):
+            # ISO-04 · 换种分享微信群走 kept 池，禁止拍 page-* 密页 flatten
+            return export_portfolio_wechat_from_kept(
+                trip_dir,
+                scale=scale,
+                fmt=fmt,
+                progress=progress,
+            )
     if pid != DEFAULT_PLATFORM:
         from travelogue.export.platform_longshot import export_platform_longshot
 

@@ -29,7 +29,10 @@ import {
   maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
-import { portfolioBookUrl, readToolbarEdition } from "../js/portfolio-export-logic.js";
+import {
+  portfolioShareBookUrl,
+  readToolbarEdition,
+} from "../js/portfolio-export-logic.js";
 import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
 import {
   ensureAiSurfaceHydrated,
@@ -611,8 +614,15 @@ export function initToolbarV3(root, tripId) {
     onRevealFolder: function (relPath, tid) {
       revealTripPath(tid || tripId, relPath);
     },
+    onRevealZip: function (relPath, tid) {
+      revealTripPath(tid || tripId, relPath).then(function (result) {
+        if (result && result.status >= 200 && result.status < 300) {
+          showToolbarToast("压缩包已选中，发给对方即可");
+        }
+      });
+    },
     onOpenBook: function (tid) {
-      var url = (root && root._previewUrl) || portfolioBookUrl(null, tid || tripId);
+      var url = portfolioShareBookUrl(tid || tripId);
       if (url) window.open(url, "_blank", "noopener");
     },
     onCopyPath: function (text) {

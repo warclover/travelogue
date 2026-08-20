@@ -62,14 +62,35 @@ export function overflowJournalCta() {
   return "改用游记（全收）";
 }
 
-export function portfolioBookUrl(entry, tripId) {
-  var fromEntry = String(
-    (entry && (entry.scrollShareUrl || entry.previewUrl)) || ""
-  ).trim();
-  if (fromEntry) return fromEntry;
+export var EXPORT_OUTPUT_DIRNAME = "导出文件";
+
+/** 打开这一本：永远打开可翻阅的 index.html，不用预览工具栏地址。 */
+export function portfolioShareBookUrl(tripId) {
   var id = String(tripId || "").trim();
   if (!id) return "";
   return "/" + encodeURIComponent(id) + "/index.html";
+}
+
+export function portfolioBookUrl(entry, tripId) {
+  var fromId = portfolioShareBookUrl(
+    tripId || (entry && (entry.tripId || entry.id))
+  );
+  if (fromId) return fromId;
+  var fromEntry = String(
+    (entry && (entry.scrollShareUrl || entry.previewUrl)) || ""
+  ).trim();
+  if (/\/index\.html$/i.test(fromEntry)) return fromEntry;
+  return "";
+}
+
+/** 成功面次要动作：压缩包选中文件；文件夹打开导出目录。 */
+export function portfolioRevealTargets(result) {
+  result = result || {};
+  var zipRel = String(result.shareZip || "").trim();
+  return {
+    zipRel: zipRel,
+    folderRel: EXPORT_OUTPUT_DIRNAME,
+  };
 }
 
 /**

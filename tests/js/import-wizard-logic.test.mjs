@@ -25,7 +25,7 @@ import {
   portfolioEditionSubline,
   shouldConfirmLowPhoto,
   lowPhotoContinueConfirm,
-  PORTFOLIO_LOW_PHOTO_HINT,
+  lowPhotoHint,
 } from "../../templates/studio/homepage-v2/import-wizard-logic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -137,8 +137,11 @@ test("PFM FE-PFM-02 low photo grey-out + informed continue", () => {
   assert.equal(shouldConfirmLowPhoto(14, 48, "homepage", "journal"), false);
   assert.equal(shouldConfirmLowPhoto(14, 48, "user", "portfolio"), false);
   assert.equal(shouldConfirmLowPhoto(60, 48, "user", "journal"), false);
-  const copy = lowPhotoContinueConfirm();
-  assert.equal(copy.body.includes(PORTFOLIO_LOW_PHOTO_HINT), true);
+  assert.equal(lowPhotoHint(48), "照片较少，作品集更适合 48 张以上");
+  assert.equal(lowPhotoHint(30), "照片较少，作品集更适合 30 张以上");
+  const copy = lowPhotoContinueConfirm(48);
+  assert.match(copy.body, /48 张以上/);
+  assert.doesNotMatch(copy.body, /30 张以上/);
   assert.equal(copy.confirmText, "仍做作品集");
   assert.match(
     readFileSync(

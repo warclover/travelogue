@@ -758,7 +758,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     from travelogue.config.edition import is_portfolio_trip
 
-    if is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM:
+    explicit_platform = str(platform_raw or "").strip() not in ("",)
+    if is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM and not explicit_platform:
         handler._json_response(
             400,
             {
@@ -832,7 +833,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
     server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"} | PORTFOLIO_PLATFORM_IDS
-    if profile.id not in server_pack_platforms and (
+    # ISO-04 · 作品集显式微信群走 kept 池，禁止 client 拍 page-* flatten
+    skip_client_fallback = profile.id in server_pack_platforms or (
+        is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM
+    )
+    if not skip_client_fallback and (
         force_client or not playwright_longshot_available()
     ):
         handler._json_response(

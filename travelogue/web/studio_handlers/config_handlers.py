@@ -83,9 +83,13 @@ def _fill_portfolio_min_kept(body: dict, cfg) -> None:
         min_photo_span_lo,
     )
 
+    catalog = load_official_series()
     pipe["minKept"] = min_kept_for_portfolio(
-        cfg, catalog_min=min_photo_span_lo(load_official_series())
+        cfg, catalog_min=min_photo_span_lo(catalog)
     )
+    from travelogue.layout_engine.editorial_series.match import catalog_page_count_chips
+
+    pipe["pageCountChips"] = catalog_page_count_chips(catalog)
 
 
 def handle_config(handler: StudioHandlerProtocol) -> None:

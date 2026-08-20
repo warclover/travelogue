@@ -9,6 +9,9 @@ import {
   formatOverflowLine,
   isPortfolioEdition,
   portfolioBookUrl,
+  portfolioRevealTargets,
+  portfolioShareBookUrl,
+  EXPORT_OUTPUT_DIRNAME,
   journalDockCta,
   dockCtaFromEntry,
   portfolioDockCta,
@@ -76,11 +79,19 @@ test("portfolioSuccessCopy 主文案与打开这一本", () => {
 });
 
 test("portfolioBookUrl", () => {
+  assert.equal(portfolioShareBookUrl("nara"), "/nara/index.html");
   assert.equal(
-    portfolioBookUrl({ previewUrl: "/nara/index.html" }, "nara"),
+    portfolioBookUrl({ previewUrl: "/nara/preview" }, "nara"),
     "/nara/index.html"
   );
   assert.equal(portfolioBookUrl(null, "nara"), "/nara/index.html");
+  const reveal = portfolioRevealTargets({
+    shareZip: "导出文件/奈良-分享.zip",
+    outputs: ["导出文件/奈良-portfolio-01.png"],
+  });
+  assert.equal(reveal.zipRel, "导出文件/奈良-分享.zip");
+  assert.equal(reveal.folderRel, EXPORT_OUTPUT_DIRNAME);
+  assert.notEqual(reveal.zipRel, reveal.folderRel);
 });
 
 test("albumSpreadCardCopy 游记不动，作品集用印刷副文", () => {

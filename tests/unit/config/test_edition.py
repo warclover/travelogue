@@ -17,12 +17,18 @@ from travelogue.config.edition import (
     apply_import_edition,
     apply_refine_edition,
     apply_refine_page_count,
+    make_studio_edition_mutator,
     read_page_count_intent,
     is_portfolio_pipeline_enabled,
     is_portfolio_trip,
     normalize_edition,
     require_explicit_export_target,
     resolve_edition,
+)
+from travelogue.config.layout_vibe import (
+    VIBE_FIT_PHOTO_EXPERIMENTAL,
+    VIBE_MAGAZINE_DEFAULT,
+    set_trip_layout_vibe,
 )
 
 pytestmark = pytest.mark.unit
@@ -161,3 +167,34 @@ def test_portfolio_pipeline_defaults_off() -> None:
     assert pipe["enabled"] is False
     assert pipe["homepageEntry"] is False
     assert pipe["maxPages"] == 32
+
+
+def test_iso06_lvp_write_does_not_change_edition() -> None:
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "layoutVibe": VIBE_MAGAZINE_DEFAULT,
+            "portfolio": {"seriesId": "magazine-16-standard"},
+        }
+    }
+    set_trip_layout_vibe(trip, VIBE_FIT_PHOTO_EXPERIMENTAL)
+    assert trip["studio"]["edition"] == "portfolio"
+    assert trip["studio"]["layoutVibe"] == VIBE_FIT_PHOTO_EXPERIMENTAL
+    assert trip["studio"]["portfolio"]["seriesId"] == "magazine-16-standard"
+
+
+def test_iso06_edition_switch_does_not_change_layout_vibe() -> None:
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "layoutVibe": VIBE_FIT_PHOTO_EXPERIMENTAL,
+            "portfolio": {"pageCount": 16},
+        }
+    }
+    apply_refine_edition(trip, "journal", _cfg(enabled=True))
+    assert "edition" not in trip["studio"]
+    assert trip["studio"]["layoutVibe"] == VIBE_FIT_PHOTO_EXPERIMENTAL
+    disk = {"studio": {"layoutVibe": VIBE_FIT_PHOTO_EXPERIMENTAL, "other": 1}}
+    make_studio_edition_mutator(trip)(disk)
+    assert disk["studio"]["layoutVibe"] == VIBE_FIT_PHOTO_EXPERIMENTAL
+    assert "edition" not in disk["studio"]

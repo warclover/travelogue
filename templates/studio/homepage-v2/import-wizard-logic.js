@@ -158,7 +158,12 @@ export function isPortfolioLowPhoto(count, minKept) {
 /** 线框 F1c · 作品集卡副文。低照片用短句，完整提示走确认模态。 */
 export var PORTFOLIO_EDITION_SUBLINE = "杂志页";
 export var PORTFOLIO_LOW_PHOTO_SUBLINE = "照片较少";
-export var PORTFOLIO_LOW_PHOTO_HINT = "照片较少，作品集更适合 30 张以上";
+
+export function lowPhotoHint(minKept) {
+  var n = Number(minKept);
+  if (!(n > 0)) n = 12;
+  return "照片较少，作品集更适合 " + n + " 张以上";
+}
 
 export function portfolioEditionSubline(low) {
   return low ? PORTFOLIO_LOW_PHOTO_SUBLINE : PORTFOLIO_EDITION_SUBLINE;
@@ -174,10 +179,10 @@ export function shouldConfirmLowPhoto(count, minKept, source, currentEdition) {
   return isPortfolioLowPhoto(count, minKept);
 }
 
-export function lowPhotoContinueConfirm() {
+export function lowPhotoContinueConfirm(minKept) {
   return {
     title: "仍做作品集？",
-    body: PORTFOLIO_LOW_PHOTO_HINT + "。确认后仍可继续。",
+    body: lowPhotoHint(minKept) + "。确认后仍可继续。",
     confirmText: "仍做作品集",
     cancelText: "取消",
   };

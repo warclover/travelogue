@@ -9,7 +9,10 @@ import { openHelpDrawer } from "./js/help-drawer.js";
 import { trackStudioEvent } from "./js/analytics.js";
 import { isAiSurfaceEnabled } from "./js/ai-surface.js";
 import { DARK_COPY } from "./js/ai-surface-dark-copy.js";
-import { portfolioSuccessCopy } from "./js/portfolio-export-logic.js";
+import {
+  portfolioRevealTargets,
+  portfolioSuccessCopy,
+} from "./js/portfolio-export-logic.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -480,24 +483,25 @@ export function mountPreviewTaskDock(root, hooks) {
         });
         actions.appendChild(openBookBtn);
       }
-      if (result.shareZip && typeof hooks.onRevealFolder === "function") {
+      var revealTargets = portfolioRevealTargets(result);
+      var revealZip = hooks.onRevealZip || hooks.onRevealFolder;
+      if (revealTargets.zipRel && typeof revealZip === "function") {
         var zipBtn = document.createElement("button");
         zipBtn.type = "button";
         zipBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
         zipBtn.textContent = packActions.secondaryZip;
         zipBtn.addEventListener("click", function () {
-          hooks.onRevealFolder(result.shareZip, tripId);
+          revealZip(revealTargets.zipRel, tripId);
         });
         actions.appendChild(zipBtn);
       }
-      var folderRel = (outputs && outputs[0]) || result.shareZip;
-      if (folderRel && typeof hooks.onRevealFolder === "function") {
+      if (typeof hooks.onRevealFolder === "function") {
         var folderBtn = document.createElement("button");
         folderBtn.type = "button";
         folderBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
         folderBtn.textContent = packActions.secondaryFolder;
         folderBtn.addEventListener("click", function () {
-          hooks.onRevealFolder(folderRel, tripId);
+          hooks.onRevealFolder(revealTargets.folderRel, tripId);
         });
         actions.appendChild(folderBtn);
       }

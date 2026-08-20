@@ -475,7 +475,7 @@ function setActiveEdition(edition, source) {
 
 function requestLowPhotoContinue(next) {
   if (_lowPhotoConfirmOpen) return;
-  var copy = lowPhotoContinueConfirm();
+  var copy = lowPhotoContinueConfirm(_pipelineCfg.minKept);
   if (typeof studioModal === "function") {
     _lowPhotoConfirmOpen = true;
     studioModal({

@@ -117,10 +117,18 @@ export function editionCardOptions() {
   ];
 }
 
-export var PAGE_COUNT_CHIPS = [8, 12, 16, 20, 24, 28, 32];
+/** 无目录投影时只出「自动」；数字档必须由现网系列库投影。 */
+export var PAGE_COUNT_CHIPS = [];
 
 export function pageCountChipOptions(chips) {
-  var list = Array.isArray(chips) && chips.length ? chips : PAGE_COUNT_CHIPS;
+  var raw = Array.isArray(chips) ? chips : PAGE_COUNT_CHIPS;
+  var list = raw
+    .map(function (n) {
+      return Number(n);
+    })
+    .filter(function (n) {
+      return n > 0;
+    });
   return [{ id: "auto", label: "自动" }].concat(
     list.map(function (n) {
       return { id: String(n), label: String(n) };

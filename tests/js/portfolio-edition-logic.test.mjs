@@ -53,13 +53,18 @@ test("成册类型两卡不叫成册风格", () => {
   assert.equal(labels.includes("成册风格"), false);
 });
 
-test("页数芯片含自动与 8–32", () => {
-  const opts = pageCountChipOptions();
+test("页数芯片只出目录投影的档，缺省仅自动", () => {
+  const empty = pageCountChipOptions();
+  assert.deepEqual(
+    empty.map((o) => o.id),
+    ["auto"]
+  );
+  const opts = pageCountChipOptions([16]);
   assert.equal(opts[0].id, "auto");
   assert.equal(opts[0].label, "自动");
   assert.deepEqual(
     opts.slice(1).map((o) => o.id),
-    ["8", "12", "16", "20", "24", "28", "32"]
+    ["16"]
   );
   assert.equal(selectedPageCountChip({ pageCountSource: "auto", pageCount: 16 }), "auto");
   assert.equal(

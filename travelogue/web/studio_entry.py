@@ -485,7 +485,8 @@ def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
         return {"overflow": None, "photosPlaced": None, "photosKept": None}
     overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
     match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
-    from travelogue.layout_engine.editorial_series.match import PAGE_COUNT_CHIPS
+    from travelogue.layout_engine.editorial_series.catalog import load_official_series
+    from travelogue.layout_engine.editorial_series.match import catalog_page_count_chips
 
     return {
         "seriesId": raw.get("seriesId"),
@@ -493,7 +494,7 @@ def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
         "pageCountSource": raw.get("pageCountSource") or "auto",
         "pageCountRequested": match.get("pageCountRequested"),
         "pageCountHint": match.get("pageCountHint"),
-        "pageCountChips": list(PAGE_COUNT_CHIPS),
+        "pageCountChips": catalog_page_count_chips(load_official_series()),
         "photosPlaced": raw.get("photosPlaced"),
         "photosKept": raw.get("photosKept"),
         "overflow": overflow,

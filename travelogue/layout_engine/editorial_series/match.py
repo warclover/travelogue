@@ -24,6 +24,21 @@ def page_count_of(series: Mapping[str, Any]) -> int:
     return int(series.get("pageCount") or series.get("page_count") or 0)
 
 
+def catalog_page_count_chips(
+    catalog: Sequence[Mapping[str, Any]],
+    *,
+    max_pages: int = 32,
+) -> list[int]:
+    """UI chips = official SKUs only. Empty catalog → no numeric chips (auto only)."""
+    return sorted(
+        {
+            page_count_of(s)
+            for s in catalog
+            if 0 < page_count_of(s) <= int(max_pages)
+        }
+    )
+
+
 def snap_to_chip(raw: int, *, max_pages: int = 32) -> int:
     """Nearest 4-multiple chip in 8…max_pages. Ties go down (D-PFM-13)."""
     chips = [c for c in PAGE_COUNT_CHIPS if c <= int(max_pages)]

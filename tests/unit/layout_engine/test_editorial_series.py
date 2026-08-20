@@ -289,6 +289,15 @@ def test_select_series_user_pin_does_not_upgrade() -> None:
     assert choice.cap == 16
 
 
+def test_catalog_page_count_chips_only_official_skus() -> None:
+    from travelogue.layout_engine.editorial_series.catalog import load_official_series
+    from travelogue.layout_engine.editorial_series.match import catalog_page_count_chips
+
+    assert catalog_page_count_chips([]) == []
+    assert catalog_page_count_chips(_fixture_catalog()) == [8, 16, 32]
+    assert catalog_page_count_chips(load_official_series()) == [16]
+
+
 def test_snap_18_to_16_hint() -> None:
     used, hint = snap_user_page_count(18, [{"pageCount": 16}])
     assert used == 16

@@ -116,7 +116,7 @@ def test_build_entry_exposes_portfolio_edition() -> None:
     assert entry["layoutVibeVisible"] is False
     assert entry["portfolio"]["photosPlaced"] == 96
     assert entry["portfolio"]["photosKept"] == 180
-    assert entry["portfolio"]["pageCountChips"] == [8, 12, 16, 20, 24, 28, 32]
+    assert entry["portfolio"]["pageCountChips"] == [16]
     assert entry["previewUrl"] == "/demo-trip/index.html"
     assert entry["dockCta"]["aria"] == "导出作品集"
     assert entry["overflowLine"] == "本册收录 96 / 180 张"
