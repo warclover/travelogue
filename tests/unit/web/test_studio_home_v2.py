@@ -83,6 +83,7 @@ V2_HOME_MARKERS = (
     "v2-wizard-photo-mode-keep-all",
     "打开画册预览",
     # M20 · 设置 Popover（手风琴五区 · 导入与分析 · D-DLLM-03 AI zone）
+    "v2-bench-layout-lab",
     "v2-settings-toggle",
     "v2-settings-popover",
     "v2-settings-close",
@@ -1357,6 +1358,9 @@ def test_homepage_v21_markers_present() -> None:
         'data-homepage-v21="1"',
         'id="v2-headline-trust"',
         'id="v2-settings-toggle"',
+        'id="v2-bench-layout-lab"',
+        "版式",
+        'href="/templates-admin"',
         "无需上传照片 · 个人隐私无忧 · 智能拼图排版 · 一键多种输出",
     ):
         assert marker in html

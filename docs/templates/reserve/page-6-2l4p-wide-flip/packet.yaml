@@ -1,0 +1,75 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-6-2l4p-wide 左右镜像。
+
+id: page-6-2l4p-wide-flip
+version: 1
+status: sketch
+kind: primitive
+displayName: 上一宽横两竖下两竖一宽横
+sketchName: 4竖2横宽幅翻
+familyId: mix-2l4p-wide
+canonical: page-6-2l4p-wide-flip
+related: [page-6-2l4p-wide]
+seeAlso: [page-6-2l4p-right, page-8-2l6p-flip]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: diag-2l4p-wide-flip
+mirroredFrom: page-6-2l4p-wide
+
+stage:
+  aspect: "16:9"
+  # 槽尺寸与列缝令牌同 page-6-2l4p-wide，只改左右。
+  # 上行仍顶齐，下行仍底齐。
+  margin:
+    top: 0.037037
+    right: 0.094375
+    bottom: 0.037037
+    left: 0.094375
+  gapX: 0.015
+  gapY: 0.037037
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 6
+mix: { portrait: 4, landscape: 2 }
+
+placement:
+  groupAlign: center
+  distribute: diag-wide-land-port-rows-flip
+
+slots:
+  - { index: 0, role: landscape, orient: landscape, aspect: "16:9" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 5, role: landscape, orient: landscape, aspect: "16:9" }
+
+copyRegions: []
+
+admit:
+  perSlot: true
+
+themes: [portrait, landscape, sequence, food]
+usage:
+  whenToUse: 两张 16:9 宽横对角（左上 / 右下），四张竖图分行填
+  whenNotToUse: 要示意图那一版（右上 / 左下宽横）→ 用 page-6-2l4p-wide；横是 4:3 叠在一侧 → 用 page-6-2l4p-right
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 1L2P
+  thumb: 上左宽横 40.625% + 两竖 18.75%；下两竖 + 右宽横；page-6-2l4p-wide 左右镜像
+
+sourceSketch: null
+
+# 几何 = page-6-2l4p-wide 水平镜像
+#   上横 left 0.094375，top 1/27
+#   上两竖 left 0.515625 / 0.718125，top 1/27
+#   下两竖 left 0.094375 / 0.296875，top 14/27
+#   下横 left 0.499375，top 0.556713（与下两竖底齐）
+# 此对角左右翻与上下翻同一张。
+# 不是 page-6-2l4p-right（那边横是 4:3 叠在一侧）。

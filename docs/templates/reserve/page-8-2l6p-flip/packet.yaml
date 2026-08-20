@@ -21,12 +21,13 @@ mirrorAxis: vertical
 
 stage:
   aspect: "16:9"
+  # 列缝与纸边同 page-8-2l6p：三道竖缝 1.5%，余宽归左右纸边。
   margin:
     top: 0.037037
-    right: 0.020833
+    right: 0.029583
     bottom: 0.037037
-    left: 0.020833
-  gapX: 0.020833
+    left: 0.029583
+  gapX: 0.015
   gapY: 0.037037
   marginBasis:
     x: pageWidth
@@ -70,6 +71,6 @@ glyph:
 sourceSketch: null
 
 # 几何 = page-8-2l6p 沿水平中线翻转
-#   上三竖 left 1/48 / 0.229167 / 0.4375；上横 left 0.645833
-#   下横 left 1/48；下三竖 left 0.375 / 0.583333 / 0.791667
+#   上三竖 left 0.029583 / 0.232083 / 0.434583；上横 left 0.637083
+#   下横 left 0.029583；下三竖 left 0.377917 / 0.580417 / 0.782917
 # 不是左右镜像。

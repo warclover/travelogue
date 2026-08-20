@@ -9,7 +9,7 @@ displayName: 左四小竖右大竖
 sketchName: 5竖四小一大
 familyId: port-4p
 canonical: page-5-1p4p-right
-related: [page-5-1p4p-left]
+related: [page-5-1p4p-left, page-5-1p4p-center]
 seeAlso: [page-5-1p4l-right, page-3-port-hero-right, page-4-port]
 replaces: null
 aliases: []
@@ -55,7 +55,7 @@ admit:
 themes: [portrait, pet, food, sequence]
 usage:
   whenToUse: 一张竖图明显更大（靠右），四张竖图 2×2 辅在左侧
-  whenNotToUse: 四辅是横图 → 用 page-5-1p4l-right；主图更适合靠左 → 用 page-5-1p4p-left
+  whenNotToUse: 四辅是横图 → 用 page-5-1p4l-right；主图更适合靠左 → 用 page-5-1p4p-left；居中 → 用 page-5-1p4p-center
 
 fitPolicy: relative-to-slot
 

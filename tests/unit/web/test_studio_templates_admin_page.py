@@ -39,3 +39,5 @@ def test_templates_admin_ui_route() -> None:
     assert "布局模板（LTE · internal）" in html
     assert "排版策略 LSE" in html
     assert (STUDIO_TEMPLATE_DIR / "templates-admin.html").is_file()
+    assert 'href="/"' in html
+    assert "wireframe" not in html

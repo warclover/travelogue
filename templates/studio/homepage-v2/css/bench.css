@@ -696,4 +696,11 @@
   opacity: .45;
   cursor: not-allowed;
 }
+a.v2-bench__ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
 

@@ -1,0 +1,77 @@
+# 备用库数据包 · 非正式合同
+# 无独立示意图：由 page-5-1p4p-right 把大竖移到中间，四小竖拆成左右各一列。
+# 本族五槽皆竖，没有横槽。
+
+id: page-5-1p4p-center
+version: 1
+status: sketch
+kind: primitive
+displayName: 中大竖左右各两小竖
+sketchName: 5竖中大四小
+familyId: port-4p
+canonical: page-5-1p4p-center
+related: [page-5-1p4p-left, page-5-1p4p-right]
+seeAlso: [page-5-1p4l-center, page-4-2p2p, page-4-port]
+replaces: null
+aliases: []
+program: mosaic
+densityClass: standard
+role: port-center-4p
+
+stage:
+  aspect: "16:9"
+  # 中主 3:4 高 25/27。左右各一列 1×2 小竖 3:4 各宽 18.75%。
+  # 顶 / 行缝 / 底各 1/27 不动。列缝令牌 1.5%；左右纸边各 10.21875%。
+  # 槽尺寸与 page-5-1p4p-right 相同，只改列序。
+  margin:
+    top: 0.037037
+    right: 0.102188
+    bottom: 0.037037
+    left: 0.102188
+  gapX: 0.015
+  gapY: 0.037037
+  marginBasis:
+    x: pageWidth
+    y: pageHeight
+
+slotCount: 5
+mix: { portrait: 5, landscape: 0 }
+
+placement:
+  groupAlign: center
+  distribute: split-left-1x2-center-hero-right-1x2
+
+slots:
+  - { index: 0, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 1, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 2, role: main, orient: portrait, aspect: "3:4" }
+  - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
+  - { index: 4, role: portrait, orient: portrait, aspect: "3:4" }
+
+copyRegions: []
+
+admit:
+  forbidOrient: [landscape]
+  requireOrient: [portrait]
+  preferAspect: "3:4"
+
+themes: [portrait, pet, food, sequence]
+usage:
+  whenToUse: 一张竖图明显更大居中，四张竖图左右各一列两张辅
+  whenNotToUse: 主图要靠左 → 用 page-5-1p4p-left；靠右 → 用 page-5-1p4p-right；四辅是横图 → 用 page-5-1p4l-center；只要两大夹两小 → 用 page-4-2p2p
+
+fitPolicy: relative-to-slot
+
+glyph:
+  badge: 2P1P2P
+  thumb: 中主 3:4 高 25/27；左右各 1×2 小竖 3:4 各宽 18.75%
+
+sourceSketch: null
+
+# --- 几何（16:9 纸）---
+#   槽尺寸同 page-5-1p4p-left / -right，只改列序。
+#   smallW = 0.1875 W；smallH = 4/9 H
+#   mainW = 0.390625 W；mainH = 25/27 H
+#   左列 left 0.102188 W；主 left 0.304688 W；右列 left 0.710313 W
+#   上行 top 1/27；下行 top 14/27
+# 横版禁入。不是 page-5-1p4l-center（那边辅槽是横）。不是 page-4-2p2p（那边是两大夹两小）。

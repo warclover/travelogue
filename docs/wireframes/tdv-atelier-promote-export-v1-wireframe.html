@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TDV · 设计工坊 写入 vs 导出 线框 v1.0</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --muted: #6a645c;
+      --paper: #f4f0e8;
+      --panel: #fffdf8;
+      --line: rgba(20, 18, 16, .12);
+      --gold: #b8923a;
+      --anno: #c45c26;
+      --ok: #2f5c4a;
+      --warn: #a33;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #121110; color: #e8e4dc; }
+    .review {
+      position: sticky; top: 0; z-index: 20;
+      background: #0d0c0b; padding: 10px 18px 12px;
+      border-bottom: 1px solid #2a2824;
+    }
+    .review h1 { margin: 0; font-size: 14px; font-weight: 650; }
+    .review h1 em { font-style: normal; color: var(--gold); font-weight: 400; }
+    .review p { margin: 4px 0 8px; font-size: 11px; color: #8a8278; max-width: 110ch; }
+    .tabs button {
+      border: 1px solid #3a3834; background: transparent; color: #e8e4dc;
+      padding: 5px 11px; border-radius: 999px; font-size: 11px; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--gold); border-color: var(--gold); color: #141210; }
+    .stage { display: none; padding: 16px 18px 48px; }
+    .stage.is-on { display: block; }
+    .anno { color: var(--anno); font-size: 12px; margin: 0 0 10px; }
+    .app {
+      background: var(--paper); color: var(--ink); border-radius: 10px;
+      overflow: hidden; min-height: 420px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .app-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 8px 12px; background: #1c1b19; color: #ece8e0; font-size: 12px;
+    }
+    .app-bar .brand { font-weight: 650; margin-right: 6px; }
+    .chip {
+      border: 1px solid #3a3834; border-radius: 6px; padding: 3px 8px; color: #cfc8bc;
+    }
+    .chip.amber { border-color: #8a6a28; color: #f0d48a; background: #2e2410; }
+    .btn {
+      border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: default;
+      background: #3d3830; color: #ece8e0;
+    }
+    .btn.pri { background: var(--gold); color: #141210; }
+    .btn.warn { background: #5a3a18; color: #f0d48a; }
+    .body { padding: 14px 16px 20px; background: var(--panel); }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+    .card {
+      border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+      background: #fff; min-width: 220px; flex: 1;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 13px; }
+    .card p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    .card.write { outline: 2px solid #2f5c4a; }
+    .card.export { outline: 2px solid var(--gold); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 550; }
+    .bad { color: var(--warn); font-weight: 650; }
+    .ok { color: var(--ok); }
+    .amber { color: #8a6a10; }
+    input[disabled] {
+      width: 100%; padding: 6px 8px; border: 1px solid var(--line);
+      border-radius: 6px; background: #f7f3ea; font: inherit;
+    }
+    .modal {
+      margin-top: 12px; border: 1px solid var(--line); border-radius: 8px;
+      background: #fffdf8; padding: 12px;
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 14px; }
+    .foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; align-items: center; }
+    .note { font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="review">
+    <h1>TDV · 设计工坊 <em>写入 vs 导出 · F1–F2 · BLK-05</em></h1>
+    <p>审这两帧：写入只覆盖工坊自己的本；导出是给现网的角色包。完成态不许写「已同步」。灰块不是实现。</p>
+    <div class="tabs">
+      <button type="button" class="is-on" data-stage="f1">F1 成册顶栏两钮</button>
+      <button type="button" data-stage="f2">F2 导出检查单</button>
+    </div>
+  </div>
+
+  <section class="stage is-on" id="f1">
+    <p class="anno">F1 · 两钮必须同时看见，文案不能互换。写入 = 工坊柜。导出 = 升格包。品牌是设计工坊，不是临时库。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">设计工坊 · 成册</span>
+        <span class="chip">folio-16-standard</span>
+        <span class="chip">目标 16 / 现 16</span>
+        <span class="chip">正 · PPC 3–5</span>
+        <span class="chip amber">未保存</span>
+        <span class="chip">不写 trip.json</span>
+        <span style="margin-left:auto"></span>
+        <button type="button" class="btn">新建</button>
+        <button type="button" class="btn">复制为本</button>
+        <button type="button" class="btn">按本序试印</button>
+        <button type="button" class="btn">复制 YAML</button>
+        <button type="button" class="btn pri">写入系列</button>
+        <button type="button" class="btn warn">导出升格系列</button>
+      </div>
+      <div class="body">
+        <div class="row">
+          <div class="card write">
+            <h3>写入系列</h3>
+            <p>只覆盖工坊 <code>series/folio-16-standard.yaml</code>。</p>
+            <p>这是设计稿。引擎不读。金样可以迭代，但新建仍禁止占用此 id。</p>
+          </div>
+          <div class="card export">
+            <h3>导出升格系列</h3>
+            <p>另存一份给现网看的角色包。正式 id 默认 <code>magazine-16-standard</code>。</p>
+            <p class="bad">禁止用任何 folio-* 当正式 id。不是同步盘，点完不会进引擎。</p>
+          </div>
+        </div>
+        <p class="note" style="margin-top:12px">页型 tab 另有「导出页型包」。无示意图则硬拒。成功文案只许「已复制检查单与 YAML」，不许「已收入现网」。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage" id="f2">
+    <p class="anno">F2 · 导出前检查单。附录 A 六张以外自动标未准入。附录 B 没有的角色必须映射或声明增收。未过硬门不能复制。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">设计工坊 · 导出升格系列</span>
+        <span class="chip">对照本 folio-16-standard</span>
+      </div>
+      <div class="body">
+        <label class="note">现网将用的正式 id</label>
+        <input disabled value="magazine-16-standard" />
+        <p class="note">人可改。若改成 folio-24-standard → 硬拒。</p>
+        <div class="modal">
+          <h3>检查单（机器已填）</h3>
+          <table>
+            <thead>
+              <tr><th>项</th><th>结果</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>每一行有 role + program</td><td class="ok">过</td></tr>
+              <tr><td>正式 id 不是 folio-*</td><td class="ok">magazine-16-standard</td></tr>
+              <tr><td>sourceAtelier</td><td class="ok">folio-16-standard</td></tr>
+              <tr><td>附录 A 以外的脸</td><td class="amber">12 行 atelier-only（只交角色，现网顶岗）</td></tr>
+              <tr><td>附录 B 未收角色</td><td class="bad">port-center-stagger · grid-6-land · mix-1p1l-wide … 须映射或声明增收</td></tr>
+              <tr><td>邻页红灯</td><td class="amber">已看 · 仍可导出</td></tr>
+              <tr><td>照片 / 星表</td><td class="ok">未夹带</td></tr>
+            </tbody>
+          </table>
+          <div class="foot">
+            <span class="note">未收角色未处理：复制按钮不可用。</span>
+            <span>
+              <button type="button" class="btn">取消</button>
+              <button type="button" class="btn off" style="opacity:.4">复制 YAML（未过门）</button>
+            </span>
+          </div>
+        </div>
+        <p class="note">过门后成功句：已复制升格 YAML 与检查单。交给现网评审。现网尚未收下。薄柜未建，升格未闭环。</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    document.querySelectorAll(".tabs button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("is-on"); });
+        document.querySelectorAll(".stage").forEach(function (s) { s.classList.remove("is-on"); });
+        btn.classList.add("is-on");
+        document.getElementById(btn.getAttribute("data-stage")).classList.add("is-on");
+      });
+    });
+  </script>
+</body>
+</html>

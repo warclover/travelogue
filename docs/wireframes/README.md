@@ -2,6 +2,10 @@
 
 | 文件 | 说明 |
 |------|------|
+| [portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) | **PFM 作品集成册双管线 V1** · F0–F8（地图 · 导入分段 · 首页次链 · 导出页图 · 游记对照 · 换种分享 · 精修成册类型 · 书架 · 红线）· [PRD](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.1.0** · [八席评审](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) Conditional Go · F0/F2/F4/F7/F8 已签 · **F1/F3/F6 待改后重签** |
+| [tdv-atelier-promote-export-v1-wireframe.html](./tdv-atelier-promote-export-v1-wireframe.html) | **TDV 设计工坊 · 写入 vs 导出 F1–F2** · [PRD](../PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) **v0.2.0** · BLK-05 |
+| [tsu-template-admin-series-editor-v1-wireframe.html](./tsu-template-admin-series-editor-v1-wireframe.html) | **TSU 模板治理 + 成册编排器 v1.2.1** · 用词收口（历史归档 / 封面封底 / 正式页型）· [PRD](../PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) §5.2.0 · **待产品 A7 签核** · 不顶 B7 |
+| [tsu-screen-template-glyphs-v1.html](./tsu-screen-template-glyphs-v1.html) | **现网 47 张 Web 拼图槽标** · 红竖 / 蓝横 · 几何来自 LTE YAML · [清单](../templates/WEB-JOURNAL-MOSAIC-TEMPLATES.md) |
 | [share-narrative-readiness-v1-wireframe.html](./share-narrative-readiness-v1-wireframe.html) | **敢发叙事就绪 SNR V1** · F1–F8（姿态条 · 薄章名 · 往年角标 · AI diff · 关闭命中 · 浮层互斥 · 文案包 L1 · CTA 人话）· [PRD](../PRD-SHARE-NARRATIVE-READINESS-V1.md) **v0.1.0** · [试用](../acceptance-records/persona-feedback-trial-2026-08-10.md) · **F1–F8 已签核 2026-08-10 · W0 编码中** |
 | [studio-ai-surface-v1-wireframe.html](./studio-ai-surface-v1-wireframe.html) | **Studio AI Surface V1** · 预览 Dock「AI」入口 · Sheet 三层 IA · **杂志文案解冻** · [PRD](../PRD-STUDIO-AI-SURFACE-V1.md) **v0.2.0 Conditional Go** · [七席+1 纪要](../acceptance-records/sas-studio-ai-surface-v1-review-2026-08-10.md) |
 | [studio-shelf-ticket-seal-v1-wireframe.html](./studio-shelf-ticket-seal-v1-wireframe.html) | **书架票根 · 朱砂钤印落位 v1** · reelsalon seal-B · ①封面钤印 / ②替条码 / ③stub 水印 · **待产品审核** |
@@ -45,6 +49,8 @@
 ## 如何查看
 
 双击 HTML 文件，或用浏览器打开。
+
+**作品集成册 PFM V1 评审 Tab**：**F0 地图** · **F1 导入分段** · **F2 首页次链** · **F3 导出页图** · **F4 游记对照** · **F5 换种分享** · **F6 精修成册类型** · **F7 书架** · **F8 红线** · 线框：[portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) · PRD：[PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.1.0** · [八席评审 2026-08-20](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) **Conditional Go** · BLK-PFM-01～09 待回写 v0.2.0 · **F1/F3/F6 待改后重签 · 未 Kickoff**
 
 **预览 Chrome 收敛 V1.1 评审 Tab**：**① 诊断·对照** · **② IA** · **③ F1 主路径** · **④ F3** · **⑤ F4 按需分章** · **⑥ F5 分章工作台** · **⑦ F7** · **⑧ 任务条** · **⑨ 配色** · **⑩ 清单** · **⑪ 拍板** · 线框：[preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) · [D-PCU-07～12](../acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) · [跨职能评审](../acceptance-records/preview-chrome-unify-v1-review-2026-07-19.md) · **合同已定 · 可开工**
 

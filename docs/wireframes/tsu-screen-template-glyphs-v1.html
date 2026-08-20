@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>现网 Web 拼图模板 · 槽标</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --muted: #6a645c;
+      --paper: #f4f0e8;
+      --port: #c45c4a;
+      --land: #3d6b8a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--font); background: #121110; color: #e8e4dc;
+    }
+    header {
+      position: sticky; top: 0; z-index: 4;
+      background: #0d0c0b; padding: 14px 20px 16px;
+      border-bottom: 1px solid #2a2824;
+    }
+    header h1 { margin: 0; font-size: 15px; font-weight: 650; }
+    header h1 em { font-style: normal; color: #b8923a; font-weight: 400; }
+    header p { margin: 6px 0 0; font-size: 12px; color: #8a8278; max-width: 92ch; line-height: 1.55; }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+    .swatch.p { background: var(--port); }
+    .swatch.l { background: var(--land); }
+    main { padding: 18px 20px 64px; }
+    .group { margin: 0 0 28px; }
+    .group h2 { margin: 0 0 4px; font-size: 14px; font-weight: 650; }
+    .group h2 small { color: #b8923a; font-weight: 500; }
+    .hint { margin: 0 0 12px; font-size: 12px; color: #8a8278; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #1a1917; border-radius: 8px; padding: 8px;
+      border: 1px solid #2a2824;
+    }
+    .glyph {
+      width: 100%; background: #0e0d0c; border: 1px solid #2a2824;
+      border-radius: 3px; position: relative; overflow: hidden;
+    }
+    .s { position: absolute; border-radius: 1px; }
+    .s.p { background: var(--port); }
+    .s.l { background: var(--land); }
+    .meta { padding: 8px 2px 2px; }
+    .id-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .id-row code {
+      font-size: 10px; color: #ece8e0; word-break: break-all; line-height: 1.35;
+    }
+    .badge {
+      flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      background: #0e0d0c; color: #fff; border-radius: 3px; padding: 2px 5px;
+    }
+    .name, .blurb { margin: 4px 0 0; font-size: 11px; color: #9a948a; line-height: 1.4; }
+    .lie { color: #c45c26; font-style: normal; margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>现网 Web 拼图模板 · 槽标 <em>红竖 / 蓝横 · 几何来自 YAML</em></h1>
+    <p>
+      对照 <a href="../templates/WEB-JOURNAL-MOSAIC-TEMPLATES.md" style="color:#b8923a">现网清单</a> 47 张（不含 _example）。
+      色块：<span class="swatch p"></span> 竖槽 · <span class="swatch l"></span> 横槽。
+      舞台按 YAML <code>stage.aspect</code>（16:9 或 9:16）。这是目录图标，不是 C 端填图器，也不顶正式页型 <code>page-*</code>。
+    </p>
+  </header>
+  <main>
+    <section class="group"><h2>现网统一候选 <small>11</small></h2><p class="hint">MCS 默认会评的 11 张。</p><div class="grid">
+    <article class="card" data-id="screen-portrait-3">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-3</code>
+          <span class="badge">3P</span>
+        </div>
+        <p class="name">portrait · 3 · 3 槽 · 9:16 · ga</p>
+        <p class="blurb">9:16 舞台，三竖横排等分</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-3">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:98.40%;height:31.73%"></div><div class="s l" style="left:0.80%;top:34.13%;width:98.40%;height:31.73%"></div><div class="s l" style="left:0.80%;top:67.47%;width:98.40%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-3</code>
+          <span class="badge">3L</span>
+        </div>
+        <p class="name">landscape · 3 · 3 槽 · 16:9 · ga</p>
+        <p class="blurb">三横上下 stack</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-1-landscape-2">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:48.40%;height:98.40%"></div><div class="s l" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-1-landscape-2</code>
+          <span class="badge">1P2L</span>
+        </div>
+        <p class="name">portrait · 1 · landscape · 2 · 3 槽 · 16:9 · ga</p>
+        <p class="blurb">左满高竖 + 右上下两横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-2-landscape-2">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-2-landscape-2</code>
+          <span class="badge">2P2L</span>
+        </div>
+        <p class="name">portrait · 2 · landscape · 2 · 4 槽 · 16:9 · ga</p>
+        <p class="blurb">16:9 等分 2×2，无 hero</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-4">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-4</code>
+          <span class="badge">4P</span>
+        </div>
+        <p class="name">portrait · 4 · 4 槽 · 9:16 · ga</p>
+        <p class="blurb">9:16 舞台，四竖 2×2</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-4">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-4</code>
+          <span class="badge">4L</span>
+        </div>
+        <p class="name">landscape · 4 · 4 槽 · 16:9 · ga</p>
+        <p class="blurb">16:9 四横 2×2 等权</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-4-hero-70-sidebar">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:68.40%;height:98.40%"></div><div class="s l" style="left:70.80%;top:0.80%;width:28.40%;height:31.73%"></div><div class="s l" style="left:70.80%;top:34.13%;width:28.40%;height:31.73%"></div><div class="s l" style="left:70.80%;top:67.47%;width:28.40%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-4-hero-70-sidebar</code>
+          <span class="badge">4L</span>
+        </div>
+        <p class="name">四图 · 七成英雄 + 侧栏三格 · 4 槽 · 16:9 · ga</p>
+        <p class="blurb">左约 70% 满高主图 + 右三格</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-main-portrait-3land">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:65.07%;height:65.07%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:65.07%"></div><div class="s l" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-main-portrait-3land</code>
+          <span class="badge">1P4L</span>
+        </div>
+        <p class="name">mosaic · 5 · main · portrait · 3land · 5 槽 · 16:9 · ga</p>
+        <p class="blurb">主横 2×2 + 右满高竖 + 底三横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-hero-3-2-plus-4">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:48.40%;height:98.40%"></div><div class="s l" style="left:50.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s l" style="left:75.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:50.80%;width:23.40%;height:48.40%"></div><div class="s l" style="left:75.80%;top:50.80%;width:23.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-hero-3-2-plus-4</code>
+          <span class="badge">1P4L</span>
+        </div>
+        <p class="name">五图 · 加权轨道 hero + 四配图 · 5 槽 · 16:9 · ga</p>
+        <p class="blurb">左列满高偏竖主槽 + 右 2×2</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-main-hero-plus-4">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:65.07%;height:65.07%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-main-hero-plus-4</code>
+          <span class="badge">6L</span>
+        </div>
+        <p class="name">mosaic · 5 · main · hero · plus · 4 · 6 槽 · 16:9 · ga</p>
+        <p class="blurb">主横 2×2 + 右列双图 + 底行三图（6 槽）</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-6-main-hero-plus-5">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:65.07%;height:65.07%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-6-main-hero-plus-5</code>
+          <span class="badge">6L</span>
+        </div>
+        <p class="name">mosaic · 6 · main · hero · plus · 5 · 6 槽 · 16:9 · ga</p>
+        <p class="blurb">与上一行同拓扑，六图 hero 家族正名</p>
+      </div>
+    </article></div></section><section class="group"><h2>实验白名单 <small>11</small></h2><p class="hint">本机实验门打开且在 allowlist 时可见。</p><div class="grid">
+    <article class="card" data-id="screen-portrait-2-gallery">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:12.56%;top:10.80%;width:33.69%;height:78.40%"></div><div class="s p" style="left:53.74%;top:10.80%;width:33.69%;height:78.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-2-gallery</code>
+          <span class="badge">2P</span>
+        </div>
+        <p class="name">portrait · 2 · gallery · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">双竖等大居中，四周留白</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-2-asymmetric-left">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:14.13%;top:9.89%;width:31.73%;height:80.22%"></div><div class="s p" style="left:54.13%;top:18.98%;width:31.73%;height:62.04%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-2-asymmetric-left</code>
+          <span class="badge">2P</span>
+        </div>
+        <p class="name">portrait · 2 · asymmetric · left · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">双竖左主右辅</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-2-asymmetric-right">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:14.13%;top:18.98%;width:31.73%;height:62.04%"></div><div class="s p" style="left:54.13%;top:9.89%;width:31.73%;height:80.22%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-2-asymmetric-right</code>
+          <span class="badge">2P</span>
+        </div>
+        <p class="name">portrait · 2 · asymmetric · right · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">双竖右主左辅</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-1-portrait-1">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:62.40%;height:98.40%"></div><div class="s p" style="left:64.80%;top:0.80%;width:34.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-1-portrait-1</code>
+          <span class="badge">1P1L</span>
+        </div>
+        <p class="name">landscape · 1 · portrait · 1 · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">左横右竖，两槽等高</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-1-landscape-1">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:34.40%;height:98.40%"></div><div class="s l" style="left:36.80%;top:0.80%;width:62.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-1-landscape-1</code>
+          <span class="badge">1P1L</span>
+        </div>
+        <p class="name">portrait · 1 · landscape · 1 · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">左竖右横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-2-asymmetric-left">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:7.94%;top:9.89%;width:48.40%;height:80.22%"></div><div class="s l" style="left:65.09%;top:28.07%;width:26.97%;height:43.85%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-2-asymmetric-left</code>
+          <span class="badge">2L</span>
+        </div>
+        <p class="name">landscape · 2 · asymmetric · left · 2 槽 · 16:9 · experimental</p>
+        <p class="blurb">双横左大右小</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-2-portrait-1">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:48.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-2-portrait-1</code>
+          <span class="badge">1P2L</span>
+        </div>
+        <p class="name">landscape · 2 · portrait · 1 · 3 槽 · 16:9 · experimental</p>
+        <p class="blurb">左两横叠 + 右竖满高</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-3-asymmetric-left">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:61.36%;height:98.40%"></div><div class="s l" style="left:63.76%;top:0.80%;width:35.44%;height:48.40%"></div><div class="s l" style="left:63.76%;top:50.80%;width:35.44%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-3-asymmetric-left</code>
+          <span class="badge">3L</span>
+        </div>
+        <p class="name">landscape · 3 · asymmetric · left · 3 槽 · 16:9 · experimental</p>
+        <p class="blurb">左大满高 + 右两小叠</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-3-asymmetric-right">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:35.44%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:35.44%;height:48.40%"></div><div class="s l" style="left:37.84%;top:0.80%;width:61.36%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-3-asymmetric-right</code>
+          <span class="badge">3L</span>
+        </div>
+        <p class="name">landscape · 3 · asymmetric · right · 3 槽 · 16:9 · experimental</p>
+        <p class="blurb">左两小叠 + 右大满高</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-3p2l-portrait-hero-quad">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:53.40%;height:98.40%"></div><div class="s p" style="left:55.80%;top:0.80%;width:20.90%;height:68.40%"></div><div class="s p" style="left:78.30%;top:0.80%;width:20.90%;height:68.40%"></div><div class="s l" style="left:55.80%;top:70.80%;width:20.90%;height:28.40%"></div><div class="s l" style="left:78.30%;top:70.80%;width:20.90%;height:28.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-3p2l-portrait-hero-quad</code>
+          <span class="badge">3P2L</span>
+        </div>
+        <p class="name">五图 · 3P2L 竖主 + 右四宫 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">左满高竖主 + 右上双竖 + 右下双横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-3p2l-portrait-hero-lp-stack">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:53.40%;height:98.40%"></div><div class="s l" style="left:55.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:80.80%;top:0.80%;width:18.40%;height:48.40%"></div><div class="s l" style="left:55.80%;top:50.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:80.80%;top:50.80%;width:18.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-3p2l-portrait-hero-lp-stack</code>
+          <span class="badge">3P2L</span>
+        </div>
+        <p class="name">五图 · 3P2L 竖主 + 右景人栈 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">左满高竖主 + 右（横|竖）×2 成对</p>
+      </div>
+    </article></div></section><section class="group"><h2>实验未进白名单 <small>7</small></h2><p class="hint">YAML 在仓库，默认不进新 trip。</p><div class="grid">
+    <article class="card" data-id="screen-mosaic-4-1l3p-rail">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:81.73%;height:98.40%"></div><div class="s p" style="left:84.13%;top:0.80%;width:15.07%;height:31.73%"></div><div class="s p" style="left:84.13%;top:34.13%;width:15.07%;height:31.73%"></div><div class="s p" style="left:84.13%;top:67.47%;width:15.07%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-4-1l3p-rail</code>
+          <span class="badge">3P1L</span>
+        </div>
+        <p class="name">四图 · 一横主栏 + 三竖轨 · 4 槽 · 16:9 · experimental</p>
+        <p class="blurb">左满高横主 + 右三竖叠轨</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-4-2l2p-weighted">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-4-2l2p-weighted</code>
+          <span class="badge">2P2L</span>
+        </div>
+        <p class="name">四图 · 2L2P 等分棋盘 · 4 槽 · 16:9 · experimental</p>
+        <p class="blurb">等分 2×2 棋盘，Z 字横竖交错</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-4-2p2l-portrait-bookends">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s l" style="left:34.13%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:34.13%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-4-2p2l-portrait-bookends</code>
+          <span class="badge">2P2L</span>
+        </div>
+        <p class="name">四图 · 2P2L 双侧竖书挡 · 4 槽 · 16:9 · experimental</p>
+        <p class="blurb">左右满高竖书挡 + 中列上下双横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-1p4l-portrait-hero">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:53.40%;height:98.40%"></div><div class="s l" style="left:55.80%;top:0.80%;width:43.40%;height:23.40%"></div><div class="s l" style="left:55.80%;top:25.80%;width:43.40%;height:23.40%"></div><div class="s l" style="left:55.80%;top:50.80%;width:43.40%;height:23.40%"></div><div class="s l" style="left:55.80%;top:75.80%;width:43.40%;height:23.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-1p4l-portrait-hero</code>
+          <span class="badge">1P4L</span>
+        </div>
+        <p class="name">五图 · 竖主满高 + 四横侧轨 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">左满高竖主 + 右四横轨</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-1p4l-portrait-center-rails">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s l" style="left:0.80%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:67.47%;top:50.80%;width:31.73%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-1p4l-portrait-center-rails</code>
+          <span class="badge">1P4L</span>
+        </div>
+        <p class="name">五图 · 1P4L 中竖主 + 双侧轨 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">中列满高竖 + 左右各上下双横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-2p3l-portrait-hero-rail">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:53.40%;height:98.40%"></div><div class="s p" style="left:55.80%;top:0.80%;width:13.40%;height:98.40%"></div><div class="s l" style="left:70.80%;top:0.80%;width:28.40%;height:31.73%"></div><div class="s l" style="left:70.80%;top:34.13%;width:28.40%;height:31.73%"></div><div class="s l" style="left:70.80%;top:67.47%;width:28.40%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-2p3l-portrait-hero-rail</code>
+          <span class="badge">2P3L</span>
+        </div>
+        <p class="name">五图 · 2P3L 竖主从 + 三横轨 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">左竖主 + 中辅竖 + 右三横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-2p3l-rail">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-2p3l-rail</code>
+          <span class="badge">2P3L</span>
+        </div>
+        <p class="name">五图 · 双竖满高 + 三横右栏 · 5 槽 · 16:9 · experimental</p>
+        <p class="blurb">双竖满高 + 右三横</p>
+      </div>
+    </article></div></section><section class="group"><h2>退役 / 仅历史渲染 <small>12</small></h2><p class="hint">新 trip 不选；旧游记仍能画出。</p><div class="grid">
+    <article class="card" data-id="screen-mosaic-5-2p3l-equal">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-2p3l-equal</code>
+          <span class="badge">2P3L</span>
+        </div>
+        <p class="name">五图 · 双竖 hero + 三横右栏 · 5 槽 · 16:9 · deprecated</p>
+        <p class="blurb">双竖满高 + 右三横；密度过高</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-2portrait-3land-balanced">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s p" style="left:0.80%;top:34.13%;width:31.73%;height:65.07%"></div><div class="s l" style="left:34.13%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:65.07%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-2portrait-3land-balanced</code>
+          <span class="badge">3P2L</span>
+        </div>
+        <p class="name">mosaic · 5 · 2portrait · 3land · balanced · 5 槽 · 16:9 · deprecated</p>
+        <p class="blurb">id 写 2P，实际 3P2L</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-3portrait-2land-balanced">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:65.07%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:65.07%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:65.07%"></div><div class="s l" style="left:0.80%;top:67.47%;width:65.07%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-3portrait-2land-balanced</code>
+          <span class="badge">3P2L</span>
+        </div>
+        <p class="name">mosaic · 5 · 3portrait · 2land · balanced · 5 槽 · 16:9 · deprecated</p>
+        <p class="blurb">上三竖 + 底两横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-mosaic-5-main-landscape-2portrait-2land">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:65.07%;height:65.07%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:65.07%"></div><div class="s l" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-mosaic-5-main-landscape-2portrait-2land</code>
+          <span class="badge">1P4L</span>
+        </div>
+        <p class="name">mosaic · 5 · main · landscape · 2portrait · 2land · 5 槽 · 16:9 · deprecated</p>
+        <p class="blurb">main-portrait-3land 的无守卫前身</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-2-overlap-bltr">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.00%;top:42.00%;width:55.00%;height:58.00%"></div><div class="s l" style="left:45.00%;top:0.00%;width:55.00%;height:58.00%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-2-overlap-bltr</code>
+          <span class="badge">2L</span>
+        </div>
+        <p class="name">landscape · 2 · overlap · bltr · 2 槽 · 16:9 · deprecated</p>
+        <p class="blurb">对角叠压（左下 / 右上）</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-2-overlap-tlbr">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.00%;top:0.00%;width:55.00%;height:58.00%"></div><div class="s l" style="left:45.00%;top:42.00%;width:55.00%;height:58.00%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-2-overlap-tlbr</code>
+          <span class="badge">2L</span>
+        </div>
+        <p class="name">landscape · 2 · overlap · tlbr · 2 槽 · 16:9 · deprecated</p>
+        <p class="blurb">对角叠压（左上 / 右下）</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-editorial-4mix">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:48.40%;height:48.40%"></div><div class="s p" style="left:0.80%;top:50.80%;width:48.40%;height:48.40%"></div><div class="s l" style="left:50.80%;top:50.80%;width:48.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-editorial-4mix</code>
+          <span class="badge">2P2L</span>
+        </div>
+        <p class="name">editorial · 4mix · chess-2L2P · 4 槽 · 16:9 · deprecated</p>
+        <p class="blurb">棋盘 2L2P，PARKED</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-6">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:34.13%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:34.13%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s l" style="left:67.47%;top:50.80%;width:31.73%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-6</code>
+          <span class="badge">6L</span>
+        </div>
+        <p class="name">landscape · 6 · 6 槽 · 16:9 · experimental</p>
+        <p class="blurb">3×2 等分六横</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-6">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:0.80%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:34.13%;top:50.80%;width:31.73%;height:48.40%"></div><div class="s p" style="left:67.47%;top:50.80%;width:31.73%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-6</code>
+          <span class="badge">6P</span>
+        </div>
+        <p class="name">portrait · 6 · 6 槽 · 9:16 · deprecated</p>
+        <p class="blurb">9:16 六竖 3×2</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-9">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s p" style="left:0.80%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s p" style="left:34.13%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s p" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s p" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s p" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s p" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-9</code>
+          <span class="badge">9P</span>
+        </div>
+        <p class="name">portrait · 9 · 9 槽 · 9:16 · deprecated</p>
+        <p class="blurb">9:16 九竖 3×3</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-9">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:0.80%;width:31.73%;height:31.73%"></div><div class="s l" style="left:0.80%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:34.13%;width:31.73%;height:31.73%"></div><div class="s l" style="left:0.80%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:34.13%;top:67.47%;width:31.73%;height:31.73%"></div><div class="s l" style="left:67.47%;top:67.47%;width:31.73%;height:31.73%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-9</code>
+          <span class="badge">9L</span>
+        </div>
+        <p class="name">landscape · 9 · 9 槽 · 16:9 · deprecated</p>
+        <p class="blurb">16:9 九横 3×3</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-grid-8">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:25.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:75.80%;top:0.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:0.80%;top:50.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:25.80%;top:50.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:50.80%;top:50.80%;width:23.40%;height:48.40%"></div><div class="s p" style="left:75.80%;top:50.80%;width:23.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-grid-8</code>
+          <span class="badge">8P</span>
+        </div>
+        <p class="name">portrait · grid · 8 · 8 槽 · 9:16 · deprecated</p>
+        <p class="blurb">9:16 八竖 4×2</p>
+      </div>
+    </article></div></section><section class="group"><h2>单图 / 非拼图窗 <small>6</small></h2><p class="hint">走普通 screen planner，不进 MOSAIC 统一窗。</p><div class="grid">
+    <article class="card" data-id="screen-landscape-1">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:98.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-1</code>
+          <span class="badge">1L</span>
+        </div>
+        <p class="name">单张横版 · 1 槽 · 16:9 · ga</p>
+        <p class="blurb">单横满屏</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-1">
+      <div class="glyph" data-stage="9:16" style="aspect-ratio:9 / 16"><div class="s p" style="left:0.80%;top:0.80%;width:98.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-1</code>
+          <span class="badge">1P</span>
+        </div>
+        <p class="name">单张竖版 · 1 槽 · 9:16 · ga</p>
+        <p class="blurb">单竖满屏（9:16）</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-full-frame">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:98.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-full-frame</code>
+          <span class="badge">1L</span>
+        </div>
+        <p class="name">全幅单图 · 1 槽 · 16:9 · ga</p>
+        <p class="blurb">全幅 contain + 模糊补边</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-2">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:48.40%;height:98.40%"></div><div class="s p" style="left:50.80%;top:0.80%;width:48.40%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-2</code>
+          <span class="badge">2P</span>
+        </div>
+        <p class="name">双竖 · 2 槽 · 16:9 · ga</p>
+        <p class="blurb">双竖等分并排</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-landscape-2">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s l" style="left:0.80%;top:0.80%;width:98.40%;height:48.40%"></div><div class="s l" style="left:0.80%;top:50.80%;width:98.40%;height:48.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-landscape-2</code>
+          <span class="badge">2L</span>
+        </div>
+        <p class="name">landscape · 2 · 2 槽 · 16:9 · ga</p>
+        <p class="blurb">双横上下 stack</p>
+      </div>
+    </article>
+
+    <article class="card" data-id="screen-portrait-3-editorial">
+      <div class="glyph" data-stage="16:9" style="aspect-ratio:16 / 9"><div class="s p" style="left:0.80%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:34.13%;top:0.80%;width:31.73%;height:98.40%"></div><div class="s p" style="left:67.47%;top:0.80%;width:31.73%;height:98.40%"></div></div>
+      <div class="meta">
+        <div class="id-row">
+          <code>screen-portrait-3-editorial</code>
+          <span class="badge">3P</span>
+        </div>
+        <p class="name">portrait · 3 · editorial · 3 槽 · 16:9 · beta</p>
+        <p class="blurb">杂志三竖并列（16:9）</p>
+      </div>
+    </article></div></section>
+    
+  </main>
+</body>
+</html>

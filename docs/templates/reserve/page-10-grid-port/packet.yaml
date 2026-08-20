@@ -9,7 +9,7 @@ displayName: 竖版十宫格
 sketchName: 10竖
 familyId: portrait-grid
 canonical: page-10-grid-port
-related: [page-4-port, page-5-1p4p-left]
+related: [page-8-grid-port, page-4-port, page-5-1p4p-left]
 seeAlso: [page-8-grid-land, page-4-2p2p]
 replaces: null
 aliases: []
@@ -64,7 +64,7 @@ admit:
 themes: [portrait, pet, food, sequence]
 usage:
   whenToUse: 十张 3:4 竖图 5×2 等权并置；连拍 / 序列
-  whenNotToUse: 只要四竖 → 用 page-4-port；必须消化横图
+  whenNotToUse: 只要四竖 → 用 page-4-port；只要八竖 → 用 page-8-grid-port；必须消化横图
 
 fitPolicy: relative-to-slot
 # 同比例铺满

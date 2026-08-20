@@ -1,0 +1,30 @@
+// 作品集 16 页正 · 与 series/folio-16-standard.yaml 同步。file:// 读不到 YAML 时用这份。引擎不读。
+window.RESERVE_SERIES_SEED = {
+  id: "folio-16-standard",
+  kind: "series",
+  status: "sketch",
+  stage: "16:9",
+  pageCount: 16,
+  density: "standard",
+  photoSpan: [48, 80],
+  coverHint: "veil-footer",
+  backHint: "closing-default",
+  sequence: [
+    { i: 1, role: "hero-land", program: "hero", faceHint: "page-1-hero-land-wide" },
+    { i: 2, role: "hero-land", program: "hero", faceHint: "page-1-hero-land-wide" },
+    { i: 3, role: "pair-port", program: "mosaic", faceHint: "page-2-pair-port" },
+    { i: 4, role: "grid-6-land", program: "grid", faceHint: "page-6-grid-land" },
+    { i: 5, role: "grid-4-land-wide", program: "grid", faceHint: "page-4-grid-land-wide" },
+    { i: 6, role: "row-port-3", program: "grid", faceHint: "page-3-port" },
+    { i: 7, role: "port-center-stagger", program: "mosaic", faceHint: "page-5-3p2l-center" },
+    { i: 8, role: "hero-land", program: "hero", faceHint: "page-1-hero-land-wide" },
+    { i: 9, role: "grid-4-land-wide", program: "grid", faceHint: "page-4-grid-land-wide" },
+    { i: 10, role: "row-port-3", program: "grid", faceHint: "page-3-port" },
+    { i: 11, role: "stack-5l-land-hero-wide", program: "mosaic", faceHint: "page-6-1l5l-wide-right" },
+    { i: 12, role: "land-hero-l", program: "mosaic", faceHint: "page-3-2l1p-hero-left" },
+    { i: 13, role: "port-center-stagger-flip", program: "mosaic", faceHint: "page-5-3p2l-center-flip" },
+    { i: 14, role: "mix-1p1l-wide", program: "mosaic", faceHint: "page-2-1p1l-wide" },
+    { i: 15, role: "land-hero-5l-wide", program: "mosaic", faceHint: "page-6-1l5l-wide-left" },
+    { i: 16, role: "hero-land", program: "hero", faceHint: "page-1-hero-land-wide" }
+  ]
+};

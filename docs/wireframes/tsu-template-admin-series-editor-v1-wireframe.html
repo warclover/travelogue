@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TSU · 模板治理台 + 成册编排器 线框 v1.2.1</title>
+  <style>
+    :root {
+      --ink: #141210;
+      --muted: #6a645c;
+      --paper: #f4f0e8;
+      --panel: #fffdf8;
+      --line: rgba(20, 18, 16, .12);
+      --gold: #b8923a;
+      --anno: #c45c26;
+      --port: #c45c4a;
+      --land: #3d6b8a;
+      --ok: #2f5c4a;
+      --warn: #a33;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #121110; color: #e8e4dc; }
+    .review {
+      position: sticky; top: 0; z-index: 20;
+      background: #0d0c0b; padding: 10px 18px 12px;
+      border-bottom: 1px solid #2a2824;
+    }
+    .review h1 { margin: 0; font-size: 14px; font-weight: 650; }
+    .review h1 em { font-style: normal; color: var(--gold); font-weight: 400; }
+    .review p { margin: 4px 0 8px; font-size: 11px; color: #8a8278; max-width: 110ch; }
+    .tab-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+    .tab-row .lab { font-size: 10px; color: #6a645c; width: 36px; letter-spacing: .06em; }
+    .tabs button {
+      border: 1px solid #3a3834; background: transparent; color: #e8e4dc;
+      padding: 5px 11px; border-radius: 999px; font-size: 11px; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--gold); border-color: var(--gold); color: #141210; }
+    .stage { display: none; padding: 16px 18px 48px; }
+    .stage.is-on { display: block; }
+    .anno { color: var(--anno); font-size: 12px; margin: 0 0 10px; }
+    .app {
+      background: var(--paper); color: var(--ink); border-radius: 10px;
+      overflow: hidden; min-height: 560px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+    .app-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 8px 12px; background: #1c1b19; color: #ece8e0; font-size: 12px;
+    }
+    .app-bar .brand { font-weight: 650; margin-right: 6px; }
+    .app-bar .sep { opacity: .35; }
+    .chip {
+      border: 1px solid #3a3834; border-radius: 6px; padding: 3px 8px; color: #cfc8bc;
+    }
+    .chip.warn { border-color: #8a3a32; color: #f0b4ae; background: #3a1c1a; }
+    .chip.amber { border-color: #8a6a28; color: #f0d48a; background: #2e2410; }
+    .chip.ok { border-color: #2f5c4a; color: #b8d8c8; }
+    .chip.mute { opacity: .55; }
+    .btn {
+      border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: default;
+      background: #3d3830; color: #ece8e0;
+    }
+    .btn.pri { background: var(--gold); color: #141210; }
+    .btn.off { opacity: .4; }
+    .nav-tabs { display: flex; gap: 0; background: #e8e2d6; font-size: 12px; }
+    .nav-tabs span {
+      padding: 9px 16px; border-right: 1px solid var(--line); color: var(--muted);
+    }
+    .nav-tabs .on { background: var(--panel); color: var(--ink); font-weight: 650; }
+    .body { padding: 14px 16px 20px; background: var(--panel); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    th { color: var(--muted); font-weight: 550; }
+    .row-bad { background: #f8e8e6; }
+    .row-wait { color: var(--muted); }
+    .editor {
+      display: grid; grid-template-columns: 188px 1fr 248px;
+      min-height: 640px; background: var(--paper);
+    }
+    .col { border-right: 1px solid var(--line); padding: 10px; overflow: auto; }
+    .col:last-child { border-right: 0; }
+    .col h3 { margin: 0 0 6px; font-size: 10px; letter-spacing: .05em; color: var(--muted); text-transform: uppercase; }
+    .inv { font-size: 10px; color: var(--muted); margin: 10px 0 4px; letter-spacing: .04em; }
+    .role {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px dashed #b8b0a4; border-radius: 8px; padding: 5px 7px; margin-bottom: 5px;
+      background: #fff; font-size: 11px;
+    }
+    .role.main { border-style: solid; border-color: #1c1b19; }
+    .role.off { opacity: .4; text-decoration: line-through; }
+    .role.care { border-color: #a33; color: #6a2018; }
+    .face-f { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+    .face-f i {
+      font-style: normal; font-size: 10px; border: 1px solid var(--line);
+      border-radius: 999px; padding: 2px 6px; background: #fff;
+    }
+    .face-f .on { background: #1c1b19; color: #fff; border-color: #1c1b19; }
+    .rail {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 7px;
+    }
+    .tile {
+      background: #1a1917; border-radius: 6px; padding: 5px;
+      color: #ece8e0; position: relative;
+    }
+    .tile.cover { outline: 2px solid var(--gold); }
+    .tile.hot { outline: 2px solid var(--warn); }
+    .tile.sel { outline: 2px solid #ece8e0; }
+    .tile.flex { box-shadow: inset 0 0 0 1px #b8923a; }
+    .tile.pair-l { outline: 2px solid #6a8aaa; }
+    .tile.pair-r { outline: 2px solid #6a8aaa; }
+    .tile .pg { font-size: 10px; color: #9a948a; margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .glyph {
+      aspect-ratio: 16/9; background: #0e0d0c; border: 1px solid #2a2824;
+      border-radius: 3px; position: relative; overflow: hidden;
+    }
+    .s { position: absolute; border-radius: 1px; }
+    .s.p { background: var(--port); }
+    .s.l { background: var(--land); }
+    .tile .name { font-size: 10px; margin-top: 3px; display: flex; justify-content: space-between; gap: 4px; }
+    .tile .name em { font-style: normal; color: #c4a056; font-size: 9px; }
+    .tag-stand { color: #c4a056; }
+    .plus {
+      position: absolute; right: -6px; top: 42%; z-index: 2;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #e8e2d6; color: #1c1b19; font-size: 10px; line-height: 12px;
+      text-align: center; font-weight: 700;
+    }
+    .stat { font-size: 12px; line-height: 1.65; margin: 0; }
+    .stat b { font-weight: 650; }
+    .warn-box, .ok-box, .amber-box, .mute-box {
+      border-radius: 6px; padding: 8px 10px; font-size: 11px; margin: 10px 0;
+    }
+    .warn-box { background: #f8e8e6; border: 1px solid #e0b4ae; color: #6a2018; }
+    .ok-box { background: #e6f0ea; border: 1px solid #b7d0c4; color: #1a3a2e; }
+    .amber-box { background: #f6eed8; border: 1px solid #e0d0a0; color: #5a4818; }
+    .mute-box { background: #ece8e0; border: 1px solid #d4cfc4; color: #5a544c; }
+    .preview-row { display: flex; gap: 8px; overflow: auto; padding-bottom: 8px; }
+    .preview-row .tile { min-width: 128px; flex: 0 0 128px; }
+    .note {
+      margin-top: 16px; font-size: 12px; color: #c8c2b6; max-width: 100ch; line-height: 1.55;
+    }
+    .note strong { color: #fff; }
+    .check { margin: 12px 0 0; padding: 0; list-style: none; font-size: 12px; color: #c8c2b6; }
+    .check li { margin: 4px 0; }
+    .badge-mini {
+      display: inline-block; min-width: 28px; text-align: center;
+      font-size: 10px; font-weight: 700; background: #1a1917; color: #fff;
+      border-radius: 3px; padding: 2px 5px; letter-spacing: .04em;
+    }
+    .dens { height: 10px; display: flex; gap: 2px; margin: 6px 0 8px; }
+    .dens i { flex: 1; background: #d8d0c4; border-radius: 1px; }
+    .dens i.d { background: #1c1b19; }
+    .dens i.m { background: #8a8278; }
+    .dens.book { margin: 0 0 10px; }
+    .bookends {
+      display: flex; gap: 8px; margin: 0 0 12px;
+      padding: 0 0 10px; border-bottom: 1px dashed #c4b8a4;
+    }
+    .bookends .tile { width: 140px; flex: 0 0 140px; }
+    .mid-label { margin: 0 0 6px; font-size: 10px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+    .tile.ghost .glyph { background: #161514; }
+    .tile.ghost .name { color: #8a8278; }
+    .pair-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+    .states { display: grid; gap: 16px; }
+    .state-cap { font-size: 11px; color: var(--anno); margin: 0 0 6px; }
+    .yaml {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 11px; background: #1a1917; color: #d8d0c4;
+      border-radius: 6px; padding: 10px 12px; line-height: 1.55; overflow: auto;
+    }
+    .face-pick { display: grid; gap: 6px; }
+    .face-pick .role { cursor: default; }
+    .face-pick .role.on { background: #1c1b19; color: #fff; border-color: #1c1b19; }
+    .empty {
+      border: 1px dashed #c4b8a4; border-radius: 8px; padding: 28px 16px;
+      text-align: center; color: var(--muted); font-size: 12px; background: #faf7f1;
+    }
+  </style>
+</head>
+<body>
+  <header class="review tabs" id="tabs">
+    <h1>TSU 线框 v1.2.1 · <em>用词收口 · 不是 C 端游记 · 不顶 B7</em></h1>
+    <p>
+      界面不再用「博物馆 / 书衣柜 / 活目录 / 观察室 / 顶岗 / 本缝」。
+      五入口：<strong>正式页型 · 试验页型 · 历史归档 · 封面封底 · 成册系列</strong>。
+      页序是线框演示，<strong>不是</strong>产品金样。灰色块 = 槽位（红竖 / 蓝横），没有「把照片拖进槽」。
+    </p>
+    <div class="tab-row">
+      <span class="lab">治理</span>
+      <button type="button" data-f="f1" class="is-on">F1 正式页型</button>
+      <button type="button" data-f="f1c">F1c 试验页型</button>
+      <button type="button" data-f="f1b">F1b 历史归档</button>
+      <button type="button" data-f="f2">F2 封面封底</button>
+      <button type="button" data-f="f3">F3 成册系列</button>
+    </div>
+    <div class="tab-row">
+      <span class="lab">编排</span>
+      <button type="button" data-f="f4">F4 16 页正 · 满轨</button>
+      <button type="button" data-f="f4b">F4b 更换版式与翻开相邻页</button>
+      <button type="button" data-f="f4c">F4c 空 / 校验 / 关旗</button>
+      <button type="button" data-f="f5">F5 18 页非标准</button>
+      <button type="button" data-f="f6">F6 成册预演</button>
+    </div>
+  </header>
+
+  <!-- F1 -->
+  <section class="stage is-on" id="f1">
+    <p class="anno">FE-1 · 五入口。正式页型只有带数据包的 page-*。表里直接出示槽标，不再写「槽标+微缩」四个字。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">Studio · 模板治理</span>
+        <span class="sep">/</span>
+        <span>template_admin</span>
+        <span style="margin-left:auto" class="chip">正式页型 6 · 无数据包不准入</span>
+      </div>
+      <div class="nav-tabs">
+        <span class="on">正式页型 6</span>
+        <span>试验页型 0</span>
+        <span>历史归档 47</span>
+        <span>封面封底</span>
+        <span>成册系列 7</span>
+      </div>
+      <div class="body">
+        <table>
+          <thead>
+            <tr><th>微缩</th><th>id</th><th>角色</th><th>mix</th><th>数据包</th><th>状态</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-mini">1L</span></td>
+              <td>page-1-hero-land</td><td>hero-land</td><td>1L</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">2P</span></td>
+              <td>page-2-pair-port</td><td>pair-port</td><td>2P</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">3P</span></td>
+              <td>page-3-port</td><td>row-port-3</td><td>3P</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">4L</span></td>
+              <td>page-4-grid-land</td><td>grid-4-land</td><td>4L</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">2L1P</span></td>
+              <td>page-3-2l1p-right</td><td>stack-l-port</td><td>2L1P</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">2L1P</span></td>
+              <td>page-3-2l1p-left</td><td>port-stack-l</td><td>2L1P</td>
+              <td>齐</td><td>designed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note"><strong>请看：</strong>正式页型只有 6 张已画 <code>page-*</code>。旧 <code>screen-*</code> 见 F1b。试验页型空态见 F1c。</p>
+  </section>
+
+  <!-- F1c -->
+  <section class="stage" id="f1c">
+    <p class="anno">FE-1 试验页型 · C13 允许空。有柜、有空态，不把「0」藏进正式页型备注。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">Studio · 模板治理</span>
+        <span class="sep">/</span>
+        <span>试验页型</span>
+        <span style="margin-left:auto" class="chip">到期日必填 · 到期未转正则退历史归档</span>
+      </div>
+      <div class="nav-tabs">
+        <span>正式页型</span>
+        <span class="on">试验页型 0</span>
+        <span>历史归档</span>
+        <span>封面封底</span>
+        <span>成册系列</span>
+      </div>
+      <div class="body">
+        <div class="empty">
+          没有要试的脸。<br>
+          想试但不进 W1 金样：写假说 + 到期日再进本柜。<br>
+          没有就空着（C13）。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- F1b -->
+  <section class="stage" id="f1b">
+    <p class="anno">FE-1 历史归档 · 旧 screen-* / 名实不符 只在这里。只 get，新册不可选。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">Studio · 模板治理</span>
+        <span class="sep">/</span>
+        <span>历史归档</span>
+        <span style="margin-left:auto" class="chip">只 get · 新册不可选</span>
+      </div>
+      <div class="nav-tabs">
+        <span>正式页型</span><span>试验页型</span><span class="on">历史归档 47</span><span>封面封底</span><span>成册系列</span>
+      </div>
+      <div class="body">
+        <table>
+          <thead>
+            <tr><th></th><th>id</th><th>mix</th><th>数据包</th><th>状态</th><th>新册</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-mini">1L</span></td>
+              <td>screen-landscape-1</td><td>1L</td>
+              <td>旧 fit</td><td>历史归档</td><td>不可选 · 旧 trip 可渲染 · W1 可暂用旧版</td>
+            </tr>
+            <tr>
+              <td><span class="badge-mini">3P</span></td>
+              <td>screen-portrait-3</td><td>3P</td>
+              <td>旧 fit</td><td>历史归档</td><td>不可选 · W1 可暂用旧版</td>
+            </tr>
+            <tr class="row-bad">
+              <td><span class="badge-mini">?</span></td>
+              <td>screen-mosaic-5-main-hero-plus-4</td><td>名 5 / 实 6</td>
+              <td>缺</td><td>历史归档 · 名实不符</td><td>禁止进系列</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="ok-box">正式页型没有名实不符行。D-U-10 留白三条不打这里的旧 fit。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- F2 -->
+  <section class="stage" id="f2">
+    <p class="anno">FE-1 封面封底 · 登记 V6 / CAL / ABE 三家。编排器封面/封底砖从这里点名，不重画题字。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">Studio · 模板治理</span>
+        <span class="sep">/</span>
+        <span>封面封底</span>
+      </div>
+      <div class="nav-tabs">
+        <span>正式页型</span><span>试验页型</span><span>历史归档</span><span class="on">封面封底</span><span>成册系列</span>
+      </div>
+      <div class="body">
+        <table>
+          <thead><tr><th>kind</th><th>SKU</th><th>用途</th><th>工艺业主</th><th>系列默认可选</th></tr></thead>
+          <tbody>
+            <tr><td>封面</td><td>v6-opening</td><td>Web 开篇风格</td><td>V6 Opening</td><td>是 · Web 默认</td></tr>
+            <tr><td>封面</td><td>opening / veil-footer</td><td>题名 + 单图</td><td>CAL</td><td>是 · 本狗粮 16 页正用这个</td></tr>
+            <tr><td>封面</td><td>opening / folio-overlap</td><td>题名叠图</td><td>CAL</td><td>可选</td></tr>
+            <tr><td>封底</td><td>abe-closing-ticket</td><td>收束落款</td><td>ABE</td><td>是</td></tr>
+          </tbody>
+        </table>
+        <p class="ok-box">几何只读。改题字去 CAL，改选片去 ABE。这里只改状态与「系列是否点名」。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- F3 -->
+  <section class="stage" id="f3">
+    <p class="anno">FE-1 成册系列 · 密度条不是密网。只有 16 页正有线框狗粮页序；其余标待 B7，不假装七本都编完。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">Studio · 模板治理</span>
+        <span class="sep">/</span>
+        <span>成册系列</span>
+        <button class="btn pri" style="margin-left:auto">打开编排器</button>
+      </div>
+      <div class="nav-tabs">
+        <span>正式页型</span><span>试验页型</span><span>历史归档</span><span>封面封底</span><span class="on">成册系列 7</span>
+      </div>
+      <div class="body">
+        <table>
+          <thead><tr><th>系列</th><th>档</th><th>密度</th><th>密度条</th><th>槽合计</th><th>状态</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td>magazine-16-standard</td><td>16</td><td>正</td>
+              <td><div class="dens"><i></i><i class="d"></i><i class="m"></i><i class="d"></i><i></i><i class="m"></i><i class="d"></i><i></i></div></td>
+              <td>46 · 带 48–80</td><td>线框狗粮 · 差 2 槽</td><td>编辑</td>
+            </tr>
+            <tr class="row-wait">
+              <td>magazine-16-airy</td><td>16</td><td>疏</td>
+              <td><div class="dens"><i></i><i></i><i class="d"></i><i></i></div></td>
+              <td>—</td><td>待 B7</td><td>壳</td>
+            </tr>
+            <tr class="row-wait">
+              <td>magazine-16-dense</td><td>16</td><td>密</td>
+              <td><div class="dens"><i class="d"></i><i class="d"></i><i class="m"></i><i class="d"></i></div></td>
+              <td>—</td><td>待 B7</td><td>壳</td>
+            </tr>
+            <tr class="row-wait">
+              <td>magazine-8-airy / standard / dense</td><td>8</td><td>三本</td>
+              <td><div class="dens"><i></i><i class="d"></i><i></i></div></td>
+              <td>—</td><td>待 B7</td><td>壳</td>
+            </tr>
+            <tr class="row-wait">
+              <td>magazine-20-standard</td><td>20</td><td>正 · 金样</td>
+              <td><div class="dens"><i></i><i class="d"></i><i></i><i class="m"></i><i class="d"></i></div></td>
+              <td>—</td><td>待产品 B7 / B8</td><td>壳</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note"><strong>请看：</strong>成册系列可以先有 7 个文件壳。没有手写页序的，打开编排器是 F4c 空轨，不是我替你发明的杂志感。</p>
+  </section>
+
+  <!-- F4 -->
+  <section class="stage" id="f4">
+    <p class="anno">
+      狗粮手记：开篇 1 暂用旧版 → 英雄 → 中段 3/4 槽交替 → 8–9 翻开相邻页「双竖 | 呼吸」→ 12 高潮 → 16 收束。
+      不用 journal，不用密网。槽合计 46，正带要 48–80，检查器必须把这 2 槽缺口说出来。
+    </p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">成册编排</span>
+        <span class="chip">magazine-16-standard.yaml</span>
+        <span class="chip">中间 16 页</span>
+        <span class="chip">正 · PPC 3–5</span>
+        <span class="chip amber">当前 46 槽 · 带 48–80 · 差 2</span>
+        <span class="chip">未保存</span>
+        <span class="chip mute">不写 trip.json</span>
+        <span style="margin-left:auto"></span>
+        <button class="btn">预演</button>
+        <button class="btn pri">保存 YAML</button>
+      </div>
+      <div class="editor">
+        <aside class="col">
+          <h3>角色 · 按槽数 · 主拖</h3>
+          <div class="inv">1 槽</div>
+          <div class="role main"><span class="badge-mini">1L</span> chapter-opener</div>
+          <div class="role main"><span class="badge-mini">1L</span> hero-land</div>
+          <div class="role main"><span class="badge-mini">疏</span> breath</div>
+          <div class="role main"><span class="badge-mini">1L</span> peak</div>
+          <div class="role main"><span class="badge-mini">1L</span> closer</div>
+          <div class="inv">2 槽</div>
+          <div class="role main"><span class="badge-mini">2P</span> pair-port</div>
+          <div class="inv">3 槽</div>
+          <div class="role main"><span class="badge-mini">3P</span> row-port-3</div>
+          <div class="role main"><span class="badge-mini">2L1P</span> stack-l-port</div>
+          <div class="role main"><span class="badge-mini">2L1P</span> port-stack-l</div>
+          <div class="inv">4 槽</div>
+          <div class="role main"><span class="badge-mini">4L</span> grid-4-land</div>
+          <div class="inv">6+ · 慎用</div>
+          <div class="role care"><span class="badge-mini">6L</span> grid-dense</div>
+          <div class="inv">W1 禁写</div>
+          <div class="role off"><span class="badge-mini">字</span> journal</div>
+          <h3 style="margin-top:14px">版式 · 只换本页 faceHint</h3>
+          <div class="face-f"><i class="on">3P</i><i>1L</i><i>2P</i><i>2L1P</i><i>4L</i></div>
+          <div class="role"><span class="badge-mini">3P</span> page-3-port · 目标</div>
+        </aside>
+        <main class="col">
+          <p class="mid-label">封面与封底 · 不计入 16 · 点砖只换 coverHint / backHint</p>
+          <div class="bookends">
+            <div class="tile cover">
+              <div class="pg"><span>封面</span><span>换</span></div>
+              <div class="glyph"><div class="s l" style="inset:12% 8%"></div></div>
+              <div class="name">veil-footer <em>CAL</em></div>
+            </div>
+            <div class="tile cover">
+              <div class="pg"><span>封底</span><span>换</span></div>
+              <div class="glyph"><div class="s l" style="inset:20% 16%"></div></div>
+              <div class="name">closing-ticket <em>ABE</em></div>
+            </div>
+          </div>
+          <p class="mid-label">全书密度（中间 1→16）</p>
+          <div class="dens book">
+            <i></i><i></i><i class="m"></i><i class="d"></i><i class="m"></i><i class="m"></i><i class="d"></i><i></i>
+            <i></i><i class="d"></i><i class="m"></i><i></i><i class="d"></i><i class="m"></i><i class="d"></i><i></i>
+          </div>
+          <h3>中间轨 · 1/16 → 16/16 · 砖角 + 为插入 · 不对页画布</h3>
+          <div class="rail">
+            <div class="tile">
+              <div class="pg"><span>1/16</span><span>opener</span></div>
+              <div class="glyph"><div class="s l" style="inset:18% 14%"></div></div>
+              <div class="name">chapter-opener <em>暂用旧版</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>2/16</span><span>hero</span></div>
+              <div class="glyph"><div class="s l" style="inset:16% 12%"></div></div>
+              <div class="name">hero-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>3/16</span><span>mosaic</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:8%;top:14%;width:42%;height:32%"></div>
+                <div class="s l" style="left:8%;top:52%;width:42%;height:32%"></div>
+                <div class="s p" style="left:56%;top:14%;width:36%;height:70%"></div>
+              </div>
+              <div class="name">stack-l-port <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>4/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>5/16</span><span>mosaic</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:8%;top:14%;width:36%;height:70%"></div>
+                <div class="s l" style="left:50%;top:14%;width:42%;height:32%"></div>
+                <div class="s l" style="left:50%;top:52%;width:42%;height:32%"></div>
+              </div>
+              <div class="name">port-stack-l <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile sel pair-l">
+              <div class="pg"><span>6/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:10%;top:18%;width:24%;height:64%"></div>
+                <div class="s p" style="left:38%;top:18%;width:24%;height:64%"></div>
+                <div class="s p" style="left:66%;top:18%;width:24%;height:64%"></div>
+              </div>
+              <div class="name">row-port-3 <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile pair-r">
+              <div class="pg"><span>7/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>8/16</span><span>mosaic</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:16%;top:16%;width:30%;height:68%"></div>
+                <div class="s p" style="left:54%;top:16%;width:30%;height:68%"></div>
+              </div>
+              <div class="name">pair-port <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile flex">
+              <div class="pg"><span>9/16</span><span>breath</span></div>
+              <div class="glyph"><div class="s l" style="inset:28% 30%"></div></div>
+              <div class="name">breath <em>弹性位 · 暂用旧版</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>10/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>11/16</span><span>mosaic</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:8%;top:14%;width:42%;height:32%"></div>
+                <div class="s l" style="left:8%;top:52%;width:42%;height:32%"></div>
+                <div class="s p" style="left:56%;top:14%;width:36%;height:70%"></div>
+              </div>
+              <div class="name">stack-l-port <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>12/16</span><span>peak</span></div>
+              <div class="glyph"><div class="s l" style="inset:14% 10%"></div></div>
+              <div class="name">peak <em>复用 hero</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>13/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>14/16</span><span>mosaic</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:8%;top:14%;width:36%;height:70%"></div>
+                <div class="s l" style="left:50%;top:14%;width:42%;height:32%"></div>
+                <div class="s l" style="left:50%;top:52%;width:42%;height:32%"></div>
+              </div>
+              <div class="name">port-stack-l <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>15/16</span><span>grid</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land <em>正式</em></div>
+              <span class="plus">+</span>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>16/16</span><span>closer</span></div>
+              <div class="glyph"><div class="s l" style="inset:18% 14%"></div></div>
+              <div class="name">closer <em>复用 hero</em></div>
+            </div>
+          </div>
+        </main>
+        <aside class="col">
+          <h3>本页 · 6/16</h3>
+          <p class="stat">
+            角色 <b>row-port-3</b><br>
+            纲领 grid · narrativeRole <b>stack</b><br>
+            脸 <b>page-3-port</b>（目标）<br>
+            槽 3P · 横禁入
+          </p>
+          <h3 style="margin-top:14px">翻开相邻页 · 胶装打开</h3>
+          <div class="pair-strip">
+            <div class="tile pair-l">
+              <div class="pg">6/16</div>
+              <div class="glyph">
+                <div class="s p" style="left:12%;top:20%;width:22%;height:60%"></div>
+                <div class="s p" style="left:39%;top:20%;width:22%;height:60%"></div>
+                <div class="s p" style="left:66%;top:20%;width:22%;height:60%"></div>
+              </div>
+              <div class="name">三竖</div>
+            </div>
+            <div class="tile pair-r">
+              <div class="pg">7/16</div>
+              <div class="glyph">
+                <div class="s l" style="left:12%;top:14%;width:36%;height:32%"></div>
+                <div class="s l" style="left:52%;top:14%;width:36%;height:32%"></div>
+                <div class="s l" style="left:12%;top:52%;width:36%;height:32%"></div>
+                <div class="s l" style="left:52%;top:52%;width:36%;height:32%"></div>
+              </div>
+              <div class="name">四宫</div>
+            </div>
+          </div>
+          <p class="stat" style="color:var(--muted)">同时可见。不是跨页单位，只是软检查。</p>
+          <h3 style="margin-top:14px">全书 · 按家族</h3>
+          <p class="stat">
+            封面 1 · 封底 1 <span style="color:var(--muted)">（不计入 16）</span><br>
+            opener 1 · hero 1 · peak 1 · closer 1<br>
+            三竖 1 · 四宫 6 · 拼图 4 · 双竖 1<br>
+            呼吸 1 · 弹性位 1
+          </p>
+          <div class="amber-box">
+            槽合计 46，正带要 ≥48。差 2 槽。
+            建议：把 8/16 双竖换成四宫，或把弹性位呼吸改成 2 槽 pair。
+            不要为了凑数去锁密网。
+          </div>
+        </aside>
+      </div>
+    </div>
+    <p class="note">
+      <strong>写入仍是角色：</strong><code>row-port-3</code>，不写死 <code>page-3-port</code>。
+      这本页序是我按 6 张已画脸 + hero/breath 暂用旧版排的演示，产品 B7 可以整本推翻。
+    </p>
+  </section>
+
+  <!-- F4b -->
+  <section class="stage" id="f4b">
+    <p class="anno">换这一页的脸 ≠ 重排全书。拖脸到已有砖只改 faceHint。翻开相邻页仍在检查器，不把画布改成对页。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">成册编排</span>
+        <span class="chip">选中 6/16 · 更换版式</span>
+        <span class="chip ok">同族 · 不重排</span>
+        <span style="margin-left:auto"></span>
+        <button class="btn pri">保存 YAML</button>
+      </div>
+      <div class="editor">
+        <aside class="col">
+          <h3>本页可换的脸</h3>
+          <p class="stat" style="margin-bottom:8px">槽数带 = 3 · 朝向账须含 3P</p>
+          <div class="face-pick">
+            <div class="role on"><span class="badge-mini">3P</span> page-3-port · 目标</div>
+            <div class="role"><span class="badge-mini">3P</span> screen-portrait-3 · 暂用旧版</div>
+            <div class="role"><span class="badge-mini">3P</span> screen-portrait-3-editorial · 次选</div>
+          </div>
+          <div class="mute-box">stack-l-port 是 2L1P，不在本页槽数带，灰掉。</div>
+          <h3 style="margin-top:14px">角色库存</h3>
+          <div class="role"><span class="badge-mini">3P</span> 拖到轨上 = 插入/换角色</div>
+          <div class="role"><span class="badge-mini">3P</span> 拖到砖上的版式区 = 只换 faceHint</div>
+        </aside>
+        <main class="col">
+          <p class="mid-label">只画被换的那一页 + 翻开相邻页邻页，避免误以为在改全书</p>
+          <div class="rail" style="grid-template-columns:repeat(3,1fr);max-width:520px">
+            <div class="tile">
+              <div class="pg"><span>5/16</span><span>邻</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:8%;top:14%;width:36%;height:70%"></div>
+                <div class="s l" style="left:50%;top:14%;width:42%;height:32%"></div>
+                <div class="s l" style="left:50%;top:52%;width:42%;height:32%"></div>
+              </div>
+              <div class="name">port-stack-l</div>
+            </div>
+            <div class="tile sel">
+              <div class="pg"><span>6/16</span><span>更换版式</span></div>
+              <div class="glyph">
+                <div class="s p" style="left:10%;top:18%;width:24%;height:64%"></div>
+                <div class="s p" style="left:38%;top:18%;width:24%;height:64%"></div>
+                <div class="s p" style="left:66%;top:18%;width:24%;height:64%"></div>
+              </div>
+              <div class="name">row-port-3 · page-3-port</div>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>7/16</span><span>邻</span></div>
+              <div class="glyph">
+                <div class="s l" style="left:10%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:12%;width:38%;height:34%"></div>
+                <div class="s l" style="left:10%;top:52%;width:38%;height:34%"></div>
+                <div class="s l" style="left:52%;top:52%;width:38%;height:34%"></div>
+              </div>
+              <div class="name">grid-4-land</div>
+            </div>
+          </div>
+          <pre class="yaml" style="margin-top:12px">pages[5]:
+  role: row-port-3
+  program: grid
+  faceHint: page-3-port   # 只动这一行
+  # 不改 pages 顺序，不写 trip.patternId</pre>
+        </main>
+        <aside class="col">
+          <h3>检查器</h3>
+          <p class="stat">换暂用旧版 <b>screen-portrait-3</b> 后：W1 能渲染，舞台仍是 9:16 满幅，和目标 16:9 留白不是同一张。</p>
+          <div class="ok-box">页序不变。全书家族统计不变。槽合计不变。</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- F4c -->
+  <section class="stage" id="f4c">
+    <p class="anno">编的时候还会撞上这三态。v1.1 没画，实现者会漏。</p>
+    <div class="states">
+      <div>
+        <p class="state-cap">① 空轨 · 从成册系列打开「待 B7」壳</p>
+        <div class="app">
+          <div class="app-bar">
+            <span class="brand">成册编排</span>
+            <span class="chip">magazine-20-standard.yaml</span>
+            <span class="chip warn">0 / 20 中间页</span>
+            <span class="chip mute">封面封底沿用现网默认</span>
+          </div>
+          <div class="body">
+            <div class="empty">
+              中间轨是空的。从左侧拖角色到这里铺阅读序。<br>
+              我不会替你发明 20 页金样。保存空序列应被校验拦住。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="state-cap">② 校验失败 · 不写幽灵页序</p>
+        <div class="app">
+          <div class="app-bar">
+            <span class="brand">成册编排</span>
+            <span class="chip warn">保存失败</span>
+            <span class="chip">文件保持上次成功版本</span>
+          </div>
+          <div class="body">
+            <div class="warn-box">
+              未写入。closer 出现在 9/16（中段）。journal 出现在 W1 序列。名实不符 被写进 faceHint。<br>
+              画布可以继续改；刷新会回到文件里的旧序。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="state-cap">③ 关编排旗 · 只读</p>
+        <div class="app">
+          <div class="app-bar">
+            <span class="brand">成册编排</span>
+            <span class="chip mute">旗关 · 只读</span>
+            <span class="chip">Web 回贪心开窗 · AC-06a</span>
+            <button class="btn off" style="margin-left:auto">保存已隐藏</button>
+          </div>
+          <div class="body">
+            <div class="mute-box">
+              还能看历史归档和这本系列总谱。不能拖、不能更换版式。画册卡序不因本旗改变（AC-06b）。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- F5 -->
+  <section class="stage" id="f5">
+    <p class="anno">18 页不是档位。顶栏标非标准页数。多出的 2 页应在尾声；中段邻页双密网是另一盏红灯。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">成册编排</span>
+        <span class="chip warn">18 页 · 非标准页数 · 按 16 页靠档</span>
+        <span class="chip">靠档或丢低优先级页，不随机砍尾</span>
+        <span class="chip amber">17–18 只许 breath / 细节 / closer</span>
+        <span style="margin-left:auto"></span>
+        <button class="btn pri">保存 YAML</button>
+      </div>
+      <div class="editor">
+        <aside class="col">
+          <h3>角色</h3>
+          <div class="role care"><span class="badge-mini">6L</span> grid-dense · 慎用</div>
+          <div class="role main"><span class="badge-mini">疏</span> breath</div>
+          <div class="role main"><span class="badge-mini">1L</span> closer</div>
+        </aside>
+        <main class="col">
+          <p class="mid-label">中段红灯 · 打开时 10 与 11 同时可见</p>
+          <div class="rail" style="grid-template-columns:repeat(2,1fr);max-width:420px">
+            <div class="tile hot">
+              <div class="pg"><span>10/18</span><span>grid-dense</span></div>
+              <div class="glyph" style="background:#2a1816"></div>
+              <div class="name">密网</div>
+            </div>
+            <div class="tile hot">
+              <div class="pg"><span>11/18</span><span>grid-dense</span></div>
+              <div class="glyph" style="background:#2a1816"></div>
+              <div class="name">密网</div>
+            </div>
+          </div>
+          <div class="warn-box">红灯：相邻两页都是密网。请改其中一页为 hero / breath。不要为了 18 页去升新档。</div>
+          <p class="mid-label">多出的 2 页 · 只走尾声</p>
+          <div class="rail" style="grid-template-columns:repeat(2,1fr);max-width:420px">
+            <div class="tile">
+              <div class="pg"><span>17/18</span><span>breath</span></div>
+              <div class="glyph"><div class="s l" style="inset:28% 30%"></div></div>
+              <div class="name">可留</div>
+            </div>
+            <div class="tile">
+              <div class="pg"><span>18/18</span><span>closer</span></div>
+              <div class="glyph"><div class="s l" style="inset:18% 14%"></div></div>
+              <div class="name">可留 · 中段 closer 不行</div>
+            </div>
+          </div>
+        </main>
+        <aside class="col">
+          <h3>非标准页数</h3>
+          <p class="stat">脊建议 16。19 页同理以 16 为脊，不拆开篇与高潮。不升 SKU。</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- F6 -->
+  <section class="stage" id="f6">
+    <p class="anno">预演必须能点开 reason，用人话。命中的是 F4 那本狗粮系列。关旗回两条出口。</p>
+    <div class="app">
+      <div class="app-bar">
+        <span class="brand">成册预演</span>
+        <span class="chip">N = 62 张</span>
+        <span class="chip">P = 16</span>
+        <span class="chip">命中 magazine-16-standard</span>
+        <span class="chip amber">系列槽 46 · 供给 62 · 有 16 张会落选</span>
+      </div>
+      <div class="body">
+        <p class="stat" style="margin-bottom:12px">PPC 目标 3–5 · 未改页序 · 拼图只在槽数带内选脸 · 落选不重排</p>
+        <div class="preview-row">
+          <div class="tile cover"><div class="pg">封面</div><div class="glyph"><div class="s l" style="inset:14%"></div></div><div class="name">veil-footer</div></div>
+          <div class="tile"><div class="pg">1/16 opener</div><div class="glyph"><div class="s l" style="inset:18%"></div></div><div class="name">暂用旧版 landscape-1</div></div>
+          <div class="tile"><div class="pg">2/16 hero</div><div class="glyph"><div class="s l" style="inset:16%"></div></div><div class="name">page-1-hero-land</div></div>
+          <div class="tile"><div class="pg">6/16 grid</div><div class="glyph">
+            <div class="s p" style="left:10%;top:18%;width:24%;height:64%"></div>
+            <div class="s p" style="left:38%;top:18%;width:24%;height:64%"></div>
+            <div class="s p" style="left:66%;top:18%;width:24%;height:64%"></div>
+          </div><div class="name">page-3-port</div></div>
+          <div class="tile hot"><div class="pg">组 4 · 落选</div><div class="glyph"></div><div class="name">横图进不了三竖</div></div>
+          <div class="tile"><div class="pg">12/16 peak</div><div class="glyph"><div class="s l" style="inset:14%"></div></div><div class="name">复用 hero-land</div></div>
+          <div class="tile cover"><div class="pg">封底</div><div class="glyph"><div class="s l" style="inset:20%"></div></div><div class="name">ABE ticket</div></div>
+        </div>
+        <div class="warn-box">
+          reason 用人话：「这一组有横图，三竖硬拒，改走 3/16 的左双横右竖。」
+          不要写 MCS 内部码。
+        </div>
+        <p class="ok-box">关编排旗：Web 回到现网贪心开窗（AC-TSU-06a）；画册卡序不因本旗改变（AC-TSU-06b）。</p>
+      </div>
+    </div>
+  </section>
+
+  <ul class="check" style="padding: 0 18px 8px">
+    <li>☐ 五入口（正式页型 / 试验页型 / 历史归档 / 封面封底 / 成册系列）是否就是你要的后台切分</li>
+    <li>☐ 编排器拖角色、更换版式是两件事 —— 是否符合预期</li>
+    <li>☐ 满 16 砖 + 暂用旧版/弹性位/翻开相邻页 + 槽合计差 2 —— 是否够你审节奏</li>
+    <li>☐ 空轨 / 校验失败 / 关旗只读 这三态要不要进 V1</li>
+    <li>☐ 18 页：中段双密网红灯，和尾声 17–18 可留，是否分开说清</li>
+    <li>☐ 这里没有「把照片拖进槽」—— 确认你不要 C 端填图器</li>
+    <li>☐ 这本 16 页序只是线框狗粮，不代替你的 B7</li>
+  </ul>
+  <p class="note" style="padding: 0 18px 32px">
+    v1.2.1 相对 v1.2：界面用词收口。过程稿「博物馆 / 书衣柜」等旧称不再出现在界面。
+  </p>
+  <script>
+    const tabs = document.getElementById("tabs");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("is-on", b === btn));
+      document.querySelectorAll(".stage").forEach((s) => s.classList.toggle("is-on", s.id === btn.dataset.f));
+    });
+  </script>
+</body>
+</html>
