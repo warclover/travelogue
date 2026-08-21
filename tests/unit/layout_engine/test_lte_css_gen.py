@@ -20,6 +20,27 @@ def engine() -> LayoutTemplateEngine:
 
 
 @pytest.mark.unit
+def test_page_hero_primitives_emit_gutter_slot_placement(
+    engine: LayoutTemplateEngine,
+) -> None:
+    """page-1-hero-* use margin tracks; slot 0 must sit in the content cell."""
+    t = engine.get("page-1-hero-land-wide")
+    css = generate_grid_css(t)
+    assert 'data-slot="0"' in css
+    assert "grid-column: 2;" in css
+    assert "grid-row: 2;" in css
+    for tid in (
+        "page-1-hero-land-right",
+        "page-1-hero-land-ultra",
+        "page-1-hero-port",
+        "page-1-hero-square-right",
+    ):
+        hero = engine.get(tid)
+        hero_css = generate_grid_css(hero)
+        assert f".{hero.render_grid_class} .layout-slot[data-slot=\"0\"]" in hero_css
+
+
+@pytest.mark.unit
 def test_generate_grid_css_for_mosaic_composite(engine: LayoutTemplateEngine) -> None:
     t = engine.get("screen-mosaic-5-main-portrait-3land")
     css = generate_grid_css(t)

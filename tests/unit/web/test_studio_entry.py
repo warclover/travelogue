@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from travelogue.web.studio_entry import (
     build_chapter_summaries,
     build_entry,
@@ -96,7 +98,11 @@ def test_build_entry_appends_fragment_when_peak_exists():
     assert entry["scrollShareUrl"] == "/demo-trip/index.html?share=1#screen-s1"
 
 
-def test_build_entry_exposes_portfolio_edition() -> None:
+def test_build_entry_exposes_portfolio_edition(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "travelogue.web.studio_entry._portfolio_pipeline_enabled",
+        lambda: False,
+    )
     journal = build_entry({"chapters": []}, "demo-trip")
     assert journal["edition"] == "journal"
     assert journal["portfolioPipelineEnabled"] is False
@@ -116,7 +122,8 @@ def test_build_entry_exposes_portfolio_edition() -> None:
     assert entry["layoutVibeVisible"] is False
     assert entry["portfolio"]["photosPlaced"] == 96
     assert entry["portfolio"]["photosKept"] == 180
-    assert entry["portfolio"]["pageCountChips"] == [16]
+    assert entry["portfolio"]["pageCountChips"] == [8, 12, 16, 20, 28]
+    assert entry["portfolio"]["pageCountChipDetails"][0] == {"pages": 8, "capacity": 27}
     assert entry["previewUrl"] == "/demo-trip/index.html"
     assert entry["dockCta"]["aria"] == "导出作品集"
     assert entry["overflowLine"] == "本册收录 96 / 180 张"

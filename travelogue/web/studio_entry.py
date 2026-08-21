@@ -486,18 +486,37 @@ def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
     overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
     match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
     from travelogue.layout_engine.editorial_series.catalog import load_official_series
-    from travelogue.layout_engine.editorial_series.match import catalog_page_count_chips
+    from travelogue.layout_engine.editorial_series.match import (
+        catalog_chip_details,
+        catalog_page_count_chips,
+    )
 
+    catalog = load_official_series()
+    fulfillment = (
+        raw.get("sequenceFulfillment")
+        if isinstance(raw.get("sequenceFulfillment"), dict)
+        else None
+    )
     return {
         "seriesId": raw.get("seriesId"),
         "pageCount": raw.get("pageCount"),
         "pageCountSource": raw.get("pageCountSource") or "auto",
         "pageCountRequested": match.get("pageCountRequested"),
-        "pageCountHint": match.get("pageCountHint"),
-        "pageCountChips": catalog_page_count_chips(load_official_series()),
+        "pageCountHint": match.get("pageCountHint")
+        or (
+            "有 "
+            + str(fulfillment.get("demotedPages"))
+            + " 页降成了单图"
+            if fulfillment and int(fulfillment.get("demotedPages") or 0) > 0
+            else None
+        ),
+        "pageCountChips": catalog_page_count_chips(catalog),
+        "pageCountChipDetails": catalog_chip_details(catalog),
         "photosPlaced": raw.get("photosPlaced"),
         "photosKept": raw.get("photosKept"),
         "overflow": overflow,
+        "sequenceFulfillment": fulfillment,
+        "sparseCollection": bool(raw.get("sparseCollection")),
     }
 
 

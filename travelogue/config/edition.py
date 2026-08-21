@@ -29,7 +29,7 @@ PORTFOLIO_PLATFORM_REQUIRED_MESSAGE = (
 DEFAULT_MIN_KEPT_DISPLAY = 12
 # Align refine pin with trip.schema.json studio.portfolio.pageCount.
 PAGE_COUNT_MIN = 4
-PAGE_COUNT_MAX = 32
+PAGE_COUNT_MAX = 48
 
 
 class PortfolioUnavailableError(CodeError):

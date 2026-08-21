@@ -123,7 +123,8 @@ def test_apply_refine_page_count_auto_and_user() -> None:
     with pytest.raises(ValueError, match="invalid page count"):
         apply_refine_page_count(trip, 1)
     with pytest.raises(ValueError, match="invalid page count"):
-        apply_refine_page_count(trip, 48)
+        apply_refine_page_count(trip, 52)
+    assert apply_refine_page_count(trip, 48) == ("user", 48)
 
 
 def test_read_page_count_intent_prefers_requested() -> None:
@@ -170,7 +171,7 @@ def test_portfolio_pipeline_defaults_off() -> None:
     pipe = studio_config_expose(cfg)["studio"]["portfolioPipeline"]
     assert pipe["enabled"] is False
     assert pipe["homepageEntry"] is False
-    assert pipe["maxPages"] == 32
+    assert pipe["maxPages"] == 48
 
 
 def test_iso06_lvp_write_does_not_change_edition() -> None:

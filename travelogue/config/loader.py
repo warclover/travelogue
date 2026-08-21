@@ -153,7 +153,7 @@ def _parse_portfolio_pipeline_config(studio_raw: dict[str, Any]) -> PortfolioPip
         enabled=cfg_bool(raw, "enabled", "enabled", False),
         homepage_entry=cfg_bool(raw, "homepage_entry", "homepageEntry", False),
         allow_refine_switch=cfg_bool(raw, "allow_refine_switch", "allowRefineSwitch", True),
-        max_pages=cfg_int(raw, "max_pages", "maxPages", 32),
+        max_pages=cfg_int(raw, "max_pages", "maxPages", 48),
         min_kept_override=min_kept,
     )
 

@@ -120,12 +120,12 @@ def test_load_official_series_skips_folio_prefix(tmp_path: Path) -> None:
     (tmp_path / "folio-16-trial.yaml").write_text(
         "id: folio-16-trial\npageCount: 16\n", encoding="utf-8"
     )
-    (tmp_path / "magazine-8-standard.yaml").write_text(
-        (FIXTURE_DIR / "magazine-8-standard.yaml").read_text(encoding="utf-8"),
+    (tmp_path / "magazine-8-sparse.yaml").write_text(
+        (FIXTURE_DIR / "magazine-8-sparse.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     loaded = load_official_series(series_dir=tmp_path)
-    assert [row["id"] for row in loaded] == ["magazine-8-standard"]
+    assert [row["id"] for row in loaded] == ["magazine-8-sparse"]
     assert loaded[0]["sequence"][0]["slotBand"] == 1
 
 
@@ -154,17 +154,34 @@ def test_compose_portfolio_trip_empty_assets_hard_fails() -> None:
     assert exc.value.code == E_PORTFOLIO_UNAVAILABLE
 
 
+W1A_OFFICIAL_IDS = {
+    "magazine-8-standard",
+    "magazine-12-standard",
+    "magazine-16-standard",
+    "magazine-20-standard",
+    "magazine-28-standard",
+}
+
+
 def test_official_catalog_p0_magazine_16() -> None:
     rows = load_official_series()
-    assert [row["id"] for row in rows] == ["magazine-16-standard"]
-    series = rows[0]
+    assert {row["id"] for row in rows} == W1A_OFFICIAL_IDS
+    series = next(row for row in rows if row["id"] == "magazine-16-standard")
     assert series["pageCount"] == 16
     assert series["density"] == "standard"
     assert series["photo_span"] == [48, 80]
     assert len(series["sequence"]) == 16
     bands = [int(p["slotBand"]) for p in series["sequence"]]
     assert bands == [1, 1, 2, 6, 4, 3, 5, 1, 4, 3, 6, 3, 5, 2, 6, 1]
+    assert series["capacity"] == 53
     assert all(not str(row["id"]).startswith("folio-") for row in rows)
+    assert {row["id"]: row["capacity"] for row in rows} == {
+        "magazine-8-standard": 27,
+        "magazine-12-standard": 36,
+        "magazine-16-standard": 53,
+        "magazine-20-standard": 72,
+        "magazine-28-standard": 81,
+    }
 
 
 def test_compose_from_official_magazine_16() -> None:
@@ -188,6 +205,11 @@ def test_compose_from_official_magazine_16() -> None:
     assert screens[3]["patternId"] == "page-6-grid-land"
     assert screens[10]["patternId"] == "page-6-1l5l-wide-right"
     assert screens[15]["patternId"] == "page-1-hero-land-wide"
+    fulfill = trip["studio"]["portfolio"]["sequenceFulfillment"]
+    assert fulfill["plannedPages"] == 16
+    assert fulfill["renderedPages"] == 16
+    assert fulfill["demotedPages"] == 0
+    assert "patternId" not in fulfill
 
 
 def test_curate_fork_source_contract() -> None:
@@ -225,6 +247,24 @@ def test_place_groups_never_mixes_shot_groups() -> None:
         refuse_cross_group_screen([page.shot_group_id] * len(page.asset_ids))
 
 
+def test_underfilled_multi_slot_page_falls_back_to_hero() -> None:
+    groups = [{"id": "solo-a", "kind": "scene", "asset_ids": ["a1"]}]
+    sequence = [
+        {"role": "grid4", "slotBand": 4, "patternId": "page-4-grid-land-wide"},
+    ]
+    land = place_groups(groups, sequence, aspect_kinds={"a1": "landscape"})
+    assert len(land.pages) == 1
+    assert land.pages[0].pattern_id == "page-1-hero-land-wide"
+    assert land.pages[0].asset_ids == ["a1"]
+
+    port = place_groups(
+        [{"id": "solo-b", "kind": "scene", "asset_ids": ["b1"]}],
+        sequence,
+        aspect_kinds={"b1": "portrait"},
+    )
+    assert port.pages[0].pattern_id == "page-1-hero-port"
+
+
 def test_ac_pfm_10_dense_page_degrades_when_group_too_small() -> None:
     """AC-PFM-10 · 槽 ≥5 且组规模不足 → 降级少槽，不硬塞。"""
     groups = [{"id": "g-scene", "kind": "scene", "asset_ids": ["a1", "a2", "a3"]}]
@@ -254,14 +294,14 @@ def test_dense_page_skipped_for_burst() -> None:
     assert [p.shot_group_id for p in placed.pages] == ["g-burst", "g-burst"]
 
 
-def test_select_series_upgrades_when_span_misses() -> None:
+def test_select_series_fill_rate_prefers_window() -> None:
     catalog = _fixture_catalog()
-    choice = select_series(catalog, kept_n=20)
+    choice = select_series(catalog, kept_n=36)
     assert choice is not None
     assert choice.series["id"] == "magazine-16-standard"
-    assert choice.upgraded is True
+    assert choice.upgraded is False
     assert choice.capped is False
-    assert choice.cap == 20
+    assert choice.cap == 36
 
 
 def test_select_series_caps_after_max_tier() -> None:
@@ -271,7 +311,7 @@ def test_select_series_caps_after_max_tier() -> None:
     assert choice.series["id"] == "magazine-32-standard"
     assert choice.upgraded is True
     assert choice.capped is True
-    assert choice.cap == 64
+    assert choice.cap == 72
     assert choice.overflow_resolution == "tier_upgraded_then_capped"
 
 
@@ -282,12 +322,13 @@ def test_select_series_user_pin_does_not_upgrade() -> None:
         kept_n=20,
         page_count=8,
         page_count_source="user",
+        density="sparse",
     )
     assert choice is not None
-    assert choice.series["id"] == "magazine-8-standard"
+    assert choice.series["id"] == "magazine-8-sparse"
     assert choice.upgraded is False
-    assert choice.capped is True
-    assert choice.cap == 16
+    assert choice.capped is False
+    assert choice.cap == 20
 
 
 def test_catalog_page_count_chips_only_official_skus() -> None:
@@ -296,7 +337,17 @@ def test_catalog_page_count_chips_only_official_skus() -> None:
 
     assert catalog_page_count_chips([]) == []
     assert catalog_page_count_chips(_fixture_catalog()) == [8, 16, 32]
-    assert catalog_page_count_chips(load_official_series()) == [16]
+    assert catalog_page_count_chips(load_official_series()) == [8, 12, 16, 20, 28]
+
+
+def test_snap_44_falls_to_catalog_sku() -> None:
+    used, hint = snap_user_page_count(
+        44,
+        [{"pageCount": 16}, {"pageCount": 28}, {"pageCount": 36}],
+        max_pages=48,
+    )
+    assert used == 36
+    assert hint == "非标准页数 · 按 36 页靠档"
 
 
 def test_snap_18_to_16_hint() -> None:
@@ -372,12 +423,12 @@ def test_compose_fixture_overflow_cap() -> None:
         series=_fixture_catalog(),
     )
     placed = _screen_ids(out)
-    assert len(placed) == 64
+    assert len(placed) == 72
     assert _item_ids(out) <= set(placed)
     overflow = meta["overflow"]
-    assert overflow["count"] == 16
+    assert overflow["count"] == 8
     assert overflow["resolution"] == "tier_upgraded_then_capped"
-    assert trip["studio"]["portfolio"]["photosPlaced"] == 64
+    assert trip["studio"]["portfolio"]["photosPlaced"] == 72
     assert trip["studio"]["portfolio"]["photosKept"] == 80
 
 
@@ -419,11 +470,12 @@ def test_compose_from_fixture_dir_not_runtime() -> None:
         assets=assets,
         series_dir=FIXTURE_DIR,
     )
-    assert meta["seriesId"] in {"magazine-8-standard", "magazine-16-standard"}
+    assert meta["seriesId"] in {"magazine-8-sparse", "magazine-16-standard"}
     assert SERIES_DIR.resolve() != FIXTURE_DIR.resolve()
     official = load_official_series()
-    assert [row["id"] for row in official] == ["magazine-16-standard"]
-    assert official[0]["photo_span"] == [48, 80]
+    assert {row["id"] for row in official} == W1A_OFFICIAL_IDS
+    gold = next(row for row in official if row["id"] == "magazine-16-standard")
+    assert gold["photo_span"] == [48, 80]
 
 
 def test_intake_rejects_folio_and_pagecount_mismatch() -> None:
@@ -490,5 +542,75 @@ def test_min_photo_span_lo_from_fixture_catalog() -> None:
 
     assert min_photo_span_lo(_fixture_catalog()) == 8
     assert min_photo_span_lo([]) is None
-    assert min_photo_span_lo(load_official_series()) == 48
+    assert min_photo_span_lo(load_official_series()) == 24
+
+
+def test_select_series_fill_rate_official_w1a() -> None:
+    catalog = load_official_series()
+    by_kept = {
+        20: "magazine-8-standard",
+        50: "magazine-16-standard",
+        82: "magazine-28-standard",
+    }
+    for kept, sid in by_kept.items():
+        choice = select_series(catalog, kept_n=kept)
+        assert choice is not None
+        assert choice.series["id"] == sid, kept
+    overflow = select_series(catalog, kept_n=82)
+    assert overflow is not None
+    assert overflow.overflow_count == 1
+    assert overflow.capped is True
+
+
+def test_compose_82_overflow_is_explicit() -> None:
+    assets = _assets_from_groups([("g-all", "scene", 82)])
+    chapters = _one_chapter(assets)
+    trip: dict = {"studio": {"edition": "portfolio"}}
+    _out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
+    assert meta["seriesId"] == "magazine-28-standard"
+    overflow = trip["studio"]["portfolio"]["overflow"]
+    assert overflow["count"] == 1
+    assert overflow["resolution"]
+
+
+def test_photo_span_mutation_leaves_four_paths_unchanged() -> None:
+    from travelogue.layout_engine.editorial_series.catalog import min_capacity
+
+    catalog = load_official_series()
+    mutated = []
+    for row in catalog:
+        copy = dict(row)
+        copy["photo_span"] = [1, 999]
+        mutated.append(copy)
+    for kept in (20, 50, 82, 90):
+        a = select_series(catalog, kept_n=kept)
+        b = select_series(mutated, kept_n=kept)
+        assert a is not None and b is not None
+        assert a.series["id"] == b.series["id"]
+        assert a.cap == b.cap
+        assert a.overflow_count == b.overflow_count
+        assert a.overflow_resolution == b.overflow_resolution
+    assert min_capacity(catalog) == min_capacity(mutated) == 27
+
+
+def test_select_series_ignores_photo_span_for_cap() -> None:
+    catalog = load_official_series()
+    mutated = []
+    for row in catalog:
+        copy = dict(row)
+        copy["photo_span"] = [1, 999]
+        mutated.append(copy)
+    a = select_series(catalog, kept_n=50)
+    b = select_series(mutated, kept_n=50)
+    assert a is not None and b is not None
+    assert a.series["id"] == b.series["id"] == "magazine-16-standard"
+    assert a.cap == b.cap == 50
+
+
+def test_min_capacity_from_official_catalog() -> None:
+    from travelogue.layout_engine.editorial_series.catalog import min_capacity
+
+    assert min_capacity(_fixture_catalog()) == 21
+    assert min_capacity([]) is None
+    assert min_capacity(load_official_series()) == 27
 

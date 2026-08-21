@@ -195,7 +195,24 @@
         "pageCount": {
           "type": "integer",
           "minimum": 4,
-          "maximum": 32
+          "maximum": 48
+        },
+        "sequenceFulfillment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plannedPages": { "type": "integer", "minimum": 0 },
+            "renderedPages": { "type": "integer", "minimum": 0 },
+            "fillRatio": { "type": "number" },
+            "demotedPages": { "type": "integer", "minimum": 0 },
+            "droppedRoles": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "sparseCollection": {
+          "type": "boolean"
         },
         "pageCountSource": {
           "type": "string",

@@ -5,7 +5,7 @@
 | **PRD** | [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.2.0** · **§14 为源** |
 | **实施** | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) |
 | **DOC-STATUS** | **active** |
-| **更新日期** | 2026-08-20 |
+| **更新日期** | 2026-08-21 |
 
 本页只锁定已开工波次的可执行门。完整 AC 表仍以 PRD §14 为准。
 
@@ -86,3 +86,13 @@ P0 序列已入运行时目录。W1 匹配器可对官方 16 页装配。**AS-PF
 | **AC-PFM-32** | 作品集正文无图注 / 章导语节点；封面封底书名地点仍在 | `test_ac_pfm_32_portfolio_body_omits_caption_and_lead` |
 | **AC-PFM-14** | 作品集 + 快速仍两击 | `wizardHitsToStart` · `tests/js/import-wizard-logic.test.mjs` |
 | **AC-PFM-23** | C 端可见串禁 edition / PFM / MCS / page-* | `test_ac_pfm_23_c_end_visible_copy_has_no_jargon` |
+| **ISO-04** | 作品集 × 显式微信群走 kept 竖条，不拍 5 槽以上 `page-*` | `tests/unit/export/test_pfm_collage_isolation.py` |
+| **ISO-06** | 作品集拒 LVP；切身份不改 `layoutVibe` | `test_iso06_lvp_rejects_portfolio_trip` · `tests/unit/config/test_edition.py` |
+| **AS-PFM-03** | **已升格 · 五档入库**（8/12/16/20/28；24/32/36 未入）。工坊对账原文不变；运行时仍拒 reserve | [对账纪要](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) · [MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md) · `test_atelier_series_audit.py` |
+
+## W4 门（协议已锁 · 人评未开）
+
+| ID | 断言 | 证据 |
+|----|------|------|
+| **AC-PFM-25** | 金样成对盲评「像一本」三问胜出 | [GUIDE](./acceptance-records/pfm-local-dogfood-GUIDE.md) · [模板](./acceptance-records/pfm-blind-review-TEMPLATE.md) · **尚未打分** |
+| **D-PFM-06** | 盲评过门前 `homepage_entry` 保持 false | `test_homepage_portfolio_entry_exists_but_hidden_by_default` |

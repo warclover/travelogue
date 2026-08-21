@@ -9,9 +9,14 @@ version: 1
 pageCount: 16
 density: standard
 photo_span: [48, 80]
+capacity: 53
 coverHint: veil-footer
 backHint: closing-default
 sourceAtelier: folio-16-standard
+_promotedFrom:
+  atelierId: folio-16-standard
+  contentHash: e68f9645329793400cad5e84b07903dd075aab6375149ccd7736c964fb32649a
+  promotedAt: 2026-08-21T10:01:47Z
 sequence:
   - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 2, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }

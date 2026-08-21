@@ -18,12 +18,20 @@ from travelogue.layout_engine.editorial_series.catalog import (
     assert_not_reserve_path,
     load_official_series,
 )
+from travelogue.layout_engine.editorial_series.fill import (
+    FULFILL_MIN,
+    fill_groups_from_assets,
+    fulfillment_ratio,
+    is_sparse_collection,
+)
 from travelogue.layout_engine.editorial_series.match import (
     groups_from_assets,
     select_series,
+    series_capacity,
     snap_user_page_count,
 )
 from travelogue.layout_engine.editorial_series.place import (
+    PlaceResult,
     attach_screens_to_chapters,
     place_groups,
 )
@@ -50,12 +58,17 @@ def compose_portfolio_trip(
     if not catalog:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
 
-    groups = groups_from_assets(assets, buckets=buckets)
+    sparse = is_sparse_collection(assets)
+    if sparse:
+        groups = groups_from_assets(assets, buckets=buckets)
+    else:
+        groups = fill_groups_from_assets(assets, trip=trip, buckets=buckets)
     kept_n = sum(len(g["asset_ids"]) for g in groups)
     if kept_n <= 0:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
 
     pipe = portfolio_pipeline_config(app_cfg)
+    max_pages = int(pipe.max_pages or 48)
     page_count, page_count_source = _page_request(trip)
     requested_pages = page_count
     snap_hint = None
@@ -63,23 +76,61 @@ def compose_portfolio_trip(
         page_count, snap_hint = snap_user_page_count(
             page_count,
             catalog,
-            max_pages=int(pipe.max_pages or 32),
+            max_pages=max_pages,
         )
     choice = select_series(
         catalog,
         kept_n=kept_n,
         page_count=page_count,
         page_count_source=page_count_source,
-        max_pages=int(pipe.max_pages or 32),
+        max_pages=max_pages,
     )
     if choice is None:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
 
-    placed = place_groups(
-        groups,
-        choice.series.get("sequence") or [],
-        cap=choice.cap,
-    )
+    aspect_kinds: dict[str, str] = {}
+    for raw in assets or []:
+        aid = str(raw.get("id") or raw.get("assetId") or "").strip()
+        if not aid:
+            continue
+        aspect_kinds[aid] = str(raw.get("aspectKind") or raw.get("aspect_kind") or "")
+    placed = _place_choice(groups, choice, aspect_kinds)
+    fulfill_hint = None
+    if (
+        not sparse
+        and page_count_source == "auto"
+        and _fulfillment(placed, choice) < FULFILL_MIN
+    ):
+        better = _better_fulfilling_choice(
+            catalog,
+            groups,
+            kept_n=kept_n,
+            max_pages=max_pages,
+            aspect_kinds=aspect_kinds,
+            current=choice,
+        )
+        if better is not None:
+            alt_placed = _place_choice(groups, better, aspect_kinds)
+            if alt_placed.pages:
+                fulfill_hint = f"你的照片更适合 {int(better.series.get('pageCount') or 0)} 页"
+                choice = better
+                placed = alt_placed
+    elif (
+        not sparse
+        and page_count_source == "user"
+        and _fulfillment(placed, choice) < FULFILL_MIN
+    ):
+        auto = select_series(
+            catalog, kept_n=kept_n, page_count_source="auto", max_pages=max_pages
+        )
+        if auto is not None and auto.series.get("id") != choice.series.get("id"):
+            hollow = max(0, int(choice.series.get("pageCount") or 0) - placed.fulfilled_pages)
+            fulfill_hint = (
+                f"有 {hollow} 页没排满，换 "
+                f"{int(auto.series.get('pageCount') or 0)} 页会更饱满"
+            )
+    if sparse and not fulfill_hint:
+        fulfill_hint = "这些照片间隔较大，预设编排排不饱满"
     if not placed.pages:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
 
@@ -111,8 +162,10 @@ def compose_portfolio_trip(
             "droppedRoles": list(placed.dropped_roles),
             "nearMiss": "photo_span" if (choice.upgraded or choice.capped) else None,
             "pageCountRequested": requested_pages if page_count_source == "user" else None,
-            "pageCountHint": snap_hint,
+            "pageCountHint": snap_hint or fulfill_hint,
         },
+        fulfillment=_sequence_fulfillment(placed, choice, photos_placed),
+        sparse=sparse,
     )
     replan_meta = {
         "editorialSeries": True,
@@ -120,6 +173,8 @@ def compose_portfolio_trip(
         "photosPlaced": photos_placed,
         "photosKept": kept_n,
         "overflow": overflow,
+        "sequenceFulfillment": _sequence_fulfillment(placed, choice, photos_placed),
+        "sparseCollection": sparse,
     }
     return chapters, replan_meta
 
@@ -134,6 +189,78 @@ def _load_catalog(
     if path is not None:
         assert_not_reserve_path(path)
     return load_official_series(series_dir=path)
+
+
+def _place_choice(
+    groups: Sequence[Mapping[str, Any]],
+    choice: Any,
+    aspect_kinds: Mapping[str, str],
+) -> PlaceResult:
+    return place_groups(
+        groups,
+        choice.series.get("sequence") or [],
+        cap=choice.cap,
+        aspect_kinds=aspect_kinds,
+    )
+
+
+def _fulfillment(placed: PlaceResult, choice: Any) -> float:
+    planned = len(choice.series.get("sequence") or [])
+    return fulfillment_ratio(
+        fulfilled_pages=placed.fulfilled_pages, planned_pages=planned
+    )
+
+
+def _sequence_fulfillment(
+    placed: PlaceResult,
+    choice: Any,
+    photos_placed: int,
+) -> dict[str, Any]:
+    planned = len(choice.series.get("sequence") or [])
+    cap = series_capacity(choice.series) or 1
+    return {
+        "plannedPages": planned,
+        "renderedPages": len(placed.pages),
+        "fillRatio": round(photos_placed / cap, 4),
+        "demotedPages": placed.demoted_pages,
+        "droppedRoles": list(placed.dropped_roles),
+    }
+
+
+def _better_fulfilling_choice(
+    catalog: Sequence[Mapping[str, Any]],
+    groups: Sequence[Mapping[str, Any]],
+    *,
+    kept_n: int,
+    max_pages: int,
+    aspect_kinds: Mapping[str, str],
+    current: Any,
+) -> Any:
+    current_density = str(current.series.get("density") or "standard").strip().lower()
+    viable: list[dict[str, Any]] = []
+    for row in catalog:
+        if str(row.get("id") or "") == str(current.series.get("id") or ""):
+            continue
+        row_density = str(row.get("density") or "standard").strip().lower()
+        if row_density != current_density:
+            continue
+        trial = select_series(
+            [row],
+            kept_n=kept_n,
+            page_count=int(row.get("pageCount") or 0),
+            page_count_source="user",
+            max_pages=max_pages,
+        )
+        if trial is None:
+            continue
+        placed = _place_choice(groups, trial, aspect_kinds)
+        if _fulfillment(placed, trial) >= FULFILL_MIN:
+            viable.append(dict(row))
+    if not viable:
+        return None
+    return select_series(
+        viable, kept_n=kept_n, page_count_source="auto", max_pages=max_pages
+    )
 
 
 def _page_request(trip: Mapping[str, Any] | None) -> tuple[int | None, str]:
@@ -162,6 +289,8 @@ def _stamp_portfolio(
     photos_kept: int,
     overflow: dict[str, Any] | None,
     match: dict[str, Any],
+    fulfillment: dict[str, Any] | None = None,
+    sparse: bool = False,
 ) -> None:
     if not isinstance(trip, dict):
         return
@@ -184,3 +313,11 @@ def _stamp_portfolio(
     else:
         block.pop("overflow", None)
     block["match"] = match
+    if fulfillment:
+        block["sequenceFulfillment"] = fulfillment
+    else:
+        block.pop("sequenceFulfillment", None)
+    if sparse:
+        block["sparseCollection"] = True
+    else:
+        block.pop("sparseCollection", None)

@@ -6,7 +6,7 @@
 | **验收** | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
 | **DOC-STATUS** | **active** |
 | **分支** | `feat/pfm-portfolio-folio-mode-v1` |
-| **状态** | **W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 工坊对账完成（不升格）** · W4 狗粮协议已锁、人评未开 · 首页次链仍关 |
+| **状态** | **W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（后继 [MSP](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、人评未开 · 首页次链仍关 |
 | **更新日期** | 2026-08-21 |
 
 ---
@@ -191,7 +191,7 @@ W0–W3 主路径与 §2 编码项均已落。运营对账、狗粮盲评、开 
 | `copyOrphans` 浏览 UI | BE-PFM-25 已写明本波不做 |
 | 打开 `homepage_entry` / 改首页主 CTA | W4 狗粮盲评后产品拍；D-PFM-06 |
 | `page-10-grid-port` 入库 | 槽数 10 超 LTE schema；等 TSU |
-| AS-PFM-03 工坊升格入库 | 对账已做；P1 仍不入库 |
+| AS-PFM-03 工坊升格入库 | **五档已入**（8/12/16/20/28）；24/32/36 见 MSP ASK |
 | AC-PFM-25 盲评「像一本」 | W4 人评，不是编码刀 |
 | 游记 Dock / LVP / Wait Tips 六张字面 | 零改 |
 
@@ -201,7 +201,7 @@ W0–W3 主路径与 §2 编码项均已落。运营对账、狗粮盲评、开 
 |----|------|------|
 | **ISO-04** | **Done** · 作品集 × 显式 `wechat_chat` 走 kept 竖条 | `portfolio_wechat.py` · `test_iso04_*` |
 | **ISO-06** | **Done** · 作品集拒 LVP；切身份不改 `layoutVibe` | `test_iso06_lvp_rejects_portfolio_trip` |
-| **AS-PFM-03** | **对账完成 · 不升格** · `folio-24` 已是 24 页 | [纪要](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) · `test_atelier_series_audit.py` |
+| **AS-PFM-03** | **已升格 · 五档入库** · 对账原文不改 | [对账](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) · [MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md) |
 | **W4 协议** | **已锁** · 人评未开 · 勿开 `homepage_entry` | [GUIDE](./acceptance-records/pfm-local-dogfood-GUIDE.md) · [盲评模板](./acceptance-records/pfm-blind-review-TEMPLATE.md) · [配置](./config-pfm-dogfood.example.yaml) |
 
 **W0–W3 编码清单已清。** 下一刀是人评三册；过门前不开首页次链。

@@ -119,21 +119,106 @@ export function editionCardOptions() {
 
 /** 无目录投影时只出「自动」；数字档必须由现网系列库投影。 */
 export var PAGE_COUNT_CHIPS = [];
+export var THIN_TIER_RATIO = 0.6;
+
+export function chipCapacity(entry) {
+  if (entry && typeof entry === "object") {
+    var cap = Number(entry.capacity);
+    return cap > 0 ? cap : 0;
+  }
+  return 0;
+}
+
+export function chipPages(entry) {
+  if (entry && typeof entry === "object") {
+    return Number(entry.pages || entry.pageCount || 0);
+  }
+  return Number(entry);
+}
+
+export function pageCountChipHint(pages, capacity) {
+  var n = Number(pages);
+  var cap = Number(capacity);
+  if (!(n > 0)) return "";
+  if (!(cap > 0)) return String(n);
+  return n + " 页 · 约 " + cap + " 张";
+}
+
+export function normalizeChipDetails(chips) {
+  var raw = Array.isArray(chips) ? chips : PAGE_COUNT_CHIPS;
+  var out = [];
+  raw.forEach(function (entry) {
+    var pages = chipPages(entry);
+    if (!(pages > 0)) return;
+    out.push({ pages: pages, capacity: chipCapacity(entry) });
+  });
+  return out;
+}
 
 export function pageCountChipOptions(chips) {
-  var raw = Array.isArray(chips) ? chips : PAGE_COUNT_CHIPS;
-  var list = raw
-    .map(function (n) {
-      return Number(n);
-    })
-    .filter(function (n) {
-      return n > 0;
-    });
-  return [{ id: "auto", label: "自动" }].concat(
-    list.map(function (n) {
-      return { id: String(n), label: String(n) };
+  var list = normalizeChipDetails(chips);
+  return [{ id: "auto", label: "自动", hint: "", capacity: 0 }].concat(
+    list.map(function (row) {
+      return {
+        id: String(row.pages),
+        label: String(row.pages),
+        hint: pageCountChipHint(row.pages, row.capacity),
+        capacity: row.capacity,
+      };
     })
   );
+}
+
+export function recommendPageCount(chips, kept) {
+  var list = normalizeChipDetails(chips).filter(function (row) {
+    return row.capacity > 0;
+  });
+  var n = Number(kept);
+  if (!list.length || !(n > 0)) return 0;
+  var windowHits = list.filter(function (row) {
+    var ratio = n / row.capacity;
+    return ratio >= 0.85 && ratio <= 1.05;
+  });
+  if (windowHits.length) {
+    return windowHits.reduce(function (a, b) {
+      return a.pages <= b.pages ? a : b;
+    }).pages;
+  }
+  var under = list.filter(function (row) {
+    return row.capacity >= n;
+  });
+  if (under.length) {
+    return under.reduce(function (a, b) {
+      return a.capacity <= b.capacity ? a : b;
+    }).pages;
+  }
+  return list.reduce(function (a, b) {
+    return a.pages >= b.pages ? a : b;
+  }).pages;
+}
+
+export function shouldConfirmThinTier(capacity, kept) {
+  var cap = Number(capacity);
+  var n = Number(kept);
+  return cap > 0 && n > 0 && cap < n * THIN_TIER_RATIO;
+}
+
+export function thinTierConfirm(capacity, kept, recommendPages) {
+  var rec = Number(recommendPages);
+  var body =
+    "这一档只收 " +
+    Number(capacity) +
+    " 张，你有 " +
+    Number(kept) +
+    " 张。";
+  if (rec > 0) body += "要更厚的一本吗？";
+  return {
+    title: "这一档会少收很多照片",
+    body: body,
+    confirmText: rec > 0 ? "改用 " + rec + " 页" : "仍用这一档",
+    cancelText: rec > 0 ? "仍用这一档" : "取消",
+    recommendPages: rec > 0 ? rec : 0,
+  };
 }
 
 /** @param {{ pageCountSource?: string, pageCount?: number, pageCountRequested?: number }} portfolio */

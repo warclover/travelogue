@@ -111,12 +111,28 @@ def normalize_series_document(
         page["slotBand"] = band
         page["patternId"] = pattern
         pages.append(page)
+    baked = sum(int(page["slotBand"]) for page in pages)
+    raw_cap = data.get("capacity")
+    if raw_cap not in (None, ""):
+        try:
+            capacity = int(raw_cap)
+        except (TypeError, ValueError) as exc:
+            raise SeriesIntakeError(f"{sid} capacity must be a positive int") from exc
+        if capacity != baked:
+            raise SeriesIntakeError(
+                f"{sid} capacity {capacity} != sum(slotBand) {baked}"
+            )
+    else:
+        capacity = baked
+    if capacity <= 0:
+        raise SeriesIntakeError(f"{sid} capacity must be > 0")
     out = dict(data)
     out["id"] = sid
     out["kind"] = str(data.get("kind") or "series")
     out["pageCount"] = page_count
     out["density"] = density
     out["photo_span"] = [lo, hi]
+    out["capacity"] = capacity
     out["sequence"] = pages
     return out
 

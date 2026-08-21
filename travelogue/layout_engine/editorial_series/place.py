@@ -6,6 +6,17 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 DENSE_MIN_SLOTS = 5
+HERO_LAND_FACE = "page-1-hero-land-wide"
+HERO_PORT_FACE = "page-1-hero-port"
+
+
+def _hero_face_for(asset_ids: Sequence[str], aspect_kinds: Mapping[str, str] | None) -> str:
+    kind = ""
+    if aspect_kinds and asset_ids:
+        kind = str(aspect_kinds.get(str(asset_ids[0])) or "").lower()
+    if kind in {"portrait", "port", "tall"}:
+        return HERO_PORT_FACE
+    return HERO_LAND_FACE
 
 
 @dataclass
@@ -16,6 +27,7 @@ class PlacedPage:
     pattern_id: str
     asset_ids: list[str]
     shot_group_id: str
+    planned_pattern_id: str = ""
 
     def as_screen(self) -> dict[str, Any]:
         refuse_cross_group_screen([self.shot_group_id] * len(self.asset_ids))
@@ -38,6 +50,8 @@ class PlaceResult:
     leftover_ids: list[str] = field(default_factory=list)
     dropped_roles: list[str] = field(default_factory=list)
     used_roles: list[str] = field(default_factory=list)
+    demoted_pages: int = 0
+    fulfilled_pages: int = 0
 
 
 def refuse_cross_group_screen(asset_group_ids: Sequence[str]) -> None:
@@ -63,6 +77,7 @@ def place_groups(
     sequence: Sequence[Mapping[str, Any]],
     *,
     cap: int | None = None,
+    aspect_kinds: Mapping[str, str] | None = None,
 ) -> PlaceResult:
     """Fill pages from groups in order. Never mix two shot groups on one page."""
     queues: list[dict[str, Any]] = []
@@ -112,9 +127,16 @@ def place_groups(
         take_n = min(band, len(group["ids"]))
         chunk = group["ids"][:take_n]
         group["ids"] = group["ids"][take_n:]
-        pattern = str(
+        planned = str(
             spec.get("patternId") or spec.get("faceHint") or f"page-grid-{take_n}"
         )
+        pattern = planned
+        demoted = False
+        # Solo / undersized group on a 2–4 slot face: keep one photo, but do
+        # not park it in the first cell of an empty grid (top-left quarter).
+        if take_n == 1 and band > 1:
+            pattern = _hero_face_for(chunk, aspect_kinds)
+            demoted = pattern != planned
         page = PlacedPage(
             role=role,
             program=str(spec.get("program") or ""),
@@ -122,11 +144,16 @@ def place_groups(
             pattern_id=pattern,
             asset_ids=chunk,
             shot_group_id=str(group["id"]),
+            planned_pattern_id=planned,
         )
         refuse_cross_group_screen([page.shot_group_id] * len(page.asset_ids))
         result.pages.append(page)
         if role:
             result.used_roles.append(role)
+        if demoted:
+            result.demoted_pages += 1
+        elif take_n == band:
+            result.fulfilled_pages += 1
 
     for g in queues:
         result.leftover_ids.extend(g["ids"])

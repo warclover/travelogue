@@ -1,10 +1,10 @@
-# PFM matcher fixture · 版式试验 · not a shipping series (AS-PFM-01 still open).
+# PFM matcher fixture · 版式试验 · not a shipping series (BLK-MSP-03).
 # Invented slotBands; not copied from docs/templates/reserve/.
-id: magazine-8-standard
+id: magazine-8-sparse
 kind: series
 version: 1
 pageCount: 8
-density: standard
+density: sparse
 photo_span: [8, 16]
 sequence:
   - { i: 1, role: hero, program: hero, slotBand: 1, patternId: page-hero-1 }

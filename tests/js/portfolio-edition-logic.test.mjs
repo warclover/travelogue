@@ -12,7 +12,10 @@ import {
   overflowJournalCta,
   pageCountChipOptions,
   portfolioFlagOffBannerCopy,
+  recommendPageCount,
   selectedPageCountChip,
+  shouldConfirmThinTier,
+  thinTierConfirm,
   shelfEditionLine,
   shouldMountEditionType,
   shouldShowPortfolioFlagOffBanner,
@@ -59,13 +62,30 @@ test("页数芯片只出目录投影的档，缺省仅自动", () => {
     empty.map((o) => o.id),
     ["auto"]
   );
-  const opts = pageCountChipOptions([16]);
+  const opts = pageCountChipOptions([{ pages: 12, capacity: 36 }, { pages: 16, capacity: 53 }]);
   assert.equal(opts[0].id, "auto");
   assert.equal(opts[0].label, "自动");
   assert.deepEqual(
     opts.slice(1).map((o) => o.id),
-    ["16"]
+    ["12", "16"]
   );
+  assert.equal(opts[1].hint, "12 页 · 约 36 张");
+  assert.equal(opts[2].hint, "16 页 · 约 53 张");
+  assert.equal(shouldConfirmThinTier(27, 180), true);
+  assert.equal(shouldConfirmThinTier(81, 80), false);
+  assert.equal(
+    recommendPageCount(
+      [
+        { pages: 8, capacity: 27 },
+        { pages: 28, capacity: 81 },
+      ],
+      80
+    ),
+    28
+  );
+  const confirm = thinTierConfirm(27, 180, 28);
+  assert.match(confirm.body, /只收 27 张/);
+  assert.equal(confirm.confirmText, "改用 28 页");
   assert.equal(selectedPageCountChip({ pageCountSource: "auto", pageCount: 16 }), "auto");
   assert.equal(
     selectedPageCountChip({ pageCountSource: "user", pageCount: 16, pageCountRequested: 18 }),

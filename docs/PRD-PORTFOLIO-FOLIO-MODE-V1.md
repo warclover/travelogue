@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.0**（BLK-PFM-01～09 已回写） |
-| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 + §2 后续编码已清** · 游记导出快照零 diff · entry/书架同一份 chrome · telemetry edition/overflow · ISO-01/02/07 · 换种分享不读 patternId · AC-PFM-10/32/14/23（`feat/pfm-portfolio-folio-mode-v1`）；首页次链仍关 |
+| **文档版本** | **v0.2.1**（BLK-PFM-01～09 已回写 · AS-PFM-03 MSP 后继） |
+| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（[MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、人评未开（`feat/pfm-portfolio-folio-mode-v1`）；首页次链仍关 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
 | **界面用词** | **游记**（快分享）· **作品集**（杂志风卷轴）。禁止对 C 端说「第七种模式 / page-* / 成册引擎 / 画册已经按页」 |
@@ -16,7 +16,7 @@
 | **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
 | **验收** | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
 | **实施** | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
-| **更新日期** | 2026-08-20 |
+| **更新日期** | 2026-08-21 |
 
 > **定位**
 >
@@ -493,7 +493,7 @@ else:                               compose_trip(...)   # 零改签名
 | P1 | `magazine-24-standard` 或 `magazine-32-standard` | 长档一根即可 |
 | P2 | 其余 12/20/28 × 疏正密 | 不挡 W1，挡「档位芯片全开」 |
 
-工坊 `folio-16-standard` 只作设计稿，运营升格后改 id。工坊 `folio-24-standard` 现网文件 `pageCount: 32` 不得入库——升格检查单硬拒 id 与页数不一致。
+工坊 `folio-16-standard` 只作设计稿，运营升格后改 id。工坊 `folio-24-standard` **已纠正为 24 页**（历史 `pageCount: 32` 不再存在）；升格检查单仍硬拒 id 与页数不一致。对账见 [AS-PFM-03 纪要](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md)。
 
 ### 8.4 装填
 
@@ -637,7 +637,7 @@ else:                               compose_trip(...)   # 零改签名
 |----|------|------|------|
 | **AS-PFM-01** | 正式 `series/` 收件目录定案（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 入库 | TSU + 运营 | **P0 已入运行时目录** |
 | **AS-PFM-02** | 活目录 `page-*` 几何入 LTE | **TSU W3** | **75 张已编译（P0 11 张齐；page-10 未收）** |
-| **AS-PFM-03** | 工坊 YAML 页数与 id 对账（拒 `folio-24` 标 32） | 运营 | 挡升格 |
+| **AS-PFM-03** | 工坊 YAML 页数与 id 对账（拒 `folio-24` 标 32） | 运营 | **已升格 · 五档入库**（8/12/16/20/28）；24/32/36 见 [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) |
 | **AS-PFM-04** | CHARTER 补一行「第二产品形态：作品集」，明确不改主叙事 | 产品 | 不挡波次（SHD-05） |
 
 ---
@@ -770,3 +770,5 @@ else:                               compose_trip(...)   # 零改签名
 |------|------|------|
 | 0.1.0 | 2026-08-20 | 初稿。收口双管线、入口、导出、隔离、前后端任务。待审线框 F0–F8。 |
 | 0.2.0 | 2026-08-20 | 八席 Conditional Go 回写：**BLK-01** 命名改 `edition`/`portfolio_*`；**BLK-02** 取消 `layoutEngine` 第三值；**BLK-03** 溢出升档 + 明示（§8.5）；**BLK-04** V1 正文纯图；**BLK-05** 主产物并列两件 + 成功面动作；**BLK-06** 文案迁移与锁；**BLK-07** OR 旁路；**BLK-08** 资产硬门 + 顶岗纪律 + 估时上调；**BLK-09** items 同源。OQ-02 否决、OQ-06 改判，OQ-07～09 补答。SHD-01～08 收入。新增 AC-PFM-27～40、ISO-07。 |
+| 0.2.0 | 2026-08-21 | 状态回写：ISO-04/06 已关；AS-PFM-03 工坊对账完成（`folio-24` 已是 24 页，不升格）；W4 狗粮协议与盲评三问已锁，人评未开，`homepage_entry` 仍关。 |
+| 0.2.1 | 2026-08-21 | AS-PFM-03 后继：MSP 五档入库（8/12/16/20/28）。原对账纪要不改。 |

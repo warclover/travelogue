@@ -1,0 +1,15 @@
+# PFM 本机狗粮配置片段（不要把本文件整份提交成仓库默认）
+#
+# 用法：合并进项目根 config.yaml（gitignore）后重启 Studio。
+# 关旗对照：enabled false ≡ 现网 GA（导入两击、导出长图、LVP 两卡）。
+#
+# W4 盲评前保持 homepage_entry: false。
+# 现网系列只有 magazine-16-standard；芯片不会出现 8/24/32。
+
+studio:
+  portfolio_pipeline:
+    enabled: true
+    homepage_entry: false
+    allow_refine_switch: true
+    # max_pages: 32
+    # min_kept_override: null   # 空 = 跟系列库下界（现网 48）

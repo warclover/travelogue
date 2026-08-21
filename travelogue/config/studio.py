@@ -59,7 +59,7 @@ class PortfolioPipelineConfig:
     enabled: bool = False
     homepage_entry: bool = False
     allow_refine_switch: bool = True
-    max_pages: int = 32
+    max_pages: int = 48
     min_kept_override: int | None = None
 
 

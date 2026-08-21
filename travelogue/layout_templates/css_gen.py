@@ -151,9 +151,12 @@ def generate_grid_css(template: TemplateDef) -> str:
     if template.stage.gap:
         block += f"  gap: {template.stage.gap};\n"
     block += "  align-items: stretch;\n}"
-    if template.kind == "primitive" and template.slots and len(template.slots) <= 1:
-        return block
+    # Always emit slot placement. 1-slot journal primitives used a 1×1 stage
+    # (auto-place filled the only cell). page-1-hero-* keep gutter tracks, so
+    # skipping placement parks the photo in the top-left margin (~6% cell).
     slot_blocks = [generate_slot_css(template, s) for s in template.slots]
+    if not slot_blocks:
+        return block
     return block + "\n\n" + "\n\n".join(slot_blocks)
 
 
@@ -211,7 +214,11 @@ def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None =
     if template.kind == "stack":
         return issues
     cols, rows = grid_templates_for(template)
-    if template.kind == "composite" or (template.kind == "primitive" and len(template.slots) > 1):
+    cols_n, rows_n = _track_dims(template.stage)
+    multi_track = cols_n > 1 or rows_n > 1
+    if template.kind == "composite" or (
+        template.kind == "primitive" and (len(template.slots) > 1 or multi_track)
+    ):
         allow_overlap = bool((template.constraints or {}).get("intentionalOverlaps"))
         covered: set[tuple[int, int]] = set()
         for slot in template.slots:

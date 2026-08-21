@@ -46,7 +46,10 @@ import {
   normalizeEdition,
   pageCountChipOptions,
   radioTabIndex,
+  recommendPageCount,
   selectedPageCountChip,
+  shouldConfirmThinTier,
+  thinTierConfirm,
   shouldMountEditionType,
 } from "../js/portfolio-edition-logic.js";
 
@@ -999,16 +1002,39 @@ export function mountEditionControls(slot, tripId, opts) {
     var show = selected === "portfolio";
     pageHost.hidden = !show;
     if (!show) return;
-    var chips = portfolio && portfolio.pageCountChips;
+    var chips =
+      (portfolio && (portfolio.pageCountChipDetails || portfolio.pageCountChips)) || [];
     pageRow.innerHTML = "";
     pageCountChipOptions(chips).forEach(function (opt) {
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "preview-sheet__chip";
       btn.setAttribute("data-page-count", opt.id);
-      btn.textContent = opt.label;
+      btn.setAttribute("role", "radio");
+      var aria = opt.hint || opt.label;
+      btn.setAttribute("aria-label", aria);
+      btn.innerHTML =
+        '<span class="preview-sheet__chip-label">' +
+        opt.label +
+        "</span>" +
+        (opt.hint
+          ? '<span class="preview-sheet__chip-hint">' + opt.hint + "</span>"
+          : "");
       btn.addEventListener("click", function () {
-        requestPageCount(opt.id);
+        requestPageCount(opt.id, opt);
+      });
+      btn.addEventListener("keydown", function (e) {
+        if (!isRadioNavKey(e.key)) return;
+        e.preventDefault();
+        var ids = pageCountChipOptions(chips).map(function (o) {
+          return o.id;
+        });
+        var next = nextRadioId(ids, selectedPages, e.key);
+        if (!next || next === selectedPages) return;
+        var hit = pageCountChipOptions(chips).filter(function (o) {
+          return o.id === next;
+        })[0];
+        requestPageCount(next, hit || { id: next });
       });
       pageRow.appendChild(btn);
     });
@@ -1187,9 +1213,42 @@ export function mountEditionControls(slot, tripId, opts) {
       });
   }
 
-  function requestPageCount(chipId) {
+  function requestPageCount(chipId, opt) {
     if (!chipId || chipId === selectedPages) return;
-    applyPageCount(chipId);
+    if (chipId === "auto") {
+      applyPageCount(chipId);
+      return;
+    }
+    var kept = Number(portfolioState && portfolioState.photosKept);
+    var cap = Number(opt && opt.capacity);
+    var chips =
+      (portfolioState &&
+        (portfolioState.pageCountChipDetails || portfolioState.pageCountChips)) ||
+      [];
+    if (!shouldConfirmThinTier(cap, kept)) {
+      applyPageCount(chipId);
+      return;
+    }
+    var rec = recommendPageCount(chips, kept);
+    var copy = thinTierConfirm(cap, kept, rec !== Number(chipId) ? rec : 0);
+    toolbarConfirm({
+      title: copy.title,
+      body: copy.body,
+      confirmText: copy.confirmText,
+      cancelText: copy.cancelText,
+    }).then(function (ok) {
+      if (ok && copy.recommendPages) {
+        applyPageCount(String(copy.recommendPages));
+        return;
+      }
+      if (ok && !copy.recommendPages) {
+        applyPageCount(chipId);
+        return;
+      }
+      if (!ok && copy.recommendPages) {
+        applyPageCount(chipId);
+      }
+    });
   }
 
   function renderOptions() {

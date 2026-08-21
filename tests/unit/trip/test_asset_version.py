@@ -74,7 +74,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-08-11: Arch Opt V2 M2-A5 · preview-toolbar typedef/JSDoc + SNR
 # chapter-panel/dock bytes already on master changed the studio/visual-journal hash.
 # Re-bumped 2026-08-21: PFM page-* faces synced into journal-screens.css.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}6d593aaa928d"
+# Re-bumped 2026-08-21 (b): 1-slot page-1-hero-* emit gutter cell placement.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}db18e79d2a5b"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

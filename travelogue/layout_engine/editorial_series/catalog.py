@@ -9,7 +9,7 @@ from travelogue.layout_engine.editorial_series.intake import (
     SeriesIntakeError,
     accept_series_document,
 )
-from travelogue.layout_engine.editorial_series.match import photo_span
+from travelogue.layout_engine.editorial_series.match import photo_span, series_capacity
 from travelogue.paths import ROOT
 
 # Runtime series live next to this package (P0: magazine-16-standard).
@@ -54,7 +54,7 @@ def load_official_series(*, series_dir: Path | None = None) -> list[dict[str, An
 
 
 def min_photo_span_lo(catalog: list[dict[str, Any]] | None = None) -> int | None:
-    """Smallest ``photo_span`` lower bound in *catalog* (D-PFM-29)."""
+    """Smallest ``photo_span`` lower bound in *catalog* (advisory copy only)."""
     rows = catalog if catalog is not None else load_official_series()
     lows: list[int] = []
     for row in rows:
@@ -62,6 +62,14 @@ def min_photo_span_lo(catalog: list[dict[str, Any]] | None = None) -> int | None
         if lo > 0:
             lows.append(lo)
     return min(lows) if lows else None
+
+
+def min_capacity(catalog: list[dict[str, Any]] | None = None) -> int | None:
+    """Smallest baked ``capacity`` (BLK-MSP-05 · wizard grey-out)."""
+    rows = catalog if catalog is not None else load_official_series()
+    caps = [series_capacity(row) for row in rows]
+    caps = [n for n in caps if n > 0]
+    return min(caps) if caps else None
 
 
 def assert_not_reserve_path(path: Path) -> None:
