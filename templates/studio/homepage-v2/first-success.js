@@ -12,6 +12,8 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
+import { shelfExportRequestForTrip } from "../js/portfolio-export-logic.js";
+import { runShelfLongshot } from "./shelf-longshot.js";
 
 var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
 var LVP_HINT_PENDING_PREFIX = "travelogue.layoutVibeHintPending.";
@@ -356,8 +358,15 @@ function openPreview(action) {
         tripId: _successResult.tripId,
       });
       runShelfLongshot(
-        { tripId: _successResult.tripId, title: _successResult.title || "我的旅途" },
-        { surface: "first_success_fallback" },
+        {
+          tripId: _successResult.tripId,
+          title: _successResult.title || "我的旅途",
+          edition: _successResult.edition,
+        },
+        shelfExportRequestForTrip(
+          { edition: _successResult.edition },
+          { surface: "first_success_fallback" },
+        ),
       );
     }
     return;

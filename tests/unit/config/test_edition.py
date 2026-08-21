@@ -120,6 +120,10 @@ def test_apply_refine_page_count_auto_and_user() -> None:
     assert apply_refine_page_count(trip, "auto") == ("auto", None)
     assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
     assert "pageCount" not in trip["studio"]["portfolio"]
+    with pytest.raises(ValueError, match="invalid page count"):
+        apply_refine_page_count(trip, 1)
+    with pytest.raises(ValueError, match="invalid page count"):
+        apply_refine_page_count(trip, 48)
 
 
 def test_read_page_count_intent_prefers_requested() -> None:

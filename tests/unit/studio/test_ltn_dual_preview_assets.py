@@ -19,7 +19,7 @@ def test_dual_preview_module_and_wiring():
         encoding="utf-8"
     )
     assert "data-ltn-dual-preview" in panel
-    assert "对比网页与长图" in panel
+    assert "对比网页版与导出长图" in panel
 
     ls = (ROOT / "templates/studio/preview-toolbar/longshot.js").read_text(encoding="utf-8")
     assert 'from "./dual-preview.js"' in ls

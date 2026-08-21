@@ -37,6 +37,7 @@ class PlaceResult:
     pages: list[PlacedPage] = field(default_factory=list)
     leftover_ids: list[str] = field(default_factory=list)
     dropped_roles: list[str] = field(default_factory=list)
+    used_roles: list[str] = field(default_factory=list)
 
 
 def refuse_cross_group_screen(asset_group_ids: Sequence[str]) -> None:
@@ -124,6 +125,8 @@ def place_groups(
         )
         refuse_cross_group_screen([page.shot_group_id] * len(page.asset_ids))
         result.pages.append(page)
+        if role:
+            result.used_roles.append(role)
 
     for g in queues:
         result.leftover_ids.extend(g["ids"])

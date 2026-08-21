@@ -3,9 +3,9 @@
     "travelogue.curation",
     "travelogue.layout_engine"
   ],
-  "totalCrossEdges": 9,
+  "totalCrossEdges": 10,
   "layoutEngineToCuration": 2,
-  "curationToLayoutEngine": 7,
+  "curationToLayoutEngine": 8,
   "targetAfterMigration": {
     "maxCrossEdges": 2,
     "reductionPercent": 80,
@@ -14,7 +14,7 @@
   "topImporters": [
     [
       "travelogue.curation.curate",
-      2
+      3
     ],
     [
       "travelogue.curation.moment_scoring",
@@ -55,6 +55,10 @@
       1
     ],
     [
+      "travelogue.layout_engine.editorial_series",
+      1
+    ],
+    [
       "travelogue.layout_engine.planner.portrait_2_picker",
       1
     ]
@@ -79,19 +83,26 @@
         1220,
         1251,
         1264,
-        1499,
-        1524,
-        1534,
-        1553,
-        1860
+        1523,
+        1548,
+        1558,
+        1577,
+        1884
       ]
     },
     {
       "importer": "travelogue.curation.curate",
       "imported": "travelogue.layout_engine.api",
       "lines": [
-        1354,
-        1404
+        1378,
+        1428
+      ]
+    },
+    {
+      "importer": "travelogue.curation.curate",
+      "imported": "travelogue.layout_engine.editorial_series",
+      "lines": [
+        1364
       ]
     },
     {
@@ -127,7 +138,7 @@
       "importer": "travelogue.layout_engine.planner.screen_planner",
       "imported": "travelogue.curation.food_policy",
       "lines": [
-        1854
+        1861
       ]
     },
     {

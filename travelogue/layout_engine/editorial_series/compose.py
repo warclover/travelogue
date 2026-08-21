@@ -107,7 +107,7 @@ def compose_portfolio_trip(
         photos_kept=kept_n,
         overflow=overflow,
         match={
-            "flexUsed": list(placed.dropped_roles),
+            "flexUsed": list(placed.used_roles),
             "droppedRoles": list(placed.dropped_roles),
             "nearMiss": "photo_span" if (choice.upgraded or choice.capped) else None,
             "pageCountRequested": requested_pages if page_count_source == "user" else None,

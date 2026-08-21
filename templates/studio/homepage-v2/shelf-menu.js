@@ -7,6 +7,7 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { postJson } from "../js/http.js";
 import { pollJobUntilDone } from "../js/job-poll.js";
 import { editionSwitchConfirm, normalizeEdition } from "../js/portfolio-edition-logic.js";
+import { shelfExportMenuCopy, shelfExportRequestForTrip } from "../js/portfolio-export-logic.js";
 import {
   V2,
   markTripDeleting,
@@ -313,17 +314,18 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     previewItem.title = "示例画册无法设为预览";
   }
 
+  var exportCopy = shelfExportMenuCopy(trip.edition);
   var longshotItem = document.createElement("button");
   longshotItem.type = "button";
   longshotItem.className = "v2-shelf__menu-item";
   longshotItem.setAttribute("role", "menuitem");
-  longshotItem.textContent = "保存长图";
+  longshotItem.textContent = exportCopy.exportItem;
 
   var openLongshotItem = document.createElement("button");
   openLongshotItem.type = "button";
   openLongshotItem.className = "v2-shelf__menu-item";
   openLongshotItem.setAttribute("role", "menuitem");
-  openLongshotItem.textContent = "打开长图文件夹";
+  openLongshotItem.textContent = exportCopy.openFolderItem;
   if (!canOpenShelfLongshotFolder(trip)) {
     openLongshotItem.disabled = true;
     openLongshotItem.title = "尚未导出长图";
@@ -389,7 +391,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     e.preventDefault();
     e.stopPropagation();
     closeMenu(menu);
-    runShelfLongshot(trip, { surface: surface });
+    runShelfLongshot(trip, shelfExportRequestForTrip(trip, { surface: surface }));
   });
 
   openLongshotItem.addEventListener("click", function (e) {

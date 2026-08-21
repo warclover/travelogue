@@ -27,6 +27,7 @@ import {
   normalizeEdition,
   parsePortfolioPipelineConfig,
   shouldShowEditionSegment,
+  shouldResetEditionToJournal,
   shouldShowHomepagePortfolioEntry,
   isPortfolioLowPhoto,
   portfolioEditionSubline,
@@ -46,6 +47,7 @@ var _trapHandler = null;
 var _step = "pick";
 var _activeEdition = "journal";
 var _pipelineCfg = { enabled: false, homepageEntry: false, minKept: 12 };
+var _pipelineHydrated = false;
 var _pickInFlight = false;
 var _uploadInFlight = false;
 var _pendingAlbumPath = null;
@@ -513,7 +515,7 @@ function syncEditionUi() {
   if (row) row.hidden = !show;
   var homeLink = $("v2-cta-portfolio");
   if (homeLink) homeLink.hidden = !shouldShowHomepagePortfolioEntry(_pipelineCfg);
-  if (!show) {
+  if (shouldResetEditionToJournal(_pipelineCfg, _pipelineHydrated)) {
     _activeEdition = "journal";
   }
   var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
@@ -541,10 +543,12 @@ function hydratePortfolioPipeline() {
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       _pipelineCfg = parsePortfolioPipelineConfig(data && data.studio);
+      _pipelineHydrated = true;
       syncEditionUi();
     })
     .catch(function () {
-      _pipelineCfg = { enabled: false, homepageEntry: false, minKept: 12 };
+      // Keep last successful config. Do not mark hydrated on failure —
+      // otherwise a pending homepage/draft portfolio choice is wiped.
       syncEditionUi();
     });
 }

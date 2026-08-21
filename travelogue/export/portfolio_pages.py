@@ -196,7 +196,7 @@ def export_portfolio_pages(
     out_ext = "jpg" if str(fmt).lower() in ("jpeg", "jpg") else "png"
     out_fmt = "jpeg" if out_ext == "jpg" else "png"
     out_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
-    _purge_prefix(out_dir, prefix, out_ext)
+    # Purge only after the first success so a total failure keeps prior pages.
 
     capture = capture_fn
     closer: Callable[[], None] | None = None
@@ -213,13 +213,15 @@ def export_portfolio_pages(
     skipped: list[str] = []
     outputs: list[LongshotOutput] = []
     nn = 0
+    body_written = 0
+    purged = False
     total = len(targets)
     try:
         for i, target in enumerate(targets, start=1):
             raise_if_longshot_cancelled(cancel_check)
             if progress:
                 progress(i - 1, total, f"页图 {i}/{total}")
-            if nn >= max_pages:
+            if not target.optional and body_written >= max_pages:
                 skipped.append(f"{target.label}（超过 {max_pages} 页上限）")
                 continue
             try:
@@ -236,7 +238,12 @@ def export_portfolio_pages(
                 _log.info("portfolio page skip %s: %s", target.key, exc)
                 skipped.append(f"{target.label}（{exc}）")
                 continue
+            if not purged:
+                _purge_prefix(out_dir, prefix, out_ext)
+                purged = True
             nn += 1
+            if not target.optional:
+                body_written += 1
             writer = PlatformExportWriter(out_dir, prefix, ext=out_ext)
             writer.write(nn, data)
             finals = writer.commit()

@@ -43,6 +43,22 @@ export function portfolioDockCta() {
   return { short: "导出作品集", aria: "导出作品集" };
 }
 
+/** 书架菜单：作品集走页图包，不走缺省群长图。 */
+export function shelfExportMenuCopy(edition) {
+  if (isPortfolioEdition(edition)) {
+    return { exportItem: "导出作品集", openFolderItem: "打开导出文件夹" };
+  }
+  return { exportItem: "保存长图", openFolderItem: "打开长图文件夹" };
+}
+
+export function shelfExportRequestForTrip(trip, opts) {
+  var next = Object.assign({}, opts || {});
+  if (isPortfolioEdition(trip && trip.edition)) {
+    next.platform = PORTFOLIO_PAGES_PLATFORM;
+  }
+  return next;
+}
+
 export function dockCtaFromEntry(entry) {
   if (entry && entry.dockCta && entry.dockCta.aria) {
     return { short: entry.dockCta.short || entry.dockCta.aria, aria: entry.dockCta.aria };

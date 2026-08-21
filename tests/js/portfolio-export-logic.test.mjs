@@ -21,6 +21,8 @@ import {
   resolvePortfolioMainPlatform,
   wrapPortfolioSocialGroupHtml,
   albumSpreadCardCopy,
+  shelfExportMenuCopy,
+  shelfExportRequestForTrip,
 } from "../../templates/studio/js/portfolio-export-logic.js";
 
 test("isPortfolioEdition", () => {
@@ -48,6 +50,23 @@ test("portfolioDockCta", () => {
   assert.equal(cta.aria, "导出作品集");
   assert.notEqual(cta.aria, "导出长图");
   assert.equal(journalDockCta().aria, "导出长图");
+});
+
+test("shelfExportRequestForTrip 作品集带 portfolio_pages", () => {
+  const journal = shelfExportMenuCopy("journal");
+  assert.equal(journal.exportItem, "保存长图");
+  assert.equal(journal.openFolderItem, "打开长图文件夹");
+  const folio = shelfExportMenuCopy("portfolio");
+  assert.equal(folio.exportItem, "导出作品集");
+  assert.equal(folio.openFolderItem, "打开导出文件夹");
+  assert.deepEqual(
+    shelfExportRequestForTrip({ edition: "portfolio" }, { surface: "grid" }),
+    { surface: "grid", platform: PORTFOLIO_PAGES_PLATFORM }
+  );
+  assert.deepEqual(
+    shelfExportRequestForTrip({ edition: "journal" }, { surface: "grid" }),
+    { surface: "grid" }
+  );
   assert.equal(dockCtaFromEntry({ edition: "journal" }).aria, "导出长图");
   assert.equal(
     dockCtaFromEntry({ dockCta: { short: "导出作品集", aria: "导出作品集" } }).short,

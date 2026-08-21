@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from travelogue.config.edition import EDITION_PORTFOLIO, normalize_edition
 from travelogue.domain.copy_origin import (
     ORIGIN_USER,
     is_user_protected,
@@ -102,7 +101,7 @@ def migrate_copy_after_recompose(
         if frag
     ]
     incoming = _dedupe([*_normalize_many(fragments), *prior])
-    body_ok = normalize_edition(edition) != EDITION_PORTFOLIO
+    body_ok = str(edition or "").strip().lower() not in {"portfolio", "folio"}
     leftovers: list[dict[str, Any]] = []
     for frag in incoming:
         kind = str(frag.get("kind") or "")

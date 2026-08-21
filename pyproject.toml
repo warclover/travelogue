@@ -165,6 +165,9 @@ forbidden_modules = [
 [[tool.importlinter.contracts]]
 name = "PFM editorial_series isolation (D-U-15 / ISO-05)"
 type = "forbidden"
+# Direct only: curate → editorial_series is the designed fork.
+# layout_templates already reaches curate via algorithm_profile.
+allow_indirect_imports = true
 source_modules = [
     "travelogue.layout_engine.mosaic",
     "travelogue.layout_templates",

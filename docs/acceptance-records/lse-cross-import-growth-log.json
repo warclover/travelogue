@@ -1,13 +1,14 @@
 {
   "ratchet": "lse-cross-import",
   "currentBaseline": {
-    "totalCrossEdges": 9,
+    "totalCrossEdges": 10,
     "layoutEngineToCuration": 2,
-    "curationToLayoutEngine": 7,
+    "curationToLayoutEngine": 8,
     "edgeSignatures": [
       "travelogue.curation.algo_v3_summary->travelogue.layout_engine.adapter",
       "travelogue.curation.curate->travelogue.layout_engine.adapter",
       "travelogue.curation.curate->travelogue.layout_engine.api",
+      "travelogue.curation.curate->travelogue.layout_engine.editorial_series",
       "travelogue.curation.layout_metrics->travelogue.layout_engine.adapter",
       "travelogue.curation.layout_planner->travelogue.layout_engine.adapter",
       "travelogue.curation.moment_scoring->travelogue.layout_engine.adapter",
@@ -16,5 +17,17 @@
       "travelogue.layout_engine.planner.screen_planner_stages->travelogue.curation.food_policy"
     ]
   },
-  "entries": []
+  "entries": [
+    {
+      "date": "2026-08-21",
+      "old_ceiling": 9,
+      "new_ceiling": 10,
+      "old_layoutEngineToCuration": 2,
+      "new_layoutEngineToCuration": 2,
+      "old_curationToLayoutEngine": 7,
+      "new_curationToLayoutEngine": 8,
+      "tracking_issue": "docs/IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md#P2-PFM-LSE",
+      "due_date": "2026-12-31"
+    }
+  ]
 }

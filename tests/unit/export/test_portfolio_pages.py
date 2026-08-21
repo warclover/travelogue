@@ -201,6 +201,29 @@ def test_export_trip_longshot_routes_to_bundle(tmp_path: Path, monkeypatch: pyte
     assert result is sentinel
 
 
+def test_max_pages_caps_body_not_cover_or_closing(tmp_path: Path) -> None:
+    _write_trip(tmp_path, edition="portfolio", screens=33)
+    result = export_portfolio_pages(tmp_path, capture_fn=lambda _t: _png_bytes())
+    assert result.page_count == 34
+    names = [p.path.name for p in result.outputs]
+    assert names[0].endswith("-portfolio-01.png")
+    assert names[-1].endswith("-portfolio-34.png")
+    assert any("第 33 屏" in s and "上限" in s for s in result.skipped_pages)
+
+
+def test_purge_waits_until_first_success(tmp_path: Path) -> None:
+    _write_trip(tmp_path, edition="portfolio", screens=2)
+    out_dir = tmp_path / EXPORT_OUTPUT_DIRNAME
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stale = out_dir / "奈良-portfolio-01.png"
+    stale.write_bytes(_png_bytes())
+
+    with pytest.raises(LongshotExportError) as exc:
+        export_portfolio_pages(tmp_path, capture_fn=lambda _t: (_ for _ in ()).throw(RuntimeError("down")))
+    assert exc.value.code == "E_PORTFOLIO_PAGES_FAILED"
+    assert stale.is_file()
+
+
 def test_is_portfolio_pages_platform() -> None:
     assert is_portfolio_pages_platform("portfolio_pages") is True
     assert is_portfolio_pages_platform("") is False

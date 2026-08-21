@@ -79,6 +79,25 @@ def test_p0_composed_screens_are_layout_screen_legal() -> None:
     assert not validate_page_pattern_ids({"studio": trip["studio"], "chapters": out})
 
 
+def test_folio_alias_allows_promoted_page_face() -> None:
+    trip = {
+        "studio": {"edition": "folio"},
+        "chapters": [
+            {
+                "screens": [
+                    {
+                        "screenId": "ch-01-sc-01",
+                        "patternId": "page-1-hero-land-wide",
+                        "slots": [{"assetId": "a1", "slot": 0, "fit": "cover"}],
+                    }
+                ]
+            }
+        ],
+    }
+    errs = validate_page_pattern_ids(trip)
+    assert not any("portfolio-only" in e for e in errs)
+
+
 def test_journal_trip_rejects_promoted_page_face() -> None:
     trip = json.loads(_LINZHI.read_text(encoding="utf-8"))
     screen = trip["chapters"][0]["screens"][0]

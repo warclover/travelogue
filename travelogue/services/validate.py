@@ -73,8 +73,9 @@ def validate_page_pattern_ids(trip: dict) -> list[str]:
     Matcher fixtures (``page-grid-4``) stay schema-legal but are not shipping SKUs.
     Journal MCS still cannot select ``page-*`` (list_active skip); this is persist isolation.
     """
-    studio = trip.get("studio") if isinstance(trip.get("studio"), dict) else {}
-    is_portfolio = str(studio.get("edition") or "").strip() == "portfolio"
+    from travelogue.config.edition import is_portfolio_trip
+
+    is_portfolio = is_portfolio_trip(trip)
     errors: list[str] = []
     engine = None
     for ci, ch in enumerate(trip.get("chapters") or []):

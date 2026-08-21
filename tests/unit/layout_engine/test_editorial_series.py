@@ -234,6 +234,7 @@ def test_ac_pfm_10_dense_page_degrades_when_group_too_small() -> None:
     ]
     placed = place_groups(groups, sequence)
     assert placed.dropped_roles == ["dense"]
+    assert placed.used_roles == ["trio"]
     assert len(placed.pages) == 1
     assert placed.pages[0].slot_band == 3
     assert placed.pages[0].asset_ids == ["a1", "a2", "a3"]

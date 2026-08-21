@@ -85,8 +85,8 @@ def test_lint_lse_cross_import_reduction_refreshes_growth_log(tmp_path) -> None:
     assert code == 0, out
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     growth = json.loads(growth_log_path.read_text(encoding="utf-8"))
-    assert baseline["totalCrossEdges"] == 9
-    assert growth["currentBaseline"]["totalCrossEdges"] == 9
+    assert baseline["totalCrossEdges"] == 10
+    assert growth["currentBaseline"]["totalCrossEdges"] == 10
     assert growth["currentBaseline"]["edgeSignatures"]
     assert growth["entries"] == []
 
@@ -131,11 +131,11 @@ def test_lint_lse_cross_import_growth_requires_metadata(tmp_path) -> None:
     )
     assert code == 0, out
     growth = json.loads(growth_log_path.read_text(encoding="utf-8"))
-    assert growth["currentBaseline"]["totalCrossEdges"] == 9
+    assert growth["currentBaseline"]["totalCrossEdges"] == 10
     assert len(growth["entries"]) == 1
     entry = growth["entries"][0]
     assert entry["old_ceiling"] == 8
-    assert entry["new_ceiling"] == 9
+    assert entry["new_ceiling"] == 10
     assert entry["tracking_issue"] == VALID_LSE_TRACKING_ISSUE
     assert entry["due_date"] == "2099-12-31"
 

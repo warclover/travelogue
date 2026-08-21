@@ -163,7 +163,7 @@ def test_cover_closing_partial_wires_title_art_attribution() -> None:
 def test_studio_panel_wires_title_art_attribution_copy() -> None:
     text = (ROOT / "templates/studio/preview-toolbar/features.js").read_text(encoding="utf-8")
     assert "data-title-art-attr" in text
-    assert "使用你的照片装帧 · 未生成风景" in text
-    assert "程序化字库合成" in text
-    assert "AI 书法风格生成" in text
+    assert "用你的杂志名生成封面字体 · 不生成风景图" in text
+    assert "字库合成，非 AI 绘图" in text
+    assert "字迹由 AI 手写体生成" in text
     assert re.search(r"setTitleArtAttribution\(", text)

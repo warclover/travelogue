@@ -27,6 +27,9 @@ PORTFOLIO_PLATFORM_REQUIRED_MESSAGE = (
 
 # Display fallback when series catalog has no photo_span yet (D-PFM-29).
 DEFAULT_MIN_KEPT_DISPLAY = 12
+# Align refine pin with trip.schema.json studio.portfolio.pageCount.
+PAGE_COUNT_MIN = 4
+PAGE_COUNT_MAX = 32
 
 
 class PortfolioUnavailableError(CodeError):
@@ -175,7 +178,7 @@ def apply_refine_page_count(trip: dict[str, Any], raw: object | None) -> tuple[s
         page_count = int(raw)
     except (TypeError, ValueError) as exc:
         raise ValueError("invalid page count") from exc
-    if page_count < 1 or page_count > 64:
+    if page_count < PAGE_COUNT_MIN or page_count > PAGE_COUNT_MAX:
         raise ValueError("invalid page count")
     folio["pageCountSource"] = "user"
     folio["pageCount"] = page_count

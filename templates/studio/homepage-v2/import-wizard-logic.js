@@ -144,6 +144,11 @@ export function shouldShowEditionSegment(pipe) {
   return !!(pipe && pipe.enabled);
 }
 
+/** hydrate 完成前不要把作品集选择静默改回游记。 */
+export function shouldResetEditionToJournal(pipe, hydrated) {
+  return hydrated === true && !shouldShowEditionSegment(pipe);
+}
+
 export function shouldShowHomepagePortfolioEntry(pipe) {
   return !!(pipe && pipe.enabled && pipe.homepageEntry);
 }

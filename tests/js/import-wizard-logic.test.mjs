@@ -20,6 +20,7 @@ import {
   normalizeEdition,
   parsePortfolioPipelineConfig,
   shouldShowEditionSegment,
+  shouldResetEditionToJournal,
   shouldShowHomepagePortfolioEntry,
   isPortfolioLowPhoto,
   portfolioEditionSubline,
@@ -109,10 +110,13 @@ test("PFM edition helpers default hidden", () => {
   assert.equal(off.enabled, false);
   assert.equal(off.homepageEntry, false);
   assert.equal(shouldShowEditionSegment(off), false);
+  assert.equal(shouldResetEditionToJournal(off, false), false);
+  assert.equal(shouldResetEditionToJournal(off, true), true);
   assert.equal(shouldShowHomepagePortfolioEntry(off), false);
   const on = parsePortfolioPipelineConfig({
     portfolioPipeline: { enabled: true, homepageEntry: false },
   });
+  assert.equal(shouldResetEditionToJournal(on, true), false);
   assert.equal(shouldShowEditionSegment(on), true);
   assert.equal(shouldShowHomepagePortfolioEntry(on), false);
   assert.equal(
