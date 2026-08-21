@@ -1,9 +1,19 @@
-"""Group → page placement. One page never spans two shot groups (AC-PFM-09)."""
+"""Group → page placement. One page never spans two shot groups (AC-PFM-09).
+
+Slot admission lives in ``slot_match`` (portfolio-only). Journal mosaic
+does not import this module.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
+
+from travelogue.layout_engine.editorial_series.slot_match import (
+    fallback_take,
+    take_for_page,
+    take_for_pattern,
+)
 
 DENSE_MIN_SLOTS = 5
 HERO_LAND_FACE = "page-1-hero-land-wide"
@@ -28,16 +38,31 @@ class PlacedPage:
     asset_ids: list[str]
     shot_group_id: str
     planned_pattern_id: str = ""
+    slot_fits: list[str] = field(default_factory=list)
+    slot_display_aspects: list[float | None] = field(default_factory=list)
+    slot_roles: list[str | None] = field(default_factory=list)
 
     def as_screen(self) -> dict[str, Any]:
         refuse_cross_group_screen([self.shot_group_id] * len(self.asset_ids))
         # Do not write series ``role`` onto layoutScreen.role (P23 peak enum).
+        slots: list[dict[str, Any]] = []
+        for i, aid in enumerate(self.asset_ids):
+            fit = "cover"
+            if i < len(self.slot_fits) and self.slot_fits[i] in {"cover", "contain"}:
+                fit = self.slot_fits[i]
+            entry: dict[str, Any] = {"assetId": aid, "slot": i, "fit": fit}
+            if i < len(self.slot_roles) and self.slot_roles[i]:
+                entry["role"] = self.slot_roles[i]
+            if i < len(self.slot_display_aspects) and self.slot_display_aspects[i]:
+                entry["displayAspect"] = self.slot_display_aspects[i]
+            slots.append(entry)
         screen: dict[str, Any] = {
             "patternId": self.pattern_id,
-            "slots": [
-                {"assetId": aid, "slot": i, "fit": "cover"}
-                for i, aid in enumerate(self.asset_ids)
-            ],
+            "slots": slots,
+            "layoutGeometry": {
+                "stageAspect": "16:9",
+                "gridClass": f"layout-screen__grid--{self.pattern_id}",
+            },
         }
         if self.shot_group_id:
             screen["shotGroupId"] = self.shot_group_id
@@ -78,6 +103,7 @@ def place_groups(
     *,
     cap: int | None = None,
     aspect_kinds: Mapping[str, str] | None = None,
+    aspect_ratios: Mapping[str, float] | None = None,
 ) -> PlaceResult:
     """Fill pages from groups in order. Never mix two shot groups on one page."""
     queues: list[dict[str, Any]] = []
@@ -124,19 +150,74 @@ def place_groups(
                 if role:
                     result.dropped_roles.append(role)
                 continue
-        take_n = min(band, len(group["ids"]))
-        chunk = group["ids"][:take_n]
-        group["ids"] = group["ids"][take_n:]
         planned = str(
-            spec.get("patternId") or spec.get("faceHint") or f"page-grid-{take_n}"
+            spec.get("patternId") or spec.get("faceHint") or f"page-grid-{band}"
         )
+        taken = take_for_page(
+            group["ids"],
+            planned,
+            band=band,
+            aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
+        )
+        if taken.skip:
+            # Same-count cousin first (e.g. land-6 → 2l4p). Else smaller
+            # pair/hero. Dense faces still refuse opposite-orient stuffing.
+            fb = fallback_take(
+                group["ids"],
+                planned,
+                aspect_kinds=aspect_kinds,
+                aspect_ratios=aspect_ratios,
+            )
+            if fb is None:
+                if role:
+                    result.dropped_roles.append(role)
+                continue
+            pattern, fb_take = fb
+            group["ids"] = fb_take.leftover
+            page = PlacedPage(
+                role=role,
+                program=str(spec.get("program") or ""),
+                slot_band=band,
+                pattern_id=pattern,
+                asset_ids=list(fb_take.asset_ids),
+                shot_group_id=str(group["id"]),
+                planned_pattern_id=planned,
+                slot_fits=list(fb_take.fits),
+                slot_display_aspects=list(fb_take.display_aspects),
+                slot_roles=list(fb_take.roles),
+            )
+            refuse_cross_group_screen([page.shot_group_id] * len(page.asset_ids))
+            result.pages.append(page)
+            if role:
+                result.used_roles.append(role)
+            if pattern != planned:
+                result.demoted_pages += 1
+            continue
+        chunk = taken.asset_ids
+        group["ids"] = taken.leftover
+        take_n = len(chunk)
         pattern = planned
         demoted = False
+        fits = list(taken.fits)
+        display_aspects = list(taken.display_aspects)
+        roles = list(taken.roles)
         # Solo / undersized group on a 2–4 slot face: keep one photo, but do
         # not park it in the first cell of an empty grid (top-left quarter).
         if take_n == 1 and band > 1:
             pattern = _hero_face_for(chunk, aspect_kinds)
             demoted = pattern != planned
+            if demoted:
+                refit = take_for_pattern(
+                    chunk,
+                    pattern,
+                    aspect_kinds=aspect_kinds,
+                    aspect_ratios=aspect_ratios,
+                )
+                if not refit.skip and refit.asset_ids:
+                    fits = list(refit.fits)
+                    display_aspects = list(refit.display_aspects)
+                    roles = list(refit.roles)
         page = PlacedPage(
             role=role,
             program=str(spec.get("program") or ""),
@@ -145,6 +226,9 @@ def place_groups(
             asset_ids=chunk,
             shot_group_id=str(group["id"]),
             planned_pattern_id=planned,
+            slot_fits=fits,
+            slot_display_aspects=display_aspects,
+            slot_roles=roles,
         )
         refuse_cross_group_screen([page.shot_group_id] * len(page.asset_ids))
         result.pages.append(page)
@@ -161,6 +245,27 @@ def place_groups(
     return result
 
 
+def _chapter_owner_ids(
+    ch: Mapping[str, Any],
+    index: int,
+    buckets: Sequence[Sequence[str]] | None,
+) -> list[str]:
+    """Prefer compose-time buckets over stale journal ``items`` stubs.
+
+    Chapter ``items`` are an 8-block mobile leftover (D-PFM-27). Using them as
+    the owner map dumps every unknown photo onto chapter 0, so later chapters
+    keep empty ``screens`` and web render falls back to long-image items.
+    """
+    if buckets is not None and index < len(buckets) and buckets[index]:
+        return [str(x) for x in buckets[index] if x]
+    from travelogue.layout_contract.chapter_items import item_asset_ids
+
+    ids: list[str] = []
+    for item in ch.get("items") or []:
+        ids.extend(item_asset_ids(item))
+    return ids
+
+
 def attach_screens_to_chapters(
     chapters: list[dict[str, Any]],
     pages: Sequence[PlacedPage],
@@ -168,16 +273,9 @@ def attach_screens_to_chapters(
     buckets: Sequence[Sequence[str]] | None = None,
 ) -> None:
     """Write screens onto existing chapters (D-PFM-14 · do not recut chapters)."""
-    from travelogue.layout_contract.chapter_items import item_asset_ids
-
     owner: dict[str, int] = {}
     for i, ch in enumerate(chapters):
-        ids: list[str] = []
-        for item in ch.get("items") or []:
-            ids.extend(item_asset_ids(item))
-        if not ids and buckets is not None and i < len(buckets):
-            ids = [str(x) for x in buckets[i] if x]
-        for aid in ids:
+        for aid in _chapter_owner_ids(ch, i, buckets):
             owner.setdefault(str(aid), i)
         ch["screens"] = []
 

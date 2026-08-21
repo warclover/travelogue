@@ -35,6 +35,7 @@ from travelogue.layout_engine.editorial_series.place import (
     attach_screens_to_chapters,
     place_groups,
 )
+from travelogue.layout_engine.editorial_series.slot_match import collect_asset_aspects
 
 
 def compose_portfolio_trip(
@@ -88,13 +89,10 @@ def compose_portfolio_trip(
     if choice is None:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
 
-    aspect_kinds: dict[str, str] = {}
-    for raw in assets or []:
-        aid = str(raw.get("id") or raw.get("assetId") or "").strip()
-        if not aid:
-            continue
-        aspect_kinds[aid] = str(raw.get("aspectKind") or raw.get("aspect_kind") or "")
-    placed = _place_choice(groups, choice, aspect_kinds)
+    aspect_kinds, aspect_ratios = collect_asset_aspects(assets)
+    placed = _place_choice(
+        groups, choice, aspect_kinds, aspect_ratios, buckets=buckets
+    )
     fulfill_hint = None
     if (
         not sparse
@@ -107,10 +105,14 @@ def compose_portfolio_trip(
             kept_n=kept_n,
             max_pages=max_pages,
             aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
             current=choice,
+            buckets=buckets,
         )
         if better is not None:
-            alt_placed = _place_choice(groups, better, aspect_kinds)
+            alt_placed = _place_choice(
+                groups, better, aspect_kinds, aspect_ratios, buckets=buckets
+            )
             if alt_placed.pages:
                 fulfill_hint = f"你的照片更适合 {int(better.series.get('pageCount') or 0)} 页"
                 choice = better
@@ -138,6 +140,7 @@ def compose_portfolio_trip(
     from travelogue.layout_contract.chapter_items import compact_chapter_items_for_screens
 
     compact_chapter_items_for_screens(chapters)
+    _clear_items_on_empty_portfolio_chapters(chapters)
 
     photos_placed = sum(len(p.asset_ids) for p in placed.pages)
     leftover = list(placed.leftover_ids)
@@ -195,13 +198,142 @@ def _place_choice(
     groups: Sequence[Mapping[str, Any]],
     choice: Any,
     aspect_kinds: Mapping[str, str],
+    aspect_ratios: Mapping[str, float] | None = None,
+    buckets: Sequence[Sequence[str]] | None = None,
 ) -> PlaceResult:
+    sequence = choice.series.get("sequence") or []
+    if _should_split_across_chapters(buckets):
+        return _place_across_chapter_buckets(
+            groups,
+            sequence,
+            buckets=buckets,
+            cap=choice.cap,
+            aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
+        )
     return place_groups(
         groups,
-        choice.series.get("sequence") or [],
+        sequence,
         cap=choice.cap,
         aspect_kinds=aspect_kinds,
+        aspect_ratios=aspect_ratios,
     )
+
+
+def _should_split_across_chapters(buckets: Sequence[Sequence[str]] | None) -> bool:
+    if not buckets:
+        return False
+    return sum(1 for b in buckets if b) >= 2
+
+
+def _place_across_chapter_buckets(
+    groups: Sequence[Mapping[str, Any]],
+    sequence: Sequence[Mapping[str, Any]],
+    *,
+    buckets: Sequence[Sequence[str]],
+    cap: int | None,
+    aspect_kinds: Mapping[str, str],
+    aspect_ratios: Mapping[str, float] | None,
+) -> PlaceResult:
+    """Keep the official sequence continuous, but do not let chapter 1 eat it.
+
+    D-PFM-14 · pages stay in series order and attach to existing chapters.
+    A global cap otherwise consumes early-day photos only; later chapters
+    then render leftover journal ``items`` (web long-image).
+    """
+    owner: dict[str, int] = {}
+    for i, bucket in enumerate(buckets):
+        for aid in bucket:
+            if aid:
+                owner.setdefault(str(aid), i)
+    by_ch: list[list[dict[str, Any]]] = [[] for _ in buckets]
+    unowned: list[dict[str, Any]] = []
+    for raw in groups:
+        g = {
+            "id": raw.get("id"),
+            "kind": raw.get("kind") or "scene",
+            "asset_ids": [str(a) for a in (raw.get("asset_ids") or []) if a],
+        }
+        if not g["asset_ids"]:
+            continue
+        idx = next((owner[a] for a in g["asset_ids"] if a in owner), None)
+        if idx is None or idx < 0 or idx >= len(by_ch):
+            unowned.append(g)
+        else:
+            by_ch[idx].append(g)
+    if unowned and by_ch:
+        by_ch[0] = unowned + by_ch[0]
+
+    sizes = [sum(len(g.get("asset_ids") or []) for g in gs) for gs in by_ch]
+    shares = _page_shares(len(sequence), sizes)
+    remaining_cap = cap
+    result = PlaceResult()
+    offset = 0
+    for i, gs in enumerate(by_ch):
+        take = shares[i]
+        slice_seq = list(sequence[offset : offset + take])
+        offset += take
+        if not gs or not slice_seq:
+            for g in gs:
+                result.leftover_ids.extend(g.get("asset_ids") or [])
+            continue
+        part = place_groups(
+            gs,
+            slice_seq,
+            cap=remaining_cap,
+            aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
+        )
+        result.pages.extend(part.pages)
+        result.leftover_ids.extend(part.leftover_ids)
+        result.dropped_roles.extend(part.dropped_roles)
+        result.used_roles.extend(part.used_roles)
+        result.demoted_pages += part.demoted_pages
+        result.fulfilled_pages += part.fulfilled_pages
+        if remaining_cap is not None:
+            used = sum(len(p.asset_ids) for p in part.pages)
+            remaining_cap = max(0, int(remaining_cap) - used)
+    return result
+
+
+def _page_shares(n_pages: int, sizes: Sequence[int]) -> list[int]:
+    """Min 1 page per nonempty chapter; leftover pages by photo count (Hamilton)."""
+    n = len(sizes)
+    shares = [0] * n
+    active = [i for i, s in enumerate(sizes) if s > 0]
+    if not active or n_pages <= 0:
+        return shares
+    if n_pages <= len(active):
+        for i in active[:n_pages]:
+            shares[i] = 1
+        return shares
+    for i in active:
+        shares[i] = 1
+    rest = n_pages - len(active)
+    total = sum(sizes[i] for i in active)
+    if rest <= 0 or total <= 0:
+        return shares
+    floors = {i: (rest * sizes[i]) // total for i in active}
+    rem = rest - sum(floors.values())
+    order = sorted(
+        active,
+        key=lambda i: ((rest * sizes[i]) % total, sizes[i], -i),
+        reverse=True,
+    )
+    for i in order[:rem]:
+        floors[i] += 1
+    for i in active:
+        shares[i] += floors[i]
+    return shares
+
+
+def _clear_items_on_empty_portfolio_chapters(chapters: list[dict[str, Any]]) -> None:
+    """D-PFM-27 · empty screens must not keep journal media-row/card leftovers."""
+    for ch in chapters:
+        if ch.get("screens"):
+            continue
+        ch["items"] = []
+        ch.setdefault("curation", {})["layoutStub"] = True
 
 
 def _fulfillment(placed: PlaceResult, choice: Any) -> float:
@@ -235,6 +367,8 @@ def _better_fulfilling_choice(
     max_pages: int,
     aspect_kinds: Mapping[str, str],
     current: Any,
+    aspect_ratios: Mapping[str, float] | None = None,
+    buckets: Sequence[Sequence[str]] | None = None,
 ) -> Any:
     current_density = str(current.series.get("density") or "standard").strip().lower()
     viable: list[dict[str, Any]] = []
@@ -253,7 +387,9 @@ def _better_fulfilling_choice(
         )
         if trial is None:
             continue
-        placed = _place_choice(groups, trial, aspect_kinds)
+        placed = _place_choice(
+            groups, trial, aspect_kinds, aspect_ratios, buckets=buckets
+        )
         if _fulfillment(placed, trial) >= FULFILL_MIN:
             viable.append(dict(row))
     if not viable:

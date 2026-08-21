@@ -1839,12 +1839,16 @@ def _stage_finalize(
             for k in ("index", "foreword", "featuredGrid", "featuredGridAssetIds", "plateAssetIds")
         }
 
-    n_breath = insert_breath_screens_in_chapters(
-        chapters,
-        arc_driven=cur_cfg.enable_arc_breath,
-    )
-    if n_breath:
-        warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（叙事弧驱动）")
+    n_breath = 0
+    from travelogue.config.edition import is_portfolio_trip
+
+    if not is_portfolio_trip(trip):
+        n_breath = insert_breath_screens_in_chapters(
+            chapters,
+            arc_driven=cur_cfg.enable_arc_breath,
+        )
+        if n_breath:
+            warnings.append(f"卷轴呼吸屏 · 插入 {n_breath} 屏（叙事弧驱动）")
 
     # AC-RHY-07 · 节奏 post-check（灰度先 log，OQ-09=B）：R-06 / R-08 / V-09 观测。
     from travelogue.layout_contract.engines import LAYOUT_ENGINE_SCREENS

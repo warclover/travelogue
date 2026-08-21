@@ -813,11 +813,16 @@ def build_layout_screen(
 
     first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
     first_asset = assets.get(first_aid) if first_aid else None
+    is_page_face = str(pattern_id).startswith("page-")
 
     viewport_fit = False
     tier_ultra = False
     screen_aspect: str | None = None
-    if pattern_id == "screen-full-frame" and first_asset:
+    if is_page_face:
+        # Portfolio magazine faces stay 16:9 one-screen (atelier stage).
+        # Do not inherit journal single-slot viewport-fit / photo AR.
+        style_parts_vf = []
+    elif pattern_id == "screen-full-frame" and first_asset:
         from travelogue.media.media_classify import is_collage_asset
 
         fit0 = full_frame_fit_for_asset(first_asset, default="cover")
@@ -904,7 +909,7 @@ def build_layout_screen(
             srcset = compile_srcset(asset, mobile=export_layout == "mobile")
             slot_aspect = _screen_aspect_ratio_css(asset)
             style_parts_slot: list[str] = []
-            if slot_aspect:
+            if slot_aspect and not is_page_face:
                 style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
             slot_da = slot.get("displayAspect")
             if slot_da is not None:
@@ -985,7 +990,9 @@ def build_layout_screen(
         slots_out.append(entry)
 
     style_parts: list[str] = list(style_parts_vf)
-    if layout_geo.get("stageAspect") and not skip_stage_aspect:
+    if is_page_face:
+        style_parts.append("--screen-aspect: 16 / 9")
+    elif layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")
     elif screen_aspect and not viewport_fit:

@@ -67,10 +67,12 @@ def build_chapters_render_context(
     strip_narrative_copy = surface.strip_narrative_copy
     is_draft = surface.is_draft
     folio_lite = surface.folio_lite
+    is_portfolio = False
     try:
         from travelogue.config.edition import is_portfolio_trip
 
-        if is_portfolio_trip(trip):
+        is_portfolio = is_portfolio_trip(trip)
+        if is_portfolio:
             folio_lite = False
     except Exception:
         pass
@@ -120,7 +122,7 @@ def build_chapters_render_context(
                 has_foreword_spread = foreword_spread is not None
 
     raw_chapters = trip.get("chapters") or []
-    if moment_signature_id and pool_ids and pool_solo:
+    if (not is_portfolio) and moment_signature_id and pool_ids and pool_solo:
         from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
 
         ensure_pool_assets_solo_screens(
@@ -130,7 +132,7 @@ def build_chapters_render_context(
             assets_by_id=assets,
             cfg=(cfg.curate.moment if cfg is not None else None),
         )
-    elif moment_signature_id:
+    elif (not is_portfolio) and moment_signature_id:
         from travelogue.curation.moment_scoring import ensure_moment_asset_in_chapters
 
         ensure_moment_asset_in_chapters(
@@ -167,7 +169,11 @@ def build_chapters_render_context(
         idx = ch.get("index", i + 1)
         curation = ch.get("curation") or {}
         anchors = curation.get("memoryAnchors") or []
-        use_screens = use_screens_global and bool(ch.get("screens")) and not is_longshot_surface
+        use_screens = (
+            use_screens_global
+            and not is_longshot_surface
+            and (bool(ch.get("screens")) or is_portfolio)
+        )
         raw_screens_for_spread: list[dict] = []
         screens_out = []
         if use_screens_global and bool(ch.get("screens")) and not is_longshot_surface:
@@ -262,16 +268,19 @@ def build_chapters_render_context(
         from travelogue.domain.longshot_density import is_compact_longshot
 
         compact_ls = is_longshot_surface and is_compact_longshot(trip)
-        chapter_items = resolve_chapter_items_for_render(
-            ch,
-            export_layout=image_layout,
-            layout_engine=layout_engine,
-            is_longshot=is_longshot_surface,
-            aspects=aspects_map,
-            assets_map=assets,
-            trip_photo_total=layout_eligible_count,
-            compact_longshot=compact_ls,
-        )
+        if is_portfolio:
+            chapter_items = []
+        else:
+            chapter_items = resolve_chapter_items_for_render(
+                ch,
+                export_layout=image_layout,
+                layout_engine=layout_engine,
+                is_longshot=is_longshot_surface,
+                aspects=aspects_map,
+                assets_map=assets,
+                trip_photo_total=layout_eligible_count,
+                compact_longshot=compact_ls,
+            )
         if is_longshot_surface and not compact_ls:
             # SFI D-SFI-11 · 紧凑档去掉呼吸停顿（默认档保留组感节奏）
             from travelogue.curation.breath_pauses import interleave_breath_items

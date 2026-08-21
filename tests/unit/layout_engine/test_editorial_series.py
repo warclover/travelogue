@@ -20,6 +20,8 @@ from travelogue.layout_engine.editorial_series.match import (
     snap_user_page_count,
 )
 from travelogue.layout_engine.editorial_series.place import (
+    PlacedPage,
+    attach_screens_to_chapters,
     place_groups,
     refuse_cross_group_screen,
 )
@@ -613,4 +615,167 @@ def test_min_capacity_from_official_catalog() -> None:
     assert min_capacity(_fixture_catalog()) == 21
     assert min_capacity([]) is None
     assert min_capacity(load_official_series()) == 27
+
+
+def test_attach_prefers_buckets_over_stale_items() -> None:
+    chapters = [
+        {
+            "id": "ch-01",
+            "items": [{"type": "media-card", "assetId": "a1"}],
+            "screens": [{"patternId": "stale"}],
+        },
+        {
+            "id": "ch-02",
+            "items": [{"type": "media-row", "assetIds": ["old-x", "old-y"]}],
+            "screens": [],
+        },
+    ]
+    pages = [
+        PlacedPage(
+            role="h1",
+            program="hero",
+            slot_band=1,
+            pattern_id="page-1-hero-land-wide",
+            asset_ids=["a1"],
+            shot_group_id="g1",
+        ),
+        PlacedPage(
+            role="h2",
+            program="hero",
+            slot_band=1,
+            pattern_id="page-1-hero-land-wide",
+            asset_ids=["b2"],
+            shot_group_id="g2",
+        ),
+    ]
+    attach_screens_to_chapters(chapters, pages, buckets=[["a1"], ["b2", "old-x"]])
+    assert [s["slots"][0]["assetId"] for s in chapters[0]["screens"]] == ["a1"]
+    assert [s["slots"][0]["assetId"] for s in chapters[1]["screens"]] == ["b2"]
+
+
+def _hero_series(pages: int) -> list[dict]:
+    return [
+        {
+            "id": f"magazine-{pages}-standard",
+            "pageCount": pages,
+            "density": "standard",
+            "version": 1,
+            "photo_span": [pages, 200],
+            "capacity": pages,
+            "sequence": [
+                {
+                    "i": i,
+                    "role": f"p{i}",
+                    "program": "hero",
+                    "slotBand": 1,
+                    "patternId": "page-1-hero-land-wide",
+                }
+                for i in range(1, pages + 1)
+            ],
+        }
+    ]
+
+
+def test_compose_reserves_pages_for_later_chapters() -> None:
+    early = _assets_from_groups([("g-early", "scene", 40)])
+    mid = _assets_from_groups([("g-mid", "scene", 8)])
+    late = _assets_from_groups([("g-late", "scene", 8)])
+    # Unique ids across groups (helper restarts at a001).
+    mid = [{**a, "id": f"m{a['id'][1:]}"} for a in mid]
+    late = [{**a, "id": f"z{a['id'][1:]}"} for a in late]
+    assets = early + mid + late
+    buckets = [
+        [a["id"] for a in early],
+        [a["id"] for a in mid],
+        [a["id"] for a in late],
+    ]
+    chapters = [
+        {
+            "id": f"ch-{i:02d}",
+            "items": [{"type": "media-card", "assetId": buckets[i - 1][0]}],
+            "screens": [],
+        }
+        for i in range(1, 4)
+    ]
+    chapters[1]["items"] = [
+        {"type": "media-row", "assetIds": ["ghost-a", "ghost-b"]},
+    ]
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"pageCountSource": "user", "pageCount": 6},
+        }
+    }
+    out, _meta = compose_portfolio_trip(
+        chapters,
+        assets=assets,
+        buckets=buckets,
+        trip=trip,
+        series=_hero_series(6),
+    )
+    counts = [len(ch.get("screens") or []) for ch in out]
+    assert counts[0] >= 1
+    assert counts[1] >= 1
+    assert counts[2] >= 1
+    assert sum(counts) == 6
+    assert not any(
+        it.get("type") == "media-row" for it in (out[1].get("items") or [])
+    )
+    assert all((ch.get("screens") or ch.get("items") == []) for ch in out)
+    for ch in out:
+        for sc in ch.get("screens") or []:
+            assert str(sc.get("patternId") or "").startswith("page-")
+
+
+def test_portfolio_empty_chapter_does_not_render_journal_items() -> None:
+    from travelogue.render.assemble import build_render_context
+
+    trip = {
+        "tripId": "folio-ch-fallback",
+        "layoutEngine": "screens",
+        "exportLayout": "web",
+        "studio": {"edition": "portfolio"},
+        "meta": {"title": "测"},
+        "assets": [
+            {
+                "id": "a1",
+                "width": 1600,
+                "height": 900,
+                "aspectKind": "landscape",
+            }
+        ],
+        "chapters": [
+            {
+                "id": "ch-01",
+                "index": 1,
+                "title": "一",
+                "screens": [
+                    {
+                        "patternId": "page-1-hero-land-wide",
+                        "slots": [{"assetId": "a1", "slot": 0, "fit": "cover"}],
+                        "layoutGeometry": {
+                            "stageAspect": "16:9",
+                            "gridClass": "layout-screen__grid--page-1-hero-land-wide",
+                        },
+                    }
+                ],
+                "items": [],
+            },
+            {
+                "id": "ch-02",
+                "index": 2,
+                "title": "二",
+                "screens": [],
+                "items": [
+                    {"type": "media-row", "assetIds": ["a1"]},
+                    {"type": "media-card", "assetId": "a1"},
+                ],
+            },
+        ],
+    }
+    ctx = build_render_context(trip, export_mode="draft", export_layout_override="web")
+    ch2 = ctx["chapters"][1]
+    assert ch2["useScreensEngine"] is True
+    assert ch2["items"] == []
+    assert ch2["screens"] == []
 

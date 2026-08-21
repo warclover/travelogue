@@ -600,6 +600,13 @@ def sync_trip_moments_finalize(
         explain=explain,
         collision=collision,
     )
+    try:
+        from travelogue.config.edition import is_portfolio_trip
+
+        if is_portfolio_trip(trip):
+            return signature_id
+    except Exception:
+        pass
     if cfg.pool_solo:
         ensure_pool_assets_solo_screens(
             chapters,
