@@ -3,7 +3,7 @@
 对应 `docs/PRD-BATCH-EXPORT-MULTISELECT-V1.md` Stage 1 · 后端调度函数。
 
 设计要点（D-BEX-02 / D-BEX-03 / D-BEX-05）：
-- **零侵入**：本模块只是一个 for 循环，逐平台调用既有 `export_trip_longshot`；
+- **零侵入**：本模块只是一个 for 循环，逐平台调用 `dispatch_export`；
   不改任何 CardGrouper / CardRenderer / Playwright 切分逻辑。
 - **单 Job 语义不变**：调用方（`export_handlers.handle_longshot`）仍只创建
   *一个* `StudioJob`，本模块在该 Job 的 worker 线程内部顺序跑完所有平台；
@@ -20,11 +20,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from travelogue.export.dispatch import dispatch_export
 from travelogue.export.longshot import (
     LongshotCancelled,
     LongshotExportError,
     LongshotExportResult,
-    export_trip_longshot,
 )
 
 CancelCheckFn = Callable[[], bool]
@@ -69,7 +69,7 @@ def export_trip_longshot_batch(
     cancel_check: CancelCheckFn | None = None,
     cancel_register: CancelRegisterFn | None = None,
 ) -> list[BatchExportItemResult]:
-    """依平台顺序调用既有 `export_trip_longshot`，逐项捕获异常、不中断整体循环。
+    """依平台顺序调用 `dispatch_export`，逐项捕获异常、不中断整体循环。
 
     `common` 是所有平台共享的导出参数（scale / fmt / include_appendix，来自
     payload 顶层字段，非 per-item）。
@@ -89,7 +89,7 @@ def export_trip_longshot_batch(
                 progress(_i, total, _platform, cur, item_total, hint)
 
         try:
-            result = export_trip_longshot(
+            result = dispatch_export(
                 trip_dir,
                 platform=req.platform,
                 slide_count=req.slide_count,

@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from travelogue.config import AppConfig
-from travelogue.render.chapters import build_chapters_render_context
+from travelogue.render.journal_chapters import build_journal_chapters
+from travelogue.render.portfolio_chapters import build_portfolio_chapters
 from travelogue.render.context_types import (
     CoverRenderContext,
     FeaturedGridBundleContext,
@@ -202,7 +203,10 @@ def build_render_context(
     cover_show_title = resolve_cover_show_title(trip, cfg=cfg)
     hook = (meta.get("hook") or "").strip()
     epilogue = (trip.get("epilogue") or "").strip()
-    if surface.strip_narrative_copy:
+    from travelogue.config.edition import is_portfolio_trip
+
+    is_portfolio = is_portfolio_trip(trip)
+    if surface.strip_narrative_copy or is_portfolio:
         hook = ""
         epilogue = ""
     else:
@@ -349,20 +353,30 @@ def build_render_context(
             if use_cover_closing:
                 moment_exclude.add(moment_id)
 
-    chapters_bundle = build_chapters_render_context(
-        trip,
-        surface,
-        trip_root=trip_root,
-        meta_title=meta_title,
-        hook=hook,
-        cfg=app_cfg,
-        moment_signature_id=moment_signature_id,
-        moment_pool_ids=moment_pool_ids,
-        moment_exif_pool_ids=moment_exif_pool_ids,
-        show_moment_exif=moment_cfg.show_exif and not omit_moment_exif,
-        pool_solo=moment_cfg.pool_solo and moment_active,
-        show_signature_label=moment_cfg.signature_label,
-    )
+    if is_portfolio:
+        chapters_bundle = build_portfolio_chapters(
+            trip,
+            surface,
+            trip_root=trip_root,
+            meta_title=meta_title,
+            hook=hook,
+            cfg=app_cfg,
+        )
+    else:
+        chapters_bundle = build_journal_chapters(
+            trip,
+            surface,
+            trip_root=trip_root,
+            meta_title=meta_title,
+            hook=hook,
+            cfg=app_cfg,
+            moment_signature_id=moment_signature_id,
+            moment_pool_ids=moment_pool_ids,
+            moment_exif_pool_ids=moment_exif_pool_ids,
+            show_moment_exif=moment_cfg.show_exif and not omit_moment_exif,
+            pool_solo=moment_cfg.pool_solo and moment_active,
+            show_signature_label=moment_cfg.signature_label,
+        )
 
     closing_asset = None
     closing_id = ""
@@ -432,13 +446,8 @@ def build_render_context(
     trip_id = str(trip.get("tripId") or "").strip()
     if surface.is_draft and trip_id:
         html_attrs.append(f'data-trip-id="{trip_id}"')
-    try:
-        from travelogue.config.edition import is_portfolio_trip
-
-        if is_portfolio_trip(trip):
-            html_attrs.append('data-edition="portfolio"')
-    except Exception:
-        pass
+    if is_portfolio:
+        html_attrs.append('data-edition="portfolio"')
     try:
         from travelogue.cover_engine.craft import craft_attr_value
 
@@ -560,6 +569,7 @@ def build_render_context(
         "editableEpilogue": surface.is_draft and bool(epilogue),
         "tripId": trip.get("tripId") or "",
         "chapters": chapters_bundle.chapters_out,
+        "chapterPartial": "chapter-portfolio" if is_portfolio else "chapter",
         "tripRoot": str(trip_root) if trip_root else None,
         "readingJson": surface.reading_json,
         "includeBreath": surface.include_breath,

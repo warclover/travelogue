@@ -11,7 +11,7 @@ from PIL import Image
 from travelogue.export.collage_pack import collage_plan_fingerprint, export_collage_pack
 from travelogue.services.trip_factory import create_trip
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.pipeline_isolation]
 
 
 def _make_rgb(path: Path, *, size: tuple[int, int] = (800, 600), color=(40, 120, 200)) -> None:

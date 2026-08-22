@@ -707,7 +707,7 @@ D-MSP-13 放宽 AC-PFM-09 的理由写的是「收到 sceneCluster 内就不会�
 | `travelogue/layout_templates/page_promote.py` | `LTE_SLOT_MAX`：`page-*` 走 10，其余仍 9 |
 | `travelogue/layout_templates/validator.py` | `V-P16-12`：按 `page-*` 前缀定向豁免到 10，非 `page-*` 仍 block |
 | `travelogue/layout_templates/templates/page-10-grid-port.yaml` | 新增 |
-| `travelogue/layout_templates/journal-screens.generated.css` | 重生成 |
+| `templates/visual-journal/portfolio-pages.css` | 重生成（DPI W1 · D-DPI-17：`journal-screens.generated.css` 已废弃） |
 | `tests/unit/layout_engine/fixtures/editorial_series/magazine-8-standard.yaml` | 改名 `magazine-8-sparse.yaml` + 三处引用回写（BLK-MSP-03） |
 | `travelogue/config/edition.py` | `PAGE_COUNT_MAX` 32→48 |
 | `travelogue/config/studio.py` | `max_pages` 默认 32→48 |

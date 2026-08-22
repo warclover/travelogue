@@ -31,7 +31,7 @@ from travelogue.config.layout_vibe import (
     set_trip_layout_vibe,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.pipeline_isolation]
 
 
 def _cfg(*, enabled: bool = False) -> AppConfig:

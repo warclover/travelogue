@@ -266,6 +266,7 @@ v0.1.0 的方向合同 + 八席 Must-Fix 回写。**隔离原则不可改**；�
 | **ISO-05** | 代码与测试禁止新增对 `docs/templates/reserve/` 的业务读取（检索范围沿用 TDV AC-07） |
 | **ISO-06** | LVP 写入不得改变 `edition`；改 `edition` 不得暗改 `layoutVibe` |
 | **ISO-07** | **`layoutEngine` 枚举与现网一致**：全库检索不得出现第三个引擎值 |
+| **ISO-DPI** | 读者面隔离（渲染 builder / CSS 产物 / 导出分发 / Dock 分发）以 [PRD-DUAL-PIPELINE-ISOLATION-V1.md](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) 为准。**不改 ISO-01～07 原文** |
 
 ### 4.3 重排边界
 

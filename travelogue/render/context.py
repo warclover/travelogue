@@ -17,6 +17,7 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    PORTFOLIO_PAGES_CSS,
     LONGSHOT_JS,
     SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
@@ -50,9 +51,8 @@ ASSET_VERSION_HEX_CHARS = 12
 ASSET_VERSION_FALLBACK_TS_CHARS = 15
 
 
-_BUNDLE_VERSION_PATHS = (
+_SHARED_BUNDLE_PATHS = (
     JOURNAL_CSS,
-    JOURNAL_SCREENS_CSS,
     BREATH_JS,
     BREATH_CSS,
     LONGSHOT_JS,
@@ -65,8 +65,18 @@ _BUNDLE_VERSION_PATHS = (
     COPY_DISPLAY_CSS,
     INLINE_EDIT_CSS,
     INLINE_EDIT_JS,
-    INLINE_EDIT_CSS,
 )
+
+# Kept for tests that still import the old name; journal-only, no portfolio CSS.
+_BUNDLE_VERSION_PATHS = _SHARED_BUNDLE_PATHS + (JOURNAL_SCREENS_CSS,)
+
+
+def _bundle_version_paths(trip: dict | None = None) -> tuple:
+    """Per-pipeline CSS + shared shell (D-DPI-16). Portfolio bytes stay off the journal list."""
+    from travelogue.config.edition import is_portfolio_trip
+
+    family_css = PORTFOLIO_PAGES_CSS if is_portfolio_trip(trip) else JOURNAL_SCREENS_CSS
+    return _SHARED_BUNDLE_PATHS + (family_css,)
 
 
 def _longshot_bundle_version(trip: dict) -> str:
@@ -74,10 +84,11 @@ def _longshot_bundle_version(trip: dict) -> str:
 
     Content-stable across re-renders; changes only when shipped CSS/JS changes.
     Normalize CRLF→LF so Windows checkouts match Linux CI hashes.
+    Journal and portfolio hash disjoint family CSS files (AC-DPI-18).
     """
     digest = hashlib.sha256()
     found = False
-    for path in _BUNDLE_VERSION_PATHS:
+    for path in _bundle_version_paths(trip):
         try:
             digest.update(path.name.encode("utf-8"))
             digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
@@ -781,6 +792,7 @@ def build_layout_screen(
     chapter_day_span: list[str] | None = None,
     trip_primary_year: int | None = None,
     peak_collage_exif: bool = False,
+    stage_aspect: str | None = None,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if is_plate and not folio_plate_rewrite_eligible(screen):
@@ -813,7 +825,8 @@ def build_layout_screen(
 
     first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
     first_asset = assets.get(first_aid) if first_aid else None
-    is_page_face = str(pattern_id).startswith("page-")
+    # Prefix sniff kept as fallback (OQ-DPI-02). Builder may pass stage_aspect.
+    is_page_face = bool(stage_aspect) or str(pattern_id).startswith("page-")
 
     viewport_fit = False
     tier_ultra = False

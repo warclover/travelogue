@@ -39,6 +39,29 @@ def _screens_use_solid_geometry(data: dict[str, Any]) -> bool:
     return found
 
 
+def _is_portfolio_data(data: dict[str, Any] | None) -> bool:
+    studio = data.get("studio") if isinstance(data, dict) else None
+    if not isinstance(studio, dict):
+        return False
+    return str(studio.get("edition") or "") == "portfolio"
+
+
+def trip_css_import_stale(trip_dir: Path, data: dict[str, Any] | None = None) -> bool:
+    """True when the copied journal.css @import does not match trip identity (IE-DPI-07)."""
+    journal_css = trip_dir / "journal.css"
+    if not journal_css.is_file():
+        return False
+    try:
+        text = journal_css.read_text(encoding="utf-8")
+    except OSError:
+        return True
+    if _is_portfolio_data(data):
+        if not (trip_dir / "portfolio-pages.css").is_file():
+            return True
+        return "portfolio-pages.css" not in text
+    return "journal-screens.css" not in text
+
+
 def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) -> bool:
     """True when a copied trip CSS file lacks grid classes used by curated screens."""
     trip_json = trip_dir / "trip.json"
@@ -49,6 +72,8 @@ def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) ->
             data = json.loads(trip_json.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return False
+    if trip_css_import_stale(trip_dir, data):
+        return True
     if _screens_use_solid_geometry(data):
         return False
     required = required_grid_classes_from_trip(data)

@@ -19,6 +19,7 @@ from travelogue.layout_templates.aspect_constants import (
 from travelogue.layout_templates.css_gen import (
     grid_templates_for,
     slot_cells,
+    template_family,
     validate_css_bundle,
 )
 from travelogue.layout_templates.geometry import slot_aspect_table
@@ -152,10 +153,10 @@ _GRANDFATHERED_DENSE_SLOT_IDS: frozenset[str] = frozenset(
 
 
 def _dense_freeze_exempt(template_id: str) -> bool:
-    """Journal mosaic freeze does not apply to atelier-promoted ``page-*`` (TSU W3 / PFM)."""
+    """Journal mosaic freeze does not apply to the portfolio family (D-DPI-12)."""
     if template_id in _GRANDFATHERED_DENSE_SLOT_IDS:
         return True
-    return str(template_id).startswith("page-")
+    return template_family(template_id) == "portfolio"
 
 
 def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:

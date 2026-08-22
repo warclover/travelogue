@@ -8,5 +8,11 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["./*.js", "./global.d.ts", "./longshot-logic.js"]
+  "include": [
+    "./*.js",
+    "./global.d.ts",
+    "./longshot-logic.js",
+    "../js/journal-dock-logic.js",
+    "../js/portfolio-dock-logic.js"
+  ]
 }

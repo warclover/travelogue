@@ -16,7 +16,7 @@ from travelogue.config.runtime import config_override
 from travelogue.web.studio_handlers.import_handlers import handle_import
 from travelogue.web.studio_jobs import reset_job_store
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.pipeline_isolation]
 
 _REPO = Path(__file__).resolve().parents[3]
 _STUDIO = _REPO / "templates" / "studio"

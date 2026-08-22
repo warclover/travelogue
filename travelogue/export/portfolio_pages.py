@@ -18,8 +18,8 @@ from travelogue.export.longshot import (
     EXPORT_OUTPUT_DIRNAME,
     LongshotCancelled,
     LongshotExportError,
-    LongshotExportResult,
     LongshotOutput,
+    PortfolioBundleResult,
     ProgressFn,
     _BROWSER_POOL,
     _slug_title,
@@ -177,7 +177,7 @@ def export_portfolio_pages(
     timeout_ms: int = 180_000,
     host: str = "127.0.0.1",
     port: int = 0,
-) -> LongshotExportResult:
+) -> PortfolioBundleResult:
     """Write compact ``{title}-portfolio-{nn}.png``. Skip failures; never rollback successes."""
     trip_dir = Path(trip_dir).resolve()
     trip = _load_trip(trip_dir)
@@ -261,7 +261,7 @@ def export_portfolio_pages(
         )
 
     hint = _hint_pages(page_count=len(outputs), skipped=skipped)
-    return LongshotExportResult(
+    return PortfolioBundleResult(
         outputs=outputs,
         capture_method="portfolio_pages",
         title=_slug_title(title),
@@ -293,7 +293,7 @@ def export_portfolio_bundle(
     port: int = 0,
     include_zip: bool = True,
     include_pages: bool = True,
-) -> LongshotExportResult:
+) -> PortfolioBundleResult:
     """One action, two artifacts. Either piece may fail without blocking the other."""
     trip_dir = Path(trip_dir).resolve()
     trip = _load_trip(trip_dir)
@@ -318,7 +318,7 @@ def export_portfolio_bundle(
         zip_error = getattr(exc, "message", None) or str(exc)
         _log.info("portfolio share zip failed: %s", exc)
 
-    pages: LongshotExportResult | None = None
+    pages: PortfolioBundleResult | None = None
     pages_error = ""
     try:
         if include_pages:
@@ -352,7 +352,7 @@ def export_portfolio_bundle(
     if pages is None:
         profile = get_profile("portfolio_pages")
         title = _trip_title(trip_dir)
-        pages = LongshotExportResult(
+        pages = PortfolioBundleResult(
             outputs=[],
             capture_method="portfolio_pages",
             title=_slug_title(title),

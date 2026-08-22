@@ -15,13 +15,16 @@ from travelogue.layout_templates.css_gen import (
     LTE_MARKER_START,
     OVERLAYS_MARKER_END,
     OVERLAYS_MARKER_START,
+    PORTFOLIO_LTE_MARKER_START,
+    PORTFOLIO_OVERLAYS_MARKER_END,
+    PORTFOLIO_OVERLAYS_MARKER_START,
     TrailingLegacyCssError,
     _truncate_trailing_legacy_after_overlays,
     lte_grid_classes_outside_marker,
     sync_journal_screens_css,
 )
 from travelogue.layout_templates.registry import get_layout_template, reset_engine_cache_for_tests
-from travelogue.paths import JOURNAL_SCREENS_CSS
+from travelogue.paths import JOURNAL_SCREENS_CSS, PORTFOLIO_PAGES_CSS
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +35,23 @@ def _fresh_lte_engine() -> None:
 @pytest.fixture
 def journal_css() -> str:
     return Path(JOURNAL_SCREENS_CSS).read_text(encoding="utf-8")
+
+
+@pytest.mark.unit
+def test_ac_dpi_05_journal_has_no_page_prefix(journal_css: str) -> None:
+    assert "page-" not in journal_css
+
+
+@pytest.mark.unit
+def test_ac_dpi_05_audit_flags_page_leak(tmp_path: Path) -> None:
+    from scripts.lte_journal_css_audit import audit_family_prefix_leak
+
+    journal = tmp_path / "journal-screens.css"
+    portfolio = tmp_path / "portfolio-pages.css"
+    journal.write_text("/* page-1-hero-port */\n.x { color: red; }\n", encoding="utf-8")
+    portfolio.write_text("/* page-1-hero-port */\n", encoding="utf-8")
+    leak = audit_family_prefix_leak(journal, portfolio)
+    assert leak["journalHasPageRules"] is True
 
 
 @pytest.mark.unit
@@ -64,6 +84,38 @@ def test_flagship_and_hero_css_inside_marker(journal_css: str) -> None:
 @pytest.mark.unit
 def test_no_lte_grid_duplicates_outside_marker(journal_css: str) -> None:
     assert lte_grid_classes_outside_marker(journal_css) == []
+
+
+@pytest.mark.unit
+def test_portfolio_pages_has_lte_and_overlay_markers() -> None:
+    text = Path(PORTFOLIO_PAGES_CSS).read_text(encoding="utf-8")
+    assert PORTFOLIO_LTE_MARKER_START in text
+    assert LTE_MARKER_END in text
+    assert PORTFOLIO_OVERLAYS_MARKER_START in text
+    assert PORTFOLIO_OVERLAYS_MARKER_END in text
+    assert text.index(PORTFOLIO_LTE_MARKER_START) < text.index(LTE_MARKER_END)
+    start = text.index(PORTFOLIO_LTE_MARKER_START)
+    end = text.index(LTE_MARKER_END)
+    inside = text[start:end]
+    assert "layout-screen__grid--page-1-hero-port" in inside
+    assert lte_grid_classes_outside_marker(text) == []
+
+
+@pytest.mark.unit
+def test_contain_collapse_opt_out_inventory(journal_css: str) -> None:
+    """AC-DPI-20: named patterns stay opted out of generic contain-collapse."""
+    assert ':not([data-pattern^="page-"])' not in journal_css
+    ostart = journal_css.index(OVERLAYS_MARKER_START)
+    oend = journal_css.index(OVERLAYS_MARKER_END)
+    overlays = journal_css[ostart:oend]
+    for token in (
+        ':not([data-layout-hint="person-pair"])',
+        ':not([data-layout-hint="person-triple"])',
+        ':not([data-layout-hint="editorial-4mix"])',
+    ):
+        assert token in overlays
+    assert "mixed-1l1p · both columns fill the 16:9 stage height" in overlays
+    assert "landscape-3-editorial · keep 16:9 stage + cover fill" in overlays
 
 
 @pytest.mark.unit

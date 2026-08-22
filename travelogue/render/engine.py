@@ -24,6 +24,7 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    PORTFOLIO_PAGES_CSS,
     LONGSHOT_BRIDGE_JS,
     LONGSHOT_CSS,
     LONGSHOT_JS,
@@ -465,6 +466,10 @@ def render_html(
         reading_profile_override=reading_profile_override,
         cfg=cfg,
     )
+    chosen = ctx.get("chapterPartial")
+    if isinstance(chosen, str) and chosen != "chapter" and chosen in partials:
+        partials = dict(partials)
+        partials["chapter"] = partials[chosen]
     return template(ctx, partials=partials)
 
 
@@ -596,21 +601,27 @@ def _render_trip_body(
         from travelogue.render.context import _longshot_bundle_version
 
         bundle_version = _longshot_bundle_version(trip)
-        for src, name in ((JOURNAL_CSS, "journal.css"), (JOURNAL_SCREENS_CSS, "journal-screens.css")):
+        from travelogue.config.edition import is_portfolio_trip
+
+        if is_portfolio_trip(trip):
+            family_src, family_name = PORTFOLIO_PAGES_CSS, "portfolio-pages.css"
+        else:
+            family_src, family_name = JOURNAL_SCREENS_CSS, "journal-screens.css"
+        for src, name in ((JOURNAL_CSS, "journal.css"), (family_src, family_name)):
             if not src.is_file():
                 raise RenderError("E_RENDER_TEMPLATE", f"missing {src.name}")
             dest = out_dir / name
             if dest.resolve() != src.resolve():
                 shutil.copy2(src, dest)
-        # Cache-bust the @import of journal-screens.css: the <link> on journal.css
-        # carries ?v=<bundle_version>, but the static @import inside journal.css does
-        # not, so browsers keep serving a stale journal-screens.css after re-renders.
+        # Cache-bust the family @import: the <link> on journal.css carries
+        # ?v=<bundle_version>, but the static @import inside journal.css does not.
+        # Rewrite the *copied* journal.css only — never the repo source (IE-DPI-06).
         journal_css_dest = out_dir / "journal.css"
         if journal_css_dest.is_file():
             css_text = journal_css_dest.read_text(encoding="utf-8")
             busted = re.sub(
-                r'@import\s+url\(\s*["\']?journal-screens\.css(?:\?[^"\')]*)?["\']?\s*\)',
-                f'@import url("journal-screens.css?v={bundle_version}")',
+                r'@import\s+url\(\s*["\']?(?:journal-screens|portfolio-pages)\.css(?:\?[^"\')]*)?["\']?\s*\)',
+                f'@import url("{family_name}?v={bundle_version}")',
                 css_text,
             )
             if busted != css_text:

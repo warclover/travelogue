@@ -729,7 +729,7 @@ def test_handle_longshot_portfolio_explicit_wechat_allowed(
             self._target()
 
     monkeypatch.setattr(
-        "travelogue.export.longshot.export_trip_longshot",
+        "travelogue.export.dispatch.dispatch_export",
         _export,
     )
     monkeypatch.setattr(

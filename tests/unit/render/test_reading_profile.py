@@ -109,6 +109,7 @@ def test_portfolio_web_defaults_to_magazine(screens_trip: tuple[Path, dict]) -> 
     assert explicit["profile"] == "legacy"
 
 
+@pytest.mark.pipeline_isolation
 def test_render_html_injects_reading_script(screens_trip: tuple[Path, dict]) -> None:
     ws, trip = screens_trip
     html = render_html(
@@ -127,6 +128,7 @@ def test_render_html_injects_reading_script(screens_trip: tuple[Path, dict]) -> 
     assert 'data-edition="portfolio"' not in html
 
 
+@pytest.mark.pipeline_isolation
 def test_portfolio_html_stamps_data_edition(screens_trip: tuple[Path, dict]) -> None:
     ws, trip = screens_trip
     trip["studio"] = {"edition": "portfolio"}

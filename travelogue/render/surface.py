@@ -88,18 +88,11 @@ def resolve_surface_context(
         layout_engine_override=layout_engine_override,
         export_layout_override=export_layout_override,
     )
-    portfolio_body = False
-    try:
-        from travelogue.config.edition import is_portfolio_trip
-
-        portfolio_body = is_portfolio_trip(trip)
-    except Exception:
-        portfolio_body = False
     strip_narrative_copy = should_strip_narrative_copy(
         photos_only=photos_only,
         include_screenplay=include_screenplay,
         is_draft=is_draft,
-    ) or portfolio_body
+    )
     assets = asset_map(trip)
 
     app_cfg = cfg or get_config()

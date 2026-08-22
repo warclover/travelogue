@@ -276,6 +276,7 @@ def test_ac_msp_16_tier_sequences_explained_by_fulfillment() -> None:
     assert rendered[12] != rendered[24]
 
 
+@pytest.mark.pipeline_isolation
 def test_ac_msp_21_journal_still_rejects_cross_shot_group() -> None:
     from pathlib import Path
 

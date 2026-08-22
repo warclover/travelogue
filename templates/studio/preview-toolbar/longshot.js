@@ -40,12 +40,7 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
-import {
-  PORTFOLIO_PAGES_PLATFORM,
-  portfolioDockCta,
-  readToolbarEdition,
-  resolvePortfolioMainPlatform,
-} from "../js/portfolio-export-logic.js";
+import { PORTFOLIO_PAGES_PLATFORM } from "../js/portfolio-export-logic.js";
 import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
@@ -651,27 +646,13 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn) return;
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
-    if (readToolbarEdition(root) === "portfolio") {
-      var packPlatform = resolvePortfolioMainPlatform(prefs.platform);
-      if (packPlatform === PORTFOLIO_PAGES_PLATFORM) {
-        var packCta = portfolioDockCta();
-        btn.removeAttribute("data-recipe-subtitle");
-        if (isPreviewToolbarV4(root)) {
-          var packLabelEl = btn.querySelector(".preview-toolbar__dock-export-label");
-          if (packLabelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
-            packLabelEl.textContent = packCta.short;
-          }
-          btn.setAttribute("aria-label", packCta.aria);
-          updateDockTip(btn, packCta.aria);
-        } else if (!btn.classList.contains("preview-toolbar__longshot--running")) {
-          btn.textContent = packCta.short;
-          btn.setAttribute("aria-label", packCta.aria);
-        } else {
-          btn.setAttribute("aria-label", packCta.aria);
-        }
-        emitSnrCtaLabel(packCta.aria, [PORTFOLIO_PAGES_PLATFORM]);
-        return;
-      }
+    if (typeof root._syncPortfolioCta === "function") {
+      var handled = root._syncPortfolioCta(root, btn, {
+        isV4: isPreviewToolbarV4(root),
+        updateDockTip: updateDockTip,
+        emitSnrCtaLabel: emitSnrCtaLabel,
+      });
+      if (handled) return;
     }
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量 CTA
     // SNR D-SNR-11 · 人话「导出 · {主平台}等 N 项」，禁止孤立「N 个模式」主文案；
@@ -1111,9 +1092,12 @@ export function cancelPreviewLongshotExport(root) {
   export function ensureStudioExportPopover(root) {
     var wrap = root.querySelector(".preview-toolbar__export-zone-wrap");
     if (!wrap) return null;
-    var edition = readToolbarEdition(root);
+    var face =
+      root && typeof root._exportPopoverSpec === "function"
+        ? root._exportPopoverSpec()
+        : { title: "导出设置", edition: "journal" };
     var pop = wrap.querySelector(".preview-toolbar__export-popover");
-    if (pop && pop.getAttribute("data-edition") !== edition) {
+    if (pop && pop.getAttribute("data-export-face") !== face.edition) {
       pop.remove();
       pop = null;
     }
@@ -1123,9 +1107,9 @@ export function cancelPreviewLongshotExport(root) {
     pop.className = "preview-toolbar__export-popover";
     pop.hidden = true;
     pop.setAttribute("role", "dialog");
-    pop.setAttribute("aria-label", edition === "portfolio" ? "导出" : "导出设置");
-    pop.setAttribute("data-edition", edition);
-    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, { edition: edition });
+    pop.setAttribute("aria-label", face.title);
+    pop.setAttribute("data-export-face", face.edition);
+    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, { edition: face.edition });
     var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
     if (dualBtn && !dualBtn._ltnBound) {
       dualBtn._ltnBound = true;
@@ -1139,12 +1123,10 @@ export function cancelPreviewLongshotExport(root) {
     var prefs0 = readLongshotExportPrefs();
     var initPlatform = prefs0.platform;
     var initPlatforms = prefs0.platforms;
-    if (edition === "portfolio") {
-      var packPid = resolvePortfolioMainPlatform(prefs0.platform);
-      if (packPid === PORTFOLIO_PAGES_PLATFORM) {
-        initPlatform = PORTFOLIO_PAGES_PLATFORM;
-        initPlatforms = [PORTFOLIO_PAGES_PLATFORM];
-      }
+    if (face.initPlatform) {
+      var seeded = face.initPlatform(prefs0);
+      initPlatform = seeded.platform;
+      initPlatforms = seeded.platforms;
     }
     var panel = bindPanelDraft(
       pop,
@@ -1494,12 +1476,10 @@ export function cancelPreviewLongshotExport(root) {
       var prefs = readLongshotExportPrefs();
       var platform = prefs.platform;
       var platforms = prefs.platforms;
-      if (readToolbarEdition(root) === "portfolio") {
-        var packPid = resolvePortfolioMainPlatform(prefs.platform);
-        if (packPid === PORTFOLIO_PAGES_PLATFORM) {
-          platform = PORTFOLIO_PAGES_PLATFORM;
-          platforms = [PORTFOLIO_PAGES_PLATFORM];
-        }
+      if (typeof root._readPortfolioDraftPrefs === "function") {
+        var seededDraft = root._readPortfolioDraftPrefs(prefs);
+        platform = seededDraft.platform;
+        platforms = seededDraft.platforms;
       }
       if (panel.setDraft) {
         panel.setDraft({
@@ -2669,13 +2649,10 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function startLongshotWithRecipe(root, tripId) {
-    if (readToolbarEdition(root) === "portfolio") {
-      var packPid = resolvePortfolioMainPlatform(readExportPrefs().platform);
-      if (packPid === PORTFOLIO_PAGES_PLATFORM) {
-        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
-        maybeCopyGateThenExport(root, tripId);
-        return;
-      }
+    if (typeof root._skipRecipeForExport === "function" && root._skipRecipeForExport()) {
+      _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      maybeCopyGateThenExport(root, tripId);
+      return;
     }
     if (!isOutputRecipeEnabled()) {
       maybeCopyGateThenExport(root, tripId);
@@ -3205,12 +3182,11 @@ export function cancelPreviewLongshotExport(root) {
       _pendingExportPlatform ||
       (afterLayout ? readResumePlatform(tripId) : null) ||
       prefsPlatform;
-    if (
-      readToolbarEdition(root) === "portfolio" &&
-      !_pendingExportPlatform &&
-      !afterLayout
-    ) {
-      platform = resolvePortfolioMainPlatform(prefsPlatform);
+    if (typeof root._resolveExportPlatform === "function") {
+      platform = root._resolveExportPlatform(prefsPlatform, {
+        pending: _pendingExportPlatform,
+        afterLayout: afterLayout,
+      });
     }
     _pendingExportPlatform = null;
     if (platform !== prefsPlatform && platform !== PORTFOLIO_PAGES_PLATFORM) {

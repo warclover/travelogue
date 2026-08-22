@@ -60,7 +60,7 @@ def test_cli_commands_exit_zero() -> None:
     with patch("sys.stdout", buf):
         code = cli.main(["export"])
     assert code == 0
-    assert "generated CSS" in buf.getvalue()
+    assert "nothing to write" in buf.getvalue()
 
     buf = StringIO()
     with patch("sys.stdout", buf):

@@ -14,7 +14,7 @@ from travelogue.export.platform_profiles import (
     resolve_profile,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.pipeline_isolation]
 
 
 def test_portfolio_ambiguous_does_not_need_intent() -> None:

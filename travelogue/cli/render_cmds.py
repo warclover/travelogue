@@ -543,7 +543,8 @@ def cmd_export_longshot(
         PortfolioPlatformRequiredError,
         require_explicit_export_target,
     )
-    from travelogue.export.longshot import LongshotExportError, export_trip_longshot
+    from travelogue.export.dispatch import dispatch_export
+    from travelogue.export.longshot import LongshotExportError
     from travelogue.export.output_recipe import resolve_output_recipe
     from travelogue.export.output_recipe.types import OutputRecipeError
     from travelogue.export.platform_profiles import (
@@ -631,7 +632,7 @@ def cmd_export_longshot(
                 "--width/--height 仅用于 --platform custom",
             )
 
-        result = export_trip_longshot(
+        result = dispatch_export(
             serve_dir,
             scale=scale,
             fmt=format,

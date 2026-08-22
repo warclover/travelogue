@@ -528,9 +528,9 @@ def _handle_longshot_batch(
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
     import json
 
+    from travelogue.export.dispatch import dispatch_export
     from travelogue.export.longshot import (
         DEFAULT_EXPORT_SCALE,
-        export_trip_longshot,
         playwright_longshot_available,
     )
     from travelogue.export.output_recipe import count_kept_n, resolve_output_recipe
@@ -886,7 +886,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
                 store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
 
         _ensure_derivatives_for_export(trip_dir)
-        result = export_trip_longshot(
+        result = dispatch_export(
             trip_dir,
             scale=scale,
             fmt=fmt,

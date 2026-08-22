@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from travelogue.paths import ROOT
+from travelogue.paths import JOURNAL_SCREENS_CSS
 
-_JOURNAL_SCREENS = ROOT / "templates" / "visual-journal" / "journal-screens.css"
+_JOURNAL_SCREENS = JOURNAL_SCREENS_CSS
 
 # object-fit: contain + portrait row layouts keep fixed anchors (PRD §4.10.1 exempt)
 _EXEMPT_CONTAIN_MARKERS = (

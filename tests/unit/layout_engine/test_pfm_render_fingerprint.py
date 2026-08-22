@@ -6,7 +6,7 @@ import pytest
 
 from travelogue.layout_engine.render_fingerprint import trip_render_fingerprint_payload
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.pipeline_isolation]
 
 
 def _journal_trip() -> dict:

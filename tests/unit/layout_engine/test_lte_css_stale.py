@@ -7,6 +7,7 @@ import pytest
 from travelogue.layout_engine.mosaic.constants import PATTERN_MOSAIC_5_2P3L_EQUAL
 from travelogue.layout_templates.css_stale import (
     required_grid_classes_from_trip,
+    trip_css_import_stale,
     trip_layout_css_stale,
     trip_render_bundle_stale,
 )
@@ -49,6 +50,39 @@ def test_trip_layout_css_stale_when_class_missing(tmp_path) -> None:
     (trip_dir / "trip.json").write_text("{}", encoding="utf-8")
     (trip_dir / "journal-screens.css").write_text(".layout-screen__grid--3col {}", encoding="utf-8")
     assert trip_layout_css_stale(trip_dir, data) is True
+
+
+@pytest.mark.unit
+def test_trip_css_import_stale_when_portfolio_points_at_journal(tmp_path) -> None:
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    (trip_dir / "journal.css").write_text('@import url("journal-screens.css");\n', encoding="utf-8")
+    data = {"studio": {"edition": "portfolio"}}
+    assert trip_css_import_stale(trip_dir, data) is True
+    assert trip_layout_css_stale(trip_dir, data) is True
+
+
+@pytest.mark.unit
+def test_trip_css_import_fresh_when_portfolio_loads_own_file(tmp_path) -> None:
+    trip_dir = tmp_path / "demo"
+    trip_dir.mkdir()
+    (trip_dir / "journal.css").write_text('@import url("portfolio-pages.css?v=ls1");\n', encoding="utf-8")
+    (trip_dir / "portfolio-pages.css").write_text("/* pages */\n", encoding="utf-8")
+    data = {
+        "studio": {"edition": "portfolio"},
+        "chapters": [
+            {
+                "screens": [
+                    {
+                        "patternId": "page-1-hero-port",
+                        "layoutGeometry": {"cols": [1], "rows": [1], "gridClass": "x"},
+                    }
+                ]
+            }
+        ],
+    }
+    assert trip_css_import_stale(trip_dir, data) is False
+    assert trip_layout_css_stale(trip_dir, data) is False
 
 
 @pytest.mark.unit

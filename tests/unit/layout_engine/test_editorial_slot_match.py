@@ -255,6 +255,7 @@ def test_journal_score_aspect_match_unchanged() -> None:
     )
 
 
+@pytest.mark.pipeline_isolation
 def test_journal_mosaic_does_not_import_portfolio_slot_match() -> None:
     mosaic = ROOT / "travelogue" / "layout_engine" / "mosaic"
     api = ROOT / "travelogue" / "layout_engine" / "api.py"

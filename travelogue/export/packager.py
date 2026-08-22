@@ -126,12 +126,18 @@ def _export_trip_stages(
     if not css.is_file():
         import shutil
 
-        from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS
+        from travelogue.config.edition import is_portfolio_trip
+        from travelogue.paths import JOURNAL_CSS, JOURNAL_SCREENS_CSS, PORTFOLIO_PAGES_CSS
 
         shutil.copy2(JOURNAL_CSS, css)
-        screens_css = trip_root / "journal-screens.css"
-        if not screens_css.is_file() and JOURNAL_SCREENS_CSS.is_file():
-            shutil.copy2(JOURNAL_SCREENS_CSS, screens_css)
+        if is_portfolio_trip(trip):
+            pages_css = trip_root / "portfolio-pages.css"
+            if not pages_css.is_file() and PORTFOLIO_PAGES_CSS.is_file():
+                shutil.copy2(PORTFOLIO_PAGES_CSS, pages_css)
+        else:
+            screens_css = trip_root / "journal-screens.css"
+            if not screens_css.is_file() and JOURNAL_SCREENS_CSS.is_file():
+                shutil.copy2(JOURNAL_SCREENS_CSS, screens_css)
 
     preview_path = trip_root / "preview.jpg"
     if not no_preview:
@@ -176,9 +182,16 @@ def _export_trip_stages(
         with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             zf.write(index, "index.html")
             zf.write(css, "journal.css")
-            screens_css = trip_root / "journal-screens.css"
-            if screens_css.is_file():
-                zf.write(screens_css, "journal-screens.css")
+            from travelogue.config.edition import is_portfolio_trip
+
+            if is_portfolio_trip(trip):
+                pages_css = trip_root / "portfolio-pages.css"
+                if pages_css.is_file():
+                    zf.write(pages_css, "portfolio-pages.css")
+            else:
+                screens_css = trip_root / "journal-screens.css"
+                if screens_css.is_file():
+                    zf.write(screens_css, "journal-screens.css")
             if preview_path.is_file():
                 zf.write(preview_path, "preview.jpg")
 

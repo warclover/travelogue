@@ -221,6 +221,70 @@ export function thinTierConfirm(capacity, kept, recommendPages) {
   };
 }
 
+/**
+ * Fill the page-count chip row (FE-DPI-03). features.js keeps the card shell.
+ * @param {HTMLElement|null} pageHost
+ * @param {HTMLElement|null} pageRow
+ * @param {HTMLElement|null} pageHint
+ * @param {object|null|undefined} portfolio
+ * @param {{ selectedId?: string, onRequest?: function(string, object): void }} [handlers]
+ * @returns {string} selected chip id
+ */
+export function renderPortfolioPageCountChips(pageHost, pageRow, pageHint, portfolio, handlers) {
+  handlers = handlers || {};
+  var onRequest = handlers.onRequest;
+  if (!pageHost || !pageRow) return "auto";
+  pageHost.hidden = false;
+  var chips =
+    (portfolio && (portfolio.pageCountChipDetails || portfolio.pageCountChips)) || [];
+  pageRow.innerHTML = "";
+  pageCountChipOptions(chips).forEach(function (opt) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "preview-sheet__chip";
+    btn.setAttribute("data-page-count", opt.id);
+    btn.setAttribute("role", "radio");
+    btn.setAttribute("aria-label", opt.hint || opt.label);
+    btn.innerHTML =
+      '<span class="preview-sheet__chip-label">' +
+      opt.label +
+      "</span>" +
+      (opt.hint
+        ? '<span class="preview-sheet__chip-hint">' + opt.hint + "</span>"
+        : "");
+    btn.addEventListener("click", function () {
+      if (typeof onRequest === "function") onRequest(opt.id, opt);
+    });
+    btn.addEventListener("keydown", function (e) {
+      if (!isRadioNavKey(e.key)) return;
+      e.preventDefault();
+      var ids = pageCountChipOptions(chips).map(function (o) {
+        return o.id;
+      });
+      var current = handlers.selectedId || selectedPageCountChip(portfolio);
+      var next = nextRadioId(ids, current, e.key);
+      if (!next || next === current) return;
+      var hit = pageCountChipOptions(chips).filter(function (o) {
+        return o.id === next;
+      })[0];
+      if (typeof onRequest === "function") onRequest(next, hit || { id: next });
+    });
+    pageRow.appendChild(btn);
+  });
+  var selected = handlers.selectedId || selectedPageCountChip(portfolio);
+  pageRow.querySelectorAll("[data-page-count]").forEach(function (btn) {
+    var on = btn.getAttribute("data-page-count") === selected;
+    btn.classList.toggle("is-on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  var hint = portfolio && portfolio.pageCountHint;
+  if (pageHint) {
+    pageHint.hidden = !hint;
+    pageHint.textContent = hint || "";
+  }
+  return selected;
+}
+
 /** @param {{ pageCountSource?: string, pageCount?: number, pageCountRequested?: number }} portfolio */
 export function selectedPageCountChip(portfolio) {
   if (!portfolio || String(portfolio.pageCountSource || "auto") !== "user") {

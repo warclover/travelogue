@@ -1,0 +1,9 @@
+<section class="chapter" id="{{id}}" data-chapter-id="{{id}}" data-pattern="{{patternId}}">
+  {{#each screens}}
+  {{#if isBreathPause}}
+  {{> breath-pause-screen}}
+  {{else}}
+  {{> layout-screen}}
+  {{/if}}
+  {{/each}}
+</section>

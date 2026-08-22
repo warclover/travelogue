@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from travelogue.layout_engine.mosaic.constants import MOSAIC_UNIFIED_PATTERN_IDS
@@ -11,10 +10,9 @@ from travelogue.layout_engine.mosaic.lte_adapter import (
     read_templates_from_lte,
     resolve_render_grid_class,
 )
+from travelogue.paths import JOURNAL_SCREENS_CSS
 
-_SCREENS_CSS = (
-    Path(__file__).resolve().parents[3] / "templates" / "visual-journal" / "journal-screens.css"
-)
+_SCREENS_CSS = JOURNAL_SCREENS_CSS
 
 
 @lru_cache(maxsize=1)

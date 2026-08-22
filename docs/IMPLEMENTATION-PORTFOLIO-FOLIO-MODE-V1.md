@@ -174,6 +174,7 @@ W0–W3 主路径与 §2 编码项均已落。运营对账、狗粮盲评、开 
 |----|----|------|---------|
 | 5 | **BE-PFM-18** | **Done** · 指纹字段级 + xhs/album 卡序 + 仓库扫描 | AC-PFM-03 · **04** · 27 |
 | 6 | **BE-PFM-14 补证** | **Done** · 作品集 trip 导出 xhs，plan 不读 patternId | AC-PFM-18 |
+| — | **DPI 门禁** | **W0–W3 已合入** · ownership 棘轮 · 双 CSS 前缀门 · `pytest -m pipeline_isolation` · Dock 纯分发 | [DPI PRD](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) |
 
 ### 2.3 证据补洞
 

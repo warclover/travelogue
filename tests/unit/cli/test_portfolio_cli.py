@@ -53,7 +53,7 @@ def test_export_longshot_journal_omits_platform_still_defaults(tmp_path: Path) -
 
     with patch("travelogue.cli.render_cmds._resolve", return_value=trip_dir):
         with patch(
-            "travelogue.export.longshot.export_trip_longshot",
+            "travelogue.export.dispatch.dispatch_export",
             return_value=_Ok(),
         ) as export:
             result = runner.invoke(app, ["export-longshot", str(trip_dir)])
@@ -75,7 +75,7 @@ def test_export_longshot_portfolio_explicit_platform_proceeds(tmp_path: Path) ->
 
     with patch("travelogue.cli.render_cmds._resolve", return_value=trip_dir):
         with patch(
-            "travelogue.export.longshot.export_trip_longshot",
+            "travelogue.export.dispatch.dispatch_export",
             return_value=_Ok(),
         ) as export:
             result = runner.invoke(

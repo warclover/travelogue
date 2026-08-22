@@ -47,6 +47,7 @@ import {
   pageCountChipOptions,
   radioTabIndex,
   recommendPageCount,
+  renderPortfolioPageCountChips,
   selectedPageCountChip,
   shouldConfirmThinTier,
   thinTierConfirm,
@@ -947,8 +948,11 @@ export function mountEditionControls(slot, tripId, opts) {
     '<p class="preview-sheet__hint preview-sheet__hint--compact" data-page-count-hint hidden></p>' +
     "</div>";
   var group = section.querySelector(".preview-sheet__editions");
+  /** @type {HTMLElement | null} */
   var pageHost = section.querySelector(".preview-sheet__page-count");
+  /** @type {HTMLElement | null} */
   var pageRow = section.querySelector(".preview-sheet__chip-row");
+  /** @type {HTMLElement | null} */
   var pageHint = section.querySelector("[data-page-count-hint]");
   var selected = "journal";
   var selectedPages = "auto";
@@ -999,51 +1003,17 @@ export function mountEditionControls(slot, tripId, opts) {
   function renderPageCount(portfolio) {
     portfolioState = portfolio || null;
     if (!pageHost || !pageRow) return;
-    var show = selected === "portfolio";
-    pageHost.hidden = !show;
-    if (!show) return;
-    var chips =
-      (portfolio && (portfolio.pageCountChipDetails || portfolio.pageCountChips)) || [];
-    pageRow.innerHTML = "";
-    pageCountChipOptions(chips).forEach(function (opt) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "preview-sheet__chip";
-      btn.setAttribute("data-page-count", opt.id);
-      btn.setAttribute("role", "radio");
-      var aria = opt.hint || opt.label;
-      btn.setAttribute("aria-label", aria);
-      btn.innerHTML =
-        '<span class="preview-sheet__chip-label">' +
-        opt.label +
-        "</span>" +
-        (opt.hint
-          ? '<span class="preview-sheet__chip-hint">' + opt.hint + "</span>"
-          : "");
-      btn.addEventListener("click", function () {
-        requestPageCount(opt.id, opt);
-      });
-      btn.addEventListener("keydown", function (e) {
-        if (!isRadioNavKey(e.key)) return;
-        e.preventDefault();
-        var ids = pageCountChipOptions(chips).map(function (o) {
-          return o.id;
-        });
-        var next = nextRadioId(ids, selectedPages, e.key);
-        if (!next || next === selectedPages) return;
-        var hit = pageCountChipOptions(chips).filter(function (o) {
-          return o.id === next;
-        })[0];
-        requestPageCount(next, hit || { id: next });
-      });
-      pageRow.appendChild(btn);
-    });
-    syncPageCount(selectedPageCountChip(portfolio));
-    var hint = portfolio && portfolio.pageCountHint;
-    if (pageHint) {
-      pageHint.hidden = !hint;
-      pageHint.textContent = hint || "";
+    if (selected !== "portfolio") {
+      pageHost.hidden = true;
+      return;
     }
+    selectedPages = renderPortfolioPageCountChips(
+      pageHost,
+      pageRow,
+      pageHint,
+      portfolio,
+      { onRequest: requestPageCount }
+    );
   }
 
   function applyEdition(next) {

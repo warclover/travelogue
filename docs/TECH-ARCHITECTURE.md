@@ -472,7 +472,9 @@ python scripts/phase7_verify_rollback.py
 
 | 工具 | 说明 | 状态 |
 |------|------|------|
-| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG | **6 条登记豁免**（post-M-B1 aesthetic / ingest debt · 2026-07-10） |
+| `lint-imports` | `pyproject.toml` `[tool.importlinter]` · PRD §5.3.1 DAG · **6 条契约**（含 DPI journal/portfolio render isolation） | 层契约 + 双管线 builder 禁跨 import |
+| `lint_dual_pipeline_ownership.py` | DPI 窄缝棘轮 · 基线 `docs/acceptance-records/dpi-seam-baseline.json` | CI lint |
+| `lte_journal_css_audit.py --fail-on-prefix-leak` | 游记 `journal-screens.css` 不得含 `page-`；作品集 `portfolio-pages.css` 不得含 `screen-` | CI validate |
 | `lint_lse_cross_import.py` | LSE ↔ curation AST 边；ceiling **10** | 见基线文件 |
 | `lint_layout_contract_surface.py` | `layout_contract` 准入（P2-C）：仅允许层 0 包依赖 | CI lint |
 | `arch_equivalence_check.py` | L3a/b/c 等价门禁 | CI validate |

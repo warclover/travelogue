@@ -98,16 +98,22 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 def cmd_export(args: argparse.Namespace) -> int:
     root = Path(args.templates) if args.templates else DEFAULT_TEMPLATES_DIR
-    out = Path(args.out) if args.out else root.parent / "journal-screens.generated.css"
     engine = LayoutTemplateEngine.load(root, rebuild_cache=True)
     from travelogue.layout_templates.css_gen import (
         TrailingLegacyCssError,
+        filter_templates_by_family,
         sync_journal_screens_css,
+        sync_portfolio_pages_css,
         write_generated_css,
     )
 
-    write_generated_css(engine._templates, out)
-    print(f"generated CSS → {out} ({len(engine._templates)} templates)")
+    wrote = False
+    if args.out:
+        family = args.target or "all"
+        selected = filter_templates_by_family(engine._templates, family)
+        write_generated_css(selected, Path(args.out))
+        print(f"generated CSS → {args.out} ({len(selected)} templates, family={family})")
+        wrote = True
     if args.sync_journal:
         on_trailing_legacy = "warn" if args.warn_trailing_legacy else "strict"
         try:
@@ -116,6 +122,16 @@ def cmd_export(args: argparse.Namespace) -> int:
             print(str(exc), file=sys.stderr)
             return 1
         print(f"synced LTE marker → {journal}")
+        wrote = True
+    if args.sync_portfolio:
+        portfolio = sync_portfolio_pages_css(engine._templates)
+        print(f"synced LTE marker → {portfolio}")
+        wrote = True
+    if not wrote:
+        print(
+            "nothing to write; pass --sync-journal, --sync-portfolio, and/or --out "
+            "(D-DPI-17: mixed journal-screens.generated.css is no longer a default product)"
+        )
     return 0
 
 
@@ -217,7 +233,17 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument(
         "--sync-journal",
         action="store_true",
-        help="Inject generated CSS into templates/visual-journal/journal-screens.css marker",
+        help="Inject screen-* CSS into templates/visual-journal/journal-screens.css marker",
+    )
+    export.add_argument(
+        "--sync-portfolio",
+        action="store_true",
+        help="Inject page-* CSS into templates/visual-journal/portfolio-pages.css marker",
+    )
+    export.add_argument(
+        "--target",
+        choices=("journal", "portfolio", "all"),
+        help="Family filter for --out (default: all). Does not change --sync-* behavior.",
     )
     export.add_argument(
         "--warn-trailing-legacy",
