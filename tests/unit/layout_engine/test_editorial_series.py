@@ -774,8 +774,8 @@ def test_portfolio_empty_chapter_does_not_render_journal_items() -> None:
         ],
     }
     ctx = build_render_context(trip, export_mode="draft", export_layout_override="web")
-    ch2 = ctx["chapters"][1]
-    assert ch2["useScreensEngine"] is True
-    assert ch2["items"] == []
-    assert ch2["screens"] == []
+    ids = [ch["id"] for ch in ctx["chapters"]]
+    assert ids == ["ch-01"]
+    assert all(ch.get("hideChapterChrome") for ch in ctx["chapters"])
+    assert ctx["hasTripIndex"] is False
 

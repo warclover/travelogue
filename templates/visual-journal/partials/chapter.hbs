@@ -1,5 +1,6 @@
-<section class="chapter{{#if isAppendix}} chapter--appendix{{/if}}" id="{{id}}" data-chapter-id="{{id}}" data-pattern="{{patternId}}"{{#if isAppendix}} data-appendix="1"{{/if}}
+<section class="chapter{{#if isAppendix}} chapter--appendix{{/if}}{{#if hideChapterChrome}} chapter--folio-body{{/if}}" id="{{id}}" data-chapter-id="{{id}}" data-pattern="{{patternId}}"{{#if isAppendix}} data-appendix="1"{{/if}}
   {{#if hasMemoryAnchors}}data-memory-anchors="{{memoryAnchors}}"{{/if}}>
+  {{#unless hideChapterChrome}}
   {{#if showDivider}}
   {{#unless useChapterSeparator}}
   {{> divider-place}}
@@ -21,6 +22,7 @@
   {{#if hasLead}}
   <p class="chapter-lead" data-block="chapter-lead"{{#if editableLead}} data-editable="lead" data-edit-path="{{editLeadPath}}"{{/if}}>{{lead}}</p>
   {{/if}}
+  {{/unless}}
   {{/unless}}
   {{#if useScreensEngine}}
   {{#each screens}}

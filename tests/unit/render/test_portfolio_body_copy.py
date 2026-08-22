@@ -63,6 +63,9 @@ def test_ac_pfm_32_portfolio_body_omits_caption_and_lead(
     assert "cover-opening__title" in html
     assert "cover-closing__title" in html or "cover-opening__title" in html
     assert 'data-block="chapter-lead"' not in html
+    assert 'data-block="chapter-header"' not in html
+    assert 'data-block="chapter-separator"' not in html
+    assert 'data-block="divider-place"' not in html
     assert "media-card__caption" not in html
     assert "media-row__caption" not in html
     assert "plate-caption" not in html

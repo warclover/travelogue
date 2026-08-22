@@ -350,7 +350,8 @@ def build_chapters_render_context(
                 items_out.append(breath_ctx)
 
         use_chapter_separator = (
-            use_screens_global
+            not is_portfolio
+            and use_screens_global
             and not is_longshot_surface
             and surface.include_breath
             and int(idx) > 1
@@ -442,6 +443,10 @@ def build_chapters_render_context(
                     pass
 
         is_appendix = bool(curation.get("isAppendix") or ch.get("isAppendix"))
+        if is_portfolio:
+            divider_ctx = {**divider_ctx, "showDivider": False}
+            if not screens_out:
+                continue
         ch_ctx: ChapterRenderContext = {
             "id": ch["id"],
             "patternId": ch.get("patternId", ""),
@@ -468,6 +473,7 @@ def build_chapters_render_context(
             "hasScreenSpread": has_screen_spread,
             "screenSpread": screen_spread or {},
             "items": items_out,
+            "hideChapterChrome": is_portfolio,
             "useChapterSeparator": use_chapter_separator,
             "chapterSeparatorStyle": (
                 chapter_separator_style(
@@ -497,7 +503,7 @@ def build_chapters_render_context(
     featured_grid_cards: list[FeaturedGridCardContext] = []
     has_trip_index = False
     has_featured_grid = False
-    if folio_full and folio_plan.get("index"):
+    if folio_full and folio_plan.get("index") and not is_portfolio:
         trip_index_entries = build_trip_index_entries(trip.get("chapters") or [])
         has_trip_index = bool(trip_index_entries)
     if folio_full and folio_plan.get("featuredGrid"):

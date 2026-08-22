@@ -256,6 +256,7 @@ class ChapterRenderContext(TypedDict, total=False):
     items: list[Any]
     useChapterSeparator: bool
     chapterSeparatorStyle: str
+    hideChapterChrome: NotRequired[bool]
     showDivider: NotRequired[bool]
     dividerDatetime: NotRequired[str]
     dividerDate: NotRequired[str]

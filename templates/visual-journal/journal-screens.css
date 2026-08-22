@@ -180,6 +180,11 @@ html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot > .l
   max-height: none;
 }
 
+/* Portfolio reader: keep chapters[] as a container, hide journal chapter chrome. */
+html[data-edition="portfolio"] .chapter {
+  margin-bottom: 0;
+}
+
 /* @lte-generated:start — YAML→CSS authority; run: python -m travelogue.layout_templates.cli export --sync-journal */
 /* Phase 16 LTE generated grid CSS — do not edit by hand */
 
