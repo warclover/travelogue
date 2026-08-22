@@ -94,5 +94,5 @@ P0 序列已入运行时目录。W1 匹配器可对官方 16 页装配。**AS-PF
 
 | ID | 断言 | 证据 |
 |----|------|------|
-| **AC-PFM-25** | 金样成对盲评「像一本」三问胜出 | [GUIDE](./acceptance-records/pfm-local-dogfood-GUIDE.md) · [模板](./acceptance-records/pfm-blind-review-TEMPLATE.md) · **尚未打分** |
+| **AC-PFM-25** | 金样成对盲评「像一本」三问胜出 | [GUIDE](./acceptance-records/pfm-local-dogfood-GUIDE.md) · [模板](./acceptance-records/pfm-blind-review-TEMPLATE.md) · [W4 定点](./acceptance-records/pfm-w4-kickoff-2026-08-22.md) · **尚未打分** |
 | **D-PFM-06** | 盲评过门前 `homepage_entry` 保持 false | `test_homepage_portfolio_entry_exists_but_hidden_by_default` |

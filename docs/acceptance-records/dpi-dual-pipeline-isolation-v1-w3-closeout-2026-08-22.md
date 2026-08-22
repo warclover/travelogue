@@ -9,41 +9,46 @@
 
 独立迭代烟测不进 `test-pr`（IE-DPI-08）。本页留下实跑命令与输出。
 
-## AC-DPI-16 · 改游记轨道不影响作品集 `?v=`
+原始 JSON：[attachments/dpi-w3-dogfood-2026-08-22/probe-report.json](./attachments/dpi-w3-dogfood-2026-08-22/probe-report.json)。夹具 `trip.render_golden.json`；改完 YAML / CSS 均 `git checkout` 还原，仓库产物零残留。
 
-游记 bundle 含 `journal-screens.css`，不含 `portfolio-pages.css`。改一张 `screen-*.yaml` 后只需跑游记侧 `export --sync-journal` / 游记回归；作品集 HTML 的 `?v=` 不吃这份哈希。
+## AC-DPI-16 · 真改一张 `screen-*` 轨道
 
-2026-08-22 实跑：
+`screen-landscape-3-asymmetric-left.yaml`：`cols: [17, 10]` → `[17, 11]`，然后只跑 `python -m travelogue.layout_templates.cli export --sync-journal`。
 
-```text
-journal_has_screens True
-journal_has_pages False
-portfolio_has_screens False
-portfolio_has_pages True
-j_v lse16f41315f6a
-p_v ls0d3491b16737
-```
+| 面 | 基线 `?v=` / sha16 | 改后 | 原始字节 |
+|----|-------------------|------|---------|
+| 游记 web | `lse16f41315f6a` / `544f08a500ffe9ef` | `lsef128e5d5d0e` / `73525a7f7a41b6dc` | **变了**（证明改动生效） |
+| 作品集 web | `ls0d3491b16737` / `4ede5aff14edb588` | 同左 | **零 diff**（含 `?v=`） |
 
-机器门：`pytest tests/unit/trip/test_asset_version.py::test_ac_dpi_18_bundle_paths_are_pipeline_disjoint -q`（绿）。游记 / 作品集 `?v=` 分算，互不包含对面族 CSS。
+## AC-DPI-17 · 真改一张 `page-*` 轨道
 
-## AC-DPI-17 · 改作品集轨道不影响游记 `?v=`
+`page-1-hero-port.yaml`：`31.015625` → `30.015625`，然后只跑 `export --sync-portfolio`。
 
-反向：作品集 bundle 含 `portfolio-pages.css`，不含 `journal-screens.css`。改一张 `page-*.yaml` + `--sync-portfolio` 后游记 web / 长图 HTML 的 `?v=` 不变。
-
-同上命令与 `test_ac_dpi_18_bundle_paths_are_pipeline_disjoint`。
+| 面 | 基线 | 改后 | 原始字节 |
+|----|------|------|---------|
+| 作品集 web | `ls0d3491b16737` / `4ede5aff14edb588` | `lsaa79b9c34225` / `db9e1d13b84fbf30` | **变了** |
+| 游记 web | `lse16f41315f6a` / `544f08a500ffe9ef` | 同左 | **零 diff** |
+| 游记长图 | `lse16f41315f6a` / `3c02119bcd5ac70b` | 同左 | **零 diff** |
 
 ## AC-DPI-23 · 误伤在 PR 阶段红灯
 
-故意把游记 contain 选择器或 `page-*` 写进对面产物，由前缀门挡住，不靠人 review。
+当前产物：`python scripts/lte_journal_css_audit.py --fail-on-prefix-leak` → exit 0，`journalHasPageRules=false` / `portfolioHasScreenRules=false`。
 
-2026-08-22 实跑 `python scripts/lte_journal_css_audit.py --fail-on-prefix-leak`：
+反例（写进 `journal-screens.css` 后必红，再还原）：
 
 ```text
-prefixLeak.journalHasPageRules = false
-prefixLeak.portfolioHasScreenRules = false
+.layout-screen__grid--page-dpi-leak { display: none; }
+
+exit 1
+prefixLeak.journalHasPageRules = true
+journalPageHits = ["page-dpi-leak"]
 ```
 
-绿 = 当前产物无交叉前缀。反例：在 `portfolio-pages.css` 写入 `screen-` 选择器，或在 `journal-screens.css` 写入 `page-`，该命令必红。
+还原后门再绿。
+
+## SHD-DPI-05 · 打开对面 demo
+
+本机 `trips/demo-81d3442e92`（作品集 · 东澳一日游 · 16 页）经 `http://127.0.0.1:18765/index.html` 打开：封面完整，`data-edition="portfolio"`。该目录仍是 DPI 前产物（`journal.css` 仍 `@import journal-screens.css?v=lsbaaadc12673a`）；游记 YAML 探测还原后未重渲染它，肉眼无坏版式。
 
 ## W3 FE 出门
 

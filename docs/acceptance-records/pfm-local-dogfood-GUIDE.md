@@ -2,8 +2,9 @@
 
 | 属性 | 内容 |
 |------|------|
-| **状态** | **协议已锁 · 人评未开** |
-| **日期** | 2026-08-21 |
+| **状态** | **协议已锁 · 语料已定点 · 人评未开** |
+| **日期** | 2026-08-21（语料定点 2026-08-22） |
+| **本机定点** | [pfm-w4-kickoff-2026-08-22.md](./pfm-w4-kickoff-2026-08-22.md) |
 | **合同** | [PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) §13 W4 · §14.5 |
 | **盲评表** | [pfm-blind-review-TEMPLATE.md](./pfm-blind-review-TEMPLATE.md) |
 | **配置样例** | [config-pfm-dogfood.example.yaml](../config-pfm-dogfood.example.yaml) |

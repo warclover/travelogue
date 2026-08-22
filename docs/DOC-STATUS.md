@@ -199,13 +199,15 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.0 Conditional Go** · 现场 W0–W3 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
 | [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
 | [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
-| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.1 Conditional Go** · W0–W3 编码已清 · ISO-04/06 · **AS-PFM-03 已升格 · 五档入库** · W4 协议已锁、人评未开 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
+| [PRD-DUAL-PIPELINE-ISOLATION-V1.md](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) | **active** | **DPI** 双管线独立迭代 **v0.2.1** · W0–W3 已合入 · [SHD-DPI-05 真改轨道](./acceptance-records/dpi-dual-pipeline-isolation-v1-w3-closeout-2026-08-22.md) |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.1 Conditional Go** · W0–W3 编码已清 · ISO-04/06 · **AS-PFM-03 已升格 · 五档入库** · W4 协议已锁、语料已定点、人评未开 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
 | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 已落 · AS-PFM-03 五档已入 · W4 人评未开 |
 | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；W0–W3 + ISO-04/06 + AS-PFM-03 五档已入 · AC-PFM-25 人评未开 |
 | [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 · F1/F3/F6 产品重签 2026-08-20 |
 | [acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) | **active** | AS-PFM-03 工坊对账原文（不升格）· 后继见下 |
 | [acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md) | **active** | AS-PFM-03 后继 · MSP 五档入库（8/12/16/20/28） |
-| [acceptance-records/pfm-local-dogfood-GUIDE.md](./acceptance-records/pfm-local-dogfood-GUIDE.md) | **active** | PFM W4 本机狗粮 GUIDE · 首页次链仍关 |
+| [acceptance-records/pfm-local-dogfood-GUIDE.md](./acceptance-records/pfm-local-dogfood-GUIDE.md) | **active** | PFM W4 本机狗粮 GUIDE · 语料已定点 · 首页次链仓库默认仍关 |
+| [acceptance-records/pfm-w4-kickoff-2026-08-22.md](./acceptance-records/pfm-w4-kickoff-2026-08-22.md) | **active** | PFM W4 开工：三册本机定点 + 首页抽查；AC-PFM-25 未打分 |
 | [acceptance-records/pfm-blind-review-TEMPLATE.md](./acceptance-records/pfm-blind-review-TEMPLATE.md) | **active** | PFM 盲评三问模板（SHD-PFM-07） |
 | [config-pfm-dogfood.example.yaml](./config-pfm-dogfood.example.yaml) | **active** | PFM 狗粮配置样例 · `homepage_entry` 保持 false |
 | [acceptance-records/msp-r05-r06-measurement-2026-08-21.md](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) | **active** | MSP R-MSP-05/06 实测 · 16 本真实 trip · `sceneCluster` 不可作填充组边界（56% trip 无簇 · 最大簇 100 张）· 填充率窗口覆盖 46% · 新增 OQ-MSP-12/13 |
@@ -213,6 +215,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MAGAZINE-SERIES-PROMOTION-V1.md](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) | **active** | **MSP** 成册档位全量升格与页序忠实度 **v0.6.0 Conditional Go** · **W1a+W1b+W2 已落地**：五档入库 · 填充组三重护栏 · 芯片副文 / 薄档确认 · 上限 48（32/36 等 ASK-MSP-02；24 等 ASK-MSP-01）· 金样未覆盖 · [R-MSP-05/06](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) + [OQ-MSP-12](./acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md) |
 | [acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md](./acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md) | **active** | MSP 七席+典型用户 · 8/8 Conditional Go · BLK-MSP-01～09 已回写 v0.3.0 · 新增 OQ-MSP-08～11 |
 | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 **v1.1** · **F0–F8 已签** |
+| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.1.0 Draft** · 工程可读性（零行为）· 拆 `assemble` / `journal_chapters` / `curate` 三核 · 热路径类型 · 活路径清单 · 待评审 · W0 可先合门禁 |
 
 ---
 

@@ -4,7 +4,7 @@
 |------|------|
 | **产品代号** | Travelogue Studio |
 | **文档版本** | **v0.2.1**（BLK-PFM-01～09 已回写 · AS-PFM-03 MSP 后继） |
-| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（[MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、人评未开（`feat/pfm-portfolio-folio-mode-v1`）；首页次链仍关 |
+| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（[MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、[语料已定点](./acceptance-records/pfm-w4-kickoff-2026-08-22.md)、人评未开（`feat/pfm-portfolio-folio-mode-v1`）；仓库 `homepage_entry` 仍关 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
 | **界面用词** | **游记**（快分享）· **作品集**（杂志风卷轴）。禁止对 C 端说「第七种模式 / page-* / 成册引擎 / 画册已经按页」 |

@@ -1,0 +1,47 @@
+{
+  "ok": true,
+  "date": "2026-08-22",
+  "fixture": "schemas/fixtures/trip.render_golden.json",
+  "journal_yaml": "travelogue/layout_templates/templates/screen-landscape-3-asymmetric-left.yaml",
+  "portfolio_yaml": "travelogue/layout_templates/templates/page-1-hero-port.yaml",
+  "restored": true,
+  "baseline": {
+    "journal_v": "lse16f41315f6a",
+    "portfolio_v": "ls0d3491b16737",
+    "journal_web": { "sha256_16": "544f08a500ffe9ef", "bytes": 17215, "qv": ["lse16f41315f6a"] },
+    "journal_longshot": { "sha256_16": "3c02119bcd5ac70b", "bytes": 13706, "qv": ["lse16f41315f6a"] },
+    "portfolio_web": { "sha256_16": "4ede5aff14edb588", "bytes": 11130, "qv": ["ls0d3491b16737"] }
+  },
+  "ac_dpi_16": {
+    "change": "cols: [17, 10] -> [17, 11] then export --sync-journal",
+    "journal_v_after": "lsef128e5d5d0e",
+    "portfolio_v_after": "ls0d3491b16737",
+    "journal_web_changed": true,
+    "journal_web_sha_after": "73525a7f7a41b6dc",
+    "portfolio_web_raw_zero_diff": true,
+    "portfolio_web_sha_after": "4ede5aff14edb588",
+    "portfolio_qv_same": true
+  },
+  "ac_dpi_17": {
+    "change": "31.015625 -> 30.015625 then export --sync-portfolio",
+    "journal_v_after": "lse16f41315f6a",
+    "portfolio_v_after": "lsaa79b9c34225",
+    "portfolio_web_changed": true,
+    "portfolio_web_sha_after": "db9e1d13b84fbf30",
+    "journal_web_raw_zero_diff": true,
+    "journal_longshot_raw_zero_diff": true,
+    "journal_qv_same": true
+  },
+  "ac_dpi_23": {
+    "inject": ".layout-screen__grid--page-dpi-leak { display: none; }",
+    "leak_exit": 1,
+    "journalHasPageRules": true,
+    "journalPageHits": ["page-dpi-leak"],
+    "restored_exit": 0,
+    "restored_journalHasPageRules": false
+  },
+  "shd_dpi_05": {
+    "opened_opposite_demo": "http://127.0.0.1:18765/index.html  trips/demo-81d3442e92  东澳一日游  data-edition=portfolio  16:9 cover visible",
+    "note": "本机 demo 仍是 DPI 前产物（journal.css @import journal-screens.css?v=lsbaaadc12673a）。改游记 YAML 并 restore 后未重渲染该目录，封面仍完整。"
+  }
+}
