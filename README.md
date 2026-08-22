@@ -17,6 +17,7 @@
 
 | 你想… | 去看 |
 |--------|------|
+| **向陌生人或用户介绍本项目** | [docs/项目说明手册.md](docs/项目说明手册.md) |
 | **了解项目为什么做** | [docs/CHARTER.md](docs/CHARTER.md) |
 | **看现行架构 / 分层约束** | [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md) |
 | **本地跑起来 / 开发调试** | [docs/WORKSHOP.md](docs/WORKSHOP.md) · [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |

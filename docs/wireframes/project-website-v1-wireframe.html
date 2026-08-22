@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travelogue 项目网站 V1 · 线框审核稿</title>
+  <style>
+    :root {
+      --ink: #14110d;
+      --muted: #5c574f;
+      --paper: #f7f3eb;
+      --cream: #efe8dc;
+      --site: #f3efe6;
+      --site-ink: #161410;
+      --accent: #8b1e18;
+      --forest: #2d4a3e;
+      --gold: #b0894a;
+      --anno: #c45c26;
+      --ok: #2e7d32;
+      --warn: #b26a00;
+      --bad: #b42318;
+      --line: rgba(20, 17, 13, 0.14);
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --display: Georgia, "Songti SC", "SimSun", serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #e4dfd6; color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 50;
+      background: #1c1b1a; color: #ecece8; padding: 14px 20px 10px;
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 110ch; line-height: 1.5; }
+    .bar a { color: #d7b56d; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #4a4744; background: transparent; color: #ecece8;
+      padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-on { background: #8b1e18; border-color: #8b1e18; color: #fff; }
+    .layout {
+      max-width: 1240px; margin: 0 auto; padding: 22px 16px 80px;
+      display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; }
+    .panel.is-on { display: block; }
+    .anno {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--anno);
+      text-transform: uppercase; margin: 0 0 8px;
+    }
+    .lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .callout {
+      border: 1px solid #d8c49a; background: #fff8e8; border-radius: 10px;
+      padding: 12px 14px; font-size: 13px; margin: 0 0 16px; line-height: 1.5;
+    }
+    .callout--ok { background: #eef6ef; border-color: #b5d4b8; }
+    .callout--bad { background: #fdeeee; border-color: #e8b4b0; }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .browser {
+      background: #2a2826; border: 2px solid #3a3733; border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 7px 11px 0;
+    }
+    .browser__dots { display: flex; gap: 5px; margin-bottom: 7px; }
+    .browser__dots i { width: 9px; height: 9px; border-radius: 50%; background: #5a554e; display: block; }
+    .browser__tab {
+      display: inline-flex; background: #1a1816; border: 1px solid #3a3733; border-bottom: none;
+      border-radius: 7px 7px 0 0; padding: 7px 12px; font-size: 11px; font-weight: 600; color: #c8c0b4;
+    }
+    .frame {
+      border: 2px solid #3a3733; border-top: none; border-radius: 0 0 14px 14px;
+      background: var(--site); color: var(--site-ink); overflow: hidden;
+    }
+    .site-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; border-bottom: 1px solid var(--line); background: #faf7f1;
+    }
+    .logo { font-family: var(--display); font-size: 16px; letter-spacing: .04em; }
+    .logo span { display: block; font-family: var(--font); font-size: 10px; color: var(--muted); letter-spacing: .12em; }
+    .nav-links { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
+    .nav-links b { color: var(--site-ink); }
+    .nav-cta {
+      background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+      padding: 8px 12px; font: inherit; font-size: 12px; font-weight: 700;
+    }
+    .ghost {
+      background: transparent; color: var(--site-ink); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 12px;
+    }
+    .hero { padding: 36px 28px 28px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; }
+    .eyebrow { font-size: 11px; letter-spacing: .16em; color: var(--muted); margin: 0 0 10px; }
+    .h1 { font-family: var(--display); font-size: 34px; line-height: 1.25; margin: 0 0 12px; font-weight: 500; }
+    .sub { margin: 0 0 16px; font-size: 15px; line-height: 1.65; color: #3d3832; max-width: 38em; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; }
+    .chip {
+      font-size: 11px; padding: 4px 8px; border-radius: 999px;
+      border: 1px solid var(--line); color: var(--muted); background: #fff;
+    }
+    .chip--trust { border-color: #c9d6c8; color: var(--forest); background: #f3f7f3; }
+    .chip--stage { border-color: #e0c48a; color: #7a5410; background: #fff7e6; }
+    .cta-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      border: 0; border-radius: 8px; padding: 11px 14px; font: inherit;
+      font-size: 13px; font-weight: 700; cursor: default;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost { background: #fff; border: 1px solid var(--line); }
+    .dual {
+      display: grid; grid-template-columns: 1.35fr .65fr; gap: 10px; min-height: 220px;
+    }
+    .ph {
+      border: 1px dashed #b8b0a3; background: repeating-linear-gradient(
+        135deg, #efe8dc, #efe8dc 8px, #e7dfd1 8px, #e7dfd1 16px
+      );
+      border-radius: 8px; display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 10px; min-height: 180px; position: relative;
+    }
+    .ph b, .ph i { font-style: normal; font-size: 11px; color: #6b645b; }
+    .ph .flag {
+      position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 700;
+      background: #fff; border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px;
+    }
+    .section { padding: 28px; border-top: 1px solid var(--line); }
+    .section h2 { font-family: var(--display); font-size: 22px; margin: 0 0 8px; font-weight: 500; }
+    .section p.s { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+    .grid-3, .grid-2, .grid-4 { display: grid; gap: 12px; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .card {
+      background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px;
+    }
+    .card h3 { margin: 0 0 6px; font-size: 14px; }
+    .card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .step:last-child { border-bottom: 0; }
+    .num {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--site-ink); color: #fff;
+      display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none;
+    }
+    .site-foot {
+      padding: 20px 28px; border-top: 1px solid var(--line); background: #1c1b1a; color: #d8d2c8;
+      display: flex; justify-content: space-between; gap: 16px; font-size: 12px;
+    }
+    .site-foot a { color: #d8d2c8; text-decoration: none; }
+    .aside {
+      position: sticky; top: 108px; background: #fffdf8; border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px;
+    }
+    .aside h3 { margin: 0 0 8px; font-size: 13px; }
+    .aside ul { margin: 0; padding-left: 18px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .map {
+      background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+    }
+    .map pre {
+      margin: 0; font-size: 12px; line-height: 1.6; white-space: pre-wrap; font-family: Consolas, monospace;
+    }
+    .cut { color: #9a3b36; text-decoration: line-through; }
+    .keep { color: #1f4d32; font-weight: 700; }
+    .phone-wrap { max-width: 390px; margin: 0 auto; }
+    .phone-frame {
+      border: 10px solid #1c1b1a; border-radius: 28px; overflow: hidden; background: var(--site);
+    }
+    .faq { border-top: 1px solid var(--line); padding: 12px 0; }
+    .faq b { display: block; font-size: 14px; margin-bottom: 4px; }
+    .faq p { margin: 0; font-size: 13px; color: var(--muted); }
+    table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+    table.cmp th, table.cmp td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+    table.cmp th { background: #f3efe6; font-size: 12px; }
+    .mark { font-size: 10px; font-weight: 700; color: var(--anno); letter-spacing: .04em; margin: 16px 0 6px; }
+    .narrow .hero, .narrow .site-nav, .narrow .section, .narrow .site-foot { padding-left: 16px; padding-right: 16px; }
+    .narrow .hero { grid-template-columns: 1fr; }
+    .narrow .dual { grid-template-columns: 1fr 90px; }
+    .narrow .grid-3, .narrow .grid-2, .narrow .grid-4 { grid-template-columns: 1fr; }
+    .narrow .nav-links { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Travelogue 项目网站 V1 · 线框审核稿</h1>
+    <p>
+      文案权威：<a href="../项目说明手册.md">项目说明手册</a>。
+      网站只做橱窗，不承载导入/成册。
+      <strong style="color:#ecece8">F0 三条已锁定</strong>：四项导航够用 · 全站主按钮「申请试用」· /start 提交「申请受邀获取」。
+      桌面高保真：<a href="./project-website-v1-hifi-desktop.html">project-website-v1-hifi-desktop.html</a>
+    </p>
+    <div class="tabs" id="tabs">
+      <button data-panel="f0" class="is-on">F0 站点地图</button>
+      <button data-panel="f1">F1 首页首屏</button>
+      <button data-panel="f2">F2 首页下半</button>
+      <button data-panel="f3">F3 怎么做</button>
+      <button data-panel="f4">F4 样张</button>
+      <button data-panel="f5">F5 申请试用</button>
+      <button data-panel="f6">F6 常见问题</button>
+      <button data-panel="f7">F7 关于</button>
+      <button data-panel="f8">F8 手机首屏</button>
+      <button data-panel="f9">F9 全站骨架</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main>
+      <section class="panel is-on" id="f0">
+        <div class="anno">F0 · Information architecture</div>
+        <h2 style="margin:0 0 6px;font-size:20px;">首版只做 6 个页面</h2>
+        <p class="lead">陌生人 5 秒看懂「本地成册 + 双交付」；用户能找到开始方式和预期。不把网站做成产品，也不做成摄影社区。</p>
+        <div class="callout callout--ok">
+          <strong>已锁定 · 2026-08-22</strong>
+          1）导航就这 4 项 + 1 个主按钮。FAQ 只放页脚，不进顶栏。<br>
+          2）全站主按钮用「申请试用」，去 <code>/start</code>。不用 Studio 的「开始制作我的游记」，也不用「开始使用」。<br>
+          3）<code>/start</code> 左列提交按钮用「申请受邀获取」。不公开挂下载。右列源码维持次路径。
+        </div>
+        <table class="cmp" style="margin-bottom:16px;">
+          <tr><th>决策</th><th>结论</th><th>为什么</th></tr>
+          <tr><td>导航</td><td>首页 / 怎么做 / 样张 / 关于 + 申请试用</td><td>主张、路径、证据、世界观各占一项就够。FAQ 是降疑，放页脚。再加页会把橱窗做成站点产品。</td></tr>
+          <tr><td>主按钮</td><td>申请试用</td><td>网站做不了游记，不能用 Studio 的「开始制作我的游记」。「开始使用」像能当场开工。「在电脑上开始」把限制写进按钮，桌面/手机会分裂。限制写在正文。</td></tr>
+          <tr><td>获取</td><td>/start 申请受邀获取</td><td>种子阶段不假装商店已上架。顶栏是意向，表单提交才是动作，所以两句分开。</td></tr>
+        </table>
+        <div class="grid-2">
+          <div class="map">
+            <div class="anno">本版建议（手册对齐）</div>
+            <pre>
+travelogue.site/
+├── <span class="keep">/</span>              首页：主张 + 双交付 + 三步
+├── <span class="keep">/how</span>          怎么做：选相册 → 出游记 → 分享
+├── <span class="keep">/examples</span>     样张：示例画册，禁止假用户数
+├── <span class="keep">/start</span>        申请试用：受邀表单 / 源码次路径
+├── <span class="keep">/faq</span>          常见问题（手册 11 节 · 不进顶栏）
+└── <span class="keep">/about</span>        关于：是什么 / 不是什么 / 阶段
+
+顶栏：首页 · 怎么做 · 样张 · 关于 | <span class="keep">申请试用</span>
+页脚：FAQ · 源码 · 数据与隐私 · 当前阶段
+            </pre>
+          </div>
+          <div class="map">
+            <div class="anno">旧官网 PRD 本版不做</div>
+            <pre>
+<span class="cut">/photographers</span>  摄影师专栏（尚无真实署名墙）
+<span class="cut">/chapters</span>       精选章节长读
+<span class="cut">/community</span>      印友会 / 群二维码
+<span class="cut">/changelog</span>      工程 Phase 日志（对用户过重）
+<span class="cut">/guide</span>          与 /how + /faq 重复
+<span class="cut">pip 作消费主 CTA</span>
+<span class="cut">macOS / 应用商店承诺</span>
+<span class="cut">MIT / 永久免费 / 开源可审主标</span>
+<span class="cut">「5000+ 用户」类社会证明</span>
+<span class="cut">在线导入 / 注册 / 云试用</span>
+            </pre>
+          </div>
+        </div>
+        <div class="mark">全站转化漏斗</div>
+        <table class="cmp">
+          <tr><th>访客状态</th><th>先看</th><th>主动作</th></tr>
+          <tr><td>完全陌生</td><td>首页首屏 5 秒</td><td>看样张，或记住「本地 / 免注册」</td></tr>
+          <tr><td>被长图吸引</td><td>样张 → 怎么做</td><td>申请试用</td></tr>
+          <tr><td>准备试用</td><td>/start 受邀表单</td><td>申请受邀获取；开发者走源码</td></tr>
+          <tr><td>顾虑隐私 / 阶段</td><td>FAQ / 关于</td><td>确认预期后再走 /start</td></tr>
+        </table>
+      </section>
+
+      <section class="panel" id="f1">
+        <div class="anno">F1 · Home · first screen · 1280 桌面</div>
+        <p class="lead">首屏必须同时完成三件事：看懂是什么、看见双交付、相信照片不上传。不放注册，不放 AI 大字，不放下载计数。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><b>首页</b><span>怎么做</span><span>样张</span><span>关于</span></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="hero">
+            <div>
+              <p class="eyebrow">TRAVELOGUE · 本地照片成册</p>
+              <h1 class="h1">照片导进来，<br>画册自动出来。</h1>
+              <p class="sub">选一次旅行的照片，自动分章 · 配文 · 排版，做成杂志风画册。你可以在电脑上翻着看，也可以导出长图，发给不用装这个软件的朋友。</p>
+              <div class="chips">
+                <span class="chip chip--trust">照片留在本机</span>
+                <span class="chip chip--trust">无需注册</span>
+                <span class="chip chip--trust">交付物归你</span>
+                <span class="chip chip--stage">种子验证 · Windows</span>
+              </div>
+              <div class="cta-row">
+                <button class="btn btn-primary">申请试用</button>
+                <button class="btn btn-ghost">先看样张</button>
+              </div>
+              <p style="margin:12px 0 0;font-size:12px;color:var(--muted);">网站不能做游记。Studio 装在你的电脑上。</p>
+            </div>
+            <div>
+              <div class="dual">
+                <div class="ph" style="aspect-ratio:16/9;min-height:0;">
+                  <span class="flag">16:9 卷轴</span>
+                  <b>大屏游记</b>
+                  <i>封面 · 分章 · 拼图 · 尾声</i>
+                </div>
+                <div class="ph" style="aspect-ratio:9/16;min-height:0;">
+                  <span class="flag">9:16 长图</span>
+                  <b>微信群</b>
+                  <i>对方不用安装</i>
+                </div>
+              </div>
+              <p style="margin:8px 0 0;font-size:11px;color:var(--muted);">占位：真实示例册截帧，禁止棚拍假脸 / 渐变 SaaS 插画。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f2">
+        <div class="anno">F2 · Home · below the fold</div>
+        <p class="lead">首屏之下按手册顺序讲：问题 → 三步 → 得到什么 → 不是什么。多平台导出只作一行，不升级成主叙事。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/#story</div>
+        </div>
+        <div class="frame">
+          <div class="section">
+            <p class="eyebrow">第三次快乐</p>
+            <h2>旅行结束，照片还在。</h2>
+            <p class="s">决定出发、身在路上，都已经发生过了。我们只负责回家整理回味——把还堆在文件夹里的照片，一次做成可以翻、可以发的游记。</p>
+            <div class="grid-3">
+              <div class="card"><h3>相册很乱</h3><p>重复、糊掉、顺序散，不知道从哪讲起。</p></div>
+              <div class="card"><h3>游记一拖再拖</h3><p>最后只发了九宫格，故事没做成。</p></div>
+              <div class="card"><h3>不想先搭系统</h3><p>大多数人要的不是终身旅行 OS，是这一趟能做完。</p></div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>默认只有三步</h2>
+            <p class="s">不需要先配置、先填愿望清单、先学模板。</p>
+            <div class="grid-3">
+              <div class="card"><h3>1. 选相册</h3><p>选这一趟的照片文件夹。一次一趟，大约 20～150 张最舒服。</p></div>
+              <div class="card"><h3>2. 出游记</h3><p>自动分章、选片、排版。先翻一遍验货，再决定要不要微调。</p></div>
+              <div class="card"><h3>3. 分享</h3><p>保存长图，在文件夹里找到文件，发给朋友。文件在，才算做完。</p></div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>你会得到什么</h2>
+            <div class="grid-2">
+              <div class="card">
+                <h3>主交付 · 大屏卷轴</h3>
+                <p>杂志风 HTML 游记：封面、章节、拼图、短文案、尾声。给自己看，也适合收藏。</p>
+              </div>
+              <div class="card">
+                <h3>主分享 · 竖版长图</h3>
+                <p>发给微信群，朋友不用点链接、不用装 App。当前最重要的分享物。</p>
+              </div>
+            </div>
+            <p class="s" style="margin-top:14px;">做完之后，同一趟也可以再出朋友圈、小红书、公众号、画册跨页或单张海报。那是「随你发哪儿」，不是产品改名叫内容工厂。</p>
+          </div>
+          <div class="section">
+            <h2>它不是这些东西</h2>
+            <div class="grid-4">
+              <div class="card"><h3>不是云相册</h3><p>不托管、不同步、不建账号。</p></div>
+              <div class="card"><h3>不是 AI 修图</h3><p>不改你的像素，只做选片与排版。</p></div>
+              <div class="card"><h3>不是九宫格放大</h3><p>策展后的成册，不是全量倾倒。</p></div>
+              <div class="card"><h3>不是旅行系统</h3><p>不卖攻略、愿望清单、终身知识库。</p></div>
+            </div>
+          </div>
+          <div class="section" style="text-align:center;">
+            <h2>先做出一张敢发的长图。</h2>
+            <p class="s">再谈更多能力。最有价值的试用：你自己的 20～100 张，大约 20 分钟。</p>
+            <div class="cta-row" style="justify-content:center;">
+              <button class="btn btn-primary">申请试用</button>
+              <button class="btn btn-ghost">它怎么工作</button>
+            </div>
+          </div>
+          <footer class="site-foot">
+            <div>Travelogue · 旅行记忆的编辑</div>
+            <div>怎么做 · 样张 · 常见问题 · 关于 · 源码</div>
+          </footer>
+        </div>
+      </section>
+
+      <section class="panel" id="f3">
+        <div class="anno">F3 · /how</div>
+        <p class="lead">把手册第 6 节收成一页。教路径，不教算法名。默认游记；作品集只在页底用一小段说明。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/how</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><span>首页</span><b>怎么做</b><span>样张</span><span>关于</span></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="section">
+            <p class="eyebrow">选相册 → 出游记 → 分享</p>
+            <h2>一次制作怎么走</h2>
+            <p class="s">Studio 在你自己的电脑上运行。网站只介绍路径，不会让你在这里上传照片。</p>
+            <div class="step"><div class="num">1</div><div><h3 style="margin:0 0 4px;font-size:15px;">打开工作台</h3><p style="margin:0;font-size:13px;color:var(--muted);">Windows 用户双击打开；开发者在本机启动 Studio。请用 Chrome 或 Edge。手机浏览器不是完整工坊。</p></div></div>
+            <div class="step"><div class="num">2</div><div><h3 style="margin:0 0 4px;font-size:15px;">选这一趟的照片</h3><p style="margin:0;font-size:13px;color:var(--muted);">一次一趟，不要把好几年混在一起。大约 20～150 张；上限约 250 张。JPG / PNG / WebP，HEIC 通常可用。RAW 请先导出成片。</p></div></div>
+            <div class="step"><div class="num">3</div><div><h3 style="margin:0 0 4px;font-size:15px;">等它做完</h3><p style="margin:0;font-size:13px;color:var(--muted);">去重、按时间和地点分章、选封面、杂志排版。可以离开，稍后再回来。默认不必配置任何模型或 Key。</p></div></div>
+            <div class="step"><div class="num">4</div><div><h3 style="margin:0 0 4px;font-size:15px;">预览，而不是立刻重做</h3><p style="margin:0;font-size:13px;color:var(--muted);">先翻一遍，看顺不顺、敢不敢发。可以删图、改几个字、换封面气质。不建议第一次打开全部开关。</p></div></div>
+            <div class="step"><div class="num">5</div><div><h3 style="margin:0 0 4px;font-size:15px;">保存，并确认文件在哪</h3><p style="margin:0;font-size:13px;color:var(--muted);">保存长图后，用「在文件夹中显示」确认落盘。产品不替你发到任何社交平台。</p></div></div>
+          </div>
+          <div class="section">
+            <h2>两种成册，默认是游记</h2>
+            <div class="grid-2">
+              <div class="card"><h3>游记</h3><p>旅行刚结束，想尽快发群。直接选相册即可。气质：快、完整、敢发。</p></div>
+              <div class="card"><h3>作品集 · 可选</h3><p>想做更像杂志的卷轴时，由你主动选。不会自动替你选，也不会合成「又快又精」一个按钮。</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f4">
+        <div class="anno">F4 · /examples</div>
+        <p class="lead">样张页用「作品先于功能」。每张必须标示例 / 作者自用，禁止装成社区热榜。没有真实成册前，宁缺一格，不放假图。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/examples</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><span>首页</span><span>怎么做</span><b>样张</b><span>关于</span></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="section">
+            <h2>先看一本做成什么样</h2>
+            <p class="s">这些是本机跑出来的示例或作者自用册，不是平台上的用户秀。点开可看卷轴截帧与长图切片。</p>
+            <div class="grid-3">
+              <div class="card">
+                <div class="ph" style="min-height:160px;margin-bottom:10px;"><span class="flag">示例</span><b>京都雨后</b></div>
+                <h3>大屏卷轴 + 群聊长图</h3>
+                <p>约 80 张成册 · 6 章 · 本地处理</p>
+              </div>
+              <div class="card">
+                <div class="ph" style="min-height:160px;margin-bottom:10px;"><span class="flag">示例</span><b>海岛三日</b></div>
+                <h3>朋友圈切片</h3>
+                <p>同一本再出 6～9 张，不在单张照片中间切断</p>
+              </div>
+              <div class="card">
+                <div class="ph" style="min-height:160px;margin-bottom:10px;"><span class="flag">空位</span><b>待补真实成册</b></div>
+                <h3>宁缺</h3>
+                <p>没有第三本真样张前，保持空位，不调用库存旅拍。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f5">
+        <div class="anno">F5 · /start · 已锁定：申请受邀获取</div>
+        <p class="lead">全站「申请试用」都落到这一页。左列是主路径：填表提交「申请受邀获取」。右列源码是给已经会跑仓库的人，不抢主按钮。</p>
+        <div class="callout callout--ok">
+          <strong>已锁定</strong>
+          不公开挂包。表单只要称呼、邮箱、系统确认；可选填「最近哪一趟想做成册」。说明：包会发到邮箱，照片不会传到本站。
+        </div>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/start</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><span>首页</span><span>怎么做</span><span>样张</span><span>关于</span></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="section">
+            <p class="eyebrow">网站做不了游记</p>
+            <h2>在你自己的电脑上打开 Studio</h2>
+            <p class="s">当前处于种子验证。Windows 是主战场。没有账号，也没有「试用三天后续费」。</p>
+            <div class="grid-2">
+              <div class="card" style="border-color:#8b1e18;">
+                <p class="eyebrow">一般用户 · 主路径</p>
+                <h3>申请受邀获取 Windows 包</h3>
+                <p>Win 10 / 11 64 位 · Chrome 或 Edge。通过后发绿色便携 / 安装包，不在本页直接下载。</p>
+                <div style="margin-top:12px;display:grid;gap:8px;">
+                  <div class="card" style="padding:8px 10px;background:#faf7f1;"><p>称呼</p></div>
+                  <div class="card" style="padding:8px 10px;background:#faf7f1;"><p>邮箱（用来收包）</p></div>
+                  <div class="card" style="padding:8px 10px;background:#faf7f1;"><p>系统：Windows 10 / 11（已预选）</p></div>
+                  <div class="card" style="padding:8px 10px;background:#faf7f1;"><p>可选：最近哪一趟想做成册</p></div>
+                </div>
+                <div class="cta-row" style="margin-top:12px;">
+                  <button class="btn btn-primary">申请受邀获取</button>
+                </div>
+                <p style="margin:10px 0 0;font-size:11px;color:var(--muted);">这不是注册账号。照片不会上传到本站。</p>
+              </div>
+              <div class="card">
+                <p class="eyebrow">开发者</p>
+                <h3>从源码启动</h3>
+                <p style="font-family:Consolas,monospace;font-size:12px;color:#3d3832;margin:8px 0;">
+                  pip install -e ".[dev]"<br>
+                  python -m travelogue studio
+                </p>
+                <p>然后打开 http://127.0.0.1:8766/</p>
+                <div class="cta-row" style="margin-top:12px;">
+                  <button class="btn btn-ghost">复制命令</button>
+                  <button class="btn btn-ghost">查看仓库</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>数据在哪</h2>
+            <div class="grid-3">
+              <div class="card"><h3>照片原片</h3><p>仍在你选的那个文件夹。软件只读。</p></div>
+              <div class="card"><h3>做成的画册</h3><p>本机 trips 目录。绿色版通常在程序旁边。</p></div>
+              <div class="card"><h3>不会去的地方</h3><p>我们没有云盘，也没有你的账号。默认不上传。</p></div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>系统与边界</h2>
+            <p class="s">macOS 公测、应用商店、手机工坊、小程序阅读，都还不是现在的承诺。手机用来看和发已经导出的图。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f6">
+        <div class="anno">F6 · /faq</div>
+        <p class="lead">问题顺序按「会不会传照片 / 要不要注册 / 是不是 AI / 怎么发给朋友」排，不按工程模块排。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/faq</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><span>首页</span><span>怎么做</span><span>样张</span><span>关于</span></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="section">
+            <h2>常见问题</h2>
+            <div class="faq"><b>照片会上传吗？要注册吗？</b><p>默认不上传，也不要注册。处理发生在你的电脑上。</p></div>
+            <div class="faq"><b>一定要联网吗？</b><p>导入、排版、预览、出长图，默认都可以本机完成。只有你以后自己配置外部模型时，文案步骤才会访问对应服务。</p></div>
+            <div class="faq"><b>会不会把我的照片变得很「AI」？</b><p>不改像素，也不默认生成假风景封面。它做的是编辑：挑哪些图、怎么分组、怎么排。</p></div>
+            <div class="faq"><b>成品可以给没装这个软件的朋友看吗？</b><p>可以。把长图或导出的图片发出去即可。</p></div>
+            <div class="faq"><b>能导入 RAW / 视频吗？</b><p>RAW 会被拦截，请先导出成片。少量短视频可以带，主线仍是照片成册。</p></div>
+            <div class="faq"><b>收费吗？</b><p>当前是自用与种子试用，许可证未对外发布。没有账号墙，也没有试用续费。</p></div>
+            <div class="faq"><b>和美图、剪映、Lightroom 有什么不同？</b><p>那些工具修单张、剪视频或调色。Travelogue 把一整趟照片做成有章节的册子，并导出能发的长图。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f7">
+        <div class="anno">F7 · /about</div>
+        <p class="lead">关于页讲世界观和阶段，不讲 Phase。四句原则原样进页。许可证待定，故不写开源许可证名称。</p>
+        <div class="browser">
+          <div class="browser__dots"><i></i><i></i><i></i></div>
+          <div class="browser__tab">travelogue.site/about</div>
+        </div>
+        <div class="frame">
+          <header class="site-nav">
+            <div class="logo">Travelogue<span>游记智能体</span></div>
+            <div class="nav-links"><span>首页</span><span>怎么做</span><span>样张</span><b>关于</b></div>
+            <button class="nav-cta">申请试用</button>
+          </header>
+          <div class="section">
+            <p class="eyebrow">项目自述</p>
+            <h2>旅行记忆的编辑，<br>不是旅行内容的工厂。</h2>
+            <p class="s">它处在「相册整理之后、发朋友圈之前」。做成之后，你得到的是自己电脑上的文件，不是锁在某个 App 里的帖子。</p>
+            <div class="grid-2">
+              <div class="card"><h3>1. 这一趟做完</h3><p>旅行结束，照片还在——游记一次做完。</p></div>
+              <div class="card"><h3>2. 照片留在本机</h3><p>无需注册。密钥如果以后你自己配，也只存在本机。</p></div>
+              <div class="card"><h3>3. 先敢发长图</h3><p>先做出一张敢发的长图，再谈更多能力。</p></div>
+              <div class="card"><h3>4. 不卖人生系统</h3><p>我们卖的是这一趟的完工，不是一套要维护的操作系统。</p></div>
+            </div>
+          </div>
+          <div class="section">
+            <h2>当前阶段</h2>
+            <p class="s">已经能走完「选相册 → 预览 → 导出长图」。正在把成书质量、第一次使用和桌面安装，打磨到非开发者也能独立做完一篇。</p>
+            <div class="card">
+              <h3>请按这个预期来</h3>
+              <p>可用的本地工具，仍处于种子验证阶段；还不是应用商店里的成熟商品。Windows 优先；默认不推 AI 文案；许可证尚未对外发布。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f8">
+        <div class="anno">F8 · Mobile home · 390</div>
+        <p class="lead">手机主按钮与桌面相同，都是「申请试用」。工坊在电脑上这件事写在正文和角标里，不写进按钮——避免再造一套文案，也不暗示手机里能做册。</p>
+        <div class="phone-wrap">
+          <div class="phone-frame narrow">
+            <header class="site-nav">
+              <div class="logo">Travelogue<span>游记智能体</span></div>
+              <button class="nav-cta">申请试用</button>
+            </header>
+            <div class="hero">
+              <div>
+                <p class="eyebrow">本地照片成册</p>
+                <h1 class="h1" style="font-size:28px;">照片导进来，画册自动出来。</h1>
+                <p class="sub">自动分章 · 配文 · 排版。电脑上制作，手机上看和发已经导出的图。</p>
+                <div class="chips">
+                  <span class="chip chip--trust">照片留在本机</span>
+                  <span class="chip chip--stage">工坊在 Windows</span>
+                </div>
+                <div class="cta-row">
+                  <button class="btn btn-primary">申请试用</button>
+                  <button class="btn btn-ghost">看样张</button>
+                </div>
+              </div>
+              <div class="dual">
+                <div class="ph"><span class="flag">16:9</span><b>卷轴</b></div>
+                <div class="ph"><span class="flag">9:16</span><b>长图</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="f9">
+        <div class="anno">F9 · Chrome · 禁区</div>
+        <p class="lead">全站重复出现的壳层先锁死，避免每页各写一套。右侧对照手册红线。</p>
+        <table class="cmp">
+          <tr><th>元素</th><th>本版合同</th><th>禁止</th></tr>
+          <tr><td>顶栏</td><td>Logo + 首页 / 怎么做 / 样张 / 关于 + 申请试用。FAQ 不进顶栏。</td><td>登录、定价、Star 数门槛、下载计数</td></tr>
+          <tr><td>主 CTA</td><td>桌面 / 手机一律「申请试用」→ <code>/start</code>。表单提交「申请受邀获取」。「开始制作我的游记」只留给 Studio 产品内。</td><td>开始使用、在电脑上开始、立即注册、在线试用、公开下载</td></tr>
+          <tr><td>次 CTA</td><td>先看样张 / 它怎么工作</td><td>邀请好友得福利</td></tr>
+          <tr><td>信任句</td><td>照片留在本机 · 无需注册 · 交付物归你</td><td>上传到云、云备份、云相册</td></tr>
+          <tr><td>能力词</td><td>自动分章 · 配文 · 排版；智能游记可用在眉题</td><td>AI 一键生成 / AI 修图 / AI 生图</td></tr>
+          <tr><td>阶段</td><td>种子验证 · Windows；许可证未发布</td><td>MIT、永久免费、永远开源、应用商店已上架</td></tr>
+          <tr><td>社会证明</td><td>真实样张、作者自用、示例标注</td><td>用户数、装机量、假证言</td></tr>
+          <tr><td>页脚</td><td>四句原则缩写 + FAQ + 源码 + 数据说明</td><td>Phase 列车、内部代号</td></tr>
+        </table>
+        <div class="callout" style="margin-top:16px;">
+          <strong>视觉方向（本线框不展开，供下一轮）</strong>
+          宣纸底 + 银盐黑字 + 少量暗红 CTA。杂志感，不是 SaaS 紫蓝渐变。样张用真成册，不用插画人像。
+        </div>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h3 id="aside-title">审核要点 · F0</h3>
+      <ul id="aside-list">
+        <li>四项导航已锁定，不再加页</li>
+        <li>全站主按钮已锁定为「申请试用」</li>
+        <li>/start 提交已锁定为「申请受邀获取」</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    const tips = {
+      f0: ["四项导航 + 申请试用：已锁定", "「开始制作我的游记」只留给 Studio", "/start = 受邀表单，不公开挂包：已锁定"],
+      f1: ["5 秒能否看懂本地成册 + 双交付", "种子验证角标是否太泄气，或必须保留诚实", "主按钮是否清楚是申请，不是当场做册"],
+      f2: ["三步是否仍是选相册 → 出游记 → 分享", "多平台是否被压成附带，没有变成主叙事", "卷尾「申请试用」是否与首屏一致"],
+      f3: ["五步是否好懂，有没有漏进算法名", "作品集是否只作为可选，没有和游记抢默认", "是否错误暗示可以在网站上制作"],
+      f4: ["示例标注是否足够，避免被看成 UGC 社区", "空位策略：宁缺是否同意", "样张要几本才开这一页"],
+      f5: ["表单三必填 + 一可选是否够", "「申请受邀获取」与顶栏「申请试用」分层是否清楚", "源码列是否足够退后"],
+      f6: ["问题顺序是否先打消上传/注册顾虑", "收费 / 许可证表述是否够稳", "FAQ 继续独立页、只出现在页脚"],
+      f7: ["四句原则是否原样保留", "阶段段是否过谦或必须", "要不要出现作者署名"],
+      f8: ["手机按钮是否已与桌面统一为「申请试用」", "正文是否写清工坊在电脑上", "窄屏顶栏是否只留 Logo + 按钮"],
+      f9: ["禁区表有没有要松的", "视觉下一轮是先出桌面高保真，还是先补真样张"]
+    };
+    const titles = {
+      f0: "审核要点 · F0", f1: "审核要点 · F1", f2: "审核要点 · F2",
+      f3: "审核要点 · F3", f4: "审核要点 · F4", f5: "审核要点 · F5",
+      f6: "审核要点 · F6", f7: "审核要点 · F7", f8: "审核要点 · F8",
+      f9: "审核要点 · F9"
+    };
+    const tabs = document.getElementById("tabs");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-panel]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-panel");
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("is-on", b === btn));
+      document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-on", p.id === id));
+      document.getElementById("aside-title").textContent = titles[id];
+      document.getElementById("aside-list").innerHTML = tips[id].map((t) => `<li>${t}</li>`).join("");
+    });
+  </script>
+</body>
+</html>

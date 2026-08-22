@@ -15,6 +15,7 @@
 
 新人 / Agent **默认只读这条短链**；下方「阅读顺序（历史 Phase）」仅考古。
 
+0. **给陌生人和用户**：[项目说明手册.md](./项目说明手册.md)（对外说明）· [项目介绍.md](./项目介绍.md)（一页纸）  
 1. [CHARTER.md](./CHARTER.md)  
 2. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) → [DEVELOPMENT.md](./DEVELOPMENT.md)  
 3. 活跃 ADR：[adr/007-native-clustering.md](./adr/007-native-clustering.md)（索引见 [adr/README.md](./adr/README.md)）  

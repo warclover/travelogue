@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Travelogue 官网 · 映像高保真</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+    :root {
+      --black: #070707;
+      --ink: #0e0e10;
+      --paper: #efe8dc;
+      --paper-2: #e4dccf;
+      --mute: #8a8278;
+      --red: #c44a1f;
+      --serif: "Noto Serif SC", "Songti SC", Georgia, serif;
+      --sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "JetBrains Mono", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: var(--sans);
+      background: var(--black);
+      color: #ece8e0;
+      line-height: 1.55;
+    }
+    button, input, textarea, select { font: inherit; }
+    img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    a { color: inherit; text-decoration: none; cursor: pointer; }
+
+    .review {
+      position: sticky; top: 0; z-index: 90;
+      background: #111; color: #c9c2b6;
+      padding: 8px 20px 7px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .review h1 { margin: 0; font-size: 12px; font-weight: 600; color: #ece8e0; }
+    .review p { margin: 2px 0 0; font-size: 11px; color: #7a746c; }
+    .review a { color: #d7b56d; }
+    .tabs { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+    .tabs button {
+      border: 1px solid #333; background: transparent; color: #c9c2b6;
+      padding: 4px 11px; font-size: 11px; letter-spacing: 0.06em; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--red); border-color: var(--red); color: #fff; }
+
+    .page { display: none; }
+    .page.is-on { display: block; }
+
+    .nav {
+      position: absolute; inset: 0 0 auto;
+      z-index: 20;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 28px 40px;
+      mix-blend-mode: difference;
+      color: #fff;
+    }
+    .page:not(#home) .nav,
+    .nav--paper {
+      position: sticky; top: 42px; mix-blend-mode: normal;
+      background: var(--black); color: #ece8e0;
+      border-bottom: 1px solid #222;
+    }
+    .logo {
+      font-family: var(--serif); font-size: 15px; letter-spacing: 0.22em;
+      font-weight: 500; cursor: pointer;
+    }
+    .links { display: flex; gap: 26px; font-size: 12px; letter-spacing: 0.14em; }
+    .links .is-on { box-shadow: inset 0 -1px 0 currentColor; }
+    .nav-cta {
+      border: 1px solid currentColor; background: transparent;
+      color: inherit; padding: 7px 14px; font-size: 11px;
+      letter-spacing: 0.16em; cursor: pointer;
+    }
+
+    .hero {
+      position: relative;
+      height: calc(100vh - 42px);
+      min-height: 720px;
+      overflow: hidden;
+    }
+    .hero img { filter: contrast(1.06) saturate(0.92); }
+    .hero::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, rgba(0,0,0,.08) 40%, rgba(0,0,0,.55) 100%);
+    }
+    .vtext {
+      position: absolute; left: 28px; top: 50%; transform: translateY(-50%);
+      writing-mode: vertical-rl; letter-spacing: 0.55em;
+      font-size: 11px; color: rgba(255,255,255,.55); z-index: 5;
+    }
+    .hero-meta {
+      position: absolute; left: 72px; bottom: 44px; right: 48px; z-index: 5;
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;
+    }
+    .hero h1 {
+      font-family: var(--serif); font-weight: 500;
+      font-size: 42px; line-height: 1.2; margin: 0 0 10px; letter-spacing: 0.04em;
+    }
+    .hero .sub { margin: 0; font-size: 14px; color: rgba(255,255,255,.72); max-width: 34em; }
+    .exif {
+      font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.55);
+      text-align: right; letter-spacing: 0.04em;
+    }
+    .exif b { display: block; color: #fff; font-weight: 500; margin-bottom: 6px; letter-spacing: 0.18em; font-family: var(--sans); font-size: 10px; }
+    .scroll-cue {
+      position: absolute; right: 40px; bottom: 44px; z-index: 5;
+      font-size: 10px; letter-spacing: 0.2em; color: rgba(255,255,255,.45);
+    }
+
+    .dark { background: var(--black); }
+    .paper { background: var(--paper); color: var(--ink); }
+    .section { padding: 72px 72px 80px; }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 28px;
+    }
+    .kicker {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em;
+      color: var(--mute);
+    }
+    .paper .kicker { color: #8a7d6c; }
+    h2 {
+      font-family: var(--serif); font-weight: 500;
+      font-size: 36px; line-height: 1.25; margin: 0 0 14px; letter-spacing: 0.03em;
+    }
+    .lede { margin: 0; max-width: 38em; color: #b8b0a4; font-size: 15px; }
+    .paper .lede { color: #5c564c; }
+
+    .strip {
+      display: flex; gap: 10px; overflow-x: auto;
+      padding-bottom: 8px; scroll-snap-type: x mandatory;
+    }
+    .strip::-webkit-scrollbar { height: 6px; }
+    .strip::-webkit-scrollbar-thumb { background: #333; }
+    .frame {
+      flex: 0 0 520px; scroll-snap-align: start;
+    }
+    .frame figure { margin: 0; }
+    .frame .pic { height: auto; aspect-ratio: 16 / 9; background: #111; }
+    .frame--port { flex: 0 0 220px; }
+    .frame--port .pic { aspect-ratio: 9 / 16; height: 390px; }
+    .pic--longshot {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+    .pic--longshot img {
+      position: absolute; left: 0; top: 0;
+      width: 100%; height: auto;
+      object-fit: unset;
+    }
+    .frame figcaption {
+      display: flex; justify-content: space-between;
+      padding: 10px 2px 0; font-size: 11px; letter-spacing: 0.08em; color: var(--mute);
+    }
+    .frame figcaption span { font-family: var(--mono); }
+
+    .spread {
+      display: grid; grid-template-columns: 1.35fr 0.8fr; min-height: 640px;
+    }
+    .spread .pic { min-height: 640px; }
+    .spread-copy {
+      padding: 72px 56px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .spread--flip { grid-template-columns: 0.8fr 1.35fr; }
+    .spread--flip .pic { order: 2; }
+    .spread--dark { background: #070707; color: #ece8e0; }
+    .spread--dark .lede { color: #b8b0a4; }
+    .hits { list-style: none; margin: 28px 0 0; padding: 0; }
+    .hit {
+      display: grid; grid-template-columns: 28px 1fr;
+      gap: 14px; padding: 14px 0;
+      border-top: 1px solid #2a2a2a;
+    }
+    .hit .n { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--red); padding-top: 4px; }
+    .hit h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 20px; font-weight: 500; }
+    .hit p { margin: 0; font-size: 13px; color: #9a9288; }
+
+    .storyboard {
+      display: grid; grid-template-columns: 1.5fr 0.72fr;
+      gap: 20px 36px; align-items: start;
+    }
+    .storyboard-steps { display: grid; gap: 20px; }
+    .shot { position: relative; }
+    .shot > .pic { height: auto; aspect-ratio: 16 / 9; }
+    .shot--share { display: flex; flex-direction: column; }
+    .shot--share .phone { width: min(260px, 100%); }
+    .shot--share .no { position: static; margin: 0 0 10px; text-shadow: none; color: #c9c2b6; }
+    .shot .no {
+      position: absolute; left: 14px; top: 14px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
+      color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.5);
+    }
+    .shot figcaption {
+      margin: 0; padding: 14px 4px 0;
+      font-size: 13px; color: #c9c2b6;
+    }
+    .shot figcaption b { display: block; font-family: var(--serif); font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+
+    .dual {
+      display: grid; grid-template-columns: 1.45fr 0.7fr; gap: 28px; align-items: end;
+    }
+    .mag {
+      background: #111; padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .mag .pic { height: auto; aspect-ratio: 16 / 9; }
+    .phone-wrap { max-width: 280px; }
+    .phone {
+      background: #0a0a0a; padding: 10px 9px 14px; border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    }
+    .phone .cap {
+      text-align: center; font-family: var(--mono); font-size: 9px;
+      letter-spacing: 0.16em; color: #666; margin-bottom: 8px;
+    }
+    .phone .pic { height: auto; aspect-ratio: 9 / 16; }
+    .obj-note { margin: 16px 0 0; font-size: 12px; color: var(--mute); }
+
+    .nots {
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1px; background: #d5ccbe;
+    }
+    .nots div { background: var(--paper); padding: 28px 22px; }
+    .nots h3 { margin: 0 0 8px; font-family: var(--serif); font-size: 18px; font-weight: 500; }
+    .nots p { margin: 0; font-size: 13px; color: #5c564c; }
+
+    .close {
+      min-height: 70vh; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+      padding: 80px 40px; position: relative;
+    }
+    .close img { position: absolute; inset: 0; opacity: .38; filter: grayscale(.25) contrast(1.1); }
+    .close .inner { position: relative; z-index: 2; }
+    .close h2 { font-size: 44px; color: #fff; }
+    .close p { color: rgba(255,255,255,.7); margin: 0 0 28px; }
+    .btn-solid {
+      border: 0; background: var(--red); color: #fff;
+      padding: 12px 22px; letter-spacing: 0.16em; font-size: 12px; cursor: pointer;
+    }
+    .btn-line {
+      border: 1px solid rgba(255,255,255,.4); background: transparent; color: #fff;
+      padding: 12px 22px; letter-spacing: 0.16em; font-size: 12px; cursor: pointer;
+    }
+
+    .how-row {
+      display: grid; grid-template-columns: 160px 1fr 1.2fr;
+      gap: 32px; padding: 36px 0; border-top: 1px solid #222;
+      align-items: center;
+    }
+    .how-row .no { font-family: var(--mono); font-size: 13px; color: var(--red); letter-spacing: 0.16em; }
+    .how-row h3 { margin: 0 0 8px; font-family: var(--serif); font-size: 24px; font-weight: 500; }
+    .how-row p { margin: 0; color: #9a9288; font-size: 14px; }
+    .how-row > .pic { height: auto; aspect-ratio: 16 / 9; }
+    .how-row--port { align-items: start; }
+    .how-row--port .phone { width: 148px; justify-self: end; }
+
+    .sheet {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    .cell { background: #0c0c0c; }
+    .cell .pic { height: auto; aspect-ratio: 16 / 9; }
+    .cell figcaption {
+      padding: 12px 10px 16px; font-size: 12px; color: var(--mute);
+    }
+    .cell h3 { margin: 0 0 4px; color: #ece8e0; font-family: var(--serif); font-size: 18px; font-weight: 500; }
+    .empty {
+      aspect-ratio: 16 / 9; display: grid; place-items: center;
+      border: 1px dashed #3a3530; color: #6a645c; letter-spacing: 0.2em; font-size: 12px;
+    }
+
+    .lab {
+      display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 120px);
+    }
+    .lab-photo { position: relative; min-height: 720px; }
+    .lab-photo .tag {
+      position: absolute; left: 28px; bottom: 28px;
+      font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.7);
+    }
+    .lab-form { background: var(--paper); color: var(--ink); padding: 72px 56px; }
+    .field { margin: 0 0 16px; }
+    .field label { display: block; font-size: 11px; letter-spacing: 0.12em; color: #7a7166; margin-bottom: 6px; }
+    .field input, .field textarea, .field select {
+      width: 100%; border: 0; border-bottom: 1px solid #c8bdaa;
+      background: transparent; padding: 10px 0; color: var(--ink);
+    }
+    .code {
+      font-family: var(--mono); font-size: 12px; background: #111; color: #d8d0c4;
+      padding: 16px; margin: 16px 0;
+    }
+    .ghost {
+      border: 1px solid #c8bdaa; background: transparent; padding: 9px 14px;
+      font-size: 12px; letter-spacing: 0.08em; cursor: pointer;
+    }
+
+    .faq { padding: 22px 0; border-top: 1px solid #ddd2c2; }
+    .faq h3 { margin: 0 0 6px; font-family: var(--serif); font-size: 20px; font-weight: 500; }
+    .faq p { margin: 0; color: #5c564c; }
+
+    .manifesto { max-width: 720px; }
+    .principles { display: grid; grid-template-columns: 1fr 1fr; gap: 40px 48px; margin-top: 48px; }
+    .principles h3 { margin: 0 0 8px; font-family: var(--serif); font-size: 20px; font-weight: 500; }
+    .principles p { margin: 0; color: #5c564c; }
+
+    .foot {
+      display: flex; justify-content: space-between; gap: 24px;
+      padding: 22px 40px; border-top: 1px solid #222;
+      font-size: 11px; letter-spacing: 0.1em; color: #7a746c;
+    }
+    .foot nav { display: flex; gap: 18px; }
+  </style>
+</head>
+<body>
+  <div class="review">
+    <h1>Travelogue 官网 · 映像高保真 · v4 竖版长图</h1>
+    <p>「03 分享」是竖排叠图，不是封面预览。规格见 <a href="./website-frames/README.md">website-frames</a>。锁定不变：四项导航 · 申请试用 · 受邀获取。 <a href="./project-website-v1-wireframe.html">线框</a></p>
+    <div class="tabs" id="tabs">
+      <button data-page="home" class="is-on">首页</button>
+      <button data-page="how">怎么做</button>
+      <button data-page="examples">样张</button>
+      <button data-page="start">申请试用</button>
+      <button data-page="faq">常见问题</button>
+      <button data-page="about">关于</button>
+    </div>
+  </div>
+
+  <header class="nav" id="nav">
+    <div class="logo" data-go="home">TRAVELOGUE</div>
+    <nav class="links">
+      <a data-go="home" class="is-on">首页</a>
+      <a data-go="how">怎么做</a>
+      <a data-go="examples">样张</a>
+      <a data-go="about">关于</a>
+    </nav>
+    <button class="nav-cta" data-go="start">申请试用</button>
+  </header>
+
+  <main>
+    <section class="page is-on" id="home">
+      <div class="hero">
+        <img src="./website-frames/lanka-hero.webp" alt="斯里兰卡风光精选 · 灯塔与海岸" />
+        <div class="vtext">映像 · 本地成册</div>
+        <div class="hero-meta">
+          <div>
+            <h1>照片导进来，<br>画册自动出来。</h1>
+            <p class="sub">选一次旅行的底片，自动分章 · 配文 · 排版。电脑上翻卷轴，也可以导出长图发给朋友。</p>
+          </div>
+          <div class="exif">
+            <b>PHOTO STAYS LOCAL</b>
+            本机处理 · 无需注册 · 交付物归你<br>
+            种子验证 · WINDOWS
+          </div>
+        </div>
+      </div>
+
+      <div class="section dark">
+        <div class="section-head">
+          <div>
+            <p class="kicker">01 / CONTACT SHEET</p>
+            <h2>先被画面击中。</h2>
+          </div>
+          <p class="lede">摄影站不靠功能卡说话。下面是本机跑出来的成屏，不是库存旅拍。</p>
+        </div>
+        <div class="strip">
+          <article class="frame">
+            <figure>
+              <div class="pic"><img src="./website-frames/lanka-portrait-3.png" alt="" /></div>
+              <figcaption>卷轴 · 竖三列开篇 <span>16:9</span></figcaption>
+            </figure>
+          </article>
+          <article class="frame">
+            <figure>
+              <div class="pic"><img src="./website-frames/lanka-1p2l.png" alt="" /></div>
+              <figcaption>卷轴 · 一竖两横 <span>CH.</span></figcaption>
+            </figure>
+          </article>
+          <article class="frame frame--port">
+            <figure>
+              <div class="pic pic--longshot"><img src="./website-frames/lanka-longshot.png" alt="" /></div>
+              <figcaption>长图 · 发给群里 <span>9:16</span></figcaption>
+            </figure>
+          </article>
+          <article class="frame">
+            <figure>
+              <div class="pic"><img src="./website-frames/lanka-grid-6.png" alt="" /></div>
+              <figcaption>拼版 · 六图一屏 <span>16:9</span></figcaption>
+            </figure>
+          </article>
+          <article class="frame">
+            <figure>
+              <div class="pic"><img src="./website-frames/lanka-plate.png" alt="" /></div>
+              <figcaption>开篇 · 成册主图 <span>16:9</span></figcaption>
+            </figure>
+          </article>
+        </div>
+      </div>
+
+      <div class="spread paper">
+        <div class="pic"><img src="./website-frames/lanka-coast.webp" alt="斯里兰卡 · 礁石海岸" /></div>
+        <div class="spread-copy">
+          <p class="kicker">02 / 第三次快乐</p>
+          <h2>旅行结束，<br>照片还在。</h2>
+          <p class="lede">决定出发、身在路上，都已经发生过了。我们只负责回家整理回味——把还堆在文件夹里的底片，一次做成可以翻、可以发的游记。</p>
+        </div>
+      </div>
+
+      <div class="section dark">
+        <div class="section-head">
+          <div>
+            <p class="kicker">03 / STORYBOARD</p>
+            <h2>默认只有三步。</h2>
+          </div>
+          <p class="lede">不需要先配置、先填愿望清单、先学模板。选相册 → 出游记 → 分享。</p>
+        </div>
+        <div class="storyboard">
+          <div class="storyboard-steps">
+            <figure class="shot">
+              <div class="pic"><img src="./website-frames/lanka-grid-4.png" alt="" /></div>
+              <div class="no">01 选相册</div>
+              <figcaption><b>一次一趟</b>大约 20～150 张。RAW 请先出成片。</figcaption>
+            </figure>
+            <figure class="shot">
+              <div class="pic"><img src="./website-frames/lanka-grid-6.png" alt="" /></div>
+              <div class="no">02 出游记</div>
+              <figcaption><b>自动分章排版</b>先翻一遍验货，再决定要不要改。</figcaption>
+            </figure>
+          </div>
+          <figure class="shot shot--share">
+            <div class="no">03 分享</div>
+            <div class="phone">
+              <div class="cap">9:16 LONGSHOT</div>
+              <div class="pic pic--longshot"><img src="./website-frames/lanka-longshot.png" alt="" /></div>
+            </div>
+            <figcaption><b>文件在，才算做完</b>保存长图，在文件夹里找到，再发给朋友。</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="section dark">
+        <p class="kicker">04 / TWO OBJECTS</p>
+        <h2>一卷，一长图。</h2>
+        <p class="lede" style="margin-bottom:28px;">主交付是大屏卷轴。主分享是竖版长图。做完之后随你发哪儿，不改产品叫什么。</p>
+        <div class="dual">
+          <div>
+            <div class="mag">
+              <div class="pic"><img src="./website-frames/lanka-1p2l.png" alt="" /></div>
+              <div class="pic"><img src="./website-frames/lanka-landscape.png" alt="" /></div>
+            </div>
+            <p class="obj-note">16:9 卷轴 · 封面与章节在同一屏序里</p>
+          </div>
+          <div class="phone-wrap">
+            <div class="phone">
+              <div class="cap">9:16 LONGSHOT</div>
+              <div class="pic pic--longshot"><img src="./website-frames/lanka-longshot.png" alt="" /></div>
+            </div>
+            <p class="obj-note">发给群里，对方不用安装</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="spread spread--dark">
+        <div class="pic"><img src="./website-frames/lanka-lamps.webp" alt="" /></div>
+        <div class="spread-copy">
+          <p class="kicker">05 / HIGHLIGHTS</p>
+          <h2>六件真正不同的事。</h2>
+          <p class="lede">能力很多，对外只讲这六条。再多就会重新变成功能清单。</p>
+          <ol class="hits">
+            <li class="hit"><span class="n">01</span><div><h3>本机成册</h3><p>照片不上传、不用注册，在你自己的电脑上做成一本。</p></div></li>
+            <li class="hit"><span class="n">02</span><div><h3>珍贵汇总</h3><p>自动去重、分章、选片，做成杂志气口，而不是把相册倒出去。</p></div></li>
+            <li class="hit"><span class="n">03</span><div><h3>一卷一长图</h3><p>大屏卷轴给自己看，竖版长图发给朋友，对方不用装这个软件。</p></div></li>
+            <li class="hit"><span class="n">04</span><div><h3>封面像一本</h3><p>开场有装帧，不是文件夹第一张随手照。</p></div></li>
+            <li class="hit"><span class="n">05</span><div><h3>做完再分发</h3><p>同一本可再出朋友圈、小红书、公众号、画册或海报，不必重做。</p></div></li>
+            <li class="hit"><span class="n">06</span><div><h3>先敢发，再谈 AI</h3><p>默认就能出纯照片长图。杂志句子是可选项，不是完工前提。</p></div></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="paper">
+        <div class="section" style="padding-bottom:0;">
+          <p class="kicker">06 / NOT THIS</p>
+          <h2>它不是这些东西。</h2>
+        </div>
+        <div class="nots">
+          <div><h3>不是云相册</h3><p>不托管、不同步、不建账号。</p></div>
+          <div><h3>不是 AI 修图</h3><p>不改你的像素，只做选片与排版。</p></div>
+          <div><h3>不是九宫格放大</h3><p>策展后的成册，不是全量倾倒。</p></div>
+          <div><h3>不是旅行系统</h3><p>不卖攻略、愿望清单、终身知识库。</p></div>
+        </div>
+      </div>
+
+      <div class="close">
+        <img src="./website-frames/lanka-sunset.webp" alt="" />
+        <div class="inner">
+          <p class="kicker">先敢发，再谈更多</p>
+          <h2>先做出一张<br>敢发的长图。</h2>
+          <p>最有价值的试用：你自己的 20～100 张，大约 20 分钟。</p>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button class="btn-solid" data-go="start">申请试用</button>
+            <button class="btn-line" data-go="how">它怎么工作</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="how">
+      <div class="section dark">
+        <p class="kicker">HOW IT IS MADE</p>
+        <h2>一次制作怎么走</h2>
+        <p class="lede">Studio 在你自己的电脑上运行。网站只介绍路径，不会让你在这里上传照片。</p>
+        <div class="how-row">
+          <div class="no">01</div>
+          <div><h3>打开工作台</h3><p>Windows 双击打开。请用 Chrome 或 Edge。手机浏览器不是完整工坊。</p></div>
+          <div class="pic"><img src="./website-frames/lanka-cover.png" alt="" /></div>
+        </div>
+        <div class="how-row">
+          <div class="no">02</div>
+          <div><h3>选这一趟的照片</h3><p>一次一趟。大约 20～150 张，上限约 250。JPG / PNG / WebP，HEIC 通常可用。</p></div>
+          <div class="pic"><img src="./website-frames/lanka-grid-4.png" alt="" /></div>
+        </div>
+        <div class="how-row">
+          <div class="no">03</div>
+          <div><h3>等它做完</h3><p>去重、按时间和地点分章、选封面、杂志排版。默认不必配置模型。</p></div>
+          <div class="pic"><img src="./website-frames/lanka-grid-6.png" alt="" /></div>
+        </div>
+        <div class="how-row">
+          <div class="no">04</div>
+          <div><h3>预览，而不是立刻重做</h3><p>先翻一遍。可以删图、改几个字、换封面气质。</p></div>
+          <div class="pic"><img src="./website-frames/lanka-1p2l.png" alt="" /></div>
+        </div>
+        <div class="how-row how-row--port">
+          <div class="no">05</div>
+          <div><h3>保存，并确认文件在哪</h3><p>用「在文件夹中显示」确认落盘。产品不替你发到任何平台。</p></div>
+          <div class="phone">
+            <div class="cap">9:16 LONGSHOT</div>
+            <div class="pic pic--longshot"><img src="./website-frames/lanka-longshot.png" alt="" /></div>
+          </div>
+        </div>
+      </div>
+      <div class="spread paper spread--flip">
+        <div class="spread-copy">
+          <p class="kicker">DEFAULT / OPTIONAL</p>
+          <h2>两种成册，<br>默认是游记。</h2>
+          <p class="lede">游记：快、完整、敢发，直接选相册。作品集：更讲究页序，由你主动选。不会合成「又快又精」一个按钮。</p>
+        </div>
+        <div class="pic"><img src="./website-frames/lanka-church.webp" alt="" /></div>
+      </div>
+    </section>
+
+    <section class="page" id="examples">
+      <div class="section dark">
+        <p class="kicker">EXAMPLES · 本机成册</p>
+        <h2>先看一本做成什么样</h2>
+        <p class="lede" style="margin-bottom:32px;">这一本是本机做成的示例，不是平台用户秀。没有第二本完整真旅册前，第三格留空。</p>
+        <div class="sheet">
+          <figure class="cell">
+            <div class="pic"><img src="./website-frames/lanka-cover.png" alt="" /></div>
+            <figcaption><h3>斯里兰卡风光精选</h3>本机成册 · 2018.07.22–08.18 · 28 天</figcaption>
+          </figure>
+          <figure class="cell">
+            <div class="pic"><img src="./website-frames/lanka-landscape.png" alt="" /></div>
+            <figcaption><h3>同册成屏</h3>16:9 卷轴 · 单张横图一屏</figcaption>
+          </figure>
+          <figure class="cell">
+            <div class="empty">宁缺</div>
+            <figcaption><h3>待补真实成册</h3>不调用库存旅拍充数</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="start">
+      <div class="lab">
+        <div class="lab-photo">
+          <img src="./website-frames/lanka-dusk.webp" alt="" />
+          <div class="tag">WEBSITE CANNOT MAKE THE BOOK<br>STUDIO RUNS ON YOUR MACHINE</div>
+        </div>
+        <div class="lab-form">
+          <p class="kicker">INVITE</p>
+          <h2>申请受邀获取<br>Windows 包</h2>
+          <p class="lede">种子验证。通过后把绿色便携 / 安装包发到邮箱。这不是注册，照片也不会传到本站。</p>
+          <form style="margin-top:28px;" onsubmit="return false;">
+            <div class="field"><label>称呼</label><input placeholder="怎么称呼你" /></div>
+            <div class="field"><label>邮箱 · 用来收包</label><input type="email" placeholder="you@example.com" /></div>
+            <div class="field"><label>系统</label><select><option>Windows 10 / 11（64 位）</option></select></div>
+            <div class="field"><label>可选 · 最近哪一趟想做成册</label><textarea rows="3" placeholder="比如：上周的京都，大约 80 张"></textarea></div>
+            <button class="btn-solid" style="width:100%;">申请受邀获取</button>
+          </form>
+          <p class="kicker" style="margin:40px 0 10px;">DEVELOPERS</p>
+          <div class="code">pip install -e ".[dev]"<br>python -m travelogue studio</div>
+          <button class="ghost" type="button">复制命令</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="faq">
+      <div class="section paper" style="min-height:80vh;">
+        <p class="kicker">FAQ</p>
+        <h2>常见问题</h2>
+        <div class="faq"><h3>照片会上传吗？要注册吗？</h3><p>默认不上传，也不要注册。处理发生在你的电脑上。</p></div>
+        <div class="faq"><h3>一定要联网吗？</h3><p>导入、排版、预览、出长图，默认都可以本机完成。</p></div>
+        <div class="faq"><h3>会不会把我的照片变得很「AI」？</h3><p>不改像素，也不默认生成假风景封面。它做的是编辑。</p></div>
+        <div class="faq"><h3>成品可以给没装这个软件的朋友看吗？</h3><p>可以。把长图发出去即可。</p></div>
+        <div class="faq"><h3>能导入 RAW / 视频吗？</h3><p>RAW 请先导出成片。少量短视频可以带，主线仍是照片成册。</p></div>
+        <div class="faq"><h3>收费吗？</h3><p>当前是种子试用，许可证未对外发布。没有账号墙，也没有试用续费。</p></div>
+      </div>
+    </section>
+
+    <section class="page" id="about">
+      <div class="spread paper">
+        <div class="pic"><img src="./website-frames/lanka-cove.webp" alt="" /></div>
+        <div class="spread-copy manifesto">
+          <p class="kicker">ABOUT</p>
+          <h2>旅行记忆的编辑，不是旅行内容的工厂。</h2>
+          <p class="lede">它处在相册整理之后、发朋友圈之前。做成之后，你得到的是自己电脑上的文件，不是锁在某个 App 里的帖子。</p>
+        </div>
+      </div>
+      <div class="section paper">
+        <div class="principles">
+          <div><h3>1. 这一趟做完</h3><p>旅行结束，照片还在——游记一次做完。</p></div>
+          <div><h3>2. 照片留在本机</h3><p>无需注册。密钥如果以后你自己配，也只存在本机。</p></div>
+          <div><h3>3. 先敢发长图</h3><p>先做出一张敢发的长图，再谈更多能力。</p></div>
+          <div><h3>4. 不卖人生系统</h3><p>我们卖的是这一趟的完工，不是一套要维护的操作系统。</p></div>
+        </div>
+        <p class="lede" style="margin-top:48px;">对外介绍能力，只用六条亮点：本机成册、珍贵汇总、一卷一长图、封面像一本、做完再分发、先敢发再谈 AI。可用的本地工具，仍处于种子验证。还不是应用商店里的成熟商品。Windows 优先；默认不推 AI 文案；许可证尚未对外发布。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div>TRAVELOGUE · 底片留在本机</div>
+    <nav>
+      <a data-go="how">怎么做</a>
+      <a data-go="examples">样张</a>
+      <a data-go="faq">常见问题</a>
+      <a data-go="about">关于</a>
+      <a data-go="start">申请试用</a>
+    </nav>
+  </footer>
+
+  <script>
+    const pages = ["home", "how", "examples", "start", "faq", "about"];
+    const nav = document.getElementById("nav");
+    function go(id) {
+      if (!pages.includes(id)) return;
+      document.querySelectorAll(".page").forEach((p) => p.classList.toggle("is-on", p.id === id));
+      document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("is-on", b.dataset.page === id));
+      document.querySelectorAll(".links a").forEach((a) => a.classList.toggle("is-on", a.dataset.go === id));
+      nav.classList.toggle("nav--paper", id !== "home");
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+    document.body.addEventListener("click", (e) => {
+      const tab = e.target.closest("[data-page]");
+      if (tab) { go(tab.dataset.page); return; }
+      const link = e.target.closest("[data-go]");
+      if (link) go(link.dataset.go);
+    });
+  </script>
+</body>
+</html>
