@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>作品集 · 页缝间隔 · 线框 V1.1</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --page: #111110;
+      --ink: #eceff1;
+      --gold: #c4a15a;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --gutter: 48px;
+      --gutter-wide: 88px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #1c1b1a; color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 20;
+      padding: 14px 20px 12px;
+      background: #1c1b1a;
+      border-bottom: 1px solid #3a3733;
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; line-height: 1.5; max-width: 110ch; }
+    .sec {
+      max-width: 1100px;
+      margin: 20px auto 0;
+      padding: 0 16px;
+    }
+    .sec h3 {
+      margin: 0 0 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px) { .compare { grid-template-columns: 1fr; } }
+    .card {
+      background: #2a2826;
+      border: 1px solid #3a3733;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .card.pick { border-color: #3d6b5a; }
+    .card.no { border-color: #8a3a2a; }
+    .card p { margin: 8px 0 0; font-size: 11px; color: #b8b2a8; line-height: 1.45; }
+    .mini {
+      background: var(--bg);
+      border: 1px solid #111;
+      padding: 8px 0;
+    }
+    .mini .pg {
+      height: 56px;
+      margin: 0 10px;
+      background: #1a1917;
+      border: 1px solid #3f3c38;
+      color: #7a756c;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mini .pg.framed { box-shadow: inset 0 0 0 1px rgba(245,243,240,0.35); }
+    .mini .pg.shadow {
+      box-shadow: 0 10px 18px rgba(0,0,0,0.55);
+    }
+    .mini .gap {
+      height: var(--gutter);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .mini .gap.wide { height: var(--gutter-wide); }
+    .mini .gap em {
+      position: absolute;
+      top: 4px;
+      font-style: normal;
+      font-size: 10px;
+      color: var(--gold);
+    }
+    .rule {
+      display: block;
+      height: 1px;
+      pointer-events: none;
+    }
+    .rule.off { display: none; }
+    .rule.hair {
+      width: 80%;
+      background: rgba(245, 243, 240, 0.55);
+    }
+    .rule.heavy {
+      width: 96%;
+      height: 3px;
+      background: #f5f3f0;
+      box-shadow: 0 0 0 8px rgba(245, 243, 240, 0.08);
+    }
+    .rule.dash {
+      width: 28px;
+      background: rgba(245, 243, 240, 0.7);
+    }
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(245, 243, 240, 0.7);
+    }
+    .folio {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: rgba(245, 243, 240, 0.45);
+    }
+    .ticks {
+      width: 80%;
+      display: flex;
+      justify-content: space-between;
+    }
+    .ticks i {
+      display: block;
+      width: 14px;
+      height: 1px;
+      background: rgba(245, 243, 240, 0.55);
+    }
+    .wash {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(245,243,240,0.06) 50%,
+        transparent 100%
+      );
+    }
+    .stage-wrap { max-width: 1100px; margin: 22px auto 80px; padding: 0 16px; }
+    .label {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .reader {
+      background: var(--bg);
+      padding: 20px 0 36px;
+      border: 1px dashed #4a4744;
+    }
+    .page {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      background: var(--page);
+      overflow: hidden;
+    }
+    .page.framed { box-shadow: inset 0 0 0 1px rgba(245,243,240,0.22); }
+    .page.shadow { box-shadow: 0 18px 28px rgba(0,0,0,0.45); }
+    .grid {
+      display: grid;
+      height: 100%;
+      gap: 1.5%;
+      padding: 5% 8%;
+    }
+    .grid.pair { grid-template-columns: 1fr 1fr; }
+    .grid.six { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .cell {
+      background: #2c2a27;
+      border: 1px solid #3f3c38;
+      color: #7a756c;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gutter {
+      height: var(--gutter);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .gutter .cap {
+      font-size: 11px;
+      color: var(--gold);
+    }
+    .ghost { opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>作品集读者面 · 页缝间隔线框 V1.1</h1>
+    <p>
+      上一行是原 A/B/C。下一行是另外 6 种：不靠「更粗的线」，而是纸边、中点、加宽缝、页码、装订标、淡带。
+      仍不改现网。末页都不应再画尾。
+    </p>
+  </div>
+
+  <div class="sec">
+    <h3>原三案</h3>
+    <div class="compare">
+      <article class="card">
+        <h2>A · 仅缝，无线</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap"><em>48px 空白</em><span class="rule off"></span></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>现网就是这个。干净，深底上容易粘成一卷。</p>
+      </article>
+      <article class="card">
+        <h2>B · 发丝（线框加亮）</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap"><em>1px · 左右缩 10%</em><span class="rule hair"></span></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>缝正中一根线。落地会再淡到 0.12。</p>
+      </article>
+      <article class="card no">
+        <h2>C · 反例，过重</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap"><em>3px 通栏</em><span class="rule heavy"></span></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>像工具栏或游记章尺。不要用。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="sec" style="margin-top:28px">
+    <h3>另外六种</h3>
+    <div class="compare">
+      <article class="card">
+        <h2>D · 纸边阴影</h2>
+        <div class="mini">
+          <div class="pg shadow">16:9 纸 1</div>
+          <div class="gap"><em>缝空 · 纸投下影</em></div>
+          <div class="pg shadow">16:9 纸 2</div>
+        </div>
+        <p>缝里不画线。每张纸自己投下影，读成叠着的一叠纸。比发丝更「物」，但深底上阴影要压得很轻，否则像浮层卡片。</p>
+      </article>
+      <article class="card">
+        <h2>E · 页缘细框</h2>
+        <div class="mini">
+          <div class="pg framed">16:9 纸 1</div>
+          <div class="gap"><em>缝空 · 纸有边</em></div>
+          <div class="pg framed">16:9 纸 2</div>
+        </div>
+        <p>线画在纸四周，不在缝里。每页是一张独立印张。满出血页会被框切一圈，杂志感会弱一点。</p>
+      </article>
+      <article class="card">
+        <h2>F · 中点 / 短划</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap"><em>中心一点</em><span class="dot"></span></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>缝正中一颗点或 28px 短划，不是通栏线。比 B 轻，深底上可能仍不够「翻页」。</p>
+      </article>
+      <article class="card">
+        <h2>G · 只加宽缝</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap wide"><em>约 88px 空白</em></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>仍无线。靠更大停顿把页断开。最干净，代价是卷轴更长，小屏上空白会抢戏。</p>
+      </article>
+      <article class="card pick">
+        <h2>H · 缝中页码 · 已选</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap"><em>书页码</em><span class="folio">02</span></div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>缝里放极淡页码。最像画册。要确认不和 Studio 坞/页签抢位置，也别做成游记章节条。</p>
+      </article>
+      <article class="card">
+        <h2>I · 左右装订短标</h2>
+        <div class="mini">
+          <div class="pg">16:9 纸 1</div>
+          <div class="gap">
+            <em>左右各 14px</em>
+            <span class="ticks"><i></i><i></i></span>
+          </div>
+          <div class="pg">16:9 纸 2</div>
+        </div>
+        <p>缝两侧各一根短标，像裁切线。印刷感强，网页上可能读成「没画完的线」。</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="sec" style="margin-top:16px">
+    <article class="card" style="max-width:none">
+      <h2>J · 缝中淡带（补充）</h2>
+      <div class="mini">
+        <div class="pg">16:9 纸 1</div>
+        <div class="gap"><em>无硬边 · 中间略亮</em><span class="wash"></span></div>
+        <div class="pg">16:9 纸 2</div>
+      </div>
+      <p>缝里一层极淡渐变，没有硬边。比 A 多一点层次，比 B 少一根线。线框里为了看见会略亮；现网必须压到几乎感觉不到，否则像高光条。</p>
+    </article>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="label">放大对照 · D 纸边阴影 / E 页缘细框 / F 中点（缝仍是独立层）</div>
+    <div class="reader">
+      <section class="page shadow">
+        <div class="grid pair">
+          <div class="cell">D · 纸投下影</div>
+          <div class="cell">缝空</div>
+        </div>
+      </section>
+      <div class="gutter"><span class="cap">D · 下面一张再投下影</span></div>
+      <section class="page framed">
+        <div class="grid six">
+          <div class="cell">E</div><div class="cell">页</div><div class="cell">缘</div>
+          <div class="cell">细</div><div class="cell">框</div><div class="cell">缝空</div>
+        </div>
+      </section>
+      <div class="gutter">
+        <span class="dot"></span>
+        <span class="cap">F · 中点 · 不进 16:9</span>
+      </div>
+      <section class="page ghost">
+        <div class="grid pair">
+          <div class="cell">末页 · 不再画尾</div>
+          <div class="cell">末页 · 不再画尾</div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

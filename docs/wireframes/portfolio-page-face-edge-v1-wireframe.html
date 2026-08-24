@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>作品集 · 页纸是否要看得见 · 线框 V1</title>
+  <style>
+    :root {
+      --reader: #f7f5f2;
+      --sheet: #f7f5f2;
+      --sheet-lift: #fffcf8;
+      --ink: #1c1b1a;
+      --muted: #6f6a63;
+      --gold: #8a6d32;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --gap: 18px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: #ece8e2; color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 20;
+      padding: 14px 20px 12px;
+      background: #ece8e2;
+      border-bottom: 1px solid #d8d2c8;
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; max-width: 110ch; }
+    .sec { max-width: 1100px; margin: 20px auto 64px; padding: 0 16px; }
+    .sec h3 {
+      margin: 0 0 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px) { .compare { grid-template-columns: 1fr; } }
+    .card {
+      background: #fff;
+      border: 1px solid #d8d2c8;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .card.pick { border-color: #3d6b5a; box-shadow: 0 0 0 1px #3d6b5a; }
+    .card.no { border-color: #b45a48; }
+    .card h2 { margin: 0 0 8px; font-size: 13px; font-weight: 650; }
+    .card p { margin: 8px 0 0; font-size: 11px; color: #5c5852; line-height: 1.45; }
+    .reader {
+      background: var(--reader);
+      padding: 10px 0;
+      border: 1px solid #e4dfd7;
+    }
+    .sheet {
+      aspect-ratio: 16 / 9;
+      width: calc(100% - 20px);
+      margin: 0 10px;
+      background: var(--sheet);
+      overflow: hidden;
+    }
+    .sheet.lift { background: var(--sheet-lift); }
+    .sheet.hair { box-shadow: inset 0 0 0 1px rgba(28, 27, 26, 0.16); }
+    .sheet.shadow { box-shadow: 0 8px 18px rgba(28, 27, 26, 0.08); }
+    .grid {
+      display: grid;
+      height: 100%;
+      padding: 5% 8%;
+      gap: 1.6%;
+    }
+    .grid.pair { grid-template-columns: 1fr 1fr; }
+    .grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+    .cell {
+      background: #8a8378;
+      border: 0;
+    }
+    .cell.boxed { box-shadow: inset 0 0 0 1px #1c1b1a; }
+    .folio {
+      height: var(--gap);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: rgba(28, 27, 26, 0.32);
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>作品集 · 页纸要不要看得见</h1>
+    <p>
+      桌面读者底和 16:9 纸都是 #f7f5f2。YAML 上下轨（双竖 5%、六宫格约 7%）是纸边，不是页缝。
+      纸与底同色时，这些纸边和 18px 页缝连成一条奶油带，页码看起来浮在很大的空白里。
+      本页不改现网。
+    </p>
+  </div>
+
+  <div class="sec">
+    <h3>对照 · 浅底与现网一致</h3>
+    <div class="compare">
+      <article class="card">
+        <h2>K · 现状：纸边在照片里</h2>
+        <div class="reader">
+          <section class="sheet">
+            <div class="grid pair"><div class="cell"></div><div class="cell"></div></div>
+          </section>
+          <div class="folio">03</div>
+          <section class="sheet">
+            <div class="grid triple"><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+          </section>
+        </div>
+        <p>16:9 没有自己的边。你看到的「边框」其实是照片外沿。两页的纸边和页缝同色，读不成一张纸。</p>
+      </article>
+
+      <article class="card pick">
+        <h2>L · 推荐：给 16:9 加发丝页框</h2>
+        <div class="reader">
+          <section class="sheet hair">
+            <div class="grid pair"><div class="cell"></div><div class="cell"></div></div>
+          </section>
+          <div class="folio">03</div>
+          <section class="sheet hair">
+            <div class="grid triple"><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+          </section>
+        </div>
+        <p>框画在整张纸上，不画在每张照片上。YAML 页边变成看得见的纸边，照片对纸有统一对比。页码仍在缝里。</p>
+      </article>
+
+      <article class="card">
+        <h2>M · 只抬纸色，不画线</h2>
+        <div class="reader">
+          <section class="sheet lift">
+            <div class="grid pair"><div class="cell"></div><div class="cell"></div></div>
+          </section>
+          <div class="folio">03</div>
+          <section class="sheet lift">
+            <div class="grid triple"><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+          </section>
+        </div>
+        <p>纸比读者底略白。没有框线，靠色差认出页。比 L 更软，深色照片上对比弱一点。</p>
+      </article>
+
+      <article class="card no">
+        <h2>N · 反例：每张照片加框</h2>
+        <div class="reader">
+          <section class="sheet">
+            <div class="grid pair"><div class="cell boxed"></div><div class="cell boxed"></div></div>
+          </section>
+          <div class="folio">03</div>
+          <section class="sheet">
+            <div class="grid triple"><div class="cell boxed"></div><div class="cell boxed"></div><div class="cell boxed"></div></div>
+          </section>
+        </div>
+        <p>像贴图墙或联系表。不要用这个当「标准对比」。</p>
+      </article>
+    </div>
+  </div>
+</body>
+</html>

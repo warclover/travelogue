@@ -162,4 +162,11 @@ def test_portfolio_render_imports_portfolio_pages(portfolio_ws: tuple[Path, dict
     portfolio_family = (ws / "portfolio-pages.css").read_text(encoding="utf-8")
     assert "display: grid" in portfolio_family
     assert "object-fit: cover" in portfolio_family
+    assert "margin: 0" in portfolio_family
+    assert "clamp(6px, 1vh, 14px)" in portfolio_family
+    assert "--portfolio-folio-size: 18px" in portfolio_family
+    assert "counter-reset: portfolio-folio" in portfolio_family
+    assert "inset 0 0 0 1px" in portfolio_family
+    assert "var(--text) 40%" in portfolio_family
+    assert "decimal-leading-zero" in portfolio_family
     assert "screen-" not in portfolio_family

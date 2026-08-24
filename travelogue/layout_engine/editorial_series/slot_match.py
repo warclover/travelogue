@@ -28,6 +28,7 @@ class SlotSpec:
     role: str
     display_aspect: float
     family: str
+    fit: str = "cover"
 
 
 @dataclass
@@ -104,6 +105,16 @@ def fit_for_pair(asset_ratio: float | None, slot_aspect: float | None) -> str:
     return "cover" if rel <= COVER_LOG_REL else "contain"
 
 
+def fit_for_slot(slot: SlotSpec, asset_ratio: float | None) -> str:
+    """Honor promoted YAML ``fit`` (试印铺满). Relative-to-slot is opt-in."""
+    declared = str(slot.fit or "").strip().lower()
+    if declared in {"auto", "auto_delegate", "relative", "relative-to-slot"}:
+        return fit_for_pair(asset_ratio, slot.display_aspect)
+    if declared == "contain":
+        return "contain"
+    return "cover"
+
+
 def _schema_role(role: str) -> str | None:
     key = str(role or "").strip().lower()
     if key in _SCHEMA_ROLES:
@@ -127,6 +138,10 @@ def load_slot_specs(pattern_id: str) -> tuple[SlotSpec, ...]:
     except KeyError:
         return ()
     rows = slot_aspect_table(template)
+    declared_fit = {
+        int(slot.index): str(slot.fit or "cover").strip().lower()
+        for slot in template.slots
+    }
     specs: list[SlotSpec] = []
     for row in rows:
         aspect = float(row.display_aspect)
@@ -137,6 +152,7 @@ def load_slot_specs(pattern_id: str) -> tuple[SlotSpec, ...]:
                 role=role,
                 display_aspect=aspect,
                 family=slot_family(role, aspect),
+                fit=declared_fit.get(int(row.index), "cover") or "cover",
             )
         )
     specs.sort(key=lambda s: s.index)
@@ -286,7 +302,7 @@ def take_for_page(
     roles: list[str | None] = []
     for aid, slot in zip(assigned, slots, strict=True):
         ratio = (aspect_ratios or {}).get(aid)
-        fits.append(fit_for_pair(ratio, slot.display_aspect))
+        fits.append(fit_for_slot(slot, ratio))
         aspects.append(round(slot.display_aspect, 4))
         roles.append(_schema_role(slot.role))
     return SlotTake(

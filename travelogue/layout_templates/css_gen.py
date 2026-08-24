@@ -464,11 +464,15 @@ def _portfolio_pages_skeleton() -> str:
         " * Must stay outside @lte-generated so sync does not drop it. */\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"],\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] {\n'
+        "  --portfolio-folio-size: 18px;\n"
+        "  --portfolio-page-gap: max(var(--portfolio-folio-size), clamp(6px, 1vh, 14px));\n"
         "  aspect-ratio: 16 / 9;\n"
         "  width: 100%;\n"
         "  height: auto;\n"
         "  max-height: none;\n"
-        "  overflow: hidden;\n"
+        "  overflow: visible;\n"
+        "  position: relative;\n"
+        "  margin: 0 auto var(--portfolio-page-gap);\n"
         "}\n\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-screen__grid,\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-screen__grid {\n'
@@ -479,10 +483,16 @@ def _portfolio_pages_skeleton() -> str:
         "  min-height: 0;\n"
         "  margin: 0;\n"
         "  padding: 0;\n"
+        "  overflow: hidden;\n"
+        "  /* L · 16:9 sheet hairline. On the paper, not on each photo. */\n"
+        "  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 40%, transparent);\n"
         "}\n\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot,\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot {\n'
+        "  display: block;\n"
+        "  width: 100%;\n"
         "  height: 100%;\n"
+        "  margin: 0;\n"
         "  min-width: 0;\n"
         "  min-height: 0;\n"
         "  align-self: stretch;\n"
@@ -508,6 +518,35 @@ def _portfolio_pages_skeleton() -> str:
         "/* Portfolio reader: keep chapters[] as a container, hide journal chapter chrome. */\n"
         'html[data-edition="portfolio"] .chapter {\n'
         "  margin-bottom: 0;\n"
+        "}\n\n"
+        "/* H · gutter folio. Number sits in the page gap, not on the 16:9 face.\n"
+        " * Last magazine page has no tail. Not journal chapter chrome. */\n"
+        'html[data-edition="portfolio"] {\n'
+        "  counter-reset: portfolio-folio;\n"
+        "}\n\n"
+        'html[data-edition="portfolio"][data-layout="web"] .layout-screen[data-pattern^="page-"]::after,\n'
+        'html[data-edition="portfolio"][data-layout="auto"] .layout-screen[data-pattern^="page-"]::after {\n'
+        "  counter-increment: portfolio-folio;\n"
+        "  content: counter(portfolio-folio, decimal-leading-zero);\n"
+        "  position: absolute;\n"
+        "  left: 50%;\n"
+        "  top: 100%;\n"
+        "  margin-top: calc(var(--portfolio-page-gap) / 2);\n"
+        "  transform: translate(-50%, -50%);\n"
+        "  font-family: var(--font-ui);\n"
+        "  font-size: var(--portfolio-folio-size);\n"
+        "  font-weight: 500;\n"
+        "  letter-spacing: 0.12em;\n"
+        "  font-variant-numeric: tabular-nums;\n"
+        "  line-height: 1;\n"
+        "  color: color-mix(in srgb, var(--text) 32%, transparent);\n"
+        "  pointer-events: none;\n"
+        "  user-select: none;\n"
+        "}\n\n"
+        'html[data-edition="portfolio"] .page > .chapter:not(:has(~ .chapter)) '
+        '.layout-screen[data-pattern^="page-"]:last-of-type::after {\n'
+        "  content: none;\n"
+        "  counter-increment: none;\n"
         "}\n\n"
         f"{PORTFOLIO_LTE_MARKER_START}\n"
         "/* Phase 16 LTE generated grid CSS — do not edit by hand */\n\n"

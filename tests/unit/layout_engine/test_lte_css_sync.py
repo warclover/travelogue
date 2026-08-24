@@ -113,12 +113,26 @@ def test_portfolio_pages_handwritten_has_grid_display() -> None:
     assert "object-fit: contain" in preamble
     assert "object-position:" in preamble
     assert "min-width: 0" in preamble
+    assert "margin: 0" in preamble
+    assert "clamp(6px, 1vh, 14px)" in preamble
+    assert "--portfolio-folio-size: 18px" in preamble
+    assert "counter-reset: portfolio-folio" in preamble
+    assert "inset 0 0 0 1px" in preamble
+    assert "var(--text) 40%" in preamble
+    assert "decimal-leading-zero" in preamble
     assert "screen-" not in preamble
     skeleton = _portfolio_pages_skeleton()
     sk_start = skeleton.index(PORTFOLIO_LTE_MARKER_START)
     sk_preamble = skeleton[:sk_start]
     assert "display: grid" in sk_preamble
     assert "object-fit: cover" in sk_preamble
+    assert "margin: 0" in sk_preamble
+    assert "clamp(6px, 1vh, 14px)" in sk_preamble
+    assert "--portfolio-folio-size: 18px" in sk_preamble
+    assert "counter-reset: portfolio-folio" in sk_preamble
+    assert "inset 0 0 0 1px" in sk_preamble
+    assert "var(--text) 40%" in sk_preamble
+    assert "decimal-leading-zero" in sk_preamble
     assert "screen-" not in sk_preamble
 
 

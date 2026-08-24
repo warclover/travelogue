@@ -8,8 +8,10 @@ import pytest
 
 from travelogue.layout_engine.editorial_series.place import place_groups
 from travelogue.layout_engine.editorial_series.slot_match import (
+    SlotSpec,
     collect_asset_aspects,
     fit_for_pair,
+    fit_for_slot,
     take_for_page,
 )
 from travelogue.layout_engine.planner.beam_scoring import score_aspect_match
@@ -93,6 +95,39 @@ def test_4x3_in_16x9_slot_uses_contain() -> None:
     assert fit_for_pair(4 / 3, 16 / 9) == "contain"
     assert fit_for_pair(16 / 9, 16 / 9) == "cover"
     assert fit_for_pair(0.75, 0.75) == "cover"
+
+
+def test_page_slot_honors_yaml_cover_instead_of_relative() -> None:
+    slot = SlotSpec(
+        index=0,
+        role="landscape",
+        display_aspect=4 / 3,
+        family="land43",
+        fit="cover",
+    )
+    assert fit_for_slot(slot, 16 / 9) == "cover"
+    auto = SlotSpec(
+        index=0,
+        role="landscape",
+        display_aspect=16 / 9,
+        family="land169",
+        fit="auto_delegate",
+    )
+    assert fit_for_slot(auto, 4 / 3) == "contain"
+
+
+def test_grid_land_16x9_photos_keep_cover() -> None:
+    kinds = {f"l{i}": "landscape" for i in range(6)}
+    ratios = {f"l{i}": 16 / 9 for i in range(6)}
+    taken = take_for_page(
+        [f"l{i}" for i in range(6)],
+        "page-6-grid-land",
+        band=6,
+        aspect_kinds=kinds,
+        aspect_ratios=ratios,
+    )
+    assert taken.skip is False
+    assert taken.fits == ["cover"] * 6
 
 
 def test_place_swaps_land_grid_for_portrait_bookend() -> None:

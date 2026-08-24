@@ -6,11 +6,15 @@
  * Must stay outside @lte-generated so sync does not drop it. */
 html[data-layout="web"] .layout-screen[data-pattern^="page-"],
 html[data-layout="auto"] .layout-screen[data-pattern^="page-"] {
+  --portfolio-folio-size: 18px;
+  --portfolio-page-gap: max(var(--portfolio-folio-size), clamp(6px, 1vh, 14px));
   aspect-ratio: 16 / 9;
   width: 100%;
   height: auto;
   max-height: none;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
+  margin: 0 auto var(--portfolio-page-gap);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-screen__grid,
@@ -22,11 +26,17 @@ html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-screen__g
   min-height: 0;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  /* L · 16:9 sheet hairline. On the paper, not on each photo. */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 40%, transparent);
 }
 
 html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot,
 html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot {
+  display: block;
+  width: 100%;
   height: 100%;
+  margin: 0;
   min-width: 0;
   min-height: 0;
   align-self: stretch;
@@ -56,6 +66,37 @@ html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot__img
 /* Portfolio reader: keep chapters[] as a container, hide journal chapter chrome. */
 html[data-edition="portfolio"] .chapter {
   margin-bottom: 0;
+}
+
+/* H · gutter folio. Number sits in the page gap, not on the 16:9 face.
+ * Last magazine page has no tail. Not journal chapter chrome. */
+html[data-edition="portfolio"] {
+  counter-reset: portfolio-folio;
+}
+
+html[data-edition="portfolio"][data-layout="web"] .layout-screen[data-pattern^="page-"]::after,
+html[data-edition="portfolio"][data-layout="auto"] .layout-screen[data-pattern^="page-"]::after {
+  counter-increment: portfolio-folio;
+  content: counter(portfolio-folio, decimal-leading-zero);
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin-top: calc(var(--portfolio-page-gap) / 2);
+  transform: translate(-50%, -50%);
+  font-family: var(--font-ui);
+  font-size: var(--portfolio-folio-size);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: color-mix(in srgb, var(--text) 32%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+
+html[data-edition="portfolio"] .page > .chapter:not(:has(~ .chapter)) .layout-screen[data-pattern^="page-"]:last-of-type::after {
+  content: none;
+  counter-increment: none;
 }
 
 /* @lte-generated:start — YAML→CSS authority; run: python -m travelogue.layout_templates.cli export --sync-portfolio */
