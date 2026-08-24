@@ -91,6 +91,72 @@ def test_wide_land_slot_prefers_16x9_over_4x3() -> None:
     assert taken.display_aspects[0] == pytest.approx(1.7778, rel=1e-3)
 
 
+def test_land_wide_refuses_3x2_when_ratio_known() -> None:
+    taken = take_for_page(
+        ["a43"],
+        "page-1-hero-land-wide",
+        band=1,
+        aspect_kinds={"a43": "landscape"},
+        aspect_ratios={"a43": 1.5},
+    )
+    assert taken.skip is True
+    assert taken.leftover == ["a43"]
+
+
+def test_land_wide_accepts_16x9() -> None:
+    taken = take_for_page(
+        ["a169"],
+        "page-1-hero-land-wide",
+        band=1,
+        aspect_kinds={"a169": "landscape"},
+        aspect_ratios={"a169": 16 / 9},
+    )
+    assert taken.skip is False
+    assert taken.asset_ids == ["a169"]
+    assert taken.display_aspects[0] == pytest.approx(1.7778, rel=1e-3)
+
+
+def test_portrait_never_enters_land_wide() -> None:
+    taken = take_for_page(
+        ["p1"],
+        "page-1-hero-land-wide",
+        band=1,
+        aspect_kinds={"p1": "portrait"},
+        aspect_ratios={"p1": 0.75},
+    )
+    assert taken.skip is True
+
+
+def test_3x2_hero_falls_back_to_land_right() -> None:
+    from travelogue.layout_engine.editorial_series.slot_match import fallback_take
+
+    fb = fallback_take(
+        ["a43"],
+        "page-1-hero-land-wide",
+        aspect_kinds={"a43": "landscape"},
+        aspect_ratios={"a43": 1.5},
+    )
+    assert fb is not None
+    face, taken = fb
+    assert face == "page-1-hero-land-right"
+    assert taken.asset_ids == ["a43"]
+
+
+def test_solo_3x2_demotes_to_land_right_not_wide() -> None:
+    groups = [{"id": "solo-a", "kind": "scene", "asset_ids": ["a1"]}]
+    sequence = [
+        {"role": "grid4", "slotBand": 4, "patternId": "page-4-grid-land-wide"},
+    ]
+    placed = place_groups(
+        groups,
+        sequence,
+        aspect_kinds={"a1": "landscape"},
+        aspect_ratios={"a1": 1.5},
+    )
+    assert placed.pages[0].pattern_id == "page-1-hero-land-right"
+    assert placed.pages[0].asset_ids == ["a1"]
+
+
 def test_4x3_in_16x9_slot_uses_contain() -> None:
     assert fit_for_pair(4 / 3, 16 / 9) == "contain"
     assert fit_for_pair(16 / 9, 16 / 9) == "cover"

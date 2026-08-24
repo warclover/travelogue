@@ -21,6 +21,7 @@ from travelogue.export.packager import ExportError
 from travelogue.export.platform_profiles import resolve_profile
 from travelogue.export.portfolio_pages import (
     PageCaptureSkip,
+    capture_is_blank,
     export_portfolio_bundle,
     export_portfolio_pages,
     is_portfolio_pages_platform,
@@ -202,13 +203,13 @@ def test_export_trip_longshot_routes_to_bundle(tmp_path: Path, monkeypatch: pyte
 
 
 def test_max_pages_caps_body_not_cover_or_closing(tmp_path: Path) -> None:
-    _write_trip(tmp_path, edition="portfolio", screens=33)
+    _write_trip(tmp_path, edition="portfolio", screens=49)
     result = export_portfolio_pages(tmp_path, capture_fn=lambda _t: _png_bytes())
-    assert result.page_count == 34
+    assert result.page_count == 50
     names = [p.path.name for p in result.outputs]
     assert names[0].endswith("-portfolio-01.png")
-    assert names[-1].endswith("-portfolio-34.png")
-    assert any("第 33 屏" in s and "上限" in s for s in result.skipped_pages)
+    assert names[-1].endswith("-portfolio-50.png")
+    assert any("第 49 屏" in s and "上限" in s for s in result.skipped_pages)
 
 
 def test_purge_waits_until_first_success(tmp_path: Path) -> None:
@@ -222,6 +223,32 @@ def test_purge_waits_until_first_success(tmp_path: Path) -> None:
         export_portfolio_pages(tmp_path, capture_fn=lambda _t: (_ for _ in ()).throw(RuntimeError("down")))
     assert exc.value.code == "E_PORTFOLIO_PAGES_FAILED"
     assert stale.is_file()
+
+
+def test_capture_is_blank_rejects_whiteboard_keeps_photo() -> None:
+    white = _png_bytes(size=(320, 180), color=(250, 248, 242))
+    photo = _png_bytes(size=(320, 180), color=(40, 80, 120))
+    assert capture_is_blank(white) is True
+    assert capture_is_blank(photo) is False
+    assert capture_is_blank(b"") is True
+
+
+def test_folio_capture_hides_reader_chrome() -> None:
+    root = Path(__file__).resolve().parents[3]
+    src = (root / "travelogue" / "export" / "portfolio_pages.py").read_text(encoding="utf-8")
+    css = (root / "templates" / "visual-journal" / "portfolio-pages.css").read_text(
+        encoding="utf-8"
+    )
+    assert "folio-page-capturing" in src
+    assert "folio-page-capturing-style" in src
+    assert "data-breath" in src
+    assert "classList.add('longshot-capturing')" not in src
+    assert "classList.add('longshot-capturing-root')" not in src
+    assert "screenplay-toolbar" in src
+    assert "_wait_locator_images" in src
+    assert "body.folio-page-capturing" in css
+    assert "body.longshot-capturing" not in css
+    assert "body.folio-page-capturing .cover-opening" in css
 
 
 def test_is_portfolio_pages_platform() -> None:

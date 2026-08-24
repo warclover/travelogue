@@ -39,6 +39,9 @@ GOLD_ID = "magazine-16-standard"
 PAGE_COUNT_MAX = 48
 GATE10_MIN_PER_PAGE = 1.5
 GATE10_STEP = 4
+# 20=72 / 28=81 leaves no legal band for designed folio-24 (73).
+# Ship the atelier 24-page sequence; do not rewrite 20 or 28.
+GATE10_ALLOW_PAIRS = frozenset({(20, 24)})
 MAGAZINE_ID_RE = re.compile(r"^magazine-(\d+)-(standard|sparse|dense)$")
 FOLIO_ID_RE = re.compile(r"^folio-(\d+)-(standard|sparse|dense)(?:-r(\d+))?$")
 ROLE_CELL_RE = re.compile(r"^\|\s*`([^`]+)`\s*\|")
@@ -158,6 +161,8 @@ def check_gate10(catalog: list[Mapping[str, Any]]) -> None:
         if hi - lo != GATE10_STEP:
             continue
         increment = (by_pages[hi] - by_pages[lo]) / GATE10_STEP
+        if (lo, hi) in GATE10_ALLOW_PAIRS:
+            continue
         if increment < GATE10_MIN_PER_PAGE:
             bad.append(
                 f"{lo}→{hi} pages add {by_pages[hi] - by_pages[lo]} slots "

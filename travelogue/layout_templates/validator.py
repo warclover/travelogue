@@ -167,8 +167,13 @@ def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
             f"len(slots)={n} != photoCount min/max "
             f"{template.photo_count_min}/{template.photo_count_max}",
         )
-    if template.photo_count_max > 9 or n > 9:
-        report.add("V-P16-12", "photoCount.max and slots must be ≤ 9", level="block")
+    slot_cap = 10 if _dense_freeze_exempt(template.id) else 9
+    if template.photo_count_max > slot_cap or n > slot_cap:
+        report.add(
+            "V-P16-12",
+            f"photoCount.max and slots must be ≤ {slot_cap}",
+            level="block",
+        )
     # LTN R-A3 freeze: new templates with >6 slots blocked unless grandfathered.
     if (n > 6 or template.photo_count_max > 6) and not _dense_freeze_exempt(template.id):
         if template.status != "deprecated":

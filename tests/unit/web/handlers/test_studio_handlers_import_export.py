@@ -752,6 +752,29 @@ def test_handle_longshot_portfolio_explicit_wechat_allowed(
     assert called == ["wechat_chat"]
 
 
+def test_handle_longshot_album_landscape_not_aliased_to_spread(
+    tmp_path: Path,
+) -> None:
+    """Stale album_landscape is unknown — do not start 3:4 print."""
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    trips = tmp_path / "trips"
+    create_trip("album-alias", trips, title="album-alias")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "album-alias",
+            "platform": "album_landscape",
+            "allowMissingSource": True,
+        },
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400, body
+    assert body["error"] in ("E_LNG2_INVALID_PLATFORM", "E_OR_UNKNOWN_PLATFORM")
+
+
 def test_read_import_request_json_body(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.import_handlers import read_import_request
 

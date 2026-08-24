@@ -24,6 +24,7 @@ import {
   ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
+  progressSubtitleForPlatform,
   estimatePhotoCountFromDom,
   formatBatchSuccess,
   isComposePlatform,
@@ -40,7 +41,13 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
-import { PORTFOLIO_PAGES_PLATFORM } from "../js/portfolio-export-logic.js";
+import {
+  PORTFOLIO_PAGES_PLATFORM,
+  folioMainExportFlags,
+  isPortfolioEdition,
+  isPortfolioPrintOneShot,
+  shouldRunSocialBatchExport,
+} from "../js/portfolio-export-logic.js";
 import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
@@ -282,6 +289,13 @@ function hydrateSessionIntentFromConfirmedPrefs(tripId) {
 function syncPrefsPlatform(platform) {
   if (!platform) return;
   try {
+    var edition =
+      typeof document !== "undefined" && document.documentElement
+        ? document.documentElement.getAttribute("data-edition")
+        : "";
+    if (isPortfolioEdition(edition) && platform !== PORTFOLIO_PAGES_PLATFORM) {
+      return;
+    }
     var prefs = readExportPrefs();
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 2026-08-06 Playwright 走查发现的真实
     // 回归：batch 态下点导出 → startLongshotWithRecipe 的 Output Recipe「猜
@@ -483,23 +497,18 @@ export function cancelPreviewLongshotExport(root) {
         longshotPollCancel();
         longshotPollCancel = null;
       }
-      var pending = jobId
-        ? postJson("/__travelogue/cancel", { jobId: jobId })
-        : Promise.resolve({ status: 200, body: { ok: true } });
+      if (jobId) {
+        postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
+      }
       longshotJobId = null;
-      return pending
-        .catch(function () {
-          return { status: 0, body: {} };
-        })
-        .then(function () {
-          setLongshotExportState(root, "idle");
-          if (root && root._taskDock && typeof root._taskDock.hide === "function") {
-            root._taskDock.hide();
-          }
-          root._exportDockActive = false;
-          _showToolbarToast("已取消导出");
-          return true;
-        });
+      // 确认后立刻回到预览，不堵在 Playwright 收尾上。
+      setLongshotExportState(root, "idle");
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      root._exportDockActive = false;
+      _showToolbarToast("已取消导出");
+      return true;
     })
     .then(
       function (result) {
@@ -582,28 +591,32 @@ export function cancelPreviewLongshotExport(root) {
    * 兜底才用 confirmed prefs.platform（AC-DFX-02 SSOT）。
    * @returns {{ title: string, subtitle: string }}
    */
-  function humanExportProgress(opts) {
+  function humanExportProgress(opts, root) {
     opts = opts || {};
     var hint = String(opts.hint || "");
     var pct = typeof opts.pct === "number" ? opts.pct : null;
     var prefs = readLongshotExportPrefs();
-    var platform =
-      detectPlatformFromProgressHint(hint) || prefs.platform || "wechat_chat";
-    var composeMode = isComposePlatform(platform);
+    var fromHint = detectPlatformFromProgressHint(hint);
+    var running = opts.platform || (root && root._runningExportPlatform) || "";
+    var platform;
+    if (fromHint) {
+      platform = fromHint;
+    } else if (
+      isPortfolioEdition(root && root._edition) ||
+      running === PORTFOLIO_PAGES_PLATFORM
+    ) {
+      // 作品集主路径不写 prefs，禁止回落到游记「可发微信的长图」。
+      platform = running || PORTFOLIO_PAGES_PLATFORM;
+    } else {
+      platform = prefs.platform || "wechat_chat";
+    }
 
     var scale = Number(prefs.scale) || 2;
     var quality = scale >= 3 ? "超清" : scale >= 2 ? "高清" : "标准";
-    // 副标题跟平台：禁对朋友圈/拼贴误用「按章导出」
-    var subtitle;
-    if (composeMode) {
-      subtitle = "3:4 拼贴 · " + quality;
-    } else if (platform === "wechat_moments") {
-      subtitle = "长图连读 · " + quality;
-    } else if (platform === "wechat_chat") {
-      subtitle = (prefs.mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
-    } else {
-      subtitle = quality;
-    }
+    var subtitle = progressSubtitleForPlatform(platform, {
+      quality: quality,
+      mode: prefs.mode,
+    });
 
     var title = progressTitleForPlatform(platform);
     if (/更新版面/.test(hint)) {
@@ -1249,6 +1262,21 @@ export function cancelPreviewLongshotExport(root) {
         startLongshot(root, _tripIdFromPath());
       });
     }
+    if (isPortfolioEdition(root._edition)) {
+      pop.querySelectorAll('[data-studio-longshot-platform="album_spread"]').forEach(function (btn) {
+        btn.addEventListener(
+          "click",
+          function (ev) {
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            closeStudioExportPopover();
+            _pendingExportPlatform = "album_spread";
+            startLongshot(root, _tripIdFromPath() || root._tripId || "");
+          },
+          true
+        );
+      });
+    }
     var revealMoreBtn = pop.querySelector('[data-action="reveal-folder"]');
     if (revealMoreBtn) {
       revealMoreBtn.addEventListener("click", function () {
@@ -1397,6 +1425,16 @@ export function cancelPreviewLongshotExport(root) {
       // 这里若漏写会导致确认后 localStorage 里只剩单值 platform，多选形同
       // 摆设（2026-08-06 Playwright 走查发现的回归，务必带上）。
       var confirmedPlatforms = normalizePlatformList(draft.platforms, confirmedPlatform);
+      if (isPortfolioPrintOneShot(root._edition, confirmedPlatform)) {
+        closeStudioExportPopover();
+        _pendingExportPlatform = "album_spread";
+        startLongshot(root, _tripIdFromPath() || root._tripId || "");
+        return;
+      }
+      if (isPortfolioEdition(root._edition) && confirmedPlatform !== PORTFOLIO_PAGES_PLATFORM) {
+        confirmedPlatform = PORTFOLIO_PAGES_PLATFORM;
+        confirmedPlatforms = [PORTFOLIO_PAGES_PLATFORM];
+      }
       if (confirmedPlatform === PORTFOLIO_PAGES_PLATFORM) {
         _pendingExportPlatform = null;
         syncConfirmedExportSummary(pop);
@@ -1785,10 +1823,17 @@ export function cancelPreviewLongshotExport(root) {
           jobId === longshotJobId
         ) {
           var pct = longshotProgressPct(job);
+          var runningPid = root._runningExportPlatform || "";
           setLongshotExportState(root, "running", {
             // FE-SR-07 · stageHint 只作分类信号，不进第一行
-            hint: job.stageHint || "正在合成长图…",
+            // 游记缺省仍是「正在合成长图…」；作品集主路径不套用。
+            hint:
+              job.stageHint ||
+              (runningPid === PORTFOLIO_PAGES_PLATFORM
+                ? "正在导出作品集…"
+                : "正在合成长图…"),
             pct: pct,
+            platform: runningPid || undefined,
           });
         }
         // PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 3 · 批量清单化进度，由调用方
@@ -1960,6 +2005,7 @@ export function cancelPreviewLongshotExport(root) {
 
   export function setLongshotExportState(root, state, opts) {
     opts = opts || {};
+    if (root && state !== "running") root._runningExportPlatform = null;
     var zone = exportZoneEl(root);
     var btn = longshotBtnEl(root);
     if (!btn) return;
@@ -1994,7 +2040,7 @@ export function cancelPreviewLongshotExport(root) {
         }
         root._exportDockActive = true;
         if (root._taskDock) {
-          var human = humanExportProgress(opts);
+          var human = humanExportProgress(opts, root);
           root._taskDock.updateExporting({
             title: human.title,
             subtitle: human.subtitle,
@@ -2650,7 +2696,9 @@ export function cancelPreviewLongshotExport(root) {
 
   function startLongshotWithRecipe(root, tripId) {
     if (typeof root._skipRecipeForExport === "function" && root._skipRecipeForExport()) {
-      _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      if (!_pendingExportPlatform) {
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      }
       maybeCopyGateThenExport(root, tripId);
       return;
     }
@@ -3171,7 +3219,8 @@ export function cancelPreviewLongshotExport(root) {
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量分支，
     // 完全不进入下方任何单平台专属逻辑（resume-after-layout / intent 映射 /
     // Task Dock 抽屉渲染等），避免混用两套结果形状（single vs `{batch:true}`）。
-    if (prefs.platforms && prefs.platforms.length > 1) {
+    // 作品集主路径禁止因共享 prefs 多选走进社交批量。
+    if (shouldRunSocialBatchExport(root && root._edition, prefs.platforms)) {
       runBatchExport(root, tripId, prefs, prefs.platforms);
       return;
     }
@@ -3189,7 +3238,11 @@ export function cancelPreviewLongshotExport(root) {
       });
     }
     _pendingExportPlatform = null;
-    if (platform !== prefsPlatform && platform !== PORTFOLIO_PAGES_PLATFORM) {
+    if (
+      platform !== prefsPlatform &&
+      platform !== PORTFOLIO_PAGES_PLATFORM &&
+      !isPortfolioEdition(root && root._edition)
+    ) {
       syncPrefsPlatform(platform);
     }
     var exportGen = nextLongshotExportGen();
@@ -3209,7 +3262,13 @@ export function cancelPreviewLongshotExport(root) {
                   : platform === PORTFOLIO_PAGES_PLATFORM
                     ? "正在导出作品集…"
                     : "正在保存…";
-    setLongshotExportState(root, "running", { hint: runningHint });
+    if (
+      isPortfolioEdition(root && root._edition) ||
+      platform === PORTFOLIO_PAGES_PLATFORM
+    ) {
+      root._runningExportPlatform = platform;
+    }
+    setLongshotExportState(root, "running", { hint: runningHint, platform: platform });
     _setSlowHint(root, "", false);
 
     var t0 = Date.now();
@@ -3233,7 +3292,9 @@ export function cancelPreviewLongshotExport(root) {
         if (mapped) req.intent = mapped;
       } else {
         req.intent = "";
-        if (_pendingPortfolioPiece === "pages") req.includeZip = false;
+        var flags = folioMainExportFlags(_pendingPortfolioPiece);
+        req.includeZip = flags.includeZip;
+        req.includePages = flags.includePages;
         _pendingPortfolioPiece = null;
       }
     }
@@ -3357,6 +3418,22 @@ export function cancelPreviewLongshotExport(root) {
         if (res.status === 200 && res.body && res.body.fallback === "client") {
           clearResumePlatform();
           return finishClientFallback();
+        }
+        if (res.status === 400) {
+          var err400 = (res.body && res.body.error) || "E_LNG2_START_FAILED";
+          var msg400 =
+            (res.body && res.body.message) || failHint || "无法开始导出";
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: err400,
+            trip_id: tripId,
+            surface: "preview",
+            from: from,
+          });
+          clearResumePlatform();
+          setLongshotExportState(root, "error", { hint: msg400 });
+          _showToolbarToast(msg400, { error: true });
+          return;
         }
         if (res.status !== 202 || !res.body.jobId) {
           trackStudioEvent("longshot_export_fail", {

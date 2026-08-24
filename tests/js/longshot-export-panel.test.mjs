@@ -23,6 +23,7 @@ import {
   ctaLabelForPlatform,
   ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
+  progressSubtitleForPlatform,
   enabledPlatformsFromConfig,
   estimateAlbumAutoCount,
   exportSummaryLine,
@@ -33,6 +34,7 @@ import {
   isConfirmedExportTarget,
   isXhsPresetCount,
   migrateAlbumLegacyPreset,
+  canonicalizePlatformId,
   normalizePlatformList,
   progressSynthesizingTitleForPlatform,
   progressTitleForPlatform,
@@ -328,6 +330,21 @@ test("P0 · humanExportProgress 平台文案（禁止回落到「微信」）", 
   assert.equal(detectPlatformFromProgressHint("单张海报排队中，请稍候…"), "poster_bric");
   assert.equal(detectPlatformFromProgressHint("朋友圈连读排队中，请稍候…"), "wechat_moments");
   assert.equal(detectPlatformFromProgressHint("拼贴页 1/3"), null);
+  assert.equal(detectPlatformFromProgressHint("正在合成长图…"), null);
+  assert.equal(detectPlatformFromProgressHint("正在导出作品集…"), "portfolio_pages");
+  assert.equal(detectPlatformFromProgressHint("正在导出页图…"), "portfolio_pages");
+  assert.equal(detectPlatformFromProgressHint("正在打包这一本…"), "portfolio_pages");
+  assert.equal(
+    progressSubtitleForPlatform("wechat_chat", { quality: "超清", mode: "chapter" }),
+    "按章发群 · 超清"
+  );
+  assert.equal(
+    progressSubtitleForPlatform("portfolio_pages", { quality: "超清" }),
+    "16:9 页图 · 超清"
+  );
+  assert.match(progressTitleForPlatform("portfolio_pages"), /作品集/);
+  assert.doesNotMatch(progressTitleForPlatform("portfolio_pages"), /微信/);
+  assert.equal(progressSynthesizingTitleForPlatform("portfolio_pages"), "正在保存这一本与页图…");
 });
 
 test("P2 · 画册跨页数：夹取范围与小红书区分（1–30 vs 1–18）", () => {
@@ -473,6 +490,20 @@ test("normalizePlatformList · 去重/去空，兜底 wechat_chat", () => {
   assert.deepEqual(normalizePlatformList(null), ["wechat_chat"]);
   assert.deepEqual(normalizePlatformList(["", null, "xiaohongshu"]), ["xiaohongshu"]);
   assert.deepEqual(normalizePlatformList([], "poster_bric"), ["poster_bric"]);
+});
+
+test("canonicalizePlatformId · 旧画册 id 落到微信群，不劫持成印刷", () => {
+  assert.equal(canonicalizePlatformId(""), "");
+  assert.equal(canonicalizePlatformId("album_landscape"), "wechat_chat");
+  assert.equal(canonicalizePlatformId("album"), "wechat_chat");
+  assert.equal(canonicalizePlatformId("album_print"), "wechat_chat");
+  assert.equal(canonicalizePlatformId("wechat_chat"), "wechat_chat");
+  assert.equal(canonicalizePlatformId("xiaohongshu"), "xiaohongshu");
+  assert.equal(canonicalizePlatformId("album_spread"), "album_spread");
+  assert.deepEqual(normalizePlatformList(["album_landscape", "xiaohongshu"]), [
+    "wechat_chat",
+    "xiaohongshu",
+  ]);
 });
 
 test("ctaLabelForPlatforms / shortCtaLabelForPlatforms · 单选=单平台文案零回归，多选用人话「主平台等 N 项」", () => {

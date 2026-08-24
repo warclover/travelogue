@@ -24,6 +24,7 @@ from travelogue.export.platform_profiles import (
     file_prefix_for_platform,
     get_profile,
     is_single_file_output,
+    normalize_platform_id,
     output_canvas_size,
     resolve_profile,
     with_custom_output,
@@ -96,6 +97,18 @@ def test_resolve_profile_rejects_unknown() -> None:
     with pytest.raises(PlatformProfileError) as ei:
         resolve_profile("not_a_platform")
     assert ei.value.code == "E_LNG2_INVALID_PLATFORM"
+
+
+def test_album_landscape_is_not_aliased_to_spread() -> None:
+    """Retired Studio ids must not silently become 3:4 print."""
+    assert normalize_platform_id("album_landscape") == "album_landscape"
+    assert normalize_platform_id("album") == "album"
+    assert normalize_platform_id("wechat_chat") == "wechat_chat"
+    assert normalize_platform_id("xiaohongshu") == "xiaohongshu"
+    with pytest.raises(PlatformProfileError) as ei:
+        resolve_profile("album_landscape")
+    assert ei.value.code == "E_LNG2_INVALID_PLATFORM"
+    assert resolve_profile("album_spread").id == "album_spread"
 
 
 def test_resolve_profile_gray_list() -> None:

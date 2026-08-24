@@ -229,7 +229,7 @@ platforms:
     allow_p1: false
     phase: PFM
     min_pages: 1
-    max_pages: 32
+    max_pages: 48
     output:
       width: 1920
       height: 1080

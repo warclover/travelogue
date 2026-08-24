@@ -65,6 +65,9 @@ test("DPI W3 · dock.js is mount + dispatch only", () => {
   assert.match(dockSrc, /applyJournalDockLogic/);
   assert.match(dockSrc, /applyPortfolioDockLogic/);
   assert.equal(longshotSrc.includes("readToolbarEdition"), false);
+  assert.match(longshotSrc, /shouldRunSocialBatchExport/);
+  assert.match(longshotSrc, /isPortfolioPrintOneShot/);
+  assert.doesNotMatch(longshotSrc, /album_landscape:\s*"album_spread"/);
   assert.deepEqual(journalDockCta(), journalDockChrome());
   assert.equal(resolveTripEdition({ _edition: "journal" }, { edition: "portfolio" }), "portfolio");
   assert.equal(resolveTripEdition({ _edition: "portfolio" }, { edition: "journal" }), "journal");

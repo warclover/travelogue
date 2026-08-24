@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 from travelogue.layout_engine.editorial_series.slot_match import (
+    classify_ratio,
     fallback_take,
     take_for_page,
     take_for_pattern,
@@ -17,13 +18,27 @@ from travelogue.layout_engine.editorial_series.slot_match import (
 
 DENSE_MIN_SLOTS = 5
 HERO_LAND_FACE = "page-1-hero-land-wide"
+HERO_LAND_43_FACE = "page-1-hero-land-right"
 HERO_PORT_FACE = "page-1-hero-port"
 
 
-def _hero_face_for(asset_ids: Sequence[str], aspect_kinds: Mapping[str, str] | None) -> str:
+def _hero_face_for(
+    asset_ids: Sequence[str],
+    aspect_kinds: Mapping[str, str] | None,
+    aspect_ratios: Mapping[str, float] | None = None,
+) -> str:
+    aid = str(asset_ids[0]) if asset_ids else ""
+    ratio = (aspect_ratios or {}).get(aid)
+    if ratio and float(ratio) > 0:
+        family = classify_ratio(float(ratio))
+        if family == "portrait":
+            return HERO_PORT_FACE
+        if family == "land43":
+            return HERO_LAND_43_FACE
+        return HERO_LAND_FACE
     kind = ""
-    if aspect_kinds and asset_ids:
-        kind = str(aspect_kinds.get(str(asset_ids[0])) or "").lower()
+    if aspect_kinds and aid:
+        kind = str(aspect_kinds.get(aid) or "").lower()
     if kind in {"portrait", "port", "tall"}:
         return HERO_PORT_FACE
     return HERO_LAND_FACE
@@ -205,7 +220,7 @@ def place_groups(
         # Solo / undersized group on a 2–4 slot face: keep one photo, but do
         # not park it in the first cell of an empty grid (top-left quarter).
         if take_n == 1 and band > 1:
-            pattern = _hero_face_for(chunk, aspect_kinds)
+            pattern = _hero_face_for(chunk, aspect_kinds, aspect_ratios)
             demoted = pattern != planned
             if demoted:
                 refit = take_for_pattern(

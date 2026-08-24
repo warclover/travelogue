@@ -294,13 +294,31 @@ export function isSmartCropUiEnabled(cfgStudio) {
  * 自动/默认设置；需要自定义张数请单选该平台单独导出。真正的"每平台独立
  * 设置"留作后续迭代（对应 PRD D-BEX-01 的完整版）。
  */
+/**
+ * Retired Studio ids still seen in localStorage. Do not map them to
+ * album_spread — that hijacked the folio main button onto 3:4 print.
+ * Journal unknown/retired ids fall back to wechat_chat (长图).
+ */
+export var RETIRED_ALBUM_PLATFORM_IDS = {
+  album_landscape: true,
+  album: true,
+  album_print: true,
+};
+
+export function canonicalizePlatformId(id) {
+  var s = String(id || "").trim();
+  if (!s) return "";
+  if (RETIRED_ALBUM_PLATFORM_IDS[s]) return "wechat_chat";
+  return s;
+}
+
 export function normalizePlatformList(list, fallback) {
   var out = [];
   (Array.isArray(list) ? list : []).forEach(function (id) {
-    var s = String(id || "").trim();
+    var s = canonicalizePlatformId(id);
     if (s && out.indexOf(s) < 0) out.push(s);
   });
-  if (!out.length) out.push(fallback || "wechat_chat");
+  if (!out.length) out.push(canonicalizePlatformId(fallback) || "wechat_chat");
   return out;
 }
 
@@ -320,8 +338,9 @@ export function readExportPrefs() {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
     if (!raw) return defaults;
     var parsed = JSON.parse(raw);
-    var platform = parsed.platform || defaults.platform;
+    var platform = canonicalizePlatformId(parsed.platform || defaults.platform);
     var platforms = normalizePlatformList(parsed.platforms, platform);
+    if (platforms.indexOf(platform) < 0) platform = platforms[0];
     return {
       platform: platform,
       platforms: platforms,
@@ -437,11 +456,30 @@ export function progressSynthesizingTitleForPlatform(platformId) {
 }
 
 /**
+ * 进度第二行。作品集只走页图语义；游记微信群 / 拼贴文案保持原样。
+ * @param {string} platformId
+ * @param {{ quality?: string, mode?: string }} [opts]
+ */
+export function progressSubtitleForPlatform(platformId, opts) {
+  opts = opts || {};
+  var quality = opts.quality || "高清";
+  var mode = opts.mode || "chapter";
+  if (platformId === "portfolio_pages") return "16:9 页图 · " + quality;
+  if (isComposePlatform(platformId)) return "3:4 拼贴 · " + quality;
+  if (platformId === "wechat_moments") return "长图连读 · " + quality;
+  if (platformId === "wechat_chat") {
+    return (mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
+  }
+  return quality;
+}
+
+/**
  * 从后端/排队阶段的自由文本 hint 里识别平台（比 localStorage prefs 更即时，
  * 用于 resume / stageHint 场景下 prefs 可能滞后的兜底），识别不到返回 null。
  */
 export function detectPlatformFromProgressHint(hint) {
   var text = String(hint || "");
+  if (/作品集|页图|这一本/.test(text)) return "portfolio_pages";
   if (/小红书/.test(text)) return "xiaohongshu";
   if (/公众号/.test(text)) return "wechat_official";
   if (/画册|跨页/.test(text)) return "album_spread";

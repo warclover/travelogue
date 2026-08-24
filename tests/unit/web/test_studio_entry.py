@@ -122,7 +122,7 @@ def test_build_entry_exposes_portfolio_edition(monkeypatch: pytest.MonkeyPatch) 
     assert entry["layoutVibeVisible"] is False
     assert entry["portfolio"]["photosPlaced"] == 96
     assert entry["portfolio"]["photosKept"] == 180
-    assert entry["portfolio"]["pageCountChips"] == [8, 12, 16, 20, 28]
+    assert entry["portfolio"]["pageCountChips"] == [8, 12, 16, 20, 24, 28, 32, 36]
     assert entry["portfolio"]["pageCountChipDetails"][0] == {"pages": 8, "capacity": 27}
     assert entry["previewUrl"] == "/demo-trip/index.html"
     assert entry["dockCta"]["aria"] == "导出作品集"

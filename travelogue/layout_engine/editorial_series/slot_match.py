@@ -172,7 +172,23 @@ def _has_aspect_signal(
     return False
 
 
-def _can_admit(slots: Sequence[SlotSpec], families: Sequence[str]) -> bool:
+def _has_ratio_signal(
+    asset_ids: Sequence[str],
+    aspect_ratios: Mapping[str, float] | None,
+) -> bool:
+    for aid in asset_ids:
+        ratio = (aspect_ratios or {}).get(aid)
+        if ratio and float(ratio) > 0:
+            return True
+    return False
+
+
+def _can_admit(
+    slots: Sequence[SlotSpec],
+    families: Sequence[str],
+    *,
+    fine_wide: bool = False,
+) -> bool:
     need_p = sum(1 for s in slots if s.family == "portrait")
     need_l = sum(1 for s in slots if _coarse(s.family) == "landscape")
     need_s = sum(1 for s in slots if s.family == "square")
@@ -191,7 +207,16 @@ def _can_admit(slots: Sequence[SlotSpec], families: Sequence[str]) -> bool:
     flex_left = flex - used_flex
     leftover_p = max(0, have_p - need_p)
     leftover_l = max(0, have_l - need_l)
-    return leftover_p + leftover_l + flex_left >= need_s
+    if leftover_p + leftover_l + flex_left < need_s:
+        return False
+    # Promoted land-wide packets (16:9) must not swallow 3:2 / 4:3.
+    # Kind-only "landscape" (no pixels) stays coarse so fixtures keep FIFO.
+    if fine_wide:
+        need_w = sum(1 for s in slots if s.family == "land169")
+        have_w = sum(1 for f in families if f == "land169")
+        if have_w < need_w:
+            return False
+    return True
 
 
 def _pair_score(asset_family_name: str, slot: SlotSpec, asset_ratio: float | None) -> float:
@@ -202,6 +227,14 @@ def _pair_score(asset_family_name: str, slot: SlotSpec, asset_ratio: float | Non
     if a_coarse == "square" and s_coarse != "square":
         return -10.0
     if a_coarse != "square" and s_coarse != "square" and a_coarse != s_coarse:
+        return -10.0
+    # Pixel-known 3:2 must not cover-crop into a 16:9 land-wide cell.
+    if (
+        asset_family_name == "land43"
+        and slot.family == "land169"
+        and asset_ratio
+        and asset_ratio > 0
+    ):
         return -10.0
     closeness = 0.0
     if asset_ratio and slot.display_aspect > 0:
@@ -283,7 +316,11 @@ def take_for_page(
         asset_family(aid, aspect_kinds=aspect_kinds, aspect_ratios=aspect_ratios)
         for aid in ids
     ]
-    if not _can_admit(slots, families):
+    if not _can_admit(
+        slots,
+        families,
+        fine_wide=_has_ratio_signal(ids, aspect_ratios),
+    ):
         return SlotTake(leftover=list(ids), skip=True)
 
     assigned = _assign(
@@ -416,6 +453,7 @@ def fallback_take(
     prefer_land = land_slots >= port_slots
     tail = (
         (
+            "page-1-hero-land-right",
             "page-2-pair-land",
             "page-2-1l1p",
             "page-1-hero-land-wide",
@@ -427,6 +465,7 @@ def fallback_take(
             "page-2-pair-port",
             "page-2-1l1p",
             "page-1-hero-port",
+            "page-1-hero-land-right",
             "page-2-pair-land",
             "page-1-hero-land-wide",
         )

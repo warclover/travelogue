@@ -20,7 +20,6 @@ pytestmark = pytest.mark.unit
 ATELIER_SERIES = ROOT / "docs" / "templates" / "reserve" / "series"
 LTE_TEMPLATES = ROOT / "travelogue" / "layout_templates" / "templates"
 FOLIO_ID_RE = re.compile(r"^folio-(\d+)-")
-KNOWN_MISSING_FACES = frozenset({"page-10-grid-port"})
 
 
 def _atelier_docs() -> list[tuple[Path, dict]]:
@@ -80,7 +79,7 @@ def test_as_pfm_03_promote_blockers_stay_honest() -> None:
     over_max: list[str] = []
     for path, data in _atelier_docs():
         sid = str(data.get("id") or path.stem)
-        if int(data.get("pageCount") or 0) > 32:
+        if int(data.get("pageCount") or 0) > 48:
             over_max.append(sid)
         absent = {
             str(page.get("faceHint") or "")
@@ -90,12 +89,9 @@ def test_as_pfm_03_promote_blockers_stay_honest() -> None:
         }
         if absent:
             missing[sid] = absent
-    assert missing == {
-        "folio-32-standard-r2": set(KNOWN_MISSING_FACES),
-        "folio-36-standard": set(KNOWN_MISSING_FACES),
-    }
-    assert over_max == ["folio-36-standard"]
-    assert "page-10-grid-port" not in lte_ids
+    assert missing == {}
+    assert over_max == []
+    assert "page-10-grid-port" in lte_ids
 
 
 def test_runtime_catalog_still_refuses_reserve() -> None:

@@ -161,7 +161,10 @@ W1A_OFFICIAL_IDS = {
     "magazine-12-standard",
     "magazine-16-standard",
     "magazine-20-standard",
+    "magazine-24-standard",
     "magazine-28-standard",
+    "magazine-32-standard",
+    "magazine-36-standard",
 }
 
 
@@ -182,7 +185,10 @@ def test_official_catalog_p0_magazine_16() -> None:
         "magazine-12-standard": 36,
         "magazine-16-standard": 53,
         "magazine-20-standard": 72,
+        "magazine-24-standard": 73,
         "magazine-28-standard": 81,
+        "magazine-32-standard": 116,
+        "magazine-36-standard": 134,
     }
 
 
@@ -339,7 +345,7 @@ def test_catalog_page_count_chips_only_official_skus() -> None:
 
     assert catalog_page_count_chips([]) == []
     assert catalog_page_count_chips(_fixture_catalog()) == [8, 16, 32]
-    assert catalog_page_count_chips(load_official_series()) == [8, 12, 16, 20, 28]
+    assert catalog_page_count_chips(load_official_series()) == [8, 12, 16, 20, 24, 28, 32, 36]
 
 
 def test_snap_44_falls_to_catalog_sku() -> None:
@@ -507,6 +513,8 @@ def test_intake_rejects_folio_and_pagecount_mismatch() -> None:
         )
         == 3
     )
+    assert slot_band_from_role("grid-10-port", {"faceHint": "page-10-grid-port"}) == 10
+    assert slot_band_from_role("grid-10-port", {"slotBand": 10}) == 10
 
 
 def test_intake_normalizes_tdv_promote_yaml_without_slot_band(tmp_path: Path) -> None:

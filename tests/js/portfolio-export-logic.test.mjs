@@ -19,6 +19,9 @@ import {
   portfolioSuccessCopy,
   readEditionFromDom,
   resolvePortfolioMainPlatform,
+  shouldRunSocialBatchExport,
+  isPortfolioPrintOneShot,
+  folioMainExportFlags,
   wrapPortfolioSocialGroupHtml,
   albumSpreadCardCopy,
   shelfExportMenuCopy,
@@ -38,10 +41,31 @@ test("readEditionFromDom", () => {
   assert.equal(readEditionFromDom({ documentElement: { getAttribute: () => null } }), "journal");
 });
 
-test("resolvePortfolioMainPlatform 默认页图包，六平台不覆盖", () => {
+test("resolvePortfolioMainPlatform 恒为页图包，印刷/社交/旧 id 都不抬主钮", () => {
   assert.equal(resolvePortfolioMainPlatform(""), PORTFOLIO_PAGES_PLATFORM);
   assert.equal(resolvePortfolioMainPlatform("wechat_chat"), PORTFOLIO_PAGES_PLATFORM);
-  assert.equal(resolvePortfolioMainPlatform("xiaohongshu"), "xiaohongshu");
+  assert.equal(resolvePortfolioMainPlatform("xiaohongshu"), PORTFOLIO_PAGES_PLATFORM);
+  assert.equal(resolvePortfolioMainPlatform("album_spread"), PORTFOLIO_PAGES_PLATFORM);
+  assert.equal(resolvePortfolioMainPlatform("album_landscape"), PORTFOLIO_PAGES_PLATFORM);
+});
+
+test("shouldRunSocialBatchExport 作品集永不批量，游记多选仍批量", () => {
+  assert.equal(shouldRunSocialBatchExport("portfolio", ["xiaohongshu", "album_spread"]), false);
+  assert.equal(shouldRunSocialBatchExport("folio", ["xiaohongshu", "wechat_moments"]), false);
+  assert.equal(shouldRunSocialBatchExport("journal", ["xiaohongshu", "album_spread"]), true);
+  assert.equal(shouldRunSocialBatchExport("journal", ["wechat_chat"]), false);
+});
+
+test("isPortfolioPrintOneShot 仅作品集印刷卡", () => {
+  assert.equal(isPortfolioPrintOneShot("portfolio", "album_spread"), true);
+  assert.equal(isPortfolioPrintOneShot("journal", "album_spread"), false);
+  assert.equal(isPortfolioPrintOneShot("portfolio", "xiaohongshu"), false);
+});
+
+test("folioMainExportFlags 主路径只要页图，这一本才打 zip", () => {
+  assert.deepEqual(folioMainExportFlags(null), { includeZip: false, includePages: true });
+  assert.deepEqual(folioMainExportFlags("pages"), { includeZip: false, includePages: true });
+  assert.deepEqual(folioMainExportFlags("book"), { includeZip: true, includePages: false });
 });
 
 test("portfolioDockCta", () => {

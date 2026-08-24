@@ -114,7 +114,7 @@ def test_unknown_promoted_page_face_rejected() -> None:
                 "screens": [
                     {
                         "screenId": "ch-01-sc-01",
-                        "patternId": "page-10-grid-port",
+                        "patternId": "page-99-not-a-face",
                         "slots": [{"assetId": "a1", "slot": 0, "fit": "cover"}],
                     }
                 ]

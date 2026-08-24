@@ -33,7 +33,15 @@ P0_PAGE_IDS: tuple[str, ...] = (
 )
 
 LTE_SLOT_MAX = 9
+PAGE_SLOT_MAX = 10
 SNAP_EPS = 0.15  # percent of stage
+
+
+def _slot_max_for(page_id: str) -> int:
+    """Journal mosaic stays at 9; portfolio ``page-*`` faces may use 10."""
+    if str(page_id).startswith("page-"):
+        return PAGE_SLOT_MAX
+    return LTE_SLOT_MAX
 _BOX_RE = re.compile(
     r"left:\s*([\d.]+),\s*top:\s*([\d.]+),\s*width:\s*([\d.]+),\s*height:\s*([\d.]+)"
 )
@@ -204,8 +212,9 @@ def compile_page(
     *,
     reserve_dir: Path = RESERVE_DIR,
 ) -> dict[str, Any]:
-    if len(boxes) > LTE_SLOT_MAX:
-        raise ValueError(f"{page_id} has {len(boxes)} slots; LTE max is {LTE_SLOT_MAX}")
+    slot_max = _slot_max_for(page_id)
+    if len(boxes) > slot_max:
+        raise ValueError(f"{page_id} has {len(boxes)} slots; LTE max is {slot_max}")
     packet = _packet(page_id, reserve_dir)
     pkt_slots = packet.get("slots") if isinstance(packet.get("slots"), list) else []
     if pkt_slots and len(pkt_slots) != len(boxes):

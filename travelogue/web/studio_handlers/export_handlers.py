@@ -624,6 +624,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     intent_raw = payload.get("intent")
     intent = str(intent_raw).strip() if intent_raw not in (None, "") else None
     platform_raw = payload.get("platform")
+    if platform_raw not in (None, ""):
+        platform_raw = normalize_platform_id(platform_raw)
 
     longshot2_enabled = bool(getattr(cfg.studio, "longshot2_enabled", True))
     from travelogue.config.studio import DEFAULT_LONGSHOT2_PLATFORMS

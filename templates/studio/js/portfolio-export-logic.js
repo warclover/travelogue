@@ -26,13 +26,33 @@ export function readToolbarEdition(root, doc) {
 }
 
 /**
- * 作品集主钮默认 portfolio_pages。
- * 用户已在 ▾ 里确认六平台之一时，视为换种分享，不覆盖。
+ * 作品集主钮永远是页图包。共享 prefs 里的社交/印刷 id（含旧 album_*）
+ * 不得抬成主平台——那些只走 ▾ 一次性导出。
  */
-export function resolvePortfolioMainPlatform(prefsPlatform) {
-  var p = String(prefsPlatform || "").trim();
-  if (p && p !== "wechat_chat" && p !== PORTFOLIO_PAGES_PLATFORM) return p;
+export function resolvePortfolioMainPlatform(_prefsPlatform) {
   return PORTFOLIO_PAGES_PLATFORM;
+}
+
+/** 作品集主路径永不走社交批量；游记仍按多选走 batch。 */
+export function shouldRunSocialBatchExport(edition, platforms) {
+  if (isPortfolioEdition(edition)) return false;
+  return Array.isArray(platforms) && platforms.length > 1;
+}
+
+/** ▾ 印刷跨页：一次性，不写回主偏好。 */
+export function isPortfolioPrintOneShot(edition, platform) {
+  return isPortfolioEdition(edition) && String(platform || "").trim() === "album_spread";
+}
+
+/**
+ * 作品集主路径只要 16:9 页图。zip「这一本」只走 ▾ 卡片。
+ * @param {"pages"|"book"|string|null|undefined} piece
+ */
+export function folioMainExportFlags(piece) {
+  if (String(piece || "").trim().toLowerCase() === "book") {
+    return { includeZip: true, includePages: false };
+  }
+  return { includeZip: false, includePages: true };
 }
 
 export function journalDockCta() {

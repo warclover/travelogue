@@ -107,7 +107,7 @@ def test_gate11_gold_needs_confirm(tmp_path: Path) -> None:
         )
 
 
-def test_gate10_only_flags_20_to_24() -> None:
+def test_gate10_allows_shipped_20_to_24_but_flags_other_degenerate() -> None:
     ladder = [
         {"pageCount": 8, "capacity": 27},
         {"pageCount": 12, "capacity": 36},
@@ -118,16 +118,14 @@ def test_gate10_only_flags_20_to_24() -> None:
         {"pageCount": 32, "capacity": 116},
         {"pageCount": 36, "capacity": 134},
     ]
+    check_gate10(ladder)
     with pytest.raises(GateError, match="GATE-10"):
-        check_gate10(ladder)
-    without_24 = [row for row in ladder if row["pageCount"] != 24]
-    check_gate10(without_24)
-    only_neighbors = [
-        {"pageCount": 16, "capacity": 53},
-        {"pageCount": 20, "capacity": 72},
-        {"pageCount": 28, "capacity": 81},
-    ]
-    check_gate10(only_neighbors)
+        check_gate10(
+            [
+                {"pageCount": 8, "capacity": 10},
+                {"pageCount": 12, "capacity": 11},
+            ]
+        )
 
 
 def test_promote_folio8_writes_capacity(tmp_path: Path) -> None:

@@ -32,10 +32,13 @@ def test_p0_eleven_faces_are_in_lte() -> None:
         assert not errors, (pid, errors)
 
 
-def test_page_ten_skipped_schema_max() -> None:
-    assert not (DEFAULT_TEMPLATES_DIR / "page-10-grid-port.yaml").is_file()
-    with pytest.raises(KeyError):
-        get_engine().get("page-10-grid-port")
+def test_page_ten_is_in_lte_and_validates() -> None:
+    tpl = get_engine().get("page-10-grid-port")
+    assert tpl.status == "experimental"
+    assert len(tpl.slots) == 10
+    report = validate_template_def(tpl, mode="ci")
+    errors = [i for i in report.issues if i.level in ("error", "block")]
+    assert not errors, errors
 
 
 def test_page_faces_are_not_mcs_active() -> None:
@@ -82,11 +85,11 @@ def test_page_star_exempt_from_ltn_dense_freeze() -> None:
     assert _dense_freeze_exempt("screen-mosaic-7-forbidden-new") is False
 
 
-def test_promote_skips_ten_slot_without_writing(tmp_path: Path) -> None:
+def test_promote_writes_ten_slot_page(tmp_path: Path) -> None:
     written, skips = promote_pages(ids=["page-10-grid-port"], templates_dir=tmp_path, write=True)
-    assert written == []
-    assert skips and "10 slots" in skips[0].reason
-    assert list(tmp_path.glob("*.yaml")) == []
+    assert written == ["page-10-grid-port"]
+    assert skips == []
+    assert (tmp_path / "page-10-grid-port.yaml").is_file()
 
 
 def test_faces_js_covers_p0() -> None:

@@ -4,17 +4,11 @@
 "use strict";
 
 import {
-  ctaLabelForPlatform,
-  readExportPrefs,
-  shortCtaLabelForPlatform,
-} from "./longshot-export-panel.js";
-import {
   formatOverflowLine,
   isPortfolioEdition,
   PORTFOLIO_PAGES_PLATFORM,
   portfolioDockCta,
   readToolbarEdition,
-  resolvePortfolioMainPlatform,
 } from "./portfolio-export-logic.js";
 import {
   overflowJournalCta,
@@ -38,10 +32,7 @@ export function resolveTripEdition(root, entry) {
  * @returns {{ short: string, aria: string }}
  */
 export function portfolioIdleCta() {
-  var prefs = readExportPrefs();
-  var pid = resolvePortfolioMainPlatform(prefs.platform);
-  if (pid === PORTFOLIO_PAGES_PLATFORM) return portfolioDockCta();
-  return { short: shortCtaLabelForPlatform(pid), aria: ctaLabelForPlatform(pid) };
+  return portfolioDockCta();
 }
 
 /**
@@ -51,13 +42,8 @@ export function portfolioExportPopoverSpec() {
   return {
     title: "导出",
     edition: "portfolio",
-    initPlatform: function (prefs) {
-      prefs = prefs || {};
-      var packPid = resolvePortfolioMainPlatform(prefs.platform);
-      if (packPid === PORTFOLIO_PAGES_PLATFORM) {
-        return { platform: PORTFOLIO_PAGES_PLATFORM, platforms: [PORTFOLIO_PAGES_PLATFORM] };
-      }
-      return { platform: prefs.platform, platforms: prefs.platforms };
+    initPlatform: function () {
+      return { platform: PORTFOLIO_PAGES_PLATFORM, platforms: [PORTFOLIO_PAGES_PLATFORM] };
     },
   };
 }
@@ -69,15 +55,16 @@ export function portfolioExportPopoverSpec() {
  */
 export function resolvePortfolioExportPlatform(prefsPlatform, opts) {
   opts = opts || {};
-  if (opts.pending || opts.afterLayout) return prefsPlatform;
-  return resolvePortfolioMainPlatform(prefsPlatform);
+  if (opts.pending) return opts.pending;
+  if (opts.afterLayout) return prefsPlatform;
+  return PORTFOLIO_PAGES_PLATFORM;
 }
 
 /**
  * @returns {boolean}
  */
 export function shouldSkipRecipeForPortfolioExport() {
-  return resolvePortfolioMainPlatform(readExportPrefs().platform) === PORTFOLIO_PAGES_PLATFORM;
+  return true;
 }
 
 /**
@@ -87,9 +74,6 @@ export function shouldSkipRecipeForPortfolioExport() {
  * @returns {boolean} true when this face handled the CTA
  */
 export function syncPortfolioCtaLabel(root, btn, helpers) {
-  var prefs = readExportPrefs();
-  var packPlatform = resolvePortfolioMainPlatform(prefs.platform);
-  if (packPlatform !== PORTFOLIO_PAGES_PLATFORM) return false;
   var packCta = portfolioDockCta();
   btn.removeAttribute("data-recipe-subtitle");
   if (helpers.isV4) {

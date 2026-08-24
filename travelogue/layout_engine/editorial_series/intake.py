@@ -29,7 +29,7 @@ def slot_band_from_role(role: str, spec: Mapping[str, Any] | None = None) -> int
         try:
             band = int(raw)
             if band > 0:
-                return min(band, 8)
+                return min(band, 10)
         except (TypeError, ValueError):
             pass
     hint = ""
@@ -37,7 +37,7 @@ def slot_band_from_role(role: str, spec: Mapping[str, Any] | None = None) -> int
         hint = str(spec.get("faceHint") or spec.get("patternId") or "")
     page_n = re.match(r"page-(\d+)", hint.strip())
     if page_n:
-        return min(max(int(page_n.group(1)), 1), 8)
+        return min(max(int(page_n.group(1)), 1), 10)
     text = str(role or "").strip().lower()
     if "hero" in text and "grid" not in text and "stack" not in text:
         return 1
@@ -45,7 +45,7 @@ def slot_band_from_role(role: str, spec: Mapping[str, Any] | None = None) -> int
         return 2
     found = _ROLE_DIGIT_RE.search(text)
     if found:
-        return min(max(int(found.group(1)), 1), 8)
+        return min(max(int(found.group(1)), 1), 10)
     return 3
 
 

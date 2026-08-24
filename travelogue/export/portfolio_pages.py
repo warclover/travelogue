@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Callable
 
@@ -190,7 +191,7 @@ def export_portfolio_pages(
         raise LongshotExportError("E_PORTFOLIO_PAGES_EMPTY", "没有可导出的作品集页")
 
     profile = get_profile("portfolio_pages")
-    max_pages = int(profile.max_pages or 32)
+    max_pages = int(profile.max_pages or 48)
     title = _trip_title(trip_dir)
     prefix = file_prefix_for_platform(title, "portfolio_pages")
     out_ext = "jpg" if str(fmt).lower() in ("jpeg", "jpg") else "png"
@@ -427,8 +428,11 @@ def _open_playwright_capture(
 
         cancel_register(_abort_page)
     try:
-        page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+        # load, not networkidle: folio preview keeps image/analytics traffic
+        # alive and used to hang the whole export (and cancel) for minutes.
+        page.goto(url, wait_until="load", timeout=timeout_ms)
         page.wait_for_selector("main", timeout=min(timeout_ms, 30_000))
+        _prepare_folio_capture(page)
         _wait_images(page)
     except Exception:
         try:
@@ -459,21 +463,136 @@ def _open_playwright_capture(
     return capture, close
 
 
-def _wait_images(page: Any) -> None:
+# Folio page shots must NOT reuse journal longshot-capturing: that class
+# pinches html/body/main to 428px and unwraps cover-hero to intrinsic height.
+# Result: portrait letterboxed cover, upscaled milky inner pages, closing
+# panorama jammed into a narrow box. Use a folio-only class instead.
+_HIDE_CAPTURE_CHROME_JS = """() => {
+  document.body.classList.add('folio-page-capturing');
+  document.documentElement.classList.remove('longshot-capturing-root');
+  document.body.classList.remove('longshot-capturing');
+  document.documentElement.setAttribute('data-breath', 'off');
+  document.querySelectorAll('.breath-reveal').forEach((el) => {
+    el.classList.add('is-visible');
+    el.style.setProperty('opacity', '1', 'important');
+    el.style.setProperty('transform', 'none', 'important');
+  });
+  if (!document.getElementById('folio-page-capturing-style')) {
+    const s = document.createElement('style');
+    s.id = 'folio-page-capturing-style';
+    s.textContent = [
+      'body.folio-page-capturing .screenplay-toolbar,',
+      'body.folio-page-capturing .screenplay-gate{display:none!important}',
+      'body.folio-page-capturing .breath-reveal,',
+      'body.folio-page-capturing .cover-breath-reveal,',
+      'body.folio-page-capturing .closing-breath-reveal{',
+      'opacity:1!important;transform:none!important}',
+      'body.folio-page-capturing .cover-opening,',
+      'body.folio-page-capturing .cover-closing{',
+      'width:100%;max-width:none;min-height:0;height:auto;',
+      'aspect-ratio:16/9;overflow:hidden}',
+      'body.folio-page-capturing .cover-hero,',
+      'body.folio-page-capturing .closing-hero{',
+      'position:absolute;inset:0;width:100%;height:100%;',
+      'max-width:none;max-height:none;aspect-ratio:auto}',
+      'body.folio-page-capturing .cover-hero__media,',
+      'body.folio-page-capturing .closing-hero__media,',
+      'body.folio-page-capturing .cover-hero__img,',
+      'body.folio-page-capturing .closing-hero__img{',
+      'position:absolute;inset:0;width:100%;height:100%;object-fit:cover}',
+    ].join('');
+    document.head.appendChild(s);
+  }
+  for (const sel of ['.screenplay-toolbar', '.screenplay-gate']) {
+    document.querySelectorAll(sel).forEach((el) => {
+      el.setAttribute('hidden', '');
+      el.style.setProperty('display', 'none', 'important');
+    });
+  }
+  for (const img of document.images || []) {
+    try { img.loading = 'eager'; } catch (e) {}
+  }
+}"""
+
+_WAIT_NODE_IMAGES_JS = """async (el, ms) => {
+  const imgs = Array.from((el && el.querySelectorAll) ? el.querySelectorAll('img') : []);
+  const deadline = Date.now() + Math.max(0, Number(ms) || 0);
+  const waitOne = async (img) => {
+    try { img.loading = 'eager'; } catch (e) {}
+    if (img.decode) {
+      try { await img.decode(); } catch (e) {}
+    }
+    if (img.complete && img.naturalWidth > 0) return;
+    await new Promise((resolve) => {
+      const done = () => resolve();
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+      setTimeout(done, Math.max(0, deadline - Date.now()));
+    });
+  };
+  await Promise.race([
+    Promise.all(imgs.map(waitOne)),
+    new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(ms) || 0))),
+  ]);
+  return imgs.filter((img) => !img.complete || img.naturalWidth === 0).length;
+}"""
+
+
+def _prepare_folio_capture(page: Any) -> None:
+    """Hide reader FABs and force eager decode before the first page shot."""
+    try:
+        page.evaluate(_HIDE_CAPTURE_CHROME_JS)
+    except Exception:
+        _log.debug("portfolio pages hide chrome skipped", exc_info=True)
+
+
+def _wait_images(page: Any, timeout_ms: int = 8000) -> None:
     try:
         page.evaluate(
-            """() => Promise.all(
-              Array.from(document.images || []).map((img) => {
-                if (img.complete) return null;
-                return new Promise((resolve) => {
-                  img.addEventListener('load', resolve, { once: true });
-                  img.addEventListener('error', resolve, { once: true });
-                });
-              })
-            )"""
+            """(ms) => Promise.race([
+              Promise.all(
+                Array.from(document.images || []).map((img) => {
+                  try { img.loading = 'eager'; } catch (e) {}
+                  if (img.decode) return img.decode().catch(() => null);
+                  if (img.complete) return null;
+                  return new Promise((resolve) => {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                  });
+                })
+              ),
+              new Promise((resolve) => setTimeout(resolve, ms))
+            ])""",
+            max(0, int(timeout_ms)),
         )
     except Exception:
         _log.debug("portfolio pages wait images skipped", exc_info=True)
+
+
+def _wait_locator_images(node: Any, timeout_ms: int = 8000) -> None:
+    try:
+        node.evaluate(_WAIT_NODE_IMAGES_JS, max(0, int(timeout_ms)))
+    except Exception:
+        _log.debug("portfolio pages wait node images skipped", exc_info=True)
+
+
+def capture_is_blank(data: bytes) -> bool:
+    """True when a page shot is a near-uniform light board (lazy decode miss)."""
+    if not data or len(data) < 32:
+        return True
+    try:
+        from PIL import Image
+
+        im = Image.open(BytesIO(data)).convert("L").resize((80, 45))
+    except Exception:
+        return False
+    hist = im.histogram()
+    total = sum(hist)
+    if total <= 0:
+        return True
+    mean = sum(i * count for i, count in enumerate(hist)) / total
+    var = sum(count * (i - mean) ** 2 for i, count in enumerate(hist)) / total
+    return mean >= 232 and var < 320
 
 
 def _screenshot_target(page: Any, target: PortfolioPageTarget) -> bytes:
@@ -493,7 +612,17 @@ def _screenshot_target(page: Any, target: PortfolioPageTarget) -> bytes:
         node.scroll_into_view_if_needed()
     except Exception:
         _log.debug("scroll into view skipped for %s", target.key, exc_info=True)
+    _wait_locator_images(node)
     data = node.screenshot(type="png")
+    if capture_is_blank(data):
+        _wait_locator_images(node, timeout_ms=4000)
+        try:
+            page.wait_for_timeout(400)
+        except Exception:
+            _log.debug("portfolio pages blank retry pause skipped", exc_info=True)
+        data = node.screenshot(type="png")
     if not data or len(data) < 32:
         raise PageCaptureSkip(target.key, "截图为空")
+    if capture_is_blank(data):
+        raise PageCaptureSkip(target.key, "页图未渲染")
     return data
