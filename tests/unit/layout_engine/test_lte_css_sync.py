@@ -19,6 +19,7 @@ from travelogue.layout_templates.css_gen import (
     PORTFOLIO_OVERLAYS_MARKER_END,
     PORTFOLIO_OVERLAYS_MARKER_START,
     TrailingLegacyCssError,
+    _portfolio_pages_skeleton,
     _truncate_trailing_legacy_after_overlays,
     lte_grid_classes_outside_marker,
     sync_journal_screens_css,
@@ -99,6 +100,26 @@ def test_portfolio_pages_has_lte_and_overlay_markers() -> None:
     inside = text[start:end]
     assert "layout-screen__grid--page-1-hero-port" in inside
     assert lte_grid_classes_outside_marker(text) == []
+
+
+@pytest.mark.unit
+def test_portfolio_pages_handwritten_has_grid_display() -> None:
+    """DPI split left display:grid in journal-screens.css; portfolio family must own it."""
+    text = Path(PORTFOLIO_PAGES_CSS).read_text(encoding="utf-8")
+    start = text.index(PORTFOLIO_LTE_MARKER_START)
+    preamble = text[:start]
+    assert "display: grid" in preamble
+    assert "object-fit: cover" in preamble
+    assert "object-fit: contain" in preamble
+    assert "object-position:" in preamble
+    assert "min-width: 0" in preamble
+    assert "screen-" not in preamble
+    skeleton = _portfolio_pages_skeleton()
+    sk_start = skeleton.index(PORTFOLIO_LTE_MARKER_START)
+    sk_preamble = skeleton[:sk_start]
+    assert "display: grid" in sk_preamble
+    assert "object-fit: cover" in sk_preamble
+    assert "screen-" not in sk_preamble
 
 
 @pytest.mark.unit

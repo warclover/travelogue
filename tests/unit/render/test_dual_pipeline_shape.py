@@ -138,6 +138,9 @@ def test_journal_render_imports_journal_screens(journal_ws: tuple[Path, dict]) -
     assert "portfolio-pages.css" not in css
     assert (ws / "journal-screens.css").is_file()
     assert not (ws / "portfolio-pages.css").is_file()
+    journal_family = (ws / "journal-screens.css").read_text(encoding="utf-8")
+    assert "display: grid" in journal_family
+    assert "page-" not in journal_family
 
 
 def test_portfolio_render_imports_portfolio_pages(portfolio_ws: tuple[Path, dict]) -> None:
@@ -156,3 +159,7 @@ def test_portfolio_render_imports_portfolio_pages(portfolio_ws: tuple[Path, dict
     assert "portfolio-pages.css" in css
     assert (ws / "portfolio-pages.css").is_file()
     assert not (ws / "journal-screens.css").is_file()
+    portfolio_family = (ws / "portfolio-pages.css").read_text(encoding="utf-8")
+    assert "display: grid" in portfolio_family
+    assert "object-fit: cover" in portfolio_family
+    assert "screen-" not in portfolio_family

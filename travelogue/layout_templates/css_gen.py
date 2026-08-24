@@ -472,24 +472,38 @@ def _portfolio_pages_skeleton() -> str:
         "}\n\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-screen__grid,\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-screen__grid {\n'
+        "  display: grid;\n"
         "  gap: 0;\n"
         "  width: 100%;\n"
         "  height: 100%;\n"
         "  min-height: 0;\n"
+        "  margin: 0;\n"
+        "  padding: 0;\n"
         "}\n\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot,\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot {\n'
         "  height: 100%;\n"
+        "  min-width: 0;\n"
         "  min-height: 0;\n"
         "  align-self: stretch;\n"
         "  overflow: hidden;\n"
         "}\n\n"
         'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot > .layout-slot__img,\n'
         'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot > .layout-slot__img {\n'
+        "  display: block;\n"
         "  width: 100%;\n"
         "  height: 100%;\n"
         "  max-width: none;\n"
         "  max-height: none;\n"
+        "  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot__img--cover,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot__img--cover {\n'
+        "  object-fit: cover;\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot__img--contain,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot__img--contain {\n'
+        "  object-fit: contain;\n"
         "}\n\n"
         "/* Portfolio reader: keep chapters[] as a container, hide journal chapter chrome. */\n"
         'html[data-edition="portfolio"] .chapter {\n'
