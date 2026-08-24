@@ -131,8 +131,8 @@ html[data-layout="web"] .layout-screen__grid--page-1-hero-land-ultra .layout-slo
 /* page-1-hero-land-wide */
 html[data-layout="web"] .layout-screen__grid--page-1-hero-land-wide,
 html[data-layout="auto"] .layout-screen__grid--page-1-hero-land-wide {
-  grid-template-columns: minmax(0, 6.25fr) minmax(0, 87.5fr) minmax(0, 6.25fr);
-  grid-template-rows: minmax(0, 6.25fr) minmax(0, 87.5fr) minmax(0, 6.25fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 96fr) minmax(0, 2fr);
+  grid-template-rows: minmax(0, 2fr) minmax(0, 96fr) minmax(0, 2fr);
   align-items: stretch;
 }
 
@@ -1834,7 +1834,7 @@ html[data-layout="web"] .layout-screen__grid--page-6-4l2p .layout-slot[data-slot
 html[data-layout="web"] .layout-screen__grid--page-6-grid-land,
 html[data-layout="auto"] .layout-screen__grid--page-6-grid-land {
   grid-template-columns: minmax(0, 2fr) minmax(0, 31fr) minmax(0, 1.5fr) minmax(0, 31fr) minmax(0, 1.5fr) minmax(0, 31fr) minmax(0, 2fr);
-  grid-template-rows: minmax(0, 7.333333fr) minmax(0, 41.333333fr) minmax(0, 2.666667fr) minmax(0, 41.333333fr) minmax(0, 7.333334fr);
+  grid-template-rows: minmax(0, 3.5fr) minmax(0, 45.166666fr) minmax(0, 2.666668fr) minmax(0, 45.166666fr) minmax(0, 3.5fr);
   align-items: stretch;
 }
 
@@ -2097,7 +2097,7 @@ html[data-layout="web"] .layout-screen__grid--page-8-2l6p-flip .layout-slot[data
 html[data-layout="web"] .layout-screen__grid--page-8-grid-land,
 html[data-layout="auto"] .layout-screen__grid--page-8-grid-land {
   grid-template-columns: minmax(0, 24.25fr) minmax(0, 1fr) minmax(0, 24.25fr) minmax(0, 1fr) minmax(0, 24.25fr) minmax(0, 1fr) minmax(0, 24.25fr);
-  grid-template-rows: minmax(0, 11.777778fr) minmax(0, 32.333333fr) minmax(0, 11.777778fr) minmax(0, 32.333333fr) minmax(0, 11.777778fr);
+  grid-template-rows: minmax(0, 3.5fr) minmax(0, 40.611111fr) minmax(0, 11.777778fr) minmax(0, 40.611111fr) minmax(0, 3.5fr);
   align-items: stretch;
 }
 
