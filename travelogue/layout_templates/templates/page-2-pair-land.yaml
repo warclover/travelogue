@@ -16,9 +16,9 @@ stage:
   - 42.5
   - 5.0
   rows:
-  - 5.0
+  - 21.666667
   - 56.666667
-  - 38.333333
+  - 21.666666
   variants:
   - layout: web
     aspect: '16:9'
@@ -83,7 +83,7 @@ render:
   fitPolicy: auto_delegate
 usage:
   summary: 双横版并排
-  whenToUse: 高光池双张横图并排；等权对仗，无主次
+  whenToUse: 高光池双张横图并排；等权对仗，无主次；不要文案栏时
   whenNotToUse: 必须消化竖图；需要上下 stack；需要明显主次
 _legacy:
   sourceAtelier: page-2-pair-land

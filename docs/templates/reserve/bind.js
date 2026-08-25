@@ -16,6 +16,7 @@
     for (const face of window.RESERVE_FACES || FACES) faceById.set(face.id, face);
   }
   let getStars = function () { return 0; };
+  let isDisabled = function () { return false; };
   let onSeriesChange = function () {};
   let series = makeSeries({ id: GOLD_ID, pageCount: 16 });
   let fileSeries = makeSeries({ id: GOLD_ID, pageCount: 16 });
@@ -252,7 +253,7 @@
   function canSwap(faceId, row) {
     const face = faceById.get(faceId);
     const cur = faceById.get(row.faceHint);
-    if (!face || !cur) return false;
+    if (!face || !cur || isDisabled(faceId)) return false;
     const a = meta(faceId);
     const b = meta(row.faceHint);
     return a.familyId === b.familyId && slotCount(face) === slotCount(cur);
@@ -270,7 +271,7 @@
 
   function insertFace(faceId, at) {
     const face = faceById.get(faceId);
-    if (!face) return;
+    if (!face || isDisabled(faceId)) return;
     const info = meta(faceId);
     const row = {
       i: 0,
@@ -381,6 +382,9 @@
       if (row.program === "closer" && row.i <= target - 2) {
         out.push(`${row.i}/${target} closer 在中段`);
       }
+      if (isDisabled(row.faceHint)) {
+        out.push(`${row.i}/${target} ${row.faceHint} 已禁用，所有管线不用`);
+      }
     });
     return out;
   }
@@ -399,7 +403,10 @@
   }
 
   function invFaces() {
-    return FACES.filter((f) => invStar < 0 || getStars(f.id) === invStar);
+    return FACES.filter((f) => {
+      if (isDisabled(f.id)) return false;
+      return invStar < 0 || getStars(f.id) === invStar;
+    });
   }
 
   function groupedInv() {
@@ -550,7 +557,7 @@
   function renderInv() {
     const kin = selectedFamily();
     const groups = groupedInv();
-    const starCounts = [0, 1, 2, 3].map((n) => [n, FACES.filter((f) => getStars(f.id) === n).length]);
+    const starCounts = [0, 1, 2, 3].map((n) => [n, FACES.filter((f) => !isDisabled(f.id) && getStars(f.id) === n).length]);
     const starChips = [
       { n: -1, label: "全部" },
       ...starCounts.filter(([, c]) => c).map(([n, c]) => ({ n, label: `${starText(n)} ${c}` }))
@@ -577,7 +584,7 @@
     }).join("");
     els.inv.innerHTML = `
       <h3>页型 · 全部可选 · 主拖</h3>
-      <p class="hint">拖到金色「再加一页」或砖缝 = 插入下一页。拖到已有砖且同族才换脸。</p>
+      <p class="hint">拖到金色「再加一页」或砖缝 = 插入下一页。拖到已有砖且同族才换脸。已禁用的脸不进库存。</p>
       <div class="inv-filters">${chips}</div>
       ${body || "<p class=\"hint\">没有可显示的脸。</p>"}`;
   }
@@ -608,10 +615,10 @@
       const flex = row.flex ? " flex" : "";
       return `
         <div class="gap" data-gap="${idx}" title="插入到 ${idx + 1} 之前"></div>
-        <article class="tile${sel}${reject}${flex}" data-index="${idx}" draggable="true">
+        <article class="tile${sel}${reject}${flex}${isDisabled(row.faceHint) ? " is-off" : ""}" data-index="${idx}" draggable="true">
           <div class="pg"><span>${row.i}/${target}</span><span>${row.program}</span></div>
           <div class="stage mini">${glyphHtml(face, false)}</div>
-          <div class="name">${row.role}${row.flex ? " <em>弹性位</em>" : ""}${face ? "" : " <em>缺脸</em>"}</div>
+          <div class="name">${row.role}${row.flex ? " <em>弹性位</em>" : ""}${face ? "" : " <em>缺脸</em>"}${isDisabled(row.faceHint) ? " <em>禁用</em>" : ""}</div>
           <button type="button" class="plus" data-gap="${idx + 1}" title="在后面插入">+</button>
         </article>`;
     }).join("");
@@ -666,7 +673,7 @@
       <p class="stat">
         角色 <b>${escapeHtml(row.role)}</b><br>
         纲领 ${escapeHtml(row.program)} · 家族 <b>${escapeHtml(info.familyId)}</b><br>
-        脸 <b>${escapeHtml(row.faceHint)}</b><br>
+        脸 <b>${escapeHtml(row.faceHint)}</b>${isDisabled(row.faceHint) ? " · <b class=\"bad\">已禁用</b>" : ""}<br>
         槽 ${face ? face.badge : "?"} · ${face ? admitText(face) : "缺脸"}
       </p>
       <div class="prog-pick">${progBtns}</div>
@@ -1119,6 +1126,7 @@
         overrides,
         overlay: overlayEl.value.trim(),
         getStars,
+        getDisabled: isDisabled,
         neighborLights: lights()
       });
     };
@@ -1204,7 +1212,7 @@
     });
     els.inv.addEventListener("dragstart", (ev) => {
       const card = ev.target.closest("[data-face]");
-      if (!card) return;
+      if (!card || isDisabled(card.dataset.face)) return;
       drag = { kind: "face", id: card.dataset.face };
       try {
         ev.dataTransfer.effectAllowed = "copy";
@@ -1297,6 +1305,7 @@
   window.ReserveBind = {
     async init(opts) {
       getStars = opts.getStars || getStars;
+      isDisabled = opts.isDisabled || isDisabled;
       onSeriesChange = opts.onChange || onSeriesChange;
       els.bar = document.getElementById("bind-bar");
       els.banner = document.getElementById("bind-banner");

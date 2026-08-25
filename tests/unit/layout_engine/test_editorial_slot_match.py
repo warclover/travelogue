@@ -213,7 +213,7 @@ def test_place_swaps_land_grid_for_portrait_bookend() -> None:
     placed = place_groups(groups, sequence, aspect_kinds=kinds, aspect_ratios=ratios)
     assert placed.dropped_roles == []
     assert placed.demoted_pages >= 1
-    assert placed.pages[0].pattern_id == "page-4-2p2p"
+    assert placed.pages[0].pattern_id == "page-4-port"
     assert set(placed.pages[0].asset_ids) == {"p1", "p2", "p3", "p4"}
     screen = placed.pages[0].as_screen()
     assert all(s.get("role") == "portrait" for s in screen["slots"])

@@ -109,14 +109,14 @@ def test_gate11_gold_needs_confirm(tmp_path: Path) -> None:
 
 def test_gate10_allows_shipped_20_to_24_but_flags_other_degenerate() -> None:
     ladder = [
-        {"pageCount": 8, "capacity": 27},
-        {"pageCount": 12, "capacity": 36},
-        {"pageCount": 16, "capacity": 53},
-        {"pageCount": 20, "capacity": 72},
-        {"pageCount": 24, "capacity": 73},
-        {"pageCount": 28, "capacity": 81},
-        {"pageCount": 32, "capacity": 116},
-        {"pageCount": 36, "capacity": 134},
+        {"pageCount": 8, "capacity": 19},
+        {"pageCount": 12, "capacity": 29},
+        {"pageCount": 16, "capacity": 43},
+        {"pageCount": 20, "capacity": 65},
+        {"pageCount": 24, "capacity": 67},
+        {"pageCount": 28, "capacity": 76},
+        {"pageCount": 32, "capacity": 88},
+        {"pageCount": 36, "capacity": 96},
     ]
     check_gate10(ladder)
     with pytest.raises(GateError, match="GATE-10"):
@@ -132,7 +132,7 @@ def test_promote_folio8_writes_capacity(tmp_path: Path) -> None:
     dest_id, dest_path = _promote(tmp_path, ATELIER / "folio-8-standard.yaml")
     assert dest_id == "magazine-8-standard"
     data = yaml.safe_load(dest_path.read_text(encoding="utf-8"))
-    assert data["capacity"] == 27
+    assert data["capacity"] == 19
     assert data["version"] == 1
     assert len(data["sequence"]) == 8
     assert data["sequence"][0]["patternId"] == "page-1-hero-land-wide"

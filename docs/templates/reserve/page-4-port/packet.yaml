@@ -2,7 +2,7 @@
 # 升附录 A 前只给人审几何与用途；引擎不读。
 
 id: page-4-port
-version: 1
+version: 2
 status: sketch
 kind: primitive
 displayName: 四竖并排
@@ -19,9 +19,9 @@ role: row-port-4
 
 stage:
   aspect: "16:9"
-  # 顶 5% 页高。四槽贴边会超宽，槽宽仍 21.875%。
+  # 四槽贴边会超宽，槽宽仍 21.875%。
   # 缝令牌 1.5%；余宽不再五等分。四槽 + 三缝 = 92%，剩余 8% 归左右纸边各 4%。
-  # 槽按 3:4 定高后，底部剩余通栏文案，可空。
+  # 槽高不变，整组上下居中。
   margin:
     top: 0.05
     left: 0.04
@@ -35,7 +35,7 @@ slotCount: 4
 mix: { portrait: 4, landscape: 0 }
 
 placement:
-  groupAlign: top
+  groupAlign: center
   distribute: even-x
 
 slots:
@@ -44,13 +44,7 @@ slots:
   - { index: 2, role: portrait, orient: portrait, aspect: "3:4" }
   - { index: 3, role: portrait, orient: portrait, aspect: "3:4" }
 
-copyRegions:
-  - id: caption
-    edge: bottom
-    optional: true
-    sizing: leftover
-    collapse: hide-frame
-    emptySlotAlign: top
+copyRegions: []
 
 admit:
   forbidOrient: [landscape]
@@ -59,7 +53,7 @@ admit:
 
 themes: [portrait, pet, food, landscape]
 usage:
-  whenToUse: 四张竖图一行并排、无主次；人像 / 竖构图风景 / 宠物 / 美食
+  whenToUse: 四张竖图一行并排、无主次；人像 / 竖构图风景 / 宠物 / 美食；不要文案栏时
   whenNotToUse: 必须消化横图；只要三竖 → 用 page-3-port；需要 2×2 宫格
 
 fitPolicy: relative-to-slot
@@ -71,17 +65,19 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 4P
-  thumb: 四竖槽 3:4 各 21.875% 顶齐；列缝 1.5%；左右纸边各 4%；下为通栏剩余文案，可空
+  thumb: 四竖槽 3:4 各 21.875% 上下居中；列缝 1.5%；左右纸边各 4%；无文案栏
 
 sourceSketch: sketch.png
 
 # --- 几何（16:9 纸，每槽必须等于 3:4）---
+# 槽尺寸与左右位置沿用 v1：
 #   slotW = 0.21875 W（7/32）
 #   slotH = 0.21875 * (16/9) * (4/3) H = 14/27 H = 0.518519 H
-#   slotTop = 0.05 H
 #   缝令牌 gapX = 0.015；余宽 0.125 − 0.045 = 0.08 → 左右纸边各 0.04
 #   slot0..3.left = 0.04 / 0.27375 / 0.5075 / 0.74125 W
-#   copy: left 0.04、宽 0.92；top 0.05 + 14/27 = 0.568519 H，高 0.431481 H
+# v2 上下居中，取消文案栏：
+#   slotTop = (1 - 14/27) / 2 = 13/54 H = 0.240741 H
+# 上下剩余各 0.240741 H，不是文案栏。
 # 左右对称，无镜像兄弟。
 # 现网 screen-portrait-4 是 9:16 舞台 2×2，不是同一张。
 # 角色对照待画的 grid-4-port 也是 2×2，不是这一行。

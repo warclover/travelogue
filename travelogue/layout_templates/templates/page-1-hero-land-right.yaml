@@ -5,14 +5,14 @@ id: page-1-hero-land-right
 version: 1
 status: experimental
 kind: primitive
-displayName: 单图 · 横版英雄 · 右齐
+displayName: 单图 · 横版英雄 · 居中
 description: Promoted from atelier reserve (compile-time). Engine does not read docs/templates/reserve/.
 stage:
   aspect: '16:9'
   cols:
-  - 27.5
+  - 16.25
   - 67.5
-  - 5.0
+  - 16.25
   rows:
   - 5.0
   - 90.0
@@ -68,9 +68,9 @@ render:
   cssBundle: journal-screens.css
   fitPolicy: auto_delegate
 usage:
-  summary: 单图 · 横版英雄 · 右齐
-  whenToUse: 高光池单张横图；左侧要呼吸或可选字时
-  whenNotToUse: 必须消化竖图；需要多图并置；没字且不能接受左空 → 改用 page-1-hero-land
+  summary: 单图 · 横版英雄 · 居中
+  whenToUse: 高光池单张横图；4:3 槽居中、不要文案栏时
+  whenNotToUse: 必须消化竖图；需要多图并置；需要 16:9 / 21:9 槽 → 用 -wide / -ultra
 _legacy:
   sourceAtelier: page-1-hero-land-right
   css_verified: true

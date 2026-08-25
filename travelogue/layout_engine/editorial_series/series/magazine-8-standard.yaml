@@ -8,20 +8,20 @@ version: 1
 pageCount: 8
 density: standard
 photo_span: [24, 40]
-capacity: 27
+capacity: 19
 coverHint: veil-footer
 backHint: closing-default
 sourceAtelier: folio-8-standard
 _promotedFrom:
   atelierId: folio-8-standard
-  contentHash: 706b29837692789f7957eafdc818630eb687e5d98a0cb24c25f5de543b18d0df
-  promotedAt: 2026-08-21T10:01:47Z
+  contentHash: 42da2e8732ac422feac62ccc8f0fab19314f2f71cb73e13f53c92e20859c8e3f
+  promotedAt: 2026-08-25T03:02:48Z
 sequence:
   - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 2, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
   - { i: 3, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 4, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center, slotBand: 5, patternId: page-5-3p2l-center }
   - { i: 5, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
-  - { i: 6, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left, slotBand: 6, patternId: page-6-1l5l-wide-left }
-  - { i: 7, role: row-3p-pair-l-wide, program: mosaic, faceHint: page-5-3p2l-wide, slotBand: 5, patternId: page-5-3p2l-wide }
-  - { i: 8, role: port-bookend-2p, program: mosaic, faceHint: page-4-2p2p, slotBand: 4, patternId: page-4-2p2p }
+  - { i: 6, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide, slotBand: 4, patternId: page-4-grid-land-wide }
+  - { i: 7, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 8, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }

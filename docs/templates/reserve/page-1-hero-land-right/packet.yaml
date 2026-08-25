@@ -2,10 +2,10 @@
 # 升附录 A 前只给人审几何与用途；引擎不读。
 
 id: page-1-hero-land-right
-version: 1
+version: 2
 status: sketch
 kind: primitive
-displayName: 单图 · 横版英雄 · 右齐
+displayName: 单图 · 横版英雄 · 居中
 sketchName: 单张横版
 familyId: hero-land
 canonical: page-1-hero-land-right
@@ -18,7 +18,7 @@ role: hero-land
 
 stage:
   aspect: "16:9"
-  # 「四周留白 5%」：左右相对页宽，上下相对页高。
+  # 「上下留白 5%」：左右相对页宽，上下相对页高。槽宽不变，水平居中。
   margin:
     top: 0.05
     right: 0.05
@@ -32,20 +32,13 @@ slotCount: 1
 mix: { portrait: 0, landscape: 1 }
 
 placement:
-  groupAlign: right
+  groupAlign: center
   distribute: none
-  emptyCopyKeepsAlign: true
 
 slots:
   - { index: 0, role: main, orient: landscape, aspect: "4:3" }
 
-copyRegions:
-  - id: rail
-    edge: left
-    optional: true
-    sizing: leftover          # 槽按高求解并右齐后，左侧剩余即栏
-    collapse: hide-frame      # 没字：藏绿框，不改槽位
-    emptySlotAlign: right
+copyRegions: []
 
 admit:
   forbidOrient: [portrait]
@@ -54,8 +47,8 @@ admit:
 
 themes: [landscape, architecture, portrait]
 usage:
-  whenToUse: 高光池单张横图；左侧要呼吸或可选字时
-  whenNotToUse: 必须消化竖图；需要多图并置；没字且不能接受左空 → 改用 page-1-hero-land
+  whenToUse: 高光池单张横图；4:3 槽居中、不要文案栏时
+  whenNotToUse: 必须消化竖图；需要多图并置；需要 16:9 / 21:9 槽 → 用 -wide / -ultra
 
 fitPolicy: relative-to-slot
 # 同比例铺满
@@ -65,20 +58,15 @@ fitPolicy: relative-to-slot
 
 glyph:
   badge: 1L
-  thumb: 一横槽右齐，四周 5% 留白；左为剩余文案栏，可空
+  thumb: 一横槽 4:3 左右居中，上下 5% 留白；无文案栏
 
 sourceSketch: sketch.png
 
 # --- 几何（16:9 纸，槽比必须等于 4:3）---
-# contentWidth  = pageWidth  * (1 - margin.left - margin.right)     = 0.90 W
-# contentHeight = pageHeight * (1 - margin.top - margin.bottom)     = 0.90 H
-# 4:3 横槽在 16:9 纸上按高求解（按宽会高出纸面）：
+# 槽尺寸沿用 v1（按高求解）：
 #   slotHeight = contentHeight                                      = 0.90 H
 #   slotWidth  = slotHeight * (4/3)                                 = 0.675 W
-#   slotLeft   = pageWidth - margin.right*W - slotWidth             = 0.275 W
+# v2 左右居中，取消文案栏：
+#   slotLeft   = (1 - slotWidth) / 2                                = 0.1625 W
 #   slotTop    = margin.top * H                                     = 0.05 H
-# 文案栏 = 左侧剩余（与槽等高，gapX = 0）：
-#   copyLeft   = 0.05 W
-#   copyWidth  = slotLeft - copyLeft                                = 0.225 W
-#   copyHeight = slotHeight                                         = 0.90 H
-# 没字：copy 框可藏，上列数字不变。
+# 左右剩余各 0.1625 W，不是文案栏。

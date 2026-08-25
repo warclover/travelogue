@@ -20,9 +20,9 @@ stage:
   - 21.875
   - 4.0
   rows:
-  - 5.0
+  - 24.074074
   - 51.851852
-  - 43.148148
+  - 24.074074
   variants:
   - layout: web
     aspect: '16:9'
@@ -111,7 +111,7 @@ render:
   fitPolicy: auto_delegate
 usage:
   summary: 四竖并排
-  whenToUse: 四张竖图一行并排、无主次；人像 / 竖构图风景 / 宠物 / 美食
+  whenToUse: 四张竖图一行并排、无主次；人像 / 竖构图风景 / 宠物 / 美食；不要文案栏时
   whenNotToUse: 必须消化横图；只要三竖 → 用 page-3-port；需要 2×2 宫格
 _legacy:
   sourceAtelier: page-4-port

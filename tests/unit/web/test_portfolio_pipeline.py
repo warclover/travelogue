@@ -307,9 +307,9 @@ def test_config_exposes_derived_min_kept(tmp_path: Path) -> None:
     status, body = handler.response
     assert status == 200
     pipe = (body.get("studio") or {}).get("portfolioPipeline") or {}
-    assert pipe.get("minKept") == 27
+    assert pipe.get("minKept") == 19
     assert pipe.get("pageCountChips") == [8, 12, 16, 20, 24, 28, 32, 36]
-    assert pipe.get("pageCountChipDetails")[0] == {"pages": 8, "capacity": 27}
+    assert pipe.get("pageCountChipDetails")[0] == {"pages": 8, "capacity": 19}
     wizard = (_STUDIO / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     assert "requestLowPhotoContinue" in wizard
     assert "lowPhotoContinueConfirm" in wizard

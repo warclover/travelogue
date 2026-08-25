@@ -7,7 +7,7 @@ fitPolicy: relative-to-slot
 faces:
   - id: page-1-hero-land-right
     status: sketch
-    displayName: 单图 · 横版英雄 · 右齐
+    displayName: 单图 · 横版英雄 · 居中
     badge: 1L
     mix: { portrait: 0, landscape: 1 }
     role: hero-land

@@ -177,24 +177,24 @@ def test_official_catalog_p0_magazine_16() -> None:
     assert series["photo_span"] == [48, 80]
     assert len(series["sequence"]) == 16
     bands = [int(p["slotBand"]) for p in series["sequence"]]
-    assert bands == [1, 1, 2, 6, 4, 3, 5, 1, 4, 3, 6, 3, 5, 2, 6, 1]
-    assert series["capacity"] == 53
+    assert bands == [1, 1, 2, 4, 3, 6, 5, 1, 4, 3, 5, 2, 1, 2, 2, 1]
+    assert series["capacity"] == 43
     assert all(not str(row["id"]).startswith("folio-") for row in rows)
     assert {row["id"]: row["capacity"] for row in rows} == {
-        "magazine-8-standard": 27,
-        "magazine-12-standard": 36,
-        "magazine-16-standard": 53,
-        "magazine-20-standard": 72,
-        "magazine-24-standard": 73,
-        "magazine-28-standard": 81,
-        "magazine-32-standard": 116,
-        "magazine-36-standard": 134,
+        "magazine-8-standard": 19,
+        "magazine-12-standard": 29,
+        "magazine-16-standard": 43,
+        "magazine-20-standard": 65,
+        "magazine-24-standard": 67,
+        "magazine-28-standard": 76,
+        "magazine-32-standard": 88,
+        "magazine-36-standard": 96,
     }
 
 
 def test_compose_from_official_magazine_16() -> None:
     """One scene group per page, sized to the P0 sequence slotBand."""
-    bands = [1, 1, 2, 6, 4, 3, 5, 1, 4, 3, 6, 3, 5, 2, 6, 1]
+    bands = [1, 1, 2, 4, 3, 6, 5, 1, 4, 3, 5, 2, 1, 2, 2, 1]
     assets = _assets_from_groups(
         [(f"g{i}", "scene", band) for i, band in enumerate(bands, 1)]
     )
@@ -203,15 +203,15 @@ def test_compose_from_official_magazine_16() -> None:
     out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
     assert meta["seriesId"] == "magazine-16-standard"
     placed = _screen_ids(out)
-    assert len(placed) == 53
+    assert len(placed) == 43
     assert _item_ids(out) <= set(placed)
-    assert trip["studio"]["portfolio"]["photosPlaced"] == 53
-    assert trip["studio"]["portfolio"]["photosKept"] == 53
+    assert trip["studio"]["portfolio"]["photosPlaced"] == 43
+    assert trip["studio"]["portfolio"]["photosKept"] == 43
     screens = [sc for ch in out for sc in (ch.get("screens") or [])]
     assert len(screens) == 16
     assert screens[0]["patternId"] == "page-1-hero-land-wide"
-    assert screens[3]["patternId"] == "page-6-grid-land"
-    assert screens[10]["patternId"] == "page-6-1l5l-wide-right"
+    assert screens[3]["patternId"] == "page-4-grid-land-wide"
+    assert screens[10]["patternId"] == "page-5-3p2l-center-flip"
     assert screens[15]["patternId"] == "page-1-hero-land-wide"
     fulfill = trip["studio"]["portfolio"]["sequenceFulfillment"]
     assert fulfill["plannedPages"] == 16
@@ -559,27 +559,27 @@ def test_select_series_fill_rate_official_w1a() -> None:
     catalog = load_official_series()
     by_kept = {
         20: "magazine-8-standard",
-        50: "magazine-16-standard",
-        82: "magazine-28-standard",
+        50: "magazine-20-standard",
+        82: "magazine-32-standard",
     }
     for kept, sid in by_kept.items():
         choice = select_series(catalog, kept_n=kept)
         assert choice is not None
         assert choice.series["id"] == sid, kept
-    overflow = select_series(catalog, kept_n=82)
+    overflow = select_series(catalog, kept_n=90)
     assert overflow is not None
-    assert overflow.overflow_count == 1
+    assert overflow.overflow_count == 2
     assert overflow.capped is True
 
 
-def test_compose_82_overflow_is_explicit() -> None:
-    assets = _assets_from_groups([("g-all", "scene", 82)])
+def test_compose_90_overflow_is_explicit() -> None:
+    assets = _assets_from_groups([("g-all", "scene", 90)])
     chapters = _one_chapter(assets)
     trip: dict = {"studio": {"edition": "portfolio"}}
     _out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
-    assert meta["seriesId"] == "magazine-28-standard"
+    assert meta["seriesId"] == "magazine-32-standard"
     overflow = trip["studio"]["portfolio"]["overflow"]
-    assert overflow["count"] == 1
+    assert overflow["count"] == 2
     assert overflow["resolution"]
 
 
@@ -600,7 +600,7 @@ def test_photo_span_mutation_leaves_four_paths_unchanged() -> None:
         assert a.cap == b.cap
         assert a.overflow_count == b.overflow_count
         assert a.overflow_resolution == b.overflow_resolution
-    assert min_capacity(catalog) == min_capacity(mutated) == 27
+    assert min_capacity(catalog) == min_capacity(mutated) == 19
 
 
 def test_select_series_ignores_photo_span_for_cap() -> None:
@@ -610,11 +610,11 @@ def test_select_series_ignores_photo_span_for_cap() -> None:
         copy = dict(row)
         copy["photo_span"] = [1, 999]
         mutated.append(copy)
-    a = select_series(catalog, kept_n=50)
-    b = select_series(mutated, kept_n=50)
+    a = select_series(catalog, kept_n=40)
+    b = select_series(mutated, kept_n=40)
     assert a is not None and b is not None
     assert a.series["id"] == b.series["id"] == "magazine-16-standard"
-    assert a.cap == b.cap == 50
+    assert a.cap == b.cap == 40
 
 
 def test_min_capacity_from_official_catalog() -> None:
@@ -622,7 +622,7 @@ def test_min_capacity_from_official_catalog() -> None:
 
     assert min_capacity(_fixture_catalog()) == 21
     assert min_capacity([]) is None
-    assert min_capacity(load_official_series()) == 27
+    assert min_capacity(load_official_series()) == 19
 
 
 def test_attach_prefers_buckets_over_stale_items() -> None:

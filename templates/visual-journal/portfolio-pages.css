@@ -155,7 +155,7 @@ html[data-edition="portfolio"] body.folio-page-capturing .closing-hero__img {
 /* page-1-hero-land-right */
 html[data-layout="web"] .layout-screen__grid--page-1-hero-land-right,
 html[data-layout="auto"] .layout-screen__grid--page-1-hero-land-right {
-  grid-template-columns: minmax(0, 27.5fr) minmax(0, 67.5fr) minmax(0, 5fr);
+  grid-template-columns: minmax(0, 16.25fr) minmax(0, 67.5fr) minmax(0, 16.25fr);
   grid-template-rows: minmax(0, 5fr) minmax(0, 90fr) minmax(0, 5fr);
   align-items: stretch;
 }
@@ -387,7 +387,7 @@ html[data-layout="web"] .layout-screen__grid--page-2-1s1p .layout-slot[data-slot
 html[data-layout="web"] .layout-screen__grid--page-2-pair-land,
 html[data-layout="auto"] .layout-screen__grid--page-2-pair-land {
   grid-template-columns: minmax(0, 5fr) minmax(0, 42.5fr) minmax(0, 5fr) minmax(0, 42.5fr) minmax(0, 5fr);
-  grid-template-rows: minmax(0, 5fr) minmax(0, 56.666667fr) minmax(0, 38.333333fr);
+  grid-template-rows: minmax(0, 21.666667fr) minmax(0, 56.666667fr) minmax(0, 21.666666fr);
   align-items: stretch;
 }
 
@@ -1186,7 +1186,7 @@ html[data-layout="web"] .layout-screen__grid--page-4-grid-land-wide .layout-slot
 html[data-layout="web"] .layout-screen__grid--page-4-port,
 html[data-layout="auto"] .layout-screen__grid--page-4-port {
   grid-template-columns: minmax(0, 4fr) minmax(0, 21.875fr) minmax(0, 1.5fr) minmax(0, 21.875fr) minmax(0, 1.5fr) minmax(0, 21.875fr) minmax(0, 1.5fr) minmax(0, 21.875fr) minmax(0, 4fr);
-  grid-template-rows: minmax(0, 5fr) minmax(0, 51.851852fr) minmax(0, 43.148148fr);
+  grid-template-rows: minmax(0, 24.074074fr) minmax(0, 51.851852fr) minmax(0, 24.074074fr);
   align-items: stretch;
 }
 

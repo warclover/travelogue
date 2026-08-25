@@ -8,14 +8,14 @@ version: 2
 pageCount: 28
 density: standard
 photo_span: [84, 140]
-capacity: 81
+capacity: 76
 coverHint: veil-footer
 backHint: closing-default
 sourceAtelier: folio-28-standard-r2
 _promotedFrom:
   atelierId: folio-28-standard-r2
-  contentHash: ece6ca924b809e9a090dc2bf0da307ca605d2a948fb2f258a13d941ddcd9294e
-  promotedAt: 2026-08-21T10:01:47Z
+  contentHash: 3f4671bf7549f8777ad014cec567f38cb0e0e5590eea78f3404793580f3addb9
+  promotedAt: 2026-08-25T03:02:50Z
 sequence:
   - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 2, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
@@ -25,23 +25,23 @@ sequence:
   - { i: 6, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
   - { i: 7, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
   - { i: 8, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
-  - { i: 9, role: land-hero-l, program: mosaic, faceHint: page-3-2l1p-hero-left, slotBand: 3, patternId: page-3-2l1p-hero-left }
-  - { i: 10, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
+  - { i: 9, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
+  - { i: 10, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross, slotBand: 4, patternId: page-4-2p2l-cross }
   - { i: 11, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 12, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
   - { i: 13, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide, slotBand: 4, patternId: page-4-grid-land-wide }
-  - { i: 14, role: land-hero-r, program: mosaic, faceHint: page-3-2l1p-hero-right, slotBand: 3, patternId: page-3-2l1p-hero-right }
-  - { i: 15, role: port-bookend-2p, program: mosaic, faceHint: page-4-2p2p, slotBand: 4, patternId: page-4-2p2p }
-  - { i: 16, role: grid-4-land, program: grid, faceHint: page-4-grid-land, slotBand: 4, patternId: page-4-grid-land }
-  - { i: 17, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left, slotBand: 6, patternId: page-6-1l5l-wide-left }
-  - { i: 18, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip, slotBand: 5, patternId: page-5-3p2l-center-flip }
-  - { i: 19, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
-  - { i: 20, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center, slotBand: 5, patternId: page-5-3p2l-center }
-  - { i: 21, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right, slotBand: 6, patternId: page-6-1l5l-wide-right }
-  - { i: 22, role: bookend-4l-2p, program: mosaic, faceHint: page-6-4l2p, slotBand: 6, patternId: page-6-4l2p }
-  - { i: 23, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
-  - { i: 24, role: grid-6-land, program: grid, faceHint: page-6-grid-land, slotBand: 6, patternId: page-6-grid-land }
-  - { i: 25, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 14, role: grid-4-land, program: grid, faceHint: page-4-grid-land, slotBand: 4, patternId: page-4-grid-land }
+  - { i: 15, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left, slotBand: 6, patternId: page-6-1l5l-wide-left }
+  - { i: 16, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip, slotBand: 5, patternId: page-5-3p2l-center-flip }
+  - { i: 17, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 18, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center, slotBand: 5, patternId: page-5-3p2l-center }
+  - { i: 19, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right, slotBand: 6, patternId: page-6-1l5l-wide-right }
+  - { i: 20, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 21, role: grid-6-land, program: grid, faceHint: page-6-grid-land, slotBand: 6, patternId: page-6-grid-land }
+  - { i: 22, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 23, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 24, role: stack-l-port-wide, program: mosaic, faceHint: page-3-2l1p-wide-right, slotBand: 3, patternId: page-3-2l1p-wide-right }
+  - { i: 25, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
   - { i: 26, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
-  - { i: 27, role: stack-l-port-wide, program: mosaic, faceHint: page-3-2l1p-wide-right, slotBand: 3, patternId: page-3-2l1p-wide-right }
+  - { i: 27, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross, slotBand: 4, patternId: page-4-2p2l-cross }
   - { i: 28, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }

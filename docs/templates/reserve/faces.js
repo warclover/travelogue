@@ -2,21 +2,20 @@
 window.RESERVE_FACES = [
       {
         id: "page-1-hero-land-right",
-        displayName: "单图 · 横版英雄 · 右齐",
+        displayName: "单图 · 横版英雄 · 居中",
         badge: "1L",
-        blurb: "高光池单横；4:3 右齐；左为剩余文案栏。没字槽仍靠右。",
+        blurb: "高光池单横；4:3 左右居中；无文案栏。槽宽高沿用右齐稿。",
         related: "兄弟 page-1-hero-land（4:3 居中）· -wide（16:9）· -ultra（21:9）",
         replaces: "意图顶岗 screen-landscape-1（满幅，不是同一张）",
         href: "page-1-hero-land-right/",
-        copy: { left: 5, top: 5, width: 22.5, height: 90 },
-        slot: { left: 27.5, top: 5, width: 67.5, height: 90 }
+        slot: { left: 16.25, top: 5, width: 67.5, height: 90 }
       },
       {
         id: "page-1-hero-land-wide",
         displayName: "单图 · 横版英雄 · 16:9",
         badge: "1L",
         blurb: "高光池单横；16:9 槽居中，四周 6.25% 留白，无文案栏。",
-        related: "兄弟 page-1-hero-land（4:3 居中）· -right（4:3 右齐）· -ultra（21:9）",
+        related: "兄弟 page-1-hero-land（4:3 居中）· -right（4:3 居中，无文案）· -ultra（21:9）",
         replaces: "意图顶岗 screen-landscape-1（满幅，不是同一张）",
         href: "page-1-hero-land-wide/",
         slot: { left: 6.25, top: 6.25, width: 87.5, height: 87.5 }
@@ -26,7 +25,7 @@ window.RESERVE_FACES = [
         displayName: "单图 · 方图英雄 · 右齐",
         badge: "1S",
         blurb: "只进 1:1 方图；方槽按高求解后右齐。左为剩余文案栏，可空。没字槽仍靠右。",
-        related: "不同族。同构摆放参见 page-1-hero-land-right",
+        related: "不同族。单图英雄参见 page-1-hero-land-right（现为 4:3 居中、无文案）",
         replaces: "无合格现网顶岗；不要拿 screen-landscape-1 顶",
         href: "page-1-hero-square-right/",
         copy: { left: 6.25, top: 6.25, width: 38.28125, height: 87.5 },
@@ -104,14 +103,13 @@ window.RESERVE_FACES = [
         id: "page-2-pair-land",
         displayName: "双横版并排",
         badge: "2L",
-        blurb: "两横槽 4:3 顶齐并排；下为通栏剩余文案，可空。竖版禁入。",
+        blurb: "两横槽 4:3 并排、上下居中；无文案栏。槽宽高沿用顶齐稿。竖版禁入。",
         related: "朝向对偶 page-2-pair-port。现网 screen-landscape-2 是上下叠，不是同一张",
         replaces: "意图顶岗 screen-landscape-2（上下 stack）",
         href: "page-2-pair-land/",
-        copy: { left: 5, top: 61.666667, width: 90, height: 33.333333 },
         slots: [
-          { left: 5, top: 5, width: 42.5, height: 56.666667 },
-          { left: 52.5, top: 5, width: 42.5, height: 56.666667 }
+          { left: 5, top: 21.666667, width: 42.5, height: 56.666667 },
+          { left: 52.5, top: 21.666667, width: 42.5, height: 56.666667 }
         ]
       },
       {
@@ -634,17 +632,16 @@ window.RESERVE_FACES = [
         id: "page-4-port",
         displayName: "四竖并排",
         badge: "4P",
-        blurb: "四竖槽 3:4 各 21.875%，顶 5%；列缝令牌 1.5%，左右纸边各 4%。下为通栏剩余文案，可空。横版禁入。左右对称，无镜像。",
+        blurb: "四竖槽 3:4 各 21.875% 上下居中；列缝令牌 1.5%，左右纸边各 4%。无文案栏。槽宽高沿用顶齐稿。横版禁入。左右对称，无镜像。",
         related: "同族 page-3-port · page-2-pair-port。不是 2×2 的 grid-4-port",
         replaces: "意图顶岗 screen-portrait-4（9:16 四竖 2×2，不是同一张）",
         href: "page-4-port/",
         hasSketch: true,
-        copy: { left: 4, top: 56.851852, width: 92, height: 43.148148 },
         slots: [
-          { left: 4, top: 5, width: 21.875, height: 51.851852 },
-          { left: 27.375, top: 5, width: 21.875, height: 51.851852 },
-          { left: 50.75, top: 5, width: 21.875, height: 51.851852 },
-          { left: 74.125, top: 5, width: 21.875, height: 51.851852 }
+          { left: 4, top: 24.074074, width: 21.875, height: 51.851852 },
+          { left: 27.375, top: 24.074074, width: 21.875, height: 51.851852 },
+          { left: 50.75, top: 24.074074, width: 21.875, height: 51.851852 },
+          { left: 74.125, top: 24.074074, width: 21.875, height: 51.851852 }
         ]
       },
       {

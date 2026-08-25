@@ -4,7 +4,7 @@
 
 | 备用 id | 中文名 | 账徽 | 槽 | 角色 | 同族兄弟 | 意图顶岗 | 状态 |
 |---------|--------|------|----|------|----------|----------|------|
-| `page-1-hero-land-right` | 单图 · 横版英雄 · 右齐 | `1L` | 1L | `hero-land` | `page-1-hero-land` · `-wide` · `-ultra` | `screen-landscape-1`（满幅，不是同一张） | sketch |
+| `page-1-hero-land-right` | 单图 · 横版英雄 · 居中 | `1L` | 1L | `hero-land` | `page-1-hero-land` · `-wide` · `-ultra` | `screen-landscape-1`（满幅，不是同一张） | sketch |
 | `page-1-hero-land-wide` | 单图 · 横版英雄 · 16:9 | `1L` | 1L | `hero-land` | `page-1-hero-land` · `-right` · `-ultra` | `screen-landscape-1`（满幅，不是同一张） | sketch |
 | `page-1-hero-land-ultra` | 单图 · 横版英雄 · 21:9 | `1L` | 1L | `hero-land` | `page-1-hero-land` · `-right` · `-wide` | `screen-panorama-1`（文档有、仓库未见 YAML） | sketch |
 | `page-1-hero-square-right` | 单图 · 方图英雄 · 右齐 | `1S` | 1S | `hero-square` | （本族第一张；旧名 `page-1-hero-square`） | 无合格现网顶岗 | sketch |
@@ -158,3 +158,9 @@
 | 0.50.5 | 2026-08-20 | 收 `page-4-1p3l-wide-right`（右竖 8/9 + 左上 16:9 宽 53.75% + 左下两横 4:3 各 25%；列缝 1.5%）+ 左右镜像 `page-4-1p3l-wide-left`。不是 4:3 上二下一的 `page-4-1p3l-*`。 |
 | 0.50.6 | 2026-08-20 | 收 `page-5-3p2l-wide`：上三竖 3:4 各 22%（外沿与下两横齐、中间均分）+ 下两宽横 16:9 各 37.5%（中缝 1.5% 居中）。左右对称。不是大竖三列的 `page-5-3p2l-*`。 |
 | 0.50.7 | 2026-08-20 | 星级重标定：按桌上新表覆盖 `stars.yaml`；未列出仍为 0，镜像不自动继承。 |
+| 0.50.8 | 2026-08-24 | 星级旁加禁用：`stars.yaml` 的 `disabled:` 名单；试印 / 成册库存 / 升格共用 `stars.js`，禁用后面都不进。 |
+| 0.50.9 | 2026-08-25 | `page-1-hero-land-right`：槽 67.5%×90% 不变，左右居中（左 16.25%），取消文案栏。id 仍叫 `-right`。 |
+| 0.50.10 | 2026-08-25 | `page-2-pair-land`：两槽 42.5%×56.666667% 与左右位置不变，上下居中（顶 21.666667%），取消下文案栏。 |
+| 0.50.11 | 2026-08-25 | `page-4-port`：四槽 21.875%×51.851852% 与左右位置不变，上下居中（顶 24.074074%），取消下文案栏。 |
+| 0.50.12 | 2026-08-25 | 星级重标定：按桌上新表覆盖 `stars.yaml`；禁用 `page-4-2p2p` · `page-6-4l2p`；未列出仍为 0。 |
+| 0.50.13 | 2026-08-25 | 成册重编：覆盖 `folio-8/12/16/20/24-standard` 与 `folio-28/32-standard-r2`、`folio-36-standard`；金样种子同步。 |

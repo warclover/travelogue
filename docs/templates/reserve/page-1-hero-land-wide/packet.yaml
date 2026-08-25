@@ -48,7 +48,7 @@ admit:
 themes: [landscape, architecture, portrait]
 usage:
   whenToUse: 高光池单张横图；原图已是 16:9 或接近宽幅时
-  whenNotToUse: 必须消化竖图；需要多图并置；需要 4:3 槽或左侧文案栏 → 用 page-1-hero-land / page-1-hero-land-right
+  whenNotToUse: 必须消化竖图；需要多图并置；需要 4:3 槽 → 用 page-1-hero-land / page-1-hero-land-right
 
 fitPolicy: relative-to-slot
 # 同比例铺满

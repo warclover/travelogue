@@ -151,6 +151,7 @@
     const overrides = src.overrides || {};
     const overlay = String(src.overlay || "").trim();
     const getStars = src.getStars || function () { return 0; };
+    const getDisabled = src.getDisabled || function () { return false; };
     const neighborLights = src.neighborLights || [];
     const idErr = officialIdError(officialId);
     const hard = [];
@@ -210,10 +211,17 @@
       });
     }
 
+    const disabledFaces = [];
     const lowStar = [];
     for (const row of rows) {
+      if (getDisabled(row.faceHint) && disabledFaces.indexOf(row.faceHint) < 0) {
+        disabledFaces.push(row.faceHint);
+      }
       const n = Number(getStars(row.faceHint) || 0);
       if (n < 3 && lowStar.indexOf(row.faceHint) < 0) lowStar.push(row.faceHint);
+    }
+    if (disabledFaces.length) {
+      hard.push(`已禁用，所有管线不用：${disabledFaces.join(" · ")}。先在页型 tab 取消禁用。`);
     }
     if (lowStar.length && !overlay) {
       hard.push("建议三星未达，须写覆盖理由。覆盖是常态。");
@@ -461,7 +469,7 @@
     };
   }
 
-  async function inspectPage(face, getStars) {
+  async function inspectPage(face, getStars, getDisabled) {
     const id = face && face.id;
     const hard = [];
     const amber = [];
@@ -501,6 +509,7 @@
         );
       }
     }
+    if (getDisabled && getDisabled(id)) hard.push("已禁用，所有管线不用。先在页型 tab 取消禁用。");
     const stars = Number(getStars ? getStars(id) : 0);
     return {
       id,
