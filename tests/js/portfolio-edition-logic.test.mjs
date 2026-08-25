@@ -83,9 +83,21 @@ test("页数芯片只出目录投影的档，缺省仅自动", () => {
     ),
     28
   );
-  const confirm = thinTierConfirm(27, 180, 28);
-  assert.match(confirm.body, /只收 27 张/);
+  const confirm = thinTierConfirm(27, 180, 28, 160);
+  assert.match(confirm.body, /大约收得下 27 张/);
+  assert.match(confirm.body, /文件夹 160 张/);
+  assert.equal(confirm.body.includes("你有"), false);
   assert.equal(confirm.confirmText, "改用 28 页");
+  assert.equal(
+    recommendPageCount(
+      [
+        { pages: 8, capacity: 27, demotedPages: 7 },
+        { pages: 28, capacity: 81, demotedPages: 0 },
+      ],
+      80
+    ),
+    28
+  );
   assert.equal(selectedPageCountChip({ pageCountSource: "auto", pageCount: 16 }), "auto");
   assert.equal(
     selectedPageCountChip({ pageCountSource: "user", pageCount: 16, pageCountRequested: 18 }),

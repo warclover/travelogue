@@ -94,6 +94,7 @@ def compose_portfolio_trip(
         groups, choice, aspect_kinds, aspect_ratios, buckets=buckets
     )
     fulfill_hint = None
+    density_hint = None
     if (
         not sparse
         and page_count_source == "auto"
@@ -122,15 +123,10 @@ def compose_portfolio_trip(
         and page_count_source == "user"
         and _fulfillment(placed, choice) < FULFILL_MIN
     ):
-        auto = select_series(
-            catalog, kept_n=kept_n, page_count_source="auto", max_pages=max_pages
-        )
-        if auto is not None and auto.series.get("id") != choice.series.get("id"):
-            hollow = max(0, int(choice.series.get("pageCount") or 0) - placed.fulfilled_pages)
-            fulfill_hint = (
-                f"有 {hollow} 页没排满，换 "
-                f"{int(auto.series.get('pageCount') or 0)} 页会更饱满"
-            )
+        hollow = max(0, int(choice.series.get("pageCount") or 0) - placed.fulfilled_pages)
+        if hollow:
+            # PFO · 用户钉页：空页不得写成唯一换档劝说（BE-PFO-03）
+            density_hint = f"有 {hollow} 页没排满。"
     if sparse and not fulfill_hint:
         fulfill_hint = "这些照片间隔较大，预设编排排不饱满"
     if not placed.pages:
@@ -151,6 +147,18 @@ def compose_portfolio_trip(
             "resolution": choice.overflow_resolution or "capped",
             "assetIds": leftover,
         }
+    folder_n = _folder_count(trip, assets)
+    match_block: dict[str, Any] = {
+        "flexUsed": list(placed.used_roles),
+        "droppedRoles": list(placed.dropped_roles),
+        "nearMiss": "photo_span" if (choice.upgraded or choice.capped) else None,
+        "pageCountRequested": requested_pages if page_count_source == "user" else None,
+        "pageCountHint": snap_hint or fulfill_hint,
+    }
+    if density_hint:
+        match_block["densityHint"] = density_hint
+    if folder_n:
+        match_block["folderCount"] = folder_n
     _stamp_portfolio(
         trip,
         series_id=str(choice.series.get("id") or ""),
@@ -160,13 +168,7 @@ def compose_portfolio_trip(
         photos_placed=photos_placed,
         photos_kept=kept_n,
         overflow=overflow,
-        match={
-            "flexUsed": list(placed.used_roles),
-            "droppedRoles": list(placed.dropped_roles),
-            "nearMiss": "photo_span" if (choice.upgraded or choice.capped) else None,
-            "pageCountRequested": requested_pages if page_count_source == "user" else None,
-            "pageCountHint": snap_hint or fulfill_hint,
-        },
+        match=match_block,
         fulfillment=_sequence_fulfillment(placed, choice, photos_placed),
         sparse=sparse,
     )
@@ -399,6 +401,24 @@ def _better_fulfilling_choice(
     )
 
 
+def _folder_count(
+    trip: Mapping[str, Any] | None,
+    assets: Sequence[Mapping[str, Any]] | None,
+) -> int | None:
+    """Scan-time folder N. Prefer trip.assets (ingest), else the compose asset list."""
+    if isinstance(trip, Mapping):
+        n = sum(
+            1
+            for a in trip.get("assets") or []
+            if isinstance(a, Mapping) and a.get("type", "image") == "image"
+        )
+        if n:
+            return n
+    if assets:
+        return len(list(assets))
+    return None
+
+
 def _page_request(trip: Mapping[str, Any] | None) -> tuple[int | None, str]:
     if not isinstance(trip, Mapping):
         return None, "auto"
@@ -444,6 +464,11 @@ def _stamp_portfolio(
     block["density"] = density
     block["photosPlaced"] = photos_placed
     block["photosKept"] = photos_kept
+    folder_n = match.get("folderCount") if isinstance(match, dict) else None
+    if folder_n:
+        block["photosFolder"] = folder_n
+    else:
+        block.pop("photosFolder", None)
     if overflow:
         block["overflow"] = overflow
     else:

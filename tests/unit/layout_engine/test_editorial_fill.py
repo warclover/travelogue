@@ -188,7 +188,10 @@ def test_user_pin_is_not_rewritten_when_hollow() -> None:
     )
     assert meta["seriesId"] == "magazine-8-standard"
     hint = trip["studio"]["portfolio"]["match"].get("pageCountHint") or ""
-    assert "没排满" in hint
+    density = trip["studio"]["portfolio"]["match"].get("densityHint") or ""
+    assert "没排满" not in hint
+    assert "更饱满" not in hint
+    assert "没排满" in density
 
 
 def test_sparse_collection_median_over_60_min() -> None:

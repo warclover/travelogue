@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 
 import {
   PORTFOLIO_PAGES_PLATFORM,
+  firstSuccessPortfolioCopy,
   formatOverflowLine,
   isPortfolioEdition,
   portfolioBookUrl,
@@ -98,12 +99,41 @@ test("shelfExportRequestForTrip 作品集带 portfolio_pages", () => {
   );
 });
 
-test("formatOverflowLine 仅在实收小于 kept 时出现", () => {
+test("firstSuccessPortfolioCopy 默认规格句，溢出进 lead", () => {
+  const spec = firstSuccessPortfolioCopy({
+    title: "林芝",
+    portfolio: { folderCount: 129, pageCount: 32, photosPlaced: 81, photosKept: 81 },
+  });
+  assert.equal(spec.headline, "《林芝》已生成 · 文件夹 129 张，做成大约一本 32 页");
+  assert.equal(spec.lead, "作品集已做好。打开看看，满意就能导出。");
+  assert.match(spec.detail, /文件夹 129 张/);
+  const leftover = firstSuccessPortfolioCopy({
+    title: "林芝",
+    overflowLine: "有 84 张没放进这本，要的话用游记能全收。",
+    overflowDetail: "文件夹 160 张 · 放进这本的有 96 张 · 大约用上 180 张",
+    portfolio: { folderCount: 160, pageCount: 32, photosPlaced: 96, photosKept: 180 },
+  });
+  assert.equal(leftover.headline, "《林芝》已生成 · 文件夹 160 张，做成大约一本 32 页");
+  assert.equal(leftover.lead, "有 84 张没放进这本，要的话用游记能全收。");
+  assert.match(leftover.detail, /放进这本的有 96 张/);
+  assert.equal(leftover.leftover, true);
+  assert.equal(firstSuccessPortfolioCopy({ title: "林芝" }).headline, "");
+});
+
+test("formatOverflowLine 人话：少收优先，否则文件夹+页数", () => {
   assert.equal(formatOverflowLine(null), "");
   assert.equal(formatOverflowLine({ photosPlaced: 96, photosKept: 96 }), "");
   assert.equal(
     formatOverflowLine({ photosPlaced: 96, photosKept: 180 }),
-    "本册收录 96 / 180 张"
+    "有 84 张没放进这本，要的话用游记能全收。"
+  );
+  assert.equal(
+    formatOverflowLine({ folderCount: 129, pageCount: 32, photosPlaced: 81, photosKept: 81 }),
+    "文件夹 129 张，做成大约一本 32 页。"
+  );
+  assert.equal(
+    formatOverflowLine({ photosPlaced: 96, photosKept: 180 }).includes("本册收录"),
+    false
   );
 });
 
@@ -114,7 +144,7 @@ test("portfolioSuccessCopy 主文案与打开这一本", () => {
   );
   assert.equal(copy.title, "作品集已导出 · 共 16 页");
   assert.equal(copy.primary, "打开这一本");
-  assert.equal(copy.overflowLine, "本册收录 96 / 180 张");
+  assert.equal(copy.overflowLine, "有 84 张没放进这本，要的话用游记能全收。");
   assert.equal(copy.overflowCta, "改用游记（全收）");
   assert.match(copy.hint, /这一本已打包/);
   const blob = [copy.title, copy.hint, copy.primary, copy.secondaryFolder, copy.secondaryZip].join(" ");

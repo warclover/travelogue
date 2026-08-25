@@ -86,16 +86,71 @@ export function dockCtaFromEntry(entry) {
   return isPortfolioEdition(entry && entry.edition) ? portfolioDockCta() : journalDockCta();
 }
 
+export function formatOverflowDetail(portfolio) {
+  if (!portfolio || typeof portfolio !== "object") return "";
+  var parts = [];
+  var folder = Number(portfolio.folderCount);
+  var placed = Number(portfolio.photosPlaced);
+  var kept = Number(portfolio.photosKept);
+  if (folder > 0) parts.push("文件夹 " + folder + " 张");
+  if (placed >= 0) parts.push("放进这本的有 " + placed + " 张");
+  if (kept > 0) parts.push("大约用上 " + kept + " 张");
+  return parts.join(" · ");
+}
+
+export function portfolioHasLeftover(portfolio) {
+  if (!portfolio || typeof portfolio !== "object") return false;
+  var placed = Number(portfolio.photosPlaced);
+  var kept = Number(portfolio.photosKept);
+  return placed >= 0 && kept > 0 && placed < kept;
+}
+
 export function formatOverflowLine(portfolio) {
   if (!portfolio || typeof portfolio !== "object") return "";
   var placed = Number(portfolio.photosPlaced);
   var kept = Number(portfolio.photosKept);
-  if (!(placed >= 0) || !(kept > 0) || placed >= kept) return "";
-  return "本册收录 " + placed + " / " + kept + " 张";
+  var leftover = placed >= 0 && kept > 0 && placed < kept ? kept - placed : 0;
+  if (leftover > 0) {
+    return "有 " + leftover + " 张没放进这本，要的话用游记能全收。";
+  }
+  var folder = Number(portfolio.folderCount);
+  var pages = Number(portfolio.pageCount);
+  if (folder > 0 && pages > 0) {
+    return "文件夹 " + folder + " 张，做成大约一本 " + pages + " 页。";
+  }
+  return "";
 }
 
 export function overflowJournalCta() {
   return "改用游记（全收）";
+}
+
+/** FirstSuccess · 作品集默认人话规格；溢出另起 lead，N/M/P 进详情。 */
+export function firstSuccessPortfolioCopy(result) {
+  var title = String((result && result.title) || "我的旅途");
+  var portfolio = (result && result.portfolio) || {};
+  var leftover = portfolioHasLeftover(portfolio);
+  var folder = Number(portfolio.folderCount);
+  var pages = Number(portfolio.pageCount);
+  var spec = folder > 0 && pages > 0
+    ? "文件夹 " + folder + " 张，做成大约一本 " + pages + " 页"
+    : "";
+  var overflow = leftover
+    ? String((result && result.overflowLine) || formatOverflowLine(portfolio) || "").trim()
+    : "";
+  var headline = "";
+  if (spec || overflow) {
+    headline = "《" + title + "》已生成";
+    if (spec) headline += " · " + spec;
+    else headline += " · " + overflow.replace(/。$/, "");
+  }
+  var lead = leftover && overflow
+    ? overflow
+    : "作品集已做好。打开看看，满意就能导出。";
+  var detail = String(
+    (result && result.overflowDetail) || formatOverflowDetail(portfolio) || ""
+  ).trim();
+  return { headline: headline, lead: lead, detail: detail, leftover: leftover };
 }
 
 export var EXPORT_OUTPUT_DIRNAME = "导出文件";
@@ -155,7 +210,7 @@ export function portfolioSuccessCopy(result, portfolio) {
     title: title,
     hint: hint,
     overflowLine: formatOverflowLine(portfolio),
-    overflowCta: formatOverflowLine(portfolio) ? overflowJournalCta() : "",
+    overflowCta: portfolioHasLeftover(portfolio) ? overflowJournalCta() : "",
     primary: "打开这一本",
     secondaryFolder: "打开文件夹",
     secondaryZip: "发送压缩包",

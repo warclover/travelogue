@@ -2526,6 +2526,7 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         if (trip.layoutCssStale || trip.renderBundleStale) {
+          // PFO W1 · 规格 job 已 stamp 时后端不得再报假 stale；这里只信 GET /trips。
           // SFC · 禁「产物/过期」工程腔；与 stale 主词「分享图需更新」同族
           var pendingMsg = trip.renderBundleStale
             ? "预览需更新，请重新渲染后再分享"
@@ -2541,6 +2542,8 @@ export function cancelPreviewLongshotExport(root) {
           _setLayoutPending(true);
           return;
         }
+        // preview_ready：作品集 / 游记都清 pending，避免改页刷新后残留「更新版面」
+        _setLayoutPending(false);
         _setLayoutPendingMessage("");
         return fetchSourceStatus(tripId).then(function () {
           if (trip.longshotStale) {
@@ -3558,8 +3561,38 @@ export function cancelPreviewLongshotExport(root) {
       });
   }
 
+  function _stripQueryParam(name) {
+    try {
+      if (!location.search || !new URLSearchParams(location.search).has(name)) {
+        return;
+      }
+      var clean = new URL(location.href);
+      clean.searchParams.delete(name);
+      history.replaceState(null, "", clean.pathname + clean.search + clean.hash);
+    } catch (_hist) {}
+  }
+
+  /** PFO · 成功面「导出作品集」进预览后打开同一套 Dock 面板，不复制 HTML。 */
+  export function consumeExportPanel(root, tripId) {
+    var flagged = false;
+    try {
+      flagged = new URLSearchParams(location.search || "").get("exportPanel") === "1";
+    } catch (_q) {}
+    if (!flagged) return false;
+    _stripQueryParam("exportPanel");
+    openLongshotExportOptions(root);
+    return true;
+  }
+
   /** FE-DFX-43 · FTUE「保存长图」续跑：query/session → 默认 wechat_chat 导出 */
   export function consumeAutoExport(root, tripId) {
+    var edition =
+      (root && root._edition) ||
+      (document.documentElement && document.documentElement.getAttribute("data-edition"));
+    if (isPortfolioEdition(edition)) {
+      _stripQueryParam("autoExport");
+      return false;
+    }
     var platform = null;
     try {
       var q = new URLSearchParams(location.search || "").get("autoExport");

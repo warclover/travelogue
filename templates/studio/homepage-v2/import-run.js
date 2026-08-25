@@ -141,6 +141,12 @@ function buildUploadForm(files, opts) {
   var mode = String(opts.mode || "quick_share");
   form.append("mode", mode);
   if (opts.edition) form.append("edition", String(opts.edition));
+  if (opts.pageCount != null && opts.pageCount !== "") {
+    form.append("pageCount", String(opts.pageCount));
+  }
+  if (opts.pageCountSource) {
+    form.append("pageCountSource", String(opts.pageCountSource));
+  }
   if (mode === "fine_craft" && opts.layoutDensity) {
     form.append("layoutDensity", String(opts.layoutDensity));
   }
@@ -498,6 +504,7 @@ function pollImport(jobId, gen, source) {
       } catch (e) { /* ignore */ }
       setStage("完成", 100);
       var result = job.result || {};
+      result.edition = result.edition || _importEdition;
       trackStudioEvent("import_success", {
         tripId: result.tripId || null,
         templateId: result.resolvedTemplateId || null,

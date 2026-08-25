@@ -402,9 +402,12 @@
 | [templates/TEMPLATE-SYSTEM-UPGRADE.md](./templates/TEMPLATE-SYSTEM-UPGRADE.md) | TSU 设计理由（送审过程稿，合同以 PRD 为准） |
 | [PRD-RESERVE-SERIES-CABINET-V1.md](./PRD-RESERVE-SERIES-CABINET-V1.md) | **RSC** 备用库成册样例柜 V1 **v0.1.0** · **W1 已落地**（手编多本 YAML · `serve.cmd` 目录 · 不进引擎 · 不代替 TSU `/series-editor`） |
 | [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **TDV** 后台模板设计验证工具 V1 **v0.2.0 Conditional Go** · BLK 已回写 · 设计工坊 · 升格包 · [八席纪要](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) · [导出线框](./wireframes/tdv-atelier-promote-export-v1-wireframe.html) · [讨论备忘](./后台模板设计验证工具备忘录.md) |
-| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **PFM** 作品集成册双管线 **v0.2.0** · W0–W3 编码已清 · W4 协议已锁、人评未开 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **PFM** 作品集成册双管线 **v0.2.0** · W0–W3 编码已清 · W4 协议已锁、人评未开 · 流程改判见 PFO · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) |
+| [PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **PFO** **v0.2.1** · W1+W2 已落地 · F9–F11 已签 · [签核](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) |
 | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | PFM 实施列车 |
 | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | PFM 验收门 · AC-PFM-25 人评未开 |
+| [IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | PFO 实施 · W1+W2 Done |
+| [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | PFO 验收门 · AC-PFO-20 已关 · W3 手测未开 |
 | [acceptance-records/pfm-local-dogfood-GUIDE.md](./acceptance-records/pfm-local-dogfood-GUIDE.md) | PFM W4 本机狗粮 GUIDE |
 | [acceptance-records/pfm-blind-review-TEMPLATE.md](./acceptance-records/pfm-blind-review-TEMPLATE.md) | PFM 盲评三问模板 |
 | [config-pfm-dogfood.example.yaml](./config-pfm-dogfood.example.yaml) | PFM 狗粮配置样例（勿改仓库默认） |
@@ -749,6 +752,7 @@ python scripts/validate_trip.py schemas/fixtures/trip.copy_locked.json --level a
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-25 | **PFO**：[PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) 升 **v0.2.1** · F9–F11 已签 · W1+W2 已落地 · [签核](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) |
 | 2026-08-21 | **MSP**：AS-PFM-03 后继五档入库（8/12/16/20/28）；原对账纪要不改 |
 | 2026-08-21 | **PFM**：AS-PFM-03 工坊对账完成（不升格）· W4 狗粮 GUIDE / 盲评三问已锁 · 首页次链仍关 |
 | 2026-08-19 | **TDV** PRD 升 **v0.2.0**：回写 BLK-TDV-01～07 · 导出线框 F1/F2 · [纪要 1.1](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |

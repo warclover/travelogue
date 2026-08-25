@@ -169,6 +169,7 @@ export function pageCountChipOptions(chips) {
   );
 }
 
+/** 精修改档：只用真可上版 kept。禁止把估计比 / demotedPages 当选档输入。 */
 export function recommendPageCount(chips, kept) {
   var list = normalizeChipDetails(chips).filter(function (row) {
     return row.capacity > 0;
@@ -203,14 +204,15 @@ export function shouldConfirmThinTier(capacity, kept) {
   return cap > 0 && n > 0 && cap < n * THIN_TIER_RATIO;
 }
 
-export function thinTierConfirm(capacity, kept, recommendPages) {
+export function thinTierConfirm(capacity, kept, recommendPages, folderCount) {
   var rec = Number(recommendPages);
-  var body =
-    "这一档只收 " +
-    Number(capacity) +
-    " 张，你有 " +
-    Number(kept) +
-    " 张。";
+  var cap = Number(capacity);
+  var folder = Number(folderCount);
+  var body = "这一档大约收得下 " + cap + " 张。";
+  if (folder > 0) {
+    body += "文件夹 " + folder + " 张。";
+  }
+  body += "继续则可能有照片放不进这本。";
   if (rec > 0) body += "要更厚的一本吗？";
   return {
     title: "这一档会少收很多照片",

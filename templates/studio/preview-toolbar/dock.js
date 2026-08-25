@@ -325,6 +325,7 @@ export function applyTripEdition(root, entry) {
       root._layoutVibeVisible = entry.layoutVibeVisible !== false;
       root._dockCta = entry.dockCta || null;
       root._overflowLine = entry.overflowLine || "";
+      root._overflowDetail = entry.overflowDetail || "";
       root._overflowCta = entry.overflowCta || "";
       root._previewUrl = String(
         (entry.scrollShareUrl || entry.previewUrl) || ""

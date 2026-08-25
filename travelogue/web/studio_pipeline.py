@@ -64,6 +64,10 @@ class StudioPipelineResult:
     title_noise_fallback: bool = False
     # FirstSuccess 顶栏用真实封面图（非竖版 preview.jpg 封面卡）
     shelf_cover_rel_path: str = ""
+    edition: str = "journal"
+    overflow_line: str = ""
+    overflow_detail: str = ""
+    portfolio: dict | None = None
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -454,6 +458,9 @@ def _finalize_pipeline_result(
     # FirstSuccess 只要照片本身；竖版 preview.jpg 封面卡（含标题）不进顶栏
     if shelf_cover_rel.replace("\\", "/").rsplit("/", 1)[-1] == "preview.jpg":
         shelf_cover_rel = ""
+    from travelogue.web.studio_entry import import_success_chrome
+
+    success_chrome = import_success_chrome(trip_final)
     return StudioPipelineResult(
         trip_id=slug,
         trip_dir=trip_root,
@@ -485,7 +492,17 @@ def _finalize_pipeline_result(
         media_warn=media_warn or "",
         title_noise_fallback=title_noise_fallback,
         shelf_cover_rel_path=shelf_cover_rel,
+        edition=_result_edition(trip_final),
+        overflow_line=str(success_chrome.get("overflowLine") or ""),
+        overflow_detail=str(success_chrome.get("overflowDetail") or ""),
+        portfolio=success_chrome.get("portfolio"),
     )
+
+
+def _result_edition(trip: dict) -> str:
+    from travelogue.config.edition import resolve_edition
+
+    return resolve_edition(trip)
 
 
 def _resolve_stored_layout_density(trip: dict, *, import_mode: str) -> str:
@@ -825,6 +842,8 @@ def run_studio_pipeline(
     stop_after: str = "full",
     force_stub: bool = False,
     edition: str | None = None,
+    page_count: object | None = None,
+    page_count_source: str | None = None,
 ) -> StudioPipelineResult:
     from travelogue.domain.photo_keep_mode import resolve_photo_keep_prefs
 
@@ -1032,7 +1051,13 @@ def run_studio_pipeline(
         )
 
         try:
-            apply_import_edition(trip, edition, cfg)
+            apply_import_edition(
+                trip,
+                edition,
+                cfg,
+                page_count=page_count,
+                page_count_source=page_count_source,
+            )
         except PortfolioUnavailableError:
             raise
         svc.update(trip_json, make_studio_edition_mutator(trip))

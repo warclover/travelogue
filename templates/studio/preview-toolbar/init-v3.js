@@ -65,6 +65,7 @@ import {
   openLongshotExportOptions,
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
+  consumeExportPanel,
   consumeAutoExport,
   shouldShowExportPulse,
   maybeShowLongshotHelp,
@@ -969,6 +970,7 @@ export function initToolbarV3(root, tripId) {
   // 「更新并导出」：版面刷新后自动续导出；FTUE「保存长图」query/session 续跑
   requestAnimationFrame(function () {
     if (consumeExportAfterLayout(root, tripId)) return;
+    if (consumeExportPanel(root, tripId)) return;
     consumeAutoExport(root, tripId);
   });
 }

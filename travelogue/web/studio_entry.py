@@ -433,17 +433,82 @@ def _edition_entry(trip: dict) -> str:
     return resolve_edition(trip)
 
 
+def _as_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _trip_folder_count(trip: dict) -> int:
+    return sum(
+        1
+        for a in trip.get("assets") or []
+        if isinstance(a, dict) and a.get("type", "image") == "image"
+    )
+
+
 def _overflow_line(portfolio: dict[str, Any] | None) -> str:
+    """PFO W1 · 角标默认一句人话，不写「本册收录 P / M」。"""
     if not isinstance(portfolio, dict):
         return ""
-    try:
-        placed = int(portfolio.get("photosPlaced"))
-        kept = int(portfolio.get("photosKept"))
-    except (TypeError, ValueError):
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
+    if leftover > 0:
+        return f"有 {leftover} 张没放进这本，要的话用游记能全收。"
+    folder = _as_int(portfolio.get("folderCount"))
+    pages = _as_int(portfolio.get("pageCount"))
+    if folder > 0 and pages > 0:
+        return f"文件夹 {folder} 张，做成大约一本 {pages} 页。"
+    return ""
+
+
+def _overflow_detail(portfolio: dict[str, Any] | None) -> str:
+    if not isinstance(portfolio, dict):
         return ""
-    if placed < 0 or kept <= 0 or placed >= kept:
-        return ""
-    return f"本册收录 {placed} / {kept} 张"
+    parts: list[str] = []
+    folder = _as_int(portfolio.get("folderCount"))
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    if folder > 0:
+        parts.append(f"文件夹 {folder} 张")
+    if placed >= 0:
+        parts.append(f"放进这本的有 {placed} 张")
+    if kept > 0:
+        parts.append(f"大约用上 {kept} 张")
+    return " · ".join(parts)
+
+
+def import_success_chrome(trip: dict) -> dict[str, Any]:
+    """FirstSuccess payload: 人话规格 / 溢出，不带芯片目录。"""
+    from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
+
+    if resolve_edition(trip) != EDITION_PORTFOLIO:
+        return {}
+    folio = _portfolio_counts(trip)
+    return {
+        "overflowLine": _overflow_line(folio) or None,
+        "overflowDetail": _overflow_detail(folio) or None,
+        "portfolio": folio,
+    }
+
+
+def _portfolio_counts(trip: dict) -> dict[str, Any]:
+    studio = trip.get("studio")
+    raw = studio.get("portfolio") if isinstance(studio, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
+    folder = raw.get("photosFolder") or match.get("folderCount")
+    if not folder:
+        folder = _trip_folder_count(trip) or None
+    return {
+        "folderCount": folder,
+        "pageCount": raw.get("pageCount"),
+        "photosPlaced": raw.get("photosPlaced"),
+        "photosKept": raw.get("photosKept"),
+    }
 
 
 def edition_chrome(trip: dict) -> dict[str, Any]:
@@ -451,6 +516,11 @@ def edition_chrome(trip: dict) -> dict[str, Any]:
     edition = _edition_entry(trip)
     portfolio = _portfolio_entry(trip)
     overflow = _overflow_line(portfolio)
+    leftover = False
+    if isinstance(portfolio, dict):
+        placed = _as_int(portfolio.get("photosPlaced"), -1)
+        kept = _as_int(portfolio.get("photosKept"))
+        leftover = placed >= 0 and kept > 0 and placed < kept
     if edition == "portfolio":
         dock = {"short": "导出作品集", "aria": "导出作品集"}
     else:
@@ -460,7 +530,8 @@ def edition_chrome(trip: dict) -> dict[str, Any]:
         "layoutVibeVisible": edition != "portfolio",
         "dockCta": dock,
         "overflowLine": overflow or None,
-        "overflowCta": "改用游记（全收）" if overflow else None,
+        "overflowDetail": _overflow_detail(portfolio) or None,
+        "overflowCta": "改用游记（全收）" if leftover else None,
         "portfolio": portfolio,
     }
 
@@ -497,23 +568,21 @@ def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
         if isinstance(raw.get("sequenceFulfillment"), dict)
         else None
     )
+    folder = raw.get("photosFolder") or match.get("folderCount")
+    if not folder:
+        folder = _trip_folder_count(trip) or None
     return {
         "seriesId": raw.get("seriesId"),
         "pageCount": raw.get("pageCount"),
         "pageCountSource": raw.get("pageCountSource") or "auto",
         "pageCountRequested": match.get("pageCountRequested"),
-        "pageCountHint": match.get("pageCountHint")
-        or (
-            "有 "
-            + str(fulfillment.get("demotedPages"))
-            + " 页降成了单图"
-            if fulfillment and int(fulfillment.get("demotedPages") or 0) > 0
-            else None
-        ),
+        "pageCountHint": match.get("pageCountHint"),
+        "densityHint": match.get("densityHint"),
         "pageCountChips": catalog_page_count_chips(catalog),
         "pageCountChipDetails": catalog_chip_details(catalog),
         "photosPlaced": raw.get("photosPlaced"),
         "photosKept": raw.get("photosKept"),
+        "folderCount": folder,
         "overflow": overflow,
         "sequenceFulfillment": fulfillment,
         "sparseCollection": bool(raw.get("sparseCollection")),

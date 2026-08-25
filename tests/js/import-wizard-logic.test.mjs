@@ -27,6 +27,11 @@ import {
   shouldConfirmLowPhoto,
   lowPhotoContinueConfirm,
   lowPhotoHint,
+  displayHintPages,
+  pageSpecSentence,
+  approxKeptSentence,
+  shouldShowPageSpec,
+  buildPageCountFields,
 } from "../../templates/studio/homepage-v2/import-wizard-logic.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -154,6 +159,56 @@ test("PFM FE-PFM-02 low photo grey-out + informed continue", () => {
     ),
     /studioModal/
   );
+});
+
+const PFO_CHIPS = [
+  { pages: 8, capacity: 19 },
+  { pages: 12, capacity: 29 },
+  { pages: 16, capacity: 43 },
+  { pages: 20, capacity: 65 },
+  { pages: 24, capacity: 67 },
+  { pages: 28, capacity: 76 },
+  { pages: 32, capacity: 88 },
+  { pages: 36, capacity: 96 },
+];
+
+test("PFO 向导规格句默认自动、游记不带页数", () => {
+  assert.equal(displayHintPages(19, PFO_CHIPS), 8);
+  assert.equal(displayHintPages(20, PFO_CHIPS), 12);
+  assert.equal(displayHintPages(100, PFO_CHIPS), 36);
+  assert.equal(displayHintPages(0, PFO_CHIPS), 0);
+  assert.equal(
+    pageSpecSentence(48, PFO_CHIPS),
+    "文件夹 48 张，做成大约一本 20 页。"
+  );
+  const on = parsePortfolioPipelineConfig({
+    portfolioPipeline: { enabled: true },
+  });
+  assert.equal(shouldShowPageSpec("portfolio", on), true);
+  assert.equal(shouldShowPageSpec("journal", on), false);
+  assert.deepEqual(buildPageCountFields("journal", "32"), {});
+  assert.deepEqual(buildPageCountFields("portfolio", "auto"), {
+    pageCountSource: "auto",
+  });
+  assert.deepEqual(buildPageCountFields("portfolio", "32"), {
+    pageCount: 32,
+    pageCountSource: "user",
+  });
+  assert.equal(parsePortfolioPipelineConfig({}).keptEstimateRatio, 0.67);
+  assert.equal(
+    parsePortfolioPipelineConfig({
+      portfolioPipeline: { keptEstimateRatio: 0.5 },
+    }).keptEstimateRatio,
+    0.5
+  );
+  assert.equal(approxKeptSentence(160, 0.67), "这本大约用上 107 张");
+  assert.equal(approxKeptSentence(0, 0.67), "");
+  const wizard = readFileSync(
+    join(__dirname, "../../templates/studio/homepage-v2/import-wizard.js"),
+    "utf8"
+  );
+  assert.match(wizard, /buildPageCountFields\(_activeEdition/);
+  assert.match(wizard, /换一本更厚 \/ 更薄/);
 });
 
 test("resolvePhotoKeepModeFromDraft 对齐 QFX 合同向量", () => {

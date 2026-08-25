@@ -9,6 +9,7 @@ from travelogue.web.studio_entry import (
     build_entry,
     build_intent_summary,
     edition_chrome,
+    import_success_chrome,
     resolve_peak_screen_id,
 )
 
@@ -126,7 +127,10 @@ def test_build_entry_exposes_portfolio_edition(monkeypatch: pytest.MonkeyPatch) 
     assert entry["portfolio"]["pageCountChipDetails"][0] == {"pages": 8, "capacity": 19}
     assert entry["previewUrl"] == "/demo-trip/index.html"
     assert entry["dockCta"]["aria"] == "导出作品集"
-    assert entry["overflowLine"] == "本册收录 96 / 180 张"
+    assert entry["overflowLine"] == "有 84 张没放进这本，要的话用游记能全收。"
+    assert "本册收录" not in (entry["overflowLine"] or "")
+    assert "放进这本的有 96 张" in (entry["overflowDetail"] or "")
+    assert "大约用上 180 张" in (entry["overflowDetail"] or "")
     assert entry["overflowCta"] == "改用游记（全收）"
     assert journal["dockCta"]["aria"] == "导出长图"
     assert journal["overflowLine"] is None
@@ -135,6 +139,55 @@ def test_build_entry_exposes_portfolio_edition(monkeypatch: pytest.MonkeyPatch) 
     assert chrome["dockCta"] == entry["dockCta"]
     assert chrome["overflowLine"] == entry["overflowLine"]
     assert chrome["layoutVibeVisible"] is False
+
+
+def test_portfolio_entry_does_not_use_demoted_pages_as_hint() -> None:
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {
+                "pageCount": 32,
+                "photosPlaced": 81,
+                "photosKept": 81,
+                "photosFolder": 129,
+                "sequenceFulfillment": {"demotedPages": 7},
+            },
+        },
+        "chapters": [],
+    }
+    entry = build_entry(trip, "demo-trip")
+    assert entry["portfolio"]["pageCountHint"] is None
+    assert entry["portfolio"]["folderCount"] == 129
+    assert entry["overflowLine"] == "文件夹 129 张，做成大约一本 32 页。"
+    assert entry["overflowCta"] is None
+
+
+def test_import_success_chrome_human_line_without_chips() -> None:
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {
+                "pageCount": 32,
+                "photosPlaced": 81,
+                "photosKept": 81,
+                "photosFolder": 129,
+            },
+        }
+    }
+    chrome = import_success_chrome(trip)
+    assert chrome["overflowLine"] == "文件夹 129 张，做成大约一本 32 页。"
+    assert chrome["portfolio"]["folderCount"] == 129
+    assert "pageCountChips" not in chrome["portfolio"]
+    leftover = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"photosPlaced": 96, "photosKept": 180, "pageCount": 32},
+        }
+    }
+    assert import_success_chrome(leftover)["overflowLine"] == (
+        "有 84 张没放进这本，要的话用游记能全收。"
+    )
+    assert import_success_chrome({"chapters": []}) == {}
 
 
 def test_build_entry_pipeline_enabled_when_flag_on() -> None:

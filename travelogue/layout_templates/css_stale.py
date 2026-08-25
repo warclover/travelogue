@@ -62,6 +62,11 @@ def trip_css_import_stale(trip_dir: Path, data: dict[str, Any] | None = None) ->
     return "journal-screens.css" not in text
 
 
+def _layout_css_name(data: dict[str, Any] | None) -> str:
+    """Same family split as S-10/S-11: portfolio pages vs journal screens."""
+    return "portfolio-pages.css" if _is_portfolio_data(data) else "journal-screens.css"
+
+
 def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) -> bool:
     """True when a copied trip CSS file lacks grid classes used by curated screens."""
     trip_json = trip_dir / "trip.json"
@@ -79,7 +84,7 @@ def trip_layout_css_stale(trip_dir: Path, data: dict[str, Any] | None = None) ->
     required = required_grid_classes_from_trip(data)
     if not required:
         return False
-    trip_css = trip_dir / "journal-screens.css"
+    trip_css = trip_dir / _layout_css_name(data)
     if not trip_css.is_file():
         return False
     try:

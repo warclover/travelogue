@@ -234,7 +234,12 @@ def test_edition_runner_stamps_portfolio_without_refresh(tmp_path, monkeypatch) 
         "travelogue.domain.pipeline_view.unlock_structure_for_replan",
         lambda trip: None,
     )
-    monkeypatch.setattr("travelogue.render.engine.render_trip_surfaces", lambda *a, **k: None)
+    render_kwargs: dict = {}
+
+    def _render(*_a, **kwargs):
+        render_kwargs.update(kwargs)
+
+    monkeypatch.setattr("travelogue.render.engine.render_trip_surfaces", _render)
 
     class _ImmediateThread:
         def __init__(self, target=None, daemon=None):
@@ -252,6 +257,8 @@ def test_edition_runner_stamps_portfolio_without_refresh(tmp_path, monkeypatch) 
         assert curate_kwargs.get("refresh_algorithms") is False
         assert written.get("studio", {}).get("edition") == "portfolio"
         assert written.get("studio", {}).get("portfolio", {}).get("pageCount") == 16
+        assert render_kwargs.get("stamp_render_bundle") is True
+        assert render_kwargs.get("update_pipeline") is False
     finally:
         for job in list(store._jobs.values()):
             if job.trip_id == trip_id:

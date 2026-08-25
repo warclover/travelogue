@@ -12,7 +12,10 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
-import { shelfExportRequestForTrip } from "../js/portfolio-export-logic.js";
+import {
+  firstSuccessPortfolioCopy,
+  shelfExportRequestForTrip,
+} from "../js/portfolio-export-logic.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
 
 var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
@@ -43,6 +46,25 @@ function previewUrlWithAutoExport(baseUrl, platform) {
   if (!url) return url;
   var sep = url.indexOf("?") >= 0 ? "&" : "?";
   return url + sep + "autoExport=" + encodeURIComponent(platform || "wechat_chat");
+}
+
+function previewUrlWithExportPanel(baseUrl) {
+  var url = String(baseUrl || "");
+  if (!url) return url;
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  return url + sep + "exportPanel=1";
+}
+
+function previewUrlWithRefine(baseUrl) {
+  var url = String(baseUrl || "");
+  if (!url) return url;
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  return url + sep + "refine=on";
+}
+
+function isPortfolioResult(result) {
+  var ed = String((result && result.edition) || "").trim().toLowerCase();
+  return ed === "portfolio" || ed === "folio";
 }
 
 var _countdownTimer = null;
@@ -205,10 +227,15 @@ function populateSuccessUi(result) {
         show(details, false);
       }
     } else {
+      var isPfCopy = isPortfolioResult(result);
+      var pfCopy = isPfCopy ? firstSuccessPortfolioCopy(result) : null;
       var summary = featured > 0 ? ("精选 " + featured + " 张") : ("照片 " + photoCount + " 张");
       if (segments > 0) summary += "，行程 " + segments + " 段";
-      var line1 = "《" + title + "》已生成 · " + summary;
+      var line1 = pfCopy && pfCopy.headline
+        ? pfCopy.headline
+        : ("《" + title + "》已生成 · " + summary);
       var detailLines = [];
+      if (pfCopy && pfCopy.detail) detailLines.push(pfCopy.detail);
       var tplLine = result.templateFeedbackMessage || "";
       if (tplLine) detailLines.push(tplLine);
       var keepMode = String(result.photoKeepMode || "").trim().toLowerCase();
@@ -275,31 +302,44 @@ function populateSuccessUi(result) {
   }
   var open = $("v2-success-open");
   var secondary = $("v2-success-secondary");
+  var refine = $("v2-success-refine");
+  var actions = $("v2-success-actions");
   var nextHint = $("v2-success-next-hint");
   var url = resolvePreviewUrl(result);
+  var isPf = isPortfolioResult(result);
   markLayoutVibeHintPending(result.tripId);
   if (open && url) open.href = url;
-  // FE-DFX-43 · 次按钮链到预览并续跑 wechat_chat（禁止与主按钮同裸 URL）
+  if (actions) actions.classList.toggle("is-portfolio-pair", isPf);
+  // 游记：次按钮链到预览并续跑 wechat_chat。作品集禁止 autoExport（BLK-PFO-03）。
   if (secondary && url) {
-    secondary.href = previewUrlWithAutoExport(url, "wechat_chat");
+    secondary.href = isPf
+      ? previewUrlWithExportPanel(url)
+      : previewUrlWithAutoExport(url, "wechat_chat");
   }
-  // D-HELP-10 · 方案 A：主 CTA 恒为打开预览；保存长图为次按钮
+  if (refine) {
+    refine.href = url ? previewUrlWithRefine(url) : "#";
+    show(refine, isPf);
+  }
   if (open) {
-    open.textContent = HELP_COPY.openPreviewCta;
+    open.textContent = isPf ? "打开这一本" : HELP_COPY.openPreviewCta;
   }
   if (secondary) {
-    secondary.textContent = HELP_COPY.saveLongshotSecondary;
-    show(secondary, _successRefinedEnabled && _successMode === "quick_share");
+    secondary.textContent = isPf ? "导出作品集" : HELP_COPY.saveLongshotSecondary;
+    secondary.classList.toggle("v2-first-success__cta", isPf);
+    secondary.classList.toggle("v2-first-success__link", !isPf);
+    show(secondary, isPf || (_successRefinedEnabled && _successMode === "quick_share"));
   }
   if (nextHint) {
     nextHint.textContent = "";
     var lead = document.createElement("p");
     lead.className = "v2-first-success__guidance-lead";
-    // NAS · FE-NAS-05：固定 COPY-NAS-FS-01；停调 loadLlmReadiness
-    lead.textContent =
-      HELP_COPY.firstSuccessNextNeutral ||
-      HELP_COPY.firstSuccessNext ||
-      "画册已做好，可预览与导出长图。";
+    // 游记 NAS · FE-NAS-05：固定 COPY-NAS-FS-01。作品集用人话规格句。
+    lead.textContent = isPf
+      ? (firstSuccessPortfolioCopy(result).lead ||
+        "作品集已做好。打开看看，满意就能导出。")
+      : (HELP_COPY.firstSuccessNextNeutral ||
+        HELP_COPY.firstSuccessNext ||
+        "画册已做好，可预览与导出长图。");
     nextHint.appendChild(lead);
     trackStudioEvent("first_success_copy_branch", {
       copy_branch: "nas_hidden",
@@ -393,6 +433,12 @@ function openPreview(action) {
 }
 
 function startCountdown() {
+  if (isPortfolioResult(_successResult)) {
+    clearCountdown();
+    var cd = $("v2-success-countdown");
+    if (cd) show(cd, false);
+    return;
+  }
   clearCountdown();
   _autoOpenEnabled = false;
   _countdownLeft = 5;
@@ -531,7 +577,23 @@ function wireFirstSuccess() {
   if (secondary) {
     secondary.addEventListener("click", function (e) {
       e.preventDefault();
-      // FE-DFX-43 · 进预览并触发默认微信群长图导出（query + session 双写）
+      if (isPortfolioResult(_successResult) && _successResult && _successResult.tripId) {
+        trackStudioEvent("success_primary_click", {
+          action: "export_portfolio",
+          mode: _successMode,
+          layoutDensity: _successResult.layoutDensity || null,
+        });
+        clearCountdown();
+        markFirstPreviewDone(_successResult.tripId);
+        var pfDest =
+          secondary.href ||
+          previewUrlWithExportPanel(resolvePreviewUrl(_successResult));
+        if (pfDest) {
+          window.location.href = pfDest;
+          return;
+        }
+      }
+      // FE-DFX-43 · 游记进预览并触发默认微信群长图导出（query + session 双写）
       if (_successRefinedEnabled && _successResult && _successResult.tripId) {
         trackStudioEvent("success_primary_click", {
           action: "save_longshot",
@@ -557,6 +619,23 @@ function wireFirstSuccess() {
         }
       }
       openPreview("open_preview_secondary");
+    });
+  }
+  var refine = $("v2-success-refine");
+  if (refine) {
+    refine.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (!_successResult || !_successResult.tripId) return;
+      trackStudioEvent("success_primary_click", {
+        action: "refine_portfolio",
+        mode: _successMode,
+        layoutDensity: _successResult.layoutDensity || null,
+      });
+      clearCountdown();
+      markFirstPreviewDone(_successResult.tripId);
+      var refineDest =
+        refine.href || previewUrlWithRefine(resolvePreviewUrl(_successResult));
+      if (refineDest) window.location.href = refineDest;
     });
   }
   var setPreview = $("v2-success-set-preview");

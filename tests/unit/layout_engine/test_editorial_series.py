@@ -572,6 +572,57 @@ def test_select_series_fill_rate_official_w1a() -> None:
     assert overflow.capped is True
 
 
+def test_compose_user_pin_16_does_not_upgrade() -> None:
+    assets = _assets_from_groups([("g1", "scene", 50)])
+    chapters = _one_chapter(assets)
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"pageCountSource": "user", "pageCount": 16},
+        }
+    }
+    _out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
+    assert meta["seriesId"] == "magazine-16-standard"
+    assert trip["studio"]["portfolio"]["pageCount"] == 16
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "user"
+
+
+def test_compose_user_pin_32_stays_when_kept_overflows() -> None:
+    assets = _assets_from_groups([("g-all", "scene", 90)])
+    chapters = _one_chapter(assets)
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"pageCountSource": "user", "pageCount": 32},
+        }
+    }
+    _out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
+    assert meta["seriesId"] == "magazine-32-standard"
+    assert trip["studio"]["portfolio"]["pageCount"] == 32
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "user"
+
+
+def test_compose_auto_page_count_matches_select_series() -> None:
+    """AC-PFO-04 · 自动档生成后 pageCount == select_series(auto, 真 M)。"""
+    catalog = load_official_series()
+    assets = _assets_from_groups([("g-all", "scene", 90)])
+    chapters = _one_chapter(assets)
+    trip = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {"pageCountSource": "auto"},
+        }
+    }
+    _out, meta = compose_portfolio_trip(chapters, assets=assets, trip=trip)
+    kept = int(trip["studio"]["portfolio"]["photosKept"])
+    choice = select_series(catalog, kept_n=kept)
+    assert choice is not None
+    expected = int(choice.series["pageCount"])
+    assert trip["studio"]["portfolio"]["pageCount"] == expected
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
+    assert meta["seriesId"] == choice.series["id"]
+
+
 def test_compose_90_overflow_is_explicit() -> None:
     assets = _assets_from_groups([("g-all", "scene", 90)])
     chapters = _one_chapter(assets)

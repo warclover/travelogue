@@ -204,6 +204,7 @@ def handle_trip_edition(handler: StudioHandlerProtocol, trip_id: str) -> None:
                 export_mode="draft",
                 validate=False,
                 update_pipeline=False,
+                stamp_render_bundle=True,
                 cfg=ctx.cfg,
             )
         except Exception:

@@ -53,6 +53,7 @@ from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.shot_grouping import shot_grouping_from_dict
 from travelogue.config.studio import (
+    DEFAULT_KEPT_ESTIMATE_RATIO,
     DEFAULT_LONGSHOT2_PLATFORMS,
     GcsPosterBricConfig,
     Longshot2Config,
@@ -149,12 +150,24 @@ def _parse_portfolio_pipeline_config(studio_raw: dict[str, Any]) -> PortfolioPip
         except (TypeError, ValueError):
             parsed = 0
         min_kept = parsed if parsed > 0 else None
+    ratio_raw = raw.get("kept_estimate_ratio", raw.get("keptEstimateRatio"))
+    try:
+        ratio = (
+            float(ratio_raw)
+            if ratio_raw not in (None, "")
+            else DEFAULT_KEPT_ESTIMATE_RATIO
+        )
+    except (TypeError, ValueError):
+        ratio = DEFAULT_KEPT_ESTIMATE_RATIO
+    if ratio <= 0 or ratio > 1:
+        ratio = DEFAULT_KEPT_ESTIMATE_RATIO
     return PortfolioPipelineConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", False),
         homepage_entry=cfg_bool(raw, "homepage_entry", "homepageEntry", False),
         allow_refine_switch=cfg_bool(raw, "allow_refine_switch", "allowRefineSwitch", True),
         max_pages=cfg_int(raw, "max_pages", "maxPages", 48),
         min_kept_override=min_kept,
+        kept_estimate_ratio=ratio,
     )
 
 LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})

@@ -249,6 +249,12 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         edition_raw = str(fields.get("edition") or "").strip().lower()
         if edition_raw:
             payload["edition"] = edition_raw
+        page_count_raw = fields.get("pageCount")
+        if page_count_raw not in (None, ""):
+            payload["pageCount"] = page_count_raw
+        page_source_raw = str(fields.get("pageCountSource") or "").strip().lower()
+        if page_source_raw:
+            payload["pageCountSource"] = page_source_raw
         if plan_bytes is not None:
             import base64
 
@@ -618,6 +624,11 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     edition_raw = str(payload.get("edition") or "").strip().lower()
     if edition_raw:
         worker_payload["edition"] = edition_raw
+        if edition_raw in ("portfolio", "folio"):
+            if payload.get("pageCount") not in (None, ""):
+                worker_payload["pageCount"] = payload.get("pageCount")
+            if payload.get("pageCountSource"):
+                worker_payload["pageCountSource"] = payload.get("pageCountSource")
     if user_notes:
         worker_payload["userNotes"] = user_notes
     if travel_notes:

@@ -943,7 +943,7 @@ export function mountEditionControls(slot, tripId, opts) {
     '<div class="preview-sheet__editions" role="radiogroup" aria-label="成册类型"></div>' +
     '<div class="preview-sheet__page-count" hidden>' +
     '<span class="preview-sheet__label">页数</span>' +
-    '<p class="preview-sheet__hint preview-sheet__hint--compact">只影响这一本的杂志页数，导入时不会问。</p>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">生成前系统会按文件夹给一个厚度；多数情况打开看看就能导出。精修改封面和成册类型。</p>' +
     '<div class="preview-sheet__chip-row" role="group" aria-label="页数"></div>' +
     '<p class="preview-sheet__hint preview-sheet__hint--compact" data-page-count-hint hidden></p>' +
     "</div>";
@@ -1200,7 +1200,13 @@ export function mountEditionControls(slot, tripId, opts) {
       return;
     }
     var rec = recommendPageCount(chips, kept);
-    var copy = thinTierConfirm(cap, kept, rec !== Number(chipId) ? rec : 0);
+    var folder = Number(portfolioState && portfolioState.folderCount);
+    var copy = thinTierConfirm(
+      cap,
+      kept,
+      rec !== Number(chipId) ? rec : 0,
+      folder
+    );
     toolbarConfirm({
       title: copy.title,
       body: copy.body,

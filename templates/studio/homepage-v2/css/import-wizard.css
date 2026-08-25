@@ -487,6 +487,55 @@
 .v2-wizard__edition-btn.is-dim {
   opacity: .45;
 }
+.v2-wizard__page-spec {
+  margin: 12px 0 4px;
+}
+.v2-wizard__page-spec-line {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+}
+.v2-wizard__page-spec-detail {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--v2-sheet-muted-soft);
+}
+.v2-wizard__page-spec-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--v2-sheet-muted-soft);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.v2-wizard__page-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.v2-wizard__page-spec-chip {
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, .04);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.v2-wizard__page-spec-chip.is-on,
+.v2-wizard__page-spec-chip[aria-pressed="true"] {
+  border-color: var(--v2-sheet-accent);
+  background: rgba(255, 255, 255, .1);
+}
 .v2-cta-group {
   display: flex;
   flex-wrap: wrap;

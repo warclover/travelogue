@@ -147,6 +147,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 实施 |
 | [archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 验收 |
 | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | **active** | QFX 七席跨职能评审 · Conditional Go · 系统根因与根本解法 |
+| [项目说明手册.md](./项目说明手册.md) | **active** | 对外用户说明（陌生人 / 试用者）；非工程合同 |
+| [项目介绍.md](./项目介绍.md) | **active** | 一页纸定位；完整说明见《项目说明手册》 |
 | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) | **active** | NAS 用户面现行合同（**v0.2.3** · status 403 + config 投影收口 · Conditional Go） |
 | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) | **active** | NAS 实施 **v0.2.2** · status 403 · config 投影 · 对齐 QFX |
 | [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) | **active** | NAS 验收 AC-NAS-01～17 · OUT-01～05 指针 · v0.1.2 e2e/DOC 勾选 |
@@ -200,7 +202,12 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
 | [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
 | [PRD-DUAL-PIPELINE-ISOLATION-V1.md](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) | **active** | **DPI** 双管线独立迭代 **v0.2.1** · W0–W3 已合入 · [SHD-DPI-05 真改轨道](./acceptance-records/dpi-dual-pipeline-isolation-v1-w3-closeout-2026-08-22.md) |
-| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.1 Conditional Go** · W0–W3 编码已清 · ISO-04/06 · **AS-PFM-03 已升格 · 五档入库** · W4 协议已锁、语料已定点、人评未开 · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.1 Conditional Go** · W0–W3 编码已清 · ISO-04/06 · **AS-PFM-03 已升格 · 五档入库** · W4 协议已锁、语料已定点、人评未开 · **入口/导出/页数流程改判见 PFO** · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
+| [PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | **PFO** **v0.2.1** · W1+W2 已落地 · **F9–F11 已签** · [签核](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) |
+| [acceptance-records/pfo-portfolio-flow-optimization-v1-review-2026-08-25.md](./acceptance-records/pfo-portfolio-flow-optimization-v1-review-2026-08-25.md) | **active** | PFO 七席+典型用户 · 8/8 Conditional Go · BLK 已回写 · F9–F11 已签见下条 |
+| [acceptance-records/pfo-f9-f11-signoff-2026-08-25.md](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) | **active** | PFO 线框 v1.2 F9–F11 产品签核 · 先实现不合适再改 · AC-PFO-20 关 |
+| [IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | PFO 实施 · W1+W2 Done · W3 未开 |
+| [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | PFO 验收门 · 源 PRD §14 · AC-PFO-20 已关 |
 | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 已落 · AS-PFM-03 五档已入 · W4 人评未开 |
 | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；W0–W3 + ISO-04/06 + AS-PFM-03 五档已入 · AC-PFM-25 人评未开 |
 | [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 · F1/F3/F6 产品重签 2026-08-20 |
@@ -215,7 +222,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MAGAZINE-SERIES-PROMOTION-V1.md](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) | **active** | **MSP** 成册档位全量升格与页序忠实度 **v0.6.0 Conditional Go** · **W1a+W1b+W2 已落地**：五档入库 · 填充组三重护栏 · 芯片副文 / 薄档确认 · 上限 48（32/36 等 ASK-MSP-02；24 等 ASK-MSP-01）· 金样未覆盖 · [R-MSP-05/06](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) + [OQ-MSP-12](./acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md) |
 | [acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md](./acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md) | **active** | MSP 七席+典型用户 · 8/8 Conditional Go · BLK-MSP-01～09 已回写 v0.3.0 · 新增 OQ-MSP-08～11 |
 | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 **v1.1** · **F0–F8 已签** |
-| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.1.0 Draft** · 工程可读性（零行为）· 拆 `assemble` / `journal_chapters` / `curate` 三核 · 热路径类型 · 活路径清单 · 待评审 · W0 可先合门禁 |
+| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.2.0 Conditional Go** · 七席 7/7 · BLK-RCL-01～10 已回写 · **W0 可开工** · [纪要](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) · 短地图 [readable-core-line.md](./readable-core-line.md) |
+| [readable-core-line.md](./readable-core-line.md) | **active** | RCL 主链短地图 · L0–L2=本合同 · **L3–L7 未立项**（curate 减厚 / context / longshot.js / handler / 算法核默认不做） |
+| [acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) | **active** | RCL 七席 · 7/7 Conditional Go · BLK-RCL-01～10 · OQ-RCL-01～06 全关 |
 
 ---
 

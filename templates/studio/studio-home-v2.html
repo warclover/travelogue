@@ -432,10 +432,11 @@
           <p class="v2-first-success__guidance-next">下一步可用自己的画册照片再做一本</p>
         </div>
         <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
-        <div class="v2-first-success__actions">
+        <div class="v2-first-success__actions" id="v2-success-actions">
           <a id="v2-success-open" href="#" class="v2-first-success__cta">打开画册预览 →</a>
+          <a id="v2-success-secondary" href="#" class="v2-first-success__link" hidden>保存长图</a>
+          <a id="v2-success-refine" href="#" class="v2-first-success__link" hidden>去精修封面和成册类型</a>
           <div class="v2-first-success__secondary">
-            <a id="v2-success-secondary" href="#" class="v2-first-success__link" hidden>保存长图</a>
             <button type="button" class="v2-first-success__link" id="v2-success-set-preview" hidden>设为首页预览</button>
           </div>
           <button type="button" class="v2-first-success__dismiss" id="v2-success-stay">留在首页</button>
@@ -552,6 +553,17 @@
               <span>杂志页</span>
             </button>
           </div>
+        </div>
+        <div class="v2-wizard__page-spec" id="v2-wizard-page-spec" hidden>
+          <p class="v2-wizard__page-spec-line" id="v2-wizard-page-spec-line">
+            系统会按能上版的张数自动选厚度。
+          </p>
+          <button type="button" class="v2-wizard__page-spec-toggle" id="v2-wizard-page-spec-toggle"
+                  aria-expanded="false" aria-controls="v2-wizard-page-spec-chips">
+            换一本更厚 / 更薄
+          </button>
+          <p class="v2-wizard__page-spec-detail" id="v2-wizard-page-spec-detail" hidden></p>
+          <div class="v2-wizard__page-spec-chips" id="v2-wizard-page-spec-chips" hidden></div>
         </div>
         <div class="v2-wizard__mode-cards" role="radiogroup" aria-label="导入模式" id="v2-wizard-mode-cards">
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="true"

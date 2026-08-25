@@ -4,6 +4,7 @@
 "use strict";
 
 import {
+  formatOverflowDetail,
   formatOverflowLine,
   isPortfolioEdition,
   PORTFOLIO_PAGES_PLATFORM,
@@ -129,6 +130,14 @@ export function syncPortfolioOverflowBadge(root, portfolio, entry) {
     (entry && entry.overflowLine) ||
     (root && root._overflowLine) ||
     formatOverflowLine(portfolio);
+  var detail =
+    (entry && entry.overflowDetail) ||
+    (root && root._overflowDetail) ||
+    formatOverflowDetail(portfolio);
+  var cta =
+    (entry && entry.overflowCta) ||
+    (root && root._overflowCta) ||
+    "";
   var el = (typeof document !== "undefined" ? document : host).querySelector(
     ".preview-portfolio-overflow"
   );
@@ -144,15 +153,15 @@ export function syncPortfolioOverflowBadge(root, portfolio, entry) {
   }
   if (!el) return;
   el.hidden = false;
+  if (detail) el.setAttribute("title", detail);
+  else el.removeAttribute("title");
   el.replaceChildren();
-  el.appendChild(document.createTextNode(line + " · "));
+  el.appendChild(document.createTextNode(cta ? line + " · " : line));
+  if (!cta) return;
   var btn = document.createElement("button");
   btn.type = "button";
   btn.className = "preview-portfolio-overflow__exit";
-  btn.textContent =
-    (entry && entry.overflowCta) ||
-    (root && root._overflowCta) ||
-    overflowJournalCta();
+  btn.textContent = cta || overflowJournalCta();
   btn.addEventListener("click", function (ev) {
     ev.preventDefault();
     if (host && typeof host._onPortfolioToJournal === "function") {

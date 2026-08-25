@@ -26,6 +26,9 @@ def test_help_copy_contract_locked() -> None:
     assert "应用排版" not in help_js
     assert "导出与更多" not in help_js
     assert "写给编辑的一句话" not in help_js
+    assert "生成前系统会按文件夹给一个厚度" in help_js
+    assert "导入时不会问" not in help_js
+    assert "可逐页调整版式" not in help_js
 
 
 def test_help_seen_gate_global_only() -> None:

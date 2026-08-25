@@ -131,13 +131,82 @@ export function parsePortfolioPipelineConfig(studioCfg) {
   if (!(minKept > 0)) {
     minKept = raw.minKeptOverride != null ? Number(raw.minKeptOverride) : Number(raw.min_kept_override);
   }
+  var chips = raw.pageCountChipDetails || raw.page_count_chip_details || [];
+  var ratio = Number(
+    raw.keptEstimateRatio != null ? raw.keptEstimateRatio : raw.kept_estimate_ratio
+  );
+  if (!(ratio > 0) || ratio > 1) ratio = 0.67;
   return {
     enabled: raw.enabled === true,
     homepageEntry: raw.homepageEntry === true || raw.homepage_entry === true,
     allowRefineSwitch: raw.allowRefineSwitch !== false && raw.allow_refine_switch !== false,
     maxPages: Number(raw.maxPages || raw.max_pages || 32),
     minKept: minKept > 0 ? minKept : 12,
+    keptEstimateRatio: ratio,
+    pageCountChipDetails: Array.isArray(chips) ? chips : [],
   };
+}
+
+/** 详情「大约」：只说话，不进选档。 */
+export function approxKeptSentence(folderCount, ratio) {
+  var n = Number(folderCount);
+  var r = Number(ratio);
+  if (!(n > 0)) return "";
+  if (!(r > 0) || r > 1) r = 0.67;
+  var approx = Math.max(1, Math.round(n * r));
+  return "这本大约用上 " + approx + " 张";
+}
+
+/** 展示用：C ≥ N 的最薄档；全不够则最厚档。不进选档。 */
+export function displayHintPages(folderCount, chips) {
+  var n = Number(folderCount);
+  var list = (Array.isArray(chips) ? chips : [])
+    .map(function (row) {
+      return {
+        pages: Number(row && (row.pages || row.pageCount)),
+        capacity: Number(row && row.capacity),
+      };
+    })
+    .filter(function (row) {
+      return row.pages > 0 && row.capacity > 0;
+    });
+  if (!(n > 0) || !list.length) return 0;
+  var under = list.filter(function (row) {
+    return row.capacity >= n;
+  });
+  if (under.length) {
+    return under.reduce(function (a, b) {
+      return a.capacity <= b.capacity ? a : b;
+    }).pages;
+  }
+  return list.reduce(function (a, b) {
+    return a.pages >= b.pages ? a : b;
+  }).pages;
+}
+
+export function pageSpecSentence(folderCount, chips) {
+  var n = Number(folderCount);
+  var x = displayHintPages(n, chips);
+  if (n > 0 && x > 0) {
+    return "文件夹 " + n + " 张，做成大约一本 " + x + " 页。";
+  }
+  if (n > 0) {
+    return "文件夹 " + n + " 张，系统会按能上版的张数自动选厚度。";
+  }
+  return "系统会按能上版的张数自动选厚度。";
+}
+
+export function shouldShowPageSpec(edition, pipe) {
+  return normalizeEdition(edition) === "portfolio" && shouldShowEditionSegment(pipe);
+}
+
+export function buildPageCountFields(edition, selectedId) {
+  if (normalizeEdition(edition) !== "portfolio") return {};
+  var id = String(selectedId || "auto");
+  if (id === "auto") return { pageCountSource: "auto" };
+  var n = Number(id);
+  if (!(n > 0)) return { pageCountSource: "auto" };
+  return { pageCount: n, pageCountSource: "user" };
 }
 
 export function shouldShowEditionSegment(pipe) {

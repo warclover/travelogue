@@ -33,11 +33,16 @@ import {
   portfolioEditionSubline,
   shouldConfirmLowPhoto,
   lowPhotoContinueConfirm,
+  shouldShowPageSpec,
+  pageSpecSentence,
+  approxKeptSentence,
+  buildPageCountFields,
 } from "./import-wizard-logic.js";
 import {
   isRadioNavKey,
   nextRadioId,
   radioTabIndex,
+  pageCountChipOptions,
 } from "../js/portfolio-edition-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 
@@ -53,6 +58,8 @@ var _uploadInFlight = false;
 var _pendingAlbumPath = null;
 var _pendingUploadFiles = null;
 var _pendingPhotoCount = null;
+var _pageCountSelected = "auto";
+var _pageSpecOpen = false;
 var _pendingFolderName = null;
 var _previewThumbs = [];
 var _previewThumbNames = [];
@@ -258,6 +265,7 @@ function updateCountHint() {
   if (n == null || !Number.isFinite(n)) {
     hint.textContent = "";
     show(hint, false);
+    syncPageSpecUi();
     return;
   }
   var bucket = null;
@@ -272,6 +280,7 @@ function updateCountHint() {
   if (!bucket) {
     hint.textContent = "";
     show(hint, false);
+    syncPageSpecUi();
     return;
   }
   hint.textContent = text;
@@ -281,6 +290,7 @@ function updateCountHint() {
     _countHintTrackedKey = trackKey;
     trackStudioEvent("photo_count_hint_show", { bucket: bucket, photoCount: n });
   }
+  syncPageSpecUi();
 }
 
 function renderThumbs(thumbs) {
@@ -536,6 +546,67 @@ function syncEditionUi() {
       ? "按杂志页编排，做完能点开翻。发群请选游记。"
       : "优先出微信长图，适合马上分享";
   }
+  syncPageSpecUi();
+}
+
+function syncPageSpecUi() {
+  var host = $("v2-wizard-page-spec");
+  var line = $("v2-wizard-page-spec-line");
+  var detail = $("v2-wizard-page-spec-detail");
+  var chipsHost = $("v2-wizard-page-spec-chips");
+  var toggle = $("v2-wizard-page-spec-toggle");
+  var show = shouldShowPageSpec(_activeEdition, _pipelineCfg);
+  if (host) host.hidden = !show;
+  if (!show) {
+    _pageCountSelected = "auto";
+    _pageSpecOpen = false;
+    if (detail) {
+      detail.textContent = "";
+      detail.hidden = true;
+    }
+    return;
+  }
+  if (line) {
+    line.textContent = pageSpecSentence(
+      _pendingPhotoCount,
+      _pipelineCfg.pageCountChipDetails
+    );
+  }
+  if (detail) {
+    var approx = approxKeptSentence(
+      _pendingPhotoCount,
+      _pipelineCfg.keptEstimateRatio
+    );
+    detail.textContent = approx;
+    detail.hidden = !_pageSpecOpen || !approx;
+  }
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", _pageSpecOpen ? "true" : "false");
+    toggle.textContent = _pageSpecOpen ? "收起厚度选项" : "换一本更厚 / 更薄";
+  }
+  if (chipsHost) {
+    chipsHost.hidden = !_pageSpecOpen;
+    if (_pageSpecOpen) renderWizardPageChips(chipsHost);
+  }
+}
+
+function renderWizardPageChips(row) {
+  if (!row) return;
+  row.innerHTML = "";
+  pageCountChipOptions(_pipelineCfg.pageCountChipDetails || []).forEach(function (opt) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "v2-wizard__page-spec-chip";
+    btn.setAttribute("data-page-count", opt.id);
+    btn.setAttribute("aria-pressed", opt.id === _pageCountSelected ? "true" : "false");
+    btn.textContent = opt.id === "auto" ? opt.label : (opt.hint || (opt.label + " 页"));
+    if (opt.id === _pageCountSelected) btn.classList.add("is-on");
+    btn.addEventListener("click", function () {
+      _pageCountSelected = opt.id;
+      syncPageSpecUi();
+    });
+    row.appendChild(btn);
+  });
 }
 
 function hydratePortfolioPipeline() {
@@ -824,6 +895,8 @@ function goToStep1(clearPending) {
     _pendingAlbumPath = null;
     _pendingUploadFiles = null;
     _pendingPhotoCount = null;
+    _pageCountSelected = "auto";
+    _pageSpecOpen = false;
     _pendingFolderName = null;
     _previewThumbs = [];
     _previewThumbNames = [];
@@ -941,6 +1014,8 @@ function saveDraft() {
     photoKeepModeTouched: _photoKeepModeTouched,
     keepNearDuplicates: readKeepDupesEnabled(),
     photoCount: _pendingPhotoCount,
+    pageCountSelected: _pageCountSelected,
+    pageSpecOpen: _pageSpecOpen,
     edition: _activeEdition === "portfolio" ? "portfolio" : undefined,
     planFileName: (function () {
       var input = $("v2-wizard-plan-file");
@@ -979,6 +1054,8 @@ function restoreDraftFields(draft) {
   setPhotoKeepMode(resolvePhotoKeepModeFromDraft(draft));
   _photoKeepModeTouched = !!(draft.photoKeepModeTouched || draft.photoCullTouched || draft.keepDupesTouched);
   _pendingPhotoCount = typeof draft.photoCount === "number" ? draft.photoCount : null;
+  _pageCountSelected = draft.pageCountSelected ? String(draft.pageCountSelected) : "auto";
+  _pageSpecOpen = draft.pageSpecOpen === true;
   _previewState = _pendingPhotoCount != null ? "ready" : "idle";
   var density = draft.layoutDensity || "balanced";
   document.querySelectorAll('input[name="v2-wizard-layout-density"]').forEach(function (input) {
@@ -986,6 +1063,7 @@ function restoreDraftFields(draft) {
   });
   updateLayoutDensityWarn();
   updatePhotoKeepModeUi();
+  syncPageSpecUi();
 }
 
 function validateFineFields() {
@@ -1056,6 +1134,7 @@ function buildWizardPayload() {
   body.photoCullEnabled = readPhotoCullEnabled();
   body.keepNearDuplicates = readKeepDupesEnabled();
   if (_pendingPhotoCount != null) body.eligibleCount = _pendingPhotoCount;
+  Object.assign(body, buildPageCountFields(_activeEdition, _pageCountSelected));
   return body;
 }
 
@@ -1217,6 +1296,7 @@ function startUploadFromWizard() {
   if (featuredDir) uploadOpts.featuredDir = featuredDir;
   if (materialDir) uploadOpts.materialDir = materialDir;
   if (_activeMode === "fine_craft") uploadOpts.layoutDensity = readLayoutDensity();
+  Object.assign(uploadOpts, buildPageCountFields(_activeEdition, _pageCountSelected));
 
   markVisited();
   try { localStorage.setItem(IMPORT_MODE_KEY, _activeMode); } catch (_e) { /* ignore */ }
@@ -1561,6 +1641,13 @@ export function initImportWizard() {
   if (editionPortfolio) editionPortfolio.addEventListener("click", function () {
     setActiveEdition("portfolio", "user");
   });
+  var pageSpecToggle = $("v2-wizard-page-spec-toggle");
+  if (pageSpecToggle) {
+    pageSpecToggle.addEventListener("click", function () {
+      _pageSpecOpen = !_pageSpecOpen;
+      syncPageSpecUi();
+    });
+  }
 
   function onEditionKeydown(e) {
     if (!isRadioNavKey(e.key)) return;

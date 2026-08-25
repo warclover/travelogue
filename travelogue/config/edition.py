@@ -114,11 +114,15 @@ def apply_import_edition(
     trip: dict[str, Any],
     raw_edition: object | None,
     cfg: AppConfig | None,
+    *,
+    page_count: object | None = None,
+    page_count_source: object | None = None,
 ) -> str:
     """Stamp portfolio identity on a new trip. Journal leaves the field unset.
 
     Raises ``PortfolioUnavailableError`` when the user asked for portfolio but
-    the parent switch is off (AC-PFM-07).
+    the parent switch is off (AC-PFM-07). Optional ``page_count`` pins a user
+    tier (PFO D-PFO-01); ``auto`` / omitted keeps ``pageCountSource=auto``.
     """
     edition = normalize_edition(raw_edition)
     if edition != EDITION_PORTFOLIO:
@@ -136,6 +140,12 @@ def apply_import_edition(
         folio = {}
         studio["portfolio"] = folio
     folio.setdefault("pageCountSource", "auto")
+    source = str(page_count_source or "").strip().lower()
+    if source == "auto":
+        folio["pageCountSource"] = "auto"
+        return EDITION_PORTFOLIO
+    if page_count not in (None, "", "auto"):
+        apply_refine_page_count(trip, page_count)
     return EDITION_PORTFOLIO
 
 

@@ -80,6 +80,29 @@ def test_apply_import_edition_flag_on_stamps_portfolio() -> None:
     assert "folio" not in trip["studio"]
 
 
+def test_apply_import_edition_pins_user_page_count() -> None:
+    trip: dict = {}
+    assert (
+        apply_import_edition(trip, "portfolio", _cfg(enabled=True), page_count=32)
+        == EDITION_PORTFOLIO
+    )
+    assert trip["studio"]["portfolio"]["pageCount"] == 32
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "user"
+
+
+def test_apply_import_edition_auto_source_ignores_page_count() -> None:
+    trip: dict = {}
+    apply_import_edition(
+        trip,
+        "portfolio",
+        _cfg(enabled=True),
+        page_count=32,
+        page_count_source="auto",
+    )
+    assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
+    assert "pageCount" not in trip["studio"]["portfolio"]
+
+
 def test_min_kept_override_beats_catalog() -> None:
     from travelogue.config.edition import min_kept_for_portfolio
 
@@ -172,6 +195,7 @@ def test_portfolio_pipeline_defaults_off() -> None:
     assert pipe["enabled"] is False
     assert pipe["homepageEntry"] is False
     assert pipe["maxPages"] == 48
+    assert pipe["keptEstimateRatio"] == 0.67
 
 
 def test_iso06_lvp_write_does_not_change_edition() -> None:

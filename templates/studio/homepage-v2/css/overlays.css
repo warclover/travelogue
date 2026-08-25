@@ -426,6 +426,20 @@
   cursor: pointer;
 }
 .v2-first-success__cta:hover { filter: brightness(1.05); }
+.v2-first-success__actions.is-portfolio-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+}
+.v2-first-success__actions.is-portfolio-pair #v2-success-refine,
+.v2-first-success__actions.is-portfolio-pair .v2-first-success__secondary,
+.v2-first-success__actions.is-portfolio-pair #v2-success-stay {
+  grid-column: 1 / -1;
+}
+.v2-first-success__actions.is-portfolio-pair #v2-success-secondary {
+  border-top: 0;
+  padding-top: 0;
+}
 /* 次操作收束为一行；全隐藏时整行折叠 */
 .v2-first-success__secondary {
   display: flex;

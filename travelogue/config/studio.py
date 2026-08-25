@@ -52,6 +52,10 @@ class GcsPosterBricConfig:
     enabled: bool = True
 
 
+# PFO · 仅详情「大约」；禁止送进 select_series（§5.3 / §11.3）。
+DEFAULT_KEPT_ESTIMATE_RATIO = 0.67
+
+
 @dataclass
 class PortfolioPipelineConfig:
     """PFM · 作品集父开关（D-PFM-02 / D-PFM-06）。默认全关 ≡ 现网 GA。"""
@@ -61,6 +65,7 @@ class PortfolioPipelineConfig:
     allow_refine_switch: bool = True
     max_pages: int = 48
     min_kept_override: int | None = None
+    kept_estimate_ratio: float = DEFAULT_KEPT_ESTIMATE_RATIO
 
 
 @dataclass
@@ -162,6 +167,7 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                 "allowRefineSwitch": bool(pipe.allow_refine_switch),
                 "maxPages": int(pipe.max_pages),
                 "minKeptOverride": pipe.min_kept_override,
+                "keptEstimateRatio": float(pipe.kept_estimate_ratio),
             },
         },
         "cohort": {

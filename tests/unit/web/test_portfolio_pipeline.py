@@ -76,6 +76,42 @@ def test_import_journal_omits_edition_and_proceeds(tmp_path: Path, monkeypatch: 
     assert status == 202, body
     payload = run_job.call_args.args[1]
     assert payload.get("edition") in (None, "", "journal")
+    assert "pageCount" not in payload
+    assert "pageCountSource" not in payload
+
+
+def test_import_journal_drops_page_count_even_if_posted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """QA-PFO-02 · 游记 POST 带 pageCount 也不转发。"""
+    monkeypatch.setenv("TRAVELOGUE_STUDIO_TRUST_LOCAL_ALBUM", "1")
+    album = tmp_path / "album"
+    album.mkdir()
+    (album / "a.jpg").write_bytes(b"x")
+    handler = MockStudioHandler(
+        tmp_path / "trips",
+        json_body={
+            "albumPath": str(album),
+            "edition": "journal",
+            "title": "奈良",
+            "force": True,
+            "forceStub": True,
+            "pageCount": 32,
+            "pageCountSource": "user",
+        },
+    )
+    with patch("travelogue.web.studio_handlers.import_handlers.run_import_job_subprocess") as run_job:
+        with patch(
+            "travelogue.web.studio_handlers.import_handlers.assert_album_importable",
+            return_value="album",
+        ):
+            handle_import(handler)
+    assert handler.response is not None
+    assert handler.response[0] == 202
+    payload = run_job.call_args.args[1]
+    assert payload.get("edition") in (None, "", "journal")
+    assert "pageCount" not in payload
+    assert "pageCountSource" not in payload
 
 
 def test_import_portfolio_accepted_when_flag_on(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -164,6 +200,7 @@ def test_flag_on_journal_import_stays_journal(tmp_path: Path, monkeypatch: pytes
     assert status == 202, body
     payload = run_job.call_args.args[1]
     assert payload.get("edition") in (None, "", "journal")
+    assert "pageCount" not in payload
 
 
 def test_journal_chrome_unchanged_when_flag_exists() -> None:
@@ -184,6 +221,9 @@ def test_journal_chrome_unchanged_when_flag_exists() -> None:
         _STUDIO / "js" / "portfolio-export-logic.js"
     ).read_text(encoding="utf-8")
     assert "v2-wizard-page-count" not in html
+    assert 'id="v2-wizard-page-spec"' in html
+    assert "换一本更厚 / 更薄" in html
+    assert 'id="v2-wizard-page-spec-chips" hidden' in html
     sheet = (_STUDIO / "preview-toolbar-v3-sheet.js").read_text(encoding="utf-8")
     assert "成册类型" in sheet
     assert 'data-book-zone="edition-type"' in sheet
@@ -310,6 +350,7 @@ def test_config_exposes_derived_min_kept(tmp_path: Path) -> None:
     assert pipe.get("minKept") == 19
     assert pipe.get("pageCountChips") == [8, 12, 16, 20, 24, 28, 32, 36]
     assert pipe.get("pageCountChipDetails")[0] == {"pages": 8, "capacity": 19}
+    assert pipe.get("keptEstimateRatio") == 0.67
     wizard = (_STUDIO / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     assert "requestLowPhotoContinue" in wizard
     assert "lowPhotoContinueConfirm" in wizard
@@ -324,6 +365,9 @@ def test_homepage_portfolio_entry_exists_but_hidden_by_default() -> None:
     edition = html[html.index('id="v2-wizard-edition"') : html.index('id="v2-wizard-edition"') + 80]
     assert "hidden" in edition
     assert "v2-wizard-page-count" not in html
+    assert 'id="v2-wizard-page-spec"' in html
+    assert "换一本更厚 / 更薄" in html
+    assert 'id="v2-wizard-page-spec-chips" hidden' in html
     constants = (_STUDIO / "js" / "constants.js").read_text(encoding="utf-8")
     assert "E_PORTFOLIO_UNAVAILABLE" in constants
 
@@ -385,8 +429,44 @@ def test_shelf_and_entry_share_overflow_chrome(tmp_path: Path) -> None:
     chrome = edition_chrome(trip)
     entry = build_entry(trip, "nara")
     rows = {row["tripId"]: row for row in list_studio_trips(trips_dir)}
-    assert chrome["overflowLine"] == "本册收录 96 / 180 张"
+    assert chrome["overflowLine"] == "有 84 张没放进这本，要的话用游记能全收。"
     assert entry["overflowLine"] == chrome["overflowLine"]
     assert rows["nara"]["overflowLine"] == chrome["overflowLine"]
     assert entry["dockCta"] == chrome["dockCta"]
     assert entry["layoutVibeVisible"] is False
+
+
+def test_pfo_w2_wizard_success_and_copy_contracts() -> None:
+    """AC-PFO-01/05/16/18 · 向导一句规格、成功面并列、禁导入不问/逐页承诺。"""
+    html = (_STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
+    wizard = (_STUDIO / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    fs = (_STUDIO / "homepage-v2" / "first-success.js").read_text(encoding="utf-8")
+    lvp = (_STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
+    longshot = (_STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    init = (_STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
+    assert "v2-wizard-page-spec" in html
+    assert "换一本更厚 / 更薄" in html
+    assert "buildPageCountFields" in wizard
+    assert "打开这一本" in fs
+    assert "导出作品集" in fs
+    assert "previewUrlWithExportPanel" in fs
+    assert "去精修封面和成册类型" in html
+    assert "逐页" not in fs
+    assert "逐页" not in html
+    assert "换每一页" not in fs
+    assert "换图改版式" not in fs
+    assert "previewUrlWithAutoExport" in fs
+    assert "wechat_chat" in fs
+    assert "导入时不会问" not in lvp
+    assert "生成前系统会按文件夹给一个厚度" in lvp
+    assert "consumeExportPanel" in longshot
+    assert "consumeExportPanel" in init
+    assert "isPortfolioEdition(edition)" in longshot
+    assert "autoExport" in longshot
+    assert "firstSuccessPortfolioCopy" in fs
+    help_js = (_STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
+    assert "生成前系统会按文件夹给一个厚度" in help_js
+    assert "导入时不会问" not in help_js
+    assert 'id: "H9"' in help_js
+    assert "data-page-count" in lvp
+    assert "v2-wizard-page-spec" in html
