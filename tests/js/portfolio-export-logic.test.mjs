@@ -19,6 +19,9 @@ import {
   portfolioDockCta,
   portfolioMainProductsHtml,
   portfolioSuccessCopy,
+  portfolioExportHint,
+  resolvePortfolioBookPages,
+  coverTitleEditLabel,
   readEditionFromDom,
   resolvePortfolioMainPlatform,
   shouldRunSocialBatchExport,
@@ -170,6 +173,25 @@ test("portfolioSuccessCopy 主文案与打开这一本", () => {
   assert.match(copy.hint, /这一本已打包/);
   const blob = [copy.title, copy.hint, copy.primary, copy.secondaryFolder, copy.secondaryZip].join(" ");
   assert.equal(/文案|正在写/.test(blob), false);
+});
+
+test("PIS · 导出主句用成册页 X，Y≠X 只进副句", () => {
+  assert.equal(resolvePortfolioBookPages({ pageCount: 37 }, { pageCount: 36 }), 36);
+  assert.equal(portfolioExportHint(36, 37), "另导出封面 1 张 · 页图按编号使用");
+  const copy = portfolioSuccessCopy(
+    {
+      pageCount: 37,
+      outputs: Array.from({ length: 37 }, (_, i) => i + ".png"),
+      userHint: "作品集已导出 · 共 37 页",
+    },
+    { pageCount: 36 }
+  );
+  assert.equal(copy.title, "作品集已导出 · 共 36 页");
+  assert.equal(copy.title.includes("37"), false);
+  assert.match(copy.hint, /另导出封面 1 张/);
+  assert.equal(copy.hint.includes("共 37 页"), false);
+  assert.equal(coverTitleEditLabel("portfolio"), "点击编辑书名");
+  assert.equal(coverTitleEditLabel("journal"), "点击编辑杂志名");
 });
 
 test("portfolioBookUrl", () => {

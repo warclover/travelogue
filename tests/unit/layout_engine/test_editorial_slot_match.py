@@ -235,7 +235,6 @@ def test_place_swaps_land6_for_mixed_2l4p() -> None:
         "page-6-2l4p-wide-flip",
         "page-6-2l4p-left",
         "page-6-2l4p-right",
-        "page-6-4l2p",
     }
     assert set(placed.pages[0].asset_ids) == set(ids)
 
@@ -360,7 +359,13 @@ def test_journal_score_aspect_match_unchanged() -> None:
 def test_journal_mosaic_does_not_import_portfolio_slot_match() -> None:
     mosaic = ROOT / "travelogue" / "layout_engine" / "mosaic"
     api = ROOT / "travelogue" / "layout_engine" / "api.py"
-    banned = ("editorial_series.slot_match", "take_for_page", "slot_match")
+    banned = (
+        "editorial_series.slot_match",
+        "editorial_series.page_stars",
+        "take_for_page",
+        "slot_match",
+        "page_stars",
+    )
     files = list(mosaic.rglob("*.py")) + [api]
     for path in files:
         text = Path(path).read_text(encoding="utf-8")

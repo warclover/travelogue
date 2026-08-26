@@ -212,24 +212,45 @@ export function portfolioRevealTargets(result) {
   };
 }
 
+/** 成册页 X：优先 trip.pageCount，不用 outputs.length。 */
+export function resolvePortfolioBookPages(result, portfolio) {
+  var x = Number(portfolio && portfolio.pageCount);
+  if (x > 0) return x;
+  var fromResult = Number(result && result.pageCount);
+  if (fromResult > 0) return fromResult;
+  return 0;
+}
+
+export function portfolioExportHint(bookPages, outputCount) {
+  var x = Number(bookPages) || 0;
+  var y = Number(outputCount) || 0;
+  if (!(y > 0)) return "";
+  if (!(x > 0) || y === x) return "这一本可以直接点开翻；页图按编号使用。";
+  if (y === x + 1) return "另导出封面 1 张 · 页图按编号使用";
+  return "页图 " + y + " 张（含封面/书衣，以文件夹为准）";
+}
+
+export function coverTitleEditLabel(edition) {
+  return isPortfolioEdition(edition) ? "点击编辑书名" : "点击编辑杂志名";
+}
+
 /**
  * @param {object} result longshot job.result
  * @param {object|null} portfolio entry.portfolio
  */
 export function portfolioSuccessCopy(result, portfolio) {
   result = result || {};
-  var n = Number(result.pageCount);
-  if (!(n >= 0)) n = Array.isArray(result.outputs) ? result.outputs.length : 0;
+  var y = Array.isArray(result.outputs) ? result.outputs.length : 0;
+  var n = resolvePortfolioBookPages(result, portfolio);
   var skipped = Array.isArray(result.skippedPages) ? result.skippedPages : [];
   var title =
     n > 0 ? "作品集已导出 · 共 " + n + " 页" : "作品集已导出";
   if (n <= 0 && result.shareZip) title = "这一本已打包";
   var hint = String(result.userHint || "").trim();
-  if (!hint) {
-    hint =
-      n > 0
-        ? "这一本可以直接点开翻；页图按编号使用。"
-        : "这一本可以直接点开翻。";
+  if (!hint || /作品集已导出\s*·\s*共\s*\d+\s*页/.test(hint)) {
+    hint = portfolioExportHint(n, y) || (n > 0 || y > 0
+      ? "这一本可以直接点开翻；页图按编号使用。"
+      : "这一本可以直接点开翻。");
   }
   if (skipped.length) {
     hint += skipped.length === 1 ? " · 跳过 1 页" : " · 跳过 " + skipped.length + " 页";

@@ -256,8 +256,10 @@ def test_portfolio_wait_copy_avoids_writing_phrases() -> None:
     wait_ctrl = (_STUDIO / "homepage-v2" / "wait-tips.js").read_text(encoding="utf-8")
     success = (_STUDIO / "js" / "portfolio-export-logic.js").read_text(encoding="utf-8")
     constants = (_STUDIO / "js" / "constants.js").read_text(encoding="utf-8")
-    assert 'PORTFOLIO_IMPORT_TITLE = "正在按杂志页编排…"' in import_logic
-    assert "自动分章 · 按页编排 · 可离开稍后回来" in import_logic
+    assert 'PORTFOLIO_IMPORT_TITLE = "正在编排作品集…"' in import_logic
+    assert "按页编排 · 可离开稍后回来" in import_logic
+    assert "正在排版作品集…" in import_logic
+    assert "正在挑选并按页编排…" in import_logic
     assert "isCopyWritingPhrase" in import_logic
     assert "/文案|正在写/" in import_logic
     assert "resolveImportStageCopy(job, _importEdition)" in import_run
@@ -400,7 +402,7 @@ def test_shelf_list_exposes_portfolio_edition_and_page_count(tmp_path: Path) -> 
     rows = {row["tripId"]: row for row in list_studio_trips(trips_dir)}
     assert rows["nara"]["edition"] == "portfolio"
     assert rows["nara"]["pageCount"] == 16
-    assert "edition" not in rows["kyoto"]
+    assert rows["kyoto"]["edition"] == "journal"
     assert "pageCount" not in rows["kyoto"]
 
 

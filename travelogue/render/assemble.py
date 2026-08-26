@@ -6,7 +6,10 @@ from pathlib import Path
 
 from travelogue.config import AppConfig
 from travelogue.render.journal_chapters import build_journal_chapters
-from travelogue.render.portfolio_chapters import build_portfolio_chapters
+from travelogue.render.portfolio_chapters import (
+    build_portfolio_chapters,
+    overlay_portfolio_epilogue_stats,
+)
 from travelogue.render.context_types import (
     CoverRenderContext,
     FeaturedGridBundleContext,
@@ -299,6 +302,8 @@ def build_render_context(
         if (use_epilogue_stats or surface.is_longshot_surface)
         else None
     )
+    if is_portfolio and epilogue_stats:
+        epilogue_stats = overlay_portfolio_epilogue_stats(trip, epilogue_stats)
 
     has_epilogue = bool(epilogue) or use_epilogue_stats
     use_cover_closing = (

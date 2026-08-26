@@ -30,6 +30,8 @@ import {
   displayHintPages,
   pageSpecSentence,
   folderCollisionCopy,
+  wizardCopy,
+  wizardStartLabel,
   approxKeptSentence,
   shouldShowPageSpec,
   buildPageCountFields,
@@ -142,7 +144,7 @@ test("PFM FE-PFM-02 low photo grey-out + informed continue", () => {
   assert.equal(isPortfolioLowPhoto(48, 48), false);
   assert.equal(isPortfolioLowPhoto(null, 48), false);
   assert.equal(portfolioEditionSubline(true), "照片较少");
-  assert.equal(portfolioEditionSubline(false), "杂志页");
+  assert.equal(portfolioEditionSubline(false), "可翻的一本");
   assert.equal(shouldConfirmLowPhoto(14, 48, "user", "journal"), true);
   assert.equal(shouldConfirmLowPhoto(14, 48, "homepage", "journal"), false);
   assert.equal(shouldConfirmLowPhoto(14, 48, "user", "portfolio"), false);
@@ -188,12 +190,57 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
   );
   assert.equal(
     folderCollisionCopy("portfolio", { title: "华农油菜花" }, { title: "华农油菜花" }),
-    "这个文件夹已经做过《华农油菜花》。继续会覆盖那一本。"
+    "这个文件夹已经做过作品集。继续会覆盖这本作品集，不会动书架上的游记那一本。"
+  );
+  assert.equal(
+    folderCollisionCopy("portfolio", { title: "华农油菜花" }, null),
+    "这个文件夹已经做过作品集《华农油菜花》。继续会覆盖这本作品集。"
+  );
+  assert.equal(
+    folderCollisionCopy(
+      "portfolio",
+      { title: "东澳作品集" },
+      { title: "珠海东澳岛一日游" }
+    ),
+    "这个文件夹已经做过作品集《东澳作品集》。继续会覆盖这本作品集，不会动已有游记《珠海东澳岛一日游》。"
   );
   assert.equal(
     folderCollisionCopy("portfolio", null, { title: "华农油菜花" }),
-    "将新建一本，不会覆盖已有游记《华农油菜花》。"
+    "将新建一本作品集，不会覆盖已有游记《华农油菜花》。两本可以同时留在书架上。"
   );
+  assert.equal(
+    folderCollisionCopy("portfolio", null, {
+      title: "珠海东澳岛一日游",
+      edition: "portfolio",
+    }),
+    "将新建一本作品集，不会覆盖已有作品集《珠海东澳岛一日游》。两本可以同时留在书架上。"
+  );
+  assert.equal(
+    folderCollisionCopy("journal", { title: "华农油菜花" }, { title: "华农油菜花" }),
+    "这个文件夹已经做过游记。继续会覆盖这本游记，不会动书架上的作品集那一本。"
+  );
+  const huang = folderCollisionCopy(
+    "portfolio",
+    { title: "华农油菜花" },
+    { title: "华农油菜花" }
+  );
+  assert.equal(huang.includes("《华农油菜花》"), false);
+  const pfCopy = wizardCopy("portfolio");
+  assert.equal(pfCopy.pickButton, "选择本次作品集的照片文件夹");
+  assert.equal(pfCopy.quickDesc.includes("请改选游记"), true);
+  assert.equal(pfCopy.quickDesc.includes("杂志"), false);
+  assert.equal(pfCopy.hideDemo, true);
+  assert.equal(wizardCopy("journal").pickButton, "选择本次画册的照片文件夹");
+  assert.equal(wizardCopy("journal").hideDemo, false);
+  assert.equal(
+    wizardStartLabel({ edition: "portfolio", covering: true }),
+    "覆盖并开始制作作品集"
+  );
+  assert.equal(
+    wizardStartLabel({ edition: "portfolio" }),
+    "开始制作作品集 →"
+  );
+  assert.equal(wizardStartLabel({ edition: "journal" }), "开始制作 →");
   const on = parsePortfolioPipelineConfig({
     portfolioPipeline: { enabled: true },
   });
@@ -225,6 +272,9 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
   );
   assert.match(wizard, /buildPageCountFields\(_activeEdition/);
   assert.match(wizard, /换一本更厚 \/ 更薄/);
+  assert.match(wizard, /wizardCopy\(_activeEdition\)/);
+  assert.match(wizard, /wizardStartLabel/);
+  assert.match(wizard, /hasSiblingJournal/);
 });
 
 test("resolvePhotoKeepModeFromDraft 对齐 QFX 合同向量", () => {

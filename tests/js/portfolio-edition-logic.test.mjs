@@ -39,9 +39,10 @@ test("确认文案必含文字可能无法全部保留", () => {
   assert.equal(toJ.body.includes("换种分享"), false);
 });
 
-test("shelfEditionLine 仅作品集弱标", () => {
-  assert.equal(shelfEditionLine({}), "");
-  assert.equal(shelfEditionLine({ edition: "journal", pageCount: 12 }), "");
+test("shelfEditionLine 游记与作品集都标身份", () => {
+  assert.equal(shelfEditionLine(null), "");
+  assert.equal(shelfEditionLine({}), "游记");
+  assert.equal(shelfEditionLine({ edition: "journal", pageCount: 12 }), "游记");
   assert.equal(shelfEditionLine({ edition: "portfolio" }), "作品集");
   assert.equal(
     shelfEditionLine({ edition: "portfolio", pageCount: 16 }),
@@ -54,6 +55,9 @@ test("成册类型两卡不叫成册风格", () => {
   assert.match(labels, /游记/);
   assert.match(labels, /作品集/);
   assert.equal(labels.includes("成册风格"), false);
+  const pf = editionCardOptions().find((o) => o.id === "portfolio");
+  assert.equal(pf.consequence, "可翻的一本");
+  assert.equal(pf.consequence.includes("杂志页"), false);
 });
 
 test("页数芯片只出目录投影的档，缺省仅自动", () => {

@@ -92,14 +92,17 @@ export function editionSwitchConfirm(from, to) {
 }
 
 /**
- * 作品集票面弱标。游记返回空串，避免每张都写「游记」。
+ * 票面第一行身份弱标。无 trip 空串；缺省 edition 当游记。
  * @param {{ edition?: string, pageCount?: number }|null} trip
  */
 export function shelfEditionLine(trip) {
-  if (!trip || !isPortfolioEdition(trip.edition)) return "";
-  var n = Number(trip.pageCount);
-  if (n > 0) return "作品集 · " + n + " 页";
-  return "作品集";
+  if (!trip) return "";
+  if (isPortfolioEdition(trip.edition)) {
+    var n = Number(trip.pageCount);
+    if (n > 0) return "作品集 · " + n + " 页";
+    return "作品集";
+  }
+  return "游记";
 }
 
 export function editionCardOptions() {
@@ -112,7 +115,7 @@ export function editionCardOptions() {
     {
       id: "portfolio",
       label: "作品集",
-      consequence: "杂志页 + 可翻阅的一本",
+      consequence: "可翻的一本",
     },
   ];
 }

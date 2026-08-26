@@ -7,10 +7,15 @@ Journal mosaic / ``compose_trip`` must not import this module.
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Any, Mapping, Sequence
+
+from travelogue.layout_engine.editorial_series.page_stars import is_disabled, star_of
+
+_LOG = logging.getLogger(__name__)
 
 PORT_MAX = 0.88
 SQUARE_MAX = 1.12
@@ -290,6 +295,8 @@ def take_for_page(
     aspect_ratios: Mapping[str, float] | None = None,
 ) -> SlotTake:
     ids = [str(a) for a in asset_ids if a]
+    if is_disabled(pattern_id):
+        return SlotTake(leftover=list(ids), skip=True)
     take_n = min(max(int(band), 1), len(ids))
     if take_n <= 0:
         return SlotTake(leftover=list(ids), skip=True)
@@ -384,6 +391,31 @@ def _family_hist(items: Sequence[str]) -> tuple[int, int, int]:
     return port, land, square
 
 
+def _mix_dist(planned: Sequence[SlotSpec], cand: Sequence[SlotSpec]) -> int:
+    a = _family_hist([s.family for s in planned])
+    b = _family_hist([s.family for s in cand])
+    return abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
+
+
+def _cousin_rank_key(
+    planned: Sequence[SlotSpec],
+    planned_n: int,
+    tid: str,
+    specs: Sequence[SlotSpec],
+    official: frozenset[str],
+) -> tuple:
+    """BLK-PIS-01 · 槽差 → overlap → mix → 星 → official → ultra → id."""
+    return (
+        planned_n - len(specs),
+        -_fine_overlap(planned, specs),
+        _mix_dist(planned, specs),
+        -star_of(tid),
+        0 if tid in official else 1,
+        0 if "ultra" not in tid else 1,
+        tid,
+    )
+
+
 def _fine_overlap(planned: Sequence[SlotSpec], cand: Sequence[SlotSpec]) -> int:
     from collections import Counter
 
@@ -399,34 +431,146 @@ def _fine_overlap(planned: Sequence[SlotSpec], cand: Sequence[SlotSpec]) -> int:
 def _cousin_faces(planned_pattern_id: str, *, max_n: int, have_n: int) -> list[str]:
     planned = list(load_slot_specs(planned_pattern_id))
     planned_n = len(planned) or max_n
-    planned_hist = _family_hist([s.family for s in planned]) if planned else (0, 0, 0)
     official = _official_face_ids()
-    ranked: list[tuple[int, int, int, int, int, str]] = []
+    ranked: list[tuple] = []
     for n in range(min(planned_n, have_n), 0, -1):
         for tid in _page_faces_by_n().get(n, ()):
-            if tid == planned_pattern_id:
+            if tid == planned_pattern_id or is_disabled(tid):
                 continue
             specs = load_slot_specs(tid)
             if len(specs) != n:
                 continue
-            hist = _family_hist([s.family for s in specs])
-            mix_dist = (
-                abs(hist[0] - planned_hist[0])
-                + abs(hist[1] - planned_hist[1])
-                + abs(hist[2] - planned_hist[2])
-            )
             ranked.append(
-                (
-                    planned_n - n,
-                    -_fine_overlap(planned, specs),
-                    mix_dist,
-                    0 if tid in official else 1,
-                    0 if "ultra" not in tid else 1,
-                    tid,
-                )
+                _cousin_rank_key(planned, planned_n, tid, specs, official)
             )
     ranked.sort()
     return [row[-1] for row in ranked]
+
+
+def maybe_star_upgrade(
+    asset_ids: Sequence[str],
+    planned_pattern_id: str,
+    planned_take: SlotTake,
+    *,
+    aspect_kinds: Mapping[str, str] | None = None,
+    aspect_ratios: Mapping[str, float] | None = None,
+) -> tuple[str, SlotTake]:
+    """Same-slot higher-star cousin. Geometry first; never counts as demote."""
+    planned = list(load_slot_specs(planned_pattern_id))
+    planned_n = len(planned)
+    planned_star = star_of(planned_pattern_id)
+    if planned_n <= 0 or planned_star >= 3 or is_disabled(planned_pattern_id):
+        return planned_pattern_id, planned_take
+
+    official = _official_face_ids()
+    planned_overlap = _fine_overlap(planned, planned)
+    best_tid = planned_pattern_id
+    best_take = planned_take
+    best_key = _cousin_rank_key(
+        planned, planned_n, planned_pattern_id, planned, official
+    )
+    ids = [str(a) for a in asset_ids if a]
+    for tid in _cousin_faces(
+        planned_pattern_id, max_n=planned_n, have_n=planned_n
+    ):
+        if is_disabled(tid) or star_of(tid) <= planned_star:
+            continue
+        specs = load_slot_specs(tid)
+        if len(specs) != planned_n:
+            continue
+        if _mix_dist(planned, specs) > 0:
+            continue
+        if _fine_overlap(planned, specs) < planned_overlap:
+            continue
+        taken = take_for_page(
+            ids,
+            tid,
+            band=planned_n,
+            aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
+        )
+        if taken.skip or not taken.asset_ids:
+            continue
+        key = _cousin_rank_key(planned, planned_n, tid, specs, official)
+        if key < best_key:
+            best_key = key
+            best_tid = tid
+            best_take = taken
+    if best_tid != planned_pattern_id:
+        _LOG.info(
+            "face_star_upgrade from=%s to=%s stars=%s->%s",
+            planned_pattern_id,
+            best_tid,
+            planned_star,
+            star_of(best_tid),
+        )
+    return best_tid, best_take
+
+
+def pick_hero_face(
+    asset_ids: Sequence[str],
+    *,
+    aspect_kinds: Mapping[str, str] | None = None,
+    aspect_ratios: Mapping[str, float] | None = None,
+) -> str:
+    """Orientation family first, then -star. Wrong-family 3-star loses."""
+    aid = str(asset_ids[0]) if asset_ids else ""
+    preferred = _preferred_hero_family(aid, aspect_kinds, aspect_ratios)
+    official = _official_face_ids()
+    ranked: list[tuple] = []
+    ids = [str(a) for a in asset_ids if a][:1]
+    for tid in _page_faces_by_n().get(1, ()):
+        if not str(tid).startswith("page-1-hero-") or is_disabled(tid):
+            continue
+        specs = load_slot_specs(tid)
+        if len(specs) != 1:
+            continue
+        taken = take_for_page(
+            ids,
+            tid,
+            band=1,
+            aspect_kinds=aspect_kinds,
+            aspect_ratios=aspect_ratios,
+        )
+        if taken.skip or not taken.asset_ids:
+            continue
+        fam = specs[0].family
+        ranked.append(
+            (
+                0 if fam == preferred else 1,
+                -star_of(tid),
+                0 if tid in official else 1,
+                0 if "ultra" not in tid else 1,
+                tid,
+            )
+        )
+    if ranked:
+        ranked.sort()
+        return str(ranked[0][-1])
+    if preferred == "portrait":
+        return "page-1-hero-port"
+    if preferred == "land43":
+        return "page-1-hero-land-right"
+    return "page-1-hero-land-wide"
+
+
+def _preferred_hero_family(
+    asset_id: str,
+    aspect_kinds: Mapping[str, str] | None,
+    aspect_ratios: Mapping[str, float] | None,
+) -> str:
+    ratio = (aspect_ratios or {}).get(asset_id)
+    if ratio and float(ratio) > 0:
+        return classify_ratio(float(ratio))
+    kind = ""
+    if aspect_kinds and asset_id:
+        kind = str(aspect_kinds.get(asset_id) or "").lower()
+    if kind in {"portrait", "port", "tall"}:
+        return "portrait"
+    if kind == "square":
+        return "square"
+    # No ratio: keep the historic default (16:9 wide), not 4:3.
+    return "land169"
 
 
 def fallback_take(
@@ -472,7 +616,7 @@ def fallback_take(
     )
     seen: set[str] = set()
     for face in [*candidates, *tail]:
-        if not face or face in seen:
+        if not face or face in seen or is_disabled(face):
             continue
         seen.add(face)
         specs = load_slot_specs(face)

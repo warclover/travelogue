@@ -38,6 +38,8 @@ import {
   approxKeptSentence,
   folderCollisionCopy,
   buildPageCountFields,
+  wizardCopy,
+  wizardStartLabel,
 } from "./import-wizard-logic.js";
 import {
   isRadioNavKey,
@@ -531,6 +533,7 @@ function applyEditionChoice(next, source) {
 }
 
 function syncEditionUi() {
+  var copy = wizardCopy(_activeEdition);
   var row = $("v2-wizard-edition");
   var journal = $("v2-wizard-edition-journal");
   var portfolio = $("v2-wizard-edition-portfolio");
@@ -540,11 +543,14 @@ function syncEditionUi() {
   if (homeLink) homeLink.hidden = !shouldShowHomepagePortfolioEntry(_pipelineCfg);
   if (shouldResetEditionToJournal(_pipelineCfg, _pipelineHydrated)) {
     _activeEdition = "journal";
+    copy = wizardCopy(_activeEdition);
   }
   var low = isPortfolioLowPhoto(_pendingPhotoCount, _pipelineCfg.minKept);
   if (journal) {
     journal.setAttribute("aria-checked", _activeEdition === "journal" ? "true" : "false");
     journal.tabIndex = radioTabIndex(_activeEdition, "journal");
+    var journalSub = journal.querySelector("span");
+    if (journalSub) journalSub.textContent = copy.journalCardSubline;
   }
   if (portfolio) {
     portfolio.setAttribute("aria-checked", _activeEdition === "portfolio" ? "true" : "false");
@@ -553,22 +559,41 @@ function syncEditionUi() {
     var sub = portfolio.querySelector("span");
     if (sub) sub.textContent = portfolioEditionSubline(low);
   }
-  var desc = $("v2-wizard-mode-quick-desc");
-  if (desc) {
-    desc.textContent = _activeEdition === "portfolio"
-      ? "按杂志页编排，做完能点开翻。发群请选游记。"
-      : "优先出微信长图，适合马上分享";
-  }
   var pickTitle = $("v2-wizard-title-pick");
-  if (pickTitle) {
-    pickTitle.textContent = _activeEdition === "portfolio" ? "制作一本作品集" : "制作我的影像画册";
+  if (pickTitle) pickTitle.textContent = copy.pickTitle;
+  var pickBtn = $("v2-wizard-pick");
+  if (pickBtn) pickBtn.textContent = copy.pickButton;
+  var pickHint = $("v2-wizard-pick-hint");
+  if (pickHint) pickHint.textContent = copy.pickHint;
+  var firstTip = $("v2-wizard-first-tip-text");
+  if (firstTip) firstTip.textContent = copy.firstTip;
+  var demo = $("v2-wizard-demo-album");
+  if (demo) demo.hidden = !!copy.hideDemo;
+  var helpItems = document.querySelectorAll("#v2-wizard-folder-points li");
+  if (helpItems && helpItems.length === copy.folderHelpHtml.length) {
+    copy.folderHelpHtml.forEach(function (html, i) {
+      helpItems[i].innerHTML = html;
+    });
   }
   var confirmTitle = $("v2-wizard-title-confirm");
-  if (confirmTitle) {
-    confirmTitle.textContent = _activeEdition === "portfolio" ? "确认作品集规格" : "确认并开始";
-  }
+  if (confirmTitle) confirmTitle.textContent = copy.confirmTitle;
+  var verifyFoot = $("v2-wizard-verify-foot");
+  if (verifyFoot) verifyFoot.textContent = copy.verifyFoot;
+  var desc = $("v2-wizard-mode-quick-desc");
+  if (desc) desc.textContent = copy.quickDesc;
+  var fineTitle = $("v2-wizard-mode-fine-title");
+  if (fineTitle) fineTitle.textContent = copy.fineTitle;
+  var fineDesc = $("v2-wizard-mode-fine-desc");
+  if (fineDesc) fineDesc.textContent = copy.fineDesc;
+  var finePageTitle = $("v2-wizard-title-fine");
+  if (finePageTitle) finePageTitle.textContent = copy.fineTitle;
+  var trust = $("v2-wizard-trust");
+  if (trust) trust.textContent = copy.trust;
+  var trustFine = $("v2-wizard-trust-fine");
+  if (trustFine) trustFine.textContent = copy.trust;
   syncPageSpecUi();
   updateDuplicateTitleNote();
+  updateStartLabel();
 }
 
 function syncPageSpecUi() {
@@ -649,20 +674,21 @@ function hydratePortfolioPipeline() {
     });
 }
 
+function isCoveringSelf() {
+  var self = _activeEdition === "portfolio" ? _existingPortfolio : _existingJournal;
+  return !!(self && (self.tripId || self.title));
+}
+
 function updateStartLabel() {
   var start = $("v2-wizard-start");
   if (!start) return;
-  if (_pendingUploadFiles && _pendingUploadFiles.length) {
-    start.textContent = "开始上传";
-    return;
-  }
-  if (_activeMode === "fine_craft") {
-    start.textContent = _fineVisited ? "定制画册细节 →" : "填写细节 →";
-  } else if (_activeEdition === "portfolio") {
-    start.textContent = "开始制作作品集 →";
-  } else {
-    start.textContent = "开始制作 →";
-  }
+  start.textContent = wizardStartLabel({
+    edition: _activeEdition,
+    mode: _activeMode,
+    fineVisited: _fineVisited,
+    uploading: !!(!(_pendingUploadFiles) ? false : _pendingUploadFiles.length),
+    covering: isCoveringSelf(),
+  });
 }
 
 function syncChipPressedState() {
@@ -1332,6 +1358,7 @@ function startUploadFromWizard() {
   if (featuredDir) uploadOpts.featuredDir = featuredDir;
   if (materialDir) uploadOpts.materialDir = materialDir;
   if (_activeMode === "fine_craft") uploadOpts.layoutDensity = readLayoutDensity();
+  uploadOpts.hasSiblingJournal = !!_existingJournal;
   Object.assign(uploadOpts, buildPageCountFields(_activeEdition, _pageCountSelected));
 
   markVisited();
@@ -1384,7 +1411,10 @@ function startImportFromWizard() {
             : "将新建一本" + bookWord + " · 开始制作";
       studioToast(toastMsg, { duration: 2000 });
     }
-    return startV2Import(body, { source: "本机文件夹" }).catch(function () { /* handled */ });
+    return startV2Import(body, {
+      source: "本机文件夹",
+      hasSiblingJournal: !!_existingJournal,
+    }).catch(function () { /* handled */ });
   }).catch(function (err) {
     setStepError("fine", err && err.message ? err.message : "读取计划文件失败，请重试");
   });

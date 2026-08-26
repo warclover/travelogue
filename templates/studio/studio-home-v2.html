@@ -483,7 +483,7 @@
           试用《斯里兰卡见闻录》
           <small>本机示例 · 无需选文件夹</small>
         </button>
-        <p class="v2-wizard__hint v2-wizard__hint--center">一本画册一个文件夹，无需上传照片，隐私无忧</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-pick-hint">一本画册一个文件夹，无需上传照片，隐私无忧</p>
         <p class="v2-wizard__first-tip" id="v2-wizard-first-tip" hidden role="status">
           <span id="v2-wizard-first-tip-text">选一次画册的文件夹即可，不用先整理</span>
           <button type="button" class="v2-wizard__first-tip-dismiss" id="v2-wizard-first-tip-dismiss"
@@ -491,7 +491,7 @@
         </p>
         <details class="v2-wizard__details" id="v2-wizard-folder-help">
           <summary>不知道选哪个文件夹？</summary>
-          <ul class="v2-wizard__folder-points">
+          <ul class="v2-wizard__folder-points" id="v2-wizard-folder-points">
             <li>同一次画册放同一文件夹（50–100 张最佳）</li>
             <li>Day1/Day2 子夹：合并导入或分两次导入（每次一本<strong>新</strong>画册）</li>
             <li>支持 JPG / PNG / WebP / HEIC；不移动、不修改原片</li>
@@ -535,7 +535,7 @@
             <button type="button" class="v2-wizard__change-folder" id="v2-wizard-change-folder"
                     aria-label="换文件夹，返回选择步骤">换文件夹</button>
           </div>
-          <p class="v2-wizard__verify-foot">制作时将自动去重与挑选 · 换文件夹可再做一篇</p>
+          <p class="v2-wizard__verify-foot" id="v2-wizard-verify-foot">制作时将自动去重与挑选 · 换文件夹可再做一篇</p>
           <p class="v2-wizard__count-hint" id="v2-wizard-count-hint" hidden role="status"></p>
           <div class="v2-wizard__thumbs" id="v2-wizard-thumbs" hidden></div>
         </div>
@@ -550,7 +550,7 @@
             <button type="button" class="v2-wizard__edition-btn" role="radio" aria-checked="false"
                     tabindex="-1" data-edition="portfolio" id="v2-wizard-edition-portfolio">
               作品集
-              <span>杂志页</span>
+              <span>可翻的一本</span>
             </button>
           </div>
         </div>
@@ -573,8 +573,8 @@
           </button>
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="false"
                   data-mode="fine_craft" id="v2-wizard-mode-fine">
-            <span class="v2-wizard__mode-card-title">个性化定制画册</span>
-            <span class="v2-wizard__mode-card-desc">输入画册相关信息，定制更多细节</span>
+            <span class="v2-wizard__mode-card-title" id="v2-wizard-mode-fine-title">个性化定制画册</span>
+            <span class="v2-wizard__mode-card-desc" id="v2-wizard-mode-fine-desc">输入画册相关信息，定制更多细节</span>
           </button>
         </div>
         <div class="v2-wizard__photo-row">

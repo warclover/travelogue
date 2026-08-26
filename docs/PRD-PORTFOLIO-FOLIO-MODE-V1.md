@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.1**（BLK-PFM-01～09 已回写 · AS-PFM-03 MSP 后继） |
+| **文档版本** | **v0.2.2**（BLK-PFM-01～09 已回写 · AS-PFM-03 MSP 后继 · **身份/票根后继见 PIS**） |
 | **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（[MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、[语料已定点](./acceptance-records/pfm-w4-kickoff-2026-08-22.md)、人评未开（`feat/pfm-portfolio-folio-mode-v1`）；仓库 `homepage_entry` 仍关 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
@@ -13,11 +13,12 @@
 | **评审** | [八席纪要 2026-08-20](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md)（七席 + 典型用户 · 8/8 Conditional Go · BLK-PFM-01～09 · OQ-02 否决 / OQ-06 改判） |
 | **前置条件** | 现网游记 GA（`layoutEngine=screens` + MCS/MTSO）· 六平台导出 GA（ADR-021）· **正式 `series/` 收件目录已定（TDV OQ-03 关闭）** · **P0 系列 `magazine-16-standard` 已入现网目录** · 活目录 `page-*` 由 TSU W3 供货（PFM 只消费） |
 | **线框** | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（**F0–F8 已签** · 2026-08-20 产品重签 F1/F3/F6） |
-| **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
+| **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**后继**：票根 / 双身份话术 / 成册页 X / 堂亲按星）· [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
 | **验收** | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
 | **实施** | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
-| **更新日期** | 2026-08-21 |
+| **更新日期** | 2026-08-26 |
 | **流程改判** | **2026-08-25 起**：导入页数、满意即导、导出面板、张数推荐口径以 [PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（**PFO v0.2.0**）为准。本文 **D-PFM-28 / D-PFM-13「仅精修钉页」/ N-PFM-14 / OQ-PFM-02** 视为被 PFO 改判。**D-PFM-10 / SHD-PFM-06「两种书不并排」的意图保留**：PFO D-PFO-04 和解为点法对齐 + 六种分组降级，**不按「取消折叠」落地**。装配隔离、`page-*`、身份字段、游记零改仍以本文为准。 |
+| **身份/票根后继** | **2026-08-26 起**：同夹双本话术、票根「游记 / 作品集 · N 页」、成册页 X、堂亲/升星以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS**）为准。本文 **FE-PFM-11 游记票根空串** 视为被 AMD-PIS-01 改判。装配隔离、`page-*`、身份字段仍以本文为准。 |
 
 > **定位**
 >
@@ -774,3 +775,4 @@ else:                               compose_trip(...)   # 零改签名
 | 0.2.0 | 2026-08-20 | 八席 Conditional Go 回写：**BLK-01** 命名改 `edition`/`portfolio_*`；**BLK-02** 取消 `layoutEngine` 第三值；**BLK-03** 溢出升档 + 明示（§8.5）；**BLK-04** V1 正文纯图；**BLK-05** 主产物并列两件 + 成功面动作；**BLK-06** 文案迁移与锁；**BLK-07** OR 旁路；**BLK-08** 资产硬门 + 顶岗纪律 + 估时上调；**BLK-09** items 同源。OQ-02 否决、OQ-06 改判，OQ-07～09 补答。SHD-01～08 收入。新增 AC-PFM-27～40、ISO-07。 |
 | 0.2.0 | 2026-08-21 | 状态回写：ISO-04/06 已关；AS-PFM-03 工坊对账完成（`folio-24` 已是 24 页，不升格）；W4 狗粮协议与盲评三问已锁，人评未开，`homepage_entry` 仍关。 |
 | 0.2.1 | 2026-08-21 | AS-PFM-03 后继：MSP 五档入库（8/12/16/20/28）。原对账纪要不改。 |
+| 0.2.2 | 2026-08-26 | **SHD-PIS-06**：文首挂 [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 后继。FE-PFM-11 游记票根空串改判见 AMD-PIS-01；选脸按星见 AMD-PIS-03。 |

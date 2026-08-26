@@ -768,6 +768,30 @@ def sample_album_preview_thumbs(
             names.append(path.name)
     return thumbs, photo_count, names
 
+def _reuse_legacy_portfolio_dir(
+    album_dir: Path,
+    *,
+    trips_dir: Path,
+    title: str,
+    place: str,
+    trip_id: str | None,
+    edition: str | None,
+) -> tuple[str, Path] | None:
+    """Pre-split portfolio trips sit on the journal slug; reuse so we overwrite that book."""
+    if trip_id:
+        return None
+    if str(edition or "").strip().lower() not in {"portfolio", "folio"}:
+        return None
+    legacy = demo_trip_id_from_album(album_dir, title=title, place=place, edition=None)
+    legacy_dir = trips_dir / legacy
+    if not legacy_dir.exists() or not any(legacy_dir.iterdir()):
+        return None
+    meta = _trip_collision_meta(legacy_dir, legacy)
+    if meta.get("edition") != "portfolio":
+        return None
+    return legacy, legacy_dir
+
+
 def resolve_studio_trip_dir(
     album_dir: Path,
     *,
@@ -777,6 +801,16 @@ def resolve_studio_trip_dir(
     trip_id: str | None = None,
     edition: str | None = None,
 ) -> tuple[str, Path]:
+    reused = _reuse_legacy_portfolio_dir(
+        album_dir,
+        trips_dir=trips_dir,
+        title=title,
+        place=place,
+        trip_id=trip_id,
+        edition=edition,
+    )
+    if reused is not None:
+        return reused
     slug = demo_trip_id_from_album(
         album_dir, title=title, place=place, explicit=trip_id, edition=edition
     )
@@ -798,6 +832,7 @@ def peek_existing_album_trip(
         return None
     if not album_dir.is_dir():
         return None
+    wanted = "portfolio" if str(edition or "").strip().lower() in {"portfolio", "folio"} else "journal"
     slug, trip_dir = resolve_studio_trip_dir(
         album_dir,
         trips_dir=trips_dir,
@@ -807,7 +842,10 @@ def peek_existing_album_trip(
     )
     if not trip_dir.exists() or not any(trip_dir.iterdir()):
         return None
-    return _trip_collision_meta(trip_dir, slug)
+    meta = _trip_collision_meta(trip_dir, slug)
+    if meta.get("edition") != wanted:
+        return None
+    return meta
 
 
 def _trip_collision_meta(trip_dir: Path, slug: str) -> dict[str, str]:

@@ -200,20 +200,139 @@ export function pageSpecSentence(folderCount, chips, selectedId) {
   return "系统会按能上版的张数自动选厚度。";
 }
 
+function _tripHasIdentity(trip) {
+  return !!(trip && (trip.title || trip.tripId || trip.edition));
+}
+
+function _tripTitle(trip) {
+  return String((trip && trip.title) || "").replace(/\s+/g, " ").trim();
+}
+
+function _identityWord(edition) {
+  return normalizeEdition(edition) === "portfolio" ? "作品集" : "游记";
+}
+
+function _otherEditionOf(edition, existingOther) {
+  if (existingOther && existingOther.edition) {
+    return normalizeEdition(existingOther.edition);
+  }
+  return normalizeEdition(edition) === "portfolio" ? "journal" : "portfolio";
+}
+
 /**
  * @param {"journal"|"portfolio"} edition
- * @param {{ title?: string, edition?: string }|null|undefined} existingSelf
- * @param {{ title?: string, edition?: string }|null|undefined} existingOther
+ * @param {{ title?: string, edition?: string, tripId?: string }|null|undefined} existingSelf
+ * @param {{ title?: string, edition?: string, tripId?: string }|null|undefined} existingOther
  */
 export function folderCollisionCopy(edition, existingSelf, existingOther) {
-  if (existingSelf && existingSelf.title) {
-    return "这个文件夹已经做过《" + existingSelf.title + "》。继续会覆盖那一本。";
+  var selfWord = _identityWord(edition);
+  var otherWord = _identityWord(_otherEditionOf(edition, existingOther));
+  var hasSelf = _tripHasIdentity(existingSelf);
+  var hasOther = _tripHasIdentity(existingOther);
+  var selfTitle = _tripTitle(existingSelf);
+  var otherTitle = _tripTitle(existingOther);
+  var sameTitle = !!(selfTitle && otherTitle && selfTitle === otherTitle);
+
+  if (hasSelf && !hasOther) {
+    if (selfTitle) {
+      return (
+        "这个文件夹已经做过" + selfWord + "《" + selfTitle +
+        "》。继续会覆盖这本" + selfWord + "。"
+      );
+    }
+    return "这个文件夹已经做过" + selfWord + "。继续会覆盖这本" + selfWord + "。";
   }
-  if (existingOther && existingOther.title) {
-    var other = normalizeEdition(edition) === "portfolio" ? "游记" : "作品集";
-    return "将新建一本，不会覆盖已有" + other + "《" + existingOther.title + "》。";
+  if (hasSelf && hasOther) {
+    if (sameTitle) {
+      return (
+        "这个文件夹已经做过" + selfWord +
+        "。继续会覆盖这本" + selfWord +
+        "，不会动书架上的" + otherWord + "那一本。"
+      );
+    }
+    var selfBit = selfTitle ? selfWord + "《" + selfTitle + "》" : selfWord;
+    var otherBit = otherTitle ? otherWord + "《" + otherTitle + "》" : otherWord + "那一本";
+    return (
+      "这个文件夹已经做过" + selfBit +
+      "。继续会覆盖这本" + selfWord +
+      "，不会动已有" + otherBit + "。"
+    );
+  }
+  if (!hasSelf && hasOther) {
+    var otherNamed = otherTitle ? otherWord + "《" + otherTitle + "》" : otherWord;
+    return (
+      "将新建一本" + selfWord +
+      "，不会覆盖已有" + otherNamed +
+      "。两本可以同时留在书架上。"
+    );
   }
   return "";
+}
+
+/** 向导可见字（游记=HTML 默认冻结值；作品集=本波）。 */
+export function wizardCopy(edition) {
+  var pf = normalizeEdition(edition) === "portfolio";
+  return {
+    pickTitle: pf ? "制作一本作品集" : "制作我的影像画册",
+    pickButton: pf ? "选择本次作品集的照片文件夹" : "选择本次画册的照片文件夹",
+    pickHint: pf
+      ? "一本作品集一个文件夹，无需上传照片，隐私无忧"
+      : "一本画册一个文件夹，无需上传照片，隐私无忧",
+    firstTip: pf
+      ? "选一次作品集的文件夹即可，不用先整理"
+      : "选一次画册的文件夹即可，不用先整理",
+    folderHelpHtml: pf
+      ? [
+          "同一次作品集放同一文件夹（50–100 张最佳）",
+          "Day1/Day2 子夹：合并导入或分两次导入（每次一本<strong>新</strong>作品集）",
+          "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
+          "手机照片需先传到电脑",
+        ]
+      : [
+          "同一次画册放同一文件夹（50–100 张最佳）",
+          "Day1/Day2 子夹：合并导入或分两次导入（每次一本<strong>新</strong>画册）",
+          "支持 JPG / PNG / WebP / HEIC；不移动、不修改原片",
+          "手机照片需先传到电脑",
+        ],
+    confirmTitle: pf ? "确认作品集规格" : "确认并开始",
+    verifyFoot: pf
+      ? "制作时将自动去重与挑选 · 换文件夹可再做一本"
+      : "制作时将自动去重与挑选 · 换文件夹可再做一篇",
+    journalCardSubline: "推荐 · 发群",
+    quickDesc: pf
+      ? "按页编排，做完能点开翻。要发群请改选游记。"
+      : "优先出微信长图，适合马上分享",
+    fineTitle: pf ? "个性化定制" : "个性化定制画册",
+    fineDesc: pf
+      ? "输入书名等信息，定制更多细节"
+      : "输入画册相关信息，定制更多细节",
+    trust: pf
+      ? "照片多时可能超过 10 分钟；可离开，做好了再回来。"
+      : "根据不同照片数量（上限250张），生成画册耗时不同，通常需要1-8分钟",
+    hideDemo: pf,
+  };
+}
+
+/**
+ * @param {{
+ *   edition?: string,
+ *   mode?: string,
+ *   fineVisited?: boolean,
+ *   uploading?: boolean,
+ *   covering?: boolean
+ * }} opts
+ */
+export function wizardStartLabel(opts) {
+  var o = opts || {};
+  if (o.uploading) return "开始上传";
+  var pf = normalizeEdition(o.edition) === "portfolio";
+  if (String(o.mode || "") === "fine_craft") {
+    if (o.fineVisited) return pf ? "定制作品集细节 →" : "定制画册细节 →";
+    return "填写细节 →";
+  }
+  if (pf && o.covering) return "覆盖并开始制作作品集";
+  if (pf) return "开始制作作品集 →";
+  return "开始制作 →";
 }
 
 export function shouldShowPageSpec(edition, pipe) {
@@ -250,7 +369,7 @@ export function isPortfolioLowPhoto(count, minKept) {
 }
 
 /** 线框 F1c · 作品集卡副文。低照片用短句，完整提示走确认模态。 */
-export var PORTFOLIO_EDITION_SUBLINE = "杂志页";
+export var PORTFOLIO_EDITION_SUBLINE = "可翻的一本";
 export var PORTFOLIO_LOW_PHOTO_SUBLINE = "照片较少";
 
 export function lowPhotoHint(minKept) {

@@ -455,6 +455,9 @@ html.preview-export-popover-open body {
   text-align: left;
   cursor: pointer;
 }
+.preview-toolbar__export-more-link[hidden] {
+  display: none !important;
+}
 .preview-toolbar__export-more-link:hover {
   background: color-mix(in srgb, var(--preview-accent, #3f454c) 10%, transparent);
 }

@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.1**（F9–F11 已签 · W1+W2 已落地） |
+| **文档版本** | **v0.2.2**（F9–F11 已签 · W1+W2 已落地 · **后继见 PIS**） |
 | **状态** | **有条件通过（Conditional Go）** · BLK 已回写 · **W1+W2 已落地** · F9–F11 已签（AC-PFO-20）· 不批无条件 Go（挡 W3 真夹狗粮） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集主路径」— **PFO**（Portfolio Flow Optimization） |
@@ -13,10 +13,11 @@
 | **评审** | [七席+典型用户 2026-08-25](./acceptance-records/pfo-portfolio-flow-optimization-v1-review-2026-08-25.md) · **8/8 Conditional Go** · BLK-PFO-01～07 **已回写本文** |
 | **前置条件** | [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) W0–W3 已合入 · 现网八档 `magazine-*-standard`（8–36）已升格 · 六平台导出 GA（ADR-021）· 双管线隔离 [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) |
 | **线框** | [portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.2** · **F9–F11 已签 2026-08-25**（先按帧落地，不合适再改）· [签核记录](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) |
-| **关联文档** | [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（装配源，流程以本文改判为准）· [作品集模式流程.md](./作品集模式流程.md)（用户侧已按 §4）· [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) · [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) · [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [RCL](./PRD-READABLE-CORE-LINE-V1.md) |
+| **关联文档** | [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（装配源，流程以本文改判为准）· [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**后继**：双身份话术 / 票根 / 页数 X / 选脸）· [作品集模式流程.md](./作品集模式流程.md)（用户侧已按 §4）· [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) · [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) · [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [RCL](./PRD-READABLE-CORE-LINE-V1.md) |
 | **验收** | [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · 本文 **§14 为源** |
 | **实施** | [IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · 本文 **§12 为源** |
-| **更新日期** | 2026-08-25 |
+| **更新日期** | 2026-08-26 |
+| **后继** | **2026-08-26 起**：同夹双身份话术、票根、作品集用词、成册页 X、堂亲/升星以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS**）为准。本文规格一句、打开∥导出、先弹面板、`0.67` 不进选档**不重开**。 |
 
 > **定位**
 >
@@ -680,3 +681,4 @@ PFM 文首改判指针、DOC-STATUS 本行、README 索引随本文件一并列�
 | v0.1.0 | 2026-08-25 | 初稿。改判 D-PFM-28 / OQ-02 / 页数仅精修 / 六种默认折叠；统一主路径；三层张数；任务 P0–P2；AC-PFO-01～16。 |
 | v0.2.0 | 2026-08-25 | 八席 Conditional Go 回写。BLK-PFO-01～07：假 pending 按代码根因；向导一句规格；成功面打开∥导出、禁倒计时；D-PFO-04 改判为点法对齐+六种降级；0.67 不准选档；F9–F11 挡 W2；禁逐页承诺。新增 AC-PFO-17～20、OQ-PFO-06～08、§12.5 测试迁移。W1 可开工。 |
 | v0.2.1 | 2026-08-25 | 产品认可线框 v1.2 F9–F11（先实现，不合适再改）。AC-PFO-20 / BLK-PFO-06 关。拆 IMPLEMENTATION / ACCEPTANCE。W1+W2 已落地。 |
+| v0.2.2 | 2026-08-26 | **SHD-PIS-06**：文首挂 [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 后继。流程合同本文仍为准；身份/票根/页数 X/选脸不在本文续写。 |

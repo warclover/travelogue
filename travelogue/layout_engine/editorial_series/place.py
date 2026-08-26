@@ -10,38 +10,14 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 from travelogue.layout_engine.editorial_series.slot_match import (
-    classify_ratio,
     fallback_take,
+    maybe_star_upgrade,
+    pick_hero_face,
     take_for_page,
     take_for_pattern,
 )
 
 DENSE_MIN_SLOTS = 5
-HERO_LAND_FACE = "page-1-hero-land-wide"
-HERO_LAND_43_FACE = "page-1-hero-land-right"
-HERO_PORT_FACE = "page-1-hero-port"
-
-
-def _hero_face_for(
-    asset_ids: Sequence[str],
-    aspect_kinds: Mapping[str, str] | None,
-    aspect_ratios: Mapping[str, float] | None = None,
-) -> str:
-    aid = str(asset_ids[0]) if asset_ids else ""
-    ratio = (aspect_ratios or {}).get(aid)
-    if ratio and float(ratio) > 0:
-        family = classify_ratio(float(ratio))
-        if family == "portrait":
-            return HERO_PORT_FACE
-        if family == "land43":
-            return HERO_LAND_43_FACE
-        return HERO_LAND_FACE
-    kind = ""
-    if aspect_kinds and aid:
-        kind = str(aspect_kinds.get(aid) or "").lower()
-    if kind in {"portrait", "port", "tall"}:
-        return HERO_PORT_FACE
-    return HERO_LAND_FACE
 
 
 @dataclass
@@ -168,8 +144,9 @@ def place_groups(
         planned = str(
             spec.get("patternId") or spec.get("faceHint") or f"page-grid-{band}"
         )
+        source_ids = list(group["ids"])
         taken = take_for_page(
-            group["ids"],
+            source_ids,
             planned,
             band=band,
             aspect_kinds=aspect_kinds,
@@ -179,7 +156,7 @@ def place_groups(
             # Same-count cousin first (e.g. land-6 → 2l4p). Else smaller
             # pair/hero. Dense faces still refuse opposite-orient stuffing.
             fb = fallback_take(
-                group["ids"],
+                source_ids,
                 planned,
                 aspect_kinds=aspect_kinds,
                 aspect_ratios=aspect_ratios,
@@ -209,30 +186,41 @@ def place_groups(
             if pattern != planned:
                 result.demoted_pages += 1
             continue
-        chunk = taken.asset_ids
-        group["ids"] = taken.leftover
-        take_n = len(chunk)
+        take_n = len(taken.asset_ids)
         pattern = planned
         demoted = False
-        fits = list(taken.fits)
-        display_aspects = list(taken.display_aspects)
-        roles = list(taken.roles)
+        placed_take = taken
         # Solo / undersized group on a 2–4 slot face: keep one photo, but do
         # not park it in the first cell of an empty grid (top-left quarter).
         if take_n == 1 and band > 1:
-            pattern = _hero_face_for(chunk, aspect_kinds, aspect_ratios)
+            pattern = pick_hero_face(
+                taken.asset_ids,
+                aspect_kinds=aspect_kinds,
+                aspect_ratios=aspect_ratios,
+            )
             demoted = pattern != planned
             if demoted:
                 refit = take_for_pattern(
-                    chunk,
+                    taken.asset_ids,
                     pattern,
                     aspect_kinds=aspect_kinds,
                     aspect_ratios=aspect_ratios,
                 )
                 if not refit.skip and refit.asset_ids:
-                    fits = list(refit.fits)
-                    display_aspects = list(refit.display_aspects)
-                    roles = list(refit.roles)
+                    placed_take = refit
+        else:
+            pattern, placed_take = maybe_star_upgrade(
+                source_ids,
+                planned,
+                taken,
+                aspect_kinds=aspect_kinds,
+                aspect_ratios=aspect_ratios,
+            )
+        chunk = list(placed_take.asset_ids)
+        group["ids"] = list(placed_take.leftover)
+        fits = list(placed_take.fits)
+        display_aspects = list(placed_take.display_aspects)
+        roles = list(placed_take.roles)
         page = PlacedPage(
             role=role,
             program=str(spec.get("program") or ""),

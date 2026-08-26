@@ -275,12 +275,13 @@ def test_ac_msp_16_tier_sequences_explained_by_fulfillment() -> None:
         )
         assert choice is not None
         placed = place_groups(groups, choice.series.get("sequence") or [], cap=choice.cap)
-        demoted = sum(
+        swapped = sum(
             1
             for p in placed.pages
             if p.planned_pattern_id and p.pattern_id != p.planned_pattern_id
         )
-        assert demoted == placed.demoted_pages
+        # W3 star upgrades change patternId without counting as demote.
+        assert placed.demoted_pages <= swapped
         consumed = len(placed.pages) + len(placed.dropped_roles)
         planned_n = len(choice.series.get("sequence") or [])
         assert consumed <= planned_n

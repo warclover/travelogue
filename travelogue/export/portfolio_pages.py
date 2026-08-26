@@ -157,13 +157,42 @@ def _purge_prefix(directory: Path, prefix: str, ext: str) -> None:
             _log.debug("purge previous portfolio part failed: %s", path, exc_info=True)
 
 
-def _hint_pages(*, page_count: int, skipped: list[str]) -> str:
+def book_page_count(trip: dict[str, Any] | None) -> int:
+    """成册页 X = studio.portfolio.pageCount；缺省 0（调用方再退回张数）。"""
+    data = trip if isinstance(trip, dict) else {}
+    studio = data.get("studio") if isinstance(data.get("studio"), dict) else {}
+    folio = studio.get("portfolio") if isinstance(studio.get("portfolio"), dict) else {}
+    try:
+        n = int(folio.get("pageCount") or 0)
+    except (TypeError, ValueError):
+        n = 0
+    return n if n > 0 else 0
+
+
+def portfolio_export_page_copy(
+    *,
+    book_pages: int,
+    output_count: int,
+    skipped: list[str] | None = None,
+) -> tuple[int, str]:
+    """Job ``pageCount`` = X；``userHint`` 只解释 Y≠X。与前端 ``portfolioExportHint`` 对齐。"""
+    skipped = skipped or []
     extra = ""
     if skipped:
         shown = "、".join(skipped[:5])
         more = f" 等 {len(skipped)} 页" if len(skipped) > 5 else ""
         extra = f"（跳过 {len(skipped)} 页：{shown}{more}）"
-    return f"作品集已导出 · 共 {page_count} 页{extra}" if page_count else f"页图未产出{extra}"
+    x = book_pages if book_pages > 0 else output_count
+    y = output_count
+    if y <= 0:
+        hint = f"页图未产出{extra}"
+    elif book_pages <= 0 or y == x:
+        hint = f"这一本可以直接点开翻；页图按编号使用。{extra}"
+    elif y == x + 1:
+        hint = f"另导出封面 1 张 · 页图按编号使用{extra}"
+    else:
+        hint = f"页图 {y} 张（含封面/书衣，以文件夹为准）{extra}"
+    return x, hint
 
 
 def export_portfolio_pages(
@@ -261,7 +290,11 @@ def export_portfolio_pages(
             "页图全部失败" + (f"：{skipped[0]}" if skipped else ""),
         )
 
-    hint = _hint_pages(page_count=len(outputs), skipped=skipped)
+    book_x, hint = portfolio_export_page_copy(
+        book_pages=book_page_count(trip),
+        output_count=len(outputs),
+        skipped=skipped,
+    )
     return PortfolioBundleResult(
         outputs=outputs,
         capture_method="portfolio_pages",
@@ -273,7 +306,7 @@ def export_portfolio_pages(
         profile_label=profile.label,
         target_page_count=screen_n,
         publish_guide=(profile.publish_guide or "").strip(),
-        page_count=len(outputs),
+        page_count=book_x,
         output_format=out_fmt,
         skipped_pages=skipped,
     )

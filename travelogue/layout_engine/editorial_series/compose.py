@@ -110,35 +110,11 @@ def compose_portfolio_trip(
     density_hint = None
     if (
         not sparse
-        and page_count_source == "auto"
-        and _fulfillment(placed, choice) < FULFILL_MIN
-    ):
-        better = _better_fulfilling_choice(
-            catalog,
-            groups,
-            kept_n=kept_n,
-            max_pages=max_pages,
-            aspect_kinds=aspect_kinds,
-            aspect_ratios=aspect_ratios,
-            current=choice,
-            buckets=buckets,
-        )
-        if better is not None:
-            alt_placed = _place_choice(
-                groups, better, aspect_kinds, aspect_ratios, buckets=buckets
-            )
-            if alt_placed.pages:
-                fulfill_hint = f"你的照片更适合 {int(better.series.get('pageCount') or 0)} 页"
-                choice = better
-                placed = alt_placed
-    elif (
-        not sparse
-        and page_count_source == "user"
         and _fulfillment(placed, choice) < FULFILL_MIN
     ):
         hollow = max(0, int(choice.series.get("pageCount") or 0) - placed.fulfilled_pages)
         if hollow:
-            # PFO · 用户钉页：空页不得写成唯一换档劝说（BE-PFO-03）
+            # PFO D-PFO-05 · 空页只作弱提示，禁止据此换薄档
             density_hint = f"有 {hollow} 页没排满。"
     if sparse and not fulfill_hint:
         fulfill_hint = "这些照片间隔较大，预设编排排不饱满"
@@ -424,46 +400,6 @@ def _sequence_fulfillment(
         "demotedPages": placed.demoted_pages,
         "droppedRoles": list(placed.dropped_roles),
     }
-
-
-def _better_fulfilling_choice(
-    catalog: Sequence[Mapping[str, Any]],
-    groups: Sequence[Mapping[str, Any]],
-    *,
-    kept_n: int,
-    max_pages: int,
-    aspect_kinds: Mapping[str, str],
-    current: Any,
-    aspect_ratios: Mapping[str, float] | None = None,
-    buckets: Sequence[Sequence[str]] | None = None,
-) -> Any:
-    current_density = str(current.series.get("density") or "standard").strip().lower()
-    viable: list[dict[str, Any]] = []
-    for row in catalog:
-        if str(row.get("id") or "") == str(current.series.get("id") or ""):
-            continue
-        row_density = str(row.get("density") or "standard").strip().lower()
-        if row_density != current_density:
-            continue
-        trial = select_series(
-            [row],
-            kept_n=kept_n,
-            page_count=int(row.get("pageCount") or 0),
-            page_count_source="user",
-            max_pages=max_pages,
-        )
-        if trial is None:
-            continue
-        placed = _place_choice(
-            groups, trial, aspect_kinds, aspect_ratios, buckets=buckets
-        )
-        if _fulfillment(placed, trial) >= FULFILL_MIN:
-            viable.append(dict(row))
-    if not viable:
-        return None
-    return select_series(
-        viable, kept_n=kept_n, page_count_source="auto", max_pages=max_pages
-    )
 
 
 def _folder_count(

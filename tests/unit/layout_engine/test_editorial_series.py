@@ -650,6 +650,13 @@ def test_compose_user_pin_32_stays_when_kept_overflows() -> None:
     assert trip["studio"]["portfolio"]["pageCountSource"] == "user"
 
 
+def test_select_series_105_picks_thickest_official() -> None:
+    catalog = load_official_series()
+    choice = select_series(catalog, kept_n=105)
+    assert choice is not None
+    assert int(choice.series["pageCount"]) == 36
+
+
 def test_compose_auto_page_count_matches_select_series() -> None:
     """AC-PFO-04 · 自动档生成后 pageCount == select_series(auto, 真 M)。"""
     catalog = load_official_series()
@@ -669,6 +676,55 @@ def test_compose_auto_page_count_matches_select_series() -> None:
     assert trip["studio"]["portfolio"]["pageCount"] == expected
     assert trip["studio"]["portfolio"]["pageCountSource"] == "auto"
     assert meta["seriesId"] == choice.series["id"]
+
+
+def test_compose_auto_does_not_downgrade_to_fill_pages() -> None:
+    """D-PFO-05 · 空页兑现不得把真 M 从最厚档削到 16 页。"""
+    from datetime import datetime, timedelta, timezone
+
+    catalog = load_official_series()
+    t0 = datetime(2015, 6, 1, 9, 0, tzinfo=timezone.utc)
+    assets = []
+    for i in range(1, 106):
+        ts = t0 + timedelta(minutes=i * 12)
+        assets.append(
+            {
+                "id": f"a{i:03d}",
+                "width": 1600,
+                "height": 900,
+                "aspectKind": "landscape",
+                "takenAt": ts.isoformat().replace("+00:00", "Z"),
+            }
+        )
+    buckets = [
+        [a["id"] for a in assets[:35]],
+        [a["id"] for a in assets[35:70]],
+        [a["id"] for a in assets[70:]],
+    ]
+    trip = {
+        "studio": {"edition": "portfolio", "portfolio": {"pageCountSource": "auto"}},
+        "curation": {
+            "segments": [
+                {"id": f"seg-{i}", "assetIds": b} for i, b in enumerate(buckets)
+            ]
+        },
+        "assets": assets,
+    }
+    chapters = [
+        {
+            "id": f"ch-{i}",
+            "items": [{"type": "media-card", "assetId": aid} for aid in bucket],
+            "screens": [],
+        }
+        for i, bucket in enumerate(buckets)
+    ]
+    compose_portfolio_trip(chapters, assets=assets, trip=trip, buckets=buckets)
+    kept = int(trip["studio"]["portfolio"]["photosKept"])
+    choice = select_series(catalog, kept_n=kept)
+    assert choice is not None
+    assert trip["studio"]["portfolio"]["pageCount"] == int(choice.series["pageCount"])
+    hint = trip["studio"]["portfolio"].get("match", {}).get("pageCountHint") or ""
+    assert "更适合" not in hint
 
 
 def test_compose_90_overflow_is_explicit() -> None:

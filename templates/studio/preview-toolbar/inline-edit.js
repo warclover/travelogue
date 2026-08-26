@@ -4,6 +4,7 @@
 "use strict";
 
 import { postJsonConflictRetry } from "../js/http.js";
+import { coverTitleEditLabel, readEditionFromDom } from "../js/portfolio-export-logic.js";
 
 var _tripApiBase = function (_tripId) {
   return "";
@@ -149,8 +150,9 @@ export function initCoverTitleEdit(tripId, opts) {
     titleEl.classList.add("cover-opening__title--editable");
     titleEl.setAttribute("role", "button");
     titleEl.setAttribute("tabindex", "0");
-    titleEl.setAttribute("aria-label", "点击编辑杂志名");
-    titleEl.title = "点击编辑杂志名";
+    var coverLabel = coverTitleEditLabel(readEditionFromDom(document));
+    titleEl.setAttribute("aria-label", coverLabel);
+    titleEl.title = coverLabel;
     titleEl.dataset.title = (titleEl.textContent || "").trim();
     syncCoverTitleLayoutClass(titleEl);
 

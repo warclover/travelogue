@@ -8,9 +8,11 @@ import { resolveDisplayTitle } from "../js/title-humanize.js";
 import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
 
 export var JOURNAL_IMPORT_TITLE = "正在生成你的影像画册…";
-export var PORTFOLIO_IMPORT_TITLE = "正在按杂志页编排…";
+export var PORTFOLIO_IMPORT_TITLE = "正在编排作品集…";
 export var JOURNAL_IMPORT_ESTIMATE = "自动分章 · 配文 · 排版 · 可离开稍后回来";
-export var PORTFOLIO_IMPORT_ESTIMATE = "自动分章 · 按页编排 · 可离开稍后回来";
+export var PORTFOLIO_IMPORT_ESTIMATE = "按页编排 · 可离开稍后回来";
+export var PORTFOLIO_STAGE_CURATE = "正在挑选并按页编排…";
+export var PORTFOLIO_STAGE_RENDER = "正在排版作品集…";
 
 export function normalizeImportEdition(raw) {
   var t = String(raw || "").trim().toLowerCase();
@@ -89,7 +91,11 @@ export function resolveImportStageCopy(job, edition) {
   }
 
   if (normalizeImportEdition(edition) === "portfolio") {
-    if (stage === "narrate" || isCopyWritingPhrase(out.main)) {
+    if (stage === "curate") {
+      out.main = PORTFOLIO_STAGE_CURATE;
+    } else if (stage === "render") {
+      out.main = PORTFOLIO_STAGE_RENDER;
+    } else if (stage === "narrate" || isCopyWritingPhrase(out.main)) {
       out.main = PORTFOLIO_IMPORT_TITLE;
     }
     if (isCopyWritingPhrase(out.secondary)) {
@@ -97,6 +103,39 @@ export function resolveImportStageCopy(job, edition) {
     }
   }
   return out;
+}
+
+/**
+ * 409 二次确认。游记标题/正文/取消 toast 冻结现网字面。
+ * @param {{ existingIsPf?: boolean, existingTitle?: string, hasSiblingJournal?: boolean }} opts
+ */
+export function demoExistsOverwriteCopy(opts) {
+  var o = opts || {};
+  var title = String(o.existingTitle || "").trim();
+  if (!o.existingIsPf) {
+    return {
+      title: "该画册已存在",
+      body: title
+        ? "《" + title + "》已经用过这个文件夹。覆盖后无法撤销。"
+        : "是否覆盖已有内容？覆盖后无法撤销。",
+      confirmText: "覆盖并重新导入",
+      cancelText: "取消",
+      cancelToast: "未覆盖已有画册",
+    };
+  }
+  var body = title
+    ? "《" + title + "》已经用这个文件夹做过作品集。覆盖后无法撤销。"
+    : "是否覆盖已有作品集？覆盖后无法撤销。";
+  if (o.hasSiblingJournal) {
+    body += "不会动书架上的游记那一本。";
+  }
+  return {
+    title: "这本作品集已存在",
+    body: body,
+    confirmText: "覆盖并重新导入",
+    cancelText: "取消",
+    cancelToast: "未覆盖已有作品集",
+  };
 }
 
 export function basenameTitle(path) {

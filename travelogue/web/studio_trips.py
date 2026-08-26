@@ -197,14 +197,14 @@ def longshot_reveal_rel_path(trip_dir: Path) -> str | None:
 
 
 def _shelf_edition_fields(data: dict) -> dict:
-    """FE-PFM-11 · 仅作品集票面带 edition / pageCount；游记行不写身份字段。"""
+    """PIS · 游记行带 edition=journal；作品集带 edition + pageCount。"""
     if not data:
-        return {}
+        return {"edition": "journal"}
     from travelogue.web.studio_entry import edition_chrome
 
     chrome = edition_chrome(data)
     if chrome.get("edition") != "portfolio":
-        return {}
+        return {"edition": "journal"}
     out: dict = {"edition": "portfolio"}
     folio = chrome.get("portfolio") if isinstance(chrome.get("portfolio"), dict) else {}
     try:

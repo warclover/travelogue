@@ -38,6 +38,7 @@ from travelogue.web.studio_pipeline import (
     infer_album_preview_date_range,
     list_album_preview_candidates,
     peek_existing_album_trip,
+    resolve_studio_trip_dir,
     sample_album_preview_thumbs,
 )
 from travelogue.web.studio_uploads import (
@@ -593,10 +594,12 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if trip_id_str:
         store.update(job, trip_id=trip_id_str)
     else:
-        from travelogue.util.trip_slug import demo_trip_id_from_album
-
-        predicted = demo_trip_id_from_album(
-            album_path, title=title, place=place, explicit=None, edition=edition_raw
+        predicted, _predicted_dir = resolve_studio_trip_dir(
+            album_path,
+            trips_dir=trips_root,
+            title=title,
+            place=place,
+            edition=edition_raw,
         )
         store.update(job, trip_id=predicted)
 

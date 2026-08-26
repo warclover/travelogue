@@ -12,6 +12,26 @@ from travelogue.render.journal_chapters import ChaptersRenderBundle
 from travelogue.render.surface import SurfaceContext
 
 
+def overlay_portfolio_epilogue_stats(trip: dict, stats: dict) -> dict:
+    """PIS BLK-03 · 作品集辑封默认只写「P 张照片」，不写天数。"""
+    photo = 0
+    studio = trip.get("studio") if isinstance(trip.get("studio"), dict) else {}
+    folio = studio.get("portfolio") if isinstance(studio.get("portfolio"), dict) else {}
+    try:
+        photo = int(folio.get("photosPlaced") or 0)
+    except (TypeError, ValueError):
+        photo = 0
+    if photo <= 0:
+        try:
+            photo = int((stats or {}).get("photoCount") or 0)
+        except (TypeError, ValueError):
+            photo = 0
+    out = dict(stats or {})
+    out["photoCount"] = photo
+    out["summaryLine"] = f"{photo} 张照片" if photo else "照片"
+    return out
+
+
 def build_portfolio_chapters(
     trip: dict,
     surface: SurfaceContext,

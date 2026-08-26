@@ -21,11 +21,13 @@ from travelogue.export.packager import ExportError
 from travelogue.export.platform_profiles import resolve_profile
 from travelogue.export.portfolio_pages import (
     PageCaptureSkip,
+    book_page_count,
     capture_is_blank,
     export_portfolio_bundle,
     export_portfolio_pages,
     is_portfolio_pages_platform,
     list_portfolio_page_targets,
+    portfolio_export_page_copy,
 )
 
 pytestmark = pytest.mark.unit
@@ -37,7 +39,9 @@ def _png_bytes(*, size: tuple[int, int] = (320, 180), color=(40, 80, 120)) -> by
     return buf.getvalue()
 
 
-def _write_trip(trip_dir: Path, *, edition: str | None, screens: int) -> None:
+def _write_trip(
+    trip_dir: Path, *, edition: str | None, screens: int, page_count: int | None = None
+) -> None:
     trip_dir.mkdir(parents=True, exist_ok=True)
     chapter_screens = [
         {
@@ -53,7 +57,10 @@ def _write_trip(trip_dir: Path, *, edition: str | None, screens: int) -> None:
         "chapters": [{"id": "ch-01", "screens": chapter_screens}] if screens else [],
     }
     if edition:
-        data["studio"] = {"edition": edition}
+        folio: dict = {}
+        if page_count:
+            folio["pageCount"] = page_count
+        data["studio"] = {"edition": edition, "portfolio": folio} if folio else {"edition": edition}
     (trip_dir / "trip.json").write_text(
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -200,6 +207,29 @@ def test_export_trip_longshot_routes_to_bundle(tmp_path: Path, monkeypatch: pyte
     )
     result = export_trip_longshot(tmp_path, platform="portfolio_pages")
     assert result is sentinel
+
+
+def test_book_page_count_prefers_studio_over_outputs() -> None:
+    assert book_page_count({"studio": {"portfolio": {"pageCount": 36}}}) == 36
+    assert book_page_count({"studio": {}}) == 0
+
+
+def test_portfolio_export_page_copy_cover_extra() -> None:
+    x, hint = portfolio_export_page_copy(book_pages=36, output_count=37)
+    assert x == 36
+    assert "另导出封面 1 张" in hint
+    assert "页图按编号使用" in hint
+    assert "37" not in hint
+    assert "共 36 页" not in hint
+
+
+def test_page_count_uses_folio_x_not_output_y(tmp_path: Path) -> None:
+    _write_trip(tmp_path, edition="portfolio", screens=2, page_count=3)
+    result = export_portfolio_pages(tmp_path, capture_fn=lambda _t: _png_bytes())
+    assert result.page_count == 3
+    assert len(result.outputs) == 4
+    assert "另导出封面" in result.user_hint
+    assert "共 4 页" not in (result.user_hint or "")
 
 
 def test_max_pages_caps_body_not_cover_or_closing(tmp_path: Path) -> None:

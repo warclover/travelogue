@@ -38,6 +38,7 @@ import {
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+import { coverTitleEditLabel, readEditionFromDom } from "../js/portfolio-export-logic.js";
 import {
   editionCardOptionsForPipeline,
   editionSwitchConfirm,
@@ -110,7 +111,7 @@ export function initTitleEdit(root, tripId) {
     var display = document.createElement("button");
     display.type = "button";
     display.className = "preview-toolbar__title";
-    display.title = "点击编辑杂志名";
+    display.title = coverTitleEditLabel(readEditionFromDom(document));
     display.textContent = "我的旅途";
     wrap.appendChild(display);
 
@@ -939,7 +940,7 @@ export function mountEditionControls(slot, tripId, opts) {
   section.className = "preview-sheet__section preview-sheet__edition-section";
   section.innerHTML =
     '<span class="preview-sheet__label">成册类型</span>' +
-    '<p class="preview-sheet__hint preview-sheet__hint--compact">游记发群长图；作品集出杂志页和可翻阅的一本。</p>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">游记发群长图；作品集出可翻的一本。</p>' +
     '<div class="preview-sheet__editions" role="radiogroup" aria-label="成册类型"></div>' +
     '<div class="preview-sheet__page-count" hidden>' +
     '<span class="preview-sheet__label">页数</span>' +

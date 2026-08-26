@@ -1158,6 +1158,7 @@ export function cancelPreviewLongshotExport(root) {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
         appendixCount: estimateAppendixCountFromDom(document),
+        edition: face.edition,
         onDraftChange: function (draft) {
           syncConfirmedExportSummary(pop, draft && draft.platforms);
         },

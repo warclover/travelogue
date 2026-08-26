@@ -45,6 +45,7 @@ import {
   resolveImportStageCopy,
   importPanelCopy,
   normalizeImportEdition,
+  demoExistsOverwriteCopy,
 } from "./import-run-logic.js";
 import {
   scheduleWaitTips,
@@ -65,6 +66,7 @@ let _stageMainChangedAt = 0;
 let _stageStallEmitted = false;
 let _sfcVisionWarmupTracked = false;
 let _importEdition = "journal";
+let _hasSiblingJournal = false;
 
 /** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
 var SLOW_HINT_COPY = {
@@ -601,6 +603,7 @@ function pollImport(jobId, gen, source) {
 export function startV2Import(body, opts) {
   _importEdition = normalizeImportEdition(body && body.edition);
   opts = opts || {};
+  _hasSiblingJournal = opts.hasSiblingJournal === true;
   var gen = ++_gen;
   var source = opts.source || "本机文件夹";
   var tpl = readTemplateParams();
@@ -650,21 +653,24 @@ export function startV2Import(body, opts) {
       }
       var existingTitle = data.existingTitle || "";
       var existingIsPf = data.existingEdition === "portfolio" || data.existingEdition === "folio";
+      var overwriteCopy = demoExistsOverwriteCopy({
+        existingIsPf: existingIsPf,
+        existingTitle: existingTitle,
+        hasSiblingJournal: existingIsPf && _hasSiblingJournal,
+      });
       var confirmOverwrite = typeof studioModal === "function"
         ? studioModal({
-            title: existingIsPf ? "这本作品集已存在" : "该画册已存在",
-            body: existingTitle
-              ? "《" + existingTitle + "》已经用过这个文件夹。覆盖后无法撤销。"
-              : "是否覆盖已有内容？覆盖后无法撤销。",
-            confirmText: "覆盖并重新导入",
-            cancelText: "取消",
+            title: overwriteCopy.title,
+            body: overwriteCopy.body,
+            confirmText: overwriteCopy.confirmText,
+            cancelText: overwriteCopy.cancelText,
           })
-        : Promise.resolve(window.confirm(data.message || "该画册已存在。是否覆盖？"));
+        : Promise.resolve(window.confirm(data.message || overwriteCopy.title));
       return confirmOverwrite.then(function (ok) {
         if (!ok) {
           restoreImportShell();
           if (typeof studioToast === "function") {
-            studioToast("未覆盖已有画册", { duration: 2800 });
+            studioToast(overwriteCopy.cancelToast, { duration: 2800 });
           }
           return null;
         }
@@ -697,6 +703,7 @@ export function startV2Import(body, opts) {
 export function startV2UploadImport(files, opts) {
   opts = opts || {};
   _importEdition = normalizeImportEdition(opts.edition);
+  _hasSiblingJournal = opts.hasSiblingJournal === true;
   var list = files ? Array.prototype.slice.call(files) : [];
   if (!list.length) return Promise.resolve();
   if (isImportPhotoCapExceeded(list.length, IMPORT_PHOTO_CAP)) {

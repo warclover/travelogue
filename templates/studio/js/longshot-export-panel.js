@@ -749,7 +749,9 @@ export function buildPanelHtml(platformIds, opts) {
     "</div>" +
     '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出尺寸随导出目标变化</p>' +
     "</div>" +
-    '<div class="preview-toolbar__export-popover-field" data-field="density">' +
+    '<div class="preview-toolbar__export-popover-field" data-field="density"' +
+    (edition === "portfolio" ? " hidden" : "") +
+    ">" +
     '<span class="preview-toolbar__export-popover-label">长图密度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
     '<button type="button" data-studio-longshot-density="default">默认</button>' +
@@ -773,7 +775,9 @@ export function buildPanelHtml(platformIds, opts) {
     '<div class="preview-toolbar__export-more-links">' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
-    '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>' +
+    (edition === "portfolio"
+      ? '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview hidden>对比网页版与导出长图</button>'
+      : '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>') +
     "</div></details>" +
     "</div>" +
     '<div class="preview-toolbar__export-popover-actions">' +
@@ -916,8 +920,19 @@ export function syncPanelUI(pop, draft, opts) {
   }
   var densityField = pop.querySelector('[data-field="density"]');
   if (densityField) {
-    // 长图密度仅微信群/朋友圈；拼贴出口隐藏
-    densityField.hidden = isBatch || isComposePlatform(platform);
+    // 长图密度仅微信群/朋友圈；拼贴出口隐藏。作品集主路径（页图）也隐藏。
+    var folioMain =
+      opts.edition === "portfolio" &&
+      platform !== "wechat_chat" &&
+      platform !== "wechat_moments";
+    densityField.hidden = isBatch || isComposePlatform(platform) || folioMain;
+  }
+  var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
+  if (dualBtn) {
+    dualBtn.hidden =
+      opts.edition === "portfolio" &&
+      platform !== "wechat_chat" &&
+      platform !== "wechat_moments";
   }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
   if (noteEl) {
@@ -1047,6 +1062,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     smartCropEnabled: opts.smartCropEnabled === true,
     photoCount: opts.photoCount || 0,
     appendixCount: opts.appendixCount || 0,
+    edition: opts.edition === "portfolio" ? "portfolio" : "journal",
   };
   var draft = {
     platform: (initialDraft && initialDraft.platform) || "wechat_chat",

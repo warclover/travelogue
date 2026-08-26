@@ -86,6 +86,7 @@ function stubPopover(platformIds) {
   const expectBody = { innerHTML: "", textContent: "" };
   const albumCountField = { hidden: true };
   const batchHint = { hidden: true, textContent: "" };
+  const dualBtn = { hidden: false };
   const platformBtns = (platformIds || []).map((id) =>
     stubBtn("data-studio-longshot-platform", id)
   );
@@ -112,6 +113,7 @@ function stubPopover(platformIds) {
       if (sel === "[data-xhs-estimate]") return null;
       if (sel === "[data-album-estimate]") return null;
       if (sel === "[data-batch-hint]") return batchHint;
+      if (sel === "[data-ltn-dual-preview]") return dualBtn;
       return null;
     },
     querySelectorAll(sel) {
@@ -129,6 +131,7 @@ function stubPopover(platformIds) {
     _expectField: expectField,
     _expectBody: expectBody,
     _batchHint: batchHint,
+    _dualBtn: dualBtn,
     _platformBtns: platformBtns,
   };
 }
@@ -226,6 +229,28 @@ test("作品集面板：换种分享默认折叠 + 印刷副文；游记仍画�
   assert.match(pf, /这本作品集/);
   assert.doesNotMatch(pf, /data-studio-longshot-platform="portfolio_pages"/);
   assert.doesNotMatch(pf, />画册印刷</);
+  assert.match(pf, /data-field="density"[^>]*hidden/);
+  assert.match(pf, /data-ltn-dual-preview hidden/);
+  assert.doesNotMatch(journal, /data-field="density"[^>]*hidden/);
+  assert.doesNotMatch(journal, /data-ltn-dual-preview hidden/);
+});
+
+test("PIS · 作品集主路径藏长图密度，社交选中才露出", () => {
+  const pop = stubPopover(["wechat_chat", "xiaohongshu", "portfolio_pages"]);
+  syncPanelUI(
+    pop,
+    { platforms: ["portfolio_pages"], mode: "chapter", scale: 2 },
+    { edition: "portfolio" }
+  );
+  assert.equal(pop._densityField.hidden, true);
+  assert.equal(pop._dualBtn.hidden, true);
+  syncPanelUI(
+    pop,
+    { platforms: ["wechat_chat"], mode: "chapter", scale: 2 },
+    { edition: "portfolio" }
+  );
+  assert.equal(pop._densityField.hidden, false);
+  assert.equal(pop._dualBtn.hidden, false);
 });
 
 test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () => {
