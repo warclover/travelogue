@@ -210,6 +210,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | PFO 验收门 · 源 PRD §14 · AC-PFO-20 已关 |
 | [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) | **active** | **PIS** **v0.1.2** Conditional Go · BLK-PIS-01～05 已回写 · **W1+W2+W3 已落地** · **W4 狗粮已走** · [八席](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) · [W4](./acceptance-records/pis-w4-dogfood-2026-08-26.md) |
 | [acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) | **active** | PIS 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.1.1 |
+| [acceptance-records/pis-w4-dogfood-2026-08-26.md](./acceptance-records/pis-w4-dogfood-2026-08-26.md) | **active** | PIS W4 狗粮 · 华农确认页 + 珠海覆盖写回原 trip · 未点导出出 Y |
 | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 已落 · AS-PFM-03 五档已入 · W4 人评未开 |
 | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；W0–W3 + ISO-04/06 + AS-PFM-03 五档已入 · AC-PFM-25 人评未开 |
 | [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 · F1/F3/F6 产品重签 2026-08-20 |
