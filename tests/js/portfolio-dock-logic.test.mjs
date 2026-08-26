@@ -9,6 +9,8 @@ import {
   resolvePortfolioMainPlatform,
 } from "../../templates/studio/js/portfolio-export-logic.js";
 import {
+  clearPortfolioExportArmed,
+  markPortfolioExportArmed,
   portfolioExportPopoverSpec,
   portfolioIdleCta,
   resolvePortfolioExportPlatform,
@@ -52,4 +54,14 @@ test("作品集主钮与主区 seed 恒为导出作品集 / 页图包", () => {
     platform: PORTFOLIO_PAGES_PLATFORM,
     platforms: [PORTFOLIO_PAGES_PLATFORM],
   });
+});
+
+test("作品集主钮未确认先开面板，确认本册后才开导", () => {
+  clearPortfolioExportArmed();
+  assert.equal(shouldSkipRecipeForPortfolioExport("demo-x"), true);
+  markPortfolioExportArmed("demo-x");
+  assert.equal(shouldSkipRecipeForPortfolioExport("demo-x"), false);
+  assert.equal(shouldSkipRecipeForPortfolioExport("demo-other"), true);
+  clearPortfolioExportArmed();
+  assert.equal(shouldSkipRecipeForPortfolioExport("demo-x"), true);
 });

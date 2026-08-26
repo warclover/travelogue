@@ -134,6 +134,14 @@ test("FE-FST-01 · resolveImportStageCopy：N/N 后切 curate，计数不霸屏"
     pfTips.find((c) => c.id === "WT-03").title,
     "分章排版，交给它"
   );
+  assert.equal(
+    pfTips.find((c) => c.id === "WT-01").title,
+    "可翻的一本，页图也能带走"
+  );
+  assert.equal(
+    pfTips.find((c) => c.id === "WT-04").title,
+    "先打开这一本，再导出"
+  );
 });
 
 test("SFC W0 · vision_warmup 主句非空", () => {

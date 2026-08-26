@@ -69,8 +69,8 @@ test("页数芯片只出目录投影的档，缺省仅自动", () => {
     opts.slice(1).map((o) => o.id),
     ["12", "16"]
   );
-  assert.equal(opts[1].hint, "12 页 · 约 36 张");
-  assert.equal(opts[2].hint, "16 页 · 约 53 张");
+  assert.equal(opts[1].hint, "12 页 · 最多约 36 张");
+  assert.equal(opts[2].hint, "16 页 · 最多约 53 张");
   assert.equal(shouldConfirmThinTier(27, 180), true);
   assert.equal(shouldConfirmThinTier(81, 80), false);
   assert.equal(

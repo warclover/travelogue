@@ -141,7 +141,7 @@ export function pageCountChipHint(pages, capacity) {
   var cap = Number(capacity);
   if (!(n > 0)) return "";
   if (!(cap > 0)) return String(n);
-  return n + " 页 · 约 " + cap + " 张";
+  return n + " 页 · 最多约 " + cap + " 张";
 }
 
 export function normalizeChipDetails(chips) {

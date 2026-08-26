@@ -37,6 +37,7 @@ from travelogue.web.studio_pipeline import (
     assert_album_importable,
     infer_album_preview_date_range,
     list_album_preview_candidates,
+    peek_existing_album_trip,
     sample_album_preview_thumbs,
 )
 from travelogue.web.studio_uploads import (
@@ -455,6 +456,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     photo_keep_mode, photo_cull_enabled, keep_near_duplicates = (
         _resolve_photo_keep_from_payload(payload if isinstance(payload, dict) else {})
     )
+    edition_raw = str(payload.get("edition") or "").strip().lower() or None
 
     try:
         assert_album_importable(
@@ -464,6 +466,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
             place=place,
             trip_id=trip_id_str,
             force=force,
+            edition=edition_raw,
         )
     except DemoError as exc:
         if upload_dir:
@@ -489,6 +492,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
             title=title,
             place=place,
             trip_id=trip_id_str,
+            edition=edition_raw,
         )
         if force_trip_dir.exists() and any(force_trip_dir.iterdir()):
             disk_id = force_trip_dir.name
@@ -592,7 +596,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         from travelogue.util.trip_slug import demo_trip_id_from_album
 
         predicted = demo_trip_id_from_album(
-            album_path, title=title, place=place, explicit=None
+            album_path, title=title, place=place, explicit=None, edition=edition_raw
         )
         store.update(job, trip_id=predicted)
 
@@ -621,7 +625,6 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         worker_payload["photoKeepMode"] = photo_keep_mode
     if template_id_str:
         worker_payload["template_id"] = template_id_str
-    edition_raw = str(payload.get("edition") or "").strip().lower()
     if edition_raw:
         worker_payload["edition"] = edition_raw
         if edition_raw in ("portfolio", "folio"):
@@ -743,12 +746,28 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
     date_start, date_end = infer_album_preview_date_range(
         album_path, candidates=candidates, budget_s=1.0
     )
+    title_hint = str(payload.get("title") or album_path.name).strip() or album_path.name
+    place_hint = str(payload.get("place") or "旅途").strip() or "旅途"
     payload: dict = {
         "ok": True,
         "thumbs": thumbs,
         "thumbNames": thumb_names,
         "photoCount": photo_count,
         "folderName": album_path.name,
+        "existingJournal": peek_existing_album_trip(
+            album_path,
+            trips_dir=trips_root,
+            title=title_hint,
+            place=place_hint,
+            edition=None,
+        ),
+        "existingPortfolio": peek_existing_album_trip(
+            album_path,
+            trips_dir=trips_root,
+            title=title_hint,
+            place=place_hint,
+            edition="portfolio",
+        ),
     }
     if date_start:
         payload["dateStart"] = date_start

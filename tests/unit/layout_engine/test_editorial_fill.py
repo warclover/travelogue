@@ -9,6 +9,7 @@ import pytest
 from travelogue.layout_engine.editorial_series.fill import (
     fill_groups_from_assets,
     is_sparse_collection,
+    pack_thin_fill_groups,
 )
 
 pytestmark = pytest.mark.unit
@@ -66,6 +67,16 @@ def test_does_not_merge_when_gap_over_10_min() -> None:
     assets = [_asset(1, minutes=0), _asset(2, minutes=11)]
     groups = fill_groups_from_assets(assets, trip=_trip(assets))
     assert len(groups) == 2
+
+
+def test_pack_thin_fill_groups_same_chapter() -> None:
+    assets = [_asset(i, minutes=i * 15) for i in range(1, 9)]
+    groups = fill_groups_from_assets(assets, trip=_trip(assets))
+    assert len(groups) == 8
+    packed = pack_thin_fill_groups(groups)
+    assert len(packed) == 2
+    assert [len(g["asset_ids"]) for g in packed] == [4, 4]
+    assert packed[0]["id"].startswith("pack-")
 
 
 def test_splits_when_run_span_exceeds_45_min() -> None:

@@ -448,6 +448,25 @@ def _trip_folder_count(trip: dict) -> int:
     )
 
 
+def _leftover_is_capacity(portfolio: dict[str, Any]) -> bool:
+    """True leftover = 档位装不下. False = 编排没排满 (do not push journal)."""
+    overflow = portfolio.get("overflow") if isinstance(portfolio.get("overflow"), dict) else {}
+    res = str(overflow.get("resolution") or portfolio.get("overflowResolution") or "")
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
+    if leftover <= 0:
+        return False
+    cap = _as_int(overflow.get("capacity") or portfolio.get("capacity"))
+    if res == "placement_gap":
+        return False
+    if cap > 0 and placed < cap:
+        return False
+    if res in {"capped", "tier_upgraded_then_capped", "tier_upgraded"}:
+        return True
+    return kept > cap if cap > 0 else True
+
+
 def _overflow_line(portfolio: dict[str, Any] | None) -> str:
     """PFO W1 · 角标默认一句人话，不写「本册收录 P / M」。"""
     if not isinstance(portfolio, dict):
@@ -456,7 +475,9 @@ def _overflow_line(portfolio: dict[str, Any] | None) -> str:
     kept = _as_int(portfolio.get("photosKept"))
     leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
     if leftover > 0:
-        return f"有 {leftover} 张没放进这本，要的话用游记能全收。"
+        if _leftover_is_capacity(portfolio):
+            return f"有 {leftover} 张没放进这本，要的话用游记能全收。"
+        return f"编排没排满，有 {leftover} 张没放进这本。"
     folder = _as_int(portfolio.get("folderCount"))
     pages = _as_int(portfolio.get("pageCount"))
     if folder > 0 and pages > 0:
@@ -503,12 +524,20 @@ def _portfolio_counts(trip: dict) -> dict[str, Any]:
     folder = raw.get("photosFolder") or match.get("folderCount")
     if not folder:
         folder = _trip_folder_count(trip) or None
-    return {
+    overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
+    out = {
         "folderCount": folder,
         "pageCount": raw.get("pageCount"),
         "photosPlaced": raw.get("photosPlaced"),
         "photosKept": raw.get("photosKept"),
     }
+    if overflow:
+        out["overflow"] = {
+            "count": overflow.get("count"),
+            "resolution": overflow.get("resolution"),
+            "capacity": overflow.get("capacity"),
+        }
+    return out
 
 
 def edition_chrome(trip: dict) -> dict[str, Any]:
@@ -521,6 +550,7 @@ def edition_chrome(trip: dict) -> dict[str, Any]:
         placed = _as_int(portfolio.get("photosPlaced"), -1)
         kept = _as_int(portfolio.get("photosKept"))
         leftover = placed >= 0 and kept > 0 and placed < kept
+    capacity_left = leftover and isinstance(portfolio, dict) and _leftover_is_capacity(portfolio)
     if edition == "portfolio":
         dock = {"short": "导出作品集", "aria": "导出作品集"}
     else:
@@ -531,7 +561,7 @@ def edition_chrome(trip: dict) -> dict[str, Any]:
         "dockCta": dock,
         "overflowLine": overflow or None,
         "overflowDetail": _overflow_detail(portfolio) or None,
-        "overflowCta": "改用游记（全收）" if leftover else None,
+        "overflowCta": "改用游记（全收）" if capacity_left else None,
         "portfolio": portfolio,
     }
 

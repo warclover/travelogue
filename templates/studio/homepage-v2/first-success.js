@@ -167,7 +167,7 @@ function hasUserTrips() {
   return V2.trips.some(function (t) { return !isDemoTrip(t); });
 }
 
-function restoreImportShell() {
+export function restoreImportShell() {
   show($("v2-loading"), false);
   show($("v2-importing"), false);
   show($("v2-headline"), true);
@@ -237,7 +237,7 @@ function populateSuccessUi(result) {
       var detailLines = [];
       if (pfCopy && pfCopy.detail) detailLines.push(pfCopy.detail);
       var tplLine = result.templateFeedbackMessage || "";
-      if (tplLine) detailLines.push(tplLine);
+      if (tplLine && !isPfCopy) detailLines.push(tplLine);
       var keepMode = String(result.photoKeepMode || "").trim().toLowerCase();
       if (keepMode === "keep_all") {
         detailLines.push(
@@ -254,7 +254,7 @@ function populateSuccessUi(result) {
         }
       }
       var density = String(result.layoutDensity || "").toLowerCase();
-      var densityLine = densitySummaryLine(density);
+      var densityLine = !isPfCopy ? densitySummaryLine(density) : "";
       if (densityLine) detailLines.push(densityLine);
       msg.textContent = line1;
       if (details) {
@@ -345,8 +345,8 @@ function populateSuccessUi(result) {
       copy_branch: "nas_hidden",
       tripId: result.tripId || null,
     });
-    // FE-FTUE-08 · 示例成稿后转化；非示例也轻提示一次（防试完就走）
-    if (HELP_COPY.ftueConvertHint) {
+    // FE-FTUE-08 · 示例成稿后转化；作品集不套游记「再做一本」
+    if (HELP_COPY.ftueConvertHint && !isPf) {
       var nextLine = document.createElement("p");
       nextLine.className = "v2-first-success__guidance-next";
       nextLine.textContent = HELP_COPY.ftueConvertHint;

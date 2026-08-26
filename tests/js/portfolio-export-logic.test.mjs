@@ -8,6 +8,7 @@ import {
   PORTFOLIO_PAGES_PLATFORM,
   firstSuccessPortfolioCopy,
   formatOverflowLine,
+  leftoverIsCapacity,
   isPortfolioEdition,
   portfolioBookUrl,
   portfolioRevealTargets,
@@ -134,6 +135,26 @@ test("formatOverflowLine 人话：少收优先，否则文件夹+页数", () => 
   assert.equal(
     formatOverflowLine({ photosPlaced: 96, photosKept: 180 }).includes("本册收录"),
     false
+  );
+  assert.equal(
+    formatOverflowLine({
+      photosPlaced: 11,
+      photosKept: 28,
+      overflow: { resolution: "placement_gap", capacity: 29 },
+    }),
+    "编排没排满，有 17 张没放进这本。"
+  );
+  assert.equal(
+    leftoverIsCapacity({
+      photosPlaced: 11,
+      photosKept: 28,
+      overflow: { resolution: "placement_gap", capacity: 29 },
+    }),
+    false
+  );
+  assert.equal(
+    leftoverIsCapacity({ photosPlaced: 96, photosKept: 180 }),
+    true
   );
 });
 

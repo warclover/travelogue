@@ -61,11 +61,75 @@ export function resolvePortfolioExportPlatform(prefsPlatform, opts) {
   return PORTFOLIO_PAGES_PLATFORM;
 }
 
+var PORTFOLIO_EXPORT_ARMED_KEY = "travelogue.portfolioExportArmed.v1";
+var _armedMem = null;
+
+function _sessionStore() {
+  try {
+    if (typeof sessionStorage !== "undefined") return sessionStorage;
+  } catch (_e) {}
+  return null;
+}
+
 /**
+ * 本册点过「确定」后主钮才开导。不写共享 prefs，避免游记 CTA 被页图 id 污染。
+ * @param {string} tripId
+ */
+export function markPortfolioExportArmed(tripId) {
+  var id = String(tripId || "").trim();
+  if (!id) return;
+  var payload = JSON.stringify({ tripId: id, ts: Date.now() });
+  var store = _sessionStore();
+  if (store) {
+    try {
+      store.setItem(PORTFOLIO_EXPORT_ARMED_KEY, payload);
+      return;
+    } catch (_eSet) {}
+  }
+  _armedMem = payload;
+}
+
+/**
+ * @param {string} tripId
  * @returns {boolean}
  */
-export function shouldSkipRecipeForPortfolioExport() {
-  return true;
+export function isPortfolioExportArmed(tripId) {
+  var id = String(tripId || "").trim();
+  if (!id) return false;
+  var raw = null;
+  var store = _sessionStore();
+  if (store) {
+    try {
+      raw = store.getItem(PORTFOLIO_EXPORT_ARMED_KEY);
+    } catch (_eGet) {}
+  }
+  if (!raw) raw = _armedMem;
+  if (!raw) return false;
+  try {
+    var parsed = JSON.parse(raw);
+    return !!(parsed && parsed.tripId === id);
+  } catch (_eParse) {
+    return false;
+  }
+}
+
+export function clearPortfolioExportArmed() {
+  var store = _sessionStore();
+  if (store) {
+    try {
+      store.removeItem(PORTFOLIO_EXPORT_ARMED_KEY);
+    } catch (_eDel) {}
+  }
+  _armedMem = null;
+}
+
+/**
+ * 未确认先开面板；确认过本册后走页图导出。
+ * @param {string} [tripId]
+ * @returns {boolean}
+ */
+export function shouldSkipRecipeForPortfolioExport(tripId) {
+  return !isPortfolioExportArmed(tripId);
 }
 
 /**

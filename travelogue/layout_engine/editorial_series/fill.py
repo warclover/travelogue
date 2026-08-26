@@ -121,6 +121,77 @@ def fill_groups_from_assets(
     ]
 
 
+THIN_GROUP_MAX = 2
+PACK_TARGET = 4
+
+
+def pack_thin_fill_groups(
+    groups: Sequence[Mapping[str, Any]] | None,
+    *,
+    buckets: Sequence[Sequence[str]] | None = None,
+) -> list[dict[str, Any]]:
+    """Pack 1–2 photo fill runs so multi-slot pages can actually fill.
+
+    Adjacency (10 min) leaves leisurely same-day shoots as solos; one page
+    cannot span two groups, so 12 pages then only take ~12 photos. Same-chapter
+    thin runs are packed to 4. Named shot groups stay intact.
+    """
+    rows = [dict(g) for g in groups or [] if g.get("asset_ids")]
+    if not rows:
+        return []
+    owner: dict[str, int] = {}
+    for i, bucket in enumerate(buckets or []):
+        for aid in bucket or []:
+            if aid:
+                owner.setdefault(str(aid), i)
+
+    def _chapter(g: Mapping[str, Any]) -> int:
+        for aid in g.get("asset_ids") or []:
+            if str(aid) in owner:
+                return owner[str(aid)]
+        return -1
+
+    def _named_shot(g: Mapping[str, Any]) -> bool:
+        gid = str(g.get("id") or "")
+        return bool(gid) and not gid.startswith(("solo-", "fill-", "pack-"))
+
+    out: list[dict[str, Any]] = []
+    buf: dict[str, Any] | None = None
+    for raw in rows:
+        ids = [str(a) for a in (raw.get("asset_ids") or []) if a]
+        if not ids:
+            continue
+        kind = str(raw.get("kind") or "scene") or "scene"
+        if _named_shot(raw) or len(ids) > THIN_GROUP_MAX:
+            if buf:
+                out.append(buf)
+                buf = None
+            out.append({"id": raw.get("id"), "kind": kind, "asset_ids": ids})
+            continue
+        ch = _chapter(raw)
+        if buf is None:
+            buf = {
+                "id": f"pack-{ids[0]}",
+                "kind": "scene",
+                "asset_ids": list(ids),
+                "_ch": ch,
+            }
+            continue
+        if buf["_ch"] != ch or len(buf["asset_ids"]) + len(ids) > PACK_TARGET:
+            out.append({k: v for k, v in buf.items() if k != "_ch"})
+            buf = {
+                "id": f"pack-{ids[0]}",
+                "kind": "scene",
+                "asset_ids": list(ids),
+                "_ch": ch,
+            }
+            continue
+        buf["asset_ids"].extend(ids)
+    if buf:
+        out.append({k: v for k, v in buf.items() if k != "_ch"})
+    return out
+
+
 def _can_absorb(run: Mapping[str, Any], seg: str, ts: datetime | None) -> bool:
     if run.get("seg") != seg:
         return False

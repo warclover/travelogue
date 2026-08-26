@@ -187,6 +187,23 @@ def test_import_success_chrome_human_line_without_chips() -> None:
     assert import_success_chrome(leftover)["overflowLine"] == (
         "有 84 张没放进这本，要的话用游记能全收。"
     )
+    gap = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {
+                "photosPlaced": 11,
+                "photosKept": 28,
+                "pageCount": 12,
+                "photosFolder": 31,
+                "overflow": {"count": 17, "resolution": "placement_gap", "capacity": 29},
+            },
+        },
+        "chapters": [],
+    }
+    assert import_success_chrome(gap)["overflowLine"] == (
+        "编排没排满，有 17 张没放进这本。"
+    )
+    assert build_entry(gap, "demo-trip")["overflowCta"] is None
     assert import_success_chrome({"chapters": []}) == {}
 
 

@@ -154,7 +154,7 @@ export function approxKeptSentence(folderCount, ratio) {
   if (!(n > 0)) return "";
   if (!(r > 0) || r > 1) r = 0.67;
   var approx = Math.max(1, Math.round(n * r));
-  return "这本大约用上 " + approx + " 张";
+  return "生成后按实际上版张数定厚度；现在估计大约用上 " + approx + " 张";
 }
 
 /** 展示用：C ≥ N 的最薄档；全不够则最厚档。不进选档。 */
@@ -184,16 +184,36 @@ export function displayHintPages(folderCount, chips) {
   }).pages;
 }
 
-export function pageSpecSentence(folderCount, chips) {
+export function pageSpecSentence(folderCount, chips, selectedId) {
   var n = Number(folderCount);
-  var x = displayHintPages(n, chips);
-  if (n > 0 && x > 0) {
-    return "文件夹 " + n + " 张，做成大约一本 " + x + " 页。";
+  var sel = String(selectedId || "auto");
+  if (sel !== "auto") {
+    var pages = Number(sel);
+    if (n > 0 && pages > 0) {
+      return "文件夹 " + n + " 张，做成一本 " + pages + " 页。";
+    }
+    if (pages > 0) return "做成一本 " + pages + " 页。";
   }
   if (n > 0) {
     return "文件夹 " + n + " 张，系统会按能上版的张数自动选厚度。";
   }
   return "系统会按能上版的张数自动选厚度。";
+}
+
+/**
+ * @param {"journal"|"portfolio"} edition
+ * @param {{ title?: string, edition?: string }|null|undefined} existingSelf
+ * @param {{ title?: string, edition?: string }|null|undefined} existingOther
+ */
+export function folderCollisionCopy(edition, existingSelf, existingOther) {
+  if (existingSelf && existingSelf.title) {
+    return "这个文件夹已经做过《" + existingSelf.title + "》。继续会覆盖那一本。";
+  }
+  if (existingOther && existingOther.title) {
+    var other = normalizeEdition(edition) === "portfolio" ? "游记" : "作品集";
+    return "将新建一本，不会覆盖已有" + other + "《" + existingOther.title + "》。";
+  }
+  return "";
 }
 
 export function shouldShowPageSpec(edition, pipe) {

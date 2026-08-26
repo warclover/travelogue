@@ -16,6 +16,10 @@ import {
   syncPortfolioFlagOffBanner,
   syncPortfolioOverflowBadge,
 } from "../js/portfolio-dock-logic.js";
+import {
+  isPortfolioEdition,
+  portfolioDockCta,
+} from "../js/portfolio-export-logic.js";
 
 export { syncPortfolioFlagOffBanner, syncPortfolioOverflowBadge };
 
@@ -151,10 +155,23 @@ function _dockRoot() {
   );
 }
 
+function _htmlEditionIsPortfolio() {
+  try {
+    return isPortfolioEdition(
+      typeof document !== "undefined" && document.documentElement
+        ? document.documentElement.getAttribute("data-edition")
+        : ""
+    );
+  } catch (_eEd) {
+    return false;
+  }
+}
+
 function idleExportShortLabel() {
   try {
     var root = _dockRoot();
     if (root && root._dockCta && root._dockCta.short) return root._dockCta.short;
+    if (_htmlEditionIsPortfolio()) return portfolioDockCta().short;
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
       return shortCtaLabelForPlatform(prefs.platform);
@@ -163,10 +180,11 @@ function idleExportShortLabel() {
   return journalDockCta().short;
 }
 
-function idleExportAriaLabel() {
+export function idleExportAriaLabel() {
   try {
     var root = _dockRoot();
     if (root && root._dockCta && root._dockCta.aria) return root._dockCta.aria;
+    if (_htmlEditionIsPortfolio()) return portfolioDockCta().aria;
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
       return ctaLabelForPlatform(prefs.platform);

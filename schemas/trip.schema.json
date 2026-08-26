@@ -232,6 +232,11 @@
           "type": "integer",
           "minimum": 0
         },
+        "photosFolder": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "PFO · 导入扫描张数 N，供人话句；缺省回退 match.folderCount"
+        },
         "overflow": {
           "type": "object",
           "additionalProperties": true

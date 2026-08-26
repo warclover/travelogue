@@ -10,6 +10,7 @@ import {
   isPreviewToolbarV4,
   dockLongshotIconHtml,
   dockIconSvg,
+  idleExportAriaLabel,
   initDockTooltips,
   initDockScrollFade,
   applyTripEdition,
@@ -751,7 +752,7 @@ export function initToolbarV3(root, tripId) {
     longshotBtn.className +=
       " preview-toolbar__dock-btn preview-toolbar__dock-btn--export";
     longshotBtn.innerHTML = dockLongshotIconHtml("idle");
-    longshotBtn.setAttribute("aria-label", "导出长图");
+    longshotBtn.setAttribute("aria-label", idleExportAriaLabel());
   } else {
     // F-EXP-09 · 可见「长图」；完整动作名放 aria
     longshotBtn.textContent = "长图";
@@ -884,17 +885,30 @@ export function initToolbarV3(root, tripId) {
   refreshPreviewCover(root);
   // SNR · 成册姿态条（chrome；narrative_ready 时不挂主条）
   if (isPreviewToolbarV4(root)) {
-    mountNarrativePostureBar(root, tripId);
+    if (document.documentElement.getAttribute("data-edition") !== "portfolio") {
+      mountNarrativePostureBar(root, tripId);
+    }
     mountNarrateDiffBar(root, tripId);
   }
-  fetchEntry(tripId).then(function (data) {
-    applyTripEdition(root, data);
-    refreshPreviewNarrowGate();
-    syncLongshotCtaLabel(root);
-    initFeaturedStars(tripId);
-    initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
-    syncInspectChromeVisibility();
-  });
+  applyTripEdition(root, { edition: readToolbarEdition(root) });
+  fetchEntry(tripId)
+    .then(function (data) {
+      applyTripEdition(root, data);
+      refreshPreviewNarrowGate();
+      syncLongshotCtaLabel(root);
+      initFeaturedStars(tripId);
+      initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
+      syncInspectChromeVisibility();
+    })
+    .then(consumePendingExportIntents, consumePendingExportIntents);
+
+  function consumePendingExportIntents() {
+    requestAnimationFrame(function () {
+      if (consumeExportAfterLayout(root, tripId)) return;
+      if (consumeExportPanel(root, tripId)) return;
+      consumeAutoExport(root, tripId);
+    });
+  }
 
   // V1.1 MF-01d · 返回首页强制退出精修
   var backBtn = root.querySelector(".preview-toolbar__dock-btn--back");
@@ -967,10 +981,4 @@ export function initToolbarV3(root, tripId) {
   });
   syncToolbarHeight(root);
 
-  // 「更新并导出」：版面刷新后自动续导出；FTUE「保存长图」query/session 续跑
-  requestAnimationFrame(function () {
-    if (consumeExportAfterLayout(root, tripId)) return;
-    if (consumeExportPanel(root, tripId)) return;
-    consumeAutoExport(root, tripId);
-  });
 }

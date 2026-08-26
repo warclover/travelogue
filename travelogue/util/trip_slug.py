@@ -34,17 +34,33 @@ def demo_trip_id_from_album(
     title: str,
     place: str,
     explicit: str | None = None,
+    edition: str | None = None,
 ) -> str:
-    """Prefer --trip-id, else album folder name, else demo-{ascii(place-title)} or hash."""
+    """Prefer --trip-id, else album folder name, else demo-{ascii(place-title)} or hash.
+
+    Portfolio uses a distinct slug so the same folder can keep a journal trip.
+    """
+    edition_key = str(edition or "").strip().lower()
+    if edition_key in {"portfolio", "folio"}:
+        edition_key = "portfolio"
+    else:
+        edition_key = ""
+    title = str(title or "")
+    place = str(place or "")
     seed = f"{album_dir.name}:{title}:{place}"
+    if edition_key:
+        seed = f"{seed}:{edition_key}"
     if explicit:
         return normalize_trip_id(explicit, fallback_seed=seed)
     folder = album_dir.name.strip().lower()
     if _TRIP_ID_RE.match(folder):
+        if edition_key:
+            return normalize_trip_id(f"{folder}-p", fallback_seed=seed)
         return folder
     for candidate in (f"{place}-{title}", place, title, album_dir.name):
         ascii_slug = re.sub(r"[^a-z0-9]+", "-", candidate.strip().lower())
         ascii_slug = re.sub(r"-+", "-", ascii_slug).strip("-")
         if len(ascii_slug) >= 3:
-            return normalize_trip_id(f"demo-{ascii_slug}", fallback_seed=seed)
+            suffix = "-p" if edition_key else ""
+            return normalize_trip_id(f"demo-{ascii_slug}{suffix}", fallback_seed=seed)
     return normalize_trip_id("", fallback_seed=seed)

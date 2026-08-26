@@ -29,6 +29,7 @@ import {
   lowPhotoHint,
   displayHintPages,
   pageSpecSentence,
+  folderCollisionCopy,
   approxKeptSentence,
   shouldShowPageSpec,
   buildPageCountFields,
@@ -179,7 +180,19 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
   assert.equal(displayHintPages(0, PFO_CHIPS), 0);
   assert.equal(
     pageSpecSentence(48, PFO_CHIPS),
-    "文件夹 48 张，做成大约一本 20 页。"
+    "文件夹 48 张，系统会按能上版的张数自动选厚度。"
+  );
+  assert.equal(
+    pageSpecSentence(31, PFO_CHIPS, "16"),
+    "文件夹 31 张，做成一本 16 页。"
+  );
+  assert.equal(
+    folderCollisionCopy("portfolio", { title: "华农油菜花" }, { title: "华农油菜花" }),
+    "这个文件夹已经做过《华农油菜花》。继续会覆盖那一本。"
+  );
+  assert.equal(
+    folderCollisionCopy("portfolio", null, { title: "华农油菜花" }),
+    "将新建一本，不会覆盖已有游记《华农油菜花》。"
   );
   const on = parsePortfolioPipelineConfig({
     portfolioPipeline: { enabled: true },
@@ -201,7 +214,10 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
     }).keptEstimateRatio,
     0.5
   );
-  assert.equal(approxKeptSentence(160, 0.67), "这本大约用上 107 张");
+  assert.equal(
+    approxKeptSentence(160, 0.67),
+    "生成后按实际上版张数定厚度；现在估计大约用上 107 张"
+  );
   assert.equal(approxKeptSentence(0, 0.67), "");
   const wizard = readFileSync(
     join(__dirname, "../../templates/studio/homepage-v2/import-wizard.js"),

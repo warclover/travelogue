@@ -36,6 +36,7 @@ import {
   shouldShowPageSpec,
   pageSpecSentence,
   approxKeptSentence,
+  folderCollisionCopy,
   buildPageCountFields,
 } from "./import-wizard-logic.js";
 import {
@@ -61,6 +62,8 @@ var _pendingPhotoCount = null;
 var _pageCountSelected = "auto";
 var _pageSpecOpen = false;
 var _pendingFolderName = null;
+var _existingJournal = null;
+var _existingPortfolio = null;
 var _previewThumbs = [];
 var _previewThumbNames = [];
 var _previewDateStart = null;
@@ -380,7 +383,13 @@ function fetchAlbumPreview(albumPath) {
     });
   }, PREVIEW_TIMEOUT_MS);
 
-  return postJson("/__travelogue/album-preview", { albumPath: albumPath, thumbCount: thumbLimit() })
+  return postJson("/__travelogue/album-preview", {
+    albumPath: albumPath,
+    thumbCount: thumbLimit(),
+    title: currentCollisionTitle(),
+    place: safeGet("v2-wizard-place") || "旅途",
+    edition: _activeEdition,
+  })
     .then(function (res) {
       var data = res.body || {};
       if (res.status >= 400 || !data.ok) return null;
@@ -396,6 +405,8 @@ function fetchAlbumPreview(albumPath) {
           _previewState = "failed";
         }
         _pendingPhotoCount = null;
+        _existingJournal = null;
+        _existingPortfolio = null;
         _previewThumbs = [];
         _previewThumbNames = [];
         _previewDateStart = null;
@@ -413,6 +424,8 @@ function fetchAlbumPreview(albumPath) {
       _previewThumbs = Array.isArray(data.thumbs) ? data.thumbs : [];
       _previewThumbNames = Array.isArray(data.thumbNames) ? data.thumbNames : [];
       if (data.folderName) _pendingFolderName = String(data.folderName);
+      _existingJournal = data.existingJournal || null;
+      _existingPortfolio = data.existingPortfolio || null;
       _previewDateStart = data.dateStart ? String(data.dateStart) : null;
       _previewDateEnd = data.dateEnd ? String(data.dateEnd) : null;
       _previewState = _pendingPhotoCount != null ? "ready" : "degraded";
@@ -546,7 +559,16 @@ function syncEditionUi() {
       ? "按杂志页编排，做完能点开翻。发群请选游记。"
       : "优先出微信长图，适合马上分享";
   }
+  var pickTitle = $("v2-wizard-title-pick");
+  if (pickTitle) {
+    pickTitle.textContent = _activeEdition === "portfolio" ? "制作一本作品集" : "制作我的影像画册";
+  }
+  var confirmTitle = $("v2-wizard-title-confirm");
+  if (confirmTitle) {
+    confirmTitle.textContent = _activeEdition === "portfolio" ? "确认作品集规格" : "确认并开始";
+  }
   syncPageSpecUi();
+  updateDuplicateTitleNote();
 }
 
 function syncPageSpecUi() {
@@ -569,14 +591,17 @@ function syncPageSpecUi() {
   if (line) {
     line.textContent = pageSpecSentence(
       _pendingPhotoCount,
-      _pipelineCfg.pageCountChipDetails
+      _pipelineCfg.pageCountChipDetails,
+      _pageCountSelected
     );
   }
   if (detail) {
-    var approx = approxKeptSentence(
-      _pendingPhotoCount,
-      _pipelineCfg.keptEstimateRatio
-    );
+    var approx = _pageCountSelected === "auto"
+      ? approxKeptSentence(
+        _pendingPhotoCount,
+        _pipelineCfg.keptEstimateRatio
+      )
+      : "";
     detail.textContent = approx;
     detail.hidden = !_pageSpecOpen || !approx;
   }
@@ -648,6 +673,11 @@ function syncChipPressedState() {
   });
 }
 
+function currentCollisionTitle() {
+  if (_titleUserEdited) return safeGet("v2-wizard-trip-title") || "";
+  return _pendingFolderName || safeGet("v2-wizard-trip-title") || basenameTitle(_pendingAlbumPath) || "";
+}
+
 function findDuplicateTripTitle(title) {
   var needle = String(title || "").trim();
   if (!needle) return null;
@@ -662,13 +692,15 @@ function findDuplicateTripTitle(title) {
 }
 
 function updateDuplicateTitleNote() {
-  var title = "";
-  if (_titleUserEdited) title = safeGet("v2-wizard-trip-title");
-  if (!title) {
-    title = _pendingFolderName || safeGet("v2-wizard-trip-title") || basenameTitle(_pendingAlbumPath);
+  var self = _activeEdition === "portfolio" ? _existingPortfolio : _existingJournal;
+  var other = _activeEdition === "portfolio" ? _existingJournal : _existingPortfolio;
+  var text = folderCollisionCopy(_activeEdition, self, other);
+  if (!text) {
+    var match = findDuplicateTripTitle(currentCollisionTitle());
+    if (match && !(self && self.title)) {
+      text = "将新建一本，不会覆盖《" + match + "》。";
+    }
   }
-  var match = findDuplicateTripTitle(title);
-  var text = match ? ("将新建一本，不会覆盖《" + match + "》") : "";
   ["v2-wizard-dup-note", "v2-wizard-dup-note-fine"].forEach(function (id) {
     var el = $(id);
     if (!el) return;
@@ -898,6 +930,8 @@ function goToStep1(clearPending) {
     _pageCountSelected = "auto";
     _pageSpecOpen = false;
     _pendingFolderName = null;
+    _existingJournal = null;
+    _existingPortfolio = null;
     _previewThumbs = [];
     _previewThumbNames = [];
     _previewDateStart = null;
@@ -981,6 +1015,8 @@ function afterFolderPicked(albumPath, via) {
   _pendingAlbumPath = albumPath;
   _pendingUploadFiles = null;
   _pendingFolderName = basenameTitle(albumPath);
+  _existingJournal = null;
+  _existingPortfolio = null;
   _pendingPhotoCount = null;
   _previewState = "loading";
   _previewThumbs = [];
@@ -1306,7 +1342,12 @@ function startUploadFromWizard() {
   try { sessionStorage.removeItem(IMPORT_DRAFT_KEY); } catch (_e2) { /* ignore */ }
   closeImportWizard("start_upload", { persistDraft: false });
   if (typeof studioToast === "function") {
-    studioToast("将新建一本画册 · 已选择 " + files.length + " 张", { duration: 2200 });
+    studioToast(
+      (_activeEdition === "portfolio" ? "将新建一本作品集 · 已选择 " : "将新建一本画册 · 已选择 ") +
+        files.length +
+        " 张",
+      { duration: 2200 }
+    );
   }
   return startV2UploadImport(files, uploadOpts).catch(function () { /* import-run handles */ });
 }
@@ -1334,12 +1375,13 @@ function startImportFromWizard() {
         (body && typeof body.eligibleCount === "number" && body.eligibleCount) ||
         (body && typeof body.photoCount === "number" && body.photoCount) ||
         0;
+      var bookWord = _activeEdition === "portfolio" ? "作品集" : "画册";
       var toastMsg =
         _activeMode === "fine_craft"
-          ? "已按个性化定制画册启动"
+          ? (_activeEdition === "portfolio" ? "已按作品集细节启动" : "已按个性化定制画册启动")
           : nPhotos > 0
-            ? "将新建一本画册 · 已选择 " + nPhotos + " 张"
-            : "将新建一本画册 · 开始制作";
+            ? "将新建一本" + bookWord + " · 已选择 " + nPhotos + " 张"
+            : "将新建一本" + bookWord + " · 开始制作";
       studioToast(toastMsg, { duration: 2000 });
     }
     return startV2Import(body, { source: "本机文件夹" }).catch(function () { /* handled */ });

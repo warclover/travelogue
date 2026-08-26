@@ -23,6 +23,7 @@ from travelogue.layout_engine.editorial_series.fill import (
     fill_groups_from_assets,
     fulfillment_ratio,
     is_sparse_collection,
+    pack_thin_fill_groups,
 )
 from travelogue.layout_engine.editorial_series.match import (
     groups_from_assets,
@@ -63,7 +64,10 @@ def compose_portfolio_trip(
     if sparse:
         groups = groups_from_assets(assets, buckets=buckets)
     else:
-        groups = fill_groups_from_assets(assets, trip=trip, buckets=buckets)
+        groups = pack_thin_fill_groups(
+            fill_groups_from_assets(assets, trip=trip, buckets=buckets),
+            buckets=buckets,
+        )
     kept_n = sum(len(g["asset_ids"]) for g in groups)
     if kept_n <= 0:
         raise PortfolioUnavailableError(PORTFOLIO_UNAVAILABLE_MESSAGE)
@@ -92,6 +96,15 @@ def compose_portfolio_trip(
     aspect_kinds, aspect_ratios = collect_asset_aspects(assets)
     placed = _place_choice(
         groups, choice, aspect_kinds, aspect_ratios, buckets=buckets
+    )
+    placed = _prefer_fuller_global_place(
+        placed,
+        groups,
+        choice,
+        aspect_kinds,
+        aspect_ratios,
+        buckets=buckets,
+        kept_n=kept_n,
     )
     fulfill_hint = None
     density_hint = None
@@ -142,10 +155,14 @@ def compose_portfolio_trip(
     leftover = list(placed.leftover_ids)
     overflow: dict[str, Any] | None = None
     if photos_placed < kept_n:
+        capacity = series_capacity(choice.series) or 0
         overflow = {
             "count": kept_n - photos_placed,
-            "resolution": choice.overflow_resolution or "capped",
+            "resolution": _overflow_resolution(
+                choice, photos_placed=photos_placed, kept_n=kept_n, capacity=capacity
+            ),
             "assetIds": leftover,
+            "capacity": capacity or None,
         }
     folder_n = _folder_count(trip, assets)
     match_block: dict[str, Any] = {
@@ -220,6 +237,54 @@ def _place_choice(
         aspect_kinds=aspect_kinds,
         aspect_ratios=aspect_ratios,
     )
+
+
+def _prefer_fuller_global_place(
+    placed: PlaceResult,
+    groups: Sequence[Mapping[str, Any]],
+    choice: Any,
+    aspect_kinds: Mapping[str, str],
+    aspect_ratios: Mapping[str, float] | None,
+    *,
+    buckets: Sequence[Sequence[str]] | None,
+    kept_n: int,
+) -> PlaceResult:
+    """Chapter split can starve later groups of pages. Keep the fuller book."""
+    if not _should_split_across_chapters(buckets):
+        return placed
+    placed_n = sum(len(p.asset_ids) for p in placed.pages)
+    capacity = series_capacity(choice.series) or kept_n
+    budget = min(kept_n, int(choice.cap or capacity or kept_n))
+    if placed_n >= budget or not placed.leftover_ids:
+        return placed
+    global_placed = place_groups(
+        groups,
+        choice.series.get("sequence") or [],
+        cap=choice.cap,
+        aspect_kinds=aspect_kinds,
+        aspect_ratios=aspect_ratios,
+    )
+    global_n = sum(len(p.asset_ids) for p in global_placed.pages)
+    if global_n > placed_n and global_placed.pages:
+        return global_placed
+    return placed
+
+
+def _overflow_resolution(
+    choice: Any,
+    *,
+    photos_placed: int,
+    kept_n: int,
+    capacity: int,
+) -> str:
+    raw = str(choice.overflow_resolution or "").strip()
+    if capacity > 0 and photos_placed < capacity and photos_placed < kept_n:
+        return "placement_gap"
+    if raw:
+        return raw
+    if choice.capped or (capacity > 0 and kept_n > capacity):
+        return "capped"
+    return "placement_gap"
 
 
 def _should_split_across_chapters(buckets: Sequence[Sequence[str]] | None) -> bool:

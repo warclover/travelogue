@@ -775,11 +775,62 @@ def resolve_studio_trip_dir(
     title: str = "我的旅途",
     place: str = "旅途",
     trip_id: str | None = None,
+    edition: str | None = None,
 ) -> tuple[str, Path]:
     slug = demo_trip_id_from_album(
-        album_dir, title=title, place=place, explicit=trip_id
+        album_dir, title=title, place=place, explicit=trip_id, edition=edition
     )
     return slug, trips_dir / slug
+
+
+def peek_existing_album_trip(
+    album_dir: Path,
+    *,
+    trips_dir: Path,
+    title: str = "我的旅途",
+    place: str = "旅途",
+    edition: str | None = None,
+) -> dict[str, str] | None:
+    """Collision probe for album-preview. None = this edition would create a new trip."""
+    try:
+        album_dir = album_dir.resolve()
+    except OSError:
+        return None
+    if not album_dir.is_dir():
+        return None
+    slug, trip_dir = resolve_studio_trip_dir(
+        album_dir,
+        trips_dir=trips_dir,
+        title=title,
+        place=place,
+        edition=edition,
+    )
+    if not trip_dir.exists() or not any(trip_dir.iterdir()):
+        return None
+    return _trip_collision_meta(trip_dir, slug)
+
+
+def _trip_collision_meta(trip_dir: Path, slug: str) -> dict[str, str]:
+    title = slug
+    edition = "journal"
+    trip_json = trip_dir / "trip.json"
+    if trip_json.is_file():
+        try:
+            import json
+
+            loaded = json.loads(trip_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            loaded = None
+        if isinstance(loaded, dict):
+            meta = loaded.get("meta") if isinstance(loaded.get("meta"), dict) else {}
+            title = str(
+                meta.get("displayTitle") or meta.get("title") or loaded.get("title") or slug
+            ).strip() or slug
+            studio = loaded.get("studio") if isinstance(loaded.get("studio"), dict) else {}
+            raw_ed = str(studio.get("edition") or "").strip().lower()
+            if raw_ed in {"portfolio", "folio"}:
+                edition = "portfolio"
+    return {"tripId": slug, "title": title, "edition": edition}
 
 
 def assert_album_importable(
@@ -790,6 +841,7 @@ def assert_album_importable(
     place: str = "旅途",
     trip_id: str | None = None,
     force: bool = False,
+    edition: str | None = None,
 ) -> str:
     album_dir = album_dir.resolve()
     if not album_dir.is_dir():
@@ -800,6 +852,7 @@ def assert_album_importable(
         title=title,
         place=place,
         trip_id=trip_id,
+        edition=edition,
     )
     if trip_dir.exists() and any(trip_dir.iterdir()) and not force:
         raise DemoError(
@@ -873,6 +926,7 @@ def run_studio_pipeline(
         place=place,
         trip_id=trip_id,
         force=force,
+        edition=edition,
     )
     trip_dir = trips_root / slug
 

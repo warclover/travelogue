@@ -105,13 +105,41 @@ export function portfolioHasLeftover(portfolio) {
   return placed >= 0 && kept > 0 && placed < kept;
 }
 
+function leftoverCapacity(portfolio) {
+  var ov = (portfolio && portfolio.overflow) || {};
+  var res = String(ov.resolution || portfolio.overflowResolution || "");
+  var placed = Number(portfolio.photosPlaced);
+  var kept = Number(portfolio.photosKept);
+  var leftover = placed >= 0 && kept > 0 && placed < kept ? kept - placed : 0;
+  if (leftover <= 0) return false;
+  var cap = Number(ov.capacity != null ? ov.capacity : portfolio.capacity);
+  if (res === "placement_gap") return false;
+  if (cap > 0 && placed < cap) return false;
+  if (
+    res === "capped" ||
+    res === "tier_upgraded_then_capped" ||
+    res === "tier_upgraded"
+  ) {
+    return true;
+  }
+  return cap > 0 ? kept > cap : true;
+}
+
+export function leftoverIsCapacity(portfolio) {
+  if (!portfolioHasLeftover(portfolio)) return false;
+  return leftoverCapacity(portfolio);
+}
+
 export function formatOverflowLine(portfolio) {
   if (!portfolio || typeof portfolio !== "object") return "";
   var placed = Number(portfolio.photosPlaced);
   var kept = Number(portfolio.photosKept);
   var leftover = placed >= 0 && kept > 0 && placed < kept ? kept - placed : 0;
   if (leftover > 0) {
-    return "有 " + leftover + " 张没放进这本，要的话用游记能全收。";
+    if (leftoverCapacity(portfolio)) {
+      return "有 " + leftover + " 张没放进这本，要的话用游记能全收。";
+    }
+    return "编排没排满，有 " + leftover + " 张没放进这本。";
   }
   var folder = Number(portfolio.folderCount);
   var pages = Number(portfolio.pageCount);
@@ -210,7 +238,7 @@ export function portfolioSuccessCopy(result, portfolio) {
     title: title,
     hint: hint,
     overflowLine: formatOverflowLine(portfolio),
-    overflowCta: portfolioHasLeftover(portfolio) ? overflowJournalCta() : "",
+    overflowCta: leftoverIsCapacity(portfolio) ? overflowJournalCta() : "",
     primary: "打开这一本",
     secondaryFolder: "打开文件夹",
     secondaryZip: "发送压缩包",

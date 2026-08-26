@@ -48,6 +48,7 @@ import {
   isPortfolioPrintOneShot,
   shouldRunSocialBatchExport,
 } from "../js/portfolio-export-logic.js";
+import { markPortfolioExportArmed } from "../js/portfolio-dock-logic.js";
 import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
@@ -1436,7 +1437,8 @@ export function cancelPreviewLongshotExport(root) {
         confirmedPlatforms = [PORTFOLIO_PAGES_PLATFORM];
       }
       if (confirmedPlatform === PORTFOLIO_PAGES_PLATFORM) {
-        _pendingExportPlatform = null;
+        markPortfolioExportArmed(_tripIdFromPath() || root._tripId || "");
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
         syncConfirmedExportSummary(pop);
         syncLongshotCtaLabel(root);
         refreshLongshotExportMeta(root);
@@ -2598,7 +2600,14 @@ export function cancelPreviewLongshotExport(root) {
       trackStudioEvent("longshot_export_blocked_pending", { trip_id: tripId });
       _toolbarConfirm({
         title: "导出前先更新一下",
-        body: "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
+        body: isPortfolioEdition(
+          (root && root._edition) ||
+            (typeof document !== "undefined" && document.documentElement
+              ? document.documentElement.getAttribute("data-edition")
+              : "")
+        )
+          ? "预览还没跟上这一本，导出前需先更新，否则页图仍是旧版。"
+          : "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
         confirmText: "更新并导出",
         secondaryText: "仅更新版面",
         cancelText: "取消",
@@ -2698,10 +2707,12 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function startLongshotWithRecipe(root, tripId) {
-    if (typeof root._skipRecipeForExport === "function" && root._skipRecipeForExport()) {
-      if (!_pendingExportPlatform) {
-        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
-      }
+    if (typeof root._skipRecipeForExport === "function" && root._skipRecipeForExport(tripId)) {
+      openLongshotExportOptions(root);
+      return;
+    }
+    if (isPortfolioEdition(root && root._edition)) {
+      _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
       maybeCopyGateThenExport(root, tripId);
       return;
     }

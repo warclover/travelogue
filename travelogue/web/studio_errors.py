@@ -155,7 +155,13 @@ def demo_error_payload(exc: DemoError) -> dict:
             if trip_dir:
                 from pathlib import Path
 
-                payload["existingTripId"] = Path(trip_dir).name
+                from travelogue.web.studio_pipeline import _trip_collision_meta
+
+                path = Path(trip_dir)
+                payload["existingTripId"] = path.name
+                meta = _trip_collision_meta(path, path.name)
+                payload["existingTitle"] = meta.get("title") or path.name
+                payload["existingEdition"] = meta.get("edition") or "journal"
     if is_llm_auth_recoverable(exc.code):
         payload["recoverableWithStub"] = True
     return payload

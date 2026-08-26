@@ -52,7 +52,7 @@ export var HELP_COPY = {
     "手机照片需先传到电脑",
   ],
   importNewTripLine:
-    "每个文件夹会生成一本新的画册，不会覆盖已有画册",
+    "作品集和游记可以各做一本；同一身份再用这个文件夹会覆盖",
   importNewToast: "将新建一本画册 · 已选择 N 张",
   publishGuideFallback: [
     "长图已保存到本机",

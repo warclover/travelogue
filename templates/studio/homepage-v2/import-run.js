@@ -27,7 +27,7 @@ import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
 import {
-  captureImportShell, showFirstSuccess, refreshSuccessCover,
+  captureImportShell, showFirstSuccess, refreshSuccessCover, restoreImportShell,
 } from "./first-success.js";
 import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
@@ -648,17 +648,24 @@ export function startV2Import(body, opts) {
           return null;
         });
       }
+      var existingTitle = data.existingTitle || "";
+      var existingIsPf = data.existingEdition === "portfolio" || data.existingEdition === "folio";
       var confirmOverwrite = typeof studioModal === "function"
         ? studioModal({
-            title: "该画册已存在",
-            body: "是否覆盖已有内容？覆盖后无法撤销。",
+            title: existingIsPf ? "这本作品集已存在" : "该画册已存在",
+            body: existingTitle
+              ? "《" + existingTitle + "》已经用过这个文件夹。覆盖后无法撤销。"
+              : "是否覆盖已有内容？覆盖后无法撤销。",
             confirmText: "覆盖并重新导入",
             cancelText: "取消",
           })
         : Promise.resolve(window.confirm(data.message || "该画册已存在。是否覆盖？"));
       return confirmOverwrite.then(function (ok) {
         if (!ok) {
-          if (typeof V2.reroute === "function") V2.reroute();
+          restoreImportShell();
+          if (typeof studioToast === "function") {
+            studioToast("未覆盖已有画册", { duration: 2800 });
+          }
           return null;
         }
         var forced = Object.assign({}, body, { force: true });

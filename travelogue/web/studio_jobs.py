@@ -379,6 +379,7 @@ def _cleanup_import_if_incomplete(job: StudioJob, payload: dict[str, Any]) -> No
                 title=str(payload.get("title") or "") or None,
                 place=str(payload.get("place") or "") or None,
                 explicit=None,
+                edition=str(payload.get("edition") or "") or None,
             )
 
     cleanup_import_terminal_artifacts(

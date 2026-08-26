@@ -440,6 +440,54 @@ def test_compose_fixture_overflow_cap() -> None:
     assert trip["studio"]["portfolio"]["photosKept"] == 80
 
 
+def test_compose_spaced_solos_fill_more_than_one_per_page() -> None:
+    """Leisurely same-day solos used to place ~1 photo/page after chapter split."""
+    from datetime import datetime, timedelta, timezone
+
+    t0 = datetime(2015, 3, 22, 10, 0, tzinfo=timezone.utc)
+    assets = []
+    for i in range(1, 29):
+        ts = t0 + timedelta(minutes=i * 15)
+        assets.append(
+            {
+                "id": f"a{i:03d}",
+                "width": 1600,
+                "height": 900,
+                "aspectKind": "landscape",
+                "takenAt": ts.isoformat().replace("+00:00", "Z"),
+            }
+        )
+    buckets = [
+        [a["id"] for a in assets[:12]],
+        [a["id"] for a in assets[12:20]],
+        [a["id"] for a in assets[20:]],
+    ]
+    trip = {
+        "studio": {"edition": "portfolio", "portfolio": {"pageCountSource": "auto"}},
+        "curation": {
+            "segments": [
+                {"id": f"seg-{i}", "assetIds": b} for i, b in enumerate(buckets)
+            ]
+        },
+        "assets": assets,
+    }
+    chapters = [
+        {
+            "id": f"ch-{i}",
+            "items": [{"type": "media-card", "assetId": aid} for aid in bucket],
+            "screens": [],
+        }
+        for i, bucket in enumerate(buckets)
+    ]
+    _out, meta = compose_portfolio_trip(
+        chapters, assets=assets, trip=trip, buckets=buckets
+    )
+    assert meta["photosPlaced"] >= 20
+    overflow = meta.get("overflow")
+    if overflow:
+        assert overflow["resolution"] == "placement_gap" or overflow["count"] <= 8
+
+
 def test_compose_items_match_screens_when_stub_can_cover() -> None:
     """D-PFM-27 · 屏数未超 items 上限时，实收集合与 items 一致。"""
     series = [
