@@ -255,6 +255,13 @@ export function runShelfLongshot(trip, opts) {
   if (opts.platform) preset.platform = opts.platform;
   if (opts.intent) preset.intent = opts.intent;
   if (opts.segmentMode) preset.segmentMode = opts.segmentMode;
+  if (opts.includeZip === true || opts.includeZip === false) {
+    preset.includeZip = opts.includeZip;
+  }
+  if (opts.includePages === true || opts.includePages === false) {
+    preset.includePages = opts.includePages;
+  }
+  if (opts.portfolioPiece) preset.portfolioPiece = opts.portfolioPiece;
 
   trackStudioEvent("shelf_longshot_start", {
     trip_id: tripId,

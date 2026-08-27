@@ -261,6 +261,7 @@ def test_capture_is_blank_rejects_whiteboard_keeps_photo() -> None:
     assert capture_is_blank(white) is True
     assert capture_is_blank(photo) is False
     assert capture_is_blank(b"") is True
+    assert capture_is_blank(b"not-a-png-but-longer-than-thirty-two-bytes!!") is True
 
 
 def test_folio_capture_hides_reader_chrome() -> None:

@@ -73,8 +73,17 @@ export function shelfExportMenuCopy(edition) {
 
 export function shelfExportRequestForTrip(trip, opts) {
   var next = Object.assign({}, opts || {});
+  var store = next.store;
+  if (Object.prototype.hasOwnProperty.call(next, "store")) {
+    delete next.store;
+  }
   if (isPortfolioEdition(trip && trip.edition)) {
     next.platform = PORTFOLIO_PAGES_PLATFORM;
+    var product = readPortfolioExportPrefs(store).product;
+    var flags = folioMainExportFlags(product);
+    next.includeZip = flags.includeZip;
+    next.includePages = flags.includePages;
+    next.portfolioPiece = product;
   }
   return next;
 }
@@ -377,7 +386,7 @@ export var PORTFOLIO_ALBUM_SPREAD_SUB =
   "给印刷公司的 3:4 跨页，不是这一本";
 
 export function albumSpreadCardCopy(edition) {
-  if (edition === "portfolio") {
+  if (isPortfolioEdition(edition)) {
     return {
       title: PORTFOLIO_ALBUM_SPREAD_TITLE,
       subtitle: PORTFOLIO_ALBUM_SPREAD_SUB,

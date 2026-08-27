@@ -1,7 +1,7 @@
 """Compiled face-star snapshot for portfolio cousin / upgrade.
 
 Source: docs/templates/reserve/stars.yaml
-Synced: 2026-08-26
+Synced: 2026-08-27
 Do not import docs.templates.reserve (ISO-05 / D-TDV-09).
 Unlisted face = 0. Mirror ids do not inherit. 3 = best.
 """
@@ -19,6 +19,7 @@ FACE_STARS: dict[str, int] = {
     "page-2-pair-port": 3,
     "page-3-2l1p-left": 3,
     "page-3-2l1p-right": 3,
+    "page-3-2l1p-hero-right": 3,
     "page-3-2l1p-wide-left": 3,
     "page-3-2l1p-wide-right": 3,
     "page-3-land": 3,
@@ -32,6 +33,7 @@ FACE_STARS: dict[str, int] = {
     "page-5-3p2l-center": 3,
     "page-5-3p2l-center-flip": 3,
     "page-6-1l5l-wide-left": 3,
+    "page-6-2l4p-wide": 3,
     "page-6-2l4p-wide-flip": 3,
     "page-6-grid-land": 3,
     "page-7-1p6l-center": 3,

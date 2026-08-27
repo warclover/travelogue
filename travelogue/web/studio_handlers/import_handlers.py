@@ -484,7 +484,6 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     force_cleared = False
     if force:
         from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
-        from travelogue.web.studio_pipeline import resolve_studio_trip_dir
         from travelogue.web.studio_trip_delete import clear_trip_dir_via_tombstone
 
         _, force_trip_dir = resolve_studio_trip_dir(

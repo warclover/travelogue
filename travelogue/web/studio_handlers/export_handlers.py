@@ -1045,7 +1045,7 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
 
     rel = rel_to_trip(trip_dir, out)
     try:
-        maybe_write_longshot_current_after_upload(
+        current_path = maybe_write_longshot_current_after_upload(
             trip_dir,
             rel=rel,
             segment_index=seg_i,
@@ -1067,6 +1067,53 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
         return
     platform = str(payload.get("platform") or "wechat_chat").strip() or "wechat_chat"
     copy_display = str(payload.get("copyDisplay") or COPY_DISPLAY_FULL).strip().lower()
+    if current_path is not None:
+        from travelogue.export.longshot import default_longshot_output_name
+        from travelogue.export.output_ledger import (
+            OutputLedgerError,
+            load_trip_dict,
+            output_ledger_enabled,
+            record_successful_output,
+            spec_from_profile,
+        )
+        from travelogue.render.context import longshot_bundle_version
+
+        if output_ledger_enabled():
+            if seg_n and seg_n > 1:
+                ledger_files = [
+                    default_longshot_output_name(
+                        trip_dir,
+                        fmt=fmt,
+                        segment_index=i,
+                        segment_total=seg_n,
+                    )
+                    for i in range(1, seg_n + 1)
+                ]
+            else:
+                ledger_files = [Path(rel).name]
+            trip = load_trip_dict(trip_dir)
+            try:
+                record_successful_output(
+                    trip_dir,
+                    trip=trip,
+                    profile=platform,
+                    files=ledger_files,
+                    spec=spec_from_profile(platform, scale=1, fmt=fmt),
+                    bundle_fp=longshot_bundle_version(trip),
+                    batch_id=str(payload.get("batchId") or payload.get("jobId") or "").strip(),
+                    segmented=bool(seg_n and seg_n > 1),
+                )
+            except OutputLedgerError as exc:
+                handler._json_response(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "E_OUTPUT_LEDGER",
+                        "message": "长图已保存，但成品清单写入失败",
+                        "detail": str(exc)[:240],
+                    },
+                )
+                return
     publish_guide = [
         "长图已保存到本机",
         "打开微信，按文件名顺序发到群聊",

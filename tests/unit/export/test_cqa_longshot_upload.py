@@ -87,6 +87,42 @@ def test_write_longshot_upload_rejects_bad_magic(tmp_path: Path) -> None:
     assert list(trip.glob("*-长图*")) == []
 
 
+def test_handle_longshot_upload_writes_ledger(monkeypatch, tmp_path: Path) -> None:
+    from dataclasses import replace
+
+    from travelogue.config import AppConfig
+    from travelogue.config.runtime import app_config_scope
+    from travelogue.export.output_ledger import read_ledger
+
+    trip = _trip_with_json(tmp_path)
+    responses: list[tuple[int, dict]] = []
+
+    class H:
+        def _read_json_body(self):
+            import base64
+
+            return {
+                "tripId": trip.name,
+                "format": "png",
+                "data": base64.b64encode(PNG_MAGIC).decode("ascii"),
+                "platform": "wechat_chat",
+            }
+
+        def _json_response(self, status, body):
+            responses.append((status, body))
+
+    monkeypatch.setattr(export_handlers, "resolve_trip_dir", lambda _ctx, _tid: trip)
+    monkeypatch.setattr(export_handlers, "studio_ctx", lambda _h: object())
+    cfg = replace(AppConfig(), studio=replace(AppConfig().studio, output_ledger=True))
+    with app_config_scope(cfg):
+        export_handlers.handle_longshot_upload(H())  # type: ignore[arg-type]
+    assert responses and responses[0][0] == 200
+    rows = read_ledger(trip)
+    assert rows is not None
+    assert rows[0]["profile"] == "wechat_chat"
+    assert rows[0]["files"]
+
+
 def test_handle_longshot_upload_rejects_reserved_filename(monkeypatch, tmp_path: Path) -> None:
     trip = _trip_with_json(tmp_path)
     before = (trip / "trip.json").read_text(encoding="utf-8")

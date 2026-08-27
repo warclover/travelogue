@@ -279,13 +279,16 @@ export function renderPortfolioPageCountChips(pageHost, pageRow, pageHint, portf
     btn.setAttribute("data-page-count", opt.id);
     btn.setAttribute("role", "radio");
     btn.setAttribute("aria-label", opt.hint || opt.label);
-    btn.innerHTML =
-      '<span class="preview-sheet__chip-label">' +
-      opt.label +
-      "</span>" +
-      (opt.hint
-        ? '<span class="preview-sheet__chip-hint">' + opt.hint + "</span>"
-        : "");
+    var labelEl = document.createElement("span");
+    labelEl.className = "preview-sheet__chip-label";
+    labelEl.textContent = opt.label;
+    btn.appendChild(labelEl);
+    if (opt.hint) {
+      var hintEl = document.createElement("span");
+      hintEl.className = "preview-sheet__chip-hint";
+      hintEl.textContent = opt.hint;
+      btn.appendChild(hintEl);
+    }
     btn.addEventListener("click", function () {
       if (typeof onRequest === "function") onRequest(opt.id, opt);
     });

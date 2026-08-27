@@ -20,6 +20,7 @@ from travelogue.export.output_ledger import (
     LEDGER_NAME,
     LEDGER_SCHEMA_VERSION,
     append_output,
+    drop_output_row,
     ledger_path,
     load_trip_dict,
     lookup_output_meta,
@@ -325,3 +326,90 @@ def test_enabled_flag_from_config() -> None:
     cfg = replace(AppConfig(), studio=replace(AppConfig().studio, output_ledger=True))
     with app_config_scope(cfg):
         assert output_ledger_enabled() is True
+
+
+def test_empty_portfolio_pages_drops_stale_row(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    _png(export_dir, "页-01.png")
+    append_output(
+        trip_dir,
+        _record(
+            trip,
+            output_id="portfolio_pages",
+            profile="portfolio_pages",
+            files=["页-01.png"],
+            label="页图",
+            surface="folio",
+        ),
+    )
+    result = LongshotExportResult(outputs=[], platform="portfolio_pages")
+    record_dispatch_result(
+        trip_dir,
+        result,
+        platform="portfolio_pages",
+        bundle_fp="lse16f41315f6a",
+        trip=trip,
+    )
+    rows = read_ledger(trip_dir) or []
+    assert all(rec["outputId"] != "portfolio_pages" for rec in rows)
+    assert (export_dir / "页-01.png").is_file()
+
+
+def test_concurrent_append_keeps_both_rows(tmp_path: Path) -> None:
+    import threading
+
+    trip_dir, trip = _trip(tmp_path)
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    _png(export_dir, "a.png")
+    _png(export_dir, "b.png")
+    errors: list[BaseException] = []
+
+    def write(output_id: str, name: str) -> None:
+        try:
+            append_output(
+                trip_dir,
+                _record(
+                    trip,
+                    output_id=output_id,
+                    profile=output_id,
+                    files=[name],
+                    label=output_id,
+                ),
+            )
+        except BaseException as exc:  # noqa: BLE001 — collect worker errors
+            errors.append(exc)
+
+    workers = [
+        threading.Thread(target=write, args=("xiaohongshu", "a.png")),
+        threading.Thread(target=write, args=("wechat_moments", "b.png")),
+    ]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join()
+    assert errors == []
+    rows = read_ledger(trip_dir)
+    assert rows is not None
+    assert {rec["outputId"] for rec in rows} == {"xiaohongshu", "wechat_moments"}
+
+
+def test_drop_output_row_keeps_files(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    _png(export_dir, "页-01.png")
+    append_output(
+        trip_dir,
+        _record(
+            trip,
+            output_id="portfolio_pages",
+            profile="portfolio_pages",
+            files=["页-01.png"],
+            label="页图",
+            surface="folio",
+        ),
+    )
+    assert drop_output_row(trip_dir, "portfolio_pages") is True
+    assert drop_output_row(trip_dir, "portfolio_pages") is False
+    assert (export_dir / "页-01.png").is_file()
+    assert (read_ledger(trip_dir) or []) == []

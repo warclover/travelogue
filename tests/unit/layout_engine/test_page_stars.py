@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import warnings
 
 import pytest
 import yaml
@@ -176,14 +175,26 @@ def test_planned_three_star_that_fits_does_not_swap() -> None:
     assert placed.demoted_pages == 0
 
 
-def test_snapshot_reconcile_warns_not_fails() -> None:
+def test_snapshot_matches_workshop_stars() -> None:
     workshop, disabled = _workshop_stars()
-    if workshop != dict(FACE_STARS) or disabled != DISABLED_FACES:
-        warnings.warn(
-            "page_stars snapshot drifted from docs/templates/reserve/stars.yaml; "
-            "sync travelogue/layout_engine/editorial_series/page_stars.py",
-            stacklevel=1,
-        )
+    assert workshop == dict(FACE_STARS)
+    assert disabled == DISABLED_FACES
+
+
+def test_official_series_faces_have_stars() -> None:
+    from travelogue.layout_engine.editorial_series.catalog import load_official_series
+
+    planned: set[str] = set()
+    for series in load_official_series():
+        for page in series.get("sequence") or []:
+            if not isinstance(page, dict):
+                continue
+            for key in ("patternId", "faceHint"):
+                tid = str(page.get(key) or "").strip()
+                if tid:
+                    planned.add(tid)
+    missing = sorted(tid for tid in planned if tid not in DISABLED_FACES and star_of(tid) <= 0)
+    assert missing == [], f"official series faces missing stars: {missing}"
 
 
 def test_runtime_modules_do_not_import_reserve() -> None:

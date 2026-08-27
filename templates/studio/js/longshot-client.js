@@ -66,6 +66,15 @@ export function buildLongshotRequest(tripId, preset) {
   if (p.includeAppendix === true) {
     body.includeAppendix = true;
   }
+  if (p.includeZip === true || p.includeZip === false) {
+    body.includeZip = p.includeZip;
+  }
+  if (p.includePages === true || p.includePages === false) {
+    body.includePages = p.includePages;
+  }
+  if (p.portfolioPiece) {
+    body.portfolioPiece = p.portfolioPiece;
+  }
   return body;
 }
 

@@ -618,7 +618,7 @@ def capture_is_blank(data: bytes) -> bool:
 
         im = Image.open(BytesIO(data)).convert("L").resize((80, 45))
     except Exception:
-        return False
+        return True
     hist = im.histogram()
     total = sum(hist)
     if total <= 0:

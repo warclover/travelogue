@@ -3,6 +3,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   EDITION_COPY_LOCK,
@@ -126,6 +127,15 @@ test("页数芯片只出目录投影的档，缺省仅自动", () => {
 
 test("溢出出口是改用游记全收", () => {
   assert.equal(overflowJournalCta(), "改用游记（全收）");
+});
+
+test("页数 chip 不用 innerHTML 拼 hint", () => {
+  const src = readFileSync(
+    new URL("../../templates/studio/js/portfolio-edition-logic.js", import.meta.url),
+    "utf8"
+  );
+  assert.equal(src.includes("btn.innerHTML"), false);
+  assert.match(src, /chip-label[\s\S]*textContent/);
 });
 
 test("AC-PFM-07 · 关旗横幅与成册类型显隐", () => {

@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from travelogue.domain.output_fingerprint import (
     copy_fp,
@@ -49,6 +52,67 @@ VALID_STALE_INPUTS = frozenset({"structure", "copy", "bundle", "options"})
 BARE_NAME_FORBIDDEN = frozenset({".", ".."})
 
 ScandirFn = Callable[[os.PathLike[str] | str], Iterable[os.DirEntry[str]]]
+
+_ledger_thread_locks: dict[str, threading.RLock] = {}
+_ledger_thread_locks_guard = threading.Lock()
+_ledger_hold = threading.local()
+
+
+def _ledger_lock_key(trip_dir: Path) -> str:
+    return os.path.normcase(str(Path(trip_dir).resolve())).casefold()
+
+
+@contextmanager
+def _ledger_lock(trip_dir: Path) -> Iterator[None]:
+    """Serialize ledger RMW across threads and Studio subprocesses."""
+    key = _ledger_lock_key(trip_dir)
+    with _ledger_thread_locks_guard:
+        lock = _ledger_thread_locks.setdefault(key, threading.RLock())
+    lock.acquire()
+    held: set[str] = getattr(_ledger_hold, "keys", None) or set()
+    outermost = key not in held
+    if outermost:
+        held = set(held)
+        held.add(key)
+        _ledger_hold.keys = held
+    fh = None
+    try:
+        if outermost:
+            lock_path = ledger_path(trip_dir).with_name(f".{LEDGER_NAME}.lock")
+            lock_path.parent.mkdir(parents=True, exist_ok=True)
+            fh = open(lock_path, "a+b")
+            if os.name == "nt":
+                import msvcrt
+
+                fh.seek(0)
+                if fh.read(1) == b"":
+                    fh.write(b"\0")
+                    fh.flush()
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        yield
+    finally:
+        if fh is not None:
+            try:
+                if os.name == "nt":
+                    import msvcrt
+
+                    fh.seek(0)
+                    msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            finally:
+                fh.close()
+        if outermost:
+            held.discard(key)
+            _ledger_hold.keys = held
+        lock.release()
 
 # share_zip / pdf are not platform_profiles.yaml keys (PRD §4.4).
 _NON_PLATFORM: dict[str, dict[str, Any]] = {
@@ -318,11 +382,7 @@ def _load_unhealed(trip_dir: Path) -> list[dict[str, Any]]:
     return parsed
 
 
-def append_output(trip_dir: Path, record: dict[str, Any]) -> Path | None:
-    """Replace the matching ``outputId`` and write atomically.
-
-    ``profile == custom`` (or unresolvable id) returns None without writing.
-    """
+def _append_output_unlocked(trip_dir: Path, record: dict[str, Any]) -> Path | None:
     profile = str(record.get("profile") or record.get("outputId") or "").strip()
     if profile == "custom" or str(record.get("outputId") or "") == "custom":
         return None
@@ -348,7 +408,16 @@ def append_output(trip_dir: Path, record: dict[str, Any]) -> Path | None:
     return _atomic_write(ledger_path(trip_dir), payload)
 
 
-def prune_ledger(
+def append_output(trip_dir: Path, record: dict[str, Any]) -> Path | None:
+    """Replace the matching ``outputId`` and write atomically.
+
+    ``profile == custom`` (or unresolvable id) returns None without writing.
+    """
+    with _ledger_lock(trip_dir):
+        return _append_output_unlocked(trip_dir, record)
+
+
+def _prune_ledger_unlocked(
     trip_dir: Path,
     *,
     scandir: ScandirFn = os.scandir,
@@ -363,6 +432,34 @@ def prune_ledger(
     }
     _atomic_write(ledger_path(trip_dir), payload)
     return healed
+
+
+def prune_ledger(
+    trip_dir: Path,
+    *,
+    scandir: ScandirFn = os.scandir,
+) -> list[dict[str, Any]] | None:
+    with _ledger_lock(trip_dir):
+        return _prune_ledger_unlocked(trip_dir, scandir=scandir)
+
+
+def drop_output_row(trip_dir: Path, output_id: str) -> bool:
+    """Remove a ledger row without deleting files (failed recapture → orphans)."""
+    wanted = str(output_id or "").strip()
+    if not wanted:
+        return False
+    with _ledger_lock(trip_dir):
+        current = _load_unhealed(trip_dir)
+        next_rows = [rec for rec in current if rec["outputId"] != wanted]
+        if len(next_rows) == len(current):
+            return False
+        payload = {
+            "schemaVersion": LEDGER_SCHEMA_VERSION,
+            "updatedAt": _utc_now(),
+            "outputs": next_rows,
+        }
+        _atomic_write(ledger_path(trip_dir), payload)
+        return True
 
 
 def _edition_snapshot(trip: dict[str, Any] | None) -> str:
@@ -453,6 +550,8 @@ def record_dispatch_result(
             batch_id=batch_id,
             segmented=segmented,
         )
+    elif resolve_output_id(pid) == "portfolio_pages":
+        drop_output_row(trip_dir, "portfolio_pages")
     share_zip = getattr(result, "share_zip", None)
     if share_zip:
         record_successful_output(
@@ -508,9 +607,10 @@ def record_successful_output(
     }
     if record["batchId"] is None:
         record.pop("batchId")
-    written = append_output(trip_dir, record)
-    prune_ledger(trip_dir)
-    return written
+    with _ledger_lock(trip_dir):
+        written = _append_output_unlocked(trip_dir, record)
+        _prune_ledger_unlocked(trip_dir)
+        return written
 
 
 def on_ticket(record: dict[str, Any]) -> bool:
@@ -612,28 +712,29 @@ def delete_output(trip_dir: Path, output_id: str) -> bool:
     wanted = str(output_id or "").strip()
     if not wanted:
         return False
-    current = _load_unhealed(trip_dir)
-    found: dict[str, Any] | None = None
-    next_rows: list[dict[str, Any]] = []
-    for rec in current:
-        if rec["outputId"] == wanted:
-            found = rec
-        else:
-            next_rows.append(rec)
-    if found is None:
-        return False
-    export_dir = _export_dir(trip_dir)
-    for name in found.get("files") or []:
-        path = export_dir / str(name)
-        try:
-            if path.is_file():
-                path.unlink()
-        except OSError:
-            pass
-    payload = {
-        "schemaVersion": LEDGER_SCHEMA_VERSION,
-        "updatedAt": _utc_now(),
-        "outputs": next_rows,
-    }
-    _atomic_write(ledger_path(trip_dir), payload)
-    return True
+    with _ledger_lock(trip_dir):
+        current = _load_unhealed(trip_dir)
+        found: dict[str, Any] | None = None
+        next_rows: list[dict[str, Any]] = []
+        for rec in current:
+            if rec["outputId"] == wanted:
+                found = rec
+            else:
+                next_rows.append(rec)
+        if found is None:
+            return False
+        export_dir = _export_dir(trip_dir)
+        for name in found.get("files") or []:
+            path = export_dir / str(name)
+            try:
+                if path.is_file():
+                    path.unlink()
+            except OSError:
+                pass
+        payload = {
+            "schemaVersion": LEDGER_SCHEMA_VERSION,
+            "updatedAt": _utc_now(),
+            "outputs": next_rows,
+        }
+        _atomic_write(ledger_path(trip_dir), payload)
+        return True

@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { buildLongshotRequest } from "../../templates/studio/js/longshot-client.js";
 import {
   PORTFOLIO_PAGES_PLATFORM,
   firstSuccessPortfolioCopy,
@@ -124,12 +125,50 @@ test("shelfExportRequestForTrip 作品集带 portfolio_pages", () => {
   assert.equal(folio.openFolderItem, "打开导出文件夹");
   assert.deepEqual(
     shelfExportRequestForTrip({ edition: "portfolio" }, { surface: "grid" }),
-    { surface: "grid", platform: PORTFOLIO_PAGES_PLATFORM }
+    {
+      surface: "grid",
+      platform: PORTFOLIO_PAGES_PLATFORM,
+      includeZip: false,
+      includePages: true,
+      portfolioPiece: "pages",
+    }
+  );
+  assert.deepEqual(
+    shelfExportRequestForTrip(
+      { edition: "portfolio" },
+      {
+        surface: "grid",
+        store: {
+          getItem: function () {
+            return JSON.stringify({ product: "book" });
+          },
+        },
+      }
+    ),
+    {
+      surface: "grid",
+      platform: PORTFOLIO_PAGES_PLATFORM,
+      includeZip: true,
+      includePages: false,
+      portfolioPiece: "book",
+    }
   );
   assert.deepEqual(
     shelfExportRequestForTrip({ edition: "journal" }, { surface: "grid" }),
     { surface: "grid" }
   );
+  const body = buildLongshotRequest("t1", {
+    scale: 3,
+    format: "png",
+    copyDisplay: "photos",
+    platform: PORTFOLIO_PAGES_PLATFORM,
+    includeZip: false,
+    includePages: true,
+    portfolioPiece: "pages",
+  });
+  assert.equal(body.includeZip, false);
+  assert.equal(body.includePages, true);
+  assert.equal(body.portfolioPiece, "pages");
   assert.equal(dockCtaFromEntry({ edition: "journal" }).aria, "导出长图");
   assert.equal(
     dockCtaFromEntry({ dockCta: { short: "导出作品集", aria: "导出作品集" } }).short,
@@ -252,6 +291,7 @@ test("albumSpreadCardCopy 游记不动，作品集用印刷副文", () => {
   assert.equal(pf.title, "印刷跨页（现网画册）");
   assert.match(pf.subtitle, /给印刷公司的 3:4 跨页/);
   assert.doesNotMatch(pf.title, /^画册$/);
+  assert.deepEqual(albumSpreadCardCopy("folio"), pf);
 });
 
 test("wrapPortfolioSocialGroupHtml 默认折叠", () => {

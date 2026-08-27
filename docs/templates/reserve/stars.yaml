@@ -13,6 +13,7 @@ page-2-pair-land: 3
 page-2-pair-port: 3
 page-3-2l1p-left: 3
 page-3-2l1p-right: 3
+page-3-2l1p-hero-right: 3
 page-3-2l1p-wide-left: 3
 page-3-2l1p-wide-right: 3
 page-3-land: 3
@@ -26,6 +27,7 @@ page-4-port: 3
 page-5-3p2l-center: 3
 page-5-3p2l-center-flip: 3
 page-6-1l5l-wide-left: 3
+page-6-2l4p-wide: 3
 page-6-2l4p-wide-flip: 3
 page-6-grid-land: 3
 page-7-1p6l-center: 3

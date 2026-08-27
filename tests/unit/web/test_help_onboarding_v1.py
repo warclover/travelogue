@@ -87,7 +87,7 @@ def test_import_folder_scaffold_markers() -> None:
     assert "同一次画册放同一文件夹（50–100 张最佳）" in html
     assert "手机照片需先传到电脑" in html
     # 第 4 条在 help-onboarding 文案源；HTML 脚手架由 JS 注入时也会读到
-    assert "每个文件夹会生成一本" in help_js
+    assert "作品集和游记可以各做一本" in help_js
     assert "试试用自己的照片做一篇" in html
     assert 'data-help-item="H1"' in html
 

@@ -344,12 +344,15 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     """M20-d · Import entry/Wizard + 导入编排，复用 v3 共享原语（非复制视图）。"""
     entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    wizard_logic = (STUDIO_DIR / "homepage-v2" / "import-wizard-logic.js").read_text(
+        encoding="utf-8"
+    )
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "refreshTripsForImportSuccess" in run
     assert not (STUDIO_DIR / "homepage-v2" / "import-sheet.js").is_file()
     assert not (STUDIO_DIR / "homepage-v2" / "import-flags.js").is_file()
 
-    for js in (entry, wizard, run):
+    for js in (entry, wizard, wizard_logic, run):
         assert "\ufffd" not in js
 
     # 薄编排层（RET-3 · Wizard 唯一入口）
@@ -365,7 +368,7 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     # Wizard v3（PRD v3.0.1）+ A.1
     assert "openImportWizard" in wizard and "startV2Import" in wizard
     assert "wizard_step_view" in wizard
-    assert "填写细节 →" in wizard
+    assert "填写细节 →" in wizard_logic
     assert "requestCloseWizard" in wizard
     assert "photo_count_hint_show" in wizard
     assert "resetPrefillableFieldsForNewFolder" in wizard
@@ -465,7 +468,11 @@ def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
     assert 'id="v2-wizard-template-mode"' in html
 
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
-    assert "定制画册细节 →" in wizard
+    wizard_logic = (STUDIO_DIR / "homepage-v2" / "import-wizard-logic.js").read_text(
+        encoding="utf-8"
+    )
+    assert "定制画册细节 →" in wizard_logic
+    assert "定制作品集细节 →" in wizard_logic
     assert "FIRST_TIP_KEY" in wizard
     assert "updateDuplicateTitleNote" in wizard
     assert "syncChipPressedState" in wizard
