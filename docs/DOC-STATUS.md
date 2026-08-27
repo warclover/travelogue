@@ -216,6 +216,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-FRONTEND-IDENTITY-ISOLATION-V1.md](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) | **active** | **FXI** 前端身份面隔离 **v0.1.6** · **F1–F3 已签** · **BLK-FXI-01 游记精修/导出零触及** · **W1+W2 已落地** · **W3 狗粮已走** · F2 过河不批量 · [线框](./wireframes/frontend-identity-isolation-v1-wireframe.html) · [签核](./acceptance-records/fxi-f1-f3-signoff-2026-08-26.md) · [W3](./acceptance-records/fxi-w3-dogfood-2026-08-27.md) |
 | [acceptance-records/fxi-f1-f3-signoff-2026-08-26.md](./acceptance-records/fxi-f1-f3-signoff-2026-08-26.md) | **active** | FXI 线框签核 · **F1–F3 已签 2026-08-26** · W1–W3 已落地 |
 | [acceptance-records/fxi-w3-dogfood-2026-08-27.md](./acceptance-records/fxi-w3-dogfood-2026-08-27.md) | **active** | FXI W3 狗粮 · 华农 F1 页图 + F2 小红书单出 · 游记导出/精修无回归 · 升 Go 待产品 |
+| [作品集管线简化讨论备忘录.md](./作品集管线简化讨论备忘录.md) | **active（note）** | 2026-08-27 过河微信失效之后 · 双开 / 统一管线 / 页图学 ECC · **不升格合同** · 过河微信绑定未拍板 |
 | [acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) | **active** | PIS 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.1.1 |
 | [acceptance-records/pis-w4-dogfood-2026-08-26.md](./acceptance-records/pis-w4-dogfood-2026-08-26.md) | **active** | PIS W4 狗粮 · 华农确认页 + 珠海覆盖写回原 trip · 未点导出出 Y |
 | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 已落 · AS-PFM-03 五档已入 · W4 人评未开 |
