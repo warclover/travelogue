@@ -3,6 +3,9 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   INTENT_TO_PLATFORM,
@@ -900,4 +903,16 @@ test("CLG · 点闸卡不改主选，说明层标题固定", () => {
   assert.equal(crossingGateCopy().sheetTitle, "长图要在游记里做");
   assert.equal(pop._platformBtns[0].getAttribute("aria-describedby"), "clg-gate-sub-wechat_chat");
   assert.equal(pop._platformBtns[0]._sub.textContent, "要先有一本游记");
+});
+
+test("CLG · 闸层 CSS 不得把 popover 改成 relative", () => {
+  const cssPath = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../templates/studio/preview-toolbar/longshot.css"
+  );
+  const css = readFileSync(cssPath, "utf8");
+  assert.doesNotMatch(
+    css,
+    /\.preview-toolbar__export-popover\.is-clg-open\s*\{[^}]*position\s*:\s*relative/
+  );
 });

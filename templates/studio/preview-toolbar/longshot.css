@@ -204,6 +204,8 @@ html.preview-export-popover-open body {
   overflow: hidden;
   touch-action: none;
 }
+/* 导出弹窗字阶只准四档：标题 15 / 正文 13 / 控件 12 / 辅字 11。
+ * 层级用字重和墨色，禁止再写裸 px 或把 token fallback 写歪。 */
 .preview-toolbar__export-popover-title {
   margin: 0 0 4px;
   font-size: var(--studio-panel-title-size, 15px);
@@ -308,18 +310,24 @@ html.preview-export-popover-open body {
 }
 .preview-toolbar__fxi-lead {
   margin: 0 0 12px;
-  font-size: var(--studio-panel-meta-size, 11px);
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 650;
   line-height: 1.45;
-  color: var(--preview-muted);
+  color: var(--preview-ink, #14110d);
 }
 .preview-toolbar__fxi-banner {
   margin: 0 0 12px;
   padding: 8px 10px;
   font-size: var(--studio-panel-meta-size, 11px);
   line-height: 1.45;
-  color: var(--preview-ink, #14110d);
+  color: var(--preview-muted);
   background: color-mix(in srgb, var(--preview-accent, #3f454c) 8%, #fff);
   border-radius: 8px;
+}
+.preview-toolbar__fxi-banner strong {
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 650;
+  color: var(--preview-ink, #14110d);
 }
 .preview-toolbar__fxi-cross,
 .preview-toolbar__fxi-back {
@@ -345,17 +353,19 @@ html.preview-export-popover-open body {
 .preview-toolbar__export-platform-card[data-clg-locked="1"] {
   opacity: 0.48;
 }
-.preview-toolbar__export-popover.is-clg-open {
-  position: relative;
-}
+/* 弹层已是 position:absolute，本身就是叠层的包含块。
+ * 禁止再改成 relative：导出区在 Dock 里，relative 会让整块弹层进文档流，
+ * Dock 的 border-radius:999px 会被撑成巨大圆角条。 */
 .preview-toolbar__clg-sheet-host {
   position: absolute;
   inset: 0;
   z-index: 4;
+  pointer-events: none;
 }
 .preview-toolbar__clg-veil {
   position: absolute;
   inset: 0;
+  pointer-events: auto;
   background: rgba(20, 17, 13, 0.28);
   border-radius: 8px;
 }
@@ -380,19 +390,22 @@ html.preview-export-popover-open body {
   border: 0;
   background: none;
   font: inherit;
-  font-size: 16px;
+  font-size: var(--studio-panel-ui-size, 12px);
   line-height: 1.2;
   color: var(--preview-muted);
   cursor: pointer;
 }
 .preview-toolbar__clg-sheet-title {
   margin: 0 0 8px;
-  font-size: var(--studio-panel-body-size, 15px);
+  font-size: var(--studio-panel-title-size, 15px);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--preview-ink, #14110d);
 }
 .preview-toolbar__clg-sheet-body {
   margin: 0 0 12px;
-  font-size: var(--studio-panel-meta-size, 13px);
-  line-height: 1.55;
+  font-size: var(--studio-panel-body-size, 13px);
+  line-height: 1.45;
   color: var(--preview-muted);
 }
 .preview-toolbar__clg-sheet-actions {
@@ -525,7 +538,7 @@ html.preview-export-popover-open body {
   border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   border-radius: 999px;
   padding: 5px 12px;
-  font-size: var(--studio-panel-meta-size, 11px);
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   font-family: inherit;
   background: var(--preview-surface, #ffffff);
