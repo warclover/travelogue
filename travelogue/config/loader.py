@@ -788,6 +788,7 @@ def load_config(path: Path | None = None) -> AppConfig:
             ai_surface_enabled=cfg_bool(
                 studio_raw, "ai_surface_enabled", "aiSurfaceEnabled", False
             ),
+            output_ledger=cfg_bool(studio_raw, "output_ledger", "outputLedger", True),
             longshot2=_parse_longshot2_config(studio_raw),
             output_recipe=_parse_output_recipe_config(studio_raw),
             gcs_poster_bric=_parse_gcs_poster_bric_config(data, studio_raw),

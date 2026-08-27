@@ -10,6 +10,11 @@
     "handler": "trip_handlers.handle_delete_trip"
   },
   {
+    "method": "DELETE",
+    "path": "/__travelogue/trips/{tripId}/outputs/{outputId}",
+    "handler": "trip_handlers.handle_delete_output"
+  },
+  {
     "method": "GET",
     "path": "/",
     "handler": "static_handlers.handle_home_root"
@@ -153,6 +158,11 @@
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/entry",
     "handler": "trip_handlers.handle_entry"
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/outputs",
+    "handler": "trip_handlers.handle_get_outputs"
   },
   {
     "method": "GET",

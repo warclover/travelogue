@@ -79,6 +79,11 @@ def _bundle_version_paths(trip: dict | None = None) -> tuple:
     return _SHARED_BUNDLE_PATHS + (family_css,)
 
 
+def longshot_bundle_version(trip: dict) -> str:
+    """Public accessor for OLT bundleFp (BE-OLT-03). Logic is unchanged."""
+    return _longshot_bundle_version(trip)
+
+
 def _longshot_bundle_version(trip: dict) -> str:
     """Pin asset cache-busting to template bundle content hashes (P2-4).
 

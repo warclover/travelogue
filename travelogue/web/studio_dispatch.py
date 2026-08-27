@@ -31,6 +31,8 @@ from travelogue.web.studio_handlers.common import (
     match_aesthetic_preference,
     match_bento_preview,
     match_entry,
+    match_trip_output_item,
+    match_trip_outputs,
     match_source_status,
     match_trip_ai_intent_brief,
     match_trip_ai_layout_critic,
@@ -208,6 +210,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         auth=True,
     ),
     RouteSpec("GET", TRIPS_PATH, "trip_handlers.handle_trips", auth=True),
+    RouteSpec(
+        "GET",
+        "/__travelogue/trips/{tripId}/outputs",
+        "trip_handlers.handle_get_outputs",
+        "capture",
+        auth=True,
+    ),
     RouteSpec("GET", CHAPTER_LAYOUT_PATH, "trip_handlers.handle_chapter_layout", auth=True),
     RouteSpec("GET", "/__travelogue/trips/{tripId}/entry", "trip_handlers.handle_entry", "capture", auth=True),
     RouteSpec(
@@ -308,6 +317,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         auth=True,
     ),
     # DELETE
+    RouteSpec(
+        "DELETE",
+        "/__travelogue/trips/{tripId}/outputs/{outputId}",
+        "trip_handlers.handle_delete_output",
+        "capture",
+        auth=True,
+    ),
     RouteSpec("DELETE", "/__travelogue/trips/{tripId}", "trip_handlers.handle_delete_trip", "capture", auth=True),
     # POST
     RouteSpec("POST", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_post_unlock_gate", auth=True),
@@ -514,6 +530,8 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/layout-strategies/{strategyId}": match_layout_strategy_detail,
     "/__travelogue/templates/admin/{templateId}/version": match_template_admin_version,
     "/__travelogue/trips/{tripId}/entry": match_entry,
+    "/__travelogue/trips/{tripId}/outputs": match_trip_outputs,
+    "/__travelogue/trips/{tripId}/outputs/{outputId}": match_trip_output_item,
     "/__travelogue/trips/{tripId}/source-status": match_source_status,
     "/__travelogue/trips/{tripId}/cohort": match_trip_cohort,
     "/__travelogue/trips/{tripId}/aesthetic": match_aesthetic,

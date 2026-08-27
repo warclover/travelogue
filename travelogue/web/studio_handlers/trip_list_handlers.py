@@ -265,6 +265,68 @@ def handle_bento_preview(handler: StudioHandlerProtocol, trip_id: str) -> None:
     handler._json_response(200, {"ok": True, **payload})
 
 
+def _ledger_bundle_fp(trip: dict) -> str:
+    from travelogue.render.context import longshot_bundle_version
+
+    return longshot_bundle_version(trip) if trip else ""
+
+
+def handle_get_outputs(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    """GET /trips/{id}/outputs · empty list when no ledger or flag off (AC-OLT-20)."""
+    from travelogue.export.output_ledger import (
+        annotate_outputs,
+        output_ledger_enabled,
+        read_ledger,
+    )
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    if not output_ledger_enabled():
+        handler._json_response(200, {"ok": True, "outputs": []})
+        return
+    records = read_ledger(trip_dir)
+    if records is None:
+        handler._json_response(200, {"ok": True, "outputs": []})
+        return
+    handler._json_response(
+        200,
+        {
+            "ok": True,
+            "outputs": annotate_outputs(records, trip, _ledger_bundle_fp(trip)),
+        },
+    )
+
+
+def handle_delete_output(handler: StudioHandlerProtocol, trip_id: str, output_id: str) -> None:
+    from travelogue.export.output_ledger import delete_output, output_ledger_enabled
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    trip_dir, trip = loaded
+    if is_protected_demo_trip(trip_dir.name, trip):
+        handler._json_response(
+            403,
+            {"ok": False, "error": "E_TRIP_DELETE_DENIED", "message": "示例画册无法删除"},
+        )
+        return
+    if not output_ledger_enabled():
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_OUTPUT_NOT_FOUND", "message": "没有这份成品"},
+        )
+        return
+    if not delete_output(trip_dir, output_id):
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_OUTPUT_NOT_FOUND", "message": "没有这份成品"},
+        )
+        return
+    handler._json_response(200, {"ok": True})
+
+
 def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
     from travelogue.curation.chapter_explain import (
         build_chapter_explain,

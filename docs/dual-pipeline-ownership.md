@@ -29,6 +29,8 @@
 | S-11 | `travelogue/render/engine.py` | 按身份拷贝 / 重写 `@import`（只改拷贝后的 `journal.css`） |
 | S-12 | `travelogue/export/packager.py` | zip 按身份打包族 CSS |
 
+**OLT（DOC-OLT-02 · 2026-08-26）**：成品账本 / 四段指纹 / 票根副券 **零新增窄缝**，额度仍 **12 / 14**。`export/output_ledger.py` 与 `domain/output_fingerprint.py` 无 `is_portfolio` 分支；`export/dispatch.py`（S-07）只在成功后写账本，`edition` 仅作字符串快照。
+
 ## 允许清单（不占窄缝额度）
 
 `config/edition.py` · `export/portfolio_*.py` · `layout_engine/editorial_series/**` · `web/studio*` · `cli/render_cmds.py`

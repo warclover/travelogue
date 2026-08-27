@@ -15,6 +15,7 @@ trips_dir: ./trips
 # 等价环境变量：TRAVELOGUE_AI_SURFACE=1
 studio:
   ai_surface_enabled: true        # false=默认无 AI 面（NAS）；true=开启杂志文案/封面字体等
+  output_ledger: true             # OLT · 成品账本；发布默认 true，false 回退现网
 
 llm:
   provider: stub                  # stub | deepseek | dashscope

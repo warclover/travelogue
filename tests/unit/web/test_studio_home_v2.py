@@ -749,6 +749,15 @@ def test_studio_home_v2_shelf_module() -> None:
     assert ".v2-shelf__ticket" in V2_CSS_BUNDLE
     assert ".v2-shelf__perf" in V2_CSS_BUNDLE
     assert ".v2-shelf__barcode" in V2_CSS_BUNDLE
+    assert "shelf-outputs.js" in shelf
+    assert "buildOutputStubs" in shelf
+    assert "allowReadyBadge" in shelf
+    outputs_js = (STUDIO_DIR / "homepage-v2" / "shelf-outputs.js").read_text(encoding="utf-8")
+    assert "v2-shelf__stubs" in outputs_js
+    assert ".v2-shelf__stub-chip" in V2_CSS_BUNDLE
+    assert "管理成品" in (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(
+        encoding="utf-8"
+    )
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "studio-modal.css" in html
@@ -766,8 +775,11 @@ def test_studio_home_v2_shelf_module() -> None:
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
     assert "改为游记重排" in menu
-    assert "保存长图" in menu
-    assert "打开长图文件夹" in menu
+    assert "shelfExportMenuCopy" in menu
+    assert "管理成品" in menu
+    export_copy = (STUDIO_DIR / "js" / "portfolio-export-logic.js").read_text(encoding="utf-8")
+    assert "保存长图" in export_copy
+    assert "打开长图文件夹" in export_copy
     assert "openShelfLongshotFolder" in menu
     assert "canOpenShelfLongshotFolder" in menu
     assert "删除画册" in menu

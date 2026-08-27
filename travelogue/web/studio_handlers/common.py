@@ -113,6 +113,24 @@ def match_entry(path: str) -> str | None:
     return match_trip_suffix(path, "/entry")
 
 
+def match_trip_outputs(path: str) -> str | None:
+    """GET /__travelogue/trips/{tripId}/outputs"""
+    return match_trip_suffix(path, "/outputs")
+
+
+def match_trip_output_item(path: str) -> tuple[str, str] | None:
+    """DELETE /__travelogue/trips/{tripId}/outputs/{outputId}"""
+    prefix = TRIPS_PATH + "/"
+    marker = "/outputs/"
+    if not path.startswith(prefix) or marker not in path:
+        return None
+    rest = path[len(prefix) :]
+    trip_id, sep, output_id = rest.partition(marker)
+    if not sep or not trip_id or not output_id or "/" in trip_id or "/" in output_id:
+        return None
+    return unquote(trip_id), unquote(output_id)
+
+
 def match_source_status(path: str) -> str | None:
     return match_trip_suffix(path, "/source-status")
 

@@ -18,6 +18,7 @@ import {
 import { deleteTrip } from "./trips-client.js";
 import { runShelfLongshot, openShelfLongshotFolder, canOpenShelfLongshotFolder } from "./shelf-longshot.js";
 import { setBentoPreviewTripId } from "./bento-tabs.js";
+import { hasManageOutputs, openManageOutputs } from "./shelf-outputs.js";
 
 var _openMenuEl = null;
 var _docBound = false;
@@ -347,6 +348,24 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   menu.appendChild(previewItem);
   menu.appendChild(longshotItem);
   menu.appendChild(openLongshotItem);
+  if (hasManageOutputs(trip)) {
+    var manageItem = document.createElement("button");
+    manageItem.type = "button";
+    manageItem.className = "v2-shelf__menu-item";
+    manageItem.setAttribute("role", "menuitem");
+    manageItem.textContent = "管理成品";
+    manageItem.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu(menu);
+      openManageOutputs(trip, {
+        onChanged: function () {
+          if (typeof opts.onOutputsChanged === "function") opts.onOutputsChanged(trip.tripId);
+        },
+      });
+    });
+    menu.appendChild(manageItem);
+  }
   if (!demo && normalizeEdition(trip.edition) === "portfolio") {
     var toJournalItem = document.createElement("button");
     toJournalItem.type = "button";

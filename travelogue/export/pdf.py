@@ -93,4 +93,28 @@ def export_trip_pdf(
 
     if not out_path.is_file() or out_path.stat().st_size == 0:
         raise PdfExportError(f"PDF export failed: {out_path}")
+    _record_pdf_ledger(trip_dir, out_path, width_px=width_px)
     return out_path
+
+
+def _record_pdf_ledger(trip_dir: Path, out_path: Path, *, width_px: int) -> None:
+    from travelogue.export.output_ledger import (
+        load_trip_dict,
+        output_ledger_enabled,
+        record_successful_output,
+        spec_from_profile,
+    )
+
+    if not output_ledger_enabled():
+        return
+    from travelogue.render.context import longshot_bundle_version
+
+    trip = load_trip_dict(trip_dir)
+    record_successful_output(
+        trip_dir,
+        trip=trip,
+        profile="pdf",
+        files=[out_path.name],
+        spec=spec_from_profile("pdf", scale=1, fmt="pdf", extra={"width": width_px}),
+        bundle_fp=longshot_bundle_version(trip),
+    )

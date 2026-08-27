@@ -254,6 +254,7 @@ export function runShelfLongshot(trip, opts) {
   var preset = Object.assign({}, LONGSHOT_PRESETS.shelf);
   if (opts.platform) preset.platform = opts.platform;
   if (opts.intent) preset.intent = opts.intent;
+  if (opts.segmentMode) preset.segmentMode = opts.segmentMode;
 
   trackStudioEvent("shelf_longshot_start", {
     trip_id: tripId,

@@ -241,4 +241,26 @@ def _export_trip_stages(
 
     _mark_exported(trip, confirm_privacy=True)
     persist_trip_snapshot(svc, trip_path, trip)
+    _record_share_zip_ledger(trip_root, trip, zip_path)
     return zip_path
+
+
+def _record_share_zip_ledger(trip_root: Path, trip: dict, zip_path: Path) -> None:
+    from travelogue.export.output_ledger import (
+        output_ledger_enabled,
+        record_successful_output,
+        spec_from_profile,
+    )
+
+    if not output_ledger_enabled():
+        return
+    from travelogue.render.context import longshot_bundle_version
+
+    record_successful_output(
+        trip_root,
+        trip=trip,
+        profile="share_zip",
+        files=[zip_path.name],
+        spec=spec_from_profile("share_zip", scale=1, fmt="zip"),
+        bundle_fp=longshot_bundle_version(trip),
+    )

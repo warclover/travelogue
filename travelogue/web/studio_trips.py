@@ -196,6 +196,29 @@ def longshot_reveal_rel_path(trip_dir: Path) -> str | None:
     return newest.relative_to(trip_dir).as_posix()
 
 
+def _apply_output_ledger(row: dict, trip_dir: Path, data: dict) -> None:
+    """OLT M2 · attach outputSummary; swap longshotStale source when flag is on."""
+    try:
+        from travelogue.export.output_ledger import (
+            build_output_summary,
+            output_ledger_enabled,
+            read_ledger,
+            ticket_outputs_outdated,
+        )
+    except Exception:
+        return
+    if not output_ledger_enabled():
+        return
+    records = read_ledger(trip_dir)
+    if records is None:
+        return
+    from travelogue.render.context import longshot_bundle_version
+
+    bundle_fp = longshot_bundle_version(data) if data else ""
+    row["outputSummary"] = build_output_summary(records, data, bundle_fp)
+    row["longshotStale"] = ticket_outputs_outdated(records, data, bundle_fp)
+
+
 def _shelf_edition_fields(data: dict) -> dict:
     """PIS · 游记行带 edition=journal；作品集带 edition + pageCount。"""
     if not data:
@@ -316,6 +339,7 @@ def _trip_rows(trips_dir: Path) -> list[tuple[float, dict]]:
                 },
             )
         )
+        _apply_output_ledger(rows[-1][1], child, data if isinstance(data, dict) else {})
 
     rows.sort(key=lambda item: item[0], reverse=True)
     return rows

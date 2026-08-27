@@ -15,6 +15,36 @@ from travelogue.export.longshot import (
 )
 
 
+def _maybe_record_ledger(
+    trip_dir: Path,
+    result: LongshotExportResult,
+    *,
+    platform: str | None,
+    scale: int,
+    fmt: str,
+) -> None:
+    from travelogue.export.output_ledger import output_ledger_enabled
+
+    if not output_ledger_enabled():
+        return
+    import uuid
+
+    from travelogue.export.output_ledger import load_trip_dict, record_dispatch_result
+    from travelogue.render.context import longshot_bundle_version
+
+    trip = load_trip_dict(trip_dir)
+    record_dispatch_result(
+        trip_dir,
+        result,
+        platform=platform or getattr(result, "platform", "") or "",
+        bundle_fp=longshot_bundle_version(trip),
+        trip=trip,
+        scale=scale,
+        fmt=fmt,
+        batch_id="lsb-" + uuid.uuid4().hex[:6],
+    )
+
+
 def dispatch_export(
     trip_dir: Path,
     *,
@@ -42,6 +72,61 @@ def dispatch_export(
     include_pages: bool = True,
 ) -> LongshotExportResult:
     """Pick a writer. The only edition ``if`` in the export entry path."""
+    result = _dispatch_export_writers(
+        trip_dir,
+        scale=scale,
+        fmt=fmt,
+        chapter=chapter,
+        output=output,
+        base_url=base_url,
+        trip_id=trip_id,
+        host=host,
+        port=port,
+        timeout_ms=timeout_ms,
+        watermark=watermark,
+        progress=progress,
+        copy_display=copy_display,
+        segment_mode=segment_mode,
+        platform=platform,
+        slide_count=slide_count,
+        pad_mode=pad_mode,
+        profile=profile,
+        include_appendix=include_appendix,
+        cancel_check=cancel_check,
+        cancel_register=cancel_register,
+        include_zip=include_zip,
+        include_pages=include_pages,
+    )
+    _maybe_record_ledger(trip_dir, result, platform=platform, scale=scale, fmt=fmt)
+    return result
+
+
+def _dispatch_export_writers(
+    trip_dir: Path,
+    *,
+    scale: int,
+    fmt: str,
+    chapter: int | None,
+    output: Path | None,
+    base_url: str | None,
+    trip_id: str | None,
+    host: str,
+    port: int,
+    timeout_ms: int,
+    watermark: bool,
+    progress: ProgressFn | None,
+    copy_display: str,
+    segment_mode: str,
+    platform: str | None,
+    slide_count: int | None,
+    pad_mode: str | None,
+    profile: Any,
+    include_appendix: bool,
+    cancel_check: CancelCheckFn | None,
+    cancel_register: CancelRegisterFn | None,
+    include_zip: bool,
+    include_pages: bool,
+) -> LongshotExportResult:
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
 
     pid = normalize_platform_id(platform)

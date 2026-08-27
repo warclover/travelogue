@@ -5,6 +5,9 @@ platforms:
   wechat_chat:
     label: 微信群
     label_en: WeChat Chat
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     segment: technical_chapter
     capture: chapter_or_full
     allow_p1: true
@@ -15,6 +18,9 @@ platforms:
   wechat_moments:
     label: 朋友圈
     label_en: Moments
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     # content_balanced: split full longshot into ≤9 contiguous segments;
     # cuts only at photo/card boundaries (never mid-photo); variable heights OK.
     segment: content_balanced
@@ -38,6 +44,8 @@ platforms:
   moments_grid:
     label: 朋友圈 · 九宫格
     label_en: Moments Grid
+    surface: grid
+    stale_inputs: [structure, copy, bundle]
     segment: photo_led
     capture: photo_grid
     allow_p1: false
@@ -58,6 +66,8 @@ platforms:
   poster_bric:
     label: 单张海报
     label_en: Poster Collage
+    surface: card
+    stale_inputs: [structure, copy, bundle]
     segment: photo_led
     capture: poster_bric
     allow_p1: false
@@ -77,6 +87,9 @@ platforms:
   xiaohongshu:
     label: 小红书
     label_en: Xiaohongshu
+    surface: card
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode]
     segment: photo_led
     capture: collage_pages
     allow_p1: false
@@ -99,6 +112,9 @@ platforms:
   wechat_official:
     label: 公众号
     label_en: WeChat Official Account
+    surface: card
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode]
     segment: photo_led
     capture: collage_pages
     allow_p1: false
@@ -120,6 +136,8 @@ platforms:
   album_spread:
     label: 画册印刷
     label_en: Album Spread
+    surface: spread
+    stale_inputs: [structure, copy, bundle]
     segment: photo_led
     capture: collage_pages
     allow_p1: false
@@ -140,6 +158,9 @@ platforms:
   instagram:
     label: Instagram
     label_en: Instagram
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     segment: content_balanced
     capture: full_once
     allow_p1: false
@@ -161,6 +182,9 @@ platforms:
   weibo:
     label: 微博
     label_en: Weibo
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     segment: content_balanced
     capture: full_once
     allow_p1: false
@@ -182,6 +206,9 @@ platforms:
   douyin_cover:
     label: 抖音封面
     label_en: Douyin Cover
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     segment: content_balanced
     capture: full_once
     allow_p1: false
@@ -203,6 +230,9 @@ platforms:
   custom:
     label: 自定义
     label_en: Custom
+    surface: scroll
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode, longshotDensity]
     segment: content_balanced
     capture: full_once
     allow_p1: false
@@ -224,6 +254,9 @@ platforms:
   portfolio_pages:
     label: 作品集页图
     label_en: Portfolio Pages
+    surface: folio
+    stale_inputs: [structure, copy, bundle, options]
+    stale_options: [copyDisplay, breathMode]
     segment: magazine_pages
     capture: screen_pages
     allow_p1: false
