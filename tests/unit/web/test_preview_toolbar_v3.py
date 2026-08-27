@@ -293,7 +293,8 @@ def test_v4_css_icon_dock_and_task_dock() -> None:
     for token in (
         "preview-toolbar__dock",
         "preview-toolbar--v4",
-        "--preview-toolbar-h: 80px",
+        "--preview-toolbar-h: 64px",
+        "--dock-ctl: 32px",
         "preview-task-dock",
         "preview-sheet",
         "preview-sheet__content",
@@ -505,8 +506,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             box = dock.bounding_box()
             assert box is not None
-            # PCU：40px 触控 + Help/?/分章 + SAS「AI」；高度/宽度较 icon-only 与旧 labeled 略增
-            assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
+            # 32px ctl + 3+3 pad + border；字号/图标不动
+            assert box["height"] <= 46, f"dock height expected compact, got {box['height']}"
             assert box["width"] <= 800, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
@@ -900,14 +901,15 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "preview-chapter-panel" in chap
     assert "确认并继续" in chap
     dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
-    # MF-05 · Dock 触控目标 ≥40px（含窄屏折叠态）
-    assert "min-width: 40px" in dock_css
-    assert "min-height: 40px" in dock_css
+    # Dock 桌面收至 32px ctl；窄屏折叠仍跟 --dock-ctl
+    assert "--dock-ctl: 32px" in dock_css
+    assert "min-width: var(--dock-ctl, 32px)" in dock_css
+    assert "min-height: var(--dock-ctl, 32px)" in dock_css
+    assert "padding: 3px 7px" in dock_css
     assert (
-        ".preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled {\n"
-        "    padding: 0;\n"
-        "    width: 40px;"
-    ) in dock_css or "width: 40px;\n    min-width: 40px;\n    max-width: 40px;" in dock_css
+        "width: var(--dock-ctl, 32px);\n    min-width: var(--dock-ctl, 32px);\n"
+        "    max-width: var(--dock-ctl, 32px);"
+    ) in dock_css
     assert 'label: "封面"' in sheet
     assert 'label: "页面"' in sheet
     assert 'label: "画册"' in sheet
