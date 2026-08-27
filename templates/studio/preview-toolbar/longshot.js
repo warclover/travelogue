@@ -206,6 +206,13 @@ function resetFxiExportFace() {
   document.querySelectorAll(".preview-toolbar").forEach(function (el) {
     if (isPortfolioEdition(el._edition)) el._fxiExportFace = "default";
   });
+  // AC-FXI-05 · 关掉过河面后拆掉隐藏的 F2 DOM。否则再点 Dock 时
+  // keepFace / data-export-face 会把 social 面又装回来。
+  document
+    .querySelectorAll('.preview-toolbar__export-popover[data-export-face="portfolio:social"]')
+    .forEach(function (pop) {
+      if (pop.hidden) pop.remove();
+    });
 }
 
 function _readJsonStorage(store, key) {
@@ -1480,6 +1487,9 @@ export function cancelPreviewLongshotExport(root) {
         )
           ? socialPlatforms
           : null;
+        // 过河一旦开导，下一张 Dock 必须回 F1（G-FXI-02 / AC-FXI-05）。
+        // 平台已写入 _pending*，不再依赖面板 face。
+        if (root) root._fxiExportFace = "default";
         startLongshot(root, tripIdApply0);
         return;
       }
