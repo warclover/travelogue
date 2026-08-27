@@ -90,10 +90,19 @@ def test_curate_edition_portfolio_flag_off(tmp_path: Path) -> None:
     trips = tmp_path / "trips"
     create_trip("pf-off", trips)
     trip_dir = trips / "pf-off"
-    result = runner.invoke(app, ["curate", str(trip_dir), "--edition", "portfolio"])
+    cfg = replace(
+        AppConfig(),
+        studio=replace(
+            AppConfig().studio,
+            portfolio_pipeline=PortfolioPipelineConfig(enabled=False),
+        ),
+    )
+    with patch("travelogue.cli.pipeline.get_config", return_value=cfg):
+        result = runner.invoke(app, ["curate", str(trip_dir), "--edition", "portfolio"])
     text = result.stdout + result.stderr
     assert result.exit_code != 0
     assert E_PORTFOLIO_UNAVAILABLE in text
+    assert "E_CURATE_TOO_FEW" not in text
 
 
 def test_curate_edition_portfolio_flag_on_stamps(tmp_path: Path) -> None:

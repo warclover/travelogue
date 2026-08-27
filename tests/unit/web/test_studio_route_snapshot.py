@@ -24,3 +24,19 @@ def test_studio_route_snapshot_has_serve_trip_post_entries() -> None:
     assert ("POST", "{tripId}/__travelogue/save-copy", "serve._handle_save_copy") in rows
     assert ("POST", "{tripId}/__travelogue/promote-tier", "serve._handle_promote_tier") in rows
     assert ("POST", "{tripId}/__travelogue/rerender", "trip_handlers.handle_rerender") in rows
+
+
+def test_sibling_journal_route_requires_auth() -> None:
+    match = [
+        row
+        for row in studio_route_snapshot()
+        if row["path"] == "/__travelogue/trips/{tripId}/sibling-journal"
+    ]
+    assert match == [
+        {
+            "method": "GET",
+            "path": "/__travelogue/trips/{tripId}/sibling-journal",
+            "handler": "trip_handlers.handle_sibling_journal",
+            "auth": True,
+        }
+    ]

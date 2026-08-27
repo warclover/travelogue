@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import threading
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
@@ -345,6 +346,80 @@ def read_ledger(
     return _heal(parsed, existing)
 
 
+_LEDGER_CORE_KEYS = frozenset({"schemaVersion", "outputs", "updatedAt"})
+
+
+def _quarantine_corrupt_ledger(path: Path) -> Path:
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    backup = path.with_name(f"{path.name}.corrupt-{stamp}")
+    shutil.copy2(path, backup)
+    return backup
+
+
+def _inspect_ledger(trip_dir: Path) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
+    """Return ``(missing|ok|corrupt|unsupported, records, extra_fields)``."""
+    path = ledger_path(trip_dir)
+    if not path.is_file():
+        return "missing", [], {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return "corrupt", [], {}
+    if not isinstance(data, dict):
+        return "corrupt", [], {}
+    version = data.get("schemaVersion")
+    if isinstance(version, int) and version > LEDGER_SCHEMA_VERSION:
+        return "unsupported", [], {}
+    if version != LEDGER_SCHEMA_VERSION:
+        return "corrupt", [], {}
+    raw_outputs = data.get("outputs")
+    if not isinstance(raw_outputs, list):
+        return "corrupt", [], {}
+    parsed: list[dict[str, Any]] = []
+    for item in raw_outputs:
+        rec = _valid_record(item)
+        if rec is None:
+            return "corrupt", [], {}
+        if isinstance(item, dict):
+            extra = {key: value for key, value in item.items() if key not in rec}
+            if extra:
+                rec = {**rec, **extra}
+        parsed.append(rec)
+    extras = {key: value for key, value in data.items() if key not in _LEDGER_CORE_KEYS}
+    return "ok", parsed, extras
+
+
+def _require_writable_ledger(
+    trip_dir: Path,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    status, records, extras = _inspect_ledger(trip_dir)
+    if status == "missing":
+        return [], {}
+    if status == "ok":
+        return records, extras
+    path = ledger_path(trip_dir)
+    if status == "corrupt":
+        backup = _quarantine_corrupt_ledger(path)
+        raise OutputLedgerError(
+            f"output ledger corrupt; original kept, backup at {backup}"
+        )
+    raise OutputLedgerError(
+        f"output ledger schema unsupported; refuse to overwrite {path}"
+    )
+
+
+def _write_ledger_rows(
+    trip_dir: Path,
+    rows: list[dict[str, Any]],
+    extras: dict[str, Any] | None = None,
+) -> Path:
+    payload = dict(extras or {})
+    payload["schemaVersion"] = LEDGER_SCHEMA_VERSION
+    payload["updatedAt"] = _utc_now()
+    payload["outputs"] = rows
+    return _atomic_write(ledger_path(trip_dir), payload)
+
+
 def _atomic_write(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -365,24 +440,8 @@ def _atomic_write(path: Path, payload: dict[str, Any]) -> Path:
 
 
 def _load_unhealed(trip_dir: Path) -> list[dict[str, Any]]:
-    path = ledger_path(trip_dir)
-    if not path.is_file():
-        return []
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, dict) or data.get("schemaVersion") != LEDGER_SCHEMA_VERSION:
-        return []
-    raw_outputs = data.get("outputs")
-    if not isinstance(raw_outputs, list):
-        return []
-    parsed: list[dict[str, Any]] = []
-    for item in raw_outputs:
-        rec = _valid_record(item)
-        if rec is not None:
-            parsed.append(rec)
-    return parsed
+    records, _extras = _require_writable_ledger(trip_dir)
+    return records
 
 
 def _append_output_unlocked(trip_dir: Path, record: dict[str, Any]) -> Path | None:
@@ -392,7 +451,7 @@ def _append_output_unlocked(trip_dir: Path, record: dict[str, Any]) -> Path | No
     parsed = _valid_record(record)
     if parsed is None:
         raise OutputLedgerError("invalid output record")
-    current = _load_unhealed(trip_dir)
+    current, extras = _require_writable_ledger(trip_dir)
     replaced = False
     next_rows: list[dict[str, Any]] = []
     for rec in current:
@@ -403,12 +462,7 @@ def _append_output_unlocked(trip_dir: Path, record: dict[str, Any]) -> Path | No
             next_rows.append(rec)
     if not replaced:
         next_rows.append(parsed)
-    payload = {
-        "schemaVersion": LEDGER_SCHEMA_VERSION,
-        "updatedAt": _utc_now(),
-        "outputs": next_rows,
-    }
-    return _atomic_write(ledger_path(trip_dir), payload)
+    return _write_ledger_rows(trip_dir, next_rows, extras)
 
 
 def append_output(trip_dir: Path, record: dict[str, Any]) -> Path | None:
@@ -452,16 +506,11 @@ def drop_output_row(trip_dir: Path, output_id: str) -> bool:
     if not wanted:
         return False
     with _ledger_lock(trip_dir):
-        current = _load_unhealed(trip_dir)
+        current, extras = _require_writable_ledger(trip_dir)
         next_rows = [rec for rec in current if rec["outputId"] != wanted]
         if len(next_rows) == len(current):
             return False
-        payload = {
-            "schemaVersion": LEDGER_SCHEMA_VERSION,
-            "updatedAt": _utc_now(),
-            "outputs": next_rows,
-        }
-        _atomic_write(ledger_path(trip_dir), payload)
+        _write_ledger_rows(trip_dir, next_rows, extras)
         return True
 
 
@@ -718,7 +767,7 @@ def delete_output(trip_dir: Path, output_id: str) -> bool:
     if not wanted:
         return False
     with _ledger_lock(trip_dir):
-        current = _load_unhealed(trip_dir)
+        current, extras = _require_writable_ledger(trip_dir)
         found: dict[str, Any] | None = None
         next_rows: list[dict[str, Any]] = []
         for rec in current:
@@ -736,10 +785,5 @@ def delete_output(trip_dir: Path, output_id: str) -> bool:
                     path.unlink()
             except OSError:
                 pass
-        payload = {
-            "schemaVersion": LEDGER_SCHEMA_VERSION,
-            "updatedAt": _utc_now(),
-            "outputs": next_rows,
-        }
-        _atomic_write(ledger_path(trip_dir), payload)
+        _write_ledger_rows(trip_dir, next_rows, extras)
         return True

@@ -489,10 +489,18 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
 )
 
 
-def studio_route_snapshot() -> list[dict[str, str]]:
-    """Return sorted method+path+handler triples for AC-ARC-13 snapshot tests."""
-    rows = [{"method": s.method, "path": s.path, "handler": s.handler} for s in ROUTE_SPECS]
-    return sorted(rows, key=lambda r: (r["method"], r["path"], r["handler"]))
+def studio_route_snapshot() -> list[dict[str, object]]:
+    """Return sorted method+path+handler+auth rows for AC-ARC-13 snapshot tests."""
+    rows = [
+        {
+            "method": s.method,
+            "path": s.path,
+            "handler": s.handler,
+            "auth": s.auth,
+        }
+        for s in ROUTE_SPECS
+    ]
+    return sorted(rows, key=lambda r: (str(r["method"]), str(r["path"]), str(r["handler"])))
 
 
 def _bind_trip_or_404(handler: Any, trip_id: str) -> bool:

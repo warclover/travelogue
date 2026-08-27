@@ -24,6 +24,7 @@ from travelogue.export.longshot import (
 from travelogue.export.output_ledger import (
     LEDGER_NAME,
     LEDGER_SCHEMA_VERSION,
+    OutputLedgerError,
     append_output,
     drop_output_row,
     ledger_path,
@@ -458,3 +459,64 @@ def test_drop_output_row_keeps_files(tmp_path: Path) -> None:
     assert drop_output_row(trip_dir, "portfolio_pages") is False
     assert (export_dir / "页-01.png").is_file()
     assert (read_ledger(trip_dir) or []) == []
+
+
+def test_append_refuses_corrupt_ledger(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    path = ledger_path(trip_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("{not-json", encoding="utf-8")
+    before = path.read_bytes()
+    rec = _record(trip, output_id="xiaohongshu", profile="xiaohongshu", files=["雨后京都-xhs-01.png"])
+    with pytest.raises(OutputLedgerError, match="corrupt"):
+        append_output(trip_dir, rec)
+    assert path.read_bytes() == before
+    assert list(path.parent.glob("outputs.json.corrupt-*"))
+
+
+def test_append_refuses_future_schema(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    path = ledger_path(trip_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"schemaVersion": 99, "outputs": [], "keepMe": True}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    rec = _record(trip, output_id="xiaohongshu", profile="xiaohongshu", files=["雨后京都-xhs-01.png"])
+    with pytest.raises(OutputLedgerError, match="unsupported"):
+        append_output(trip_dir, rec)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["schemaVersion"] == 99
+    assert data["keepMe"] is True
+
+
+def test_append_preserves_unknown_top_level_fields(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    _png(export_dir, "雨后京都-xhs-01.png")
+    append_output(
+        trip_dir,
+        _record(trip, output_id="xiaohongshu", profile="xiaohongshu", files=["雨后京都-xhs-01.png"]),
+    )
+    path = ledger_path(trip_dir)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["ownerNote"] = "keep"
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    _png(export_dir, "页-01.png")
+    append_output(
+        trip_dir,
+        _record(
+            trip,
+            output_id="portfolio_pages",
+            profile="portfolio_pages",
+            files=["页-01.png"],
+            label="页图",
+            surface="folio",
+        ),
+    )
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written["ownerNote"] == "keep"
+    assert {row["outputId"] for row in written["outputs"]} == {
+        "xiaohongshu",
+        "portfolio_pages",
+    }
