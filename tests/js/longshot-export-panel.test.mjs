@@ -269,7 +269,8 @@ test("作品集过河面 F2：复用游记六平台 + 顶条", () => {
     { edition: "portfolio", face: "social" }
   );
   assert.match(social, /发到微信、小红书/);
-  assert.match(social, /这不是在导出作品集/);
+  assert.match(social, /小红书、海报和印刷可以在这里做/);
+  assert.doesNotMatch(social, /这不是在导出作品集/);
   assert.match(social, /用这些照片/);
   assert.match(social, /返回，继续导出作品集/);
   assert.match(social, /导出小红书/);

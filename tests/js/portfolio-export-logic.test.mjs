@@ -344,7 +344,8 @@ test("wrapJournalPanelAsPortfolioSocialFace 套游记面板", () => {
   const html = wrapJournalPanelAsPortfolioSocialFace(journal);
   assert.match(html, /data-fxi-face="social"/);
   assert.match(html, /发到微信、小红书/);
-  assert.match(html, /这不是在导出作品集/);
+  assert.match(html, /小红书、海报和印刷可以在这里做/);
+  assert.doesNotMatch(html, /这不是在导出作品集/);
   assert.match(html, /导出小红书/);
   assert.doesNotMatch(html, /导出长图/);
   assert.match(html, /返回，继续导出作品集/);

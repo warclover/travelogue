@@ -1287,6 +1287,7 @@ export function cancelPreviewLongshotExport(root) {
 
   function _closeStudioExportPopoverUi() {
     document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
+      closeCrossingGateSheet(pop);
       releaseExportPopoverFocus(pop);
       pop.hidden = true;
       pop.classList.remove("preview-toolbar__export-popover--sheet");
@@ -1963,6 +1964,13 @@ export function cancelPreviewLongshotExport(root) {
         _closeStudioExportPopoverUi();
       }
       if (root && keepFace) root._fxiExportFace = keepFace;
+      // AC-FXI-05 · 关掉 F2 会拆掉 social DOM。必须重新拿活节点再亮，
+      // 否则人会看到「弹窗打不开」，回首页重载才好。
+      pop = ensureStudioExportPopover(root);
+      if (!pop) {
+        reject(new Error("no popover"));
+        return;
+      }
       pop._readDraftFromPrefs();
       applyExportPopoverLayoutMode(pop);
       pop.hidden = false;

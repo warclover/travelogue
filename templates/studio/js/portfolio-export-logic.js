@@ -618,7 +618,6 @@ export function portfolioExportSocialFaceSpec() {
     edition: "portfolio",
     face: "social",
     badge: copy.badge,
-    banner: "这不是在导出作品集。",
     leadSecondary: copy.leadSecondary,
     backLabel: "返回，继续导出作品集",
     confirmLabel: "导出小红书",
@@ -702,9 +701,6 @@ export function wrapJournalPanelAsPortfolioSocialFace(journalHtml) {
   html = html.replace(
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>',
     '<p class="preview-toolbar__fxi-banner" data-fxi-banner>' +
-      "<strong>" +
-      spec.banner +
-      "</strong> " +
       spec.leadSecondary +
       "</p>"
   );

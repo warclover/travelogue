@@ -81,6 +81,22 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     assert "poster_bric" in panel and "album_spread" in panel
 
 
+def test_reopen_export_popover_reacquires_after_teardown() -> None:
+    """关掉 F2 会拆 social DOM；再开必须重新 ensure，不能亮已卸下的节点。"""
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    close_idx = longshot.index("function _closeStudioExportPopoverUi")
+    close_chunk = longshot[close_idx : close_idx + 500]
+    assert "closeCrossingGateSheet(pop)" in close_chunk
+    open_idx = longshot.index("export function openStudioLongshotExportPanel")
+    open_chunk = longshot[open_idx : open_idx + 4200]
+    keep = "if (root && keepFace) root._fxiExportFace = keepFace;"
+    assert keep in open_chunk
+    after_keep = open_chunk.split(keep, 1)[1]
+    assert after_keep.index("pop = ensureStudioExportPopover(root)") < after_keep.index(
+        "pop.hidden = false"
+    )
+
+
 def test_studio_panel_excludes_phase_c_platforms() -> None:
     """H-C-04 · Studio UI must not list Ins/微博/抖音/custom (Phase C backend only)."""
     src = PANEL.read_text(encoding="utf-8")
