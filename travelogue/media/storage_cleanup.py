@@ -141,6 +141,24 @@ def safe_cleanup_trip(
     return result
 
 
+def contained_trip_source(trip_dir: Path, source_rel: str) -> Path | None:
+    """Resolve ``sourceFile`` only when it stays under ``trip_dir/source``."""
+    raw = (source_rel or "").strip().replace("\\", "/")
+    if not raw or raw.startswith("/") or ":" in raw:
+        return None
+    parts = [part for part in raw.split("/") if part]
+    if not parts or parts[0] != "source" or any(part in {".", ".."} for part in parts):
+        return None
+    trip_root = trip_dir.resolve()
+    source_root = (trip_root / "source").resolve()
+    target = trip_root.joinpath(*parts).resolve()
+    try:
+        target.relative_to(source_root)
+    except ValueError:
+        return None
+    return target
+
+
 def deep_cleanup_source(
     trip: dict[str, Any],
     trip_dir: Path,
@@ -162,7 +180,16 @@ def deep_cleanup_source(
         source_rel = asset.get("sourceFile")
         if not isinstance(source_rel, str) or not source_rel.strip():
             continue
-        source_path = trip_dir / source_rel.lstrip("/\\")
+        source_path = contained_trip_source(trip_dir, source_rel)
+        if source_path is None:
+            result.items.append(
+                CleanupItemResult(
+                    path=source_rel,
+                    status="skipped",
+                    detail="E_STUDIO_PATH",
+                )
+            )
+            continue
         if not source_path.is_file():
             continue
         has_ref = source_ref_path(asset) is not None

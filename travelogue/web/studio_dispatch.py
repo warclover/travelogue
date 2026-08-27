@@ -676,12 +676,17 @@ def dispatch_studio(method: str, path: str, handler: Any, *, require_auth: Calla
 
     Returns True when a route matched (including auth rejection short-circuit).
     """
+    from travelogue.web.studio_json import StudioJsonBodyError
+
     for route in _routes_for(method):
         cap = route.match(path)
         if cap is False or cap is None:
             continue
         if route.spec.auth and not require_auth():
             return True
-        route.invoke(handler, cap if cap is not True else None)
+        try:
+            route.invoke(handler, cap if cap is not True else None)
+        except StudioJsonBodyError:
+            pass
         return True
     return False

@@ -17,6 +17,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_STUDIO_PIPELINE": "导入失败，请重试",
     "E_TRIP_SAVE_BUSY": "画册文件正被占用，请关闭预览/资源管理器后重试",
     "E_STUDIO_AUTH": "Studio 请求未授权",
+    "E_STUDIO_PATH": "路径不在允许范围内",
+    "E_STUDIO_BAD_BODY": "请求体无效",
     "E_STUDIO_BODY_TOO_LARGE": "请求体过大",
     "E_STUDIO_ALBUM_DENIED": "不允许从该路径导入",
     "E_STUDIO_REVEAL_DENIED": "无法打开该文件",

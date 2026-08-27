@@ -18,6 +18,7 @@ from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.trip import TripConflictError
 from travelogue.web.copy_patch import CopyPatchError, apply_copy_patches
 from travelogue.web.studio_auth import is_loopback_host, studio_request_authorized
+from travelogue.web.studio_json import StudioJsonBodyError, loads_json_object, parse_content_length
 from travelogue.web.studio_chrome import inject_studio_chrome, should_inject_studio_chrome
 from travelogue.web.studio_errors import client_error_payload, internal_error_payload, user_message
 from travelogue.web.studio_routes import StudioMixin
@@ -163,10 +164,13 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                     },
                 )
                 return
-            if path == SAVE_PATH:
-                self._handle_save_copy()
+            try:
+                if path == SAVE_PATH:
+                    self._handle_save_copy()
+                    return
+                self._handle_promote_tier()
+            except StudioJsonBodyError:
                 return
-            self._handle_promote_tier()
             return
         self.send_error(404)
 
@@ -263,8 +267,11 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
         return True
 
     def _read_json_body(self, *, max_bytes: int = MAX_JSON_BODY) -> dict:
-        length = int(self.headers.get("Content-Length") or 0)
-        if length > max_bytes:
+        try:
+            length = parse_content_length(
+                self.headers.get("Content-Length"), max_bytes=max_bytes
+            )
+        except OverflowError:
             self._json_response(
                 413,
                 {
@@ -273,14 +280,16 @@ class TripPreviewHandler(StudioMixin, SimpleHTTPRequestHandler):
                     "message": "request body too large",
                 },
             )
-            return {}
+            raise StudioJsonBodyError() from None
+        except ValueError:
+            self._json_response(400, {"ok": False, "error": "invalid Content-Length"})
+            raise StudioJsonBodyError() from None
         body = self.rfile.read(length) if length else b""
         try:
-            payload = json.loads(body.decode("utf-8") or "{}")
-        except json.JSONDecodeError:
+            return loads_json_object(body)
+        except ValueError:
             self._json_response(400, {"ok": False, "error": "invalid JSON"})
-            return {}
-        return payload if isinstance(payload, dict) else {}
+            raise StudioJsonBodyError() from None
 
     def _handle_save_copy(self) -> None:
         payload = self._read_json_body()

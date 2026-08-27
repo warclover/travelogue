@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from travelogue.web.studio_auth import studio_request_authorized
+from travelogue.web.studio_auth import studio_request_authorized, studio_write_guard
 from travelogue.web.studio_chrome import should_inject_studio_chrome
 from travelogue.web.studio_dispatch import dispatch_studio
 from travelogue.web.studio_errors import user_message
@@ -77,6 +77,22 @@ class StudioMixin:
         path = getattr(self, "path", "") or ""
         query = path.split("?", 1)[1] if "?" in path else ""
         headers = getattr(self, "headers", {}) or {}
+        method = getattr(self, "command", "GET")
+        if not studio_write_guard(
+            method=method,
+            path=path.split("?", 1)[0],
+            headers=headers,
+            allow_lan=self.studio_allow_lan,
+        ):
+            self._json_response(
+                401,
+                {
+                    "ok": False,
+                    "error": "E_STUDIO_AUTH",
+                    "message": user_message("E_STUDIO_AUTH"),
+                },
+            )
+            return False
         if studio_request_authorized(
             host=self.studio_host,
             token=self.studio_token,

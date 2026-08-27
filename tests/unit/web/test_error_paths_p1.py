@@ -46,7 +46,8 @@ def test_save_upload_files_strips_path_traversal(tmp_path) -> None:
         ],
     )
     assert saved == 1
-    assert (upload_dir / "photos" / "ok.jpg").is_file()
+    assert (upload_dir / "ok.jpg").is_file()
+    assert not (upload_dir / "photos").exists()
     assert not (tmp_path / "etc").exists()
 
 

@@ -165,7 +165,12 @@ def match_trip_delete(path: str) -> str | None:
 def resolve_trip_dir_listed(ctx: AppContext, trip_id: str) -> Path | None:
     """按磁盘目录名解析 trip（与 list_studio_trips 一致，不做 slug 正则限制）。"""
     raw = unquote((trip_id or "").strip())
-    if not raw or raw in {".", ".."} or "/" in raw or "\\" in raw or raw.startswith("_"):
+    if not raw or raw in {".", ".."} or raw.startswith("_"):
+        return None
+    if "/" in raw or "\\" in raw or ":" in raw:
+        return None
+    candidate = Path(raw)
+    if candidate.is_absolute() or getattr(candidate, "drive", ""):
         return None
     trips_dir = ctx.trips_root.resolve()
     trip_dir = (trips_dir / raw).resolve()
