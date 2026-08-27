@@ -13,7 +13,7 @@
 | **评审** | [七席+典型用户 2026-08-26](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) · **8/8 Conditional Go** · BLK-PIS-01～05 **已回写本文** |
 | **前置条件** | [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) W1+W2 已落地 · 同夹分 slug / 旧册复用已合入 · [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) 星表仍在工坊 `stars.yaml` |
 | **线框** | **本波不新开帧。** 向导/成功面/导出面板沿用 PFO 已签 F9–F11；只改字与显隐，不改击数与主按钮等级 |
-| **关联文档** | [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（流程仍以 PFO 为准）· [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（身份字段 / 票面）· [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md)（星表权威）· [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md)（系列档位）· [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) |
+| **关联文档** | [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（流程仍以 PFO 为准）· [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（身份字段 / 票面）· [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)（**后继**：精修/导出默认面；§6.6 折叠组被改判）· [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md)（星表权威）· [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md)（系列档位）· [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) |
 | **验收** | 本文 **§13 为源**（未另拆 ACCEPTANCE 页；合入前可按 PFO 体例拆出） |
 | **实施** | 本文 **§11 为源** |
 | **更新日期** | 2026-08-26 |
@@ -393,6 +393,8 @@ Should-Fix 不挡 W1，写入 §11：SHD-PIS-01～06。
 
 游记面板 HTML 零改（AC-PFO-11 延续）。
 
+**2026-08-26 · FXI 改判**：上表「展开社交图 / 折叠组内允许微信群」的**默认面落点**以 [FXI D-FXI-05](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) 为准。作品集导出默认面不再有折叠组；六种只出现在过河面。本表用词与密度显隐在过河面上仍有效。
+
 ---
 
 ## 7. 页数口径
@@ -661,6 +663,9 @@ PFO AC-PFO-* 不废止。与本文冲突的「游记票根空白」「杂志页�
 
 要改 8–36 档本身
   → MSP / series YAML
+
+要改精修 / 导出默认面看见什么（两卡、六种、过河）
+  → FXI
 ```
 
 `DOC-STATUS.md` 已登记。PFO / PFM / TDV 文首「后继见 PIS」与 TDV D-TDV-10 指针已随 **DOC-PIS-01 / v0.1.2** 回写（SHD-PIS-06）。
@@ -674,3 +679,4 @@ PFO AC-PFO-* 不废止。与本文冲突的「游记票根空白」「杂志页�
 | v0.1.0 | 2026-08-26 | 初稿。吸收 08-26 复测清单 + 产品拍板 |
 | v0.1.1 | 2026-08-26 | 八席 BLK-PIS-01～05 回写：先几何后星、同名不复读、辑封默认不写天、游记 409 冻结、AC-07 收窄。§3 改判改称 AMD-PIS-*。W1 编码门打开 |
 | v0.1.2 | 2026-08-26 | **DOC-PIS-01 / SHD-PIS-06**：TDV D-TDV-10、PFO v0.2.2、PFM v0.2.2 文首后继。W1+W2 已落地。**W3 选脸已落地**（`page_stars.py` + 先几何后星）。 |
+| v0.1.2+FXI | 2026-08-26 | §6.6 默认面折叠组落点挂 [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)。票根 / X / 选脸不重开。 |

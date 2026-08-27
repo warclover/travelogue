@@ -234,6 +234,107 @@ export function coverTitleEditLabel(edition) {
   return isPortfolioEdition(edition) ? "点击编辑书名" : "点击编辑杂志名";
 }
 
+/** 精修封面分区 / 标签：作品集说书名，游记说杂志名。 */
+export function coverNameLabel(edition) {
+  return isPortfolioEdition(edition) ? "书名" : "杂志名";
+}
+
+export function coverNameSegCopy(edition) {
+  return {
+    label: coverNameLabel(edition),
+    hint: "改名·字体",
+  };
+}
+
+export function aiGotoCoverNameLabel(edition) {
+  return isPortfolioEdition(edition) ? "去精修 · 书名" : "去精修 · 杂志名";
+}
+
+export function coverNameTooLongToast(edition) {
+  return coverNameLabel(edition) + "最多 20 个字";
+}
+
+export function coverNameEmptyToast(edition) {
+  return coverNameLabel(edition) + "不能为空";
+}
+
+export function firstSuccessRefineLabel(edition) {
+  return isPortfolioEdition(edition) ? "去精修封面" : "去精修封面和成册类型";
+}
+
+export var PORTFOLIO_EXPORT_PREFS_KEY = "travelogue.studio.portfolioExportPrefs.v1";
+export var PORTFOLIO_SOCIAL_PREFS_KEY = "travelogue.studio.portfolioSocialPrefs.v1";
+
+function _kvStore(explicit) {
+  if (explicit) return explicit;
+  try {
+    if (typeof localStorage !== "undefined") return localStorage;
+  } catch (_e) {}
+  return null;
+}
+
+function _readJsonStore(store, key) {
+  if (!store || typeof store.getItem !== "function") return null;
+  try {
+    var raw = store.getItem(key);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function _writeJsonStore(store, key, value) {
+  if (!store || typeof store.setItem !== "function") return;
+  try {
+    store.setItem(key, JSON.stringify(value));
+  } catch (_e) {}
+}
+
+/** F1 · 只记页图 / 这一本。禁止写 journal 钥。 */
+export function readPortfolioExportPrefs(store) {
+  var parsed = _readJsonStore(_kvStore(store), PORTFOLIO_EXPORT_PREFS_KEY);
+  var product = parsed && String(parsed.product || "").trim() === "book" ? "book" : "pages";
+  return { product: product };
+}
+
+export function writePortfolioExportPrefs(prefs, store) {
+  var product = prefs && String(prefs.product || "").trim() === "book" ? "book" : "pages";
+  _writeJsonStore(_kvStore(store), PORTFOLIO_EXPORT_PREFS_KEY, { product: product });
+}
+
+/** F2 · 过河上次平台。禁止写 journal 钥，也不得改 F1 product。 */
+export function readPortfolioSocialPrefs(store) {
+  var parsed = _readJsonStore(_kvStore(store), PORTFOLIO_SOCIAL_PREFS_KEY) || {};
+  var platform = String(parsed.platform || "").trim() || "wechat_chat";
+  if (platform === "portfolio_pages") platform = "wechat_chat";
+  var platforms = Array.isArray(parsed.platforms)
+    ? parsed.platforms
+        .map(function (id) {
+          return String(id || "").trim();
+        })
+        .filter(function (id) {
+          return id && id !== "portfolio_pages";
+        })
+    : [];
+  if (!platforms.length) platforms = [platform];
+  if (platforms.indexOf(platform) < 0) platform = platforms[0];
+  return { platform: platform, platforms: platforms };
+}
+
+export function writePortfolioSocialPrefs(prefs, store) {
+  var next = readPortfolioSocialPrefs({
+    getItem: function () {
+      return JSON.stringify({
+        platform: prefs && prefs.platform,
+        platforms: prefs && prefs.platforms,
+      });
+    },
+  });
+  _writeJsonStore(_kvStore(store), PORTFOLIO_SOCIAL_PREFS_KEY, next);
+}
+
 /**
  * @param {object} result longshot job.result
  * @param {object|null} portfolio entry.portfolio
@@ -286,21 +387,139 @@ export function albumSpreadCardCopy(edition) {
   return { title: "画册印刷", subtitle: "跨页", aria: "画册印刷" };
 }
 
-export function portfolioMainProductsHtml() {
+export function portfolioExportDefaultFaceSpec() {
+  return {
+    title: "导出作品集",
+    badge: "作品集",
+    lead: "带走你刚做好的这一本。",
+    edition: "portfolio",
+    face: "default",
+    products: ["book", "pages"],
+    platforms: [],
+    crossRiver: { label: "想发到微信或小红书？", targetFace: "social" },
+    confirmLabel: "导出作品集",
+    initProduct: "pages",
+  };
+}
+
+export function portfolioExportSocialFaceSpec() {
+  return {
+    title: "发到微信、小红书…",
+    edition: "portfolio",
+    face: "social",
+    badge: "按游记来做",
+    banner: "这不是在导出作品集。会用同一批照片，按游记的方式做成能发的图。",
+    backLabel: "返回，继续导出作品集",
+    confirmLabel: "导出长图",
+    products: [],
+  };
+}
+
+export function firstSuccessCrossRiverLabel() {
+  return "想发到微信或小红书？";
+}
+
+export function portfolioMainProductsHtml(selected) {
+  var product = String(selected || "pages").trim() === "book" ? "book" : "pages";
+  var pagesOn = product === "pages";
   return (
     '<div class="preview-toolbar__export-popover-field" data-field="portfolio-main">' +
-    '<span class="preview-toolbar__export-popover-label">这本作品集</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="这本作品集">' +
-    '<button type="button" class="preview-toolbar__export-platform-card" data-action="export-portfolio-book">' +
-    '<span class="preview-toolbar__export-platform-card__title">这一本</span>' +
-    '<span class="preview-toolbar__export-platform-card__sub">可点开翻的压缩包</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="带走哪一种">' +
+    '<button type="button" class="preview-toolbar__export-platform-card' +
+    (pagesOn ? " is-on is-selected" : "") +
+    '" data-action="export-portfolio-pages" data-fxi-product="pages">' +
+    '<span class="preview-toolbar__export-platform-card__title">页图</span>' +
+    '<span class="preview-toolbar__export-platform-card__sub">一页一张图，发给别人用</span>' +
     "</button>" +
-    '<button type="button" class="preview-toolbar__export-platform-card" data-action="export-portfolio-pages">' +
-    '<span class="preview-toolbar__export-platform-card__title">页图序列</span>' +
-    '<span class="preview-toolbar__export-platform-card__sub">16:9 页图</span>' +
+    '<button type="button" class="preview-toolbar__export-platform-card' +
+    (!pagesOn ? " is-on is-selected" : "") +
+    '" data-action="export-portfolio-book" data-fxi-product="book">' +
+    '<span class="preview-toolbar__export-platform-card__title">这一本</span>' +
+    '<span class="preview-toolbar__export-platform-card__sub">一个能点开翻的文件</span>' +
     "</button>" +
     "</div></div>"
   );
+}
+
+/** F1 · 作品集导出默认面。禁止六平台 / 折叠组 / 密度。 */
+export function portfolioExportDefaultFaceHtml(selected) {
+  var spec = portfolioExportDefaultFaceSpec();
+  return (
+    '<div data-fxi-face="default">' +
+    '<div class="preview-toolbar__fxi-head">' +
+    '<p class="preview-toolbar__export-popover-title">' +
+    spec.title +
+    "</p>" +
+    '<span class="preview-toolbar__fxi-badge">' +
+    spec.badge +
+    "</span></div>" +
+    '<p class="preview-toolbar__fxi-lead">' +
+    spec.lead +
+    "</p>" +
+    portfolioMainProductsHtml(selected || spec.initProduct) +
+    '<p class="preview-toolbar__fxi-cross">' +
+    '<button type="button" class="preview-toolbar__fxi-link" data-fxi-cross-river>' +
+    spec.crossRiver.label +
+    "</button></p>" +
+    '<div class="preview-toolbar__export-popover-actions">' +
+    '<button type="button" class="preview-toolbar__export-popover-ok" data-action="ok">' +
+    spec.confirmLabel +
+    "</button>" +
+    '<button type="button" class="preview-toolbar__export-popover-cancel" data-action="cancel">取消</button>' +
+    "</div></div>"
+  );
+}
+
+/**
+ * F2 · 整面替换：复用游记面板 HTML，只套顶条 / 改标题主钮 / 加返回。
+ * 禁止改 buildPanelHtml({edition:"journal"}) 的源。
+ */
+export function wrapJournalPanelAsPortfolioSocialFace(journalHtml) {
+  var spec = portfolioExportSocialFaceSpec();
+  var html = String(journalHtml || "");
+  html = html.replace(
+    '<p class="preview-toolbar__export-popover-title">导出设置</p>',
+    '<div class="preview-toolbar__fxi-head">' +
+      '<p class="preview-toolbar__export-popover-title">' +
+      spec.title +
+      "</p>" +
+      '<span class="preview-toolbar__fxi-badge">' +
+      spec.badge +
+      "</span></div>"
+  );
+  html = html.replace(
+    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>',
+    '<p class="preview-toolbar__fxi-banner" data-fxi-banner>' +
+      spec.banner +
+      "</p>"
+  );
+  html = html.replace(
+    '<span class="preview-toolbar__export-platform-card__title">画册印刷</span>' +
+      '<span class="preview-toolbar__export-platform-card__sub">跨页</span>',
+    '<span class="preview-toolbar__export-platform-card__title">画册印刷</span>' +
+      '<span class="preview-toolbar__export-platform-card__sub">给印刷公司的跨页，不是这本作品集</span>'
+  );
+  html = html.replace(
+    'data-action="ok">确定</button>',
+    'data-action="ok">' + spec.confirmLabel + "</button>"
+  );
+  html = html.replace(
+    '<div class="preview-toolbar__export-popover-actions">',
+    '<div class="preview-toolbar__export-popover-actions">' +
+      '<button type="button" class="preview-toolbar__export-popover-cancel" data-fxi-back>' +
+      spec.backLabel +
+      "</button>"
+  );
+  return '<div data-fxi-face="social">' + html + "</div>";
+}
+
+/** F2 过河面：复用游记点法，但不走批量。 */
+export function isPortfolioSocialExportFace(el) {
+  if (!el) return false;
+  var key = el.getAttribute && el.getAttribute("data-export-face");
+  if (key === "portfolio:social") return true;
+  if (el.getAttribute && el.getAttribute("data-fxi-face") === "social") return true;
+  return !!(el.querySelector && el.querySelector('[data-fxi-face="social"]'));
 }
 
 export function wrapPortfolioSocialGroupHtml(platformBtnsHtml, count) {

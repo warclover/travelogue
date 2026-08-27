@@ -4,7 +4,12 @@
 "use strict";
 
 import { postJsonConflictRetry } from "../js/http.js";
-import { coverTitleEditLabel, readEditionFromDom } from "../js/portfolio-export-logic.js";
+import {
+  coverNameEmptyToast,
+  coverNameTooLongToast,
+  coverTitleEditLabel,
+  readEditionFromDom,
+} from "../js/portfolio-export-logic.js";
 
 var _tripApiBase = function (_tripId) {
   return "";
@@ -203,11 +208,15 @@ export function initCoverTitleEdit(tripId, opts) {
           return;
         }
         if (next.length > 20) {
-          _showToolbarToast("杂志名最多 20 个字", { error: true });
+          _showToolbarToast(coverNameTooLongToast(readEditionFromDom(document)), {
+            error: true,
+          });
           return;
         }
         if (!next) {
-          _showToolbarToast("杂志名不能为空", { error: true });
+          _showToolbarToast(coverNameEmptyToast(readEditionFromDom(document)), {
+            error: true,
+          });
           return;
         }
         saveMagazineTitle(tripId, next, titleEl);

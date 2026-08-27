@@ -13,7 +13,9 @@ import { V2, $, show } from "./store.js";
 import { syncVariantGuard } from "./variant-guard.js";
 import { syncHomeStubBanner } from "../js/home-stub-banner.js";
 import {
+  firstSuccessCrossRiverLabel,
   firstSuccessPortfolioCopy,
+  firstSuccessRefineLabel,
   shelfExportRequestForTrip,
 } from "../js/portfolio-export-logic.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
@@ -48,11 +50,13 @@ function previewUrlWithAutoExport(baseUrl, platform) {
   return url + sep + "autoExport=" + encodeURIComponent(platform || "wechat_chat");
 }
 
-function previewUrlWithExportPanel(baseUrl) {
+function previewUrlWithExportPanel(baseUrl, opts) {
   var url = String(baseUrl || "");
   if (!url) return url;
   var sep = url.indexOf("?") >= 0 ? "&" : "?";
-  return url + sep + "exportPanel=1";
+  var q = "exportPanel=1";
+  if (opts && opts.face === "social") q += "&exportFace=social";
+  return url + sep + q;
 }
 
 function previewUrlWithRefine(baseUrl) {
@@ -318,6 +322,7 @@ function populateSuccessUi(result) {
   }
   if (refine) {
     refine.href = url ? previewUrlWithRefine(url) : "#";
+    refine.textContent = firstSuccessRefineLabel(isPf ? "portfolio" : "journal");
     show(refine, isPf);
   }
   if (open) {
@@ -351,6 +356,13 @@ function populateSuccessUi(result) {
       nextLine.className = "v2-first-success__guidance-next";
       nextLine.textContent = HELP_COPY.ftueConvertHint;
       nextHint.appendChild(nextLine);
+    }
+    if (isPf && url) {
+      var cross = document.createElement("a");
+      cross.className = "v2-first-success__guidance-next";
+      cross.href = previewUrlWithExportPanel(url, { face: "social" });
+      cross.textContent = firstSuccessCrossRiverLabel();
+      nextHint.appendChild(cross);
     }
     show(nextHint, true);
   }

@@ -46,7 +46,10 @@ import {
   folioMainExportFlags,
   isPortfolioEdition,
   isPortfolioPrintOneShot,
+  readPortfolioExportPrefs,
   shouldRunSocialBatchExport,
+  writePortfolioExportPrefs,
+  writePortfolioSocialPrefs,
 } from "../js/portfolio-export-logic.js";
 import { markPortfolioExportArmed } from "../js/portfolio-dock-logic.js";
 import { openDualPreview } from "./dual-preview.js";
@@ -179,6 +182,31 @@ var _pagehideBound = false;
 var _copyGateBypassTitle = null;
 var _pendingExportPlatform = null;
 var _pendingPortfolioPiece = null;
+var _pendingSocialPlatforms = null;
+
+function fxiExportFaceOf(root, pop) {
+  if (pop) {
+    var key = pop.getAttribute("data-export-face") || "";
+    if (key === "portfolio:social") return "social";
+    if (pop.querySelector && pop.querySelector('[data-fxi-face="social"]')) {
+      return "social";
+    }
+  }
+  return root && root._fxiExportFace === "social" ? "social" : "default";
+}
+
+function fxiExportFaceKey(root, spec) {
+  var edition = (spec && spec.edition) || "journal";
+  if (edition !== "portfolio") return edition;
+  return "portfolio:" + fxiExportFaceOf(root);
+}
+
+function resetFxiExportFace() {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll(".preview-toolbar").forEach(function (el) {
+    if (isPortfolioEdition(el._edition)) el._fxiExportFace = "default";
+  });
+}
 
 function _readJsonStorage(store, key) {
   try {
@@ -294,7 +322,7 @@ function syncPrefsPlatform(platform) {
       typeof document !== "undefined" && document.documentElement
         ? document.documentElement.getAttribute("data-edition")
         : "";
-    if (isPortfolioEdition(edition) && platform !== PORTFOLIO_PAGES_PLATFORM) {
+    if (isPortfolioEdition(edition)) {
       return;
     }
     var prefs = readExportPrefs();
@@ -1084,6 +1112,7 @@ export function cancelPreviewLongshotExport(root) {
     try {
       document.documentElement.classList.remove("preview-export-popover-open");
     } catch (eLock) {}
+    resetFxiExportFace();
   }
 
   export function closeStudioExportPopover() {
@@ -1110,8 +1139,9 @@ export function cancelPreviewLongshotExport(root) {
       root && typeof root._exportPopoverSpec === "function"
         ? root._exportPopoverSpec()
         : { title: "导出设置", edition: "journal" };
+    var faceKey = fxiExportFaceKey(root, face);
     var pop = wrap.querySelector(".preview-toolbar__export-popover");
-    if (pop && pop.getAttribute("data-export-face") !== face.edition) {
+    if (pop && pop.getAttribute("data-export-face") !== faceKey) {
       pop.remove();
       pop = null;
     }
@@ -1122,8 +1152,13 @@ export function cancelPreviewLongshotExport(root) {
     pop.hidden = true;
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", face.title);
-    pop.setAttribute("data-export-face", face.edition);
-    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, { edition: face.edition });
+    pop.setAttribute("data-export-face", faceKey);
+    var initProduct = readPortfolioExportPrefs().product;
+    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, {
+      edition: face.edition,
+      face: face.edition === "portfolio" ? fxiExportFaceOf(root) : "default",
+      product: initProduct,
+    });
     var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
     if (dualBtn && !dualBtn._ltnBound) {
       dualBtn._ltnBound = true;
@@ -1158,7 +1193,7 @@ export function cancelPreviewLongshotExport(root) {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
         appendixCount: estimateAppendixCountFromDom(document),
-        edition: face.edition,
+        edition: fxiExportFaceOf(root) === "social" ? "journal" : face.edition,
         onDraftChange: function (draft) {
           syncConfirmedExportSummary(pop, draft && draft.platforms);
         },
@@ -1244,41 +1279,33 @@ export function cancelPreviewLongshotExport(root) {
         exportZip(_tripIdFromPath());
       });
     }
-    var bookBtn = pop.querySelector('[data-action="export-portfolio-book"]');
-    if (bookBtn) {
-      bookBtn.addEventListener("click", function () {
-        closeStudioExportPopover();
-        exportZip(_tripIdFromPath(), {
-          title: "导出这一本",
-          body: "将打包可点开翻阅的压缩包。继续？",
-          doneTitle: "这一本已打包",
+    pop.setAttribute("data-fxi-product", initProduct || "pages");
+    pop.querySelectorAll("[data-fxi-product]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        var product = btn.getAttribute("data-fxi-product") || "pages";
+        pop.setAttribute("data-fxi-product", product);
+        pop.querySelectorAll("[data-fxi-product]").forEach(function (el) {
+          var on = el.getAttribute("data-fxi-product") === product;
+          el.classList.toggle("is-on", on);
+          el.classList.toggle("is-selected", on);
         });
       });
-    }
-    var pagesBtn = pop.querySelector('[data-action="export-portfolio-pages"]');
-    if (pagesBtn) {
-      pagesBtn.addEventListener("click", function () {
-        closeStudioExportPopover();
-        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
-        _pendingPortfolioPiece = "pages";
-        startLongshot(root, _tripIdFromPath());
+    });
+    pop.querySelectorAll("[data-fxi-cross-river]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        switchPortfolioExportFace(root, "social");
       });
-    }
-    if (isPortfolioEdition(root._edition)) {
-      pop.querySelectorAll('[data-studio-longshot-platform="album_spread"]').forEach(function (btn) {
-        btn.addEventListener(
-          "click",
-          function (ev) {
-            ev.preventDefault();
-            ev.stopImmediatePropagation();
-            closeStudioExportPopover();
-            _pendingExportPlatform = "album_spread";
-            startLongshot(root, _tripIdFromPath() || root._tripId || "");
-          },
-          true
-        );
+    });
+    pop.querySelectorAll("[data-fxi-back]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        switchPortfolioExportFace(root, "default");
       });
-    }
+    });
     var revealMoreBtn = pop.querySelector('[data-action="reveal-folder"]');
     if (revealMoreBtn) {
       revealMoreBtn.addEventListener("click", function () {
@@ -1419,6 +1446,43 @@ export function cancelPreviewLongshotExport(root) {
     wireXhsCopyPack();
 
     pop._applyDraft = function () {
+      var tripIdApply0 = _tripIdFromPath() || root._tripId || "";
+      var applyFace = fxiExportFaceOf(root, pop);
+      if (isPortfolioEdition(root._edition) && applyFace !== "social") {
+        var product = pop.getAttribute("data-fxi-product") || "pages";
+        writePortfolioExportPrefs({ product: product });
+        markPortfolioExportArmed(tripIdApply0);
+        if (product === "book") {
+          exportZip(tripIdApply0, {
+            title: "导出这一本",
+            body: "将打包可点开翻阅的压缩包。继续？",
+            doneTitle: "这一本已打包",
+          });
+          return;
+        }
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+        _pendingPortfolioPiece = "pages";
+        startLongshot(root, tripIdApply0);
+        return;
+      }
+      if (isPortfolioEdition(root._edition) && applyFace === "social") {
+        var socialDraft = panel.getDraft();
+        var socialPlatform = socialDraft.platform || "wechat_chat";
+        var socialPlatforms = normalizePlatformList(socialDraft.platforms, socialPlatform);
+        writePortfolioSocialPrefs({
+          platform: socialPlatform,
+          platforms: socialPlatforms,
+        });
+        _pendingExportPlatform = socialPlatform;
+        _pendingSocialPlatforms = shouldRunSocialBatchExport(
+          root._edition,
+          socialPlatforms
+        )
+          ? socialPlatforms
+          : null;
+        startLongshot(root, tripIdApply0);
+        return;
+      }
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
       var prevDensity = readExportPrefs().density || "default";
@@ -1542,6 +1606,46 @@ export function cancelPreviewLongshotExport(root) {
     return pop;
   }
 
+  function rebindActiveExportSession(root, pop) {
+    if (typeof _activeExportPanelFinish !== "function" || !pop) return;
+    var okBtn = pop.querySelector('[data-action="ok"]');
+    var cancelBtn = pop.querySelector('[data-action="cancel"]');
+    function onOk() {
+      _activeExportPanelFinish(true);
+    }
+    function onCancel() {
+      _activeExportPanelFinish(false);
+    }
+    if (okBtn) okBtn.addEventListener("click", onOk);
+    if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
+    if (_studioExportPopoverClose) {
+      document.removeEventListener("click", _studioExportPopoverClose, true);
+    }
+    _studioExportPopoverClose = function (e) {
+      if (pop.contains(e.target)) return;
+      if (root && root.querySelector(".preview-toolbar__longshot-caret") === e.target) {
+        return;
+      }
+      _activeExportPanelFinish(false);
+    };
+    document.addEventListener("click", _studioExportPopoverClose, true);
+  }
+
+  function switchPortfolioExportFace(root, face) {
+    if (!root) return;
+    root._fxiExportFace = face === "social" ? "social" : "default";
+    var pop = ensureStudioExportPopover(root);
+    if (!pop) return;
+    if (typeof pop._readDraftFromPrefs === "function") pop._readDraftFromPrefs();
+    applyExportPopoverLayoutMode(pop);
+    pop.hidden = false;
+    try {
+      document.documentElement.classList.add("preview-export-popover-open");
+    } catch (_eOpen) {}
+    trapExportPopoverFocus(pop);
+    rebindActiveExportSession(root, pop);
+  }
+
   function applyExportPopoverLayoutMode(pop) {
     if (!pop) return;
     var sheet = typeof window !== "undefined" && window.innerHeight < 560;
@@ -1603,6 +1707,7 @@ export function cancelPreviewLongshotExport(root) {
         return;
       }
       // SFP D-SFP-10 · 浮层互斥：打开导出设置前关掉分章面板
+      var keepFace = root && root._fxiExportFace;
       var mutexClosed = [];
       try {
         if (
@@ -1652,6 +1757,7 @@ export function cancelPreviewLongshotExport(root) {
       } else {
         _closeStudioExportPopoverUi();
       }
+      if (root && keepFace) root._fxiExportFace = keepFace;
       pop._readDraftFromPrefs();
       applyExportPopoverLayoutMode(pop);
       pop.hidden = false;
@@ -2708,12 +2814,25 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function startLongshotWithRecipe(root, tripId) {
-    if (typeof root._skipRecipeForExport === "function" && root._skipRecipeForExport(tripId)) {
+    var socialPending =
+      !!(_pendingExportPlatform && _pendingExportPlatform !== PORTFOLIO_PAGES_PLATFORM);
+    var socialBatch = shouldRunSocialBatchExport(
+      root && root._edition,
+      _pendingSocialPlatforms
+    );
+    if (
+      !socialPending &&
+      !socialBatch &&
+      typeof root._skipRecipeForExport === "function" &&
+      root._skipRecipeForExport(tripId)
+    ) {
       openLongshotExportOptions(root);
       return;
     }
     if (isPortfolioEdition(root && root._edition)) {
-      _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      if (!socialPending && !socialBatch) {
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      }
       maybeCopyGateThenExport(root, tripId);
       return;
     }
@@ -2807,9 +2926,11 @@ export function cancelPreviewLongshotExport(root) {
       if (!choice) return;
       if (choice === "secondary") {
         try {
-          var nextPrefs = readExportPrefs();
-          nextPrefs.mode = "chapter";
-          writeExportPrefs(nextPrefs);
+          if (!isPortfolioEdition(root._edition)) {
+            var nextPrefs = readExportPrefs();
+            nextPrefs.mode = "chapter";
+            writeExportPrefs(nextPrefs);
+          }
         } catch (_e) {}
       }
       next();
@@ -3231,6 +3352,17 @@ export function cancelPreviewLongshotExport(root) {
     hideLongshotDrawer(root);
 
     var prefs = readLongshotExportPrefs();
+    var pendingSocial = _pendingSocialPlatforms;
+    _pendingSocialPlatforms = null;
+    if (shouldRunSocialBatchExport(root && root._edition, pendingSocial)) {
+      runBatchExport(
+        root,
+        tripId,
+        Object.assign({}, prefs, { platforms: pendingSocial }),
+        pendingSocial
+      );
+      return;
+    }
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量分支，
     // 完全不进入下方任何单平台专属逻辑（resume-after-layout / intent 映射 /
     // Task Dock 抽屉渲染等），避免混用两套结果形状（single vs `{batch:true}`）。
@@ -3315,6 +3447,7 @@ export function cancelPreviewLongshotExport(root) {
     }
     if (
       platform !== PORTFOLIO_PAGES_PLATFORM &&
+      !isPortfolioEdition(root && root._edition) &&
       !assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)
     ) {
       setLongshotExportState(root, "idle");
@@ -3587,11 +3720,18 @@ export function cancelPreviewLongshotExport(root) {
   /** PFO · 成功面「导出作品集」进预览后打开同一套 Dock 面板，不复制 HTML。 */
   export function consumeExportPanel(root, tripId) {
     var flagged = false;
+    var faceQ = "";
     try {
-      flagged = new URLSearchParams(location.search || "").get("exportPanel") === "1";
+      var q = new URLSearchParams(location.search || "");
+      flagged = q.get("exportPanel") === "1";
+      faceQ = String(q.get("exportFace") || "").trim();
     } catch (_q) {}
     if (!flagged) return false;
     _stripQueryParam("exportPanel");
+    _stripQueryParam("exportFace");
+    if (faceQ === "social" && isPortfolioEdition(root && root._edition)) {
+      root._fxiExportFace = "social";
+    }
     openLongshotExportOptions(root);
     return true;
   }

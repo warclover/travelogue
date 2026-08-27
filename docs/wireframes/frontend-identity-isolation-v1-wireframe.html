@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FXI v0.3 · F1–F3 已签</title>
+  <style>
+    :root {
+      --bg: #e6e2db;
+      --ink: #14110d;
+      --muted: #5c574f;
+      --accent: #3d6b5a;
+      --gold: #c4a15a;
+      --gold-ink: #1a1408;
+      --paper: #fffdf8;
+      --surface: #f3efe8;
+      --danger: #b42318;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --border: rgba(20, 17, 13, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 40;
+      background: #1c1b1a; color: #eceff1; padding: 14px 20px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 118ch; line-height: 1.45; }
+    .bar a { color: #e0a090; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #4a4744; background: transparent; color: #eceff1;
+      padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .layout {
+      max-width: 1180px; margin: 0 auto; padding: 22px 16px 80px;
+      display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .aside { order: -1; } }
+    .panel { display: none; }
+    .panel.is-on { display: block; }
+    .anno {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #c45c26;
+      text-transform: uppercase; margin: 0 0 8px;
+    }
+    .lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .row { display: grid; gap: 16px; }
+    .row-2 { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 800px) { .row-2 { grid-template-columns: 1fr; } }
+    .phone, .desk {
+      background: var(--paper); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(20,17,13,.08); overflow: hidden;
+    }
+    .phone { max-width: 420px; }
+    .chrome {
+      background: #2a3d36; color: #e8f5f0; padding: 8px 12px; font-size: 11px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .chrome.book { background: #3d3424; color: #f3e4c4; }
+    .body { padding: 14px 16px 18px; }
+    .card {
+      border: 2px solid transparent; border-radius: 12px; padding: 11px 12px;
+      background: var(--surface); margin-bottom: 8px; font-size: 13px;
+    }
+    .card.on { border-color: var(--accent); background: #fff; }
+    .card strong { display: block; font-size: 14px; }
+    .card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .cta {
+      border: 0; border-radius: 10px; padding: 10px 14px; font: inherit;
+      font-weight: 700; background: var(--surface); color: var(--ink); cursor: pointer;
+    }
+    .cta.gold { background: var(--gold); color: var(--gold-ink); }
+    .cta.wide { width: 100%; }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.45; }
+    .dock {
+      display: flex; gap: 8px; justify-content: center; padding: 10px;
+      background: rgba(0,0,0,.35);
+    }
+    .dock i {
+      display: inline-block; padding: 8px 12px; border-radius: 10px;
+      background: rgba(255,255,255,.12); color: #e8f5f0; font-size: 12px; font-style: normal;
+    }
+    .dock .main { background: var(--gold); color: var(--gold-ink); font-weight: 700; }
+    .spread {
+      min-height: 160px;
+      background: linear-gradient(180deg, #1e2a28 0%, #18221f 100%);
+      color: #d7c7a3; display: grid; place-items: center; font-size: 13px; letter-spacing: .06em;
+    }
+    .modal-wrap { background: rgba(0,0,0,.4); padding: 22px 14px; border-radius: 12px; }
+    .modal {
+      background: #fff; border-radius: 14px; padding: 16px; max-width: 340px; margin: 0 auto;
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal p { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .actions button {
+      border: 0; border-radius: 8px; padding: 8px 12px; font: inherit; white-space: nowrap; cursor: pointer;
+    }
+    .ghost { background: var(--surface); }
+    .ok { background: var(--accent); color: #fff; }
+    .callout {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin: 0 0 16px;
+      background: #e8f5e9; border: 1px solid #a5d6a7; line-height: 1.5;
+    }
+    .callout.warn { background: #fff8e1; border-color: #ffb74d; }
+    .callout.bad { background: #fdecea; border-color: #f5c2c0; }
+    .aside {
+      position: sticky; top: 92px; background: var(--paper); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+    }
+    .aside h2 { margin: 0 0 8px; font-size: 13px; }
+    .aside label { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; margin: 8px 0; color: var(--muted); }
+    .pop {
+      background: var(--paper); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px; font-size: 12px; width: min(340px, 100%);
+    }
+    .pop h4 { margin: 0 0 8px; font-size: 14px; }
+    .grp { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .06em; margin: 10px 0 6px; }
+    .opt { padding: 8px 10px; border-radius: 8px; background: var(--surface); margin-bottom: 6px; }
+    .opt.hi { background: #fff; border: 2px solid var(--accent); }
+    .opt.fold { background: #ece7de; color: var(--muted); }
+    .opt button, .linkish {
+      border: 0; background: none; padding: 0; font: inherit; color: var(--accent);
+      font-weight: 650; cursor: pointer; text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .chip {
+      display: inline-block; font-size: 11px; padding: 4px 8px; border-radius: 999px;
+      background: #e8f0ec; color: #1a2f28; margin: 0 4px 4px 0;
+    }
+    .chip.on { background: var(--accent); color: #fff; }
+    .bad-x { color: var(--danger); font-weight: 700; }
+    .sig {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 2px;
+    }
+    .sig.re { background: #ffe6c9; color: #7a3f06; }
+    .sig.ok { background: #dfeee4; color: #1c4a32; }
+    .strike { text-decoration: line-through; color: var(--muted); }
+    .fact {
+      padding: 10px 12px; border-radius: 10px; background: #fff;
+      border: 1px solid var(--border); font-size: 13px; margin-bottom: 10px;
+    }
+    .fact b { display: block; font-size: 14px; }
+    .banner {
+      background: #fff8e1; border: 1px solid #ffb74d; border-radius: 8px;
+      padding: 8px 10px; font-size: 12px; line-height: 1.45; margin: 0 0 10px;
+    }
+    .pop-foot {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--paper); }
+    th, td { border: 1px solid var(--border); padding: 8px; text-align: left; vertical-align: top; }
+    th { background: var(--surface); }
+    .col-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--muted); margin: 0 0 6px;
+    }
+    .col-tag.bad { color: var(--danger); }
+    .col-tag.good { color: var(--accent); }
+    .live { outline: 2px dashed #c45c26; outline-offset: 3px; }
+    .pill {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+      padding: 2px 8px; border-radius: 999px; vertical-align: 1px;
+    }
+    .pill.journal { background: #d7ebe3; color: #1a3d32; }
+    .pill.book { background: #f3e4c4; color: #5a3d08; }
+    .pop-lead { margin: 0 0 10px; font-size: 13px; color: var(--ink); line-height: 1.45; }
+    .pop-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .pop-head h4 { margin: 0; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .compare { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>FXI · 前端身份面隔离 <span class="sig ok">v0.3 · F1–F3 已签</span></h1>
+    <p>
+      精修与导出跟导入时选的身份走，互斥，不同时出现。线框并排只是对照。
+      合同：<a href="../PRD-FRONTEND-IDENTITY-ISOLATION-V1.md">PRD-FRONTEND-IDENTITY-ISOLATION-V1</a> v0.1.5。
+      <a href="../acceptance-records/fxi-f1-f3-signoff-2026-08-26.md">签核</a>。可拆 W1。
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-on" data-tab="map">地图</button>
+      <button type="button" data-tab="f1">F1 作品集导出</button>
+      <button type="button" data-tab="f2">F2 想发微信小红书</button>
+      <button type="button" data-tab="f3">F3 作品集精修</button>
+      <button type="button" data-tab="ok">成功面链</button>
+      <button type="button" data-tab="red">红线</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main>
+      <section class="panel is-on" data-id="map">
+        <p class="anno">跟导入时那一次选择走</p>
+        <p class="lead">
+          导入选游记或作品集，这本书的精修和导出一起跟过去，互斥，不会同时出现两套。
+          线框把两边并排放，只为对照，不是同一本书的界面。
+        </p>
+        <table>
+          <tr><th>这本是</th><th>打开的是</th><th>本波</th><th>人看见</th></tr>
+          <tr>
+            <td><span class="pill journal">游记</span></td>
+            <td>导出</td>
+            <td>冻结</td>
+            <td>现网六平台 · 导出长图</td>
+          </tr>
+          <tr>
+            <td><span class="pill book">作品集</span></td>
+            <td>导出</td>
+            <td><strong>新增 · F1 已签</strong></td>
+            <td>页图 / 能翻的一本 · 导出作品集</td>
+          </tr>
+          <tr>
+            <td><span class="pill journal">游记</span></td>
+            <td>精修</td>
+            <td>冻结</td>
+            <td>现网成册类型两卡 · 成册风格 · 杂志名</td>
+          </tr>
+          <tr>
+            <td><span class="pill book">作品集</span></td>
+            <td>精修</td>
+            <td><strong>新增 · F3 已签</strong></td>
+            <td>书名 · 这本有多厚 · 想改做成一本游记？</td>
+          </tr>
+        </table>
+        <div class="callout" style="margin-top:16px">
+          作品集里若还想发微信、小红书：那是<strong>另一件事</strong>，点一句人话再换面（F2）。
+          过河<strong>不改</strong>这本书的身份，精修面也不换。
+        </div>
+        <p class="hint">后来在精修里改成另一本身份并确认，精修和导出会一起换过去，仍是互斥的一套。</p>
+      </section>
+
+      <section class="panel" data-id="f1">
+        <p class="anno">F1 · 新增作品集导出面 <span class="sig ok">已签</span></p>
+        <p class="lead">
+          左边是游记导出（现网，本波不动，不签）。右边是<strong>新增</strong>的作品集导出：只回答「怎么带走这一本」。
+          想发微信或小红书，是底下那句问话，不是第三种导出模式。
+        </p>
+        <div class="compare">
+          <div>
+            <p class="col-tag">游记 · 现网零改 · 对照</p>
+            <div class="desk">
+              <div class="spread">游记预览 · 卷轴</div>
+              <div class="dock"><i>精修</i><i class="main">导出长图 ▾</i></div>
+              <div class="body">
+                <div class="pop" style="width:100%">
+                  <div class="pop-head">
+                    <h4>导出长图</h4>
+                    <span class="pill journal">游记</span>
+                  </div>
+                  <p class="pop-lead">选这次发到哪儿。</p>
+                  <div class="opt hi"><strong>微信群</strong><span class="hint" style="margin:2px 0 0">按顺序的一张长图，适合发群</span></div>
+                  <div class="opt"><strong>朋友圈</strong><span class="hint" style="margin:2px 0 0">切成几段，滑动连着看</span></div>
+                  <div class="opt"><strong>小红书</strong><span class="hint" style="margin:2px 0 0">竖版海报，一篇里一张张发</span></div>
+                  <div class="opt"><strong>公众号</strong><span class="hint" style="margin:2px 0 0">配进图文的图</span></div>
+                  <div class="opt"><strong>单张海报</strong><span class="hint" style="margin:2px 0 0">一张竖图</span></div>
+                  <div class="opt"><strong>画册印刷</strong><span class="hint" style="margin:2px 0 0">给印刷公司的跨页</span></div>
+                  <div class="pop-foot">
+                    <span class="hint" style="margin:0">问的是「发到哪儿」</span>
+                    <button type="button" class="cta gold">导出长图</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="col-tag good">作品集 · 已签 · 橙框可点</p>
+            <div class="desk">
+              <div class="spread">作品集预览 · 36 页</div>
+              <div class="dock"><i>精修</i><i class="main">导出作品集 ▾</i></div>
+              <div class="body">
+                <div class="pop live" id="f1-pop" data-face="default" style="width:100%">
+                  <div data-show="default">
+                    <div class="pop-head">
+                      <h4>导出作品集</h4>
+                      <span class="pill book">作品集</span>
+                    </div>
+                    <p class="pop-lead">带走你刚做好的这一本。</p>
+                    <div class="opt hi"><strong>页图</strong><span class="hint" style="margin:2px 0 0">一页一张图，发给别人用</span></div>
+                    <div class="opt"><strong>这一本</strong><span class="hint" style="margin:2px 0 0">一个能点开翻的文件</span></div>
+                    <p style="margin:14px 0 0">
+                      <button type="button" class="linkish" data-go="f2-from-f1">想发到微信或小红书？</button>
+                    </p>
+                    <div class="pop-foot">
+                      <span class="hint" style="margin:0">问的是「带走哪一种」</span>
+                      <button type="button" class="cta gold">导出作品集</button>
+                    </div>
+                  </div>
+                  <div data-show="social" hidden>
+                    <div class="pop-head">
+                      <h4>发到微信、小红书…</h4>
+                      <span class="pill journal">按游记来做</span>
+                    </div>
+                    <div class="banner">
+                      这不是在导出作品集。<br />
+                      会用同一批照片，按游记的方式做成能发的图。
+                    </div>
+                    <div class="opt">微信群</div>
+                    <div class="opt">朋友圈</div>
+                    <div class="opt hi">小红书</div>
+                    <div class="opt">公众号</div>
+                    <div class="opt">单张海报</div>
+                    <div class="opt">
+                      画册印刷
+                      <span class="hint" style="margin:2px 0 0">给印刷公司的跨页，不是这本作品集</span>
+                    </div>
+                    <div class="pop-foot">
+                      <button type="button" class="ghost" data-go="f1-back">返回，继续导出作品集</button>
+                      <button type="button" class="cta gold">导出长图</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="hint">点问句 → 整面换成「发到哪儿」。主钮也改成「导出长图」，跟左边游记同一套说法。</p>
+          </div>
+        </div>
+        <div class="callout warn" style="margin-top:16px">
+          <strong>请确认：</strong>两块面标题、徽章、主钮、第一句都不一样。
+          作品集默认面看不见微信/小红书。问句是链，不是第三张卡。
+        </div>
+      </section>
+
+      <section class="panel" data-id="f2">
+        <p class="anno">F2 · 从作品集走进「发到哪儿」 <span class="sig ok">已签</span></p>
+        <p class="lead">
+          左边：本来就是游记，直接选发到哪儿。
+          右边：人在作品集里，临时改做能发的图。平台和点法跟左边一样，但先说清「这趟不是在导出作品集」，并随时能回去继续带走这一本。
+        </p>
+        <div class="compare">
+          <div>
+            <p class="col-tag">游记本人 · 对照</p>
+            <div class="pop" style="width:100%">
+              <div class="pop-head">
+                <h4>导出长图</h4>
+                <span class="pill journal">游记</span>
+              </div>
+              <p class="pop-lead">选这次发到哪儿。</p>
+              <div class="opt hi">微信群</div>
+              <div class="opt">朋友圈</div>
+              <div class="opt">小红书</div>
+              <div class="opt">公众号</div>
+              <div class="opt">单张海报</div>
+              <div class="opt">画册印刷</div>
+              <div class="pop-foot">
+                <span></span>
+                <button type="button" class="cta gold">导出长图</button>
+              </div>
+            </div>
+            <p class="hint">没有「返回导出作品集」。这本本来就是游记。</p>
+          </div>
+          <div>
+            <p class="col-tag good">作品集里临时来发 · 已签</p>
+            <div class="pop" style="width:100%">
+              <div class="pop-head">
+                <h4>发到微信、小红书…</h4>
+                <span class="pill journal">按游记来做</span>
+              </div>
+              <div class="banner">
+                这不是在导出作品集。<br />
+                会用同一批照片，按游记的方式做成能发的图。
+              </div>
+              <div class="opt">微信群</div>
+              <div class="opt">朋友圈</div>
+              <div class="opt hi">小红书</div>
+              <div class="opt">公众号</div>
+              <div class="opt">单张海报</div>
+              <div class="opt">
+                画册印刷
+                <span class="hint" style="margin:2px 0 0">给印刷公司的跨页，不是这本作品集</span>
+              </div>
+              <div class="pop-foot">
+                <button type="button" class="ghost">返回，继续导出作品集</button>
+                <button type="button" class="cta gold">导出长图</button>
+              </div>
+            </div>
+            <p class="hint">预览还是作品集那 36 页。导完小红书，再点 Dock，又回到「带走这一本」。</p>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px">
+          <strong>和「改成游记重排」不是一回事。</strong>
+          这里只另做能发的图，这本书还是作品集。
+          若要把整本改成游记卷轴，走作品集精修里的「想改做成一本游记？」。
+        </div>
+      </section>
+
+      <section class="panel" data-id="f3">
+        <p class="anno">F3 · 新增作品集精修面 <span class="sig ok">已签</span></p>
+        <p class="lead">
+          左边是游记精修现网（成册类型两卡还在，本波不改、不签）。
+          右边是<strong>新增</strong>的作品集精修：只改书名和厚度。不要共用左边那张表，也不要做成两个 tab。
+        </p>
+        <div class="compare">
+          <div>
+            <p class="col-tag">游记精修 · 现网冻结 · 不签</p>
+            <div class="phone">
+              <div class="chrome"><span>精修 · 画册</span><span>×</span></div>
+              <div class="body">
+                <p style="font-weight:650;margin:0 0 6px">成册类型</p>
+                <p class="hint" style="margin:0 0 8px">游记发群长图；作品集出可翻的一本。</p>
+                <div class="card on"><strong>游记</strong><span>卷轴 + 长图，适合发群</span></div>
+                <div class="card"><strong>作品集</strong><span>可翻的一本</span></div>
+                <p style="font-weight:650;margin:14px 0 6px">成册风格</p>
+                <div class="card on"><strong>杂志成册（推荐）</strong><span>宽画幅节奏稳</span></div>
+                <div class="card"><strong>更贴照片比例（实验）</strong><span>更贴原图，页数可能变</span></div>
+                <p style="font-weight:650;margin:14px 0 6px">杂志名</p>
+                <div class="opt">林芝 · 三月</div>
+              </div>
+            </div>
+            <p class="hint">功能和文案与现网一致。两卡泄漏后继另收。</p>
+          </div>
+          <div>
+            <p class="col-tag good">作品集精修 · 新增 · 已签</p>
+            <div class="phone">
+              <div class="chrome book"><span>精修 · 作品集</span><span>×</span></div>
+              <div class="body">
+                <div class="pop-head" style="margin-bottom:8px">
+                  <h4 style="margin:0;font-size:15px">改这本作品集</h4>
+                  <span class="pill book">作品集</span>
+                </div>
+                <p class="pop-lead">改书名，以及这本有多厚。</p>
+                <p style="font-weight:650;margin:0 0 6px">书名</p>
+                <div class="opt">林芝 · 三月<span class="hint" style="margin:2px 0 0">点这里改书名</span></div>
+                <p style="font-weight:650;margin:14px 0 6px">这本有多厚</p>
+                <p class="hint" style="margin:0 0 8px">现在是 36 页。换一档会整本重排。</p>
+                <div>
+                  <span class="chip">自动</span>
+                  <span class="chip">8</span><span class="chip">12</span>
+                  <span class="chip">16</span><span class="chip">20</span>
+                  <span class="chip">24</span><span class="chip">28</span>
+                  <span class="chip">32</span><span class="chip on">36</span>
+                </div>
+                <p class="live" style="margin:16px 0 0;padding:6px">
+                  <button type="button" class="linkish" id="f3p-reflow">想改做成一本游记？</button>
+                </p>
+                <div class="modal-wrap" id="f3p-modal" hidden style="margin-top:12px">
+                  <div class="modal">
+                    <h3>改做成游记？</h3>
+                    <p>
+                      精选和分组会留下。整本会按游记重新排，变成能发群的长图。<br />
+                      <strong>你改过的字，有的可能对不上新的页。</strong>
+                    </p>
+                    <div class="actions">
+                      <button type="button" class="ghost" id="f3p-cancel">还是作品集</button>
+                      <button type="button" class="ok" id="f3p-ok">按游记重排</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="hint">没有成册风格，没有微信/小红书，也不再挂「成册类型」两卡。页数只出现在这一面。</p>
+          </div>
+        </div>
+        <div class="callout bad" style="margin-top:16px">
+          <span class="bad-x">作品集不要这样：</span>
+          继续复用左边那张「成册类型」表，或在精修里做「游记 | 作品集」两个 tab。
+          游记那张表现网保持，本波不改。
+        </div>
+      </section>
+
+      <section class="panel" data-id="ok">
+        <p class="anno">成功面同一句问话 <span class="sig re">与 F1 同句 · 不另开门</span></p>
+        <p class="lead">刚带走这一本之后，如果还想发微信、小红书，用同一句问话。不要把六种平台铺回成功面。</p>
+        <div class="phone">
+          <div class="chrome"><span>作品集</span><span>×</span></div>
+          <div class="body">
+            <p style="margin:0 0 8px"><span class="pill book">作品集</span></p>
+            <h3 style="margin:0 0 6px;font-size:18px">这一本已备好 · 共 36 页</h3>
+            <p class="hint" style="margin:0 0 14px">可以点开翻；页图按编号用。</p>
+            <button type="button" class="cta gold wide">打开这一本</button>
+            <button type="button" class="cta wide" style="margin-top:8px">打开文件夹</button>
+            <p style="margin:16px 0 0;text-align:center">
+              <button type="button" class="linkish">想发到微信或小红书？</button>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" data-id="red">
+        <p class="anno">红线 · 出现任一则本波不算过门</p>
+        <table>
+          <tr><th>禁止</th><th>为什么</th><th>正确</th></tr>
+          <tr><td>作品集导出默认面用折叠藏六种</td><td>人以为这些也是这本书的模式</td><td>只留「带走这一本」；发微信另换一面</td></tr>
+          <tr><td>问句做成第三张同等大卡</td><td>又变两种书并排</td><td>一句「想发到微信或小红书？」</td></tr>
+          <tr><td>两块面都叫「导出」、主钮都叫「导出」</td><td>分不清在干什么</td><td>游记「导出长图」· 作品集「导出作品集」</td></tr>
+          <tr><td>顶条写「拼贴 / 这本书的页」</td><td>不像人话</td><td>「这不是在导出作品集」</td></tr>
+          <tr><td>同一本书同时出游记面和作品集面</td><td>身份没有互斥</td><td>跟导入那次选择走，只挂一套</td></tr>
+          <tr><td>改游记精修或游记导出的功能 / 文案</td><td>现网 GA，本波冻结</td><td>只给作品集加面</td></tr>
+          <tr><td>作品集精修继续挂「成册类型」两卡</td><td>两套管线共用一张表</td><td>作品集另挂书名 + 厚度 + 问句</td></tr>
+          <tr><td>精修 / 导出做成「游记 | 作品集」两个 tab</td><td>混面，比两卡更吵</td><td>按身份挂载，不是页签</td></tr>
+          <tr><td>作品集精修出现成册风格或杂志名</td><td>人以为作品集也能调游记气质</td><td>作品集只改书名和厚度</td></tr>
+          <tr><td>同一面板 CSS 隐藏对面</td><td>假隔离</td><td>spec 没列的不进 DOM</td></tr>
+          <tr><td>在 dock.js 铺 is_portfolio</td><td>破 DPI S-09</td><td>两套 Dock logic 吐 spec</td></tr>
+          <tr><td>过河时改 edition</td><td>把出图当成换书</td><td>过河 ≠ 重排</td></tr>
+          <tr><td>从作品集删掉出小红书的能力</td><td>废 D-PFM-10</td><td>能力在，落点在 F2</td></tr>
+          <tr><td>把游记「画册印刷」藏掉</td><td>那是游记自己的印刷口</td><td>游记导出零改</td></tr>
+        </table>
+      </section>
+    </main>
+
+    <aside class="aside">
+      <h2>签核清单</h2>
+      <p class="hint" style="margin:0 0 8px">F1–F3 已签。先实现，不合适再改。</p>
+      <label><input type="checkbox" data-sign="f1" checked disabled /> F1 作品集只回答「带走这一本」· 六平台不在默认面（已签）</label>
+      <label><input type="checkbox" data-sign="f2" checked disabled /> F2 先说「这不是在导出作品集」· 能返回 · 不改游记导出（已签）</label>
+      <label><input type="checkbox" data-sign="f3" checked disabled /> F3 作品集精修独立 · 游记精修保持不变（已签）</label>
+      <p class="hint" id="sign-state">3 / 3 已勾。F1–F3 齐，可拆 W1。</p>
+      <hr style="border:0;border-top:1px solid var(--border);margin:14px 0" />
+      <p class="hint">硬门：此次实现不得影响游记精修与导出。游记快照红则打回。</p>
+      <p class="hint">不签：改游记导出六平台、改游记精修成册类型两卡。</p>
+      <p class="hint">W2 另收：作品集书名残留、导出偏好分钥。游记两卡后继。</p>
+    </aside>
+  </div>
+
+  <script>
+    var tabs = document.querySelectorAll("[data-tab]");
+    var panels = document.querySelectorAll(".panel");
+    function show(id) {
+      tabs.forEach(function (b) { b.classList.toggle("is-on", b.getAttribute("data-tab") === id); });
+      panels.forEach(function (p) { p.classList.toggle("is-on", p.getAttribute("data-id") === id); });
+    }
+    tabs.forEach(function (b) {
+      b.addEventListener("click", function () { show(b.getAttribute("data-tab")); });
+    });
+
+    var pop = document.getElementById("f1-pop");
+    function setFace(face) {
+      if (!pop) return;
+      pop.setAttribute("data-face", face);
+      pop.querySelectorAll("[data-show]").forEach(function (el) {
+        el.hidden = el.getAttribute("data-show") !== face;
+      });
+    }
+    document.querySelectorAll("[data-go]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var go = btn.getAttribute("data-go");
+        if (go === "f2-from-f1") setFace("social");
+        if (go === "f1-back") setFace("default");
+      });
+    });
+
+    function bindConfirm(openId, modalId, cancelId, okId) {
+      var modal = document.getElementById(modalId);
+      var openBtn = document.getElementById(openId);
+      var cancelBtn = document.getElementById(cancelId);
+      var okBtn = document.getElementById(okId);
+      if (!modal || !openBtn) return;
+      openBtn.addEventListener("click", function () { modal.hidden = false; });
+      if (cancelBtn) cancelBtn.addEventListener("click", function () { modal.hidden = true; });
+      if (okBtn) okBtn.addEventListener("click", function () {
+        modal.hidden = true;
+        openBtn.textContent = "已确认重排（线框演示）";
+      });
+    }
+    bindConfirm("f3p-reflow", "f3p-modal", "f3p-cancel", "f3p-ok");
+
+    var boxes = document.querySelectorAll("[data-sign]");
+    var state = document.getElementById("sign-state");
+    function syncSign() {
+      var n = 0;
+      boxes.forEach(function (b) { if (b.checked) n += 1; });
+      state.textContent = n + " / 3 已勾。" + (n === 3 ? " F1–F3 齐，可拆 W1。" : " 未齐，W1 不可开工。");
+    }
+    boxes.forEach(function (b) { b.addEventListener("change", syncSign); });
+    syncSign();
+  </script>
+</body>
+</html>

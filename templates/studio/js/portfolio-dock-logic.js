@@ -9,6 +9,9 @@ import {
   isPortfolioEdition,
   PORTFOLIO_PAGES_PLATFORM,
   portfolioDockCta,
+  portfolioExportDefaultFaceSpec,
+  portfolioExportSocialFaceSpec,
+  readPortfolioSocialPrefs,
   readToolbarEdition,
 } from "./portfolio-export-logic.js";
 import {
@@ -39,10 +42,25 @@ export function portfolioIdleCta() {
 /**
  * @returns {{ title: string, edition: string, initPlatform: function(object): {platform: string, platforms: string[]} }}
  */
-export function portfolioExportPopoverSpec() {
+export function portfolioExportPopoverSpec(opts) {
+  opts = opts || {};
+  if (opts.face === "social") {
+    var social = portfolioExportSocialFaceSpec();
+    return {
+      title: social.title,
+      edition: "portfolio",
+      face: "social",
+      initPlatform: function () {
+        var social = readPortfolioSocialPrefs();
+        return { platform: social.platform, platforms: social.platforms };
+      },
+    };
+  }
+  var face = portfolioExportDefaultFaceSpec();
   return {
-    title: "导出",
+    title: face.title,
     edition: "portfolio",
+    face: "default",
     initPlatform: function () {
       return { platform: PORTFOLIO_PAGES_PLATFORM, platforms: [PORTFOLIO_PAGES_PLATFORM] };
     },
@@ -168,12 +186,16 @@ export function applyPortfolioDockLogic(root, entry) {
       entry && entry.dockCta && entry.dockCta.aria
         ? { short: entry.dockCta.short || entry.dockCta.aria, aria: entry.dockCta.aria }
         : portfolioIdleCta();
-    root._exportPopoverSpec = portfolioExportPopoverSpec;
+    root._exportPopoverSpec = function () {
+      return portfolioExportPopoverSpec({ face: root._fxiExportFace });
+    };
     root._syncPortfolioCta = syncPortfolioCtaLabel;
     root._resolveExportPlatform = resolvePortfolioExportPlatform;
     root._skipRecipeForExport = shouldSkipRecipeForPortfolioExport;
     root._readPortfolioDraftPrefs = function (prefs) {
-      return portfolioExportPopoverSpec().initPlatform(prefs);
+      return portfolioExportPopoverSpec({ face: root._fxiExportFace }).initPlatform(
+        prefs
+      );
     };
   }
   if (entry) {

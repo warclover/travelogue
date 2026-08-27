@@ -74,7 +74,7 @@ function stubBtn(attrName, attrValue) {
 }
 
 /** Minimal popover stub for syncPanelUI field visibility (no jsdom). */
-function stubPopover(platformIds) {
+function stubPopover(platformIds, faceAttrs) {
   const copy = { hidden: false };
   const copyLabel = { textContent: "长图要不要字" };
   const modeField = { hidden: false };
@@ -91,6 +91,9 @@ function stubPopover(platformIds) {
     stubBtn("data-studio-longshot-platform", id)
   );
   return {
+    getAttribute(name) {
+      return (faceAttrs && faceAttrs[name]) || null;
+    },
     querySelector(sel) {
       if (sel === '[data-field="copy"]') return copy;
       if (sel === "[data-copy-label]") return copyLabel;
@@ -208,7 +211,7 @@ test("FE-PFM-06 · 游记导出 Dock / ▾ 开旗前后零 diff", () => {
   assert.match(snap.html, /导出设置/);
 });
 
-test("作品集面板：换种分享默认折叠 + 印刷副文；游记仍画册印刷", () => {
+test("作品集默认面 F1：只有页图/这一本，无六平台", () => {
   const journal = buildPanelHtml(["wechat_chat", "xiaohongshu", "album_spread"]);
   assert.match(journal, /画册印刷/);
   assert.doesNotMatch(journal, /用同一批照片出社交图/);
@@ -220,19 +223,38 @@ test("作品集面板：换种分享默认折叠 + 印刷副文；游记仍画�
     ["wechat_chat", "xiaohongshu", "album_spread", "portfolio_pages"],
     { edition: "portfolio" }
   );
-  assert.match(pf, /data-portfolio-share-fold/);
-  assert.doesNotMatch(pf, /<details[^>]*\sopen/);
-  assert.match(pf, /用同一批照片出社交图/);
-  assert.match(pf, /印刷跨页（现网画册）/);
-  assert.match(pf, /给印刷公司的 3:4 跨页，不是这一本/);
-  assert.match(pf, /社交图仍按现网拼贴/);
-  assert.match(pf, /这本作品集/);
-  assert.doesNotMatch(pf, /data-studio-longshot-platform="portfolio_pages"/);
-  assert.doesNotMatch(pf, />画册印刷</);
-  assert.match(pf, /data-field="density"[^>]*hidden/);
-  assert.match(pf, /data-ltn-dual-preview hidden/);
-  assert.doesNotMatch(journal, /data-field="density"[^>]*hidden/);
-  assert.doesNotMatch(journal, /data-ltn-dual-preview hidden/);
+  assert.match(pf, /导出作品集/);
+  assert.match(pf, /带走你刚做好的这一本/);
+  assert.match(pf, /想发到微信或小红书/);
+  assert.match(pf, /data-action="export-portfolio-book"/);
+  assert.match(pf, /data-action="export-portfolio-pages"/);
+  assert.match(pf, />页图</);
+  assert.match(pf, />这一本</);
+  assert.doesNotMatch(pf, /data-portfolio-share-fold/);
+  assert.doesNotMatch(pf, /用同一批照片出社交图/);
+  assert.doesNotMatch(pf, /data-studio-longshot-platform/);
+  assert.doesNotMatch(pf, /data-field="density"/);
+  assert.doesNotMatch(pf, /data-field="mode"/);
+  assert.doesNotMatch(pf, /换种分享/);
+  assert.doesNotMatch(journal, /导出作品集/);
+});
+
+test("作品集过河面 F2：复用游记六平台 + 顶条", () => {
+  const social = buildPanelHtml(
+    ["wechat_chat", "xiaohongshu", "album_spread"],
+    { edition: "portfolio", face: "social" }
+  );
+  assert.match(social, /发到微信、小红书/);
+  assert.match(social, /这不是在导出作品集/);
+  assert.match(social, /按游记来做/);
+  assert.match(social, /返回，继续导出作品集/);
+  assert.match(social, /导出长图/);
+  assert.match(social, /data-studio-longshot-platform="wechat_chat"/);
+  assert.match(social, /画册印刷/);
+  assert.match(social, /不是这本作品集/);
+  assert.doesNotMatch(social, /data-portfolio-share-fold/);
+  assert.doesNotMatch(social, /换种分享/);
+  assert.doesNotMatch(social, />确定</);
 });
 
 test("PIS · 作品集主路径藏长图密度，社交选中才露出", () => {
@@ -688,6 +710,20 @@ test("syncPanelUI · 多选态隐藏张数/跨页数控件，展示批量提示"
   assert.equal(popBatch._expectBody.textContent, "");
   assert.equal(popBatch._platformBtns[0].getAttribute("aria-checked"), "true");
   assert.equal(popBatch._platformBtns[1].getAttribute("aria-checked"), "true");
+});
+
+test("F2 过河面多选不展示批量提示，也不藏主平台设置", () => {
+  const pop = stubPopover(["xiaohongshu", "wechat_chat"], {
+    "data-export-face": "portfolio:social",
+  });
+  syncPanelUI(pop, {
+    platforms: ["xiaohongshu", "wechat_chat"],
+    mode: "chapter",
+    scale: 2,
+  });
+  assert.equal(pop._batchHint.hidden, true);
+  assert.equal(pop._batchHint.textContent, "");
+  assert.equal(pop._expectField.hidden, false);
 });
 
 test("bindPanelDraft · getDraft/setDraft 单选零回归 + platforms 数组往返", () => {

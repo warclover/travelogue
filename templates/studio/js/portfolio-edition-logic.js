@@ -78,6 +78,18 @@ export function normalizeEdition(raw) {
 export function editionSwitchConfirm(from, to) {
   var next = normalizeEdition(to);
   var toPortfolio = next === "portfolio";
+  var fromPortfolio = normalizeEdition(from) === "portfolio";
+  if (fromPortfolio && !toPortfolio) {
+    return {
+      title: "改做成游记？",
+      body:
+        "精选和分组会保留，页面将按另一套版式重排。" +
+        EDITION_COPY_LOCK +
+        "你改过的字，有的可能对不上新的页。",
+      confirmText: "按游记重排",
+      cancelText: "还是作品集",
+    };
+  }
   var body =
     "精选和分组会保留，页面将按另一套版式重排。" + EDITION_COPY_LOCK;
   if (toPortfolio) {
@@ -88,6 +100,23 @@ export function editionSwitchConfirm(from, to) {
     body: body,
     confirmText: "重排页面",
     cancelText: "取消",
+  };
+}
+
+/** F3 · 作品集精修身份区。禁止成册类型两卡。 */
+export function portfolioRefineIdentitySpec(pageCount) {
+  var n = Number(pageCount) || 0;
+  return {
+    title: "改这本作品集",
+    badge: "作品集",
+    lead: "改书名，以及这本有多厚。",
+    coverLabel: "书名",
+    thicknessLabel: "这本有多厚",
+    thicknessLead: n > 0 ? "现在是 " + n + " 页" : "",
+    showLayoutVibe: false,
+    showPageCount: true,
+    showEditionCards: false,
+    action: { label: "想改做成一本游记？", to: "journal" },
   };
 }
 

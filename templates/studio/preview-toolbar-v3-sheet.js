@@ -748,9 +748,14 @@ export function mountPreviewUnifiedSheet(root, hooks) {
   }
 
   function coverSubsegHtml() {
+    var isPf = typeof hooks.isPortfolio === "function" && hooks.isPortfolio();
+    var segs = COVER_SEGS.map(function (seg) {
+      if (seg.id !== "name") return seg;
+      return { id: "name", label: isPf ? "书名" : "杂志名", hint: seg.hint };
+    });
     return (
       '<div class="preview-sheet__cover-subseg" role="tablist" aria-label="封面子段">' +
-      COVER_SEGS.map(function (seg) {
+      segs.map(function (seg) {
         var on = seg.id === activeCoverSeg;
         return (
           '<button type="button" class="preview-sheet__cover-subseg-btn' +
@@ -858,7 +863,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<button type="button" data-cover-side="closing">封底</button>' +
       "</div>" +
       '<p class="preview-sheet__empty-label"><strong data-cover-panel-title>换一张封面图</strong></p>' +
-      '<p class="preview-sheet__hint">点缩略图即可更换。版式与杂志名见上方分段。</p>' +
+      '<p class="preview-sheet__hint">点缩略图即可更换。版式与' +
+      (typeof hooks.isPortfolio === "function" && hooks.isPortfolio() ? "书名" : "杂志名") +
+      "见上方分段。</p>" +
       '<div class="preview-sheet__bookends-slot" data-book-zone="bookends"></div>' +
       '<button type="button" class="preview-sheet__ghost" data-action="goto-cover-style">去换版式</button>';
 
@@ -894,20 +901,31 @@ export function mountPreviewUnifiedSheet(root, hooks) {
         '<p class="preview-sheet__hint preview-sheet__hint--compact">影响整本页面气质，不是封面第一眼样式。要换封面样式 → 「封面 · 版式」。</p>' +
         '<div class="preview-sheet__layout-vibe-slot"></div>' +
         "</div></details>";
+    var editionZone = isPortfolio
+      ? '<details class="preview-sheet__zone preview-sheet__zone--edition-type" data-book-zone="edition-type" open>' +
+        '<summary>改这本作品集 <span class="preview-sheet__zone-meta">作品集</span></summary>' +
+        '<div class="preview-sheet__zone-body">' +
+        '<div class="preview-sheet__edition-slot"></div>' +
+        "</div></details>"
+      : '<details class="preview-sheet__zone preview-sheet__zone--edition-type" data-book-zone="edition-type" open>' +
+        '<summary>成册类型 <span class="preview-sheet__zone-meta">游记 · 作品集</span></summary>' +
+        '<div class="preview-sheet__zone-body">' +
+        '<p class="preview-sheet__hint preview-sheet__hint--compact">换类型会重排页面，精选和分组会保留。</p>' +
+        '<div class="preview-sheet__edition-slot"></div>' +
+        "</div></details>";
     bodyEl.innerHTML =
-      '<p class="preview-sheet__hint preview-sheet__hint--lead">改一句话与成册风格。杂志名与封面字体在「封面」。</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--lead">' +
+      (isPortfolio
+        ? "改这本作品集。书名与封面字体在「封面」。"
+        : "改一句话与成册风格。杂志名与封面字体在「封面」。") +
+      "</p>" +
       '<details class="preview-sheet__zone preview-sheet__zone--story" data-book-zone="story" open>' +
       '<summary>给这本画册的一句话 <span class="preview-sheet__zone-meta">封面副标 · 辑封</span></summary>' +
       '<div class="preview-sheet__zone-body">' +
       '<div class="preview-sheet__embed preview-sheet__embed--edit"></div>' +
       bookCopyRefreshHtml() +
       "</div></details>" +
-      '<details class="preview-sheet__zone preview-sheet__zone--edition-type" data-book-zone="edition-type" open>' +
-      '<summary>成册类型 <span class="preview-sheet__zone-meta">游记 · 作品集</span></summary>' +
-      '<div class="preview-sheet__zone-body">' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">换类型会重排页面，精选和分组会保留。</p>' +
-      '<div class="preview-sheet__edition-slot"></div>' +
-      "</div></details>" +
+      editionZone +
       vibeZone +
       '<details class="preview-sheet__zone preview-sheet__zone--brand" data-book-zone="brand" open>' +
       "<summary>作品署名</summary>" +
@@ -932,7 +950,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
       '<div class="preview-sheet__embed preview-sheet__embed--structure"></div>' +
       "</div></details>" +
       '<div class="preview-sheet__book-foot">' +
-      '<button type="button" class="preview-sheet__ghost" data-action="goto-cover-name">去改杂志名 / 字体</button>' +
+      '<button type="button" class="preview-sheet__ghost" data-action="goto-cover-name">' +
+      (isPortfolio ? "去改书名 / 字体" : "去改杂志名 / 字体") +
+      "</button>" +
       '<p class="preview-sheet__hint preview-sheet__hint--compact" style="text-align:center;margin-top:6px">换封面/封底 → 「封面 · 照片」</p>' +
       "</div>";
 

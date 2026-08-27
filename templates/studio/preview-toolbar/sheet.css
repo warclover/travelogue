@@ -836,6 +836,27 @@
   margin-top: 0;
 }
 
+.preview-sheet__fxi-action {
+  margin: 14px 0 0;
+}
+.preview-sheet__fxi-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--preview-accent, #3f454c);
+  font: inherit;
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.preview-sheet__fxi-link:hover {
+  color: var(--preview-ink, #14110d);
+}
+
 .preview-sheet__ghost {
   display: block;
   width: 100%;

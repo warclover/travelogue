@@ -8,8 +8,9 @@
 import { HELP_COPY } from "./help-onboarding.js";
 import {
   albumSpreadCardCopy,
-  portfolioMainProductsHtml,
-  wrapPortfolioSocialGroupHtml,
+  isPortfolioSocialExportFace,
+  portfolioExportDefaultFaceHtml,
+  wrapJournalPanelAsPortfolioSocialFace,
 } from "./portfolio-export-logic.js";
 
 export var LONGSHOT_EXPORT_PREFS_KEY = "travelogue.studio.longshotExportPrefs";
@@ -609,6 +610,15 @@ export function journalExportPanelSnapshot(platformIds) {
 export function buildPanelHtml(platformIds, opts) {
   opts = opts || {};
   var edition = opts.edition === "portfolio" ? "portfolio" : "journal";
+  var face = opts.face === "social" ? "social" : "default";
+  if (edition === "portfolio" && face === "social") {
+    return wrapJournalPanelAsPortfolioSocialFace(
+      buildPanelHtml(platformIds, { edition: "journal" })
+    );
+  }
+  if (edition === "portfolio") {
+    return portfolioExportDefaultFaceHtml(opts.product);
+  }
   var ids = platformIds && platformIds.length ? platformIds : ["wechat_chat", "wechat_moments"];
   var socialIds = ids.filter(function (id) {
     return id && id !== "portfolio_pages";
@@ -650,21 +660,17 @@ export function buildPanelHtml(platformIds, opts) {
     .join("");
 
   var platformField =
-    edition === "portfolio"
-      ? portfolioMainProductsHtml() +
-        wrapPortfolioSocialGroupHtml(platformBtns, socialIds.length) +
-        '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>'
-      : '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-        '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
-        '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
-        platformBtns +
-        "</div>" +
-        '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
-        "</div>";
+    '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
+    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
+    platformBtns +
+    "</div>" +
+    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
+    "</div>";
 
   return (
     '<p class="preview-toolbar__export-popover-title">' +
-    (edition === "portfolio" ? "导出" : "导出设置") +
+    "导出设置" +
     "</p>" +
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
@@ -797,7 +803,8 @@ export function syncPanelUI(pop, draft, opts) {
   if (!pop || !draft) return;
   opts = opts || {};
   var platforms = normalizePlatformList(draft.platforms || [draft.platform]);
-  var isBatch = platforms.length > 1;
+  var isBatch =
+    platforms.length > 1 && !isPortfolioSocialExportFace(pop);
   var platform = platforms[0];
   var meta = PLATFORMS[platform] || PLATFORMS.wechat_chat;
   // MVP · 批量态（≥2 平台）不做手风琴逐平台设置，统一隐藏张数/跨页数控件。

@@ -17,7 +17,7 @@
 | **验收** | [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · 本文 **§14 为源** |
 | **实施** | [IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · 本文 **§12 为源** |
 | **更新日期** | 2026-08-26 |
-| **后继** | **2026-08-26 起**：同夹双身份话术、票根、作品集用词、成册页 X、堂亲/升星以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS**）为准。本文规格一句、打开∥导出、先弹面板、`0.67` 不进选档**不重开**。 |
+| **后继** | **2026-08-26 起**：同夹双身份话术、票根、作品集用词、成册页 X、堂亲/升星以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS**）为准。**精修/导出默认面、六种落点**以 [PRD-FRONTEND-IDENTITY-ISOLATION-V1.md](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)（**FXI**）为准；本文 **D-PFO-04「分组仍在默认面」** 视为被 FXI 改判，点法对齐仍有效。规格一句、打开∥导出、先弹面板、`0.67` 不进选档**不重开**。 |
 
 > **定位**
 >
@@ -202,7 +202,7 @@ PFO 推翻的是「页数只能藏在精修」，**不是**推翻「不要让用
 | **N-PFM-14 / OQ-PFM-02** | 否决导入问页数 | **吸收原话、改形态**：推翻的是「只能精修定页」，不是推翻「不要让用户蒙数字」 | **D-PFO-01** |
 | **D-PFM-13**「仅精修钉页」 | 芯片只在精修 | **生成前钉死为权威**；精修改为副本入口 | **D-PFO-02** |
 | FirstSuccess「导出另一步」 | 只给打开画册 | **打开这一本与导出作品集并列**；禁止倒计时自动导 | **D-PFO-03** |
-| **D-PFM-10**「六种默认折叠」 | ▾ 换种分享默认折叠 | **点法对齐，视觉仍降级。** 默认高亮作品集主产物；六种在分组里（可展开，默认不必摊开）。印刷副文 + 低于「这一本」的视觉权重。**不按 v0.1.0「取消折叠」落地** | **D-PFO-04** |
+| **D-PFM-10**「六种默认折叠」 | ▾ 换种分享默认折叠 | **点法对齐，视觉仍降级。** 默认高亮作品集主产物；六种在分组里（可展开，默认不必摊开）。印刷副文 + 低于「这一本」的视觉权重。**不按 v0.1.0「取消折叠」落地**。**默认面落点经 [FXI D-FXI-02](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) 再改判**：六种不得留在作品集导出默认面；点法对齐只作用于过河面 | **D-PFO-04** |
 | 推荐句（实现，非条款） | 按 M + 当前兑现空页劝换档 | **生成后按真 M「装得下」选最薄标准档**；生成前估计只进文案。空页提示降为预览弱提示、单独成句 | **D-PFO-05** |
 | 导出闸门（实现） | `layoutPending` 一视同仁 | **规格 job 已渲染成功不得升假 pending**；作品集过期检测读作品集 CSS；与 import 同一 stamp | **D-PFO-06** |
 
@@ -682,3 +682,4 @@ PFM 文首改判指针、DOC-STATUS 本行、README 索引随本文件一并列�
 | v0.2.0 | 2026-08-25 | 八席 Conditional Go 回写。BLK-PFO-01～07：假 pending 按代码根因；向导一句规格；成功面打开∥导出、禁倒计时；D-PFO-04 改判为点法对齐+六种降级；0.67 不准选档；F9–F11 挡 W2；禁逐页承诺。新增 AC-PFO-17～20、OQ-PFO-06～08、§12.5 测试迁移。W1 可开工。 |
 | v0.2.1 | 2026-08-25 | 产品认可线框 v1.2 F9–F11（先实现，不合适再改）。AC-PFO-20 / BLK-PFO-06 关。拆 IMPLEMENTATION / ACCEPTANCE。W1+W2 已落地。 |
 | v0.2.2 | 2026-08-26 | **SHD-PIS-06**：文首挂 [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 后继。流程合同本文仍为准；身份/票根/页数 X/选脸不在本文续写。 |
+| v0.2.2+FXI | 2026-08-26 | 文首后继加 [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)。D-PFO-04 默认面分组视为被 D-FXI-02 改判；点法五步不重开。 |

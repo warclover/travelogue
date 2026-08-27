@@ -452,7 +452,9 @@ def test_pfo_w2_wizard_success_and_copy_contracts() -> None:
     assert "打开这一本" in fs
     assert "导出作品集" in fs
     assert "previewUrlWithExportPanel" in fs
-    assert "去精修封面和成册类型" in html
+    assert "去精修封面" in html
+    assert "去精修封面和成册类型" not in html
+    assert "firstSuccessRefineLabel" in fs
     assert "逐页" not in fs
     assert "逐页" not in html
     assert "换每一页" not in fs
@@ -467,6 +469,7 @@ def test_pfo_w2_wizard_success_and_copy_contracts() -> None:
     assert "autoExport" in longshot
     assert "firstSuccessPortfolioCopy" in fs
     help_js = (_STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
+    assert "换种分享" not in help_js
     assert "生成前系统会按文件夹给一个厚度" in help_js
     assert "导入时不会问" not in help_js
     assert 'id: "H9"' in help_js

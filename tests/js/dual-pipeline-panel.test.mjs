@@ -66,6 +66,18 @@ test("DPI W3 · dock.js is mount + dispatch only", () => {
   assert.match(dockSrc, /applyPortfolioDockLogic/);
   assert.equal(longshotSrc.includes("readToolbarEdition"), false);
   assert.match(longshotSrc, /shouldRunSocialBatchExport/);
+  assert.match(
+    longshotSrc,
+    /_pendingSocialPlatforms = shouldRunSocialBatchExport/,
+  );
+  assert.match(
+    longshotSrc,
+    /shouldRunSocialBatchExport\(root && root\._edition, pendingSocial\)/,
+  );
+  assert.match(
+    longshotSrc,
+    /!isPortfolioEdition\(root && root\._edition\) &&\s*\n\s*!assertConfirmedPlatformPayload/,
+  );
   assert.match(longshotSrc, /isPortfolioPrintOneShot/);
   assert.doesNotMatch(longshotSrc, /album_landscape:\s*"album_spread"/);
   assert.deepEqual(journalDockCta(), journalDockChrome());

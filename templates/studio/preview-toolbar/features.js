@@ -38,7 +38,14 @@ import {
 } from "./core.js";
 import { HELP_COPY } from "../js/help-onboarding.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
-import { coverTitleEditLabel, readEditionFromDom } from "../js/portfolio-export-logic.js";
+import {
+  coverNameEmptyToast,
+  coverNameLabel,
+  coverNameTooLongToast,
+  coverTitleEditLabel,
+  isPortfolioEdition,
+  readEditionFromDom,
+} from "../js/portfolio-export-logic.js";
 import {
   editionCardOptionsForPipeline,
   editionSwitchConfirm,
@@ -53,6 +60,7 @@ import {
   shouldConfirmThinTier,
   thinTierConfirm,
   shouldMountEditionType,
+  portfolioRefineIdentitySpec,
 } from "../js/portfolio-edition-logic.js";
 
 export { revealTripFolder };
@@ -158,11 +166,15 @@ export function initTitleEdit(root, tripId) {
           return;
         }
         if (next.length > 20) {
-          showToolbarToast("杂志名最多 20 个字", { error: true });
+          showToolbarToast(coverNameTooLongToast(readEditionFromDom(document)), {
+            error: true,
+          });
           return;
         }
         if (!next) {
-          showToolbarToast("杂志名不能为空", { error: true });
+          showToolbarToast(coverNameEmptyToast(readEditionFromDom(document)), {
+            error: true,
+          });
           return;
         }
         var prev = (display.dataset.title || "").trim();
@@ -1281,6 +1293,198 @@ export function mountEditionControls(slot, tripId, opts) {
   bindPortfolioJournalExit(root, tripId);
 }
 
+/** F3 · 作品集精修面。禁止走 mountEditionControls 成册类型表。 */
+export function mountPortfolioRefineControls(slot, tripId, opts) {
+  opts = opts || {};
+  if (!slot || slot.querySelector("[data-fxi-refine]")) return;
+  var spec = portfolioRefineIdentitySpec(0);
+  var section = document.createElement("div");
+  section.className = "preview-sheet__section preview-sheet__fxi-refine";
+  section.setAttribute("data-fxi-refine", "1");
+  section.innerHTML =
+    '<span class="preview-sheet__label">' +
+    spec.title +
+    "</span>" +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact">' +
+    spec.lead +
+    "</p>" +
+    '<div class="preview-sheet__page-count">' +
+    '<span class="preview-sheet__label">' +
+    spec.thicknessLabel +
+    ' <span data-fxi-thickness></span></span>' +
+    '<div class="preview-sheet__chip-row" role="group" aria-label="' +
+    spec.thicknessLabel +
+    '"></div>' +
+    '<p class="preview-sheet__hint preview-sheet__hint--compact" data-page-count-hint hidden></p>' +
+    "</div>" +
+    '<p class="preview-sheet__fxi-action">' +
+    '<button type="button" class="preview-sheet__fxi-link" data-fxi-to-journal>' +
+    spec.action.label +
+    "</button></p>";
+  var pageHost = section.querySelector(".preview-sheet__page-count");
+  var pageRow = section.querySelector(".preview-sheet__chip-row");
+  var pageHint = section.querySelector("[data-page-count-hint]");
+  var thicknessEl = section.querySelector("[data-fxi-thickness]");
+  var selectedPages = "auto";
+  var portfolioState = null;
+  var root = opts.root || document.querySelector(".preview-toolbar") || document.body;
+
+  function setBusy(busy) {
+    if (pageRow) {
+      pageRow.querySelectorAll("[data-page-count]").forEach(function (btn) {
+        btn.disabled = !!busy;
+      });
+    }
+    var toJ = section.querySelector("[data-fxi-to-journal]");
+    if (toJ) toJ.disabled = !!busy;
+  }
+
+  function syncPageCount(chipId) {
+    selectedPages = chipId || "auto";
+    if (!pageRow) return;
+    pageRow.querySelectorAll("[data-page-count]").forEach(function (btn) {
+      var on = btn.getAttribute("data-page-count") === selectedPages;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function applyPageCount(chipId) {
+    var pageCount = chipId === "auto" ? "auto" : Number(chipId);
+    setBusy(true);
+    showToolbarToast("正在按页数重排页面…", { duration: 3500 });
+    if (root && root._taskDock && typeof root._taskDock.updateExporting === "function") {
+      root._taskDock.updateExporting({
+        title: "正在按页数重排页面…",
+        subtitle: "精选和分组会保留",
+        pct: 8,
+      });
+      root._exportDockActive = true;
+    }
+    function clearDock() {
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      if (root) root._exportDockActive = false;
+    }
+    return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/edition", {
+      edition: "portfolio",
+      pageCount: pageCount,
+    })
+      .then(function (res) {
+        if (res.status === 200 && res.body && res.body.unchanged) {
+          setBusy(false);
+          clearDock();
+          syncPageCount(chipId);
+          return true;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          setBusy(false);
+          clearDock();
+          showToolbarToast(
+            (res.body && (res.body.message || res.body.error)) || "无法更新页数",
+            { error: true }
+          );
+          return false;
+        }
+        return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
+          setBusy(false);
+          clearDock();
+          if (!job || job.status !== "succeeded") {
+            showToolbarToast("页数更新失败", { error: true });
+            return false;
+          }
+          syncPageCount(chipId);
+          trackStudioEvent("page_count_change", { tripId: tripId, pageCount: chipId });
+          showToolbarToast("页面已按新的页数重排");
+          reloadPreviewAfterLayout();
+          return true;
+        });
+      })
+      .catch(function () {
+        setBusy(false);
+        clearDock();
+        showToolbarToast("页数更新失败", { error: true });
+        return false;
+      });
+  }
+
+  function requestPageCount(chipId, opt) {
+    if (!chipId || chipId === selectedPages) return;
+    if (chipId === "auto") {
+      applyPageCount(chipId);
+      return;
+    }
+    var kept = Number(portfolioState && portfolioState.photosKept);
+    var cap = Number(opt && opt.capacity);
+    var chips =
+      (portfolioState &&
+        (portfolioState.pageCountChipDetails || portfolioState.pageCountChips)) ||
+      [];
+    if (!shouldConfirmThinTier(cap, kept)) {
+      applyPageCount(chipId);
+      return;
+    }
+    var rec = recommendPageCount(chips, kept);
+    var folder = Number(portfolioState && portfolioState.folderCount);
+    var copy = thinTierConfirm(
+      cap,
+      kept,
+      rec !== Number(chipId) ? rec : 0,
+      folder
+    );
+    toolbarConfirm({
+      title: copy.title,
+      body: copy.body,
+      confirmText: copy.confirmText,
+      cancelText: copy.cancelText,
+    }).then(function (ok) {
+      if (ok && copy.recommendPages) {
+        applyPageCount(String(copy.recommendPages));
+        return;
+      }
+      if (ok && !copy.recommendPages) {
+        applyPageCount(chipId);
+        return;
+      }
+      if (!ok && copy.recommendPages) {
+        applyPageCount(chipId);
+      }
+    });
+  }
+
+  slot.appendChild(section);
+  bindPortfolioJournalExit(root, tripId);
+  var toJournal = section.querySelector("[data-fxi-to-journal]");
+  if (toJournal) {
+    toJournal.addEventListener("click", function () {
+      if (root && typeof root._onPortfolioToJournal === "function") {
+        root._onPortfolioToJournal();
+      }
+    });
+  }
+
+  fetchEntry(tripId)
+    .then(function (data) {
+      portfolioState = (data && data.portfolio) || null;
+      var pages = Number(portfolioState && portfolioState.pageCount) || 0;
+      var nextSpec = portfolioRefineIdentitySpec(pages);
+      if (thicknessEl) {
+        thicknessEl.textContent = nextSpec.thicknessLead
+          ? " · " + nextSpec.thicknessLead
+          : "";
+      }
+      selectedPages = renderPortfolioPageCountChips(
+        pageHost,
+        pageRow,
+        pageHint,
+        portfolioState,
+        { onRequest: requestPageCount }
+      );
+    })
+    .catch(function () {});
+}
+
 export function bindPortfolioJournalExit(root, tripId) {
   if (!root || root._onPortfolioToJournal) return;
   root._onPortfolioToJournal = function () {
@@ -1350,10 +1554,19 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     if (mode === "name" && slot.querySelector("[data-cover-name-font]")) return;
     var section = document.createElement("div");
     section.className = "preview-sheet__section preview-sheet__cover-section";
+    var nameNoun = coverNameLabel(readEditionFromDom(document));
     var titleArtHtml =
       '<div class="preview-sheet__title-art" data-title-art hidden>' +
-      '<p class="preview-sheet__hint preview-sheet__hint--compact">用杂志名生成封面字体（此版式支持时生效）。</p>' +
-      '<p class="preview-sheet__title-art-attr" data-title-art-attr>用你的杂志名生成封面字体 · 不生成风景图</p>' +
+      '<p class="preview-sheet__hint preview-sheet__hint--compact">' +
+      (isPortfolioEdition(readEditionFromDom(document))
+        ? "用书名生成封面字体（此版式支持时生效）。"
+        : "用杂志名生成封面字体（此版式支持时生效）。") +
+      "</p>" +
+      '<p class="preview-sheet__title-art-attr" data-title-art-attr>' +
+      (isPortfolioEdition(readEditionFromDom(document))
+        ? "用你的书名生成封面字体 · 不生成风景图"
+        : "用你的杂志名生成封面字体 · 不生成风景图") +
+      "</p>" +
       '<label class="preview-sheet__title-art-routec" data-title-art-routec-label hidden>' +
       '<input type="checkbox" class="preview-sheet__title-art-routec-check" data-title-art-routec-check />' +
       '<span class="preview-sheet__title-art-routec-copy">' +
@@ -1366,10 +1579,16 @@ export function mountCoverStyleControls(slot, tripId, opts) {
     if (mode === "name") {
       section.setAttribute("data-cover-name-font", "1");
       section.innerHTML =
-        '<span class="preview-sheet__label">杂志名</span>' +
+        '<span class="preview-sheet__label">' +
+        nameNoun +
+        "</span>" +
         '<p class="preview-sheet__hint preview-sheet__hint--compact">先改成你喜欢的名字，再生成封面字体。</p>' +
-        '<p class="preview-sheet__cover-name-stale" data-cover-name-stale hidden role="status">杂志名已改 · 旧字体已过期，请重新生成</p>' +
-        '<label class="preview-sheet__label" for="preview-cover-magazine-name">杂志名</label>' +
+        '<p class="preview-sheet__cover-name-stale" data-cover-name-stale hidden role="status">' +
+        nameNoun +
+        "已改 · 旧字体已过期，请重新生成</p>" +
+        '<label class="preview-sheet__label" for="preview-cover-magazine-name">' +
+        nameNoun +
+        "</label>" +
         '<input id="preview-cover-magazine-name" class="preview-sheet__cover-name-input" type="text" maxlength="20" autocomplete="off" placeholder="我的旅途" />' +
         '<p class="preview-sheet__hint preview-sheet__hint--compact preview-sheet__cover-name-meta">' +
         '<span>最多 20 字 · 字体效果宜用更短名字</span>' +
@@ -1414,7 +1633,9 @@ export function mountCoverStyleControls(slot, tripId, opts) {
 
     function setTitleArtAttribution(engine) {
       if (!titleArtAttr) return;
-      var base = "用你的杂志名生成封面字体 · 不生成风景图";
+      var base = isPortfolioEdition(readEditionFromDom(document))
+        ? "用你的书名生成封面字体 · 不生成风景图"
+        : "用你的杂志名生成封面字体 · 不生成风景图";
       var detail =
         engine === "diffusion-fixed-prompt-v1"
           ? "字迹由 AI 手写体生成"
@@ -1555,11 +1776,18 @@ export function mountCoverStyleControls(slot, tripId, opts) {
       if (!nameInput) return Promise.resolve(false);
       var next = String(nameInput.value || "").trim();
       if (!next) {
-        showToolbarToast("请填写杂志名", { error: true });
+        showToolbarToast(
+          isPortfolioEdition(readEditionFromDom(document))
+            ? "请填写书名"
+            : "请填写杂志名",
+          { error: true }
+        );
         return Promise.resolve(false);
       }
       if (next.length > 20) {
-        showToolbarToast("杂志名最多 20 个字", { error: true });
+        showToolbarToast(coverNameTooLongToast(readEditionFromDom(document)), {
+          error: true,
+        });
         return Promise.resolve(false);
       }
       if (next === savedMagazineName) {

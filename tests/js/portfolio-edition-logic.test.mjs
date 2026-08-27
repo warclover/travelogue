@@ -10,6 +10,7 @@ import {
   editionCardOptionsForPipeline,
   editionSwitchConfirm,
   overflowJournalCta,
+  portfolioRefineIdentitySpec,
   pageCountChipOptions,
   portfolioFlagOffBannerCopy,
   recommendPageCount,
@@ -34,9 +35,23 @@ test("确认文案必含文字可能无法全部保留", () => {
   assert.equal(toPf.body.includes("edition"), false);
 
   const toJ = editionSwitchConfirm("portfolio", "journal");
-  assert.equal(toJ.title, "改回「游记」？");
+  assert.equal(toJ.title, "改做成游记？");
+  assert.equal(toJ.confirmText, "按游记重排");
+  assert.equal(toJ.cancelText, "还是作品集");
   assert.ok(toJ.body.includes(EDITION_COPY_LOCK));
+  assert.match(toJ.body, /对不上新的页/);
   assert.equal(toJ.body.includes("换种分享"), false);
+});
+
+test("F3 · 作品集精修 spec 无成册类型两卡", () => {
+  const spec = portfolioRefineIdentitySpec(36);
+  assert.equal(spec.title, "改这本作品集");
+  assert.equal(spec.coverLabel, "书名");
+  assert.equal(spec.thicknessLead, "现在是 36 页");
+  assert.equal(spec.showEditionCards, false);
+  assert.equal(spec.showLayoutVibe, false);
+  assert.equal(spec.action.label, "想改做成一本游记？");
+  assert.equal(spec.action.to, "journal");
 });
 
 test("shelfEditionLine 游记与作品集都标身份", () => {

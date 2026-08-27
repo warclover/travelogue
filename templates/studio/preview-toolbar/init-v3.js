@@ -121,6 +121,7 @@ import {
   mountCoverStyleControls,
   mountLayoutVibeControls,
   mountEditionControls,
+  mountPortfolioRefineControls,
   bindPortfolioJournalExit,
   maybeShowLayoutVibeImportHint,
   mountTemplateControls,
@@ -404,6 +405,10 @@ export function initToolbarV3(root, tripId) {
       mountLayoutVibeControls(slot, tripId, { root: root });
     },
     mountEditionControls: function (slot) {
+      if (readToolbarEdition(root) === "portfolio") {
+        mountPortfolioRefineControls(slot, tripId, { root: root });
+        return;
+      }
       mountEditionControls(slot, tripId, { root: root });
     },
     isPortfolio: function () {
