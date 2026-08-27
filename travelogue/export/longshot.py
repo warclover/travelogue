@@ -104,6 +104,7 @@ class PortfolioBundleResult(LongshotExportResult):
 
     skipped_pages: list[str] = field(default_factory=list)
     share_zip: Path | None = None
+    pages_failed: bool = False
 
 
 class _PlaywrightBrowserPool:

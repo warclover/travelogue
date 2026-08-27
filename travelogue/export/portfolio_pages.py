@@ -399,6 +399,8 @@ def export_portfolio_bundle(
         )
 
     pages.share_zip = zip_path
+    if include_pages and not pages.outputs:
+        pages.pages_failed = True
     hint_bits: list[str] = []
     if pages.outputs:
         hint_bits.append(pages.user_hint or f"页图 {len(pages.outputs)} 张已保存")

@@ -137,6 +137,7 @@ def test_bundle_zip_failure_still_writes_pages(tmp_path: Path) -> None:
     result = export_portfolio_bundle(tmp_path, capture_fn=capture, packager_fn=boom)
     assert result.page_count == 1
     assert result.share_zip is None
+    assert result.pages_failed is False
     assert "打包失败" in result.user_hint
     assert result.outputs[0].path.is_file()
 
@@ -155,6 +156,7 @@ def test_bundle_pages_failure_still_writes_zip(tmp_path: Path) -> None:
 
     result = export_portfolio_bundle(tmp_path, capture_fn=capture, packager_fn=ok_zip)
     assert result.outputs == []
+    assert result.pages_failed is True
     assert result.share_zip is not None and result.share_zip.is_file()
     assert "页图未产出" in result.user_hint
     assert "可打开翻阅" in result.user_hint
@@ -179,7 +181,31 @@ def test_bundle_pages_only_skips_packager(tmp_path: Path) -> None:
     )
     assert result.page_count == 1
     assert result.share_zip is None
+    assert result.pages_failed is False
     assert result.outputs[0].path.is_file()
+
+
+def test_bundle_book_only_does_not_mark_pages_failed(tmp_path: Path) -> None:
+    _write_trip(tmp_path, edition="portfolio", screens=1)
+
+    def capture(_target):
+        raise AssertionError("pages must not run")
+
+    def ok_zip(trip_dir: Path) -> Path:
+        out = trip_dir / EXPORT_OUTPUT_DIRNAME / "奈良-分享.zip"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(b"PK\x05\x06")
+        return out
+
+    result = export_portfolio_bundle(
+        tmp_path,
+        capture_fn=capture,
+        packager_fn=ok_zip,
+        include_pages=False,
+    )
+    assert result.outputs == []
+    assert result.pages_failed is False
+    assert result.share_zip is not None and result.share_zip.is_file()
 
 
 def test_collage_pack_does_not_read_pattern_id() -> None:

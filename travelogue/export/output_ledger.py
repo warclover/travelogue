@@ -76,6 +76,7 @@ def _ledger_lock(trip_dir: Path) -> Iterator[None]:
         held.add(key)
         _ledger_hold.keys = held
     fh = None
+    locked = False
     try:
         if outermost:
             lock_path = ledger_path(trip_dir).with_name(f".{LEDGER_NAME}.lock")
@@ -94,19 +95,21 @@ def _ledger_lock(trip_dir: Path) -> Iterator[None]:
                 import fcntl
 
                 fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            locked = True
         yield
     finally:
         if fh is not None:
             try:
-                if os.name == "nt":
-                    import msvcrt
+                if locked:
+                    if os.name == "nt":
+                        import msvcrt
 
-                    fh.seek(0)
-                    msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
-                else:
-                    import fcntl
+                        fh.seek(0)
+                        msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        import fcntl
 
-                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+                        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
             finally:
                 fh.close()
         if outermost:
@@ -550,7 +553,9 @@ def record_dispatch_result(
             batch_id=batch_id,
             segmented=segmented,
         )
-    elif resolve_output_id(pid) == "portfolio_pages":
+    elif resolve_output_id(pid) == "portfolio_pages" and getattr(
+        result, "pages_failed", False
+    ):
         drop_output_row(trip_dir, "portfolio_pages")
     share_zip = getattr(result, "share_zip", None)
     if share_zip:

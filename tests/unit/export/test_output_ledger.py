@@ -15,7 +15,12 @@ import pytest
 
 from travelogue.config import AppConfig
 from travelogue.config.runtime import app_config_scope
-from travelogue.export.longshot import EXPORT_OUTPUT_DIRNAME, LongshotExportResult, LongshotOutput
+from travelogue.export.longshot import (
+    EXPORT_OUTPUT_DIRNAME,
+    LongshotExportResult,
+    LongshotOutput,
+    PortfolioBundleResult,
+)
 from travelogue.export.output_ledger import (
     LEDGER_NAME,
     LEDGER_SCHEMA_VERSION,
@@ -343,7 +348,11 @@ def test_empty_portfolio_pages_drops_stale_row(tmp_path: Path) -> None:
             surface="folio",
         ),
     )
-    result = LongshotExportResult(outputs=[], platform="portfolio_pages")
+    result = PortfolioBundleResult(
+        outputs=[],
+        platform="portfolio_pages",
+        pages_failed=True,
+    )
     record_dispatch_result(
         trip_dir,
         result,
@@ -353,6 +362,42 @@ def test_empty_portfolio_pages_drops_stale_row(tmp_path: Path) -> None:
     )
     rows = read_ledger(trip_dir) or []
     assert all(rec["outputId"] != "portfolio_pages" for rec in rows)
+    assert (export_dir / "页-01.png").is_file()
+
+
+def test_book_only_export_keeps_existing_pages_row(tmp_path: Path) -> None:
+    trip_dir, trip = _trip(tmp_path)
+    export_dir = trip_dir / EXPORT_OUTPUT_DIRNAME
+    _png(export_dir, "页-01.png")
+    _png(export_dir, "这一本.zip")
+    append_output(
+        trip_dir,
+        _record(
+            trip,
+            output_id="portfolio_pages",
+            profile="portfolio_pages",
+            files=["页-01.png"],
+            label="页图",
+            surface="folio",
+        ),
+    )
+    result = PortfolioBundleResult(
+        outputs=[],
+        platform="portfolio_pages",
+        share_zip=export_dir / "这一本.zip",
+        pages_failed=False,
+    )
+    record_dispatch_result(
+        trip_dir,
+        result,
+        platform="portfolio_pages",
+        bundle_fp="lse16f41315f6a",
+        trip=trip,
+    )
+    rows = read_ledger(trip_dir) or []
+    ids = {rec["outputId"] for rec in rows}
+    assert "portfolio_pages" in ids
+    assert "share_zip" in ids
     assert (export_dir / "页-01.png").is_file()
 
 

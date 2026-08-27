@@ -1072,6 +1072,7 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
         from travelogue.export.output_ledger import (
             OutputLedgerError,
             load_trip_dict,
+            lookup_output_meta,
             output_ledger_enabled,
             record_successful_output,
             spec_from_profile,
@@ -1092,13 +1093,17 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
             else:
                 ledger_files = [Path(rel).name]
             trip = load_trip_dict(trip_dir)
+            ledger_profile = "wechat_chat"
+            meta = lookup_output_meta(platform, segmented=bool(seg_n and seg_n > 1))
+            if meta is not None and meta.surface not in ("folio", "bundle", "spread"):
+                ledger_profile = meta.profile
             try:
                 record_successful_output(
                     trip_dir,
                     trip=trip,
-                    profile=platform,
+                    profile=ledger_profile,
                     files=ledger_files,
-                    spec=spec_from_profile(platform, scale=1, fmt=fmt),
+                    spec=spec_from_profile(ledger_profile, scale=1, fmt=fmt),
                     bundle_fp=longshot_bundle_version(trip),
                     batch_id=str(payload.get("batchId") or payload.get("jobId") or "").strip(),
                     segmented=bool(seg_n and seg_n > 1),
