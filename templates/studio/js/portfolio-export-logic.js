@@ -273,6 +273,199 @@ export function firstSuccessRefineLabel(edition) {
 
 export var PORTFOLIO_EXPORT_PREFS_KEY = "travelogue.studio.portfolioExportPrefs.v1";
 export var PORTFOLIO_SOCIAL_PREFS_KEY = "travelogue.studio.portfolioSocialPrefs.v1";
+export var CLG_CREATE_JOURNAL_KEY = "travelogue.studio.clgCreateJournal.v1";
+export var CLG_SIBLING_TIMEOUT_MS = 4000;
+export var CROSSING_LONGSHOT_LOCKED = ["wechat_chat", "wechat_moments"];
+export var CROSSING_AVAILABLE = [
+  "xiaohongshu",
+  "wechat_official",
+  "poster_bric",
+  "album_spread",
+];
+
+export function isCrossingLongshotLocked(platform) {
+  return CROSSING_LONGSHOT_LOCKED.indexOf(String(platform || "").trim()) >= 0;
+}
+
+export function isCrossingAvailablePlatform(platform) {
+  return CROSSING_AVAILABLE.indexOf(String(platform || "").trim()) >= 0;
+}
+
+/** 上次可用卡，否则小红书（旗关则下一张可用 ECC）。 */
+export function nextCrossingDefaultPlatform(prefs, enabled) {
+  var allow = CROSSING_AVAILABLE.filter(function (id) {
+    return !enabled || !enabled.length || enabled.indexOf(id) >= 0;
+  });
+  if (!allow.length) allow = ["xiaohongshu"];
+  var prefPlat = prefs && String(prefs.platform || "").trim();
+  if (prefPlat && allow.indexOf(prefPlat) >= 0) return prefPlat;
+  var listed = prefs && Array.isArray(prefs.platforms) ? prefs.platforms : [];
+  for (var i = 0; i < listed.length; i++) {
+    var id = String(listed[i] || "").trim();
+    if (id && allow.indexOf(id) >= 0) return id;
+  }
+  return allow[0];
+}
+
+export function crossingGateCopy() {
+  return {
+    badge: "用这些照片",
+    leadSecondary: "小红书、海报和印刷可以在这里做。长图要在游记里做。",
+    gateSub: "要先有一本游记",
+    sheetTitle: "长图要在游记里做",
+    sheetHasBody:
+      "微信群和朋友圈的长图，要打开游记那本才能做。书架上已经有一本《{title}》。",
+    sheetHasBodySameTitle:
+      "微信群和朋友圈的长图，要打开游记那本才能做。这个文件夹已经做过一本游记。",
+    sheetHasCta: "打开那本游记",
+    sheetStay: "留在作品集",
+    sheetNoneBody:
+      "要用微信群或朋友圈发长图，得先做一本游记。做好之后，这本作品集还在，两本都可以留在书架上。",
+    sheetNoneCta: "去做一本游记",
+    sheetXhs: "先出小红书",
+    sheetConvertBody:
+      "找不到原来的照片文件夹，没法再做一本新的游记。也可以把这本书改做成游记——那会重排这一本，不是再留一本。",
+    sheetConvertCta: "想改做成一本游记？",
+    toastOpenFail: "那本游记打不开",
+    toastBlockedExport: "长图要在游记里做",
+    sheetLoading: "正在找书架上的游记…",
+    toastSiblingSurprise: "书架上已经有一本游记",
+  };
+}
+
+/**
+ * @param {{present?: boolean, tripId?: string, title?: string, canCreateSibling?: boolean, loading?: boolean}|null} sibling
+ * @param {string} [currentTitle]
+ */
+export function crossingGateSheetModel(sibling, currentTitle) {
+  var copy = crossingGateCopy();
+  sibling = sibling || {};
+  if (sibling.loading) {
+    return {
+      title: copy.sheetTitle,
+      body: copy.sheetLoading,
+      primary: copy.sheetHasCta,
+      primaryDisabled: true,
+      secondary: copy.sheetStay,
+      variant: "loading",
+    };
+  }
+  if (sibling.present && sibling.tripId) {
+    var title = String(sibling.title || "").trim();
+    var same =
+      currentTitle && title && title === String(currentTitle || "").trim();
+    return {
+      title: copy.sheetTitle,
+      body: same
+        ? copy.sheetHasBodySameTitle
+        : copy.sheetHasBody.replace("{title}", title || "游记"),
+      primary: copy.sheetHasCta,
+      secondary: copy.sheetStay,
+      variant: "has",
+    };
+  }
+  if (sibling.canCreateSibling) {
+    return {
+      title: copy.sheetTitle,
+      body: copy.sheetNoneBody,
+      primary: copy.sheetNoneCta,
+      secondary: copy.sheetXhs,
+      variant: "none",
+    };
+  }
+  return {
+    title: copy.sheetTitle,
+    body: copy.sheetConvertBody,
+    primary: copy.sheetConvertCta,
+    secondary: copy.sheetStay,
+    variant: "convert",
+  };
+}
+
+function _sessionStore(explicit) {
+  if (explicit) return explicit;
+  try {
+    if (typeof sessionStorage !== "undefined") return sessionStorage;
+  } catch (_e) {}
+  return null;
+}
+
+export function writeClgCreateJournalHandshake(payload, store) {
+  var kv = _sessionStore(store);
+  if (!kv || typeof kv.setItem !== "function") return;
+  kv.setItem(
+    CLG_CREATE_JOURNAL_KEY,
+    JSON.stringify({
+      albumPath: payload && payload.albumPath,
+      edition: "journal",
+      fromTripId: (payload && payload.fromTripId) || "",
+      ts: Date.now(),
+    })
+  );
+}
+
+export function crossingSiblingAfterFailure(cachedAlbumRoot) {
+  var albumRoot = String(cachedAlbumRoot || "").trim();
+  return {
+    ok: true,
+    present: false,
+    tripId: null,
+    title: null,
+    albumRoot: albumRoot || null,
+    canCreateSibling: !!albumRoot,
+  };
+}
+
+export function settleCrossingSiblingResponse(res, cachedAlbumRoot) {
+  if (res && res.status === 200 && res.body && res.body.ok) {
+    var albumRoot = String(res.body.albumRoot || cachedAlbumRoot || "").trim();
+    return {
+      ok: true,
+      present: !!(res.body.present && res.body.tripId),
+      tripId: res.body.tripId || null,
+      title: res.body.title || null,
+      albumRoot: albumRoot || null,
+      canCreateSibling: res.body.canCreateSibling === true,
+    };
+  }
+  return crossingSiblingAfterFailure(cachedAlbumRoot);
+}
+
+export function crossingOpenJournalFailedSibling(prev) {
+  return crossingSiblingAfterFailure(prev && prev.albumRoot);
+}
+
+/** BLK-CLG-05 · 去做一本走进向导后 peek 到游记，改开那本。 */
+export function shouldOpenSiblingInsteadOfOverwrite(clgHandshake, existingJournal) {
+  return !!(
+    clgHandshake &&
+    existingJournal &&
+    String(existingJournal.tripId || "").trim()
+  );
+}
+
+export function consumeClgCreateJournalHandshake(store) {
+  var kv = _sessionStore(store);
+  if (!kv || typeof kv.getItem !== "function") return null;
+  try {
+    var raw = kv.getItem(CLG_CREATE_JOURNAL_KEY);
+    if (!raw) return null;
+    kv.removeItem(CLG_CREATE_JOURNAL_KEY);
+    var parsed = JSON.parse(raw);
+    var albumPath = parsed && String(parsed.albumPath || "").trim();
+    if (!albumPath) return null;
+    return {
+      albumPath: albumPath,
+      edition: "journal",
+      fromTripId: String((parsed && parsed.fromTripId) || ""),
+    };
+  } catch (_e) {
+    try {
+      kv.removeItem(CLG_CREATE_JOURNAL_KEY);
+    } catch (_e2) {}
+    return null;
+  }
+}
 
 function _kvStore(explicit) {
   if (explicit) return explicit;
@@ -313,26 +506,32 @@ export function writePortfolioExportPrefs(prefs, store) {
   _writeJsonStore(_kvStore(store), PORTFOLIO_EXPORT_PREFS_KEY, { product: product });
 }
 
-/** F2 · 过河上次平台。禁止写 journal 钥，也不得改 F1 product。 */
+/** F2 · 过河上次平台。禁止写 journal 钥，也不得改 F1 product。闸卡不得回落。 */
 export function readPortfolioSocialPrefs(store) {
   var parsed = _readJsonStore(_kvStore(store), PORTFOLIO_SOCIAL_PREFS_KEY) || {};
-  var platform = String(parsed.platform || "").trim() || "wechat_chat";
-  if (platform === "portfolio_pages") platform = "wechat_chat";
+  var platform = String(parsed.platform || "").trim();
+  if (platform === "portfolio_pages" || isCrossingLongshotLocked(platform)) {
+    platform = "";
+  }
   var platforms = Array.isArray(parsed.platforms)
     ? parsed.platforms
         .map(function (id) {
           return String(id || "").trim();
         })
         .filter(function (id) {
-          return id && id !== "portfolio_pages";
+          return id && id !== "portfolio_pages" && !isCrossingLongshotLocked(id);
         })
     : [];
-  if (!platforms.length) platforms = [platform];
-  if (platforms.indexOf(platform) < 0) platform = platforms[0];
-  return { platform: platform, platforms: platforms };
+  platform = nextCrossingDefaultPlatform({
+    platform: platform,
+    platforms: platforms,
+  });
+  return { platform: platform, platforms: [platform] };
 }
 
 export function writePortfolioSocialPrefs(prefs, store) {
+  var rawPlat = prefs && String(prefs.platform || "").trim();
+  if (isCrossingLongshotLocked(rawPlat)) return;
   var next = readPortfolioSocialPrefs({
     getItem: function () {
       return JSON.stringify({
@@ -341,6 +540,7 @@ export function writePortfolioSocialPrefs(prefs, store) {
       });
     },
   });
+  if (isCrossingLongshotLocked(next.platform)) return;
   _writeJsonStore(_kvStore(store), PORTFOLIO_SOCIAL_PREFS_KEY, next);
 }
 
@@ -380,7 +580,7 @@ export function portfolioSuccessCopy(result, portfolio) {
 /** D-PFM-10 / 30 · 作品集导出 ▾ 换种分享（默认折叠）+ 印刷副文 */
 export var PORTFOLIO_SOCIAL_GROUP_TITLE = "用同一批照片出社交图";
 export var PORTFOLIO_SOCIAL_HINT =
-  "社交图仍按现网拼贴，不是这一本作品集的页。";
+  "小红书、海报和印刷可以在这里做。长图要在游记里做。";
 export var PORTFOLIO_ALBUM_SPREAD_TITLE = "印刷跨页（现网画册）";
 export var PORTFOLIO_ALBUM_SPREAD_SUB =
   "给印刷公司的 3:4 跨页，不是这一本";
@@ -412,15 +612,18 @@ export function portfolioExportDefaultFaceSpec() {
 }
 
 export function portfolioExportSocialFaceSpec() {
+  var copy = crossingGateCopy();
   return {
     title: "发到微信、小红书…",
     edition: "portfolio",
     face: "social",
-    badge: "按游记来做",
-    banner: "这不是在导出作品集。会用同一批照片，按游记的方式做成能发的图。",
+    badge: copy.badge,
+    banner: "这不是在导出作品集。",
+    leadSecondary: copy.leadSecondary,
     backLabel: "返回，继续导出作品集",
-    confirmLabel: "导出长图",
+    confirmLabel: "导出小红书",
     products: [],
+    lockedPlatforms: CROSSING_LONGSHOT_LOCKED.slice(),
   };
 }
 
@@ -499,7 +702,10 @@ export function wrapJournalPanelAsPortfolioSocialFace(journalHtml) {
   html = html.replace(
     '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>',
     '<p class="preview-toolbar__fxi-banner" data-fxi-banner>' +
+      "<strong>" +
       spec.banner +
+      "</strong> " +
+      spec.leadSecondary +
       "</p>"
   );
   html = html.replace(

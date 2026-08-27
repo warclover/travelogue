@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.1.6**（Draft · F1–F3 已签 · **游记精修/导出零触及** · W1 可拆 · 待七席） |
+| **文档版本** | **v0.1.8**（Draft · F1–F3 已签 · **游记精修/导出零触及** · W1–W3 已落 · **过河哪些能导见 CLG v0.1.2** · 待七席） |
 | **状态** | **Draft**。2026-08-26 产品：此次实现**不得**影响游记管线的精修与导出。F1–F3 已签。**不批无条件 Go**。W1 编码门开，**BLK-FXI-01 为合入第一门**。不挡 DPI / PFM 装配合同 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「前端身份面隔离」— **FXI**（Frontend Identity Isolation） |
@@ -13,10 +13,10 @@
 | **评审** | 待七席。方向来源：本仓库产品对话（作品集默认面按身份藏干净；过河必须换面并说清「这不是这本书」；游记零改） |
 | **前置条件** | [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) W0–W3 已合入 · [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) W0–W3 已合入 · [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) W1+W2 已落地 · [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) W1–W3 已落地 · 六平台导出 GA（ADR-021） |
 | **线框** | **W0 出稿。F1–F3 已签。** [wireframes/frontend-identity-isolation-v1-wireframe.html](./wireframes/frontend-identity-isolation-v1-wireframe.html) · [签核](./acceptance-records/fxi-f1-f3-signoff-2026-08-26.md)。并排只是对照，不是同一本书同时出两面。本文 **§6 / §7 / §9 为合同底稿**；**§8 为冻结声明**；**§4.0 为身份联动** |
-| **关联文档** | [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（能力源：D-PFM-10 换种分享仍在）· [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（点法对齐仍在，落点改判）· [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（用词表 W2 继续切）· [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md)（S-09 Dock 缝，禁止在 `dock.js` 铺 `is_portfolio`）· [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) |
+| **关联文档** | [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md)（能力源：D-PFM-10 换种分享仍在）· [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（点法对齐仍在，落点改判）· [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（用词表 W2 继续切）· [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md)（S-09 Dock 缝，禁止在 `dock.js` 铺 `is_portfolio`）· [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md)（过河哪些能导；改判本文 §7.2） |
 | **验收** | 本文 **§16 为源**（合入前可按 PFO 体例拆 `ACCEPTANCE-FRONTEND-IDENTITY-ISOLATION-V1.md`） |
 | **实施** | 本文 **§14 为源** |
-| **更新日期** | 2026-08-26 |
+| **更新日期** | 2026-08-27 |
 
 > **定位**
 >
@@ -382,13 +382,13 @@ Dock「导出作品集」、FirstSuccess「导出作品集」。**同一份** `p
 | 元素 | 合同 |
 |------|------|
 | 标题 | **发到微信、小红书…**（禁止「出社交图」「换种分享」） |
-| 徽章 | **按游记来做**（不是「作品集」） |
-| 顶条 | 固定可见。主句：**这不是在导出作品集。** 副句：**会用同一批照片，按游记的方式做成能发的图。** 禁止「拼贴 / 这本书的页」 |
+| 徽章 | 原「按游记来做」。**2026-08-27 改判为「用这些照片」**（仅 F2），见 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md) |
+| 顶条 | 固定可见。主句：**这不是在导出作品集。** 副句 **2026-08-27 改判为**「小红书、海报和印刷可以在这里做。长图要在游记里做。」见 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md) D-CLG-03。禁止「拼贴 / 这本书的页」 |
 | 返回 | **返回，继续导出作品集**。回到 F1，不触发导出 |
-| 确定钮 | **导出长图**（与游记同一主钮文案，点法对齐） |
+| 确定钮 | 原「导出长图」。**2026-08-27 改判（仅 F2）**：跟平台短句（默认「导出小红书」）。点法仍是选 → 确定 → Dock。游记主钮零改。见 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md) D-CLG-07 |
 | 平台网格 | **复用游记** `buildPanelHtml` 的点法与卡序，禁止另做一套社交 UX（D-FXI-02） |
 | 印刷 | 游记叫「画册印刷」；本面加副文「不是这本作品集」。**不得**与「这一本」同面 |
-| Writer | 现网 ECC / Slice；**禁止**读作品集 `screens` / `page-*`（D-PFM-10 能力半句） |
+| Writer | 现网 ECC / Slice；**禁止**读作品集 `screens` / `page-*`（D-PFM-10 能力半句）。**2026-08-27 改判**：过河只开导 ECC 四平台；微信群 / 朋友圈为闸卡，见 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md) D-CLG-01～04 |
 | 批量 | 仍禁止 `portfolio_pages` 与社交勾在同一 `platforms[]`（N-PFM-15） |
 
 ### 7.3 导完
@@ -821,6 +821,9 @@ PFM / PFO / PIS 既有隔离、溢出、打开∥导出、页数 X 断言不废�
 
 要改装配 / Writer / CSS 族
   → PFM + DPI
+
+要改过河「六种里哪些能导」、灰卡与同夹游记去向
+  → [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md)（改判本文 §7.2）
 ```
 
 ---
@@ -836,3 +839,5 @@ PFM / PFO / PIS 既有隔离、溢出、打开∥导出、页数 X 断言不废�
 | v0.1.4 | 2026-08-26 | **F3 产品已签。** 原话：作品集精修独立 · 游记精修保持不变即可。F1 / F2 未签，W1 编码门仍关。 |
 | v0.1.5 | 2026-08-26 | **F1 / F2 已签。** 产品确认：精修与导出跟导入所选身份联动，互斥、不同时出现（D-FXI-07 / G-FXI-10 / AC-FXI-19）。线框并排只是对照。W1 编码门开。 |
 | v0.1.6 | 2026-08-26 | **游记零触及升为合入第一门。** 产品：此次实现不得影响游记精修与导出。§12.4 禁止改文件清单。BLK-FXI-01：游记快照红则整 PR 打回。 |
+| v0.1.7 | 2026-08-27 | **过河哪些能导改判指针。** §7.2 Writer / §18 挂 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md)。F1 / F3 / 游记冻结不重开。 |
+| v0.1.8 | 2026-08-27 | **CLG 八席回写指针。** F2 副句去拼贴；确定钮仅 F2 改跟平台；徽章「用这些照片」。 |

@@ -130,6 +130,9 @@ def _dispatch_export_writers(
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
 
     pid = normalize_platform_id(platform)
+    from travelogue.export.crossing_longshot import reject_portfolio_crossing_longshot
+
+    reject_portfolio_crossing_longshot(trip_dir, pid)
     if pid == "moments_grid":
         from travelogue.export.photo_grid_pack import export_photo_grid_pack
 

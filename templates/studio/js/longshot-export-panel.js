@@ -8,7 +8,11 @@
 import { HELP_COPY } from "./help-onboarding.js";
 import {
   albumSpreadCardCopy,
+  crossingGateCopy,
+  crossingGateSheetModel,
+  isCrossingLongshotLocked,
   isPortfolioSocialExportFace,
+  nextCrossingDefaultPlatform,
   portfolioExportDefaultFaceHtml,
   wrapJournalPanelAsPortfolioSocialFace,
 } from "./portfolio-export-logic.js";
@@ -799,12 +803,99 @@ export function buildPanelHtml(platformIds, opts) {
  * @param {{platform:string, mode:string, scale:number, slideCount?:number|null, padMode?:string}} draft
  * @param {{smartCropEnabled?: boolean, photoCount?: number}} [opts]
  */
+function _clgEsc(s) {
+  return String(s || "").replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+
+export function crossingGateSheetHtml(model) {
+  model = model || crossingGateSheetModel({ loading: true });
+  var copy = crossingGateCopy();
+  return (
+    '<div class="preview-toolbar__clg-veil" data-clg-veil></div>' +
+    '<div class="preview-toolbar__clg-sheet" role="dialog" aria-modal="true" aria-labelledby="clg-sheet-title">' +
+    '<button type="button" class="preview-toolbar__clg-dismiss" data-clg-dismiss aria-label="' +
+    _clgEsc(copy.sheetStay) +
+    '">×</button>' +
+    '<h3 id="clg-sheet-title" class="preview-toolbar__clg-sheet-title">' +
+    _clgEsc(model.title) +
+    "</h3>" +
+    '<p class="preview-toolbar__clg-sheet-body">' +
+    _clgEsc(model.body) +
+    "</p>" +
+    '<div class="preview-toolbar__clg-sheet-actions">' +
+    (model.primary
+      ? '<button type="button" class="preview-toolbar__export-popover-ok" data-clg-primary' +
+        (model.primaryDisabled ? " disabled" : "") +
+        ">" +
+        _clgEsc(model.primary) +
+        "</button>"
+      : "") +
+    (model.secondary
+      ? '<button type="button" class="preview-toolbar__export-popover-cancel" data-clg-secondary>' +
+        _clgEsc(model.secondary) +
+        "</button>"
+      : "") +
+    "</div></div>"
+  );
+}
+
+export function renderCrossingGateSheet(pop, sibling, currentTitle) {
+  if (!pop || typeof pop.querySelector !== "function") return;
+  var model = crossingGateSheetModel(sibling, currentTitle);
+  var host = pop.querySelector("[data-clg-sheet]");
+  if (!host && typeof document !== "undefined" && document.createElement) {
+    host = document.createElement("div");
+    host.setAttribute("data-clg-sheet", "1");
+    host.className = "preview-toolbar__clg-sheet-host";
+    pop.appendChild(host);
+  }
+  if (!host) return;
+  host.hidden = false;
+  host.innerHTML = crossingGateSheetHtml(model);
+  pop.classList.add("is-clg-open");
+  host._clgVariant = model.variant;
+}
+
+export function closeCrossingGateSheet(pop) {
+  if (!pop || typeof pop.querySelector !== "function") return;
+  var pid = pop._clgGatePid;
+  pop._clgSheetOpen = false;
+  var host = pop.querySelector("[data-clg-sheet]");
+  if (host) {
+    host.hidden = true;
+    host.innerHTML = "";
+  }
+  pop.classList.remove("is-clg-open");
+  var gate =
+    pid &&
+    pop.querySelector &&
+    pop.querySelector('[data-studio-longshot-platform="' + pid + '"]');
+  if (gate && typeof gate.focus === "function") {
+    try {
+      gate.focus();
+    } catch (_eFocus) {}
+  }
+}
+
 export function syncPanelUI(pop, draft, opts) {
   if (!pop || !draft) return;
   opts = opts || {};
+  var socialFace = isPortfolioSocialExportFace(pop);
   var platforms = normalizePlatformList(draft.platforms || [draft.platform]);
-  var isBatch =
-    platforms.length > 1 && !isPortfolioSocialExportFace(pop);
+  if (socialFace) {
+    var usable = platforms.filter(function (id) {
+      return !isCrossingLongshotLocked(id);
+    });
+    if (!usable.length) {
+      usable = [nextCrossingDefaultPlatform({ platform: draft.platform, platforms: platforms })];
+    }
+    draft.platforms = usable.slice(0, 1);
+    draft.platform = draft.platforms[0];
+    platforms = draft.platforms.slice();
+  }
+  var isBatch = platforms.length > 1 && !socialFace;
   var platform = platforms[0];
   var meta = PLATFORMS[platform] || PLATFORMS.wechat_chat;
   // MVP · 批量态（≥2 平台）不做手风琴逐平台设置，统一隐藏张数/跨页数控件。
@@ -820,12 +911,28 @@ export function syncPanelUI(pop, draft, opts) {
     }
   }
 
+  var gateCopy = socialFace ? crossingGateCopy() : null;
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
-    var on = platforms.indexOf(btn.getAttribute("data-studio-longshot-platform")) >= 0;
+    var pid = btn.getAttribute("data-studio-longshot-platform");
+    var on = platforms.indexOf(pid) >= 0;
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.setAttribute("aria-checked", on ? "true" : "false");
-    btn.setAttribute("role", "checkbox");
+    btn.setAttribute("role", socialFace ? "radio" : "checkbox");
+    if (socialFace && isCrossingLongshotLocked(pid)) {
+      btn.setAttribute("data-clg-locked", "1");
+      var sub =
+        btn.querySelector &&
+        btn.querySelector(".preview-toolbar__export-platform-card__sub");
+      if (sub) {
+        sub.textContent = gateCopy.gateSub;
+        if (!sub.id) sub.id = "clg-gate-sub-" + pid;
+        btn.setAttribute("aria-describedby", sub.id);
+      }
+    } else {
+      btn.removeAttribute("data-clg-locked");
+      btn.removeAttribute("aria-describedby");
+    }
   });
   var batchHint = pop.querySelector("[data-batch-hint]");
   if (batchHint) {
@@ -914,7 +1021,8 @@ export function syncPanelUI(pop, draft, opts) {
 
   var modeField = pop.querySelector('[data-field="mode"]');
   // 仅微信群单选显「按章/一整张」；批量或其它平台隐藏（D-LNG2-15 / D-BEX-01）
-  if (modeField) modeField.hidden = isBatch || !meta.showSegmentMode;
+  // F2 过河面永远藏按章：闸卡不可用，可用卡也不吃卷轴。
+  if (modeField) modeField.hidden = socialFace || isBatch || !meta.showSegmentMode;
 
   var copyField = pop.querySelector('[data-field="copy"]');
   if (copyField) {
@@ -1057,6 +1165,17 @@ export function syncPanelUI(pop, draft, opts) {
       coach.textContent = "";
     }
   }
+
+  if (socialFace) {
+    var okBtn = pop.querySelector('[data-action="ok"]');
+    if (okBtn) {
+      var lockedMain = isCrossingLongshotLocked(platform);
+      okBtn.textContent = lockedMain
+        ? crossingGateCopy().sheetTitle
+        : shortCtaLabelForPlatform(platform);
+      okBtn.disabled = lockedMain;
+    }
+  }
 }
 
 /**
@@ -1118,6 +1237,16 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+      if (isPortfolioSocialExportFace(pop) && isCrossingLongshotLocked(pid)) {
+        if (typeof pop._onCrossingGate === "function") pop._onCrossingGate(pid);
+        return;
+      }
+      if (isPortfolioSocialExportFace(pop)) {
+        draft.platforms = [pid];
+        draft.platform = pid;
+        refresh();
+        return;
+      }
       var idx = draft.platforms.indexOf(pid);
       if (idx >= 0) {
         // 再点同一项：取消勾选（至少保留 1 个）

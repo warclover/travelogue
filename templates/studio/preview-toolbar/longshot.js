@@ -4,6 +4,7 @@
 "use strict";
 
 import {
+  getJson,
   postJson,
   postJsonBusyRetry,
   isJobBusyResponse,
@@ -16,6 +17,8 @@ import {
 import {
   bindPanelDraft,
   buildPanelHtml,
+  closeCrossingGateSheet,
+  renderCrossingGateSheet,
   exportSummaryLineForPlatforms,
   batchChecklistItems,
   batchChecklistItemsFromResult,
@@ -43,11 +46,19 @@ import {
 } from "../js/longshot-export-panel.js";
 import {
   PORTFOLIO_PAGES_PLATFORM,
+  CLG_SIBLING_TIMEOUT_MS,
+  crossingGateCopy,
+  crossingOpenJournalFailedSibling,
+  crossingSiblingAfterFailure,
   folioMainExportFlags,
+  isCrossingLongshotLocked,
   isPortfolioEdition,
   isPortfolioPrintOneShot,
+  nextCrossingDefaultPlatform,
   readPortfolioExportPrefs,
+  settleCrossingSiblingResponse,
   shouldRunSocialBatchExport,
+  writeClgCreateJournalHandshake,
   writePortfolioExportPrefs,
   writePortfolioSocialPrefs,
 } from "../js/portfolio-export-logic.js";
@@ -199,6 +210,174 @@ function fxiExportFaceKey(root, spec) {
   var edition = (spec && spec.edition) || "journal";
   if (edition !== "portfolio") return edition;
   return "portfolio:" + fxiExportFaceOf(root);
+}
+
+function _clgCurrentTitle() {
+  try {
+    var el = document.documentElement;
+    return String(
+      (el && el.getAttribute("data-title")) || document.title || ""
+    ).trim();
+  } catch (_e) {
+    return "";
+  }
+}
+
+function _clgJournalUrl(tripId) {
+  return "/" + encodeURIComponent(String(tripId || "").trim()) + "/index.html?exportPanel=1";
+}
+
+function applyCrossingSibling(root, pop, sibling) {
+  if (!pop) return;
+  if (sibling && sibling.albumRoot) pop._clgAlbumRoot = sibling.albumRoot;
+  pop._clgSibling = sibling;
+  if (pop._clgSheetOpen && typeof pop._onCrossingGate === "function") {
+    pop._onCrossingGate(pop._clgGatePid);
+  }
+}
+
+function prefetchCrossingSibling(root, pop) {
+  if (!pop || !isPortfolioEdition(root && root._edition)) return;
+  if (fxiExportFaceOf(root, pop) !== "social") return;
+  var tripId = _tripIdFromPath() || (root && root._tripId) || "";
+  if (!tripId) {
+    applyCrossingSibling(root, pop, crossingSiblingAfterFailure(pop._clgAlbumRoot));
+    return;
+  }
+  if (pop._clgSibling && pop._clgSibling.ok && !pop._clgSibling.loading) return;
+  pop._clgSibling = { loading: true, albumRoot: pop._clgAlbumRoot || null };
+  var finished = false;
+  function fromNetwork(sibling) {
+    finished = true;
+    applyCrossingSibling(root, pop, sibling);
+  }
+  getJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/sibling-journal")
+    .then(function (res) {
+      fromNetwork(settleCrossingSiblingResponse(res, pop._clgAlbumRoot));
+    })
+    .catch(function () {
+      if (!finished) {
+        fromNetwork(crossingSiblingAfterFailure(pop._clgAlbumRoot));
+      }
+    });
+  window.setTimeout(function () {
+    if (finished) return;
+    if (pop._clgSibling && pop._clgSibling.ok && !pop._clgSibling.loading) return;
+    applyCrossingSibling(root, pop, crossingSiblingAfterFailure(pop._clgAlbumRoot));
+  }, CLG_SIBLING_TIMEOUT_MS);
+}
+
+function bindCrossingGateSheet(root, pop) {
+  if (!pop) return;
+  pop._onCrossingGate = function (pid) {
+    pop._clgGatePid = pid || pop._clgGatePid || "";
+    pop._clgSheetOpen = true;
+    var sibling = pop._clgSibling || {
+      loading: true,
+      albumRoot: pop._clgAlbumRoot || null,
+    };
+    renderCrossingGateSheet(pop, sibling, _clgCurrentTitle());
+    var host = pop.querySelector("[data-clg-sheet]");
+    if (!host) return;
+    function stay(ev) {
+      if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      closeCrossingGateSheet(pop);
+    }
+    var primary = host.querySelector("[data-clg-primary]");
+    var secondary = host.querySelector("[data-clg-secondary]");
+    var dismiss = host.querySelector("[data-clg-dismiss]");
+    var veil = host.querySelector("[data-clg-veil]");
+    if (primary) {
+      primary.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        handleCrossingGatePrimary(root, pop);
+      });
+    }
+    if (secondary) {
+      secondary.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        handleCrossingGateSecondary(root, pop);
+      });
+    }
+    if (dismiss) dismiss.addEventListener("click", stay);
+    if (veil) veil.addEventListener("click", stay);
+    var focusEl =
+      (primary && !primary.disabled && primary) || secondary || dismiss;
+    if (focusEl && typeof focusEl.focus === "function") {
+      window.setTimeout(function () {
+        try {
+          focusEl.focus();
+        } catch (_eF) {}
+      }, 0);
+    }
+  };
+}
+
+function handleCrossingGatePrimary(root, pop) {
+  var sibling = pop._clgSibling || {};
+  var copy = crossingGateCopy();
+  if (sibling.present && sibling.tripId) {
+    var journalId = String(sibling.tripId);
+    getJson("/__travelogue/trips/" + encodeURIComponent(journalId) + "/entry")
+      .then(function (res) {
+        if (res.status === 200 && res.body) {
+          window.location.assign(_clgJournalUrl(journalId));
+          return;
+        }
+        if (typeof _showToolbarToast === "function") {
+          _showToolbarToast(copy.toastOpenFail, { error: true });
+        }
+        applyCrossingSibling(
+          root,
+          pop,
+          crossingOpenJournalFailedSibling(sibling)
+        );
+      })
+      .catch(function () {
+        if (typeof _showToolbarToast === "function") {
+          _showToolbarToast(copy.toastOpenFail, { error: true });
+        }
+        applyCrossingSibling(
+          root,
+          pop,
+          crossingOpenJournalFailedSibling(sibling)
+        );
+      });
+    return;
+  }
+  if (sibling.canCreateSibling && sibling.albumRoot) {
+    writeClgCreateJournalHandshake({
+      albumPath: sibling.albumRoot,
+      fromTripId: _tripIdFromPath() || (root && root._tripId) || "",
+    });
+    try {
+      window.location.assign("/");
+    } catch (_eGo) {}
+    return;
+  }
+  closeCrossingGateSheet(pop);
+  if (typeof _activeExportPanelFinish === "function") {
+    _activeExportPanelFinish(false);
+  }
+  if (root && typeof root._onPortfolioToJournal === "function") {
+    root._onPortfolioToJournal();
+  }
+}
+
+function handleCrossingGateSecondary(root, pop) {
+  var sibling = pop._clgSibling || {};
+  closeCrossingGateSheet(pop);
+  if (sibling.canCreateSibling && !sibling.present) {
+    if (pop._panelDraft && typeof pop._panelDraft.setDraft === "function") {
+      var xhs = nextCrossingDefaultPlatform({ platform: "xiaohongshu" });
+      pop._panelDraft.setDraft({ platform: xhs, platforms: [xhs] });
+    }
+  }
 }
 
 function resetFxiExportFace() {
@@ -1207,6 +1386,10 @@ export function cancelPreviewLongshotExport(root) {
       }
     );
     pop._panelDraft = panel;
+    if (fxiExportFaceOf(root, pop) === "social") {
+      bindCrossingGateSheet(root, pop);
+      prefetchCrossingSibling(root, pop);
+    }
 
     pop.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -1476,6 +1659,10 @@ export function cancelPreviewLongshotExport(root) {
         var socialDraft = panel.getDraft();
         var socialPlatform = socialDraft.platform || "wechat_chat";
         var socialPlatforms = normalizePlatformList(socialDraft.platforms, socialPlatform);
+        if (isCrossingLongshotLocked(socialPlatform)) {
+          if (typeof pop._onCrossingGate === "function") pop._onCrossingGate(socialPlatform);
+          return;
+        }
         writePortfolioSocialPrefs({
           platform: socialPlatform,
           platforms: socialPlatforms,
@@ -1654,6 +1841,10 @@ export function cancelPreviewLongshotExport(root) {
     } catch (_eOpen) {}
     trapExportPopoverFocus(pop);
     rebindActiveExportSession(root, pop);
+    if (face === "social") {
+      bindCrossingGateSheet(root, pop);
+      prefetchCrossingSibling(root, pop);
+    }
   }
 
   function applyExportPopoverLayoutMode(pop) {
@@ -1678,6 +1869,10 @@ export function cancelPreviewLongshotExport(root) {
     function onKey(e) {
       if (e.key === "Escape") {
         e.preventDefault();
+        if (pop.classList.contains("is-clg-open")) {
+          closeCrossingGateSheet(pop);
+          return;
+        }
         if (typeof _activeExportPanelFinish === "function") {
           _activeExportPanelFinish(false);
         } else {
@@ -3556,6 +3751,14 @@ export function cancelPreviewLongshotExport(root) {
           });
           clearResumePlatform();
           // D-PCU-10 · 结构未确认：引导打开分章面板
+          if (errCode === "E_CLG_NEEDS_JOURNAL") {
+            _showToolbarToast(
+              (res.body && res.body.message) || crossingGateCopy().toastBlockedExport,
+              { error: true }
+            );
+            setLongshotExportState(root, "idle");
+            return;
+          }
           if (errCode === "E_PIPELINE_ORDER") {
             if (typeof root._openChapterPanel === "function") {
               root._openChapterPanel({ pending: true });

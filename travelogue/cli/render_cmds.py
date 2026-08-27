@@ -543,6 +543,7 @@ def cmd_export_longshot(
         PortfolioPlatformRequiredError,
         require_explicit_export_target,
     )
+    from travelogue.export.crossing_longshot import CrossingLongshotNeedsJournal
     from travelogue.export.dispatch import dispatch_export
     from travelogue.export.longshot import LongshotExportError
     from travelogue.export.output_recipe import resolve_output_recipe
@@ -652,6 +653,7 @@ def cmd_export_longshot(
         PlatformProfileError,
         OutputRecipeError,
         PortfolioPlatformRequiredError,
+        CrossingLongshotNeedsJournal,
     ) as exc:
         try:
             code = getattr(exc, "code", None) or type(exc).__name__

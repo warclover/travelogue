@@ -48,6 +48,7 @@ import {
   pageCountChipOptions,
 } from "../js/portfolio-edition-logic.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
+import { shouldOpenSiblingInsteadOfOverwrite } from "../js/portfolio-export-logic.js";
 
 var _open = false;
 var _previousFocus = null;
@@ -65,6 +66,7 @@ var _pageCountSelected = "auto";
 var _pageSpecOpen = false;
 var _pendingFolderName = null;
 var _existingJournal = null;
+var _clgHandshake = false;
 var _existingPortfolio = null;
 var _previewThumbs = [];
 var _previewThumbNames = [];
@@ -428,6 +430,21 @@ function fetchAlbumPreview(albumPath) {
       if (data.folderName) _pendingFolderName = String(data.folderName);
       _existingJournal = data.existingJournal || null;
       _existingPortfolio = data.existingPortfolio || null;
+      if (shouldOpenSiblingInsteadOfOverwrite(_clgHandshake, _existingJournal)) {
+        _clgHandshake = false;
+        if (typeof studioToast === "function") {
+          studioToast("书架上已经有一本游记", { duration: 2800 });
+        }
+        closeImportWizard("clg_sibling_surprise", { persistDraft: false });
+        try {
+          window.location.assign(
+            "/" +
+              encodeURIComponent(String(_existingJournal.tripId)) +
+              "/index.html?exportPanel=1"
+          );
+        } catch (_eOpen) {}
+        return;
+      }
       _previewDateStart = data.dateStart ? String(data.dateStart) : null;
       _previewDateEnd = data.dateEnd ? String(data.dateEnd) : null;
       _previewState = _pendingPhotoCount != null ? "ready" : "degraded";
@@ -1486,6 +1503,17 @@ export function openImportWizard(opts) {
   clearErrors();
   trapFocus(dialog);
   trackStudioEvent("open_sheet", { state: V2.state, surface: "bench" });
+  var albumPath = String(opts.albumPath || "").trim();
+  if (albumPath) {
+    _clgHandshake = true;
+    afterFolderPicked(albumPath, "clg");
+    if (opts.edition) {
+      setActiveEdition(opts.edition, "homepage");
+    }
+    var pickClg = $("v2-wizard-pick");
+    if (_step === "pick" && pickClg) pickClg.focus();
+    return;
+  }
   if (opts.forceStep === "pick") {
     goToStep1(true);
   } else {
@@ -1505,6 +1533,7 @@ export function openImportWizard(opts) {
  */
 export function closeImportWizard(reason, opts) {
   opts = opts || {};
+  _clgHandshake = false;
   if (!_open) return;
   var root = $("v2-wizard-root");
   var dialog = $("v2-import-wizard");

@@ -771,6 +771,17 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             },
         )
         return
+    if is_portfolio_trip(trip) and platform_id in ("wechat_chat", "wechat_moments"):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_CLG_NEEDS_JOURNAL",
+                "code": "E_CLG_NEEDS_JOURNAL",
+                "message": "长图要在游记里做",
+            },
+        )
+        return
 
     # Moments / grid: always export pure photos (ignore preview copy mode).
     if platform_id in ("wechat_moments", "moments_grid", "poster_bric"):

@@ -143,8 +143,10 @@ def test_iso04_portfolio_wechat_does_not_flatten_page_geometry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """ISO-04 · 作品集显式微信群走 kept 池，不拍 5 槽以上 page-* flatten。"""
-    from travelogue.export.longshot import export_trip_longshot
-    from travelogue.export.portfolio_wechat import list_portfolio_wechat_photo_paths
+    from travelogue.export.portfolio_wechat import (
+        export_portfolio_wechat_from_kept,
+        list_portfolio_wechat_photo_paths,
+    )
 
     portfolio = _new_trip(tmp_path, "iso04-wechat-pf")
     _stamp_portfolio_page_screens(portfolio)
@@ -161,7 +163,8 @@ def test_iso04_portfolio_wechat_does_not_flatten_page_geometry(
     )
     paths = list_portfolio_wechat_photo_paths(portfolio)
     assert paths
-    result = export_trip_longshot(portfolio, platform="wechat_chat")
+    # CLG · Studio/dispatch 已拒闸；几何门改打 Writer，断言保持。
+    result = export_portfolio_wechat_from_kept(portfolio)
     assert result.outputs
     name = result.outputs[0].path.name
     assert "长图" in name

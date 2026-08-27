@@ -33,6 +33,17 @@ import {
   wrapJournalPanelAsPortfolioSocialFace,
   portfolioExportDefaultFaceSpec,
   portfolioExportDefaultFaceHtml,
+  isCrossingLongshotLocked,
+  nextCrossingDefaultPlatform,
+  crossingGateCopy,
+  crossingGateSheetModel,
+  consumeClgCreateJournalHandshake,
+  writeClgCreateJournalHandshake,
+  CLG_CREATE_JOURNAL_KEY,
+  crossingSiblingAfterFailure,
+  settleCrossingSiblingResponse,
+  crossingOpenJournalFailedSibling,
+  shouldOpenSiblingInsteadOfOverwrite,
   albumSpreadCardCopy,
   shelfExportMenuCopy,
   shelfExportRequestForTrip,
@@ -299,7 +310,7 @@ test("wrapPortfolioSocialGroupHtml 默认折叠", () => {
   assert.match(html, /data-portfolio-share-fold/);
   assert.doesNotMatch(html, /<details[^>]*\sopen/);
   assert.match(html, /用同一批照片出社交图（6）/);
-  assert.match(html, /社交图仍按现网拼贴/);
+  assert.match(html, /长图要在游记里做/);
 });
 
 test("portfolioMainProductsHtml 这一本与页图", () => {
@@ -334,7 +345,8 @@ test("wrapJournalPanelAsPortfolioSocialFace 套游记面板", () => {
   assert.match(html, /data-fxi-face="social"/);
   assert.match(html, /发到微信、小红书/);
   assert.match(html, /这不是在导出作品集/);
-  assert.match(html, /导出长图/);
+  assert.match(html, /导出小红书/);
+  assert.doesNotMatch(html, /导出长图/);
   assert.match(html, /返回，继续导出作品集/);
   assert.doesNotMatch(html, />确定</);
 });
@@ -361,6 +373,9 @@ function memoryStore(seed) {
     },
     setItem(key, value) {
       this.data[key] = String(value);
+    },
+    removeItem(key) {
+      delete this.data[key];
     },
   };
 }
@@ -411,4 +426,83 @@ test("F2 社交钥丢掉 portfolio_pages", () => {
   const social = readPortfolioSocialPrefs(mem);
   assert.equal(social.platform, "xiaohongshu");
   assert.equal(social.platforms.includes("portfolio_pages"), false);
+});
+
+test("CLG · 闸纯函数与默认主选", () => {
+  assert.equal(isCrossingLongshotLocked("wechat_chat"), true);
+  assert.equal(isCrossingLongshotLocked("wechat_moments"), true);
+  assert.equal(isCrossingLongshotLocked("xiaohongshu"), false);
+  assert.equal(nextCrossingDefaultPlatform({ platform: "wechat_chat" }), "xiaohongshu");
+  assert.equal(
+    nextCrossingDefaultPlatform({ platform: "poster_bric" }),
+    "poster_bric"
+  );
+  const copy = crossingGateCopy();
+  assert.equal(copy.badge, "用这些照片");
+  assert.equal(copy.gateSub, "要先有一本游记");
+  assert.doesNotMatch(copy.leadSecondary, /拼贴|卷轴|同夹/);
+  const has = crossingGateSheetModel({
+    present: true,
+    tripId: "demo-j",
+    title: "凯哥",
+  });
+  assert.equal(has.primary, "打开那本游记");
+  assert.match(has.body, /《凯哥》/);
+  const none = crossingGateSheetModel({ present: false, canCreateSibling: true });
+  assert.equal(none.primary, "去做一本游记");
+  const convert = crossingGateSheetModel({ present: false, canCreateSibling: false });
+  assert.equal(convert.primary, "想改做成一本游记？");
+});
+
+test("CLG · 社交钥读到闸卡则纠正，写入闸卡被拒", () => {
+  const mem = memoryStore({
+    [PORTFOLIO_SOCIAL_PREFS_KEY]: JSON.stringify({
+      platform: "wechat_chat",
+      platforms: ["wechat_chat"],
+    }),
+  });
+  assert.equal(readPortfolioSocialPrefs(mem).platform, "xiaohongshu");
+  writePortfolioSocialPrefs({ platform: "wechat_moments" }, mem);
+  assert.equal(JSON.parse(mem.getItem(PORTFOLIO_SOCIAL_PREFS_KEY)).platform, "wechat_chat");
+});
+
+test("CLG · 去做一本握手读完即删", () => {
+  const mem = memoryStore();
+  writeClgCreateJournalHandshake({ albumPath: "D:/photos/华南农大", fromTripId: "pf-1" }, mem);
+  const once = consumeClgCreateJournalHandshake(mem);
+  assert.equal(once.albumPath, "D:/photos/华南农大");
+  assert.equal(once.edition, "journal");
+  assert.equal(mem.getItem(CLG_CREATE_JOURNAL_KEY), null);
+  assert.equal(consumeClgCreateJournalHandshake(mem), null);
+});
+
+test("CLG · sibling 失败用缓存夹，打开那本失败降级", () => {
+  const fail = crossingSiblingAfterFailure("D:/photos/华南农大");
+  assert.equal(fail.present, false);
+  assert.equal(fail.canCreateSibling, true);
+  assert.equal(fail.albumRoot, "D:/photos/华南农大");
+  assert.deepEqual(crossingSiblingAfterFailure(""), {
+    ok: true,
+    present: false,
+    tripId: null,
+    title: null,
+    albumRoot: null,
+    canCreateSibling: false,
+  });
+  const ok = settleCrossingSiblingResponse(
+    { status: 200, body: { ok: true, present: true, tripId: "demo-j", title: "凯哥", albumRoot: "D:/a", canCreateSibling: true } },
+    ""
+  );
+  assert.equal(ok.tripId, "demo-j");
+  const netFail = settleCrossingSiblingResponse({ status: 500, body: {} }, "D:/a");
+  assert.equal(netFail.canCreateSibling, true);
+  const openedFail = crossingOpenJournalFailedSibling({ albumRoot: "D:/a", present: true, tripId: "gone" });
+  assert.equal(openedFail.present, false);
+  assert.equal(openedFail.canCreateSibling, true);
+  assert.equal(shouldOpenSiblingInsteadOfOverwrite(true, { tripId: "demo-j" }), true);
+  assert.equal(shouldOpenSiblingInsteadOfOverwrite(true, null), false);
+  assert.equal(shouldOpenSiblingInsteadOfOverwrite(false, { tripId: "demo-j" }), false);
+  const loading = crossingGateSheetModel({ loading: true });
+  assert.equal(loading.body, "正在找书架上的游记…");
+  assert.equal(loading.primaryDisabled, true);
 });

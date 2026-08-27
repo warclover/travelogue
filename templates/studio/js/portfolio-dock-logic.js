@@ -11,6 +11,7 @@ import {
   portfolioDockCta,
   portfolioExportDefaultFaceSpec,
   portfolioExportSocialFaceSpec,
+  nextCrossingDefaultPlatform,
   readPortfolioSocialPrefs,
   readToolbarEdition,
 } from "./portfolio-export-logic.js";
@@ -52,7 +53,8 @@ export function portfolioExportPopoverSpec(opts) {
       face: "social",
       initPlatform: function () {
         var social = readPortfolioSocialPrefs();
-        return { platform: social.platform, platforms: social.platforms };
+        var platform = nextCrossingDefaultPlatform(social);
+        return { platform: platform, platforms: [platform] };
       },
     };
   }

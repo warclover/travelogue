@@ -216,6 +216,10 @@ def match_trip_edition(path: str) -> str | None:
     return match_trip_suffix(path, EDITION_SUFFIX)
 
 
+def match_trip_sibling_journal(path: str) -> str | None:
+    return match_trip_suffix(path, "/sibling-journal")
+
+
 def match_trip_moment_curation(path: str) -> str | None:
     return match_trip_suffix(path, CURATION_MOMENT_SUFFIX)
 

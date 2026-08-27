@@ -6,6 +6,7 @@
  */
 import { V2, $ } from "./store.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { consumeClgCreateJournalHandshake } from "../js/portfolio-export-logic.js";
 
 let _ctaWired = false;
 let _uiReady = null;
@@ -49,7 +50,16 @@ export function closeImportSheet(reason) {
 }
 
 export function initImportSheet() {
-  ensureUiReady();
+  ensureUiReady().then(function (m) {
+    if (!m) return;
+    var handshake = consumeClgCreateJournalHandshake();
+    if (handshake && handshake.albumPath) {
+      m.openImportWizard({
+        edition: "journal",
+        albumPath: handshake.albumPath,
+      });
+    }
+  });
   if (_ctaWired) return;
   _ctaWired = true;
   var cta = $("v2-cta");

@@ -361,3 +361,18 @@ def handle_chapter_layout(handler: StudioHandlerProtocol) -> None:
     elif "mosaicExplain" in explain:
         explain.pop("mosaicExplain", None)
     handler._json_response(200, {"ok": True, **explain})
+
+
+def handle_sibling_journal(handler: StudioHandlerProtocol, trip_id: str) -> None:
+    """CLG · GET /trips/{id}/sibling-journal。认不到也是 200。"""
+    from travelogue.web.studio_pipeline import sibling_journal_for_trip
+
+    loaded = load_trip_or_404(handler, trip_id)
+    if loaded is None:
+        return
+    _trip_dir, trip = loaded
+    ctx = studio_ctx(handler)
+    handler._json_response(
+        200,
+        sibling_journal_for_trip(trip, trip_id=trip_id, trips_dir=ctx.trips_root),
+    )

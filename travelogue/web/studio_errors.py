@@ -59,6 +59,7 @@ USER_MESSAGES: dict[str, str] = {
     "E_MEDIA_CLEANUP_PARTIAL": "清理未完成，查看详情",
     "E_MEDIA_INCREMENTAL_SOURCE": "追加导入缺少可访问的原片",
     "E_PORTFOLIO_UNAVAILABLE": "作品集暂时排不出，可改回游记",
+    "E_CLG_NEEDS_JOURNAL": "长图要在游记里做",
 }
 
 # Codes with a fixed user-facing line — do not append raw exception text.

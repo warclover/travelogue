@@ -32,6 +32,7 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_entry,
     handle_get_outputs,
     handle_patch_stratum_preference,
+    handle_sibling_journal,
     handle_trips,
 )
 from travelogue.web.studio_handlers.trip_moment_handlers import (
@@ -76,6 +77,7 @@ __all__ = [
     "handle_post_resolve_title_art",
     "handle_post_restore_auto",
     "handle_rerender",
+    "handle_sibling_journal",
     "handle_trip_curate",
     "handle_trips",
 ]

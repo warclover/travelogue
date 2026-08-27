@@ -86,7 +86,7 @@ P0 序列已入运行时目录。W1 匹配器可对官方 16 页装配。**AS-PF
 | **AC-PFM-32** | 作品集正文无图注 / 章导语节点；封面封底书名地点仍在 | `test_ac_pfm_32_portfolio_body_omits_caption_and_lead` |
 | **AC-PFM-14** | 作品集 + 快速仍两击 | `wizardHitsToStart` · `tests/js/import-wizard-logic.test.mjs` |
 | **AC-PFM-23** | C 端可见串禁 edition / PFM / MCS / page-* | `test_ac_pfm_23_c_end_visible_copy_has_no_jargon` |
-| **ISO-04** | 作品集 × 显式微信群走 kept 竖条，不拍 5 槽以上 `page-*` | `tests/unit/export/test_pfm_collage_isolation.py` |
+| **ISO-04** | 作品集 × 显式微信群 **不得拍** 5 槽以上 `page-*`（几何门保持）。**Studio 开导改判见 [CLG](./PRD-CROSSING-LONGSHOT-GATE-V1.md)**：作品集 × 微信群 / 朋友圈 → `E_CLG_NEEDS_JOURNAL` | `tests/unit/export/test_pfm_collage_isolation.py` · Studio 单测改判见 CLG BE-CLG-02 |
 | **ISO-06** | 作品集拒 LVP；切身份不改 `layoutVibe` | `test_iso06_lvp_rejects_portfolio_trip` · `tests/unit/config/test_edition.py` |
 | **AS-PFM-03** | **已升格 · 五档入库**（8/12/16/20/28；24/32/36 未入）。工坊对账原文不变；运行时仍拒 reserve | [对账纪要](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) · [MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md) · `test_atelier_series_audit.py` |
 

@@ -848,6 +848,75 @@ def peek_existing_album_trip(
     return meta
 
 
+def sibling_journal_for_trip(
+    trip: dict,
+    *,
+    trip_id: str,
+    trips_dir: Path,
+) -> dict[str, object]:
+    """CLG · 同夹游记探测。认不到也是 200 + present=false。"""
+    media = trip.get("media") if isinstance(trip.get("media"), dict) else {}
+    roots = media.get("albumRoots") if isinstance(media.get("albumRoots"), list) else []
+    album_root = ""
+    if roots:
+        album_root = str(roots[0] or "").strip()
+    if not album_root:
+        assets = trip.get("assets") if isinstance(trip.get("assets"), list) else []
+        for asset in assets:
+            if not isinstance(asset, dict):
+                continue
+            ref = asset.get("sourceRef") if isinstance(asset.get("sourceRef"), dict) else {}
+            raw = str(ref.get("albumRoot") or "").strip()
+            if raw:
+                album_root = raw
+                break
+
+    can_create = False
+    album_dir: Path | None = None
+    if album_root:
+        try:
+            album_dir = Path(album_root)
+            can_create = album_dir.is_dir()
+        except OSError:
+            album_dir = None
+            can_create = False
+
+    found: dict[str, str] | None = None
+    if album_dir is not None and can_create:
+        folder_name = album_dir.name or "我的旅途"
+        found = peek_existing_album_trip(
+            album_dir,
+            trips_dir=trips_dir,
+            title=folder_name,
+            place="旅途",
+            edition="journal",
+        )
+        if found is None:
+            meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+            title = str(
+                meta.get("displayTitle") or meta.get("title") or trip.get("title") or folder_name
+            ).strip() or folder_name
+            place = str(meta.get("place") or "旅途").strip() or "旅途"
+            found = peek_existing_album_trip(
+                album_dir,
+                trips_dir=trips_dir,
+                title=title,
+                place=place,
+                edition="journal",
+            )
+        if found and str(found.get("tripId") or "") == str(trip_id or "").strip():
+            found = None
+
+    return {
+        "ok": True,
+        "present": bool(found),
+        "tripId": (found or {}).get("tripId") if found else None,
+        "title": (found or {}).get("title") if found else None,
+        "albumRoot": album_root or None,
+        "canCreateSibling": bool(can_create),
+    }
+
+
 def _trip_collision_meta(trip_dir: Path, slug: str) -> dict[str, str]:
     title = slug
     edition = "journal"

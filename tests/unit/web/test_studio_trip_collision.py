@@ -6,7 +6,11 @@ import json
 from pathlib import Path
 
 from travelogue.util.trip_slug import demo_trip_id_from_album
-from travelogue.web.studio_pipeline import peek_existing_album_trip, resolve_studio_trip_dir
+from travelogue.web.studio_pipeline import (
+    peek_existing_album_trip,
+    resolve_studio_trip_dir,
+    sibling_journal_for_trip,
+)
 
 
 def _write_trip(trip_dir: Path, *, title: str, edition: str) -> None:
@@ -98,3 +102,40 @@ def test_peek_journal_stays_when_portfolio_exists(tmp_path: Path) -> None:
     assert found_p["edition"] == "portfolio"
     assert found_p["tripId"] == pf_slug
     assert found_p["tripId"] != journal
+
+
+def test_sibling_journal_for_trip_finds_same_folder_journal(tmp_path: Path) -> None:
+    album = tmp_path / "华农油菜花"
+    album.mkdir()
+    (album / "a.jpg").write_bytes(b"x")
+    trips = tmp_path / "trips"
+    title = "华农油菜花"
+    journal = demo_trip_id_from_album(album, title=title, place="旅途")
+    pf_slug, _ = resolve_studio_trip_dir(
+        album, trips_dir=trips, title=title, place="旅途", edition="portfolio"
+    )
+    _write_trip(trips / journal, title="凯哥拍摄精选 · 旅行", edition="journal")
+    _write_trip(trips / pf_slug, title=title, edition="portfolio")
+    trip = {
+        "title": title,
+        "studio": {"edition": "portfolio"},
+        "media": {"albumRoots": [str(album)]},
+    }
+    payload = sibling_journal_for_trip(trip, trip_id=pf_slug, trips_dir=trips)
+    assert payload["ok"] is True
+    assert payload["present"] is True
+    assert payload["tripId"] == journal
+    assert payload["title"] == "凯哥拍摄精选 · 旅行"
+    assert payload["canCreateSibling"] is True
+
+
+def test_sibling_journal_for_trip_missing_root_is_not_404(tmp_path: Path) -> None:
+    payload = sibling_journal_for_trip(
+        {"studio": {"edition": "portfolio"}},
+        trip_id="pf-orphan",
+        trips_dir=tmp_path / "trips",
+    )
+    assert payload["ok"] is True
+    assert payload["present"] is False
+    assert payload["tripId"] is None
+    assert payload["canCreateSibling"] is False

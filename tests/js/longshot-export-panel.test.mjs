@@ -43,7 +43,9 @@ import {
   shortCtaLabelForPlatform,
   shortCtaLabelForPlatforms,
   syncPanelUI,
+  crossingGateSheetHtml,
 } from "../../templates/studio/js/longshot-export-panel.js";
+import { crossingGateCopy } from "../../templates/studio/js/portfolio-export-logic.js";
 
 /** Minimal button stub used by both querySelector and querySelectorAll below. */
 function stubBtn(attrName, attrValue) {
@@ -56,6 +58,16 @@ function stubBtn(attrName, attrValue) {
     setAttribute(name, value) {
       attrs[name] = value;
     },
+    removeAttribute(name) {
+      delete attrs[name];
+    },
+    querySelector(sel) {
+      if (sel === ".preview-toolbar__export-platform-card__sub") {
+        if (!this._sub) this._sub = { id: "", textContent: "" };
+        return this._sub;
+      }
+      return null;
+    },
     classList: {
       toggle(name, on) {
         if (on) classes.add(name);
@@ -65,10 +77,16 @@ function stubBtn(attrName, attrValue) {
         return classes.has(name);
       },
     },
-    // bindPanelDraft wires click handlers unconditionally on every matched
-    // button; no-op here since these tests drive state via getDraft/setDraft
-    // directly rather than simulating real clicks (no jsdom in this suite).
-    addEventListener() {},
+    // bindPanelDraft wires click handlers; CLG tests may fire them.
+    addEventListener(type, fn) {
+      if (!this._listeners) this._listeners = [];
+      this._listeners.push({ type: type, fn: fn });
+    },
+    click() {
+      (this._listeners || [])
+        .filter((item) => item.type === "click")
+        .forEach((item) => item.fn({ preventDefault() {}, stopPropagation() {} }));
+    },
     _attrs: attrs,
   };
 }
@@ -87,6 +105,7 @@ function stubPopover(platformIds, faceAttrs) {
   const albumCountField = { hidden: true };
   const batchHint = { hidden: true, textContent: "" };
   const dualBtn = { hidden: false };
+  const okBtn = { textContent: "确定", disabled: false };
   const platformBtns = (platformIds || []).map((id) =>
     stubBtn("data-studio-longshot-platform", id)
   );
@@ -117,6 +136,7 @@ function stubPopover(platformIds, faceAttrs) {
       if (sel === "[data-album-estimate]") return null;
       if (sel === "[data-batch-hint]") return batchHint;
       if (sel === "[data-ltn-dual-preview]") return dualBtn;
+      if (sel === '[data-action="ok"]') return okBtn;
       return null;
     },
     querySelectorAll(sel) {
@@ -135,6 +155,7 @@ function stubPopover(platformIds, faceAttrs) {
     _expectBody: expectBody,
     _batchHint: batchHint,
     _dualBtn: dualBtn,
+    _okBtn: okBtn,
     _platformBtns: platformBtns,
   };
 }
@@ -246,9 +267,11 @@ test("作品集过河面 F2：复用游记六平台 + 顶条", () => {
   );
   assert.match(social, /发到微信、小红书/);
   assert.match(social, /这不是在导出作品集/);
-  assert.match(social, /按游记来做/);
+  assert.match(social, /用这些照片/);
   assert.match(social, /返回，继续导出作品集/);
-  assert.match(social, /导出长图/);
+  assert.match(social, /导出小红书/);
+  assert.doesNotMatch(social, /data-action="ok">导出长图/);
+  assert.doesNotMatch(social, /按游记来做/);
   assert.match(social, /data-studio-longshot-platform="wechat_chat"/);
   assert.match(social, /画册印刷/);
   assert.match(social, /不是这本作品集/);
@@ -823,4 +846,58 @@ test("isConfirmedExportTarget · 重启后画册/海报视为已确认，未点�
     }),
     true
   );
+});
+
+test("CLG · F2 闸卡打 data-clg-locked，无 aria-disabled，确定钮跟平台", () => {
+  const pop = stubPopover(
+    ["wechat_chat", "wechat_moments", "xiaohongshu"],
+    { "data-export-face": "portfolio:social" }
+  );
+  syncPanelUI(pop, { platforms: ["wechat_chat"], mode: "chapter", scale: 2 });
+  assert.equal(pop._platformBtns[0].getAttribute("data-clg-locked"), "1");
+  assert.equal(pop._platformBtns[1].getAttribute("data-clg-locked"), "1");
+  assert.equal(pop._platformBtns[2].getAttribute("data-clg-locked"), null);
+  assert.equal(pop._platformBtns[0].getAttribute("aria-disabled"), null);
+  assert.equal(pop._okBtn.textContent, "导出小红书");
+  assert.equal(pop._okBtn.disabled, false);
+  assert.equal(pop._modeField.hidden, true);
+  assert.equal(pop._batchHint.hidden, true);
+});
+
+test("CLG · 游记面板无闸文案", () => {
+  const journal = buildPanelHtml(["wechat_chat", "wechat_moments", "xiaohongshu"]);
+  assert.doesNotMatch(journal, /要先有一本游记/);
+  assert.doesNotMatch(journal, /data-clg-locked/);
+  const sheet = crossingGateSheetHtml({
+    title: crossingGateCopy().sheetTitle,
+    body: crossingGateCopy().sheetNoneBody,
+    primary: crossingGateCopy().sheetNoneCta,
+    secondary: crossingGateCopy().sheetXhs,
+  });
+  assert.match(sheet, /去做一本游记/);
+  assert.match(sheet, /data-clg-dismiss/);
+  assert.match(sheet, /aria-label="留在作品集"/);
+  assert.doesNotMatch(sheet, /拼贴|卷轴|同夹/);
+});
+
+test("CLG · 点闸卡不改主选，说明层标题固定", () => {
+  const pop = stubPopover(["wechat_chat", "xiaohongshu"], {
+    "data-export-face": "portfolio:social",
+  });
+  let opened = 0;
+  pop._onCrossingGate = () => {
+    opened += 1;
+  };
+  const panel = bindPanelDraft(
+    pop,
+    { platform: "xiaohongshu", platforms: ["xiaohongshu"] },
+    {}
+  );
+  pop._platformBtns[0].click();
+  assert.equal(opened, 1);
+  assert.equal(panel.getDraft().platform, "xiaohongshu");
+  assert.deepEqual(panel.getDraft().platforms, ["xiaohongshu"]);
+  assert.equal(crossingGateCopy().sheetTitle, "长图要在游记里做");
+  assert.equal(pop._platformBtns[0].getAttribute("aria-describedby"), "clg-gate-sub-wechat_chat");
+  assert.equal(pop._platformBtns[0]._sub.textContent, "要先有一本游记");
 });

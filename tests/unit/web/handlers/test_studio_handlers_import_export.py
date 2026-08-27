@@ -698,13 +698,12 @@ def test_handle_longshot_portfolio_implicit_wechat_rejected(tmp_path: Path) -> N
     assert body["error"] == "E_PORTFOLIO_PACK_REQUIRED"
 
 
-def test_handle_longshot_portfolio_explicit_wechat_allowed(
+def test_handle_longshot_portfolio_explicit_wechat_blocked(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """D-PFM-10 · 换种分享显式微信群可出；ISO-04 走 kept 池而不是 client flatten。"""
+    """CLG · 作品集显式微信群不再开导；409 + E_CLG_NEEDS_JOURNAL。"""
     import json
 
-    from travelogue.export.longshot import LongshotExportResult
     from travelogue.web.studio_handlers.export_handlers import handle_longshot
 
     trips = tmp_path / "trips"
@@ -718,23 +717,10 @@ def test_handle_longshot_portfolio_explicit_wechat_allowed(
 
     def _export(trip_dir, **kwargs):
         called.append(str(kwargs.get("platform") or ""))
-        return LongshotExportResult(outputs=[], platform="wechat_chat", capture_method="kept_stack")
-
-    class _Immediate:
-        def __init__(self, target=None, daemon=None):
-            self._target = target
-
-        def start(self) -> None:
-            assert self._target is not None
-            self._target()
 
     monkeypatch.setattr(
         "travelogue.export.dispatch.dispatch_export",
         _export,
-    )
-    monkeypatch.setattr(
-        "travelogue.web.studio_handlers.export_handlers.threading.Thread",
-        _Immediate,
     )
     handler = MockStudioHandler(
         trips,
@@ -747,9 +733,11 @@ def test_handle_longshot_portfolio_explicit_wechat_allowed(
     handle_longshot(handler)
     assert handler.response is not None
     status, body = handler.response
-    assert status == 202
-    assert body.get("ok") is True
-    assert called == ["wechat_chat"]
+    assert status == 409
+    assert body.get("error") == "E_CLG_NEEDS_JOURNAL"
+    assert body.get("code") == "E_CLG_NEEDS_JOURNAL"
+    assert body.get("message") == "长图要在游记里做"
+    assert called == []
 
 
 def test_handle_longshot_album_landscape_not_aliased_to_spread(
