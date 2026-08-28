@@ -191,6 +191,7 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [ARCH-OPT-REVIEW-V2-2026-08-11.md](./ARCH-OPT-REVIEW-V2-2026-08-11.md) | **active** | PRD-ARCH-OPTIMIZATION-V2 四方评审报告（有条件通过）|
 | [IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md](./IMPLEMENTATION-ARCH-OPTIMIZATION-V2.md) | **active** | 架构治理 V2 **稳定优先切片 Done**（M2-A + M2-B1 · [#62](https://github.com/warclover/travelogue/pull/62)；其余 Parking Lot）|
 | [acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md](./acceptance-records/arch-opt-v2-m2a-closeout-2026-08-11.md) | **active** | Arch Opt V2 收工记录（含 M2-A3 合入路径核实 + 门禁快照）|
+| [acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md](./acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md) | **closed** | 全量快照丢更新 + 三道门禁修复 **本波关闭** · ADR-008 §10 |
 | [RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md](./RESEARCH-PHOTO-ZINE-SKILLS-2026-08.md) | **active** | Photo/Zine Agent Skills 外部调研 + Travelogue 参考价值（Postcard / Abstract Editorial / Gathered / Distill / Minimal）|
 | [PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) | **active** | **TSU** **v1.1.0** Conditional Go · BLK-TSU-01～08 已回写 · [七席](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) |
 | [acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md](./acceptance-records/tsu-template-system-upgrade-v1-review-2026-08-15.md) | **active** | TSU 七席 · 7/7 Conditional Go · Must-Fix 已回写 v1.1.0 |

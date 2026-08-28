@@ -18,7 +18,7 @@ from travelogue.render.engine import (
     should_include_screenplay,
 )
 from travelogue.render.preview import render_preview_jpg
-from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip import persist_pipeline_owned
 from travelogue.services.validate import validate_trip
 from travelogue.util.datetime_ import utc_now_iso as _utc_now_iso
 
@@ -110,13 +110,13 @@ def _export_trip_stages(
 
     if no_longshot:
         trip.setdefault("export", {})["longShot"] = False
-        persist_trip_snapshot(svc, trip_path, trip)
+        persist_pipeline_owned(svc, trip_path, trip)
 
     if auto_render:
         render_trip(trip_path, trip_root, export_mode="share", validate=False)
         trip = svc.load(trip_path)
         _mark_rendered(trip)
-        persist_trip_snapshot(svc, trip_path, trip)
+        persist_pipeline_owned(svc, trip_path, trip)
 
     index = trip_root / "index.html"
     css = trip_root / "journal.css"
@@ -240,7 +240,7 @@ def _export_trip_stages(
             curation["warnings"] = warnings
 
     _mark_exported(trip, confirm_privacy=True)
-    persist_trip_snapshot(svc, trip_path, trip)
+    persist_pipeline_owned(svc, trip_path, trip)
     _record_share_zip_ledger(trip_root, trip, zip_path)
     return zip_path
 

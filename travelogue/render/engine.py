@@ -712,7 +712,7 @@ def _render_trip_body(
 
     should_stamp = bool(stamp_render_bundle) and out_dir.resolve() == trip_root.resolve()
     if should_stamp or update_pipeline:
-        from travelogue.services.trip import mark_render_bundle_current, persist_trip_snapshot
+        from travelogue.services.trip import mark_render_bundle_current, persist_pipeline_owned
 
         if should_stamp:
             mark_render_bundle_current(trip)
@@ -722,7 +722,7 @@ def _render_trip_body(
             set_pipeline_status(trip, "rendered")
             if not should_stamp:
                 mark_render_bundle_current(trip)
-        persist_trip_snapshot(trip_svc, trip_path, trip)
+        persist_pipeline_owned(trip_svc, trip_path, trip)
 
     record_render_outcome(trip_id=trip_id, template_id=effective_template, ok=True)
     return out_dir

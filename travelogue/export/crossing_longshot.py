@@ -1,8 +1,6 @@
-"""CLG · 作品集过河不得开导吃卷轴的两平台。"""
+"""CLG · 过河不得开导吃卷轴的两平台（身份判断在 S-07 dispatch）。"""
 
 from __future__ import annotations
-
-from pathlib import Path
 
 from travelogue.errors import CodeError
 
@@ -19,8 +17,6 @@ def is_crossing_longshot_locked(platform: str | None) -> bool:
     return str(platform or "").strip() in CROSSING_LONGSHOT_LOCKED
 
 
-def reject_portfolio_crossing_longshot(trip_dir: Path, platform: str | None) -> None:
-    from travelogue.export.portfolio_wechat import trip_is_portfolio
-
-    if trip_is_portfolio(trip_dir) and is_crossing_longshot_locked(platform):
+def reject_crossing_longshot_if_locked(platform: str | None, *, folio: bool) -> None:
+    if folio and is_crossing_longshot_locked(platform):
         raise CrossingLongshotNeedsJournal()

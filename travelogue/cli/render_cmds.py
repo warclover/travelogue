@@ -18,7 +18,7 @@ from travelogue.export.packager import ExportError, export_trip
 from travelogue.orchestrator.pipeline import PublishResult, publish_trip
 from travelogue.render.engine import RenderError, render_trip, render_trip_surfaces
 from travelogue.render.preview import render_preview_jpg
-from travelogue.services.trip import TripNotFoundError, persist_trip_snapshot
+from travelogue.services.trip import TripNotFoundError, persist_pipeline_owned
 
 
 @app.command("render")
@@ -198,7 +198,7 @@ def cmd_title_art(
         typer.echo(f"E_TITLE_ART: {exc}", err=True)
         raise typer.Exit(1) from exc
 
-    persist_trip_snapshot(svc, trip_path, trip)
+    persist_pipeline_owned(svc, trip_path, trip)
     if result is None:
         typer.echo(
             "OK title-art · 未生成（非白名单 openingStyle / 标题为空 / 字形不覆盖，已 fail-open）"
@@ -420,7 +420,7 @@ def cmd_migrate_captions(
     if dry_run:
         typer.echo(f"OK migrate-captions · would migrate {len(migrated)} assets: {', '.join(migrated[:8])}")
         return
-    persist_trip_snapshot(svc, trip_path, trip)
+    persist_pipeline_owned(svc, trip_path, trip)
     typer.echo(f"OK migrate-captions · migrated {len(migrated)} assets")
 
 

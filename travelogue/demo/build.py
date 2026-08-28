@@ -15,7 +15,7 @@ from travelogue.orchestrator.pipeline import PublishResult
 from travelogue.orchestrator.run import RunResult, run_trip
 from travelogue.paths import DEMO_CONFIG_PATH
 from travelogue.render.engine import render_trip, render_trip_surfaces
-from travelogue.services.trip import TripService, persist_trip_snapshot
+from travelogue.services.trip import TripService, persist_pipeline_owned
 from travelogue.services.trip_factory import create_trip
 from travelogue.util.trip_slug import demo_trip_id_from_album
 
@@ -233,7 +233,7 @@ def _run_demo_from_album_scoped(
     orient = (trip.get("curation") or {}).get("orientationSummary") or {}
     stats.update(orient)
 
-    persist_trip_snapshot(svc, trip_json, trip)
+    persist_pipeline_owned(svc, trip_json, trip)
 
     index_html = trip_root / "index.html"
     if render:

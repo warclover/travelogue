@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AST lint: trip dict saves must use TripService.update outside services/trip.py."""
+"""AST lint: trip writes must use incremental persist; no full-snapshot replay."""
 
 from __future__ import annotations
 
@@ -11,6 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 ALLOWED = ROOT / "travelogue" / "services" / "trip.py"
 TRIP_DICT_NAMES = frozenset({"trip", "body", "work", "loaded", "snapshot"})
 SVC_NAMES = frozenset({"svc", "trip_svc", "trip_service"})
+SNAPSHOT_ALLOWLIST = frozenset(
+    {
+        "travelogue/services/trip.py",
+    }
+)
 
 
 class TripSaveLintVisitor(ast.NodeVisitor):
@@ -23,9 +28,22 @@ class TripSaveLintVisitor(ast.NodeVisitor):
             if self._is_forbidden_trip_save(node):
                 self.violations.append(
                     f"{self.rel_path}:{node.lineno}: use TripService.update or "
-                    "persist_trip_snapshot instead of direct save"
+                    "persist_pipeline_owned instead of direct save"
                 )
+        if self._is_persist_trip_snapshot(node) and self.rel_path not in SNAPSHOT_ALLOWLIST:
+            self.violations.append(
+                f"{self.rel_path}:{node.lineno}: persist_trip_snapshot is not "
+                "allowlisted; use persist_pipeline_owned or a field mutator"
+            )
         self.generic_visit(node)
+
+    def _is_persist_trip_snapshot(self, node: ast.Call) -> bool:
+        func = node.func
+        if isinstance(func, ast.Name):
+            return func.id == "persist_trip_snapshot"
+        if isinstance(func, ast.Attribute):
+            return func.attr == "persist_trip_snapshot"
+        return False
 
     def _is_forbidden_trip_save(self, node: ast.Call) -> bool:
         if node.args:

@@ -204,7 +204,7 @@ function mountFpahL0More(root, actions) {
     moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
   });
   document.addEventListener("click", function (ev) {
-    if (!moreWrap.contains(ev.target)) {
+    if (!(ev.target instanceof Node) || !moreWrap.contains(ev.target)) {
       pop.hidden = true;
       moreBtn.setAttribute("aria-expanded", "false");
     }

@@ -32,7 +32,7 @@
 |------|------|
 | import-linter | **绿** · 3 kept |
 | `pytest --fast` | **绿** · 4071 passed / 0 failed |
-| god-module ratchet | **绿** · curate 1986 / studio_pipeline 1181 |
+| god-module ratchet | **绿** · 合入快照 curate 1986 / studio_pipeline 1181 · **2026-08-28 只降至 1646 / 1144**（[结案](./acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md)） |
 | `tsc:preview-toolbar` | **绿** |
 | LSE cross-import | **绿** · 9 / ceiling 9 |
 | LSE growth-log 防篡改 | **绿** · 脚本 + CI 步骤（closeout 补上） |

@@ -83,6 +83,8 @@ def merge_ingest_partial(disk_trip: dict, *, memory_assets_delta, stats, checkpo
     # bump_revision=False（pipeline 中间态，对齐 ADR-008 §6）
 ```
 
+阶段末热路径已于 **2026-08-28** 改走 `persist_pipeline_owned` + 用户文案回填（见 [结案](./acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md) / ADR-008 §10）。下表仍是 **ProcessPool ingest × `persist_every_n`** 的 PT-M1-10，未在该结案关闭。
+
 **AC-ARC-02-parallel 大纲**（架构+QA，M1 前补全用例）：
 
 | 步骤 | 动作 | 期望 |

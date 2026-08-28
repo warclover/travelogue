@@ -2,7 +2,22 @@
 
 from __future__ import annotations
 
+from travelogue.domain.copy_persist import restore_user_copy_onto, snapshot_user_copy
 from travelogue.domain.trip_meta import STAMP_RENDERED_REVISION
+
+# Intent keys HTTP / Studio may patch; flush only seeds when disk is empty.
+_HTTP_INTENT_KEYS = (
+    "title",
+    "places",
+    "placesUserSet",
+    "userNotes",
+    "photoKeepMode",
+    "photoCullEnabled",
+    "keepNearDuplicates",
+    "layoutDensity",
+    "featuredSubjects",
+)
+_PIPELINE_INTENT_KEYS = ("travelPlan",)
 
 # Top-level keys ingest may write during / at end of import.
 _INGEST_OWNED_TOP = (
@@ -46,6 +61,7 @@ def merge_ingest_partial(disk_trip: dict, *, memory_trip: dict) -> None:
     Prohibits ``disk_trip.clear(); disk_trip.update(full_memory_trip)``.
     Preserves concurrent HTTP writes (intent / copy / chapters / screens).
     """
+    prior_copy = snapshot_user_copy(disk_trip)
     for key in _INGEST_OWNED_TOP:
         if key in memory_trip:
             val = memory_trip[key]
@@ -92,14 +108,17 @@ def merge_ingest_partial(disk_trip: dict, *, memory_trip: dict) -> None:
         for key in ("dateStart", "dateEnd", "dates"):
             if key in mem_meta:
                 disk_meta[key] = mem_meta[key]
+    restore_user_copy_onto(disk_trip, prior_copy)
 
 
 def merge_pipeline_persist(disk_trip: dict, *, memory_trip: dict) -> None:
     """Stage-end persist: push pipeline fields without clobbering HTTP intent/notes.
 
     Unlike a full ``disk.update(memory)``, ``intent`` / ``userNotes`` on disk win
-    when both sides have values (AC-ARC-02-parallel).
+    when both sides have values (AC-ARC-02-parallel). User-protected copy
+    (lead / decorLine / hook / epilogue) is restored after the structure push.
     """
+    prior_copy = snapshot_user_copy(disk_trip)
     merge_ingest_partial(disk_trip, memory_trip=memory_trip)
 
     for key in _PIPELINE_STRUCTURE_TOP:
@@ -150,6 +169,16 @@ def merge_pipeline_persist(disk_trip: dict, *, memory_trip: dict) -> None:
         # and false-flag「预览产物已过期」right after a fresh import.
         if mem_meta.get(STAMP_RENDERED_REVISION):
             disk_meta[STAMP_RENDERED_REVISION] = True
+        if "titleArt" in mem_meta:
+            disk_meta["titleArt"] = mem_meta["titleArt"]
+
+    mem_privacy = memory_trip.get("privacy")
+    if isinstance(mem_privacy, dict) and "confirmedAt" in mem_privacy:
+        disk_privacy = disk_trip.get("privacy")
+        if not isinstance(disk_privacy, dict):
+            disk_privacy = {}
+            disk_trip["privacy"] = disk_privacy
+        disk_privacy["confirmedAt"] = mem_privacy["confirmedAt"]
 
     # Copy any other non-HTTP top-level keys from memory (template extras, etc.)
     for key, value in memory_trip.items():
@@ -160,6 +189,8 @@ def merge_pipeline_persist(disk_trip: dict, *, memory_trip: dict) -> None:
         if key in ("meta", "pipeline", "version", "tripId", "createdAt", "updatedAt"):
             continue
         disk_trip[key] = value
+
+    restore_user_copy_onto(disk_trip, prior_copy)
 
 
 def make_ingest_merge_mutator(memory_trip: dict):
@@ -181,26 +212,46 @@ def make_pipeline_persist_mutator(memory_trip: dict):
 
 
 def make_intent_flush_mutator(memory_trip: dict):
-    """Flush intent (+ travelPlan) and curation.intentHints from memory onto disk.
+    """Field-level intent flush. Pipeline keys merge; HTTP title/notes on disk win.
 
-    Used pre-ingest and again after ``ingest_travel_plan`` so plan cities survive
-    ``_sync_trip_from_disk`` (cover/intent regression F5).
+    Used pre-ingest and after ``ingest_travel_plan`` so plan cities survive
+    ``_sync_trip_from_disk`` (cover/intent regression F5) without replacing intent.
     """
 
     def mutator(disk_trip: dict) -> None:
-        if "intent" in memory_trip:
-            disk_trip["intent"] = memory_trip["intent"]
-        if "userNotes" in memory_trip:
-            disk_trip["userNotes"] = memory_trip["userNotes"]
+        mem_intent = memory_trip.get("intent")
+        if isinstance(mem_intent, dict):
+            disk_intent = disk_trip.get("intent")
+            if not isinstance(disk_intent, dict):
+                disk_trip["intent"] = dict(mem_intent)
+            else:
+                _merge_intent_fields(disk_intent, mem_intent)
+
+        mem_notes = memory_trip.get("userNotes")
+        if mem_notes not in (None, "") and disk_trip.get("userNotes") in (None, ""):
+            disk_trip["userNotes"] = mem_notes
+
         mem_meta = memory_trip.get("meta")
+        disk_intent = disk_trip.get("intent")
         if isinstance(mem_meta, dict):
             disk_meta = disk_trip.setdefault("meta", {})
             if not isinstance(disk_meta, dict):
                 disk_trip["meta"] = {}
                 disk_meta = disk_trip["meta"]
-            for key in ("title", "places", "tone", "dateStart", "dateEnd", "dates"):
-                if key in mem_meta:
+            for key in ("dateStart", "dateEnd", "dates"):
+                if key in mem_meta and disk_meta.get(key) in (None, "", []):
                     disk_meta[key] = mem_meta[key]
+            if isinstance(disk_intent, dict):
+                for key in ("title", "places", "tone"):
+                    if key in disk_intent:
+                        disk_meta[key] = disk_intent[key]
+                    elif key in mem_meta and disk_meta.get(key) in (None, "", []):
+                        disk_meta[key] = mem_meta[key]
+            else:
+                for key in ("title", "places", "tone"):
+                    if key in mem_meta and disk_meta.get(key) in (None, "", []):
+                        disk_meta[key] = mem_meta[key]
+
         mem_curation = memory_trip.get("curation")
         if isinstance(mem_curation, dict) and "intentHints" in mem_curation:
             disk_curation = disk_trip.setdefault("curation", {})
@@ -214,6 +265,27 @@ def make_intent_flush_mutator(memory_trip: dict):
                 disk_curation.pop("intentHints", None)
 
     return mutator
+
+
+def _merge_intent_fields(disk_intent: dict, mem_intent: dict) -> None:
+    for key in _PIPELINE_INTENT_KEYS:
+        if key in mem_intent:
+            disk_intent[key] = mem_intent[key]
+    mem_folders = mem_intent.get("folders")
+    if isinstance(mem_folders, dict) and mem_folders:
+        disk_folders = dict(disk_intent.get("folders") or {})
+        disk_folders.update(mem_folders)
+        disk_intent["folders"] = disk_folders
+    if "version" in mem_intent and not disk_intent.get("version"):
+        disk_intent["version"] = mem_intent["version"]
+    for key in _HTTP_INTENT_KEYS:
+        if key not in mem_intent:
+            continue
+        if key == "places" and disk_intent.get("placesUserSet"):
+            continue
+        disk_val = disk_intent.get(key)
+        if disk_val in (None, "", [], {}):
+            disk_intent[key] = mem_intent[key]
 
 
 def make_intent_folders_merge_mutator(memory_trip: dict):

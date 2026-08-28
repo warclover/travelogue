@@ -94,6 +94,30 @@ def test_merge_pipeline_persist_propagates_render_bundle_stamp() -> None:
     assert disk["meta"]["title"] == "stale memory"
 
 
+def test_merge_pipeline_persist_copies_title_art_and_privacy_confirm() -> None:
+    from travelogue.media.ingest_persist import merge_pipeline_persist
+
+    disk = {
+        "assets": [{"id": "a1"}],
+        "intent": {"title": "HTTP wins"},
+        "pipeline": {"status": "rendered"},
+        "meta": {"title": "HTTP wins"},
+        "privacy": {"stripExifOnExport": True},
+    }
+    memory = {
+        "assets": [{"id": "a1"}],
+        "intent": {"title": "stale"},
+        "pipeline": {"status": "exported"},
+        "meta": {"title": "stale", "titleArt": {"assetPath": "trip-derived/title-art/a.png"}},
+        "privacy": {"confirmedAt": "2026-08-28T00:00:00Z", "stripExifOnExport": False},
+    }
+    merge_pipeline_persist(disk, memory_trip=memory)
+    assert disk["intent"]["title"] == "HTTP wins"
+    assert disk["meta"]["titleArt"]["assetPath"] == "trip-derived/title-art/a.png"
+    assert disk["privacy"]["confirmedAt"] == "2026-08-28T00:00:00Z"
+    assert disk["privacy"]["stripExifOnExport"] is True
+
+
 def test_pipeline_persist_mutator_keeps_render_bundle_fresh(tmp_path) -> None:
     """Studio _persist_trip_state after mark_render_bundle_current must not stale."""
     from pathlib import Path
@@ -183,5 +207,158 @@ def test_intent_flush_mutator_persists_travel_plan_and_hints() -> None:
         "curation": {"intentHints": {"planCities": ["大阪", "京都"]}},
     }
     make_intent_flush_mutator(memory)(disk)
+    assert disk["intent"]["title"] == "关西之旅"
     assert disk["intent"]["travelPlan"]["cities"] == ["大阪", "京都"]
     assert disk["curation"]["intentHints"]["planCities"] == ["大阪", "京都"]
+
+
+def test_merge_pipeline_persist_keeps_user_copy() -> None:
+    from travelogue.media.ingest_persist import merge_pipeline_persist
+
+    disk = {
+        "assets": [{"id": "a1", "caption": "用户图注", "captionOrigin": "user"}],
+        "meta": {"hook": "用户钩子", "hookOrigin": "user"},
+        "epilogue": "用户收束",
+        "epilogueOrigin": "user",
+        "chapters": [
+            {
+                "id": "ch-01",
+                "title": "用户章题",
+                "titleOrigin": "user",
+                "lead": "用户导语",
+                "leadOrigin": "user",
+                "decorLine": "用户饰线",
+                "decorLineOrigin": "user",
+                "items": [{"assetId": "a1", "caption": "用户卡注", "captionOrigin": "user"}],
+                "screens": [
+                    {
+                        "screenId": "sc-01",
+                        "edited": True,
+                        "copy": {"kicker": "用户眉题", "body": "用户屏文"},
+                    }
+                ],
+            }
+        ],
+        "pipeline": {"status": "structure_locked"},
+    }
+    memory = {
+        "assets": [{"id": "a1", "caption": "管线图注", "captionOrigin": "stub"}],
+        "meta": {"hook": "管线钩子", "hookOrigin": "stub"},
+        "epilogue": "管线收束",
+        "epilogueOrigin": "stub",
+        "chapters": [
+            {
+                "id": "ch-01",
+                "title": "管线章题",
+                "titleOrigin": "stub",
+                "lead": "管线导语",
+                "leadOrigin": "stub",
+                "decorLine": "管线饰线",
+                "decorLineOrigin": "stub",
+                "items": [{"assetId": "a1", "caption": "管线卡注", "captionOrigin": "stub"}],
+                "screens": [
+                    {
+                        "screenId": "sc-01",
+                        "copy": {"kicker": "管线眉题", "body": "管线屏文"},
+                    }
+                ],
+            },
+            {"id": "ch-02", "title": "新章", "lead": "新导语", "leadOrigin": "stub"},
+        ],
+        "pipeline": {"status": "copy_draft"},
+    }
+    merge_pipeline_persist(disk, memory_trip=memory)
+    ch1 = disk["chapters"][0]
+    assert ch1["title"] == "用户章题"
+    assert ch1["lead"] == "用户导语"
+    assert ch1["decorLine"] == "用户饰线"
+    assert ch1["items"][0]["caption"] == "用户卡注"
+    assert ch1["screens"][0]["copy"]["kicker"] == "用户眉题"
+    assert disk["meta"]["hook"] == "用户钩子"
+    assert disk["epilogue"] == "用户收束"
+    assert disk["assets"][0]["caption"] == "用户图注"
+    assert disk["chapters"][1]["id"] == "ch-02"
+    assert disk["chapters"][1]["lead"] == "新导语"
+
+
+def test_merge_pipeline_persist_overwrites_unprotected_lead() -> None:
+    from travelogue.media.ingest_persist import merge_pipeline_persist
+
+    disk = {
+        "chapters": [{"id": "ch-01", "lead": "旧 stub", "leadOrigin": "stub"}],
+        "pipeline": {"status": "structure_locked"},
+    }
+    memory = {
+        "chapters": [{"id": "ch-01", "lead": "新管线导语", "leadOrigin": "llm"}],
+        "pipeline": {"status": "copy_draft"},
+    }
+    merge_pipeline_persist(disk, memory_trip=memory)
+    assert disk["chapters"][0]["lead"] == "新管线导语"
+    assert disk["chapters"][0]["leadOrigin"] == "llm"
+
+
+def test_intent_flush_keeps_http_title_and_merges_travel_plan() -> None:
+    from travelogue.media.ingest_persist import make_intent_flush_mutator
+
+    disk = {
+        "intent": {"version": "1", "title": "HTTP补丁标题", "places": ["京都"]},
+        "meta": {"title": "HTTP补丁标题", "places": ["京都"]},
+    }
+    memory = {
+        "intent": {
+            "version": "1",
+            "title": "过期向导标题",
+            "places": [],
+            "travelPlan": {"cities": ["大阪"], "format": "text"},
+        },
+        "meta": {"title": "过期向导标题", "places": [], "tone": "relaxed"},
+        "curation": {"intentHints": {"planCities": ["大阪"]}},
+    }
+    make_intent_flush_mutator(memory)(disk)
+    assert disk["intent"]["title"] == "HTTP补丁标题"
+    assert disk["intent"]["places"] == ["京都"]
+    assert disk["intent"]["travelPlan"]["cities"] == ["大阪"]
+    assert disk["meta"]["title"] == "HTTP补丁标题"
+    assert disk["curation"]["intentHints"]["planCities"] == ["大阪"]
+
+
+def test_intent_flush_seeds_title_when_disk_intent_empty() -> None:
+    from travelogue.media.ingest_persist import make_intent_flush_mutator
+
+    disk: dict = {}
+    memory = {
+        "intent": {"version": "1", "title": "向导标题", "places": ["奈良"]},
+        "userNotes": "首记",
+        "meta": {"title": "向导标题", "places": ["奈良"]},
+    }
+    make_intent_flush_mutator(memory)(disk)
+    assert disk["intent"]["title"] == "向导标题"
+    assert disk["intent"]["places"] == ["奈良"]
+    assert disk["userNotes"] == "首记"
+    assert disk["meta"]["title"] == "向导标题"
+
+
+def test_intent_flush_respects_places_user_set() -> None:
+    from travelogue.media.ingest_persist import make_intent_flush_mutator
+
+    disk = {
+        "intent": {
+            "version": "1",
+            "title": "HTTP",
+            "places": [],
+            "placesUserSet": True,
+        }
+    }
+    memory = {
+        "intent": {
+            "version": "1",
+            "title": "stale",
+            "places": ["大阪"],
+            "placesUserSet": False,
+            "travelPlan": {"cities": ["大阪"]},
+        }
+    }
+    make_intent_flush_mutator(memory)(disk)
+    assert disk["intent"]["places"] == []
+    assert disk["intent"]["placesUserSet"] is True
+    assert disk["intent"]["travelPlan"]["cities"] == ["大阪"]

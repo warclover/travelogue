@@ -130,9 +130,10 @@ def _dispatch_export_writers(
     from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
 
     pid = normalize_platform_id(platform)
-    from travelogue.export.crossing_longshot import reject_portfolio_crossing_longshot
+    from travelogue.export.crossing_longshot import reject_crossing_longshot_if_locked
+    from travelogue.export.portfolio_wechat import trip_is_portfolio
 
-    reject_portfolio_crossing_longshot(trip_dir, pid)
+    reject_crossing_longshot_if_locked(pid, folio=trip_is_portfolio(trip_dir))
     if pid == "moments_grid":
         from travelogue.export.photo_grid_pack import export_photo_grid_pack
 
