@@ -1169,6 +1169,12 @@ def export_journal_longshot(
             "未找到 index-longshot.html，请先完成渲染",
         )
 
+    # 捕获脚本跟模板走：已渲染 trip 目录里的 longshot.js/css 可能过期
+    # （竖排艺术字全宽栅格化即一例）。导出前覆盖拷贝，不必整本重渲。
+    from travelogue.render.engine import copy_longshot_bundle
+
+    copy_longshot_bundle(trip_dir)
+
     raise_if_longshot_cancelled(cancel_check)
 
     scale = max(1, min(int(scale), 3))

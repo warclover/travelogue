@@ -360,6 +360,31 @@ body.longshot-capturing .cover-opening__title {
   overflow: hidden;
 }
 
+/* 艺术字只服务 Opening 首屏。捕获若按 428px 全宽栅格化竖排条幅，
+   会按原图高宽比拉出数千像素黑塔（folio-overlap 7 字叠字）。
+   长图改走上方 26px 横排书名；预览 / 分享首屏仍用贴纸。 */
+html[data-layout="longshot"] .cover-opening__title-art,
+html[data-layout="mobile"] body.longshot-capturing .cover-opening__title-art,
+body.longshot-capturing .cover-opening__title-art {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+body.longshot-capturing .cover-opening__title.sr-only {
+  position: relative;
+  width: auto;
+  height: auto;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+}
+
 /* split-mat · 长图导出：竖排书名 → 横排（Web 预览仍竖排） */
 body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical,
 body.longshot-capturing .cover-opening[data-cover-opening="split-mat"] .cover-opening__title--vertical-compact,
@@ -414,7 +439,8 @@ body.longshot-capturing .trip-meta {
 }
 
 /* 封面 trip-meta 常与书名重复；捕捉时与 web 一样隐藏，只留中间标题 */
-body.longshot-capturing .cover-opening .trip-meta {
+body.longshot-capturing .cover-opening .trip-meta,
+body.longshot-capturing .cover-opening__archive {
   display: none;
 }
 
