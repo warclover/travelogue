@@ -186,6 +186,8 @@ ALLOWED_STUDIO_HOMEPAGE_EVENTS = frozenset(
         "ai_sheet_action_click",
         "ai_sheet_action_result",
         "ai_sheet_gate_view",
+        # MET-01 · journal 竖切漏斗（inspectable preview；勿与向导 preview_loaded 混淆）
+        "funnel_first_preview",
     }
 )
 

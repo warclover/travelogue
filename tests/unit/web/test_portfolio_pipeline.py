@@ -209,7 +209,7 @@ def test_journal_chrome_unchanged_when_flag_exists() -> None:
     toolbar = (_STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     lvp = (_STUDIO / "preview-toolbar" / "features.js").read_text(encoding="utf-8")
     logic = (_STUDIO / "js" / "portfolio-export-logic.js").read_text(encoding="utf-8")
-    assert "开始制作我的画册" in html
+    assert "选择照片文件夹" in html
     assert "导出长图" in toolbar
     assert "导出作品集" not in toolbar
     assert "导出作品集" in logic
@@ -234,7 +234,7 @@ def test_journal_chrome_unchanged_when_flag_exists() -> None:
     assert "shelfEditionLine" in shelf
     assert "改为游记重排" in menu
     assert "做一本作品集" in html
-    assert "开始制作我的画册" in html
+    assert "选择照片文件夹" in html
     constants = (_STUDIO / "js" / "constants.js").read_text(encoding="utf-8")
     assert 'narrate: "正在生成画册文案…"' in constants
     import_logic = (_STUDIO / "homepage-v2" / "import-run-logic.js").read_text(
@@ -363,7 +363,7 @@ def test_homepage_portfolio_entry_exists_but_hidden_by_default() -> None:
     assert 'id="v2-cta-portfolio"' in html
     assert "做一本作品集" in html
     assert 'id="v2-cta-portfolio" hidden' in html or 'hidden>做一本作品集' in html
-    assert "开始制作我的画册" in html
+    assert "选择照片文件夹" in html
     edition = html[html.index('id="v2-wizard-edition"') : html.index('id="v2-wizard-edition"') + 80]
     assert "hidden" in edition
     assert "v2-wizard-page-count" not in html

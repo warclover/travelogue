@@ -320,7 +320,7 @@ def test_persona_flag_off_no_intent_card(studio_server) -> None:
 
 
 def test_persona_returning_user_homepage_shelf_loads(studio_server) -> None:
-    """回访用户：书架 fixture 可打开首页，主 CTA 打开 Import Wizard。"""
+    """回访用户：书架 fixture 可打开首页，次按钮打开 Import Wizard。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -330,7 +330,9 @@ def test_persona_returning_user_homepage_shelf_loads(studio_server) -> None:
         body_html = page.content()
         assert "data-homepage-variant" in body_html
 
-        page.locator("#v2-cta").click()
+        cta = page.locator("#v2-cta").inner_text()
+        assert "继续制作《京都" in cta
+        page.locator("#v2-cta-secondary").click()
         _wait_visible(page, "v2-wizard-root")
         assert page.locator("#v2-wizard-step-pick").is_visible()
 

@@ -544,9 +544,14 @@
   gap: 12px;
 }
 .v2-bench__cta-secondary {
+  border: 0;
+  background: none;
+  padding: 0;
   color: var(--v2-primary, #3d6b5a);
+  font: inherit;
   font-size: 13px;
   text-decoration: none;
+  cursor: pointer;
 }
 .v2-bench__cta-secondary:hover {
   text-decoration: underline;

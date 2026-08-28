@@ -147,11 +147,30 @@ import {
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
+function trackFunnelFirstPreview(root, tripId) {
+  if (!tripId || isSharePreview()) return;
+  try {
+    var seenKey = "travelogue.funnel.firstPreview." + tripId;
+    if (sessionStorage.getItem(seenKey)) return;
+    sessionStorage.setItem(seenKey, "1");
+  } catch (_eSeen) {}
+  var edition = "journal";
+  try {
+    edition = readToolbarEdition(root) === "portfolio" ? "portfolio" : "journal";
+  } catch (_eEd) {}
+  trackStudioEvent("funnel_first_preview", {
+    tripId: tripId,
+    edition: edition,
+    source: "preview_toolbar",
+  });
+}
+
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
   // NAS · 尽早水合，供 Sheet/抽屉运行时门控（AC-NAS-09）
   ensureAiSurfaceHydrated();
   bindPortfolioJournalExit(root, tripId);
+  trackFunnelFirstPreview(root, tripId);
 
   var dock = root.querySelector(".preview-toolbar__dock");
   var helpBtn = createHelpOpenButton({

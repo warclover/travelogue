@@ -155,7 +155,7 @@
             <div class="v2-bench__side">
               <p class="v2-bench__side-label">快捷操作</p>
               <div class="v2-bench__quick-actions" id="v2-bench-quick-actions">
-                <!-- FE-FTUE-01：有用户作品时由 bento.js 动态插入「继续上次」（空态不渲染 DOM） -->
+                <!-- UX-01：续作并入状态主按钮，快捷区不再动态插入 resume 按钮 -->
                 <a class="v2-bench__ghost-btn" id="v2-bench-layout-lab"
                    href="/templates-admin"
                    aria-label="版式"
@@ -206,7 +206,11 @@
 
     <div id="v2-cta-group" class="v2-cta-group">
       <button type="button" class="v2-bench__cta-primary" id="v2-cta"
-              aria-label="开始制作我的画册">开始制作我的画册 →</button>
+              aria-label="选择照片文件夹">
+        <span id="v2-cta-label">选择照片文件夹</span>
+        <span class="v2-bench__cta-chip" id="v2-cta-chip" hidden></span>
+      </button>
+      <button type="button" class="v2-bench__cta-secondary" id="v2-cta-secondary">试用示例</button>
       <a href="#v2-cta-portfolio" class="v2-bench__cta-secondary" id="v2-cta-portfolio" hidden>做一本作品集</a>
     </div>
 

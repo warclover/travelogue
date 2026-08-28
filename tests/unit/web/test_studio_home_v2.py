@@ -53,7 +53,8 @@ V2_HOME_MARKERS = (
     "v2-demo-flag",
     "每一个瞬间",
     "都值得再次相遇",
-    "开始制作我的画册",
+    "选择照片文件夹",
+    "试用示例",
     "示例作品",
     "v2-unsupported",
     "v2-unsupported-copy",
@@ -94,7 +95,7 @@ V2_HOME_MARKERS = (
     'id="studio-cfg-vision"',
     'id="v2-settings-zone-ai"',
     'id="studio-llm-settings-entry"',
-    "开始制作我的画册",
+    "选择照片文件夹",
     "无需上传照片 · 个人隐私无忧 · 智能拼图排版 · 一键多种输出",
     # Import Failed overlay
     "v2-failure",
@@ -320,6 +321,10 @@ def test_studio_home_v2_js_modules_present() -> None:
     settings = (STUDIO_DIR / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
     assert "bindAdvancedConfigControls" in settings
     assert "syncCtaPlacement" in bento
+    assert "initHomepageCta" in bento
+    assert "syncHomepageCta" in bento
+    cta = (STUDIO_DIR / "homepage-v2" / "homepage-cta.js").read_text(encoding="utf-8")
+    assert "resolveHomepageCta" in cta
     assert "renderBentoEmpty" in bento
     assert "renderBackground" in bento
     assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染
@@ -905,6 +910,8 @@ def test_studio_home_v2_telemetry_wired() -> None:
 
     entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
     assert "cta_click" in entry
+    homepage_cta = (STUDIO_DIR / "homepage-v2" / "homepage-cta.js").read_text(encoding="utf-8")
+    assert "cta_click" in homepage_cta
 
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     assert "sheet_close" in wizard

@@ -2,8 +2,7 @@
  * 首页 v2 · Bento 首屏渲染（示例 + 用户 Tab · 方案 A/B′）。
  */
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
-import { isDemoTrip } from "../js/constants.js";
-import { cssBackgroundImage, formatUpdatedAt } from "../js/dom.js";
+import { cssBackgroundImage } from "../js/dom.js";
 import { manifestAssetUrl } from "./manifest.js";
 import { initCarousel } from "./carousel.js";
 import { initPhoneStrip } from "./phone-strip.js";
@@ -15,6 +14,7 @@ import { syncBentoStaleBar } from "./bento-stale.js";
 import { pickRecentUserTrips } from "./trip-preview.js";
 import { openImportSheet } from "./import-entry.js";
 import { HELP_COPY, trackHelpEvent } from "../js/help-onboarding.js";
+import { initHomepageCta, syncHomepageCta } from "./homepage-cta.js";
 
 var STALE_BADGE = "可重排";
 var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
@@ -283,58 +283,15 @@ export function renderBenchRecent() {
   var recent = pickRecentUserTrips(V2.trips).slice(0, 3);
   show(sample, !recent.length);
   syncCtaPlacement();
+  syncHomepageCta();
   syncDemoConvertCta();
-  syncBenchResumeButton();
-}
-
-/** FE-FTUE-01：仅有非 demo 用户作品时挂载「继续上次」；空态不渲染 DOM。 */
-function syncBenchResumeButton() {
-  var host = $("v2-bench-quick-actions");
-  var resumeTrip = (V2.trips || []).find(function (t) {
-    return t && !isDemoTrip(t);
-  });
-  var resumeBtn = $("v2-bench-resume");
-  if (!resumeTrip) {
-    if (resumeBtn && resumeBtn.parentNode) resumeBtn.parentNode.removeChild(resumeBtn);
-    return;
-  }
-  if (!resumeBtn) {
-    if (!host) return;
-    resumeBtn = document.createElement("button");
-    resumeBtn.type = "button";
-    resumeBtn.className = "v2-bench__ghost-btn v2-bench__ghost-btn--secondary";
-    resumeBtn.id = "v2-bench-resume";
-    resumeBtn.textContent = "继续上次";
-    var settings = $("v2-settings-toggle");
-    if (settings && settings.parentNode === host) {
-      host.insertBefore(resumeBtn, settings);
-    } else {
-      host.insertBefore(resumeBtn, host.firstChild);
-    }
-  }
-  resumeBtn.disabled = false;
-  resumeBtn.dataset.tripId = resumeTrip.tripId || "";
-  if (!resumeBtn.dataset.wired) {
-    resumeBtn.dataset.wired = "1";
-    resumeBtn.addEventListener("click", function () {
-      var tripId = resumeBtn.dataset.tripId;
-      if (!tripId) return;
-      var trip = V2.trips.find(function (t) { return t.tripId === tripId; });
-      if (!trip) return;
-      trackStudioEvent("bench_resume_click", {
-        trip_id: tripId,
-        stale: !!(trip.algorithmStale || trip.longshotStale),
-      });
-      window.location.href = trip.previewUrl || ("/" + trip.tripId + "/index.html");
-    });
-  }
 }
 
 /** 工作台 bench。 */
 export function renderBench(manifest) {
   renderBenchRecent();
   if (!manifest) {
-    syncBenchResumeButton();
+    syncHomepageCta();
     return;
   }
   var titleEl = $("v2-bench-title");
@@ -352,7 +309,7 @@ export function renderBench(manifest) {
     if (meta.chapterCount) parts.push(meta.chapterCount + " 章");
     metaEl.textContent = parts.join(" · ");
   }
-  syncBenchResumeButton();
+  syncHomepageCta();
   if (thumb && manifest.assets && manifest.assets.background) {
     var url = manifestAssetUrl(manifest, "background");
     var gen = _bentoMediaGen;
@@ -400,7 +357,9 @@ export function renderBentoEmpty(manifest) {
 
   initBentoPreviewPicker();
   syncPreviewUi();
+  initHomepageCta();
   syncCtaPlacement();
+  syncHomepageCta();
 
   trackStudioEvent("layout_tier", {
     tier: resolveLayoutTier({ manifestError: !manifest }),

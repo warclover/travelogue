@@ -26,6 +26,7 @@ var FIXTURES = [
   { v: "single-stale", label: "single-stale" },
   { v: "single-algorithm-stale", label: "single-algorithm-stale" },
   { v: "multi", label: "multi" },
+  { v: "delivered", label: "delivered" },
   { v: "many", label: "many (25)" },
   { v: "demo-only", label: "demo-only" },
   { v: "error", label: "error" },

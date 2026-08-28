@@ -386,6 +386,8 @@ def _run(base: str) -> int:
         # Find CTA to open import
         opened = False
         for sel in (
+            "#v2-cta",
+            "text=选择照片文件夹",
             "text=制作我的游记",
             "text=开始制作我的画册",
             "#v2-cta-primary",

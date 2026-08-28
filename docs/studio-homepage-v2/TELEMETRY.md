@@ -127,3 +127,26 @@
 脚本常量：`scripts/studio_lcp_measure.py` → `VARIANT_PATHS = {"v2": "/", "classic": "/classic"}`（legacy 键 `v3` 可读）。
 
 聚合：`scripts/studio_telemetry_aggregate.py` · `scripts/studio_holdback_report.py` 须按 `meta.variant` 分桶，且 holdback 阶段 v2/classic **同期** jsonl。
+
+---
+
+## 7. Sprint 0 · journal 竖切四事件（MET-01）
+
+合同：`travelogue/domain/studio_funnel.py` · 术语表：[COPY-DICTIONARY-V1](../COPY-DICTIONARY-V1.md)
+
+| 阶段 | 事件 | 口径 |
+|------|------|------|
+| 进入首页 | `homepage_view` | 首页最终态首帧一次 |
+| 导入成功 | `import_success` | 生成任务 succeeded |
+| 首次预览 | `funnel_first_preview` | 预览工具栏挂载且可验收；**不是**向导 `preview_loaded` |
+| 首次成功导出 | `longshot_export_success` | 每个 trip 取首次 |
+
+历史 jsonl 在新事件出现前，首次预览回退到 `cover_opening_style_render` / `preview_open_from_success`。
+
+导出当前基线：
+
+```
+python scripts/studio_funnel_baseline.py
+```
+
+只记阶段、耗时和 trip slug / edition。禁止 path、filename、标题、图注、照片内容。关闭遥测不得影响核心功能（本漏斗复用既有本机 jsonl，无新远端通道）。

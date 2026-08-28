@@ -62,14 +62,6 @@ export function initImportSheet() {
   });
   if (_ctaWired) return;
   _ctaWired = true;
-  var cta = $("v2-cta");
-  if (cta) {
-    cta.addEventListener("click", function () {
-      var surface = cta.classList.contains("is-headline") ? "headline" : "bench";
-      trackStudioEvent("cta_click", { surface: surface });
-      openImportSheet();
-    });
-  }
   var portfolio = $("v2-cta-portfolio");
   if (portfolio) {
     portfolio.addEventListener("click", function (ev) {

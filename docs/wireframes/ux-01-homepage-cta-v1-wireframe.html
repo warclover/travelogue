@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UX-01 · 首页状态主按钮 · 线框 v1 待确认</title>
+  <style>
+    :root {
+      --ink: #1a1a1a;
+      --muted: #6b6b6b;
+      --line: #c8c8c8;
+      --fill: #e8e8e8;
+      --fill-deep: #d4d4d4;
+      --paper: #f6f6f6;
+      --anno: #c45c26;
+      --ok: #2d6a4f;
+      --cta: #2d5678;
+      --ghost: #fff;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: Consolas, "SF Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #111;
+      color: #ececec;
+      line-height: 1.5;
+    }
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 12px 18px 10px;
+      background: #0c0c0c;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .bar h1 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .bar h1 em { font-style: normal; color: #d4a574; font-weight: 400; }
+    .bar p { margin: 0; font-size: 12px; color: #888; max-width: 96ch; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #444;
+      background: transparent;
+      color: #ccc;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tabs button.is-on {
+      background: #d4a574;
+      border-color: #d4a574;
+      color: #111;
+      font-weight: 600;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      min-height: calc(100vh - 92px);
+    }
+    @media (max-width: 1080px) { .layout { grid-template-columns: 1fr; } }
+    .stage {
+      padding: 24px 20px 48px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+    }
+    .panel { display: none; width: min(100%, 920px); }
+    .panel.is-on { display: block; }
+    .device {
+      background: var(--paper);
+      color: var(--ink);
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .chrome {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 12px;
+      background: #2a2a2a;
+      color: #bbb;
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+    .page { padding: 18px 20px 16px; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+      min-height: 168px;
+    }
+    .art, .phone {
+      background: var(--fill);
+      border: 1px dashed var(--line);
+      color: #888;
+      font-size: 11px;
+      font-family: var(--mono);
+      display: grid;
+      place-items: center;
+    }
+    .phone { min-height: 168px; }
+    .copy { margin: 14px 0 10px; }
+    .copy h2 { margin: 0 0 4px; font-size: 20px; font-weight: 650; }
+    .copy p { margin: 0; font-size: 12px; color: var(--muted); }
+    .cta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 16px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: default;
+    }
+    .btn.primary { background: var(--cta); color: #fff; }
+    .btn.ghost {
+      background: var(--ghost);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-weight: 500;
+    }
+    .btn.link {
+      background: none;
+      color: var(--muted);
+      padding: 8px 0;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .btn.dim { opacity: 0.45; }
+    .chip {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: #ece4d4;
+      color: #5a4a28;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .bench {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1.5px solid var(--line);
+      border-radius: 6px;
+    }
+    .bench .meta { font-size: 11px; color: var(--muted); }
+    .thumbs { display: flex; gap: 6px; }
+    .thumb {
+      width: 36px;
+      height: 46px;
+      background: var(--fill-deep);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+    }
+    .gear {
+      margin-left: auto;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .shelf {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .card {
+      height: 72px;
+      background: var(--fill);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-size: 10px;
+      color: #777;
+      display: grid;
+      place-items: end start;
+      padding: 6px;
+    }
+    .note {
+      margin: 10px 0 0;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--anno);
+    }
+    .notes {
+      padding: 20px 18px 40px;
+      background: #141414;
+      border-left: 1px solid #2a2a2a;
+      font-size: 13px;
+    }
+    .notes h2 { margin: 0 0 8px; font-size: 13px; color: #d4a574; }
+    .notes p, .notes li { color: #bbb; }
+    .notes ul { margin: 0 0 16px; padding-left: 18px; }
+    .notes table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin: 8px 0 16px;
+    }
+    .notes th, .notes td {
+      border-bottom: 1px solid #2e2e2e;
+      padding: 6px 4px;
+      text-align: left;
+      vertical-align: top;
+      color: #ccc;
+    }
+    .notes th { color: #888; font-weight: 500; }
+    .ask { color: #e0a090; }
+    .table-wrap { overflow-x: auto; }
+    .cmp {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 720px) { .cmp, .hero { grid-template-columns: 1fr; } }
+    .mini { font-size: 11px; color: var(--muted); margin: 0 0 6px; }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>UX-01 · 首页状态主按钮 <em>线框 v1 · 待确认 · 不重做整页</em></h1>
+    <p>只改首屏那一个主动作。Bento 预览、书架、设置、主题本轮不动。journal 竖切；作品集只保证身份不被带错。</p>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="now" class="is-on">F0 现状</button>
+      <button type="button" data-tab="empty">F1 空态</button>
+      <button type="button" data-tab="resume">F2 未完成</button>
+      <button type="button" data-tab="export">F3 待导出</button>
+      <button type="button" data-tab="done">F4 已交付回访</button>
+      <button type="button" data-tab="folio">F5 作品集身份</button>
+      <button type="button" data-tab="rules">状态机</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="stage">
+      <section class="panel is-on" id="now">
+        <div class="device">
+          <div class="chrome"><span>1280 × 720 · 现网回访</span><span>主按钮固定文案</span></div>
+          <div class="page">
+            <div class="hero">
+              <div class="art">画册预览（不动）</div>
+              <div class="phone">长图预览（不动）</div>
+            </div>
+            <div class="copy">
+              <h2>每一个瞬间，都值得再次相遇</h2>
+              <p>品牌区保留。本帧只看工作台按钮抢焦点。</p>
+            </div>
+            <div class="bench">
+              <button class="btn primary" type="button">开始制作我的画册 →</button>
+              <button class="btn ghost" type="button">继续上次</button>
+              <div class="thumbs"><span class="thumb"></span><span class="thumb"></span><span class="thumb"></span></div>
+              <span class="meta">预览画册 ▾</span>
+              <span class="gear">设</span>
+            </div>
+            <div class="shelf">
+              <div class="card">京都五日</div>
+              <div class="card">东京街拍</div>
+              <div class="card">示例</div>
+              <div class="card">+</div>
+            </div>
+            <p class="note">问题：主按钮永远是「新建」；续作是弱按钮，且不说书名、身份、下一步。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="empty">
+        <div class="device">
+          <div class="chrome"><span>空态 · 无用户画册</span><span>主按钮在标题下</span></div>
+          <div class="page">
+            <div class="hero">
+              <div class="art">示例画册预览</div>
+              <div class="phone">示例长图</div>
+            </div>
+            <div class="copy">
+              <h2>用一次旅行的照片，做成能发出去的画册</h2>
+              <p>照片留在本机 · 无需注册</p>
+            </div>
+            <div class="cta-row">
+              <button class="btn primary" type="button">选择照片文件夹</button>
+              <button class="btn link" type="button">试用示例</button>
+            </div>
+            <p class="note">位置沿用 D-19：空态主按钮在文案区，不在工作台。示例是文字链，不再做成第二个主按钮。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="resume">
+        <div class="device">
+          <div class="chrome"><span>未完成 · 已生成，尚未打开预览</span><span>主按钮在工作台</span></div>
+          <div class="page">
+            <div class="hero">
+              <div class="art">《京都五日》封面</div>
+              <div class="phone">该本长图预览</div>
+            </div>
+            <div class="copy">
+              <h2>每一个瞬间，都值得再次相遇</h2>
+              <p>品牌区不动。下一步由工作台主按钮承担。</p>
+            </div>
+            <div class="bench">
+              <button class="btn primary" type="button">继续制作《京都五日》<span class="chip">游记</span></button>
+              <button class="btn ghost" type="button">选择照片文件夹</button>
+              <span class="gear">设</span>
+            </div>
+            <div class="shelf">
+              <div class="card">京都五日 · 进行中</div>
+              <div class="card">示例</div>
+              <div class="card">+</div>
+              <div class="card"></div>
+            </div>
+            <p class="note">点主按钮进入该本预览（上次位置）。新建降为次按钮，不再叫「开始制作我的画册」。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="export">
+        <div class="device">
+          <div class="chrome"><span>待导出 · 已预览，尚无成功导出</span><span>或导出后内容已改</span></div>
+          <div class="page">
+            <div class="hero">
+              <div class="art">《京都五日》封面</div>
+              <div class="phone">待导出长图</div>
+            </div>
+            <div class="copy">
+              <h2>每一个瞬间，都值得再次相遇</h2>
+              <p>用户上次停在预览检查，还没拿到产物。</p>
+            </div>
+            <div class="bench">
+              <button class="btn primary" type="button">继续检查并导出<span class="chip">游记</span></button>
+              <button class="btn ghost" type="button">选择照片文件夹</button>
+              <span class="gear">设</span>
+            </div>
+            <div class="shelf">
+              <div class="card">京都五日 · 待导出</div>
+              <div class="card">示例</div>
+              <div class="card">+</div>
+              <div class="card"></div>
+            </div>
+            <p class="note">进入该本预览上次检查位置，并露出导出。不在首页直接开导出面板。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="done">
+        <div class="device">
+          <div class="chrome"><span>已交付回访 · 最近一本已成功导出且未改</span><span>请确认主按钮</span></div>
+          <div class="page">
+            <div class="cmp">
+              <div>
+                <p class="mini">方案 A · 推荐：主按钮回到新建</p>
+                <div class="cta-row">
+                  <button class="btn primary" type="button">选择照片文件夹</button>
+                  <button class="btn ghost" type="button">打开《京都五日》</button>
+                </div>
+              </div>
+              <div>
+                <p class="mini">方案 B：主按钮继续打开上一本</p>
+                <div class="cta-row">
+                  <button class="btn primary" type="button">打开《京都五日》</button>
+                  <button class="btn ghost" type="button">选择照片文件夹</button>
+                </div>
+              </div>
+            </div>
+            <p class="note">修订稿原文：无进行中项目时主按钮为「选择照片文件夹」。方案 A 与此一致。方案 B 更利于回看。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="folio">
+        <div class="device">
+          <div class="chrome"><span>最近一本是作品集</span><span>身份必须写在按钮上</span></div>
+          <div class="page">
+            <div class="hero">
+              <div class="art">《东京街拍》作品集</div>
+              <div class="phone">作品集页图（非长图）</div>
+            </div>
+            <div class="copy">
+              <h2>每一个瞬间，都值得再次相遇</h2>
+              <p>主按钮带着 edition，禁止把游记带进作品集导出面。</p>
+            </div>
+            <div class="bench">
+              <button class="btn primary" type="button">继续制作《东京街拍》<span class="chip">作品集</span></button>
+              <button class="btn ghost" type="button">选择照片文件夹</button>
+              <span class="gear">设</span>
+            </div>
+            <p class="note">作品集待导出时主按钮为「继续检查并导出」，chip 仍是「作品集」，落地走作品集预览 / 导出作品集，不挂 EPF 三意图。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="rules">
+        <div class="device">
+          <div class="chrome"><span>判定顺序 · 只取最近一本用户画册</span><span>示例不计</span></div>
+          <div class="page">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>优先级</th><th>判定</th><th>主按钮</th><th>次按钮</th><th>点击去向</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td>无用户画册</td>
+                    <td>选择照片文件夹</td>
+                    <td>试用示例</td>
+                    <td>导入向导 / 示例相册</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>最近一本尚未打开过可验收预览</td>
+                    <td>继续制作《书名》+ 身份</td>
+                    <td>选择照片文件夹</td>
+                    <td>该本预览首页</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>已预览，但从未成功导出；或导出后内容已改</td>
+                    <td>继续检查并导出 + 身份</td>
+                    <td>选择照片文件夹</td>
+                    <td>该本预览上次位置</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>最近一本已成功导出且未改</td>
+                    <td class="ask">待确认：方案 A 或 B</td>
+                    <td class="ask">另一个入口</td>
+                    <td>新建 或 打开上一本</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note">生成中 / 失败态不改主按钮状态机，交给 WAIT-01。本页只处理 Idle 回访。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="notes" id="notes">
+      <h2>本轮范围</h2>
+      <ul>
+        <li>只改一个视觉主按钮和一条次入口。</li>
+        <li>文案跟术语表：动作用「导出」，对象按长图 / 画册说，不用「分享图」「验货」。</li>
+        <li>最近一本按「最近打开」取；示例相册不参与判定。</li>
+        <li>journal 与 portfolio 用 chip 区分，点击不串导出面。</li>
+      </ul>
+      <h2>明确不动</h2>
+      <ul>
+        <li>Bento 双预览、书架网格、设置、主题。</li>
+        <li>不把最近项目收成 3 本，不重做首页。</li>
+        <li>不在首页直接弹出导出设置。</li>
+      </ul>
+      <h2>请拍板</h2>
+      <p class="ask">1. 已交付回访：主按钮用方案 A「选择照片文件夹」，还是方案 B「打开上一本」？</p>
+      <p class="ask">2. 「待导出」是否包含「导出后内容已改」（现网 stale）？建议包含。</p>
+      <p class="ask">3. 次按钮「选择照片文件夹」是否仍打开现有导入向导，并默认跟最近一本相同身份？建议：默认游记，作品集走向导内切换。</p>
+      <p class="ask">4. 空态「试用示例」是否继续进入现有示例相册？建议是。</p>
+    </aside>
+  </div>
+  <script>
+    var tabs = document.getElementById("tabs");
+    var panels = document.querySelectorAll(".panel");
+    tabs.addEventListener("click", function (ev) {
+      var btn = ev.target.closest("button");
+      if (!btn) return;
+      tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-on", b === btn); });
+      panels.forEach(function (p) { p.classList.toggle("is-on", p.id === btn.getAttribute("data-tab")); });
+    });
+  </script>
+</body>
+</html>

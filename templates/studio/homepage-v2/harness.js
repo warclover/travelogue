@@ -2,7 +2,7 @@
  * 首页 v2 · Dev Harness（DEV-HARNESS.md §2/§3）。
  *
  * URL 参数强制态，供 Playwright 跑 AC 自动化与人工走查：
- *  - studioFixture=empty|single-stale|multi|multi-templates|demo-only|error  → mock GET /trips
+ *  - studioFixture=empty|single-stale|multi|multi-templates|delivered|demo-only|error  → mock GET /trips
  *  - bentoPreviewTrip=<tripId|demo|>                          → 预置预览画册 preference
  *  - bentoTabSession=mine|demo                                 → D-13 session Tab（迁移测试）
  *  - bentoTabSessionTrip=<tripId>                              → 配合 bentoTabSession=mine
@@ -56,6 +56,8 @@ function trip(id, title, opts) {
     previewRelPath: opts.previewRelPath || null,
     shelfCoverRelPath: opts.shelfCoverRelPath || opts.previewRelPath || null,
     previewUrl: opts.previewUrl || null,
+    edition: opts.edition || "journal",
+    hasLongshotExport: !!opts.hasLongshotExport,
     longshotStale: !!opts.longshotStale,
     algorithmStale: !!opts.algorithmStale,
     aestheticStale: !!opts.aestheticStale,
@@ -73,7 +75,11 @@ const FIXTURES = {
   "single-stale": {
     ok: true,
     total: 1,
-    trips: [trip("kyoto-rain", "京都 · 雨后", { longshotStale: true, updatedAt: NOW - 3 * DAY })],
+    trips: [trip("kyoto-rain", "京都 · 雨后", {
+      hasLongshotExport: true,
+      longshotStale: true,
+      updatedAt: NOW - 3 * DAY,
+    })],
   },
   "single-algorithm-stale": {
     ok: true,
@@ -110,6 +116,17 @@ const FIXTURES = {
         templateSourceLabel: "手动指定",
         templateLocked: true,
       }),
+    ],
+  },
+  delivered: {
+    ok: true,
+    total: 2,
+    trips: [
+      trip("kyoto-rain", "京都 · 雨后", {
+        hasLongshotExport: true,
+        updatedAt: NOW - DAY,
+      }),
+      trip("demo-album", "斯里兰卡见闻录", { isDemo: true, updatedAt: NOW - 40 * DAY }),
     ],
   },
   "demo-only": {

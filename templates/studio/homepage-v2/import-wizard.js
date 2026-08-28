@@ -1613,12 +1613,13 @@ function wireTemplateSelect() {
 }
 
 /** FE-FTUE-02 / FE-DFX-44：向导 pick · 一键试用示例相册（先判重再 import）。 */
-function startDemoAlbumImport() {
+export function startDemoAlbumImport(opts) {
+  opts = opts || {};
   if (V2.state === "Importing") {
     if (typeof studioToast === "function") studioToast("正在制作中", { duration: 2200 });
     return;
   }
-  trackStudioEvent("ftue_demo_album_click", { source: "wizard" });
+  trackStudioEvent("ftue_demo_album_click", { source: opts.source || "wizard" });
   markVisited();
 
   var existing = (V2.trips || []).find(function (t) {
