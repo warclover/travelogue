@@ -32,6 +32,8 @@ import {
   folderCollisionCopy,
   wizardCopy,
   wizardStartLabel,
+  wizardPhotoSummaryLine,
+  wizardCountHint,
   approxKeptSentence,
   shouldShowPageSpec,
   buildPageCountFields,
@@ -230,8 +232,18 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
   assert.equal(pfCopy.quickDesc.includes("请改选游记"), true);
   assert.equal(pfCopy.quickDesc.includes("杂志"), false);
   assert.equal(pfCopy.hideDemo, true);
-  assert.equal(wizardCopy("journal").pickButton, "选择本次画册的照片文件夹");
+  assert.equal(wizardCopy("journal").pickButton, "选择照片文件夹");
   assert.equal(wizardCopy("journal").hideDemo, false);
+  assert.equal(
+    wizardPhotoSummaryLine(48),
+    "文件夹有 48 张。制作时会自动去重与挑选，成册张数以完成后为准。"
+  );
+  assert.equal(
+    wizardPhotoSummaryLine(12, { keepMode: "keep_all" }),
+    "文件夹有 12 张，将全部保留进入制作。"
+  );
+  assert.equal(wizardCountHint(72).bucket, "sweet");
+  assert.equal(wizardCountHint(2).bucket, "few");
   assert.equal(
     wizardStartLabel({ edition: "portfolio", covering: true }),
     "覆盖并开始制作作品集"

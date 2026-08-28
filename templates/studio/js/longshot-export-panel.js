@@ -7,6 +7,11 @@
 
 import { HELP_COPY } from "./help-onboarding.js";
 import {
+  buildIntentPresetHtml,
+  defaultPlatformForIntent,
+  intentForPlatform,
+} from "./export-preset-facade.js";
+import {
   albumSpreadCardCopy,
   crossingGateCopy,
   crossingGateSheetModel,
@@ -414,7 +419,7 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "poster_bric") return "导出海报";
   if (platformId === "album_spread") return "导出画册";
   if (platformId === "portfolio_pages") return "导出作品集";
-  return "发微信群";
+  return "长图";
 }
 
 /** 批量态窄栏短标签 · 单选时与单平台文案完全一致（零回归）。 */
@@ -495,7 +500,7 @@ export function detectPlatformFromProgressHint(hint) {
 }
 
 /** 摘要尾句 · 各模式共用（按钮文案随模式变，指引固定指右上角 CTA） */
-var EXPORT_SUMMARY_CTA_HINT = "点击右上角灰色按钮导出";
+var EXPORT_SUMMARY_CTA_HINT = "点「长图」开始导出";
 
 function _withExportCtaHint(line) {
   return String(line || "") + " · " + EXPORT_SUMMARY_CTA_HINT;
@@ -617,7 +622,7 @@ export function buildPanelHtml(platformIds, opts) {
   var face = opts.face === "social" ? "social" : "default";
   if (edition === "portfolio" && face === "social") {
     return wrapJournalPanelAsPortfolioSocialFace(
-      buildPanelHtml(platformIds, { edition: "journal" })
+      buildPanelHtml(platformIds, { edition: "journal", intentFacade: false })
     );
   }
   if (edition === "portfolio") {
@@ -663,20 +668,31 @@ export function buildPanelHtml(platformIds, opts) {
     })
     .join("");
 
-  var platformField =
-    '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
+  var platformGrid =
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="按渠道导出（点击可多选）">' +
     platformBtns +
     "</div>" +
-    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
-    "</div>";
+    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>';
+  var platformField =
+    opts.intentFacade === false
+      ? '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
+        '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+        platformGrid +
+        "</div>"
+      : '<div class="preview-toolbar__export-popover-field" data-field="intent">' +
+        '<span class="preview-toolbar__export-popover-label">这次要做什么</span>' +
+        buildIntentPresetHtml() +
+        "</div>" +
+        '<details class="preview-toolbar__export-advanced" data-field="platform">' +
+        "<summary>高级 · 按渠道导出</summary>" +
+        platformGrid +
+        "</details>";
 
   return (
     '<p class="preview-toolbar__export-popover-title">' +
     "导出设置" +
     "</p>" +
-    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
+    '<p class="preview-toolbar__export-popover-note">选好用途后点「确定」，再点「长图」开始导出。</p>' +
     '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
     '<div class="preview-toolbar__export-popover-body">' +
     platformField +
@@ -912,6 +928,12 @@ export function syncPanelUI(pop, draft, opts) {
   }
 
   var gateCopy = socialFace ? crossingGateCopy() : null;
+  var currentIntent = intentForPlatform(platform);
+  pop.querySelectorAll("[data-export-intent]").forEach(function (btn) {
+    var on = btn.getAttribute("data-export-intent") === currentIntent.id;
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+  });
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     var pid = btn.getAttribute("data-studio-longshot-platform");
     var on = platforms.indexOf(pid) >= 0;
@@ -1053,8 +1075,8 @@ export function syncPanelUI(pop, draft, opts) {
   if (noteEl) {
     noteEl.textContent =
       isBatch || meta.showCopyControls === false
-        ? "选好后点「确定」，再点上方灰色按钮开始导出。"
-        : "选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。";
+        ? "选好后点「确定」，再点「长图」开始导出。"
+        : "选好后点「确定」，再点「长图」开始导出。改「要不要字」会同步预览。";
   }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
@@ -1234,6 +1256,14 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     });
   });
 
+  pop.querySelectorAll("[data-export-intent]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var intentId = btn.getAttribute("data-export-intent") || "daily_share";
+      draft.platforms = [defaultPlatformForIntent(intentId)];
+      draft.platform = draft.platforms[0];
+      refresh();
+    });
+  });
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";

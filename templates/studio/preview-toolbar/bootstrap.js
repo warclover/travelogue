@@ -36,9 +36,9 @@ export function initPreviewToolbar() {
     "</a>" +
     '<span class="preview-toolbar__dock-divider" aria-hidden="true"></span>' +
     '<div class="preview-toolbar__menu-wrap">' +
-    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio preview-toolbar__dock-btn--labeled" aria-haspopup="dialog" aria-expanded="false" aria-label="精修">' +
+    '<button type="button" class="preview-toolbar__menu-btn preview-toolbar__dock-btn preview-toolbar__dock-btn--menu preview-toolbar__dock-btn--folio preview-toolbar__dock-btn--labeled" aria-haspopup="dialog" aria-expanded="false" aria-label="调整">' +
     dockIconSvg("refine") +
-    '<span class="preview-toolbar__dock-label">精修</span>' +
+    '<span class="preview-toolbar__dock-label">调整</span>' +
     "</button>" +
     "</div>" +
     "</nav>";

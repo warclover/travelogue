@@ -191,14 +191,14 @@ test("cta / short / summary 覆盖 poster_bric（禁止回落发微信群）", (
   assert.equal(shortCtaLabelForPlatform("poster_bric"), "导出海报");
   assert.equal(
     confirmedExportSummary("poster_bric"),
-    "当前将导出：单张海报 · 3:4 · 点击右上角灰色按钮导出"
+    "当前将导出：单张海报 · 3:4 · 点「长图」开始导出"
   );
   assert.notEqual(shortCtaLabelForPlatform("poster_bric"), "发微信群");
 });
 
 test("wechat_moments 短标签带平台名（对齐导出小红书；禁止裸「连读/按章」）", () => {
   assert.equal(shortCtaLabelForPlatform("wechat_moments"), "导出朋友圈");
-  assert.equal(shortCtaLabelForPlatform("wechat_chat"), "发微信群");
+  assert.equal(shortCtaLabelForPlatform("wechat_chat"), "长图");
   assert.match(ctaLabelForPlatform("wechat_moments"), /导出.*连读|长图连读|朋友圈/);
   assert.notEqual(shortCtaLabelForPlatform("wechat_moments"), "导出连读");
   assert.notEqual(shortCtaLabelForPlatform("wechat_chat"), "按章导出");
@@ -233,6 +233,8 @@ test("FE-PFM-06 · 游记导出 Dock / ▾ 开旗前后零 diff", () => {
   assert.doesNotMatch(snap.html, /印刷跨页（现网画册）/);
   assert.match(snap.html, /画册印刷/);
   assert.match(snap.html, /导出设置/);
+  assert.match(snap.html, /日常分享/);
+  assert.match(snap.html, /data-export-intent/);
 });
 
 test("作品集默认面 F1：只有页图/这一本，无六平台", () => {
@@ -332,7 +334,7 @@ test("syncPanelUI · 单选微信群/朋友圈/小红书二级区跟平台", () 
 test("exportSummaryLine · draft 未确认时提示待生效", () => {
   assert.equal(
     exportSummaryLine("wechat_chat", "wechat_chat"),
-    "当前将导出：微信群 · 点击右上角灰色按钮导出"
+    "当前将导出：微信群 · 点「长图」开始导出"
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
@@ -340,7 +342,7 @@ test("exportSummaryLine · draft 未确认时提示待生效", () => {
   );
   assert.match(
     exportSummaryLine("wechat_chat", "wechat_moments"),
-    /点击右上角灰色按钮导出/
+    /点「长图」开始导出/
   );
   assert.doesNotMatch(
     exportSummaryLine("wechat_chat", "wechat_moments"),
@@ -373,7 +375,7 @@ test("poster_bric / album_spread 隐藏「长图要不要字」；Studio 无九�
   const popPoster = stubPopover();
   syncPanelUI(popPoster, { platform: "poster_bric", mode: "full", scale: 2 });
   assert.equal(popPoster._copy.hidden, true);
-  assert.match(popPoster._note.textContent, /灰色按钮/);
+  assert.match(popPoster._note.textContent, /长图/);
   assert.doesNotMatch(popPoster._note.textContent, /要不要字/);
 
   const popChat = stubPopover();
@@ -613,9 +615,9 @@ test("exportSummaryLineForPlatforms · 单选零回归；多选展示平台清�
   const pending = exportSummaryLineForPlatforms(["wechat_chat"], ["xiaohongshu", "wechat_moments"]);
   assert.match(pending, /已改选：2 个模式/);
   assert.match(pending, /点「确定」后生效/);
-  assert.match(pending, /点击右上角灰色按钮导出/);
+  assert.match(pending, /点「长图」开始导出/);
   assert.doesNotMatch(pending, /灰色按钮仍按/);
-  assert.match(same, /点击右上角灰色按钮导出/);
+  assert.match(same, /点「长图」开始导出/);
 });
 
 test("formatBatchSuccess · 全部成功 / 部分失败文案（D-BEX-05 不整体判失败)", () => {

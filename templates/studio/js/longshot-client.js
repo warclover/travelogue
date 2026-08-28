@@ -4,6 +4,7 @@
  */
 import { postJson, postJsonBusyRetry, isJobBusyResponse } from "./http.js";
 import { pollJobUntilDone } from "./job-poll.js";
+import { successLineForPlatform } from "./copy-dictionary.js";
 
 export const LONGSHOT_SLOW_MS = 45000;
 export const LONGSHOT_POLL_MS = 800;
@@ -151,51 +152,10 @@ export function formatLongshotResult(job) {
   var segmented = result.segmented || outputs.length > 1;
   var platform = result.platform || "wechat_chat";
   var lines = [];
-  var title = "长图已保存";
-
-  if (platform === "poster_bric") {
-    title = "✓ A4 海报已就绪";
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "album_spread") {
-    title = "✓ " + (result.pageCount || outputs.length) + " 张画册跨页已就绪";
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "wechat_moments") {
-    var n = result.pageCount || outputs.length;
-    title = "✓ " + n + " 张长图连读已就绪";
-    lines.push("这不是九宫格 · 滑动连读的长图切片");
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "xiaohongshu") {
-    title = "✓ " + (result.pageCount || outputs.length) + " 张竖版拼贴海报已就绪";
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "wechat_official") {
-    title = "✓ " + (result.pageCount || outputs.length) + " 张公众号配图已就绪";
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else if (platform === "moments_grid") {
-    // CLI / 旧 Job 兼容；Studio 已不下发此平台
-    var nGrid = result.pageCount || outputs.length;
-    title = "✓ " + nGrid + " 张九宫格已就绪";
-    if (result.userHint) lines.push(result.userHint);
-    if (result.publishGuide) lines.push(result.publishGuide);
-  } else {
-    // FE-FST-04 · 默认微信群：已保存确认（发群教学改走 Help H4）
-    var displayTitle = String(result.displayTitle || result.title || "").trim();
-    if (segmented && outputs.length > 1) {
-      title = "长图已保存（共 " + outputs.length + " 段）";
-      lines.push(
-        result.userHint ||
-          "已按章导出 " + outputs.length + " 张，底部含页码便于按序发送。"
-      );
-    } else if (displayTitle) {
-      title = "《" + displayTitle + "》长图已保存";
-    } else {
-      title = "长图已保存";
-    }
-  }
+  var count = result.pageCount || outputs.length || 1;
+  var title = successLineForPlatform(platform, count);
+  if (result.userHint) lines.push(result.userHint);
+  lines.push("已保存到此画册文件夹");
   if (method === "p1") {
     lines.push("已使用兼容模式导出，与预览可能有细微差异。");
   }

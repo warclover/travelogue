@@ -62,7 +62,8 @@ def test_wait_tips_host_hooks_in_import_run() -> None:
     assert "pauseWaitTips" in imp
     assert "resumeWaitTips" in imp
     assert "notifyWaitTipsJob" in imp
-    assert "beforeEl: cancelBtn" in imp
+    assert "beforeEl: cancelBtn" not in imp
+    assert "scheduleWaitTips(" not in imp
     assert "mountWaitTipsRestoreChip" in imp
     ctrl = _read(CTRL_JS)
     assert "remountWaitTipsIfImporting" in ctrl

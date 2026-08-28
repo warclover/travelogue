@@ -13,6 +13,7 @@ import {
   portfolioRevealTargets,
   portfolioSuccessCopy,
 } from "./js/portfolio-export-logic.js";
+import { formatLongshotResult } from "./js/longshot-client.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -255,38 +256,11 @@ export function mountPreviewTaskDock(root, hooks) {
     if (job && job.status === "failed") {
       main.textContent =
         (job.error && (job.error.message || job.error.code)) || "导出失败";
-    } else if (result.platform === "moments_grid") {
-      var nGrid = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nGrid + " 张九宫格已就绪";
-    } else if (result.platform === "wechat_moments") {
-      var nMoments = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nMoments + " 张长图连读已就绪";
-    } else if (result.platform === "xiaohongshu") {
-      var nXhs = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nXhs + " 张竖版拼贴海报已就绪";
-    } else if (result.platform === "wechat_official") {
-      var nMp = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nMp + " 张公众号配图已就绪";
-    } else if (result.platform === "poster_bric") {
-      main.textContent = "✓ 单张海报已就绪";
-    } else if (result.platform === "album_spread") {
-      var nAlbum = result.pageCount || outputs.length;
-      main.textContent = "✓ " + nAlbum + " 张画册跨页已就绪";
     } else if (result.platform === "portfolio_pages") {
       var packCopy = portfolioSuccessCopy(result, root && root._portfolio);
       main.textContent = packCopy.title;
     } else {
-      // FE-FST-04 / D-FST-13 · 默认微信群：已保存确认，不塞发群教学
-      var displayTitle = String(
-        result.displayTitle || result.title || ""
-      ).trim();
-      if (outputs.length > 1) {
-        main.textContent = "长图已保存（共 " + outputs.length + " 段）";
-      } else if (displayTitle) {
-        main.textContent = "《" + displayTitle + "》长图已保存";
-      } else {
-        main.textContent = "长图已保存";
-      }
+      main.textContent = formatLongshotResult(job).title;
     }
     textWrap.appendChild(main);
     if (job && job.status !== "failed") {
@@ -349,20 +323,11 @@ export function mountPreviewTaskDock(root, hooks) {
         // FE-DFX-30 · 稳定成功面副文案（此画册文件夹）
         shareHint.textContent = "已保存到此画册文件夹";
         textWrap.appendChild(shareHint);
-        // Help H4 按需；默认面不展示发群三要素（First-Session Trust）
         trackStudioEvent("longshot_success_share_hint_shown", {
           platform: result.platform || "wechat_chat",
           source: "task_dock",
           guideKind: "saved_confirm",
         });
-        var moreHelp = document.createElement("button");
-        moreHelp.type = "button";
-        moreHelp.className = "preview-task-dock__help-link";
-        moreHelp.textContent = "怎么发到微信群？";
-        moreHelp.addEventListener("click", function () {
-          openHelpDrawer({ source: "deep_link", itemId: "H4" });
-        });
-        textWrap.appendChild(moreHelp);
       }
       if (
         (result.platform === "wechat_moments" ||
@@ -553,17 +518,6 @@ export function mountPreviewTaskDock(root, hooks) {
         hooks.onRevealFolder(outputs[0], tripId);
       });
       actions.appendChild(revealBtn);
-    }
-
-    if (job && job.status !== "failed" && !isPortfolioPack && outputs.length && typeof hooks.onCopyPath === "function") {
-      var copyBtn = document.createElement("button");
-      copyBtn.type = "button";
-      copyBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
-      copyBtn.textContent = "复制路径";
-      copyBtn.addEventListener("click", function () {
-        hooks.onCopyPath(outputs.join("\n"));
-      });
-      actions.appendChild(copyBtn);
     }
 
     actions.appendChild(

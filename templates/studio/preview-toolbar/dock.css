@@ -701,6 +701,33 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   display: none !important;
 }
 
+.preview-toolbar__more-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.preview-toolbar__more-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 260;
+  display: flex;
+  flex-direction: column;
+  min-width: 148px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(20, 17, 13, 0.92);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+.preview-toolbar__more-popover[hidden] {
+  display: none !important;
+}
+.preview-toolbar__more-popover .preview-toolbar__dock-btn {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 36px;
+}
+
 .preview-toolbar--v4 .preview-toolbar__dock-btn--chapters,
 .preview-toolbar--v4 .preview-toolbar__dock-btn--folder,
 .preview-toolbar--v4 .preview-toolbar__dock-btn--ai,

@@ -941,8 +941,8 @@ export function cancelPreviewLongshotExport(root) {
     }
     // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
     function shortLabelForCta() {
-      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "选择分享";
-      return shortCtaLabelForPlatform(platform);
+      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "长图";
+      return "长图";
     }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {

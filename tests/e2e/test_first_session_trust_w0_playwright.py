@@ -200,7 +200,8 @@ def test_ac_fst_08_longshot_success_surface_primary_and_no_auto_reveal(
 
         main = page.locator(".preview-task-dock--success .preview-task-dock__main")
         main_text = main.inner_text().strip()
-        assert "长图已保存" in main_text
+        assert "已导出" in main_text
+        assert "长图" in main_text
         assert "打开微信" not in main_text
         assert "按文件名顺序" not in main_text
         assert "拖进微信群" not in main_text
@@ -212,8 +213,7 @@ def test_ac_fst_08_longshot_success_surface_primary_and_no_auto_reveal(
         assert primary.first.inner_text().strip() == "在文件夹中显示"
 
         help_link = page.locator(".preview-task-dock--success .preview-task-dock__help-link")
-        assert help_link.count() >= 1
-        assert "怎么发到微信群" in help_link.first.inner_text()
+        assert help_link.count() == 0
 
         # AC-FST-08 · 成功面保持可见 ≥3s（自动隐藏 8s）
         page.wait_for_timeout(3100)

@@ -62,7 +62,7 @@ V2_HOME_MARKERS = (
     "v2-import-wizard",
     'role="dialog"',
     'aria-modal="true"',
-    "选择本次画册的照片文件夹",
+    "选择照片文件夹",
     "一本画册一个文件夹，无需上传照片，隐私无忧",
     "v2-wizard-album-path",
     "v2-wizard-album-upload",

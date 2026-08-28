@@ -56,6 +56,8 @@ import {
   isWaitTipsDismissed,
   mountWaitTipsRestoreChip,
 } from "./wait-tips.js";
+// WAIT-01 · 等待中零教学：不调用 scheduleWaitTips。取消 / 终态仍 unmount。
+// 帮助「重播等待提示」走 remountWaitTipsIfImporting（自带 beforeEl）。
 
 let _gen = 0;
 let _activeJobId = null;
@@ -121,7 +123,7 @@ function postMultipartImportV2(formData, options) {
     };
     xhr.onerror = function () {
       reject(new Error(
-        "上传失败：网络中断或照片总量过大。建议改用「选择本次画册的照片文件夹」。"
+        "上传失败：网络中断或照片总量过大。建议改用「选择照片文件夹」。"
       ));
     };
     xhr.send(formData);
@@ -325,20 +327,7 @@ export function renderImportingPanel(source) {
   syncAdvancedOptionsLock();
   syncHomeStubBanner();
   cancelBtn.addEventListener("click", cancelImport);
-  // Wait Tips：主句/慢安抚之下、取消之上；≥2s 显现；失败静默
-  try {
-    scheduleWaitTips(panel, {
-      importStartedAt: _importStartedAt,
-      beforeEl: cancelBtn,
-      edition: _importEdition,
-    });
-    // 曾点 × 持久隐藏时，长等待仍可一键恢复（避免「技巧卡片不见了」）
-    if (isWaitTipsDismissed()) {
-      mountWaitTipsRestoreChip(panel, cancelBtn);
-    }
-  } catch (_e) {
-    /* tips 不得拖垮进度壳 */
-  }
+  // WAIT-01 / ONB-01：等待中零教学，不挂 Wait Tips。
 }
 
 function performCancelImport() {
@@ -355,6 +344,11 @@ function performCancelImport() {
     sessionStorage.removeItem(SS.activePending);
   } catch (e) { /* ignore */ }
   _activeJobId = null;
+  var importingHost = $("v2-importing");
+  if (importingHost) {
+    show(importingHost, false);
+    importingHost.setAttribute("aria-busy", "false");
+  }
   if (shouldCancelApi) {
     postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
   }
@@ -504,7 +498,6 @@ function pollImport(jobId, gen, source) {
       try {
         sessionStorage.removeItem(SS.activePending);
       } catch (e) { /* ignore */ }
-      setStage("完成", 100);
       var result = job.result || {};
       result.edition = result.edition || _importEdition;
       trackStudioEvent("import_success", {

@@ -165,6 +165,52 @@ function trackFunnelFirstPreview(root, tripId) {
   });
 }
 
+/** NAV-01 / FPAH L0：首层只留返回、调整、导出、更多。 */
+function mountFpahL0More(root, actions) {
+  if (!root || !actions || actions.querySelector("#preview-toolbar-more")) return;
+  var moreWrap = document.createElement("div");
+  moreWrap.className = "preview-toolbar__more-wrap";
+  var moreBtn = document.createElement("button");
+  moreBtn.type = "button";
+  moreBtn.id = "preview-toolbar-more";
+  moreBtn.className =
+    "preview-toolbar__dock-btn preview-toolbar__dock-btn--more preview-toolbar__dock-btn--labeled preview-toolbar__ctl";
+  moreBtn.setAttribute("aria-label", "更多");
+  moreBtn.setAttribute("aria-haspopup", "menu");
+  moreBtn.setAttribute("aria-expanded", "false");
+  moreBtn.innerHTML =
+    '<span class="preview-toolbar__dock-label" aria-hidden="true">⋯</span>' +
+    '<span class="preview-toolbar__dock-label">更多</span>';
+  var pop = document.createElement("div");
+  pop.className = "preview-toolbar__more-popover";
+  pop.hidden = true;
+  pop.setAttribute("role", "menu");
+  [
+    root.querySelector("#studio-help-open-preview"),
+    root.querySelector(".preview-toolbar__dock-btn--screenplay"),
+    root.querySelector(".preview-toolbar__dock-btn--chapters"),
+    root.querySelector(".preview-toolbar__dock-btn--ai"),
+    root.querySelector(".preview-toolbar__dock-btn--folder"),
+  ].forEach(function (el) {
+    if (el) pop.appendChild(el);
+  });
+  moreWrap.appendChild(moreBtn);
+  moreWrap.appendChild(pop);
+  actions.appendChild(moreWrap);
+  moreBtn.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var open = pop.hidden;
+    pop.hidden = !open;
+    moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.addEventListener("click", function (ev) {
+    if (!moreWrap.contains(ev.target)) {
+      pop.hidden = true;
+      moreBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
   // NAS · 尽早水合，供 Sheet/抽屉运行时门控（AC-NAS-09）
@@ -861,6 +907,7 @@ export function initToolbarV3(root, tripId) {
     });
     actions.appendChild(folderBtn);
     actions.appendChild(exportWrap);
+    mountFpahL0More(root, actions);
   } else {
     actions.insertBefore(exportWrap, menuWrap);
     insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });

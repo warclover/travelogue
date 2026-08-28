@@ -6,6 +6,8 @@
 import {
   HELP_COPY,
   trackHelpEvent,
+  hasGenerateCompleteTipSeen,
+  markGenerateCompleteTipSeen,
 } from "../js/help-onboarding.js";
 import { LS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
@@ -350,12 +352,13 @@ function populateSuccessUi(result) {
       copy_branch: "nas_hidden",
       tripId: result.tripId || null,
     });
-    // FE-FTUE-08 · 示例成稿后转化；作品集不套游记「再做一本」
-    if (HELP_COPY.ftueConvertHint && !isPf) {
+    // ONB-01 · 生成完成一次性提示；作品集不套游记「再做一本」
+    if (HELP_COPY.ftueConvertHint && !isPf && !hasGenerateCompleteTipSeen()) {
       var nextLine = document.createElement("p");
       nextLine.className = "v2-first-success__guidance-next";
       nextLine.textContent = HELP_COPY.ftueConvertHint;
       nextHint.appendChild(nextLine);
+      markGenerateCompleteTipSeen();
     }
     if (isPf && url) {
       var cross = document.createElement("a");

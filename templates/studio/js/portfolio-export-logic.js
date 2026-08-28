@@ -699,7 +699,7 @@ export function wrapJournalPanelAsPortfolioSocialFace(journalHtml) {
       "</span></div>"
   );
   html = html.replace(
-    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>',
+    '<p class="preview-toolbar__export-popover-note">选好用途后点「确定」，再点「长图」开始导出。</p>',
     '<p class="preview-toolbar__fxi-banner" data-fxi-banner>' +
       spec.leadSecondary +
       "</p>"

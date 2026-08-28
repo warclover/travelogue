@@ -40,6 +40,8 @@ import {
   buildPageCountFields,
   wizardCopy,
   wizardStartLabel,
+  wizardPhotoSummaryLine,
+  wizardCountHint,
 } from "./import-wizard-logic.js";
 import {
   isRadioNavKey,
@@ -277,13 +279,9 @@ function updateCountHint() {
   }
   var bucket = null;
   var text = "";
-  if (n < 4) {
-    bucket = "few";
-    text = "照片偏少，成册可能较短";
-  } else if (n > 300) {
-    bucket = "many";
-    text = "照片较多，预计需要多几分钟";
-  }
+  var hintSpec = wizardCountHint(n);
+  bucket = hintSpec.bucket;
+  text = hintSpec.text;
   if (!bucket) {
     hint.textContent = "";
     show(hint, false);
@@ -353,9 +351,17 @@ function renderVerifyLine() {
   } else if (_previewState === "failed" && _pendingAlbumPath) {
     verifyText = "📁 " + name + " · 未能清点照片，可更换文件夹或直接开始";
   } else if (_previewState === "ready" && _pendingPhotoCount != null) {
-    verifyText = "📁 " + name + " · 已清点 " + _pendingPhotoCount + " 张";
+    verifyText =
+      "📁 " +
+      name +
+      " · " +
+      wizardPhotoSummaryLine(_pendingPhotoCount, { edition: _activeEdition });
   } else if (_pendingPhotoCount != null) {
-    verifyText = "📁 " + name + " · 已清点 " + _pendingPhotoCount + " 张";
+    verifyText =
+      "📁 " +
+      name +
+      " · " +
+      wizardPhotoSummaryLine(_pendingPhotoCount, { edition: _activeEdition });
   }
   if (line) line.textContent = verifyText;
   if (fineCtx && _pendingPhotoCount != null && _previewState === "ready") {

@@ -174,7 +174,7 @@ function idleExportShortLabel() {
     if (_htmlEditionIsPortfolio()) return portfolioDockCta().short;
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
-      return shortCtaLabelForPlatform(prefs.platform);
+      return journalDockCta().short;
     }
   } catch (_eIdle) {}
   return journalDockCta().short;

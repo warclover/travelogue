@@ -274,13 +274,13 @@ export function wizardCopy(edition) {
   var pf = normalizeEdition(edition) === "portfolio";
   return {
     pickTitle: pf ? "制作一本作品集" : "制作我的影像画册",
-    pickButton: pf ? "选择本次作品集的照片文件夹" : "选择本次画册的照片文件夹",
+    pickButton: pf ? "选择本次作品集的照片文件夹" : "选择照片文件夹",
     pickHint: pf
       ? "一本作品集一个文件夹，无需上传照片，隐私无忧"
       : "一本画册一个文件夹，无需上传照片，隐私无忧",
     firstTip: pf
-      ? "选一次作品集的文件夹即可，不用先整理"
-      : "选一次画册的文件夹即可，不用先整理",
+      ? "选一次作品集的文件夹即可。不用先整理，也不用上传。"
+      : "选一次旅行的照片文件夹即可。不用先整理，也不用上传。",
     folderHelpHtml: pf
       ? [
           "同一次作品集放同一文件夹（50–100 张最佳）",
@@ -333,6 +333,31 @@ export function wizardStartLabel(opts) {
   if (pf && o.covering) return "覆盖并开始制作作品集";
   if (pf) return "开始制作作品集 →";
   return "开始制作 →";
+}
+
+/** WIZ-01 · 游记只说文件夹张数，不猜造 M/P/C。 */
+export function wizardPhotoSummaryLine(n, opts) {
+  opts = opts || {};
+  var count = Number(n);
+  if (!Number.isFinite(count) || count < 0) return "";
+  var keepAll = String(opts.keepMode || "").toLowerCase() === "keep_all";
+  if (keepAll) return "文件夹有 " + count + " 张，将全部保留进入制作。";
+  if (normalizeEdition(opts.edition) === "portfolio") {
+    return "文件夹有 " + count + " 张，系统会按能上版的张数自动选厚度。";
+  }
+  return "文件夹有 " + count + " 张。制作时会自动去重与挑选，成册张数以完成后为准。";
+}
+
+/** WIZ-01 · 张数弱建议，不阻断开始。 */
+export function wizardCountHint(n) {
+  var count = Number(n);
+  if (!Number.isFinite(count)) return { bucket: "", text: "" };
+  if (count < 4) return { bucket: "few", text: "照片偏少，成册可能较短" };
+  if (count >= 50 && count <= 100) {
+    return { bucket: "sweet", text: "50–100 张最合适，也可以继续" };
+  }
+  if (count > 300) return { bucket: "many", text: "照片较多，预计需要多几分钟" };
+  return { bucket: "", text: "" };
 }
 
 export function shouldShowPageSpec(edition, pipe) {

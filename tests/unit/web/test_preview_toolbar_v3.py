@@ -686,7 +686,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 };
             }"""
             )
-            assert dock_idle["label"] == "精修", dock_idle
+            assert dock_idle["label"] == "调整", dock_idle
             assert dock_idle["pressed"] == "false", dock_idle
 
             browser.close()
@@ -753,7 +753,10 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
 
     assert 'case "refine":' in dock
     assert 'dockIconSvg("refine")' in bootstrap
-    assert 'aria-label="精修"' in bootstrap
+    assert 'aria-label="调整"' in bootstrap
+    assert "preview-toolbar-more" in (STUDIO / "preview-toolbar" / "init-v3.js").read_text(
+        encoding="utf-8"
+    )
     assert "导出前先更新一下" in longshot
     assert "版面尚未更新" not in longshot
     assert "更新并导出" in longshot
@@ -768,9 +771,9 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "版面没有更新成功，长图尚未开始" in longshot
     assert "再点「长图」即可导出" in longshot
     # First-Session Trust · 默认成功面 = 已保存确认（不塞发群教学）
-    assert "长图已保存" in task_dock
+    assert "formatLongshotResult" in task_dock
     assert 'guide.text.replace' not in task_dock
-    assert "怎么发到微信群？" in task_dock
+    assert "怎么发到微信群？" not in task_dock
     assert "help-onboarding" in task_dock
     assert "已保存到本机 · 拖进微信群即可" not in task_dock
     assert "showNextStepHint" in task_dock
@@ -820,7 +823,7 @@ def test_preview_refine_ux_v11_m1_mode_panel_decouple_markers() -> None:
 
     assert "syncRefineDockChrome" in mode
     assert "maybeShowRefineStarTip" in mode
-    assert "精修中" in mode
+    assert "调整中" in mode
     assert "onExitRefineMode" in init
     assert "isRefineModeOn" in init
     assert "syncRefineDockChrome(root, { panelOpen: false })" in init
