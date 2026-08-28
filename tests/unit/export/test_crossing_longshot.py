@@ -10,7 +10,7 @@ import pytest
 from travelogue.export.crossing_longshot import (
     CrossingLongshotNeedsJournal,
     is_crossing_longshot_locked,
-    reject_portfolio_crossing_longshot,
+    reject_crossing_longshot_if_locked,
 )
 
 
@@ -28,19 +28,15 @@ def test_is_crossing_longshot_locked() -> None:
     assert is_crossing_longshot_locked("xiaohongshu") is False
 
 
-def test_reject_portfolio_wechat(tmp_path: Path) -> None:
-    pf = tmp_path / "pf"
-    _write_trip(pf, edition="portfolio")
+def test_reject_portfolio_wechat() -> None:
     with pytest.raises(CrossingLongshotNeedsJournal) as exc:
-        reject_portfolio_crossing_longshot(pf, "wechat_chat")
+        reject_crossing_longshot_if_locked("wechat_chat", folio=True)
     assert exc.value.code == "E_CLG_NEEDS_JOURNAL"
-    reject_portfolio_crossing_longshot(pf, "xiaohongshu")
+    reject_crossing_longshot_if_locked("xiaohongshu", folio=True)
 
 
-def test_journal_wechat_not_rejected(tmp_path: Path) -> None:
-    journal = tmp_path / "j"
-    _write_trip(journal, edition="journal")
-    reject_portfolio_crossing_longshot(journal, "wechat_chat")
+def test_journal_wechat_not_rejected() -> None:
+    reject_crossing_longshot_if_locked("wechat_chat", folio=False)
 
 
 def test_dispatch_rejects_portfolio_wechat(tmp_path: Path) -> None:

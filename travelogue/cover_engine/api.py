@@ -174,7 +174,7 @@ def resolve_opening(
     Does not resolve closing. Returns closing_pending=True.
     """
     t0 = time.perf_counter()
-    from travelogue.curation.curate import _sync_trip_covers_core
+    from travelogue.curation.cover_sync import _sync_trip_covers_core
 
     cover_id = _sync_trip_covers_core(
         trip,
