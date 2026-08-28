@@ -1,0 +1,28 @@
+{
+  "work": "C:\\Users\\xiafe\\AppData\\Local\\Temp\\ppx-accept-oom",
+  "machine": {
+    "os": "win32",
+    "cpuCount": 18,
+    "cpu": "Intel(R) Core(TM) Ultra 5 125H",
+    "ramGb": 31.5,
+    "defenderRealtime": true,
+    "configYamlExists": true,
+    "configHasParallelIngestKey": true,
+    "frozenOnedir": false
+  },
+  "startedAt": "2026-08-28T17:55:23",
+  "oom36": {
+    "makeSec": 0.5,
+    "elapsedSec": 3.6,
+    "added": 4,
+    "workers": 3,
+    "requested": 3,
+    "downscaled": true,
+    "downscaleReason": "memory_cap_ram",
+    "median": 7360,
+    "fallback": false,
+    "leftoverPartial": false,
+    "ok": true
+  },
+  "endedAt": "2026-08-28T17:55:28"
+}

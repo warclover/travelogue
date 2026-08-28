@@ -23,7 +23,7 @@
 | K4 | 设计冻结（§2） | ☑ | 进程树 / 取消 / 滑窗 / RAM / 物化合并 |
 | K5 | 杀伤测试规格 | ☑ | §4；M0 第一提交按此写红测试 |
 | K6 | 评审通过 | ☐ | 架构 + QA 至少口头 Go 再合 M1 |
-| K7 | 本机 `parallel_ingest` 现状登记 | ☐ | 实施者开工日记下本机 `config.yaml` 是否打开；不改仓库默认 |
+| K7 | 本机 `parallel_ingest` 现状登记 | ☑ | 本机 `config.yaml` 为 `true` / workers=0；仓库默认仍 `false` |
 
 K6 未过不得把 M1 合入主分支。K1–K5 已在本波文档完成。
 
@@ -204,7 +204,7 @@ orchestrator `run.py` 现顺序：join → save → load → `ensure_derivatives
 | BE-PPX-09 | 埋点写入（reason / spawn / firstProgress / RSS） | ingest / derivatives | ☑ |
 | QA-PPX-04 | AC-PPX-02～07、11 单测 | `tests/unit/media/` · `tests/unit/web/` | ☑ |
 | QA-PPX-05 | 等价脚本确认无 hash 门 | `scripts/pipeline_perf_equivalence_check.py` | ☑ 脚本无 hashlib / 文件 hash 门 |
-| QA-PPX-06 | 基准机 31/57/121/134 · 高分/中分分档 | 验收记录 | ☐ |
+| QA-PPX-06 | 基准机 31/57/121/134 · 高分/中分分档 | 验收记录 | ☑ [ppx-w1-windows-bench-2026-08-28](./acceptance-records/ppx-w1-windows-bench-2026-08-28.md) |
 
 **M1 出口**：QA-PPX-02 绿；AC-PPX-01/03/09 绿；AC-PPX-10 有记录。
 
