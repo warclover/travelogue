@@ -4600,10 +4600,18 @@
         },
         "timings": {
           "type": "object",
+          "properties": {
+            "ingestParallelFallbackReason": {
+              "type": "string"
+            },
+            "ingestWorkersDownscaleReason": {
+              "type": "string"
+            }
+          },
           "additionalProperties": {
             "type": "number"
           },
-          "description": "P7 telemetry: per-stage elapsed milliseconds"
+          "description": "P7 telemetry: per-stage elapsed milliseconds plus PPX reason codes"
         },
         "derivativesStatus": {
           "type": [

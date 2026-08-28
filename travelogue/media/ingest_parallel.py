@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import multiprocessing as mp
 import os
 import shutil
+import sys
+import time
 from collections.abc import Callable
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -20,15 +24,87 @@ from travelogue.media.ingest_worker import (
 )
 from travelogue.media.media_classify import date_confidence_for_source
 
+_BROWSER_RESERVE_MB = 1536
+_WORKER_OVERHEAD_MB = 80
+_RAM_SAFETY = 0.45
+_POOL_SHUTDOWN_S = 5.0
+
+
+def _cleanup_ingest_partial(temp_root: Path) -> None:
+    if temp_root.exists():
+        shutil.rmtree(temp_root, ignore_errors=True)
+    parent = temp_root.parent
+    try:
+        if parent.name == ".ingest-partial" and parent.exists() and not any(parent.iterdir()):
+            shutil.rmtree(parent, ignore_errors=True)
+    except OSError:
+        pass
+
+
+@dataclass
+class ParallelIngestOutcome:
+    ok: bool
+    reason: str | None = None
+    requested_workers: int = 1
+    effective_workers: int = 1
+    spawn_ms: float = 0.0
+    first_progress_ms: float | None = None
+
+
+def median_int(values: list[int]) -> int | None:
+    nums = [int(v) for v in values if int(v) > 0]
+    if not nums:
+        return None
+    nums.sort()
+    n = len(nums)
+    mid = n // 2
+    if n % 2:
+        return nums[mid]
+    return (nums[mid - 1] + nums[mid]) // 2
+
+
+def available_ram_mb() -> int | None:
+    """Available physical RAM in MiB. None when the probe fails (no new deps)."""
+    if sys.platform == "win32":
+        import ctypes
+
+        class _MemoryStatusEx(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = _MemoryStatusEx()
+        stat.dwLength = ctypes.sizeof(_MemoryStatusEx)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            return int(stat.ullAvailPhys // (1024 * 1024))
+        return None
+    try:
+        avail_pages = os.sysconf("SC_AVPHYS_PAGES")
+        page = os.sysconf("SC_PAGE_SIZE")
+        if avail_pages > 0 and page > 0:
+            return int(avail_pages * page // (1024 * 1024))
+    except (ValueError, OSError, AttributeError):
+        pass
+    return None
+
 
 def workers_memory_cap(*, median_long_edge_px: int | None = None) -> int:
     """Cap parallel ingest workers by typical album resolution (PRD · D5 / MF-05).
 
     Peak RAM scales with decoded pixels; 36MP × many workers can OOM. Thresholds
     use long-edge (max(w, h)) medians in pixels.
+    Unknown long-edge defaults to 6 (PPX D-PPX-08), not 10.
     """
     if median_long_edge_px is None or median_long_edge_px <= 0:
-        return 10
+        return 6
     edge = int(median_long_edge_px)
     if edge >= 7000:
         return 4
@@ -39,15 +115,50 @@ def workers_memory_cap(*, median_long_edge_px: int | None = None) -> int:
     return 10
 
 
+def workers_ram_cap(
+    *,
+    median_long_edge_px: int | None = None,
+    widths_in_flight: int = 2,
+    available_mb: int | None = None,
+) -> int:
+    """Cap workers by available RAM minus a Chromium reserve (PPX D-PPX-08)."""
+    ram = available_mb if available_mb is not None else available_ram_mb()
+    if ram is None or ram <= 0:
+        return 10
+    edge = int(median_long_edge_px or 4000)
+    pixels = max(1.0, float(edge) * float(edge) * 0.75)
+    per_image_mb = pixels * 4.0 / 1_000_000.0
+    in_flight = max(1, int(widths_in_flight))
+    per_worker_mb = per_image_mb * (1 + in_flight) + _WORKER_OVERHEAD_MB
+    usable = max(512.0, float(ram) * _RAM_SAFETY - _BROWSER_RESERVE_MB)
+    return max(1, int(usable // per_worker_mb))
+
+
+def _combined_worker_cap(*, median_long_edge_px: int | None, widths_in_flight: int = 2) -> tuple[int, str | None]:
+    edge_cap = workers_memory_cap(median_long_edge_px=median_long_edge_px)
+    ram_cap = workers_ram_cap(
+        median_long_edge_px=median_long_edge_px, widths_in_flight=widths_in_flight
+    )
+    cap = min(edge_cap, ram_cap)
+    if median_long_edge_px is None or median_long_edge_px <= 0:
+        reason = "memory_cap_unknown_edge"
+    elif ram_cap < edge_cap:
+        reason = "memory_cap_ram"
+    else:
+        reason = "memory_cap_long_edge"
+    return cap, reason
+
+
 def resolve_auto_ingest_workers(*, median_long_edge_px: int | None = None) -> tuple[int, bool]:
     """Return ``(workers, downscaled)`` for ``parallel_ingest_workers=0``.
 
     Auto formula (PRD-PIPELINE-PERF-V1 · R1.2): ``max(2, min(cpu//2, 10))``,
-    then apply :func:`workers_memory_cap`.
+    then apply :func:`workers_memory_cap` and :func:`workers_ram_cap`.
     """
     cpu = os.cpu_count() or 2
     uncapped = max(2, min(cpu // 2, 10))
-    capped = min(uncapped, workers_memory_cap(median_long_edge_px=median_long_edge_px))
+    mem_cap, _reason = _combined_worker_cap(median_long_edge_px=median_long_edge_px)
+    capped = min(uncapped, mem_cap)
     return max(1, capped), capped < uncapped
 
 
@@ -71,19 +182,67 @@ def resolve_parallel_ingest_plan(
     if configured == 1:
         return False, 1, False, False
     downscaled = False
+    mem_cap, _reason = _combined_worker_cap(median_long_edge_px=median_long_edge_px)
     if configured <= 0:
         workers, downscaled = resolve_auto_ingest_workers(
             median_long_edge_px=median_long_edge_px
         )
     else:
         workers = max(1, configured)
-        mem_cap = workers_memory_cap(median_long_edge_px=median_long_edge_px)
         if workers > mem_cap:
             workers = mem_cap
             downscaled = True
     if workers <= 1:
         return False, 1, False, False
     return True, workers, False, downscaled
+
+
+def peak_rss_mb() -> float | None:
+    """Peak RSS of the current process in MiB, or None if the probe fails."""
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        class _ProcessMemoryCounters(ctypes.Structure):
+            _fields_ = [
+                ("cb", wintypes.DWORD),
+                ("PageFaultCount", wintypes.DWORD),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t),
+            ]
+
+        counters = _ProcessMemoryCounters()
+        counters.cb = ctypes.sizeof(counters)
+        try:
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            ok = ctypes.windll.psapi.GetProcessMemoryInfo(
+                handle, ctypes.byref(counters), counters.cb
+            )
+        except (AttributeError, OSError):
+            return None
+        if ok:
+            return round(float(counters.PeakWorkingSetSize) / (1024.0 * 1024.0), 2)
+        return None
+    try:
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        if sys.platform == "darwin":
+            return round(float(usage) / (1024.0 * 1024.0), 2)
+        return round(float(usage) / 1024.0, 2)
+    except (OSError, AttributeError, ValueError):
+        return None
+
+
+def plan_downscale_reason(*, median_long_edge_px: int | None = None) -> str:
+    _cap, reason = _combined_worker_cap(median_long_edge_px=median_long_edge_px)
+    return reason or "memory_cap_long_edge"
 
 
 def _rewrite_asset_rel(rel: str | None, *, provisional_id: str, asset_id: str) -> str | None:
@@ -567,11 +726,9 @@ def run_parallel_ingest_loop(
     on_persist: Callable[[], None] | None,
     on_asset_added: Callable[[dict], None] | None,
     emit_progress: Callable[..., None],
-) -> bool:
-    """ProcessPool map → ordered merge/dedupe replay → per-asset offer.
-
-    Returns False when the pool cannot start (caller should fail-open to serial).
-    """
+    cancel_check: Callable[[], None] | None = None,
+) -> ParallelIngestOutcome:
+    """ProcessPool map with watermark merge. Fail-open to serial on pool start errors."""
     persist_every_n = max(0, int(app_cfg.pipeline.persist_every_n))
     temp_root = trip_dir / ".ingest-partial" / batch
     if temp_root.exists():
@@ -605,63 +762,95 @@ def run_parallel_ingest_loop(
             )
         )
 
-    results_by_index: dict[int, WorkerResult] = {}
     total_photos = len(photo_tiers)
-    try:
-        with ProcessPoolExecutor(max_workers=workers) as pool:
-            futures = {
-                pool.submit(process_ingest_photo_worker_star, job): int(job[0]) for job in jobs
-            }
-            for fut in as_completed(futures):
-                idx = futures[fut]
-                try:
-                    results_by_index[idx] = fut.result()
-                except Exception as exc:  # noqa: BLE001
-                    results_by_index[idx] = WorkerResult(
-                        index=idx,
-                        source_path=str(photo_tiers[idx][0]),
-                        user_tier=photo_tiers[idx][1],
-                        provisional_id=f"prov-{idx:05d}",
-                        error=f"pool:{type(exc).__name__}: {exc}",
-                    )
-    except Exception:
-        if temp_root.exists():
-            shutil.rmtree(temp_root, ignore_errors=True)
-        return False
-
+    ctx = mp.get_context("spawn")
+    t0 = time.monotonic()
+    spawn_ms = 0.0
+    first_progress_ms: float | None = None
+    next_commit = 0
+    buffer: dict[int, WorkerResult] = {}
     kept_since_persist = [0]
-    for index in range(total_photos):
-        result = results_by_index.get(index)
-        if result is None:
-            result = WorkerResult(
-                index=index,
-                source_path=str(photo_tiers[index][0]),
-                user_tier=photo_tiers[index][1],
-                provisional_id=f"prov-{index:05d}",
-                error="missing worker result",
+
+    def _merge_ready() -> None:
+        nonlocal next_commit, first_progress_ms
+        while next_commit in buffer:
+            result = buffer.pop(next_commit)
+            merge_one_worker_result(
+                result=result,
+                state=state,
+                build_ctx=build_ctx,
+                cfg=cfg,
+                dedupe=dedupe,
+                from_dir=from_dir,
+                album_root=album_root,
+                trip_dir=trip_dir,
+                resume_ingest=resume_ingest,
+                processed=next_commit + 1,
+                total_photos=total_photos,
+                on_persist=on_persist,
+                on_asset_added=on_asset_added,
+                emit_progress=emit_progress,
+                persist_every_n=persist_every_n,
+                kept_since_persist=kept_since_persist,
             )
-        merge_one_worker_result(
-            result=result,
-            state=state,
-            build_ctx=build_ctx,
-            cfg=cfg,
-            dedupe=dedupe,
-            from_dir=from_dir,
-            album_root=album_root,
-            trip_dir=trip_dir,
-            resume_ingest=resume_ingest,
-            processed=index + 1,
-            total_photos=total_photos,
-            on_persist=on_persist,
-            on_asset_added=on_asset_added,
-            emit_progress=emit_progress,
-            persist_every_n=persist_every_n,
-            kept_since_persist=kept_since_persist,
+            if first_progress_ms is None:
+                first_progress_ms = round((time.monotonic() - t0) * 1000.0, 2)
+            next_commit += 1
+
+    try:
+        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx) as pool:
+            spawn_ms = round((time.monotonic() - t0) * 1000.0, 2)
+            pending = list(jobs)
+            in_flight: dict[Any, int] = {}
+            while pending or in_flight:
+                if cancel_check is not None:
+                    cancel_check()
+                while pending and len(in_flight) < max(1, workers):
+                    job = pending.pop(0)
+                    fut = pool.submit(process_ingest_photo_worker_star, job)
+                    in_flight[fut] = int(job[0])
+                if not in_flight:
+                    break
+                done, _not_done = wait(
+                    in_flight.keys(), timeout=0.2, return_when=FIRST_COMPLETED
+                )
+                if not done:
+                    continue
+                for fut in done:
+                    idx = in_flight.pop(fut)
+                    try:
+                        buffer[idx] = fut.result()
+                    except Exception as exc:  # noqa: BLE001
+                        buffer[idx] = WorkerResult(
+                            index=idx,
+                            source_path=str(photo_tiers[idx][0]),
+                            user_tier=photo_tiers[idx][1],
+                            provisional_id=f"prov-{idx:05d}",
+                            error=f"pool:{type(exc).__name__}: {exc}",
+                        )
+                _merge_ready()
+    except BaseException as exc:
+        _cleanup_ingest_partial(temp_root)
+        name = type(exc).__name__
+        if name in {"DemoError", "InterruptedError"} or "CANCEL" in str(getattr(exc, "code", "")).upper():
+            raise
+        return ParallelIngestOutcome(
+            ok=False,
+            reason="pool_start_failed",
+            requested_workers=workers,
+            effective_workers=1,
+            spawn_ms=spawn_ms,
         )
 
     if on_persist and kept_since_persist[0] > 0:
         on_persist()
 
-    if temp_root.exists():
-        shutil.rmtree(temp_root, ignore_errors=True)
-    return True
+    _cleanup_ingest_partial(temp_root)
+    return ParallelIngestOutcome(
+        ok=True,
+        reason=None,
+        requested_workers=workers,
+        effective_workers=workers,
+        spawn_ms=spawn_ms,
+        first_progress_ms=first_progress_ms,
+    )
