@@ -25,6 +25,7 @@ import {
   progressTitleForPlatform,
 } from "../js/longshot-export-panel.js";
 import { V2 } from "./store.js";
+import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 
 // EOI · 需与 travelogue/export/longshot.py 的 EXPORT_OUTPUT_DIRNAME 保持一致——
 // longshot-current.json 现在落在 trip 根目录下的这个子目录里，不再是根目录。
@@ -85,12 +86,12 @@ function openShelfLongshotModal(opts) {
   secondaryBtn.textContent = opts.secondaryText || "关闭";
   secondaryBtn.hidden = !!opts.secondaryHidden;
 
-  // FE-SR-08 / USR-03 · 成功面「换种分享方式」（与预览 Dock 同合同）
+  // FE-SR-08 / USR-03 · 成功面「换用途」（与预览 Dock 同合同）
   var switchBtn = document.createElement("button");
   switchBtn.type = "button";
   switchBtn.className = "studio__btn studio__btn--ghost studio__btn--sm";
   switchBtn.setAttribute("data-share-ready-switch", "1");
-  switchBtn.textContent = "换种分享方式";
+  switchBtn.textContent = COPY_DICTIONARY.switchPurpose;
   switchBtn.hidden = true;
 
   if (!switchBtn.hidden) actions.appendChild(switchBtn);
@@ -236,7 +237,7 @@ function offerShelfSwitchShare(tripId, tripTitle, resultModal) {
           { surface: "switch_share", platform: platform, intent: choice.intent }
         );
       } else {
-        toast("已换种分享方式 · 下次导出生效", { duration: 2800 });
+        toast(COPY_DICTIONARY.switchPurposeDone + " · 下次导出生效", { duration: 2800 });
       }
     });
   });

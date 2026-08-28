@@ -44,7 +44,7 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
-import { exportAria } from "../js/copy-dictionary.js";
+import { COPY_DICTIONARY, exportAria } from "../js/copy-dictionary.js";
 import {
   PORTFOLIO_PAGES_PLATFORM,
   CLG_SIBLING_TIMEOUT_MS,
@@ -2690,12 +2690,12 @@ export function cancelPreviewLongshotExport(root) {
       // FE-FST-05 / D-FST-13 · 禁止自动 reveal
     }
 
-    // FE-SR-08 / USR-03 · 非 Dock 成功面也提供换种分享
+    // FE-SR-08 / USR-03 · 非 Dock 成功面也提供换用途
     var switchShareBtn = document.createElement("button");
     switchShareBtn.type = "button";
     switchShareBtn.className = "preview-toolbar__drawer-secondary";
     switchShareBtn.setAttribute("data-share-ready-switch", "1");
-    switchShareBtn.textContent = "换种分享方式";
+    switchShareBtn.textContent = COPY_DICTIONARY.switchPurpose;
     switchShareBtn.addEventListener("click", function () {
       hideLongshotDrawer(root);
       offerSwitchShareMethod(root, tripId);
@@ -3179,7 +3179,7 @@ export function cancelPreviewLongshotExport(root) {
             maybeCopyGateThenExport(root, tripId);
           });
         } else {
-          _showToolbarToast("已换种分享方式", { duration: 2800 });
+          _showToolbarToast(COPY_DICTIONARY.switchPurposeDone, { duration: 2800 });
         }
       });
     });

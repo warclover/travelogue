@@ -88,7 +88,7 @@ def test_ac_or_r03_illegal_platform_still_400() -> None:
 
 
 def test_phase_a_must_fix_ui_guards() -> None:
-    """H-A-07/09 实现护栏：整卷确认 + 换种分享方式 + ≥50 副文."""
+    """H-A-07/09 实现护栏：整卷确认 + 换用途 + ≥50 副文."""
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
     recipe = (STUDIO / "js" / "output-recipe.js").read_text(encoding="utf-8")
     dock = (STUDIO / "preview-toolbar-v3-task-dock.js").read_text(encoding="utf-8")
@@ -96,7 +96,7 @@ def test_phase_a_must_fix_ui_guards() -> None:
     assert "maybeConfirmFullExportThen" in longshot
     assert "仍导出整卷" in longshot
     assert "改用按章导出" in longshot
-    assert "换种分享方式" in longshot
+    assert "COPY_DICTIONARY.switchPurpose" in longshot
     assert "offerSwitchShareMethod" in longshot
     assert "actionText" in dock
     # FE-SR-08 / USR-03 · 成功面也挂换种分享（非仅 failed）
@@ -104,7 +104,7 @@ def test_phase_a_must_fix_ui_guards() -> None:
     assert "正在生成可发微信的长图" in longshot
     assert "humanExportProgress" in longshot
     shelf_ls = (STUDIO / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
-    assert "换种分享方式" in shelf_ls
+    assert "COPY_DICTIONARY.switchPurpose" in shelf_ls
     assert 'data-share-ready-switch' in shelf_ls
     assert "offerShelfSwitchShare" in shelf_ls
     # SFH W0b · 叙事深提示文案已下沉 output-recipe-logic.js（行为等价）

@@ -14,6 +14,7 @@ import {
   portfolioSuccessCopy,
 } from "./js/portfolio-export-logic.js";
 import { formatLongshotResult } from "./js/longshot-client.js";
+import { COPY_DICTIONARY } from "./js/copy-dictionary.js";
 
 var SUCCESS_AUTO_HIDE_MS = 8000;
 
@@ -472,7 +473,7 @@ export function mountPreviewTaskDock(root, hooks) {
       }
     }
 
-    // FE-SR-08 · 成功面保留「换种分享方式」；失败面不给第二条恢复路径
+    // FE-SR-08 · 成功面保留「换用途」；失败面不给第二条恢复路径
     if (
       job &&
       job.status !== "failed" &&
@@ -482,7 +483,7 @@ export function mountPreviewTaskDock(root, hooks) {
       var switchBtn = document.createElement("button");
       switchBtn.type = "button";
       switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
-      var actionText = "换种分享方式";
+      var actionText = COPY_DICTIONARY.switchPurpose;
       switchBtn.setAttribute("data-share-ready-switch", "1");
       switchBtn.textContent = actionText;
       switchBtn.addEventListener("click", function () {
@@ -970,15 +971,15 @@ export function mountPreviewTaskDock(root, hooks) {
       }
       actions.appendChild(buildCloseBtn());
     } else {
-      // FE-SR-08 / USR-03 同款：成功/部分失败均提供「换种分享方式」
+      // FE-SR-08 / USR-03 同款：成功/部分失败均提供「换用途」
       if (typeof hooks.onSwitchShareMethod === "function") {
         var switchBtn = document.createElement("button");
         switchBtn.type = "button";
         switchBtn.className = "preview-task-dock__btn preview-task-dock__btn--ghost";
         switchBtn.setAttribute("data-share-ready-switch", "1");
-        switchBtn.textContent = "换种分享方式";
+        switchBtn.textContent = COPY_DICTIONARY.switchPurpose;
         switchBtn.addEventListener("click", function () {
-          hooks.onSwitchShareMethod({ actionText: "换种分享方式", tripId: opts.tripId });
+          hooks.onSwitchShareMethod({ actionText: COPY_DICTIONARY.switchPurpose, tripId: opts.tripId });
         });
         actions.appendChild(switchBtn);
       }

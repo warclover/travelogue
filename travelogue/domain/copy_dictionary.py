@@ -22,6 +22,8 @@ PORTFOLIO_EXPORT_LABEL: Final = "导出作品集"
 PORTFOLIO_EXPORT_ARIA: Final = "导出作品集"
 
 SUCCESS_VERB: Final = "已导出"
+SWITCH_PURPOSE: Final = "换用途"
+SWITCH_PURPOSE_DONE: Final = "已换用途"
 SHELF_READY: Final = "长图已就绪"
 SHELF_STALE: Final = "长图需更新"
 
