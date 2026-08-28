@@ -17,6 +17,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_STUDIO_PIPELINE": "导入失败，请重试",
     "E_TRIP_SAVE_BUSY": "画册文件正被占用，请关闭预览/资源管理器后重试",
     "E_STUDIO_AUTH": "Studio 请求未授权",
+    "E_STUDIO_PATH": "路径不在允许范围内",
+    "E_STUDIO_BAD_BODY": "请求体无效",
     "E_STUDIO_BODY_TOO_LARGE": "请求体过大",
     "E_STUDIO_ALBUM_DENIED": "不允许从该路径导入",
     "E_STUDIO_REVEAL_DENIED": "无法打开该文件",
@@ -58,6 +60,8 @@ USER_MESSAGES: dict[str, str] = {
     "E_MEDIA_CLEANUP_REFUSED": "无法安全删除源文件拷贝",
     "E_MEDIA_CLEANUP_PARTIAL": "清理未完成，查看详情",
     "E_MEDIA_INCREMENTAL_SOURCE": "追加导入缺少可访问的原片",
+    "E_PORTFOLIO_UNAVAILABLE": "作品集暂时排不出，可改回游记",
+    "E_CLG_NEEDS_JOURNAL": "长图要在游记里做",
 }
 
 # Codes with a fixed user-facing line — do not append raw exception text.
@@ -90,6 +94,7 @@ _PLAIN_ONLY_CODES = frozenset(
         "E_STUDIO_RERENDER",
         "E_TRIP_CONFLICT",
         "E_TRIP_NOT_FOUND",
+        "E_PORTFOLIO_UNAVAILABLE",
     }
 )
 
@@ -153,7 +158,13 @@ def demo_error_payload(exc: DemoError) -> dict:
             if trip_dir:
                 from pathlib import Path
 
-                payload["existingTripId"] = Path(trip_dir).name
+                from travelogue.web.studio_pipeline import _trip_collision_meta
+
+                path = Path(trip_dir)
+                payload["existingTripId"] = path.name
+                meta = _trip_collision_meta(path, path.name)
+                payload["existingTitle"] = meta.get("title") or path.name
+                payload["existingEdition"] = meta.get("edition") or "journal"
     if is_llm_auth_recoverable(exc.code):
         payload["recoverableWithStub"] = True
     return payload

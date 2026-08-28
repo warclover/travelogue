@@ -17,6 +17,7 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
+    PORTFOLIO_PAGES_CSS,
     LONGSHOT_JS,
     SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
@@ -50,9 +51,8 @@ ASSET_VERSION_HEX_CHARS = 12
 ASSET_VERSION_FALLBACK_TS_CHARS = 15
 
 
-_BUNDLE_VERSION_PATHS = (
+_SHARED_BUNDLE_PATHS = (
     JOURNAL_CSS,
-    JOURNAL_SCREENS_CSS,
     BREATH_JS,
     BREATH_CSS,
     LONGSHOT_JS,
@@ -65,8 +65,23 @@ _BUNDLE_VERSION_PATHS = (
     COPY_DISPLAY_CSS,
     INLINE_EDIT_CSS,
     INLINE_EDIT_JS,
-    INLINE_EDIT_CSS,
 )
+
+# Kept for tests that still import the old name; journal-only, no portfolio CSS.
+_BUNDLE_VERSION_PATHS = _SHARED_BUNDLE_PATHS + (JOURNAL_SCREENS_CSS,)
+
+
+def _bundle_version_paths(trip: dict | None = None) -> tuple:
+    """Per-pipeline CSS + shared shell (D-DPI-16). Portfolio bytes stay off the journal list."""
+    from travelogue.config.edition import is_portfolio_trip
+
+    family_css = PORTFOLIO_PAGES_CSS if is_portfolio_trip(trip) else JOURNAL_SCREENS_CSS
+    return _SHARED_BUNDLE_PATHS + (family_css,)
+
+
+def longshot_bundle_version(trip: dict) -> str:
+    """Public accessor for OLT bundleFp (BE-OLT-03). Logic is unchanged."""
+    return _longshot_bundle_version(trip)
 
 
 def _longshot_bundle_version(trip: dict) -> str:
@@ -74,10 +89,11 @@ def _longshot_bundle_version(trip: dict) -> str:
 
     Content-stable across re-renders; changes only when shipped CSS/JS changes.
     Normalize CRLF→LF so Windows checkouts match Linux CI hashes.
+    Journal and portfolio hash disjoint family CSS files (AC-DPI-18).
     """
     digest = hashlib.sha256()
     found = False
-    for path in _BUNDLE_VERSION_PATHS:
+    for path in _bundle_version_paths(trip):
         try:
             digest.update(path.name.encode("utf-8"))
             digest.update(path.read_bytes().replace(b"\r\n", b"\n"))
@@ -781,6 +797,7 @@ def build_layout_screen(
     chapter_day_span: list[str] | None = None,
     trip_primary_year: int | None = None,
     peak_collage_exif: bool = False,
+    stage_aspect: str | None = None,
 ) -> LayoutScreenContext:
     pattern_id = screen.get("patternId", "screen-landscape-1")
     if is_plate and not folio_plate_rewrite_eligible(screen):
@@ -813,11 +830,17 @@ def build_layout_screen(
 
     first_aid = (screen.get("slots") or [{}])[0].get("assetId", "")
     first_asset = assets.get(first_aid) if first_aid else None
+    # Prefix sniff kept as fallback (OQ-DPI-02). Builder may pass stage_aspect.
+    is_page_face = bool(stage_aspect) or str(pattern_id).startswith("page-")
 
     viewport_fit = False
     tier_ultra = False
     screen_aspect: str | None = None
-    if pattern_id == "screen-full-frame" and first_asset:
+    if is_page_face:
+        # Portfolio magazine faces stay 16:9 one-screen (atelier stage).
+        # Do not inherit journal single-slot viewport-fit / photo AR.
+        style_parts_vf = []
+    elif pattern_id == "screen-full-frame" and first_asset:
         from travelogue.media.media_classify import is_collage_asset
 
         fit0 = full_frame_fit_for_asset(first_asset, default="cover")
@@ -904,7 +927,7 @@ def build_layout_screen(
             srcset = compile_srcset(asset, mobile=export_layout == "mobile")
             slot_aspect = _screen_aspect_ratio_css(asset)
             style_parts_slot: list[str] = []
-            if slot_aspect:
+            if slot_aspect and not is_page_face:
                 style_parts_slot.append(f"--slot-aspect: {slot_aspect}")
             slot_da = slot.get("displayAspect")
             if slot_da is not None:
@@ -985,7 +1008,9 @@ def build_layout_screen(
         slots_out.append(entry)
 
     style_parts: list[str] = list(style_parts_vf)
-    if layout_geo.get("stageAspect") and not skip_stage_aspect:
+    if is_page_face:
+        style_parts.append("--screen-aspect: 16 / 9")
+    elif layout_geo.get("stageAspect") and not skip_stage_aspect:
         stage_aspect = str(layout_geo["stageAspect"]).replace(":", " / ")
         style_parts.append(f"--screen-aspect: {stage_aspect}")
     elif screen_aspect and not viewport_fit:
@@ -1089,7 +1114,7 @@ def build_layout_screen(
             out["isPlate"] = True
             out["patternId"] = "screen-plate"
             first_aid = slot_aids[0] if slot_aids else ""
-            if first_aid and first_aid in assets:
+            if first_aid and first_aid in assets and not strip_narrative_copy:
                 cap = asset_caption(assets[first_aid])
                 if cap:
                     out["plateCaption"] = cap

@@ -1,6 +1,6 @@
 id: screen-landscape-1-portrait-1
 version: 1
-status: experimental
+status: deprecated  # C-02 · 2026-08-28 overdue rolloutZero → archive
 kind: composite
 displayName: landscape · 1 · portrait · 1
 description: >

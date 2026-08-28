@@ -5,12 +5,19 @@ from __future__ import annotations
 import secrets
 import sys
 from http.cookies import SimpleCookie
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from travelogue.util.net import LOOPBACK_HOSTS, is_loopback_host
 
 STUDIO_TOKEN_COOKIE = "studio-token"
 STUDIO_TOKEN_QUERY_KEYS = ("studio_token", "t")
+_WRITE_METHODS = frozenset({"POST", "PATCH", "DELETE"})
+_MULTIPART_OR_JSON_PATHS = frozenset(
+    {
+        "/__travelogue/import",
+        "/__travelogue/longshot/upload",
+    }
+)
 
 __all__ = [
     "LOOPBACK_HOSTS",
@@ -22,6 +29,7 @@ __all__ = [
     "extract_studio_token",
     "studio_request_authorized",
     "studio_post_authorized",
+    "studio_write_guard",
 ]
 
 
@@ -109,3 +117,56 @@ def studio_post_authorized(
         headers=headers,
         allow_lan=allow_lan,
     )
+
+
+def _header(headers, name: str) -> str:
+    return str(headers.get(name) or headers.get(name.lower()) or "").strip()
+
+
+def _hostname_from_host_header(value: str) -> str:
+    raw = (value or "").strip()
+    if raw.startswith("["):
+        end = raw.find("]")
+        if end != -1:
+            return raw[1:end].lower()
+    return raw.split(":", 1)[0].lower()
+
+
+def _origin_trusted(origin: str, *, allow_lan: bool) -> bool:
+    if not origin:
+        return True
+    parsed = urlparse(origin)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    host = (parsed.hostname or "").lower()
+    if is_loopback_host(host):
+        return True
+    return bool(allow_lan)
+
+
+def studio_write_guard(
+    *,
+    method: str,
+    path: str,
+    headers,
+    allow_lan: bool,
+) -> bool:
+    """First-cut CSRF/content-type guard for write requests.
+
+    Missing Origin is allowed (urllib / native clients). A present non-loopback
+    Origin is rejected in loopback mode. LAN mode still relies on the token.
+    """
+    if (method or "").upper() not in _WRITE_METHODS:
+        return True
+    if not _origin_trusted(_header(headers, "Origin"), allow_lan=allow_lan):
+        return False
+    host = _hostname_from_host_header(_header(headers, "Host"))
+    if not allow_lan and host and not is_loopback_host(host):
+        return False
+    if (method or "").upper() == "DELETE":
+        return True
+    content_type = _header(headers, "Content-Type").lower()
+    route = (path or "").split("?", 1)[0]
+    if route in _MULTIPART_OR_JSON_PATHS:
+        return "multipart/form-data" in content_type or "application/json" in content_type
+    return "application/json" in content_type

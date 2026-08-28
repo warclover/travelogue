@@ -192,7 +192,7 @@ def test_homepage_p2_denoise_no_user_facing_bento():
     assert "导入偏好、存储位置与界面选项。改动会立即保存。" in html
     assert "AI 文案（可选）" not in html
     assert 'id="v2-cta"' in html
-    assert "开始制作我的画册" in html
+    assert "选择照片文件夹" in html
     assert "你的影像画册" in _read("templates/studio/homepage-v2/shelf.js")
     assert "v2-shelf__title-h1" in _read("templates/studio/homepage-v2/css/shelf.css")
 

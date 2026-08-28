@@ -1,0 +1,19 @@
+{
+  "count": 1,
+  "edges": [
+    "travelogue/export/output_recipe/resolve.py::branch"
+  ],
+  "grandfather": {
+    "travelogue/export/output_recipe/resolve.py::branch": {
+      "owner": "dpi-w0",
+      "expiry": "2026-12-31"
+    }
+  },
+  "details": [
+    {
+      "file": "travelogue/export/output_recipe/resolve.py",
+      "kind": "branch"
+    }
+  ],
+  "note": "W2 ratchet. Remaining grandfather: output_recipe/resolve.py. CSS prefix leak is lte_journal_css_audit.py."
+}

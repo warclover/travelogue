@@ -124,3 +124,10 @@ def test_validator_blocks_more_than_nine_slots(engine: LayoutTemplateEngine) -> 
     report = validate_template_def(t, mode="publish")
     assert not report.ok
     assert any(i.code == "V-P16-12" and i.level == "block" for i in report.issues)
+
+
+@pytest.mark.unit
+def test_validator_allows_ten_slots_on_page_faces(engine: LayoutTemplateEngine) -> None:
+    t = engine.get("page-10-grid-port")
+    report = validate_template_def(t, mode="publish")
+    assert not any(i.code == "V-P16-12" for i in report.issues)

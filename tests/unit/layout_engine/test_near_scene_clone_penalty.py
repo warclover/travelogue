@@ -82,7 +82,8 @@ def test_candidates_hard_reject_requires_gate_enabled() -> None:
     for aid in assets:
         assets[aid]["shotGroupId"] = "walk-1"
     trip_id = "near-scene-gate-test"
-    weighted = "screen-mosaic-4-2l2p-weighted"
+    # C-02 archived weighted; bookends is the remaining 2L2P prefers_burst=false SKU.
+    weighted = "screen-mosaic-4-2p2l-portrait-bookends"
     cfg = dataclasses.replace(
         MosaicConfig(),
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
@@ -176,7 +177,7 @@ def test_candidates_hard_reject_near_scene_on_weighted() -> None:
     )
 
     trip_id = "near-scene-weighted-test"
-    weighted = "screen-mosaic-4-2l2p-weighted"
+    weighted = "screen-mosaic-4-2p2l-portrait-bookends"
     base_cfg = get_config().mosaic
     cfg = dataclasses.replace(
         base_cfg,

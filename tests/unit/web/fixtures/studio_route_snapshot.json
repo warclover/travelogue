@@ -2,491 +2,613 @@
   {
     "method": "DELETE",
     "path": "/__travelogue/llm/settings",
-    "handler": "llm_settings_handlers.handle_llm_settings"
+    "handler": "llm_settings_handlers.handle_llm_settings",
+    "auth": true
   },
   {
     "method": "DELETE",
     "path": "/__travelogue/trips/{tripId}",
-    "handler": "trip_handlers.handle_delete_trip"
+    "handler": "trip_handlers.handle_delete_trip",
+    "auth": true
+  },
+  {
+    "method": "DELETE",
+    "path": "/__travelogue/trips/{tripId}/outputs/{outputId}",
+    "handler": "trip_handlers.handle_delete_output",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/",
-    "handler": "static_handlers.handle_home_root"
+    "handler": "static_handlers.handle_home_root",
+    "auth": false
   },
   {
     "method": "GET",
     "path": "/__studio/*",
-    "handler": "static_handlers.handle_studio_asset"
+    "handler": "static_handlers.handle_studio_asset",
+    "auth": false
   },
   {
     "method": "GET",
     "path": "/__travelogue/ai/ops-summary",
-    "handler": "ai_ops_handlers.handle_get_ai_ops_summary"
+    "handler": "ai_ops_handlers.handle_get_ai_ops_summary",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/ai/unlock-gate",
-    "handler": "ai_ops_handlers.handle_get_unlock_gate"
+    "handler": "ai_ops_handlers.handle_get_unlock_gate",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/chapter-layout",
-    "handler": "trip_handlers.handle_chapter_layout"
+    "handler": "trip_handlers.handle_chapter_layout",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/config",
-    "handler": "config_handlers.handle_config"
+    "handler": "config_handlers.handle_config",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/layout-strategies",
-    "handler": "layout_strategy_handlers.handle_layout_strategies_list"
+    "handler": "layout_strategy_handlers.handle_layout_strategies_list",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/layout-strategies/capabilities",
-    "handler": "layout_strategy_handlers.handle_lse_capabilities_get"
+    "handler": "layout_strategy_handlers.handle_lse_capabilities_get",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/layout-strategies/weights/{weightsHash}",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_weights"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_weights",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/layout-strategies/{strategyId}",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_detail"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_detail",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/layout-strategies/{strategyId}/decisions",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_decisions"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_decisions",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/llm/status",
-    "handler": "llm_settings_handlers.handle_llm_status"
+    "handler": "llm_settings_handlers.handle_llm_status",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/output-recipe",
-    "handler": "export_handlers.handle_output_recipe"
+    "handler": "export_handlers.handle_output_recipe",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/status",
-    "handler": "job_handlers.handle_status"
+    "handler": "job_handlers.handle_status",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/storage/usage",
-    "handler": "storage_handlers.handle_storage_usage"
+    "handler": "storage_handlers.handle_storage_usage",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates",
-    "handler": "template_handlers.handle_templates_list"
+    "handler": "template_handlers.handle_templates_list",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/admin",
-    "handler": "template_admin_handlers.handle_templates_admin_list"
+    "handler": "template_admin_handlers.handle_templates_admin_list",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/admin/audit",
-    "handler": "template_admin_handlers.handle_templates_admin_audit"
+    "handler": "template_admin_handlers.handle_templates_admin_audit",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/admin/dashboard",
-    "handler": "template_admin_handlers.handle_templates_admin_dashboard"
+    "handler": "template_admin_handlers.handle_templates_admin_dashboard",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/admin/decisions",
-    "handler": "template_admin_handlers.handle_templates_admin_decisions"
+    "handler": "template_admin_handlers.handle_templates_admin_decisions",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/admin/{templateId}/version",
-    "handler": "template_admin_handlers.handle_templates_admin_version_diff"
+    "handler": "template_admin_handlers.handle_templates_admin_version_diff",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/templates/decisions*",
-    "handler": "template_handlers.handle_template_decisions"
+    "handler": "template_handlers.handle_template_decisions",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips",
-    "handler": "trip_handlers.handle_trips"
+    "handler": "trip_handlers.handle_trips",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/aesthetic",
-    "handler": "trip_handlers.handle_aesthetic"
+    "handler": "trip_handlers.handle_aesthetic",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/bento-preview",
-    "handler": "trip_handlers.handle_bento_preview"
+    "handler": "trip_handlers.handle_bento_preview",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/bookends",
-    "handler": "trip_handlers.handle_get_bookends"
+    "handler": "trip_handlers.handle_get_bookends",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/cohort",
-    "handler": "trip_handlers.handle_get_cohort"
+    "handler": "trip_handlers.handle_get_cohort",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/curation/moment",
-    "handler": "trip_handlers.handle_get_moment_curation"
+    "handler": "trip_handlers.handle_get_moment_curation",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/entry",
-    "handler": "trip_handlers.handle_entry"
+    "handler": "trip_handlers.handle_entry",
+    "auth": true
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/outputs",
+    "handler": "trip_handlers.handle_get_outputs",
+    "auth": true
+  },
+  {
+    "method": "GET",
+    "path": "/__travelogue/trips/{tripId}/sibling-journal",
+    "handler": "trip_handlers.handle_sibling_journal",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/__travelogue/trips/{tripId}/source-status",
-    "handler": "storage_handlers.handle_source_status"
+    "handler": "storage_handlers.handle_source_status",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/ai-ops-admin",
-    "handler": "ai_ops_handlers.handle_ai_ops_admin_page"
+    "handler": "ai_ops_handlers.handle_ai_ops_admin_page",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/classic",
-    "handler": "static_handlers.handle_home"
+    "handler": "static_handlers.handle_home",
+    "auth": false
   },
   {
     "method": "GET",
     "path": "/lse-flags-admin",
-    "handler": "static_handlers.handle_lse_flags_admin_page"
+    "handler": "static_handlers.handle_lse_flags_admin_page",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/templates-admin",
-    "handler": "static_handlers.handle_templates_admin_page"
+    "handler": "static_handlers.handle_templates_admin_page",
+    "auth": true
   },
   {
     "method": "GET",
     "path": "/v2",
-    "handler": "static_handlers.send_redirect"
+    "handler": "static_handlers.send_redirect",
+    "auth": false
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/config",
-    "handler": "config_handlers.handle_config"
+    "handler": "config_handlers.handle_config",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/layout-strategies/capabilities",
-    "handler": "layout_strategy_handlers.handle_lse_capabilities_patch"
+    "handler": "layout_strategy_handlers.handle_lse_capabilities_patch",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/templates/admin/{templateId}",
-    "handler": "template_admin_handlers.handle_templates_admin_patch"
+    "handler": "template_admin_handlers.handle_templates_admin_patch",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/templates/admin/{templateId}/metadata",
-    "handler": "template_admin_handlers.handle_templates_admin_metadata"
+    "handler": "template_admin_handlers.handle_templates_admin_metadata",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/aesthetic/preference",
-    "handler": "trip_handlers.handle_patch_stratum_preference"
+    "handler": "trip_handlers.handle_patch_stratum_preference",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/asset-media-class",
-    "handler": "trip_handlers.handle_asset_media_class"
+    "handler": "trip_handlers.handle_asset_media_class",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/chapters/{chapterId}/copy-intent",
-    "handler": "trip_handlers.handle_patch_copy_intent"
+    "handler": "trip_handlers.handle_patch_copy_intent",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/cohort",
-    "handler": "trip_handlers.handle_patch_cohort"
+    "handler": "trip_handlers.handle_patch_cohort",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/intent",
-    "handler": "trip_handlers.handle_patch_intent"
+    "handler": "trip_handlers.handle_patch_intent",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/moment",
-    "handler": "trip_handlers.handle_patch_moment"
+    "handler": "trip_handlers.handle_patch_moment",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/pipeline",
-    "handler": "trip_handlers.handle_patch_pipeline"
+    "handler": "trip_handlers.handle_patch_pipeline",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/screens/{screenId}/replan",
-    "handler": "trip_handlers.handle_patch_screen_replan"
+    "handler": "trip_handlers.handle_patch_screen_replan",
+    "auth": true
   },
   {
     "method": "PATCH",
     "path": "/__travelogue/trips/{tripId}/template",
-    "handler": "trip_handlers.handle_patch_template"
+    "handler": "trip_handlers.handle_patch_template",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/ai/unlock-gate",
-    "handler": "ai_ops_handlers.handle_post_unlock_gate"
+    "handler": "ai_ops_handlers.handle_post_unlock_gate",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/album-preview",
-    "handler": "import_handlers.handle_album_preview"
+    "handler": "import_handlers.handle_album_preview",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/cancel",
-    "handler": "job_handlers.handle_cancel"
+    "handler": "job_handlers.handle_cancel",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/export",
-    "handler": "export_handlers.handle_export"
+    "handler": "export_handlers.handle_export",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/import",
-    "handler": "import_handlers.handle_import"
+    "handler": "import_handlers.handle_import",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/layout-strategies/runtime/approve",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_approve"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_approve",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/layout-strategies/sandbox",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_sandbox"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_sandbox",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/layout-strategies/shadow",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_shadow"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_shadow",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/layout-strategies/{strategyId}/rollback",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_rollback"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_rollback",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/layout-strategies/{strategyId}/runtime",
-    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_propose"
+    "handler": "layout_strategy_handlers.handle_layout_strategy_runtime_propose",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/llm/ping",
-    "handler": "llm_settings_handlers.handle_llm_ping"
+    "handler": "llm_settings_handlers.handle_llm_ping",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/llm/settings",
-    "handler": "llm_settings_handlers.handle_llm_settings"
+    "handler": "llm_settings_handlers.handle_llm_settings",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/longshot",
-    "handler": "export_handlers.handle_longshot"
+    "handler": "export_handlers.handle_longshot",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/longshot/upload",
-    "handler": "export_handlers.handle_longshot_upload"
+    "handler": "export_handlers.handle_longshot_upload",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/narrate",
-    "handler": "export_handlers.handle_narrate"
+    "handler": "export_handlers.handle_narrate",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/pick-folder",
-    "handler": "config_handlers.handle_pick_folder"
+    "handler": "config_handlers.handle_pick_folder",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/reveal",
-    "handler": "export_handlers.handle_reveal"
+    "handler": "export_handlers.handle_reveal",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/shutdown",
-    "handler": "export_handlers.handle_shutdown"
+    "handler": "export_handlers.handle_shutdown",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/storage/cleanup",
-    "handler": "storage_handlers.handle_storage_cleanup"
+    "handler": "storage_handlers.handle_storage_cleanup",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/storage/remount",
-    "handler": "storage_handlers.handle_storage_remount"
+    "handler": "storage_handlers.handle_storage_remount",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/studio-event",
-    "handler": "telemetry_handlers.handle_studio_event"
+    "handler": "telemetry_handlers.handle_studio_event",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/admission",
-    "handler": "template_admin_handlers.handle_templates_admin_admission"
+    "handler": "template_admin_handlers.handle_templates_admin_admission",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/delete",
-    "handler": "template_admin_handlers.handle_templates_admin_delete"
+    "handler": "template_admin_handlers.handle_templates_admin_delete",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/register",
-    "handler": "template_admin_handlers.handle_templates_admin_register"
+    "handler": "template_admin_handlers.handle_templates_admin_register",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/review",
-    "handler": "template_admin_handlers.handle_templates_admin_review"
+    "handler": "template_admin_handlers.handle_templates_admin_review",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/rollback",
-    "handler": "template_admin_handlers.handle_templates_admin_rollback"
+    "handler": "template_admin_handlers.handle_templates_admin_rollback",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/admin/runtime",
-    "handler": "template_admin_handlers.handle_templates_admin_runtime"
+    "handler": "template_admin_handlers.handle_templates_admin_runtime",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/preview",
-    "handler": "template_handlers.handle_template_preview"
+    "handler": "template_handlers.handle_template_preview",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/recompute",
-    "handler": "template_handlers.handle_template_recompute"
+    "handler": "template_handlers.handle_template_recompute",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/templates/replay",
-    "handler": "template_handlers.handle_template_replay"
+    "handler": "template_handlers.handle_template_replay",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/ai/intent-brief",
-    "handler": "ai_ops_handlers.handle_post_intent_brief"
+    "handler": "ai_ops_handlers.handle_post_intent_brief",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/ai/layout-critic",
-    "handler": "ai_ops_handlers.handle_post_layout_critic"
+    "handler": "ai_ops_handlers.handle_post_layout_critic",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/ai/layout-critic/accept",
-    "handler": "ai_ops_handlers.handle_post_layout_critic_accept"
+    "handler": "ai_ops_handlers.handle_post_layout_critic_accept",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/ai/layout-feedback",
-    "handler": "ai_ops_handlers.handle_post_layout_feedback"
+    "handler": "ai_ops_handlers.handle_post_layout_feedback",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/asset-media-class",
-    "handler": "trip_handlers.handle_asset_media_class"
+    "handler": "trip_handlers.handle_asset_media_class",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/bookends/repick-closing",
-    "handler": "trip_handlers.handle_post_repick_closing"
+    "handler": "trip_handlers.handle_post_repick_closing",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/bookends/repick-opening",
-    "handler": "trip_handlers.handle_post_repick_opening"
+    "handler": "trip_handlers.handle_post_repick_opening",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/bookends/resolve-closing",
-    "handler": "trip_handlers.handle_post_resolve_closing"
+    "handler": "trip_handlers.handle_post_resolve_closing",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/bookends/resolve-opening",
-    "handler": "trip_handlers.handle_post_resolve_opening"
+    "handler": "trip_handlers.handle_post_resolve_opening",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/bookends/restore-auto",
-    "handler": "trip_handlers.handle_post_restore_auto"
+    "handler": "trip_handlers.handle_post_restore_auto",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/cohort/refresh",
-    "handler": "trip_handlers.handle_post_cohort_refresh"
+    "handler": "trip_handlers.handle_post_cohort_refresh",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/copy-telemetry",
-    "handler": "trip_handlers.handle_post_copy_telemetry"
+    "handler": "trip_handlers.handle_post_copy_telemetry",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/curate",
-    "handler": "trip_handlers.handle_trip_curate"
+    "handler": "trip_handlers.handle_trip_curate",
+    "auth": true
+  },
+  {
+    "method": "POST",
+    "path": "/__travelogue/trips/{tripId}/edition",
+    "handler": "trip_handlers.handle_trip_edition",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/layout-vibe",
-    "handler": "trip_handlers.handle_layout_vibe"
+    "handler": "trip_handlers.handle_layout_vibe",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "/__travelogue/trips/{tripId}/title-art/resolve",
-    "handler": "trip_handlers.handle_post_resolve_title_art"
+    "handler": "trip_handlers.handle_post_resolve_title_art",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "{tripId}/__travelogue/promote-tier",
-    "handler": "serve._handle_promote_tier"
+    "handler": "serve._handle_promote_tier",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "{tripId}/__travelogue/rerender",
-    "handler": "trip_handlers.handle_rerender"
+    "handler": "trip_handlers.handle_rerender",
+    "auth": true
   },
   {
     "method": "POST",
     "path": "{tripId}/__travelogue/save-copy",
-    "handler": "serve._handle_save_copy"
+    "handler": "serve._handle_save_copy",
+    "auth": true
   }
 ]

@@ -146,7 +146,7 @@
     },
     "studio": {
       "$ref": "#/$defs/tripStudio",
-      "description": "Studio per-trip preferences (LVP · layoutVibe, etc.)"
+      "description": "Studio per-trip preferences (LVP layoutVibe · PFM edition)"
     }
   },
   "$defs": {
@@ -162,6 +162,88 @@
             "fit_photo_experimental"
           ],
           "description": "LVP · Layout Vibe Picker id (PRD-LAYOUT-VIBE-PICKER-V1)"
+        },
+        "edition": {
+          "type": "string",
+          "enum": [
+            "journal",
+            "portfolio"
+          ],
+          "description": "PFM · 成册身份。缺省（不写字段）≡ journal（D-PFM-32）。禁止 folio / surface。"
+        },
+        "portfolio": {
+          "$ref": "#/$defs/tripStudioPortfolio"
+        },
+        "copyOrphans": {
+          "type": "array",
+          "description": "切身份时回填不上的文案草稿（D-PFM-24）",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "tripStudioPortfolio": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "PFM · 作品集装配诊断（仅 edition=portfolio 时存在）",
+      "properties": {
+        "seriesId": {
+          "type": "string"
+        },
+        "pageCount": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 48
+        },
+        "sequenceFulfillment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plannedPages": { "type": "integer", "minimum": 0 },
+            "renderedPages": { "type": "integer", "minimum": 0 },
+            "fillRatio": { "type": "number" },
+            "demotedPages": { "type": "integer", "minimum": 0 },
+            "droppedRoles": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "sparseCollection": {
+          "type": "boolean"
+        },
+        "pageCountSource": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "user"
+          ]
+        },
+        "density": {
+          "type": "string"
+        },
+        "photosPlaced": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "photosKept": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "photosFolder": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "PFO · 导入扫描张数 N，供人话句；缺省回退 match.folderCount"
+        },
+        "overflow": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "match": {
+          "type": "object",
+          "additionalProperties": true
         }
       }
     },
@@ -3903,8 +3985,11 @@
           "type": "string"
         },
         "patternId": {
-          "type": "string",
-          "enum": [
+          "description": "Journal SKUs stay on the closed screen-* enum (H8 / AC-ACP-07). Portfolio magazine faces use page-* promoted into LTE and must not enter journal MCS.",
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
             "screen-portrait-1",
             "screen-portrait-2",
             "screen-portrait-2-gallery",
@@ -3961,6 +4046,13 @@
             "screen-panorama-1",
             "screen-tall-1",
             "screen-breath-pause"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^page-[a-z0-9]+(-[a-z0-9]+)*$",
+              "description": "PFM promoted page-* face. Not a journal mosaic candidate."
+            }
           ]
         },
         "tone": {
@@ -4274,6 +4366,10 @@
         "groupId": {
           "type": "string",
           "description": "ADR-020 · collage / sequence group id (default = screenId)"
+        },
+        "shotGroupId": {
+          "type": "string",
+          "description": "PFM · shot group this magazine page was filled from (AC-PFM-09). Journal screens omit."
         },
         "preserveGroup": {
           "type": "boolean",

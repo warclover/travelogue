@@ -20,23 +20,23 @@ sequence:
   - { i: 6, role: row-port-3, program: grid, faceHint: page-3-port }
   - { i: 7, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
   - { i: 8, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide }
-  - { i: 9, role: land-hero-l, program: mosaic, faceHint: page-3-2l1p-hero-left }
-  - { i: 10, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
+  - { i: 9, role: hero-land, program: hero, faceHint: page-1-hero-land-right }
+  - { i: 10, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross }
   - { i: 11, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
   - { i: 12, role: row-port-3, program: grid, faceHint: page-3-port }
   - { i: 13, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide }
-  - { i: 14, role: land-hero-r, program: mosaic, faceHint: page-3-2l1p-hero-right }
-  - { i: 15, role: port-bookend-2p, program: mosaic, faceHint: page-4-2p2p }
-  - { i: 16, role: grid-4-land, program: grid, faceHint: page-4-grid-land }
-  - { i: 17, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left }
-  - { i: 18, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip }
-  - { i: 19, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
-  - { i: 20, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center }
-  - { i: 21, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right }
-  - { i: 22, role: bookend-4l-2p, program: mosaic, faceHint: page-6-4l2p }
-  - { i: 23, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
-  - { i: 24, role: grid-6-land, program: grid, faceHint: page-6-grid-land }
-  - { i: 25, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide }
+  - { i: 14, role: grid-4-land, program: grid, faceHint: page-4-grid-land }
+  - { i: 15, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left }
+  - { i: 16, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip }
+  - { i: 17, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 18, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center }
+  - { i: 19, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right }
+  - { i: 20, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
+  - { i: 21, role: grid-6-land, program: grid, faceHint: page-6-grid-land }
+  - { i: 22, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide }
+  - { i: 23, role: pair-port, program: mosaic, faceHint: page-2-pair-port }
+  - { i: 24, role: stack-l-port-wide, program: mosaic, faceHint: page-3-2l1p-wide-right }
+  - { i: 25, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
   - { i: 26, role: pair-port, program: mosaic, faceHint: page-2-pair-port }
-  - { i: 27, role: stack-l-port-wide, program: mosaic, faceHint: page-3-2l1p-wide-right }
+  - { i: 27, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross }
   - { i: 28, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }

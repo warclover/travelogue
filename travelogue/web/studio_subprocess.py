@@ -117,6 +117,17 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                 else None
             ),
             force_stub=bool(payload.get("forceStub")),
+            edition=(
+                str(payload.get("edition")).strip()
+                if payload.get("edition")
+                else None
+            ),
+            page_count=payload.get("pageCount"),
+            page_count_source=(
+                str(payload.get("pageCountSource")).strip()
+                if payload.get("pageCountSource")
+                else None
+            ),
         )
         progress_queue.put(
             {
@@ -160,6 +171,10 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                     )
                     or "",
                     "displayTitle": result.title,
+                    "edition": getattr(result, "edition", None) or "journal",
+                    "overflowLine": getattr(result, "overflow_line", None) or "",
+                    "overflowDetail": getattr(result, "overflow_detail", None) or "",
+                    "portfolio": getattr(result, "portfolio", None),
                 },
             }
         )

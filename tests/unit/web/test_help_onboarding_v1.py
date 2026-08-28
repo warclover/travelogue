@@ -17,7 +17,8 @@ def test_help_copy_contract_locked() -> None:
     assert "画册已做好，可预览与导出" in help_js
     assert "杂志级文案已完成" not in help_js
     assert "AI 已写好" not in help_js
-    assert "验货没问题就点『长图』，生成可发微信的长图" in help_js
+    assert "预览满意后点『长图』，就会导出到本机文件夹。" in help_js
+    assert "验货没问题就点『长图』" not in help_js
     assert "长图已保存到本机" in help_js
     assert "打开微信，按文件名顺序发到群聊" in help_js
     assert "可点『在文件夹中显示』找到文件" in help_js
@@ -26,12 +27,16 @@ def test_help_copy_contract_locked() -> None:
     assert "应用排版" not in help_js
     assert "导出与更多" not in help_js
     assert "写给编辑的一句话" not in help_js
+    assert "生成前系统会按文件夹给一个厚度" in help_js
+    assert "导入时不会问" not in help_js
+    assert "可逐页调整版式" not in help_js
 
 
 def test_help_seen_gate_global_only() -> None:
     help_js = HELP_JS.read_text(encoding="utf-8")
     assert "travelogue.studio.help.previewLongshotSeen" in help_js
     assert "travelogue.studio.help.exportPulseSeen" in help_js
+    assert "travelogue.studio.onb.generateCompleteSeen" in help_js
     assert "migrateLongshotHelpSeen" in help_js
     assert "isHelpL1Blocked" in help_js
     assert "markLongshotHelpSeen" in help_js
@@ -69,9 +74,10 @@ def test_preview_longshot_tip_and_busy_gate() -> None:
 def test_task_dock_success_saved_confirm() -> None:
     """First-Session Trust supersede AC-FTUE-09 · 默认面已保存确认；H4 按需。"""
     dock = TASK_DOCK.read_text(encoding="utf-8")
-    assert "长图已保存" in dock
-    assert "怎么发到微信群？" in dock
-    assert 'itemId: "H4"' in dock or "itemId: 'H4'" in dock
+    assert "formatLongshotResult" in dock
+    assert "在文件夹中显示" in dock
+    assert "怎么发到微信群？" not in dock
+    assert 'job.status !== "failed"' in dock
     assert "longshot_success_share_hint_shown" in dock
     assert "guide.text.replace" not in dock
     assert "已保存到本机 · 拖进微信群即可" not in dock
@@ -84,7 +90,7 @@ def test_import_folder_scaffold_markers() -> None:
     assert "同一次画册放同一文件夹（50–100 张最佳）" in html
     assert "手机照片需先传到电脑" in html
     # 第 4 条在 help-onboarding 文案源；HTML 脚手架由 JS 注入时也会读到
-    assert "每个文件夹会生成一本" in help_js
+    assert "作品集和游记可以各做一本" in help_js
     assert "试试用自己的照片做一篇" in html
     assert 'data-help-item="H1"' in html
 
@@ -132,7 +138,8 @@ def test_help_w3_platform_pick_markers() -> None:
     assert "travelogue.studio.help.platformPickSeen" in help_js
     assert 'helpItemId: "H3"' in longshot
     assert "helpItemId" in modal
-    assert 'itemId: "H4"' in dock
+    assert 'id: "H4"' in help_js
+    assert 'itemId: "H4"' not in dock
     assert "appendHelpDeepLink" in dock
     assert "helpDeepLinkPending" in dock
     assert '"H3"' in dock

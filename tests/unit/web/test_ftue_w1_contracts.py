@@ -16,7 +16,7 @@ VJ = ROOT / "templates" / "visual-journal"
 def test_format_longshot_result_saved_confirm_not_publish_guide() -> None:
     """First-Session Trust · 默认成功文案 = 已保存，不塞 resolvePublishGuide。"""
     src = (STUDIO / "js" / "longshot-client.js").read_text(encoding="utf-8")
-    assert "长图已保存" in src
+    assert "successLineForPlatform" in src
     assert "resolvePublishGuide" not in src
 
 

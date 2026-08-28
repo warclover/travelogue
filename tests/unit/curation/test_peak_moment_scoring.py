@@ -49,6 +49,41 @@ def test_preflight_writes_secondary_hints() -> None:
     assert hints == pool[1:]
 
 
+def test_finalize_skips_journal_solo_inject_on_portfolio() -> None:
+    cfg = MomentConfig(min_score=0.0, small_trip_elevated_min_score=0.0, pool_solo=True)
+    trip: dict = {"studio": {"edition": "portfolio"}}
+    assets = [_asset(f"a{i}", featured=(i < 3), sharp=0.9 - i * 0.01) for i in range(40)]
+    chapters = [
+        {
+            "id": "ch-01",
+            "screens": [
+                {
+                    "patternId": "page-1-hero-land-wide",
+                    "screenId": "ch-01-sc-01",
+                    "slots": [{"assetId": "a0"}],
+                    "layoutGeometry": {"stageAspect": "16:9"},
+                }
+            ],
+        },
+        {
+            "id": "ch-02",
+            "screens": [
+                {
+                    "patternId": "page-1-hero-land-wide",
+                    "screenId": "ch-02-sc-01",
+                    "slots": [{"assetId": "a10"}],
+                    "layoutGeometry": {"stageAspect": "16:9"},
+                }
+            ],
+        },
+    ]
+    result = sync_trip_moments_finalize(trip, assets, chapters, cfg=cfg)
+    assert result
+    patterns = [sc.get("patternId") for ch in chapters for sc in (ch.get("screens") or [])]
+    assert patterns == ["page-1-hero-land-wide", "page-1-hero-land-wide"]
+    assert all(not sc.get("role") for ch in chapters for sc in (ch.get("screens") or []))
+
+
 def test_finalize_skips_small_trip() -> None:
     cfg = MomentConfig(auto_disable_small_trip=True, small_trip_max_assets=15)
     trip: dict = {}

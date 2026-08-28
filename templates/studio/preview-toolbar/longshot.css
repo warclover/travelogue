@@ -180,10 +180,10 @@
 }
 .preview-toolbar__export-confirmed-summary {
   margin: 0 0 10px;
-  font-size: var(--studio-panel-body-size, 13px);
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--preview-accent, #3f454c);
+  font-size: var(--studio-panel-meta-size, 11px);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--preview-muted);
 }
 .preview-toolbar__export-popover--sheet {
   position: fixed;
@@ -204,6 +204,8 @@ html.preview-export-popover-open body {
   overflow: hidden;
   touch-action: none;
 }
+/* 导出弹窗字阶只准四档：标题 15 / 正文 13 / 控件 12 / 辅字 11。
+ * 层级用字重和墨色，禁止再写裸 px 或把 token fallback 写歪。 */
 .preview-toolbar__export-popover-title {
   margin: 0 0 4px;
   font-size: var(--studio-panel-title-size, 15px);
@@ -223,10 +225,50 @@ html.preview-export-popover-open body {
   display: block;
   margin-bottom: 8px;
   font-size: var(--studio-panel-meta-size, 11px);
-  font-weight: 700;
+  font-weight: 400;
   color: var(--preview-muted);
 }
 /* 方案 A · 2 列平台卡 · 主名+用途同行（禁止塞进单行 pill） */
+.preview-toolbar__export-intent-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.preview-toolbar__export-intent-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+  border-radius: 10px;
+  background: var(--preview-surface, #ffffff);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.preview-toolbar__export-intent-card__title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.preview-toolbar__export-intent-card__sub {
+  font-size: 11px;
+  color: var(--preview-muted, #5c574f);
+}
+.preview-toolbar__export-intent-card.is-selected {
+  border-color: var(--preview-accent, #2d5678);
+  background: color-mix(in srgb, var(--preview-accent, #2d5678) 12%, #fff);
+}
+.preview-toolbar__export-advanced {
+  margin: 8px 0 0;
+}
+.preview-toolbar__export-advanced summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--preview-muted, #5c574f);
+}
 .preview-toolbar__export-platform-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -285,6 +327,191 @@ html.preview-export-popover-open body {
 .preview-toolbar__export-platform-card.is-selected
   .preview-toolbar__export-platform-card__sub {
   opacity: 0.88;
+}
+.preview-toolbar__fxi-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+.preview-toolbar__fxi-head .preview-toolbar__export-popover-title {
+  margin: 0;
+}
+.preview-toolbar__fxi-badge {
+  flex: 0 0 auto;
+  font-size: var(--studio-panel-meta-size, 11px);
+  font-weight: 700;
+  color: var(--preview-muted);
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.3;
+}
+.preview-toolbar__fxi-lead {
+  margin: 0 0 12px;
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--preview-ink, #14110d);
+}
+.preview-toolbar__fxi-banner {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  font-size: var(--studio-panel-meta-size, 11px);
+  line-height: 1.45;
+  color: var(--preview-muted);
+  background: color-mix(in srgb, var(--preview-accent, #3f454c) 8%, #fff);
+  border-radius: 8px;
+}
+.preview-toolbar__fxi-banner strong {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.preview-toolbar__fxi-cross,
+.preview-toolbar__fxi-back {
+  margin: 8px 0 0;
+}
+.preview-toolbar__fxi-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--preview-accent, #3f454c);
+  font: inherit;
+  font-size: var(--studio-panel-meta-size, 11px);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.preview-toolbar__fxi-link:hover {
+  color: var(--preview-ink, #14110d);
+}
+.preview-toolbar__export-platform-card[data-clg-locked="1"] {
+  opacity: 0.48;
+}
+/* 弹层已是 position:absolute，本身就是叠层的包含块。
+ * 禁止再改成 relative：导出区在 Dock 里，relative 会让整块弹层进文档流，
+ * Dock 的 border-radius:999px 会被撑成巨大圆角条。 */
+.preview-toolbar__clg-sheet-host {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.preview-toolbar__clg-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: rgba(20, 17, 13, 0.28);
+  border-radius: 8px;
+}
+.preview-toolbar__clg-sheet {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 72px;
+  pointer-events: auto;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.16));
+  box-shadow: 0 10px 28px rgba(20, 17, 13, 0.16);
+}
+.preview-toolbar__clg-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--studio-panel-ui-size, 12px);
+  line-height: 1.2;
+  color: var(--preview-muted);
+  cursor: pointer;
+}
+.preview-toolbar__clg-sheet-title {
+  margin: 0 0 8px;
+  font-size: var(--studio-panel-title-size, 15px);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--preview-ink, #14110d);
+}
+.preview-toolbar__clg-sheet-body {
+  margin: 0 0 12px;
+  font-size: var(--studio-panel-body-size, 13px);
+  line-height: 1.45;
+  color: var(--preview-muted);
+}
+.preview-toolbar__clg-sheet-actions {
+  display: flex;
+  gap: 8px;
+}
+.preview-toolbar__clg-sheet-actions > button {
+  flex: 1;
+}
+.preview-toolbar__export-popover-card.is-on,
+.preview-toolbar__export-platform-card.is-on {
+  border-color: var(--preview-accent);
+  box-shadow: 0 0 0 1px var(--preview-accent);
+}
+.preview-toolbar__export-share-fold {
+  margin: 4px 0 8px;
+  border: 1px solid var(--preview-border, rgba(20, 17, 13, 0.12));
+  border-radius: 10px;
+  padding: 6px 10px 8px;
+  background: var(--preview-surface, #ffffff);
+}
+.preview-toolbar__export-share-fold > summary {
+  cursor: pointer;
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--preview-ink, #14110d);
+  list-style: none;
+}
+.preview-toolbar__export-share-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.preview-toolbar__export-share-fold > summary::before {
+  content: "▸ ";
+  font-weight: 500;
+}
+.preview-toolbar__export-share-fold[open] > summary::before {
+  content: "▾ ";
+}
+.preview-toolbar__export-share-hint {
+  margin: 6px 0 8px;
+  font-size: var(--studio-panel-meta-size, 11px);
+  color: var(--preview-muted);
+  line-height: 1.4;
+}
+.preview-toolbar__export-share-fold .preview-toolbar__export-platform-grid {
+  margin-top: 4px;
+}
+.preview-toolbar__export-share-fold
+  .preview-toolbar__export-platform-card[data-studio-longshot-platform="album_spread"] {
+  grid-column: 1 / -1;
+}
+.preview-toolbar__export-platform-card--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.preview-toolbar__export-platform-card--stack
+  .preview-toolbar__export-platform-card__title,
+.preview-toolbar__export-platform-card--stack
+  .preview-toolbar__export-platform-card__sub {
+  white-space: normal;
+}
+.preview-toolbar__export-platform-card--stack
+  .preview-toolbar__export-platform-card__sub::before {
+  content: none;
 }
 .preview-toolbar__export-popover-seg {
   display: inline-flex;
@@ -351,7 +578,7 @@ html.preview-export-popover-open body {
   border: 1px solid color-mix(in srgb, var(--preview-accent, #3f454c) 35%, transparent);
   border-radius: 999px;
   padding: 5px 12px;
-  font-size: var(--studio-panel-meta-size, 11px);
+  font-size: var(--studio-panel-ui-size, 12px);
   font-weight: 600;
   font-family: inherit;
   background: var(--preview-surface, #ffffff);
@@ -401,6 +628,9 @@ html.preview-export-popover-open body {
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+}
+.preview-toolbar__export-more-link[hidden] {
+  display: none !important;
 }
 .preview-toolbar__export-more-link:hover {
   background: color-mix(in srgb, var(--preview-accent, #3f454c) 10%, transparent);

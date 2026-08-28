@@ -1,0 +1,3 @@
+# Official magazine series YAML (PFM · AS-PFM-01).
+# P0: magazine-16-standard.yaml (hand-arranged 16-page standard book).
+# Add more as magazine-{pages}-{density}.yaml. Engine never reads reserve/.

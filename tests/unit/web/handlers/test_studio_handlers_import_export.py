@@ -675,6 +675,94 @@ def test_handle_longshot_rejects_poster_bric_when_flag_off(tmp_path: Path) -> No
     assert body["error"] == "E_GCS_POSTER_DISABLED"
 
 
+def test_handle_longshot_portfolio_implicit_wechat_rejected(tmp_path: Path) -> None:
+    """作品集默认路径仍须这一本 + 页图，不能静默走群长图。"""
+    import json
+
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    trips = tmp_path / "trips"
+    create_trip("pf-implicit", trips, title="pf-implicit")
+    trip_json = trips / "pf-implicit" / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    data["studio"] = {"edition": "portfolio"}
+    trip_json.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    handler = MockStudioHandler(
+        trips,
+        json_body={"tripId": "pf-implicit", "allowMissingSource": True},
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400
+    assert body["error"] == "E_PORTFOLIO_PACK_REQUIRED"
+
+
+def test_handle_longshot_portfolio_explicit_wechat_blocked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CLG · 作品集显式微信群不再开导；409 + E_CLG_NEEDS_JOURNAL。"""
+    import json
+
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    trips = tmp_path / "trips"
+    create_trip("pf-explicit", trips, title="pf-explicit")
+    trip_json = trips / "pf-explicit" / "trip.json"
+    data = json.loads(trip_json.read_text(encoding="utf-8"))
+    data["studio"] = {"edition": "portfolio"}
+    trip_json.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+    called: list[str] = []
+
+    def _export(trip_dir, **kwargs):
+        called.append(str(kwargs.get("platform") or ""))
+
+    monkeypatch.setattr(
+        "travelogue.export.dispatch.dispatch_export",
+        _export,
+    )
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "pf-explicit",
+            "platform": "wechat_chat",
+            "allowMissingSource": True,
+        },
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 409
+    assert body.get("error") == "E_CLG_NEEDS_JOURNAL"
+    assert body.get("code") == "E_CLG_NEEDS_JOURNAL"
+    assert body.get("message") == "长图要在游记里做"
+    assert called == []
+
+
+def test_handle_longshot_album_landscape_not_aliased_to_spread(
+    tmp_path: Path,
+) -> None:
+    """Stale album_landscape is unknown — do not start 3:4 print."""
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+
+    trips = tmp_path / "trips"
+    create_trip("album-alias", trips, title="album-alias")
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "album-alias",
+            "platform": "album_landscape",
+            "allowMissingSource": True,
+        },
+    )
+    handle_longshot(handler)
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 400, body
+    assert body["error"] in ("E_LNG2_INVALID_PLATFORM", "E_OR_UNKNOWN_PLATFORM")
+
+
 def test_read_import_request_json_body(tmp_path: Path) -> None:
     from travelogue.web.studio_handlers.import_handlers import read_import_request
 

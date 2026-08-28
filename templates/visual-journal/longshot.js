@@ -894,9 +894,18 @@
     return pickBestSrcForCapture(img, 99999);
   }
 
+  function isTitleArtImage(img) {
+    if (!img) return false;
+    var cls = img.className || "";
+    if (typeof cls !== "string") cls = String(cls);
+    if (cls.indexOf("cover-opening__title-art") >= 0) return true;
+    return !!(img.closest && img.closest("img.cover-opening__title-art, .cover-opening__title-art"));
+  }
+
   function upgradeImagesToMaxSrc(root, requiredWidth) {
     var saved = [];
     root.querySelectorAll("img").forEach(function (img) {
+      if (isTitleArtImage(img)) return;
       var best = pickBestSrcForCapture(img, requiredWidth);
       if (!best) return;
       var current = img.currentSrc || img.src || "";
@@ -1253,6 +1262,7 @@
   function buildDisplaySizeMap(root) {
     var map = new WeakMap();
     root.querySelectorAll("img").forEach(function (img) {
+      if (isTitleArtImage(img)) return;
       var size = getPaintedImageSize(img);
       if (size) map.set(img, size);
     });
@@ -1282,6 +1292,7 @@
     var byImg = new WeakMap();
     var bySrc = {};
     root.querySelectorAll("img").forEach(function (img) {
+      if (isTitleArtImage(img)) return;
       var dim = captureDimensions(img, width, sizeMap, useDisplaySizes);
       byImg.set(img, dim);
       var key = srcKey(img.currentSrc || img.src);
@@ -1373,6 +1384,7 @@
     pixelScale
   ) {
     clonedRoot.querySelectorAll("img").forEach(function (cloneImg) {
+      if (isTitleArtImage(cloneImg)) return;
       normalizeImageForCapture(
         findOriginalImage(cloneImg, imageMap),
         cloneImg,
@@ -1388,6 +1400,7 @@
   function normalizeLiveImages(root, imageMap, width, sizeMap, useDisplaySizes, dimStore, pixelScale) {
     var saved = [];
     root.querySelectorAll("img").forEach(function (img) {
+      if (isTitleArtImage(img)) return;
       saved.push({
         orig: img,
         cssText: img.style.cssText,
@@ -1687,6 +1700,7 @@
       "#longshot-toast",
       ".longshot-toast",
       ".footer-cta",
+      ".cover-opening__title-art",
     ];
     removeSelectors.forEach(function (sel) {
       doc.querySelectorAll(sel).forEach(function (el) {

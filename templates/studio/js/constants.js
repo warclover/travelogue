@@ -103,6 +103,13 @@ export const STUDIO_ERROR_MESSAGES = {
   E_MEDIA_CLEANUP_REFUSED: "无法安全删除源文件拷贝",
   E_MEDIA_CLEANUP_PARTIAL: "清理未完成，查看详情",
   E_MEDIA_INCREMENTAL_SOURCE: "追加导入缺少可访问的原片",
+  E_PORTFOLIO_UNAVAILABLE: "作品集暂时排不出，可改回游记",
+  E_PORTFOLIO_CONFIRM_REQUIRED: "切换成册类型前请确认页面将重排",
+  E_PORTFOLIO_SWITCH_DISABLED: "精修切换未开启",
+  E_PORTFOLIO_PAGE_COUNT: "页数无效",
+  E_PORTFOLIO_PAGES_JOURNAL: "页数只能在作品集精修改",
+  E_PORTFOLIO_PACK_REQUIRED: "作品集请导出这一本与页图，不要走群长图",
+  E_LVP_PORTFOLIO: "作品集没有成册风格，请改回游记后再选。",
 };
 
 export const DEFAULT_PIPELINE_ESTIMATES = [

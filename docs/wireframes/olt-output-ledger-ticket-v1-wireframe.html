@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OLT · 帧 A / 帧 B · 待产品签核</title>
+  <style>
+    :root {
+      --ink: #1c1916;
+      --ink-soft: #3d3832;
+      --muted: #6b655c;
+      --line: rgba(28, 25, 22, 0.14);
+      --paper: #f3f1ec;
+      --shelf-paper: #f7f5f0;
+      --stub-bg: #f0ebe3;
+      --stub-ink: #2a241c;
+      --stub-muted: #7a7268;
+      --stub-edge: #d9d0c4;
+      --primary: #3d5a4c;
+      --anno: #c45c26;
+      --ok: #2f6b4f;
+      --bad: #a33b36;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --font-display: "Segoe UI Semibold", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-mono: "Cascadia Mono", "Consolas", "SF Mono", ui-monospace, monospace;
+      --cover-sample: url("./_assets/shelf-ticket-cover-sample.png");
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: #111;
+      color: #ececec;
+      line-height: 1.5;
+    }
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      padding: 10px 18px;
+      background: #0c0c0c;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .bar h1 { margin: 0; margin-right: auto; font-size: 13px; font-weight: 600; }
+    .bar h1 em { font-style: normal; color: #e0a090; font-weight: 400; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tabs button {
+      border: 1px solid #444;
+      background: transparent;
+      color: #ccc;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .tabs button:hover { background: #1c1c1c; }
+    .tabs button.is-on {
+      background: #c45c26;
+      border-color: #c45c26;
+      color: #fff;
+      font-weight: 600;
+    }
+    .bar p { width: 100%; margin: 0; font-size: 11px; color: #888; }
+    .bar a, .side a, .copy a { color: #e0a090; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      min-height: calc(100vh - 78px);
+    }
+    @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    .stage {
+      padding: 28px 24px 56px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .panel { display: none; width: min(1080px, 100%); }
+    .panel.is-on { display: block; }
+    .device {
+      background: var(--shelf-paper);
+      color: var(--ink);
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,.45);
+    }
+    .device--dark {
+      --shelf-paper: #1c1b19;
+      --stub-bg: #2a2621;
+      --stub-ink: #efe8dc;
+      --stub-muted: #9a9288;
+      --stub-edge: #3d3832;
+      --ink: #efe8dc;
+      --muted: #9a9288;
+      background: #1c1b19;
+      color: #efe8dc;
+    }
+    .device__label {
+      padding: 8px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #888;
+      background: #141414;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .device__label strong { color: #e0a090; font-weight: 600; }
+    .shelf { padding: 22px 24px 28px; }
+    .shelf__title {
+      margin: 0 0 4px;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .shelf__count { margin: 0 0 16px; font-size: 12px; color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px 16px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    .grid--2 { grid-template-columns: repeat(2, minmax(0, 280px)); justify-content: start; }
+
+    .ticket {
+      position: relative;
+      filter: drop-shadow(0 10px 22px rgba(28, 25, 22, 0.12));
+    }
+    .ticket__body {
+      position: relative;
+      background: var(--stub-bg);
+      border: 1px solid var(--stub-edge);
+      border-radius: 6px 6px 10px 10px;
+      overflow: hidden;
+      -webkit-mask-image: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px);
+      mask-image: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px);
+    }
+    .ticket__cover {
+      aspect-ratio: 3 / 4;
+      background: #c8c2b8 center / cover no-repeat;
+      background-image: var(--cover-sample);
+      position: relative;
+    }
+    .ticket__cover--port { background-position: 70% 30%; filter: saturate(1.04); }
+    .ticket__cover--blank {
+      display: grid;
+      place-items: center;
+      background: #2a4538;
+      background-image: none;
+      color: #f3eee4;
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: .08em;
+    }
+    .badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      line-height: 1.2;
+    }
+    .badge--ready {
+      background: color-mix(in srgb, #3d6b5a 22%, transparent);
+      color: #1e4a38;
+      border: 1px solid color-mix(in srgb, #3d6b5a 45%, transparent);
+    }
+    .device--dark .badge--ready { color: #d4e8df; }
+    .badge--stale {
+      background: color-mix(in srgb, #3d5a4c 18%, transparent);
+      color: #2a4538;
+      border: 1px solid color-mix(in srgb, #3d5a4c 35%, transparent);
+    }
+    .device--dark .badge--stale { color: #cde3d6; }
+    .badge--algo {
+      background: color-mix(in srgb, #8a8680 22%, transparent);
+      color: #5c5852;
+      border: 1px solid color-mix(in srgb, #8a8680 40%, transparent);
+      font-weight: 600;
+    }
+    .badge--preview {
+      background: rgba(255,255,255,.88);
+      color: #4a453e;
+      border: 1px solid rgba(28,25,22,.12);
+    }
+    .menu {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 4;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255,255,255,.92);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1;
+      opacity: .7;
+    }
+    .perf {
+      height: 8px;
+      margin-top: -4px;
+      background-image: radial-gradient(circle at 5px 4px, var(--shelf-paper) 4px, transparent 4.5px);
+      background-size: 10px 8px;
+      background-repeat: repeat-x;
+    }
+    .stub {
+      padding: 8px 12px 14px;
+      background: var(--stub-bg);
+      color: var(--stub-ink);
+    }
+    .name {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .meta {
+      margin: 3px 0 0;
+      font-size: 9px;
+      letter-spacing: .06em;
+      color: var(--stub-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .serial {
+      margin: 5px 0 0;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: .12em;
+      color: color-mix(in srgb, var(--stub-ink) 55%, transparent);
+    }
+    .perf-row {
+      margin: 7px 0 6px;
+      border-top: 1px dashed color-mix(in srgb, var(--stub-ink) 22%, transparent);
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: 0 0 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      max-width: 100%;
+      padding: 1px 6px;
+      border: 1px solid color-mix(in srgb, var(--stub-ink) 16%, transparent);
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--shelf-paper) 55%, transparent);
+      color: var(--stub-ink);
+      font-size: 9px;
+      letter-spacing: .02em;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+    .chip--more {
+      font-family: var(--font-mono);
+      letter-spacing: .04em;
+      color: var(--stub-muted);
+    }
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--stub-ink) 42%, transparent);
+      flex: 0 0 4px;
+    }
+    .code-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .code-id {
+      font-family: var(--font-mono);
+      font-size: 7px;
+      letter-spacing: .12em;
+      color: color-mix(in srgb, var(--stub-ink) 50%, transparent);
+    }
+    .barcode {
+      width: 40px;
+      height: 16px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--stub-ink) 0 1px,
+        transparent 1px 2px,
+        var(--stub-ink) 2px 3px,
+        transparent 3px 5px,
+        var(--stub-ink) 5px 6px,
+        transparent 6px 7px
+      );
+      opacity: .78;
+    }
+    .cap {
+      margin: 8px 2px 0;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .02em;
+    }
+    .cap strong { color: var(--ink); font-weight: 700; }
+
+    .ban { outline: 2px dashed var(--bad); outline-offset: 4px; }
+    .ok-ring { outline: 2px solid color-mix(in srgb, var(--ok) 55%, transparent); outline-offset: 4px; }
+    .stamp {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+    .stamp--no { background: #a33b36; color: #fff; }
+    .stamp--yes { background: #2f6b4f; color: #fff; }
+
+    .copy {
+      background: #161616;
+      color: #ddd;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 18px 20px 22px;
+    }
+    .copy h2 { margin: 0 0 8px; font-size: 16px; }
+    .copy p, .copy li { font-size: 13px; color: #bbb; }
+    .copy table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .copy th, .copy td { border: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .copy th { background: #1e1e1e; color: #e0a090; }
+    .copy code { font-size: 11px; background: #222; padding: 1px 4px; border-radius: 3px; }
+
+    .sheet {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fff;
+      color: #1c1916;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(0,0,0,.4);
+    }
+    .sheet__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .sheet__head h3 { margin: 0; font-size: 15px; }
+    .sheet__head span { font-size: 11px; color: var(--muted); }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      align-items: start;
+    }
+    .row:last-child { border-bottom: none; }
+    .row__title { margin: 0; font-size: 13px; font-weight: 700; }
+    .row__sub { margin: 3px 0 0; font-size: 11px; color: var(--muted); }
+    .state {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+    .state--ready { color: #2f6b4f; }
+    .state--out { color: #6b655c; }
+    .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .acts button {
+      border: 1px solid var(--line);
+      background: #f7f5f0;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: default;
+    }
+    .acts button.danger { color: var(--bad); }
+
+    .fly {
+      position: absolute;
+      min-width: 140px;
+      padding: 6px 0;
+      background: #fff;
+      color: #1c1916;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      font-size: 12px;
+      z-index: 8;
+    }
+    .fly button {
+      display: block;
+      width: 100%;
+      border: none;
+      background: none;
+      text-align: left;
+      padding: 7px 12px;
+      cursor: default;
+    }
+    .toast {
+      margin: 14px auto 0;
+      max-width: 420px;
+      padding: 8px 12px;
+      background: #2a241c;
+      color: #efe8dc;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .confirm {
+      max-width: 360px;
+      margin: 18px auto 0;
+      padding: 16px;
+      background: #fff;
+      color: #1c1916;
+      border-radius: 8px;
+    }
+    .confirm p { margin: 0 0 12px; font-size: 13px; }
+    .confirm .acts { justify-content: flex-end; }
+
+    .side {
+      background: #121212;
+      border-left: 1px solid #2a2a2a;
+      padding: 18px 16px 40px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .side h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #e0a090; }
+    .side h3 { margin: 16px 0 6px; font-size: 12px; color: #eee; }
+    .side ul { margin: 0; padding-left: 16px; }
+    .side li { margin-bottom: 4px; }
+    .check { list-style: none; padding-left: 0; }
+    .check li { padding-left: 18px; position: relative; }
+    .check li::before { content: "☐"; position: absolute; left: 0; color: #e0a090; }
+
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 820px) { .pair { grid-template-columns: 1fr; } }
+    .note {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: #161616;
+      border-left: 3px solid #c45c26;
+      font-size: 12px;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <h1>OLT 线框 · 帧 A / 帧 B <em>已签 2026-08-26 · M2 编码中</em></h1>
+    <nav class="tabs" id="tabs">
+      <button type="button" class="is-on" data-tab="spec">① 合同</button>
+      <button type="button" data-tab="a-light">帧 A · 浅</button>
+      <button type="button" data-tab="a-dark">帧 A · 深</button>
+      <button type="button" data-tab="a-no">帧 A · 禁</button>
+      <button type="button" data-tab="b-list">帧 B · 列表</button>
+      <button type="button" data-tab="b-act">帧 B · 交互</button>
+      <button type="button" data-tab="sign">拍板清单</button>
+    </nav>
+    <p>合同：<a href="../PRD-OUTPUT-LEDGER-TICKET-V1.md">PRD-OUTPUT-LEDGER-TICKET-V1</a> v0.1.2 §6.6 / §6.7 · 评审加席否决：副券禁数字 · 同卡禁双状态 · 签核记录待产品勾</p>
+  </header>
+
+  <div class="layout">
+    <main class="stage">
+      <section class="panel is-on" id="spec">
+        <div class="copy">
+          <h2>这两帧签什么</h2>
+          <p>M2 编码门 = 产品在本页看过、并在拍板清单勾完。§6.2 的 ASCII <strong>不是</strong>已签帧。</p>
+          <table>
+            <tr><th>帧</th><th>必须看见</th><th>签完才能做</th></tr>
+            <tr>
+              <td><strong>A</strong> 票根</td>
+              <td>副券行 + <strong>收敛后的既有徽章</strong>同框。深/浅各一套。零成品与今天逐像素一致。</td>
+              <td>M2b 票面副券</td>
+            </tr>
+            <tr>
+              <td><strong>B</strong> 管理成品</td>
+              <td>全部成品（含分享包 / PDF）+ 文件数 + 三个动作。数字只在这里出现。</td>
+              <td>M2a 仅列表也可出门</td>
+            </tr>
+          </table>
+          <h2 style="margin-top:20px">加席已经否掉、本帧必须画出来</h2>
+          <ul>
+            <li>副券上出现 <code>33</code> 紧挨身份行「32 页」—— 36 vs 37 重演。</li>
+            <li>封面角「分享图已就绪」+ 副券「有更新」同卡。</li>
+            <li>分享包 / PDF 占票根三个可见位。</li>
+            <li>C 端出现「副券 / 账本 / stale / 更新版面」。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel" id="a-light">
+        <div class="device">
+          <div class="device__label">帧 A · 浅色主题 · <strong>徽章与副券必须同框</strong></div>
+          <div class="shelf">
+            <h2 class="shelf__title">书架</h2>
+            <p class="shelf__count">4 本 · 开旗后指纹与 L1 徽章同源</p>
+            <div class="grid">
+              <article class="ticket">
+                <div class="ticket__body">
+                  <div class="ticket__cover ticket__cover--blank">珠</div>
+                  <button class="menu" type="button" aria-label="更多">⋯</button>
+                  <span class="badge badge--preview">可先预览</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap"><strong>零成品</strong> · 无副券行 · 票面与今天一致</p>
+              </article>
+
+              <article class="ticket ok-ring">
+                <div class="ticket__body">
+                  <div class="ticket__cover"></div>
+                  <button class="menu" type="button" aria-label="更多">⋯</button>
+                  <span class="badge badge--ready">分享图已就绪</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip">小红书</span>
+                      <span class="chip">朋友圈</span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap"><strong>全 ready</strong> · 徽章「已就绪」· 副券无圆点 · 无数字</p>
+              </article>
+
+              <article class="ticket ok-ring">
+                <div class="ticket__body">
+                  <div class="ticket__cover ticket__cover--port"></div>
+                  <button class="menu" type="button" aria-label="更多">⋯</button>
+                  <span class="badge badge--stale">分享图需更新</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip">小红书<span class="dot" title="内容有更新，可重新导出"></span></span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap"><strong>有更新</strong> · L1 改成「需更新」· 绝不再写「已就绪」</p>
+              </article>
+
+              <article class="ticket">
+                <div class="ticket__body">
+                  <div class="ticket__cover" style="filter:hue-rotate(18deg)"></div>
+                  <button class="menu" type="button" aria-label="更多">⋯</button>
+                  <span class="badge badge--algo">可重排</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">华农油菜花</p>
+                    <p class="meta">游记 · 2026 · 03 · 31 张</p>
+                    <p class="serial">NO.20261102</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">微信群</span>
+                      <span class="chip">小红书</span>
+                      <span class="chip">单张海报</span>
+                      <span class="chip chip--more" title="还有 2 种成品，点击查看">+2</span>
+                    </div>
+                    <div class="code-row"><span class="code-id">HN8K2Q1C</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap"><strong>溢出 + 游记</strong> · folio 不在 · +2 含未上券的分享包/PDF · L2「可重排」不压 L1</p>
+              </article>
+            </div>
+          </div>
+        </div>
+        <p class="note">副券插在编号之后、花体码之前。点副券只开文件夹，不跳进预览。右键/长按 outdated 条才给「重新导出」。</p>
+      </section>
+
+      <section class="panel" id="a-dark">
+        <div class="device device--dark">
+          <div class="device__label">帧 A · 深色主题 · <strong>同一套信息，换纸色</strong></div>
+          <div class="shelf">
+            <h2 class="shelf__title">书架</h2>
+            <p class="shelf__count">深色不得加新色条、不得改封面区尺寸</p>
+            <div class="grid grid--2">
+              <article class="ticket ok-ring">
+                <div class="ticket__body">
+                  <div class="ticket__cover"></div>
+                  <button class="menu" type="button">⋯</button>
+                  <span class="badge badge--ready">分享图已就绪</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip">小红书</span>
+                      <span class="chip">朋友圈</span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap">全 ready · 深色</p>
+              </article>
+              <article class="ticket ok-ring">
+                <div class="ticket__body">
+                  <div class="ticket__cover ticket__cover--port"></div>
+                  <button class="menu" type="button">⋯</button>
+                  <span class="badge badge--stale">分享图需更新</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip">小红书<span class="dot"></span></span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <p class="cap">有更新 · 深色 · 仍无「已就绪」</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="a-no">
+        <div class="device">
+          <div class="device__label">帧 A · 禁止形态 · <strong>看见这些就拒签</strong></div>
+          <div class="shelf">
+            <div class="pair">
+              <article class="ticket ban">
+                <div class="ticket__body">
+                  <div class="ticket__cover"></div>
+                  <span class="badge badge--ready">分享图已就绪</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip">小红书<span class="dot"></span></span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <span class="stamp stamp--no">否 · 双真相</span>
+                <p class="cap">加席：「到底是好了还是没好？」AC-OLT-26</p>
+              </article>
+              <article class="ticket ban">
+                <div class="ticket__body">
+                  <div class="ticket__cover ticket__cover--port"></div>
+                  <span class="badge badge--ready">分享图已就绪</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <p class="serial">NO.20263841</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图 33</span>
+                      <span class="chip">小红书 12</span>
+                    </div>
+                    <div class="code-row"><span class="code-id">KJPM4R8T</span><span class="barcode"></span></div>
+                  </div>
+                </div>
+                <span class="stamp stamp--no">否 · 32 旁写 33</span>
+                <p class="cap">PIS 页数口径被破坏。数字只进帧 B。</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="b-list">
+        <div class="device" style="background:#2a2a2a;padding:28px 16px 36px">
+          <div class="device__label">帧 B · 管理成品 · <strong>卡片菜单入口 · 含未上券的包和 PDF</strong></div>
+          <div class="sheet">
+            <div class="sheet__head">
+              <h3>管理成品</h3>
+              <span>《珠海东澳》· 5 种</span>
+            </div>
+            <div class="row">
+              <div>
+                <p class="row__title">作品集页图</p>
+                <p class="row__sub">32 个文件 · 2026 · 08 · 26</p>
+                <div class="acts">
+                  <button type="button">在文件夹中显示</button>
+                  <button type="button">重新导出</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <span class="state state--ready">最新</span>
+            </div>
+            <div class="row">
+              <div>
+                <p class="row__title">小红书</p>
+                <p class="row__sub">12 个文件 · 2026 · 08 · 24</p>
+                <div class="acts">
+                  <button type="button">在文件夹中显示</button>
+                  <button type="button">重新导出</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <span class="state state--out">有更新</span>
+            </div>
+            <div class="row">
+              <div>
+                <p class="row__title">朋友圈</p>
+                <p class="row__sub">9 个文件 · 2026 · 08 · 20</p>
+                <div class="acts">
+                  <button type="button">在文件夹中显示</button>
+                  <button type="button">重新导出</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <span class="state state--ready">最新</span>
+            </div>
+            <div class="row">
+              <div>
+                <p class="row__title">分享包</p>
+                <p class="row__sub">1 个文件 · 2026 · 08 · 20</p>
+                <div class="acts">
+                  <button type="button">在文件夹中显示</button>
+                  <button type="button">重新导出</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <span class="state state--ready">最新</span>
+            </div>
+            <div class="row">
+              <div>
+                <p class="row__title">PDF</p>
+                <p class="row__sub">1 个文件 · 2026 · 08 · 19</p>
+                <div class="acts">
+                  <button type="button">在文件夹中显示</button>
+                  <button type="button">重新导出</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <span class="state state--ready">最新</span>
+            </div>
+          </div>
+          <p class="note" style="max-width:520px;margin:14px auto 0">票根 +2 的 N 必须和本表「还有几种」对得上：上券 3 + 未上券 2 = 5，可见 3，+2。</p>
+        </div>
+      </section>
+
+      <section class="panel" id="b-act">
+        <div class="device" style="background:#2a2a2a;padding:28px 16px 36px">
+          <div class="device__label">帧 B · 交互补帧 · <strong>有更新必须给下一步 · 失败不许静默</strong></div>
+          <div class="pair" style="align-items:start">
+            <div>
+              <article class="ticket" style="max-width:240px;margin:0 auto;position:relative">
+                <div class="ticket__body">
+                  <div class="ticket__cover ticket__cover--port"></div>
+                  <span class="badge badge--stale">分享图需更新</span>
+                  <div class="perf"></div>
+                  <div class="stub">
+                    <p class="name">珠海东澳</p>
+                    <p class="meta">作品集 · 32 页 · 2026 · 08 · 129 张</p>
+                    <div class="perf-row"></div>
+                    <div class="chips">
+                      <span class="chip">作品集页图</span>
+                      <span class="chip" style="outline:1px solid #c45c26">小红书<span class="dot"></span></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="fly" style="right:8px;bottom:54px">
+                  <button type="button">重新导出</button>
+                  <button type="button">在文件夹中显示</button>
+                </div>
+              </article>
+              <p class="cap" style="text-align:center;color:#bbb">右键 / 长按 outdated 条 · 左键仍是开文件夹</p>
+            </div>
+            <div>
+              <div class="confirm">
+                <p>删除《珠海东澳》的小红书？只删这份成品，不影响这本书本身。</p>
+                <div class="acts">
+                  <button type="button">取消</button>
+                  <button type="button" class="danger">删除这份成品</button>
+                </div>
+              </div>
+              <div class="toast">没找到这份文件，可能已被移动或删除。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="sign">
+        <div class="copy">
+          <h2>拍板清单 · 产品勾完才算签</h2>
+          <p>签核记录：<a href="../acceptance-records/olt-frame-ab-signoff-2026-08-26.md">olt-frame-ab-signoff-2026-08-26.md</a>（现为待签）。勾完后把该文件结论改成「认可」，PRD 文首线框栏改「已签」。</p>
+          <table>
+            <tr><th>#</th><th>断言</th><th>对应</th></tr>
+            <tr><td>1</td><td>零成品票根没有副券行，身份行仍是「作品集 · 32 页」/「游记」</td><td>AC-OLT-14/18</td></tr>
+            <tr><td>2</td><td>副券只写渠道名，不见任何数字</td><td>BLK-02 · AC-OLT-15</td></tr>
+            <tr><td>3</td><td>「已就绪」与 outdated 圆点不同框</td><td>BLK-04 · AC-OLT-26</td></tr>
+            <tr><td>4</td><td>有更新时 L1 徽章是「分享图需更新」，不是藏徽章</td><td>§6.7.2 (a)</td></tr>
+            <tr><td>5</td><td>分享包 / PDF 不上票根，进管理列表；+N 含它们</td><td>AMD-OLT-01</td></tr>
+            <tr><td>6</td><td>深浅两套，票根形状 / 封面区 / 无新色条</td><td>§6.6</td></tr>
+            <tr><td>7</td><td>管理列表有文件数、日期、三个动作；删除确认不含技术词</td><td>帧 B</td></tr>
+            <tr><td>8</td><td>outdated 有就地「重新导出」；reveal 失败有人话 toast</td><td>SHD-06/07</td></tr>
+          </table>
+          <p style="margin-top:16px">不签：改票根形状、给副券上色条、把「游记」做成副券、按渠道切管线。</p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="side">
+      <h2>签核说明</h2>
+      <p>本页是 M2 的看帧入口。看完到「拍板清单」勾，再改签核记录。</p>
+      <h3>打开方式</h3>
+      <ul>
+        <li>双击本 HTML，或浏览器打开</li>
+        <li>路径 <code>docs/wireframes/olt-output-ledger-ticket-v1-wireframe.html</code></li>
+      </ul>
+      <h3>产品要勾</h3>
+      <ul class="check">
+        <li>帧 A 浅 · 四态齐</li>
+        <li>帧 A 深 · 两套纸色</li>
+        <li>禁帧两张都否</li>
+        <li>帧 B 列表含包/PDF</li>
+        <li>右键重导 + toast</li>
+      </ul>
+      <h3>关联</h3>
+      <ul>
+        <li>PRD OLT v0.1.2 §6</li>
+        <li>八席纪要 2026-08-26</li>
+        <li>PIS 身份行不得回退</li>
+        <li>SFP D-SFP-09 徽章序</li>
+      </ul>
+    </aside>
+  </div>
+
+  <script>
+    var tabs = document.getElementById("tabs");
+    var panels = document.querySelectorAll(".panel");
+    tabs.addEventListener("click", function (e) {
+      var btn = e.target.closest("button");
+      if (!btn) return;
+      tabs.querySelectorAll("button").forEach(function (b) { b.classList.toggle("is-on", b === btn); });
+      panels.forEach(function (p) { p.classList.toggle("is-on", p.id === btn.getAttribute("data-tab")); });
+    });
+  </script>
+</body>
+</html>

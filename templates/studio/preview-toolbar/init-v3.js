@@ -10,13 +10,16 @@ import {
   isPreviewToolbarV4,
   dockLongshotIconHtml,
   dockIconSvg,
+  idleExportAriaLabel,
   initDockTooltips,
   initDockScrollFade,
+  applyTripEdition,
 } from "./dock.js";
 import { mountAiSurface } from "./ai-sheet.js";
 import { mountNarrativePostureBar } from "./narrative-posture.js";
 import { mountNarrateDiffBar } from "./narrate-diff.js";
 import { isSharePreview } from "./share.js";
+import { refreshPreviewNarrowGate } from "./narrow-gate.js";
 import {
   ensurePreviewRefineDefault,
   setPreviewRefineMode,
@@ -27,6 +30,10 @@ import {
   maybeShowBookTabMigrateTip,
 } from "./preview-mode.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import {
+  portfolioShareBookUrl,
+  readToolbarEdition,
+} from "../js/portfolio-export-logic.js";
 import { HELP_COPY, maybeShowStubNarrateTip } from "../js/help-onboarding.js";
 import {
   ensureAiSurfaceHydrated,
@@ -59,6 +66,7 @@ import {
   openLongshotExportOptions,
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
+  consumeExportPanel,
   consumeAutoExport,
   shouldShowExportPulse,
   maybeShowLongshotHelp,
@@ -112,6 +120,9 @@ import {
   revealTripFolder,
   mountCoverStyleControls,
   mountLayoutVibeControls,
+  mountEditionControls,
+  mountPortfolioRefineControls,
+  bindPortfolioJournalExit,
   maybeShowLayoutVibeImportHint,
   mountTemplateControls,
   snapshotReadingPayload,
@@ -136,10 +147,76 @@ import {
 var READER_VIEW_KEY = "travelogue.studio.readerView";
 var EXPORT_HINT_KEY = "travelogue.studio.exportHintSeen"; // legacy; pulse 现用 shouldShowExportPulse
 
+function trackFunnelFirstPreview(root, tripId) {
+  if (!tripId || isSharePreview()) return;
+  try {
+    var seenKey = "travelogue.funnel.firstPreview." + tripId;
+    if (sessionStorage.getItem(seenKey)) return;
+    sessionStorage.setItem(seenKey, "1");
+  } catch (_eSeen) {}
+  var edition = "journal";
+  try {
+    edition = readToolbarEdition(root) === "portfolio" ? "portfolio" : "journal";
+  } catch (_eEd) {}
+  trackStudioEvent("funnel_first_preview", {
+    tripId: tripId,
+    edition: edition,
+    source: "preview_toolbar",
+  });
+}
+
+/** NAV-01 / FPAH L0：首层只留返回、调整、导出、更多。 */
+function mountFpahL0More(root, actions) {
+  if (!root || !actions || actions.querySelector("#preview-toolbar-more")) return;
+  var moreWrap = document.createElement("div");
+  moreWrap.className = "preview-toolbar__more-wrap";
+  var moreBtn = document.createElement("button");
+  moreBtn.type = "button";
+  moreBtn.id = "preview-toolbar-more";
+  moreBtn.className =
+    "preview-toolbar__dock-btn preview-toolbar__dock-btn--more preview-toolbar__dock-btn--labeled preview-toolbar__ctl";
+  moreBtn.setAttribute("aria-label", "更多");
+  moreBtn.setAttribute("aria-haspopup", "menu");
+  moreBtn.setAttribute("aria-expanded", "false");
+  moreBtn.innerHTML =
+    '<span class="preview-toolbar__dock-label" aria-hidden="true">⋯</span>' +
+    '<span class="preview-toolbar__dock-label">更多</span>';
+  var pop = document.createElement("div");
+  pop.className = "preview-toolbar__more-popover";
+  pop.hidden = true;
+  pop.setAttribute("role", "menu");
+  [
+    root.querySelector("#studio-help-open-preview"),
+    root.querySelector(".preview-toolbar__dock-btn--screenplay"),
+    root.querySelector(".preview-toolbar__dock-btn--chapters"),
+    root.querySelector(".preview-toolbar__dock-btn--ai"),
+    root.querySelector(".preview-toolbar__dock-btn--folder"),
+  ].forEach(function (el) {
+    if (el) pop.appendChild(el);
+  });
+  moreWrap.appendChild(moreBtn);
+  moreWrap.appendChild(pop);
+  actions.appendChild(moreWrap);
+  moreBtn.addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var open = pop.hidden;
+    pop.hidden = !open;
+    moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.addEventListener("click", function (ev) {
+    if (!moreWrap.contains(ev.target)) {
+      pop.hidden = true;
+      moreBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
 export function initToolbarV3(root, tripId) {
   ensurePreviewRefineDefault();
   // NAS · 尽早水合，供 Sheet/抽屉运行时门控（AC-NAS-09）
   ensureAiSurfaceHydrated();
+  bindPortfolioJournalExit(root, tripId);
+  trackFunnelFirstPreview(root, tripId);
 
   var dock = root.querySelector(".preview-toolbar__dock");
   var helpBtn = createHelpOpenButton({
@@ -392,6 +469,16 @@ export function initToolbarV3(root, tripId) {
     mountLayoutVibeControls: function (slot) {
       mountLayoutVibeControls(slot, tripId, { root: root });
     },
+    mountEditionControls: function (slot) {
+      if (readToolbarEdition(root) === "portfolio") {
+        mountPortfolioRefineControls(slot, tripId, { root: root });
+        return;
+      }
+      mountEditionControls(slot, tripId, { root: root });
+    },
+    isPortfolio: function () {
+      return readToolbarEdition(root) === "portfolio";
+    },
     mountBookendsPanel: function (slot) {
       // RCI · 照片段不嵌版式；版式段另行挂载并复用 applyStyleViaBookends
       return mountBookendsPanel(slot, tripId, {
@@ -599,6 +686,17 @@ export function initToolbarV3(root, tripId) {
     onRevealFolder: function (relPath, tid) {
       revealTripPath(tid || tripId, relPath);
     },
+    onRevealZip: function (relPath, tid) {
+      revealTripPath(tid || tripId, relPath).then(function (result) {
+        if (result && result.status >= 200 && result.status < 300) {
+          showToolbarToast("压缩包已选中，发给对方即可");
+        }
+      });
+    },
+    onOpenBook: function (tid) {
+      var url = portfolioShareBookUrl(tid || tripId);
+      if (url) window.open(url, "_blank", "noopener");
+    },
     onCopyPath: function (text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function () {
@@ -724,7 +822,7 @@ export function initToolbarV3(root, tripId) {
     longshotBtn.className +=
       " preview-toolbar__dock-btn preview-toolbar__dock-btn--export";
     longshotBtn.innerHTML = dockLongshotIconHtml("idle");
-    longshotBtn.setAttribute("aria-label", "导出长图");
+    longshotBtn.setAttribute("aria-label", idleExportAriaLabel());
   } else {
     // F-EXP-09 · 可见「长图」；完整动作名放 aria
     longshotBtn.textContent = "长图";
@@ -809,6 +907,7 @@ export function initToolbarV3(root, tripId) {
     });
     actions.appendChild(folderBtn);
     actions.appendChild(exportWrap);
+    mountFpahL0More(root, actions);
   } else {
     actions.insertBefore(exportWrap, menuWrap);
     insertScreenplayControl(actions, menuWrap, { label: "放映", v3: true });
@@ -857,14 +956,30 @@ export function initToolbarV3(root, tripId) {
   refreshPreviewCover(root);
   // SNR · 成册姿态条（chrome；narrative_ready 时不挂主条）
   if (isPreviewToolbarV4(root)) {
-    mountNarrativePostureBar(root, tripId);
+    if (document.documentElement.getAttribute("data-edition") !== "portfolio") {
+      mountNarrativePostureBar(root, tripId);
+    }
     mountNarrateDiffBar(root, tripId);
   }
-  fetchEntry(tripId).then(function (data) {
-    initFeaturedStars(tripId);
-    initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
-    syncInspectChromeVisibility();
-  });
+  applyTripEdition(root, { edition: readToolbarEdition(root) });
+  fetchEntry(tripId)
+    .then(function (data) {
+      applyTripEdition(root, data);
+      refreshPreviewNarrowGate();
+      syncLongshotCtaLabel(root);
+      initFeaturedStars(tripId);
+      initCollageMediaControls(tripId, (data && data.assetMediaById) || {});
+      syncInspectChromeVisibility();
+    })
+    .then(consumePendingExportIntents, consumePendingExportIntents);
+
+  function consumePendingExportIntents() {
+    requestAnimationFrame(function () {
+      if (consumeExportAfterLayout(root, tripId)) return;
+      if (consumeExportPanel(root, tripId)) return;
+      consumeAutoExport(root, tripId);
+    });
+  }
 
   // V1.1 MF-01d · 返回首页强制退出精修
   var backBtn = root.querySelector(".preview-toolbar__dock-btn--back");
@@ -937,9 +1052,4 @@ export function initToolbarV3(root, tripId) {
   });
   syncToolbarHeight(root);
 
-  // 「更新并导出」：版面刷新后自动续导出；FTUE「保存长图」query/session 续跑
-  requestAnimationFrame(function () {
-    if (consumeExportAfterLayout(root, tripId)) return;
-    consumeAutoExport(root, tripId);
-  });
 }

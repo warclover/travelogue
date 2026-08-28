@@ -11,6 +11,7 @@ from travelogue.web.studio_handlers.bookends_handlers import (
     handle_post_resolve_opening,
     handle_post_restore_auto,
 )
+from travelogue.web.studio_handlers.edition_handlers import handle_trip_edition
 from travelogue.web.studio_handlers.layout_vibe_handlers import handle_layout_vibe
 from travelogue.web.studio_handlers.title_art_handlers import handle_post_resolve_title_art
 from travelogue.web.studio_handlers.trip_intent_handlers import (
@@ -26,9 +27,12 @@ from travelogue.web.studio_handlers.trip_list_handlers import (
     handle_aesthetic,
     handle_bento_preview,
     handle_chapter_layout,
+    handle_delete_output,
     handle_delete_trip,
     handle_entry,
+    handle_get_outputs,
     handle_patch_stratum_preference,
+    handle_sibling_journal,
     handle_trips,
 )
 from travelogue.web.studio_handlers.trip_moment_handlers import (
@@ -47,12 +51,15 @@ __all__ = [
     "handle_aesthetic",
     "handle_bento_preview",
     "handle_chapter_layout",
+    "handle_delete_output",
     "handle_delete_trip",
     "handle_entry",
+    "handle_get_outputs",
     "handle_get_bookends",
     "handle_get_moment_curation",
     "handle_get_cohort",
     "handle_layout_vibe",
+    "handle_trip_edition",
     "handle_patch_cohort",
     "handle_patch_copy_intent",
     "handle_patch_intent",
@@ -70,6 +77,7 @@ __all__ = [
     "handle_post_resolve_title_art",
     "handle_post_restore_auto",
     "handle_rerender",
+    "handle_sibling_journal",
     "handle_trip_curate",
     "handle_trips",
 ]

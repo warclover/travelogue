@@ -98,6 +98,15 @@ class LongshotExportResult:
         return [item.path for item in self.outputs]
 
 
+@dataclass
+class PortfolioBundleResult(LongshotExportResult):
+    """Works-set bundle extras (DPI W2 · moved off the journal result type)."""
+
+    skipped_pages: list[str] = field(default_factory=list)
+    share_zip: Path | None = None
+    pages_failed: bool = False
+
+
 class _PlaywrightBrowserPool:
     IDLE_SECONDS = 60
 
@@ -1103,71 +1112,55 @@ def export_trip_longshot(
     cancel_check: CancelCheckFn | None = None,
     cancel_register: CancelRegisterFn | None = None,
 ) -> LongshotExportResult:
-    """Export longshot. Branch A (wechat_chat) by default; platform → branch B/D."""
-    from travelogue.export.platform_profiles import DEFAULT_PLATFORM, normalize_platform_id
+    """Compatibility entry — routes through ``dispatch_export`` (DPI W2)."""
+    from travelogue.export.dispatch import dispatch_export
 
-    pid = normalize_platform_id(platform)
-    # Output Recipe · 分支 D · 真九宫格（不经 Playwright / platform_longshot）
-    if pid == "moments_grid":
-        from travelogue.export.photo_grid_pack import export_photo_grid_pack
+    return dispatch_export(
+        trip_dir,
+        scale=scale,
+        fmt=fmt,
+        chapter=chapter,
+        output=output,
+        base_url=base_url,
+        trip_id=trip_id,
+        host=host,
+        port=port,
+        timeout_ms=timeout_ms,
+        watermark=watermark,
+        progress=progress,
+        copy_display=copy_display,
+        segment_mode=segment_mode,
+        platform=platform,
+        slide_count=slide_count,
+        pad_mode=pad_mode,
+        profile=profile,
+        include_appendix=include_appendix,
+        cancel_check=cancel_check,
+        cancel_register=cancel_register,
+    )
 
-        return export_photo_grid_pack(
-            trip_dir,
-            scale=scale,
-            fmt=fmt,
-            progress=progress,
-        )
-    if pid == "poster_bric":
-        from travelogue.export.poster_bric_pack import export_poster_bric_pack
 
-        return export_poster_bric_pack(
-            trip_dir,
-            scale=scale,
-            fmt=fmt,
-            progress=progress,
-            platform=pid,
-        )
-    if pid in ("xiaohongshu", "wechat_official", "album_spread"):
-        from travelogue.export.collage_pack import export_collage_pack
-
-        cfg = None
-        try:
-            from travelogue.config import get_config
-
-            cfg = get_config()
-        except Exception:
-            cfg = None
-        return export_collage_pack(
-            trip_dir,
-            platform=pid,
-            scale=scale,
-            fmt=fmt,
-            progress=progress,
-            slide_count=slide_count,
-            cfg=cfg,
-        )
-    if pid != DEFAULT_PLATFORM:
-        from travelogue.export.platform_longshot import export_platform_longshot
-
-        return export_platform_longshot(
-            trip_dir,
-            platform=pid,
-            scale=scale,
-            fmt=fmt,
-            base_url=base_url,
-            trip_id=trip_id,
-            host=host,
-            port=port,
-            timeout_ms=timeout_ms,
-            progress=progress,
-            copy_display=copy_display,
-            slide_count=slide_count,
-            pad_mode=pad_mode,
-            profile=profile,
-            cancel_check=cancel_check,
-            cancel_register=cancel_register,
-        )
-
+def export_journal_longshot(
+    trip_dir: Path,
+    *,
+    scale: int = DEFAULT_EXPORT_SCALE,
+    fmt: str = "png",
+    chapter: int | None = None,
+    output: Path | None = None,
+    base_url: str | None = None,
+    trip_id: str | None = None,
+    host: str = "127.0.0.1",
+    port: int = 0,
+    timeout_ms: int = 180_000,
+    watermark: bool = True,
+    progress: ProgressFn | None = None,
+    copy_display: str = "full",
+    segment_mode: str = "auto",
+    include_appendix: bool = False,
+    cancel_check: CancelCheckFn | None = None,
+    cancel_register: CancelRegisterFn | None = None,
+) -> LongshotExportResult:
+    """Journal × wechat_chat vertical strip only. No edition branch."""
     trip_dir = trip_dir.resolve()
     longshot_html = trip_dir / LONGSHOT_INDEX_NAME
     if not longshot_html.is_file():
@@ -1175,6 +1168,12 @@ def export_trip_longshot(
             "E_LNG_NO_LONGSHOT",
             "未找到 index-longshot.html，请先完成渲染",
         )
+
+    # 捕获脚本跟模板走：已渲染 trip 目录里的 longshot.js/css 可能过期
+    # （竖排艺术字全宽栅格化即一例）。导出前覆盖拷贝，不必整本重渲。
+    from travelogue.render.engine import copy_longshot_bundle
+
+    copy_longshot_bundle(trip_dir)
 
     raise_if_longshot_cancelled(cancel_check)
 

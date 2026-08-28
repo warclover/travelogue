@@ -84,52 +84,22 @@ def test_missing_trip_id_invisible() -> None:
     assert pick.pattern_id is None
 
 
-def test_strong_portrait_prefers_pl() -> None:
+def test_c02_archived_mirrors_split_even_when_allowlisted() -> None:
     cfg = _Cfg()
-    pick = pick_mixed_1l1p_variant(
-        portrait_id="p",
-        landscape_id="l",
-        assets_map={"p": _asset(aesthetic=0.95), "l": _asset(aesthetic=0.2)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert pick.pattern_id == PATTERN_MIXED_PL
-    assert pick.reason == "strength"
-
-
-def test_strong_landscape_prefers_lp() -> None:
-    cfg = _Cfg()
-    pick = pick_mixed_1l1p_variant(
-        portrait_id="p",
-        landscape_id="l",
-        assets_map={"p": _asset(aesthetic=0.2), "l": _asset(aesthetic=0.95)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert pick.pattern_id == PATTERN_MIXED_LP
-    assert pick.reason == "strength"
-
-
-def test_tie_rotates_mirrors_via_recent_window() -> None:
-    """PRD: 平局 → recent_window 轮换 L|P / P|L。"""
-    cfg = _Cfg()
-    first = pick_mixed_1l1p_variant(
-        portrait_id="p",
-        landscape_id="l",
-        assets_map={"p": _asset(aesthetic=0.5), "l": _asset(aesthetic=0.5)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert first.pattern_id in (PATTERN_MIXED_LP, PATTERN_MIXED_PL)
-    assert first.reason == "rotate"
-    second = pick_mixed_1l1p_variant(
-        portrait_id="p",
-        landscape_id="l",
-        assets_map={"p": _asset(aesthetic=0.5), "l": _asset(aesthetic=0.5)},
-        cfg=cfg,
-        trip_id="trip-dogfood",
-        recent_pattern_ids=[first.pattern_id],
-    )
-    assert second.pattern_id in (PATTERN_MIXED_LP, PATTERN_MIXED_PL)
-    assert second.pattern_id != first.pattern_id
-    assert second.reason == "rotate"
+    assert experimental_members_visible(
+        mosaic_cfg=cfg.mosaic, trip_id="trip-dogfood"
+    ) == []
+    for aesthetic_p, aesthetic_l in ((0.95, 0.2), (0.2, 0.95), (0.5, 0.5)):
+        pick = pick_mixed_1l1p_variant(
+            portrait_id="p",
+            landscape_id="l",
+            assets_map={
+                "p": _asset(aesthetic=aesthetic_p),
+                "l": _asset(aesthetic=aesthetic_l),
+            },
+            cfg=cfg,
+            trip_id="trip-dogfood",
+        )
+        assert pick.pattern_id is None
+        assert pick.reason == "fallback_split"
+        assert pick.pattern_id not in (PATTERN_MIXED_LP, PATTERN_MIXED_PL)

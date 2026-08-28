@@ -86,7 +86,7 @@ def test_batch_runs_all_requests_in_order(tmp_path: Path) -> None:
         BatchExportRequest(platform="wechat_official"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         results = export_trip_longshot_batch(tmp_path, requests=requests)
 
     assert calls == ["xiaohongshu", "wechat_official", "album_spread"]
@@ -105,7 +105,7 @@ def test_batch_continues_after_item_failure(tmp_path: Path) -> None:
         BatchExportRequest(platform="wechat_moments"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         results = export_trip_longshot_batch(tmp_path, requests=requests)
 
     assert [r.platform for r in results] == ["xiaohongshu", "wechat_moments", "album_spread"]
@@ -125,7 +125,7 @@ def test_batch_continues_after_unexpected_exception(tmp_path: Path) -> None:
         BatchExportRequest(platform="xiaohongshu"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         results = export_trip_longshot_batch(tmp_path, requests=requests)
 
     assert results[0].ok is False
@@ -147,7 +147,7 @@ def test_batch_stops_before_next_item_when_cancelled(tmp_path: Path) -> None:
         BatchExportRequest(platform="xiaohongshu"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         results = export_trip_longshot_batch(
             tmp_path, requests=requests, cancel_check=lambda: cancelled["flag"]
         )
@@ -168,7 +168,7 @@ def test_batch_reraises_longshot_cancelled_mid_item(tmp_path: Path) -> None:
         BatchExportRequest(platform="wechat_moments"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         with pytest.raises(LongshotCancelled):
             export_trip_longshot_batch(tmp_path, requests=requests)
 
@@ -188,7 +188,7 @@ def test_batch_progress_callback_receives_item_context(tmp_path: Path) -> None:
         BatchExportRequest(platform="xiaohongshu"),
         BatchExportRequest(platform="album_spread"),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         export_trip_longshot_batch(tmp_path, requests=requests, progress=on_progress)
 
     assert seen == [
@@ -214,7 +214,7 @@ def test_batch_passes_per_item_fields_and_common_kwargs(tmp_path: Path) -> None:
             segment_mode="auto", copy_display="photos",
         ),
     ]
-    with patch("travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export):
+    with patch("travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export):
         export_trip_longshot_batch(
             tmp_path, requests=requests, common={"scale": 3, "fmt": "jpeg", "include_appendix": True}
         )

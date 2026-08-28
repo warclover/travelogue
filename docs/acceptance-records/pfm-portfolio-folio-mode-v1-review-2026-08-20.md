@@ -2,17 +2,17 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档** | [PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md)（**PFM** · 作品集成册管线 / 双管线）**v0.1.0**（待回写 v0.2.0） |
-| **线框** | [portfolio-folio-mode-v1-wireframe.html](../wireframes/portfolio-folio-mode-v1-wireframe.html) F0–F8 |
+| **文档** | [PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md)（**PFM** · 作品集成册管线 / 双管线）**v0.2.0**（BLK-PFM-01～09 已回写） |
+| **线框** | [portfolio-folio-mode-v1-wireframe.html](../wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（**F0–F8 已签** · 产品 2026-08-20 重签 F1/F3/F6） |
 | **讨论底稿** | [画册编排.md](../画册编排.md) · [临时模板库管线讨论备忘录 §4](../templates/reserve/临时模板库管线讨论备忘录.md) · [智能模板建议0813.md](../智能模板建议0813.md) |
 | **相邻挡门** | [TSU](../PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](../PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [RSC](../PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](../PRD-EDITORIAL-COMPILER-V1.md) · [LVP](../PRD-LAYOUT-VIBE-PICKER-V1.md) · [ECC](../PRD-EXPORT-CARD-COMPOSE-V1.md) · [OR](../PRD-OUTPUT-RECIPE-V1.md) · [IW v3](../PRD-IMPORT-SHEET-v3-WIZARD.md) · [ADR-003](../adr/003-experience-reading-modes.md) · [ADR-021](../adr/021-export-compose-dual-engine.md) |
 | **日期** | 2026-08-20 |
 | **结论** | **有条件通过（Conditional Go）**。切口成立，双管线主线可冻结。**BLK-PFM-01～09 回写 v0.2.0 前：不批无条件 Go · 不批 W1 匹配器合码 · 不批 W3 前端拆单**。线框 F0/F2/F4/F7/F8 可签；**F1/F3/F6 须改后重签**；F5 有条件签。 |
-| **编码** | ☐ 策划回写 v0.2（BLK-PFM-01～09）　☐ W0 命名/schema/flag　☐ W1 匹配器　☐ W2 渲染 + 导出　☐ W3 界面　☐ W4 狗粮盲评 |
+| **编码** | ☑ 策划回写 v0.2（BLK-PFM-01～09）　☑ W0 命名/schema/flag　☐ W1 匹配器　☐ W2 渲染 + 导出　☐ W3 界面　☐ W4 狗粮盲评 |
 | **参评角色** | **七席**：产品 · 算法 · 架构 · 开发 · 测试/QA · 视觉/排版 · 用户体验（狗粮手测）· **加席**：典型用户（非从业者 · 一次旅行拍 180 张 · 现网只用过「选夹→开始→发群」） |
 | **评审方式** | 分席只读 PRD v0.1.0 §0～§16 + 线框 F0–F8，对照现网代码事实（`services/layout.py` 引擎白名单、`render/surface.py`、`export/platform_profiles.py`、`curation/folio_plan.py`、`render/reading_profile.py`、`docs/templates/reserve/*/packet.yaml`）与相邻合同（TSU v1.1.0、TDV v0.2.0 现场） |
 | **记录人** | 八席联合纪要（跨职能模拟联评 · 2026-08-20） |
-| **本纪要状态** | **待策划回写** · Must-Fix 未关 |
+| **本纪要状态** | **已结案 · Conditional Go** · **Must-Fix 已回写 PRD v0.2.0**（核对见 §4 表后） |
 | **审查基线** | 默认零步不动 · 游记 GA 逐字不改 · 不接 `album_spread` · 不打开 MSA · 引擎不读工坊 · **不把未升格的系列写成已具备** · **不把顶岗预演说成作品集** · **加席否决权与产品同等：合同若让普通用户拿到一堆不知道往哪发的 PNG，算没写完** |
 
 ---
@@ -96,6 +96,24 @@
 | **BLK-PFM-07** | W2 / W3 | **Output Recipe 旁路写死。** `edition=portfolio` 时不进入按 kept N 分带的意图卡逻辑（10–30 张 Ambiguous 带），默认直接 `portfolio_pages`；journal 路径逐字不变。§6.1 与 OR 合同各加一行，配 AC 断言「作品集路径不弹意图卡」。 |
 | **BLK-PFM-08** | W1 出门 | **资产前置写成硬门，且不吸收 TSU 的活。** W1 出门须满足：正式 `series/` 收件目录已定（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 已入现网目录 + 升格检查单拒过 id/页数不一致（F-09）。在此之前 W1 只能内部预演，**任何界面与文档不得称「作品集」**，只能写「版式试验」。BE-PFM-11 中 `page-*` 活目录入库明确划归 **TSU W3**，PFM 只消费；BE-PFM-11 / BE-PFM-13 估时按开发席意见上调（页图 Writer ≥3.5 天）。 |
 | **BLK-PFM-09** | W1 / W2 | **`items ↔ screens` 一致性给出方案。** 现网门 `test_chapter_items_screens_sync` 要求章内资产集合一致（F-10）。作品集若少上照片，手机降级 items 必须与 `screens` 实收集合同源（不得用全 kept 池），或显式豁免并改测试口径——二选一写进 §9 与 AC，禁止留到实施时发现红灯再拍。 |
+
+**v0.2.0 回写核对（2026-08-20）**
+
+| ID | 落点 | 状态 |
+|----|------|------|
+| BLK-01 | D-PFM-01 · §0.1 禁用表 · §7 · §12 任务表全量改名 | 已关 |
+| BLK-02 | D-PFM-04 · N-PFM-12 · §7.1/§7.3 · ISO-07 · AC-PFM-27 | 已关 |
+| BLK-03 | D-PFM-21 · §8.5 · AC-PFM-29/30 · 线框 F3c | 已关 |
+| BLK-04 | D-PFM-22 · N-PFM-13 · §9 · AC-PFM-32/33 | 已关 |
+| BLK-05 | D-PFM-23 · §6.1/§6.2 · AC-PFM-37/38 · 线框 F3a/F3b | 已关 |
+| BLK-06 | D-PFM-24 · §5.4 · AC-PFM-20/39 · 线框 F6b | 已关 |
+| BLK-07 | D-PFM-25 · §6.1 · AC-PFM-19 | 已关 |
+| BLK-08 | D-PFM-26 · 前置条件 · AS-PFM-01/02 · BE-PFM-11/13 估时 | 已关 |
+| BLK-09 | D-PFM-27 · BE-PFM-22 · AC-PFM-31 | 已关 |
+
+SHD-01～08 一并收进 v0.2（平台接入面、游记不写字段 + 指纹字段级、CLI 硬要求、阈值派生、CHARTER 一行、折叠 + 印刷副文、盲评法、`magazine` 性能 WARN）。
+
+**回写后允许**：W0 命名 / schema / flag 开工。仍禁止：W1 在 AS-PFM-01 未满足时出门；W3 在 F1/F3/F6 重签前拆单；任何界面在正式系列到位前称「作品集」。
 
 ---
 
@@ -196,3 +214,5 @@ W1 与 TSU 的资产波次**并行推进但不互相顶替**：PFM 不得替 TSU
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | 1.0 | 2026-08-20 | 首场七席 + 典型用户加席。8/8 Conditional Go。BLK-PFM-01～09；六个开放问题裁决（OQ-02 否决、OQ-06 改判），新增 OQ-07～09。PRD 仍为 v0.1.0，待回写 v0.2.0。 |
+| 1.1 | 2026-08-20 | 策划回写：PRD 升 v0.2.0（BLK-PFM-01～09 全关 + SHD-01～08 收入）；线框升 v1.1（F1 撤页数芯片 + 置灰态、F3 导出作品集 + 成功面 + 溢出明示、F6 文字迁移告知、F5 默认折叠、F8 加三条红线）。**F1/F3/F6 待产品重签**。 |
+| 1.2 | 2026-08-20 | 产品重签 F1/F3/F6。W0 开工：`feat/pfm-portfolio-folio-mode-v1`。 |

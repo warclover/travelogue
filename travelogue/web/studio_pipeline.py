@@ -64,6 +64,10 @@ class StudioPipelineResult:
     title_noise_fallback: bool = False
     # FirstSuccess 顶栏用真实封面图（非竖版 preview.jpg 封面卡）
     shelf_cover_rel_path: str = ""
+    edition: str = "journal"
+    overflow_line: str = ""
+    overflow_detail: str = ""
+    portfolio: dict | None = None
 
 
 def _parse_iso_date(raw: object) -> date | None:
@@ -454,6 +458,9 @@ def _finalize_pipeline_result(
     # FirstSuccess 只要照片本身；竖版 preview.jpg 封面卡（含标题）不进顶栏
     if shelf_cover_rel.replace("\\", "/").rsplit("/", 1)[-1] == "preview.jpg":
         shelf_cover_rel = ""
+    from travelogue.web.studio_entry import import_success_chrome
+
+    success_chrome = import_success_chrome(trip_final)
     return StudioPipelineResult(
         trip_id=slug,
         trip_dir=trip_root,
@@ -485,7 +492,17 @@ def _finalize_pipeline_result(
         media_warn=media_warn or "",
         title_noise_fallback=title_noise_fallback,
         shelf_cover_rel_path=shelf_cover_rel,
+        edition=_result_edition(trip_final),
+        overflow_line=str(success_chrome.get("overflowLine") or ""),
+        overflow_detail=str(success_chrome.get("overflowDetail") or ""),
+        portfolio=success_chrome.get("portfolio"),
     )
+
+
+def _result_edition(trip: dict) -> str:
+    from travelogue.config.edition import resolve_edition
+
+    return resolve_edition(trip)
 
 
 def _resolve_stored_layout_density(trip: dict, *, import_mode: str) -> str:
@@ -751,6 +768,30 @@ def sample_album_preview_thumbs(
             names.append(path.name)
     return thumbs, photo_count, names
 
+def _reuse_legacy_portfolio_dir(
+    album_dir: Path,
+    *,
+    trips_dir: Path,
+    title: str,
+    place: str,
+    trip_id: str | None,
+    edition: str | None,
+) -> tuple[str, Path] | None:
+    """Pre-split portfolio trips sit on the journal slug; reuse so we overwrite that book."""
+    if trip_id:
+        return None
+    if str(edition or "").strip().lower() not in {"portfolio", "folio"}:
+        return None
+    legacy = demo_trip_id_from_album(album_dir, title=title, place=place, edition=None)
+    legacy_dir = trips_dir / legacy
+    if not legacy_dir.exists() or not any(legacy_dir.iterdir()):
+        return None
+    meta = _trip_collision_meta(legacy_dir, legacy)
+    if meta.get("edition") != "portfolio":
+        return None
+    return legacy, legacy_dir
+
+
 def resolve_studio_trip_dir(
     album_dir: Path,
     *,
@@ -758,11 +799,145 @@ def resolve_studio_trip_dir(
     title: str = "我的旅途",
     place: str = "旅途",
     trip_id: str | None = None,
+    edition: str | None = None,
 ) -> tuple[str, Path]:
+    reused = _reuse_legacy_portfolio_dir(
+        album_dir,
+        trips_dir=trips_dir,
+        title=title,
+        place=place,
+        trip_id=trip_id,
+        edition=edition,
+    )
+    if reused is not None:
+        return reused
     slug = demo_trip_id_from_album(
-        album_dir, title=title, place=place, explicit=trip_id
+        album_dir, title=title, place=place, explicit=trip_id, edition=edition
     )
     return slug, trips_dir / slug
+
+
+def peek_existing_album_trip(
+    album_dir: Path,
+    *,
+    trips_dir: Path,
+    title: str = "我的旅途",
+    place: str = "旅途",
+    edition: str | None = None,
+) -> dict[str, str] | None:
+    """Collision probe for album-preview. None = this edition would create a new trip."""
+    try:
+        album_dir = album_dir.resolve()
+    except OSError:
+        return None
+    if not album_dir.is_dir():
+        return None
+    wanted = "portfolio" if str(edition or "").strip().lower() in {"portfolio", "folio"} else "journal"
+    slug, trip_dir = resolve_studio_trip_dir(
+        album_dir,
+        trips_dir=trips_dir,
+        title=title,
+        place=place,
+        edition=edition,
+    )
+    if not trip_dir.exists() or not any(trip_dir.iterdir()):
+        return None
+    meta = _trip_collision_meta(trip_dir, slug)
+    if meta.get("edition") != wanted:
+        return None
+    return meta
+
+
+def sibling_journal_for_trip(
+    trip: dict,
+    *,
+    trip_id: str,
+    trips_dir: Path,
+) -> dict[str, object]:
+    """CLG · 同夹游记探测。认不到也是 200 + present=false。"""
+    media = trip.get("media") if isinstance(trip.get("media"), dict) else {}
+    roots = media.get("albumRoots") if isinstance(media.get("albumRoots"), list) else []
+    album_root = ""
+    if roots:
+        album_root = str(roots[0] or "").strip()
+    if not album_root:
+        assets = trip.get("assets") if isinstance(trip.get("assets"), list) else []
+        for asset in assets:
+            if not isinstance(asset, dict):
+                continue
+            ref = asset.get("sourceRef") if isinstance(asset.get("sourceRef"), dict) else {}
+            raw = str(ref.get("albumRoot") or "").strip()
+            if raw:
+                album_root = raw
+                break
+
+    can_create = False
+    album_dir: Path | None = None
+    if album_root:
+        try:
+            album_dir = Path(album_root)
+            can_create = album_dir.is_dir()
+        except OSError:
+            album_dir = None
+            can_create = False
+
+    found: dict[str, str] | None = None
+    if album_dir is not None and can_create:
+        folder_name = album_dir.name or "我的旅途"
+        found = peek_existing_album_trip(
+            album_dir,
+            trips_dir=trips_dir,
+            title=folder_name,
+            place="旅途",
+            edition="journal",
+        )
+        if found is None:
+            meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
+            title = str(
+                meta.get("displayTitle") or meta.get("title") or trip.get("title") or folder_name
+            ).strip() or folder_name
+            place = str(meta.get("place") or "旅途").strip() or "旅途"
+            found = peek_existing_album_trip(
+                album_dir,
+                trips_dir=trips_dir,
+                title=title,
+                place=place,
+                edition="journal",
+            )
+        if found and str(found.get("tripId") or "") == str(trip_id or "").strip():
+            found = None
+
+    return {
+        "ok": True,
+        "present": bool(found),
+        "tripId": (found or {}).get("tripId") if found else None,
+        "title": (found or {}).get("title") if found else None,
+        "albumRoot": album_root or None,
+        "canCreateSibling": bool(can_create),
+    }
+
+
+def _trip_collision_meta(trip_dir: Path, slug: str) -> dict[str, str]:
+    title = slug
+    edition = "journal"
+    trip_json = trip_dir / "trip.json"
+    if trip_json.is_file():
+        try:
+            import json
+
+            loaded = json.loads(trip_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            loaded = None
+        if isinstance(loaded, dict):
+            meta = loaded.get("meta") if isinstance(loaded.get("meta"), dict) else {}
+            title = str(
+                meta.get("displayTitle") or meta.get("title") or loaded.get("title") or slug
+            ).strip() or slug
+            studio = loaded.get("studio") if isinstance(loaded.get("studio"), dict) else {}
+            raw_ed = str(studio.get("edition") or "").strip().lower()
+            if raw_ed in {"portfolio", "folio"}:
+                edition = "portfolio"
+    return {"tripId": slug, "title": title, "edition": edition}
 
 
 def assert_album_importable(
@@ -773,6 +948,7 @@ def assert_album_importable(
     place: str = "旅途",
     trip_id: str | None = None,
     force: bool = False,
+    edition: str | None = None,
 ) -> str:
     album_dir = album_dir.resolve()
     if not album_dir.is_dir():
@@ -783,6 +959,7 @@ def assert_album_importable(
         title=title,
         place=place,
         trip_id=trip_id,
+        edition=edition,
     )
     if trip_dir.exists() and any(trip_dir.iterdir()) and not force:
         raise DemoError(
@@ -824,6 +1001,9 @@ def run_studio_pipeline(
     photo_keep_mode: str | None = None,
     stop_after: str = "full",
     force_stub: bool = False,
+    edition: str | None = None,
+    page_count: object | None = None,
+    page_count_source: str | None = None,
 ) -> StudioPipelineResult:
     from travelogue.domain.photo_keep_mode import resolve_photo_keep_prefs
 
@@ -853,6 +1033,7 @@ def run_studio_pipeline(
         place=place,
         trip_id=trip_id,
         force=force,
+        edition=edition,
     )
     trip_dir = trips_root / slug
 
@@ -1023,6 +1204,24 @@ def run_studio_pipeline(
         from travelogue.media.ingest_persist import make_intent_flush_mutator
 
         svc.update(trip_json, make_intent_flush_mutator(trip))
+
+        from travelogue.config.edition import (
+            PortfolioUnavailableError,
+            apply_import_edition,
+            make_studio_edition_mutator,
+        )
+
+        try:
+            apply_import_edition(
+                trip,
+                edition,
+                cfg,
+                page_count=page_count,
+                page_count_source=page_count_source,
+            )
+        except PortfolioUnavailableError:
+            raise
+        svc.update(trip_json, make_studio_edition_mutator(trip))
 
         if plan_bytes is not None or plan_text:
             from travelogue.services.intent_plan import ingest_travel_plan

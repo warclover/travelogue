@@ -64,7 +64,7 @@ interface Element {
   contentDocument?: Document | null;
   focus(options?: FocusOptions): void;
   _sheet?: {
-    open: (tab: string) => void;
+    open: (...args: unknown[]) => void;
     setPendingDot?: (on: boolean) => void;
     refreshLayoutTab?: () => void;
     isOpen?: () => boolean;
@@ -87,6 +87,14 @@ interface Element {
 }
 
 interface HTMLElement {
+  _sheet?: {
+    open: (...args: unknown[]) => void;
+    setPendingDot?: (on: boolean) => void;
+    refreshLayoutTab?: () => void;
+    isOpen?: () => boolean;
+    close?: (reason?: string, done?: () => void) => void;
+    [key: string]: unknown;
+  };
   /** AI Sheet API mounted on preview toolbar root (SNR / chapter panel). */
   _aiSheet?: {
     open?: (opts?: Record<string, unknown>) => void;

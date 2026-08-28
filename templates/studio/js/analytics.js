@@ -154,6 +154,8 @@ const ALLOWED = new Set([
   "ai_sheet_action_click",
   "ai_sheet_action_result",
   "ai_sheet_gate_view",
+  // MET-01 · journal 竖切漏斗（可验收预览；不是向导 preview_loaded）
+  "funnel_first_preview",
 ]);
 
 const EVENT_RING_KEY = "travelogue.studio.eventRing";

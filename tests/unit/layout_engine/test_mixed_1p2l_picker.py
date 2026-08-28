@@ -90,11 +90,14 @@ def test_strong_portrait_prefers_fill() -> None:
         trip_id="trip-dogfood",
     )
     assert pick.pattern_id == PATTERN_MIXED_1P2L_FILL
-    assert pick.reason == "strength"
+    assert pick.reason == "fallback_fill"
 
 
-def test_strong_landscape_prefers_mirror() -> None:
+def test_c02_archived_mirror_stays_on_fill() -> None:
     cfg = _Cfg()
+    assert experimental_members_visible(
+        mosaic_cfg=cfg.mosaic, trip_id="trip-dogfood"
+    ) == []
     pick = pick_mixed_1p2l_variant(
         portrait_id="p",
         landscape_ids=["l1", "l2"],
@@ -106,42 +109,9 @@ def test_strong_landscape_prefers_mirror() -> None:
         cfg=cfg,
         trip_id="trip-dogfood",
     )
-    assert pick.pattern_id == PATTERN_MIXED_L2P1
-    assert pick.reason == "strength"
-
-
-def test_tie_rotates_via_recent_window() -> None:
-    cfg = _Cfg()
-    first = pick_mixed_1p2l_variant(
-        portrait_id="p",
-        landscape_ids=["l1", "l2"],
-        assets_map={
-            "p": _asset(aesthetic=0.5),
-            "l1": _asset(aesthetic=0.5),
-            "l2": _asset(),
-        },
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert first.pattern_id in (PATTERN_MIXED_1P2L_FILL, PATTERN_MIXED_L2P1)
-    assert first.reason == "rotate"
-    second = pick_mixed_1p2l_variant(
-        portrait_id="p",
-        landscape_ids=["l1", "l2"],
-        assets_map={
-            "p": _asset(aesthetic=0.5),
-            "l1": _asset(aesthetic=0.5),
-            "l2": _asset(),
-        },
-        cfg=cfg,
-        trip_id="trip-dogfood",
-        recent_pattern_ids=[first.pattern_id],
-    )
-    assert second.pattern_id in (PATTERN_MIXED_1P2L_FILL, PATTERN_MIXED_L2P1)
-    assert second.pattern_id != first.pattern_id
-    # After fill, tie must be able to surface the experimental mirror.
-    if first.pattern_id == PATTERN_MIXED_1P2L_FILL:
-        assert second.pattern_id == PATTERN_MIXED_L2P1
+    assert pick.pattern_id == PATTERN_MIXED_1P2L_FILL
+    assert pick.reason == "fallback_fill"
+    assert pick.pattern_id != PATTERN_MIXED_L2P1
 
 
 def test_emit_off_stays_p1l2() -> None:
@@ -159,8 +129,8 @@ def test_emit_off_stays_p1l2() -> None:
     assert [s["assetId"] for s in screen["slots"]] == ["p", "l1", "l2"]
 
 
-def test_emit_on_can_mirror() -> None:
-    """AC-M1P2L-02: ON + strong landscape → L2|P slot order."""
+def test_c02_emit_on_archived_mirror_stays_p1l2() -> None:
+    """C-02: archived L2|P cannot emit even when experiments are ON."""
     cfg = _Cfg()
     screen = _make_mixed_portrait_landscape_screen(
         "p",
@@ -173,9 +143,8 @@ def test_emit_on_can_mirror() -> None:
         trip={"tripId": "trip-dogfood"},
         cfg=cfg,
     )
-    assert screen["patternId"] == PATTERN_MIXED_L2P1
-    assert screen["mixed1p2lPicker"]["reason"] == "strength"
-    assert [s["assetId"] for s in screen["slots"]] == ["l1", "l2", "p"]
+    assert screen["patternId"] == PATTERN_MIXED_1P2L_FILL
+    assert [s["assetId"] for s in screen["slots"]] == ["p", "l1", "l2"]
 
 
 def test_hard_gate_blocks_person_portrait() -> None:
@@ -191,8 +160,8 @@ def test_hard_gate_blocks_person_portrait() -> None:
     )
 
 
-def test_dogfood_window_try_mixed_emits_mirror() -> None:
-    """Synthetic 1P2L window · ON + strong landscape → mirror via stage hook."""
+def test_dogfood_window_try_mixed_stays_fill_after_c02() -> None:
+    """Synthetic 1P2L window · archived mirror cannot emit."""
     from travelogue.config.layout import LayoutConfig
     from travelogue.layout_contract.orientations import AspectKind
     from travelogue.layout_contract.planner_state import ScreenLayoutPlannerState
@@ -263,6 +232,5 @@ def test_dogfood_window_try_mixed_emits_mirror() -> None:
     )
     assert try_mixed_portrait_landscape(ctx, "p", "l1", "l2")
     assert len(ctx.screens) == 1
-    assert ctx.screens[0]["patternId"] == PATTERN_MIXED_L2P1
-    assert ctx.screens[0]["mixed1p2lPicker"]["reason"] == "strength"
-    assert [s["assetId"] for s in ctx.screens[0]["slots"]] == ["l1", "l2", "p"]
+    assert ctx.screens[0]["patternId"] == PATTERN_MIXED_1P2L_FILL
+    assert [s["assetId"] for s in ctx.screens[0]["slots"]] == ["p", "l1", "l2"]

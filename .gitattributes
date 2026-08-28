@@ -4,14 +4,36 @@ trips/linzhi/*.css text eol=lf
 trips/linzhi/*.js text eol=lf
 trips/linzhi/README.md text eol=lf
 
-# Binary assets
-*.png binary
-*.jpg binary
-*.webp binary
-
-# Docs and schemas: LF in repo regardless of Windows checkout.
-docs/** text eol=lf
-schemas/** text eol=lf
+# Docs and schemas: LF for text extensions only. Do not use docs/** —
+# that rule previously overrode *.png binary and rewrote image bytes.
+docs/**/*.md text eol=lf
+docs/**/*.markdown text eol=lf
+docs/**/*.yaml text eol=lf
+docs/**/*.yml text eol=lf
+docs/**/*.json text eol=lf
+docs/**/*.html text eol=lf
+docs/**/*.css text eol=lf
+docs/**/*.js text eol=lf
+docs/**/*.py text eol=lf
+docs/**/*.txt text eol=lf
+docs/**/*.svg text eol=lf
+schemas/**/*.json text eol=lf
+schemas/**/*.yaml text eol=lf
+schemas/**/*.yml text eol=lf
 *.md text eol=lf
 *.yaml text eol=lf
+*.yml text eol=lf
 *.json text eol=lf
+
+# Binary assets — last so they win over any text/eol rule.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.ico binary

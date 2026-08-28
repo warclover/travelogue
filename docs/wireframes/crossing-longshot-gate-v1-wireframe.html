@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLG v0.1.2 · 过河长图闸 · 帧 A–D 改字待签</title>
+  <style>
+    :root {
+      --bg: #e6e2db;
+      --ink: #14110d;
+      --muted: #5c574f;
+      --accent: #3d6b5a;
+      --gold: #c4a15a;
+      --gold-ink: #1a1408;
+      --paper: #fffdf8;
+      --surface: #f3efe8;
+      --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --border: rgba(20, 17, 13, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+    .bar {
+      position: sticky; top: 0; z-index: 40;
+      background: #1c1b1a; color: #eceff1; padding: 14px 20px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    }
+    .bar h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+    .bar p { margin: 0; font-size: 12px; color: #9aa3a8; max-width: 118ch; line-height: 1.45; }
+    .bar a { color: #e0a090; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tabs button {
+      border: 1px solid #4a4744; background: transparent; color: #eceff1;
+      padding: 6px 11px; border-radius: 999px; font-size: 12px; cursor: pointer;
+    }
+    .tabs button.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .layout { max-width: 920px; margin: 0 auto; padding: 22px 16px 80px; }
+    .panel { display: none; }
+    .panel.is-on { display: block; }
+    .anno {
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #c45c26;
+      margin: 0 0 8px;
+    }
+    .lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .phone {
+      max-width: 420px; background: var(--paper); border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: 0 10px 28px rgba(20,17,13,.08); overflow: hidden;
+    }
+    .chrome {
+      background: #3d3424; color: #f3e4c4; padding: 8px 12px; font-size: 11px;
+      display: flex; justify-content: space-between;
+    }
+    .body { padding: 14px 16px 18px; position: relative; }
+    .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .head strong { font-size: 16px; }
+    .badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: #ece4d4; color: #5a4a28;
+    }
+    .banner { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 10px 0 14px; }
+    .banner b { color: var(--ink); font-weight: 650; }
+    .card {
+      border: 2px solid transparent; border-radius: 12px; padding: 11px 12px;
+      background: var(--surface); margin-bottom: 8px; font-size: 13px;
+    }
+    .card.on { border-color: var(--accent); background: #fff; }
+    .card.gate { opacity: 0.48; }
+    .card strong { display: block; font-size: 14px; }
+    .card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .row { display: flex; gap: 8px; margin-top: 14px; }
+    .cta {
+      border: 0; border-radius: 10px; padding: 10px 14px; font: inherit;
+      font-weight: 700; background: var(--surface); color: var(--ink); cursor: pointer;
+    }
+    .cta.gold { background: var(--gold); color: var(--gold-ink); }
+    .cta.wide { flex: 1; }
+    .stage { position: relative; }
+    .stage.is-dim .grid { filter: saturate(0.7); }
+    .veil {
+      display: none; position: absolute; inset: 0; z-index: 2;
+      background: rgba(20, 17, 13, 0.28); border-radius: 8px;
+    }
+    .stage.is-dim .veil { display: block; }
+    .sheet {
+      position: relative; z-index: 3;
+      margin-top: 8px; padding: 14px 14px 12px; border-radius: 12px;
+      background: #fff; border: 1px solid var(--border);
+      box-shadow: 0 10px 28px rgba(20, 17, 13, 0.16);
+    }
+    .stage.is-dim .sheet {
+      position: absolute; left: 8px; right: 8px; top: 72px;
+    }
+    .sheet h3 { margin: 0 0 8px; font-size: 15px; }
+    .sheet p { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--muted); }
+    .aside {
+      margin-top: 20px; padding: 14px; background: var(--paper);
+      border: 1px solid var(--border); border-radius: 12px; font-size: 13px;
+    }
+    .aside label { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>CLG · 过河长图闸 v0.1.2 · 帧 A–D 改字待签</h1>
+    <p>
+      合同 <a href="../PRD-CROSSING-LONGSHOT-GATE-V1.md">PRD-CROSSING-LONGSHOT-GATE-V1.md</a>
+      · 八席 Must-Fix 已回写 · 只改作品集 F2 · 游记六平台零改 · 不 POST /edition
+    </p>
+    <div class="tabs" role="tablist">
+      <button type="button" class="is-on" data-tab="a">帧 A · 第一眼</button>
+      <button type="button" data-tab="b">帧 B · 已有游记</button>
+      <button type="button" data-tab="c">帧 C · 去做一本</button>
+      <button type="button" data-tab="d">帧 D · 改这本书</button>
+      <button type="button" data-tab="sign">拍板清单</button>
+    </div>
+  </div>
+  <div class="layout">
+    <section class="panel is-on" id="a" data-panel>
+      <p class="anno">FRAME A · AC-CLG-01 / 02 / 11 · BLK-06 / 07</p>
+      <p class="lead">默认小红书。微信两卡灰但能点开说明。确定钮跟平台走，不写「导出长图」。</p>
+      <div class="phone">
+        <div class="chrome"><span>作品集 · 华农油菜花</span><span>导出</span></div>
+        <div class="body">
+          <div class="head">
+            <strong>发到微信、小红书…</strong>
+            <span class="badge">用这些照片</span>
+          </div>
+          <p class="banner"><b>这不是在导出作品集。</b><br />小红书、海报和印刷可以在这里做。长图要在游记里做。</p>
+          <div class="card gate"><strong>微信群</strong><span>要先有一本游记</span></div>
+          <div class="card gate"><strong>朋友圈</strong><span>要先有一本游记</span></div>
+          <div class="card on"><strong>小红书</strong><span>3:4 海报</span></div>
+          <div class="card"><strong>公众号</strong><span>3:4 配图</span></div>
+          <div class="card"><strong>单张海报</strong><span>3:4</span></div>
+          <div class="card"><strong>画册印刷</strong><span>给印刷公司的跨页，不是这本作品集</span></div>
+          <p class="hint">张数 自动 · 文案包 · 清晰度（跟小红书现网）</p>
+          <div class="row">
+            <button type="button" class="cta wide">返回，继续导出作品集</button>
+            <button type="button" class="cta gold wide">导出小红书</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="b" data-panel>
+      <p class="anno">FRAME B · AC-CLG-03 / 04 · BLK-04 / 06</p>
+      <p class="lead">点灰卡。说明层叠在六卡上。主钮是「打开那本」，不是「新建」。</p>
+      <div class="phone">
+        <div class="chrome"><span>作品集 · 华农油菜花</span><span>导出</span></div>
+        <div class="body">
+          <div class="head">
+            <strong>发到微信、小红书…</strong>
+            <span class="badge">用这些照片</span>
+          </div>
+          <p class="banner"><b>这不是在导出作品集。</b><br />小红书、海报和印刷可以在这里做。长图要在游记里做。</p>
+          <div class="stage is-dim">
+            <div class="veil" aria-hidden="true"></div>
+            <div class="grid">
+              <div class="card gate"><strong>微信群</strong><span>要先有一本游记</span></div>
+              <div class="card gate"><strong>朋友圈</strong><span>要先有一本游记</span></div>
+              <div class="card on"><strong>小红书</strong><span>3:4 海报</span></div>
+              <div class="card"><strong>公众号</strong><span>3:4 配图</span></div>
+            </div>
+            <div class="sheet" role="dialog">
+              <h3>长图要在游记里做</h3>
+              <p>微信群和朋友圈的长图，要打开游记那本才能做。书架上已经有一本《凯哥拍摄精选 · 旅行》。</p>
+              <div class="row">
+                <button type="button" class="cta gold wide">打开那本游记</button>
+                <button type="button" class="cta wide">留在作品集</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="c" data-panel>
+      <p class="anno">FRAME C · AC-CLG-05 · D-CLG-06</p>
+      <p class="lead">还没有游记。去做一本 = 新做一本，不覆盖这本书。「先出小红书」把主选拉回来。</p>
+      <div class="phone">
+        <div class="chrome"><span>作品集 · 珠海东澳岛</span><span>导出</span></div>
+        <div class="body">
+          <div class="head">
+            <strong>发到微信、小红书…</strong>
+            <span class="badge">用这些照片</span>
+          </div>
+          <p class="banner"><b>这不是在导出作品集。</b><br />小红书、海报和印刷可以在这里做。长图要在游记里做。</p>
+          <div class="stage is-dim">
+            <div class="veil" aria-hidden="true"></div>
+            <div class="grid">
+              <div class="card gate"><strong>微信群</strong><span>要先有一本游记</span></div>
+              <div class="card gate"><strong>朋友圈</strong><span>要先有一本游记</span></div>
+              <div class="card on"><strong>小红书</strong><span>3:4 海报</span></div>
+              <div class="card"><strong>公众号</strong><span>3:4 配图</span></div>
+            </div>
+            <div class="sheet" role="dialog">
+              <h3>长图要在游记里做</h3>
+              <p>要用微信群或朋友圈发长图，得先做一本游记。做好之后，这本作品集还在，两本都可以留在书架上。</p>
+              <div class="row">
+                <button type="button" class="cta gold wide">去做一本游记</button>
+                <button type="button" class="cta wide">先出小红书</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="d" data-panel>
+      <p class="anno">FRAME D · AC-CLG-15 · 找不到文件夹</p>
+      <p class="lead">老册认不到照片文件夹。主钮只打开精修问句，说明层里不改身份。顶条与帧 A 相同。</p>
+      <div class="phone">
+        <div class="chrome"><span>作品集 · 老册</span><span>导出</span></div>
+        <div class="body">
+          <div class="head">
+            <strong>发到微信、小红书…</strong>
+            <span class="badge">用这些照片</span>
+          </div>
+          <p class="banner"><b>这不是在导出作品集。</b><br />小红书、海报和印刷可以在这里做。长图要在游记里做。</p>
+          <div class="stage is-dim">
+            <div class="veil" aria-hidden="true"></div>
+            <div class="grid">
+              <div class="card gate"><strong>微信群</strong><span>要先有一本游记</span></div>
+              <div class="card gate"><strong>朋友圈</strong><span>要先有一本游记</span></div>
+              <div class="card on"><strong>小红书</strong><span>3:4 海报</span></div>
+            </div>
+            <div class="sheet" role="dialog">
+              <h3>长图要在游记里做</h3>
+              <p>找不到原来的照片文件夹，没法再做一本新的游记。也可以把这本书改做成游记——那会重排这一本，不是再留一本。</p>
+              <div class="row">
+                <button type="button" class="cta gold wide">想改做成一本游记？</button>
+                <button type="button" class="cta wide">留在作品集</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="sign" data-panel>
+      <p class="anno">SIGNOFF · DOC-CLG-01</p>
+      <p class="lead">产品勾完四帧（改字后），W1 编码门才开。不签：改游记面板、F2 改身份、删掉两张灰卡、F2 确定钮再写「导出长图」。</p>
+      <div class="aside">
+        <label><input type="checkbox" /> 帧 A：两卡灰但仍能点、默认小红书、副句用人话、确定钮是「导出小红书」</label>
+        <label><input type="checkbox" /> 帧 B：有游记时主钮「打开那本游记」；说明层叠在六卡上</label>
+        <label><input type="checkbox" /> 帧 C：没有游记时「去做一本」且说清不覆盖作品集</label>
+        <label><input type="checkbox" /> 帧 D：找不到文件夹时主钮是精修问句，顶条仍在，不在过河改身份</label>
+        <label><input type="checkbox" /> 游记自己的导出六种不动</label>
+        <label><input type="checkbox" /> 过河不 POST /edition；C 端没有拼贴 / 卷轴 / 同夹</label>
+      </div>
+    </section>
+  </div>
+  <script>
+    document.querySelectorAll("[data-tab]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.remove("is-on"); });
+        document.querySelectorAll("[data-panel]").forEach(function (p) { p.classList.remove("is-on"); });
+        btn.classList.add("is-on");
+        var el = document.getElementById(btn.getAttribute("data-tab"));
+        if (el) el.classList.add("is-on");
+      });
+    });
+  </script>
+</body>
+</html>

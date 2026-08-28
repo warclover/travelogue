@@ -78,67 +78,43 @@ def test_empty_cohort_fallback_fill() -> None:
     assert pick.reason == "fallback_fill"
 
 
-def test_star_cohort_admits_any_trip() -> None:
+def test_c02_archived_asym_invisible_even_on_star_cohort() -> None:
     cfg = _Cfg(cohort=("*",))
     visible = experimental_members_visible(
         mosaic_cfg=cfg.mosaic, trip_id="any-trip-id"
     )
-    assert PATTERN_LANDSCAPE_3_ASYM_LEFT in visible
-    assert PATTERN_LANDSCAPE_3_ASYM_RIGHT in visible
+    assert PATTERN_LANDSCAPE_3_ASYM_LEFT not in visible
+    assert PATTERN_LANDSCAPE_3_ASYM_RIGHT not in visible
 
 
-def test_left_strength_prefers_asym_left() -> None:
+def test_c02_archived_asym_falls_back_fill() -> None:
     cfg = _Cfg()
-    pick = pick_landscape_3_variant(
-        ["a", "b", "c"],
-        assets_map={
+    for assets in (
+        {
             "a": _asset(aesthetic=0.95),
             "b": _asset(),
             "c": _asset(aesthetic=0.2),
         },
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert pick.pattern_id == PATTERN_LANDSCAPE_3_ASYM_LEFT
-    assert pick.reason == "strength"
-
-
-def test_right_strength_prefers_asym_right() -> None:
-    cfg = _Cfg()
-    pick = pick_landscape_3_variant(
-        ["a", "b", "c"],
-        assets_map={
+        {
             "a": _asset(aesthetic=0.2),
             "b": _asset(),
             "c": _asset(aesthetic=0.95),
         },
-        cfg=cfg,
-        trip_id="trip-dogfood",
-    )
-    assert pick.pattern_id == PATTERN_LANDSCAPE_3_ASYM_RIGHT
-    assert pick.reason == "strength"
-
-
-def test_tie_prefers_asym_not_fill() -> None:
-    """AC-L3E-04: 强弱接近 → asym；不得因 fill 权重更高而落 stack。"""
-    cfg = _Cfg()
-    pick = pick_landscape_3_variant(
-        ["a", "b", "c"],
-        assets_map={
+        {
             "a": _asset(aesthetic=0.5),
             "b": _asset(),
             "c": _asset(aesthetic=0.52),
         },
-        cfg=cfg,
-        trip_id="trip-dogfood",
-        recent_pattern_ids=[],
-    )
-    assert pick.pattern_id in (
-        PATTERN_LANDSCAPE_3_ASYM_LEFT,
-        PATTERN_LANDSCAPE_3_ASYM_RIGHT,
-    )
-    assert pick.reason == "asym_tie"
-    assert pick.variant_role != "fill"
+    ):
+        pick = pick_landscape_3_variant(
+            ["a", "b", "c"],
+            assets_map=assets,
+            cfg=cfg,
+            trip_id="trip-dogfood",
+        )
+        assert pick.pattern_id == PATTERN_LANDSCAPE_3_FILL
+        assert pick.reason == "fallback_fill"
+        assert pick.variant_role == "fill"
 
 
 def test_preferred_side_missing_falls_back_to_fill() -> None:
@@ -158,7 +134,7 @@ def test_preferred_side_missing_falls_back_to_fill() -> None:
     assert pick.variant_role == "fill"
 
 
-def test_tie_rotates_asym_mirrors() -> None:
+def test_c02_archived_tie_cannot_rotate_asym() -> None:
     cfg = _Cfg()
     first = pick_landscape_3_variant(
         ["a", "b", "c"],
@@ -181,11 +157,7 @@ def test_tie_rotates_asym_mirrors() -> None:
         trip_id="trip-dogfood",
         recent_pattern_ids=[first.pattern_id],
     )
-    assert first.pattern_id != second.pattern_id
-    assert {first.pattern_id, second.pattern_id} == {
-        PATTERN_LANDSCAPE_3_ASYM_LEFT,
-        PATTERN_LANDSCAPE_3_ASYM_RIGHT,
-    }
+    assert first.pattern_id == second.pattern_id == PATTERN_LANDSCAPE_3_FILL
 
 
 def test_landscape_triple_family_is_triple_kind() -> None:
@@ -272,9 +244,5 @@ def test_family_on_triple_run_emits_landscape_3() -> None:
     consumed = try_landscape_run(ctx)
     assert consumed == 3
     assert len(ctx.screens) == 1
-    assert ctx.screens[0]["patternId"] in (
-        PATTERN_LANDSCAPE_3_FILL,
-        PATTERN_LANDSCAPE_3_ASYM_LEFT,
-        PATTERN_LANDSCAPE_3_ASYM_RIGHT,
-    )
+    assert ctx.screens[0]["patternId"] == PATTERN_LANDSCAPE_3_FILL
     assert "landscape3Picker" in ctx.screens[0]

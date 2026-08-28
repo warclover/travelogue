@@ -37,6 +37,7 @@ OPTIONAL_KEYS = frozenset(
         "planText",
         "eligibleCount",
         "template_id",
+        "edition",
     }
 )
 

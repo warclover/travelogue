@@ -1,0 +1,32 @@
+---
+description: Dual-pipeline isolation (DPI) — journal vs portfolio ownership
+alwaysApply: true
+---
+
+# Dual pipeline (DPI)
+
+Two reader pipelines must iterate independently. Do not add cross-pipeline `if`s outside registered seams.
+
+## Entry files
+
+**Journal:** `travelogue/layout_engine/mosaic/**`, `compose_trip`, `templates/visual-journal/journal-screens.css`, `screen-*.yaml`. Chapter builder: `travelogue/render/journal_chapters.py` (`chapters.py` is a re-export).
+
+**Portfolio:** `travelogue/layout_engine/editorial_series/**`, `compose_portfolio_trip`, `page-*.yaml`, `templates/visual-journal/portfolio-pages.css`.
+
+**Shared (do not split):** ingest, cull, cluster, cover, Studio shell, `journal.css` variables, `schemas/fixtures/trip.render_golden.json`.
+
+## Before you edit
+
+1. Who owns this file? `python scripts/lint_dual_pipeline_ownership.py --explain <file>`
+2. Is the branch in a named seam (`docs/dual-pipeline-ownership.md`)? If not, change the call site, do not add `is_portfolio`.
+3. Whose fixture is it? Cloning `trip.render_golden.json` and injecting `edition` is legal. Do not read `phase16-dogfood` from portfolio tests, or `editorial_series` fixtures from journal tests.
+4. Will the other pipeline load this? Run `pytest -m pipeline_isolation -q`.
+
+## Do not
+
+- Put `page-*` rules in `journal-screens.css` after W1, or `screen-*` rules in `portfolio-pages.css`.
+- Put `portfolio-pages.css` on the journal bundle-hash list.
+- Add `is_portfolio` in `chapters.py` (only `assemble.py` dispatches).
+- Put edition branches in `dock.js` beyond mount + `journalDockLogic` / `portfolioDockLogic`.
+- Create import-linter shells for modules that do not exist yet.
+- Treat `trip.render_golden.json` as journal-only.

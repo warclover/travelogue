@@ -106,7 +106,19 @@ def handle_layout_vibe(handler: StudioHandlerProtocol, trip_id: str) -> None:
     loaded = load_trip_or_404(handler, trip_id)
     if loaded is None:
         return
-    trip_dir, _trip0 = loaded
+    trip_dir, trip0 = loaded
+    from travelogue.config.edition import is_portfolio_trip
+
+    if is_portfolio_trip(trip0):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_LVP_PORTFOLIO",
+                "message": "作品集没有成册风格，请改回游记后再选。",
+            },
+        )
+        return
     trip_json = trip_dir / "trip.json"
     ctx = studio_ctx(handler)
     svc = ctx.trip_service()

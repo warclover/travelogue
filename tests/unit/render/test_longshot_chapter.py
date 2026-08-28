@@ -64,6 +64,32 @@ def test_longshot_css_caption_display() -> None:
     assert "font-size: 26px" in css
 
 
+def test_export_refreshes_longshot_bundle() -> None:
+    src = (ROOT / "travelogue" / "export" / "longshot.py").read_text(encoding="utf-8")
+    assert "copy_longshot_bundle" in src
+
+
+def test_longshot_skips_title_art_on_capture() -> None:
+    """封面竖排艺术字不得按 428px 全宽栅格化；捕获改走横排书名。"""
+    js = LONGSHOT_JS.read_text(encoding="utf-8")
+    assert "function isTitleArtImage" in js
+    assert "cover-opening__title-art" in js
+    upgrade = js.index("function upgradeImagesToMaxSrc")
+    assert js[upgrade : upgrade + 220].count("isTitleArtImage") >= 1
+    live = js.index("function normalizeLiveImages")
+    assert "if (isTitleArtImage(img)) return;" in js[live : live + 400]
+    clone = js.index("function normalizeCloneImages")
+    assert "if (isTitleArtImage(cloneImg)) return;" in js[clone : clone + 280]
+    assert '".cover-opening__title-art"' in js
+
+    css = LONGSHOT_CSS.read_text(encoding="utf-8")
+    hide = css.index("body.longshot-capturing .cover-opening__title-art")
+    hide_block = css[hide : hide + 280]
+    assert "display: none !important" in hide_block
+    assert "body.longshot-capturing .cover-opening__title.sr-only" in css
+    assert "body.longshot-capturing .cover-opening__archive" in css
+
+
 def test_longshot_split_mat_title_horizontal_on_capture() -> None:
     """split-mat 竖排书名在长图截图态须横排，且按字数分档字号。"""
     css = LONGSHOT_CSS.read_text(encoding="utf-8")

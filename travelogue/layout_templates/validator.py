@@ -19,6 +19,7 @@ from travelogue.layout_templates.aspect_constants import (
 from travelogue.layout_templates.css_gen import (
     grid_templates_for,
     slot_cells,
+    template_family,
     validate_css_bundle,
 )
 from travelogue.layout_templates.geometry import slot_aspect_table
@@ -141,7 +142,7 @@ def _check_gaps(template: TemplateDef, report: ValidationReport) -> None:
         )
 
 
-# LTN R-A3 · slots >6 frozen except grandfathered 8/9 SKUs (Wave C may prune further).
+# LTN R-A3 · slots >6 frozen except grandfathered 8/9 SKUs and PFM ``page-*`` faces.
 _GRANDFATHERED_DENSE_SLOT_IDS: frozenset[str] = frozenset(
     {
         "screen-portrait-grid-8",
@@ -149,6 +150,13 @@ _GRANDFATHERED_DENSE_SLOT_IDS: frozenset[str] = frozenset(
         "screen-landscape-9",
     }
 )
+
+
+def _dense_freeze_exempt(template_id: str) -> bool:
+    """Journal mosaic freeze does not apply to the portfolio family (D-DPI-12)."""
+    if template_id in _GRANDFATHERED_DENSE_SLOT_IDS:
+        return True
+    return template_family(template_id) == "portfolio"
 
 
 def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
@@ -159,10 +167,15 @@ def _check_photo_count(template: TemplateDef, report: ValidationReport) -> None:
             f"len(slots)={n} != photoCount min/max "
             f"{template.photo_count_min}/{template.photo_count_max}",
         )
-    if template.photo_count_max > 9 or n > 9:
-        report.add("V-P16-12", "photoCount.max and slots must be ≤ 9", level="block")
+    slot_cap = 10 if _dense_freeze_exempt(template.id) else 9
+    if template.photo_count_max > slot_cap or n > slot_cap:
+        report.add(
+            "V-P16-12",
+            f"photoCount.max and slots must be ≤ {slot_cap}",
+            level="block",
+        )
     # LTN R-A3 freeze: new templates with >6 slots blocked unless grandfathered.
-    if (n > 6 or template.photo_count_max > 6) and template.id not in _GRANDFATHERED_DENSE_SLOT_IDS:
+    if (n > 6 or template.photo_count_max > 6) and not _dense_freeze_exempt(template.id):
         if template.status != "deprecated":
             report.add(
                 "V-LTN-FREEZE",

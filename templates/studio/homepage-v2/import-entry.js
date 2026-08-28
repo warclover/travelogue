@@ -6,6 +6,7 @@
  */
 import { V2, $ } from "./store.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { consumeClgCreateJournalHandshake } from "../js/portfolio-export-logic.js";
 
 let _ctaWired = false;
 let _uiReady = null;
@@ -49,15 +50,24 @@ export function closeImportSheet(reason) {
 }
 
 export function initImportSheet() {
-  ensureUiReady();
+  ensureUiReady().then(function (m) {
+    if (!m) return;
+    var handshake = consumeClgCreateJournalHandshake();
+    if (handshake && handshake.albumPath) {
+      m.openImportWizard({
+        edition: "journal",
+        albumPath: handshake.albumPath,
+      });
+    }
+  });
   if (_ctaWired) return;
   _ctaWired = true;
-  var cta = $("v2-cta");
-  if (cta) {
-    cta.addEventListener("click", function () {
-      var surface = cta.classList.contains("is-headline") ? "headline" : "bench";
-      trackStudioEvent("cta_click", { surface: surface });
-      openImportSheet();
+  var portfolio = $("v2-cta-portfolio");
+  if (portfolio) {
+    portfolio.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      trackStudioEvent("cta_click", { surface: "portfolio_link" });
+      openImportSheet({ edition: "portfolio" });
     });
   }
 }

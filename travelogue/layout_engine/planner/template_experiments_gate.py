@@ -4,6 +4,19 @@ from __future__ import annotations
 
 from travelogue.config.mosaic import MosaicConfig, TemplateExperimentsConfig
 
+_ARCHIVED_STATUSES = frozenset({"deprecated", "disabled"})
+
+
+def _yaml_status_archived(pattern_id: str) -> bool:
+    """YAML ``status`` is the picker-side archive bit (C-02). Unknown IDs stay visible."""
+    try:
+        from travelogue.layout_templates.registry import get_engine
+
+        status = str(getattr(get_engine().get(pattern_id), "status", "") or "")
+    except KeyError:
+        return False
+    return status in _ARCHIVED_STATUSES
+
 
 def experimental_members_visible(
     *,
@@ -32,7 +45,9 @@ def experimental_members_visible(
     out = [
         pid
         for pid in allow
-        if pid in allowlist_intersect and pid not in parked_ids
+        if pid in allowlist_intersect
+        and pid not in parked_ids
+        and not _yaml_status_archived(pid)
     ]
     order = stable_order or {}
     return sorted(out, key=lambda p: order.get(p, 99))

@@ -25,6 +25,28 @@ def test_demo_trip_id_from_album_folder():
     assert tid == "kyoto-2025"
 
 
+def test_demo_trip_id_portfolio_does_not_collide_with_journal():
+    folder = Path("D:/Photos/kyoto-2025")
+    journal = demo_trip_id_from_album(folder, title="京都", place="京都")
+    portfolio = demo_trip_id_from_album(
+        folder, title="京都", place="京都", edition="portfolio"
+    )
+    assert journal == "kyoto-2025"
+    assert portfolio != journal
+    assert portfolio.endswith("-p")
+
+
+def test_demo_trip_id_cjk_portfolio_hash_differs():
+    folder = Path("D:/Photos/华农油菜花")
+    journal = demo_trip_id_from_album(folder, title="华农油菜花", place="旅途")
+    portfolio = demo_trip_id_from_album(
+        folder, title="华农油菜花", place="旅途", edition="portfolio"
+    )
+    assert journal.startswith("demo-")
+    assert portfolio.startswith("demo-")
+    assert journal != portfolio
+
+
 def test_demo_trip_id_explicit():
     tid = demo_trip_id_from_album(
         Path("album"),

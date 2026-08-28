@@ -27,7 +27,7 @@ import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { renderColdStartBackground } from "./bento.js";
 import {
-  captureImportShell, showFirstSuccess, refreshSuccessCover,
+  captureImportShell, showFirstSuccess, refreshSuccessCover, restoreImportShell,
 } from "./first-success.js";
 import { showImportFailed } from "./import-failed.js";
 import { syncVariantGuard } from "./variant-guard.js";
@@ -43,6 +43,9 @@ import {
   shouldClearPendingOnJobTerminal,
   shouldPerformCancelImport,
   resolveImportStageCopy,
+  importPanelCopy,
+  normalizeImportEdition,
+  demoExistsOverwriteCopy,
 } from "./import-run-logic.js";
 import {
   scheduleWaitTips,
@@ -53,6 +56,8 @@ import {
   isWaitTipsDismissed,
   mountWaitTipsRestoreChip,
 } from "./wait-tips.js";
+// WAIT-01 · 等待中零教学：不调用 scheduleWaitTips。取消 / 终态仍 unmount。
+// 帮助「重播等待提示」走 remountWaitTipsIfImporting（自带 beforeEl）。
 
 let _gen = 0;
 let _activeJobId = null;
@@ -62,6 +67,8 @@ let _stageMainText = "";
 let _stageMainChangedAt = 0;
 let _stageStallEmitted = false;
 let _sfcVisionWarmupTracked = false;
+let _importEdition = "journal";
+let _hasSiblingJournal = false;
 
 /** T-M4-04 · 冻结三档慢安抚（与 errors.js showSlowHint 同源） */
 var SLOW_HINT_COPY = {
@@ -116,7 +123,7 @@ function postMultipartImportV2(formData, options) {
     };
     xhr.onerror = function () {
       reject(new Error(
-        "上传失败：网络中断或照片总量过大。建议改用「选择本次画册的照片文件夹」。"
+        "上传失败：网络中断或照片总量过大。建议改用「选择照片文件夹」。"
       ));
     };
     xhr.send(formData);
@@ -137,6 +144,13 @@ function buildUploadForm(files, opts) {
   form.append("placeUserSet", placeUserSet ? "true" : "false");
   var mode = String(opts.mode || "quick_share");
   form.append("mode", mode);
+  if (opts.edition) form.append("edition", String(opts.edition));
+  if (opts.pageCount != null && opts.pageCount !== "") {
+    form.append("pageCount", String(opts.pageCount));
+  }
+  if (opts.pageCountSource) {
+    form.append("pageCountSource", String(opts.pageCountSource));
+  }
   if (mode === "fine_craft" && opts.layoutDensity) {
     form.append("layoutDensity", String(opts.layoutDensity));
   }
@@ -246,14 +260,15 @@ export function renderImportingPanel(source) {
   sourceP.textContent = "来源 · " + (source || "本机文件夹");
   panel.appendChild(sourceP);
 
+  var panelCopy = importPanelCopy(_importEdition);
   var title = document.createElement("h2");
   title.className = "v2-import-panel__title";
-  title.textContent = "正在生成你的影像画册…";
+  title.textContent = panelCopy.title;
   panel.appendChild(title);
 
   var estimate = document.createElement("p");
   estimate.className = "v2-import-panel__estimate";
-  estimate.textContent = "自动分章 · 配文 · 排版 · 可离开稍后回来";
+  estimate.textContent = panelCopy.estimate;
   panel.appendChild(estimate);
 
   var bar = document.createElement("div");
@@ -312,19 +327,7 @@ export function renderImportingPanel(source) {
   syncAdvancedOptionsLock();
   syncHomeStubBanner();
   cancelBtn.addEventListener("click", cancelImport);
-  // Wait Tips：主句/慢安抚之下、取消之上；≥2s 显现；失败静默
-  try {
-    scheduleWaitTips(panel, {
-      importStartedAt: _importStartedAt,
-      beforeEl: cancelBtn,
-    });
-    // 曾点 × 持久隐藏时，长等待仍可一键恢复（避免「技巧卡片不见了」）
-    if (isWaitTipsDismissed()) {
-      mountWaitTipsRestoreChip(panel, cancelBtn);
-    }
-  } catch (_e) {
-    /* tips 不得拖垮进度壳 */
-  }
+  // WAIT-01 / ONB-01：等待中零教学，不挂 Wait Tips。
 }
 
 function performCancelImport() {
@@ -341,6 +344,11 @@ function performCancelImport() {
     sessionStorage.removeItem(SS.activePending);
   } catch (e) { /* ignore */ }
   _activeJobId = null;
+  var importingHost = $("v2-importing");
+  if (importingHost) {
+    show(importingHost, false);
+    importingHost.setAttribute("aria-busy", "false");
+  }
   if (shouldCancelApi) {
     postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
   }
@@ -432,7 +440,7 @@ function pollImport(jobId, gen, source) {
         var idx = job.stageIndex || 0;
         var count = job.stageCount || 4;
         // FE-FST-01 · 阶段主句优先；照片计数仅 ingest 次行
-        var copy = resolveImportStageCopy(job);
+        var copy = resolveImportStageCopy(job, _importEdition);
         setStage(copy.main, count ? (idx / count) * 100 : 0, copy.secondary);
         var now = Date.now();
         if (
@@ -490,8 +498,8 @@ function pollImport(jobId, gen, source) {
       try {
         sessionStorage.removeItem(SS.activePending);
       } catch (e) { /* ignore */ }
-      setStage("完成", 100);
       var result = job.result || {};
+      result.edition = result.edition || _importEdition;
       trackStudioEvent("import_success", {
         tripId: result.tripId || null,
         templateId: result.resolvedTemplateId || null,
@@ -586,7 +594,9 @@ function pollImport(jobId, gen, source) {
  * @param {{source?:string}} [opts]
  */
 export function startV2Import(body, opts) {
+  _importEdition = normalizeImportEdition(body && body.edition);
   opts = opts || {};
+  _hasSiblingJournal = opts.hasSiblingJournal === true;
   var gen = ++_gen;
   var source = opts.source || "本机文件夹";
   var tpl = readTemplateParams();
@@ -634,17 +644,27 @@ export function startV2Import(body, opts) {
           return null;
         });
       }
+      var existingTitle = data.existingTitle || "";
+      var existingIsPf = data.existingEdition === "portfolio" || data.existingEdition === "folio";
+      var overwriteCopy = demoExistsOverwriteCopy({
+        existingIsPf: existingIsPf,
+        existingTitle: existingTitle,
+        hasSiblingJournal: existingIsPf && _hasSiblingJournal,
+      });
       var confirmOverwrite = typeof studioModal === "function"
         ? studioModal({
-            title: "该画册已存在",
-            body: "是否覆盖已有内容？覆盖后无法撤销。",
-            confirmText: "覆盖并重新导入",
-            cancelText: "取消",
+            title: overwriteCopy.title,
+            body: overwriteCopy.body,
+            confirmText: overwriteCopy.confirmText,
+            cancelText: overwriteCopy.cancelText,
           })
-        : Promise.resolve(window.confirm(data.message || "该画册已存在。是否覆盖？"));
+        : Promise.resolve(window.confirm(data.message || overwriteCopy.title));
       return confirmOverwrite.then(function (ok) {
         if (!ok) {
-          if (typeof V2.reroute === "function") V2.reroute();
+          restoreImportShell();
+          if (typeof studioToast === "function") {
+            studioToast(overwriteCopy.cancelToast, { duration: 2800 });
+          }
           return null;
         }
         var forced = Object.assign({}, body, { force: true });
@@ -675,6 +695,8 @@ export function startV2Import(body, opts) {
  */
 export function startV2UploadImport(files, opts) {
   opts = opts || {};
+  _importEdition = normalizeImportEdition(opts.edition);
+  _hasSiblingJournal = opts.hasSiblingJournal === true;
   var list = files ? Array.prototype.slice.call(files) : [];
   if (!list.length) return Promise.resolve();
   if (isImportPhotoCapExceeded(list.length, IMPORT_PHOTO_CAP)) {
@@ -713,6 +735,7 @@ export function startV2UploadImport(files, opts) {
       photoKeepMode: opts.photoKeepMode || null,
       photoCullEnabled: opts.photoCullEnabled !== false,
       forceStub: forceStub,
+      edition: opts.edition || undefined,
     }));
   } catch (e) { /* ignore */ }
 
@@ -820,6 +843,7 @@ export function resumeV2ImportIfAny() {
     return false;
   }
   var source = resolveImportResumeSource(pending);
+  _importEdition = normalizeImportEdition(pending && pending.edition);
   var gen = ++_gen;
   renderImportingPanel(source);
   setStage("恢复上次导入…", 0);

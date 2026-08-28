@@ -15,6 +15,7 @@ import { pollJobUntilDone } from "../js/job-poll.js";
 import { dockIconSvg } from "./dock.js";
 import { fetchEntry, startLlmNarrate } from "./core.js";
 import { closeStudioExportPopover } from "./longshot.js";
+import { isPortfolioEdition } from "../js/portfolio-export-logic.js";
 import {
   reloadPreviewAfterLayout,
   showToolbarToast,
@@ -27,6 +28,16 @@ var TITLE_ART_ROUTE_C_PREF_KEY = "travelogue.studio.titleArtRouteC";
 var BODY_OPEN_CLASS = "preview-ai-sheet-open";
 var DISMISS_KEY_PREFIX = "travelogue.studio.aiSheet.dismissed.";
 var BADGE_SEEN_KEY_PREFIX = "travelogue.studio.aiSheet.badgeSeen.";
+
+function aiSheetCoverNameLink() {
+  var ed = "";
+  try {
+    if (typeof document !== "undefined" && document.documentElement) {
+      ed = document.documentElement.getAttribute("data-edition") || "";
+    }
+  } catch (_e) {}
+  return isPortfolioEdition(ed) ? "去精修 · 书名" : "去精修 · 杂志名";
+}
 
 function escapeHtml(s) {
   return String(s == null ? "" : s)
@@ -400,7 +411,9 @@ export function mountAiSurface(root, tripId, opts) {
         '<span class="preview-ai-sheet__status">本机字库</span>' +
         '<button type="button" class="preview-ai-sheet__btn" data-ai-title-art-btn>生成字体</button>' +
         "</div>" +
-        '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">去精修 · 杂志名</button>' +
+        '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">' +
+        aiSheetCoverNameLink() +
+        "</button>" +
         "</div>"
       );
     }
@@ -441,7 +454,9 @@ export function mountAiSurface(root, tripId, opts) {
       escapeHtml(btnLabel) +
       "</button>" +
       "</div>" +
-      '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">去精修 · 杂志名</button>' +
+      '<button type="button" class="preview-ai-sheet__link-btn" data-ai-goto-cover-name">' +
+      aiSheetCoverNameLink() +
+      "</button>" +
       "</div>"
     );
   }

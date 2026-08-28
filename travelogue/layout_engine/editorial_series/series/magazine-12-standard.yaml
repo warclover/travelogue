@@ -1,0 +1,31 @@
+# Runtime series · promoted from folio-12-standard.
+# Engine does not read docs/templates/reserve/ (ISO-05).
+id: magazine-12-standard
+kind: series
+status: official
+stage: "16:9"
+version: 1
+pageCount: 12
+density: standard
+photo_span: [36, 60]
+capacity: 29
+coverHint: veil-footer
+backHint: closing-default
+sourceAtelier: folio-12-standard
+_promotedFrom:
+  atelierId: folio-12-standard
+  contentHash: e3bbaf1bee6a4d6eac5678f984bca0ed3ac00dea462d471cdd96235b96bafaa4
+  promotedAt: 2026-08-25T03:02:48Z
+sequence:
+  - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 2, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 3, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 4, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 5, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center, slotBand: 5, patternId: page-5-3p2l-center }
+  - { i: 6, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
+  - { i: 7, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide, slotBand: 4, patternId: page-4-grid-land-wide }
+  - { i: 8, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 9, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 10, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 11, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross, slotBand: 4, patternId: page-4-2p2l-cross }
+  - { i: 12, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }

@@ -137,3 +137,27 @@ test("OR-X-06 · 阈值顺序护栏布尔；乱序不自动改写", () => {
   // 乱序下 classify 仍按数值比较（不拒绝）
   assert.equal(classifyBand(10, inverted), "sparse"); // 10 <= 30
 });
+
+test("PFM · mapServerRecipePayload 采信 portfolio_bypass，不回落意图卡", () => {
+  const cfg = cfgFromSet("default", true);
+  const tip = mapServerRecipePayload(
+    {
+      keptN: 18,
+      recipe: {
+        band: "ambiguous",
+        needs_intent: false,
+        source: "portfolio_bypass",
+        intent: "",
+        platform: "",
+        kept_n: 18,
+      },
+    },
+    "preview",
+    cfg,
+    "moments_scroll"
+  );
+  assert.equal(tip.needsIntent, false);
+  assert.equal(tip.source, "portfolio_bypass");
+  assert.equal(tip.intent, null);
+  assert.equal(tip.keptN, 18);
+});

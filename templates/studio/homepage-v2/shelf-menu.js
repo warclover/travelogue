@@ -4,6 +4,10 @@
  */
 import { isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";
+import { postJson } from "../js/http.js";
+import { pollJobUntilDone } from "../js/job-poll.js";
+import { editionSwitchConfirm, normalizeEdition } from "../js/portfolio-edition-logic.js";
+import { shelfExportMenuCopy, shelfExportRequestForTrip } from "../js/portfolio-export-logic.js";
 import {
   V2,
   markTripDeleting,
@@ -14,6 +18,7 @@ import {
 import { deleteTrip } from "./trips-client.js";
 import { runShelfLongshot, openShelfLongshotFolder, canOpenShelfLongshotFolder } from "./shelf-longshot.js";
 import { setBentoPreviewTripId } from "./bento-tabs.js";
+import { hasManageOutputs, openManageOutputs } from "./shelf-outputs.js";
 
 var _openMenuEl = null;
 var _docBound = false;
@@ -111,6 +116,68 @@ function genericDeleteCopy(title) {
       "将移除画册「" + title + "」及其排版与预览记录。" +
       "你电脑上的原始照片不会被删除，之后可以用同一文件夹重新导入。",
   };
+}
+
+function confirmShelfEditionSwitch(trip, to, surface) {
+  var tripId = trip.tripId;
+  var copy = editionSwitchConfirm(trip.edition, to);
+  var runSwitch = function () {
+    toast("正在按成册类型重排页面…", { duration: 3200 });
+    return postJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/edition", {
+      edition: to,
+      confirmed: true,
+    })
+      .then(function (res) {
+        if (res.status === 200 && res.body && res.body.unchanged) {
+          if (typeof V2.reroute === "function") V2.reroute();
+          return;
+        }
+        if (!(res.status === 202 && res.body && res.body.jobId)) {
+          var msg = (res.body && (res.body.message || res.body.error)) || "无法改回游记";
+          toast(msg, { duration: 3200 });
+          return;
+        }
+        return pollJobUntilDone(res.body.jobId, { intervalMs: 800 }).then(function (job) {
+          if (!job || job.status !== "succeeded") {
+            toast((job && job.error && job.error.message) || "改回游记失败", {
+              duration: 3200,
+            });
+            return;
+          }
+          trackStudioEvent("shelf_edition_change", {
+            trip_id: tripId,
+            surface: surface,
+            edition: "journal",
+          });
+          toast("已改回游记并重排页面", { duration: 3000 });
+          if (typeof V2.reroute === "function") V2.reroute();
+        });
+      })
+      .catch(function () {
+        toast("改回游记失败，请重试", { duration: 3200 });
+      });
+  };
+
+  if (typeof studioModal !== "function") {
+    if (window.confirm(copy.title + "\n\n" + copy.body)) runSwitch();
+    return;
+  }
+
+  studioModal({
+    title: copy.title,
+    body: copy.body,
+    confirmText: copy.confirmText,
+    cancelText: copy.cancelText,
+  }).then(function (ok) {
+    if (!ok) {
+      trackStudioEvent("shelf_edition_cancel", {
+        trip_id: tripId,
+        surface: surface,
+      });
+      return;
+    }
+    runSwitch();
+  });
 }
 
 function confirmDelete(trip, surface, onSuccess) {
@@ -248,17 +315,18 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     previewItem.title = "示例画册无法设为预览";
   }
 
+  var exportCopy = shelfExportMenuCopy(trip.edition);
   var longshotItem = document.createElement("button");
   longshotItem.type = "button";
   longshotItem.className = "v2-shelf__menu-item";
   longshotItem.setAttribute("role", "menuitem");
-  longshotItem.textContent = "保存长图";
+  longshotItem.textContent = exportCopy.exportItem;
 
   var openLongshotItem = document.createElement("button");
   openLongshotItem.type = "button";
   openLongshotItem.className = "v2-shelf__menu-item";
   openLongshotItem.setAttribute("role", "menuitem");
-  openLongshotItem.textContent = "打开长图文件夹";
+  openLongshotItem.textContent = exportCopy.openFolderItem;
   if (!canOpenShelfLongshotFolder(trip)) {
     openLongshotItem.disabled = true;
     openLongshotItem.title = "尚未导出长图";
@@ -280,6 +348,38 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   menu.appendChild(previewItem);
   menu.appendChild(longshotItem);
   menu.appendChild(openLongshotItem);
+  if (hasManageOutputs(trip)) {
+    var manageItem = document.createElement("button");
+    manageItem.type = "button";
+    manageItem.className = "v2-shelf__menu-item";
+    manageItem.setAttribute("role", "menuitem");
+    manageItem.textContent = "管理成品";
+    manageItem.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu(menu);
+      openManageOutputs(trip, {
+        onChanged: function () {
+          if (typeof opts.onOutputsChanged === "function") opts.onOutputsChanged(trip.tripId);
+        },
+      });
+    });
+    menu.appendChild(manageItem);
+  }
+  if (!demo && normalizeEdition(trip.edition) === "portfolio") {
+    var toJournalItem = document.createElement("button");
+    toJournalItem.type = "button";
+    toJournalItem.className = "v2-shelf__menu-item";
+    toJournalItem.setAttribute("role", "menuitem");
+    toJournalItem.textContent = "改为游记重排";
+    toJournalItem.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeMenu(menu);
+      confirmShelfEditionSwitch(trip, "journal", surface);
+    });
+    menu.appendChild(toJournalItem);
+  }
   menu.appendChild(deleteItem);
   coverWrap.appendChild(menuBtn);
   coverWrap.appendChild(menu);
@@ -310,7 +410,7 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     e.preventDefault();
     e.stopPropagation();
     closeMenu(menu);
-    runShelfLongshot(trip, { surface: surface });
+    runShelfLongshot(trip, shelfExportRequestForTrip(trip, { surface: surface }));
   });
 
   openLongshotItem.addEventListener("click", function (e) {

@@ -6,6 +6,21 @@
 "use strict";
 
 import { HELP_COPY } from "./help-onboarding.js";
+import {
+  buildIntentPresetHtml,
+  defaultPlatformForIntent,
+  intentForPlatform,
+} from "./export-preset-facade.js";
+import {
+  albumSpreadCardCopy,
+  crossingGateCopy,
+  crossingGateSheetModel,
+  isCrossingLongshotLocked,
+  isPortfolioSocialExportFace,
+  nextCrossingDefaultPlatform,
+  portfolioExportDefaultFaceHtml,
+  wrapJournalPanelAsPortfolioSocialFace,
+} from "./portfolio-export-logic.js";
 
 export var LONGSHOT_EXPORT_PREFS_KEY = "travelogue.studio.longshotExportPrefs";
 export var MOMENTS_COACH_KEY = "travelogue.studio.longshotMomentsCoachSeen";
@@ -81,6 +96,16 @@ export var PLATFORMS = {
     showAlbumCountOptions: true,
     expectHtml:
       "将导出多张 <strong>两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1，适合印刷 / 对页预览）。精选照片较多时可能需 <strong>1–2 分钟</strong>，请耐心等待",
+  },
+  portfolio_pages: {
+    id: "portfolio_pages",
+    label: "作品集页图",
+    title: "作品集",
+    subtitle: "这一本 + 页图",
+    cta: "导出作品集",
+    showSegmentMode: false,
+    showCopyControls: false,
+    expectHtml: "将导出可翻阅的一本与 16:9 页图序列",
   },
 };
 
@@ -279,13 +304,31 @@ export function isSmartCropUiEnabled(cfgStudio) {
  * 自动/默认设置；需要自定义张数请单选该平台单独导出。真正的"每平台独立
  * 设置"留作后续迭代（对应 PRD D-BEX-01 的完整版）。
  */
+/**
+ * Retired Studio ids still seen in localStorage. Do not map them to
+ * album_spread — that hijacked the folio main button onto 3:4 print.
+ * Journal unknown/retired ids fall back to wechat_chat (长图).
+ */
+export var RETIRED_ALBUM_PLATFORM_IDS = {
+  album_landscape: true,
+  album: true,
+  album_print: true,
+};
+
+export function canonicalizePlatformId(id) {
+  var s = String(id || "").trim();
+  if (!s) return "";
+  if (RETIRED_ALBUM_PLATFORM_IDS[s]) return "wechat_chat";
+  return s;
+}
+
 export function normalizePlatformList(list, fallback) {
   var out = [];
   (Array.isArray(list) ? list : []).forEach(function (id) {
-    var s = String(id || "").trim();
+    var s = canonicalizePlatformId(id);
     if (s && out.indexOf(s) < 0) out.push(s);
   });
-  if (!out.length) out.push(fallback || "wechat_chat");
+  if (!out.length) out.push(canonicalizePlatformId(fallback) || "wechat_chat");
   return out;
 }
 
@@ -305,8 +348,9 @@ export function readExportPrefs() {
     var raw = localStorage.getItem(LONGSHOT_EXPORT_PREFS_KEY);
     if (!raw) return defaults;
     var parsed = JSON.parse(raw);
-    var platform = parsed.platform || defaults.platform;
+    var platform = canonicalizePlatformId(parsed.platform || defaults.platform);
     var platforms = normalizePlatformList(parsed.platforms, platform);
+    if (platforms.indexOf(platform) < 0) platform = platforms[0];
     return {
       platform: platform,
       platforms: platforms,
@@ -374,7 +418,8 @@ export function shortCtaLabelForPlatform(platformId) {
   if (platformId === "wechat_official") return "导出公众号";
   if (platformId === "poster_bric") return "导出海报";
   if (platformId === "album_spread") return "导出画册";
-  return "发微信群";
+  if (platformId === "portfolio_pages") return "导出作品集";
+  return "长图";
 }
 
 /** 批量态窄栏短标签 · 单选时与单平台文案完全一致（零回归）。 */
@@ -396,6 +441,7 @@ export var PROGRESS_TITLES = {
   wechat_official: "正在生成公众号竖版拼贴…",
   poster_bric: "正在生成 3:4 单张海报…",
   album_spread: "正在生成画册跨页，照片较多时请耐心等待…",
+  portfolio_pages: "正在导出作品集…",
 };
 
 /** Compose 引擎出口（3:4 卡片管线）· 与 Slice/长图区分文案与副标题语义 */
@@ -415,7 +461,26 @@ export function progressTitleForPlatform(platformId) {
 }
 
 export function progressSynthesizingTitleForPlatform(platformId) {
+  if (platformId === "portfolio_pages") return "正在保存这一本与页图…";
   return isComposePlatform(platformId) ? "正在合成拼贴…" : "正在合成长图…";
+}
+
+/**
+ * 进度第二行。作品集只走页图语义；游记微信群 / 拼贴文案保持原样。
+ * @param {string} platformId
+ * @param {{ quality?: string, mode?: string }} [opts]
+ */
+export function progressSubtitleForPlatform(platformId, opts) {
+  opts = opts || {};
+  var quality = opts.quality || "高清";
+  var mode = opts.mode || "chapter";
+  if (platformId === "portfolio_pages") return "16:9 页图 · " + quality;
+  if (isComposePlatform(platformId)) return "3:4 拼贴 · " + quality;
+  if (platformId === "wechat_moments") return "长图连读 · " + quality;
+  if (platformId === "wechat_chat") {
+    return (mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
+  }
+  return quality;
 }
 
 /**
@@ -424,6 +489,7 @@ export function progressSynthesizingTitleForPlatform(platformId) {
  */
 export function detectPlatformFromProgressHint(hint) {
   var text = String(hint || "");
+  if (/作品集|页图|这一本/.test(text)) return "portfolio_pages";
   if (/小红书/.test(text)) return "xiaohongshu";
   if (/公众号/.test(text)) return "wechat_official";
   if (/画册|跨页/.test(text)) return "album_spread";
@@ -434,7 +500,7 @@ export function detectPlatformFromProgressHint(hint) {
 }
 
 /** 摘要尾句 · 各模式共用（按钮文案随模式变，指引固定指右上角 CTA） */
-var EXPORT_SUMMARY_CTA_HINT = "点击右上角灰色按钮导出";
+var EXPORT_SUMMARY_CTA_HINT = "点「长图」开始导出";
 
 function _withExportCtaHint(line) {
   return String(line || "") + " · " + EXPORT_SUMMARY_CTA_HINT;
@@ -535,17 +601,55 @@ export function estimatePhotoCountFromDom(doc) {
 /**
  * Build popover inner HTML for enabled platforms.
  * @param {string[]} platformIds
+ * @param {{edition?: string}} [opts] 作品集 edition=portfolio 时换种分享默认折叠
  */
-export function buildPanelHtml(platformIds) {
+/** FE-PFM-06 · 游记 Dock / ▾ 快照。开旗与否不改变游记字面。 */
+export function journalDockChrome() {
+  return { short: "长图", aria: "导出长图" };
+}
+
+export function journalExportPanelSnapshot(platformIds) {
+  return {
+    dock: journalDockChrome(),
+    title: "导出设置",
+    html: buildPanelHtml(platformIds, { edition: "journal" }),
+  };
+}
+
+export function buildPanelHtml(platformIds, opts) {
+  opts = opts || {};
+  var edition = opts.edition === "portfolio" ? "portfolio" : "journal";
+  var face = opts.face === "social" ? "social" : "default";
+  if (edition === "portfolio" && face === "social") {
+    return wrapJournalPanelAsPortfolioSocialFace(
+      buildPanelHtml(platformIds, { edition: "journal", intentFacade: false })
+    );
+  }
+  if (edition === "portfolio") {
+    return portfolioExportDefaultFaceHtml(opts.product);
+  }
   var ids = platformIds && platformIds.length ? platformIds : ["wechat_chat", "wechat_moments"];
-  var platformBtns = ids
+  var socialIds = ids.filter(function (id) {
+    return id && id !== "portfolio_pages";
+  });
+  var platformBtns = socialIds
     .map(function (id) {
       var p = PLATFORMS[id] || { id: id, label: id };
       var title = p.title || p.label || id;
       var sub = p.subtitle || "";
       var aria = p.label || title;
+      var extraClass = "";
+      if (id === "album_spread") {
+        var albumCopy = albumSpreadCardCopy(edition);
+        title = albumCopy.title;
+        sub = albumCopy.subtitle;
+        aria = albumCopy.aria;
+        if (edition === "portfolio") extraClass = " preview-toolbar__export-platform-card--stack";
+      }
       return (
-        '<button type="button" class="preview-toolbar__export-platform-card" ' +
+        '<button type="button" class="preview-toolbar__export-platform-card' +
+        extraClass +
+        '" ' +
         'data-studio-longshot-platform="' +
         p.id +
         '" aria-label="' +
@@ -564,18 +668,34 @@ export function buildPanelHtml(platformIds) {
     })
     .join("");
 
-  return (
-    '<p class="preview-toolbar__export-popover-title">导出设置</p>' +
-    '<p class="preview-toolbar__export-popover-note">选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。</p>' +
-    '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
-    '<div class="preview-toolbar__export-popover-body">' +
-    '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
-    '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
-    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="导出模式（用途）（点击可多选）">' +
+  var platformGrid =
+    '<div class="preview-toolbar__export-platform-grid" role="group" aria-label="按渠道导出（点击可多选）">' +
     platformBtns +
     "</div>" +
-    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>' +
-    "</div>" +
+    '<p class="preview-toolbar__export-batch-hint" data-batch-hint hidden></p>';
+  var platformField =
+    opts.intentFacade === false
+      ? '<div class="preview-toolbar__export-popover-field" data-field="platform">' +
+        '<span class="preview-toolbar__export-popover-label">导出模式（用途） · 点击可多选</span>' +
+        platformGrid +
+        "</div>"
+      : '<div class="preview-toolbar__export-popover-field" data-field="intent">' +
+        '<span class="preview-toolbar__export-popover-label">这次要做什么</span>' +
+        buildIntentPresetHtml() +
+        "</div>" +
+        '<details class="preview-toolbar__export-advanced" data-field="platform">' +
+        "<summary>高级 · 按渠道导出</summary>" +
+        platformGrid +
+        "</details>";
+
+  return (
+    '<p class="preview-toolbar__export-popover-title">' +
+    "导出设置" +
+    "</p>" +
+    '<p class="preview-toolbar__export-popover-note">选好用途后点「确定」，再点「长图」开始导出。</p>' +
+    '<p class="preview-toolbar__export-confirmed-summary" data-export-confirmed-summary aria-live="polite"></p>' +
+    '<div class="preview-toolbar__export-popover-body">' +
+    platformField +
     '<div class="preview-toolbar__export-popover-field preview-toolbar__export-copy-field" data-field="copy">' +
     '<span class="preview-toolbar__export-popover-label" data-copy-label>长图要不要字</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group" data-copy-preset-seg>' +
@@ -655,7 +775,9 @@ export function buildPanelHtml(platformIds) {
     "</div>" +
     '<p class="preview-toolbar__export-scale-hint" data-scale-hint>输出尺寸随导出目标变化</p>' +
     "</div>" +
-    '<div class="preview-toolbar__export-popover-field" data-field="density">' +
+    '<div class="preview-toolbar__export-popover-field" data-field="density"' +
+    (edition === "portfolio" ? " hidden" : "") +
+    ">" +
     '<span class="preview-toolbar__export-popover-label">长图密度</span>' +
     '<div class="preview-toolbar__export-popover-seg" role="group">' +
     '<button type="button" data-studio-longshot-density="default">默认</button>' +
@@ -679,7 +801,9 @@ export function buildPanelHtml(platformIds) {
     '<div class="preview-toolbar__export-more-links">' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="export-zip">导出 zip（自行托管）</button>' +
     '<button type="button" class="preview-toolbar__export-more-link" data-action="reveal-folder">在文件夹中显示</button>' +
-    '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>' +
+    (edition === "portfolio"
+      ? '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview hidden>对比网页版与导出长图</button>'
+      : '<button type="button" class="preview-toolbar__export-more-link" data-ltn-dual-preview>对比网页版与导出长图</button>') +
     "</div></details>" +
     "</div>" +
     '<div class="preview-toolbar__export-popover-actions">' +
@@ -695,11 +819,99 @@ export function buildPanelHtml(platformIds) {
  * @param {{platform:string, mode:string, scale:number, slideCount?:number|null, padMode?:string}} draft
  * @param {{smartCropEnabled?: boolean, photoCount?: number}} [opts]
  */
+function _clgEsc(s) {
+  return String(s || "").replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+
+export function crossingGateSheetHtml(model) {
+  model = model || crossingGateSheetModel({ loading: true });
+  var copy = crossingGateCopy();
+  return (
+    '<div class="preview-toolbar__clg-veil" data-clg-veil></div>' +
+    '<div class="preview-toolbar__clg-sheet" role="dialog" aria-modal="true" aria-labelledby="clg-sheet-title">' +
+    '<button type="button" class="preview-toolbar__clg-dismiss" data-clg-dismiss aria-label="' +
+    _clgEsc(copy.sheetStay) +
+    '">×</button>' +
+    '<h3 id="clg-sheet-title" class="preview-toolbar__clg-sheet-title">' +
+    _clgEsc(model.title) +
+    "</h3>" +
+    '<p class="preview-toolbar__clg-sheet-body">' +
+    _clgEsc(model.body) +
+    "</p>" +
+    '<div class="preview-toolbar__clg-sheet-actions">' +
+    (model.primary
+      ? '<button type="button" class="preview-toolbar__export-popover-ok" data-clg-primary' +
+        (model.primaryDisabled ? " disabled" : "") +
+        ">" +
+        _clgEsc(model.primary) +
+        "</button>"
+      : "") +
+    (model.secondary
+      ? '<button type="button" class="preview-toolbar__export-popover-cancel" data-clg-secondary>' +
+        _clgEsc(model.secondary) +
+        "</button>"
+      : "") +
+    "</div></div>"
+  );
+}
+
+export function renderCrossingGateSheet(pop, sibling, currentTitle) {
+  if (!pop || typeof pop.querySelector !== "function") return;
+  var model = crossingGateSheetModel(sibling, currentTitle);
+  var host = pop.querySelector("[data-clg-sheet]");
+  if (!host && typeof document !== "undefined" && document.createElement) {
+    host = document.createElement("div");
+    host.setAttribute("data-clg-sheet", "1");
+    host.className = "preview-toolbar__clg-sheet-host";
+    pop.appendChild(host);
+  }
+  if (!host) return;
+  host.hidden = false;
+  host.innerHTML = crossingGateSheetHtml(model);
+  pop.classList.add("is-clg-open");
+  host._clgVariant = model.variant;
+}
+
+export function closeCrossingGateSheet(pop) {
+  if (!pop || typeof pop.querySelector !== "function") return;
+  var pid = pop._clgGatePid;
+  pop._clgSheetOpen = false;
+  var host = pop.querySelector("[data-clg-sheet]");
+  if (host) {
+    host.hidden = true;
+    host.innerHTML = "";
+  }
+  pop.classList.remove("is-clg-open");
+  var gate =
+    pid &&
+    pop.querySelector &&
+    pop.querySelector('[data-studio-longshot-platform="' + pid + '"]');
+  if (gate && typeof gate.focus === "function") {
+    try {
+      gate.focus();
+    } catch (_eFocus) {}
+  }
+}
+
 export function syncPanelUI(pop, draft, opts) {
   if (!pop || !draft) return;
   opts = opts || {};
+  var socialFace = isPortfolioSocialExportFace(pop);
   var platforms = normalizePlatformList(draft.platforms || [draft.platform]);
-  var isBatch = platforms.length > 1;
+  if (socialFace) {
+    var usable = platforms.filter(function (id) {
+      return !isCrossingLongshotLocked(id);
+    });
+    if (!usable.length) {
+      usable = [nextCrossingDefaultPlatform({ platform: draft.platform, platforms: platforms })];
+    }
+    draft.platforms = usable.slice(0, 1);
+    draft.platform = draft.platforms[0];
+    platforms = draft.platforms.slice();
+  }
+  var isBatch = platforms.length > 1 && !socialFace;
   var platform = platforms[0];
   var meta = PLATFORMS[platform] || PLATFORMS.wechat_chat;
   // MVP · 批量态（≥2 平台）不做手风琴逐平台设置，统一隐藏张数/跨页数控件。
@@ -715,12 +927,34 @@ export function syncPanelUI(pop, draft, opts) {
     }
   }
 
+  var gateCopy = socialFace ? crossingGateCopy() : null;
+  var currentIntent = intentForPlatform(platform);
+  pop.querySelectorAll("[data-export-intent]").forEach(function (btn) {
+    var on = btn.getAttribute("data-export-intent") === currentIntent.id;
+    btn.classList.toggle("is-selected", on);
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+  });
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
-    var on = platforms.indexOf(btn.getAttribute("data-studio-longshot-platform")) >= 0;
+    var pid = btn.getAttribute("data-studio-longshot-platform");
+    var on = platforms.indexOf(pid) >= 0;
     btn.classList.toggle("is-selected", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.setAttribute("aria-checked", on ? "true" : "false");
-    btn.setAttribute("role", "checkbox");
+    btn.setAttribute("role", socialFace ? "radio" : "checkbox");
+    if (socialFace && isCrossingLongshotLocked(pid)) {
+      btn.setAttribute("data-clg-locked", "1");
+      var sub =
+        btn.querySelector &&
+        btn.querySelector(".preview-toolbar__export-platform-card__sub");
+      if (sub) {
+        sub.textContent = gateCopy.gateSub;
+        if (!sub.id) sub.id = "clg-gate-sub-" + pid;
+        btn.setAttribute("aria-describedby", sub.id);
+      }
+    } else {
+      btn.removeAttribute("data-clg-locked");
+      btn.removeAttribute("aria-describedby");
+    }
   });
   var batchHint = pop.querySelector("[data-batch-hint]");
   if (batchHint) {
@@ -809,7 +1043,8 @@ export function syncPanelUI(pop, draft, opts) {
 
   var modeField = pop.querySelector('[data-field="mode"]');
   // 仅微信群单选显「按章/一整张」；批量或其它平台隐藏（D-LNG2-15 / D-BEX-01）
-  if (modeField) modeField.hidden = isBatch || !meta.showSegmentMode;
+  // F2 过河面永远藏按章：闸卡不可用，可用卡也不吃卷轴。
+  if (modeField) modeField.hidden = socialFace || isBatch || !meta.showSegmentMode;
 
   var copyField = pop.querySelector('[data-field="copy"]');
   if (copyField) {
@@ -822,15 +1057,26 @@ export function syncPanelUI(pop, draft, opts) {
   }
   var densityField = pop.querySelector('[data-field="density"]');
   if (densityField) {
-    // 长图密度仅微信群/朋友圈；拼贴出口隐藏
-    densityField.hidden = isBatch || isComposePlatform(platform);
+    // 长图密度仅微信群/朋友圈；拼贴出口隐藏。作品集主路径（页图）也隐藏。
+    var folioMain =
+      opts.edition === "portfolio" &&
+      platform !== "wechat_chat" &&
+      platform !== "wechat_moments";
+    densityField.hidden = isBatch || isComposePlatform(platform) || folioMain;
+  }
+  var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
+  if (dualBtn) {
+    dualBtn.hidden =
+      opts.edition === "portfolio" &&
+      platform !== "wechat_chat" &&
+      platform !== "wechat_moments";
   }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
   if (noteEl) {
     noteEl.textContent =
       isBatch || meta.showCopyControls === false
-        ? "选好后点「确定」，再点上方灰色按钮开始导出。"
-        : "选好后点「确定」，再点上方灰色按钮开始导出。改「要不要字」会同步预览。";
+        ? "选好后点「确定」，再点「长图」开始导出。"
+        : "选好后点「确定」，再点「长图」开始导出。改「要不要字」会同步预览。";
   }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');
@@ -941,6 +1187,17 @@ export function syncPanelUI(pop, draft, opts) {
       coach.textContent = "";
     }
   }
+
+  if (socialFace) {
+    var okBtn = pop.querySelector('[data-action="ok"]');
+    if (okBtn) {
+      var lockedMain = isCrossingLongshotLocked(platform);
+      okBtn.textContent = lockedMain
+        ? crossingGateCopy().sheetTitle
+        : shortCtaLabelForPlatform(platform);
+      okBtn.disabled = lockedMain;
+    }
+  }
 }
 
 /**
@@ -953,6 +1210,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     smartCropEnabled: opts.smartCropEnabled === true,
     photoCount: opts.photoCount || 0,
     appendixCount: opts.appendixCount || 0,
+    edition: opts.edition === "portfolio" ? "portfolio" : "journal",
   };
   var draft = {
     platform: (initialDraft && initialDraft.platform) || "wechat_chat",
@@ -998,9 +1256,27 @@ export function bindPanelDraft(pop, initialDraft, opts) {
     });
   });
 
+  pop.querySelectorAll("[data-export-intent]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var intentId = btn.getAttribute("data-export-intent") || "daily_share";
+      draft.platforms = [defaultPlatformForIntent(intentId)];
+      draft.platform = draft.platforms[0];
+      refresh();
+    });
+  });
   pop.querySelectorAll("[data-studio-longshot-platform]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var pid = btn.getAttribute("data-studio-longshot-platform") || "wechat_chat";
+      if (isPortfolioSocialExportFace(pop) && isCrossingLongshotLocked(pid)) {
+        if (typeof pop._onCrossingGate === "function") pop._onCrossingGate(pid);
+        return;
+      }
+      if (isPortfolioSocialExportFace(pop)) {
+        draft.platforms = [pid];
+        draft.platform = pid;
+        refresh();
+        return;
+      }
       var idx = draft.platforms.indexOf(pid);
       if (idx >= 0) {
         // 再点同一项：取消勾选（至少保留 1 个）

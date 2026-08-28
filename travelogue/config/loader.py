@@ -53,11 +53,13 @@ from travelogue.config.mosaic import mosaic_from_dict
 from travelogue.config.phase6 import phase6_from_dict
 from travelogue.config.shot_grouping import shot_grouping_from_dict
 from travelogue.config.studio import (
+    DEFAULT_KEPT_ESTIMATE_RATIO,
     DEFAULT_LONGSHOT2_PLATFORMS,
     GcsPosterBricConfig,
     Longshot2Config,
     OutputRecipeBandsConfig,
     OutputRecipeConfig,
+    PortfolioPipelineConfig,
     StudioConfig,
 )
 from travelogue.config.template import TemplateAdminConfig, TemplateRouterConfig
@@ -129,6 +131,43 @@ def _parse_gcs_poster_bric_config(
         raw = {}
     return GcsPosterBricConfig(
         enabled=cfg_bool(raw, "enabled", "enabled", True) if raw else True,
+    )
+
+
+def _parse_portfolio_pipeline_config(studio_raw: dict[str, Any]) -> PortfolioPipelineConfig:
+    raw = studio_raw.get("portfolio_pipeline")
+    if not isinstance(raw, dict):
+        raw = studio_raw.get("portfolioPipeline")
+    if not isinstance(raw, dict):
+        raw = {}
+    override = raw.get("min_kept_override", raw.get("minKeptOverride"))
+    min_kept: int | None
+    if override is None or override == "":
+        min_kept = None
+    else:
+        try:
+            parsed = int(override)
+        except (TypeError, ValueError):
+            parsed = 0
+        min_kept = parsed if parsed > 0 else None
+    ratio_raw = raw.get("kept_estimate_ratio", raw.get("keptEstimateRatio"))
+    try:
+        ratio = (
+            float(ratio_raw)
+            if ratio_raw not in (None, "")
+            else DEFAULT_KEPT_ESTIMATE_RATIO
+        )
+    except (TypeError, ValueError):
+        ratio = DEFAULT_KEPT_ESTIMATE_RATIO
+    if ratio <= 0 or ratio > 1:
+        ratio = DEFAULT_KEPT_ESTIMATE_RATIO
+    return PortfolioPipelineConfig(
+        enabled=cfg_bool(raw, "enabled", "enabled", False),
+        homepage_entry=cfg_bool(raw, "homepage_entry", "homepageEntry", False),
+        allow_refine_switch=cfg_bool(raw, "allow_refine_switch", "allowRefineSwitch", True),
+        max_pages=cfg_int(raw, "max_pages", "maxPages", 48),
+        min_kept_override=min_kept,
+        kept_estimate_ratio=ratio,
     )
 
 LSE_BEAT_PROFILE_VALUES = frozenset({"flat", "classic_magazine", "dense_mid"})
@@ -749,9 +788,11 @@ def load_config(path: Path | None = None) -> AppConfig:
             ai_surface_enabled=cfg_bool(
                 studio_raw, "ai_surface_enabled", "aiSurfaceEnabled", False
             ),
+            output_ledger=cfg_bool(studio_raw, "output_ledger", "outputLedger", True),
             longshot2=_parse_longshot2_config(studio_raw),
             output_recipe=_parse_output_recipe_config(studio_raw),
             gcs_poster_bric=_parse_gcs_poster_bric_config(data, studio_raw),
+            portfolio_pipeline=_parse_portfolio_pipeline_config(studio_raw),
         ),
         phase6=phase6_from_dict(phase6_raw),
         template_router=TemplateRouterConfig(

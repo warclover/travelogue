@@ -16,6 +16,13 @@ from travelogue.web.studio_stages import stage_hint
 STAGE_COUNT = 4
 
 
+def _run_longshot_abort(abort: Callable[[], None]) -> None:
+    try:
+        abort()
+    except Exception:
+        pass
+
+
 @dataclass
 class StudioJob:
     job_id: str
@@ -315,10 +322,7 @@ class StudioJobStore:
             elif job.type == "g1_continue":
                 self._g1_running = False
         if abort is not None:
-            try:
-                abort()
-            except Exception:
-                pass
+            threading.Thread(target=_run_longshot_abort, args=(abort,), daemon=True).start()
         return job
 
     def await_import_handle_done(self, job_id: str, timeout: float = 30.0) -> bool:
@@ -375,6 +379,7 @@ def _cleanup_import_if_incomplete(job: StudioJob, payload: dict[str, Any]) -> No
                 title=str(payload.get("title") or "") or None,
                 place=str(payload.get("place") or "") or None,
                 explicit=None,
+                edition=str(payload.get("edition") or "") or None,
             )
 
     cleanup_import_terminal_artifacts(

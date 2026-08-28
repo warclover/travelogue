@@ -110,6 +110,11 @@ def cmd_curate(
         "--no-refresh-algorithms",
         help="skip auto re-cull even when cull config is stale",
     ),
+    edition: str | None = typer.Option(
+        None,
+        "--edition",
+        help="journal | portfolio（装配前盖身份；关旗时 portfolio 失败）",
+    ),
     trips_dir: Path | None = typer.Option(None, "--trips-dir"),
 ) -> None:
     """Agent 1+1.5: day chapters, cover, row layout (structure_draft)."""
@@ -120,6 +125,17 @@ def cmd_curate(
     refresh_flag: bool | None = True if refresh_algorithms else False if no_refresh_algorithms else None
     trip_path = _resolve(path, trips_dir=trips_dir)
     trip = _trip_svc(trip_path).load(trip_path)
+    if edition is not None:
+        from travelogue.config.edition import (
+            PortfolioUnavailableError,
+            apply_refine_edition,
+        )
+
+        try:
+            apply_refine_edition(trip, edition, get_config())
+        except PortfolioUnavailableError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(1) from exc
     try:
         result = run_curate(
             trip,
@@ -289,11 +305,29 @@ def cmd_run(
         help="stub | deepseek | dashscope for narrate stage",
     ),
     regenerate: bool = typer.Option(False, "--regenerate", help="Force rewrite copy on narrate stage"),
+    edition: str | None = typer.Option(
+        None,
+        "--edition",
+        help="journal | portfolio（装配前盖身份；关旗时 portfolio 失败）",
+    ),
     config: Path | None = typer.Option(None, "--config", help="config.yaml path"),
 ) -> None:
     """Run pipeline stages in order up to --until."""
     _load_cfg(config)
     trip_path = _resolve(path, trips_dir=trips_dir)
+    if edition is not None:
+        from travelogue.config.edition import (
+            PortfolioUnavailableError,
+            apply_refine_edition,
+        )
+
+        trip = _trip_svc(trip_path).load(trip_path)
+        try:
+            apply_refine_edition(trip, edition, get_config())
+        except PortfolioUnavailableError as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(1) from exc
+        persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
     try:
         result: RunResult = run_trip(
             trip_path,

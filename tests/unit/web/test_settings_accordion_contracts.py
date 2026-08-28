@@ -88,7 +88,7 @@ def test_settings_accordion_js_behaviors() -> None:
     assert "openLlmSettings" in llm
     assert "userDataDir" in llm and "tripsDir" in llm
     assert "showResumeAfterSave" in llm
-    assert "LLM_KEY_LINKS" in llm
+    assert "LLM_KEY_LINKS" not in llm
     # 不再 appendChild 注入 AI 区
     assert "appendChild(sec)" not in llm
 

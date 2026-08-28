@@ -29,7 +29,9 @@ PLATFORM_SEGMENT_IDS = frozenset(
         "custom",
     }
 )
-KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS)
+# PFM · 作品集页图。登记到已知平台；不进 PHASE_A 平铺、不进批量多选（N-PFM-15）。
+PORTFOLIO_PLATFORM_IDS = frozenset({"portfolio_pages"})
+KNOWN_PLATFORM_IDS = frozenset({"wechat_chat"} | PLATFORM_SEGMENT_IDS | PORTFOLIO_PLATFORM_IDS)
 
 # Fixed-canvas collage compose (no Playwright aspect-fit longshot)
 COMPOSE_PLATFORM_IDS = frozenset(
@@ -80,6 +82,9 @@ class PlatformProfile:
     publish_guide: str = ""
     output: dict[str, Any] = field(default_factory=dict)
     phase: str | None = None
+    surface: str = ""
+    stale_inputs: tuple[str, ...] = ()
+    stale_options: tuple[str, ...] = ()
 
     @property
     def is_platform_segment(self) -> bool:
@@ -100,6 +105,12 @@ def _coerce_int(value: Any, default: int | None = None) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _string_tuple(raw: Any) -> tuple[str, ...]:
+    if not isinstance(raw, list):
+        return ()
+    return tuple(str(item).strip() for item in raw if str(item).strip())
 
 
 def _profile_from_raw(pid: str, raw: dict[str, Any]) -> PlatformProfile:
@@ -123,6 +134,9 @@ def _profile_from_raw(pid: str, raw: dict[str, Any]) -> PlatformProfile:
         publish_guide=str(raw.get("publish_guide") or "").strip(),
         output=dict(output),
         phase=str(raw["phase"]) if raw.get("phase") is not None else None,
+        surface=str(raw.get("surface") or "").strip(),
+        stale_inputs=_string_tuple(raw.get("stale_inputs")),
+        stale_options=_string_tuple(raw.get("stale_options")),
     )
 
 
@@ -186,12 +200,12 @@ def resolve_profile(
     profile = get_profile(pid, path=path)
 
     if pid != DEFAULT_PLATFORM:
-        if not longshot2_enabled:
+        if not longshot2_enabled and pid not in PORTFOLIO_PLATFORM_IDS:
             raise PlatformProfileError(
                 "E_LNG2_INVALID_PLATFORM",
                 "平台导出未启用，请改用微信群长图",
             )
-        if allowed_platforms is not None and pid not in PHASE_C_CLI_ONLY:
+        if allowed_platforms is not None and pid not in PHASE_C_CLI_ONLY | PORTFOLIO_PLATFORM_IDS:
             # Phase C platforms are CLI/API only — skip Studio gray-list gate
             allow = {str(x).strip() for x in allowed_platforms if str(x).strip()}
             if pid not in allow:
@@ -503,4 +517,6 @@ def file_prefix_for_platform(title: str, platform_id: str) -> str:
         return f"{slug}-douyin-cover"
     if platform_id == "custom":
         return f"{slug}-custom"
+    if platform_id == "portfolio_pages":
+        return f"{slug}-portfolio"
     return f"{slug}-{platform_id}"

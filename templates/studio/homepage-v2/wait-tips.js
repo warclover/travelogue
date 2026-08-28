@@ -9,6 +9,7 @@ import {
   DISMISS_KEY,
   VERSION_KEY,
   WAIT_TIPS_CARDS,
+  waitTipsCardsForEdition,
 } from "./wait-tips-copy.js";
 
 var SHOW_DELAY_MS = 2000;
@@ -28,6 +29,8 @@ var _importStartedAt = 0;
 var _suppressAdvance = false;
 var _alive = false;
 var _firstDwellDone = false;
+var _cards = WAIT_TIPS_CARDS;
+var _edition = "journal";
 
 function _lsGet(key) {
   try {
@@ -94,7 +97,7 @@ function viewedCount() {
 }
 
 function currentCard() {
-  return WAIT_TIPS_CARDS[_index] || WAIT_TIPS_CARDS[0];
+  return _cards[_index] || _cards[0];
 }
 
 function renderCard() {
@@ -127,7 +130,7 @@ function scheduleAdvance() {
   _timer = setTimeout(function () {
     if (!_alive || _paused || _suppressAdvance) return;
     var from = currentCard().id;
-    goTo((_index + 1) % WAIT_TIPS_CARDS.length, "auto");
+    goTo((_index + 1) % _cards.length, "auto");
     trackStudioEvent("wait_tips_auto_advance", {
       from_id: from,
       to_id: currentCard().id,
@@ -136,9 +139,9 @@ function scheduleAdvance() {
 }
 
 function goTo(nextIndex, via) {
-  if (!_root || !WAIT_TIPS_CARDS.length) return;
+  if (!_root || !_cards.length) return;
   var from = currentCard().id;
-  var n = WAIT_TIPS_CARDS.length;
+  var n = _cards.length;
   var prevIdx = _index;
   _index = ((nextIndex % n) + n) % n;
   renderCard();
@@ -213,7 +216,7 @@ function buildDom() {
   dots.className = "v2-wait-tips__dots";
   dots.setAttribute("role", "tablist");
   dots.setAttribute("aria-label", "提示页码");
-  for (var i = 0; i < WAIT_TIPS_CARDS.length; i++) {
+  for (var i = 0; i < _cards.length; i++) {
     (function (idx) {
       var d = document.createElement("button");
       d.type = "button";
@@ -269,7 +272,7 @@ function buildDom() {
 
 /**
  * @param {HTMLElement} panel · .v2-import-panel
- * @param {{ importStartedAt?: number, beforeEl?: HTMLElement|null, force?: boolean }} opts
+ * @param {{ importStartedAt?: number, beforeEl?: HTMLElement|null, force?: boolean, edition?: string }} opts
  *   force：忽略/清除 dismiss，立即显现（帮助「重播」或面板内恢复入口）
  */
 export function scheduleWaitTips(panel, opts) {
@@ -280,6 +283,8 @@ export function scheduleWaitTips(panel, opts) {
     if (force) clearWaitTipsDismissed();
     if (!panel || (!force && isWaitTipsDismissed())) return;
     removeWaitTipsRestoreChip(panel);
+    _edition = opts.edition || "journal";
+    _cards = waitTipsCardsForEdition(_edition);
     _importStartedAt = opts.importStartedAt || Date.now();
     _alive = true;
     _index = 0;
@@ -342,6 +347,7 @@ export function mountWaitTipsRestoreChip(panel, beforeEl) {
         importStartedAt: _importStartedAt || Date.now() - SHOW_DELAY_MS,
         beforeEl: beforeEl,
         force: true,
+        edition: _edition,
       });
     });
     if (beforeEl && beforeEl.parentNode === panel) {
@@ -371,6 +377,7 @@ export function remountWaitTipsIfImporting() {
       importStartedAt: _importStartedAt || Date.now() - SHOW_DELAY_MS,
       beforeEl: cancel,
       force: true,
+      edition: _edition,
     });
     return !!document.getElementById("v2-wait-tips");
   } catch (_e) {

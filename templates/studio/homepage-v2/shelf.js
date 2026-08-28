@@ -28,16 +28,18 @@ import {
   shelfShowCoverReadyBadge,
 } from "./shelf-actions-logic.js";
 import { stubCode, stubSerial, stubYearMonth } from "./shelf-ticket-logic.js";
-
-var READY_LONGSHOT = "分享图已就绪";
-var PREVIEW_READY = "可先预览";
-var PREPARING_HD = "正在准备高清图";
+import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
+import { allowReadyBadge, buildOutputStubs } from "./shelf-outputs.js";
+import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
+var READY_LONGSHOT = COPY_DICTIONARY.shelfReady;
+var PREVIEW_READY = "可先预览";
+var PREPARING_HD = "正在准备高清图";
 var STALE_BADGE = "可重排";
 var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
-var STALE_LONGSHOT = "分享图需更新";
+var STALE_LONGSHOT = COPY_DICTIONARY.shelfStale;
 var _shelfScrollTracked = false;
 var _hostEl = null;
 var _gridEl = null;
@@ -108,6 +110,8 @@ function tripSubLine(trip) {
 /** 满票根 meta：年月优先（暂用 updatedAt）· 张数。 */
 function stubMetaLine(trip) {
   var bits = [];
+  var editionLine = shelfEditionLine(trip);
+  if (editionLine) bits.push(editionLine);
   var ym = stubYearMonth(trip.updatedAt);
   if (ym) bits.push(ym);
   if (trip.photoCount) bits.push(trip.photoCount + " 张");
@@ -183,9 +187,9 @@ function buildCoverWrap(trip, surface) {
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
   var staleBits = [];
-  if (trip.longshotStale) staleBits.push("分享图需更新");
+  if (trip.longshotStale) staleBits.push(STALE_LONGSHOT);
   if (trip.algorithmStale) staleBits.push(STALE_BADGE);
-  var readyBadge = shelfShowCoverReadyBadge(trip);
+  var readyBadge = shelfShowCoverReadyBadge(trip) && allowReadyBadge(trip);
   if (readyBadge) staleBits.push(READY_LONGSHOT);
   openCover.title = (trip.title || trip.tripId)
     + (staleBits.length ? " · " + staleBits.join(" · ") : "");
@@ -230,7 +234,11 @@ function buildCoverWrap(trip, surface) {
     algoBadge.title = STALE_BADGE_TIP;
     wrap.appendChild(algoBadge);
   }
-  attachShelfTripMenu(wrap, trip, { surface: surface, onDeleted: onTripDeleted });
+  attachShelfTripMenu(wrap, trip, {
+    surface: surface,
+    onDeleted: onTripDeleted,
+    onOutputsChanged: refreshTripOutputs,
+  });
   return wrap;
 }
 
@@ -302,6 +310,14 @@ function buildBook(trip) {
   code.setAttribute("aria-hidden", "true");
   code.appendChild(el("span", "v2-shelf__code-id", stubCode(trip)));
   code.appendChild(el("span", "v2-shelf__barcode"));
+
+  var stubs = buildOutputStubs(trip, {
+    onRevealFail: function () { refreshTripOutputs(trip.tripId); },
+  });
+  if (stubs) {
+    openMeta.classList.add("v2-shelf__stub--chips");
+    openMeta.appendChild(stubs);
+  }
   openMeta.appendChild(code);
 
   openMeta.addEventListener("click", function () { openTrip(trip, false); });
@@ -483,4 +499,28 @@ function refreshShelfStorageBadge(badgeEl) {
     });
 }
 
-export { loadMoreShelf, SHELF_PAGE_SIZE };
+function refreshTripOutputs(tripId) {
+  return fetch("/__travelogue/trips?limit=100&offset=0", { headers: studioAuthHeaders() })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      var found = null;
+      var rows = (data && data.trips) || [];
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i].tripId === tripId) {
+          found = rows[i];
+          break;
+        }
+      }
+      if (!found) return;
+      _loadedTrips = _loadedTrips.map(function (t) {
+        return t.tripId === tripId ? Object.assign({}, t, found) : t;
+      });
+      if (!_gridEl) return;
+      var card = _gridEl.querySelector('.v2-shelf__card[data-trip-id="' + tripId + '"]');
+      if (!card) return;
+      card.replaceWith(buildBook(found));
+    })
+    .catch(function () { /* keep current ticket */ });
+}
+
+export { loadMoreShelf, SHELF_PAGE_SIZE, refreshTripOutputs };

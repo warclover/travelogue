@@ -31,6 +31,8 @@ from travelogue.web.studio_handlers.common import (
     match_aesthetic_preference,
     match_bento_preview,
     match_entry,
+    match_trip_output_item,
+    match_trip_outputs,
     match_source_status,
     match_trip_ai_intent_brief,
     match_trip_ai_layout_critic,
@@ -50,6 +52,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_curate,
     match_trip_delete,
     match_trip_intent,
+    match_trip_edition,
     match_trip_layout_vibe,
     match_trip_moment_curation,
     match_trip_moment_patch,
@@ -58,6 +61,7 @@ from travelogue.web.studio_handlers.common import (
     match_trip_rerender,
     match_trip_save_copy,
     match_trip_screen_replan,
+    match_trip_sibling_journal,
     match_trip_template,
     match_trip_title_art_resolve,
 )
@@ -207,6 +211,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         auth=True,
     ),
     RouteSpec("GET", TRIPS_PATH, "trip_handlers.handle_trips", auth=True),
+    RouteSpec(
+        "GET",
+        "/__travelogue/trips/{tripId}/outputs",
+        "trip_handlers.handle_get_outputs",
+        "capture",
+        auth=True,
+    ),
     RouteSpec("GET", CHAPTER_LAYOUT_PATH, "trip_handlers.handle_chapter_layout", auth=True),
     RouteSpec("GET", "/__travelogue/trips/{tripId}/entry", "trip_handlers.handle_entry", "capture", auth=True),
     RouteSpec(
@@ -248,6 +259,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         "GET",
         "/__travelogue/trips/{tripId}/bookends",
         "trip_handlers.handle_get_bookends",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "GET",
+        "/__travelogue/trips/{tripId}/sibling-journal",
+        "trip_handlers.handle_sibling_journal",
         "capture",
         auth=True,
     ),
@@ -307,6 +325,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         auth=True,
     ),
     # DELETE
+    RouteSpec(
+        "DELETE",
+        "/__travelogue/trips/{tripId}/outputs/{outputId}",
+        "trip_handlers.handle_delete_output",
+        "capture",
+        auth=True,
+    ),
     RouteSpec("DELETE", "/__travelogue/trips/{tripId}", "trip_handlers.handle_delete_trip", "capture", auth=True),
     # POST
     RouteSpec("POST", AI_UNLOCK_GATE_PATH, "ai_ops_handlers.handle_post_unlock_gate", auth=True),
@@ -357,6 +382,13 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
         "POST",
         "/__travelogue/trips/{tripId}/layout-vibe",
         "trip_handlers.handle_layout_vibe",
+        "capture",
+        auth=True,
+    ),
+    RouteSpec(
+        "POST",
+        "/__travelogue/trips/{tripId}/edition",
+        "trip_handlers.handle_trip_edition",
         "capture",
         auth=True,
     ),
@@ -457,10 +489,18 @@ ROUTE_SPECS: tuple[RouteSpec, ...] = (
 )
 
 
-def studio_route_snapshot() -> list[dict[str, str]]:
-    """Return sorted method+path+handler triples for AC-ARC-13 snapshot tests."""
-    rows = [{"method": s.method, "path": s.path, "handler": s.handler} for s in ROUTE_SPECS]
-    return sorted(rows, key=lambda r: (r["method"], r["path"], r["handler"]))
+def studio_route_snapshot() -> list[dict[str, object]]:
+    """Return sorted method+path+handler+auth rows for AC-ARC-13 snapshot tests."""
+    rows = [
+        {
+            "method": s.method,
+            "path": s.path,
+            "handler": s.handler,
+            "auth": s.auth,
+        }
+        for s in ROUTE_SPECS
+    ]
+    return sorted(rows, key=lambda r: (str(r["method"]), str(r["path"]), str(r["handler"])))
 
 
 def _bind_trip_or_404(handler: Any, trip_id: str) -> bool:
@@ -506,12 +546,15 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/layout-strategies/{strategyId}": match_layout_strategy_detail,
     "/__travelogue/templates/admin/{templateId}/version": match_template_admin_version,
     "/__travelogue/trips/{tripId}/entry": match_entry,
+    "/__travelogue/trips/{tripId}/outputs": match_trip_outputs,
+    "/__travelogue/trips/{tripId}/outputs/{outputId}": match_trip_output_item,
     "/__travelogue/trips/{tripId}/source-status": match_source_status,
     "/__travelogue/trips/{tripId}/cohort": match_trip_cohort,
     "/__travelogue/trips/{tripId}/aesthetic": match_aesthetic,
     "/__travelogue/trips/{tripId}/bento-preview": match_bento_preview,
     "/__travelogue/trips/{tripId}/curation/moment": match_trip_moment_curation,
     "/__travelogue/trips/{tripId}/bookends": match_trip_bookends,
+    "/__travelogue/trips/{tripId}/sibling-journal": match_trip_sibling_journal,
     "/__travelogue/trips/{tripId}/bookends/resolve-opening": match_trip_bookends_resolve_opening,
     "/__travelogue/trips/{tripId}/bookends/resolve-closing": match_trip_bookends_resolve_closing,
     "/__travelogue/trips/{tripId}/bookends/repick-opening": match_trip_bookends_repick_opening,
@@ -537,6 +580,7 @@ _CAPTURE_MATCHERS: dict[str, Matcher] = {
     "/__travelogue/layout-strategies/{strategyId}/runtime": match_layout_strategy_runtime,
     "/__travelogue/trips/{tripId}/curate": match_trip_curate,
     "/__travelogue/trips/{tripId}/layout-vibe": match_trip_layout_vibe,
+    "/__travelogue/trips/{tripId}/edition": match_trip_edition,
     "/__travelogue/trips/{tripId}/cohort/refresh": match_trip_cohort_refresh,
     "/__travelogue/trips/{tripId}/copy-telemetry": match_trip_copy_telemetry,
     "{tripId}/__travelogue/save-copy": match_trip_save_copy,
@@ -640,12 +684,17 @@ def dispatch_studio(method: str, path: str, handler: Any, *, require_auth: Calla
 
     Returns True when a route matched (including auth rejection short-circuit).
     """
+    from travelogue.web.studio_json import StudioJsonBodyError
+
     for route in _routes_for(method):
         cap = route.match(path)
         if cap is False or cap is None:
             continue
         if route.spec.auth and not require_auth():
             return True
-        route.invoke(handler, cap if cap is not True else None)
+        try:
+            route.invoke(handler, cap if cap is not True else None)
+        except StudioJsonBodyError:
+            pass
         return True
     return False

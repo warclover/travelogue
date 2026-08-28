@@ -58,6 +58,7 @@ def _project_config_body(
     }
     if include_pipeline_estimates:
         body["pipelineEstimates"] = pipeline_estimate_tiers()
+    _fill_portfolio_min_kept(body, cfg)
     if enabled:
         body.update(studio_llm_status(cfg=cfg))
         return body
@@ -66,6 +67,33 @@ def _project_config_body(
     for key in ("llmAvailable", "llmProvider"):
         body.pop(key, None)
     return body
+
+
+def _fill_portfolio_min_kept(body: dict, cfg) -> None:
+    """D-PFM-29 · expose derived minKept without config importing layout_engine."""
+    studio = body.get("studio")
+    if not isinstance(studio, dict):
+        return
+    pipe = studio.get("portfolioPipeline")
+    if not isinstance(pipe, dict):
+        return
+    from travelogue.config.edition import min_kept_for_portfolio
+    from travelogue.layout_engine.editorial_series.catalog import (
+        load_official_series,
+        min_capacity,
+    )
+
+    catalog = load_official_series()
+    pipe["minKept"] = min_kept_for_portfolio(
+        cfg, catalog_min=min_capacity(catalog)
+    )
+    from travelogue.layout_engine.editorial_series.match import (
+        catalog_chip_details,
+        catalog_page_count_chips,
+    )
+
+    pipe["pageCountChips"] = catalog_page_count_chips(catalog)
+    pipe["pageCountChipDetails"] = catalog_chip_details(catalog)
 
 
 def handle_config(handler: StudioHandlerProtocol) -> None:

@@ -15,13 +15,24 @@ from travelogue.media.storage_cleanup import (
 )
 from travelogue.paths import ROOT, is_frozen
 from travelogue.web.studio_errors import user_message
-from travelogue.web.studio_handlers.common import studio_ctx
+from travelogue.web.studio_handlers.common import (
+    resolve_trip_dir,
+    resolve_trip_dir_listed,
+    studio_ctx,
+)
 from travelogue.web.studio_handlers.protocols import StudioHandlerProtocol
+from travelogue.web.studio_trip_id import is_valid_studio_trip_id
 
 
 def handle_source_status(handler: StudioHandlerProtocol, trip_id: str) -> None:
     ctx = studio_ctx(handler)
-    trip_dir = Path(ctx.trips_root) / trip_id
+    trip_dir = resolve_trip_dir(ctx, trip_id) or resolve_trip_dir_listed(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_TRIP_NOT_FOUND", "message": user_message("E_TRIP_NOT_FOUND")},
+        )
+        return
     trip_json = trip_dir / "trip.json"
     if not trip_json.is_file():
         handler._json_response(
@@ -75,13 +86,25 @@ def handle_storage_cleanup(handler: StudioHandlerProtocol) -> None:
     targets: list[Path] = []
     if trip_ids:
         for tid in trip_ids:
-            td = trips_root / str(tid)
-            if (td / "trip.json").is_file():
+            raw = str(tid)
+            if not is_valid_studio_trip_id(raw):
+                handler._json_response(
+                    400,
+                    {
+                        "ok": False,
+                        "error": "E_STUDIO_PATH",
+                        "message": user_message("E_STUDIO_PATH"),
+                    },
+                )
+                return
+            td = resolve_trip_dir(ctx, raw)
+            if td is not None:
                 targets.append(td)
-    else:
+    elif trips_root.is_dir():
         for child in trips_root.iterdir():
-            if child.is_dir() and (child / "trip.json").is_file():
-                targets.append(child)
+            td = resolve_trip_dir_listed(ctx, child.name)
+            if td is not None:
+                targets.append(td)
 
     total_freed = 0
     items: list[dict] = []
@@ -212,7 +235,19 @@ def handle_storage_remount(handler: StudioHandlerProtocol) -> None:
         handler._json_response(400, {"ok": False, "error": "tripId and albumPath required"})
         return
     ctx = studio_ctx(handler)
-    trip_dir = Path(ctx.trips_root) / trip_id
+    if not is_valid_studio_trip_id(trip_id):
+        handler._json_response(
+            400,
+            {"ok": False, "error": "E_STUDIO_PATH", "message": user_message("E_STUDIO_PATH")},
+        )
+        return
+    trip_dir = resolve_trip_dir(ctx, trip_id)
+    if trip_dir is None:
+        handler._json_response(
+            404,
+            {"ok": False, "error": "E_TRIP_NOT_FOUND", "message": user_message("E_TRIP_NOT_FOUND")},
+        )
+        return
     trip_json = trip_dir / "trip.json"
     album = Path(album_raw)
     if not trip_json.is_file():

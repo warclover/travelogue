@@ -59,6 +59,9 @@ jobs:
       - name: Trip HTML title consistency (shelf/preview drift)
         run: python scripts/lint_trip_html_title.py schemas/fixtures tests/fixtures
 
+      - name: Binary asset signatures (new drift only; B-03 abandoned set allowlisted)
+        run: python scripts/lint_binary_assets.py --strict
+
       - name: Import layer contract (M-B0)
         run: lint-imports
 
@@ -86,6 +89,9 @@ jobs:
       # CSC · Completion Surface Convergence ratchets (AC-CSC-01/02/03/12)
       - name: CSC layout_engine facade deep-import ceiling
         run: python scripts/lint_layout_engine_facade.py
+
+      - name: DPI dual-pipeline ownership ratchet
+        run: python scripts/lint_dual_pipeline_ownership.py
 
       - name: CSC god-module line ceiling (curate / studio_pipeline)
         run: python scripts/lint_csc_god_module_ratchet.py
@@ -160,6 +166,11 @@ jobs:
           python -m travelogue.layout_templates.cli export --sync-journal
           git diff --exit-code templates/visual-journal/journal-screens.css || {
             echo "journal-screens.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-journal"
+            exit 1
+          }
+          python -m travelogue.layout_templates.cli export --sync-portfolio
+          git diff --exit-code templates/visual-journal/portfolio-pages.css || {
+            echo "portfolio-pages.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-portfolio"
             exit 1
           }
 
@@ -349,7 +360,7 @@ jobs:
         run: python -m travelogue.layout_templates.cli check-primitives
 
       - name: LTE journal CSS handwritten inventory
-        run: python scripts/lte_journal_css_audit.py --fail-on-duplicates
+        run: python scripts/lte_journal_css_audit.py --fail-on-duplicates --fail-on-prefix-leak
 
       # LRG / LTN R-A1 · sync-journal also runs as PR block in test-pr; keep on push.
       - name: LTE journal CSS sync drift (release block)
@@ -357,6 +368,11 @@ jobs:
           python -m travelogue.layout_templates.cli export --sync-journal
           git diff --exit-code templates/visual-journal/journal-screens.css || {
             echo "journal-screens.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-journal"
+            exit 1
+          }
+          python -m travelogue.layout_templates.cli export --sync-portfolio
+          git diff --exit-code templates/visual-journal/portfolio-pages.css || {
+            echo "portfolio-pages.css out of sync; run: python -m travelogue.layout_templates.cli export --sync-portfolio"
             exit 1
           }
 

@@ -240,6 +240,7 @@ def _handle_longshot_batch(
     from travelogue.export.platform_profiles import (
         COMPOSE_PLATFORM_IDS,
         DEFAULT_PLATFORM,
+        PORTFOLIO_PLATFORM_IDS,
         PlatformProfileError,
         normalize_platform_id,
         resolve_profile,
@@ -280,6 +281,16 @@ def _handle_longshot_batch(
                     "ok": False,
                     "error": "E_LNG2_DUPLICATE_PLATFORM",
                     "message": f"重复的导出平台：{platform_id}",
+                },
+            )
+            return
+        if platform_id in PORTFOLIO_PLATFORM_IDS:
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_PORTFOLIO_NOT_BATCH",
+                    "message": "作品集页图不进批量多选",
                 },
             )
             return
@@ -517,9 +528,9 @@ def _handle_longshot_batch(
 def handle_longshot(handler: StudioHandlerProtocol) -> None:
     import json
 
+    from travelogue.export.dispatch import dispatch_export
     from travelogue.export.longshot import (
         DEFAULT_EXPORT_SCALE,
-        export_trip_longshot,
         playwright_longshot_available,
     )
     from travelogue.export.output_recipe import count_kept_n, resolve_output_recipe
@@ -613,6 +624,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     intent_raw = payload.get("intent")
     intent = str(intent_raw).strip() if intent_raw not in (None, "") else None
     platform_raw = payload.get("platform")
+    if platform_raw not in (None, ""):
+        platform_raw = normalize_platform_id(platform_raw)
 
     longshot2_enabled = bool(getattr(cfg.studio, "longshot2_enabled", True))
     from travelogue.config.studio import DEFAULT_LONGSHOT2_PLATFORMS
@@ -688,8 +701,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         )
         return
 
+    from travelogue.export.portfolio_pages import is_portfolio_pages_platform
+
     recipe = None
-    use_recipe = bool(recipe_enabled or intent)
+    portfolio_pages_request = is_portfolio_pages_platform(platform_raw)
+    use_recipe = bool(recipe_enabled or intent) and not portfolio_pages_request
     if use_recipe:
         try:
             recipe = resolve_output_recipe(
@@ -718,15 +734,54 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             )
             return
 
+        if recipe.source == "portfolio_bypass":
+            handler._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "E_PORTFOLIO_PACK_REQUIRED",
+                    "message": "作品集请导出这一本与页图，不要走群长图",
+                    "recipe": recipe.to_dict(),
+                },
+            )
+            return
+
         platform_id = normalize_platform_id(recipe.platform or platform_raw)
         if platform_id == DEFAULT_PLATFORM and recipe.layout in ("chapter", "by_chapter"):
             segment_mode = "chapter"
         elif platform_id == DEFAULT_PLATFORM and recipe.layout == "single":
             segment_mode = "full"
+    elif portfolio_pages_request:
+        platform_id = normalize_platform_id(platform_raw)
     elif not longshot2_enabled:
         platform_id = DEFAULT_PLATFORM
     else:
         platform_id = normalize_platform_id(platform_raw)
+
+    from travelogue.config.edition import is_portfolio_trip
+
+    explicit_platform = str(platform_raw or "").strip() not in ("",)
+    if is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM and not explicit_platform:
+        handler._json_response(
+            400,
+            {
+                "ok": False,
+                "error": "E_PORTFOLIO_PACK_REQUIRED",
+                "message": "作品集请导出这一本与页图，不要走群长图",
+            },
+        )
+        return
+    if is_portfolio_trip(trip) and platform_id in ("wechat_chat", "wechat_moments"):
+        handler._json_response(
+            409,
+            {
+                "ok": False,
+                "error": "E_CLG_NEEDS_JOURNAL",
+                "code": "E_CLG_NEEDS_JOURNAL",
+                "message": "长图要在游记里做",
+            },
+        )
+        return
 
     # Moments / grid: always export pure photos (ignore preview copy mode).
     if platform_id in ("wechat_moments", "moments_grid", "poster_bric"):
@@ -760,6 +815,15 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
     )
     include_appendix = bool(payload.get("includeAppendix"))
 
+    include_zip = True
+    include_pages = True
+    if portfolio_pages_request:
+        piece = str(payload.get("portfolioPiece") or "").strip().lower()
+        if piece == "pages" or payload.get("includeZip") is False:
+            include_zip = False
+        if piece == "book" or payload.get("includePages") is False:
+            include_pages = False
+
     # Validate platform before client fallback (AC-LNG2-05c / AC-OR-R03).
     try:
         profile = resolve_profile(
@@ -778,11 +842,15 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
 
     # M-INS-0c · 真九宫格 / Compose 拼贴（小红书/公众号/画册/海报）不需 Playwright；
     # 其余保留 client fallback（AC-ECC-05）。
-    from travelogue.export.platform_profiles import COMPOSE_PLATFORM_IDS
+    from travelogue.export.platform_profiles import COMPOSE_PLATFORM_IDS, PORTFOLIO_PLATFORM_IDS
 
     force_client = bool(payload.get("forceClient") or payload.get("clientOnly"))
-    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"}
-    if profile.id not in server_pack_platforms and (
+    server_pack_platforms = COMPOSE_PLATFORM_IDS | {"moments_grid"} | PORTFOLIO_PLATFORM_IDS
+    # ISO-04 · 作品集显式微信群走 kept 池，禁止 client 拍 page-* flatten
+    skip_client_fallback = profile.id in server_pack_platforms or (
+        is_portfolio_trip(trip) and platform_id == DEFAULT_PLATFORM
+    )
+    if not skip_client_fallback and (
         force_client or not playwright_longshot_available()
     ):
         handler._json_response(
@@ -831,7 +899,7 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
                 store.set_longshot_abort(job.job_id, abort)  # type: ignore[arg-type]
 
         _ensure_derivatives_for_export(trip_dir)
-        result = export_trip_longshot(
+        result = dispatch_export(
             trip_dir,
             scale=scale,
             fmt=fmt,
@@ -844,6 +912,8 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             include_appendix=include_appendix,
             cancel_check=cancel_check,
             cancel_register=cancel_register,
+            include_zip=include_zip,
+            include_pages=include_pages,
         )
         rel_outputs = [rel_to_trip(trip_dir, item.path) for item in result.outputs]
         page_count = result.page_count if result.page_count is not None else len(result.outputs)
@@ -872,6 +942,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             "outputFormat": getattr(result, "output_format", None) or fmt,
             "keptN": count_kept_n(trip if isinstance(trip, dict) else None),
             "intent": getattr(recipe, "intent", None) if recipe else None,
+            "skippedPages": list(getattr(result, "skipped_pages", None) or []),
+            "shareZip": (
+                rel_to_trip(trip_dir, result.share_zip)
+                if getattr(result, "share_zip", None)
+                else None
+            ),
         }
 
     threading.Thread(
@@ -980,7 +1056,7 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
 
     rel = rel_to_trip(trip_dir, out)
     try:
-        maybe_write_longshot_current_after_upload(
+        current_path = maybe_write_longshot_current_after_upload(
             trip_dir,
             rel=rel,
             segment_index=seg_i,
@@ -1002,6 +1078,58 @@ def handle_longshot_upload(handler: StudioHandlerProtocol) -> None:
         return
     platform = str(payload.get("platform") or "wechat_chat").strip() or "wechat_chat"
     copy_display = str(payload.get("copyDisplay") or COPY_DISPLAY_FULL).strip().lower()
+    if current_path is not None:
+        from travelogue.export.longshot import default_longshot_output_name
+        from travelogue.export.output_ledger import (
+            OutputLedgerError,
+            load_trip_dict,
+            lookup_output_meta,
+            output_ledger_enabled,
+            record_successful_output,
+            spec_from_profile,
+        )
+        from travelogue.render.context import longshot_bundle_version
+
+        if output_ledger_enabled():
+            if seg_n and seg_n > 1:
+                ledger_files = [
+                    default_longshot_output_name(
+                        trip_dir,
+                        fmt=fmt,
+                        segment_index=i,
+                        segment_total=seg_n,
+                    )
+                    for i in range(1, seg_n + 1)
+                ]
+            else:
+                ledger_files = [Path(rel).name]
+            trip = load_trip_dict(trip_dir)
+            ledger_profile = "wechat_chat"
+            meta = lookup_output_meta(platform, segmented=bool(seg_n and seg_n > 1))
+            if meta is not None and meta.surface not in ("folio", "bundle", "spread"):
+                ledger_profile = meta.profile
+            try:
+                record_successful_output(
+                    trip_dir,
+                    trip=trip,
+                    profile=ledger_profile,
+                    files=ledger_files,
+                    spec=spec_from_profile(ledger_profile, scale=1, fmt=fmt),
+                    bundle_fp=longshot_bundle_version(trip),
+                    batch_id=str(payload.get("batchId") or payload.get("jobId") or "").strip(),
+                    segmented=bool(seg_n and seg_n > 1),
+                )
+            except OutputLedgerError as exc:
+                handler._json_response(
+                    500,
+                    {
+                        "ok": False,
+                        "error": "E_OUTPUT_LEDGER",
+                        "message": "长图已保存，但成品清单写入失败",
+                        "detail": str(exc)[:240],
+                    },
+                )
+                return
     publish_guide = [
         "长图已保存到本机",
         "打开微信，按文件名顺序发到群聊",

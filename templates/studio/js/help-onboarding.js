@@ -29,6 +29,8 @@ export var HELP_LS = {
   homeStubBannerDismissed: "travelogue.desktop.homeStubBanner.v1",
   /** L0 Hardening · 首次预览本机文案 tip */
   stubHintSeen: "travelogue.desktop.stubHint.v1",
+  /** ONB-01 · 生成完成一次性提示 */
+  generateCompleteSeen: "travelogue.studio.onb.generateCompleteSeen",
 };
 
 /** session：能力卡本会话压制非关键自动 Help L1（D-DLLM-13） */
@@ -39,9 +41,8 @@ export var HELP_COPY = {
   firstSuccessNext: "画册已做好，可预览与导出长图。",
   firstSuccessNextReady: "画册已做好，可预览与导出长图。",
   firstSuccessNextNeutral: "画册已做好，可预览与导出长图。",
-  longshotTip:
-    "验货没问题就点『长图』，生成可发微信的长图",
-  longshotAria: "验货没问题就点『长图』，生成可发微信的长图",
+  longshotTip: "预览满意后点『长图』，就会导出到本机文件夹。",
+  longshotAria: "预览满意后点『长图』，就会导出到本机文件夹。",
   openPreviewCta: "打开画册预览 →",
   saveLongshotSecondary: "保存长图",
   importFolderSummary: "不知道选哪个文件夹？",
@@ -52,7 +53,7 @@ export var HELP_COPY = {
     "手机照片需先传到电脑",
   ],
   importNewTripLine:
-    "每个文件夹会生成一本新的画册，不会覆盖已有画册",
+    "作品集和游记可以各做一本；同一身份再用这个文件夹会覆盖",
   importNewToast: "将新建一本画册 · 已选择 N 张",
   publishGuideFallback: [
     "长图已保存到本机",
@@ -103,7 +104,10 @@ export var HELP_COPY = {
   stubNarrateTip: "预览里点文字即可改；导出可选纯照片。",
   helpDeepLinkPending: "「分享图需更新」是什么意思 →",
   helpDeepLinkH3: "了解更多 →",
-  /** H0–H6 帮助抽屉（NAS：H7 已移除 · D-NAS-20） */
+  /** PFO · 作品集厚度（§10.3）；精修 hint 同源 */
+  portfolioPageSpecHint:
+    "生成前系统会按文件夹给一个厚度；多数情况打开看看就能导出。精修改封面和成册类型。",
+  /** H0–H6 帮助抽屉（NAS：H7 已移除 · D-NAS-20）；H9 = 作品集页数 */
   helpItems: [
     {
       id: "H0",
@@ -135,9 +139,9 @@ export var HELP_COPY = {
         "若要按精选改构图：用「按精选重排」（会确认；与「更新版面」不同）",
         "点「长图」：导出当前已更新结果",
         "章节顺序不对：点工具栏「分章」可跳章、看说明或重新生成（默认已排好，一般不用动）",
-        "点「精修」：进入精修模式（可收起面板继续改）",
-        "Esc / × / 再点「精修」（面板开时）：只关面板，模式可仍为 on",
-        "点「完成」：退出精修模式（★ 隐藏）——不是更新版面",
+        "点「调整」：进入调整模式（可收起面板继续改）",
+        "Esc / × / 再点「调整」（面板开时）：只关面板，模式可仍为 on",
+        "点「完成调整」：退出调整模式（★ 隐藏）——不是更新版面",
       ],
     },
     {
@@ -198,6 +202,14 @@ export var HELP_COPY = {
         "推荐更稳；实验更贴照片比例，章节页数可能变（会先确认）",
         "随时可改回推荐；改完会更新版面",
         "高级配置说明见产品文档「一句话选风格」，不是研发开关页",
+      ],
+    },
+    {
+      id: "H9",
+      title: "作品集的页数怎么定",
+      body: [
+        "生成前系统会按文件夹给一个厚度；多数情况打开看看就能导出。精修改封面和成册类型。",
+        "过河可以出小红书、海报和印刷；长图要在游记里做。",
       ],
     },
   ],
@@ -319,6 +331,14 @@ export function markLongshotHelpSeen(meta) {
       reason: meta.reason,
     });
   }
+}
+
+export function hasGenerateCompleteTipSeen() {
+  return _lsGet(HELP_LS.generateCompleteSeen) === "1";
+}
+
+export function markGenerateCompleteTipSeen() {
+  _lsSet(HELP_LS.generateCompleteSeen, "1");
 }
 
 /** 重播用：清全局两键（W2）；顺带清 legacy 全局。 */

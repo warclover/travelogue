@@ -1,0 +1,118 @@
+# Promoted page-* face · compile-time from docs/templates/reserve.
+# Engine does not read the atelier tree (ISO-05 / D-PFM-16).
+# experimental; list_active skips page-* so journal MCS never picks these SKUs.
+id: page-3-1s2l-wide-left
+version: 1
+status: experimental
+kind: composite
+displayName: 左方右双宽横
+description: Promoted from atelier reserve (compile-time). Engine does not read docs/templates/reserve/.
+stage:
+  aspect: '16:9'
+  cols:
+  - 50.0
+  - 8.333333
+  - 33.333333
+  - 8.333334
+  rows:
+  - 5.555556
+  - 5.555555
+  - 33.333333
+  - 11.111112
+  - 33.333333
+  - 5.555556
+  - 5.555555
+  variants:
+  - layout: web
+    aspect: '16:9'
+  - layout: mobile
+    aspect: '9:16'
+photoCount:
+  min: 3
+  max: 3
+mix:
+  portrait: 0
+  landscape: 3
+slots:
+- index: 0
+  rect:
+  - 1
+  - 1
+  - 2
+  - 6
+  role: square
+  fit: cover
+- index: 1
+  rect:
+  - 3
+  - 3
+  - 3
+  - 3
+  role: landscape
+  fit: cover
+- index: 2
+  rect:
+  - 3
+  - 3
+  - 5
+  - 5
+  role: landscape
+  fit: cover
+constraints:
+  portrait_forbidden_in_wide_slots: []
+  landscape_forbidden_in_tall_slots: []
+  intentionalGaps:
+  - - 1
+    - 4
+    - 1
+    - 1
+  - - 2
+    - 4
+    - 2
+    - 2
+  - - 2
+    - 2
+    - 3
+    - 3
+  - - 4
+    - 4
+    - 3
+    - 3
+  - - 2
+    - 4
+    - 4
+    - 4
+  - - 2
+    - 2
+    - 5
+    - 5
+  - - 4
+    - 4
+    - 5
+    - 5
+  - - 2
+    - 4
+    - 6
+    - 6
+  - - 1
+    - 4
+    - 7
+    - 7
+scoring:
+  base_weight: 1.0
+  tags:
+  - page
+  - portfolio
+  - atelier-promote
+render:
+  gridClass: layout-screen__grid--page-3-1s2l-wide-left
+  cssBundle: journal-screens.css
+  fitPolicy: auto_delegate
+usage:
+  summary: 左方右双宽横
+  whenToUse: 一张方图为主，两张 16:9 宽横辅
+  whenNotToUse: 右栏是 4:3 → 用 page-3-1s2l-left；方图更适合靠右 → 用 page-3-1s2l-wide-right
+_legacy:
+  sourceAtelier: page-3-1s2l-wide-left
+  css_verified: true
+balancePolicy: weighted_tracks

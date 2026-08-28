@@ -79,6 +79,10 @@ def resolve_output_recipe(
             thresholds=t,
         )
 
+    from travelogue.config.edition import is_portfolio_trip
+
+    portfolio = is_portfolio_trip(trip)
+
     # locale=zh 永不被 IG hook 改写（AC-OR-10）
     trip_out = trip_output
     if trip_out is None and trip is not None:
@@ -89,7 +93,7 @@ def resolve_output_recipe(
         intent=intent,
         platform=platform,
         session_override=session_override,
-        trip_output=trip_out,
+        trip_output=None if portfolio else trip_out,
     )
 
     if explicit_intent or explicit_platform:
@@ -100,7 +104,7 @@ def resolve_output_recipe(
         layout_override = None
         if session_override and session_override.get("layout"):
             layout_override = str(session_override["layout"])
-        elif trip_out and trip_out.get("layout"):
+        elif (not portfolio) and trip_out and trip_out.get("layout"):
             layout_override = str(trip_out["layout"])
         return _build_from_intent(
             resolved_intent,
@@ -113,6 +117,10 @@ def resolve_output_recipe(
             needs_intent=False,
             thresholds=t,
         )
+
+    # D-PFM-25 · 作品集不进 Ambiguous 意图矩阵；默认走「这一本 + 页图」。
+    if portfolio:
+        return _portfolio_bypass(band=band, kept_n=n, locale=loc, entrypoint=ep)
 
     # Ambiguous · 无 intent · 入口矩阵（D-OR-16 / §8.3）
     if band == "ambiguous":
@@ -287,6 +295,32 @@ def _layout_for_intent(intent: str, band: str) -> str:
     if intent == "instagram_carousel":
         return "content_balanced"
     return _default_layout(band)
+
+
+def _portfolio_bypass(
+    *,
+    band: str,
+    kept_n: int,
+    locale: str,
+    entrypoint: str,
+) -> OutputRecipe:
+    """AC-PFM-19 · no intent card; Dock CTA is 导出作品集."""
+    return OutputRecipe(
+        recipe_id="portfolio.pack",
+        preset_id="",
+        intent="",
+        engine="",
+        band=band,
+        kept_n=kept_n,
+        locale=locale,
+        platform="",
+        layout="",
+        needs_intent=False,
+        source="portfolio_bypass",
+        cta_label="导出作品集",
+        product_label="",
+        entrypoint=entrypoint,
+    )
 
 
 def _needs_intent_stub(

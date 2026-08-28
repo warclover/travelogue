@@ -7,7 +7,28 @@ import sys
 from pathlib import Path
 
 from travelogue.layout_templates.models import TemplateDef, TemplateSlot, TemplateStage
-from travelogue.paths import JOURNAL_SCREENS_CSS
+from travelogue.paths import JOURNAL_SCREENS_CSS, PORTFOLIO_PAGES_CSS
+
+
+def template_family(template_id: str) -> str:
+    """DPI family key (D-DPI-12). ``page-*`` is portfolio; everything else is journal."""
+    return "portfolio" if str(template_id).startswith("page-") else "journal"
+
+
+def filter_templates_by_family(
+    templates: dict[str, TemplateDef],
+    family: str,
+) -> dict[str, TemplateDef]:
+    if family == "all":
+        return templates
+    return {tid: tpl for tid, tpl in templates.items() if template_family(tid) == family}
+
+
+def bundle_css_path_for(template: TemplateDef | str) -> Path:
+    tid = template if isinstance(template, str) else template.id
+    if template_family(tid) == "portfolio":
+        return Path(PORTFOLIO_PAGES_CSS)
+    return Path(JOURNAL_SCREENS_CSS)
 
 
 def _format_weighted_track(weight: float) -> str:
@@ -57,28 +78,30 @@ def normalize_grid_template(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip())
 
 
-_JOURNAL_CSS_CACHE: tuple[str, float, str] | None = None
+_CSS_FILE_CACHE: dict[str, tuple[float, str]] = {}
 
 
-def _read_journal_css() -> str:
-    """Read journal-screens.css with an mtime-keyed cache.
+def _read_css(path: Path) -> str:
+    """Read a bundle CSS file with an mtime-keyed cache.
 
     validate_css_bundle is called once per template during a full CLI validate;
-    without caching this re-reads the same large stylesheet N times.
+    without caching this re-reads the same stylesheet N times.
     """
-    global _JOURNAL_CSS_CACHE
-    path = Path(JOURNAL_SCREENS_CSS)
+    key = str(path)
     try:
         mtime = path.stat().st_mtime
     except OSError:
         return path.read_text(encoding="utf-8")
-    key = str(path)
-    cache = _JOURNAL_CSS_CACHE
-    if cache is not None and cache[0] == key and cache[1] == mtime:
-        return cache[2]
+    cached = _CSS_FILE_CACHE.get(key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
     text = path.read_text(encoding="utf-8")
-    _JOURNAL_CSS_CACHE = (key, mtime, text)
+    _CSS_FILE_CACHE[key] = (mtime, text)
     return text
+
+
+def _read_journal_css() -> str:
+    return _read_css(Path(JOURNAL_SCREENS_CSS))
 
 
 def _track_dims(stage: TemplateStage) -> tuple[int, int]:
@@ -151,20 +174,39 @@ def generate_grid_css(template: TemplateDef) -> str:
     if template.stage.gap:
         block += f"  gap: {template.stage.gap};\n"
     block += "  align-items: stretch;\n}"
-    if template.kind == "primitive" and template.slots and len(template.slots) <= 1:
+    if not should_emit_slot_placement(template):
         return block
     slot_blocks = [generate_slot_css(template, s) for s in template.slots]
+    if not slot_blocks:
+        return block
     return block + "\n\n" + "\n\n".join(slot_blocks)
 
 
-def generate_bundle_css(templates: dict[str, TemplateDef]) -> str:
+def should_emit_slot_placement(template: TemplateDef) -> bool:
+    """Family-parameterized slot placement (D-DPI-12).
+
+    Portfolio ``page-*`` always emit (gutter tracks). Journal 1-slot 1×1
+    primitives rely on auto-place and omit placement declarations.
+    """
+    if template_family(template.id) == "portfolio":
+        return True
+    cols, rows = _track_dims(template.stage)
+    return not (len(template.slots) == 1 and cols == 1 and rows == 1)
+
+
+def generate_bundle_css(
+    templates: dict[str, TemplateDef],
+    *,
+    family: str = "all",
+) -> str:
+    selected = filter_templates_by_family(templates, family)
     parts = [
         "/* Phase 16 LTE generated grid CSS — do not edit by hand */",
         "",
     ]
-    for tid in sorted(templates):
+    for tid in sorted(selected):
         parts.append(f"/* {tid} */")
-        parts.append(generate_grid_css(templates[tid]))
+        parts.append(generate_grid_css(selected[tid]))
         parts.append("")
     return "\n".join(parts)
 
@@ -198,20 +240,34 @@ def _marker_block_region(css_text: str) -> str:
     redefine the same grid class with variant tracks and would otherwise clobber
     the canonical value (e.g. screen-portrait-2's person-pair overlay).
     """
-    start = css_text.find(LTE_MARKER_START)
+    start = css_text.find(LTE_MARKER_TOKEN)
     end = css_text.find(LTE_MARKER_END)
     if start == -1 or end == -1 or end <= start:
         return css_text
     return css_text[start : end + len(LTE_MARKER_END)]
 
 
-def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None = None) -> list[str]:
-    """V-P16-05/06: generated grid-template matches stage; optional journal CSS parity."""
+def validate_css_bundle(
+    template: TemplateDef,
+    *,
+    css_text: str | None = None,
+    journal_css_text: str | None = None,
+) -> list[str]:
+    """V-P16-05/06: generated grid-template matches stage; family CSS parity.
+
+    ``journal_css_text`` is kept as a compatibility alias for ``css_text``.
+    Bundle file is chosen by template id prefix when neither override is set.
+    A missing grid class in the marker block is an error (AC-DPI-19).
+    """
     issues: list[str] = []
     if template.kind == "stack":
         return issues
     cols, rows = grid_templates_for(template)
-    if template.kind == "composite" or (template.kind == "primitive" and len(template.slots) > 1):
+    cols_n, rows_n = _track_dims(template.stage)
+    multi_track = cols_n > 1 or rows_n > 1
+    if template.kind == "composite" or (
+        template.kind == "primitive" and (len(template.slots) > 1 or multi_track)
+    ):
         allow_overlap = bool((template.constraints or {}).get("intentionalOverlaps"))
         covered: set[tuple[int, int]] = set()
         for slot in template.slots:
@@ -222,18 +278,27 @@ def validate_css_bundle(template: TemplateDef, *, journal_css_text: str | None =
             if overlap and not allow_overlap:
                 issues.append(f"slot {slot.index} placement overlaps {sorted(overlap)} (V-P16-06)")
             covered |= cells
-    css_text = journal_css_text or _read_journal_css()
-    parsed = _parse_journal_grid_css(_marker_block_region(css_text))
+    text = css_text if css_text is not None else journal_css_text
+    bundle_path = bundle_css_path_for(template)
+    if text is None:
+        text = _read_css(bundle_path)
+    parsed = _parse_journal_grid_css(_marker_block_region(text))
     expected = parsed.get(template.render_grid_class)
-    if expected:
-        if "gridTemplateColumns" in expected and normalize_grid_template(cols) != expected["gridTemplateColumns"]:
-            issues.append(
-                f"grid-template-columns {cols!r} != journal {expected['gridTemplateColumns']!r}"
-            )
-        if "gridTemplateRows" in expected and normalize_grid_template(rows) != expected["gridTemplateRows"]:
-            issues.append(
-                f"grid-template-rows {rows!r} != journal {expected['gridTemplateRows']!r}"
-            )
+    if not expected:
+        issues.append(
+            f"grid class {template.render_grid_class!r} missing from "
+            f"{bundle_path.name} @lte-generated block"
+        )
+        return issues
+    label = bundle_path.name
+    if "gridTemplateColumns" in expected and normalize_grid_template(cols) != expected["gridTemplateColumns"]:
+        issues.append(
+            f"grid-template-columns {cols!r} != {label} {expected['gridTemplateColumns']!r}"
+        )
+    if "gridTemplateRows" in expected and normalize_grid_template(rows) != expected["gridTemplateRows"]:
+        issues.append(
+            f"grid-template-rows {rows!r} != {label} {expected['gridTemplateRows']!r}"
+        )
     return issues
 
 
@@ -244,14 +309,26 @@ def write_generated_css(
     path.write_text(generate_bundle_css(templates), encoding="utf-8")
 
 
+LTE_MARKER_TOKEN = "/* @lte-generated:start"
+LTE_MARKER_END = "/* @lte-generated:end */"
 LTE_MARKER_START = (
-    "/* @lte-generated:start — YAML→CSS authority; "
+    f"{LTE_MARKER_TOKEN} — YAML→CSS authority; "
     "run: python -m travelogue.layout_templates.cli export --sync-journal */"
 )
-LTE_MARKER_END = "/* @lte-generated:end */"
+PORTFOLIO_LTE_MARKER_START = (
+    f"{LTE_MARKER_TOKEN} — YAML→CSS authority; "
+    "run: python -m travelogue.layout_templates.cli export --sync-portfolio */"
+)
 JOURNAL_SCREENS_OVERLAYS = Path(JOURNAL_SCREENS_CSS).parent / "journal-screens-overlays.css"
 OVERLAYS_MARKER_START = "/* @journal-overlays:start */"
 OVERLAYS_MARKER_END = "/* @journal-overlays:end */"
+PORTFOLIO_OVERLAYS_MARKER_START = "/* @portfolio-overlays:start */"
+PORTFOLIO_OVERLAYS_MARKER_END = "/* @portfolio-overlays:end */"
+
+_LTE_BLOCK_RE = re.compile(
+    re.escape(LTE_MARKER_TOKEN) + r".*?" + re.escape(LTE_MARKER_END),
+    re.DOTALL,
+)
 
 
 _CSS_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
@@ -337,14 +414,10 @@ def sync_journal_screens_css(
     """
     path = journal_path or Path(JOURNAL_SCREENS_CSS)
     text = path.read_text(encoding="utf-8")
-    generated = generate_bundle_css(templates)
+    generated = generate_bundle_css(templates, family="journal")
     block = f"{LTE_MARKER_START}\n{generated}\n{LTE_MARKER_END}"
-    pattern = re.compile(
-        re.escape(LTE_MARKER_START) + r".*?" + re.escape(LTE_MARKER_END),
-        re.DOTALL,
-    )
-    if pattern.search(text):
-        new_text = pattern.sub(block, text)
+    if _LTE_BLOCK_RE.search(text):
+        new_text = _LTE_BLOCK_RE.sub(block, text)
     else:
         anchor = (
             "html[data-layout=\"web\"] .layout-screen__grid--1col,\n"
@@ -365,12 +438,149 @@ def sync_journal_screens_css(
     return path
 
 
+def _text_without_overlay_block(css_text: str) -> str:
+    for start_m, end_m in (
+        (OVERLAYS_MARKER_START, OVERLAYS_MARKER_END),
+        (PORTFOLIO_OVERLAYS_MARKER_START, PORTFOLIO_OVERLAYS_MARKER_END),
+    ):
+        ostart = css_text.find(start_m)
+        oend = css_text.find(end_m)
+        if ostart == -1 or oend == -1 or oend < ostart:
+            continue
+        css_text = css_text[:ostart] + css_text[oend + len(end_m) :]
+    return css_text
+
+
 def _journal_text_without_overlay_block(journal_text: str) -> str:
-    ostart = journal_text.find(OVERLAYS_MARKER_START)
-    oend = journal_text.find(OVERLAYS_MARKER_END)
-    if ostart == -1 or oend == -1 or oend < ostart:
-        return journal_text
-    return journal_text[:ostart] + journal_text[oend + len(OVERLAYS_MARKER_END) :]
+    return _text_without_overlay_block(journal_text)
+
+
+def _portfolio_pages_skeleton() -> str:
+    return (
+        "/* Portfolio reader CSS — page-* only (DPI W1). */\n"
+        "/* Shared variables live in journal.css; do not duplicate them here. */\n\n"
+        "/* PFM · page-* magazine stage: 16:9 one screen. Gutters live in YAML tracks\n"
+        " * (atelier faces.js); journal --rhythm-l0-gap must not shrink those cells.\n"
+        " * Must stay outside @lte-generated so sync does not drop it. */\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"],\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] {\n'
+        "  --portfolio-folio-size: 18px;\n"
+        "  --portfolio-page-gap: max(var(--portfolio-folio-size), clamp(6px, 1vh, 14px));\n"
+        "  aspect-ratio: 16 / 9;\n"
+        "  width: 100%;\n"
+        "  height: auto;\n"
+        "  max-height: none;\n"
+        "  overflow: visible;\n"
+        "  position: relative;\n"
+        "  margin: 0 auto var(--portfolio-page-gap);\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-screen__grid,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-screen__grid {\n'
+        "  display: grid;\n"
+        "  gap: 0;\n"
+        "  width: 100%;\n"
+        "  height: 100%;\n"
+        "  min-height: 0;\n"
+        "  margin: 0;\n"
+        "  padding: 0;\n"
+        "  overflow: hidden;\n"
+        "  /* L · 16:9 sheet hairline. On the paper, not on each photo. */\n"
+        "  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 40%, transparent);\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot {\n'
+        "  display: block;\n"
+        "  width: 100%;\n"
+        "  height: 100%;\n"
+        "  margin: 0;\n"
+        "  min-width: 0;\n"
+        "  min-height: 0;\n"
+        "  align-self: stretch;\n"
+        "  overflow: hidden;\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot > .layout-slot__img,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot > .layout-slot__img {\n'
+        "  display: block;\n"
+        "  width: 100%;\n"
+        "  height: 100%;\n"
+        "  max-width: none;\n"
+        "  max-height: none;\n"
+        "  object-position: calc(var(--focal-x, 0.5) * 100%) calc(var(--focal-y, 0.45) * 100%);\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot__img--cover,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot__img--cover {\n'
+        "  object-fit: cover;\n"
+        "}\n\n"
+        'html[data-layout="web"] .layout-screen[data-pattern^="page-"] .layout-slot__img--contain,\n'
+        'html[data-layout="auto"] .layout-screen[data-pattern^="page-"] .layout-slot__img--contain {\n'
+        "  object-fit: contain;\n"
+        "}\n\n"
+        "/* Portfolio reader: keep chapters[] as a container, hide journal chapter chrome. */\n"
+        'html[data-edition="portfolio"] .chapter {\n'
+        "  margin-bottom: 0;\n"
+        "}\n\n"
+        "/* H · gutter folio. Number sits in the page gap, not on the 16:9 face.\n"
+        " * Last magazine page has no tail. Not journal chapter chrome. */\n"
+        'html[data-edition="portfolio"] {\n'
+        "  counter-reset: portfolio-folio;\n"
+        "}\n\n"
+        'html[data-edition="portfolio"][data-layout="web"] .layout-screen[data-pattern^="page-"]::after,\n'
+        'html[data-edition="portfolio"][data-layout="auto"] .layout-screen[data-pattern^="page-"]::after {\n'
+        "  counter-increment: portfolio-folio;\n"
+        "  content: counter(portfolio-folio, decimal-leading-zero);\n"
+        "  position: absolute;\n"
+        "  left: 50%;\n"
+        "  top: 100%;\n"
+        "  margin-top: calc(var(--portfolio-page-gap) / 2);\n"
+        "  transform: translate(-50%, -50%);\n"
+        "  font-family: var(--font-ui);\n"
+        "  font-size: var(--portfolio-folio-size);\n"
+        "  font-weight: 500;\n"
+        "  letter-spacing: 0.12em;\n"
+        "  font-variant-numeric: tabular-nums;\n"
+        "  line-height: 1;\n"
+        "  color: color-mix(in srgb, var(--text) 32%, transparent);\n"
+        "  pointer-events: none;\n"
+        "  user-select: none;\n"
+        "}\n\n"
+        'html[data-edition="portfolio"] .page > .chapter:not(:has(~ .chapter)) '
+        '.layout-screen[data-pattern^="page-"]:last-of-type::after {\n'
+        "  content: none;\n"
+        "  counter-increment: none;\n"
+        "}\n\n"
+        f"{PORTFOLIO_LTE_MARKER_START}\n"
+        "/* Phase 16 LTE generated grid CSS — do not edit by hand */\n\n"
+        f"{LTE_MARKER_END}\n\n"
+        f"{PORTFOLIO_OVERLAYS_MARKER_START}\n"
+        f"{PORTFOLIO_OVERLAYS_MARKER_END}\n"
+    )
+
+
+def sync_portfolio_pages_css(
+    templates: dict[str, TemplateDef],
+    *,
+    portfolio_path: Path | None = None,
+) -> Path:
+    """Inject/replace LTE generated grid CSS in portfolio-pages.css (DPI W1)."""
+    path = portfolio_path or Path(PORTFOLIO_PAGES_CSS)
+    if path.is_file():
+        text = path.read_text(encoding="utf-8")
+    else:
+        text = _portfolio_pages_skeleton()
+    generated = generate_bundle_css(templates, family="portfolio")
+    block = f"{PORTFOLIO_LTE_MARKER_START}\n{generated}\n{LTE_MARKER_END}"
+    if _LTE_BLOCK_RE.search(text):
+        new_text = _LTE_BLOCK_RE.sub(block, text)
+    else:
+        new_text = text.rstrip() + "\n\n" + block + "\n"
+    if PORTFOLIO_OVERLAYS_MARKER_START not in new_text:
+        new_text = (
+            new_text.rstrip()
+            + f"\n\n{PORTFOLIO_OVERLAYS_MARKER_START}\n{PORTFOLIO_OVERLAYS_MARKER_END}\n"
+        )
+    new_text = prune_lte_duplicate_blocks_outside_marker(new_text)
+    path.write_text(new_text, encoding="utf-8")
+    return path
 
 
 def sync_journal_overlays(
@@ -401,8 +611,8 @@ def sync_journal_overlays(
 
 def lte_grid_classes_outside_marker(journal_text: str) -> list[str]:
     """Return LTE grid class names duplicated outside the generated marker block."""
-    journal_text = _journal_text_without_overlay_block(journal_text)
-    start = journal_text.find(LTE_MARKER_START)
+    journal_text = _text_without_overlay_block(journal_text)
+    start = journal_text.find(LTE_MARKER_TOKEN)
     end = journal_text.find(LTE_MARKER_END)
     if start == -1 or end == -1:
         return []
@@ -489,7 +699,7 @@ def prune_lte_duplicate_blocks_outside_marker(journal_text: str) -> str:
     dupes = set(lte_grid_classes_outside_marker(journal_text))
     if not dupes:
         return journal_text
-    start = journal_text.find(LTE_MARKER_START)
+    start = journal_text.find(LTE_MARKER_TOKEN)
     end = journal_text.find(LTE_MARKER_END)
     if start == -1 or end == -1:
         return journal_text
@@ -497,12 +707,21 @@ def prune_lte_duplicate_blocks_outside_marker(journal_text: str) -> str:
     before = _prune_css_section(journal_text[:start], dupes)
     marker = journal_text[start:marker_end]
     after = journal_text[marker_end:]
-    ostart = after.find(OVERLAYS_MARKER_START)
-    oend = after.find(OVERLAYS_MARKER_END)
-    if ostart != -1 and oend != -1 and oend > ostart:
+    overlay_pair = None
+    for start_m, end_m in (
+        (OVERLAYS_MARKER_START, OVERLAYS_MARKER_END),
+        (PORTFOLIO_OVERLAYS_MARKER_START, PORTFOLIO_OVERLAYS_MARKER_END),
+    ):
+        ostart = after.find(start_m)
+        oend = after.find(end_m)
+        if ostart != -1 and oend != -1 and oend > ostart:
+            overlay_pair = (ostart, oend, end_m)
+            break
+    if overlay_pair is not None:
+        ostart, oend, end_m = overlay_pair
         mid = _prune_css_section(after[:ostart], dupes)
-        overlay = after[ostart : oend + len(OVERLAYS_MARKER_END)]
-        tail = _prune_css_section(after[oend + len(OVERLAYS_MARKER_END) :], dupes)
+        overlay = after[ostart : oend + len(end_m)]
+        tail = _prune_css_section(after[oend + len(end_m) :], dupes)
         return before + marker + mid + overlay + tail
     after = _prune_css_section(after, dupes)
     return before + marker + after

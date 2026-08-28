@@ -27,6 +27,15 @@ var COPY = {
  */
 export function mountNarrativePostureBar(root, tripId) {
   if (!root || !tripId) return null;
+  try {
+    if (
+      typeof document !== "undefined" &&
+      document.documentElement &&
+      document.documentElement.getAttribute("data-edition") === "portfolio"
+    ) {
+      return null;
+    }
+  } catch (_eEd) {}
   if (root._narrativePostureBar) return root._narrativePostureBar;
 
   var el = null;

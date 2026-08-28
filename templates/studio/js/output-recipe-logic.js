@@ -233,6 +233,20 @@ export function mapServerRecipePayload(body, entrypoint, cfg, sessionIntent) {
   );
   if (!isFinite(keptN) || keptN < 0) keptN = 0;
   var ep = entrypoint || "preview";
+  var r = (body && body.recipe) || {};
+  if (r.source === "portfolio_bypass") {
+    return {
+      band: r.band || classifyBand(keptN, cfg),
+      needsIntent: false,
+      intent: null,
+      platform: null,
+      ctaLabel: r.cta_label || "",
+      subtitle: "",
+      userHints: r.user_hints && r.user_hints.length ? r.user_hints : [],
+      source: "portfolio_bypass",
+      keptN: keptN,
+    };
+  }
   if (sessionIntent && INTENT_TO_PLATFORM[sessionIntent]) {
     var fromSession = recipeFromIntent(
       sessionIntent,

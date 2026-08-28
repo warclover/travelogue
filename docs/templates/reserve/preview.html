@@ -121,6 +121,8 @@
     .albums button.warn { border-color: #b8923a; color: #e6d08a; }
     .page-head .lock { color: var(--accent); }
     .page-head .lock.miss { color: #a33; }
+    .page-head .off { color: #a33; font-weight: 650; }
+    .page.is-off .stage { opacity: .35; }
     .dock .warn-chip {
       font-size: 12px; color: #e6d08a;
       border: 1px solid #b8923a; border-radius: 999px; padding: 4px 10px;
@@ -154,12 +156,13 @@
   </div>
   <p class="hint" id="hint">
     像 Web 游记预览那样竖着翻 16:9 页。照片只在本机浏览器里读，不上传、不进引擎、不进 trip。
-    <span class="stars-only"><b>按星级 = 未锁组 · 只测几何</b>。默认铺 <b>2 星以上</b> 各脸；按朝向轮转，可重复入座。</span>
+    <span class="stars-only"><b>按星级 = 未锁组 · 只测几何</b>。默认铺 <b>2 星以上</b> 各脸；按朝向轮转，可重复入座。已禁用的脸不铺。</span>
     <span class="series-only">按柜里已写入的本铺页序。相册下备齐子夹 <code>01</code>…<code>NN</code>（NN = 该本页数）则<b>已锁组</b>：第 n 页只吃自己的子夹。没子夹则<b>未锁组 · 只测几何</b>，按朝向消耗。备夹说明见 <a href="./GROUP-LOCK-GUIDE.md">GROUP-LOCK-GUIDE</a>。日常请用设计工坊打开方式：<a href="./serve.cmd">serve.cmd</a>。</span>
     默认 <b>铺满</b>；可切 <b>相对槽</b>。点某一格换下一张同朝向图。
   </p>
   <div class="reel" id="reel"></div>
   <script src="./faces.js"></script>
+  <script src="./stars.js"></script>
   <script src="./series-folio-16.js"></script>
   <script>
     const FACES = window.RESERVE_FACES || [];
@@ -192,64 +195,8 @@
     }
     const GOLD_ID = "folio-16-standard";
     const SERIES_ID = GOLD_ID;
-    const SEED = {
-      "page-1-hero-land-right": 3,
-      "page-1-hero-land-wide": 3,
-      "page-10-grid-port": 3,
-      "page-2-1l1p-wide": 3,
-      "page-2-pair-port": 3,
-      "page-3-2l1p-hero-right": 3,
-      "page-3-2l1p-left": 3,
-      "page-3-2l1p-wide-left": 3,
-      "page-3-land": 3,
-      "page-3-port": 3,
-      "page-4-2p2p": 3,
-      "page-4-grid-land": 3,
-      "page-4-grid-land-wide": 3,
-      "page-5-3p2l-center": 3,
-      "page-5-3p2l-center-flip": 3,
-      "page-5-3p2l-wide": 3,
-      "page-6-1l5l-wide-left": 3,
-      "page-6-2l4p-wide-flip": 3,
-      "page-6-4l2p": 3,
-      "page-6-grid-land": 3,
-      "page-7-1p6l-center": 3,
-      "page-8-2l6p": 3,
-      "page-8-grid-land": 3,
-      "page-8-grid-port": 3,
-      "page-9-grid-land-wide": 3,
-      "page-1-hero-port": 2,
-      "page-2-1p1l-wide": 2,
-      "page-2-pair-land": 2,
-      "page-3-2l1p-hero-left": 2,
-      "page-3-2l1p-right": 2,
-      "page-3-2l1p-wide-right": 2,
-      "page-3-2p1s": 2,
-      "page-3-port-hero-left": 2,
-      "page-3-port-hero-right": 2,
-      "page-4-1l3l-left": 2,
-      "page-4-1l3l-right": 2,
-      "page-4-1l3l-wide-left": 2,
-      "page-4-1l3l-wide-right": 2,
-      "page-4-1p3l-right": 2,
-      "page-4-1p3l-wide-left": 2,
-      "page-4-1p3l-wide-right": 2,
-      "page-4-2p2l-cross": 2,
-      "page-4-port": 2,
-      "page-5-1p4l-center": 2,
-      "page-5-1p4p-center": 2,
-      "page-5-3p2l-left": 2,
-      "page-5-3p2l-right": 2,
-      "page-5-3p2l-stack-center": 2,
-      "page-5-3p2l-stack-right": 2,
-      "page-6-1l5l-wide-right": 2,
-      "page-6-2l4p-left": 2,
-      "page-6-2l4p-right": 2,
-      "page-7-1p6l-left": 2,
-      "page-7-1p6l-right": 2,
-      "page-1-hero-land-ultra": 1,
-      "page-4-1p3l-left": 1
-    };
+    const RS = window.ReserveStars;
+    const SEED = RS.SEED;
 
     const statusEl = document.getElementById("status");
     const hintEl = document.getElementById("hint");
@@ -260,6 +207,7 @@
     const modeEm = document.getElementById("mode-em");
 
     let stars = { ...SEED };
+    let disabled = [];
     let photos = { l: [], p: [], s: [] };
     let offset = 0;
     let scope = "all";
@@ -271,19 +219,12 @@
     let activeAlbum = "";
     let photoSeq = 0;
 
-    function parseStarsYaml(text) {
-      const out = {};
-      for (const raw of String(text).split(/\r?\n/)) {
-        const line = raw.trim();
-        if (!line || line.startsWith("#")) continue;
-        const m = /^([a-z0-9-]+):\s*([0-3])\s*$/.exec(line);
-        if (m) out[m[1]] = Number(m[2]);
-      }
-      return out;
+    function faceStars(face) {
+      return RS.starOf(face.id, stars);
     }
 
-    function faceStars(face) {
-      return Number(stars[face.id] || 0);
+    function isFaceOff(id) {
+      return RS.isDisabled(id, disabled);
     }
 
     function slotBoxes(face) {
@@ -317,6 +258,7 @@
 
     function visibleFaces() {
       return FACES.filter((f) => {
+        if (isFaceOff(f.id)) return false;
         const n = faceStars(f);
         if (n < 2) return false;
         if (scope === "3" && n < 3) return false;
@@ -537,7 +479,7 @@
       const mix = { l: 0, p: 0, s: 0 };
       for (const row of series.sequence) {
         const face = FACE_BY_ID.get(row.faceHint);
-        if (!face) continue;
+        if (!face || isFaceOff(face.id)) continue;
         for (const box of slotBoxes(face)) {
           const need = slotOrient(box);
           mix[need] += 1;
@@ -617,6 +559,17 @@
         const face = FACE_BY_ID.get(row.faceHint);
         if (!face) {
           return `<article class="page"><div class="page-head">缺脸 ${row.faceHint}</div></article>`;
+        }
+        if (isFaceOff(face.id)) {
+          return `<article class="page is-off">
+            <div class="page-head">
+              <span>${row.i}/${target}</span>
+              <span class="off">已禁用 · 本管线不用</span>
+              <code>${face.id}</code>
+              <span class="name">${face.displayName}</span>
+            </div>
+            <div class="stage-wrap"><div class="stage"></div></div>
+          </article>`;
         }
         const copies = copyBoxes(face).map((box) => `<div class="copy" style="${pct(box)}"></div>`).join("");
         const pageGroup = album && album.groups[row.i];
@@ -795,8 +748,12 @@
       try {
         const res = await fetch("./stars.yaml", { cache: "no-store" });
         if (res.ok) {
-          const parsed = parseStarsYaml(await res.text());
-          if (Object.keys(parsed).length) stars = parsed;
+          const text = await res.text();
+          if (RS.looksLike(text)) {
+            const parsed = RS.parse(text);
+            if (Object.keys(parsed.stars).length) stars = parsed.stars;
+            disabled = RS.cloneDisabled(parsed.disabled);
+          }
         }
       } catch (_) { /* file:// 用 SEED */ }
     }

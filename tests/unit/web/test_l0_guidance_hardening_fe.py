@@ -59,7 +59,9 @@ def test_capability_card_l0g_copy() -> None:
     """NAS · AC-NAS-01：能力卡永不 show；无 AI 升级 CTA 串。"""
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
     assert "照片留在本机，也能做成可发的画册" in cap
-    assert "开始制作" in cap
+    assert "选择照片文件夹" in cap
+    assert "微信分享长图" not in cap
+    assert "发群" not in cap
     assert "以后再升级 AI 文案" not in cap
     assert "向导里可一键试用示例" in cap
     assert "开始导入" not in cap

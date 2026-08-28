@@ -52,6 +52,22 @@ class GcsPosterBricConfig:
     enabled: bool = True
 
 
+# PFO · 仅详情「大约」；禁止送进 select_series（§5.3 / §11.3）。
+DEFAULT_KEPT_ESTIMATE_RATIO = 0.67
+
+
+@dataclass
+class PortfolioPipelineConfig:
+    """PFM · 作品集父开关（D-PFM-02 / D-PFM-06）。默认全关 ≡ 现网 GA。"""
+
+    enabled: bool = False
+    homepage_entry: bool = False
+    allow_refine_switch: bool = True
+    max_pages: int = 48
+    min_kept_override: int | None = None
+    kept_estimate_ratio: float = DEFAULT_KEPT_ESTIMATE_RATIO
+
+
 @dataclass
 class StudioConfig:
     """Studio workbench (Phase 4 M17 · G1)."""
@@ -63,9 +79,14 @@ class StudioConfig:
     layout_templates_internal: bool = False
     # NAS · 默认 False；正式面勿 PATCH。亦可用 env TRAVELOGUE_AI_SURFACE=1。
     ai_surface_enabled: bool = False
+    # OLT M3 · 发布默认开；关旗仍可回退（BE-OLT-10）
+    output_ledger: bool = True
     longshot2: Longshot2Config = field(default_factory=Longshot2Config)
     output_recipe: OutputRecipeConfig = field(default_factory=OutputRecipeConfig)
     gcs_poster_bric: GcsPosterBricConfig = field(default_factory=GcsPosterBricConfig)
+    portfolio_pipeline: PortfolioPipelineConfig = field(
+        default_factory=PortfolioPipelineConfig
+    )
 
     @property
     def longshot2_enabled(self) -> bool:
@@ -85,6 +106,7 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
     """
     or_cfg = getattr(cfg.studio, "output_recipe", None) or OutputRecipeConfig()
     bands = getattr(or_cfg, "bands", None) or OutputRecipeBandsConfig()
+    pipe = getattr(cfg.studio, "portfolio_pipeline", None) or PortfolioPipelineConfig()
     # Layer-0 constants (must not import orchestrator from config).
     from travelogue.constants import (
         ADVANCED_SETTINGS_KEYS,
@@ -140,6 +162,14 @@ def studio_config_expose(cfg: AppConfig) -> dict[str, Any]:
                         True,
                     )
                 ),
+            },
+            "portfolioPipeline": {
+                "enabled": bool(pipe.enabled),
+                "homepageEntry": bool(pipe.homepage_entry),
+                "allowRefineSwitch": bool(pipe.allow_refine_switch),
+                "maxPages": int(pipe.max_pages),
+                "minKeptOverride": pipe.min_kept_override,
+                "keptEstimateRatio": float(pipe.kept_estimate_ratio),
             },
         },
         "cohort": {

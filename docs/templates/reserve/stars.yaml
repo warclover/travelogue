@@ -1,52 +1,45 @@
 # 备用库星级 · 权威。未列出 = 0。镜像不自动继承。
 # 0 无星 · 1 · 2 · 3 最常用
-# 在 gallery.html 点星后用「写入本库」覆盖本文件。
+# disabled: 下列页型所有工坊管线不用（试印 / 成册库存 / 升格）。星级仍保留。
+# 在 gallery.html 点星或禁用后用「写入本库」覆盖本文件。
 
 page-1-hero-land-right: 3
 page-1-hero-land-wide: 3
+page-1-hero-port: 3
 page-10-grid-port: 3
 page-2-1l1p-wide: 3
+page-2-1p1l-wide: 3
+page-2-pair-land: 3
 page-2-pair-port: 3
-page-3-2l1p-hero-right: 3
 page-3-2l1p-left: 3
+page-3-2l1p-right: 3
+page-3-2l1p-hero-right: 3
 page-3-2l1p-wide-left: 3
+page-3-2l1p-wide-right: 3
 page-3-land: 3
 page-3-port: 3
-page-4-2p2p: 3
+page-4-1p3l-wide-left: 3
+page-4-1p3l-wide-right: 3
+page-4-2p2l-cross: 3
 page-4-grid-land: 3
 page-4-grid-land-wide: 3
+page-4-port: 3
 page-5-3p2l-center: 3
 page-5-3p2l-center-flip: 3
-page-5-3p2l-wide: 3
 page-6-1l5l-wide-left: 3
+page-6-2l4p-wide: 3
 page-6-2l4p-wide-flip: 3
-page-6-4l2p: 3
 page-6-grid-land: 3
 page-7-1p6l-center: 3
 page-8-2l6p: 3
 page-8-grid-land: 3
 page-8-grid-port: 3
 page-9-grid-land-wide: 3
-page-1-hero-port: 2
-page-2-1p1l-wide: 2
-page-2-pair-land: 2
-page-3-2l1p-hero-left: 2
-page-3-2l1p-right: 2
-page-3-2l1p-wide-right: 2
-page-3-2p1s: 2
-page-3-port-hero-left: 2
-page-3-port-hero-right: 2
 page-4-1l3l-left: 2
 page-4-1l3l-right: 2
 page-4-1l3l-wide-left: 2
 page-4-1l3l-wide-right: 2
-page-4-1p3l-right: 2
-page-4-1p3l-wide-left: 2
-page-4-1p3l-wide-right: 2
-page-4-2p2l-cross: 2
-page-4-port: 2
 page-5-1p4l-center: 2
-page-5-1p4p-center: 2
 page-5-3p2l-left: 2
 page-5-3p2l-right: 2
 page-5-3p2l-stack-center: 2
@@ -56,5 +49,8 @@ page-6-2l4p-left: 2
 page-6-2l4p-right: 2
 page-7-1p6l-left: 2
 page-7-1p6l-right: 2
-page-1-hero-land-ultra: 1
 page-4-1p3l-left: 1
+
+disabled:
+  - page-4-2p2p
+  - page-6-4l2p

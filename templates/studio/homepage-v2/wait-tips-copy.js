@@ -58,3 +58,47 @@ export var WAIT_TIPS_CARDS = [
     body: "同一次出行放一起就好，不必事先精挑细选。",
   },
 ];
+
+/**
+ * 作品集导入轮播：去掉「配文」口径，且本表不得出现「文案 / 正在写」。
+ * 游记六张字面不变（WAIT_TIPS 合同）。
+ */
+var PORTFOLIO_WAIT_TIP_OVERRIDES = {
+  "WT-01": {
+    title: "可翻的一本，页图也能带走",
+    body: "先在大屏慢慢翻；满意了，再导出这一本或页图。",
+  },
+  "WT-03": {
+    title: "分章排版，交给它",
+    body: "选好这一趟的照片就行，不用先一张张归类。",
+  },
+  "WT-04": {
+    title: "先打开这一本，再导出",
+    body: "预览里慢慢看；满意了，再点「导出作品集」。",
+  },
+  "WT-02": {
+    title: "回忆，只放在你身边",
+    body: "不上传云端，在本机悄悄成册。私密，是作品集该有的样子。",
+  },
+  "WT-06": {
+    title: "一本作品集，一个文件夹",
+    body: "同一次出行放一起就好，不必事先精挑细选。",
+  },
+};
+
+export function waitTipsCardsForEdition(edition) {
+  var t = String(edition || "").trim().toLowerCase();
+  if (t !== "portfolio" && t !== "folio") return WAIT_TIPS_CARDS;
+  return WAIT_TIPS_CARDS.map(function (card) {
+    var over = PORTFOLIO_WAIT_TIP_OVERRIDES[card.id];
+    if (!over) return card;
+    return {
+      id: card.id,
+      category: card.category,
+      tone: card.tone,
+      label: card.label,
+      title: over.title,
+      body: over.body,
+    };
+  });
+}

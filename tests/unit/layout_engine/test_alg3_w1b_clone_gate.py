@@ -112,7 +112,7 @@ def test_ac10_b7_reduces_fake_slice_winners_at_least_40pct() -> None:
     """
     assets, aspects = _tight_clone_window()
     trip_id = "alg3-ac10-clone"
-    weighted = "screen-mosaic-4-2l2p-weighted"
+    weighted = "screen-mosaic-4-2p2l-portrait-bookends"
     base = MosaicConfig()
     common = dict(
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),

@@ -98,16 +98,22 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 def cmd_export(args: argparse.Namespace) -> int:
     root = Path(args.templates) if args.templates else DEFAULT_TEMPLATES_DIR
-    out = Path(args.out) if args.out else root.parent / "journal-screens.generated.css"
     engine = LayoutTemplateEngine.load(root, rebuild_cache=True)
     from travelogue.layout_templates.css_gen import (
         TrailingLegacyCssError,
+        filter_templates_by_family,
         sync_journal_screens_css,
+        sync_portfolio_pages_css,
         write_generated_css,
     )
 
-    write_generated_css(engine._templates, out)
-    print(f"generated CSS → {out} ({len(engine._templates)} templates)")
+    wrote = False
+    if args.out:
+        family = args.target or "all"
+        selected = filter_templates_by_family(engine._templates, family)
+        write_generated_css(selected, Path(args.out))
+        print(f"generated CSS → {args.out} ({len(selected)} templates, family={family})")
+        wrote = True
     if args.sync_journal:
         on_trailing_legacy = "warn" if args.warn_trailing_legacy else "strict"
         try:
@@ -116,7 +122,32 @@ def cmd_export(args: argparse.Namespace) -> int:
             print(str(exc), file=sys.stderr)
             return 1
         print(f"synced LTE marker → {journal}")
+        wrote = True
+    if args.sync_portfolio:
+        portfolio = sync_portfolio_pages_css(engine._templates)
+        print(f"synced LTE marker → {portfolio}")
+        wrote = True
+    if not wrote:
+        print(
+            "nothing to write; pass --sync-journal, --sync-portfolio, and/or --out "
+            "(D-DPI-17: mixed journal-screens.generated.css is no longer a default product)"
+        )
     return 0
+
+
+def cmd_promote_pages(args: argparse.Namespace) -> int:
+    from travelogue.layout_templates.page_promote import P0_PAGE_IDS, promote_pages
+
+    ids = list(args.ids or [])
+    if args.p0_only:
+        ids = list(P0_PAGE_IDS)
+    elif not ids:
+        ids = None
+    written, skips = promote_pages(ids=ids, write=True)
+    print(f"promoted {len(written)} page-* YAML → {DEFAULT_TEMPLATES_DIR}")
+    for skip in skips:
+        print(f"skip {skip.page_id}: {skip.reason}")
+    return 0 if written else 1
 
 
 def cmd_docgen(args: argparse.Namespace) -> int:
@@ -202,7 +233,17 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument(
         "--sync-journal",
         action="store_true",
-        help="Inject generated CSS into templates/visual-journal/journal-screens.css marker",
+        help="Inject screen-* CSS into templates/visual-journal/journal-screens.css marker",
+    )
+    export.add_argument(
+        "--sync-portfolio",
+        action="store_true",
+        help="Inject page-* CSS into templates/visual-journal/portfolio-pages.css marker",
+    )
+    export.add_argument(
+        "--target",
+        choices=("journal", "portfolio", "all"),
+        help="Family filter for --out (default: all). Does not change --sync-* behavior.",
     )
     export.add_argument(
         "--warn-trailing-legacy",
@@ -213,6 +254,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     export.set_defaults(func=cmd_export)
+
+    promote = sub.add_parser(
+        "promote-pages",
+        help="Compile atelier page-* faces into LTE YAML (does not scan reserve at runtime)",
+    )
+    promote.add_argument("--p0-only", action="store_true", help="Only magazine-16's 11 faces")
+    promote.add_argument("--id", action="append", dest="ids", help="Face id to promote")
+    promote.set_defaults(func=cmd_promote_pages)
 
     docgen = sub.add_parser("docgen", help="Generate slot-aspect markdown docs")
     docgen.add_argument("--templates", type=Path)

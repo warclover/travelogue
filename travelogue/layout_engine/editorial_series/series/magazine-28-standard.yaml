@@ -1,0 +1,47 @@
+# Runtime series · promoted from folio-28-standard-r2.
+# Engine does not read docs/templates/reserve/ (ISO-05).
+id: magazine-28-standard
+kind: series
+status: official
+stage: "16:9"
+version: 2
+pageCount: 28
+density: standard
+photo_span: [84, 140]
+capacity: 76
+coverHint: veil-footer
+backHint: closing-default
+sourceAtelier: folio-28-standard-r2
+_promotedFrom:
+  atelierId: folio-28-standard-r2
+  contentHash: 3f4671bf7549f8777ad014cec567f38cb0e0e5590eea78f3404793580f3addb9
+  promotedAt: 2026-08-25T03:02:50Z
+sequence:
+  - { i: 1, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 2, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 3, role: mix-1l1p-wide, program: mosaic, faceHint: page-2-1l1p-wide, slotBand: 2, patternId: page-2-1l1p-wide }
+  - { i: 4, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
+  - { i: 5, role: pair-land, program: mosaic, faceHint: page-2-pair-land, slotBand: 2, patternId: page-2-pair-land }
+  - { i: 6, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
+  - { i: 7, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
+  - { i: 8, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 9, role: hero-land, program: hero, faceHint: page-1-hero-land-right, slotBand: 1, patternId: page-1-hero-land-right }
+  - { i: 10, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross, slotBand: 4, patternId: page-4-2p2l-cross }
+  - { i: 11, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 12, role: row-port-3, program: grid, faceHint: page-3-port, slotBand: 3, patternId: page-3-port }
+  - { i: 13, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide, slotBand: 4, patternId: page-4-grid-land-wide }
+  - { i: 14, role: grid-4-land, program: grid, faceHint: page-4-grid-land, slotBand: 4, patternId: page-4-grid-land }
+  - { i: 15, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left, slotBand: 6, patternId: page-6-1l5l-wide-left }
+  - { i: 16, role: port-center-stagger-flip, program: mosaic, faceHint: page-5-3p2l-center-flip, slotBand: 5, patternId: page-5-3p2l-center-flip }
+  - { i: 17, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 18, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center, slotBand: 5, patternId: page-5-3p2l-center }
+  - { i: 19, role: stack-5l-land-hero-wide, program: mosaic, faceHint: page-6-1l5l-wide-right, slotBand: 6, patternId: page-6-1l5l-wide-right }
+  - { i: 20, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 21, role: grid-6-land, program: grid, faceHint: page-6-grid-land, slotBand: 6, patternId: page-6-grid-land }
+  - { i: 22, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide, slotBand: 2, patternId: page-2-1p1l-wide }
+  - { i: 23, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 24, role: stack-l-port-wide, program: mosaic, faceHint: page-3-2l1p-wide-right, slotBand: 3, patternId: page-3-2l1p-wide-right }
+  - { i: 25, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }
+  - { i: 26, role: pair-port, program: mosaic, faceHint: page-2-pair-port, slotBand: 2, patternId: page-2-pair-port }
+  - { i: 27, role: cross-2p2l, program: mosaic, faceHint: page-4-2p2l-cross, slotBand: 4, patternId: page-4-2p2l-cross }
+  - { i: 28, role: hero-land, program: hero, faceHint: page-1-hero-land-wide, slotBand: 1, patternId: page-1-hero-land-wide }

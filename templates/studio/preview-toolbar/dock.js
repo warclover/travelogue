@@ -4,11 +4,22 @@
 "use strict";
 
 import {
-  ctaLabelForPlatform,
   isConfirmedExportTarget,
   readExportPrefs,
-  shortCtaLabelForPlatform,
 } from "../js/longshot-export-panel.js";
+import { applyJournalDockLogic, journalDockCta } from "../js/journal-dock-logic.js";
+import {
+  applyPortfolioDockLogic,
+  resolveTripEdition,
+  syncPortfolioFlagOffBanner,
+  syncPortfolioOverflowBadge,
+} from "../js/portfolio-dock-logic.js";
+import {
+  isPortfolioEdition,
+  portfolioDockCta,
+} from "../js/portfolio-export-logic.js";
+
+export { syncPortfolioFlagOffBanner, syncPortfolioOverflowBadge };
 
 export function presentPreviewUrl() {
   return document.documentElement.getAttribute("data-present-preview-url") || "";
@@ -132,24 +143,48 @@ export function dockIconSvg(name) {
   }
 }
 
-function idleExportShortLabel() {
-  try {
-    var prefs = readExportPrefs();
-    if (isConfirmedExportTarget(prefs)) {
-      return shortCtaLabelForPlatform(prefs.platform);
-    }
-  } catch (_eIdle) {}
-  return "长图";
+/**
+ * @returns {(HTMLElement & { _dockCta?: { short?: string, aria?: string } }) | null}
+ */
+function _dockRoot() {
+  if (typeof document === "undefined") return null;
+  return /** @type {(HTMLElement & { _dockCta?: { short?: string, aria?: string } }) | null} */ (
+    document.querySelector(".preview-toolbar")
+  );
 }
 
-function idleExportAriaLabel() {
+function _htmlEditionIsPortfolio() {
   try {
+    return isPortfolioEdition(
+      typeof document !== "undefined" && document.documentElement
+        ? document.documentElement.getAttribute("data-edition")
+        : ""
+    );
+  } catch (_eEd) {
+    return false;
+  }
+}
+
+function idleExportShortLabel() {
+  try {
+    var root = _dockRoot();
+    if (root && root._dockCta && root._dockCta.short) return root._dockCta.short;
+    if (_htmlEditionIsPortfolio()) return portfolioDockCta().short;
     var prefs = readExportPrefs();
     if (isConfirmedExportTarget(prefs)) {
-      return ctaLabelForPlatform(prefs.platform);
+      return journalDockCta().short;
     }
+  } catch (_eIdle) {}
+  return journalDockCta().short;
+}
+
+export function idleExportAriaLabel() {
+  try {
+    var root = _dockRoot();
+    if (root && root._dockCta && root._dockCta.aria) return root._dockCta.aria;
+    if (_htmlEditionIsPortfolio()) return portfolioDockCta().aria;
   } catch (_eAria) {}
-  return "导出长图";
+  return journalDockCta().aria;
 }
 
 export function dockLongshotContentHtml(state) {
@@ -291,6 +326,41 @@ export function initDockTooltips(root) {
     var caretBtn = dock.querySelector(".preview-toolbar__longshot-caret");
     if (caretBtn) caretBtn.removeAttribute("title");
   }
+
+export function applyTripEdition(root, entry) {
+  var edition = resolveTripEdition(root, entry);
+  if (root) {
+    root._edition = edition;
+    if (entry) {
+      root._portfolio = entry.portfolio || null;
+      root._pipelineEnabled = entry.portfolioPipelineEnabled === true;
+      root._layoutVibeVisible = entry.layoutVibeVisible !== false;
+      root._dockCta = entry.dockCta || null;
+      root._overflowLine = entry.overflowLine || "";
+      root._overflowDetail = entry.overflowDetail || "";
+      root._overflowCta = entry.overflowCta || "";
+      root._previewUrl = String(
+        (entry.scrollShareUrl || entry.previewUrl) || ""
+      ).trim();
+    }
+  }
+  // S-09 · one mount + one panel dispatch (AC-DPI-15)
+  var isPortfolio = edition === "portfolio";
+  try {
+    if (typeof document !== "undefined" && document.documentElement) {
+      if (isPortfolio) {
+        document.documentElement.setAttribute("data-edition", "portfolio");
+      } else {
+        document.documentElement.removeAttribute("data-edition");
+      }
+    }
+  } catch (_eAttr) {}
+  if (isPortfolio) {
+    applyPortfolioDockLogic(root, entry);
+  } else {
+    applyJournalDockLogic(root, entry);
+  }
+}
 
 export function initDockScrollFade(root) {
     if (!isPreviewToolbarV4(root)) return;

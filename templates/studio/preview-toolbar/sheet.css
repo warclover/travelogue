@@ -373,10 +373,50 @@
   gap: 8px;
 }
 
+.preview-sheet__editions,
 .preview-sheet__layout-vibes {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+}
+
+.preview-sheet__edition {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--sheet-surface);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.preview-sheet__edition.is-on {
+  border-color: var(--sheet-accent);
+  background: var(--sheet-surface);
+}
+
+.preview-sheet__edition:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.preview-sheet__edition-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: var(--studio-panel-body-size, 13px);
+}
+
+.preview-sheet__edition-consequence {
+  font-size: var(--studio-panel-meta-size, 11px);
+  line-height: 1.45;
+  color: var(--sheet-muted);
 }
 
 .preview-sheet__layout-vibe {
@@ -796,6 +836,27 @@
   margin-top: 0;
 }
 
+.preview-sheet__fxi-action {
+  margin: 14px 0 0;
+}
+.preview-sheet__fxi-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--preview-accent, #3f454c);
+  font: inherit;
+  font-size: var(--studio-panel-body-size, 13px);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.preview-sheet__fxi-link:hover {
+  color: var(--preview-ink, #14110d);
+}
+
 .preview-sheet__ghost {
   display: block;
   width: 100%;
@@ -878,12 +939,24 @@
 }
 
 .preview-sheet__chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   border: 1px solid var(--sheet-border);
-  border-radius: 999px;
-  padding: 6px 12px;
+  border-radius: 12px;
+  padding: 6px 10px;
+  min-width: 4.5rem;
   font-size: var(--studio-panel-ui-size, 12px);
+  line-height: 1.2;
   background: var(--sheet-surface);
   cursor: pointer;
+}
+
+.preview-sheet__chip-hint {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.72;
 }
 
 .preview-sheet__chip.is-on {

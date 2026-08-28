@@ -2,7 +2,10 @@
 
 | 文件 | 说明 |
 |------|------|
-| [portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) | **PFM 作品集成册双管线 V1** · F0–F8（地图 · 导入分段 · 首页次链 · 导出页图 · 游记对照 · 换种分享 · 精修成册类型 · 书架 · 红线）· [PRD](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.1.0** · [八席评审](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) Conditional Go · F0/F2/F4/F7/F8 已签 · **F1/F3/F6 待改后重签** |
+| [olt-output-ledger-ticket-v1-wireframe.html](./olt-output-ledger-ticket-v1-wireframe.html) | **OLT · 成品账本与票根副券** · 帧 A 浅/深/禁 · 帧 B 列表/交互 · [PRD](../PRD-OUTPUT-LEDGER-TICKET-V1.md) **v0.1.4** · [签核](../acceptance-records/olt-frame-ab-signoff-2026-08-26.md) **已签 2026-08-26** · ASCII §6.2 不算已签帧 |
+| [portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) | **PFM / PFO** · F0–F8 已签 · **v1.2 F9–F11 已签 2026-08-25** · [PFO](../PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) **v0.2.1** · [签核](../acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) |
+| [frontend-identity-isolation-v1-wireframe.html](./frontend-identity-isolation-v1-wireframe.html) | **FXI · 前端身份面隔离 v0.3** · **F1–F3 已签** · **BLK-FXI-01 游记精修/导出零触及** · [PRD](../PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) **v0.1.8 Draft** · [签核](../acceptance-records/fxi-f1-f3-signoff-2026-08-26.md) · 过河哪些能导见 [CLG](../PRD-CROSSING-LONGSHOT-GATE-V1.md) |
+| [crossing-longshot-gate-v1-wireframe.html](./crossing-longshot-gate-v1-wireframe.html) | **CLG · 过河长图闸 v0.1.2** · 帧 A–D **改字待签** · [PRD](../PRD-CROSSING-LONGSHOT-GATE-V1.md) · [八席](../acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) · W1 编码门关 |
 | [tdv-atelier-promote-export-v1-wireframe.html](./tdv-atelier-promote-export-v1-wireframe.html) | **TDV 设计工坊 · 写入 vs 导出 F1–F2** · [PRD](../PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) **v0.2.0** · BLK-05 |
 | [tsu-template-admin-series-editor-v1-wireframe.html](./tsu-template-admin-series-editor-v1-wireframe.html) | **TSU 模板治理 + 成册编排器 v1.2.1** · 用词收口（历史归档 / 封面封底 / 正式页型）· [PRD](../PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) §5.2.0 · **待产品 A7 签核** · 不顶 B7 |
 | [tsu-screen-template-glyphs-v1.html](./tsu-screen-template-glyphs-v1.html) | **现网 47 张 Web 拼图槽标** · 红竖 / 蓝横 · 几何来自 LTE YAML · [清单](../templates/WEB-JOURNAL-MOSAIC-TEMPLATES.md) |
@@ -50,7 +53,9 @@
 
 双击 HTML 文件，或用浏览器打开。
 
-**作品集成册 PFM V1 评审 Tab**：**F0 地图** · **F1 导入分段** · **F2 首页次链** · **F3 导出页图** · **F4 游记对照** · **F5 换种分享** · **F6 精修成册类型** · **F7 书架** · **F8 红线** · 线框：[portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) · PRD：[PRD-PORTFOLIO-FOLIO-MODE-V1.md](../PRD-PORTFOLIO-FOLIO-MODE-V1.md) **v0.1.0** · [八席评审 2026-08-20](../acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) **Conditional Go** · BLK-PFM-01～09 待回写 v0.2.0 · **F1/F3/F6 待改后重签 · 未 Kickoff**
+**OLT 成品账本与票根副券评审 Tab**：**① 合同** · **帧 A 浅** · **帧 A 深** · **帧 A 禁** · **帧 B 列表** · **帧 B 交互** · **拍板清单** · **帧 A/B 已签 2026-08-26** · 线框：[olt-output-ledger-ticket-v1-wireframe.html](./olt-output-ledger-ticket-v1-wireframe.html) · [PRD v0.1.4](../PRD-OUTPUT-LEDGER-TICKET-V1.md) · [签核](../acceptance-records/olt-frame-ab-signoff-2026-08-26.md) · **M1–M3 已落地** · M4 狗粮未开
+
+**作品集成册 PFM / PFO 评审 Tab**：**F0–F11 已签** · 线框：[portfolio-folio-mode-v1-wireframe.html](./portfolio-folio-mode-v1-wireframe.html) **v1.2** · [PFO v0.2.1](../PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · [F9–F11 签核](../acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) · [PFM](../PRD-PORTFOLIO-FOLIO-MODE-V1.md)
 
 **预览 Chrome 收敛 V1.1 评审 Tab**：**① 诊断·对照** · **② IA** · **③ F1 主路径** · **④ F3** · **⑤ F4 按需分章** · **⑥ F5 分章工作台** · **⑦ F7** · **⑧ 任务条** · **⑨ 配色** · **⑩ 清单** · **⑪ 拍板** · 线框：[preview-chrome-unify-v1-wireframe.html](./preview-chrome-unify-v1-wireframe.html) · [产品拍板](../acceptance-records/preview-chrome-unify-v1-product-note-2026-07-19.md) · [D-PCU-07～12](../acceptance-records/preview-chrome-unify-v1-decisions-2026-07-19.md) · [跨职能评审](../acceptance-records/preview-chrome-unify-v1-review-2026-07-19.md) · **合同已定 · 可开工**
 

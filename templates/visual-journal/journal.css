@@ -1,5 +1,8 @@
 /**
  * Visual Journal v0.2.1 — 用户交付样式（journal.css）
+ * SHARED shell (SHD-DPI-06): variables / fonts / chrome for journal AND portfolio.
+ * Do not add family-specific layout rules here (screen-* / page-*).
+ * The @import filename below is rewritten on copy by render/engine.py — do not rename it.
  * 双形态：手机 9:16 · Web 16:9（断点 768px）
  * 字体：全书微软雅黑栈 + 各平台系统无衬线回退（无需联网）
  * 可选杂志体：html[data-font-theme="magazine"] 使用 --font-legacy-brush

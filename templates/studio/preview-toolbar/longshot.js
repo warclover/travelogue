@@ -4,6 +4,7 @@
 "use strict";
 
 import {
+  getJson,
   postJson,
   postJsonBusyRetry,
   isJobBusyResponse,
@@ -16,6 +17,8 @@ import {
 import {
   bindPanelDraft,
   buildPanelHtml,
+  closeCrossingGateSheet,
+  renderCrossingGateSheet,
   exportSummaryLineForPlatforms,
   batchChecklistItems,
   batchChecklistItemsFromResult,
@@ -24,6 +27,7 @@ import {
   ctaLabelForPlatforms,
   detectPlatformFromProgressHint,
   enabledPlatformsFromConfig,
+  progressSubtitleForPlatform,
   estimatePhotoCountFromDom,
   formatBatchSuccess,
   isComposePlatform,
@@ -40,6 +44,26 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
+import { exportAria } from "../js/copy-dictionary.js";
+import {
+  PORTFOLIO_PAGES_PLATFORM,
+  CLG_SIBLING_TIMEOUT_MS,
+  crossingGateCopy,
+  crossingOpenJournalFailedSibling,
+  crossingSiblingAfterFailure,
+  folioMainExportFlags,
+  isCrossingLongshotLocked,
+  isPortfolioEdition,
+  isPortfolioPrintOneShot,
+  nextCrossingDefaultPlatform,
+  readPortfolioExportPrefs,
+  settleCrossingSiblingResponse,
+  shouldRunSocialBatchExport,
+  writeClgCreateJournalHandshake,
+  writePortfolioExportPrefs,
+  writePortfolioSocialPrefs,
+} from "../js/portfolio-export-logic.js";
+import { markPortfolioExportArmed } from "../js/portfolio-dock-logic.js";
 import { openDualPreview } from "./dual-preview.js";
 import {
   applyOutputRecipeConfig,
@@ -169,6 +193,207 @@ var _exportStartFrom = "direct";
 var _pagehideBound = false;
 var _copyGateBypassTitle = null;
 var _pendingExportPlatform = null;
+var _pendingPortfolioPiece = null;
+var _pendingSocialPlatforms = null;
+
+function fxiExportFaceOf(root, pop) {
+  if (pop) {
+    var key = pop.getAttribute("data-export-face") || "";
+    if (key === "portfolio:social") return "social";
+    if (pop.querySelector && pop.querySelector('[data-fxi-face="social"]')) {
+      return "social";
+    }
+  }
+  return root && root._fxiExportFace === "social" ? "social" : "default";
+}
+
+function fxiExportFaceKey(root, spec) {
+  var edition = (spec && spec.edition) || "journal";
+  if (edition !== "portfolio") return edition;
+  return "portfolio:" + fxiExportFaceOf(root);
+}
+
+function _clgCurrentTitle() {
+  try {
+    var el = document.documentElement;
+    return String(
+      (el && el.getAttribute("data-title")) || document.title || ""
+    ).trim();
+  } catch (_e) {
+    return "";
+  }
+}
+
+function _clgJournalUrl(tripId) {
+  return "/" + encodeURIComponent(String(tripId || "").trim()) + "/index.html?exportPanel=1";
+}
+
+function applyCrossingSibling(root, pop, sibling) {
+  if (!pop) return;
+  if (sibling && sibling.albumRoot) pop._clgAlbumRoot = sibling.albumRoot;
+  pop._clgSibling = sibling;
+  if (pop._clgSheetOpen && typeof pop._onCrossingGate === "function") {
+    pop._onCrossingGate(pop._clgGatePid);
+  }
+}
+
+function prefetchCrossingSibling(root, pop) {
+  if (!pop || !isPortfolioEdition(root && root._edition)) return;
+  if (fxiExportFaceOf(root, pop) !== "social") return;
+  var tripId = _tripIdFromPath() || (root && root._tripId) || "";
+  if (!tripId) {
+    applyCrossingSibling(root, pop, crossingSiblingAfterFailure(pop._clgAlbumRoot));
+    return;
+  }
+  if (pop._clgSibling && pop._clgSibling.ok && !pop._clgSibling.loading) return;
+  pop._clgSibling = { loading: true, albumRoot: pop._clgAlbumRoot || null };
+  var finished = false;
+  function fromNetwork(sibling) {
+    finished = true;
+    applyCrossingSibling(root, pop, sibling);
+  }
+  getJson("/__travelogue/trips/" + encodeURIComponent(tripId) + "/sibling-journal")
+    .then(function (res) {
+      fromNetwork(settleCrossingSiblingResponse(res, pop._clgAlbumRoot));
+    })
+    .catch(function () {
+      if (!finished) {
+        fromNetwork(crossingSiblingAfterFailure(pop._clgAlbumRoot));
+      }
+    });
+  window.setTimeout(function () {
+    if (finished) return;
+    if (pop._clgSibling && pop._clgSibling.ok && !pop._clgSibling.loading) return;
+    applyCrossingSibling(root, pop, crossingSiblingAfterFailure(pop._clgAlbumRoot));
+  }, CLG_SIBLING_TIMEOUT_MS);
+}
+
+function bindCrossingGateSheet(root, pop) {
+  if (!pop) return;
+  pop._onCrossingGate = function (pid) {
+    pop._clgGatePid = pid || pop._clgGatePid || "";
+    pop._clgSheetOpen = true;
+    var sibling = pop._clgSibling || {
+      loading: true,
+      albumRoot: pop._clgAlbumRoot || null,
+    };
+    renderCrossingGateSheet(pop, sibling, _clgCurrentTitle());
+    var host = pop.querySelector("[data-clg-sheet]");
+    if (!host) return;
+    function stay(ev) {
+      if (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      closeCrossingGateSheet(pop);
+    }
+    var primary = host.querySelector("[data-clg-primary]");
+    var secondary = host.querySelector("[data-clg-secondary]");
+    var dismiss = host.querySelector("[data-clg-dismiss]");
+    var veil = host.querySelector("[data-clg-veil]");
+    if (primary) {
+      primary.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        handleCrossingGatePrimary(root, pop);
+      });
+    }
+    if (secondary) {
+      secondary.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        handleCrossingGateSecondary(root, pop);
+      });
+    }
+    if (dismiss) dismiss.addEventListener("click", stay);
+    if (veil) veil.addEventListener("click", stay);
+    var focusEl =
+      (primary && !primary.disabled && primary) || secondary || dismiss;
+    if (focusEl && typeof focusEl.focus === "function") {
+      window.setTimeout(function () {
+        try {
+          focusEl.focus();
+        } catch (_eF) {}
+      }, 0);
+    }
+  };
+}
+
+function handleCrossingGatePrimary(root, pop) {
+  var sibling = pop._clgSibling || {};
+  var copy = crossingGateCopy();
+  if (sibling.present && sibling.tripId) {
+    var journalId = String(sibling.tripId);
+    getJson("/__travelogue/trips/" + encodeURIComponent(journalId) + "/entry")
+      .then(function (res) {
+        if (res.status === 200 && res.body) {
+          window.location.assign(_clgJournalUrl(journalId));
+          return;
+        }
+        if (typeof _showToolbarToast === "function") {
+          _showToolbarToast(copy.toastOpenFail, { error: true });
+        }
+        applyCrossingSibling(
+          root,
+          pop,
+          crossingOpenJournalFailedSibling(sibling)
+        );
+      })
+      .catch(function () {
+        if (typeof _showToolbarToast === "function") {
+          _showToolbarToast(copy.toastOpenFail, { error: true });
+        }
+        applyCrossingSibling(
+          root,
+          pop,
+          crossingOpenJournalFailedSibling(sibling)
+        );
+      });
+    return;
+  }
+  if (sibling.canCreateSibling && sibling.albumRoot) {
+    writeClgCreateJournalHandshake({
+      albumPath: sibling.albumRoot,
+      fromTripId: _tripIdFromPath() || (root && root._tripId) || "",
+    });
+    try {
+      window.location.assign("/");
+    } catch (_eGo) {}
+    return;
+  }
+  closeCrossingGateSheet(pop);
+  if (typeof _activeExportPanelFinish === "function") {
+    _activeExportPanelFinish(false);
+  }
+  if (root && typeof root._onPortfolioToJournal === "function") {
+    root._onPortfolioToJournal();
+  }
+}
+
+function handleCrossingGateSecondary(root, pop) {
+  var sibling = pop._clgSibling || {};
+  closeCrossingGateSheet(pop);
+  if (sibling.canCreateSibling && !sibling.present) {
+    if (pop._panelDraft && typeof pop._panelDraft.setDraft === "function") {
+      var xhs = nextCrossingDefaultPlatform({ platform: "xiaohongshu" });
+      pop._panelDraft.setDraft({ platform: xhs, platforms: [xhs] });
+    }
+  }
+}
+
+function resetFxiExportFace() {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll(".preview-toolbar").forEach(function (el) {
+    if (isPortfolioEdition(el._edition)) el._fxiExportFace = "default";
+  });
+  // AC-FXI-05 · 关掉过河面后拆掉隐藏的 F2 DOM。否则再点 Dock 时
+  // keepFace / data-export-face 会把 social 面又装回来。
+  document
+    .querySelectorAll('.preview-toolbar__export-popover[data-export-face="portfolio:social"]')
+    .forEach(function (pop) {
+      if (pop.hidden) pop.remove();
+    });
+}
 
 function _readJsonStorage(store, key) {
   try {
@@ -280,6 +505,13 @@ function hydrateSessionIntentFromConfirmedPrefs(tripId) {
 function syncPrefsPlatform(platform) {
   if (!platform) return;
   try {
+    var edition =
+      typeof document !== "undefined" && document.documentElement
+        ? document.documentElement.getAttribute("data-edition")
+        : "";
+    if (isPortfolioEdition(edition)) {
+      return;
+    }
     var prefs = readExportPrefs();
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 2026-08-06 Playwright 走查发现的真实
     // 回归：batch 态下点导出 → startLongshotWithRecipe 的 Output Recipe「猜
@@ -481,23 +713,18 @@ export function cancelPreviewLongshotExport(root) {
         longshotPollCancel();
         longshotPollCancel = null;
       }
-      var pending = jobId
-        ? postJson("/__travelogue/cancel", { jobId: jobId })
-        : Promise.resolve({ status: 200, body: { ok: true } });
+      if (jobId) {
+        postJson("/__travelogue/cancel", { jobId: jobId }).catch(function () {});
+      }
       longshotJobId = null;
-      return pending
-        .catch(function () {
-          return { status: 0, body: {} };
-        })
-        .then(function () {
-          setLongshotExportState(root, "idle");
-          if (root && root._taskDock && typeof root._taskDock.hide === "function") {
-            root._taskDock.hide();
-          }
-          root._exportDockActive = false;
-          _showToolbarToast("已取消导出");
-          return true;
-        });
+      // 确认后立刻回到预览，不堵在 Playwright 收尾上。
+      setLongshotExportState(root, "idle");
+      if (root && root._taskDock && typeof root._taskDock.hide === "function") {
+        root._taskDock.hide();
+      }
+      root._exportDockActive = false;
+      _showToolbarToast("已取消导出");
+      return true;
     })
     .then(
       function (result) {
@@ -580,28 +807,32 @@ export function cancelPreviewLongshotExport(root) {
    * 兜底才用 confirmed prefs.platform（AC-DFX-02 SSOT）。
    * @returns {{ title: string, subtitle: string }}
    */
-  function humanExportProgress(opts) {
+  function humanExportProgress(opts, root) {
     opts = opts || {};
     var hint = String(opts.hint || "");
     var pct = typeof opts.pct === "number" ? opts.pct : null;
     var prefs = readLongshotExportPrefs();
-    var platform =
-      detectPlatformFromProgressHint(hint) || prefs.platform || "wechat_chat";
-    var composeMode = isComposePlatform(platform);
+    var fromHint = detectPlatformFromProgressHint(hint);
+    var running = opts.platform || (root && root._runningExportPlatform) || "";
+    var platform;
+    if (fromHint) {
+      platform = fromHint;
+    } else if (
+      isPortfolioEdition(root && root._edition) ||
+      running === PORTFOLIO_PAGES_PLATFORM
+    ) {
+      // 作品集主路径不写 prefs，禁止回落到游记「可发微信的长图」。
+      platform = running || PORTFOLIO_PAGES_PLATFORM;
+    } else {
+      platform = prefs.platform || "wechat_chat";
+    }
 
     var scale = Number(prefs.scale) || 2;
     var quality = scale >= 3 ? "超清" : scale >= 2 ? "高清" : "标准";
-    // 副标题跟平台：禁对朋友圈/拼贴误用「按章导出」
-    var subtitle;
-    if (composeMode) {
-      subtitle = "3:4 拼贴 · " + quality;
-    } else if (platform === "wechat_moments") {
-      subtitle = "长图连读 · " + quality;
-    } else if (platform === "wechat_chat") {
-      subtitle = (prefs.mode === "full" ? "一整张发群" : "按章发群") + " · " + quality;
-    } else {
-      subtitle = quality;
-    }
+    var subtitle = progressSubtitleForPlatform(platform, {
+      quality: quality,
+      mode: prefs.mode,
+    });
 
     var title = progressTitleForPlatform(platform);
     if (/更新版面/.test(hint)) {
@@ -644,6 +875,14 @@ export function cancelPreviewLongshotExport(root) {
     if (!btn) return;
     if (btn.getAttribute("data-label-locked") === "1") return;
     var prefs = readExportPrefs();
+    if (typeof root._syncPortfolioCta === "function") {
+      var handled = root._syncPortfolioCta(root, btn, {
+        isV4: isPreviewToolbarV4(root),
+        updateDockTip: updateDockTip,
+        emitSnrCtaLabel: emitSnrCtaLabel,
+      });
+      if (handled) return;
+    }
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量 CTA
     // SNR D-SNR-11 · 人话「导出 · {主平台}等 N 项」，禁止孤立「N 个模式」主文案；
     // 不进入下方任何单平台 Output Recipe / tipRecipe 逻辑——那套「猜意图」
@@ -701,10 +940,14 @@ export function cancelPreviewLongshotExport(root) {
     } else {
       btn.removeAttribute("data-recipe-subtitle");
     }
-    // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
+    // COPY-01 · 可见短标签与 aria 都用术语表；渠道不进按钮能力
     function shortLabelForCta() {
-      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "选择分享";
-      return shortCtaLabelForPlatform(platform);
+      return "长图";
+    }
+    function journalButtonAria(raw) {
+      var text = String(raw || "");
+      if (!text || text.indexOf("发微信群") >= 0) return exportAria("journal");
+      return text;
     }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
@@ -713,17 +956,17 @@ export function cancelPreviewLongshotExport(root) {
       if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
         labelEl.textContent = short;
       }
-      btn.setAttribute("aria-label", label);
-      updateDockTip(btn, label);
-      emitSnrCtaLabel(label, [platform]);
+      btn.setAttribute("aria-label", journalButtonAria(label));
+      updateDockTip(btn, journalButtonAria(label));
+      emitSnrCtaLabel(journalButtonAria(label), [platform]);
       return;
     }
     var shortBar = shortLabelForCta();
     if (!btn.classList.contains("preview-toolbar__longshot--running")) {
       btn.textContent = shortBar;
     }
-    btn.setAttribute("aria-label", label);
-    emitSnrCtaLabel(label, [platform]);
+    btn.setAttribute("aria-label", journalButtonAria(label));
+    emitSnrCtaLabel(journalButtonAria(label), [platform]);
   }
 
   function maybeToastSparseMoments() {
@@ -1049,6 +1292,7 @@ export function cancelPreviewLongshotExport(root) {
 
   function _closeStudioExportPopoverUi() {
     document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
+      closeCrossingGateSheet(pop);
       releaseExportPopoverFocus(pop);
       pop.hidden = true;
       pop.classList.remove("preview-toolbar__export-popover--sheet");
@@ -1060,6 +1304,7 @@ export function cancelPreviewLongshotExport(root) {
     try {
       document.documentElement.classList.remove("preview-export-popover-open");
     } catch (eLock) {}
+    resetFxiExportFace();
   }
 
   export function closeStudioExportPopover() {
@@ -1082,15 +1327,30 @@ export function cancelPreviewLongshotExport(root) {
   export function ensureStudioExportPopover(root) {
     var wrap = root.querySelector(".preview-toolbar__export-zone-wrap");
     if (!wrap) return null;
+    var face =
+      root && typeof root._exportPopoverSpec === "function"
+        ? root._exportPopoverSpec()
+        : { title: "导出设置", edition: "journal" };
+    var faceKey = fxiExportFaceKey(root, face);
     var pop = wrap.querySelector(".preview-toolbar__export-popover");
+    if (pop && pop.getAttribute("data-export-face") !== faceKey) {
+      pop.remove();
+      pop = null;
+    }
     if (pop) return pop;
 
     pop = document.createElement("div");
     pop.className = "preview-toolbar__export-popover";
     pop.hidden = true;
     pop.setAttribute("role", "dialog");
-    pop.setAttribute("aria-label", "导出设置");
-    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds);
+    pop.setAttribute("aria-label", face.title);
+    pop.setAttribute("data-export-face", faceKey);
+    var initProduct = readPortfolioExportPrefs().product;
+    pop.innerHTML = buildPanelHtml(_longshot2PlatformIds, {
+      edition: face.edition,
+      face: face.edition === "portfolio" ? fxiExportFaceOf(root) : "default",
+      product: initProduct,
+    });
     var dualBtn = pop.querySelector("[data-ltn-dual-preview]");
     if (dualBtn && !dualBtn._ltnBound) {
       dualBtn._ltnBound = true;
@@ -1102,11 +1362,18 @@ export function cancelPreviewLongshotExport(root) {
     }
 
     var prefs0 = readLongshotExportPrefs();
+    var initPlatform = prefs0.platform;
+    var initPlatforms = prefs0.platforms;
+    if (face.initPlatform) {
+      var seeded = face.initPlatform(prefs0);
+      initPlatform = seeded.platform;
+      initPlatforms = seeded.platforms;
+    }
     var panel = bindPanelDraft(
       pop,
       {
-        platform: prefs0.platform,
-        platforms: prefs0.platforms,
+        platform: initPlatform,
+        platforms: initPlatforms,
         mode: prefs0.mode,
         scale: prefs0.scale,
         slideCount: prefs0.slideCount,
@@ -1118,12 +1385,17 @@ export function cancelPreviewLongshotExport(root) {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
         appendixCount: estimateAppendixCountFromDom(document),
+        edition: fxiExportFaceOf(root) === "social" ? "journal" : face.edition,
         onDraftChange: function (draft) {
           syncConfirmedExportSummary(pop, draft && draft.platforms);
         },
       }
     );
     pop._panelDraft = panel;
+    if (fxiExportFaceOf(root, pop) === "social") {
+      bindCrossingGateSheet(root, pop);
+      prefetchCrossingSibling(root, pop);
+    }
 
     pop.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -1203,6 +1475,33 @@ export function cancelPreviewLongshotExport(root) {
         exportZip(_tripIdFromPath());
       });
     }
+    pop.setAttribute("data-fxi-product", initProduct || "pages");
+    pop.querySelectorAll("[data-fxi-product]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        var product = btn.getAttribute("data-fxi-product") || "pages";
+        pop.setAttribute("data-fxi-product", product);
+        pop.querySelectorAll("[data-fxi-product]").forEach(function (el) {
+          var on = el.getAttribute("data-fxi-product") === product;
+          el.classList.toggle("is-on", on);
+          el.classList.toggle("is-selected", on);
+        });
+      });
+    });
+    pop.querySelectorAll("[data-fxi-cross-river]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        switchPortfolioExportFace(root, "social");
+      });
+    });
+    pop.querySelectorAll("[data-fxi-back]").forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        switchPortfolioExportFace(root, "default");
+      });
+    });
     var revealMoreBtn = pop.querySelector('[data-action="reveal-folder"]');
     if (revealMoreBtn) {
       revealMoreBtn.addEventListener("click", function () {
@@ -1343,6 +1642,50 @@ export function cancelPreviewLongshotExport(root) {
     wireXhsCopyPack();
 
     pop._applyDraft = function () {
+      var tripIdApply0 = _tripIdFromPath() || root._tripId || "";
+      var applyFace = fxiExportFaceOf(root, pop);
+      if (isPortfolioEdition(root._edition) && applyFace !== "social") {
+        var product = pop.getAttribute("data-fxi-product") || "pages";
+        writePortfolioExportPrefs({ product: product });
+        markPortfolioExportArmed(tripIdApply0);
+        if (product === "book") {
+          exportZip(tripIdApply0, {
+            title: "导出这一本",
+            body: "将打包可点开翻阅的压缩包。继续？",
+            doneTitle: "这一本已打包",
+          });
+          return;
+        }
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+        _pendingPortfolioPiece = "pages";
+        startLongshot(root, tripIdApply0);
+        return;
+      }
+      if (isPortfolioEdition(root._edition) && applyFace === "social") {
+        var socialDraft = panel.getDraft();
+        var socialPlatform = socialDraft.platform || "wechat_chat";
+        var socialPlatforms = normalizePlatformList(socialDraft.platforms, socialPlatform);
+        if (isCrossingLongshotLocked(socialPlatform)) {
+          if (typeof pop._onCrossingGate === "function") pop._onCrossingGate(socialPlatform);
+          return;
+        }
+        writePortfolioSocialPrefs({
+          platform: socialPlatform,
+          platforms: socialPlatforms,
+        });
+        _pendingExportPlatform = socialPlatform;
+        _pendingSocialPlatforms = shouldRunSocialBatchExport(
+          root._edition,
+          socialPlatforms
+        )
+          ? socialPlatforms
+          : null;
+        // 过河一旦开导，下一张 Dock 必须回 F1（G-FXI-02 / AC-FXI-05）。
+        // 平台已写入 _pending*，不再依赖面板 face。
+        if (root) root._fxiExportFace = "default";
+        startLongshot(root, tripIdApply0);
+        return;
+      }
       var draft = panel.getDraft();
       var prevPlatform = readExportPrefs().platform || "wechat_chat";
       var prevDensity = readExportPrefs().density || "default";
@@ -1351,6 +1694,24 @@ export function cancelPreviewLongshotExport(root) {
       // 这里若漏写会导致确认后 localStorage 里只剩单值 platform，多选形同
       // 摆设（2026-08-06 Playwright 走查发现的回归，务必带上）。
       var confirmedPlatforms = normalizePlatformList(draft.platforms, confirmedPlatform);
+      if (isPortfolioPrintOneShot(root._edition, confirmedPlatform)) {
+        closeStudioExportPopover();
+        _pendingExportPlatform = "album_spread";
+        startLongshot(root, _tripIdFromPath() || root._tripId || "");
+        return;
+      }
+      if (isPortfolioEdition(root._edition) && confirmedPlatform !== PORTFOLIO_PAGES_PLATFORM) {
+        confirmedPlatform = PORTFOLIO_PAGES_PLATFORM;
+        confirmedPlatforms = [PORTFOLIO_PAGES_PLATFORM];
+      }
+      if (confirmedPlatform === PORTFOLIO_PAGES_PLATFORM) {
+        markPortfolioExportArmed(_tripIdFromPath() || root._tripId || "");
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+        syncConfirmedExportSummary(pop);
+        syncLongshotCtaLabel(root);
+        refreshLongshotExportMeta(root);
+        return;
+      }
       var nextDensity = draft.density === "compact" ? "compact" : "default";
       writeStoredLongshotPrefs(draft.mode, draft.scale);
       writeExportPrefs({
@@ -1421,10 +1782,17 @@ export function cancelPreviewLongshotExport(root) {
     }
     pop._readDraftFromPrefs = function () {
       var prefs = readLongshotExportPrefs();
+      var platform = prefs.platform;
+      var platforms = prefs.platforms;
+      if (typeof root._readPortfolioDraftPrefs === "function") {
+        var seededDraft = root._readPortfolioDraftPrefs(prefs);
+        platform = seededDraft.platform;
+        platforms = seededDraft.platforms;
+      }
       if (panel.setDraft) {
         panel.setDraft({
-          platform: prefs.platform,
-          platforms: prefs.platforms,
+          platform: platform,
+          platforms: platforms,
           mode: prefs.mode,
           scale: prefs.scale,
           slideCount: prefs.slideCount,
@@ -1439,6 +1807,50 @@ export function cancelPreviewLongshotExport(root) {
 
     wrap.appendChild(pop);
     return pop;
+  }
+
+  function rebindActiveExportSession(root, pop) {
+    if (typeof _activeExportPanelFinish !== "function" || !pop) return;
+    var okBtn = pop.querySelector('[data-action="ok"]');
+    var cancelBtn = pop.querySelector('[data-action="cancel"]');
+    function onOk() {
+      _activeExportPanelFinish(true);
+    }
+    function onCancel() {
+      _activeExportPanelFinish(false);
+    }
+    if (okBtn) okBtn.addEventListener("click", onOk);
+    if (cancelBtn) cancelBtn.addEventListener("click", onCancel);
+    if (_studioExportPopoverClose) {
+      document.removeEventListener("click", _studioExportPopoverClose, true);
+    }
+    _studioExportPopoverClose = function (e) {
+      if (pop.contains(e.target)) return;
+      if (root && root.querySelector(".preview-toolbar__longshot-caret") === e.target) {
+        return;
+      }
+      _activeExportPanelFinish(false);
+    };
+    document.addEventListener("click", _studioExportPopoverClose, true);
+  }
+
+  function switchPortfolioExportFace(root, face) {
+    if (!root) return;
+    root._fxiExportFace = face === "social" ? "social" : "default";
+    var pop = ensureStudioExportPopover(root);
+    if (!pop) return;
+    if (typeof pop._readDraftFromPrefs === "function") pop._readDraftFromPrefs();
+    applyExportPopoverLayoutMode(pop);
+    pop.hidden = false;
+    try {
+      document.documentElement.classList.add("preview-export-popover-open");
+    } catch (_eOpen) {}
+    trapExportPopoverFocus(pop);
+    rebindActiveExportSession(root, pop);
+    if (face === "social") {
+      bindCrossingGateSheet(root, pop);
+      prefetchCrossingSibling(root, pop);
+    }
   }
 
   function applyExportPopoverLayoutMode(pop) {
@@ -1463,6 +1875,10 @@ export function cancelPreviewLongshotExport(root) {
     function onKey(e) {
       if (e.key === "Escape") {
         e.preventDefault();
+        if (pop.classList.contains("is-clg-open")) {
+          closeCrossingGateSheet(pop);
+          return;
+        }
         if (typeof _activeExportPanelFinish === "function") {
           _activeExportPanelFinish(false);
         } else {
@@ -1502,6 +1918,7 @@ export function cancelPreviewLongshotExport(root) {
         return;
       }
       // SFP D-SFP-10 · 浮层互斥：打开导出设置前关掉分章面板
+      var keepFace = root && root._fxiExportFace;
       var mutexClosed = [];
       try {
         if (
@@ -1550,6 +1967,14 @@ export function cancelPreviewLongshotExport(root) {
         _activeExportPanelFinish(false);
       } else {
         _closeStudioExportPopoverUi();
+      }
+      if (root && keepFace) root._fxiExportFace = keepFace;
+      // AC-FXI-05 · 关掉 F2 会拆掉 social DOM。必须重新拿活节点再亮，
+      // 否则人会看到「弹窗打不开」，回首页重载才好。
+      pop = ensureStudioExportPopover(root);
+      if (!pop) {
+        reject(new Error("no popover"));
+        return;
       }
       pop._readDraftFromPrefs();
       applyExportPopoverLayoutMode(pop);
@@ -1725,10 +2150,17 @@ export function cancelPreviewLongshotExport(root) {
           jobId === longshotJobId
         ) {
           var pct = longshotProgressPct(job);
+          var runningPid = root._runningExportPlatform || "";
           setLongshotExportState(root, "running", {
             // FE-SR-07 · stageHint 只作分类信号，不进第一行
-            hint: job.stageHint || "正在合成长图…",
+            // 游记缺省仍是「正在合成长图…」；作品集主路径不套用。
+            hint:
+              job.stageHint ||
+              (runningPid === PORTFOLIO_PAGES_PLATFORM
+                ? "正在导出作品集…"
+                : "正在合成长图…"),
             pct: pct,
+            platform: runningPid || undefined,
           });
         }
         // PRD-BATCH-EXPORT-MULTISELECT-V1 Stage 3 · 批量清单化进度，由调用方
@@ -1900,6 +2332,7 @@ export function cancelPreviewLongshotExport(root) {
 
   export function setLongshotExportState(root, state, opts) {
     opts = opts || {};
+    if (root && state !== "running") root._runningExportPlatform = null;
     var zone = exportZoneEl(root);
     var btn = longshotBtnEl(root);
     if (!btn) return;
@@ -1934,7 +2367,7 @@ export function cancelPreviewLongshotExport(root) {
         }
         root._exportDockActive = true;
         if (root._taskDock) {
-          var human = humanExportProgress(opts);
+          var human = humanExportProgress(opts, root);
           root._taskDock.updateExporting({
             title: human.title,
             subtitle: human.subtitle,
@@ -2420,6 +2853,7 @@ export function cancelPreviewLongshotExport(root) {
           return;
         }
         if (trip.layoutCssStale || trip.renderBundleStale) {
+          // PFO W1 · 规格 job 已 stamp 时后端不得再报假 stale；这里只信 GET /trips。
           // SFC · 禁「产物/过期」工程腔；与 stale 主词「分享图需更新」同族
           var pendingMsg = trip.renderBundleStale
             ? "预览需更新，请重新渲染后再分享"
@@ -2435,6 +2869,8 @@ export function cancelPreviewLongshotExport(root) {
           _setLayoutPending(true);
           return;
         }
+        // preview_ready：作品集 / 游记都清 pending，避免改页刷新后残留「更新版面」
+        _setLayoutPending(false);
         _setLayoutPendingMessage("");
         return fetchSourceStatus(tripId).then(function () {
           if (trip.longshotStale) {
@@ -2445,12 +2881,14 @@ export function cancelPreviewLongshotExport(root) {
       .catch(function () {});
   }
 
-  export function exportZip(tripId) {
+  export function exportZip(tripId, opts) {
+    opts = opts || {};
     var root = document.querySelector(".preview-toolbar");
     maybeSourceMissingGate(root, tripId, function () {
       _toolbarConfirm({
-        title: "导出 zip",
-        body: "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
+        title: opts.title || "导出 zip",
+        body:
+          opts.body || "导出 zip 包用于自行托管或备份，不是微信分享主路径。继续？",
         confirmText: "继续",
       }).then(function (ok) {
         if (!ok) return;
@@ -2464,7 +2902,7 @@ export function cancelPreviewLongshotExport(root) {
         var zipRel = res.body.zipRelPath;
         if (!zipRel) return;
         return _toolbarConfirm({
-          title: "zip 已生成",
+          title: opts.doneTitle || "zip 已生成",
           body: "是否在文件夹中显示？",
           confirmText: "显示",
           cancelText: "关闭",
@@ -2487,7 +2925,14 @@ export function cancelPreviewLongshotExport(root) {
       trackStudioEvent("longshot_export_blocked_pending", { trip_id: tripId });
       _toolbarConfirm({
         title: "导出前先更新一下",
-        body: "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
+        body: isPortfolioEdition(
+          (root && root._edition) ||
+            (typeof document !== "undefined" && document.documentElement
+              ? document.documentElement.getAttribute("data-edition")
+              : "")
+        )
+          ? "预览还没跟上这一本，导出前需先更新，否则页图仍是旧版。"
+          : "你改过拼图或版式相关设置，导出前需先更新版面，否则长图仍是旧版。",
         confirmText: "更新并导出",
         secondaryText: "仅更新版面",
         cancelText: "取消",
@@ -2587,6 +3032,28 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function startLongshotWithRecipe(root, tripId) {
+    var socialPending =
+      !!(_pendingExportPlatform && _pendingExportPlatform !== PORTFOLIO_PAGES_PLATFORM);
+    var socialBatch = shouldRunSocialBatchExport(
+      root && root._edition,
+      _pendingSocialPlatforms
+    );
+    if (
+      !socialPending &&
+      !socialBatch &&
+      typeof root._skipRecipeForExport === "function" &&
+      root._skipRecipeForExport(tripId)
+    ) {
+      openLongshotExportOptions(root);
+      return;
+    }
+    if (isPortfolioEdition(root && root._edition)) {
+      if (!socialPending && !socialBatch) {
+        _pendingExportPlatform = PORTFOLIO_PAGES_PLATFORM;
+      }
+      maybeCopyGateThenExport(root, tripId);
+      return;
+    }
     if (!isOutputRecipeEnabled()) {
       maybeCopyGateThenExport(root, tripId);
       return;
@@ -2677,9 +3144,11 @@ export function cancelPreviewLongshotExport(root) {
       if (!choice) return;
       if (choice === "secondary") {
         try {
-          var nextPrefs = readExportPrefs();
-          nextPrefs.mode = "chapter";
-          writeExportPrefs(nextPrefs);
+          if (!isPortfolioEdition(root._edition)) {
+            var nextPrefs = readExportPrefs();
+            nextPrefs.mode = "chapter";
+            writeExportPrefs(nextPrefs);
+          }
         } catch (_e) {}
       }
       next();
@@ -3101,10 +3570,22 @@ export function cancelPreviewLongshotExport(root) {
     hideLongshotDrawer(root);
 
     var prefs = readLongshotExportPrefs();
+    var pendingSocial = _pendingSocialPlatforms;
+    _pendingSocialPlatforms = null;
+    if (shouldRunSocialBatchExport(root && root._edition, pendingSocial)) {
+      runBatchExport(
+        root,
+        tripId,
+        Object.assign({}, prefs, { platforms: pendingSocial }),
+        pendingSocial
+      );
+      return;
+    }
     // PRD-BATCH-EXPORT-MULTISELECT-V1 · 多选（2+ 个平台）走独立的批量分支，
     // 完全不进入下方任何单平台专属逻辑（resume-after-layout / intent 映射 /
     // Task Dock 抽屉渲染等），避免混用两套结果形状（single vs `{batch:true}`）。
-    if (prefs.platforms && prefs.platforms.length > 1) {
+    // 作品集主路径禁止因共享 prefs 多选走进社交批量。
+    if (shouldRunSocialBatchExport(root && root._edition, prefs.platforms)) {
       runBatchExport(root, tripId, prefs, prefs.platforms);
       return;
     }
@@ -3115,8 +3596,18 @@ export function cancelPreviewLongshotExport(root) {
       _pendingExportPlatform ||
       (afterLayout ? readResumePlatform(tripId) : null) ||
       prefsPlatform;
+    if (typeof root._resolveExportPlatform === "function") {
+      platform = root._resolveExportPlatform(prefsPlatform, {
+        pending: _pendingExportPlatform,
+        afterLayout: afterLayout,
+      });
+    }
     _pendingExportPlatform = null;
-    if (platform !== prefsPlatform) {
+    if (
+      platform !== prefsPlatform &&
+      platform !== PORTFOLIO_PAGES_PLATFORM &&
+      !isPortfolioEdition(root && root._edition)
+    ) {
       syncPrefsPlatform(platform);
     }
     var exportGen = nextLongshotExportGen();
@@ -3133,8 +3624,16 @@ export function cancelPreviewLongshotExport(root) {
                 ? "正在导出单张海报…"
                 : platform === "album_spread"
                   ? "正在导出画册跨页…"
-                  : "正在保存…";
-    setLongshotExportState(root, "running", { hint: runningHint });
+                  : platform === PORTFOLIO_PAGES_PLATFORM
+                    ? "正在导出作品集…"
+                    : "正在保存…";
+    if (
+      isPortfolioEdition(root && root._edition) ||
+      platform === PORTFOLIO_PAGES_PLATFORM
+    ) {
+      root._runningExportPlatform = platform;
+    }
+    setLongshotExportState(root, "running", { hint: runningHint, platform: platform });
     _setSlowHint(root, "", false);
 
     var t0 = Date.now();
@@ -3153,10 +3652,22 @@ export function cancelPreviewLongshotExport(root) {
     var req = buildLongshotRequestFromPage(tripId);
     if (req && platform) {
       req.platform = platform;
-      var mapped = PLATFORM_TO_INTENT[platform];
-      if (mapped) req.intent = mapped;
+      if (platform !== PORTFOLIO_PAGES_PLATFORM) {
+        var mapped = PLATFORM_TO_INTENT[platform];
+        if (mapped) req.intent = mapped;
+      } else {
+        req.intent = "";
+        var flags = folioMainExportFlags(_pendingPortfolioPiece);
+        req.includeZip = flags.includeZip;
+        req.includePages = flags.includePages;
+        _pendingPortfolioPiece = null;
+      }
     }
-    if (!assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)) {
+    if (
+      platform !== PORTFOLIO_PAGES_PLATFORM &&
+      !isPortfolioEdition(root && root._edition) &&
+      !assertConfirmedPlatformPayload(readExportPrefs().platform || prefsPlatform, req && req.platform)
+    ) {
       setLongshotExportState(root, "idle");
       _showToolbarToast("导出目标不一致，请重新在导出设置里确认", { error: true });
       return;
@@ -3253,6 +3764,14 @@ export function cancelPreviewLongshotExport(root) {
           });
           clearResumePlatform();
           // D-PCU-10 · 结构未确认：引导打开分章面板
+          if (errCode === "E_CLG_NEEDS_JOURNAL") {
+            _showToolbarToast(
+              (res.body && res.body.message) || crossingGateCopy().toastBlockedExport,
+              { error: true }
+            );
+            setLongshotExportState(root, "idle");
+            return;
+          }
           if (errCode === "E_PIPELINE_ORDER") {
             if (typeof root._openChapterPanel === "function") {
               root._openChapterPanel({ pending: true });
@@ -3273,6 +3792,22 @@ export function cancelPreviewLongshotExport(root) {
         if (res.status === 200 && res.body && res.body.fallback === "client") {
           clearResumePlatform();
           return finishClientFallback();
+        }
+        if (res.status === 400) {
+          var err400 = (res.body && res.body.error) || "E_LNG2_START_FAILED";
+          var msg400 =
+            (res.body && res.body.message) || failHint || "无法开始导出";
+          trackStudioEvent("longshot_export_fail", {
+            platform: platform,
+            error_code: err400,
+            trip_id: tripId,
+            surface: "preview",
+            from: from,
+          });
+          clearResumePlatform();
+          setLongshotExportState(root, "error", { hint: msg400 });
+          _showToolbarToast(msg400, { error: true });
+          return;
         }
         if (res.status !== 202 || !res.body.jobId) {
           trackStudioEvent("longshot_export_fail", {
@@ -3397,8 +3932,45 @@ export function cancelPreviewLongshotExport(root) {
       });
   }
 
+  function _stripQueryParam(name) {
+    try {
+      if (!location.search || !new URLSearchParams(location.search).has(name)) {
+        return;
+      }
+      var clean = new URL(location.href);
+      clean.searchParams.delete(name);
+      history.replaceState(null, "", clean.pathname + clean.search + clean.hash);
+    } catch (_hist) {}
+  }
+
+  /** PFO · 成功面「导出作品集」进预览后打开同一套 Dock 面板，不复制 HTML。 */
+  export function consumeExportPanel(root, tripId) {
+    var flagged = false;
+    var faceQ = "";
+    try {
+      var q = new URLSearchParams(location.search || "");
+      flagged = q.get("exportPanel") === "1";
+      faceQ = String(q.get("exportFace") || "").trim();
+    } catch (_q) {}
+    if (!flagged) return false;
+    _stripQueryParam("exportPanel");
+    _stripQueryParam("exportFace");
+    if (faceQ === "social" && isPortfolioEdition(root && root._edition)) {
+      root._fxiExportFace = "social";
+    }
+    openLongshotExportOptions(root);
+    return true;
+  }
+
   /** FE-DFX-43 · FTUE「保存长图」续跑：query/session → 默认 wechat_chat 导出 */
   export function consumeAutoExport(root, tripId) {
+    var edition =
+      (root && root._edition) ||
+      (document.documentElement && document.documentElement.getAttribute("data-edition"));
+    if (isPortfolioEdition(edition)) {
+      _stripQueryParam("autoExport");
+      return false;
+    }
     var platform = null;
     try {
       var q = new URLSearchParams(location.search || "").get("autoExport");

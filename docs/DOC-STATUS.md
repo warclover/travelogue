@@ -147,6 +147,8 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/IMPLEMENTATION-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 实施 |
 | [archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md](./archive/2026/qfx-cqa/ACCEPTANCE-CODE-QUALITY-AUDIT-FIXPACK-V1.md) | **archive**（Closed） | CQA 验收 |
 | [acceptance-records/quality-fixpack-v1-review-2026-07-22.md](./acceptance-records/quality-fixpack-v1-review-2026-07-22.md) | **active** | QFX 七席跨职能评审 · Conditional Go · 系统根因与根本解法 |
+| [项目说明手册.md](./项目说明手册.md) | **active** | 对外用户说明（陌生人 / 试用者）；非工程合同 |
+| [项目介绍.md](./项目介绍.md) | **active** | 一页纸定位；完整说明见《项目说明手册》 |
 | [PRD-NO-AI-SURFACE-V1.md](./PRD-NO-AI-SURFACE-V1.md) | **active** | NAS 用户面现行合同（**v0.2.3** · status 403 + config 投影收口 · Conditional Go） |
 | [IMPLEMENTATION-NO-AI-SURFACE-V1.md](./IMPLEMENTATION-NO-AI-SURFACE-V1.md) | **active** | NAS 实施 **v0.2.2** · status 403 · config 投影 · 对齐 QFX |
 | [ACCEPTANCE-NO-AI-SURFACE-V1.md](./ACCEPTANCE-NO-AI-SURFACE-V1.md) | **active** | NAS 验收 AC-NAS-01～17 · OUT-01～05 指针 · v0.1.2 e2e/DOC 勾选 |
@@ -196,12 +198,49 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [templates/ROLE-FACE-MAP.md](./templates/ROLE-FACE-MAP.md) | **active** | TSU 附录 B · 角色对照 / 现网顶岗 / `narrativeRole` |
 | [templates/TEMPLATE-SYSTEM-UPGRADE.md](./templates/TEMPLATE-SYSTEM-UPGRADE.md) | **active（rationale）** | TSU 设计理由；合同以 PRD 为准 |
 | [PRD-RESERVE-SERIES-CABINET-V1.md](./PRD-RESERVE-SERIES-CABINET-V1.md) | **active** | **RSC** 备用库成册样例柜 **v0.1.0** · **W1 已落地** · 多本手编 YAML · 引擎不读 · 工坊总合同见 TDV |
-| [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.0 Conditional Go** · 现场 W0–W3 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
+| [PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) | **active** | **TDV** 后台模板设计验证工具（设计工坊）**v0.2.1 Conditional Go** · **D-TDV-10 后继见 PIS** · 现场 W0–W3 已做 · 现网收件仍归 TSU · [八席](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
 | [acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) | **active** | TDV 七席+运营 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 |
 | [后台模板设计验证工具备忘录.md](./后台模板设计验证工具备忘录.md) | **active（note）** | TDV 三轮讨论底稿 · 2026-08-19 |
-| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.1.0 Conditional Go** · 游记/作品集分表面 · **BLK-PFM-01～09 待回写 v0.2.0** · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) |
-| [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 未回写 · OQ-02 否决 / OQ-06 改判 |
-| [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 F0–F8 · F0/F2/F4/F7/F8 已签 · **F1/F3/F6 待改后重签** |
+| [PRD-DUAL-PIPELINE-ISOLATION-V1.md](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) | **active** | **DPI** 双管线独立迭代 **v0.2.1** · W0–W3 已合入 · [SHD-DPI-05 真改轨道](./acceptance-records/dpi-dual-pipeline-isolation-v1-w3-closeout-2026-08-22.md) |
+| [PRD-PORTFOLIO-FOLIO-MODE-V1.md](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | **PFM** 作品集成册双管线 **v0.2.2 Conditional Go** · W0–W3 编码已清 · ISO-04/06 · **AS-PFM-03 已升格 · 五档入库** · W4 协议已锁、语料已定点、人评未开 · **入口/导出/页数流程改判见 PFO** · **身份/票根/选脸后继见 PIS** · [八席](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) |
+| [PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | **PFO** **v0.2.2** · W1+W2 已落地 · **F9–F11 已签** · **身份/页数 X/选脸后继见 PIS** · [签核](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) · [实施](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) · [验收](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) |
+| [acceptance-records/pfo-portfolio-flow-optimization-v1-review-2026-08-25.md](./acceptance-records/pfo-portfolio-flow-optimization-v1-review-2026-08-25.md) | **active** | PFO 七席+典型用户 · 8/8 Conditional Go · BLK 已回写 · F9–F11 已签见下条 |
+| [acceptance-records/pfo-f9-f11-signoff-2026-08-25.md](./acceptance-records/pfo-f9-f11-signoff-2026-08-25.md) | **active** | PFO 线框 v1.2 F9–F11 产品签核 · 先实现不合适再改 · AC-PFO-20 关 |
+| [IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./IMPLEMENTATION-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | PFO 实施 · W1+W2 Done · W3 未开 |
+| [ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./ACCEPTANCE-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) | **active** | PFO 验收门 · 源 PRD §14 · AC-PFO-20 已关 |
+| [PRD-OUTPUT-LEDGER-TICKET-V1.md](./PRD-OUTPUT-LEDGER-TICKET-V1.md) | **active** | **OLT** 成品账本与票根副券 **v0.1.4** Conditional Go · BLK-OLT-01～07 已回写 · **M1–M3 已落地** · 发布默认开旗 · **M4 狗粮未开** · [八席](./acceptance-records/olt-output-ledger-ticket-v1-review-2026-08-26.md) · [线框](./wireframes/olt-output-ledger-ticket-v1-wireframe.html) · [签核](./acceptance-records/olt-frame-ab-signoff-2026-08-26.md) |
+| [acceptance-records/olt-output-ledger-ticket-v1-review-2026-08-26.md](./acceptance-records/olt-output-ledger-ticket-v1-review-2026-08-26.md) | **active** | OLT 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.1.1 |
+| [acceptance-records/olt-frame-ab-signoff-2026-08-26.md](./acceptance-records/olt-frame-ab-signoff-2026-08-26.md) | **active** | OLT 帧 A/B 产品签核 · **已签 2026-08-26** · 八条认可 |
+| [wireframes/olt-output-ledger-ticket-v1-wireframe.html](./wireframes/olt-output-ledger-ticket-v1-wireframe.html) | **active** | OLT 看帧入口 · 帧 A 浅/深/禁 · 帧 B 列表/交互 · **已签** |
+| [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) | **active** | **PIS** **v0.1.2** Conditional Go · BLK-PIS-01～05 已回写 · **W1+W2+W3 已落地** · **W4 狗粮已走** · [八席](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) · [W4](./acceptance-records/pis-w4-dogfood-2026-08-26.md) · **精修/导出默认面后继见 FXI** |
+| [PRD-FRONTEND-IDENTITY-ISOLATION-V1.md](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) | **active** | **FXI** 前端身份面隔离 **v0.1.8** · **F1–F3 已签** · **BLK-FXI-01 游记精修/导出零触及** · **W1+W2 已落地** · **W3 狗粮已走** · F2 过河不批量 · **过河哪些能导后继见 CLG v0.1.2** · [线框](./wireframes/frontend-identity-isolation-v1-wireframe.html) · [签核](./acceptance-records/fxi-f1-f3-signoff-2026-08-26.md) · [W3](./acceptance-records/fxi-w3-dogfood-2026-08-27.md) |
+| [PRD-CROSSING-LONGSHOT-GATE-V1.md](./PRD-CROSSING-LONGSHOT-GATE-V1.md) | **active** | **CLG** 过河长图闸 **v0.1.2** · **八席 Conditional Go** · **帧 A–D 已签** · **W1 编码中** · [线框](./wireframes/crossing-longshot-gate-v1-wireframe.html) · [八席](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) · [签核](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) |
+| [wireframes/crossing-longshot-gate-v1-wireframe.html](./wireframes/crossing-longshot-gate-v1-wireframe.html) | **active** | CLG 看帧入口 · 帧 B/C/D **已签** · 叠层说明 · 确定钮「导出小红书」 |
+| [acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) | **active** | CLG 七席+典型用户 · 8/8 Conditional Go · BLK-CLG-06～10 **已回写** v0.1.2 |
+| [acceptance-records/clg-frame-bcd-signoff-2026-08-27.md](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) | **active** | CLG 帧 A/B/C/D 产品签核 · **已签 2026-08-27** · W1 编码门开 |
+| [acceptance-records/fxi-f1-f3-signoff-2026-08-26.md](./acceptance-records/fxi-f1-f3-signoff-2026-08-26.md) | **active** | FXI 线框签核 · **F1–F3 已签 2026-08-26** · W1–W3 已落地 |
+| [acceptance-records/fxi-w3-dogfood-2026-08-27.md](./acceptance-records/fxi-w3-dogfood-2026-08-27.md) | **active** | FXI W3 狗粮 · 华农 F1 页图 + F2 小红书单出 · 游记导出/精修无回归 · 升 Go 待产品 |
+| [作品集管线简化讨论备忘录.md](./作品集管线简化讨论备忘录.md) | **active（note）** | 2026-08-27 过河微信失效之后 · 双开 / 统一管线 / 页图学 ECC · **不升格合同** · 过河闸卡后继见 CLG |
+| [复杂度与商业化备忘录.md](./复杂度与商业化备忘录.md) | **active（note）** | 2026-08-27 两轮咨询 · 体量已超独立开发者均值 · 瘦面/组合/立项而非只砍功能 · 商业价值=小而美买断非平台 · **不升格合同** |
+| [acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md](./acceptance-records/pis-portfolio-identity-stars-v1-review-2026-08-26.md) | **active** | PIS 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.1.1 |
+| [acceptance-records/pis-w4-dogfood-2026-08-26.md](./acceptance-records/pis-w4-dogfood-2026-08-26.md) | **active** | PIS W4 狗粮 · 华农确认页 + 珠海覆盖写回原 trip · 未点导出出 Y |
+| [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 实施列车 · W0–W3 已落 · AS-PFM-03 五档已入 · W4 人评未开 |
+| [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md) | **active** | PFM 验收门 · 源 PRD §14；W0–W3 + ISO-04/06 + AS-PFM-03 五档已入 · AC-PFM-25 人评未开 |
+| [acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md) | **active** | PFM 七席+典型用户 · 8/8 Conditional Go · Must-Fix 已回写 v0.2.0 · F1/F3/F6 产品重签 2026-08-20 |
+| [acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md) | **active** | AS-PFM-03 工坊对账原文（不升格）· 后继见下 |
+| [acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md) | **active** | AS-PFM-03 后继 · MSP 五档入库（8/12/16/20/28） |
+| [acceptance-records/pfm-local-dogfood-GUIDE.md](./acceptance-records/pfm-local-dogfood-GUIDE.md) | **active** | PFM W4 本机狗粮 GUIDE · 语料已定点 · 首页次链仓库默认仍关 |
+| [acceptance-records/pfm-w4-kickoff-2026-08-22.md](./acceptance-records/pfm-w4-kickoff-2026-08-22.md) | **active** | PFM W4 开工：三册本机定点 + 首页抽查；AC-PFM-25 未打分 |
+| [acceptance-records/pfm-blind-review-TEMPLATE.md](./acceptance-records/pfm-blind-review-TEMPLATE.md) | **active** | PFM 盲评三问模板（SHD-PFM-07） |
+| [config-pfm-dogfood.example.yaml](./config-pfm-dogfood.example.yaml) | **active** | PFM 狗粮配置样例 · `homepage_entry` 保持 false |
+| [acceptance-records/msp-r05-r06-measurement-2026-08-21.md](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) | **active** | MSP R-MSP-05/06 实测 · 16 本真实 trip · `sceneCluster` 不可作填充组边界（56% trip 无簇 · 最大簇 100 张）· 填充率窗口覆盖 46% · 新增 OQ-MSP-12/13 |
+| [acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md](./acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md) | **active** | MSP OQ-MSP-12 填充组边界实测 · 9 候选 × 16 trip · 定稿「保留 shotGroup + 单张合并 · 同 segment + ≤10min + 跨度 ≤45min」**兑现率 48%→69%** · 同 sceneCluster 作必要条件时增益为零 · 发现时间稀疏合集（OQ-MSP-14）· 兑现率不可作换档触发 |
+| [PRD-MAGAZINE-SERIES-PROMOTION-V1.md](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) | **active** | **MSP** 成册档位全量升格与页序忠实度 **v0.6.0 Conditional Go** · **W1a+W1b+W2 已落地**：五档入库 · 填充组三重护栏 · 芯片副文 / 薄档确认 · 上限 48（32/36 等 ASK-MSP-02；24 等 ASK-MSP-01）· 金样未覆盖 · [R-MSP-05/06](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) + [OQ-MSP-12](./acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md) |
+| [acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md](./acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md) | **active** | MSP 七席+典型用户 · 8/8 Conditional Go · BLK-MSP-01～09 已回写 v0.3.0 · 新增 OQ-MSP-08～11 |
+| [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 **v1.1** · **F0–F8 已签** |
+| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.2.0 Conditional Go** · 七席 7/7 · BLK-RCL-01～10 已回写 · **W0 可开工** · [纪要](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) · 短地图 [readable-core-line.md](./readable-core-line.md) |
+| [readable-core-line.md](./readable-core-line.md) | **active** | RCL 主链短地图 · L0–L2=本合同 · **L3–L7 未立项**（curate 减厚 / context / longshot.js / handler / 算法核默认不做） |
+| [acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) | **active** | RCL 七席 · 7/7 Conditional Go · BLK-RCL-01～10 · OQ-RCL-01～06 全关 |
 
 ---
 

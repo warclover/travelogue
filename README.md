@@ -144,7 +144,7 @@ travelogue/
 └── config.yaml.example       # 全量研究面配置样例（用户档见 config.user.example.yaml）
 ```
 
-架构分层由 `pyproject.toml` 的 `[tool.importlinter]` 强制约束（`cli/web/desktop` → `orchestrator` → `render/export` → `services/templating` → `curation/layout_engine/layout_templates` → `media/vision/llm` → `config` → `util/types/domain/…`），详见 [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md) §18。
+架构分层由 `pyproject.toml` 的 `[tool.importlinter]` 强制约束（`cli/web/desktop` → `orchestrator` → `render/export` → `services/templating` → `curation/layout_engine/layout_templates` → `media/vision/llm` → `config` → `util/types/domain/…`），另含 **DPI** 两条 render isolation 契约。详见 [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md) §18 与 [docs/dual-pipeline-ownership.md](docs/dual-pipeline-ownership.md)。
 
 ---
 

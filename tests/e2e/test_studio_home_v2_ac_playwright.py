@@ -1502,7 +1502,7 @@ def test_ac_hp21_02_idle_empty_headline_cta(studio_server) -> None:
         assert "数字影像画册" in visible["trustText"]
         assert visible["leadGone"]
         assert visible["ctaInHeadline"]
-        assert "开始制作我的画册" in visible["ctaText"]
+        assert "选择照片文件夹" in visible["ctaText"]
         browser.close()
 
 
@@ -1612,11 +1612,84 @@ def test_ac_hp21_01_primary_cta_hierarchy(studio_server) -> None:
             }
             """
         )
-        assert "开始制作我的画册" in metrics["text"]
+        assert "继续制作《京都" in metrics["text"]
         assert metrics["minHeight"] >= 44
         assert metrics["ctaArea"] > metrics["settingsArea"] > 0
         assert metrics["recentHidden"]
         assert _contrast_ratio(page, "#v2-cta") >= 4.5
+        browser.close()
+
+
+def test_ux01_homepage_cta_states(studio_server) -> None:
+    """UX-01 · 空态 / 未完成 / 待导出 / 已交付 主次按钮文案与位置。"""
+    cases = (
+        (
+            "studioFixture=empty",
+            {
+                "primary": "选择照片文件夹",
+                "secondary": "试用示例",
+                "inHeadline": True,
+                "chip": "",
+            },
+        ),
+        (
+            "studioFixture=multi",
+            {
+                "primary": "继续制作《京都 · 雨后》",
+                "secondary": "选择照片文件夹",
+                "inHeadline": False,
+                "chip": "游记",
+            },
+        ),
+        (
+            "studioFixture=single-stale",
+            {
+                "primary": "继续检查并导出",
+                "secondary": "选择照片文件夹",
+                "inHeadline": False,
+                "chip": "游记",
+            },
+        ),
+        (
+            "studioFixture=delivered",
+            {
+                "primary": "选择照片文件夹",
+                "secondary": "打开《京都 · 雨后》",
+                "inHeadline": False,
+                "chip": "",
+            },
+        ),
+    )
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        for query, expected in cases:
+            _goto_v2(page, studio_server["base"], query)
+            _wait_visible(page, "v2-frame")
+            state = page.evaluate(
+                """
+                () => {
+                  const cta = document.getElementById('v2-cta');
+                  const label = document.getElementById('v2-cta-label');
+                  const chip = document.getElementById('v2-cta-chip');
+                  const secondary = document.getElementById('v2-cta-secondary');
+                  const headline = document.getElementById('v2-headline-cta-slot');
+                  return {
+                    primary: (label || cta)?.textContent.trim() || '',
+                    secondary: secondary && !secondary.hidden
+                      ? secondary.textContent.trim() : '',
+                    inHeadline: !!(cta && headline && headline.contains(cta)),
+                    chip: chip && !chip.hidden ? chip.textContent.trim() : '',
+                    resumeGone: !document.getElementById('v2-bench-resume'),
+                  };
+                }
+                """
+            )
+            assert state["primary"] == expected["primary"], query
+            assert state["secondary"] == expected["secondary"], query
+            assert state["inHeadline"] is expected["inHeadline"], query
+            assert state["chip"] == expected["chip"], query
+            assert state["resumeGone"]
         browser.close()
 
 
@@ -1707,7 +1780,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             "() => !document.getElementById('v2-bento-preview-listbox').hidden"
         )
         picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
-        assert "分享图需更新" in picker_text or "可重排" in picker_text
+        assert "长图需更新" in picker_text or "可重排" in picker_text
         assert "算法待更新" not in picker_text
         assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 

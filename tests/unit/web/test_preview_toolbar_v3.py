@@ -293,7 +293,8 @@ def test_v4_css_icon_dock_and_task_dock() -> None:
     for token in (
         "preview-toolbar__dock",
         "preview-toolbar--v4",
-        "--preview-toolbar-h: 80px",
+        "--preview-toolbar-h: 64px",
+        "--dock-ctl: 32px",
         "preview-task-dock",
         "preview-sheet",
         "preview-sheet__content",
@@ -505,8 +506,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
 
             box = dock.bounding_box()
             assert box is not None
-            # PCU：40px 触控 + Help/?/分章 + SAS「AI」；高度/宽度较 icon-only 与旧 labeled 略增
-            assert box["height"] <= 58, f"dock height expected compact, got {box['height']}"
+            # 32px ctl + 3+3 pad + border；字号/图标不动
+            assert box["height"] <= 46, f"dock height expected compact, got {box['height']}"
             assert box["width"] <= 800, f"dock width expected compact-labeled, got {box['width']}"
 
             assert page.locator(".preview-toolbar__dock-btn--back").count() == 1
@@ -685,7 +686,7 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 };
             }"""
             )
-            assert dock_idle["label"] == "精修", dock_idle
+            assert dock_idle["label"] == "调整", dock_idle
             assert dock_idle["pressed"] == "false", dock_idle
 
             browser.close()
@@ -752,7 +753,12 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
 
     assert 'case "refine":' in dock
     assert 'dockIconSvg("refine")' in bootstrap
-    assert 'aria-label="精修"' in bootstrap
+    assert 'aria-label="调整"' in bootstrap
+    assert "preview-toolbar-more" in (STUDIO / "preview-toolbar" / "init-v3.js").read_text(
+        encoding="utf-8"
+    )
+    assert "journalButtonAria" in longshot
+    assert 'exportAria("journal")' in longshot
     assert "导出前先更新一下" in longshot
     assert "版面尚未更新" not in longshot
     assert "更新并导出" in longshot
@@ -767,9 +773,9 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "版面没有更新成功，长图尚未开始" in longshot
     assert "再点「长图」即可导出" in longshot
     # First-Session Trust · 默认成功面 = 已保存确认（不塞发群教学）
-    assert "长图已保存" in task_dock
+    assert "formatLongshotResult" in task_dock
     assert 'guide.text.replace' not in task_dock
-    assert "怎么发到微信群？" in task_dock
+    assert "怎么发到微信群？" not in task_dock
     assert "help-onboarding" in task_dock
     assert "已保存到本机 · 拖进微信群即可" not in task_dock
     assert "showNextStepHint" in task_dock
@@ -819,7 +825,7 @@ def test_preview_refine_ux_v11_m1_mode_panel_decouple_markers() -> None:
 
     assert "syncRefineDockChrome" in mode
     assert "maybeShowRefineStarTip" in mode
-    assert "精修中" in mode
+    assert "调整中" in mode
     assert "onExitRefineMode" in init
     assert "isRefineModeOn" in init
     assert "syncRefineDockChrome(root, { panelOpen: false })" in init
@@ -900,14 +906,15 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "preview-chapter-panel" in chap
     assert "确认并继续" in chap
     dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
-    # MF-05 · Dock 触控目标 ≥40px（含窄屏折叠态）
-    assert "min-width: 40px" in dock_css
-    assert "min-height: 40px" in dock_css
+    # Dock 桌面收至 32px ctl；窄屏折叠仍跟 --dock-ctl
+    assert "--dock-ctl: 32px" in dock_css
+    assert "min-width: var(--dock-ctl, 32px)" in dock_css
+    assert "min-height: var(--dock-ctl, 32px)" in dock_css
+    assert "padding: 3px 7px" in dock_css
     assert (
-        ".preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn--labeled {\n"
-        "    padding: 0;\n"
-        "    width: 40px;"
-    ) in dock_css or "width: 40px;\n    min-width: 40px;\n    max-width: 40px;" in dock_css
+        "width: var(--dock-ctl, 32px);\n    min-width: var(--dock-ctl, 32px);\n"
+        "    max-width: var(--dock-ctl, 32px);"
+    ) in dock_css
     assert 'label: "封面"' in sheet
     assert 'label: "页面"' in sheet
     assert 'label: "画册"' in sheet
@@ -917,7 +924,7 @@ def test_preview_refine_v1_p1_g1_banner_and_three_zone_ia() -> None:
     assert "regenerateStructure" in drawers
     assert 'label: "文字"' not in sheet
     assert 'label: "高级"' not in sheet
-    assert "精修 · 画册" in shell
+    assert "精修 · 画册" in features
     assert "可在「排版」中更换" not in shell
     assert "preview-dock-stat" in shell or "准备高清 ·" in shell
 
@@ -1040,7 +1047,7 @@ def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     assert "cohortEmbed.hidden = true" in sheet
     assert "旅行主角 · 同框未开启" not in sheet
     assert "showStale" in task_dock
-    assert "分享图需更新" in task_dock
+    assert "长图需更新" in task_dock
     assert "重新导出" in task_dock
     assert "onReExport" in init_v3
     assert "未保存的编辑" not in init_v3

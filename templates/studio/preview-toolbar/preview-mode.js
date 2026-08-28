@@ -94,7 +94,7 @@ export function syncRefineDockChrome(root, opts) {
   var on = isPreviewRefineOn();
   var panelOpen = !!opts.panelOpen;
   var showDone = on && !panelOpen;
-  var label = showDone ? "完成" : "精修";
+  var label = showDone ? "完成调整" : "调整";
 
   menuBtn.setAttribute("aria-expanded", panelOpen ? "true" : "false");
   menuBtn.setAttribute("aria-pressed", on ? "true" : "false");
@@ -124,7 +124,7 @@ function ensureRefineModeChip() {
     chip.textContent = "更新中";
     chip.classList.add("is-busy");
   } else {
-    chip.textContent = "精修中";
+    chip.textContent = "调整中";
     chip.classList.remove("is-busy");
   }
   chip.hidden = false;
@@ -153,7 +153,7 @@ function setRefineChipUpdating(busy) {
   chip.removeAttribute("data-refine-chip-busy");
   chip.classList.remove("is-busy");
   if (isPreviewRefineOn()) {
-    chip.textContent = "精修中";
+    chip.textContent = "调整中";
     chip.hidden = false;
   } else {
     hideRefineModeChip();

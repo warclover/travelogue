@@ -154,10 +154,12 @@ PR 修改 YAML 后**必须** `--semantic` 通过；晋升 GA 前需 `--publish` 
 
 ```bash
 python -m travelogue.layout_templates.cli export --sync-journal
+python -m travelogue.layout_templates.cli export --sync-portfolio
 ```
 
-- 输出：`travelogue/layout_templates/journal-screens.generated.css`
-- `--sync-journal`：将生成块注入 `templates/visual-journal/journal-screens.css` 的 LTE marker 区间
+- `--sync-journal`：将 `screen-*` 生成块注入 `templates/visual-journal/journal-screens.css`
+- `--sync-portfolio`：将 `page-*` 生成块注入 `templates/visual-journal/portfolio-pages.css`
+- `--out`：可选调试导出；不再默认写 `journal-screens.generated.css`（D-DPI-17 已废弃该第三份产物）
 
 修改 slot 几何或 gridClass 后，**必须**重新 export 并提交 CSS，否则预览会出现 stale 提示（§9.1）。
 

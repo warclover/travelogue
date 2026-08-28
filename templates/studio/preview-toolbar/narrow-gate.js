@@ -12,6 +12,8 @@ import {
 } from "../homepage-v2/viewport-logic.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { bindCopyPageUrlControl } from "../js/copy-page-url.js";
+import { readEditionFromDom } from "../js/portfolio-export-logic.js";
+import { resolvePreviewNarrowGateCopy } from "./narrow-gate-logic.js";
 
 var GATE_ID = "preview-narrow-gate";
 var _lastLayout = null;
@@ -77,25 +79,20 @@ function ensureGateEl() {
 }
 
 function showGate(layout) {
-  var copy = unsupportedCopy(layout, {
+  var base = unsupportedCopy(layout, {
     width: window.innerWidth || document.documentElement.clientWidth || 0,
     miniappQrAvailable: false,
   });
+  var copy = resolvePreviewNarrowGateCopy(
+    layout,
+    readEditionFromDom(document),
+    base
+  );
   var el = ensureGateEl();
   var title = el.querySelector("#preview-narrow-gate-title");
   var lead = el.querySelector("#preview-narrow-gate-lead");
-  if (title) {
-    title.textContent =
-      layout === "unsupported_phone"
-        ? "请在电脑浏览器打开预览工作台"
-        : copy.title;
-  }
-  if (lead) {
-    lead.textContent =
-      layout === "unsupported_phone"
-        ? "手机可阅读分享页；精修与导出请在电脑浏览器打开本地址。"
-        : copy.lead;
-  }
+  if (title) title.textContent = copy.title;
+  if (lead) lead.textContent = copy.lead;
   el.removeAttribute("hidden");
   document.documentElement.setAttribute("data-preview-narrow-gate", "1");
   if (_lastLayout !== layout) {
@@ -125,6 +122,10 @@ function apply() {
 /**
  * Share 只读预览跳过；Studio 预览挂载后启用。
  */
+export function refreshPreviewNarrowGate() {
+  apply();
+}
+
 export function initPreviewNarrowGate() {
   if (_wired) {
     apply();

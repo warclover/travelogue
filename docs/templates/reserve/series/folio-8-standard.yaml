@@ -17,6 +17,6 @@ sequence:
   - { i: 3, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }
   - { i: 4, role: port-center-stagger, program: mosaic, faceHint: page-5-3p2l-center }
   - { i: 5, role: row-port-3, program: grid, faceHint: page-3-port }
-  - { i: 6, role: land-hero-5l-wide, program: mosaic, faceHint: page-6-1l5l-wide-left }
-  - { i: 7, role: row-3p-pair-l-wide, program: mosaic, faceHint: page-5-3p2l-wide }
-  - { i: 8, role: port-bookend-2p, program: mosaic, faceHint: page-4-2p2p }
+  - { i: 6, role: grid-4-land-wide, program: grid, faceHint: page-4-grid-land-wide }
+  - { i: 7, role: mix-1p1l-wide, program: mosaic, faceHint: page-2-1p1l-wide }
+  - { i: 8, role: hero-land, program: hero, faceHint: page-1-hero-land-wide }

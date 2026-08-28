@@ -27,6 +27,47 @@ def test_layout_vibe_options_have_no_algorithm_jargon() -> None:
         assert opt["id"] in (VIBE_MAGAZINE_DEFAULT, VIBE_FIT_PHOTO_EXPERIMENTAL)
 
 
+def test_iso06_lvp_rejects_portfolio_trip(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """ISO-06 · LVP API 拒作品集 trip，不得改 edition / 重跑游记装配。"""
+    from travelogue.web.studio_handlers import layout_vibe_handlers as mod
+
+    trip_dir = tmp_path / "pf-lvp"
+    trip_dir.mkdir()
+    trip = {
+        "studio": {"edition": "portfolio", "layoutVibe": VIBE_MAGAZINE_DEFAULT},
+        "chapters": [{"id": "keep-me", "screens": [{"patternId": "page-6-grid-land"}]}],
+    }
+    (trip_dir / "trip.json").write_text(
+        __import__("json").dumps(trip, ensure_ascii=False), encoding="utf-8"
+    )
+
+    class _H:
+        def __init__(self) -> None:
+            self.status = None
+            self.body = None
+
+        def _read_json_body(self):
+            return {"layoutVibe": VIBE_FIT_PHOTO_EXPERIMENTAL, "confirmed": True}
+
+        def _json_response(self, status, body):
+            self.status = status
+            self.body = body
+
+    def _apply(*_a, **_k):
+        raise AssertionError("LVP must not recompose a portfolio trip")
+
+    monkeypatch.setattr(mod, "load_trip_or_404", lambda *_a, **_k: (trip_dir, trip))
+    monkeypatch.setattr("travelogue.services.layout.apply_layout_to_trip", _apply)
+    h = _H()
+    mod.handle_layout_vibe(h, "pf-lvp")
+    assert h.status == 409
+    assert h.body["error"] == "E_LVP_PORTFOLIO"
+    disk = __import__("json").loads((trip_dir / "trip.json").read_text(encoding="utf-8"))
+    assert disk["studio"]["edition"] == "portfolio"
+    assert disk["studio"]["layoutVibe"] == VIBE_MAGAZINE_DEFAULT
+    assert disk["chapters"][0]["id"] == "keep-me"
+
+
 def test_ac_lvp_05_experimental_requires_confirm() -> None:
     """AC-LVP-05 · experimental without confirmedExperimental → 400."""
     from travelogue.web.studio_handlers import layout_vibe_handlers as mod
@@ -292,6 +333,7 @@ def test_sheet_book_panel_hosts_layout_vibe_zone() -> None:
     assert 'data-book-zone="layout-vibe"' in sheet
     assert "mountLayoutVibeControls" in sheet
     assert "成册风格" in sheet
+    assert "成册类型" in sheet
 
 
 def test_help_h8_points_to_docs_not_lse() -> None:

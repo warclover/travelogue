@@ -125,6 +125,9 @@ function populateFailedUi(err, pending) {
   if (continueBtn && authRecoverable) {
     continueBtn.textContent = "继续生成画册";
   }
+  // Sprint 2 · 默认失败面只留一个重试；鉴权可恢复仍露出继续生成
+  var stay = $("v2-failure-stay");
+  setHidden(stay, !authRecoverable);
   // 缺引擎：重试降为次要（配置变更后仍可用）；有 pending 才显示
   var canRetry = !!canContinue;
   setHidden(retry, authRecoverable ? !canRetry : false);
@@ -342,6 +345,8 @@ function wireImportFailed() {
   if (retry) retry.addEventListener("click", retryImportFailed);
   var stay = $("v2-failure-stay");
   if (stay) stay.addEventListener("click", dismissImportFailed);
+  var scrim = document.querySelector("#v2-failure .v2-failure__scrim");
+  if (scrim) scrim.addEventListener("click", dismissImportFailed);
   var cont = $("v2-failure-continue-stub");
   if (cont) cont.addEventListener("click", continueWithStub);
   var settings = $("v2-failure-open-settings");

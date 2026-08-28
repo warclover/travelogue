@@ -37,6 +37,8 @@ from travelogue.web.studio_pipeline import (
     assert_album_importable,
     infer_album_preview_date_range,
     list_album_preview_candidates,
+    peek_existing_album_trip,
+    resolve_studio_trip_dir,
     sample_album_preview_thumbs,
 )
 from travelogue.web.studio_uploads import (
@@ -246,6 +248,15 @@ def read_import_request(handler: StudioHandlerProtocol) -> tuple[dict, Path | No
         payload["keepNearDuplicates"] = _parse_keep_near_duplicates(
             fields.get("keepNearDuplicates")
         )
+        edition_raw = str(fields.get("edition") or "").strip().lower()
+        if edition_raw:
+            payload["edition"] = edition_raw
+        page_count_raw = fields.get("pageCount")
+        if page_count_raw not in (None, ""):
+            payload["pageCount"] = page_count_raw
+        page_source_raw = str(fields.get("pageCountSource") or "").strip().lower()
+        if page_source_raw:
+            payload["pageCountSource"] = page_source_raw
         if plan_bytes is not None:
             import base64
 
@@ -307,6 +318,28 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
 
     if not payload:
         return
+
+    from travelogue.config import get_config
+    from travelogue.config.edition import (
+        EDITION_PORTFOLIO,
+        PortfolioUnavailableError,
+        apply_import_edition,
+        normalize_edition,
+    )
+
+    if normalize_edition(payload.get("edition")) == EDITION_PORTFOLIO:
+        try:
+            apply_import_edition({}, payload.get("edition"), get_config())
+        except PortfolioUnavailableError as exc:
+            handler._json_response(
+                409,
+                {
+                    "ok": False,
+                    "error": exc.code,
+                    "message": user_message(exc.code, exc.message),
+                },
+            )
+            return
 
     # Busy check before album validation so clients/probes see 409, not 403/400.
     if payload.get("_job") is None and get_job_store().is_import_running():
@@ -424,6 +457,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     photo_keep_mode, photo_cull_enabled, keep_near_duplicates = (
         _resolve_photo_keep_from_payload(payload if isinstance(payload, dict) else {})
     )
+    edition_raw = str(payload.get("edition") or "").strip().lower() or None
 
     try:
         assert_album_importable(
@@ -433,6 +467,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
             place=place,
             trip_id=trip_id_str,
             force=force,
+            edition=edition_raw,
         )
     except DemoError as exc:
         if upload_dir:
@@ -449,7 +484,6 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     force_cleared = False
     if force:
         from travelogue.web.studio_handlers.trip_common import is_protected_demo_trip
-        from travelogue.web.studio_pipeline import resolve_studio_trip_dir
         from travelogue.web.studio_trip_delete import clear_trip_dir_via_tombstone
 
         _, force_trip_dir = resolve_studio_trip_dir(
@@ -458,6 +492,7 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
             title=title,
             place=place,
             trip_id=trip_id_str,
+            edition=edition_raw,
         )
         if force_trip_dir.exists() and any(force_trip_dir.iterdir()):
             disk_id = force_trip_dir.name
@@ -558,10 +593,12 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
     if trip_id_str:
         store.update(job, trip_id=trip_id_str)
     else:
-        from travelogue.util.trip_slug import demo_trip_id_from_album
-
-        predicted = demo_trip_id_from_album(
-            album_path, title=title, place=place, explicit=None
+        predicted, _predicted_dir = resolve_studio_trip_dir(
+            album_path,
+            trips_dir=trips_root,
+            title=title,
+            place=place,
+            edition=edition_raw,
         )
         store.update(job, trip_id=predicted)
 
@@ -590,6 +627,13 @@ def handle_import(handler: StudioHandlerProtocol) -> None:
         worker_payload["photoKeepMode"] = photo_keep_mode
     if template_id_str:
         worker_payload["template_id"] = template_id_str
+    if edition_raw:
+        worker_payload["edition"] = edition_raw
+        if edition_raw in ("portfolio", "folio"):
+            if payload.get("pageCount") not in (None, ""):
+                worker_payload["pageCount"] = payload.get("pageCount")
+            if payload.get("pageCountSource"):
+                worker_payload["pageCountSource"] = payload.get("pageCountSource")
     if user_notes:
         worker_payload["userNotes"] = user_notes
     if travel_notes:
@@ -704,12 +748,28 @@ def handle_album_preview(handler: StudioHandlerProtocol) -> None:
     date_start, date_end = infer_album_preview_date_range(
         album_path, candidates=candidates, budget_s=1.0
     )
+    title_hint = str(payload.get("title") or album_path.name).strip() or album_path.name
+    place_hint = str(payload.get("place") or "旅途").strip() or "旅途"
     payload: dict = {
         "ok": True,
         "thumbs": thumbs,
         "thumbNames": thumb_names,
         "photoCount": photo_count,
         "folderName": album_path.name,
+        "existingJournal": peek_existing_album_trip(
+            album_path,
+            trips_dir=trips_root,
+            title=title_hint,
+            place=place_hint,
+            edition=None,
+        ),
+        "existingPortfolio": peek_existing_album_trip(
+            album_path,
+            trips_dir=trips_root,
+            title=title_hint,
+            place=place_hint,
+            edition="portfolio",
+        ),
     }
     if date_start:
         payload["dateStart"] = date_start

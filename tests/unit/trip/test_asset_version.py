@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import re
 
+from travelogue.paths import JOURNAL_SCREENS_CSS, PORTFOLIO_PAGES_CSS
 from travelogue.render.context import (
     ASSET_VERSION_HEX_CHARS,
     ASSET_VERSION_PREFIX,
+    _bundle_version_paths,
     _longshot_bundle_version,
     build_render_context,
 )
@@ -73,7 +75,10 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-08-03: LVP M2 · 成册风格 Sheet/help + wait/hint (studio bundle).
 # Re-bumped 2026-08-11: Arch Opt V2 M2-A5 · preview-toolbar typedef/JSDoc + SNR
 # chapter-panel/dock bytes already on master changed the studio/visual-journal hash.
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}86403e11f6d4"
+# Re-bumped 2026-08-21: PFM page-* faces synced into journal-screens.css.
+# Re-bumped 2026-08-21 (b): 1-slot page-1-hero-* emit gutter cell placement.
+# Re-bumped 2026-08-22: DPI W1 · split journal/portfolio CSS + per-pipeline ?v= (one bump).
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}e16f41315f6a"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"
@@ -97,3 +102,15 @@ def test_build_render_context_uses_bundle_version() -> None:
     ctx = build_render_context(trip, export_mode="draft")
     assert ctx["assetVersion"] == _longshot_bundle_version(trip)
     assert ctx["assetVersion"] == _EXPECTED_BUNDLE_VERSION
+
+
+def test_ac_dpi_18_bundle_paths_are_pipeline_disjoint() -> None:
+    journal = _bundle_version_paths({})
+    portfolio = _bundle_version_paths({"studio": {"edition": "portfolio"}})
+    assert JOURNAL_SCREENS_CSS in journal
+    assert PORTFOLIO_PAGES_CSS not in journal
+    assert PORTFOLIO_PAGES_CSS in portfolio
+    assert JOURNAL_SCREENS_CSS not in portfolio
+    assert _longshot_bundle_version({}) != _longshot_bundle_version(
+        {"studio": {"edition": "portfolio"}}
+    )

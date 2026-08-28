@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.2.0**（BLK-PFM-01～09 已回写） |
-| **状态** | **Conditional Go · 回写完成**（八席 2026-08-20）。**W0 可开工**；**W1 仍挡资产门 AS-PFM-01**；**W3 挡线框 F1/F3/F6 重签** |
+| **文档版本** | **v0.2.2**（BLK-PFM-01～09 已回写 · AS-PFM-03 MSP 后继 · **身份/票根后继见 PIS**） |
+| **状态** | **Conditional Go · 线框已签**（八席 2026-08-20 · 产品 2026-08-20 重签 F1/F3/F6）。**W0–W3 编码已清** · ISO-04/06 已关 · **AS-PFM-03 已升格 · 五档入库**（[MSP 后继](./acceptance-records/pfm-as-pfm-03-msp-promote-2026-08-21.md)）· W4 狗粮协议已锁、[语料已定点](./acceptance-records/pfm-w4-kickoff-2026-08-22.md)、人评未开（`feat/pfm-portfolio-folio-mode-v1`）；仓库 `homepage_entry` 仍关 |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「作品集成册」— **PFM**（Portfolio Folio Mode） |
 | **界面用词** | **游记**（快分享）· **作品集**（杂志风卷轴）。禁止对 C 端说「第七种模式 / page-* / 成册引擎 / 画册已经按页」 |
@@ -12,11 +12,14 @@
 | **触发来源** | 2026-08-20 产品：两条管线都有需求、互不干扰；筛选/聚类与现网游记一致，页面装配走成册编排。前序：[临时模板库管线讨论备忘录 §4](./templates/reserve/临时模板库管线讨论备忘录.md) · [TSU D-U-09](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV D-TDV-22](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) |
 | **评审** | [八席纪要 2026-08-20](./acceptance-records/pfm-portfolio-folio-mode-v1-review-2026-08-20.md)（七席 + 典型用户 · 8/8 Conditional Go · BLK-PFM-01～09 · OQ-02 否决 / OQ-06 改判） |
 | **前置条件** | 现网游记 GA（`layoutEngine=screens` + MCS/MTSO）· 六平台导出 GA（ADR-021）· **正式 `series/` 收件目录已定（TDV OQ-03 关闭）** · **P0 系列 `magazine-16-standard` 已入现网目录** · 活目录 `page-*` 由 TSU W3 供货（PFM 只消费） |
-| **线框** | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（F0/F2/F4/F7/F8 已签；**F1/F3/F6 已按 BLK 改，待重签**） |
-| **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
-| **验收** | Kickoff 后拆 [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
-| **实施** | Kickoff 后拆 [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
-| **更新日期** | 2026-08-20 |
+| **线框** | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) **v1.1**（**F0–F8 已签** · 2026-08-20 产品重签 F1/F3/F6） |
+| **关联文档** | [CHARTER.md](./CHARTER.md) · [TSU](./PRD-TEMPLATE-SYSTEM-UPGRADE-V1.md) · [TDV](./PRD-TEMPLATE-DESIGN-VERIFICATION-V1.md) · [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**后继**：票根 / 双身份话术 / 成册页 X / 堂亲按星）· [RSC](./PRD-RESERVE-SERIES-CABINET-V1.md) · [EDC](./PRD-EDITORIAL-COMPILER-V1.md) · [LVP](./PRD-LAYOUT-VIBE-PICKER-V1.md) · [AEL](./PRD-ALBUM-EDITORIAL-LAB-V1.md) · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) · [ADR-003](./adr/003-experience-reading-modes.md) · [ADR-021](./adr/021-export-compose-dual-engine.md) · [导出门面](./PRD-PREVIEW-EXPORT-FACADE-V1.md) · [Output Recipe](./PRD-OUTPUT-RECIPE-V1.md) · [Import Wizard](./PRD-IMPORT-SHEET-v3-WIZARD.md) |
+| **验收** | [ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md](./ACCEPTANCE-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§14 为源** |
+| **实施** | [IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md](./IMPLEMENTATION-PORTFOLIO-FOLIO-MODE-V1.md)；本文 **§12 为源** |
+| **更新日期** | 2026-08-26 |
+| **流程改判** | **2026-08-25 起**：导入页数、满意即导、导出面板、张数推荐口径以 [PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md)（**PFO v0.2.0**）为准。本文 **D-PFM-28 / D-PFM-13「仅精修钉页」/ N-PFM-14 / OQ-PFM-02** 视为被 PFO 改判。**D-PFM-10 / SHD-PFM-06「两种书不并排」的意图保留**：PFO D-PFO-04 和解为点法对齐 + 六种分组降级，**不按「取消折叠」落地**。装配隔离、`page-*`、身份字段、游记零改仍以本文为准。 |
+| **身份/票根后继** | **2026-08-26 起**：同夹双本话术、票根「游记 / 作品集 · N 页」、成册页 X、堂亲/升星以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS**）为准。本文 **FE-PFM-11 游记票根空串** 视为被 AMD-PIS-01 改判。装配隔离、`page-*`、身份字段仍以本文为准。 |
+| **精修/导出面后继** | **2026-08-26 起**：作品集精修 / 导出默认面、六种落点以 [PRD-FRONTEND-IDENTITY-ISOLATION-V1.md](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)（**FXI v0.1.3**）为准。本文 **D-PFM-10 的折叠落点** 视为被 FXI 改判；**D-PFM-07 仅作品集精修落点**被改判，游记成册类型两卡本波冻结。**D-PFM-10 能力半句保留**（作品集仍可出社交图）。游记精修 / 导出、装配隔离、`page-*`、身份字段仍以本文为准。 |
 
 > **定位**
 >
@@ -164,7 +167,7 @@ LVP 卡面「杂志成册（推荐）」指的是 **游记 GA 拼图栈**，不�
 | **N-PFM-11** | 首页主 CTA 改成「做作品集」 | 主路径仍是游记 |
 | **N-PFM-12** | **新增 `layoutEngine` 第三个值** | 输出同构 `screens[]`，加值只为标身份，护栏爆破面大（D-PFM-04） |
 | **N-PFM-13** | **作品集正文页排图注 / 章导语** | 现有 `page-*` 无文案区（D-PFM-22）；要文字须先在 TSU 侧供货 |
-| **N-PFM-14** | **导入时问用户要几页** | 用户此时没看过照片（D-PFM-28，OQ-02 否决） |
+| **N-PFM-14** | **导入时问用户要几页** | **已被 PFO 推翻**（页数是规格，见 [PFO](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) D-PFO-01） |
 | **N-PFM-15** | `portfolio_pages` 进批量导出多选面板 | 与社交批量混淆（SHD-01） |
 
 ---
@@ -189,16 +192,16 @@ v0.1.0 的方向合同 + 八席 Must-Fix 回写。**隔离原则不可改**；�
 |----|------|------|
 | **D-PFM-05** | **导入入口。** Step 2 在现有快速/精细**上方**加分段：「这次做：游记 \| 作品集」。默认游记。作品集 + 快速 = 仍两击开始 | — |
 | **D-PFM-06** | **首页入口。** 主 CTA 文案不变。次入口弱链「做一本作品集」→ 打开同一 Wizard 且预选作品集。`homepage_entry` **默认 false，W2 换真 `page-*` 前不得开** | OQ-01 |
-| **D-PFM-07** | **精修切换。** 精修「这本」新增「成册类型」两卡（游记 / 作品集），**不是** LVP 那两张。切换须二次确认 | — |
+| **D-PFM-07** | **精修切换。** 精修「这本」新增「成册类型」两卡（游记 / 作品集），**不是** LVP 那两张。切换须二次确认 | **形态经 [FXI D-FXI-03](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) 改判（v0.1.3）**：仅作品集精修改为独立面（书名 + 厚度 + 问句）。游记精修成册类型两卡本波冻结，本条游记半句仍有效。二次确认与 `/edition` 仍有效 |
 | **D-PFM-08** | **LVP 作用域。** 仅游记显示「成册风格」。作品集显示页数档位，不显示 MSA 实验卡 | — |
-| **D-PFM-28** | **导入不问页数。** 作品集 + 精细（2b）**不出页数芯片**，一律 `auto`。页数只在精修改（那时用户已看到成品） | BLK/OQ-02 |
+| **D-PFM-28** | **导入不问页数。** 作品集 + 精细（2b）**不出页数芯片**，一律 `auto`。页数只在精修改（那时用户已看到成品） | **已被 [PFO D-PFO-01](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) 改判** · 原文保留 |
 | **D-PFM-29** | **照片过少。** kept 低于「系列库最小 `photo_span`」时，Wizard 作品集卡**默认置灰** + 一句「照片较少，作品集更适合 30 张以上」，点击可知情继续（不硬拒）。阈值由系列库派生，配置只做覆盖 | OQ-06 改判 · SHD-04 |
 
 ### 3.3 装配
 
 | ID | 决策 | 来源 |
 |----|------|------|
-| **D-PFM-13** | **页数。** 自动：按 kept N 查正式系列 `photo_span` 选档。用户可在**精修**钉 8/12/16/20/24/28/32。非 4 的倍数靠档，不升 SKU | 改（导入不问） |
+| **D-PFM-13** | **页数。** 自动：按 kept N 查正式系列 `photo_span` 选档。用户可在**精修**钉 8/12/16/20/24/28/32。非 4 的倍数靠档，不升 SKU | **「仅精修钉页」已被 [PFO D-PFO-02](./PRD-PORTFOLIO-FLOW-OPTIMIZATION-V1.md) 改判**；自动选档算法仍有效 |
 | **D-PFM-14** | **章保留。** 不重切 `chapters` 边界。页序列跨章连续 | — |
 | **D-PFM-15** | **降级。** 组装不上：换同纲领兄弟 → flex → 靠档少页 → 丢低优先级页。不改槽比、不打开 MSA、不拆组硬拼 | — |
 | **D-PFM-16** | **资产。** 引擎只读现网正式 `series/` 与活目录。工坊 `folio-*` 禁止当运行时 id；正式 id `magazine-{pages}-{density}` | — |
@@ -218,7 +221,7 @@ v0.1.0 的方向合同 + 八席 Must-Fix 回写。**隔离原则不可改**；�
 |----|------|------|
 | **D-PFM-23** | **主产物并列两件。** 作品集 Dock 主钮 = **导出作品集**，一次动作产出：① **这一本**——复用现网分享包（`export/packager.py`：`index.html` + `journal.css` + `assets/`，可点开翻）；② **页图序列**——`portfolio_pages` 的 N 张 16:9 PNG。成功面主按钮 = **打开这一本**，次要 = 发送压缩包 / 打开文件夹。**禁止**只写「已保存」 | BLK-05 |
 | **D-PFM-25** | **旁路 Output Recipe。** `edition=portfolio` 时不进入按 kept N 分带的意图矩阵（10–30 张 Ambiguous 意图卡不弹），默认直接走 D-PFM-23；游记路径逐字不变 | BLK-07 |
-| **D-PFM-10** | **换种分享。** 作品集导出 ▾ 仍可取现网六平台，分组标题「用同一批照片出社交图」，**默认折叠**。走 ECC / Slice，**禁止**用作品集 `screens` flatten | SHD-06 |
+| **D-PFM-10** | **换种分享。** 作品集导出 ▾ 仍可取现网六平台，分组标题「用同一批照片出社交图」，**默认折叠**。走 ECC / Slice，**禁止**用作品集 `screens` flatten | **能力保留。落点经 [FXI D-FXI-01](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) 改判**：六种移出作品集导出默认面（含不得以折叠留在设置里）；过河换面。PFO D-PFO-04 点法对齐仍作用于过河面。ECC 不读 page-* 仍有效 |
 | **D-PFM-30** | **印刷项副文。** 换种分享里的 `album_spread` 文案固定为「印刷跨页（现网画册）· 给印刷公司的 3:4 跨页，不是这一本」 | SHD-06 |
 | **D-PFM-11** | **游记导出零改。** 游记的 Dock、六平台、OR 意图矩阵与 GA 逐字一致 | — |
 | **D-PFM-12** | **印刷脱钩。** 即使用户人话「导出画册」，作品集主路径仍是这一本 + 页图；`album_spread` 只出现在换种分享 | — |
@@ -266,6 +269,7 @@ v0.1.0 的方向合同 + 八席 Must-Fix 回写。**隔离原则不可改**；�
 | **ISO-05** | 代码与测试禁止新增对 `docs/templates/reserve/` 的业务读取（检索范围沿用 TDV AC-07） |
 | **ISO-06** | LVP 写入不得改变 `edition`；改 `edition` 不得暗改 `layoutVibe` |
 | **ISO-07** | **`layoutEngine` 枚举与现网一致**：全库检索不得出现第三个引擎值 |
+| **ISO-DPI** | 读者面隔离（渲染 builder / CSS 产物 / 导出分发 / Dock 分发）以 [PRD-DUAL-PIPELINE-ISOLATION-V1.md](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) 为准。**不改 ISO-01～07 原文** |
 
 ### 4.3 重排边界
 
@@ -454,6 +458,7 @@ studio:
 
 - **不改** `layoutEngine` 枚举（D-PFM-04）。  
 - `studio.edition`（enum `journal|portfolio`）、`studio.portfolio`、`studio.copyOrphans` 入 `$defs`。  
+- `layoutScreen.patternId`：游记仍走封闭 `screen-*` 枚举（H8 / Critic 白名单）；作品集允许 `page-*` 前缀（LTE 已收的脸才能过语义校验）。**不把 `page-*` 写入 mosaic 活跃集。**  
 - 关旗校验：`enabled=false` 时 API 拒绝新建作品集（已有 trip 只读提示 + 可改回游记）。
 
 ---
@@ -492,7 +497,7 @@ else:                               compose_trip(...)   # 零改签名
 | P1 | `magazine-24-standard` 或 `magazine-32-standard` | 长档一根即可 |
 | P2 | 其余 12/20/28 × 疏正密 | 不挡 W1，挡「档位芯片全开」 |
 
-工坊 `folio-16-standard` 只作设计稿，运营升格后改 id。工坊 `folio-24-standard` 现网文件 `pageCount: 32` 不得入库——升格检查单硬拒 id 与页数不一致。
+工坊 `folio-16-standard` 只作设计稿，运营升格后改 id。工坊 `folio-24-standard` **已纠正为 24 页**（历史 `pageCount: 32` 不再存在）；升格检查单仍硬拒 id 与页数不一致。对账见 [AS-PFM-03 纪要](./acceptance-records/pfm-as-pfm-03-atelier-reconcile-2026-08-21.md)。
 
 ### 8.4 装填
 
@@ -558,16 +563,16 @@ else:                               compose_trip(...)   # 零改签名
 | 帧 | 审什么 | 八席结论 |
 |----|--------|----------|
 | **F0** | 双管线地图 + 三轴对照 | **已签** |
-| **F1** | Wizard Step 2：身份分段 + 快速/精细 | **已改待重签**（撤页数芯片、补成品副文、加置灰态） |
+| **F1** | Wizard Step 2：身份分段 + 快速/精细 | **已签**（2026-08-20 产品重签：撤页数芯片、补成品副文、置灰+知情继续） |
 | **F2** | 首页次链 | **已签**（绑 W2 才露） |
-| **F3** | 作品集预览 Dock + 成功面 | **已改待重签**（主钮「导出作品集」、成功面「打开这一本」、溢出明示） |
+| **F3** | 作品集预览 Dock + 成功面 | **已签**（2026-08-20 产品重签：主钮「导出作品集」、成功面「打开这一本」、溢出明示） |
 | **F4** | 游记预览 Dock（对照：零变化） | **已签** |
 | **F5** | 作品集导出 ▾ 换种分享 | **已签（有条件）** · 默认折叠 + 印刷副文 |
-| **F6** | 精修成册类型 + 确认模态 | **已改待重签**（补「文字可能无法全部保留」、页数芯片落此处） |
+| **F6** | 精修成册类型 + 确认模态 | **已签**（2026-08-20 产品重签：「文字可能无法全部保留」、页数芯片仅精修） |
 | **F7** | 书架标 + 菜单改身份 | **已签** |
 | **F8** | 禁止形态 | **已签** · 新增两条红线（无正式系列不得称作品集、不得静默丢照片） |
 
-**签核规则**：F0 已过 → W1 线框门通过（但仍挡 AS-PFM-01 资产门）。**F1/F3/F6 重签后**才 Kickoff W3。
+**签核规则**：F0 已过 → W1 线框门通过。**AS-PFM-01 P0 已入库。** 界面仍不得称作品集（等 `page-*`）。**F1/F3/F6 已于 2026-08-20 重签** → W3 入口可拆。
 
 ---
 
@@ -634,9 +639,9 @@ else:                               compose_trip(...)   # 零改签名
 
 | ID | 任务 | 业主 | 挡门 |
 |----|------|------|------|
-| **AS-PFM-01** | 正式 `series/` 收件目录定案（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 入库 | TSU + 运营 | **挡 W1 出门** |
-| **AS-PFM-02** | 活目录 `page-*` 几何入 LTE | **TSU W3** | 挡 W2 |
-| **AS-PFM-03** | 工坊 YAML 页数与 id 对账（拒 `folio-24` 标 32） | 运营 | 挡升格 |
+| **AS-PFM-01** | 正式 `series/` 收件目录定案（TDV OQ-03 关闭）+ P0 `magazine-16-standard` 入库 | TSU + 运营 | **P0 已入运行时目录** |
+| **AS-PFM-02** | 活目录 `page-*` 几何入 LTE | **TSU W3** | **75 张已编译（P0 11 张齐；page-10 未收）** |
+| **AS-PFM-03** | 工坊 YAML 页数与 id 对账（拒 `folio-24` 标 32） | 运营 | **已升格 · 五档入库**（8/12/16/20/28）；24/32/36 见 [MSP](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) |
 | **AS-PFM-04** | CHARTER 补一行「第二产品形态：作品集」，明确不改主叙事 | 产品 | 不挡波次（SHD-05） |
 
 ---
@@ -769,3 +774,6 @@ else:                               compose_trip(...)   # 零改签名
 |------|------|------|
 | 0.1.0 | 2026-08-20 | 初稿。收口双管线、入口、导出、隔离、前后端任务。待审线框 F0–F8。 |
 | 0.2.0 | 2026-08-20 | 八席 Conditional Go 回写：**BLK-01** 命名改 `edition`/`portfolio_*`；**BLK-02** 取消 `layoutEngine` 第三值；**BLK-03** 溢出升档 + 明示（§8.5）；**BLK-04** V1 正文纯图；**BLK-05** 主产物并列两件 + 成功面动作；**BLK-06** 文案迁移与锁；**BLK-07** OR 旁路；**BLK-08** 资产硬门 + 顶岗纪律 + 估时上调；**BLK-09** items 同源。OQ-02 否决、OQ-06 改判，OQ-07～09 补答。SHD-01～08 收入。新增 AC-PFM-27～40、ISO-07。 |
+| 0.2.0 | 2026-08-21 | 状态回写：ISO-04/06 已关；AS-PFM-03 工坊对账完成（`folio-24` 已是 24 页，不升格）；W4 狗粮协议与盲评三问已锁，人评未开，`homepage_entry` 仍关。 |
+| 0.2.1 | 2026-08-21 | AS-PFM-03 后继：MSP 五档入库（8/12/16/20/28）。原对账纪要不改。 |
+| 0.2.2 | 2026-08-26 | **SHD-PIS-06**：文首挂 [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 后继。FE-PFM-11 游记票根空串改判见 AMD-PIS-01；选脸按星见 AMD-PIS-03。 |

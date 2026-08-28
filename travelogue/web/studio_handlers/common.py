@@ -113,6 +113,24 @@ def match_entry(path: str) -> str | None:
     return match_trip_suffix(path, "/entry")
 
 
+def match_trip_outputs(path: str) -> str | None:
+    """GET /__travelogue/trips/{tripId}/outputs"""
+    return match_trip_suffix(path, "/outputs")
+
+
+def match_trip_output_item(path: str) -> tuple[str, str] | None:
+    """DELETE /__travelogue/trips/{tripId}/outputs/{outputId}"""
+    prefix = TRIPS_PATH + "/"
+    marker = "/outputs/"
+    if not path.startswith(prefix) or marker not in path:
+        return None
+    rest = path[len(prefix) :]
+    trip_id, sep, output_id = rest.partition(marker)
+    if not sep or not trip_id or not output_id or "/" in trip_id or "/" in output_id:
+        return None
+    return unquote(trip_id), unquote(output_id)
+
+
 def match_source_status(path: str) -> str | None:
     return match_trip_suffix(path, "/source-status")
 
@@ -147,7 +165,12 @@ def match_trip_delete(path: str) -> str | None:
 def resolve_trip_dir_listed(ctx: AppContext, trip_id: str) -> Path | None:
     """按磁盘目录名解析 trip（与 list_studio_trips 一致，不做 slug 正则限制）。"""
     raw = unquote((trip_id or "").strip())
-    if not raw or raw in {".", ".."} or "/" in raw or "\\" in raw or raw.startswith("_"):
+    if not raw or raw in {".", ".."} or raw.startswith("_"):
+        return None
+    if "/" in raw or "\\" in raw or ":" in raw:
+        return None
+    candidate = Path(raw)
+    if candidate.is_absolute() or getattr(candidate, "drive", ""):
         return None
     trips_dir = ctx.trips_root.resolve()
     trip_dir = (trips_dir / raw).resolve()
@@ -190,6 +213,16 @@ def match_trip_layout_vibe(path: str) -> str | None:
     from travelogue.web.studio_handlers.paths import LAYOUT_VIBE_SUFFIX
 
     return match_trip_suffix(path, LAYOUT_VIBE_SUFFIX)
+
+
+def match_trip_edition(path: str) -> str | None:
+    from travelogue.web.studio_handlers.paths import EDITION_SUFFIX
+
+    return match_trip_suffix(path, EDITION_SUFFIX)
+
+
+def match_trip_sibling_journal(path: str) -> str | None:
+    return match_trip_suffix(path, "/sibling-journal")
 
 
 def match_trip_moment_curation(path: str) -> str | None:

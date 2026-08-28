@@ -10,10 +10,15 @@ STUDIO = Path(__file__).resolve().parents[3] / "templates" / "studio"
 def test_empty_state_resume_not_in_html() -> None:
     html = (STUDIO / "studio-home-v2.html").read_text(encoding="utf-8")
     assert 'id="v2-bench-resume"' not in html
+    assert ">继续上次<" not in html
     assert 'id="v2-bench-quick-actions"' in html
+    assert 'id="v2-cta-secondary"' in html
     bento = (STUDIO / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
-    assert "syncBenchResumeButton" in bento
-    assert "removeChild(resumeBtn)" in bento
+    assert "initHomepageCta" in bento
+    assert "syncHomepageCta" in bento
+    assert "syncBenchResumeButton" not in bento
+    cta = (STUDIO / "homepage-v2" / "homepage-cta.js").read_text(encoding="utf-8")
+    assert "resolveHomepageCta" in cta
 
 
 def test_wizard_demo_album_cta() -> None:
@@ -36,7 +41,8 @@ def test_wizard_demo_album_cta() -> None:
 def test_capability_card_ftue_copy() -> None:
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
     assert "照片留在本机，也能做成可发的画册" in cap
-    assert "开始制作我的画册" in cap
+    assert "选择照片文件夹" in cap
+    assert "开始制作我的画册" not in cap
     assert "开始导入" not in cap
     # 书架已有作品时不挡主 CTA
     assert "tripsTotal" in cap

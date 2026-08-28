@@ -754,6 +754,8 @@ studio:
     platforms: [wechat_moments, xiaohongshu]
     smart_crop:
       enabled: false              # 实验裁切 · 默认关
+  # OLT · 成品账本。发布默认开；显式 false 回退现网（BE-OLT-10）
+  output_ledger: true
   # Output Recipe V1 · Band × Intent → 导出配方（默认关，灰度开启）
   output_recipe:
     enabled: false
@@ -761,6 +763,13 @@ studio:
       sparse_max: 9
       ambiguous_max: 30
       narrative_chapter_hint_at: 50
+  # PFM · 作品集成册管线（默认关 ≡ 现网 GA；狗粮再开）
+  portfolio_pipeline:
+    enabled: false
+    homepage_entry: false          # W2 换真 page-* 前不得开
+    allow_refine_switch: true
+    max_pages: 32
+    min_kept_override: null        # 缺省由系列库最小 photo_span 派生
 
 # Phase 6 · 验收阈值与运营告警（PRD-PHASE6 §18）
 phase6:

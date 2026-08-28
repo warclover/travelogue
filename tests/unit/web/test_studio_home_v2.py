@@ -53,7 +53,8 @@ V2_HOME_MARKERS = (
     "v2-demo-flag",
     "每一个瞬间",
     "都值得再次相遇",
-    "开始制作我的画册",
+    "选择照片文件夹",
+    "试用示例",
     "示例作品",
     "v2-unsupported",
     "v2-unsupported-copy",
@@ -61,7 +62,7 @@ V2_HOME_MARKERS = (
     "v2-import-wizard",
     'role="dialog"',
     'aria-modal="true"',
-    "选择本次画册的照片文件夹",
+    "选择照片文件夹",
     "一本画册一个文件夹，无需上传照片，隐私无忧",
     "v2-wizard-album-path",
     "v2-wizard-album-upload",
@@ -94,7 +95,7 @@ V2_HOME_MARKERS = (
     'id="studio-cfg-vision"',
     'id="v2-settings-zone-ai"',
     'id="studio-llm-settings-entry"',
-    "开始制作我的画册",
+    "选择照片文件夹",
     "无需上传照片 · 个人隐私无忧 · 智能拼图排版 · 一键多种输出",
     # Import Failed overlay
     "v2-failure",
@@ -320,6 +321,10 @@ def test_studio_home_v2_js_modules_present() -> None:
     settings = (STUDIO_DIR / "homepage-v2" / "settings-panel.js").read_text(encoding="utf-8")
     assert "bindAdvancedConfigControls" in settings
     assert "syncCtaPlacement" in bento
+    assert "initHomepageCta" in bento
+    assert "syncHomepageCta" in bento
+    cta = (STUDIO_DIR / "homepage-v2" / "homepage-cta.js").read_text(encoding="utf-8")
+    assert "resolveHomepageCta" in cta
     assert "renderBentoEmpty" in bento
     assert "renderBackground" in bento
     assert "initCarousel" in bento  # M20-b：carousel 由独立模块渲染
@@ -344,12 +349,15 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     """M20-d · Import entry/Wizard + 导入编排，复用 v3 共享原语（非复制视图）。"""
     entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
+    wizard_logic = (STUDIO_DIR / "homepage-v2" / "import-wizard-logic.js").read_text(
+        encoding="utf-8"
+    )
     run = (STUDIO_DIR / "homepage-v2" / "import-run.js").read_text(encoding="utf-8")
     assert "refreshTripsForImportSuccess" in run
     assert not (STUDIO_DIR / "homepage-v2" / "import-sheet.js").is_file()
     assert not (STUDIO_DIR / "homepage-v2" / "import-flags.js").is_file()
 
-    for js in (entry, wizard, run):
+    for js in (entry, wizard, wizard_logic, run):
         assert "\ufffd" not in js
 
     # 薄编排层（RET-3 · Wizard 唯一入口）
@@ -365,7 +373,7 @@ def test_studio_home_v2_import_sheet_modules() -> None:
     # Wizard v3（PRD v3.0.1）+ A.1
     assert "openImportWizard" in wizard and "startV2Import" in wizard
     assert "wizard_step_view" in wizard
-    assert "填写细节 →" in wizard
+    assert "填写细节 →" in wizard_logic
     assert "requestCloseWizard" in wizard
     assert "photo_count_hint_show" in wizard
     assert "resetPrefillableFieldsForNewFolder" in wizard
@@ -465,7 +473,11 @@ def test_studio_home_v2_import_wizard_a1_dom_smoke() -> None:
     assert 'id="v2-wizard-template-mode"' in html
 
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
-    assert "定制画册细节 →" in wizard
+    wizard_logic = (STUDIO_DIR / "homepage-v2" / "import-wizard-logic.js").read_text(
+        encoding="utf-8"
+    )
+    assert "定制画册细节 →" in wizard_logic
+    assert "定制作品集细节 →" in wizard_logic
     assert "FIRST_TIP_KEY" in wizard
     assert "updateDuplicateTitleNote" in wizard
     assert "syncChipPressedState" in wizard
@@ -597,6 +609,7 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     assert "showImportFailed" in failed and "failureNextHint" in failed
     assert "trapFocus" in failed
     assert "Escape" in failed
+    assert "setHidden(stay, !authRecoverable)" in failed
     css = V2_CSS_BUNDLE
     assert ".v2-first-success {" in css
     first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]
@@ -749,6 +762,15 @@ def test_studio_home_v2_shelf_module() -> None:
     assert ".v2-shelf__ticket" in V2_CSS_BUNDLE
     assert ".v2-shelf__perf" in V2_CSS_BUNDLE
     assert ".v2-shelf__barcode" in V2_CSS_BUNDLE
+    assert "shelf-outputs.js" in shelf
+    assert "buildOutputStubs" in shelf
+    assert "allowReadyBadge" in shelf
+    outputs_js = (STUDIO_DIR / "homepage-v2" / "shelf-outputs.js").read_text(encoding="utf-8")
+    assert "v2-shelf__stubs" in outputs_js
+    assert ".v2-shelf__stub-chip" in V2_CSS_BUNDLE
+    assert "管理成品" in (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(
+        encoding="utf-8"
+    )
 
     html = (STUDIO_DIR / "studio-home-v2.html").read_text(encoding="utf-8")
     assert "studio-modal.css" in html
@@ -765,8 +787,12 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "Date.now() - openedAt < GHOST_CLICK_MS" in modal_js
 
     menu = (STUDIO_DIR / "homepage-v2" / "shelf-menu.js").read_text(encoding="utf-8")
-    assert "保存长图" in menu
-    assert "打开长图文件夹" in menu
+    assert "改为游记重排" in menu
+    assert "shelfExportMenuCopy" in menu
+    assert "管理成品" in menu
+    export_copy = (STUDIO_DIR / "js" / "portfolio-export-logic.js").read_text(encoding="utf-8")
+    assert "保存长图" in export_copy
+    assert "打开长图文件夹" in export_copy
     assert "openShelfLongshotFolder" in menu
     assert "canOpenShelfLongshotFolder" in menu
     assert "删除画册" in menu
@@ -885,6 +911,8 @@ def test_studio_home_v2_telemetry_wired() -> None:
 
     entry = (STUDIO_DIR / "homepage-v2" / "import-entry.js").read_text(encoding="utf-8")
     assert "cta_click" in entry
+    homepage_cta = (STUDIO_DIR / "homepage-v2" / "homepage-cta.js").read_text(encoding="utf-8")
+    assert "cta_click" in homepage_cta
 
     wizard = (STUDIO_DIR / "homepage-v2" / "import-wizard.js").read_text(encoding="utf-8")
     assert "sheet_close" in wizard

@@ -57,8 +57,9 @@ def handle_cancel(handler: StudioHandlerProtocol) -> None:
         else:
             purged = True
     elif job.type == "longshot" and job.status == "cancelled":
-        # Await runner exit so a second longshot cannot race the same trip.
-        store.await_longshot_done(job.job_id, timeout=30.0)
+        # Do not block the preview on Playwright teardown (goto/networkidle
+        # used to hold this request for several seconds). Slot still releases
+        # in finish_longshot; a 409 is preferable to a frozen preview.
         purged_outputs = True
     handler._json_response(
         200,

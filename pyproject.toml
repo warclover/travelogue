@@ -48,6 +48,7 @@ markers = [
     "controlled_parity: P17 LSE controlled-environment screens parity (AC-P17-01)",
     "w3a_gate: P17 W3a cut-engine gates (AC-P17-23/27/31)",
     "pt_windows_spawn: Pipeline Throughput ProcessPool spawn smoke (nightly Windows / G1 gate)",
+    "pipeline_isolation: dual-pipeline isolation contract (DPI); local one-shot selector for humans and triage — NOT a separate CI step (already inside the fast suite)",
 ]
 # Fast local / PR subset (matches .github/workflows/ci.yml test-pr):
 #   pytest --fast -q
@@ -160,4 +161,44 @@ forbidden_modules = [
     "travelogue.orchestrator",
     "travelogue.cli",
     "travelogue.desktop",
+]
+
+[[tool.importlinter.contracts]]
+name = "PFM editorial_series isolation (D-U-15 / ISO-05)"
+type = "forbidden"
+# Direct only: curate → editorial_series is the designed fork.
+# layout_templates already reaches curate via algorithm_profile.
+allow_indirect_imports = true
+source_modules = [
+    "travelogue.layout_engine.mosaic",
+    "travelogue.layout_templates",
+]
+forbidden_modules = [
+    "travelogue.layout_engine.editorial_series",
+]
+
+[[tool.importlinter.contracts]]
+name = "DPI journal render isolation"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = [
+    "travelogue.render.journal_chapters",
+]
+forbidden_modules = [
+    "travelogue.layout_engine.editorial_series",
+    "travelogue.export.portfolio_pages",
+    "travelogue.export.portfolio_wechat",
+]
+
+[[tool.importlinter.contracts]]
+name = "DPI portfolio render isolation"
+type = "forbidden"
+allow_indirect_imports = true
+source_modules = [
+    "travelogue.render.portfolio_chapters",
+]
+forbidden_modules = [
+    "travelogue.layout_engine.mosaic",
+    "travelogue.curation.longshot_filter",
+    "travelogue.curation.moment_scoring",
 ]

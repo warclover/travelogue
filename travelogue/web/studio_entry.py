@@ -358,6 +358,8 @@ def build_entry(
         ),
         "layoutVibe": _layout_vibe_entry(trip),
         "layoutVibeOptions": _layout_vibe_options(),
+        **edition_chrome(trip),
+        "portfolioPipelineEnabled": _portfolio_pipeline_enabled(),
         "bookends": _bookends_entry_summary(trip, curation if isinstance(curation, dict) else {}),
         "appendixOutlierCount": len(
             (curation.get("excludedTimeOutlierAssetIds") or [])
@@ -423,6 +425,198 @@ def _layout_vibe_entry(trip: dict) -> str:
     from travelogue.config.layout_vibe import resolve_layout_vibe
 
     return resolve_layout_vibe(trip)
+
+
+def _edition_entry(trip: dict) -> str:
+    from travelogue.config.edition import resolve_edition
+
+    return resolve_edition(trip)
+
+
+def _as_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _trip_folder_count(trip: dict) -> int:
+    return sum(
+        1
+        for a in trip.get("assets") or []
+        if isinstance(a, dict) and a.get("type", "image") == "image"
+    )
+
+
+def _leftover_is_capacity(portfolio: dict[str, Any]) -> bool:
+    """True leftover = 档位装不下. False = 编排没排满 (do not push journal)."""
+    overflow = portfolio.get("overflow") if isinstance(portfolio.get("overflow"), dict) else {}
+    res = str(overflow.get("resolution") or portfolio.get("overflowResolution") or "")
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
+    if leftover <= 0:
+        return False
+    cap = _as_int(overflow.get("capacity") or portfolio.get("capacity"))
+    if res == "placement_gap":
+        return False
+    if cap > 0 and placed < cap:
+        return False
+    if res in {"capped", "tier_upgraded_then_capped", "tier_upgraded"}:
+        return True
+    return kept > cap if cap > 0 else True
+
+
+def _overflow_line(portfolio: dict[str, Any] | None) -> str:
+    """PFO W1 · 角标默认一句人话，不写「本册收录 P / M」。"""
+    if not isinstance(portfolio, dict):
+        return ""
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
+    if leftover > 0:
+        if _leftover_is_capacity(portfolio):
+            return f"有 {leftover} 张没放进这本，要的话用游记能全收。"
+        return f"编排没排满，有 {leftover} 张没放进这本。"
+    folder = _as_int(portfolio.get("folderCount"))
+    pages = _as_int(portfolio.get("pageCount"))
+    if folder > 0 and pages > 0:
+        return f"文件夹 {folder} 张，做成大约一本 {pages} 页。"
+    return ""
+
+
+def _overflow_detail(portfolio: dict[str, Any] | None) -> str:
+    if not isinstance(portfolio, dict):
+        return ""
+    parts: list[str] = []
+    folder = _as_int(portfolio.get("folderCount"))
+    placed = _as_int(portfolio.get("photosPlaced"), -1)
+    kept = _as_int(portfolio.get("photosKept"))
+    if folder > 0:
+        parts.append(f"文件夹 {folder} 张")
+    if placed >= 0:
+        parts.append(f"放进这本的有 {placed} 张")
+    if kept > 0:
+        parts.append(f"大约用上 {kept} 张")
+    return " · ".join(parts)
+
+
+def import_success_chrome(trip: dict) -> dict[str, Any]:
+    """FirstSuccess payload: 人话规格 / 溢出，不带芯片目录。"""
+    from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
+
+    if resolve_edition(trip) != EDITION_PORTFOLIO:
+        return {}
+    folio = _portfolio_counts(trip)
+    return {
+        "overflowLine": _overflow_line(folio) or None,
+        "overflowDetail": _overflow_detail(folio) or None,
+        "portfolio": folio,
+    }
+
+
+def _portfolio_counts(trip: dict) -> dict[str, Any]:
+    studio = trip.get("studio")
+    raw = studio.get("portfolio") if isinstance(studio, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
+    folder = raw.get("photosFolder") or match.get("folderCount")
+    if not folder:
+        folder = _trip_folder_count(trip) or None
+    overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
+    out = {
+        "folderCount": folder,
+        "pageCount": raw.get("pageCount"),
+        "photosPlaced": raw.get("photosPlaced"),
+        "photosKept": raw.get("photosKept"),
+    }
+    if overflow:
+        out["overflow"] = {
+            "count": overflow.get("count"),
+            "resolution": overflow.get("resolution"),
+            "capacity": overflow.get("capacity"),
+        }
+    return out
+
+
+def edition_chrome(trip: dict) -> dict[str, Any]:
+    """List + preview share this chrome: CTA, overflow, LVP visibility."""
+    edition = _edition_entry(trip)
+    portfolio = _portfolio_entry(trip)
+    overflow = _overflow_line(portfolio)
+    leftover = False
+    if isinstance(portfolio, dict):
+        placed = _as_int(portfolio.get("photosPlaced"), -1)
+        kept = _as_int(portfolio.get("photosKept"))
+        leftover = placed >= 0 and kept > 0 and placed < kept
+    capacity_left = leftover and isinstance(portfolio, dict) and _leftover_is_capacity(portfolio)
+    if edition == "portfolio":
+        dock = {"short": "导出作品集", "aria": "导出作品集"}
+    else:
+        dock = {"short": "长图", "aria": "导出长图"}
+    return {
+        "edition": edition,
+        "layoutVibeVisible": edition != "portfolio",
+        "dockCta": dock,
+        "overflowLine": overflow or None,
+        "overflowDetail": _overflow_detail(portfolio) or None,
+        "overflowCta": "改用游记（全收）" if capacity_left else None,
+        "portfolio": portfolio,
+    }
+
+
+def _portfolio_pipeline_enabled() -> bool:
+    from travelogue.config.edition import is_portfolio_pipeline_enabled
+    from travelogue.config.runtime import get_config
+
+    return is_portfolio_pipeline_enabled(get_config())
+
+
+def _portfolio_entry(trip: dict) -> dict[str, Any] | None:
+    from travelogue.config.edition import EDITION_PORTFOLIO, resolve_edition
+
+    if resolve_edition(trip) != EDITION_PORTFOLIO:
+        return None
+    studio = trip.get("studio")
+    if not isinstance(studio, dict):
+        return {"overflow": None, "photosPlaced": None, "photosKept": None}
+    raw = studio.get("portfolio")
+    if not isinstance(raw, dict):
+        return {"overflow": None, "photosPlaced": None, "photosKept": None}
+    overflow = raw.get("overflow") if isinstance(raw.get("overflow"), dict) else None
+    match = raw.get("match") if isinstance(raw.get("match"), dict) else {}
+    from travelogue.layout_engine.editorial_series.catalog import load_official_series
+    from travelogue.layout_engine.editorial_series.match import (
+        catalog_chip_details,
+        catalog_page_count_chips,
+    )
+
+    catalog = load_official_series()
+    fulfillment = (
+        raw.get("sequenceFulfillment")
+        if isinstance(raw.get("sequenceFulfillment"), dict)
+        else None
+    )
+    folder = raw.get("photosFolder") or match.get("folderCount")
+    if not folder:
+        folder = _trip_folder_count(trip) or None
+    return {
+        "seriesId": raw.get("seriesId"),
+        "pageCount": raw.get("pageCount"),
+        "pageCountSource": raw.get("pageCountSource") or "auto",
+        "pageCountRequested": match.get("pageCountRequested"),
+        "pageCountHint": match.get("pageCountHint"),
+        "densityHint": match.get("densityHint"),
+        "pageCountChips": catalog_page_count_chips(catalog),
+        "pageCountChipDetails": catalog_chip_details(catalog),
+        "photosPlaced": raw.get("photosPlaced"),
+        "photosKept": raw.get("photosKept"),
+        "folderCount": folder,
+        "overflow": overflow,
+        "sequenceFulfillment": fulfillment,
+        "sparseCollection": bool(raw.get("sparseCollection")),
+    }
 
 
 def _layout_vibe_options() -> list[dict[str, str]]:

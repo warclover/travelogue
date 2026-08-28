@@ -3,7 +3,7 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.0** |
+| **文档版本** | **v0.2.1**（**D-TDV-10 后继见 PIS**） |
 | **状态** | **Conditional Go · Must-Fix 已回写**（[八席 2026-08-19](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) · BLK-TDV-01～07）· W0 身份文案可继续 · W1 导出可按回写后合同 Kickoff · 现网收件仍归 TSU 另波 |
 | **DOC-STATUS** | **active** |
 | **特性代号** | **TDV**（Template Design Verification） |
@@ -19,7 +19,8 @@
 | **线框对照** | 成册台对标 TSU F4。**导出新 IA**：[tdv-atelier-promote-export-v1-wireframe.html](./wireframes/tdv-atelier-promote-export-v1-wireframe.html)（F1 两钮 · F2 检查单 · BLK-05） |
 | **不改** | 引擎、MCS、`layout_templates`、`trip.json`、现网 `/templates-admin` 实现、画册 `album_spread`、封面封底砖、现网长图脸库 |
 | **评审纪要** | [tdv-template-design-verification-v1-review-2026-08-19.md](./acceptance-records/tdv-template-design-verification-v1-review-2026-08-19.md) |
-| **更新日期** | 2026-08-19 |
+| **更新日期** | 2026-08-26 |
+| **后继** | **2026-08-26 起**：作品集堂亲/升星读星的收窄以 [PRD-PORTFOLIO-IDENTITY-STARS-V1.md](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（**PIS · AMD-PIS-03 / BLK-PIS-01**）为准。工坊点星、`stars.yaml` 权威、现网 YAML 不写星（D-TDV-09）仍以本文为准。 |
 
 > **一句话目标**：把已能干活的临时库，收成一个与现网**机器隔离**的后台工坊——设计页型、看微缩、标常用度、手编成册、真图验证；试好的页型和角色系列，只以**升格包**交给现网，从不被引擎直接读取。
 >
@@ -183,7 +184,7 @@ SHD-01～06 一并收进 v0.2（无示意图硬拒、三星覆盖常态、今日
 | **D-TDV-07** | 升格包只含：**页型包**和/或**角色系列**。见 §6。 |
 | **D-TDV-08** | 不进升格包：`stars.yaml`、本机照片、浏览器草稿、`file://` 种子、`serve.py` / `serve.cmd`、未满目标的试刊本（除非人显式导出并标 sketch）。 |
 | **D-TDV-09** | 星级只认工坊 `stars.yaml`。未列出 = 0。镜像不自动继承。数据包 / 附录 A / 现网 YAML **不写星**。 |
-| **D-TDV-10** | 星是工坊**门槛信号**，不是选型分数。默认：`promote-ready` 建议 ★★★。**覆盖理由是常态**（当前三星只有少量），不是例外。现网状态机不出现星星。 |
+| **D-TDV-10** | 星是工坊**门槛信号**，不是选型分数。默认：`promote-ready` 建议 ★★★。**覆盖理由是常态**（当前三星只有少量），不是例外。现网状态机不出现星星。**后继（PIS · 2026-08-26）**：C 端仍不画星星。作品集堂亲/升星可读编译快照 `editorial_series/page_stars.py`（不是 `page-*.yaml`、不读工坊目录），排序受 [PIS BLK-PIS-01](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 约束（先几何后星；错混三星不得压过正配二星）。游记 MCS / `screen-*` 仍不按星选型。 |
 | **D-TDV-11** | 真图试印永远留在工坊。照片只在浏览器本地读。不要导出、不上传、不进 trip。 |
 | **D-TDV-12** | 工坊试印 ≠ 现网预演。两个概念、两套界面、两句人话。 |
 | **D-TDV-13** | 创建页型 = 填数据包出微缩。V1 **禁止**自由画框、改槽 `rect` 的可视化编辑器。 |
@@ -640,6 +641,7 @@ AC-TDV-13～14 只绑 W2。AC-15/16/19 绑 W1。宣称 W1 完成不要求组锁�
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.2.1 | 2026-08-26 | **DOC-PIS-01**：D-TDV-10 挂 [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 后继。C 端不画星星；作品集堂亲/升星可读编译快照，排序受 BLK-PIS-01。D-TDV-09 不改。 |
 | v0.2.0 | 2026-08-19 | 回写八席 BLK-TDV-01～07 与 SHD-01～06。D-TDV-29～35。导出线框 F1/F2。AC-15/16 提前到 W1，增 AC-19。 |
 | v0.1.0 | 2026-08-19 | 首稿。收口备忘录三轮讨论。工坊独立 + 升格包 + 薄柜指针。W0 文档。 |
 

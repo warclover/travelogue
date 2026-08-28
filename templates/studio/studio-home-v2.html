@@ -155,7 +155,7 @@
             <div class="v2-bench__side">
               <p class="v2-bench__side-label">快捷操作</p>
               <div class="v2-bench__quick-actions" id="v2-bench-quick-actions">
-                <!-- FE-FTUE-01：有用户作品时由 bento.js 动态插入「继续上次」（空态不渲染 DOM） -->
+                <!-- UX-01：续作并入状态主按钮，快捷区不再动态插入 resume 按钮 -->
                 <a class="v2-bench__ghost-btn" id="v2-bench-layout-lab"
                    href="/templates-admin"
                    aria-label="版式"
@@ -204,8 +204,15 @@
       </section>
     </div>
 
-    <button type="button" class="v2-bench__cta-primary" id="v2-cta"
-            aria-label="开始制作我的画册">开始制作我的画册 →</button>
+    <div id="v2-cta-group" class="v2-cta-group">
+      <button type="button" class="v2-bench__cta-primary" id="v2-cta"
+              aria-label="选择照片文件夹">
+        <span id="v2-cta-label">选择照片文件夹</span>
+        <span class="v2-bench__cta-chip" id="v2-cta-chip" hidden></span>
+      </button>
+      <button type="button" class="v2-bench__cta-secondary" id="v2-cta-secondary">试用示例</button>
+      <a href="#v2-cta-portfolio" class="v2-bench__cta-secondary" id="v2-cta-portfolio" hidden>做一本作品集</a>
+    </div>
 
     <div id="v2-settings-popover" class="v2-settings-popover" hidden role="dialog"
          aria-labelledby="v2-settings-title" aria-describedby="v2-settings-desc">
@@ -429,10 +436,11 @@
           <p class="v2-first-success__guidance-next">下一步可用自己的画册照片再做一本</p>
         </div>
         <p class="v2-first-success__countdown" id="v2-success-countdown" hidden></p>
-        <div class="v2-first-success__actions">
+        <div class="v2-first-success__actions" id="v2-success-actions">
           <a id="v2-success-open" href="#" class="v2-first-success__cta">打开画册预览 →</a>
+          <a id="v2-success-secondary" href="#" class="v2-first-success__link" hidden>保存长图</a>
+          <a id="v2-success-refine" href="#" class="v2-first-success__link" hidden>去精修封面</a>
           <div class="v2-first-success__secondary">
-            <a id="v2-success-secondary" href="#" class="v2-first-success__link" hidden>保存长图</a>
             <button type="button" class="v2-first-success__link" id="v2-success-set-preview" hidden>设为首页预览</button>
           </div>
           <button type="button" class="v2-first-success__dismiss" id="v2-success-stay">留在首页</button>
@@ -473,21 +481,21 @@
       </div>
       <div class="v2-wizard__body">
         <button type="button" class="v2-wizard__primary v2-wizard__primary--pick" id="v2-wizard-pick">
-          选择本次画册的照片文件夹
+          选择照片文件夹
         </button>
         <button type="button" class="v2-wizard__demo" id="v2-wizard-demo-album">
           试用《斯里兰卡见闻录》
           <small>本机示例 · 无需选文件夹</small>
         </button>
-        <p class="v2-wizard__hint v2-wizard__hint--center">一本画册一个文件夹，无需上传照片，隐私无忧</p>
+        <p class="v2-wizard__hint v2-wizard__hint--center" id="v2-wizard-pick-hint">一本画册一个文件夹，无需上传照片，隐私无忧</p>
         <p class="v2-wizard__first-tip" id="v2-wizard-first-tip" hidden role="status">
-          <span id="v2-wizard-first-tip-text">选一次画册的文件夹即可，不用先整理</span>
+          <span id="v2-wizard-first-tip-text">选一次旅行的照片文件夹即可。不用先整理，也不用上传。</span>
           <button type="button" class="v2-wizard__first-tip-dismiss" id="v2-wizard-first-tip-dismiss"
-                  aria-label="关闭提示">×</button>
+                  aria-label="知道了">知道了</button>
         </p>
         <details class="v2-wizard__details" id="v2-wizard-folder-help">
           <summary>不知道选哪个文件夹？</summary>
-          <ul class="v2-wizard__folder-points">
+          <ul class="v2-wizard__folder-points" id="v2-wizard-folder-points">
             <li>同一次画册放同一文件夹（50–100 张最佳）</li>
             <li>Day1/Day2 子夹：合并导入或分两次导入（每次一本<strong>新</strong>画册）</li>
             <li>支持 JPG / PNG / WebP / HEIC；不移动、不修改原片</li>
@@ -531,20 +539,46 @@
             <button type="button" class="v2-wizard__change-folder" id="v2-wizard-change-folder"
                     aria-label="换文件夹，返回选择步骤">换文件夹</button>
           </div>
-          <p class="v2-wizard__verify-foot">制作时将自动去重与挑选 · 换文件夹可再做一篇</p>
+          <p class="v2-wizard__verify-foot" id="v2-wizard-verify-foot">制作时将自动去重与挑选 · 换文件夹可再做一篇</p>
           <p class="v2-wizard__count-hint" id="v2-wizard-count-hint" hidden role="status"></p>
           <div class="v2-wizard__thumbs" id="v2-wizard-thumbs" hidden></div>
+        </div>
+        <div class="v2-wizard__edition" id="v2-wizard-edition" hidden>
+          <p class="v2-wizard__edition-label" id="v2-wizard-edition-label">这次做</p>
+          <div class="v2-wizard__edition-seg" role="radiogroup" aria-labelledby="v2-wizard-edition-label">
+            <button type="button" class="v2-wizard__edition-btn" role="radio" aria-checked="true"
+                    tabindex="0" data-edition="journal" id="v2-wizard-edition-journal">
+              游记
+              <span>推荐 · 发群</span>
+            </button>
+            <button type="button" class="v2-wizard__edition-btn" role="radio" aria-checked="false"
+                    tabindex="-1" data-edition="portfolio" id="v2-wizard-edition-portfolio">
+              作品集
+              <span>可翻的一本</span>
+            </button>
+          </div>
+        </div>
+        <div class="v2-wizard__page-spec" id="v2-wizard-page-spec" hidden>
+          <p class="v2-wizard__page-spec-line" id="v2-wizard-page-spec-line">
+            系统会按能上版的张数自动选厚度。
+          </p>
+          <button type="button" class="v2-wizard__page-spec-toggle" id="v2-wizard-page-spec-toggle"
+                  aria-expanded="false" aria-controls="v2-wizard-page-spec-chips">
+            换一本更厚 / 更薄
+          </button>
+          <p class="v2-wizard__page-spec-detail" id="v2-wizard-page-spec-detail" hidden></p>
+          <div class="v2-wizard__page-spec-chips" id="v2-wizard-page-spec-chips" hidden></div>
         </div>
         <div class="v2-wizard__mode-cards" role="radiogroup" aria-label="导入模式" id="v2-wizard-mode-cards">
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="true"
                   data-mode="quick_share" id="v2-wizard-mode-quick">
             <span class="v2-wizard__mode-card-title">快速分享（推荐）</span>
-            <span class="v2-wizard__mode-card-desc">优先出微信长图，适合马上分享</span>
+            <span class="v2-wizard__mode-card-desc" id="v2-wizard-mode-quick-desc">优先出微信长图，适合马上分享</span>
           </button>
           <button type="button" class="v2-wizard__mode-card" role="radio" aria-checked="false"
                   data-mode="fine_craft" id="v2-wizard-mode-fine">
-            <span class="v2-wizard__mode-card-title">个性化定制画册</span>
-            <span class="v2-wizard__mode-card-desc">输入画册相关信息，定制更多细节</span>
+            <span class="v2-wizard__mode-card-title" id="v2-wizard-mode-fine-title">个性化定制画册</span>
+            <span class="v2-wizard__mode-card-desc" id="v2-wizard-mode-fine-desc">输入画册相关信息，定制更多细节</span>
           </button>
         </div>
         <div class="v2-wizard__photo-row">

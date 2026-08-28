@@ -7,6 +7,29 @@
 import { resolveDisplayTitle } from "../js/title-humanize.js";
 import { STAGE_LABELS, STAGE_HINT_LABELS } from "../js/constants.js";
 
+export var JOURNAL_IMPORT_TITLE = "正在生成你的影像画册…";
+export var PORTFOLIO_IMPORT_TITLE = "正在编排作品集…";
+export var JOURNAL_IMPORT_ESTIMATE = "自动分章 · 配文 · 排版 · 可离开稍后回来";
+export var PORTFOLIO_IMPORT_ESTIMATE = "按页编排 · 可离开稍后回来";
+export var PORTFOLIO_STAGE_CURATE = "正在挑选并按页编排…";
+export var PORTFOLIO_STAGE_RENDER = "正在排版作品集…";
+
+export function normalizeImportEdition(raw) {
+  var t = String(raw || "").trim().toLowerCase();
+  return t === "portfolio" || t === "folio" ? "portfolio" : "journal";
+}
+
+export function isCopyWritingPhrase(text) {
+  return /文案|正在写/.test(String(text || ""));
+}
+
+export function importPanelCopy(edition) {
+  if (normalizeImportEdition(edition) === "portfolio") {
+    return { title: PORTFOLIO_IMPORT_TITLE, estimate: PORTFOLIO_IMPORT_ESTIMATE };
+  }
+  return { title: JOURNAL_IMPORT_TITLE, estimate: JOURNAL_IMPORT_ESTIMATE };
+}
+
 /** Orchestrator 阶段名 → 产品阶段（FE-FST-01 · SFC vision_warmup） */
 export function normalizeImportProductStage(stage) {
   var s = String(stage || "");
@@ -29,9 +52,10 @@ export function normalizeImportProductStage(stage) {
  * FE-FST-01 · 导入进度主句/次行。
  * SFC W0 · D-SFC-04 · running 主句永不为空；vision_warmup 优先。
  * @param {{ stage?: string, stageHint?: string }|null} job
+ * @param {string} [edition]
  * @returns {{ main: string, secondary: string }}
  */
-export function resolveImportStageCopy(job) {
+export function resolveImportStageCopy(job, edition) {
   var stage = normalizeImportProductStage(job && job.stage);
   var rawHint = String((job && job.stageHint) || "").trim();
   var mappedHint = STAGE_HINT_LABELS[rawHint] || STAGE_HINT_LABELS[stage] || "";
@@ -40,34 +64,78 @@ export function resolveImportStageCopy(job) {
     /^已处理\s*\d+\s*\/\s*\d+/.test(rawHint) ||
     /正在导入并挑选照片/.test(rawHint);
   var fallback = "正在处理…";
+  var out;
 
   if (stage === "vision_warmup") {
-    return {
+    out = {
       main: stageMain || mappedHint || "正在准备识图（首次可能较慢）",
       secondary: "",
     };
-  }
-
-  if (stage && stage !== "ingest" && stageMain) {
-    return { main: stageMain, secondary: "" };
-  }
-
-  if (mappedHint) {
-    return { main: mappedHint, secondary: isPhotoCount ? rawHint : "" };
-  }
-
-  if (stage === "ingest" || !stage) {
+  } else if (stage && stage !== "ingest" && stageMain) {
+    out = { main: stageMain, secondary: "" };
+  } else if (mappedHint) {
+    out = { main: mappedHint, secondary: isPhotoCount ? rawHint : "" };
+  } else if (stage === "ingest" || !stage) {
     if (isPhotoCount) {
-      return {
+      out = {
         main: STAGE_LABELS.ingest || "正在整理照片…",
         secondary: rawHint,
       };
+    } else if (rawHint) {
+      out = { main: rawHint, secondary: "" };
+    } else {
+      out = { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
     }
-    if (rawHint) return { main: rawHint, secondary: "" };
-    return { main: STAGE_LABELS.ingest || "正在整理照片…", secondary: "" };
+  } else {
+    out = { main: stageMain || rawHint || fallback, secondary: "" };
   }
 
-  return { main: stageMain || rawHint || fallback, secondary: "" };
+  if (normalizeImportEdition(edition) === "portfolio") {
+    if (stage === "curate") {
+      out.main = PORTFOLIO_STAGE_CURATE;
+    } else if (stage === "render") {
+      out.main = PORTFOLIO_STAGE_RENDER;
+    } else if (stage === "narrate" || isCopyWritingPhrase(out.main)) {
+      out.main = PORTFOLIO_IMPORT_TITLE;
+    }
+    if (isCopyWritingPhrase(out.secondary)) {
+      out.secondary = "";
+    }
+  }
+  return out;
+}
+
+/**
+ * 409 二次确认。游记标题/正文/取消 toast 冻结现网字面。
+ * @param {{ existingIsPf?: boolean, existingTitle?: string, hasSiblingJournal?: boolean }} opts
+ */
+export function demoExistsOverwriteCopy(opts) {
+  var o = opts || {};
+  var title = String(o.existingTitle || "").trim();
+  if (!o.existingIsPf) {
+    return {
+      title: "该画册已存在",
+      body: title
+        ? "《" + title + "》已经用过这个文件夹。覆盖后无法撤销。"
+        : "是否覆盖已有内容？覆盖后无法撤销。",
+      confirmText: "覆盖并重新导入",
+      cancelText: "取消",
+      cancelToast: "未覆盖已有画册",
+    };
+  }
+  var body = title
+    ? "《" + title + "》已经用这个文件夹做过作品集。覆盖后无法撤销。"
+    : "是否覆盖已有作品集？覆盖后无法撤销。";
+  if (o.hasSiblingJournal) {
+    body += "不会动书架上的游记那一本。";
+  }
+  return {
+    title: "这本作品集已存在",
+    body: body,
+    confirmText: "覆盖并重新导入",
+    cancelText: "取消",
+    cancelToast: "未覆盖已有作品集",
+  };
 }
 
 export function basenameTitle(path) {

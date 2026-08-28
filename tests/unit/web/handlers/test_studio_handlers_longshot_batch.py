@@ -180,7 +180,7 @@ def test_handle_longshot_batch_partial_failure_continues_and_reports_items(
             "travelogue.export.longshot.playwright_longshot_available", return_value=True
         ),
         patch(
-            "travelogue.export.longshot_batch.export_trip_longshot", side_effect=fake_export
+            "travelogue.export.longshot_batch.dispatch_export", side_effect=fake_export
         ),
     ):
         handle_longshot(handler)
@@ -255,7 +255,7 @@ def test_handle_longshot_single_platform_request_shape_unaffected(tmp_path: Path
             "travelogue.export.longshot.playwright_longshot_available", return_value=True
         ),
         patch(
-            "travelogue.export.longshot.export_trip_longshot",
+            "travelogue.export.dispatch.dispatch_export",
             side_effect=fake_export,
         ),
     ):
@@ -378,7 +378,7 @@ def test_handle_longshot_batch_compose_only_ok_without_playwright(
             return_value=False,
         ),
         patch(
-            "travelogue.export.longshot_batch.export_trip_longshot",
+            "travelogue.export.longshot_batch.dispatch_export",
             side_effect=fake_export,
         ),
     ):
