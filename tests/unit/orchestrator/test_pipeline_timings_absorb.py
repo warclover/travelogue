@@ -36,6 +36,21 @@ def test_absorb_does_not_overwrite_local_stage_keys() -> None:
     assert local["ingestWorkers"] == 2.0
 
 
+def test_absorb_preserves_string_reason_keys() -> None:
+    trip = {
+        "pipeline": {
+            "timings": {
+                "ingestParallelFallbackReason": "pool_start_failed",
+                "ingestWorkersDownscaleReason": "memory_cap_ram",
+            }
+        }
+    }
+    local: dict = {"ingestMs": 10.0}
+    absorb_pipeline_timing_keys(trip, local)
+    assert local["ingestParallelFallbackReason"] == "pool_start_failed"
+    assert local["ingestWorkersDownscaleReason"] == "memory_cap_ram"
+
+
 def test_flush_pattern_without_absorb_wipes_workers() -> None:
     """Document the pre-fix failure mode (regression guard)."""
     trip = {"pipeline": {"timings": {"ingestWorkers": 4.0}}}

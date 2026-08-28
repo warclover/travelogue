@@ -123,7 +123,8 @@ def absorb_pipeline_timing_keys(trip: dict, timings: dict[str, float]) -> None:
         try:
             timings[key] = float(value)
         except (TypeError, ValueError):
-            continue
+            if isinstance(value, str) and value:
+                timings[key] = value
 
 
 def clear_pending_assets(trip: dict) -> None:

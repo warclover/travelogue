@@ -185,25 +185,25 @@ orchestrator `run.py` 现顺序：join → save → load → `ensure_derivatives
 | ID | 任务 | 位置 | 状态 |
 |---|---|---|---|
 | DOC-PPX-01 | PRD / IMPLEMENTATION / ACCEPTANCE / W0 | `docs/` | ☑ |
-| BE-PPX-01 | timings TypedDict 增键（可先声明后写入） | `types/trip_telemetry.py` | ☐ |
-| QA-PPX-01 | `ImportSubprocess` `daemon is False` 单测 | `tests/unit/web/test_studio_subprocess.py` | ☑ 已入仓 · 今日必红 |
-| QA-PPX-02 | `ImportSubprocess.start()` 并行杀伤测试（先红） | 新 `tests/integration/studio/test_import_subprocess_parallel.py` | ☑ 已入仓 · 今日必红 |
+| BE-PPX-01 | timings TypedDict 增键（可先声明后写入） | `types/trip_telemetry.py` | ☑ |
+| QA-PPX-01 | `ImportSubprocess` `daemon is False` 单测 | `tests/unit/web/test_studio_subprocess.py` | ☑ |
+| QA-PPX-02 | `ImportSubprocess.start()` 并行杀伤测试（先红） | 新 `tests/integration/studio/test_import_subprocess_parallel.py` | ☑ 已绿 |
 | QA-PPX-03 | 收紧 `test_pt_ingest_windows_spawn`：fail-open 不再算并行成功 | `tests/integration/test_pt_ingest_windows_spawn.py` | ☑ |
 
 ### M1 · 执行链
 
 | ID | 任务 | 位置 | 状态 |
 |---|---|---|---|
-| BE-PPX-02 | 非 daemon + 退出 join | `studio_subprocess.py` · `studio_jobs.py` | ☐ |
-| BE-PPX-03 | 取消协议 + 临时目录清理 | 同上 + `ingest_parallel.py` | ☐ |
-| BE-PPX-04 | `ParallelIngestOutcome` + ingest 接线 | `ingest_parallel.py` · `ingest.py` | ☐ |
-| BE-PPX-05 | watermark 滑窗 | `ingest_parallel.py` | ☐ |
-| BE-PPX-06 | `medianLongEdgePx` 出扫描、入规划 | `user_tier.py` / `ingest.py` | ☐ |
-| BE-PPX-07 | RAM 预算 + 未知边上限 6 | `ingest_parallel.py` · 改既有单测 | ☐ |
-| BE-PPX-08 | 并行物化 + 主进程合并 | `derivatives.py` · `orchestrator/run.py` | ☐ |
-| BE-PPX-09 | 埋点写入（reason / spawn / firstProgress / RSS） | ingest / derivatives | ☐ |
-| QA-PPX-04 | AC-PPX-02～07、11 单测 | `tests/unit/media/` · `tests/unit/web/` | ☐ |
-| QA-PPX-05 | 等价脚本确认无 hash 门 | `scripts/pipeline_perf_equivalence_check.py` | ☐ |
+| BE-PPX-02 | 非 daemon + 退出 join | `studio_subprocess.py` · `studio_jobs.py` | ☑ |
+| BE-PPX-03 | 取消协议 + 临时目录清理 | 同上 + `ingest_parallel.py` | ☑ |
+| BE-PPX-04 | `ParallelIngestOutcome` + ingest 接线 | `ingest_parallel.py` · `ingest.py` | ☑ |
+| BE-PPX-05 | watermark 滑窗 | `ingest_parallel.py` | ☑ |
+| BE-PPX-06 | `medianLongEdgePx` 出扫描、入规划 | `user_tier.py` / `ingest.py` | ☑ |
+| BE-PPX-07 | RAM 预算 + 未知边上限 6 | `ingest_parallel.py` · 改既有单测 | ☑ |
+| BE-PPX-08 | 并行物化 + 主进程合并 | `derivatives.py` · `orchestrator/run.py` | ☑ 主进程合并；orchestrator 同步路径复用 ensure 空转 |
+| BE-PPX-09 | 埋点写入（reason / spawn / firstProgress / RSS） | ingest / derivatives | ☑ |
+| QA-PPX-04 | AC-PPX-02～07、11 单测 | `tests/unit/media/` · `tests/unit/web/` | ☑ |
+| QA-PPX-05 | 等价脚本确认无 hash 门 | `scripts/pipeline_perf_equivalence_check.py` | ☑ 脚本无 hashlib / 文件 hash 门 |
 | QA-PPX-06 | 基准机 31/57/121/134 · 高分/中分分档 | 验收记录 | ☐ |
 
 **M1 出口**：QA-PPX-02 绿；AC-PPX-01/03/09 绿；AC-PPX-10 有记录。
