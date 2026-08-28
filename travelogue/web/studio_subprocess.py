@@ -4,12 +4,36 @@ from __future__ import annotations
 
 import logging
 import multiprocessing as mp
+import os
+import signal
+import subprocess
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 _log = logging.getLogger(__name__)
+
+_CANCEL_JOIN_S = 8.0
+_TERMINATE_JOIN_S = 2.0
+
+
+def _kill_process_tree(pid: int) -> None:
+    """Best-effort reap of pid and its descendants (PPX D-PPX-03)."""
+    if pid <= 0:
+        return
+    if sys.platform == "win32":
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(pid)],
+            capture_output=True,
+            check=False,
+        )
+        return
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        pass
 
 
 def _write_import_diag(payload: dict[str, Any], code: str, message: str) -> None:
@@ -117,6 +141,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                 else None
             ),
             force_stub=bool(payload.get("forceStub")),
+            stop_after=str(payload.get("stopAfter") or "full"),
             edition=(
                 str(payload.get("edition")).strip()
                 if payload.get("edition")
@@ -223,7 +248,7 @@ class ImportSubprocess:
         self._process = self._ctx.Process(
             target=_import_worker,
             args=(payload, self._queue, self._cancel),
-            daemon=True,
+            daemon=False,
         )
 
     def start(self) -> None:
@@ -231,8 +256,17 @@ class ImportSubprocess:
 
     def cancel(self) -> None:
         self._cancel.set()
-        if self._process.is_alive():
-            self._process.terminate()
+        if not self._process.is_alive():
+            return
+        self._process.join(timeout=_CANCEL_JOIN_S)
+        if not self._process.is_alive():
+            return
+        pid = self._process.pid
+        self._process.terminate()
+        self._process.join(timeout=_TERMINATE_JOIN_S)
+        if self._process.is_alive() and pid:
+            _kill_process_tree(int(pid))
+            self._process.join(timeout=_TERMINATE_JOIN_S)
 
     def join(self, timeout: float | None = None) -> None:
         self._process.join(timeout)

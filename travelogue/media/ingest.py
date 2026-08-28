@@ -250,7 +250,7 @@ def scan_image_paths(
         raise IngestError("E_INGEST_EMPTY", f"no images in {directory}")
 
     stats = {"skipped_small": 0, "skipped_open": 0, **raw_stats}
-    accepted: list[tuple[datetime, str, Path]] = []
+    accepted: list[tuple[datetime, str, Path, int]] = []
 
     for path in candidates:
         try:
@@ -261,12 +261,20 @@ def scan_image_paths(
         if not min_edge_ok(meta.width, meta.height, min_edge_px):
             stats["skipped_small"] += 1
             continue
-        accepted.append((meta.taken_at, str(path).lower(), path))
+        accepted.append(
+            (meta.taken_at, str(path).lower(), path, max(int(meta.width), int(meta.height)))
+        )
 
     accepted.sort(key=lambda x: (x[0], x[1]))
-    files = [p for _, _, p in accepted[:max_photos]]
+    chosen = accepted[:max_photos]
+    files = [p for _, _, p, _edge in chosen]
     stats["scanned"] = len(candidates)
     stats["used"] = len(files)
+    from travelogue.media.ingest_parallel import median_int
+
+    median = median_int([edge for *_, edge in chosen])
+    if median is not None:
+        stats["medianLongEdgePx"] = median
     return files, stats
 
 
@@ -707,6 +715,19 @@ def _scan_photos_for_ingest(
                     photo_tiers.append((p, tier))
                 else:
                     scan_stats.setdefault("incremental_source_missing", []).append(aid)
+            from travelogue.media.image_ops import peek_image_meta
+            from travelogue.media.ingest_parallel import median_int
+
+            edges: list[int] = []
+            for photo, _tier in photo_tiers:
+                try:
+                    meta = peek_image_meta(photo)
+                    edges.append(max(int(meta.width), int(meta.height)))
+                except Exception:
+                    continue
+            median = median_int(edges)
+            if median is not None:
+                scan_stats["medianLongEdgePx"] = median
             return _IngestScanResult(
                 photo_tiers=photo_tiers,
                 scan_stats=scan_stats,
@@ -1357,17 +1378,27 @@ def ingest_into_trip(
 
     use_parallel, workers, parallel_fallback = False, 1, False
     workers_downscaled = False
+    median_long_edge = scan_stats.get("medianLongEdgePx")
+    if median_long_edge is not None:
+        try:
+            median_long_edge = int(median_long_edge)
+        except (TypeError, ValueError):
+            median_long_edge = None
     if resolved_app.pipeline.parallel_ingest:
         from travelogue.media.ingest_parallel import resolve_parallel_ingest_plan
 
         use_parallel, workers, parallel_fallback, workers_downscaled = (
-            resolve_parallel_ingest_plan(resolved_app, photo_count=total_photos)
+            resolve_parallel_ingest_plan(
+                resolved_app,
+                photo_count=total_photos,
+                median_long_edge_px=median_long_edge,
+            )
         )
 
     if use_parallel:
         from travelogue.media.ingest_parallel import run_parallel_ingest_loop
 
-        ok = run_parallel_ingest_loop(
+        outcome = run_parallel_ingest_loop(
             photo_tiers=photo_tiers,
             workers=workers,
             trip_dir=trip_dir,
@@ -1383,19 +1414,45 @@ def ingest_into_trip(
             on_persist=on_persist,
             on_asset_added=asset_added_cb,
             emit_progress=_emit_progress,
+            cancel_check=_emit_progress,
         )
-        if ok:
-            ingest_stats = loop_state.ingest_stats
-            ingest_stats["ingestWorkers"] = workers
+        ingest_stats = loop_state.ingest_stats
+        ingest_stats["ingestWorkersRequested"] = outcome.requested_workers
+        ingest_stats["ingestPoolSpawnMs"] = outcome.spawn_ms
+        if outcome.first_progress_ms is not None:
+            ingest_stats["ingestFirstProgressMs"] = outcome.first_progress_ms
+        if median_long_edge:
+            ingest_stats["ingestMedianLongEdgePx"] = median_long_edge
+        if outcome.ok:
+            ingest_stats["ingestWorkers"] = outcome.effective_workers
             ingest_stats["ingestParallelFallback"] = False
             if workers_downscaled:
+                from travelogue.media.ingest_parallel import plan_downscale_reason
+
                 ingest_stats["ingestWorkersDownscaled"] = True
-                ingest_stats["ingestWorkersDownscaleReason"] = "memory_cap_long_edge"
+                ingest_stats["ingestWorkersDownscaleReason"] = plan_downscale_reason(
+                    median_long_edge_px=median_long_edge
+                )
+        elif outcome.reason == "pool_cancelled":
+            ingest_stats["ingestParallelFallbackReason"] = "pool_cancelled"
+            from travelogue.demo.build import DemoError
+
+            raise DemoError("E_STUDIO_CANCELLED", "cancelled")
         else:
             use_parallel = False
             parallel_fallback = True
-            loop_state.ingest_stats["ingestParallelFallback"] = True
-            loop_state.ingest_stats["ingestWorkers"] = 1
+            ingest_stats["ingestParallelFallback"] = True
+            ingest_stats["ingestWorkers"] = 1
+            if outcome.reason:
+                ingest_stats["ingestParallelFallbackReason"] = outcome.reason
+    elif resolved_app.pipeline.parallel_ingest:
+        reason_stats = loop_state.ingest_stats
+        min_photos = max(1, int(resolved_app.pipeline.parallel_ingest_min_photos))
+        if total_photos < min_photos:
+            reason_stats["ingestParallelFallbackReason"] = "below_min_photos"
+        elif int(resolved_app.pipeline.parallel_ingest_workers) == 1 or workers <= 1:
+            reason_stats["ingestParallelFallbackReason"] = "workers_eq_one"
+        reason_stats.setdefault("ingestWorkersRequested", workers)
 
     if not use_parallel:
         if parallel_fallback:
@@ -1466,6 +1523,28 @@ def ingest_into_trip(
         )
     if ingest_stats.get("ingestWorkersDownscaled"):
         timings["ingestWorkersDownscaled"] = 1.0
+    for key in (
+        "ingestWorkersRequested",
+        "ingestPoolSpawnMs",
+        "ingestFirstProgressMs",
+        "ingestMedianLongEdgePx",
+    ):
+        if key in ingest_stats:
+            try:
+                timings[key] = float(ingest_stats[key])
+            except (TypeError, ValueError):
+                continue
+    reason = ingest_stats.get("ingestParallelFallbackReason")
+    if reason:
+        timings["ingestParallelFallbackReason"] = str(reason)
+    downscale_reason = ingest_stats.get("ingestWorkersDownscaleReason")
+    if downscale_reason:
+        timings["ingestWorkersDownscaleReason"] = str(downscale_reason)
+    from travelogue.media.ingest_parallel import peak_rss_mb
+
+    rss = peak_rss_mb()
+    if rss is not None:
+        timings["peakRssMb"] = float(rss)
     if "nimaWarmHits" in ingest_stats:
         timings["nimaWarmHits"] = float(ingest_stats["nimaWarmHits"])
     if "nimaWarmMisses" in ingest_stats:

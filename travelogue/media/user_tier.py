@@ -75,7 +75,7 @@ def _scan_one_dir(
     recursive: bool,
     min_edge_px: int,
     stats: dict,
-) -> list[tuple[datetime, str, Path, str]]:
+) -> list[tuple[datetime, str, Path, str, int]]:
     if max_count <= 0:
         return []
     if not directory.is_dir():
@@ -91,7 +91,7 @@ def _scan_one_dir(
             candidates.append(path)
 
     stats[f"scanned_{tier}"] = len(candidates)
-    accepted: list[tuple[datetime, str, Path, str]] = []
+    accepted: list[tuple[datetime, str, Path, str, int]] = []
     for path in candidates:
         if len(accepted) >= max_count:
             break
@@ -103,7 +103,8 @@ def _scan_one_dir(
         if not min_edge_ok(meta.width, meta.height, min_edge_px):
             stats["skipped_small"] = stats.get("skipped_small", 0) + 1
             continue
-        accepted.append((meta.taken_at, str(path).lower(), path, tier))
+        long_edge = max(int(meta.width), int(meta.height))
+        accepted.append((meta.taken_at, str(path).lower(), path, tier, long_edge))
 
     accepted.sort(key=lambda x: (x[0], x[1]))
     stats[f"used_{tier}"] = len(accepted)
@@ -121,7 +122,7 @@ def scan_tiered_image_paths(
 ) -> tuple[list[tuple[Path, str]], dict]:
     """Scan featured first, then material; single_dir → all material."""
     stats: dict = {"mode": "single"}
-    merged: list[tuple[datetime, str, Path, str]] = []
+    merged: list[tuple[datetime, str, Path, str, int]] = []
 
     if featured_dir or material_dir:
         stats["mode"] = "dual"
@@ -169,9 +170,14 @@ def scan_tiered_image_paths(
 
     stats["scanned"] = stats.get("scanned_featured", 0) + stats.get("scanned_material", 0)
     stats["used"] = len(merged)
-    stats["featured_count"] = sum(1 for *_, tier in merged if tier == TIER_FEATURED)
-    stats["material_count"] = sum(1 for *_, tier in merged if tier == TIER_MATERIAL)
-    files = [(path, tier) for _, _, path, tier in merged]
+    stats["featured_count"] = sum(1 for *_, tier, _edge in merged if tier == TIER_FEATURED)
+    stats["material_count"] = sum(1 for *_, tier, _edge in merged if tier == TIER_MATERIAL)
+    from travelogue.media.ingest_parallel import median_int
+
+    median = median_int([edge for *_, edge in merged])
+    if median is not None:
+        stats["medianLongEdgePx"] = median
+    files = [(path, tier) for _, _, path, tier, _edge in merged]
     return files, stats
 
 

@@ -5,8 +5,8 @@
 | **PRD** | [PRD-PIPELINE-PERF-V1.md](./PRD-PIPELINE-PERF-V1.md) **v0.2** |
 | **评审** | [acceptance-records/pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **验收** | [ACCEPTANCE-PIPELINE-PERF-V1.md](./ACCEPTANCE-PIPELINE-PERF-V1.md)（对照 PRD §9） |
-| **状态** | **M1/M2/M3 编码 ☑ · 07b 签字 ☑ · 合入 master**（AC-08/09/10/11/12 后置） |
-| **更新** | 2026-07-19 |
+| **状态** | **M1/M2/M3 编码 ☑ · 07b 签字 ☑ · 合入 master**（AC-08/09/10/11/12 后置）· **执行链 2026-08-28 重开** → [IMPLEMENTATION-PIPELINE-PERF-EXECUTION-V1.md](./IMPLEMENTATION-PIPELINE-PERF-EXECUTION-V1.md) |
+| **更新** | 2026-07-19 · 2026-08-28 加收口指针 |
 | **分支** | `feat/pipeline-perf-v1` → `master` |
 
 ---

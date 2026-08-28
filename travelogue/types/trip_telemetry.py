@@ -16,6 +16,18 @@ class PipelineTimingsDict(TypedDict, total=False):
     totalMs: float
     ingestWorkers: float
     ingestParallelFallback: float
+    ingestParallelFallbackReason: str
+    ingestWorkersRequested: float
+    ingestPoolSpawnMs: float
+    ingestFirstProgressMs: float
+    ingestMedianLongEdgePx: float
+    ingestWorkersDownscaled: float
+    ingestWorkersDownscaleReason: str
+    materializeWorkers: float
+    materializeAssets: float
+    materializeDecodeMs: float
+    materializeEncodeMs: float
+    peakRssMb: float
     narrateConcurrency: float
     narrateCacheHits: float
     narrateCacheMisses: float

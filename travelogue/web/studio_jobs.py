@@ -481,7 +481,7 @@ def run_import_job_subprocess(job: StudioJob, payload: dict[str, Any]) -> None:
                     error=job_error_payload("E_STUDIO_PIPELINE"),
                 )
         finally:
-            handle.join(timeout=5.0)
+            handle.join(timeout=8.0)
             try:
                 _cleanup_import_if_incomplete(job, payload)
             except Exception:

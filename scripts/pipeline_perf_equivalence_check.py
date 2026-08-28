@@ -7,6 +7,9 @@ items (deferred derivatives, scan peek, worker signals, parallel ingest plan).
 
 Default mode: self-reflexivity on a tiny synthetic album (CI-safe).
 Optional: ``--baseline-trip`` / ``--candidate-trip`` for offline golden diffs.
+
+D-PPX-10 / QA-PPX-05: compare cull set, chapters, screens, cover, and
+decision fields only. Do **not** add WebP file-hash equality gates.
 """
 
 from __future__ import annotations

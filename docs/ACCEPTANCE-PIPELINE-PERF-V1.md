@@ -6,7 +6,7 @@
 | **评审纪要** | [pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **实施清单** | [IMPLEMENTATION-PIPELINE-PERF-V1.md](./IMPLEMENTATION-PIPELINE-PERF-V1.md) |
 | **对比数据** | [pipeline-perf-v1-compare-latest.json](./acceptance-records/pipeline-perf-v1-compare-latest.json) |
-| **状态** | **合入 master（人工放行）** · Actions 额度耗尽未跑远程 CI；本地狗粮 + 单测/等价脚本已覆盖主路径 |
+| **状态** | **合入 master（人工放行）** · 2026-08-28 起执行链验收改走 [ACCEPTANCE-PIPELINE-PERF-EXECUTION-V1.md](./ACCEPTANCE-PIPELINE-PERF-EXECUTION-V1.md) |
 | **日期** | 2026-07-19 |
 | **分支** | `feat/pipeline-perf-v1` |
 
