@@ -21,6 +21,8 @@ export var COPY_DICTIONARY = {
   portfolioExportLabel: "导出作品集",
   portfolioExportAria: "导出作品集",
   successVerb: "已导出",
+  switchPurpose: "换用途",
+  switchPurposeDone: "已换用途",
   shelfReady: "长图已就绪",
   shelfStale: "长图需更新",
   forbiddenUmbrella: ["分享图"],

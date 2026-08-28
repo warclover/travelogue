@@ -23,8 +23,8 @@ def test_format_longshot_result_saved_confirm_not_publish_guide() -> None:
 def test_shelf_longshot_emits_share_hint_event() -> None:
     src = (STUDIO / "homepage-v2" / "shelf-longshot.js").read_text(encoding="utf-8")
     assert "formatLongshotResult" in src
-    # FE-SR-08 / USR-03 · 书架成功面也提供换种分享
-    assert "换种分享方式" in src
+    # FE-SR-08 / USR-03 · 书架成功面也提供换用途
+    assert "COPY_DICTIONARY.switchPurpose" in src
     assert "offerShelfSwitchShare" in src
     # D-FST-13 · 禁自动 reveal
     assert "shelf_longshot_auto_reveal" not in src

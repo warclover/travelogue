@@ -51,7 +51,7 @@
 | 工具栏 | `templates/studio/preview-toolbar/longshot.js` | journal 主按钮跟 §2；渠道不进短标签 |
 | 成功反馈 | `templates/studio/js/longshot-client.js` · Task Dock | 一个成功容器；主句按 §1 |
 
-成功面继续遵守 FST：主动作是「在文件夹中显示」，不教微信。
+成功面继续遵守 FST：主动作是「在文件夹中显示」，不教微信。次要动作写「换用途」，回到意图/用途选择；禁止再写「换种分享方式」。
 
 ## 5. 非目标
 
