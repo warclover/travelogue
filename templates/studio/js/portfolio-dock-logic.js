@@ -41,7 +41,7 @@ export function portfolioIdleCta() {
 }
 
 /**
- * @returns {{ title: string, edition: string, initPlatform: function(object): {platform: string, platforms: string[]} }}
+ * @returns {{ title: string, edition: string, face?: string, initPlatform: function(object): {platform: string, platforms: string[]} }}
  */
 export function portfolioExportPopoverSpec(opts) {
   opts = opts || {};

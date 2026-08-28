@@ -21,7 +21,7 @@ from travelogue.web.studio_handlers.import_handlers import (
 )
 from travelogue.web.studio_handlers.job_handlers import handle_cancel, handle_status
 from travelogue.web.studio_jobs import get_job_store, reset_job_store
-from travelogue.web.studio_pipeline import sample_album_preview_thumbs
+from travelogue.web.studio_album_preview import sample_album_preview_thumbs
 
 pytestmark = pytest.mark.unit
 
@@ -840,16 +840,16 @@ def test_handle_album_preview_thumb_count_clamped(tmp_path: Path) -> None:
 
 def test_sample_album_preview_thumbs_large_album_degrades(tmp_path: Path) -> None:
     """PRD-IMPORT-SHEET-v3-WIZARD BE-02 · 候选数超阈值走快速降级路径，仍能出片与计数。"""
-    import travelogue.web.studio_pipeline as pipeline_mod
+    import travelogue.web.studio_album_preview as preview_mod
     from tests.studio_test_helpers import make_test_album
 
     album = make_test_album(tmp_path, n=6)
-    original = pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD
-    pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = 2
+    original = preview_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD
+    preview_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = 2
     try:
-        thumbs, count, names = pipeline_mod.sample_album_preview_thumbs(album, count=4)
+        thumbs, count, names = preview_mod.sample_album_preview_thumbs(album, count=4)
     finally:
-        pipeline_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = original
+        preview_mod.ALBUM_PREVIEW_FAST_DEGRADE_THRESHOLD = original
     assert count == 6
     assert len(thumbs) == 4
     assert len(names) == len(thumbs)
@@ -895,7 +895,7 @@ def test_handle_album_preview_optional_dates(tmp_path: Path) -> None:
 
 
 def test_infer_album_preview_date_range_empty(tmp_path: Path) -> None:
-    from travelogue.web.studio_pipeline import infer_album_preview_date_range
+    from travelogue.web.studio_album_preview import infer_album_preview_date_range
 
     empty = tmp_path / "empty-album"
     empty.mkdir()
@@ -904,7 +904,7 @@ def test_infer_album_preview_date_range_empty(tmp_path: Path) -> None:
 
 def test_infer_album_preview_date_range_reuses_candidates(tmp_path: Path) -> None:
     """Shared candidates avoid a second rglob; mtime extremes still yield ISO dates."""
-    from travelogue.web.studio_pipeline import (
+    from travelogue.web.studio_album_preview import (
         infer_album_preview_date_range,
         list_album_preview_candidates,
     )

@@ -1021,9 +1021,9 @@ export function mountEditionControls(slot, tripId, opts) {
       return;
     }
     selectedPages = renderPortfolioPageCountChips(
-      pageHost,
-      pageRow,
-      pageHint,
+      pageHost instanceof HTMLElement ? pageHost : null,
+      pageRow instanceof HTMLElement ? pageRow : null,
+      pageHint instanceof HTMLElement ? pageHint : null,
       portfolio,
       { onRequest: requestPageCount }
     );
@@ -1475,9 +1475,9 @@ export function mountPortfolioRefineControls(slot, tripId, opts) {
           : "";
       }
       selectedPages = renderPortfolioPageCountChips(
-        pageHost,
-        pageRow,
-        pageHint,
+        pageHost instanceof HTMLElement ? pageHost : null,
+        pageRow instanceof HTMLElement ? pageRow : null,
+        pageHint instanceof HTMLElement ? pageHint : null,
         portfolioState,
         { onRequest: requestPageCount }
       );
