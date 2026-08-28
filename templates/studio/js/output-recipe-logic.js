@@ -4,6 +4,8 @@
  */
 "use strict";
 
+import { COPY_DICTIONARY } from "./copy-dictionary.js";
+
 export var INTENT_TO_PLATFORM = {
   chat_longshot: "wechat_chat",
   moments_scroll: "wechat_moments",
@@ -146,7 +148,7 @@ export function resolveClientRecipe(keptN, entrypoint, cfg, sessionIntent) {
       needsIntent: false,
       intent: "chat_longshot",
       platform: "wechat_chat",
-      ctaLabel: "导出长图 · 发微信群",
+      ctaLabel: COPY_DICTIONARY.ctaSparseChat,
       subtitle: "",
       userHints: ["可到预览选择其他分享方式"],
       source: "band_default",
@@ -164,7 +166,7 @@ export function resolveClientRecipe(keptN, entrypoint, cfg, sessionIntent) {
       needsIntent: false,
       intent: "chat_longshot",
       platform: "wechat_chat",
-      ctaLabel: "按章导出长图 · 发微信群",
+      ctaLabel: COPY_DICTIONARY.ctaNarrativeChat,
       subtitle: hints[0] || "",
       userHints: hints,
       source: "band_default",
@@ -176,7 +178,7 @@ export function resolveClientRecipe(keptN, entrypoint, cfg, sessionIntent) {
     needsIntent: false,
     intent: "chat_longshot",
     platform: "wechat_chat",
-    ctaLabel: "导出长图 · 发微信群",
+    ctaLabel: COPY_DICTIONARY.ctaSparseChat,
     subtitle: "",
     userHints: [],
     source: "band_default",
@@ -205,8 +207,8 @@ export function recipeFromIntent(intent, band, keptN, source) {
           : normalized === "album_spread"
             ? "导出画册跨页"
             : band === "narrative"
-              ? "按章导出长图 · 发微信群"
-              : "导出长图 · 发微信群";
+              ? COPY_DICTIONARY.ctaNarrativeChat
+              : COPY_DICTIONARY.ctaSparseChat;
   return {
     band: band,
     needsIntent: false,

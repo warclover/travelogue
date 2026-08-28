@@ -102,7 +102,7 @@ def _force_click(page, selector: str) -> None:
 
 
 def test_persona_sparse_default_cta_wechat_chat(studio_server) -> None:
-    """H-A-01 · Sparse 主 CTA「导出长图 · 发微信群」，一次点击路径语义。"""
+    """H-A-01 · Sparse 主 CTA「导出长图 · 导出到：微信群」，一次点击路径语义。"""
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -115,7 +115,7 @@ def test_persona_sparse_default_cta_wechat_chat(studio_server) -> None:
             assert r["needsIntent"] is False
             assert r["intent"] == "chat_longshot"
             assert r["platform"] == "wechat_chat"
-            assert r["ctaLabel"] == "导出长图 · 发微信群"
+            assert r["ctaLabel"] == "导出长图 · 导出到：微信群"
             assert "九宫格" not in (r["ctaLabel"] or "")
 
         browser.close()
@@ -247,7 +247,7 @@ def test_persona_ambiguous_shelf_fallback_no_intent_card(studio_server) -> None:
         assert r["band"] == "ambiguous"
         assert r["needsIntent"] is False
         assert r["intent"] == "chat_longshot"
-        assert r["ctaLabel"] == "导出长图 · 发微信群"
+        assert r["ctaLabel"] == "导出长图 · 导出到：微信群"
         assert any("预览" in h for h in (r["userHints"] or []))
 
         browser.close()
@@ -268,7 +268,7 @@ def test_persona_narrative_deep_chapter_default(studio_server) -> None:
 
         r40 = _resolve(page, 40)
         assert r40["band"] == "narrative"
-        assert r40["ctaLabel"] == "按章导出长图 · 发微信群"
+        assert r40["ctaLabel"] == "按章导出长图 · 导出到：微信群"
         assert r40["needsIntent"] is False
 
         r55 = _resolve(page, 55)

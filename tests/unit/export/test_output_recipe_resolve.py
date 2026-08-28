@@ -51,7 +51,8 @@ def test_ac_or_02_sparse_default_chat_not_grid() -> None:
     assert r.needs_intent is False
     assert r.intent != "moments_grid"
     assert "九宫格" not in r.cta_label
-    assert "发微信群" in r.cta_label
+    assert "发微信群" not in r.cta_label
+    assert r.cta_label == "导出长图 · 导出到：微信群"
 
 
 def test_ac_or_03_ambiguous_preview_needs_intent() -> None:
@@ -82,6 +83,8 @@ def test_ac_or_04_narrative_by_chapter_and_deep_hint() -> None:
     assert r.layout == "by_chapter"
     assert r.intent == "chat_longshot"
     assert "按章" in r.cta_label
+    assert "发微信群" not in r.cta_label
+    assert r.cta_label == "按章导出长图 · 导出到：微信群"
 
     deep = resolve_output_recipe(kept_n=55, entrypoint="preview", enabled=True)
     assert any("按章" in h or "章节" in h for h in deep.user_hints)

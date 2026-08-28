@@ -6,6 +6,7 @@
 "use strict";
 
 import { HELP_COPY } from "./help-onboarding.js";
+import { COPY_DICTIONARY } from "./copy-dictionary.js";
 import {
   buildIntentPresetHtml,
   defaultPlatformForIntent,
@@ -31,7 +32,7 @@ export var PLATFORMS = {
     label: "微信群",
     title: "微信群",
     subtitle: "按序长图",
-    cta: "导出长图 · 发微信群",
+    cta: COPY_DICTIONARY.ctaSparseChat,
     showSegmentMode: true,
     copyLabel: "微信群长图 · 要不要字",
     expectHtml:

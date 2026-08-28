@@ -944,10 +944,8 @@ export function cancelPreviewLongshotExport(root) {
     function shortLabelForCta() {
       return "长图";
     }
-    function journalButtonAria(raw) {
-      var text = String(raw || "");
-      if (!text || text.indexOf("发微信群") >= 0) return exportAria("journal");
-      return text;
+    function journalButtonAria(_raw) {
+      return exportAria("journal");
     }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
