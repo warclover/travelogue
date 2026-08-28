@@ -9,7 +9,7 @@ import typer
 from travelogue.cli._apps import cluster_app
 from travelogue.config import get_config
 from travelogue.runtime import app_context_for_trips_dir
-from travelogue.services.trip import TripNotFoundError, TripService, persist_trip_snapshot
+from travelogue.services.trip import TripNotFoundError, TripService, persist_pipeline_owned
 
 
 def _cluster_resolve(
@@ -50,7 +50,7 @@ def cluster_recluster(
 
         clear_cluster_cache(trip_dir)
     result = run_clustering_layer(body, trip_dir=trip_dir, cfg=cfg)
-    persist_trip_snapshot(svc, trip_json, body)
+    persist_pipeline_owned(svc, trip_json, body)
     typer.echo(
         f"OK recluster · mode={result.mode} segments={result.geo_event_count} "
         f"clusters={result.scene_cluster_count} force={force}"
@@ -82,7 +82,7 @@ def cluster_reshotgroup(
     ssg = replace(base.shot_grouping, enabled="true", look=look_cfg)
     cfg = replace(base, shot_grouping=ssg)
     result = run_shot_grouping_layer(body, trip_dir=trip_dir, cfg=cfg)
-    persist_trip_snapshot(svc, trip_json, body)
+    persist_pipeline_owned(svc, trip_json, body)
     typer.echo(
         f"OK reshotgroup · mode={result.mode} groups={result.group_count} "
         f"softSplits={result.soft_split_count} lookGroups={result.look_group_count}"
@@ -190,7 +190,7 @@ def cluster_process_pending(
     if clear:
         cleared = clear_pending_assets(body)
 
-    persist_trip_snapshot(svc, trip_json, body)
+    persist_pipeline_owned(svc, trip_json, body)
     typer.echo(
         "OK process-pending · "
         f"pending={len(pending_before)} cleared={len(cleared)} "

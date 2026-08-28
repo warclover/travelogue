@@ -24,7 +24,7 @@ from travelogue.services.pipeline_state import (
     set_pipeline_timings,
     trip_status,
 )
-from travelogue.services.trip import mark_render_bundle_current, persist_trip_snapshot
+from travelogue.services.trip import mark_render_bundle_current, persist_pipeline_owned
 
 
 @dataclass
@@ -100,7 +100,7 @@ def _run_trip_stages(
     locks = (trip.get("pipeline") or {}).get("locks") or {}
 
     def save() -> None:
-        persist_trip_snapshot(svc, trip_path, trip)
+        persist_pipeline_owned(svc, trip_path, trip)
 
     stages_order = [
         "ingest",
@@ -379,7 +379,7 @@ def _run_trip_stages(
             trip = svc.load(trip_path)
             flush_timings()
             mark_render_bundle_current(trip)
-            persist_trip_snapshot(svc, trip_path, trip)
+            persist_pipeline_owned(svc, trip_path, trip)
 
             result.stages.append("render")
 
@@ -394,7 +394,7 @@ def _run_trip_stages(
             pipeline_timings["exportMs"] = round((time.monotonic() - export_t0) * 1000.0, 2)
             trip = svc.load(trip_path)
             flush_timings()
-            persist_trip_snapshot(svc, trip_path, trip)
+            persist_pipeline_owned(svc, trip_path, trip)
             result.publish = pub
             result.stages.append("export")
 
@@ -410,6 +410,6 @@ def _run_trip_stages(
         rendered_rev > 0 and rendered_rev >= meta_revision(trip)
     ):
         mark_render_bundle_current(trip)
-    persist_trip_snapshot(svc, trip_path, trip)
+    persist_pipeline_owned(svc, trip_path, trip)
 
     return result

@@ -12,7 +12,7 @@ from travelogue.cli._helpers import _trips_root
 from travelogue.curation.curate import CurateError, run_curate
 from travelogue.media.ingest import IngestError, ingest_into_trip
 from travelogue.runtime import app_context_for_trips_dir
-from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip import persist_pipeline_owned
 from travelogue.services.trip_factory import create_trip
 
 
@@ -42,7 +42,7 @@ def cmd_trip_new(
         except IngestError as exc:
             typer.echo(str(exc), err=True)
             raise typer.Exit(1) from exc
-        persist_trip_snapshot(svc, trip_json, trip)
+        persist_pipeline_owned(svc, trip_json, trip)
         typer.echo(f"OK ingest +{result.added} assets · batch {result.batch_id}")
         if layout != "auto":
             try:
@@ -50,7 +50,7 @@ def cmd_trip_new(
             except CurateError as exc:
                 typer.echo(str(exc), err=True)
                 raise typer.Exit(1) from exc
-            persist_trip_snapshot(svc, trip_json, trip)
+            persist_pipeline_owned(svc, trip_json, trip)
             typer.echo(f"OK curate {cur.chapter_count} chapters · {cur.layout_summary}")
 
 

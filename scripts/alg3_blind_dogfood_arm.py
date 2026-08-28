@@ -13,7 +13,7 @@ from travelogue.curation.algo_v3_summary import attach_algo_v3_summary
 from travelogue.render.engine import render_trip
 from travelogue.runtime import app_context_for_trip_json
 from travelogue.services.layout import apply_layout_to_trip
-from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip import persist_pipeline_owned
 
 ROOT = Path("docs/acceptance-records/attachments/alg3-blind-2026-08-02")
 TRIP_ID = "demo-3ee2727aea"
@@ -40,7 +40,7 @@ def run_arm(arm: str, cfg_path: Path) -> None:
     with app_config_scope(cfg):
         apply_layout_to_trip(trip, export_layout="web", cfg=get_config())
         summary = attach_algo_v3_summary(trip, cfg=get_config())
-        persist_trip_snapshot(svc, trip_path, trip)
+        persist_pipeline_owned(svc, trip_path, trip)
         render_trip(trip_path, trip_path.parent, export_mode="draft", validate=False)
 
     fp = _pattern_fingerprint(trip)

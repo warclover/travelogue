@@ -646,16 +646,48 @@ class TripService:
         raise TripNotFoundError(f"E_TRIP_NOT_FOUND {trip_id_or_path}")
 
 
-def persist_trip_snapshot(
+def persist_pipeline_owned(
     svc: TripService,
     trip_json_path: Path | str,
     work: dict,
     *,
     max_retries: int = 3,
+    bump_revision: bool = True,
+    touch_updated: bool = True,
 ) -> None:
-    """Merge an in-memory trip dict onto disk via revision CAS."""
+    """Persist pipeline-owned fields without clobbering HTTP intent/notes."""
+    from travelogue.media.ingest_persist import make_pipeline_persist_mutator
+
+    svc.update(
+        trip_json_path,
+        make_pipeline_persist_mutator(work),
+        max_retries=max_retries,
+        bump_revision=bump_revision,
+        touch_updated=touch_updated,
+    )
+
+
+def persist_trip_snapshot(
+    svc: TripService,
+    trip_json_path: Path | str,
+    work: dict,
+    *,
+    base_revision: int,
+    max_retries: int = 1,
+) -> None:
+    """Full-snapshot write. Requires the caller's load revision.
+
+    Disk revision != ``base_revision`` is a conflict. The stale snapshot is
+    never replayed onto a newer document.
+    """
 
     def mutator(trip: dict) -> None:
+        disk_rev = meta_revision(trip)
+        if disk_rev != base_revision:
+            raise TripConflictError(
+                f"full snapshot stale for {trip_json_path} "
+                f"(base_revision={base_revision}, disk={disk_rev})"
+            )
         for key, value in work.items():
             trip[key] = value
 

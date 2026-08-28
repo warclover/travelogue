@@ -19,6 +19,16 @@ def _violations(source: str, *, rel: str = "sample.py") -> list[str]:
     return visitor.violations
 
 
+def test_flags_persist_trip_snapshot() -> None:
+    source = """
+from travelogue.services.trip import persist_trip_snapshot
+
+def bad(svc, trip, trip_path):
+    persist_trip_snapshot(svc, trip_path, trip)
+"""
+    assert len(_violations(source)) == 1
+
+
 def test_allows_update_calls() -> None:
     source = """
 def ok(svc, trip_path):
