@@ -24,11 +24,17 @@ from travelogue.layout_engine.mosaic.candidates import (
 )
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
 
+# C-02 archived the overdue 0% rails; keep GA + remaining experimental YAML SKUs.
 TPC_W3_IDS = (
+    "screen-mosaic-4-hero-70-sidebar",
+    "screen-mosaic-4-2p2l-portrait-bookends",
+    "screen-mosaic-5-1p4l-portrait-hero",
+    "screen-mosaic-5-2p3l-portrait-hero-rail",
+)
+C02_ARCHIVED_W3 = (
     "screen-mosaic-4-1l3p-rail",
     "screen-mosaic-5-2p3l-rail",
     "screen-mosaic-4-2l2p-weighted",
-    "screen-mosaic-4-hero-70-sidebar",
 )
 
 
@@ -79,9 +85,9 @@ def _assets_for_mix(
 @pytest.mark.parametrize(
     "template_id,landscape,portrait",
     [
-        ("screen-mosaic-4-1l3p-rail", 1, 3),
-        ("screen-mosaic-5-2p3l-rail", 3, 2),
-        ("screen-mosaic-4-2l2p-weighted", 2, 2),
+        ("screen-mosaic-4-2p2l-portrait-bookends", 2, 2),
+        ("screen-mosaic-5-1p4l-portrait-hero", 4, 1),
+        ("screen-mosaic-5-2p3l-portrait-hero-rail", 3, 2),
         ("screen-mosaic-4-hero-70-sidebar", 4, 0),
     ],
 )
@@ -91,7 +97,7 @@ def test_ac_tpc_02_yaml_only_mix_hit(
     """AC-TPC-02: new YAML templates are mix-index hittable with zero Python branches."""
     engine = get_engine()
     tmpl = engine.get(template_id)
-    # LTN C3 · 4-hero promoted to ga; rails remain experimental.
+    # LTN C3 · 4-hero is ga; remaining YAML-only SKUs stay experimental.
     assert tmpl.status in ("experimental", "ga")
     assert (tmpl.raw or {}).get("usage", {}).get("summary")
     assert (tmpl.constraints or {}).get("eligibility")
@@ -124,7 +130,7 @@ def test_w3_templates_in_list_active() -> None:
 
 def test_enabled_contract_does_not_emit_w3_experimental() -> None:
     """MTSO D-01 · TPC ON alone must not unlock experimental rails."""
-    ids, aspects, assets = _assets_for_mix(landscape=1, portrait=3)
+    ids, aspects, assets = _assets_for_mix(landscape=2, portrait=2)
     cfg = replace(
         get_config().mosaic,
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
@@ -135,21 +141,24 @@ def test_enabled_contract_does_not_emit_w3_experimental() -> None:
         ids, aspects, assets, cfg=cfg
     )
     pattern_ids = {c.pattern_id for c in result.candidates}
-    assert "screen-mosaic-4-1l3p-rail" not in pattern_ids
+    assert "screen-mosaic-4-2p2l-portrait-bookends" not in pattern_ids
+    for tid in C02_ARCHIVED_W3:
+        assert tid not in pattern_ids
 
 
 def test_template_experiments_emits_w3_candidate() -> None:
-    """MTSO · experiments triple admits W3 experimental into candidates."""
+    """MTSO · experiments triple admits remaining experimental YAML into candidates."""
     from travelogue.config.app import AppConfig
 
-    ids, aspects, assets = _assets_for_mix(landscape=1, portrait=3)
+    live = "screen-mosaic-4-2p2l-portrait-bookends"
+    ids, aspects, assets = _assets_for_mix(landscape=2, portrait=2)
     trip_id = "mtso-dogfood-trip"
     cfg = replace(
         AppConfig().mosaic,
         template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
         template_experiments=TemplateExperimentsConfig(
             enabled=True,
-            allowlist=("screen-mosaic-4-1l3p-rail",),
+            allowlist=(live,),
             cohort_trip_ids=(trip_id,),
         ),
         enabled_window_sizes=(4, 5, 6, 9),
@@ -158,4 +167,6 @@ def test_template_experiments_emits_w3_candidate() -> None:
         ids, aspects, assets, cfg=cfg, trip_id=trip_id
     )
     pattern_ids = {c.pattern_id for c in result.candidates}
-    assert "screen-mosaic-4-1l3p-rail" in pattern_ids
+    assert live in pattern_ids
+    for tid in C02_ARCHIVED_W3:
+        assert tid not in pattern_ids

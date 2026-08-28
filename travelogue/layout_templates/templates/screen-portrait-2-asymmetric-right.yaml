@@ -1,6 +1,6 @@
 id: screen-portrait-2-asymmetric-right
 version: 1
-status: experimental
+status: deprecated  # C-02 · 2026-08-28 overdue rolloutZero → archive
 kind: primitive
 displayName: portrait · 2 · asymmetric · right
 description: >

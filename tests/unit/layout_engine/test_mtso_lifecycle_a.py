@@ -47,6 +47,23 @@ from travelogue.layout_templates.legacy_bridge import export_mosaic_pattern
 from travelogue.layout_templates.registry import get_engine, reset_engine_cache_for_tests
 
 RAIL_2P3L = "screen-mosaic-5-2p3l-rail"
+# C-02 archived the overdue 0% rails; keep live experimentals for admit-triple tests.
+LIVE_EXPERIMENTAL = "screen-mosaic-4-2p2l-portrait-bookends"
+LIVE_EXPERIMENTAL_5 = "screen-mosaic-5-2p3l-portrait-hero-rail"
+C02_ARCHIVED_OVERDUE = (
+    "screen-landscape-1-portrait-1",
+    "screen-portrait-1-landscape-1",
+    "screen-landscape-2-portrait-1",
+    "screen-landscape-2-asymmetric-left",
+    "screen-landscape-3-asymmetric-left",
+    "screen-landscape-3-asymmetric-right",
+    "screen-portrait-2-asymmetric-left",
+    "screen-portrait-2-asymmetric-right",
+    "screen-portrait-2-gallery",
+    "screen-mosaic-4-1l3p-rail",
+    "screen-mosaic-4-2l2p-weighted",
+    "screen-mosaic-5-2p3l-rail",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -77,20 +94,20 @@ def test_experiments_empty_cohort_fail_closed() -> None:
             get_config().mosaic,
             template_experiments=TemplateExperimentsConfig(
                 enabled=True,
-                allowlist=("screen-mosaic-4-1l3p-rail",),
+                allowlist=(LIVE_EXPERIMENTAL,),
                 cohort_trip_ids=(),
             ),
         ),
     )
     admit = lifecycle_admit(
-        "screen-mosaic-4-1l3p-rail",
+        LIVE_EXPERIMENTAL,
         app=app,
         mosaic_cfg=app.mosaic,
         trip_id="any-trip",
     )
     assert not admit.ok
     assert admit.reason == "lifecycle_cohort_miss"
-    assert "screen-mosaic-4-1l3p-rail" not in mosaic_registry(cfg=app, trip_id="any-trip")
+    assert LIVE_EXPERIMENTAL not in mosaic_registry(cfg=app, trip_id="any-trip")
 
 
 def test_experiments_triple_admits_rail() -> None:
@@ -101,19 +118,41 @@ def test_experiments_triple_admits_rail() -> None:
             get_config().mosaic,
             template_experiments=TemplateExperimentsConfig(
                 enabled=True,
-                allowlist=("screen-mosaic-4-1l3p-rail",),
+                allowlist=(LIVE_EXPERIMENTAL,),
                 cohort_trip_ids=(trip_id,),
             ),
         ),
     )
     admit = lifecycle_admit(
-        "screen-mosaic-4-1l3p-rail",
+        LIVE_EXPERIMENTAL,
         app=app,
         mosaic_cfg=app.mosaic,
         trip_id=trip_id,
     )
     assert admit.ok
-    assert "screen-mosaic-4-1l3p-rail" in mosaic_registry(cfg=app, trip_id=trip_id)
+    assert LIVE_EXPERIMENTAL in mosaic_registry(cfg=app, trip_id=trip_id)
+
+
+def test_c02_overdue_zero_never_admitted_even_with_experiments() -> None:
+    trip_id = "c02-archive-cohort"
+    app = replace(
+        get_config(),
+        mosaic=replace(
+            get_config().mosaic,
+            template_experiments=TemplateExperimentsConfig(
+                enabled=True,
+                allowlist=C02_ARCHIVED_OVERDUE,
+                cohort_trip_ids=(trip_id, "*"),
+            ),
+        ),
+    )
+    for pid in C02_ARCHIVED_OVERDUE:
+        admit = lifecycle_admit(
+            pid, app=app, mosaic_cfg=app.mosaic, trip_id=trip_id
+        )
+        assert not admit.ok, pid
+        assert admit.reason == "lifecycle_deprecated", pid
+        assert pid not in mosaic_registry(cfg=app, trip_id=trip_id)
 
 
 def test_deprecated_equal_never_admitted() -> None:
@@ -319,7 +358,7 @@ def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
             template_contract=TemplateContractConfig(enabled=True, shadow_log=False),
             template_experiments=TemplateExperimentsConfig(
                 enabled=True,
-                allowlist=(RAIL_2P3L,),
+                allowlist=(LIVE_EXPERIMENTAL_5,),
                 cohort_trip_ids=(trip_id,),
             ),
             enabled_window_sizes=(4, 5, 6, 9),
@@ -339,9 +378,11 @@ def test_trip_id_plumbs_experiments_into_mcs_pick() -> None:
             trip_photo_total=40,
             trip_id=trip_id,
         )
-        assert RAIL_2P3L in mosaic_registry(cfg=app, trip_id=trip_id)
-        # Winner may be another L3P2-capable pattern; at least rail must be admitted.
-        assert not mosaic_pattern_disabled(RAIL_2P3L, cfg=app.mosaic, trip_id=trip_id)
+        assert LIVE_EXPERIMENTAL_5 in mosaic_registry(cfg=app, trip_id=trip_id)
+        # Winner may be another L3P2-capable pattern; at least live SKU must be admitted.
+        assert not mosaic_pattern_disabled(
+            LIVE_EXPERIMENTAL_5, cfg=app.mosaic, trip_id=trip_id
+        )
         assert trip_id_from_trip({"tripId": trip_id}) == trip_id
 
 
@@ -359,7 +400,7 @@ def test_append_screen_admits_experimental_with_trip_id() -> None:
             get_config().mosaic,
             template_experiments=TemplateExperimentsConfig(
                 enabled=True,
-                allowlist=(RAIL_2P3L,),
+                allowlist=(LIVE_EXPERIMENTAL_5,),
                 cohort_trip_ids=(trip_id,),
             ),
         ),
@@ -369,17 +410,17 @@ def test_append_screen_admits_experimental_with_trip_id() -> None:
         return_value=app.mosaic,
     ):
         assert not mosaic_pattern_disabled(
-            RAIL_2P3L, cfg=app.mosaic, trip_id=trip_id
+            LIVE_EXPERIMENTAL_5, cfg=app.mosaic, trip_id=trip_id
         )
-        assert mosaic_pattern_disabled(RAIL_2P3L, cfg=app.mosaic, trip_id=None)
+        assert mosaic_pattern_disabled(LIVE_EXPERIMENTAL_5, cfg=app.mosaic, trip_id=None)
         ctx = build_chapter_plan_context(
             ["a"],
             {"a": "landscape"},
             assets={"a": {"id": "a", "width": 1600, "height": 900}},
             trip={"tripId": trip_id},
         )
-        append_screen(ctx, {"patternId": RAIL_2P3L, "slots": []})
-        assert ctx.screens[-1]["patternId"] == RAIL_2P3L
+        append_screen(ctx, {"patternId": LIVE_EXPERIMENTAL_5, "slots": []})
+        assert ctx.screens[-1]["patternId"] == LIVE_EXPERIMENTAL_5
 
 
 def test_funnel_raw_via_drain_mosaic_capture() -> None:

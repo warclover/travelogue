@@ -79,7 +79,7 @@ def test_empty_cohort_fallback_fill() -> None:
     assert pick.reason == "fallback_fill"
 
 
-def test_left_strength_prefers_asym() -> None:
+def test_c02_archived_asym_falls_back_fill() -> None:
     cfg = _Cfg()
     pick = pick_landscape_2_variant(
         ["a", "b"],
@@ -87,7 +87,8 @@ def test_left_strength_prefers_asym() -> None:
         cfg=cfg,
         trip_id="trip-dogfood",
     )
-    assert pick.pattern_id == PATTERN_LANDSCAPE_2_ASYM_LEFT
+    assert pick.pattern_id == PATTERN_LANDSCAPE_2_FILL
+    assert pick.reason == "fallback_fill"
 
 
 def test_tie_falls_back_fill_while_overlap_parked() -> None:
@@ -124,7 +125,7 @@ def test_overlap_ids_stay_invisible_even_when_allowlisted() -> None:
     )
     assert PATTERN_LANDSCAPE_2_OVERLAP_TLBR not in visible
     assert PATTERN_LANDSCAPE_2_OVERLAP_BLTR not in visible
-    assert PATTERN_LANDSCAPE_2_ASYM_LEFT in visible
+    assert PATTERN_LANDSCAPE_2_ASYM_LEFT not in visible
 
 
 def test_landscape_pair_family_streak() -> None:
@@ -208,10 +209,7 @@ def test_family_on_short_run_emits_landscape_2_pair() -> None:
     consumed = try_landscape_run(ctx)
     assert consumed == 2
     assert len(ctx.screens) == 1
-    assert ctx.screens[0]["patternId"] in (
-        PATTERN_LANDSCAPE_2_FILL,
-        PATTERN_LANDSCAPE_2_ASYM_LEFT,
-    )
+    assert ctx.screens[0]["patternId"] == PATTERN_LANDSCAPE_2_FILL
     assert "overlap" not in ctx.screens[0]["patternId"]
 
 

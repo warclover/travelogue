@@ -2,7 +2,7 @@
 # 2P3L 主从继任见 PRD-MOSAIC-TEMPLATE-SELECTION-OPTIMIZATION-V1（PR-C）。
 id: screen-mosaic-5-2p3l-rail
 version: 1
-status: experimental
+status: deprecated  # C-02 · 2026-08-28 overdue rolloutZero → archive
 kind: composite
 displayName: 五图 · 双竖满高 + 三横右栏
 description: >

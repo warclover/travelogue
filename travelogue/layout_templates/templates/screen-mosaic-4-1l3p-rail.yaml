@@ -1,6 +1,6 @@
 id: screen-mosaic-4-1l3p-rail
 version: 2
-status: experimental
+status: deprecated  # C-02 · 2026-08-28 overdue rolloutZero → archive
 kind: composite
 displayName: 四图 · 一横主栏 + 三竖轨
 description: >

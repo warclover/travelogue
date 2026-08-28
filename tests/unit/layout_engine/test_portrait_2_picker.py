@@ -110,9 +110,8 @@ def test_strength_side_left_right_tie() -> None:
     )
 
 
-def test_picker_asym_respects_strength_side() -> None:
+def test_c02_archived_variants_stay_on_fill() -> None:
     cfg = _Cfg()
-    # Penalize fill so strength-driven asym can win over base_weight=1.0 fill.
     recent = [PATTERN_PORTRAIT_2_FILL, PATTERN_PORTRAIT_2_GALLERY]
     left = pick_portrait_2_variant(
         ["a", "b"],
@@ -121,8 +120,8 @@ def test_picker_asym_respects_strength_side() -> None:
         trip_id="trip-dogfood",
         recent_pattern_ids=recent,
     )
-    assert left.pattern_id == PATTERN_PORTRAIT_2_ASYM_LEFT
-    assert left.strength_side == "left"
+    assert left.pattern_id == PATTERN_PORTRAIT_2_FILL
+    assert left.reason == "fallback_fill"
 
     right = pick_portrait_2_variant(
         ["a", "b"],
@@ -131,8 +130,8 @@ def test_picker_asym_respects_strength_side() -> None:
         trip_id="trip-dogfood",
         recent_pattern_ids=recent,
     )
-    assert right.pattern_id == PATTERN_PORTRAIT_2_ASYM_RIGHT
-    assert right.strength_side == "right"
+    assert right.pattern_id == PATTERN_PORTRAIT_2_FILL
+    assert right.reason == "fallback_fill"
 
 
 def test_picker_tie_skips_asym() -> None:
