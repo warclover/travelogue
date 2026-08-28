@@ -117,6 +117,7 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
                 else None
             ),
             force_stub=bool(payload.get("forceStub")),
+            stop_after=str(payload.get("stopAfter") or "full"),
             edition=(
                 str(payload.get("edition")).strip()
                 if payload.get("edition")

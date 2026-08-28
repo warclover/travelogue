@@ -156,6 +156,22 @@ def test_import_worker_surfaces_generic_error(tmp_path: Path) -> None:
     assert events[0]["demo"] is False
 
 
+def test_import_worker_forwards_stop_after(tmp_path: Path) -> None:
+    ctx = mp.get_context("spawn")
+    queue: mp.Queue = ctx.Queue()
+    cancel = ctx.Event()
+    captured: dict = {}
+
+    def fake_run(*_args, **kwargs):
+        captured.update(kwargs)
+        return _FakePipelineResult("ppx", tmp_path / "trips" / "ppx")
+
+    with patch("travelogue.web.studio_pipeline.run_studio_pipeline", side_effect=fake_run):
+        _import_worker({**_base_payload(tmp_path), "stopAfter": "structure"}, queue, cancel)
+
+    assert captured.get("stop_after") == "structure"
+
+
 def test_import_worker_honours_cancel_event(tmp_path: Path) -> None:
     ctx = mp.get_context("spawn")
     queue: mp.Queue = ctx.Queue()
@@ -180,3 +196,12 @@ def test_import_subprocess_drain_empty_before_start(tmp_path: Path) -> None:
     handle = ImportSubprocess(payload)
     assert handle.drain() == []
     assert handle.alive is False
+
+
+def test_import_subprocess_is_not_daemon(tmp_path: Path) -> None:
+    """QA-PPX-01 · daemon 父进程在 Windows/spawn 下不能再开 ProcessPool。"""
+    handle = ImportSubprocess(_base_payload(tmp_path))
+    assert handle._process.daemon is False, (
+        "ImportSubprocess must be non-daemon so ingest ProcessPool can start "
+        "(PRD-PIPELINE-PERF-EXECUTION-V1 · D-PPX-02)"
+    )

@@ -51,9 +51,6 @@ def test_pt_ingest_process_pool_spawn_smoke(tmp_path: Path) -> None:
     )
     assert result.added >= 1
     assert len(trip["assets"]) >= 1
-    # Either parallel workers ran, or fail-open serial — must not crash / corrupt.
-    workers = result.stats.get("ingestWorkers", 1)
-    assert workers >= 1
-    timings = (trip.get("pipeline") or {}).get("timings") or {}
-    if "ingestWorkers" in timings:
-        assert timings["ingestWorkers"] >= 1
+    # AC-PPX-12 · this path calls ingest_into_trip in-process. Fail-open serial
+    # must not crash, but it is not proof that Studio parallel ingest works.
+    # Parallel-reachable is AC-PPX-01 via ImportSubprocess.start().

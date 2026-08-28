@@ -4,14 +4,14 @@
 |------|------|
 | **产品代号** | Travelogue |
 | **文档版本** | **v0.2** |
-| **状态** | **有条件通过（Conditional Go）** · 评审 Must-Fix 已回写 · 可开 IMPLEMENTATION / M1 |
+| **状态** | **有条件通过（Conditional Go）** · 2026-07-19 合入 · **执行链于 2026-08-28 重开** → [PRD-PIPELINE-PERF-EXECUTION-V1.md](./PRD-PIPELINE-PERF-EXECUTION-V1.md) |
 | **主题代号** | 「流水线提速 V1（Pipeline Perf）」— 并行修复 · 派生图分层 · 重复解码消除 · 计算重叠 |
 | **调研来源** | 2026-07-19 首席架构师性能研究（13 个真实 trip `pipeline.timings` 埋点 + `scripts/perf_probe_ingest.py` / `scripts/perf_probe_pipeline.py` 实测，样本相册 `D:\Photos\仙本那精选全集2`） |
 | **评审纪要** | [acceptance-records/pipeline-perf-v1-review-2026-07-19.md](./acceptance-records/pipeline-perf-v1-review-2026-07-19.md) |
 | **关联文档** | [ARCH-OPT-P2-BACKLOG.md](./ARCH-OPT-P2-BACKLOG.md) · [config-pipeline-throughput.example.yaml](./config-pipeline-throughput.example.yaml) · [acceptance-records/tpc-local-dogfood-GUIDE.md](./acceptance-records/tpc-local-dogfood-GUIDE.md) |
 | **验收** | 本文 §9；落地后补 `ACCEPTANCE-PIPELINE-PERF-V1.md` |
 | **实施清单** | [IMPLEMENTATION-PIPELINE-PERF-V1.md](./IMPLEMENTATION-PIPELINE-PERF-V1.md) |
-| **更新日期** | 2026-07-19 |
+| **更新日期** | 2026-07-19 · 2026-08-28 加执行链收口指针 |
 
 > **定位**
 >
@@ -351,11 +351,11 @@ ingest → clustering → curate → layout → lock_structure ─┬─ narrate
 
 | # | 项 | 状态 |
 |---|-----|------|
-| 1 | R1.1 根因未定位（demo 配置分支 vs 子进程配置解析） | **关闭（2026-07-19）**：主因是 `flush_timings` 整表覆盖抹掉 `ingestWorkers`（见 IMPLEMENTATION 摸底）；非配置未加载。已修 `absorb_pipeline_timing_keys` |
+| 1 | R1.1 根因未定位（demo 配置分支 vs 子进程配置解析） | **部分关闭（2026-07-19）/ 执行链重开（2026-08-28）**：遥测整表覆盖已修。现网 5/5 仍 `workers=1`+`fallback=1`，根因是 daemon 导入进程嵌套 ProcessPool。收口见 [PRD-PIPELINE-PERF-EXECUTION-V1.md](./PRD-PIPELINE-PERF-EXECUTION-V1.md) |
 | 2 | 延迟物化与 refine 手动换片的竞态（用户换入未物化照片立即导出） | **关闭**：D6 同步物化 + MF-10 三个故障注入负例 |
 | 3 | 金字塔缩放画质（逐级 LANCZOS 误差累积） | **关闭**：R2.3 flag 默认关，SSIM 报告后再开，不阻塞 M2 |
 | 4 | NIMA 输入源改派生图导致分数漂移 → 影响选片 | **关闭**：D4 拍板 V1 只重叠不换源；换源 Park V2 |
-| 5 | 并行 worker 内存峰值（36MP 相册 × 10 workers） | **关闭**：D5 升格为 V1 落地降额公式 + 遥测（MF-05） |
+| 5 | 并行 worker 内存峰值（36MP 相册 × 10 workers） | **公式已写、入参未接（2026-08-28）**：`median_long_edge_px` 未从扫描传入，未知分辨率仍按 10。收口见 PPX D-PPX-07/08 |
 | 6 | `webp_method=2` 体积增幅在移动端分享场景的可接受度 | 预算 ≤12%；超限降级方案见 R1.4；狗粮期收集典型用户反馈 |
 | 7 | Q1 严格等价与 R1.3/R1.4 参数变更的矛盾 | **关闭**：D1 等价性分级（E-A/E-B），07a/07b 分门禁 |
 | 8 | libvips / GPU 编码等更激进方案 | **Park** → V2 候选，本包不引入新依赖 |
@@ -370,3 +370,4 @@ ingest → clustering → curate → layout → lock_structure ─┬─ narrate
 |------|------|------|
 | v0.1 | 2026-07-19 | 初稿 · 基于 2026-07-19 性能研究（真实 trip 埋点 + 微基准 + 串并行对比）· P-PPF-01～08 · WS1–WS5 · 质量红线 Q1–Q5 · AC-PPF-01～12 |
 | v0.2 | 2026-07-19 | 评审回写 · D1–D6 拍板（等价性分级 / derivedPlan 合同 / materialize 与 narrate 并行 / NIMA 只重叠不换源 / 内存降额升格 V1 / 导出同步物化）· MF-01～10 · AC-PPF-07 拆分 07a/07b · 绝对时长退出 CI · 链到评审纪要 |
+| v0.2-note | 2026-08-28 | 不改 V1 需求正文。状态行与 §10 风险 1/5 指向执行链收口 PRD（PPX）。 |
