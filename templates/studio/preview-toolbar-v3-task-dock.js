@@ -424,7 +424,7 @@ export function mountPreviewTaskDock(root, hooks) {
 
     var isPortfolioPack = result.platform === "portfolio_pages";
 
-    // FE-DFX-31 · 失败：重试（不改 confirmed platform）+ 换种分享方式
+    // Sprint 2 · 失败面只留一个重试（不改 confirmed platform）
     if (job && job.status === "failed" && typeof hooks.onReExport === "function") {
       var retryBtn = document.createElement("button");
       retryBtn.type = "button";
@@ -472,10 +472,12 @@ export function mountPreviewTaskDock(root, hooks) {
       }
     }
 
-    // FE-SR-08 / USR-03 · 成功与失败均提供「换种分享方式」（禁止第二套成功面）
+    // FE-SR-08 · 成功面保留「换种分享方式」；失败面不给第二条恢复路径
     if (
+      job &&
+      job.status !== "failed" &&
       typeof hooks.onSwitchShareMethod === "function" &&
-      !(job && job.status !== "failed" && isPortfolioPack)
+      !isPortfolioPack
     ) {
       var switchBtn = document.createElement("button");
       switchBtn.type = "button";
@@ -695,7 +697,7 @@ export function mountPreviewTaskDock(root, hooks) {
     textWrap.className = "preview-task-dock__text";
     var main = document.createElement("span");
     main.className = "preview-task-dock__main";
-    main.textContent = opts.title || "分享图需更新";
+    main.textContent = opts.title || "长图需更新";
     textWrap.appendChild(main);
     var sub = document.createElement("small");
     sub.textContent =

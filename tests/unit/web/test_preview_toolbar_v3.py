@@ -1045,7 +1045,7 @@ def test_preview_refine_v1_p2_feedback_and_cohort_gate() -> None:
     assert "cohortEmbed.hidden = true" in sheet
     assert "旅行主角 · 同框未开启" not in sheet
     assert "showStale" in task_dock
-    assert "分享图需更新" in task_dock
+    assert "长图需更新" in task_dock
     assert "重新导出" in task_dock
     assert "onReExport" in init_v3
     assert "未保存的编辑" not in init_v3

@@ -77,6 +77,7 @@ def test_task_dock_success_saved_confirm() -> None:
     assert "formatLongshotResult" in dock
     assert "在文件夹中显示" in dock
     assert "怎么发到微信群？" not in dock
+    assert 'job.status !== "failed"' in dock
     assert "longshot_success_share_hint_shown" in dock
     assert "guide.text.replace" not in dock
     assert "已保存到本机 · 拖进微信群即可" not in dock

@@ -68,7 +68,7 @@ function ensureRoot() {
     '<p id="studio-capability-card-title" class="studio-capability-card__title">照片留在本机，也能做成可发的画册</p>' +
     '<p class="studio-capability-card__body">选择你的影像作品，自动拼图、排版；微信分享长图可直接发群。向导里可一键试用示例。</p>' +
     '<div class="studio-capability-card__actions">' +
-    '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">开始制作我的画册</button>' +
+    '<button type="button" class="studio-capability-card__primary" id="studio-capability-start">选择照片文件夹</button>' +
     "</div>" +
     "</div>";
   document.body.appendChild(el);

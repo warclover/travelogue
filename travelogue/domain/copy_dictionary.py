@@ -22,6 +22,8 @@ PORTFOLIO_EXPORT_LABEL: Final = "导出作品集"
 PORTFOLIO_EXPORT_ARIA: Final = "导出作品集"
 
 SUCCESS_VERB: Final = "已导出"
+SHELF_READY: Final = "长图已就绪"
+SHELF_STALE: Final = "长图需更新"
 
 FORBIDDEN_UMBRELLA: Final = ("分享图",)
 FORBIDDEN_ACTION_ALIAS: Final = ("发微信群",)

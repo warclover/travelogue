@@ -17,7 +17,7 @@ export function matchesPreviewSearch(trip, query) {
 
 export function stalePreviewLabel(trip) {
   if (!trip) return "";
-  if (trip.longshotStale) return "分享图需更新";
+  if (trip.longshotStale) return "长图需更新";
   if (trip.algorithmStale) return "可重排";
   return "";
 }

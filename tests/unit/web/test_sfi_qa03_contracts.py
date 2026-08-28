@@ -17,7 +17,7 @@ DOMAIN = ROOT / "travelogue" / "domain"
 def test_stale_primary_copy_not_regressed() -> None:
     dock = (STUDIO / "preview-toolbar-v3-task-dock.js").read_text(encoding="utf-8")
     bento = (STUDIO / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
-    assert "分享图需更新" in dock or "分享图需更新" in bento
+    assert "长图需更新" in dock or "长图需更新" in bento
     for bad in ("长图可更新", "长图待更新", "长图已过期", "预览产物已过期"):
         assert bad not in dock
         assert bad not in bento

@@ -13,6 +13,8 @@ from travelogue.domain.copy_dictionary import (
     JOURNAL_EXPORT_LABEL,
     PORTFOLIO_EXPORT_LABEL,
     PRODUCTS,
+    SHELF_READY,
+    SHELF_STALE,
     SUCCESS_VERB,
     VERTICAL_SLICE_SURFACES,
     export_aria,
@@ -29,6 +31,8 @@ def test_dictionary_forbids_umbrella_and_channel_as_action() -> None:
     assert "验货" in FORBIDDEN_POSITION_COPY
     assert "长图" in PRODUCTS
     assert "日常分享" in INTENTS
+    assert SHELF_READY == "长图已就绪"
+    assert SHELF_STALE == "长图需更新"
 
 
 def test_export_labels_stay_identity_specific() -> None:
@@ -49,6 +53,8 @@ def test_js_dictionary_mirrors_python() -> None:
     assert f'journalExportLabel: "{JOURNAL_EXPORT_LABEL}"' in text
     assert f'portfolioExportLabel: "{PORTFOLIO_EXPORT_LABEL}"' in text
     assert f'successVerb: "{SUCCESS_VERB}"' in text
+    assert f'shelfReady: "{SHELF_READY}"' in text
+    assert f'shelfStale: "{SHELF_STALE}"' in text
     for word in FORBIDDEN_UMBRELLA + FORBIDDEN_ACTION_ALIAS + FORBIDDEN_POSITION_COPY:
         assert word in text
     for alias in HELP_SEARCH_ALIASES:
@@ -60,6 +66,8 @@ def test_doc_and_vertical_slice_surfaces_exist() -> None:
     assert "DOC-STATUS" in doc
     assert "分享图" in doc
     assert JOURNAL_EXPORT_LABEL in doc
+    assert SHELF_READY in doc
+    assert SHELF_STALE in doc
     for rel in VERTICAL_SLICE_SURFACES:
         assert (ROOT / rel).is_file()
         assert rel in doc

@@ -15,10 +15,11 @@ import { pickRecentUserTrips } from "./trip-preview.js";
 import { openImportSheet } from "./import-entry.js";
 import { HELP_COPY, trackHelpEvent } from "../js/help-onboarding.js";
 import { initHomepageCta, syncHomepageCta } from "./homepage-cta.js";
+import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 
 var STALE_BADGE = "可重排";
 var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
-var STALE_LONGSHOT = "分享图需更新";
+var STALE_LONGSHOT = COPY_DICTIONARY.shelfStale;
 var _demoConvertWired = false;
 
 function syncDemoConvertCta() {

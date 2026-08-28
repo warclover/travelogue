@@ -20,7 +20,10 @@ def test_stale_label_is_share_face_copy() -> None:
         assert "长图可更新" not in text, path.name
         assert "长图待更新" not in text, path.name
         assert "长图已过期" not in text, path.name
-    assert "分享图需更新" in (STUDIO / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    bento = (STUDIO / "homepage-v2" / "bento.js").read_text(encoding="utf-8")
+    dictionary = (STUDIO / "js" / "copy-dictionary.js").read_text(encoding="utf-8")
+    assert "COPY_DICTIONARY.shelfStale" in bento
+    assert 'shelfStale: "长图需更新"' in dictionary
     assert "分享图需更新" in (STUDIO / "js" / "help-onboarding.js").read_text(encoding="utf-8")
 
 

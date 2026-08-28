@@ -30,16 +30,16 @@ import {
 import { stubCode, stubSerial, stubYearMonth } from "./shelf-ticket-logic.js";
 import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
 import { allowReadyBadge, buildOutputStubs } from "./shelf-outputs.js";
-
-var READY_LONGSHOT = "分享图已就绪";
-var PREVIEW_READY = "可先预览";
-var PREPARING_HD = "正在准备高清图";
+import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
 
+var READY_LONGSHOT = COPY_DICTIONARY.shelfReady;
+var PREVIEW_READY = "可先预览";
+var PREPARING_HD = "正在准备高清图";
 var STALE_BADGE = "可重排";
 var STALE_BADGE_TIP = "版式算法有更新，可点重新排版";
-var STALE_LONGSHOT = "分享图需更新";
+var STALE_LONGSHOT = COPY_DICTIONARY.shelfStale;
 var _shelfScrollTracked = false;
 var _hostEl = null;
 var _gridEl = null;
@@ -187,7 +187,7 @@ function buildCoverWrap(trip, surface) {
   var openCover = el("button", "v2-shelf__open v2-shelf__open--cover");
   openCover.type = "button";
   var staleBits = [];
-  if (trip.longshotStale) staleBits.push("分享图需更新");
+  if (trip.longshotStale) staleBits.push(STALE_LONGSHOT);
   if (trip.algorithmStale) staleBits.push(STALE_BADGE);
   var readyBadge = shelfShowCoverReadyBadge(trip) && allowReadyBadge(trip);
   if (readyBadge) staleBits.push(READY_LONGSHOT);

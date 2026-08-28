@@ -609,6 +609,7 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     assert "showImportFailed" in failed and "failureNextHint" in failed
     assert "trapFocus" in failed
     assert "Escape" in failed
+    assert "setHidden(stay, !authRecoverable)" in failed
     css = V2_CSS_BUNDLE
     assert ".v2-first-success {" in css
     first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]

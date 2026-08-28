@@ -41,7 +41,8 @@ def test_wizard_demo_album_cta() -> None:
 def test_capability_card_ftue_copy() -> None:
     cap = (STUDIO / "js" / "capability-card.js").read_text(encoding="utf-8")
     assert "照片留在本机，也能做成可发的画册" in cap
-    assert "开始制作我的画册" in cap
+    assert "选择照片文件夹" in cap
+    assert "开始制作我的画册" not in cap
     assert "开始导入" not in cap
     # 书架已有作品时不挡主 CTA
     assert "tripsTotal" in cap

@@ -1780,7 +1780,7 @@ def test_ac_hp21_06_stale_user_copy(studio_server) -> None:
             "() => !document.getElementById('v2-bento-preview-listbox').hidden"
         )
         picker_text = page.locator("#v2-bento-preview-listbox").inner_text()
-        assert "分享图需更新" in picker_text or "可重排" in picker_text
+        assert "长图需更新" in picker_text or "可重排" in picker_text
         assert "算法待更新" not in picker_text
         assert "算法待更新" not in page.locator(".v2-bench").inner_text()
 
