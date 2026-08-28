@@ -59,8 +59,7 @@ jobs:
       - name: Trip HTML title consistency (shelf/preview drift)
         run: python scripts/lint_trip_html_title.py schemas/fixtures tests/fixtures
 
-      - name: Binary asset signatures (warning until B-03 inventory)
-        continue-on-error: true
+      - name: Binary asset signatures (new drift only; B-03 abandoned set allowlisted)
         run: python scripts/lint_binary_assets.py --strict
 
       - name: Import layer contract (M-B0)
