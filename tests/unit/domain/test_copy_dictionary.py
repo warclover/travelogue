@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from travelogue.domain.copy_dictionary import (
     ACTION,
+    CTA_NARRATIVE_CHAT,
+    CTA_SPARSE_CHAT,
     FORBIDDEN_ACTION_ALIAS,
     FORBIDDEN_POSITION_COPY,
     FORBIDDEN_UMBRELLA,
@@ -13,6 +15,7 @@ from travelogue.domain.copy_dictionary import (
     JOURNAL_EXPORT_LABEL,
     PORTFOLIO_EXPORT_LABEL,
     PRODUCTS,
+    PURPOSE_EXPAND_WECHAT,
     SHELF_READY,
     SHELF_STALE,
     SUCCESS_VERB,
@@ -37,6 +40,11 @@ def test_dictionary_forbids_umbrella_and_channel_as_action() -> None:
     assert SHELF_STALE == "长图需更新"
     assert SWITCH_PURPOSE == "换用途"
     assert SWITCH_PURPOSE_DONE == "已换用途"
+    assert PURPOSE_EXPAND_WECHAT == "导出到：微信群"
+    assert CTA_SPARSE_CHAT == "导出长图 · 导出到：微信群"
+    assert CTA_NARRATIVE_CHAT == "按章导出长图 · 导出到：微信群"
+    assert "发微信群" not in CTA_SPARSE_CHAT
+    assert "发微信群" not in CTA_NARRATIVE_CHAT
 
 
 def test_export_labels_stay_identity_specific() -> None:
@@ -59,6 +67,8 @@ def test_js_dictionary_mirrors_python() -> None:
     assert f'successVerb: "{SUCCESS_VERB}"' in text
     assert f'switchPurpose: "{SWITCH_PURPOSE}"' in text
     assert f'switchPurposeDone: "{SWITCH_PURPOSE_DONE}"' in text
+    assert f'ctaSparseChat: "{CTA_SPARSE_CHAT}"' in text
+    assert f'ctaNarrativeChat: "{CTA_NARRATIVE_CHAT}"' in text
     assert f'shelfReady: "{SHELF_READY}"' in text
     assert f'shelfStale: "{SHELF_STALE}"' in text
     for word in FORBIDDEN_UMBRELLA + FORBIDDEN_ACTION_ALIAS + FORBIDDEN_POSITION_COPY:
@@ -75,6 +85,8 @@ def test_doc_and_vertical_slice_surfaces_exist() -> None:
     assert SHELF_READY in doc
     assert SHELF_STALE in doc
     assert SWITCH_PURPOSE in doc
+    assert PURPOSE_EXPAND_WECHAT in doc
+    assert CTA_SPARSE_CHAT in doc
     for rel in VERTICAL_SLICE_SURFACES:
         assert (ROOT / rel).is_file()
         assert rel in doc
@@ -90,3 +102,16 @@ def test_success_secondary_does_not_hardcode_old_share_phrase() -> None:
         text = (ROOT / rel).read_text(encoding="utf-8")
         assert "换种分享方式" not in text
         assert "COPY_DICTIONARY.switchPurpose" in text
+
+
+def test_recipe_cta_surfaces_do_not_teach_wechat_as_action() -> None:
+    yaml_text = (ROOT / "config/output_recipe_presets.yaml").read_text(encoding="utf-8")
+    assert f'cta.sparse_chat: "{CTA_SPARSE_CHAT}"' in yaml_text
+    assert f'cta.narrative_chat: "{CTA_NARRATIVE_CHAT}"' in yaml_text
+    logic = (ROOT / "templates/studio/js/output-recipe-logic.js").read_text(encoding="utf-8")
+    panel = (ROOT / "templates/studio/js/longshot-export-panel.js").read_text(encoding="utf-8")
+    assert "COPY_DICTIONARY.ctaSparseChat" in logic
+    assert "COPY_DICTIONARY.ctaNarrativeChat" in logic
+    assert "COPY_DICTIONARY.ctaSparseChat" in panel
+    assert '"导出长图 · 发微信群"' not in logic
+    assert '"导出长图 · 发微信群"' not in panel

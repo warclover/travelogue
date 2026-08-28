@@ -32,7 +32,7 @@ test("确认文案必含文字可能无法全部保留", () => {
   assert.equal(toPf.confirmText, "重排页面");
   assert.match(toPf.body, /精选和分组会保留/);
   assert.ok(toPf.body.includes(EDITION_COPY_LOCK));
-  assert.match(toPf.body, /换种分享/);
+  assert.match(toPf.body, /改回游记再导出长图/);
   assert.equal(toPf.body.includes("edition"), false);
 
   const toJ = editionSwitchConfirm("portfolio", "journal");

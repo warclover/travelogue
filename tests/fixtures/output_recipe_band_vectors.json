@@ -190,7 +190,7 @@
           "needs_intent": false,
           "intent": "chat_longshot",
           "kept_n": 5,
-          "cta_label": "导出长图 · 发微信群"
+          "cta_label": "导出长图 · 导出到：微信群"
         }
       },
       "expect": {

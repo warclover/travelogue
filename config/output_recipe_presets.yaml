@@ -118,8 +118,8 @@ presets:
     product_label_key: label.instagram_carousel
 
 copy:
-  cta.sparse_chat: "导出长图 · 发微信群"
-  cta.narrative_chat: "按章导出长图 · 发微信群"
+  cta.sparse_chat: "导出长图 · 导出到：微信群"
+  cta.narrative_chat: "按章导出长图 · 导出到：微信群"
   cta.moments_scroll: "导出朋友圈 · 长图连读"
   cta.moments_grid: "导出朋友圈 · 九宫格（CLI）"
   cta.poster_bric: "导出单张海报"

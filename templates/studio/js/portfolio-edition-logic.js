@@ -93,7 +93,7 @@ export function editionSwitchConfirm(from, to) {
   var body =
     "精选和分组会保留，页面将按另一套版式重排。" + EDITION_COPY_LOCK;
   if (toPortfolio) {
-    body += "页数可能变少，照片可能收录不全；发群请改用「换种分享」。";
+    body += "页数可能变少，照片可能收录不全；发群请先改回游记再导出长图。";
   }
   return {
     title: toPortfolio ? "改成「作品集」？" : "改回「游记」？",
