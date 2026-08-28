@@ -26,7 +26,7 @@ from travelogue.render.engine import RenderError, render_trip
 from travelogue.services.layout import LayoutError, apply_layout_to_trip
 from travelogue.services.narrate import NarrateError, run_narrate
 from travelogue.services.pipeline_state import PipelineError, lock_copy, lock_structure
-from travelogue.services.trip import persist_trip_snapshot
+from travelogue.services.trip import persist_pipeline_owned
 from travelogue.services.validate import validate_trip
 
 
@@ -70,7 +70,7 @@ def cmd_ingest(
         else:
             typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+    persist_pipeline_owned(_trip_svc(trip_path), trip_path, trip)
     typer.echo("OK ingest")
     typer.echo(format_ingest_report(result, trip))
 
@@ -88,7 +88,7 @@ def cmd_media_reexport(
     trip_root = trip_path.parent
     trip = _trip_svc(trip_path).load(trip_path)
     result = reexport_trip_assets(trip, trip_root, asset_ids=asset_id, app_cfg=get_config())
-    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+    persist_pipeline_owned(_trip_svc(trip_path), trip_path, trip)
     typer.echo("OK reexport")
     typer.echo(format_ingest_report(result, trip))
     if result.failed:
@@ -147,7 +147,7 @@ def cmd_curate(
     except CurateError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+    persist_pipeline_owned(_trip_svc(trip_path), trip_path, trip)
     from travelogue.curation.curate_report import format_curate_report
 
     typer.echo(format_curate_report(result, trip))
@@ -178,7 +178,7 @@ def cmd_lock(
     else:
         typer.echo("E_CLI: lock target must be structure or copy", err=True)
         raise typer.Exit(1)
-    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+    persist_pipeline_owned(_trip_svc(trip_path), trip_path, trip)
 
 
 @app.command("narrate")
@@ -234,7 +234,7 @@ def cmd_narrate(
     if dry_run:
         typer.echo(f"dry-run would update: {', '.join(result.fields_updated) or '(none)'}")
         return
-    persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+    persist_pipeline_owned(_trip_svc(trip_path), trip_path, trip)
     prov = provider or get_config().llm.provider or "stub"
     typer.echo(f"OK narrate ({prov}) · updated {', '.join(result.fields_updated) or '(none)'}")
     if result.fields_updated:
@@ -319,6 +319,7 @@ def cmd_run(
         from travelogue.config.edition import (
             PortfolioUnavailableError,
             apply_refine_edition,
+            make_studio_edition_mutator,
         )
 
         trip = _trip_svc(trip_path).load(trip_path)
@@ -327,7 +328,7 @@ def cmd_run(
         except PortfolioUnavailableError as exc:
             typer.echo(str(exc), err=True)
             raise typer.Exit(1) from exc
-        persist_trip_snapshot(_trip_svc(trip_path), trip_path, trip)
+        _trip_svc(trip_path).update(trip_path, make_studio_edition_mutator(trip))
     try:
         result: RunResult = run_trip(
             trip_path,
@@ -397,7 +398,7 @@ def cmd_layout(
     except LayoutError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
-    persist_trip_snapshot(svc, trip_path, trip)
+    persist_pipeline_owned(svc, trip_path, trip)
     typer.echo(f"OK layout · {result.summary_text}")
     typer.echo(f"  chapters: {result.chapter_count} · items blocks: {result.item_count}")
     if not no_validate:
