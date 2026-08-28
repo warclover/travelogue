@@ -4,10 +4,8 @@
 "use strict";
 
 import {
-  ctaLabelForPlatform,
   isConfirmedExportTarget,
   readExportPrefs,
-  shortCtaLabelForPlatform,
 } from "../js/longshot-export-panel.js";
 import { applyJournalDockLogic, journalDockCta } from "../js/journal-dock-logic.js";
 import {
@@ -185,10 +183,6 @@ export function idleExportAriaLabel() {
     var root = _dockRoot();
     if (root && root._dockCta && root._dockCta.aria) return root._dockCta.aria;
     if (_htmlEditionIsPortfolio()) return portfolioDockCta().aria;
-    var prefs = readExportPrefs();
-    if (isConfirmedExportTarget(prefs)) {
-      return ctaLabelForPlatform(prefs.platform);
-    }
   } catch (_eAria) {}
   return journalDockCta().aria;
 }

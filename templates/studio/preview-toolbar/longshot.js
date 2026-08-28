@@ -44,6 +44,7 @@ import {
   sparseMomentsHintMessage,
   writeExportPrefs,
 } from "../js/longshot-export-panel.js";
+import { exportAria } from "../js/copy-dictionary.js";
 import {
   PORTFOLIO_PAGES_PLATFORM,
   CLG_SIBLING_TIMEOUT_MS,
@@ -939,10 +940,14 @@ export function cancelPreviewLongshotExport(root) {
     } else {
       btn.removeAttribute("data-recipe-subtitle");
     }
-    // SNR · Dock 短标签跟人话平台名；按章语义留在 aria-label / tip，不盖掉「发微信群」
+    // COPY-01 · 可见短标签与 aria 都用术语表；渠道不进按钮能力
     function shortLabelForCta() {
-      if (!confirmed && tipRecipe && tipRecipe.needsIntent) return "长图";
       return "长图";
+    }
+    function journalButtonAria(raw) {
+      var text = String(raw || "");
+      if (!text || text.indexOf("发微信群") >= 0) return exportAria("journal");
+      return text;
     }
     var isDock = isPreviewToolbarV4(root);
     if (isDock) {
@@ -951,17 +956,17 @@ export function cancelPreviewLongshotExport(root) {
       if (labelEl && !btn.classList.contains("preview-toolbar__longshot--running")) {
         labelEl.textContent = short;
       }
-      btn.setAttribute("aria-label", label);
-      updateDockTip(btn, label);
-      emitSnrCtaLabel(label, [platform]);
+      btn.setAttribute("aria-label", journalButtonAria(label));
+      updateDockTip(btn, journalButtonAria(label));
+      emitSnrCtaLabel(journalButtonAria(label), [platform]);
       return;
     }
     var shortBar = shortLabelForCta();
     if (!btn.classList.contains("preview-toolbar__longshot--running")) {
       btn.textContent = shortBar;
     }
-    btn.setAttribute("aria-label", label);
-    emitSnrCtaLabel(label, [platform]);
+    btn.setAttribute("aria-label", journalButtonAria(label));
+    emitSnrCtaLabel(journalButtonAria(label), [platform]);
   }
 
   function maybeToastSparseMoments() {

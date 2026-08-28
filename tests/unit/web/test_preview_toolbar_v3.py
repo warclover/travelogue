@@ -757,6 +757,8 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "preview-toolbar-more" in (STUDIO / "preview-toolbar" / "init-v3.js").read_text(
         encoding="utf-8"
     )
+    assert "journalButtonAria" in longshot
+    assert 'exportAria("journal")' in longshot
     assert "导出前先更新一下" in longshot
     assert "版面尚未更新" not in longshot
     assert "更新并导出" in longshot

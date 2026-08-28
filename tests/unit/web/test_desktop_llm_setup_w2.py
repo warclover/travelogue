@@ -25,6 +25,7 @@ def test_capability_card_contract() -> None:
     # 中性标题/主 CTA 可留在 DOM 工厂；AI 升级串不得出现在默认可达面
     assert "照片留在本机，也能做成可发的画册" in cap
     assert "选择照片文件夹" in cap
+    assert "微信分享长图" not in cap
     assert "以后再升级 AI 文案" not in cap
     assert "开始导入" not in cap
     # NAS：show / maybeShow 为永久 no-op（dark 亦不恢复 · D-NAS-20）
