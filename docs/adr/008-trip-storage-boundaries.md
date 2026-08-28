@@ -122,6 +122,22 @@ Phase 22 需要 **成文的存储边界**，避免「file-as-DB」退化为「JS
 
 **孤儿 Blob**：dedupe 丢弃或 worker 崩溃留下的 provisional 文件必须删除或在 resume 时回收；不得残留为最终 `assets/asset-NNN-*`。
 
+### 10. 全量快照不得进热路径（2026-08-28）
+
+> 结案：[acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md](../acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md)
+
+CAS + 文件锁保证一次 `load → mutate → save` **窗口完整**，不保证调用方旧内存对象相对用户加载时的 revision 仍合法。用整份内存 trip 覆盖磁盘，会把并发 HTTP 的 `intent` / 笔记 / 用户文案打回去，同时 `meta.revision` 仍递增。
+
+| 路径 | 合同 |
+|------|------|
+| 阶段末 / CLI / render stamp | `persist_pipeline_owned`（增量 merge；磁盘 `intent` / `userNotes` 赢；用户保护文案回填） |
+| HTTP 文案 | 既有 `apply_copy_patch` + `TripService.update` |
+| 预导入 intent flush | `make_intent_flush_mutator`：管线键合并，HTTP 键只在磁盘为空时 seed |
+| 成册身份 | `make_studio_edition_mutator` |
+| `persist_trip_snapshot` | **必须**带调用方 `base_revision`；磁盘 revision 变化直接冲突，禁止重放。生产代码 lint 禁止调用 |
+
+未纳入本波：Output / Telemetry 顶层 mutator；`export` 整段推送仍可能盖掉并发导出设置。
+
 ---
 
 ## 拒绝的方案
@@ -162,6 +178,7 @@ Phase 22 需要 **成文的存储边界**，避免「file-as-DB」退化为「JS
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v0.4 | 2026-08-28 | 增补 §10：热路径禁止全量快照；`persist_pipeline_owned` + 用户文案回填 |
 | v0.3 | 2026-07-11 | 增补 §9 Ingest 并行写边界（Pipeline Throughput） |
 | v0.2 | 2026-06-11 | Accepted · PRD v0.22.1 评审闭合 |
 | v0.1 | 2026-06-11 | Proposed · Phase 22 Kickoff |

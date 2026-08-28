@@ -13,7 +13,7 @@
 | M-A1a | done | 2026-07-08 | `pytest tests/test_trip_service_update.py` 7 passed | — |
 | M-A1b | done | 2026-07-08 | handlers 14 处 + serve.py 2 处改 svc.update；409 E_TRIP_CONFLICT + http.js 重试；`pytest tests/test_studio_handlers_trip.py` 等 41 passed | — |
 | M-A1c | done | 2026-07-08 | studio_pipeline 5 处 + studio_narrate 1 处改 update；`tests/test_trip_cross_process_update.py` spawn 集成测试通过 | 文件锁补强（.trip.lock）跳过 |
-| M-A1d | done | 2026-07-08 | render/engine.py + orchestrator/run.py + CLI/export 收口 persist_trip_snapshot | — |
+| M-A1d | done | 2026-07-08 | render/engine.py + orchestrator/run.py + CLI/export 收口 persist_trip_snapshot | 2026-08-28 热路径改 `persist_pipeline_owned`；见 [结案](./acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md) |
 | M-A1e | done | 2026-07-08 | `scripts/lint_trip_save_calls.py` + CI；AC-ARC-01/02 测试；`test_trip_concurrent_save.py` 改写 | — |
 | M-A2 | done | 2026-07-08 | 重复键 ConfigError（含行号）；未知键单条 warning / strict 报错；`pytest tests/test_config_fail_loud.py` 5 passed；example 零告警回归 | — |
 | M-A3 | done | 2026-07-08 | `.gitignore` 增加 registry.cache.json / trips/.cache/；registry.cache 移出索引；import-wizard.js 索引无正反斜杠重复 | — |
@@ -106,6 +106,7 @@
 | FIX-09 | P1 | 2026-07-09 | layout_engine→curation hero AST 反向边 | ✅ 已修复：`layout_contract.scoring` 注册表反转；边数 8→7 / LE→cur=0 |
 | P2 | — | 2026-07-09 | run_curate 拆分 · `.trip.lock` · layout_contract 准入 | 见 [ARCH-OPT-P2-BACKLOG.md](./ARCH-OPT-P2-BACKLOG.md) |
 | P2-C | ✅ | 2026-07-10 | `layout_contract` 准入文档 + `lint_layout_contract_surface` CI | TECH-ARCH §18.2.1 |
+| FIX-10 | P0 | 2026-08-28 | 全量旧快照丢并发业务更新；DPI / god-module / tsc 红灯 | ✅ 已关闭：热路径增量 persist + 文案回填；门禁只降；[结案](./acceptance-records/trip-persist-lost-update-closeout-2026-08-28.md) |
 
 ---
 
