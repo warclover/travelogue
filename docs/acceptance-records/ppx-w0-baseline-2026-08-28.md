@@ -97,7 +97,7 @@ M1 出口必须超过「只修 daemon」档。分档门槛见 PRD §2.2。
 
 | 项 | 值 |
 |---|---|
-| 机器 | |
-| `config.yaml` 的 `parallel_ingest` | |
-| 是否 frozen onedir | |
-| Defender 实时防护 | |
+| 机器 | Intel Core Ultra 5 125H · 31.5 GB · Windows |
+| `config.yaml` 的 `parallel_ingest` | true（workers=0 auto）· 仓库默认未改 |
+| 是否 frozen onedir | 否 |
+| Defender 实时防护 | 开 |
