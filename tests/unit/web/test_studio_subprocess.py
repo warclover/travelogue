@@ -198,6 +198,12 @@ def test_import_subprocess_drain_empty_before_start(tmp_path: Path) -> None:
     assert handle.alive is False
 
 
+def test_import_subprocess_cancel_before_start_is_safe(tmp_path: Path) -> None:
+    handle = ImportSubprocess(_base_payload(tmp_path))
+    handle.cancel()
+    assert handle.alive is False
+
+
 def test_import_subprocess_is_not_daemon(tmp_path: Path) -> None:
     """QA-PPX-01 · daemon 父进程在 Windows/spawn 下不能再开 ProcessPool。"""
     handle = ImportSubprocess(_base_payload(tmp_path))
