@@ -129,7 +129,15 @@ def migrate_share_face_purity_on_open(trip: dict[str, Any] | None) -> dict[str, 
             thin_ids.append(str(m))
     except Exception:
         thin_ids = []
-    all_chapter_ids = list(dict.fromkeys([*chapter_ids, *year_ids, *thin_ids]))
+    lead_ids: list[str] = []
+    try:
+        fill_empty_stub_leads = importlib.import_module(
+            "travelogue.services.narrate"
+        ).fill_empty_stub_leads
+        lead_ids = list(fill_empty_stub_leads(trip) or [])
+    except Exception:
+        lead_ids = []
+    all_chapter_ids = list(dict.fromkeys([*chapter_ids, *year_ids, *thin_ids, *lead_ids]))
     return {
         "displayTitle": display_migrated,
         "chapters": all_chapter_ids,

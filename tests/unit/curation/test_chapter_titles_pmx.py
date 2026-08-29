@@ -33,12 +33,11 @@ def test_chapter_titles_no_paren_or_ordinal_for_same_day() -> None:
         {"id": "c", "takenAt": "2026-05-27T11:00:00"},
     ]
     titles = chapter_titles([["a"], ["b"], ["c"]], assets, {"places": ["京都"]})
-    # SNR · 无地点时日期±时段优先于裸日期
-    assert titles[0] in {"5月27日", "5月27日 · 上午"}
+    # 有地点时地点±时段优先；日期只作退路
+    assert titles[0] in {"京都", "京都 · 上午"}
     assert all("（" not in t and "）" not in t for t in titles)
     assert all("·二" not in t and "·三" not in t for t in titles)
-    # 后续仍以日期族起步；撞车后允许同名
-    assert titles[1].startswith("5月27日")
+    assert not any(t.startswith("5月27日") for t in titles)
 
 
 def test_strip_ordinal_face_title() -> None:
@@ -78,4 +77,14 @@ def test_chapter_titles_ignore_polluted_kyoto_segment_on_sri_lanka_trip() -> Non
     )
     assert titles
     assert "京都" not in titles[0]
-    assert titles[0].startswith("7月22日")
+    assert titles[0].startswith("斯里兰卡")
+
+
+def test_chapter_titles_ordinal_leg_before_bare_date() -> None:
+    assets = [
+        {"id": "a", "takenAt": "2026-05-27T10:00:00"},
+        {"id": "b", "takenAt": "2026-05-27T15:00:00"},
+    ]
+    titles = chapter_titles([["a"], ["b"]], assets, {})
+    assert titles[0] in {"第一程", "第一程 · 上午"}
+    assert titles[1] in {"第二程", "第二程 · 下午"}

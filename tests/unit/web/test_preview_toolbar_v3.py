@@ -771,6 +771,13 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "_getLayoutPending()" in longshot
     assert "consumeExportAfterLayout" in longshot
     assert "export_after_layout_consumed" in longshot
+    assert 'clearExportAfterLayoutFlag("leave")' not in longshot
+    assert 'clearExportAfterLayoutFlag("job_started")' in longshot
+    assert 'clearExportAfterLayoutFlag("disconnect")' not in longshot
+    assert "离开预览时 fetch 会 abort" in longshot
+    assert "inflightOnly" in (STUDIO / "preview-toolbar" / "init-v3.js").read_text(
+        encoding="utf-8"
+    )
     assert "longshot_export_blocked_pending" in longshot
     assert "EXPORT_AFTER_TTL_MS" in longshot
     assert "shouldShowExportPulse" in longshot
@@ -810,7 +817,7 @@ def test_preview_refine_v1_p0_copy_and_intercept_markers() -> None:
     assert "本机文案 · 点此生成杂志感（不会自动重写）" not in sheet
     assert "配置写作引擎" not in sheet
     assert 'data-action="open-ai-narrate"' in sheet
-    assert "在 AI 中打开" in sheet
+    assert "打开写作辅助" in sheet
     assert "isAiSurfaceEnabled" in sheet
     init_v3 = (STUDIO / "preview-toolbar" / "init-v3.js").read_text(encoding="utf-8")
     dark = (STUDIO / "js" / "ai-surface-dark-copy.js").read_text(encoding="utf-8")

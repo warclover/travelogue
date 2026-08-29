@@ -186,8 +186,12 @@ var EXPECT_LAYOUT_RELOAD_KEY = "travelogue.studio.expectLayoutReload";
 var UPDATE_ONLY_HINT_KEY = "travelogue.studio.updateOnlyHint";
 var EXPORT_SIDE_EFFECT_KEY = "travelogue.studio.exportSideEffect";
 var AUTO_EXPORT_KEY = "travelogue.studio.autoExport";
+var EXPORT_INFLIGHT_KEY = "travelogue.studio.exportInFlight";
+var EXPORT_DONE_KEY = "travelogue.studio.exportDone";
 var COPY_GATE_SEVERE_KEY = "travelogue.studio.copyGateSevere.";
 var EXPORT_AFTER_TTL_MS = 10 * 60 * 1000;
+var EXPORT_INFLIGHT_TTL_MS = 30 * 60 * 1000;
+var EXPORT_DONE_TTL_MS = 15 * 60 * 1000;
 var EXPORT_SIDE_EFFECT_MS = 60 * 1000;
 var AUTO_EXPORT_TTL_MS = 5 * 60 * 1000;
 var _exportStartFrom = "direct";
@@ -490,6 +494,66 @@ function clearResumePlatform() {
   _removeStorage(sessionStorage, EXPORT_RESUME_PLATFORM_KEY);
 }
 
+function writeExportInFlight(tripId, jobId, platform) {
+  clearExportAfterLayoutFlag("job_started");
+  clearLayoutUpdatingFlag();
+  return _writeJsonStorage(sessionStorage, EXPORT_INFLIGHT_KEY, {
+    tripId: String(tripId || ""),
+    jobId: String(jobId || ""),
+    platform: String(platform || ""),
+    ts: Date.now(),
+  });
+}
+
+function readExportInFlight(tripId) {
+  var data = _readJsonStorage(sessionStorage, EXPORT_INFLIGHT_KEY);
+  if (!data) return null;
+  if (String(data.tripId || "") !== String(tripId || "")) return null;
+  if (data.ts && Date.now() - Number(data.ts) > EXPORT_INFLIGHT_TTL_MS) {
+    _removeStorage(sessionStorage, EXPORT_INFLIGHT_KEY);
+    return null;
+  }
+  if (!data.jobId) return null;
+  return data;
+}
+
+function clearExportInFlight() {
+  _removeStorage(sessionStorage, EXPORT_INFLIGHT_KEY);
+}
+
+function writeExportDone(tripId, job) {
+  var result = (job && job.result) || {};
+  var outputs = result.outputs || [];
+  return _writeJsonStorage(sessionStorage, EXPORT_DONE_KEY, {
+    tripId: String(tripId || ""),
+    platform: String(result.platform || ""),
+    outputs: outputs,
+    outputCount: outputs.length || result.pageCount || 0,
+    pageCount: result.pageCount != null ? result.pageCount : outputs.length,
+    ts: Date.now(),
+  });
+}
+
+function readExportDone(tripId) {
+  var data = _readJsonStorage(sessionStorage, EXPORT_DONE_KEY);
+  if (!data) return null;
+  if (String(data.tripId || "") !== String(tripId || "")) return null;
+  if (data.ts && Date.now() - Number(data.ts) > EXPORT_DONE_TTL_MS) {
+    _removeStorage(sessionStorage, EXPORT_DONE_KEY);
+    return null;
+  }
+  return data;
+}
+
+function clearExportDone() {
+  _removeStorage(sessionStorage, EXPORT_DONE_KEY);
+}
+
+export function clearExportResumeState() {
+  clearExportInFlight();
+  clearExportDone();
+}
+
 function hydrateSessionIntentFromConfirmedPrefs(tripId) {
   if (!tripId) return;
   try {
@@ -593,8 +657,7 @@ export function disconnectExportFeedback(tripId) {
 }
 
 function applyDisconnectExportError(root, tripId) {
-  clearExportAfterLayoutFlag("disconnect");
-  clearLayoutUpdatingFlag();
+  // C3 · 断线只反馈当前页；after-layout / updating / in-flight 留给回来续跑。
   var fb = disconnectExportFeedback(tripId);
   setLongshotExportState(root, "error", fb);
 }
@@ -626,12 +689,8 @@ function isFlagExpired(data) {
 function bindExportAfterLayoutPagehide() {
   if (_pagehideBound || typeof window === "undefined") return;
   _pagehideBound = true;
-  window.addEventListener("pagehide", function () {
-    var expecting = _readJsonStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY);
-    if (expecting) return;
-    clearExportAfterLayoutFlag("leave");
-    clearLayoutUpdatingFlag();
-  });
+  // 回首页是同一会话：不要在 pagehide 清 after-layout / layoutUpdating。
+  // 版面刷新用 EXPECT_LAYOUT_RELOAD；旗标只在 job 开始、取消、失败、TTL 过期时清。
 }
 
 export function registerLongshotBridge(api) {
@@ -701,8 +760,8 @@ export function cancelPreviewLongshotExport(root) {
       nextLongshotExportGen();
       // OQ-LCC-04 · 清续跑 flag，避免取消后幽灵「更新并导出」
       clearLayoutUpdatingFlag();
+      clearExportAfterLayoutFlag("cancel");
       try {
-        sessionStorage.removeItem(EXPORT_AFTER_LAYOUT_KEY);
         sessionStorage.removeItem(EXPECT_LAYOUT_RELOAD_KEY);
       } catch (e) {}
       clearResumePlatform();
@@ -2192,6 +2251,13 @@ export function cancelPreviewLongshotExport(root) {
       longshotPollCancel();
       longshotPollCancel = null;
     }
+    if (kind !== "narrate") {
+      writeExportInFlight(
+        _tripIdFromPath(),
+        jobId,
+        (root && root._runningExportPlatform) || ""
+      );
+    }
     var cancelFn = startJobPollInterval(jobId, {
       intervalMs: 800,
       slowMs: SLOW_JOB_MS,
@@ -2227,6 +2293,12 @@ export function cancelPreviewLongshotExport(root) {
         } else {
           longshotPollCancel = null;
           if (jobId === longshotJobId) longshotJobId = null;
+          if (job && job.status === "succeeded") {
+            writeExportDone(_tripIdFromPath(), job);
+            clearExportInFlight();
+          } else {
+            clearExportInFlight();
+          }
         }
         onDone(job);
       },
@@ -2237,7 +2309,8 @@ export function cancelPreviewLongshotExport(root) {
         }
         longshotPollCancel = null;
         if (jobId === longshotJobId) longshotJobId = null;
-        // F-TRU-EXP-04 · 轮询断服
+        // C3 · 离开预览时 fetch 会 abort，不能清 in-flight，否则回首页再进就丢了。
+        // F-TRU-EXP-04 · 轮询断服（当前页提示；旗标留给 consumeResumeExport）
         applyDisconnectExportError(root, _tripIdFromPath());
         trackStudioEvent("longshot_export_fail", {
           error_code: "disconnect",
@@ -3621,6 +3694,7 @@ export function cancelPreviewLongshotExport(root) {
   }
 
   function runLongshotExport(root, tripId) {
+    clearExportDone();
     var btn = longshotBtnEl(root);
     if (!btn || btn.disabled) return;
     _setToolbarCollapsed(root, false, false);
@@ -4000,6 +4074,52 @@ export function cancelPreviewLongshotExport(root) {
     } catch (_hist) {}
   }
 
+  /** C3 · 切标签/刷新后恢复进行中的导出或刚完成的成功面。 */
+  export function consumeResumeExport(root, tripId, opts) {
+    opts = opts || {};
+    var inflight = readExportInFlight(tripId);
+    if (inflight && inflight.jobId) {
+      longshotJobId = inflight.jobId;
+      if (root) {
+        root._runningExportPlatform = inflight.platform || "";
+        root._exportDockActive = true;
+      }
+      setLongshotExportState(root, "running", {
+        hint:
+          inflight.platform === PORTFOLIO_PAGES_PLATFORM
+            ? "正在导出作品集…"
+            : "正在合成长图…",
+        platform: inflight.platform || undefined,
+      });
+      pollJob(inflight.jobId, root, function (job) {
+        _setSlowHint(root, "", false);
+        if (job.status === "succeeded") {
+          setLongshotExportState(root, "done");
+          showLongshotDrawer(root, job);
+        } else if (job.status === "failed") {
+          showLongshotDrawer(root, job);
+        } else {
+          setLongshotExportState(root, "idle");
+        }
+      });
+      return true;
+    }
+    if (opts.inflightOnly) return false;
+    var done = readExportDone(tripId);
+    if (!done) return false;
+    var job = {
+      status: "succeeded",
+      result: {
+        outputs: done.outputs || [],
+        platform: done.platform || "wechat_chat",
+        pageCount: done.pageCount != null ? done.pageCount : done.outputCount || 0,
+      },
+    };
+    setLongshotExportState(root, "done");
+    showLongshotDrawer(root, job);
+    return true;
+  }
+
   /** PFO · 成功面「导出作品集」进预览后打开同一套 Dock 面板，不复制 HTML。 */
   export function consumeExportPanel(root, tripId) {
     var flagged = false;
@@ -4070,29 +4190,49 @@ export function cancelPreviewLongshotExport(root) {
     _removeStorage(sessionStorage, EXPECT_LAYOUT_RELOAD_KEY);
 
     var updating = readLayoutUpdating();
-    if (updating && String(updating.tripId || "") === String(tripId || "")) {
-      if (isFlagExpired(updating)) {
-        clearLayoutUpdatingFlag();
-      } else {
-        setLongshotExportState(root, "running", { hint: "正在更新版面…" });
-        if (root._taskDock) {
-          root._exportDockActive = true;
-          root._taskDock.updateExporting({
-            title: "正在更新版面…",
-            subtitle: "即将开始导出",
-            pct: 12,
-          });
-        }
+    var stillUpdating =
+      updating &&
+      String(updating.tripId || "") === String(tripId || "") &&
+      !isFlagExpired(updating);
+    var flagged = readExportAfterLayout();
+    var flaggedId = flagged ? String(flagged.tripId || "") : "";
+    var currentId = String(tripId || "");
+    var flaggedOk =
+      !!flagged &&
+      flaggedId === currentId &&
+      !isFlagExpired(flagged);
+
+    if (stillUpdating && !flaggedOk) {
+      setLongshotExportState(root, "running", { hint: "正在更新版面…" });
+      if (root._taskDock) {
+        root._exportDockActive = true;
+        root._taskDock.updateExporting({
+          title: "正在更新版面…",
+          subtitle: "即将开始导出",
+          pct: 12,
+        });
       }
+      return true;
+    }
+    if (updating && isFlagExpired(updating)) {
+      clearLayoutUpdatingFlag();
     }
 
-    var flagged = readExportAfterLayout();
-    if (!flagged) {
-      clearLayoutUpdatingFlag();
+    if (!flaggedOk) {
+      if (flagged && isFlagExpired(flagged)) {
+        clearExportAfterLayoutFlag("expired", { flagged_id: flaggedId });
+        trackStudioEvent("export_after_layout_expired", { trip_id: currentId });
+      } else if (flagged && flaggedId && flaggedId !== currentId) {
+        clearExportAfterLayoutFlag("trip_mismatch", { flagged_id: flaggedId });
+        trackStudioEvent("export_after_layout_trip_mismatch", {
+          flagged_id: flaggedId,
+          current_id: currentId,
+        });
+      }
       var onlyHint = _readJsonStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
       if (
         onlyHint &&
-        String(onlyHint.tripId || "") === String(tripId || "") &&
+        String(onlyHint.tripId || "") === currentId &&
         !isFlagExpired(onlyHint)
       ) {
         _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
@@ -4103,30 +4243,7 @@ export function cancelPreviewLongshotExport(root) {
       return false;
     }
 
-    var flaggedId = String(flagged.tripId || "");
-    var currentId = String(tripId || "");
-
-    clearExportAfterLayoutFlag("consume", { flagged_id: flaggedId });
     _removeStorage(sessionStorage, UPDATE_ONLY_HINT_KEY);
-
-    if (isFlagExpired(flagged)) {
-      clearLayoutUpdatingFlag();
-      trackStudioEvent("export_after_layout_expired", { trip_id: currentId });
-      return false;
-    }
-    if (!flaggedId || flaggedId !== currentId) {
-      clearLayoutUpdatingFlag();
-      trackStudioEvent("export_after_layout_trip_mismatch", {
-        flagged_id: flaggedId,
-        current_id: currentId,
-      });
-      return false;
-    }
-    if (_getLayoutPending()) {
-      clearLayoutUpdatingFlag();
-      return false;
-    }
-
     clearLayoutUpdatingFlag();
     var latencyMs =
       flagged.ts && Number(flagged.ts) ? Date.now() - Number(flagged.ts) : null;
@@ -4143,7 +4260,7 @@ export function cancelPreviewLongshotExport(root) {
       writeResumePlatform(currentId, resumePlatform);
       syncPrefsPlatform(resumePlatform);
     }
-    // 续跑后若仍有标题风险，再跑门禁；否则直接导出
+    // 旗标留到 writeExportInFlight / 取消；中途离开仍能再续。
     maybeCopyGateThenExport(root, tripId);
     return true;
   }

@@ -77,7 +77,7 @@ def test_settings_accordion_js_behaviors() -> None:
     assert "studio-llm-settings-root" in settings  # Modal 打开时不误关设置
     assert "syncImportMeta" in settings
     assert "syncAppearanceMeta" in settings
-    assert "harnessEnabled()" in settings and "v2-settings-zone-more" in settings
+    assert "isDevQuery()" in settings and "v2-settings-zone-more" in settings
 
     assert "v2-settings-meta-storage" in storage
     assert "占用较高，建议清理" in storage

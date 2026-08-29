@@ -309,7 +309,8 @@ export function wizardCopy(edition) {
     trust: pf
       ? "照片多时可能超过 10 分钟；可离开，做好了再回来。"
       : "根据不同照片数量（上限250张），生成画册耗时不同，通常需要1-8分钟",
-    hideDemo: pf,
+    hideDemo: false,
+    demoLabel: pf ? "试用示例作品集" : "试用《斯里兰卡见闻录》",
   };
 }
 

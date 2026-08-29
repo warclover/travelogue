@@ -119,7 +119,7 @@ def test_sas_api_config_ia_and_no_advanced() -> None:
 def test_sas_w2_old_entry_deeplink() -> None:
     text = _SHEET.read_text(encoding="utf-8")
     assert 'data-action="open-ai-narrate"' in text
-    assert "在 AI 中打开" in text
+    assert "打开写作辅助" in text
     assert 'focus: "narrate"' in text
     # 权威入口不再直接挂 data-action=llm 开始生成
     assert 'data-action="llm"' not in text
@@ -140,7 +140,8 @@ def test_sas_w3_refine_cross_link_copy() -> None:
     assert "尝试AI文案" in text
     assert "优先尝试AI字体，耗时约几十秒" in text
     sheet = _SHEET.read_text(encoding="utf-8")
-    assert "智能生成请用顶栏「AI」" in sheet
+    assert "在精修里写一句" in sheet
+    assert "请用顶栏「AI」" not in sheet
 
 
 def test_sas_w2_entry_exposes_intent_brief_ui() -> None:

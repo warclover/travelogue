@@ -20,7 +20,7 @@ import {
   harnessTripsOverride, harnessAssetsFail, harnessPreseedSession,
   harnessInstallFetchMocks, harnessInstallBentoPreviewMock,
   harnessInstallCurateMock,
-  harnessApplyStartup, harnessEnabled,
+  harnessApplyStartup, harnessEnabled, isDevQuery,
 } from "./harness.js";
 import { fetchTripsFirstPage } from "./trips-client.js";
 import { clearBentoPreviewCache } from "./trip-preview.js";
@@ -231,6 +231,8 @@ function init() {
       initLlmSettingsEntry();
     }
   });
+  var layoutLab = $("v2-bench-layout-lab");
+  if (layoutLab) layoutLab.hidden = !isDevQuery();
   if (harnessEnabled()) {
     harnessPreseedSession();
     harnessInstallBentoPreviewMock();

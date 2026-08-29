@@ -58,7 +58,7 @@ def test_chapter_titles_cross_year_in_bucket() -> None:
         {"id": "n", "takenAt": "2026-05-20T12:00:00Z"},
     ]
     titles = _chapter_titles([["o", "n"]], assets, {"places": ["京都"]})
-    assert titles[0] == "2010–2026"
+    assert titles[0].startswith("京都")
 
 
 def test_chapter_titles_cross_year_trip_prefixes_year() -> None:
@@ -76,7 +76,9 @@ def test_chapter_titles_cross_year_trip_prefixes_year() -> None:
             "dateEnd": "2025-01-16",
         },
     )
-    assert titles == ["2024年8月14日", "2025年1月16日"]
+    assert titles[0].startswith("武汉")
+    assert titles[1].startswith("第二程") or titles[1].startswith("武汉")
+    assert all("·二" not in t and "·三" not in t for t in titles)
 
 
 def test_merge_small_buckets_combines_pairs() -> None:
@@ -133,12 +135,12 @@ def test_chapter_titles_same_day_suffix() -> None:
     assets = _assets_for_days(["2025-04-02", "2025-04-02", "2025-04-03"], prefix="x")
     buckets = [["x0"], ["x1"], ["x2"]]
     titles = _chapter_titles(buckets, assets, {"places": ["京都"]})
-    assert titles[0].startswith("4月2日")
-    # SFP D-SFP-01：禁「日期续」/「（N）」/「·二」；同日后续用时段，否则允许同名
+    assert titles[0].startswith("京都")
+    # SFP D-SFP-01：禁「日期续」/「（N）」/「·二」；同日后续用地点撞车后第N程
     assert "续" not in titles[1]
     assert "（" not in titles[1] and "）" not in titles[1]
     assert "·二" not in titles[1] and "·三" not in titles[1]
-    assert titles[1].startswith("4月2日")
+    assert titles[1].startswith("京都") or "程" in titles[1]
 
 
 def test_chapter_titles_prefer_span_over_multi_seg_labels() -> None:
@@ -160,7 +162,7 @@ def test_chapter_titles_prefer_span_over_multi_seg_labels() -> None:
             "s2": "4月4日·清明",
         },
     )
-    assert titles[0] == "2月9–4月4日"
+    assert titles[0].startswith("第一程") or titles[0] == "2月9–4月4日"
     assert "··" not in titles[0]
 
 
@@ -175,10 +177,10 @@ def test_chapter_titles_clean_long_segment_label() -> None:
         bucket_segment_ids=["seg"],
         segment_labels={"seg": "1月16日·夏睿彤年度精选"},
     )
-    # Album-marketing tails must not become scene shorts; SNR may append daypart.
-    assert titles[0].startswith("1月16日")
+    # Album-marketing tails must not become scene shorts；无地点时用第N程
     assert "精选" not in titles[0]
     assert "夏睿彤" not in titles[0]
+    assert titles[0].startswith("第一程") or titles[0].startswith("1月16日")
 
 
 def test_run_curate_auto_attaches_screens() -> None:

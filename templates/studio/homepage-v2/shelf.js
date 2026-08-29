@@ -27,7 +27,7 @@ import {
   shelfShowCoverLongshotBadge,
   shelfShowCoverReadyBadge,
 } from "./shelf-actions-logic.js";
-import { stubCode, stubSerial, stubYearMonth } from "./shelf-ticket-logic.js";
+import { stubYearMonth } from "./shelf-ticket-logic.js";
 import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
 import { allowReadyBadge, buildOutputStubs } from "./shelf-outputs.js";
 import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
@@ -303,13 +303,7 @@ function buildBook(trip) {
   var stubMain = el("div", "v2-shelf__stub-main");
   stubMain.appendChild(el("h3", "v2-shelf__title", trip.title || trip.tripId));
   stubMain.appendChild(el("p", "v2-shelf__sub", stubMetaLine(trip)));
-  stubMain.appendChild(el("p", "v2-shelf__serial", stubSerial(trip)));
   openMeta.appendChild(stubMain);
-
-  var code = el("div", "v2-shelf__code");
-  code.setAttribute("aria-hidden", "true");
-  code.appendChild(el("span", "v2-shelf__code-id", stubCode(trip)));
-  code.appendChild(el("span", "v2-shelf__barcode"));
 
   var stubs = buildOutputStubs(trip, {
     onRevealFail: function () { refreshTripOutputs(trip.tripId); },
@@ -318,7 +312,6 @@ function buildBook(trip) {
     openMeta.classList.add("v2-shelf__stub--chips");
     openMeta.appendChild(stubs);
   }
-  openMeta.appendChild(code);
 
   openMeta.addEventListener("click", function () { openTrip(trip, false); });
   body.appendChild(openMeta);

@@ -386,6 +386,80 @@ def _build_lead_frame(chapter_index: int, day_label: str, place: str) -> str:
     return " · ".join(parts) + "。"
 
 
+def stub_face_lead(
+    chapter: dict,
+    *,
+    assets: dict[str, dict] | None = None,
+    chapter_index: int = 0,
+    chapter_total: int = 1,
+) -> str:
+    """NAS / frame · 非空短导语。禁止杂志题名、禁止「旅行照片」。"""
+    n = len(_chapter_asset_ids(chapter))
+    daypart = ""
+    for aid in _chapter_asset_ids(chapter):
+        raw = str((assets or {}).get(aid, {}).get("takenAt") or "")
+        if not raw:
+            continue
+        dt = _parse_iso_date(raw)
+        if not dt:
+            continue
+        hour = dt.hour
+        if 5 <= hour < 12:
+            daypart = "上午"
+        elif 12 <= hour < 17:
+            daypart = "下午"
+        elif 17 <= hour < 20:
+            daypart = "傍晚"
+        else:
+            daypart = "晚上"
+        break
+    idx = int(chapter.get("index") or chapter_index or 0)
+    if idx <= 0:
+        idx = max(1, chapter_index)
+    if n and daypart:
+        return f"这一程拍下 {n} 张 · {daypart}。"
+    if n:
+        return f"这一程拍下 {n} 张。"
+    if idx <= 1:
+        return "从这一程开始。"
+    if chapter_total > 1 and idx >= chapter_total:
+        return "这一程接近尾声。"
+    return "这一程。"
+
+
+def fill_empty_stub_leads(trip: dict) -> list[str]:
+    """Open/render migrate · 给空 lead 补一句 stub，不覆盖手改。"""
+    from travelogue.domain.copy_origin import is_user_protected
+
+    trip = trip if isinstance(trip, dict) else {}
+    chapters = [c for c in (trip.get("chapters") or []) if isinstance(c, dict)]
+    assets = {
+        str(a["id"]): a
+        for a in (trip.get("assets") or [])
+        if isinstance(a, dict) and a.get("id")
+    }
+    updated: list[str] = []
+    total = len(chapters)
+    for ch in chapters:
+        if ch.get("edited") or is_user_protected(ch, "leadOrigin"):
+            continue
+        if str(ch.get("decorLine") or "").strip():
+            continue
+        if (ch.get("lead") or "").strip():
+            continue
+        lead = stub_face_lead(
+            ch,
+            assets=assets,
+            chapter_index=int(ch.get("index") or 0),
+            chapter_total=total,
+        )
+        if not lead:
+            continue
+        ch["lead"] = lead
+        updated.append(str(ch.get("id") or ""))
+    return updated
+
+
 def _build_lead(
     chapter: dict,
     *,
@@ -603,14 +677,21 @@ def _run_narrate_stub(
     for ch in chapters:
         if ch.get("edited"):
             continue
-        if not chapter_lead_allowed(ch, chapters, scope):
+        # 有章级一句时不叠导语；其余章即使 frame 也要有一句非空 stub。
+        if str(ch.get("decorLine") or "").strip():
             continue
         if not regenerate and (ch.get("lead") or "").strip():
             continue
         idx = int(ch.get("index") or 0)
         if not dry_run:
-            ch["lead"] = _finalize_copy(
-                _build_lead(
+            raw_lead = stub_face_lead(
+                ch,
+                assets=assets,
+                chapter_index=idx,
+                chapter_total=chapter_total,
+            )
+            if not raw_lead and chapter_lead_allowed(ch, chapters, scope):
+                raw_lead = _build_lead(
                     ch,
                     meta=meta,
                     intent=intent,
@@ -619,12 +700,13 @@ def _run_narrate_stub(
                     tone=tone_val,
                     chapter_index=idx,
                     chapter_total=chapter_total,
-                ),
+                )
+            ch["lead"] = _finalize_copy(
+                raw_lead,
                 lim["chapterLeadMaxChars"],
                 seen=lead_seen,
-                title=str(meta.get("displayTitle") or meta.get("title") or ""),
                 kind="lead",
-            )
+            ) or raw_lead
         updated.append(f"chapters[{ch.get('index')}].lead")
 
     if chapter_total >= 2 and (regenerate or not (trip.get("epilogue") or "").strip()):

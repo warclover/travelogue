@@ -30,6 +30,10 @@ export function mountPreviewTaskDock(root, hooks) {
 
   var autoHideTimer = null;
   var dismissTimer = null;
+  var autoHideRemaining = 0;
+  var autoHideStartedAt = 0;
+  var autoHideAfter = null;
+  var visibilityBound = false;
   var _successShownAt = 0;
   var _progressModeTracked = "";
 
@@ -53,6 +57,43 @@ export function mountPreviewTaskDock(root, hooks) {
       clearTimeout(dismissTimer);
       dismissTimer = null;
     }
+    autoHideRemaining = 0;
+    autoHideAfter = null;
+  }
+
+  function startAutoHideTimer(ms) {
+    autoHideRemaining = ms;
+    autoHideStartedAt = Date.now();
+    autoHideTimer = setTimeout(function () {
+      autoHideTimer = null;
+      autoHideRemaining = 0;
+      var after = autoHideAfter;
+      autoHideAfter = null;
+      hide();
+      if (typeof after === "function") after();
+    }, ms);
+  }
+
+  function onVisibilityForAutoHide() {
+    if (document.hidden) {
+      if (!autoHideTimer) return;
+      clearTimeout(autoHideTimer);
+      autoHideTimer = null;
+      autoHideRemaining = Math.max(
+        0,
+        autoHideRemaining - (Date.now() - autoHideStartedAt)
+      );
+      return;
+    }
+    if (autoHideRemaining > 0 && !autoHideTimer) {
+      startAutoHideTimer(autoHideRemaining);
+    }
+  }
+
+  function bindVisibilityPause() {
+    if (visibilityBound || typeof document === "undefined") return;
+    visibilityBound = true;
+    document.addEventListener("visibilitychange", onVisibilityForAutoHide);
   }
 
   function emitSuccessVisibleMs() {
@@ -96,10 +137,15 @@ export function mountPreviewTaskDock(root, hooks) {
 
   function scheduleAutoHide(ms, after) {
     clearTimers();
-    autoHideTimer = setTimeout(function () {
-      hide();
-      if (typeof after === "function") after();
-    }, ms || SUCCESS_AUTO_HIDE_MS);
+    autoHideAfter = after;
+    bindVisibilityPause();
+    var delay = ms || SUCCESS_AUTO_HIDE_MS;
+    if (typeof document !== "undefined" && document.hidden) {
+      autoHideRemaining = delay;
+      autoHideStartedAt = Date.now();
+      return;
+    }
+    startAutoHideTimer(delay);
   }
 
   function focusDockPrimary() {

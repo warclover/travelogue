@@ -108,7 +108,7 @@ describe("ticketOpenMetaShape", function () {
     assert.equal(ticketOpenMetaShape({}).children.includes("v2-shelf__stubs"), false);
   });
 
-  it("inserts the stubs row only after serial and before the barcode", function () {
+  it("inserts the stubs row after the title block", function () {
     var shape = ticketOpenMetaShape({
       outputSummary: {
         total: 1,
@@ -118,7 +118,6 @@ describe("ticketOpenMetaShape", function () {
     assert.deepEqual(shape.children, [
       "v2-shelf__stub-main",
       "v2-shelf__stubs",
-      "v2-shelf__code",
     ]);
     assert.match(shape.openMetaClass, /stub--chips/);
   });

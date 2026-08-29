@@ -69,7 +69,9 @@ import {
   refreshLongshotExportMeta,
   consumeExportAfterLayout,
   consumeExportPanel,
+  consumeResumeExport,
   consumeAutoExport,
+  clearExportResumeState,
   shouldShowExportPulse,
   maybeShowLongshotHelp,
   onLongshotHelpTargetClick,
@@ -761,6 +763,7 @@ export function initToolbarV3(root, tripId) {
     },
     onResultDismissed: function () {
       root._exportResultShowing = false;
+      clearExportResumeState();
       refreshTaskDockState(root);
     },
   });
@@ -982,8 +985,10 @@ export function initToolbarV3(root, tripId) {
 
   function consumePendingExportIntents() {
     requestAnimationFrame(function () {
+      if (consumeResumeExport(root, tripId, { inflightOnly: true })) return;
       if (consumeExportAfterLayout(root, tripId)) return;
       if (consumeExportPanel(root, tripId)) return;
+      if (consumeResumeExport(root, tripId)) return;
       consumeAutoExport(root, tripId);
     });
   }

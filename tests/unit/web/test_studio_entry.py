@@ -129,8 +129,8 @@ def test_build_entry_exposes_portfolio_edition(monkeypatch: pytest.MonkeyPatch) 
     assert entry["dockCta"]["aria"] == "导出作品集"
     assert entry["overflowLine"] == "有 84 张没放进这本，要的话用游记能全收。"
     assert "本册收录" not in (entry["overflowLine"] or "")
-    assert "放进这本的有 96 张" in (entry["overflowDetail"] or "")
-    assert "大约用上 180 张" in (entry["overflowDetail"] or "")
+    assert entry["overflowDetail"] == "入册 96 张 · 未排 84 张"
+    assert "大约用上" not in (entry["overflowDetail"] or "")
     assert entry["overflowCta"] == "改用游记（全收）"
     assert journal["dockCta"]["aria"] == "导出长图"
     assert journal["overflowLine"] is None
@@ -203,6 +203,22 @@ def test_import_success_chrome_human_line_without_chips() -> None:
     assert import_success_chrome(gap)["overflowLine"] == (
         "编排没排满，有 17 张没放进这本。"
     )
+    mixed = {
+        "studio": {
+            "edition": "portfolio",
+            "portfolio": {
+                "photosPlaced": 89,
+                "photosKept": 117,
+                "photosFolder": 121,
+                "pageCount": 36,
+                "overflow": {"resolution": "placement_gap", "capacity": 120},
+            },
+        },
+        "chapters": [],
+    }
+    mixed_chrome = import_success_chrome(mixed)
+    assert mixed_chrome["overflowLine"] == "编排没排满，有 28 张没放进这本。"
+    assert mixed_chrome["overflowDetail"] == "入册 89 张 · 未排 28 张"
     assert build_entry(gap, "demo-trip")["overflowCta"] is None
     assert import_success_chrome({"chapters": []}) == {}
 

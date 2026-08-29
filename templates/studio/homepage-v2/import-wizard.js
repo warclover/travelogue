@@ -591,7 +591,19 @@ function syncEditionUi() {
   var firstTip = $("v2-wizard-first-tip-text");
   if (firstTip) firstTip.textContent = copy.firstTip;
   var demo = $("v2-wizard-demo-album");
-  if (demo) demo.hidden = !!copy.hideDemo;
+  if (demo) {
+    demo.hidden = !!copy.hideDemo;
+    var demoSmall = demo.querySelector("small");
+    demo.textContent = "";
+    demo.appendChild(document.createTextNode(copy.demoLabel || "试用《斯里兰卡见闻录》"));
+    if (demoSmall) {
+      demo.appendChild(demoSmall);
+    } else {
+      var small = document.createElement("small");
+      small.textContent = "本机示例 · 无需选文件夹";
+      demo.appendChild(small);
+    }
+  }
   var helpItems = document.querySelectorAll("#v2-wizard-folder-points li");
   if (helpItems && helpItems.length === copy.folderHelpHtml.length) {
     copy.folderHelpHtml.forEach(function (html, i) {
@@ -1628,17 +1640,21 @@ export function startDemoAlbumImport(opts) {
   trackStudioEvent("ftue_demo_album_click", { source: opts.source || "wizard" });
   markVisited();
 
-  var existing = (V2.trips || []).find(function (t) {
-    return t && t.tripId === "demo-album";
-  });
+  var pf = _activeEdition === "portfolio";
+  var existing = pf
+    ? null
+    : (V2.trips || []).find(function (t) {
+        return t && t.tripId === "demo-album";
+      });
   // PMX D1 · 与后端 DEMO_ALBUM_DISPLAY_TITLE 对齐；禁止「示例游记」
   var DEMO_ALBUM_DISPLAY_TITLE = "斯里兰卡见闻录";
   var body = {
     useDemoAlbum: true,
-    title: DEMO_ALBUM_DISPLAY_TITLE,
+    title: pf ? "示例作品集" : DEMO_ALBUM_DISPLAY_TITLE,
     place: "旅途",
     mode: "quick_share",
   };
+  if (pf) body.edition = "portfolio";
 
   function kickoff(force) {
     _importStarted = true;

@@ -162,14 +162,7 @@ def apply_scope_cleanup(trip: dict, scope: str) -> list[str]:
                 apply_caption_to_trip(trip, aid, "")
                 cleared.append(f"assets.{aid}.caption")
 
-    for ch in chapters:
-        if chapter_lead_allowed(ch, chapters, scope):
-            continue
-        # BE-SFI-00/06 · field-level origin=user never cleared by sparse scope
-        if ch.get("edited") or is_user_protected(ch, "leadOrigin"):
-            continue
-        if (ch.get("lead") or "").strip():
-            ch.pop("lead", None)
-            cleared.append(f"chapters.{ch.get('id')}.lead")
+    # C1 · frame 也不再清空章导语；空壳出门比短 stub 更伤敢发。
+    # 用户锁 / 手改仍由 narrate 写入路径尊重。
 
     return cleared

@@ -34,13 +34,17 @@ function params() {
   }
 }
 
+export function isDevQuery() {
+  return params().get("dev") === "1";
+}
+
 export function harnessEnabled() {
   if (!isLoopback()) return false;
   try {
     var body = document.body;
     if (body && body.getAttribute("data-studio-dev") === "1") return true;
   } catch (e) { /* ignore */ }
-  return params().get("dev") === "1";
+  return isDevQuery();
 }
 
 const NOW = Math.floor(Date.now() / 1000);

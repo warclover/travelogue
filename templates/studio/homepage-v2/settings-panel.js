@@ -5,7 +5,7 @@ import { trackStudioEvent } from "../js/analytics.js";
 import { bindAdvancedConfigControls } from "../js/advanced.js";
 import { openHelpDrawer } from "../js/help-drawer.js";
 import { isCapabilityCardSeen } from "../js/help-onboarding.js";
-import { harnessEnabled } from "./harness.js";
+import { isDevQuery } from "./harness.js";
 import { openDevPanelFromSettings } from "./dev-panel.js";
 import { requestExitStudio } from "../js/studio-exit.js";
 import { bindStorageSettings } from "./storage-settings.js";
@@ -256,7 +256,7 @@ function syncMoreZone() {
 function syncDevSection() {
   var section = $("v2-settings-dev-section");
   if (!section) return;
-  section.hidden = !harnessEnabled();
+  section.hidden = !isDevQuery();
   syncMoreZone();
 }
 
@@ -441,7 +441,7 @@ export function openSettings(opts) {
     });
   } catch (_e) {}
   // ?dev=1 / harness：展开「更多」，避免 Dev 入口藏在折叠区内不可见
-  if (harnessEnabled()) {
+  if (isDevQuery()) {
     expandZone($("v2-settings-zone-more"));
   }
   if (opts.focus && focusZoneControl(opts.focus)) return;

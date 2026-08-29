@@ -486,19 +486,20 @@ def _overflow_line(portfolio: dict[str, Any] | None) -> str:
 
 
 def _overflow_detail(portfolio: dict[str, Any] | None) -> str:
+    """One human ledger: 入册 / 未排. Never mix folder + kept + placed in one breath."""
     if not isinstance(portfolio, dict):
         return ""
-    parts: list[str] = []
-    folder = _as_int(portfolio.get("folderCount"))
     placed = _as_int(portfolio.get("photosPlaced"), -1)
     kept = _as_int(portfolio.get("photosKept"))
+    leftover = kept - placed if placed >= 0 and kept > 0 and placed < kept else 0
+    if leftover > 0 and placed >= 0:
+        return f"入册 {placed} 张 · 未排 {leftover} 张"
+    folder = _as_int(portfolio.get("folderCount"))
+    if folder > 0 and placed >= 0:
+        return f"文件夹 {folder} 张 · 入册 {placed} 张"
     if folder > 0:
-        parts.append(f"文件夹 {folder} 张")
-    if placed >= 0:
-        parts.append(f"放进这本的有 {placed} 张")
-    if kept > 0:
-        parts.append(f"大约用上 {kept} 张")
-    return " · ".join(parts)
+        return f"文件夹 {folder} 张"
+    return ""
 
 
 def import_success_chrome(trip: dict) -> dict[str, Any]:

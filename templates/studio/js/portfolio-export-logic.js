@@ -97,14 +97,18 @@ export function dockCtaFromEntry(entry) {
 
 export function formatOverflowDetail(portfolio) {
   if (!portfolio || typeof portfolio !== "object") return "";
-  var parts = [];
-  var folder = Number(portfolio.folderCount);
   var placed = Number(portfolio.photosPlaced);
   var kept = Number(portfolio.photosKept);
-  if (folder > 0) parts.push("文件夹 " + folder + " 张");
-  if (placed >= 0) parts.push("放进这本的有 " + placed + " 张");
-  if (kept > 0) parts.push("大约用上 " + kept + " 张");
-  return parts.join(" · ");
+  var leftover = placed >= 0 && kept > 0 && placed < kept ? kept - placed : 0;
+  if (leftover > 0 && placed >= 0) {
+    return "入册 " + placed + " 张 · 未排 " + leftover + " 张";
+  }
+  var folder = Number(portfolio.folderCount);
+  if (folder > 0 && placed >= 0) {
+    return "文件夹 " + folder + " 张 · 入册 " + placed + " 张";
+  }
+  if (folder > 0) return "文件夹 " + folder + " 张";
+  return "";
 }
 
 export function portfolioHasLeftover(portfolio) {

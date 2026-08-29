@@ -7,7 +7,7 @@ from datetime import date, datetime
 
 from travelogue.curation.bucket_planning import bucket_day_span
 from travelogue.curation.time_segments import parse_asset_date
-from travelogue.domain.copy_subject import narrative_copy_subject
+from travelogue.domain.copy_subject import is_generic_place, narrative_copy_subject
 
 _CHAPTER_TITLE_MAX = 14
 _DATE_HEAD_RE = re.compile(r"^\d{1,2}月\d{1,2}")
@@ -182,6 +182,13 @@ def scene_short_from_segment_label(
     return None
 
 
+def _ordinal_leg(index_1: int) -> str:
+    names = "一二三四五六七八九十"
+    if 1 <= index_1 <= 10:
+        return f"第{names[index_1 - 1]}程"
+    return f"第{index_1}程"
+
+
 def _pick_thin_chapter_title(
     *,
     date_base: str,
@@ -190,8 +197,9 @@ def _pick_thin_chapter_title(
     scene: str | None,
     used: list[str],
     max_len: int = _CHAPTER_TITLE_MAX,
+    leg: str | None = None,
 ) -> str:
-    """SNR D-SNR-03 · 地点±时段 → 场景±时段 → 日期±时段 → 同名日期。"""
+    """地点±时段 → 场景±时段 → 第N程±时段 → 日期（日期只作最后退路）。"""
 
     def _push(buf: list[str], text: str) -> None:
         t = (text or "").strip()
@@ -207,13 +215,17 @@ def _pick_thin_chapter_title(
         if daypart:
             _push(candidates, f"{scene} · {daypart}")
         _push(candidates, scene)
+    if leg:
+        if daypart:
+            _push(candidates, f"{leg} · {daypart}")
+        _push(candidates, leg)
     if daypart:
         _push(candidates, f"{date_base} · {daypart}")
     _push(candidates, date_base)
     for cand in candidates:
         if cand not in used:
             return cand
-    return _clip_title(date_base, max_len=max_len)
+    return _clip_title(leg or date_base, max_len=max_len)
 
 
 # SFP D-SFP-01 · 同日后续章：时段 → segment → 同名日期（禁止「·二/·三」与「（N）」上读者面）
@@ -320,6 +332,16 @@ def chapter_titles(
     from travelogue.domain.place_names import allowed_place_names
 
     place = narrative_copy_subject(meta, intent=intent, assets=assets)
+    # 章名用地名，不用杂志题名（copy_subject 在未手设地点时会回题名）
+    meta_places = [
+        str(p).strip()
+        for p in (meta.get("places") or [])
+        if str(p).strip() and not is_generic_place(str(p).strip())
+    ]
+    trip_place = _clip_title(meta_places[0], max_len=8) if meta_places else ""
+    if not trip_place and place and place != str(meta.get("title") or "").strip():
+        if not is_generic_place(place):
+            trip_place = _clip_title(place, max_len=8)
     assets_by_id = {a["id"]: a for a in assets}
     titles: list[str] = []
     day_seen: dict[str, int] = {}
@@ -347,12 +369,36 @@ def chapter_titles(
             plan_idx += 1
             continue
 
-        # 多日章节优先日期跨度，避免多段 label 硬截断出「2月9–12日··4月4」
+        # 多日章节：地点/第N程优先，日期跨度只作退路（避免三行日历腔）
         if len(span) > 1:
-            span_title = title_for_bucket_span(span, with_year=with_year)
-            if span_title:
-                titles.append(span_title)
-                continue
+            span_title = title_for_bucket_span(span, with_year=with_year) or ""
+            live_bucket = [
+                aid
+                for aid in bucket
+                if not (assets_by_id.get(aid) or {}).get("timeOutlier")
+            ] or bucket
+            daypart = _bucket_daypart(live_bucket, assets_by_id)
+            place_short = _bucket_place_short(live_bucket, assets_by_id) or trip_place
+            seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
+            scene = (
+                scene_short_from_segment_label(
+                    segment_labels.get(seg_id, ""),
+                    allowed_places=allowed_places,
+                )
+                if seg_id
+                else None
+            )
+            titles.append(
+                _pick_thin_chapter_title(
+                    date_base=span_title,
+                    daypart=daypart,
+                    place=place_short or None,
+                    scene=scene,
+                    used=titles,
+                    leg=_ordinal_leg(i + 1),
+                )
+            )
+            continue
 
         # D-SFI-05 · 离群排除后若只剩单日，禁止再用多段 label 把离群日期拼回章名
         # （否则会出现「6月30日·11月30日」/「2018–2020」）
@@ -367,7 +413,7 @@ def chapter_titles(
                 if not (assets_by_id.get(aid) or {}).get("timeOutlier")
             ] or bucket
             daypart = _bucket_daypart(live_bucket, assets_by_id)
-            place_short = _bucket_place_short(live_bucket, assets_by_id)
+            place_short = _bucket_place_short(live_bucket, assets_by_id) or trip_place
             seg_id = bucket_segment_ids[i] if i < len(bucket_segment_ids) else ""
             scene = (
                 scene_short_from_segment_label(
@@ -377,14 +423,14 @@ def chapter_titles(
                 if seg_id
                 else None
             )
-            # SNR D-SNR-03 · 首章与同日后续共用薄章名优先级（禁序号腔）
             titles.append(
                 _pick_thin_chapter_title(
                     date_base=base,
                     daypart=daypart,
-                    place=place_short,
+                    place=place_short or None,
                     scene=scene,
                     used=titles,
+                    leg=_ordinal_leg(i + 1),
                 )
             )
             continue
@@ -430,7 +476,7 @@ def chapter_titles(
             day_seen[key] = day_seen.get(key, 0) + 1
             base = _day_title(d, with_year=with_year)
             daypart = _bucket_daypart(bucket, assets_by_id)
-            place_short = _bucket_place_short(bucket, assets_by_id)
+            place_short = _bucket_place_short(bucket, assets_by_id) or trip_place
             scene = (
                 scene_short_from_segment_label(
                     segment_labels.get(seg_id, ""),
@@ -443,9 +489,10 @@ def chapter_titles(
                 _pick_thin_chapter_title(
                     date_base=base,
                     daypart=daypart,
-                    place=place_short,
+                    place=place_short or None,
                     scene=scene,
                     used=titles,
+                    leg=_ordinal_leg(i + 1),
                 )
             )
         elif i == 0:

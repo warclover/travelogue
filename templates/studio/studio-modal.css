@@ -30,8 +30,8 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(6, 5, 4, .52);
-  backdrop-filter: blur(4px);
+  background: rgba(6, 5, 4, .72);
+  backdrop-filter: blur(8px);
   font-family: var(--studio-font-ui);
 }
 

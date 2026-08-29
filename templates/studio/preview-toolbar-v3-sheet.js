@@ -470,9 +470,9 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     return (
       '<ul class="preview-sheet__list preview-sheet__list--copy-refresh">' +
       '<li data-tool="llm"><span>杂志文案</span>' +
-      '<button type="button" class="preview-sheet__link" data-action="open-ai-narrate">在 AI 中打开</button></li>' +
+      '<button type="button" class="preview-sheet__link" data-action="open-ai-narrate">打开写作辅助</button></li>' +
       "</ul>" +
-      '<p class="preview-sheet__hint">智能生成请用顶栏「AI」；版式与书衣仍在本精修面板。</p>'
+      '<p class="preview-sheet__hint">在精修里写一句，或点上面打开写作辅助。版式与书衣仍在本面板。</p>'
     );
   }
 
@@ -1185,6 +1185,12 @@ export function mountPreviewUnifiedSheet(root, hooks) {
     if (activeTab === "cover") {
       renderCoverPanel();
     } else if (activeTab === "page") {
+      var pageCtx = describeScreenContext(findDominantScreen());
+      if (pageCtx.empty && scrollPreviewToBodyScreen()) {
+        window.setTimeout(function () {
+          if (activeTab === "page") renderPagePanel();
+        }, 420);
+      }
       renderPagePanel();
     } else {
       renderBookPanel();

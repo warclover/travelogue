@@ -103,7 +103,7 @@ export function outputChips(row) {
 /** AC-OLT-14 · 零成品不插副券行，票面孩子与改前一致。 */
 export var ZERO_OUTPUT_TICKET_SHAPE = Object.freeze({
   openMetaClass: "v2-shelf__open v2-shelf__open--meta v2-shelf__stub",
-  children: Object.freeze(["v2-shelf__stub-main", "v2-shelf__code"]),
+  children: Object.freeze(["v2-shelf__stub-main"]),
 });
 
 export function shouldInsertOutputStubs(row) {
@@ -118,7 +118,6 @@ export function ticketOpenMetaShape(row) {
     children.push("v2-shelf__stubs");
     classes.push("v2-shelf__stub--chips");
   }
-  children.push("v2-shelf__code");
   return { openMetaClass: classes.join(" "), children: children };
 }
 

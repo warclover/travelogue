@@ -9,6 +9,7 @@ import {
   PORTFOLIO_PAGES_PLATFORM,
   firstSuccessPortfolioCopy,
   formatOverflowLine,
+  formatOverflowDetail,
   leftoverIsCapacity,
   isPortfolioEdition,
   portfolioBookUrl,
@@ -198,14 +199,29 @@ test("firstSuccessPortfolioCopy 默认规格句，溢出进 lead", () => {
   const leftover = firstSuccessPortfolioCopy({
     title: "林芝",
     overflowLine: "有 84 张没放进这本，要的话用游记能全收。",
-    overflowDetail: "文件夹 160 张 · 放进这本的有 96 张 · 大约用上 180 张",
+    overflowDetail: "入册 96 张 · 未排 84 张",
     portfolio: { folderCount: 160, pageCount: 32, photosPlaced: 96, photosKept: 180 },
   });
   assert.equal(leftover.headline, "《林芝》已生成 · 文件夹 160 张，做成大约一本 32 页");
   assert.equal(leftover.lead, "有 84 张没放进这本，要的话用游记能全收。");
-  assert.match(leftover.detail, /放进这本的有 96 张/);
+  assert.match(leftover.detail, /入册 96 张 · 未排 84 张/);
   assert.equal(leftover.leftover, true);
   assert.equal(firstSuccessPortfolioCopy({ title: "林芝" }).headline, "");
+});
+
+test("formatOverflowDetail 一口径：入册/未排，不混文件夹与选用数", () => {
+  assert.equal(
+    formatOverflowDetail({
+      folderCount: 121,
+      photosPlaced: 89,
+      photosKept: 117,
+    }),
+    "入册 89 张 · 未排 28 张"
+  );
+  assert.equal(
+    formatOverflowDetail({ folderCount: 129, photosPlaced: 81, photosKept: 81 }),
+    "文件夹 129 张 · 入册 81 张"
+  );
 });
 
 test("formatOverflowLine 人话：少收优先，否则文件夹+页数", () => {

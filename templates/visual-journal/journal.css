@@ -2810,13 +2810,9 @@ body.longshot-capturing .cover-opening .trip-meta {
   letter-spacing: 0.04em;
 }
 
-.cover-closing__title-art-attr {
-  margin: 0.45rem 0 0;
-  max-width: 22em;
-  font-size: 9px;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.38);
+.cover-closing__title-art-attr,
+.longshot-boundary-footer__title-art-attr {
+  display: none;
 }
 
 .cover-closing__end {

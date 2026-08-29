@@ -93,9 +93,9 @@ def test_narrate_chapter_id_rejected_when_out_of_scope() -> None:
 def test_apply_scope_cleanup_clears_middle_copy() -> None:
     trip = _sample_trip()
     cleared = apply_scope_cleanup(trip, SCOPE_FRAME)
-    assert any("chapters.ch-02.lead" in c for c in cleared)
-    assert not trip["chapters"][1].get("lead")
-    assert not trip["chapters"][0].get("lead")
+    assert not any(".lead" in c for c in cleared)
+    assert trip["chapters"][1].get("lead") == "旧导语2"
+    assert trip["chapters"][0].get("lead") == "旧导语1"
     assert trip["assets"][0].get("skipCaption") is True
     assert not trip["assets"][0].get("caption")
 
@@ -105,13 +105,12 @@ def test_narrate_frame_stub_only_hook_epilogue() -> None:
     result = run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
     assert "meta.hook" in result.fields_updated
     assert "epilogue" in result.fields_updated
-    assert not any("lead" in f for f in result.fields_updated)
+    assert any("lead" in f for f in result.fields_updated)
     assert trip["meta"]["hook"]
     # BE-FST-03 · stub still touches epilogue field but leaves it empty
     assert not (trip.get("epilogue") or "").strip()
-    assert not trip["chapters"][0].get("lead")
-    assert not trip["chapters"][1].get("lead")
-    assert not trip["chapters"][2].get("lead")
+    assert all((ch.get("lead") or "").strip() for ch in trip["chapters"])
+    assert "旅行照片" not in (trip["chapters"][0].get("lead") or "")
     assert trip["curation"]["narrativeScope"] == SCOPE_FRAME
 
 
@@ -119,7 +118,7 @@ def test_narrate_frame_chapters_stub_first_last_lead() -> None:
     trip = _sample_trip()
     run_narrate(trip, provider="stub", scope=SCOPE_FRAME_CHAPTERS, regenerate=True)
     assert trip["chapters"][0].get("lead")
-    assert not trip["chapters"][1].get("lead")
+    assert trip["chapters"][1].get("lead")
     assert trip["chapters"][2].get("lead")
 
 
@@ -143,7 +142,8 @@ def test_llm_narrate_frame_skips_chapter_calls() -> None:
     run_llm_narrate(trip, provider="deepseek", chat_fn=fake_chat, scope=SCOPE_FRAME, regenerate=True)
     assert len(calls) == 1
     assert trip["meta"]["hook"] == "frame hook。"
-    assert not trip["chapters"][0].get("lead")
+    # LLM frame 仍不调章节；既有 lead 不被 cleanup 清掉
+    assert trip["chapters"][0].get("lead") == "旧导语1"
 
 
 def test_narrate_full_preserves_legacy_behavior() -> None:

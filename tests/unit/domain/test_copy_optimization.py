@@ -126,7 +126,7 @@ def test_copy_patch_decor_line() -> None:
     assert len(trip["chapters"][0]["decorLine"]) <= 30
 
 
-def test_narrate_frame_skips_lead_and_caption(tmp_path: Path) -> None:
+def test_narrate_frame_writes_stub_lead_skips_caption(tmp_path: Path) -> None:
     trip = {
         "tripId": "scope-frame",
         "meta": {"title": "京都", "tone": "relaxed", "hook": ""},
@@ -145,7 +145,8 @@ def test_narrate_frame_skips_lead_and_caption(tmp_path: Path) -> None:
         "pipeline": {"status": "structure_locked", "locks": {"structure": True, "copy": False}},
     }
     result = run_narrate(trip, provider="stub", scope=SCOPE_FRAME, regenerate=True)
-    assert not any("lead" in f for f in result.fields_updated)
+    assert any("lead" in f for f in result.fields_updated)
+    assert (trip["chapters"][0].get("lead") or "").strip()
     assert not any("caption" in f for f in result.fields_updated)
 
 

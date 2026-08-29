@@ -231,7 +231,8 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
   assert.equal(pfCopy.pickButton, "选择本次作品集的照片文件夹");
   assert.equal(pfCopy.quickDesc.includes("请改选游记"), true);
   assert.equal(pfCopy.quickDesc.includes("杂志"), false);
-  assert.equal(pfCopy.hideDemo, true);
+  assert.equal(pfCopy.hideDemo, false);
+  assert.equal(pfCopy.demoLabel, "试用示例作品集");
   assert.equal(wizardCopy("journal").pickButton, "选择照片文件夹");
   assert.equal(wizardCopy("journal").hideDemo, false);
   assert.equal(

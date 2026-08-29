@@ -330,6 +330,20 @@ def build_journal_chapter_list(
                 record_stub_hit(
                     surface=surface_name, field="lead", pattern_id=pattern_id, trip_id=trip_id
                 )
+        if not lead and not strip_narrative_copy and not (i == 0 and folio.has_foreword_spread):
+            from travelogue.services.narrate import stub_face_lead
+
+            assets_by_id = {
+                str(a.get("id")): a
+                for a in (trip.get("assets") or [])
+                if isinstance(a, dict) and a.get("id")
+            }
+            lead = stub_face_lead(
+                ch,
+                assets=assets_by_id,
+                chapter_index=int(ch.get("index") or i + 1),
+                chapter_total=len(raw_chapters) if raw_chapters else 1,
+            )
 
         decor_line = (ch.get("decorLine") or "").strip()
         if strip_narrative_copy:

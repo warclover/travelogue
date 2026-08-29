@@ -152,12 +152,16 @@ def test_title_art_attribution_distinguishes_route_c() -> None:
     assert ATTR_ROUTE_B in title_art_attribution_line("clean-pipeline-v1")
 
 
-def test_cover_closing_partial_wires_title_art_attribution() -> None:
+def test_cover_closing_partial_omits_title_art_attribution() -> None:
     text = (ROOT / "templates/visual-journal/partials/cover-closing.hbs").read_text(
         encoding="utf-8"
     )
-    assert "titleArtAttribution" in text
-    assert 'data-block="title-art-attribution"' in text
+    assert "titleArtAttribution" not in text
+    assert "data-block=\"title-art-attribution\"" not in text
+    footer = (
+        ROOT / "templates/visual-journal/partials/longshot-boundary-footer.hbs"
+    ).read_text(encoding="utf-8")
+    assert "titleArtAttribution" not in footer
 
 
 def test_studio_panel_wires_title_art_attribution_copy() -> None:
