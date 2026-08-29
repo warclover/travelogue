@@ -3,7 +3,7 @@
   "measured_at": "2026-08-29",
   "functions": {
     "travelogue.render.assemble:build_render_context": {
-      "lines": 538,
+      "lines": 141,
       "cap_after_w1": 160,
       "owner": "shared",
       "file": "travelogue/render/assemble.py"
