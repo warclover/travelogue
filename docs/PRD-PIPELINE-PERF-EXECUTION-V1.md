@@ -4,7 +4,7 @@
 |---|---|
 | 文档编号 | PPX-PRD-001 |
 | 版本 | v0.1.0 |
-| 状态 | Draft · 待评审 |
+| 状态 | **口头 Go（K6）** · M1 已合 [#72] · M2 不开 · 默认 `parallel_ingest` 仍 false |
 | 优先级 | P0 |
 | 主题代号 | Pipeline Perf Execution（PPX）— 兑现已设计的并行，而不是另开优化专项 |
 | DOC-STATUS | proposed；审核通过前不写入 DOC-STATUS |
@@ -16,7 +16,7 @@
 | W0 基线 | [acceptance-records/ppx-w0-baseline-2026-08-28.md](./acceptance-records/ppx-w0-baseline-2026-08-28.md) |
 | 复议 | 2026-08-28 架构与算法复议（工作区 canvas `travelogue-perf-architect-algorithm-advice-2026-08-28`）；**以本文为实施合同** |
 | 真实实现锚点 | `travelogue/web/studio_subprocess.py` · `travelogue/media/ingest.py` · `travelogue/media/ingest_parallel.py` · `travelogue/media/derivatives.py` · `travelogue/orchestrator/run.py` |
-| 更新日期 | 2026-08-28 |
+| 更新日期 | 2026-08-29 |
 
 > 一句话目标：当 `pipeline.parallel_ingest=true` 时，Studio 真导入路径必须真正并行；高清物化必须按资产并行且不改坏 trip；失败对用户可回退、对遥测和 CI 不可静默。
 

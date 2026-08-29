@@ -5,8 +5,8 @@
 | **对应 PRD** | [PRD-PIPELINE-PERF-EXECUTION-V1.md](./PRD-PIPELINE-PERF-EXECUTION-V1.md) **v0.1.0** |
 | **实施清单** | [IMPLEMENTATION-PIPELINE-PERF-EXECUTION-V1.md](./IMPLEMENTATION-PIPELINE-PERF-EXECUTION-V1.md) |
 | **W0 基线** | [acceptance-records/ppx-w0-baseline-2026-08-28.md](./acceptance-records/ppx-w0-baseline-2026-08-28.md) |
-| **状态** | **本机抽检通过** · 已合入 [#72](https://github.com/warclover/travelogue/pull/72) · 记录见 [ppx-w1-windows-bench-2026-08-28.md](./acceptance-records/ppx-w1-windows-bench-2026-08-28.md) |
-| **日期** | 2026-08-28 |
+| **状态** | **M1 关闭** · K6 口头 Go · 已合入 [#72](https://github.com/warclover/travelogue/pull/72) · 记录见 [ppx-w1-windows-bench-2026-08-28.md](./acceptance-records/ppx-w1-windows-bench-2026-08-28.md) |
+| **日期** | 2026-08-29 |
 
 > **验收原则**
 >
@@ -70,6 +70,8 @@
 | 角色 | 结论 | 日期 |
 |---|---|---|
 | 实现 | ☑ 本机抽检 | 2026-08-28 |
-| QA | ☐ | |
-| 架构 | ☐ | |
+| QA | ☑ 口头 Go | 2026-08-29 |
+| 架构 | ☑ 口头 Go | 2026-08-29 |
 | 产品（仅当要改 `parallel_ingest` 默认 true） | 本波不需要 | — |
+
+口头 Go 三句：M1 关闭；M2 不开工；仓库 `parallel_ingest` 继续默认 `false`。K6 为合入后补签（M1 已在 [#72](https://github.com/warclover/travelogue/pull/72)）。
