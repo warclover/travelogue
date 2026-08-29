@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue |
-| **文档版本** | **v0.2.1**（W0 地图与门禁已落 · 2026-08-29） |
-| **状态** | **有条件通过（Conditional Go）** · 七席 BLK 已回写 · **W0 已落** · W1 待排期（须 W0 在主干；BLK-RCL-02/03/04/10 已回写） |
+| **文档版本** | **v0.2.2**（W0–W2 已落 · W3 活路径文件头与 CSS 目录 · 2026-08-29） |
+| **状态** | **W0–W3 已落主干** · 七席 BLK 已回写 · 列车停在 L2b；L3 起须单独 PRD |
 | **DOC-STATUS** | active |
 | **评审** | [七席纪要 2026-08-22](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md)（v0.1.0 · 7/7 Conditional Go · BLK-RCL-01～10） |
 | **特性代号** | **RCL**（Readable Core Line · 可读主链） |

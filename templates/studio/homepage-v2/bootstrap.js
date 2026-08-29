@@ -1,5 +1,7 @@
 /**
- * 首页 v2 · DOMContentLoaded 入口（M21-c 后主入口 GET /）。
+ * LIVE · Studio homepage-v2 entry (GET / after M21-c).
+ * Loaded by: studio-home-v2.html. Closure root is hardcoded (BLK-RCL-09).
+ * Filename v2 ≠ frozen. Not: templates/studio/legacy-freeze/.
  */
 import { isDemoTrip } from "../js/constants.js";
 import { trackStudioEvent } from "../js/analytics.js";

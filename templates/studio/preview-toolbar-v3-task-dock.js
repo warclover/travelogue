@@ -1,6 +1,7 @@
 // @ts-nocheck
 /**
- * Preview toolbar v3 · bottom task dock (export progress / success / layout pending).
+ * LIVE · Preview toolbar task dock (export progress / success / layout pending).
+ * Loaded by: init-v3.js. Filename v3 ≠ frozen.
  */
 "use strict";
 

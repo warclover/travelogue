@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -92,3 +93,30 @@ def test_multiline_from_is_followed(tmp_path: Path) -> None:
 
 def test_main_green_on_repo() -> None:
     assert main([]) == 0
+
+
+# AC-RCL-16 · §7.2 required headers (status enum in the file head).
+_W3_HEADER_FILES = (
+    ("templates/studio/preview-toolbar.js", "LIVE"),
+    ("templates/studio/homepage-v2/bootstrap.js", "LIVE"),
+    ("templates/studio/preview-toolbar/init-v3.js", "LIVE"),
+    ("templates/studio/preview-toolbar/bootstrap.js", "LIVE"),
+    ("templates/studio/preview-toolbar/dock.js", "LIVE"),
+    ("templates/studio/preview-toolbar-v3-sheet.js", "LIVE"),
+    ("templates/studio/preview-toolbar-v3-task-dock.js", "LIVE"),
+    ("templates/visual-journal/longshot.js", "READER"),
+    ("templates/visual-journal/journal.css", "LIVE"),
+    ("templates/visual-journal/journal-screens.css", "LIVE"),
+    ("templates/visual-journal/portfolio-pages.css", "LIVE"),
+)
+_STATUS_RE = re.compile(r"\b(LIVE|READER|FROZEN|GENERATED)\b")
+
+
+def test_w3_required_files_have_status_headers() -> None:
+    from scripts.lint_frontend_live_path import ROOT
+
+    for rel, expected in _W3_HEADER_FILES:
+        head = "\n".join((ROOT / rel).read_text(encoding="utf-8").splitlines()[:20])
+        found = _STATUS_RE.findall(head)
+        assert found, rel
+        assert found[0] == expected, rel
