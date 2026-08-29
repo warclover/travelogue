@@ -121,7 +121,7 @@ export function portfolioRefineIdentitySpec(pageCount) {
 }
 
 /**
- * 票面第一行身份弱标。无 trip 空串；缺省 edition 当游记。
+ * 票面身份行。无 trip 空串；缺省 edition 当游记。
  * @param {{ edition?: string, pageCount?: number }|null} trip
  */
 export function shelfEditionLine(trip) {
@@ -132,6 +132,12 @@ export function shelfEditionLine(trip) {
     return "作品集";
   }
   return "游记";
+}
+
+/** 封面角标短名：只写形态，页数留给票根身份行。 */
+export function shelfEditionShort(trip) {
+  if (!trip) return "";
+  return isPortfolioEdition(trip.edition) ? "作品集" : "游记";
 }
 
 export function editionCardOptions() {

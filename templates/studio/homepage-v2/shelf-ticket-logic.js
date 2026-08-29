@@ -72,3 +72,12 @@ export function stubYearMonth(ts) {
   var m = d.getMonth() + 1;
   return d.getFullYear() + " · " + (m < 10 ? "0" + m : String(m));
 }
+
+/** 票根副行：年月 · 张数。形态不进这一行（C15 单独露）。 */
+export function stubFactsLine(trip) {
+  var bits = [];
+  var ym = stubYearMonth(trip && trip.updatedAt);
+  if (ym) bits.push(ym);
+  if (trip && trip.photoCount) bits.push(trip.photoCount + " 张");
+  return bits.join(" · ");
+}

@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   stubCode,
+  stubFactsLine,
   stubFingerprint,
   stubSerial,
 } from "../../templates/studio/homepage-v2/shelf-ticket-logic.js";
@@ -50,6 +51,21 @@ describe("stubSerial", function () {
     });
     assert.match(s1, /^NO\.\d{8}$/);
     assert.notEqual(s1, s2);
+  });
+});
+
+describe("stubFactsLine", function () {
+  it("keeps date and count off the edition words", function () {
+    var line = stubFactsLine({
+      title: "华农油菜花",
+      edition: "portfolio",
+      pageCount: 13,
+      photoCount: 31,
+      updatedAt: 1756406400,
+    });
+    assert.match(line, /31 张/);
+    assert.equal(line.includes("游记"), false);
+    assert.equal(line.includes("作品集"), false);
   });
 });
 

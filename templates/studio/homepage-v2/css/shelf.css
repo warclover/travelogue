@@ -231,6 +231,17 @@
   flex-direction: column;
   justify-content: flex-start;
 }
+.v2-shelf__ticket .v2-shelf__edition {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  color: var(--v2-stub-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .v2-shelf__ticket .v2-shelf__title {
   font-size: 12px;
   font-weight: 700;
@@ -473,6 +484,31 @@
     display: flex;
     opacity: .82;
   }
+}
+.v2-shelf__cover-flags {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: calc(100% - 44px);
+  pointer-events: none;
+}
+.v2-shelf__edition-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--v2-paper, #fff) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--v2-ink, #14110d) 16%, transparent);
+  color: var(--v2-ink);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
 }
 .v2-shelf__badge {
   position: absolute;

@@ -759,8 +759,14 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "v2-shelf__serial" not in shelf
     assert "v2-shelf__barcode" not in shelf
     assert "stubMetaLine" in shelf
+    assert "v2-shelf__edition" in shelf
+    assert "v2-shelf__edition-badge" in shelf
+    assert "shelfEditionShort" in shelf
+    assert "stubFactsLine" in shelf
     assert "v2-shelf__menu-btn" in V2_CSS_BUNDLE
     assert ".v2-shelf__ticket" in V2_CSS_BUNDLE
+    assert ".v2-shelf__edition" in V2_CSS_BUNDLE
+    assert ".v2-shelf__edition-badge" in V2_CSS_BUNDLE
     assert ".v2-shelf__perf" in V2_CSS_BUNDLE
     assert ".v2-shelf__barcode" in V2_CSS_BUNDLE
     assert "shelf-outputs.js" in shelf

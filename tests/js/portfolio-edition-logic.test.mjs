@@ -19,6 +19,7 @@ import {
   shouldConfirmThinTier,
   thinTierConfirm,
   shelfEditionLine,
+  shelfEditionShort,
   shouldMountEditionType,
   shouldShowPortfolioFlagOffBanner,
   isRadioNavKey,
@@ -64,6 +65,15 @@ test("shelfEditionLine 游记与作品集都标身份", () => {
     shelfEditionLine({ edition: "portfolio", pageCount: 16 }),
     "作品集 · 16 页"
   );
+});
+
+test("华农同名两本封面短标能分开", () => {
+  var journal = { title: "华农油菜花", edition: "journal", pageCount: 8 };
+  var portfolio = { title: "华农油菜花", edition: "portfolio", pageCount: 13 };
+  assert.equal(shelfEditionShort(null), "");
+  assert.equal(shelfEditionShort(journal), "游记");
+  assert.equal(shelfEditionShort(portfolio), "作品集");
+  assert.notEqual(shelfEditionLine(journal), shelfEditionLine(portfolio));
 });
 
 test("成册类型两卡不叫成册风格", () => {

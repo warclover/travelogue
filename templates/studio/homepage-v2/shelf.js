@@ -27,8 +27,8 @@ import {
   shelfShowCoverLongshotBadge,
   shelfShowCoverReadyBadge,
 } from "./shelf-actions-logic.js";
-import { stubYearMonth } from "./shelf-ticket-logic.js";
-import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
+import { stubFactsLine } from "./shelf-ticket-logic.js";
+import { shelfEditionLine, shelfEditionShort } from "../js/portfolio-edition-logic.js";
 import { allowReadyBadge, buildOutputStubs, runTripRecipeReexport } from "./shelf-outputs.js";
 import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
@@ -107,15 +107,15 @@ function tripSubLine(trip) {
   return sub.join(" · ");
 }
 
-/** 满票根 meta：年月优先（暂用 updatedAt）· 张数。 */
+/** 满票根副行：年月 · 张数。形态走独立身份行。 */
 function stubMetaLine(trip) {
-  var bits = [];
+  return stubFactsLine(trip) || tripSubLine(trip);
+}
+
+function stubOpenLabel(trip) {
+  var title = (trip && (trip.title || trip.tripId)) || "这本";
   var editionLine = shelfEditionLine(trip);
-  if (editionLine) bits.push(editionLine);
-  var ym = stubYearMonth(trip.updatedAt);
-  if (ym) bits.push(ym);
-  if (trip.photoCount) bits.push(trip.photoCount + " 张");
-  return bits.join(" · ") || tripSubLine(trip);
+  return editionLine ? "打开 " + title + " · " + editionLine : "打开 " + title;
 }
 
 function onTripDeleted(trip) {
@@ -199,9 +199,15 @@ function buildCoverWrap(trip, surface) {
   buildCover(trip, openCover);
   openCover.addEventListener("click", function () { openTrip(trip, false); });
   wrap.appendChild(openCover);
+  var coverFlags = el("div", "v2-shelf__cover-flags");
   if (isDemoTrip(trip)) {
-    wrap.appendChild(el("span", "v2-demo-flag v2-shelf__badge", "示例"));
+    coverFlags.appendChild(el("span", "v2-demo-flag", "示例"));
   }
+  var editionShort = shelfEditionShort(trip);
+  if (editionShort) {
+    coverFlags.appendChild(el("span", "v2-shelf__edition-badge", editionShort));
+  }
+  if (coverFlags.childNodes.length) wrap.appendChild(coverFlags);
   // PRD-PIPELINE-PERF-V1 · R5.1 / MF-09 · shelf two-state (+ preparing HD)
   var preparingN = Number(trip.derivativesPreparing || 0);
   if (preparingN > 0) {
@@ -312,11 +318,16 @@ function buildBook(trip) {
 
   var openMeta = el("button", "v2-shelf__open v2-shelf__open--meta v2-shelf__stub");
   openMeta.type = "button";
-  openMeta.setAttribute("aria-label", "打开 " + (trip.title || trip.tripId));
+  openMeta.setAttribute("aria-label", stubOpenLabel(trip));
 
   var stubMain = el("div", "v2-shelf__stub-main");
+  var editionLine = shelfEditionLine(trip);
+  if (editionLine) {
+    stubMain.appendChild(el("p", "v2-shelf__edition", editionLine));
+  }
   stubMain.appendChild(el("h3", "v2-shelf__title", trip.title || trip.tripId));
-  stubMain.appendChild(el("p", "v2-shelf__sub", stubMetaLine(trip)));
+  var facts = stubMetaLine(trip);
+  if (facts) stubMain.appendChild(el("p", "v2-shelf__sub", facts));
   openMeta.appendChild(stubMain);
 
   var stubs = buildOutputStubs(trip, {
