@@ -222,3 +222,19 @@ export function reexportRequest(item) {
   }
   return next;
 }
+
+/** C13 · 优先过期副券，否则最近一张票根；没有成品则微信群长图。 */
+export function lastRecipeChip(row) {
+  var chips = outputChips(row).chips || [];
+  var i;
+  for (i = 0; i < chips.length; i++) {
+    if (chips[i] && chips[i].state === "outdated") return chips[i];
+  }
+  return chips[0] || null;
+}
+
+export function lastRecipeRequest(row) {
+  var chip = lastRecipeChip(row);
+  if (chip) return reexportRequest(chip);
+  return { platform: "wechat_chat" };
+}

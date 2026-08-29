@@ -12,6 +12,7 @@ import {
   outputChips,
   overflowAriaLabel,
   readyConflictsOutdated,
+  lastRecipeRequest,
   reexportRequest,
   revealFailToast,
   shouldInsertOutputStubs,
@@ -208,5 +209,21 @@ describe("manageRows and copy", function () {
       platform: "wechat_chat",
       segmentMode: "chapter",
     });
+  });
+
+  it("lastRecipeRequest prefers outdated chip then first ticket", function () {
+    assert.deepEqual(lastRecipeRequest({}), { platform: "wechat_chat" });
+    assert.deepEqual(
+      lastRecipeRequest({
+        outputSummary: {
+          total: 2,
+          chips: [
+            rec({ outputId: "xiaohongshu", profile: "xiaohongshu", state: "ready" }),
+            rec({ outputId: "wechat_chat:whole", profile: "wechat_chat", state: "outdated" }),
+          ],
+        },
+      }),
+      { platform: "wechat_chat", segmentMode: "full" }
+    );
   });
 });

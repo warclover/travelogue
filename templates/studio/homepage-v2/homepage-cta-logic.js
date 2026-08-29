@@ -63,11 +63,11 @@ export function resolveHomepageCta(trips) {
   if (trip.longshotStale) {
     return {
       state: CTA_RESUME_EXPORT,
-      primaryLabel: "继续检查并导出",
-      primaryAria: "继续检查并导出《" + title + "》",
-      primaryAction: "preview_export",
-      secondaryLabel: "选择照片文件夹",
-      secondaryAction: "import",
+      primaryLabel: "按原配方重出",
+      primaryAria: "按原配方重出《" + title + "》",
+      primaryAction: "reexport_recipe",
+      secondaryLabel: "打开《" + title + "》",
+      secondaryAction: "preview",
       chip: chip,
       trip: trip,
     };

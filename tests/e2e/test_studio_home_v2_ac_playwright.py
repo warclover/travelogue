@@ -1644,8 +1644,8 @@ def test_ux01_homepage_cta_states(studio_server) -> None:
         (
             "studioFixture=single-stale",
             {
-                "primary": "继续检查并导出",
-                "secondary": "选择照片文件夹",
+                "primary": "按原配方重出",
+                "secondary": "打开《京都 · 雨后》",
                 "inHeadline": False,
                 "chip": "游记",
             },

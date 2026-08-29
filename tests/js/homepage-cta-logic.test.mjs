@@ -49,7 +49,7 @@ describe("resolveHomepageCta", function () {
     assert.equal(cta.chip, "游记");
   });
 
-  it("stale export resumes check-and-export for portfolio", function () {
+  it("stale export one-clicks last recipe for portfolio", function () {
     var cta = resolveHomepageCta([
       {
         tripId: "tokyo",
@@ -61,10 +61,12 @@ describe("resolveHomepageCta", function () {
       },
     ]);
     assert.equal(cta.state, CTA_RESUME_EXPORT);
-    assert.equal(cta.primaryLabel, "继续检查并导出");
-    assert.equal(cta.primaryAction, "preview_export");
+    assert.equal(cta.primaryLabel, "按原配方重出");
+    assert.equal(cta.primaryAction, "reexport_recipe");
+    assert.equal(cta.secondaryLabel, "打开《东京街拍》");
+    assert.equal(cta.secondaryAction, "preview");
     assert.equal(cta.chip, "作品集");
-    assert.equal(previewHref(cta.trip, true), "/tokyo/index.html?exportPanel=1");
+    assert.equal(previewHref(cta.trip, false), "/tokyo/index.html");
   });
 
   it("delivered trip uses plan A: new folder primary, open last secondary", function () {

@@ -28,9 +28,9 @@ export function shelfResumeActions(trip) {
   if (trip.longshotStale) {
     actions.push({
       kind: "longshot",
-      label: "更新长图",
+      label: "按原配方重出",
       primary: true,
-      focusLongshot: true,
+      reexportRecipe: true,
     });
   }
   if (trip.algorithmStale) {

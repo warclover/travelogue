@@ -29,7 +29,7 @@ import {
 } from "./shelf-actions-logic.js";
 import { stubYearMonth } from "./shelf-ticket-logic.js";
 import { shelfEditionLine } from "../js/portfolio-edition-logic.js";
-import { allowReadyBadge, buildOutputStubs } from "./shelf-outputs.js";
+import { allowReadyBadge, buildOutputStubs, runTripRecipeReexport } from "./shelf-outputs.js";
 import { COPY_DICTIONARY } from "../js/copy-dictionary.js";
 import { triggerHomepageRecurate } from "./bento-stale.js";
 import { openSettings } from "./settings-panel.js";
@@ -225,7 +225,17 @@ function buildCoverWrap(trip, surface) {
     priorityLongshotTripId: priorityLongshotTripId,
   });
   if (showLongshotBadge) {
-    wrap.appendChild(el("span", "v2-shelf__stale-badge", STALE_LONGSHOT));
+    var staleBtn = el("button", "v2-shelf__stale-badge", STALE_LONGSHOT);
+    staleBtn.type = "button";
+    staleBtn.title = "按原配方重出";
+    staleBtn.setAttribute("aria-label", "按原配方重出");
+    staleBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      trackStudioEvent("shelf_stale_reexport", { trip_id: trip.tripId });
+      runTripRecipeReexport(trip, "shelf_badge");
+    });
+    wrap.appendChild(staleBtn);
   } else if (readyBadge) {
     wrap.appendChild(el("span", "v2-shelf__ready-badge", READY_LONGSHOT));
   } else if (trip.algorithmStale && !trip.longshotStale) {
@@ -276,6 +286,10 @@ function buildResume(trip) {
       });
       if (action.triggerCurate) {
         triggerHomepageRecurate(trip.tripId, "shelf_resume");
+        return;
+      }
+      if (action.reexportRecipe) {
+        runTripRecipeReexport(trip, "shelf_resume");
         return;
       }
       openTrip(trip, !!action.focusLongshot);

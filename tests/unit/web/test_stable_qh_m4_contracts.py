@@ -30,7 +30,7 @@ def test_m4_03_shelf_badge_demotes_when_resume_owns_cta() -> None:
     shelf = (_STUDIO / "homepage-v2" / "shelf.js").read_text(encoding="utf-8")
     assert "shelfShowCoverLongshotBadge" in logic
     assert "shelfShowCoverLongshotBadge" in shelf
-    assert "更新长图" in logic
+    assert "按原配方重出" in logic
 
 
 def test_m4_06_longshot_export_cooperative_cancel_cta() -> None:

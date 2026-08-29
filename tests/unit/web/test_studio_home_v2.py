@@ -736,7 +736,7 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "renderShelf" in shelf
     assert "你的影像画册" in shelf
     logic = (STUDIO_DIR / "homepage-v2" / "shelf-actions-logic.js").read_text(encoding="utf-8")
-    assert "更新长图" in logic            # stale → 更新长图
+    assert "按原配方重出" in logic            # stale → 按原配方重出
     assert "可重排" in shelf
     assert "重新排版" in logic
     assert "longshotStale" in shelf
@@ -800,6 +800,8 @@ def test_studio_home_v2_shelf_module() -> None:
     assert "shelf_menu_open" in menu
     assert "deleteTrip" in menu
     assert "runShelfLongshot" in menu
+    assert "runTripRecipeReexport" in menu
+    assert "按原配方重出" in menu
     assert "shelf-longshot.js" in menu
 
     longshot_client = (STUDIO_DIR / "js" / "longshot-client.js").read_text(encoding="utf-8")

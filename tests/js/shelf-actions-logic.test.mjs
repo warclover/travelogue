@@ -25,6 +25,8 @@ describe("shelfResumeActions", function () {
   it("longshot stale prioritizes update longshot", function () {
     var actions = shelfResumeActions({ longshotStale: true });
     assert.equal(actions[0].kind, "longshot");
+    assert.equal(actions[0].label, "按原配方重出");
+    assert.equal(actions[0].reexportRecipe, true);
     assert.equal(actions[0].primary, true);
     assert.equal(actions[1].kind, "open");
     assert.equal(actions[1].primary, false);

@@ -252,7 +252,7 @@ def test_fe_alg3_s03_shelf_cta_not_forced_by_algo_v3_alone() -> None:
         / "shelf-actions-logic.js"
     ).read_text(encoding="utf-8")
     assert "function shelfResumeActions" in logic
-    assert 'label: "更新长图"' in logic
+    assert 'label: "按原配方重出"' in logic
     assert 'label: "重新排版"' in logic
     assert 'label: "打开预览"' in logic
     # Contract: longshot/algorithm CTAs are gated on their stale flags only —

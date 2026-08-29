@@ -256,6 +256,11 @@
   border-radius: 999px;
   line-height: 1.2;
 }
+button.v2-shelf__stale-badge {
+  margin: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
 /* SFP D-SFP-09 · L2「可重排」次级中性，弱于 L1「分享图需更新」 */
 .v2-shelf__stale-badge--algo {
   background: color-mix(in srgb, #8a8680 22%, transparent);

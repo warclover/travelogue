@@ -5,10 +5,12 @@ import { getJson, postJson, studioAuthHeaders } from "../js/http.js";
 import { revealLongshotOutput } from "../js/longshot-client.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { runShelfLongshot } from "./shelf-longshot.js";
+import { shelfExportRequestForTrip } from "../js/portfolio-export-logic.js";
 import {
   allowReadyBadge,
   deleteConfirmCopy,
   hasManageOutputs,
+  lastRecipeRequest,
   manageRows,
   outputChips,
   overflowAriaLabel,
@@ -64,6 +66,15 @@ function revealChip(trip, chip, onMissing) {
     if (typeof onMissing === "function") onMissing();
     return false;
   });
+}
+
+export function runTripRecipeReexport(trip, surface) {
+  var recipe = lastRecipeRequest(trip);
+  var opts = shelfExportRequestForTrip(
+    trip,
+    Object.assign({ surface: surface || "shelf_stale" }, recipe)
+  );
+  return runShelfLongshot(trip, opts);
 }
 
 function reexport(trip, item) {

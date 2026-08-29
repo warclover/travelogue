@@ -18,7 +18,7 @@ import {
 import { deleteTrip } from "./trips-client.js";
 import { runShelfLongshot, openShelfLongshotFolder, canOpenShelfLongshotFolder } from "./shelf-longshot.js";
 import { setBentoPreviewTripId } from "./bento-tabs.js";
-import { hasManageOutputs, openManageOutputs } from "./shelf-outputs.js";
+import { hasManageOutputs, openManageOutputs, runTripRecipeReexport } from "./shelf-outputs.js";
 
 var _openMenuEl = null;
 var _docBound = false;
@@ -320,7 +320,9 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
   longshotItem.type = "button";
   longshotItem.className = "v2-shelf__menu-item";
   longshotItem.setAttribute("role", "menuitem");
-  longshotItem.textContent = exportCopy.exportItem;
+  longshotItem.textContent = trip.longshotStale
+    ? "按原配方重出"
+    : exportCopy.exportItem;
 
   var openLongshotItem = document.createElement("button");
   openLongshotItem.type = "button";
@@ -410,6 +412,10 @@ export function attachShelfTripMenu(coverWrap, trip, opts) {
     e.preventDefault();
     e.stopPropagation();
     closeMenu(menu);
+    if (trip.longshotStale) {
+      runTripRecipeReexport(trip, surface);
+      return;
+    }
     runShelfLongshot(trip, shelfExportRequestForTrip(trip, { surface: surface }));
   });
 

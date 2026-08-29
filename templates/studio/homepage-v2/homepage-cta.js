@@ -5,6 +5,7 @@ import { V2, $ } from "./store.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { openImportSheet } from "./import-entry.js";
 import { previewHref, resolveHomepageCta } from "./homepage-cta-logic.js";
+import { runTripRecipeReexport } from "./shelf-outputs.js";
 
 var _wired = false;
 
@@ -49,6 +50,16 @@ function runCtaAction(action, tripId, surface) {
         mod.startDemoAlbumImport({ source: "homepage_cta" });
       }
     });
+    return;
+  }
+  if (action === "reexport_recipe" && trip) {
+    trackStudioEvent("cta_click", {
+      surface: surface,
+      action: action,
+      trip_id: trip.tripId,
+      stale: true,
+    });
+    runTripRecipeReexport(trip, "homepage_cta");
     return;
   }
   if ((action === "preview" || action === "preview_export") && trip) {
