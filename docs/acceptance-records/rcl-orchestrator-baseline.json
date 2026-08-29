@@ -15,7 +15,7 @@
       "file": "travelogue/render/journal_chapters.py"
     },
     "travelogue.curation.curate:_stage_build_chapters_compose": {
-      "lines": 616,
+      "lines": 99,
       "cap_after_w1": 160,
       "owner": "shared",
       "file": "travelogue/curation/curate.py"

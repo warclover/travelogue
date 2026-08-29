@@ -181,6 +181,8 @@ def explain_file(rel: str) -> str:
         return f"{posix}: journal exclusive CSS"
     if posix == "travelogue/render/chapters.py":
         return f"{posix}: journal builder re-export; identity dispatch is assemble.py only"
+    if posix == "travelogue/curation/compose_stages.py":
+        return f"{posix}: shared compose stage (align / peel / score / materialize); S-01 stays in curate.py"
     if posix == "travelogue/render/journal_chapters.py":
         return f"{posix}: journal exclusive builder (highlight / longshot / breath / trip-index)"
     if posix == "travelogue/render/journal_folio.py":

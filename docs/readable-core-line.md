@@ -27,7 +27,7 @@ python -m pytest -m pipeline_isolation -q
 
 ```mermaid
 flowchart TD
-  curate["_stage_build_chapters_compose<br/>curate.py · S-01"]
+  curate["_stage_build_chapters_compose<br/>align → peel → score → S-01 → materialize"]
   composeJ["compose_trip · mosaic"]
   composeP["compose_portfolio_trip · editorial_series"]
   assemble["build_render_context<br/>cover bundle → copy → S-04"]
@@ -53,7 +53,7 @@ flowchart TD
 |----|-------------|---------|----------------------|
 | `build_render_context` | 141 | ≤160 | 表面 → 封面 → 文案护栏 → **S-04** → extras → 组装返回 |
 | `build_journal_chapters` | 51 | ≤140 | 输入 → folio → 高光/长图 → 屏循环 → extras |
-| `_stage_build_chapters_compose` | 616 | ≤160 | 对齐桶 → 剥异常 → 打分 → **S-01** → 物化 |
+| `_stage_build_chapters_compose` | 99 | ≤160 | 对齐桶 → 剥异常 → 打分 → **S-01** → 物化 |
 
 `build_portfolio_chapters` 已短，**不拆**。
 
@@ -70,7 +70,7 @@ W1 预注册模块（**不建空壳**，与第一批调用同提交）：`compos
 | 列 | 主题 | 状态 | 买什么 | 明确不做 | 立项代号（预留） |
 |----|------|------|--------|----------|------------------|
 | **L0** | 地图与谎言 | RCL W0 · **已落** | 本文 + `TECH-ARCHITECTURE.md` 现状 + 活路径清单 + 三核棘轮 | 搬家函数 | — |
-| **L1** | 拆三个编排核 | RCL W1 · **assemble / journal 已拆** · curate 待拆 | 主链一屏能读完调用顺序 | 不拆 planner / `longshot.js` | — |
+| **L1** | 拆三个编排核 | RCL W1 · **assemble / journal / curate 已拆** | 主链一屏能读完调用顺序 | 不拆 planner / `longshot.js` | — |
 | **L2** | 热路径类型 | RCL W2 | `studio` / `titleArt`(runtime) / `chapters` / `slots` | 不改 `trip.schema.json` · 不 typed 全集 | — |
 | **L2b** | 活路径可见 | RCL W3 | 文件头 `LIVE/READER/FROZEN` + CSS 目录（marker 外） | 不拆第三份 CSS | — |
 | **L3** | `curate.py` 减厚 | **未立项** | 预检 / 分桶 / 构图 / 收尾四文件；别名墙沉底；god-module **只降** | 不复制成两条 curate；S-01 留在 `curate.py` | `PRD-CURATE-STAGE-SPLIT` |
