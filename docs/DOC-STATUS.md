@@ -239,8 +239,9 @@ W3c **不要求**一次清库；本波先钉机制 + ≥5 篇示范，后续按 
 | [PRD-MAGAZINE-SERIES-PROMOTION-V1.md](./PRD-MAGAZINE-SERIES-PROMOTION-V1.md) | **active** | **MSP** 成册档位全量升格与页序忠实度 **v0.6.0 Conditional Go** · **W1a+W1b+W2 已落地**：五档入库 · 填充组三重护栏 · 芯片副文 / 薄档确认 · 上限 48（32/36 等 ASK-MSP-02；24 等 ASK-MSP-01）· 金样未覆盖 · [R-MSP-05/06](./acceptance-records/msp-r05-r06-measurement-2026-08-21.md) + [OQ-MSP-12](./acceptance-records/msp-oq-msp-12-boundary-study-2026-08-21.md) |
 | [acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md](./acceptance-records/msp-magazine-series-promotion-v1-review-2026-08-21.md) | **active** | MSP 七席+典型用户 · 8/8 Conditional Go · BLK-MSP-01～09 已回写 v0.3.0 · 新增 OQ-MSP-08～11 |
 | [wireframes/portfolio-folio-mode-v1-wireframe.html](./wireframes/portfolio-folio-mode-v1-wireframe.html) | **active** | PFM 线框 **v1.1** · **F0–F8 已签** |
-| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.2.0 Conditional Go** · 七席 7/7 · BLK-RCL-01～10 已回写 · **W0 可开工** · [纪要](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) · 短地图 [readable-core-line.md](./readable-core-line.md) |
-| [readable-core-line.md](./readable-core-line.md) | **active** | RCL 主链短地图 · L0–L2=本合同 · **L3–L7 未立项**（curate 减厚 / context / longshot.js / handler / 算法核默认不做） |
+| [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) | **active** | **RCL** 可读主链 **v0.2.1 Conditional Go** · 七席 7/7 · BLK-RCL-01～10 已回写 · **W0 已落** · [纪要](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) · 短地图 [readable-core-line.md](./readable-core-line.md) · 活路径 [frontend-live-path.md](./frontend-live-path.md) |
+| [readable-core-line.md](./readable-core-line.md) | **active** | RCL 主链短地图 · L0 已落 · L1–L2=本合同 · **L3–L7 未立项**（curate 减厚 / context / longshot.js / handler / 算法核默认不做） |
+| [frontend-live-path.md](./frontend-live-path.md) | **active** | RCL W0 活路径清单 · 闭包根写死 preview-toolbar.js + homepage-v2/bootstrap.js |
 | [acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md](./acceptance-records/rcl-readable-core-line-v1-review-2026-08-22.md) | **active** | RCL 七席 · 7/7 Conditional Go · BLK-RCL-01～10 · OQ-RCL-01～06 全关 |
 
 ---

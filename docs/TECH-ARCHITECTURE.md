@@ -2,10 +2,12 @@
 
 | 属性 | 内容 |
 |------|------|
-| **文档版本** | v1.1（§17.7 Pipeline Throughput · 2026-07-11） |
+| **文档版本** | v1.2（RCL W0 · 2026-08-29 刷新 §2/§3/§4 现状） |
 | **阶段** | P0 本地工坊 |
-| **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md` |
-| **更新日期** | 2026-07-11（§17.7）；§18 · 2026-07-08 M-C1 |
+| **关联** | `CHARTER.md`、`AGENT-ARCHITECTURE.md`、`DATA-MODEL.md`、[DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md)、[RCL](./PRD-READABLE-CORE-LINE-V1.md) |
+| **更新日期** | 2026-08-29（RCL W0）；§17.7 · 2026-07-11；§18 · 2026-07-08 M-C1 |
+
+> **现行入口以 Studio + DPI 为准。** 主工作台是 `python -m travelogue studio`；双管线所有权看 [dual-pipeline-ownership.md](./dual-pipeline-ownership.md)，主链编排看 [readable-core-line.md](./readable-core-line.md)。下文历史段落（P0 CLI 选型、Phase 吞吐、M-D1 分层）可留作沿革，**勿当现行目录**。
 
 ---
 
@@ -25,9 +27,9 @@
 
 ```mermaid
 flowchart TB
-  subgraph ui [UI 层 P0]
+  subgraph ui [UI 层]
+    Studio[Studio 网页工作台]
     CLI[CLI travelogue]
-    Skill[Cursor Skills 可选]
   end
 
   subgraph orch [编排层]
@@ -57,8 +59,8 @@ flowchart TB
     GEO[Geocode API 可选]
   end
 
+  Studio --> O
   CLI --> O
-  Skill --> O
   O --> SM
   O --> A0 & A1 & A2 & A3
   A0 & A1 & A2 & A3 --> TS
@@ -82,7 +84,7 @@ flowchart TB
 | 图像 | Pillow + pillow-heif | HEIC 支持 |
 | 视频 | ffmpeg CLI | 裁切循环片段 |
 | 配置 | `config.yaml` + 环境变量覆盖 | 本地 Key 不入库 |
-| UI 壳 | **延后**（Tauri / Web） | P0 先 CLI |
+| UI | **Studio 网页工作台** | `python -m travelogue studio`；CLI 仍可用。桌面安装器另见 Desktop 合同 |
 
 ---
 
@@ -94,18 +96,24 @@ flowchart TB
 travelogue/
 ├── docs/
 ├── schemas/
-├── templates/visual-journal/   # journal.hbs + journal.css + manifest.json
+├── templates/
+│   ├── studio/                 # Studio：homepage-v2 / preview-toolbar
+│   └── visual-journal/
+│       ├── journal.css         # 共享变量（不分家）
+│       ├── journal-screens.css # 游记屏
+│       └── portfolio-pages.css # 作品集页
 ├── travelogue/                 # Python 包
-│   ├── cli.py
-│   ├── config.py
-│   ├── curation/               # curate, bucket_planning, chapter_titles, screen_planner, …
-│   ├── media/                  # Agent 0（ingest, image_ops, …）
-│   ├── services/               # validate, narrate, llm_narrate, layout, manifest_limits
-│   ├── llm/                    # OpenAI-compatible client (deepseek, dashscope)
-│   ├── render/                 # Agent 3（pybars3 → journal.hbs）
+│   ├── web/                    # Studio HTTP / handlers
+│   ├── layout_engine/          # mosaic（游记）· editorial_series（作品集）
+│   ├── cover_engine/
+│   ├── curation/               # curate · S-01 仍在此
+│   ├── media/
+│   ├── services/
+│   ├── llm/
+│   ├── render/                 # assemble · journal_chapters · portfolio_chapters
 │   ├── export/
 │   ├── orchestrator/
-│   └── demo/
+│   └── cli/
 ├── scripts/
 ├── tests/
 ├── trips/                      # 运行时（.gitignore）
@@ -447,7 +455,7 @@ python scripts/phase7_verify_rollback.py
 
 ## 18. 架构优化（M-D1 · 2026-07-08 全量）
 
-> SSOT：[PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 进度 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)
+> SSOT：[PRD-ARCH-OPTIMIZATION.md](./PRD-ARCH-OPTIMIZATION.md) v1.1 · 进度 [ARCH-OPT-STATUS.md](./ARCH-OPT-STATUS.md)。**现行双管线 / 主链入口**： [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) · [RCL](./PRD-READABLE-CORE-LINE-V1.md) · [readable-core-line.md](./readable-core-line.md)。
 
 ### 18.1 现行分层（as-is）
 

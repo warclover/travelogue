@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "measured_at": "2026-08-29",
+  "functions": {
+    "travelogue.render.assemble:build_render_context": {
+      "lines": 538,
+      "cap_after_w1": 160,
+      "owner": "shared",
+      "file": "travelogue/render/assemble.py"
+    },
+    "travelogue.render.journal_chapters:build_journal_chapters": {
+      "lines": 467,
+      "cap_after_w1": 140,
+      "owner": "journal",
+      "file": "travelogue/render/journal_chapters.py"
+    },
+    "travelogue.curation.curate:_stage_build_chapters_compose": {
+      "lines": 616,
+      "cap_after_w1": 160,
+      "owner": "shared",
+      "file": "travelogue/curation/curate.py"
+    }
+  }
+}
