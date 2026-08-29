@@ -3,16 +3,16 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.1.2**（Draft · [八席](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) Conditional Go · **BLK-CLG-06～10 已回写** · [帧 A/B/C/D 已签](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) · **W1 已落** · [W2 狗粮 2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md)） |
-| **状态** | **Draft · W1 已落 · W2 狗粮已走**。升 Go 仍是产品裁决。**BLK-CLG-01 为合入第一门**（游记导出快照红则整 PR 打回） |
+| **文档版本** | **v0.1.3**（[八席](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) 升 **Go** · **BLK-CLG-06～10 已回写** · [帧 A/B/C/D 已签](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) · **W1 已落** · [W2 狗粮已认](./acceptance-records/clg-w2-dogfood-2026-08-29.md)） |
+| **状态** | **Go** · 产品 2026-08-29 认 W2 记录。**BLK-CLG-01 仍为回归门**（游记导出快照红则打回） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「过河长图闸」— **CLG**（Crossing Longshot Gate） |
 | **界面用词** | 过河面沿用 FXI：**发到微信、小红书…** · **这不是在导出作品集** · **返回，继续导出作品集**。本波新词：**长图要在游记里做** · **打开那本游记** · **去做一本游记** · **先出小红书** · **要先有一本游记** · **用这些照片**。确定钮跟平台走（默认 **导出小红书**）。禁止对 C 端说 sidecar / 拼贴 / 卷轴 / 同夹 / ISO-04 / kept_stack / index-longshot / Writer / edition / 闸。**禁止** F2 确定钮写「导出长图」（游记面板仍写） |
 | **文档类型** | **加法合同**：只改作品集 **F2 过河面** 的可达平台与缺卷轴时的去向。改判 FXI §7.2 的「六种都能导」半句。**不改**游记导出 / 精修，**不改** F1 / F3，**不改**装配 |
 | **触发来源** | 2026-08-27 狗粮后实测：作品集过河选微信群「按章」，仍出一整张单张竖条。讨论收口见 [作品集管线简化讨论备忘录](./作品集管线简化讨论备忘录.md)。产品赞同：过河灰掉吃卷轴的两卡，其余四种可导；点灰卡则去那本游记或去做一本 |
-| **评审** | [八席 2026-08-27](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) **8/8 Conditional Go**。Must-Fix 已回写。**待产品重勾**改字后的帧 A–D |
+| **评审** | [八席 2026-08-27](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) **8/8 Conditional Go** · **2026-08-29 产品认 W2，升 Go** |
 | **前置条件** | [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md) W1–W3 已落地 · [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md) 同夹双本已落地 · [ECC](./PRD-EXPORT-CARD-COMPOSE-V1.md) / ADR-021 四平台 GA · [DPI](./PRD-DUAL-PIPELINE-ISOLATION-V1.md) W0–W3 |
-| **线框** | [crossing-longshot-gate-v1-wireframe.html](./wireframes/crossing-longshot-gate-v1-wireframe.html) **待签**（帧 A 第一眼 · B 有游记 · C 去做一本 · D 认不到文件夹）。本文 **§6 为合同底稿**；ASCII 与 HTML 不一致时以 HTML 为准 |
+| **线框** | [crossing-longshot-gate-v1-wireframe.html](./wireframes/crossing-longshot-gate-v1-wireframe.html) **已签**（[帧 A/B/C/D](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md)）。本文 **§6 为合同底稿**；ASCII 与 HTML 不一致时以 HTML 为准 |
 | **关联文档** | [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)（F2 面源 · 本文改判其「六种都能导」）· [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（同夹双本 · 覆盖只发生在同一身份）· [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) D-PFM-10 / ISO-04（能力仍在，Studio F2 不再走微信 Writer）· [备忘录](./作品集管线简化讨论备忘录.md) |
 | **验收** | 本文 **§13 为源** |
 | **实施** | 本文 **§11 为源** |
@@ -532,7 +532,7 @@ Studio JS 未注册 dual-pipeline 标记，不要为闸去注册。
 | **W0** | 帧 A/B/C/D 产品勾 | 未签不得合功能 PR |
 | **W1** | FE+BE 绿；**BLK-CLG-01～10** | ☑ W0 |
 | **W2** | 狗粮两夹 | ☑ [2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md) |
-| **升 Go** | 产品裁决 | W2 |
+| **升 Go** | 产品认 W2 | ☑ 2026-08-29 |
 
 **BLK（01～05 预占 · 06～10 八席 · 均已回写正文）**
 
@@ -625,3 +625,4 @@ Studio JS 未注册 dual-pipeline 标记，不要为闸去注册。
 | v0.1.1 | 2026-08-27 | 落地缝：peek 与 album-preview 对齐；去做一本用 session + 现网向导 opts（不造 URL）；防漏认后覆盖游记（BLK-CLG-05）；加载/失败态；帧 D；挂 FXI / DOC-STATUS。 |
 | v0.1.2 | 2026-08-27 | 八席 Must-Fix 回写。去拼贴/卷轴/同夹；F2 确定钮跟平台（默认导出小红书）；闸卡不用 aria-disabled；向导握手跳过草稿；dispatch+handler 双拒并点名改测。线框改字待产品重勾。 |
 | v0.1.2 | 2026-08-29 | W1 缺口：F2 藏「点长图开始导出」摘要、补主句「这不是在导出作品集。」。W2 狗粮见 [clg-w2-dogfood-2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md)。 |
+| v0.1.3 | 2026-08-29 | 产品认 W2，升 **Go**。接受记录内未空转完小红书成功句、未点「开始制作」。 |
