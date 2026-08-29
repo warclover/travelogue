@@ -252,6 +252,11 @@ def test_v4_dock_tooltips_and_scroll_fade() -> None:
         assert token in init_v3 or token in dock, f"missing v4 dock ux: {token}"
     for token in ("initCoverTitleEdit", "cover-opening__title--editable"):
         assert token in init_v3 or token in inline, f"missing v4 inline edit: {token}"
+    assert "_prepareExportSettingsOpen" in init_v3
+    assert "cover-opening__title-art" in inline
+    inline_css = (STUDIO / "preview-toolbar" / "inline-edit.css").read_text(encoding="utf-8")
+    assert "title--editable.sr-only" in inline_css
+    assert ".cover-opening__title-art" in inline_css
     css = PREVIEW_CSS_BUNDLE
     for token in (
         "preview-toolbar__dock-tip",
@@ -637,8 +642,8 @@ def test_v4_preview_toolbar_playwright_smoke(tmp_path: Path) -> None:
                 };
             }"""
             )
-            assert dock_done["label"] == "完成", dock_done
-            assert dock_done["aria"] == "完成", dock_done
+            assert dock_done["label"] == "完成调整", dock_done
+            assert dock_done["aria"] == "完成调整", dock_done
             assert dock_done["pressed"] == "true", dock_done
             assert dock_done["expanded"] == "false", dock_done
             assert dock_done["chip"] is True, dock_done

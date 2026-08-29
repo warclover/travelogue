@@ -3098,6 +3098,9 @@ export function cancelPreviewLongshotExport(root) {
       typeof root._skipRecipeForExport === "function" &&
       root._skipRecipeForExport(tripId)
     ) {
+      if (typeof root._prepareExportCtaOpen === "function") {
+        root._prepareExportCtaOpen(root);
+      }
       openLongshotExportOptions(root);
       return;
     }

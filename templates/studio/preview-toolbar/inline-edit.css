@@ -15,6 +15,24 @@ html[data-preview-toolbar="on"] .cover-opening__title--editable:focus-visible {
   outline-offset: 2px;
 }
 
+/* titleArt 开着时原生 h1 被 sr-only clip 掉，点击打到 .cover-opening。
+   Studio 预览里恢复命中区（字透明），并让可见贴纸可点。长图捕获仍走 journal.css 的 pointer-events:none。 */
+html[data-preview-toolbar="on"] .cover-opening[data-title-art="on"] .cover-opening__title--editable.sr-only {
+  clip: auto;
+  clip-path: none;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  background: transparent;
+  z-index: 7;
+}
+
+html[data-preview-toolbar="on"] .cover-opening[data-title-art="on"] .cover-opening__title-art {
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 5;
+}
+
 html[data-preview-toolbar="on"] .cover-opening__title--saving {
   opacity: 0.55;
   pointer-events: none;

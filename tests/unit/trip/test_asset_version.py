@@ -80,7 +80,8 @@ from travelogue.render.golden_regression import load_golden_trip
 # Re-bumped 2026-08-22: DPI W1 · split journal/portfolio CSS + per-pipeline ?v= (one bump).
 # Re-bumped 2026-08-29: journal-screens.css DPI W1 ownership header (comment only).
 # Re-bumped 2026-08-29 (b): RCL W3 · LIVE/READER file heads + CSS catalog comments (one bump).
-_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}a9c55c66d8c2"
+# Re-bumped 2026-08-29 (c): screenplay gate hideGate releases focus before hide.
+_EXPECTED_BUNDLE_VERSION = f"{ASSET_VERSION_PREFIX}fcaf2ad41c41"
 
 _ASSET_VERSION_RE = re.compile(
     rf"^{re.escape(ASSET_VERSION_PREFIX)}[0-9a-f]{{{ASSET_VERSION_HEX_CHARS}}}$"

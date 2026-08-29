@@ -30,6 +30,8 @@ export function applyJournalDockLogic(root, entry) {
     root._resolveExportPlatform = null;
     root._skipRecipeForExport = null;
     root._readPortfolioDraftPrefs = null;
+    root._prepareExportSettingsOpen = null;
+    root._prepareExportCtaOpen = null;
   }
   hidePortfolioDockBanners();
 }

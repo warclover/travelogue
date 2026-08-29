@@ -182,12 +182,24 @@ export function syncPortfolioCtaLabel(root, btn, helpers) {
  * @param {object|null|undefined} root
  * @param {object|null|undefined} entry
  */
+/** Dock「导出设置」打开社交/印刷面，不与主钮「导出作品集」抢同一对话框。 */
+export function preparePortfolioSettingsOpen(root) {
+  if (root) root._fxiExportFace = "social";
+}
+
+/** 主钮仍打开页图/这一本。 */
+export function preparePortfolioDefaultExportOpen(root) {
+  if (root) root._fxiExportFace = "default";
+}
+
 export function applyPortfolioDockLogic(root, entry) {
   if (root) {
     root._dockCta =
       entry && entry.dockCta && entry.dockCta.aria
         ? { short: entry.dockCta.short || entry.dockCta.aria, aria: entry.dockCta.aria }
         : portfolioIdleCta();
+    root._prepareExportSettingsOpen = preparePortfolioSettingsOpen;
+    root._prepareExportCtaOpen = preparePortfolioDefaultExportOpen;
     root._exportPopoverSpec = function () {
       return portfolioExportPopoverSpec({ face: root._fxiExportFace });
     };

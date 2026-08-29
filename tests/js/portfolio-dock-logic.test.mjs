@@ -8,11 +8,15 @@ import {
   PORTFOLIO_PAGES_PLATFORM,
   resolvePortfolioMainPlatform,
 } from "../../templates/studio/js/portfolio-export-logic.js";
+import { applyJournalDockLogic } from "../../templates/studio/js/journal-dock-logic.js";
 import {
+  applyPortfolioDockLogic,
   clearPortfolioExportArmed,
   markPortfolioExportArmed,
   portfolioExportPopoverSpec,
   portfolioIdleCta,
+  preparePortfolioDefaultExportOpen,
+  preparePortfolioSettingsOpen,
   resolvePortfolioExportPlatform,
   shouldSkipRecipeForPortfolioExport,
 } from "../../templates/studio/js/portfolio-dock-logic.js";
@@ -54,6 +58,20 @@ test("作品集主钮与主区 seed 恒为导出作品集 / 页图包", () => {
     platform: PORTFOLIO_PAGES_PLATFORM,
     platforms: [PORTFOLIO_PAGES_PLATFORM],
   });
+});
+
+test("作品集设置钮与主钮分面，不共用同一对话框", () => {
+  const root = {};
+  applyPortfolioDockLogic(root, null);
+  preparePortfolioSettingsOpen(root);
+  assert.equal(root._fxiExportFace, "social");
+  assert.equal(portfolioExportPopoverSpec({ face: root._fxiExportFace }).face, "social");
+  preparePortfolioDefaultExportOpen(root);
+  assert.equal(root._fxiExportFace, "default");
+  assert.equal(portfolioExportPopoverSpec({ face: root._fxiExportFace }).face, "default");
+  applyJournalDockLogic(root, null);
+  assert.equal(root._prepareExportSettingsOpen, null);
+  assert.equal(root._prepareExportCtaOpen, null);
 });
 
 test("作品集主钮未确认先开面板，确认本册后才开导", () => {
