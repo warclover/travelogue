@@ -10,6 +10,7 @@ from travelogue.render.context import build_layout_screen
 from travelogue.render.context_types import ChapterRenderContext
 from travelogue.render.journal_chapters import ChaptersRenderBundle
 from travelogue.render.surface import SurfaceContext
+from travelogue.types.trip_hot import TripHot
 
 
 def overlay_portfolio_epilogue_stats(trip: dict, stats: dict) -> dict:
@@ -33,7 +34,7 @@ def overlay_portfolio_epilogue_stats(trip: dict, stats: dict) -> dict:
 
 
 def build_portfolio_chapters(
-    trip: dict,
+    trip: TripHot | dict,
     surface: SurfaceContext,
     *,
     trip_root: Path | None,

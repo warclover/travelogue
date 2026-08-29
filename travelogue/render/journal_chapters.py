@@ -23,6 +23,7 @@ from travelogue.render.journal_folio import (
 from travelogue.render.journal_screens import build_chapter_screens
 from travelogue.render.screen_tone import build_chapter_separator_ticket, chapter_separator_style
 from travelogue.render.surface import SurfaceContext
+from travelogue.types.trip_hot import TripHot
 
 
 @dataclass
@@ -434,7 +435,7 @@ def build_journal_chapter_list(
 
 
 def build_journal_chapters(
-    trip: dict,
+    trip: TripHot | dict,
     surface: SurfaceContext,
     *,
     trip_root: Path | None,

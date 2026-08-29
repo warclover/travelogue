@@ -25,6 +25,7 @@ from travelogue.render.portfolio_chapters import (
     overlay_portfolio_epilogue_stats,
 )
 from travelogue.render.surface import SurfaceContext, resolve_surface_context
+from travelogue.types.trip_hot import TripHot
 
 
 def _moment_render_state(
@@ -253,7 +254,7 @@ def _merge_render_context(
 
 
 def build_render_context(
-    trip: dict,
+    trip: TripHot | dict,
     *,
     export_mode: str = "draft",
     trip_root: Path | None = None,
