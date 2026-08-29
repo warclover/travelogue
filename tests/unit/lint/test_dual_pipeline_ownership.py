@@ -45,7 +45,10 @@ def test_ac_dpi_12_builder_split() -> None:
     assemble = (ROOT / "travelogue/render/assemble.py").read_text(encoding="utf-8")
     chapters = (ROOT / "travelogue/render/chapters.py").read_text(encoding="utf-8")
     journal = (ROOT / "travelogue/render/journal_chapters.py").read_text(encoding="utf-8")
+    folio = (ROOT / "travelogue/render/journal_folio.py").read_text(encoding="utf-8")
+    screens = (ROOT / "travelogue/render/journal_screens.py").read_text(encoding="utf-8")
     portfolio = (ROOT / "travelogue/render/portfolio_chapters.py").read_text(encoding="utf-8")
+    journal_family = journal + folio + screens
 
     assert len(re.findall(r"\bis_portfolio_trip\s*\(", assemble)) == 1
     assert "is_portfolio" not in chapters
@@ -59,8 +62,17 @@ def test_ac_dpi_12_builder_split() -> None:
         "build_featured_grid_cards",
         "chapter_divider",
     ):
-        assert token in journal
+        assert token in journal_family
         assert token not in portfolio
+
+    for rel, text in (
+        ("journal_chapters.py", journal),
+        ("journal_folio.py", folio),
+        ("journal_screens.py", screens),
+    ):
+        assert "portfolio" not in text, rel
+        assert "editorial_series" not in text, rel
+        assert "page-" not in text, rel
 
     assert 'stage_aspect="16:9"' in portfolio
     assert "if not raw_screens" in portfolio

@@ -1,12 +1,12 @@
-"""Journal chapter builder (DPI W2). No edition branch."""
+"""Journal chapter builder. Stages: inputs → folio → moment/longshot → list → extras."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from travelogue.config import AppConfig
-from travelogue.curation.screen_tone import enrich_screen_tones
 from travelogue.render.context_types import (
     BreathPauseItemContext,
     ChapterRenderContext,
@@ -15,6 +15,12 @@ from travelogue.render.context_types import (
     ScreenSpreadContext,
     TripIndexEntryContext,
 )
+from travelogue.render.journal_folio import (
+    JournalFolioState,
+    build_journal_folio_extras,
+    resolve_journal_folio_plan,
+)
+from travelogue.render.journal_screens import build_chapter_screens
 from travelogue.render.screen_tone import build_chapter_separator_ticket, chapter_separator_style
 from travelogue.render.surface import SurfaceContext
 
@@ -32,86 +38,59 @@ class ChaptersRenderBundle:
     has_featured_grid: bool
 
 
-def build_journal_chapters(
+@dataclass(frozen=True)
+class JournalChapterInputs:
+    aspects_map: dict
+    layout_eligible_count: int
+    featured_ids: frozenset[str]
+    moment_screen_label: str
+    trip_primary_year: Any
+    exif_pool: frozenset[str]
+    pool_ids: list[str]
+
+
+def prepare_journal_chapter_inputs(
     trip: dict,
-    surface: SurfaceContext,
     *,
-    trip_root: Path | None,
-    meta_title: str,
-    hook: str,
-    cfg: AppConfig | None = None,
-    moment_signature_id: str = "",
-    moment_pool_ids: list[str] | None = None,
-    moment_exif_pool_ids: frozenset[str] | None = None,
-    show_moment_exif: bool = True,
-    pool_solo: bool = True,
-    show_signature_label: bool = True,
-) -> ChaptersRenderBundle:
-    from travelogue.curation.chapter_items import resolve_chapter_items_for_render
+    moment_pool_ids: list[str] | None,
+    moment_exif_pool_ids: frozenset[str] | None,
+    show_signature_label: bool,
+) -> JournalChapterInputs:
     from travelogue.curation.layout_planner import aspect_kind_for_asset
-    from travelogue.render.context import (
-        build_featured_grid_cards,
-        build_foreword_spread,
-        build_layout_screen,
-        build_media_card,
-        build_media_row,
-        build_media_scroll,
-        build_screen_spread,
-        build_trip_index_entries,
-        chapter_divider,
-        folio_plate_rewrite_eligible,
-    )
+    from travelogue.render.moment_screen import moment_label_for_trip
     from travelogue.render.reading_profile import featured_asset_ids as collect_featured_ids
 
-    assets = surface.assets
-    strip_narrative_copy = surface.strip_narrative_copy
-    is_draft = surface.is_draft
-    folio_lite = surface.folio_lite
-    folio_full = surface.folio_full
-    use_screens_global = surface.use_screens_global
-    is_longshot_surface = surface.is_longshot_surface
-    layout_engine = surface.layout_engine
-    image_layout = surface.image_layout
-
-    chapters_out: list[ChapterRenderContext] = []
     aspects_map = {a["id"]: aspect_kind_for_asset(a) for a in trip.get("assets", []) if a.get("id")}
     layout_eligible_count = sum(
         1 for a in trip.get("assets", []) if a.get("layoutEligible", True)
     )
-    featured_ids = frozenset(collect_featured_ids(trip))
-    global_screen_index = 0
-    exif_pool = moment_exif_pool_ids or frozenset()
-    pool_ids = list(moment_pool_ids or [])
-    from travelogue.render.moment_screen import moment_label_for_trip
-
-    moment_screen_label = moment_label_for_trip(trip) if show_signature_label else ""
     try:
         from travelogue.domain.narrative_posture import trip_primary_year as _resolve_trip_year
 
-        _trip_primary_year = _resolve_trip_year(trip)
+        trip_primary_year = _resolve_trip_year(trip)
     except Exception:
-        _trip_primary_year = None
+        trip_primary_year = None
+    return JournalChapterInputs(
+        aspects_map=aspects_map,
+        layout_eligible_count=layout_eligible_count,
+        featured_ids=frozenset(collect_featured_ids(trip)),
+        moment_screen_label=moment_label_for_trip(trip) if show_signature_label else "",
+        trip_primary_year=trip_primary_year,
+        exif_pool=moment_exif_pool_ids or frozenset(),
+        pool_ids=list(moment_pool_ids or []),
+    )
 
-    folio_plan: dict = {}
-    grid_exclude: frozenset[str] = frozenset()
-    if folio_full:
-        from travelogue.curation.folio_plan import resolve_folio_plan
 
-        layout_eligible = [a for a in trip.get("assets", []) if a.get("layoutEligible", True)]
-        folio_plan = resolve_folio_plan(trip, trip.get("chapters") or [], layout_eligible)
-        if folio_plan.get("featuredGrid"):
-            grid_exclude = frozenset(folio_plan.get("featuredGridAssetIds") or [])
-
-    foreword_spread: ForewordSpreadContext | None = None
-    has_foreword_spread = False
-    if folio_full and folio_plan.get("foreword"):
-        chapters_raw = trip.get("chapters") or []
-        if chapters_raw:
-            first_lead = (chapters_raw[0].get("lead") or "").strip()
-            if first_lead and not strip_narrative_copy:
-                foreword_spread = build_foreword_spread(chapters_raw[0], trip_hook=hook)
-                has_foreword_spread = foreword_spread is not None
-
+def apply_journal_moment_and_longshot(
+    trip: dict,
+    surface: SurfaceContext,
+    *,
+    cfg: AppConfig | None,
+    moment_signature_id: str,
+    pool_ids: list[str],
+    pool_solo: bool,
+) -> list:
+    assets = surface.assets
     raw_chapters = trip.get("chapters") or []
     if moment_signature_id and pool_ids and pool_solo:
         from travelogue.curation.moment_scoring import ensure_pool_assets_solo_screens
@@ -131,7 +110,7 @@ def build_journal_chapters(
             moment_signature_id,
             assets_by_id=assets,
         )
-    if is_longshot_surface:
+    if surface.is_longshot_surface:
         from travelogue.config import get_config
         from travelogue.curation.longshot_filter import chapters_for_longshot_render
         from travelogue.curation.phase6_rollout import resolve_app_config_for_trip
@@ -150,10 +129,44 @@ def build_journal_chapters(
             mmr_lambda=effective_cfg.curate.longshot_mmr_lambda,
             max_consecutive_same_pattern=effective_cfg.curate.max_consecutive_same_pattern,
         )
+    return raw_chapters
 
-    from travelogue.config import get_config
 
-    render_cfg = cfg or get_config()
+def build_journal_chapter_list(
+    trip: dict,
+    surface: SurfaceContext,
+    raw_chapters: list,
+    inputs: JournalChapterInputs,
+    folio: JournalFolioState,
+    *,
+    trip_root: Path | None,
+    meta_title: str,
+    hook: str,
+    cfg: AppConfig | None,
+    moment_signature_id: str,
+    show_moment_exif: bool,
+    show_signature_label: bool,
+) -> list[ChapterRenderContext]:
+    """Chapter loop: screens, items, copy, separator. Screen loop is in journal_screens."""
+    from travelogue.curation.chapter_items import resolve_chapter_items_for_render
+    from travelogue.render.context import (
+        build_media_card,
+        build_media_row,
+        build_media_scroll,
+        build_screen_spread,
+        chapter_divider,
+    )
+
+    assets = surface.assets
+    strip_narrative_copy = surface.strip_narrative_copy
+    is_draft = surface.is_draft
+    folio_full = surface.folio_full
+    use_screens_global = surface.use_screens_global
+    is_longshot_surface = surface.is_longshot_surface
+    layout_engine = surface.layout_engine
+    image_layout = surface.image_layout
+    chapters_out: list[ChapterRenderContext] = []
+    global_screen_index = 0
     chapter_total = len(raw_chapters)
 
     for i, ch in enumerate(raw_chapters):
@@ -163,81 +176,25 @@ def build_journal_chapters(
         use_screens = (
             use_screens_global and not is_longshot_surface and bool(ch.get("screens"))
         )
-        raw_screens_for_spread: list[dict] = []
-        screens_out = []
-        if use_screens_global and bool(ch.get("screens")) and not is_longshot_surface:
-            raw_screens = enrich_screen_tones(
-                ch.get("screens", []),
-                assets,
-                trip_root=trip_root,
-                chapter_index=idx,
-            )
-            from travelogue.render.mobile_screens import (
-                expand_screens_for_mobile,
-                should_expand_screens_for_mobile,
-            )
-
-            render_screens = raw_screens
-            if should_expand_screens_for_mobile(
-                image_layout, is_longshot=is_longshot_surface
-            ):
-                render_screens = expand_screens_for_mobile(raw_screens)
-            from travelogue.layout_engine.editorial.four_mix import apply_editorial_4mix_slot_fits
-            from travelogue.layout_engine.editorial.portrait_row import (
-                apply_editorial_row_slot_fits,
-            )
-
-            raw_screens_for_spread.extend(raw_screens)
-            chapter_screen_seq = 0
-            for sc in render_screens:
-                sc = apply_editorial_row_slot_fits(dict(sc), assets, trip=trip)
-                sc = apply_editorial_4mix_slot_fits(
-                    sc, assets, trip=trip, cfg=render_cfg
-                )
-                slots = sc.get("slots") or []
-                if grid_exclude:
-                    slots = [s for s in slots if s.get("assetId") not in grid_exclude]
-                    if not slots:
-                        continue
-                    if len(slots) != len(sc.get("slots") or []):
-                        sc = dict(sc)
-                        sc["slots"] = slots
-                chapter_screen_seq += 1
-                global_screen_index += 1
-                screens_out.append(
-                    build_layout_screen(
-                        sc,
-                        assets,
-                        meta_title=meta_title,
-                        export_layout=image_layout,
-                        eager=i == 0 and chapter_screen_seq == 1,
-                        screen_index=global_screen_index,
-                        chapter_index=f"{idx:02d}",
-                        chapter_id=str(ch.get("id") or ""),
-                        is_draft=is_draft,
-                        strip_narrative_copy=strip_narrative_copy,
-                        folio_lite=folio_lite,
-                        is_plate=chapter_screen_seq == 1
-                        and folio_plate_rewrite_eligible(sc),
-                        featured_asset_ids=featured_ids,
-                        moment_exif_pool_ids=exif_pool,
-                        moment_signature_id=moment_signature_id,
-                        show_moment_exif=show_moment_exif,
-                        show_signature_label=show_signature_label,
-                        moment_screen_label=moment_screen_label,
-                        peak_collage_exif=bool(
-                            cfg is not None
-                            and getattr(
-                                cfg.curate.moment, "pool_portrait_collage_exif", False
-                            )
-                        ),
-                        chapter_day_span=list(
-                            (ch.get("curation") or {}).get("daySpan") or []
-                        )
-                        or None,
-                        trip_primary_year=_trip_primary_year,
-                    )
-                )
+        screens_out, raw_screens_for_spread, global_screen_index = build_chapter_screens(
+            ch,
+            chapter_loop_index=i,
+            idx=idx,
+            trip=trip,
+            surface=surface,
+            trip_root=trip_root,
+            meta_title=meta_title,
+            featured_ids=inputs.featured_ids,
+            grid_exclude=folio.grid_exclude,
+            global_screen_index=global_screen_index,
+            moment_exif_pool_ids=inputs.exif_pool,
+            moment_signature_id=moment_signature_id,
+            show_moment_exif=show_moment_exif,
+            show_signature_label=show_signature_label,
+            moment_screen_label=inputs.moment_screen_label,
+            trip_primary_year=inputs.trip_primary_year,
+            cfg=cfg,
+        )
 
         screen_spread: ScreenSpreadContext | None = None
         has_screen_spread = False
@@ -262,9 +219,9 @@ def build_journal_chapters(
             export_layout=image_layout,
             layout_engine=layout_engine,
             is_longshot=is_longshot_surface,
-            aspects=aspects_map,
+            aspects=inputs.aspects_map,
             assets_map=assets,
-            trip_photo_total=layout_eligible_count,
+            trip_photo_total=inputs.layout_eligible_count,
             compact_longshot=compact_ls,
         )
         if is_longshot_surface and not compact_ls:
@@ -362,7 +319,7 @@ def build_journal_chapters(
         lead = (ch.get("lead") or "").strip()
         if strip_narrative_copy:
             lead = ""
-        if i == 0 and has_foreword_spread:
+        if i == 0 and folio.has_foreword_spread:
             lead = ""
         elif lead:
             lead, blanked = sanitize_share_copy_tracked(
@@ -473,29 +430,57 @@ def build_journal_chapters(
             ),
         }
         chapters_out.append(ch_ctx)
+    return chapters_out
 
-    trip_index_entries: list[TripIndexEntryContext] = []
-    featured_grid_cards: list[FeaturedGridCardContext] = []
-    has_trip_index = False
-    has_featured_grid = False
-    if folio_full and folio_plan.get("index"):
-        trip_index_entries = build_trip_index_entries(trip.get("chapters") or [])
-        has_trip_index = bool(trip_index_entries)
-    if folio_full and folio_plan.get("featuredGrid"):
-        featured_grid_cards = build_featured_grid_cards(
-            list(folio_plan.get("featuredGridAssetIds") or []),
-            assets,
-            meta_title=meta_title,
-            export_layout=image_layout,
-        )
-        has_featured_grid = len(featured_grid_cards) >= 4
 
-    return ChaptersRenderBundle(
-        chapters_out=chapters_out,
-        foreword_spread=foreword_spread,
-        has_foreword_spread=has_foreword_spread,
-        trip_index_entries=trip_index_entries,
-        has_trip_index=has_trip_index,
-        featured_grid_cards=featured_grid_cards,
-        has_featured_grid=has_featured_grid,
+def build_journal_chapters(
+    trip: dict,
+    surface: SurfaceContext,
+    *,
+    trip_root: Path | None,
+    meta_title: str,
+    hook: str,
+    cfg: AppConfig | None = None,
+    moment_signature_id: str = "",
+    moment_pool_ids: list[str] | None = None,
+    moment_exif_pool_ids: frozenset[str] | None = None,
+    show_moment_exif: bool = True,
+    pool_solo: bool = True,
+    show_signature_label: bool = True,
+) -> ChaptersRenderBundle:
+    inputs = prepare_journal_chapter_inputs(
+        trip,
+        moment_pool_ids=moment_pool_ids,
+        moment_exif_pool_ids=moment_exif_pool_ids,
+        show_signature_label=show_signature_label,
+    )
+    folio = resolve_journal_folio_plan(trip, surface, hook=hook)
+    raw_chapters = apply_journal_moment_and_longshot(
+        trip,
+        surface,
+        cfg=cfg,
+        moment_signature_id=moment_signature_id,
+        pool_ids=inputs.pool_ids,
+        pool_solo=pool_solo,
+    )
+    chapters_out = build_journal_chapter_list(
+        trip,
+        surface,
+        raw_chapters,
+        inputs,
+        folio,
+        trip_root=trip_root,
+        meta_title=meta_title,
+        hook=hook,
+        cfg=cfg,
+        moment_signature_id=moment_signature_id,
+        show_moment_exif=show_moment_exif,
+        show_signature_label=show_signature_label,
+    )
+    return build_journal_folio_extras(
+        trip,
+        surface,
+        folio,
+        chapters_out,
+        meta_title=meta_title,
     )
