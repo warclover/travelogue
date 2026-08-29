@@ -234,9 +234,10 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
 }
 
 .preview-toolbar--v4 .preview-toolbar__export-popover {
-  right: 0;
+  /* 弹层已挂 body；未量到锚点时回退到 Dock 下方，勿再用 100%（相对 Dock 会被裁切） */
+  right: max(12px, env(safe-area-inset-right, 0px));
   left: auto;
-  top: calc(100% + 8px);
+  top: calc(var(--preview-toolbar-h, 64px) + 4px);
 }
 
 .preview-toolbar--v4 .preview-toolbar__dock .preview-toolbar__dock-btn,

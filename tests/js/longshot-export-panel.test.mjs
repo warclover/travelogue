@@ -924,4 +924,7 @@ test("CLG · 闸层 CSS 不得把 popover 改成 relative", () => {
     css,
     /\.preview-toolbar__export-popover\.is-clg-open\s*\{[^}]*position\s*:\s*relative/
   );
+  const popRule = css.split(".preview-toolbar__export-popover {", 2)[1].split("}", 1)[0];
+  assert.match(popRule, /position:\s*fixed/);
+  assert.doesNotMatch(popRule, /calc\(100%\s*\+/);
 });

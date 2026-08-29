@@ -1299,8 +1299,12 @@ export function cancelPreviewLongshotExport(root) {
     document.querySelectorAll(".preview-toolbar__export-popover").forEach(function (pop) {
       closeCrossingGateSheet(pop);
       releaseExportPopoverFocus(pop);
+      unbindExportPopoverReposition(pop);
       pop.hidden = true;
       pop.classList.remove("preview-toolbar__export-popover--sheet");
+      pop.style.top = "";
+      pop.style.right = "";
+      pop.style.left = "";
     });
     if (_studioExportPopoverClose) {
       document.removeEventListener("click", _studioExportPopoverClose, true);
@@ -1337,12 +1341,17 @@ export function cancelPreviewLongshotExport(root) {
         ? root._exportPopoverSpec()
         : { title: "导出设置", edition: "journal" };
     var faceKey = fxiExportFaceKey(root, face);
-    var pop = wrap.querySelector(".preview-toolbar__export-popover");
+    var pop =
+      wrap.querySelector(".preview-toolbar__export-popover") ||
+      document.querySelector(".preview-toolbar__export-popover");
     if (pop && pop.getAttribute("data-export-face") !== faceKey) {
       pop.remove();
       pop = null;
     }
-    if (pop) return pop;
+    if (pop) {
+      hostStudioExportPopover(pop);
+      return pop;
+    }
 
     pop = document.createElement("div");
     pop.className = "preview-toolbar__export-popover";
@@ -1810,7 +1819,16 @@ export function cancelPreviewLongshotExport(root) {
       syncConfirmedExportSummary(pop);
     };
 
-    wrap.appendChild(pop);
+    hostStudioExportPopover(pop);
+    return pop;
+  }
+
+  /** Dock 有 backdrop-filter + 999px 圆角，会把内部 absolute 弹层裁成一条白缝。 */
+  function hostStudioExportPopover(pop) {
+    if (!pop || !document.body) return pop;
+    if (pop.parentNode !== document.body) {
+      document.body.appendChild(pop);
+    }
     return pop;
   }
 
@@ -1846,6 +1864,7 @@ export function cancelPreviewLongshotExport(root) {
     if (!pop) return;
     if (typeof pop._readDraftFromPrefs === "function") pop._readDraftFromPrefs();
     applyExportPopoverLayoutMode(pop);
+    bindExportPopoverReposition(pop);
     pop.hidden = false;
     try {
       document.documentElement.classList.add("preview-export-popover-open");
@@ -1864,9 +1883,34 @@ export function cancelPreviewLongshotExport(root) {
     pop.classList.toggle("preview-toolbar__export-popover--sheet", sheet);
     if (sheet) {
       pop.setAttribute("data-export-sheet", "1");
-    } else {
-      pop.removeAttribute("data-export-sheet");
+      pop.style.top = "";
+      pop.style.right = "";
+      pop.style.left = "";
+      return;
     }
+    pop.removeAttribute("data-export-sheet");
+    var wrap = document.querySelector(".preview-toolbar__export-zone-wrap");
+    if (!wrap || typeof wrap.getBoundingClientRect !== "function") return;
+    var rect = wrap.getBoundingClientRect();
+    var gutter = 8;
+    pop.style.top = Math.round(rect.bottom + gutter) + "px";
+    pop.style.right =
+      Math.round(Math.max(12, window.innerWidth - rect.right)) + "px";
+    pop.style.left = "auto";
+  }
+
+  function bindExportPopoverReposition(pop) {
+    if (!pop || pop._onReposition) return;
+    pop._onReposition = function () {
+      applyExportPopoverLayoutMode(pop);
+    };
+    window.addEventListener("resize", pop._onReposition);
+  }
+
+  function unbindExportPopoverReposition(pop) {
+    if (!pop || !pop._onReposition) return;
+    window.removeEventListener("resize", pop._onReposition);
+    pop._onReposition = null;
   }
 
   function trapExportPopoverFocus(pop) {
@@ -1983,6 +2027,7 @@ export function cancelPreviewLongshotExport(root) {
       }
       pop._readDraftFromPrefs();
       applyExportPopoverLayoutMode(pop);
+      bindExportPopoverReposition(pop);
       pop.hidden = false;
       try {
         document.documentElement.classList.add("preview-export-popover-open");

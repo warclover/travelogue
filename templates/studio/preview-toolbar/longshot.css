@@ -144,11 +144,13 @@
   color: #fff;
 }
 
-/* ▾ 导出设置弹层（AC-DFX-03 · 矮窗可滚动 + 底栏 sticky） */
+/* ▾ 导出设置弹层（AC-DFX-03 · 矮窗可滚动 + 底栏 sticky）
+ * 必须挂在 document.body：Dock 的 backdrop-filter + 999px 圆角会裁切
+ * 内部 absolute 层，只剩底栏一条白缝。JS 按导出钮 getBoundingClientRect 写 top/right。 */
 .preview-toolbar__export-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed;
+  top: calc(var(--preview-toolbar-h, 64px) + 4px);
+  right: max(12px, env(safe-area-inset-right, 0px));
   z-index: 400;
   display: flex;
   flex-direction: column;
@@ -393,9 +395,8 @@ html.preview-export-popover-open body {
 .preview-toolbar__export-platform-card[data-clg-locked="1"] {
   opacity: 0.48;
 }
-/* 弹层已是 position:absolute，本身就是叠层的包含块。
- * 禁止再改成 relative：导出区在 Dock 里，relative 会让整块弹层进文档流，
- * Dock 的 border-radius:999px 会被撑成巨大圆角条。 */
+/* 过河闸叠在弹层内部。弹层已挂 body 且 position:fixed。
+ * 禁止把弹层改回 relative 或塞进 Dock：999px 圆角 + backdrop-filter 会裁成白缝。 */
 .preview-toolbar__clg-sheet-host {
   position: absolute;
   inset: 0;

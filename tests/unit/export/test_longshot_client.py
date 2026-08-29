@@ -81,6 +81,26 @@ def test_preview_toolbar_wires_export_popover_caret() -> None:
     assert "poster_bric" in panel and "album_spread" in panel
 
 
+def test_export_popover_portals_out_of_dock() -> None:
+    """导出弹层必须挂 body。Dock 的 backdrop-filter + 999px 会裁成底栏白缝。"""
+    longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
+    css = (STUDIO / "preview-toolbar" / "longshot.css").read_text(encoding="utf-8")
+    dock_css = (STUDIO / "preview-toolbar" / "dock.css").read_text(encoding="utf-8")
+    assert "function hostStudioExportPopover" in longshot
+    assert "document.body.appendChild(pop)" in longshot
+    assert "getBoundingClientRect" in longshot
+    assert "function bindExportPopoverReposition" in longshot
+    assert "wrap.appendChild(pop)" not in longshot
+    pop_rule = css.split(".preview-toolbar__export-popover {", 1)[1].split("}", 1)[0]
+    assert "position: fixed" in pop_rule
+    assert "calc(100% +" not in pop_rule
+    dock_pop = dock_css.split(
+        ".preview-toolbar--v4 .preview-toolbar__export-popover {", 1
+    )
+    assert len(dock_pop) == 2
+    assert "calc(100% +" not in dock_pop[1].split("}", 1)[0]
+
+
 def test_reopen_export_popover_reacquires_after_teardown() -> None:
     """关掉 F2 会拆 social DOM；再开必须重新 ensure，不能亮已卸下的节点。"""
     longshot = (STUDIO / "preview-toolbar" / "longshot.js").read_text(encoding="utf-8")
