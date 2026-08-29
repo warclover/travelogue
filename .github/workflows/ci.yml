@@ -94,7 +94,7 @@ jobs:
         run: python scripts/lint_dual_pipeline_ownership.py
 
       - name: RCL orchestrator length + comment-budget ratchet
-        run: python scripts/lint_rcl_orchestrators.py
+        run: python scripts/lint_rcl_orchestrators.py --enforce-w1-caps
 
       - name: RCL frontend live-path closure
         run: python scripts/lint_frontend_live_path.py
