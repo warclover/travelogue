@@ -17,8 +17,8 @@ from travelogue.paths import (
     INLINE_EDIT_JS,
     JOURNAL_CSS,
     JOURNAL_SCREENS_CSS,
-    PORTFOLIO_PAGES_CSS,
     LONGSHOT_JS,
+    PORTFOLIO_PAGES_CSS,
     SCREENPLAY_BOOKMARKS_JS,
     SCREENPLAY_CSS,
     SCREENPLAY_HASH_JS,
@@ -38,6 +38,7 @@ from travelogue.render.context_types import (
     TripIndexEntryContext,
 )
 from travelogue.services.validate import asset_map
+from travelogue.types.trip_hot import ScreenRecord
 
 
 def _asset_lookup(assets: dict[str, dict], aid: str) -> dict | None:
@@ -775,7 +776,7 @@ def folio_plate_rewrite_eligible(screen: dict) -> bool:
 
 
 def build_layout_screen(
-    screen: dict,
+    screen: ScreenRecord | dict,
     assets: dict[str, dict],
     *,
     meta_title: str,

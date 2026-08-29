@@ -71,7 +71,7 @@ W1 预注册模块（**不建空壳**，与第一批调用同提交）：`compos
 |----|------|------|--------|----------|------------------|
 | **L0** | 地图与谎言 | RCL W0 · **已落** | 本文 + `TECH-ARCHITECTURE.md` 现状 + 活路径清单 + 三核棘轮 | 搬家函数 | — |
 | **L1** | 拆三个编排核 | RCL W1 · **assemble / journal / curate 已拆** | 主链一屏能读完调用顺序 | 不拆 planner / `longshot.js` | — |
-| **L2** | 热路径类型 | RCL W2 | `studio` / `titleArt`(runtime) / `chapters` / `slots` | 不改 `trip.schema.json` · 不 typed 全集 | — |
+| **L2** | 热路径类型 | RCL W2 · **已落** | `studio` / `titleArt`(runtime) / `chapters` / `slots` | 不改 `trip.schema.json` · 不 typed 全集 | — |
 | **L2b** | 活路径可见 | RCL W3 | 文件头 `LIVE/READER/FROZEN` + CSS 目录（marker 外） | 不拆第三份 CSS | — |
 | **L3** | `curate.py` 减厚 | **未立项** | 预检 / 分桶 / 构图 / 收尾四文件；别名墙沉底；god-module **只降** | 不复制成两条 curate；S-01 留在 `curate.py` | `PRD-CURATE-STAGE-SPLIT` |
 | **L4** | 渲染上下文 | **未立项** | `context.py` 按产物切（card / row / scroll / layout-screen） | 不拆算法；不新造模板类型层 | `PRD-RENDER-CONTEXT-SPLIT` |

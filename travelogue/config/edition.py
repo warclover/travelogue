@@ -6,11 +6,13 @@ Journal trips must not persist ``studio.edition`` (D-PFM-32).
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from travelogue.config.app import AppConfig
 from travelogue.config.studio import PortfolioPipelineConfig
 from travelogue.errors import CodeError
+from travelogue.types.trip_hot import read_studio_block
 
 EDITION_JOURNAL = "journal"
 EDITION_PORTFOLIO = "portfolio"
@@ -72,9 +74,7 @@ def read_trip_edition(trip: Mapping[str, Any] | None) -> str | None:
     """Raw stored value, or None when the field is absent (journal default)."""
     if not isinstance(trip, Mapping):
         return None
-    studio = trip.get("studio")
-    if not isinstance(studio, Mapping):
-        return None
+    studio = read_studio_block(trip)
     raw = studio.get("edition")
     if raw is None or str(raw).strip() == "":
         return None

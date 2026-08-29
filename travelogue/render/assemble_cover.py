@@ -8,6 +8,7 @@ from typing import Any
 from travelogue.config import AppConfig
 from travelogue.render.context_types import CoverRenderContext
 from travelogue.render.surface import SurfaceContext
+from travelogue.types.trip_hot import TripHot, read_title_art_meta
 
 # 装帧身份线前封回声白名单。展示判定留在 assemble.py，便于现网 monkeypatch。
 _COVER_OPENING_BRAND_STYLES: tuple[str, ...] = (
@@ -28,7 +29,7 @@ _TITLE_ART_FALLBACK_Y = "25%"
 
 
 def _resolve_title_art_src(
-    trip: dict, opening_style_id: str
+    trip: TripHot | dict, opening_style_id: str
 ) -> tuple[str | None, bool, str, str, str]:
     """PRD-COVER-CALLIGRAPHY-TITLE-V1 §7：白名单内 + 非 stale + enabled 才叠加。
 
@@ -52,9 +53,8 @@ def _resolve_title_art_src(
     empty = (None, False, _TITLE_ART_FALLBACK_X, _TITLE_ART_FALLBACK_Y, "")
     if not is_whitelisted(opening_style_id):
         return empty
-    meta = trip.get("meta") if isinstance(trip.get("meta"), dict) else {}
-    title_art = meta.get("titleArt") if isinstance(meta.get("titleArt"), dict) else None
-    if not isinstance(title_art, dict):
+    title_art = read_title_art_meta(trip)
+    if title_art is None:
         return empty
     if not title_art.get("enabled") or title_art.get("stale"):
         return empty

@@ -63,6 +63,7 @@ def test_comment_budget_skips_missing_stage_modules(tmp_path: Path) -> None:
     assert "travelogue/render/journal_folio.py" in present
     assert "travelogue/render/journal_screens.py" in present
     assert "travelogue/curation/compose_stages.py" in present
+    assert "travelogue/types/trip_hot.py" in present
 
 
 def test_comment_budget_flags_long_docstring(tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
-"""
-Web screens layout engine (layoutEngine=screens).
+"""Web screens layout engine (layoutEngine=screens).
 
-See docs/web端模板.prd and docs/web端模板升级计划.md.
+Live contract: docs/PRD-PHASE16-layout-template-engine.md · docs/dual-pipeline-ownership.md.
+RCL map: docs/readable-core-line.md (L7 kernel — do not split here).
 """
 
 from __future__ import annotations
