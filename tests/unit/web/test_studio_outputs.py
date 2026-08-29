@@ -274,11 +274,12 @@ def test_flag_off_longshot_stale_still_uses_mtime(tmp_path: Path) -> None:
 
 
 def test_build_book_zero_output_dom_order() -> None:
-    """AC-OLT-14 · buildBook 只在有副券时插行；顺序仍是身份 → 副券 → 花体码。"""
+    """AC-OLT-14 · buildBook 只在有副券时插行；C12 票根不再挂工程编码。"""
     shelf = Path("templates/studio/homepage-v2/shelf.js").read_text(encoding="utf-8")
     i_main = shelf.index("openMeta.appendChild(stubMain)")
     i_stubs = shelf.index("if (stubs)")
-    i_code = shelf.index("openMeta.appendChild(code)")
-    assert i_main < i_stubs < i_code
+    assert i_main < i_stubs
+    assert "openMeta.appendChild(code)" not in shelf
+    assert "v2-shelf__code" not in shelf
     assert 'openMeta.classList.add("v2-shelf__stub--chips")' in shelf
     assert "allowReadyBadge(trip)" in shelf

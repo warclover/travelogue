@@ -263,7 +263,7 @@ def test_portfolio_wait_copy_avoids_writing_phrases() -> None:
     assert "isCopyWritingPhrase" in import_logic
     assert "/文案|正在写/" in import_logic
     assert "resolveImportStageCopy(job, _importEdition)" in import_run
-    assert "edition: _importEdition" in import_run
+    assert "result.edition = result.edition || _importEdition" in import_run
     assert "normalizeImportEdition(opts.edition)" in import_run
     assert "normalizeImportEdition(pending && pending.edition)" in import_run
     assert "waitTipsCardsForEdition" in wait_copy

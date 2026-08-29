@@ -88,3 +88,42 @@ def cmd_trip_list(
     for tid, status, layout_st, title in rows:
         typer.echo(f"{tid}\t{status}\t{layout_st}\t{title}")
 
+
+@trip_app.command("backfill-copy")
+def cmd_trip_backfill_copy(
+    trips_dir: Path = typer.Option(Path("trips"), "--trips-dir"),
+    only: str = typer.Option("", "--only", help="comma trip ids; empty = all"),
+    rerender: bool = typer.Option(
+        True,
+        "--rerender/--no-rerender",
+        help="re-render HTML when chapter title/lead changed",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="probe only, do not write"),
+) -> None:
+    """Write stub chapter leads and non-date titles onto existing trips."""
+    from travelogue.services.share_face_backfill import backfill_trips_dir
+
+    root = _trips_root(trips_dir)
+    only_ids = {x.strip() for x in only.split(",") if x.strip()} or None
+    rows = backfill_trips_dir(
+        root,
+        rerender=rerender,
+        dry_run=dry_run,
+        only=only_ids,
+    )
+    changed = [r for r in rows if r.get("changed") and not r.get("error")]
+    errors = [r for r in rows if r.get("error")]
+    rerendered = [r for r in rows if r.get("rerendered")]
+    typer.echo(
+        f"trips={len(rows)} changed={len(changed)} "
+        f"rerendered={len(rerendered)} errors={len(errors)}"
+        + (" dry-run" if dry_run else "")
+    )
+    for row in changed:
+        hits = ",".join(str(x) for x in (row.get("chapters") or [])[:6])
+        typer.echo(f"  {row['tripId']}\t{hits}")
+    for row in errors:
+        typer.echo(f"E {row['tripId']}\t{row['error']}", err=True)
+    if errors:
+        raise typer.Exit(1)
+
