@@ -945,6 +945,10 @@ export function initToolbarV3(root, tripId) {
     e.preventDefault();
     e.stopPropagation();
     // 打开导出选项不停止脉冲、不标记已学会
+    // 作品集：设置钮走社交/印刷面（S-09 钩子）；游记钩子为空，仍开渠道设置。
+    if (typeof root._prepareExportSettingsOpen === "function") {
+      root._prepareExportSettingsOpen(root);
+    }
     openLongshotExportOptions(root);
   });
 

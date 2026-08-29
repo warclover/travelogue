@@ -229,8 +229,12 @@
 
   ScreenplayPlayer.prototype.hideGate = function () {
     if (!this.gate) return;
+    var focused = document.activeElement;
+    if (focused && this.gate.contains(focused) && typeof focused.blur === "function") {
+      focused.blur();
+    }
     this.gate.hidden = true;
-    this.gate.setAttribute("aria-hidden", "true");
+    this.gate.removeAttribute("aria-hidden");
     document.body.classList.remove("screenplay-gate-active");
   };
 
@@ -241,7 +245,7 @@
     }
     this.pendingIndex = typeof startIndex === "number" && startIndex >= 0 ? startIndex : 0;
     this.gate.hidden = false;
-    this.gate.setAttribute("aria-hidden", "false");
+    this.gate.removeAttribute("aria-hidden");
     document.body.classList.add("screenplay-gate-active");
     var btn = this.gate.querySelector("[data-screenplay-gate-start]");
     if (btn) btn.focus();

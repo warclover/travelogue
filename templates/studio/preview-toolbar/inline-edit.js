@@ -255,4 +255,17 @@ export function initCoverTitleEdit(tripId, opts) {
         openEditor();
       }
     });
+
+    // 书法贴纸盖住 sr-only 标题时，点可见贴纸走同一条改名。
+    var cover = titleEl.closest(".cover-opening") || document.querySelector(".cover-opening");
+    var titleArt = cover && cover.querySelector(".cover-opening__title-art");
+    if (titleArt && titleArt.dataset.coverTitleEdit !== "on") {
+      titleArt.dataset.coverTitleEdit = "on";
+      titleArt.setAttribute("aria-hidden", "true");
+      titleArt.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openEditor();
+      });
+    }
   }

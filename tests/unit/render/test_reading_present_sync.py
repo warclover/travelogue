@@ -163,3 +163,5 @@ def test_screenplay_hash_entry_requires_user_gesture_gate() -> None:
     assert "armFromHash" in js
     assert "player.showGate(idx)" in js
     assert "player.start(idx)" not in js
+    assert "this.gate.contains(focused)" in js
+    assert 'this.gate.removeAttribute("aria-hidden")' in js
