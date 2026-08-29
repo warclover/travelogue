@@ -804,6 +804,7 @@ export function initToolbarV3(root, tripId) {
   initG1V3(root, tripId, drawers, root._sheet);
   initDisplayedAestheticTitles(tripId);
 
+  // wrap 只作定位锚点。popover 由 longshot.hostStudioExportPopover 挂 body，勿把 dialog 塞回 wrap。
   var exportWrap = document.createElement("div");
   exportWrap.className = "preview-toolbar__export-zone-wrap";
 

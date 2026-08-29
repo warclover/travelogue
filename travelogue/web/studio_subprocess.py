@@ -241,6 +241,13 @@ def _import_worker(payload: dict[str, Any], progress_queue: mp.Queue, cancel_eve
 
 
 class ImportSubprocess:
+    """Studio import isolation process (PPX D-PPX-02 / D-PPX-03).
+
+    spawn + daemon=False so the child can own a ProcessPool. daemon=True cannot
+    spawn workers on Windows and leaves orphans if the parent dies. Cancel:
+    Event → join 8s → terminate → kill process tree (taskkill /T).
+    """
+
     def __init__(self, payload: dict[str, Any]) -> None:
         self._ctx = mp.get_context("spawn")
         self._cancel = self._ctx.Event()
@@ -255,6 +262,7 @@ class ImportSubprocess:
         self._process.start()
 
     def cancel(self) -> None:
+        # 协作 Event 不够：池 worker 不是导入进程的直接子进程，必须升级到杀树。
         self._cancel.set()
         if not self._process.is_alive():
             return

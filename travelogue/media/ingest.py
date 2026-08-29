@@ -1378,6 +1378,7 @@ def ingest_into_trip(
 
     use_parallel, workers, parallel_fallback = False, 1, False
     workers_downscaled = False
+    # 扫描 peek 的长边中位数喂 RAM/worker 护栏（PPX D-PPX-07）。勿为护栏再全量解码。
     median_long_edge = scan_stats.get("medianLongEdgePx")
     if median_long_edge is not None:
         try:
@@ -1414,6 +1415,7 @@ def ingest_into_trip(
             on_persist=on_persist,
             on_asset_added=asset_added_cb,
             emit_progress=_emit_progress,
+            # _emit_progress 只打点，不查取消。Studio 真取消靠 ImportSubprocess 杀进程树。
             cancel_check=_emit_progress,
         )
         ingest_stats = loop_state.ingest_stats
@@ -1434,6 +1436,7 @@ def ingest_into_trip(
                     median_long_edge_px=median_long_edge
                 )
         elif outcome.reason == "pool_cancelled":
+            # 现网循环从不返回此 reason（取消会直接 raise）。留给以后接上协作 Event。
             ingest_stats["ingestParallelFallbackReason"] = "pool_cancelled"
             from travelogue.demo.build import DemoError
 

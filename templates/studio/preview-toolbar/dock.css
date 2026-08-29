@@ -69,6 +69,7 @@ html[data-preview-toolbar="on"]:has(.preview-toolbar--v4) {
   opacity: 1;
   transition: opacity 0.2s ease, background 0.2s ease;
   color: var(--dock-ink);
+  /* Dock 自成层叠根 + backdrop-filter；子 absolute 弹层会被裁切，导出 popover 必须挂 body。 */
   isolation: isolate;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
@@ -165,6 +166,7 @@ body.preview-ai-sheet-open .preview-toolbar__longshot-split {
   border-radius: 999px;
   border: none;
   box-shadow: none;
+  /* 圆角 pill 裁切 split 内子元素；popover 若放回 Dock 会再变成底栏白缝。 */
   overflow: hidden;
 }
 

@@ -1,4 +1,8 @@
-"""Mosaic Composition System (Phase 15)."""
+"""Mosaic Composition System (Phase 15).
+
+Journal exclusive · ``compose_trip`` / ``screen-*``. Independent of
+``editorial_series``. Identity fork lives in ``curate.py`` (S-01).
+"""
 
 from travelogue.layout_engine.mosaic.candidates import (
     generate_five_candidates,

@@ -1302,6 +1302,7 @@ export function cancelPreviewLongshotExport(root) {
       unbindExportPopoverReposition(pop);
       pop.hidden = true;
       pop.classList.remove("preview-toolbar__export-popover--sheet");
+      // 清掉桌面态 inline 坐标，避免下次矮窗 sheet 被 leftover top/right 钉死。
       pop.style.top = "";
       pop.style.right = "";
       pop.style.left = "";
@@ -1341,6 +1342,7 @@ export function cancelPreviewLongshotExport(root) {
         ? root._exportPopoverSpec()
         : { title: "导出设置", edition: "journal" };
     var faceKey = fxiExportFaceKey(root, face);
+    // 现网挂 body；wrap 查询留给旧会话里还在 Dock 内的节点，找到就迁走。
     var pop =
       wrap.querySelector(".preview-toolbar__export-popover") ||
       document.querySelector(".preview-toolbar__export-popover");
@@ -1877,6 +1879,7 @@ export function cancelPreviewLongshotExport(root) {
     }
   }
 
+  /** 挂到 body 后 CSS 只给兜底位置；桌面态必须按导出钮实测，矮窗必须清 inline。 */
   function applyExportPopoverLayoutMode(pop) {
     if (!pop) return;
     var sheet = typeof window !== "undefined" && window.innerHeight < 560;
@@ -1899,6 +1902,7 @@ export function cancelPreviewLongshotExport(root) {
     pop.style.left = "auto";
   }
 
+  // Dock 是 position:fixed，滚页面不必重算；只听 resize（含矮窗切 sheet）。
   function bindExportPopoverReposition(pop) {
     if (!pop || pop._onReposition) return;
     pop._onReposition = function () {

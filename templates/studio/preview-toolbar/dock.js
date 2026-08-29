@@ -1,5 +1,7 @@
 /**
  * Preview toolbar · dock icons, screenplay control, dock UX.
+ * S-09 · identity stays mount + journalDockLogic / portfolioDockLogic.
+ * Do not grow is_portfolio / edition product branches in this file.
  */
 "use strict";
 
@@ -166,6 +168,7 @@ function _htmlEditionIsPortfolio() {
 }
 
 function idleExportShortLabel() {
+  // 只读 edition 做 idle 标签兜底；行为差异改 *-dock-logic.js。
   try {
     var root = _dockRoot();
     if (root && root._dockCta && root._dockCta.short) return root._dockCta.short;
@@ -344,7 +347,7 @@ export function applyTripEdition(root, entry) {
       ).trim();
     }
   }
-  // S-09 · one mount + one panel dispatch (AC-DPI-15)
+  // S-09 · 身份只在此处分发一次。新业务写 journal-dock-logic / portfolio-dock-logic。
   var isPortfolio = edition === "portfolio";
   try {
     if (typeof document !== "undefined" && document.documentElement) {

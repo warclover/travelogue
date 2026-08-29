@@ -1,4 +1,4 @@
-"""Agent 1 · Curator — day-based chapters, cover, then layout."""
+"""Agent 1 · Curator — S-01 sole compose fork; no is_portfolio in mosaic / editorial_series."""
 
 from __future__ import annotations
 
@@ -981,7 +981,7 @@ def _stage_build_chapters_compose(
     from travelogue.curation.intent_hints import peak_chapter_hints_for_trip
 
     intent_peak = peak_chapter_hints_for_trip(trip, len(non_empty_buckets))
-    # 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
+    # S-01 · 统一 beam 入口（架构收敛 A3）：mosaic 开/关均走 compose_trip，
     # deterministic_strict 与 meta 标注由 compose_trip 内部按 mosaic.enabled 选择。
     # PFM：作品集在 compose_trip 之前分叉；失败硬报，禁止静默掉回 journal。
     from travelogue.config.edition import (

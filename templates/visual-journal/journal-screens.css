@@ -1,3 +1,5 @@
+/* Journal reader CSS — screen-* only (DPI W1). */
+/* Shared variables live in journal.css; do not add page-* rules here. */
 /**
  * Web layoutEngine=screens — 舞台与槽位（见 docs/PRD-页面优化.md · BSP）
  */

@@ -517,7 +517,10 @@ def merge_one_worker_result(
     persist_every_n: int,
     kept_since_persist: list[int],
 ) -> None:
-    """Replay serial dedupe state machine for one WorkerResult (input order)."""
+    """Replay serial dedupe state machine for one WorkerResult (input order).
+
+    Must stay lockstep with ``ingest._process_one_ingest_photo`` — change both.
+    """
     from travelogue.media import ingest_checkpoint as icp
     from travelogue.media.ingest import (
         _find_phash_asset_index,
@@ -767,6 +770,7 @@ def run_parallel_ingest_loop(
     t0 = time.monotonic()
     spawn_ms = 0.0
     first_progress_ms: float | None = None
+    # watermark：worker 完成顺序任意；dedupe / assetId 是输入序状态机，必须按 index 提交。
     next_commit = 0
     buffer: dict[int, WorkerResult] = {}
     kept_since_persist = [0]
