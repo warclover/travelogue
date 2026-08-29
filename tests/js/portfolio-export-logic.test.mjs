@@ -345,7 +345,7 @@ test("wrapJournalPanelAsPortfolioSocialFace 套游记面板", () => {
   assert.match(html, /data-fxi-face="social"/);
   assert.match(html, /发到微信、小红书/);
   assert.match(html, /小红书、海报和印刷可以在这里做/);
-  assert.doesNotMatch(html, /这不是在导出作品集/);
+  assert.match(html, /这不是在导出作品集/);
   assert.match(html, /导出小红书/);
   assert.doesNotMatch(html, /导出长图/);
   assert.match(html, /返回，继续导出作品集/);
@@ -440,6 +440,7 @@ test("CLG · 闸纯函数与默认主选", () => {
   );
   const copy = crossingGateCopy();
   assert.equal(copy.badge, "用这些照片");
+  assert.equal(copy.leadPrimary, "这不是在导出作品集。");
   assert.equal(copy.gateSub, "要先有一本游记");
   assert.doesNotMatch(copy.leadSecondary, /拼贴|卷轴|同夹/);
   const has = crossingGateSheetModel({

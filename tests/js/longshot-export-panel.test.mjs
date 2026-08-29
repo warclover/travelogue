@@ -109,6 +109,7 @@ function stubPopover(platformIds, faceAttrs) {
   const batchHint = { hidden: true, textContent: "" };
   const dualBtn = { hidden: false };
   const okBtn = { textContent: "确定", disabled: false };
+  const confirmedSummary = { hidden: false, textContent: "点「长图」开始导出" };
   const platformBtns = (platformIds || []).map((id) =>
     stubBtn("data-studio-longshot-platform", id)
   );
@@ -140,6 +141,7 @@ function stubPopover(platformIds, faceAttrs) {
       if (sel === "[data-batch-hint]") return batchHint;
       if (sel === "[data-ltn-dual-preview]") return dualBtn;
       if (sel === '[data-action="ok"]') return okBtn;
+      if (sel === "[data-export-confirmed-summary]") return confirmedSummary;
       return null;
     },
     querySelectorAll(sel) {
@@ -159,6 +161,7 @@ function stubPopover(platformIds, faceAttrs) {
     _batchHint: batchHint,
     _dualBtn: dualBtn,
     _okBtn: okBtn,
+    _confirmedSummary: confirmedSummary,
     _platformBtns: platformBtns,
   };
 }
@@ -272,7 +275,7 @@ test("作品集过河面 F2：复用游记六平台 + 顶条", () => {
   );
   assert.match(social, /发到微信、小红书/);
   assert.match(social, /小红书、海报和印刷可以在这里做/);
-  assert.doesNotMatch(social, /这不是在导出作品集/);
+  assert.match(social, /这不是在导出作品集/);
   assert.match(social, /用这些照片/);
   assert.match(social, /返回，继续导出作品集/);
   assert.match(social, /导出小红书/);
@@ -868,6 +871,9 @@ test("CLG · F2 闸卡打 data-clg-locked，无 aria-disabled，确定钮跟平�
   assert.equal(pop._okBtn.disabled, false);
   assert.equal(pop._modeField.hidden, true);
   assert.equal(pop._batchHint.hidden, true);
+  assert.equal(pop._confirmedSummary.hidden, true);
+  assert.equal(pop._confirmedSummary.textContent, "");
+  assert.doesNotMatch(pop._note.textContent, /长图/);
 });
 
 test("CLG · 游记面板无闸文案", () => {

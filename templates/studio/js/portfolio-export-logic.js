@@ -310,6 +310,7 @@ export function nextCrossingDefaultPlatform(prefs, enabled) {
 export function crossingGateCopy() {
   return {
     badge: "用这些照片",
+    leadPrimary: "这不是在导出作品集。",
     leadSecondary: "小红书、海报和印刷可以在这里做。长图要在游记里做。",
     gateSub: "要先有一本游记",
     sheetTitle: "长图要在游记里做",
@@ -618,6 +619,7 @@ export function portfolioExportSocialFaceSpec() {
     edition: "portfolio",
     face: "social",
     badge: copy.badge,
+    leadPrimary: copy.leadPrimary,
     leadSecondary: copy.leadSecondary,
     backLabel: "返回，继续导出作品集",
     confirmLabel: "导出小红书",
@@ -700,6 +702,9 @@ export function wrapJournalPanelAsPortfolioSocialFace(journalHtml) {
   );
   html = html.replace(
     '<p class="preview-toolbar__export-popover-note">选好用途后点「确定」，再点「长图」开始导出。</p>',
+    '<p class="preview-toolbar__fxi-lead" data-fxi-lead-primary>' +
+      spec.leadPrimary +
+      "</p>" +
     '<p class="preview-toolbar__fxi-banner" data-fxi-banner>' +
       spec.leadSecondary +
       "</p>"

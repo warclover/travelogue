@@ -54,6 +54,7 @@ import {
   folioMainExportFlags,
   isCrossingLongshotLocked,
   isPortfolioEdition,
+  isPortfolioSocialExportFace,
   isPortfolioPrintOneShot,
   nextCrossingDefaultPlatform,
   readPortfolioExportPrefs,
@@ -1114,6 +1115,12 @@ export function cancelPreviewLongshotExport(root) {
     if (!pop) return;
     var el = pop.querySelector("[data-export-confirmed-summary]");
     if (!el) return;
+    if (isPortfolioSocialExportFace(pop)) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
     var prefs = readExportPrefs();
     var confirmed = normalizePlatformList(
       prefs.platforms,
