@@ -1073,11 +1073,16 @@ export function syncPanelUI(pop, draft, opts) {
       platform !== "wechat_moments";
   }
   var noteEl = pop.querySelector(".preview-toolbar__export-popover-note");
-  if (noteEl) {
+  if (noteEl && !socialFace) {
     noteEl.textContent =
       isBatch || meta.showCopyControls === false
         ? "选好后点「确定」，再点「长图」开始导出。"
         : "选好后点「确定」，再点「长图」开始导出。改「要不要字」会同步预览。";
+  }
+  var confirmedSummary = pop.querySelector("[data-export-confirmed-summary]");
+  if (socialFace && confirmedSummary) {
+    confirmedSummary.hidden = true;
+    confirmedSummary.textContent = "";
   }
 
   var xhsCount = pop.querySelector('[data-field="xhs-count"]');

@@ -3,8 +3,8 @@
 | 属性 | 内容 |
 |------|------|
 | **产品代号** | Travelogue Studio |
-| **文档版本** | **v0.1.2**（Draft · [八席](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) Conditional Go · **BLK-CLG-06～10 已回写** · [帧 B/C/D 已签](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) · **W1 编码中**） |
-| **状态** | **Draft**。帧 B/C/D 已签，W1 编码门开。**BLK-CLG-01 为合入第一门**（游记导出快照红则整 PR 打回） |
+| **文档版本** | **v0.1.2**（Draft · [八席](./acceptance-records/clg-crossing-longshot-gate-v1-review-2026-08-27.md) Conditional Go · **BLK-CLG-06～10 已回写** · [帧 A/B/C/D 已签](./acceptance-records/clg-frame-bcd-signoff-2026-08-27.md) · **W1 已落** · [W2 狗粮 2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md)） |
+| **状态** | **Draft · W1 已落 · W2 狗粮已走**。升 Go 仍是产品裁决。**BLK-CLG-01 为合入第一门**（游记导出快照红则整 PR 打回） |
 | **DOC-STATUS** | **active** |
 | **主题代号** | 「过河长图闸」— **CLG**（Crossing Longshot Gate） |
 | **界面用词** | 过河面沿用 FXI：**发到微信、小红书…** · **这不是在导出作品集** · **返回，继续导出作品集**。本波新词：**长图要在游记里做** · **打开那本游记** · **去做一本游记** · **先出小红书** · **要先有一本游记** · **用这些照片**。确定钮跟平台走（默认 **导出小红书**）。禁止对 C 端说 sidecar / 拼贴 / 卷轴 / 同夹 / ISO-04 / kept_stack / index-longshot / Writer / edition / 闸。**禁止** F2 确定钮写「导出长图」（游记面板仍写） |
@@ -16,7 +16,7 @@
 | **关联文档** | [FXI](./PRD-FRONTEND-IDENTITY-ISOLATION-V1.md)（F2 面源 · 本文改判其「六种都能导」）· [PIS](./PRD-PORTFOLIO-IDENTITY-STARS-V1.md)（同夹双本 · 覆盖只发生在同一身份）· [PFM](./PRD-PORTFOLIO-FOLIO-MODE-V1.md) D-PFM-10 / ISO-04（能力仍在，Studio F2 不再走微信 Writer）· [备忘录](./作品集管线简化讨论备忘录.md) |
 | **验收** | 本文 **§13 为源** |
 | **实施** | 本文 **§11 为源** |
-| **更新日期** | 2026-08-27 |
+| **更新日期** | 2026-08-29 |
 
 > **定位**
 >
@@ -530,8 +530,8 @@ Studio JS 未注册 dual-pipeline 标记，不要为闸去注册。
 | 里程碑 | 出门标准 | 编码门 |
 |--------|----------|--------|
 | **W0** | 帧 A/B/C/D 产品勾 | 未签不得合功能 PR |
-| **W1** | FE+BE 绿；**BLK-CLG-01～10** | W0 |
-| **W2** | 狗粮两夹 | W1 |
+| **W1** | FE+BE 绿；**BLK-CLG-01～10** | ☑ W0 |
+| **W2** | 狗粮两夹 | ☑ [2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md) |
 | **升 Go** | 产品裁决 | W2 |
 
 **BLK（01～05 预占 · 06～10 八席 · 均已回写正文）**
@@ -624,3 +624,4 @@ Studio JS 未注册 dual-pipeline 标记，不要为闸去注册。
 | v0.1.0 | 2026-08-27 | 初稿。产品赞同闸卡方案并吸收补充：有游记先打开、默认不落灰卡、F2 不改身份、游记面板零改。帧 A/B/C 待签。 |
 | v0.1.1 | 2026-08-27 | 落地缝：peek 与 album-preview 对齐；去做一本用 session + 现网向导 opts（不造 URL）；防漏认后覆盖游记（BLK-CLG-05）；加载/失败态；帧 D；挂 FXI / DOC-STATUS。 |
 | v0.1.2 | 2026-08-27 | 八席 Must-Fix 回写。去拼贴/卷轴/同夹；F2 确定钮跟平台（默认导出小红书）；闸卡不用 aria-disabled；向导握手跳过草稿；dispatch+handler 双拒并点名改测。线框改字待产品重勾。 |
+| v0.1.2 | 2026-08-29 | W1 缺口：F2 藏「点长图开始导出」摘要、补主句「这不是在导出作品集。」。W2 狗粮见 [clg-w2-dogfood-2026-08-29](./acceptance-records/clg-w2-dogfood-2026-08-29.md)。 |
