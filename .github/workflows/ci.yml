@@ -93,6 +93,12 @@ jobs:
       - name: DPI dual-pipeline ownership ratchet
         run: python scripts/lint_dual_pipeline_ownership.py
 
+      - name: RCL orchestrator length + comment-budget ratchet
+        run: python scripts/lint_rcl_orchestrators.py
+
+      - name: RCL frontend live-path closure
+        run: python scripts/lint_frontend_live_path.py
+
       - name: CSC god-module line ceiling (curate / studio_pipeline)
         run: python scripts/lint_csc_god_module_ratchet.py
 

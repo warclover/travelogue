@@ -30,3 +30,9 @@ Two reader pipelines must iterate independently. Do not add cross-pipeline `if`s
 - Put edition branches in `dock.js` beyond mount + `journalDockLogic` / `portfolioDockLogic`.
 - Create import-linter shells for modules that do not exist yet.
 - Treat `trip.render_golden.json` as journal-only.
+
+## Readable core line (RCL)
+
+Map: `docs/readable-core-line.md`. Contract: `docs/PRD-READABLE-CORE-LINE-V1.md`.
+**G-RCL-01:** next feature PR touching `assemble.py` / `journal_chapters.py` / `_stage_build_chapters_compose` must have RCL W0 on master.
+Do not add identity `if`s in W1 stage modules. Live path: `docs/frontend-live-path.md`.
