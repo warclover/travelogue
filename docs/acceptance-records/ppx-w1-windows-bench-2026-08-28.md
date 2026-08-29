@@ -90,4 +90,4 @@
 | **AC-PPX-08** | **通过** |
 | **AC-PPX-10** | **通过（1×cold · I+M 切片）** |
 
-实现签字：2026-08-28 本机抽检。QA / 架构仍按 K6 在 [#72](https://github.com/warclover/travelogue/pull/72)（已合入）上确认即可。
+实现签字：2026-08-28 本机抽检。QA / 架构口头 Go：2026-08-29（合入后补签 K6）。三句：M1 关闭；M2 不开工；仓库 `parallel_ingest` 继续默认 `false`。

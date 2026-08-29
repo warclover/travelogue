@@ -7,7 +7,7 @@
 | **W0 基线** | [acceptance-records/ppx-w0-baseline-2026-08-28.md](./acceptance-records/ppx-w0-baseline-2026-08-28.md) |
 | **上游** | [PRD-PIPELINE-PERF-V1.md](./PRD-PIPELINE-PERF-V1.md) · [IMPLEMENTATION-PIPELINE-PERF-V1.md](./IMPLEMENTATION-PIPELINE-PERF-V1.md) |
 | **状态图例** | ☑ 已落地 · ◑ 部分 · ☐ 未开始 |
-| **更新日期** | 2026-08-28 |
+| **更新日期** | 2026-08-29 |
 
 > **Kickoff**：M0 可在评审通过后立即开工。M1 编码不得在 AC-PPX-01 杀伤测试先红之前开始合入。产品默认 `parallel_ingest` 保持 `false`。
 
@@ -22,10 +22,10 @@
 | K3 | DPI 所有权 | ☑ | 见 §1；禁止新增强制 edition 分支 |
 | K4 | 设计冻结（§2） | ☑ | 进程树 / 取消 / 滑窗 / RAM / 物化合并 |
 | K5 | 杀伤测试规格 | ☑ | §4；M0 第一提交按此写红测试 |
-| K6 | 评审通过 | ☐ | 架构 + QA 至少口头 Go 再合 M1 |
+| K6 | 评审通过 | ☑ | 2026-08-29 架构 + QA 口头 Go（合入后补签）；M1 关闭 · M2 不开 · 默认 flag 仍 false |
 | K7 | 本机 `parallel_ingest` 现状登记 | ☑ | 本机 `config.yaml` 为 `true` / workers=0；仓库默认仍 `false` |
 
-K6 未过不得把 M1 合入主分支。K1–K5 已在本波文档完成。
+K6 已补签。M1 已在 [#72](https://github.com/warclover/travelogue/pull/72) 合入。K1–K7 齐。
 
 ---
 
