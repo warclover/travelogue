@@ -1,5 +1,7 @@
 /**
- * Preview toolbar · v3 init (bridges, sheet, dock, longshot mount).
+ * LIVE · Preview toolbar init (bridges, sheet, dock, longshot mount).
+ * Loaded by: preview-toolbar.js. Filename v3 ≠ frozen.
+ * Not: templates/visual-journal/longshot.js (reader capture).
  */
 "use strict";
 

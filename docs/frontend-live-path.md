@@ -1,6 +1,6 @@
 # 前端活路径（RCL W0）
 
-权威清单。合同以 [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) §7 为准。W0 只登记、不改 JS；W3 再打文件头。
+权威清单。合同以 [PRD-READABLE-CORE-LINE-V1.md](./PRD-READABLE-CORE-LINE-V1.md) §7 为准。W0 登记 + lint；W3 已在 §7.2 名单文首打 `LIVE` / `READER` 状态头。
 
 **G-RCL-01**：下一支改 `assemble.py` / `journal_chapters.py` / `_stage_build_chapters_compose` 的功能 PR，合并前 RCL W0 必须在主干。
 

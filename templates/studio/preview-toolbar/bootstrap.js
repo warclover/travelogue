@@ -1,5 +1,7 @@
 /**
- * Preview toolbar · entry bootstrap (v4 shell mount + DOM ready).
+ * LIVE · Preview toolbar bootstrap (v4 shell mount + DOM ready).
+ * Loaded by: preview-toolbar.js. LIVE assembly shell.
+ * Not: homepage-v2/bootstrap.js (home closure root).
  */
 "use strict";
 

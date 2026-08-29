@@ -1,5 +1,7 @@
 /**
- * Travelogue Studio · preview page toolbar (ESM).
+ * LIVE · Studio preview toolbar entry.
+ * Loaded by: journal.hbs / present shell.
+ * Not: templates/visual-journal/longshot.js (reader capture).
  */
 "use strict";
 

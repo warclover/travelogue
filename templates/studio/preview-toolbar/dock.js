@@ -1,6 +1,6 @@
 /**
- * Preview toolbar · dock icons, screenplay control, dock UX.
- * S-09 · identity stays mount + journalDockLogic / portfolioDockLogic.
+ * LIVE · Preview toolbar dock (icons, screenplay, dock UX).
+ * Loaded by: init-v3.js. S-09 · mount + journalDockLogic / portfolioDockLogic.
  * Do not grow is_portfolio / edition product branches in this file.
  */
 "use strict";

@@ -1,5 +1,9 @@
-/* Journal reader CSS — screen-* only (DPI W1). */
-/* Shared variables live in journal.css; do not add page-* rules here. */
+/*
+ * LIVE · journal-screens.css
+ * RCL-W3-CATALOG · stage vars · @lte-generated · handwritten overlays
+ * Shared tokens stay in journal.css. No third family file.
+ * Forbidden: portfolio family prefixes (docs/dual-pipeline-ownership.md)
+ */
 /**
  * Web layoutEngine=screens — 舞台与槽位（见 docs/PRD-页面优化.md · BSP）
  */

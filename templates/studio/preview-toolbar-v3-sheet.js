@@ -1,9 +1,8 @@
 // @ts-nocheck
 /**
- * Preview toolbar v3 · unified refine sheet（封面 | 页面 | 画册）.
- * Export decisions live in Dock ▾（copyDisplay / platform / scale）.
- * Mobile: bottom sheet · Desktop (≥1024px): right side panel.
- * Default open tab stays contextual（封面/封底 → 封面；正文 → 页面）.
+ * LIVE · Preview toolbar refine sheet (cover | page | book).
+ * Loaded by: init-v3.js. Filename v3 ≠ frozen.
+ * Export decisions stay in Dock. Not a reader-facing module.
  */
 "use strict";
 

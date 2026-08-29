@@ -1,7 +1,7 @@
 /**
- * Travelogue · 保存长图
- * 将 <main> 按竖版长图版式（428px 宽 · iPhone 15 Pro Max 可读）导出为 PNG。
- * 依赖 html2canvas（优先本地 vendor/，失败则 CDN）。
+ * READER · journal.hbs longshot capture (428px readable PNG).
+ * Not: templates/studio/preview-toolbar/longshot.js (Studio export panel).
+ * Do not merge the two longshot modules.
  */
 (function (global) {
   "use strict";
