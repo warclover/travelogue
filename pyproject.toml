@@ -183,6 +183,8 @@ type = "forbidden"
 allow_indirect_imports = true
 source_modules = [
     "travelogue.render.journal_chapters",
+    "travelogue.render.journal_folio",
+    "travelogue.render.journal_screens",
 ]
 forbidden_modules = [
     "travelogue.layout_engine.editorial_series",

@@ -35,6 +35,8 @@
 
 `config/edition.py` · `export/portfolio_*.py` · `layout_engine/editorial_series/**` · `web/studio*` · `cli/render_cmds.py`
 
+RCL 阶段模块不占窄缝：`render/assemble_cover.py` · `render/assemble_copy.py` · `render/journal_folio.py` · `render/journal_screens.py`（零身份 `if`）。
+
 ## 夹具
 
 | 独占 | 路径 |

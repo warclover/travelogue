@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from scripts.lint_rcl_orchestrators import (
@@ -25,7 +27,9 @@ def test_baseline_covers_three_functions_with_owner() -> None:
     functions = baseline["functions"]
     assert set(functions) == {key for key, *_ in ORCHESTRATORS}
     assemble = "travelogue.render.assemble:build_render_context"
+    journal = "travelogue.render.journal_chapters:build_journal_chapters"
     assert current[assemble]["lines"] <= int(functions[assemble]["cap_after_w1"])
+    assert current[journal]["lines"] <= int(functions[journal]["cap_after_w1"])
     for key, meta in current.items():
         rec = functions[key]
         assert rec["owner"]
@@ -38,7 +42,7 @@ def test_remaining_kernels_still_over_w1_cap_until_extracted() -> None:
     baseline = load_baseline()
     assert compare_to_baseline(current, baseline, enforce_w1_caps=False) == []
     over = compare_to_baseline(current, baseline, enforce_w1_caps=True)
-    assert any("build_journal_chapters" in row and "W1 cap" in row for row in over)
+    assert not any("build_journal_chapters" in row and "W1 cap" in row for row in over)
     assert any("_stage_build_chapters_compose" in row and "W1 cap" in row for row in over)
 
 
@@ -56,6 +60,8 @@ def test_comment_budget_skips_missing_stage_modules(tmp_path: Path) -> None:
     present = [rel for rel in COMMENT_ALLOWLIST if (ROOT / rel).is_file()]
     assert "travelogue/render/assemble_cover.py" in present
     assert "travelogue/render/assemble_copy.py" in present
+    assert "travelogue/render/journal_folio.py" in present
+    assert "travelogue/render/journal_screens.py" in present
 
 
 def test_comment_budget_flags_long_docstring(tmp_path: Path) -> None:

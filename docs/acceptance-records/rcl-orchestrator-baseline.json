@@ -9,7 +9,7 @@
       "file": "travelogue/render/assemble.py"
     },
     "travelogue.render.journal_chapters:build_journal_chapters": {
-      "lines": 467,
+      "lines": 51,
       "cap_after_w1": 140,
       "owner": "journal",
       "file": "travelogue/render/journal_chapters.py"
