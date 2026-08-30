@@ -122,7 +122,17 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
     _trip_dir, trip = loaded
     ctx = studio_ctx(handler)
     # SFP D-SFP-12 · 打开预览静默 migrate（响应面立即净化；落盘 best-effort）
+    title_snap = [
+        (str(ch.get("id") or ""), str(ch.get("title") or ""))
+        for ch in (trip.get("chapters") or [])
+        if isinstance(ch, dict)
+    ]
     migrated = migrate_share_face_purity_on_open(trip)
+    title_after = [
+        (str(ch.get("id") or ""), str(ch.get("title") or ""))
+        for ch in (trip.get("chapters") or [])
+        if isinstance(ch, dict)
+    ]
     trip_json = _trip_dir / "trip.json"
     if not get_job_store().is_trip_busy(trip_id):
         try:
@@ -131,7 +141,9 @@ def handle_entry(handler: StudioHandlerProtocol, trip_id: str) -> None:
             # flag「预览需更新」. Also repair prior false-stale drift (rev>rendered)
             # left by older open-path writes.
             needs_persist = bool(migrated.get("changed"))
-            chapter_titles_changed = bool(migrated.get("chapters"))
+            # refresh_chapter_titles 曾把「生成串 ≠ 落盘截断」误报成章名变更。
+            # 只有标题正文真的变了才撤印章并重渲，避免新建游记一打开就 pending。
+            chapter_titles_changed = title_snap != title_after
             needs_stamp_repair = (not needs_persist) and trip_render_bundle_stale(
                 _trip_dir, trip
             )

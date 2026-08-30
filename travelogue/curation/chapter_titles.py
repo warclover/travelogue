@@ -556,12 +556,16 @@ def refresh_chapter_titles_on_trip(trip: dict) -> list[str]:
         # 无资产桶勿用「片段N」覆盖已有可读章名（open migrate 序数清洗后仍可能无 items）
         if not bucket:
             continue
-        new_title = (title or "").strip()
-        if not new_title or new_title == str(ch.get("title") or "").strip():
+        # Planner persists [:12]; compare the written clip, not the raw generator
+        # string. Otherwise「华农油菜花 作品 · 下午」vs stored 12 字每次都报改过，
+        # 打开预览就不盖 renderedRevision 印章，刚做好的游记立刻「预览需更新」。
+        new_title = _clip_title(title, max_len=12)
+        stored = str(ch.get("title") or "").strip()
+        if not new_title or new_title == stored:
             continue
-        if new_title.startswith("片段") and str(ch.get("title") or "").strip():
+        if new_title.startswith("片段") and stored:
             continue
-        ch["title"] = new_title[:12]
+        ch["title"] = new_title
         # Rule-based CN · not LLM invent; clear non-user origin so later refresh can update
         if str(ch.get("titleOrigin") or "") != "user":
             ch.pop("titleOrigin", None)

@@ -93,6 +93,63 @@ def test_handle_entry_success(tmp_path: Path) -> None:
     assert body["aesthetic"]["enabled"] is True
 
 
+def test_handle_entry_clipped_chapter_title_keeps_render_stamp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """薄章名 refresh 误报不得撤 renderedRevision 印章。"""
+    from travelogue.curation import chapter_titles as ct
+    from travelogue.layout_templates.css_stale import trip_render_bundle_stale
+    from travelogue.services.trip import (
+        mark_render_bundle_current,
+        meta_rendered_revision,
+        meta_revision,
+    )
+
+    monkeypatch.setattr(
+        ct, "chapter_titles", lambda *a, **k: ["华农油菜花 作品 · 下午"]
+    )
+
+    trips_dir = tmp_path / "trips"
+    trip_json = create_trip("demo-clip-stamp", trips_dir, title="油菜花", place="华农")
+    trip_dir = trip_json.parent
+    (trip_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    svc = TripService(root=trips_dir.parent)
+
+    def _seed(t: dict) -> bool:
+        meta = t.setdefault("meta", {})
+        meta["displayTitle"] = "油菜花"
+        t["assets"] = [
+            {
+                "id": "a1",
+                "takenAt": "2026-03-01T12:00:00Z",
+                "type": "image",
+                "width": 1200,
+                "height": 800,
+            }
+        ]
+        t["chapters"] = [
+            {
+                "id": "ch-01",
+                "index": 1,
+                "title": "华农油菜花 作品 · 下",
+                "items": [{"type": "media-card", "assetId": "a1"}],
+                "curation": {},
+            }
+        ]
+        mark_render_bundle_current(t)
+        return True
+
+    svc.update(trip_json, _seed)
+    before = svc.load(trip_json)
+    assert meta_rendered_revision(before) == meta_revision(before)
+
+    handle_entry(MockStudioHandler(trips_dir), "demo-clip-stamp")
+    after = svc.load(trip_json)
+    assert after["chapters"][0]["title"] == "华农油菜花 作品 · 下"
+    assert meta_rendered_revision(after) == meta_revision(after)
+    assert trip_render_bundle_stale(trip_dir, after) is False
+
+
 def test_handle_entry_idempotent_open_does_not_false_stale(tmp_path: Path) -> None:
     """SFP open migrate must not bump revision on no-op (假阳性「预览需更新」)."""
     from travelogue.layout_templates.css_stale import trip_render_bundle_stale

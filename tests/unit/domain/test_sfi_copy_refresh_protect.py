@@ -105,3 +105,21 @@ def test_user_title_origin_protected() -> None:
     trip["chapters"][1]["title"] = "我的章名"
     refresh_chapter_titles_on_trip(trip)
     assert trip["chapters"][1]["title"] == "我的章名"
+
+
+def test_refresh_does_not_flag_when_only_unclipped_generator_differs(
+    monkeypatch,
+) -> None:
+    """落盘已是 12 字截断时，生成串多一字不得算改过（否则打开预览假 stale）。"""
+    from travelogue.curation import chapter_titles as ct
+
+    monkeypatch.setattr(
+        ct, "chapter_titles", lambda *a, **k: ["华农油菜花 作品 · 下午"]
+    )
+    trip = _mini_trip()
+    trip["chapters"][0]["title"] = "华农油菜花 作品 · 下"
+    trip["chapters"][0]["items"] = [{"type": "media-card", "assetId": "a1"}]
+    updated = refresh_chapter_titles_on_trip(trip)
+    assert updated == []
+    assert trip["chapters"][0]["title"] == "华农油菜花 作品 · 下"
+    assert refresh_chapter_titles_on_trip(trip) == []
