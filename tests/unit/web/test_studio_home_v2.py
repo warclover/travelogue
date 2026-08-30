@@ -583,6 +583,9 @@ def test_studio_home_v2_first_success_module() -> None:
     assert "success_primary_click" in fs
     assert "trapFocus" in fs
     assert "Escape" in fs
+    assert "!!result.tripId && !isDemoTrip(result)" in fs
+    tabs = (STUDIO_DIR / "homepage-v2" / "bento-tabs.js").read_text(encoding="utf-8")
+    assert 'reason: "demo"' in tabs
     assert "harnessApplyStartup" in harness and "studioState" in harness
     assert "studioJob" in harness and "harnessInstallFetchMocks" in harness
 
@@ -609,7 +612,9 @@ def test_studio_home_v2_layout_tier_and_failed_modules() -> None:
     assert "showImportFailed" in failed and "failureNextHint" in failed
     assert "trapFocus" in failed
     assert "Escape" in failed
-    assert "setHidden(stay, !authRecoverable)" in failed
+    assert "setHidden(stay, false)" in failed
+    assert "isPermanentImportError" in failed
+    assert "更换文件夹" in failed
     css = V2_CSS_BUNDLE
     assert ".v2-first-success {" in css
     first_success_block = css.split(".v2-first-success {", 1)[1].split("}", 1)[0]

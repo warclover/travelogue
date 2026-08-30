@@ -533,7 +533,11 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
         DEFAULT_EXPORT_SCALE,
         playwright_longshot_available,
     )
-    from travelogue.export.output_recipe import count_kept_n, resolve_output_recipe
+    from travelogue.export.output_recipe import (
+        apply_recipe_layout_to_segment_mode,
+        count_kept_n,
+        resolve_output_recipe,
+    )
     from travelogue.export.output_recipe.types import OutputRecipeError
     from travelogue.export.platform_profiles import (
         DEFAULT_PLATFORM,
@@ -747,10 +751,12 @@ def handle_longshot(handler: StudioHandlerProtocol) -> None:
             return
 
         platform_id = normalize_platform_id(recipe.platform or platform_raw)
-        if platform_id == DEFAULT_PLATFORM and recipe.layout in ("chapter", "by_chapter"):
-            segment_mode = "chapter"
-        elif platform_id == DEFAULT_PLATFORM and recipe.layout == "single":
-            segment_mode = "full"
+        segment_mode = apply_recipe_layout_to_segment_mode(
+            segment_mode,
+            recipe_layout=recipe.layout,
+            platform_id=platform_id,
+            wechat_platform=DEFAULT_PLATFORM,
+        )
     elif portfolio_pages_request:
         platform_id = normalize_platform_id(platform_raw)
     elif not longshot2_enabled:

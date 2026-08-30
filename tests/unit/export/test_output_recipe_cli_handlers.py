@@ -304,3 +304,132 @@ def test_resolve_cli_command_prints_json(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["band"] == "sparse"
     assert payload["intent"] == "chat_longshot"
+
+
+def test_handle_longshot_explicit_chapter_survives_single_recipe(tmp_path: Path) -> None:
+    """QA-01 · recipe.layout=single must not overwrite request segmentMode=chapter."""
+    from travelogue.export.longshot import LongshotExportResult
+    from travelogue.export.output_recipe import resolve_output_recipe
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+    from travelogue.web.studio_jobs import reset_job_store
+
+    trips = tmp_path / "trips"
+    create_trip("or-seg", trips)
+    _write_kept_n(trips / "or-seg", 5)
+    recipe = resolve_output_recipe(
+        kept_n=5,
+        enabled=True,
+        intent="chat_longshot",
+        entrypoint="preview",
+    )
+    assert recipe.layout == "single"
+
+    captured: dict = {}
+
+    def fake_dispatch(*_args, **kwargs):
+        captured.update(kwargs)
+        return LongshotExportResult(segmented=True, segment_reason="chapter", page_count=3)
+
+    class ImmediateThread:
+        def __init__(self, target=None, daemon=False, **_kwargs):
+            self._target = target
+
+        def start(self) -> None:
+            if self._target:
+                self._target()
+
+    reset_job_store()
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "or-seg",
+            "intent": "chat_longshot",
+            "entrypoint": "preview",
+            "segmentMode": "chapter",
+            "allowMissingSource": True,
+            "scale": 1,
+        },
+    )
+    _enable_recipe(handler)
+    with patch(
+        "travelogue.export.longshot.playwright_longshot_available",
+        return_value=True,
+    ), patch(
+        "travelogue.export.dispatch.dispatch_export",
+        side_effect=fake_dispatch,
+    ), patch(
+        "travelogue.web.studio_handlers.export_handlers._ensure_derivatives_for_export",
+    ), patch(
+        "travelogue.web.studio_handlers.export_handlers.threading.Thread",
+        ImmediateThread,
+    ):
+        handle_longshot(handler)
+
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202, body
+    assert captured.get("segment_mode") == "chapter"
+
+
+def test_handle_longshot_explicit_full_survives_chapter_recipe(tmp_path: Path) -> None:
+    from travelogue.export.longshot import LongshotExportResult
+    from travelogue.export.output_recipe import resolve_output_recipe
+    from travelogue.web.studio_handlers.export_handlers import handle_longshot
+    from travelogue.web.studio_jobs import reset_job_store
+
+    trips = tmp_path / "trips"
+    create_trip("or-full", trips)
+    _write_kept_n(trips / "or-full", 40)
+    recipe = resolve_output_recipe(
+        kept_n=40,
+        enabled=True,
+        intent="chat_longshot",
+        entrypoint="preview",
+    )
+    assert recipe.layout == "by_chapter"
+
+    captured: dict = {}
+
+    def fake_dispatch(*_args, **kwargs):
+        captured.update(kwargs)
+        return LongshotExportResult(segmented=False, page_count=1)
+
+    class ImmediateThread:
+        def __init__(self, target=None, daemon=False, **_kwargs):
+            self._target = target
+
+        def start(self) -> None:
+            if self._target:
+                self._target()
+
+    reset_job_store()
+    handler = MockStudioHandler(
+        trips,
+        json_body={
+            "tripId": "or-full",
+            "intent": "chat_longshot",
+            "entrypoint": "preview",
+            "segmentMode": "full",
+            "allowMissingSource": True,
+            "scale": 1,
+        },
+    )
+    _enable_recipe(handler)
+    with patch(
+        "travelogue.export.longshot.playwright_longshot_available",
+        return_value=True,
+    ), patch(
+        "travelogue.export.dispatch.dispatch_export",
+        side_effect=fake_dispatch,
+    ), patch(
+        "travelogue.web.studio_handlers.export_handlers._ensure_derivatives_for_export",
+    ), patch(
+        "travelogue.web.studio_handlers.export_handlers.threading.Thread",
+        ImmediateThread,
+    ):
+        handle_longshot(handler)
+
+    assert handler.response is not None
+    status, body = handler.response
+    assert status == 202, body
+    assert captured.get("segment_mode") == "full"

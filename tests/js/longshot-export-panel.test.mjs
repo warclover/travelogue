@@ -29,6 +29,8 @@ import {
   progressSubtitleForPlatform,
   enabledPlatformsFromConfig,
   estimateAlbumAutoCount,
+  estimateWechatChatExportRisk,
+  formatWechatChatExportExpect,
   exportSummaryLine,
   exportSummaryLineForPlatforms,
   formatBatchSuccess,
@@ -912,6 +914,27 @@ test("CLG · 点闸卡不改主选，说明层标题固定", () => {
   assert.equal(crossingGateCopy().sheetTitle, "长图要在游记里做");
   assert.equal(pop._platformBtns[0].getAttribute("aria-describedby"), "clg-gate-sub-wechat_chat");
   assert.equal(pop._platformBtns[0]._sub.textContent, "要先有一本游记");
+});
+
+test("UX-05 · 微信群整篇大图给出分章建议", () => {
+  const whole = estimateWechatChatExportRisk({
+    photoCount: 16,
+    chapterCount: 3,
+    mode: "full",
+  });
+  assert.equal(whole.fileCount, 1);
+  assert.equal(whole.warn, true);
+  assert.equal(whole.suggestChapter, true);
+  assert.match(formatWechatChatExportExpect(whole), /按章分开/);
+
+  const chapter = estimateWechatChatExportRisk({
+    photoCount: 16,
+    chapterCount: 3,
+    mode: "chapter",
+  });
+  assert.equal(chapter.fileCount, 3);
+  assert.equal(chapter.suggestChapter, false);
+  assert.match(formatWechatChatExportExpect(chapter), /3 张/);
 });
 
 test("CLG · 闸层 CSS 不得把 popover 改成 relative", () => {

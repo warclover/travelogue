@@ -339,7 +339,8 @@ pytest tests/unit/web/test_studio_intent.py::test_pipeline_default_place_passes_
 |------|--------------------------------------|-------|
 | **loading** | 「正在清点照片…」 | 可弱化 |
 | **degraded / timeout** | 「照片较多，制作时将自动清点」 | **允许**；不得显示已清点 N 张 |
-| **failed** | 「未能清点照片，可更换文件夹或直接开始」 | **允许**；错误稳定可见（`role="status"` / 行内 error） |
+| **failed · 永久错误** | 「未能清点照片，请更换文件夹」 | **阻断**；主操作「更换文件夹」 |
+| **failed · 可恢复** | 「未能清点照片，可更换文件夹或仍要开始」 | **允许**；错误稳定可见（`role="status"` / 行内 error） |
 | **ready** | 「已清点 N 张」 | 正常 |
 
 实现：`_previewFailed` / `_previewDegraded` 等显式状态；禁止失败后 `_pendingPhotoCount=null` 仍落入 loading 文案。  

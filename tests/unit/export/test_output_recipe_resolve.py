@@ -9,6 +9,7 @@ import pytest
 from travelogue.export.output_recipe import (
     BandThresholds,
     OutputRecipeError,
+    apply_recipe_layout_to_segment_mode,
     classify_band,
     count_kept_n,
     resolve_output_recipe,
@@ -231,3 +232,55 @@ def test_r03_unknown_platform_is_or_error() -> None:
     with pytest.raises(OutputRecipeError) as ei:
         resolve_output_recipe(kept_n=5, enabled=True, platform="totally_bogus")
     assert ei.value.code == "E_OR_UNKNOWN_PLATFORM"
+
+
+def test_explicit_segment_mode_wins_over_recipe_layout() -> None:
+    """User-visible full/chapter must not be overwritten by recipe.layout=single."""
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            "chapter",
+            recipe_layout="single",
+            platform_id="wechat_chat",
+        )
+        == "chapter"
+    )
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            "full",
+            recipe_layout="by_chapter",
+            platform_id="wechat_chat",
+        )
+        == "full"
+    )
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            "auto",
+            recipe_layout="single",
+            platform_id="wechat_chat",
+        )
+        == "full"
+    )
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            "auto",
+            recipe_layout="by_chapter",
+            platform_id="wechat_chat",
+        )
+        == "chapter"
+    )
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            None,
+            recipe_layout="chapter",
+            platform_id="wechat_chat",
+        )
+        == "chapter"
+    )
+    assert (
+        apply_recipe_layout_to_segment_mode(
+            "auto",
+            recipe_layout="single",
+            platform_id="wechat_moments",
+        )
+        == "auto"
+    )

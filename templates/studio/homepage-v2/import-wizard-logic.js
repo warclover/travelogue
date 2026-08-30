@@ -325,6 +325,7 @@ export function wizardCopy(edition) {
  */
 export function wizardStartLabel(opts) {
   var o = opts || {};
+  if (o.changeFolder) return "更换文件夹";
   if (o.uploading) return "开始上传";
   var pf = normalizeEdition(o.edition) === "portfolio";
   if (String(o.mode || "") === "fine_craft") {
@@ -347,6 +348,46 @@ export function wizardPhotoSummaryLine(n, opts) {
     return "文件夹有 " + count + " 张，系统会按能上版的张数自动选厚度。";
   }
   return "文件夹有 " + count + " 张。制作时会自动去重与挑选，成册张数以完成后为准。";
+}
+
+/** 永久输入错误：重放同一路径不会成功。 */
+var PERMANENT_IMPORT_CODES = {
+  E_STUDIO_ALBUM_DENIED: true,
+  E_DEMO_NOT_DIR: true,
+  E_INGEST_NOT_DIR: true,
+  E_INGEST_EMPTY: true,
+  E_INGEST_TOO_FEW: true,
+  E_DEMO_TOO_FEW: true,
+  E_STUDIO_UPLOAD_EMPTY: true,
+  E_PICK_FOLDER_DENIED: true,
+  E_PICK_FOLDER_UNSUPPORTED: true,
+};
+
+export function isPermanentImportError(code) {
+  return !!PERMANENT_IMPORT_CODES[String(code || "")];
+}
+
+/**
+ * @param {number|null|undefined} status
+ * @param {string|null|undefined} errorCode
+ * @returns {{ kind: "permanent"|"recoverable", code: string }}
+ */
+export function classifyAlbumPreviewFailure(status, errorCode) {
+  var code = String(errorCode || "");
+  var st = Number(status) || 0;
+  if (isPermanentImportError(code) || st === 400 || st === 403) {
+    return { kind: "permanent", code: code || "E_STUDIO_ALBUM_DENIED" };
+  }
+  return { kind: "recoverable", code: code || "preview_failed" };
+}
+
+export function wizardFailedVerifyLine(kind) {
+  if (kind === "permanent") return "未能清点照片，请更换文件夹";
+  return "未能清点照片，可更换文件夹或仍要开始";
+}
+
+export function canStartAfterPreview(previewState, failureKind) {
+  return !(previewState === "failed" && failureKind === "permanent");
 }
 
 /** WIZ-01 · 张数弱建议，不阻断开始。 */

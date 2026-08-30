@@ -5,6 +5,7 @@
  */
 import { SS, isDemoTrip, SHEET_FOCUSABLE } from "../js/constants.js";
 import { humanizeStudioError, failureNextHint, isLlmAuthRecoverable } from "../js/errors.js";
+import { isPermanentImportError } from "./import-wizard-logic.js";
 import { trackStudioEvent } from "../js/analytics.js";
 import { V2, $, show, setV2SkipLinkTarget } from "./store.js";
 import { captureImportShell } from "./first-success.js";
@@ -125,16 +126,20 @@ function populateFailedUi(err, pending) {
   if (continueBtn && authRecoverable) {
     continueBtn.textContent = "继续生成画册";
   }
-  // Sprint 2 · 默认失败面只留一个重试；鉴权可恢复仍露出继续生成
+  // 所有失败面保留「留在首页」；永久路径错误主操作改为更换文件夹
   var stay = $("v2-failure-stay");
-  setHidden(stay, !authRecoverable);
-  // 缺引擎：重试降为次要（配置变更后仍可用）；有 pending 才显示
+  setHidden(stay, false);
+  var permanent = isPermanentImportError(code);
   var canRetry = !!canContinue;
   setHidden(retry, authRecoverable ? !canRetry : false);
   if (retry && authRecoverable) {
     retry.textContent = "仍要重试";
     retry.classList.remove("v2-failure__cta");
     retry.classList.add("v2-failure__secondary");
+  } else if (retry && permanent) {
+    retry.textContent = "更换文件夹";
+    retry.classList.add("v2-failure__cta");
+    retry.classList.remove("v2-failure__secondary");
   } else if (retry) {
     retry.textContent = "重试";
     retry.classList.add("v2-failure__cta");
@@ -258,7 +263,18 @@ export function showImportFailed(err) {
   if (!_wired) wireImportFailed();
 }
 
+function changeFolderFromFailed() {
+  clearActivePending();
+  hideImportFailed();
+  syncVariantGuard();
+  openImportSheet({ forceStep: "pick" });
+}
+
 function retryImportFailed() {
+  if (isPermanentImportError(_lastErr && _lastErr.code)) {
+    changeFolderFromFailed();
+    return;
+  }
   var pending = readPendingImport();
   if (pending && pending.uploadForm) {
     clearActivePending();

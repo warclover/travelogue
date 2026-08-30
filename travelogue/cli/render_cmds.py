@@ -546,7 +546,10 @@ def cmd_export_longshot(
     from travelogue.export.crossing_longshot import CrossingLongshotNeedsJournal
     from travelogue.export.dispatch import dispatch_export
     from travelogue.export.longshot import LongshotExportError
-    from travelogue.export.output_recipe import resolve_output_recipe
+    from travelogue.export.output_recipe import (
+        apply_recipe_layout_to_segment_mode,
+        resolve_output_recipe,
+    )
     from travelogue.export.output_recipe.types import OutputRecipeError
     from travelogue.export.platform_profiles import (
         PlatformProfileError,
@@ -607,10 +610,11 @@ def cmd_export_longshot(
                     "E_OR_INTENT_REQUIRED", "CLI 需指定 --intent 或 --platform"
                 )
             platform_id = recipe.platform or platform_id
-            if platform_id == "wechat_chat" and recipe.layout in ("chapter", "by_chapter"):
-                segment_mode = "chapter"
-            elif platform_id == "wechat_chat" and recipe.layout == "single":
-                segment_mode = "full"
+            segment_mode = apply_recipe_layout_to_segment_mode(
+                segment_mode,
+                recipe_layout=recipe.layout,
+                platform_id=platform_id,
+            )
         else:
             platform_id = platform or "wechat_chat"
 

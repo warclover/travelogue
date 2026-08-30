@@ -275,6 +275,31 @@ def _resolve_intent_platform_pair(
     raise OutputRecipeError("E_OR_INVALID_INTENT", "须指定 intent 或 platform")
 
 
+def apply_recipe_layout_to_segment_mode(
+    segment_mode: str | None,
+    *,
+    recipe_layout: str | None,
+    platform_id: str | None = "",
+    wechat_platform: str = "wechat_chat",
+) -> str:
+    """User-explicit full/chapter wins; recipe.layout only fills auto/missing.
+
+    Web and CLI must share this so a visible「按章分开」 cannot be overwritten
+    when the band default is ``single``.
+    """
+    mode = str(segment_mode or "auto").strip().lower() or "auto"
+    if mode in ("full", "chapter"):
+        return mode
+    if str(platform_id or "").strip() != wechat_platform:
+        return mode
+    layout = str(recipe_layout or "").strip().lower()
+    if layout in ("chapter", "by_chapter"):
+        return "chapter"
+    if layout == "single":
+        return "full"
+    return mode
+
+
 def _default_layout(band: str) -> str:
     if band == "sparse":
         return "single"
