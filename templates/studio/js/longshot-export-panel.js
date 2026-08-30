@@ -599,6 +599,70 @@ export function estimatePhotoCountFromDom(doc) {
   return imgs.length;
 }
 
+/** Best-effort chapter count from reader DOM. */
+export function estimateChapterCountFromDom(doc) {
+  doc = doc || (typeof document !== "undefined" ? document : null);
+  if (!doc) return 0;
+  return doc.querySelectorAll("section.chapter[data-chapter-id]").length;
+}
+
+/** 16 张示例整篇实测约 14930px / 16.5MiB，用作软预估。 */
+export var WECHAT_CHAT_PX_PER_PHOTO = 930;
+export var WECHAT_CHAT_BYTES_PER_PHOTO = 1100000;
+export var WECHAT_CHAT_HEIGHT_SOFT_PX = 8000;
+export var WECHAT_CHAT_BYTES_SOFT = 8 * 1024 * 1024;
+
+/**
+ * @param {{ photoCount?: number, chapterCount?: number, mode?: string }} opts
+ */
+export function estimateWechatChatExportRisk(opts) {
+  var photos = Math.max(0, Number(opts && opts.photoCount) || 0);
+  var chapters = Math.max(0, Number(opts && opts.chapterCount) || 0);
+  var mode = String((opts && opts.mode) || "full");
+  var fileCount = mode === "chapter" && chapters > 1 ? chapters : 1;
+  var photosPerFile = fileCount > 1 && photos > 0 ? photos / fileCount : photos;
+  var heightPx = Math.round(photosPerFile * WECHAT_CHAT_PX_PER_PHOTO);
+  var bytes = Math.round(photosPerFile * WECHAT_CHAT_BYTES_PER_PHOTO);
+  var warn =
+    photos > 0 &&
+    (heightPx >= WECHAT_CHAT_HEIGHT_SOFT_PX || bytes >= WECHAT_CHAT_BYTES_SOFT);
+  return {
+    fileCount: fileCount,
+    heightPx: heightPx,
+    bytes: bytes,
+    warn: warn,
+    suggestChapter: warn && mode !== "chapter" && chapters > 1,
+  };
+}
+
+/** @param {ReturnType<typeof estimateWechatChatExportRisk>} risk */
+export function formatWechatChatExportExpect(risk) {
+  var r = risk || estimateWechatChatExportRisk({});
+  if (!r.heightPx && !r.bytes) {
+    return "将导出<strong>可按序发群</strong>的长图；可选按章分开或一整张";
+  }
+  var sizeMb = (r.bytes / (1024 * 1024)).toFixed(1);
+  var heightLabel =
+    r.heightPx >= 1000
+      ? "约 " + (r.heightPx / 1000).toFixed(1) + " 千像素高"
+      : "约 " + r.heightPx + " 像素高";
+  var files = r.fileCount > 1 ? r.fileCount + " 张" : "1 张";
+  var line =
+    "预计导出 <strong>" +
+    files +
+    "</strong> · " +
+    heightLabel +
+    " · 约 " +
+    sizeMb +
+    " MB";
+  if (r.suggestChapter) {
+    line += " · 文件较大，建议改用「按章分开」";
+  } else if (r.warn && r.fileCount > 1) {
+    line += " · 单张仍然偏大，分享前请先在本机打开看一下";
+  }
+  return line;
+}
+
 /**
  * Build popover inner HTML for enabled platforms.
  * @param {string[]} platformIds
@@ -1172,6 +1236,14 @@ export function syncPanelUI(pop, draft, opts) {
           "将导出 <strong>" +
           draft.slideCount +
           " 张两卡跨页</strong>拼贴（3:4+3:4+中缝，约 1.53:1）";
+      } else if (platform === "wechat_chat") {
+        expectBody.innerHTML = formatWechatChatExportExpect(
+          estimateWechatChatExportRisk({
+            photoCount: opts.photoCount || estimatePhotoCountFromDom(),
+            chapterCount: opts.chapterCount || estimateChapterCountFromDom(),
+            mode: draft.mode,
+          })
+        );
       } else {
         expectBody.innerHTML = meta.expectHtml;
       }
@@ -1215,6 +1287,7 @@ export function bindPanelDraft(pop, initialDraft, opts) {
   var uiOpts = {
     smartCropEnabled: opts.smartCropEnabled === true,
     photoCount: opts.photoCount || 0,
+    chapterCount: opts.chapterCount || 0,
     appendixCount: opts.appendixCount || 0,
     edition: opts.edition === "portfolio" ? "portfolio" : "journal",
   };
@@ -1454,6 +1527,9 @@ export function bindPanelDraft(pop, initialDraft, opts) {
       }
       if (nextOpts && nextOpts.photoCount != null) {
         uiOpts.photoCount = nextOpts.photoCount;
+      }
+      if (nextOpts && nextOpts.chapterCount != null) {
+        uiOpts.chapterCount = nextOpts.chapterCount;
       }
       if (nextOpts && nextOpts.appendixCount != null) {
         uiOpts.appendixCount = nextOpts.appendixCount;

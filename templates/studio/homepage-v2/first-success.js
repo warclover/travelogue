@@ -371,7 +371,7 @@ function populateSuccessUi(result) {
   }
   var setPreview = $("v2-success-set-preview");
   if (setPreview) {
-    show(setPreview, !!result.tripId);
+    show(setPreview, !!result.tripId && !isDemoTrip(result));
   }
 
   applySuccessCover(result, title);
@@ -656,11 +656,12 @@ function wireFirstSuccess() {
   var setPreview = $("v2-success-set-preview");
   if (setPreview) {
     setPreview.addEventListener("click", function () {
-      if (!_successResult || !_successResult.tripId) return;
+      if (!_successResult || !_successResult.tripId || isDemoTrip(_successResult)) return;
       clearCountdown();
       import("./bento-tabs.js").then(function (m) {
         return m.setBentoPreviewTripId(_successResult.tripId, { source: "first_success" });
-      }).then(function () {
+      }).then(function (out) {
+        if (out && out.rejected) return;
         if (typeof studioToast === "function") {
           studioToast("已设为首页预览", { duration: 2200 });
         }

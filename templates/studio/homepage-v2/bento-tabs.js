@@ -2,6 +2,7 @@
  * 首页 v2 · Bento 预览来源（D-14 · 预览画册 select）。
  */
 import { trackStudioEvent } from "../js/analytics.js";
+import { isDemoTrip } from "../js/constants.js";
 import {
   V2,
   $,
@@ -87,6 +88,9 @@ export function activeBentoManifest() {
 export function setBentoPreviewTripId(tripId, opts) {
   opts = opts || {};
   var nextId = tripId || null;
+  if (nextId && isDemoTrip({ tripId: nextId })) {
+    return Promise.resolve({ rejected: true, reason: "demo" });
+  }
   var prevTab = V2.bentoTab;
   if (V2.bentoPreviewTripId === nextId && !opts.force) {
     syncPreviewUi();

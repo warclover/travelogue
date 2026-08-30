@@ -53,14 +53,14 @@ export function humanizeStudioError(code, message) {
 }
 
 const FAILURE_NEXT_HINTS = {
-  E_INGEST_EMPTY: "请确认文件夹里有 JPG/PNG/WebP/HEIC 照片，然后重试。",
+  E_INGEST_EMPTY: "请确认文件夹里有 JPG/PNG/WebP/HEIC 照片，然后更换文件夹。",
   E_INGEST_TOO_FEW: "确认页有足够张数仍失败时，多半是智能挑选后不足 4 张：可点「设置智能选片规则」选「全部保留」或「保留连拍与近似照片」后再试。",
   E_DEMO_TOO_FEW: "示例相册需要至少 4 张照片；请改用「制作我的杂志」选自己的文件夹。",
   E_DEMO_NOT_DIR: "请粘贴或选择本机上的文件夹路径，而不是单个文件。",
-  E_STUDIO_ALBUM_DENIED: "请改用 Sheet 内的「浏览文件夹」，或检查路径是否在本机允许范围内。",
+  E_STUDIO_ALBUM_DENIED: "请改用导入窗口里的「浏览文件夹」，或检查路径是否在本机允许范围内。",
   E_STUDIO_UPLOAD_EMPTY: "请重新选择包含照片的文件夹后再上传。",
   E_STUDIO_BODY_TOO_LARGE: "文件夹过大：请改用「制作我的杂志」选文件夹，或合并后分批导入。",
-  E_PICK_FOLDER_UNSUPPORTED: "请粘贴路径，或使用 Sheet 底部的小文件夹上传（≤200MB）。",
+  E_PICK_FOLDER_UNSUPPORTED: "请粘贴路径，或使用导入窗口底部的小文件夹上传（≤200MB）。",
   E_PICK_FOLDER_DENIED: "仅允许访问本机文件夹；请确认 Studio 有权限访问该路径。",
   E_PICK_FOLDER_FAILED: "请粘贴完整路径，或安装 desktop 依赖后重试浏览文件夹。",
   E_STUDIO_PIPELINE: "通常是临时问题：检查文件夹仍可访问后点「重试」。",

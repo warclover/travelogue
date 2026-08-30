@@ -29,6 +29,7 @@ import {
   enabledPlatformsFromConfig,
   progressSubtitleForPlatform,
   estimatePhotoCountFromDom,
+  estimateChapterCountFromDom,
   formatBatchSuccess,
   isComposePlatform,
   isSmartCropUiEnabled,
@@ -1389,6 +1390,7 @@ export function cancelPreviewLongshotExport(root) {
     pop._panelDraft.setUiOpts({
       smartCropEnabled: _longshot2SmartCrop,
       photoCount: estimatePhotoCountFromDom(document),
+      chapterCount: estimateChapterCountFromDom(document),
       appendixCount: estimateAppendixCountFromDom(document),
     });
   }
@@ -1459,6 +1461,7 @@ export function cancelPreviewLongshotExport(root) {
       {
         smartCropEnabled: _longshot2SmartCrop,
         photoCount: estimatePhotoCountFromDom(document),
+        chapterCount: estimateChapterCountFromDom(document),
         appendixCount: estimateAppendixCountFromDom(document),
         edition: fxiExportFaceOf(root) === "social" ? "journal" : face.edition,
         onDraftChange: function (draft) {

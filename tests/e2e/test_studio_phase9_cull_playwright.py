@@ -395,3 +395,79 @@ def test_ac_f1_09_photo_cull_disabled_success_copy_m_equals_n(studio_server) -> 
         assert "30" in text
         assert "极低清晰度" not in text
         browser.close()
+
+
+def test_demo_first_success_hides_set_preview(studio_server) -> None:
+    """BUG-01 · 示例成功页不得出现无效的「设为首页预览」。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=empty")
+        page.evaluate(
+            """
+            async () => {
+              const mod = await import('/__studio/homepage-v2/first-success.js');
+              mod.showFirstSuccess({
+                result: {
+                  tripId: 'demo-album',
+                  title: '斯里兰卡见闻录',
+                  photoCount: 16,
+                  segmentCount: 3,
+                },
+              });
+            }
+            """
+        )
+        _wait_visible(page, "v2-success-open")
+        set_preview = page.locator("#v2-success-set-preview")
+        assert set_preview.count() == 1
+        assert not set_preview.is_visible()
+        page.evaluate(
+            """
+            async () => {
+              const mod = await import('/__studio/homepage-v2/first-success.js');
+              mod.showFirstSuccess({
+                result: {
+                  tripId: 'user-trip',
+                  title: '京都 · 雨后',
+                  photoCount: 12,
+                  segmentCount: 2,
+                },
+              });
+            }
+            """
+        )
+        page.wait_for_function(
+            "() => { const el = document.getElementById('v2-success-set-preview'); return el && !el.hidden; }"
+        )
+        browser.close()
+
+
+def test_permanent_import_failure_offers_change_folder(studio_server) -> None:
+    """BUG-04 · 永久路径错误主按钮是更换文件夹，并保留留在首页。"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        _goto_v2(page, studio_server["base"], "dev=1&studioFixture=empty")
+        page.evaluate(
+            """
+            async () => {
+              const mod = await import('/__studio/homepage-v2/import-failed.js');
+              try {
+                sessionStorage.setItem(
+                  'travelogue.studio.activePending',
+                  JSON.stringify({ albumPath: 'C:/__travelogue_missing_folder__' })
+                );
+              } catch (e) {}
+              mod.showImportFailed({
+                code: 'E_STUDIO_ALBUM_DENIED',
+                message: '不允许从该路径导入',
+              });
+            }
+            """
+        )
+        _wait_visible(page, "v2-failure-retry")
+        assert page.locator("#v2-failure-retry").inner_text().strip() == "更换文件夹"
+        assert page.locator("#v2-failure-stay").is_visible()
+        assert "Sheet" not in page.locator("#v2-failure-hint").inner_text()
+        browser.close()

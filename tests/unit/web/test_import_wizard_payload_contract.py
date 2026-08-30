@@ -84,15 +84,21 @@ def test_m3_upload_aligns_with_wizard_fields() -> None:
 
 
 def test_m3_preview_four_states_copy_frozen() -> None:
-    """AC-QH-04 · 清点四态文案冻结。"""
+    """AC-QH-04 · 清点四态走 logic 输出，不再冻源码字面量位置。"""
     wizard = _WIZARD_JS.read_text(encoding="utf-8")
+    logic = (_WIZARD_JS.parent / "import-wizard-logic.js").read_text(encoding="utf-8")
     assert "正在清点照片…" in wizard
     assert "照片较多，制作时将自动清点" in wizard
-    assert "未能清点照片，可更换文件夹或直接开始" in wizard
-    assert "已清点 " in wizard
+    assert "wizardFailedVerifyLine" in wizard
+    assert "classifyAlbumPreviewFailure" in wizard
+    assert "未能清点照片，请更换文件夹" in logic
+    assert "未能清点照片，可更换文件夹或仍要开始" in logic
+    assert "function wizardPhotoSummaryLine" in logic
+    assert "文件夹有 " in logic
     assert '_previewState === "failed"' in wizard or '_previewState = "failed"' in wizard
     assert '_previewState === "degraded"' in wizard or '_previewState = "degraded"' in wizard
     assert "PREVIEW_TIMEOUT_MS" in wizard
+    assert "canStartAfterPreview" in wizard
 
 
 def test_m3_cancel_confirm_copy() -> None:

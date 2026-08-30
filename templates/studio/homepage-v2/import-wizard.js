@@ -42,6 +42,9 @@ import {
   wizardStartLabel,
   wizardPhotoSummaryLine,
   wizardCountHint,
+  classifyAlbumPreviewFailure,
+  wizardFailedVerifyLine,
+  canStartAfterPreview,
 } from "./import-wizard-logic.js";
 import {
   isRadioNavKey,
@@ -76,6 +79,9 @@ var _previewDateStart = null;
 var _previewDateEnd = null;
 /** 清点四态：idle | loading | ready | failed | degraded */
 var _previewState = "idle";
+/** failed 时：permanent | recoverable | "" */
+var _previewFailureKind = "";
+var _previewFailureCode = "";
 var _previewGen = 0;
 var PREVIEW_TIMEOUT_MS = 8000;
 var _importStarted = false;
@@ -349,7 +355,7 @@ function renderVerifyLine() {
   } else if (_previewState === "degraded" && _pendingAlbumPath) {
     verifyText = "📁 " + name + " · 照片较多，制作时将自动清点";
   } else if (_previewState === "failed" && _pendingAlbumPath) {
-    verifyText = "📁 " + name + " · 未能清点照片，可更换文件夹或直接开始";
+    verifyText = "📁 " + name + " · " + wizardFailedVerifyLine(_previewFailureKind);
   } else if (_previewState === "ready" && _pendingPhotoCount != null) {
     verifyText =
       "📁 " +
@@ -375,6 +381,8 @@ function fetchAlbumPreview(albumPath) {
   var gen = ++_previewGen;
   var started = Date.now();
   _previewState = "loading";
+  _previewFailureKind = "";
+  _previewFailureCode = "";
   _pendingPhotoCount = null;
   renderVerifyLine();
   updateCountHint();
@@ -383,11 +391,13 @@ function fetchAlbumPreview(albumPath) {
   var timeoutId = setTimeout(function () {
     if (gen !== _previewGen || settled) return;
     _previewState = "degraded";
+    _previewFailureKind = "recoverable";
     _pendingPhotoCount = null;
     _previewThumbs = [];
     _previewThumbNames = [];
     renderVerifyLine();
     updateCountHint();
+    updateStartLabel();
     trackStudioEvent("preview_timeout", {
       elapsedMs: Date.now() - started,
     });
@@ -402,17 +412,31 @@ function fetchAlbumPreview(albumPath) {
   })
     .then(function (res) {
       var data = res.body || {};
-      if (res.status >= 400 || !data.ok) return null;
+      if (res.status >= 400 || !data.ok) {
+        return {
+          __error: true,
+          status: res.status,
+          error: data.error || "",
+        };
+      }
       return data;
     })
-    .catch(function () { return null; })
+    .catch(function () {
+      return { __error: true, status: 0, error: "" };
+    })
     .then(function (data) {
       if (gen !== _previewGen) return;
       settled = true;
       clearTimeout(timeoutId);
-      if (!data) {
+      if (!data || data.__error) {
         if (_previewState !== "degraded") {
           _previewState = "failed";
+          var classified = classifyAlbumPreviewFailure(
+            data && data.status,
+            data && data.error
+          );
+          _previewFailureKind = classified.kind;
+          _previewFailureCode = classified.code;
         }
         _pendingPhotoCount = null;
         _existingJournal = null;
@@ -423,14 +447,33 @@ function fetchAlbumPreview(albumPath) {
         _previewDateEnd = null;
         renderVerifyLine();
         updateCountHint();
+        updateStartLabel();
         trackStudioEvent("preview_failed", {
           elapsedMs: Date.now() - started,
           degraded: _previewState === "degraded",
+          error: _previewFailureCode || "",
         });
         return;
       }
       var n = Number(data.photoCount);
       _pendingPhotoCount = Number.isFinite(n) && n >= 0 ? n : null;
+      if (_pendingPhotoCount === 0) {
+        _previewState = "failed";
+        _previewFailureKind = "permanent";
+        _previewFailureCode = "E_INGEST_EMPTY";
+        _previewThumbs = [];
+        _previewThumbNames = [];
+        renderVerifyLine();
+        updateCountHint();
+        updateStartLabel();
+        trackStudioEvent("preview_failed", {
+          elapsedMs: Date.now() - started,
+          error: "E_INGEST_EMPTY",
+        });
+        return;
+      }
+      _previewFailureKind = "";
+      _previewFailureCode = "";
       _previewThumbs = Array.isArray(data.thumbs) ? data.thumbs : [];
       _previewThumbNames = Array.isArray(data.thumbNames) ? data.thumbNames : [];
       if (data.folderName) _pendingFolderName = String(data.folderName);
@@ -457,6 +500,7 @@ function fetchAlbumPreview(albumPath) {
       renderVerifyLine();
       renderThumbs(_previewThumbs);
       updateCountHint();
+      updateStartLabel();
       updatePhotoKeepModeUi();
       updateLayoutDensityWarn();
       syncEditionUi();
@@ -723,6 +767,7 @@ function updateStartLabel() {
     fineVisited: _fineVisited,
     uploading: !!(!(_pendingUploadFiles) ? false : _pendingUploadFiles.length),
     covering: isCoveringSelf(),
+    changeFolder: !canStartAfterPreview(_previewState, _previewFailureKind),
   });
 }
 
@@ -997,6 +1042,9 @@ function goToStep1(clearPending) {
     _previewThumbNames = [];
     _previewDateStart = null;
     _previewDateEnd = null;
+    _previewState = "idle";
+    _previewFailureKind = "";
+    _previewFailureCode = "";
   }
   toggleDrawer(false);
   clearErrors();
@@ -1080,6 +1128,8 @@ function afterFolderPicked(albumPath, via) {
   _existingPortfolio = null;
   _pendingPhotoCount = null;
   _previewState = "loading";
+  _previewFailureKind = "";
+  _previewFailureCode = "";
   _previewThumbs = [];
   _previewThumbNames = [];
   _previewDateStart = null;
@@ -1415,6 +1465,10 @@ function startUploadFromWizard() {
 }
 
 function startImportFromWizard() {
+  if (!canStartAfterPreview(_previewState, _previewFailureKind)) {
+    goToStep1(true);
+    return;
+  }
   if (_pendingUploadFiles && _pendingUploadFiles.length) {
     return startUploadFromWizard();
   }
@@ -1456,6 +1510,10 @@ function startImportFromWizard() {
 }
 
 function onWizardStartClick() {
+  if (!canStartAfterPreview(_previewState, _previewFailureKind)) {
+    goToStep1(true);
+    return;
+  }
   if (_activeMode === "fine_craft" && _step === "confirm") {
     goToStep2b();
     return;

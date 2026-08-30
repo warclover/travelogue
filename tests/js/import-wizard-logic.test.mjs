@@ -34,6 +34,10 @@ import {
   wizardStartLabel,
   wizardPhotoSummaryLine,
   wizardCountHint,
+  isPermanentImportError,
+  classifyAlbumPreviewFailure,
+  wizardFailedVerifyLine,
+  canStartAfterPreview,
   approxKeptSentence,
   shouldShowPageSpec,
   buildPageCountFields,
@@ -254,6 +258,22 @@ test("PFO 向导规格句默认自动、游记不带页数", () => {
     "开始制作作品集 →"
   );
   assert.equal(wizardStartLabel({ edition: "journal" }), "开始制作 →");
+  assert.equal(wizardStartLabel({ changeFolder: true }), "更换文件夹");
+  assert.equal(isPermanentImportError("E_STUDIO_ALBUM_DENIED"), true);
+  assert.equal(isPermanentImportError("E_STUDIO_PIPELINE"), false);
+  assert.equal(
+    classifyAlbumPreviewFailure(403, "E_STUDIO_ALBUM_DENIED").kind,
+    "permanent"
+  );
+  assert.equal(classifyAlbumPreviewFailure(0, "").kind, "recoverable");
+  assert.equal(wizardFailedVerifyLine("permanent"), "未能清点照片，请更换文件夹");
+  assert.equal(
+    wizardFailedVerifyLine("recoverable"),
+    "未能清点照片，可更换文件夹或仍要开始"
+  );
+  assert.equal(canStartAfterPreview("failed", "permanent"), false);
+  assert.equal(canStartAfterPreview("failed", "recoverable"), true);
+  assert.equal(canStartAfterPreview("degraded", "recoverable"), true);
   const on = parsePortfolioPipelineConfig({
     portfolioPipeline: { enabled: true },
   });

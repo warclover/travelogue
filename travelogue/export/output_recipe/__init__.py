@@ -5,6 +5,7 @@ from __future__ import annotations
 from travelogue.export.output_recipe.kept_n import count_kept_n
 from travelogue.export.output_recipe.resolve import (
     ambiguous_intent_options,
+    apply_recipe_layout_to_segment_mode,
     classify_band,
     resolve_output_recipe,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "PHASE_A_INTENTS",
     "PLATFORM_TO_INTENT",
     "ambiguous_intent_options",
+    "apply_recipe_layout_to_segment_mode",
     "classify_band",
     "count_kept_n",
     "resolve_output_recipe",
