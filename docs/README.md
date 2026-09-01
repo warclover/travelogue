@@ -15,7 +15,7 @@
 
 新人 / Agent **默认只读这条短链**；下方「阅读顺序（历史 Phase）」仅考古。
 
-1. [CHARTER.md](./CHARTER.md) · [收敛任务清单.md](./收敛任务清单.md) · [收敛功能生命周期.md](./收敛功能生命周期.md)（`R0-01`～`R0-03`）  
+1. [CHARTER.md](./CHARTER.md) · [收敛任务清单.md](./收敛任务清单.md) · [收敛决策记录.md](./收敛决策记录.md) · [收敛功能生命周期.md](./收敛功能生命周期.md) · [v1.0发布门槛.md](./v1.0发布门槛.md)（`R0-01`～`R0-05` · G0）  
 2. [TECH-ARCHITECTURE.md](./TECH-ARCHITECTURE.md) → [DEVELOPMENT.md](./DEVELOPMENT.md)  
 3. 活跃 ADR：[adr/007-native-clustering.md](./adr/007-native-clustering.md)（索引见 [adr/README.md](./adr/README.md)）  
 4. [ACCEPTANCE.md](./ACCEPTANCE.md)（单轨验收入口）  

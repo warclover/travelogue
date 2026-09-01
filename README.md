@@ -21,6 +21,8 @@
 | **了解项目为什么做 / v1.0 定义** | [docs/CHARTER.md](docs/CHARTER.md) · [docs/收敛任务清单.md](docs/收敛任务清单.md) `R0-01` |
 | **看现行架构 / 分层约束** | [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md) |
 | **功能能不能做（生命周期）** | [docs/收敛功能生命周期.md](docs/收敛功能生命周期.md) |
+| **能不能发布（门槛）** | [docs/v1.0发布门槛.md](docs/v1.0发布门槛.md)（`QG-01`～`QG-08`；未跑不得发布） |
+| **已拍板什么（决策索引）** | [docs/收敛决策记录.md](docs/收敛决策记录.md)（`RD-*`） |
 | **本地跑起来 / 开发调试** | [docs/WORKSHOP.md](docs/WORKSHOP.md) · [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
 | **CLI 命令契约** | [docs/CLI-SPEC.md](docs/CLI-SPEC.md) · `python scripts/validate_trip.py` |
 | **当前版用户面合同（默认无 AI）** | [docs/PRD-NO-AI-SURFACE-V1.md](docs/PRD-NO-AI-SURFACE-V1.md) |
