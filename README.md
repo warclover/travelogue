@@ -1,15 +1,16 @@
 # Travelogue · 画册智能体
 
-> 本地照片（+ 可选短视频）→ 智能聚类 / 排版 / 挑片 / 装帧 → **杂志风 HTML 画册**，一键出 **微信长图 / 小红书 / 公众号图文 / 朋友圈**。
-> 全流程本机运行，**默认无需 LLM Key**（本机文案 stub）；配置 Key 后可解锁「杂志感」AI 文案。
+> 创作者在电脑上选定一组照片，系统自动编排成一张可直接分享的竖版长图；分享出去。
+> 16:9 网页、页图和 ZIP 是同一编排计划的派生留存，不是并列产品。全流程本机运行，**默认无需 LLM Key**。
 
 | 属性 | 内容 |
 |------|------|
 | **形态** | Studio 网页工作台（`python -m travelogue studio`） · Windows 桌面安装版 · 开发者 CLI |
-| **当前用户面** | **v2 Bento 首页**为唯一主入口（M21 已切主站）；**默认无 AI 面**（NAS）——先把纯照片长图做到能放心发朋友圈，AI 文案作为可选升级项 |
-| **核心管线** | `ingest`（摄入/挑片/RAW 拦截）→ `cluster`（场景+地理事件聚类）→ `curate`（选片/分章/智能排版）→ `narrate`（文案，默认 stub）→ `render`（HTML）→ `export`（长图/多平台/批量） |
-| **主模板** | `visual-journal`；Web 端排版走智能排版引擎（LTE 模板 + MCS 拼图 + 可选 LSE 策略层） |
-| **文档入口** | [docs/README.md](docs/README.md)（**现行导读**在文档顶部，其余为历史 Phase 存档） |
+| **当前用户面** | **v2 Bento 首页**为唯一主入口；**默认无 AI 面**。第一交付物是竖版长图，不是多平台内容工厂 |
+| **核心管线** | `ingest` → `cluster` → `curate` → `narrate`（默认 stub）→ `render` → `export`（竖版长图优先；16:9 / 页图 / ZIP 为派生留存） |
+| **主模板** | `visual-journal`；目标主路径为 series + 统一 LayoutPlan（mosaic 为旧 trip 兼容层，见 `R0-02`） |
+| **文档入口** | [docs/CHARTER.md](docs/CHARTER.md) · [docs/收敛任务清单.md](docs/收敛任务清单.md) · [docs/README.md](docs/README.md) |
+| **功能冻结** | [docs/收敛功能生命周期.md](docs/收敛功能生命周期.md)（`R0-03`）：收敛期只允许服务主闭环、质量门槛、旧数据兼容或复杂度削减的变更 |
 
 ---
 
@@ -17,13 +18,14 @@
 
 | 你想… | 去看 |
 |--------|------|
-| **了解项目为什么做** | [docs/CHARTER.md](docs/CHARTER.md) |
+| **了解项目为什么做 / v1.0 定义** | [docs/CHARTER.md](docs/CHARTER.md) · [docs/收敛任务清单.md](docs/收敛任务清单.md) `R0-01` |
 | **看现行架构 / 分层约束** | [docs/TECH-ARCHITECTURE.md](docs/TECH-ARCHITECTURE.md) |
+| **功能能不能做（生命周期）** | [docs/收敛功能生命周期.md](docs/收敛功能生命周期.md) |
 | **本地跑起来 / 开发调试** | [docs/WORKSHOP.md](docs/WORKSHOP.md) · [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) |
 | **CLI 命令契约** | [docs/CLI-SPEC.md](docs/CLI-SPEC.md) · `python scripts/validate_trip.py` |
 | **当前版用户面合同（默认无 AI）** | [docs/PRD-NO-AI-SURFACE-V1.md](docs/PRD-NO-AI-SURFACE-V1.md) |
 | **Studio 首页 v2 / M21 路由** | [docs/studio-homepage-v2/M21-ROUTING.md](docs/studio-homepage-v2/M21-ROUTING.md) |
-| **导出与分享（长图/多平台/批量）** | [docs/PRD-LONGSHOT-2.0.md](docs/PRD-LONGSHOT-2.0.md) · [docs/PRD-EXPORT-CARD-COMPOSE-V1.md](docs/PRD-EXPORT-CARD-COMPOSE-V1.md) · [docs/PRD-BATCH-EXPORT-MULTISELECT-V1.md](docs/PRD-BATCH-EXPORT-MULTISELECT-V1.md) |
+| **导出与分享** | 第一交付物是竖版长图。[docs/PRD-LONGSHOT-2.0.md](docs/PRD-LONGSHOT-2.0.md) 等为既有多平台预设，生命周期 **冻结维护**（不新平台、不扩规格） |
 | **智能排版 / 拼图 / 模板体系** | [docs/PRD-PHASE17-layout-strategy-engine.md](docs/PRD-PHASE17-layout-strategy-engine.md)（LSE）· [docs/PRD-PHASE16-layout-template-engine.md](docs/PRD-PHASE16-layout-template-engine.md)（LTE） |
 | **封面装帧 / Bookends** | [docs/PRD-COVER-STYLES-V6.md](docs/PRD-COVER-STYLES-V6.md) · [docs/PRD-BOOKENDS-ENGINE-V1.md](docs/PRD-BOOKENDS-ENGINE-V1.md) |
 | **桌面安装版** | [docs/PRD-DESKTOP-INSTALLER-V1.md](docs/PRD-DESKTOP-INSTALLER-V1.md) |
@@ -66,14 +68,14 @@ python -m travelogue studio
 | **`/__travelogue/*`** | Studio 声明式路由表（`web/studio_dispatch.py`），trip 增删查改、cohort、模板路由等 API |
 
 ```powershell
-# 服务端长图（Playwright）
+# 服务端竖版长图（第一交付物）
 python -m travelogue export-longshot trips\<tripId> --scale 2
 
-# Longshot 2.0 · 多平台导出（朋友圈 / 小红书 / 公众号 / 单张海报等）
+# 既有多平台预设仍可用，但属冻结维护（不新平台、不扩规格）
 python -m travelogue export-longshot trips\<tripId> --platform xiaohongshu
 ```
 
-Studio 面板同样支持**多平台勾选批量导出**（Task Dock 清单化进度，见 [PRD-BATCH-EXPORT-MULTISELECT-V1](docs/PRD-BATCH-EXPORT-MULTISELECT-V1.md)）。
+Studio 仍可勾选既有平台做批量导出；这不是 v1.0 主叙事，见 [收敛功能生命周期.md](docs/收敛功能生命周期.md)。
 
 </details>
 
@@ -89,8 +91,8 @@ Studio 面板同样支持**多平台勾选批量导出**（Task Dock 清单化�
 | **智能排版** | LTE 模板引擎（pattern 注册）+ MCS 拼图（equal-grid 等权合同默认开）+ LSE 策略层（评分/节奏/多样性，默认关闭以保稳态） |
 | **封面与装帧** | Cover Style Engine V6（多款开场皮肤 + Studio 可选）+ Bookends（封面–封底成对约束与锁定） |
 | **文案** | 默认**本机 stub**（零依赖）；可在 Studio「设置 → 模型API 配置」粘贴一把通义百炼 Key，解锁杂志文案和封面字体 |
-| **渲染** | Handlebars → HTML；Web 端 `screens`（16:9 舞台）引擎为主，兼容 legacy |
-| **导出/分享** | 服务端长图（Playwright）· Longshot 2.0 多平台（朋友圈/小红书/公众号/…）· 3:4 卡片统一管线（画册/小红书/单张海报共用模板库）· 批量多选导出 |
+| **渲染** | Handlebars → HTML；16:9 网页是派生留存投影，不是并列主产品 |
+| **导出/分享** | **竖版长图为第一交付物**（Playwright 服务端长图）。既有朋友圈/小红书/公众号/3:4 卡片/批量导出为 **冻结维护**，不新平台、不扩规格 |
 | **桌面分发** | PyInstaller 打包的 Windows 安装版 / 绿色便携包，无需 Python 环境 |
 
 ---
@@ -140,7 +142,7 @@ travelogue/
 │   ├── trip.json              # 单一事实源（含 pipeline 状态机）
 │   ├── source/ · assets/
 │   ├── index.html
-│   └── *-longshot.png         # 长图 / 多平台导出物
+│   └── *-longshot.png         # 竖版长图（第一交付物）；其它平台导出物冻结维护
 └── config.yaml.example       # 全量研究面配置样例（用户档见 config.user.example.yaml）
 ```
 
@@ -163,7 +165,7 @@ travelogue/
 
 - **Python 3.11+**：ingest / 聚类 / 策展 / 排版 / Studio HTTP 服务
 - **Handlebars（pybars3）**：`trip.json` → HTML
-- **Playwright + Chromium**：服务端长图截图、多平台导出
+- **Playwright + Chromium**：服务端竖版长图截图；既有多平台导出路径冻结维护
 - **Pillow**：3:4 卡片统一渲染管线（确定性路径，不依赖 Playwright）
 - **scikit-learn（HDBSCAN/DBSCAN）· OpenCV**：场景聚类、人脸/构图信号（`vision` 可选依赖）
 - **CLIP（open-clip-torch，可选）**：语义聚类增强
